@@ -3,24 +3,23 @@
 ## 1. 关联产品需求
 
 - PRD: `.docs/01_product/npm_package_distribution.md`
-- Requirement IDs: `PRD-NPM-001` 至 `PRD-NPM-014`
+- Requirement IDs: `PRD-NPM-001` 至 `PRD-NPM-015`
 
 ## 2. 现有上下文
 
 - 当前模块（Current modules）:
   - `AGENTS.md`：Agent 全局协议。
   - `Makefile`：当前验证命令入口。
-  - `.harness/agents/skills/**/SKILL.md`：阶段 Skill 的 canonical source。
-  - `.agents/skills/**/SKILL.md`：阶段 Skill 的 Agent 兼容生成出口。
-  - `.harness/managed/templates/**`：阶段产物模板。
-  - `.harness/managed/policies/**`：阶段契约、路径策略、gate 和风险矩阵。
+  - `<harnessRoot>/skills/**/SKILL.md`：阶段 Skill 的 canonical source。
+  - `<harnessRoot>/managed/templates/**`：阶段产物模板。
+  - `<harnessRoot>/managed/policies/**`：阶段契约、路径策略、gate 和风险矩阵。
   - `tools/*.py`：当前 validators、transition、overview 生成和状态工具。
   - `.github/workflows/harness.yml`：当前 CI gate 入口。
 - 相关 APIs（Related APIs）:
   - CLI binary: `sdlc-harness`
   - Commands: `init`、`init --adopt`、`sync`、`upgrade`、`doctor`、`validate-*`、`package sync-source`、`package check-source`
 - 相关数据（Related data）:
-  - `.harness/config.yaml`
+  - `<harnessRoot>/config.yaml`
   - managed file metadata block
   - sync manifest
   - local overrides
@@ -63,13 +62,14 @@ packages/sdlc-harness/
 
 ```txt
 AGENTS.md
-.harness/agents/skills/**/SKILL.md
-.agents/skills/**/SKILL.md
-.harness/config.yaml
-.harness/managed/templates/**
-.harness/managed/policies/**
-.harness/managed/make/sdlc-harness.mk
-.harness/overrides/**
+package.json or sdlc-harness.config.json
+<harnessRoot>/config.yaml
+<harnessRoot>/skills/**/SKILL.md
+<harnessRoot>/state/**
+<harnessRoot>/managed/templates/**
+<harnessRoot>/managed/policies/**
+<harnessRoot>/managed/make/sdlc-harness.mk
+<harnessRoot>/overrides/**
 .docs/**
 ```
 
@@ -79,7 +79,7 @@ AGENTS.md
 |---|---|---|---|---|
 | `sdlc-harness init` | CLI command | `--force?`、cwd | 创建新项目 Harness 骨架并执行 `sync` | 非空冲突、权限不足 |
 | `sdlc-harness init --adopt` | CLI command | cwd | 最小接入已有项目，执行安全诊断 | 发现高风险覆盖时停止 |
-| `sdlc-harness sync` | CLI command | `.harness/config.yaml`、包内 assets | materialized files、sync report | managed marker 缺失、local override 冲突、never overwrite 命中 |
+| `sdlc-harness sync` | CLI command | `<harnessRoot>/config.yaml`、包内 assets | materialized files、sync report | managed marker 缺失、local override 冲突、never overwrite 命中 |
 | `sdlc-harness upgrade` | CLI command | 当前 package version、schema version | migration report、自动 `sync`、doctor report | migration 失败、checksum 冲突 |
 | `sdlc-harness doctor` | CLI command | cwd | 配置完整性、漂移、override、gate 建议 | 配置不可读 |
 | `sdlc-harness validate-*` | CLI command | cwd | 对应 gate 结果 | gate failure |
@@ -88,7 +88,7 @@ AGENTS.md
 
 ## 5. 数据模型（Data Model）
 
-### 5.1 `.harness/config.yaml`
+### 5.1 `<harnessRoot>/config.yaml`
 
 ```yaml
 core:
@@ -99,26 +99,24 @@ core:
 managed_files:
   - path: "AGENTS.md"
     strategy: "merge-block"
-  - path: ".agents/skills"
-    strategy: "generated-compat"
-  - path: ".harness/agents/skills"
+  - path: "<harnessRoot>/skills"
     strategy: "managed"
-  - path: ".harness/managed/templates"
+  - path: "<harnessRoot>/managed/templates"
     strategy: "managed"
-  - path: ".harness/managed/policies"
+  - path: "<harnessRoot>/managed/policies"
     strategy: "merge-with-local"
-  - path: ".harness/managed/make/sdlc-harness.mk"
+  - path: "<harnessRoot>/managed/make/sdlc-harness.mk"
     strategy: "managed"
   - path: ".github/workflows/harness.yml"
     strategy: "create-if-missing"
 
 local_overrides:
-  - ".harness/overrides/**"
-  - ".harness/managed/policies/*.local.yaml"
+  - "<harnessRoot>/overrides/**"
+  - "<harnessRoot>/managed/policies/*.local.yaml"
 
 never_overwrite:
   - ".docs/**"
-  - ".harness/state/**"
+  - "<harnessRoot>/state/**"
   - "src/**"
   - "tests/**"
 ```
@@ -142,7 +140,7 @@ source_mappings:
   - source: "AGENTS.md"
     target: "packages/sdlc-harness/assets/agents/AGENTS_CORE.md"
     mode: "extract-managed-block"
-  - source: ".harness/agents/skills"
+  - source: ".harness/skills"
     target: "packages/sdlc-harness/assets/skills"
     mode: "copy-tree"
   - source: ".harness/managed/templates"
@@ -169,6 +167,7 @@ source_mappings:
 | DEV-004 | 实现 `package sync-source` / `package check-source` 与 CI 漂移检查 | `packages/sdlc-harness/**`, `.github/workflows/**`, `tests/sdlc-harness/**`, `.docs/04_implementation/npm_package/**` | `make lint`, `make test-current-domain` | `.docs/04_implementation/npm_package/dev_004_source_sync_ci.md` |
 | DEV-005 | 将 validators 入口接入 `sdlc-harness validate-*` | `packages/sdlc-harness/**`, `tests/sdlc-harness/**`, `.docs/04_implementation/npm_package/**` | `make lint`, `make test-current-domain` | `.docs/04_implementation/npm_package/dev_005_validate_commands.md` |
 | DEV-006 | 统一 `.harness` 工作流根目录并生成 `.agents` 兼容出口 | `README.md`, `.harness/config.yaml`, `.harness/agents/**`, `.harness/managed/**`, `.agents/skills/**`, `packages/sdlc-harness/**`, `tests/sdlc-harness/**`, `.docs/02_architecture/harness_package_distribution.md`, `.docs/04_implementation/npm_package/**` | `npm test`, `node packages/sdlc-harness/dist/cli.js package check-source`, `node packages/sdlc-harness/dist/cli.js validate-harness`, `make validate-harness` | `.docs/04_implementation/npm_package/dev_006_unified_harness_root.md` |
+| DEV-008 | 支持 `harnessFolderName` 配置 Harness 根目录 | `package.json`, `AGENTS.md`, `README.md`, `.harness/config.yaml`, `.harness/skills/**`, `.harness/managed/**`, `tools/**`, `packages/sdlc-harness/**`, `tests/sdlc-harness/**`, `.docs/04_implementation/npm_package/**` | `npm test`, `node packages/sdlc-harness/dist/cli.js package check-source`, `node packages/sdlc-harness/dist/cli.js validate-harness`, `make validate-harness` | `.docs/04_implementation/npm_package/dev_008_configurable_harness_root.md` |
 
 ## 7. 风险与缓解
 
@@ -177,10 +176,10 @@ source_mappings:
 | 包源码与当前工作流内容漂移 | P0 | `package sync-source` 更新，`package check-source` 和 CI 强制检查 |
 | 根 `Makefile` 与业务项目冲突 | P0 | 只插入 include，不整体覆盖 |
 | `AGENTS.md` 与项目自定义规则冲突 | P0 | 使用 managed block，marker 外内容不改 |
-| 生成的 Skill 不被 Agent 识别 | P0 | canonical Skill materialize 到 `.harness/agents/skills/**/SKILL.md`，同时生成 `.agents/skills/**/SKILL.md` 兼容出口 |
+| 生成的 Skill 不被 Agent 识别 | P0 | 默认 `<harnessRoot>` 为 `.agents`；显式 `.harness` 项目需在入口规则中声明 `.harness/skills/**` |
 | npm 包 validators 运行环境不稳定 | P1 | validators 运行时使用 TypeScript/Node，不依赖 Python 运行时 |
 
 ## 8. 需要关注的方案偏移
 
 - 如果当前仓库继续作为包源码仓库，`packages/sdlc-harness/assets/**` 不应手写，应由 `package sync-source` 从工作流源文件生成。
-- RFC_001 调整后，`.harness/**` 是工作区 Harness 配置 canonical root，`.agents/skills/**` 只作为兼容生成出口。
+- RFC_002 调整后，Harness root 由 JSON 配置决定；默认 `.agents`，当前仓库显式配置 `.harness`。

@@ -1,5 +1,6 @@
 import path from "node:path";
 import { readConfig } from "./config.js";
+import { harnessRoot } from "./harness-root.js";
 import {
   copyTree,
   listFiles,
@@ -26,40 +27,41 @@ export function emptySyncReport(): SyncReport {
 }
 
 export async function runSync(projectRoot: string): Promise<SyncReport> {
+  const root = await harnessRoot(projectRoot);
   const config = await readConfig(projectRoot);
   const report = emptySyncReport();
 
   for (const managedFile of config.managed_files) {
-    await syncManagedFile(projectRoot, managedFile, report);
+    await syncManagedFile(projectRoot, root, managedFile, report);
   }
 
   return report;
 }
 
-async function syncManagedFile(projectRoot: string, managedFile: ManagedFile, report: SyncReport): Promise<void> {
+async function syncManagedFile(projectRoot: string, root: string, managedFile: ManagedFile, report: SyncReport): Promise<void> {
   const destination = path.join(projectRoot, managedFile.path);
   if (managedFile.path === "AGENTS.md") {
-    await syncAgentsBlock(destination, report);
+    await syncAgentsBlock(destination, root, report);
     return;
   }
-  if (managedFile.path === ".harness/agents/skills") {
+  if (managedFile.path === path.join(root, "skills") || managedFile.path === ".harness/agents/skills") {
     await syncTree(packageAssetPath("skills"), destination, report);
     return;
   }
-  if (managedFile.path === ".agents/skills") {
+  if (managedFile.path === ".agents/skills" && root !== ".agents") {
     await syncTree(packageAssetPath("skills"), destination, report);
     return;
   }
-  if (managedFile.path === ".harness/managed/templates" || managedFile.path === ".harness/templates") {
+  if (managedFile.path === path.join(root, "managed", "templates") || managedFile.path === ".harness/templates") {
     await syncTree(packageAssetPath("templates"), destination, report);
     return;
   }
-  if (managedFile.path === ".harness/managed/policies" || managedFile.path === ".harness/policies") {
+  if (managedFile.path === path.join(root, "managed", "policies") || managedFile.path === ".harness/policies") {
     await syncTree(packageAssetPath("policies"), destination, report);
     return;
   }
   if (
-    managedFile.path === ".harness/managed/make/sdlc-harness.mk" ||
+    managedFile.path === path.join(root, "managed", "make", "sdlc-harness.mk") ||
     managedFile.path === ".harness/make/sdlc-harness.mk"
   ) {
     await syncFile(packageAssetPath("make", "sdlc-harness.mk"), destination, report, "skip-if-missing");
@@ -76,13 +78,14 @@ async function syncManagedFile(projectRoot: string, managedFile: ManagedFile, re
   report.skipped.push(managedFile.path);
 }
 
-async function syncAgentsBlock(destination: string, report: SyncReport): Promise<void> {
+async function syncAgentsBlock(destination: string, root: string, report: SyncReport): Promise<void> {
   const corePath = packageAssetPath("agents", "AGENTS_CORE.md");
   if (!(await pathExists(corePath))) {
     report.skipped.push("AGENTS.md");
     return;
   }
-  const block = `${MANAGED_BLOCK_START}\n${(await readText(corePath)).trim()}\n${MANAGED_BLOCK_END}`;
+  const core = renderAgentsCore(await readText(corePath), root);
+  const block = `${MANAGED_BLOCK_START}\n${core.trim()}\n${MANAGED_BLOCK_END}`;
   const existing = (await pathExists(destination)) ? await readText(destination) : "";
   let next: string;
   if (existing.includes(MANAGED_BLOCK_START) && existing.includes(MANAGED_BLOCK_END)) {
@@ -99,6 +102,10 @@ async function syncAgentsBlock(destination: string, report: SyncReport): Promise
   } else {
     report.skipped.push("AGENTS.md");
   }
+}
+
+function renderAgentsCore(content: string, root: string): string {
+  return content.replaceAll(".harness", root);
 }
 
 async function syncTree(source: string, destination: string, report: SyncReport): Promise<void> {

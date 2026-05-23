@@ -55,7 +55,7 @@
 - 不翻译 `REQUIREMENT_GATHERING`、`ARCHITECTING`、`SPRINTING`、`REVIEWING`、`TESTING`、`RELEASING`、`RFC_RECALIBRATION`、`BLOCKED` 等阶段枚举。
 - 不翻译 `pending`、`in_progress`、`done`、`blocked`、`pending_revision`、`cancelled`、`archived` 等任务状态。
 - 不翻译 `make validate-*`、`python3 tools/transition.py --to <PHASE>`、`.docs/01_product/`、`.harness/state/tasks.yaml` 等命令和路径。
-- 后续更新 `.harness/agents/skills/*/SKILL.md` 或 `.harness/managed/templates/*.md` 时，遵循“中文解释 + 英文精确标识符”。`.agents/skills/**` 是 `sdlc-harness sync` 生成的兼容视图，不作为仓库事实源维护。
+- 后续更新 `.harness/skills/*/SKILL.md` 或 `.harness/managed/templates/*.md` 时，遵循“中文解释 + 英文精确标识符”。Harness 根目录由 `package.json#sdlcHarness.harnessFolderName` 或 `sdlc-harness.config.json#harnessFolderName` 决定；未配置的项目默认使用 `.agents`。
 
 ## 通用执行原则
 

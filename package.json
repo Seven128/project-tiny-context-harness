@@ -7,6 +7,10 @@
     "packages/*"
   ],
   "scripts": {
+    "test": "npm test --workspace @ai-sdlc/sdlc-harness",
     "sdlc-harness": "node packages/sdlc-harness/dist/cli.js"
+  },
+  "sdlcHarness": {
+    "harnessFolderName": ".harness"
   }
 }

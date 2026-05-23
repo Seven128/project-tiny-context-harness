@@ -1,10 +1,10 @@
 import path from "node:path";
 import type { HarnessConfig } from "./types.js";
-import { DEFAULT_CONFIG_PATH } from "./paths.js";
+import { harnessConfigPath, harnessPath, harnessRoot } from "./harness-root.js";
 import { pathExists, readText, writeTextIfChanged } from "./fs.js";
 import { parseYaml, stringifyYaml } from "./yaml.js";
 
-export function defaultConfig(): HarnessConfig {
+export function defaultConfig(root: string): HarnessConfig {
   return {
     core: {
       package: "@ai-sdlc/sdlc-harness",
@@ -13,38 +13,39 @@ export function defaultConfig(): HarnessConfig {
     },
     managed_files: [
       { path: "AGENTS.md", strategy: "merge-block" },
-      { path: ".harness/agents/skills", strategy: "managed" },
-      { path: ".agents/skills", strategy: "generated-compat" },
-      { path: ".harness/managed/templates", strategy: "managed" },
-      { path: ".harness/managed/policies", strategy: "merge-with-local" },
-      { path: ".harness/managed/make/sdlc-harness.mk", strategy: "managed" },
+      { path: harnessPath(root, "skills"), strategy: "managed" },
+      { path: harnessPath(root, "managed", "templates"), strategy: "managed" },
+      { path: harnessPath(root, "managed", "policies"), strategy: "merge-with-local" },
+      { path: harnessPath(root, "managed", "make", "sdlc-harness.mk"), strategy: "managed" },
       { path: ".github/workflows/harness.yml", strategy: "create-if-missing" }
     ],
-    local_overrides: [".harness/overrides/**", ".harness/managed/policies/*.local.yaml"],
-    never_overwrite: [".docs/**", ".harness/state/**", "src/**", "tests/**"]
+    local_overrides: [harnessPath(root, "overrides/**"), harnessPath(root, "managed", "policies", "*.local.yaml")],
+    never_overwrite: [".docs/**", harnessPath(root, "state/**"), "src/**", "tests/**"]
   };
 }
 
 export async function readConfig(projectRoot: string): Promise<HarnessConfig> {
-  const configPath = path.join(projectRoot, DEFAULT_CONFIG_PATH);
+  const root = await harnessRoot(projectRoot);
+  const configPath = path.join(projectRoot, await harnessConfigPath(projectRoot));
   if (!(await pathExists(configPath))) {
-    return defaultConfig();
+    return defaultConfig(root);
   }
   const parsed = parseYaml(await readText(configPath)) as Partial<HarnessConfig>;
-  return normalizeConfig(parsed);
+  return normalizeConfig(parsed, root);
 }
 
 export async function writeConfigIfMissing(projectRoot: string): Promise<boolean> {
-  const configPath = path.join(projectRoot, DEFAULT_CONFIG_PATH);
+  const root = await harnessRoot(projectRoot);
+  const configPath = path.join(projectRoot, await harnessConfigPath(projectRoot));
   if (await pathExists(configPath)) {
     return false;
   }
-  await writeTextIfChanged(configPath, stringifyYaml(defaultConfig()));
+  await writeTextIfChanged(configPath, stringifyYaml(defaultConfig(root)));
   return true;
 }
 
-export function normalizeConfig(value: Partial<HarnessConfig>): HarnessConfig {
-  const fallback = defaultConfig();
+export function normalizeConfig(value: Partial<HarnessConfig>, root = ".agents"): HarnessConfig {
+  const fallback = defaultConfig(root);
   return {
     core: {
       package: value.core?.package ?? fallback.core.package,

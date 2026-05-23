@@ -1,5 +1,5 @@
 current_phase: "SPRINTING"
-current_task_id: "DEV-007"
+current_task_id: "DEV-008"
 tasks:
   - id: "DEV-001"
     title: "创建 npm 包骨架与 source sync manifest"
@@ -192,3 +192,36 @@ tasks:
     checkpoint: ".harness/state/checkpoints/DEV-007.md"
     gate_result: "PASS"
     commit: "dd209fe"
+
+  - id: "DEV-008"
+    title: "支持 harnessFolderName 配置 Harness 根目录"
+    status: "in_progress"
+    priority: "P0"
+    docs:
+      product:
+        - ".docs/01_product/npm_package_distribution.md"
+      tech_plan:
+        - ".docs/03_tech_plan/harness_package_distribution.md"
+      rfc:
+        - ".docs/rfc/RFC_002_configurable_harness_root.md"
+    allowed_paths:
+      - "package.json"
+      - "AGENTS.md"
+      - "README.md"
+      - ".harness/config.yaml"
+      - ".harness/skills/**"
+      - ".harness/agents/**"
+      - ".harness/managed/**"
+      - "tools/**"
+      - "packages/sdlc-harness/**"
+      - "tests/sdlc-harness/**"
+      - ".docs/04_implementation/npm_package/**"
+    required_gates:
+      - "npm test"
+      - "node packages/sdlc-harness/dist/cli.js package check-source"
+      - "node packages/sdlc-harness/dist/cli.js validate-harness"
+      - "make validate-harness"
+    implementation_doc: ".docs/04_implementation/npm_package/dev_008_configurable_harness_root.md"
+    checkpoint_required: true
+    checkpoint: ".harness/state/checkpoints/DEV-008.md"
+    gate_result: ""

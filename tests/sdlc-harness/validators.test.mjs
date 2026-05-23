@@ -7,12 +7,17 @@ import { runValidator } from "../../packages/sdlc-harness/dist/lib/validators.js
 const root = await mkdtemp(path.join(tmpdir(), "sdlc-harness-validators-"));
 
 try {
+  await writeFile(
+    path.join(root, "package.json"),
+    JSON.stringify({ sdlcHarness: { harnessFolderName: ".harness" } }, null, 2),
+    "utf8"
+  );
   await mkdir(path.join(root, ".docs/01_product"), { recursive: true });
   await mkdir(path.join(root, ".docs/02_architecture"), { recursive: true });
   await mkdir(path.join(root, ".docs/03_tech_plan"), { recursive: true });
   await mkdir(path.join(root, ".docs/04_implementation/example"), { recursive: true });
   await mkdir(path.join(root, ".harness/state"), { recursive: true });
-  await mkdir(path.join(root, ".harness/agents/skills"), { recursive: true });
+  await mkdir(path.join(root, ".harness/skills"), { recursive: true });
   await mkdir(path.join(root, ".harness/managed/templates"), { recursive: true });
   await mkdir(path.join(root, ".harness/managed/policies"), { recursive: true });
   await writeFile(path.join(root, "AGENTS.md"), "# Agents\n", "utf8");

@@ -6,10 +6,8 @@ core:
 managed_files:
   - path: "AGENTS.md"
     strategy: "merge-block"
-  - path: ".harness/agents/skills"
+  - path: ".harness/skills"
     strategy: "managed"
-  - path: ".agents/skills"
-    strategy: "generated-compat"
   - path: ".harness/managed/templates"
     strategy: "managed"
   - path: ".harness/managed/policies"

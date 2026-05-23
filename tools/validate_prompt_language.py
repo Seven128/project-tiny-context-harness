@@ -85,8 +85,8 @@ def validate_agents() -> None:
 
 
 def validate_skills() -> None:
-    skill_files = sorted((ROOT / ".harness/agents/skills").glob("*/SKILL.md"))
-    require(skill_files, "No skill files found under .harness/agents/skills/")
+    skill_files = sorted((ROOT / ".harness/skills").glob("*/SKILL.md"))
+    require(skill_files, "No skill files found under .harness/skills/")
 
     for path in skill_files:
         content = text(path)

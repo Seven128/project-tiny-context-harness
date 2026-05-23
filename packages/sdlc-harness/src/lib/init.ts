@@ -1,5 +1,6 @@
 import path from "node:path";
 import { writeConfigIfMissing } from "./config.js";
+import { harnessConfigPath, harnessPath, harnessRoot } from "./harness-root.js";
 import { ensureDir, pathExists, writeTextIfChanged } from "./fs.js";
 import { runSync } from "./sync-engine.js";
 
@@ -28,13 +29,15 @@ export async function runInit(projectRoot: string, options: InitOptions): Promis
     report.push("Project is not empty; continuing with non-destructive init. Use --adopt to mark this as an existing project adoption.");
   }
 
+  const root = await harnessRoot(projectRoot);
+  const configPath = await harnessConfigPath(projectRoot);
   if (await writeConfigIfMissing(projectRoot)) {
-    report.push("created .harness/config.yaml");
+    report.push(`created ${configPath}`);
   } else {
-    report.push("kept existing .harness/config.yaml");
+    report.push(`kept existing ${configPath}`);
   }
 
-  await createProjectState(projectRoot, report);
+  await createProjectState(projectRoot, root, report);
   await createDocs(projectRoot, report);
 
   const syncReport = await runSync(projectRoot);
@@ -53,18 +56,18 @@ async function projectHasExistingFiles(projectRoot: string): Promise<boolean> {
   return false;
 }
 
-async function createProjectState(projectRoot: string, report: string[]): Promise<void> {
-  const stateRoot = path.join(projectRoot, ".harness/state");
+async function createProjectState(projectRoot: string, root: string, report: string[]): Promise<void> {
+  const stateRoot = path.join(projectRoot, root, "state");
   await ensureDir(path.join(stateRoot, "checkpoints"));
   const files: Array<[string, string]> = [
     [
-      ".harness/state/lifecycle.yaml",
+      harnessPath(root, "state", "lifecycle.yaml"),
       `project_name: "Project"\nversion: "v0.1"\ncurrent_phase: "REQUIREMENT_GATHERING"\nactive_role: "pm"\nactive_skill: "pm_prd"\ncurrent_milestone: "MVP"\nblocked_reason: ""\nsuspended_phase: ""\nallowed_next_phases:\n  - "ARCHITECTING"\nhistory: []\n`
     ],
-    [".harness/state/tasks.yaml", `current_phase: "SPRINTING"\ncurrent_task_id: ""\ntasks: []\n`],
-    [".harness/state/tasks.draft.yaml", `current_phase: "SPRINTING"\ncurrent_task_id: ""\ntasks: []\n`],
-    [".harness/state/gate_results.log", "# Gate results are appended by sdlc-harness.\n"],
-    [".harness/state/memory.md", "# Project Memory\n\n短期状态写入 plan/tasks；长期稳定知识简短记录在这里，并链接到 `.docs/` 正式出处。\n"]
+    [harnessPath(root, "state", "tasks.yaml"), `current_phase: "SPRINTING"\ncurrent_task_id: ""\ntasks: []\n`],
+    [harnessPath(root, "state", "tasks.draft.yaml"), `current_phase: "SPRINTING"\ncurrent_task_id: ""\ntasks: []\n`],
+    [harnessPath(root, "state", "gate_results.log"), "# Gate results are appended by sdlc-harness.\n"],
+    [harnessPath(root, "state", "memory.md"), "# Project Memory\n\n短期状态写入 plan/tasks；长期稳定知识简短记录在这里，并链接到 `.docs/` 正式出处。\n"]
   ];
   for (const [relative, content] of files) {
     if (await writeTextIfChanged(path.join(projectRoot, relative), content)) {

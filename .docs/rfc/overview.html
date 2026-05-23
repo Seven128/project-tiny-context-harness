@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="generator" content="AI SDLC Harness build_doc_overviews.py">
-  <meta name="source-hash" content="c3c08a819ec009a1">
+  <meta name="source-hash" content="767b6ed4e7e1a844">
   <title>.docs/rfc overview</title>
   <style>
     :root {
@@ -116,11 +116,12 @@
     <section class="hero">
       <h1>.docs/rfc overview</h1>
       <p class="meta">Generated artifact. Markdown slices remain the source of truth.</p>
-      <p class="meta">Source hash: <code>c3c08a819ec009a1</code></p>
+      <p class="meta">Source hash: <code>767b6ed4e7e1a844</code></p>
       <div class="source-list">
         <h2>Source Slices</h2>
         <ol>
 <li><a href="#rfc-001-unify-harness-directory-model-md">RFC_001_unify_harness_directory_model.md</a></li>
+<li><a href="#rfc-002-configurable-harness-root-md">RFC_002_configurable_harness_root.md</a></li>
 </ol>
       </div>
     </section>
@@ -245,6 +246,136 @@
 <li><input type="checkbox" disabled> 运行 <code>node packages/sdlc-harness/dist/cli.js validate-harness</code> 验证新布局的 Harness 骨架。</li>
 <li><input type="checkbox" disabled> 运行 <code>make validate-rfc</code> 验证 RFC 产物和全量回归入口。</li>
 <li><input type="checkbox" disabled> 确认 <code>.docs/**</code>、<code>.harness/state/**</code>、<code>src/**</code>、<code>tests/**</code> 未被 sync/upgrade 覆盖。</li>
+</ul>
+<h2 id="7-status">7. Status</h2>
+<ul>
+<li>Status: APPLIED</li>
+</ul>
+</article>
+<article class="doc-slice" id="rfc-002-configurable-harness-root-md">
+<header>
+<h2>RFC_002_configurable_harness_root.md</h2>
+<a class="source-link" href="RFC_002_configurable_harness_root.md">Source Markdown</a>
+</header>
+<h1 id="rfc-002-可配置-harness-根目录">RFC_002: 可配置 Harness 根目录</h1>
+<h2 id="1-背景">1. 背景</h2>
+<p>RFC_001 将 Harness 配置事实源统一到 <code>.harness/**</code>，并把 <code>.agents/skills/**</code> 降级为兼容生成物。但这仍然让 Codex/Agent 的 Skill discovery 约定和 Harness 配置根目录之间存在适配层。</p>
+<p>用户提出新的产品方向：通过项目级 JSON 配置声明 Harness 根目录。如果配置为 <code>.harness</code>，则所有 Harness 配置都放在 <code>.harness</code> 下，且 Skill 直接放在 <code>.harness/skills</code>；如果没有配置，则默认使用 <code>.agents</code> 作为 Harness 根目录，所有 Harness 配置都放在 <code>.agents</code> 下，Skill 直接位于 <code>.agents/skills</code>，从而天然匹配多数 Agent 的 Skill discovery 约定。</p>
+<h2 id="2-变更内容-change-content">2. 变更内容（Change Content）</h2>
+<ul>
+<li>Added:</li>
+<li>支持从 <code>package.json</code> 的 <code>sdlcHarness.harnessFolderName</code> 读取 Harness 根目录。</li>
+<li>支持从 <code>sdlc-harness.config.json</code> 读取 <code>harnessFolderName</code>。</li>
+<li>支持 <code>harnessFloderName</code> 作为兼容别名，避免用户拼写错误导致配置失效。</li>
+<li>默认 Harness 根目录为 <code>.agents</code>。</li>
+<li>Changed:</li>
+<li>当前仓库通过 <code>package.json</code> 显式声明 <code>sdlcHarness.harnessFolderName: &quot;.harness&quot;</code>。</li>
+<li>配置为 <code>.harness</code> 时，Skill canonical path 从 <code>.harness/agents/skills/**</code> 改为 <code>.harness/skills/**</code>。</li>
+<li><code>sdlc-harness init</code>、<code>sync</code>、<code>upgrade</code>、<code>doctor</code>、<code>validate-*</code> 按配置根目录读写 <code>config.yaml</code>、<code>state/**</code>、<code>skills/**</code>、<code>managed/**</code>。</li>
+<li><code>AGENTS.md</code> managed block 在同步时按目标根目录渲染路径。</li>
+<li>Removed:</li>
+<li>移除 <code>.harness/agents/skills/**</code> 这一层中间目录语义。</li>
+<li>Unchanged:</li>
+<li><code>.docs/**</code> 仍是项目文档事实源，不受根目录配置影响。</li>
+<li><code>AGENTS.md</code> 仍位于项目根，作为 Agent 全局入口。</li>
+<li>npm 包仍通过 <code>sync</code> materialize 工作区可读文件。</li>
+</ul>
+<h2 id="3-product-impact-产品影响">3. Product Impact（产品影响）</h2>
+<table>
+<thead><tr>
+<th>受影响 PRD（Affected PRD）</th>
+<th>影响（Impact）</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>.docs/01_product/npm_package_distribution.md</code></td>
+<td>需要新增 configurable harness root 需求，并说明默认 <code>.agents</code>、显式 <code>.harness</code> 和 Skill 路径规则。</td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-technical-impact-candidates-技术影响候选">4. Technical Impact Candidates（技术影响候选）</h2>
+<table>
+<thead><tr>
+<th>模块（Module）</th>
+<th>影响（Impact）</th>
+<th>置信度（Confidence）</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>package.json</code></td>
+<td>当前仓库需要声明 <code>sdlcHarness.harnessFolderName: &quot;.harness&quot;</code>。</td>
+<td>high</td>
+</tr>
+<tr>
+<td><code>.harness/skills/**</code></td>
+<td>需要替代 <code>.harness/agents/skills/**</code> 作为当前仓库 Skill canonical source。</td>
+<td>high</td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/src/lib/config.ts</code></td>
+<td>需要读取 JSON root config，并按 root 生成默认 config path 和 managed paths。</td>
+<td>high</td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/src/lib/init.ts</code></td>
+<td>需要按 root 生成 state/config/managed 文件。</td>
+<td>high</td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/src/lib/sync-engine.ts</code></td>
+<td>需要按 root 同步 skills、templates、policies、make，并按 root 渲染 AGENTS block。</td>
+<td>high</td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/src/lib/migrations.ts</code></td>
+<td>需要按 root 迁移 config 和 state。</td>
+<td>high</td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/src/lib/doctor.ts</code></td>
+<td>需要按 root 检查 config、state 和 managed files。</td>
+<td>high</td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/src/lib/validators.ts</code></td>
+<td>需要按 root 校验 harness scaffold。</td>
+<td>high</td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/source-mappings.yaml</code></td>
+<td>当前仓库 source mapping 需要从 <code>.harness/skills</code> 读取。</td>
+<td>high</td>
+</tr>
+<tr>
+<td><code>tools/*.py</code></td>
+<td>当前仓库本地 Python gate 需要从 <code>.harness/skills</code> 读取 Skill。</td>
+<td>medium</td>
+</tr>
+<tr>
+<td><code>README.md</code>、<code>AGENTS.md</code></td>
+<td>需要说明 configurable root 和当前仓库配置。</td>
+<td>high</td>
+</tr>
+</tbody>
+</table>
+<p>Impact analysis:</p>
+<pre><code class="language-sh">python3 tools/impact_analyzer.py --rfc .docs/rfc/RFC_002_configurable_harness_root.md --top 40</code></pre>
+<h2 id="5-acceptance-criteria">5. Acceptance Criteria</h2>
+<ul>
+<li><input type="checkbox" disabled> 无配置时，<code>sdlc-harness init</code> 生成 <code>.agents/config.yaml</code>、<code>.agents/state/**</code>、<code>.agents/skills/**</code>、<code>.agents/managed/**</code>。</li>
+<li><input type="checkbox" disabled> <code>package.json</code> 配置 <code>sdlcHarness.harnessFolderName: &quot;.harness&quot;</code> 时，<code>sdlc-harness init/sync/validate-harness</code> 使用 <code>.harness/config.yaml</code>、<code>.harness/state/**</code>、<code>.harness/skills/**</code>、<code>.harness/managed/**</code>。</li>
+<li><input type="checkbox" disabled> <code>sdlc-harness.config.json</code> 配置 <code>harnessFolderName</code> 时也生效。</li>
+<li><input type="checkbox" disabled> <code>harnessFloderName</code> 作为兼容别名可被读取。</li>
+<li><input type="checkbox" disabled> 当前仓库 Skill source 移到 <code>.harness/skills/**</code>，不再使用 <code>.harness/agents/skills/**</code>。</li>
+<li><input type="checkbox" disabled> <code>npm test</code>、<code>package check-source</code>、<code>validate-harness</code>、<code>make validate-harness</code> 通过。</li>
+</ul>
+<h2 id="6-regression-requirements-回归要求">6. Regression Requirements（回归要求）</h2>
+<ul>
+<li><input type="checkbox" disabled> 覆盖默认 <code>.agents</code> root 的 init/sync/validate 测试。</li>
+<li><input type="checkbox" disabled> 覆盖 <code>package.json</code> <code>.harness</code> root 的 init/sync/validate 测试。</li>
+<li><input type="checkbox" disabled> 覆盖 <code>sdlc-harness.config.json</code> 和 <code>harnessFloderName</code> 别名读取。</li>
+<li><input type="checkbox" disabled> 覆盖当前仓库 source mappings 无漂移。</li>
+<li><input type="checkbox" disabled> 运行 <code>make validate-current</code> 确认开发阶段闭环。</li>
 </ul>
 <h2 id="7-status">7. Status</h2>
 <ul>

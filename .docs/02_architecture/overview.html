@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="generator" content="AI SDLC Harness build_doc_overviews.py">
-  <meta name="source-hash" content="f69349fb669e8ec6">
+  <meta name="source-hash" content="c413c3471cd30c16">
   <title>.docs/02_architecture overview</title>
   <style>
     :root {
@@ -116,7 +116,7 @@
     <section class="hero">
       <h1>.docs/02_architecture overview</h1>
       <p class="meta">Generated artifact. Markdown slices remain the source of truth.</p>
-      <p class="meta">Source hash: <code>f69349fb669e8ec6</code></p>
+      <p class="meta">Source hash: <code>c413c3471cd30c16</code></p>
       <div class="source-list">
         <h2>Source Slices</h2>
         <ol>
@@ -133,7 +133,7 @@
 <h2 id="1-关联产品需求">1. 关联产品需求</h2>
 <ul>
 <li>PRD: <code>.docs/01_product/npm_package_distribution.md</code></li>
-<li>Requirement IDs: <code>PRD-NPM-001</code> 至 <code>PRD-NPM-014</code></li>
+<li>Requirement IDs: <code>PRD-NPM-001</code> 至 <code>PRD-NPM-015</code></li>
 </ul>
 <h2 id="2-领域边界">2. 领域边界</h2>
 <p>AI SDLC Harness npm 包化后有三个明确边界：</p>
@@ -156,12 +156,12 @@
 </tr>
 <tr>
 <td>Project Instance Workspace</td>
-<td>保存某个业务项目的 <code>.docs/**</code>、<code>.harness/state/**</code>、local overrides 和业务代码</td>
+<td>保存某个业务项目的 <code>.docs/**</code>、<code>&lt;harnessRoot&gt;/state/**</code>、local overrides 和业务代码</td>
 <td>不直接 fork 通用 Harness 逻辑</td>
 </tr>
 </tbody>
 </table>
-<p>核心原则：包是分发源，<code>.harness/**</code> 是工作区内的 Harness 配置事实源，<code>.agents/skills/**</code> 是 Agent 兼容读取出口，项目状态和文档是不可覆盖事实源。</p>
+<p>核心原则：包是分发源，项目通过 JSON 配置选择 Harness 根目录。默认根目录是 <code>.agents</code>，可以显式配置为 <code>.harness</code>。<code>&lt;harnessRoot&gt;/skills/**</code> 是 Skill fact source，<code>&lt;harnessRoot&gt;/state/**</code> 是项目状态事实源，<code>.docs/**</code> 是项目文档事实源。</p>
 <h2 id="3-主要组件">3. 主要组件</h2>
 <table>
 <thead><tr>
@@ -187,7 +187,7 @@
 </tr>
 <tr>
 <td>Project Config</td>
-<td><code>.harness/config.yaml</code></td>
+<td><code>&lt;harnessRoot&gt;/config.yaml</code></td>
 <td>记录 <code>package</code>、<code>version</code>、<code>schema_version</code>、<code>managed_files</code>、<code>local_overrides</code>、<code>never_overwrite</code></td>
 </tr>
 <tr>
@@ -211,25 +211,25 @@
 <h3 id="4-1-项目接入">4.1 项目接入</h3>
 <pre><code class="language-txt">npm install -D @ai-sdlc/sdlc-harness
 -&gt; npx sdlc-harness init 或 init --adopt
--&gt; 写入 .harness/config.yaml
+-&gt; 写入 &lt;harnessRoot&gt;/config.yaml
 -&gt; sync materialize agent-readable files
 -&gt; doctor 输出接入状态</code></pre>
 <h3 id="4-2-已接入项目升级">4.2 已接入项目升级</h3>
 <pre><code class="language-txt">npm update @ai-sdlc/sdlc-harness
 -&gt; npx sdlc-harness upgrade
--&gt; 读取 .harness/config.yaml
+-&gt; 读取 &lt;harnessRoot&gt;/config.yaml
 -&gt; 执行 migrations
 -&gt; 自动执行 sync
 -&gt; doctor / validate-harness
 -&gt; 输出升级报告</code></pre>
 <h3 id="4-3-当前仓库工作流变更同步到包">4.3 当前仓库工作流变更同步到包</h3>
-<pre><code class="language-txt">修改 AGENTS.md / .harness/agents/skills / .harness/managed/templates / .harness/managed/policies / Makefile / workflow / validators
+<pre><code class="language-txt">修改 AGENTS.md / &lt;harnessRoot&gt;/skills / &lt;harnessRoot&gt;/managed/templates / &lt;harnessRoot&gt;/managed/policies / Makefile / workflow / validators
 -&gt; npx sdlc-harness package sync-source
 -&gt; 更新 packages/sdlc-harness/assets 或包内 validator 入口
 -&gt; npx sdlc-harness package check-source
 -&gt; CI 阻止 source workspace 与 package canonical source 漂移</code></pre>
 <h2 id="5-agent-可读性约束">5. Agent 可读性约束</h2>
-<p>多数 Agent 的 Skill 和规则路由依赖工作区固定路径。因此 <code>AGENTS.md</code> managed block、<code>.harness/**</code> canonical 配置入口和 <code>.agents/skills/**/SKILL.md</code> 兼容出口必须落在业务项目工作区内。npm 包中的 assets 只是分发源，不能替代工作区 materialized files。</p>
+<p>多数 Agent 的 Skill 和规则路由依赖工作区固定路径。因此默认 <code>&lt;harnessRoot&gt;</code> 采用 <code>.agents</code>，让 Skill 位于 <code>.agents/skills/**/SKILL.md</code>。如果项目显式配置 <code>&lt;harnessRoot&gt;</code> 为 <code>.harness</code>，则 Skill 位于 <code>.harness/skills/**/SKILL.md</code>，这时需要由项目入口说明或 Agent 适配层负责读取该路径。npm 包中的 assets 只是分发源，不能替代工作区 materialized files。</p>
 <h2 id="6-覆盖与冲突策略">6. 覆盖与冲突策略</h2>
 <table>
 <thead><tr>
@@ -249,27 +249,22 @@
 <td>根 <code>Makefile</code> 常包含业务命令，不整体覆盖</td>
 </tr>
 <tr>
-<td><code>.harness/agents/skills/**/SKILL.md</code></td>
+<td><code>&lt;harnessRoot&gt;/skills/**/SKILL.md</code></td>
 <td><code>managed</code></td>
 <td>Skill 属于 Harness 配置 canonical root</td>
 </tr>
 <tr>
-<td><code>.agents/skills/**/SKILL.md</code></td>
-<td><code>generated-compat</code></td>
-<td>Agent 需要本地 Skill 文件，保留为兼容出口</td>
-</tr>
-<tr>
-<td><code>.harness/managed/templates/**</code></td>
+<td><code>&lt;harnessRoot&gt;/managed/templates/**</code></td>
 <td><code>managed</code></td>
 <td>模板来自包内 canonical source</td>
 </tr>
 <tr>
-<td><code>.harness/managed/policies/*.yaml</code></td>
+<td><code>&lt;harnessRoot&gt;/managed/policies/*.yaml</code></td>
 <td><code>merge-with-local</code></td>
 <td>默认策略可升级，项目差异放 <code>.local.yaml</code></td>
 </tr>
 <tr>
-<td><code>.harness/config.yaml</code></td>
+<td><code>&lt;harnessRoot&gt;/config.yaml</code></td>
 <td><code>project-owned-with-managed-version</code></td>
 <td>项目拥有，但 CLI 更新版本和 schema 字段</td>
 </tr>
@@ -279,7 +274,7 @@
 <td>项目事实源</td>
 </tr>
 <tr>
-<td><code>.harness/state/**</code></td>
+<td><code>&lt;harnessRoot&gt;/state/**</code></td>
 <td><code>never-overwrite</code></td>
 <td>项目状态事实源</td>
 </tr>
@@ -311,7 +306,7 @@
 <tr>
 <td>Agent 无法读取包内 Skill</td>
 <td>P0</td>
-<td>Skill materialize 到 <code>.harness/agents/skills/**/SKILL.md</code>，并生成 <code>.agents/skills/**/SKILL.md</code> 兼容出口</td>
+<td>默认根目录为 <code>.agents</code>，让 Skill 直接 materialize 到 <code>.agents/skills/**/SKILL.md</code>；显式 <code>.harness</code> 项目需在入口规则中声明 <code>.harness/skills/**</code></td>
 </tr>
 <tr>
 <td>validators 运行环境不一致</td>

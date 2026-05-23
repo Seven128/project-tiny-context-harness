@@ -8,6 +8,11 @@ import { runUpgrade } from "../../packages/sdlc-harness/dist/lib/upgrade.js";
 const root = await mkdtemp(path.join(tmpdir(), "sdlc-harness-upgrade-"));
 
 try {
+  await writeFile(
+    path.join(root, "package.json"),
+    JSON.stringify({ sdlcHarness: { harnessFolderName: ".harness" } }, null, 2),
+    "utf8"
+  );
   await runInit(root, { adopt: true, force: false });
   await mkdir(path.join(root, ".harness/state"), { recursive: true });
   await writeFile(
@@ -47,8 +52,9 @@ never_overwrite:
   assert.match(tasks, /current_task_id/);
 
   const config = await readFile(path.join(root, ".harness/config.yaml"), "utf8");
-  assert.match(config, /\.harness\/agents\/skills/);
-  assert.match(config, /\.agents\/skills/);
+  assert.match(config, /\.harness\/skills/);
+  assert.doesNotMatch(config, /\.harness\/agents\/skills/);
+  assert.doesNotMatch(config, /\.agents\/skills/);
   assert.match(config, /\.harness\/managed\/templates/);
   assert.match(config, /\.harness\/managed\/policies/);
 } finally {

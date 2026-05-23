@@ -1,7 +1,7 @@
 import path from "node:path";
 import { readConfig } from "./config.js";
 import { pathExists, readText, writeTextIfChanged } from "./fs.js";
-import { DEFAULT_CONFIG_PATH } from "./paths.js";
+import { harnessConfigPath, harnessPath, harnessRoot } from "./harness-root.js";
 import type { ManagedFile } from "./types.js";
 import { parseYaml, stringifyYaml } from "./yaml.js";
 
@@ -22,32 +22,34 @@ export interface MigrationReport {
 
 export async function runMigrations(projectRoot: string): Promise<MigrationReport> {
   const report: MigrationReport = { changed: [], skipped: [] };
-  await migrateConfig(projectRoot, report);
-  await migrateTasks(projectRoot, report);
-  await ensureMemory(projectRoot, report);
+  const root = await harnessRoot(projectRoot);
+  await migrateConfig(projectRoot, root, report);
+  await migrateTasks(projectRoot, root, report);
+  await ensureMemory(projectRoot, root, report);
   return report;
 }
 
-async function migrateConfig(projectRoot: string, report: MigrationReport): Promise<void> {
-  const configPath = path.join(projectRoot, DEFAULT_CONFIG_PATH);
+async function migrateConfig(projectRoot: string, root: string, report: MigrationReport): Promise<void> {
+  const relativeConfigPath = await harnessConfigPath(projectRoot);
+  const configPath = path.join(projectRoot, relativeConfigPath);
   if (!(await pathExists(configPath))) {
-    report.skipped.push(DEFAULT_CONFIG_PATH);
+    report.skipped.push(relativeConfigPath);
     return;
   }
   const config = await readConfig(projectRoot);
   config.core.schema_version = CURRENT_SCHEMA_VERSION;
-  config.managed_files = migrateManagedFiles(config.managed_files);
+  config.managed_files = migrateManagedFiles(config.managed_files, root);
   config.local_overrides = config.local_overrides.map((item) =>
-    item === ".harness/policies/*.local.yaml" ? ".harness/managed/policies/*.local.yaml" : item
+    item === ".harness/policies/*.local.yaml" ? harnessPath(root, "managed", "policies", "*.local.yaml") : item
   );
   if (await writeTextIfChanged(configPath, stringifyYaml(config))) {
-    report.changed.push(DEFAULT_CONFIG_PATH);
+    report.changed.push(relativeConfigPath);
   } else {
-    report.skipped.push(DEFAULT_CONFIG_PATH);
+    report.skipped.push(relativeConfigPath);
   }
 }
 
-function migrateManagedFiles(managedFiles: ManagedFile[]): ManagedFile[] {
+function migrateManagedFiles(managedFiles: ManagedFile[], root: string): ManagedFile[] {
   const migrated: ManagedFile[] = [];
   const seen = new Set<string>();
   const push = (item: ManagedFile) => {
@@ -59,21 +61,20 @@ function migrateManagedFiles(managedFiles: ManagedFile[]): ManagedFile[] {
   };
 
   for (const item of managedFiles) {
-    if (item.path === ".agents/skills") {
-      push({ path: ".harness/agents/skills", strategy: "managed" });
-      push({ path: ".agents/skills", strategy: "generated-compat" });
+    if (item.path === ".agents/skills" || item.path === ".harness/agents/skills") {
+      push({ path: harnessPath(root, "skills"), strategy: "managed" });
       continue;
     }
     if (item.path === ".harness/templates") {
-      push({ path: ".harness/managed/templates", strategy: "managed" });
+      push({ path: harnessPath(root, "managed", "templates"), strategy: "managed" });
       continue;
     }
     if (item.path === ".harness/policies") {
-      push({ path: ".harness/managed/policies", strategy: "merge-with-local" });
+      push({ path: harnessPath(root, "managed", "policies"), strategy: "merge-with-local" });
       continue;
     }
     if (item.path === ".harness/make/sdlc-harness.mk") {
-      push({ path: ".harness/managed/make/sdlc-harness.mk", strategy: "managed" });
+      push({ path: harnessPath(root, "managed", "make", "sdlc-harness.mk"), strategy: "managed" });
       continue;
     }
     push(item);
@@ -82,10 +83,11 @@ function migrateManagedFiles(managedFiles: ManagedFile[]): ManagedFile[] {
   return migrated;
 }
 
-async function migrateTasks(projectRoot: string, report: MigrationReport): Promise<void> {
-  const tasksPath = path.join(projectRoot, ".harness/state/tasks.yaml");
+async function migrateTasks(projectRoot: string, root: string, report: MigrationReport): Promise<void> {
+  const relativeTasksPath = harnessPath(root, "state", "tasks.yaml");
+  const tasksPath = path.join(projectRoot, relativeTasksPath);
   if (!(await pathExists(tasksPath))) {
-    report.skipped.push(".harness/state/tasks.yaml");
+    report.skipped.push(relativeTasksPath);
     return;
   }
   const data = (parseYaml(await readText(tasksPath)) ?? {}) as Record<string, unknown>;
@@ -103,20 +105,21 @@ async function migrateTasks(projectRoot: string, report: MigrationReport): Promi
     changed = true;
   }
   if (changed && (await writeTextIfChanged(tasksPath, stringifyYaml(data)))) {
-    report.changed.push(".harness/state/tasks.yaml");
+    report.changed.push(relativeTasksPath);
   } else {
-    report.skipped.push(".harness/state/tasks.yaml");
+    report.skipped.push(relativeTasksPath);
   }
 }
 
-async function ensureMemory(projectRoot: string, report: MigrationReport): Promise<void> {
-  const memoryPath = path.join(projectRoot, ".harness/state/memory.md");
+async function ensureMemory(projectRoot: string, root: string, report: MigrationReport): Promise<void> {
+  const relativeMemoryPath = harnessPath(root, "state", "memory.md");
+  const memoryPath = path.join(projectRoot, relativeMemoryPath);
   if (await pathExists(memoryPath)) {
-    report.skipped.push(".harness/state/memory.md");
+    report.skipped.push(relativeMemoryPath);
     return;
   }
   const content = "# Project Memory\n\n记录跨阶段长期有效的稳定知识，并链接到 `.docs/` 正式出处。\n";
   if (await writeTextIfChanged(memoryPath, content)) {
-    report.changed.push(".harness/state/memory.md");
+    report.changed.push(relativeMemoryPath);
   }
 }

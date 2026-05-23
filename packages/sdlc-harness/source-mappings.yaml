@@ -2,7 +2,7 @@ source_mappings:
   - source: "AGENTS.md"
     target: "packages/sdlc-harness/assets/agents/AGENTS_CORE.md"
     mode: "extract-managed-block"
-  - source: ".harness/agents/skills"
+  - source: ".harness/skills"
     target: "packages/sdlc-harness/assets/skills"
     mode: "copy-tree"
   - source: ".harness/managed/templates"

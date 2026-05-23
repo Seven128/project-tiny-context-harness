@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process";
 import path from "node:path";
 import { promisify } from "node:util";
+import { harnessPath, harnessRoot } from "./harness-root.js";
 import { listFiles, pathExists, readText } from "./fs.js";
 import { parseYaml } from "./yaml.js";
 
@@ -37,25 +38,27 @@ function normalizeGate(gate: string): string {
 
 async function validateHarness(projectRoot: string): Promise<ValidatorReport> {
   const errors: string[] = [];
+  const root = await harnessRoot(projectRoot);
   for (const required of [
     "AGENTS.md",
     ".docs/INDEX.md",
-    ".harness/config.yaml",
-    ".harness/state/lifecycle.yaml",
-    ".harness/state/tasks.yaml",
-    ".harness/agents/skills",
-    ".harness/managed/templates",
-    ".harness/managed/policies"
+    harnessPath(root, "config.yaml"),
+    harnessPath(root, "state", "lifecycle.yaml"),
+    harnessPath(root, "state", "tasks.yaml"),
+    harnessPath(root, "skills"),
+    harnessPath(root, "managed", "templates"),
+    harnessPath(root, "managed", "policies")
   ]) {
     if (!(await pathExists(path.join(projectRoot, required)))) {
       errors.push(`missing ${required}`);
     }
   }
-  return { info: [`validate-harness checked ${projectRoot}`], errors };
+  return { info: [`validate-harness checked ${projectRoot} (${root})`], errors };
 }
 
 async function validateCurrent(projectRoot: string): Promise<ValidatorReport> {
-  const lifecycle = await readYamlObject(path.join(projectRoot, ".harness/state/lifecycle.yaml"));
+  const root = await harnessRoot(projectRoot);
+  const lifecycle = await readYamlObject(path.join(projectRoot, root, "state", "lifecycle.yaml"));
   const current = String(lifecycle.current_phase ?? "");
   const gateByPhase: Record<string, string> = {
     REQUIREMENT_GATHERING: "validate-pm",
@@ -91,7 +94,8 @@ async function validateDesign(projectRoot: string): Promise<ValidatorReport> {
 
 async function validateDev(projectRoot: string): Promise<ValidatorReport> {
   const errors: string[] = [];
-  const tasksData = await readYamlObject(path.join(projectRoot, ".harness/state/tasks.yaml"));
+  const root = await harnessRoot(projectRoot);
+  const tasksData = await readYamlObject(path.join(projectRoot, root, "state", "tasks.yaml"));
   const tasks = Array.isArray(tasksData.tasks) ? (tasksData.tasks as Array<Record<string, unknown>>) : [];
   if (tasks.length === 0) errors.push("tasks.yaml must contain at least one task");
   const open = tasks.filter((task) => ["pending", "in_progress", "blocked", "pending_revision"].includes(String(task.status)));
@@ -107,7 +111,8 @@ async function validateDev(projectRoot: string): Promise<ValidatorReport> {
 }
 
 async function validateCheckpoint(projectRoot: string): Promise<ValidatorReport> {
-  const tasksData = await readYamlObject(path.join(projectRoot, ".harness/state/tasks.yaml"));
+  const root = await harnessRoot(projectRoot);
+  const tasksData = await readYamlObject(path.join(projectRoot, root, "state", "tasks.yaml"));
   const tasks = Array.isArray(tasksData.tasks) ? (tasksData.tasks as Array<Record<string, unknown>>) : [];
   const required = tasks.filter((task) => Boolean(task.checkpoint_required) || task.status === "blocked");
   const errors: string[] = [];
