@@ -28,3 +28,7 @@ export interface SourceMapping {
     | "copy-file"
     | "extract-harness-targets";
 }
+
+export interface SourceMappingsFile {
+  source_mappings: SourceMapping[];
+}

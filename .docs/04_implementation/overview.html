@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="generator" content="AI SDLC Harness build_doc_overviews.py">
-  <meta name="source-hash" content="e38aa4773e97f2ad">
+  <meta name="source-hash" content="7b71fa1ffbc86f28">
   <title>.docs/04_implementation overview</title>
   <style>
     :root {
@@ -116,13 +116,14 @@
     <section class="hero">
       <h1>.docs/04_implementation overview</h1>
       <p class="meta">Generated artifact. Markdown slices remain the source of truth.</p>
-      <p class="meta">Source hash: <code>e38aa4773e97f2ad</code></p>
+      <p class="meta">Source hash: <code>7b71fa1ffbc86f28</code></p>
       <div class="source-list">
         <h2>Source Slices</h2>
         <ol>
 <li><a href="#npm-package-dev-001-package-scaffold-md">npm_package/dev_001_package_scaffold.md</a></li>
 <li><a href="#npm-package-dev-002-sync-init-doctor-md">npm_package/dev_002_sync_init_doctor.md</a></li>
 <li><a href="#npm-package-dev-003-upgrade-migrations-md">npm_package/dev_003_upgrade_migrations.md</a></li>
+<li><a href="#npm-package-dev-004-source-sync-ci-md">npm_package/dev_004_source_sync_ci.md</a></li>
 </ol>
       </div>
     </section>
@@ -530,6 +531,135 @@
 <ul>
 <li>DEV-004 should ensure package canonical assets do not drift from this self-hosting source workspace.</li>
 <li>Future schema versions should add explicit migration records to <code>migrations</code>.</li>
+</ul>
+</article>
+<article class="doc-slice" id="npm-package-dev-004-source-sync-ci-md">
+<header>
+<h2>npm_package/dev_004_source_sync_ci.md</h2>
+<a class="source-link" href="npm_package/dev_004_source_sync_ci.md">Source Markdown</a>
+</header>
+<h1 id="dev-004-package-source-sync-implementation-doc">DEV-004 package source sync Implementation Doc</h1>
+<h2 id="1-关联信息">1. 关联信息</h2>
+<ul>
+<li>Task ID: <code>DEV-004</code></li>
+<li>Linked PRD: <code>.docs/01_product/npm_package_distribution.md</code></li>
+<li>Linked technical design: <code>.docs/03_tech_plan/harness_package_distribution.md</code></li>
+<li>Linked RFC: none</li>
+<li>Linked commit: pending</li>
+</ul>
+<h2 id="2-本次实现范围">2. 本次实现范围</h2>
+<ul>
+<li>新增（Added）:</li>
+<li><code>sdlc-harness package sync-source</code> to update package canonical assets from this self-hosting workspace.</li>
+<li><code>sdlc-harness package check-source</code> to detect drift between source workspace files and package assets.</li>
+<li>Package source mapping implementation for copy-file, copy-tree, managed block extraction, and Makefile target extraction mode.</li>
+<li>CI steps to install Node dependencies, run package tests, and run package source drift check.</li>
+<li>Package assets generated from current <code>AGENTS.md</code>, <code>.agents/skills/**</code>, <code>.harness/templates/**</code>, <code>.harness/policies/**</code>, <code>Makefile</code>, <code>.github/workflows/harness.yml</code>, and <code>tools/**</code>.</li>
+<li>修改（Changed）:</li>
+<li><code>package</code> CLI subcommand now dispatches to real source sync/check behavior.</li>
+<li>未覆盖（Not covered）:</li>
+<li>DEV-005 still needs Node/TypeScript validator command implementation instead of Python validator execution.</li>
+</ul>
+<h2 id="3-真实代码结构">3. 真实代码结构</h2>
+<table>
+<thead><tr>
+<th>文件（File）</th>
+<th>作用（Purpose）</th>
+<th>关键函数/对象（Key Functions/Objects）</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>packages/sdlc-harness/src/lib/package-source.ts</code></td>
+<td>Source workspace to package asset sync/check</td>
+<td><code>syncSource</code>、<code>checkSource</code></td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/src/commands/package-source.ts</code></td>
+<td>CLI adapter</td>
+<td><code>packageSource</code></td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/assets/**</code></td>
+<td>Package canonical assets</td>
+<td>synced skills/templates/policies/validators</td>
+</tr>
+<tr>
+<td><code>.github/workflows/harness.yml</code></td>
+<td>CI drift check</td>
+<td>Node setup, npm test, package check-source</td>
+</tr>
+<tr>
+<td><code>tests/sdlc-harness/package-source.test.mjs</code></td>
+<td>Focused source sync test</td>
+<td><code>syncSource</code>、<code>checkSource</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-核心数据流">4. 核心数据流</h2>
+<pre><code class="language-txt">sdlc-harness package sync-source
+-&gt; read packages/sdlc-harness/source-mappings.yaml
+-&gt; render each source mapping
+-&gt; write packages/sdlc-harness/assets/**
+-&gt; sdlc-harness package check-source verifies no drift</code></pre>
+<h2 id="5-关键实现逻辑">5. 关键实现逻辑</h2>
+<ul>
+<li>输入校验（Input validation）: source mappings are read from the committed package mapping file.</li>
+<li>核心分支（Core branches）:</li>
+<li><code>copy-tree</code> copies directories while skipping <code>.gitkeep</code>.</li>
+<li><code>extract-managed-block</code> uses marker content when present, otherwise copies the whole source file.</li>
+<li><code>check-source</code> hashes normalized expected and existing content.</li>
+<li>异常处理（Error handling）: CLI sets non-zero exit code when drift is detected.</li>
+<li>边界兜底（Boundary fallback）: source mappings exclude <code>.docs/**</code> and <code>.harness/state/**</code>, so project instance state does not enter package assets.</li>
+<li>性能或并发注意事项（Performance or concurrency notes）: source sync removes and rewrites target asset trees deterministically.</li>
+</ul>
+<h2 id="6-与技术方案的偏移">6. 与技术方案的偏移</h2>
+<ul>
+<li>暂无。实现满足“工作流源变化必须自动更新包 canonical source 并可检查漂移”的约束。</li>
+</ul>
+<h2 id="7-测试覆盖-test-coverage">7. 测试覆盖（Test Coverage）</h2>
+<table>
+<thead><tr>
+<th>测试（Test）</th>
+<th>覆盖范围（Coverage）</th>
+<th>结果（Result）</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>npm test</code></td>
+<td>TypeScript build plus init/sync/doctor/upgrade/source-sync tests</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>node packages/sdlc-harness/dist/cli.js package check-source</code></td>
+<td>当前仓库 source-to-package drift check</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>python3 tools/validate_allowed_paths.py</code></td>
+<td>DEV-004 changed file boundaries</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>make validate-checkpoint</code></td>
+<td>DEV-004 checkpoint completeness</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>make lint</code></td>
+<td>Current project lint gate placeholder</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>make test-current-domain</code></td>
+<td>Current task focused gate placeholder</td>
+<td>PASS</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8-后续维护注意事项">8. 后续维护注意事项</h2>
+<ul>
+<li>每次修改 <code>AGENTS.md</code>、Skill、templates、policies、Makefile、workflow 或 validators 后，都要运行 <code>sdlc-harness package sync-source</code> 并确认 <code>check-source</code> 通过。</li>
+<li>DEV-005 should replace Python validators as runtime dependencies with Node/TypeScript validation commands.</li>
 </ul>
 </article>
   </main>
