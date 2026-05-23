@@ -6,7 +6,7 @@
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`
 - Linked RFC: `.docs/rfc/RFC_001_unify_harness_directory_model.md`
-- Linked commit: pending
+- Linked commit: `eb778fd`
 
 ## 2. 本次实现范围
 

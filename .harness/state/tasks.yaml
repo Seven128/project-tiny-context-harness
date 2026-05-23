@@ -132,7 +132,7 @@ tasks:
 
   - id: "DEV-006"
     title: "统一 .harness 工作流根目录并生成 .agents 兼容出口"
-    status: "in_progress"
+    status: "done"
     priority: "P0"
     docs:
       product:
@@ -157,6 +157,7 @@ tasks:
       - "node packages/sdlc-harness/dist/cli.js validate-harness"
       - "make validate-harness"
     implementation_doc: ".docs/04_implementation/npm_package/dev_006_unified_harness_root.md"
-    checkpoint_required: true
+    checkpoint_required: false
     checkpoint: ".harness/state/checkpoints/DEV-006.md"
-    gate_result: ""
+    gate_result: "PASS"
+    commit: "eb778fd"
