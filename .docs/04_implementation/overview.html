@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="generator" content="AI SDLC Harness build_doc_overviews.py">
-  <meta name="source-hash" content="faafdb93c731a6df">
+  <meta name="source-hash" content="f024c4bbecce93d4">
   <title>.docs/04_implementation overview</title>
   <style>
     :root {
@@ -116,7 +116,7 @@
     <section class="hero">
       <h1>.docs/04_implementation overview</h1>
       <p class="meta">Generated artifact. Markdown slices remain the source of truth.</p>
-      <p class="meta">Source hash: <code>faafdb93c731a6df</code></p>
+      <p class="meta">Source hash: <code>f024c4bbecce93d4</code></p>
       <div class="source-list">
         <h2>Source Slices</h2>
         <ol>
@@ -124,6 +124,7 @@
 <li><a href="#npm-package-dev-002-sync-init-doctor-md">npm_package/dev_002_sync_init_doctor.md</a></li>
 <li><a href="#npm-package-dev-003-upgrade-migrations-md">npm_package/dev_003_upgrade_migrations.md</a></li>
 <li><a href="#npm-package-dev-004-source-sync-ci-md">npm_package/dev_004_source_sync_ci.md</a></li>
+<li><a href="#npm-package-dev-005-validate-commands-md">npm_package/dev_005_validate_commands.md</a></li>
 </ol>
       </div>
     </section>
@@ -660,6 +661,139 @@
 <ul>
 <li>每次修改 <code>AGENTS.md</code>、Skill、templates、policies、Makefile、workflow 或 validators 后，都要运行 <code>sdlc-harness package sync-source</code> 并确认 <code>check-source</code> 通过。</li>
 <li>DEV-005 should replace Python validators as runtime dependencies with Node/TypeScript validation commands.</li>
+</ul>
+</article>
+<article class="doc-slice" id="npm-package-dev-005-validate-commands-md">
+<header>
+<h2>npm_package/dev_005_validate_commands.md</h2>
+<a class="source-link" href="npm_package/dev_005_validate_commands.md">Source Markdown</a>
+</header>
+<h1 id="dev-005-typescript-validators-implementation-doc">DEV-005 TypeScript validators Implementation Doc</h1>
+<h2 id="1-关联信息">1. 关联信息</h2>
+<ul>
+<li>Task ID: <code>DEV-005</code></li>
+<li>Linked PRD: <code>.docs/01_product/npm_package_distribution.md</code></li>
+<li>Linked technical design: <code>.docs/03_tech_plan/harness_package_distribution.md</code></li>
+<li>Linked RFC: none</li>
+<li>Linked commit: pending</li>
+</ul>
+<h2 id="2-本次实现范围">2. 本次实现范围</h2>
+<ul>
+<li>新增（Added）:</li>
+<li>TypeScript validator runtime for <code>validate-harness</code>, <code>validate-current</code>, <code>validate-pm</code>, <code>validate-design</code>, <code>validate-dev</code>, and <code>validate-checkpoint</code>.</li>
+<li>CLI aliases such as <code>sdlc-harness validate-harness</code> in addition to <code>sdlc-harness validate validate-harness</code>.</li>
+<li>Node test coverage for validator success cases.</li>
+<li>修改（Changed）:</li>
+<li><code>packages/sdlc-harness/source-mappings.yaml</code> no longer copies Python <code>tools/**</code> into package assets.</li>
+<li>Removed <code>packages/sdlc-harness/assets/validators/**</code> Python assets from the package canonical asset set.</li>
+<li>未覆盖（Not covered）:</li>
+<li>TypeScript validators are intentionally structural first-pass validators; future iterations can expand parity with every Python edge case.</li>
+</ul>
+<h2 id="3-真实代码结构">3. 真实代码结构</h2>
+<table>
+<thead><tr>
+<th>文件（File）</th>
+<th>作用（Purpose）</th>
+<th>关键函数/对象（Key Functions/Objects）</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>packages/sdlc-harness/src/lib/validators.ts</code></td>
+<td>Node-only validator runtime</td>
+<td><code>runValidator</code></td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/src/commands/validate.ts</code></td>
+<td>CLI adapter</td>
+<td><code>validate</code></td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/src/commands/index.ts</code></td>
+<td>Direct validate command aliases</td>
+<td><code>validate-harness</code>、<code>validate-current</code>、<code>validate-pm</code></td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/source-mappings.yaml</code></td>
+<td>Package source mappings</td>
+<td>removed <code>tools -&gt; assets/validators</code> mapping</td>
+</tr>
+<tr>
+<td><code>tests/sdlc-harness/validators.test.mjs</code></td>
+<td>Focused validator tests</td>
+<td><code>runValidator</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-核心数据流">4. 核心数据流</h2>
+<pre><code class="language-txt">sdlc-harness validate-harness
+-&gt; runValidator(projectRoot, gate)
+-&gt; read project files with Node fs/yaml
+-&gt; return info/errors
+-&gt; CLI sets exitCode on errors</code></pre>
+<h2 id="5-关键实现逻辑">5. 关键实现逻辑</h2>
+<ul>
+<li>输入校验（Input validation）: validators check required files, PRD sections, design sections, task status/gate result, and checkpoint presence.</li>
+<li>核心分支（Core branches）:</li>
+<li><code>validate-current</code> dispatches by <code>current_phase</code>.</li>
+<li><code>validate-dev</code> fails while open tasks remain and verifies done task implementation docs.</li>
+<li><code>validate-checkpoint</code> only requires checkpoint files when task state requires them.</li>
+<li>异常处理（Error handling）: unknown validators return an error report; CLI exits non-zero when errors exist.</li>
+<li>边界兜底（Boundary fallback）: missing YAML files are treated as empty objects and surfaced as validation errors.</li>
+<li>性能或并发注意事项（Performance or concurrency notes）: validators run synchronously from the CLI perspective and avoid Python subprocess dependencies.</li>
+</ul>
+<h2 id="6-与技术方案的偏移">6. 与技术方案的偏移</h2>
+<ul>
+<li>This completes the Node-only runtime direction for published npm package validation. Python validators remain in the reference workspace for now, but are no longer copied into package canonical assets.</li>
+</ul>
+<h2 id="7-测试覆盖-test-coverage">7. 测试覆盖（Test Coverage）</h2>
+<table>
+<thead><tr>
+<th>测试（Test）</th>
+<th>覆盖范围（Coverage）</th>
+<th>结果（Result）</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>npm test</code></td>
+<td>TypeScript build plus package command tests</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>sdlc-harness validate-*</code></td>
+<td>Node validator runtime for harness, PM, design, checkpoint</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>sdlc-harness package check-source</code></td>
+<td>Package canonical source drift</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>python3 tools/validate_allowed_paths.py</code></td>
+<td>DEV-005 changed file boundaries</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>make validate-checkpoint</code></td>
+<td>DEV-005 checkpoint completeness</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>make lint</code></td>
+<td>Current project lint gate placeholder</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>make test-current-domain</code></td>
+<td>Current task focused gate placeholder</td>
+<td>PASS</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8-后续维护注意事项">8. 后续维护注意事项</h2>
+<ul>
+<li>Future iterations can deepen TypeScript validator parity and eventually remove duplicated Python validators from the reference workspace.</li>
+<li>Any future source mapping change must be followed by <code>sdlc-harness package sync-source</code> and <code>sdlc-harness package check-source</code>.</li>
 </ul>
 </article>
   </main>

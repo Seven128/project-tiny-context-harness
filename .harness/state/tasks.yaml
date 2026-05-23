@@ -99,7 +99,7 @@ tasks:
 
   - id: "DEV-005"
     title: "将 validators 入口接入 sdlc-harness validate-*"
-    status: "pending"
+    status: "done"
     priority: "P1"
     docs:
       product:
@@ -117,5 +117,5 @@ tasks:
     implementation_doc: ".docs/04_implementation/npm_package/dev_005_validate_commands.md"
     checkpoint_required: false
     checkpoint: ".harness/state/checkpoints/DEV-005.md"
-    gate_result: ""
+    gate_result: "PASS"
     commit: ""

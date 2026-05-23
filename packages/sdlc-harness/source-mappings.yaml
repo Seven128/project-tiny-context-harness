@@ -17,6 +17,3 @@ source_mappings:
   - source: ".github/workflows/harness.yml"
     target: "packages/sdlc-harness/assets/github/harness.yml"
     mode: "copy-file"
-  - source: "tools"
-    target: "packages/sdlc-harness/assets/validators"
-    mode: "copy-tree"
