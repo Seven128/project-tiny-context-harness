@@ -1,5 +1,5 @@
 current_phase: "SPRINTING"
-current_task_id: "DEV-001"
+current_task_id: "DEV-002"
 tasks:
   - id: "DEV-001"
     title: "创建 npm 包骨架与 source sync manifest"
@@ -23,7 +23,7 @@ tasks:
     checkpoint_required: false
     checkpoint: ".harness/state/checkpoints/DEV-001.md"
     gate_result: "PASS"
-    commit: ""
+    commit: "a4b145c"
 
   - id: "DEV-002"
     title: "实现 sync、init、init --adopt 和 doctor 最小闭环"
