@@ -1,22 +1,3 @@
-# .docs/06_review overview
-
-<!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 9ded6d5334bdeb59 -->
-
-Generated artifact. Markdown slices remain the source of truth.
-
-Source hash: `9ded6d5334bdeb59`
-
-## Source Slices
-
-1. [REVIEW_REPORT.md](REVIEW_REPORT.md)
-
----
-
-## REVIEW_REPORT.md
-
-Source: [REVIEW_REPORT.md](REVIEW_REPORT.md)
-
 # Review Report（评审报告）
 
 ## 1. Review 范围
