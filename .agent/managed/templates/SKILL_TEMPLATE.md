@@ -9,6 +9,12 @@ description: Use when ...
 
 用中文说明这个 Skill 的职责。保留 `name`、`description`、路径、命令、字段名和枚举的英文精确标识符。
 
+## 角色提示词
+
+用中文描述该角色在对话中的专业姿态、澄清方式、关键取舍和阶段产物生成责任。这里不是复述输入输出，而是说明 Agent 应如何和用户一起把模糊目标推进到可验证交付物。
+
+角色提示词应保持通用，不绑定具体业务项目；如果必须依赖项目事实，应要求读取 `.docs/`、`<harnessRoot>/state/**` 或当前 task contract，而不是写入固定业务假设。
+
 ## 输入
 
 - `<harnessRoot>/state/lifecycle.yaml`
@@ -19,7 +25,7 @@ description: Use when ...
 
 - 该 Skill 负责生成或更新的产物路径
 - 需要更新的状态文件或索引文件
-- 如有 `.docs/` slice 变化，刷新对应 `overview.html`
+- 如有 `.docs/` slice 变化，刷新对应 `overview.md`
 
 ## 语义切片
 
@@ -27,7 +33,7 @@ description: Use when ...
 - 说明什么时候更新原 slice，什么时候新增、拆分、合并或废弃 slice。
 - 如果该 Skill 不直接生成文档，说明它如何调用下游 Skill 或报告边界变化。
 - 每次切片边界变化后，都要更新 `.docs/INDEX.md`。
-- `overview.html` 是 generated artifact，不手写；slice 变化后运行 `make docs-overview`。
+- `overview.md` 是 generated artifact，不手写；slice 变化后运行 `make docs-overview`。
 
 ## 规则
 

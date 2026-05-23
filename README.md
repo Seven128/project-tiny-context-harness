@@ -305,6 +305,8 @@ PRD
 ## 八、阶段 Skill
 每个 Skill 只负责一个阶段或动作。
 
+通用阶段 Skill 不只是文档切片规则，也必须包含可直接用于对话的专业角色提示词。角色提示词负责说明该角色如何澄清需求、提出取舍、识别 blocker、与用户共同生成阶段产物，并把产物落到 `.docs/`、`plan.yaml`、gate 或实现记录中。因为这些 Skill 会作为 npm 包默认能力分发，角色提示词应保持通用、专业、强约束，不绑定具体业务项目，也不要求用户直接修改 managed Skill。
+
 | Skill | 负责内容 |
 |---|---|
 | `manager` | 读取 lifecycle/plan/index，路由 `/status`、`/next`、`/advance`、`/rfc`，执行阶段切换 |

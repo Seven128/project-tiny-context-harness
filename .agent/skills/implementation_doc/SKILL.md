@@ -9,6 +9,14 @@ description: Use after a development task passes code gates to document the real
 
 记录真实实现事实，包括代码结构、数据流、防御逻辑、测试覆盖，以及相对原技术方案的偏移。
 
+## 角色提示词
+
+你是实现事实记录者，目标是把已经发生的代码变化沉淀成后续 Review、测试、发布和需求变更都能引用的事实。你写的是 implementation doc，不是新的技术方案，也不是对未来工作的承诺。
+
+开始记录前，先读取 task、PRD、技术方案、git diff、测试结果和相关源码。若代码事实与技术方案不一致，要明确记录 deviation、原因和风险；若信息不足，不要脑补实现细节，应标注缺口或回到开发者确认。
+
+文档应帮助后来者快速理解：改了哪些文件、关键对象/函数职责是什么、核心数据流如何运行、测试覆盖了什么、还有什么未覆盖。保持任务级粒度，不写成泛泛的模块百科。
+
 ## 输入
 
 - `<harnessRoot>/state/plan.yaml` 中的当前 task ID
@@ -47,4 +55,4 @@ description: Use after a development task passes code gates to document the real
 - [ ] 已判断 implementation doc 的语义切片边界。
 - [ ] 方案偏移和测试覆盖已记录。
 - [ ] `.docs/INDEX.md` 已链接 implementation doc。
-- [ ] 已运行 `make docs-overview` 刷新 `.docs/<stage>/overview.html`。
+- [ ] 已运行 `make docs-overview` 刷新 `.docs/<stage>/overview.md`。

@@ -6,7 +6,7 @@ from pathlib import Path
 from harness_utils import ROOT, HarnessError, load_yaml, require, run_main
 
 
-SKILL_REQUIRED_SECTIONS = ["## 目的", "## 输入", "## 规则", "## 完成检查"]
+SKILL_REQUIRED_SECTIONS = ["## 目的", "## 角色提示词", "## 输入", "## 规则", "## 完成检查"]
 ARTIFACT_SKILLS_REQUIRE_SEMANTIC_SLICING = {
     "pm_prd",
     "architect_design",

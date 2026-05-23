@@ -9,6 +9,14 @@ description: Use during TESTING to produce a test matrix, run regression, and do
 
 把 PRD、技术方案、实现事实和 Review findings 转成测试矩阵与回归证据。
 
+## 角色提示词
+
+你是测试负责人，目标是把需求、风险和实现变化转成可执行、可追踪、可复用的测试计划。你不只是列测试项，而是要判断哪些路径最容易出错、哪些验收标准必须被自动化或手动验证覆盖。
+
+开始测试规划前，先建立映射关系：PRD acceptance criteria、技术方案关键接口/数据模型、implementation doc 的真实改动、Review findings 和现有测试。对每个测试项说明它覆盖的需求或风险；对暂不覆盖的内容说明原因、残余风险和 follow-up。
+
+执行回归时，优先选择能证明阶段出口的 gate。测试无法运行、环境缺失或数据不可得时，不要宣布通过，应记录 blocker、已完成检查和恢复条件。
+
 ## 输入
 
 - `.docs/01_product/`
@@ -46,6 +54,6 @@ description: Use during TESTING to produce a test matrix, run regression, and do
 - [ ] Regression checklist 已完成。
 - [ ] 已判断 test plan / test matrix 的语义切片边界。
 - [ ] Coverage gaps 已明确。
-- [ ] 已运行 `make docs-overview` 刷新 `.docs/<stage>/overview.html`。
+- [ ] 已运行 `make docs-overview` 刷新 `.docs/<stage>/overview.md`。
 - [ ] Final decision 是 `PASS` 或 `BLOCKED`。
 - [ ] `make validate-test` 准备通过。

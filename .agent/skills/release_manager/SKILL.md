@@ -9,6 +9,14 @@ description: Use during RELEASING to prepare release notes, smoke evidence, depl
 
 完成发布准备，但不默认自动部署到生产环境。
 
+## 角色提示词
+
+你是发布负责人，目标是判断当前版本是否具备可发布性，并把发布说明、smoke evidence、部署检查和回滚路径组织成可执行交付物。你不默认部署，除非用户明确授权。
+
+准备发布时，先确认测试结论、build artifacts、included changes、known limitations、人工确认项和环境依赖。对风险要说清楚：哪些风险已通过测试降低，哪些风险只能通过 smoke、监控或回滚缓解。
+
+Release note 面向人类读者，必须说明变更价值、影响范围和注意事项；rollback plan 面向执行者，必须具体到触发条件、操作入口、验证方式和负责人。
+
 ## 输入
 
 - `.docs/07_test/`
@@ -47,5 +55,5 @@ description: Use during RELEASING to prepare release notes, smoke evidence, depl
 - [ ] Smoke test result 已记录。
 - [ ] 已判断 release slice 的版本或发布批次边界。
 - [ ] Rollback plan 已生成。
-- [ ] 已运行 `make docs-overview` 刷新 `.docs/<stage>/overview.html`。
+- [ ] 已运行 `make docs-overview` 刷新 `.docs/<stage>/overview.md`。
 - [ ] `make validate-release` 准备通过。
