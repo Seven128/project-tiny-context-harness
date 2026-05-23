@@ -535,10 +535,73 @@ AI SDLC Harness 是面向 AI Agent 的需求全链路工作流骨架。它把阶
 
 Agent 仍然以 vibe 方式完成单阶段任务；Harness 负责让整个项目保持阶段连续、事实可寻址、交付可验证、变更可回溯。
 
-## 十七、npm 包化与项目接入
+## 十七、本工作流项目如何使用工作流迭代自己
+本仓库是 AI SDLC Harness 的自举开发仓库。它既保存工作流能力本身，也使用这套工作流来迭代工作流能力本身。
+
+### 17.1 工作流配置的定义与范围
+这里的“工作流配置”不只是一组 prompt 或 Skill，而是定义 Harness 如何运行的一整套协议：
+
+- Agent 入口和角色规则：`AGENTS.md`、`.agents/skills/**/SKILL.md`。
+- 阶段与 gate 策略：`.harness/policies/**`。
+- 阶段产物模板：`.harness/templates/**`。
+- state protocol：`lifecycle.yaml`、`tasks.yaml`、checkpoint、memory 的字段结构、状态枚举、迁移规则和校验逻辑。
+- task/plan protocol：`current_task_id`、`tasks[]`、`allowed_paths`、`required_gates`、`implementation_doc`、`checkpoint_required` 等字段如何组成短期执行记忆。
+- checkpoint protocol：checkpoint 应该有哪些章节、何时触发、如何更新 `latest.md`。
+- memory protocol：memory 如何记录、校验、提升、失效，以及如何链接到 `.docs/**` 正式出处。
+- validators、lifecycle transition、sync、upgrade、migration 等确定性工具逻辑。
+
+需要特别区分：
+
+```txt
+状态结构 / schema / 生命周期规则 = Harness 工作流配置内容
+状态实例 / 当前值 / 历史进度 = 当前项目运行数据
+```
+
+因此，`lifecycle.yaml` 应该有哪些字段、`tasks.yaml` 应该如何拆分、phase/status 枚举是什么、checkpoint 和 memory 如何校验，这些都属于 Harness 工作流配置，应进入 npm 包；但当前项目处于哪个 phase、当前 task 是什么、history 里有哪些时间戳、checkpoint 写了什么、memory 记录了哪些具体事实，则属于当前项目实例数据，不应被包升级覆盖。
+
+### 17.2 为什么可以自迭代
+这个仓库可以使用自己的 Harness 迭代自己，原因是它本身也可以被视为一个使用 AI SDLC Harness 的项目实例。
+
+普通业务项目通过 `sdlc-harness init` 得到工作流入口、Skill、policy、template、state 初始结构和 `.docs/**` 产物目录；本仓库也拥有同样的工作流入口和运行状态。区别在于：普通业务项目在这套工作流之上开发业务系统，而本仓库在这套工作流之上开发 Harness 工作流本身。
+
+也就是说，这个仓库既是 reference implementation，也是 authoring workspace。它不是在工作流之外手工维护工作流，而是在工作流内部把工作流当作当前项目来需求分析、架构设计、开发实现、Review、测试和发布。
+
+### 17.3 本仓库实际开发的项目
+当前这个仓库中实际开发的项目有两个紧密相关的目标：
+
+1. 迭代 AI SDLC Harness 工作流配置本身：
+   - 调整阶段规则、Skill、policy、template、state protocol、checkpoint protocol、memory protocol 和 validators。
+   - 通过 `.docs/**` 记录需求、架构、技术方案和真实实现。
+   - 通过 `.harness/state/**` 记录当前自举项目的运行状态。
+
+2. 开发并迭代 npm 包分发能力：
+   - 将工作流配置和产物模板打包为 `@ai-sdlc/sdlc-harness`。
+   - 让其它项目可以通过 `sdlc-harness init`、`sync`、`upgrade` 低成本接入和持续升级。
+   - 通过 `sdlc-harness package sync-source` 和 `sdlc-harness package check-source` 保证本仓库工作流源内容变化后，包内 canonical source 同步更新，不发生漂移。
+
+所以，本仓库保存的是：
+
+```txt
+Harness 工作流能力源码
++ 当前自举项目的 state data
++ 当前自举项目的 .docs 产物
++ 面向其它项目分发的 npm 包源码
+```
+
+而 npm 包导出的是：
+
+```txt
+state schemas / initial state templates / validators / lifecycle transition logic
+task-plan protocol / checkpoint protocol / memory protocol
+skills / policies / templates / sync / upgrade / migrations
+```
+
+不导出的是当前项目的具体运行数据，例如当前 `current_phase`、当前 `tasks.yaml` 内容、checkpoint 内容、memory 条目和 `.docs/**` 产物。
+
+## 十八、npm 包化与项目接入
 当前仓库可以作为参考实现和模板仓库，但长期产品形态不应依赖每个业务项目直接 fork 整套配置。更稳的方式是把通用 Harness 能力拆成可版本化的 npm 包，并把业务项目中的工作流文件视为由包同步出来的 agent-readable artifact。
 
-### 17.1 包与命令名称
+### 18.1 包与命令名称
 npm 包建议命名为 `@ai-sdlc/sdlc-harness`，命令入口统一使用：
 
 ```sh
@@ -547,7 +610,7 @@ sdlc-harness <command>
 
 不要把命令直接命名为 `harness`，避免与其它工具、脚本或项目内部概念冲突。
 
-### 17.2 分层模型
+### 18.2 分层模型
 包内维护 canonical source：
 - CLI，例如 `sdlc-harness init`、`sdlc-harness sync`、`sdlc-harness upgrade`、`sdlc-harness doctor`。
 - 默认 `.agents/skills/*/SKILL.md`。
@@ -563,7 +626,7 @@ sdlc-harness <command>
 - `.harness/config.yaml`，记录 core version、schema version、managed files 和 local overrides。
 - `.docs/**`，作为当前项目的需求、方案、实现、测试、发布事实源。
 
-### 17.3 为什么仍要同步到工作区
+### 18.3 为什么仍要同步到工作区
 多数 Agent 在启动或路由 Skill 时，只读取工作区内固定目录，例如 `AGENTS.md`、`.agents/skills/**/SKILL.md` 或类似约定。它们通常不会直接扫描 `node_modules` 中的包内容。
 
 因此 npm 包不能只把 Skill 藏在包里。正确流程是：
@@ -576,7 +639,7 @@ state protocol = 包提供 schema / template / validator / migration
 .harness/state concrete data + .docs = 项目事实源，升级不覆盖
 ```
 
-### 17.4 新项目和已有项目接入
+### 18.4 新项目和已有项目接入
 新项目接入：
 
 ```sh
@@ -593,7 +656,7 @@ npx sdlc-harness init --adopt
 
 `init --adopt` 不假设项目为空，应尽量只创建最小 Harness 入口、扫描已有 README/docs/src/tests，并通过 `sdlc-harness doctor` 报告缺失产物或推荐阶段。
 
-### 17.5 同步与升级
+### 18.5 同步与升级
 同步命令：
 
 ```sh
@@ -617,7 +680,7 @@ npx sdlc-harness upgrade
 5. 自动执行 sync，把最新 Skill、模板、策略和状态模板 materialize 到工作区。
 6. 运行 `sdlc-harness doctor` 或对应 `make validate-harness`，输出升级报告。
 
-### 17.6 本地覆盖规则
+### 18.6 本地覆盖规则
 项目本地定制不应直接改 managed files。推荐使用：
 
 ```txt
