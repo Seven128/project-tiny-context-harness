@@ -21,7 +21,7 @@
 | 架构决策 | `.docs/05_decisions/` | ADR 和长期技术决策 | 暂无 |
 | Review | `.docs/06_review/` | Review reports、风险、重构建议 | [MVP release candidate review](06_review/REVIEW_REPORT.md) |
 | 测试 | `.docs/07_test/` | Test plan、test matrix、回归记录 | [MVP package release test plan](07_test/TEST_PLAN.md) |
-| 发布 | `.docs/08_release/` | Release note、smoke results、rollback plan | 暂无 |
+| 发布 | `.docs/08_release/` | Release note、smoke results、rollback plan | [v0.1.0 npm release](08_release/v0.1.0_npm_release.md) |
 | RFC | `.docs/rfc/` | 需求变更和影响补丁 | [RFC_001 统一 .harness 工作流根目录](rfc/RFC_001_unify_harness_directory_model.md), [RFC_002 可配置 Harness 根目录](rfc/RFC_002_configurable_harness_root.md), [RFC_003 init 询问 Harness 根目录并默认使用 .agent](rfc/RFC_003_init_prompt_and_default_agent_root.md), [RFC_004 简化 task/checkpoint/archive 模型](rfc/RFC_004_simplify_task_checkpoint_archive_model.md), [RFC_005 合并 checkpoint 到 plan.yaml](rfc/RFC_005_merge_checkpoint_into_plan.md) |
 
 ## 维护规则
