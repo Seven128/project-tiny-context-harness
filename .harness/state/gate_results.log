@@ -18,3 +18,7 @@
 2026-05-23T09:59:31Z phase=SPRINTING gate="sdlc-harness package check-source" result=PASS note="DEV-005 package drift check"
 2026-05-23T09:59:31Z phase=SPRINTING gate="make lint" result=PASS note="DEV-005 required gate"
 2026-05-23T09:59:31Z phase=SPRINTING gate="make test-current-domain" result=PASS note="DEV-005 required gate"
+2026-05-23T10:57:05Z phase=SPRINTING gate="npm test" result=PASS note="DEV-006 required gate"
+2026-05-23T10:57:05Z phase=SPRINTING gate="node packages/sdlc-harness/dist/cli.js package check-source" result=PASS note="DEV-006 required gate"
+2026-05-23T10:57:05Z phase=SPRINTING gate="node packages/sdlc-harness/dist/cli.js validate-harness" result=PASS note="DEV-006 required gate"
+2026-05-23T10:57:05Z phase=SPRINTING gate="make validate-harness" result=PASS note="DEV-006 required gate"

@@ -13,13 +13,14 @@ export function defaultConfig(): HarnessConfig {
     },
     managed_files: [
       { path: "AGENTS.md", strategy: "merge-block" },
-      { path: ".agents/skills", strategy: "generated" },
-      { path: ".harness/templates", strategy: "managed" },
-      { path: ".harness/policies", strategy: "merge-with-local" },
-      { path: ".harness/make/sdlc-harness.mk", strategy: "managed" },
+      { path: ".harness/agents/skills", strategy: "managed" },
+      { path: ".agents/skills", strategy: "generated-compat" },
+      { path: ".harness/managed/templates", strategy: "managed" },
+      { path: ".harness/managed/policies", strategy: "merge-with-local" },
+      { path: ".harness/managed/make/sdlc-harness.mk", strategy: "managed" },
       { path: ".github/workflows/harness.yml", strategy: "create-if-missing" }
     ],
-    local_overrides: [".harness/overrides/**", ".harness/policies/*.local.yaml"],
+    local_overrides: [".harness/overrides/**", ".harness/managed/policies/*.local.yaml"],
     never_overwrite: [".docs/**", ".harness/state/**", "src/**", "tests/**"]
   };
 }

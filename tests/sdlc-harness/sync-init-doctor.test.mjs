@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { runDoctor } from "../../packages/sdlc-harness/dist/lib/doctor.js";
@@ -20,6 +20,10 @@ try {
 
   const syncReport = await runSync(root);
   assert.equal(syncReport.blocked.length, 0);
+  await stat(path.join(root, ".harness/agents/skills/manager/SKILL.md"));
+  await stat(path.join(root, ".agents/skills/manager/SKILL.md"));
+  await stat(path.join(root, ".harness/managed/templates/CHECKPOINT_TEMPLATE.md"));
+  await stat(path.join(root, ".harness/managed/policies/phase_contracts.yaml"));
 
   const doctor = await runDoctor(root);
   assert.deepEqual(doctor.errors, []);

@@ -43,6 +43,9 @@ async function validateHarness(projectRoot: string): Promise<ValidatorReport> {
     ".harness/config.yaml",
     ".harness/state/lifecycle.yaml",
     ".harness/state/tasks.yaml",
+    ".harness/agents/skills",
+    ".harness/managed/templates",
+    ".harness/managed/policies",
     ".agents/skills"
   ]) {
     if (!(await pathExists(path.join(projectRoot, required)))) {

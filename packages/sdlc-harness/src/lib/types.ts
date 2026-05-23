@@ -14,6 +14,7 @@ export interface ManagedFile {
   strategy:
     | "merge-block"
     | "generated"
+    | "generated-compat"
     | "managed"
     | "merge-with-local"
     | "create-if-missing";

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="generator" content="AI SDLC Harness build_doc_overviews.py">
-  <meta name="source-hash" content="0fbc0d3a6918404d">
+  <meta name="source-hash" content="f0c0c07bdd0c803f">
   <title>.docs/04_implementation overview</title>
   <style>
     :root {
@@ -116,7 +116,7 @@
     <section class="hero">
       <h1>.docs/04_implementation overview</h1>
       <p class="meta">Generated artifact. Markdown slices remain the source of truth.</p>
-      <p class="meta">Source hash: <code>0fbc0d3a6918404d</code></p>
+      <p class="meta">Source hash: <code>f0c0c07bdd0c803f</code></p>
       <div class="source-list">
         <h2>Source Slices</h2>
         <ol>
@@ -125,6 +125,7 @@
 <li><a href="#npm-package-dev-003-upgrade-migrations-md">npm_package/dev_003_upgrade_migrations.md</a></li>
 <li><a href="#npm-package-dev-004-source-sync-ci-md">npm_package/dev_004_source_sync_ci.md</a></li>
 <li><a href="#npm-package-dev-005-validate-commands-md">npm_package/dev_005_validate_commands.md</a></li>
+<li><a href="#npm-package-dev-006-unified-harness-root-md">npm_package/dev_006_unified_harness_root.md</a></li>
 </ol>
       </div>
     </section>
@@ -794,6 +795,168 @@
 <ul>
 <li>Future iterations can deepen TypeScript validator parity and eventually remove duplicated Python validators from the reference workspace.</li>
 <li>Any future source mapping change must be followed by <code>sdlc-harness package sync-source</code> and <code>sdlc-harness package check-source</code>.</li>
+</ul>
+</article>
+<article class="doc-slice" id="npm-package-dev-006-unified-harness-root-md">
+<header>
+<h2>npm_package/dev_006_unified_harness_root.md</h2>
+<a class="source-link" href="npm_package/dev_006_unified_harness_root.md">Source Markdown</a>
+</header>
+<h1 id="dev-006-unified-harness-root-implementation-doc">DEV-006 Unified Harness Root Implementation Doc</h1>
+<h2 id="1-关联信息">1. 关联信息</h2>
+<ul>
+<li>Task ID: <code>DEV-006</code></li>
+<li>Linked PRD: <code>.docs/01_product/npm_package_distribution.md</code></li>
+<li>Linked technical design: <code>.docs/03_tech_plan/harness_package_distribution.md</code></li>
+<li>Linked RFC: <code>.docs/rfc/RFC_001_unify_harness_directory_model.md</code></li>
+<li>Linked commit: pending</li>
+</ul>
+<h2 id="2-本次实现范围">2. 本次实现范围</h2>
+<ul>
+<li>新增（Added）:</li>
+<li><code>.harness/agents/skills/**</code> as the workspace canonical Skill source.</li>
+<li><code>.harness/managed/templates/**</code>、<code>.harness/managed/policies/**</code> and <code>.harness/managed/make/sdlc-harness.mk</code> as package-managed workspace assets.</li>
+<li>Migration coverage for old <code>.agents/skills</code>、<code>.harness/templates</code>、<code>.harness/policies</code> and <code>.harness/make</code> config paths.</li>
+<li>修改（Changed）:</li>
+<li>Package default config, sync engine, source mappings, and Node validators now target the <code>.harness</code> canonical layout.</li>
+<li><code>sdlc-harness sync</code> materializes both <code>.harness/agents/skills/**</code> and <code>.agents/skills/**</code>.</li>
+<li>README explains <code>.harness</code> as canonical root and <code>.agents</code> as compatibility view.</li>
+<li>Package tests cover new sync output, source sync mappings, validator requirements, and config migration.</li>
+<li>未覆盖（Not covered）:</li>
+<li>Current Python local gate scripts still read legacy <code>.harness/policies/**</code> and <code>.harness/templates/**</code>; these legacy mirrors remain in this workspace for transition compatibility.</li>
+</ul>
+<h2 id="3-真实代码结构">3. 真实代码结构</h2>
+<table>
+<thead><tr>
+<th>文件（File）</th>
+<th>作用（Purpose）</th>
+<th>关键函数/对象（Key Functions/Objects）</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>.harness/config.yaml</code></td>
+<td>Current workspace package sync config</td>
+<td><code>managed_files</code>, <code>local_overrides</code></td>
+</tr>
+<tr>
+<td><code>.harness/agents/skills/**/SKILL.md</code></td>
+<td>Canonical workspace Skill source</td>
+<td>phase Skill files</td>
+</tr>
+<tr>
+<td><code>.harness/managed/templates/**</code></td>
+<td>Canonical package-managed templates</td>
+<td>PRD/RFC/checkpoint/implementation templates</td>
+</tr>
+<tr>
+<td><code>.harness/managed/policies/**</code></td>
+<td>Canonical package-managed policies</td>
+<td><code>phase_contracts</code>, <code>gates</code>, <code>allowed_paths</code>, <code>risk_matrix</code></td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/src/lib/config.ts</code></td>
+<td>Default package config</td>
+<td><code>defaultConfig</code></td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/src/lib/sync-engine.ts</code></td>
+<td>Materializes package assets into projects</td>
+<td><code>runSync</code>, <code>syncManagedFile</code></td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/src/lib/migrations.ts</code></td>
+<td>Upgrades old project config layouts</td>
+<td><code>migrateConfig</code>, <code>migrateManagedFiles</code></td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/src/lib/validators.ts</code></td>
+<td>Node validation runtime</td>
+<td><code>validateHarness</code></td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/source-mappings.yaml</code></td>
+<td>Source workspace to package asset mapping</td>
+<td><code>.harness/agents</code>, <code>.harness/managed</code> sources</td>
+</tr>
+<tr>
+<td><code>tests/sdlc-harness/*.test.mjs</code></td>
+<td>Regression coverage for package behavior</td>
+<td>sync/init/doctor, upgrade, validators, package source</td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-核心数据流">4. 核心数据流</h2>
+<pre><code class="language-txt">harness source workspace
+-&gt; .harness/agents/skills + .harness/managed/*
+-&gt; sdlc-harness package sync-source
+-&gt; packages/sdlc-harness/assets/*
+-&gt; sdlc-harness sync
+-&gt; project .harness canonical files + .agents compatibility view
+-&gt; validate-harness / doctor</code></pre>
+<h2 id="5-关键实现逻辑">5. 关键实现逻辑</h2>
+<ul>
+<li>输入校验（Input validation）:</li>
+<li>Node <code>validate-harness</code> now requires <code>.harness/agents/skills</code>、<code>.harness/managed/templates</code>、<code>.harness/managed/policies</code> and <code>.agents/skills</code>.</li>
+<li><code>package check-source</code> reads package mappings from <code>.harness/agents/skills</code> and <code>.harness/managed/**</code>.</li>
+<li>核心分支（Core branches）:</li>
+<li><code>syncManagedFile</code> writes canonical Skill assets to <code>.harness/agents/skills</code>.</li>
+<li>The same Skill assets are also written to <code>.agents/skills</code> for compatibility with Agent startup conventions.</li>
+<li>Legacy config paths are still recognized by <code>syncManagedFile</code> so older config files do not immediately break.</li>
+<li><code>migrateManagedFiles</code> rewrites old config paths to the new canonical layout during <code>upgrade</code>.</li>
+<li>异常处理（Error handling）:</li>
+<li>Missing package asset directories are reported as skipped sync entries, preserving existing behavior.</li>
+<li>Config migration deduplicates managed paths so old <code>.agents/skills</code> does not create duplicate entries.</li>
+<li>边界兜底（Boundary fallback）:</li>
+<li>Legacy <code>.harness/templates/**</code> and <code>.harness/policies/**</code> remain in the source workspace for current Python gates.</li>
+<li>New npm package behavior does not rely on Python validators.</li>
+<li>性能或并发注意事项（Performance or concurrency notes）:</li>
+<li>Sync remains file-copy based and deterministic; no concurrent writes were introduced.</li>
+</ul>
+<h2 id="6-与技术方案的偏移">6. 与技术方案的偏移</h2>
+<ul>
+<li>RFC_001 planned <code>.harness/managed/**</code> as canonical package-managed layout. The implementation applies that to npm package source mappings, sync, migrations, and Node validators.</li>
+<li>Full removal of legacy <code>.harness/templates/**</code> and <code>.harness/policies/**</code> is intentionally deferred because current local Python gates still depend on those paths.</li>
+</ul>
+<h2 id="7-测试覆盖-test-coverage">7. 测试覆盖（Test Coverage）</h2>
+<table>
+<thead><tr>
+<th>测试（Test）</th>
+<th>覆盖范围（Coverage）</th>
+<th>结果（Result）</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>npm test</code></td>
+<td>TypeScript build and all package tests</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>node packages/sdlc-harness/dist/cli.js package check-source</code></td>
+<td>Source workspace to package assets drift check</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>node packages/sdlc-harness/dist/cli.js validate-harness</code></td>
+<td>Node validator for new canonical layout</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>make validate-harness</code></td>
+<td>Local Harness scaffold, prompt language, checkpoint, and doc overview gates</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>make validate-checkpoint</code></td>
+<td>DEV-006 checkpoint completeness after &gt;5 file change trigger</td>
+<td>PASS</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8-后续维护注意事项">8. 后续维护注意事项</h2>
+<ul>
+<li>Future work can migrate local Python gate scripts to <code>.harness/managed/**</code> and then archive legacy <code>.harness/templates/**</code> / <code>.harness/policies/**</code>.</li>
+<li>When Skill, template, policy, Makefile, workflow, or AGENTS source changes, run <code>sdlc-harness package sync-source</code> and <code>package check-source</code>.</li>
+<li>Keep <code>.agents/skills/**</code> generated from <code>.harness/agents/skills/**</code>; do not treat <code>.agents</code> as the source of truth.</li>
 </ul>
 </article>
   </main>

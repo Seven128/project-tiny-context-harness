@@ -42,19 +42,26 @@ async function syncManagedFile(projectRoot: string, managedFile: ManagedFile, re
     await syncAgentsBlock(destination, report);
     return;
   }
+  if (managedFile.path === ".harness/agents/skills") {
+    await syncTree(packageAssetPath("skills"), destination, report);
+    return;
+  }
   if (managedFile.path === ".agents/skills") {
     await syncTree(packageAssetPath("skills"), destination, report);
     return;
   }
-  if (managedFile.path === ".harness/templates") {
+  if (managedFile.path === ".harness/managed/templates" || managedFile.path === ".harness/templates") {
     await syncTree(packageAssetPath("templates"), destination, report);
     return;
   }
-  if (managedFile.path === ".harness/policies") {
+  if (managedFile.path === ".harness/managed/policies" || managedFile.path === ".harness/policies") {
     await syncTree(packageAssetPath("policies"), destination, report);
     return;
   }
-  if (managedFile.path === ".harness/make/sdlc-harness.mk") {
+  if (
+    managedFile.path === ".harness/managed/make/sdlc-harness.mk" ||
+    managedFile.path === ".harness/make/sdlc-harness.mk"
+  ) {
     await syncFile(packageAssetPath("make", "sdlc-harness.mk"), destination, report, "skip-if-missing");
     return;
   }

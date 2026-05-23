@@ -7,16 +7,16 @@ import { checkSource, syncSource } from "../../packages/sdlc-harness/dist/lib/pa
 const fixture = await mkdtemp(path.join(tmpdir(), "sdlc-harness-source-"));
 
 try {
-  await mkdir(path.join(fixture, ".agents/skills/example"), { recursive: true });
-  await mkdir(path.join(fixture, ".harness/templates"), { recursive: true });
-  await mkdir(path.join(fixture, ".harness/policies"), { recursive: true });
+  await mkdir(path.join(fixture, ".harness/agents/skills/example"), { recursive: true });
+  await mkdir(path.join(fixture, ".harness/managed/templates"), { recursive: true });
+  await mkdir(path.join(fixture, ".harness/managed/policies"), { recursive: true });
   await mkdir(path.join(fixture, ".github/workflows"), { recursive: true });
   await mkdir(path.join(fixture, "tools"), { recursive: true });
   await mkdir(path.join(fixture, "packages/sdlc-harness"), { recursive: true });
   await writeFile(path.join(fixture, "AGENTS.md"), "# AI SDLC Harness\n", "utf8");
-  await writeFile(path.join(fixture, ".agents/skills/example/SKILL.md"), "# Skill\n", "utf8");
-  await writeFile(path.join(fixture, ".harness/templates/EXAMPLE.md"), "# Template\n", "utf8");
-  await writeFile(path.join(fixture, ".harness/policies/example.yaml"), "ok: true\n", "utf8");
+  await writeFile(path.join(fixture, ".harness/agents/skills/example/SKILL.md"), "# Skill\n", "utf8");
+  await writeFile(path.join(fixture, ".harness/managed/templates/EXAMPLE.md"), "# Template\n", "utf8");
+  await writeFile(path.join(fixture, ".harness/managed/policies/example.yaml"), "ok: true\n", "utf8");
   await writeFile(path.join(fixture, ".github/workflows/harness.yml"), "name: Harness\n", "utf8");
   await writeFile(path.join(fixture, "Makefile"), "help:\n\t@echo ok\n", "utf8");
   await writeFile(path.join(fixture, "tools/example.py"), "print('ok')\n", "utf8");
@@ -26,13 +26,13 @@ try {
   - source: "AGENTS.md"
     target: "packages/sdlc-harness/assets/agents/AGENTS_CORE.md"
     mode: "extract-managed-block"
-  - source: ".agents/skills"
+  - source: ".harness/agents/skills"
     target: "packages/sdlc-harness/assets/skills"
     mode: "copy-tree"
-  - source: ".harness/templates"
+  - source: ".harness/managed/templates"
     target: "packages/sdlc-harness/assets/templates"
     mode: "copy-tree"
-  - source: ".harness/policies"
+  - source: ".harness/managed/policies"
     target: "packages/sdlc-harness/assets/policies"
     mode: "copy-tree"
   - source: "Makefile"
@@ -41,9 +41,6 @@ try {
   - source: ".github/workflows/harness.yml"
     target: "packages/sdlc-harness/assets/github/harness.yml"
     mode: "copy-file"
-  - source: "tools"
-    target: "packages/sdlc-harness/assets/validators"
-    mode: "copy-tree"
 `,
     "utf8"
   );

@@ -2,6 +2,7 @@ import path from "node:path";
 import { readConfig } from "./config.js";
 import { pathExists, readText, writeTextIfChanged } from "./fs.js";
 import { DEFAULT_CONFIG_PATH } from "./paths.js";
+import type { ManagedFile } from "./types.js";
 import { parseYaml, stringifyYaml } from "./yaml.js";
 
 export const CURRENT_SCHEMA_VERSION = "1";
@@ -35,11 +36,50 @@ async function migrateConfig(projectRoot: string, report: MigrationReport): Prom
   }
   const config = await readConfig(projectRoot);
   config.core.schema_version = CURRENT_SCHEMA_VERSION;
+  config.managed_files = migrateManagedFiles(config.managed_files);
+  config.local_overrides = config.local_overrides.map((item) =>
+    item === ".harness/policies/*.local.yaml" ? ".harness/managed/policies/*.local.yaml" : item
+  );
   if (await writeTextIfChanged(configPath, stringifyYaml(config))) {
     report.changed.push(DEFAULT_CONFIG_PATH);
   } else {
     report.skipped.push(DEFAULT_CONFIG_PATH);
   }
+}
+
+function migrateManagedFiles(managedFiles: ManagedFile[]): ManagedFile[] {
+  const migrated: ManagedFile[] = [];
+  const seen = new Set<string>();
+  const push = (item: ManagedFile) => {
+    if (seen.has(item.path)) {
+      return;
+    }
+    seen.add(item.path);
+    migrated.push(item);
+  };
+
+  for (const item of managedFiles) {
+    if (item.path === ".agents/skills") {
+      push({ path: ".harness/agents/skills", strategy: "managed" });
+      push({ path: ".agents/skills", strategy: "generated-compat" });
+      continue;
+    }
+    if (item.path === ".harness/templates") {
+      push({ path: ".harness/managed/templates", strategy: "managed" });
+      continue;
+    }
+    if (item.path === ".harness/policies") {
+      push({ path: ".harness/managed/policies", strategy: "merge-with-local" });
+      continue;
+    }
+    if (item.path === ".harness/make/sdlc-harness.mk") {
+      push({ path: ".harness/managed/make/sdlc-harness.mk", strategy: "managed" });
+      continue;
+    }
+    push(item);
+  }
+
+  return migrated;
 }
 
 async function migrateTasks(projectRoot: string, report: MigrationReport): Promise<void> {
