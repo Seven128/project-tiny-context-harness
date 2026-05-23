@@ -1,5 +1,5 @@
 current_phase: "SPRINTING"
-current_task_id: "DEV-004"
+current_task_id: "DEV-005"
 tasks:
   - id: "DEV-001"
     title: "创建 npm 包骨架与 source sync manifest"
@@ -95,7 +95,7 @@ tasks:
     checkpoint_required: false
     checkpoint: ".harness/state/checkpoints/DEV-004.md"
     gate_result: "PASS"
-    commit: ""
+    commit: "ee54878"
 
   - id: "DEV-005"
     title: "将 validators 入口接入 sdlc-harness validate-*"
