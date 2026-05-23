@@ -52,7 +52,7 @@ tasks:
 
   - id: "DEV-003"
     title: "实现 upgrade、migration 和自动 sync"
-    status: "pending"
+    status: "done"
     priority: "P0"
     docs:
       product:
@@ -70,7 +70,7 @@ tasks:
     implementation_doc: ".docs/04_implementation/npm_package/dev_003_upgrade_migrations.md"
     checkpoint_required: false
     checkpoint: ".harness/state/checkpoints/DEV-003.md"
-    gate_result: ""
+    gate_result: "PASS"
     commit: ""
 
   - id: "DEV-004"

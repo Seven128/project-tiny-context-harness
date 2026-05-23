@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="generator" content="AI SDLC Harness build_doc_overviews.py">
-  <meta name="source-hash" content="ec0f12e44eec75ee">
+  <meta name="source-hash" content="eb9c7c52697a6ef1">
   <title>.docs/04_implementation overview</title>
   <style>
     :root {
@@ -116,12 +116,13 @@
     <section class="hero">
       <h1>.docs/04_implementation overview</h1>
       <p class="meta">Generated artifact. Markdown slices remain the source of truth.</p>
-      <p class="meta">Source hash: <code>ec0f12e44eec75ee</code></p>
+      <p class="meta">Source hash: <code>eb9c7c52697a6ef1</code></p>
       <div class="source-list">
         <h2>Source Slices</h2>
         <ol>
 <li><a href="#npm-package-dev-001-package-scaffold-md">npm_package/dev_001_package_scaffold.md</a></li>
 <li><a href="#npm-package-dev-002-sync-init-doctor-md">npm_package/dev_002_sync_init_doctor.md</a></li>
+<li><a href="#npm-package-dev-003-upgrade-migrations-md">npm_package/dev_003_upgrade_migrations.md</a></li>
 </ol>
       </div>
     </section>
@@ -411,6 +412,124 @@
 <li>DEV-003 should make <code>upgrade</code> call migration and then <code>sync</code>.</li>
 <li>DEV-004 should populate package assets from source mappings and enforce drift checks.</li>
 <li>DEV-005 should replace Python validator dependency with Node/TypeScript validation commands.</li>
+</ul>
+</article>
+<article class="doc-slice" id="npm-package-dev-003-upgrade-migrations-md">
+<header>
+<h2>npm_package/dev_003_upgrade_migrations.md</h2>
+<a class="source-link" href="npm_package/dev_003_upgrade_migrations.md">Source Markdown</a>
+</header>
+<h1 id="dev-003-upgrade-migrations-implementation-doc">DEV-003 upgrade/migrations Implementation Doc</h1>
+<h2 id="1-关联信息">1. 关联信息</h2>
+<ul>
+<li>Task ID: <code>DEV-003</code></li>
+<li>Linked PRD: <code>.docs/01_product/npm_package_distribution.md</code></li>
+<li>Linked technical design: <code>.docs/03_tech_plan/harness_package_distribution.md</code></li>
+<li>Linked RFC: none</li>
+<li>Linked commit: pending</li>
+</ul>
+<h2 id="2-本次实现范围">2. 本次实现范围</h2>
+<ul>
+<li>新增（Added）:</li>
+<li><code>runMigrations</code> for config normalization, state task shape migration, and memory file creation.</li>
+<li><code>runUpgrade</code>, which runs migrations, then <code>sync</code>, then <code>doctor</code>.</li>
+<li>Node test coverage for upgrade preserving and migrating project state structure.</li>
+<li>修改（Changed）:</li>
+<li><code>sdlc-harness upgrade</code> command now calls real upgrade logic.</li>
+<li>未覆盖（Not covered）:</li>
+<li>No versioned multi-step migration chain yet; current schema version is <code>1</code>.</li>
+<li>No package source drift check yet; DEV-004 covers that.</li>
+</ul>
+<h2 id="3-真实代码结构">3. 真实代码结构</h2>
+<table>
+<thead><tr>
+<th>文件（File）</th>
+<th>作用（Purpose）</th>
+<th>关键函数/对象（Key Functions/Objects）</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>packages/sdlc-harness/src/lib/migrations.ts</code></td>
+<td>State/config migration engine</td>
+<td><code>runMigrations</code>、<code>CURRENT_SCHEMA_VERSION</code></td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/src/lib/upgrade.ts</code></td>
+<td>Upgrade orchestration</td>
+<td><code>runUpgrade</code></td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/src/commands/upgrade.ts</code></td>
+<td>CLI adapter</td>
+<td><code>upgrade</code></td>
+</tr>
+<tr>
+<td><code>tests/sdlc-harness/upgrade.test.mjs</code></td>
+<td>Focused upgrade test</td>
+<td><code>runUpgrade</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-核心数据流">4. 核心数据流</h2>
+<pre><code class="language-txt">sdlc-harness upgrade
+-&gt; runMigrations
+-&gt; runSync
+-&gt; runDoctor
+-&gt; report blockers or success</code></pre>
+<h2 id="5-关键实现逻辑">5. 关键实现逻辑</h2>
+<ul>
+<li>输入校验（Input validation）: Upgrade uses existing config/state readers and doctor after migration.</li>
+<li>核心分支（Core branches）:</li>
+<li>Missing config is skipped by migration and reported later by doctor.</li>
+<li><code>tasks.yaml</code> gets missing <code>current_phase</code>, <code>current_task_id</code>, and <code>tasks</code> structure without replacing task values.</li>
+<li>Missing <code>memory.md</code> is created with a short protocol note.</li>
+<li>异常处理（Error handling）: Upgrade throws if sync reports blockers or doctor reports errors.</li>
+<li>边界兜底（Boundary fallback）: State migrations add missing structure but preserve concrete project state values.</li>
+<li>性能或并发注意事项（Performance or concurrency notes）: Migration and sync run sequentially.</li>
+</ul>
+<h2 id="6-与技术方案的偏移">6. 与技术方案的偏移</h2>
+<ul>
+<li>暂无。实现保持 <code>upgrade</code> 自动执行 <code>sync</code> 的 P0 约束。</li>
+</ul>
+<h2 id="7-测试覆盖-test-coverage">7. 测试覆盖（Test Coverage）</h2>
+<table>
+<thead><tr>
+<th>测试（Test）</th>
+<th>覆盖范围（Coverage）</th>
+<th>结果（Result）</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>npm test</code></td>
+<td>TypeScript build plus init/sync/doctor/upgrade tests</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>python3 tools/validate_allowed_paths.py</code></td>
+<td>DEV-003 changed file boundaries</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>make validate-checkpoint</code></td>
+<td>DEV-003 checkpoint completeness</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>make lint</code></td>
+<td>Current project lint gate placeholder</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>make test-current-domain</code></td>
+<td>Current task focused gate placeholder</td>
+<td>PASS</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8-后续维护注意事项">8. 后续维护注意事项</h2>
+<ul>
+<li>DEV-004 should ensure package canonical assets do not drift from this self-hosting source workspace.</li>
+<li>Future schema versions should add explicit migration records to <code>migrations</code>.</li>
 </ul>
 </article>
   </main>
