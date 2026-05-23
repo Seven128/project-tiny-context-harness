@@ -1,5 +1,5 @@
 current_phase: "SPRINTING"
-current_task_id: "DEV-005"
+current_task_id: "DEV-006"
 tasks:
   - id: "DEV-001"
     title: "创建 npm 包骨架与 source sync manifest"
@@ -24,6 +24,8 @@ tasks:
     checkpoint: ".harness/state/checkpoints/DEV-001.md"
     gate_result: "PASS"
     commit: "a4b145c"
+    revision_notes:
+      - "RFC_001 changes the managed layout assumptions originally scaffolded here; DEV-006 will apply the incremental revision."
 
   - id: "DEV-002"
     title: "实现 sync、init、init --adopt 和 doctor 最小闭环"
@@ -49,6 +51,8 @@ tasks:
     checkpoint: ".harness/state/checkpoints/DEV-002.md"
     gate_result: "PASS"
     commit: "559d169"
+    revision_notes:
+      - "RFC_001 changes sync/init/doctor materialization targets; DEV-006 will apply the incremental revision."
 
   - id: "DEV-003"
     title: "实现 upgrade、migration 和自动 sync"
@@ -72,6 +76,8 @@ tasks:
     checkpoint: ".harness/state/checkpoints/DEV-003.md"
     gate_result: "PASS"
     commit: "2f2fc93"
+    revision_notes:
+      - "RFC_001 changes upgrade migration targets; DEV-006 will apply the incremental revision."
 
   - id: "DEV-004"
     title: "实现 package sync-source / package check-source 与 CI 漂移检查"
@@ -96,6 +102,8 @@ tasks:
     checkpoint: ".harness/state/checkpoints/DEV-004.md"
     gate_result: "PASS"
     commit: "ee54878"
+    revision_notes:
+      - "RFC_001 changes package source mappings; DEV-006 will apply the incremental revision."
 
   - id: "DEV-005"
     title: "将 validators 入口接入 sdlc-harness validate-*"
@@ -119,3 +127,36 @@ tasks:
     checkpoint: ".harness/state/checkpoints/DEV-005.md"
     gate_result: "PASS"
     commit: "140e078"
+    revision_notes:
+      - "RFC_001 changes validate-harness directory checks; DEV-006 will apply the incremental revision."
+
+  - id: "DEV-006"
+    title: "统一 .harness 工作流根目录并生成 .agents 兼容出口"
+    status: "pending"
+    priority: "P0"
+    docs:
+      product:
+        - ".docs/01_product/npm_package_distribution.md"
+      tech_plan:
+        - ".docs/03_tech_plan/harness_package_distribution.md"
+      rfc:
+        - ".docs/rfc/RFC_001_unify_harness_directory_model.md"
+    allowed_paths:
+      - "README.md"
+      - ".harness/config.yaml"
+      - ".harness/agents/**"
+      - ".harness/managed/**"
+      - ".agents/skills/**"
+      - "packages/sdlc-harness/**"
+      - "tests/sdlc-harness/**"
+      - ".docs/02_architecture/harness_package_distribution.md"
+      - ".docs/04_implementation/npm_package/**"
+    required_gates:
+      - "npm test"
+      - "node packages/sdlc-harness/dist/cli.js package check-source"
+      - "node packages/sdlc-harness/dist/cli.js validate-harness"
+      - "make validate-harness"
+    implementation_doc: ".docs/04_implementation/npm_package/dev_006_unified_harness_root.md"
+    checkpoint_required: false
+    checkpoint: ".harness/state/checkpoints/DEV-006.md"
+    gate_result: ""

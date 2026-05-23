@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="generator" content="AI SDLC Harness build_doc_overviews.py">
-  <meta name="source-hash" content="7289574658373255">
+  <meta name="source-hash" content="42df45d2904b0885">
   <title>.docs/03_tech_plan overview</title>
   <style>
     :root {
@@ -116,7 +116,7 @@
     <section class="hero">
       <h1>.docs/03_tech_plan overview</h1>
       <p class="meta">Generated artifact. Markdown slices remain the source of truth.</p>
-      <p class="meta">Source hash: <code>7289574658373255</code></p>
+      <p class="meta">Source hash: <code>42df45d2904b0885</code></p>
       <div class="source-list">
         <h2>Source Slices</h2>
         <ol>
@@ -133,16 +133,17 @@
 <h2 id="1-关联产品需求">1. 关联产品需求</h2>
 <ul>
 <li>PRD: <code>.docs/01_product/npm_package_distribution.md</code></li>
-<li>Requirement IDs: <code>PRD-NPM-001</code> 至 <code>PRD-NPM-013</code></li>
+<li>Requirement IDs: <code>PRD-NPM-001</code> 至 <code>PRD-NPM-014</code></li>
 </ul>
 <h2 id="2-现有上下文">2. 现有上下文</h2>
 <ul>
 <li>当前模块（Current modules）:</li>
 <li><code>AGENTS.md</code>：Agent 全局协议。</li>
 <li><code>Makefile</code>：当前验证命令入口。</li>
-<li><code>.agents/skills/**/SKILL.md</code>：阶段 Skill。</li>
-<li><code>.harness/templates/**</code>：阶段产物模板。</li>
-<li><code>.harness/policies/**</code>：阶段契约、路径策略、gate 和风险矩阵。</li>
+<li><code>.harness/agents/skills/**/SKILL.md</code>：阶段 Skill 的 canonical source。</li>
+<li><code>.agents/skills/**/SKILL.md</code>：阶段 Skill 的 Agent 兼容生成出口。</li>
+<li><code>.harness/managed/templates/**</code>：阶段产物模板。</li>
+<li><code>.harness/managed/policies/**</code>：阶段契约、路径策略、gate 和风险矩阵。</li>
 <li><code>tools/*.py</code>：当前 validators、transition、overview 生成和状态工具。</li>
 <li><code>.github/workflows/harness.yml</code>：当前 CI gate 入口。</li>
 <li>相关 APIs（Related APIs）:</li>
@@ -181,16 +182,16 @@
 │   ├── templates/
 │   ├── policies/
 │   ├── make/
-│   ├── github/
-│   └── validators/
+│   └── github/
 └── migrations/</code></pre>
 <h3 id="3-2-工作区生成目录">3.2 工作区生成目录</h3>
 <pre><code class="language-txt">AGENTS.md
+.harness/agents/skills/**/SKILL.md
 .agents/skills/**/SKILL.md
 .harness/config.yaml
-.harness/templates/**
-.harness/policies/**
-.harness/make/sdlc-harness.mk
+.harness/managed/templates/**
+.harness/managed/policies/**
+.harness/managed/make/sdlc-harness.mk
 .harness/overrides/**
 .docs/**</code></pre>
 <h2 id="4-接口契约-interface-contract">4. 接口契约（Interface Contract）</h2>
@@ -272,19 +273,21 @@ managed_files:
   - path: &quot;AGENTS.md&quot;
     strategy: &quot;merge-block&quot;
   - path: &quot;.agents/skills&quot;
-    strategy: &quot;generated&quot;
-  - path: &quot;.harness/templates&quot;
+    strategy: &quot;generated-compat&quot;
+  - path: &quot;.harness/agents/skills&quot;
     strategy: &quot;managed&quot;
-  - path: &quot;.harness/policies&quot;
+  - path: &quot;.harness/managed/templates&quot;
+    strategy: &quot;managed&quot;
+  - path: &quot;.harness/managed/policies&quot;
     strategy: &quot;merge-with-local&quot;
-  - path: &quot;.harness/make/sdlc-harness.mk&quot;
+  - path: &quot;.harness/managed/make/sdlc-harness.mk&quot;
     strategy: &quot;managed&quot;
   - path: &quot;.github/workflows/harness.yml&quot;
     strategy: &quot;create-if-missing&quot;
 
 local_overrides:
   - &quot;.harness/overrides/**&quot;
-  - &quot;.harness/policies/*.local.yaml&quot;
+  - &quot;.harness/managed/policies/*.local.yaml&quot;
 
 never_overwrite:
   - &quot;.docs/**&quot;
@@ -304,13 +307,13 @@ checksum: sha256:...
   - source: &quot;AGENTS.md&quot;
     target: &quot;packages/sdlc-harness/assets/agents/AGENTS_CORE.md&quot;
     mode: &quot;extract-managed-block&quot;
-  - source: &quot;.agents/skills&quot;
+  - source: &quot;.harness/agents/skills&quot;
     target: &quot;packages/sdlc-harness/assets/skills&quot;
     mode: &quot;copy-tree&quot;
-  - source: &quot;.harness/templates&quot;
+  - source: &quot;.harness/managed/templates&quot;
     target: &quot;packages/sdlc-harness/assets/templates&quot;
     mode: &quot;copy-tree&quot;
-  - source: &quot;.harness/policies&quot;
+  - source: &quot;.harness/managed/policies&quot;
     target: &quot;packages/sdlc-harness/assets/policies&quot;
     mode: &quot;copy-tree&quot;
   - source: &quot;Makefile&quot;
@@ -318,10 +321,7 @@ checksum: sha256:...
     mode: &quot;extract-harness-targets&quot;
   - source: &quot;.github/workflows/harness.yml&quot;
     target: &quot;packages/sdlc-harness/assets/github/harness.yml&quot;
-    mode: &quot;copy-file&quot;
-  - source: &quot;tools&quot;
-    target: &quot;packages/sdlc-harness/assets/validators&quot;
-    mode: &quot;copy-tree&quot;</code></pre>
+    mode: &quot;copy-file&quot;</code></pre>
 <h2 id="6-任务拆分-task-breakdown">6. 任务拆分（Task Breakdown）</h2>
 <table>
 <thead><tr>
@@ -367,6 +367,13 @@ checksum: sha256:...
 <td><code>make lint</code>, <code>make test-current-domain</code></td>
 <td><code>.docs/04_implementation/npm_package/dev_005_validate_commands.md</code></td>
 </tr>
+<tr>
+<td>DEV-006</td>
+<td>统一 <code>.harness</code> 工作流根目录并生成 <code>.agents</code> 兼容出口</td>
+<td><code>README.md</code>, <code>.harness/config.yaml</code>, <code>.harness/agents/**</code>, <code>.harness/managed/**</code>, <code>.agents/skills/**</code>, <code>packages/sdlc-harness/**</code>, <code>tests/sdlc-harness/**</code>, <code>.docs/02_architecture/harness_package_distribution.md</code>, <code>.docs/04_implementation/npm_package/**</code></td>
+<td><code>npm test</code>, <code>node packages/sdlc-harness/dist/cli.js package check-source</code>, <code>node packages/sdlc-harness/dist/cli.js validate-harness</code>, <code>make validate-harness</code></td>
+<td><code>.docs/04_implementation/npm_package/dev_006_unified_harness_root.md</code></td>
+</tr>
 </tbody>
 </table>
 <h2 id="7-风险与缓解">7. 风险与缓解</h2>
@@ -395,19 +402,19 @@ checksum: sha256:...
 <tr>
 <td>生成的 Skill 不被 Agent 识别</td>
 <td>P0</td>
-<td>materialize 到 <code>.agents/skills/**/SKILL.md</code></td>
+<td>canonical Skill materialize 到 <code>.harness/agents/skills/**/SKILL.md</code>，同时生成 <code>.agents/skills/**/SKILL.md</code> 兼容出口</td>
 </tr>
 <tr>
-<td>npm 包调用 Python validators 环境不稳定</td>
+<td>npm 包 validators 运行环境不稳定</td>
 <td>P1</td>
-<td>首版 doctor 检查 <code>python3</code>，后续再迁移 TypeScript</td>
+<td>validators 运行时使用 TypeScript/Node，不依赖 Python 运行时</td>
 </tr>
 </tbody>
 </table>
 <h2 id="8-需要关注的方案偏移">8. 需要关注的方案偏移</h2>
 <ul>
-<li>如果实际实现发现 TypeScript CLI 调用 Python validators 过重，应在 ADR 中记录是否改为 TypeScript validator。</li>
 <li>如果当前仓库继续作为包源码仓库，<code>packages/sdlc-harness/assets/**</code> 不应手写，应由 <code>package sync-source</code> 从工作流源文件生成。</li>
+<li>RFC_001 调整后，<code>.harness/**</code> 是工作区 Harness 配置 canonical root，<code>.agents/skills/**</code> 只作为兼容生成出口。</li>
 </ul>
 </article>
   </main>

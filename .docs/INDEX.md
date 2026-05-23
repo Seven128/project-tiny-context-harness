@@ -22,7 +22,7 @@
 | Review | `.docs/06_review/` | Review reports、风险、重构建议 | 暂无 |
 | 测试 | `.docs/07_test/` | Test plan、test matrix、回归记录 | 暂无 |
 | 发布 | `.docs/08_release/` | Release note、smoke results、rollback plan | 暂无 |
-| RFC | `.docs/rfc/` | 需求变更和影响补丁 | 暂无 |
+| RFC | `.docs/rfc/` | 需求变更和影响补丁 | [RFC_001 统一 .harness 工作流根目录](rfc/RFC_001_unify_harness_directory_model.md) |
 
 ## 维护规则
 
