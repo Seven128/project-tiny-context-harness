@@ -85,8 +85,8 @@ def validate_agents() -> None:
 
 
 def validate_skills() -> None:
-    skill_files = sorted((ROOT / ".agents/skills").glob("*/SKILL.md"))
-    require(skill_files, "No skill files found under .agents/skills/")
+    skill_files = sorted((ROOT / ".harness/agents/skills").glob("*/SKILL.md"))
+    require(skill_files, "No skill files found under .harness/agents/skills/")
 
     for path in skill_files:
         content = text(path)
@@ -101,8 +101,8 @@ def validate_skills() -> None:
 
 
 def validate_skill_template() -> None:
-    path = ROOT / ".harness/templates/SKILL_TEMPLATE.md"
-    require(path.exists(), "Missing .harness/templates/SKILL_TEMPLATE.md")
+    path = ROOT / ".harness/managed/templates/SKILL_TEMPLATE.md"
+    require(path.exists(), "Missing .harness/managed/templates/SKILL_TEMPLATE.md")
     content = text(path)
     for section in SKILL_REQUIRED_SECTIONS:
         require(section in content, f"SKILL_TEMPLATE.md missing Chinese section: {section}")

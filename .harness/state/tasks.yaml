@@ -1,5 +1,5 @@
 current_phase: "SPRINTING"
-current_task_id: "DEV-006"
+current_task_id: "DEV-007"
 tasks:
   - id: "DEV-001"
     title: "创建 npm 包骨架与 source sync manifest"
@@ -161,3 +161,33 @@ tasks:
     checkpoint: ".harness/state/checkpoints/DEV-006.md"
     gate_result: "PASS"
     commit: "eb778fd"
+
+  - id: "DEV-007"
+    title: "删除 tracked .agents skills 兼容生成物"
+    status: "in_progress"
+    priority: "P0"
+    docs:
+      product:
+        - ".docs/01_product/npm_package_distribution.md"
+      tech_plan:
+        - ".docs/03_tech_plan/harness_package_distribution.md"
+      rfc:
+        - ".docs/rfc/RFC_001_unify_harness_directory_model.md"
+    allowed_paths:
+      - ".gitignore"
+      - "AGENTS.md"
+      - "README.md"
+      - ".agents/skills/**"
+      - "tools/**"
+      - "packages/sdlc-harness/**"
+      - "tests/sdlc-harness/**"
+      - ".docs/04_implementation/npm_package/**"
+    required_gates:
+      - "npm test"
+      - "node packages/sdlc-harness/dist/cli.js package check-source"
+      - "node packages/sdlc-harness/dist/cli.js validate-harness"
+      - "make validate-harness"
+    implementation_doc: ".docs/04_implementation/npm_package/dev_007_remove_tracked_agents_skills.md"
+    checkpoint_required: true
+    checkpoint: ".harness/state/checkpoints/DEV-007.md"
+    gate_result: ""

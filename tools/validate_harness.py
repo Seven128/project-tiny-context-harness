@@ -12,7 +12,7 @@ def main() -> None:
         ".harness/state/tasks.draft.yaml",
         ".harness/state/gate_results.log",
         ".harness/state/memory.md",
-        ".harness/templates/CHECKPOINT_TEMPLATE.md",
+        ".harness/managed/templates/CHECKPOINT_TEMPLATE.md",
         ".harness/policies/phase_contracts.yaml",
         ".harness/policies/gates.yaml",
         ".harness/policies/allowed_paths.yaml",
@@ -32,7 +32,7 @@ def main() -> None:
         ".docs/08_release",
         ".docs/rfc",
         ".harness/state/checkpoints",
-        ".agents/skills",
+        ".harness/agents/skills",
         "tools",
     ]
     require_paths(required_files + required_dirs)
@@ -49,7 +49,7 @@ def main() -> None:
     for phase_name, contract in phases.items():
         skill = contract.get("skill")
         require(skill, f"{phase_name} missing skill")
-        skill_file = repo_path(f".agents/skills/{skill}/SKILL.md")
+        skill_file = repo_path(f".harness/agents/skills/{skill}/SKILL.md")
         require(skill_file.exists(), f"Missing skill file for {phase_name}: {skill_file.relative_to(repo_path('.'))}")
         require("inputs" in contract, f"{phase_name} missing inputs")
         require("outputs" in contract, f"{phase_name} missing outputs")

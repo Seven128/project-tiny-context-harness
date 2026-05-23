@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="generator" content="AI SDLC Harness build_doc_overviews.py">
-  <meta name="source-hash" content="7686f265611e6bb9">
+  <meta name="source-hash" content="4447d68b4a9b11d8">
   <title>.docs/04_implementation overview</title>
   <style>
     :root {
@@ -116,7 +116,7 @@
     <section class="hero">
       <h1>.docs/04_implementation overview</h1>
       <p class="meta">Generated artifact. Markdown slices remain the source of truth.</p>
-      <p class="meta">Source hash: <code>7686f265611e6bb9</code></p>
+      <p class="meta">Source hash: <code>4447d68b4a9b11d8</code></p>
       <div class="source-list">
         <h2>Source Slices</h2>
         <ol>
@@ -126,6 +126,7 @@
 <li><a href="#npm-package-dev-004-source-sync-ci-md">npm_package/dev_004_source_sync_ci.md</a></li>
 <li><a href="#npm-package-dev-005-validate-commands-md">npm_package/dev_005_validate_commands.md</a></li>
 <li><a href="#npm-package-dev-006-unified-harness-root-md">npm_package/dev_006_unified_harness_root.md</a></li>
+<li><a href="#npm-package-dev-007-remove-tracked-agents-skills-md">npm_package/dev_007_remove_tracked_agents_skills.md</a></li>
 </ol>
       </div>
     </section>
@@ -896,7 +897,7 @@
 <h2 id="5-关键实现逻辑">5. 关键实现逻辑</h2>
 <ul>
 <li>输入校验（Input validation）:</li>
-<li>Node <code>validate-harness</code> now requires <code>.harness/agents/skills</code>、<code>.harness/managed/templates</code>、<code>.harness/managed/policies</code> and <code>.agents/skills</code>.</li>
+<li>Node <code>validate-harness</code> requires <code>.harness/agents/skills</code>、<code>.harness/managed/templates</code> and <code>.harness/managed/policies</code>; DEV-007 removes <code>.agents/skills</code> from required tracked workspace state.</li>
 <li><code>package check-source</code> reads package mappings from <code>.harness/agents/skills</code> and <code>.harness/managed/**</code>.</li>
 <li>核心分支（Core branches）:</li>
 <li><code>syncManagedFile</code> writes canonical Skill assets to <code>.harness/agents/skills</code>.</li>
@@ -957,6 +958,140 @@
 <li>Future work can migrate local Python gate scripts to <code>.harness/managed/**</code> and then archive legacy <code>.harness/templates/**</code> / <code>.harness/policies/**</code>.</li>
 <li>When Skill, template, policy, Makefile, workflow, or AGENTS source changes, run <code>sdlc-harness package sync-source</code> and <code>package check-source</code>.</li>
 <li>Keep <code>.agents/skills/**</code> generated from <code>.harness/agents/skills/**</code>; do not treat <code>.agents</code> as the source of truth.</li>
+</ul>
+</article>
+<article class="doc-slice" id="npm-package-dev-007-remove-tracked-agents-skills-md">
+<header>
+<h2>npm_package/dev_007_remove_tracked_agents_skills.md</h2>
+<a class="source-link" href="npm_package/dev_007_remove_tracked_agents_skills.md">Source Markdown</a>
+</header>
+<h1 id="dev-007-remove-tracked-agents-skills-implementation-doc">DEV-007 Remove Tracked Agents Skills Implementation Doc</h1>
+<h2 id="1-关联信息">1. 关联信息</h2>
+<ul>
+<li>Task ID: <code>DEV-007</code></li>
+<li>Linked PRD: <code>.docs/01_product/npm_package_distribution.md</code></li>
+<li>Linked technical design: <code>.docs/03_tech_plan/harness_package_distribution.md</code></li>
+<li>Linked RFC: <code>.docs/rfc/RFC_001_unify_harness_directory_model.md</code></li>
+<li>Linked commit: pending</li>
+</ul>
+<h2 id="2-本次实现范围">2. 本次实现范围</h2>
+<ul>
+<li>新增（Added）:</li>
+<li><code>.gitignore</code> rule for <code>.agents/skills/</code> as a generated compatibility view.</li>
+<li>DEV-007 checkpoint for the gate failure and &gt;5 file change trigger.</li>
+<li>修改（Changed）:</li>
+<li>Removed tracked <code>.agents/skills/**/SKILL.md</code> files from the repository.</li>
+<li>Python local gates now validate Skill files under <code>.harness/agents/skills/**</code>.</li>
+<li>Node <code>validate-harness</code> no longer requires <code>.agents/skills/**</code>.</li>
+<li>README and AGENTS now describe <code>.agents/skills/**</code> as generated and not a source authoring path.</li>
+<li>Package <code>AGENTS_CORE.md</code> was regenerated from the updated <code>AGENTS.md</code>.</li>
+<li>未覆盖（Not covered）:</li>
+<li><code>sdlc-harness sync</code> still supports generating <code>.agents/skills/**</code> for Agent clients that require that compatibility path.</li>
+</ul>
+<h2 id="3-真实代码结构">3. 真实代码结构</h2>
+<table>
+<thead><tr>
+<th>文件（File）</th>
+<th>作用（Purpose）</th>
+<th>关键函数/对象（Key Functions/Objects）</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>.gitignore</code></td>
+<td>Ignores generated compatibility Skill view</td>
+<td><code>.agents/skills/</code></td>
+</tr>
+<tr>
+<td><code>.harness/agents/skills/**/SKILL.md</code></td>
+<td>Canonical tracked Skill source</td>
+<td>phase Skill files</td>
+</tr>
+<tr>
+<td><code>tools/validate_harness.py</code></td>
+<td>Local Python Harness scaffold validator</td>
+<td>canonical Skill path checks</td>
+</tr>
+<tr>
+<td><code>tools/validate_prompt_language.py</code></td>
+<td>Local prompt language validator</td>
+<td>canonical Skill and template checks</td>
+</tr>
+<tr>
+<td><code>packages/sdlc-harness/src/lib/validators.ts</code></td>
+<td>Node package validator runtime</td>
+<td><code>validateHarness</code></td>
+</tr>
+<tr>
+<td><code>tests/sdlc-harness/validators.test.mjs</code></td>
+<td>Regression for Node validator without <code>.agents/skills</code></td>
+<td><code>runValidator</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-核心数据流">4. 核心数据流</h2>
+<pre><code class="language-txt">tracked source
+-&gt; .harness/agents/skills/** + .harness/managed/**
+-&gt; validators read canonical .harness paths
+-&gt; optional sdlc-harness sync
+-&gt; local ignored .agents/skills/** compatibility view</code></pre>
+<h2 id="5-关键实现逻辑">5. 关键实现逻辑</h2>
+<ul>
+<li>输入校验（Input validation）:</li>
+<li>Local Python validators no longer use <code>.agents/skills/**</code> as a required path.</li>
+<li>Node <code>validate-harness</code> passes in a fixture without <code>.agents/skills/**</code>.</li>
+<li>核心分支（Core branches）:</li>
+<li>Source authoring and validation use <code>.harness/agents/skills/**</code>.</li>
+<li>Compatibility output remains supported by <code>sdlc-harness sync</code>.</li>
+<li>异常处理（Error handling）:</li>
+<li>If an Agent client needs <code>.agents/skills/**</code>, running <code>sdlc-harness sync</code> regenerates it from package assets.</li>
+<li>边界兜底（Boundary fallback）:</li>
+<li>The deleted <code>.agents/skills/**</code> files still exist canonically under <code>.harness/agents/skills/**</code>.</li>
+<li>性能或并发注意事项（Performance or concurrency notes）:</li>
+<li>No runtime concurrency changes.</li>
+</ul>
+<h2 id="6-与技术方案的偏移">6. 与技术方案的偏移</h2>
+<ul>
+<li>This tightens RFC_001 semantics: <code>.agents/skills/**</code> remains a generated compatibility view but is no longer tracked in the source workspace.</li>
+</ul>
+<h2 id="7-测试覆盖-test-coverage">7. 测试覆盖（Test Coverage）</h2>
+<table>
+<thead><tr>
+<th>测试（Test）</th>
+<th>覆盖范围（Coverage）</th>
+<th>结果（Result）</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>npm test</code></td>
+<td>TypeScript build and package tests</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>node packages/sdlc-harness/dist/cli.js package check-source</code></td>
+<td>Package source drift after AGENTS update</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>node packages/sdlc-harness/dist/cli.js validate-harness</code></td>
+<td>Node validator without tracked <code>.agents/skills</code></td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>make validate-harness</code></td>
+<td>Local Python Harness checks using canonical Skill path</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>make validate-current</code></td>
+<td>Sprint exit gate with all tasks closed</td>
+<td>PASS</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8-后续维护注意事项">8. 后续维护注意事项</h2>
+<ul>
+<li>Do not edit or commit <code>.agents/skills/**</code>; edit <code>.harness/agents/skills/**</code> instead.</li>
+<li>If an Agent environment requires <code>.agents/skills/**</code>, regenerate it with <code>sdlc-harness sync</code>.</li>
 </ul>
 </article>
   </main>

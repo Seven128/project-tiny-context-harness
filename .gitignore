@@ -33,3 +33,6 @@ temp/
 # Local artifacts
 artifacts/
 reports/
+
+# Generated Harness compatibility views
+.agents/skills/

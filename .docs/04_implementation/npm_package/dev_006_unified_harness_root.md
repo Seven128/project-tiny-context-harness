@@ -52,7 +52,7 @@ harness source workspace
 ## 5. 关键实现逻辑
 
 - 输入校验（Input validation）:
-  - Node `validate-harness` now requires `.harness/agents/skills`、`.harness/managed/templates`、`.harness/managed/policies` and `.agents/skills`.
+  - Node `validate-harness` requires `.harness/agents/skills`、`.harness/managed/templates` and `.harness/managed/policies`; DEV-007 removes `.agents/skills` from required tracked workspace state.
   - `package check-source` reads package mappings from `.harness/agents/skills` and `.harness/managed/**`.
 - 核心分支（Core branches）:
   - `syncManagedFile` writes canonical Skill assets to `.harness/agents/skills`.

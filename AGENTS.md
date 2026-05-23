@@ -33,7 +33,7 @@
 - `checkpoint` 是 task 内部的执行现场快照，不是正式需求、技术方案或 implementation doc。
 - 满足触发条件时，在当前 task 中设置 `checkpoint_required: true`，并写入 `checkpoint` 路径。
 - 当前 task 需要 checkpoint 时，同时更新 `.harness/state/checkpoints/latest.md`。
-- Checkpoint 使用 `.harness/templates/CHECKPOINT_TEMPLATE.md`。
+- Checkpoint 使用 `.harness/managed/templates/CHECKPOINT_TEMPLATE.md`。
 - 使用 `make validate-checkpoint` 校验必需 checkpoint 是否完整。
 - 任务完成并写入 implementation doc 后，可以把 `checkpoint_required` 改回 `false`；历史 checkpoint 可保留用于恢复。
 
@@ -50,12 +50,12 @@
 
 - 面向人阅读的说明、规则、SOP、检查清单使用中文。
 - 机器契约保持英文，包括字段名、路径、命令、阶段枚举、状态枚举、脚本参数。
-- 不翻译 `.harness/state/*.yaml`、`.harness/policies/*.yaml` 中的 key。
+- 不翻译 `.harness/state/*.yaml`、`.harness/managed/policies/*.yaml` 中的 key。
 - 不翻译 `current_phase`、`active_skill`、`allowed_paths`、`required_gates`、`implementation_doc` 等字段名。
 - 不翻译 `REQUIREMENT_GATHERING`、`ARCHITECTING`、`SPRINTING`、`REVIEWING`、`TESTING`、`RELEASING`、`RFC_RECALIBRATION`、`BLOCKED` 等阶段枚举。
 - 不翻译 `pending`、`in_progress`、`done`、`blocked`、`pending_revision`、`cancelled`、`archived` 等任务状态。
 - 不翻译 `make validate-*`、`python3 tools/transition.py --to <PHASE>`、`.docs/01_product/`、`.harness/state/tasks.yaml` 等命令和路径。
-- 后续更新 `.agents/skills/*/SKILL.md` 或 `.harness/templates/*.md` 时，遵循“中文解释 + 英文精确标识符”。
+- 后续更新 `.harness/agents/skills/*/SKILL.md` 或 `.harness/managed/templates/*.md` 时，遵循“中文解释 + 英文精确标识符”。`.agents/skills/**` 是 `sdlc-harness sync` 生成的兼容视图，不作为仓库事实源维护。
 
 ## 通用执行原则
 
