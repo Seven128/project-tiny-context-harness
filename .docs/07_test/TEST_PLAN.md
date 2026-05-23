@@ -1,22 +1,3 @@
-# .docs/07_test overview
-
-<!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: ae1963e53214b333 -->
-
-Generated artifact. Markdown slices remain the source of truth.
-
-Source hash: `ae1963e53214b333`
-
-## Source Slices
-
-1. [TEST_PLAN.md](TEST_PLAN.md)
-
----
-
-## TEST_PLAN.md
-
-Source: [TEST_PLAN.md](TEST_PLAN.md)
-
 # Test Plan（测试计划）
 
 ## 1. 测试范围
