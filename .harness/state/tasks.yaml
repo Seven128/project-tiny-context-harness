@@ -164,7 +164,7 @@ tasks:
 
   - id: "DEV-007"
     title: "删除 tracked .agents skills 兼容生成物"
-    status: "in_progress"
+    status: "done"
     priority: "P0"
     docs:
       product:
@@ -188,6 +188,7 @@ tasks:
       - "node packages/sdlc-harness/dist/cli.js validate-harness"
       - "make validate-harness"
     implementation_doc: ".docs/04_implementation/npm_package/dev_007_remove_tracked_agents_skills.md"
-    checkpoint_required: true
+    checkpoint_required: false
     checkpoint: ".harness/state/checkpoints/DEV-007.md"
-    gate_result: ""
+    gate_result: "PASS"
+    commit: "dd209fe"
