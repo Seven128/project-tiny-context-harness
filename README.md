@@ -311,6 +311,15 @@ tasks:
 
 task completion ledger commit 发生在 implementation commit 之后，只负责把 `plan.yaml` 中当前 task 压缩为 `summary`、`implementation_doc`、`gate_result` 等 done 摘要，并记录必要 gate log。不要把这个压缩动作 amend 回 implementation commit，否则 git history 会丢失当时的 `allowed_paths`、`required_gates` 和 `acceptance_criteria`。
 
+后续如果需要追溯某个 done task 被压缩前的完整执行合同，先读取该 task 的 implementation doc，再从 git history 查找 task implementation commit：
+
+```sh
+git log --oneline --grep "<TASK_ID>"
+git show <implementation_commit>:.agent/state/plan.yaml
+```
+
+如果项目使用自定义 `<harnessRoot>`，把 `.agent/state/plan.yaml` 替换为实际 root。不要因为当前 `plan.yaml` 只剩 done 摘要就重建旧字段；新的执行范围应通过 RFC 或 revision task 写回新的 open task 合同。
+
 两个 commit 都 `git push` 成功前，不认为该 task 完成，也不要进入下一个 pending task。如果仓库没有 remote/upstream、没有权限、凭证失效或 push 被拒绝，当前 task 应停在需要人工处理的状态并报告 blocker；不能为了继续执行而静默跳过 push。
 
 只有这些情况才回到 RFC 或架构阶段重新规划：
@@ -334,7 +343,7 @@ PRD
 
 每个 open task 都必须在 `plan.yaml` 中包含 `docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`。执行中只把必要现场写成短 `working_notes`；任务完成并写入 implementation doc 后，删除这些活跃字段，只留下摘要、implementation doc 和 gate result。历史动作记录以 git commit 为准，产物结果以 implementation doc 为准。
 
-`done` task 的历史边界以 task implementation commit 为准，因为它保留了 task 被压缩前的完整执行合同。`plan.yaml` 不长期保存 commit hash；需要追溯时从 git history、PR 或外部 release 系统查看。completion ledger commit 只负责把当前 plan 恢复为短期、低噪声状态。
+`done` task 的历史边界以 task implementation commit 为准，因为它保留了 task 被压缩前的完整执行合同。`plan.yaml` 不长期保存 commit hash；需要追溯时从 git history、PR 或外部 release 系统查看。completion ledger commit 只负责把当前 plan 恢复为短期、低噪声状态。Agent 查历史合同时，应以 `git log --grep "<TASK_ID>"` 找到 implementation commit，并用 `git show <commit>:<harnessRoot>/state/plan.yaml` 读取当时的未压缩合同。
 
 ## 八、阶段 Skill
 每个 Skill 只负责一个阶段或动作。

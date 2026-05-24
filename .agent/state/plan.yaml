@@ -1,5 +1,5 @@
 current_phase: "SPRINTING"
-current_task_id: ""
+current_task_id: "DEV-024"
 tasks:
   - id: "DEV-001"
     title: "创建 npm 包骨架与 source sync manifest"

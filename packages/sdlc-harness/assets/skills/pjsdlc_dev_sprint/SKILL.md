@@ -59,6 +59,15 @@ description: Use during SPRINTING to execute one task from plan.yaml, respecting
 5. implementation commit 完成后，再把 task 标记为 `done`，并移除 `docs`、`allowed_paths`、`required_gates`、`acceptance_criteria`、`working_notes`。
 6. 将压缩后的 `plan.yaml` 和必要 gate 记录提交为 task completion ledger commit，并 `git push` 两个 commit 到当前 upstream branch。
 
+done task 的完整执行合同不在当前 `plan.yaml` 长期保留，而在 task implementation commit 中。需要追溯历史 task 时，先读取 `implementation_doc`，再定位并查看该 commit 中的 `plan.yaml`：
+
+```sh
+git log --oneline --grep "<TASK_ID>"
+git show <implementation_commit>:.agent/state/plan.yaml
+```
+
+如果项目配置了自定义 `<harnessRoot>`，把 `.agent/state/plan.yaml` 替换为实际 root。不要因为当前 done task 只剩摘要就重建或猜测旧合同；需要新执行范围时，通过 RFC 或 revision task 写入新的 open task 合同。
+
 ## 规则
 
 1. 一次只执行一个任务。
@@ -72,7 +81,8 @@ description: Use during SPRINTING to execute one task from plan.yaml, respecting
 9. 任务完成并写入 implementation doc、刷新 `overview.md`、记录 gate 后，先创建 task implementation commit；此时不要压缩该 task。
 10. task implementation commit 必须包含未压缩的 open task 合同，确保 git history 能看到当时的 `allowed_paths`、`required_gates` 和 `acceptance_criteria`。
 11. implementation commit 完成后，压缩该 task，只保留简短摘要和 gate 结果，并创建 task completion ledger commit。
-12. 两个 commit 后必须 `git push` 到当前 upstream branch；如果没有 remote/upstream、权限或凭证导致无法 push，停止推进并报告 blocker。
+12. 追溯已完成 task 的详细合同时，使用 git history 查找 task implementation commit，不要要求当前 `plan.yaml` 保留旧详情。
+13. 两个 commit 后必须 `git push` 到当前 upstream branch；如果没有 remote/upstream、权限或凭证导致无法 push，停止推进并报告 blocker。
 
 ## 完成检查
 
