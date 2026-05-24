@@ -1,5 +1,5 @@
 current_phase: "SPRINTING"
-current_task_id: "DEV-022"
+current_task_id: ""
 tasks:
   - id: "DEV-001"
     title: "创建 npm 包骨架与 source sync manifest"
@@ -150,47 +150,7 @@ tasks:
 
   - id: "DEV-022"
     title: "为托管文本块标识增加 pjsdlc 前缀"
-    status: "in_progress"
-    summary: "将 AGENTS.md、Makefile 和 managed metadata 的 preferred marker 迁移到 `pjsdlc:sdlc-harness:*`，并兼容旧 marker。"
-    docs:
-      product:
-        - ".docs/01_product/npm_package_distribution.md"
-      tech_plan:
-        - ".docs/03_tech_plan/harness_package_distribution.md"
-      rfc:
-        - ".docs/rfc/RFC_008_prefix_managed_block_markers.md"
-    allowed_paths:
-      - "AGENTS.md"
-      - "README.md"
-      - "Makefile"
-      - ".agent/state/lifecycle.yaml"
-      - ".agent/state/plan.yaml"
-      - ".agent/state/gate_results.log"
-      - ".agent/managed/**"
-      - ".github/workflows/harness.yml"
-      - "packages/sdlc-harness/**"
-      - "tests/sdlc-harness/**"
-      - ".docs/01_product/npm_package_distribution.md"
-      - ".docs/03_tech_plan/harness_package_distribution.md"
-      - ".docs/INDEX.md"
-      - ".docs/rfc/RFC_008_prefix_managed_block_markers.md"
-      - ".docs/01_product/overview.md"
-      - ".docs/03_tech_plan/overview.md"
-      - ".docs/rfc/overview.md"
-      - ".docs/04_implementation/npm_package/**"
-      - ".docs/04_implementation/overview.md"
-    required_gates:
-      - "python3 tools/validate_allowed_paths.py"
-      - "npm test"
-      - "node packages/sdlc-harness/dist/cli.js package check-source"
-      - "make validate-harness"
-    acceptance_criteria:
-      - "New generated AGENTS.md uses `<!-- pjsdlc:sdlc-harness:begin/end -->`."
-      - "New generated Makefile uses `# pjsdlc:sdlc-harness:make:begin/end`."
-      - "Existing legacy `sdlc-harness:*` blocks are recognized and migrated to `pjsdlc:*` blocks."
-      - "Broken or duplicate markers still block sync instead of overwriting user content."
-      - "Docs describe the marker namespace and legacy compatibility behavior."
-    working_notes:
-      - "Config.yaml remains schema-governed rather than text-block managed; marker namespace applies to bridge text blocks and metadata comments."
+    status: "done"
+    summary: "将 AGENTS.md、Makefile 和 managed metadata 的 preferred marker 迁移到 `pjsdlc:sdlc-harness:*`，并让 sync 兼容迁移旧 marker。"
     implementation_doc: ".docs/04_implementation/npm_package/dev_022_pjsdlc_marker_prefix.md"
-    gate_result: ""
+    gate_result: "PASS"
