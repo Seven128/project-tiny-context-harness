@@ -190,14 +190,7 @@ tasks:
 
 task 完成后，先创建 task implementation commit，保留完整 open task 合同；再将该 task 从 `plan.yaml` 的 `tasks` 列表移除，并创建 task completion ledger commit。历史动作记录由 git commit 承载，产物结果由 implementation doc 承载；Harness 不再维护 checkpoint 文件或 `.agent/archive/**` 作为常规归档事实源。
 
-如果后续 Agent 需要追溯 done task 的完整执行合同，应先读取对应 implementation doc，再从 git history 找到 task implementation commit。该 commit 必须早于 task completion ledger commit，并保留该 task 被移除前的 `plan.yaml`。推荐查询方式：
-
-```sh
-git log --oneline --grep "<TASK_ID>"
-git show <implementation_commit>:.agent/state/plan.yaml
-```
-
-如果使用了自定义 `<harnessRoot>`，第二条命令中的 `.agent` 替换为实际 root。Agent 不应因为当前 `plan.yaml` 已移除 done task 就重建或猜测历史合同；只有新的 RFC 或 revision task 才能把新执行合同写回当前 `plan.yaml`。
+默认不追溯 done task 的执行流水。task implementation commit 在 task 移除前保留完整 open task contract，只作为 cold archive；只有用户明确要求 forensic/audit/regression 追溯时，Agent 才临时查询 git、PR、CI 或 release 记录。普通 bugfix 和后续开发应直接使用当前代码、测试、PRD、技术方案和 implementation doc。
 
 ### 5.5 Gate results scratchpad
 
@@ -244,7 +237,7 @@ completion ledger commit 可以把 `gate_results.log` 重置为短 header：
 | npm 包 validators 运行环境不稳定 | P1 | validators 运行时使用 TypeScript/Node，不依赖 Python 运行时 |
 | `plan.yaml` 过大导致 Agent 上下文膨胀 | P0 | plan 只保留当前和未来任务，done/cancelled task 完成后移出 plan |
 | task/release 归档与 git 历史重复 | P1 | 删除 `.agent/archive/**` 常规机制，动作记录以 git commit/tag 为准 |
-| Agent 误以为 done task 详情丢失 | P1 | 在 AGENTS、Skill 和 README 中声明用 git history 找回 task implementation commit 中的完整 open task 合同 |
+| Agent 默认追溯 done task 导致上下文噪声 | P1 | 在 AGENTS、Skill 和 README 中声明过去 task 合同只是 cold archive，默认不读取 |
 | `gate_results.log` 无限增长 | P1 | gate log 只作为短期 scratchpad，completion 后重置，长期 gate 事实进入 implementation doc、git 或 CI logs |
 | Agent 默认读取过去执行流水导致上下文噪声 | P0 | active state 不保存 `history`，历史执行信息仅在显式 forensic/audit 场景临时查询 |
 

@@ -62,7 +62,6 @@ YAML_KEYWORDS = {
         "active_skill",
         "current_milestone",
         "allowed_next_phases",
-        "history",
     ],
     "plan": [
         "current_phase",

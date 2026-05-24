@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-from harness_utils import dump_yaml, load_lifecycle, load_phase_contracts, make_arg_parser, now_utc, require, run_main
+from harness_utils import dump_yaml, load_lifecycle, load_phase_contracts, make_arg_parser, require, run_main
 
 
 def main() -> None:
     parser = make_arg_parser("Transition AI SDLC Harness lifecycle phase")
     parser.add_argument("--to", required=True, help="Target lifecycle phase")
-    parser.add_argument("--reason", default="", help="Short reason to record in history")
+    parser.add_argument("--reason", default="", help="Short compatibility note; not persisted in active state")
     parser.add_argument("--force", action="store_true", help="Allow transition outside configured next phases")
     args = parser.parse_args()
 
@@ -28,17 +28,6 @@ def main() -> None:
 
     require(args.force or target in legal, f"Illegal transition {current} -> {target}. Legal: {sorted(legal)}")
 
-    history = lifecycle.setdefault("history", [])
-    history.append(
-        {
-            "phase": current,
-            "role": lifecycle.get("active_role", ""),
-            "exit_status": "SUCCESS",
-            "timestamp": now_utc(),
-            "note": args.reason,
-        }
-    )
-
     if target in {"RFC_RECALIBRATION", "BLOCKED"} and current not in {"RFC_RECALIBRATION", "BLOCKED"}:
         lifecycle["suspended_phase"] = current
     elif suspended and target == suspended:
@@ -56,6 +45,8 @@ def main() -> None:
 
     dump_yaml(lifecycle, ".agent/state/lifecycle.yaml")
     print(f"Transitioned {current} -> {target}")
+    if args.reason:
+        print(f"Note: {args.reason}")
 
 
 if __name__ == "__main__":

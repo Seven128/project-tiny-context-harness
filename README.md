@@ -162,8 +162,9 @@ active_skill: "pjsdlc_pm_prd"
 current_milestone: "MVP"
 allowed_next_phases:
   - "ARCHITECTING"
-history: []
 ```
+
+`lifecycle.yaml` 不保存 phase transition history。过去阶段流转是 git/PR/CI/release 系统里的 cold archive，不是 Agent 默认上下文。
 
 ### 阶段枚举：
 - `IDLE`
@@ -306,16 +307,9 @@ tasks: []
 
 开发阶段默认一个 task 对应一个主要实现提交和一个轻量完成记录提交。task implementation commit 的 commit message 应包含 task id，例如 `DEV-003: implement login rate limit`。这个 commit 应包含该 task 的代码、测试、implementation doc、`.docs/INDEX.md`、`overview.md`、必要 gate 记录，以及尚未移除的 open task 合同；不要把多个 task 混进同一个 commit，也不要把未归属变更顺手带入。
 
-task completion ledger commit 发生在 implementation commit 之后，只负责把当前 task 从 `plan.yaml` 移除，并把 `gate_results.log` 重置为短期 scratchpad header。不要把这个清理动作 amend 回 implementation commit，否则 git history 会丢失当时的 `allowed_paths`、`required_gates` 和 `acceptance_criteria`。
+task completion ledger commit 发生在 implementation commit 之后，只负责把当前 task 从 `plan.yaml` 移除，并把 `gate_results.log` 重置为短期 scratchpad header。不要把这个清理动作 amend 回 implementation commit，否则必要时可查询的 cold archive 会丢失当时的 `allowed_paths`、`required_gates` 和 `acceptance_criteria`。
 
-后续如果需要追溯某个 done task 被移除前的完整执行合同，先读取该 task 的 implementation doc，再从 git history 查找 task implementation commit：
-
-```sh
-git log --oneline --grep "<TASK_ID>"
-git show <implementation_commit>:.agent/state/plan.yaml
-```
-
-如果项目使用自定义 `<harnessRoot>`，把 `.agent/state/plan.yaml` 替换为实际 root。不要因为当前 `plan.yaml` 已经移除 done task 就重建旧字段；新的执行范围应通过 RFC 或 revision task 写回新的 open task 合同。
+默认不要追溯 done task 的执行流水。修 bug、补功能和继续开发时，以当前代码、测试、PRD、技术方案和 implementation doc 为准；只有用户明确要求 forensic/audit/regression 追溯时，才临时查询 git、PR、CI 或 release 记录。
 
 两个 commit 都 `git push` 成功前，不认为该 task 完成，也不要进入下一个 pending task。如果仓库没有 remote/upstream、没有权限、凭证失效或 push 被拒绝，当前 task 应停在需要人工处理的状态并报告 blocker；不能为了继续执行而静默跳过 push。
 
@@ -338,9 +332,9 @@ PRD
 -> 代码、测试和 implementation doc
 ```
 
-每个 open task 都必须在 `plan.yaml` 中包含 `docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`。执行中只把必要现场写成短 `working_notes`；任务完成并写入 implementation doc 后，把该 task 从当前 `plan.yaml` 移除。历史动作记录以 git commit 为准，产物结果以 implementation doc 为准。
+每个 open task 都必须在 `plan.yaml` 中包含 `docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`。执行中只把必要现场写成短 `working_notes`；任务完成并写入 implementation doc 后，把该 task 从当前 `plan.yaml` 移除。历史动作记录以 git/PR/CI/release 系统作为 cold archive，产物结果以 implementation doc 为准。
 
-`done` task 的历史边界以 task implementation commit 为准，因为它保留了 task 被移除前的完整执行合同。`plan.yaml` 不长期保存 commit hash；需要追溯时从 git history、PR 或外部 release 系统查看。completion ledger commit 只负责把当前 plan 恢复为短期、低噪声状态。Agent 查历史合同时，应以 `git log --grep "<TASK_ID>"` 找到 implementation commit，并用 `git show <commit>:<harnessRoot>/state/plan.yaml` 读取当时的未移除合同。
+过去 phase/task/gate 执行流水不是 Agent 默认上下文。`plan.yaml` 不长期保存 commit hash，`lifecycle.yaml` 不保存 `history`，completion ledger commit 只负责把当前 plan 恢复为短期、低噪声状态。只有用户明确要求 forensic/audit/regression 追溯时，才临时查询 git、PR、CI 或 release 记录。
 
 `gate_results.log` 同样是短期 scratchpad，只记录当前 task 或当前阶段最近 gate 情况。长期 gate 事实应进入 implementation doc、git commit、CI logs 或 release 记录；task/phase 完成后可以把它重置为短 header，避免无限增长。
 
@@ -590,10 +584,10 @@ Agent 仍然以 vibe 方式完成单阶段任务；Harness 负责让整个项目
 
 ```txt
 状态结构 / schema / 生命周期规则 = Harness 工作流配置内容
-状态实例 / 当前值 / 历史进度 = 当前项目运行数据
+状态实例 / 当前值 = 当前项目运行数据
 ```
 
-因此，`lifecycle.yaml` 应该有哪些字段、`plan.yaml` 应该如何拆分、phase/status 枚举是什么、plan 和 memory 如何校验，这些都属于 Harness 工作流配置，应进入 npm 包；但当前项目处于哪个 phase、当前 task 是什么、history 里有哪些时间戳、open task 里有哪些执行备注、memory 记录了哪些具体事实，则属于当前项目实例数据，不应被包升级覆盖。
+因此，`lifecycle.yaml` 应该有哪些字段、`plan.yaml` 应该如何拆分、phase/status 枚举是什么、plan 和 memory 如何校验，这些都属于 Harness 工作流配置，应进入 npm 包；但当前项目处于哪个 phase、当前 task 是什么、open task 里有哪些执行备注、memory 记录了哪些具体事实，则属于当前项目实例数据，不应被包升级覆盖。
 
 ### 17.2 为什么可以自迭代
 这个仓库可以使用自己的 Harness 迭代自己，原因是它本身也可以被视为一个使用 AI SDLC Harness 的项目实例。

@@ -59,14 +59,7 @@ description: Use during SPRINTING to execute one task from plan.yaml, respecting
 5. implementation commit 完成后，再把该 task 从 `plan.yaml` 的 `tasks` 列表移除，并保留/递增 `next_task_sequence`。
 6. 将移除当前 task 后的 `plan.yaml` 和重置后的短期 `gate_results.log` 提交为 task completion ledger commit，并 `git push` 两个 commit 到当前 upstream branch。
 
-done task 的完整执行合同不在当前 `plan.yaml` 长期保留，而在 task implementation commit 中。需要追溯历史 task 时，先读取 `implementation_doc`，再定位并查看该 commit 中的 `plan.yaml`：
-
-```sh
-git log --oneline --grep "<TASK_ID>"
-git show <implementation_commit>:.agent/state/plan.yaml
-```
-
-如果项目配置了自定义 `<harnessRoot>`，把 `.agent/state/plan.yaml` 替换为实际 root。不要因为当前 done task 已被移除就重建或猜测旧合同；需要新执行范围时，通过 RFC 或 revision task 写入新的 open task 合同。
+done task 的执行流水不在当前 `plan.yaml` 长期保留，也不是默认上下文。修 bug、补功能和继续开发时，优先读取当前代码、测试、PRD、技术方案和 implementation doc；只有用户明确要求 forensic/audit/regression 追溯时，才临时使用 git、PR 或 CI 记录。
 
 ## 规则
 
@@ -79,9 +72,9 @@ git show <implementation_commit>:.agent/state/plan.yaml
 7. gate 通过后调用 `implementation_doc`。
 8. 只有 gate 通过且 implementation doc 校验通过后，才能把任务标记为 `done`。
 9. 任务完成并写入 implementation doc、刷新 `overview.md`、记录 gate 后，先创建 task implementation commit；此时不要移除该 task。
-10. task implementation commit 必须包含尚未移除的 open task 合同，确保 git history 能看到当时的 `allowed_paths`、`required_gates` 和 `acceptance_criteria`。
+10. task implementation commit 必须包含尚未移除的 open task 合同，作为必要时可查询的 cold archive；不要在后续默认读取它。
 11. implementation commit 完成后，从当前 `plan.yaml` 移除该 task，重置 `gate_results.log`，并创建 task completion ledger commit。
-12. 追溯已完成 task 的详细合同时，使用 git history 查找 task implementation commit，不要要求当前 `plan.yaml` 保留旧详情。
+12. 默认不追溯已完成 task 的执行流水；只有显式 forensic/audit/regression 任务才临时查询 git、PR 或 CI 记录。
 13. 两个 commit 后必须 `git push` 到当前 upstream branch；如果没有 remote/upstream、权限或凭证导致无法 push，停止推进并报告 blocker。
 
 ## 完成检查

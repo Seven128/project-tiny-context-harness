@@ -23,6 +23,8 @@ try {
 
   const defaultConfig = await readFile(path.join(defaultRoot, ".agent/config.yaml"), "utf8");
   assert.match(defaultConfig, /agent-project-sdlc/);
+  const defaultLifecycle = await readFile(path.join(defaultRoot, ".agent/state/lifecycle.yaml"), "utf8");
+  assert.doesNotMatch(defaultLifecycle, /history:/);
 
   const defaultAgents = await readFile(path.join(defaultRoot, "AGENTS.md"), "utf8");
   assert.match(defaultAgents, /pjsdlc:sdlc-harness:begin/);

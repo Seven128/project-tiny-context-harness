@@ -40,16 +40,9 @@ Skill、执行出口 gate，并记录 blocker。
 
 ## Plan Protocol
 
-每个 open task 都必须在 `plan.yaml` 中包含 `docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`；done/cancelled task 不长期留在当前 `plan.yaml`。完成后的历史事实以 git commit 与 implementation doc 为准，`next_task_sequence` 负责继续分配后续 task id。
+每个 open task 都必须在 `plan.yaml` 中包含 `docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`；done/cancelled task 不长期留在当前 `plan.yaml`。完成后的产物事实以 implementation doc 为准，动作历史以 git/PR/CI/release 系统作为 cold archive，`next_task_sequence` 负责继续分配后续 task id。
 
-如果用户或后续 Agent 需要查看 done task 被移除前的完整执行合同，先读取该 task 的 `implementation_doc`，再从 git history 找 task implementation commit：
-
-```sh
-git log --oneline --grep "<TASK_ID>"
-git show <implementation_commit>:.agent/state/plan.yaml
-```
-
-如果项目配置了自定义 `<harnessRoot>`，把 `.agent/state/plan.yaml` 替换为实际 root。不要为了查看历史细节把 done task 的旧字段重新写回当前 `plan.yaml`；只有新的 RFC 或 revision task 才能创建新的 open task 合同。
+`lifecycle.yaml`、`plan.yaml` 和 `gate_results.log` 只用于当前可执行状态。默认不要读取过去 phase/task/gate 执行流水；只有用户明确要求 forensic/audit/regression 追溯时，才临时查询 git、PR、CI 或 release 记录。
 
 ## 完成检查
 

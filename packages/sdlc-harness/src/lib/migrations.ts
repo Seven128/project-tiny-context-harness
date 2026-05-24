@@ -169,12 +169,20 @@ async function migrateLifecycle(projectRoot: string, root: string, report: Migra
     return;
   }
   const data = (parseYaml(await readText(lifecyclePath)) ?? {}) as Record<string, unknown>;
+  let changed = false;
   const activeSkill = String(data.active_skill ?? "");
-  if (!SKILL_RENAMES[activeSkill]) {
+  if (SKILL_RENAMES[activeSkill]) {
+    data.active_skill = SKILL_RENAMES[activeSkill];
+    changed = true;
+  }
+  if ("history" in data) {
+    delete data.history;
+    changed = true;
+  }
+  if (!changed) {
     report.skipped.push(relativeLifecyclePath);
     return;
   }
-  data.active_skill = SKILL_RENAMES[activeSkill];
   if (await writeTextIfChanged(lifecyclePath, stringifyYaml(data))) {
     report.changed.push(relativeLifecyclePath);
   } else {

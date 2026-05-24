@@ -62,7 +62,12 @@ tasks:
   await writeFile(path.join(root, ".harness/state/tasks.draft.yaml"), "tasks: []\n", "utf8");
   await writeFile(
     path.join(root, ".harness/state/lifecycle.yaml"),
-    'current_phase: "REQUIREMENT_GATHERING"\nactive_skill: "pm_prd"\n',
+    `current_phase: "REQUIREMENT_GATHERING"
+active_skill: "pm_prd"
+history:
+  - phase: "IDLE"
+    note: "legacy phase history should be removed"
+`,
     "utf8"
   );
   await rm(path.join(root, ".harness/pjsdlc_managed"), { recursive: true, force: true });
@@ -104,6 +109,8 @@ tasks:
   const lifecycle = await readFile(path.join(root, ".harness/state/lifecycle.yaml"), "utf8");
   assert.match(lifecycle, /active_skill: "?pjsdlc_pm_prd"?/);
   assert.doesNotMatch(lifecycle, /active_skill: "pm_prd"/);
+  assert.doesNotMatch(lifecycle, /history:/);
+  assert.doesNotMatch(lifecycle, /legacy phase history/);
 } finally {
   await rm(root, { recursive: true, force: true });
 }
