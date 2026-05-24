@@ -212,8 +212,18 @@ async function migratePlan(
     changed = true;
   }
   if (Array.isArray(data.tasks)) {
+    const retainedTasks: unknown[] = [];
+    let maxTaskSequence = 0;
     for (const task of data.tasks) {
-      if (!isRecord(task)) continue;
+      if (!isRecord(task)) {
+        retainedTasks.push(task);
+        continue;
+      }
+      const taskId = String(task.id ?? "");
+      const match = taskId.match(/^DEV-(\d+)$/);
+      if (match) {
+        maxTaskSequence = Math.max(maxTaskSequence, Number(match[1]));
+      }
       if ("checkpoint" in task) {
         const checkpoint = String(task.checkpoint ?? "");
         if (isOpenTask(task) && checkpoint) {
@@ -227,7 +237,30 @@ async function migratePlan(
         delete task.checkpoint;
         changed = true;
       }
+      if ("gate_result" in task && isOpenTask(task)) {
+        delete task.gate_result;
+        changed = true;
+      }
+      if (["done", "cancelled"].includes(String(task.status))) {
+        changed = true;
+        continue;
+      }
+      retainedTasks.push(task);
     }
+    if (retainedTasks.length !== data.tasks.length) {
+      data.tasks = retainedTasks;
+      changed = true;
+    }
+    const nextTaskSequence = data.next_task_sequence;
+    if (!Number.isInteger(nextTaskSequence) || Number(nextTaskSequence) <= maxTaskSequence) {
+      data.next_task_sequence = maxTaskSequence + 1;
+      changed = true;
+    }
+  }
+  const currentTaskId = String(data.current_task_id ?? "");
+  if (currentTaskId && !taskById(data, currentTaskId)) {
+    data.current_task_id = "";
+    changed = true;
   }
   if (changed || sourcePath !== planPath) {
     if (await writeTextIfChanged(planPath, stringifyYaml(data))) {
@@ -250,6 +283,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isOpenTask(task: Record<string, unknown>): boolean {
   return ["pending", "in_progress", "blocked", "pending_revision"].includes(String(task.status));
+}
+
+function taskById(planData: Record<string, unknown>, taskId: string): Record<string, unknown> | undefined {
+  const tasks = Array.isArray(planData.tasks) ? planData.tasks : [];
+  return tasks.find((task): task is Record<string, unknown> => isRecord(task) && task.id === taskId);
 }
 
 async function readLegacyCheckpointContract(

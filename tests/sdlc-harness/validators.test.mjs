@@ -46,13 +46,9 @@ try {
   );
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
-    `tasks:
-  - id: DEV-001
-    title: Done task
-    status: done
-    summary: Completed task
-    gate_result: PASS
-    implementation_doc: .docs/04_implementation/example/dev.md
+    `current_task_id: ""
+next_task_sequence: 2
+tasks: []
 `,
     "utf8"
   );
@@ -64,7 +60,26 @@ try {
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
-    `tasks:
+    `current_task_id: ""
+next_task_sequence: 2
+tasks:
+  - id: DEV-001
+    title: Done task
+    status: done
+    summary: Completed task
+    gate_result: PASS
+    implementation_doc: .docs/04_implementation/example/dev.md
+`,
+    "utf8"
+  );
+  let devReport = await runValidator(root, "validate-dev");
+  assert.match(devReport.errors.join("\n"), /Completed task DEV-001 must not remain in plan.yaml/);
+
+  await writeFile(
+    path.join(root, ".harness/state/plan.yaml"),
+    `current_task_id: DEV-002
+next_task_sequence: 3
+tasks:
   - id: DEV-002
     title: Open task
     status: in_progress
@@ -73,12 +88,14 @@ try {
 `,
     "utf8"
   );
-  let devReport = await runValidator(root, "validate-dev");
+  devReport = await runValidator(root, "validate-dev");
   assert.match(devReport.errors.join("\n"), /Open task DEV-002 missing allowed_paths/);
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
-    `tasks:
+    `current_task_id: DEV-002
+next_task_sequence: 3
+tasks:
   - id: DEV-002
     title: Open task
     status: in_progress

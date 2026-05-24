@@ -8,14 +8,15 @@ def main() -> None:
     tasks = tasks_data.get("tasks", [])
     current_task_id = tasks_data.get("current_task_id") or ""
     current_task = next((task for task in tasks if task.get("id") == current_task_id), None)
-    done_count = sum(1 for task in tasks if task.get("status") == "done")
+    active_count = len(tasks)
 
     print(f"Current phase: {lifecycle.get('current_phase')}")
     print(f"Active role: {lifecycle.get('active_role')}")
     print(f"Active skill: {lifecycle.get('active_skill')}")
     print(f"Milestone: {lifecycle.get('current_milestone')}")
     print(f"Allowed next phases: {', '.join(lifecycle.get('allowed_next_phases') or []) or 'none'}")
-    print(f"Tasks: {done_count}/{len(tasks)} done")
+    print(f"Plan tasks: {active_count} active/future")
+    print(f"Next task sequence: {tasks_data.get('next_task_sequence') or 'unset'}")
     if current_task:
         print(f"Current task: {current_task.get('id')} {current_task.get('title')} [{current_task.get('status')}]")
     else:

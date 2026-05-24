@@ -96,14 +96,26 @@ async function validateDev(projectRoot: string): Promise<ValidatorReport> {
   const root = await harnessRoot(projectRoot);
   const tasksData = await readYamlObject(path.join(projectRoot, root, "state", "plan.yaml"));
   const tasks = Array.isArray(tasksData.tasks) ? (tasksData.tasks as Array<Record<string, unknown>>) : [];
-  if (tasks.length === 0) errors.push("plan.yaml must contain at least one task");
+  const nextTaskSequence = tasksData.next_task_sequence;
+  if (!Number.isInteger(nextTaskSequence) || Number(nextTaskSequence) <= 0) {
+    errors.push("plan.yaml must define positive integer next_task_sequence");
+  }
   const open = tasks.filter((task) => ["pending", "in_progress", "blocked", "pending_revision"].includes(String(task.status)));
   if (open.length > 0) errors.push(`Open tasks remain: ${open.map((task) => task.id).join(", ")}`);
+  let maxTaskSequence = 0;
   for (const task of tasks) {
     for (const field of ["id", "title", "status", "summary", "implementation_doc"]) {
       if (!task[field]) errors.push(`Task missing ${field}: ${String(task.id ?? "unknown")}`);
     }
+    const taskId = String(task.id ?? "");
+    const match = taskId.match(/^DEV-(\d+)$/);
+    if (match) {
+      maxTaskSequence = Math.max(maxTaskSequence, Number(match[1]));
+    }
     if (["pending", "in_progress", "blocked", "pending_revision"].includes(String(task.status))) {
+      if ("gate_result" in task) {
+        errors.push(`Open task ${task.id} must not define gate_result`);
+      }
       for (const field of ["docs", "allowed_paths", "required_gates", "acceptance_criteria"]) {
         if (!task[field]) errors.push(`Open task ${task.id} missing ${field}`);
       }
@@ -114,17 +126,14 @@ async function validateDev(projectRoot: string): Promise<ValidatorReport> {
         errors.push(`Open task ${task.id} must define required_gates`);
       }
     } else {
-      for (const field of ["docs", "allowed_paths", "required_gates", "acceptance_criteria", "working_notes"]) {
+      errors.push(`Completed task ${task.id} must not remain in plan.yaml`);
+      for (const field of ["docs", "allowed_paths", "required_gates", "acceptance_criteria", "working_notes", "gate_result"]) {
         if (task[field]) errors.push(`Closed task ${task.id} must not retain ${field}`);
       }
     }
   }
-  for (const task of tasks.filter((task) => task.status === "done")) {
-    if (task.gate_result !== "PASS") errors.push(`Done task ${task.id} must have gate_result PASS`);
-    const implementationDoc = String(task.implementation_doc ?? "");
-    if (implementationDoc && !(await pathExists(path.join(projectRoot, implementationDoc)))) {
-      errors.push(`Implementation doc missing for ${task.id}: ${implementationDoc}`);
-    }
+  if (Number.isInteger(nextTaskSequence) && Number(nextTaskSequence) <= maxTaskSequence) {
+    errors.push("next_task_sequence must be greater than task ids currently in plan.yaml");
   }
   return { info: [`validate-dev checked ${tasks.length} task(s)`], errors };
 }

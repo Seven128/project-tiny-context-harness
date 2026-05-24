@@ -333,6 +333,7 @@ def validate_task_shape(task: dict[str, Any], index: int) -> None:
     require(task["status"] in TASK_STATUSES, f"{task.get('id', prefix)} has invalid status: {task.get('status')}")
     require(isinstance(task["summary"], str) and task["summary"].strip(), f"{task['id']} must define summary")
     if task["status"] in OPEN_TASK_STATUSES:
+        require("gate_result" not in task, f"{task['id']} open task must not define gate_result")
         for field in ["docs", "allowed_paths", "required_gates", "acceptance_criteria"]:
             require(field in task, f"{task['id']} open task missing field: {field}")
         require(isinstance(task["docs"], dict), f"{task['id']} docs must be a mapping")
@@ -340,7 +341,7 @@ def validate_task_shape(task: dict[str, Any], index: int) -> None:
         require(isinstance(task["required_gates"], list) and task["required_gates"], f"{task['id']} must define required_gates")
         require(isinstance(task["acceptance_criteria"], list) and task["acceptance_criteria"], f"{task['id']} must define acceptance_criteria")
     else:
-        for field in ["docs", "allowed_paths", "required_gates", "acceptance_criteria", "working_notes"]:
+        for field in ["docs", "allowed_paths", "required_gates", "acceptance_criteria", "working_notes", "gate_result"]:
             require(field not in task, f"{task['id']} closed task must not retain {field}")
 
 

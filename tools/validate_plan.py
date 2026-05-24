@@ -5,15 +5,20 @@ from harness_utils import OPEN_TASK_STATUSES, load_plan, require, run_main, task
 def main() -> None:
     data = load_plan()
     tasks = data.get("tasks", [])
-    require(tasks, "plan.yaml must contain at least one task before leaving SPRINTING")
+    next_task_sequence = data.get("next_task_sequence")
+    require(isinstance(next_task_sequence, int) and next_task_sequence > 0, "plan.yaml must define positive integer next_task_sequence")
 
     for index, task in enumerate(tasks):
         require(isinstance(task, dict), f"Task #{index + 1} must be a mapping")
         validate_task_shape(task, index)
-        if task.get("status") == "done":
-            require(task.get("gate_result") == "PASS", f"Done task {task.get('id')} must have gate_result PASS")
-        if task.get("status") == "cancelled":
-            require(not task.get("gate_result"), f"Cancelled task {task.get('id')} should not have gate_result")
+        require(task.get("status") in OPEN_TASK_STATUSES, f"Completed task {task.get('id')} must not remain in plan.yaml")
+
+    max_sequence = 0
+    for task in tasks:
+        task_id = str(task.get("id") or "")
+        if task_id.startswith("DEV-") and task_id[4:].isdigit():
+            max_sequence = max(max_sequence, int(task_id[4:]))
+    require(next_task_sequence > max_sequence, "next_task_sequence must be greater than task ids currently in plan.yaml")
 
     current_task_id = data.get("current_task_id") or ""
     if current_task_id:
@@ -21,7 +26,7 @@ def main() -> None:
 
     open_tasks = [task.get("id") for task in tasks if task.get("status") in OPEN_TASK_STATUSES]
     require(not open_tasks, f"Open tasks remain: {', '.join(open_tasks)}")
-    print(f"Tasks OK: {len(tasks)} task(s), all closed")
+    print(f"Plan OK: {len(tasks)} active/future task(s), none open")
 
 
 if __name__ == "__main__":

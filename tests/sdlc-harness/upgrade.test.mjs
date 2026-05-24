@@ -41,7 +41,24 @@ never_overwrite:
 `,
     "utf8"
   );
-  await writeFile(path.join(root, ".harness/state/tasks.yaml"), "tasks: []\n", "utf8");
+  await writeFile(
+    path.join(root, ".harness/state/plan.yaml"),
+    `current_task_id: DEV-002
+tasks:
+  - id: DEV-001
+    title: Completed legacy task
+    status: done
+    summary: Done task should leave current plan
+    implementation_doc: .docs/04_implementation/legacy/dev_001.md
+  - id: DEV-002
+    title: Open legacy task
+    status: pending
+    summary: Open task should stay in current plan
+    gate_result: PASS
+    implementation_doc: .docs/04_implementation/legacy/dev_002.md
+`,
+    "utf8"
+  );
   await writeFile(path.join(root, ".harness/state/tasks.draft.yaml"), "tasks: []\n", "utf8");
   await writeFile(
     path.join(root, ".harness/state/lifecycle.yaml"),
@@ -59,6 +76,10 @@ never_overwrite:
   const plan = await readFile(path.join(root, ".harness/state/plan.yaml"), "utf8");
   assert.match(plan, /current_phase/);
   assert.match(plan, /current_task_id/);
+  assert.match(plan, /id: DEV-002/);
+  assert.match(plan, /next_task_sequence: 3/);
+  assert.doesNotMatch(plan, /DEV-001/);
+  assert.doesNotMatch(plan, /gate_result/);
   const draft = await readFile(path.join(root, ".harness/state/plan.draft.yaml"), "utf8");
   assert.match(draft, /current_phase/);
   assert.match(draft, /current_task_id/);

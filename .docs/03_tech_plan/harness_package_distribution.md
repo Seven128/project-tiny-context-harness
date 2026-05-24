@@ -190,14 +190,14 @@ tasks:
 
 task 完成后，先创建 task implementation commit，保留完整 open task 合同；再将该 task 从 `plan.yaml` 的 `tasks` 列表移除，并创建 task completion ledger commit。历史动作记录由 git commit 承载，产物结果由 implementation doc 承载；Harness 不再维护 checkpoint 文件或 `.agent/archive/**` 作为常规归档事实源。
 
-如果后续 Agent 需要追溯 done task 的完整执行合同，应先读取对应 implementation doc，再从 git history 找到 task implementation commit。该 commit 必须早于 task completion ledger commit，并保留压缩前的 `plan.yaml`。推荐查询方式：
+如果后续 Agent 需要追溯 done task 的完整执行合同，应先读取对应 implementation doc，再从 git history 找到 task implementation commit。该 commit 必须早于 task completion ledger commit，并保留该 task 被移除前的 `plan.yaml`。推荐查询方式：
 
 ```sh
 git log --oneline --grep "<TASK_ID>"
 git show <implementation_commit>:.agent/state/plan.yaml
 ```
 
-如果使用了自定义 `<harnessRoot>`，第二条命令中的 `.agent` 替换为实际 root。Agent 不应因为当前 `plan.yaml` 已压缩就重建或猜测历史合同；只有新的 RFC 或 revision task 才能把新执行合同写回当前 `plan.yaml`。
+如果使用了自定义 `<harnessRoot>`，第二条命令中的 `.agent` 替换为实际 root。Agent 不应因为当前 `plan.yaml` 已移除 done task 就重建或猜测历史合同；只有新的 RFC 或 revision task 才能把新执行合同写回当前 `plan.yaml`。
 
 ### 5.5 Gate results scratchpad
 

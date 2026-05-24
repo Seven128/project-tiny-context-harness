@@ -52,7 +52,7 @@ Agent 在单阶段内部仍然以 vibe 方式执行；Harness 负责规定当前
 - 变更补丁化：需求变化先进入 RFC，再做影响分析、局部补丁、任务回退或增量任务。
 - 实现文档增量化：技术方案是计划，implementation doc 是开发后的事实。
 - 派生视图自动化：`overview.md` 由脚本生成，只用于浏览，不作为事实源。
-- Plan 短期化：open task 在 `plan.yaml` 中保存当前执行合同，done task 立即压缩为简短摘要，避免历史现场长期占用上下文。
+- Plan 短期化：open task 在 `plan.yaml` 中保存当前执行合同，done task 完成后移出当前计划，避免历史现场长期占用上下文。
 - 包与项目解耦：Harness npm 包只提供默认工作流能力、schema、模板、策略、迁移和同步规则；项目状态、业务内容和本地定制属于用户仓库，`sync` / `upgrade` 必须增量合并，不得全量覆盖。
 - 自举配置分层：开发 Harness 自身时可以有只服务于本仓库的 authoring overlay，用于记录工作流演进原则、包化约束和专用 Skill；这些内容默认不进入通用 npm 包，也不默认分发给用户项目。
 
@@ -239,11 +239,12 @@ make validate-doc-overviews
 
 ## 七、任务状态与开发循环
 ### 7.1 plan.yaml
-`.agent/state/plan.yaml` 是开发阶段的机器可读短期执行记忆。open task 直接保存当前任务需要的执行合同；任务完成后压缩为简短摘要，避免过往任务变成无效上下文。典型 open task 字段：
+`.agent/state/plan.yaml` 是开发阶段的机器可读短期执行记忆，只保留当前和未来任务。open task 直接保存当前任务需要的执行合同；任务完成后从 `plan.yaml` 移除，避免过往任务变成无效上下文。`next_task_sequence` 负责在历史 task 被移除后继续分配后续 `DEV-*` id。典型 open task 字段：
 
 ```yaml
 current_phase: "SPRINTING"
 current_task_id: "DEV-003"
+next_task_sequence: 4
 tasks:
   - id: "DEV-003"
     title: "实现登录失败次数限制"
@@ -264,19 +265,15 @@ tasks:
     working_notes:
       - "只记录恢复现场所需的短备注。"
     implementation_doc: ".docs/04_implementation/auth/login_rate_limit_impl.md"
-    gate_result: ""
 ```
 
-典型 done task 字段：
+task 完成后不再长期保留 done task 字段，当前 plan 回到只含待做任务或空列表：
 
 ```yaml
-tasks:
-  - id: "DEV-003"
-    title: "实现登录失败次数限制"
-    status: "done"
-    summary: "实现登录失败次数限制，并补充对应测试。"
-    implementation_doc: ".docs/04_implementation/auth/login_rate_limit_impl.md"
-    gate_result: "PASS"
+current_phase: "SPRINTING"
+current_task_id: ""
+next_task_sequence: 4
+tasks: []
 ```
 
 ### 任务状态：
@@ -301,24 +298,24 @@ tasks:
 -> 刷新 overview.md
 -> 保持 plan.yaml 中当前 task 的完整 open task 合同
 -> 创建 task implementation commit
--> 将 plan.yaml 中当前 task 压缩为 done 摘要
+-> 从 plan.yaml 中移除当前 task，并重置 gate_results.log
 -> 创建 task completion ledger commit
 -> git push 两个 commit 到当前 upstream branch
 -> 选择下一个 pending task
 ```
 
-开发阶段默认一个 task 对应一个主要实现提交和一个轻量完成记录提交。task implementation commit 的 commit message 应包含 task id，例如 `DEV-003: implement login rate limit`。这个 commit 应包含该 task 的代码、测试、implementation doc、`.docs/INDEX.md`、`overview.md`、必要 gate 记录，以及尚未压缩的 open task 合同；不要把多个 task 混进同一个 commit，也不要把未归属变更顺手带入。
+开发阶段默认一个 task 对应一个主要实现提交和一个轻量完成记录提交。task implementation commit 的 commit message 应包含 task id，例如 `DEV-003: implement login rate limit`。这个 commit 应包含该 task 的代码、测试、implementation doc、`.docs/INDEX.md`、`overview.md`、必要 gate 记录，以及尚未移除的 open task 合同；不要把多个 task 混进同一个 commit，也不要把未归属变更顺手带入。
 
-task completion ledger commit 发生在 implementation commit 之后，只负责把 `plan.yaml` 中当前 task 压缩为 `summary`、`implementation_doc`、`gate_result` 等 done 摘要，并记录必要 gate log。不要把这个压缩动作 amend 回 implementation commit，否则 git history 会丢失当时的 `allowed_paths`、`required_gates` 和 `acceptance_criteria`。
+task completion ledger commit 发生在 implementation commit 之后，只负责把当前 task 从 `plan.yaml` 移除，并把 `gate_results.log` 重置为短期 scratchpad header。不要把这个清理动作 amend 回 implementation commit，否则 git history 会丢失当时的 `allowed_paths`、`required_gates` 和 `acceptance_criteria`。
 
-后续如果需要追溯某个 done task 被压缩前的完整执行合同，先读取该 task 的 implementation doc，再从 git history 查找 task implementation commit：
+后续如果需要追溯某个 done task 被移除前的完整执行合同，先读取该 task 的 implementation doc，再从 git history 查找 task implementation commit：
 
 ```sh
 git log --oneline --grep "<TASK_ID>"
 git show <implementation_commit>:.agent/state/plan.yaml
 ```
 
-如果项目使用自定义 `<harnessRoot>`，把 `.agent/state/plan.yaml` 替换为实际 root。不要因为当前 `plan.yaml` 只剩 done 摘要就重建旧字段；新的执行范围应通过 RFC 或 revision task 写回新的 open task 合同。
+如果项目使用自定义 `<harnessRoot>`，把 `.agent/state/plan.yaml` 替换为实际 root。不要因为当前 `plan.yaml` 已经移除 done task 就重建旧字段；新的执行范围应通过 RFC 或 revision task 写回新的 open task 合同。
 
 两个 commit 都 `git push` 成功前，不认为该 task 完成，也不要进入下一个 pending task。如果仓库没有 remote/upstream、没有权限、凭证失效或 push 被拒绝，当前 task 应停在需要人工处理的状态并报告 blocker；不能为了继续执行而静默跳过 push。
 
@@ -341,9 +338,11 @@ PRD
 -> 代码、测试和 implementation doc
 ```
 
-每个 open task 都必须在 `plan.yaml` 中包含 `docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`。执行中只把必要现场写成短 `working_notes`；任务完成并写入 implementation doc 后，删除这些活跃字段，只留下摘要、implementation doc 和 gate result。历史动作记录以 git commit 为准，产物结果以 implementation doc 为准。
+每个 open task 都必须在 `plan.yaml` 中包含 `docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`。执行中只把必要现场写成短 `working_notes`；任务完成并写入 implementation doc 后，把该 task 从当前 `plan.yaml` 移除。历史动作记录以 git commit 为准，产物结果以 implementation doc 为准。
 
-`done` task 的历史边界以 task implementation commit 为准，因为它保留了 task 被压缩前的完整执行合同。`plan.yaml` 不长期保存 commit hash；需要追溯时从 git history、PR 或外部 release 系统查看。completion ledger commit 只负责把当前 plan 恢复为短期、低噪声状态。Agent 查历史合同时，应以 `git log --grep "<TASK_ID>"` 找到 implementation commit，并用 `git show <commit>:<harnessRoot>/state/plan.yaml` 读取当时的未压缩合同。
+`done` task 的历史边界以 task implementation commit 为准，因为它保留了 task 被移除前的完整执行合同。`plan.yaml` 不长期保存 commit hash；需要追溯时从 git history、PR 或外部 release 系统查看。completion ledger commit 只负责把当前 plan 恢复为短期、低噪声状态。Agent 查历史合同时，应以 `git log --grep "<TASK_ID>"` 找到 implementation commit，并用 `git show <commit>:<harnessRoot>/state/plan.yaml` 读取当时的未移除合同。
+
+`gate_results.log` 同样是短期 scratchpad，只记录当前 task 或当前阶段最近 gate 情况。长期 gate 事实应进入 implementation doc、git commit、CI logs 或 release 记录；task/phase 完成后可以把它重置为短 header，避免无限增长。
 
 ## 八、阶段 Skill
 每个 Skill 只负责一个阶段或动作。
@@ -514,9 +513,9 @@ Codex 不需要真实“模式切换”：
 4. `.docs/INDEX.md` 已更新。
 5. `overview.md` 已刷新。
 6. open task 的 plan 合同已完整。
-7. `plan.yaml` 已把 done task 压缩为简短摘要。
+7. `plan.yaml` 已在 implementation commit 之后移除 done task。
 8. 已在 `plan.yaml` 保留完整 open task 合同时创建 task implementation commit。
-9. 已在 implementation commit 之后压缩 `plan.yaml`，并创建 task completion ledger commit。
+9. 已在 implementation commit 之后短期化 `plan.yaml`，并创建 task completion ledger commit。
 10. 已 `git push` 两个 commit 到当前 upstream branch；如果 push 失败，任务不能视为完成。
 
 ## 十四、完整工作流示例
@@ -543,8 +542,8 @@ Codex 不需要真实“模式切换”：
 4. 任务完成：
    - gate 通过后调用 `implementation_doc`。
    - 写 `.docs/04_implementation/auth/account_lock_impl.md`。
-   - 更新 `.docs/INDEX.md`、`overview.md` 和 `plan.yaml`。
-   - 将当前 task 压缩为简短 done 摘要。
+   - 更新 `.docs/INDEX.md`、`overview.md`，并保持 `plan.yaml` 中当前 open task 合同完整。
+   - 创建 task implementation commit 后，从当前 `plan.yaml` 移除该 task 并创建 task completion ledger commit。
 
 5. Review、测试、发布：
    - `reviewer` 输出 Review report。
@@ -583,7 +582,7 @@ Agent 仍然以 vibe 方式完成单阶段任务；Harness 负责让整个项目
 - 阶段与 gate 策略：`.agent/pjsdlc_managed/policies/**`。
 - 阶段产物模板：`.agent/pjsdlc_managed/templates/**`。
 - state protocol：`lifecycle.yaml`、`plan.yaml`、`plan.draft.yaml`、memory 的字段结构、状态枚举、迁移规则和校验逻辑。
-- task/plan protocol：`current_task_id`、`tasks[]`、`summary`、`implementation_doc`、`gate_result` 和 open task 的 `allowed_paths` / `required_gates` 如何组成短期执行记忆。
+- task/plan protocol：`current_task_id`、`next_task_sequence`、`tasks[]`、`summary`、`implementation_doc` 和 open task 的 `allowed_paths` / `required_gates` 如何组成短期执行记忆。
 - memory protocol：memory 如何记录、校验、提升、失效，以及如何链接到 `.docs/**` 正式出处。
 - validators、lifecycle transition、sync、upgrade、migration 等确定性工具逻辑。
 
