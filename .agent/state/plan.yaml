@@ -1,5 +1,5 @@
 current_phase: "SPRINTING"
-current_task_id: "DEV-024"
+current_task_id: ""
 tasks:
   - id: "DEV-001"
     title: "创建 npm 包骨架与 source sync manifest"
@@ -164,45 +164,7 @@ tasks:
 
   - id: "DEV-024"
     title: "补充 done task 详细合同的 git history 恢复提示"
-    status: "in_progress"
-    summary: "在 AGENTS、Skill、README 和技术方案中明确 done task 压缩后应通过 git history 查找 task implementation commit 中的完整 open task 合同。"
-    docs:
-      product:
-        - ".docs/01_product/npm_package_distribution.md"
-      tech_plan:
-        - ".docs/03_tech_plan/harness_package_distribution.md"
-      rfc:
-        - ".docs/rfc/RFC_010_recover_done_task_contract_from_git.md"
-    allowed_paths:
-      - "AGENTS.md"
-      - "README.md"
-      - ".agent/state/lifecycle.yaml"
-      - ".agent/state/plan.yaml"
-      - ".agent/state/gate_results.log"
-      - ".agent/skills/pjsdlc_dev_sprint/SKILL.md"
-      - ".agent/skills/pjsdlc_manager/SKILL.md"
-      - "packages/sdlc-harness/assets/**"
-      - "packages/sdlc-harness/source-mappings.yaml"
-      - ".docs/01_product/npm_package_distribution.md"
-      - ".docs/03_tech_plan/harness_package_distribution.md"
-      - ".docs/INDEX.md"
-      - ".docs/rfc/RFC_010_recover_done_task_contract_from_git.md"
-      - ".docs/01_product/overview.md"
-      - ".docs/03_tech_plan/overview.md"
-      - ".docs/rfc/overview.md"
-      - ".docs/04_implementation/npm_package/**"
-      - ".docs/04_implementation/overview.md"
-    required_gates:
-      - "python3 tools/validate_allowed_paths.py"
-      - "node packages/sdlc-harness/dist/cli.js package check-source"
-      - "make validate-harness"
-    acceptance_criteria:
-      - "Marker namespace `pjsdlc:sdlc-harness:*` is preserved."
-      - "AGENTS.md tells Agent to recover done task details from git history instead of current compressed plan.yaml."
-      - "Developer and manager Skill explain how to locate task implementation commit and inspect historical plan.yaml."
-      - "README and tech plan include git command examples."
-      - "Package assets stay in sync with workspace prompts."
-    working_notes:
-      - "Use task id based lookup such as `git log --oneline --grep <TASK_ID>` and `git show <commit>:.agent/state/plan.yaml`."
+    status: "done"
+    summary: "补充 done task 压缩后的 git history 恢复提示，明确通过 task implementation commit 查看完整 open task 合同，并保留 `pjsdlc:sdlc-harness:*` marker namespace。"
     implementation_doc: ".docs/04_implementation/npm_package/dev_024_done_task_git_history_lookup.md"
-    gate_result: ""
+    gate_result: "PASS"
