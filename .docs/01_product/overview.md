@@ -1,11 +1,11 @@
 # .docs/01_product overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: b09cd88d1442e825 -->
+<!-- source-hash: efb0e5a77889aae4 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `b09cd88d1442e825`
+Source hash: `efb0e5a77889aae4`
 
 ## Source Slices
 
@@ -53,7 +53,7 @@ Source: [npm_package_distribution.md](npm_package_distribution.md)
 | PRD-NPM-004 | 提供 `sync` 命令，将包内 canonical source 同步到工作区固定路径 | P0 | 重点覆盖 `AGENTS.md` 管理区块、`<harnessRoot>/skills/**`、`<harnessRoot>/managed/templates/**`、`<harnessRoot>/managed/policies/**`、`<harnessRoot>/managed/make/sdlc-harness.mk`；除 skills 硬索引外，工作流配置不再维护 legacy mirror |
 | PRD-NPM-005 | 提供 `upgrade` 命令，且 `upgrade` 必须自动执行 `sync` | P0 | 用户不需要在升级后再手动运行一次 `sync` |
 | PRD-NPM-006 | 提供 `<harnessRoot>/config.yaml` 记录 package version、schema version、managed files、local overrides 和 never overwrite | P0 | 作为 sync/upgrade 的机器契约 |
-| PRD-NPM-007 | `AGENTS.md` 使用 managed block 合并，不整体覆盖项目自有 Agent 规则 | P0 | 使用 `sdlc-harness:begin/end` marker |
+| PRD-NPM-007 | `AGENTS.md` 使用 managed block 合并，不整体覆盖项目自有 Agent 规则 | P0 | preferred marker 使用 `pjsdlc:sdlc-harness:begin/end`；旧 `sdlc-harness:begin/end` 仅作为 legacy marker 兼容迁移 |
 | PRD-NPM-008 | `Makefile` 不整体覆盖，优先插入 include 并生成 `<harnessRoot>/managed/make/sdlc-harness.mk` | P0 | 保护项目自己的 `lint`、`test`、`build` 命令 |
 | PRD-NPM-009 | `.docs/**`、`<harnessRoot>/state/**`、`src/**`、`tests/**` 永远不被 sync/upgrade 覆盖 | P0 | 这些是项目事实源或业务代码 |
 | PRD-NPM-010 | 支持 local overrides 合成最终 Skill、模板或策略 | P1 | 推荐 `<harnessRoot>/overrides/**` 和 `<harnessRoot>/managed/policies/*.local.yaml`；不要直接修改 package-managed 文件 |
@@ -71,7 +71,7 @@ Source: [npm_package_distribution.md](npm_package_distribution.md)
 - [ ] 已有仓库执行 `npx sdlc-harness init --adopt` 后，不修改 `src/**`、`tests/**`、已有业务文档和已有项目配置，除非用户显式确认。
 - [ ] 执行 `npx sdlc-harness sync` 后，`<harnessRoot>/skills/**/SKILL.md` 作为 canonical source 存在于工作区，Agent 可按本地固定目录读取。
 - [ ] 执行 `npx sdlc-harness upgrade` 后，自动完成 `sync`，不要求用户再手动运行 `npx sdlc-harness sync`。
-- [ ] `AGENTS.md` 中项目自定义内容在 sync/upgrade 后保持不变，仅 `sdlc-harness` managed block 被更新。
+- [ ] `AGENTS.md` 中项目自定义内容在 sync/upgrade 后保持不变，仅 `pjsdlc:sdlc-harness` managed block 被更新；旧 `sdlc-harness` block 可被迁移为新 marker。
 - [ ] 项目根 `Makefile` 中业务自定义 `lint`、`test-all`、`build` 等目标在 sync/upgrade 后保持不变。
 - [ ] `.docs/**` 和 `<harnessRoot>/state/**` 在 sync/upgrade 中不会被覆盖；如检测到风险，命令失败并输出 blocker。
 - [ ] `sdlc-harness doctor` 能报告 managed files 缺失、checksum 漂移、schema version 不匹配和 local override 合并结果。

@@ -126,7 +126,7 @@ never_overwrite:
 ### 5.2 managed metadata
 
 ```txt
-<!-- sdlc-harness-managed
+<!-- pjsdlc:sdlc-harness-managed
 source: agent-project-sdlc
 version: 0.1.0
 kind: skill
@@ -209,7 +209,7 @@ task 完成后，移除 `docs`、`allowed_paths`、`required_gates`、`acceptanc
 |---|---|---|
 | 包源码与当前工作流内容漂移 | P0 | `package sync-source` 更新，`package check-source` 和 CI 强制检查 |
 | 根 `Makefile` 与业务项目冲突 | P0 | 只插入 include，不整体覆盖 |
-| `AGENTS.md` 与项目自定义规则冲突 | P0 | 使用 managed block，marker 外内容不改 |
+| `AGENTS.md` 与项目自定义规则冲突 | P0 | 使用 `pjsdlc:sdlc-harness:*` managed block，marker 外内容不改；旧 `sdlc-harness:*` marker 仅作为 migration 输入 |
 | 生成的 Skill 不被 Agent 识别 | P0 | 默认 `<harnessRoot>` 为 `.agent`；Skill 保持 `<harnessRoot>/skills/<skill_name>/SKILL.md` 硬索引；显式 `.harness` 项目需在入口规则中声明 `.harness/skills/**` |
 | policy/template 事实源重复 | P1 | 工具只读取 `<harnessRoot>/managed/policies/**` 和 `<harnessRoot>/managed/templates/**`，删除 legacy mirror |
 | npm 包 validators 运行环境不稳定 | P1 | validators 运行时使用 TypeScript/Node，不依赖 Python 运行时 |
