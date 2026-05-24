@@ -1,11 +1,11 @@
 # .docs/01_product overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: af2b846f062ae6e7 -->
+<!-- source-hash: fdaabb23a26c4660 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `af2b846f062ae6e7`
+Source hash: `fdaabb23a26c4660`
 
 ## Source Slices
 
@@ -67,6 +67,8 @@ Source: [npm_package_distribution.md](npm_package_distribution.md)
 | PRD-NPM-018 | 已完成 task 的执行合同只作为显式 forensic fallback | P2 | task implementation commit 在 task 移除前保留完整 open task contract，但 Agent 默认不读取过去 task 执行流水；只有用户明确要求 forensic/audit/regression 追溯时，才临时使用 git、PR、CI 或 release 记录 |
 | PRD-NPM-019 | `gate_results.log` 只作为当前 task / 当前阶段短期 gate scratchpad | P1 | task 或阶段完成后应把最终 gate 事实沉淀到 implementation doc、git commit、CI logs 或 release 记录中；`gate_results.log` 不无限累积历史 |
 | PRD-NPM-020 | Harness active state 不读取、不保存过去执行流水 | P0 | `lifecycle.yaml`、`plan.yaml`、`gate_results.log` 只保存当前可执行状态；过去阶段/task/gate 执行信息默认不进入 Agent 上下文，仅在显式 forensic / audit / regression 场景中通过 git、PR、CI、release 系统和阶段产物查询 |
+| PRD-NPM-021 | 移除独立 gate results state | P0 | 不再维护 `<harnessRoot>/state/gate_results.log`；当前 task gate 证据写入 task notes 或 implementation doc `Verification`，长期记录由 implementation doc、CI logs 或 release 系统承担 |
+| PRD-NPM-022 | RFC 阶段必须显式考虑影响面 | P0 | RFC 进入补丁或 DEV task 前必须列出 docs、state、skills、policies、templates、tools、package assets、tests、sync/upgrade/migration 和 generated artifacts 影响 |
 
 ## 5. Acceptance Criteria
 
@@ -90,6 +92,8 @@ Source: [npm_package_distribution.md](npm_package_distribution.md)
 - [ ] Agent 默认不读取 done task 的历史执行合同；显式 forensic/audit/regression 场景可临时通过 git、PR、CI 或 release 记录追溯。
 - [ ] `gate_results.log` 不长期保存全部历史 gate；完成后的长期 gate 事实以 implementation doc、git commit、CI logs 或 release 记录为准。
 - [ ] `lifecycle.yaml` 不保存 phase transition history；Agent 默认不读取过去执行流水。
+- [ ] 新项目不生成 `gate_results.log`，gate 证据进入 task notes 或 implementation doc。
+- [ ] RFC 产物包含明确影响面清单，并据此创建后续 task。
 - [ ] Harness 不再生成或要求 checkpoint 目录、checkpoint 模板或 `validate-checkpoint` gate。
 - [ ] Harness 不再生成或要求 `.agent/archive/**` 作为 task/release 常规归档。
 
@@ -102,7 +106,7 @@ Source: [npm_package_distribution.md](npm_package_distribution.md)
 - 不覆盖或重写业务项目已有代码、产品文档、实现文档和历史状态。
 - 不把 task/release 历史动作重复归档到 `.agent/archive/**`；这类历史以 git commit、tag 或外部 release 系统为准。
 - 不保留独立 checkpoint 文件；活跃任务现场只存在于 `plan.yaml` 的 open task 条目中。
-- 不把全部历史 gate 结果长期堆在 `.agent/state/gate_results.log` 中。
+- 不维护独立 gate results state。
 - 不把过去 phase/task 执行流水写入 active state，也不要求 Agent 默认读取这些流水。
 
 ## 7. Open Questions
