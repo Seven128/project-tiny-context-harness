@@ -45,6 +45,7 @@
 | PRD-NPM-015 | 支持通过 JSON 配置 `harnessFolderName` 指定 Harness 根目录，默认值为 `.agent` | P0 | 优先读取 `package.json` 的 `sdlcHarness.harnessFolderName`，也支持 `sdlc-harness.config.json`；兼容别名 `harnessFloderName` |
 | PRD-NPM-016 | `sdlc-harness init` 交互式询问 Harness folder name，并写入 `package.json` | P0 | 提示默认值 `.agent`；直接回车采用默认；非交互环境不阻塞并使用默认 |
 | PRD-NPM-017 | 删除 archive 并采用 `plan.yaml` 单文件执行计划模型 | P0 | `plan.yaml` 取代 `tasks.yaml`；open task 直接包含 `allowed_paths`、`required_gates`、`acceptance_criteria` 和必要执行备注；done task 压缩为简短摘要；不再维护 checkpoint 文件或 `.agent/archive/**` 常规归档 |
+| PRD-NPM-018 | Agent 必须能从 git history 恢复已完成 task 的完整执行合同 | P0 | task implementation commit 在压缩前保留完整 open task contract；当需要追溯 done task 的 `allowed_paths`、`required_gates`、`acceptance_criteria` 或 `working_notes` 时，Agent 使用 git history 和 implementation doc，而不是要求当前 `plan.yaml` 长期保留详情 |
 
 ## 5. Acceptance Criteria
 
@@ -65,6 +66,7 @@
 - [ ] `plan.yaml` 和 `plan.draft.yaml` 取代 `tasks.yaml` 和 `tasks.draft.yaml`。
 - [ ] open task 直接在 `plan.yaml` 中声明 `allowed_paths`、`required_gates`、`acceptance_criteria` 和必要执行备注。
 - [ ] task 完成后压缩为简短摘要、implementation doc 和 gate result，历史动作记录由 git commit 承载，产物结果由 implementation doc 承载。
+- [ ] Agent 能根据 task id 从 git history 找到 task implementation commit，并查看该 commit 中未压缩的 `plan.yaml` 版本。
 - [ ] Harness 不再生成或要求 checkpoint 目录、checkpoint 模板或 `validate-checkpoint` gate。
 - [ ] Harness 不再生成或要求 `.agent/archive/**` 作为 task/release 常规归档。
 

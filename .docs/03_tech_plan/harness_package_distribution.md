@@ -188,6 +188,15 @@ tasks:
 
 task 完成后，移除 `docs`、`allowed_paths`、`required_gates`、`acceptance_criteria` 和 `working_notes`，只保留 `id`、`title`、`status`、`summary`、`implementation_doc` 和 `gate_result`。历史动作记录由 git commit 承载，产物结果由 implementation doc 承载；Harness 不再维护 checkpoint 文件或 `.agent/archive/**` 作为常规归档事实源。
 
+如果后续 Agent 需要追溯 done task 的完整执行合同，应先读取对应 implementation doc，再从 git history 找到 task implementation commit。该 commit 必须早于 task completion ledger commit，并保留压缩前的 `plan.yaml`。推荐查询方式：
+
+```sh
+git log --oneline --grep "<TASK_ID>"
+git show <implementation_commit>:.agent/state/plan.yaml
+```
+
+如果使用了自定义 `<harnessRoot>`，第二条命令中的 `.agent` 替换为实际 root。Agent 不应因为当前 `plan.yaml` 已压缩就重建或猜测历史合同；只有新的 RFC 或 revision task 才能把新执行合同写回当前 `plan.yaml`。
+
 ## 6. 任务拆分（Task Breakdown）
 
 | Task ID | 标题（Title） | Allowed Paths | Required Gates | Implementation Doc |
@@ -215,6 +224,7 @@ task 完成后，移除 `docs`、`allowed_paths`、`required_gates`、`acceptanc
 | npm 包 validators 运行环境不稳定 | P1 | validators 运行时使用 TypeScript/Node，不依赖 Python 运行时 |
 | `plan.yaml` 过大导致 Agent 上下文膨胀 | P0 | open task 只保存当前执行合同和必要短备注，done task 立即压缩为简短摘要 |
 | task/release 归档与 git 历史重复 | P1 | 删除 `.agent/archive/**` 常规机制，动作记录以 git commit/tag 为准 |
+| Agent 误以为 done task 详情丢失 | P1 | 在 AGENTS、Skill 和 README 中声明用 git history 找回 task implementation commit 中的完整 open task 合同 |
 
 ## 8. 需要关注的方案偏移
 
