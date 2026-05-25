@@ -3,7 +3,7 @@
 ## 1. 关联产品需求
 
 - PRD: `.docs/01_product/npm_package_distribution.md`
-- Requirement IDs: `PRD-NPM-001` 至 `PRD-NPM-023`
+- Requirement IDs: `PRD-NPM-001` 至 `PRD-NPM-024`
 
 ## 2. 现有上下文
 
@@ -93,6 +93,15 @@ package.json or sdlc-harness.config.json
 | 刷新 overview | 运行 `make docs-overview` |
 
 如果自然语言意图会改变阶段、创建或删除 task、提交、push 或发布，Agent 先说明即将执行的动作和验证方式，再继续。这个契约只约束 Agent 行为，不增加新的 state 字段，也不要求 Codex、Claude Code 或其它客户端提供专有模式切换能力。
+
+### 3.4 根文档分层
+
+根文档分成两层：
+
+- `README.md`：面向用户和 npm 包消费者，介绍 Harness 是什么、如何安装、如何 `init` / `init --adopt` / `sync` / `upgrade` / `doctor`，以及自然语言日常使用方式。
+- `PROJECT_SPEC.md`：面向维护者，保存完整产品说明、阶段设计、包化策略、迁移原则和历史取舍。
+
+这个拆分只改变文档入口，不改变 sync、upgrade、state schema 或 package assets。`init --adopt` 仍可把 `README.md` 作为已有项目识别 marker；本仓库的重型设计内容不再占用用户阅读 README 的首屏。
 
 ## 4. 接口契约（Interface Contract）
 
