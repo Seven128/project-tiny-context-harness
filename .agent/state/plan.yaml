@@ -1,36 +1,4 @@
 current_phase: "SPRINTING"
-current_task_id: "DEV-030"
+current_task_id: ""
 next_task_sequence: 31
-tasks:
-  - id: "DEV-030"
-    title: "拆分 README 与项目规格说明"
-    status: "in_progress"
-    summary: "将当前厚重 README 移为项目规格说明，并新建面向用户的 README，介绍 npm 包、接入方式和常用命令。"
-    docs:
-      product:
-        - ".docs/01_product/npm_package_distribution.md"
-      tech_plan:
-        - ".docs/03_tech_plan/harness_package_distribution.md"
-    allowed_paths:
-      - "README.md"
-      - "PROJECT_SPEC.md"
-      - ".agent/state/plan.yaml"
-      - ".docs/01_product/npm_package_distribution.md"
-      - ".docs/03_tech_plan/harness_package_distribution.md"
-      - ".docs/INDEX.md"
-      - ".docs/01_product/overview.md"
-      - ".docs/03_tech_plan/overview.md"
-      - ".docs/04_implementation/npm_package/dev_030_readme_user_guide.md"
-      - ".docs/04_implementation/overview.md"
-    required_gates:
-      - "python3 tools/validate_allowed_paths.py"
-      - "make validate-harness"
-      - "git diff --check"
-    acceptance_criteria:
-      - "Existing long-form README content is preserved under a name that reflects project/product specification."
-      - "Root README is rewritten from the user perspective, covering what the package is, install/init/adopt/sync/upgrade/doctor, natural-language workflow usage, and validation commands."
-      - "Docs mention the README/spec split where relevant."
-      - "Implementation doc records the rename, new README behavior, and verification."
-    working_notes:
-      - "Package source sync is not required unless package-managed assets change."
-    implementation_doc: ".docs/04_implementation/npm_package/dev_030_readme_user_guide.md"
+tasks: []
