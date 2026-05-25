@@ -18,6 +18,7 @@
 - 发布文档：`.docs/08_release/`
 - RFC 文档：`.docs/rfc/`
 - 全局文档索引：`.docs/INDEX.md`
+- Harness authoring overlay（如果存在）：`.agent/authoring/`，只在维护 Harness/workflow/npm package 源码或本仓库自举规则时读取，不作为用户项目默认分发内容
 
 ## 派生视图
 
