@@ -11,7 +11,7 @@ AI SDLC Harness npm 包化后有三个明确边界：
 
 | 边界 | 责任 | 不负责 |
 |---|---|---|
-| Source Authoring Workspace | 当前 `ProjectTemplate` 仓库中维护工作流事实源、参考实现和包源同步输入；`.agent/**` 是工作流配置 canonical root | 不保存业务项目状态 |
+| Source Authoring Workspace | 当前 `ProjectTemplate` 仓库中维护工作流事实源、参考实现和包源同步输入；`.codex/**` 是工作流配置 canonical root | 不保存业务项目状态 |
 | npm Package Canonical Source | 发布 `agent-project-sdlc`，提供 CLI、默认 Skill、模板、策略、validators、migrations | 不直接作为 Agent 启动时唯一读取源 |
 | Project Instance Workspace | 保存某个业务项目的 `.docs/**`、`<harnessRoot>/state/**`、local overrides 和业务代码 | 不直接 fork 通用 Harness 逻辑 |
 

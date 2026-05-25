@@ -245,7 +245,7 @@ async function installedConsumerSmoke(version) {
   if (installedVersion !== version) {
     throw new Error(`Installed package version ${installedVersion} did not match ${version}`);
   }
-  await run("npx", ["sdlc-harness", "init", "--harness-folder", ".agent"], { cwd: tmp });
+  await run("npx", ["sdlc-harness", "init", "--harness-folder", ".codex"], { cwd: tmp });
   const doctor = await run("npx", ["sdlc-harness", "doctor"], { cwd: tmp, capture: true });
   if (!doctor.output.includes(`core package: ${packageName}@${version}`)) {
     throw new Error("Doctor output did not include the expected package version.");
@@ -499,7 +499,7 @@ function formatBytes(value) {
 
 async function hasOpenTask() {
   try {
-    const plan = await fs.readFile(path.join(projectRoot, ".agent", "state", "plan.yaml"), "utf8");
+    const plan = await fs.readFile(path.join(projectRoot, ".codex", "state", "plan.yaml"), "utf8");
     return /^current_task_id:\s*"[^"]+"/m.test(plan) && !/^current_task_id:\s*""/m.test(plan);
   } catch {
     return false;

@@ -43,7 +43,7 @@ def main() -> None:
     if target == "BLOCKED" and lifecycle.get("suspended_phase"):
         lifecycle["allowed_next_phases"] = [lifecycle["suspended_phase"]]
 
-    dump_yaml(lifecycle, ".agent/state/lifecycle.yaml")
+    dump_yaml(lifecycle, ".codex/state/lifecycle.yaml")
     print(f"Transitioned {current} -> {target}")
     if args.reason:
         print(f"Note: {args.reason}")

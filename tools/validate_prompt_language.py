@@ -48,8 +48,8 @@ MACHINE_IDENTIFIERS = [
 REQUIRED_AGENTS_TERMS = [
     "Skill Language Contract",
     "中文解释 + 英文精确标识符",
-    ".agent/state/lifecycle.yaml",
-    ".agent/state/plan.yaml",
+    ".codex/state/lifecycle.yaml",
+    ".codex/state/plan.yaml",
     "make validate-current",
 ]
 
@@ -85,8 +85,8 @@ def validate_agents() -> None:
 
 
 def validate_skills() -> None:
-    skill_files = sorted((ROOT / ".agent/skills").glob("*/SKILL.md"))
-    require(skill_files, "No workflow skill files found under .agent/skills/")
+    skill_files = sorted((ROOT / ".codex/skills").glob("*/SKILL.md"))
+    require(skill_files, "No workflow skill files found under .codex/skills/")
 
     for path in skill_files:
         content = text(path)
@@ -101,8 +101,8 @@ def validate_skills() -> None:
 
 
 def validate_skill_template() -> None:
-    path = ROOT / ".agent/pjsdlc_managed/templates/SKILL_TEMPLATE.md"
-    require(path.exists(), "Missing .agent/pjsdlc_managed/templates/SKILL_TEMPLATE.md")
+    path = ROOT / ".codex/pjsdlc_managed/templates/SKILL_TEMPLATE.md"
+    require(path.exists(), "Missing .codex/pjsdlc_managed/templates/SKILL_TEMPLATE.md")
     content = text(path)
     for section in SKILL_REQUIRED_SECTIONS:
         require(section in content, f"SKILL_TEMPLATE.md missing Chinese section: {section}")
@@ -111,9 +111,9 @@ def validate_skill_template() -> None:
 
 
 def validate_yaml_keys() -> None:
-    lifecycle = load_yaml(".agent/state/lifecycle.yaml")
-    tasks = load_yaml(".agent/state/plan.yaml")
-    phase_contracts = load_yaml(".agent/pjsdlc_managed/policies/phase_contracts.yaml")
+    lifecycle = load_yaml(".codex/state/lifecycle.yaml")
+    tasks = load_yaml(".codex/state/plan.yaml")
+    phase_contracts = load_yaml(".codex/pjsdlc_managed/policies/phase_contracts.yaml")
 
     for key in YAML_KEYWORDS["lifecycle"]:
         require(key in lifecycle, f"lifecycle.yaml key was removed or translated: {key}")

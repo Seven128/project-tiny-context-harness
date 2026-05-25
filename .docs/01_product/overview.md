@@ -1,11 +1,11 @@
 # .docs/01_product overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 57f0a7f7a086d5ab -->
+<!-- source-hash: 64e2e2892a587fce -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `57f0a7f7a086d5ab`
+Source hash: `64e2e2892a587fce`
 
 ## Source Slices
 
@@ -63,7 +63,7 @@ Source: [npm_package_distribution.md](npm_package_distribution.md)
 | PRD-NPM-014 | 以可配置 `<harnessRoot>` 作为 Harness 工作流配置 canonical root | P0 | Skill、policy、template、state protocol、validator 和 migration 都属于 Harness 配置；具体 state data 和 `.docs/**` 属于项目实例 |
 | PRD-NPM-015 | 支持通过 JSON 配置 `harnessFolderName` 指定 Harness 根目录，配置层默认值为 `.agent` | P0 | 优先读取 `package.json` 的 `sdlcHarness.harnessFolderName`，也支持 `sdlc-harness.config.json`；兼容别名 `harnessFloderName` |
 | PRD-NPM-016 | `sdlc-harness init` 先询问目标 Agent，并写入对应 `harnessFolderName` | P0 | 直接回车默认 `Codex -> .codex`；选择 `Other` 时才询问自定义 folder，直接回车默认 `.agent`；非交互环境不阻塞并使用 Codex 默认 |
-| PRD-NPM-017 | 删除 archive 并采用 `plan.yaml` 单文件短期执行计划模型 | P0 | `plan.yaml` 取代 `tasks.yaml`；open task 直接包含 `allowed_paths`、`required_gates`、`acceptance_criteria` 和必要执行备注；task 完成并写入长期历史后从 `plan.yaml` 移除；不再维护 checkpoint 文件或 `.agent/archive/**` 常规归档 |
+| PRD-NPM-017 | 删除 archive 并采用 `plan.yaml` 单文件短期执行计划模型 | P0 | `plan.yaml` 取代 `tasks.yaml`；open task 直接包含 `allowed_paths`、`required_gates`、`acceptance_criteria` 和必要执行备注；task 完成并写入长期历史后从 `plan.yaml` 移除；不再维护 checkpoint 文件或 `<harnessRoot>/archive/**` 常规归档 |
 | PRD-NPM-018 | 已完成 task 的历史查询面向产物结果和变更意图 | P2 | Agent 默认不读取过去 task 执行流水；历史 task 查询以模块级 implementation doc、RFC、PRD、tech plan 和代码为主，`allowed_paths`、`required_gates` 和临时 `working_notes` 不作为历史查询 API |
 | PRD-NPM-019 | Gate evidence 写入 task notes 或 implementation doc | P1 | 不维护独立 gate scratchpad；当前 task 的临时 gate 证据可写入 `working_notes`，完成后的最终 gate 事实写入 implementation doc `Verification`、CI logs 或 release 记录 |
 | PRD-NPM-020 | Harness active state 不读取、不保存过去执行流水 | P0 | `lifecycle.yaml` 和 `plan.yaml` 只保存当前可执行状态；过去阶段/task/gate 执行信息默认不进入 Agent 上下文，仅在显式 forensic / audit / regression 场景中通过 git、PR、CI、release 系统和阶段产物查询 |
@@ -93,6 +93,7 @@ Source: [npm_package_distribution.md](npm_package_distribution.md)
 - [ ] 未经过交互式 init 且未配置 `harnessFolderName` 的配置解析默认使用 `.agent` 作为 Harness 根目录。
 - [ ] workflow Skill 使用 `<harnessRoot>/skills/pjsdlc_<skill_name>/SKILL.md` hard file index；policy、template、Makefile fragment 等工作流配置统一位于 `<harnessRoot>/pjsdlc_managed/**`，不再维护 `<harnessRoot>/policies/**` 或 `<harnessRoot>/templates/**` mirror。
 - [ ] 配置 `harnessFolderName: ".harness"` 的项目使用 `.harness` 作为 Harness 根目录，Skill 位于 `.harness/skills/**`，不再额外套 `.harness/agents/skills/**`。
+- [ ] 当前 `ProjectTemplate` source authoring workspace 显式配置 `harnessFolderName: ".codex"`，本地状态、skills、templates、policies 和 Makefile fragment 位于 `.codex/**`。
 - [ ] `plan.yaml` 和 `plan.draft.yaml` 取代 `tasks.yaml` 和 `tasks.draft.yaml`。
 - [ ] open task 直接在 `plan.yaml` 中声明 `allowed_paths`、`required_gates`、`acceptance_criteria` 和必要执行备注。
 - [ ] task 完成后从 `plan.yaml` 移除，历史动作记录由 git commit 承载，产物结果由 implementation doc 承载。
@@ -107,7 +108,7 @@ Source: [npm_package_distribution.md](npm_package_distribution.md)
 - [ ] README 和协议按阶段顺序说明 `/prd`、`/design`、`/dev`、`/devloop`；`/dev` 一次只完成一个 DEV task 闭环，`/devloop` 连续创建/执行 DEV task，直到没有明确任务或遇到 blocker。
 - [ ] npm package patch release 可以通过 `npm run release:npm -- --version patch --publish --yes` 执行，并生成 release evidence。
 - [ ] Harness 不再生成或要求 checkpoint 目录、checkpoint 模板或 `validate-checkpoint` gate。
-- [ ] Harness 不再生成或要求 `.agent/archive/**` 作为 task/release 常规归档。
+- [ ] Harness 不再生成或要求 `<harnessRoot>/archive/**` 作为 task/release 常规归档。
 
 ## 6. Out Of Scope
 
@@ -116,7 +117,7 @@ Source: [npm_package_distribution.md](npm_package_distribution.md)
 - 不在首个版本实现跨仓库自动开 PR 的机器人流程。
 - 不在首个版本解决所有语言生态的项目脚本自动识别；`lint`、`test`、`build` 可先由项目保留或人工配置。
 - 不覆盖或重写业务项目已有代码、产品文档、实现文档和历史状态。
-- 不把 task/release 历史动作重复归档到 `.agent/archive/**`；这类历史以 git commit、tag 或外部 release 系统为准。
+- 不把 task/release 历史动作重复归档到 `<harnessRoot>/archive/**`；这类历史以 git commit、tag 或外部 release 系统为准。
 - 不保留独立 checkpoint 文件；活跃任务现场只存在于 `plan.yaml` 的 open task 条目中。
 - 不维护独立 gate results state。
 - 不把过去 phase/task 执行流水写入 active state，也不要求 Agent 默认读取这些流水。

@@ -119,7 +119,7 @@ async function syncAgentsBlock(destination: string, root: string, report: SyncRe
 }
 
 function renderAgentsCore(content: string, root: string): string {
-  return content.replaceAll(".agent", root);
+  return content.replaceAll(".agent", root).replaceAll(".codex", root);
 }
 
 async function syncMakefileInclude(destination: string, root: string, report: SyncReport): Promise<void> {

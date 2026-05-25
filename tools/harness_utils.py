@@ -305,18 +305,18 @@ def contains_any(text: str, terms: list[str]) -> bool:
 
 
 def load_lifecycle() -> dict[str, Any]:
-    data = load_yaml(".agent/state/lifecycle.yaml")
+    data = load_yaml(".codex/state/lifecycle.yaml")
     require(isinstance(data, dict), "lifecycle.yaml must be a mapping")
     return data
 
 
 def load_phase_contracts() -> dict[str, Any]:
-    data = load_yaml(".agent/pjsdlc_managed/policies/phase_contracts.yaml")
+    data = load_yaml(".codex/pjsdlc_managed/policies/phase_contracts.yaml")
     require(isinstance(data, dict) and isinstance(data.get("phases"), dict), "phase_contracts.yaml must contain phases")
     return data["phases"]
 
 
-def load_plan(path: str = ".agent/state/plan.yaml") -> dict[str, Any]:
+def load_plan(path: str = ".codex/state/plan.yaml") -> dict[str, Any]:
     data = load_yaml(path)
     require(isinstance(data, dict), f"{path} must be a mapping")
     tasks = data.get("tasks", [])
@@ -343,7 +343,7 @@ def validate_task_shape(task: dict[str, Any], index: int) -> None:
             require(field not in task, f"{task['id']} closed task must not retain {field}")
 
 
-def expand_harness_root(patterns: list[str], root: str = ".agent") -> list[str]:
+def expand_harness_root(patterns: list[str], root: str = ".codex") -> list[str]:
     return [str(pattern).replace("<harnessRoot>", root) for pattern in patterns]
 
 

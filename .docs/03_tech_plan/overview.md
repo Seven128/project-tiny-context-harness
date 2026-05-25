@@ -1,11 +1,11 @@
 # .docs/03_tech_plan overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 48a93337091bfc74 -->
+<!-- source-hash: ceb76bd47d82349d -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `48a93337091bfc74`
+Source hash: `ceb76bd47d82349d`
 
 ## Source Slices
 
@@ -208,18 +208,18 @@ source_mappings:
   - source: "AGENTS.md"
     target: "packages/sdlc-harness/assets/agents/AGENTS_CORE.md"
     mode: "extract-managed-block"
-  - source: ".agent/skills"
+  - source: ".codex/skills"
     target: "packages/sdlc-harness/assets/skills"
     mode: "copy-tree"
     exclude:
       - "authoring/**"
-  - source: ".agent/pjsdlc_managed/templates"
+  - source: ".codex/pjsdlc_managed/templates"
     target: "packages/sdlc-harness/assets/templates"
     mode: "copy-tree"
-  - source: ".agent/pjsdlc_managed/policies"
+  - source: ".codex/pjsdlc_managed/policies"
     target: "packages/sdlc-harness/assets/policies"
     mode: "copy-tree"
-  - source: ".agent/pjsdlc_managed/make/sdlc-harness.mk"
+  - source: ".codex/pjsdlc_managed/make/sdlc-harness.mk"
     target: "packages/sdlc-harness/assets/make/sdlc-harness.mk"
     mode: "copy-file"
   - source: ".github/workflows/harness.yml"
@@ -256,7 +256,7 @@ tasks:
     implementation_doc: ".docs/04_implementation/npm_package/plan_state_model.md"
 ```
 
-task 完成后，先在当前 task 仍位于 `plan.yaml` 时创建 task implementation commit；再将该 task 从 `plan.yaml` 的 `tasks` 列表移除，并创建 task completion ledger commit。历史动作记录由 git commit 承载，产物结果由模块级 implementation doc 承载；Harness 不再维护 checkpoint 文件或 `.agent/archive/**` 作为常规归档事实源。
+task 完成后，先在当前 task 仍位于 `plan.yaml` 时创建 task implementation commit；再将该 task 从 `plan.yaml` 的 `tasks` 列表移除，并创建 task completion ledger commit。历史动作记录由 git commit 承载，产物结果由模块级 implementation doc 承载；Harness 不再维护 checkpoint 文件或 `<harnessRoot>/archive/**` 作为常规归档事实源。
 
 默认不追溯 done task 的执行流水。历史 task 查询主要面向“做了什么、为什么做、影响哪个模块、验证了什么”，默认读取模块级 implementation doc、RFC、PRD、tech plan 和代码。task id 和 commit 只作为 provenance；`allowed_paths`、`required_gates`、临时 `working_notes` 是执行期约束，不作为历史查询 API；只有用户明确要求 forensic/audit/regression 追溯时，Agent 才临时查询 git、PR、CI 或 release 记录。
 
@@ -338,7 +338,7 @@ git commit、tag 和 push 仍由 SPRINTING task protocol 负责，避免 release
 | policy/template 事实源重复 | P1 | 工具只读取 `<harnessRoot>/pjsdlc_managed/policies/**` 和 `<harnessRoot>/pjsdlc_managed/templates/**`，删除 legacy mirror |
 | npm 包 validators 运行环境不稳定 | P1 | validators 运行时使用 TypeScript/Node，不依赖 Python 运行时 |
 | `plan.yaml` 过大导致 Agent 上下文膨胀 | P0 | plan 只保留当前和未来任务，done/cancelled task 完成后移出 plan |
-| task/release 归档与 git 历史重复 | P1 | 删除 `.agent/archive/**` 常规机制，动作记录以 git commit/tag 为准 |
+| task/release 归档与 git 历史重复 | P1 | 删除 `<harnessRoot>/archive/**` 常规机制，动作记录以 git commit/tag 为准 |
 | Agent 默认追溯 done task 导致上下文噪声 | P1 | 在 AGENTS、Skill 和 README 中声明过去 task 合同只是 cold archive，默认不读取 |
 | 独立 gate state 与 task/module implementation doc 重复 | P1 | 删除 `gate_results.log`，gate evidence 进入 task notes、相关 implementation doc 或 CI/release 记录 |
 | Agent 默认读取过去执行流水导致上下文噪声 | P0 | active state 不保存 `history`，历史执行信息仅在显式 forensic/audit 场景临时查询 |
@@ -347,8 +347,8 @@ git commit、tag 和 push 仍由 SPRINTING task protocol 负责，避免 release
 ## 8. 需要关注的方案偏移
 
 - 如果当前仓库继续作为包源码仓库，`packages/sdlc-harness/assets/**` 不应手写，应由 `package sync-source` 从工作流源文件生成。
-- RFC_003 调整后，`sdlc-harness init` 已从直接询问 Harness root 演进为先选择目标 Agent；默认 `Codex -> .codex`，`Other` 的空输入和配置兜底仍为 `.agent`。当前仓库作为 authoring workspace 继续使用 `.agent`。
-- RFC_004 调整后，删除 `.agent/archive/**` 常规归档，并把历史动作记录交给 git。
+- RFC_003 调整后，`sdlc-harness init` 已从直接询问 Harness root 演进为先选择目标 Agent；默认 `Codex -> .codex`，`Other` 的空输入和配置兜底仍为 `.agent`。当前仓库作为 authoring workspace 使用 `.codex`。
+- RFC_004 调整后，删除 `<harnessRoot>/archive/**` 常规归档，并把历史动作记录交给 git。
 - RFC_005 调整后，checkpoint 文件被删除；`allowed_paths`、`required_gates` 和验收标准直接保存在 open task 的 `plan.yaml` 条目中。
 - RFC_011 调整后，done/cancelled task 不再长期留在 `plan.yaml`。
 - RFC_012 调整后，`lifecycle.yaml.history` 被移除，阶段流转历史不再写入 active state。

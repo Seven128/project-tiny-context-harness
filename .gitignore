@@ -26,7 +26,7 @@ coverage/
 
 # Logs and temporary files
 *.log
-!.agent/state/gate_results.log
+!.codex/state/gate_results.log
 tmp/
 temp/
 

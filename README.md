@@ -152,6 +152,8 @@ make docs-overview
 
 ## 开发本包
 
+这个源码仓库自身使用 `package.json#sdlcHarness.harnessFolderName = ".codex"`，因此本地 Harness 状态、skills、templates 和 policies 位于 `.codex/**`。
+
 安装依赖后运行：
 
 ```sh

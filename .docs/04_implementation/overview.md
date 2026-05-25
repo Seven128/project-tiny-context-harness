@@ -1,50 +1,51 @@
 # .docs/04_implementation overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: a28536e0e0f8d3b0 -->
+<!-- source-hash: 118a6cc1f2afd945 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `a28536e0e0f8d3b0`
+Source hash: `118a6cc1f2afd945`
 
 ## Source Slices
 
 1. [harness_workflow/command_intent_model.md](harness_workflow/command_intent_model.md)
 2. [harness_workflow/implementation_doc_model.md](harness_workflow/implementation_doc_model.md)
 3. [npm_package/authoring_overlay.md](npm_package/authoring_overlay.md)
-4. [npm_package/dev_001_package_scaffold.md](npm_package/dev_001_package_scaffold.md)
-5. [npm_package/dev_002_sync_init_doctor.md](npm_package/dev_002_sync_init_doctor.md)
-6. [npm_package/dev_003_upgrade_migrations.md](npm_package/dev_003_upgrade_migrations.md)
-7. [npm_package/dev_004_source_sync_ci.md](npm_package/dev_004_source_sync_ci.md)
-8. [npm_package/dev_005_validate_commands.md](npm_package/dev_005_validate_commands.md)
-9. [npm_package/dev_006_unified_harness_root.md](npm_package/dev_006_unified_harness_root.md)
-10. [npm_package/dev_007_remove_tracked_agents_skills.md](npm_package/dev_007_remove_tracked_agents_skills.md)
-11. [npm_package/dev_008_configurable_harness_root.md](npm_package/dev_008_configurable_harness_root.md)
-12. [npm_package/dev_009_init_prompt_default_agent_root.md](npm_package/dev_009_init_prompt_default_agent_root.md)
-13. [npm_package/dev_010_task_checkpoint_model.md](npm_package/dev_010_task_checkpoint_model.md)
-14. [npm_package/dev_011_plan_yaml_no_checkpoint.md](npm_package/dev_011_plan_yaml_no_checkpoint.md)
-15. [npm_package/dev_012_makefile_include_block.md](npm_package/dev_012_makefile_include_block.md)
-16. [npm_package/dev_013_package_workspace_decoupling_principle.md](npm_package/dev_013_package_workspace_decoupling_principle.md)
-17. [npm_package/dev_014_authoring_overlay_design.md](npm_package/dev_014_authoring_overlay_design.md)
-18. [npm_package/dev_015_markdown_doc_overviews.md](npm_package/dev_015_markdown_doc_overviews.md)
-19. [npm_package/dev_016_role_prompts_and_karpathy_guidelines.md](npm_package/dev_016_role_prompts_and_karpathy_guidelines.md)
-20. [npm_package/dev_017_chinese_karpathy_guidelines.md](npm_package/dev_017_chinese_karpathy_guidelines.md)
-21. [npm_package/dev_018_task_commit_push_rule.md](npm_package/dev_018_task_commit_push_rule.md)
-22. [npm_package/dev_019_commit_before_task_compression.md](npm_package/dev_019_commit_before_task_compression.md)
-23. [npm_package/dev_020_rename_npm_package.md](npm_package/dev_020_rename_npm_package.md)
-24. [npm_package/dev_021_consolidate_managed_config.md](npm_package/dev_021_consolidate_managed_config.md)
-25. [npm_package/dev_022_pjsdlc_marker_prefix.md](npm_package/dev_022_pjsdlc_marker_prefix.md)
-26. [npm_package/dev_023_pjsdlc_layout_and_skill_prefix.md](npm_package/dev_023_pjsdlc_layout_and_skill_prefix.md)
-27. [npm_package/dev_024_done_task_git_history_lookup.md](npm_package/dev_024_done_task_git_history_lookup.md)
-28. [npm_package/dev_025_short_lived_plan_and_gate_log.md](npm_package/dev_025_short_lived_plan_and_gate_log.md)
-29. [npm_package/dev_026_remove_execution_history_from_active_state.md](npm_package/dev_026_remove_execution_history_from_active_state.md)
-30. [npm_package/dev_027_workflow_singleton_collaboration_boundary.md](npm_package/dev_027_workflow_singleton_collaboration_boundary.md)
-31. [npm_package/dev_028_remove_gate_results_state_and_rfc_impact.md](npm_package/dev_028_remove_gate_results_state_and_rfc_impact.md)
-32. [npm_package/dev_029_natural_language_control.md](npm_package/dev_029_natural_language_control.md)
-33. [npm_package/dev_030_readme_user_guide.md](npm_package/dev_030_readme_user_guide.md)
-34. [npm_package/init_agent_selection.md](npm_package/init_agent_selection.md)
-35. [npm_package/package_release_flow.md](npm_package/package_release_flow.md)
-36. [npm_package/skill_layout.md](npm_package/skill_layout.md)
+4. [npm_package/current_workspace_codex_root.md](npm_package/current_workspace_codex_root.md)
+5. [npm_package/dev_001_package_scaffold.md](npm_package/dev_001_package_scaffold.md)
+6. [npm_package/dev_002_sync_init_doctor.md](npm_package/dev_002_sync_init_doctor.md)
+7. [npm_package/dev_003_upgrade_migrations.md](npm_package/dev_003_upgrade_migrations.md)
+8. [npm_package/dev_004_source_sync_ci.md](npm_package/dev_004_source_sync_ci.md)
+9. [npm_package/dev_005_validate_commands.md](npm_package/dev_005_validate_commands.md)
+10. [npm_package/dev_006_unified_harness_root.md](npm_package/dev_006_unified_harness_root.md)
+11. [npm_package/dev_007_remove_tracked_agents_skills.md](npm_package/dev_007_remove_tracked_agents_skills.md)
+12. [npm_package/dev_008_configurable_harness_root.md](npm_package/dev_008_configurable_harness_root.md)
+13. [npm_package/dev_009_init_prompt_default_agent_root.md](npm_package/dev_009_init_prompt_default_agent_root.md)
+14. [npm_package/dev_010_task_checkpoint_model.md](npm_package/dev_010_task_checkpoint_model.md)
+15. [npm_package/dev_011_plan_yaml_no_checkpoint.md](npm_package/dev_011_plan_yaml_no_checkpoint.md)
+16. [npm_package/dev_012_makefile_include_block.md](npm_package/dev_012_makefile_include_block.md)
+17. [npm_package/dev_013_package_workspace_decoupling_principle.md](npm_package/dev_013_package_workspace_decoupling_principle.md)
+18. [npm_package/dev_014_authoring_overlay_design.md](npm_package/dev_014_authoring_overlay_design.md)
+19. [npm_package/dev_015_markdown_doc_overviews.md](npm_package/dev_015_markdown_doc_overviews.md)
+20. [npm_package/dev_016_role_prompts_and_karpathy_guidelines.md](npm_package/dev_016_role_prompts_and_karpathy_guidelines.md)
+21. [npm_package/dev_017_chinese_karpathy_guidelines.md](npm_package/dev_017_chinese_karpathy_guidelines.md)
+22. [npm_package/dev_018_task_commit_push_rule.md](npm_package/dev_018_task_commit_push_rule.md)
+23. [npm_package/dev_019_commit_before_task_compression.md](npm_package/dev_019_commit_before_task_compression.md)
+24. [npm_package/dev_020_rename_npm_package.md](npm_package/dev_020_rename_npm_package.md)
+25. [npm_package/dev_021_consolidate_managed_config.md](npm_package/dev_021_consolidate_managed_config.md)
+26. [npm_package/dev_022_pjsdlc_marker_prefix.md](npm_package/dev_022_pjsdlc_marker_prefix.md)
+27. [npm_package/dev_023_pjsdlc_layout_and_skill_prefix.md](npm_package/dev_023_pjsdlc_layout_and_skill_prefix.md)
+28. [npm_package/dev_024_done_task_git_history_lookup.md](npm_package/dev_024_done_task_git_history_lookup.md)
+29. [npm_package/dev_025_short_lived_plan_and_gate_log.md](npm_package/dev_025_short_lived_plan_and_gate_log.md)
+30. [npm_package/dev_026_remove_execution_history_from_active_state.md](npm_package/dev_026_remove_execution_history_from_active_state.md)
+31. [npm_package/dev_027_workflow_singleton_collaboration_boundary.md](npm_package/dev_027_workflow_singleton_collaboration_boundary.md)
+32. [npm_package/dev_028_remove_gate_results_state_and_rfc_impact.md](npm_package/dev_028_remove_gate_results_state_and_rfc_impact.md)
+33. [npm_package/dev_029_natural_language_control.md](npm_package/dev_029_natural_language_control.md)
+34. [npm_package/dev_030_readme_user_guide.md](npm_package/dev_030_readme_user_guide.md)
+35. [npm_package/init_agent_selection.md](npm_package/init_agent_selection.md)
+36. [npm_package/package_release_flow.md](npm_package/package_release_flow.md)
+37. [npm_package/skill_layout.md](npm_package/skill_layout.md)
 
 ---
 
@@ -317,6 +318,51 @@ User asks to change Harness/workflow/package source
 - `.agent/skills/authoring/**` 只服务本仓库维护 Harness 自身；不要加入 `packages/sdlc-harness/source-mappings.yaml`。
 - 可脚本化提示应保持轻量：先指出机会和收益，再根据用户确认或任务要求实现脚本。
 - 如果 scriptability heuristic 未来对所有用户项目都有价值，应通过 PRD / tech plan / RFC 晋升为通用 Harness 能力。
+
+---
+
+## npm_package/current_workspace_codex_root.md
+
+Source: [npm_package/current_workspace_codex_root.md](npm_package/current_workspace_codex_root.md)
+
+# Current Workspace Codex Root Implementation Doc
+
+## Summary
+
+`DEV-041` 将当前 `ProjectTemplate` source authoring workspace 的 Harness root 从 `.agent/**` 迁移到 `.codex/**`，与 `sdlc-harness init` 的默认 `Codex -> .codex` 体验对齐。
+
+迁移后，本仓库自己的 lifecycle、plan、memory、workflow skills、templates、policies 和 Makefile fragment 都位于 `.codex/**`。普通用户项目仍可以通过 `harnessFolderName` 使用其它 root；配置层没有显式配置时的兜底默认值仍由 npm 包保持为 `.agent`。
+
+## Changed Files
+
+| 文件 | 变更 |
+|---|---|
+| `.codex/**` | 承接原 `.agent/**` 的 state、skills、templates、policies、config 和 Makefile fragment。 |
+| `package.json` | 增加 `sdlcHarness.harnessFolderName: ".codex"`，让本仓库工具读取当前 root。 |
+| `AGENTS.md` | 当前事实源、工作规则、自然语言路由和阶段流转路径改为 `.codex/**`。 |
+| `Makefile` | managed include 改为 `.codex/pjsdlc_managed/make/sdlc-harness.mk`。 |
+| `tools/*.py` / `tools/release_npm.mjs` | 本地 validators、transition、allowed paths 和 release 证据读取改为 `.codex/**`。 |
+| `packages/sdlc-harness/source-mappings.yaml` | source sync 从 `.codex/skills` 和 `.codex/pjsdlc_managed/**` 读取当前仓库事实源。 |
+| `packages/sdlc-harness/src/lib/sync-engine.ts` | `AGENTS_CORE.md` 渲染同时支持把 `.agent` 或 `.codex` 源路径替换成目标项目的 `<harnessRoot>`。 |
+| `packages/sdlc-harness/assets/agents/AGENTS_CORE.md` | 通过 `package sync-source` 同步新的 AGENTS managed block。 |
+| `README.md` / `PROJECT_SPEC.md` / `.docs/**` | 说明当前 authoring workspace 使用 `.codex/**`，并保留产品层 `Other -> .agent` 与配置兜底语义。 |
+
+## Behavior
+
+- 本仓库运行 `make validate-harness` 时读取 `.codex/state/**`、`.codex/skills/**` 和 `.codex/pjsdlc_managed/**`。
+- `package sync-source` 以 `.codex/**` 作为 source authoring workspace 输入，并继续排除 `.codex/skills/authoring/**`。
+- 包内 `sync` 对用户项目仍按目标 `<harnessRoot>` 渲染 AGENTS 和 Makefile；`.codex` 只是当前源码仓库的本地 root。
+- `.agent/**` 不再作为当前工作区事实源保留。
+
+## Verification
+
+| Gate | Result |
+|---|---|
+| `npm test` | PASS，5 个 `tests/sdlc-harness/*.test.mjs` 全部通过。 |
+| `node packages/sdlc-harness/dist/cli.js package check-source` | PASS，package assets 与 `.codex/**` source mappings 一致。 |
+| `make validate-harness` | PASS，Harness scaffold、Skill language contract 和 doc overview check 均通过。 |
+| `python3 tools/validate_allowed_paths.py` | PASS，55 个 changed files 均在 DEV-041 allowed_paths 内。 |
+| `git diff --check` | PASS。 |
 
 ---
 

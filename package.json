@@ -10,5 +10,8 @@
     "test": "npm test --workspace agent-project-sdlc",
     "release:npm": "node tools/release_npm.mjs",
     "sdlc-harness": "node packages/sdlc-harness/dist/cli.js"
+  },
+  "sdlcHarness": {
+    "harnessFolderName": ".codex"
   }
 }

@@ -3,7 +3,7 @@ from harness_utils import load_plan, require, run_main, validate_task_shape
 
 
 def main() -> None:
-    data = load_plan(".agent/state/plan.draft.yaml")
+    data = load_plan(".codex/state/plan.draft.yaml")
     tasks = data.get("tasks", [])
     require(tasks, "plan.draft.yaml must contain at least one task before leaving ARCHITECTING")
     for index, task in enumerate(tasks):
