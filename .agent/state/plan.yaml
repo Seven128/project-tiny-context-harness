@@ -1,4 +1,43 @@
 current_phase: "SPRINTING"
-current_task_id: ""
-next_task_sequence: 33
-tasks: []
+current_task_id: "DEV-033"
+next_task_sequence: 34
+tasks:
+  - id: "DEV-033"
+    title: "发布 agent-project-sdlc 0.1.3"
+    status: "in_progress"
+    summary: "将 DEV-032 的模块级 implementation doc 协议更新发布为 npm package patch 版本。"
+    docs:
+      product:
+        - ".docs/01_product/npm_package_distribution.md"
+      tech_plan:
+        - ".docs/03_tech_plan/harness_package_distribution.md"
+      rfc: []
+    allowed_paths:
+      - ".agent/state/plan.yaml"
+      - "packages/sdlc-harness/package.json"
+      - "package-lock.json"
+      - ".docs/04_implementation/npm_package/**"
+      - ".docs/04_implementation/overview.md"
+      - ".docs/08_release/v0.1.3_npm_release.md"
+      - ".docs/08_release/overview.md"
+      - ".docs/INDEX.md"
+    required_gates:
+      - "npm test"
+      - "node packages/sdlc-harness/dist/cli.js package check-source"
+      - "make validate-harness"
+      - "npm pack --dry-run --workspace agent-project-sdlc"
+      - "npm publish --workspace agent-project-sdlc"
+      - "npm view agent-project-sdlc version dist-tags.latest dist.integrity --json"
+      - "registry installed-consumer smoke"
+      - "python3 tools/validate_allowed_paths.py"
+      - "git diff --check"
+    acceptance_criteria:
+      - "package version bumped to 0.1.3 and package-lock updated."
+      - "npm registry latest resolves to agent-project-sdlc@0.1.3 after publish."
+      - "registry installed-consumer smoke confirms init and doctor work from published package."
+      - "release doc records artifacts, gates, publish evidence, smoke evidence, and rollback plan."
+      - "implementation doc records the package release flow fact update."
+    working_notes:
+      - "Current registry latest is 0.1.2; publish next patch 0.1.3."
+      - "Published agent-project-sdlc@0.1.3; registry latest and installed-consumer smoke passed."
+    implementation_doc: ".docs/04_implementation/npm_package/package_release_flow.md"
