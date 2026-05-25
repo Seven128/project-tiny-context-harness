@@ -49,7 +49,7 @@ Skill、执行出口 gate，并记录 blocker。
 
 ## Plan Protocol
 
-每个 open task 都必须在 `plan.yaml` 中包含 `docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`；done/cancelled task 不长期留在当前 `plan.yaml`。完成后的产物事实以 implementation doc 为准，动作历史以 git/PR/CI/release 系统作为 cold archive，`next_task_sequence` 负责继续分配后续 task id。
+每个 open task 都必须在 `plan.yaml` 中包含 `docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`；done/cancelled task 不长期留在当前 `plan.yaml`。完成后的产物事实以模块、子系统或核心数据流级 implementation doc 为准，动作历史以 git/PR/CI/release 系统作为 cold archive，`next_task_sequence` 负责继续分配后续 task id。
 
 `lifecycle.yaml` 和 `plan.yaml` 只用于当前可执行状态。默认不要读取过去 phase/task/gate 执行流水；只有用户明确要求 forensic/audit/regression 追溯时，才临时查询 git、PR、CI 或 release 记录。
 

@@ -43,6 +43,8 @@ Input
 |---|---|---|---|---|
 | DEV-001 |  | `src/**`, `tests/**` | `make lint`, `make test-current-domain` | `.docs/04_implementation/...` |
 
+`Implementation Doc` 应指向模块、子系统或核心数据流级文档；多个 task 可以更新同一份文档，task id 和 commit 记录在该文档的 provenance / Change Log 中。
+
 ## 7. 风险与缓解
 
 | 风险（Risk） | 等级（Level） | 缓解措施（Mitigation） |

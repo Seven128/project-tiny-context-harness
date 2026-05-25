@@ -226,7 +226,7 @@ RAG 能减少一次性塞进上下文的内容，但固定 chunk 和余弦召回
 | `.docs/01_product/` | `pm_prd` | 业务能力、用户场景、验收边界、Out of Scope |
 | `.docs/02_architecture/` | `architect_design` | 领域边界、子系统、跨模块架构问题、关键技术风险 |
 | `.docs/03_tech_plan/` | `architect_design` | 可实现范围、接口契约、数据模型、模块方案、任务组 |
-| `.docs/04_implementation/` | `implementation_doc` | 已完成任务、真实实现模块、核心数据流 |
+| `.docs/04_implementation/` | `implementation_doc` | 真实实现模块、子系统、核心数据流 |
 | `.docs/05_decisions/` | `architect_design` | 单个架构决策，一份 ADR 对应一个 durable decision |
 | `.docs/06_review/` | `reviewer` | 一次 Review 批次、一个 PR、一个里程碑、一个模块或一个风险主题 |
 | `.docs/07_test/` | `tester` | 测试计划、测试矩阵、回归批次、领域测试范围 |
@@ -234,6 +234,8 @@ RAG 能减少一次性塞进上下文的内容，但固定 chunk 和余弦召回
 | `.docs/rfc/` | `rfc_recalibrate` | 一次可独立评估、实现和回归的需求变更 |
 
 如果文档变化没有改变语义边界，更新原 slice；如果新增独立场景、拆分模块、合并流程或 RFC 改变影响范围，应新增、拆分、合并或废弃 slice，并更新 `.docs/INDEX.md`。
+
+implementation doc 是最终实现产物的事实层，默认与技术架构和技术方案中的模块、子系统或核心数据流对应。task 是执行和提交边界，task id、commit 和 RFC 只作为 implementation doc 的 provenance；多个 task 可以更新同一份 implementation doc。
 
 ### 6.3 overview.md
 每个 `.docs/<stage>/` 目录生成一个 `overview.md`：
@@ -306,7 +308,7 @@ tasks: []
 -> 读取当前 open task 的 allowed_paths / required_gates / acceptance_criteria
 -> 执行代码和测试
 -> 运行 current_task.required_gates
--> 写 implementation doc
+-> 写入或更新相关 implementation doc
 -> 刷新 overview.md
 -> 保持当前 task 仍位于 plan.yaml
 -> 创建 task implementation commit
@@ -316,11 +318,11 @@ tasks: []
 -> 选择下一个 pending task
 ```
 
-开发阶段默认一个 task 对应一个主要实现提交和一个轻量完成记录提交。task implementation commit 的 commit message 应包含 task id，例如 `DEV-003: implement login rate limit`。这个 commit 应包含该 task 的代码、测试、implementation doc、`.docs/INDEX.md`、`overview.md` 和必要验证证据；不要把多个 task 混进同一个 commit，也不要把未归属变更顺手带入。
+开发阶段默认一个 task 对应一个主要实现提交和一个轻量完成记录提交。task implementation commit 的 commit message 应包含 task id，例如 `DEV-003: implement login rate limit`。这个 commit 应包含该 task 的代码、测试、被更新的模块级 implementation doc、`.docs/INDEX.md`、`overview.md` 和必要验证证据；不要把多个 task 混进同一个 commit，也不要把未归属变更顺手带入。
 
 task completion ledger commit 发生在 implementation commit 之后，只负责把当前 task 从 `plan.yaml` 移除。不要把这个清理动作 amend 回 implementation commit，否则 task 的实现变更和当前计划短期化会混在一起，后续追溯不清晰。
 
-默认不要追溯 done task 的执行流水。修 bug、补功能和继续开发时，以当前代码、测试、PRD、技术方案和 implementation doc 为准；历史 task 查询主要看“做了什么、为什么做、产物在哪里、验证了什么”。`allowed_paths`、`required_gates`、临时 `working_notes` 是执行期约束，不作为历史查询 API。只有用户明确要求 forensic/audit/regression 追溯时，才临时查询 git、PR、CI 或 release 记录。
+默认不要追溯 done task 的执行流水。修 bug、补功能和继续开发时，以当前代码、测试、PRD、技术方案和模块级 implementation doc 为准；历史 task 查询主要看“做了什么、为什么做、影响哪个模块、验证了什么”。task id 和 commit 只作为 provenance；`allowed_paths`、`required_gates`、临时 `working_notes` 是执行期约束，不作为历史查询 API。只有用户明确要求 forensic/audit/regression 追溯时，才临时查询 git、PR、CI 或 release 记录。
 
 两个 commit 都 `git push` 成功前，不认为该 task 完成，也不要进入下一个 pending task。如果仓库没有 remote/upstream、没有权限、凭证失效或 push 被拒绝，当前 task 应停在需要人工处理的状态并报告 blocker；不能为了继续执行而静默跳过 push。
 
@@ -340,14 +342,15 @@ task completion ledger commit 发生在 implementation commit 之后，只负责
 PRD
 -> tech plan
 -> plan.yaml 中的 task
--> 代码、测试和 implementation doc
+-> 代码、测试
+-> 模块级 implementation doc
 ```
 
-每个 open task 都必须在 `plan.yaml` 中包含 `docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`。执行中只把必要现场写成短 `working_notes`；任务完成并写入 implementation doc 后，把该 task 从当前 `plan.yaml` 移除。历史动作记录以 git/PR/CI/release 系统作为 cold archive，产物结果以 implementation doc 为准。
+每个 open task 都必须在 `plan.yaml` 中包含 `docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`。执行中只把必要现场写成短 `working_notes`；任务完成并写入或更新相关 implementation doc 后，把该 task 从当前 `plan.yaml` 移除。历史动作记录以 git/PR/CI/release 系统作为 cold archive，产物结果以模块级 implementation doc 为准。
 
 过去 phase/task/gate 执行流水不是 Agent 默认上下文。`plan.yaml` 不长期保存 commit hash，`lifecycle.yaml` 不保存 `history`，completion ledger commit 只负责把当前 plan 恢复为短期、低噪声状态。只有用户明确要求 forensic/audit/regression 追溯时，才临时查询 git、PR、CI 或 release 记录。
 
-Gate evidence 不再使用独立 state 文件。执行中如需恢复现场，可把关键 gate 结果写入当前 task 的 `working_notes`；任务完成后，最终验证事实写入 implementation doc 的 `Verification`，CI logs 或 release 记录也可以作为长期外部记录。
+Gate evidence 不再使用独立 state 文件。执行中如需恢复现场，可把关键 gate 结果写入当前 task 的 `working_notes`；任务完成后，最终验证事实写入相关 implementation doc 的 `Verification`，CI logs 或 release 记录也可以作为长期外部记录。
 
 ## 八、阶段 Skill
 每个 Skill 只负责一个阶段或动作。
@@ -531,7 +534,7 @@ Codex 不需要真实“模式切换”：
 最小任务完成标准：
 1. 代码已修改。
 2. 相关检查已通过。
-3. implementation doc 已生成。
+3. 相关 implementation doc 已生成或更新。
 4. `.docs/INDEX.md` 已更新。
 5. `overview.md` 已刷新。
 6. open task 的 plan 执行合同已完整。

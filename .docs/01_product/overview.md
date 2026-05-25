@@ -1,11 +1,11 @@
 # .docs/01_product overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: c3ff9c9bbe01f030 -->
+<!-- source-hash: c2c047b32e525805 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `c3ff9c9bbe01f030`
+Source hash: `c2c047b32e525805`
 
 ## Source Slices
 
@@ -64,13 +64,14 @@ Source: [npm_package_distribution.md](npm_package_distribution.md)
 | PRD-NPM-015 | 支持通过 JSON 配置 `harnessFolderName` 指定 Harness 根目录，默认值为 `.agent` | P0 | 优先读取 `package.json` 的 `sdlcHarness.harnessFolderName`，也支持 `sdlc-harness.config.json`；兼容别名 `harnessFloderName` |
 | PRD-NPM-016 | `sdlc-harness init` 交互式询问 Harness folder name，并写入 `package.json` | P0 | 提示默认值 `.agent`；直接回车采用默认；非交互环境不阻塞并使用默认 |
 | PRD-NPM-017 | 删除 archive 并采用 `plan.yaml` 单文件短期执行计划模型 | P0 | `plan.yaml` 取代 `tasks.yaml`；open task 直接包含 `allowed_paths`、`required_gates`、`acceptance_criteria` 和必要执行备注；task 完成并写入长期历史后从 `plan.yaml` 移除；不再维护 checkpoint 文件或 `.agent/archive/**` 常规归档 |
-| PRD-NPM-018 | 已完成 task 的历史查询面向产物结果和变更意图 | P2 | Agent 默认不读取过去 task 执行流水；历史 task 查询以 implementation doc、RFC、PRD、tech plan 和代码为主，`allowed_paths`、`required_gates` 和临时 `working_notes` 不作为历史查询 API |
+| PRD-NPM-018 | 已完成 task 的历史查询面向产物结果和变更意图 | P2 | Agent 默认不读取过去 task 执行流水；历史 task 查询以模块级 implementation doc、RFC、PRD、tech plan 和代码为主，`allowed_paths`、`required_gates` 和临时 `working_notes` 不作为历史查询 API |
 | PRD-NPM-019 | Gate evidence 写入 task notes 或 implementation doc | P1 | 不维护独立 gate scratchpad；当前 task 的临时 gate 证据可写入 `working_notes`，完成后的最终 gate 事实写入 implementation doc `Verification`、CI logs 或 release 记录 |
 | PRD-NPM-020 | Harness active state 不读取、不保存过去执行流水 | P0 | `lifecycle.yaml` 和 `plan.yaml` 只保存当前可执行状态；过去阶段/task/gate 执行信息默认不进入 Agent 上下文，仅在显式 forensic / audit / regression 场景中通过 git、PR、CI、release 系统和阶段产物查询 |
 | PRD-NPM-021 | 移除独立 gate results state | P0 | 不再维护 `<harnessRoot>/state/gate_results.log`；当前 task gate 证据写入 task notes 或 implementation doc `Verification`，长期记录由 implementation doc、CI logs 或 release 系统承担 |
 | PRD-NPM-022 | RFC 阶段必须显式考虑影响面 | P0 | RFC 进入补丁或 DEV task 前必须列出 docs、state、skills、policies、templates、tools、package assets、tests、sync/upgrade/migration 和 generated artifacts 影响 |
 | PRD-NPM-023 | 用户可通过自然语言控制 workflow | P0 | `/status`、`/next`、`/advance`、`/rfc` 等宏指令保留为快捷入口；Agent 应将“继续”“开始开发”“跑测试”“进入下一阶段”等自然语言映射到 lifecycle/plan 对应动作 |
 | PRD-NPM-024 | 根 README 面向用户接入和日常使用 | P1 | 长篇产品说明和设计取舍迁移到 `PROJECT_SPEC.md`；根 `README.md` 只保留用户视角的包介绍、安装、初始化、同步、升级、诊断和验证命令 |
+| PRD-NPM-025 | implementation doc 默认按模块级事实切片 | P0 | `.docs/04_implementation/` 描述最终实现产物，默认按模块、子系统或核心数据流维护，并与 architecture / tech plan 边界对应；task id 和 commit 仅作为 provenance，不作为默认文档粒度 |
 
 ## 5. Acceptance Criteria
 
@@ -98,6 +99,7 @@ Source: [npm_package_distribution.md](npm_package_distribution.md)
 - [ ] RFC 产物包含明确影响面清单，并据此创建后续 task。
 - [ ] 用户不需要记忆宏指令，也可以通过自然语言让 Agent 报告状态、继续当前阶段、检查阶段推进、进入 RFC、执行当前开发任务、运行测试、进入 Review 或刷新 overview。
 - [ ] 根 `README.md` 是轻量用户指南，`PROJECT_SPEC.md` 保存完整项目规格说明。
+- [ ] implementation doc 默认按模块、子系统或核心数据流维护；open task 的 `implementation_doc` 指向相关长期实现事实文档，多个 task 可以更新同一份文档。
 - [ ] Harness 不再生成或要求 checkpoint 目录、checkpoint 模板或 `validate-checkpoint` gate。
 - [ ] Harness 不再生成或要求 `.agent/archive/**` 作为 task/release 常规归档。
 
@@ -112,6 +114,7 @@ Source: [npm_package_distribution.md](npm_package_distribution.md)
 - 不保留独立 checkpoint 文件；活跃任务现场只存在于 `plan.yaml` 的 open task 条目中。
 - 不维护独立 gate results state。
 - 不把过去 phase/task 执行流水写入 active state，也不要求 Agent 默认读取这些流水。
+- 不要求把历史 `dev_*.md` 文件在本需求内一次性迁移为模块级文档；历史文件可作为 legacy task log 保留，后续按需要合并。
 
 ## 7. Open Questions
 

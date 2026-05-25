@@ -49,7 +49,7 @@ description: Use during ARCHITECTING to create architecture docs, technical plan
 2. 每个 open task 必须包含 `id`、`title`、`status`、`summary`、`docs`、`allowed_paths`、`required_gates`、`acceptance_criteria` 和 `implementation_doc`。
 3. `plan.draft.yaml` 不得自动覆盖 `plan.yaml`。
 4. 风险或不清晰的问题按 `<harnessRoot>/pjsdlc_managed/policies/risk_matrix.yaml` 标记。
-5. 任务边界应足够小，能在一次开发执行和一份 implementation doc 内闭环。
+5. 任务边界应足够小，能在一次开发执行内闭环；`implementation_doc` 应指向将被更新或新增的模块、子系统或核心数据流文档。
 
 ## 完成检查
 

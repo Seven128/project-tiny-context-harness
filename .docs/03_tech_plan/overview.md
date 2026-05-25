@@ -1,11 +1,11 @@
 # .docs/03_tech_plan overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 8af6eea4eaf8f98b -->
+<!-- source-hash: 75953b13a87dd4a7 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `8af6eea4eaf8f98b`
+Source hash: `75953b13a87dd4a7`
 
 ## Source Slices
 
@@ -232,28 +232,36 @@ tasks:
       - "open task contract lives in plan.yaml"
     working_notes:
       - "只记录恢复现场所需的短备注。"
-    implementation_doc: ".docs/04_implementation/npm_package/dev_011_plan_yaml_no_checkpoint.md"
+    implementation_doc: ".docs/04_implementation/npm_package/plan_state_model.md"
 ```
 
-task 完成后，先在当前 task 仍位于 `plan.yaml` 时创建 task implementation commit；再将该 task 从 `plan.yaml` 的 `tasks` 列表移除，并创建 task completion ledger commit。历史动作记录由 git commit 承载，产物结果由 implementation doc 承载；Harness 不再维护 checkpoint 文件或 `.agent/archive/**` 作为常规归档事实源。
+task 完成后，先在当前 task 仍位于 `plan.yaml` 时创建 task implementation commit；再将该 task 从 `plan.yaml` 的 `tasks` 列表移除，并创建 task completion ledger commit。历史动作记录由 git commit 承载，产物结果由模块级 implementation doc 承载；Harness 不再维护 checkpoint 文件或 `.agent/archive/**` 作为常规归档事实源。
 
-默认不追溯 done task 的执行流水。历史 task 查询主要面向“做了什么、为什么做、产物在哪里、验证了什么”，默认读取 implementation doc、RFC、PRD、tech plan 和代码。`allowed_paths`、`required_gates`、临时 `working_notes` 是执行期约束，不作为历史查询 API；只有用户明确要求 forensic/audit/regression 追溯时，Agent 才临时查询 git、PR、CI 或 release 记录。
+默认不追溯 done task 的执行流水。历史 task 查询主要面向“做了什么、为什么做、影响哪个模块、验证了什么”，默认读取模块级 implementation doc、RFC、PRD、tech plan 和代码。task id 和 commit 只作为 provenance；`allowed_paths`、`required_gates`、临时 `working_notes` 是执行期约束，不作为历史查询 API；只有用户明确要求 forensic/audit/regression 追溯时，Agent 才临时查询 git、PR、CI 或 release 记录。
 
-### 5.5 Gate evidence
+### 5.5 Implementation doc model
+
+`.docs/04_implementation/` 是最终实现产物的事实层，默认与 architecture / tech plan 中的模块、子系统或核心数据流边界对应。`plan.yaml.tasks[].implementation_doc` 指向本 task 会更新或新增的长期实现事实文档；多个 task 可以指向同一份 implementation doc。
+
+task id、commit、RFC 和 gate 结果记录在 implementation doc 的 provenance / Change Log / Verification 中。task 不再默认生成独立 `dev_*.md` 文档；已有 `dev_*.md` 文件作为 legacy task log 保留，后续可以按模块逐步合并。
+
+### 5.6 Gate evidence
 
 RFC_014 后，Harness 不再维护 `<harnessRoot>/state/gate_results.log`。gate evidence 属于当前 task 验证过程：执行中可写入 open task 的 `working_notes`，完成后写入 implementation doc 的 `Verification`。CI 系统、release 系统或外部审计系统可以作为长期 gate 记录。
 
 `tools/run_current_gate.py` 只负责运行当前 phase gate 并输出结果，不写 state。completion ledger commit 只移除当前 task，不再清理 gate log。
 
-历史 task 查询同样不依赖 open task execution contract。`allowed_paths`、`required_gates`、临时 `working_notes` 是执行期约束，不作为历史查询 API；需要理解过去产物时，读取 implementation doc、RFC、PRD、tech plan 和代码。
+历史 task 查询同样不依赖 open task execution contract。`allowed_paths`、`required_gates`、临时 `working_notes` 是执行期约束，不作为历史查询 API；需要理解过去产物时，读取模块级 implementation doc、RFC、PRD、tech plan 和代码。
 
-### 5.6 Active state 不保存执行历史
+### 5.7 Active state 不保存执行历史
 
 `<harnessRoot>/state/lifecycle.yaml` 只保存当前路由状态，不保存 `history`。阶段流转历史、task 执行历史和 gate 历史都不属于 active state；它们是 cold archive，只在显式追溯、audit 或 regression forensic 场景下通过 git、PR、CI、release 系统和阶段产物读取。
 
 `transition.py` 只更新 `current_phase`、`active_role`、`active_skill`、`suspended_phase` 和 `allowed_next_phases`。`--reason` 保留为命令兼容参数，但不写入 state。package migration 会删除既有 lifecycle `history`，避免老项目升级后继续携带阶段流水。
 
 ## 6. 任务拆分（Task Breakdown）
+
+下表保留历史任务拆分和 legacy implementation doc 路径，便于理解已完成工作；未来 task 的 `Implementation Doc` 应优先指向模块、子系统或核心数据流级文档。
 
 | Task ID | 标题（Title） | Allowed Paths | Required Gates | Implementation Doc |
 |---|---|---|---|---|
@@ -281,7 +289,7 @@ RFC_014 后，Harness 不再维护 `<harnessRoot>/state/gate_results.log`。gate
 | `plan.yaml` 过大导致 Agent 上下文膨胀 | P0 | plan 只保留当前和未来任务，done/cancelled task 完成后移出 plan |
 | task/release 归档与 git 历史重复 | P1 | 删除 `.agent/archive/**` 常规机制，动作记录以 git commit/tag 为准 |
 | Agent 默认追溯 done task 导致上下文噪声 | P1 | 在 AGENTS、Skill 和 README 中声明过去 task 合同只是 cold archive，默认不读取 |
-| 独立 gate state 与 task/implementation doc 重复 | P1 | 删除 `gate_results.log`，gate evidence 进入 task notes、implementation doc 或 CI/release 记录 |
+| 独立 gate state 与 task/module implementation doc 重复 | P1 | 删除 `gate_results.log`，gate evidence 进入 task notes、相关 implementation doc 或 CI/release 记录 |
 | Agent 默认读取过去执行流水导致上下文噪声 | P0 | active state 不保存 `history`，历史执行信息仅在显式 forensic/audit 场景临时查询 |
 | RFC 漏掉影响面 | P0 | RFC Skill 强制先列影响面清单，覆盖 docs/state/skills/policies/templates/tools/package assets/tests/migrations/generated artifacts |
 

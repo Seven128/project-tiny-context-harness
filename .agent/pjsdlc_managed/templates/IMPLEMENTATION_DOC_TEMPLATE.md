@@ -1,14 +1,16 @@
-# [Task/Module] Implementation Doc
+# [Module/Subsystem/Core Flow] Implementation Doc
 
 ## 1. 关联信息
 
-- Task ID:
+- Domain:
+- Module / subsystem / core flow:
+- Updated by task:
 - Linked PRD:
 - Linked technical design:
 - Linked RFC:
 - Linked commit:
 
-## 2. 本次实现范围
+## 2. 当前实现范围
 
 - 新增（Added）:
 - 修改（Changed）:
@@ -48,6 +50,12 @@ Input
 |---|---|---|
 |  |  |  |
 
-## 8. 后续维护注意事项
+## 8. 变更记录（Change Log）
+
+| 日期（Date） | Task ID | Commit | 摘要（Summary） |
+|---|---|---|---|
+|  |  |  |  |
+
+## 9. 后续维护注意事项
 
 - 
