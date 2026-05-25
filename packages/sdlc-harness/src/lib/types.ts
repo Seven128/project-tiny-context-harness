@@ -23,6 +23,7 @@ export interface ManagedFile {
 export interface SourceMapping {
   source: string;
   target: string;
+  exclude?: string[];
   mode:
     | "extract-managed-block"
     | "copy-tree"

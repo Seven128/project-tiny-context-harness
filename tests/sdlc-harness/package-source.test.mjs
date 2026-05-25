@@ -7,7 +7,8 @@ import { checkSource, syncSource } from "../../packages/sdlc-harness/dist/lib/pa
 const fixture = await mkdtemp(path.join(tmpdir(), "sdlc-harness-source-"));
 
 try {
-  await mkdir(path.join(fixture, ".agent/skills/pjsdlc_example"), { recursive: true });
+  await mkdir(path.join(fixture, ".agent/prompts/workflow/pjsdlc_example"), { recursive: true });
+  await mkdir(path.join(fixture, ".agent/prompts/authoring/local_only"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/pjsdlc_managed/templates"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/pjsdlc_managed/policies"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/pjsdlc_managed/make"), { recursive: true });
@@ -19,7 +20,8 @@ try {
     "before\n<!-- pjsdlc:sdlc-harness:begin -->\n# AI SDLC Harness\n<!-- pjsdlc:sdlc-harness:end -->\nafter\n",
     "utf8"
   );
-  await writeFile(path.join(fixture, ".agent/skills/pjsdlc_example/SKILL.md"), "# Skill\n", "utf8");
+  await writeFile(path.join(fixture, ".agent/prompts/workflow/pjsdlc_example/PROMPT.md"), "# Prompt\n", "utf8");
+  await writeFile(path.join(fixture, ".agent/prompts/authoring/local_only/PROMPT.md"), "# Local only\n", "utf8");
   await writeFile(path.join(fixture, ".agent/pjsdlc_managed/templates/EXAMPLE.md"), "# Template\n", "utf8");
   await writeFile(path.join(fixture, ".agent/pjsdlc_managed/policies/example.yaml"), "ok: true\n", "utf8");
   await writeFile(path.join(fixture, ".agent/pjsdlc_managed/make/sdlc-harness.mk"), "help:\n\t@echo ok\n", "utf8");
@@ -32,9 +34,11 @@ try {
   - source: "AGENTS.md"
     target: "packages/sdlc-harness/assets/agents/AGENTS_CORE.md"
     mode: "extract-managed-block"
-  - source: ".agent/skills"
-    target: "packages/sdlc-harness/assets/skills"
+  - source: ".agent/prompts"
+    target: "packages/sdlc-harness/assets/prompts"
     mode: "copy-tree"
+    exclude:
+      - "authoring/**"
   - source: ".agent/pjsdlc_managed/templates"
     target: "packages/sdlc-harness/assets/templates"
     mode: "copy-tree"
@@ -60,6 +64,9 @@ try {
   const agentsCore = await readFile(path.join(fixture, "packages/sdlc-harness/assets/agents/AGENTS_CORE.md"), "utf8");
   assert.match(agentsCore, /AI SDLC Harness/);
   assert.doesNotMatch(agentsCore, /before|after/);
+  const workflowPrompt = await readFile(path.join(fixture, "packages/sdlc-harness/assets/prompts/workflow/pjsdlc_example/PROMPT.md"), "utf8");
+  assert.match(workflowPrompt, /Prompt/);
+  await assert.rejects(readFile(path.join(fixture, "packages/sdlc-harness/assets/prompts/authoring/local_only/PROMPT.md"), "utf8"));
 } finally {
   await rm(fixture, { recursive: true, force: true });
 }

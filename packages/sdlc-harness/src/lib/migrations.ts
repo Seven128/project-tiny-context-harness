@@ -1,7 +1,7 @@
 import path from "node:path";
 import { rename, rm } from "node:fs/promises";
 import { readConfig } from "./config.js";
-import { ensureDir, pathExists, readText, writeTextIfChanged } from "./fs.js";
+import { ensureDir, listFiles, pathExists, readText, writeTextIfChanged } from "./fs.js";
 import { harnessConfigPath, harnessPath, harnessRoot } from "./harness-root.js";
 import type { ManagedFile } from "./types.js";
 import { parseYaml, stringifyYaml } from "./yaml.js";
@@ -21,7 +21,7 @@ export interface MigrationReport {
   skipped: string[];
 }
 
-const SKILL_RENAMES: Record<string, string> = {
+const PROMPT_RENAMES: Record<string, string> = {
   manager: "pjsdlc_manager",
   pm_prd: "pjsdlc_pm_prd",
   architect_design: "pjsdlc_architect_design",
@@ -66,6 +66,9 @@ async function migrateConfig(projectRoot: string, root: string, report: Migratio
 }
 
 async function migrateLegacyManagedPaths(projectRoot: string, root: string, report: MigrationReport): Promise<void> {
+  await movePromptTreeIfDestinationMissing(projectRoot, harnessPath(root, "skills"), harnessPath(root, "prompts", "workflow"), report);
+  await movePromptTreeIfDestinationMissing(projectRoot, ".agents/skills", harnessPath(root, "prompts", "workflow"), report);
+  await movePromptTreeIfDestinationMissing(projectRoot, ".harness/agents/skills", harnessPath(root, "prompts", "workflow"), report);
   await moveIfDestinationMissing(projectRoot, harnessPath(root, "managed"), harnessPath(root, "pjsdlc_managed"), report);
   await moveIfDestinationMissing(
     projectRoot,
@@ -85,6 +88,32 @@ async function migrateLegacyManagedPaths(projectRoot: string, root: string, repo
     harnessPath(root, "pjsdlc_managed", "make"),
     report
   );
+}
+
+async function movePromptTreeIfDestinationMissing(
+  projectRoot: string,
+  legacyRelativePath: string,
+  nextRelativePath: string,
+  report: MigrationReport
+): Promise<void> {
+  const legacyPath = path.join(projectRoot, legacyRelativePath);
+  if (!(await pathExists(legacyPath))) {
+    report.skipped.push(legacyRelativePath);
+    return;
+  }
+  const nextPath = path.join(projectRoot, nextRelativePath);
+  if (await pathExists(nextPath)) {
+    report.skipped.push(`${legacyRelativePath} -> ${nextRelativePath}`);
+    return;
+  }
+  await ensureDir(path.dirname(nextPath));
+  await rename(legacyPath, nextPath);
+  for (const file of await listFiles(nextPath)) {
+    if (path.basename(file) === "SKILL.md") {
+      await rename(file, path.join(path.dirname(file), "PROMPT.md"));
+    }
+  }
+  report.changed.push(`${legacyRelativePath} -> ${nextRelativePath}`);
 }
 
 async function moveIfDestinationMissing(
@@ -130,8 +159,12 @@ function migrateManagedFiles(managedFiles: ManagedFile[], root: string): Managed
   };
 
   for (const item of managedFiles) {
-    if (item.path === ".agents/skills" || item.path === ".harness/agents/skills") {
-      push({ path: harnessPath(root, "skills"), strategy: "managed" });
+    if (
+      item.path === ".agents/skills" ||
+      item.path === ".harness/agents/skills" ||
+      item.path === harnessPath(root, "skills")
+    ) {
+      push({ path: harnessPath(root, "prompts"), strategy: "managed" });
       continue;
     }
     if (item.path === ".harness/templates" || item.path === harnessPath(root, "managed", "templates")) {
@@ -171,9 +204,16 @@ async function migrateLifecycle(projectRoot: string, root: string, report: Migra
   }
   const data = (parseYaml(await readText(lifecyclePath)) ?? {}) as Record<string, unknown>;
   let changed = false;
-  const activeSkill = String(data.active_skill ?? "");
-  if (SKILL_RENAMES[activeSkill]) {
-    data.active_skill = SKILL_RENAMES[activeSkill];
+  const activePrompt = String(data.active_prompt ?? data.active_skill ?? "");
+  if (PROMPT_RENAMES[activePrompt]) {
+    data.active_prompt = PROMPT_RENAMES[activePrompt];
+    changed = true;
+  } else if (activePrompt && !data.active_prompt) {
+    data.active_prompt = activePrompt;
+    changed = true;
+  }
+  if ("active_skill" in data) {
+    delete data.active_skill;
     changed = true;
   }
   if ("history" in data) {

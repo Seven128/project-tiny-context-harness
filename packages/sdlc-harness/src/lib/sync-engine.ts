@@ -56,12 +56,16 @@ async function syncManagedFile(projectRoot: string, root: string, managedFile: M
     await syncMakefileInclude(destination, root, report);
     return;
   }
-  if (managedFile.path === path.join(root, "skills") || managedFile.path === ".harness/agents/skills") {
-    await syncTree(packageAssetPath("skills"), destination, report);
+  if (managedFile.path === path.join(root, "prompts")) {
+    await syncTree(packageAssetPath("prompts"), destination, report);
     return;
   }
-  if (managedFile.path === ".agents/skills" && root !== ".agents") {
-    await syncTree(packageAssetPath("skills"), destination, report);
+  if (
+    managedFile.path === path.join(root, "skills") ||
+    managedFile.path === ".harness/agents/skills" ||
+    (managedFile.path === ".agents/skills" && root !== ".agents")
+  ) {
+    await syncTree(packageAssetPath("prompts"), path.join(projectRoot, root, "prompts"), report);
     return;
   }
   if (managedFile.path === path.join(root, "pjsdlc_managed", "templates")) {

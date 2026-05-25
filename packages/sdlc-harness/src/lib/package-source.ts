@@ -98,7 +98,11 @@ async function renderMapping(
       if (path.basename(file) === ".gitkeep") {
         continue;
       }
-      rendered.push({ relative: path.relative(source, file), content: await readText(file) });
+      const relative = path.relative(source, file);
+      if (isExcluded(relative, mapping.exclude ?? [])) {
+        continue;
+      }
+      rendered.push({ relative, content: await readText(file) });
     }
     return rendered;
   }
@@ -117,6 +121,18 @@ async function renderMapping(
     return readText(source);
   }
   throw new Error(`Unsupported source mapping mode: ${mapping.mode}`);
+}
+
+function isExcluded(relativePath: string, patterns: string[]): boolean {
+  const normalized = relativePath.split(path.sep).join("/");
+  return patterns.some((pattern) => {
+    const normalizedPattern = pattern.replace(/\\/g, "/");
+    if (normalizedPattern.endsWith("/**")) {
+      const prefix = normalizedPattern.slice(0, -3);
+      return normalized === prefix || normalized.startsWith(`${prefix}/`);
+    }
+    return normalized === normalizedPattern;
+  });
 }
 
 function normalize(content: string): string {

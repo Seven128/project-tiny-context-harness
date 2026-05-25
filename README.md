@@ -35,7 +35,7 @@ npx sdlc-harness init --adopt
 - `AGENTS.md`
 - `.agent/state/lifecycle.yaml`
 - `.agent/state/plan.yaml`
-- `.agent/skills/**`
+- `.agent/prompts/workflow/**`
 - `.agent/pjsdlc_managed/**`
 - `.docs/**`
 - `Makefile` harness include block
@@ -61,14 +61,14 @@ npx sdlc-harness init --adopt
 准备 review。
 ```
 
-Agent 会读取 `.agent/state/lifecycle.yaml` 和 `.agent/state/plan.yaml`，再按当前阶段选择对应 Skill、产物和 gate。
+Agent 会读取 `.agent/state/lifecycle.yaml` 和 `.agent/state/plan.yaml`，再按当前阶段选择对应 workflow prompt、产物和 gate。
 
 常用快捷入口：
 
 | 指令 | 简单自然语言 | 更完整的意图 |
 |---|---|---|
 | `/status` | 现在到哪一步了 | 读取 lifecycle/plan，报告当前阶段、任务、阻塞项和下一步 |
-| `/next` | 继续推进 | 按当前阶段的 `active_skill` 执行下一步 |
+| `/next` | 继续推进 | 按当前阶段的 `active_prompt` 执行下一步 |
 | `/prd` | 完善产品方案 | 在需求阶段澄清用户目标、补齐 PRD、验收标准和 open questions |
 | `/design` | 设计技术方案 | 在架构阶段基于 PRD 生成或更新架构、技术方案和 `plan.draft.yaml` |
 | `/dev` | 做下一个任务 | 创建或选择下一个最小 DEV task，完成一个 task 闭环后停止 |
@@ -86,7 +86,7 @@ Agent 会读取 `.agent/state/lifecycle.yaml` 和 `.agent/state/plan.yaml`，再
 npx sdlc-harness doctor
 ```
 
-同步包内默认规则、Skill、模板和策略：
+同步包内默认规则、workflow prompts、模板和策略：
 
 ```sh
 npx sdlc-harness sync
@@ -120,7 +120,7 @@ make docs-overview
 
 | 路径 | 用途 |
 |---|---|
-| `.agent/state/lifecycle.yaml` | 当前生命周期阶段和 active skill |
+| `.agent/state/lifecycle.yaml` | 当前生命周期阶段和 active prompt |
 | `.agent/state/plan.yaml` | 当前和未来 task 的短期执行计划 |
 | `.docs/01_product/` | PRD、用户场景、验收标准 |
 | `.docs/02_architecture/` | 架构边界和高层设计 |

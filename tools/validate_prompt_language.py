@@ -6,8 +6,8 @@ from pathlib import Path
 from harness_utils import ROOT, HarnessError, load_yaml, require, run_main
 
 
-SKILL_REQUIRED_SECTIONS = ["## 目的", "## 角色提示词", "## 输入", "## 规则", "## 完成检查"]
-ARTIFACT_SKILLS_REQUIRE_SEMANTIC_SLICING = {
+PROMPT_REQUIRED_SECTIONS = ["## 目的", "## 角色提示词", "## 输入", "## 规则", "## 完成检查"]
+ARTIFACT_PROMPTS_REQUIRE_SEMANTIC_SLICING = {
     "pjsdlc_pm_prd",
     "pjsdlc_architect_design",
     "pjsdlc_dev_sprint",
@@ -17,7 +17,7 @@ ARTIFACT_SKILLS_REQUIRE_SEMANTIC_SLICING = {
     "pjsdlc_release_manager",
     "pjsdlc_rfc_recalibrate",
 }
-SKILL_FORBIDDEN_HEADINGS = [
+PROMPT_FORBIDDEN_HEADINGS = [
     "## Purpose",
     "## Required Inputs",
     "## Outputs",
@@ -27,7 +27,7 @@ SKILL_FORBIDDEN_HEADINGS = [
 
 MACHINE_IDENTIFIERS = [
     "current_phase",
-    "active_skill",
+    "active_prompt",
     "allowed_paths",
     "required_gates",
     "implementation_doc",
@@ -59,7 +59,7 @@ YAML_KEYWORDS = {
         "version",
         "current_phase",
         "active_role",
-        "active_skill",
+        "active_prompt",
         "current_milestone",
         "allowed_next_phases",
     ],
@@ -84,30 +84,30 @@ def validate_agents() -> None:
         require(identifier in content, f"AGENTS.md should preserve machine identifier: {identifier}")
 
 
-def validate_skills() -> None:
-    skill_files = sorted((ROOT / ".agent/skills").glob("*/SKILL.md"))
-    require(skill_files, "No skill files found under .agent/skills/")
+def validate_prompts() -> None:
+    prompt_files = sorted((ROOT / ".agent/prompts/workflow").glob("*/PROMPT.md"))
+    require(prompt_files, "No workflow prompt files found under .agent/prompts/workflow/")
 
-    for path in skill_files:
+    for path in prompt_files:
         content = text(path)
-        for section in SKILL_REQUIRED_SECTIONS:
+        for section in PROMPT_REQUIRED_SECTIONS:
             require(section in content, f"{path.relative_to(ROOT)} missing Chinese section: {section}")
-        for heading in SKILL_FORBIDDEN_HEADINGS:
+        for heading in PROMPT_FORBIDDEN_HEADINGS:
             require(heading not in content, f"{path.relative_to(ROOT)} still uses English prompt heading: {heading}")
         require("name:" in content and "description:" in content, f"{path.relative_to(ROOT)} must keep frontmatter name/description")
-        skill_name = path.parent.name
-        if skill_name in ARTIFACT_SKILLS_REQUIRE_SEMANTIC_SLICING:
+        prompt_name = path.parent.name
+        if prompt_name in ARTIFACT_PROMPTS_REQUIRE_SEMANTIC_SLICING:
             require("## 语义切片" in content, f"{path.relative_to(ROOT)} missing semantic slicing section: ## 语义切片")
 
 
-def validate_skill_template() -> None:
-    path = ROOT / ".agent/pjsdlc_managed/templates/SKILL_TEMPLATE.md"
-    require(path.exists(), "Missing .agent/pjsdlc_managed/templates/SKILL_TEMPLATE.md")
+def validate_prompt_template() -> None:
+    path = ROOT / ".agent/pjsdlc_managed/templates/PROMPT_TEMPLATE.md"
+    require(path.exists(), "Missing .agent/pjsdlc_managed/templates/PROMPT_TEMPLATE.md")
     content = text(path)
-    for section in SKILL_REQUIRED_SECTIONS:
-        require(section in content, f"SKILL_TEMPLATE.md missing Chinese section: {section}")
-    require("## 语义切片" in content, "SKILL_TEMPLATE.md missing semantic slicing section: ## 语义切片")
-    require("current_phase" in content and "make validate-current" in content, "SKILL_TEMPLATE.md must demonstrate English machine identifiers")
+    for section in PROMPT_REQUIRED_SECTIONS:
+        require(section in content, f"PROMPT_TEMPLATE.md missing Chinese section: {section}")
+    require("## 语义切片" in content, "PROMPT_TEMPLATE.md missing semantic slicing section: ## 语义切片")
+    require("current_phase" in content and "make validate-current" in content, "PROMPT_TEMPLATE.md must demonstrate English machine identifiers")
 
 
 def validate_yaml_keys() -> None:
@@ -126,8 +126,8 @@ def validate_yaml_keys() -> None:
 def main() -> None:
     try:
         validate_agents()
-        validate_skills()
-        validate_skill_template()
+        validate_prompts()
+        validate_prompt_template()
         validate_yaml_keys()
     except HarnessError:
         raise

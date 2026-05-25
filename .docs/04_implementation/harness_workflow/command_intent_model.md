@@ -34,8 +34,8 @@
 | `AGENTS.md` | Agent 入口协议 | 自然语言与宏指令、`/prd`、`/design`、`/dev`、`/devloop` |
 | `README.md` | 用户视角日常使用说明 | 常用快捷入口表 |
 | `PROJECT_SPEC.md` | 完整工作流规格 | 宏指令协议、Codex 适配方式 |
-| `.agent/skills/pjsdlc_manager/SKILL.md` | 意图路由 Skill | 自然语言到 workflow action 的映射规则 |
-| `.agent/skills/pjsdlc_dev_sprint/SKILL.md` | 开发阶段执行 Skill | `/dev` 与 `/devloop` 的执行边界 |
+| `.agent/prompts/workflow/pjsdlc_manager/PROMPT.md` | 意图路由 Prompt | 自然语言到 workflow action 的映射规则 |
+| `.agent/prompts/workflow/pjsdlc_dev_sprint/PROMPT.md` | 开发阶段执行 Prompt | `/dev` 与 `/devloop` 的执行边界 |
 | `packages/sdlc-harness/assets/**` | npm 包 canonical assets | 由 `package sync-source` 同步 |
 | `.docs/01_product/npm_package_distribution.md` | 产品需求 | `PRD-NPM-026` |
 | `.docs/03_tech_plan/harness_package_distribution.md` | 技术方案 | Natural Language Control |
@@ -46,7 +46,7 @@
 User input
 -> Manager reads lifecycle.yaml and plan.yaml
 -> Natural language or /xxx detailed prompt alias maps to workflow action
--> Stage Skill executes the action
+-> Stage Prompt executes the action
 -> Gates and docs update
 -> Commit/push protocol records durable history
 ```
