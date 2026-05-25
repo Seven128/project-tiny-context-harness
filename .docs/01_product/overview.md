@@ -1,11 +1,11 @@
 # .docs/01_product overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 02da9b522a8aee39 -->
+<!-- source-hash: 1192c3befc2a13dc -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `02da9b522a8aee39`
+Source hash: `1192c3befc2a13dc`
 
 ## Source Slices
 
@@ -73,6 +73,7 @@ Source: [npm_package_distribution.md](npm_package_distribution.md)
 | PRD-NPM-024 | 根 README 面向用户接入和日常使用 | P1 | 长篇产品说明和设计取舍迁移到 `PROJECT_SPEC.md`；根 `README.md` 只保留用户视角的包介绍、安装、初始化、同步、升级、诊断和验证命令 |
 | PRD-NPM-025 | implementation doc 默认按模块级事实切片 | P0 | `.docs/04_implementation/` 描述最终实现产物，默认按模块、子系统或核心数据流维护，并与 architecture / tech plan 边界对应；task id 和 commit 仅作为 provenance，不作为默认文档粒度 |
 | PRD-NPM-026 | 支持自然语言意图和约定指令别名双入口 | P0 | 每个阶段都应支持自然语言和 `/xxx` 快捷入口；开发阶段提供 `/dev` 单任务闭环和 `/devloop` 连续开发循环，且自然语言“做下一个任务”“开始循环：写任务，执行任务”能映射到对应动作 |
+| PRD-NPM-027 | npm 发布流程可脚本化执行 | P1 | 提供仓库内 release script，自动执行 version bump、test、source drift check、pack dry-run、publish、registry latest verification、installed-consumer smoke 和 release doc evidence；默认不发布，显式确认后才 publish |
 
 ## 5. Acceptance Criteria
 
@@ -102,6 +103,7 @@ Source: [npm_package_distribution.md](npm_package_distribution.md)
 - [ ] 根 `README.md` 是轻量用户指南，`PROJECT_SPEC.md` 保存完整项目规格说明。
 - [ ] implementation doc 默认按模块、子系统或核心数据流维护；open task 的 `implementation_doc` 指向相关长期实现事实文档，多个 task 可以更新同一份文档。
 - [ ] `/dev` 一次只完成一个 DEV task 闭环；`/devloop` 连续创建/执行 DEV task，直到没有明确任务或遇到 blocker。
+- [ ] npm package patch release 可以通过 `npm run release:npm -- --version patch --publish --yes` 执行，并生成 release evidence。
 - [ ] Harness 不再生成或要求 checkpoint 目录、checkpoint 模板或 `validate-checkpoint` gate。
 - [ ] Harness 不再生成或要求 `.agent/archive/**` 作为 task/release 常规归档。
 

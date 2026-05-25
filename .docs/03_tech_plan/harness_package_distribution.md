@@ -3,7 +3,7 @@
 ## 1. 关联产品需求
 
 - PRD: `.docs/01_product/npm_package_distribution.md`
-- Requirement IDs: `PRD-NPM-001` 至 `PRD-NPM-026`
+- Requirement IDs: `PRD-NPM-001` 至 `PRD-NPM-027`
 
 ## 2. 现有上下文
 
@@ -242,6 +242,36 @@ RFC_014 后，Harness 不再维护 `<harnessRoot>/state/gate_results.log`。gate
 `<harnessRoot>/state/lifecycle.yaml` 只保存当前路由状态，不保存 `history`。阶段流转历史、task 执行历史和 gate 历史都不属于 active state；它们是 cold archive，只在显式追溯、audit 或 regression forensic 场景下通过 git、PR、CI、release 系统和阶段产物读取。
 
 `transition.py` 只更新 `current_phase`、`active_role`、`active_skill`、`suspended_phase` 和 `allowed_next_phases`。`--reason` 保留为命令兼容参数，但不写入 state。package migration 会删除既有 lifecycle `history`，避免老项目升级后继续携带阶段流水。
+
+### 5.8 npm release automation
+
+`tools/release_npm.mjs` 负责本仓库的 npm 发布自动化。默认模式只准备发布并生成 release doc；真正发布必须显式传入 `--publish --yes`。
+
+典型命令：
+
+```sh
+npm run release:npm -- --version patch --publish --yes
+```
+
+脚本职责：
+
+```txt
+resolve next version from local package and npm registry
+-> npm version --workspace agent-project-sdlc --no-git-tag-version
+-> npm test
+-> package check-source
+-> npm pack --dry-run --json
+-> npm publish
+-> npm view latest verification
+-> temporary consumer install smoke
+-> write .docs/08_release/vX.Y.Z_npm_release.md
+-> make docs-overview
+-> make validate-harness
+-> validate allowed paths when an open task exists
+-> git diff --check
+```
+
+git commit、tag 和 push 仍由 SPRINTING task protocol 负责，避免 release script 绕过 task implementation commit 和 completion ledger commit。
 
 ## 6. 任务拆分（Task Breakdown）
 
