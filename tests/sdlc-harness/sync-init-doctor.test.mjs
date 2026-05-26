@@ -31,6 +31,8 @@ try {
 
   const defaultConfig = await readFile(path.join(defaultRoot, ".agent/config.yaml"), "utf8");
   assert.match(defaultConfig, /agent-project-sdlc/);
+  assert.match(defaultConfig, /\.agent\/pjsdlc_managed\/override_skills\/\*\.md/);
+  assert.doesNotMatch(defaultConfig, /\.agent\/overrides\/\*\*/);
   const packageMetadata = JSON.parse(await readFile(path.join(path.dirname(cliPath), "..", "package.json"), "utf8"));
   assert.match(defaultConfig, new RegExp(`version: "?${packageMetadata.version}"?`));
   const defaultLifecycle = await readFile(path.join(defaultRoot, ".agent/state/lifecycle.yaml"), "utf8");
@@ -53,9 +55,9 @@ try {
   await assert.rejects(stat(path.join(defaultRoot, ".agent/templates/PLAN_TEMPLATE.yaml")));
   await assert.rejects(stat(path.join(defaultRoot, ".agent/policies/phase_contracts.yaml")));
 
-  await mkdir(path.join(defaultRoot, ".agent/overrides/skills"), { recursive: true });
+  await mkdir(path.join(defaultRoot, ".agent/pjsdlc_managed/override_skills"), { recursive: true });
   await writeFile(
-    path.join(defaultRoot, ".agent/overrides/skills/pjsdlc_dev_sprint.md"),
+    path.join(defaultRoot, ".agent/pjsdlc_managed/override_skills/pjsdlc_dev_sprint.md"),
     "项目开发阶段必须优先检查本地业务约束。\n",
     "utf8"
   );
@@ -64,7 +66,7 @@ try {
   const overriddenDevSkill = await readFile(path.join(defaultRoot, ".agent/skills/pjsdlc_dev_sprint/SKILL.md"), "utf8");
   assert.match(overriddenDevSkill, /# Dev Sprint Skill/);
   assert.match(overriddenDevSkill, /## Local Override/);
-  assert.match(overriddenDevSkill, /\.agent\/overrides\/skills\/pjsdlc_dev_sprint\.md/);
+  assert.match(overriddenDevSkill, /\.agent\/pjsdlc_managed\/override_skills\/pjsdlc_dev_sprint\.md/);
   assert.match(overriddenDevSkill, /项目开发阶段必须优先检查本地业务约束。/);
   const secondOverrideSyncReport = await runSync(defaultRoot);
   assert.equal(secondOverrideSyncReport.blocked.length, 0);
@@ -83,9 +85,9 @@ try {
   );
   const configuredInitReport = await runInit(configuredRoot, { adopt: true, force: false });
   assert.ok(configuredInitReport.some((line) => line.includes("created .harness/config.yaml")));
-  await mkdir(path.join(configuredRoot, ".harness/overrides/skills"), { recursive: true });
+  await mkdir(path.join(configuredRoot, ".harness/pjsdlc_managed/override_skills"), { recursive: true });
   await writeFile(
-    path.join(configuredRoot, ".harness/overrides/skills/pjsdlc_manager.md"),
+    path.join(configuredRoot, ".harness/pjsdlc_managed/override_skills/pjsdlc_manager.md"),
     "项目管理阶段必须用本项目的交接口径报告状态。\n",
     "utf8"
   );
@@ -103,7 +105,7 @@ try {
   await assert.rejects(stat(path.join(configuredRoot, ".harness/templates/PLAN_TEMPLATE.yaml")));
   await assert.rejects(stat(path.join(configuredRoot, ".harness/policies/phase_contracts.yaml")));
   const configuredManagerSkill = await readFile(path.join(configuredRoot, ".harness/skills/pjsdlc_manager/SKILL.md"), "utf8");
-  assert.match(configuredManagerSkill, /\.harness\/overrides\/skills\/pjsdlc_manager\.md/);
+  assert.match(configuredManagerSkill, /\.harness\/pjsdlc_managed\/override_skills\/pjsdlc_manager\.md/);
   assert.match(configuredManagerSkill, /项目管理阶段必须用本项目的交接口径报告状态。/);
 
   const configuredDoctor = await runDoctor(configuredRoot);
@@ -174,12 +176,12 @@ try {
   assert.ok(brokenMarkerReport.blocked.some((line) => line.includes("Makefile")));
 
   await runInit(unknownSkillOverrideRoot, { adopt: true, force: false });
-  await mkdir(path.join(unknownSkillOverrideRoot, ".agent/overrides/skills"), { recursive: true });
-  await writeFile(path.join(unknownSkillOverrideRoot, ".agent/overrides/skills/pjsdlc_unknown.md"), "unknown\n", "utf8");
+  await mkdir(path.join(unknownSkillOverrideRoot, ".agent/pjsdlc_managed/override_skills"), { recursive: true });
+  await writeFile(path.join(unknownSkillOverrideRoot, ".agent/pjsdlc_managed/override_skills/pjsdlc_unknown.md"), "unknown\n", "utf8");
   const unknownSkillOverrideReport = await runSync(unknownSkillOverrideRoot);
   assert.ok(
     unknownSkillOverrideReport.blocked.some((line) =>
-      line.includes("unknown skill override: .agent/overrides/skills/pjsdlc_unknown.md")
+      line.includes("unknown skill override: .agent/pjsdlc_managed/override_skills/pjsdlc_unknown.md")
     )
   );
 

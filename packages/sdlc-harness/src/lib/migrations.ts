@@ -88,6 +88,12 @@ async function migrateLegacyManagedPaths(projectRoot: string, root: string, repo
     harnessPath(root, "pjsdlc_managed", "make"),
     report
   );
+  await moveIfDestinationMissing(
+    projectRoot,
+    harnessPath(root, "overrides", "skills"),
+    harnessPath(root, "pjsdlc_managed", "override_skills"),
+    report
+  );
 }
 
 async function movePromptTreeToSkillsIfDestinationMissing(
@@ -149,6 +155,13 @@ async function moveIfDestinationMissing(
 }
 
 function migrateLocalOverride(item: string, root: string): string {
+  if (
+    item === harnessPath(root, "overrides/**") ||
+    item === harnessPath(root, "overrides", "skills", "*.md") ||
+    item === harnessPath(root, "overrides", "skills", "**")
+  ) {
+    return harnessPath(root, "pjsdlc_managed", "override_skills", "*.md");
+  }
   if (
     item === ".harness/policies/*.local.yaml" ||
     item === harnessPath(root, "managed", "policies", "*.local.yaml")

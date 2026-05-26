@@ -87,13 +87,13 @@ Agent 会读取 `<harnessRoot>/state/lifecycle.yaml` 和 `<harnessRoot>/state/pl
 如果某个项目需要补充阶段角色要求，把追加提示词写到：
 
 ```txt
-<harnessRoot>/overrides/skills/<skill_name>.md
+<harnessRoot>/pjsdlc_managed/override_skills/<skill_name>.md
 ```
 
 例如：
 
 ```txt
-.codex/overrides/skills/pjsdlc_dev_sprint.md
+.codex/pjsdlc_managed/override_skills/pjsdlc_dev_sprint.md
 ```
 
 然后运行：

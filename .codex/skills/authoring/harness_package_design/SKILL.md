@@ -27,6 +27,11 @@ tech plan 或 RFC 明确晋升路径，再进入通用 Skill、policy、template
 - 项目实例数据：只描述当前仓库状态和 `.docs/**` 产物，不应被 sync/upgrade 覆盖。
 - Harness authoring overlay：只约束本仓库维护 Harness 自身的原则、专用 Skill 和包化安全规则。
 
+除 `<harnessRoot>/skills/**` 作为 workflow Skill hard file index 外，workflow Harness 配置都应放在
+`<harnessRoot>/pjsdlc_managed/**`。不要在 `<harnessRoot>` 顶层新增泛用 `overrides/`、`templates/`、
+`policies/` 等目录；例如项目本地阶段角色提示词使用
+`<harnessRoot>/pjsdlc_managed/override_skills/<skill_name>.md`。
+
 当发现一个动作重复、耗时、容易漏步骤、容易产生漂移、需要固定证据、需要发布/回滚安全阀、
 或未来很可能再次执行时，主动提示用户“这个动作可以抽成脚本”。提示要轻量，不要打断当前工作：
 说明脚本能减少什么成本或风险，建议脚本边界、输入参数、默认安全行为和验证命令。不要把一次性、
@@ -37,6 +42,7 @@ tech plan 或 RFC 明确晋升路径，再进入通用 Skill、policy、template
 - `.agent/state/lifecycle.yaml`
 - `.agent/state/plan.yaml`
 - `AGENTS.md`
+- `README.md`
 - `PROJECT_SPEC.md`
 - `.docs/01_product/`
 - `.docs/03_tech_plan/`
@@ -55,7 +61,8 @@ tech plan 或 RFC 明确晋升路径，再进入通用 Skill、policy、template
 5. 发现重复、长耗时、高风险或证据链固定的动作时，提示用户可以抽成脚本；用户确认或任务明确要求后，再实现脚本。
 6. 脚本默认应可 dry-run；真正 publish、tag、push、delete、overwrite 或迁移用户文件必须有显式参数或确认。
 7. 如果 authoring rule 值得分发给所有用户项目，先记录影响面和兼容性，再把规则晋升到通用 Harness 配置。
-8. 完成 task 前，更新模块级 implementation doc，并刷新 `.docs/<stage>/overview.md`。
+8. 每次改动或 RFC impact analysis 都要显式考虑 `PROJECT_SPEC.md` 和 `README.md` 是否需要同步更新；如果不需要，也说明原因。
+9. 完成 task 前，更新模块级 implementation doc，并刷新 `.docs/<stage>/overview.md`。
 
 ## 输出
 
@@ -67,6 +74,7 @@ tech plan 或 RFC 明确晋升路径，再进入通用 Skill、policy、template
 
 - [ ] 已确认 `.agent/skills/authoring/**` 没有进入 package assets。
 - [ ] 如果修改了通用 Harness 源文件，package source sync/check 已通过。
+- [ ] 已判断 `PROJECT_SPEC.md` 和 `README.md` 是否需要同步更新。
 - [ ] 如果发现可脚本化动作，已提示用户或说明暂不脚本化的理由。
 - [ ] 模块级 implementation doc 和 `.docs/INDEX.md` 已按需更新。
 - [ ] `make validate-harness` 和当前 task required gates 已通过。

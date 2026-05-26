@@ -24,7 +24,10 @@ export function defaultConfig(root: string): HarnessConfig {
       { path: harnessPath(root, "pjsdlc_managed", "make", "sdlc-harness.mk"), strategy: "managed" },
       { path: ".github/workflows/harness.yml", strategy: "create-if-missing" }
     ],
-    local_overrides: [harnessPath(root, "overrides/**"), harnessPath(root, "pjsdlc_managed", "policies", "*.local.yaml")],
+    local_overrides: [
+      harnessPath(root, "pjsdlc_managed", "override_skills", "*.md"),
+      harnessPath(root, "pjsdlc_managed", "policies", "*.local.yaml")
+    ],
     never_overwrite: [".docs/**", harnessPath(root, "state/**"), "src/**", "tests/**"]
   };
 }

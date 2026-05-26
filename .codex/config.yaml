@@ -20,7 +20,7 @@ managed_files:
     strategy: "create-if-missing"
 
 local_overrides:
-  - ".codex/overrides/**"
+  - ".codex/pjsdlc_managed/override_skills/*.md"
   - ".codex/pjsdlc_managed/policies/*.local.yaml"
 
 never_overwrite:

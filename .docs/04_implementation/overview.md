@@ -1,11 +1,11 @@
 # .docs/04_implementation overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 5efa1e68adb798e4 -->
+<!-- source-hash: da00206f87f8601e -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `5efa1e68adb798e4`
+Source hash: `da00206f87f8601e`
 
 ## Source Slices
 
@@ -602,7 +602,7 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: workflow Skills, prompt routing, hard/soft indexing and authoring overlay
-- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`
+- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`, `PROJECT_SPEC.md`
 - Linked RFC: `RFC_007`, `RFC_009`
@@ -614,7 +614,7 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 - `AGENTS.md` provides the deterministic soft index from lifecycle state to `active_skill`.
 - Native Agent skill hydration, when supported by the client, is a separate hard-index mechanism based on the client-specific skill root.
 - Natural language intent and `/xxx` macro aliases map to the same workflow actions.
-- Project-local role prompt additions live under `<harnessRoot>/overrides/skills/<skill_name>.md` and are appended to managed Skill output by `sdlc-harness sync`.
+- Project-local role prompt additions live under `<harnessRoot>/pjsdlc_managed/override_skills/<skill_name>.md` and are appended to managed Skill output by `sdlc-harness sync`.
 - This authoring repository keeps a private authoring Skill under `.codex/skills/authoring/**`; package source sync excludes it from user projects.
 
 ## 3. 真实代码结构
@@ -661,7 +661,7 @@ Skill sync with project-local role prompt additions:
 
 ```txt
 Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
-+ optional <harnessRoot>/overrides/skills/<skill_name>.md
++ optional <harnessRoot>/pjsdlc_managed/override_skills/<skill_name>.md
 -> sdlc-harness sync
 -> <harnessRoot>/skills/<skill_name>/SKILL.md
 ```
@@ -675,7 +675,8 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 - `/plan` and `/goal` are client modes and are not automatically controlled by Harness.
 - Authoring-only prompts help this repository improve the Harness itself and should not be shipped into user projects by default.
 - Local Skill overrides are append-only in v1. They let projects add role preferences without replacing lifecycle, task, gate or allowed-path rules from the package Skill.
-- `sync` blocks unknown files under `<harnessRoot>/overrides/skills/*.md`, so a misspelled Skill name cannot silently fail to apply.
+- `sync` blocks unknown files under `<harnessRoot>/pjsdlc_managed/override_skills/*.md`, so a misspelled Skill name cannot silently fail to apply.
+- `pjsdlc_managed/override_skills` keeps override configuration with other managed workflow configuration while preserving `<harnessRoot>/skills/**` as the shallow hard file index.
 
 ## 6. 与技术方案的偏移
 
@@ -691,7 +692,8 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | `npm test --workspace agent-project-sdlc` | Package build and CLI behavior regression tests | PASS for DEV-044 |
 | `node packages/sdlc-harness/dist/cli.js package check-source` | Skills and managed prompt assets match authoring source | PASS for DEV-044 |
 | `tests/sdlc-harness/package-source.test.mjs` | Authoring Skill exclusion from package assets | PASS in package tests |
-| `tests/sdlc-harness/sync-init-doctor.test.mjs` | Skill override append, idempotency, configured root and unknown override blocking | PASS for DEV-044 |
+| `tests/sdlc-harness/sync-init-doctor.test.mjs` | Skill override append, idempotency, configured root and unknown override blocking | PASS for DEV-046 |
+| `tests/sdlc-harness/upgrade.test.mjs` | Migration from legacy `overrides/skills` to `pjsdlc_managed/override_skills` | PASS for DEV-046 |
 | `make validate-harness` | Prompt language and overview consistency | PASS for DEV-044 |
 
 ## 8. 变更记录（Change Log）
@@ -705,12 +707,13 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-25 | `DEV-040` | `40552f0` | Added target-agent selection and `.codex` default for Codex. |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Migrated legacy prompt/skill implementation docs into module-level facts. |
 | 2026-05-26 | `DEV-044` | DEV-044 implementation commit | Added sync-time append overrides for project-local workflow Skill prompt additions. |
+| 2026-05-26 | `DEV-046` | DEV-046 implementation commit | Moved project-local Skill overrides under `pjsdlc_managed/override_skills` and updated authoring impact rules. |
 
 ## 9. 后续维护注意事项
 
 - When adding a workflow role, update both the Skill file and the soft-index contract in lifecycle/phase policies.
 - If a client-specific native skill root is supported, document it as hard-index behavior without assuming every Agent hydrates it identically.
-- Do not document direct edits to `<harnessRoot>/skills/**/SKILL.md` as a customization path; use `<harnessRoot>/overrides/skills/*.md` and `sdlc-harness sync`.
+- Do not document direct edits to `<harnessRoot>/skills/**/SKILL.md` as a customization path; use `<harnessRoot>/pjsdlc_managed/override_skills/*.md` and `sdlc-harness sync`.
 
 ---
 

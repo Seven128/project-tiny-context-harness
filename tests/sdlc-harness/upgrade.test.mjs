@@ -74,6 +74,12 @@ history:
   await rm(path.join(root, ".harness/pjsdlc_managed"), { recursive: true, force: true });
   await mkdir(path.join(root, ".harness/managed/policies"), { recursive: true });
   await writeFile(path.join(root, ".harness/managed/policies/custom.local.yaml"), "custom: true\n", "utf8");
+  await mkdir(path.join(root, ".harness/overrides/skills"), { recursive: true });
+  await writeFile(
+    path.join(root, ".harness/overrides/skills/pjsdlc_dev_sprint.md"),
+    "升级后的开发阶段仍保留本地提示词。\n",
+    "utf8"
+  );
 
   const report = await runUpgrade(root);
   assert.ok(report.some((line) => line.startsWith("migrations changed=")));
@@ -99,11 +105,19 @@ history:
   assert.doesNotMatch(config, /\.agents\/skills/);
   assert.match(config, /\.harness\/pjsdlc_managed\/templates/);
   assert.match(config, /\.harness\/pjsdlc_managed\/policies/);
+  assert.match(config, /\.harness\/pjsdlc_managed\/override_skills\/\*\.md/);
+  assert.doesNotMatch(config, /\.harness\/overrides\/\*\*/);
   assert.doesNotMatch(config, /\.harness\/managed\/templates/);
   assert.doesNotMatch(config, /\.harness\/managed\/policies/);
   const localOverride = await readFile(path.join(root, ".harness/pjsdlc_managed/policies/custom.local.yaml"), "utf8");
   assert.match(localOverride, /custom: true/);
   await assert.rejects(readFile(path.join(root, ".harness/managed/policies/custom.local.yaml"), "utf8"));
+  const skillOverride = await readFile(path.join(root, ".harness/pjsdlc_managed/override_skills/pjsdlc_dev_sprint.md"), "utf8");
+  assert.match(skillOverride, /升级后的开发阶段仍保留本地提示词。/);
+  await assert.rejects(readFile(path.join(root, ".harness/overrides/skills/pjsdlc_dev_sprint.md"), "utf8"));
+  const generatedDevSkill = await readFile(path.join(root, ".harness/skills/pjsdlc_dev_sprint/SKILL.md"), "utf8");
+  assert.match(generatedDevSkill, /\.harness\/pjsdlc_managed\/override_skills\/pjsdlc_dev_sprint\.md/);
+  assert.match(generatedDevSkill, /升级后的开发阶段仍保留本地提示词。/);
 
   const makefile = await readFile(path.join(root, "Makefile"), "utf8");
   assert.match(makefile, /pjsdlc:sdlc-harness:make:begin/);

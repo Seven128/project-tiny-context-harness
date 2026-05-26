@@ -69,13 +69,13 @@ package.json or sdlc-harness.config.json
 <harnessRoot>/pjsdlc_managed/templates/**
 <harnessRoot>/pjsdlc_managed/policies/**
 <harnessRoot>/pjsdlc_managed/make/sdlc-harness.mk
-<harnessRoot>/overrides/**
+<harnessRoot>/pjsdlc_managed/override_skills/*.md
 .docs/**
 ```
 
 `<harnessRoot>/skills/pjsdlc_*/SKILL.md` 是 Harness hard file index，保持一层 `skills/<skill_name>/SKILL.md`，并通过 `pjsdlc_` 前缀标识包内 workflow Skill。这个固定路径用于 `active_skill` / `phase_contracts.yaml` 的软路由；它不保证具体 Agent 客户端会把该目录当作 native skill hard index 首轮水合。除 skills 外的 package-managed workflow config 统一放在 `<harnessRoot>/pjsdlc_managed/**`，不再维护 `<harnessRoot>/managed/**`、`<harnessRoot>/policies/**` 或 `<harnessRoot>/templates/**` mirror。
 
-项目本地阶段角色提示词通过 `<harnessRoot>/overrides/skills/<skill_name>.md` 追加到最终 `SKILL.md`。`sdlc-harness sync` 先读取包内 base Skill，再校验 override 文件名必须匹配已有 `pjsdlc_*` workflow Skill，最后在 `<harnessRoot>/skills/<skill_name>/SKILL.md` 末尾写入一个 `Local Override` 区块。直接修改 `<harnessRoot>/skills/**/SKILL.md` 不受支持，因为该目录是 managed output，会在后续 sync/upgrade 中被重新物化。
+项目本地阶段角色提示词通过 `<harnessRoot>/pjsdlc_managed/override_skills/<skill_name>.md` 追加到最终 `SKILL.md`。`sdlc-harness sync` 先读取包内 base Skill，再校验 override 文件名必须匹配已有 `pjsdlc_*` workflow Skill，最后在 `<harnessRoot>/skills/<skill_name>/SKILL.md` 末尾写入一个 `Local Override` 区块。直接修改 `<harnessRoot>/skills/**/SKILL.md` 不受支持，因为该目录是 managed output，会在后续 sync/upgrade 中被重新物化。
 
 `sdlc-harness init` 的交互顺序是先选择目标 Agent，再确定 `<harnessRoot>`：
 
@@ -130,7 +130,7 @@ Codex `/plan` 和 `/goal` 是客户端模式入口，不由 Harness 自动开启
 |---|---|---|---|---|
 | `sdlc-harness init` | CLI command | `--force?`、`--harness-folder?`、cwd；无显式目录时交互选择 Agent | 创建新项目 Harness 骨架并执行 `sync` | 非空冲突、权限不足、未知 Agent 选择 |
 | `sdlc-harness init --adopt` | CLI command | `--harness-folder?`、cwd；无显式目录时交互选择 Agent | 最小接入已有项目，执行安全诊断 | 发现高风险覆盖时停止 |
-| `sdlc-harness sync` | CLI command | `<harnessRoot>/config.yaml`、包内 assets、`<harnessRoot>/overrides/skills/*.md` | materialized files、sync report；Skill 输出包含本地追加 override | managed marker 缺失、未知 Skill override、local override 冲突、never overwrite 命中 |
+| `sdlc-harness sync` | CLI command | `<harnessRoot>/config.yaml`、包内 assets、`<harnessRoot>/pjsdlc_managed/override_skills/*.md` | materialized files、sync report；Skill 输出包含本地追加 override | managed marker 缺失、未知 Skill override、local override 冲突、never overwrite 命中 |
 | `sdlc-harness upgrade` | CLI command | 当前 package version、schema version | migration report、自动 `sync`、doctor report | migration 失败、checksum 冲突 |
 | `sdlc-harness doctor` | CLI command | cwd | 配置完整性、漂移、override、gate 建议 | 配置不可读 |
 | `sdlc-harness validate-*` | CLI command | cwd | 对应 gate 结果 | gate failure |
@@ -162,7 +162,7 @@ managed_files:
     strategy: "create-if-missing"
 
 local_overrides:
-  - "<harnessRoot>/overrides/**"
+  - "<harnessRoot>/pjsdlc_managed/override_skills/*.md"
   - "<harnessRoot>/pjsdlc_managed/policies/*.local.yaml"
 
 never_overwrite:
@@ -174,10 +174,10 @@ never_overwrite:
 
 ### 5.2 Skill local overrides
 
-`<harnessRoot>/overrides/skills/<skill_name>.md` 是项目本地补充提示词事实源。v1 只支持追加覆盖，不支持整段替换 managed Skill，也不支持结构化 patch。
+`<harnessRoot>/pjsdlc_managed/override_skills/<skill_name>.md` 是项目本地补充提示词事实源。v1 只支持追加覆盖，不支持整段替换 managed Skill，也不支持结构化 patch。
 
 ```txt
-<harnessRoot>/overrides/skills/pjsdlc_dev_sprint.md
+<harnessRoot>/pjsdlc_managed/override_skills/pjsdlc_dev_sprint.md
 -> sdlc-harness sync
 -> <harnessRoot>/skills/pjsdlc_dev_sprint/SKILL.md
    = package base Skill + Local Override block
@@ -189,6 +189,7 @@ never_overwrite:
 - 空 override 文件不生成追加区块。
 - 未知或嵌套 override 路径会阻塞 sync，避免用户以为本地提示词已经生效。
 - override 生效时机是运行 `sync` 之后；`upgrade` 自动执行 `sync`，因此升级后会重新合成本地 override。
+- legacy `<harnessRoot>/overrides/skills` 如果存在，upgrade migration 会在目标缺失时移动到 `<harnessRoot>/pjsdlc_managed/override_skills`。
 
 ### 5.3 managed metadata
 
@@ -334,7 +335,7 @@ git commit、tag 和 push 仍由 SPRINTING task protocol 负责，避免 release
 | 根 `Makefile` 与业务项目冲突 | P0 | 只插入 include，不整体覆盖 |
 | `AGENTS.md` 与项目自定义规则冲突 | P0 | 使用 `pjsdlc:sdlc-harness:*` managed block，marker 外内容不改；旧 `sdlc-harness:*` marker 仅作为 migration 输入 |
 | 生成的 Skill 不被 Agent 识别 | P0 | init 默认按目标 Agent 写入 `<harnessRoot>`，Skill 保持 `<harnessRoot>/skills/pjsdlc_<skill_name>/SKILL.md` hard file index；`AGENTS.md` 提供 Harness soft index，native skill 首轮水合由具体 Agent adapter 负责 |
-| 用户直接修改 managed Skill 导致升级丢失 | P1 | 项目定制写入 `<harnessRoot>/overrides/skills/<skill_name>.md`，由 `sync` 追加合成到最终 `SKILL.md` |
+| 用户直接修改 managed Skill 导致升级丢失 | P1 | 项目定制写入 `<harnessRoot>/pjsdlc_managed/override_skills/<skill_name>.md`，由 `sync` 追加合成到最终 `SKILL.md` |
 | policy/template 事实源重复 | P1 | 工具只读取 `<harnessRoot>/pjsdlc_managed/policies/**` 和 `<harnessRoot>/pjsdlc_managed/templates/**`，删除 legacy mirror |
 | npm 包 validators 运行环境不稳定 | P1 | validators 运行时使用 TypeScript/Node，不依赖 Python 运行时 |
 | `plan.yaml` 过大导致 Agent 上下文膨胀 | P0 | plan 只保留当前和未来任务，done/cancelled task 完成后移出 plan |

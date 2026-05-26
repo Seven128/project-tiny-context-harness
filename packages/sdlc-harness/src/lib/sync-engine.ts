@@ -302,7 +302,7 @@ async function readSkillOverrides(
   report: SyncReport
 ): Promise<Map<string, { relativePath: string; content: string }>> {
   const overrides = new Map<string, { relativePath: string; content: string }>();
-  const overrideRoot = path.join(projectRoot, root, "overrides", "skills");
+  const overrideRoot = skillOverrideRoot(projectRoot, root);
   if (!(await pathExists(overrideRoot))) {
     return overrides;
   }
@@ -314,18 +314,22 @@ async function readSkillOverrides(
     const relativePath = path.relative(overrideRoot, file).split(path.sep).join("/");
     const match = relativePath.match(/^([^/]+)\.md$/);
     if (!match || !knownSkills.has(match[1])) {
-      report.blocked.push(`unknown skill override: ${path.join(root, "overrides", "skills", relativePath)}`);
+      report.blocked.push(`unknown skill override: ${path.join(root, "pjsdlc_managed", "override_skills", relativePath)}`);
       continue;
     }
     const content = await readText(file);
     if (content.trim()) {
       overrides.set(match[1], {
-        relativePath: path.join(root, "overrides", "skills", relativePath),
+        relativePath: path.join(root, "pjsdlc_managed", "override_skills", relativePath),
         content
       });
     }
   }
   return overrides;
+}
+
+function skillOverrideRoot(projectRoot: string, root: string): string {
+  return path.join(projectRoot, root, "pjsdlc_managed", "override_skills");
 }
 
 function skillNameForSourceFile(sourceRoot: string, file: string): string | undefined {
