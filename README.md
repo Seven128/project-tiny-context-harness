@@ -48,6 +48,27 @@ npx sdlc-harness init --adopt
 - `.docs/**`
 - `Makefile` harness include block
 
+## 对外能力一览
+
+`agent-project-sdlc` 对外提供这些能力：
+
+| 能力 | 入口 | 说明 |
+|---|---|---|
+| 新项目初始化 | `npx sdlc-harness init` | 选择目标 Agent，生成 Harness 根目录、状态文件、workflow skills、模板、策略、`.docs/**` 和 Makefile include |
+| 已有项目接入 | `npx sdlc-harness init --adopt` | 非破坏性接入已有仓库，不覆盖业务代码和已有项目事实源 |
+| 可配置 Harness 根目录 | `--harness-folder`、`package.json#sdlcHarness.harnessFolderName`、`sdlc-harness.config.json` | 支持 `.codex`、`.claude`、`.cursor`、`.cline`、`.roo`、`.gemini` 或自定义目录 |
+| 同步 managed workflow 文件 | `npx sdlc-harness sync` | 从包内 canonical assets 物化 `AGENTS.md` managed block、workflow skills、templates、policies、Makefile 片段和 GitHub workflow |
+| 升级已接入项目 | `npx sdlc-harness upgrade` | 执行迁移并自动 `sync`，保留 state、docs、业务代码和本地 override |
+| 接入诊断 | `npx sdlc-harness doctor` | 检查 harness root、版本、schema、关键文件和 managed paths |
+| 阶段 gate | `npx sdlc-harness validate-*`、`make validate-current`、`make validate-harness` | 校验需求、设计、开发计划、Harness 骨架、提示词语言契约和 overview freshness |
+| 生命周期工作流 | `lifecycle.yaml`、`plan.yaml`、`.docs/**` | 固定 REQUIREMENT_GATHERING、ARCHITECTING、SPRINTING、REVIEWING、TESTING、RELEASING、RFC_RECALIBRATION 等阶段事实链 |
+| 自然语言控制 | `AGENTS.md` + workflow skills | 用户可说“继续”“开始开发”“跑测试”“需求变了”等，由 Agent 映射到 `/next`、`/dev`、`/test`、RFC 等动作 |
+| Workflow skills | `<harnessRoot>/skills/pjsdlc_*/SKILL.md` | 提供 PM、架构、开发、实现文档、Review、测试、发布、RFC 等阶段角色提示词 |
+| 阶段角色提示词本地追加 | `<harnessRoot>/pjsdlc_managed/override_skills/<skill_name>.md` + `sync` | 用户不改 managed Skill，通过本地 override 追加项目规则，下一次 sync/upgrade 会重新合成 |
+| 本地策略覆盖 | `<harnessRoot>/pjsdlc_managed/policies/*.local.yaml` | 保留项目自己的策略补充，不和包内默认策略混写 |
+| 文档 overview | `make docs-overview`、`make validate-doc-overviews` | 从 `.docs/**` facts 生成各阶段 overview，避免手写派生视图 |
+| 包源码一致性检查 | `sdlc-harness package sync-source`、`sdlc-harness package check-source` | 供本仓库维护者同步和检查 package canonical assets，避免源码与发布内容漂移 |
+
 ## 日常使用
 
 用户不需要记宏指令。直接用自然语言让 agent 推进即可；熟悉后也可以使用 `/xxx` 快捷入口。

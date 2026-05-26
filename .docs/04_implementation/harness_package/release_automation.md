@@ -4,11 +4,11 @@
 
 - Domain: `harness_package`
 - Module / subsystem / core flow: npm release automation and registry smoke
-- Updated by task: `DEV-033`, `DEV-035`, `DEV-042`, `DEV-043`
+- Updated by task: `DEV-033`, `DEV-035`, `DEV-042`, `DEV-043`, `DEV-047`, `DEV-048`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`
 - Linked RFC: none
-- Linked commits: `DEV-033`, `DEV-035`, `DEV-042` implementation commits; `DEV-043` migration commit
+- Linked commits: `DEV-033`, `DEV-035`, `DEV-042` implementation commits; `DEV-043` migration commit; `338b4b5`; `DEV-048` implementation commit
 
 ## 2. 当前实现范围
 
@@ -16,6 +16,7 @@
 - `npm run release:npm` is the root script entrypoint.
 - The script defaults to prepare/check mode; real publishing requires `--publish --yes`.
 - Release evidence is written under `.docs/08_release/vX.Y.Z_npm_release.md`.
+- `packages/sdlc-harness/README.md` is included in the package `files` list so npm displays public install, command, workflow and Skill override documentation.
 - Git commit, tag and push remain outside the release script and are handled by the SPRINTING task protocol.
 
 ## 3. 真实代码结构
@@ -25,6 +26,7 @@
 | `tools/release_npm.mjs` | Release automation entrypoint | version resolution, gate runner, publish, smoke, release doc writer |
 | `package.json` | Root script adapter | `scripts.release:npm` |
 | `packages/sdlc-harness/package.json` | Package version and publish metadata | `version`, `files`, `bin`, `prepack` |
+| `packages/sdlc-harness/README.md` | npm registry README | public capability list, command examples, Skill override usage |
 | `package-lock.json` | Workspace lock version record | `packages/sdlc-harness.version` |
 | `.docs/08_release/*.md` | Release evidence and rollback plan | versioned release docs |
 
@@ -67,9 +69,10 @@ npm run release:npm -- --version patch --publish --yes
 | `npm test` | Package build and tests before publish | PASS during release tasks |
 | `node packages/sdlc-harness/dist/cli.js package check-source` | Asset drift before publish | PASS during release tasks |
 | `npm pack --dry-run --json --workspace agent-project-sdlc` | Tarball content and metadata | PASS during release tasks |
-| `npm publish --workspace agent-project-sdlc` | Registry publish | PASS for `v0.1.3` through `v0.1.5` |
-| `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json` | Registry verification | PASS for `v0.1.5` |
-| Temporary installed-consumer smoke | Published package install and CLI smoke | PASS during release tasks |
+| `npm publish --workspace agent-project-sdlc` | Registry publish | PASS for `v0.1.3` through `v0.1.7` |
+| `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json` | Registry verification | PASS for `v0.1.7` |
+| `npm view agent-project-sdlc readme --json` | Registry README publication | PASS for `v0.1.7` |
+| Temporary installed-consumer smoke | Published package install and CLI smoke | PASS during release tasks through `v0.1.7` |
 
 ## 8. 变更记录（Change Log）
 
@@ -79,6 +82,8 @@ npm run release:npm -- --version patch --publish --yes
 | 2026-05-25 | `DEV-035` | Historical implementation commit | Added `tools/release_npm.mjs` release automation. |
 | 2026-05-26 | `DEV-042` | `873966d` | Released `agent-project-sdlc@0.1.5`. |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Moved release-flow facts out of the old `npm_package` implementation-doc directory. |
+| 2026-05-26 | `DEV-047` | `338b4b5` | Released `agent-project-sdlc@0.1.6`. |
+| 2026-05-26 | `DEV-048` | DEV-048 implementation commit | Released `agent-project-sdlc@0.1.7` with package README registry data and public capability coverage. |
 
 ## 9. 后续维护注意事项
 
