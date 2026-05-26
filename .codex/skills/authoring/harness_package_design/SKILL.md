@@ -37,6 +37,11 @@ tech plan 或 RFC 明确晋升路径，再进入通用 Skill、policy、template
 说明脚本能减少什么成本或风险，建议脚本边界、输入参数、默认安全行为和验证命令。不要把一次性、
 低风险、低频动作过度脚本化。
 
+`README.md` 和 package README 是 npm package 的对外能力索引。新增、删除或改变对外 CLI command、
+configuration、workflow behavior、managed path、override mechanism、validator、migration、release
+behavior 或用户可见约束时，必须同步检查这两个 README 是否完整描述所有 public package
+capabilities；不能只在 `PROJECT_SPEC.md`、implementation doc 或 release note 中记录。
+
 ## 输入
 
 - `.agent/state/lifecycle.yaml`
@@ -62,7 +67,8 @@ tech plan 或 RFC 明确晋升路径，再进入通用 Skill、policy、template
 6. 脚本默认应可 dry-run；真正 publish、tag、push、delete、overwrite 或迁移用户文件必须有显式参数或确认。
 7. 如果 authoring rule 值得分发给所有用户项目，先记录影响面和兼容性，再把规则晋升到通用 Harness 配置。
 8. 每次改动或 RFC impact analysis 都要显式考虑 `PROJECT_SPEC.md` 和 `README.md` 是否需要同步更新；如果不需要，也说明原因。
-9. 完成 task 前，更新模块级 implementation doc，并刷新 `.docs/<stage>/overview.md`。
+9. package 对外能力变化时，`README.md` 和 `packages/sdlc-harness/README.md` 必须覆盖完整 public capability list，包括入口命令、配置方式、sync/upgrade 行为、本地 override、validator 和发布/诊断能力。
+10. 完成 task 前，更新模块级 implementation doc，并刷新 `.docs/<stage>/overview.md`。
 
 ## 输出
 
@@ -74,7 +80,8 @@ tech plan 或 RFC 明确晋升路径，再进入通用 Skill、policy、template
 
 - [ ] 已确认 `.agent/skills/authoring/**` 没有进入 package assets。
 - [ ] 如果修改了通用 Harness 源文件，package source sync/check 已通过。
-- [ ] 已判断 `PROJECT_SPEC.md` 和 `README.md` 是否需要同步更新。
+- [ ] 已判断 `PROJECT_SPEC.md`、`README.md` 和 `packages/sdlc-harness/README.md` 是否需要同步更新。
+- [ ] 如果 package public capability 有变化，README/package README 已完整覆盖对外能力。
 - [ ] 如果发现可脚本化动作，已提示用户或说明暂不脚本化的理由。
 - [ ] 模块级 implementation doc 和 `.docs/INDEX.md` 已按需更新。
 - [ ] `make validate-harness` 和当前 task required gates 已通过。

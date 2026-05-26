@@ -1,11 +1,11 @@
 # .docs/04_implementation overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: d76b8be14534ca0f -->
+<!-- source-hash: 1622269c4b58b977 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `d76b8be14534ca0f`
+Source hash: `1622269c4b58b977`
 
 ## Source Slices
 
@@ -607,11 +607,11 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: workflow Skills, prompt routing, hard/soft indexing and authoring overlay
-- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`
+- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`, `PROJECT_SPEC.md`
 - Linked RFC: `RFC_007`, `RFC_009`
-- Linked commits: historical `DEV-*` implementation commits; `DEV-043` migration commit
+- Linked commits: historical `DEV-*` implementation commits; `DEV-043` migration commit; `DEV-049` implementation commit
 
 ## 2. 当前实现范围
 
@@ -621,6 +621,7 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 - Natural language intent and `/xxx` macro aliases map to the same workflow actions.
 - Project-local role prompt additions live under `<harnessRoot>/pjsdlc_managed/override_skills/<skill_name>.md` and are appended to managed Skill output by `sdlc-harness sync`.
 - This authoring repository keeps a private authoring Skill under `.codex/skills/authoring/**`; package source sync excludes it from user projects.
+- The authoring Skill requires README/package README coverage to stay aligned with all public package capabilities.
 
 ## 3. 真实代码结构
 
@@ -636,7 +637,7 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 | `.codex/skills/pjsdlc_tester/SKILL.md` | Testing prompt | regression/test plan workflow |
 | `.codex/skills/pjsdlc_release_manager/SKILL.md` | Release prompt | release notes, smoke and rollback plan |
 | `.codex/skills/pjsdlc_rfc_recalibrate/SKILL.md` | RFC prompt | change impact analysis |
-| `.codex/skills/authoring/harness_package_design/SKILL.md` | Authoring-only prompt | package iteration, scriptability heuristic |
+| `.codex/skills/authoring/harness_package_design/SKILL.md` | Authoring-only prompt | package iteration, scriptability heuristic, README capability coverage |
 | `.codex/pjsdlc_managed/policies/phase_contracts.yaml` | Phase-to-skill contract | `skill` per phase |
 | `packages/sdlc-harness/src/lib/sync-engine.ts` | Skill materialization | base Skill copy plus local override append |
 | `tools/validate_prompt_language.py` | Prompt contract validator | Chinese explanation + English identifiers |
@@ -679,6 +680,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 - User convenience comes from natural-language routing and macro aliases; users do not need to memorize every `/xxx`.
 - `/plan` and `/goal` are client modes and are not automatically controlled by Harness.
 - Authoring-only prompts help this repository improve the Harness itself and should not be shipped into user projects by default.
+- Package-facing behavior changes must keep both `README.md` and `packages/sdlc-harness/README.md` aligned with the full public capability list, not only `PROJECT_SPEC.md` or release notes.
 - Local Skill overrides are append-only in v1. They let projects add role preferences without replacing lifecycle, task, gate or allowed-path rules from the package Skill.
 - `sync` blocks unknown files under `<harnessRoot>/pjsdlc_managed/override_skills/*.md`, so a misspelled Skill name cannot silently fail to apply.
 - `pjsdlc_managed/override_skills` keeps override configuration with other managed workflow configuration while preserving `<harnessRoot>/skills/**` as the shallow hard file index.
@@ -713,6 +715,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Migrated legacy prompt/skill implementation docs into module-level facts. |
 | 2026-05-26 | `DEV-044` | DEV-044 implementation commit | Added sync-time append overrides for project-local workflow Skill prompt additions. |
 | 2026-05-26 | `DEV-046` | DEV-046 implementation commit | Moved project-local Skill overrides under `pjsdlc_managed/override_skills` and updated authoring impact rules. |
+| 2026-05-26 | `DEV-049` | DEV-049 implementation commit | Added authoring rule that README/package README must cover all public package capabilities. |
 
 ## 9. 后续维护注意事项
 
