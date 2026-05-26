@@ -1,44 +1,4 @@
 current_phase: "SPRINTING"
-current_task_id: "DEV-048"
+current_task_id: ""
 next_task_sequence: 49
-tasks:
-  - id: "DEV-048"
-    title: "Publish package README capability coverage"
-    status: "in_progress"
-    summary: "Add public capability coverage to the root README and package README, then publish a patch release so npm displays README data."
-    docs:
-      root:
-        - "README.md"
-      release:
-        - ".docs/08_release/"
-    allowed_paths:
-      - ".codex/state/plan.yaml"
-      - ".docs/08_release/v0.1.7_npm_release.md"
-      - ".docs/08_release/overview.md"
-      - ".docs/04_implementation/harness_package/release_automation.md"
-      - ".docs/04_implementation/overview.md"
-      - "README.md"
-      - "package-lock.json"
-      - "packages/sdlc-harness/README.md"
-      - "packages/sdlc-harness/package.json"
-    required_gates:
-      - "npm pack --dry-run --json --workspace agent-project-sdlc"
-      - "npm run release:npm -- --version patch --publish --yes"
-      - "npm view agent-project-sdlc readme --json"
-      - "make validate-current"
-      - "git diff --check"
-    acceptance_criteria:
-      - "Root README lists all external package capabilities, including Skill overrides."
-      - "Package README exists under packages/sdlc-harness/README.md and is included in npm pack output."
-      - "npm registry README data is present after publish."
-      - "Release evidence records the README fix."
-    implementation_doc: ".docs/04_implementation/harness_package/release_automation.md"
-    working_notes:
-      - "npm view agent-project-sdlc readme returned ERROR: No README data found for 0.1.6."
-      - "npm pack --dry-run --json --workspace agent-project-sdlc: PASS, package includes README.md."
-      - "npm run release:npm -- --version patch --publish --yes: PASS, published agent-project-sdlc@0.1.7."
-      - "npm view agent-project-sdlc readme --json: PASS, registry README contains package README with Skill override coverage."
-      - "npm view agent-project-sdlc version dist-tags.latest --json: PASS, version/latest are 0.1.7."
-      - "make validate-harness: PASS."
-      - "git diff --check: PASS."
-      - "python3 tools/validate_allowed_paths.py: PASS."
+tasks: []
