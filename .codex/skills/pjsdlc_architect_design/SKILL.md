@@ -41,6 +41,7 @@ description: Use during ARCHITECTING to create architecture docs, technical plan
 - `.docs/05_decisions/` 按单个架构决策切片，即一份 ADR 只记录一个 durable decision。
 - 如果一个技术方案跨越多个独立模块，应拆成多个 tech plan slice，并在 `plan.draft.yaml` 中分别引用。
 - 如果实现计划改变了已有模块边界，应更新相关 architecture slice，而不是只在 task 描述里补一句。
+- 如果用户明确要求把既有完整技术方案文件切成多个 `.docs/03_tech_plan/` slices，先确认 replacement slices 覆盖原文件中仍有效的接口契约、数据模型、模块方案、任务组和 gate；切片完成并更新 `plan.draft.yaml` 引用、`.docs/INDEX.md`、刷新 `overview.md` 后，删除被替代的完整 tech plan file，避免同一事实由完整文件和 slices 双重保留。
 - 每次新增、拆分、合并或废弃 slice 后，都要更新 `.docs/INDEX.md`。
 
 ## 规则
@@ -56,6 +57,7 @@ description: Use during ARCHITECTING to create architecture docs, technical plan
 - [ ] 架构文档和技术方案已生成。
 - [ ] 相关接口契约和数据结构已明确。
 - [ ] 已判断 architecture / tech plan / ADR 的语义切片边界。
+- [ ] 如果用户要求把完整技术方案切成 tech plan slices，已删除被替代的完整 tech plan file，并同步 `plan.draft.yaml` 引用。
 - [ ] task draft 字段完整且范围清晰。
 - [ ] `.docs/INDEX.md` 已链接新增产物。
 - [ ] 已运行 `make docs-overview` 刷新 `.docs/<stage>/overview.md`。

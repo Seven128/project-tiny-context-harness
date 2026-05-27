@@ -39,6 +39,7 @@ description: Use during REQUIREMENT_GATHERING to turn raw input into PRD slices 
 - `.docs/01_product/` 按业务能力、用户场景、验收边界切片。
 - 如果新增内容仍属于同一业务能力，只更新原 PRD slice。
 - 如果新增内容形成独立用户场景、独立验收标准或独立 Out of Scope，应创建新的 PRD slice。
+- 如果用户明确要求把既有完整 PRD/产品方案文件切成多个 `.docs/01_product/` slices，先确认 replacement slices 覆盖原文件中仍有效的全部需求事实；切片完成并更新 `.docs/INDEX.md`、刷新 `overview.md` 后，删除被替代的完整文件，避免同一事实由完整文件和 slices 双重保留。不要因此删除 `.docs/00_raw/` 原始记录，除非用户明确要求。
 - 每次新增、拆分、合并或废弃 slice 后，都要更新 `.docs/INDEX.md`。
 
 ## 规则
@@ -57,6 +58,7 @@ description: Use during REQUIREMENT_GATHERING to turn raw input into PRD slices 
 - [ ] Out of Scope 明确。
 - [ ] Open Questions 有 owner/status。
 - [ ] 已判断是否需要新增、拆分、合并或废弃 PRD slice。
+- [ ] 如果用户要求把完整 PRD/产品方案切成 slices，已删除被替代的完整文件，并保留必要的 `.docs/00_raw/` 原始记录。
 - [ ] 如果用户要求并行，worker output 已由主 Agent 合成，最终 PRD 不由 worker 直接写入。
 - [ ] `.docs/INDEX.md` 已链接新增产物。
 - [ ] 已运行 `make docs-overview` 刷新 `.docs/<stage>/overview.md`。

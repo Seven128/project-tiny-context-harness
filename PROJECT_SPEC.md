@@ -235,6 +235,8 @@ RAG 能减少一次性塞进上下文的内容，但固定 chunk 和余弦召回
 
 如果文档变化没有改变语义边界，更新原 slice；如果新增独立场景、拆分模块、合并流程或 RFC 改变影响范围，应新增、拆分、合并或废弃 slice，并更新 `.docs/INDEX.md`。
 
+当用户明确要求把 `.docs/01_product/` 中既有完整 PRD/产品方案文件，或 `.docs/03_tech_plan/` 中既有完整技术方案文件切成多个 slices 时，完成条件不是“完整文件 + slices”并存。主 Agent 必须先确认 replacement slices 覆盖原文件中仍有效的事实；切片完成后更新 `.docs/INDEX.md`，技术方案还要同步 `plan.draft.yaml` 引用，并运行 `make docs-overview`；随后删除被替代的完整文件，避免同一事实源被重复检索和重复维护。`.docs/00_raw/` 原始记录不因 PRD slicing 自动删除。
+
 implementation doc 是最终实现产物的事实层，默认与技术架构和技术方案中的模块、子系统或核心数据流对应。task 是执行和提交边界，task id、commit 和 RFC 只作为 implementation doc 的 provenance；多个 task 可以更新同一份 implementation doc。不要在 `.docs/04_implementation/` 下维护按 task 编号铺开的 `dev_*.md` ledger；历史动作记录由 git commit、tag、release evidence 和模块级 implementation doc 共同承担。
 
 ### 6.3 overview.md
