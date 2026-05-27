@@ -4,7 +4,7 @@
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: implementation documentation model
-- Updated by task: `DEV-032`, `DEV-043`
+- Updated by task: `DEV-032`, `DEV-043`, `TASK-057`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md` (`PRD-NPM-025`)
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`
 - Linked RFC: none
@@ -18,8 +18,8 @@
   - 技术方案中的 implementation doc model 说明。
 - 修改（Changed）:
   - `pjsdlc_implementation_doc` 不再默认按 task 生成 `dev_*.md`。
-  - `pjsdlc_dev_sprint` 将 task 定义为执行和提交边界，将 implementation doc 定义为长期事实边界。
-  - `pjsdlc_architect_design` 和 plan/tech templates 引导 future task 指向模块级 implementation doc。
+  - `pjsdlc_dev_sprint` 将 development task 定义为执行和提交边界，将 implementation doc 定义为长期事实边界。
+  - `pjsdlc_architect_design` 和 plan/tech templates 引导 future development task 指向模块级 implementation doc；非开发 task 使用 `result_docs` 指向对应阶段产物。
   - AGENTS、PROJECT_SPEC、PRD 和 tech plan 使用同一套语义。
   - DEV-043 将历史 `.docs/04_implementation/npm_package/dev_*.md` task log 合并为模块、子系统和核心数据流级 implementation docs，并从活跃实现文档图中移除 legacy 目录。
 
@@ -33,7 +33,7 @@
 | `.codex/skills/pjsdlc_architect_design/SKILL.md` | 架构阶段任务规划规则 | task `implementation_doc` 指向长期实现事实文档 |
 | `.codex/skills/pjsdlc_manager/SKILL.md` | 自然语言 workflow 路由规则 | 完成后的产物事实说明 |
 | `.codex/pjsdlc_managed/templates/IMPLEMENTATION_DOC_TEMPLATE.md` | 新 implementation doc 模板 | module/subsystem/core flow、provenance、Change Log |
-| `.codex/pjsdlc_managed/templates/PLAN_TEMPLATE.yaml` | open task 模板 | `implementation_doc` 示例路径 |
+| `.codex/pjsdlc_managed/templates/PLAN_TEMPLATE.yaml` | open task 模板 | `TASK-*`、`phase`、`result_docs` 和 development `implementation_doc` 示例路径 |
 | `.codex/pjsdlc_managed/templates/TECH_DESIGN_TEMPLATE.md` | 技术方案模板 | task breakdown 中 implementation doc 的模块级说明 |
 | `.docs/04_implementation/harness_package/*.md` | package-facing module implementation docs | CLI lifecycle、source sync、release automation |
 | `.docs/04_implementation/harness_workflow/*.md` | workflow-facing module implementation docs | command routing、implementation model、state/task protocol、skills/prompt、docs validation |
@@ -55,7 +55,7 @@ Architecting
 
 ## 5. 关键实现逻辑
 
-- 输入校验（Input validation）: open task 仍必须包含 `implementation_doc`，但该字段现在指向长期实现事实文档，而不是默认 `dev_*.md` task ledger。
+- 输入校验（Input validation）: development open task 使用 `implementation_doc` 指向长期实现事实文档，而不是默认 `dev_*.md` task ledger；文档、Review、测试、发布和 RFC task 使用 `result_docs`。
 - 核心分支（Core branches）: 修改已有模块时更新已有 implementation doc；新增稳定模块或核心数据流时创建新文档；一个 task 可更新多份相关文档。
 - 异常处理（Error handling）: 若真实代码边界与 architecture / tech plan 不一致，implementation doc 必须记录 deviation，并更新 `.docs/INDEX.md`。
 - 边界兜底（Boundary fallback）: 只有当 task 本身就是稳定模块/数据流边界时，implementation doc 才可以与单个 task 一一对应。
@@ -81,6 +81,7 @@ Architecting
 |---|---|---|---|
 | 2026-05-25 | `DEV-032` | `DEV-032` implementation commit | 将 implementation doc 默认粒度从 task 调整为模块、子系统或核心数据流。 |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | 将 legacy `npm_package/dev_*.md` task log 合并进模块级 implementation docs，并更新索引和引用。 |
+| 2026-05-27 | `TASK-057` | Working tree | 明确只有 development task 使用 `implementation_doc`，其它阶段 task 使用 `result_docs`。 |
 
 ## 9. 后续维护注意事项
 

@@ -64,11 +64,13 @@ phases:
     role: "reviewer"
     skill: "pjsdlc_reviewer"
     inputs:
+      - "<harnessRoot>/state/plan.yaml"
       - ".docs/01_product/"
       - ".docs/03_tech_plan/"
       - ".docs/04_implementation/"
       - "git diff"
     outputs:
+      - "<harnessRoot>/state/plan.yaml"
       - ".docs/06_review/REVIEW_REPORT.md"
     gates:
       - "make validate-review"
@@ -79,11 +81,13 @@ phases:
     role: "tester"
     skill: "pjsdlc_tester"
     inputs:
+      - "<harnessRoot>/state/plan.yaml"
       - ".docs/01_product/"
       - ".docs/03_tech_plan/"
       - ".docs/04_implementation/"
       - ".docs/06_review/"
     outputs:
+      - "<harnessRoot>/state/plan.yaml"
       - ".docs/07_test/"
       - "tests/"
     gates:
@@ -95,9 +99,11 @@ phases:
     role: "release_manager"
     skill: "pjsdlc_release_manager"
     inputs:
+      - "<harnessRoot>/state/plan.yaml"
       - ".docs/07_test/"
       - "build artifacts"
     outputs:
+      - "<harnessRoot>/state/plan.yaml"
       - ".docs/08_release/"
     gates:
       - "make validate-release"

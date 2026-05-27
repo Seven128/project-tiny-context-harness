@@ -52,7 +52,7 @@ transition、GitHub workflow static check 和 release automation static check。
 `PASS`、`BLOCKED` 和 `FAIL`：已知产品能力缺口使用 `BLOCKED`，脚本错误或非预期行为使用
 `FAIL`。脚本默认在报告写出后删除 consumer lab 测试仓库；只有调试或需要本地 evidence commit/tag
 时才显式传入 `--keep-lab`，且 `--commit-lab` 必须和 `--keep-lab` 同时使用。每次全量测试后，
-都要把问题总结为 defect candidates，并建议或创建 RFC，再拆 DEV task 修复；不要在同一个测试
+都要把问题总结为 defect candidates，并建议或创建 RFC，再拆 `TASK-*` development task 修复；不要在同一个测试
 task 中顺手修复所有缺陷。
 
 `README.md` 和 package README 是 npm package 的对外能力索引。新增、删除或改变对外 CLI command、
@@ -103,6 +103,6 @@ capabilities；不能只在 `PROJECT_SPEC.md`、implementation doc 或 release n
 - [ ] 如果 package public capability 有变化，README/package README 已完整覆盖对外能力。
 - [ ] 如果发现可脚本化动作，已提示用户或说明暂不脚本化的理由。
 - [ ] 如果改动影响 package public behavior 或 README capability，已运行或更新 `tools/consumer_lab_full_test.mjs`，并把测试脚本影响面纳入 RFC / task evidence。
-- [ ] 全量 consumer lab 发现的问题已总结为 defect candidates，并进入 RFC 或后续 DEV task，而不是停留在零散日志中。
+- [ ] 全量 consumer lab 发现的问题已总结为 defect candidates，并进入 RFC 或后续 `TASK-*` development task，而不是停留在零散日志中。
 - [ ] 模块级 implementation doc 和 `.docs/INDEX.md` 已按需更新。
 - [ ] `make validate-harness` 和当前 task required gates 已通过。

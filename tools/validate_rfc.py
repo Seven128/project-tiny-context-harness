@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 import re
 
-from harness_utils import combined_text, contains_any, markdown_deliverables, require, run_main
+from harness_utils import combined_text, contains_any, load_plan, markdown_deliverables, require, run_main, validate_plan_contract
 
 
 def main() -> None:
+    validate_plan_contract(load_plan(), allow_open=False)
     docs = markdown_deliverables(".docs/rfc")
     require(docs, "No RFC documents found in .docs/rfc/")
     text = combined_text(docs)

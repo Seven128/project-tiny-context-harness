@@ -1,5 +1,5 @@
 current_phase: "REQUIREMENT_GATHERING"
-current_task_id: "PRD-001"
+current_task_id: "TASK-001"
 next_task_sequence: 2
 # Optional. Omit this block for normal serial workflow. Only add it when the
 # user explicitly asks for parallel / multi-agent / multi-worktree execution.
@@ -9,7 +9,7 @@ next_task_sequence: 2
 #   mode: "user_orchestrated" # or "runtime_managed" when the current agent runtime can spawn subagents
 #   phase: "SPRINTING"
 #   coordinator: "main_agent"
-#   linked_task_id: "DEV-001"
+#   linked_task_id: "TASK-001"
 #   workers:
 #     - id: "worker-feature"
 #       writes_repo: true
@@ -33,7 +33,8 @@ next_task_sequence: 2
 #     fact_source_updates:
 #       - ".docs/04_implementation/"
 tasks:
-  - id: "PRD-001"
+  - id: "TASK-001"
+    phase: "REQUIREMENT_GATHERING"
     title: "生成示例 PRD slice"
     status: "pending"
     summary: "一句话描述任务目标和交付边界。"

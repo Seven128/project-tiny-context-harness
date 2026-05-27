@@ -1,11 +1,11 @@
 # .docs/03_tech_plan overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 850e8b9de06ad24c -->
+<!-- source-hash: 7773907d092f3c7e -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `850e8b9de06ad24c`
+Source hash: `7773907d092f3c7e`
 
 ## Source Slices
 
@@ -124,7 +124,7 @@ package.json or sdlc-harness.config.json
 | 需求或设计变化 | 进入 `RFC_RECALIBRATION` workflow |
 | 完善产品方案、写 PRD | `/prd`：在 `REQUIREMENT_GATHERING` 澄清需求并更新 PRD、验收标准和 open questions |
 | 设计技术方案、做架构方案、根据 PRD 做技术方案 | `/design`：在 `ARCHITECTING` 更新 architecture、tech plan 和 `plan.draft.yaml` |
-| 开始开发、做当前任务、做下一个任务 | `/dev`：在 `SPRINTING` 创建或选择下一个最小 DEV task，并完成一个 task 闭环 |
+| 开始开发、做当前任务、做下一个任务 | `/dev`：在 `SPRINTING` 创建或选择下一个最小 `TASK-*` development task，并完成一个 task 闭环 |
 | 开始循环：写任务，执行任务；把开发循环跑完 | `/devloop`：连续运行 `/dev`，直到没有明确任务或遇到 blocker |
 | 测试或验证 | 运行当前 task 或阶段对应 gate |
 | Review | 进入只读 Review workflow |
@@ -254,14 +254,15 @@ source_mappings:
 
 `<harnessRoot>/state/plan.yaml` 是当前 sprint/阶段的短期执行计划事实源。它只保留当前和未来相关任务：`pending`、`in_progress`、`blocked`、`pending_revision`。done/cancelled task 不长期留在 `plan.yaml`，避免历史现场挤占 Agent 对当前任务的注意力。
 
-`REQUIREMENT_GATHERING`、`ARCHITECTING` 和 `SPRINTING` 都使用同一个 task contract。产品方案生成、既有文档切片和原始事实源合成使用 `PRD-*` task；架构设计、技术方案生成/切片和 `plan.draft.yaml` 生成使用 `DES-*` task；开发实现使用 `DEV-*` task。`next_task_sequence` 负责在删除历史 task 后继续分配后续 workflow task id。典型 open task 结构：
+所有阶段都使用同一个 task contract。产品方案生成、既有文档切片、事实源合成、架构设计、技术方案生成、开发实现、Review、测试、发布准备和 RFC recalibration 都应拆成足够小的 `TASK-*` open task，并通过 `phase` 字段标明所属阶段。历史 `PRD-*`、`DES-*`、`DEV-*` 前缀只作为兼容旧记录和旧提交的 provenance。`next_task_sequence` 负责在删除历史 task 后继续分配后续 `TASK-*` id。典型 open task 结构：
 
 ```yaml
 current_phase: "REQUIREMENT_GATHERING"
-current_task_id: "PRD-011"
+current_task_id: "TASK-011"
 next_task_sequence: 12
 tasks:
-  - id: "PRD-011"
+  - id: "TASK-011"
+    phase: "REQUIREMENT_GATHERING"
     title: "生成账号安全 PRD slice"
     status: "in_progress"
     summary: "一句话描述当前任务目标。"
@@ -286,7 +287,7 @@ tasks:
       - ".docs/01_product/account_security.md"
 ```
 
-文档生产 task 使用 `result_docs` 指向本 task 产出的 PRD、architecture、tech plan、ADR 或 `plan.draft.yaml`。开发 task 使用 `implementation_doc` 指向模块级实现事实文档。task 完成后，将该 task 从 `plan.yaml` 的 `tasks` 列表移除。开发阶段仍采用两段提交：先在当前 task 仍位于 `plan.yaml` 时创建 task implementation commit；再移除 task，并创建 task completion ledger commit。历史动作记录由 git commit 承载，产物结果由 `.docs/**` slice、`plan.draft.yaml` 或模块级 implementation doc 承载；Harness 不再维护 checkpoint 文件或 `<harnessRoot>/archive/**` 作为常规归档事实源。
+文档、Review、测试、发布和 RFC 类 task 使用 `result_docs` 指向本 task 产出的 PRD、architecture、tech plan、ADR、review report、test plan、release note、RFC 或 `plan.draft.yaml`。开发 task 使用 `implementation_doc` 指向模块级实现事实文档。task 完成后，将该 task 从 `plan.yaml` 的 `tasks` 列表移除。开发阶段仍采用两段提交：先在当前 task 仍位于 `plan.yaml` 时创建 task implementation commit；再移除 task，并创建 task completion ledger commit。历史动作记录由 git commit 承载，产物结果由 `.docs/**` slice、`plan.draft.yaml`、Review/Test/Release/RFC 文档或模块级 implementation doc 承载；Harness 不再维护 checkpoint 文件或 `<harnessRoot>/archive/**` 作为常规归档事实源。
 
 默认不追溯 done task 的执行流水。历史 task 查询主要面向“做了什么、为什么做、影响哪个模块、验证了什么”，默认读取模块级 implementation doc、RFC、PRD、tech plan 和代码。task id 和 commit 只作为 provenance；`allowed_paths`、`required_gates`、临时 `working_notes` 是执行期约束，不作为历史查询 API；只有用户明确要求 forensic/audit/regression 追溯时，Agent 才临时查询 git、PR、CI 或 release 记录。
 
@@ -301,7 +302,7 @@ parallel_execution:
   mode: "user_orchestrated" # or "runtime_managed"
   phase: "SPRINTING"
   coordinator: "main_agent"
-  linked_task_id: "DEV-011"
+  linked_task_id: "TASK-011"
   workers:
     - id: "worker-feature"
       writes_repo: true

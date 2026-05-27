@@ -37,6 +37,7 @@ validate-current:
 
 validate-plan:
 	$(PYTHON) tools/validate_plan.py --allow-open
+	$(PYTHON) tools/validate_allowed_paths.py
 
 validate-pm:
 	test -f .docs/INDEX.md

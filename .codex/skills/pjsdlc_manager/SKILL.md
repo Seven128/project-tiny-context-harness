@@ -45,23 +45,23 @@ Parallel Execution 是显式 opt-in：只有用户明确提出“并行”“多
 12. 用户自然语言要求继续、推进或下一步时，等价执行 `/next`。
 13. 用户自然语言要求进入下一阶段或检查是否可进入下一阶段时，等价执行 `/advance`。
 14. 用户自然语言表达需求或设计变化时，进入 RFC workflow。
-15. 用户输入 `/prd`，或自然语言要求“完善产品方案”“写 PRD”“文档切片”“我提供信息，你帮我完善产品方案”时，如果 `current_phase` 是 `REQUIREMENT_GATHERING`，调用产品方案工作流；该工作流必须先创建或选择一个最小 `PRD-*` open task，再执行一个 PRD 生成或切片 task；否则说明当前阶段冲突和推荐路径。
-16. 用户输入 `/design`，或自然语言要求“设计技术方案”“做架构方案”“根据 PRD 做技术方案”“切技术方案”时，如果 `current_phase` 是 `ARCHITECTING`，调用架构和技术方案工作流；该工作流必须先创建或选择一个最小 `DES-*` open task，再执行一个 architecture / tech plan / `plan.draft.yaml` 生成或切片 task；否则说明当前阶段冲突和推荐路径。
-17. 用户输入 `/dev`，或自然语言要求“开始开发”“做当前任务”“做下一个任务”“继续开发下一个任务”时，如果 `current_phase` 是 `SPRINTING`，创建或选择一个最小 DEV task 并执行一个 task 闭环；否则说明当前阶段冲突和推荐路径。
+15. 用户输入 `/prd`，或自然语言要求“完善产品方案”“写 PRD”“文档切片”“我提供信息，你帮我完善产品方案”时，如果 `current_phase` 是 `REQUIREMENT_GATHERING`，调用产品方案工作流；该工作流必须先创建或选择一个最小 `TASK-*` open task，并设置 `phase: "REQUIREMENT_GATHERING"`，再执行一个 PRD 生成或切片 task；否则说明当前阶段冲突和推荐路径。
+16. 用户输入 `/design`，或自然语言要求“设计技术方案”“做架构方案”“根据 PRD 做技术方案”“切技术方案”时，如果 `current_phase` 是 `ARCHITECTING`，调用架构和技术方案工作流；该工作流必须先创建或选择一个最小 `TASK-*` open task，并设置 `phase: "ARCHITECTING"`，再执行一个 architecture / tech plan / `plan.draft.yaml` 生成或切片 task；否则说明当前阶段冲突和推荐路径。
+17. 用户输入 `/dev`，或自然语言要求“开始开发”“做当前任务”“做下一个任务”“继续开发下一个任务”时，如果 `current_phase` 是 `SPRINTING`，创建或选择一个最小 `TASK-*` development task 并执行一个 task 闭环；否则说明当前阶段冲突和推荐路径。
 18. 用户输入 `/devloop`，或自然语言要求“开始循环：写任务，执行任务”“把开发循环跑完”“连续开发”时，如果 `current_phase` 是 `SPRINTING`，连续运行 `/dev` 循环，直到没有明确可做任务或遇到 blocker；否则说明当前阶段冲突和推荐路径。
 19. 用户自然语言要求跑测试或验证时，运行当前 task 或当前阶段的对应 gate。
 20. 用户明确要求并行、多 agent 或多 worktree 时，先判断当前阶段是否是 `REQUIREMENT_GATHERING`、`SPRINTING` 或 `TESTING`；如果是，生成或使用 `parallel_execution.trigger: "user_requested"` 合同；否则说明当前阶段不支持并行合同。
 21. `runtime_managed` 模式只在当前 Agent runtime 真实具备 subagent 能力时使用；否则使用 `user_orchestrated` 并输出每个 worker 的可复制 prompt。
-22. 用户自然语言要求 review 时，进入只读 Review workflow，不直接改源码。
+22. 用户自然语言要求 review 时，如果 `current_phase` 是 `REVIEWING`，创建或选择一个最小 `TASK-*` review task，并设置 `phase: "REVIEWING"`；reviewer 只读源码，不直接改源码。
 23. 用户自然语言要求刷新文档总览时，运行 `make docs-overview`。
 24. `/plan` 和 `/goal` 是客户端模式入口，不由 Harness 自动开启；如果用户手动组合 `/plan` 或 `/goal` 与自然语言或宏指令，应按对应 workflow action 继续执行。
 25. 如果动作会改变阶段、创建或删除 task、提交、push 或发布，先用一句话说明即将执行的动作和验证方式，再继续。
 
 ## Plan Protocol
 
-每个 open task 都必须在 `plan.yaml` 中包含 `docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`；文档生产 task 使用 `result_docs` 指向本 task 产出的 PRD、architecture、tech plan、ADR 或 `plan.draft.yaml`，开发 task 使用 `implementation_doc` 指向模块级实现事实。done/cancelled task 不长期留在当前 `plan.yaml`。完成后的产物事实以对应 `.docs/**` slice、`plan.draft.yaml` 或模块级 implementation doc 为准，动作历史以 git/PR/CI/release 系统作为 cold archive，`next_task_sequence` 负责继续分配后续 task id。
+每个 open task 都必须在 `plan.yaml` 中包含 `id`、`phase`、`docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`；新 task 统一使用 `TASK-*` id，历史 `DEV-*`、`PRD-*`、`DES-*` task 只作为兼容输入保留。文档和流程产物 task 使用 `result_docs` 指向本 task 产出的 PRD、architecture、tech plan、ADR、review、test、release、RFC 或 `plan.draft.yaml`，开发 task 使用 `implementation_doc` 指向模块级实现事实。done/cancelled task 不长期留在当前 `plan.yaml`。完成后的产物事实以对应 `.docs/**` slice、`plan.draft.yaml` 或模块级 implementation doc 为准，动作历史以 git/PR/CI/release 系统作为 cold archive，`next_task_sequence` 负责继续分配后续 task id。
 
-`REQUIREMENT_GATHERING`、`ARCHITECTING` 和 `SPRINTING` 都是单 task 推进：`/prd` 默认只完成一个 `PRD-*` task，`/design` 默认只完成一个 `DES-*` task，`/dev` 默认只完成一个 `DEV-*` task。`validate-plan` 用于检查当前 open task 合同是否完整；阶段出口 gate `validate-pm`、`validate-design` 和 `validate-dev` 都要求没有 open task 残留。
+`/prd`、`/design`、`/dev`、`/review`、`/test`、`/release` 和 `/rfc` 都是单 task 推进：默认只完成一个 `TASK-*`。`validate-plan` 用于检查当前 open task 合同是否完整；阶段出口 gate `validate-pm`、`validate-design`、`validate-dev`、`validate-review`、`validate-test`、`validate-release` 和 `validate-rfc` 都要求没有 open task 残留。
 
 `parallel_execution` 是可选顶层合同，缺省表示串行。启用后必须声明 `enabled`、`trigger`、`mode`、`phase`、`coordinator`、`workers` 和 `integration`；`SPRINTING` 并行还必须通过 `linked_task_id` 绑定当前 `current_task_id`。
 

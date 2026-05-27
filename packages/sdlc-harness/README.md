@@ -25,9 +25,9 @@ npx sdlc-harness init --adopt
 | Managed file sync | `npx sdlc-harness sync` | Materializes package canonical assets into the configured Harness root while preserving project state, docs and local overrides. |
 | Upgrade | `npx sdlc-harness upgrade` | Runs migrations and sync for already-adopted projects. |
 | Diagnostics | `npx sdlc-harness doctor` | Reports Harness root, package version, schema version and key managed paths. |
-| Validators | `npx sdlc-harness validate-*`, `make validate-current`, `make validate-harness` | Checks phase deliverables, active plan shape, prompt language contract and generated overview freshness. |
+| Validators | `npx sdlc-harness validate-*`, `make validate-current`, `make validate-harness` | Checks product, design, development, review, test, release, RFC, active plan shape, prompt language contract and generated overview freshness. |
 | Lifecycle workflow | `<harnessRoot>/state/lifecycle.yaml`, `<harnessRoot>/state/plan.yaml`, `.docs/**` | Tracks REQUIREMENT_GATHERING, ARCHITECTING, SPRINTING, REVIEWING, TESTING, RELEASING and RFC_RECALIBRATION facts. |
-| Stage task control | `plan.yaml`, `make validate-plan`, `npx sdlc-harness validate-plan` | Keeps PRD generation/slicing in `PRD-*` tasks, architecture/tech-plan generation/slicing in `DES-*` tasks, and development in `DEV-*` tasks. |
+| Stage task control | `plan.yaml`, `make validate-plan`, `npx sdlc-harness validate-plan` | Keeps each stage's agent work in small `TASK-*` tasks with `phase` metadata and scoped paths/gates. |
 | Natural-language control | `AGENTS.md` plus workflow skills | Lets users say things like "continue", "start development", "run tests" or "requirements changed"; agents map these to workflow actions. |
 | Optional parallel execution contract | `plan.yaml#parallel_execution` | Enabled only when users explicitly request multi-agent, parallel or multi-worktree execution; supports runtime-managed subagents or user-orchestrated worker prompts. |
 | Workflow skills | `<harnessRoot>/skills/pjsdlc_*/SKILL.md` | Provides role prompts for product, architecture, development, implementation docs, review, testing, release and RFC recalibration. |
@@ -72,7 +72,7 @@ The CLI does not promise to automatically launch Codex agents. Workers do not ne
 
 ## Stage Task Control
 
-Product and design work are also plan-controlled. Conversational PRD creation, existing document slicing, and fact-source-based synthesis should create or resume one small `PRD-*` or `DES-*` task in `plan.yaml`, write the current task's `result_docs`, update indexes/overviews, run `validate-plan`, and remove the task after completion. Phase exit validators reject remaining open tasks.
+Every stage's agent work is plan-controlled. Conversational PRD or design creation, existing document slicing, fact-source-based synthesis, development, review, testing, release preparation and RFC recalibration should create or resume one small `TASK-*` task in `plan.yaml` with a valid `phase`, write the current task's `result_docs` or `implementation_doc`, update indexes/overviews, run `validate-plan`, and remove the task after completion. Phase exit validators reject remaining open tasks.
 
 ## Common Commands
 
@@ -83,6 +83,10 @@ npx sdlc-harness sync
 npx sdlc-harness upgrade
 npx sdlc-harness doctor
 npx sdlc-harness validate-plan
+npx sdlc-harness validate-review
+npx sdlc-harness validate-test
+npx sdlc-harness validate-release
+npx sdlc-harness validate-rfc
 make validate-current
 make validate-harness
 make docs-overview

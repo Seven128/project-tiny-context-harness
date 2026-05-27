@@ -15,7 +15,7 @@ description: Use during SPRINTING to execute one task from plan.yaml, respecting
 
 开始编码前，先确认当前 open task 是否完整，修改范围是否覆盖必要文件，验收标准是否能被测试或 gate 验证。如果发现任务边界、产品行为或技术方案不清晰，要停下来说明 blocker、给出可能解释和推荐下一步，而不是扩大范围继续写。
 
-`/dev` 和 `/devloop` 是开发阶段的两个入口。`/dev` 创建或选择下一个最小 DEV task，并只完成一个 task 闭环后停止。`/devloop` 连续运行 `/dev`，直到技术方案中没有明确可创建/执行的任务，或遇到需求、架构、allowed_paths、gate、commit/push blocker。
+`/dev` 和 `/devloop` 是开发阶段的两个入口。`/dev` 创建或选择下一个最小 `TASK-*` development task，设置 `phase: "SPRINTING"`，并只完成一个 task 闭环后停止。`/devloop` 连续运行 `/dev`，直到技术方案中没有明确可创建/执行的任务，或遇到需求、架构、allowed_paths、gate、commit/push blocker。
 
 实现时遵循小步闭环：先检查 `git status`，确认工作区没有未归属到当前 task 的脏变更；再定位相关代码和测试，做必要修改，运行 gate，修复失败，写入或更新相关 implementation doc 并刷新文档派生视图。此时先不要从 `plan.yaml` 移除当前 task，要在当前 task 仍位于 `plan.yaml` 时创建 task implementation commit；随后再移除 task，创建 task completion ledger commit，并 push 两个 commit。不要顺手重构、重排格式或处理无关问题；如果发现无关风险，只记录或报告。
 
@@ -44,14 +44,14 @@ description: Use during SPRINTING to execute one task from plan.yaml, respecting
 
 - `SPRINTING` 阶段的执行单元是 `current_task_id`，不要在开发中重新生成整个 Sprint 计划。
 - 当前 task 是开发阶段的执行单元、修改边界和提交边界；implementation doc 的长期语义切片是模块、子系统或核心数据流。
-- open task 在 `plan.yaml` 中直接保存 `docs`、`allowed_paths`、`required_gates`、`acceptance_criteria` 和必要的 `working_notes`。
+- open task 在 `plan.yaml` 中直接保存 `phase: "SPRINTING"`、`docs`、`allowed_paths`、`required_gates`、`acceptance_criteria`、`implementation_doc` 和必要的 `working_notes`。
 - task implementation commit 必须发生在 task 移除之前，避免实现变更和计划短期化混在同一个提交里。
 - task completion ledger commit 发生在 implementation commit 之后，只负责将该 task 从当前 `plan.yaml` 移除。
-- 一个开发 task 默认对应一个主要 implementation commit 和一个轻量 completion ledger commit。implementation commit message 应包含 task id，例如 `DEV-003: implement login rate limit`；push 成功前，不进入下一个 task。
+- 一个开发 task 默认对应一个主要 implementation commit 和一个轻量 completion ledger commit。implementation commit message 应包含 task id，例如 `TASK-003: implement login rate limit`；push 成功前，不进入下一个 task。
 - 本 Skill 不直接重切 PRD 或 tech plan；如果发现上游语义边界错误，进入 `BLOCKED`、创建 RFC，或请求回到 `ARCHITECTING`。
 - gate 通过后调用 `pjsdlc_implementation_doc`，由该 Skill 按真实实现更新或新增 `.docs/04_implementation/` 模块级 slice。
 - 如果一个任务实际变成多个独立实现边界，应停止扩大范围，拆分后续任务或回到任务规划。
-- `/dev` 是单任务执行入口：没有 open task 时，先根据 PRD、architecture、tech plan 和 `plan.draft.yaml` 创建一个最小 open task；已有 open task 时，直接执行该 task；完成后停止。
+- `/dev` 是单任务执行入口：没有 open task 时，先根据 PRD、architecture、tech plan 和 `plan.draft.yaml` 创建一个最小 `TASK-*` open task；已有 open task 时，直接执行该 task；完成后停止。
 - `/devloop` 是连续执行入口：每完成一个 task 并 push 两段提交后，重新读取 lifecycle、plan、PRD、architecture 和 tech plan，再决定是否创建/执行下一个最小 task；没有明确任务或出现 blocker 时停止并报告。
 - Parallel Execution 是当前 task 的可选协作方式，不替代 task completion protocol；`SPRINTING` 并行必须用 `parallel_execution.linked_task_id` 绑定当前 `current_task_id`。
 
@@ -60,7 +60,7 @@ description: Use during SPRINTING to execute one task from plan.yaml, respecting
 每个 open task 都必须在 `plan.yaml` 中包含完整执行合同：
 
 1. `current_task_id` 指向正在执行的 open task。
-2. open task 直接声明 `docs`、`allowed_paths`、`required_gates`、`acceptance_criteria`。
+2. open task 直接声明 `phase: "SPRINTING"`、`docs`、`allowed_paths`、`required_gates`、`acceptance_criteria` 和 `implementation_doc`。
 3. 任务执行中只保留恢复所需的简短 `working_notes`。
 4. gate、implementation doc、`.docs/INDEX.md` 和 `overview.md` 完成后，在当前 task 仍位于 `plan.yaml` 时创建 task implementation commit。
 5. implementation commit 完成后，再把该 task 从 `plan.yaml` 的 `tasks` 列表移除，并保留/递增 `next_task_sequence`。

@@ -19,6 +19,8 @@ description: Use during RFC_RECALIBRATION to process requirement changes with im
 
 影响面分析必须先于补丁。至少检查 docs/state/skills/policies/templates/tools/package assets/tests/migrations/generated artifacts 是否受影响；如果某一类不受影响，也要显式说明不受影响或不需要修改。对于 Harness package 相关变更，还要检查 `sync`、`upgrade`、source mappings、package assets 和用户项目迁移行为。
 
+RFC recalibration 本身也是 workflow task。开始处理变更前，先在 `<harnessRoot>/state/plan.yaml` 创建或选择一个足够小的 `TASK-*` open task，并设置 `phase: "RFC_RECALIBRATION"`；当前轮只处理一个 RFC 文件、一个 impact analysis 单元或一个局部补丁单元。
+
 ## 输入
 
 - `.docs/rfc/RFC_*.md`
@@ -33,6 +35,7 @@ description: Use during RFC_RECALIBRATION to process requirement changes with im
 - 局部更新后的 PRD 和技术方案
 - 被标记为 `pending_revision` 的受影响任务，或新增增量任务
 - Regression requirements
+- 更新后的 `<harnessRoot>/state/plan.yaml`
 - 更新后的 `.docs/INDEX.md`
 
 ## 语义切片
@@ -43,6 +46,17 @@ description: Use during RFC_RECALIBRATION to process requirement changes with im
 - 对受影响产物做局部补丁，不重写无关稳定 slice。
 - 每次 RFC 影响了文档边界，都要更新 `.docs/INDEX.md` 并记录受影响任务状态。
 
+## Plan Protocol
+
+RFC 阶段受 `plan.yaml` 管控：
+
+1. 没有 open task 时，先创建一个最小 `TASK-*` task，设置 `phase: "RFC_RECALIBRATION"` 和 `current_task_id`。
+2. open task 必须包含 `phase`、`docs`、`allowed_paths`、`required_gates`、`acceptance_criteria` 和 `result_docs`；`result_docs` 指向本 task 计划产出的 RFC、受影响 PRD/tech plan/test docs 或 plan update。
+3. 单个 task 的目标应足够小：一份 RFC 的 impact analysis、一个受影响 slice 的局部补丁、一组任务状态调整，或一个回归要求更新。
+4. 执行当前 task 时只编辑 `allowed_paths` 中的 RFC、受影响 facts、`.docs/INDEX.md`、overview 和 `plan.yaml`。
+5. 完成后运行 `make validate-plan` 和 task required gates；阶段出口前运行 `make validate-rfc`。
+6. task 完成后从 `plan.yaml.tasks` 移除；如果还有 pending RFC task，下一轮 `/rfc` 或 `/next` 再继续。
+
 ## 规则
 
 1. 影响已接受产物的需求变化，必须先进入本 Skill。
@@ -51,10 +65,13 @@ description: Use during RFC_RECALIBRATION to process requirement changes with im
 4. 受影响的 `pending` 或 `in_progress` 任务追加 revision notes。
 5. 不重写无关的稳定文档。
 6. 只有 `make validate-rfc` 通过后，才能恢复原阶段或进入 `SPRINTING`。
+7. RFC 阶段一次只执行一个 `TASK-*` task。
 
 ## 完成检查
 
 - [ ] RFC 包含有效 status 和 acceptance criteria。
+- [ ] 当前 RFC 工作已绑定 `plan.yaml` 中一个最小 `TASK-*` task，并设置 `phase: "RFC_RECALIBRATION"`。
+- [ ] 当前 task 已从 `plan.yaml` 移除，或因中断/blocker 保留为可恢复 open task。
 - [ ] Product impact 和 technical impact 已记录。
 - [ ] 已判断 RFC 是否需要拆分，以及是否影响其它阶段 slice。
 - [ ] 已列出 docs/state/skills/policies/templates/tools/package assets/tests/migrations/generated artifacts 的影响面。

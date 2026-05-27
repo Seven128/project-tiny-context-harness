@@ -1,11 +1,11 @@
 # .docs/04_implementation overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 662518538bcb2cb4 -->
+<!-- source-hash: e60e43174a6d73f7 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `662518538bcb2cb4`
+Source hash: `e60e43174a6d73f7`
 
 ## Source Slices
 
@@ -144,12 +144,12 @@ Source: [harness_package/consumer_lab_validation.md](harness_package/consumer_la
 
 - Domain: `harness_package`
 - Module / subsystem / core flow: installed-consumer workflow validation
-- Updated by task: `DEV-051`, `DEV-052`
+- Updated by task: `DEV-051`, `DEV-052`, `TASK-057`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`
 - Linked test evidence: `.docs/07_test/harness_consumer_lab.md`
 - External lab repository: `/Users/momoooo/Documents/sdlc-harness-consumer-lab`
-- Latest scripted lab evidence commit: `9e004d1`
-- Latest scripted lab evidence tag: `consumer-lab-full-0.1.7-20260526T204200Z`
+- Latest scripted lab evidence commit: not recorded for the 2026-05-27 cleanup run
+- Latest scripted lab evidence tag: not recorded for the 2026-05-27 cleanup run
 
 ## 2. What Was Built
 
@@ -198,12 +198,12 @@ The lab exposed a package boundary issue: installed consumers receive Make targe
 
 This means the package currently has two validation surfaces:
 
-- Package CLI validators, which work for `validate-harness`, `validate-current`, `validate-pm`, `validate-design`, and `validate-dev`.
+- Package CLI validators, which work for `validate-harness`, `validate-current`, `validate-plan`, `validate-pm`, `validate-design`, `validate-dev`, `validate-review`, `validate-test`, `validate-release`, and `validate-rfc`.
 - Generated Make targets, which advertise the full lifecycle but fail in a consumer-only repo because `tools/**` is missing.
 
-Later-stage gates and overview generation remain blocked from package-only consumer workflows until either the tools are distributed or CLI coverage replaces those Makefile dependencies.
+Overview generation and Makefile gates remain blocked from package-only consumer workflows until either the tools are distributed or CLI coverage replaces those Makefile dependencies.
 
-The scripted report also produces defect candidates and a recommended RFC title whenever `BLOCKED` items remain. This makes the expected follow-up explicit: every full-lab run that finds package behavior gaps should feed RFC recalibration before bug-fix DEV tasks.
+The scripted report also produces defect candidates and a recommended RFC title whenever `BLOCKED` items remain. This makes the expected follow-up explicit: every full-lab run that finds package behavior gaps should feed RFC recalibration before bug-fix `TASK-*` development tasks.
 
 ## 5. Verification
 
@@ -211,10 +211,10 @@ The scripted report also produces defect candidates and a recommended RFC title 
 |---|---|
 | `npm test` | PASS |
 | `node packages/sdlc-harness/dist/cli.js package check-source` | PASS |
-| `node tools/consumer_lab_full_test.mjs --report-only --lab-dir /Users/momoooo/Documents/sdlc-harness-consumer-lab --markdown-report .docs/07_test/harness_consumer_lab.md` | PASS for script execution; report decision BLOCKED due known package gaps; lab deleted after run |
+| `node tools/consumer_lab_full_test.mjs --report-only --reset-lab --lab-dir /Users/momoooo/Documents/sdlc-harness-consumer-lab` | PASS for script execution; report decision BLOCKED due known Makefile/tools package gap; lab deleted after run |
 | `test ! -e /Users/momoooo/Documents/sdlc-harness-consumer-lab` | PASS after default full lab run |
-| Lab supported package capability subset | PASS: 25 checks |
-| Lab full documented workflow | BLOCKED: 11 known package gaps, 0 unexpected failures |
+| Lab supported package capability subset | PASS: 37 checks |
+| Lab full documented workflow | BLOCKED: 7 known package gaps, 0 unexpected failures |
 
 ## 6. Follow-up
 
@@ -432,7 +432,7 @@ Source: [harness_workflow/command_intent_model.md](harness_workflow/command_inte
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: natural language and command alias routing
-- Updated by task: `DEV-034`, `DEV-036`, `DEV-043`, `DEV-050`
+- Updated by task: `DEV-034`, `DEV-036`, `DEV-043`, `DEV-050`, `TASK-057`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md` (`PRD-NPM-026`, `PRD-NPM-028`)
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`
 - Linked RFC: `RFC_015`
@@ -445,6 +445,7 @@ Source: [harness_workflow/command_intent_model.md](harness_workflow/command_inte
   - `/xxx` 宏指令作为更完整、更细节的提示词别名；简单自然语言作为低成本意图入口。
   - `/prd` 产品方案入口和 `/design` 架构/技术方案入口。
   - `/dev` 单任务开发闭环和 `/devloop` 连续开发循环语义。
+  - `/review`、`/test`、`/release` 和 `/rfc` 也通过 `TASK-*` open task 做小步恢复和阶段 gate 管控。
   - `/plan`、`/goal` 与 Harness workflow 的配合边界说明。
   - 用户显式要求并行、多 agent 或多 worktree 时，映射到 optional `parallel_execution` 合同。
 - 修改（Changed）:
@@ -484,7 +485,7 @@ User input
 
 - 输入校验（Input validation）: manager 在路由前必须读取 lifecycle 和 plan；如果当前阶段与用户意图冲突，先说明冲突和推荐路径。
 - 入口语义（Entry semantics）: `/xxx` 宏指令是更完整、更细节的提示词别名；自然语言入口映射到同一 action，但由 Agent 结合上下文补足细节。
-- 核心分支（Core branches）: `/prd` 只在需求阶段推进产品方案；`/design` 只在架构阶段推进 architecture / tech plan；`/dev` 执行一个最小 DEV task 后停止；`/devloop` 每完成一个 task 后重新读取当前状态，再决定是否继续。
+- 核心分支（Core branches）: `/prd` 只在需求阶段推进产品方案；`/design` 只在架构阶段推进 architecture / tech plan；`/dev` 执行一个最小 `TASK-*` development task 后停止；`/review`、`/test`、`/release` 和 `/rfc` 也各执行一个最小 `TASK-*`；`/devloop` 每完成一个 task 后重新读取当前状态，再决定是否继续。
 - 异常处理（Error handling）: 需求、架构、allowed_paths、gate、commit/push 不清或失败时停止并报告 blocker。
 - 边界兜底（Boundary fallback）: `/plan` 和 `/goal` 属于 Codex 客户端模式，Harness 只说明组合方式，不把它们当作可配置 state。
 - 性能或并发注意事项（Performance or concurrency notes）: `/devloop` 每轮重新读取状态，避免连续执行时使用过期 plan 或远端状态。
@@ -511,6 +512,7 @@ User input
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | 将当前 workspace path 更新为 `.codex`，并纳入模块级 implementation doc 迁移。 |
 | 2026-05-25 | `DEV-036` | `DEV-036` implementation commit | 澄清宏指令是详细提示词别名，并补齐 `/prd`、`/design` 阶段入口。 |
 | 2026-05-27 | `DEV-050` | DEV-050 implementation commit | 增加显式 opt-in 的 parallel execution 意图路由和降级语义。 |
+| 2026-05-27 | `TASK-057` | Working tree | 将 Review、测试、发布和 RFC 入口纳入统一 `TASK-*` 小任务路由语义。 |
 
 ## 9. 后续维护注意事项
 
@@ -621,7 +623,7 @@ Source: [harness_workflow/implementation_doc_model.md](harness_workflow/implemen
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: implementation documentation model
-- Updated by task: `DEV-032`, `DEV-043`
+- Updated by task: `DEV-032`, `DEV-043`, `TASK-057`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md` (`PRD-NPM-025`)
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`
 - Linked RFC: none
@@ -635,8 +637,8 @@ Source: [harness_workflow/implementation_doc_model.md](harness_workflow/implemen
   - 技术方案中的 implementation doc model 说明。
 - 修改（Changed）:
   - `pjsdlc_implementation_doc` 不再默认按 task 生成 `dev_*.md`。
-  - `pjsdlc_dev_sprint` 将 task 定义为执行和提交边界，将 implementation doc 定义为长期事实边界。
-  - `pjsdlc_architect_design` 和 plan/tech templates 引导 future task 指向模块级 implementation doc。
+  - `pjsdlc_dev_sprint` 将 development task 定义为执行和提交边界，将 implementation doc 定义为长期事实边界。
+  - `pjsdlc_architect_design` 和 plan/tech templates 引导 future development task 指向模块级 implementation doc；非开发 task 使用 `result_docs` 指向对应阶段产物。
   - AGENTS、PROJECT_SPEC、PRD 和 tech plan 使用同一套语义。
   - DEV-043 将历史 `.docs/04_implementation/npm_package/dev_*.md` task log 合并为模块、子系统和核心数据流级 implementation docs，并从活跃实现文档图中移除 legacy 目录。
 
@@ -650,7 +652,7 @@ Source: [harness_workflow/implementation_doc_model.md](harness_workflow/implemen
 | `.codex/skills/pjsdlc_architect_design/SKILL.md` | 架构阶段任务规划规则 | task `implementation_doc` 指向长期实现事实文档 |
 | `.codex/skills/pjsdlc_manager/SKILL.md` | 自然语言 workflow 路由规则 | 完成后的产物事实说明 |
 | `.codex/pjsdlc_managed/templates/IMPLEMENTATION_DOC_TEMPLATE.md` | 新 implementation doc 模板 | module/subsystem/core flow、provenance、Change Log |
-| `.codex/pjsdlc_managed/templates/PLAN_TEMPLATE.yaml` | open task 模板 | `implementation_doc` 示例路径 |
+| `.codex/pjsdlc_managed/templates/PLAN_TEMPLATE.yaml` | open task 模板 | `TASK-*`、`phase`、`result_docs` 和 development `implementation_doc` 示例路径 |
 | `.codex/pjsdlc_managed/templates/TECH_DESIGN_TEMPLATE.md` | 技术方案模板 | task breakdown 中 implementation doc 的模块级说明 |
 | `.docs/04_implementation/harness_package/*.md` | package-facing module implementation docs | CLI lifecycle、source sync、release automation |
 | `.docs/04_implementation/harness_workflow/*.md` | workflow-facing module implementation docs | command routing、implementation model、state/task protocol、skills/prompt、docs validation |
@@ -672,7 +674,7 @@ Architecting
 
 ## 5. 关键实现逻辑
 
-- 输入校验（Input validation）: open task 仍必须包含 `implementation_doc`，但该字段现在指向长期实现事实文档，而不是默认 `dev_*.md` task ledger。
+- 输入校验（Input validation）: development open task 使用 `implementation_doc` 指向长期实现事实文档，而不是默认 `dev_*.md` task ledger；文档、Review、测试、发布和 RFC task 使用 `result_docs`。
 - 核心分支（Core branches）: 修改已有模块时更新已有 implementation doc；新增稳定模块或核心数据流时创建新文档；一个 task 可更新多份相关文档。
 - 异常处理（Error handling）: 若真实代码边界与 architecture / tech plan 不一致，implementation doc 必须记录 deviation，并更新 `.docs/INDEX.md`。
 - 边界兜底（Boundary fallback）: 只有当 task 本身就是稳定模块/数据流边界时，implementation doc 才可以与单个 task 一一对应。
@@ -698,6 +700,7 @@ Architecting
 |---|---|---|---|
 | 2026-05-25 | `DEV-032` | `DEV-032` implementation commit | 将 implementation doc 默认粒度从 task 调整为模块、子系统或核心数据流。 |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | 将 legacy `npm_package/dev_*.md` task log 合并进模块级 implementation docs，并更新索引和引用。 |
+| 2026-05-27 | `TASK-057` | Working tree | 明确只有 development task 使用 `implementation_doc`，其它阶段 task 使用 `result_docs`。 |
 
 ## 9. 后续维护注意事项
 
@@ -716,7 +719,7 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: workflow Skills, prompt routing, hard/soft indexing and authoring overlay
-- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`
+- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`, `PROJECT_SPEC.md`
 - Linked RFC: `RFC_007`, `RFC_009`, `RFC_015`
@@ -735,7 +738,7 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 - The authoring Skill requires README/package README coverage to stay aligned with all public package capabilities.
 - PM, Manager, Dev and Tester prompts now describe optional parallel execution semantics and keep final fact-source integration with the main agent.
 - PM and Architect prompts require deleting the superseded monolithic PRD/product or tech plan file after user-requested slicing creates replacement slices and updates the related fact-source references.
-- PM, Architect and Manager prompts now require PRD and design generation work to run as small `PRD-*` / `DES-*` `plan.yaml` tasks, covering conversational generation, existing-document slicing and synthesis from prior fact sources.
+- PM, Architect, Reviewer, Tester, Release and RFC prompts now require each main workflow action to run as one small `TASK-*` `plan.yaml` task with `phase` metadata. This covers conversational generation, existing-document slicing, synthesis from prior fact sources, review batches, test evidence, release preparation and RFC recalibration.
 
 ## 3. 真实代码结构
 
@@ -801,7 +804,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 - `sync` blocks unknown files under `<harnessRoot>/pjsdlc_managed/override_skills/*.md`, so a misspelled Skill name cannot silently fail to apply.
 - `pjsdlc_managed/override_skills` keeps override configuration with other managed workflow configuration while preserving `<harnessRoot>/skills/**` as the shallow hard file index.
 - When a user explicitly asks to slice an existing complete PRD/product document or complete tech plan into multiple slices, `pjsdlc_pm_prd` and `pjsdlc_architect_design` now require validating replacement slice coverage, updating `.docs/INDEX.md` and generated `overview.md`, synchronizing `plan.draft.yaml` references for tech plan slicing, and then deleting the superseded complete file so the facts are not duplicated.
-- `pjsdlc_pm_prd` creates or resumes one small `PRD-*` task before writing PRD slices; `pjsdlc_architect_design` creates or resumes one small `DES-*` task before writing architecture, tech plan, ADR or `plan.draft.yaml` outputs. `pjsdlc_manager` routes `/prd` and `/design` through those task protocols and treats remaining open tasks as phase-exit blockers.
+- `pjsdlc_pm_prd`, `pjsdlc_architect_design`, `pjsdlc_reviewer`, `pjsdlc_tester`, `pjsdlc_release_manager` and `pjsdlc_rfc_recalibrate` create or resume one small `TASK-*` task before writing phase outputs. `pjsdlc_manager` routes `/prd`, `/design`, `/review`, `/test`, `/release` and `/rfc` through those task protocols and treats remaining open tasks as phase-exit blockers.
 
 ## 6. 与技术方案的偏移
 
@@ -838,6 +841,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-27 | `DEV-050` | DEV-050 implementation commit | Added opt-in parallel execution prompt rules for PM, Manager, Dev and Tester workflows. |
 | 2026-05-27 | `DEV-055` | Working tree | Required PRD and tech plan slicing workflows to delete superseded complete files after replacement slices and references are complete. |
 | 2026-05-27 | `DEV-056` | Working tree | Routed PRD and design generation/slicing through recoverable `plan.yaml` tasks. |
+| 2026-05-27 | `TASK-057` | Working tree | Generalized prompt rules so every phase main action is a `TASK-*` task governed by `plan.yaml`, with review/test/release/RFC outputs using `result_docs`. |
 | 2026-05-27 | Direct user request | Working tree | Added complete Skill override merge support with description merging and semantic conflict review guidance. |
 
 ## 9. 后续维护注意事项
@@ -858,7 +862,7 @@ Source: [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: lifecycle state, plan state, task execution protocol and gate evidence
-- Updated by task: `DEV-010`, `DEV-011`, `DEV-018`, `DEV-019`, `DEV-024`, `DEV-025`, `DEV-026`, `DEV-027`, `DEV-028`, `DEV-043`, `DEV-050`, `DEV-056`
+- Updated by task: `DEV-010`, `DEV-011`, `DEV-018`, `DEV-019`, `DEV-024`, `DEV-025`, `DEV-026`, `DEV-027`, `DEV-028`, `DEV-043`, `DEV-050`, `DEV-056`, `TASK-057`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`
 - Linked RFC: `RFC_004`, `RFC_005`, `RFC_010`, `RFC_011`, `RFC_012`, `RFC_013`, `RFC_014`, `RFC_015`
@@ -867,9 +871,10 @@ Source: [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and
 ## 2. 当前实现范围
 
 - `.codex/state/lifecycle.yaml` stores only the current routing state.
-- `.codex/state/plan.yaml` stores the current and future short-lived task contract across PM, design and sprint execution.
-- `next_task_sequence` preserves future workflow task id allocation after done tasks are removed; task prefixes include `PRD-*`, `DES-*` and `DEV-*`.
-- Document-production tasks use `result_docs` for planned PRD, architecture, tech plan, ADR or `plan.draft.yaml` outputs; development tasks use `implementation_doc`.
+- `.codex/state/plan.yaml` stores the current and future short-lived task contract across all workflow phases.
+- `TASK-*` is the new task id model; `phase` identifies `REQUIREMENT_GATHERING`, `ARCHITECTING`, `SPRINTING`, `REVIEWING`, `TESTING`, `RELEASING` or `RFC_RECALIBRATION`; historical `PRD-*`, `DES-*` and `DEV-*` ids remain validator-compatible provenance.
+- `next_task_sequence` preserves future `TASK-*` id allocation after done tasks are removed.
+- Document, review, test, release and RFC tasks use `result_docs` for planned fact-source outputs; development tasks use `implementation_doc`.
 - Checkpoint files, archive directories, gate result logs and lifecycle history are no longer active state facts.
 - A SPRINTING task completes in two commits: implementation commit while the task is still present, then completion ledger commit after removing the task.
 - Past task details are cold archive and only used for explicit forensic/audit/regression requests.
@@ -883,27 +888,31 @@ Source: [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and
 | `.codex/state/lifecycle.yaml` | Current phase routing | `current_phase`, `active_skill`, `allowed_next_phases` |
 | `.codex/state/plan.yaml` | Active short-term task contract | `current_task_id`, `next_task_sequence`, `tasks[]` |
 | `.codex/pjsdlc_managed/templates/PLAN_TEMPLATE.yaml` | New-task template | open task fields, `result_docs` and `implementation_doc` examples |
-| `.codex/skills/pjsdlc_pm_prd/SKILL.md` | Product task prompt | `PRD-*` document-production task protocol |
-| `.codex/skills/pjsdlc_architect_design/SKILL.md` | Design task prompt | `DES-*` document-production task protocol |
+| `.codex/skills/pjsdlc_pm_prd/SKILL.md` | Product task prompt | `TASK-*` document-production task protocol with `phase: "REQUIREMENT_GATHERING"` |
+| `.codex/skills/pjsdlc_architect_design/SKILL.md` | Design task prompt | `TASK-*` document-production task protocol with `phase: "ARCHITECTING"` |
 | `.codex/skills/pjsdlc_dev_sprint/SKILL.md` | Development execution prompt | one-task protocol, two-commit ledger, push requirement |
 | `.codex/skills/pjsdlc_manager/SKILL.md` | Workflow routing prompt | `/next`, `/dev`, `/devloop`, status routing |
 | `.codex/skills/pjsdlc_rfc_recalibrate/SKILL.md` | Change recalibration prompt | RFC impact checklist |
 | `tools/harness_utils.py` | Shared state helpers | `load_plan`, `validate_task_shape`, path expansion |
 | `tools/validate_plan.py` | Active plan validator | current/future task checks and optional parallel contract checks |
 | `tools/validate_allowed_paths.py` | Worktree scope validator | allowed path enforcement |
+| `tools/validate_review.py` | Review exit validator | no-open-task check plus review report shape |
+| `tools/validate_test_plan.py` | Test exit validator | no-open-task check plus test matrix/regression/coverage gap |
+| `tools/validate_release_plan.py` | Release exit validator | no-open-task check plus release/smoke/rollback docs |
+| `tools/validate_rfc.py` | RFC exit validator | no-open-task check plus RFC status and impact sections |
 | `tools/run_current_gate.py` | Phase gate runner | phase-to-gate dispatch |
 | `tools/status.py` | Human status report | lifecycle and task summary |
 | `tools/transition.py` | Phase transition helper | lifecycle state mutation without history append |
-| `packages/sdlc-harness/src/lib/validators.ts` | Package-side state validators | plan/lifecycle compatibility |
+| `packages/sdlc-harness/src/lib/validators.ts` | Package-side state validators | plan/lifecycle compatibility and package CLI validators |
 | `packages/sdlc-harness/src/lib/migrations.ts` | State migrations | remove checkpoints, history and gate logs |
 
 ## 4. 核心数据流
 
 ```txt
-REQUIREMENT_GATHERING / ARCHITECTING document task starts
--> plan.yaml contains one small PRD-* or DES-* open task
+Any workflow phase task starts
+-> plan.yaml contains one small TASK-* open task with phase metadata
 -> agent edits only allowed_paths for the current slice or plan.draft output
--> result_docs points to the produced .docs/** slice or plan.draft.yaml
+-> result_docs or implementation_doc points to the produced fact source
 -> docs index and generated overview are updated
 -> validate-plan checks the open task contract during execution
 -> phase exit validator runs only after open tasks are removed
@@ -935,7 +944,7 @@ User explicitly asks for parallel / multi-agent / multi-worktree
 ## 5. 关键实现逻辑
 
 - `plan.yaml` is intentionally short lived. It is not a historical task database.
-- PM and design generation are task-controlled just like sprint execution: one `PRD-*` or `DES-*` task should produce one bounded document slice, source chunk, interface contract or plan draft group.
+- Every phase task is task-controlled: one `TASK-*` task should produce one bounded document slice, review batch, test evidence set, release artifact set, RFC impact slice or development change.
 - `validate-plan` permits open tasks and checks their shape; phase exit gates reject remaining open tasks.
 - `allowed_paths`, `required_gates` and `working_notes` are execution-time constraints, not a long-term query API.
 - Gate evidence belongs in the current task while executing, and in implementation docs, CI logs or release docs after completion.
@@ -972,6 +981,7 @@ User explicitly asks for parallel / multi-agent / multi-worktree
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Consolidated legacy state/task implementation docs into module facts. |
 | 2026-05-27 | `DEV-050` | DEV-050 implementation commit | Added opt-in `parallel_execution` contract for multi-agent/worktree coordination. |
 | 2026-05-27 | `DEV-056` | Working tree | Extended `plan.yaml` task control to PRD and design document generation, slicing and fact-source synthesis. |
+| 2026-05-27 | `TASK-057` | Working tree | Unified all new workflow tasks under `TASK-*` with `phase`, expanded plan control to review/test/release/RFC, and kept legacy task prefixes compatible. |
 
 ## 9. 后续维护注意事项
 

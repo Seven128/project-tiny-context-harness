@@ -3,6 +3,7 @@ from harness_utils import (
     OPEN_TASK_STATUSES,
     changed_files,
     expand_harness_root,
+    load_lifecycle,
     load_plan,
     load_yaml,
     matches_any,
@@ -18,8 +19,10 @@ def main() -> None:
     open_tasks = [task for task in tasks if task.get("status") in OPEN_TASK_STATUSES]
 
     policies = load_yaml(".codex/pjsdlc_managed/policies/allowed_paths.yaml")
-    sprint_policy = ((policies.get("phases") or {}).get("SPRINTING") or {})
-    always_allow = expand_harness_root(sprint_policy.get("always_allow") or [])
+    lifecycle = load_lifecycle()
+    current_phase = lifecycle.get("current_phase") or "SPRINTING"
+    phase_policy = ((policies.get("phases") or {}).get(current_phase) or {})
+    always_allow = expand_harness_root(phase_policy.get("always_allow") or [])
 
     if open_tasks:
         current_task_id = data.get("current_task_id") or ""

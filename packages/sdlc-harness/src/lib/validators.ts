@@ -15,6 +15,7 @@ export interface ValidatorReport {
 type Validator = (projectRoot: string) => Promise<ValidatorReport>;
 const PARALLEL_MODES = new Set(["runtime_managed", "user_orchestrated"]);
 const PARALLEL_PHASES = new Set(["REQUIREMENT_GATHERING", "SPRINTING", "TESTING"]);
+const TASK_PHASES = new Set(["REQUIREMENT_GATHERING", "ARCHITECTING", "SPRINTING", "REVIEWING", "TESTING", "RELEASING", "RFC_RECALIBRATION"]);
 
 const validators: Record<string, Validator> = {
   "validate-harness": validateHarness,
@@ -22,7 +23,11 @@ const validators: Record<string, Validator> = {
   "validate-plan": validatePlan,
   "validate-pm": validatePm,
   "validate-design": validateDesign,
-  "validate-dev": validateDev
+  "validate-dev": validateDev,
+  "validate-review": validateReview,
+  "validate-test": validateTest,
+  "validate-release": validateRelease,
+  "validate-rfc": validateRfc
 };
 
 export async function runValidator(projectRoot: string, gate: string): Promise<ValidatorReport> {
@@ -65,7 +70,11 @@ async function validateCurrent(projectRoot: string): Promise<ValidatorReport> {
   const gateByPhase: Record<string, string> = {
     REQUIREMENT_GATHERING: "validate-pm",
     ARCHITECTING: "validate-design",
-    SPRINTING: "validate-dev"
+    SPRINTING: "validate-dev",
+    REVIEWING: "validate-review",
+    TESTING: "validate-test",
+    RELEASING: "validate-release",
+    RFC_RECALIBRATION: "validate-rfc"
   };
   return runValidator(projectRoot, gateByPhase[current] ?? "validate-harness");
 }
@@ -98,7 +107,8 @@ async function validateDesign(projectRoot: string): Promise<ValidatorReport> {
 
 async function validatePlan(projectRoot: string): Promise<ValidatorReport> {
   const plan = await validatePlanState(projectRoot, true);
-  return { info: [`validate-plan checked ${plan.taskCount} task(s)`], errors: plan.errors };
+  const pathErrors = await validateChangedPaths(projectRoot, plan.plan, true);
+  return { info: [`validate-plan checked ${plan.taskCount} task(s)`], errors: [...plan.errors, ...pathErrors] };
 }
 
 async function validateDev(projectRoot: string): Promise<ValidatorReport> {
@@ -106,7 +116,57 @@ async function validateDev(projectRoot: string): Promise<ValidatorReport> {
   return { info: [`validate-dev checked ${plan.taskCount} task(s)`], errors: plan.errors };
 }
 
-async function validatePlanState(projectRoot: string, allowOpen: boolean): Promise<{ taskCount: number; errors: string[] }> {
+async function validateReview(projectRoot: string): Promise<ValidatorReport> {
+  const plan = await validatePlanState(projectRoot, false);
+  const text = (await readText(path.join(projectRoot, ".docs/06_review/REVIEW_REPORT.md"))).toLowerCase();
+  const errors = [...plan.errors];
+  if (!containsAny(text, ["finding", "发现", "风险"])) errors.push("Review report must include findings or risks");
+  if (!containsAny(text, ["test gap", "测试缺口", "coverage"])) errors.push("Review report must include test gaps or coverage notes");
+  if (!containsAny(text, ["pass", "blocked", "通过", "阻塞"])) errors.push("Review report must include PASS/BLOCKED decision");
+  return { info: ["validate-review checked review report"], errors };
+}
+
+async function validateTest(projectRoot: string): Promise<ValidatorReport> {
+  const plan = await validatePlanState(projectRoot, false);
+  const text = (await readText(path.join(projectRoot, ".docs/07_test/TEST_PLAN.md"))).toLowerCase();
+  const errors = [...plan.errors];
+  if (!containsAny(text, ["matrix", "矩阵"])) errors.push("Test plan must include a test matrix");
+  if (!containsAny(text, ["regression", "回归"])) errors.push("Test plan must include regression coverage");
+  if (!containsAny(text, ["coverage gap", "覆盖缺口", "gap"])) errors.push("Test plan must include coverage gaps");
+  if (!containsAny(text, ["pass", "blocked", "通过", "阻塞"])) errors.push("Test plan must include PASS/BLOCKED decision");
+  return { info: ["validate-test checked test plan"], errors };
+}
+
+async function validateRelease(projectRoot: string): Promise<ValidatorReport> {
+  const plan = await validatePlanState(projectRoot, false);
+  const docs = await markdownFiles(path.join(projectRoot, ".docs/08_release"));
+  const text = await combinedText(docs);
+  const errors = [...plan.errors];
+  if (docs.length === 0) errors.push("No release deliverables found");
+  if (!containsAny(text, ["release", "发布"])) errors.push("Release docs must include release notes");
+  if (!containsAny(text, ["smoke", "冒烟"])) errors.push("Release docs must include smoke test evidence");
+  if (!containsAny(text, ["rollback", "回滚"])) errors.push("Release docs must include rollback plan");
+  return { info: [`validate-release checked ${docs.length} file(s)`], errors };
+}
+
+async function validateRfc(projectRoot: string): Promise<ValidatorReport> {
+  const plan = await validatePlanState(projectRoot, false);
+  const docs = await markdownFiles(path.join(projectRoot, ".docs/rfc"));
+  const text = await combinedText(docs);
+  const errors = [...plan.errors];
+  if (docs.length === 0) errors.push("No RFC documents found");
+  if (!containsAny(text, ["background", "背景"])) errors.push("RFC must include background");
+  if (!containsAny(text, ["product impact", "产品影响"])) errors.push("RFC must include product impact");
+  if (!containsAny(text, ["technical impact", "技术影响"])) errors.push("RFC must include technical impact candidates");
+  if (!containsAny(text, ["regression", "回归"])) errors.push("RFC must include regression requirements");
+  const statuses = [...text.matchAll(/status:\s*([a-z_]+)/g)].map((match) => match[1].toUpperCase());
+  if (statuses.length === 0) errors.push("RFC must include a Status line");
+  const invalidStatuses = statuses.filter((status) => !["DRAFT", "APPLIED", "VERIFIED", "ARCHIVED"].includes(status));
+  if (invalidStatuses.length > 0) errors.push(`Invalid RFC status: ${invalidStatuses.join(", ")}`);
+  return { info: [`validate-rfc checked ${docs.length} file(s)`], errors };
+}
+
+async function validatePlanState(projectRoot: string, allowOpen: boolean): Promise<{ taskCount: number; errors: string[]; plan: Record<string, unknown> }> {
   const errors: string[] = [];
   const root = await harnessRoot(projectRoot);
   const tasksData = await readYamlObject(path.join(projectRoot, root, "state", "plan.yaml"));
@@ -127,6 +187,15 @@ async function validatePlanState(projectRoot: string, allowOpen: boolean): Promi
     for (const field of ["id", "title", "status", "summary"]) {
       if (!task[field]) errors.push(`Task missing ${field}: ${String(task.id ?? "unknown")}`);
     }
+    const taskId = String(task.id ?? "");
+    if (!/^[A-Z]+-\d+$/.test(taskId)) {
+      errors.push(`${taskId || `Task #${index + 1}`} id must match PREFIX-###`);
+    }
+    if (taskId.startsWith("TASK-") && !TASK_PHASES.has(String(task.phase ?? ""))) {
+      errors.push(`${taskId} must define valid phase`);
+    } else if (task.phase !== undefined && !TASK_PHASES.has(String(task.phase))) {
+      errors.push(`${taskId} has invalid phase: ${String(task.phase)}`);
+    }
     if (!["pending", "in_progress", "done", "blocked", "pending_revision", "cancelled"].includes(String(task.status))) {
       errors.push(`${String(task.id ?? `Task #${index + 1}`)} has invalid status: ${String(task.status)}`);
     }
@@ -135,7 +204,6 @@ async function validatePlanState(projectRoot: string, allowOpen: boolean): Promi
     if (!hasImplementationDoc && !hasResultDocs) {
       errors.push(`${String(task.id ?? `Task #${index + 1}`)} must define implementation_doc or result_docs`);
     }
-    const taskId = String(task.id ?? "");
     const match = taskId.match(/^[A-Z]+-(\d+)$/);
     if (match) {
       maxTaskSequence = Math.max(maxTaskSequence, Number(match[1]));
@@ -173,7 +241,7 @@ async function validatePlanState(projectRoot: string, allowOpen: boolean): Promi
   if (currentTaskId && !tasks.some((task) => isRecord(task) && task.id === currentTaskId)) {
     errors.push(`current_task_id does not match a task: ${currentTaskId}`);
   }
-  return { taskCount: tasks.length, errors };
+  return { taskCount: tasks.length, errors, plan: tasksData };
 }
 
 function validateParallelExecutionContract(plan: Record<string, unknown>, errors: string[]): void {
@@ -258,6 +326,33 @@ function validateParallelExecutionContract(plan: Record<string, unknown>, errors
   if (!Array.isArray(integration.fact_source_updates) || integration.fact_source_updates.length === 0) {
     errors.push("parallel_execution.integration.fact_source_updates must be a non-empty list");
   }
+}
+
+async function validateChangedPaths(projectRoot: string, plan: Record<string, unknown>, allowOpen: boolean): Promise<string[]> {
+  if (!allowOpen) return [];
+  const currentTaskId = String(plan.current_task_id ?? "");
+  if (!currentTaskId) return [];
+  const tasks = Array.isArray(plan.tasks) ? (plan.tasks as unknown[]) : [];
+  const task = tasks.find((candidate) => isRecord(candidate) && candidate.id === currentTaskId);
+  if (!isRecord(task)) return [`current_task_id does not match a task: ${currentTaskId}`];
+  if (!Array.isArray(task.allowed_paths)) return [`${currentTaskId} must define allowed_paths`];
+  const patterns = task.allowed_paths.map((pattern) => String(pattern).replace("<harnessRoot>", ".codex"));
+  const changed = await changedFiles(projectRoot);
+  const blocked = changed.filter((file) => !matchesAny(file, patterns));
+  return blocked.length > 0 ? [`Changed files outside current task allowed_paths: ${blocked.join(", ")}`] : [];
+}
+
+function matchesAny(file: string, patterns: string[]): boolean {
+  return patterns.some((pattern) => matchesGlob(file, pattern));
+}
+
+function matchesGlob(file: string, pattern: string): boolean {
+  const normalizedFile = file.replace(/\\/g, "/");
+  const normalizedPattern = pattern.replace(/\\/g, "/");
+  if (normalizedFile === normalizedPattern) return true;
+  if (normalizedPattern.endsWith("/**") && normalizedFile.startsWith(normalizedPattern.slice(0, -3))) return true;
+  const escaped = normalizedPattern.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*\*/g, ".*").replace(/\*/g, "[^/]*");
+  return new RegExp(`^${escaped}$`).test(normalizedFile);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

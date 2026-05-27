@@ -20,6 +20,10 @@ export const commands: Record<string, CommandHandler> = {
   "validate-pm": (args) => validate(["validate-pm", ...args]),
   "validate-design": (args) => validate(["validate-design", ...args]),
   "validate-dev": (args) => validate(["validate-dev", ...args]),
+  "validate-review": (args) => validate(["validate-review", ...args]),
+  "validate-test": (args) => validate(["validate-test", ...args]),
+  "validate-release": (args) => validate(["validate-release", ...args]),
+  "validate-rfc": (args) => validate(["validate-rfc", ...args]),
   package: packageSource
 };
 
@@ -31,6 +35,6 @@ export function help(): void {
   upgrade              Run migrations and then sync
   doctor               Diagnose project configuration and drift
   validate <gate>      Run a Harness validation gate
-  validate-plan        Validate plan.yaml shape while allowing the current open task
+  validate-*           Run a named gate directly, including validate-plan/review/test/release/rfc
   package <subcommand> Maintain package canonical source`);
 }

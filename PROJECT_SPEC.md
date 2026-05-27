@@ -255,14 +255,15 @@ make validate-doc-overviews
 
 ## 七、任务状态与开发循环
 ### 7.1 plan.yaml
-`.codex/state/plan.yaml` 是阶段任务的机器可读短期执行记忆，只保留当前和未来任务。open task 直接保存当前任务需要的执行合同；任务完成后从 `plan.yaml` 移除，避免过往任务变成无效上下文。`REQUIREMENT_GATHERING`、`ARCHITECTING` 和 `SPRINTING` 都使用同一个 task contract：产品方案生成、既有文档切片和原始事实源合成使用 `PRD-*` task；架构设计、技术方案生成/切片和 `plan.draft.yaml` 生成使用 `DES-*` task；开发实现使用 `DEV-*` task。`next_task_sequence` 负责在历史 task 被移除后继续分配后续 workflow task id，避免不同前缀之间发生序号冲突。典型 open task 字段：
+`.codex/state/plan.yaml` 是阶段任务的机器可读短期执行记忆，只保留当前和未来任务。open task 直接保存当前任务需要的执行合同；任务完成后从 `plan.yaml` 移除，避免过往任务变成无效上下文。所有阶段的 Agent 主任务都使用同一个 task contract：产品方案生成、既有文档切片、事实源合成、架构设计、技术方案生成、开发实现、Review、测试、发布准备和 RFC recalibration 都应拆成足够小的 `TASK-*` open task，并通过 `phase` 字段标明所属阶段。历史 `PRD-*`、`DES-*`、`DEV-*` 前缀只作为兼容旧记录和旧提交的 provenance。`next_task_sequence` 负责在历史 task 被移除后继续分配后续 `TASK-*` id，避免 id 冲突。典型 open task 字段：
 
 ```yaml
 current_phase: "REQUIREMENT_GATHERING"
-current_task_id: "PRD-003"
+current_task_id: "TASK-003"
 next_task_sequence: 4
 tasks:
-  - id: "PRD-003"
+  - id: "TASK-003"
+    phase: "REQUIREMENT_GATHERING"
     title: "生成登录安全 PRD slice"
     status: "in_progress"
     summary: "根据用户输入生成一个登录安全产品方案 slice。"
@@ -287,7 +288,7 @@ tasks:
       - ".docs/01_product/auth/login_security.md"
 ```
 
-文档生产 task 使用 `result_docs` 指向本 task 产出的 PRD、architecture、tech plan、ADR 或 `plan.draft.yaml`。开发 task 使用 `implementation_doc` 指向模块级实现事实文档。
+文档、Review、测试、发布和 RFC 类 task 使用 `result_docs` 指向本 task 产出的 PRD、architecture、tech plan、ADR、review report、test plan、release note、RFC 或 `plan.draft.yaml`。开发 task 使用 `implementation_doc` 指向模块级实现事实文档。
 
 task 完成后不再长期保留 done task 字段，当前 plan 回到只含待做任务或空列表：
 
@@ -307,7 +308,7 @@ parallel_execution:
   mode: "user_orchestrated"
   phase: "SPRINTING"
   coordinator: "main_agent"
-  linked_task_id: "DEV-003"
+    linked_task_id: "TASK-003"
   workers:
     - id: "worker-auth"
       writes_repo: true
@@ -361,7 +362,7 @@ parallel_execution:
 -> 选择下一个 pending task
 ```
 
-开发阶段默认一个 task 对应一个主要实现提交和一个轻量完成记录提交。task implementation commit 的 commit message 应包含 task id，例如 `DEV-003: implement login rate limit`。这个 commit 应包含该 task 的代码、测试、被更新的模块级 implementation doc、`.docs/INDEX.md`、`overview.md` 和必要验证证据；不要把多个 task 混进同一个 commit，也不要把未归属变更顺手带入。
+开发阶段默认一个 task 对应一个主要实现提交和一个轻量完成记录提交。task implementation commit 的 commit message 应包含 task id，例如 `TASK-003: implement login rate limit`。这个 commit 应包含该 task 的代码、测试、被更新的模块级 implementation doc、`.docs/INDEX.md`、`overview.md` 和必要验证证据；不要把多个 task 混进同一个 commit，也不要把未归属变更顺手带入。
 
 task completion ledger commit 发生在 implementation commit 之后，只负责把当前 task 从 `plan.yaml` 移除。不要把这个清理动作 amend 回 implementation commit，否则 task 的实现变更和当前计划短期化会混在一起，后续追溯不清晰。
 
@@ -384,12 +385,12 @@ task completion ledger commit 发生在 implementation commit 之后，只负责
 ```txt
 PRD
 -> tech plan
--> plan.yaml 中的 PRD/DES/DEV task
+-> plan.yaml 中的 TASK task
 -> `.docs/**` slices、`plan.draft.yaml` 或代码/测试
 -> 模块级 implementation doc
 ```
 
-每个 open task 都必须在 `plan.yaml` 中包含 `docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`。文档生产 task 使用 `result_docs`，开发 task 使用 `implementation_doc`。执行中只把必要现场写成短 `working_notes`；任务完成并写入或更新相关事实源后，把该 task 从当前 `plan.yaml` 移除。历史动作记录以 git/PR/CI/release 系统作为 cold archive，产物结果以 `.docs/**` slice、`plan.draft.yaml` 或模块级 implementation doc 为准。
+每个 open task 都必须在 `plan.yaml` 中包含 `phase`、`docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`。文档、Review、测试、发布和 RFC 类 task 使用 `result_docs`，开发 task 使用 `implementation_doc`。执行中只把必要现场写成短 `working_notes`；任务完成并写入或更新相关事实源后，把该 task 从当前 `plan.yaml` 移除。历史动作记录以 git/PR/CI/release 系统作为 cold archive，产物结果以 `.docs/**` slice、`plan.draft.yaml`、Review/Test/Release/RFC 文档或模块级 implementation doc 为准。
 
 过去 phase/task/gate 执行流水不是 Agent 默认上下文。`plan.yaml` 不长期保存 commit hash，`lifecycle.yaml` 不保存 `history`，completion ledger commit 只负责把当前 plan 恢复为短期、低噪声状态。只有用户明确要求 forensic/audit/regression 追溯时，才临时查询 git、PR、CI 或 release 记录。
 
@@ -420,8 +421,8 @@ Harness workflow skill 同时支持 native skill hard index 和 Harness soft ind
 | Skill | 负责内容 |
 |---|---|
 | `pjsdlc_manager` | 读取 lifecycle/plan/index，将自然语言意图或 `/status`、`/next`、`/advance`、`/rfc` 路由到 workflow action，执行阶段切换 |
-| `pjsdlc_pm_prd` | 原始需求归档、PRD 切片、验收标准、Out of Scope、Open Questions，并按 `PRD-*` task 小步产出 |
-| `pjsdlc_architect_design` | 架构设计、技术方案、接口契约、任务草案、ADR，并按 `DES-*` task 小步产出 |
+| `pjsdlc_pm_prd` | 原始需求归档、PRD 切片、验收标准、Out of Scope、Open Questions，并按 `phase: "REQUIREMENT_GATHERING"` 的 `TASK-*` 小步产出 |
+| `pjsdlc_architect_design` | 架构设计、技术方案、接口契约、任务草案、ADR，并按 `phase: "ARCHITECTING"` 的 `TASK-*` 小步产出 |
 | `pjsdlc_dev_sprint` | 按 `current_task_id` 执行开发、控制 `allowed_paths`、运行 `required_gates`，并在每个 task 完成后 commit/push |
 | `pjsdlc_implementation_doc` | 记录真实实现结构、数据流、测试覆盖和方案偏移 |
 | `pjsdlc_reviewer` | 只读 Review，输出 findings、风险、重构建议和测试入口结论 |
@@ -524,7 +525,7 @@ RFC 必须包含：
 | “需求变了 / 这个设计要改” | 进入 RFC workflow |
 | “完善产品方案 / 写 PRD / 我提供信息，你帮我完善产品方案” | 等价 `/prd`，在 `REQUIREMENT_GATHERING` 更新 PRD、验收标准和 open questions |
 | “设计技术方案 / 做架构方案 / 根据 PRD 做技术方案” | 等价 `/design`，在 `ARCHITECTING` 更新 architecture、tech plan 和 `plan.draft.yaml` |
-| “开始开发 / 做当前任务 / 做下一个任务” | 等价 `/dev`，在 `SPRINTING` 创建或选择下一个最小 DEV task，并完成一个 task 闭环 |
+| “开始开发 / 做当前任务 / 做下一个任务” | 等价 `/dev`，在 `SPRINTING` 创建或选择下一个最小 `TASK-*` development task，并完成一个 task 闭环 |
 | “开始循环：写任务，执行任务 / 把开发循环跑完” | 等价 `/devloop`，连续运行开发循环直到没有明确任务或遇到 blocker |
 | “跑测试 / 验证一下” | 运行当前 task 或阶段对应 gate |
 | “准备 review / 帮我 review” | 进入只读 Review |
@@ -542,7 +543,7 @@ RFC 必须包含：
 | `/rfc <file>` | 挂起当前流程，进入 RFC 变更处理 |
 | `/prd` | 在需求阶段澄清用户目标，更新 PRD、验收标准、open questions、`.docs/INDEX.md` 和 overview |
 | `/design` | 在架构阶段基于 PRD 更新 architecture、tech plan 和 `plan.draft.yaml` |
-| `/dev` | 创建或选择下一个最小 DEV task，执行一个 task，完成 gate、implementation doc、两段 commit/push 后停止 |
+| `/dev` | 创建或选择下一个最小 `TASK-*` development task，执行一个 task，完成 gate、implementation doc、两段 commit/push 后停止 |
 | `/devloop` | 连续运行 `/dev`，直到没有明确可创建/执行的 task 或遇到需求、架构、allowed_paths、gate、commit/push blocker |
 | `/syncdocs` | 归档/切分长文档，更新 `.docs/INDEX.md` |
 | `/overview` | 运行 `make docs-overview` |
@@ -768,7 +769,7 @@ Authoring overlay 的默认规则：
 - 如果某条 authoring rule 对所有用户项目都有价值，必须通过 PRD / tech plan / RFC 明确晋升为通用 Skill、policy、template、PROJECT_SPEC 或 README 规则，再进入包内 canonical assets。
 - 如果某条 authoring Skill 只服务于 Harness 包源码维护，例如 package source drift、migration safety、managed block compatibility，就应留在 authoring overlay，不污染通用阶段 Skill。
 - 自举维护 Harness 自身时的阶段化测试流程、全量 consumer lab 验收提示词、测试脚本使用提示词和缺陷归因 SOP 属于 authoring overlay。它们只能沉淀在 `.codex/skills/authoring/**` 或 authoring-only 文档中，不写入通用 `.codex/skills/pjsdlc_*` workflow Skill；通用阶段 Skill 面向所有用户项目，不能携带本仓库维护 npm 包自身时才需要的全量验收流程。
-- 每次全量新开 consumer 仓库测试结束后，都要产出问题总结，并默认删除测试仓库，避免临时 consumer state 变成新的事实源。若需要调试现场或本地 evidence commit/tag，必须显式使用保留参数。若发现 npm 包能力、README 声明、Makefile gate、validator、sync/upgrade 或 workflow 文档与 installed-consumer 行为不一致，应先形成 RFC 或 RFC 候选，再拆分 DEV task 修复，而不是把问题停留在临时日志里。
+- 每次全量新开 consumer 仓库测试结束后，都要产出问题总结，并默认删除测试仓库，避免临时 consumer state 变成新的事实源。若需要调试现场或本地 evidence commit/tag，必须显式使用保留参数。若发现 npm 包能力、README 声明、Makefile gate、validator、sync/upgrade 或 workflow 文档与 installed-consumer 行为不一致，应先形成 RFC 或 RFC 候选，再拆分 `TASK-*` development task 修复，而不是把问题停留在临时日志里。
 
 这个分层解决的是自举开发中的边界问题：本仓库需要比普通用户项目更多的工作流开发约束，但这些约束不能因为本仓库是 package source 就自动成为所有用户项目的默认配置。
 

@@ -99,17 +99,6 @@ export function classifyMissingTools(result) {
   return { status: "FAIL", details: trimOutput(output) || `exit ${result.status}` };
 }
 
-export function classifyUnknownValidator(result) {
-  if (result.status === 0) {
-    return { status: "PASS", details: "command passed" };
-  }
-  const output = `${result.stdout}\n${result.stderr}`;
-  if (output.includes("unknown validator")) {
-    return { status: "BLOCKED", details: "package CLI does not expose this later-stage validator yet" };
-  }
-  return { status: "FAIL", details: trimOutput(output) || `exit ${result.status}` };
-}
-
 export async function runConsumerLabFullTest(rawOptions) {
   const options = {
     ...rawOptions,
@@ -200,6 +189,10 @@ export async function runConsumerLabFullTest(rawOptions) {
   commandCheck("CLI validators", "validate-pm", "npx", ["sdlc-harness", "validate-pm"]);
   commandCheck("CLI validators", "validate-design", "npx", ["sdlc-harness", "validate-design"]);
   commandCheck("CLI validators", "validate-dev final empty plan", "npx", ["sdlc-harness", "validate-dev"]);
+  commandCheck("CLI validators", "validate-review", "npx", ["sdlc-harness", "validate-review"]);
+  commandCheck("CLI validators", "validate-test", "npx", ["sdlc-harness", "validate-test"]);
+  commandCheck("CLI validators", "validate-release", "npx", ["sdlc-harness", "validate-release"]);
+  commandCheck("CLI validators", "validate-rfc", "npx", ["sdlc-harness", "validate-rfc"]);
 
   await verifyPlanProtocol(options.labDir, commandCheck, add);
   await verifyStaticWorkflowText(options.labDir, add);
@@ -216,13 +209,7 @@ export async function runConsumerLabFullTest(rawOptions) {
     classifyMissingTools
   );
   for (const validator of ["validate-review", "validate-test", "validate-release", "validate-rfc"]) {
-    expectedBlockedOrPass(
-      "Later-stage CLI validators",
-      `npx sdlc-harness validate ${validator}`,
-      "npx",
-      ["sdlc-harness", "validate", validator],
-      classifyUnknownValidator
-    );
+    commandCheck("Later-stage CLI validators", `npx sdlc-harness validate ${validator}`, "npx", ["sdlc-harness", "validate", validator]);
   }
 
   await verifyReleaseAndGithubStatic(options.sourceRoot, options.labDir, add);
@@ -458,10 +445,11 @@ tasks: []
   await writeFile(
     path.join(labDir, ".codex/state/plan.draft.yaml"),
     `current_phase: "SPRINTING"
-current_task_id: "DEV-001"
+current_task_id: "TASK-001"
 next_task_sequence: 2
 tasks:
-  - id: "DEV-001"
+  - id: "TASK-001"
+    phase: "SPRINTING"
     title: "Implement text summary helper"
     status: "pending"
     summary: "Add the toy helper and tests used by the consumer lab lifecycle rehearsal."
@@ -490,7 +478,7 @@ async function writeDocs(labDir) {
     ".docs/02_architecture/text_summary_architecture.md":
       "# Text Summary Architecture\n\nThe PRD requirement is implemented as a pure JavaScript API interface in `src/stringStats.js`.\n\nTask breakdown: add helper, add tests, record implementation.\n",
     ".docs/03_tech_plan/text_summary_plan.md":
-      "# Text Summary Technical Plan\n\nThis plan implements the PRD requirement.\n\n## API Contract\n\n`summarizeText(input)` returns `characters`, `words`, and `empty`.\n\n## Task Breakdown\n\n- `DEV-001`: implement helper and tests.\n",
+      "# Text Summary Technical Plan\n\nThis plan implements the PRD requirement.\n\n## API Contract\n\n`summarizeText(input)` returns `characters`, `words`, and `empty`.\n\n## Task Breakdown\n\n- `TASK-001`: implement helper and tests.\n",
     ".docs/04_implementation/text_summary.md":
       "# Text Summary Implementation\n\n`src/stringStats.js` exports `summarizeText(input)`.\n\n## Verification\n\n- `npm test`: PASS\n",
     ".docs/06_review/REVIEW_REPORT.md":
@@ -518,7 +506,8 @@ async function verifyPlanProtocol(labDir, commandCheck, add) {
 current_task_id: ""
 next_task_sequence: 2
 tasks:
-  - id: "DEV-001"
+  - id: "TASK-001"
+    phase: "SPRINTING"
     title: "Completed task should not remain"
     status: "done"
     summary: "Negative protocol check."
@@ -531,17 +520,18 @@ tasks:
     area: "Task protocol",
     evidence: "done task retained in plan is rejected",
     command: "npx sdlc-harness validate-dev",
-    status: done.status !== 0 && `${done.stdout}\n${done.stderr}`.includes("Completed task DEV-001") ? "PASS" : "FAIL",
+    status: done.status !== 0 && `${done.stdout}\n${done.stderr}`.includes("Completed task TASK-001") ? "PASS" : "FAIL",
     details: trimOutput(`${done.stdout}\n${done.stderr}`)
   });
 
   await writeFile(
     planPath,
     `current_phase: "SPRINTING"
-current_task_id: "DEV-001"
+current_task_id: "TASK-001"
 next_task_sequence: 2
 tasks:
-  - id: "DEV-001"
+  - id: "TASK-001"
+    phase: "SPRINTING"
     title: "Open task should remain until completion"
     status: "in_progress"
     summary: "Negative protocol check."
@@ -627,7 +617,7 @@ async function verifyStaticWorkflowText(labDir, add) {
   const agents = await readFile(path.join(labDir, "AGENTS.md"), "utf8");
   const manager = await readFile(path.join(labDir, ".codex/skills/pjsdlc_manager/SKILL.md"), "utf8");
   const text = `${agents}\n${manager}`;
-  const required = ["/status", "/next", "/dev", "/test", "自然语言", "active_skill", "PRD-*", "DES-*", "validate-plan"];
+  const required = ["/status", "/next", "/dev", "/test", "自然语言", "active_skill", "TASK-*", "phase", "validate-plan"];
   const missing = required.filter((needle) => !text.includes(needle));
   add({
     area: "Natural-language control",

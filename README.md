@@ -60,9 +60,9 @@ npx sdlc-harness init --adopt
 | 同步 managed workflow 文件 | `npx sdlc-harness sync` | 从包内 canonical assets 物化 `AGENTS.md` managed block、workflow skills、templates、policies、Makefile 片段和 GitHub workflow |
 | 升级已接入项目 | `npx sdlc-harness upgrade` | 执行迁移并自动 `sync`，保留 state、docs、业务代码和本地 override |
 | 接入诊断 | `npx sdlc-harness doctor` | 检查 harness root、版本、schema、关键文件和 managed paths |
-| 阶段 gate | `npx sdlc-harness validate-*`、`make validate-current`、`make validate-harness` | 校验需求、设计、开发计划、Harness 骨架、提示词语言契约和 overview freshness |
+| 阶段 gate | `npx sdlc-harness validate-*`、`make validate-current`、`make validate-harness` | 校验需求、设计、开发、Review、测试、发布、RFC、Harness 骨架、提示词语言契约和 overview freshness |
 | 生命周期工作流 | `lifecycle.yaml`、`plan.yaml`、`.docs/**` | 固定 REQUIREMENT_GATHERING、ARCHITECTING、SPRINTING、REVIEWING、TESTING、RELEASING、RFC_RECALIBRATION 等阶段事实链 |
-| 阶段小任务管控 | `plan.yaml`、`make validate-plan` | 产品方案生成/切片使用 `PRD-*` task，架构和技术方案生成/切片使用 `DES-*` task，开发实现使用 `DEV-*` task |
+| 阶段小任务管控 | `plan.yaml`、`make validate-plan` | 每个阶段的 Agent 主任务都应拆成足够小的 `TASK-*` open task，并用 `phase` 标明所属阶段 |
 | 自然语言控制 | `AGENTS.md` + workflow skills | 用户可说“继续”“开始开发”“跑测试”“需求变了”等，由 Agent 映射到 `/next`、`/dev`、`/test`、RFC 等动作 |
 | 可选并行执行合同 | `plan.yaml#parallel_execution` | 用户明确要求多 agent/并行/多 worktree 时启用；支持 runtime-managed subagents 或 user-orchestrated worker prompts |
 | Workflow skills | `<harnessRoot>/skills/pjsdlc_*/SKILL.md` | 提供 PM、架构、开发、实现文档、Review、测试、发布、RFC 等阶段角色提示词 |
@@ -95,7 +95,7 @@ npx sdlc-harness init --adopt
 准备 review。
 ```
 
-Agent 会读取 `<harnessRoot>/state/lifecycle.yaml` 和 `<harnessRoot>/state/plan.yaml`，再按当前阶段选择对应 workflow skill、产物和 gate。产品方案和技术方案阶段也不是一次性长生成：对话式方案产出、现有文档切片、基于上一阶段事实源生成新方案，都应先落成一个最小 `PRD-*` 或 `DES-*` open task；当前轮只执行一个 task，写入 `result_docs`、更新索引和 overview，运行 `make validate-plan`，任务完成后再从 `plan.yaml` 移除。
+Agent 会读取 `<harnessRoot>/state/lifecycle.yaml` 和 `<harnessRoot>/state/plan.yaml`，再按当前阶段选择对应 workflow skill、产物和 gate。任何阶段的 Agent 主任务都不是一次性长生成：产品方案、技术方案、文档切片、基于上一阶段事实源生成、Review、测试、发布和 RFC 处理，都应先落成一个最小 `TASK-*` open task，并设置对应 `phase`；当前轮只执行一个 task，写入 `result_docs` 或 `implementation_doc`、更新索引和 overview，运行 `make validate-plan`，任务完成后再从 `plan.yaml` 移除。
 
 ### Workflow skill 如何生效
 
@@ -147,9 +147,9 @@ Harness CLI v1 不承诺自动启动 Codex agent，也不要求 worker 之间通
 |---|---|---|
 | `/status` | 现在到哪一步了 | 读取 lifecycle/plan，报告当前阶段、任务、阻塞项和下一步 |
 | `/next` | 继续推进 | 按当前阶段的 `active_skill` 执行下一步 |
-| `/prd` | 完善产品方案 | 在需求阶段创建或选择一个最小 `PRD-*` task，澄清目标、切片文档或补齐当前 PRD slice |
-| `/design` | 设计技术方案 | 在架构阶段创建或选择一个最小 `DES-*` task，生成或切分当前 architecture / tech plan / `plan.draft.yaml` 产物 |
-| `/dev` | 做下一个任务 | 创建或选择下一个最小 DEV task，完成一个 task 闭环后停止 |
+| `/prd` | 完善产品方案 | 在需求阶段创建或选择一个最小 `TASK-*` task，澄清目标、切片文档或补齐当前 PRD slice |
+| `/design` | 设计技术方案 | 在架构阶段创建或选择一个最小 `TASK-*` task，生成或切分当前 architecture / tech plan / `plan.draft.yaml` 产物 |
+| `/dev` | 做下一个任务 | 创建或选择下一个最小 `TASK-*` development task，完成一个 task 闭环后停止 |
 | `/devloop` | 开始循环：写任务，执行任务 | 连续运行 `/dev`，直到没有明确任务或遇到 blocker |
 | `/test` | 跑一下当前验证 | 运行当前 task 或阶段对应 gate |
 | `/review` | 准备 review | 进入只读 Review workflow |

@@ -4,8 +4,8 @@ from harness_utils import (
     contains_any,
     load_plan,
     markdown_deliverables,
-    run_main,
     require,
+    run_main,
     validate_plan_contract,
 )
 

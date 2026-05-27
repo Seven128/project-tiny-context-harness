@@ -12,6 +12,10 @@ gates:
       - "REQUIREMENT_GATHERING"
       - "ARCHITECTING"
       - "SPRINTING"
+      - "REVIEWING"
+      - "TESTING"
+      - "RELEASING"
+      - "RFC_RECALIBRATION"
 
   validate-pm:
     command: "make validate-pm"

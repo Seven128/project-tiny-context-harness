@@ -26,6 +26,15 @@ OPEN_TASK_STATUSES = {"pending", "in_progress", "blocked", "pending_revision"}
 PARALLEL_MODES = {"runtime_managed", "user_orchestrated"}
 PARALLEL_PHASES = {"REQUIREMENT_GATHERING", "SPRINTING", "TESTING"}
 TASK_ID_PATTERN = re.compile(r"^[A-Z]+-(\d+)$")
+TASK_PHASES = {
+    "REQUIREMENT_GATHERING",
+    "ARCHITECTING",
+    "SPRINTING",
+    "REVIEWING",
+    "TESTING",
+    "RELEASING",
+    "RFC_RECALIBRATION",
+}
 
 
 class HarnessError(RuntimeError):
@@ -332,6 +341,12 @@ def validate_task_shape(task: dict[str, Any], index: int) -> None:
     prefix = f"Task #{index + 1}"
     for field in ["id", "title", "status", "summary"]:
         require(field in task, f"{prefix} missing field: {field}")
+    task_id = str(task.get("id") or "")
+    require(TASK_ID_PATTERN.match(task_id), f"{task_id or prefix} id must match PREFIX-###")
+    if task_id.startswith("TASK-"):
+        require(task.get("phase") in TASK_PHASES, f"{task_id} must define valid phase")
+    elif task.get("phase") is not None:
+        require(task.get("phase") in TASK_PHASES, f"{task_id} has invalid phase: {task.get('phase')}")
     require(task["status"] in TASK_STATUSES, f"{task.get('id', prefix)} has invalid status: {task.get('status')}")
     require(isinstance(task["summary"], str) and task["summary"].strip(), f"{task['id']} must define summary")
     has_implementation_doc = isinstance(task.get("implementation_doc"), str) and task["implementation_doc"].strip()

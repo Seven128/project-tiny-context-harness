@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-from harness_utils import combined_text, contains_any, markdown_deliverables, require, run_main
+from harness_utils import combined_text, contains_any, load_plan, markdown_deliverables, require, run_main, validate_plan_contract
 
 
 def main() -> None:
+    validate_plan_contract(load_plan(), allow_open=False)
     docs = markdown_deliverables(".docs/08_release")
     require(docs, "No release deliverables found in .docs/08_release/")
     text = combined_text(docs)

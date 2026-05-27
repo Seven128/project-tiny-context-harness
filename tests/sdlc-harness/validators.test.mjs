@@ -16,6 +16,10 @@ try {
   await mkdir(path.join(root, ".docs/02_architecture"), { recursive: true });
   await mkdir(path.join(root, ".docs/03_tech_plan"), { recursive: true });
   await mkdir(path.join(root, ".docs/04_implementation/example"), { recursive: true });
+  await mkdir(path.join(root, ".docs/06_review"), { recursive: true });
+  await mkdir(path.join(root, ".docs/07_test"), { recursive: true });
+  await mkdir(path.join(root, ".docs/08_release"), { recursive: true });
+  await mkdir(path.join(root, ".docs/rfc"), { recursive: true });
   await mkdir(path.join(root, ".harness/state"), { recursive: true });
   await mkdir(path.join(root, ".harness/skills"), { recursive: true });
   await mkdir(path.join(root, ".harness/pjsdlc_managed/templates"), { recursive: true });
@@ -40,6 +44,26 @@ try {
   );
   await writeFile(path.join(root, ".docs/04_implementation/example/dev.md"), "# Impl\n", "utf8");
   await writeFile(
+    path.join(root, ".docs/06_review/REVIEW_REPORT.md"),
+    "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage is intentionally narrow.\n\n## Decision\n\nPASS\n",
+    "utf8"
+  );
+  await writeFile(
+    path.join(root, ".docs/07_test/TEST_PLAN.md"),
+    "# Test Plan\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal | PASS |\n\n## Regression\n\n- focused regression: PASS\n\n## Coverage Gap\n\nNo browser coverage.\n\n## Decision\n\nPASS\n",
+    "utf8"
+  );
+  await writeFile(
+    path.join(root, ".docs/08_release/v0.1.0.md"),
+    "# Release v0.1.0\n\n## Release Notes\n\nInitial test release.\n\n## Smoke Evidence\n\n- smoke test: PASS\n\n## Rollback Plan\n\nRevert the release commit.\n",
+    "utf8"
+  );
+  await writeFile(
+    path.join(root, ".docs/rfc/RFC_001.md"),
+    "# RFC 001\n\nStatus: VERIFIED\n\n## Background\n\nTest RFC.\n\n## Product Impact\n\nNo user-facing change.\n\n## Technical Impact\n\nNo implementation change.\n\n## Regression\n\nKeep validator coverage.\n",
+    "utf8"
+  );
+  await writeFile(
     path.join(root, ".harness/state/lifecycle.yaml"),
     'current_phase: "REQUIREMENT_GATHERING"\n',
     "utf8"
@@ -53,10 +77,33 @@ tasks: []
     "utf8"
   );
 
-  for (const gate of ["validate-harness", "validate-plan", "validate-pm", "validate-design", "validate-dev"]) {
+  for (const gate of [
+    "validate-harness",
+    "validate-plan",
+    "validate-pm",
+    "validate-design",
+    "validate-dev",
+    "validate-review",
+    "validate-test",
+    "validate-release",
+    "validate-rfc"
+  ]) {
     const report = await runValidator(root, gate);
     assert.deepEqual(report.errors, [], gate);
   }
+
+  await writeFile(
+    path.join(root, ".harness/state/lifecycle.yaml"),
+    'current_phase: "TESTING"\n',
+    "utf8"
+  );
+  const testingCurrent = await runValidator(root, "validate-current");
+  assert.deepEqual(testingCurrent.errors, [], "validate-current routes TESTING to validate-test");
+  await writeFile(
+    path.join(root, ".harness/state/lifecycle.yaml"),
+    'current_phase: "REQUIREMENT_GATHERING"\n',
+    "utf8"
+  );
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
@@ -119,10 +166,11 @@ tasks:
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
-    `current_task_id: PRD-004
+    `current_task_id: TASK-004
 next_task_sequence: 5
 tasks:
-  - id: PRD-004
+  - id: TASK-004
+    phase: REQUIREMENT_GATHERING
     title: Draft one PRD slice
     status: in_progress
     summary: Active document-production task
@@ -145,7 +193,33 @@ tasks:
   const planReport = await runValidator(root, "validate-plan");
   assert.deepEqual(planReport.errors, [], "validate-plan allows open document task with result_docs");
   const pmWithOpenTask = await runValidator(root, "validate-pm");
-  assert.match(pmWithOpenTask.errors.join("\n"), /Open tasks remain: PRD-004/);
+  assert.match(pmWithOpenTask.errors.join("\n"), /Open tasks remain: TASK-004/);
+
+  await writeFile(
+    path.join(root, ".harness/state/plan.yaml"),
+    `current_task_id: TASK-005
+next_task_sequence: 6
+tasks:
+  - id: TASK-005
+    title: Missing phase
+    status: in_progress
+    summary: Active document-production task
+    docs:
+      product:
+        - .docs/01_product/prd.md
+    allowed_paths:
+      - ".docs/01_product/prd.md"
+    required_gates:
+      - "npx sdlc-harness validate-plan"
+    acceptance_criteria:
+      - "One PRD slice is updated."
+    result_docs:
+      - .docs/01_product/prd.md
+`,
+    "utf8"
+  );
+  const missingPhase = await runValidator(root, "validate-plan");
+  assert.match(missingPhase.errors.join("\n"), /TASK-005 must define valid phase/);
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),

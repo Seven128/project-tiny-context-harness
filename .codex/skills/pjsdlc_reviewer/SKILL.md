@@ -17,8 +17,11 @@ Review 时先建立证据链：PRD 说什么、技术方案承诺什么、implem
 
 不要把个人偏好包装成 blocker。区分 blocking issue、follow-up improvement 和 open question。如果没有发现问题，要明确说明，同时列出剩余测试缺口或残余风险。
 
+Review 产出本身也是 workflow task。开始 review 前，先在 `<harnessRoot>/state/plan.yaml` 创建或选择一个足够小的 `TASK-*` open task，并设置 `phase: "REVIEWING"`；当前轮只产出一个 review batch、一个风险主题 slice 或一次 PR review 结论。不要在一个任务里覆盖多个互不相关的 review 主题。
+
 ## 输入
 
+- `<harnessRoot>/state/plan.yaml`
 - `.docs/01_product/`
 - `.docs/03_tech_plan/`
 - `.docs/04_implementation/`
@@ -29,6 +32,7 @@ Review 时先建立证据链：PRD 说什么、技术方案承诺什么、implem
 ## 输出
 
 - `.docs/06_review/REVIEW_REPORT.md`
+- 更新后的 `<harnessRoot>/state/plan.yaml`
 - 风险清单
 - 重构建议
 - 是否允许进入 `TESTING` 的结论
@@ -41,6 +45,17 @@ Review 时先建立证据链：PRD 说什么、技术方案承诺什么、implem
 - Review 不重切上游 PRD / tech plan；如果发现上游边界错误，记录 blocker 或建议 RFC。
 - 每次新增或拆分 review slice 后，都要更新 `.docs/INDEX.md`。
 
+## Plan Protocol
+
+Review 阶段受 `plan.yaml` 管控：
+
+1. 没有 open task 时，先创建一个最小 `TASK-*` task，设置 `phase: "REVIEWING"` 和 `current_task_id`。
+2. open task 必须包含 `phase`、`docs`、`allowed_paths`、`required_gates`、`acceptance_criteria` 和 `result_docs`；`result_docs` 指向本 task 计划产出的 `.docs/06_review/**` 文件。
+3. 单个 task 的目标应足够小：一次 review batch、一个 PR、一个模块或一个风险主题。
+4. 执行当前 task 时只写 review 产物、`.docs/INDEX.md`、`overview.md` 和 `plan.yaml`，不修改源码。
+5. 完成后运行 `make validate-plan` 和 `make docs-overview`；阶段出口前运行 `make validate-review`。
+6. task 完成后从 `plan.yaml.tasks` 移除；如果还有 pending review task，下一轮 `/review` 或 `/next` 再继续。
+
 ## 规则
 
 1. 本 Skill 不修改源码。
@@ -48,10 +63,13 @@ Review 时先建立证据链：PRD 说什么、技术方案承诺什么、implem
 3. 每条 finding 尽量引用文件、需求、任务或文档路径。
 4. 区分 blocking issues 和 follow-up improvements。
 5. 如果未发现问题，明确说明，并列出剩余测试缺口或残余风险。
+6. Review 阶段一次只执行一个 `TASK-*` task。
 
 ## 完成检查
 
 - [ ] Review report 已生成。
+- [ ] 当前 review 工作已绑定 `plan.yaml` 中一个最小 `TASK-*` task，并设置 `phase: "REVIEWING"`。
+- [ ] 当前 task 已从 `plan.yaml` 移除，或因中断/blocker 保留为可恢复 open task。
 - [ ] 已评估需求一致性。
 - [ ] 已评估架构和可维护性风险。
 - [ ] 已判断 review slice 的范围和风险主题边界。

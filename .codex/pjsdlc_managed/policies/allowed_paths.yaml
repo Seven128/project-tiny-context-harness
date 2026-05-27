@@ -31,17 +31,20 @@ phases:
   REVIEWING:
     read_only_source: true
     write:
+      - "<harnessRoot>/state/plan.yaml"
       - ".docs/06_review/**"
       - ".docs/INDEX.md"
 
   TESTING:
     write:
+      - "<harnessRoot>/state/plan.yaml"
       - ".docs/07_test/**"
       - "tests/**"
       - ".docs/INDEX.md"
 
   RELEASING:
     write:
+      - "<harnessRoot>/state/plan.yaml"
       - ".docs/08_release/**"
       - ".docs/INDEX.md"
 

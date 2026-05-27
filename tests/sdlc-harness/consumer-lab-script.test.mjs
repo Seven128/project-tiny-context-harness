@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   classifyMissingTools,
-  classifyUnknownValidator,
   parseArgs,
   renderMarkdownReport,
   summarizeChecks
@@ -54,18 +53,6 @@ test("consumer lab script classifies known package boundary gaps", () => {
     {
       status: "BLOCKED",
       details: "consumer repo is missing generated Makefile tools/** dependency"
-    }
-  );
-
-  assert.deepEqual(
-    classifyUnknownValidator({
-      status: 1,
-      stdout: "",
-      stderr: "error: unknown validator: validate-review"
-    }),
-    {
-      status: "BLOCKED",
-      details: "package CLI does not expose this later-stage validator yet"
     }
   );
 });

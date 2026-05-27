@@ -4,12 +4,12 @@
 
 - Domain: `harness_package`
 - Module / subsystem / core flow: installed-consumer workflow validation
-- Updated by task: `DEV-051`, `DEV-052`
+- Updated by task: `DEV-051`, `DEV-052`, `TASK-057`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`
 - Linked test evidence: `.docs/07_test/harness_consumer_lab.md`
 - External lab repository: `/Users/momoooo/Documents/sdlc-harness-consumer-lab`
-- Latest scripted lab evidence commit: `9e004d1`
-- Latest scripted lab evidence tag: `consumer-lab-full-0.1.7-20260526T204200Z`
+- Latest scripted lab evidence commit: not recorded for the 2026-05-27 cleanup run
+- Latest scripted lab evidence tag: not recorded for the 2026-05-27 cleanup run
 
 ## 2. What Was Built
 
@@ -58,12 +58,12 @@ The lab exposed a package boundary issue: installed consumers receive Make targe
 
 This means the package currently has two validation surfaces:
 
-- Package CLI validators, which work for `validate-harness`, `validate-current`, `validate-pm`, `validate-design`, and `validate-dev`.
+- Package CLI validators, which work for `validate-harness`, `validate-current`, `validate-plan`, `validate-pm`, `validate-design`, `validate-dev`, `validate-review`, `validate-test`, `validate-release`, and `validate-rfc`.
 - Generated Make targets, which advertise the full lifecycle but fail in a consumer-only repo because `tools/**` is missing.
 
-Later-stage gates and overview generation remain blocked from package-only consumer workflows until either the tools are distributed or CLI coverage replaces those Makefile dependencies.
+Overview generation and Makefile gates remain blocked from package-only consumer workflows until either the tools are distributed or CLI coverage replaces those Makefile dependencies.
 
-The scripted report also produces defect candidates and a recommended RFC title whenever `BLOCKED` items remain. This makes the expected follow-up explicit: every full-lab run that finds package behavior gaps should feed RFC recalibration before bug-fix DEV tasks.
+The scripted report also produces defect candidates and a recommended RFC title whenever `BLOCKED` items remain. This makes the expected follow-up explicit: every full-lab run that finds package behavior gaps should feed RFC recalibration before bug-fix `TASK-*` development tasks.
 
 ## 5. Verification
 
@@ -71,10 +71,10 @@ The scripted report also produces defect candidates and a recommended RFC title 
 |---|---|
 | `npm test` | PASS |
 | `node packages/sdlc-harness/dist/cli.js package check-source` | PASS |
-| `node tools/consumer_lab_full_test.mjs --report-only --lab-dir /Users/momoooo/Documents/sdlc-harness-consumer-lab --markdown-report .docs/07_test/harness_consumer_lab.md` | PASS for script execution; report decision BLOCKED due known package gaps; lab deleted after run |
+| `node tools/consumer_lab_full_test.mjs --report-only --reset-lab --lab-dir /Users/momoooo/Documents/sdlc-harness-consumer-lab` | PASS for script execution; report decision BLOCKED due known Makefile/tools package gap; lab deleted after run |
 | `test ! -e /Users/momoooo/Documents/sdlc-harness-consumer-lab` | PASS after default full lab run |
-| Lab supported package capability subset | PASS: 25 checks |
-| Lab full documented workflow | BLOCKED: 11 known package gaps, 0 unexpected failures |
+| Lab supported package capability subset | PASS: 37 checks |
+| Lab full documented workflow | BLOCKED: 7 known package gaps, 0 unexpected failures |
 
 ## 6. Follow-up
 
