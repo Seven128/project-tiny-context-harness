@@ -35,8 +35,10 @@ Key options:
 
 - `--lab-dir <path>` selects the long-lived consumer lab.
 - `--reset-lab` explicitly deletes and recreates the lab.
+- By default, the script deletes the lab repository after reports are written.
+- `--keep-lab` explicitly keeps the lab for debugging.
 - `--report-only` writes reports and exits 0 even when the result is `BLOCKED`.
-- `--commit-lab` explicitly creates a local lab evidence commit and tag.
+- `--commit-lab` explicitly creates a local lab evidence commit and tag, and requires `--keep-lab`.
 - `--json-report <path>` and `--markdown-report <path>` override report destinations.
 
 ## 3. Verified Behavior
@@ -69,8 +71,8 @@ The scripted report also produces defect candidates and a recommended RFC title 
 |---|---|
 | `npm test` | PASS |
 | `node packages/sdlc-harness/dist/cli.js package check-source` | PASS |
-| `node tools/consumer_lab_full_test.mjs --report-only --lab-dir /Users/momoooo/Documents/sdlc-harness-consumer-lab --markdown-report .docs/07_test/harness_consumer_lab.md` | PASS for script execution; report decision BLOCKED due known package gaps |
-| `node tools/consumer_lab_full_test.mjs --report-only --commit-lab --lab-dir /Users/momoooo/Documents/sdlc-harness-consumer-lab --markdown-report .docs/07_test/harness_consumer_lab.md` | PASS; lab commit/tag recorded |
+| `node tools/consumer_lab_full_test.mjs --report-only --lab-dir /Users/momoooo/Documents/sdlc-harness-consumer-lab --markdown-report .docs/07_test/harness_consumer_lab.md` | PASS for script execution; report decision BLOCKED due known package gaps; lab deleted after run |
+| `test ! -e /Users/momoooo/Documents/sdlc-harness-consumer-lab` | PASS after default full lab run |
 | Lab supported package capability subset | PASS: 25 checks |
 | Lab full documented workflow | BLOCKED: 11 known package gaps, 0 unexpected failures |
 

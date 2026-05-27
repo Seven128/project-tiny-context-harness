@@ -25,6 +25,7 @@ export function parseArgs(argv) {
     sourceRoot: process.cwd(),
     labDir: DEFAULT_LAB_DIR,
     resetLab: false,
+    keepLab: false,
     reportOnly: false,
     commitLab: false,
     tagPrefix: "consumer-lab-full",
@@ -42,6 +43,8 @@ export function parseArgs(argv) {
       options.labDir = requireValue(argv, ++index, arg);
     } else if (arg === "--reset-lab") {
       options.resetLab = true;
+    } else if (arg === "--keep-lab") {
+      options.keepLab = true;
     } else if (arg === "--report-only") {
       options.reportOnly = true;
     } else if (arg === "--commit-lab") {
@@ -59,6 +62,9 @@ export function parseArgs(argv) {
 
   options.sourceRoot = path.resolve(options.sourceRoot);
   options.labDir = path.resolve(options.labDir);
+  if (options.commitLab && !options.keepLab) {
+    throw new Error("--commit-lab requires --keep-lab because the default behavior deletes the lab after the run");
+  }
   return options;
 }
 
@@ -116,6 +122,7 @@ export async function runConsumerLabFullTest(rawOptions) {
   );
   const packageVersion = packageManifest.version;
   const checks = [];
+  let report;
   const artifactsDir = path.join(options.labDir, ".artifacts");
 
   const add = (check) => {
@@ -167,7 +174,9 @@ export async function runConsumerLabFullTest(rawOptions) {
     details: tarballName ? tarballName : trimOutput(`${pack.stdout}\n${pack.stderr}`)
   });
   if (pack.status !== 0 || !tarballName) {
-    return await finishReport({ options, packageVersion, startedAt, checks, labCommit: "", labTag: "" });
+    report = await finishReport({ options, packageVersion, startedAt, checks, labCommit: "", labTag: "" });
+    await cleanupLab(options);
+    return report;
   }
 
   const tarballPath = path.join(artifactsDir, tarballName);
@@ -220,7 +229,9 @@ export async function runConsumerLabFullTest(rawOptions) {
     ? await commitLabEvidence(options.labDir, options.tagPrefix, packageVersion)
     : await readLabHead(options.labDir);
 
-  return await finishReport({ options, packageVersion, startedAt, checks, labCommit, labTag });
+  report = await finishReport({ options, packageVersion, startedAt, checks, labCommit, labTag });
+  await cleanupLab(options);
+  return report;
 }
 
 async function ensureBaseLab(labDir, tarballPath) {
@@ -629,6 +640,7 @@ async function finishReport({ options, packageVersion, startedAt, checks, labCom
     packageVersion,
     sourceRoot: options.sourceRoot,
     labDir: options.labDir,
+    labCleanup: options.keepLab ? "kept" : "deleted",
     labCommit,
     labTag,
     summary,
@@ -643,6 +655,13 @@ async function finishReport({ options, packageVersion, startedAt, checks, labCom
   await writeFile(options.jsonReport || defaultJson, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   await writeFile(options.markdownReport || defaultMarkdown, renderMarkdownReport(report), "utf8");
   return report;
+}
+
+async function cleanupLab(options) {
+  if (options.keepLab) {
+    return;
+  }
+  await rm(options.labDir, { recursive: true, force: true });
 }
 
 function buildRecommendedRfc(checks) {
@@ -692,12 +711,13 @@ export function renderMarkdownReport(report) {
 - Package: \`${report.packageName}@${report.packageVersion}\`
 - Source root: \`${report.sourceRoot}\`
 - Lab repository: \`${report.labDir}\`
+- Lab cleanup: \`${report.labCleanup}\`
 - Lab commit: \`${report.labCommit || "not recorded"}\`
 - Lab tag: \`${report.labTag || "not recorded"}\`
 - Started: ${report.startedAt}
 - Finished: ${report.finishedAt}
 
-This script installs the package tarball into the lab and does not copy source-repo \`tools/**\` into the consumer repository.
+This script installs the package tarball into the lab, does not copy source-repo \`tools/**\` into the consumer repository, and deletes the lab repository after reports are written unless \`--keep-lab\` is set.
 
 ## Summary
 
@@ -710,10 +730,10 @@ This script installs the package tarball into the lab and does not copy source-r
 
 ~~~sh
 node tools/consumer_lab_full_test.mjs --report-only --lab-dir ${report.labDir}
-node tools/consumer_lab_full_test.mjs --report-only --commit-lab --lab-dir ${report.labDir}
+node tools/consumer_lab_full_test.mjs --report-only --keep-lab --commit-lab --lab-dir ${report.labDir}
 ~~~
 
-Default reports are written to \`${report.labDir}/.artifacts/consumer_lab_full_report.{json,md}\`. Use \`--reset-lab\` only when the existing lab should be deleted and recreated; use \`--commit-lab\` only when a local evidence commit and tag should be created.
+Default reports are written to \`${report.labDir}/.artifacts/consumer_lab_full_report.{json,md}\` before cleanup. Pass \`--markdown-report\` or \`--json-report\` outside the lab when the report must persist after the default cleanup. Use \`--reset-lab\` only when the existing lab should be deleted before the run; use \`--keep-lab\` only for debugging; use \`--commit-lab\` with \`--keep-lab\` when a local evidence commit and tag should be created.
 
 ## Matrix
 
@@ -783,8 +803,9 @@ Options:
   --source-root <path>      Source repository root. Default: cwd
   --lab-dir <path>          Consumer lab directory. Default: ${DEFAULT_LAB_DIR}
   --reset-lab               Delete and recreate the lab directory before running
+  --keep-lab                Keep the lab directory after reports are written
   --report-only             Always exit 0 after writing reports
-  --commit-lab              Commit lab changes and create a unique local evidence tag
+  --commit-lab              Commit lab changes and create a unique local evidence tag; requires --keep-lab
   --tag-prefix <prefix>     Evidence tag prefix. Default: consumer-lab-full
   --json-report <path>      JSON report path. Default: <lab>/.artifacts/consumer_lab_full_report.json
   --markdown-report <path>  Markdown report path. Default: <lab>/.artifacts/consumer_lab_full_report.md

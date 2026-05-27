@@ -15,6 +15,7 @@ test("consumer lab script parses safety and report options", () => {
     "--source-root",
     "/tmp/source",
     "--reset-lab",
+    "--keep-lab",
     "--report-only",
     "--commit-lab",
     "--tag-prefix",
@@ -28,11 +29,19 @@ test("consumer lab script parses safety and report options", () => {
   assert.equal(options.labDir, "/tmp/lab");
   assert.equal(options.sourceRoot, "/tmp/source");
   assert.equal(options.resetLab, true);
+  assert.equal(options.keepLab, true);
   assert.equal(options.reportOnly, true);
   assert.equal(options.commitLab, true);
   assert.equal(options.tagPrefix, "evidence");
   assert.equal(options.jsonReport, "/tmp/report.json");
   assert.equal(options.markdownReport, "/tmp/report.md");
+});
+
+test("consumer lab script requires keep-lab when committing evidence", () => {
+  assert.throws(
+    () => parseArgs(["--commit-lab"]),
+    /--commit-lab requires --keep-lab/
+  );
 });
 
 test("consumer lab script classifies known package boundary gaps", () => {
@@ -75,6 +84,7 @@ test("consumer lab script summarizes and renders reports", () => {
     packageVersion: "0.0.0",
     sourceRoot: "/source",
     labDir: "/lab",
+    labCleanup: "deleted",
     labCommit: "abc123",
     labTag: "tag",
     startedAt: "start",

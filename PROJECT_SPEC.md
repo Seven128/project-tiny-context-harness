@@ -760,7 +760,7 @@ Authoring overlay 的默认规则：
 - 如果某条 authoring rule 对所有用户项目都有价值，必须通过 PRD / tech plan / RFC 明确晋升为通用 Skill、policy、template、PROJECT_SPEC 或 README 规则，再进入包内 canonical assets。
 - 如果某条 authoring Skill 只服务于 Harness 包源码维护，例如 package source drift、migration safety、managed block compatibility，就应留在 authoring overlay，不污染通用阶段 Skill。
 - 自举维护 Harness 自身时的阶段化测试流程、全量 consumer lab 验收提示词、测试脚本使用提示词和缺陷归因 SOP 属于 authoring overlay。它们只能沉淀在 `.codex/skills/authoring/**` 或 authoring-only 文档中，不写入通用 `.codex/skills/pjsdlc_*` workflow Skill；通用阶段 Skill 面向所有用户项目，不能携带本仓库维护 npm 包自身时才需要的全量验收流程。
-- 每次全量新开 consumer 仓库测试结束后，都要产出问题总结。若发现 npm 包能力、README 声明、Makefile gate、validator、sync/upgrade 或 workflow 文档与 installed-consumer 行为不一致，应先形成 RFC 或 RFC 候选，再拆分 DEV task 修复，而不是把问题停留在临时日志里。
+- 每次全量新开 consumer 仓库测试结束后，都要产出问题总结，并默认删除测试仓库，避免临时 consumer state 变成新的事实源。若需要调试现场或本地 evidence commit/tag，必须显式使用保留参数。若发现 npm 包能力、README 声明、Makefile gate、validator、sync/upgrade 或 workflow 文档与 installed-consumer 行为不一致，应先形成 RFC 或 RFC 候选，再拆分 DEV task 修复，而不是把问题停留在临时日志里。
 
 这个分层解决的是自举开发中的边界问题：本仓库需要比普通用户项目更多的工作流开发约束，但这些约束不能因为本仓库是 package source 就自动成为所有用户项目的默认配置。
 

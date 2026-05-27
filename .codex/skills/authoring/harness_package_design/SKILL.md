@@ -50,8 +50,10 @@ tech plan 或 RFC 明确晋升路径，再进入通用 Skill、policy、template
 doctor、managed assets、override、validators、task protocol、parallel contract、docs overview、
 transition、GitHub workflow static check 和 release automation static check。脚本报告必须区分
 `PASS`、`BLOCKED` 和 `FAIL`：已知产品能力缺口使用 `BLOCKED`，脚本错误或非预期行为使用
-`FAIL`。每次全量测试后，都要把问题总结为 defect candidates，并建议或创建 RFC，再拆 DEV task
-修复；不要在同一个测试 task 中顺手修复所有缺陷。
+`FAIL`。脚本默认在报告写出后删除 consumer lab 测试仓库；只有调试或需要本地 evidence commit/tag
+时才显式传入 `--keep-lab`，且 `--commit-lab` 必须和 `--keep-lab` 同时使用。每次全量测试后，
+都要把问题总结为 defect candidates，并建议或创建 RFC，再拆 DEV task 修复；不要在同一个测试
+task 中顺手修复所有缺陷。
 
 `README.md` 和 package README 是 npm package 的对外能力索引。新增、删除或改变对外 CLI command、
 configuration、workflow behavior、managed path、override mechanism、validator、migration、release

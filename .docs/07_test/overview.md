@@ -1,11 +1,11 @@
 # .docs/07_test overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 4e1812000e4f158c -->
+<!-- source-hash: 4b34ed3293717df7 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `4e1812000e4f158c`
+Source hash: `4b34ed3293717df7`
 
 ## Source Slices
 
@@ -75,12 +75,13 @@ Source: [harness_consumer_lab.md](harness_consumer_lab.md)
 - Package: `agent-project-sdlc@0.1.7`
 - Source root: `/Users/momoooo/Documents/ProjectTemplate`
 - Lab repository: `/Users/momoooo/Documents/sdlc-harness-consumer-lab`
-- Lab commit: `9e004d1`
-- Lab tag: `consumer-lab-full-0.1.7-20260526T204200Z`
-- Started: 2026-05-26T20:42:33.502Z
-- Finished: 2026-05-26T20:42:48.465Z
+- Lab cleanup: `deleted`
+- Lab commit: `not recorded`
+- Lab tag: `not recorded`
+- Started: 2026-05-27T09:01:11.496Z
+- Finished: 2026-05-27T09:01:31.465Z
 
-This script installs the package tarball into the lab and does not copy source-repo `tools/**` into the consumer repository.
+This script installs the package tarball into the lab, does not copy source-repo `tools/**` into the consumer repository, and deletes the lab repository after reports are written unless `--keep-lab` is set.
 
 ## Summary
 
@@ -93,18 +94,18 @@ This script installs the package tarball into the lab and does not copy source-r
 
 ~~~sh
 node tools/consumer_lab_full_test.mjs --report-only --lab-dir /Users/momoooo/Documents/sdlc-harness-consumer-lab
-node tools/consumer_lab_full_test.mjs --report-only --commit-lab --lab-dir /Users/momoooo/Documents/sdlc-harness-consumer-lab
+node tools/consumer_lab_full_test.mjs --report-only --keep-lab --commit-lab --lab-dir /Users/momoooo/Documents/sdlc-harness-consumer-lab
 ~~~
 
-Default reports are written to `/Users/momoooo/Documents/sdlc-harness-consumer-lab/.artifacts/consumer_lab_full_report.{json,md}`. Use `--reset-lab` only when the existing lab should be deleted and recreated; use `--commit-lab` only when a local evidence commit and tag should be created.
+Default reports are written to `/Users/momoooo/Documents/sdlc-harness-consumer-lab/.artifacts/consumer_lab_full_report.{json,md}` before cleanup. Pass `--markdown-report` or `--json-report` outside the lab when the report must persist after the default cleanup. Use `--reset-lab` only when the existing lab should be deleted before the run; use `--keep-lab` only for debugging; use `--commit-lab` with `--keep-lab` when a local evidence commit and tag should be created.
 
 ## Matrix
 
 | Area | Evidence | Result | Details |
 |---|---|---|---|
 | Package smoke | npm pack current source package | PASS | agent-project-sdlc-0.1.7.tgz |
-| Package smoke | install current source tarball | PASS | up to date, audited 3 packages in 1s  1 package is looking for funding   run `npm fund` for details  found 0 vulnerabilities |
-| CLI lifecycle | init explicit .codex root | PASS | configured package.json sdlcHarness.harnessFolderName=".codex" Project is not empty; continuing with non-destructive init. Use --adopt to mark this as an existing project adoption. kept existing .codex/config.yaml created .codex/state/plan.yaml created .codex/state/plan.draft.yaml created .docs/INDEX.md sync changed=0 skipped=13 blocked=0 init complete |
+| Package smoke | install current source tarball | PASS | added 2 packages, and audited 3 packages in 2s  1 package is looking for funding   run `npm fund` for details  found 0 vulnerabilities |
+| CLI lifecycle | init explicit .codex root | PASS | created .codex/config.yaml created .codex/state/lifecycle.yaml created .codex/state/plan.yaml created .codex/state/plan.draft.yaml created .codex/state/memory.md created .docs/INDEX.md sync changed=27 skipped=0 blocked=0 init complete |
 | CLI lifecycle | doctor installed workspace | PASS | harness root: .codex core package: agent-project-sdlc@0.1.7 schema version: 1 doctor complete |
 | CLI lifecycle | sync idempotency | PASS | sync changed=0 skipped=13 blocked=0 |
 | CLI lifecycle | upgrade idempotency | PASS | migrations changed=0 skipped=15 sync changed=0 skipped=13 blocked=0 doctor warnings=0 errors=0 |
@@ -114,7 +115,7 @@ Default reports are written to `/Users/momoooo/Documents/sdlc-harness-consumer-l
 | Local overrides | known Skill override appends Local Override | PASS | override appended |
 | Local overrides | unknown Skill override blocks sync | PASS | sync changed=0 skipped=4 blocked=1  blocked: unknown skill override: .codex/pjsdlc_managed/override_skills/pjsdlc_unknown.md |
 | Local policy overrides | *.local.yaml preserved across sync | PASS | local policy preserved |
-| Toy project | node:test fixture | PASS | ℹ tests 2 ℹ suites 0 ℹ pass 2 ℹ fail 0 ℹ cancelled 0 ℹ skipped 0 ℹ todo 0 ℹ duration_ms 69.957 |
+| Toy project | node:test fixture | PASS | ℹ tests 2 ℹ suites 0 ℹ pass 2 ℹ fail 0 ℹ cancelled 0 ℹ skipped 0 ℹ todo 0 ℹ duration_ms 73.193792 |
 | CLI validators | validate-harness | PASS | validate-harness checked /Users/momoooo/Documents/sdlc-harness-consumer-lab (.codex) |
 | CLI validators | validate-current | PASS | validate-pm checked 1 file(s) |
 | CLI validators | validate-pm | PASS | validate-pm checked 1 file(s) |
