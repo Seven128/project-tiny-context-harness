@@ -4,7 +4,7 @@
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: workflow Skills, prompt routing, hard/soft indexing and authoring overlay
-- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`
+- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`, `PROJECT_SPEC.md`
 - Linked RFC: `RFC_007`, `RFC_009`, `RFC_015`
@@ -23,6 +23,7 @@
 - The authoring Skill requires README/package README coverage to stay aligned with all public package capabilities.
 - PM, Manager, Dev and Tester prompts now describe optional parallel execution semantics and keep final fact-source integration with the main agent.
 - PM and Architect prompts require deleting the superseded monolithic PRD/product or tech plan file after user-requested slicing creates replacement slices and updates the related fact-source references.
+- PM, Architect and Manager prompts now require PRD and design generation work to run as small `PRD-*` / `DES-*` `plan.yaml` tasks, covering conversational generation, existing-document slicing and synthesis from prior fact sources.
 
 ## 3. 真实代码结构
 
@@ -88,6 +89,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 - `sync` blocks unknown files under `<harnessRoot>/pjsdlc_managed/override_skills/*.md`, so a misspelled Skill name cannot silently fail to apply.
 - `pjsdlc_managed/override_skills` keeps override configuration with other managed workflow configuration while preserving `<harnessRoot>/skills/**` as the shallow hard file index.
 - When a user explicitly asks to slice an existing complete PRD/product document or complete tech plan into multiple slices, `pjsdlc_pm_prd` and `pjsdlc_architect_design` now require validating replacement slice coverage, updating `.docs/INDEX.md` and generated `overview.md`, synchronizing `plan.draft.yaml` references for tech plan slicing, and then deleting the superseded complete file so the facts are not duplicated.
+- `pjsdlc_pm_prd` creates or resumes one small `PRD-*` task before writing PRD slices; `pjsdlc_architect_design` creates or resumes one small `DES-*` task before writing architecture, tech plan, ADR or `plan.draft.yaml` outputs. `pjsdlc_manager` routes `/prd` and `/design` through those task protocols and treats remaining open tasks as phase-exit blockers.
 
 ## 6. 与技术方案的偏移
 
@@ -100,13 +102,13 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 测试（Test） | 覆盖范围（Coverage） | 最近记录结果（Result） |
 |---|---|---|
 | `python3 tools/validate_prompt_language.py` | Prompt language contract and managed prompts | PASS in Harness gates |
-| `npm test --workspace agent-project-sdlc` | Package build and CLI behavior regression tests | PASS for DEV-055; 9 tests passed |
-| `node packages/sdlc-harness/dist/cli.js package sync-source` | Package assets reflect authoring Skill source changes | PASS for DEV-055 |
-| `node packages/sdlc-harness/dist/cli.js package check-source` | Skills and managed prompt assets match authoring source | PASS for DEV-055 |
+| `npm test --workspace agent-project-sdlc` | Package build and CLI behavior regression tests | PASS for DEV-056; 9 tests passed |
+| `node packages/sdlc-harness/dist/cli.js package sync-source` | Package assets reflect authoring Skill source changes | PASS for DEV-056 |
+| `node packages/sdlc-harness/dist/cli.js package check-source` | Skills and managed prompt assets match authoring source | PASS for DEV-056 |
 | `tests/sdlc-harness/package-source.test.mjs` | Authoring Skill exclusion from package assets | PASS in package tests |
 | `tests/sdlc-harness/sync-init-doctor.test.mjs` | Skill override append, idempotency, configured root and unknown override blocking | PASS for DEV-046 |
 | `tests/sdlc-harness/upgrade.test.mjs` | Migration from legacy `overrides/skills` to `pjsdlc_managed/override_skills` | PASS for DEV-046 |
-| `make validate-harness` | Prompt language and overview consistency | PASS for DEV-055 |
+| `make validate-harness` | Prompt language and overview consistency | PASS for DEV-056 |
 
 ## 8. 变更记录（Change Log）
 
@@ -123,6 +125,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-26 | `DEV-049` | DEV-049 implementation commit | Added authoring rule that README/package README must cover all public package capabilities. |
 | 2026-05-27 | `DEV-050` | DEV-050 implementation commit | Added opt-in parallel execution prompt rules for PM, Manager, Dev and Tester workflows. |
 | 2026-05-27 | `DEV-055` | Working tree | Required PRD and tech plan slicing workflows to delete superseded complete files after replacement slices and references are complete. |
+| 2026-05-27 | `DEV-056` | Working tree | Routed PRD and design generation/slicing through recoverable `plan.yaml` tasks. |
 | 2026-05-27 | Direct user request | Working tree | Added complete Skill override merge support with description merging and semantic conflict review guidance. |
 
 ## 9. 后续维护注意事项

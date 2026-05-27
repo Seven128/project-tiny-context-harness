@@ -25,6 +25,7 @@ TASK_STATUSES = {
 OPEN_TASK_STATUSES = {"pending", "in_progress", "blocked", "pending_revision"}
 PARALLEL_MODES = {"runtime_managed", "user_orchestrated"}
 PARALLEL_PHASES = {"REQUIREMENT_GATHERING", "SPRINTING", "TESTING"}
+TASK_ID_PATTERN = re.compile(r"^[A-Z]+-(\d+)$")
 
 
 class HarnessError(RuntimeError):
@@ -329,10 +330,13 @@ def load_plan(path: str = ".codex/state/plan.yaml") -> dict[str, Any]:
 
 def validate_task_shape(task: dict[str, Any], index: int) -> None:
     prefix = f"Task #{index + 1}"
-    for field in ["id", "title", "status", "summary", "implementation_doc"]:
+    for field in ["id", "title", "status", "summary"]:
         require(field in task, f"{prefix} missing field: {field}")
     require(task["status"] in TASK_STATUSES, f"{task.get('id', prefix)} has invalid status: {task.get('status')}")
     require(isinstance(task["summary"], str) and task["summary"].strip(), f"{task['id']} must define summary")
+    has_implementation_doc = isinstance(task.get("implementation_doc"), str) and task["implementation_doc"].strip()
+    has_result_docs = isinstance(task.get("result_docs"), list) and bool(task["result_docs"])
+    require(has_implementation_doc or has_result_docs, f"{task['id']} must define implementation_doc or result_docs")
     if task["status"] in OPEN_TASK_STATUSES:
         require("gate_result" not in task, f"{task['id']} open task must not define gate_result")
         for field in ["docs", "allowed_paths", "required_gates", "acceptance_criteria"]:
@@ -342,8 +346,39 @@ def validate_task_shape(task: dict[str, Any], index: int) -> None:
         require(isinstance(task["required_gates"], list) and task["required_gates"], f"{task['id']} must define required_gates")
         require(isinstance(task["acceptance_criteria"], list) and task["acceptance_criteria"], f"{task['id']} must define acceptance_criteria")
     else:
-        for field in ["docs", "allowed_paths", "required_gates", "acceptance_criteria", "working_notes", "gate_result"]:
+        for field in ["docs", "allowed_paths", "required_gates", "acceptance_criteria", "working_notes", "gate_result", "result_docs"]:
             require(field not in task, f"{task['id']} closed task must not retain {field}")
+
+
+def task_sequence_number(task_id: str) -> int:
+    match = TASK_ID_PATTERN.match(task_id)
+    return int(match.group(1)) if match else 0
+
+
+def validate_plan_contract(data: dict[str, Any], allow_open: bool) -> None:
+    validate_parallel_execution_contract(data)
+    tasks = data.get("tasks", [])
+    next_task_sequence = data.get("next_task_sequence")
+    require(isinstance(next_task_sequence, int) and next_task_sequence > 0, "plan.yaml must define positive integer next_task_sequence")
+
+    for index, task in enumerate(tasks):
+        require(isinstance(task, dict), f"Task #{index + 1} must be a mapping")
+        validate_task_shape(task, index)
+        require(task.get("status") in OPEN_TASK_STATUSES, f"Completed task {task.get('id')} must not remain in plan.yaml")
+
+    max_sequence = 0
+    for task in tasks:
+        task_id = str(task.get("id") or "")
+        max_sequence = max(max_sequence, task_sequence_number(task_id))
+    require(next_task_sequence > max_sequence, "next_task_sequence must be greater than task ids currently in plan.yaml")
+
+    current_task_id = data.get("current_task_id") or ""
+    if current_task_id:
+        require(task_by_id(data, current_task_id), f"current_task_id does not match a task: {current_task_id}")
+
+    open_tasks = [task.get("id") for task in tasks if task.get("status") in OPEN_TASK_STATUSES]
+    if not allow_open:
+        require(not open_tasks, f"Open tasks remain: {', '.join(open_tasks)}")
 
 
 def validate_parallel_execution_contract(data: dict[str, Any]) -> None:

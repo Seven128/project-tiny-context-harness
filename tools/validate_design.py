@@ -1,8 +1,19 @@
 #!/usr/bin/env python3
-from harness_utils import combined_text, contains_any, markdown_deliverables, require, run_main
+from harness_utils import (
+    combined_text,
+    contains_any,
+    load_plan,
+    markdown_deliverables,
+    run_main,
+    require,
+    validate_plan_contract,
+)
 
 
 def main() -> None:
+    plan = load_plan()
+    validate_plan_contract(plan, allow_open=False)
+
     architecture_docs = markdown_deliverables(".docs/02_architecture")
     tech_plan_docs = markdown_deliverables(".docs/03_tech_plan")
     require(architecture_docs, "No architecture deliverables found in .docs/02_architecture/")

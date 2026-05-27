@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: help status docs-overview validate-doc-overviews validate-harness validate-current validate-pm validate-design validate-dev validate-review validate-test validate-release validate-rfc lint test-current-domain test-all build
+.PHONY: help status docs-overview validate-doc-overviews validate-harness validate-current validate-plan validate-pm validate-design validate-dev validate-review validate-test validate-release validate-rfc lint test-current-domain test-all build
 
 help:
 	@echo "AI SDLC Harness commands"
@@ -9,6 +9,7 @@ help:
 	@echo "  make validate-doc-overviews 校验 .docs 各阶段 overview.md 是否最新"
 	@echo "  make validate-harness    校验 Harness 骨架、配置和提示词语言契约"
 	@echo "  make validate-current    运行当前 lifecycle phase 的 gate"
+	@echo "  make validate-plan       校验 plan.yaml task 合同，允许当前 open task"
 	@echo "  make validate-pm         校验产品需求产物"
 	@echo "  make validate-design     校验架构设计、技术方案和任务草案"
 	@echo "  make validate-dev        校验 sprint 任务状态、路径、代码 gate 和实现文档"
@@ -33,6 +34,9 @@ validate-harness:
 
 validate-current:
 	$(PYTHON) tools/run_current_gate.py
+
+validate-plan:
+	$(PYTHON) tools/validate_plan.py --allow-open
 
 validate-pm:
 	test -f .docs/INDEX.md

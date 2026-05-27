@@ -19,6 +19,7 @@ const PARALLEL_PHASES = new Set(["REQUIREMENT_GATHERING", "SPRINTING", "TESTING"
 const validators: Record<string, Validator> = {
   "validate-harness": validateHarness,
   "validate-current": validateCurrent,
+  "validate-plan": validatePlan,
   "validate-pm": validatePm,
   "validate-design": validateDesign,
   "validate-dev": validateDev
@@ -70,9 +71,10 @@ async function validateCurrent(projectRoot: string): Promise<ValidatorReport> {
 }
 
 async function validatePm(projectRoot: string): Promise<ValidatorReport> {
+  const plan = await validatePlanState(projectRoot, false);
   const docs = await markdownFiles(path.join(projectRoot, ".docs/01_product"));
   const text = await combinedText(docs);
-  const errors: string[] = [];
+  const errors: string[] = [...plan.errors];
   if (docs.length === 0) errors.push("No PRD deliverables found");
   if (!containsAny(text, ["acceptance", "验收"])) errors.push("PRD must include acceptance criteria");
   if (!containsAny(text, ["out of scope", "不做", "边界"])) errors.push("PRD must include out-of-scope boundaries");
@@ -81,10 +83,11 @@ async function validatePm(projectRoot: string): Promise<ValidatorReport> {
 }
 
 async function validateDesign(projectRoot: string): Promise<ValidatorReport> {
+  const plan = await validatePlanState(projectRoot, false);
   const architecture = await markdownFiles(path.join(projectRoot, ".docs/02_architecture"));
   const techPlan = await markdownFiles(path.join(projectRoot, ".docs/03_tech_plan"));
   const text = await combinedText([...architecture, ...techPlan]);
-  const errors: string[] = [];
+  const errors: string[] = [...plan.errors];
   if (architecture.length === 0) errors.push("No architecture deliverables found");
   if (techPlan.length === 0) errors.push("No technical plan deliverables found");
   if (!containsAny(text, ["prd", "requirement", "需求"])) errors.push("Design must cite product requirements");
@@ -93,7 +96,17 @@ async function validateDesign(projectRoot: string): Promise<ValidatorReport> {
   return { info: [`validate-design checked ${architecture.length + techPlan.length} file(s)`], errors };
 }
 
+async function validatePlan(projectRoot: string): Promise<ValidatorReport> {
+  const plan = await validatePlanState(projectRoot, true);
+  return { info: [`validate-plan checked ${plan.taskCount} task(s)`], errors: plan.errors };
+}
+
 async function validateDev(projectRoot: string): Promise<ValidatorReport> {
+  const plan = await validatePlanState(projectRoot, false);
+  return { info: [`validate-dev checked ${plan.taskCount} task(s)`], errors: plan.errors };
+}
+
+async function validatePlanState(projectRoot: string, allowOpen: boolean): Promise<{ taskCount: number; errors: string[] }> {
   const errors: string[] = [];
   const root = await harnessRoot(projectRoot);
   const tasksData = await readYamlObject(path.join(projectRoot, root, "state", "plan.yaml"));
@@ -104,14 +117,26 @@ async function validateDev(projectRoot: string): Promise<ValidatorReport> {
     errors.push("plan.yaml must define positive integer next_task_sequence");
   }
   const open = tasks.filter((task) => ["pending", "in_progress", "blocked", "pending_revision"].includes(String(task.status)));
-  if (open.length > 0) errors.push(`Open tasks remain: ${open.map((task) => task.id).join(", ")}`);
+  if (!allowOpen && open.length > 0) errors.push(`Open tasks remain: ${open.map((task) => task.id).join(", ")}`);
   let maxTaskSequence = 0;
-  for (const task of tasks) {
-    for (const field of ["id", "title", "status", "summary", "implementation_doc"]) {
+  tasks.forEach((task, index) => {
+    if (!isRecord(task)) {
+      errors.push(`Task #${index + 1} must be a mapping`);
+      return;
+    }
+    for (const field of ["id", "title", "status", "summary"]) {
       if (!task[field]) errors.push(`Task missing ${field}: ${String(task.id ?? "unknown")}`);
     }
+    if (!["pending", "in_progress", "done", "blocked", "pending_revision", "cancelled"].includes(String(task.status))) {
+      errors.push(`${String(task.id ?? `Task #${index + 1}`)} has invalid status: ${String(task.status)}`);
+    }
+    const hasImplementationDoc = typeof task.implementation_doc === "string" && task.implementation_doc.trim().length > 0;
+    const hasResultDocs = Array.isArray(task.result_docs) && task.result_docs.length > 0;
+    if (!hasImplementationDoc && !hasResultDocs) {
+      errors.push(`${String(task.id ?? `Task #${index + 1}`)} must define implementation_doc or result_docs`);
+    }
     const taskId = String(task.id ?? "");
-    const match = taskId.match(/^DEV-(\d+)$/);
+    const match = taskId.match(/^[A-Z]+-(\d+)$/);
     if (match) {
       maxTaskSequence = Math.max(maxTaskSequence, Number(match[1]));
     }
@@ -122,23 +147,33 @@ async function validateDev(projectRoot: string): Promise<ValidatorReport> {
       for (const field of ["docs", "allowed_paths", "required_gates", "acceptance_criteria"]) {
         if (!task[field]) errors.push(`Open task ${task.id} missing ${field}`);
       }
+      if (!isRecord(task.docs)) {
+        errors.push(`${task.id} docs must be a mapping`);
+      }
       if (!Array.isArray(task.allowed_paths) || task.allowed_paths.length === 0) {
         errors.push(`Open task ${task.id} must define allowed_paths`);
       }
       if (!Array.isArray(task.required_gates) || task.required_gates.length === 0) {
         errors.push(`Open task ${task.id} must define required_gates`);
       }
+      if (!Array.isArray(task.acceptance_criteria) || task.acceptance_criteria.length === 0) {
+        errors.push(`Open task ${task.id} must define acceptance_criteria`);
+      }
     } else {
       errors.push(`Completed task ${task.id} must not remain in plan.yaml`);
-      for (const field of ["docs", "allowed_paths", "required_gates", "acceptance_criteria", "working_notes", "gate_result"]) {
-        if (task[field]) errors.push(`Closed task ${task.id} must not retain ${field}`);
+      for (const field of ["docs", "allowed_paths", "required_gates", "acceptance_criteria", "working_notes", "gate_result", "result_docs"]) {
+        if (field in task) errors.push(`Closed task ${task.id} must not retain ${field}`);
       }
     }
-  }
+  });
   if (Number.isInteger(nextTaskSequence) && Number(nextTaskSequence) <= maxTaskSequence) {
     errors.push("next_task_sequence must be greater than task ids currently in plan.yaml");
   }
-  return { info: [`validate-dev checked ${tasks.length} task(s)`], errors };
+  const currentTaskId = String(tasksData.current_task_id ?? "");
+  if (currentTaskId && !tasks.some((task) => isRecord(task) && task.id === currentTaskId)) {
+    errors.push(`current_task_id does not match a task: ${currentTaskId}`);
+  }
+  return { taskCount: tasks.length, errors };
 }
 
 function validateParallelExecutionContract(plan: Record<string, unknown>, errors: string[]): void {

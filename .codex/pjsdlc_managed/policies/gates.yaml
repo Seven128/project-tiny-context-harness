@@ -5,6 +5,14 @@ gates:
     required_for:
       - "all"
 
+  validate-plan:
+    command: "make validate-plan"
+    purpose: "验证当前 open task 合同，允许任务执行中保留 open task"
+    required_for:
+      - "REQUIREMENT_GATHERING"
+      - "ARCHITECTING"
+      - "SPRINTING"
+
   validate-pm:
     command: "make validate-pm"
     purpose: "验证 PRD、验收标准、Out of Scope 和 Open Questions"

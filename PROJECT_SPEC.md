@@ -255,33 +255,39 @@ make validate-doc-overviews
 
 ## 七、任务状态与开发循环
 ### 7.1 plan.yaml
-`.codex/state/plan.yaml` 是开发阶段的机器可读短期执行记忆，只保留当前和未来任务。open task 直接保存当前任务需要的执行合同；任务完成后从 `plan.yaml` 移除，避免过往任务变成无效上下文。`next_task_sequence` 负责在历史 task 被移除后继续分配后续 `DEV-*` id。典型 open task 字段：
+`.codex/state/plan.yaml` 是阶段任务的机器可读短期执行记忆，只保留当前和未来任务。open task 直接保存当前任务需要的执行合同；任务完成后从 `plan.yaml` 移除，避免过往任务变成无效上下文。`REQUIREMENT_GATHERING`、`ARCHITECTING` 和 `SPRINTING` 都使用同一个 task contract：产品方案生成、既有文档切片和原始事实源合成使用 `PRD-*` task；架构设计、技术方案生成/切片和 `plan.draft.yaml` 生成使用 `DES-*` task；开发实现使用 `DEV-*` task。`next_task_sequence` 负责在历史 task 被移除后继续分配后续 workflow task id，避免不同前缀之间发生序号冲突。典型 open task 字段：
 
 ```yaml
-current_phase: "SPRINTING"
-current_task_id: "DEV-003"
+current_phase: "REQUIREMENT_GATHERING"
+current_task_id: "PRD-003"
 next_task_sequence: 4
 tasks:
-  - id: "DEV-003"
-    title: "实现登录失败次数限制"
+  - id: "PRD-003"
+    title: "生成登录安全 PRD slice"
     status: "in_progress"
-    summary: "实现登录失败次数限制并补充对应测试。"
+    summary: "根据用户输入生成一个登录安全产品方案 slice。"
     docs:
+      raw:
+        - ".docs/00_raw/login_security_notes.md"
       product:
-        - ".docs/01_product/auth/account_lock.md"
-      tech_plan:
-        - ".docs/03_tech_plan/auth/account_lock_plan.md"
+        - ".docs/01_product/auth/login_security.md"
     allowed_paths:
-      - "src/auth/**"
-      - "tests/auth/**"
+      - ".docs/00_raw/**"
+      - ".docs/01_product/auth/login_security.md"
+      - ".docs/INDEX.md"
+      - ".codex/state/plan.yaml"
     required_gates:
-      - "npm test"
+      - "make validate-plan"
+      - "make docs-overview"
     acceptance_criteria:
-      - "连续失败 5 次后锁定账号 10 分钟"
+      - "PRD slice 包含验收标准、Out of Scope 和 Open Questions。"
     working_notes:
       - "只记录恢复现场所需的短备注。"
-    implementation_doc: ".docs/04_implementation/auth/login_rate_limit_impl.md"
+    result_docs:
+      - ".docs/01_product/auth/login_security.md"
 ```
+
+文档生产 task 使用 `result_docs` 指向本 task 产出的 PRD、architecture、tech plan、ADR 或 `plan.draft.yaml`。开发 task 使用 `implementation_doc` 指向模块级实现事实文档。
 
 task 完成后不再长期保留 done task 字段，当前 plan 回到只含待做任务或空列表：
 
@@ -378,12 +384,12 @@ task completion ledger commit 发生在 implementation commit 之后，只负责
 ```txt
 PRD
 -> tech plan
--> plan.yaml 中的 task
--> 代码、测试
+-> plan.yaml 中的 PRD/DES/DEV task
+-> `.docs/**` slices、`plan.draft.yaml` 或代码/测试
 -> 模块级 implementation doc
 ```
 
-每个 open task 都必须在 `plan.yaml` 中包含 `docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`。执行中只把必要现场写成短 `working_notes`；任务完成并写入或更新相关 implementation doc 后，把该 task 从当前 `plan.yaml` 移除。历史动作记录以 git/PR/CI/release 系统作为 cold archive，产物结果以模块级 implementation doc 为准。
+每个 open task 都必须在 `plan.yaml` 中包含 `docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`。文档生产 task 使用 `result_docs`，开发 task 使用 `implementation_doc`。执行中只把必要现场写成短 `working_notes`；任务完成并写入或更新相关事实源后，把该 task 从当前 `plan.yaml` 移除。历史动作记录以 git/PR/CI/release 系统作为 cold archive，产物结果以 `.docs/**` slice、`plan.draft.yaml` 或模块级 implementation doc 为准。
 
 过去 phase/task/gate 执行流水不是 Agent 默认上下文。`plan.yaml` 不长期保存 commit hash，`lifecycle.yaml` 不保存 `history`，completion ledger commit 只负责把当前 plan 恢复为短期、低噪声状态。只有用户明确要求 forensic/audit/regression 追溯时，才临时查询 git、PR、CI 或 release 记录。
 
@@ -414,8 +420,8 @@ Harness workflow skill 同时支持 native skill hard index 和 Harness soft ind
 | Skill | 负责内容 |
 |---|---|
 | `pjsdlc_manager` | 读取 lifecycle/plan/index，将自然语言意图或 `/status`、`/next`、`/advance`、`/rfc` 路由到 workflow action，执行阶段切换 |
-| `pjsdlc_pm_prd` | 原始需求归档、PRD 切片、验收标准、Out of Scope、Open Questions |
-| `pjsdlc_architect_design` | 架构设计、技术方案、接口契约、任务草案、ADR |
+| `pjsdlc_pm_prd` | 原始需求归档、PRD 切片、验收标准、Out of Scope、Open Questions，并按 `PRD-*` task 小步产出 |
+| `pjsdlc_architect_design` | 架构设计、技术方案、接口契约、任务草案、ADR，并按 `DES-*` task 小步产出 |
 | `pjsdlc_dev_sprint` | 按 `current_task_id` 执行开发、控制 `allowed_paths`、运行 `required_gates`，并在每个 task 完成后 commit/push |
 | `pjsdlc_implementation_doc` | 记录真实实现结构、数据流、测试覆盖和方案偏移 |
 | `pjsdlc_reviewer` | 只读 Review，输出 findings、风险、重构建议和测试入口结论 |
@@ -671,7 +677,7 @@ Agent 仍然以 vibe 方式完成单阶段任务；Harness 负责让整个项目
 - 阶段与 gate 策略：`.codex/pjsdlc_managed/policies/**`。
 - 阶段产物模板：`.codex/pjsdlc_managed/templates/**`。
 - state protocol：`lifecycle.yaml`、`plan.yaml`、`plan.draft.yaml`、memory 的字段结构、状态枚举、迁移规则和校验逻辑。
-- task/plan protocol：`current_task_id`、`next_task_sequence`、`tasks[]`、`summary`、`implementation_doc` 和 open task 的 `allowed_paths` / `required_gates` 如何组成短期执行记忆。
+- task/plan protocol：`current_task_id`、`next_task_sequence`、`tasks[]`、`summary`、`result_docs` / `implementation_doc` 和 open task 的 `allowed_paths` / `required_gates` 如何组成短期执行记忆。
 - memory protocol：memory 如何记录、校验、提升、失效，以及如何链接到 `.docs/**` 正式出处。
 - validators、lifecycle transition、sync、upgrade、migration 等确定性工具逻辑。
 

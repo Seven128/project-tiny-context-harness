@@ -17,9 +17,12 @@ description: Use during ARCHITECTING to create architecture docs, technical plan
 
 架构产物应区分稳定边界和实现计划：architecture slice 记录领域边界、子系统、关键风险和长期约束；tech plan slice 记录接口契约、数据模型、模块方案、任务拆分和 gate。不要把重大架构变化藏在 task 描述里。
 
+架构和技术方案产出本身也是 workflow task，而不是一次性长文档生成。无论来源是对话式设计、既有完整技术方案切片，还是根据 PRD/architecture 事实源生成新方案，都要先在 `<harnessRoot>/state/plan.yaml` 创建或选择一个足够小的 `DES-*` open task，并只完成当前 `current_task_id` 对应的一片 architecture / tech plan / ADR / `plan.draft.yaml` 产物。不要在一个任务里连续创建大量设计文件；如果需要多个 slices，先拆出 pending tasks，当前轮只执行一个 task。
+
 ## 输入
 
 - `.docs/INDEX.md`
+- `<harnessRoot>/state/plan.yaml`
 - 相关 `.docs/01_product/` PRD
 - 现有 `.docs/02_architecture/`
 - 当前代码结构概览
@@ -32,6 +35,7 @@ description: Use during ARCHITECTING to create architecture docs, technical plan
 - `.docs/03_tech_plan/` 下的技术方案
 - 需要长期保留的 ADR 写入 `.docs/05_decisions/`
 - `<harnessRoot>/state/plan.draft.yaml`
+- 更新后的 `<harnessRoot>/state/plan.yaml`
 - 更新后的 `.docs/INDEX.md`
 
 ## 语义切片
@@ -44,18 +48,33 @@ description: Use during ARCHITECTING to create architecture docs, technical plan
 - 如果用户明确要求把既有完整技术方案文件切成多个 `.docs/03_tech_plan/` slices，先确认 replacement slices 覆盖原文件中仍有效的接口契约、数据模型、模块方案、任务组和 gate；切片完成并更新 `plan.draft.yaml` 引用、`.docs/INDEX.md`、刷新 `overview.md` 后，删除被替代的完整 tech plan file，避免同一事实由完整文件和 slices 双重保留。
 - 每次新增、拆分、合并或废弃 slice 后，都要更新 `.docs/INDEX.md`。
 
+## Plan Protocol
+
+架构和技术方案阶段的方案生成、既有文档切片和上一阶段事实源合成都受 `plan.yaml` 管控：
+
+1. 没有 open task 时，先创建一个最小 `DES-*` task，并设置 `current_task_id`。
+2. open task 必须包含 `docs`、`allowed_paths`、`required_gates`、`acceptance_criteria` 和 `result_docs`；`result_docs` 指向本 task 计划产出的 `.docs/02_architecture/`、`.docs/03_tech_plan/`、`.docs/05_decisions/` 或 `<harnessRoot>/state/plan.draft.yaml`。
+3. 单个 task 的目标应足够小：一个子系统 architecture slice、一个 tech plan slice、一个接口契约、一组开发任务草案，或从完整技术方案中切出的一个语义 slice。
+4. 如果需要多个 architecture / tech plan slices，先生成多个 pending `DES-*` tasks 或至少创建当前 task 并在 `working_notes` 写明剩余 slices；当前轮只执行一个 task。
+5. 执行当前 task 时只编辑 `allowed_paths` 中的文件，完成后更新 `.docs/INDEX.md`、运行 `make docs-overview`，并至少运行 `make validate-plan`；阶段出口前再运行 `make validate-design`。
+6. task 完成后，从 `plan.yaml.tasks` 移除该 task；如果仍有 pending DES task，下一轮 `/design` 或 `/next` 再继续。
+7. 如果网络或上下文中断，新会话先读取 `current_task_id` 和当前 open task，按 `working_notes` 恢复，而不是重新生成全量技术方案。
+
 ## 规则
 
 1. 技术方案必须引用 PRD 路径和 requirement IDs。
-2. 每个 open task 必须包含 `id`、`title`、`status`、`summary`、`docs`、`allowed_paths`、`required_gates`、`acceptance_criteria` 和 `implementation_doc`。
+2. 每个 open task 必须包含 `id`、`title`、`status`、`summary`、`docs`、`allowed_paths`、`required_gates`、`acceptance_criteria` 和 `result_docs`；开发阶段 task 继续使用 `implementation_doc`。
 3. `plan.draft.yaml` 不得自动覆盖 `plan.yaml`。
 4. 风险或不清晰的问题按 `<harnessRoot>/pjsdlc_managed/policies/risk_matrix.yaml` 标记。
-5. 任务边界应足够小，能在一次开发执行内闭环；`implementation_doc` 应指向将被更新或新增的模块、子系统或核心数据流文档。
+5. 任务边界应足够小，能在一次设计执行内闭环；`result_docs` 应指向将被更新或新增的 architecture、tech plan、ADR 或 `plan.draft.yaml` 文件。
+6. `make validate-design` 是阶段出口 gate；如果还有 open DES task，不要请求进入 `SPRINTING`。
 
 ## 完成检查
 
 - [ ] 架构文档和技术方案已生成。
 - [ ] 相关接口契约和数据结构已明确。
+- [ ] 当前设计产出或切片工作已绑定 `plan.yaml` 中一个最小 `DES-*` task。
+- [ ] 当前 task 已从 `plan.yaml` 移除，或因中断/blocker 保留为可恢复 open task。
 - [ ] 已判断 architecture / tech plan / ADR 的语义切片边界。
 - [ ] 如果用户要求把完整技术方案切成 tech plan slices，已删除被替代的完整 tech plan file，并同步 `plan.draft.yaml` 引用。
 - [ ] task draft 字段完整且范围清晰。

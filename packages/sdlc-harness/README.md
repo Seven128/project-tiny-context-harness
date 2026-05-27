@@ -27,6 +27,7 @@ npx sdlc-harness init --adopt
 | Diagnostics | `npx sdlc-harness doctor` | Reports Harness root, package version, schema version and key managed paths. |
 | Validators | `npx sdlc-harness validate-*`, `make validate-current`, `make validate-harness` | Checks phase deliverables, active plan shape, prompt language contract and generated overview freshness. |
 | Lifecycle workflow | `<harnessRoot>/state/lifecycle.yaml`, `<harnessRoot>/state/plan.yaml`, `.docs/**` | Tracks REQUIREMENT_GATHERING, ARCHITECTING, SPRINTING, REVIEWING, TESTING, RELEASING and RFC_RECALIBRATION facts. |
+| Stage task control | `plan.yaml`, `make validate-plan`, `npx sdlc-harness validate-plan` | Keeps PRD generation/slicing in `PRD-*` tasks, architecture/tech-plan generation/slicing in `DES-*` tasks, and development in `DEV-*` tasks. |
 | Natural-language control | `AGENTS.md` plus workflow skills | Lets users say things like "continue", "start development", "run tests" or "requirements changed"; agents map these to workflow actions. |
 | Optional parallel execution contract | `plan.yaml#parallel_execution` | Enabled only when users explicitly request multi-agent, parallel or multi-worktree execution; supports runtime-managed subagents or user-orchestrated worker prompts. |
 | Workflow skills | `<harnessRoot>/skills/pjsdlc_*/SKILL.md` | Provides role prompts for product, architecture, development, implementation docs, review, testing, release and RFC recalibration. |
@@ -69,6 +70,10 @@ The default workflow is serial. Agents should only create `parallel_execution` i
 
 The CLI does not promise to automatically launch Codex agents. Workers do not need to communicate with each other; the main agent owns final fact-source updates such as PRD, plan, implementation docs, test results and generated overviews.
 
+## Stage Task Control
+
+Product and design work are also plan-controlled. Conversational PRD creation, existing document slicing, and fact-source-based synthesis should create or resume one small `PRD-*` or `DES-*` task in `plan.yaml`, write the current task's `result_docs`, update indexes/overviews, run `validate-plan`, and remove the task after completion. Phase exit validators reject remaining open tasks.
+
 ## Common Commands
 
 ```sh
@@ -77,6 +82,7 @@ npx sdlc-harness init --adopt
 npx sdlc-harness sync
 npx sdlc-harness upgrade
 npx sdlc-harness doctor
+npx sdlc-harness validate-plan
 make validate-current
 make validate-harness
 make docs-overview

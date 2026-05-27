@@ -45,8 +45,8 @@ Parallel Execution 是显式 opt-in：只有用户明确提出“并行”“多
 12. 用户自然语言要求继续、推进或下一步时，等价执行 `/next`。
 13. 用户自然语言要求进入下一阶段或检查是否可进入下一阶段时，等价执行 `/advance`。
 14. 用户自然语言表达需求或设计变化时，进入 RFC workflow。
-15. 用户输入 `/prd`，或自然语言要求“完善产品方案”“写 PRD”“我提供信息，你帮我完善产品方案”时，如果 `current_phase` 是 `REQUIREMENT_GATHERING`，调用产品方案工作流并更新 PRD、验收标准和 open questions；否则说明当前阶段冲突和推荐路径。
-16. 用户输入 `/design`，或自然语言要求“设计技术方案”“做架构方案”“根据 PRD 做技术方案”时，如果 `current_phase` 是 `ARCHITECTING`，调用架构和技术方案工作流并更新 architecture、tech plan 和 `plan.draft.yaml`；否则说明当前阶段冲突和推荐路径。
+15. 用户输入 `/prd`，或自然语言要求“完善产品方案”“写 PRD”“文档切片”“我提供信息，你帮我完善产品方案”时，如果 `current_phase` 是 `REQUIREMENT_GATHERING`，调用产品方案工作流；该工作流必须先创建或选择一个最小 `PRD-*` open task，再执行一个 PRD 生成或切片 task；否则说明当前阶段冲突和推荐路径。
+16. 用户输入 `/design`，或自然语言要求“设计技术方案”“做架构方案”“根据 PRD 做技术方案”“切技术方案”时，如果 `current_phase` 是 `ARCHITECTING`，调用架构和技术方案工作流；该工作流必须先创建或选择一个最小 `DES-*` open task，再执行一个 architecture / tech plan / `plan.draft.yaml` 生成或切片 task；否则说明当前阶段冲突和推荐路径。
 17. 用户输入 `/dev`，或自然语言要求“开始开发”“做当前任务”“做下一个任务”“继续开发下一个任务”时，如果 `current_phase` 是 `SPRINTING`，创建或选择一个最小 DEV task 并执行一个 task 闭环；否则说明当前阶段冲突和推荐路径。
 18. 用户输入 `/devloop`，或自然语言要求“开始循环：写任务，执行任务”“把开发循环跑完”“连续开发”时，如果 `current_phase` 是 `SPRINTING`，连续运行 `/dev` 循环，直到没有明确可做任务或遇到 blocker；否则说明当前阶段冲突和推荐路径。
 19. 用户自然语言要求跑测试或验证时，运行当前 task 或当前阶段的对应 gate。
@@ -59,7 +59,9 @@ Parallel Execution 是显式 opt-in：只有用户明确提出“并行”“多
 
 ## Plan Protocol
 
-每个 open task 都必须在 `plan.yaml` 中包含 `docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`；done/cancelled task 不长期留在当前 `plan.yaml`。完成后的产物事实以模块、子系统或核心数据流级 implementation doc 为准，动作历史以 git/PR/CI/release 系统作为 cold archive，`next_task_sequence` 负责继续分配后续 task id。
+每个 open task 都必须在 `plan.yaml` 中包含 `docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`；文档生产 task 使用 `result_docs` 指向本 task 产出的 PRD、architecture、tech plan、ADR 或 `plan.draft.yaml`，开发 task 使用 `implementation_doc` 指向模块级实现事实。done/cancelled task 不长期留在当前 `plan.yaml`。完成后的产物事实以对应 `.docs/**` slice、`plan.draft.yaml` 或模块级 implementation doc 为准，动作历史以 git/PR/CI/release 系统作为 cold archive，`next_task_sequence` 负责继续分配后续 task id。
+
+`REQUIREMENT_GATHERING`、`ARCHITECTING` 和 `SPRINTING` 都是单 task 推进：`/prd` 默认只完成一个 `PRD-*` task，`/design` 默认只完成一个 `DES-*` task，`/dev` 默认只完成一个 `DEV-*` task。`validate-plan` 用于检查当前 open task 合同是否完整；阶段出口 gate `validate-pm`、`validate-design` 和 `validate-dev` 都要求没有 open task 残留。
 
 `parallel_execution` 是可选顶层合同，缺省表示串行。启用后必须声明 `enabled`、`trigger`、`mode`、`phase`、`coordinator`、`workers` 和 `integration`；`SPRINTING` 并行还必须通过 `linked_task_id` 绑定当前 `current_task_id`。
 

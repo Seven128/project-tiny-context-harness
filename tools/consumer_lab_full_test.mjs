@@ -196,6 +196,7 @@ export async function runConsumerLabFullTest(rawOptions) {
   commandCheck("Toy project", "node:test fixture", "npm", ["test"]);
   commandCheck("CLI validators", "validate-harness", "npx", ["sdlc-harness", "validate-harness"]);
   commandCheck("CLI validators", "validate-current", "npx", ["sdlc-harness", "validate-current"]);
+  commandCheck("CLI validators", "validate-plan", "npx", ["sdlc-harness", "validate-plan"]);
   commandCheck("CLI validators", "validate-pm", "npx", ["sdlc-harness", "validate-pm"]);
   commandCheck("CLI validators", "validate-design", "npx", ["sdlc-harness", "validate-design"]);
   commandCheck("CLI validators", "validate-dev final empty plan", "npx", ["sdlc-harness", "validate-dev"]);
@@ -626,7 +627,7 @@ async function verifyStaticWorkflowText(labDir, add) {
   const agents = await readFile(path.join(labDir, "AGENTS.md"), "utf8");
   const manager = await readFile(path.join(labDir, ".codex/skills/pjsdlc_manager/SKILL.md"), "utf8");
   const text = `${agents}\n${manager}`;
-  const required = ["/status", "/next", "/dev", "/test", "自然语言", "active_skill"];
+  const required = ["/status", "/next", "/dev", "/test", "自然语言", "active_skill", "PRD-*", "DES-*", "validate-plan"];
   const missing = required.filter((needle) => !text.includes(needle));
   add({
     area: "Natural-language control",

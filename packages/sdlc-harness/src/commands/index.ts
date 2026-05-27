@@ -16,6 +16,7 @@ export const commands: Record<string, CommandHandler> = {
   validate,
   "validate-harness": (args) => validate(["validate-harness", ...args]),
   "validate-current": (args) => validate(["validate-current", ...args]),
+  "validate-plan": (args) => validate(["validate-plan", ...args]),
   "validate-pm": (args) => validate(["validate-pm", ...args]),
   "validate-design": (args) => validate(["validate-design", ...args]),
   "validate-dev": (args) => validate(["validate-dev", ...args]),
@@ -30,5 +31,6 @@ export function help(): void {
   upgrade              Run migrations and then sync
   doctor               Diagnose project configuration and drift
   validate <gate>      Run a Harness validation gate
+  validate-plan        Validate plan.yaml shape while allowing the current open task
   package <subcommand> Maintain package canonical source`);
 }

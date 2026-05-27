@@ -1,8 +1,19 @@
 #!/usr/bin/env python3
-from harness_utils import combined_text, contains_any, markdown_deliverables, require, run_main
+from harness_utils import (
+    combined_text,
+    contains_any,
+    load_plan,
+    markdown_deliverables,
+    run_main,
+    require,
+    validate_plan_contract,
+)
 
 
 def main() -> None:
+    plan = load_plan()
+    validate_plan_contract(plan, allow_open=False)
+
     docs = markdown_deliverables(".docs/01_product")
     require(docs, "No PRD deliverables found in .docs/01_product/")
     text = combined_text(docs)

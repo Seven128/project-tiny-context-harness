@@ -15,8 +15,10 @@ phases:
     role: "pm"
     skill: "pjsdlc_pm_prd"
     inputs:
+      - "<harnessRoot>/state/plan.yaml"
       - ".docs/00_raw/"
     outputs:
+      - "<harnessRoot>/state/plan.yaml"
       - ".docs/01_product/"
       - ".docs/INDEX.md"
     gates:
@@ -28,9 +30,11 @@ phases:
     role: "architect"
     skill: "pjsdlc_architect_design"
     inputs:
+      - "<harnessRoot>/state/plan.yaml"
       - ".docs/01_product/"
       - ".docs/02_architecture/"
     outputs:
+      - "<harnessRoot>/state/plan.yaml"
       - ".docs/02_architecture/"
       - ".docs/03_tech_plan/"
       - "<harnessRoot>/state/plan.draft.yaml"

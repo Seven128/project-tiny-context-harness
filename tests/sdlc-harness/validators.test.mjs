@@ -53,7 +53,7 @@ tasks: []
     "utf8"
   );
 
-  for (const gate of ["validate-harness", "validate-pm", "validate-design", "validate-dev"]) {
+  for (const gate of ["validate-harness", "validate-plan", "validate-pm", "validate-design", "validate-dev"]) {
     const report = await runValidator(root, gate);
     assert.deepEqual(report.errors, [], gate);
   }
@@ -116,6 +116,36 @@ tasks:
   devReport = await runValidator(root, "validate-dev");
   assert.match(devReport.errors.join("\n"), /Open tasks remain: DEV-002/);
   assert.doesNotMatch(devReport.errors.join("\n"), /missing allowed_paths/);
+
+  await writeFile(
+    path.join(root, ".harness/state/plan.yaml"),
+    `current_task_id: PRD-004
+next_task_sequence: 5
+tasks:
+  - id: PRD-004
+    title: Draft one PRD slice
+    status: in_progress
+    summary: Active document-production task
+    docs:
+      raw:
+        - .docs/00_raw/request.md
+    allowed_paths:
+      - ".docs/01_product/prd.md"
+      - ".docs/INDEX.md"
+      - ".harness/state/plan.yaml"
+    required_gates:
+      - "npx sdlc-harness validate-plan"
+    acceptance_criteria:
+      - "One PRD slice is updated."
+    result_docs:
+      - .docs/01_product/prd.md
+`,
+    "utf8"
+  );
+  const planReport = await runValidator(root, "validate-plan");
+  assert.deepEqual(planReport.errors, [], "validate-plan allows open document task with result_docs");
+  const pmWithOpenTask = await runValidator(root, "validate-pm");
+  assert.match(pmWithOpenTask.errors.join("\n"), /Open tasks remain: PRD-004/);
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
