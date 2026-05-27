@@ -1,11 +1,11 @@
 # .docs/04_implementation overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 6c8518161df612b6 -->
+<!-- source-hash: 42a083543dae829c -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `6c8518161df612b6`
+Source hash: `42a083543dae829c`
 
 ## Source Slices
 
@@ -41,7 +41,7 @@ Source: [harness_package/cli_distribution_and_lifecycle.md](harness_package/cli_
 
 - `agent-project-sdlc` npm package exposes the `sdlc-harness` CLI binary.
 - `init` / `init --adopt` create or adopt a project Harness without overwriting user-owned project code.
-- Fresh `init` state routes new projects to `SPRINTING` with `active_role: "developer"` and `active_skill: "pjsdlc_dev_sprint"`.
+- Fresh `init` lifecycle routes new projects to `SPRINTING` with `active_role: "developer"` and `active_skill: "pjsdlc_dev_sprint"`; generated plan files do not duplicate `current_phase`.
 - `sync` materializes managed Harness assets from package canonical assets into the selected `<harnessRoot>`.
 - `upgrade` refreshes `<harnessRoot>/config.yaml` core package metadata, runs schema migrations and then syncs managed assets.
 - `doctor` reports Harness config, managed file drift, override state and suggested gates.
@@ -92,12 +92,13 @@ Existing project runs sdlc-harness upgrade
 ## 5. 关键实现逻辑
 
 - Agent selection happens before folder selection. `Codex` is the default and writes `.codex`; `Other` asks for a custom folder and defaults to `.agent`.
-- New project lifecycle scaffolding starts at `SPRINTING` and allows `REVIEWING` next, matching the generated `plan.yaml` / `plan.draft.yaml` sprint task protocol.
+- New project lifecycle scaffolding starts at `SPRINTING` and allows `REVIEWING` next. Generated `plan.yaml` stores `current_task_id`, `next_task_sequence` and `tasks`; generated `plan.draft.yaml` stores only draft sequencing and tasks.
 - Explicit CLI flags and existing JSON config have higher priority than interactive defaults.
 - Managed files use package metadata blocks and merge strategies instead of blind overwrites.
 - Package name and CLI name are intentionally separate: npm installs `agent-project-sdlc`, users run `sdlc-harness`.
 - Migrations preserve compatibility with earlier `.harness`, `.agents` and `.agent` layouts while converging new installs on the configured `<harnessRoot>`.
 - `migrateConfig` rewrites `core.package` and `core.version` from the installed package metadata so package upgrades do not leave stale config versions.
+- Plan migrations remove stale `current_phase` from active and draft plans, remove draft `current_task_id`, and strip duplicate `phase` / `linked_task_id` from `parallel_execution`.
 - Validation commands mirror the Python Harness gates closely enough for package consumers to run health checks without depending on this authoring workspace.
 
 ## 6. 与技术方案的偏移
@@ -110,8 +111,8 @@ Existing project runs sdlc-harness upgrade
 
 | 测试（Test） | 覆盖范围（Coverage） | 最近记录结果（Result） |
 |---|---|---|
-| `npm test` | TypeScript build and package CLI regression tests | PASS for `TASK-058` on 2026-05-28 |
-| `tests/sdlc-harness/sync-init-doctor.test.mjs` | init, adopt, sync and doctor behavior | PASS for `DEV-054`; asserts generated lifecycle starts at `SPRINTING` |
+| `npm test` | TypeScript build and package CLI regression tests | PASS for `TASK-059` on 2026-05-28 |
+| `tests/sdlc-harness/sync-init-doctor.test.mjs` | init, adopt, sync and doctor behavior | PASS for `TASK-059`; asserts generated lifecycle starts at `SPRINTING` and plan files do not duplicate phase |
 | `tools/consumer_lab_full_test.mjs` | full consumer lab lifecycle smoke coverage | Checks generated `.codex/state/lifecycle.yaml` routes to `pjsdlc_dev_sprint` |
 | `tests/sdlc-harness/upgrade.test.mjs` | migrations and automatic sync | PASS in package regression suite |
 | `tests/sdlc-harness/harness-root.test.mjs` | root resolution and config precedence | PASS in package regression suite |
@@ -129,6 +130,7 @@ Existing project runs sdlc-harness upgrade
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Migrated legacy task-grain implementation docs into module-level facts. |
 | 2026-05-27 | `DEV-054` | Pending implementation commit | Changed fresh init lifecycle defaults from `REQUIREMENT_GATHERING` routing to `SPRINTING` developer routing. |
 | 2026-05-28 | `TASK-058` | Pending implementation commit | Updated upgrade config migration to refresh `core.version` from the current package version. |
+| 2026-05-28 | `TASK-059` | Pending implementation commit | Removed duplicate current phase state from generated and migrated plan files. |
 
 ## 9. 后续维护注意事项
 
@@ -403,8 +405,8 @@ Author edits Harness source files
 
 | 测试（Test） | 覆盖范围（Coverage） | 最近记录结果（Result） |
 |---|---|---|
-| `node packages/sdlc-harness/dist/cli.js package sync-source` | Regenerate package canonical assets from authoring source | PASS in source-sync and release tasks |
-| `node packages/sdlc-harness/dist/cli.js package check-source` | Asset drift detection | PASS in source-sync, release and DEV-043 gates |
+| `node packages/sdlc-harness/dist/cli.js package sync-source` | Regenerate package canonical assets from authoring source | PASS for `TASK-059`; changed 25 assets |
+| `node packages/sdlc-harness/dist/cli.js package check-source` | Asset drift detection | PASS for `TASK-059` |
 | `tests/sdlc-harness/package-source.test.mjs` | Mapping modes, excludes and drift errors | PASS in `npm test` |
 | `make validate-harness` | Prompt language and generated overview consistency | PASS for DEV-043 |
 
@@ -417,6 +419,7 @@ Author edits Harness source files
 | 2026-05-25 | `DEV-037` - `DEV-039` | Historical implementation commits | Added authoring Skill boundary and excluded authoring assets from package sync. |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Consolidated source-sync implementation facts from legacy task docs. |
 | 2026-05-27 | Direct user request | Working tree | Added root README as a packaged docs asset for installed-package agent reads. |
+| 2026-05-28 | `TASK-059` | Pending implementation commit | Synced source changes that remove duplicate phase/task state from distributed assets. |
 
 ## 9. 后续维护注意事项
 
@@ -865,7 +868,7 @@ Source: [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: lifecycle state, plan state, task execution protocol and gate evidence
-- Updated by task: `DEV-010`, `DEV-011`, `DEV-018`, `DEV-019`, `DEV-024`, `DEV-025`, `DEV-026`, `DEV-027`, `DEV-028`, `DEV-043`, `DEV-050`, `DEV-056`, `TASK-057`
+- Updated by task: `DEV-010`, `DEV-011`, `DEV-018`, `DEV-019`, `DEV-024`, `DEV-025`, `DEV-026`, `DEV-027`, `DEV-028`, `DEV-043`, `DEV-050`, `DEV-056`, `TASK-057`, `TASK-059`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`
 - Linked RFC: `RFC_004`, `RFC_005`, `RFC_010`, `RFC_011`, `RFC_012`, `RFC_013`, `RFC_014`, `RFC_015`
@@ -873,15 +876,16 @@ Source: [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and
 
 ## 2. 当前实现范围
 
-- `.codex/state/lifecycle.yaml` stores only the current routing state.
-- `.codex/state/plan.yaml` stores the current and future short-lived task contract across all workflow phases.
+- `.codex/state/lifecycle.yaml` stores the single source for current phase routing state.
+- `.codex/state/plan.yaml` stores the current and future short-lived task contract across all workflow phases, without duplicating `current_phase`.
+- `.codex/state/plan.draft.yaml` stores draft tasks and `next_task_sequence`, without `current_phase` or `current_task_id`.
 - `TASK-*` is the new task id model; `phase` identifies `REQUIREMENT_GATHERING`, `ARCHITECTING`, `SPRINTING`, `REVIEWING`, `TESTING`, `RELEASING` or `RFC_RECALIBRATION`; historical `PRD-*`, `DES-*` and `DEV-*` ids remain validator-compatible provenance.
 - `next_task_sequence` preserves future `TASK-*` id allocation after done tasks are removed.
 - Document, review, test, release and RFC tasks use `result_docs` for planned fact-source outputs; development tasks use `implementation_doc`.
 - Checkpoint files, archive directories, gate result logs and lifecycle history are no longer active state facts.
 - A SPRINTING task completes in two commits: implementation commit while the task is still present, then completion ledger commit after removing the task.
 - Past task details are cold archive and only used for explicit forensic/audit/regression requests.
-- `parallel_execution` is an optional top-level plan contract; when omitted the workflow remains serial.
+- `parallel_execution` is an optional top-level plan contract; when omitted the workflow remains serial. It does not store `phase` or `linked_task_id`; validators infer phase from lifecycle and task selection from `current_task_id`.
 
 ## 3. 真实代码结构
 
@@ -890,6 +894,7 @@ Source: [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and
 | `AGENTS.md` | Project-level protocol | Plan Protocol, work rules, natural-language routing |
 | `.codex/state/lifecycle.yaml` | Current phase routing | `current_phase`, `active_skill`, `allowed_next_phases` |
 | `.codex/state/plan.yaml` | Active short-term task contract | `current_task_id`, `next_task_sequence`, `tasks[]` |
+| `.codex/state/plan.draft.yaml` | Draft task contract | `next_task_sequence`, `tasks[]` |
 | `.codex/pjsdlc_managed/templates/PLAN_TEMPLATE.yaml` | New-task template | open task fields, `result_docs` and `implementation_doc` examples |
 | `.codex/skills/pjsdlc_pm_prd/SKILL.md` | Product task prompt | `TASK-*` document-production task protocol with `phase: "REQUIREMENT_GATHERING"` |
 | `.codex/skills/pjsdlc_architect_design/SKILL.md` | Design task prompt | `TASK-*` document-production task protocol with `phase: "ARCHITECTING"` |
@@ -947,6 +952,9 @@ User explicitly asks for parallel / multi-agent / multi-worktree
 ## 5. 关键实现逻辑
 
 - `plan.yaml` is intentionally short lived. It is not a historical task database.
+- `current_phase` belongs only to `lifecycle.yaml`; `plan.yaml`, `plan.draft.yaml` and `parallel_execution` must not duplicate it.
+- `plan.draft.yaml` is not active execution state and must not contain `current_task_id`.
+- Field audit: `active_role`, `active_skill`, `current_milestone`, `blocked_reason`, `suspended_phase` and `allowed_next_phases` are lifecycle-only; `current_task_id` and `next_task_sequence` are plan-only; `tasks[].phase` is semantic task classification rather than current lifecycle state and remains on each task.
 - Every phase task is task-controlled: one `TASK-*` task should produce one bounded document slice, review batch, test evidence set, release artifact set, RFC impact slice or development change.
 - `validate-plan` permits open tasks and checks their shape; phase exit gates reject remaining open tasks.
 - `allowed_paths`, `required_gates` and `working_notes` are execution-time constraints, not a long-term query API.
@@ -954,7 +962,7 @@ User explicitly asks for parallel / multi-agent / multi-worktree
 - `lifecycle.yaml` does not store phase history. Phase history is reconstructed from git, PRs, CI or release evidence only when explicitly needed.
 - `/dev` runs one task and stops. `/devloop` repeats `/dev` until no clear task remains or a blocker appears.
 - The workflow assumes a singleton project-level Harness collaboration boundary; concurrent agents must coordinate through git and active state rather than independent archive files.
-- Parallel execution is opt-in only. `trigger` must be `user_requested`, `mode` must be `runtime_managed` or `user_orchestrated`, and `SPRINTING` contracts must bind `linked_task_id` to `current_task_id`.
+- Parallel execution is opt-in only. `trigger` must be `user_requested`, `mode` must be `runtime_managed` or `user_orchestrated`, and validators reject duplicate `phase` / `linked_task_id` fields in the contract.
 - Workers do not own final fact sources. PRD, plan state, implementation docs, test results, generated overviews and total gate evidence are integrated by the main agent.
 
 ## 6. 与技术方案的偏移
@@ -966,12 +974,12 @@ User explicitly asks for parallel / multi-agent / multi-worktree
 
 | 测试（Test） | 覆盖范围（Coverage） | 最近记录结果（Result） |
 |---|---|---|
-| `python3 tools/validate_plan.py --allow-open` | Current plan shape while a task is in progress | PASS for DEV-056 |
+| `python3 tools/validate_plan.py --allow-open` | Current plan shape while a task is in progress | PASS for TASK-059 |
 | `python3 tools/validate_plan.py` | Current plan shape and no remaining open tasks | PASS in Harness gates |
 | `python3 tools/validate_allowed_paths.py` | Current worktree changes within active task boundary | PASS in task gates |
-| `tests/sdlc-harness/validators.test.mjs` | Package validator plan task and optional parallel contract acceptance/failure cases | PASS for DEV-056 |
+| `tests/sdlc-harness/validators.test.mjs` | Package validator plan task and optional parallel contract acceptance/failure cases | PASS for TASK-059 |
 | `make validate-current` | Phase-specific gate dispatch | PASS in sprint/review/test transitions |
-| `npm test --workspace agent-project-sdlc` | Package migration and validator parity | PASS for DEV-056; 9 tests passed |
+| `npm test --workspace agent-project-sdlc` | Package migration and validator parity | PASS for TASK-059; 9 tests passed |
 | `make validate-harness` | Prompt language and generated overview consistency | PASS for DEV-043 |
 
 ## 8. 变更记录（Change Log）
@@ -985,6 +993,7 @@ User explicitly asks for parallel / multi-agent / multi-worktree
 | 2026-05-27 | `DEV-050` | DEV-050 implementation commit | Added opt-in `parallel_execution` contract for multi-agent/worktree coordination. |
 | 2026-05-27 | `DEV-056` | Working tree | Extended `plan.yaml` task control to PRD and design document generation, slicing and fact-source synthesis. |
 | 2026-05-27 | `TASK-057` | Working tree | Unified all new workflow tasks under `TASK-*` with `phase`, expanded plan control to review/test/release/RFC, and kept legacy task prefixes compatible. |
+| 2026-05-28 | `TASK-059` | Pending implementation commit | Removed duplicate current phase state from plan files and parallel execution contracts. |
 
 ## 9. 后续维护注意事项
 

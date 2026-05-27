@@ -64,8 +64,8 @@ async function createProjectState(projectRoot: string, root: string, report: str
       harnessPath(root, "state", "lifecycle.yaml"),
       `project_name: "Project"\nversion: "v0.1"\ncurrent_phase: "SPRINTING"\nactive_role: "developer"\nactive_skill: "pjsdlc_dev_sprint"\ncurrent_milestone: "MVP"\nblocked_reason: ""\nsuspended_phase: ""\nallowed_next_phases:\n  - "REVIEWING"\n`
     ],
-    [harnessPath(root, "state", "plan.yaml"), `current_phase: "SPRINTING"\ncurrent_task_id: ""\nnext_task_sequence: 1\ntasks: []\n`],
-    [harnessPath(root, "state", "plan.draft.yaml"), `current_phase: "SPRINTING"\ncurrent_task_id: ""\nnext_task_sequence: 1\ntasks: []\n`],
+    [harnessPath(root, "state", "plan.yaml"), `current_task_id: ""\nnext_task_sequence: 1\ntasks: []\n`],
+    [harnessPath(root, "state", "plan.draft.yaml"), `next_task_sequence: 1\ntasks: []\n`],
     [harnessPath(root, "state", "memory.md"), "# Project Memory\n\n短期执行计划写入 plan.yaml；长期稳定知识简短记录在这里，并链接到 `.docs/` 正式出处。\n"]
   ];
   for (const [relative, content] of files) {

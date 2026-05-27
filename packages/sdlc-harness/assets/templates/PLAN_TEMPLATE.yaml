@@ -1,4 +1,3 @@
-current_phase: "REQUIREMENT_GATHERING"
 current_task_id: "TASK-001"
 next_task_sequence: 2
 # Optional. Omit this block for normal serial workflow. Only add it when the
@@ -7,9 +6,7 @@ next_task_sequence: 2
 #   enabled: true
 #   trigger: "user_requested"
 #   mode: "user_orchestrated" # or "runtime_managed" when the current agent runtime can spawn subagents
-#   phase: "SPRINTING"
 #   coordinator: "main_agent"
-#   linked_task_id: "TASK-001"
 #   workers:
 #     - id: "worker-feature"
 #       writes_repo: true

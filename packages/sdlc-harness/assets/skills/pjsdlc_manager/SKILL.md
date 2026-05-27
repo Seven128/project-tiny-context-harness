@@ -63,7 +63,7 @@ Parallel Execution 是显式 opt-in：只有用户明确提出“并行”“多
 
 `/prd`、`/design`、`/dev`、`/review`、`/test`、`/release` 和 `/rfc` 都是单 task 推进：默认只完成一个 `TASK-*`。`validate-plan` 用于检查当前 open task 合同是否完整；阶段出口 gate `validate-pm`、`validate-design`、`validate-dev`、`validate-review`、`validate-test`、`validate-release` 和 `validate-rfc` 都要求没有 open task 残留。
 
-`parallel_execution` 是可选顶层合同，缺省表示串行。启用后必须声明 `enabled`、`trigger`、`mode`、`phase`、`coordinator`、`workers` 和 `integration`；`SPRINTING` 并行还必须通过 `linked_task_id` 绑定当前 `current_task_id`。
+`parallel_execution` 是可选顶层合同，缺省表示串行。启用后必须声明 `enabled`、`trigger`、`mode`、`coordinator`、`workers` 和 `integration`；不要在合同内重复保存 `phase` 或 `linked_task_id`，当前阶段来自 lifecycle 的 `current_phase`，当前任务来自 plan 的 `current_task_id`。
 
 `lifecycle.yaml` 和 `plan.yaml` 只用于当前可执行状态。默认不要读取过去 phase/task/gate 执行流水；只有用户明确要求 forensic/audit/regression 追溯时，才临时查询 git、PR、CI 或 release 记录。
 

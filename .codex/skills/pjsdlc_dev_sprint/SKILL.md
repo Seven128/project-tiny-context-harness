@@ -53,7 +53,7 @@ description: Use during SPRINTING to execute one task from plan.yaml, respecting
 - 如果一个任务实际变成多个独立实现边界，应停止扩大范围，拆分后续任务或回到任务规划。
 - `/dev` 是单任务执行入口：没有 open task 时，先根据 PRD、architecture、tech plan 和 `plan.draft.yaml` 创建一个最小 `TASK-*` open task；已有 open task 时，直接执行该 task；完成后停止。
 - `/devloop` 是连续执行入口：每完成一个 task 并 push 两段提交后，重新读取 lifecycle、plan、PRD、architecture 和 tech plan，再决定是否创建/执行下一个最小 task；没有明确任务或出现 blocker 时停止并报告。
-- Parallel Execution 是当前 task 的可选协作方式，不替代 task completion protocol；`SPRINTING` 并行必须用 `parallel_execution.linked_task_id` 绑定当前 `current_task_id`。
+- Parallel Execution 是当前 task 的可选协作方式，不替代 task completion protocol；`SPRINTING` 并行从 lifecycle 的 `current_phase` 和 plan 的 `current_task_id` 推断上下文，不在 `parallel_execution` 内重复保存。
 
 ## Plan Protocol
 

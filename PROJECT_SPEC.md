@@ -255,10 +255,9 @@ make validate-doc-overviews
 
 ## 七、任务状态与开发循环
 ### 7.1 plan.yaml
-`.codex/state/plan.yaml` 是阶段任务的机器可读短期执行记忆，只保留当前和未来任务。open task 直接保存当前任务需要的执行合同；任务完成后从 `plan.yaml` 移除，避免过往任务变成无效上下文。所有阶段的 Agent 主任务都使用同一个 task contract：产品方案生成、既有文档切片、事实源合成、架构设计、技术方案生成、开发实现、Review、测试、发布准备和 RFC recalibration 都应拆成足够小的 `TASK-*` open task，并通过 `phase` 字段标明所属阶段。历史 `PRD-*`、`DES-*`、`DEV-*` 前缀只作为兼容旧记录和旧提交的 provenance。`next_task_sequence` 负责在历史 task 被移除后继续分配后续 `TASK-*` id，避免 id 冲突。典型 open task 字段：
+`.codex/state/plan.yaml` 是阶段任务的机器可读短期执行记忆，只保留当前和未来任务。`current_phase` 只保存在 `.codex/state/lifecycle.yaml`，`plan.yaml` 不重复保存当前阶段。open task 直接保存当前任务需要的执行合同；任务完成后从 `plan.yaml` 移除，避免过往任务变成无效上下文。所有阶段的 Agent 主任务都使用同一个 task contract：产品方案生成、既有文档切片、事实源合成、架构设计、技术方案生成、开发实现、Review、测试、发布准备和 RFC recalibration 都应拆成足够小的 `TASK-*` open task，并通过 `phase` 字段标明所属阶段。历史 `PRD-*`、`DES-*`、`DEV-*` 前缀只作为兼容旧记录和旧提交的 provenance。`next_task_sequence` 负责在历史 task 被移除后继续分配后续 `TASK-*` id，避免 id 冲突。典型 open task 字段：
 
 ```yaml
-current_phase: "REQUIREMENT_GATHERING"
 current_task_id: "TASK-003"
 next_task_sequence: 4
 tasks:
@@ -293,22 +292,19 @@ tasks:
 task 完成后不再长期保留 done task 字段，当前 plan 回到只含待做任务或空列表：
 
 ```yaml
-current_phase: "SPRINTING"
 current_task_id: ""
 next_task_sequence: 4
 tasks: []
 ```
 
-`parallel_execution` 是可选顶层合同，缺省不存在表示串行。只有用户明确提出“并行”“多 agent”或“多 worktree”时，才允许加入该合同。`runtime_managed` 用于当前 Agent runtime 真实具备 subagent 能力的情况；`user_orchestrated` 用于用户手动打开多个对话或 worktree 并粘贴 worker prompt 的情况。Harness v1 不承诺 CLI 自动启动 Codex agent。
+`parallel_execution` 是可选顶层合同，缺省不存在表示串行。只有用户明确提出“并行”“多 agent”或“多 worktree”时，才允许加入该合同。`parallel_execution` 不保存 `phase` 或 `linked_task_id`；当前阶段从 lifecycle 的 `current_phase` 读取，当前任务从 plan 的 `current_task_id` 读取。`runtime_managed` 用于当前 Agent runtime 真实具备 subagent 能力的情况；`user_orchestrated` 用于用户手动打开多个对话或 worktree 并粘贴 worker prompt 的情况。Harness v1 不承诺 CLI 自动启动 Codex agent。
 
 ```yaml
 parallel_execution:
   enabled: true
   trigger: "user_requested"
   mode: "user_orchestrated"
-  phase: "SPRINTING"
   coordinator: "main_agent"
-    linked_task_id: "TASK-003"
   workers:
     - id: "worker-auth"
       writes_repo: true

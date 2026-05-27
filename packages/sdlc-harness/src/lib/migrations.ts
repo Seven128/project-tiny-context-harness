@@ -39,8 +39,8 @@ export async function runMigrations(projectRoot: string): Promise<MigrationRepor
   await migrateConfig(projectRoot, root, report);
   await migrateLegacyManagedPaths(projectRoot, root, report);
   await migrateLifecycle(projectRoot, root, report);
-  await migratePlan(projectRoot, root, report, "plan.yaml", "tasks.yaml");
-  await migratePlan(projectRoot, root, report, "plan.draft.yaml", "tasks.draft.yaml");
+  await migratePlan(projectRoot, root, report, "plan.yaml", "tasks.yaml", { activePlan: true });
+  await migratePlan(projectRoot, root, report, "plan.draft.yaml", "tasks.draft.yaml", { activePlan: false });
   await removeLegacyGateResults(projectRoot, root, report);
   await removeLegacyCheckpoints(projectRoot, root, report);
   await ensureMemory(projectRoot, root, report);
@@ -264,7 +264,8 @@ async function migratePlan(
   root: string,
   report: MigrationReport,
   planFileName: string,
-  legacyFileName: string
+  legacyFileName: string,
+  options: { activePlan: boolean }
 ): Promise<void> {
   const relativePlanPath = harnessPath(root, "state", planFileName);
   const planPath = path.join(projectRoot, relativePlanPath);
@@ -276,17 +277,31 @@ async function migratePlan(
   }
   const data = (parseYaml(await readText(sourcePath)) ?? {}) as Record<string, unknown>;
   let changed = false;
-  if (!("current_phase" in data)) {
-    data.current_phase = "SPRINTING";
+  if ("current_phase" in data) {
+    delete data.current_phase;
     changed = true;
   }
-  if (!("current_task_id" in data)) {
+  if (options.activePlan && !("current_task_id" in data)) {
     data.current_task_id = "";
+    changed = true;
+  }
+  if (!options.activePlan && "current_task_id" in data) {
+    delete data.current_task_id;
     changed = true;
   }
   if (!Array.isArray(data.tasks)) {
     data.tasks = [];
     changed = true;
+  }
+  if (isRecord(data.parallel_execution)) {
+    if ("phase" in data.parallel_execution) {
+      delete data.parallel_execution.phase;
+      changed = true;
+    }
+    if ("linked_task_id" in data.parallel_execution) {
+      delete data.parallel_execution.linked_task_id;
+      changed = true;
+    }
   }
   if (Array.isArray(data.tasks)) {
     const retainedTasks: unknown[] = [];
@@ -334,10 +349,12 @@ async function migratePlan(
       changed = true;
     }
   }
-  const currentTaskId = String(data.current_task_id ?? "");
-  if (currentTaskId && !taskById(data, currentTaskId)) {
-    data.current_task_id = "";
-    changed = true;
+  if (options.activePlan) {
+    const currentTaskId = String(data.current_task_id ?? "");
+    if (currentTaskId && !taskById(data, currentTaskId)) {
+      data.current_task_id = "";
+      changed = true;
+    }
   }
   if (changed || sourcePath !== planPath) {
     if (await writeTextIfChanged(planPath, stringifyYaml(data))) {

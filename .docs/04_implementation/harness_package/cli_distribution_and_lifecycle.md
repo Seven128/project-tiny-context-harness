@@ -14,7 +14,7 @@
 
 - `agent-project-sdlc` npm package exposes the `sdlc-harness` CLI binary.
 - `init` / `init --adopt` create or adopt a project Harness without overwriting user-owned project code.
-- Fresh `init` state routes new projects to `SPRINTING` with `active_role: "developer"` and `active_skill: "pjsdlc_dev_sprint"`.
+- Fresh `init` lifecycle routes new projects to `SPRINTING` with `active_role: "developer"` and `active_skill: "pjsdlc_dev_sprint"`; generated plan files do not duplicate `current_phase`.
 - `sync` materializes managed Harness assets from package canonical assets into the selected `<harnessRoot>`.
 - `upgrade` refreshes `<harnessRoot>/config.yaml` core package metadata, runs schema migrations and then syncs managed assets.
 - `doctor` reports Harness config, managed file drift, override state and suggested gates.
@@ -65,12 +65,13 @@ Existing project runs sdlc-harness upgrade
 ## 5. 关键实现逻辑
 
 - Agent selection happens before folder selection. `Codex` is the default and writes `.codex`; `Other` asks for a custom folder and defaults to `.agent`.
-- New project lifecycle scaffolding starts at `SPRINTING` and allows `REVIEWING` next, matching the generated `plan.yaml` / `plan.draft.yaml` sprint task protocol.
+- New project lifecycle scaffolding starts at `SPRINTING` and allows `REVIEWING` next. Generated `plan.yaml` stores `current_task_id`, `next_task_sequence` and `tasks`; generated `plan.draft.yaml` stores only draft sequencing and tasks.
 - Explicit CLI flags and existing JSON config have higher priority than interactive defaults.
 - Managed files use package metadata blocks and merge strategies instead of blind overwrites.
 - Package name and CLI name are intentionally separate: npm installs `agent-project-sdlc`, users run `sdlc-harness`.
 - Migrations preserve compatibility with earlier `.harness`, `.agents` and `.agent` layouts while converging new installs on the configured `<harnessRoot>`.
 - `migrateConfig` rewrites `core.package` and `core.version` from the installed package metadata so package upgrades do not leave stale config versions.
+- Plan migrations remove stale `current_phase` from active and draft plans, remove draft `current_task_id`, and strip duplicate `phase` / `linked_task_id` from `parallel_execution`.
 - Validation commands mirror the Python Harness gates closely enough for package consumers to run health checks without depending on this authoring workspace.
 
 ## 6. 与技术方案的偏移
@@ -83,8 +84,8 @@ Existing project runs sdlc-harness upgrade
 
 | 测试（Test） | 覆盖范围（Coverage） | 最近记录结果（Result） |
 |---|---|---|
-| `npm test` | TypeScript build and package CLI regression tests | PASS for `TASK-058` on 2026-05-28 |
-| `tests/sdlc-harness/sync-init-doctor.test.mjs` | init, adopt, sync and doctor behavior | PASS for `DEV-054`; asserts generated lifecycle starts at `SPRINTING` |
+| `npm test` | TypeScript build and package CLI regression tests | PASS for `TASK-059` on 2026-05-28 |
+| `tests/sdlc-harness/sync-init-doctor.test.mjs` | init, adopt, sync and doctor behavior | PASS for `TASK-059`; asserts generated lifecycle starts at `SPRINTING` and plan files do not duplicate phase |
 | `tools/consumer_lab_full_test.mjs` | full consumer lab lifecycle smoke coverage | Checks generated `.codex/state/lifecycle.yaml` routes to `pjsdlc_dev_sprint` |
 | `tests/sdlc-harness/upgrade.test.mjs` | migrations and automatic sync | PASS in package regression suite |
 | `tests/sdlc-harness/harness-root.test.mjs` | root resolution and config precedence | PASS in package regression suite |
@@ -102,6 +103,7 @@ Existing project runs sdlc-harness upgrade
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Migrated legacy task-grain implementation docs into module-level facts. |
 | 2026-05-27 | `DEV-054` | Pending implementation commit | Changed fresh init lifecycle defaults from `REQUIREMENT_GATHERING` routing to `SPRINTING` developer routing. |
 | 2026-05-28 | `TASK-058` | Pending implementation commit | Updated upgrade config migration to refresh `core.version` from the current package version. |
+| 2026-05-28 | `TASK-059` | Pending implementation commit | Removed duplicate current phase state from generated and migrated plan files. |
 
 ## 9. 后续维护注意事项
 

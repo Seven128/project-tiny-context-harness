@@ -14,8 +14,8 @@ export interface ValidatorReport {
 
 type Validator = (projectRoot: string) => Promise<ValidatorReport>;
 const PARALLEL_MODES = new Set(["runtime_managed", "user_orchestrated"]);
-const PARALLEL_PHASES = new Set(["REQUIREMENT_GATHERING", "SPRINTING", "TESTING"]);
 const TASK_PHASES = new Set(["REQUIREMENT_GATHERING", "ARCHITECTING", "SPRINTING", "REVIEWING", "TESTING", "RELEASING", "RFC_RECALIBRATION"]);
+const PARALLEL_ALLOWED_PHASES = new Set(["REQUIREMENT_GATHERING", "SPRINTING", "TESTING"]);
 
 const validators: Record<string, Validator> = {
   "validate-harness": validateHarness,
@@ -170,7 +170,12 @@ async function validatePlanState(projectRoot: string, allowOpen: boolean): Promi
   const errors: string[] = [];
   const root = await harnessRoot(projectRoot);
   const tasksData = await readYamlObject(path.join(projectRoot, root, "state", "plan.yaml"));
-  validateParallelExecutionContract(tasksData, errors);
+  const lifecycle = await readYamlObject(path.join(projectRoot, root, "state", "lifecycle.yaml"));
+  const currentPhase = String(lifecycle.current_phase ?? "");
+  if ("current_phase" in tasksData) {
+    errors.push("plan.yaml must not define current_phase; lifecycle.yaml is the single source for current_phase");
+  }
+  validateParallelExecutionContract(tasksData, currentPhase, errors);
   const tasks = Array.isArray(tasksData.tasks) ? (tasksData.tasks as Array<Record<string, unknown>>) : [];
   const nextTaskSequence = tasksData.next_task_sequence;
   if (!Number.isInteger(nextTaskSequence) || Number(nextTaskSequence) <= 0) {
@@ -244,7 +249,7 @@ async function validatePlanState(projectRoot: string, allowOpen: boolean): Promi
   return { taskCount: tasks.length, errors, plan: tasksData };
 }
 
-function validateParallelExecutionContract(plan: Record<string, unknown>, errors: string[]): void {
+function validateParallelExecutionContract(plan: Record<string, unknown>, currentPhase: string, errors: string[]): void {
   const contract = plan.parallel_execution;
   if (contract === undefined || contract === null) return;
   if (!isRecord(contract)) {
@@ -257,16 +262,19 @@ function validateParallelExecutionContract(plan: Record<string, unknown>, errors
   if (!PARALLEL_MODES.has(String(contract.mode ?? ""))) {
     errors.push("parallel_execution.mode must be runtime_managed or user_orchestrated");
   }
-  if (!PARALLEL_PHASES.has(String(contract.phase ?? ""))) {
-    errors.push("parallel_execution.phase must be REQUIREMENT_GATHERING, SPRINTING, or TESTING");
+  if ("phase" in contract) {
+    errors.push("parallel_execution must not define phase; lifecycle.yaml is the single source for current_phase");
+  }
+  if ("linked_task_id" in contract) {
+    errors.push("parallel_execution must not define linked_task_id; use plan.yaml current_task_id");
+  }
+  if (!PARALLEL_ALLOWED_PHASES.has(currentPhase)) {
+    errors.push("parallel_execution is only supported during REQUIREMENT_GATHERING, SPRINTING, or TESTING");
   }
   if (contract.coordinator !== "main_agent") errors.push('parallel_execution.coordinator must be "main_agent"');
 
-  if (contract.phase === "SPRINTING") {
-    if (!contract.linked_task_id) errors.push("SPRINTING parallel_execution must define linked_task_id");
-    if (contract.linked_task_id !== plan.current_task_id) {
-      errors.push("SPRINTING parallel_execution.linked_task_id must match current_task_id");
-    }
+  if (currentPhase === "SPRINTING" && !plan.current_task_id) {
+    errors.push("SPRINTING parallel_execution requires plan.yaml current_task_id");
   }
 
   const workers = contract.workers;

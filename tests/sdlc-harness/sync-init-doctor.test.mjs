@@ -43,6 +43,12 @@ try {
   assert.match(defaultLifecycle, /active_skill: "pjsdlc_dev_sprint"/);
   assert.match(defaultLifecycle, /  - "REVIEWING"/);
   assert.doesNotMatch(defaultLifecycle, /history:/);
+  const defaultPlan = await readFile(path.join(defaultRoot, ".agent/state/plan.yaml"), "utf8");
+  assert.doesNotMatch(defaultPlan, /current_phase/);
+  assert.match(defaultPlan, /current_task_id: ""/);
+  const defaultDraft = await readFile(path.join(defaultRoot, ".agent/state/plan.draft.yaml"), "utf8");
+  assert.doesNotMatch(defaultDraft, /current_phase/);
+  assert.doesNotMatch(defaultDraft, /current_task_id/);
   await assert.rejects(stat(path.join(defaultRoot, ".agent/state/gate_results.log")));
 
   const defaultAgents = await readFile(path.join(defaultRoot, "AGENTS.md"), "utf8");

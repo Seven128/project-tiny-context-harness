@@ -1,5 +1,3 @@
-current_phase: "SPRINTING"
-current_task_id: "DEV-001"
 next_task_sequence: 2
 tasks:
   - id: "DEV-001"

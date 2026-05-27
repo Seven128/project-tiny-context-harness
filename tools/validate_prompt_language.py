@@ -64,8 +64,8 @@ YAML_KEYWORDS = {
         "allowed_next_phases",
     ],
     "plan": [
-        "current_phase",
         "current_task_id",
+        "next_task_sequence",
         "tasks",
     ],
     "phase_contracts": ["phases"],

@@ -435,8 +435,7 @@ test("summarizeText marks empty input", () => {
   await writeDocs(labDir);
   await writeFile(
     path.join(labDir, ".codex/state/plan.yaml"),
-    `current_phase: "SPRINTING"
-current_task_id: ""
+    `current_task_id: ""
 next_task_sequence: 2
 tasks: []
 `,
@@ -444,9 +443,7 @@ tasks: []
   );
   await writeFile(
     path.join(labDir, ".codex/state/plan.draft.yaml"),
-    `current_phase: "SPRINTING"
-current_task_id: "TASK-001"
-next_task_sequence: 2
+    `next_task_sequence: 2
 tasks:
   - id: "TASK-001"
     phase: "SPRINTING"
@@ -502,8 +499,7 @@ async function verifyPlanProtocol(labDir, commandCheck, add) {
   const planPath = path.join(labDir, ".codex/state/plan.yaml");
   await writeFile(
     planPath,
-    `current_phase: "SPRINTING"
-current_task_id: ""
+    `current_task_id: ""
 next_task_sequence: 2
 tasks:
   - id: "TASK-001"
@@ -526,8 +522,7 @@ tasks:
 
   await writeFile(
     planPath,
-    `current_phase: "SPRINTING"
-current_task_id: "TASK-001"
+    `current_task_id: "TASK-001"
 next_task_sequence: 2
 tasks:
   - id: "TASK-001"
@@ -559,14 +554,12 @@ tasks:
 
   await writeFile(
     planPath,
-    `current_phase: "SPRINTING"
-current_task_id: ""
+    `current_task_id: ""
 next_task_sequence: 2
 parallel_execution:
   enabled: true
   trigger: "user_requested"
   mode: "user_orchestrated"
-  phase: "TESTING"
   coordinator: "main_agent"
   workers:
     - id: "worker-smoke"
@@ -589,28 +582,29 @@ tasks: []
 `,
     "utf8"
   );
-  commandCheck("Parallel execution", "valid explicit user_requested contract", "npx", ["sdlc-harness", "validate-dev"]);
+  await writeFile(path.join(labDir, ".codex/state/lifecycle.yaml"), 'current_phase: "TESTING"\nactive_role: "tester"\nactive_skill: "pjsdlc_tester"\n', "utf8");
+  commandCheck("Parallel execution", "valid explicit user_requested contract", "npx", ["sdlc-harness", "validate-test"]);
 
   const valid = await readFile(planPath, "utf8");
   await writeFile(planPath, valid.replace('trigger: "user_requested"', 'trigger: "automatic"'), "utf8");
-  const invalid = run("npx", ["sdlc-harness", "validate-dev"], labDir);
+  const invalid = run("npx", ["sdlc-harness", "validate-test"], labDir);
   add({
     area: "Parallel execution",
     evidence: "automatic trigger is rejected",
-    command: "npx sdlc-harness validate-dev",
+    command: "npx sdlc-harness validate-test",
     status: invalid.status !== 0 && `${invalid.stdout}\n${invalid.stderr}`.includes("user_requested") ? "PASS" : "FAIL",
     details: trimOutput(`${invalid.stdout}\n${invalid.stderr}`)
   });
 
   await writeFile(
     planPath,
-    `current_phase: "SPRINTING"
-current_task_id: ""
+    `current_task_id: ""
 next_task_sequence: 2
 tasks: []
 `,
     "utf8"
   );
+  await writeFile(path.join(labDir, ".codex/state/lifecycle.yaml"), 'current_phase: "SPRINTING"\nactive_role: "developer"\nactive_skill: "pjsdlc_dev_sprint"\n', "utf8");
 }
 
 async function verifyStaticWorkflowText(labDir, add) {

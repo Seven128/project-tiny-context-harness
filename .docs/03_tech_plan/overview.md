@@ -1,11 +1,11 @@
 # .docs/03_tech_plan overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 7773907d092f3c7e -->
+<!-- source-hash: e35e4b326b154bb1 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `7773907d092f3c7e`
+Source hash: `e35e4b326b154bb1`
 
 ## Source Slices
 
@@ -252,12 +252,11 @@ source_mappings:
 
 ### 5.5 Plan state 与 open task contract
 
-`<harnessRoot>/state/plan.yaml` 是当前 sprint/阶段的短期执行计划事实源。它只保留当前和未来相关任务：`pending`、`in_progress`、`blocked`、`pending_revision`。done/cancelled task 不长期留在 `plan.yaml`，避免历史现场挤占 Agent 对当前任务的注意力。
+`<harnessRoot>/state/plan.yaml` 是当前 sprint/阶段的短期执行计划事实源。它只保留当前和未来相关任务：`pending`、`in_progress`、`blocked`、`pending_revision`。`current_phase` 只保存在 `<harnessRoot>/state/lifecycle.yaml`，`plan.yaml` 不重复保存当前阶段。done/cancelled task 不长期留在 `plan.yaml`，避免历史现场挤占 Agent 对当前任务的注意力。
 
 所有阶段都使用同一个 task contract。产品方案生成、既有文档切片、事实源合成、架构设计、技术方案生成、开发实现、Review、测试、发布准备和 RFC recalibration 都应拆成足够小的 `TASK-*` open task，并通过 `phase` 字段标明所属阶段。历史 `PRD-*`、`DES-*`、`DEV-*` 前缀只作为兼容旧记录和旧提交的 provenance。`next_task_sequence` 负责在删除历史 task 后继续分配后续 `TASK-*` id。典型 open task 结构：
 
 ```yaml
-current_phase: "REQUIREMENT_GATHERING"
 current_task_id: "TASK-011"
 next_task_sequence: 12
 tasks:
@@ -293,16 +292,14 @@ tasks:
 
 #### Optional parallel_execution contract
 
-`parallel_execution` 是 `plan.yaml` 的可选顶层合同。缺省不存在表示串行 workflow；只有用户明确提出并行、多 agent 或多 worktree 时，Agent 才能创建该合同。
+`parallel_execution` 是 `plan.yaml` 的可选顶层合同。缺省不存在表示串行 workflow；只有用户明确提出并行、多 agent 或多 worktree 时，Agent 才能创建该合同。它不保存 `phase` 或 `linked_task_id`；当前阶段来自 lifecycle，当前任务来自 `current_task_id`。
 
 ```yaml
 parallel_execution:
   enabled: true
   trigger: "user_requested"
   mode: "user_orchestrated" # or "runtime_managed"
-  phase: "SPRINTING"
   coordinator: "main_agent"
-  linked_task_id: "TASK-011"
   workers:
     - id: "worker-feature"
       writes_repo: true
@@ -334,15 +331,15 @@ parallel_execution:
 阶段规则：
 
 - `REQUIREMENT_GATHERING`：worker 只能做调研、草稿、场景拆解、风险和 open questions；最终 PRD 由主 Agent 合成。
-- `SPRINTING`：worker 可写各自 `owned_paths`，但不得直接改 `plan.yaml`、`lifecycle.yaml`、`.docs/INDEX.md`、overview 或最终 implementation doc；并行合同必须通过 `linked_task_id` 绑定当前 `current_task_id`。
+- `SPRINTING`：worker 可写各自 `owned_paths`，但不得直接改 `plan.yaml`、`lifecycle.yaml`、`.docs/INDEX.md`、overview 或最终 implementation doc；并行执行上下文从 `lifecycle.yaml#current_phase` 和 `plan.yaml#current_task_id` 推断。
 - `TESTING`：worker 可并行执行验证片区和提交证据；最终 test plan、coverage gaps 和 PASS/BLOCKED 由主 Agent 汇总。
 
 Validator 行为：
 
 - 无 `parallel_execution` 时保持兼容。
-- 启用时校验 `enabled`、`trigger`、`mode`、`phase`、`coordinator`、`workers` 和 `integration`。
+- 启用时校验 `enabled`、`trigger`、`mode`、`coordinator`、`workers` 和 `integration`，并拒绝重复保存 `phase` 或 `linked_task_id`。
 - `writes_repo: true` 的 worker 必须声明 `branch`、`worktree` 和非空 `owned_paths`。
-- `SPRINTING` 的 `linked_task_id` 必须等于 `current_task_id`。
+- `SPRINTING` 阶段启用并行时必须存在 `current_task_id`。
 
 ### 5.6 Implementation doc model
 

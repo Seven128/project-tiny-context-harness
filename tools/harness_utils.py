@@ -24,7 +24,7 @@ TASK_STATUSES = {
 
 OPEN_TASK_STATUSES = {"pending", "in_progress", "blocked", "pending_revision"}
 PARALLEL_MODES = {"runtime_managed", "user_orchestrated"}
-PARALLEL_PHASES = {"REQUIREMENT_GATHERING", "SPRINTING", "TESTING"}
+PARALLEL_ALLOWED_PHASES = {"REQUIREMENT_GATHERING", "SPRINTING", "TESTING"}
 TASK_ID_PATTERN = re.compile(r"^[A-Z]+-(\d+)$")
 TASK_PHASES = {
     "REQUIREMENT_GATHERING",
@@ -371,7 +371,10 @@ def task_sequence_number(task_id: str) -> int:
 
 
 def validate_plan_contract(data: dict[str, Any], allow_open: bool) -> None:
-    validate_parallel_execution_contract(data)
+    lifecycle = load_lifecycle()
+    current_phase = str(lifecycle.get("current_phase") or "")
+    require("current_phase" not in data, "plan.yaml must not define current_phase; lifecycle.yaml is the single source for current_phase")
+    validate_parallel_execution_contract(data, current_phase)
     tasks = data.get("tasks", [])
     next_task_sequence = data.get("next_task_sequence")
     require(isinstance(next_task_sequence, int) and next_task_sequence > 0, "plan.yaml must define positive integer next_task_sequence")
@@ -396,7 +399,7 @@ def validate_plan_contract(data: dict[str, Any], allow_open: bool) -> None:
         require(not open_tasks, f"Open tasks remain: {', '.join(open_tasks)}")
 
 
-def validate_parallel_execution_contract(data: dict[str, Any]) -> None:
+def validate_parallel_execution_contract(data: dict[str, Any], current_phase: str) -> None:
     contract = data.get("parallel_execution")
     if contract is None:
         return
@@ -405,15 +408,13 @@ def validate_parallel_execution_contract(data: dict[str, Any]) -> None:
     require(contract.get("enabled") is True, "parallel_execution.enabled must be true when present")
     require(contract.get("trigger") == "user_requested", 'parallel_execution.trigger must be "user_requested"')
     require(contract.get("mode") in PARALLEL_MODES, "parallel_execution.mode must be runtime_managed or user_orchestrated")
-    require(contract.get("phase") in PARALLEL_PHASES, "parallel_execution.phase must be REQUIREMENT_GATHERING, SPRINTING, or TESTING")
+    require("phase" not in contract, "parallel_execution must not define phase; lifecycle.yaml is the single source for current_phase")
+    require("linked_task_id" not in contract, "parallel_execution must not define linked_task_id; use plan.yaml current_task_id")
+    require(current_phase in PARALLEL_ALLOWED_PHASES, "parallel_execution is only supported during REQUIREMENT_GATHERING, SPRINTING, or TESTING")
     require(contract.get("coordinator") == "main_agent", 'parallel_execution.coordinator must be "main_agent"')
 
-    if contract.get("phase") == "SPRINTING":
-        require(contract.get("linked_task_id"), "SPRINTING parallel_execution must define linked_task_id")
-        require(
-            contract.get("linked_task_id") == data.get("current_task_id"),
-            "SPRINTING parallel_execution.linked_task_id must match current_task_id",
-        )
+    if current_phase == "SPRINTING":
+        require(data.get("current_task_id"), "SPRINTING parallel_execution requires plan.yaml current_task_id")
 
     workers = contract.get("workers")
     require(isinstance(workers, list) and workers, "parallel_execution.workers must be a non-empty list")

@@ -68,6 +68,8 @@ The default workflow is serial. Agents should only create `parallel_execution` i
 - `runtime_managed`: use only when the current agent runtime can spawn subagents. The main agent assigns workers, waits for results, reviews, merges or cherry-picks, and runs the total gate.
 - `user_orchestrated`: use when the runtime cannot spawn subagents. The main agent generates copyable worker prompts, and the user manually opens Codex conversations or worktrees and pastes them.
 
+`parallel_execution` does not store duplicate current phase or current task fields. Agents read phase from `<harnessRoot>/state/lifecycle.yaml#current_phase` and task selection from `<harnessRoot>/state/plan.yaml#current_task_id`.
+
 The CLI does not promise to automatically launch Codex agents. Workers do not need to communicate with each other; the main agent owns final fact-source updates such as PRD, plan, implementation docs, test results and generated overviews.
 
 ## Stage Task Control

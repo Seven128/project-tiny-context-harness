@@ -139,6 +139,8 @@ override 文件支持两种写法：普通项目追加片段，或带 `name`/`de
 - `runtime_managed`：当前 Agent runtime 支持创建 subagent 时，由主 Agent 分配 worker、等待结果、review、merge/cherry-pick 并跑总 gate。
 - `user_orchestrated`：runtime 不能自动创建 subagent 时，主 Agent 生成每个 worker 的可复制 prompt；用户手动打开多个对话或 worktree 后粘贴执行。
 
+`parallel_execution` 不保存当前阶段或当前任务副本；阶段只从 `lifecycle.yaml#current_phase` 读取，当前任务只从 `plan.yaml#current_task_id` 读取。
+
 Harness CLI v1 不承诺自动启动 Codex agent，也不要求 worker 之间通信。worker 只处理自己的 `owned_paths` 和 gate，最终 PRD、plan、implementation doc、test result、overview 等事实源由主 Agent 集成。
 
 常用快捷入口：

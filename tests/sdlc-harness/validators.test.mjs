@@ -229,7 +229,6 @@ parallel_execution:
   enabled: true
   trigger: user_requested
   mode: user_orchestrated
-  phase: REQUIREMENT_GATHERING
   coordinator: main_agent
   workers:
     - id: worker-research
@@ -263,7 +262,6 @@ parallel_execution:
   enabled: true
   trigger: user_requested
   mode: runtime_managed
-  phase: TESTING
   coordinator: main_agent
   workers:
     - id: worker-smoke
@@ -299,7 +297,6 @@ next_task_sequence: 3
 parallel_execution:
   enabled: true
   mode: user_orchestrated
-  phase: REQUIREMENT_GATHERING
   coordinator: main_agent
   workers:
     - id: worker-research
@@ -332,7 +329,6 @@ parallel_execution:
   enabled: true
   trigger: user_requested
   mode: runtime_managed
-  phase: TESTING
   coordinator: main_agent
   workers:
     - id: worker-duplicate
@@ -373,7 +369,6 @@ parallel_execution:
   enabled: true
   trigger: user_requested
   mode: runtime_managed
-  phase: TESTING
   coordinator: main_agent
   workers:
     - id: worker-smoke
@@ -402,13 +397,65 @@ tasks: []
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
+    `current_phase: SPRINTING
+current_task_id: ""
+next_task_sequence: 3
+tasks: []
+`,
+    "utf8"
+  );
+  devReport = await runValidator(root, "validate-dev");
+  assert.match(devReport.errors.join("\n"), /plan\.yaml must not define current_phase/);
+
+  await writeFile(
+    path.join(root, ".harness/state/lifecycle.yaml"),
+    'current_phase: "SPRINTING"\n',
+    "utf8"
+  );
+  await writeFile(
+    path.join(root, ".harness/state/plan.yaml"),
+    `current_task_id: ""
+next_task_sequence: 3
+parallel_execution:
+  enabled: true
+  trigger: user_requested
+  mode: user_orchestrated
+  coordinator: main_agent
+  workers:
+    - id: worker-feature
+      writes_repo: true
+      branch: agent/feature
+      worktree: ../project-feature
+      owned_paths:
+        - "src/feature/**"
+      forbidden_paths:
+        - ".harness/state/**"
+      expected_output:
+        - "implementation branch"
+      required_gates:
+        - "npm test -- tests/feature"
+  integration:
+    owner: main_agent
+    merge_strategy: "main agent reviews and cherry-picks"
+    required_gates:
+      - "make validate-dev"
+    fact_source_updates:
+      - ".docs/04_implementation/"
+tasks: []
+`,
+    "utf8"
+  );
+  devReport = await runValidator(root, "validate-dev");
+  assert.match(devReport.errors.join("\n"), /SPRINTING parallel_execution requires plan\.yaml current_task_id/);
+
+  await writeFile(
+    path.join(root, ".harness/state/plan.yaml"),
     `current_task_id: DEV-002
 next_task_sequence: 3
 parallel_execution:
   enabled: true
   trigger: user_requested
   mode: user_orchestrated
-  phase: SPRINTING
   coordinator: main_agent
   linked_task_id: DEV-999
   workers:
@@ -450,7 +497,7 @@ tasks:
     "utf8"
   );
   devReport = await runValidator(root, "validate-dev");
-  assert.match(devReport.errors.join("\n"), /SPRINTING parallel_execution\.linked_task_id must match current_task_id/);
+  assert.match(devReport.errors.join("\n"), /parallel_execution must not define linked_task_id/);
 } finally {
   await rm(root, { recursive: true, force: true });
 }
