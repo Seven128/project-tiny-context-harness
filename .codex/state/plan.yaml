@@ -1,43 +1,4 @@
 current_phase: "SPRINTING"
-current_task_id: "DEV-055"
+current_task_id: ""
 next_task_sequence: 56
-tasks:
-  - id: "DEV-055"
-    title: "Require cleanup after PRD and tech plan slicing"
-    status: "in_progress"
-    summary: "Add workflow prompt rules so user-requested slicing in product and technical plan phases deletes the superseded monolithic source file after replacement slices are complete."
-    docs:
-      product:
-        - ".docs/01_product/npm_package_distribution.md"
-      tech_plan:
-        - ".docs/03_tech_plan/harness_package_distribution.md"
-        - "PROJECT_SPEC.md"
-      implementation:
-        - ".docs/04_implementation/harness_workflow/skills_prompt_and_authoring.md"
-      rfc: []
-    allowed_paths:
-      - ".codex/state/plan.yaml"
-      - ".codex/skills/pjsdlc_pm_prd/SKILL.md"
-      - ".codex/skills/pjsdlc_architect_design/SKILL.md"
-      - "packages/sdlc-harness/assets/skills/pjsdlc_pm_prd/SKILL.md"
-      - "packages/sdlc-harness/assets/skills/pjsdlc_architect_design/SKILL.md"
-      - "PROJECT_SPEC.md"
-      - ".docs/04_implementation/harness_workflow/skills_prompt_and_authoring.md"
-      - ".docs/04_implementation/overview.md"
-      - ".docs/INDEX.md"
-    required_gates:
-      - "node packages/sdlc-harness/dist/cli.js package sync-source"
-      - "node packages/sdlc-harness/dist/cli.js package check-source"
-      - "make docs-overview"
-      - "make validate-harness"
-      - "npm test --workspace agent-project-sdlc"
-    acceptance_criteria:
-      - "PRD Skill explicitly requires deleting the superseded complete product/PRD file after user-requested slicing creates replacement slices and updates INDEX/overview."
-      - "Architect Skill explicitly requires deleting the superseded complete tech plan file after user-requested slicing creates replacement slices and updates plan.draft/INDEX/overview."
-      - "Package assets are synced from authoring Skill sources."
-      - "Implementation doc records the workflow behavior and verification evidence."
-    implementation_doc: ".docs/04_implementation/harness_workflow/skills_prompt_and_authoring.md"
-    working_notes:
-      - "2026-05-27: Updated PM and Architect Skill slicing rules, synced package assets, refreshed implementation overview."
-      - "2026-05-27: Gates passed: package sync-source, package check-source, make docs-overview, make validate-harness, npm test --workspace agent-project-sdlc."
-      - "2026-05-27: README/package README and consumer lab script unchanged because this is detailed workflow prompt behavior, not a new public CLI/package capability; existing prompt, sync and package tests cover the change."
+tasks: []
