@@ -1,11 +1,11 @@
 # .docs/08_release overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: ffa83b03200eed6c -->
+<!-- source-hash: d3582c5994cd7b6c -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `ffa83b03200eed6c`
+Source hash: `d3582c5994cd7b6c`
 
 ## Source Slices
 
@@ -19,16 +19,17 @@ Source: [CURRENT_RELEASE.md](CURRENT_RELEASE.md)
 
 # Current Release Status（当前发布状态）
 
-This file represents the latest release status only. Historical release evidence lives in git tags, npm registry metadata, CI logs and release commits.
+This file is overwritten by each release. Historical release evidence lives in git tags, npm registry metadata, CI logs and release commits.
 
 ## 1. Release Summary（发布摘要）
 
-- Version: `agent-project-sdlc@0.1.13`
+- Version: `agent-project-sdlc@0.1.14`
 - Milestone: `MVP`
 - Date: `2026-05-28`
 - Owner: `release_manager`
 - Registry: `https://registry.npmjs.org/`
 - Status: `RELEASED`
+- Current release report: `.docs/08_release/CURRENT_RELEASE.md`
 
 ## 2. Included Changes（包含变更）
 
@@ -39,11 +40,11 @@ This file represents the latest release status only. Historical release evidence
 
 | 产物（Artifact） | 位置（Location） | Checksum/Version |
 |---|---|---|
-| npm package | `agent-project-sdlc` | `0.1.13` |
-| dry-run tarball | `npm pack --dry-run --json --workspace agent-project-sdlc` | `116b7b91c4938fb777064ee94c54dd0760577661` |
-| dry-run integrity | same | `sha512-5f7vLAznrq8GI4z1cKKerlPcUSvv2Aw5OEyLmegdZuGM1pYLTe6392nbOjZD+vGCTS0LSijUVEUQbxL8LQPtRg==` |
-| package content | dry-run output | 83 files, 65.3 kB package size, 228.3 kB unpacked size |
-| registry package | `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json` | `version 0.1.13`, `latest 0.1.13`, `integrity sha512-5f7vLAznrq8GI4z1cKKerlPcUSvv2Aw5OEyLmegdZuGM1pYLTe6392nbOjZD+vGCTS0LSijUVEUQbxL8LQPtRg==` |
+| npm package | `agent-project-sdlc` | `0.1.14` |
+| dry-run tarball | `npm pack --dry-run --json --workspace agent-project-sdlc` | `1ebc9248a221902c9752c54bf05e99d903cd20c2` |
+| dry-run integrity | same | `sha512-KJpt+Bf/DyIoaJOTsqhD0I49ALDdVZOOhJ4VI2rn8YYHMTdHVfrjlitbOsTTcRSF/HpN7Sars6NGFag4oZ9eNg==` |
+| package content | dry-run output | 85 files, 69.3 kB package size, 242.7 kB unpacked size |
+| registry package | `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json` | `version 0.1.14`, `latest 0.1.14`, `integrity sha512-KJpt+Bf/DyIoaJOTsqhD0I49ALDdVZOOhJ4VI2rn8YYHMTdHVfrjlitbOsTTcRSF/HpN7Sars6NGFag4oZ9eNg==` |
 
 ## 4. Smoke Test Result（冒烟测试结果）
 
@@ -54,21 +55,21 @@ This file represents the latest release status only. Historical release evidence
   - `make validate-harness`: PASS。
   - `npm pack --dry-run --json --workspace agent-project-sdlc`: PASS。
   - `git diff --check`: PASS。
-  - `npm publish --workspace agent-project-sdlc`: PASS，registry 返回 agent-project-sdlc@0.1.13。
-  - `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json`: PASS，version 和 latest 均为 0.1.13。
-  - Registry installed-consumer smoke: PASS，从 npm registry 安装 agent-project-sdlc@0.1.13 后，init 和 doctor 均通过，doctor 输出 `core package: agent-project-sdlc@0.1.13`。
+  - `npm publish --workspace agent-project-sdlc`: PASS，registry 返回 agent-project-sdlc@0.1.14。
+  - `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json`: PASS，version 和 latest 均为 0.1.14。
+  - Registry installed-consumer smoke: PASS，从 npm registry 安装 agent-project-sdlc@0.1.14 后，init 和 doctor 均通过，doctor 输出 `core package: agent-project-sdlc@0.1.14`。
 
 ## 5. Deployment Checklist（部署检查清单）
 
 - [x] Confirm registry latest before publishing.
-- [x] Bump package version to `0.1.13`.
+- [x] Bump package version to `0.1.14`.
 - [x] Package source drift check passed.
 - [x] npm tests passed.
 - [x] Pack dry run passed.
 - [x] Publish package with `npm publish --workspace agent-project-sdlc`.
 - [x] Verify registry package with `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json`.
 - [x] Run installed-consumer smoke from npm registry.
-- [x] Create and push git tag `v0.1.13` after publish success.
+- [x] Create and push git tag `v0.1.14` after publish success.
 
 ## 6. Rollback Plan（回滚方案）
 
@@ -87,4 +88,4 @@ This file represents the latest release status only. Historical release evidence
 
 ## 7. Known Issues（已知限制）
 
-- None recorded for the current release.
+- None recorded for this release status. Update this section before publish if smoke, registry or consumer install limitations are discovered.
