@@ -15,7 +15,7 @@ help:
 	@echo "  make validate-dev        校验 sprint 任务状态、draft 消费、路径、代码 gate 和实现文档"
 	@echo "  make validate-review     校验 Review report"
 	@echo "  make validate-test       校验 regression/test report"
-	@echo "  make validate-release    校验 release note、smoke result 和 rollback plan"
+	@echo "  make validate-release    校验 current release status、smoke result 和 rollback plan"
 	@echo "  make validate-rfc        校验 RFC 产物并运行完整回归入口"
 
 status:

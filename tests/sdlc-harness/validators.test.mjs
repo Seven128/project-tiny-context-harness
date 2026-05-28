@@ -69,8 +69,8 @@ try {
     "utf8"
   );
   await writeFile(
-    path.join(root, ".docs/08_release/v0.1.0.md"),
-    "# Release v0.1.0\n\n## Release Notes\n\nInitial test release.\n\n## Smoke Evidence\n\n- smoke test: PASS\n\n## Rollback Plan\n\nRevert the release commit.\n",
+    path.join(root, ".docs/08_release/CURRENT_RELEASE.md"),
+    "# Current Release Status\n\n## Release Notes\n\nInitial test release.\n\n## Smoke Evidence\n\n- smoke test: PASS\n\n## Rollback Plan\n\nRevert the release commit.\n",
     "utf8"
   );
   await writeFile(
@@ -137,6 +137,28 @@ tasks:
   const preferredTestReport = await runValidator(root, "validate-test");
   assert.deepEqual(preferredTestReport.errors, [], "validate-test prefers TEST_REPORT.md when both test files exist");
   assert.match(preferredTestReport.info.join("\n"), /TEST_REPORT\.md/);
+
+  const currentReleasePath = path.join(root, ".docs/08_release/CURRENT_RELEASE.md");
+  const legacyReleasePath = path.join(root, ".docs/08_release/v0.1.0.md");
+  await writeFile(
+    legacyReleasePath,
+    "# Legacy Release v0.1.0\n\n## Release Notes\n\nLegacy release.\n\n## Smoke Evidence\n\n- smoke test: PASS\n\n## Rollback Plan\n\nRevert the release commit.\n",
+    "utf8"
+  );
+  await rm(currentReleasePath, { force: true });
+  const legacyReleaseReport = await runValidator(root, "validate-release");
+  assert.deepEqual(legacyReleaseReport.errors, [], "validate-release accepts legacy versioned release docs");
+  assert.match(legacyReleaseReport.info.join("\n"), /legacy \.docs\/08_release/);
+  await writeFile(currentReleasePath, "# Current Release Status\n\n## Release Notes\n\nOnly change notes are present.\n", "utf8");
+  const preferredCurrentRelease = await runValidator(root, "validate-release");
+  assert.match(preferredCurrentRelease.errors.join("\n"), /smoke test evidence/);
+  assert.match(preferredCurrentRelease.errors.join("\n"), /rollback plan/);
+  assert.match(preferredCurrentRelease.info.join("\n"), /CURRENT_RELEASE\.md/);
+  await writeFile(
+    currentReleasePath,
+    "# Current Release Status\n\n## Release Notes\n\nInitial test release.\n\n## Smoke Evidence\n\n- smoke test: PASS\n\n## Rollback Plan\n\nRevert the release commit.\n",
+    "utf8"
+  );
 
   await writeFile(
     path.join(root, ".docs/06_review/REVIEW_REPORT.md"),

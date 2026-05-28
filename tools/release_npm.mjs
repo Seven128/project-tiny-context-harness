@@ -9,6 +9,7 @@ const projectRoot = process.cwd();
 const packageName = "agent-project-sdlc";
 const workspaceName = "agent-project-sdlc";
 const packageManifestPath = path.join(projectRoot, "packages", "sdlc-harness", "package.json");
+const releaseDocRelativePath = ".docs/08_release/CURRENT_RELEASE.md";
 
 const args = parseArgs(process.argv.slice(2));
 
@@ -90,7 +91,7 @@ async function main() {
 
   console.log("");
   console.log(`${args.publish ? "Published" : "Prepared"} ${packageName}@${targetVersion}`);
-  console.log(`Release doc: .docs/08_release/v${targetVersion}_npm_release.md`);
+  console.log(`Current release status: ${releaseDocRelativePath}`);
 }
 
 function parseArgs(argv) {
@@ -128,7 +129,7 @@ function printHelp() {
   node tools/release_npm.mjs [--version patch|minor|major|x.y.z] [--publish --yes]
 
 Default mode is a dry run that bumps the package version, runs release gates, and writes
-the release doc. Pass --publish --yes to publish to npm and run registry smoke.`);
+the current release status doc. Pass --publish --yes to publish to npm and run registry smoke.`);
 }
 
 async function step(report, label, action) {
@@ -384,7 +385,7 @@ async function writeReleaseDoc(report, forcedStatus) {
   const version = report.targetVersion;
   const status = forcedStatus ?? (report.publish ? "RELEASED" : "DRY_RUN");
   const decision = status === "RELEASED" || status === "DRY_RUN" ? "PASS" : "BLOCKED";
-  const docPath = path.join(projectRoot, ".docs", "08_release", `v${version}_npm_release.md`);
+  const docPath = path.join(projectRoot, releaseDocRelativePath);
   const pack = report.pack;
   const registry = report.registry;
   const smoke = report.smoke;
@@ -404,7 +405,9 @@ async function writeReleaseDoc(report, forcedStatus) {
       ? "Pending。"
       : "SKIPPED，dry-run 未安装 registry package。";
 
-  const content = `# Release Note And Rollback Plan（发布说明与回滚方案）
+  const content = `# Current Release Status（当前发布状态）
+
+This file is overwritten by each release. Historical release evidence lives in git tags, npm registry metadata, CI logs and release commits.
 
 ## 1. Release Summary（发布摘要）
 
@@ -414,6 +417,7 @@ async function writeReleaseDoc(report, forcedStatus) {
 - Owner: \`release_manager\`
 - Registry: \`https://registry.npmjs.org/\`
 - Status: \`${status}\`
+- Current release report: \`${releaseDocRelativePath}\`
 
 ## 2. Included Changes（包含变更）
 
@@ -461,7 +465,7 @@ async function writeReleaseDoc(report, forcedStatus) {
   - \`npm publish\` 失败且 package 未创建。
   - 发布成功后发现 CLI 无法安装、初始化、doctor 失败，或包内 assets 与仓库事实源漂移。
 - 步骤（Steps）:
-  1. 如果 publish 未成功，不创建 release tag，保留当前 release doc 的 blocker 状态，修复后重新执行 release gate。
+  1. 如果 publish 未成功，不创建 release tag，保留当前 release status 的 blocker 状态，修复后重新执行 release gate。
   2. 如果 publish 已成功但 smoke 失败，立即停止推广该版本。
   3. 由于 npm package version 不可复用，修复后 bump 到下一个 patch version，重新执行 test/release gate 后发布。
   4. 如需让消费者回退，指导安装上一稳定版本或从 git commit/tag 固定依赖。
@@ -469,6 +473,10 @@ async function writeReleaseDoc(report, forcedStatus) {
   - 本包发布的是 CLI 和 Harness assets，不迁移 npm registry 外的数据。
   - 用户仓库 sync/upgrade 遵循 managed file 增量策略；回滚时不得覆盖用户本地自定义配置。
 - 负责人（Owner）: \`release_manager\`
+
+## 7. Known Issues（已知限制）
+
+- None recorded for this release status. Update this section before publish if smoke, registry or consumer install limitations are discovered.
 `;
   await fs.mkdir(path.dirname(docPath), { recursive: true });
   await fs.writeFile(docPath, content);

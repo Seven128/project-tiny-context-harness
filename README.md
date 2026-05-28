@@ -234,7 +234,7 @@ make docs-overview
 | `.docs/05_decisions/` | ADR，长期关键决策及其背景、备选方案、理由和后果 |
 | `.docs/06_review/` | Review 报告 |
 | `.docs/07_test/` | 测试报告、测试矩阵、回归证据和覆盖缺口 |
-| `.docs/08_release/` | 发布记录和回滚方案 |
+| `.docs/08_release/` | 当前发布状态、smoke evidence、回滚方案和已知限制 |
 | `.docs/rfc/` | 需求变更和影响分析 |
 
 `overview.md` 是生成物，用于浏览和阶段交接；Markdown slices 和 `.docs/INDEX.md` 才是事实源。

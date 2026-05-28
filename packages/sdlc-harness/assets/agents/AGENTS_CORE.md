@@ -15,7 +15,7 @@
 - 实现文档：`.docs/04_implementation/`
 - Review 文档：`.docs/06_review/`
 - 测试文档：`.docs/07_test/`
-- 发布文档：`.docs/08_release/`
+- 发布文档：`.docs/08_release/CURRENT_RELEASE.md`（当前发布状态；历史发布动作由 git tag、release commit、registry 或外部发布系统追溯）
 - RFC 文档：`.docs/rfc/`
 - 全局文档索引：`.docs/INDEX.md`
 - Harness authoring skills（如果存在）：`.codex/skills/authoring/`，只在维护 Harness/workflow/npm package 源码或本仓库自举规则时读取，不作为用户项目默认分发内容
@@ -34,7 +34,7 @@
 - `current_phase` 只保存在 `lifecycle.yaml`；不要在 `plan.yaml`、`plan.draft.yaml` 或 `parallel_execution` 中重复保存当前阶段。
 - 新建任务统一使用 `TASK-*` id，并通过 `phase` 标明属于 `REQUIREMENT_GATHERING`、`ARCHITECTING`、`SPRINTING`、`REVIEWING`、`TESTING`、`RELEASING` 或 `RFC_RECALIBRATION`；历史 `PRD-*`、`DES-*`、`DEV-*` 只作为兼容旧记录和旧提交的 provenance。
 - `next_task_sequence` 记录下一个可分配的 `TASK-*` 序号，避免删除历史 task 后发生 id 冲突。
-- 文档、Review、测试、发布和 RFC 类 task 使用 `result_docs` 指向本 task 产出的 PRD、architecture、tech plan、ADR、review report、test report、release note、RFC 或 `plan.draft.yaml`；开发 task 使用 `implementation_doc` 指向模块级实现事实。
+- 文档、Review、测试、发布和 RFC 类 task 使用 `result_docs` 指向本 task 产出的 PRD、architecture、tech plan、ADR、review report、test report、current release status、RFC 或 `plan.draft.yaml`；开发 task 使用 `implementation_doc` 指向模块级实现事实。
 - task 完成并写入或更新相关事实源后，从 `plan.yaml` 的 `tasks` 列表移除该 task；不要长期保留 done/cancelled task 摘要。
 - `plan.draft.yaml` 是架构阶段生成的计划草案，不自动覆盖 `plan.yaml`。
 - `plan.draft.yaml` 不保存 `current_phase` 或 `current_task_id`，只保存待采用的 task 草案和必要的 `next_task_sequence`。

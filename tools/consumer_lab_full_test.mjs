@@ -488,8 +488,8 @@ async function writeDocs(labDir) {
       "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage is intentionally narrow.\n\n## Runnable Entry/Exit Readiness\n\nExisting entry/exit is runnable through `summarizeText(input)`.\n\n## Decision\n\nPASS\n",
     ".docs/07_test/TEST_REPORT.md":
       "# Test Report\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal text | PASS |\n| Empty text | PASS |\n\n## Regression Evidence\n\n- `npm test`: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped API.\n\n## Coverage Gap\n\nNo locale-specific coverage.\n\n## Decision\n\nPASS\n",
-    ".docs/08_release/v0.1.0_lab_release.md":
-      "# Lab Release v0.1.0\n\n## Release Notes\n\nTiny helper fixture.\n\n## Smoke Evidence\n\n- `npm test`: PASS\n\n## Rollback Plan\n\nRevert the lab helper commit.\n",
+    ".docs/08_release/CURRENT_RELEASE.md":
+      "# Current Release Status\n\n## Release Notes\n\nTiny helper fixture.\n\n## Smoke Evidence\n\n- `npm test`: PASS\n\n## Rollback Plan\n\nRevert the lab helper commit.\n",
     ".docs/rfc/RFC_001_change_empty_semantics.md":
       "# RFC 001 Change Empty Semantics\n\nStatus: VERIFIED\n\n## Background\n\nThe lab needs one RFC document.\n\n## Product Impact\n\nWhitespace-only strings remain empty.\n\n## Technical Impact\n\nNo code change required.\n\n## Regression\n\nKeep whitespace-only coverage.\n",
     ".docs/INDEX.md":
@@ -677,11 +677,14 @@ async function verifyReleaseAndGithubStatic(sourceRoot, labDir, add) {
     details: "static workflow asset checked; remote GitHub Actions execution is out of scope"
   });
   const releaseScript = path.join(sourceRoot, "tools/release_npm.mjs");
+  const releaseScriptText = existsSync(releaseScript) ? await readFile(releaseScript, "utf8") : "";
   add({
     area: "Release automation",
     evidence: "release automation static coverage",
-    status: existsSync(releaseScript) ? "PASS" : "FAIL",
-    details: "npm publish is out of scope for consumer lab"
+    status: releaseScriptText.includes(".docs/08_release/CURRENT_RELEASE.md") ? "PASS" : "FAIL",
+    details: releaseScriptText.includes(".docs/08_release/CURRENT_RELEASE.md")
+      ? "release automation writes current release status; npm publish is out of scope for consumer lab"
+      : "release automation current release status path missing"
   });
 }
 

@@ -269,7 +269,7 @@ tasks:
       - ".docs/01_product/account_security.md"
 ```
 
-文档、Review、测试、发布和 RFC 类 task 使用 `result_docs` 指向本 task 产出的 PRD、architecture、tech plan、ADR、review report、test plan、release note、RFC 或 `plan.draft.yaml`。开发 task 使用 `implementation_doc` 指向模块级实现事实文档。task 完成后，将该 task 从 `plan.yaml` 的 `tasks` 列表移除。开发阶段仍采用两段提交：先在当前 task 仍位于 `plan.yaml` 时创建 task implementation commit；再移除 task，并创建 task completion ledger commit。历史动作记录由 git commit 承载，产物结果由 `.docs/**` slice、`plan.draft.yaml`、Review/Test/Release/RFC 文档或模块级 implementation doc 承载；Harness 不再维护 checkpoint 文件或 `<harnessRoot>/archive/**` 作为常规归档事实源。
+文档、Review、测试、发布和 RFC 类 task 使用 `result_docs` 指向本 task 产出的 PRD、architecture、tech plan、ADR、review report、test report、current release status、RFC 或 `plan.draft.yaml`。开发 task 使用 `implementation_doc` 指向模块级实现事实文档。task 完成后，将该 task 从 `plan.yaml` 的 `tasks` 列表移除。开发阶段仍采用两段提交：先在当前 task 仍位于 `plan.yaml` 时创建 task implementation commit；再移除 task，并创建 task completion ledger commit。历史动作记录由 git commit 承载，产物结果由 `.docs/**` slice、`plan.draft.yaml`、Review/Test/Release/RFC 文档或模块级 implementation doc 承载；Harness 不再维护 checkpoint 文件或 `<harnessRoot>/archive/**` 作为常规归档事实源。
 
 架构阶段的 `validate-design` 不再只检查目录里是否有 Markdown。`overview.md` 和 `README.md` 不计入 architecture / tech plan deliverables；`plan.draft.yaml` 中每个开发 draft task 必须在 `docs.tech_plan` 指向存在的 `.docs/03_tech_plan/` slice；多个开发 draft task 的 primary tech plan slice 不能全部相同。PRD、tech plan 或 draft task 明确包含需要独立架构边界的横切主题时，gate 要求对应专门 architecture slice，避免一个总纲文档掩盖模块级事实源。
 
@@ -348,7 +348,7 @@ RFC_014 后，Harness 不再维护 `<harnessRoot>/state/gate_results.log`。gate
 
 ### 5.9 npm release automation
 
-`tools/release_npm.mjs` 负责本仓库的 npm 发布自动化。默认模式只准备发布并生成 release doc；真正发布必须显式传入 `--publish --yes`。
+`tools/release_npm.mjs` 负责本仓库的 npm 发布自动化。默认模式只准备发布并生成当前 release status；真正发布必须显式传入 `--publish --yes`。
 
 典型命令：
 
@@ -367,7 +367,7 @@ resolve next version from local package and npm registry
 -> npm publish
 -> npm view latest verification
 -> temporary consumer install smoke
--> write .docs/08_release/vX.Y.Z_npm_release.md
+-> write .docs/08_release/CURRENT_RELEASE.md
 -> make docs-overview
 -> make validate-harness
 -> validate allowed paths when an open task exists
@@ -378,7 +378,7 @@ git commit、tag 和 push 仍由 SPRINTING task protocol 负责，避免 release
 
 ## 6. 任务拆分（Task Breakdown）
 
-历史 task 拆分仍可通过 git commit、RFC 和 release docs 追溯；本节只保留模块级 implementation doc 路由，作为后续 task 的写入目标。
+历史 task 拆分仍可通过 git commit、RFC、git tag、registry 或当前 release status 追溯；本节只保留模块级 implementation doc 路由，作为后续 task 的写入目标。
 
 | 实现边界（Module / Flow） | 覆盖任务（Task provenance） | Implementation Doc |
 |---|---|---|

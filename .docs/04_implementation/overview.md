@@ -1,11 +1,11 @@
 # .docs/04_implementation overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 19f4ae56d640babb -->
+<!-- source-hash: 075d34c0e3afa3fc -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `19f4ae56d640babb`
+Source hash: `075d34c0e3afa3fc`
 
 ## Source Slices
 
@@ -259,7 +259,7 @@ Source: [harness_package/release_automation.md](harness_package/release_automati
 
 - Domain: `harness_package`
 - Module / subsystem / core flow: npm release automation and registry smoke
-- Updated by task: `DEV-033`, `DEV-035`, `DEV-042`, `DEV-043`, `DEV-047`, `DEV-048`
+- Updated by task: `DEV-033`, `DEV-035`, `DEV-042`, `DEV-043`, `DEV-047`, `DEV-048`, `TASK-069`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`
 - Linked RFC: none
@@ -267,10 +267,10 @@ Source: [harness_package/release_automation.md](harness_package/release_automati
 
 ## 2. 当前实现范围
 
-- `tools/release_npm.mjs` automates npm package version bump, gates, publish, registry verification, installed-consumer smoke and release-doc generation.
+- `tools/release_npm.mjs` automates npm package version bump, gates, publish, registry verification, installed-consumer smoke and current-release status generation.
 - `npm run release:npm` is the root script entrypoint.
 - The script defaults to prepare/check mode; real publishing requires `--publish --yes`.
-- Release evidence is written under `.docs/08_release/vX.Y.Z_npm_release.md`.
+- Release evidence is written to `.docs/08_release/CURRENT_RELEASE.md`; each release overwrites the current status instead of creating a versioned docs ledger.
 - `packages/sdlc-harness/README.md` is included in the package `files` list so npm displays public install, command, workflow and Skill override documentation.
 - Root `README.md` is packaged as `assets/docs/README.md` so installed-package agents can inspect the full user guide from `node_modules` without changing consumer project files.
 - Git commit, tag and push remain outside the release script and are handled by the SPRINTING task protocol.
@@ -278,7 +278,7 @@ Source: [harness_package/release_automation.md](harness_package/release_automati
 ## Runnable Entry/Exit
 
 - Entry points: `npm run release:npm -- --version <value>` with optional `--publish --yes`.
-- Exit / side effects: prepare mode runs gates and writes evidence; publish mode can bump package version, publish to npm and perform registry smoke.
+- Exit / side effects: prepare mode runs gates and writes the current release status; publish mode can bump package version, publish to npm and perform registry smoke.
 - Config contract: package metadata, npm auth/environment, release script flags and Harness docs paths.
 - Fixture/live boundary: default behavior is non-publishing prepare/check; live npm publication requires explicit `--publish --yes`.
 
@@ -286,13 +286,13 @@ Source: [harness_package/release_automation.md](harness_package/release_automati
 
 | 文件（File） | 作用（Purpose） | 关键函数/对象（Key Functions/Objects） |
 |---|---|---|
-| `tools/release_npm.mjs` | Release automation entrypoint | version resolution, gate runner, publish, smoke, release doc writer |
+| `tools/release_npm.mjs` | Release automation entrypoint | version resolution, gate runner, publish, smoke, current release status writer |
 | `package.json` | Root script adapter | `scripts.release:npm` |
 | `packages/sdlc-harness/package.json` | Package version and publish metadata | `version`, `files`, `bin`, `prepack` |
 | `packages/sdlc-harness/README.md` | npm registry README | public capability list, command examples, Skill override usage |
 | `packages/sdlc-harness/assets/docs/README.md` | Packaged root README asset | agent-readable full user guide copied from root `README.md` |
 | `package-lock.json` | Workspace lock version record | `packages/sdlc-harness.version` |
-| `.docs/08_release/*.md` | Release evidence and rollback plan | versioned release docs |
+| `.docs/08_release/CURRENT_RELEASE.md` | Current release status | release notes, smoke evidence, deployment checklist, rollback plan, known issues |
 
 ## 4. 核心数据流
 
@@ -306,7 +306,7 @@ npm run release:npm -- --version patch --publish --yes
 -> npm publish
 -> npm view latest verification
 -> temporary consumer install smoke
--> write release doc
+-> write .docs/08_release/CURRENT_RELEASE.md
 -> make docs-overview
 -> make validate-harness
 -> git diff --check
@@ -317,7 +317,7 @@ npm run release:npm -- --version patch --publish --yes
 - The script refuses accidental publish unless both `--publish` and `--yes` are present.
 - Version selection can be explicit or semantic (`patch`, `minor`, `major`) and is checked against the npm registry.
 - Registry smoke validates the published package by installing it into a temporary consumer and running package commands.
-- Release docs are generated as durable evidence; they are not the implementation-doc source of truth for package mechanics.
+- `CURRENT_RELEASE.md` is the active release status fact source. Historical release evidence is reconstructed from git tags, npm registry metadata, CI logs and release commits when explicitly needed.
 - Commit and tag creation remain manual/task-driven so release automation cannot bypass Harness task ledger rules.
 
 ## 6. 与技术方案的偏移
@@ -329,9 +329,13 @@ npm run release:npm -- --version patch --publish --yes
 
 | 测试（Test） | 覆盖范围（Coverage） | 最近记录结果（Result） |
 |---|---|---|
-| `node --check tools/release_npm.mjs` | Script syntax | PASS |
-| `npm test` | Package build and tests before publish | PASS during release tasks |
-| `node packages/sdlc-harness/dist/cli.js package check-source` | Asset drift before publish | PASS during release tasks |
+| `node --check tools/release_npm.mjs` | Script syntax | PASS for `TASK-069` |
+| `npm test --workspace agent-project-sdlc` | Package build and validator tests | PASS for `TASK-069` |
+| `node packages/sdlc-harness/dist/cli.js package sync-source` | Asset sync after release Skill/template/README changes | PASS for `TASK-069` |
+| `node packages/sdlc-harness/dist/cli.js package check-source` | Asset drift before publish | PASS for `TASK-069` |
+| `node tools/consumer_lab_full_test.mjs` | Installed-consumer release validator and static release automation coverage | PASS for command exit; report decision `BLOCKED` with 38 PASS, 7 known Makefile/tools blockers and 0 FAIL |
+| `make docs-overview` | Release and implementation overview refresh | PASS for `TASK-069` |
+| `make validate-harness` | Prompt language and overview consistency | PASS for `TASK-069` |
 | `npm pack --dry-run --json --workspace agent-project-sdlc` | Tarball content and metadata | PASS during release tasks |
 | `npm publish --workspace agent-project-sdlc` | Registry publish | PASS for `v0.1.3` through `v0.1.7` |
 | `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json` | Registry verification | PASS for `v0.1.7` |
@@ -349,11 +353,12 @@ npm run release:npm -- --version patch --publish --yes
 | 2026-05-26 | `DEV-047` | `338b4b5` | Released `agent-project-sdlc@0.1.6`. |
 | 2026-05-26 | `DEV-048` | DEV-048 implementation commit | Released `agent-project-sdlc@0.1.7` with package README registry data and public capability coverage. |
 | 2026-05-27 | Direct user request | Working tree | Added root README to package assets for installed-package agent reads. |
+| 2026-05-29 | `TASK-069` | Working tree | Changed release docs to a single `.docs/08_release/CURRENT_RELEASE.md` current-state contract with legacy validator compatibility. |
 
 ## 9. 后续维护注意事项
 
 - Keep the release script conservative; publishing must remain explicit.
-- If release evidence format changes, update both `tools/release_npm.mjs` and `.docs/08_release/` expectations.
+- If release evidence format changes, update `tools/release_npm.mjs`, `validate-release`, package validators, release Skill/template and `.docs/08_release/CURRENT_RELEASE.md` expectations together.
 
 ---
 
@@ -799,7 +804,7 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: workflow Skills, prompt routing, hard/soft indexing and authoring overlay
-- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`, `TASK-060`, `TASK-061`, `TASK-066`, `TASK-067`
+- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`, `TASK-060`, `TASK-061`, `TASK-066`, `TASK-067`, `TASK-069`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`, `PROJECT_SPEC.md`
 - Linked RFC: `RFC_007`, `RFC_009`, `RFC_015`
@@ -825,6 +830,7 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 - Review, test and implementation templates include runnable entry/exit sections. `validate-review` and `validate-test` require entry/exit evidence text, and TESTING validators reject runtime, bootstrap, provider, deploy or package runtime script changes.
 - TESTING uses `.docs/07_test/TEST_REPORT.md` as the canonical test evidence file. `validate-test` keeps accepting legacy `.docs/07_test/TEST_PLAN.md`, but prefers `TEST_REPORT.md` when both exist.
 - `validate-dev` now requires implementation docs to include `Runnable Entry/Exit` facts or explicit `Not applicable`, so missing runtime boundaries cannot be deferred into TESTING by omission.
+- RELEASING uses `.docs/08_release/CURRENT_RELEASE.md` as the canonical current release status. `validate-release` keeps accepting legacy versioned release docs when the current file is absent, but new release work updates the current status file instead of creating a version ledger.
 
 ## Runnable Entry/Exit
 
@@ -845,7 +851,7 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 | `.codex/skills/pjsdlc_implementation_doc/SKILL.md` | Implementation fact prompt | module-level implementation docs |
 | `.codex/skills/pjsdlc_reviewer/SKILL.md` | Review prompt | read-only review workflow |
 | `.codex/skills/pjsdlc_tester/SKILL.md` | Testing prompt | regression/test report workflow |
-| `.codex/skills/pjsdlc_release_manager/SKILL.md` | Release prompt | release notes, smoke and rollback plan |
+| `.codex/skills/pjsdlc_release_manager/SKILL.md` | Release prompt | current release status, smoke and rollback plan |
 | `.codex/skills/pjsdlc_rfc_recalibrate/SKILL.md` | RFC prompt | change impact analysis |
 | `.codex/skills/authoring/harness_package_design/SKILL.md` | Authoring-only prompt | package iteration, scriptability heuristic, README capability coverage |
 | `.codex/pjsdlc_managed/policies/phase_contracts.yaml` | Phase-to-skill contract | `skill` per phase |
@@ -893,7 +899,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 - User convenience comes from natural-language routing and macro aliases; users do not need to memorize every `/xxx`.
 - `/plan` and `/goal` are client modes and are not automatically controlled by Harness.
 - Authoring-only prompts help this repository improve the Harness itself and should not be shipped into user projects by default.
-- Package-facing behavior changes must keep both `README.md` and `packages/sdlc-harness/README.md` aligned with the full public capability list, not only `PROJECT_SPEC.md` or release notes.
+- Package-facing behavior changes must keep both `README.md` and `packages/sdlc-harness/README.md` aligned with the full public capability list, not only `PROJECT_SPEC.md` or release status notes.
 - Local Skill overrides are append-only in v1. They let projects add role preferences or complete local Skill extensions without replacing lifecycle, task, gate or allowed-path rules from the package Skill.
 - `sync` auto-detects a complete Skill override when the override file starts with `name` and `description` frontmatter, validates that `name` matches the target skill, merges the override `description` into the final top-level metadata and appends the stripped body.
 - `sync` writes a semantic maintenance note into each generated `Local Override` block so future agents can review phase boundaries, `allowed_paths`, `required_gates`, commit/release rules and completion checks for conflicts.
@@ -941,6 +947,11 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | `node tools/consumer_lab_full_test.mjs` | Installed-consumer validation of `TEST_REPORT.md` and package validators | PASS for TASK-067 command exit; report decision `BLOCKED` with 38 PASS, 7 known Makefile/tools blockers and 0 FAIL |
 | `make docs-overview` | Generated overview refresh after test report rename | PASS for TASK-067 |
 | `make validate-harness` | Prompt language and overview consistency after TESTING report contract changes | PASS for TASK-067 |
+| `npm test --workspace agent-project-sdlc` | Package validator regression for current release status and legacy release docs compatibility | PASS for TASK-069; 10 tests passed |
+| `node packages/sdlc-harness/dist/cli.js package sync-source` | Package assets reflect release status Skill/template/README changes | PASS for TASK-069 |
+| `node packages/sdlc-harness/dist/cli.js package check-source` | Package assets match authoring source after release status contract changes | PASS for TASK-069 |
+| `node tools/consumer_lab_full_test.mjs` | Installed-consumer validation of `CURRENT_RELEASE.md` and package validators | PASS for command exit; report decision `BLOCKED` with 38 PASS, 7 known Makefile/tools blockers and 0 FAIL |
+| `make validate-harness` | Prompt language and overview consistency after release status contract changes | PASS for TASK-069 |
 
 ## 8. 变更记录（Change Log）
 
@@ -964,6 +975,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-28 | `TASK-061` | Working tree | Added Skill routing guidance for returning from `ARCHITECTING` to `REQUIREMENT_GATHERING` before development when PRD facts need revision. |
 | 2026-05-28 | `TASK-066` | Working tree | Hardened SPRINTING/REVIEWING/TESTING runnable entry/exit boundaries and validator checks so TESTING cannot absorb product runtime implementation. |
 | 2026-05-28 | `TASK-067` | Working tree | Replaced the canonical TESTING document contract with `TEST_REPORT.md`, kept legacy `TEST_PLAN.md` validation compatibility and tightened dev/test entry/exit evidence gates. |
+| 2026-05-29 | `TASK-069` | Working tree | Replaced versioned release document generation with canonical `.docs/08_release/CURRENT_RELEASE.md` release status guidance and validator compatibility wording. |
 
 ## 9. 后续维护注意事项
 
@@ -983,7 +995,7 @@ Source: [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: lifecycle state, plan state, task execution protocol and gate evidence
-- Updated by task: `DEV-010`, `DEV-011`, `DEV-018`, `DEV-019`, `DEV-024`, `DEV-025`, `DEV-026`, `DEV-027`, `DEV-028`, `DEV-043`, `DEV-050`, `DEV-056`, `TASK-057`, `TASK-059`, `TASK-061`, `TASK-062`, `TASK-065`
+- Updated by task: `DEV-010`, `DEV-011`, `DEV-018`, `DEV-019`, `DEV-024`, `DEV-025`, `DEV-026`, `DEV-027`, `DEV-028`, `DEV-043`, `DEV-050`, `DEV-056`, `TASK-057`, `TASK-059`, `TASK-061`, `TASK-062`, `TASK-065`, `TASK-069`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`
 - Linked RFC: `RFC_004`, `RFC_005`, `RFC_010`, `RFC_011`, `RFC_012`, `RFC_013`, `RFC_014`, `RFC_015`, `RFC_016`
@@ -1005,6 +1017,7 @@ Source: [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and
 - A SPRINTING task completes in two commits: implementation commit while the task is still present, then completion ledger commit after removing the task.
 - Generic draft-to-plan rule: when any workflow promotes a draft into a formal `TASK-*`, it removes the source draft in the same state update; the current built-in implementation point is SPRINTING consuming `plan.draft.yaml.tasks[]`.
 - Past task details are cold archive and only used for explicit forensic/audit/regression requests.
+- Release history is also cold archive. `.docs/08_release/CURRENT_RELEASE.md` stores only the current release status; older release evidence is reconstructed from git tags, registry metadata, CI, release commits or external release systems.
 - `parallel_execution` is an optional top-level plan contract; when omitted the workflow remains serial. It does not store `phase` or `linked_task_id`; validators infer phase from lifecycle and task selection from `current_task_id`.
 
 ## Runnable Entry/Exit
@@ -1037,7 +1050,7 @@ Source: [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and
 | `tools/validate_allowed_paths.py` | Worktree scope validator | allowed path enforcement |
 | `tools/validate_review.py` | Review exit validator | no-open-task check plus review report shape |
 | `tools/validate_test_plan.py` | Test exit validator | no-open-task check plus test report, matrix, regression evidence and coverage gap |
-| `tools/validate_release_plan.py` | Release exit validator | no-open-task check plus release/smoke/rollback docs |
+| `tools/validate_release_plan.py` | Release exit validator | no-open-task check plus current release status/smoke/rollback docs |
 | `tools/validate_rfc.py` | RFC exit validator | no-open-task check plus RFC status and impact sections |
 | `tools/run_current_gate.py` | Phase gate runner | phase-to-gate dispatch |
 | `tools/status.py` | Human status report | lifecycle and task summary |
@@ -1105,8 +1118,8 @@ User explicitly asks for parallel / multi-agent / multi-worktree
 - Every phase task is task-controlled: one `TASK-*` task should produce one bounded document slice, review batch, test evidence set, release artifact set, RFC impact slice or development change.
 - `validate-plan` permits open tasks and checks their shape; phase exit gates reject remaining open tasks.
 - `allowed_paths`, `required_gates` and `working_notes` are execution-time constraints, not a long-term query API.
-- Gate evidence belongs in the current task while executing, and in implementation docs, CI logs or release docs after completion.
-- `lifecycle.yaml` does not store phase history. Phase history is reconstructed from git, PRs, CI or release evidence only when explicitly needed.
+- Gate evidence belongs in the current task while executing, and in implementation docs, CI logs, current release status or external release systems after completion.
+- `lifecycle.yaml` does not store phase history. Phase history is reconstructed from git, PRs, CI, registry metadata, tags or external release evidence only when explicitly needed.
 - `/dev` runs one task and stops. `/devloop` repeats `/dev` until neither `plan.yaml.tasks[]` nor `plan.draft.yaml.tasks[]` contains a clear next task, or a blocker appears.
 - The workflow assumes a singleton project-level Harness collaboration boundary; concurrent agents must coordinate through git and active state rather than independent archive files.
 - Parallel execution is opt-in only. `trigger` must be `user_requested`, `mode` must be `runtime_managed` or `user_orchestrated`, and validators reject duplicate `phase` / `linked_task_id` fields in the contract.
@@ -1133,6 +1146,8 @@ User explicitly asks for parallel / multi-agent / multi-worktree
 | `npm test --workspace agent-project-sdlc` | Package migration, init seed and validator parity | PASS for TASK-065 |
 | `node packages/sdlc-harness/dist/cli.js package sync-source && package check-source` | Package assets synchronized from source README, Skill and template files | PASS for TASK-065 |
 | `make validate-harness` | Prompt language and generated overview consistency | PASS for TASK-065 |
+| `npm test --workspace agent-project-sdlc` | Package validator parity for release current-status and legacy docs compatibility | PASS for TASK-069 |
+| `make validate-harness` | Prompt language and generated overview consistency after release current-status changes | PASS for TASK-069 |
 
 ## 8. 变更记录（Change Log）
 
@@ -1151,8 +1166,9 @@ User explicitly asks for parallel / multi-agent / multi-worktree
 | 2026-05-28 | `TASK-062` | Working tree | Added promote-on-consume semantics for `plan.draft.yaml`, dev-state validation, package validator parity, and cleared the stale `DEV-001` draft from current state. |
 | 2026-05-28 | `TASK-063` | Working tree | Clarified that promote-on-consume is the generic rule for any draft-to-plan workflow, while `plan.draft.yaml` remains the current built-in development draft queue. |
 | 2026-05-28 | `TASK-065` | Pending implementation commit | Clarified ADR and memory responsibilities across PROJECT_SPEC, README/package README, architect skill, ADR template and package memory seeds. |
+| 2026-05-29 | `TASK-069` | Working tree | Clarified that release history is cold archive while `.docs/08_release/CURRENT_RELEASE.md` remains the active release status fact source. |
 
 ## 9. 后续维护注意事项
 
 - Do not reintroduce active historical ledgers unless a new RFC explicitly changes the state model.
-- If a new workflow action needs durable history, prefer git/tag/release evidence or module implementation docs before adding state files.
+- If a new workflow action needs durable history, prefer git, tags, registry/CI/release systems or module implementation docs before adding state files.

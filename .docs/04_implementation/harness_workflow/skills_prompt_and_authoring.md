@@ -4,7 +4,7 @@
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: workflow Skills, prompt routing, hard/soft indexing and authoring overlay
-- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`, `TASK-060`, `TASK-061`, `TASK-066`, `TASK-067`
+- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`, `TASK-060`, `TASK-061`, `TASK-066`, `TASK-067`, `TASK-069`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`, `PROJECT_SPEC.md`
 - Linked RFC: `RFC_007`, `RFC_009`, `RFC_015`
@@ -30,6 +30,7 @@
 - Review, test and implementation templates include runnable entry/exit sections. `validate-review` and `validate-test` require entry/exit evidence text, and TESTING validators reject runtime, bootstrap, provider, deploy or package runtime script changes.
 - TESTING uses `.docs/07_test/TEST_REPORT.md` as the canonical test evidence file. `validate-test` keeps accepting legacy `.docs/07_test/TEST_PLAN.md`, but prefers `TEST_REPORT.md` when both exist.
 - `validate-dev` now requires implementation docs to include `Runnable Entry/Exit` facts or explicit `Not applicable`, so missing runtime boundaries cannot be deferred into TESTING by omission.
+- RELEASING uses `.docs/08_release/CURRENT_RELEASE.md` as the canonical current release status. `validate-release` keeps accepting legacy versioned release docs when the current file is absent, but new release work updates the current status file instead of creating a version ledger.
 
 ## Runnable Entry/Exit
 
@@ -50,7 +51,7 @@
 | `.codex/skills/pjsdlc_implementation_doc/SKILL.md` | Implementation fact prompt | module-level implementation docs |
 | `.codex/skills/pjsdlc_reviewer/SKILL.md` | Review prompt | read-only review workflow |
 | `.codex/skills/pjsdlc_tester/SKILL.md` | Testing prompt | regression/test report workflow |
-| `.codex/skills/pjsdlc_release_manager/SKILL.md` | Release prompt | release notes, smoke and rollback plan |
+| `.codex/skills/pjsdlc_release_manager/SKILL.md` | Release prompt | current release status, smoke and rollback plan |
 | `.codex/skills/pjsdlc_rfc_recalibrate/SKILL.md` | RFC prompt | change impact analysis |
 | `.codex/skills/authoring/harness_package_design/SKILL.md` | Authoring-only prompt | package iteration, scriptability heuristic, README capability coverage |
 | `.codex/pjsdlc_managed/policies/phase_contracts.yaml` | Phase-to-skill contract | `skill` per phase |
@@ -98,7 +99,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 - User convenience comes from natural-language routing and macro aliases; users do not need to memorize every `/xxx`.
 - `/plan` and `/goal` are client modes and are not automatically controlled by Harness.
 - Authoring-only prompts help this repository improve the Harness itself and should not be shipped into user projects by default.
-- Package-facing behavior changes must keep both `README.md` and `packages/sdlc-harness/README.md` aligned with the full public capability list, not only `PROJECT_SPEC.md` or release notes.
+- Package-facing behavior changes must keep both `README.md` and `packages/sdlc-harness/README.md` aligned with the full public capability list, not only `PROJECT_SPEC.md` or release status notes.
 - Local Skill overrides are append-only in v1. They let projects add role preferences or complete local Skill extensions without replacing lifecycle, task, gate or allowed-path rules from the package Skill.
 - `sync` auto-detects a complete Skill override when the override file starts with `name` and `description` frontmatter, validates that `name` matches the target skill, merges the override `description` into the final top-level metadata and appends the stripped body.
 - `sync` writes a semantic maintenance note into each generated `Local Override` block so future agents can review phase boundaries, `allowed_paths`, `required_gates`, commit/release rules and completion checks for conflicts.
@@ -146,6 +147,11 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | `node tools/consumer_lab_full_test.mjs` | Installed-consumer validation of `TEST_REPORT.md` and package validators | PASS for TASK-067 command exit; report decision `BLOCKED` with 38 PASS, 7 known Makefile/tools blockers and 0 FAIL |
 | `make docs-overview` | Generated overview refresh after test report rename | PASS for TASK-067 |
 | `make validate-harness` | Prompt language and overview consistency after TESTING report contract changes | PASS for TASK-067 |
+| `npm test --workspace agent-project-sdlc` | Package validator regression for current release status and legacy release docs compatibility | PASS for TASK-069; 10 tests passed |
+| `node packages/sdlc-harness/dist/cli.js package sync-source` | Package assets reflect release status Skill/template/README changes | PASS for TASK-069 |
+| `node packages/sdlc-harness/dist/cli.js package check-source` | Package assets match authoring source after release status contract changes | PASS for TASK-069 |
+| `node tools/consumer_lab_full_test.mjs` | Installed-consumer validation of `CURRENT_RELEASE.md` and package validators | PASS for command exit; report decision `BLOCKED` with 38 PASS, 7 known Makefile/tools blockers and 0 FAIL |
+| `make validate-harness` | Prompt language and overview consistency after release status contract changes | PASS for TASK-069 |
 
 ## 8. 变更记录（Change Log）
 
@@ -169,6 +175,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-28 | `TASK-061` | Working tree | Added Skill routing guidance for returning from `ARCHITECTING` to `REQUIREMENT_GATHERING` before development when PRD facts need revision. |
 | 2026-05-28 | `TASK-066` | Working tree | Hardened SPRINTING/REVIEWING/TESTING runnable entry/exit boundaries and validator checks so TESTING cannot absorb product runtime implementation. |
 | 2026-05-28 | `TASK-067` | Working tree | Replaced the canonical TESTING document contract with `TEST_REPORT.md`, kept legacy `TEST_PLAN.md` validation compatibility and tightened dev/test entry/exit evidence gates. |
+| 2026-05-29 | `TASK-069` | Working tree | Replaced versioned release document generation with canonical `.docs/08_release/CURRENT_RELEASE.md` release status guidance and validator compatibility wording. |
 
 ## 9. 后续维护注意事项
 

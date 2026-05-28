@@ -76,6 +76,8 @@ The CLI does not promise to automatically launch Codex agents. Workers do not ne
 
 Every stage's agent work is plan-controlled. Conversational PRD or design creation, existing document slicing, fact-source-based synthesis, development, review, testing, release preparation and RFC recalibration should create or resume one small `TASK-*` task in `plan.yaml` with a valid `phase`, write the current task's `result_docs` or `implementation_doc`, update indexes/overviews, run `validate-plan`, and remove the task after completion. Phase exit validators reject remaining open tasks.
 
+Release docs are current-state facts, not a version ledger. New release work should update `.docs/08_release/CURRENT_RELEASE.md`; `validate-release` accepts legacy versioned release docs only for existing projects that have not migrated yet.
+
 The generic rule is that any workflow promoting a draft task into a formal `TASK-*` in `plan.yaml` must remove the source draft from its draft queue in the same state update. The formal task is then recovered only from `plan.yaml`; completed history lives in implementation docs, git, PR and CI records. The built-in Harness draft queue is currently `plan.draft.yaml.tasks[]`, which means unadopted development drafts only. `/devloop` treats the development queue as exhausted only when both `plan.yaml.tasks[]` and `plan.draft.yaml.tasks[]` have no executable task.
 
 Before development starts, `ARCHITECTING` can return to `REQUIREMENT_GATHERING` for PRD edits. The manager uses `python3 tools/transition.py --to REQUIREMENT_GATHERING`, the PM workflow updates the PRD through one `TASK-*`, then `validate-pm` and `python3 tools/transition.py --to ARCHITECTING` return the project to design. Requirement changes after `SPRINTING` still use RFC recalibration.
@@ -112,4 +114,4 @@ make docs-overview
 
 ## More Information
 
-The source repository keeps the full product and architecture specification in `PROJECT_SPEC.md`, with implementation and release evidence under `.docs/**`.
+The source repository keeps the full product and architecture specification in `PROJECT_SPEC.md`, with implementation facts and the current release status under `.docs/**`.

@@ -99,7 +99,7 @@ phases:
     next: "RELEASING"
 
   RELEASING:
-    goal: "发布准备、发布检查和回滚方案"
+    goal: "当前发布状态、发布检查和回滚方案"
     role: "release_manager"
     skill: "pjsdlc_release_manager"
     inputs:
@@ -108,7 +108,7 @@ phases:
       - "build artifacts"
     outputs:
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/08_release/"
+      - ".docs/08_release/CURRENT_RELEASE.md"
     gates:
       - "make validate-release"
     next: "COMPLETED"
@@ -118,7 +118,7 @@ phases:
     role: "manager"
     skill: "pjsdlc_manager"
     inputs:
-      - ".docs/08_release/"
+      - ".docs/08_release/CURRENT_RELEASE.md"
     outputs:
       - "<harnessRoot>/state/lifecycle.yaml"
     gates: []

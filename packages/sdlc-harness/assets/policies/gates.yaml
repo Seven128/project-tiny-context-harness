@@ -49,7 +49,7 @@ gates:
 
   validate-release:
     command: "make validate-release"
-    purpose: "验证发布说明、Smoke Test、部署检查和回滚方案"
+    purpose: "验证当前发布状态、Smoke Test、部署检查和回滚方案"
     required_for:
       - "RELEASING"
 

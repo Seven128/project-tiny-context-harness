@@ -22,7 +22,7 @@
 开发实现 -> 代码、测试、实现记录、提交记录
 Review -> Review 报告、风险清单、重构建议
 测试验证 -> 测试报告、测试矩阵、回归证据、覆盖缺口
-发布上线 -> Release Note、部署检查、回滚方案
+发布上线 -> Current Release Status、部署检查、回滚方案
 需求变更 -> RFC、影响范围、任务回退或增量计划
 要解决的问题： 需要把每个阶段的目标、输入、输出和完成条件固定下来，让 Agent 在正确阶段完成正确交付物，而不是把需求、方案、开发、Review 和测试混成一段连续聊天。否则项目复杂度上升后，容易出现需求边界不清、方案和实现偏移、Review 缺少依据、测试缺少覆盖目标、变更无法回溯等问题。
 ### 2.2 阶段产物分散，跨阶段衔接存在切换成本和理解成本
@@ -209,7 +209,7 @@ python3 tools/transition.py --to <PHASE>
 | `SPRINTING` | `pjsdlc_dev_sprint` | `plan.yaml`、`plan.draft.yaml`、PRD、技术方案 | 代码、测试、implementation docs、gate 记录、已消费 draft、runnable entry/exit | `make validate-dev` | `REVIEWING` |
 | `REVIEWING` | `pjsdlc_reviewer` | PRD、技术方案、实现文档、`git diff` | Review report、entry/exit readiness 结论 | `make validate-review` | `TESTING` |
 | `TESTING` | `pjsdlc_tester` | PRD、技术方案、实现文档、Review、既有 runnable entry/exit | Test report、测试矩阵、回归证据、coverage gaps、final decision | `make validate-test` | `RELEASING` |
-| `RELEASING` | `pjsdlc_release_manager` | 测试结果、build artifacts | Release note、smoke result、rollback plan | `make validate-release` | `COMPLETED` |
+| `RELEASING` | `pjsdlc_release_manager` | 测试结果、build artifacts | Current release status、smoke result、rollback plan | `make validate-release` | `COMPLETED` |
 | `RFC_RECALIBRATION` | `pjsdlc_rfc_recalibrate` | RFC、PRD、技术方案、任务状态 | 局部补丁、任务回退或增量任务 | `make validate-rfc` | 原阶段或 `SPRINTING` |
 
 `phase_contracts.yaml` 支持 `returns` 作为受限回退目标。当前唯一默认回退是 `ARCHITECTING -> REQUIREMENT_GATHERING`，用于尚未进入 `SPRINTING` 时补充或修正 PRD。回退后 lifecycle 的 `active_role` 和 `active_skill` 切到 PM 工作流；PRD task 完成并通过 `validate-pm` 后，再用 `python3 tools/transition.py --to ARCHITECTING` 回到设计阶段。进入 `SPRINTING` 后的需求变化必须走 RFC recalibration。
@@ -238,7 +238,7 @@ RAG 能减少一次性塞进上下文的内容，但固定 chunk 和余弦召回
 | `.docs/05_decisions/` | `pjsdlc_architect_design` | 单个架构决策，一份 ADR 对应一个 durable decision |
 | `.docs/06_review/` | `pjsdlc_reviewer` | 一次 Review 批次、一个 PR、一个里程碑、一个模块或一个风险主题 |
 | `.docs/07_test/` | `pjsdlc_tester` | 测试报告、测试矩阵、回归证据、覆盖缺口、领域测试范围 |
-| `.docs/08_release/` | `pjsdlc_release_manager` | 版本、发布批次、hotfix、rollback plan |
+| `.docs/08_release/` | `pjsdlc_release_manager` | 当前发布状态、release notes、smoke evidence、rollback plan、known issues |
 | `.docs/rfc/` | `pjsdlc_rfc_recalibrate` | 一次可独立评估、实现和回归的需求变更 |
 
 `.docs/05_decisions/` 采用 ADR（Architecture Decision Record）实践，用来记录关键长期决策的“为什么”。architecture / tech plan 可以记录当前方案的局部设计理由；当一个选择有明确备选方案、会长期约束多个模块或阶段、未来容易被质疑、修改成本高，或需要保留推翻条件时，应抽成 ADR。ADR 回答“为什么当时选择这个方案，而不是别的方案”，记录背景、备选方案、决策、理由、后果和 supersede 关系；它不是 lifecycle phase，而是 `ARCHITECTING` workflow 可以产出的长期事实源。
@@ -305,7 +305,7 @@ tasks:
       - ".docs/01_product/auth/login_security.md"
 ```
 
-文档、Review、测试、发布和 RFC 类 task 使用 `result_docs` 指向本 task 产出的 PRD、architecture、tech plan、ADR、review report、test report、release note、RFC 或 `plan.draft.yaml`。开发 task 使用 `implementation_doc` 指向模块级实现事实文档。
+文档、Review、测试、发布和 RFC 类 task 使用 `result_docs` 指向本 task 产出的 PRD、architecture、tech plan、ADR、review report、test report、current release status、RFC 或 `plan.draft.yaml`。开发 task 使用 `implementation_doc` 指向模块级实现事实文档。
 
 通用规则：任何阶段或工作流如果把 draft task promote 成 `plan.yaml` 中的正式 `TASK-*`，必须在同一次状态更新中从源 draft queue 删除该 draft；若正式 task 后续中断或 blocked，恢复现场只读取 `plan.yaml` 中的 open task。draft queue 只表示尚未采用的草案，不是完成历史或半 ledger。当前 Harness 内置 draft queue 只有 `plan.draft.yaml.tasks[]`，默认由 `ARCHITECTING` 生成开发草案、由 `SPRINTING` 消费开发草案。已完成历史继续由 implementation docs、git commit、PR/CI 和 release evidence 承担，不写回 draft queue。
 
@@ -449,7 +449,7 @@ Harness workflow skill 同时支持 native skill hard index 和 Harness soft ind
 | `pjsdlc_implementation_doc` | 记录真实实现结构、数据流、runnable entry/exit、测试覆盖和方案偏移 |
 | `pjsdlc_reviewer` | 只读 Review，输出 findings、风险、重构建议、entry/exit readiness 和测试入口结论 |
 | `pjsdlc_tester` | 生成 test matrix、补测试、调用既有入口记录回归和覆盖缺口；发现入口/出口缺失时返回 `BLOCKED` |
-| `pjsdlc_release_manager` | Release note、build artifacts、smoke test、deployment checklist、rollback plan |
+| `pjsdlc_release_manager` | Current release status、build artifacts、smoke test、deployment checklist、rollback plan |
 | `pjsdlc_rfc_recalibrate` | RFC 影响分析、局部补丁、任务回退或增量任务 |
 
 ### 提示词语言契约：
@@ -482,7 +482,7 @@ make validate-rfc
 - `validate-dev`：检查任务状态、已消费 draft、open task plan 合同、lint、测试、implementation docs 和已承诺 runnable entry/exit 记录。
 - `validate-review`：检查 Review report 和进入 TESTING 前的 runnable entry/exit readiness 结论。
 - `validate-test`：检查 test report、test matrix、回归证据、覆盖缺口和 TESTING 阶段边界；测试阶段不能新增 product runtime、bootstrap、provider adapter、deploy 或 package runtime script。
-- `validate-release`：检查 release note、smoke result 和 rollback plan。
+- `validate-release`：检查 current release status、smoke result 和 rollback plan。
 - `validate-rfc`：检查 RFC、影响范围和回归要求。
 
 ### 9.3 CI/CD
@@ -525,7 +525,7 @@ RFC 必须包含：
 -> 局部修改文档
 -> 执行增量任务
 -> 全局回归测试
--> 新版本 release doc 或外部发布记录
+-> 更新 `.docs/08_release/CURRENT_RELEASE.md` 或外部发布记录
 ```
 
 ### 10.4 影响分析边界
@@ -666,7 +666,7 @@ Codex 不需要真实“模式切换”：
 5. Review、测试、发布：
    - `pjsdlc_reviewer` 输出 Review report。
    - `pjsdlc_tester` 生成 test matrix 并跑回归。
-   - `pjsdlc_release_manager` 输出 release note、smoke result 和 rollback plan。
+   - `pjsdlc_release_manager` 输出 current release status、smoke result 和 rollback plan。
 
 6. 后续变更：
    - 新需求写入 `.docs/rfc/RFC_*.md`。

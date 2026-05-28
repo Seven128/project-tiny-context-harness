@@ -80,6 +80,7 @@ const TESTING_RUNTIME_FILE_TERMS = ["bootstrap", "cloud", "daemon", "poller", "p
 const TESTING_ALLOWED_TEST_FILE_TERMS = ["assertion", "fixture", "mock", "smoke"];
 const TEST_REPORT_PATH = ".docs/07_test/TEST_REPORT.md";
 const LEGACY_TEST_PLAN_PATH = ".docs/07_test/TEST_PLAN.md";
+const CURRENT_RELEASE_REPORT_PATH = ".docs/08_release/CURRENT_RELEASE.md";
 const RUNNABLE_ENTRY_EXIT_TERMS = [
   "runnable entry/exit",
   "entry/exit",
@@ -397,14 +398,14 @@ async function validateTest(projectRoot: string): Promise<ValidatorReport> {
 
 async function validateRelease(projectRoot: string): Promise<ValidatorReport> {
   const plan = await validatePlanState(projectRoot, false);
-  const docs = await markdownFiles(path.join(projectRoot, ".docs/08_release"));
-  const text = await combinedText(docs);
+  const report = await readReleaseReport(projectRoot);
+  const text = report?.text ?? "";
   const errors = [...plan.errors];
-  if (docs.length === 0) errors.push("No release deliverables found");
-  if (!containsAny(text, ["release", "发布"])) errors.push("Release docs must include release notes");
-  if (!containsAny(text, ["smoke", "冒烟"])) errors.push("Release docs must include smoke test evidence");
-  if (!containsAny(text, ["rollback", "回滚"])) errors.push("Release docs must include rollback plan");
-  return { info: [`validate-release checked ${docs.length} file(s)`], errors };
+  if (!report) errors.push(`Missing current release report: expected ${CURRENT_RELEASE_REPORT_PATH} or legacy .docs/08_release/*.md`);
+  if (!containsAny(text, ["release", "发布"])) errors.push("Current release report must include release notes");
+  if (!containsAny(text, ["smoke", "冒烟"])) errors.push("Current release report must include smoke test evidence");
+  if (!containsAny(text, ["rollback", "回滚"])) errors.push("Current release report must include rollback plan");
+  return { info: [`validate-release checked ${report?.source ?? "missing current release report"}`], errors };
 }
 
 async function validateRfc(projectRoot: string): Promise<ValidatorReport> {
@@ -639,6 +640,18 @@ async function readTestReport(projectRoot: string): Promise<{ text: string; sour
   const legacy = path.join(projectRoot, LEGACY_TEST_PLAN_PATH);
   if (await pathExists(legacy)) {
     return { text: await readText(legacy), source: LEGACY_TEST_PLAN_PATH };
+  }
+  return undefined;
+}
+
+async function readReleaseReport(projectRoot: string): Promise<{ text: string; source: string } | undefined> {
+  const canonical = path.join(projectRoot, CURRENT_RELEASE_REPORT_PATH);
+  if (await pathExists(canonical)) {
+    return { text: await readText(canonical), source: CURRENT_RELEASE_REPORT_PATH };
+  }
+  const legacyDocs = await markdownFiles(path.join(projectRoot, ".docs/08_release"));
+  if (legacyDocs.length > 0) {
+    return { text: await combinedText(legacyDocs), source: `legacy .docs/08_release/*.md (${legacyDocs.length} file(s))` };
   }
   return undefined;
 }

@@ -4,7 +4,7 @@
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: lifecycle state, plan state, task execution protocol and gate evidence
-- Updated by task: `DEV-010`, `DEV-011`, `DEV-018`, `DEV-019`, `DEV-024`, `DEV-025`, `DEV-026`, `DEV-027`, `DEV-028`, `DEV-043`, `DEV-050`, `DEV-056`, `TASK-057`, `TASK-059`, `TASK-061`, `TASK-062`, `TASK-065`
+- Updated by task: `DEV-010`, `DEV-011`, `DEV-018`, `DEV-019`, `DEV-024`, `DEV-025`, `DEV-026`, `DEV-027`, `DEV-028`, `DEV-043`, `DEV-050`, `DEV-056`, `TASK-057`, `TASK-059`, `TASK-061`, `TASK-062`, `TASK-065`, `TASK-069`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`
 - Linked RFC: `RFC_004`, `RFC_005`, `RFC_010`, `RFC_011`, `RFC_012`, `RFC_013`, `RFC_014`, `RFC_015`, `RFC_016`
@@ -26,6 +26,7 @@
 - A SPRINTING task completes in two commits: implementation commit while the task is still present, then completion ledger commit after removing the task.
 - Generic draft-to-plan rule: when any workflow promotes a draft into a formal `TASK-*`, it removes the source draft in the same state update; the current built-in implementation point is SPRINTING consuming `plan.draft.yaml.tasks[]`.
 - Past task details are cold archive and only used for explicit forensic/audit/regression requests.
+- Release history is also cold archive. `.docs/08_release/CURRENT_RELEASE.md` stores only the current release status; older release evidence is reconstructed from git tags, registry metadata, CI, release commits or external release systems.
 - `parallel_execution` is an optional top-level plan contract; when omitted the workflow remains serial. It does not store `phase` or `linked_task_id`; validators infer phase from lifecycle and task selection from `current_task_id`.
 
 ## Runnable Entry/Exit
@@ -58,7 +59,7 @@
 | `tools/validate_allowed_paths.py` | Worktree scope validator | allowed path enforcement |
 | `tools/validate_review.py` | Review exit validator | no-open-task check plus review report shape |
 | `tools/validate_test_plan.py` | Test exit validator | no-open-task check plus test report, matrix, regression evidence and coverage gap |
-| `tools/validate_release_plan.py` | Release exit validator | no-open-task check plus release/smoke/rollback docs |
+| `tools/validate_release_plan.py` | Release exit validator | no-open-task check plus current release status/smoke/rollback docs |
 | `tools/validate_rfc.py` | RFC exit validator | no-open-task check plus RFC status and impact sections |
 | `tools/run_current_gate.py` | Phase gate runner | phase-to-gate dispatch |
 | `tools/status.py` | Human status report | lifecycle and task summary |
@@ -126,8 +127,8 @@ User explicitly asks for parallel / multi-agent / multi-worktree
 - Every phase task is task-controlled: one `TASK-*` task should produce one bounded document slice, review batch, test evidence set, release artifact set, RFC impact slice or development change.
 - `validate-plan` permits open tasks and checks their shape; phase exit gates reject remaining open tasks.
 - `allowed_paths`, `required_gates` and `working_notes` are execution-time constraints, not a long-term query API.
-- Gate evidence belongs in the current task while executing, and in implementation docs, CI logs or release docs after completion.
-- `lifecycle.yaml` does not store phase history. Phase history is reconstructed from git, PRs, CI or release evidence only when explicitly needed.
+- Gate evidence belongs in the current task while executing, and in implementation docs, CI logs, current release status or external release systems after completion.
+- `lifecycle.yaml` does not store phase history. Phase history is reconstructed from git, PRs, CI, registry metadata, tags or external release evidence only when explicitly needed.
 - `/dev` runs one task and stops. `/devloop` repeats `/dev` until neither `plan.yaml.tasks[]` nor `plan.draft.yaml.tasks[]` contains a clear next task, or a blocker appears.
 - The workflow assumes a singleton project-level Harness collaboration boundary; concurrent agents must coordinate through git and active state rather than independent archive files.
 - Parallel execution is opt-in only. `trigger` must be `user_requested`, `mode` must be `runtime_managed` or `user_orchestrated`, and validators reject duplicate `phase` / `linked_task_id` fields in the contract.
@@ -154,6 +155,8 @@ User explicitly asks for parallel / multi-agent / multi-worktree
 | `npm test --workspace agent-project-sdlc` | Package migration, init seed and validator parity | PASS for TASK-065 |
 | `node packages/sdlc-harness/dist/cli.js package sync-source && package check-source` | Package assets synchronized from source README, Skill and template files | PASS for TASK-065 |
 | `make validate-harness` | Prompt language and generated overview consistency | PASS for TASK-065 |
+| `npm test --workspace agent-project-sdlc` | Package validator parity for release current-status and legacy docs compatibility | PASS for TASK-069 |
+| `make validate-harness` | Prompt language and generated overview consistency after release current-status changes | PASS for TASK-069 |
 
 ## 8. 变更记录（Change Log）
 
@@ -172,8 +175,9 @@ User explicitly asks for parallel / multi-agent / multi-worktree
 | 2026-05-28 | `TASK-062` | Working tree | Added promote-on-consume semantics for `plan.draft.yaml`, dev-state validation, package validator parity, and cleared the stale `DEV-001` draft from current state. |
 | 2026-05-28 | `TASK-063` | Working tree | Clarified that promote-on-consume is the generic rule for any draft-to-plan workflow, while `plan.draft.yaml` remains the current built-in development draft queue. |
 | 2026-05-28 | `TASK-065` | Pending implementation commit | Clarified ADR and memory responsibilities across PROJECT_SPEC, README/package README, architect skill, ADR template and package memory seeds. |
+| 2026-05-29 | `TASK-069` | Working tree | Clarified that release history is cold archive while `.docs/08_release/CURRENT_RELEASE.md` remains the active release status fact source. |
 
 ## 9. 后续维护注意事项
 
 - Do not reintroduce active historical ledgers unless a new RFC explicitly changes the state model.
-- If a new workflow action needs durable history, prefer git/tag/release evidence or module implementation docs before adding state files.
+- If a new workflow action needs durable history, prefer git, tags, registry/CI/release systems or module implementation docs before adding state files.
