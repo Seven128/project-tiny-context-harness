@@ -36,6 +36,46 @@ const DESIGN_CATEGORIES = [
   }
 ];
 
+const TESTING_DISALLOWED_ALLOWED_PATHS = [
+  "package.json",
+  "**/package.json",
+  "package-lock.json",
+  "**/package-lock.json",
+  "npm-shrinkwrap.json",
+  "**/npm-shrinkwrap.json",
+  "pnpm-lock.yaml",
+  "**/pnpm-lock.yaml",
+  "yarn.lock",
+  "**/yarn.lock",
+  "bun.lock",
+  "**/bun.lock",
+  "bun.lockb",
+  "**/bun.lockb",
+  "src/**",
+  "app/**",
+  "lib/**",
+  "server/**",
+  "bin/**",
+  "cli/**",
+  "runtime/**",
+  "deploy/**",
+  "deployment/**",
+  "infra/**",
+  "ops/**",
+  "systemd/**",
+  ".github/workflows/**",
+  "dockerfile",
+  "dockerfile.*",
+  "docker-compose*.yml",
+  "docker-compose*.yaml",
+  "*.service",
+  "tests/runtime/**",
+  "tests/**/runtime/**"
+];
+
+const TESTING_DISALLOWED_CHANGED_PATHS = [...TESTING_DISALLOWED_ALLOWED_PATHS, "scripts/**", "tools/**"];
+const TESTING_RUNTIME_FILE_TERMS = ["bootstrap", "cloud", "daemon", "poller", "provider", "runtime", "service", "systemd"];
+
 const validators: Record<string, Validator> = {
   "validate-harness": validateHarness,
   "validate-current": validateCurrent,
@@ -312,18 +352,29 @@ async function validateReview(projectRoot: string): Promise<ValidatorReport> {
   const errors = [...plan.errors];
   if (!containsAny(text, ["finding", "发现", "风险"])) errors.push("Review report must include findings or risks");
   if (!containsAny(text, ["test gap", "测试缺口", "coverage"])) errors.push("Review report must include test gaps or coverage notes");
+  if (!containsAny(text, ["entry/exit", "entrypoint", "入口", "出口", "runnable", "可运行"])) {
+    errors.push("Review report must assess runnable entry/exit readiness before TESTING");
+  }
   if (!containsAny(text, ["pass", "blocked", "通过", "阻塞"])) errors.push("Review report must include PASS/BLOCKED decision");
   return { info: ["validate-review checked review report"], errors };
 }
 
 async function validateTest(projectRoot: string): Promise<ValidatorReport> {
+  const root = await harnessRoot(projectRoot);
+  const lifecycle = await readYamlObject(path.join(projectRoot, root, "state", "lifecycle.yaml"));
   const plan = await validatePlanState(projectRoot, false);
   const text = (await readText(path.join(projectRoot, ".docs/07_test/TEST_PLAN.md"))).toLowerCase();
   const errors = [...plan.errors];
   if (!containsAny(text, ["matrix", "矩阵"])) errors.push("Test plan must include a test matrix");
   if (!containsAny(text, ["regression", "回归"])) errors.push("Test plan must include regression coverage");
   if (!containsAny(text, ["coverage gap", "覆盖缺口", "gap"])) errors.push("Test plan must include coverage gaps");
+  if (!containsAny(text, ["entry/exit", "entrypoint", "入口", "出口", "runnable", "可运行"])) {
+    errors.push("Test plan must state existing runnable entry/exit coverage or blocker status");
+  }
   if (!containsAny(text, ["pass", "blocked", "通过", "阻塞"])) errors.push("Test plan must include PASS/BLOCKED decision");
+  if (lifecycle.current_phase === "TESTING") {
+    errors.push(...testingBoundaryErrorsForChangedFiles(await changedFiles(projectRoot)));
+  }
   return { info: ["validate-test checked test plan"], errors };
 }
 
@@ -422,6 +473,7 @@ async function validatePlanState(projectRoot: string, allowOpen: boolean): Promi
       if (!Array.isArray(task.acceptance_criteria) || task.acceptance_criteria.length === 0) {
         errors.push(`Open task ${task.id} must define acceptance_criteria`);
       }
+      errors.push(...testingBoundaryErrorsForAllowedPaths(task));
     } else {
       errors.push(`Completed task ${task.id} must not remain in plan.yaml`);
       for (const field of ["docs", "allowed_paths", "required_gates", "acceptance_criteria", "working_notes", "gate_result", "result_docs"]) {
@@ -580,6 +632,45 @@ function containsAny(text: string, needles: string[]): boolean {
   return needles.some((needle) => lowered.includes(needle.toLowerCase()));
 }
 
+function testingBoundaryErrorsForAllowedPaths(task: Record<string, unknown>): string[] {
+  if (task.phase !== "TESTING") return [];
+  const allowed = Array.isArray(task.allowed_paths) ? task.allowed_paths.map((item) => String(item)) : [];
+  const blocked = allowed.filter((item) => isTestingBoundaryAllowedPath(item));
+  if (blocked.length === 0) return [];
+  return [
+    `TESTING task allowed_paths must not include product runtime, package/deploy config, or long-running runtime paths: ${blocked.join(", ")}`
+  ];
+}
+
+function testingBoundaryErrorsForChangedFiles(files: string[]): string[] {
+  const blocked = files.filter((file) => isTestingRuntimeBoundaryChange(file));
+  if (blocked.length === 0) return [];
+  return [
+    `TESTING changes must use existing product entrypoints only; move runtime, bootstrap, provider, deploy, or package script changes to SPRINTING/RFC: ${blocked.join(", ")}`
+  ];
+}
+
+function isTestingBoundaryAllowedPath(file: string): boolean {
+  const lowered = file.replace(/\\/g, "/").toLowerCase();
+  if (["package.json", "package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"].includes(lowered)) {
+    return true;
+  }
+  return matchesAny(lowered, TESTING_DISALLOWED_ALLOWED_PATHS);
+}
+
+function isTestingRuntimeBoundaryChange(file: string): boolean {
+  const normalized = file.replace(/\\/g, "/");
+  const lowered = normalized.toLowerCase();
+  if (isTestingBoundaryAllowedPath(lowered) || matchesAny(lowered, TESTING_DISALLOWED_CHANGED_PATHS)) {
+    return true;
+  }
+  if (lowered.startsWith("tests/")) {
+    const name = path.basename(lowered);
+    return TESTING_RUNTIME_FILE_TERMS.some((term) => name.includes(term));
+  }
+  return false;
+}
+
 function isDevelopmentDraft(task: Record<string, unknown>): boolean {
   const taskId = String(task.id ?? "");
   return Boolean(task.implementation_doc) || task.phase === "SPRINTING" || taskId.startsWith("DEV-");
@@ -614,7 +705,7 @@ function taskText(task: Record<string, unknown>): string {
 
 export async function changedFiles(projectRoot: string): Promise<string[]> {
   try {
-    const { stdout } = await execFileAsync("git", ["status", "--porcelain"], { cwd: projectRoot });
+    const { stdout } = await execFileAsync("git", ["status", "--porcelain", "--untracked-files=all"], { cwd: projectRoot });
     return stdout
       .split("\n")
       .map((line) => line.slice(3).trim())

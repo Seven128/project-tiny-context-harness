@@ -105,6 +105,8 @@ Agent 会读取 `<harnessRoot>/state/lifecycle.yaml` 和 `<harnessRoot>/state/pl
 
 `validate-design` 会把架构阶段的语义切片作为硬 gate：`overview.md` 不计入 deliverables，`plan.draft.yaml` 中每个开发 draft task 必须通过 `docs.tech_plan` 指向存在的 tech plan slice；多个开发 draft task 默认需要不同 primary tech plan slice。PRD、tech plan 或 draft task 明确出现 AI provider / copilot、外部系统边界、合规 / 权限 / 审计等横切主题时，也需要对应的专门 architecture slice。
 
+SPRINTING 的 Definition of Done 包含可运行入口/出口：技术方案或 task 承诺的 API、CLI、server route、adapter、worker、provider、配置契约和 fixture/live 边界必须在开发阶段实现或明确 `BLOCKED`。REVIEWING 会把缺少入口/出口作为阻断项；TESTING 只调用既有入口做输入输出验证，不能新增 product runtime、bootstrap、provider adapter、deploy 或 package runtime script。
+
 ### ADR 与 Memory 的边界
 
 `.docs/05_decisions/` 保存 ADR（Architecture Decision Record）。ADR 是软件工程中常见的架构决策记录实践，用来回答“为什么当时选择这个方案，而不是别的方案”。architecture / tech plan 可以写当前方案里的局部设计理由；如果一个决定有备选方案、影响多个模块或阶段、未来容易被质疑，或修改成本高，就应写成 ADR，记录背景、备选方案、理由、后果和替代关系。

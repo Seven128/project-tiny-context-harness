@@ -484,9 +484,9 @@ async function writeDocs(labDir) {
     ".docs/04_implementation/text_summary.md":
       "# Text Summary Implementation\n\n`src/stringStats.js` exports `summarizeText(input)`.\n\n## Verification\n\n- `npm test`: PASS\n",
     ".docs/06_review/REVIEW_REPORT.md":
-      "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage is intentionally narrow.\n\n## Decision\n\nPASS\n",
+      "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage is intentionally narrow.\n\n## Runnable Entry/Exit Readiness\n\nExisting entry/exit is runnable through `summarizeText(input)`.\n\n## Decision\n\nPASS\n",
     ".docs/07_test/TEST_PLAN.md":
-      "# Test Plan\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal text | PASS |\n| Empty text | PASS |\n\n## Regression\n\n- `npm test`: PASS\n\n## Coverage Gap\n\nNo locale-specific coverage.\n\n## Decision\n\nPASS\n",
+      "# Test Plan\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal text | PASS |\n| Empty text | PASS |\n\n## Regression\n\n- `npm test`: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped API.\n\n## Coverage Gap\n\nNo locale-specific coverage.\n\n## Decision\n\nPASS\n",
     ".docs/08_release/v0.1.0_lab_release.md":
       "# Lab Release v0.1.0\n\n## Release Notes\n\nTiny helper fixture.\n\n## Smoke Evidence\n\n- `npm test`: PASS\n\n## Rollback Plan\n\nRevert the lab helper commit.\n",
     ".docs/rfc/RFC_001_change_empty_semantics.md":

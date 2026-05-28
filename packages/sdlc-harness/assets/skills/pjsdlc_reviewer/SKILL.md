@@ -17,6 +17,8 @@ Review 时先建立证据链：PRD 说什么、技术方案承诺什么、implem
 
 不要把个人偏好包装成 blocker。区分 blocking issue、follow-up improvement 和 open question。如果没有发现问题，要明确说明，同时列出剩余测试缺口或残余风险。
 
+Review 必须把“当前模块没有可运行入口/出口”视为阻断项，而不是普通测试缺口。凡 PRD、技术方案或 implementation doc 承诺 API、CLI、server route、adapter、worker、provider、外部发送/写入执行器、配置契约或 live/fixture 双模式边界，Review 都要核对真实代码和实现文档是否提供可调用入口、输出/副作用边界和验证方式；缺失时 gate decision 应为 `BLOCKED`，并要求回到 SPRINTING/RFC，而不是允许进入 TESTING 后补 runtime。
+
 Review 产出本身也是 workflow task。开始 review 前，先在 `<harnessRoot>/state/plan.yaml` 创建或选择一个足够小的 `TASK-*` open task，并设置 `phase: "REVIEWING"`；当前轮只产出一个 review batch、一个风险主题 slice 或一次 PR review 结论。不要在一个任务里覆盖多个互不相关的 review 主题。
 
 ## 输入
@@ -35,6 +37,7 @@ Review 产出本身也是 workflow task。开始 review 前，先在 `<harnessRo
 - 更新后的 `<harnessRoot>/state/plan.yaml`
 - 风险清单
 - 重构建议
+- runnable entry/exit readiness 结论
 - 是否允许进入 `TESTING` 的结论
 
 ## 语义切片
@@ -62,8 +65,9 @@ Review 阶段受 `plan.yaml` 管控：
 2. Findings 放在最前面，并按严重程度排序。
 3. 每条 finding 尽量引用文件、需求、任务或文档路径。
 4. 区分 blocking issues 和 follow-up improvements。
-5. 如果未发现问题，明确说明，并列出剩余测试缺口或残余风险。
-6. Review 阶段一次只执行一个 `TASK-*` task。
+5. 缺少已承诺的 runnable entry/exit、配置契约或 fixture/live 边界时，必须作为 P0/P1 blocking finding。
+6. 如果未发现问题，明确说明，并列出剩余测试缺口或残余风险。
+7. Review 阶段一次只执行一个 `TASK-*` task。
 
 ## 完成检查
 
@@ -72,6 +76,7 @@ Review 阶段受 `plan.yaml` 管控：
 - [ ] 当前 task 已从 `plan.yaml` 移除，或因中断/blocker 保留为可恢复 open task。
 - [ ] 已评估需求一致性。
 - [ ] 已评估架构和可维护性风险。
+- [ ] 已评估 runnable entry/exit、配置契约和 fixture/live 边界是否足以进入 TESTING。
 - [ ] 已判断 review slice 的范围和风险主题边界。
 - [ ] 已列出测试缺口。
 - [ ] 已运行 `make docs-overview` 刷新 `.docs/<stage>/overview.md`。

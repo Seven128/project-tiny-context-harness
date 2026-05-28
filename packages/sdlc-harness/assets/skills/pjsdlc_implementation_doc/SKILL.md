@@ -17,6 +17,8 @@ description: Use after development gates pass to update module-level implementat
 
 文档应帮助后来者快速理解：某个模块或核心数据流的当前实现是什么、关键对象/函数职责是什么、行为如何从输入流到输出、测试覆盖了什么、还有什么未覆盖。task id 只作为 provenance，不作为默认切片粒度。
 
+如果模块包含或承诺可运行系统边界，implementation doc 必须记录 runnable entry/exit：API/CLI/server route/adapter/worker/provider 的调用方式、配置契约、输入来源、输出或副作用、fixture/live 模式边界，以及哪些真实外部执行器尚未实现。不能把未来才会实现的入口写成当前事实。
+
 ## 输入
 
 - `<harnessRoot>/state/plan.yaml` 中当前 task 的 `implementation_doc` 路径和 task ID
@@ -45,8 +47,9 @@ description: Use after development gates pass to update module-level implementat
 1. implementation doc 描述当前代码事实，而不是期望中的未来设计。
 2. 每个被记录的文件都应说明它在该模块或数据流中的作用和关键函数/对象。
 3. 与技术方案的偏移必须明确记录，即便该偏移是合理的。
-4. 测试覆盖必须列出具体测试，或明确记录覆盖缺口。
-5. 文档粒度保持在模块、子系统或核心数据流级别；不要默认按 task 建文档，也不要写成跨全项目的巨型百科。
+4. runnable entry/exit、配置契约和 fixture/live 边界必须记录当前事实；缺失项写入 `未覆盖（Not covered）` 或方案偏移。
+5. 测试覆盖必须列出具体测试，或明确记录覆盖缺口。
+6. 文档粒度保持在模块、子系统或核心数据流级别；不要默认按 task 建文档，也不要写成跨全项目的巨型百科。
 
 ## 完成检查
 
@@ -54,6 +57,7 @@ description: Use after development gates pass to update module-level implementat
 - [ ] Task ID、commit 和关联产物路径已作为 provenance 记录。
 - [ ] 真实代码结构表已填写。
 - [ ] 核心数据流已说明。
+- [ ] runnable entry/exit、配置契约和 fixture/live 边界已记录，或缺失项已明确标注。
 - [ ] 已判断 implementation doc 的语义切片边界。
 - [ ] 方案偏移和测试覆盖已记录。
 - [ ] `.docs/INDEX.md` 已链接 implementation doc。

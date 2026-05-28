@@ -32,7 +32,15 @@ Input
 -> Output
 ```
 
-## 5. 关键实现逻辑
+## 5. Runnable Entry/Exit（可运行入口/出口）
+
+- Entry points:
+- Exit / side effects:
+- Config contract:
+- Fixture/live boundary:
+- Missing runtime boundaries:
+
+## 6. 关键实现逻辑
 
 - 输入校验（Input validation）:
 - 核心分支（Core branches）:
@@ -40,22 +48,22 @@ Input
 - 边界兜底（Boundary fallback）:
 - 性能或并发注意事项（Performance or concurrency notes）:
 
-## 6. 与技术方案的偏移
+## 7. 与技术方案的偏移
 
 - 
 
-## 7. 测试覆盖（Test Coverage）
+## 8. 测试覆盖（Test Coverage）
 
 | 测试（Test） | 覆盖范围（Coverage） | 结果（Result） |
 |---|---|---|
 |  |  |  |
 
-## 8. 变更记录（Change Log）
+## 9. 变更记录（Change Log）
 
 | 日期（Date） | Task ID | Commit | 摘要（Summary） |
 |---|---|---|---|
 |  |  |  |  |
 
-## 9. 后续维护注意事项
+## 10. 后续维护注意事项
 
 - 

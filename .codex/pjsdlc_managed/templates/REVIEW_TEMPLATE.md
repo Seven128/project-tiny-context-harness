@@ -25,7 +25,15 @@
 
 - 
 
-## 6. Gate Result（阶段结论）
+## 6. Runnable Entry/Exit Readiness（可运行入口/出口）
+
+- Entry points:
+- Exit / side effects:
+- Config contract:
+- Fixture/live boundary:
+- Blocking gaps before TESTING:
+
+## 7. Gate Result（阶段结论）
 
 - Decision: `PASS` / `BLOCKED`
 - Required before testing:

@@ -82,6 +82,8 @@ Before development starts, `ARCHITECTING` can return to `REQUIREMENT_GATHERING` 
 
 `validate-design` treats semantic slicing as a hard gate. Generated `overview.md` files do not count as deliverables, development draft tasks in `plan.draft.yaml` must reference existing tech plan slices through `docs.tech_plan`, multiple development draft tasks need distinct primary tech plan slices, and explicit AI provider/copilot, external-system, or compliance/permission/audit themes require dedicated architecture slices.
 
+SPRINTING Definition of Done includes runnable entry/exit boundaries. API, CLI, server route, adapter, worker, provider, config-contract and fixture/live boundaries promised by a technical plan or task must be implemented or marked `BLOCKED` during development. REVIEWING treats missing entry/exit as blocking, and TESTING only exercises existing entrypoints; it must not add product runtime, bootstrap, provider adapter, deploy code or package runtime scripts.
+
 ## ADR And Memory Boundaries
 
 `.docs/05_decisions/` stores ADRs, or Architecture Decision Records. ADRs answer why a key architecture choice was made instead of another option. Architecture and tech plan slices may include local design rationale; create an ADR when a decision has real alternatives, affects multiple modules or stages, is likely to be challenged later, or would be expensive to reverse.

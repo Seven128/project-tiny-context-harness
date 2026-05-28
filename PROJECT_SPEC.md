@@ -202,9 +202,9 @@ python3 tools/transition.py --to <PHASE>
 |---|---|---|---|---|---|
 | `REQUIREMENT_GATHERING` | `pjsdlc_pm_prd` | `.docs/00_raw/` | `.docs/01_product/`, `.docs/INDEX.md` | `make validate-pm` | `ARCHITECTING` |
 | `ARCHITECTING` | `pjsdlc_architect_design` | PRD、现有架构、代码结构 | 架构文档、技术方案、`plan.draft.yaml` | `make validate-design` | `SPRINTING`；开发前可返回 `REQUIREMENT_GATHERING` |
-| `SPRINTING` | `pjsdlc_dev_sprint` | `plan.yaml`、`plan.draft.yaml`、PRD、技术方案 | 代码、测试、implementation docs、gate 记录、已消费 draft | `make validate-dev` | `REVIEWING` |
-| `REVIEWING` | `pjsdlc_reviewer` | PRD、技术方案、实现文档、`git diff` | Review report | `make validate-review` | `TESTING` |
-| `TESTING` | `pjsdlc_tester` | PRD、技术方案、实现文档、Review | Test plan、测试矩阵、回归记录 | `make validate-test` | `RELEASING` |
+| `SPRINTING` | `pjsdlc_dev_sprint` | `plan.yaml`、`plan.draft.yaml`、PRD、技术方案 | 代码、测试、implementation docs、gate 记录、已消费 draft、runnable entry/exit | `make validate-dev` | `REVIEWING` |
+| `REVIEWING` | `pjsdlc_reviewer` | PRD、技术方案、实现文档、`git diff` | Review report、entry/exit readiness 结论 | `make validate-review` | `TESTING` |
+| `TESTING` | `pjsdlc_tester` | PRD、技术方案、实现文档、Review、既有 runnable entry/exit | Test plan、测试矩阵、回归记录、coverage gaps | `make validate-test` | `RELEASING` |
 | `RELEASING` | `pjsdlc_release_manager` | 测试结果、build artifacts | Release note、smoke result、rollback plan | `make validate-release` | `COMPLETED` |
 | `RFC_RECALIBRATION` | `pjsdlc_rfc_recalibrate` | RFC、PRD、技术方案、任务状态 | 局部补丁、任务回退或增量任务 | `make validate-rfc` | 原阶段或 `SPRINTING` |
 
@@ -439,10 +439,10 @@ Harness workflow skill 同时支持 native skill hard index 和 Harness soft ind
 | `pjsdlc_manager` | 读取 lifecycle/plan/index，将自然语言意图或 `/status`、`/next`、`/advance`、`/rfc` 路由到 workflow action，执行阶段切换 |
 | `pjsdlc_pm_prd` | 原始需求归档、PRD 切片、验收标准、Out of Scope、Open Questions，并按 `phase: "REQUIREMENT_GATHERING"` 的 `TASK-*` 小步产出 |
 | `pjsdlc_architect_design` | 架构设计、技术方案、接口契约、任务草案、ADR，并按 `phase: "ARCHITECTING"` 的 `TASK-*` 小步产出 |
-| `pjsdlc_dev_sprint` | 按 `current_task_id` 执行开发、控制 `allowed_paths`、运行 `required_gates`，并在每个 task 完成后 commit/push |
-| `pjsdlc_implementation_doc` | 记录真实实现结构、数据流、测试覆盖和方案偏移 |
-| `pjsdlc_reviewer` | 只读 Review，输出 findings、风险、重构建议和测试入口结论 |
-| `pjsdlc_tester` | 生成 test matrix、补测试、记录回归和覆盖缺口 |
+| `pjsdlc_dev_sprint` | 按 `current_task_id` 执行开发、控制 `allowed_paths`、运行 `required_gates`，交付已承诺的 runnable entry/exit，并在每个 task 完成后 commit/push |
+| `pjsdlc_implementation_doc` | 记录真实实现结构、数据流、runnable entry/exit、测试覆盖和方案偏移 |
+| `pjsdlc_reviewer` | 只读 Review，输出 findings、风险、重构建议、entry/exit readiness 和测试入口结论 |
+| `pjsdlc_tester` | 生成 test matrix、补测试、调用既有入口记录回归和覆盖缺口；发现入口/出口缺失时返回 `BLOCKED` |
 | `pjsdlc_release_manager` | Release note、build artifacts、smoke test、deployment checklist、rollback plan |
 | `pjsdlc_rfc_recalibrate` | RFC 影响分析、局部补丁、任务回退或增量任务 |
 
@@ -473,9 +473,9 @@ make validate-rfc
 ### 9.2 阶段 gate
 - `validate-pm`：检查 PRD、验收标准、Out of Scope、Open Questions。
 - `validate-design`：检查架构、技术方案、`plan.draft.yaml`、draft task 的 `docs.tech_plan` 引用、tech plan primary slice 去重和横切 architecture slice。
-- `validate-dev`：检查任务状态、已消费 draft、open task plan 合同、lint、测试和 implementation docs。
-- `validate-review`：检查 Review report。
-- `validate-test`：检查 test plan、test matrix、回归和覆盖缺口。
+- `validate-dev`：检查任务状态、已消费 draft、open task plan 合同、lint、测试、implementation docs 和已承诺 runnable entry/exit 记录。
+- `validate-review`：检查 Review report 和进入 TESTING 前的 runnable entry/exit readiness 结论。
+- `validate-test`：检查 test plan、test matrix、回归、覆盖缺口和 TESTING 阶段边界；测试阶段不能新增 product runtime、bootstrap、provider adapter、deploy 或 package runtime script。
 - `validate-release`：检查 release note、smoke result 和 rollback plan。
 - `validate-rfc`：检查 RFC、影响范围和回归要求。
 

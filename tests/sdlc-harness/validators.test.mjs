@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -55,12 +56,12 @@ try {
   await writeFile(path.join(root, ".docs/04_implementation/example/dev.md"), "# Impl\n", "utf8");
   await writeFile(
     path.join(root, ".docs/06_review/REVIEW_REPORT.md"),
-    "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage is intentionally narrow.\n\n## Decision\n\nPASS\n",
+    "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage is intentionally narrow.\n\n## Runnable Entry/Exit Readiness\n\nExisting entry/exit is runnable before testing.\n\n## Decision\n\nPASS\n",
     "utf8"
   );
   await writeFile(
     path.join(root, ".docs/07_test/TEST_PLAN.md"),
-    "# Test Plan\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal | PASS |\n\n## Regression\n\n- focused regression: PASS\n\n## Coverage Gap\n\nNo browser coverage.\n\n## Decision\n\nPASS\n",
+    "# Test Plan\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal | PASS |\n\n## Regression\n\n- focused regression: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped CLI.\n\n## Coverage Gap\n\nNo browser coverage.\n\n## Decision\n\nPASS\n",
     "utf8"
   );
   await writeFile(
@@ -127,6 +128,78 @@ tasks:
   ]) {
     const report = await runValidator(root, gate);
     assert.deepEqual(report.errors, [], gate);
+  }
+
+  await writeFile(
+    path.join(root, ".docs/06_review/REVIEW_REPORT.md"),
+    "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage is intentionally narrow.\n\n## Decision\n\nPASS\n",
+    "utf8"
+  );
+  const missingEntryReview = await runValidator(root, "validate-review");
+  assert.match(missingEntryReview.errors.join("\n"), /entry\/exit readiness/);
+  await writeFile(
+    path.join(root, ".docs/06_review/REVIEW_REPORT.md"),
+    "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage is intentionally narrow.\n\n## Runnable Entry/Exit Readiness\n\nExisting entry/exit is runnable before testing.\n\n## Decision\n\nPASS\n",
+    "utf8"
+  );
+
+  const boundaryRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-testing-boundary-"));
+  try {
+    await writeTestingBoundaryFixture(boundaryRoot);
+    await writeFile(
+      path.join(boundaryRoot, ".harness/state/plan.yaml"),
+      `current_task_id: TASK-001
+next_task_sequence: 2
+tasks:
+  - id: TASK-001
+    phase: TESTING
+    title: Invalid testing runtime task
+    status: in_progress
+    summary: Invalid testing task that tries to change runtime scripts.
+    docs:
+      review:
+        - .docs/06_review/REVIEW_REPORT.md
+    allowed_paths:
+      - ".docs/07_test/**"
+      - "tests/**"
+      - "package.json"
+    required_gates:
+      - "npx sdlc-harness validate-test"
+    acceptance_criteria:
+      - "Runtime script changes are rejected in TESTING."
+    result_docs:
+      - .docs/07_test/TEST_PLAN.md
+`,
+      "utf8"
+    );
+    const invalidTestingTask = await runValidator(boundaryRoot, "validate-plan");
+    assert.match(invalidTestingTask.errors.join("\n"), /TESTING task allowed_paths/);
+
+    await writeFile(
+      path.join(boundaryRoot, ".harness/state/plan.yaml"),
+      `current_task_id: ""
+next_task_sequence: 2
+tasks: []
+`,
+      "utf8"
+    );
+    execFileSync("git", ["init"], { cwd: boundaryRoot, stdio: "ignore" });
+    execFileSync("git", ["config", "user.name", "Codex"], { cwd: boundaryRoot });
+    execFileSync("git", ["config", "user.email", "codex@example.local"], { cwd: boundaryRoot });
+    execFileSync("git", ["add", "."], { cwd: boundaryRoot });
+    execFileSync("git", ["commit", "-m", "baseline"], { cwd: boundaryRoot, stdio: "ignore" });
+    await writeFile(
+      path.join(boundaryRoot, "package.json"),
+      JSON.stringify({ sdlcHarness: { harnessFolderName: ".harness" }, scripts: { "dev:agent": "node tests/runtime/direct-poller.mjs" } }, null, 2),
+      "utf8"
+    );
+    await mkdir(path.join(boundaryRoot, "tests/runtime"), { recursive: true });
+    await writeFile(path.join(boundaryRoot, "tests/runtime/direct-poller.mjs"), "export {};\n", "utf8");
+    const dirtyRuntime = await runValidator(boundaryRoot, "validate-test");
+    assert.match(dirtyRuntime.errors.join("\n"), /package\.json/);
+    assert.match(dirtyRuntime.errors.join("\n"), /tests\/runtime\/direct-poller\.mjs/);
+  } finally {
+    await rm(boundaryRoot, { recursive: true, force: true });
   }
 
   const staleDraftDevReport = await runValidator(root, "validate-dev");
@@ -702,4 +775,34 @@ tasks:
   assert.match(devReport.errors.join("\n"), /parallel_execution must not define linked_task_id/);
 } finally {
   await rm(root, { recursive: true, force: true });
+}
+
+async function writeTestingBoundaryFixture(projectRoot) {
+  await writeFile(
+    path.join(projectRoot, "package.json"),
+    JSON.stringify({ sdlcHarness: { harnessFolderName: ".harness" } }, null, 2),
+    "utf8"
+  );
+  await mkdir(path.join(projectRoot, ".docs/06_review"), { recursive: true });
+  await mkdir(path.join(projectRoot, ".docs/07_test"), { recursive: true });
+  await mkdir(path.join(projectRoot, ".harness/state"), { recursive: true });
+  await writeFile(
+    path.join(projectRoot, ".docs/06_review/REVIEW_REPORT.md"),
+    "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage exists.\n\n## Runnable Entry/Exit Readiness\n\nExisting entry/exit is runnable.\n\n## Decision\n\nPASS\n",
+    "utf8"
+  );
+  await writeFile(
+    path.join(projectRoot, ".docs/07_test/TEST_PLAN.md"),
+    "# Test Plan\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal | PASS |\n\n## Regression\n\n- focused regression: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised.\n\n## Coverage Gap\n\nNo gap.\n\n## Decision\n\nPASS\n",
+    "utf8"
+  );
+  await writeFile(path.join(projectRoot, ".harness/state/lifecycle.yaml"), 'current_phase: "TESTING"\n', "utf8");
+  await writeFile(
+    path.join(projectRoot, ".harness/state/plan.yaml"),
+    `current_task_id: ""
+next_task_sequence: 2
+tasks: []
+`,
+    "utf8"
+  );
 }

@@ -17,6 +17,8 @@ description: Use during TESTING to produce a test matrix, run regression, and do
 
 执行回归时，优先选择能证明阶段出口的 gate。测试无法运行、环境缺失或数据不可得时，不要宣布通过，应记录 blocker、已完成检查和恢复条件。
 
+TESTING 只能调用 SPRINTING 已经交付的入口做输入/输出验证。可以补充测试、fixture、mock、assertion helper 和测试文档，但不能在 TESTING 中新增或长期维护 product runtime、server/API/CLI/adapter、direct poller、cloud bootstrap、systemd unit、真实 provider adapter、package runtime script 或部署脚本。如果发现真实入口/出口不存在、live 模式不可调用、配置契约缺失或用户目标与已实现通道不一致，应记录 `BLOCKED`、生成 RFC 或后续 dev task 建议，并停止把测试阶段扩大成开发/集成搭建。
+
 测试计划和回归证据产出本身也是 workflow task。开始测试前，先在 `<harnessRoot>/state/plan.yaml` 创建或选择一个足够小的 `TASK-*` open task，并设置 `phase: "TESTING"`；当前轮只产出一个测试矩阵 slice、一个回归批次、一个风险验证片区或一组 scoped test changes。
 
 如果用户明确要求并行、多 agent 或多 worktree，测试阶段可以启用 `parallel_execution`，让 worker 分别执行互不依赖的回归片区、smoke、兼容性或风险验证。worker 只提交证据和必要的 scoped test changes；最终 `.docs/07_test/**`、coverage gaps、PASS/BLOCKED 决策和阶段 gate 由主 Agent 汇总。没有用户显式要求时，测试 workflow 保持串行。
@@ -38,6 +40,7 @@ description: Use during TESTING to produce a test matrix, run regression, and do
 - 更新后的 `<harnessRoot>/state/plan.yaml`
 - 回归测试记录
 - 覆盖缺口清单
+- `BLOCKED` 时的 RFC/dev follow-up 建议和恢复条件
 
 ## 语义切片
 
@@ -63,9 +66,11 @@ description: Use during TESTING to produce a test matrix, run regression, and do
 1. 测试用例必须追溯到 PRD acceptance criteria 或 Review findings。
 2. 根据风险补充边界、负向、回归和集成测试。
 3. 如果有意延后覆盖，必须记录风险和 follow-up。
-4. 并行测试必须使用 `parallel_execution.trigger: "user_requested"`；`runtime_managed` 只在当前 runtime 支持 subagent 时使用，否则输出 `user_orchestrated` worker prompt。
-5. 宣布阶段完成前运行 `make test-all`。
-6. 测试阶段一次只执行一个 `TASK-*` task。
+4. 不得新增 product runtime、server/API/CLI/adapter、poller、cloud bootstrap、systemd unit、真实 provider adapter、package runtime script 或部署脚本；这些属于 SPRINTING/RFC。
+5. 测试发现入口/出口缺失时，Final decision 必须为 `BLOCKED`，并指出回到 SPRINTING/RFC 的具体条件。
+6. 并行测试必须使用 `parallel_execution.trigger: "user_requested"`；`runtime_managed` 只在当前 runtime 支持 subagent 时使用，否则输出 `user_orchestrated` worker prompt。
+7. 宣布阶段完成前运行 `make test-all`。
+8. 测试阶段一次只执行一个 `TASK-*` task。
 
 ## 完成检查
 
@@ -73,6 +78,7 @@ description: Use during TESTING to produce a test matrix, run regression, and do
 - [ ] 当前测试工作已绑定 `plan.yaml` 中一个最小 `TASK-*` task，并设置 `phase: "TESTING"`。
 - [ ] 当前 task 已从 `plan.yaml` 移除，或因中断/blocker 保留为可恢复 open task。
 - [ ] Regression checklist 已完成。
+- [ ] 测试只调用既有 runnable entry/exit；未在 TESTING 中新增 product runtime、bootstrap、provider adapter、deploy 或 package runtime script。
 - [ ] 已判断 test plan / test matrix 的语义切片边界。
 - [ ] Coverage gaps 已明确。
 - [ ] 如果启用了并行测试，worker evidence 已由主 Agent 汇总到测试产物。

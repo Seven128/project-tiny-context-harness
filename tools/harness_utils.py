@@ -317,6 +317,105 @@ def contains_any(text: str, terms: list[str]) -> bool:
     return any(term.lower() in lowered for term in terms)
 
 
+TESTING_DISALLOWED_ALLOWED_PATHS = [
+    "package.json",
+    "**/package.json",
+    "package-lock.json",
+    "**/package-lock.json",
+    "npm-shrinkwrap.json",
+    "**/npm-shrinkwrap.json",
+    "pnpm-lock.yaml",
+    "**/pnpm-lock.yaml",
+    "yarn.lock",
+    "**/yarn.lock",
+    "bun.lock",
+    "**/bun.lock",
+    "bun.lockb",
+    "**/bun.lockb",
+    "src/**",
+    "app/**",
+    "lib/**",
+    "server/**",
+    "bin/**",
+    "cli/**",
+    "runtime/**",
+    "deploy/**",
+    "deployment/**",
+    "infra/**",
+    "ops/**",
+    "systemd/**",
+    ".github/workflows/**",
+    "dockerfile",
+    "dockerfile.*",
+    "docker-compose*.yml",
+    "docker-compose*.yaml",
+    "*.service",
+    "tests/runtime/**",
+    "tests/**/runtime/**",
+]
+
+TESTING_DISALLOWED_CHANGED_PATHS = TESTING_DISALLOWED_ALLOWED_PATHS + [
+    "scripts/**",
+    "tools/**",
+]
+
+TESTING_RUNTIME_FILE_TERMS = [
+    "bootstrap",
+    "cloud",
+    "daemon",
+    "poller",
+    "provider",
+    "runtime",
+    "service",
+    "systemd",
+]
+
+
+def testing_boundary_errors_for_allowed_paths(task: dict[str, Any]) -> list[str]:
+    if task.get("phase") != "TESTING":
+        return []
+    blocked = []
+    for raw_path in task.get("allowed_paths") or []:
+        path = str(raw_path)
+        lowered = path.lower()
+        if matches_any(lowered, TESTING_DISALLOWED_ALLOWED_PATHS) or lowered in {
+            "package.json",
+            "package-lock.json",
+            "pnpm-lock.yaml",
+            "yarn.lock",
+            "bun.lock",
+            "bun.lockb",
+        }:
+            blocked.append(path)
+    if not blocked:
+        return []
+    return [
+        "TESTING task allowed_paths must not include product runtime, package/deploy config, or long-running runtime paths: "
+        + ", ".join(blocked)
+    ]
+
+
+def testing_boundary_errors_for_changed_files(files: list[str]) -> list[str]:
+    blocked = [path for path in files if is_testing_runtime_boundary_change(path)]
+    if not blocked:
+        return []
+    return [
+        "TESTING changes must use existing product entrypoints only; move runtime, bootstrap, provider, deploy, or package script changes to SPRINTING/RFC: "
+        + ", ".join(blocked)
+    ]
+
+
+def is_testing_runtime_boundary_change(path: str) -> bool:
+    normalized = path.replace("\\", "/")
+    lowered = normalized.lower()
+    if matches_any(lowered, TESTING_DISALLOWED_CHANGED_PATHS):
+        return True
+    if lowered.startswith("tests/"):
+        name = Path(lowered).name
+        return any(term in name for term in TESTING_RUNTIME_FILE_TERMS)
+    return False
+
+
 def load_lifecycle() -> dict[str, Any]:
     data = load_yaml(".codex/state/lifecycle.yaml")
     require(isinstance(data, dict), "lifecycle.yaml must be a mapping")
@@ -360,6 +459,8 @@ def validate_task_shape(task: dict[str, Any], index: int) -> None:
         require(isinstance(task["allowed_paths"], list) and task["allowed_paths"], f"{task['id']} must define allowed_paths")
         require(isinstance(task["required_gates"], list) and task["required_gates"], f"{task['id']} must define required_gates")
         require(isinstance(task["acceptance_criteria"], list) and task["acceptance_criteria"], f"{task['id']} must define acceptance_criteria")
+        for error in testing_boundary_errors_for_allowed_paths(task):
+            require(False, f"{task['id']} {error}")
     else:
         for field in ["docs", "allowed_paths", "required_gates", "acceptance_criteria", "working_notes", "gate_result", "result_docs"]:
             require(field not in task, f"{task['id']} closed task must not retain {field}")

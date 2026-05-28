@@ -17,13 +17,21 @@
 
 - [ ] 
 
-## 4. Coverage Gaps（覆盖缺口）
+## 4. Runnable Entry/Exit Coverage（可运行入口/出口覆盖）
+
+- Existing entry points under test:
+- Expected exits / side effects:
+- Config contract used:
+- Fixture/live boundary:
+- Missing entry/exit blocker:
+
+## 5. Coverage Gaps（覆盖缺口）
 
 | 缺口（Gap） | 风险（Risk） | 后续动作（Follow-up） |
 |---|---|---|
 |  |  |  |
 
-## 5. Final Result（最终结论）
+## 6. Final Result（最终结论）
 
 - Decision: `PASS` / `BLOCKED`
 - Evidence:
