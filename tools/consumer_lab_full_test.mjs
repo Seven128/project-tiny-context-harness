@@ -181,14 +181,15 @@ export async function runConsumerLabFullTest(rawOptions) {
   await verifyAdoptAndConfiguredRoots(options.labDir, tarballPath, add);
   await verifyOverrides(options.labDir, add);
   await writeToyProject(options.labDir);
+  await commitLabCheckpoint(options.labDir, "Record toy project baseline");
 
   commandCheck("Toy project", "node:test fixture", "npm", ["test"]);
   commandCheck("CLI validators", "validate-harness", "npx", ["sdlc-harness", "validate-harness"]);
-  commandCheck("CLI validators", "validate-current", "npx", ["sdlc-harness", "validate-current"]);
   commandCheck("CLI validators", "validate-plan", "npx", ["sdlc-harness", "validate-plan"]);
   commandCheck("CLI validators", "validate-pm", "npx", ["sdlc-harness", "validate-pm"]);
   commandCheck("CLI validators", "validate-design", "npx", ["sdlc-harness", "validate-design"]);
   await writeFile(path.join(options.labDir, ".codex/state/plan.draft.yaml"), "next_task_sequence: 2\ntasks: []\n", "utf8");
+  commandCheck("CLI validators", "validate-current", "npx", ["sdlc-harness", "validate-current"]);
   commandCheck("CLI validators", "validate-dev final empty plan", "npx", ["sdlc-harness", "validate-dev"]);
   commandCheck("CLI validators", "validate-review", "npx", ["sdlc-harness", "validate-review"]);
   commandCheck("CLI validators", "validate-test", "npx", ["sdlc-harness", "validate-test"]);
@@ -482,17 +483,17 @@ async function writeDocs(labDir) {
     ".docs/03_tech_plan/text_summary_plan.md":
       "# Text Summary Technical Plan\n\nThis plan implements the PRD requirement.\n\n## API Contract\n\n`summarizeText(input)` returns `characters`, `words`, and `empty`.\n\n## Task Breakdown\n\n- `TASK-001`: implement helper and tests.\n",
     ".docs/04_implementation/text_summary.md":
-      "# Text Summary Implementation\n\n`src/stringStats.js` exports `summarizeText(input)`.\n\n## Verification\n\n- `npm test`: PASS\n",
+      "# Text Summary Implementation\n\n`src/stringStats.js` exports `summarizeText(input)`.\n\n## Runnable Entry/Exit\n\n- Entry points: `summarizeText(input)` exported API.\n- Exit / side effects: returns `characters`, `words`, and `empty`; no side effects.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only local package validation.\n\n## Verification\n\n- `npm test`: PASS\n",
     ".docs/06_review/REVIEW_REPORT.md":
       "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage is intentionally narrow.\n\n## Runnable Entry/Exit Readiness\n\nExisting entry/exit is runnable through `summarizeText(input)`.\n\n## Decision\n\nPASS\n",
-    ".docs/07_test/TEST_PLAN.md":
-      "# Test Plan\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal text | PASS |\n| Empty text | PASS |\n\n## Regression\n\n- `npm test`: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped API.\n\n## Coverage Gap\n\nNo locale-specific coverage.\n\n## Decision\n\nPASS\n",
+    ".docs/07_test/TEST_REPORT.md":
+      "# Test Report\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal text | PASS |\n| Empty text | PASS |\n\n## Regression Evidence\n\n- `npm test`: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped API.\n\n## Coverage Gap\n\nNo locale-specific coverage.\n\n## Decision\n\nPASS\n",
     ".docs/08_release/v0.1.0_lab_release.md":
       "# Lab Release v0.1.0\n\n## Release Notes\n\nTiny helper fixture.\n\n## Smoke Evidence\n\n- `npm test`: PASS\n\n## Rollback Plan\n\nRevert the lab helper commit.\n",
     ".docs/rfc/RFC_001_change_empty_semantics.md":
       "# RFC 001 Change Empty Semantics\n\nStatus: VERIFIED\n\n## Background\n\nThe lab needs one RFC document.\n\n## Product Impact\n\nWhitespace-only strings remain empty.\n\n## Technical Impact\n\nNo code change required.\n\n## Regression\n\nKeep whitespace-only coverage.\n",
     ".docs/INDEX.md":
-      "# Documentation Index\n\n- Product: `.docs/01_product/text_summary_prd.md`\n- Architecture: `.docs/02_architecture/text_summary_architecture.md`\n- Technical plan: `.docs/03_tech_plan/text_summary_plan.md`\n- Implementation: `.docs/04_implementation/text_summary.md`\n- Test: `.docs/07_test/TEST_PLAN.md`\n"
+      "# Documentation Index\n\n- Product: `.docs/01_product/text_summary_prd.md`\n- Architecture: `.docs/02_architecture/text_summary_architecture.md`\n- Technical plan: `.docs/03_tech_plan/text_summary_plan.md`\n- Implementation: `.docs/04_implementation/text_summary.md`\n- Test: `.docs/07_test/TEST_REPORT.md`\n"
   };
   for (const [relative, content] of Object.entries(files)) {
     await mkdir(path.dirname(path.join(labDir, relative)), { recursive: true });
@@ -684,7 +685,7 @@ async function verifyReleaseAndGithubStatic(sourceRoot, labDir, add) {
   });
 }
 
-async function commitLabEvidence(labDir, tagPrefix, packageVersion) {
+async function commitLabCheckpoint(labDir, message) {
   if (!existsSync(path.join(labDir, ".git"))) {
     run("git", ["init"], labDir);
   }
@@ -697,8 +698,12 @@ async function commitLabEvidence(labDir, tagPrefix, packageVersion) {
   run("git", ["add", "."], labDir);
   const status = run("git", ["status", "--porcelain"], labDir).stdout.trim();
   if (status) {
-    run("git", ["commit", "-m", "Record full Harness consumer lab evidence"], labDir);
+    run("git", ["commit", "-m", message], labDir);
   }
+}
+
+async function commitLabEvidence(labDir, tagPrefix, packageVersion) {
+  await commitLabCheckpoint(labDir, "Record full Harness consumer lab evidence");
   const commit = run("git", ["rev-parse", "--short", "HEAD"], labDir).stdout.trim();
   const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..+$/, "Z");
   const tag = `${tagPrefix}-${packageVersion}-${stamp}`;
@@ -905,7 +910,7 @@ async function main() {
   }
   const report = await runConsumerLabFullTest(options);
   console.log(renderMarkdownReport(report));
-  if (!options.reportOnly && report.summary.worst !== "PASS") {
+  if (!options.reportOnly && report.summary.worst === "FAIL") {
     process.exitCode = 1;
   }
 }

@@ -11,7 +11,7 @@ description: Use during TESTING to produce a test matrix, run regression, and do
 
 ## 角色提示词
 
-你是测试负责人，目标是把需求、风险和实现变化转成可执行、可追踪、可复用的测试计划。你不只是列测试项，而是要判断哪些路径最容易出错、哪些验收标准必须被自动化或手动验证覆盖。
+你是测试负责人，目标是把需求、风险和实现变化转成可执行、可追踪、可复用的测试报告：测试矩阵、回归证据、覆盖缺口和最终结论。你不只是列测试项，而是要判断哪些路径最容易出错、哪些验收标准必须被自动化或手动验证覆盖。
 
 开始测试规划前，先建立映射关系：PRD acceptance criteria、技术方案关键接口/数据模型、implementation doc 的真实改动、Review findings 和现有测试。对每个测试项说明它覆盖的需求或风险；对暂不覆盖的内容说明原因、残余风险和 follow-up。
 
@@ -19,7 +19,7 @@ description: Use during TESTING to produce a test matrix, run regression, and do
 
 TESTING 只能调用 SPRINTING 已经交付的入口做输入/输出验证。可以补充测试、fixture、mock、assertion helper 和测试文档，但不能在 TESTING 中新增或长期维护 product runtime、server/API/CLI/adapter、direct poller、cloud bootstrap、systemd unit、真实 provider adapter、package runtime script 或部署脚本。如果发现真实入口/出口不存在、live 模式不可调用、配置契约缺失或用户目标与已实现通道不一致，应记录 `BLOCKED`、生成 RFC 或后续 dev task 建议，并停止把测试阶段扩大成开发/集成搭建。
 
-测试计划和回归证据产出本身也是 workflow task。开始测试前，先在 `<harnessRoot>/state/plan.yaml` 创建或选择一个足够小的 `TASK-*` open task，并设置 `phase: "TESTING"`；当前轮只产出一个测试矩阵 slice、一个回归批次、一个风险验证片区或一组 scoped test changes。
+测试报告和回归证据产出本身也是 workflow task。开始测试前，先在 `<harnessRoot>/state/plan.yaml` 创建或选择一个足够小的 `TASK-*` open task，并设置 `phase: "TESTING"`；当前轮只产出一个测试矩阵 slice、一个回归批次、一个风险验证片区或一组 scoped test changes。`plan.yaml` 仍是唯一执行计划事实源，`.docs/07_test/**` 只记录 test matrix、regression evidence、coverage gaps 和 final decision，不表达“下一步如何开发”。
 
 如果用户明确要求并行、多 agent 或多 worktree，测试阶段可以启用 `parallel_execution`，让 worker 分别执行互不依赖的回归片区、smoke、兼容性或风险验证。worker 只提交证据和必要的 scoped test changes；最终 `.docs/07_test/**`、coverage gaps、PASS/BLOCKED 决策和阶段 gate 由主 Agent 汇总。没有用户显式要求时，测试 workflow 保持串行。
 
@@ -31,23 +31,23 @@ TESTING 只能调用 SPRINTING 已经交付的入口做输入/输出验证。可
 - `.docs/04_implementation/`
 - `.docs/06_review/REVIEW_REPORT.md`
 - 现有测试
-- `<harnessRoot>/pjsdlc_managed/templates/TEST_PLAN_TEMPLATE.md`
+- `<harnessRoot>/pjsdlc_managed/templates/TEST_REPORT_TEMPLATE.md`
 
 ## 输出
 
-- `.docs/07_test/TEST_PLAN.md`
+- `.docs/07_test/TEST_REPORT.md`
 - 必要时在 `tests/` 下补充测试
 - 更新后的 `<harnessRoot>/state/plan.yaml`
-- 回归测试记录
+- 回归证据记录
 - 覆盖缺口清单
 - `BLOCKED` 时的 RFC/dev follow-up 建议和恢复条件
 
 ## 语义切片
 
-- `.docs/07_test/` 默认按测试计划、测试矩阵、回归批次或领域测试范围切片。
+- `.docs/07_test/` 默认按测试报告、测试矩阵、回归批次或领域测试范围切片。
 - Test matrix 的语义原子是 PRD acceptance criteria、Review findings 和关键风险路径。
-- 如果多个领域的测试范围互不依赖，应拆成多个 test plan slices，并在主 `TEST_PLAN.md` 汇总。
-- 如果新增测试只是覆盖同一验收标准，应更新原 test slice，不要创建重复测试计划。
+- 如果多个领域的测试范围互不依赖，应拆成多个 test evidence slices，并在主 `TEST_REPORT.md` 汇总。
+- 如果新增测试只是覆盖同一验收标准，应更新原 test slice，不要创建重复测试报告。
 - 每次新增、拆分或合并 test slice 后，都要更新 `.docs/INDEX.md`。
 
 ## Plan Protocol
@@ -68,9 +68,10 @@ TESTING 只能调用 SPRINTING 已经交付的入口做输入/输出验证。可
 3. 如果有意延后覆盖，必须记录风险和 follow-up。
 4. 不得新增 product runtime、server/API/CLI/adapter、poller、cloud bootstrap、systemd unit、真实 provider adapter、package runtime script 或部署脚本；这些属于 SPRINTING/RFC。
 5. 测试发现入口/出口缺失时，Final decision 必须为 `BLOCKED`，并指出回到 SPRINTING/RFC 的具体条件。
-6. 并行测试必须使用 `parallel_execution.trigger: "user_requested"`；`runtime_managed` 只在当前 runtime 支持 subagent 时使用，否则输出 `user_orchestrated` worker prompt。
-7. 宣布阶段完成前运行 `make test-all`。
-8. 测试阶段一次只执行一个 `TASK-*` task。
+6. 新测试文档使用 `.docs/07_test/TEST_REPORT.md`；历史 `.docs/07_test/TEST_PLAN.md` 只作为 legacy alias / index 兼容，不作为新事实源命名。
+7. 并行测试必须使用 `parallel_execution.trigger: "user_requested"`；`runtime_managed` 只在当前 runtime 支持 subagent 时使用，否则输出 `user_orchestrated` worker prompt。
+8. 宣布阶段完成前运行 `make test-all`。
+9. 测试阶段一次只执行一个 `TASK-*` task。
 
 ## 完成检查
 
@@ -79,7 +80,7 @@ TESTING 只能调用 SPRINTING 已经交付的入口做输入/输出验证。可
 - [ ] 当前 task 已从 `plan.yaml` 移除，或因中断/blocker 保留为可恢复 open task。
 - [ ] Regression checklist 已完成。
 - [ ] 测试只调用既有 runnable entry/exit；未在 TESTING 中新增 product runtime、bootstrap、provider adapter、deploy 或 package runtime script。
-- [ ] 已判断 test plan / test matrix 的语义切片边界。
+- [ ] 已判断 test report / test matrix 的语义切片边界。
 - [ ] Coverage gaps 已明确。
 - [ ] 如果启用了并行测试，worker evidence 已由主 Agent 汇总到测试产物。
 - [ ] 已运行 `make docs-overview` 刷新 `.docs/<stage>/overview.md`。

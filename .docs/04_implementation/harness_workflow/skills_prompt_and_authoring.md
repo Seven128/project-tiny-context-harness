@@ -4,7 +4,7 @@
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: workflow Skills, prompt routing, hard/soft indexing and authoring overlay
-- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`, `TASK-060`, `TASK-061`, `TASK-066`
+- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`, `TASK-060`, `TASK-061`, `TASK-066`, `TASK-067`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`, `PROJECT_SPEC.md`
 - Linked RFC: `RFC_007`, `RFC_009`, `RFC_015`
@@ -28,6 +28,15 @@
 - PM, Architect, Reviewer, Tester, Release and RFC prompts now require each main workflow action to run as one small `TASK-*` `plan.yaml` task with `phase` metadata. This covers conversational generation, existing-document slicing, synthesis from prior fact sources, review batches, test evidence, release preparation and RFC recalibration.
 - Dev, Review, Tester and Implementation Doc prompts now treat runnable entry/exit as a hard phase boundary: SPRINTING must implement or block promised API/CLI/adapter/provider/config/fixture-live boundaries, REVIEWING must block missing entry/exit, and TESTING may only exercise existing entrypoints.
 - Review, test and implementation templates include runnable entry/exit sections. `validate-review` and `validate-test` require entry/exit evidence text, and TESTING validators reject runtime, bootstrap, provider, deploy or package runtime script changes.
+- TESTING uses `.docs/07_test/TEST_REPORT.md` as the canonical test evidence file. `validate-test` keeps accepting legacy `.docs/07_test/TEST_PLAN.md`, but prefers `TEST_REPORT.md` when both exist.
+- `validate-dev` now requires implementation docs to include `Runnable Entry/Exit` facts or explicit `Not applicable`, so missing runtime boundaries cannot be deferred into TESTING by omission.
+
+## Runnable Entry/Exit
+
+- Entry points: workflow Skills under `<harnessRoot>/skills/**`, managed templates/policies, Python validators, package `validate-*` commands and package source sync.
+- Exit / side effects: updated prompts and validators govern phase behavior; `package sync-source` materializes distributable assets.
+- Config contract: `AGENTS.md`, `.codex/pjsdlc_managed/**`, `packages/sdlc-harness/source-mappings.yaml`, `.docs/07_test/TEST_REPORT.md`.
+- Fixture/live boundary: workflow contract only; TESTING may add fixtures/mocks/assertions/smoke runners under `tests/**` but cannot introduce product runtime/provider/bootstrap/deploy code.
 
 ## 3. 真实代码结构
 
@@ -40,12 +49,12 @@
 | `.codex/skills/pjsdlc_dev_sprint/SKILL.md` | Development prompt | `/dev`, `/devloop`, one-task execution protocol |
 | `.codex/skills/pjsdlc_implementation_doc/SKILL.md` | Implementation fact prompt | module-level implementation docs |
 | `.codex/skills/pjsdlc_reviewer/SKILL.md` | Review prompt | read-only review workflow |
-| `.codex/skills/pjsdlc_tester/SKILL.md` | Testing prompt | regression/test plan workflow |
+| `.codex/skills/pjsdlc_tester/SKILL.md` | Testing prompt | regression/test report workflow |
 | `.codex/skills/pjsdlc_release_manager/SKILL.md` | Release prompt | release notes, smoke and rollback plan |
 | `.codex/skills/pjsdlc_rfc_recalibrate/SKILL.md` | RFC prompt | change impact analysis |
 | `.codex/skills/authoring/harness_package_design/SKILL.md` | Authoring-only prompt | package iteration, scriptability heuristic, README capability coverage |
 | `.codex/pjsdlc_managed/policies/phase_contracts.yaml` | Phase-to-skill contract | `skill` per phase |
-| `.codex/pjsdlc_managed/templates/*` | Stage document templates | review/test/implementation entry/exit evidence sections |
+| `.codex/pjsdlc_managed/templates/*` | Stage document templates | review/test report/implementation entry/exit evidence sections |
 | `tools/validate_review.py`, `tools/validate_test_plan.py` | Source workspace validators | review/test document and TESTING boundary checks |
 | `packages/sdlc-harness/src/lib/validators.ts` | Package CLI validators | `npx sdlc-harness validate-*` checks including TESTING boundary rules |
 | `packages/sdlc-harness/src/lib/sync-engine.ts` | Skill materialization | base Skill copy plus local override append |
@@ -101,6 +110,9 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 - `pjsdlc_pm_prd`, `pjsdlc_architect_design`, `pjsdlc_reviewer`, `pjsdlc_tester`, `pjsdlc_release_manager` and `pjsdlc_rfc_recalibrate` create or resume one small `TASK-*` task before writing phase outputs. `pjsdlc_manager` routes `/prd`, `/design`, `/review`, `/test`, `/release` and `/rfc` through those task protocols and treats remaining open tasks as phase-exit blockers.
 - SPRINTING Definition of Done now includes runnable entry/exit for promised API, CLI, server route, adapter, worker, provider, config contract and fixture/live boundaries. Missing entry/exit remains a dev/RFC blocker instead of becoming testing work.
 - REVIEWING validates entry/exit readiness before TESTING. TESTING validates through existing entrypoints only and blocks product runtime, package runtime script, long-running runtime, systemd, cloud bootstrap, provider adapter and deploy/script changes.
+- `validate-test` reads `.docs/07_test/TEST_REPORT.md` first and falls back to legacy `.docs/07_test/TEST_PLAN.md`. Both validators require test matrix, regression evidence, coverage gaps, runnable entry/exit coverage and PASS/BLOCKED decision text.
+- TESTING boundary checks still reject `tests/runtime/**` and runtime-like test files, but allow clearly test-only fixture, mock, assertion and smoke files under `tests/**`.
+- `validate-dev` checks implementation docs for runnable entry/exit facts, accepting explicit `Not applicable` only when the module truly has no product runtime boundary.
 - Package Skill overrides remain append-only local extensions. The generated override block now states that package-managed phase boundaries remain authoritative and overrides may narrow local behavior but must not expand TESTING or REVIEWING into implementation/runtime ownership.
 
 ## 6. 与技术方案的偏移
@@ -128,6 +140,12 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | `node packages/sdlc-harness/dist/cli.js package check-source` | Package assets match authoring source | PASS for TASK-066 |
 | `make validate-harness` | Prompt language and overview consistency after boundary hardening | PASS for TASK-066 |
 | `make validate-doc-overviews` | Generated overview freshness | PASS for TASK-066 |
+| `npm test --workspace agent-project-sdlc` | Package validator regression for `TEST_REPORT.md`, legacy `TEST_PLAN.md`, TESTING fixture allowance and dev entry/exit docs | PASS for TASK-067; 10 tests passed |
+| `node packages/sdlc-harness/dist/cli.js package sync-source` | Package assets reflect TESTING report contract changes | PASS for TASK-067 |
+| `node packages/sdlc-harness/dist/cli.js package check-source` | Package assets match authoring source after TESTING report changes | PASS for TASK-067 |
+| `node tools/consumer_lab_full_test.mjs` | Installed-consumer validation of `TEST_REPORT.md` and package validators | PASS for TASK-067 command exit; report decision `BLOCKED` with 38 PASS, 7 known Makefile/tools blockers and 0 FAIL |
+| `make docs-overview` | Generated overview refresh after test report rename | PASS for TASK-067 |
+| `make validate-harness` | Prompt language and overview consistency after TESTING report contract changes | PASS for TASK-067 |
 
 ## 8. 变更记录（Change Log）
 
@@ -150,6 +168,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-28 | `TASK-060` | Working tree | Promoted architect semantic slicing guidance into explicit hard-gate wording for `plan.draft.yaml` tech plan references and dedicated architecture slices. |
 | 2026-05-28 | `TASK-061` | Working tree | Added Skill routing guidance for returning from `ARCHITECTING` to `REQUIREMENT_GATHERING` before development when PRD facts need revision. |
 | 2026-05-28 | `TASK-066` | Working tree | Hardened SPRINTING/REVIEWING/TESTING runnable entry/exit boundaries and validator checks so TESTING cannot absorb product runtime implementation. |
+| 2026-05-28 | `TASK-067` | Working tree | Replaced the canonical TESTING document contract with `TEST_REPORT.md`, kept legacy `TEST_PLAN.md` validation compatibility and tightened dev/test entry/exit evidence gates. |
 
 ## 9. 后续维护注意事项
 

@@ -30,6 +30,13 @@
   - 不实现 CLI 子命令 `/prd`、`/design`、`/dev` 或 `/devloop`；它们是 Agent 对话层宏指令，不是 `sdlc-harness` binary 参数。
   - 不自动开启 Codex 原生 `/plan` 或 `/goal` 模式。
 
+## Runnable Entry/Exit
+
+- Entry points: Agent natural-language requests and `/status`, `/next`, `/advance`, `/prd`, `/design`, `/dev`, `/devloop`, `/review`, `/test`, `/release`, `/rfc` macro aliases.
+- Exit / side effects: selected workflow Skill updates bounded facts, gates and commits according to the active lifecycle phase.
+- Config contract: `.codex/state/lifecycle.yaml`, `.codex/state/plan.yaml`, `AGENTS.md` routing rules and `phase_contracts.yaml`.
+- Fixture/live boundary: conversation-level routing protocol; no standalone product runtime or CLI endpoint is introduced.
+
 ## 3. 真实代码结构
 
 | 文件（File） | 作用（Purpose） | 关键函数/对象（Key Functions/Objects） |

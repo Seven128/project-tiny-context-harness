@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
-from harness_utils import read_text, repo_path, require, run_main
+from harness_utils import contains_any, read_text, repo_path, require, run_main
+
+
+RUNNABLE_ENTRY_EXIT_TERMS = [
+    "runnable entry/exit",
+    "entry/exit",
+    "entry points",
+    "entry point",
+    "可运行入口/出口",
+    "入口/出口",
+    "not applicable",
+]
 
 
 def main() -> None:
@@ -17,6 +28,11 @@ def main() -> None:
         doc = relative if relative.startswith(".") else f".{relative}"
         index_path = doc.removeprefix(".docs/")
         require(doc in index or index_path in index, f".docs/INDEX.md does not link implementation doc: {doc}")
+        text = read_text(doc)
+        require(
+            contains_any(text, RUNNABLE_ENTRY_EXIT_TERMS),
+            f"Implementation doc must include Runnable Entry/Exit facts or explicit Not applicable: {doc}",
+        )
     print(f"Implementation docs OK: {len(docs)} implementation doc(s)")
 
 

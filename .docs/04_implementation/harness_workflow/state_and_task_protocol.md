@@ -28,6 +28,13 @@
 - Past task details are cold archive and only used for explicit forensic/audit/regression requests.
 - `parallel_execution` is an optional top-level plan contract; when omitted the workflow remains serial. It does not store `phase` or `linked_task_id`; validators infer phase from lifecycle and task selection from `current_task_id`.
 
+## Runnable Entry/Exit
+
+- Entry points: `.codex/state/plan.yaml`, `.codex/state/plan.draft.yaml`, lifecycle phase transitions and `validate-plan` / `validate-dev` gates.
+- Exit / side effects: validators accept or reject task contracts, draft consumption and phase-exit readiness; SPRINTING writes implementation and completion ledger commits.
+- Config contract: task fields (`phase`, `allowed_paths`, `required_gates`, `result_docs`, `implementation_doc`) and lifecycle `current_phase`.
+- Fixture/live boundary: workflow state protocol only; no product runtime is owned by plan state itself.
+
 ## 3. 真实代码结构
 
 | 文件（File） | 作用（Purpose） | 关键函数/对象（Key Functions/Objects） |
@@ -50,7 +57,7 @@
 | `tools/validate_dev_state.py` | Development state validator | rejects stale unconsumed drafts before `validate-dev` can pass |
 | `tools/validate_allowed_paths.py` | Worktree scope validator | allowed path enforcement |
 | `tools/validate_review.py` | Review exit validator | no-open-task check plus review report shape |
-| `tools/validate_test_plan.py` | Test exit validator | no-open-task check plus test matrix/regression/coverage gap |
+| `tools/validate_test_plan.py` | Test exit validator | no-open-task check plus test report, matrix, regression evidence and coverage gap |
 | `tools/validate_release_plan.py` | Release exit validator | no-open-task check plus release/smoke/rollback docs |
 | `tools/validate_rfc.py` | RFC exit validator | no-open-task check plus RFC status and impact sections |
 | `tools/run_current_gate.py` | Phase gate runner | phase-to-gate dispatch |

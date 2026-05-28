@@ -74,6 +74,13 @@ Existing project runs sdlc-harness upgrade
 - Plan migrations remove stale `current_phase` from active and draft plans, remove draft `current_task_id`, and strip duplicate `phase` / `linked_task_id` from `parallel_execution`.
 - Validation commands mirror the Python Harness gates closely enough for package consumers to run health checks without depending on this authoring workspace.
 
+## Runnable Entry/Exit
+
+- Entry points: `sdlc-harness` CLI commands (`init`, `sync`, `upgrade`, `doctor`, `validate-*`) and the root `npm run sdlc-harness` adapter.
+- Exit / side effects: writes or checks Harness state/assets, reports validator diagnostics, and never publishes or pushes by default.
+- Config contract: `package.json#sdlcHarness.harnessFolderName`, `<harnessRoot>/config.yaml`, and package default config.
+- Fixture/live boundary: package tests and consumer lab use local fixtures; npm registry publish/smoke remains release-stage live behavior.
+
 ## 6. 与技术方案的偏移
 
 - Earlier plans used `.harness`, `.agents` and then `.agent` as defaults; current behavior is target-agent first, with Codex mapping to `.codex`.

@@ -20,6 +20,13 @@
 - Root `README.md` is packaged as `assets/docs/README.md` so installed-package agents can inspect the full user guide from `node_modules` without changing consumer project files.
 - Git commit, tag and push remain outside the release script and are handled by the SPRINTING task protocol.
 
+## Runnable Entry/Exit
+
+- Entry points: `npm run release:npm -- --version <value>` with optional `--publish --yes`.
+- Exit / side effects: prepare mode runs gates and writes evidence; publish mode can bump package version, publish to npm and perform registry smoke.
+- Config contract: package metadata, npm auth/environment, release script flags and Harness docs paths.
+- Fixture/live boundary: default behavior is non-publishing prepare/check; live npm publication requires explicit `--publish --yes`.
+
 ## 3. 真实代码结构
 
 | 文件（File） | 作用（Purpose） | 关键函数/对象（Key Functions/Objects） |

@@ -23,6 +23,13 @@
   - AGENTS、PROJECT_SPEC、PRD 和 tech plan 使用同一套语义。
   - DEV-043 将历史 `.docs/04_implementation/npm_package/dev_*.md` task log 合并为模块、子系统和核心数据流级 implementation docs，并从活跃实现文档图中移除 legacy 目录。
 
+## Runnable Entry/Exit
+
+- Entry points: `pjsdlc_implementation_doc` prompt usage and `tools/validate_task_docs.py` / package `validate-dev` checks.
+- Exit / side effects: implementation docs record module facts, verification and runnable boundaries; validators fail when implementation slices omit required entry/exit facts.
+- Config contract: `.docs/04_implementation/**/*.md`, `.docs/INDEX.md`, implementation doc template and dev task `implementation_doc` fields.
+- Fixture/live boundary: documentation model only; product runtime behavior must be implemented in the owning development module before testing.
+
 ## 3. 真实代码结构
 
 | 文件（File） | 作用（Purpose） | 关键函数/对象（Key Functions/Objects） |

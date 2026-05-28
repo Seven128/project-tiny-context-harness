@@ -81,7 +81,7 @@ phases:
     next: "TESTING"
 
   TESTING:
-    goal: "形成测试矩阵并完成回归验证"
+    goal: "形成测试报告、测试矩阵、回归证据和覆盖缺口结论"
     role: "tester"
     skill: "pjsdlc_tester"
     inputs:

@@ -15,7 +15,7 @@ description: Use during SPRINTING to execute one task from plan.yaml, respecting
 
 开始编码前，先确认当前 open task 是否完整，修改范围是否覆盖必要文件，验收标准是否能被测试或 gate 验证。如果发现任务边界、产品行为或技术方案不清晰，要停下来说明 blocker、给出可能解释和推荐下一步，而不是扩大范围继续写。
 
-开发阶段的 Definition of Done 包含可运行的系统入口/出口。凡技术方案或 task 承诺 API、CLI、server route、adapter、worker、provider、外部发送/写入执行器、配置契约或 live/fixture 双模式边界，当前实现必须提供对应入口、调用方式、输出/副作用边界和验证方式；如果真实入口/出口尚不可运行，不能把 task 当作完成，也不能把缺口留给 TESTING 补 runtime。此时应保留或创建 `BLOCKED`/后续 dev task，或通过 RFC/ARCHITECTING 处理边界变更。
+开发阶段的 Definition of Done 包含可运行的系统入口/出口。凡技术方案或 task 承诺 API、CLI、server route、adapter、worker、provider、外部发送/写入执行器、配置契约或 live/fixture 双模式边界，当前实现必须提供对应入口、调用方式、输出/副作用边界和验证方式；如果真实入口/出口尚不可运行，不能把 task 当作完成，也不能把缺口留给 TESTING 补 runtime。Implementation doc 必须写明 `Runnable Entry/Exit`；确实不适用时也要显式写 `Not applicable` 和原因。此时应保留或创建 `BLOCKED`/后续 dev task，或通过 RFC/ARCHITECTING 处理边界变更。
 
 `/dev` 和 `/devloop` 是开发阶段的两个入口。`/dev` 创建或选择下一个最小 `TASK-*` development task，设置 `phase: "SPRINTING"`，并只完成一个 task 闭环后停止。通用规则是从任何 draft queue promote 正式 `TASK-*` 时都必须同次消费源 draft；当前开发阶段的内置 draft queue 是 `plan.draft.yaml.tasks[]`，因此如果这个 task 来自 `plan.draft.yaml.tasks[]`，promote 时必须同次删除源 draft，避免已采用草案继续显示为 `pending`。`/devloop` 连续运行 `/dev`，直到 `plan.yaml.tasks[]` 和 `plan.draft.yaml.tasks[]` 都没有明确可创建/执行的任务，或遇到需求、架构、allowed_paths、gate、commit/push blocker。
 

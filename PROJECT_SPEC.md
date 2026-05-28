@@ -11,13 +11,17 @@
 - 阶段交付成本：通过把质量检查、Review 清单、测试与发布检查固定为阶段完成条件，减少每次交付时重新组织约束的心智成本。
 ## 二、当前现状与要解决的问题
 ### 2.1 稍有复杂度的软件项目天然需要多阶段软件工程
-现状： 只要项目超过 demo、脚本或一次性页面的复杂度，就不能长期只靠“想到什么就让 Agent 写什么”的方式推进。软件工程本身要求需求被拆成多个阶段，例如需求收集、产品方案、技术方案、开发实现、Review、测试、发布和需求变更。每个阶段都有独立目标，也会形成对应交付产物。
+现状： 软件工程阶段不是 Harness 额外发明出来的流程负担，而是任何软件项目中客观存在的工作内容。区别只在于复杂度低时，这些阶段会被自然压缩甚至隐式完成：需求很短，方案很直观，测试和发布成本很低，主要工作量集中在开发实现上，因此单纯 Vibe Coding 往往已经足够。人和 Agent 可以依靠当前对话上下文、少量代码文件和即时反馈完成闭环，不需要显式维护一套完整的软件工程工作流。
+
+但当项目稍有复杂度后，需求澄清、产品边界、技术取舍、任务拆分、实现记录、Review、测试、发布和变更处理都会开始产生真实工作量。项目上下文也会从“几轮对话能讲清楚”增长为“需要长期保存、反复引用、跨阶段衔接的一组事实”。如果仍然只依靠对话上下文和若干大文件保存项目上下文，Agent 很容易遇到上下文窗口不足、事实源不清、旧决策和新决策混杂、需求变化影响范围难判断、阶段交付标准缺失等问题。单纯 Vibe Coding 仍然适合单阶段内的生成和迭代，但不适合作为复杂项目的完整项目控制机制。
+
+只要项目超过 demo、脚本或一次性页面的复杂度，就不能长期只靠“想到什么就让 Agent 写什么”的方式推进。软件工程本身要求需求被拆成多个阶段，例如需求收集、产品方案、技术方案、开发实现、Review、测试、发布和需求变更。每个阶段都有独立目标，也会形成对应交付产物。
 需求收集 -> 原始需求记录、问题澄清、需求边界
 产品方案 -> PRD、用户场景、验收标准、Out of Scope
 技术方案 -> 架构设计、接口契约、数据结构、任务拆分
 开发实现 -> 代码、测试、实现记录、提交记录
 Review -> Review 报告、风险清单、重构建议
-测试验证 -> 测试计划、测试矩阵、回归记录
+测试验证 -> 测试报告、测试矩阵、回归证据、覆盖缺口
 发布上线 -> Release Note、部署检查、回滚方案
 需求变更 -> RFC、影响范围、任务回退或增量计划
 要解决的问题： 需要把每个阶段的目标、输入、输出和完成条件固定下来，让 Agent 在正确阶段完成正确交付物，而不是把需求、方案、开发、Review 和测试混成一段连续聊天。否则项目复杂度上升后，容易出现需求边界不清、方案和实现偏移、Review 缺少依据、测试缺少覆盖目标、变更无法回溯等问题。
@@ -204,11 +208,13 @@ python3 tools/transition.py --to <PHASE>
 | `ARCHITECTING` | `pjsdlc_architect_design` | PRD、现有架构、代码结构 | 架构文档、技术方案、`plan.draft.yaml` | `make validate-design` | `SPRINTING`；开发前可返回 `REQUIREMENT_GATHERING` |
 | `SPRINTING` | `pjsdlc_dev_sprint` | `plan.yaml`、`plan.draft.yaml`、PRD、技术方案 | 代码、测试、implementation docs、gate 记录、已消费 draft、runnable entry/exit | `make validate-dev` | `REVIEWING` |
 | `REVIEWING` | `pjsdlc_reviewer` | PRD、技术方案、实现文档、`git diff` | Review report、entry/exit readiness 结论 | `make validate-review` | `TESTING` |
-| `TESTING` | `pjsdlc_tester` | PRD、技术方案、实现文档、Review、既有 runnable entry/exit | Test plan、测试矩阵、回归记录、coverage gaps | `make validate-test` | `RELEASING` |
+| `TESTING` | `pjsdlc_tester` | PRD、技术方案、实现文档、Review、既有 runnable entry/exit | Test report、测试矩阵、回归证据、coverage gaps、final decision | `make validate-test` | `RELEASING` |
 | `RELEASING` | `pjsdlc_release_manager` | 测试结果、build artifacts | Release note、smoke result、rollback plan | `make validate-release` | `COMPLETED` |
 | `RFC_RECALIBRATION` | `pjsdlc_rfc_recalibrate` | RFC、PRD、技术方案、任务状态 | 局部补丁、任务回退或增量任务 | `make validate-rfc` | 原阶段或 `SPRINTING` |
 
 `phase_contracts.yaml` 支持 `returns` 作为受限回退目标。当前唯一默认回退是 `ARCHITECTING -> REQUIREMENT_GATHERING`，用于尚未进入 `SPRINTING` 时补充或修正 PRD。回退后 lifecycle 的 `active_role` 和 `active_skill` 切到 PM 工作流；PRD task 完成并通过 `validate-pm` 后，再用 `python3 tools/transition.py --to ARCHITECTING` 回到设计阶段。进入 `SPRINTING` 后的需求变化必须走 RFC recalibration。
+
+TESTING 阶段 gate 仍命名为 `validate-test`，但 canonical 文档产物是 `.docs/07_test/TEST_REPORT.md`。该文件只记录测试矩阵、回归证据、runnable entry/exit coverage、coverage gaps 和 final decision；历史 `.docs/07_test/TEST_PLAN.md` 作为 legacy alias 兼容，不再作为新测试事实源命名。
 
 ## 六、文档切片与阶段产物
 ### 6.1 为什么要语义切片
@@ -231,7 +237,7 @@ RAG 能减少一次性塞进上下文的内容，但固定 chunk 和余弦召回
 | `.docs/04_implementation/` | `pjsdlc_implementation_doc` | 真实实现模块、子系统、核心数据流 |
 | `.docs/05_decisions/` | `pjsdlc_architect_design` | 单个架构决策，一份 ADR 对应一个 durable decision |
 | `.docs/06_review/` | `pjsdlc_reviewer` | 一次 Review 批次、一个 PR、一个里程碑、一个模块或一个风险主题 |
-| `.docs/07_test/` | `pjsdlc_tester` | 测试计划、测试矩阵、回归批次、领域测试范围 |
+| `.docs/07_test/` | `pjsdlc_tester` | 测试报告、测试矩阵、回归证据、覆盖缺口、领域测试范围 |
 | `.docs/08_release/` | `pjsdlc_release_manager` | 版本、发布批次、hotfix、rollback plan |
 | `.docs/rfc/` | `pjsdlc_rfc_recalibrate` | 一次可独立评估、实现和回归的需求变更 |
 
@@ -299,7 +305,7 @@ tasks:
       - ".docs/01_product/auth/login_security.md"
 ```
 
-文档、Review、测试、发布和 RFC 类 task 使用 `result_docs` 指向本 task 产出的 PRD、architecture、tech plan、ADR、review report、test plan、release note、RFC 或 `plan.draft.yaml`。开发 task 使用 `implementation_doc` 指向模块级实现事实文档。
+文档、Review、测试、发布和 RFC 类 task 使用 `result_docs` 指向本 task 产出的 PRD、architecture、tech plan、ADR、review report、test report、release note、RFC 或 `plan.draft.yaml`。开发 task 使用 `implementation_doc` 指向模块级实现事实文档。
 
 通用规则：任何阶段或工作流如果把 draft task promote 成 `plan.yaml` 中的正式 `TASK-*`，必须在同一次状态更新中从源 draft queue 删除该 draft；若正式 task 后续中断或 blocked，恢复现场只读取 `plan.yaml` 中的 open task。draft queue 只表示尚未采用的草案，不是完成历史或半 ledger。当前 Harness 内置 draft queue 只有 `plan.draft.yaml.tasks[]`，默认由 `ARCHITECTING` 生成开发草案、由 `SPRINTING` 消费开发草案。已完成历史继续由 implementation docs、git commit、PR/CI 和 release evidence 承担，不写回 draft queue。
 
@@ -344,7 +350,7 @@ parallel_execution:
       - ".docs/04_implementation/"
 ```
 
-需求阶段并行只用于调研、草稿、风险和 open questions，最终 PRD 由主 Agent 合成。开发阶段 worker 只能改自己的 `owned_paths`，不得直接改 `plan.yaml`、`lifecycle.yaml`、`.docs/INDEX.md`、overview 或最终 implementation doc。测试阶段 worker 可以并行产出验证证据，最终 test plan 和 PASS/BLOCKED 决策由主 Agent 汇总。
+需求阶段并行只用于调研、草稿、风险和 open questions，最终 PRD 由主 Agent 合成。开发阶段 worker 只能改自己的 `owned_paths`，不得直接改 `plan.yaml`、`lifecycle.yaml`、`.docs/INDEX.md`、overview 或最终 implementation doc。测试阶段 worker 可以并行产出验证证据，最终 test report 和 PASS/BLOCKED 决策由主 Agent 汇总。
 
 ### 任务状态：
 - `pending`
@@ -475,7 +481,7 @@ make validate-rfc
 - `validate-design`：检查架构、技术方案、`plan.draft.yaml`、draft task 的 `docs.tech_plan` 引用、tech plan primary slice 去重和横切 architecture slice。
 - `validate-dev`：检查任务状态、已消费 draft、open task plan 合同、lint、测试、implementation docs 和已承诺 runnable entry/exit 记录。
 - `validate-review`：检查 Review report 和进入 TESTING 前的 runnable entry/exit readiness 结论。
-- `validate-test`：检查 test plan、test matrix、回归、覆盖缺口和 TESTING 阶段边界；测试阶段不能新增 product runtime、bootstrap、provider adapter、deploy 或 package runtime script。
+- `validate-test`：检查 test report、test matrix、回归证据、覆盖缺口和 TESTING 阶段边界；测试阶段不能新增 product runtime、bootstrap、provider adapter、deploy 或 package runtime script。
 - `validate-release`：检查 release note、smoke result 和 rollback plan。
 - `validate-rfc`：检查 RFC、影响范围和回归要求。
 
@@ -564,7 +570,7 @@ RFC 必须包含：
 | `/syncdocs` | 归档/切分长文档，更新 `.docs/INDEX.md` |
 | `/overview` | 运行 `make docs-overview` |
 | `/review` | 进入只读 Review |
-| `/test` | 进入测试计划和验证流程 |
+| `/test` | 进入测试报告和验证流程 |
 
 ## 十二、Codex 适配方式
 Codex 不需要真实“模式切换”：

@@ -42,7 +42,7 @@ RFC recalibration 本身也是 workflow task。开始处理变更前，先在 `<
 
 - `.docs/rfc/` 按一次需求变更切片，一份 RFC 只描述一个可独立评估、实现和回归的变更。
 - 如果用户一次提出多个互不依赖的变更，应拆成多份 RFC。
-- RFC 的 impact analysis 负责判断是否需要重切 PRD、tech plan、implementation doc 或 test plan，并覆盖 state、tools、package assets、tests、migration 和 generated overview。
+- RFC 的 impact analysis 负责判断是否需要重切 PRD、tech plan、implementation doc 或 test report，并覆盖 state、tools、package assets、tests、migration 和 generated overview。
 - 对受影响产物做局部补丁，不重写无关稳定 slice。
 - 每次 RFC 影响了文档边界，都要更新 `.docs/INDEX.md` 并记录受影响任务状态。
 

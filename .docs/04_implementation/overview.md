@@ -1,11 +1,11 @@
 # .docs/04_implementation overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 2188b913eba8a46a -->
+<!-- source-hash: 19f4ae56d640babb -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `2188b913eba8a46a`
+Source hash: `19f4ae56d640babb`
 
 ## Source Slices
 
@@ -101,6 +101,13 @@ Existing project runs sdlc-harness upgrade
 - Plan migrations remove stale `current_phase` from active and draft plans, remove draft `current_task_id`, and strip duplicate `phase` / `linked_task_id` from `parallel_execution`.
 - Validation commands mirror the Python Harness gates closely enough for package consumers to run health checks without depending on this authoring workspace.
 
+## Runnable Entry/Exit
+
+- Entry points: `sdlc-harness` CLI commands (`init`, `sync`, `upgrade`, `doctor`, `validate-*`) and the root `npm run sdlc-harness` adapter.
+- Exit / side effects: writes or checks Harness state/assets, reports validator diagnostics, and never publishes or pushes by default.
+- Config contract: `package.json#sdlcHarness.harnessFolderName`, `<harnessRoot>/config.yaml`, and package default config.
+- Fixture/live boundary: package tests and consumer lab use local fixtures; npm registry publish/smoke remains release-stage live behavior.
+
 ## 6. 与技术方案的偏移
 
 - Earlier plans used `.harness`, `.agents` and then `.agent` as defaults; current behavior is target-agent first, with Codex mapping to `.codex`.
@@ -186,6 +193,13 @@ Key options:
 - `--commit-lab` explicitly creates a local lab evidence commit and tag, and requires `--keep-lab`.
 - `--json-report <path>` and `--markdown-report <path>` override report destinations.
 
+## Runnable Entry/Exit
+
+- Entry points: `node tools/consumer_lab_full_test.mjs` with optional lab/report flags.
+- Exit / side effects: creates a temporary consumer repository, installs the local package tarball, writes JSON/Markdown reports, and deletes the lab unless `--keep-lab` is set.
+- Config contract: script CLI flags plus the generated consumer `package.json#sdlcHarness.harnessFolderName`.
+- Fixture/live boundary: authoring-only installed-consumer fixture; no external publish, tag, push or production deployment occurs unless explicitly requested by script flags.
+
 ## 3. Verified Behavior
 
 - Package smoke: `npm pack` and tarball install into the lab.
@@ -260,6 +274,13 @@ Source: [harness_package/release_automation.md](harness_package/release_automati
 - `packages/sdlc-harness/README.md` is included in the package `files` list so npm displays public install, command, workflow and Skill override documentation.
 - Root `README.md` is packaged as `assets/docs/README.md` so installed-package agents can inspect the full user guide from `node_modules` without changing consumer project files.
 - Git commit, tag and push remain outside the release script and are handled by the SPRINTING task protocol.
+
+## Runnable Entry/Exit
+
+- Entry points: `npm run release:npm -- --version <value>` with optional `--publish --yes`.
+- Exit / side effects: prepare mode runs gates and writes evidence; publish mode can bump package version, publish to npm and perform registry smoke.
+- Config contract: package metadata, npm auth/environment, release script flags and Harness docs paths.
+- Fixture/live boundary: default behavior is non-publishing prepare/check; live npm publication requires explicit `--publish --yes`.
 
 ## 3. 真实代码结构
 
@@ -398,6 +419,13 @@ Author edits Harness source files
 - Makefile integration is an include block, allowing project-specific targets to win on name conflicts.
 - The current package does not guarantee native skill hydration for every Agent. It distributes files in the chosen root and exposes Harness soft routing through `AGENTS.md`.
 
+## Runnable Entry/Exit
+
+- Entry points: `sdlc-harness package sync-source`, `sdlc-harness package check-source`, and user-project `sdlc-harness sync`.
+- Exit / side effects: source sync rewrites package assets from authoring sources; check-source reports drift without writing; user sync materializes managed assets.
+- Config contract: `packages/sdlc-harness/source-mappings.yaml`, `<harnessRoot>/config.yaml`, and managed-file metadata markers.
+- Fixture/live boundary: package-source tests use temporary fixtures; real package asset updates happen only in the authoring workspace.
+
 ## 6. 与技术方案的偏移
 
 - Legacy package layouts referenced `.harness/managed`, `.agents/skills` and `.agent/managed`; current generated assets use `<harnessRoot>/skills` and `<harnessRoot>/pjsdlc_managed`.
@@ -465,6 +493,13 @@ Source: [harness_workflow/command_intent_model.md](harness_workflow/command_inte
 - 未覆盖（Not covered）:
   - 不实现 CLI 子命令 `/prd`、`/design`、`/dev` 或 `/devloop`；它们是 Agent 对话层宏指令，不是 `sdlc-harness` binary 参数。
   - 不自动开启 Codex 原生 `/plan` 或 `/goal` 模式。
+
+## Runnable Entry/Exit
+
+- Entry points: Agent natural-language requests and `/status`, `/next`, `/advance`, `/prd`, `/design`, `/dev`, `/devloop`, `/review`, `/test`, `/release`, `/rfc` macro aliases.
+- Exit / side effects: selected workflow Skill updates bounded facts, gates and commits according to the active lifecycle phase.
+- Config contract: `.codex/state/lifecycle.yaml`, `.codex/state/plan.yaml`, `AGENTS.md` routing rules and `phase_contracts.yaml`.
+- Fixture/live boundary: conversation-level routing protocol; no standalone product runtime or CLI endpoint is introduced.
 
 ## 3. 真实代码结构
 
@@ -559,6 +594,13 @@ Source: [harness_workflow/docs_overview_and_validation.md](harness_workflow/docs
 - `tools/validate_task_docs.py` requires every implementation doc slice to be linked from `.docs/INDEX.md`.
 - Root README is a user guide; `PROJECT_SPEC.md` carries the heavier product/specification narrative.
 
+## Runnable Entry/Exit
+
+- Entry points: `make docs-overview`, `make validate-doc-overviews`, `make validate-harness`, `tools/validate_task_docs.py`, and package-side validators.
+- Exit / side effects: overview generation writes `.docs/**/overview.md`; validation commands report stale overview, missing links or gate errors.
+- Config contract: `.docs/INDEX.md`, `.docs/**` slice layout and Harness Make targets.
+- Fixture/live boundary: local repository documentation validation only; no runtime service or external system is involved.
+
 ## 3. 真实代码结构
 
 | 文件（File） | 作用（Purpose） | 关键函数/对象（Key Functions/Objects） |
@@ -596,6 +638,7 @@ ARCHITECTING exit or design regression check
 Implementation doc slice exists
 -> tools/validate_task_docs.py scans .docs/04_implementation/**/*.md
 -> each slice must be linked from .docs/INDEX.md
+-> each slice must state Runnable Entry/Exit facts or explicit Not applicable
 -> missing links fail validate-dev / relevant gates
 ```
 
@@ -606,7 +649,7 @@ Implementation doc slice exists
 - Design validation now treats generated `overview.md` and `README.md` as non-deliverables, so visual rollups cannot satisfy architecture or tech plan slice requirements.
 - `plan.draft.yaml` is part of the design gate because task granularity must line up with tech plan fact granularity before SPRINTING starts.
 - Cross-cutting architecture validation uses conservative trigger phrases from PRD, tech plan and draft task text, then requires different architecture docs for different triggered categories.
-- Implementation docs are validated as module/subsystem/core-flow slices, not task ledgers.
+- Implementation docs are validated as module/subsystem/core-flow slices, not task ledgers, and must include runnable entry/exit facts so TESTING receives stable boundaries.
 - DEV-043 removes the legacy `npm_package/dev_*.md` docs from the active docs graph and replaces them with module-level slices.
 
 ## 6. 与技术方案的偏移
@@ -671,6 +714,13 @@ Source: [harness_workflow/implementation_doc_model.md](harness_workflow/implemen
   - `pjsdlc_architect_design` 和 plan/tech templates 引导 future development task 指向模块级 implementation doc；非开发 task 使用 `result_docs` 指向对应阶段产物。
   - AGENTS、PROJECT_SPEC、PRD 和 tech plan 使用同一套语义。
   - DEV-043 将历史 `.docs/04_implementation/npm_package/dev_*.md` task log 合并为模块、子系统和核心数据流级 implementation docs，并从活跃实现文档图中移除 legacy 目录。
+
+## Runnable Entry/Exit
+
+- Entry points: `pjsdlc_implementation_doc` prompt usage and `tools/validate_task_docs.py` / package `validate-dev` checks.
+- Exit / side effects: implementation docs record module facts, verification and runnable boundaries; validators fail when implementation slices omit required entry/exit facts.
+- Config contract: `.docs/04_implementation/**/*.md`, `.docs/INDEX.md`, implementation doc template and dev task `implementation_doc` fields.
+- Fixture/live boundary: documentation model only; product runtime behavior must be implemented in the owning development module before testing.
 
 ## 3. 真实代码结构
 
@@ -749,7 +799,7 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: workflow Skills, prompt routing, hard/soft indexing and authoring overlay
-- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`, `TASK-060`, `TASK-061`, `TASK-066`
+- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`, `TASK-060`, `TASK-061`, `TASK-066`, `TASK-067`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`, `PROJECT_SPEC.md`
 - Linked RFC: `RFC_007`, `RFC_009`, `RFC_015`
@@ -773,6 +823,15 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 - PM, Architect, Reviewer, Tester, Release and RFC prompts now require each main workflow action to run as one small `TASK-*` `plan.yaml` task with `phase` metadata. This covers conversational generation, existing-document slicing, synthesis from prior fact sources, review batches, test evidence, release preparation and RFC recalibration.
 - Dev, Review, Tester and Implementation Doc prompts now treat runnable entry/exit as a hard phase boundary: SPRINTING must implement or block promised API/CLI/adapter/provider/config/fixture-live boundaries, REVIEWING must block missing entry/exit, and TESTING may only exercise existing entrypoints.
 - Review, test and implementation templates include runnable entry/exit sections. `validate-review` and `validate-test` require entry/exit evidence text, and TESTING validators reject runtime, bootstrap, provider, deploy or package runtime script changes.
+- TESTING uses `.docs/07_test/TEST_REPORT.md` as the canonical test evidence file. `validate-test` keeps accepting legacy `.docs/07_test/TEST_PLAN.md`, but prefers `TEST_REPORT.md` when both exist.
+- `validate-dev` now requires implementation docs to include `Runnable Entry/Exit` facts or explicit `Not applicable`, so missing runtime boundaries cannot be deferred into TESTING by omission.
+
+## Runnable Entry/Exit
+
+- Entry points: workflow Skills under `<harnessRoot>/skills/**`, managed templates/policies, Python validators, package `validate-*` commands and package source sync.
+- Exit / side effects: updated prompts and validators govern phase behavior; `package sync-source` materializes distributable assets.
+- Config contract: `AGENTS.md`, `.codex/pjsdlc_managed/**`, `packages/sdlc-harness/source-mappings.yaml`, `.docs/07_test/TEST_REPORT.md`.
+- Fixture/live boundary: workflow contract only; TESTING may add fixtures/mocks/assertions/smoke runners under `tests/**` but cannot introduce product runtime/provider/bootstrap/deploy code.
 
 ## 3. 真实代码结构
 
@@ -785,12 +844,12 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 | `.codex/skills/pjsdlc_dev_sprint/SKILL.md` | Development prompt | `/dev`, `/devloop`, one-task execution protocol |
 | `.codex/skills/pjsdlc_implementation_doc/SKILL.md` | Implementation fact prompt | module-level implementation docs |
 | `.codex/skills/pjsdlc_reviewer/SKILL.md` | Review prompt | read-only review workflow |
-| `.codex/skills/pjsdlc_tester/SKILL.md` | Testing prompt | regression/test plan workflow |
+| `.codex/skills/pjsdlc_tester/SKILL.md` | Testing prompt | regression/test report workflow |
 | `.codex/skills/pjsdlc_release_manager/SKILL.md` | Release prompt | release notes, smoke and rollback plan |
 | `.codex/skills/pjsdlc_rfc_recalibrate/SKILL.md` | RFC prompt | change impact analysis |
 | `.codex/skills/authoring/harness_package_design/SKILL.md` | Authoring-only prompt | package iteration, scriptability heuristic, README capability coverage |
 | `.codex/pjsdlc_managed/policies/phase_contracts.yaml` | Phase-to-skill contract | `skill` per phase |
-| `.codex/pjsdlc_managed/templates/*` | Stage document templates | review/test/implementation entry/exit evidence sections |
+| `.codex/pjsdlc_managed/templates/*` | Stage document templates | review/test report/implementation entry/exit evidence sections |
 | `tools/validate_review.py`, `tools/validate_test_plan.py` | Source workspace validators | review/test document and TESTING boundary checks |
 | `packages/sdlc-harness/src/lib/validators.ts` | Package CLI validators | `npx sdlc-harness validate-*` checks including TESTING boundary rules |
 | `packages/sdlc-harness/src/lib/sync-engine.ts` | Skill materialization | base Skill copy plus local override append |
@@ -846,6 +905,9 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 - `pjsdlc_pm_prd`, `pjsdlc_architect_design`, `pjsdlc_reviewer`, `pjsdlc_tester`, `pjsdlc_release_manager` and `pjsdlc_rfc_recalibrate` create or resume one small `TASK-*` task before writing phase outputs. `pjsdlc_manager` routes `/prd`, `/design`, `/review`, `/test`, `/release` and `/rfc` through those task protocols and treats remaining open tasks as phase-exit blockers.
 - SPRINTING Definition of Done now includes runnable entry/exit for promised API, CLI, server route, adapter, worker, provider, config contract and fixture/live boundaries. Missing entry/exit remains a dev/RFC blocker instead of becoming testing work.
 - REVIEWING validates entry/exit readiness before TESTING. TESTING validates through existing entrypoints only and blocks product runtime, package runtime script, long-running runtime, systemd, cloud bootstrap, provider adapter and deploy/script changes.
+- `validate-test` reads `.docs/07_test/TEST_REPORT.md` first and falls back to legacy `.docs/07_test/TEST_PLAN.md`. Both validators require test matrix, regression evidence, coverage gaps, runnable entry/exit coverage and PASS/BLOCKED decision text.
+- TESTING boundary checks still reject `tests/runtime/**` and runtime-like test files, but allow clearly test-only fixture, mock, assertion and smoke files under `tests/**`.
+- `validate-dev` checks implementation docs for runnable entry/exit facts, accepting explicit `Not applicable` only when the module truly has no product runtime boundary.
 - Package Skill overrides remain append-only local extensions. The generated override block now states that package-managed phase boundaries remain authoritative and overrides may narrow local behavior but must not expand TESTING or REVIEWING into implementation/runtime ownership.
 
 ## 6. 与技术方案的偏移
@@ -873,6 +935,12 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | `node packages/sdlc-harness/dist/cli.js package check-source` | Package assets match authoring source | PASS for TASK-066 |
 | `make validate-harness` | Prompt language and overview consistency after boundary hardening | PASS for TASK-066 |
 | `make validate-doc-overviews` | Generated overview freshness | PASS for TASK-066 |
+| `npm test --workspace agent-project-sdlc` | Package validator regression for `TEST_REPORT.md`, legacy `TEST_PLAN.md`, TESTING fixture allowance and dev entry/exit docs | PASS for TASK-067; 10 tests passed |
+| `node packages/sdlc-harness/dist/cli.js package sync-source` | Package assets reflect TESTING report contract changes | PASS for TASK-067 |
+| `node packages/sdlc-harness/dist/cli.js package check-source` | Package assets match authoring source after TESTING report changes | PASS for TASK-067 |
+| `node tools/consumer_lab_full_test.mjs` | Installed-consumer validation of `TEST_REPORT.md` and package validators | PASS for TASK-067 command exit; report decision `BLOCKED` with 38 PASS, 7 known Makefile/tools blockers and 0 FAIL |
+| `make docs-overview` | Generated overview refresh after test report rename | PASS for TASK-067 |
+| `make validate-harness` | Prompt language and overview consistency after TESTING report contract changes | PASS for TASK-067 |
 
 ## 8. 变更记录（Change Log）
 
@@ -895,6 +963,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-28 | `TASK-060` | Working tree | Promoted architect semantic slicing guidance into explicit hard-gate wording for `plan.draft.yaml` tech plan references and dedicated architecture slices. |
 | 2026-05-28 | `TASK-061` | Working tree | Added Skill routing guidance for returning from `ARCHITECTING` to `REQUIREMENT_GATHERING` before development when PRD facts need revision. |
 | 2026-05-28 | `TASK-066` | Working tree | Hardened SPRINTING/REVIEWING/TESTING runnable entry/exit boundaries and validator checks so TESTING cannot absorb product runtime implementation. |
+| 2026-05-28 | `TASK-067` | Working tree | Replaced the canonical TESTING document contract with `TEST_REPORT.md`, kept legacy `TEST_PLAN.md` validation compatibility and tightened dev/test entry/exit evidence gates. |
 
 ## 9. 后续维护注意事项
 
@@ -938,6 +1007,13 @@ Source: [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and
 - Past task details are cold archive and only used for explicit forensic/audit/regression requests.
 - `parallel_execution` is an optional top-level plan contract; when omitted the workflow remains serial. It does not store `phase` or `linked_task_id`; validators infer phase from lifecycle and task selection from `current_task_id`.
 
+## Runnable Entry/Exit
+
+- Entry points: `.codex/state/plan.yaml`, `.codex/state/plan.draft.yaml`, lifecycle phase transitions and `validate-plan` / `validate-dev` gates.
+- Exit / side effects: validators accept or reject task contracts, draft consumption and phase-exit readiness; SPRINTING writes implementation and completion ledger commits.
+- Config contract: task fields (`phase`, `allowed_paths`, `required_gates`, `result_docs`, `implementation_doc`) and lifecycle `current_phase`.
+- Fixture/live boundary: workflow state protocol only; no product runtime is owned by plan state itself.
+
 ## 3. 真实代码结构
 
 | 文件（File） | 作用（Purpose） | 关键函数/对象（Key Functions/Objects） |
@@ -960,7 +1036,7 @@ Source: [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and
 | `tools/validate_dev_state.py` | Development state validator | rejects stale unconsumed drafts before `validate-dev` can pass |
 | `tools/validate_allowed_paths.py` | Worktree scope validator | allowed path enforcement |
 | `tools/validate_review.py` | Review exit validator | no-open-task check plus review report shape |
-| `tools/validate_test_plan.py` | Test exit validator | no-open-task check plus test matrix/regression/coverage gap |
+| `tools/validate_test_plan.py` | Test exit validator | no-open-task check plus test report, matrix, regression evidence and coverage gap |
 | `tools/validate_release_plan.py` | Release exit validator | no-open-task check plus release/smoke/rollback docs |
 | `tools/validate_rfc.py` | RFC exit validator | no-open-task check plus RFC status and impact sections |
 | `tools/run_current_gate.py` | Phase gate runner | phase-to-gate dispatch |

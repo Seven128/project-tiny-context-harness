@@ -58,6 +58,8 @@ const TESTING_DISALLOWED_ALLOWED_PATHS = [
   "bin/**",
   "cli/**",
   "runtime/**",
+  "scripts/**",
+  "tools/**",
   "deploy/**",
   "deployment/**",
   "infra/**",
@@ -75,6 +77,18 @@ const TESTING_DISALLOWED_ALLOWED_PATHS = [
 
 const TESTING_DISALLOWED_CHANGED_PATHS = [...TESTING_DISALLOWED_ALLOWED_PATHS, "scripts/**", "tools/**"];
 const TESTING_RUNTIME_FILE_TERMS = ["bootstrap", "cloud", "daemon", "poller", "provider", "runtime", "service", "systemd"];
+const TESTING_ALLOWED_TEST_FILE_TERMS = ["assertion", "fixture", "mock", "smoke"];
+const TEST_REPORT_PATH = ".docs/07_test/TEST_REPORT.md";
+const LEGACY_TEST_PLAN_PATH = ".docs/07_test/TEST_PLAN.md";
+const RUNNABLE_ENTRY_EXIT_TERMS = [
+  "runnable entry/exit",
+  "entry/exit",
+  "entry points",
+  "entry point",
+  "可运行入口/出口",
+  "入口/出口",
+  "not applicable"
+];
 
 const validators: Record<string, Validator> = {
   "validate-harness": validateHarness,
@@ -324,7 +338,8 @@ async function validateDev(projectRoot: string): Promise<ValidatorReport> {
   const root = await harnessRoot(projectRoot);
   const plan = await validatePlanState(projectRoot, false);
   const draftErrors = await validateDevDraftConsumed(projectRoot, root);
-  return { info: [`validate-dev checked ${plan.taskCount} task(s)`], errors: [...plan.errors, ...draftErrors] };
+  const implementationDocErrors = await validateImplementationDocRunnableEntryExit(projectRoot);
+  return { info: [`validate-dev checked ${plan.taskCount} task(s)`], errors: [...plan.errors, ...draftErrors, ...implementationDocErrors] };
 }
 
 async function validateDevDraftConsumed(projectRoot: string, root: string): Promise<string[]> {
@@ -363,19 +378,21 @@ async function validateTest(projectRoot: string): Promise<ValidatorReport> {
   const root = await harnessRoot(projectRoot);
   const lifecycle = await readYamlObject(path.join(projectRoot, root, "state", "lifecycle.yaml"));
   const plan = await validatePlanState(projectRoot, false);
-  const text = (await readText(path.join(projectRoot, ".docs/07_test/TEST_PLAN.md"))).toLowerCase();
   const errors = [...plan.errors];
-  if (!containsAny(text, ["matrix", "矩阵"])) errors.push("Test plan must include a test matrix");
-  if (!containsAny(text, ["regression", "回归"])) errors.push("Test plan must include regression coverage");
-  if (!containsAny(text, ["coverage gap", "覆盖缺口", "gap"])) errors.push("Test plan must include coverage gaps");
+  const report = await readTestReport(projectRoot);
+  const text = report ? report.text.toLowerCase() : "";
+  if (!report) errors.push(`Missing test report: expected ${TEST_REPORT_PATH} or legacy ${LEGACY_TEST_PLAN_PATH}`);
+  if (!containsAny(text, ["matrix", "矩阵"])) errors.push("Test report must include a test matrix");
+  if (!containsAny(text, ["regression", "回归"])) errors.push("Test report must include regression evidence");
+  if (!containsAny(text, ["coverage gap", "覆盖缺口", "gap"])) errors.push("Test report must include coverage gaps");
   if (!containsAny(text, ["entry/exit", "entrypoint", "入口", "出口", "runnable", "可运行"])) {
-    errors.push("Test plan must state existing runnable entry/exit coverage or blocker status");
+    errors.push("Test report must state existing runnable entry/exit coverage or blocker status");
   }
-  if (!containsAny(text, ["pass", "blocked", "通过", "阻塞"])) errors.push("Test plan must include PASS/BLOCKED decision");
+  if (!containsAny(text, ["pass", "blocked", "通过", "阻塞"])) errors.push("Test report must include PASS/BLOCKED decision");
   if (lifecycle.current_phase === "TESTING") {
     errors.push(...testingBoundaryErrorsForChangedFiles(await changedFiles(projectRoot)));
   }
-  return { info: ["validate-test checked test plan"], errors };
+  return { info: [`validate-test checked ${report?.source ?? "missing test report"}`], errors };
 }
 
 async function validateRelease(projectRoot: string): Promise<ValidatorReport> {
@@ -614,6 +631,32 @@ async function readYamlObject(filePath: string): Promise<Record<string, unknown>
   return (parseYaml(await readText(filePath)) ?? {}) as Record<string, unknown>;
 }
 
+async function readTestReport(projectRoot: string): Promise<{ text: string; source: string } | undefined> {
+  const canonical = path.join(projectRoot, TEST_REPORT_PATH);
+  if (await pathExists(canonical)) {
+    return { text: await readText(canonical), source: TEST_REPORT_PATH };
+  }
+  const legacy = path.join(projectRoot, LEGACY_TEST_PLAN_PATH);
+  if (await pathExists(legacy)) {
+    return { text: await readText(legacy), source: LEGACY_TEST_PLAN_PATH };
+  }
+  return undefined;
+}
+
+async function validateImplementationDocRunnableEntryExit(projectRoot: string): Promise<string[]> {
+  const docs = await markdownFiles(path.join(projectRoot, ".docs/04_implementation"));
+  const errors: string[] = [];
+  for (const doc of docs) {
+    const text = await readText(doc);
+    if (!containsAny(text, RUNNABLE_ENTRY_EXIT_TERMS)) {
+      errors.push(
+        `Implementation doc must include Runnable Entry/Exit facts or explicit Not applicable: ${repoRelative(projectRoot, doc)}`
+      );
+    }
+  }
+  return errors;
+}
+
 async function markdownFiles(root: string): Promise<string[]> {
   const files = await listFiles(root);
   return files.filter((file) => {
@@ -666,6 +709,9 @@ function isTestingRuntimeBoundaryChange(file: string): boolean {
   }
   if (lowered.startsWith("tests/")) {
     const name = path.basename(lowered);
+    if (TESTING_ALLOWED_TEST_FILE_TERMS.some((term) => name.includes(term))) {
+      return false;
+    }
     return TESTING_RUNTIME_FILE_TERMS.some((term) => name.includes(term));
   }
   return false;

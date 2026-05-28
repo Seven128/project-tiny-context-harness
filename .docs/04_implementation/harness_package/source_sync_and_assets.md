@@ -56,6 +56,13 @@ Author edits Harness source files
 - Makefile integration is an include block, allowing project-specific targets to win on name conflicts.
 - The current package does not guarantee native skill hydration for every Agent. It distributes files in the chosen root and exposes Harness soft routing through `AGENTS.md`.
 
+## Runnable Entry/Exit
+
+- Entry points: `sdlc-harness package sync-source`, `sdlc-harness package check-source`, and user-project `sdlc-harness sync`.
+- Exit / side effects: source sync rewrites package assets from authoring sources; check-source reports drift without writing; user sync materializes managed assets.
+- Config contract: `packages/sdlc-harness/source-mappings.yaml`, `<harnessRoot>/config.yaml`, and managed-file metadata markers.
+- Fixture/live boundary: package-source tests use temporary fixtures; real package asset updates happen only in the authoring workspace.
+
 ## 6. 与技术方案的偏移
 
 - Legacy package layouts referenced `.harness/managed`, `.agents/skills` and `.agent/managed`; current generated assets use `<harnessRoot>/skills` and `<harnessRoot>/pjsdlc_managed`.

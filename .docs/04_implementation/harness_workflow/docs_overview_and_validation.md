@@ -20,6 +20,13 @@
 - `tools/validate_task_docs.py` requires every implementation doc slice to be linked from `.docs/INDEX.md`.
 - Root README is a user guide; `PROJECT_SPEC.md` carries the heavier product/specification narrative.
 
+## Runnable Entry/Exit
+
+- Entry points: `make docs-overview`, `make validate-doc-overviews`, `make validate-harness`, `tools/validate_task_docs.py`, and package-side validators.
+- Exit / side effects: overview generation writes `.docs/**/overview.md`; validation commands report stale overview, missing links or gate errors.
+- Config contract: `.docs/INDEX.md`, `.docs/**` slice layout and Harness Make targets.
+- Fixture/live boundary: local repository documentation validation only; no runtime service or external system is involved.
+
 ## 3. 真实代码结构
 
 | 文件（File） | 作用（Purpose） | 关键函数/对象（Key Functions/Objects） |
@@ -57,6 +64,7 @@ ARCHITECTING exit or design regression check
 Implementation doc slice exists
 -> tools/validate_task_docs.py scans .docs/04_implementation/**/*.md
 -> each slice must be linked from .docs/INDEX.md
+-> each slice must state Runnable Entry/Exit facts or explicit Not applicable
 -> missing links fail validate-dev / relevant gates
 ```
 
@@ -67,7 +75,7 @@ Implementation doc slice exists
 - Design validation now treats generated `overview.md` and `README.md` as non-deliverables, so visual rollups cannot satisfy architecture or tech plan slice requirements.
 - `plan.draft.yaml` is part of the design gate because task granularity must line up with tech plan fact granularity before SPRINTING starts.
 - Cross-cutting architecture validation uses conservative trigger phrases from PRD, tech plan and draft task text, then requires different architecture docs for different triggered categories.
-- Implementation docs are validated as module/subsystem/core-flow slices, not task ledgers.
+- Implementation docs are validated as module/subsystem/core-flow slices, not task ledgers, and must include runnable entry/exit facts so TESTING receives stable boundaries.
 - DEV-043 removes the legacy `npm_package/dev_*.md` docs from the active docs graph and replaces them with module-level slices.
 
 ## 6. 与技术方案的偏移

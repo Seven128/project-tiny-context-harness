@@ -1,4 +1,4 @@
-# Test Plan（测试计划）
+# Test Report（测试报告）
 
 ## 1. Scope（范围）
 
@@ -13,9 +13,9 @@
 |---|---|---|---|---|
 |  |  | unit/integration/e2e/regression |  | pending |
 
-## 3. Regression Checklist（回归检查清单）
+## 3. Regression Evidence（回归证据）
 
-- [ ] 
+- 
 
 ## 4. Runnable Entry/Exit Coverage（可运行入口/出口覆盖）
 
@@ -31,7 +31,7 @@
 |---|---|---|
 |  |  |  |
 
-## 6. Final Result（最终结论）
+## 6. Final Decision（最终结论）
 
 - Decision: `PASS` / `BLOCKED`
 - Evidence:

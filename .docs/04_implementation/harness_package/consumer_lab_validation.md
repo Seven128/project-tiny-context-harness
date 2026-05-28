@@ -41,6 +41,13 @@ Key options:
 - `--commit-lab` explicitly creates a local lab evidence commit and tag, and requires `--keep-lab`.
 - `--json-report <path>` and `--markdown-report <path>` override report destinations.
 
+## Runnable Entry/Exit
+
+- Entry points: `node tools/consumer_lab_full_test.mjs` with optional lab/report flags.
+- Exit / side effects: creates a temporary consumer repository, installs the local package tarball, writes JSON/Markdown reports, and deletes the lab unless `--keep-lab` is set.
+- Config contract: script CLI flags plus the generated consumer `package.json#sdlcHarness.harnessFolderName`.
+- Fixture/live boundary: authoring-only installed-consumer fixture; no external publish, tag, push or production deployment occurs unless explicitly requested by script flags.
+
 ## 3. Verified Behavior
 
 - Package smoke: `npm pack` and tarball install into the lab.

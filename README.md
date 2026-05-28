@@ -107,6 +107,8 @@ Agent 会读取 `<harnessRoot>/state/lifecycle.yaml` 和 `<harnessRoot>/state/pl
 
 SPRINTING 的 Definition of Done 包含可运行入口/出口：技术方案或 task 承诺的 API、CLI、server route、adapter、worker、provider、配置契约和 fixture/live 边界必须在开发阶段实现或明确 `BLOCKED`。REVIEWING 会把缺少入口/出口作为阻断项；TESTING 只调用既有入口做输入输出验证，不能新增 product runtime、bootstrap、provider adapter、deploy 或 package runtime script。
 
+`validate-test` 仍然是 TESTING 阶段 gate 名称。TESTING 的 canonical 产物是 `.docs/07_test/TEST_REPORT.md`，记录 test matrix、regression evidence、runnable entry/exit coverage、coverage gaps 和 final decision；历史 `.docs/07_test/TEST_PLAN.md` 只作为 existing project 的 legacy alias 兼容，新测试证据应使用 `TEST_REPORT.md`。
+
 ### ADR 与 Memory 的边界
 
 `.docs/05_decisions/` 保存 ADR（Architecture Decision Record）。ADR 是软件工程中常见的架构决策记录实践，用来回答“为什么当时选择这个方案，而不是别的方案”。architecture / tech plan 可以写当前方案里的局部设计理由；如果一个决定有备选方案、影响多个模块或阶段、未来容易被质疑，或修改成本高，就应写成 ADR，记录背景、备选方案、理由、后果和替代关系。
@@ -231,7 +233,7 @@ make docs-overview
 | `.docs/04_implementation/` | 模块、子系统和核心数据流的真实实现事实 |
 | `.docs/05_decisions/` | ADR，长期关键决策及其背景、备选方案、理由和后果 |
 | `.docs/06_review/` | Review 报告 |
-| `.docs/07_test/` | 测试计划和回归记录 |
+| `.docs/07_test/` | 测试报告、测试矩阵、回归证据和覆盖缺口 |
 | `.docs/08_release/` | 发布记录和回滚方案 |
 | `.docs/rfc/` | 需求变更和影响分析 |
 

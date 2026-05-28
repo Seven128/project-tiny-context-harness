@@ -1,16 +1,17 @@
 # .docs/07_test overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 4b34ed3293717df7 -->
+<!-- source-hash: a0bb36dd2aa7b045 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `4b34ed3293717df7`
+Source hash: `a0bb36dd2aa7b045`
 
 ## Source Slices
 
 1. [TEST_PLAN.md](TEST_PLAN.md)
-2. [harness_consumer_lab.md](harness_consumer_lab.md)
+2. [TEST_REPORT.md](TEST_REPORT.md)
+3. [harness_consumer_lab.md](harness_consumer_lab.md)
 
 ---
 
@@ -18,7 +19,19 @@ Source hash: `4b34ed3293717df7`
 
 Source: [TEST_PLAN.md](TEST_PLAN.md)
 
-# Test Plan（测试计划）
+# Legacy Test Plan Alias
+
+Canonical TESTING evidence has moved to [TEST_REPORT.md](TEST_REPORT.md).
+
+`TEST_PLAN.md` is retained only as a legacy alias for existing links and older Harness versions.
+
+---
+
+## TEST_REPORT.md
+
+Source: [TEST_REPORT.md](TEST_REPORT.md)
+
+# Test Report（测试报告）
 
 ## 1. 测试范围
 
@@ -39,7 +52,7 @@ Source: [TEST_PLAN.md](TEST_PLAN.md)
 | package rename consumer path | Local installed-consumer smoke | 从 `agent-project-sdlc-0.1.0.tgz` 安装后运行 `npx sdlc-harness help`、`init --harness-folder .agent`、`doctor` | PASS：`doctor` 输出 `core package: agent-project-sdlc@0.1.0`。 |
 | 阶段 gate 可执行 | TESTING gate placeholder | `make test-all` | PASS：当前 Makefile 仍为占位输出，需要后续替换为项目级 regression suite。 |
 
-## 3. Regression（回归记录）
+## 3. Regression Evidence（回归证据）
 
 - `npm test` 运行 `npm run build` 后执行 `node --test ../../tests/sdlc-harness/*.test.mjs`，通过：
   - `harness-root.test.mjs`
@@ -51,13 +64,21 @@ Source: [TEST_PLAN.md](TEST_PLAN.md)
 - `make validate-harness` 确认 `.docs/**/overview.md` 未过期。
 - DEV-020 后重新执行 local tarball consumer smoke，确认包名改动不影响 `sdlc-harness` CLI。
 
-## 4. Coverage Gaps（覆盖缺口）
+## 4. Runnable Entry/Exit Coverage（可运行入口/出口覆盖）
+
+- Existing entry points under test: `sdlc-harness` CLI, package validators, package sync/source commands, generated Makefile gates.
+- Expected exits / side effects: validation reports, package asset sync/check output, generated overview checks and consumer lab smoke output.
+- Config contract used: `package.json#sdlcHarness.harnessFolderName`, `<harnessRoot>/config.yaml`, `<harnessRoot>/state/lifecycle.yaml`, `<harnessRoot>/state/plan.yaml`.
+- Fixture/live boundary: npm package and local consumer smoke are fixture/local validation; npm registry publish remains release-stage live validation.
+- Missing entry/exit blocker: none for the recorded package release candidate.
+
+## 5. Coverage Gaps（覆盖缺口）
 
 - `make test-all` 仍是通用占位命令，真实项目级 regression 目前由 `npm test`、source drift check、Harness validation 和 pack dry run 覆盖。
 - npm registry publish 需要在 RELEASING 阶段用实际 npm auth、包名可用性和 2FA/token policy 验证。
 - published package smoke 尚未完成；需要发布后从 registry 安装执行 CLI smoke。
 
-## 5. Gate Result（阶段结论）
+## 6. Final Decision（最终结论）
 
 - Decision: `PASS`
 - Required before release: 完成 release note、publish checklist、smoke evidence 和 rollback plan。

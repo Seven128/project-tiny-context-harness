@@ -339,6 +339,8 @@ TESTING_DISALLOWED_ALLOWED_PATHS = [
     "bin/**",
     "cli/**",
     "runtime/**",
+    "scripts/**",
+    "tools/**",
     "deploy/**",
     "deployment/**",
     "infra/**",
@@ -368,6 +370,13 @@ TESTING_RUNTIME_FILE_TERMS = [
     "runtime",
     "service",
     "systemd",
+]
+
+TESTING_ALLOWED_TEST_FILE_TERMS = [
+    "assertion",
+    "fixture",
+    "mock",
+    "smoke",
 ]
 
 
@@ -412,6 +421,8 @@ def is_testing_runtime_boundary_change(path: str) -> bool:
         return True
     if lowered.startswith("tests/"):
         name = Path(lowered).name
+        if any(term in name for term in TESTING_ALLOWED_TEST_FILE_TERMS):
+            return False
         return any(term in name for term in TESTING_RUNTIME_FILE_TERMS)
     return False
 

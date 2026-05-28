@@ -53,15 +53,19 @@ try {
     "# Generated Technical Plan Overview\n\nGenerated overview should not count as a deliverable.\n",
     "utf8"
   );
-  await writeFile(path.join(root, ".docs/04_implementation/example/dev.md"), "# Impl\n", "utf8");
+  await writeFile(
+    path.join(root, ".docs/04_implementation/example/dev.md"),
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: shipped CLI fixture.\n- Exit / side effects: validation output only.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only.\n",
+    "utf8"
+  );
   await writeFile(
     path.join(root, ".docs/06_review/REVIEW_REPORT.md"),
     "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage is intentionally narrow.\n\n## Runnable Entry/Exit Readiness\n\nExisting entry/exit is runnable before testing.\n\n## Decision\n\nPASS\n",
     "utf8"
   );
   await writeFile(
-    path.join(root, ".docs/07_test/TEST_PLAN.md"),
-    "# Test Plan\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal | PASS |\n\n## Regression\n\n- focused regression: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped CLI.\n\n## Coverage Gap\n\nNo browser coverage.\n\n## Decision\n\nPASS\n",
+    path.join(root, ".docs/07_test/TEST_REPORT.md"),
+    "# Test Report\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal | PASS |\n\n## Regression Evidence\n\n- focused regression: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped CLI.\n\n## Coverage Gap\n\nNo browser coverage.\n\n## Decision\n\nPASS\n",
     "utf8"
   );
   await writeFile(
@@ -129,6 +133,10 @@ tasks:
     const report = await runValidator(root, gate);
     assert.deepEqual(report.errors, [], gate);
   }
+  await writeFile(path.join(root, ".docs/07_test/TEST_PLAN.md"), "# Legacy Test Plan\n\nMissing canonical sections.\n", "utf8");
+  const preferredTestReport = await runValidator(root, "validate-test");
+  assert.deepEqual(preferredTestReport.errors, [], "validate-test prefers TEST_REPORT.md when both test files exist");
+  assert.match(preferredTestReport.info.join("\n"), /TEST_REPORT\.md/);
 
   await writeFile(
     path.join(root, ".docs/06_review/REVIEW_REPORT.md"),
@@ -168,7 +176,7 @@ tasks:
     acceptance_criteria:
       - "Runtime script changes are rejected in TESTING."
     result_docs:
-      - .docs/07_test/TEST_PLAN.md
+      - .docs/07_test/TEST_REPORT.md
 `,
       "utf8"
     );
@@ -188,6 +196,11 @@ tasks: []
     execFileSync("git", ["config", "user.email", "codex@example.local"], { cwd: boundaryRoot });
     execFileSync("git", ["add", "."], { cwd: boundaryRoot });
     execFileSync("git", ["commit", "-m", "baseline"], { cwd: boundaryRoot, stdio: "ignore" });
+    await mkdir(path.join(boundaryRoot, "tests"), { recursive: true });
+    await writeFile(path.join(boundaryRoot, "tests/provider-fixture.mjs"), "export {};\n", "utf8");
+    const testOnlyFixture = await runValidator(boundaryRoot, "validate-test");
+    assert.deepEqual(testOnlyFixture.errors, [], "TESTING allows provider-named test fixture files");
+    await rm(path.join(boundaryRoot, "tests/provider-fixture.mjs"), { force: true });
     await writeFile(
       path.join(boundaryRoot, "package.json"),
       JSON.stringify({ sdlcHarness: { harnessFolderName: ".harness" }, scripts: { "dev:agent": "node tests/runtime/direct-poller.mjs" } }, null, 2),
@@ -213,6 +226,16 @@ tasks: []
   );
   const consumedDraftDevReport = await runValidator(root, "validate-dev");
   assert.deepEqual(consumedDraftDevReport.errors, [], "validate-dev allows consumed draft queue");
+  await writeFile(path.join(root, ".docs/04_implementation/example/dev.md"), "# Impl\n", "utf8");
+  const missingRunnableEntryExitDevReport = await runValidator(root, "validate-dev");
+  assert.match(missingRunnableEntryExitDevReport.errors.join("\n"), /Runnable Entry\/Exit/);
+  await writeFile(
+    path.join(root, ".docs/04_implementation/example/dev.md"),
+    "# Impl\n\n## Runnable Entry/Exit\n\nNot applicable: validator fixture implementation has no product runtime boundary.\n",
+    "utf8"
+  );
+  const notApplicableDevReport = await runValidator(root, "validate-dev");
+  assert.deepEqual(notApplicableDevReport.errors, [], "validate-dev accepts explicit Not applicable entry/exit docs");
 
   await writeFile(
     path.join(root, ".harness/state/lifecycle.yaml"),
