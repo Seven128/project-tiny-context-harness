@@ -1,11 +1,11 @@
 # .docs/04_implementation overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 075d34c0e3afa3fc -->
+<!-- source-hash: c1c0ad9aad0df2bb -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `075d34c0e3afa3fc`
+Source hash: `c1c0ad9aad0df2bb`
 
 ## Source Slices
 
@@ -804,10 +804,10 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: workflow Skills, prompt routing, hard/soft indexing and authoring overlay
-- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`, `TASK-060`, `TASK-061`, `TASK-066`, `TASK-067`, `TASK-069`
+- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`, `TASK-060`, `TASK-061`, `TASK-066`, `TASK-067`, `TASK-069`, `TASK-070`, `TASK-071`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`, `PROJECT_SPEC.md`
-- Linked RFC: `RFC_007`, `RFC_009`, `RFC_015`
+- Linked RFC: `RFC_007`, `RFC_009`, `RFC_015`, `RFC_017`, `RFC_018`
 - Linked commits: historical `DEV-*` implementation commits; `DEV-043` migration commit; `DEV-049` implementation commit; `DEV-050` implementation commit
 
 ## 2. 当前实现范围
@@ -828,8 +828,10 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 - PM, Architect, Reviewer, Tester, Release and RFC prompts now require each main workflow action to run as one small `TASK-*` `plan.yaml` task with `phase` metadata. This covers conversational generation, existing-document slicing, synthesis from prior fact sources, review batches, test evidence, release preparation and RFC recalibration.
 - Dev, Review, Tester and Implementation Doc prompts now treat runnable entry/exit as a hard phase boundary: SPRINTING must implement or block promised API/CLI/adapter/provider/config/fixture-live boundaries, REVIEWING must block missing entry/exit, and TESTING may only exercise existing entrypoints.
 - Review, test and implementation templates include runnable entry/exit sections. `validate-review` and `validate-test` require entry/exit evidence text, and TESTING validators reject runtime, bootstrap, provider, deploy or package runtime script changes.
-- TESTING uses `.docs/07_test/TEST_REPORT.md` as the canonical test evidence file. `validate-test` keeps accepting legacy `.docs/07_test/TEST_PLAN.md`, but prefers `TEST_REPORT.md` when both exist.
+- TESTING distinguishes `.docs/07_test/TEST_STRATEGY.md`, `.docs/07_test/TEST_CASES.md` and `.docs/07_test/TEST_REPORT.md`; `TEST_REPORT.md` is execution-only evidence and `validate-test` no longer falls back to `TEST_PLAN.md`.
+- RFC recalibration now records `Test Fact Source Impact` and removes superseded `.docs/07_test/**` files from current test facts and `.docs/INDEX.md` when a route, entry/exit or acceptance boundary changes.
 - `validate-dev` now requires implementation docs to include `Runnable Entry/Exit` facts or explicit `Not applicable`, so missing runtime boundaries cannot be deferred into TESTING by omission.
+- Dev and Manager prompts now distinguish direct SPRINTING `validate-dev` from phase-exit `validate-current`: direct dev gate allows a valid current open task, while phase advancement still requires no open tasks.
 - RELEASING uses `.docs/08_release/CURRENT_RELEASE.md` as the canonical current release status. `validate-release` keeps accepting legacy versioned release docs when the current file is absent, but new release work updates the current status file instead of creating a version ledger.
 
 ## Runnable Entry/Exit
@@ -844,18 +846,19 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 | 文件（File） | 作用（Purpose） | 关键函数/对象（Key Functions/Objects） |
 |---|---|---|
 | `AGENTS.md` | Deterministic workflow router | lifecycle-first rule, natural-language and macro mapping |
-| `.codex/skills/pjsdlc_manager/SKILL.md` | Manager prompt | status/next/advance/dev/test/review routing |
+| `.codex/skills/pjsdlc_manager/SKILL.md` | Manager prompt | status/next/advance/dev/test/review routing and phase-exit gate semantics |
 | `.codex/skills/pjsdlc_pm_prd/SKILL.md` | Product prompt | PRD slicing and requirement gathering |
 | `.codex/skills/pjsdlc_architect_design/SKILL.md` | Architecture prompt | architecture/tech plan and `plan.draft.yaml` |
-| `.codex/skills/pjsdlc_dev_sprint/SKILL.md` | Development prompt | `/dev`, `/devloop`, one-task execution protocol |
+| `.codex/skills/pjsdlc_dev_sprint/SKILL.md` | Development prompt | `/dev`, `/devloop`, one-task execution protocol and direct dev gate semantics |
 | `.codex/skills/pjsdlc_implementation_doc/SKILL.md` | Implementation fact prompt | module-level implementation docs |
 | `.codex/skills/pjsdlc_reviewer/SKILL.md` | Review prompt | read-only review workflow |
-| `.codex/skills/pjsdlc_tester/SKILL.md` | Testing prompt | regression/test report workflow |
+| `.codex/skills/pjsdlc_tester/SKILL.md` | Testing prompt | test strategy/cases/report workflow |
 | `.codex/skills/pjsdlc_release_manager/SKILL.md` | Release prompt | current release status, smoke and rollback plan |
 | `.codex/skills/pjsdlc_rfc_recalibrate/SKILL.md` | RFC prompt | change impact analysis |
 | `.codex/skills/authoring/harness_package_design/SKILL.md` | Authoring-only prompt | package iteration, scriptability heuristic, README capability coverage |
+| `.codex/pjsdlc_managed/make/sdlc-harness.mk` | Managed Makefile fragment | direct `validate-dev` package CLI wiring |
 | `.codex/pjsdlc_managed/policies/phase_contracts.yaml` | Phase-to-skill contract | `skill` per phase |
-| `.codex/pjsdlc_managed/templates/*` | Stage document templates | review/test report/implementation entry/exit evidence sections |
+| `.codex/pjsdlc_managed/templates/*` | Stage document templates | review/test strategy/cases/report/implementation entry/exit evidence sections |
 | `tools/validate_review.py`, `tools/validate_test_plan.py` | Source workspace validators | review/test document and TESTING boundary checks |
 | `packages/sdlc-harness/src/lib/validators.ts` | Package CLI validators | `npx sdlc-harness validate-*` checks including TESTING boundary rules |
 | `packages/sdlc-harness/src/lib/sync-engine.ts` | Skill materialization | base Skill copy plus local override append |
@@ -911,9 +914,13 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 - `pjsdlc_pm_prd`, `pjsdlc_architect_design`, `pjsdlc_reviewer`, `pjsdlc_tester`, `pjsdlc_release_manager` and `pjsdlc_rfc_recalibrate` create or resume one small `TASK-*` task before writing phase outputs. `pjsdlc_manager` routes `/prd`, `/design`, `/review`, `/test`, `/release` and `/rfc` through those task protocols and treats remaining open tasks as phase-exit blockers.
 - SPRINTING Definition of Done now includes runnable entry/exit for promised API, CLI, server route, adapter, worker, provider, config contract and fixture/live boundaries. Missing entry/exit remains a dev/RFC blocker instead of becoming testing work.
 - REVIEWING validates entry/exit readiness before TESTING. TESTING validates through existing entrypoints only and blocks product runtime, package runtime script, long-running runtime, systemd, cloud bootstrap, provider adapter and deploy/script changes.
-- `validate-test` reads `.docs/07_test/TEST_REPORT.md` first and falls back to legacy `.docs/07_test/TEST_PLAN.md`. Both validators require test matrix, regression evidence, coverage gaps, runnable entry/exit coverage and PASS/BLOCKED decision text.
+- `validate-test` requires `.docs/07_test/TEST_REPORT.md`, rejects placeholder report text, and requires test matrix, regression evidence, coverage gaps, runnable entry/exit coverage and PASS/BLOCKED decision text.
+- `validate-plan` rejects non-`TESTING`/`RFC_RECALIBRATION` tasks that target `.docs/07_test/**`, so SPRINTING cannot create formal test facts before entry/exit delivery.
+- `validate-rfc` checks `Test Fact Source Impact` and rejects RFCs that list superseded `.docs/07_test/**` paths still present in current facts or `.docs/INDEX.md`.
 - TESTING boundary checks still reject `tests/runtime/**` and runtime-like test files, but allow clearly test-only fixture, mock, assertion and smoke files under `tests/**`.
 - `validate-dev` checks implementation docs for runnable entry/exit facts, accepting explicit `Not applicable` only when the module truly has no product runtime boundary.
+- direct `validate-dev` is explicitly an in-development SPRINTING gate. It validates the current open task contract, dirty-file scope, draft consumption and implementation docs without forcing task removal. `validate-current` / `/advance` keeps no-open phase-exit behavior before REVIEWING.
+- Managed Makefile `validate-dev` runs `$(SDLC_HARNESS) validate-dev`, then project `lint` and `test-current-domain`, so installed package consumers no longer need source-repo-only Python validators for this gate.
 - Package Skill overrides remain append-only local extensions. The generated override block now states that package-managed phase boundaries remain authoritative and overrides may narrow local behavior but must not expand TESTING or REVIEWING into implementation/runtime ownership.
 
 ## 6. 与技术方案的偏移
@@ -952,6 +959,19 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | `node packages/sdlc-harness/dist/cli.js package check-source` | Package assets match authoring source after release status contract changes | PASS for TASK-069 |
 | `node tools/consumer_lab_full_test.mjs` | Installed-consumer validation of `CURRENT_RELEASE.md` and package validators | PASS for command exit; report decision `BLOCKED` with 38 PASS, 7 known Makefile/tools blockers and 0 FAIL |
 | `make validate-harness` | Prompt language and overview consistency after release status contract changes | PASS for TASK-069 |
+| `npm test --workspace agent-project-sdlc` | Package validator regression for TEST_REPORT-only validation, placeholder rejection, test doc task boundaries and RFC superseded cleanup | PASS for TASK-070; 10 tests passed |
+| `node packages/sdlc-harness/dist/cli.js package sync-source` | Package assets reflect test artifact semantics changes | PASS for TASK-070 |
+| `node packages/sdlc-harness/dist/cli.js package check-source` | Package assets match authoring source after test artifact semantics changes | PASS for TASK-070 |
+| `make validate-plan` | Active RFC task contract and changed paths | PASS for TASK-070 |
+| `make docs-overview` | Generated overview refresh for RFC, implementation and test docs | PASS for TASK-070 |
+| `make validate-rfc` | RFC format, Test Fact Source Impact and no-open-task phase gate | PASS for TASK-070 |
+| `make validate-harness` | Prompt language and overview consistency after test artifact semantics changes | PASS for TASK-070 |
+| `npm test --workspace agent-project-sdlc` | Package validator and consumer lab regression for direct dev gate open-task semantics | PASS for TASK-071; 10 tests passed |
+| `node packages/sdlc-harness/dist/cli.js package sync-source` | Package assets reflect Dev/Manager Skill and managed Makefile changes | PASS for TASK-071 |
+| `node packages/sdlc-harness/dist/cli.js package check-source` | Package assets match source after dev gate wording and wiring changes | PASS for TASK-071 |
+| `make validate-dev` | Managed Makefile direct dev gate uses package CLI without unsynced Python dev-state tools | PASS for TASK-071 |
+| `make validate-current` | Manager phase-exit path keeps no-open safety after direct dev gate | PASS for TASK-071 |
+| `make validate-harness` | Prompt language and generated overview consistency after Dev/Manager prompt changes | PASS for TASK-071 |
 
 ## 8. 变更记录（Change Log）
 
@@ -976,6 +996,8 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-28 | `TASK-066` | Working tree | Hardened SPRINTING/REVIEWING/TESTING runnable entry/exit boundaries and validator checks so TESTING cannot absorb product runtime implementation. |
 | 2026-05-28 | `TASK-067` | Working tree | Replaced the canonical TESTING document contract with `TEST_REPORT.md`, kept legacy `TEST_PLAN.md` validation compatibility and tightened dev/test entry/exit evidence gates. |
 | 2026-05-29 | `TASK-069` | Working tree | Replaced versioned release document generation with canonical `.docs/08_release/CURRENT_RELEASE.md` release status guidance and validator compatibility wording. |
+| 2026-05-29 | `TASK-070` | Working tree | Split test strategy, test cases and execution report semantics; removed `TEST_PLAN.md` report fallback; added RFC cleanup checks for superseded test facts. |
+| 2026-05-29 | `TASK-071` | Working tree | Clarified direct dev gate open-task semantics in Dev/Manager prompts and moved managed Makefile `validate-dev` to package CLI wiring. |
 
 ## 9. 后续维护注意事项
 
@@ -995,10 +1017,10 @@ Source: [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: lifecycle state, plan state, task execution protocol and gate evidence
-- Updated by task: `DEV-010`, `DEV-011`, `DEV-018`, `DEV-019`, `DEV-024`, `DEV-025`, `DEV-026`, `DEV-027`, `DEV-028`, `DEV-043`, `DEV-050`, `DEV-056`, `TASK-057`, `TASK-059`, `TASK-061`, `TASK-062`, `TASK-065`, `TASK-069`
+- Updated by task: `DEV-010`, `DEV-011`, `DEV-018`, `DEV-019`, `DEV-024`, `DEV-025`, `DEV-026`, `DEV-027`, `DEV-028`, `DEV-043`, `DEV-050`, `DEV-056`, `TASK-057`, `TASK-059`, `TASK-061`, `TASK-062`, `TASK-065`, `TASK-069`, `TASK-071`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`
-- Linked RFC: `RFC_004`, `RFC_005`, `RFC_010`, `RFC_011`, `RFC_012`, `RFC_013`, `RFC_014`, `RFC_015`, `RFC_016`
+- Linked RFC: `RFC_004`, `RFC_005`, `RFC_010`, `RFC_011`, `RFC_012`, `RFC_013`, `RFC_014`, `RFC_015`, `RFC_016`, `RFC_018`
 - Linked commits: historical `DEV-*` implementation commits; `DEV-043` migration commit; `DEV-050` implementation commit
 
 ## 2. 当前实现范围
@@ -1019,10 +1041,12 @@ Source: [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and
 - Past task details are cold archive and only used for explicit forensic/audit/regression requests.
 - Release history is also cold archive. `.docs/08_release/CURRENT_RELEASE.md` stores only the current release status; older release evidence is reconstructed from git tags, registry metadata, CI, release commits or external release systems.
 - `parallel_execution` is an optional top-level plan contract; when omitted the workflow remains serial. It does not store `phase` or `linked_task_id`; validators infer phase from lifecycle and task selection from `current_task_id`.
+- Direct `validate-dev` is the SPRINTING in-development gate. It allows a valid current open `phase: "SPRINTING"` task, checks scoped dirty files and draft consumption, and rejects missing current-task contracts.
+- `validate-current` and `tools/run_current_gate.py` keep phase-exit safety: after the phase gate runs, `plan.yaml` must have no open tasks before lifecycle advancement.
 
 ## Runnable Entry/Exit
 
-- Entry points: `.codex/state/plan.yaml`, `.codex/state/plan.draft.yaml`, lifecycle phase transitions and `validate-plan` / `validate-dev` gates.
+- Entry points: `.codex/state/plan.yaml`, `.codex/state/plan.draft.yaml`, lifecycle phase transitions and `validate-plan` / direct `validate-dev` / phase-exit `validate-current` gates.
 - Exit / side effects: validators accept or reject task contracts, draft consumption and phase-exit readiness; SPRINTING writes implementation and completion ledger commits.
 - Config contract: task fields (`phase`, `allowed_paths`, `required_gates`, `result_docs`, `implementation_doc`) and lifecycle `current_phase`.
 - Fixture/live boundary: workflow state protocol only; no product runtime is owned by plan state itself.
@@ -1052,11 +1076,11 @@ Source: [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and
 | `tools/validate_test_plan.py` | Test exit validator | no-open-task check plus test report, matrix, regression evidence and coverage gap |
 | `tools/validate_release_plan.py` | Release exit validator | no-open-task check plus current release status/smoke/rollback docs |
 | `tools/validate_rfc.py` | RFC exit validator | no-open-task check plus RFC status and impact sections |
-| `tools/run_current_gate.py` | Phase gate runner | phase-to-gate dispatch |
+| `tools/run_current_gate.py` | Phase gate runner | phase-to-gate dispatch plus no-open phase-exit check |
 | `tools/status.py` | Human status report | lifecycle and task summary |
 | `tools/transition.py` | Phase transition helper | lifecycle state mutation without history append |
 | `packages/sdlc-harness/src/lib/init.ts` | Package init state seed | memory seed describing summary/link-only scope |
-| `packages/sdlc-harness/src/lib/validators.ts` | Package-side state validators | plan/lifecycle compatibility and package CLI validators |
+| `packages/sdlc-harness/src/lib/validators.ts` | Package-side state validators | direct dev gate, SPRINTING phase-exit gate, plan/lifecycle compatibility and package CLI validators |
 | `packages/sdlc-harness/src/lib/migrations.ts` | State migrations | remove checkpoints, history and gate logs; create missing memory with summary/link-only scope |
 
 ## 4. 核心数据流
@@ -1085,11 +1109,13 @@ SPRINTING task starts
 -> if no open task exists, agent may promote one plan.draft.yaml task into a formal TASK-* and delete the source draft
 -> plan.yaml contains full open task contract
 -> agent edits only allowed_paths
+-> direct validate-dev may run while the current task remains open
 -> required_gates pass
 -> related module implementation doc records facts and verification
 -> implementation commit is created while task remains in plan.yaml
 -> task is removed from plan.yaml
 -> completion ledger commit is created
+-> validate-current can pass only after no open task remains
 -> both commits are pushed before the next task starts
 ```
 
@@ -1111,12 +1137,14 @@ User explicitly asks for parallel / multi-agent / multi-worktree
 - `current_phase` belongs only to `lifecycle.yaml`; `plan.yaml`, `plan.draft.yaml` and `parallel_execution` must not duplicate it.
 - `transition.py` derives legal targets from the current phase's `next`, optional `returns`, `allowed_next_phases`, RFC/BLOCKED special routes and BLOCKED resume rules. After transition, `allowed_next_phases` is regenerated from the target phase's `next` plus `returns`.
 - Draft queues are not active execution state and must not retain adopted or completed drafts. The current built-in draft queue is `plan.draft.yaml`; it must not contain `current_task_id`.
-- `validate-dev` rejects any remaining `plan.draft.yaml.tasks[]`; agents must either continue promoting real unadopted drafts or remove already-consumed stale drafts before development completion.
+- direct `validate-dev` rejects any remaining `plan.draft.yaml.tasks[]`; agents must either continue promoting real unadopted drafts or remove already-consumed stale drafts before development completion.
+- direct `validate-dev` requires lifecycle `current_phase: "SPRINTING"` and allows either an empty development queue or one valid current open `phase: "SPRINTING"` task with `current_task_id`, `docs`, `allowed_paths`, `required_gates`, `acceptance_criteria` and `implementation_doc`.
+- `validate-dev` enforces dirty-file scoping when a current open task exists; changes outside the current task `allowed_paths` fail the direct dev gate.
 - ADRs solve the long-term "why this option, not another" problem. Architecture and tech plan slices may keep local rationale, but decisions with alternatives, cross-module or cross-stage impact, high reversal cost or future supersede semantics belong in `.docs/05_decisions/`.
 - `memory.md` must not become a decision ledger. It may point to ADRs, PRDs, tech plans or implementation docs, but detailed context, alternatives, tradeoffs and consequences remain in those formal fact sources.
 - Field audit: `active_role`, `active_skill`, `current_milestone`, `blocked_reason`, `suspended_phase` and `allowed_next_phases` are lifecycle-only; `current_task_id` and `next_task_sequence` are plan-only; `tasks[].phase` is semantic task classification rather than current lifecycle state and remains on each task.
 - Every phase task is task-controlled: one `TASK-*` task should produce one bounded document slice, review batch, test evidence set, release artifact set, RFC impact slice or development change.
-- `validate-plan` permits open tasks and checks their shape; phase exit gates reject remaining open tasks.
+- `validate-plan` permits open tasks and checks their shape; phase exit gates reject remaining open tasks. In `SPRINTING`, this no-open rule lives in `validate-current` and `tools/run_current_gate.py`, not in direct `validate-dev`.
 - `allowed_paths`, `required_gates` and `working_notes` are execution-time constraints, not a long-term query API.
 - Gate evidence belongs in the current task while executing, and in implementation docs, CI logs, current release status or external release systems after completion.
 - `lifecycle.yaml` does not store phase history. Phase history is reconstructed from git, PRs, CI, registry metadata, tags or external release evidence only when explicitly needed.
@@ -1138,6 +1166,15 @@ User explicitly asks for parallel / multi-agent / multi-worktree
 | `python3 tools/validate_plan.py` | Current plan shape and no remaining open tasks | PASS in Harness gates |
 | `python3 tools/validate_dev_state.py` | `validate-dev` rejection of stale unconsumed draft tasks | PASS for TASK-062 |
 | `python3 tools/validate_allowed_paths.py` | Current worktree changes within active task boundary | PASS in task gates |
+| `npm test --workspace agent-project-sdlc` | Package validator regression for direct `validate-dev` open-task acceptance and `validate-current` phase-exit rejection | PASS for TASK-071; 10 tests passed |
+| `node packages/sdlc-harness/dist/cli.js package sync-source` | Managed Makefile and Skill/package assets reflect dev gate wiring changes | PASS for TASK-071 |
+| `node packages/sdlc-harness/dist/cli.js package check-source` | Package canonical assets match source after dev gate wiring changes | PASS for TASK-071 |
+| `make validate-plan` | Active RFC task contract and allowed changed paths for TASK-071 | PASS for TASK-071 |
+| `make docs-overview` | Generated overview refresh after RFC_018 and implementation doc updates | PASS for TASK-071 |
+| `make validate-rfc` | RFC_018 status, impact sections and no-open task safety | PASS for TASK-071 |
+| `make validate-current` | Phase-exit gate keeps no-open safety after TASK-071 completion | PASS for TASK-071 |
+| `make validate-dev` | Direct SPRINTING dev gate passes with an empty development queue after RFC resume | PASS for TASK-071 |
+| `make validate-harness` | Prompt language and generated overview consistency after dev gate wiring changes | PASS for TASK-071 |
 | `tests/sdlc-harness/sync-init-doctor.test.mjs` | Package init memory seed and managed asset sync behavior | PASS for TASK-065 |
 | `tests/sdlc-harness/upgrade.test.mjs` | Migration-created memory seed and legacy state migration | PASS for TASK-065 |
 | `tests/sdlc-harness/validators.test.mjs` | Package validator plan task, draft consumption and optional parallel contract acceptance/failure cases | PASS for TASK-062 |
@@ -1167,6 +1204,7 @@ User explicitly asks for parallel / multi-agent / multi-worktree
 | 2026-05-28 | `TASK-063` | Working tree | Clarified that promote-on-consume is the generic rule for any draft-to-plan workflow, while `plan.draft.yaml` remains the current built-in development draft queue. |
 | 2026-05-28 | `TASK-065` | Pending implementation commit | Clarified ADR and memory responsibilities across PROJECT_SPEC, README/package README, architect skill, ADR template and package memory seeds. |
 | 2026-05-29 | `TASK-069` | Working tree | Clarified that release history is cold archive while `.docs/08_release/CURRENT_RELEASE.md` remains the active release status fact source. |
+| 2026-05-29 | `TASK-071` | Working tree | Split direct `validate-dev` open-task semantics from `validate-current` phase-exit no-open checks and moved managed Makefile dev gate to package CLI. |
 
 ## 9. 后续维护注意事项
 

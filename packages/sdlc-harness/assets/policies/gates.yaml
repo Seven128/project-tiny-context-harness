@@ -43,7 +43,7 @@ gates:
 
   validate-test:
     command: "make validate-test"
-    purpose: "验证测试矩阵、回归记录和覆盖缺口"
+    purpose: "验证 TEST_REPORT.md 执行证据、测试矩阵、回归记录、覆盖缺口和阶段边界"
     required_for:
       - "TESTING"
 

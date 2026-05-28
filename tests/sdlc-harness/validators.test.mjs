@@ -75,7 +75,7 @@ try {
   );
   await writeFile(
     path.join(root, ".docs/rfc/RFC_001.md"),
-    "# RFC 001\n\nStatus: VERIFIED\n\n## Background\n\nTest RFC.\n\n## Product Impact\n\nNo user-facing change.\n\n## Technical Impact\n\nNo implementation change.\n\n## Regression\n\nKeep validator coverage.\n",
+    "# RFC 001\n\nStatus: VERIFIED\n\n## Background\n\nTest RFC.\n\n## Product Impact\n\nNo user-facing change.\n\n## Technical Impact\n\nNo implementation change.\n\n## Regression\n\nKeep validator coverage.\n\n## Test Fact Source Impact\n\nSuperseded test docs: none\n",
     "utf8"
   );
   await writeFile(
@@ -134,9 +134,44 @@ tasks:
     assert.deepEqual(report.errors, [], gate);
   }
   await writeFile(path.join(root, ".docs/07_test/TEST_PLAN.md"), "# Legacy Test Plan\n\nMissing canonical sections.\n", "utf8");
-  const preferredTestReport = await runValidator(root, "validate-test");
-  assert.deepEqual(preferredTestReport.errors, [], "validate-test prefers TEST_REPORT.md when both test files exist");
-  assert.match(preferredTestReport.info.join("\n"), /TEST_REPORT\.md/);
+  const ignoredTestPlan = await runValidator(root, "validate-test");
+  assert.deepEqual(ignoredTestPlan.errors, [], "validate-test ignores TEST_PLAN.md when TEST_REPORT.md exists");
+  assert.match(ignoredTestPlan.info.join("\n"), /TEST_REPORT\.md/);
+
+  await rm(path.join(root, ".docs/07_test/TEST_REPORT.md"), { force: true });
+  const onlyLegacyPlan = await runValidator(root, "validate-test");
+  assert.match(onlyLegacyPlan.errors.join("\n"), /Missing test report/);
+  await rm(path.join(root, ".docs/07_test/TEST_PLAN.md"), { force: true });
+  await writeFile(path.join(root, ".docs/07_test/TEST_CASES.md"), "# Test Cases\n\n## Cases\n\nNo executed evidence.\n", "utf8");
+  const onlyTestCases = await runValidator(root, "validate-test");
+  assert.match(onlyTestCases.errors.join("\n"), /Missing test report/);
+  await writeFile(
+    path.join(root, ".docs/07_test/TEST_REPORT.md"),
+    "# Test Report\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal | pending |\n\n## Regression Evidence\n\n- TBD\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised.\n\n## Coverage Gap\n\nTBD\n\n## Decision\n\nBLOCKED\n",
+    "utf8"
+  );
+  const placeholderReport = await runValidator(root, "validate-test");
+  assert.match(placeholderReport.errors.join("\n"), /executed evidence/);
+  await writeFile(
+    path.join(root, ".docs/07_test/TEST_REPORT.md"),
+    "# Test Report\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal | PASS |\n\n## Regression Evidence\n\n- focused regression: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped CLI.\n\n## Coverage Gap\n\nNo browser coverage.\n\n## Decision\n\nPASS\n",
+    "utf8"
+  );
+  await writeFile(
+    path.join(root, ".docs/rfc/RFC_002.md"),
+    "# RFC 002\n\nStatus: APPLIED\n\n## Background\n\nRoute change.\n\n## Product Impact\n\nTest facts must be cleaned.\n\n## Technical Impact\n\nNo implementation change.\n\n## Regression\n\nKeep current TEST_REPORT evidence.\n\n## Test Fact Source Impact\n\nSuperseded test docs: .docs/07_test/OLD_ROUTE.md\n",
+    "utf8"
+  );
+  await writeFile(path.join(root, ".docs/07_test/OLD_ROUTE.md"), "# Old route result\n", "utf8");
+  const staleRfcDoc = await runValidator(root, "validate-rfc");
+  assert.match(staleRfcDoc.errors.join("\n"), /Superseded test doc still exists/);
+  await rm(path.join(root, ".docs/07_test/OLD_ROUTE.md"), { force: true });
+  await writeFile(path.join(root, ".docs/INDEX.md"), "# Index\n\n- Old: .docs/07_test/OLD_ROUTE.md\n", "utf8");
+  const staleRfcIndex = await runValidator(root, "validate-rfc");
+  assert.match(staleRfcIndex.errors.join("\n"), /Superseded test doc still linked/);
+  await writeFile(path.join(root, ".docs/INDEX.md"), "# Index\n.docs/04_implementation/example/dev.md\n", "utf8");
+  const cleanedRfc = await runValidator(root, "validate-rfc");
+  assert.deepEqual(cleanedRfc.errors, [], "validate-rfc allows superseded test refs only after facts and index are cleaned");
 
   const currentReleasePath = path.join(root, ".docs/08_release/CURRENT_RELEASE.md");
   const legacyReleasePath = path.join(root, ".docs/08_release/v0.1.0.md");
@@ -207,6 +242,34 @@ tasks:
 
     await writeFile(
       path.join(boundaryRoot, ".harness/state/plan.yaml"),
+      `current_task_id: TASK-002
+next_task_sequence: 3
+tasks:
+  - id: TASK-002
+    phase: SPRINTING
+    title: Invalid premature test docs task
+    status: in_progress
+    summary: Invalid sprint task that tries to create current test facts before TESTING.
+    docs:
+      product:
+        - .docs/01_product/prd.md
+    allowed_paths:
+      - "src/**"
+      - ".docs/07_test/**"
+    required_gates:
+      - "npm test"
+    acceptance_criteria:
+      - "SPRINTING cannot create formal test facts."
+    result_docs:
+      - .docs/07_test/TEST_REPORT.md
+`,
+      "utf8"
+    );
+    const prematureTestFactsTask = await runValidator(boundaryRoot, "validate-plan");
+    assert.match(prematureTestFactsTask.errors.join("\n"), /Only TESTING or RFC_RECALIBRATION tasks/);
+
+    await writeFile(
+      path.join(boundaryRoot, ".harness/state/plan.yaml"),
       `current_task_id: ""
 next_task_sequence: 2
 tasks: []
@@ -237,6 +300,11 @@ tasks: []
     await rm(boundaryRoot, { recursive: true, force: true });
   }
 
+  await writeFile(
+    path.join(root, ".harness/state/lifecycle.yaml"),
+    'current_phase: "SPRINTING"\n',
+    "utf8"
+  );
   const staleDraftDevReport = await runValidator(root, "validate-dev");
   assert.match(staleDraftDevReport.errors.join("\n"), /Unconsumed draft tasks remain in plan\.draft\.yaml: TASK-001/);
   await writeFile(
@@ -424,6 +492,11 @@ tasks: []
 `,
     "utf8"
   );
+  await writeFile(
+    path.join(root, ".harness/state/lifecycle.yaml"),
+    'current_phase: "SPRINTING"\n',
+    "utf8"
+  );
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
@@ -443,11 +516,25 @@ tasks:
   assert.match(devReport.errors.join("\n"), /Completed task DEV-001 must not remain in plan.yaml/);
 
   await writeFile(
+    path.join(root, ".harness/state/lifecycle.yaml"),
+    'current_phase: "REVIEWING"\n',
+    "utf8"
+  );
+  devReport = await runValidator(root, "validate-dev");
+  assert.match(devReport.errors.join("\n"), /validate-dev requires lifecycle current_phase SPRINTING/);
+  await writeFile(
+    path.join(root, ".harness/state/lifecycle.yaml"),
+    'current_phase: "SPRINTING"\n',
+    "utf8"
+  );
+
+  await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
-    `current_task_id: DEV-002
+    `current_task_id: TASK-002
 next_task_sequence: 3
 tasks:
-  - id: DEV-002
+  - id: TASK-002
+    phase: SPRINTING
     title: Open task
     status: in_progress
     summary: Active task
@@ -456,14 +543,15 @@ tasks:
     "utf8"
   );
   devReport = await runValidator(root, "validate-dev");
-  assert.match(devReport.errors.join("\n"), /Open task DEV-002 missing allowed_paths/);
+  assert.match(devReport.errors.join("\n"), /Open task TASK-002 missing allowed_paths/);
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
-    `current_task_id: DEV-002
+    `current_task_id: ""
 next_task_sequence: 3
 tasks:
-  - id: DEV-002
+  - id: TASK-002
+    phase: SPRINTING
     title: Open task
     status: in_progress
     summary: Active task
@@ -481,8 +569,114 @@ tasks:
     "utf8"
   );
   devReport = await runValidator(root, "validate-dev");
-  assert.match(devReport.errors.join("\n"), /Open tasks remain: DEV-002/);
+  assert.match(devReport.errors.join("\n"), /validate-dev requires current_task_id/);
   assert.doesNotMatch(devReport.errors.join("\n"), /missing allowed_paths/);
+
+  await writeFile(
+    path.join(root, ".harness/state/plan.yaml"),
+    `current_task_id: TASK-999
+next_task_sequence: 3
+tasks:
+  - id: TASK-002
+    phase: SPRINTING
+    title: Open task
+    status: in_progress
+    summary: Active task
+    docs:
+      product:
+        - .docs/01_product/prd.md
+    allowed_paths:
+      - "src/**"
+    required_gates:
+      - "npm test"
+    acceptance_criteria:
+      - "plan contract is present"
+    implementation_doc: .docs/04_implementation/example/dev.md
+`,
+    "utf8"
+  );
+  devReport = await runValidator(root, "validate-dev");
+  assert.match(devReport.errors.join("\n"), /current_task_id does not match/);
+
+  await writeFile(
+    path.join(root, ".harness/state/plan.yaml"),
+    `current_task_id: TASK-002
+next_task_sequence: 3
+tasks:
+  - id: TASK-002
+    phase: REQUIREMENT_GATHERING
+    title: Open task
+    status: in_progress
+    summary: Active task
+    docs:
+      product:
+        - .docs/01_product/prd.md
+    allowed_paths:
+      - "src/**"
+    required_gates:
+      - "npm test"
+    acceptance_criteria:
+      - "plan contract is present"
+    implementation_doc: .docs/04_implementation/example/dev.md
+`,
+    "utf8"
+  );
+  devReport = await runValidator(root, "validate-dev");
+  assert.match(devReport.errors.join("\n"), /TASK-002 must have phase SPRINTING/);
+
+  await writeFile(
+    path.join(root, ".harness/state/plan.yaml"),
+    `current_task_id: TASK-002
+next_task_sequence: 3
+tasks:
+  - id: TASK-002
+    phase: SPRINTING
+    title: Open task
+    status: in_progress
+    summary: Active task
+    docs:
+      product:
+        - .docs/01_product/prd.md
+    allowed_paths:
+      - "src/**"
+    required_gates:
+      - "npm test"
+    acceptance_criteria:
+      - "plan contract is present"
+    implementation_doc: .docs/04_implementation/example/dev.md
+`,
+    "utf8"
+  );
+  devReport = await runValidator(root, "validate-dev");
+  assert.deepEqual(devReport.errors, [], "validate-dev accepts valid current open SPRINTING task");
+  const currentWithOpenDevTask = await runValidator(root, "validate-current");
+  assert.match(currentWithOpenDevTask.errors.join("\n"), /Open tasks remain: TASK-002/);
+
+  await writeFile(path.join(root, ".docs/INDEX.md"), "# Index\n", "utf8");
+  devReport = await runValidator(root, "validate-dev");
+  assert.match(devReport.errors.join("\n"), /\.docs\/INDEX\.md does not link implementation doc/);
+  await writeFile(path.join(root, ".docs/INDEX.md"), "# Index\n.docs/04_implementation/example/dev.md\n", "utf8");
+
+  const dirtyRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-dirty-dev-"));
+  try {
+    await writeSprintDevFixture(dirtyRoot);
+    execFileSync("git", ["init"], { cwd: dirtyRoot, stdio: "ignore" });
+    execFileSync("git", ["config", "user.name", "Codex"], { cwd: dirtyRoot });
+    execFileSync("git", ["config", "user.email", "codex@example.local"], { cwd: dirtyRoot });
+    execFileSync("git", ["add", "."], { cwd: dirtyRoot });
+    execFileSync("git", ["commit", "-m", "baseline"], { cwd: dirtyRoot, stdio: "ignore" });
+    await writeFile(path.join(dirtyRoot, "README.md"), "# Dirty outside allowed paths\n", "utf8");
+    const dirtyDevReport = await runValidator(dirtyRoot, "validate-dev");
+    assert.match(dirtyDevReport.errors.join("\n"), /Changed files outside current task allowed_paths: README\.md/);
+  } finally {
+    await rm(dirtyRoot, { recursive: true, force: true });
+  }
+
+  await writeFile(
+    path.join(root, ".harness/state/lifecycle.yaml"),
+    'current_phase: "REQUIREMENT_GATHERING"\n',
+    "utf8"
+  );
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
@@ -571,8 +765,8 @@ tasks: []
 `,
     "utf8"
   );
-  devReport = await runValidator(root, "validate-dev");
-  assert.deepEqual(devReport.errors, [], "valid user_orchestrated parallel contract");
+  let parallelReport = await runValidator(root, "validate-plan");
+  assert.deepEqual(parallelReport.errors, [], "valid user_orchestrated parallel contract");
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
@@ -607,8 +801,8 @@ tasks: []
 `,
     "utf8"
   );
-  devReport = await runValidator(root, "validate-dev");
-  assert.deepEqual(devReport.errors, [], "valid runtime_managed parallel contract");
+  parallelReport = await runValidator(root, "validate-plan");
+  assert.deepEqual(parallelReport.errors, [], "valid runtime_managed parallel contract");
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
@@ -638,8 +832,8 @@ tasks: []
 `,
     "utf8"
   );
-  devReport = await runValidator(root, "validate-dev");
-  assert.match(devReport.errors.join("\n"), /parallel_execution\.trigger must be "user_requested"/);
+  parallelReport = await runValidator(root, "validate-plan");
+  assert.match(parallelReport.errors.join("\n"), /parallel_execution\.trigger must be "user_requested"/);
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
@@ -678,8 +872,8 @@ tasks: []
 `,
     "utf8"
   );
-  devReport = await runValidator(root, "validate-dev");
-  assert.match(devReport.errors.join("\n"), /parallel_execution worker id must be unique: worker-duplicate/);
+  parallelReport = await runValidator(root, "validate-plan");
+  assert.match(parallelReport.errors.join("\n"), /parallel_execution worker id must be unique: worker-duplicate/);
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
@@ -710,10 +904,10 @@ tasks: []
 `,
     "utf8"
   );
-  devReport = await runValidator(root, "validate-dev");
-  assert.match(devReport.errors.join("\n"), /branch is required when writes_repo is true/);
-  assert.match(devReport.errors.join("\n"), /worktree is required when writes_repo is true/);
-  assert.match(devReport.errors.join("\n"), /owned_paths must not be empty when writes_repo is true/);
+  parallelReport = await runValidator(root, "validate-plan");
+  assert.match(parallelReport.errors.join("\n"), /branch is required when writes_repo is true/);
+  assert.match(parallelReport.errors.join("\n"), /worktree is required when writes_repo is true/);
+  assert.match(parallelReport.errors.join("\n"), /owned_paths must not be empty when writes_repo is true/);
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
@@ -837,8 +1031,8 @@ async function writeTestingBoundaryFixture(projectRoot) {
     "utf8"
   );
   await writeFile(
-    path.join(projectRoot, ".docs/07_test/TEST_PLAN.md"),
-    "# Test Plan\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal | PASS |\n\n## Regression\n\n- focused regression: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised.\n\n## Coverage Gap\n\nNo gap.\n\n## Decision\n\nPASS\n",
+    path.join(projectRoot, ".docs/07_test/TEST_REPORT.md"),
+    "# Test Report\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal | PASS |\n\n## Regression\n\n- focused regression: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised.\n\n## Coverage Gap\n\nNo gap.\n\n## Decision\n\nPASS\n",
     "utf8"
   );
   await writeFile(path.join(projectRoot, ".harness/state/lifecycle.yaml"), 'current_phase: "TESTING"\n', "utf8");
@@ -847,6 +1041,49 @@ async function writeTestingBoundaryFixture(projectRoot) {
     `current_task_id: ""
 next_task_sequence: 2
 tasks: []
+`,
+    "utf8"
+  );
+}
+
+async function writeSprintDevFixture(projectRoot) {
+  await writeFile(
+    path.join(projectRoot, "package.json"),
+    JSON.stringify({ sdlcHarness: { harnessFolderName: ".harness" } }, null, 2),
+    "utf8"
+  );
+  await mkdir(path.join(projectRoot, ".docs/04_implementation/example"), { recursive: true });
+  await mkdir(path.join(projectRoot, ".harness/state"), { recursive: true });
+  await writeFile(path.join(projectRoot, ".docs/INDEX.md"), "# Index\n.docs/04_implementation/example/dev.md\n", "utf8");
+  await writeFile(
+    path.join(projectRoot, ".docs/04_implementation/example/dev.md"),
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: local fixture API.\n- Exit / side effects: validation output only.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only.\n",
+    "utf8"
+  );
+  await writeFile(path.join(projectRoot, ".harness/state/lifecycle.yaml"), 'current_phase: "SPRINTING"\n', "utf8");
+  await writeFile(path.join(projectRoot, ".harness/state/plan.draft.yaml"), "next_task_sequence: 2\ntasks: []\n", "utf8");
+  await writeFile(
+    path.join(projectRoot, ".harness/state/plan.yaml"),
+    `current_task_id: TASK-001
+next_task_sequence: 2
+tasks:
+  - id: TASK-001
+    phase: SPRINTING
+    title: Active sprint task
+    status: in_progress
+    summary: Validate dirty-file scoping.
+    docs:
+      product:
+        - .docs/01_product/prd.md
+    allowed_paths:
+      - "src/**"
+      - "tests/**"
+      - ".docs/04_implementation/**"
+    required_gates:
+      - "npm test"
+    acceptance_criteria:
+      - "Dirty file scoping is enforced."
+    implementation_doc: .docs/04_implementation/example/dev.md
 `,
     "utf8"
   );

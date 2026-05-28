@@ -13,22 +13,24 @@ from harness_utils import (
 )
 
 TEST_REPORT_PATH = ".docs/07_test/TEST_REPORT.md"
-LEGACY_TEST_PLAN_PATH = ".docs/07_test/TEST_PLAN.md"
+PLACEHOLDER_TERMS = ["pending", "tbd", "todo", "待填", "待补", "placeholder"]
 
 
 def read_test_report() -> tuple[str, str]:
-    if repo_path(TEST_REPORT_PATH).exists():
-        return read_text(TEST_REPORT_PATH), TEST_REPORT_PATH
     require(
-        repo_path(LEGACY_TEST_PLAN_PATH).exists(),
-        f"Missing test report: expected {TEST_REPORT_PATH} or legacy {LEGACY_TEST_PLAN_PATH}",
+        repo_path(TEST_REPORT_PATH).exists(),
+        f"Missing test report: expected executed evidence at {TEST_REPORT_PATH}",
     )
-    return read_text(LEGACY_TEST_PLAN_PATH), LEGACY_TEST_PLAN_PATH
+    return read_text(TEST_REPORT_PATH), TEST_REPORT_PATH
 
 
 def main() -> None:
     validate_plan_contract(load_plan(), allow_open=False)
     text, source = read_test_report()
+    require(
+        not contains_any(text, PLACEHOLDER_TERMS),
+        "Test report must contain executed evidence, not pending/TBD/TODO/placeholder content",
+    )
     require(contains_any(text, ["matrix", "矩阵"]), "Test report must include a test matrix")
     require(contains_any(text, ["regression", "回归"]), "Test report must include regression evidence")
     require(contains_any(text, ["coverage gap", "覆盖缺口", "gap"]), "Test report must include coverage gaps")

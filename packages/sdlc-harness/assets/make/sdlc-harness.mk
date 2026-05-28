@@ -1,4 +1,5 @@
 PYTHON ?= python3
+SDLC_HARNESS ?= npx sdlc-harness
 
 .PHONY: help status docs-overview validate-doc-overviews validate-harness validate-current validate-plan validate-pm validate-design validate-dev validate-review validate-test validate-release validate-rfc lint test-current-domain test-all build
 
@@ -14,7 +15,7 @@ help:
 	@echo "  make validate-design     校验架构设计、技术方案和任务草案"
 	@echo "  make validate-dev        校验 sprint 任务状态、draft 消费、路径、代码 gate 和实现文档"
 	@echo "  make validate-review     校验 Review report"
-	@echo "  make validate-test       校验 regression/test report"
+	@echo "  make validate-test       校验 TEST_REPORT 执行证据和测试阶段边界"
 	@echo "  make validate-release    校验 current release status、smoke result 和 rollback plan"
 	@echo "  make validate-rfc        校验 RFC 产物并运行完整回归入口"
 
@@ -48,12 +49,9 @@ validate-design:
 	$(PYTHON) tools/validate_plan_draft.py
 
 validate-dev:
-	$(PYTHON) tools/validate_plan.py
-	$(PYTHON) tools/validate_dev_state.py
-	$(PYTHON) tools/validate_allowed_paths.py
+	$(SDLC_HARNESS) validate-dev
 	$(MAKE) lint
 	$(MAKE) test-current-domain
-	$(PYTHON) tools/validate_task_docs.py
 
 validate-review:
 	test -f .docs/06_review/REVIEW_REPORT.md

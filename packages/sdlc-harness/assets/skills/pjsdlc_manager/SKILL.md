@@ -38,7 +38,7 @@ Parallel Execution 是显式 opt-in：只有用户明确提出“并行”“多
 5. gate 失败时保持当前阶段不变，并报告 blocker。
 6. 用户输入 `/status` 时，运行 `make status`。
 7. 用户输入 `/next` 时，调用 `active_skill` 映射的 Skill。
-8. 用户输入 `/advance` 时，运行 `make validate-current`，通过后流转到配置的 `next` 阶段。
+8. 用户输入 `/advance` 时，运行 `make validate-current`，通过后流转到配置的 `next` 阶段；在 `SPRINTING` 下这会执行 phase-exit no-open 检查，不能用 direct `make validate-dev` 的通过结果替代。
 9. 用户输入 `/rfc <file>` 时，流转到 `RFC_RECALIBRATION` 并调用 `pjsdlc_rfc_recalibrate`。
 10. 如果当前 task 处于 `blocked` 或缺少 open task 必需的 plan 字段，不要推进阶段，先要求 `plan.yaml` 完整。
 11. 用户自然语言询问状态时，等价执行 `/status`。
@@ -61,7 +61,7 @@ Parallel Execution 是显式 opt-in：只有用户明确提出“并行”“多
 
 每个 open task 都必须在 `plan.yaml` 中包含 `id`、`phase`、`docs`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`；新 task 统一使用 `TASK-*` id，历史 `DEV-*`、`PRD-*`、`DES-*` task 只作为兼容输入保留。文档和流程产物 task 使用 `result_docs` 指向本 task 产出的 PRD、architecture、tech plan、ADR、review、test、release、RFC 或 `plan.draft.yaml`，开发 task 使用 `implementation_doc` 指向模块级实现事实。任何阶段如果从 draft queue promote 正式 `TASK-*`，必须同次消费并删除源 draft；当前内置 draft queue 是 `plan.draft.yaml.tasks[]`，用于保存尚未采用的开发草案。done/cancelled task 不长期留在当前 `plan.yaml`。完成后的产物事实以对应 `.docs/**` slice 或模块级 implementation doc 为准，动作历史以 git/PR/CI/release 系统作为 cold archive，`next_task_sequence` 负责继续分配后续 task id。
 
-`/prd`、`/design`、`/dev`、`/review`、`/test`、`/release` 和 `/rfc` 都是单 task 推进：默认只完成一个 `TASK-*`。`validate-plan` 用于检查当前 open task 合同是否完整；阶段出口 gate `validate-pm`、`validate-design`、`validate-dev`、`validate-review`、`validate-test`、`validate-release` 和 `validate-rfc` 都要求没有 open task 残留。
+`/prd`、`/design`、`/dev`、`/review`、`/test`、`/release` 和 `/rfc` 都是单 task 推进：默认只完成一个 `TASK-*`。`validate-plan` 用于检查当前 open task 合同是否完整。direct `validate-dev` / `make validate-dev` 是 `SPRINTING` 开发中 gate，允许一个合法当前 open task 存在；`validate-current` / `/advance` 在 `SPRINTING` 下仍是阶段出口 gate，要求没有 open task 残留。其它阶段出口 gate `validate-pm`、`validate-design`、`validate-review`、`validate-test`、`validate-release` 和 `validate-rfc` 也要求没有 open task 残留。
 
 `parallel_execution` 是可选顶层合同，缺省表示串行。启用后必须声明 `enabled`、`trigger`、`mode`、`coordinator`、`workers` 和 `integration`；不要在合同内重复保存 `phase` 或 `linked_task_id`，当前阶段来自 lifecycle 的 `current_phase`，当前任务来自 plan 的 `current_task_id`。
 

@@ -45,7 +45,7 @@ phases:
       - "REQUIREMENT_GATHERING"
 
   SPRINTING:
-    goal: "按任务状态执行开发、消费已采用草案、测试和实现文档沉淀"
+    goal: "按任务状态执行开发、消费已采用草案、开发验证和实现文档沉淀"
     role: "developer"
     skill: "pjsdlc_dev_sprint"
     inputs:
@@ -81,7 +81,7 @@ phases:
     next: "TESTING"
 
   TESTING:
-    goal: "形成测试报告、测试矩阵、回归证据和覆盖缺口结论"
+    goal: "基于已交付 entry/exit 形成测试策略、测试用例、执行报告、回归证据和覆盖缺口结论"
     role: "tester"
     skill: "pjsdlc_tester"
     inputs:
@@ -92,7 +92,9 @@ phases:
       - ".docs/06_review/"
     outputs:
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/07_test/"
+      - ".docs/07_test/TEST_STRATEGY.md"
+      - ".docs/07_test/TEST_CASES.md"
+      - ".docs/07_test/TEST_REPORT.md"
       - "tests/"
     gates:
       - "make validate-test"
@@ -125,7 +127,7 @@ phases:
     next: "IDLE"
 
   RFC_RECALIBRATION:
-    goal: "处理需求变更、影响分析、局部补丁和任务回退"
+    goal: "处理需求变更、影响分析、测试事实源清理、局部补丁和任务回退"
     role: "rfc_owner"
     skill: "pjsdlc_rfc_recalibrate"
     inputs:
@@ -135,6 +137,7 @@ phases:
       - "<harnessRoot>/state/plan.yaml"
     outputs:
       - ".docs/rfc/"
+      - ".docs/07_test/"
       - "<harnessRoot>/state/plan.yaml"
       - ".docs/INDEX.md"
     gates:

@@ -379,6 +379,29 @@ TESTING_ALLOWED_TEST_FILE_TERMS = [
     "smoke",
 ]
 
+TEST_FACT_SOURCE_PHASES = {"TESTING", "RFC_RECALIBRATION"}
+TEST_FACT_SOURCE_PATTERNS = [".docs/07_test/**", ".docs/07_test/"]
+
+
+def test_fact_source_errors_for_task(task: dict[str, Any]) -> list[str]:
+    phase = str(task.get("phase") or "")
+    if phase in TEST_FACT_SOURCE_PHASES:
+        return []
+    candidates = [str(path) for path in task.get("allowed_paths") or []]
+    candidates.extend(str(path) for path in task.get("result_docs") or [])
+    blocked = [
+        path
+        for path in candidates
+        if matches_any(path.replace("\\", "/"), TEST_FACT_SOURCE_PATTERNS)
+        or path.replace("\\", "/").startswith(".docs/07_test/")
+    ]
+    if not blocked:
+        return []
+    return [
+        "Only TESTING or RFC_RECALIBRATION tasks may target current test fact sources under .docs/07_test/**: "
+        + ", ".join(blocked)
+    ]
+
 
 def testing_boundary_errors_for_allowed_paths(task: dict[str, Any]) -> list[str]:
     if task.get("phase") != "TESTING":
@@ -462,6 +485,8 @@ def validate_task_shape(task: dict[str, Any], index: int) -> None:
     has_implementation_doc = isinstance(task.get("implementation_doc"), str) and task["implementation_doc"].strip()
     has_result_docs = isinstance(task.get("result_docs"), list) and bool(task["result_docs"])
     require(has_implementation_doc or has_result_docs, f"{task['id']} must define implementation_doc or result_docs")
+    for error in test_fact_source_errors_for_task(task):
+        require(False, f"{task['id']} {error}")
     if task["status"] in OPEN_TASK_STATUSES:
         require("gate_result" not in task, f"{task['id']} open task must not define gate_result")
         for field in ["docs", "allowed_paths", "required_gates", "acceptance_criteria"]:

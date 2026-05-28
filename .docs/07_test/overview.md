@@ -1,29 +1,16 @@
 # .docs/07_test overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: a0bb36dd2aa7b045 -->
+<!-- source-hash: 63f37f4d514ca759 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `a0bb36dd2aa7b045`
+Source hash: `63f37f4d514ca759`
 
 ## Source Slices
 
-1. [TEST_PLAN.md](TEST_PLAN.md)
-2. [TEST_REPORT.md](TEST_REPORT.md)
-3. [harness_consumer_lab.md](harness_consumer_lab.md)
-
----
-
-## TEST_PLAN.md
-
-Source: [TEST_PLAN.md](TEST_PLAN.md)
-
-# Legacy Test Plan Alias
-
-Canonical TESTING evidence has moved to [TEST_REPORT.md](TEST_REPORT.md).
-
-`TEST_PLAN.md` is retained only as a legacy alias for existing links and older Harness versions.
+1. [TEST_REPORT.md](TEST_REPORT.md)
+2. [harness_consumer_lab.md](harness_consumer_lab.md)
 
 ---
 

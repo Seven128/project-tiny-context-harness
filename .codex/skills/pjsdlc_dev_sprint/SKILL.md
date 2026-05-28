@@ -19,7 +19,7 @@ description: Use during SPRINTING to execute one task from plan.yaml, respecting
 
 `/dev` 和 `/devloop` 是开发阶段的两个入口。`/dev` 创建或选择下一个最小 `TASK-*` development task，设置 `phase: "SPRINTING"`，并只完成一个 task 闭环后停止。通用规则是从任何 draft queue promote 正式 `TASK-*` 时都必须同次消费源 draft；当前开发阶段的内置 draft queue 是 `plan.draft.yaml.tasks[]`，因此如果这个 task 来自 `plan.draft.yaml.tasks[]`，promote 时必须同次删除源 draft，避免已采用草案继续显示为 `pending`。`/devloop` 连续运行 `/dev`，直到 `plan.yaml.tasks[]` 和 `plan.draft.yaml.tasks[]` 都没有明确可创建/执行的任务，或遇到需求、架构、allowed_paths、gate、commit/push blocker。
 
-实现时遵循小步闭环：先检查 `git status`，确认工作区没有未归属到当前 task 的脏变更；再定位相关代码和测试，做必要修改，运行 gate，修复失败，写入或更新相关 implementation doc 并刷新文档派生视图。此时先不要从 `plan.yaml` 移除当前 task，要在当前 task 仍位于 `plan.yaml` 时创建 task implementation commit；随后再移除 task，创建 task completion ledger commit，并 push 两个 commit。不要顺手重构、重排格式或处理无关问题；如果发现无关风险，只记录或报告。
+实现时遵循小步闭环：先检查 `git status`，确认工作区没有未归属到当前 task 的脏变更；再定位相关代码和测试，做必要修改，运行 gate，修复失败，写入或更新相关 implementation doc 并刷新文档派生视图。直接运行 `make validate-dev` 或 `npx sdlc-harness validate-dev` 是开发中 gate，允许当前 `SPRINTING` task 仍然 open，并校验 `current_task_id`、task 合同、dirty files、draft queue 和 implementation doc。此时先不要从 `plan.yaml` 移除当前 task，要在当前 task 仍位于 `plan.yaml` 时创建 task implementation commit；随后再移除 task，创建 task completion ledger commit，并 push 两个 commit。`make validate-current` / `/advance` 是阶段出口 gate，必须在 open task 已移除后才通过。不要顺手重构、重排格式或处理无关问题；如果发现无关风险，只记录或报告。
 
 如果用户明确要求并行、多 agent 或多 worktree，开发阶段可以启用可选 `parallel_execution`。主 Agent 先创建合同，声明每个 worker 的 `branch`、`worktree`、`owned_paths`、`forbidden_paths`、`expected_output` 和 `required_gates`。worker 可以在各自 owned paths 内实现，但不得直接修改 `plan.yaml`、`lifecycle.yaml`、`.docs/INDEX.md`、overview 或最终 implementation doc。主 Agent 负责 review、merge/cherry-pick、运行总 gate、更新事实源和完成两段提交。没有用户显式要求时，继续使用串行 `/dev` 或 `/devloop`。
 
@@ -55,6 +55,7 @@ description: Use during SPRINTING to execute one task from plan.yaml, respecting
 - 一个开发 task 默认对应一个主要 implementation commit 和一个轻量 completion ledger commit。implementation commit message 应包含 task id，例如 `TASK-003: implement login rate limit`；push 成功前，不进入下一个 task。
 - 本 Skill 不直接重切 PRD 或 tech plan；如果发现上游语义边界错误，进入 `BLOCKED`、创建 RFC，或请求回到 `ARCHITECTING`。
 - gate 通过后调用 `pjsdlc_implementation_doc`，由该 Skill 按真实实现更新或新增 `.docs/04_implementation/` 模块级 slice。
+- direct dev gate 与 phase-exit gate 语义不同：`validate-dev` 支持当前 open `SPRINTING` task；`validate-current` 在 `SPRINTING` 下仍会拒绝 open task，提示先完成 implementation commit 和 completion ledger。
 - 如果一个任务实际变成多个独立实现边界，应停止扩大范围，拆分后续任务或回到任务规划。
 - `/dev` 是单任务执行入口：没有 open task 时，先根据 PRD、architecture、tech plan 和 `plan.draft.yaml` 创建一个最小 `TASK-*` open task；如果从 `plan.draft.yaml.tasks[]` 采用 draft，必须同次从 draft 列表删除源项；已有 open task 时，直接执行该 task；完成后停止。
 - `/devloop` 是连续执行入口：每完成一个 task 并 push 两段提交后，重新读取 lifecycle、`plan.yaml`、`plan.draft.yaml`、PRD、architecture 和 tech plan，再决定是否创建/执行下一个最小 task；没有 open task 且没有未采用 draft，或出现 blocker 时停止并报告。
@@ -80,19 +81,20 @@ done task 的执行流水不在当前 `plan.yaml` 长期保留，也不是默认
 2. 开始修改前检查 `git status`；如果存在不属于当前 task 的未提交变更，先完成对应 task 的 commit/push，或报告 blocker，不要混入当前 task。
 3. 只编辑当前 task 的 `allowed_paths` 允许的文件，以及 `SPRINTING` 阶段允许的 Harness 记账文件；如果本轮 promote draft，允许同步编辑 `<harnessRoot>/state/plan.draft.yaml` 来消费源 draft。
 4. 必须运行当前 task 的 `required_gates`。
-5. 如果 gate 因代码或测试逻辑失败，在任务范围内修复。
-6. 如果 gate 因基础设施、凭证缺失、产品行为不清或高风险架构变化失败，进入 `BLOCKED`。
-7. gate 通过后调用 `pjsdlc_implementation_doc`。
-8. 只有 gate 通过、承诺的 runnable entry/exit 已实现或明确 `BLOCKED`，且 implementation doc 校验通过后，才能把任务标记为 `done`。
-9. 任务完成并写入或更新相关 implementation doc、刷新 `overview.md`、记录 gate 后，先创建 task implementation commit；此时不要移除该 task。
-10. task implementation commit 必须发生在 task 移除前；后续默认不要读取其中的执行期字段，历史查询以模块级 implementation doc、RFC、PRD、tech plan 和代码为主。
-11. implementation commit 完成后，从当前 `plan.yaml` 移除该 task，并创建 task completion ledger commit。
-12. 默认不追溯已完成 task 的执行流水；只有显式 forensic/audit/regression 任务才临时查询 git、PR 或 CI 记录。
-13. 两个 commit 后必须 `git push` 到当前 upstream branch；如果没有 remote/upstream、权限或凭证导致无法 push，停止推进并报告 blocker。
-14. `/devloop` 每轮都必须重新读取当前状态，不得在一次上下文中假设 plan、draft、代码或远端状态未变化。
-15. 只有用户明确要求并行、多 agent 或多 worktree 时，才允许创建 `parallel_execution`；否则不得默认并行。
-16. `runtime_managed` 只在当前 runtime 支持 subagent 时使用；没有该能力时，输出 `user_orchestrated` worker prompt，由用户手动打开对话或 worktree 后粘贴。
-17. worker 不更新主事实源；主 Agent 才能更新 `plan.yaml`、`.docs/INDEX.md`、overview、implementation doc 和最终 gate 证据。
+5. 开发中可运行 `make validate-dev` 验证当前 open task；它通过不表示可以进入 `REVIEWING`。
+6. 如果 gate 因代码或测试逻辑失败，在任务范围内修复。
+7. 如果 gate 因基础设施、凭证缺失、产品行为不清或高风险架构变化失败，进入 `BLOCKED`。
+8. gate 通过后调用 `pjsdlc_implementation_doc`。
+9. 只有 gate 通过、承诺的 runnable entry/exit 已实现或明确 `BLOCKED`，且 implementation doc 校验通过后，才能把任务标记为 `done`。
+10. 任务完成并写入或更新相关 implementation doc、刷新 `overview.md`、记录 gate 后，先创建 task implementation commit；此时不要移除该 task。
+11. task implementation commit 必须发生在 task 移除前；后续默认不要读取其中的执行期字段，历史查询以模块级 implementation doc、RFC、PRD、tech plan 和代码为主。
+12. implementation commit 完成后，从当前 `plan.yaml` 移除该 task，并创建 task completion ledger commit。
+13. 默认不追溯已完成 task 的执行流水；只有显式 forensic/audit/regression 任务才临时查询 git、PR 或 CI 记录。
+14. 两个 commit 后必须 `git push` 到当前 upstream branch；如果没有 remote/upstream、权限或凭证导致无法 push，停止推进并报告 blocker。
+15. `/devloop` 每轮都必须重新读取当前状态，不得在一次上下文中假设 plan、draft、代码或远端状态未变化。
+16. 只有用户明确要求并行、多 agent 或多 worktree 时，才允许创建 `parallel_execution`；否则不得默认并行。
+17. `runtime_managed` 只在当前 runtime 支持 subagent 时使用；没有该能力时，输出 `user_orchestrated` worker prompt，由用户手动打开对话或 worktree 后粘贴。
+18. worker 不更新主事实源；主 Agent 才能更新 `plan.yaml`、`.docs/INDEX.md`、overview、implementation doc 和最终 gate 证据。
 
 ## 完成检查
 

@@ -191,6 +191,16 @@ export async function runConsumerLabFullTest(rawOptions) {
   await writeFile(path.join(options.labDir, ".codex/state/plan.draft.yaml"), "next_task_sequence: 2\ntasks: []\n", "utf8");
   commandCheck("CLI validators", "validate-current", "npx", ["sdlc-harness", "validate-current"]);
   commandCheck("CLI validators", "validate-dev final empty plan", "npx", ["sdlc-harness", "validate-dev"]);
+  await writeOpenSprintTaskPlan(options.labDir);
+  commandCheck("Makefile gates", "make validate-dev accepts valid current open SPRINTING task", "make", ["validate-dev"]);
+  await writeFile(
+    path.join(options.labDir, ".codex/state/plan.yaml"),
+    `current_task_id: ""
+next_task_sequence: 2
+tasks: []
+`,
+    "utf8"
+  );
   commandCheck("CLI validators", "validate-review", "npx", ["sdlc-harness", "validate-review"]);
   commandCheck("CLI validators", "validate-test", "npx", ["sdlc-harness", "validate-test"]);
   commandCheck("CLI validators", "validate-release", "npx", ["sdlc-harness", "validate-release"]);
@@ -488,17 +498,56 @@ async function writeDocs(labDir) {
       "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage is intentionally narrow.\n\n## Runnable Entry/Exit Readiness\n\nExisting entry/exit is runnable through `summarizeText(input)`.\n\n## Decision\n\nPASS\n",
     ".docs/07_test/TEST_REPORT.md":
       "# Test Report\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal text | PASS |\n| Empty text | PASS |\n\n## Regression Evidence\n\n- `npm test`: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped API.\n\n## Coverage Gap\n\nNo locale-specific coverage.\n\n## Decision\n\nPASS\n",
+    ".docs/07_test/TEST_CASES.md":
+      "# Test Cases\n\n## Scope\n\n- Runnable entry/exit under test: `summarizeText(input)`.\n\n## Cases\n\n| ID | Requirement | Preconditions | Steps | Expected Result |\n|---|---|---|---|---|\n| TC-001 | Character and word count | Package installed | Call `summarizeText(\"hello world\")` | Returns counts and `empty: false` |\n| TC-002 | Empty state | Package installed | Call `summarizeText(\"\")` | Returns `empty: true` |\n",
     ".docs/08_release/CURRENT_RELEASE.md":
       "# Current Release Status\n\n## Release Notes\n\nTiny helper fixture.\n\n## Smoke Evidence\n\n- `npm test`: PASS\n\n## Rollback Plan\n\nRevert the lab helper commit.\n",
     ".docs/rfc/RFC_001_change_empty_semantics.md":
-      "# RFC 001 Change Empty Semantics\n\nStatus: VERIFIED\n\n## Background\n\nThe lab needs one RFC document.\n\n## Product Impact\n\nWhitespace-only strings remain empty.\n\n## Technical Impact\n\nNo code change required.\n\n## Regression\n\nKeep whitespace-only coverage.\n",
+      "# RFC 001 Change Empty Semantics\n\nStatus: VERIFIED\n\n## Background\n\nThe lab needs one RFC document.\n\n## Product Impact\n\nWhitespace-only strings remain empty.\n\n## Technical Impact\n\nNo code change required.\n\n## Regression\n\nKeep whitespace-only coverage.\n\n## Test Fact Source Impact\n\nSuperseded test docs: none\n",
     ".docs/INDEX.md":
-      "# Documentation Index\n\n- Product: `.docs/01_product/text_summary_prd.md`\n- Architecture: `.docs/02_architecture/text_summary_architecture.md`\n- Technical plan: `.docs/03_tech_plan/text_summary_plan.md`\n- Implementation: `.docs/04_implementation/text_summary.md`\n- Test: `.docs/07_test/TEST_REPORT.md`\n"
+      "# Documentation Index\n\n- Product: `.docs/01_product/text_summary_prd.md`\n- Architecture: `.docs/02_architecture/text_summary_architecture.md`\n- Technical plan: `.docs/03_tech_plan/text_summary_plan.md`\n- Implementation: `.docs/04_implementation/text_summary.md`\n- Test cases: `.docs/07_test/TEST_CASES.md`\n- Test report: `.docs/07_test/TEST_REPORT.md`\n"
   };
   for (const [relative, content] of Object.entries(files)) {
     await mkdir(path.dirname(path.join(labDir, relative)), { recursive: true });
     await writeFile(path.join(labDir, relative), content, "utf8");
   }
+}
+
+async function writeOpenSprintTaskPlan(labDir) {
+  await writeFile(
+    path.join(labDir, ".codex/state/lifecycle.yaml"),
+    'current_phase: "SPRINTING"\nactive_role: "developer"\nactive_skill: "pjsdlc_dev_sprint"\n',
+    "utf8"
+  );
+  await writeFile(path.join(labDir, ".codex/state/plan.draft.yaml"), "next_task_sequence: 2\ntasks: []\n", "utf8");
+  await writeFile(
+    path.join(labDir, ".codex/state/plan.yaml"),
+    `current_task_id: "TASK-001"
+next_task_sequence: 2
+tasks:
+  - id: "TASK-001"
+    phase: "SPRINTING"
+    title: "Open task should remain until completion"
+    status: "in_progress"
+    summary: "Positive dev gate check."
+    docs:
+      product:
+        - ".docs/01_product/text_summary_prd.md"
+      tech_plan:
+        - ".docs/03_tech_plan/text_summary_plan.md"
+    allowed_paths:
+      - ".codex/state/**"
+      - "src/**"
+      - "tests/**"
+      - ".docs/04_implementation/**"
+    required_gates:
+      - "npm test"
+    acceptance_criteria:
+      - "Open task is intentionally present during direct validate-dev."
+    implementation_doc: ".docs/04_implementation/text_summary.md"
+`,
+    "utf8"
+  );
 }
 
 async function verifyPlanProtocol(labDir, commandCheck, add) {
@@ -567,36 +616,22 @@ tasks:
     details: trimOutput(`${done.stdout}\n${done.stderr}`)
   });
 
-  await writeFile(
-    planPath,
-    `current_task_id: "TASK-001"
-next_task_sequence: 2
-tasks:
-  - id: "TASK-001"
-    phase: "SPRINTING"
-    title: "Open task should remain until completion"
-    status: "in_progress"
-    summary: "Negative protocol check."
-    docs:
-      product:
-        - ".docs/01_product/text_summary_prd.md"
-    allowed_paths:
-      - "src/**"
-    required_gates:
-      - "npm test"
-    acceptance_criteria:
-      - "Open task is intentionally present."
-    implementation_doc: ".docs/04_implementation/text_summary.md"
-`,
-    "utf8"
-  );
+  await writeOpenSprintTaskPlan(labDir);
   const open = run("npx", ["sdlc-harness", "validate-dev"], labDir);
   add({
     area: "Task protocol",
-    evidence: "open task retained is rejected by completion gate",
+    evidence: "direct dev gate accepts current open SPRINTING task",
     command: "npx sdlc-harness validate-dev",
-    status: open.status !== 0 && `${open.stdout}\n${open.stderr}`.includes("Open tasks remain") ? "PASS" : "FAIL",
+    status: open.status === 0 ? "PASS" : "FAIL",
     details: trimOutput(`${open.stdout}\n${open.stderr}`)
+  });
+  const phaseExit = run("npx", ["sdlc-harness", "validate-current"], labDir);
+  add({
+    area: "Task protocol",
+    evidence: "phase exit gate rejects open SPRINTING task",
+    command: "npx sdlc-harness validate-current",
+    status: phaseExit.status !== 0 && `${phaseExit.stdout}\n${phaseExit.stderr}`.includes("Open tasks remain") ? "PASS" : "FAIL",
+    details: trimOutput(`${phaseExit.stdout}\n${phaseExit.stderr}`)
   });
 
   await writeFile(

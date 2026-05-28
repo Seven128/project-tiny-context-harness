@@ -79,8 +79,11 @@ const TESTING_DISALLOWED_CHANGED_PATHS = [...TESTING_DISALLOWED_ALLOWED_PATHS, "
 const TESTING_RUNTIME_FILE_TERMS = ["bootstrap", "cloud", "daemon", "poller", "provider", "runtime", "service", "systemd"];
 const TESTING_ALLOWED_TEST_FILE_TERMS = ["assertion", "fixture", "mock", "smoke"];
 const TEST_REPORT_PATH = ".docs/07_test/TEST_REPORT.md";
-const LEGACY_TEST_PLAN_PATH = ".docs/07_test/TEST_PLAN.md";
 const CURRENT_RELEASE_REPORT_PATH = ".docs/08_release/CURRENT_RELEASE.md";
+const TEST_REPORT_PLACEHOLDER_TERMS = ["pending", "tbd", "todo", "待填", "待补", "placeholder"];
+const TEST_FACT_SOURCE_PHASES = new Set(["TESTING", "RFC_RECALIBRATION"]);
+const TEST_FACT_SOURCE_PATTERNS = [".docs/07_test/**", ".docs/07_test/"];
+const TEST_FACT_SOURCE_REF = /\.docs\/07_test\/[^\s`,)]+/g;
 const RUNNABLE_ENTRY_EXIT_TERMS = [
   "runnable entry/exit",
   "entry/exit",
@@ -141,6 +144,9 @@ async function validateCurrent(projectRoot: string): Promise<ValidatorReport> {
   const root = await harnessRoot(projectRoot);
   const lifecycle = await readYamlObject(path.join(projectRoot, root, "state", "lifecycle.yaml"));
   const current = String(lifecycle.current_phase ?? "");
+  if (current === "SPRINTING") {
+    return validateDevInternal(projectRoot, { phaseExit: true });
+  }
   const gateByPhase: Record<string, string> = {
     REQUIREMENT_GATHERING: "validate-pm",
     ARCHITECTING: "validate-design",
@@ -281,6 +287,7 @@ function validateDraftTaskShape(task: Record<string, unknown>, index: number, er
   if (!hasImplementationDoc && !hasResultDocs) {
     errors.push(`${String(task.id ?? prefix)} must define implementation_doc or result_docs`);
   }
+  errors.push(...testFactSourceErrorsForTask(task));
   if (OPEN_TASK_STATUSES.has(String(task.status))) {
     if ("gate_result" in task) errors.push(`${String(task.id ?? prefix)} open task must not define gate_result`);
     for (const field of ["docs", "allowed_paths", "required_gates", "acceptance_criteria"]) {
@@ -336,11 +343,51 @@ async function validateCrossCuttingArchitecture(
 }
 
 async function validateDev(projectRoot: string): Promise<ValidatorReport> {
+  return validateDevInternal(projectRoot, { phaseExit: false });
+}
+
+async function validateDevInternal(projectRoot: string, options: { phaseExit: boolean }): Promise<ValidatorReport> {
   const root = await harnessRoot(projectRoot);
-  const plan = await validatePlanState(projectRoot, false);
+  const lifecycle = await readYamlObject(path.join(projectRoot, root, "state", "lifecycle.yaml"));
+  const plan = await validatePlanState(projectRoot, !options.phaseExit);
+  const phaseErrors = String(lifecycle.current_phase ?? "") === "SPRINTING" ? [] : ["validate-dev requires lifecycle current_phase SPRINTING"];
+  const openTaskErrors = options.phaseExit ? [] : validateDevOpenTaskState(plan.plan);
+  const pathErrors = options.phaseExit ? [] : await validateChangedPaths(projectRoot, plan.plan, true);
   const draftErrors = await validateDevDraftConsumed(projectRoot, root);
   const implementationDocErrors = await validateImplementationDocRunnableEntryExit(projectRoot);
-  return { info: [`validate-dev checked ${plan.taskCount} task(s)`], errors: [...plan.errors, ...draftErrors, ...implementationDocErrors] };
+  return {
+    info: [`validate-dev checked ${plan.taskCount} task(s)${options.phaseExit ? " for phase exit" : ""}`],
+    errors: [...phaseErrors, ...plan.errors, ...openTaskErrors, ...pathErrors, ...draftErrors, ...implementationDocErrors]
+  };
+}
+
+function validateDevOpenTaskState(plan: Record<string, unknown>): string[] {
+  const errors: string[] = [];
+  const tasks = Array.isArray(plan.tasks) ? plan.tasks.filter(isRecord) : [];
+  const open = tasks.filter((task) => OPEN_TASK_STATUSES.has(String(task.status)));
+  if (open.length === 0) return errors;
+
+  const currentTaskId = String(plan.current_task_id ?? "");
+  if (!currentTaskId) {
+    errors.push("validate-dev requires current_task_id when SPRINTING has an open task");
+    return errors;
+  }
+  const currentTask = open.find((task) => String(task.id ?? "") === currentTaskId);
+  if (!currentTask) {
+    errors.push(`current_task_id does not match an open SPRINTING task: ${currentTaskId}`);
+    return errors;
+  }
+  const otherOpen = open.filter((task) => String(task.id ?? "") !== currentTaskId);
+  if (otherOpen.length > 0) {
+    errors.push(`validate-dev supports only the current open task during SPRINTING: ${open.map((task) => task.id).join(", ")}`);
+  }
+  if (String(currentTask.phase ?? "") !== "SPRINTING") {
+    errors.push(`${currentTaskId} must have phase SPRINTING for validate-dev`);
+  }
+  if (typeof currentTask.implementation_doc !== "string" || !currentTask.implementation_doc.trim()) {
+    errors.push(`${currentTaskId} must define implementation_doc for validate-dev`);
+  }
+  return errors;
 }
 
 async function validateDevDraftConsumed(projectRoot: string, root: string): Promise<string[]> {
@@ -382,7 +429,10 @@ async function validateTest(projectRoot: string): Promise<ValidatorReport> {
   const errors = [...plan.errors];
   const report = await readTestReport(projectRoot);
   const text = report ? report.text.toLowerCase() : "";
-  if (!report) errors.push(`Missing test report: expected ${TEST_REPORT_PATH} or legacy ${LEGACY_TEST_PLAN_PATH}`);
+  if (!report) errors.push(`Missing test report: expected executed evidence at ${TEST_REPORT_PATH}`);
+  if (containsAny(text, TEST_REPORT_PLACEHOLDER_TERMS)) {
+    errors.push("Test report must contain executed evidence, not pending/TBD/TODO/placeholder content");
+  }
   if (!containsAny(text, ["matrix", "矩阵"])) errors.push("Test report must include a test matrix");
   if (!containsAny(text, ["regression", "回归"])) errors.push("Test report must include regression evidence");
   if (!containsAny(text, ["coverage gap", "覆盖缺口", "gap"])) errors.push("Test report must include coverage gaps");
@@ -418,6 +468,20 @@ async function validateRfc(projectRoot: string): Promise<ValidatorReport> {
   if (!containsAny(text, ["product impact", "产品影响"])) errors.push("RFC must include product impact");
   if (!containsAny(text, ["technical impact", "技术影响"])) errors.push("RFC must include technical impact candidates");
   if (!containsAny(text, ["regression", "回归"])) errors.push("RFC must include regression requirements");
+  if (!containsAny(text, ["test fact source impact", "测试事实源影响"])) {
+    errors.push("RFC must include Test Fact Source Impact");
+  }
+  const indexPath = path.join(projectRoot, ".docs/INDEX.md");
+  const indexText = (await pathExists(indexPath)) ? await readText(indexPath) : "";
+  if (!indexText) errors.push("Missing .docs/INDEX.md for RFC test fact source validation");
+  for (const superseded of await supersededTestDocs(docs)) {
+    if (await pathExists(path.join(projectRoot, superseded))) {
+      errors.push(`Superseded test doc still exists in current facts: ${superseded}`);
+    }
+    if (indexText.includes(superseded)) {
+      errors.push(`Superseded test doc still linked from .docs/INDEX.md: ${superseded}`);
+    }
+  }
   const statuses = [...text.matchAll(/status:\s*([a-z_]+)/g)].map((match) => match[1].toUpperCase());
   if (statuses.length === 0) errors.push("RFC must include a Status line");
   const invalidStatuses = statuses.filter((status) => !["DRAFT", "APPLIED", "VERIFIED", "ARCHIVED"].includes(status));
@@ -472,6 +536,7 @@ async function validatePlanState(projectRoot: string, allowOpen: boolean): Promi
     if (match) {
       maxTaskSequence = Math.max(maxTaskSequence, Number(match[1]));
     }
+    errors.push(...testFactSourceErrorsForTask(task));
     if (["pending", "in_progress", "blocked", "pending_revision"].includes(String(task.status))) {
       if ("gate_result" in task) {
         errors.push(`Open task ${task.id} must not define gate_result`);
@@ -637,10 +702,6 @@ async function readTestReport(projectRoot: string): Promise<{ text: string; sour
   if (await pathExists(canonical)) {
     return { text: await readText(canonical), source: TEST_REPORT_PATH };
   }
-  const legacy = path.join(projectRoot, LEGACY_TEST_PLAN_PATH);
-  if (await pathExists(legacy)) {
-    return { text: await readText(legacy), source: LEGACY_TEST_PLAN_PATH };
-  }
   return undefined;
 }
 
@@ -659,11 +720,22 @@ async function readReleaseReport(projectRoot: string): Promise<{ text: string; s
 async function validateImplementationDocRunnableEntryExit(projectRoot: string): Promise<string[]> {
   const docs = await markdownFiles(path.join(projectRoot, ".docs/04_implementation"));
   const errors: string[] = [];
+  const indexPath = path.join(projectRoot, ".docs/INDEX.md");
+  const indexText = (await pathExists(indexPath)) ? await readText(indexPath) : "";
+  if (docs.length > 0 && !indexText) {
+    errors.push("Missing .docs/INDEX.md for implementation doc validation");
+  }
   for (const doc of docs) {
+    const relative = repoRelative(projectRoot, doc);
+    const dotted = relative.startsWith(".") ? relative : `.${relative}`;
+    const withoutDocsPrefix = dotted.replace(/^\.docs\//, "");
+    if (indexText && !indexText.includes(dotted) && !indexText.includes(withoutDocsPrefix)) {
+      errors.push(`.docs/INDEX.md does not link implementation doc: ${dotted}`);
+    }
     const text = await readText(doc);
     if (!containsAny(text, RUNNABLE_ENTRY_EXIT_TERMS)) {
       errors.push(
-        `Implementation doc must include Runnable Entry/Exit facts or explicit Not applicable: ${repoRelative(projectRoot, doc)}`
+        `Implementation doc must include Runnable Entry/Exit facts or explicit Not applicable: ${dotted}`
       );
     }
   }
@@ -704,6 +776,37 @@ function testingBoundaryErrorsForChangedFiles(files: string[]): string[] {
   return [
     `TESTING changes must use existing product entrypoints only; move runtime, bootstrap, provider, deploy, or package script changes to SPRINTING/RFC: ${blocked.join(", ")}`
   ];
+}
+
+function testFactSourceErrorsForTask(task: Record<string, unknown>): string[] {
+  const phase = String(task.phase ?? "");
+  if (TEST_FACT_SOURCE_PHASES.has(phase)) return [];
+  const candidates = [...asStringList(task.allowed_paths), ...asStringList(task.result_docs)];
+  const blocked = candidates.filter((candidate) => {
+    const normalized = candidate.replace(/\\/g, "/");
+    return normalized.startsWith(".docs/07_test/") || matchesAny(normalized, TEST_FACT_SOURCE_PATTERNS);
+  });
+  if (blocked.length === 0) return [];
+  return [
+    `Only TESTING or RFC_RECALIBRATION tasks may target current test fact sources under .docs/07_test/**: ${blocked.join(", ")}`
+  ];
+}
+
+async function supersededTestDocs(docs: string[]): Promise<string[]> {
+  const refs = new Set<string>();
+  for (const doc of docs) {
+    const text = await readText(doc);
+    for (const line of text.split("\n")) {
+      const lowered = line.toLowerCase();
+      if (!lowered.includes("superseded") && !lowered.includes("被替代") && !lowered.includes("失效")) {
+        continue;
+      }
+      for (const match of line.matchAll(TEST_FACT_SOURCE_REF)) {
+        refs.add(normalizeDocRef(match[0]).replace(/[.,;:]$/, ""));
+      }
+    }
+  }
+  return [...refs].filter((ref) => ref.startsWith(".docs/07_test/"));
 }
 
 function isTestingBoundaryAllowedPath(file: string): boolean {

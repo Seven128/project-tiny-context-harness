@@ -107,7 +107,11 @@ Agent 会读取 `<harnessRoot>/state/lifecycle.yaml` 和 `<harnessRoot>/state/pl
 
 SPRINTING 的 Definition of Done 包含可运行入口/出口：技术方案或 task 承诺的 API、CLI、server route、adapter、worker、provider、配置契约和 fixture/live 边界必须在开发阶段实现或明确 `BLOCKED`。REVIEWING 会把缺少入口/出口作为阻断项；TESTING 只调用既有入口做输入输出验证，不能新增 product runtime、bootstrap、provider adapter、deploy 或 package runtime script。
 
-`validate-test` 仍然是 TESTING 阶段 gate 名称。TESTING 的 canonical 产物是 `.docs/07_test/TEST_REPORT.md`，记录 test matrix、regression evidence、runnable entry/exit coverage、coverage gaps 和 final decision；历史 `.docs/07_test/TEST_PLAN.md` 只作为 existing project 的 legacy alias 兼容，新测试证据应使用 `TEST_REPORT.md`。
+`make validate-dev` / `npx sdlc-harness validate-dev` 是 SPRINTING 开发中 gate：当前 `current_task_id` 指向的 open task 可以继续留在 `plan.yaml`，validator 会检查它是否是合法 `phase: "SPRINTING"` task、是否具备 `docs`、`allowed_paths`、`required_gates`、`acceptance_criteria`、`implementation_doc`，并校验 dirty files、`plan.draft.yaml` 和 implementation doc。`make validate-current` / `/advance` 是阶段出口 gate；进入 REVIEWING 前仍必须先完成 implementation commit 和 completion ledger，把 open task 从 `plan.yaml` 移除。
+
+`validate-test` 仍然是 TESTING 阶段 gate 名称。`.docs/07_test/TEST_STRATEGY.md` 描述测试范围、环境、优先级和执行策略；`.docs/07_test/TEST_CASES.md` 描述绑定真实 runnable entry/exit 的测试用例；`.docs/07_test/TEST_REPORT.md` 只记录 TESTING 阶段实际执行后的 test matrix、regression evidence、runnable entry/exit coverage、coverage gaps 和 final decision。`validate-test` 只接受 `TEST_REPORT.md`，不会把 `TEST_PLAN.md` 当作 report fallback。
+
+开发尚未完成可测试 entry/exit 前，不要在 `.docs/07_test/**` 生成正式测试用例或测试报告；验收思路应保留在 PRD acceptance criteria、tech plan verification strategy 或非执行性草稿里。RFC 改变技术路线、entry/exit 或验收边界时，必须审查 `.docs/07_test/**`，把被新方案 supersede 的旧测试结果从当前事实源和 `.docs/INDEX.md` 中移除。
 
 ### ADR 与 Memory 的边界
 
@@ -233,7 +237,7 @@ make docs-overview
 | `.docs/04_implementation/` | 模块、子系统和核心数据流的真实实现事实 |
 | `.docs/05_decisions/` | ADR，长期关键决策及其背景、备选方案、理由和后果 |
 | `.docs/06_review/` | Review 报告 |
-| `.docs/07_test/` | 测试报告、测试矩阵、回归证据和覆盖缺口 |
+| `.docs/07_test/` | 测试策略、测试用例、执行后测试报告、回归证据和覆盖缺口 |
 | `.docs/08_release/` | 当前发布状态、smoke evidence、回滚方案和已知限制 |
 | `.docs/rfc/` | 需求变更和影响分析 |
 

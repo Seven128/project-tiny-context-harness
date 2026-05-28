@@ -54,5 +54,6 @@ phases:
       - ".docs/rfc/**"
       - ".docs/01_product/**"
       - ".docs/03_tech_plan/**"
+      - ".docs/07_test/**"
       - "<harnessRoot>/state/plan.yaml"
       - ".docs/INDEX.md"

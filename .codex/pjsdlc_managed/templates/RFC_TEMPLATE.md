@@ -31,6 +31,13 @@
 
 - [ ] 
 
-## 7. Status
+## 7. Test Fact Source Impact（测试事实源影响）
+
+- Reviewed test docs:
+- Superseded test docs: none
+- Retained test docs:
+- Reason:
+
+## 8. Status
 
 - Status: DRAFT

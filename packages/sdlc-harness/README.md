@@ -86,7 +86,11 @@ Before development starts, `ARCHITECTING` can return to `REQUIREMENT_GATHERING` 
 
 SPRINTING Definition of Done includes runnable entry/exit boundaries. API, CLI, server route, adapter, worker, provider, config-contract and fixture/live boundaries promised by a technical plan or task must be implemented or marked `BLOCKED` during development. REVIEWING treats missing entry/exit as blocking, and TESTING only exercises existing entrypoints; it must not add product runtime, bootstrap, provider adapter, deploy code or package runtime scripts.
 
-`validate-test` keeps its command name as the TESTING phase gate. The canonical TESTING deliverable is `.docs/07_test/TEST_REPORT.md`, which records test matrix, regression evidence, runnable entry/exit coverage, coverage gaps and final decision. Legacy `.docs/07_test/TEST_PLAN.md` remains accepted for existing projects, but new test evidence should use `TEST_REPORT.md`.
+`make validate-dev` and `npx sdlc-harness validate-dev` are in-development SPRINTING gates. They allow the current `current_task_id` open task to remain in `plan.yaml` while checking that it is a valid `phase: "SPRINTING"` task with `docs`, `allowed_paths`, `required_gates`, `acceptance_criteria`, `implementation_doc`, scoped dirty files, an empty `plan.draft.yaml` queue and linked runnable-entry implementation docs. `make validate-current` and `/advance` are phase-exit gates; before moving to REVIEWING, the implementation commit and completion ledger must be done and no open task may remain.
+
+`validate-test` keeps its command name as the TESTING phase gate. `.docs/07_test/TEST_STRATEGY.md` describes scope, environment, priority and execution strategy; `.docs/07_test/TEST_CASES.md` describes cases bound to real runnable entry/exit; `.docs/07_test/TEST_REPORT.md` only records executed TESTING evidence, test matrix, regression evidence, runnable entry/exit coverage, coverage gaps and final decision. `validate-test` only accepts `TEST_REPORT.md`; it no longer treats `TEST_PLAN.md` as a report fallback.
+
+Do not create formal `.docs/07_test/**` test cases or reports before development has delivered testable entry/exit. When an RFC changes the technical route, entry/exit or acceptance boundary, review `.docs/07_test/**` and remove superseded test results from current facts and `.docs/INDEX.md`.
 
 ## ADR And Memory Boundaries
 
