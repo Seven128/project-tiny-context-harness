@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 import re
 
 from harness_utils import (
@@ -15,6 +16,33 @@ from harness_utils import (
 
 
 TEST_FACT_SOURCE_REF = re.compile(r"\.docs/07_test/[^\s`,)]+")
+SELF_TEST_TRIGGER_TERMS = [
+    "entry/exit",
+    "runnable entry",
+    "runnable exit",
+    "runnable entry/exit",
+    "runtime",
+    "environment",
+    "target_runtime_environment",
+    "target runtime",
+    "required_gates",
+    "gate",
+    "handoff",
+    "blocker",
+    "module key test path",
+    "test route",
+    "test path",
+    "debug path",
+    "测试路径",
+    "测试链路",
+    "自测链路",
+    "模块关键测试路径",
+    "入口",
+    "出口",
+    "运行环境",
+    "阻塞",
+]
+SELF_TEST_IMPACT_TERMS = ["development self-test impact", "开发自测影响"]
 
 
 def superseded_test_docs(docs) -> list[str]:
@@ -51,7 +79,26 @@ def main() -> None:
     allowed = {"DRAFT", "APPLIED", "VERIFIED", "ARCHIVED"}
     invalid = [status for status in statuses if status not in allowed]
     require(not invalid, "Invalid RFC status: " + ", ".join(invalid))
+    validate_development_self_test_impact(docs)
     print(f"RFC artifacts OK: {len(docs)} file(s)")
+
+
+def validate_development_self_test_impact(docs) -> None:
+    for doc in docs:
+        number = rfc_number(doc.name)
+        if number is not None and number < 23:
+            continue
+        text = doc.read_text(encoding="utf-8")
+        if contains_any(text, SELF_TEST_TRIGGER_TERMS):
+            require(
+                contains_any(text, SELF_TEST_IMPACT_TERMS),
+                f"{doc.relative_to(repo_path('.')).as_posix()} must include Development Self-Test Impact when RFC changes entry/exit, runtime, gates, handoff, or blockers",
+            )
+
+
+def rfc_number(file_name: str) -> int | None:
+    match = re.match(r"^RFC[_-](\d+)", file_name, re.IGNORECASE)
+    return int(match.group(1)) if match else None
 
 
 if __name__ == "__main__":

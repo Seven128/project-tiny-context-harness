@@ -317,6 +317,149 @@ def contains_any(text: str, terms: list[str]) -> bool:
     return any(term.lower() in lowered for term in terms)
 
 
+EVIDENCE_PLACEHOLDER_TERMS = ["pending", "tbd", "todo", "placeholder", "待填", "待补", "待确认"]
+APPLICATION_READINESS_TASK_TERMS = [
+    "service",
+    "agent",
+    "runtime",
+    "http",
+    "server",
+    "worker",
+    "provider",
+    "adapter",
+    "live mode",
+    "live",
+    "external integration",
+    "webhook",
+    "bot",
+    "机器人",
+    "常驻",
+    "云端",
+    "入口",
+    "出口",
+]
+PAGE_TASK_TERMS = ["frontend", "front-end", "browser", "page", "页面", "前端", "按钮", "表单", "跳转"]
+CALLABLE_TASK_TERMS = [
+    "api",
+    "endpoint",
+    "cli",
+    "command",
+    "worker",
+    "route",
+    "server action",
+    "adapter",
+    "provider",
+    "rpa",
+    "bot",
+    "机器人",
+    "队列",
+]
+SELF_TEST_CONTRACT_STATUSES = {"required", "not_applicable"}
+
+
+def as_string_list(value: Any) -> list[str]:
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    if isinstance(value, str) and value.strip():
+        return [value.strip()]
+    return []
+
+
+def is_placeholder_evidence(value: str) -> bool:
+    normalized = value.strip().lower()
+    if not normalized or normalized in {"-", "n/a", "na", "none", "null", "不适用", "无"}:
+        return True
+    return any(term == normalized or term in normalized for term in EVIDENCE_PLACEHOLDER_TERMS)
+
+
+def task_text_for_contract(task: dict[str, Any]) -> str:
+    parts = [str(task.get(key) or "") for key in ["id", "title", "summary", "phase"] if task.get(key)]
+    docs = task.get("docs")
+    if isinstance(docs, dict):
+        for value in docs.values():
+            parts.extend(as_string_list(value))
+    return "\n".join(parts)
+
+
+def needs_runnable_task_contract(task: dict[str, Any]) -> bool:
+    if task.get("phase") != "SPRINTING":
+        return False
+    evidence_level = task.get("evidence_level")
+    target_runtime = task.get("target_runtime_environment")
+    if (
+        isinstance(evidence_level, dict)
+        and isinstance(target_runtime, dict)
+        and evidence_level.get("required") == "unit"
+        and target_runtime.get("kind") == "not_applicable"
+    ):
+        return False
+    context = task_text_for_contract(task).lower()
+    return contains_any(context, APPLICATION_READINESS_TASK_TERMS + PAGE_TASK_TERMS + CALLABLE_TASK_TERMS)
+
+
+def self_test_contract_errors_for_task(task: dict[str, Any]) -> list[str]:
+    task_id = str(task.get("id") or "Task")
+    required_for_runnable = needs_runnable_task_contract(task)
+    contract = task.get("self_test_contract")
+    errors: list[str] = []
+    if required_for_runnable and not isinstance(contract, dict):
+        return [f"{task_id} runtime/app task must define self_test_contract"]
+    if contract is None:
+        return []
+    if not isinstance(contract, dict):
+        return [f"{task_id} self_test_contract must be a mapping"]
+
+    status = str(contract.get("status") or "")
+    if status not in SELF_TEST_CONTRACT_STATUSES:
+        errors.append(f"{task_id} self_test_contract.status must be required or not_applicable")
+    if required_for_runnable and status != "required":
+        errors.append(f"{task_id} runnable boundary task self_test_contract.status must be required")
+
+    if status == "not_applicable":
+        reason = str(contract.get("not_applicable_reason") or "").strip()
+        if len(reason) < 24 or is_placeholder_evidence(reason):
+            errors.append(f"{task_id} self_test_contract.not_applicable_reason must explain why self-test is not applicable")
+        return errors
+    if status != "required":
+        return errors
+
+    for field in ["source", "runnable_entry", "observable_exit", "module_key_test_path"]:
+        value = str(contract.get(field) or "").strip()
+        if not value or is_placeholder_evidence(value):
+            errors.append(f"{task_id} self_test_contract.{field} must be concrete")
+    if not as_string_list(contract.get("capability_refs")):
+        errors.append(f"{task_id} self_test_contract.capability_refs must be a non-empty list")
+
+    required_gates = as_string_list(contract.get("required_gates"))
+    if not required_gates:
+        errors.append(f"{task_id} self_test_contract.required_gates must be a non-empty list")
+    task_gates = set(as_string_list(task.get("required_gates")))
+    for gate in required_gates:
+        if gate not in task_gates:
+            errors.append(f"{task_id} self_test_contract.required_gates must also appear in task required_gates: {gate}")
+
+    scenarios = contract.get("scenarios")
+    if not isinstance(scenarios, list) or not scenarios:
+        errors.append(f"{task_id} self_test_contract.scenarios must be a non-empty list")
+        return errors
+    seen: set[str] = set()
+    for index, scenario in enumerate(scenarios):
+        if not isinstance(scenario, dict):
+            errors.append(f"{task_id} self_test_contract.scenarios[{index}] must be a mapping")
+            continue
+        scenario_id = str(scenario.get("id") or "").strip()
+        if not scenario_id:
+            errors.append(f"{task_id} self_test_contract.scenarios[{index}].id must be set")
+        elif scenario_id in seen:
+            errors.append(f"{task_id} self_test_contract scenario id must be unique: {scenario_id}")
+        seen.add(scenario_id)
+        for field in ["entry", "expected_exit", "evidence"]:
+            value = str(scenario.get(field) or "").strip()
+            if not value or is_placeholder_evidence(value):
+                errors.append(f"{task_id} self_test_contract.scenarios[{scenario_id or index}].{field} must be concrete")
+    return errors
+
+
 TESTING_DISALLOWED_ALLOWED_PATHS = [
     "package.json",
     "**/package.json",
@@ -495,6 +638,8 @@ def validate_task_shape(task: dict[str, Any], index: int) -> None:
         require(isinstance(task["allowed_paths"], list) and task["allowed_paths"], f"{task['id']} must define allowed_paths")
         require(isinstance(task["required_gates"], list) and task["required_gates"], f"{task['id']} must define required_gates")
         require(isinstance(task["acceptance_criteria"], list) and task["acceptance_criteria"], f"{task['id']} must define acceptance_criteria")
+        for error in self_test_contract_errors_for_task(task):
+            require(False, error)
         for error in testing_boundary_errors_for_allowed_paths(task):
             require(False, f"{task['id']} {error}")
     else:

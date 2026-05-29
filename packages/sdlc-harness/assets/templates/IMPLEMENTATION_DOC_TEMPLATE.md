@@ -50,10 +50,24 @@ Input
 - Config Contract:
 - Testing Handoff Readiness:
 - Known Missing Runtime Boundaries:
-- Basic Self-test Evidence:
+- Basic Self-test Evidence: See `Development Self-Test Report`.
 - Not applicable:
 
-## 7. Testing Handoff Contract（测试交接合同）
+## 7. Development Self-Test Report（开发自测报告，已执行）
+
+- Contract Source:
+- Scenario Results:
+- Executed Gates:
+- Module Key Test Path: local start / invocation -> all self-test scenarios -> all task/module promised runnable entries -> actual internal key paths / boundaries / checkpoints -> observable completion evidence
+- Actual Evidence:
+- Missing / Blockers:
+- Testing Handoff Readiness:
+
+| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |
+|---|---|---|---|---|
+| ST-001 | PASS / BLOCKED |  |  |  |
+
+## 8. Testing Handoff Contract（测试交接合同）
 
 - Entry:
 - Config:
@@ -63,7 +77,7 @@ Input
 - Cleanup / reset / idempotency:
 - Evidence Level:
 
-## 8. 关键实现逻辑
+## 9. 关键实现逻辑
 
 - 输入校验（Input validation）:
 - 核心分支（Core branches）:
@@ -71,22 +85,22 @@ Input
 - 边界兜底（Boundary fallback）:
 - 性能或并发注意事项（Performance or concurrency notes）:
 
-## 9. 与技术方案的偏移
+## 10. 与技术方案的偏移
 
 - 
 
-## 10. 测试覆盖（Test Coverage）
+## 11. 测试覆盖（Test Coverage）
 
 | 测试（Test） | 覆盖范围（Coverage） | 结果（Result） |
 |---|---|---|
 |  |  |  |
 
-## 11. 变更记录（Change Log）
+## 12. 变更记录（Change Log）
 
 | 日期（Date） | Task ID | Commit | 摘要（Summary） |
 |---|---|---|---|
 |  |  |  |  |
 
-## 12. 后续维护注意事项
+## 13. 后续维护注意事项
 
 - 

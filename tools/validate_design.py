@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 from harness_utils import (
     combined_text,
     contains_any,
@@ -79,6 +80,7 @@ def validate_draft_task_tech_plan_refs(tech_plan_docs: list) -> list[dict]:
         for ref in normalized_refs:
             require(ref.startswith(".docs/03_tech_plan/"), f"Draft task {task.get('id')} docs.tech_plan must point into .docs/03_tech_plan/: {ref}")
             require(ref in available_tech_plans, f"Draft task {task.get('id')} references missing or generated tech plan slice: {ref}")
+        validate_self_test_contract_tech_plan_binding(task, normalized_refs)
         primary_refs.append(normalized_refs[0])
 
     require(development_tasks, "plan.draft.yaml must contain at least one development task with implementation_doc")
@@ -108,6 +110,55 @@ def validate_cross_cutting_architecture(product_docs: list, tech_plan_docs: list
         ]
         require(matches, f"Design requires a dedicated {category['label']} architecture slice")
         assigned_docs.add(repo_relative(matches[0]))
+
+
+def validate_self_test_contract_tech_plan_binding(task: dict, normalized_tech_refs: list[str]) -> None:
+    contract = task.get("self_test_contract")
+    if not isinstance(contract, dict) or contract.get("status") != "required":
+        return
+    source = normalize_doc_ref(str(contract.get("source") or ""))
+    task_id = task.get("id")
+    require(source in normalized_tech_refs, f"Draft task {task_id} self_test_contract.source must be listed in docs.tech_plan: {source}")
+    source_path = repo_path(source)
+    if not source_path.exists():
+        return
+    text = source_path.read_text(encoding="utf-8")
+    section = markdown_section(text, ["development self-test contract", "开发自测合同"])
+    require(section, f"Draft task {task_id} self_test_contract.source must contain a Development Self-Test Contract section: {source}")
+    require(
+        contains_any(section, ["module key test path", "模块关键测试路径"]),
+        f"Draft task {task_id} tech plan Development Self-Test Contract must include Module key test path: {source}",
+    )
+    for scenario in contract.get("scenarios") or []:
+        if not isinstance(scenario, dict):
+            continue
+        scenario_id = str(scenario.get("id") or "").strip()
+        if scenario_id:
+            require(scenario_id in section, f"Draft task {task_id} tech plan Development Self-Test Contract must include scenario {scenario_id}: {source}")
+
+
+def markdown_section(text: str, header_terms: list[str]) -> str:
+    lines = text.splitlines()
+    start = -1
+    level = 0
+    for index, line in enumerate(lines):
+        match = re.match(r"^(#{1,6})\s+(.+)$", line)
+        if not match:
+            continue
+        title = match.group(2).lower()
+        if any(term.lower() in title for term in header_terms):
+            start = index
+            level = len(match.group(1))
+            break
+    if start == -1:
+        return ""
+    end = len(lines)
+    for index in range(start + 1, len(lines)):
+        match = re.match(r"^(#{1,6})\s+", lines[index])
+        if match and len(match.group(1)) <= level:
+            end = index
+            break
+    return "\n".join(lines[start:end])
 
 
 def is_development_draft(task: dict) -> bool:

@@ -1,11 +1,11 @@
 # .docs/rfc overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: e776e172da3f1897 -->
+<!-- source-hash: 7ed08f625b29905f -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `e776e172da3f1897`
+Source hash: `7ed08f625b29905f`
 
 ## Source Slices
 
@@ -30,6 +30,9 @@ Source hash: `e776e172da3f1897`
 19. [RFC_019_sprinting_runnable_evidence_gate.md](RFC_019_sprinting_runnable_evidence_gate.md)
 20. [RFC_020_application_readiness_gates.md](RFC_020_application_readiness_gates.md)
 21. [RFC_021_task_runtime_evidence_contract.md](RFC_021_task_runtime_evidence_contract.md)
+22. [RFC_022_workflow_stage_rationale.md](RFC_022_workflow_stage_rationale.md)
+23. [RFC_023_development_self_test_contract.md](RFC_023_development_self_test_contract.md)
+24. [RFC_024_development_self_test_module_key_path.md](RFC_024_development_self_test_module_key_path.md)
 
 ---
 
@@ -1469,5 +1472,224 @@ Source: [RFC_021_task_runtime_evidence_contract.md](RFC_021_task_runtime_evidenc
 - Reason: 本 RFC 强化 workflow gate 和 task contract，不替换当前 TESTING 事实源。
 
 ## 8. Status
+
+- Status: APPLIED
+
+---
+
+## RFC_022_workflow_stage_rationale.md
+
+Source: [RFC_022_workflow_stage_rationale.md](RFC_022_workflow_stage_rationale.md)
+
+# RFC_022: 工作流阶段动机说明补充
+
+## 1. 背景
+
+`PROJECT_SPEC.md` 的 2.1 已经说明：简单项目可以依靠单纯 Vibe Coding 完成闭环，复杂度上来后需要显式软件工程阶段。用户补充希望进一步说明“为什么需要阶段化工作流”：因为各阶段的输入、执行和输出工作量客观存在，如果没有工作流程约束，这些工作量容易被遗漏，阶段产物偏差会持续累积，直到测试阶段才集中暴露并造成返工。
+
+本 RFC 只处理一处产品规格说明补充，不改变 Harness 的 CLI、validator、Skill、policy、template、package sync/upgrade 或迁移行为。
+
+## 2. 变更内容（Change Content）
+
+- Changed: `PROJECT_SPEC.md` 2.1 补充说明软件工程阶段的工作量来自各阶段客观存在的输入、执行和输出要求。
+- Changed: `PROJECT_SPEC.md` 2.1 补充说明缺少工作流/工作阶段时，阶段输入缺失、执行遗漏、输出不完整会让偏差向下游累积，并在测试阶段转化为返工、修 bug、改需求或重切方案。
+- Changed: `PROJECT_SPEC.md` 2.1 明确工作流通过显性化和契约化阶段产出，减少遗漏和返工，提高 Agent 产出的准确率和整体效率。
+
+## 3. Product Impact（产品影响）
+
+| 受影响产物（Affected Artifact） | 影响（Impact） |
+|---|---|
+| `PROJECT_SPEC.md` | 补强“当前现状与要解决的问题”中使用阶段化工作流的动机说明。 |
+| `README.md` | 不影响。README 面向安装和日常使用入口，本次不新增对外能力或用户操作。 |
+| `packages/sdlc-harness/README.md` | 不影响。本次不改变 package public capability。 |
+
+## 4. Technical Impact Candidates（技术影响候选）
+
+| 模块（Module） | 影响（Impact） | 置信度（Confidence） |
+|---|---|---|
+| CLI / validators / migrations | 无技术行为变化。 | high |
+| Workflow skills / policies / templates | 无规则或模板变化。 | high |
+| Package assets / source sync | 无需同步；`PROJECT_SPEC.md` 不在 package source mappings 中。 | high |
+| Tests | 无需新增测试；运行 RFC gate 和现有回归入口即可。 | high |
+
+## 5. Acceptance Criteria
+
+- [x] `PROJECT_SPEC.md` 2.1 补充阶段工作量客观存在的原因。
+- [x] `PROJECT_SPEC.md` 2.1 说明缺少工作流程会导致输入、执行、输出遗漏并累积偏差。
+- [x] `PROJECT_SPEC.md` 2.1 说明工作流如何减少返工并提高准确率和效率。
+
+## 6. Regression Requirements（回归要求）
+
+- [x] `make validate-plan`
+- [x] `make docs-overview`
+- [x] `make validate-rfc`
+
+## 7. Test Fact Source Impact（测试事实源影响）
+
+- Reviewed test docs: `.docs/07_test/TEST_REPORT.md`, `.docs/07_test/harness_consumer_lab.md`
+- Superseded test docs: none
+- Retained test docs: `.docs/07_test/TEST_REPORT.md`, `.docs/07_test/harness_consumer_lab.md`
+- Reason: 本 RFC 只是产品规格文案澄清，不替换测试策略、测试报告或当前测试事实源。
+
+## 8. Status
+
+- Status: APPLIED
+
+---
+
+## RFC_023_development_self_test_contract.md
+
+Source: [RFC_023_development_self_test_contract.md](RFC_023_development_self_test_contract.md)
+
+# RFC_023: 开发阶段自测合同与报告强化
+
+## 1. 背景
+
+近期反馈指出：现有 SPRINTING Definition of Done 已要求 runnable entry/exit、初始化、配置契约、可观测输出和 Basic Self-test Evidence，但约束仍偏向字段和格式。实际执行中可能出现“RFC 或技术方案文字上成立，但开发任务入口、required gates、implementation doc evidence 和 Review/Testing handoff 没有同步”的状态。
+
+这会让开发阶段被误判为完成：Harness gate 能证明骨架、文档链接和 evidence 字段存在，却不能充分证明模块级可运行交付边界已经能被 Review/Testing 消费。
+
+## 2. 变更内容（Change Content）
+
+- Added: tech plan 和 runnable-boundary task 的 `Development Self-Test Contract` / `self_test_contract`。
+- Added: implementation doc 的 `Development Self-Test Report`，作为 SPRINTING 阶段已执行自测事实。
+- Changed: `validate-design` 检查 runnable-boundary draft task 是否有 `self_test_contract`，并确认其 `source` 指向包含 `Development Self-Test Contract` 的 tech plan slice。
+- Changed: `validate-dev` 检查当前 SPRINTING task 的 `self_test_contract`、task `required_gates` 和 implementation doc `Development Self-Test Report` 是否一致。
+- Changed: `validate-rfc` 对 `RFC_023` 之后涉及 entry/exit、runtime、gate、handoff 或 blocker 的 RFC 要求 `Development Self-Test Impact`。
+- Changed: Dev、Architect、RFC、Implementation Doc、Reviewer、Tester prompts 和 managed templates 同步描述自测合同/报告边界。
+
+## 3. Product Impact（产品影响）
+
+| 受影响 PRD（Affected PRD） | 影响（Impact） |
+|---|---|
+| `.docs/01_product/npm_package_distribution.md` | 强化 package validators 和 workflow assets 的 public behavior：开发阶段必须证明模块级可运行交付边界可自测。 |
+| `README.md` / `packages/sdlc-harness/README.md` / `PROJECT_SPEC.md` | 对外说明 `self_test_contract`、`Development Self-Test Contract` 和 `Development Self-Test Report`。 |
+
+## 4. Technical Impact Candidates（技术影响候选）
+
+| 模块（Module） | 影响（Impact） | 置信度（Confidence） |
+|---|---|---|
+| Package validators | `validate-design`、`validate-dev`、`validate-rfc` 增加自测合同与报告检查。 | high |
+| Python validators | 本仓库 Makefile 使用的 `validate-design` / `validate-rfc` 同步检查自测合同和 RFC impact。 | high |
+| Workflow skills/templates | 更新 Architect、Dev、RFC、Implementation Doc、Reviewer、Tester 和 tech plan / plan / implementation / RFC templates。 | high |
+| Package assets | 通过 `package sync-source` 同步 managed assets。 | high |
+| Tests / consumer lab | 增加 validator regression，并更新 consumer lab fixture。 | high |
+
+## 5. Acceptance Criteria
+
+- [x] runtime/page/API/worker/provider/live 类 task 缺少 `self_test_contract` 时被 validator 拒绝。
+- [x] `self_test_contract.required_gates` 未同步到 task `required_gates` 时被 validator 拒绝。
+- [x] tech plan source 缺少 `Development Self-Test Contract` 时被 `validate-design` 拒绝。
+- [x] implementation doc 缺少 `Development Self-Test Report` 或 scenario result 时被 `validate-dev` 拒绝。
+- [x] scenario result 为 `BLOCKED` 时，开发 task 不能关闭。
+- [x] `RFC_023` 之后涉及 entry/exit/runtime/gate/handoff/blocker 的 RFC 缺少 `Development Self-Test Impact` 时被拒绝。
+
+## 6. Regression Requirements（回归要求）
+
+- [x] `npm test --workspace agent-project-sdlc`
+- [x] `node packages/sdlc-harness/dist/cli.js package sync-source`
+- [x] `node packages/sdlc-harness/dist/cli.js package check-source`
+- [x] `make docs-overview`
+- [x] `make validate-harness`
+- [x] `make validate-rfc`
+
+## 7. Test Fact Source Impact（测试事实源影响）
+
+- Reviewed test docs: `.docs/07_test/TEST_REPORT.md`, `.docs/07_test/harness_consumer_lab.md`
+- Superseded test docs: none
+- Retained test docs: `.docs/07_test/TEST_REPORT.md`, `.docs/07_test/harness_consumer_lab.md`
+- Reason: 本 RFC 强化开发阶段自测合同和 handoff evidence，不替换当前 TESTING 事实源。
+
+## 8. Development Self-Test Impact（开发自测影响）
+
+- Entry/exit impact: runnable-boundary task 必须在 tech plan / task contract 中声明自测入口和可观测出口。
+- Runtime / target environment impact: `self_test_contract` 与 `evidence_level.required`、`target_runtime_environment` 一起描述开发阶段交付边界。
+- Required gates impact: `self_test_contract.required_gates` 必须同步到 task `required_gates`。
+- Tech plan self-test contract impact: tech plan template 新增 `Development Self-Test Contract`。
+- `plan.yaml` / `plan.draft.yaml` task contract impact: runnable-boundary SPRINTING task 新增 `self_test_contract`。
+- Implementation doc self-test report impact: implementation doc template 新增 `Development Self-Test Report`，`Basic Self-test Evidence` 指向该报告。
+- Review / Testing handoff impact: Review/Testing 只消费已完成自测报告和 Testing Handoff Contract，不新增 runtime 搭建职责。
+
+## 9. Status
+
+- Status: APPLIED
+
+---
+
+## RFC_024_development_self_test_module_key_path.md
+
+Source: [RFC_024_development_self_test_module_key_path.md](RFC_024_development_self_test_module_key_path.md)
+
+# RFC_024: 开发自测报告记录模块关键测试路径
+
+## 1. 背景
+
+`RFC_023` 已把 `Development Self-Test Contract` 和 `Development Self-Test Report` 作为开发阶段完成条件，要求记录 contract source、scenario results、executed gates、actual evidence、missing/blockers 和 Testing Handoff Readiness。
+
+但实际 debug 和阶段交接还需要一个更直接的路径摘要：从本地启动或调用入口开始，执行并完成 `self_test_contract` 中全部自测用例的模块关键测试路径。该路径应覆盖本 task / 本模块承诺的所有可运行入口，以及自测用例实际经过的内部关键路径、关键边界、观察点和可观测完成证据。如果报告只列结果，不记录这条路径，后续 Agent 调试时仍需要重新摸索“从哪里启动、经过哪些模块入口和内部关键路径、怎么看中间点、怎样确认所有自测用例跑完”。
+
+## 2. 变更内容（Change Content）
+
+- Added: `self_test_contract.module_key_test_path`，由 ARCHITECTING 或 RFC_RECALIBRATION 预先定义从本地启动或调用入口到完成全部自测 scenario 的模块关键测试路径，覆盖本 task / 本模块承诺的所有可运行入口和内部关键路径。
+- Added: `Development Self-Test Contract` 模板中的 `Module key test path` 字段。
+- Added: `Development Self-Test Report` 模板中的 `Module Key Test Path` 字段，记录开发阶段实际执行的本地到自测完成路径，包括实际入口、内部关键路径、关键边界、观察点和可观测完成证据。
+- Changed: Dev、Architect、RFC、Implementation Doc、Reviewer、Tester prompts 同步要求维护和消费该路径摘要。
+- Changed: `validate-design` / `validate-dev` 对 runnable-boundary `self_test_contract.status: "required"` 强制检查 `module_key_test_path` 和报告字段。
+- Changed: `validate-rfc` 对 test route / module key path / debug path 相关 RFC 文本要求 `Development Self-Test Impact`。
+
+## 3. Product Impact（产品影响）
+
+| 受影响 PRD（Affected PRD） | 影响（Impact） |
+|---|---|
+| `.docs/01_product/npm_package_distribution.md` | 强化 package validators 和 workflow assets 的 public behavior：开发自测报告必须能复用为后续 debug 路径。 |
+| `README.md` / `packages/sdlc-harness/README.md` / `PROJECT_SPEC.md` | 对外说明 `module_key_test_path` 和 `Development Self-Test Report` 的新增必填字段。 |
+
+## 4. Technical Impact Candidates（技术影响候选）
+
+| 模块（Module） | 影响（Impact） | 置信度（Confidence） |
+|---|---|---|
+| Package validators | `validate-design`、`validate-dev`、`validate-rfc` 增加模块关键测试路径检查。 | high |
+| Python validators | 本仓库 Makefile 使用的 `validate-design` / `validate-rfc` 同步检查合同字段和 RFC trigger terms。 | high |
+| Workflow skills/templates | 更新 Architect、Dev、RFC、Implementation Doc、Reviewer、Tester 和 tech plan / plan / implementation / RFC templates。 | high |
+| Package assets | 通过 `package sync-source` 同步 managed assets。 | high |
+| Tests / consumer lab | 更新 validator regression 与 consumer lab fixture。 | high |
+
+## 5. Acceptance Criteria
+
+- [x] runnable-boundary task 的 `self_test_contract.status: "required"` 缺少 `module_key_test_path` 时被 validator 拒绝。
+- [x] tech plan 的 `Development Self-Test Contract` 缺少 `Module key test path` 时被 `validate-design` 拒绝。
+- [x] implementation doc 的 `Development Self-Test Report` 缺少 `Module Key Test Path` 时被 `validate-dev` 拒绝。
+- [x] `Module Key Test Path` 是 placeholder 时被 `validate-dev` 拒绝。
+- [x] 完整合同、报告、scenario result、required gates 和模块关键测试路径一致时通过；路径覆盖本 task / 本模块承诺的入口和内部关键路径。
+
+## 6. Regression Requirements（回归要求）
+
+- [x] `npm test --workspace agent-project-sdlc`
+- [x] `node packages/sdlc-harness/dist/cli.js package sync-source`
+- [x] `node packages/sdlc-harness/dist/cli.js package check-source`
+- [x] `make docs-overview`
+- [x] `make validate-harness`
+- [x] `make validate-plan`
+- [x] `make validate-rfc`
+- [x] `node packages/sdlc-harness/dist/cli.js validate-dev`
+
+## 7. Test Fact Source Impact（测试事实源影响）
+
+- Reviewed test docs: `.docs/07_test/TEST_REPORT.md`, `.docs/07_test/harness_consumer_lab.md`
+- Superseded test docs: none
+- Retained test docs: `.docs/07_test/TEST_REPORT.md`, `.docs/07_test/harness_consumer_lab.md`
+- Reason: 本 RFC 强化开发阶段自测报告和 debug handoff evidence，不替换当前 TESTING 事实源。
+
+## 8. Development Self-Test Impact（开发自测影响）
+
+- Entry/exit impact: runnable-boundary task 的自测合同必须描述从本地启动或调用入口到完成所有自测 scenario 的模块关键测试路径，覆盖本 task / 本模块承诺的所有可运行入口。
+- Runtime / target environment impact: `module_key_test_path` 补充 `runnable_entry`、`observable_exit`、`evidence_level.required` 和 `target_runtime_environment`，并记录内部关键路径、关键边界、观察点和完成证据，用于调试复用。
+- Required gates impact: 不新增 gate 类型；现有 `self_test_contract.required_gates` 仍必须同步到 task `required_gates`。
+- Tech plan self-test contract impact: tech plan template 的 `Development Self-Test Contract` 新增 `Module key test path`。
+- `plan.yaml` / `plan.draft.yaml` task contract impact: runnable-boundary SPRINTING task 的 `self_test_contract` 新增 `module_key_test_path`。
+- Implementation doc self-test report impact: `Development Self-Test Report` 新增 `Module Key Test Path`，记录从本地启动到全部自测 scenario 完成的实际路径，以及自测实际经过的内部关键路径和可观测完成证据。
+- Review / Testing handoff impact: Review/Testing 可复用该路径定位入口、模块边界、关键中间观察点和自测完成证据；不新增 TESTING 阶段 runtime 搭建职责。
+
+## 9. Status
 
 - Status: APPLIED

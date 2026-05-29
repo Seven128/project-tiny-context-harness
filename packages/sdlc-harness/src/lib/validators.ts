@@ -97,6 +97,10 @@ const RUNNABLE_ENTRY_EXIT_TERMS = [
   "not applicable"
 ];
 const DEVELOPMENT_EVIDENCE_TERMS = ["development evidence", "开发自测证据"];
+const DEVELOPMENT_SELF_TEST_CONTRACT_TERMS = ["development self-test contract", "开发自测合同"];
+const DEVELOPMENT_SELF_TEST_REPORT_TERMS = ["development self-test report", "开发自测报告"];
+const DEVELOPMENT_SELF_TEST_IMPACT_TERMS = ["development self-test impact", "开发自测影响"];
+const MODULE_KEY_TEST_PATH_TERMS = ["module key test path", "模块关键测试路径"];
 const TESTING_HANDOFF_TERMS = ["testing handoff contract", "测试交接合同"];
 const EVIDENCE_PLACEHOLDER_TERMS = [
   "pending",
@@ -227,6 +231,33 @@ const REVIEW_READINESS_FIELDS = [
   "Config Contract",
   "Testing Handoff Readiness"
 ];
+const SELF_TEST_CONTRACT_STATUSES = new Set(["required", "not_applicable"]);
+const RFC_SELF_TEST_TRIGGER_TERMS = [
+  "entry/exit",
+  "runnable entry",
+  "runnable exit",
+  "runnable entry/exit",
+  "runtime",
+  "environment",
+  "target_runtime_environment",
+  "target runtime",
+  "required_gates",
+  "gate",
+  "handoff",
+  "blocker",
+  "module key test path",
+  "test route",
+  "test path",
+  "debug path",
+  "测试路径",
+  "测试链路",
+  "自测链路",
+  "模块关键测试路径",
+  "入口",
+  "出口",
+  "运行环境",
+  "阻塞"
+];
 
 const validators: Record<string, Validator> = {
   "validate-harness": validateHarness,
@@ -355,26 +386,26 @@ async function validateDesignDraft(
   const availableTechPlans = new Set(techPlanFiles.map((file) => repoRelative(projectRoot, file)));
   const developmentTasks: Array<Record<string, unknown>> = [];
   const primaryRefs: string[] = [];
-  rawTasks.forEach((rawTask, index) => {
+  for (const [index, rawTask] of rawTasks.entries()) {
     if (!isRecord(rawTask)) {
       errors.push(`Task draft #${index + 1} must be a mapping`);
-      return;
+      continue;
     }
     validateDraftTaskShape(rawTask, index, errors);
     if (rawTask.status !== "pending") {
       errors.push(`Draft task ${String(rawTask.id ?? "")} should start as pending`);
     }
-    if (!isDevelopmentDraft(rawTask)) return;
+    if (!isDevelopmentDraft(rawTask)) continue;
 
     developmentTasks.push(rawTask);
     if (!isRecord(rawTask.docs)) {
       errors.push(`Draft task ${String(rawTask.id ?? "")} docs must be a mapping`);
-      return;
+      continue;
     }
     const techRefs = asStringList(rawTask.docs.tech_plan);
     if (techRefs.length === 0) {
       errors.push(`Draft task ${String(rawTask.id ?? "")} must reference at least one tech plan slice in docs.tech_plan`);
-      return;
+      continue;
     }
     const normalizedRefs = techRefs.map(normalizeDocRef);
     for (const ref of normalizedRefs) {
@@ -384,8 +415,9 @@ async function validateDesignDraft(
         errors.push(`Draft task ${String(rawTask.id ?? "")} references missing or generated tech plan slice: ${ref}`);
       }
     }
+    errors.push(...(await validateSelfTestContractTechPlanBinding(projectRoot, rawTask, normalizedRefs)));
     primaryRefs.push(normalizedRefs[0]);
-  });
+  }
 
   if (developmentTasks.length === 0) {
     errors.push("plan.draft.yaml must contain at least one development task with implementation_doc");
@@ -623,11 +655,33 @@ async function validateRfc(projectRoot: string): Promise<ValidatorReport> {
       errors.push(`Superseded test doc still linked from .docs/INDEX.md: ${superseded}`);
     }
   }
-  const statuses = [...text.matchAll(/status:\s*([a-z_]+)/g)].map((match) => match[1].toUpperCase());
+  const statuses = [...text.matchAll(/^\s*-?\s*Status:\s*([A-Z_]+)/gim)].map((match) => match[1].toUpperCase());
   if (statuses.length === 0) errors.push("RFC must include a Status line");
   const invalidStatuses = statuses.filter((status) => !["DRAFT", "APPLIED", "VERIFIED", "ARCHIVED"].includes(status));
   if (invalidStatuses.length > 0) errors.push(`Invalid RFC status: ${invalidStatuses.join(", ")}`);
+  errors.push(...(await validateRfcSelfTestImpact(projectRoot, docs)));
   return { info: [`validate-rfc checked ${docs.length} file(s)`], errors };
+}
+
+async function validateRfcSelfTestImpact(projectRoot: string, docs: string[]): Promise<string[]> {
+  const errors: string[] = [];
+  for (const doc of docs) {
+    const relative = repoRelative(projectRoot, doc);
+    const basename = path.basename(doc);
+    const number = rfcNumber(basename);
+    if (number !== undefined && number < 23) continue;
+    const text = await readText(doc);
+    if (!containsAny(text, RFC_SELF_TEST_TRIGGER_TERMS)) continue;
+    if (!containsAny(text, DEVELOPMENT_SELF_TEST_IMPACT_TERMS)) {
+      errors.push(`${relative} must include Development Self-Test Impact when RFC changes entry/exit, runtime, gates, handoff, or blockers`);
+    }
+  }
+  return errors;
+}
+
+function rfcNumber(fileName: string): number | undefined {
+  const match = fileName.match(/^RFC[_-](\d+)/i);
+  return match ? Number(match[1]) : undefined;
 }
 
 async function validatePlanState(projectRoot: string, allowOpen: boolean): Promise<{ taskCount: number; errors: string[]; plan: Record<string, unknown> }> {
@@ -722,7 +776,7 @@ function validateRuntimeEvidenceContract(task: Record<string, unknown>): string[
   if (String(task.phase ?? "") !== "SPRINTING") return errors;
 
   const context = taskText(task).toLowerCase();
-  const needsRuntimeContract = containsAny(context, [...APPLICATION_READINESS_TASK_TERMS, ...PAGE_TASK_TERMS]);
+  const needsRuntimeContract = needsRunnableTaskContract(task) && !isNotApplicableRuntimeTask(task);
   const evidenceLevel = task.evidence_level;
   const targetRuntime = task.target_runtime_environment;
 
@@ -777,6 +831,132 @@ function validateRuntimeEvidenceContract(task: Record<string, unknown>): string[
     }
   }
 
+  errors.push(...validateSelfTestContract(task, needsRuntimeContract));
+  return errors;
+}
+
+function needsRunnableTaskContract(task: Record<string, unknown>): boolean {
+  const context = taskText(task).toLowerCase();
+  return containsAny(context, [...APPLICATION_READINESS_TASK_TERMS, ...PAGE_TASK_TERMS, ...CALLABLE_TASK_TERMS]);
+}
+
+function isNotApplicableRuntimeTask(task: Record<string, unknown>): boolean {
+  const evidenceLevel = isRecord(task.evidence_level) ? task.evidence_level : undefined;
+  const targetRuntime = isRecord(task.target_runtime_environment) ? task.target_runtime_environment : undefined;
+  return String(evidenceLevel?.required ?? "") === "unit" && String(targetRuntime?.kind ?? "") === "not_applicable";
+}
+
+function validateSelfTestContract(task: Record<string, unknown>, requiredForRunnableBoundary: boolean): string[] {
+  const errors: string[] = [];
+  const taskId = String(task.id ?? "Task");
+  const contract = task.self_test_contract;
+
+  if (requiredForRunnableBoundary && !isRecord(contract)) {
+    errors.push(`${taskId} runtime/app task must define self_test_contract`);
+    return errors;
+  }
+  if (contract === undefined) return errors;
+  if (!isRecord(contract)) {
+    errors.push(`${taskId} self_test_contract must be a mapping`);
+    return errors;
+  }
+
+  const status = String(contract.status ?? "");
+  if (!SELF_TEST_CONTRACT_STATUSES.has(status)) {
+    errors.push(`${taskId} self_test_contract.status must be required or not_applicable`);
+  }
+  if (requiredForRunnableBoundary && status !== "required") {
+    errors.push(`${taskId} runnable boundary task self_test_contract.status must be required`);
+  }
+
+  if (status === "not_applicable") {
+    const reason = String(contract.not_applicable_reason ?? "").trim();
+    if (reason.length < 24 || isPlaceholderEvidence(reason)) {
+      errors.push(`${taskId} self_test_contract.not_applicable_reason must explain why self-test is not applicable`);
+    }
+    return errors;
+  }
+  if (status !== "required") return errors;
+
+  for (const field of ["source", "runnable_entry", "observable_exit", "module_key_test_path"]) {
+    if (typeof contract[field] !== "string" || !String(contract[field]).trim() || isPlaceholderEvidence(String(contract[field]))) {
+      errors.push(`${taskId} self_test_contract.${field} must be concrete`);
+    }
+  }
+  if (!Array.isArray(contract.capability_refs) || contract.capability_refs.length === 0) {
+    errors.push(`${taskId} self_test_contract.capability_refs must be a non-empty list`);
+  }
+
+  const requiredGates = asStringList(contract.required_gates);
+  if (requiredGates.length === 0) {
+    errors.push(`${taskId} self_test_contract.required_gates must be a non-empty list`);
+  }
+  const taskGates = new Set(asStringList(task.required_gates));
+  for (const gate of requiredGates) {
+    if (!taskGates.has(gate)) {
+      errors.push(`${taskId} self_test_contract.required_gates must also appear in task required_gates: ${gate}`);
+    }
+  }
+
+  const scenarios = Array.isArray(contract.scenarios) ? contract.scenarios : [];
+  if (scenarios.length === 0) {
+    errors.push(`${taskId} self_test_contract.scenarios must be a non-empty list`);
+  }
+  const seen = new Set<string>();
+  scenarios.forEach((scenario, index) => {
+    if (!isRecord(scenario)) {
+      errors.push(`${taskId} self_test_contract.scenarios[${index}] must be a mapping`);
+      return;
+    }
+    const scenarioId = String(scenario.id ?? "").trim();
+    if (!scenarioId) {
+      errors.push(`${taskId} self_test_contract.scenarios[${index}].id must be set`);
+    } else if (seen.has(scenarioId)) {
+      errors.push(`${taskId} self_test_contract scenario id must be unique: ${scenarioId}`);
+    }
+    seen.add(scenarioId);
+    for (const field of ["entry", "expected_exit", "evidence"]) {
+      if (typeof scenario[field] !== "string" || !String(scenario[field]).trim() || isPlaceholderEvidence(String(scenario[field]))) {
+        errors.push(`${taskId} self_test_contract.scenarios[${scenarioId || index}].${field} must be concrete`);
+      }
+    }
+  });
+  return errors;
+}
+
+async function validateSelfTestContractTechPlanBinding(
+  projectRoot: string,
+  task: Record<string, unknown>,
+  normalizedTechRefs: string[]
+): Promise<string[]> {
+  const errors: string[] = [];
+  const taskId = String(task.id ?? "Task");
+  const contract = isRecord(task.self_test_contract) ? task.self_test_contract : undefined;
+  if (!contract || String(contract.status ?? "") !== "required") return errors;
+
+  const source = normalizeDocRef(String(contract.source ?? ""));
+  if (!source) return errors;
+  if (!normalizedTechRefs.includes(source)) {
+    errors.push(`${taskId} self_test_contract.source must be listed in docs.tech_plan: ${source}`);
+    return errors;
+  }
+  const sourcePath = path.join(projectRoot, source);
+  if (!(await pathExists(sourcePath))) return errors;
+  const text = await readText(sourcePath);
+  const section = markdownSection(text, DEVELOPMENT_SELF_TEST_CONTRACT_TERMS);
+  if (!section) {
+    errors.push(`${taskId} self_test_contract.source must contain a Development Self-Test Contract section: ${source}`);
+    return errors;
+  }
+  if (!containsAny(section, MODULE_KEY_TEST_PATH_TERMS)) {
+    errors.push(`${taskId} tech plan Development Self-Test Contract must include Module key test path: ${source}`);
+  }
+  for (const scenario of Array.isArray(contract.scenarios) ? contract.scenarios.filter(isRecord) : []) {
+    const scenarioId = String(scenario.id ?? "").trim();
+    if (scenarioId && !section.includes(scenarioId)) {
+      errors.push(`${taskId} tech plan Development Self-Test Contract must include scenario ${scenarioId}: ${source}`);
+    }
+  }
   return errors;
 }
 
@@ -1026,7 +1206,81 @@ function validateDevelopmentEvidenceText(text: string, task: Record<string, unkn
     }
   }
   errors.push(...validateEvidenceLevelAgainstContract(section, text, task, implementationDoc));
+  errors.push(...validateDevelopmentSelfTestReport(text, section, task, implementationDoc));
   return errors;
+}
+
+function validateDevelopmentSelfTestReport(
+  fullText: string,
+  developmentEvidenceSection: string,
+  task: Record<string, unknown>,
+  implementationDoc: string
+): string[] {
+  const errors: string[] = [];
+  const taskId = String(task.id ?? "current task");
+  const contract = isRecord(task.self_test_contract) ? task.self_test_contract : undefined;
+  if (!contract || String(contract.status ?? "") !== "required") return errors;
+
+  const report = markdownSection(fullText, DEVELOPMENT_SELF_TEST_REPORT_TERMS);
+  if (!report) {
+    return [`${taskId} implementation_doc must include Development Self-Test Report for self_test_contract: ${implementationDoc}`];
+  }
+
+  const basicSelfTest = evidenceFieldValue(developmentEvidenceSection, "Basic Self-test Evidence") ?? "";
+  if (!containsAny(basicSelfTest, ["Development Self-Test Report", "开发自测报告", "self-test report"])) {
+    errors.push(`${taskId} Basic Self-test Evidence must reference the Development Self-Test Report in ${implementationDoc}`);
+  }
+
+  for (const field of ["Contract Source", "Scenario Results", "Executed Gates", "Module Key Test Path", "Actual Evidence", "Missing / Blockers", "Testing Handoff Readiness"]) {
+    const value = evidenceFieldValue(report, field);
+    const allowsNone = field === "Missing / Blockers";
+    if (!value || (!allowsNone && isPlaceholderEvidence(value))) {
+      errors.push(`${taskId} Development Self-Test Report ${field} must contain executed evidence in ${implementationDoc}`);
+    }
+  }
+
+  const source = String(contract.source ?? "").trim();
+  if (source && !report.includes(source)) {
+    errors.push(`${taskId} Development Self-Test Report must reference contract source ${source} in ${implementationDoc}`);
+  }
+  for (const gate of asStringList(contract.required_gates)) {
+    if (!report.includes(gate)) {
+      errors.push(`${taskId} Development Self-Test Report must record required gate ${gate} in ${implementationDoc}`);
+    }
+  }
+  const moduleKeyTestPath = evidenceFieldValue(report, "Module Key Test Path") ?? "";
+  const runnableEntry = String(contract.runnable_entry ?? "").trim();
+  if (runnableEntry && !moduleKeyTestPath.includes(runnableEntry)) {
+    errors.push(`${taskId} Development Self-Test Report Module Key Test Path must include runnable entry ${runnableEntry} in ${implementationDoc}`);
+  }
+  const scenarios = Array.isArray(contract.scenarios) ? contract.scenarios.filter(isRecord) : [];
+  for (const scenario of scenarios) {
+    const scenarioId = String(scenario.id ?? "").trim();
+    if (!scenarioId) continue;
+    if (!moduleKeyTestPath.includes(scenarioId)) {
+      errors.push(`${taskId} Development Self-Test Report Module Key Test Path must include scenario ${scenarioId} in ${implementationDoc}`);
+    }
+    const status = scenarioStatus(report, scenarioId);
+    if (!status) {
+      errors.push(`${taskId} Development Self-Test Report must record scenario ${scenarioId} as PASS or BLOCKED in ${implementationDoc}`);
+    } else if (status === "BLOCKED") {
+      errors.push(`${taskId} Development Self-Test Report scenario ${scenarioId} is BLOCKED; keep task open or record a blocker`);
+    }
+  }
+  return errors;
+}
+
+function scenarioStatus(text: string, scenarioId: string): "PASS" | "BLOCKED" | undefined {
+  const escaped = scenarioId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const patterns = [
+    new RegExp("^.*" + escaped + ".*\\b(PASS|BLOCKED)\\b.*$", "im"),
+    new RegExp("\\|[^\\n|]*" + escaped + "[^\\n|]*\\|[^\\n|]*\\b(PASS|BLOCKED)\\b[^\\n|]*\\|", "i")
+  ];
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) return match[1].toUpperCase() as "PASS" | "BLOCKED";
+  }
+  return undefined;
 }
 
 function hasConcreteDevelopmentEvidenceFields(section: string): boolean {

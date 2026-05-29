@@ -15,6 +15,8 @@
 
 但当项目稍有复杂度后，需求澄清、产品边界、技术取舍、任务拆分、实现记录、Review、测试、发布和变更处理都会开始产生真实工作量。项目上下文也会从“几轮对话能讲清楚”增长为“需要长期保存、反复引用、跨阶段衔接的一组事实”。如果仍然只依靠对话上下文和若干大文件保存项目上下文，Agent 很容易遇到上下文窗口不足、事实源不清、旧决策和新决策混杂、需求变化影响范围难判断、阶段交付标准缺失等问题。单纯 Vibe Coding 仍然适合单阶段内的生成和迭代，但不适合作为复杂项目的完整项目控制机制。
 
+更关键的是，这些软件工程阶段的工作量不是流程名义上的负担，而是客观存在的输入、执行和输出要求。需求阶段要澄清边界和验收标准，产品方案要固化用户场景和 Out of Scope，技术方案要确认架构、接口和任务拆分，开发阶段要落实实现、测试和实现记录，Review、测试、发布阶段要分别验证质量、覆盖风险和交付状态。如果没有显式设置工作流程和工作阶段，这些要求很容易被压缩成对话里的隐含期待，导致阶段应有的输入缺失、执行步骤遗漏、输出产物不完整。偏差会沿着阶段向下游累积，直到测试阶段才被集中发现，随后转化为返工、修 bug、改需求或重切方案。工作流的价值就是把阶段性工作显性化和契约化，让每个阶段明确该读什么、做什么、交付什么、何时算完成，从而减少遗漏和返工，提高 Agent 产出的准确率和整体效率。
+
 只要项目超过 demo、脚本或一次性页面的复杂度，就不能长期只靠“想到什么就让 Agent 写什么”的方式推进。软件工程本身要求需求被拆成多个阶段，例如需求收集、产品方案、技术方案、开发实现、Review、测试、发布和需求变更。每个阶段都有独立目标，也会形成对应交付产物。
 需求收集 -> 原始需求记录、问题澄清、需求边界
 产品方案 -> PRD、用户场景、验收标准、Out of Scope
@@ -208,7 +210,7 @@ python3 tools/transition.py --to <PHASE>
 |---|---|---|---|---|---|
 | `REQUIREMENT_GATHERING` | `pjsdlc_pm_prd` | `.docs/00_raw/` | `.docs/01_product/`, `.docs/INDEX.md` | `make validate-pm` | `ARCHITECTING` |
 | `ARCHITECTING` | `pjsdlc_architect_design` | PRD、现有架构、代码结构 | 架构文档、技术方案、`plan.draft.yaml` | `make validate-design` | `SPRINTING`；开发前可返回 `REQUIREMENT_GATHERING` |
-| `SPRINTING` | `pjsdlc_dev_sprint` | `plan.yaml`、`plan.draft.yaml`、PRD、技术方案 | 代码、测试、implementation docs、gate 记录、已消费 draft、runnable entry/exit、Development Evidence | `make validate-dev` | `REVIEWING` |
+| `SPRINTING` | `pjsdlc_dev_sprint` | `plan.yaml`、`plan.draft.yaml`、PRD、技术方案、Development Self-Test Contract | 代码、测试、implementation docs、gate 记录、已消费 draft、runnable entry/exit、Development Evidence、Development Self-Test Report、Module Key Test Path | `make validate-dev` | `REVIEWING` |
 | `REVIEWING` | `pjsdlc_reviewer` | PRD、技术方案、实现文档、`git diff` | Review report、entry/exit readiness 结论 | `make validate-review` | `TESTING` |
 | `TESTING` | `pjsdlc_tester` | PRD、技术方案、实现文档、Review、既有 runnable entry/exit | Test strategy、test cases、test report、回归证据、coverage gaps、final decision | `make validate-test` | `RELEASING` |
 | `RELEASING` | `pjsdlc_release_manager` | 测试结果、build artifacts | Current release status、smoke result、rollback plan | `make validate-release` | `COMPLETED` |
@@ -216,7 +218,7 @@ python3 tools/transition.py --to <PHASE>
 
 `phase_contracts.yaml` 支持 `returns` 作为受限回退目标。当前唯一默认回退是 `ARCHITECTING -> REQUIREMENT_GATHERING`，用于尚未进入 `SPRINTING` 时补充或修正 PRD。回退后 lifecycle 的 `active_role` 和 `active_skill` 切到 PM 工作流；PRD task 完成并通过 `validate-pm` 后，再用 `python3 tools/transition.py --to ARCHITECTING` 回到设计阶段。进入 `SPRINTING` 后的需求变化必须走 RFC recalibration。
 
-`make validate-dev` / `npx sdlc-harness validate-dev` 是 SPRINTING 开发中 gate，允许当前 `current_task_id` 对应的 open task 留在 `plan.yaml`，并校验 lifecycle、当前 task 合同、dirty files、`plan.draft.yaml` 消费状态、runtime evidence task contract、implementation doc 和结构化 `Development Evidence`。runtime/app/provider/live 类 task 必须声明 `evidence_level.required` 和 `target_runtime_environment`；`deployed_runtime` 不能用 `unit`、`local_runtime`、`external_provider_live`、provider smoke、fake adapter 或 localhost smoke 单独关闭，`business_handoff_ready` 必须有 Testing Handoff Contract。当前 task 的 implementation doc 必须包含 `Evidence Level`、`Target Runtime Environment`、`Runnable Entry`、`Observable Exit`、`Client / Server Initialization`、`Config Contract`、`Testing Handoff Readiness`、`Known Missing Runtime Boundaries`、`Basic Self-test Evidence`，或带原因的 `Not applicable`；页面类任务还需要 dev server/page URL 与 browser check，API/CLI/worker 类任务需要 command/endpoint/invocation 与 response/output/side effect。`make validate-current` / `/advance` 是阶段出口 gate；在 `SPRINTING` 下会在 dev gate 后继续执行 no-open 检查，确保进入 `REVIEWING` 前已经完成 implementation commit 和 completion ledger。
+`make validate-dev` / `npx sdlc-harness validate-dev` 是 SPRINTING 开发中 gate，允许当前 `current_task_id` 对应的 open task 留在 `plan.yaml`，并校验 lifecycle、当前 task 合同、dirty files、`plan.draft.yaml` 消费状态、runtime evidence task contract、`self_test_contract`、implementation doc、结构化 `Development Evidence` 和 `Development Self-Test Report`。runtime/app/provider/live 类 task 必须声明 `evidence_level.required`、`target_runtime_environment` 和 `self_test_contract`；`self_test_contract.required_gates` 必须同步出现在 task `required_gates`，`self_test_contract.module_key_test_path` 必须描述从本地启动或调用入口开始，到完成全部自测 scenario 的模块关键测试路径，并覆盖本 task / 本模块承诺的所有可运行入口和内部关键路径；`deployed_runtime` 不能用 `unit`、`local_runtime`、`external_provider_live`、provider smoke、fake adapter 或 localhost smoke 单独关闭，`business_handoff_ready` 必须有 Testing Handoff Contract。当前 task 的 implementation doc 必须包含 `Evidence Level`、`Target Runtime Environment`、`Runnable Entry`、`Observable Exit`、`Client / Server Initialization`、`Config Contract`、`Testing Handoff Readiness`、`Known Missing Runtime Boundaries`、`Basic Self-test Evidence`，或带原因的 `Not applicable`；如果 `self_test_contract.status: "required"`，还必须包含已执行的 `Development Self-Test Report`，记录 contract source、scenario results、executed gates、Module Key Test Path、actual evidence、missing/blockers 和 Testing Handoff Readiness；`Module Key Test Path` 必须记录实际入口、内部关键路径、关键边界、观察点和可观测完成证据。页面类任务还需要 dev server/page URL 与 browser check，API/CLI/worker 类任务需要 command/endpoint/invocation 与 response/output/side effect。`make validate-current` / `/advance` 是阶段出口 gate；在 `SPRINTING` 下会在 dev gate 后继续执行 no-open 检查，确保进入 `REVIEWING` 前已经完成 implementation commit 和 completion ledger。
 
 TESTING 阶段 gate 仍命名为 `validate-test`。`.docs/07_test/TEST_STRATEGY.md` 只描述测试范围、环境、优先级和执行策略；`.docs/07_test/TEST_CASES.md` 只描述绑定真实 runnable entry/exit 的测试用例；`.docs/07_test/TEST_REPORT.md` 只记录 TESTING 阶段实际执行后的测试矩阵、回归证据、runnable entry/exit coverage、coverage gaps 和 final decision。`validate-test` 只接受 `.docs/07_test/TEST_REPORT.md`，不再把 `.docs/07_test/TEST_PLAN.md` 当作 report fallback。
 
@@ -484,12 +486,12 @@ make validate-rfc
 
 ### 9.2 阶段 gate
 - `validate-pm`：检查 PRD、验收标准、Out of Scope、Open Questions。
-- `validate-design`：检查架构、技术方案、`plan.draft.yaml`、draft task 的 `docs.tech_plan` 引用、tech plan primary slice 去重和横切 architecture slice。
-- `validate-dev`：作为 direct SPRINTING gate，允许合法当前 open task，检查 lifecycle、当前 task 合同、runtime evidence task contract、dirty files、已消费 draft、lint、测试、implementation docs、已承诺 runnable entry/exit、目标运行环境和结构化 Development Evidence；阶段出口仍由 `validate-current` 追加 no-open 检查。
+- `validate-design`：检查架构、技术方案、`plan.draft.yaml`、draft task 的 `docs.tech_plan` 引用、tech plan primary slice 去重、横切 architecture slice，以及可运行边界 task 的 `self_test_contract` 与 tech plan `Development Self-Test Contract` 绑定，包括 `module_key_test_path`。
+- `validate-dev`：作为 direct SPRINTING gate，允许合法当前 open task，检查 lifecycle、当前 task 合同、runtime evidence task contract、`self_test_contract`、dirty files、已消费 draft、lint、测试、implementation docs、已承诺 runnable entry/exit、目标运行环境、结构化 Development Evidence、Development Self-Test Report 和 Module Key Test Path；阶段出口仍由 `validate-current` 追加 no-open 检查。
 - `validate-review`：检查 Review report 和进入 TESTING 前的 runnable entry/exit readiness 结论。
 - `validate-test`：检查 `TEST_REPORT.md` 执行证据、test matrix、回归证据、覆盖缺口和 TESTING 阶段边界；测试阶段不能新增 product runtime、bootstrap、provider adapter、deploy 或 package runtime script，也不能用 `TEST_PLAN.md` 充当执行报告。
 - `validate-release`：检查 current release status、smoke result 和 rollback plan。
-- `validate-rfc`：检查 RFC、影响范围和回归要求。
+- `validate-rfc`：检查 RFC、影响范围、回归要求和涉及 entry/exit、runtime、gate、handoff、blocker 或模块关键测试路径变化时的 Development Self-Test Impact。
 
 ### 9.3 CI/CD
 团队协作时，Makefile gate 可以映射到 GitHub Actions、GitLab CI、PR check 或分支保护。当前模板提供 `.github/workflows/harness.yml`，默认运行 `validate-harness`，也可手动选择其它 gate。

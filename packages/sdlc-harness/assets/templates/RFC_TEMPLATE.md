@@ -38,6 +38,17 @@
 - Retained test docs:
 - Reason:
 
-## 8. Status
+## 8. Development Self-Test Impact（开发自测影响）
+
+- Entry/exit impact:
+- Runtime / target environment impact:
+- Required gates impact:
+- Tech plan self-test contract impact:
+- `plan.yaml` / `plan.draft.yaml` task contract impact:
+- Implementation doc self-test report impact:
+- Module key test path impact:
+- Review / Testing handoff impact:
+
+## 9. Status
 
 - Status: DRAFT

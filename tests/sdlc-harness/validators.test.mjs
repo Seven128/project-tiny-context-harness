@@ -45,7 +45,7 @@ try {
   );
   await writeFile(
     path.join(root, ".docs/03_tech_plan/plan.md"),
-    "# Plan\n\nAPI contract task breakdown\n",
+    "# Plan\n\nAPI contract task breakdown\n\n## Development Self-Test Contract\n\n- Module key test path: local `npm test` -> ST-001 -> validator CLI entry -> plan and implementation evidence parser key path -> PASS output.\n\n| Scenario ID | Entry | Expected Exit | Evidence |\n|---|---|---|---|\n| ST-001 | `npm test` | PASS output | command output |\n",
     "utf8"
   );
   await writeFile(
@@ -55,7 +55,7 @@ try {
   );
   await writeFile(
     path.join(root, ".docs/04_implementation/example/dev.md"),
-    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: shipped CLI fixture.\n- Exit / side effects: validation output only.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` executed through the local package CLI.\n- Target Runtime Environment: `local` CLI runtime.\n- Runnable Entry: CLI command `npx sdlc-harness validate-dev` runs the package validator fixture.\n- Observable Exit: Command output reports validate-dev PASS with no errors.\n- Client / Server Initialization: Local CLI runtime starts from the recorded command and exits with status evidence.\n- Config Contract: no external config required for this fixture.\n- Testing Handoff Readiness: local validation command and output are ready for TESTING handoff.\n- Known Missing Runtime Boundaries: none for this local CLI fixture.\n- Basic Self-test Evidence: `npm test --workspace agent-project-sdlc` PASS for the fixture regression.\n",
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: shipped CLI fixture.\n- Exit / side effects: validation output only.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` executed through the local package CLI.\n- Target Runtime Environment: `local` CLI runtime.\n- Runnable Entry: CLI command `npx sdlc-harness validate-dev` runs the package validator fixture.\n- Observable Exit: Command output reports validate-dev PASS with no errors.\n- Client / Server Initialization: Local CLI runtime starts from the recorded command and exits with status evidence.\n- Config Contract: no external config required for this fixture.\n- Testing Handoff Readiness: local validation command and output are ready for TESTING handoff.\n- Known Missing Runtime Boundaries: none for this local CLI fixture.\n- Basic Self-test Evidence: See `Development Self-Test Report`; `npm test --workspace agent-project-sdlc` PASS for the fixture regression.\n\n## Development Self-Test Report\n\n- Contract Source: .docs/03_tech_plan/plan.md\n- Scenario Results: ST-001 PASS\n- Executed Gates: npm test\n- Module Key Test Path: local `npm test` -> ST-001 -> validator CLI entry -> plan and implementation evidence parser key path -> PASS output.\n- Actual Evidence: command output reports PASS.\n- Missing / Blockers: none\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |\n|---|---|---|---|---|\n| ST-001 | PASS | `npm test` | PASS output | command output |\n",
     "utf8"
   );
   await writeFile(
@@ -113,6 +113,21 @@ tasks:
       - .docs/04_implementation/example/dev.md
     required_gates:
       - npm test
+    self_test_contract:
+      status: required
+      source: .docs/03_tech_plan/plan.md
+      capability_refs:
+        - PRD-TEST-001
+      runnable_entry: npm test
+      observable_exit: PASS output
+      module_key_test_path: local npm test -> ST-001 -> validator CLI entry -> plan and implementation evidence parser key path -> PASS output
+      required_gates:
+        - npm test
+      scenarios:
+        - id: ST-001
+          entry: npm test
+          expected_exit: PASS output
+          evidence: command output
     acceptance_criteria:
       - Fixture task has a concrete tech plan slice.
     implementation_doc: .docs/04_implementation/example/dev.md
@@ -179,6 +194,20 @@ tasks:
   await writeFile(path.join(root, ".docs/INDEX.md"), "# Index\n.docs/04_implementation/example/dev.md\n", "utf8");
   const cleanedRfc = await runValidator(root, "validate-rfc");
   assert.deepEqual(cleanedRfc.errors, [], "validate-rfc allows superseded test refs only after facts and index are cleaned");
+  await writeFile(
+    path.join(root, ".docs/rfc/RFC_023_runtime_change.md"),
+    "# RFC 023 Runtime Change\n\nStatus: APPLIED\n\n## Background\n\nRuntime entry/exit changes.\n\n## Product Impact\n\nRuntime handoff changes.\n\n## Technical Impact\n\nA new runtime gate is required.\n\n## Regression\n\nRun focused validator regression.\n\n## Test Fact Source Impact\n\nSuperseded test docs: none\n",
+    "utf8"
+  );
+  const missingSelfTestImpactRfc = await runValidator(root, "validate-rfc");
+  assert.match(missingSelfTestImpactRfc.errors.join("\n"), /Development Self-Test Impact/);
+  await writeFile(
+    path.join(root, ".docs/rfc/RFC_023_runtime_change.md"),
+    "# RFC 023 Runtime Change\n\nStatus: APPLIED\n\n## Background\n\nRuntime entry/exit changes.\n\n## Product Impact\n\nRuntime handoff changes.\n\n## Technical Impact\n\nA new runtime gate is required.\n\n## Regression\n\nRun focused validator regression.\n\n## Test Fact Source Impact\n\nSuperseded test docs: none\n\n## Development Self-Test Impact\n\n- Entry/exit impact: runtime entry changes.\n- Required gates impact: task gates are updated.\n",
+    "utf8"
+  );
+  const selfTestImpactRfc = await runValidator(root, "validate-rfc");
+  assert.deepEqual(selfTestImpactRfc.errors, [], "validate-rfc accepts RFC self-test impact for runtime changes");
 
   const currentReleasePath = path.join(root, ".docs/08_release/CURRENT_RELEASE.md");
   const legacyReleasePath = path.join(root, ".docs/08_release/v0.1.0.md");
@@ -416,12 +445,28 @@ tasks:
       kind: local
       required_for_done: true
       handoff_entrypoint: "http://localhost:3000/events"
+    self_test_contract:
+      status: required
+      source: .docs/03_tech_plan/plan.md
+      capability_refs:
+        - PRD-TEST-001
+      runnable_entry: "http://localhost:3000/events"
+      observable_exit: "HTTP response and queue log"
+      module_key_test_path: "local npm test -> ST-001 -> http://localhost:3000/events runnable entry -> event validation and service handler key path -> queue log"
+      required_gates:
+        - "npm test"
+      scenarios:
+        - id: ST-001
+          entry: "http://localhost:3000/events"
+          expected_exit: "HTTP response and queue log"
+          evidence: "command output"
     implementation_doc: .docs/04_implementation/example/dev.md
 `,
     "utf8"
   );
   const providerSmokeOnlyDevReport = await runValidator(root, "validate-dev");
   assert.match(providerSmokeOnlyDevReport.errors.join("\n"), /not enough for application readiness/);
+  assert.match(providerSmokeOnlyDevReport.errors.join("\n"), /Development Self-Test Report/);
   await writeFile(
     path.join(root, ".docs/04_implementation/example/dev.md"),
     "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service.\n- Exit / side effects: HTTP response and queue item.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: runtime HTTP smoke plus provider live smoke.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` runtime HTTP smoke.\n- Target Runtime Environment: `local` service at `http://localhost:3000/events`.\n- Runnable Entry: HTTP endpoint `http://localhost:3000/events` receives a live-mode event.\n- Observable Exit: response output and queue log report PASS for runtime HTTP smoke and application readiness.\n- Testing Handoff Readiness: local endpoint is documented for TESTING handoff.\n- Known Missing Runtime Boundaries: no deployed runtime evidence for this local fixture.\n- Basic Self-test Evidence: runtime HTTP smoke PASS.\n",
@@ -465,6 +510,21 @@ tasks:
       kind: cloud_vm
       required_for_done: true
       handoff_entrypoint: "https://agent.example.test/health"
+    self_test_contract:
+      status: required
+      source: .docs/03_tech_plan/plan.md
+      capability_refs:
+        - PRD-TEST-001
+      runnable_entry: "https://agent.example.test/health"
+      observable_exit: "health response"
+      module_key_test_path: "local npm test -> ST-001 -> https://agent.example.test/health runnable entry -> cloud startup and readiness key path -> health response"
+      required_gates:
+        - "npm test"
+      scenarios:
+        - id: ST-001
+          entry: "https://agent.example.test/health"
+          expected_exit: "health response"
+          evidence: "command output"
     implementation_doc: .docs/04_implementation/example/dev.md
 `,
     "utf8"
@@ -501,6 +561,21 @@ tasks:
       kind: cloud_vm
       required_for_done: true
       handoff_entrypoint: "https://agent.example.test/messages"
+    self_test_contract:
+      status: required
+      source: .docs/03_tech_plan/plan.md
+      capability_refs:
+        - PRD-TEST-001
+      runnable_entry: "https://agent.example.test/messages"
+      observable_exit: "HTTP response and audit log"
+      module_key_test_path: "local npm test -> ST-001 -> https://agent.example.test/messages runnable entry -> request validation, message handling and audit key path -> audit log"
+      required_gates:
+        - "npm test"
+      scenarios:
+        - id: ST-001
+          entry: "https://agent.example.test/messages"
+          expected_exit: "HTTP response and audit log"
+          evidence: "command output"
     implementation_doc: .docs/04_implementation/example/dev.md
 `,
     "utf8"
@@ -514,7 +589,21 @@ tasks:
   assert.match(missingBusinessHandoffContractDevReport.errors.join("\n"), /Testing Handoff Contract/);
   await writeFile(
     path.join(root, ".docs/04_implementation/example/dev.md"),
-    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service at `https://agent.example.test/messages`.\n- Exit / side effects: HTTP response and audit log.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: deployed runtime smoke.\n\n## Development Evidence\n\n- Evidence Level: `business_handoff_ready`.\n- Target Runtime Environment: `cloud_vm` service at `https://agent.example.test/messages`.\n- Runnable Entry: HTTP endpoint `https://agent.example.test/messages` receives a live-mode event.\n- Observable Exit: response output and audit log report PASS.\n- Client / Server Initialization: cloud VM service startup and health status return PASS.\n- Config Contract: env DASH_SCOPE_API_KEY is required.\n- Testing Handoff Readiness: testing handoff contract below includes entry, config, startup, input, expected exit and cleanup.\n- Known Missing Runtime Boundaries: none.\n- Basic Self-test Evidence: deployed runtime smoke PASS.\n\n## Testing Handoff Contract\n\n- Entry: URL `https://agent.example.test/messages`.\n- Config: env secret `DASH_SCOPE_API_KEY` is required; missing config returns a documented error.\n- Initialization: service startup and health endpoint return PASS before tests.\n- Input sample: message request body fixture `{ \"text\": \"hello\" }`.\n- Expected exit / observable exit: HTTP response, queue item, audit log and send result are produced.\n- Cleanup: shutdown or reset is idempotent between test runs.\n- Evidence Level: `business_handoff_ready`.\n",
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service at `https://agent.example.test/messages`.\n- Exit / side effects: HTTP response and audit log.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: deployed runtime smoke.\n\n## Development Evidence\n\n- Evidence Level: `business_handoff_ready`.\n- Target Runtime Environment: `cloud_vm` service at `https://agent.example.test/messages`.\n- Runnable Entry: HTTP endpoint `https://agent.example.test/messages` receives a live-mode event.\n- Observable Exit: response output and audit log report PASS.\n- Client / Server Initialization: cloud VM service startup and health status return PASS.\n- Config Contract: env DASH_SCOPE_API_KEY is required.\n- Testing Handoff Readiness: testing handoff contract below includes entry, config, startup, input, expected exit and cleanup.\n- Known Missing Runtime Boundaries: none.\n- Basic Self-test Evidence: See `Development Self-Test Report`; deployed runtime smoke PASS.\n\n## Development Self-Test Report\n\n- Contract Source: .docs/03_tech_plan/plan.md\n- Scenario Results: ST-001 PASS\n- Executed Gates: npm test\n- Actual Evidence: command output reports PASS.\n- Missing / Blockers: none\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |\n|---|---|---|---|---|\n| ST-001 | PASS | `https://agent.example.test/messages` | HTTP response and audit log | command output |\n\n## Testing Handoff Contract\n\n- Entry: URL `https://agent.example.test/messages`.\n- Config: env secret `DASH_SCOPE_API_KEY` is required.\n- Initialization: service startup and health endpoint return PASS before tests.\n- Input sample: message request body fixture `{ \"text\": \"hello\" }`.\n- Expected exit / observable exit: HTTP response, queue item, audit log and send result are produced.\n- Cleanup: shutdown or reset is idempotent between test runs.\n- Evidence Level: `business_handoff_ready`.\n",
+    "utf8"
+  );
+  const missingModuleKeyPathDevReport = await runValidator(root, "validate-dev");
+  assert.match(missingModuleKeyPathDevReport.errors.join("\n"), /Module Key Test Path/);
+  await writeFile(
+    path.join(root, ".docs/04_implementation/example/dev.md"),
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service at `https://agent.example.test/messages`.\n- Exit / side effects: HTTP response and audit log.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: deployed runtime smoke.\n\n## Development Evidence\n\n- Evidence Level: `business_handoff_ready`.\n- Target Runtime Environment: `cloud_vm` service at `https://agent.example.test/messages`.\n- Runnable Entry: HTTP endpoint `https://agent.example.test/messages` receives a live-mode event.\n- Observable Exit: response output and audit log report PASS.\n- Client / Server Initialization: cloud VM service startup and health status return PASS.\n- Config Contract: env DASH_SCOPE_API_KEY is required.\n- Testing Handoff Readiness: testing handoff contract below includes entry, config, startup, input, expected exit and cleanup.\n- Known Missing Runtime Boundaries: none.\n- Basic Self-test Evidence: See `Development Self-Test Report`; deployed runtime smoke PASS.\n\n## Development Self-Test Report\n\n- Contract Source: .docs/03_tech_plan/plan.md\n- Scenario Results: not recorded yet\n- Executed Gates: npm test\n- Module Key Test Path: local `npm test` -> ST-001 -> `https://agent.example.test/messages` runnable entry -> request validation, message handling and audit key path -> audit log.\n- Actual Evidence: command output reports PASS.\n- Missing / Blockers: none\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n## Testing Handoff Contract\n\n- Entry: URL `https://agent.example.test/messages`.\n- Config: env secret `DASH_SCOPE_API_KEY` is required.\n- Initialization: service startup and health endpoint return PASS before tests.\n- Input sample: message request body fixture `{ \"text\": \"hello\" }`.\n- Expected exit / observable exit: HTTP response, queue item, audit log and send result are produced.\n- Cleanup: shutdown or reset is idempotent between test runs.\n- Evidence Level: `business_handoff_ready`.\n",
+    "utf8"
+  );
+  const missingSelfTestScenarioDevReport = await runValidator(root, "validate-dev");
+  assert.match(missingSelfTestScenarioDevReport.errors.join("\n"), /scenario ST-001/);
+  await writeFile(
+    path.join(root, ".docs/04_implementation/example/dev.md"),
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service at `https://agent.example.test/messages`.\n- Exit / side effects: HTTP response and audit log.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: deployed runtime smoke.\n\n## Development Evidence\n\n- Evidence Level: `business_handoff_ready`.\n- Target Runtime Environment: `cloud_vm` service at `https://agent.example.test/messages`.\n- Runnable Entry: HTTP endpoint `https://agent.example.test/messages` receives a live-mode event.\n- Observable Exit: response output and audit log report PASS.\n- Client / Server Initialization: cloud VM service startup and health status return PASS.\n- Config Contract: env DASH_SCOPE_API_KEY is required.\n- Testing Handoff Readiness: testing handoff contract below includes entry, config, startup, input, expected exit and cleanup.\n- Known Missing Runtime Boundaries: none.\n- Basic Self-test Evidence: See `Development Self-Test Report`; deployed runtime smoke PASS.\n\n## Development Self-Test Report\n\n- Contract Source: .docs/03_tech_plan/plan.md\n- Scenario Results: ST-001 PASS\n- Executed Gates: npm test\n- Module Key Test Path: local `npm test` -> ST-001 -> `https://agent.example.test/messages` runnable entry -> request validation, message handling and audit key path -> HTTP response and audit log.\n- Actual Evidence: command output and audit log report PASS.\n- Missing / Blockers: none\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |\n|---|---|---|---|---|\n| ST-001 | PASS | `https://agent.example.test/messages` | HTTP response and audit log | command output |\n\n## Testing Handoff Contract\n\n- Entry: URL `https://agent.example.test/messages`.\n- Config: env secret `DASH_SCOPE_API_KEY` is required; missing config returns a documented error.\n- Initialization: service startup and health endpoint return PASS before tests.\n- Input sample: message request body fixture `{ \"text\": \"hello\" }`.\n- Expected exit / observable exit: HTTP response, queue item, audit log and send result are produced.\n- Cleanup: shutdown or reset is idempotent between test runs.\n- Evidence Level: `business_handoff_ready`.\n",
     "utf8"
   );
   const businessHandoffReadyDevReport = await runValidator(root, "validate-dev");
@@ -585,6 +674,21 @@ tasks:
       kind: browser
       required_for_done: true
       handoff_entrypoint: "http://localhost:3000/dashboard"
+    self_test_contract:
+      status: required
+      source: .docs/03_tech_plan/plan.md
+      capability_refs:
+        - PRD-TEST-001
+      runnable_entry: "http://localhost:3000/dashboard"
+      observable_exit: "rendered page state"
+      module_key_test_path: "local npm test -> ST-001 -> http://localhost:3000/dashboard runnable page entry -> browser load and render key path -> rendered page state"
+      required_gates:
+        - "npm test"
+      scenarios:
+        - id: ST-001
+          entry: "http://localhost:3000/dashboard"
+          expected_exit: "rendered page state"
+          evidence: "browser check"
     implementation_doc: .docs/04_implementation/example/dev.md
 `,
     "utf8"
@@ -649,6 +753,86 @@ tasks:
   );
   let designReport = await runValidator(root, "validate-design");
   assert.match(designReport.errors.join("\n"), /must reference at least one tech plan slice/);
+
+  await writeFile(
+    path.join(root, ".harness/state/plan.draft.yaml"),
+    `next_task_sequence: 2
+tasks:
+  - id: TASK-001
+    phase: SPRINTING
+    title: Runtime service task
+    status: pending
+    summary: Runtime service task needs a self-test contract.
+    docs:
+      product:
+        - .docs/01_product/prd.md
+      tech_plan:
+        - .docs/03_tech_plan/plan.md
+    allowed_paths:
+      - src/**
+    required_gates:
+      - npm test
+    acceptance_criteria:
+      - Runtime handoff is testable.
+    evidence_level:
+      required: local_runtime
+    target_runtime_environment:
+      kind: local
+      required_for_done: true
+      handoff_entrypoint: "http://localhost:3000/health"
+    implementation_doc: .docs/04_implementation/example/dev.md
+`,
+    "utf8"
+  );
+  designReport = await runValidator(root, "validate-design");
+  assert.match(designReport.errors.join("\n"), /self_test_contract/);
+
+  await writeFile(
+    path.join(root, ".harness/state/plan.draft.yaml"),
+    `next_task_sequence: 2
+tasks:
+  - id: TASK-001
+    phase: SPRINTING
+    title: Runtime service task
+    status: pending
+    summary: Runtime service task needs a module key test path.
+    docs:
+      product:
+        - .docs/01_product/prd.md
+      tech_plan:
+        - .docs/03_tech_plan/plan.md
+    allowed_paths:
+      - src/**
+    required_gates:
+      - npm test
+    acceptance_criteria:
+      - Runtime handoff is testable.
+    evidence_level:
+      required: local_runtime
+    target_runtime_environment:
+      kind: local
+      required_for_done: true
+      handoff_entrypoint: "http://localhost:3000/health"
+    self_test_contract:
+      status: required
+      source: .docs/03_tech_plan/plan.md
+      capability_refs:
+        - PRD-TEST-001
+      runnable_entry: "http://localhost:3000/health"
+      observable_exit: "health response"
+      required_gates:
+        - npm test
+      scenarios:
+        - id: ST-001
+          entry: "http://localhost:3000/health"
+          expected_exit: "health response"
+          evidence: "command output"
+    implementation_doc: .docs/04_implementation/example/dev.md
+`,
+    "utf8"
+  );
+  designReport = await runValidator(root, "validate-design");
+  assert.match(designReport.errors.join("\n"), /module_key_test_path/);
 
   await writeFile(
     path.join(root, ".harness/state/plan.draft.yaml"),

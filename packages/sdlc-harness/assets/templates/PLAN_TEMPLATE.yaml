@@ -63,6 +63,24 @@ tasks:
       kind: "local | ci | staging | cloud_vm | managed_service | browser | worker | not_applicable"
       required_for_done: true
       handoff_entrypoint: "URL / CLI / worker command / server action"
+    # Required for SPRINTING tasks with a runnable boundary. Created during
+    # ARCHITECTING/RFC and executed during SPRINTING.
+    self_test_contract:
+      status: "required | not_applicable"
+      source: ".docs/03_tech_plan/example.md"
+      capability_refs:
+        - "PRD-EXAMPLE-001"
+      runnable_entry: "command / URL / endpoint / worker command"
+      observable_exit: "response / page state / side effect / log / artifact"
+      module_key_test_path: "local start command / URL -> all self-test scenarios -> all task/module promised runnable entries -> internal key paths / boundaries / checkpoints -> observable completion evidence"
+      required_gates:
+        - "npm run smoke"
+      scenarios:
+        - id: "ST-001"
+          entry: "command / URL / endpoint / worker command"
+          expected_exit: "observable response / side effect / page state"
+          evidence: "command/browser/API/log/screenshot/etc"
+      not_applicable_reason: ""
     working_notes:
       - "执行现场备注只在 open task 保留。"
     result_docs:
