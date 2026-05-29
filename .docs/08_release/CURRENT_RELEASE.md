@@ -50,7 +50,7 @@ This file is overwritten by each release. Historical release evidence lives in g
 - [x] Publish package with `npm publish --workspace agent-project-sdlc`.
 - [x] Verify registry package with `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json`.
 - [x] Run installed-consumer smoke from npm registry.
-- [ ] Create and push git tag `v0.1.18` after publish success.
+- [x] Create and push git tag `v0.1.18` after publish success.
 
 ## 6. Rollback Plan（回滚方案）
 
