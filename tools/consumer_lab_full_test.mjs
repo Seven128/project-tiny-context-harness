@@ -477,6 +477,14 @@ tasks:
       - "npm test"
     acceptance_criteria:
       - "summarizeText returns character count, word count, and empty state."
+    evidence_level:
+      required: "local_runtime"
+      supporting:
+        - "unit"
+    target_runtime_environment:
+      kind: "local"
+      required_for_done: true
+      handoff_entrypoint: "npm test"
     implementation_doc: ".docs/04_implementation/text_summary.md"
 `,
     "utf8"
@@ -493,7 +501,7 @@ async function writeDocs(labDir) {
     ".docs/03_tech_plan/text_summary_plan.md":
       "# Text Summary Technical Plan\n\nThis plan implements the PRD requirement.\n\n## API Contract\n\n`summarizeText(input)` returns `characters`, `words`, and `empty`.\n\n## Task Breakdown\n\n- `TASK-001`: implement helper and tests.\n",
     ".docs/04_implementation/text_summary.md":
-      "# Text Summary Implementation\n\n`src/stringStats.js` exports `summarizeText(input)`.\n\n## Runnable Entry/Exit\n\n- Entry points: `summarizeText(input)` exported API.\n- Exit / side effects: returns `characters`, `words`, and `empty`; no side effects.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only local package validation.\n\n## Development Evidence\n\n- Runnable Entry: API command `npm test` invokes `summarizeText(input)` through node:test.\n- Observable Exit: test output reports PASS for character count, word count and empty state.\n- Client / Server Initialization: local package test runtime starts with `npm test` and exits with status evidence.\n- Config Contract: no external config required for this fixture.\n- Basic Self-test Evidence: `npm test` PASS for the consumer lab fixture.\n\n## Verification\n\n- `npm test`: PASS\n",
+      "# Text Summary Implementation\n\n`src/stringStats.js` exports `summarizeText(input)`.\n\n## Runnable Entry/Exit\n\n- Entry points: `summarizeText(input)` exported API.\n- Exit / side effects: returns `characters`, `words`, and `empty`; no side effects.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only local package validation.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` package test runtime.\n- Target Runtime Environment: `local` node test command `npm test`.\n- Runnable Entry: API command `npm test` invokes `summarizeText(input)` through node:test.\n- Observable Exit: test output reports PASS for character count, word count and empty state.\n- Client / Server Initialization: local package test runtime starts with `npm test` and exits with status evidence.\n- Config Contract: no external config required for this fixture.\n- Testing Handoff Readiness: `npm test` is the handoff entry for TESTING.\n- Known Missing Runtime Boundaries: none for this local helper fixture.\n- Basic Self-test Evidence: `npm test` PASS for the consumer lab fixture.\n\n## Verification\n\n- `npm test`: PASS\n",
     ".docs/06_review/REVIEW_REPORT.md":
       "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage is intentionally narrow.\n\n## Runnable Entry/Exit Readiness\n\n- Runnable Entry: PASS\n- Observable Exit: PASS\n- Initialization: PASS\n- Config Contract: PASS\n- Testing Handoff Readiness: PASS\n- Notes: Existing entry/exit is runnable through `summarizeText(input)`.\n\n## Decision\n\nPASS\n",
     ".docs/07_test/TEST_REPORT.md":

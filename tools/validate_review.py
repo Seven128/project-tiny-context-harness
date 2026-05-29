@@ -8,6 +8,19 @@ READINESS_FIELDS = [
     "Config Contract",
     "Testing Handoff Readiness",
 ]
+RUNTIME_MISMATCH_TERMS = [
+    "not deployed",
+    "not initialized",
+    "local only",
+    "localhost only",
+    "fake adapter",
+    "fake send",
+    "未部署",
+    "未初始化",
+    "只在本地",
+    "仅本地",
+    "本地跑通",
+]
 
 
 def main() -> None:
@@ -34,6 +47,11 @@ def main() -> None:
             f"Review readiness is BLOCKED: {field}",
         )
     require(contains_any(text, ["pass", "blocked", "通过", "阻塞"]), "Review report must include PASS/BLOCKED decision")
+    if contains_any(lowered, ["decision: pass", "decision: `pass`", "final decision: pass"]):
+        require(
+            not contains_any(lowered, RUNTIME_MISMATCH_TERMS),
+            "Review report cannot PASS while target runtime or handoff evidence is missing or lower-level only",
+        )
     print("Review report OK")
 
 

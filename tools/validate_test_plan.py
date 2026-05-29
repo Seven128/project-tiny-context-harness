@@ -30,6 +30,17 @@ MISSING_READINESS_TERMS = [
     "尚未交付",
     "未交付",
     "不存在",
+    "not deployed",
+    "not initialized",
+    "local only",
+    "localhost only",
+    "fake adapter",
+    "fake send",
+    "未部署",
+    "未初始化",
+    "只在本地",
+    "仅本地",
+    "本地跑通",
 ]
 
 

@@ -18,6 +18,9 @@ const TASK_PHASES = new Set(["REQUIREMENT_GATHERING", "ARCHITECTING", "SPRINTING
 const PARALLEL_ALLOWED_PHASES = new Set(["REQUIREMENT_GATHERING", "SPRINTING", "TESTING"]);
 const TASK_STATUSES = new Set(["pending", "in_progress", "done", "blocked", "pending_revision", "cancelled"]);
 const OPEN_TASK_STATUSES = new Set(["pending", "in_progress", "blocked", "pending_revision"]);
+const EVIDENCE_LEVELS = new Set(["unit", "local_runtime", "external_provider_live", "deployed_runtime", "business_handoff_ready"]);
+const EVIDENCE_LEVEL_ORDER = ["unit", "local_runtime", "external_provider_live", "deployed_runtime", "business_handoff_ready"];
+const TARGET_RUNTIME_KINDS = new Set(["local", "ci", "staging", "cloud_vm", "managed_service", "browser", "worker", "not_applicable"]);
 const DESIGN_CATEGORIES = [
   {
     label: "AI copilot/provider",
@@ -94,6 +97,7 @@ const RUNNABLE_ENTRY_EXIT_TERMS = [
   "not applicable"
 ];
 const DEVELOPMENT_EVIDENCE_TERMS = ["development evidence", "开发自测证据"];
+const TESTING_HANDOFF_TERMS = ["testing handoff contract", "测试交接合同"];
 const EVIDENCE_PLACEHOLDER_TERMS = [
   "pending",
   "tbd",
@@ -105,7 +109,7 @@ const EVIDENCE_PLACEHOLDER_TERMS = [
 ];
 const PAGE_TASK_TERMS = ["frontend", "front-end", "browser", "page", "页面", "前端", "按钮", "表单", "跳转"];
 const PAGE_ENTRY_TERMS = ["http://", "https://", "localhost", "127.0.0.1", "page url", "页面 url", "dev server"];
-const PAGE_BROWSER_CHECK_TERMS = ["browser check", "playwright", "screenshot", "click", "button", "form", "页面可加载", "浏览器"];
+const PAGE_BROWSER_CHECK_TERMS = ["browser check", "playwright", "screenshot", "click", "button", "form", "页面可加载", "浏览器验证"];
 const CALLABLE_TASK_TERMS = [
   "api",
   "endpoint",
@@ -173,6 +177,16 @@ const INSUFFICIENT_APPLICATION_SMOKE_TERMS = [
   "domain smoke",
   "受控 smoke"
 ];
+const LOWER_LEVEL_EVIDENCE_TERMS = [
+  ...INSUFFICIENT_APPLICATION_SMOKE_TERMS,
+  "unit",
+  "unit test",
+  "local_runtime",
+  "local runtime",
+  "localhost",
+  "external_provider_live",
+  "external provider live"
+];
 const MISSING_READINESS_TERMS = [
   "missing entry",
   "missing exit",
@@ -189,6 +203,22 @@ const MISSING_READINESS_TERMS = [
   "尚未交付",
   "未交付",
   "不存在"
+];
+const RUNTIME_MISMATCH_TERMS = [
+  ...MISSING_READINESS_TERMS,
+  "not deployed",
+  "not initialized",
+  "not connected",
+  "local only",
+  "localhost only",
+  "fake adapter",
+  "fake send",
+  "未部署",
+  "未初始化",
+  "未接入",
+  "只在本地",
+  "仅本地",
+  "本地跑通"
 ];
 const REVIEW_READINESS_FIELDS = [
   "Runnable Entry",
@@ -407,6 +437,7 @@ function validateDraftTaskShape(task: Record<string, unknown>, index: number, er
     if (!Array.isArray(task.acceptance_criteria) || task.acceptance_criteria.length === 0) {
       errors.push(`${String(task.id ?? prefix)} must define acceptance_criteria`);
     }
+    errors.push(...validateRuntimeEvidenceContract(task));
   } else {
     for (const field of ["docs", "allowed_paths", "required_gates", "acceptance_criteria", "working_notes", "gate_result", "result_docs"]) {
       if (field in task) errors.push(`${String(task.id ?? prefix)} closed task must not retain ${field}`);
@@ -525,6 +556,7 @@ async function validateReview(projectRoot: string): Promise<ValidatorReport> {
     errors.push("Review report must assess runnable entry/exit readiness before TESTING");
   }
   errors.push(...validateReviewReadinessChecklist(rawText));
+  errors.push(...validateRuntimeHandoffReport(rawText, "Review report"));
   if (!containsAny(text, ["pass", "blocked", "通过", "阻塞"])) errors.push("Review report must include PASS/BLOCKED decision");
   return { info: ["validate-review checked review report"], errors };
 }
@@ -548,6 +580,7 @@ async function validateTest(projectRoot: string): Promise<ValidatorReport> {
   }
   if (!containsAny(text, ["pass", "blocked", "通过", "阻塞"])) errors.push("Test report must include PASS/BLOCKED decision");
   errors.push(...validateTestReadinessDecision(text));
+  errors.push(...validateRuntimeHandoffReport(report?.text ?? "", "Test report"));
   if (lifecycle.current_phase === "TESTING") {
     errors.push(...testingBoundaryErrorsForChangedFiles(await changedFiles(projectRoot)));
   }
@@ -664,6 +697,7 @@ async function validatePlanState(projectRoot: string, allowOpen: boolean): Promi
       if (!Array.isArray(task.acceptance_criteria) || task.acceptance_criteria.length === 0) {
         errors.push(`Open task ${task.id} must define acceptance_criteria`);
       }
+      errors.push(...validateRuntimeEvidenceContract(task));
       errors.push(...testingBoundaryErrorsForAllowedPaths(task));
     } else {
       errors.push(`Completed task ${task.id} must not remain in plan.yaml`);
@@ -680,6 +714,70 @@ async function validatePlanState(projectRoot: string, allowOpen: boolean): Promi
     errors.push(`current_task_id does not match a task: ${currentTaskId}`);
   }
   return { taskCount: tasks.length, errors, plan: tasksData };
+}
+
+function validateRuntimeEvidenceContract(task: Record<string, unknown>): string[] {
+  const errors: string[] = [];
+  const taskId = String(task.id ?? "Task");
+  if (String(task.phase ?? "") !== "SPRINTING") return errors;
+
+  const context = taskText(task).toLowerCase();
+  const needsRuntimeContract = containsAny(context, [...APPLICATION_READINESS_TASK_TERMS, ...PAGE_TASK_TERMS]);
+  const evidenceLevel = task.evidence_level;
+  const targetRuntime = task.target_runtime_environment;
+
+  if (needsRuntimeContract && !isRecord(evidenceLevel)) {
+    errors.push(`${taskId} runtime/app task must define evidence_level.required`);
+  }
+  if (needsRuntimeContract && !isRecord(targetRuntime)) {
+    errors.push(`${taskId} runtime/app task must define target_runtime_environment`);
+  }
+
+  if (evidenceLevel !== undefined) {
+    if (!isRecord(evidenceLevel)) {
+      errors.push(`${taskId} evidence_level must be a mapping`);
+    } else {
+      const required = String(evidenceLevel.required ?? "");
+      if (!EVIDENCE_LEVELS.has(required)) {
+        errors.push(`${taskId} evidence_level.required must be one of ${[...EVIDENCE_LEVELS].join(", ")}`);
+      }
+      if ("supporting" in evidenceLevel && !Array.isArray(evidenceLevel.supporting)) {
+        errors.push(`${taskId} evidence_level.supporting must be a list when present`);
+      }
+      if (Array.isArray(evidenceLevel.supporting)) {
+        for (const level of evidenceLevel.supporting) {
+          if (!EVIDENCE_LEVELS.has(String(level))) {
+            errors.push(`${taskId} evidence_level.supporting contains invalid level: ${String(level)}`);
+          }
+        }
+      }
+    }
+  }
+
+  if (targetRuntime !== undefined) {
+    if (!isRecord(targetRuntime)) {
+      errors.push(`${taskId} target_runtime_environment must be a mapping`);
+    } else {
+      const kind = String(targetRuntime.kind ?? "");
+      if (!TARGET_RUNTIME_KINDS.has(kind)) {
+        errors.push(`${taskId} target_runtime_environment.kind must be one of ${[...TARGET_RUNTIME_KINDS].join(", ")}`);
+      }
+      if (typeof targetRuntime.required_for_done !== "boolean") {
+        errors.push(`${taskId} target_runtime_environment.required_for_done must be a boolean`);
+      }
+      if (targetRuntime.required_for_done === true) {
+        const entrypoint = String(targetRuntime.handoff_entrypoint ?? "").trim();
+        if (!entrypoint) {
+          errors.push(`${taskId} target_runtime_environment.handoff_entrypoint is required when required_for_done is true`);
+        }
+        if (["cloud_vm", "staging", "managed_service"].includes(kind) && /localhost|127\.0\.0\.1/.test(entrypoint.toLowerCase())) {
+          errors.push(`${taskId} target runtime ${kind} cannot use localhost as final handoff_entrypoint`);
+        }
+      }
+    }
+  }
+
+  return errors;
 }
 
 function validateParallelExecutionContract(plan: Record<string, unknown>, currentPhase: string, errors: string[]): void {
@@ -878,16 +976,27 @@ function validateDevelopmentEvidenceText(text: string, task: Record<string, unkn
   if (!section) {
     return [`${taskId} implementation_doc must include Development Evidence with Runnable Entry, Observable Exit, and Basic Self-test Evidence: ${implementationDoc}`];
   }
-  if (hasJustifiedNotApplicableEvidence(section)) return [];
+  if (hasJustifiedNotApplicableEvidence(section) && !hasConcreteDevelopmentEvidenceFields(section)) {
+    const required = isRecord(task.evidence_level) ? String(task.evidence_level.required ?? "") : "";
+    const targetRuntime = isRecord(task.target_runtime_environment) ? task.target_runtime_environment : undefined;
+    if (required && required !== "unit") {
+      return [`${taskId} Development Evidence cannot be Not applicable when evidence_level.required is ${required} in ${implementationDoc}`];
+    }
+    if (targetRuntime && targetRuntime.required_for_done === true && String(targetRuntime.kind ?? "") !== "not_applicable") {
+      return [`${taskId} Development Evidence cannot be Not applicable when target_runtime_environment.required_for_done is true in ${implementationDoc}`];
+    }
+    return [];
+  }
 
-  for (const field of ["Runnable Entry", "Observable Exit", "Client / Server Initialization", "Config Contract", "Basic Self-test Evidence"]) {
+  for (const field of ["Evidence Level", "Target Runtime Environment", "Runnable Entry", "Observable Exit", "Client / Server Initialization", "Config Contract", "Testing Handoff Readiness", "Known Missing Runtime Boundaries", "Basic Self-test Evidence"]) {
     const value = evidenceFieldValue(section, field);
     if (!value || isPlaceholderEvidence(value)) {
       errors.push(`${taskId} Development Evidence ${field} must contain concrete, executed evidence in ${implementationDoc}`);
     }
   }
 
-  const context = `${taskText(task)}\n${text}`.toLowerCase();
+  const runnableSection = markdownSection(text, RUNNABLE_ENTRY_EXIT_TERMS) ?? "";
+  const context = `${taskText(task)}\n${section}\n${runnableSection}`.toLowerCase();
   const loweredSection = section.toLowerCase();
   if (containsAny(context, PAGE_TASK_TERMS)) {
     if (!containsAny(loweredSection, PAGE_ENTRY_TERMS)) {
@@ -916,7 +1025,99 @@ function validateDevelopmentEvidenceText(text: string, task: Record<string, unkn
       errors.push(`${taskId} provider, fixture, fake-adapter, or one-shot smoke is not enough for application readiness; record application readiness evidence or BLOCKED in ${implementationDoc}`);
     }
   }
+  errors.push(...validateEvidenceLevelAgainstContract(section, text, task, implementationDoc));
   return errors;
+}
+
+function hasConcreteDevelopmentEvidenceFields(section: string): boolean {
+  return ["Evidence Level", "Target Runtime Environment", "Runnable Entry", "Observable Exit", "Client / Server Initialization", "Config Contract"].some((field) => {
+    const value = evidenceFieldValue(section, field);
+    return Boolean(value && !isPlaceholderEvidence(value));
+  });
+}
+
+function validateEvidenceLevelAgainstContract(section: string, fullText: string, task: Record<string, unknown>, implementationDoc: string): string[] {
+  const errors: string[] = [];
+  const taskId = String(task.id ?? "current task");
+  const evidenceLevel = isRecord(task.evidence_level) ? task.evidence_level : undefined;
+  const targetRuntime = isRecord(task.target_runtime_environment) ? task.target_runtime_environment : undefined;
+  const required = String(evidenceLevel?.required ?? "");
+  const actualLevelText = evidenceFieldValue(section, "Evidence Level") ?? section;
+  const actualLevel = evidenceLevelFromText(actualLevelText);
+  const loweredText = `${section}\n${fullText}`.toLowerCase();
+
+  if (required && EVIDENCE_LEVELS.has(required)) {
+    if (!actualLevel) {
+      errors.push(`${taskId} Development Evidence Evidence Level must state the actual evidence level for required ${required} in ${implementationDoc}`);
+    } else if (evidenceLevelRank(actualLevel) < evidenceLevelRank(required)) {
+      errors.push(`${taskId} Development Evidence level ${actualLevel} is lower than required ${required} in ${implementationDoc}`);
+    }
+    if (["deployed_runtime", "business_handoff_ready"].includes(required)) {
+      const supportOnly = containsAny(loweredText, LOWER_LEVEL_EVIDENCE_TERMS) && !loweredText.includes(required);
+      if (supportOnly) {
+        errors.push(`${taskId} lower-level smoke cannot close required ${required}; record target runtime handoff evidence or BLOCKED in ${implementationDoc}`);
+      }
+    }
+  }
+
+  if (targetRuntime) {
+    const kind = String(targetRuntime.kind ?? "");
+    const targetText = evidenceFieldValue(section, "Target Runtime Environment") ?? section;
+    if (kind && TARGET_RUNTIME_KINDS.has(kind) && !targetText.toLowerCase().includes(kind.replace("_", " ")) && !targetText.toLowerCase().includes(kind)) {
+      errors.push(`${taskId} Development Evidence Target Runtime Environment must match task contract kind ${kind} in ${implementationDoc}`);
+    }
+    if (targetRuntime.required_for_done === true && String(targetRuntime.handoff_entrypoint ?? "").trim()) {
+      const entrypoint = String(targetRuntime.handoff_entrypoint).trim();
+      if (!fullText.includes(entrypoint)) {
+        errors.push(`${taskId} implementation_doc must record handoff_entrypoint ${entrypoint} from target_runtime_environment in ${implementationDoc}`);
+      }
+    }
+  }
+
+  if (required === "business_handoff_ready") {
+    errors.push(...validateTestingHandoffContract(fullText, task, implementationDoc));
+  }
+
+  return errors;
+}
+
+function validateTestingHandoffContract(text: string, task: Record<string, unknown>, implementationDoc: string): string[] {
+  const taskId = String(task.id ?? "current task");
+  const section = markdownSection(text, TESTING_HANDOFF_TERMS);
+  if (!section) {
+    return [`${taskId} required business_handoff_ready but implementation_doc is missing Testing Handoff Contract: ${implementationDoc}`];
+  }
+  const lowered = section.toLowerCase();
+  const requiredGroups: Array<[string, string[]]> = [
+    ["entrypoint", ["entry", "entrypoint", "url", "command", "入口"]],
+    ["config", ["config", "env", "secret", "配置", "环境变量"]],
+    ["initialization", ["initialization", "startup", "start", "health", "初始化", "启动"]],
+    ["input sample", ["input sample", "request body", "fixture", "message", "输入样例", "请求"]],
+    ["observable exit", ["observable exit", "expected exit", "response", "queue", "audit", "file", "发送", "出口"]],
+    ["cleanup", ["cleanup", "shutdown", "reset", "idempotent", "清理", "关闭", "重置", "幂等"]],
+    ["evidence level", ["business_handoff_ready", "evidence level", "证据等级"]]
+  ];
+  const errors: string[] = [];
+  for (const [label, terms] of requiredGroups) {
+    if (!containsAny(lowered, terms)) {
+      errors.push(`${taskId} Testing Handoff Contract must include ${label} in ${implementationDoc}`);
+    }
+  }
+  const targetRuntime = isRecord(task.target_runtime_environment) ? task.target_runtime_environment : undefined;
+  const entrypoint = String(targetRuntime?.handoff_entrypoint ?? "").trim();
+  if (entrypoint && !section.includes(entrypoint)) {
+    errors.push(`${taskId} Testing Handoff Contract must include handoff_entrypoint ${entrypoint} in ${implementationDoc}`);
+  }
+  return errors;
+}
+
+function evidenceLevelFromText(text: string): string | undefined {
+  const lowered = text.toLowerCase().replace(/-/g, "_").replace(/\s+/g, "_");
+  return EVIDENCE_LEVEL_ORDER.find((level) => lowered.includes(level));
+}
+
+function evidenceLevelRank(level: string): number {
+  return EVIDENCE_LEVEL_ORDER.indexOf(level);
 }
 
 function validateReviewReadinessChecklist(text: string): string[] {
@@ -952,6 +1153,25 @@ function validateTestReadinessDecision(text: string): string[] {
     return ["Test report cannot PASS while runnable entry/exit or Development Evidence is missing; use BLOCKED with recovery conditions"];
   }
   return [];
+}
+
+function validateRuntimeHandoffReport(text: string, label: string): string[] {
+  const decision = finalDecision(text);
+  if (decision !== "PASS") return [];
+  const lowered = text.toLowerCase();
+  const errors: string[] = [];
+  if (containsAny(lowered, RUNTIME_MISMATCH_TERMS)) {
+    errors.push(`${label} cannot PASS while target runtime or handoff evidence is missing or lower-level only`);
+  }
+  if (containsAny(lowered, ["deployed_runtime", "business_handoff_ready", "target runtime", "target_runtime_environment", "evidence level"])) {
+    if (!containsAny(lowered, ["evidence level", "evidence_level", "证据等级"])) {
+      errors.push(`${label} PASS must state evidence level when runtime handoff is in scope`);
+    }
+    if (!containsAny(lowered, ["target runtime", "target_runtime_environment", "运行环境"])) {
+      errors.push(`${label} PASS must state target runtime environment when runtime handoff is in scope`);
+    }
+  }
+  return errors;
 }
 
 function finalDecision(text: string): "PASS" | "BLOCKED" | undefined {

@@ -26,6 +26,9 @@
 - Expected exits / side effects:
 - Development Evidence used:
 - Application readiness decision source:
+- Evidence Level used:
+- Target runtime under test:
+- Testing Handoff Contract used:
 - Config contract used:
 - Fixture/live boundary:
 - Missing entry/exit blocker:

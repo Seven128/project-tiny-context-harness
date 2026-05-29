@@ -42,14 +42,28 @@ Input
 
 ## 6. Development Evidence（开发自测证据）
 
+- Evidence Level:
+- Target Runtime Environment:
 - Runnable Entry:
 - Observable Exit:
 - Client / Server Initialization:
 - Config Contract:
+- Testing Handoff Readiness:
+- Known Missing Runtime Boundaries:
 - Basic Self-test Evidence:
 - Not applicable:
 
-## 7. 关键实现逻辑
+## 7. Testing Handoff Contract（测试交接合同）
+
+- Entry:
+- Config:
+- Initialization / health:
+- Input sample:
+- Expected exit / observable side effect:
+- Cleanup / reset / idempotency:
+- Evidence Level:
+
+## 8. 关键实现逻辑
 
 - 输入校验（Input validation）:
 - 核心分支（Core branches）:
@@ -57,22 +71,22 @@ Input
 - 边界兜底（Boundary fallback）:
 - 性能或并发注意事项（Performance or concurrency notes）:
 
-## 8. 与技术方案的偏移
+## 9. 与技术方案的偏移
 
 - 
 
-## 9. 测试覆盖（Test Coverage）
+## 10. 测试覆盖（Test Coverage）
 
 | 测试（Test） | 覆盖范围（Coverage） | 结果（Result） |
 |---|---|---|
 |  |  |  |
 
-## 10. 变更记录（Change Log）
+## 11. 变更记录（Change Log）
 
 | 日期（Date） | Task ID | Commit | 摘要（Summary） |
 |---|---|---|---|
 |  |  |  |  |
 
-## 11. 后续维护注意事项
+## 12. 后续维护注意事项
 
 - 

@@ -55,7 +55,7 @@ try {
   );
   await writeFile(
     path.join(root, ".docs/04_implementation/example/dev.md"),
-    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: shipped CLI fixture.\n- Exit / side effects: validation output only.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Runnable Entry: CLI command `npx sdlc-harness validate-dev` runs the package validator fixture.\n- Observable Exit: Command output reports validate-dev PASS with no errors.\n- Client / Server Initialization: Local CLI runtime starts from the recorded command and exits with status evidence.\n- Config Contract: no external config required for this fixture.\n- Basic Self-test Evidence: `npm test --workspace agent-project-sdlc` PASS for the fixture regression.\n",
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: shipped CLI fixture.\n- Exit / side effects: validation output only.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` executed through the local package CLI.\n- Target Runtime Environment: `local` CLI runtime.\n- Runnable Entry: CLI command `npx sdlc-harness validate-dev` runs the package validator fixture.\n- Observable Exit: Command output reports validate-dev PASS with no errors.\n- Client / Server Initialization: Local CLI runtime starts from the recorded command and exits with status evidence.\n- Config Contract: no external config required for this fixture.\n- Testing Handoff Readiness: local validation command and output are ready for TESTING handoff.\n- Known Missing Runtime Boundaries: none for this local CLI fixture.\n- Basic Self-test Evidence: `npm test --workspace agent-project-sdlc` PASS for the fixture regression.\n",
     "utf8"
   );
   await writeFile(
@@ -408,6 +408,14 @@ tasks:
       - "npm test"
     acceptance_criteria:
       - "application readiness is proven beyond provider smoke"
+    evidence_level:
+      required: local_runtime
+      supporting:
+        - external_provider_live
+    target_runtime_environment:
+      kind: local
+      required_for_done: true
+      handoff_entrypoint: "http://localhost:3000/events"
     implementation_doc: .docs/04_implementation/example/dev.md
 `,
     "utf8"
@@ -416,18 +424,130 @@ tasks:
   assert.match(providerSmokeOnlyDevReport.errors.join("\n"), /not enough for application readiness/);
   await writeFile(
     path.join(root, ".docs/04_implementation/example/dev.md"),
-    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service.\n- Exit / side effects: HTTP response and queue item.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: runtime HTTP smoke plus provider live smoke.\n\n## Development Evidence\n\n- Runnable Entry: HTTP endpoint `http://localhost:3000/events` receives a live-mode event.\n- Observable Exit: response output and queue log report PASS for runtime HTTP smoke and application readiness.\n- Basic Self-test Evidence: runtime HTTP smoke PASS.\n",
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service.\n- Exit / side effects: HTTP response and queue item.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: runtime HTTP smoke plus provider live smoke.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` runtime HTTP smoke.\n- Target Runtime Environment: `local` service at `http://localhost:3000/events`.\n- Runnable Entry: HTTP endpoint `http://localhost:3000/events` receives a live-mode event.\n- Observable Exit: response output and queue log report PASS for runtime HTTP smoke and application readiness.\n- Testing Handoff Readiness: local endpoint is documented for TESTING handoff.\n- Known Missing Runtime Boundaries: no deployed runtime evidence for this local fixture.\n- Basic Self-test Evidence: runtime HTTP smoke PASS.\n",
     "utf8"
   );
   const missingInitializationDevReport = await runValidator(root, "validate-dev");
   assert.match(missingInitializationDevReport.errors.join("\n"), /Client \/ Server Initialization/);
   await writeFile(
     path.join(root, ".docs/04_implementation/example/dev.md"),
-    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service.\n- Exit / side effects: HTTP response and queue item.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: runtime HTTP smoke plus provider live smoke.\n\n## Development Evidence\n\n- Runnable Entry: HTTP endpoint `http://localhost:3000/events` receives a live-mode event.\n- Observable Exit: response output and queue log report PASS for runtime HTTP smoke and application readiness.\n- Client / Server Initialization: server startup command `npm run agent:start` listens on localhost and health status returns PASS.\n- Basic Self-test Evidence: runtime HTTP smoke PASS.\n",
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service.\n- Exit / side effects: HTTP response and queue item.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: runtime HTTP smoke plus provider live smoke.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` runtime HTTP smoke.\n- Target Runtime Environment: `local` service at `http://localhost:3000/events`.\n- Runnable Entry: HTTP endpoint `http://localhost:3000/events` receives a live-mode event.\n- Observable Exit: response output and queue log report PASS for runtime HTTP smoke and application readiness.\n- Client / Server Initialization: server startup command `npm run agent:start` listens on localhost and health status returns PASS.\n- Testing Handoff Readiness: local endpoint is documented for TESTING handoff.\n- Known Missing Runtime Boundaries: no deployed runtime evidence for this local fixture.\n- Basic Self-test Evidence: runtime HTTP smoke PASS.\n",
     "utf8"
   );
   const missingConfigContractDevReport = await runValidator(root, "validate-dev");
   assert.match(missingConfigContractDevReport.errors.join("\n"), /Config Contract/);
+  await writeFile(
+    path.join(root, ".harness/state/plan.yaml"),
+    `current_task_id: TASK-003
+next_task_sequence: 4
+tasks:
+  - id: TASK-003
+    phase: SPRINTING
+    title: Deploy cloud agent runtime task
+    status: in_progress
+    summary: Cloud VM agent service must be deployed and handed off to TESTING.
+    docs:
+      product:
+        - .docs/01_product/prd.md
+    allowed_paths:
+      - "src/**"
+    required_gates:
+      - "npm test"
+    acceptance_criteria:
+      - "deployed runtime evidence closes the cloud service task"
+    evidence_level:
+      required: deployed_runtime
+      supporting:
+        - unit
+        - local_runtime
+        - external_provider_live
+    target_runtime_environment:
+      kind: cloud_vm
+      required_for_done: true
+      handoff_entrypoint: "https://agent.example.test/health"
+    implementation_doc: .docs/04_implementation/example/dev.md
+`,
+    "utf8"
+  );
+  await writeFile(
+    path.join(root, ".docs/04_implementation/example/dev.md"),
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service.\n- Exit / side effects: fake send adapter output only.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: provider live smoke only.\n\n## Development Evidence\n\n- Evidence Level: `external_provider_live` provider smoke only.\n- Target Runtime Environment: `cloud_vm` target is not deployed; only localhost and provider live smoke were checked.\n- Runnable Entry: provider live smoke calls DashScope with a one-shot smoke message.\n- Observable Exit: fake adapter output reports PASS for provider smoke.\n- Client / Server Initialization: provider client initializes for the one-shot request.\n- Config Contract: env DASH_SCOPE_API_KEY is required.\n- Testing Handoff Readiness: not deployed, no cloud VM handoff entry is available.\n- Known Missing Runtime Boundaries: cloud VM service initialization and https://agent.example.test/health are missing.\n- Basic Self-test Evidence: provider live smoke PASS.\n",
+    "utf8"
+  );
+  const deployedRuntimeLowerEvidenceDevReport = await runValidator(root, "validate-dev");
+  assert.match(deployedRuntimeLowerEvidenceDevReport.errors.join("\n"), /lower than required deployed_runtime|lower-level smoke cannot close required deployed_runtime/);
+  await writeFile(
+    path.join(root, ".harness/state/plan.yaml"),
+    `current_task_id: TASK-004
+next_task_sequence: 5
+tasks:
+  - id: TASK-004
+    phase: SPRINTING
+    title: Handoff cloud agent runtime task
+    status: in_progress
+    summary: Cloud VM agent service must be business handoff ready.
+    docs:
+      product:
+        - .docs/01_product/prd.md
+    allowed_paths:
+      - "src/**"
+    required_gates:
+      - "npm test"
+    acceptance_criteria:
+      - "business handoff has entry, input, exit and cleanup evidence"
+    evidence_level:
+      required: business_handoff_ready
+    target_runtime_environment:
+      kind: cloud_vm
+      required_for_done: true
+      handoff_entrypoint: "https://agent.example.test/messages"
+    implementation_doc: .docs/04_implementation/example/dev.md
+`,
+    "utf8"
+  );
+  await writeFile(
+    path.join(root, ".docs/04_implementation/example/dev.md"),
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service at `https://agent.example.test/messages`.\n- Exit / side effects: HTTP response and audit log.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: deployed runtime smoke.\n\n## Development Evidence\n\n- Evidence Level: `business_handoff_ready`.\n- Target Runtime Environment: `cloud_vm` service at `https://agent.example.test/messages`.\n- Runnable Entry: HTTP endpoint `https://agent.example.test/messages` receives a live-mode event.\n- Observable Exit: response output and audit log report PASS.\n- Client / Server Initialization: cloud VM service startup and health status return PASS.\n- Config Contract: env DASH_SCOPE_API_KEY is required.\n- Testing Handoff Readiness: entrypoint exists for TESTING, but the detailed handoff contract is not written.\n- Known Missing Runtime Boundaries: none.\n- Basic Self-test Evidence: deployed runtime smoke PASS.\n",
+    "utf8"
+  );
+  const missingBusinessHandoffContractDevReport = await runValidator(root, "validate-dev");
+  assert.match(missingBusinessHandoffContractDevReport.errors.join("\n"), /Testing Handoff Contract/);
+  await writeFile(
+    path.join(root, ".docs/04_implementation/example/dev.md"),
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service at `https://agent.example.test/messages`.\n- Exit / side effects: HTTP response and audit log.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: deployed runtime smoke.\n\n## Development Evidence\n\n- Evidence Level: `business_handoff_ready`.\n- Target Runtime Environment: `cloud_vm` service at `https://agent.example.test/messages`.\n- Runnable Entry: HTTP endpoint `https://agent.example.test/messages` receives a live-mode event.\n- Observable Exit: response output and audit log report PASS.\n- Client / Server Initialization: cloud VM service startup and health status return PASS.\n- Config Contract: env DASH_SCOPE_API_KEY is required.\n- Testing Handoff Readiness: testing handoff contract below includes entry, config, startup, input, expected exit and cleanup.\n- Known Missing Runtime Boundaries: none.\n- Basic Self-test Evidence: deployed runtime smoke PASS.\n\n## Testing Handoff Contract\n\n- Entry: URL `https://agent.example.test/messages`.\n- Config: env secret `DASH_SCOPE_API_KEY` is required; missing config returns a documented error.\n- Initialization: service startup and health endpoint return PASS before tests.\n- Input sample: message request body fixture `{ \"text\": \"hello\" }`.\n- Expected exit / observable exit: HTTP response, queue item, audit log and send result are produced.\n- Cleanup: shutdown or reset is idempotent between test runs.\n- Evidence Level: `business_handoff_ready`.\n",
+    "utf8"
+  );
+  const businessHandoffReadyDevReport = await runValidator(root, "validate-dev");
+  assert.deepEqual(businessHandoffReadyDevReport.errors, [], "validate-dev accepts complete business handoff evidence");
+  await writeFile(
+    path.join(root, ".harness/state/plan.yaml"),
+    `current_task_id: TASK-005
+next_task_sequence: 6
+tasks:
+  - id: TASK-005
+    phase: SPRINTING
+    title: Static fixture task
+    status: in_progress
+    summary: Static validator fixture without product runtime boundary.
+    docs:
+      product:
+        - .docs/01_product/prd.md
+    allowed_paths:
+      - "src/**"
+    required_gates:
+      - "npm test"
+    acceptance_criteria:
+      - "unit-only task may use Not applicable runtime evidence"
+    evidence_level:
+      required: unit
+    target_runtime_environment:
+      kind: not_applicable
+      required_for_done: false
+      handoff_entrypoint: ""
+    implementation_doc: .docs/04_implementation/example/dev.md
+`,
+    "utf8"
+  );
   await writeFile(
     path.join(root, ".docs/04_implementation/example/dev.md"),
     "# Impl\n\n## Runnable Entry/Exit\n\nNot applicable: validator fixture implementation has no product runtime boundary.\n\n## Development Evidence\n\n- Not applicable: because this validator fixture has no product runtime boundary, no user-facing entry, and no observable side effect beyond static validation.\n",
@@ -459,6 +579,12 @@ tasks:
       - "npm test"
     acceptance_criteria:
       - "page evidence is structured"
+    evidence_level:
+      required: local_runtime
+    target_runtime_environment:
+      kind: browser
+      required_for_done: true
+      handoff_entrypoint: "http://localhost:3000/dashboard"
     implementation_doc: .docs/04_implementation/example/dev.md
 `,
     "utf8"
@@ -467,14 +593,14 @@ tasks:
   assert.match(pageMissingUrlDevReport.errors.join("\n"), /dev server or page URL/);
   await writeFile(
     path.join(root, ".docs/04_implementation/example/dev.md"),
-    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: page module fixture.\n- Exit / side effects: rendered page state.\n- Config contract: fixture.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Runnable Entry: dev server page URL `http://localhost:3000/dashboard` opens the local UI fixture.\n- Observable Exit: PASS output reports rendered page state.\n- Client / Server Initialization: dev server startup is represented by the recorded page URL.\n- Config Contract: fixture config only.\n- Basic Self-test Evidence: smoke PASS.\n",
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: page module fixture.\n- Exit / side effects: rendered page state.\n- Config contract: fixture.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` browser fixture.\n- Target Runtime Environment: `browser` dev server page URL `http://localhost:3000/dashboard`.\n- Runnable Entry: dev server page URL `http://localhost:3000/dashboard` opens the local UI fixture.\n- Observable Exit: PASS output reports rendered page state.\n- Client / Server Initialization: dev server startup is represented by the recorded page URL.\n- Config Contract: fixture config only.\n- Testing Handoff Readiness: page URL evidence is ready for TESTING handoff.\n- Known Missing Runtime Boundaries: none for this browser fixture.\n- Basic Self-test Evidence: smoke PASS.\n",
     "utf8"
   );
   const pageMissingBrowserCheckDevReport = await runValidator(root, "validate-dev");
   assert.match(pageMissingBrowserCheckDevReport.errors.join("\n"), /browser check/);
   await writeFile(
     path.join(root, ".docs/04_implementation/example/dev.md"),
-    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: shipped CLI fixture.\n- Exit / side effects: validation output only.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Runnable Entry: CLI command `npx sdlc-harness validate-dev` runs the package validator fixture.\n- Observable Exit: Command output reports validate-dev PASS with no errors.\n- Client / Server Initialization: Local CLI runtime starts from the recorded command and exits with status evidence.\n- Config Contract: no external config required for this fixture.\n- Basic Self-test Evidence: `npm test --workspace agent-project-sdlc` PASS for the fixture regression.\n",
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: shipped CLI fixture.\n- Exit / side effects: validation output only.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` executed through the local package CLI.\n- Target Runtime Environment: `local` CLI runtime.\n- Runnable Entry: CLI command `npx sdlc-harness validate-dev` runs the package validator fixture.\n- Observable Exit: Command output reports validate-dev PASS with no errors.\n- Client / Server Initialization: Local CLI runtime starts from the recorded command and exits with status evidence.\n- Config Contract: no external config required for this fixture.\n- Testing Handoff Readiness: local validation command and output are ready for TESTING handoff.\n- Known Missing Runtime Boundaries: none for this local CLI fixture.\n- Basic Self-test Evidence: `npm test --workspace agent-project-sdlc` PASS for the fixture regression.\n",
     "utf8"
   );
   await writeFile(
@@ -1216,7 +1342,7 @@ async function writeSprintDevFixture(projectRoot) {
   await writeFile(path.join(projectRoot, ".docs/INDEX.md"), "# Index\n.docs/04_implementation/example/dev.md\n", "utf8");
   await writeFile(
     path.join(projectRoot, ".docs/04_implementation/example/dev.md"),
-    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: local fixture API.\n- Exit / side effects: validation output only.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Runnable Entry: API command `node tests/fixture-api.mjs` invokes the local fixture API.\n- Observable Exit: Command output reports PASS validation output only.\n- Client / Server Initialization: Local API fixture starts from the recorded command.\n- Config Contract: no external config required for this fixture.\n- Basic Self-test Evidence: `npm test --workspace agent-project-sdlc` PASS for dirty-file scoping regression.\n",
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: local fixture API.\n- Exit / side effects: validation output only.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` executed through the local API fixture.\n- Target Runtime Environment: `local` fixture API runtime.\n- Runnable Entry: API command `node tests/fixture-api.mjs` invokes the local fixture API.\n- Observable Exit: Command output reports PASS validation output only.\n- Client / Server Initialization: Local API fixture starts from the recorded command.\n- Config Contract: no external config required for this fixture.\n- Testing Handoff Readiness: local API command and output are ready for TESTING handoff.\n- Known Missing Runtime Boundaries: none for this local fixture.\n- Basic Self-test Evidence: `npm test --workspace agent-project-sdlc` PASS for dirty-file scoping regression.\n",
     "utf8"
   );
   await writeFile(path.join(projectRoot, ".harness/state/lifecycle.yaml"), 'current_phase: "SPRINTING"\n', "utf8");

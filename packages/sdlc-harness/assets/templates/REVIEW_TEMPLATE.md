@@ -32,6 +32,9 @@
 - Config contract:
 - Fixture/live boundary:
 - Development Evidence:
+- Evidence Level:
+- Target Runtime Environment:
+- Testing Handoff Contract:
 - Blocking gaps before TESTING:
 
 ## 7. Application Readiness Checklist（应用就绪检查）

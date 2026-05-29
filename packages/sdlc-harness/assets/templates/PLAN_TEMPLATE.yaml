@@ -53,6 +53,16 @@ tasks:
       - "make docs-overview"
     acceptance_criteria:
       - "验收标准写在 open task 内，完成后从当前 plan 删除。"
+    # Required for SPRINTING tasks that deliver a service, agent, runtime,
+    # worker, frontend app, provider/live integration, or other runnable boundary.
+    evidence_level:
+      required: "unit | local_runtime | external_provider_live | deployed_runtime | business_handoff_ready"
+      supporting:
+        - "unit"
+    target_runtime_environment:
+      kind: "local | ci | staging | cloud_vm | managed_service | browser | worker | not_applicable"
+      required_for_done: true
+      handoff_entrypoint: "URL / CLI / worker command / server action"
     working_notes:
       - "执行现场备注只在 open task 保留。"
     result_docs:

@@ -4,10 +4,10 @@
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: workflow Skills, prompt routing, hard/soft indexing and authoring overlay
-- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`, `TASK-060`, `TASK-061`, `TASK-066`, `TASK-067`, `TASK-069`, `TASK-070`, `TASK-071`, `TASK-072`
+- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`, `TASK-060`, `TASK-061`, `TASK-066`, `TASK-067`, `TASK-069`, `TASK-070`, `TASK-071`, `TASK-072`, `TASK-076`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`, `PROJECT_SPEC.md`
-- Linked RFC: `RFC_007`, `RFC_009`, `RFC_015`, `RFC_017`, `RFC_018`, `RFC_019`
+- Linked RFC: `RFC_007`, `RFC_009`, `RFC_015`, `RFC_017`, `RFC_018`, `RFC_019`, `RFC_020`, `RFC_021`
 - Linked commits: historical `DEV-*` implementation commits; `DEV-043` migration commit; `DEV-049` implementation commit; `DEV-050` implementation commit
 
 ## 2. 当前实现范围
@@ -33,7 +33,9 @@
 - `validate-dev` now requires implementation docs to include `Runnable Entry/Exit` facts or explicit `Not applicable`, so missing runtime boundaries cannot be deferred into TESTING by omission.
 - `validate-dev` now requires the current open SPRINTING task implementation doc to include structured `Development Evidence`: `Runnable Entry`, `Observable Exit`, `Basic Self-test Evidence`, or a justified `Not applicable`.
 - `validate-dev` now treats service / agent / runtime readiness as stronger than provider or fixture smoke: current task evidence must include `Client / Server Initialization` and `Config Contract`, and provider smoke, fixture smoke, fake adapter or one-shot smoke cannot alone satisfy application readiness.
+- `validate-dev` now promotes runtime readiness into the task contract: runtime/app/provider/live SPRINTING tasks declare `evidence_level.required` and `target_runtime_environment`, `deployed_runtime` cannot be closed by lower-level smoke, and `business_handoff_ready` requires a Testing Handoff Contract.
 - `validate-review` now requires explicit PASS/BLOCKED readiness fields for `Runnable Entry`, `Observable Exit`, `Initialization`, `Config Contract` and `Testing Handoff Readiness`; any `BLOCKED` field blocks TESTING handoff.
+- `validate-review` and `validate-test` now reject `PASS` reports that acknowledge runtime/handoff mismatch, missing deployment, missing initialization, local-only evidence or fake adapters.
 - `validate-test` now rejects `PASS` reports that acknowledge missing runnable entry/exit or missing `Development Evidence`; TESTING must report `BLOCKED` with recovery conditions instead.
 - Dev and Manager prompts now distinguish direct SPRINTING `validate-dev` from phase-exit `validate-current`: direct dev gate allows a valid current open task, while phase advancement still requires no open tasks.
 - RELEASING uses `.docs/08_release/CURRENT_RELEASE.md` as the canonical current release status. `validate-release` keeps accepting legacy versioned release docs when the current file is absent, but new release work updates the current status file instead of creating a version ledger.
@@ -48,11 +50,25 @@
 ## Development Evidence
 
 - Runnable Entry: CLI command `npx sdlc-harness validate-dev` / `make validate-dev` validates the current SPRINTING task evidence contract through `packages/sdlc-harness/src/lib/validators.ts`.
-- Observable Exit: Validator output reports PASS or concrete errors for missing `Development Evidence`, missing `Observable Exit`, missing `Client / Server Initialization`, missing `Config Contract`, missing `Basic Self-test Evidence`, insufficient provider/fixture smoke, page URL/browser evidence gaps, or callable invocation/result gaps.
+- Observable Exit: Validator output reports PASS or concrete errors for missing `Development Evidence`, missing `Observable Exit`, missing `Client / Server Initialization`, missing `Config Contract`, missing `Basic Self-test Evidence`, insufficient lower-level smoke, UI evidence gaps, or callable invocation/result gaps.
+- Evidence Level: current task contract requires `local_runtime`; validator source and package CLI execute as local runtime checks.
+- Target Runtime Environment: current task contract uses `local` with `npx sdlc-harness validate-dev` as the handoff entrypoint.
 - Client / Server Initialization: service / agent / runtime tasks must record startup, live entrypoint, health/status, endpoint, CLI command or worker command evidence.
 - Config Contract: service / agent / runtime tasks must record required env/config/API key inputs or an explicit no-config contract.
-- Basic Self-test Evidence: `npm test --workspace agent-project-sdlc` covers validator regression for TASK-075 after completion; final source sync and Harness gates are recorded in Test Coverage.
+- Testing Handoff Readiness: package validator errors identify whether a task is ready for Review/Testing handoff or must remain in SPRINTING/RFC.
+- Known Missing Runtime Boundaries: none for the Harness validator module; product runtimes in consumer projects are represented by task contracts rather than owned by this repository runtime.
+- Basic Self-test Evidence: `npm test --workspace agent-project-sdlc` covers validator regression for TASK-076 after completion; final source sync and Harness gates are recorded in Test Coverage.
 - Not applicable: not applicable only when a module has no product runtime boundary; this workflow validator module has CLI validator entrypoints, so structured evidence is required.
+
+## Testing Handoff Contract
+
+- Entry: `npx sdlc-harness validate-dev` or `make validate-dev`.
+- Config: no secrets; harness root comes from `package.json#sdlcHarness.harnessFolderName` or `sdlc-harness.config.json#harnessFolderName`.
+- Initialization / health: package CLI starts through Node and reads lifecycle/plan/implementation docs.
+- Input sample: a SPRINTING task with `evidence_level.required`, `target_runtime_environment`, implementation doc and Development Evidence.
+- Expected exit / observable side effect: PASS output or concrete validator errors for evidence level, target runtime, handoff entrypoint or Testing Handoff Contract mismatch.
+- Cleanup / reset / idempotency: validator is read-only; repeated runs are idempotent.
+- Evidence Level: `local_runtime`.
 
 ## 3. 真实代码结构
 
@@ -202,6 +218,12 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | `make docs-overview` | Generated overview refresh for RFC_020 and implementation docs | PASS for TASK-075 |
 | `make validate-dev` | Direct SPRINTING gate validates current task application readiness evidence contract | PASS for TASK-075 |
 | `make validate-harness` | Prompt language and generated overview consistency after application readiness changes | PASS for TASK-075 |
+| `npm test --workspace agent-project-sdlc` | Package validator regression for Evidence Level, Target Runtime Environment and Testing Handoff Contract | PASS for TASK-076; 10 tests passed |
+| `node packages/sdlc-harness/dist/cli.js package sync-source` | Package assets reflect runtime evidence contract prompt/template/README changes | PASS for TASK-076; changed=25 |
+| `node packages/sdlc-harness/dist/cli.js package check-source` | Package assets match authoring source after runtime evidence contract changes | PASS for TASK-076 |
+| `make docs-overview` | Generated overview refresh after RFC_021 and implementation doc updates | PASS for TASK-076 |
+| `make validate-harness` | Prompt language and overview consistency after runtime evidence contract changes | PASS for TASK-076 |
+| `make validate-dev` | Direct SPRINTING gate validates current task runtime evidence contract | PASS for TASK-076 |
 
 ## 8. 变更记录（Change Log）
 
@@ -230,6 +252,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-29 | `TASK-071` | Working tree | Clarified direct dev gate open-task semantics in Dev/Manager prompts and moved managed Makefile `validate-dev` to package CLI wiring. |
 | 2026-05-29 | `TASK-072` | Working tree | Added structured SPRINTING Development Evidence requirements and `validate-dev` checks for runnable entry, observable exit and basic self-test evidence. |
 | 2026-05-29 | `TASK-075` | Working tree | Hardened application readiness gates so provider/fixture smoke cannot be mistaken for delivered runtime readiness. |
+| 2026-05-29 | `TASK-076` | Working tree | Added task-level Evidence Level, Target Runtime Environment and Testing Handoff Contract validation for runtime/app handoff readiness. |
 
 ## 9. 后续维护注意事项
 
