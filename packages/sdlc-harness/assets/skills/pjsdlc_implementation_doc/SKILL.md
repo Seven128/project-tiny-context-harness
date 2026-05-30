@@ -19,7 +19,7 @@ description: Use after development gates pass to update module-level implementat
 
 如果模块包含或承诺可运行系统边界，implementation doc 必须记录 runnable entry/exit：API/CLI/server route/service/agent/runtime/adapter/worker/provider 的调用方式、初始化方式、配置契约、输入来源、输出或副作用、fixture/live 模式边界，以及哪些真实外部执行器尚未实现。还必须在 `Development Evidence` 中记录开发阶段实际验证过的 `Evidence Level`、`Target Runtime Environment`、`Runnable Entry`、`Observable Exit`、`Client / Server Initialization`、`Config Contract`、`Testing Handoff Readiness`、`Known Missing Runtime Boundaries` 和 `Basic Self-test Evidence`；`Basic Self-test Evidence` 应指向已执行的 `Development Self-Test Report`。确实没有应用入口时，`Not applicable` 必须写清原因。不能把未来才会实现的入口写成当前事实，不能把 provider smoke、fixture smoke、fake adapter 或 one-shot smoke 单独写成 application readiness。如果 task 要求 `business_handoff_ready`，还必须写 Testing Handoff Contract，包含入口、配置、初始化/health、输入样例、预期出口、清理/reset/幂等说明和证据等级。
 
-如果当前 task 有 `self_test_contract.status: "required"`，implementation doc 必须填写 `Development Self-Test Report`，把设计/RFC 阶段定义的自测合同执行完成：记录 contract source、每个 scenario 的 `PASS` / `BLOCKED` 结果、实际执行入口、实际出口、证据位置或命令输出、executed gates、Module Key Test Path、missing/blockers 和 Testing Handoff Readiness。`Module Key Test Path` 必须说明从本地启动或调用入口开始，执行并完成 `self_test_contract` 中全部自测用例的模块关键测试路径。该路径应覆盖本 task / 本模块承诺的所有可运行入口，以及自测用例实际经过的内部关键路径、关键边界、观察点和可观测完成证据，供后续 Agent 复用和 debug。任何 scenario 为 `BLOCKED` 时，不得把开发 task 写成完成。
+如果当前 task 有 `self_test_contract.status: "required"`，implementation doc 必须填写 `Development Self-Test Report`，把设计/RFC 阶段定义的自测合同执行完成：记录 contract source、每个 scenario 的 `PASS` / `BLOCKED` 结果、实际执行入口、实际出口、证据位置或命令输出、executed gates、Module Key Test Path、missing/blockers 和 Testing Handoff Readiness。`Development Self-Test Report` 只能记录当前 task 本轮实际执行后的结果；不得用历史报告、模板字段、代码阅读或无关通用 gate 替代本轮 self-test scenario 执行。`Module Key Test Path` 必须说明从本地启动或调用入口开始，执行并完成 `self_test_contract` 中全部自测用例的模块关键测试路径。该路径应覆盖本 task / 本模块承诺的所有可运行入口，以及自测用例实际经过的内部关键路径、关键边界、观察点和可观测完成证据，供后续 Agent 复用和 debug。任何 scenario 为 `BLOCKED` 时，不得把开发 task 写成完成。
 
 ## 输入
 
@@ -51,7 +51,7 @@ description: Use after development gates pass to update module-level implementat
 3. 与技术方案的偏移必须明确记录，即便该偏移是合理的。
 4. runnable entry/exit、配置契约和 fixture/live 边界必须记录当前事实；缺失项写入 `未覆盖（Not covered）` 或方案偏移。
 5. `Development Evidence` 必须包含 task 合同要求的证据等级、目标运行环境、实际可调用入口、可观察出口、初始化方式、配置契约、测试交接状态、缺失 runtime 边界和开发自测证据；页面类任务记录 dev server/page URL 与 browser check，API/CLI/worker/RPA/service/agent/runtime 类任务记录 startup/invocation command、endpoint/health/status 与 response/output/side effect。
-6. `Development Self-Test Report` 必须执行 `self_test_contract` 中的全部 scenario 和 required gates，并记录从本地启动或调用入口开始，到完成所有自测用例的 `Module Key Test Path`；路径必须覆盖本 task / 本模块承诺的所有可运行入口、内部关键路径、关键边界、观察点和完成证据，不能只补一句 smoke 结果。
+6. `Development Self-Test Report` 必须记录当前 task 本轮执行 `self_test_contract` 中全部 scenario 和 required gates 后的结果，并记录从本地启动或调用入口开始，到完成所有自测用例的 `Module Key Test Path`；路径必须覆盖本 task / 本模块承诺的所有可运行入口、内部关键路径、关键边界、观察点和完成证据，不能只补一句 smoke 结果，也不能复用历史 PASS、模板字段、代码阅读或无关通用 gate 作为本轮证据。
 7. 测试覆盖必须列出具体测试，或明确记录覆盖缺口。
 8. 文档粒度保持在模块、子系统或核心数据流级别；不要默认按 task 建文档，也不要写成跨全项目的巨型百科。
 

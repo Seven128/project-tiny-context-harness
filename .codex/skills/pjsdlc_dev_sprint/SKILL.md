@@ -19,6 +19,8 @@ description: Use during SPRINTING to execute one task from plan.yaml, respecting
 
 `self_test_contract` 是开发阶段自测合同，由 ARCHITECTING 或 RFC_RECALIBRATION 先定义，SPRINTING 负责执行并在 implementation doc 填写 `Development Self-Test Report`。开发者不得在开发结束后用现有实现反推自测合同；如果合同缺失、入口不匹配、required gates 未同步或场景无法执行，要先回到 ARCHITECTING/RFC 或把 task 保持为 `BLOCKED`。自测报告不是 TESTING 阶段产物，它只证明当前模块级可运行交付边界已经能被 Review/Testing 消费。报告还必须记录 `Module Key Test Path`：从本地启动或调用入口开始，执行并完成 `self_test_contract` 中全部自测用例的模块关键测试路径。该路径应覆盖本 task / 本模块承诺的所有可运行入口，以及自测用例实际经过的内部关键路径、关键边界、观察点和可观测完成证据，供后续 Agent 复用和 debug。
 
+开发阶段交付包含两类产物：实现产物（代码、配置、脚本、测试等）和开发自测产物。`Development Self-Test Report` 是开发阶段产物，不是计划、模板或历史记录。若当前 task 或关联技术方案声明 `self_test_contract.status: "required"`，必须先逐条执行 `self_test_contract.scenarios[]` 和 `self_test_contract.required_gates`，再填写或更新 `Development Self-Test Report`。没有本轮执行过的 runnable entry、内部关键路径、observable exit / artifact / screenshot / response / log 等证据时，不得写 `PASS`，不得完成 task。
+
 页面类任务在开发阶段必须启动 dev server 或等价预览入口，并用浏览器、Playwright、截图或等价方式验证页面可加载、主入口可访问、核心按钮/表单/跳转可用、没有明显报错或空白页。API/CLI/worker/RPA/service/agent/runtime 类任务必须记录实际启动或调用命令、endpoint、worker command、dry-run/live preflight、health/status 或 server action，以及可观察的 response、队列 item、审计日志、文件产物、发送结果、错误码或 PASS/BLOCKED 结果。
 
 `/dev` 和 `/devloop` 是开发阶段的两个入口。`/dev` 创建或选择下一个最小 `TASK-*` development task，设置 `phase: "SPRINTING"`，并只完成一个 task 闭环后停止。通用规则是从任何 draft queue promote 正式 `TASK-*` 时都必须同次消费源 draft；当前开发阶段的内置 draft queue 是 `plan.draft.yaml.tasks[]`，因此如果这个 task 来自 `plan.draft.yaml.tasks[]`，promote 时必须同次删除源 draft，避免已采用草案继续显示为 `pending`。`/devloop` 连续运行 `/dev`，直到 `plan.yaml.tasks[]` 和 `plan.draft.yaml.tasks[]` 都没有明确可创建/执行的任务，或遇到需求、架构、allowed_paths、gate、commit/push blocker。
@@ -108,7 +110,7 @@ done task 的执行流水不在当前 `plan.yaml` 长期保留，也不是默认
 - [ ] 当前任务仍然是单一清晰的执行单元。
 - [ ] 技术方案或 task 承诺的 API/CLI/adapter/worker/provider、配置契约、输出/副作用和 fixture/live 边界已可运行并写入 implementation doc，或已明确 `BLOCKED`/后续 dev task。
 - [ ] implementation doc `Development Evidence` 已记录 `Evidence Level`、`Target Runtime Environment`、`Runnable Entry`、`Observable Exit`、`Client / Server Initialization`、`Config Contract`、`Testing Handoff Readiness`、`Known Missing Runtime Boundaries`、`Basic Self-test Evidence`，或写明带原因的 `Not applicable`。
-- [ ] 如果当前 task 有 `self_test_contract.status: "required"`，implementation doc 已填写 `Development Self-Test Report`，包含 contract source、scenario results、executed gates、Module Key Test Path、actual evidence、missing/blockers 和 Testing Handoff Readiness，且没有 `BLOCKED` 场景。
+- [ ] 如果当前 task 有 `self_test_contract.status: "required"`，已逐条执行当前 `self_test_contract.scenarios[]` 和 `self_test_contract.required_gates`，并在 implementation doc `Development Self-Test Report` 写入本轮 contract source、scenario results、executed gates、runnable entry、内部关键路径、observable exit/evidence、Module Key Test Path、missing/blockers 和 Testing Handoff Readiness，且没有 `BLOCKED` 场景。
 - [ ] 如果 task 要求 `business_handoff_ready`，implementation doc 已写入 Testing Handoff Contract，包含入口、配置、初始化/health、输入样例、预期出口、清理方式和证据等级。
 - [ ] 如果当前 task 来自 `plan.draft.yaml.tasks[]`，源 draft 已在 promote 时从 draft 列表删除。
 - [ ] implementation doc 已生成或更新，并反映相关模块的真实代码。

@@ -27,6 +27,8 @@ tech plan 或 RFC 明确晋升路径，再进入通用 Skill、policy、template
 - 项目实例数据：只描述当前仓库状态和 `.docs/**` 产物，不应被 sync/upgrade 覆盖。
 - Harness authoring overlay：只约束本仓库维护 Harness 自身的原则、专用 Skill 和包化安全规则。
 
+修改工作流规则时，先回到 `PROJECT_SPEC.md` 的目的：降低遗漏、返工和上下文漂移，让 Agent 更稳定地完成阶段交付，而不是把 Agent 完全自动化或审计化。优先采用足够让 Agent 注意力对齐目标的轻量约束，例如角色提示词红线、完成检查、模板占位约束或局部内容校验。validator、脚本和执行器都可以使用；但如果校验逻辑会明显变重，只有在问题重复发生、高风险、或必须由机器证明时，才升级为复杂 validator、自动执行器、证据清单或审计机制。做归因时区分 Agent execution violation 和 Harness contract gap，避免把执行纪律问题全部升级成复杂机制。
+
 除 `<harnessRoot>/skills/**` 作为 workflow Skill hard file index 外，workflow Harness 配置都应放在
 `<harnessRoot>/pjsdlc_managed/**`。不要在 `<harnessRoot>` 顶层新增泛用 `overrides/`、`templates/`、
 `policies/` 等目录；例如项目本地阶段角色提示词使用

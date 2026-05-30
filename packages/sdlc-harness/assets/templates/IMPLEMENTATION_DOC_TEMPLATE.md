@@ -65,7 +65,7 @@ Input
 
 | Scenario ID | Result | Executed Entry | Actual Exit | Evidence |
 |---|---|---|---|---|
-| ST-001 | PASS / BLOCKED |  |  |  |
+|  |  |  |  |  |
 
 ## 8. Testing Handoff Contract（测试交接合同）
 

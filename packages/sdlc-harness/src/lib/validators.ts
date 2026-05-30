@@ -123,6 +123,36 @@ const EVIDENCE_PLACEHOLDER_TERMS = [
   "待补",
   "待确认"
 ];
+const SELF_TEST_REPORT_PLACEHOLDER_TERMS = [
+  "pass / blocked",
+  "pass or blocked",
+  "pass/block",
+  "pass/blocker",
+  "local start / invocation",
+  "all self-test scenarios",
+  "all task/module promised runnable entries",
+  "actual internal key paths",
+  "observable completion evidence"
+];
+const SELF_TEST_OBSERVABLE_EVIDENCE_TERMS = [
+  "pass output",
+  "response",
+  "output",
+  "side effect",
+  "log",
+  "artifact",
+  "health",
+  "status",
+  "audit",
+  "rendered",
+  "page state",
+  "screenshot",
+  "browser check",
+  "playwright",
+  "command output",
+  "queue",
+  "file"
+];
 const PAGE_TASK_TERMS = ["frontend", "front-end", "browser", "page", "页面", "前端", "按钮", "表单", "跳转"];
 const PAGE_ENTRY_TERMS = ["http://", "https://", "localhost", "127.0.0.1", "page url", "页面 url", "dev server"];
 const PAGE_BROWSER_CHECK_TERMS = ["browser check", "playwright", "screenshot", "click", "button", "form", "页面可加载", "浏览器验证"];
@@ -1353,11 +1383,28 @@ function validateDevelopmentSelfTestReport(
     }
   }
   const moduleKeyTestPath = evidenceFieldValue(report, "Module Key Test Path") ?? "";
+  if (isPlaceholderSelfTestReportValue(moduleKeyTestPath) || isTemplateModuleKeyTestPath(moduleKeyTestPath)) {
+    errors.push(`${taskId} Development Self-Test Report Module Key Test Path must replace template placeholders with actual executed path evidence in ${implementationDoc}`);
+  }
   const runnableEntry = String(contract.runnable_entry ?? "").trim();
   if (runnableEntry && !moduleKeyTestPath.includes(runnableEntry)) {
     errors.push(`${taskId} Development Self-Test Report Module Key Test Path must include runnable entry ${runnableEntry} in ${implementationDoc}`);
   }
   const scenarios = Array.isArray(contract.scenarios) ? contract.scenarios.filter(isRecord) : [];
+  const exitEvidenceTerms = [
+    String(contract.observable_exit ?? "").trim(),
+    ...scenarios.flatMap((scenario) => [
+      String(scenario.expected_exit ?? "").trim(),
+      String(scenario.evidence ?? "").trim()
+    ])
+  ].filter(Boolean);
+  if (
+    exitEvidenceTerms.length > 0
+    && !exitEvidenceTerms.some((term) => normalizedIncludes(moduleKeyTestPath, term))
+    && !containsAny(moduleKeyTestPath, SELF_TEST_OBSERVABLE_EVIDENCE_TERMS)
+  ) {
+    errors.push(`${taskId} Development Self-Test Report Module Key Test Path must include observable exit or evidence from self_test_contract in ${implementationDoc}`);
+  }
   for (const scenario of scenarios) {
     const scenarioId = String(scenario.id ?? "").trim();
     if (!scenarioId) continue;
@@ -1367,24 +1414,96 @@ function validateDevelopmentSelfTestReport(
     const status = scenarioStatus(report, scenarioId);
     if (!status) {
       errors.push(`${taskId} Development Self-Test Report must record scenario ${scenarioId} as PASS or BLOCKED in ${implementationDoc}`);
+    } else if (status === "AMBIGUOUS") {
+      errors.push(`${taskId} Development Self-Test Report scenario ${scenarioId} must choose exactly one of PASS or BLOCKED in ${implementationDoc}`);
     } else if (status === "BLOCKED") {
       errors.push(`${taskId} Development Self-Test Report scenario ${scenarioId} is BLOCKED; keep task open or record a blocker`);
+    }
+    errors.push(...validateScenarioTableEvidence(report, scenarioId, taskId, implementationDoc));
+  }
+
+  const targetRuntime = isRecord(task.target_runtime_environment) ? task.target_runtime_environment : undefined;
+  const reportContext = `${taskText(task)}\n${report}\n${Object.values(contract).map((value) => String(value ?? "")).join("\n")}`;
+  if (String(targetRuntime?.kind ?? "") === "browser" || containsAny(reportContext, PAGE_TASK_TERMS)) {
+    const loweredReport = report.toLowerCase();
+    if (!containsAny(loweredReport, PAGE_ENTRY_TERMS)) {
+      errors.push(`${taskId} page Development Self-Test Report must include a dev server or page URL in ${implementationDoc}`);
+    }
+    if (!containsAny(loweredReport, PAGE_BROWSER_CHECK_TERMS)) {
+      errors.push(`${taskId} page Development Self-Test Report must include browser, Playwright, screenshot, or equivalent interaction evidence in ${implementationDoc}`);
     }
   }
   return errors;
 }
 
-function scenarioStatus(text: string, scenarioId: string): "PASS" | "BLOCKED" | undefined {
+function scenarioStatus(text: string, scenarioId: string): "PASS" | "BLOCKED" | "AMBIGUOUS" | undefined {
   const escaped = scenarioId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const patterns = [
-    new RegExp("^.*" + escaped + ".*\\b(PASS|BLOCKED)\\b.*$", "im"),
-    new RegExp("\\|[^\\n|]*" + escaped + "[^\\n|]*\\|[^\\n|]*\\b(PASS|BLOCKED)\\b[^\\n|]*\\|", "i")
-  ];
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (match) return match[1].toUpperCase() as "PASS" | "BLOCKED";
+  const pattern = new RegExp("^.*" + escaped + ".*$", "gim");
+  for (const match of text.matchAll(pattern)) {
+    const line = match[0];
+    const hasPass = /\bPASS\b/i.test(line);
+    const hasBlocked = /\bBLOCKED\b/i.test(line);
+    if (hasPass && hasBlocked) return "AMBIGUOUS";
+    if (hasPass) return "PASS";
+    if (hasBlocked) return "BLOCKED";
   }
   return undefined;
+}
+
+function validateScenarioTableEvidence(report: string, scenarioId: string, taskId: string, implementationDoc: string): string[] {
+  const errors: string[] = [];
+  const rows = markdownTableRows(report).filter((cells) => cells.some((cell) => normalizeCell(cell) === scenarioId));
+  for (const cells of rows) {
+    const [id, result, executedEntry, actualExit, evidence] = cells;
+    if (!id || normalizeCell(id) !== scenarioId) continue;
+    const requiredCells: Array<[string, string | undefined]> = [
+      ["Result", result],
+      ["Executed Entry", executedEntry],
+      ["Actual Exit", actualExit],
+      ["Evidence", evidence]
+    ];
+    for (const [label, value] of requiredCells) {
+      if (!value || isPlaceholderSelfTestReportValue(value)) {
+        errors.push(`${taskId} Development Self-Test Report scenario ${scenarioId} table ${label} must contain concrete evidence in ${implementationDoc}`);
+      }
+    }
+    if (result && scenarioStatus(`| ${cells.join(" | ")} |`, scenarioId) === "AMBIGUOUS") {
+      errors.push(`${taskId} Development Self-Test Report scenario ${scenarioId} table Result must choose exactly one of PASS or BLOCKED in ${implementationDoc}`);
+    }
+  }
+  return errors;
+}
+
+function markdownTableRows(section: string): string[][] {
+  return section
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("|") && line.endsWith("|") && !/^\|\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|$/.test(line))
+    .map((line) => line.slice(1, -1).split("|").map((cell) => cell.trim()));
+}
+
+function normalizeCell(value: string): string {
+  return value.replace(/`/g, "").trim();
+}
+
+function isTemplateModuleKeyTestPath(value: string): boolean {
+  const lowered = value.toLowerCase();
+  return [
+    "local start / invocation",
+    "all self-test scenarios",
+    "all task/module promised runnable entries",
+    "actual internal key paths",
+    "observable completion evidence"
+  ].some((term) => lowered.includes(term));
+}
+
+function isPlaceholderSelfTestReportValue(value: string): boolean {
+  const normalized = value.trim().toLowerCase();
+  return isPlaceholderEvidence(value) || SELF_TEST_REPORT_PLACEHOLDER_TERMS.some((term) => normalized.includes(term));
+}
+
+function normalizedIncludes(text: string, needle: string): boolean {
+  return text.toLowerCase().includes(needle.toLowerCase());
 }
 
 function hasConcreteDevelopmentEvidenceFields(section: string): boolean {
