@@ -104,6 +104,8 @@ Agent 会读取 `<harnessRoot>/state/lifecycle.yaml` 和 `<harnessRoot>/state/pl
 
 阶段关系由 `<harnessRoot>/pjsdlc_managed/policies/phase_contracts.yaml` 中的轻量显式有向图表达：`phases` 保存稳定阶段 contract，`transitions` 保存合法流转边和少量效果，例如设置或清理 `suspended_phase`。这样做是为了让正常推进、开发前返回、RFC interrupt/resume 和 BLOCKED resume 都被 transition helper 与 validator 读取，避免规则埋在长文档或工具硬编码里。它不是重型图引擎，不保存历史、不做复杂遍历、不引入 node/edge class 或可视化；目标只是降低遗漏和漂移。
 
+迁移成本较低：对使用 managed assets 的项目，运行 `npx sdlc-harness upgrade` 即可同步新的 `phase_contracts.yaml` 和 `tools/transition.py`；也可以运行 `npx sdlc-harness sync` 只刷新 managed 文件。`lifecycle.yaml` 和 `plan.yaml` 不需要手动迁移，旧的 `allowed_next_phases` 会在下一次 `transition.py` 执行后按图重新生成。只有维护了自定义 phase policy 的项目需要把阶段内的 `next` / `returns` 转成 top-level `transitions`；如果升级前直接运行新版 `validate-harness` 看到缺少 `transitions`，先执行 `upgrade` / `sync`。
+
 在尚未进入开发前，`ARCHITECTING` 可以回到 `REQUIREMENT_GATHERING` 修改 PRD：Manager 使用 `python3 tools/transition.py --to REQUIREMENT_GATHERING` 切回 PM/PRD 工作流，完成 PRD task 和 `validate-pm` 后，再用 `python3 tools/transition.py --to ARCHITECTING` 回到设计阶段。进入 `SPRINTING` 后的需求或设计变化走 RFC workflow；`SPRINTING`、`REVIEWING`、`TESTING` 和 `RELEASING` 都可以通过 `python3 tools/transition.py --to RFC_RECALIBRATION` 进入受控 RFC 中断，RFC 完成后回到 `SPRINTING` 重新完成开发自测和 handoff。
 
 `validate-design` 会把架构阶段的语义切片作为硬 gate：`overview.md` 不计入 deliverables，`plan.draft.yaml` 中每个开发 draft task 必须通过 `docs.tech_plan` 指向存在的 tech plan slice；多个开发 draft task 默认需要不同 primary tech plan slice。PRD、tech plan 或 draft task 明确出现 AI provider / copilot、外部系统边界、合规 / 权限 / 审计等横切主题时，也需要对应的专门 architecture slice。可运行边界类 draft task 还必须带 `self_test_contract`，并在 tech plan 中有 `Development Self-Test Contract`；合同必须记录 `module_key_test_path`，说明从本地启动或调用入口开始，到完成全部自测 scenario 的模块关键测试路径，并覆盖本 task / 本模块承诺的所有可运行入口和内部关键路径。

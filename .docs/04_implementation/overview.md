@@ -1,11 +1,11 @@
 # .docs/04_implementation overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 74416d4880498458 -->
+<!-- source-hash: bb33c87d248509d8 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `74416d4880498458`
+Source hash: `bb33c87d248509d8`
 
 ## Source Slices
 
@@ -102,6 +102,7 @@ Existing project runs sdlc-harness upgrade
 - Validation commands mirror the Python Harness gates closely enough for package consumers to run health checks without depending on this authoring workspace.
 - `validate-dev` checks `Development Self-Test Report` content against the current `self_test_contract`: it requires legal `Report Status`, Module Application Entry, Module Key Test Path, scenario results, executed gates, Observable Exit, Current Blocker, Testing Handoff Readiness and Evidence Index Refs; only accepts completion when report status and every scenario are `PASS`; rejects template module-key-path text, ambiguous status rows, missing scenario row evidence, missing required gates, embedded debug/operator/runbook/exploration log sections, `Actual Evidence` body fields, overlong reports, high-risk reports without `.docs/09_runbooks/**` evidence refs or Current Operator Path hard constraints, high-risk implementation docs with mainline evidence dump/operator log/failed-attempt sections, unpromoted session / QR / canonical path / do-not-retry judgments, and browser reports without page URL plus browser/Playwright/screenshot evidence. It remains a content consistency gate, not a command execution audit.
 - Managed `phase_contracts.yaml` now distributes a lightweight explicit phase graph: `phases` hold node contracts, top-level `transitions` hold legal directed edges and minimal effects. Package `validate-harness` rejects graph drift such as missing `transitions`, legacy `next` / `returns`, unknown targets or invalid `<suspended_phase>` usage; synced `transition.py` consumes the graph while retaining legacy fallback for older consumer policies.
+- Migration is handled by existing package flows rather than a standalone migration script: `upgrade` runs sync and refreshes the managed policy/tool files, while state files remain compatible. If a consumer has local custom phase policy edits, the manual migration is to move node-local `next` / `returns` into top-level transition edges and then rerun `validate-harness`.
 
 ## Runnable Entry/Exit
 
@@ -158,6 +159,7 @@ Existing project runs sdlc-harness upgrade
 | 2026-05-30 | Direct maintenance | Working tree | Strengthened `validate-dev` Development Self-Test Report content checks and documented that it is not execution-proof auditing. |
 | 2026-05-30 | Self-test report boundary hardening | Working tree | Added Report Status, Current Operator Path, disallowed log-section and working_notes validator coverage. |
 | 2026-05-31 | Lightweight explicit phase graph | Working tree | Distributed top-level phase `transitions`, package graph validation and graph-based transition helper sync behavior. |
+| 2026-05-31 | Phase graph migration guidance | Working tree | Clarified that consumers migrate through `upgrade` / `sync`, with manual conversion only for custom phase policies. |
 
 ## 9. 后续维护注意事项
 
@@ -909,6 +911,7 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 - Development Self-Test Report now has an explicit handoff-card boundary: it must include `Report Status: PASS | BLOCKED | IN_PROGRESS | STALE`, `Module Application Entry`, `Module Key Test Path`, scenario results, executed gates, `Observable Exit`, `Current Blocker`, `Testing Handoff Readiness` and `Evidence Index Refs`; it proves only module entry/core path/exit/minimal evidence pointers and must not become a debug log, operator log, runbook, evidence dump or exploration history.
 - The authoring-only Harness design prompt now states the lightweight-constraint principle: workflow changes should first align Agent attention with the `PROJECT_SPEC.md` purpose, and heavier validation or execution mechanisms are reserved for heavy logic when issues repeat, risk is high, or machine proof is required.
 - The authoring-only Harness design prompt now constrains graph/data-structure workflow changes: phase graph, task graph and similar schemas must stay lightweight and declarative, name their source of truth, consumer, validator and compatibility path, avoid execution history/evidence/runbook content, and require PRD/RFC approval before introducing heavy graph engines, node/edge classes, traversal frameworks or visualizers.
+- The authoring-only Harness design prompt now asks maintainers to consider data structures for workflow changes when repeated consumers, validator/tool usage or recovery reliability would benefit, while explicitly weighing migration cost, compatibility, schema drift, context weight and over-abstraction before promoting prose into structure.
 - `validate-rfc` now requires `Development Self-Test Impact` for new RFCs that change entry/exit, runtime, gates, handoff or blocker semantics.
 - `validate-review` now requires explicit PASS/BLOCKED readiness fields for `Runnable Entry`, `Observable Exit`, `Initialization`, `Config Contract` and `Testing Handoff Readiness`; any `BLOCKED` field blocks TESTING handoff.
 - `validate-review` and `validate-test` now reject `PASS` reports that acknowledge runtime/handoff mismatch, missing deployment, missing initialization, local-only evidence or fake adapters.
@@ -1035,6 +1038,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 - `pjsdlc_implementation_doc` records the same evidence provenance rule for module docs: `Development Self-Test Report` facts must come from the current task run, not from historical PASS text, template placeholders, code inspection or unrelated generic gates.
 - `harness_package_design` distinguishes Agent execution violations from Harness contract gaps and prefers lightweight prompt/checklist/template/content constraints before adding heavier validators, scripts or executors.
 - `harness_package_design` now requires future workflow graph/data-structure changes to preserve a lightweight declarative boundary, document consumer and validator paths, remove or explicitly deprecate duplicate facts, and avoid storing task history, operator logs, debug evidence, runbook bodies or implementation text in graph nodes or edges.
+- `harness_package_design` now adds a general structure-vs-prose calibration rule: use data structures when they create stable, validator-consumed attention surfaces; keep prose/checklists when the information is one-off, human-context-heavy or lacks a clear consumer.
 - `validate-rfc` requires `Development Self-Test Impact` in RFC files from `RFC_023` onward when they mention entry/exit, runtime, target environment, gates, handoff or blockers.
 - `validate-dev` rejects service / agent / runtime tasks whose evidence only proves provider smoke, fixture smoke, fake adapter or one-shot smoke without application readiness or `BLOCKED`.
 - `validate-review` checks structured readiness fields and treats any `BLOCKED` field as a gate blocker.
@@ -1174,6 +1178,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-30 | Resume-first runtime task protocol | Working tree | Added resume-first prompt rules for high-risk runtime/live tasks and separated runbook/evidence/exploration responsibilities. |
 | 2026-05-30 | Self-test report boundary hardening | Working tree | Added Report Status semantics, Current Operator Path prompt rules, log-section boundary and working_notes limit guidance. |
 | 2026-05-31 | Lightweight explicit phase graph | Working tree | Added authoring guardrails for future workflow graph/data-structure changes: lightweight schema first, explicit consumer/validator/compatibility path and no evidence/history/runbook bodies inside graph nodes. |
+| 2026-05-31 | Data-structure calibration | Working tree | Added authoring guidance to consider structured contracts for repeated workflow consumers while weighing migration, compatibility, context and over-abstraction costs. |
 
 ## 9. 后续维护注意事项
 
@@ -1213,6 +1218,7 @@ Source: [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and
 - `.docs/05_decisions/` is not a lifecycle phase; it is an `ARCHITECTING`-produced ADR fact source for durable architecture decisions that may outlive a single architecture or tech plan slice.
 - `phase_contracts.yaml` uses a lightweight explicit directed graph: `phases` are stable phase contract nodes, and top-level `transitions` are legal directed edges with trigger, kind and minimal effects. Canonical phase nodes no longer use `next` / `returns`; `transition.py` keeps a legacy fallback only for older consumer policies that do not yet contain `transitions`.
 - The phase graph is intentionally lightweight. It exists so transition helpers, validators and agents read the same legal flow contract; it does not store task history, operator logs, debug evidence, runbook bodies, implementation doc text or phase execution history, and it does not introduce graph engine classes, traversal frameworks or visualization.
+- User migration cost is low for managed consumers: `sdlc-harness upgrade` or `sdlc-harness sync` refreshes the managed policy and transition helper, while existing `lifecycle.yaml`, `plan.yaml` and task data stay valid. Custom phase policies need a manual `next` / `returns` to top-level `transitions` conversion; old policies still work through the transition helper fallback, but canonical validation expects the explicit graph after sync.
 - A SPRINTING task completes in two commits: implementation commit while the task is still present, then completion ledger commit after removing the task.
 - Generic draft-to-plan rule: when any workflow promotes a draft into a formal `TASK-*`, it removes the source draft in the same state update; the current built-in implementation point is SPRINTING consuming `plan.draft.yaml.tasks[]`.
 - Past task details are cold archive and only used for explicit forensic/audit/regression requests.
@@ -1434,6 +1440,7 @@ Stage task starts
 | 2026-05-30 | Resume-first runtime task protocol | Working tree | Added high-risk runtime `resume_capsule`, `.docs/09_runbooks` recovery docs and Gate Breakdown validation. |
 | 2026-05-30 | Self-test report boundary hardening | Working tree | Added Report Status, Current Operator Path, disallowed log-section checks and working_notes limit validation. |
 | 2026-05-31 | Lightweight explicit phase graph | Working tree | Moved canonical phase routing from node-local `next` / `returns` and hardcoded RFC interrupt rules to top-level `transitions`, with validator coverage and legacy fallback. |
+| 2026-05-31 | Phase graph migration guidance | Working tree | Documented that managed consumers migrate through upgrade/sync with no state schema migration, while custom phase policies convert `next` / `returns` to explicit transition edges. |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Consolidated legacy state/task implementation docs into module facts. |
 | 2026-05-27 | `DEV-050` | DEV-050 implementation commit | Added opt-in `parallel_execution` contract for multi-agent/worktree coordination. |
 | 2026-05-30 | `TASK-084` | TASK-084 implementation commit | Added default Codex native subagent scheduling semantics and SPRINTING path-lock validation. |

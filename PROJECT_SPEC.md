@@ -213,6 +213,8 @@ python3 tools/transition.py --to <PHASE>
 
 `phase_contracts.yaml` 使用轻量显式有向图表达阶段关系：`phases` 是阶段节点，只保存稳定的阶段 contract，例如 `goal`、`role`、`skill`、`inputs`、`outputs` 和 `gates`；`transitions` 是有向边，只保存合法流转、触发语义和少量运行期效果，例如设置或清理 `suspended_phase`。这样做的原因是让正常推进、开发前返回、RFC interrupt、RFC resume、BLOCKED interrupt 和 BLOCKED resume 都成为固定字段，被 transition helper 和 validator 同时消费，而不是散落在文档说明、`next` / `returns` 字段和工具硬编码里。它不是重型 graph engine：不引入 node class、edge class、遍历框架、可视化、schema migration 框架或阶段历史图，因为当前问题是降低遗漏和漂移，不是构建通用工作流内核。
 
+迁移策略是 managed-asset 优先：已接入项目运行 `npx sdlc-harness upgrade` 或 `npx sdlc-harness sync` 即可获得新的 phase policy 和 transition helper；`lifecycle.yaml`、`plan.yaml` 和任务数据不需要 schema migration。旧的 `allowed_next_phases` 只是派生视图，下一次 transition 后会按图重算。只有维护自定义 phase policy 的项目需要把阶段节点内的 `next` / `returns` 显式转换为 top-level `transitions`；新版 `transition.py` 对缺少 `transitions` 的旧 policy 保留 legacy fallback，但 canonical `validate-harness` 会要求升级后的 managed policy 使用显式图。
+
 | 阶段 | Skill | 主要输入 | 主要输出 | 出口 Gate | 下一阶段 |
 |---|---|---|---|---|---|
 | `REQUIREMENT_GATHERING` | `pjsdlc_pm_prd` | `.docs/00_raw/` | `.docs/01_product/`, `.docs/INDEX.md` | `make validate-pm` | `ARCHITECTING` |
