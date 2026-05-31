@@ -4,9 +4,9 @@ This file is overwritten by each release. Historical release evidence lives in g
 
 ## 1. Release Summary（发布摘要）
 
-- Version: `agent-project-sdlc@0.1.22`
+- Version: `agent-project-sdlc@0.1.23`
 - Milestone: `MVP`
-- Date: `2026-05-30`
+- Date: `2026-05-31`
 - Owner: `release_manager`
 - Registry: `https://registry.npmjs.org/`
 - Status: `RELEASED`
@@ -21,11 +21,11 @@ This file is overwritten by each release. Historical release evidence lives in g
 
 | 产物（Artifact） | 位置（Location） | Checksum/Version |
 |---|---|---|
-| npm package | `agent-project-sdlc` | `0.1.22` |
-| dry-run tarball | `npm pack --dry-run --json --workspace agent-project-sdlc` | `27648fa4bdae22a4b8617d7a14b65401439c412a` |
-| dry-run integrity | same | `sha512-Kd09+1TKuPKrLLojdfRSFgEpLLqgbeYEk8Yrw+/tus/4COLoqcJ0D5HpIjsNyjaXhCe15nhvtqw/K80kl42CQQ==` |
-| package content | dry-run output | 109 files, 115.6 kB package size, 429.2 kB unpacked size |
-| registry package | `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json` | `version 0.1.22`, `latest 0.1.22`, `integrity sha512-Kd09+1TKuPKrLLojdfRSFgEpLLqgbeYEk8Yrw+/tus/4COLoqcJ0D5HpIjsNyjaXhCe15nhvtqw/K80kl42CQQ==` |
+| npm package | `agent-project-sdlc` | `0.1.23` |
+| dry-run tarball | `npm pack --dry-run --json --workspace agent-project-sdlc` | `2a7d28f300f5fbce6bbb1793bcdaae7635765fe5` |
+| dry-run integrity | same | `sha512-gTKxNyQu9cnQ8nDAbbIHpjwi/On3+CVoXy2EpLzKLSodypeNn8ZfSI9a1j6oh0dP4lUwwCLGLPUX1X2OjLBqUA==` |
+| package content | dry-run output | 109 files, 129.4 kB package size, 487.0 kB unpacked size |
+| registry package | `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json` | `version 0.1.23`, `latest 0.1.23`, `integrity sha512-gTKxNyQu9cnQ8nDAbbIHpjwi/On3+CVoXy2EpLzKLSodypeNn8ZfSI9a1j6oh0dP4lUwwCLGLPUX1X2OjLBqUA==` |
 
 ## 4. Smoke Test Result（冒烟测试结果）
 
@@ -36,21 +36,21 @@ This file is overwritten by each release. Historical release evidence lives in g
   - `make validate-harness`: PASS。
   - `npm pack --dry-run --json --workspace agent-project-sdlc`: PASS。
   - `git diff --check`: PASS。
-  - `npm publish --workspace agent-project-sdlc`: PASS，registry 返回 agent-project-sdlc@0.1.22。
-  - `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json`: PASS，version 和 latest 均为 0.1.22。
-  - Registry installed-consumer smoke: PASS，从 npm registry 安装 agent-project-sdlc@0.1.22 后，init 和 doctor 均通过，doctor 输出 `core package: agent-project-sdlc@0.1.22`。
+  - `npm publish --workspace agent-project-sdlc`: PASS，registry 返回 agent-project-sdlc@0.1.23。
+  - `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json`: PASS，version 和 latest 均为 0.1.23。
+  - Registry installed-consumer smoke: PASS，从 npm registry 安装 agent-project-sdlc@0.1.23 后，init 和 doctor 均通过，doctor 输出 `core package: agent-project-sdlc@0.1.23`。
 
 ## 5. Deployment Checklist（部署检查清单）
 
 - [x] Confirm registry latest before publishing.
-- [x] Bump package version to `0.1.22`.
+- [x] Bump package version to `0.1.23`.
 - [x] Package source drift check passed.
 - [x] npm tests passed.
 - [x] Pack dry run passed.
 - [x] Publish package with `npm publish --workspace agent-project-sdlc`.
 - [x] Verify registry package with `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json`.
 - [x] Run installed-consumer smoke from npm registry.
-- [ ] Create and push git tag `v0.1.22` after publish success.
+- [x] Create and push git tag `v0.1.23` after publish success.
 
 ## 6. Rollback Plan（回滚方案）
 
