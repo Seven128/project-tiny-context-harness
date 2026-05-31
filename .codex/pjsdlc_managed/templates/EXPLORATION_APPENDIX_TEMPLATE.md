@@ -20,3 +20,5 @@
 | Decision | Promoted To |
 |---|---|
 |  | `plan.yaml#resume_capsule` / runbook / implementation doc |
+
+凡会改变下一步动作的判断，必须 promoted 到 `plan.yaml#resume_capsule.do_not_retry` 或 runbook 顶部 `Hard Constraints`；本 appendix 只能保留推导和历史背景。

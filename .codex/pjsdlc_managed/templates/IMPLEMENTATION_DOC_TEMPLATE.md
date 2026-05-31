@@ -60,31 +60,35 @@ Input
 - Operator runbook: `.docs/09_runbooks/...`
 - Credential reference: Keychain item name 或 secret reference name only；不要记录明文密钥。
 - Command/UI channel:
+- Hard Constraints: 会改变下一步动作的判断必须提升到这里和 `plan.yaml#resume_capsule.do_not_retry`；不要只埋在 evidence、notes 或 appendix。
 - Do-not-retry summary: fallback / diagnostic 只写一句结论，详细内容进 exploration appendix 或 git history。
 
 ## 8. Development Self-Test Report（开发自测报告）
 
-本节只证明模块入口、核心路径、出口和最小证据，不是 debug log、operator log、runbook 或探索流水。
+本节是开发阶段可执行交接卡，只证明模块应用入口、核心路径、出口和最小证据指针。目标控制在几十行；high-risk runtime/live 场景包含 `Gate Breakdown` 时也不要超过 120 行。本节不是 debug log、operator log、runbook、evidence dump 或探索流水。
 
 - Report Status: PASS | BLOCKED | IN_PROGRESS | STALE
 - Contract Source:
+- Module Application Entry:
+- Module Key Test Path: local start / invocation -> all self-test scenarios -> all task/module promised runnable entries -> actual internal key paths / boundaries / checkpoints -> observable completion evidence
 - Scenario Results:
 - Executed Gates:
-- Module Key Test Path: local start / invocation -> all self-test scenarios -> all task/module promised runnable entries -> actual internal key paths / boundaries / checkpoints -> observable completion evidence
-- Actual Evidence:
-- Missing / Blockers:
+- Observable Exit:
+- Current Blocker:
 - Testing Handoff Readiness:
+- Evidence Index Refs: `.docs/09_runbooks/..._evidence.md` 或外部 artifact / CI / command output path；不要复制证据正文。
 
 保留：
 - Runnable Entry / Module Key Test Path / Observable Exit
-- Scenario Results / Executed Gates / Actual Evidence
-- Missing / Blockers / Testing Handoff Readiness
+- Scenario Results / Executed Gates / Evidence Index Refs
+- Current Blocker / Testing Handoff Readiness
 
 不保留：
 - 每次工具探索的完整流水
 - debug log、operator log、历史操作日记或 runbook 正文
 - fallback / diagnostic 的长篇命令、截图过程或 UI 细节
 - 与当前恢复路径无关的旧失败通道；只在 appendix 或 git history 保留
+- `Actual Evidence` 正文字段；证据正文进入 Evidence Index 或外部 artifact，本节只留 refs
 
 ### Gate Breakdown（Gate 分层）
 

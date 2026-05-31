@@ -1,11 +1,11 @@
 # .docs/04_implementation overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: d26013df3fc86b3d -->
+<!-- source-hash: f5d9ed1872f827b9 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `d26013df3fc86b3d`
+Source hash: `f5d9ed1872f827b9`
 
 ## Source Slices
 
@@ -100,7 +100,7 @@ Existing project runs sdlc-harness upgrade
 - `migrateConfig` rewrites `core.package`, deletes legacy `core.version`, and preserves `core.schema_version`. Package version is intentionally not persisted in project config because the installed package manifest is the source of truth.
 - Plan migrations remove stale `current_phase` from active and draft plans, remove draft `current_task_id`, and strip duplicate `phase` / `linked_task_id` from `parallel_execution`.
 - Validation commands mirror the Python Harness gates closely enough for package consumers to run health checks without depending on this authoring workspace.
-- `validate-dev` checks `Development Self-Test Report` content against the current `self_test_contract`: it requires legal `Report Status`, only accepts completion when report status and every scenario are `PASS`, rejects template module-key-path text, ambiguous status rows, missing scenario row evidence, missing required gates, embedded debug/operator/runbook/exploration log sections, and browser reports without page URL plus browser/Playwright/screenshot evidence. It remains a content consistency gate, not a command execution audit.
+- `validate-dev` checks `Development Self-Test Report` content against the current `self_test_contract`: it requires legal `Report Status`, Module Application Entry, Module Key Test Path, scenario results, executed gates, Observable Exit, Current Blocker, Testing Handoff Readiness and Evidence Index Refs; only accepts completion when report status and every scenario are `PASS`; rejects template module-key-path text, ambiguous status rows, missing scenario row evidence, missing required gates, embedded debug/operator/runbook/exploration log sections, `Actual Evidence` body fields, overlong reports, high-risk reports without `.docs/09_runbooks/**` evidence refs or Current Operator Path hard constraints, and browser reports without page URL plus browser/Playwright/screenshot evidence. It remains a content consistency gate, not a command execution audit.
 
 ## Runnable Entry/Exit
 
@@ -902,7 +902,7 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 - `validate-design` and `validate-dev` now enforce `self_test_contract`: design binds runnable-boundary tasks to a tech plan `Development Self-Test Contract`, and development requires a completed implementation doc `Development Self-Test Report` before handoff.
 - Development Self-Test Contract / Report now require `module_key_test_path` / `Module Key Test Path`, recording the module key test path from local start or invocation to all self-test scenarios completion. The path is scoped to the current task/module and covers promised runnable entries, internal key paths, boundaries, checkpoints and observable completion evidence for later debug reuse.
 - Dev and Implementation Doc prompts now treat `Development Self-Test Report` as a development deliverable, separate from code/config/test implementation artifacts. When `self_test_contract.status: "required"`, agents must execute the current scenarios and required gates before writing the report; historical reports, template fields, code reading or unrelated green gates cannot stand in for current-run evidence.
-- Development Self-Test Report now has an explicit boundary: it must include `Report Status: PASS | BLOCKED | IN_PROGRESS | STALE`, prove only module entry/core path/exit/minimal evidence, and must not become a debug log, operator log, runbook or exploration history.
+- Development Self-Test Report now has an explicit handoff-card boundary: it must include `Report Status: PASS | BLOCKED | IN_PROGRESS | STALE`, `Module Application Entry`, `Module Key Test Path`, scenario results, executed gates, `Observable Exit`, `Current Blocker`, `Testing Handoff Readiness` and `Evidence Index Refs`; it proves only module entry/core path/exit/minimal evidence pointers and must not become a debug log, operator log, runbook, evidence dump or exploration history.
 - The authoring-only Harness design prompt now states the lightweight-constraint principle: workflow changes should first align Agent attention with the `PROJECT_SPEC.md` purpose, and heavier validation or execution mechanisms are reserved for heavy logic when issues repeat, risk is high, or machine proof is required.
 - `validate-rfc` now requires `Development Self-Test Impact` for new RFCs that change entry/exit, runtime, gates, handoff or blocker semantics.
 - `validate-review` now requires explicit PASS/BLOCKED readiness fields for `Runnable Entry`, `Observable Exit`, `Initialization`, `Config Contract` and `Testing Handoff Readiness`; any `BLOCKED` field blocks TESTING handoff.
@@ -921,7 +921,7 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 ## Development Evidence
 
 - Runnable Entry: CLI command `npx sdlc-harness validate-dev` / `make validate-dev` validates the current SPRINTING task evidence contract through `packages/sdlc-harness/src/lib/validators.ts`.
-- Observable Exit: Validator output reports PASS or concrete errors for missing `Development Evidence`, missing `Observable Exit`, missing `Client / Server Initialization`, missing `Config Contract`, missing `Basic Self-test Evidence`, missing `Module Key Test Path`, insufficient lower-level smoke, UI evidence gaps, or callable invocation/result gaps.
+- Observable Exit: Validator output reports PASS or concrete errors for missing `Development Evidence`, missing `Observable Exit`, missing `Client / Server Initialization`, missing `Config Contract`, missing `Basic Self-test Evidence`, missing `Module Key Test Path`, missing `Evidence Index Refs`, overlong self-test reports, insufficient lower-level smoke, UI evidence gaps, or callable invocation/result gaps.
 - Evidence Level: current task contract requires `local_runtime`; validator source and package CLI execute as local runtime checks.
 - Target Runtime Environment: current task contract uses `local` with `npx sdlc-harness validate-dev` as the handoff entrypoint.
 - Client / Server Initialization: service / agent / runtime tasks must record startup, live entrypoint, health/status, endpoint, CLI command or worker command evidence.
@@ -1021,10 +1021,10 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 - `validate-dev` checks implementation docs for runnable entry/exit facts, accepting explicit `Not applicable` only when the module truly has no product runtime boundary.
 - `validate-dev` checks the current open SPRINTING task implementation doc for a `Development Evidence` section with concrete `Runnable Entry`, `Observable Exit`, `Client / Server Initialization`, `Config Contract` and `Basic Self-test Evidence`, or a justified `Not applicable`.
 - `validate-design` checks runnable-boundary draft tasks for `self_test_contract` and verifies the referenced tech plan slice contains a `Development Self-Test Contract`.
-- `validate-dev` checks `self_test_contract.required_gates` against task `required_gates`, requires `Report Status: PASS` and every contract scenario to have a `PASS` result in `Development Self-Test Report`, and rejects `BLOCKED`, `IN_PROGRESS` or `STALE` reports as unfinished development handoff.
+- `validate-dev` checks `self_test_contract.required_gates` against task `required_gates`, requires `Report Status: PASS` and every contract scenario to have a `PASS` result in `Development Self-Test Report`, requires self-test report handoff fields and `Evidence Index Refs`, rejects `Actual Evidence` body fields, and rejects `BLOCKED`, `IN_PROGRESS` or `STALE` reports as unfinished development handoff.
 - `validate-design` and `validate-dev` require `module_key_test_path` / `Module Key Test Path` so the implementation doc records the local-start-to-self-test-completion module key test path, including current task/module runnable entries, internal key paths, boundaries, checkpoints and completion evidence for future debug.
-- High-risk runtime/live/remote-operator tasks now use resume-first recovery: Architect reserves `.docs/09_runbooks/**`, Dev maintains `plan.yaml#resume_capsule`, Implementation Doc keeps operation logs out of the main implementation facts, and Review/Testing consume the capsule/runbook before reading exploration appendices.
-- `validate-dev` requires high-risk current SPRINTING tasks to have concrete `resume_capsule` fields, current implementation doc recovery ref, `.docs/09_runbooks/**` recovery ref, a short `Current Operator Path` and a `Gate Breakdown` in `Development Self-Test Report`.
+- High-risk runtime/live/remote-operator tasks now use resume-first recovery: Architect reserves `.docs/09_runbooks/**`, Dev maintains `plan.yaml#resume_capsule`, strategy-changing decisions are promoted to `resume_capsule.do_not_retry` / runbook `Hard Constraints`, Implementation Doc keeps operation logs out of the main implementation facts, and Review/Testing consume the capsule/runbook before reading exploration appendices.
+- `validate-dev` requires high-risk current SPRINTING tasks to have concrete `resume_capsule` fields, current implementation doc recovery ref, `.docs/09_runbooks/**` recovery ref, a short `Current Operator Path` with `Hard Constraints`, `Evidence Index Refs` under `.docs/09_runbooks/**`, and a `Gate Breakdown` in `Development Self-Test Report`.
 - Open task `working_notes` now stays resume-first with a validator limit of 8 entries.
 - `pjsdlc_dev_sprint` explicitly frames SPRINTING outputs as implementation artifacts plus development self-test artifacts. It requires scenario/gate execution before report writing, and blocks task completion when current-run runnable entry, internal key path and observable exit/evidence cannot be named.
 - `pjsdlc_implementation_doc` records the same evidence provenance rule for module docs: `Development Self-Test Report` facts must come from the current task run, not from historical PASS text, template placeholders, code inspection or unrelated generic gates.

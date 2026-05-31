@@ -138,6 +138,20 @@ const SELF_TEST_REPORT_PLACEHOLDER_TERMS = [
   "observable completion evidence"
 ];
 const SELF_TEST_REPORT_STATUSES = new Set(["PASS", "BLOCKED", "IN_PROGRESS", "STALE"]);
+const SELF_TEST_REPORT_REQUIRED_FIELDS = [
+  "Contract Source",
+  "Module Application Entry",
+  "Module Key Test Path",
+  "Scenario Results",
+  "Executed Gates",
+  "Observable Exit",
+  "Current Blocker",
+  "Testing Handoff Readiness",
+  "Evidence Index Refs"
+];
+const SELF_TEST_REPORT_NONE_ALLOWED_FIELDS = new Set(["Current Blocker"]);
+const MAX_SELF_TEST_REPORT_LINES = 80;
+const MAX_HIGH_RISK_SELF_TEST_REPORT_LINES = 120;
 const SELF_TEST_REPORT_DISALLOWED_SECTION_TERMS = [
   "debug log",
   "operator log",
@@ -155,6 +169,18 @@ const SELF_TEST_REPORT_DISALLOWED_SECTION_TERMS = [
   "失败探索",
   "诊断尝试",
   "历史流水"
+];
+const SELF_TEST_REPORT_DISALLOWED_FIELD_TERMS = [
+  "Actual Evidence"
+];
+const HARD_CONSTRAINT_TERMS = [
+  "hard constraint",
+  "hard constraints",
+  "strategy constraint",
+  "strategy constraints",
+  "恢复硬约束",
+  "硬约束",
+  "策略约束"
 ];
 const SELF_TEST_OBSERVABLE_EVIDENCE_TERMS = [
   "pass output",
@@ -1497,19 +1523,25 @@ function validateDevelopmentSelfTestReport(
   } else if (reportStatus !== "PASS") {
     errors.push(`${taskId} Development Self-Test Report Report Status is ${reportStatus}; validate-dev cannot handoff until the report status is PASS`);
   }
+  const highRiskRuntime = requiresResumeCapsule(task);
   errors.push(...validateSelfTestReportBoundary(report, taskId, implementationDoc));
+  errors.push(...validateSelfTestReportLength(report, taskId, implementationDoc, highRiskRuntime));
 
   const basicSelfTest = evidenceFieldValue(developmentEvidenceSection, "Basic Self-test Evidence") ?? "";
   if (!containsAny(basicSelfTest, ["Development Self-Test Report", "开发自测报告", "self-test report"])) {
     errors.push(`${taskId} Basic Self-test Evidence must reference the Development Self-Test Report in ${implementationDoc}`);
   }
 
-  for (const field of ["Contract Source", "Scenario Results", "Executed Gates", "Module Key Test Path", "Actual Evidence", "Missing / Blockers", "Testing Handoff Readiness"]) {
+  for (const field of SELF_TEST_REPORT_REQUIRED_FIELDS) {
     const value = evidenceFieldValue(report, field);
-    const allowsNone = field === "Missing / Blockers";
+    const allowsNone = SELF_TEST_REPORT_NONE_ALLOWED_FIELDS.has(field);
     if (!value || (!allowsNone && isPlaceholderEvidence(value))) {
       errors.push(`${taskId} Development Self-Test Report ${field} must contain executed evidence in ${implementationDoc}`);
     }
+  }
+  const evidenceIndexRefs = evidenceFieldValue(report, "Evidence Index Refs") ?? "";
+  if (highRiskRuntime && !evidenceIndexRefs.includes(RUNBOOK_DOC_PREFIX)) {
+    errors.push(`${taskId} high-risk Development Self-Test Report Evidence Index Refs must link evidence under ${RUNBOOK_DOC_PREFIX} in ${implementationDoc}`);
   }
 
   const source = String(contract.source ?? "").trim();
@@ -1572,7 +1604,7 @@ function validateDevelopmentSelfTestReport(
       errors.push(`${taskId} page Development Self-Test Report must include browser, Playwright, screenshot, or equivalent interaction evidence in ${implementationDoc}`);
     }
   }
-  if (requiresResumeCapsule(task)) {
+  if (highRiskRuntime) {
     errors.push(...validateCurrentOperatorPath(fullText, taskId, implementationDoc));
     errors.push(...validateGateBreakdown(fullText, taskId, implementationDoc));
   }
@@ -1588,6 +1620,14 @@ function normalizeSelfTestReportStatus(value: string | undefined): "PASS" | "BLO
 function validateSelfTestReportBoundary(report: string, taskId: string, implementationDoc: string): string[] {
   const errors: string[] = [];
   for (const line of report.split(/\r?\n/)) {
+    const fieldMatch = line.match(/^\s*[-*]\s*([^:]+)\s*:/);
+    if (fieldMatch) {
+      const field = fieldMatch[1].trim().toLowerCase();
+      const blockedField = SELF_TEST_REPORT_DISALLOWED_FIELD_TERMS.find((term) => field === term.toLowerCase());
+      if (blockedField) {
+        errors.push(`${taskId} Development Self-Test Report must not use ${blockedField}; put evidence bodies in an Evidence Index and reference them with Evidence Index Refs in ${implementationDoc}`);
+      }
+    }
     const match = line.match(/^(#{1,6})\s+(.+)$/);
     if (!match) continue;
     const title = match[2].trim().toLowerCase();
@@ -1597,6 +1637,15 @@ function validateSelfTestReportBoundary(report: string, taskId: string, implemen
     }
   }
   return errors;
+}
+
+function validateSelfTestReportLength(report: string, taskId: string, implementationDoc: string, highRiskRuntime: boolean): string[] {
+  const limit = highRiskRuntime ? MAX_HIGH_RISK_SELF_TEST_REPORT_LINES : MAX_SELF_TEST_REPORT_LINES;
+  const lineCount = report.split(/\r?\n/).filter((line) => line.trim()).length;
+  if (lineCount <= limit) return [];
+  return [
+    `${taskId} Development Self-Test Report must stay as a short handoff card (${limit} non-empty lines max); move logs, evidence bodies, runbook steps, and exploration history out of ${implementationDoc}`
+  ];
 }
 
 function validateCurrentOperatorPath(fullText: string, taskId: string, implementationDoc: string): string[] {
@@ -1611,7 +1660,8 @@ function validateCurrentOperatorPath(fullText: string, taskId: string, implement
     ["runbook link", ["Operator runbook", "Runbook"]],
     ["credential reference name", ["Credential reference", "Credential reference name"]],
     ["command/UI channel", ["Command/UI channel", "Command channel", "UI channel"]],
-    ["do-not-retry summary", ["Do-not-retry summary", "Do not retry summary"]]
+    ["do-not-retry summary", ["Do-not-retry summary", "Do not retry summary"]],
+    ["hard constraints", ["Hard Constraints", "Hard Constraint", "Strategy Constraints", "Strategy Constraint"]]
   ];
   for (const [label, fields] of requiredFields) {
     const value = fields.map((field) => evidenceFieldValue(section, field)).find((candidate) => candidate && candidate.trim());
@@ -1624,6 +1674,9 @@ function validateCurrentOperatorPath(fullText: string, taskId: string, implement
   const runbookValue = evidenceFieldValue(section, "Operator runbook") ?? evidenceFieldValue(section, "Runbook") ?? section;
   if (!runbookValue.includes(RUNBOOK_DOC_PREFIX)) {
     errors.push(`${taskId} Current Operator Path must link a runbook/evidence document under ${RUNBOOK_DOC_PREFIX} in ${implementationDoc}`);
+  }
+  if (!containsAny(section, HARD_CONSTRAINT_TERMS)) {
+    errors.push(`${taskId} Current Operator Path must promote strategy-changing recovery decisions as Hard Constraints in ${implementationDoc}`);
   }
   return errors;
 }

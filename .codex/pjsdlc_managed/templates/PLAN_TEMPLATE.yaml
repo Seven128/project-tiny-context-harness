@@ -12,7 +12,7 @@ next_task_sequence: 2
 #   blocker: "current blocker, or none with context"
 #   last_passed_gate: "last concrete PASS gate or checkpoint"
 #   do_not_retry:
-#     - "known failed path or repeated trap to avoid"
+#     - "known failed path, repeated trap, or strategy-changing hard constraint; e.g. if PC WeChat shows QR after confirmed login, first classify rule_assumption_gap vs operator_induced_logout_or_session_reset before rescanning"
 #   recovery_refs:
 #     - ".docs/04_implementation/example.md"
 #     - ".docs/09_runbooks/example_live_smoke_runbook.md"

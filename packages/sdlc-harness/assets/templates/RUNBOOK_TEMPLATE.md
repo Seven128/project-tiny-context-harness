@@ -10,7 +10,12 @@
 - Last known good checkpoint:
 - Primary blocker:
 
-## 2. Operator Path
+## 2. Hard Constraints
+
+- 会改变下一步动作的判断必须写在这里，并同步到 `plan.yaml#resume_capsule.do_not_retry` 或 implementation doc `Current Operator Path`。
+- Example: PC 微信已登录后再次出现 QR 时，先判定 `rule_assumption_gap` vs `operator_induced_logout_or_session_reset`，不得直接进入重新扫码流程。
+
+## 3. Operator Path
 
 ```txt
 canonical:
@@ -21,26 +26,26 @@ UI channel:
 do not prefer:
 ```
 
-## 3. Preconditions
+## 4. Preconditions
 
 - Required access:
 - Required local tools:
 - Required remote services:
 - Safety / cleanup notes:
 
-## 4. Resume Steps
+## 5. Resume Steps
 
 1. 
 2. 
 3. 
 
-## 5. Fallbacks And Diagnostics
+## 6. Fallbacks And Diagnostics
 
 - Preferred fallback:
 - Diagnostic-only paths:
 - Do not retry:
 
-## 6. Linked Evidence
+## 7. Linked Evidence
 
 - Evidence index:
 - Exploration appendix:

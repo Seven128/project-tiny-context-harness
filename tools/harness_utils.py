@@ -731,7 +731,7 @@ def validate_resume_capsule_contract(data: dict[str, Any]) -> None:
     do_not_retry = as_string_list(capsule.get("do_not_retry"))
     require(
         do_not_retry and not any(is_placeholder_evidence(item) for item in do_not_retry),
-        f"{current_task_id} resume_capsule.do_not_retry must list concrete paths or attempts not to repeat",
+        f"{current_task_id} resume_capsule.do_not_retry must list concrete paths, attempts, or strategy-changing constraints not to repeat",
     )
 
     refs = as_string_list(capsule.get("recovery_refs"))

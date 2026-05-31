@@ -58,6 +58,8 @@
 | PRD-NPM-027 | npm 发布流程可脚本化执行 | P1 | 提供仓库内 release script，自动执行 version bump、test、source drift check、pack dry-run、publish、registry latest verification、installed-consumer smoke 和 release doc evidence；默认不发布，显式确认后才 publish |
 | PRD-NPM-028 | 支持默认 Codex native subagent 并行调度合同 | P1 | 每个阶段 task 默认评估是否适合安全并行；适合时使用 `parallel_execution.trigger: "workflow_default"`、`mode: "runtime_managed"` 和 `runtime.provider: "codex_native_subagents"`；用户显式要求并行时使用 `user_requested`；Harness 记录 worker 边界、owned paths、required gates 和主 Agent 集成责任 |
 | PRD-NPM-029 | `validate-dev` 强制 SPRINTING 交付结构化 Development Evidence | P0 | 当前 open dev task 的 implementation doc 必须记录 `Runnable Entry`、`Observable Exit`、`Basic Self-test Evidence`，或带原因的 `Not applicable`；页面类任务要求 dev server/page URL 与 browser check，API/CLI/worker 类任务要求 invocation 与可观察结果 |
+| PRD-NPM-030 | `Development Self-Test Report` 必须保持短交接卡语义 | P0 | 自测报告只记录入口、Module Key Test Path、scenario 结果、executed gates、Observable Exit、Current Blocker、Testing Handoff Readiness 和 Evidence Index Refs；debug log、operator log、runbook、evidence dump、失败探索和历史流水必须分离到 runbook/evidence/exploration |
+| PRD-NPM-031 | high-risk runtime/live task 必须提升恢复硬约束 | P0 | 会改变下一步动作的判断必须 promoted 到 `resume_capsule.do_not_retry`、runbook `Hard Constraints` 或短 `Current Operator Path`，不能只埋在 evidence、notes、appendix 或长 implementation doc 中 |
 
 ## 5. Acceptance Criteria
 
@@ -101,6 +103,8 @@
 - [ ] 全阶段并行的最终事实源更新都由主 Agent 集成；worker 不直接拥有最终 PRD、plan、architecture、tech plan、implementation doc、review/test/release report 或 overview。
 - [ ] SPRINTING 写入 worker 的 `owned_paths` 必须非空、互不重叠，并落在当前 task `allowed_paths` 内。
 - [ ] `validate-dev` 拒绝缺少当前 task `Development Evidence` 的 implementation doc，确保 TESTING 接收到已有预期能力的应用入口与可观察出口。
+- [ ] `validate-dev` 拒绝把 debug/operator/runbook/exploration/history 或 `Actual Evidence` 正文塞进 `Development Self-Test Report` 主线，并要求 Evidence Index Refs。
+- [ ] high-risk runtime/live task 的恢复硬约束可以在 `resume_capsule` / runbook / implementation doc 顶部被直接消费。
 
 ## 6. Out Of Scope
 

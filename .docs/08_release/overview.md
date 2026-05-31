@@ -1,11 +1,11 @@
 # .docs/08_release overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 3bebcf876d322440 -->
+<!-- source-hash: 1337b725d7adde2d -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `3bebcf876d322440`
+Source hash: `1337b725d7adde2d`
 
 ## Source Slices
 
@@ -52,9 +52,9 @@ This file is overwritten by each release. Historical release evidence lives in g
 - Evidence:
   - `npm test`: PASS。
   - `node packages/sdlc-harness/dist/cli.js package check-source`: PASS。
-  - `make validate-harness`: Pending。
+  - `make validate-harness`: PASS。
   - `npm pack --dry-run --json --workspace agent-project-sdlc`: PASS。
-  - `git diff --check`: Pending。
+  - `git diff --check`: PASS。
   - `npm publish --workspace agent-project-sdlc`: PASS，registry 返回 agent-project-sdlc@0.1.22。
   - `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json`: PASS，version 和 latest 均为 0.1.22。
   - Registry installed-consumer smoke: PASS，从 npm registry 安装 agent-project-sdlc@0.1.22 后，init 和 doctor 均通过，doctor 输出 `core package: agent-project-sdlc@0.1.22`。
