@@ -1,11 +1,11 @@
 # .docs/01_product overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 66e4569d64a461a5 -->
+<!-- source-hash: 372d6c4eff0daf83 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `66e4569d64a461a5`
+Source hash: `372d6c4eff0daf83`
 
 ## Source Slices
 
@@ -124,6 +124,7 @@ Source: [npm_package_distribution.md](npm_package_distribution.md)
 - [ ] `validate-dev` 拒绝缺少当前 task `Development Evidence` 的 implementation doc，确保 TESTING 接收到已有预期能力的应用入口与可观察出口。
 - [ ] `validate-dev` 拒绝把 debug/operator/runbook/exploration/history 或 `Actual Evidence` 正文塞进 `Development Self-Test Report` 主线，并要求 Evidence Index Refs。
 - [ ] high-risk runtime/live task 的恢复硬约束可以在 `resume_capsule` / runbook / implementation doc 顶部被直接消费。
+- [ ] session / QR / canonical path / do-not-retry 类关键判断如果只出现在 `working_notes`、evidence、appendix 或 implementation doc 普通章节中，而未 promoted 到 hard constraints，`validate-dev` 会拒绝。
 
 ## 6. Out Of Scope
 

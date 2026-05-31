@@ -173,6 +173,34 @@ const SELF_TEST_REPORT_DISALLOWED_SECTION_TERMS = [
 const SELF_TEST_REPORT_DISALLOWED_FIELD_TERMS = [
   "Actual Evidence"
 ];
+const IMPLEMENTATION_MAINLINE_DISALLOWED_SECTION_TERMS = [
+  "debug log",
+  "operator log",
+  "operation log",
+  "evidence dump",
+  "screenshot index",
+  "full screenshot",
+  "runbook body",
+  "failed attempts",
+  "failure exploration",
+  "diagnostic attempts",
+  "diagnostic path",
+  "remote operation log",
+  "recovery notes",
+  "task changelog",
+  "old task",
+  "historical task",
+  "调试日志",
+  "操作日志",
+  "证据正文",
+  "截图索引",
+  "失败探索",
+  "诊断尝试",
+  "诊断路径",
+  "恢复备注",
+  "旧 task",
+  "历史 task"
+];
 const HARD_CONSTRAINT_TERMS = [
   "hard constraint",
   "hard constraints",
@@ -181,6 +209,54 @@ const HARD_CONSTRAINT_TERMS = [
   "恢复硬约束",
   "硬约束",
   "策略约束"
+];
+const STRATEGY_CHANGING_DECISION_GROUPS: Array<[string, string[]]> = [
+  [
+    "session persistence/reset",
+    [
+      "session persistence",
+      "session reset",
+      "session_reset",
+      "session 异常",
+      "rule_assumption_gap",
+      "operator_induced_logout_or_session_reset",
+      "operator induced logout",
+      "logout",
+      "logged out",
+      "退登",
+      "qr",
+      "二维码",
+      "扫码",
+      "重新扫码"
+    ]
+  ],
+  [
+    "canonical path change",
+    [
+      "canonical path changed",
+      "canonical path change",
+      "canonical path switched",
+      "canonical path reset",
+      "主路径变化",
+      "主路径切换",
+      "恢复路径变化"
+    ]
+  ],
+  [
+    "do-not-retry decision",
+    [
+      "do not retry",
+      "do-not-retry",
+      "don't retry",
+      "not retry",
+      "must not retry",
+      "不得重试",
+      "不要重试",
+      "不要再试",
+      "不要重复",
+      "不得直接"
+    ]
+  ]
 ];
 const SELF_TEST_OBSERVABLE_EVIDENCE_TERMS = [
   "pass output",
@@ -1430,7 +1506,10 @@ async function validateCurrentTaskDevelopmentEvidence(projectRoot: string, plan:
     return [`${taskId} implementation_doc is missing: ${implementationDoc}`];
   }
   const text = await readText(docPath);
-  return validateDevelopmentEvidenceText(text, currentTask, implementationDoc);
+  return [
+    ...validateDevelopmentEvidenceText(text, currentTask, implementationDoc),
+    ...(await validateHighRiskRecoveryBoundaries(projectRoot, text, plan, currentTask, implementationDoc))
+  ];
 }
 
 function currentOpenSprintTask(plan: Record<string, unknown>): Record<string, unknown> | undefined {
@@ -1646,6 +1725,99 @@ function validateSelfTestReportLength(report: string, taskId: string, implementa
   return [
     `${taskId} Development Self-Test Report must stay as a short handoff card (${limit} non-empty lines max); move logs, evidence bodies, runbook steps, and exploration history out of ${implementationDoc}`
   ];
+}
+
+async function validateHighRiskRecoveryBoundaries(
+  projectRoot: string,
+  implementationText: string,
+  plan: Record<string, unknown>,
+  task: Record<string, unknown>,
+  implementationDoc: string
+): Promise<string[]> {
+  if (!requiresResumeCapsule(task)) return [];
+  const taskId = String(task.id ?? "current task");
+  const errors = validateImplementationDocMainlineBoundary(implementationText, taskId, implementationDoc);
+  errors.push(...(await validateStrategyChangingDecisionPromotion(projectRoot, implementationText, plan, task, implementationDoc)));
+  return errors;
+}
+
+function validateImplementationDocMainlineBoundary(fullText: string, taskId: string, implementationDoc: string): string[] {
+  const errors: string[] = [];
+  for (const line of fullText.split(/\r?\n/)) {
+    const match = line.match(/^(#{1,6})\s+(.+)$/);
+    if (!match) continue;
+    const title = match[2].trim().toLowerCase();
+    const blockedTerm = IMPLEMENTATION_MAINLINE_DISALLOWED_SECTION_TERMS.find((term) => title.includes(term));
+    if (blockedTerm) {
+      errors.push(`${taskId} implementation_doc must not keep ${blockedTerm} as a mainline section in ${implementationDoc}; move it to a runbook, evidence index, exploration appendix, or external artifact`);
+    }
+  }
+  return errors;
+}
+
+async function validateStrategyChangingDecisionPromotion(
+  projectRoot: string,
+  implementationText: string,
+  plan: Record<string, unknown>,
+  task: Record<string, unknown>,
+  implementationDoc: string
+): Promise<string[]> {
+  const taskId = String(task.id ?? "current task");
+  const capsule = isRecord(plan.resume_capsule) ? plan.resume_capsule : {};
+  const recoveryRefs = asStringList(capsule.recovery_refs);
+  const runbookTexts = await readExistingRunbookRefs(projectRoot, recoveryRefs);
+  const promotionText = [
+    asStringList(capsule.do_not_retry).join("\n"),
+    markdownSection(implementationText, CURRENT_OPERATOR_PATH_TERMS) ?? "",
+    ...runbookTexts.map((text) => markdownSection(text, HARD_CONSTRAINT_TERMS) ?? "")
+  ].join("\n");
+  const sourceText = [
+    asStringList(task.working_notes).join("\n"),
+    removeMarkdownSections(implementationText, CURRENT_OPERATOR_PATH_TERMS),
+    ...runbookTexts.map((text) => removeMarkdownSections(text, HARD_CONSTRAINT_TERMS))
+  ].join("\n");
+
+  const errors: string[] = [];
+  for (const [label, terms] of STRATEGY_CHANGING_DECISION_GROUPS) {
+    if (containsAny(sourceText, terms) && !containsAny(promotionText, terms)) {
+      errors.push(`${taskId} strategy-changing ${label} judgment appears outside promoted hard constraints; promote it to resume_capsule.do_not_retry, runbook Hard Constraints, or Current Operator Path in ${implementationDoc}`);
+    }
+  }
+  return errors;
+}
+
+async function readExistingRunbookRefs(projectRoot: string, refs: string[]): Promise<string[]> {
+  const texts: string[] = [];
+  for (const ref of refs) {
+    if (!ref.startsWith(RUNBOOK_DOC_PREFIX) || !ref.endsWith(".md")) continue;
+    const fullPath = path.join(projectRoot, ref);
+    if (await pathExists(fullPath)) {
+      texts.push(await readText(fullPath));
+    }
+  }
+  return texts;
+}
+
+function removeMarkdownSections(text: string, headerTerms: string[]): string {
+  const lines = text.split(/\r?\n/);
+  const kept: string[] = [];
+  let skippingLevel = 0;
+  for (const line of lines) {
+    const match = line.match(/^(#{1,6})\s+(.+)$/);
+    if (match) {
+      const level = match[1].length;
+      if (skippingLevel > 0 && level <= skippingLevel) {
+        skippingLevel = 0;
+      }
+      const title = match[2].toLowerCase();
+      if (skippingLevel === 0 && headerTerms.some((term) => title.includes(term.toLowerCase()))) {
+        skippingLevel = level;
+        continue;
+      }
+    }
+    if (skippingLevel === 0) kept.push(line);
+  }
+  return kept.join("\n");
 }
 
 function validateCurrentOperatorPath(fullText: string, taskId: string, implementationDoc: string): string[] {

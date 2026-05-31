@@ -827,6 +827,27 @@ tasks:
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
+    highRiskPlanText.replace(
+      '    acceptance_criteria:\n      - "business handoff has entry, input, exit and cleanup evidence"\n',
+      '    acceptance_criteria:\n      - "business handoff has entry, input, exit and cleanup evidence"\n    working_notes:\n      - "PC WeChat QR after confirmed login suggests session reset; do not rescan until classified."\n'
+    ),
+    "utf8"
+  );
+  const unpromotedStrategyJudgmentReport = await runValidator(root, "validate-dev");
+  assert.match(unpromotedStrategyJudgmentReport.errors.join("\n"), /strategy-changing session persistence\/reset judgment/);
+  await writeFile(path.join(root, ".harness/state/plan.yaml"), highRiskPlanText, "utf8");
+
+  await writeFile(
+    path.join(root, ".docs/04_implementation/example/dev.md"),
+    `${completeBusinessReportText}\n\n## Evidence Dump\n\n- Full command transcript should move to an evidence index.\n`,
+    "utf8"
+  );
+  const implementationMainlineBloatReport = await runValidator(root, "validate-dev");
+  assert.match(implementationMainlineBloatReport.errors.join("\n"), /must not keep evidence dump as a mainline section/);
+  await writeFile(path.join(root, ".docs/04_implementation/example/dev.md"), completeBusinessReportText, "utf8");
+
+  await writeFile(
+    path.join(root, ".harness/state/plan.yaml"),
     `current_task_id: TASK-004
 next_task_sequence: 5
 ${resumeCapsule("TASK-004", "cloud VM messages endpoint", "run business handoff smoke", "npm test")}

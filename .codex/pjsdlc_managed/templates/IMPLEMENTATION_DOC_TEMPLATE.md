@@ -89,6 +89,7 @@ Input
 - fallback / diagnostic 的长篇命令、截图过程或 UI 细节
 - 与当前恢复路径无关的旧失败通道；只在 appendix 或 git history 保留
 - `Actual Evidence` 正文字段；证据正文进入 Evidence Index 或外部 artifact，本节只留 refs
+- high-risk implementation doc 主线不得新增 `Evidence Dump`、`Operator Log`、`Failed Attempts`、`Screenshot Index` 等章节；这些只能进入 runbook / evidence index / exploration appendix
 
 ### Gate Breakdown（Gate 分层）
 
