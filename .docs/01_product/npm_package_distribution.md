@@ -60,6 +60,7 @@
 | PRD-NPM-029 | `validate-dev` 强制 SPRINTING 交付结构化 Development Evidence | P0 | 当前 open dev task 的 implementation doc 必须记录 `Runnable Entry`、`Observable Exit`、`Basic Self-test Evidence`，或带原因的 `Not applicable`；页面类任务要求 dev server/page URL 与 browser check，API/CLI/worker 类任务要求 invocation 与可观察结果 |
 | PRD-NPM-030 | `Development Self-Test Report` 必须保持短交接卡语义 | P0 | 自测报告只记录入口、Module Key Test Path、scenario 结果、executed gates、Observable Exit、Current Blocker、Testing Handoff Readiness 和 Evidence Index Refs；debug log、operator log、runbook、evidence dump、失败探索和历史流水必须分离到 runbook/evidence/exploration |
 | PRD-NPM-031 | high-risk runtime/live task 必须提升恢复硬约束 | P0 | 会改变下一步动作的判断必须 promoted 到 `resume_capsule.do_not_retry`、runbook `Hard Constraints` 或短 `Current Operator Path`，不能只埋在 evidence、notes、appendix 或长 implementation doc 中 |
+| PRD-NPM-032 | 阶段流转必须使用轻量显式有向图 | P0 | `phase_contracts.yaml` 以 `phases` 记录阶段节点 contract，以 `transitions` 记录合法流转边、trigger、kind 和必要 effects；`transition.py` 和 validator 必须消费同一图结构。不得把 task history、operator log、debug evidence、runbook 正文或阶段历史塞入图；不得为当前需求引入重型 graph engine、node/edge class、遍历框架或可视化。 |
 
 ## 5. Acceptance Criteria
 
@@ -106,6 +107,8 @@
 - [ ] `validate-dev` 拒绝把 debug/operator/runbook/exploration/history 或 `Actual Evidence` 正文塞进 `Development Self-Test Report` 主线，并要求 Evidence Index Refs。
 - [ ] high-risk runtime/live task 的恢复硬约束可以在 `resume_capsule` / runbook / implementation doc 顶部被直接消费。
 - [ ] session / QR / canonical path / do-not-retry 类关键判断如果只出现在 `working_notes`、evidence、appendix 或 implementation doc 普通章节中，而未 promoted 到 hard constraints，`validate-dev` 会拒绝。
+- [ ] `phase_contracts.yaml` 包含 top-level `transitions`，canonical phase nodes 不再使用 `next` / `returns`；`validate-harness` 拒绝缺失 transitions、未知 phase、重复 edge、非法 `<suspended_phase>` target 或遗留 `next` / `returns`。
+- [ ] `transition.py` 从显式 transition graph 计算合法下一阶段和 `allowed_next_phases`，并且旧 consumer policy 缺少 `transitions` 时仍能用 legacy `next` / `returns` fallback 完成基本流转。
 
 ## 6. Out Of Scope
 

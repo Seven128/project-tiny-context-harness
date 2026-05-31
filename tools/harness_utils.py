@@ -55,6 +55,9 @@ TASK_PHASES = {
     "RELEASING",
     "RFC_RECALIBRATION",
 }
+RESERVED_SUSPENDED_PHASE_TARGET = "<suspended_phase>"
+TRANSITION_KINDS = {"normal", "return", "interrupt", "resume"}
+LEGACY_RFC_INTERRUPT_SOURCES = {"SPRINTING", "REVIEWING", "TESTING", "RELEASING"}
 
 
 class HarnessError(RuntimeError):
@@ -643,10 +646,176 @@ def load_lifecycle() -> dict[str, Any]:
     return data
 
 
-def load_phase_contracts() -> dict[str, Any]:
+def load_phase_contract_data() -> dict[str, Any]:
     data = load_yaml(".codex/pjsdlc_managed/policies/phase_contracts.yaml")
     require(isinstance(data, dict) and isinstance(data.get("phases"), dict), "phase_contracts.yaml must contain phases")
+    return data
+
+
+def load_phase_contracts() -> dict[str, Any]:
+    data = load_phase_contract_data()
     return data["phases"]
+
+
+def legacy_phase_transition_edges(phases: dict[str, Any]) -> list[dict[str, Any]]:
+    edges: list[dict[str, Any]] = []
+    for phase_name, contract in phases.items():
+        if not isinstance(contract, dict):
+            continue
+        next_phase = contract.get("next")
+        if next_phase:
+            edges.append({"from": str(phase_name), "to": str(next_phase), "trigger": "advance", "kind": "normal"})
+        for return_phase in contract.get("returns") or []:
+            if return_phase:
+                edges.append({"from": str(phase_name), "to": str(return_phase), "trigger": "return", "kind": "return"})
+
+    if "RFC_RECALIBRATION" in phases:
+        for phase_name in sorted(LEGACY_RFC_INTERRUPT_SOURCES & set(phases.keys())):
+            edges.append(
+                {
+                    "from": phase_name,
+                    "to": "RFC_RECALIBRATION",
+                    "trigger": "requirement_change",
+                    "kind": "interrupt",
+                    "effects": {"set_suspended_phase": True},
+                }
+            )
+    if "BLOCKED" in phases:
+        for phase_name in phases:
+            if phase_name == "BLOCKED":
+                continue
+            edges.append(
+                {
+                    "from": str(phase_name),
+                    "to": "BLOCKED",
+                    "trigger": "blocked",
+                    "kind": "interrupt",
+                    "effects": {"set_suspended_phase": True},
+                }
+            )
+        edges.append(
+            {
+                "from": "BLOCKED",
+                "to": RESERVED_SUSPENDED_PHASE_TARGET,
+                "trigger": "resume",
+                "kind": "resume",
+                "effects": {"clear_suspended_phase": True},
+            }
+        )
+    return edges
+
+
+def phase_transition_edges(contract_data: dict[str, Any]) -> list[dict[str, Any]]:
+    phases = contract_data.get("phases")
+    require(isinstance(phases, dict), "phase_contracts.yaml must contain phases")
+    transitions = contract_data.get("transitions")
+    if isinstance(transitions, list):
+        return [edge for edge in transitions if isinstance(edge, dict)]
+    return legacy_phase_transition_edges(phases)
+
+
+def resolve_phase_transition_target(edge: dict[str, Any], suspended_phase: str = "") -> str:
+    target = str(edge.get("to") or "")
+    if target == RESERVED_SUSPENDED_PHASE_TARGET:
+        return suspended_phase
+    return target
+
+
+def phase_transition_targets(contract_data: dict[str, Any], phase_name: str, suspended_phase: str = "") -> list[str]:
+    targets: list[str] = []
+    for edge in phase_transition_edges(contract_data):
+        if str(edge.get("from") or "") != phase_name:
+            continue
+        target = resolve_phase_transition_target(edge, suspended_phase)
+        if target:
+            targets.append(target)
+    return list(dict.fromkeys(targets))
+
+
+def find_phase_transition(
+    contract_data: dict[str, Any],
+    from_phase: str,
+    to_phase: str,
+    suspended_phase: str = "",
+) -> dict[str, Any] | None:
+    for edge in phase_transition_edges(contract_data):
+        if str(edge.get("from") or "") != from_phase:
+            continue
+        if resolve_phase_transition_target(edge, suspended_phase) == to_phase:
+            return edge
+    return None
+
+
+def phase_transition_contract_errors(contract_data: dict[str, Any], require_transitions: bool = True) -> list[str]:
+    errors: list[str] = []
+    phases = contract_data.get("phases")
+    if not isinstance(phases, dict):
+        return ["phase_contracts.yaml must contain phases"]
+
+    for phase_name, contract in phases.items():
+        if not isinstance(contract, dict):
+            errors.append(f"{phase_name} phase contract must be a mapping")
+            continue
+        for legacy_key in ["next", "returns"]:
+            if legacy_key in contract:
+                errors.append(f"{phase_name} must not define legacy {legacy_key}; use top-level transitions")
+
+    transitions = contract_data.get("transitions")
+    if not isinstance(transitions, list):
+        if require_transitions:
+            errors.append("phase_contracts.yaml must contain top-level transitions")
+        return errors
+
+    phase_names = set(str(name) for name in phases.keys())
+    seen: set[tuple[str, str, str]] = set()
+    outgoing: set[str] = set()
+    for index, edge in enumerate(transitions, start=1):
+        prefix = f"transition #{index}"
+        if not isinstance(edge, dict):
+            errors.append(f"{prefix} must be a mapping")
+            continue
+        missing = [field for field in ["from", "to", "trigger", "kind"] if not str(edge.get(field) or "").strip()]
+        for field in missing:
+            errors.append(f"{prefix} missing {field}")
+        if missing:
+            continue
+
+        from_phase = str(edge["from"])
+        to_phase = str(edge["to"])
+        trigger = str(edge["trigger"])
+        kind = str(edge["kind"])
+        if from_phase not in phase_names:
+            errors.append(f"{prefix} from references unknown phase: {from_phase}")
+        if to_phase == RESERVED_SUSPENDED_PHASE_TARGET:
+            if from_phase != "BLOCKED" or kind != "resume":
+                errors.append(f"{prefix} may use {RESERVED_SUSPENDED_PHASE_TARGET} only for BLOCKED resume")
+        elif to_phase not in phase_names:
+            errors.append(f"{prefix} to references unknown phase: {to_phase}")
+        if kind not in TRANSITION_KINDS:
+            errors.append(f"{prefix} has invalid kind: {kind}")
+
+        key = (from_phase, to_phase, trigger)
+        if key in seen:
+            errors.append(f"{prefix} duplicates transition {from_phase} -> {to_phase} ({trigger})")
+        seen.add(key)
+        outgoing.add(from_phase)
+
+        effects = edge.get("effects")
+        if effects is None:
+            continue
+        if not isinstance(effects, dict):
+            errors.append(f"{prefix} effects must be a mapping")
+            continue
+        for effect_name, effect_value in effects.items():
+            if effect_name not in {"set_suspended_phase", "clear_suspended_phase"}:
+                errors.append(f"{prefix} has unknown effect: {effect_name}")
+            if not isinstance(effect_value, bool):
+                errors.append(f"{prefix} effect {effect_name} must be boolean")
+
+    for phase_name in phase_names:
+        if phase_name not in outgoing:
+            errors.append(f"{phase_name} must have at least one outgoing transition")
+    return errors
 
 
 def load_plan(path: str = ".codex/state/plan.yaml") -> dict[str, Any]:

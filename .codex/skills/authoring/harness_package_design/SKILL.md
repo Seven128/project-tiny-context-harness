@@ -29,6 +29,10 @@ tech plan 或 RFC 明确晋升路径，再进入通用 Skill、policy、template
 
 修改工作流规则时，先回到 `PROJECT_SPEC.md` 的目的：降低遗漏、返工和上下文漂移，让 Agent 更稳定地完成阶段交付，而不是把 Agent 完全自动化或审计化。优先采用足够让 Agent 注意力对齐目标的轻量约束，例如角色提示词红线、完成检查、模板占位约束或局部内容校验。validator、脚本和执行器都可以使用；但如果校验逻辑会明显变重，只有在问题重复发生、高风险、或必须由机器证明时，才升级为复杂 validator、自动执行器、证据清单或审计机制。做归因时区分 Agent execution violation 和 Harness contract gap，避免把执行纪律问题全部升级成复杂机制。
 
+修改 workflow graph、phase graph、task graph 或类似数据结构时，默认采用轻量 declarative schema，而不是重型图框架。图节点和边只能保存稳定 workflow contract，例如阶段角色、skill、输入输出、gate、合法流转和少量 transition effects；不得把 task history、operator log、debug evidence、runbook 正文、implementation doc 正文、screenshot 过程、失败探索流水或阶段执行历史塞入图。新增或扩展这类结构前，必须先写清 source of truth、实际 consumer、validator、migration / compatibility path，以及为什么现有 YAML 字段不足。没有 validator 或 transition/helper 消费的数据结构不算提升 Agent 注意力，只是换了存储格式。
+
+后续 workflow graph 类变更必须保持边界：优先新增或调整少量字段、edge、validator 规则和文档说明；不得为了“更结构化”直接引入 graph engine、node class、edge class、traversal framework、visualizer 或 schema migration framework。只有当同类遗漏重复发生、影响高风险阶段流转或已有轻量字段无法表达必要约束，并且经过 PRD/RFC 明确批准后，才可以升级为更重的图机制。新增 canonical graph 字段时，要同步删除或 deprecated 旧字段，避免 `next` / `returns` 这类并行事实源继续漂移。
+
 除 `<harnessRoot>/skills/**` 作为 workflow Skill hard file index 外，workflow Harness 配置都应放在
 `<harnessRoot>/pjsdlc_managed/**`。不要在 `<harnessRoot>` 顶层新增泛用 `overrides/`、`templates/`、
 `policies/` 等目录；例如项目本地阶段角色提示词使用
@@ -90,6 +94,7 @@ capabilities；不能只在 `PROJECT_SPEC.md`、implementation doc 或 release n
 9. package 对外能力变化时，`README.md` 和 `packages/sdlc-harness/README.md` 必须覆盖完整 public capability list，包括入口命令、配置方式、sync/upgrade 行为、本地 override、validator 和发布/诊断能力。
 10. 每次新增或修改 CLI、sync、upgrade、migration、validator、managed assets、Makefile、workflow Skill、README、release automation 或 workflow behavior 时，都要显式检查 `tools/consumer_lab_full_test.mjs`、`tests/sdlc-harness/**` 和相关测试文档是否需要同步更新；如果不需要，在 implementation doc 或 task notes 说明理由。
 11. 完成 task 前，更新模块级 implementation doc，并刷新 `.docs/<stage>/overview.md`。
+12. 修改 workflow graph、phase graph、task graph 或类似数据结构时，必须保持轻量 declarative boundary：固定 source of truth、consumer、validator 和兼容路径，不保存执行历史或证据正文，不引入重型 graph engine，除非 PRD/RFC 已明确批准。
 
 ## 输出
 
@@ -103,6 +108,7 @@ capabilities；不能只在 `PROJECT_SPEC.md`、implementation doc 或 release n
 - [ ] 如果修改了通用 Harness 源文件，package source sync/check 已通过。
 - [ ] 已判断 `PROJECT_SPEC.md`、`README.md` 和 `packages/sdlc-harness/README.md` 是否需要同步更新。
 - [ ] 如果 package public capability 有变化，README/package README 已完整覆盖对外能力。
+- [ ] 如果修改了 graph / data-structure 类 workflow contract，已说明轻量设计理由、非重型图边界、consumer、validator、migration/compat path，并移除或兼容旧事实源。
 - [ ] 如果发现可脚本化动作，已提示用户或说明暂不脚本化的理由。
 - [ ] 如果改动影响 package public behavior 或 README capability，已运行或更新 `tools/consumer_lab_full_test.mjs`，并把测试脚本影响面纳入 RFC / task evidence。
 - [ ] 全量 consumer lab 发现的问题已总结为 defect candidates，并进入 RFC 或后续 `TASK-*` development task，而不是停留在零散日志中。

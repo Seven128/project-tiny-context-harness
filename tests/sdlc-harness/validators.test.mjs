@@ -103,6 +103,57 @@ try {
     "utf8"
   );
   await writeFile(
+    path.join(root, ".harness/pjsdlc_managed/policies/phase_contracts.yaml"),
+    `phases:
+  REQUIREMENT_GATHERING:
+    role: pm
+    skill: pjsdlc_pm_prd
+    inputs: []
+    outputs: []
+    gates: []
+  ARCHITECTING:
+    role: architect
+    skill: pjsdlc_architect_design
+    inputs: []
+    outputs: []
+    gates: []
+  SPRINTING:
+    role: developer
+    skill: pjsdlc_dev_sprint
+    inputs: []
+    outputs: []
+    gates: []
+  BLOCKED:
+    role: manager
+    skill: pjsdlc_manager
+    inputs: []
+    outputs: []
+    gates: []
+transitions:
+  - from: REQUIREMENT_GATHERING
+    to: ARCHITECTING
+    trigger: advance
+    kind: normal
+  - from: ARCHITECTING
+    to: SPRINTING
+    trigger: advance
+    kind: normal
+  - from: SPRINTING
+    to: BLOCKED
+    trigger: blocked
+    kind: interrupt
+    effects:
+      set_suspended_phase: true
+  - from: BLOCKED
+    to: <suspended_phase>
+    trigger: resume
+    kind: resume
+    effects:
+      clear_suspended_phase: true
+`,
+    "utf8"
+  );
+  await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
     `current_task_id: ""
 next_task_sequence: 2
@@ -167,6 +218,38 @@ tasks:
     const report = await runValidator(root, gate);
     assert.deepEqual(report.errors, [], gate);
   }
+  const validPhaseContracts = await readFile(path.join(root, ".harness/pjsdlc_managed/policies/phase_contracts.yaml"), "utf8");
+  await writeFile(
+    path.join(root, ".harness/pjsdlc_managed/policies/phase_contracts.yaml"),
+    `phases:
+  REQUIREMENT_GATHERING:
+    role: pm
+    skill: pjsdlc_pm_prd
+    next: ARCHITECTING
+`,
+    "utf8"
+  );
+  let graphReport = await runValidator(root, "validate-harness");
+  assert.match(graphReport.errors.join("\n"), /top-level transitions/);
+  assert.match(graphReport.errors.join("\n"), /legacy next/);
+  await writeFile(
+    path.join(root, ".harness/pjsdlc_managed/policies/phase_contracts.yaml"),
+    `phases:
+  REQUIREMENT_GATHERING:
+    role: pm
+    skill: pjsdlc_pm_prd
+transitions:
+  - from: REQUIREMENT_GATHERING
+    to: UNKNOWN
+    trigger: advance
+    kind: normal
+`,
+    "utf8"
+  );
+  graphReport = await runValidator(root, "validate-harness");
+  assert.match(graphReport.errors.join("\n"), /unknown phase: UNKNOWN/);
+  await writeFile(path.join(root, ".harness/pjsdlc_managed/policies/phase_contracts.yaml"), validPhaseContracts, "utf8");
+
   await writeFile(path.join(root, ".docs/07_test/TEST_PLAN.md"), "# Legacy Test Plan\n\nMissing canonical sections.\n", "utf8");
   const ignoredTestPlan = await runValidator(root, "validate-test");
   assert.deepEqual(ignoredTestPlan.errors, [], "validate-test ignores TEST_PLAN.md when TEST_REPORT.md exists");

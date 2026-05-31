@@ -278,12 +278,27 @@ async function verifyManagedAssets(labDir, add) {
       lifecycle.includes('current_phase: "SPRINTING"') &&
       lifecycle.includes('active_role: "developer"') &&
       lifecycle.includes('active_skill: "pjsdlc_dev_sprint"') &&
-      lifecycle.includes('  - "REVIEWING"');
+      lifecycle.includes('  - "REVIEWING"') &&
+      lifecycle.includes('  - "RFC_RECALIBRATION"') &&
+      lifecycle.includes('  - "BLOCKED"');
     add({
       area: "Managed assets",
       evidence: "init lifecycle starts in developer sprint",
       status: lifecycleReady ? "PASS" : "FAIL",
       details: lifecycleReady ? "lifecycle.yaml routes to pjsdlc_dev_sprint" : trimOutput(lifecycle)
+    });
+
+    const phaseContracts = await readFile(path.join(labDir, ".codex/pjsdlc_managed/policies/phase_contracts.yaml"), "utf8");
+    const phaseGraphReady =
+      /^transitions:/m.test(phaseContracts) &&
+      phaseContracts.includes('to: "RFC_RECALIBRATION"') &&
+      !/^\s+next:/m.test(phaseContracts) &&
+      !/^\s+returns:/m.test(phaseContracts);
+    add({
+      area: "Managed assets",
+      evidence: "phase policy uses explicit transition graph",
+      status: phaseGraphReady ? "PASS" : "FAIL",
+      details: phaseGraphReady ? "phase_contracts.yaml contains transitions without legacy next/returns" : trimOutput(phaseContracts)
     });
   }
 }

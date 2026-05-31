@@ -8,7 +8,6 @@ phases:
     outputs:
       - "<harnessRoot>/state/lifecycle.yaml"
     gates: []
-    next: "REQUIREMENT_GATHERING"
 
   REQUIREMENT_GATHERING:
     goal: "收集需求并形成产品方案"
@@ -23,7 +22,6 @@ phases:
       - ".docs/INDEX.md"
     gates:
       - "make validate-pm"
-    next: "ARCHITECTING"
 
   ARCHITECTING:
     goal: "根据产品方案生成架构设计、技术方案和任务草案"
@@ -40,9 +38,6 @@ phases:
       - "<harnessRoot>/state/plan.draft.yaml"
     gates:
       - "make validate-design"
-    next: "SPRINTING"
-    returns:
-      - "REQUIREMENT_GATHERING"
 
   SPRINTING:
     goal: "按任务状态执行开发、消费已采用草案、开发验证、Development Evidence 和实现文档沉淀"
@@ -62,7 +57,6 @@ phases:
       - "<harnessRoot>/state/plan.draft.yaml"
     gates:
       - "make validate-dev"
-    next: "REVIEWING"
 
   REVIEWING:
     goal: "只读审查实现质量、需求一致性和架构风险"
@@ -79,7 +73,6 @@ phases:
       - ".docs/06_review/REVIEW_REPORT.md"
     gates:
       - "make validate-review"
-    next: "TESTING"
 
   TESTING:
     goal: "基于已交付 entry/exit 形成测试策略、测试用例、执行报告、回归证据和覆盖缺口结论"
@@ -100,7 +93,6 @@ phases:
       - "tests/"
     gates:
       - "make validate-test"
-    next: "RELEASING"
 
   RELEASING:
     goal: "当前发布状态、发布检查和回滚方案"
@@ -115,7 +107,6 @@ phases:
       - ".docs/08_release/CURRENT_RELEASE.md"
     gates:
       - "make validate-release"
-    next: "COMPLETED"
 
   COMPLETED:
     goal: "当前里程碑已完成"
@@ -126,7 +117,6 @@ phases:
     outputs:
       - "<harnessRoot>/state/lifecycle.yaml"
     gates: []
-    next: "IDLE"
 
   RFC_RECALIBRATION:
     goal: "处理需求变更、影响分析、测试事实源清理、局部补丁和任务回退"
@@ -145,7 +135,6 @@ phases:
       - ".docs/INDEX.md"
     gates:
       - "make validate-rfc"
-    next: "SPRINTING"
 
   BLOCKED:
     goal: "等待人工补充信息、授权或基础设施处理"
@@ -156,4 +145,131 @@ phases:
     outputs:
       - "<harnessRoot>/state/lifecycle.yaml"
     gates: []
-    next: "REQUIREMENT_GATHERING"
+
+transitions:
+  - from: "IDLE"
+    to: "REQUIREMENT_GATHERING"
+    trigger: "advance"
+    kind: "normal"
+  - from: "REQUIREMENT_GATHERING"
+    to: "ARCHITECTING"
+    trigger: "advance"
+    kind: "normal"
+  - from: "ARCHITECTING"
+    to: "SPRINTING"
+    trigger: "advance"
+    kind: "normal"
+  - from: "SPRINTING"
+    to: "REVIEWING"
+    trigger: "advance"
+    kind: "normal"
+  - from: "REVIEWING"
+    to: "TESTING"
+    trigger: "advance"
+    kind: "normal"
+  - from: "TESTING"
+    to: "RELEASING"
+    trigger: "advance"
+    kind: "normal"
+  - from: "RELEASING"
+    to: "COMPLETED"
+    trigger: "advance"
+    kind: "normal"
+  - from: "COMPLETED"
+    to: "IDLE"
+    trigger: "advance"
+    kind: "normal"
+  - from: "ARCHITECTING"
+    to: "REQUIREMENT_GATHERING"
+    trigger: "return_to_prd"
+    kind: "return"
+  - from: "SPRINTING"
+    to: "RFC_RECALIBRATION"
+    trigger: "requirement_change"
+    kind: "interrupt"
+    effects:
+      set_suspended_phase: true
+  - from: "REVIEWING"
+    to: "RFC_RECALIBRATION"
+    trigger: "requirement_change"
+    kind: "interrupt"
+    effects:
+      set_suspended_phase: true
+  - from: "TESTING"
+    to: "RFC_RECALIBRATION"
+    trigger: "requirement_change"
+    kind: "interrupt"
+    effects:
+      set_suspended_phase: true
+  - from: "RELEASING"
+    to: "RFC_RECALIBRATION"
+    trigger: "requirement_change"
+    kind: "interrupt"
+    effects:
+      set_suspended_phase: true
+  - from: "RFC_RECALIBRATION"
+    to: "SPRINTING"
+    trigger: "rfc_complete"
+    kind: "resume"
+    effects:
+      clear_suspended_phase: true
+  - from: "IDLE"
+    to: "BLOCKED"
+    trigger: "blocked"
+    kind: "interrupt"
+    effects:
+      set_suspended_phase: true
+  - from: "REQUIREMENT_GATHERING"
+    to: "BLOCKED"
+    trigger: "blocked"
+    kind: "interrupt"
+    effects:
+      set_suspended_phase: true
+  - from: "ARCHITECTING"
+    to: "BLOCKED"
+    trigger: "blocked"
+    kind: "interrupt"
+    effects:
+      set_suspended_phase: true
+  - from: "SPRINTING"
+    to: "BLOCKED"
+    trigger: "blocked"
+    kind: "interrupt"
+    effects:
+      set_suspended_phase: true
+  - from: "REVIEWING"
+    to: "BLOCKED"
+    trigger: "blocked"
+    kind: "interrupt"
+    effects:
+      set_suspended_phase: true
+  - from: "TESTING"
+    to: "BLOCKED"
+    trigger: "blocked"
+    kind: "interrupt"
+    effects:
+      set_suspended_phase: true
+  - from: "RELEASING"
+    to: "BLOCKED"
+    trigger: "blocked"
+    kind: "interrupt"
+    effects:
+      set_suspended_phase: true
+  - from: "COMPLETED"
+    to: "BLOCKED"
+    trigger: "blocked"
+    kind: "interrupt"
+    effects:
+      set_suspended_phase: true
+  - from: "RFC_RECALIBRATION"
+    to: "BLOCKED"
+    trigger: "blocked"
+    kind: "interrupt"
+    effects:
+      set_suspended_phase: true
+  - from: "BLOCKED"
+    to: "<suspended_phase>"
+    trigger: "resume"
+    kind: "resume"
+    effects:
+      clear_suspended_phase: true

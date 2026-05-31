@@ -64,7 +64,7 @@ async function createProjectState(projectRoot: string, root: string, report: str
   const files: Array<[string, string]> = [
     [
       harnessPath(root, "state", "lifecycle.yaml"),
-      `project_name: "Project"\nversion: "v0.1"\ncurrent_phase: "SPRINTING"\nactive_role: "developer"\nactive_skill: "pjsdlc_dev_sprint"\ncurrent_milestone: "MVP"\nblocked_reason: ""\nsuspended_phase: ""\nallowed_next_phases:\n  - "REVIEWING"\n`
+      `project_name: "Project"\nversion: "v0.1"\ncurrent_phase: "SPRINTING"\nactive_role: "developer"\nactive_skill: "pjsdlc_dev_sprint"\ncurrent_milestone: "MVP"\nblocked_reason: ""\nsuspended_phase: ""\nallowed_next_phases:\n  - "REVIEWING"\n  - "RFC_RECALIBRATION"\n  - "BLOCKED"\n`
     ],
     [harnessPath(root, "state", "plan.yaml"), `current_task_id: ""\nnext_task_sequence: 1\ntasks: []\n`],
     [harnessPath(root, "state", "plan.draft.yaml"), `next_task_sequence: 1\ntasks: []\n`],

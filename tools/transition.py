@@ -1,19 +1,14 @@
 #!/usr/bin/env python3
-from harness_utils import dump_yaml, load_lifecycle, load_phase_contracts, make_arg_parser, require, run_main
-
-
-RFC_INTERRUPT_SOURCES = {"SPRINTING", "REVIEWING", "TESTING", "RELEASING"}
-
-
-def phase_targets(phase: dict) -> list[str]:
-    targets: list[str] = []
-    next_phase = phase.get("next")
-    if next_phase:
-        targets.append(str(next_phase))
-    for return_phase in phase.get("returns") or []:
-        if return_phase:
-            targets.append(str(return_phase))
-    return list(dict.fromkeys(targets))
+from harness_utils import (
+    dump_yaml,
+    find_phase_transition,
+    load_lifecycle,
+    load_phase_contract_data,
+    make_arg_parser,
+    phase_transition_targets,
+    require,
+    run_main,
+)
 
 
 def main() -> None:
@@ -24,29 +19,25 @@ def main() -> None:
     args = parser.parse_args()
 
     lifecycle = load_lifecycle()
-    phases = load_phase_contracts()
+    contract_data = load_phase_contract_data()
+    phases = contract_data["phases"]
     target = args.to
     current = lifecycle.get("current_phase")
     require(target in phases, f"Unknown target phase: {target}")
     require(current in phases, f"Current phase is not declared in phase_contracts.yaml: {current}")
 
-    legal = set(lifecycle.get("allowed_next_phases") or [])
-    legal.update(phase_targets(phases[current]))
-    if target == "RFC_RECALIBRATION" and current in RFC_INTERRUPT_SOURCES:
-        legal.add(target)
-    if target == "BLOCKED":
-        legal.add(target)
     suspended = lifecycle.get("suspended_phase")
-    if current == "BLOCKED" and suspended:
-        legal.add(suspended)
+    legal = set(phase_transition_targets(contract_data, str(current), str(suspended or "")))
+    transition = find_phase_transition(contract_data, str(current), target, str(suspended or ""))
 
     require(args.force or target in legal, f"Illegal transition {current} -> {target}. Legal: {sorted(legal)}")
 
-    if target in {"RFC_RECALIBRATION", "BLOCKED"} and current not in {"RFC_RECALIBRATION", "BLOCKED"}:
+    effects = transition.get("effects") if transition else {}
+    if not isinstance(effects, dict):
+        effects = {}
+    if effects.get("set_suspended_phase"):
         lifecycle["suspended_phase"] = current
-    elif current == "RFC_RECALIBRATION" and target == "SPRINTING":
-        lifecycle["suspended_phase"] = ""
-    elif suspended and target == suspended:
+    if effects.get("clear_suspended_phase"):
         lifecycle["suspended_phase"] = ""
 
     phase = phases[target]
@@ -54,9 +45,11 @@ def main() -> None:
     lifecycle["active_role"] = phase.get("role", "")
     lifecycle["active_skill"] = phase.get("skill", "")
 
-    lifecycle["allowed_next_phases"] = phase_targets(phase)
-    if target == "BLOCKED" and lifecycle.get("suspended_phase"):
-        lifecycle["allowed_next_phases"] = [lifecycle["suspended_phase"]]
+    lifecycle["allowed_next_phases"] = phase_transition_targets(
+        contract_data,
+        target,
+        str(lifecycle.get("suspended_phase") or ""),
+    )
 
     dump_yaml(lifecycle, ".codex/state/lifecycle.yaml")
     print(f"Transitioned {current} -> {target}")

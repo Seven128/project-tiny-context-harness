@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-from harness_utils import load_lifecycle, load_phase_contracts, load_yaml, repo_path, require, require_paths, run_main
+from harness_utils import (
+    load_lifecycle,
+    load_phase_contract_data,
+    load_phase_contracts,
+    load_yaml,
+    phase_transition_contract_errors,
+    repo_path,
+    require,
+    require_paths,
+    run_main,
+)
 
 
 def main() -> None:
@@ -37,6 +47,7 @@ def main() -> None:
     require_paths(required_files + required_dirs)
 
     lifecycle = load_lifecycle()
+    phase_contract_data = load_phase_contract_data()
     phases = load_phase_contracts()
     load_yaml(".codex/pjsdlc_managed/policies/gates.yaml")
     load_yaml(".codex/pjsdlc_managed/policies/allowed_paths.yaml")
@@ -44,6 +55,8 @@ def main() -> None:
 
     current_phase = lifecycle.get("current_phase")
     require(current_phase in phases, f"Lifecycle current_phase is not declared: {current_phase}")
+    for error in phase_transition_contract_errors(phase_contract_data, require_transitions=True):
+        require(False, error)
 
     for phase_name, contract in phases.items():
         skill = contract.get("skill")

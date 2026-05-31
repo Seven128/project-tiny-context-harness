@@ -74,6 +74,7 @@ Existing project runs sdlc-harness upgrade
 - Plan migrations remove stale `current_phase` from active and draft plans, remove draft `current_task_id`, and strip duplicate `phase` / `linked_task_id` from `parallel_execution`.
 - Validation commands mirror the Python Harness gates closely enough for package consumers to run health checks without depending on this authoring workspace.
 - `validate-dev` checks `Development Self-Test Report` content against the current `self_test_contract`: it requires legal `Report Status`, Module Application Entry, Module Key Test Path, scenario results, executed gates, Observable Exit, Current Blocker, Testing Handoff Readiness and Evidence Index Refs; only accepts completion when report status and every scenario are `PASS`; rejects template module-key-path text, ambiguous status rows, missing scenario row evidence, missing required gates, embedded debug/operator/runbook/exploration log sections, `Actual Evidence` body fields, overlong reports, high-risk reports without `.docs/09_runbooks/**` evidence refs or Current Operator Path hard constraints, high-risk implementation docs with mainline evidence dump/operator log/failed-attempt sections, unpromoted session / QR / canonical path / do-not-retry judgments, and browser reports without page URL plus browser/Playwright/screenshot evidence. It remains a content consistency gate, not a command execution audit.
+- Managed `phase_contracts.yaml` now distributes a lightweight explicit phase graph: `phases` hold node contracts, top-level `transitions` hold legal directed edges and minimal effects. Package `validate-harness` rejects graph drift such as missing `transitions`, legacy `next` / `returns`, unknown targets or invalid `<suspended_phase>` usage; synced `transition.py` consumes the graph while retaining legacy fallback for older consumer policies.
 
 ## Runnable Entry/Exit
 
@@ -109,6 +110,8 @@ Existing project runs sdlc-harness upgrade
 | `tests/sdlc-harness/sync-init-doctor.test.mjs` | generated config omits `core.version`; doctor reports installed package version from package metadata | PASS for `TASK-074` |
 | `tests/sdlc-harness/upgrade.test.mjs` | upgrade removes legacy `core.version` from existing config | PASS for `TASK-074` |
 | `npm test --workspace agent-project-sdlc` | TypeScript build and package regression, including stricter `validate-dev` self-test report fixtures | PASS on 2026-05-30 |
+| `tests/sdlc-harness/sync-init-doctor.test.mjs` | synced managed policy contains top-level `transitions` and no canonical `next` / `returns` | Covered by package regression |
+| `tests/sdlc-harness/transition.test.mjs` | graph-based transition helper, RFC/BLOCKED effects and legacy policy fallback | Covered by package regression |
 | `node packages/sdlc-harness/dist/cli.js package sync-source` | package assets reflect template and README source changes | PASS on 2026-05-30; changed 48 assets |
 | `node packages/sdlc-harness/dist/cli.js package check-source` | package canonical assets match source after self-test report validation changes | PASS on 2026-05-30 |
 | `make docs-overview && make validate-harness && make validate-plan` | source docs, generated overviews, scaffold and active plan after self-test report boundary hardening | PASS on 2026-05-30 |
@@ -127,6 +130,7 @@ Existing project runs sdlc-harness upgrade
 | 2026-05-29 | `TASK-074` | Working tree | Removed redundant persisted `core.version`; doctor now derives package version from installed package metadata. |
 | 2026-05-30 | Direct maintenance | Working tree | Strengthened `validate-dev` Development Self-Test Report content checks and documented that it is not execution-proof auditing. |
 | 2026-05-30 | Self-test report boundary hardening | Working tree | Added Report Status, Current Operator Path, disallowed log-section and working_notes validator coverage. |
+| 2026-05-31 | Lightweight explicit phase graph | Working tree | Distributed top-level phase `transitions`, package graph validation and graph-based transition helper sync behavior. |
 
 ## 9. 后续维护注意事项
 

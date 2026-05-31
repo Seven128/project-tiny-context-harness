@@ -68,7 +68,7 @@ YAML_KEYWORDS = {
         "next_task_sequence",
         "tasks",
     ],
-    "phase_contracts": ["phases"],
+    "phase_contracts": ["phases", "transitions"],
 }
 
 

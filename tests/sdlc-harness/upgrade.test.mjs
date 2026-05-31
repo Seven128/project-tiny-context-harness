@@ -175,8 +175,13 @@ history:
   assert.match(makefile, /pjsdlc:sdlc-harness:make:begin/);
   assert.match(makefile, /-include \.harness\/pjsdlc_managed\/make\/sdlc-harness\.mk/);
   const transitionTool = await readFile(path.join(root, "tools/transition.py"), "utf8");
-  assert.match(transitionTool, /RFC_INTERRUPT_SOURCES/);
+  assert.match(transitionTool, /phase_transition_targets/);
   assert.doesNotMatch(transitionTool, /stale transition helper/);
+  const phaseContracts = await readFile(path.join(root, ".harness/pjsdlc_managed/policies/phase_contracts.yaml"), "utf8");
+  assert.match(phaseContracts, /^transitions:/m);
+  assert.match(phaseContracts, /to: "RFC_RECALIBRATION"/);
+  assert.doesNotMatch(phaseContracts, /^\s+next:/m);
+  assert.doesNotMatch(phaseContracts, /^\s+returns:/m);
 
   const lifecycle = await readFile(path.join(root, ".harness/state/lifecycle.yaml"), "utf8");
   assert.match(lifecycle, /active_skill: "?pjsdlc_pm_prd"?/);

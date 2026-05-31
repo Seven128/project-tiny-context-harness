@@ -14,53 +14,9 @@ try {
   await mkdir(path.join(root, ".codex/pjsdlc_managed/policies"), { recursive: true });
   await copyFile(path.join(sourceRoot, "tools/harness_utils.py"), path.join(root, "tools/harness_utils.py"));
   await copyFile(path.join(sourceRoot, "tools/transition.py"), path.join(root, "tools/transition.py"));
-  await writeFile(
-    path.join(root, ".codex/pjsdlc_managed/policies/phase_contracts.yaml"),
-    `phases:
-  REQUIREMENT_GATHERING:
-    role: pm
-    skill: pjsdlc_pm_prd
-    next: ARCHITECTING
-  ARCHITECTING:
-    role: architect
-    skill: pjsdlc_architect_design
-    next: SPRINTING
-    returns:
-      - REQUIREMENT_GATHERING
-  SPRINTING:
-    role: developer
-    skill: pjsdlc_dev_sprint
-    next: REVIEWING
-  REVIEWING:
-    role: reviewer
-    skill: pjsdlc_reviewer
-    next: TESTING
-  TESTING:
-    role: tester
-    skill: pjsdlc_tester
-    next: RELEASING
-  RELEASING:
-    role: release_manager
-    skill: pjsdlc_release_manager
-    next: COMPLETED
-  COMPLETED:
-    role: manager
-    skill: pjsdlc_manager
-    next: IDLE
-  IDLE:
-    role: manager
-    skill: pjsdlc_manager
-    next: REQUIREMENT_GATHERING
-  RFC_RECALIBRATION:
-    role: rfc_owner
-    skill: pjsdlc_rfc_recalibrate
-    next: SPRINTING
-  BLOCKED:
-    role: manager
-    skill: pjsdlc_manager
-    next: REQUIREMENT_GATHERING
-`,
-    "utf8"
+  await copyFile(
+    path.join(sourceRoot, ".codex/pjsdlc_managed/policies/phase_contracts.yaml"),
+    path.join(root, ".codex/pjsdlc_managed/policies/phase_contracts.yaml")
   );
 
   await writeLifecycle(
@@ -80,6 +36,7 @@ allowed_next_phases:
   assert.match(lifecycle, /active_skill: "pjsdlc_architect_design"/);
   assert.match(lifecycle, /- "SPRINTING"/);
   assert.match(lifecycle, /- "REQUIREMENT_GATHERING"/);
+  assert.match(lifecycle, /- "BLOCKED"/);
 
   execFileSync("python3", ["tools/transition.py", "--to", "REQUIREMENT_GATHERING"], { cwd: root });
   lifecycle = await readLifecycle();
@@ -87,6 +44,7 @@ allowed_next_phases:
   assert.match(lifecycle, /active_role: "pm"/);
   assert.match(lifecycle, /active_skill: "pjsdlc_pm_prd"/);
   assert.match(lifecycle, /- "ARCHITECTING"/);
+  assert.match(lifecycle, /- "BLOCKED"/);
   assert.doesNotMatch(lifecycle, /- "SPRINTING"/);
 
   await writeLifecycle(
@@ -135,6 +93,8 @@ allowed_next_phases:
   assert.match(lifecycle, /current_phase: "TESTING"/);
   assert.match(lifecycle, /active_role: "tester"/);
   assert.match(lifecycle, /- "RELEASING"/);
+  assert.match(lifecycle, /- "RFC_RECALIBRATION"/);
+  assert.match(lifecycle, /- "BLOCKED"/);
 
   for (const phase of ["SPRINTING", "REVIEWING", "TESTING", "RELEASING"]) {
     await writeLifecycle(
@@ -155,6 +115,7 @@ allowed_next_phases:
     assert.match(lifecycle, /active_skill: "pjsdlc_rfc_recalibrate"/);
     assert.match(lifecycle, new RegExp(`suspended_phase: "${phase}"`));
     assert.match(lifecycle, /- "SPRINTING"/);
+    assert.match(lifecycle, /- "BLOCKED"/);
   }
 
   for (const phase of ["REQUIREMENT_GATHERING", "ARCHITECTING"]) {
@@ -193,6 +154,68 @@ allowed_next_phases:
   assert.match(lifecycle, /active_skill: "pjsdlc_dev_sprint"/);
   assert.match(lifecycle, /suspended_phase: ""/);
   assert.match(lifecycle, /- "REVIEWING"/);
+  assert.match(lifecycle, /- "RFC_RECALIBRATION"/);
+  assert.match(lifecycle, /- "BLOCKED"/);
+
+  await writeLifecycle(
+    `project_name: "Fixture"
+version: "v0.1"
+current_phase: "TESTING"
+active_role: "tester"
+active_skill: "pjsdlc_tester"
+suspended_phase: ""
+allowed_next_phases:
+  - "RELEASING"
+`
+  );
+  execFileSync("python3", ["tools/transition.py", "--to", "BLOCKED"], { cwd: root });
+  lifecycle = await readLifecycle();
+  assert.match(lifecycle, /current_phase: "BLOCKED"/);
+  assert.match(lifecycle, /suspended_phase: "TESTING"/);
+  assert.match(lifecycle, /- "TESTING"/);
+  assert.doesNotMatch(lifecycle, /- "REVIEWING"/);
+  assert.throws(
+    () => execFileSync("python3", ["tools/transition.py", "--to", "REVIEWING"], { cwd: root, stdio: "pipe" }),
+    /Illegal transition BLOCKED -> REVIEWING/
+  );
+  execFileSync("python3", ["tools/transition.py", "--to", "TESTING"], { cwd: root });
+  lifecycle = await readLifecycle();
+  assert.match(lifecycle, /current_phase: "TESTING"/);
+  assert.match(lifecycle, /suspended_phase: ""/);
+  assert.match(lifecycle, /- "RELEASING"/);
+
+  await writeLegacyPhaseContracts();
+  await writeLifecycle(
+    `project_name: "Fixture"
+version: "v0.1"
+current_phase: "ARCHITECTING"
+active_role: "architect"
+active_skill: "pjsdlc_architect_design"
+suspended_phase: ""
+allowed_next_phases:
+  - "SPRINTING"
+`
+  );
+  execFileSync("python3", ["tools/transition.py", "--to", "REQUIREMENT_GATHERING"], { cwd: root });
+  lifecycle = await readLifecycle();
+  assert.match(lifecycle, /current_phase: "REQUIREMENT_GATHERING"/);
+  assert.match(lifecycle, /- "ARCHITECTING"/);
+
+  await writeLifecycle(
+    `project_name: "Fixture"
+version: "v0.1"
+current_phase: "REVIEWING"
+active_role: "reviewer"
+active_skill: "pjsdlc_reviewer"
+suspended_phase: ""
+allowed_next_phases:
+  - "TESTING"
+`
+  );
+  execFileSync("python3", ["tools/transition.py", "--to", "RFC_RECALIBRATION"], { cwd: root });
+  lifecycle = await readLifecycle();
+  assert.match(lifecycle, /current_phase: "RFC_RECALIBRATION"/);
+  assert.match(lifecycle, /suspended_phase: "REVIEWING"/);
 } finally {
   await rm(root, { recursive: true, force: true });
 }
@@ -203,4 +226,55 @@ async function writeLifecycle(content) {
 
 async function readLifecycle() {
   return readFile(path.join(root, ".codex/state/lifecycle.yaml"), "utf8");
+}
+
+async function writeLegacyPhaseContracts() {
+  await writeFile(
+    path.join(root, ".codex/pjsdlc_managed/policies/phase_contracts.yaml"),
+    `phases:
+  REQUIREMENT_GATHERING:
+    role: pm
+    skill: pjsdlc_pm_prd
+    next: ARCHITECTING
+  ARCHITECTING:
+    role: architect
+    skill: pjsdlc_architect_design
+    next: SPRINTING
+    returns:
+      - REQUIREMENT_GATHERING
+  SPRINTING:
+    role: developer
+    skill: pjsdlc_dev_sprint
+    next: REVIEWING
+  REVIEWING:
+    role: reviewer
+    skill: pjsdlc_reviewer
+    next: TESTING
+  TESTING:
+    role: tester
+    skill: pjsdlc_tester
+    next: RELEASING
+  RELEASING:
+    role: release_manager
+    skill: pjsdlc_release_manager
+    next: COMPLETED
+  COMPLETED:
+    role: manager
+    skill: pjsdlc_manager
+    next: IDLE
+  IDLE:
+    role: manager
+    skill: pjsdlc_manager
+    next: REQUIREMENT_GATHERING
+  RFC_RECALIBRATION:
+    role: rfc_owner
+    skill: pjsdlc_rfc_recalibrate
+    next: SPRINTING
+  BLOCKED:
+    role: manager
+    skill: pjsdlc_manager
+    next: REQUIREMENT_GATHERING
+`,
+    "utf8"
+  );
 }

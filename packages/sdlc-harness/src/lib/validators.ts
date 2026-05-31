@@ -17,6 +17,8 @@ const PARALLEL_MODES = new Set(["runtime_managed", "user_orchestrated"]);
 const PARALLEL_TRIGGERS = new Set(["user_requested", "workflow_default"]);
 const PARALLEL_RUNTIME_PROVIDERS = new Set(["codex_native_subagents", "user_orchestrated", "codex_exec_worktree"]);
 const TASK_PHASES = new Set(["REQUIREMENT_GATHERING", "ARCHITECTING", "SPRINTING", "REVIEWING", "TESTING", "RELEASING", "RFC_RECALIBRATION"]);
+const RESERVED_SUSPENDED_PHASE_TARGET = "<suspended_phase>";
+const TRANSITION_KINDS = new Set(["normal", "return", "interrupt", "resume"]);
 const PARALLEL_ALLOWED_PHASES = new Set(["REQUIREMENT_GATHERING", "ARCHITECTING", "SPRINTING", "REVIEWING", "TESTING", "RELEASING", "RFC_RECALIBRATION"]);
 const PARALLEL_READ_ONLY_PHASES = new Set(["REQUIREMENT_GATHERING", "ARCHITECTING", "REVIEWING", "RELEASING", "RFC_RECALIBRATION"]);
 const PARALLEL_PROTECTED_WRITE_PATTERNS = [
@@ -488,6 +490,9 @@ async function validateHarness(projectRoot: string): Promise<ValidatorReport> {
       errors.push(`missing ${required}`);
     }
   }
+  const phaseContractPath = path.join(projectRoot, harnessPath(root, "pjsdlc_managed", "policies", "phase_contracts.yaml"));
+  const phaseContracts = await readYamlObject(phaseContractPath);
+  errors.push(...validatePhaseTransitionContract(phaseContracts));
   return { info: [`validate-harness checked ${projectRoot} (${root})`], errors };
 }
 
@@ -1443,6 +1448,97 @@ function matchesGlob(file: string, pattern: string): boolean {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function validatePhaseTransitionContract(contract: Record<string, unknown>): string[] {
+  const errors: string[] = [];
+  const phases = contract.phases;
+  if (!isRecord(phases)) {
+    return ["phase_contracts.yaml must contain phases"];
+  }
+  for (const [phaseName, phaseContract] of Object.entries(phases)) {
+    if (!isRecord(phaseContract)) {
+      errors.push(`${phaseName} phase contract must be a mapping`);
+      continue;
+    }
+    for (const legacyKey of ["next", "returns"]) {
+      if (legacyKey in phaseContract) {
+        errors.push(`${phaseName} must not define legacy ${legacyKey}; use top-level transitions`);
+      }
+    }
+  }
+
+  const transitions = contract.transitions;
+  if (!Array.isArray(transitions)) {
+    errors.push("phase_contracts.yaml must contain top-level transitions");
+    return errors;
+  }
+
+  const phaseNames = new Set(Object.keys(phases));
+  const seen = new Set<string>();
+  const outgoing = new Set<string>();
+  transitions.forEach((transition, index) => {
+    const prefix = `transition #${index + 1}`;
+    if (!isRecord(transition)) {
+      errors.push(`${prefix} must be a mapping`);
+      return;
+    }
+    const fromPhase = String(transition.from ?? "");
+    const toPhase = String(transition.to ?? "");
+    const trigger = String(transition.trigger ?? "");
+    const kind = String(transition.kind ?? "");
+    for (const [field, value] of [
+      ["from", fromPhase],
+      ["to", toPhase],
+      ["trigger", trigger],
+      ["kind", kind]
+    ]) {
+      if (!value.trim()) errors.push(`${prefix} missing ${field}`);
+    }
+    if (!fromPhase || !toPhase || !trigger || !kind) return;
+    if (!phaseNames.has(fromPhase)) {
+      errors.push(`${prefix} from references unknown phase: ${fromPhase}`);
+    }
+    if (toPhase === RESERVED_SUSPENDED_PHASE_TARGET) {
+      if (fromPhase !== "BLOCKED" || kind !== "resume") {
+        errors.push(`${prefix} may use ${RESERVED_SUSPENDED_PHASE_TARGET} only for BLOCKED resume`);
+      }
+    } else if (!phaseNames.has(toPhase)) {
+      errors.push(`${prefix} to references unknown phase: ${toPhase}`);
+    }
+    if (!TRANSITION_KINDS.has(kind)) {
+      errors.push(`${prefix} has invalid kind: ${kind}`);
+    }
+
+    const duplicateKey = `${fromPhase}\0${toPhase}\0${trigger}`;
+    if (seen.has(duplicateKey)) {
+      errors.push(`${prefix} duplicates transition ${fromPhase} -> ${toPhase} (${trigger})`);
+    }
+    seen.add(duplicateKey);
+    outgoing.add(fromPhase);
+
+    if ("effects" in transition && transition.effects !== undefined) {
+      if (!isRecord(transition.effects)) {
+        errors.push(`${prefix} effects must be a mapping`);
+      } else {
+        for (const [effectName, effectValue] of Object.entries(transition.effects)) {
+          if (!["set_suspended_phase", "clear_suspended_phase"].includes(effectName)) {
+            errors.push(`${prefix} has unknown effect: ${effectName}`);
+          }
+          if (typeof effectValue !== "boolean") {
+            errors.push(`${prefix} effect ${effectName} must be boolean`);
+          }
+        }
+      }
+    }
+  });
+
+  for (const phaseName of phaseNames) {
+    if (!outgoing.has(phaseName)) {
+      errors.push(`${phaseName} must have at least one outgoing transition`);
+    }
+  }
+  return errors;
 }
 
 async function readYamlObject(filePath: string): Promise<Record<string, unknown>> {

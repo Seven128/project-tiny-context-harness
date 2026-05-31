@@ -8,3 +8,4 @@ blocked_reason: ""
 suspended_phase: ""
 allowed_next_phases:
   - "IDLE"
+  - "BLOCKED"
