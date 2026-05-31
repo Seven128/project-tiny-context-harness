@@ -93,6 +93,36 @@ tasks:
       runnable_entry: "command / URL / endpoint / worker command"
       observable_exit: "response / page state / side effect / log / artifact"
       module_key_test_path: "local start command / URL -> all self-test scenarios -> all task/module promised runnable entries -> internal key paths / boundaries / checkpoints -> observable completion evidence"
+      # Set graph_required: true for complex/high-risk handoff paths:
+      # scenario >= 3, multiple branches/entries, runtime/live/provider/browser/worker,
+      # or paths that Review/Testing must consume explicitly. The graph is a
+      # lightweight DAG handoff skeleton, not an execution trace, runbook, log,
+      # evidence dump, or graph engine input.
+      graph_required: false
+      module_key_test_graph:
+        nodes:
+          - id: "entry-local-start"
+            kind: "entry"
+            label: "local start command / URL"
+          - id: "checkpoint-core-path"
+            kind: "checkpoint"
+            label: "core module boundary or checkpoint"
+          - id: "scenario-st-001"
+            kind: "scenario"
+            label: "ST-001 expected behavior"
+            scenario_ref: "ST-001"
+            expected_exit: "observable response / side effect / page state"
+            evidence_ref: ".docs/09_runbooks/example_evidence.md#ST-001"
+          - id: "exit-observable"
+            kind: "observable_exit"
+            label: "observable response / side effect / page state"
+        edges:
+          - from: "entry-local-start"
+            to: "checkpoint-core-path"
+          - from: "checkpoint-core-path"
+            to: "scenario-st-001"
+          - from: "scenario-st-001"
+            to: "exit-observable"
       required_gates:
         - "npm run smoke"
       scenarios:

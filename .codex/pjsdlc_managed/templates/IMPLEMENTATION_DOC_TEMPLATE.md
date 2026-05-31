@@ -71,6 +71,7 @@ Input
 - Contract Source:
 - Module Application Entry:
 - Module Key Test Path: local start / invocation -> all self-test scenarios -> all task/module promised runnable entries -> actual internal key paths / boundaries / checkpoints -> observable completion evidence
+- Module Key Test Graph: required only when `self_test_contract.graph_required: true` or `module_key_test_graph` exists; keep it as a compact DAG pointer list/table covering entry, checkpoints, scenario nodes, observable exit, and evidence refs.
 - Scenario Results:
 - Executed Gates:
 - Observable Exit:
@@ -103,6 +104,21 @@ Input
 | Scenario ID | Result | Executed Entry | Actual Exit | Evidence |
 |---|---|---|---|---|
 |  |  |  |  |  |
+
+### Module Key Test Graph（复杂 / high-risk 路径需要）
+
+只记录实际 handoff path 的 DAG 骨架和 evidence pointer；不要放 command output、截图过程、operator log、debug log、runbook 正文、失败探索或历史流水。
+
+| Node ID | Kind | Label | Scenario Ref | Expected Exit | Evidence Ref |
+|---|---|---|---|---|---|
+| entry-local-start | entry |  |  |  |  |
+| scenario-st-001 | scenario |  | ST-001 |  | `.docs/09_runbooks/...#ST-001` |
+| exit-observable | observable_exit |  |  |  |  |
+
+| From | To |
+|---|---|
+| entry-local-start | scenario-st-001 |
+| scenario-st-001 | exit-observable |
 
 ## 9. Testing Handoff Contract（测试交接合同）
 

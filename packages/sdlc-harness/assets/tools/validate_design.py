@@ -129,6 +129,11 @@ def validate_self_test_contract_tech_plan_binding(task: dict, normalized_tech_re
         contains_any(section, ["module key test path", "模块关键测试路径"]),
         f"Draft task {task_id} tech plan Development Self-Test Contract must include Module key test path: {source}",
     )
+    if contract.get("graph_required") is True:
+        require(
+            contains_any(section, ["module key test graph", "module_key_test_graph", "模块关键测试图"]),
+            f"Draft task {task_id} tech plan Development Self-Test Contract must include Module Key Test Graph when graph_required is true: {source}",
+        )
     for scenario in contract.get("scenarios") or []:
         if not isinstance(scenario, dict):
             continue

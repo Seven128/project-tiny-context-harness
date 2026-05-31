@@ -116,6 +116,7 @@ const DEVELOPMENT_SELF_TEST_CONTRACT_TERMS = ["development self-test contract", 
 const DEVELOPMENT_SELF_TEST_REPORT_TERMS = ["development self-test report", "开发自测报告"];
 const DEVELOPMENT_SELF_TEST_IMPACT_TERMS = ["development self-test impact", "开发自测影响"];
 const MODULE_KEY_TEST_PATH_TERMS = ["module key test path", "模块关键测试路径"];
+const MODULE_KEY_TEST_GRAPH_TERMS = ["module key test graph", "module_key_test_graph", "模块关键测试图"];
 const GATE_BREAKDOWN_TERMS = ["gate breakdown", "gate 分层", "gate breakdown（gate 分层）"];
 const CURRENT_OPERATOR_PATH_TERMS = ["current operator path", "operator path", "当前操作路径", "当前 operator path"];
 const TESTING_HANDOFF_TERMS = ["testing handoff contract", "测试交接合同"];
@@ -137,7 +138,11 @@ const SELF_TEST_REPORT_PLACEHOLDER_TERMS = [
   "all self-test scenarios",
   "all task/module promised runnable entries",
   "actual internal key paths",
-  "observable completion evidence"
+  "observable completion evidence",
+  "required only when",
+  "compact dag pointer",
+  "复杂 / high-risk",
+  "只记录实际 handoff"
 ];
 const SELF_TEST_REPORT_STATUSES = new Set(["PASS", "BLOCKED", "IN_PROGRESS", "STALE"]);
 const SELF_TEST_REPORT_REQUIRED_FIELDS = [
@@ -419,6 +424,27 @@ const REVIEW_READINESS_FIELDS = [
   "Testing Handoff Readiness"
 ];
 const SELF_TEST_CONTRACT_STATUSES = new Set(["required", "not_applicable"]);
+const SELF_TEST_GRAPH_NODE_KINDS = new Set(["entry", "checkpoint", "branch", "scenario", "observable_exit"]);
+const SELF_TEST_GRAPH_ORDINARY_NODE_LIMIT = 12;
+const SELF_TEST_GRAPH_HIGH_RISK_NODE_LIMIT = 25;
+const SELF_TEST_GRAPH_EVIDENCE_BODY_TERMS = [
+  "```",
+  "|---",
+  "actual evidence",
+  "command transcript",
+  "full command output",
+  "stdout",
+  "stderr",
+  "traceback",
+  "debug log",
+  "operator log",
+  "evidence dump",
+  "screenshot process",
+  "截图过程",
+  "调试日志",
+  "操作日志",
+  "证据正文"
+];
 const RFC_SELF_TEST_TRIGGER_TERMS = [
   "entry/exit",
   "runnable entry",
@@ -433,6 +459,11 @@ const RFC_SELF_TEST_TRIGGER_TERMS = [
   "handoff",
   "blocker",
   "module key test path",
+  "module key test graph",
+  "module_key_test_graph",
+  "checkpoint",
+  "observable exit",
+  "evidence refs",
   "test route",
   "test path",
   "debug path",
@@ -1126,6 +1157,215 @@ function isNotApplicableRuntimeTask(task: Record<string, unknown>): boolean {
   return String(evidenceLevel?.required ?? "") === "unit" && String(targetRuntime?.kind ?? "") === "not_applicable";
 }
 
+function selfTestGraphEvidenceRefIsBody(value: string): boolean {
+  const trimmed = value.trim();
+  const lowered = trimmed.toLowerCase();
+  return trimmed.includes("\n") || trimmed.length > 180 || SELF_TEST_GRAPH_EVIDENCE_BODY_TERMS.some((term) => lowered.includes(term));
+}
+
+function graphHasCycle(nodeIds: Set<string>, adjacency: Map<string, string[]>): boolean {
+  const visiting = new Set<string>();
+  const visited = new Set<string>();
+
+  const visit = (nodeId: string): boolean => {
+    if (visiting.has(nodeId)) return true;
+    if (visited.has(nodeId)) return false;
+    visiting.add(nodeId);
+    for (const target of adjacency.get(nodeId) ?? []) {
+      if (visit(target)) return true;
+    }
+    visiting.delete(nodeId);
+    visited.add(nodeId);
+    return false;
+  };
+
+  for (const nodeId of nodeIds) {
+    if (!visited.has(nodeId) && visit(nodeId)) return true;
+  }
+  return false;
+}
+
+function reachableFrom(entryId: string, adjacency: Map<string, string[]>): Set<string> {
+  const reached = new Set<string>();
+  const stack = [entryId];
+  while (stack.length > 0) {
+    const nodeId = stack.pop()!;
+    if (reached.has(nodeId)) continue;
+    reached.add(nodeId);
+    stack.push(...(adjacency.get(nodeId) ?? []));
+  }
+  return reached;
+}
+
+function nodesThatCanReachExits(nodeIds: Set<string>, adjacency: Map<string, string[]>, exits: Set<string>): Set<string> {
+  const reverse = new Map<string, string[]>();
+  for (const nodeId of nodeIds) reverse.set(nodeId, []);
+  for (const [source, targets] of adjacency.entries()) {
+    for (const target of targets) {
+      const incoming = reverse.get(target) ?? [];
+      incoming.push(source);
+      reverse.set(target, incoming);
+    }
+  }
+  const reached = new Set<string>();
+  const stack = [...exits];
+  while (stack.length > 0) {
+    const nodeId = stack.pop()!;
+    if (reached.has(nodeId)) continue;
+    reached.add(nodeId);
+    stack.push(...(reverse.get(nodeId) ?? []));
+  }
+  return reached;
+}
+
+function validateSelfTestGraph(
+  taskId: string,
+  contract: Record<string, unknown>,
+  scenarioIds: Set<string>,
+  highRiskRuntime: boolean
+): string[] {
+  const errors: string[] = [];
+  const graphRequired = contract.graph_required;
+  if (graphRequired !== undefined && typeof graphRequired !== "boolean") {
+    errors.push(`${taskId} self_test_contract.graph_required must be a boolean when set`);
+  }
+  const graph = contract.module_key_test_graph;
+  if (graphRequired === true && !isRecord(graph)) {
+    errors.push(`${taskId} self_test_contract.module_key_test_graph is required when graph_required is true`);
+  }
+  if (graph === undefined) return errors;
+  if (!isRecord(graph)) {
+    errors.push(`${taskId} self_test_contract.module_key_test_graph must be a mapping`);
+    return errors;
+  }
+
+  const nodes = graph.nodes;
+  const edges = graph.edges;
+  if (!Array.isArray(nodes) || nodes.length === 0) {
+    errors.push(`${taskId} self_test_contract.module_key_test_graph.nodes must be a non-empty list`);
+    return errors;
+  }
+  if (!Array.isArray(edges) || edges.length === 0) {
+    errors.push(`${taskId} self_test_contract.module_key_test_graph.edges must be a non-empty list`);
+    return errors;
+  }
+
+  const nodeLimit = highRiskRuntime ? SELF_TEST_GRAPH_HIGH_RISK_NODE_LIMIT : SELF_TEST_GRAPH_ORDINARY_NODE_LIMIT;
+  if (nodes.length > nodeLimit) {
+    errors.push(`${taskId} self_test_contract.module_key_test_graph has ${nodes.length} nodes; keep ordinary graphs <= ${SELF_TEST_GRAPH_ORDINARY_NODE_LIMIT} nodes and high-risk graphs <= ${SELF_TEST_GRAPH_HIGH_RISK_NODE_LIMIT} nodes`);
+  }
+
+  const nodeIds = new Set<string>();
+  const entryIds: string[] = [];
+  const observableExitIds = new Set<string>();
+  const scenarioNodesByRef = new Map<string, string[]>();
+  const adjacency = new Map<string, string[]>();
+
+  nodes.forEach((node, index) => {
+    if (!isRecord(node)) {
+      errors.push(`${taskId} self_test_contract.module_key_test_graph.nodes[${index}] must be a mapping`);
+      return;
+    }
+    const nodeId = String(node.id ?? "").trim();
+    const kind = String(node.kind ?? "").trim();
+    const label = String(node.label ?? "").trim();
+    if (!nodeId) {
+      errors.push(`${taskId} self_test_contract.module_key_test_graph.nodes[${index}].id must be set`);
+      return;
+    }
+    if (nodeIds.has(nodeId)) {
+      errors.push(`${taskId} self_test_contract.module_key_test_graph node id must be unique: ${nodeId}`);
+    }
+    nodeIds.add(nodeId);
+    adjacency.set(nodeId, adjacency.get(nodeId) ?? []);
+    if (!SELF_TEST_GRAPH_NODE_KINDS.has(kind)) {
+      errors.push(`${taskId} self_test_contract.module_key_test_graph.nodes[${nodeId}].kind must be one of ${[...SELF_TEST_GRAPH_NODE_KINDS].join(", ")}`);
+    }
+    if (!label || isPlaceholderEvidence(label)) {
+      errors.push(`${taskId} self_test_contract.module_key_test_graph.nodes[${nodeId}].label must be concrete`);
+    }
+    if (kind === "entry") entryIds.push(nodeId);
+    if (kind === "observable_exit") observableExitIds.add(nodeId);
+    if (kind === "scenario") {
+      const scenarioRef = String(node.scenario_ref ?? "").trim();
+      if (!scenarioRef) {
+        errors.push(`${taskId} self_test_contract.module_key_test_graph scenario node ${nodeId} must set scenario_ref`);
+      } else if (!scenarioIds.has(scenarioRef)) {
+        errors.push(`${taskId} self_test_contract.module_key_test_graph scenario node ${nodeId} references unknown scenario: ${scenarioRef}`);
+      } else {
+        const current = scenarioNodesByRef.get(scenarioRef) ?? [];
+        current.push(nodeId);
+        scenarioNodesByRef.set(scenarioRef, current);
+      }
+    }
+    if (node.evidence_ref !== undefined) {
+      const evidenceRef = String(node.evidence_ref).trim();
+      if (!evidenceRef || isPlaceholderEvidence(evidenceRef) || selfTestGraphEvidenceRefIsBody(evidenceRef)) {
+        errors.push(`${taskId} self_test_contract.module_key_test_graph.nodes[${nodeId}].evidence_ref must be a short evidence pointer, not evidence body`);
+      }
+    }
+  });
+
+  if (entryIds.length !== 1) {
+    errors.push(`${taskId} self_test_contract.module_key_test_graph must have exactly one entry node`);
+  }
+  if (observableExitIds.size === 0) {
+    errors.push(`${taskId} self_test_contract.module_key_test_graph must have at least one observable_exit node`);
+  }
+
+  edges.forEach((edge, index) => {
+    if (!isRecord(edge)) {
+      errors.push(`${taskId} self_test_contract.module_key_test_graph.edges[${index}] must be a mapping`);
+      return;
+    }
+    const source = String(edge.from ?? "").trim();
+    const target = String(edge.to ?? "").trim();
+    if (!nodeIds.has(source)) {
+      errors.push(`${taskId} self_test_contract.module_key_test_graph edge references unknown from node: ${source || "<empty>"}`);
+      return;
+    }
+    if (!nodeIds.has(target)) {
+      errors.push(`${taskId} self_test_contract.module_key_test_graph edge references unknown to node: ${target || "<empty>"}`);
+      return;
+    }
+    const current = adjacency.get(source) ?? [];
+    current.push(target);
+    adjacency.set(source, current);
+  });
+
+  if (graphHasCycle(nodeIds, adjacency)) {
+    errors.push(`${taskId} self_test_contract.module_key_test_graph must be a DAG; cycles are not allowed`);
+  }
+
+  let reachedFromEntry = new Set<string>();
+  if (entryIds.length === 1) {
+    reachedFromEntry = reachableFrom(entryIds[0], adjacency);
+    const unreachable = [...nodeIds].filter((nodeId) => !reachedFromEntry.has(nodeId)).sort();
+    if (unreachable.length > 0) {
+      errors.push(`${taskId} self_test_contract.module_key_test_graph nodes must be reachable from entry: ${unreachable.join(", ")}`);
+    }
+  }
+  const canReachExit = nodesThatCanReachExits(nodeIds, adjacency, observableExitIds);
+
+  for (const scenarioId of [...scenarioIds].sort()) {
+    const scenarioNodeIds = scenarioNodesByRef.get(scenarioId) ?? [];
+    if (scenarioNodeIds.length === 0) {
+      errors.push(`${taskId} self_test_contract.module_key_test_graph must include a scenario node for ${scenarioId}`);
+      continue;
+    }
+    for (const nodeId of scenarioNodeIds) {
+      if (reachedFromEntry.size > 0 && !reachedFromEntry.has(nodeId)) {
+        errors.push(`${taskId} self_test_contract.module_key_test_graph scenario ${scenarioId} must be reachable from entry`);
+      }
+      if (!canReachExit.has(nodeId)) {
+        errors.push(`${taskId} self_test_contract.module_key_test_graph scenario ${scenarioId} must reach an observable_exit`);
+      }
+    }
+  }
+
+  return errors;
+}
+
 function validateSelfTestContract(task: Record<string, unknown>, requiredForRunnableBoundary: boolean): string[] {
   const errors: string[] = [];
   const taskId = String(task.id ?? "Task");
@@ -1183,6 +1423,7 @@ function validateSelfTestContract(task: Record<string, unknown>, requiredForRunn
     errors.push(`${taskId} self_test_contract.scenarios must be a non-empty list`);
   }
   const seen = new Set<string>();
+  const scenarioIds = new Set<string>();
   scenarios.forEach((scenario, index) => {
     if (!isRecord(scenario)) {
       errors.push(`${taskId} self_test_contract.scenarios[${index}] must be a mapping`);
@@ -1193,6 +1434,8 @@ function validateSelfTestContract(task: Record<string, unknown>, requiredForRunn
       errors.push(`${taskId} self_test_contract.scenarios[${index}].id must be set`);
     } else if (seen.has(scenarioId)) {
       errors.push(`${taskId} self_test_contract scenario id must be unique: ${scenarioId}`);
+    } else {
+      scenarioIds.add(scenarioId);
     }
     seen.add(scenarioId);
     for (const field of ["entry", "expected_exit", "evidence"]) {
@@ -1201,6 +1444,7 @@ function validateSelfTestContract(task: Record<string, unknown>, requiredForRunn
       }
     }
   });
+  errors.push(...validateSelfTestGraph(taskId, contract, scenarioIds, requiresResumeCapsule(task)));
   return errors;
 }
 
@@ -1230,6 +1474,9 @@ async function validateSelfTestContractTechPlanBinding(
   }
   if (!containsAny(section, MODULE_KEY_TEST_PATH_TERMS)) {
     errors.push(`${taskId} tech plan Development Self-Test Contract must include Module key test path: ${source}`);
+  }
+  if (contract.graph_required === true && !containsAny(section, MODULE_KEY_TEST_GRAPH_TERMS)) {
+    errors.push(`${taskId} tech plan Development Self-Test Contract must include Module Key Test Graph when graph_required is true: ${source}`);
   }
   for (const scenario of Array.isArray(contract.scenarios) ? contract.scenarios.filter(isRecord) : []) {
     const scenarioId = String(scenario.id ?? "").trim();
@@ -1732,9 +1979,17 @@ function validateDevelopmentSelfTestReport(
   if (isPlaceholderSelfTestReportValue(moduleKeyTestPath) || isTemplateModuleKeyTestPath(moduleKeyTestPath)) {
     errors.push(`${taskId} Development Self-Test Report Module Key Test Path must replace template placeholders with actual executed path evidence in ${implementationDoc}`);
   }
+  const graphRequired = contract.graph_required === true || isRecord(contract.module_key_test_graph);
+  const moduleKeyTestGraph = (markdownSection(report, MODULE_KEY_TEST_GRAPH_TERMS) ?? evidenceFieldValue(report, "Module Key Test Graph") ?? "").trim();
+  if (graphRequired && (!moduleKeyTestGraph || isPlaceholderSelfTestReportValue(moduleKeyTestGraph))) {
+    errors.push(`${taskId} Development Self-Test Report must include Module Key Test Graph because self_test_contract graph is required or present in ${implementationDoc}`);
+  }
   const runnableEntry = String(contract.runnable_entry ?? "").trim();
   if (runnableEntry && !moduleKeyTestPath.includes(runnableEntry)) {
     errors.push(`${taskId} Development Self-Test Report Module Key Test Path must include runnable entry ${runnableEntry} in ${implementationDoc}`);
+  }
+  if (graphRequired && moduleKeyTestGraph && runnableEntry && !moduleKeyTestGraph.includes(runnableEntry)) {
+    errors.push(`${taskId} Development Self-Test Report Module Key Test Graph must include runnable entry ${runnableEntry} in ${implementationDoc}`);
   }
   const scenarios = Array.isArray(contract.scenarios) ? contract.scenarios.filter(isRecord) : [];
   const exitEvidenceTerms = [
@@ -1751,11 +2006,23 @@ function validateDevelopmentSelfTestReport(
   ) {
     errors.push(`${taskId} Development Self-Test Report Module Key Test Path must include observable exit or evidence from self_test_contract in ${implementationDoc}`);
   }
+  if (
+    graphRequired
+    && moduleKeyTestGraph
+    && exitEvidenceTerms.length > 0
+    && !exitEvidenceTerms.some((term) => normalizedIncludes(moduleKeyTestGraph, term))
+    && !containsAny(moduleKeyTestGraph, ["observable_exit", "observable exit", "exit", "出口"])
+  ) {
+    errors.push(`${taskId} Development Self-Test Report Module Key Test Graph must include observable exit or evidence from self_test_contract in ${implementationDoc}`);
+  }
   for (const scenario of scenarios) {
     const scenarioId = String(scenario.id ?? "").trim();
     if (!scenarioId) continue;
     if (!moduleKeyTestPath.includes(scenarioId)) {
       errors.push(`${taskId} Development Self-Test Report Module Key Test Path must include scenario ${scenarioId} in ${implementationDoc}`);
+    }
+    if (graphRequired && moduleKeyTestGraph && !moduleKeyTestGraph.includes(scenarioId)) {
+      errors.push(`${taskId} Development Self-Test Report Module Key Test Graph must include scenario ${scenarioId} in ${implementationDoc}`);
     }
     const status = scenarioStatus(report, scenarioId);
     if (!status) {

@@ -35,6 +35,8 @@
 - Open task `working_notes` remains a short recovery surface: target 5-8 notes, validator hard limit 8 notes.
 - Direct `validate-dev` is the SPRINTING in-development gate. It allows a valid current open `phase: "SPRINTING"` task, checks scoped dirty files and draft consumption, and rejects missing current-task contracts.
 - `Development Self-Test Report` now requires `Report Status: PASS | BLOCKED | IN_PROGRESS | STALE`; direct `validate-dev` only passes completion-oriented evidence when `Report Status: PASS` and every scenario is `PASS`.
+- `self_test_contract` keeps `module_key_test_path` as the compatible short summary and can add `module_key_test_graph` as a lightweight DAG for complex/high-risk paths. `graph_required: true` makes the graph mandatory for that task; legacy text-only contracts still pass when graph is not required.
+- The test graph is a handoff contract, not active execution state: it only stores path nodes, directed edges and short evidence pointers, while runbooks, evidence bodies, debug logs, operator logs and task history remain outside the graph.
 - High-risk runtime/live implementation docs use a short `Current Operator Path` for canonical operator path, runbook link, credential reference name, command/UI channel and do-not-retry summary. Debug logs, operator logs, runbook bodies, exploration history and diagnostic attempts stay out of the self-test report.
 - `validate-current` and `tools/run_current_gate.py` keep phase-exit safety: after the phase gate runs, `plan.yaml` must have no open tasks before lifecycle advancement.
 
@@ -180,6 +182,7 @@ Stage task starts
 - direct `validate-dev` requires lifecycle `current_phase: "SPRINTING"` and allows either an empty development queue or one valid current open `phase: "SPRINTING"` task with `current_task_id`, `docs`, `allowed_paths`, `required_gates`, `acceptance_criteria` and `implementation_doc`.
 - direct `validate-dev` requires `resume_capsule` for high-risk current SPRINTING tasks, validates its task id, concrete recovery fields, do-not-retry list, current implementation doc ref and `.docs/09_runbooks/**` ref.
 - direct `validate-dev` requires legal `Development Self-Test Report` status. `BLOCKED`, `IN_PROGRESS` and `STALE` reports are recoverable facts but cannot close a development task; `PASS` with any non-PASS scenario also fails.
+- `validate-plan` and `validate-dev` validate `module_key_test_graph` when present or required: exactly one entry, at least one observable exit, allowed node kinds, unique ids, known edge refs, no cycles, all nodes reachable from entry, every scenario represented by a reachable scenario node, and every scenario path reaching an observable exit.
 - direct `validate-dev` rejects self-test report headings that turn the report into a debug/operator/runbook/exploration log. High-risk tasks must link operator facts through `Current Operator Path` and `.docs/09_runbooks/**`.
 - `validate-dev` enforces dirty-file scoping when a current open task exists; changes outside the current task `allowed_paths` fail the direct dev gate.
 - ADRs solve the long-term "why this option, not another" problem. Architecture and tech plan slices may keep local rationale, but decisions with alternatives, cross-module or cross-stage impact, high reversal cost or future supersede semantics belong in `.docs/05_decisions/`.

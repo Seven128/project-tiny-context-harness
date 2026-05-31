@@ -378,6 +378,27 @@ CALLABLE_TASK_TERMS = [
     "队列",
 ]
 SELF_TEST_CONTRACT_STATUSES = {"required", "not_applicable"}
+SELF_TEST_GRAPH_NODE_KINDS = {"entry", "checkpoint", "branch", "scenario", "observable_exit"}
+SELF_TEST_GRAPH_ORDINARY_NODE_LIMIT = 12
+SELF_TEST_GRAPH_HIGH_RISK_NODE_LIMIT = 25
+SELF_TEST_GRAPH_EVIDENCE_BODY_TERMS = [
+    "```",
+    "|---",
+    "actual evidence",
+    "command transcript",
+    "full command output",
+    "stdout",
+    "stderr",
+    "traceback",
+    "debug log",
+    "operator log",
+    "evidence dump",
+    "screenshot process",
+    "截图过程",
+    "调试日志",
+    "操作日志",
+    "证据正文",
+]
 RESUME_CAPSULE_REQUIRED_EVIDENCE_LEVELS = {"external_provider_live", "deployed_runtime", "business_handoff_ready"}
 RESUME_CAPSULE_REQUIRED_TARGET_KINDS = {"cloud_vm", "managed_service", "browser", "worker"}
 RESUME_CAPSULE_FIELDS = [
@@ -444,6 +465,182 @@ def requires_resume_capsule(task: dict[str, Any]) -> bool:
     return required in RESUME_CAPSULE_REQUIRED_EVIDENCE_LEVELS or kind in RESUME_CAPSULE_REQUIRED_TARGET_KINDS
 
 
+def self_test_graph_evidence_ref_is_body(value: str) -> bool:
+    stripped = value.strip()
+    lowered = stripped.lower()
+    return "\n" in stripped or len(stripped) > 180 or any(term in lowered for term in SELF_TEST_GRAPH_EVIDENCE_BODY_TERMS)
+
+
+def graph_has_cycle(node_ids: set[str], adjacency: dict[str, list[str]]) -> bool:
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit(node_id: str) -> bool:
+        if node_id in visiting:
+            return True
+        if node_id in visited:
+            return False
+        visiting.add(node_id)
+        for target in adjacency.get(node_id, []):
+            if visit(target):
+                return True
+        visiting.remove(node_id)
+        visited.add(node_id)
+        return False
+
+    return any(visit(node_id) for node_id in node_ids if node_id not in visited)
+
+
+def reachable_from(entry_id: str, adjacency: dict[str, list[str]]) -> set[str]:
+    reached: set[str] = set()
+    stack = [entry_id]
+    while stack:
+        node_id = stack.pop()
+        if node_id in reached:
+            continue
+        reached.add(node_id)
+        stack.extend(adjacency.get(node_id, []))
+    return reached
+
+
+def nodes_that_can_reach_exits(node_ids: set[str], adjacency: dict[str, list[str]], exits: set[str]) -> set[str]:
+    reverse: dict[str, list[str]] = {node_id: [] for node_id in node_ids}
+    for source, targets in adjacency.items():
+        for target in targets:
+            reverse.setdefault(target, []).append(source)
+    reached: set[str] = set()
+    stack = list(exits)
+    while stack:
+        node_id = stack.pop()
+        if node_id in reached:
+            continue
+        reached.add(node_id)
+        stack.extend(reverse.get(node_id, []))
+    return reached
+
+
+def self_test_graph_errors_for_contract(
+    task_id: str,
+    contract: dict[str, Any],
+    scenario_ids: set[str],
+    high_risk_runtime: bool,
+) -> list[str]:
+    errors: list[str] = []
+    graph_required = contract.get("graph_required")
+    if graph_required is not None and not isinstance(graph_required, bool):
+        errors.append(f"{task_id} self_test_contract.graph_required must be a boolean when set")
+    graph = contract.get("module_key_test_graph")
+    if graph_required is True and not isinstance(graph, dict):
+        errors.append(f"{task_id} self_test_contract.module_key_test_graph is required when graph_required is true")
+    if graph is None:
+        return errors
+    if not isinstance(graph, dict):
+        errors.append(f"{task_id} self_test_contract.module_key_test_graph must be a mapping")
+        return errors
+
+    nodes = graph.get("nodes")
+    edges = graph.get("edges")
+    if not isinstance(nodes, list) or not nodes:
+        errors.append(f"{task_id} self_test_contract.module_key_test_graph.nodes must be a non-empty list")
+        return errors
+    if not isinstance(edges, list) or not edges:
+        errors.append(f"{task_id} self_test_contract.module_key_test_graph.edges must be a non-empty list")
+        return errors
+
+    node_limit = SELF_TEST_GRAPH_HIGH_RISK_NODE_LIMIT if high_risk_runtime else SELF_TEST_GRAPH_ORDINARY_NODE_LIMIT
+    if len(nodes) > node_limit:
+        errors.append(
+            f"{task_id} self_test_contract.module_key_test_graph has {len(nodes)} nodes; keep ordinary graphs <= {SELF_TEST_GRAPH_ORDINARY_NODE_LIMIT} nodes and high-risk graphs <= {SELF_TEST_GRAPH_HIGH_RISK_NODE_LIMIT} nodes"
+        )
+
+    node_ids: set[str] = set()
+    entry_ids: list[str] = []
+    observable_exit_ids: set[str] = set()
+    scenario_nodes_by_ref: dict[str, list[str]] = {}
+    adjacency: dict[str, list[str]] = {}
+
+    for index, node in enumerate(nodes):
+        if not isinstance(node, dict):
+            errors.append(f"{task_id} self_test_contract.module_key_test_graph.nodes[{index}] must be a mapping")
+            continue
+        node_id = str(node.get("id") or "").strip()
+        kind = str(node.get("kind") or "").strip()
+        label = str(node.get("label") or "").strip()
+        if not node_id:
+            errors.append(f"{task_id} self_test_contract.module_key_test_graph.nodes[{index}].id must be set")
+            continue
+        if node_id in node_ids:
+            errors.append(f"{task_id} self_test_contract.module_key_test_graph node id must be unique: {node_id}")
+        node_ids.add(node_id)
+        adjacency.setdefault(node_id, [])
+        if kind not in SELF_TEST_GRAPH_NODE_KINDS:
+            errors.append(
+                f"{task_id} self_test_contract.module_key_test_graph.nodes[{node_id}].kind must be one of {', '.join(sorted(SELF_TEST_GRAPH_NODE_KINDS))}"
+            )
+        if not label or is_placeholder_evidence(label):
+            errors.append(f"{task_id} self_test_contract.module_key_test_graph.nodes[{node_id}].label must be concrete")
+        if kind == "entry":
+            entry_ids.append(node_id)
+        if kind == "observable_exit":
+            observable_exit_ids.add(node_id)
+        if kind == "scenario":
+            scenario_ref = str(node.get("scenario_ref") or "").strip()
+            if not scenario_ref:
+                errors.append(f"{task_id} self_test_contract.module_key_test_graph scenario node {node_id} must set scenario_ref")
+            elif scenario_ref not in scenario_ids:
+                errors.append(f"{task_id} self_test_contract.module_key_test_graph scenario node {node_id} references unknown scenario: {scenario_ref}")
+            else:
+                scenario_nodes_by_ref.setdefault(scenario_ref, []).append(node_id)
+        evidence_ref = node.get("evidence_ref")
+        if evidence_ref is not None:
+            evidence_ref_text = str(evidence_ref).strip()
+            if not evidence_ref_text or is_placeholder_evidence(evidence_ref_text) or self_test_graph_evidence_ref_is_body(evidence_ref_text):
+                errors.append(f"{task_id} self_test_contract.module_key_test_graph.nodes[{node_id}].evidence_ref must be a short evidence pointer, not evidence body")
+
+    if len(entry_ids) != 1:
+        errors.append(f"{task_id} self_test_contract.module_key_test_graph must have exactly one entry node")
+    if not observable_exit_ids:
+        errors.append(f"{task_id} self_test_contract.module_key_test_graph must have at least one observable_exit node")
+
+    for index, edge in enumerate(edges):
+        if not isinstance(edge, dict):
+            errors.append(f"{task_id} self_test_contract.module_key_test_graph.edges[{index}] must be a mapping")
+            continue
+        source = str(edge.get("from") or "").strip()
+        target = str(edge.get("to") or "").strip()
+        if source not in node_ids:
+            errors.append(f"{task_id} self_test_contract.module_key_test_graph edge references unknown from node: {source or '<empty>'}")
+            continue
+        if target not in node_ids:
+            errors.append(f"{task_id} self_test_contract.module_key_test_graph edge references unknown to node: {target or '<empty>'}")
+            continue
+        adjacency.setdefault(source, []).append(target)
+
+    if graph_has_cycle(node_ids, adjacency):
+        errors.append(f"{task_id} self_test_contract.module_key_test_graph must be a DAG; cycles are not allowed")
+
+    reached_from_entry: set[str] = set()
+    if len(entry_ids) == 1:
+        reached_from_entry = reachable_from(entry_ids[0], adjacency)
+        unreachable = sorted(node_ids - reached_from_entry)
+        if unreachable:
+            errors.append(f"{task_id} self_test_contract.module_key_test_graph nodes must be reachable from entry: {', '.join(unreachable)}")
+    can_reach_exit = nodes_that_can_reach_exits(node_ids, adjacency, observable_exit_ids)
+
+    for scenario_id in sorted(scenario_ids):
+        scenario_node_ids = scenario_nodes_by_ref.get(scenario_id, [])
+        if not scenario_node_ids:
+            errors.append(f"{task_id} self_test_contract.module_key_test_graph must include a scenario node for {scenario_id}")
+            continue
+        for node_id in scenario_node_ids:
+            if reached_from_entry and node_id not in reached_from_entry:
+                errors.append(f"{task_id} self_test_contract.module_key_test_graph scenario {scenario_id} must be reachable from entry")
+            if node_id not in can_reach_exit:
+                errors.append(f"{task_id} self_test_contract.module_key_test_graph scenario {scenario_id} must reach an observable_exit")
+
+    return errors
+
+
 def self_test_contract_errors_for_task(task: dict[str, Any]) -> list[str]:
     task_id = str(task.get("id") or "Task")
     required_for_runnable = needs_runnable_task_contract(task)
@@ -486,24 +683,28 @@ def self_test_contract_errors_for_task(task: dict[str, Any]) -> list[str]:
             errors.append(f"{task_id} self_test_contract.required_gates must also appear in task required_gates: {gate}")
 
     scenarios = contract.get("scenarios")
+    scenario_ids: set[str] = set()
     if not isinstance(scenarios, list) or not scenarios:
         errors.append(f"{task_id} self_test_contract.scenarios must be a non-empty list")
-        return errors
-    seen: set[str] = set()
-    for index, scenario in enumerate(scenarios):
-        if not isinstance(scenario, dict):
-            errors.append(f"{task_id} self_test_contract.scenarios[{index}] must be a mapping")
-            continue
-        scenario_id = str(scenario.get("id") or "").strip()
-        if not scenario_id:
-            errors.append(f"{task_id} self_test_contract.scenarios[{index}].id must be set")
-        elif scenario_id in seen:
-            errors.append(f"{task_id} self_test_contract scenario id must be unique: {scenario_id}")
-        seen.add(scenario_id)
-        for field in ["entry", "expected_exit", "evidence"]:
-            value = str(scenario.get(field) or "").strip()
-            if not value or is_placeholder_evidence(value):
-                errors.append(f"{task_id} self_test_contract.scenarios[{scenario_id or index}].{field} must be concrete")
+    else:
+        seen: set[str] = set()
+        for index, scenario in enumerate(scenarios):
+            if not isinstance(scenario, dict):
+                errors.append(f"{task_id} self_test_contract.scenarios[{index}] must be a mapping")
+                continue
+            scenario_id = str(scenario.get("id") or "").strip()
+            if not scenario_id:
+                errors.append(f"{task_id} self_test_contract.scenarios[{index}].id must be set")
+            elif scenario_id in seen:
+                errors.append(f"{task_id} self_test_contract scenario id must be unique: {scenario_id}")
+            else:
+                scenario_ids.add(scenario_id)
+            seen.add(scenario_id)
+            for field in ["entry", "expected_exit", "evidence"]:
+                value = str(scenario.get(field) or "").strip()
+                if not value or is_placeholder_evidence(value):
+                    errors.append(f"{task_id} self_test_contract.scenarios[{scenario_id or index}].{field} must be concrete")
+    errors.extend(self_test_graph_errors_for_contract(task_id, contract, scenario_ids, requires_resume_capsule(task)))
     return errors
 
 

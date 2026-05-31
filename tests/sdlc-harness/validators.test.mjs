@@ -59,7 +59,7 @@ try {
   );
   await writeFile(
     path.join(root, ".docs/03_tech_plan/plan.md"),
-    "# Plan\n\nAPI contract task breakdown\n\n## Development Self-Test Contract\n\n- Module key test path: local `npm test` -> ST-001 -> validator CLI entry -> plan and implementation evidence parser key path -> PASS output.\n\n| Scenario ID | Entry | Expected Exit | Evidence |\n|---|---|---|---|\n| ST-001 | `npm test` | PASS output | command output |\n",
+      "# Plan\n\nAPI contract task breakdown\n\n## Development Self-Test Contract\n\n- Module key test path: local `npm test` -> ST-001 -> validator CLI entry -> plan and implementation evidence parser key path -> PASS output.\n- Module Key Test Graph: entry-local-npm-test -> checkpoint-cli -> scenario-st-001 -> exit-pass.\n\n| Scenario ID | Entry | Expected Exit | Evidence |\n|---|---|---|---|\n| ST-001 | `npm test` | PASS output | command output |\n",
     "utf8"
   );
   await writeFile(
@@ -249,6 +249,70 @@ transitions:
   graphReport = await runValidator(root, "validate-harness");
   assert.match(graphReport.errors.join("\n"), /unknown phase: UNKNOWN/);
   await writeFile(path.join(root, ".harness/pjsdlc_managed/policies/phase_contracts.yaml"), validPhaseContracts, "utf8");
+
+  await writeGraphTaskPlan(root, graphContract());
+  let graphTaskReport = await runValidator(root, "validate-plan");
+  assert.deepEqual(graphTaskReport.errors, [], "validate-plan accepts valid module_key_test_graph DAG");
+
+  await writeGraphTaskPlan(root, graphContract({ graphBlock: "" }));
+  graphTaskReport = await runValidator(root, "validate-plan");
+  assert.match(graphTaskReport.errors.join("\n"), /module_key_test_graph is required/);
+
+  await writeGraphTaskPlan(root, graphContract({ graphBlock: `${validSelfTestGraphYaml()}          - from: "exit-pass"\n            to: "checkpoint-cli"\n` }));
+  graphTaskReport = await runValidator(root, "validate-plan");
+  assert.match(graphTaskReport.errors.join("\n"), /must be a DAG/);
+
+  await writeGraphTaskPlan(root, graphContract({ graphBlock: validSelfTestGraphYaml().replace('id: "exit-pass"', 'id: "scenario-st-001"') }));
+  graphTaskReport = await runValidator(root, "validate-plan");
+  assert.match(graphTaskReport.errors.join("\n"), /node id must be unique/);
+
+  await writeGraphTaskPlan(root, graphContract({ graphBlock: validSelfTestGraphYaml().replace('to: "exit-pass"', 'to: "missing-exit"') }));
+  graphTaskReport = await runValidator(root, "validate-plan");
+  assert.match(graphTaskReport.errors.join("\n"), /unknown to node: missing-exit/);
+
+  await writeGraphTaskPlan(root, graphContract({ graphBlock: validSelfTestGraphYaml().replace('kind: "entry"', 'kind: "checkpoint"') }));
+  graphTaskReport = await runValidator(root, "validate-plan");
+  assert.match(graphTaskReport.errors.join("\n"), /exactly one entry/);
+
+  await writeGraphTaskPlan(root, graphContract({ graphBlock: validSelfTestGraphYaml().replace('        edges:', '          - id: "entry-alt"\n            kind: "entry"\n            label: "alternate npm test entry"\n        edges:') }));
+  graphTaskReport = await runValidator(root, "validate-plan");
+  assert.match(graphTaskReport.errors.join("\n"), /exactly one entry/);
+
+  await writeGraphTaskPlan(root, graphContract({ graphBlock: validSelfTestGraphYaml().replace('scenario_ref: "ST-001"', 'scenario_ref: "ST-999"') }));
+  graphTaskReport = await runValidator(root, "validate-plan");
+  assert.match(graphTaskReport.errors.join("\n"), /scenario node scenario-st-001 references unknown scenario: ST-999|scenario node for ST-001/);
+
+  await writeGraphTaskPlan(root, graphContract({ graphBlock: validSelfTestGraphYaml().replace('          - from: "scenario-st-001"\n            to: "exit-pass"\n', "") }));
+  graphTaskReport = await runValidator(root, "validate-plan");
+  assert.match(graphTaskReport.errors.join("\n"), /scenario ST-001 must reach an observable_exit/);
+
+  await writeGraphTaskPlan(root, graphContract({ graphBlock: validSelfTestGraphYaml().replace('.docs/09_runbooks/live_smoke_evidence.md#ST-001', 'stdout: copied command output body') }));
+  graphTaskReport = await runValidator(root, "validate-plan");
+  assert.match(graphTaskReport.errors.join("\n"), /evidence_ref must be a short evidence pointer/);
+
+  await writeGraphTaskPlan(root, graphContract({ graphRequired: "omit", graphBlock: "" }));
+  graphTaskReport = await runValidator(root, "validate-plan");
+  assert.deepEqual(graphTaskReport.errors, [], "validate-plan keeps legacy module_key_test_path-only tasks valid");
+
+  await writeGraphTaskPlan(root, graphContract());
+  await writeFile(path.join(root, ".harness/state/lifecycle.yaml"), 'current_phase: "SPRINTING"\n', "utf8");
+  await writeFile(path.join(root, ".harness/state/plan.draft.yaml"), "next_task_sequence: 2\ntasks: []\n", "utf8");
+  await writeFile(
+    path.join(root, ".docs/04_implementation/example/dev.md"),
+    graphImplementationDoc({ includeGraph: false }),
+    "utf8"
+  );
+  graphTaskReport = await runValidator(root, "validate-dev");
+  assert.match(graphTaskReport.errors.join("\n"), /Module Key Test Graph/);
+  await writeFile(
+    path.join(root, ".docs/04_implementation/example/dev.md"),
+    graphImplementationDoc({ includeGraph: true }),
+    "utf8"
+  );
+  graphTaskReport = await runValidator(root, "validate-dev");
+  assert.deepEqual(graphTaskReport.errors, [], "validate-dev accepts actual Module Key Test Graph for graph_required task");
+  await writeFile(path.join(root, ".harness/state/lifecycle.yaml"), 'current_phase: "REQUIREMENT_GATHERING"\n', "utf8");
+  await writeFile(path.join(root, ".harness/state/plan.yaml"), "current_task_id: \"\"\nnext_task_sequence: 11\ntasks: []\n", "utf8");
 
   await writeFile(path.join(root, ".docs/07_test/TEST_PLAN.md"), "# Legacy Test Plan\n\nMissing canonical sections.\n", "utf8");
   const ignoredTestPlan = await runValidator(root, "validate-test");
@@ -445,6 +509,49 @@ tasks: []
     await rm(boundaryRoot, { recursive: true, force: true });
   }
 
+  await writeFile(
+    path.join(root, ".harness/state/plan.draft.yaml"),
+    `next_task_sequence: 2
+tasks:
+  - id: TASK-001
+    phase: SPRINTING
+    title: Implement baseline fixture
+    status: pending
+    summary: Build the baseline package validator fixture.
+    docs:
+      product:
+        - .docs/01_product/prd.md
+      architecture:
+        - .docs/02_architecture/arch.md
+      tech_plan:
+        - .docs/03_tech_plan/plan.md
+    allowed_paths:
+      - src/**
+      - tests/**
+      - .docs/04_implementation/example/dev.md
+    required_gates:
+      - npm test
+    self_test_contract:
+      status: required
+      source: .docs/03_tech_plan/plan.md
+      capability_refs:
+        - PRD-TEST-001
+      runnable_entry: npm test
+      observable_exit: PASS output
+      module_key_test_path: local npm test -> ST-001 -> validator CLI entry -> plan and implementation evidence parser key path -> PASS output
+      required_gates:
+        - npm test
+      scenarios:
+        - id: ST-001
+          entry: npm test
+          expected_exit: PASS output
+          evidence: command output
+    acceptance_criteria:
+      - Fixture task has a concrete tech plan slice.
+    implementation_doc: .docs/04_implementation/example/dev.md
+`,
+    "utf8"
+  );
   await writeFile(
     path.join(root, ".harness/state/lifecycle.yaml"),
     'current_phase: "SPRINTING"\n',
@@ -2085,6 +2192,137 @@ tasks:
   assert.match(devReport.errors.join("\n"), /parallel_execution must not define linked_task_id/);
 } finally {
   await rm(root, { recursive: true, force: true });
+}
+
+async function writeGraphTaskPlan(projectRoot, selfTestContract) {
+  await writeFile(
+    path.join(projectRoot, ".harness/state/plan.yaml"),
+    `current_task_id: TASK-010
+next_task_sequence: 11
+tasks:
+  - id: TASK-010
+    phase: SPRINTING
+    title: Graph self-test contract task
+    status: in_progress
+    summary: Runtime task with a lightweight module key test graph.
+    docs:
+      product:
+        - .docs/01_product/prd.md
+      tech_plan:
+        - .docs/03_tech_plan/plan.md
+    allowed_paths:
+      - src/**
+      - tests/**
+      - .docs/04_implementation/example/dev.md
+    required_gates:
+      - npm test
+    evidence_level:
+      required: local_runtime
+    target_runtime_environment:
+      kind: local
+      required_for_done: true
+      handoff_entrypoint: "npm test"
+    self_test_contract:
+${selfTestContract}
+    acceptance_criteria:
+      - Lightweight graph handoff is valid.
+    implementation_doc: .docs/04_implementation/example/dev.md
+`,
+    "utf8"
+  );
+}
+
+function graphContract({ graphRequired = true, graphBlock = validSelfTestGraphYaml() } = {}) {
+  const requiredLine = graphRequired === "omit" ? "" : `      graph_required: ${graphRequired ? "true" : "false"}\n`;
+  return `      status: required
+      source: .docs/03_tech_plan/plan.md
+      capability_refs:
+        - PRD-TEST-001
+      runnable_entry: npm test
+      observable_exit: PASS output
+      module_key_test_path: local npm test -> ST-001 -> validator CLI entry -> plan and implementation evidence parser key path -> PASS output
+${requiredLine}${graphBlock}      required_gates:
+        - npm test
+      scenarios:
+        - id: ST-001
+          entry: npm test
+          expected_exit: PASS output
+          evidence: command output
+`;
+}
+
+function validSelfTestGraphYaml() {
+  return `      module_key_test_graph:
+        nodes:
+          - id: "entry-local-npm-test"
+            kind: "entry"
+            label: "npm test"
+          - id: "checkpoint-cli"
+            kind: "checkpoint"
+            label: "validator CLI entry"
+          - id: "scenario-st-001"
+            kind: "scenario"
+            label: "ST-001 validator CLI evidence"
+            scenario_ref: "ST-001"
+            expected_exit: "PASS output"
+            evidence_ref: ".docs/09_runbooks/live_smoke_evidence.md#ST-001"
+          - id: "exit-pass"
+            kind: "observable_exit"
+            label: "PASS output"
+        edges:
+          - from: "entry-local-npm-test"
+            to: "checkpoint-cli"
+          - from: "checkpoint-cli"
+            to: "scenario-st-001"
+          - from: "scenario-st-001"
+            to: "exit-pass"
+`;
+}
+
+function graphImplementationDoc({ includeGraph }) {
+  const graphSection = includeGraph
+    ? `
+- Module Key Test Graph: entry-local-npm-test (entry npm test) -> checkpoint-cli -> scenario-st-001 (ST-001) -> exit-pass (PASS output); evidence_ref .docs/09_runbooks/live_smoke_evidence.md#ST-001.
+`
+    : "";
+  return `# Impl
+
+## Runnable Entry/Exit
+
+- Entry points: shipped CLI fixture.
+- Exit / side effects: validation output only.
+- Config contract: not applicable.
+- Fixture/live boundary: fixture-only.
+
+## Development Evidence
+
+- Evidence Level: \`local_runtime\` executed through the local package CLI.
+- Target Runtime Environment: \`local\` CLI runtime.
+- Runnable Entry: CLI command \`npm test\` runs the package validator fixture.
+- Observable Exit: Command output reports validate-dev PASS with no errors.
+- Client / Server Initialization: Local CLI runtime starts from the recorded command and exits with status evidence.
+- Config Contract: no external config required for this fixture.
+- Testing Handoff Readiness: local validation command and output are ready for TESTING handoff.
+- Known Missing Runtime Boundaries: none for this local CLI fixture.
+- Basic Self-test Evidence: See \`Development Self-Test Report\`; \`npm test\` PASS for the fixture regression.
+
+## Development Self-Test Report
+
+- Report Status: PASS
+- Contract Source: .docs/03_tech_plan/plan.md
+- Module Application Entry: npm test
+- Scenario Results: ST-001 PASS
+- Executed Gates: npm test
+- Module Key Test Path: local \`npm test\` -> ST-001 -> validator CLI entry -> plan and implementation evidence parser key path -> PASS output.
+${graphSection}- Observable Exit: PASS output recorded by scenario result.
+- Evidence Index Refs: .docs/09_runbooks/live_smoke_evidence.md#ST-001
+- Current Blocker: none; ready to continue through recorded handoff.
+- Testing Handoff Readiness: ready for TESTING handoff.
+
+| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |
+|---|---|---|---|---|
+| ST-001 | PASS | \`npm test\` | PASS output | command output |
+`;
 }
 
 async function writeTestingBoundaryFixture(projectRoot) {

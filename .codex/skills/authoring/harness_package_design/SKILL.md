@@ -33,6 +33,8 @@ tech plan 或 RFC 明确晋升路径，再进入通用 Skill、policy、template
 
 修改 workflow graph、phase graph、task graph 或类似数据结构时，默认采用轻量 declarative schema，而不是重型图框架。图节点和边只能保存稳定 workflow contract，例如阶段角色、skill、输入输出、gate、合法流转和少量 transition effects；不得把 task history、operator log、debug evidence、runbook 正文、implementation doc 正文、screenshot 过程、失败探索流水或阶段执行历史塞入图。新增或扩展这类结构前，必须先写清 source of truth、实际 consumer、validator、migration / compatibility path，以及为什么现有 YAML 字段不足。没有 validator 或 transition/helper 消费的数据结构不算提升 Agent 注意力，只是换了存储格式。
 
+修改测试路径图、handoff graph 或类似交接数据结构时也遵循同一边界：图只保存入口、checkpoint、scenario、出口、边和短 evidence pointer，帮助 Review/Testing 消费路径；不保存测试执行历史、trace、debug output、operator log、runbook 正文或 evidence body。优先使用现有 YAML 字段和轻量 validator；只有当重复高风险执行需要更强机器消费且经过 PRD/RFC 批准时，才升级为执行引擎或更重的 graph 机制。
+
 后续 workflow graph 类变更必须保持边界：优先新增或调整少量字段、edge、validator 规则和文档说明；不得为了“更结构化”直接引入 graph engine、node class、edge class、traversal framework、visualizer 或 schema migration framework。只有当同类遗漏重复发生、影响高风险阶段流转或已有轻量字段无法表达必要约束，并且经过 PRD/RFC 明确批准后，才可以升级为更重的图机制。新增 canonical graph 字段时，要同步删除或 deprecated 旧字段，避免 `next` / `returns` 这类并行事实源继续漂移。
 
 除 `<harnessRoot>/skills/**` 作为 workflow Skill hard file index 外，workflow Harness 配置都应放在

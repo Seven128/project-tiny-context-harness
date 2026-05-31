@@ -1,11 +1,11 @@
 # .docs/01_product overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: e0772678424b7ce3 -->
+<!-- source-hash: 7142d89d37c0630e -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `e0772678424b7ce3`
+Source hash: `7142d89d37c0630e`
 
 ## Source Slices
 
@@ -80,6 +80,7 @@ Source: [npm_package_distribution.md](npm_package_distribution.md)
 | PRD-NPM-030 | `Development Self-Test Report` 必须保持短交接卡语义 | P0 | 自测报告只记录入口、Module Key Test Path、scenario 结果、executed gates、Observable Exit、Current Blocker、Testing Handoff Readiness 和 Evidence Index Refs；debug log、operator log、runbook、evidence dump、失败探索和历史流水必须分离到 runbook/evidence/exploration |
 | PRD-NPM-031 | high-risk runtime/live task 必须提升恢复硬约束 | P0 | 会改变下一步动作的判断必须 promoted 到 `resume_capsule.do_not_retry`、runbook `Hard Constraints` 或短 `Current Operator Path`，不能只埋在 evidence、notes、appendix 或长 implementation doc 中 |
 | PRD-NPM-032 | 阶段流转必须使用轻量显式有向图 | P0 | `phase_contracts.yaml` 以 `phases` 记录阶段节点 contract，以 `transitions` 记录合法流转边、trigger、kind 和必要 effects；`transition.py` 和 validator 必须消费同一图结构。不得把 task history、operator log、debug evidence、runbook 正文或阶段历史塞入图；不得为当前需求引入重型 graph engine、node/edge class、遍历框架或可视化。 |
+| PRD-NPM-033 | 复杂开发自测路径支持轻量 DAG handoff graph | P1 | `self_test_contract.module_key_test_path` 保持兼容；复杂或 high-risk task 可设置 `graph_required: true` 并提供 `module_key_test_graph`，节点只记录 `entry`、`checkpoint`、`branch`、`scenario`、`observable_exit`，边只记录合法路径，`evidence_ref` 只保存短指针。validator 必须拒绝 cycle、未知节点、缺失 entry、scenario 不可达或证据正文进入 graph。 |
 
 ## 5. Acceptance Criteria
 
@@ -128,6 +129,9 @@ Source: [npm_package_distribution.md](npm_package_distribution.md)
 - [ ] session / QR / canonical path / do-not-retry 类关键判断如果只出现在 `working_notes`、evidence、appendix 或 implementation doc 普通章节中，而未 promoted 到 hard constraints，`validate-dev` 会拒绝。
 - [ ] `phase_contracts.yaml` 包含 top-level `transitions`，canonical phase nodes 不再使用 `next` / `returns`；`validate-harness` 拒绝缺失 transitions、未知 phase、重复 edge、非法 `<suspended_phase>` target 或遗留 `next` / `returns`。
 - [ ] `transition.py` 从显式 transition graph 计算合法下一阶段和 `allowed_next_phases`，并且旧 consumer policy 缺少 `transitions` 时仍能用 legacy `next` / `returns` fallback 完成基本流转。
+- [ ] `self_test_contract` 支持可选 `graph_required` 和 `module_key_test_graph`；当 graph required 或 graph present 时，validator 检查单一 entry、合法 node kind、唯一 node id、edge 引用、DAG 无环、每个 scenario 可从 entry 到达并能走到 observable exit。
+- [ ] 旧 task 只使用 `module_key_test_path` 时仍可通过；新 high-risk / multi-scenario task 的 prompts 会倾向生成 graph skeleton。
+- [ ] `module_key_test_graph` 不接受 command output、截图过程、operator log、debug log、runbook 正文、失败探索或历史流水，证据正文必须留在 Evidence Index 或外部 artifact。
 
 ## 6. Out Of Scope
 
@@ -142,6 +146,8 @@ Source: [npm_package_distribution.md](npm_package_distribution.md)
 - 不把过去 phase/task 执行流水写入 active state，也不要求 Agent 默认读取这些流水。
 - 历史 `dev_*.md` task log 已在 DEV-043 合并为模块级 implementation docs；后续不再把 task 粒度文档作为 `.docs/04_implementation/` 的活跃事实源。
 - 第一版不提供 `sdlc-harness parallel run` 这类独立并行调度 CLI；Harness 使用 Codex native subagent runtime，并保留 `codex_exec_worktree` 作为强隔离 fallback 语义。
+- 不提供自动 text-to-graph 迁移；测试路径分支、checkpoint 和 observable exit 需要人工或 Agent 判断，自动转换容易制造虚假结构。
+- 不把 `module_key_test_graph` 做成测试执行引擎、trace graph、图数据库、可视化或通用 traversal framework；它只承担开发自测 handoff path contract。
 
 ## 7. Open Questions
 
