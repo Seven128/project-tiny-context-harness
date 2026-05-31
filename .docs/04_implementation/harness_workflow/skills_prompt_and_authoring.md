@@ -44,6 +44,7 @@
 - The authoring-only Harness design prompt now applies the same lightweight boundary to test path graphs: graph nodes and edges only hold handoff path skeleton and evidence pointers, not execution trace, debug output, operator log, runbook body or evidence body.
 - The authoring-only Harness design prompt now asks maintainers to consider data structures for workflow changes when repeated consumers, validator/tool usage or recovery reliability would benefit, while explicitly weighing migration cost, compatibility, schema drift, context weight and over-abstraction before promoting prose into structure.
 - The authoring-only Harness design prompt now states the PROJECT_SPEC boundary: it describes stable zero-to-one project design, product/protocol rationale and canonical behavior, while version migration and upgrade instructions belong in README / package README or release/implementation docs.
+- The authoring-only Harness design prompt now requires future workflow changes to consult `memory.md#Harness Design Decisions` and related `.docs/05_decisions/ADR_*.md` before changing existing design tradeoffs, and to add new durable rationale as ADR slices instead of expanding `PROJECT_SPEC.md`.
 - `validate-rfc` now requires `Development Self-Test Impact` for new RFCs that change entry/exit, runtime, gates, handoff or blocker semantics.
 - `validate-review` now requires explicit PASS/BLOCKED readiness fields for `Runnable Entry`, `Observable Exit`, `Initialization`, `Config Contract` and `Testing Handoff Readiness`; any `BLOCKED` field blocks TESTING handoff.
 - `validate-review` and `validate-test` now reject `PASS` reports that acknowledge runtime/handoff mismatch, missing deployment, missing initialization, local-only evidence or fake adapters.
@@ -172,6 +173,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 - `harness_package_design` distinguishes Agent execution violations from Harness contract gaps and prefers lightweight prompt/checklist/template/content constraints before adding heavier validators, scripts or executors.
 - `harness_package_design` now requires future workflow graph/data-structure changes to preserve a lightweight declarative boundary, document consumer and validator paths, remove or explicitly deprecate duplicate facts, and avoid storing task history, operator logs, debug evidence, runbook bodies or implementation text in graph nodes or edges.
 - `harness_package_design` now adds a general structure-vs-prose calibration rule: use data structures when they create stable, validator-consumed attention surfaces; keep prose/checklists when the information is one-off, human-context-heavy or lacks a clear consumer.
+- `harness_package_design` now uses ADR slices as the durable design-rationale source: `PROJECT_SPEC.md` keeps summary links, `memory.md` keeps a short decision index, and ADR splits must preserve source trace.
 - `validate-rfc` requires `Development Self-Test Impact` in RFC files from `RFC_023` onward when they mention entry/exit, runtime, target environment, gates, handoff or blockers.
 - `validate-dev` rejects service / agent / runtime tasks whose evidence only proves provider smoke, fixture smoke, fake adapter or one-shot smoke without application readiness or `BLOCKED`.
 - `validate-review` checks structured readiness fields and treats any `BLOCKED` field as a gate blocker.
@@ -274,6 +276,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | `npm test --workspace agent-project-sdlc` | Package validator regression for Report Status, Current Operator Path, disallowed self-test log sections and working_notes limit | PASS on 2026-05-30; 10 tests passed |
 | `node packages/sdlc-harness/dist/cli.js package sync-source && package check-source` | Package assets reflect self-test report boundary Skill/template/README changes | PASS on 2026-05-30; sync changed=48 |
 | `make docs-overview && make validate-harness && make validate-plan` | Generated overview, prompt language and active plan consistency after self-test boundary changes | PASS on 2026-05-30 |
+| `make docs-overview && make validate-doc-overviews && make validate-harness && make validate-plan && npm test --workspace agent-project-sdlc && git diff --check` | Authoring ADR lookup guidance, memory decision index and PROJECT_SPEC boundary update | PASS on 2026-05-31; package tests 10 passed |
 
 ## 8. 变更记录（Change Log）
 
@@ -313,6 +316,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-31 | Lightweight explicit phase graph | Working tree | Added authoring guardrails for future workflow graph/data-structure changes: lightweight schema first, explicit consumer/validator/compatibility path and no evidence/history/runbook bodies inside graph nodes. |
 | 2026-05-31 | Data-structure calibration | Working tree | Added authoring guidance to consider structured contracts for repeated workflow consumers while weighing migration, compatibility, context and over-abstraction costs. |
 | 2026-05-31 | PROJECT_SPEC boundary | Working tree | Clarified that version migration and upgrade instructions stay in README/package README or release/implementation docs, not in the zero-to-one project spec. |
+| 2026-05-31 | ADR-backed design rationale | Working tree | Required future workflow changes to consult memory / ADR design decision indexes and to add durable rationale as ADR slices instead of expanding `PROJECT_SPEC.md`. |
 
 ## 9. 后续维护注意事项
 

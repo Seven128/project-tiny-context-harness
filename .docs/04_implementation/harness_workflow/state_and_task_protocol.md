@@ -20,7 +20,8 @@
 - `next_task_sequence` preserves future `TASK-*` id allocation after done tasks are removed.
 - Document, review, test, release and RFC tasks use `result_docs` for planned fact-source outputs; development tasks use `implementation_doc`.
 - Checkpoint files, archive directories, gate result logs and lifecycle history are no longer active state facts.
-- `.codex/state/memory.md` is a short cross-stage reminder and navigation surface; complete decision context, alternatives, rationale and consequences belong in `.docs/05_decisions/` ADRs or other formal `.docs/**` fact sources.
+- `.codex/state/memory.md` is a short cross-stage reminder and navigation surface; its `Harness Design Decisions` section links to durable ADR slices without copying their body.
+- Complete decision context, alternatives, rationale and consequences belong in `.docs/05_decisions/` ADRs or other formal `.docs/**` fact sources.
 - `.docs/05_decisions/` is not a lifecycle phase; it is an `ARCHITECTING`-produced ADR fact source for durable architecture decisions that may outlive a single architecture or tech plan slice.
 - `phase_contracts.yaml` uses a lightweight explicit directed graph: `phases` are stable phase contract nodes, and top-level `transitions` are legal directed edges with trigger, kind and minimal effects. Canonical phase nodes no longer use `next` / `returns`; `transition.py` keeps a legacy fallback only for older consumer policies that do not yet contain `transitions`.
 - The phase graph is intentionally lightweight. It exists so transition helpers, validators and agents read the same legal flow contract; it does not store task history, operator logs, debug evidence, runbook bodies, implementation doc text or phase execution history, and it does not introduce graph engine classes, traversal frameworks or visualization.
@@ -187,6 +188,7 @@ Stage task starts
 - `validate-dev` enforces dirty-file scoping when a current open task exists; changes outside the current task `allowed_paths` fail the direct dev gate.
 - ADRs solve the long-term "why this option, not another" problem. Architecture and tech plan slices may keep local rationale, but decisions with alternatives, cross-module or cross-stage impact, high reversal cost or future supersede semantics belong in `.docs/05_decisions/`.
 - `memory.md` must not become a decision ledger. It may point to ADRs, PRDs, tech plans or implementation docs, but detailed context, alternatives, tradeoffs and consequences remain in those formal fact sources.
+- `PROJECT_SPEC.md` keeps the project map, canonical behavior and ADR index; durable design rationale is retrieved through memory / ADR links before workflow changes.
 - Field audit: `active_role`, `active_skill`, `current_milestone`, `blocked_reason`, `suspended_phase` and `allowed_next_phases` are lifecycle-only; `current_task_id` and `next_task_sequence` are plan-only; `tasks[].phase` is semantic task classification rather than current lifecycle state and remains on each task.
 - Every phase task is task-controlled: one `TASK-*` task should produce one bounded document slice, review batch, test evidence set, release artifact set, RFC impact slice or development change.
 - `validate-plan` permits open tasks and checks their shape; phase exit gates reject remaining open tasks. In `SPRINTING`, this no-open rule lives in `validate-current` and `tools/run_current_gate.py`, not in direct `validate-dev`.

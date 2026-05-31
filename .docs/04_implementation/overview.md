@@ -1,11 +1,11 @@
 # .docs/04_implementation overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: e145bcde6e7abd3d -->
+<!-- source-hash: ed12f0dae0a7b204 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `e145bcde6e7abd3d`
+Source hash: `ed12f0dae0a7b204`
 
 ## Source Slices
 
@@ -670,7 +670,8 @@ Source: [harness_workflow/docs_overview_and_validation.md](harness_workflow/docs
 - `make validate-doc-overviews` and `make validate-harness` check that generated overviews are current.
 - `make validate-design` excludes generated `overview.md` and `README.md` from design deliverables, validates `plan.draft.yaml` task shape, requires development draft tasks to link existing tech plan slices through `docs.tech_plan`, rejects one shared primary tech plan for multiple development drafts, and requires dedicated architecture slices for explicit cross-cutting themes.
 - `tools/validate_task_docs.py` requires every implementation doc slice to be linked from `.docs/INDEX.md`.
-- Root README is a user guide; `PROJECT_SPEC.md` carries the heavier product/specification narrative.
+- Root README is a user guide; `PROJECT_SPEC.md` carries the lightweight project map, stable canonical behavior and ADR index.
+- Durable design rationale is split into `.docs/05_decisions/ADR_*.md`; `.codex/state/memory.md#Harness Design Decisions` links Agents to those ADRs without copying their body.
 
 ## Runnable Entry/Exit
 
@@ -692,7 +693,8 @@ Source: [harness_workflow/docs_overview_and_validation.md](harness_workflow/docs
 | `packages/sdlc-harness/src/lib/validators.ts` | Package CLI validators | `validate-design`, Markdown deliverable filtering, design draft slice checks |
 | `Makefile` | Validation command entrypoint | `docs-overview`, `validate-doc-overviews`, `validate-harness` |
 | `README.md` | User-facing package guide | install/init/sync/upgrade/commands |
-| `PROJECT_SPEC.md` | Maintainer-facing product/specification doc | architecture, workflow and package background |
+| `PROJECT_SPEC.md` | Maintainer-facing product/specification doc | project map, canonical behavior and ADR index |
+| `.docs/05_decisions/ADR_*.md` | Durable decision records | source trace, options, decision, rationale and consequences |
 
 ## 4. 核心数据流
 
@@ -724,6 +726,7 @@ Implementation doc slice exists
 
 - Overview files are deterministic and include every non-overview Markdown slice under their stage directory.
 - Generated overviews are for browsing and handoff; Markdown slices and `.docs/INDEX.md` remain the source of truth.
+- Durable "why" content belongs in ADR slices, while `PROJECT_SPEC.md` keeps short summaries and back-links.
 - Design validation now treats generated `overview.md` and `README.md` as non-deliverables, so visual rollups cannot satisfy architecture or tech plan slice requirements.
 - `plan.draft.yaml` is part of the design gate because task granularity must line up with tech plan fact granularity before SPRINTING starts.
 - Cross-cutting architecture validation uses conservative trigger phrases from PRD, tech plan and draft task text, then requires different architecture docs for different triggered categories.
@@ -745,6 +748,7 @@ Implementation doc slice exists
 | `make validate-design` | Design deliverable filtering, draft task tech plan refs and architecture slice checks | PASS for TASK-060 |
 | `npm test --workspace agent-project-sdlc` | Package validator regression, including design slice hard-gate cases | PASS for TASK-060; 9 tests passed |
 | `python3 tools/validate_task_docs.py` | Implementation docs are linked from `.docs/INDEX.md` | Covered by validate-dev and manual checks |
+| `make docs-overview && make validate-doc-overviews && make validate-harness && make validate-plan && npm test --workspace agent-project-sdlc && git diff --check` | ADR split, generated overview freshness, Harness scaffold, active plan, package regression and whitespace safety | PASS on 2026-05-31 for PROJECT_SPEC ADR split; package tests 10 passed |
 
 ## 8. 变更记录（Change Log）
 
@@ -756,6 +760,7 @@ Implementation doc slice exists
 | 2026-05-25 | `DEV-032` | Historical implementation commit | Defined implementation docs as module/subsystem/core-flow facts. |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Removed task-grain implementation docs from the active implementation-doc graph. |
 | 2026-05-28 | `TASK-060` | Working tree | Strengthened `validate-design` so generated overviews do not count as deliverables, draft development tasks must link tech plan slices, shared monolithic primary tech plans fail for multiple draft tasks, and explicit cross-cutting themes require dedicated architecture slices. |
+| 2026-05-31 | PROJECT_SPEC ADR split | Working tree | Split durable PROJECT_SPEC rationale into `.docs/05_decisions/` ADR slices, linked them from memory and INDEX, and kept `PROJECT_SPEC.md` as a lighter project map plus canonical behavior. |
 
 ## 9. 后续维护注意事项
 
@@ -917,6 +922,7 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 - The authoring-only Harness design prompt now applies the same lightweight boundary to test path graphs: graph nodes and edges only hold handoff path skeleton and evidence pointers, not execution trace, debug output, operator log, runbook body or evidence body.
 - The authoring-only Harness design prompt now asks maintainers to consider data structures for workflow changes when repeated consumers, validator/tool usage or recovery reliability would benefit, while explicitly weighing migration cost, compatibility, schema drift, context weight and over-abstraction before promoting prose into structure.
 - The authoring-only Harness design prompt now states the PROJECT_SPEC boundary: it describes stable zero-to-one project design, product/protocol rationale and canonical behavior, while version migration and upgrade instructions belong in README / package README or release/implementation docs.
+- The authoring-only Harness design prompt now requires future workflow changes to consult `memory.md#Harness Design Decisions` and related `.docs/05_decisions/ADR_*.md` before changing existing design tradeoffs, and to add new durable rationale as ADR slices instead of expanding `PROJECT_SPEC.md`.
 - `validate-rfc` now requires `Development Self-Test Impact` for new RFCs that change entry/exit, runtime, gates, handoff or blocker semantics.
 - `validate-review` now requires explicit PASS/BLOCKED readiness fields for `Runnable Entry`, `Observable Exit`, `Initialization`, `Config Contract` and `Testing Handoff Readiness`; any `BLOCKED` field blocks TESTING handoff.
 - `validate-review` and `validate-test` now reject `PASS` reports that acknowledge runtime/handoff mismatch, missing deployment, missing initialization, local-only evidence or fake adapters.
@@ -1045,6 +1051,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 - `harness_package_design` distinguishes Agent execution violations from Harness contract gaps and prefers lightweight prompt/checklist/template/content constraints before adding heavier validators, scripts or executors.
 - `harness_package_design` now requires future workflow graph/data-structure changes to preserve a lightweight declarative boundary, document consumer and validator paths, remove or explicitly deprecate duplicate facts, and avoid storing task history, operator logs, debug evidence, runbook bodies or implementation text in graph nodes or edges.
 - `harness_package_design` now adds a general structure-vs-prose calibration rule: use data structures when they create stable, validator-consumed attention surfaces; keep prose/checklists when the information is one-off, human-context-heavy or lacks a clear consumer.
+- `harness_package_design` now uses ADR slices as the durable design-rationale source: `PROJECT_SPEC.md` keeps summary links, `memory.md` keeps a short decision index, and ADR splits must preserve source trace.
 - `validate-rfc` requires `Development Self-Test Impact` in RFC files from `RFC_023` onward when they mention entry/exit, runtime, target environment, gates, handoff or blockers.
 - `validate-dev` rejects service / agent / runtime tasks whose evidence only proves provider smoke, fixture smoke, fake adapter or one-shot smoke without application readiness or `BLOCKED`.
 - `validate-review` checks structured readiness fields and treats any `BLOCKED` field as a gate blocker.
@@ -1147,6 +1154,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | `npm test --workspace agent-project-sdlc` | Package validator regression for Report Status, Current Operator Path, disallowed self-test log sections and working_notes limit | PASS on 2026-05-30; 10 tests passed |
 | `node packages/sdlc-harness/dist/cli.js package sync-source && package check-source` | Package assets reflect self-test report boundary Skill/template/README changes | PASS on 2026-05-30; sync changed=48 |
 | `make docs-overview && make validate-harness && make validate-plan` | Generated overview, prompt language and active plan consistency after self-test boundary changes | PASS on 2026-05-30 |
+| `make docs-overview && make validate-doc-overviews && make validate-harness && make validate-plan && npm test --workspace agent-project-sdlc && git diff --check` | Authoring ADR lookup guidance, memory decision index and PROJECT_SPEC boundary update | PASS on 2026-05-31; package tests 10 passed |
 
 ## 8. 变更记录（Change Log）
 
@@ -1186,6 +1194,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-31 | Lightweight explicit phase graph | Working tree | Added authoring guardrails for future workflow graph/data-structure changes: lightweight schema first, explicit consumer/validator/compatibility path and no evidence/history/runbook bodies inside graph nodes. |
 | 2026-05-31 | Data-structure calibration | Working tree | Added authoring guidance to consider structured contracts for repeated workflow consumers while weighing migration, compatibility, context and over-abstraction costs. |
 | 2026-05-31 | PROJECT_SPEC boundary | Working tree | Clarified that version migration and upgrade instructions stay in README/package README or release/implementation docs, not in the zero-to-one project spec. |
+| 2026-05-31 | ADR-backed design rationale | Working tree | Required future workflow changes to consult memory / ADR design decision indexes and to add durable rationale as ADR slices instead of expanding `PROJECT_SPEC.md`. |
 
 ## 9. 后续维护注意事项
 
@@ -1221,7 +1230,8 @@ Source: [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and
 - `next_task_sequence` preserves future `TASK-*` id allocation after done tasks are removed.
 - Document, review, test, release and RFC tasks use `result_docs` for planned fact-source outputs; development tasks use `implementation_doc`.
 - Checkpoint files, archive directories, gate result logs and lifecycle history are no longer active state facts.
-- `.codex/state/memory.md` is a short cross-stage reminder and navigation surface; complete decision context, alternatives, rationale and consequences belong in `.docs/05_decisions/` ADRs or other formal `.docs/**` fact sources.
+- `.codex/state/memory.md` is a short cross-stage reminder and navigation surface; its `Harness Design Decisions` section links to durable ADR slices without copying their body.
+- Complete decision context, alternatives, rationale and consequences belong in `.docs/05_decisions/` ADRs or other formal `.docs/**` fact sources.
 - `.docs/05_decisions/` is not a lifecycle phase; it is an `ARCHITECTING`-produced ADR fact source for durable architecture decisions that may outlive a single architecture or tech plan slice.
 - `phase_contracts.yaml` uses a lightweight explicit directed graph: `phases` are stable phase contract nodes, and top-level `transitions` are legal directed edges with trigger, kind and minimal effects. Canonical phase nodes no longer use `next` / `returns`; `transition.py` keeps a legacy fallback only for older consumer policies that do not yet contain `transitions`.
 - The phase graph is intentionally lightweight. It exists so transition helpers, validators and agents read the same legal flow contract; it does not store task history, operator logs, debug evidence, runbook bodies, implementation doc text or phase execution history, and it does not introduce graph engine classes, traversal frameworks or visualization.
@@ -1388,6 +1398,7 @@ Stage task starts
 - `validate-dev` enforces dirty-file scoping when a current open task exists; changes outside the current task `allowed_paths` fail the direct dev gate.
 - ADRs solve the long-term "why this option, not another" problem. Architecture and tech plan slices may keep local rationale, but decisions with alternatives, cross-module or cross-stage impact, high reversal cost or future supersede semantics belong in `.docs/05_decisions/`.
 - `memory.md` must not become a decision ledger. It may point to ADRs, PRDs, tech plans or implementation docs, but detailed context, alternatives, tradeoffs and consequences remain in those formal fact sources.
+- `PROJECT_SPEC.md` keeps the project map, canonical behavior and ADR index; durable design rationale is retrieved through memory / ADR links before workflow changes.
 - Field audit: `active_role`, `active_skill`, `current_milestone`, `blocked_reason`, `suspended_phase` and `allowed_next_phases` are lifecycle-only; `current_task_id` and `next_task_sequence` are plan-only; `tasks[].phase` is semantic task classification rather than current lifecycle state and remains on each task.
 - Every phase task is task-controlled: one `TASK-*` task should produce one bounded document slice, review batch, test evidence set, release artifact set, RFC impact slice or development change.
 - `validate-plan` permits open tasks and checks their shape; phase exit gates reject remaining open tasks. In `SPRINTING`, this no-open rule lives in `validate-current` and `tools/run_current_gate.py`, not in direct `validate-dev`.

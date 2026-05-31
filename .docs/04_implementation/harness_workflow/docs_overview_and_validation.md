@@ -18,7 +18,8 @@
 - `make validate-doc-overviews` and `make validate-harness` check that generated overviews are current.
 - `make validate-design` excludes generated `overview.md` and `README.md` from design deliverables, validates `plan.draft.yaml` task shape, requires development draft tasks to link existing tech plan slices through `docs.tech_plan`, rejects one shared primary tech plan for multiple development drafts, and requires dedicated architecture slices for explicit cross-cutting themes.
 - `tools/validate_task_docs.py` requires every implementation doc slice to be linked from `.docs/INDEX.md`.
-- Root README is a user guide; `PROJECT_SPEC.md` carries the heavier product/specification narrative.
+- Root README is a user guide; `PROJECT_SPEC.md` carries the lightweight project map, stable canonical behavior and ADR index.
+- Durable design rationale is split into `.docs/05_decisions/ADR_*.md`; `.codex/state/memory.md#Harness Design Decisions` links Agents to those ADRs without copying their body.
 
 ## Runnable Entry/Exit
 
@@ -40,7 +41,8 @@
 | `packages/sdlc-harness/src/lib/validators.ts` | Package CLI validators | `validate-design`, Markdown deliverable filtering, design draft slice checks |
 | `Makefile` | Validation command entrypoint | `docs-overview`, `validate-doc-overviews`, `validate-harness` |
 | `README.md` | User-facing package guide | install/init/sync/upgrade/commands |
-| `PROJECT_SPEC.md` | Maintainer-facing product/specification doc | architecture, workflow and package background |
+| `PROJECT_SPEC.md` | Maintainer-facing product/specification doc | project map, canonical behavior and ADR index |
+| `.docs/05_decisions/ADR_*.md` | Durable decision records | source trace, options, decision, rationale and consequences |
 
 ## 4. 核心数据流
 
@@ -72,6 +74,7 @@ Implementation doc slice exists
 
 - Overview files are deterministic and include every non-overview Markdown slice under their stage directory.
 - Generated overviews are for browsing and handoff; Markdown slices and `.docs/INDEX.md` remain the source of truth.
+- Durable "why" content belongs in ADR slices, while `PROJECT_SPEC.md` keeps short summaries and back-links.
 - Design validation now treats generated `overview.md` and `README.md` as non-deliverables, so visual rollups cannot satisfy architecture or tech plan slice requirements.
 - `plan.draft.yaml` is part of the design gate because task granularity must line up with tech plan fact granularity before SPRINTING starts.
 - Cross-cutting architecture validation uses conservative trigger phrases from PRD, tech plan and draft task text, then requires different architecture docs for different triggered categories.
@@ -93,6 +96,7 @@ Implementation doc slice exists
 | `make validate-design` | Design deliverable filtering, draft task tech plan refs and architecture slice checks | PASS for TASK-060 |
 | `npm test --workspace agent-project-sdlc` | Package validator regression, including design slice hard-gate cases | PASS for TASK-060; 9 tests passed |
 | `python3 tools/validate_task_docs.py` | Implementation docs are linked from `.docs/INDEX.md` | Covered by validate-dev and manual checks |
+| `make docs-overview && make validate-doc-overviews && make validate-harness && make validate-plan && npm test --workspace agent-project-sdlc && git diff --check` | ADR split, generated overview freshness, Harness scaffold, active plan, package regression and whitespace safety | PASS on 2026-05-31 for PROJECT_SPEC ADR split; package tests 10 passed |
 
 ## 8. 变更记录（Change Log）
 
@@ -104,6 +108,7 @@ Implementation doc slice exists
 | 2026-05-25 | `DEV-032` | Historical implementation commit | Defined implementation docs as module/subsystem/core-flow facts. |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Removed task-grain implementation docs from the active implementation-doc graph. |
 | 2026-05-28 | `TASK-060` | Working tree | Strengthened `validate-design` so generated overviews do not count as deliverables, draft development tasks must link tech plan slices, shared monolithic primary tech plans fail for multiple draft tasks, and explicit cross-cutting themes require dedicated architecture slices. |
+| 2026-05-31 | PROJECT_SPEC ADR split | Working tree | Split durable PROJECT_SPEC rationale into `.docs/05_decisions/` ADR slices, linked them from memory and INDEX, and kept `PROJECT_SPEC.md` as a lighter project map plus canonical behavior. |
 
 ## 9. 后续维护注意事项
 
