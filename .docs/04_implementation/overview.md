@@ -1,11 +1,11 @@
 # .docs/04_implementation overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: bb33c87d248509d8 -->
+<!-- source-hash: 786a59c4a696ef68 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `bb33c87d248509d8`
+Source hash: `786a59c4a696ef68`
 
 ## Source Slices
 
@@ -912,6 +912,7 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 - The authoring-only Harness design prompt now states the lightweight-constraint principle: workflow changes should first align Agent attention with the `PROJECT_SPEC.md` purpose, and heavier validation or execution mechanisms are reserved for heavy logic when issues repeat, risk is high, or machine proof is required.
 - The authoring-only Harness design prompt now constrains graph/data-structure workflow changes: phase graph, task graph and similar schemas must stay lightweight and declarative, name their source of truth, consumer, validator and compatibility path, avoid execution history/evidence/runbook content, and require PRD/RFC approval before introducing heavy graph engines, node/edge classes, traversal frameworks or visualizers.
 - The authoring-only Harness design prompt now asks maintainers to consider data structures for workflow changes when repeated consumers, validator/tool usage or recovery reliability would benefit, while explicitly weighing migration cost, compatibility, schema drift, context weight and over-abstraction before promoting prose into structure.
+- The authoring-only Harness design prompt now states the PROJECT_SPEC boundary: it describes stable zero-to-one project design, product/protocol rationale and canonical behavior, while version migration and upgrade instructions belong in README / package README or release/implementation docs.
 - `validate-rfc` now requires `Development Self-Test Impact` for new RFCs that change entry/exit, runtime, gates, handoff or blocker semantics.
 - `validate-review` now requires explicit PASS/BLOCKED readiness fields for `Runnable Entry`, `Observable Exit`, `Initialization`, `Config Contract` and `Testing Handoff Readiness`; any `BLOCKED` field blocks TESTING handoff.
 - `validate-review` and `validate-test` now reject `PASS` reports that acknowledge runtime/handoff mismatch, missing deployment, missing initialization, local-only evidence or fake adapters.
@@ -1179,6 +1180,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-30 | Self-test report boundary hardening | Working tree | Added Report Status semantics, Current Operator Path prompt rules, log-section boundary and working_notes limit guidance. |
 | 2026-05-31 | Lightweight explicit phase graph | Working tree | Added authoring guardrails for future workflow graph/data-structure changes: lightweight schema first, explicit consumer/validator/compatibility path and no evidence/history/runbook bodies inside graph nodes. |
 | 2026-05-31 | Data-structure calibration | Working tree | Added authoring guidance to consider structured contracts for repeated workflow consumers while weighing migration, compatibility, context and over-abstraction costs. |
+| 2026-05-31 | PROJECT_SPEC boundary | Working tree | Clarified that version migration and upgrade instructions stay in README/package README or release/implementation docs, not in the zero-to-one project spec. |
 
 ## 9. 后续维护注意事项
 

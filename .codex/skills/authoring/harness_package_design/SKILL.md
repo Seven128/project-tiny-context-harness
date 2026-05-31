@@ -68,6 +68,13 @@ configuration、workflow behavior、managed path、override mechanism、validato
 behavior 或用户可见约束时，必须同步检查这两个 README 是否完整描述所有 public package
 capabilities；不能只在 `PROJECT_SPEC.md`、implementation doc 或 release note 中记录。
 
+`PROJECT_SPEC.md` 的定位是整个项目从零开始的产品/协议/架构设计思路说明，记录稳定目标、设计理由、
+概念模型和当前 canonical behavior。不要把版本迁移路径、升级操作步骤、某次 release 的兼容说明或
+临时恢复 SOP 放进 `PROJECT_SPEC.md`。用户可执行的迁移和升级说明放在 `README.md` 和
+`packages/sdlc-harness/README.md`；release-specific evidence 放在 `.docs/08_release/**`；实现事实和
+兼容性细节放在对应 implementation doc。若某次迁移暴露出长期设计约束，`PROJECT_SPEC.md` 只记录抽象后的
+稳定设计原则，不记录“从版本 A 升到版本 B”的操作说明。
+
 ## 输入
 
 - `<harnessRoot>/state/lifecycle.yaml`
@@ -98,6 +105,7 @@ capabilities；不能只在 `PROJECT_SPEC.md`、implementation doc 或 release n
 11. 完成 task 前，更新模块级 implementation doc，并刷新 `.docs/<stage>/overview.md`。
 12. 修改 workflow graph、phase graph、task graph 或类似数据结构时，必须保持轻量 declarative boundary：固定 source of truth、consumer、validator 和兼容路径，不保存执行历史或证据正文，不引入重型 graph engine，除非 PRD/RFC 已明确批准。
 13. 遇到 workflow 变更时，显式判断是否需要结构化：记录结构化的收益、成本、consumer、validator 和迁移影响；没有明确消费路径或收益不足时，不要把普通说明强行改成数据结构。
+14. `PROJECT_SPEC.md` 只记录从零理解项目设计所需的稳定事实和设计原则；版本迁移、升级步骤和用户操作方案必须写入 README / package README 或 release/implementation 文档。
 
 ## 输出
 
@@ -111,6 +119,7 @@ capabilities；不能只在 `PROJECT_SPEC.md`、implementation doc 或 release n
 - [ ] 如果修改了通用 Harness 源文件，package source sync/check 已通过。
 - [ ] 已判断 `PROJECT_SPEC.md`、`README.md` 和 `packages/sdlc-harness/README.md` 是否需要同步更新。
 - [ ] 如果 package public capability 有变化，README/package README 已完整覆盖对外能力。
+- [ ] 如果存在用户迁移或升级说明，已放入 README / package README；`PROJECT_SPEC.md` 只保留稳定设计原则。
 - [ ] 如果修改了 graph / data-structure 类 workflow contract，已说明轻量设计理由、非重型图边界、consumer、validator、migration/compat path，并移除或兼容旧事实源。
 - [ ] 如果遇到可结构化的 workflow 变更，已权衡信息清晰度、Agent 注意力、validator/tool 消费收益与迁移/兼容/上下文成本，并说明为什么结构化或不结构化。
 - [ ] 如果发现可脚本化动作，已提示用户或说明暂不脚本化的理由。
