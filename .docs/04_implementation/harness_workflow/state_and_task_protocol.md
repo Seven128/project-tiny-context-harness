@@ -25,6 +25,7 @@
 - `.docs/05_decisions/` is not a lifecycle phase; it is an `ARCHITECTING`-produced ADR fact source for durable architecture decisions that may outlive a single architecture or tech plan slice.
 - `phase_contracts.yaml` uses a lightweight explicit directed graph: `phases` are stable phase contract nodes, and top-level `transitions` are legal directed edges with trigger, kind and minimal effects. Canonical phase nodes no longer use `next` / `returns`; `transition.py` keeps a legacy fallback only for older consumer policies that do not yet contain `transitions`.
 - The phase graph is intentionally lightweight. It exists so transition helpers, validators and agents read the same legal flow contract; it does not store task history, operator logs, debug evidence, runbook bodies, implementation doc text or phase execution history, and it does not introduce graph engine classes, traversal frameworks or visualization.
+- TESTING bugfix recovery is modeled as two lightweight return edges, not a new workflow engine: `TESTING -> ARCHITECTING` with trigger `bugfix_replan`, and `TESTING -> SPRINTING` with trigger `bugfix_implementation_gap`. `TEST_REPORT.md#Bugfix Route` chooses the route; transition helper still consumes only the legal graph edge.
 - User migration cost is low for managed consumers: `sdlc-harness upgrade` or `sdlc-harness sync` refreshes the managed policy and transition helper, while existing `lifecycle.yaml`, `plan.yaml` and task data stay valid. Custom phase policies need a manual `next` / `returns` to top-level `transitions` conversion; old policies still work through the transition helper fallback, but canonical validation expects the explicit graph after sync.
 - A SPRINTING task completes in two commits: implementation commit while the task is still present, then completion ledger commit after removing the task.
 - Generic draft-to-plan rule: when any workflow promotes a draft into a formal `TASK-*`, it removes the source draft in the same state update; the current built-in implementation point is SPRINTING consuming `plan.draft.yaml.tasks[]`.
@@ -143,6 +144,14 @@ Later-stage review/test/release discovers requirement or development self-test d
 ```
 
 ```txt
+TESTING discovers a bug in delivered behavior
+-> TEST_REPORT.md records Final decision: BLOCKED and Bugfix Route
+-> bugfix_replan uses transition.py --to ARCHITECTING for tech plan / contract / graph changes
+-> bugfix_implementation_gap uses transition.py --to SPRINTING for implementation deviation fixes
+-> requirement, acceptance or product-boundary changes still use RFC_RECALIBRATION
+```
+
+```txt
 SPRINTING task starts
 -> if no open task exists, agent may promote one plan.draft.yaml task into a formal TASK-* and delete the source draft
 -> plan.yaml contains full open task contract
@@ -177,6 +186,7 @@ Stage task starts
 - `plan.yaml` is not an exhaustive log of everything an Agent does. The generic workflow contract covers tasks that affect phase deliverables, gates, implementation facts or RFC recalibration; local teams may extend task taxonomy for broader project management needs without changing the core `TASK-*` workflow semantics.
 - `current_phase` belongs only to `lifecycle.yaml`; `plan.yaml`, `plan.draft.yaml` and `parallel_execution` must not duplicate it.
 - `transition.py` derives legal targets from the explicit phase graph in `phase_contracts.yaml#transitions`. `allowed_next_phases` is regenerated from outgoing edges of the target phase; RFC interrupt/resume and BLOCKED interrupt/resume behavior come from edge effects instead of hardcoded transition rules. If an older consumer policy lacks `transitions`, the helper falls back to legacy `next` / `returns` plus the former RFC and BLOCKED rules for compatibility.
+- TESTING bugfix transitions intentionally reuse `kind: return`; `trigger` provides the route semantics while preserving the existing transition kind set.
 - `validate-harness` rejects canonical phase graph drift: missing top-level `transitions`, legacy `next` / `returns` on phase nodes, unknown phase references, duplicate edges, invalid transition kinds, invalid effects and illegal `<suspended_phase>` targets.
 - Draft queues are not active execution state and must not retain adopted or completed drafts. The current built-in draft queue is `plan.draft.yaml`; it must not contain `current_task_id`.
 - direct `validate-dev` rejects any remaining `plan.draft.yaml.tasks[]`; agents must either continue promoting real unadopted drafts or remove already-consumed stale drafts before development completion.
@@ -234,6 +244,7 @@ Stage task starts
 | `make docs-overview && make validate-harness && make validate-plan` | Generated overview, Harness scaffold and active plan contract after self-test boundary hardening | PASS on 2026-05-30 |
 | `tests/sdlc-harness/transition.test.mjs` | `ARCHITECTING -> REQUIREMENT_GATHERING` rollback, PM role/skill activation and `SPRINTING` rollback rejection | PASS for TASK-061 |
 | `tests/sdlc-harness/transition.test.mjs` | Controlled `RFC_RECALIBRATION` interrupt from SPRINTING/REVIEWING/TESTING/RELEASING, illegal pre-development RFC entry, RFC return cleanup and unchanged REVIEWING -> TESTING | PASS for TASK-082 |
+| `tests/sdlc-harness/transition.test.mjs` | TESTING bugfix return edges to ARCHITECTING / SPRINTING, illegal TESTING -> REQUIREMENT_GATHERING and legacy fallback without bugfix returns | PASS in current working tree |
 | `make validate-current` | Phase-specific gate dispatch | PASS in sprint/review/test transitions |
 | `npm test --workspace agent-project-sdlc` | Package migration, init seed and validator parity | PASS for TASK-065 |
 | `node packages/sdlc-harness/dist/cli.js package sync-source && package check-source` | Package assets synchronized from source README, Skill and template files | PASS for TASK-065 |
@@ -252,6 +263,7 @@ Stage task starts
 | 2026-05-30 | Self-test report boundary hardening | Working tree | Added Report Status, Current Operator Path, disallowed log-section checks and working_notes limit validation. |
 | 2026-05-31 | Lightweight explicit phase graph | Working tree | Moved canonical phase routing from node-local `next` / `returns` and hardcoded RFC interrupt rules to top-level `transitions`, with validator coverage and legacy fallback. |
 | 2026-05-31 | Phase graph migration guidance | Working tree | Documented that managed consumers migrate through upgrade/sync with no state schema migration, while custom phase policies convert `next` / `returns` to explicit transition edges. |
+| 2026-06-01 | TESTING bugfix return boundary | Working tree | Added lightweight TESTING return edges for `bugfix_replan` and `bugfix_implementation_gap`, keeping bugfix route semantics in triggers and `TEST_REPORT.md` instead of a heavy bugfix state machine. |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Consolidated legacy state/task implementation docs into module facts. |
 | 2026-05-27 | `DEV-050` | DEV-050 implementation commit | Added opt-in `parallel_execution` contract for multi-agent/worktree coordination. |
 | 2026-05-30 | `TASK-084` | TASK-084 implementation commit | Added default Codex native subagent scheduling semantics and SPRINTING path-lock validation. |

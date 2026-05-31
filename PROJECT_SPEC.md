@@ -224,7 +224,7 @@ python3 tools/transition.py --to <PHASE>
 ### 5.2 阶段契约
 阶段契约的 canonical source 写在 `.codex/pjsdlc_managed/policies/phase_contracts.yaml`。核心关系如下：
 
-`phase_contracts.yaml` 使用轻量显式有向图表达阶段关系：`phases` 是阶段节点，只保存稳定的阶段 contract，例如 `goal`、`role`、`skill`、`inputs`、`outputs` 和 `gates`；`transitions` 是有向边，只保存合法流转、触发语义和少量运行期效果，例如设置或清理 `suspended_phase`。完整设计原因和非重型图边界见 [ADR 004: Lightweight Graph Contracts](.docs/05_decisions/ADR_004_lightweight_graph_contracts.md)。
+`phase_contracts.yaml` 使用轻量显式有向图表达阶段关系：`phases` 是阶段节点，只保存稳定的阶段 contract，例如 `goal`、`role`、`skill`、`inputs`、`outputs` 和 `gates`；`transitions` 是有向边，只保存合法流转、触发语义和少量运行期效果，例如设置或清理 `suspended_phase`。TESTING bugfix 回流也用普通 return edge 加 searchable trigger 表达，不新增重型 bugfix 状态机。完整设计原因和非重型图边界见 [ADR 004: Lightweight Graph Contracts](.docs/05_decisions/ADR_004_lightweight_graph_contracts.md)。
 
 | 阶段 | Skill | 主要输入 | 主要输出 | 出口 Gate | 下一阶段 |
 |---|---|---|---|---|---|
@@ -232,11 +232,13 @@ python3 tools/transition.py --to <PHASE>
 | `ARCHITECTING` | `pjsdlc_architect_design` | PRD、现有架构、代码结构 | 架构文档、技术方案、`plan.draft.yaml` | `make validate-design` | `SPRINTING`；开发前可返回 `REQUIREMENT_GATHERING` |
 | `SPRINTING` | `pjsdlc_dev_sprint` | `plan.yaml`、`plan.draft.yaml`、PRD、技术方案、Development Self-Test Contract | 代码、测试、implementation docs、gate 记录、已消费 draft、runnable entry/exit、Development Evidence、Development Self-Test Report、Module Key Test Path / Graph | `make validate-dev` | `REVIEWING` |
 | `REVIEWING` | `pjsdlc_reviewer` | PRD、技术方案、实现文档、`git diff` | Review report、entry/exit readiness 结论 | `make validate-review` | `TESTING` |
-| `TESTING` | `pjsdlc_tester` | PRD、技术方案、实现文档、Review、既有 runnable entry/exit | Test strategy、test cases、test report、回归证据、coverage gaps、final decision | `make validate-test` | `RELEASING` |
+| `TESTING` | `pjsdlc_tester` | PRD、技术方案、实现文档、Review、既有 runnable entry/exit | Test strategy、test cases、test report、回归证据、coverage gaps、final decision | `make validate-test` | `RELEASING`；bugfix 可返回 `ARCHITECTING` 或 `SPRINTING` |
 | `RELEASING` | `pjsdlc_release_manager` | 测试结果、build artifacts | Current release status、smoke result、rollback plan | `make validate-release` | `COMPLETED` |
 | `RFC_RECALIBRATION` | `pjsdlc_rfc_recalibrate` | RFC、PRD、技术方案、任务状态 | 局部补丁、任务回退或增量任务 | `make validate-rfc` | `SPRINTING` |
 
-`transitions` 中的 return edge 表达受限回退目标。当前唯一默认开发前回退是 `ARCHITECTING -> REQUIREMENT_GATHERING`，用于尚未进入 `SPRINTING` 时补充或修正 PRD。回退后 lifecycle 的 `active_role` 和 `active_skill` 切到 PM 工作流；PRD task 完成并通过 `validate-pm` 后，再用 `python3 tools/transition.py --to ARCHITECTING` 回到设计阶段。进入 `SPRINTING` 后的需求变化必须走 RFC recalibration。
+`transitions` 中的 return edge 表达受限回退目标。开发前回退 `ARCHITECTING -> REQUIREMENT_GATHERING` 用于尚未进入 `SPRINTING` 时补充或修正 PRD。回退后 lifecycle 的 `active_role` 和 `active_skill` 切到 PM 工作流；PRD task 完成并通过 `validate-pm` 后，再用 `python3 tools/transition.py --to ARCHITECTING` 回到设计阶段。进入 `SPRINTING` 后的需求变化必须走 RFC recalibration。
+
+TESTING bugfix 回流也使用轻量 return edge：`TESTING -> ARCHITECTING` 的 trigger 是 `bugfix_replan`，表示测试证明 tech plan、interface contract、task breakdown、Development Self-Test Contract 或 Module Key Test Graph 需要修正；`TESTING -> SPRINTING` 的 trigger 是 `bugfix_implementation_gap`，表示技术方案仍正确但实现偏离，需要补小的开发修复 task。两者都不记录执行历史，不新增 `bugfix` kind；区别通过 `trigger` 和 `TEST_REPORT.md#Bugfix Route` 保持可搜索、可消费。需求、验收标准或产品边界变化仍进入 RFC recalibration。
 
 `RFC_RECALIBRATION` 是 SPRINTING 之后的受控中断阶段。`SPRINTING`、`REVIEWING`、`TESTING` 和 `RELEASING` 可以通过 `python3 tools/transition.py --to RFC_RECALIBRATION` 进入 RFC；transition helper 从 explicit transition edge 读取 `set_suspended_phase`，切换到 `pjsdlc_rfc_recalibrate`，并把 RFC 出口收敛到 `SPRINTING`。RFC 完成并通过 `make validate-rfc` 后，resume edge 清理 `suspended_phase` 并回到 `SPRINTING`，由开发阶段重新完成自测合同、implementation doc 和 Review/Testing handoff。
 

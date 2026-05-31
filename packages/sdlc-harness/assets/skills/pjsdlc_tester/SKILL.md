@@ -19,6 +19,8 @@ description: Use during TESTING to produce a test matrix, run regression, and do
 
 TESTING 只能调用 SPRINTING/REVIEWING 已确认 `PASS` 的入口做输入/输出验证。可以补充测试、fixture、mock、assertion helper 和测试文档，但不能在 TESTING 中新增或长期维护 product runtime、server/API/CLI/adapter、direct poller、cloud bootstrap、systemd unit、真实 provider adapter、package runtime script 或部署脚本。如果发现真实入口/出口不存在、implementation doc 缺少 `Development Evidence` 或 `Development Self-Test Report`、自测报告缺少 `Report Status: PASS`、缺少从本地启动或调用入口到完成全部自测用例的 `Module Key Test Path`、缺少 `Evidence Index Refs`、或该路径没有覆盖本 task / 本模块承诺的入口、内部关键路径、关键边界、观察点和完成证据，live 模式不可调用、配置契约缺失、Review readiness checklist 不是全 `PASS`，或 `Evidence Level` / `Target Runtime Environment` / `self_test_contract` 与 task 或技术方案承诺不一致，应记录 `BLOCKED`、生成 RFC 或后续 dev task 建议，并停止把测试阶段扩大成开发/集成搭建。若 `self_test_contract` 设置 `graph_required: true` 或包含 `module_key_test_graph`，TESTING 必须按 `Module Key Test Graph` 选择入口、checkpoint、scenario 和 observable exit，不能重新发明 runtime 或把图扩成测试执行引擎。`Development Self-Test Report` 不是 debug log、operator log、runbook、evidence dump 或探索流水；测试只消费其模块入口、核心路径、出口和最小证据指针。high-risk runtime/live/remote-operator 验证要先读 `plan.yaml#resume_capsule`，再读 `.docs/09_runbooks/**` runbook 和 evidence index，最后才读 exploration appendix；测试只沿 canonical path 和 hard constraints 验证，不重新尝试 `do_not_retry` 中的失败路径。开发尚未交付可测试 entry/exit、目标运行环境、Development Self-Test Report 或 Testing Handoff Contract 时，不要在 `.docs/07_test/**` 提前生成正式测试用例或正式报告；验收思路应留在 PRD acceptance criteria、tech plan verification strategy 或非 `.docs/07_test/**` 的草稿说明里。`TEST_REPORT.md` 不能在描述缺少 entry/exit、缺少 Development Evidence、缺少 Development Self-Test Report、证据等级不匹配或未交付应用入口时给出 `PASS`。
 
+当 TESTING 发现 bug，`TEST_REPORT.md` 的 Final decision 必须为 `BLOCKED`，并写明 `Bugfix Route`。`bugfix_replan` 表示测试证明技术方案、接口契约、任务拆分、测试入口或 handoff graph 需要修改，Manager 可从 `TESTING` 轻量回退到 `ARCHITECTING`，先修正 tech plan / `plan.draft.yaml`，再回到 `SPRINTING`。`bugfix_implementation_gap` 表示既有技术方案仍正确，只是实现没有按方案交付，Manager 可从 `TESTING` 轻量回退到 `SPRINTING` 创建或选择小的 bugfix dev task；该路径是保留口子，不是预期常态。若测试暴露的是需求、验收标准或产品边界变化，仍然进入 `RFC_RECALIBRATION`。
+
 测试设计和回归证据产出本身也是 workflow task。开始测试前，先在 `<harnessRoot>/state/plan.yaml` 创建或选择一个足够小的 `TASK-*` open task，并设置 `phase: "TESTING"`；当前轮只产出一个测试策略 slice、测试用例 slice、回归批次、风险验证片区或一组 scoped test changes。`plan.yaml` 仍是唯一执行计划事实源，`.docs/07_test/**` 只记录当前方案的 test strategy、test cases、executed regression evidence、coverage gaps 和 final decision，不表达“下一步如何开发”，也不保留已被 RFC supersede 的旧测试结果。
 
 测试阶段默认先评估是否适合并行验证。适合时，主 Tester 使用 `parallel_execution.trigger: "workflow_default"` 和 `runtime.provider: "codex_native_subagents"` 调度 worker 分别执行互不依赖的回归片区、smoke、兼容性或风险验证；用户明确要求并行时使用 `trigger: "user_requested"`。worker 只提交证据和必要的 scoped test changes；最终 `.docs/07_test/**`、coverage gaps、PASS/BLOCKED 决策和阶段 gate 由主 Agent 汇总。不适合拆分时保持串行并记录原因。
@@ -44,7 +46,7 @@ TESTING 只能调用 SPRINTING/REVIEWING 已确认 `PASS` 的入口做输入/输
 - 更新后的 `<harnessRoot>/state/plan.yaml`
 - 回归证据记录
 - 覆盖缺口清单
-- `BLOCKED` 时的 RFC/dev follow-up 建议和恢复条件
+- `BLOCKED` 时的 `Bugfix Route`、RFC/dev follow-up 建议和恢复条件
 
 ## 语义切片
 
@@ -71,7 +73,7 @@ TESTING 只能调用 SPRINTING/REVIEWING 已确认 `PASS` 的入口做输入/输
 2. 根据风险补充边界、负向、回归和集成测试。
 3. 如果有意延后覆盖，必须记录风险和 follow-up。
 4. 不得新增 product runtime、server/API/CLI/adapter、poller、cloud bootstrap、systemd unit、真实 provider adapter、package runtime script 或部署脚本；这些属于 SPRINTING/RFC。
-5. 测试发现入口/出口或 Development Evidence 缺失时，Final decision 必须为 `BLOCKED`，并指出回到 SPRINTING/RFC 的具体条件。
+5. 测试发现入口/出口或 Development Evidence 缺失时，Final decision 必须为 `BLOCKED`，并指出回到 `ARCHITECTING`、`SPRINTING` 或 `RFC_RECALIBRATION` 的具体条件。
 6. 新测试策略使用 `.docs/07_test/TEST_STRATEGY.md`，新测试用例使用 `.docs/07_test/TEST_CASES.md`，执行报告使用 `.docs/07_test/TEST_REPORT.md`；不要新建或继续依赖 `.docs/07_test/TEST_PLAN.md`。
 7. `TEST_REPORT.md` 不得包含 `pending`、`TBD`、`待填`、`TODO` 或占位结论；未执行或不可执行时 Final decision 必须为 `BLOCKED` 并给出恢复条件。
 8. RFC 改变技术路线、entry/exit 或验收边界后，必须确认 `.docs/07_test/**` 中旧路线测试证据已删除或不再从 `.docs/INDEX.md` 暴露。
@@ -93,6 +95,7 @@ TESTING 只能调用 SPRINTING/REVIEWING 已确认 `PASS` 的入口做输入/输
 - [ ] 未把测试计划、测试用例或待填内容写成 `TEST_REPORT.md`。
 - [ ] 已确认 `.docs/07_test/**` 只包含当前方案仍有效的测试事实。
 - [ ] Coverage gaps 已明确。
+- [ ] 若 Final decision 为 `BLOCKED` 且原因是 bug，已写明 `Bugfix Route: bugfix_replan | bugfix_implementation_gap | RFC_RECALIBRATION`。
 - [ ] 如果启用了并行测试，worker evidence 已由主 Agent 汇总到测试产物。
 - [ ] 已运行 `make docs-overview` 刷新 `.docs/<stage>/overview.md`。
 - [ ] Final decision 是 `PASS` 或 `BLOCKED`。

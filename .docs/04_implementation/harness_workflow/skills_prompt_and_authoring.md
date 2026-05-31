@@ -29,6 +29,7 @@
 - Dev, Review, Tester and Implementation Doc prompts now treat runnable entry/exit as a hard phase boundary: SPRINTING must implement or block promised API/CLI/adapter/provider/config/fixture-live boundaries, REVIEWING must block missing entry/exit, and TESTING may only exercise existing entrypoints.
 - Review, test and implementation templates include runnable entry/exit sections. `validate-review` and `validate-test` require entry/exit evidence text, and TESTING validators reject runtime, bootstrap, provider, deploy or package runtime script changes.
 - TESTING distinguishes `.docs/07_test/TEST_STRATEGY.md`, `.docs/07_test/TEST_CASES.md` and `.docs/07_test/TEST_REPORT.md`; `TEST_REPORT.md` is execution-only evidence and `validate-test` no longer falls back to `TEST_PLAN.md`.
+- Tester and Manager prompts now classify TESTING bugfix recovery with `Bugfix Route`: `bugfix_replan` returns to `ARCHITECTING` for tech plan / contract / graph changes, `bugfix_implementation_gap` returns to `SPRINTING` for implementation deviations, and requirement or acceptance changes still use RFC.
 - RFC recalibration now records `Test Fact Source Impact` and removes superseded `.docs/07_test/**` files from current test facts and `.docs/INDEX.md` when a route, entry/exit or acceptance boundary changes.
 - `validate-dev` now requires implementation docs to include `Runnable Entry/Exit` facts or explicit `Not applicable`, so missing runtime boundaries cannot be deferred into TESTING by omission.
 - `validate-dev` now requires the current open SPRINTING task implementation doc to include structured `Development Evidence`: `Runnable Entry`, `Observable Exit`, `Basic Self-test Evidence`, or a justified `Not applicable`.
@@ -277,6 +278,8 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | `node packages/sdlc-harness/dist/cli.js package sync-source && package check-source` | Package assets reflect self-test report boundary Skill/template/README changes | PASS on 2026-05-30; sync changed=48 |
 | `make docs-overview && make validate-harness && make validate-plan` | Generated overview, prompt language and active plan consistency after self-test boundary changes | PASS on 2026-05-30 |
 | `make docs-overview && make validate-doc-overviews && make validate-harness && make validate-plan && npm test --workspace agent-project-sdlc && git diff --check` | Authoring ADR lookup guidance, memory decision index and PROJECT_SPEC boundary update | PASS on 2026-05-31; package tests 10 passed |
+| `npm test --workspace agent-project-sdlc` | Prompt and transition regression for TESTING bugfix return routing | PASS in current working tree |
+| `node packages/sdlc-harness/dist/cli.js package sync-source && node packages/sdlc-harness/dist/cli.js package check-source` | Package assets reflect TESTING bugfix Skill, policy and README updates | PASS in current working tree |
 
 ## 8. 变更记录（Change Log）
 
@@ -317,6 +320,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-31 | Data-structure calibration | Working tree | Added authoring guidance to consider structured contracts for repeated workflow consumers while weighing migration, compatibility, context and over-abstraction costs. |
 | 2026-05-31 | PROJECT_SPEC boundary | Working tree | Clarified that version migration and upgrade instructions stay in README/package README or release/implementation docs, not in the zero-to-one project spec. |
 | 2026-05-31 | ADR-backed design rationale | Working tree | Required future workflow changes to consult memory / ADR design decision indexes and to add durable rationale as ADR slices instead of expanding `PROJECT_SPEC.md`. |
+| 2026-06-01 | TESTING bugfix return boundary | Working tree | Added prompt routing for `Bugfix Route`, keeping bugfix recovery lightweight through existing return edges and avoiding a separate bugfix workflow engine. |
 
 ## 9. 后续维护注意事项
 

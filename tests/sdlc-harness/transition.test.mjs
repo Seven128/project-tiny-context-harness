@@ -93,8 +93,66 @@ allowed_next_phases:
   assert.match(lifecycle, /current_phase: "TESTING"/);
   assert.match(lifecycle, /active_role: "tester"/);
   assert.match(lifecycle, /- "RELEASING"/);
+  assert.match(lifecycle, /- "ARCHITECTING"/);
+  assert.match(lifecycle, /- "SPRINTING"/);
   assert.match(lifecycle, /- "RFC_RECALIBRATION"/);
   assert.match(lifecycle, /- "BLOCKED"/);
+
+  await writeLifecycle(
+    `project_name: "Fixture"
+version: "v0.1"
+current_phase: "TESTING"
+active_role: "tester"
+active_skill: "pjsdlc_tester"
+suspended_phase: ""
+allowed_next_phases:
+  - "RELEASING"
+`
+  );
+  execFileSync("python3", ["tools/transition.py", "--to", "ARCHITECTING"], { cwd: root });
+  lifecycle = await readLifecycle();
+  assert.match(lifecycle, /current_phase: "ARCHITECTING"/);
+  assert.match(lifecycle, /active_role: "architect"/);
+  assert.match(lifecycle, /active_skill: "pjsdlc_architect_design"/);
+  assert.match(lifecycle, /- "SPRINTING"/);
+  assert.match(lifecycle, /- "REQUIREMENT_GATHERING"/);
+  assert.match(lifecycle, /- "BLOCKED"/);
+
+  await writeLifecycle(
+    `project_name: "Fixture"
+version: "v0.1"
+current_phase: "TESTING"
+active_role: "tester"
+active_skill: "pjsdlc_tester"
+suspended_phase: ""
+allowed_next_phases:
+  - "RELEASING"
+`
+  );
+  execFileSync("python3", ["tools/transition.py", "--to", "SPRINTING"], { cwd: root });
+  lifecycle = await readLifecycle();
+  assert.match(lifecycle, /current_phase: "SPRINTING"/);
+  assert.match(lifecycle, /active_role: "developer"/);
+  assert.match(lifecycle, /active_skill: "pjsdlc_dev_sprint"/);
+  assert.match(lifecycle, /- "REVIEWING"/);
+  assert.match(lifecycle, /- "RFC_RECALIBRATION"/);
+  assert.match(lifecycle, /- "BLOCKED"/);
+
+  await writeLifecycle(
+    `project_name: "Fixture"
+version: "v0.1"
+current_phase: "TESTING"
+active_role: "tester"
+active_skill: "pjsdlc_tester"
+suspended_phase: ""
+allowed_next_phases:
+  - "RELEASING"
+`
+  );
+  assert.throws(
+    () => execFileSync("python3", ["tools/transition.py", "--to", "REQUIREMENT_GATHERING"], { cwd: root, stdio: "pipe" }),
+    /Illegal transition TESTING -> REQUIREMENT_GATHERING/
+  );
 
   for (const phase of ["SPRINTING", "REVIEWING", "TESTING", "RELEASING"]) {
     await writeLifecycle(
@@ -183,6 +241,8 @@ allowed_next_phases:
   assert.match(lifecycle, /current_phase: "TESTING"/);
   assert.match(lifecycle, /suspended_phase: ""/);
   assert.match(lifecycle, /- "RELEASING"/);
+  assert.match(lifecycle, /- "ARCHITECTING"/);
+  assert.match(lifecycle, /- "SPRINTING"/);
 
   await writeLegacyPhaseContracts();
   await writeLifecycle(
@@ -216,6 +276,22 @@ allowed_next_phases:
   lifecycle = await readLifecycle();
   assert.match(lifecycle, /current_phase: "RFC_RECALIBRATION"/);
   assert.match(lifecycle, /suspended_phase: "REVIEWING"/);
+
+  await writeLifecycle(
+    `project_name: "Fixture"
+version: "v0.1"
+current_phase: "TESTING"
+active_role: "tester"
+active_skill: "pjsdlc_tester"
+suspended_phase: ""
+allowed_next_phases:
+  - "RELEASING"
+`
+  );
+  assert.throws(
+    () => execFileSync("python3", ["tools/transition.py", "--to", "ARCHITECTING"], { cwd: root, stdio: "pipe" }),
+    /Illegal transition TESTING -> ARCHITECTING/
+  );
 } finally {
   await rm(root, { recursive: true, force: true });
 }
