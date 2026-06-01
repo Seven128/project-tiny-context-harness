@@ -6,11 +6,17 @@ import { runValidator } from "./validators.js";
 
 export type InspectionDecision = "PASS" | "WARN" | "BLOCKED";
 export type InspectionDataSource = "measured" | "inferred" | "self_reported" | "unavailable";
+export type ComparisonConfidence = "low" | "medium" | "high";
 
 export interface WorkflowInspectionOptions {
   recentMinutes?: number;
   recentTurns?: number;
   estimatedTokens?: number;
+  workflowControlMinutes?: number;
+  totalDeliveryMinutes?: number;
+  estimatedVibeHandoffMinutes?: number;
+  avoidedReworkMinutes?: number;
+  comparisonConfidence?: ComparisonConfidence;
 }
 
 export interface WorkflowInspectionMetric {
@@ -36,6 +42,7 @@ export interface WorkflowInspectionReport {
   harness_root_source: string;
   current_phase: string;
   current_task_id: string;
+  comparison_confidence: ComparisonConfidence;
   inspected_at: string;
   metrics: WorkflowInspectionMetric[];
   findings: WorkflowInspectionFinding[];
@@ -52,6 +59,7 @@ export async function runWorkflowInspection(
   const rootConfig = await readHarnessRootConfig(projectRoot);
   const root = rootConfig.harnessFolderName;
   const inspectedAt = new Date().toISOString();
+  const comparisonConfidence = options.comparisonConfidence ?? "low";
   const metrics: WorkflowInspectionMetric[] = [];
   const findings: WorkflowInspectionFinding[] = [];
 
@@ -141,6 +149,7 @@ export async function runWorkflowInspection(
   addLifecycleMetric(lifecycle, plan, currentPhase, currentTaskId, currentTask, openTasks, metrics, findings);
   addRecoveryMetric(plan, inferredTask, metrics, findings);
   addManualMetrics(options, metrics, findings);
+  addOutcomeMetrics(options, inferredTask, metrics, findings);
 
   const decision = combineDecision(metrics.map((metric) => metric.level));
   return {
@@ -149,6 +158,7 @@ export async function runWorkflowInspection(
     harness_root_source: rootConfig.source,
     current_phase: currentPhase || "UNKNOWN",
     current_task_id: currentTaskId,
+    comparison_confidence: comparisonConfidence,
     inspected_at: inspectedAt,
     metrics,
     findings
@@ -161,6 +171,7 @@ export function renderWorkflowInspection(report: WorkflowInspectionReport): stri
     `harness root: ${report.harness_root} (${report.harness_root_source})`,
     `current phase: ${report.current_phase}`,
     `current task: ${report.current_task_id || "(none)"}`,
+    `comparison confidence: ${report.comparison_confidence}`,
     "",
     "Metrics:",
     ...report.metrics.map((metric) => {
@@ -193,9 +204,12 @@ export function renderWorkflowInspectionPrompt(report: WorkflowInspectionReport)
     "请回答：",
     "1. 当前 workflow 从哪里进、当前任务是什么、下一步是什么？如果不能在 2 分钟内回答，记为 WARN。",
     "2. 最近一次只是为了理解 workflow / 找事实源花了多少分钟、多少轮对话、估算多少 tokens？>15 分钟或 >10k tokens 记 WARN；>30 分钟或 >20k tokens 记 BLOCKED 候选。",
-    "3. 是否有会改变下一步动作的判断只埋在 notes/evidence/appendix/long doc 中，而没有 promoted 到 hard constraint、do_not_retry 或短 runbook 顶部？",
-    "4. 当前 Development Self-Test Report / TEST_CASES / TEST_REPORT 是否像可执行交接卡，而不是 debug log、operator log、evidence dump 或历史流水？",
-    "5. Review / Testing 是否能直接消费入口、核心路径、checkpoint、observable exit 和 evidence refs，而不用重新发明 runtime？",
+    "3. 同等质量 baseline：如果不用 Harness、只靠纯 vibe coding，是否也能达到 Review-ready、Testing-ready、handoff/recovery-ready？不要只对比首轮写代码速度。",
+    "4. 流程成本边界：workflow_control_minutes 只算读 lifecycle/plan、理解阶段规则、补 workflow 字段、修 validator/schema、处理 transition、解决 allowed_paths/overview/source drift 等控制成本；PRD、tech plan、test cases、implementation doc、实际 coding/testing/review/release smoke 不算流程控制成本。",
+    "5. Harness 多花的流程成本是否减少了遗漏、返工、重复踩坑或交接失败？如果 workflow 更慢但避免了高风险返工，应标为有效；如果花了很多时间却没有提高交付质量，应标为 workflow overweight。",
+    "6. 是否有会改变下一步动作的判断只埋在 notes/evidence/appendix/long doc 中，而没有 promoted 到 hard constraint、do_not_retry 或短 runbook 顶部？",
+    "7. 当前 Development Self-Test Report / TEST_CASES / TEST_REPORT 是否像可执行交接卡，而不是 debug log、operator log、evidence dump 或历史流水？",
+    "8. Review / Testing 是否能直接消费入口、核心路径、checkpoint、observable exit 和 evidence refs，而不用重新发明 runtime？",
     "",
     "输出格式：",
     "- Decision: PASS | WARN | BLOCKED",
@@ -205,7 +219,8 @@ export function renderWorkflowInspectionPrompt(report: WorkflowInspectionReport)
     "",
     `Current script decision: ${report.decision}`,
     `Current phase: ${report.current_phase}`,
-    `Current task: ${report.current_task_id || "(none)"}`
+    `Current task: ${report.current_task_id || "(none)"}`,
+    `Comparison confidence: ${report.comparison_confidence}`
   ].join("\n");
 }
 
@@ -402,6 +417,110 @@ function addManualMetrics(
   }
 }
 
+function addOutcomeMetrics(
+  options: WorkflowInspectionOptions,
+  currentTask: Record<string, unknown> | undefined,
+  metrics: WorkflowInspectionMetric[],
+  findings: WorkflowInspectionFinding[]
+): void {
+  const confidence = options.comparisonConfidence ?? "low";
+  const total = options.totalDeliveryMinutes;
+  const workflowControl = options.workflowControlMinutes;
+  const estimatedVibe = options.estimatedVibeHandoffMinutes;
+  const avoidedRework = options.avoidedReworkMinutes;
+  const highRisk = currentTask ? isHighRiskTask(currentTask) : false;
+
+  if (workflowControl === undefined || total === undefined || total <= 0) {
+    addMetric(
+      metrics,
+      findings,
+      "outcome.workflow_overhead_ratio",
+      "workflow overhead ratio",
+      null,
+      "PASS",
+      "unavailable",
+      "workflow_control_minutes and positive total_delivery_minutes were not both provided; inspect-workflow will not infer runtime cost.",
+      "Pass --workflow-control-minutes and --total-delivery-minutes when the Agent/client has reliable timing data."
+    );
+  } else {
+    const ratio = round(workflowControl / total);
+    const level = levelByThreshold(ratio, highRisk ? 0.4 : 0.3, highRisk ? 0.6 : 0.5);
+    addMetric(
+      metrics,
+      findings,
+      "outcome.workflow_overhead_ratio",
+      "workflow overhead ratio",
+      ratio,
+      level,
+      "self_reported",
+      `${formatPercent(ratio)} of total delivery time was reported as pure workflow control cost; thresholds are ${highRisk ? "40%/60%" : "30%/50%"}.`,
+      "Reduce workflow control overhead, or confirm the extra control cost prevents higher downstream rework."
+    );
+  }
+
+  if (total === undefined || estimatedVibe === undefined) {
+    addMetric(
+      metrics,
+      findings,
+      "outcome.vibe_handoff_delta_minutes",
+      "vibe handoff delta minutes",
+      null,
+      "PASS",
+      "unavailable",
+      "total_delivery_minutes and estimated_vibe_handoff_minutes were not both provided; the pure-vibe comparison is unavailable.",
+      "Only compare against pure vibe coding when the baseline is same-quality: Review-ready, Testing-ready and handoff/recovery-ready."
+    );
+  } else {
+    const delta = round(total - estimatedVibe);
+    addMetric(
+      metrics,
+      findings,
+      "outcome.vibe_handoff_delta_minutes",
+      "vibe handoff delta minutes",
+      delta,
+      "PASS",
+      "self_reported",
+      delta > 0
+        ? `Harness delivery was reported ${delta} minute(s) slower than the same-quality pure-vibe baseline before avoided rework is counted.`
+        : `Harness delivery was reported ${Math.abs(delta)} minute(s) faster than or equal to the same-quality pure-vibe baseline.`,
+      "Check net_value_minutes before treating a slower baseline delta as overweight; avoided rework may offset it."
+    );
+  }
+
+  if (total === undefined || estimatedVibe === undefined || avoidedRework === undefined) {
+    addMetric(
+      metrics,
+      findings,
+      "outcome.net_value_minutes",
+      "net value minutes",
+      null,
+      "PASS",
+      "unavailable",
+      "total_delivery_minutes, estimated_vibe_handoff_minutes and avoided_rework_minutes were not all provided.",
+      "Pass all three values to estimate whether workflow cost is offset by avoided omissions, rework or handoff failures."
+    );
+    return;
+  }
+
+  const netValue = round(estimatedVibe + avoidedRework - total);
+  const clearLossThreshold = Math.max(30, total * 0.2);
+  const level: InspectionDecision =
+    netValue >= 0 ? "PASS" : confidence === "high" && Math.abs(netValue) > clearLossThreshold ? "BLOCKED" : "WARN";
+  addMetric(
+    metrics,
+    findings,
+    "outcome.net_value_minutes",
+    "net value minutes",
+    netValue,
+    level,
+    "self_reported",
+    netValue >= 0
+      ? `Reported same-quality vibe baseline plus avoided rework exceeds Harness delivery cost by ${netValue} minute(s).`
+      : `Reported Harness delivery cost exceeds same-quality vibe baseline plus avoided rework by ${Math.abs(netValue)} minute(s), with ${confidence} comparison confidence.`,
+    "If this stays negative after using a same-quality baseline, simplify the workflow path or reduce required context before continuing."
+  );
+}
+
 function addManualMetric(
   metrics: WorkflowInspectionMetric[],
   findings: WorkflowInspectionFinding[],
@@ -570,6 +689,14 @@ function combineDecision(levels: InspectionDecision[]): InspectionDecision {
 
 function maxLevel(left: InspectionDecision, right: InspectionDecision): InspectionDecision {
   return combineDecision([left, right]);
+}
+
+function round(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+function formatPercent(value: number): string {
+  return `${Math.round(value * 100)}%`;
 }
 
 function countLines(text: string): number {

@@ -146,6 +146,33 @@ npx sdlc-harness inspect-workflow --prompt
 
 `--prompt` 会要求 Agent 区分真实可测数据、推断数据、自报数据和不可测数据，并检查入口、当前任务、下一步、hard constraint promotion、交接卡边界和 Review / Testing 可消费性。`--json` 可用于 CI 或自动化读取。
 
+Outcome Comparison 用来回答 Harness 的根本问题：增加的流程成本，是否换来了更少遗漏、更少返工、更好交接。对比对象不是“纯 vibe coding 首轮把代码写出来要多久”，而是“纯 vibe coding 达到同等质量交付要多久”：可 Review、可 Testing、可 handoff/recovery。没有真实时间或可靠估算时，这些指标会显示 `unavailable`。
+
+```sh
+npx sdlc-harness inspect-workflow \
+  --workflow-control-minutes 5 \
+  --total-delivery-minutes 30 \
+  --estimated-vibe-handoff-minutes 30 \
+  --avoided-rework-minutes 10 \
+  --comparison-confidence medium
+```
+
+`workflow_control_minutes` 只算纯流程控制成本，例如读 lifecycle/plan 找状态、理解阶段规则、补 workflow 字段、修 schema/validator、处理 transition、解决 allowed_paths / overview / source drift。PRD、tech plan、test cases、implementation doc、实际 coding、测试、Review、发布 smoke 等可被后续阶段消费的 durable deliverables 不算流程控制成本。普通任务 `workflow_overhead_ratio` 超过 30% 为 `WARN`、超过 50% 为 `BLOCKED`；high-risk 任务使用 40% / 60% 阈值。`net_value_minutes` 会把同质量 vibe baseline 和 avoided rework 一起计算，避免把“多花一点流程时间但避免大量返工”的情况误判成负收益。
+
+### Delivery Reliability Benchmark
+
+本仓库提供 `examples/delivery-benchmark/`，用于自测上面的 Outcome Comparison 是否真实反映交付效果。它不是证明 Harness 首轮写代码更快，而是用 3 个从零项目对照 baseline / Harness 两条路径：CLI policy engine、API/UI triage board、provider bridge。每个场景都固定 requirements、acceptance criteria、midstream change、fresh-session recovery checkpoint 和 scoring rubric。
+
+```sh
+node examples/delivery-benchmark/runner/delivery_benchmark.mjs list
+node examples/delivery-benchmark/runner/delivery_benchmark.mjs prepare --scenario expense-policy-engine --mode harness --out-dir /tmp/expense-harness --force
+node examples/delivery-benchmark/runner/delivery_benchmark.mjs score --scenario expense-policy-engine --mode harness --run-dir /tmp/expense-harness
+```
+
+benchmark runner 只负责准备、记录和评分，不自动驱动 Agent 写代码。`sync`、`upgrade`、`transition.py`、`validate-*`、overview/source drift 等动作应记录为 `workflow_control` 成本；PRD、tech plan、test cases、implementation doc、coding、testing、review 和 release smoke 属于 durable delivery work。公开结果只在实际跑完 baseline 与 Harness 同质量对照后填写，原始转录和临时项目默认放在 `.artifacts/delivery-benchmark/` 或 `/tmp`。
+
+在本仓库维护 Harness 时，可以直接对 Agent 说“跑工作流 benchmark”。Agent 应默认选择 `expense-policy-engine`，在 `.artifacts/delivery-benchmark/<timestamp>/` 准备 baseline / harness 两条路径，真实执行后只把短摘要写入 `examples/delivery-benchmark/results/`，不提交 raw run。
+
 `validate-design` 会把架构阶段的语义切片作为硬 gate：`overview.md` 不计入 deliverables，`plan.draft.yaml` 中每个开发 draft task 必须通过 `docs.tech_plan` 指向存在的 tech plan slice；多个开发 draft task 默认需要不同 primary tech plan slice。PRD、tech plan 或 draft task 明确出现 AI provider / copilot、外部系统边界、合规 / 权限 / 审计等横切主题时，也需要对应的专门 architecture slice。可运行边界类 draft task 还必须带 `self_test_contract`，并在 tech plan 中有 `Development Self-Test Contract`；合同必须记录 `module_key_test_path`，说明从本地启动或调用入口开始，到完成全部自测 scenario 的模块关键测试路径，并覆盖本 task / 本模块承诺的所有可运行入口和内部关键路径。复杂或 high-risk 路径可设置 `graph_required: true` 并提供 `module_key_test_graph`，把入口、checkpoint、scenario、出口和 evidence refs 表达成轻量 DAG。
 
 SPRINTING 的 Definition of Done 包含模块级可运行交付边界：技术方案或 task 承诺的 API、CLI、server route、service、agent、runtime、adapter、worker、provider、配置契约和 fixture/live 边界必须在开发阶段实现或明确 `BLOCKED`。runtime/app/provider/live 类 task 必须在 `plan.yaml` 声明 `evidence_level.required`、`target_runtime_environment` 和 `self_test_contract`；`self_test_contract.required_gates` 必须同步出现在 task `required_gates`，`self_test_contract.module_key_test_path` 必须描述从本地启动或调用入口开始，到完成全部自测 scenario 的模块关键测试路径，并覆盖本 task / 本模块承诺的所有可运行入口和内部关键路径。复杂 task 的 `module_key_test_graph` 是 handoff path 的 canonical detail：它是 DAG 而不是树，因为多个 scenario 可能共享 setup、分支后汇合到同一 observable exit；它不是重型测试执行图，不保存 trace、debug log、operator log、runbook 正文或证据正文。`deployed_runtime` 不能用 `unit`、`local_runtime`、`external_provider_live`、provider smoke、fake adapter 或 localhost smoke 单独关闭，`business_handoff_ready` 还必须有 Testing Handoff Contract。当前 task 的 implementation doc 还必须写入 `Development Evidence` 和 `Development Self-Test Report`，其中自测报告记录 `Report Status: PASS | BLOCKED | IN_PROGRESS | STALE`、contract source、Module Application Entry、scenario results、executed gates、Module Key Test Path、必要时的 Module Key Test Graph、Observable Exit、Current Blocker、Testing Handoff Readiness 和 Evidence Index Refs；只有 `Report Status: PASS` 且所有 scenario 为 `PASS` 才能关闭 development task。`Development Self-Test Report` 只证明模块入口、核心路径、出口和最小证据指针，不承担 debug log、operator log、runbook、evidence dump 或探索流水职责；fallback / diagnostic 最多一句总结，详细内容进入 `.docs/09_runbooks/**` evidence index / appendix 或 git history；主报告不得使用 `Actual Evidence` 正文字段，普通报告目标不超过 80 行，high-risk 报告目标不超过 120 行。`Module Key Test Path` 必须记录实际入口、内部关键路径、关键边界、观察点和可观测完成证据。provider smoke、fixture smoke、fake adapter 或 one-shot smoke 只能证明局部链路，不能单独证明 application readiness。REVIEWING 会把缺少入口/出口、初始化、配置契约、目标运行环境、证据等级或开发自测证据作为阻断项；TESTING 只调用 Review 已确认 `PASS` 的既有入口做输入输出验证，复杂路径按 Module Key Test Graph 消费，不能新增 product runtime、bootstrap、provider adapter、deploy 或 package runtime script。
@@ -256,6 +283,7 @@ npx sdlc-harness upgrade
 ```sh
 npx sdlc-harness inspect-workflow
 npx sdlc-harness inspect-workflow --prompt
+npx sdlc-harness inspect-workflow --workflow-control-minutes 5 --total-delivery-minutes 30 --estimated-vibe-handoff-minutes 30 --avoided-rework-minutes 10
 ```
 
 运行当前阶段 gate：

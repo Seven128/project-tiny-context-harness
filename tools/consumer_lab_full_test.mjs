@@ -161,7 +161,30 @@ export async function runConsumerLabFullTest(rawOptions) {
   commandCheck("Package smoke", "install current source tarball", "npm", ["install", "-D", `./.artifacts/${tarballName}`]);
   commandCheck("CLI lifecycle", "init explicit .codex root", "npx", ["sdlc-harness", "init", "--harness-folder", ".codex"]);
   commandCheck("CLI lifecycle", "doctor installed workspace", "npx", ["sdlc-harness", "doctor"]);
-  commandCheck("CLI lifecycle", "inspect-workflow installed workspace", "npx", ["sdlc-harness", "inspect-workflow"]);
+  const defaultWorkflowInspect = run("npx", [
+    "sdlc-harness",
+    "inspect-workflow",
+    "--workflow-control-minutes",
+    "5",
+    "--total-delivery-minutes",
+    "30",
+    "--estimated-vibe-handoff-minutes",
+    "30",
+    "--avoided-rework-minutes",
+    "10"
+  ], options.labDir);
+  add({
+    area: "CLI lifecycle",
+    evidence: "inspect-workflow installed workspace with outcome metrics",
+    command: "npx sdlc-harness inspect-workflow --workflow-control-minutes 5 --total-delivery-minutes 30 --estimated-vibe-handoff-minutes 30 --avoided-rework-minutes 10",
+    status:
+      defaultWorkflowInspect.status === 0 &&
+      defaultWorkflowInspect.stdout.includes("outcome.workflow_overhead_ratio") &&
+      defaultWorkflowInspect.stdout.includes("outcome.net_value_minutes")
+        ? "PASS"
+        : "FAIL",
+    details: trimOutput(`${defaultWorkflowInspect.stdout}\n${defaultWorkflowInspect.stderr}`)
+  });
   commandCheck("CLI lifecycle", "sync idempotency", "npx", ["sdlc-harness", "sync"]);
   commandCheck("CLI lifecycle", "upgrade idempotency", "npx", ["sdlc-harness", "upgrade"]);
 
@@ -350,12 +373,30 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
     status: configuredCliValidator.status === 0 ? "PASS" : "FAIL",
     details: trimOutput(`${configuredCliValidator.stdout}\n${configuredCliValidator.stderr}`)
   });
-  const configuredWorkflowInspect = run("npx", ["sdlc-harness", "inspect-workflow"], configuredDir);
+  const configuredWorkflowInspect = run(
+    "npx",
+    [
+      "sdlc-harness",
+      "inspect-workflow",
+      "--workflow-control-minutes",
+      "5",
+      "--total-delivery-minutes",
+      "30",
+      "--estimated-vibe-handoff-minutes",
+      "30",
+      "--avoided-rework-minutes",
+      "10"
+    ],
+    configuredDir
+  );
   add({
     area: "Configurable root",
     evidence: "inspect-workflow consumes configured .workflow root",
-    command: "npx sdlc-harness inspect-workflow",
-    status: configuredWorkflowInspect.status === 0 && configuredWorkflowInspect.stdout.includes("harness root: .workflow")
+    command: "npx sdlc-harness inspect-workflow --workflow-control-minutes 5 --total-delivery-minutes 30 --estimated-vibe-handoff-minutes 30 --avoided-rework-minutes 10",
+    status:
+      configuredWorkflowInspect.status === 0 &&
+      configuredWorkflowInspect.stdout.includes("harness root: .workflow") &&
+      configuredWorkflowInspect.stdout.includes("outcome.workflow_overhead_ratio")
       ? "PASS"
       : "FAIL",
     details: trimOutput(`${configuredWorkflowInspect.stdout}\n${configuredWorkflowInspect.stderr}`)

@@ -1,0 +1,100 @@
+{
+  "id": "webhook-provider-bridge",
+  "sections": {
+    "acceptance": [
+      {
+        "id": "AC-WEB-001",
+        "label": "HMAC verification exists",
+        "evidence": [
+          { "path": "**", "contains_all": ["HMAC"] },
+          { "path": "tests/**", "contains_any": ["signature", "invalid"] }
+        ]
+      },
+      {
+        "id": "AC-WEB-002",
+        "label": "Stale timestamp rejection exists",
+        "evidence": [
+          { "path": "**", "contains_all": ["stale", "timestamp"] }
+        ]
+      },
+      {
+        "id": "AC-WEB-003",
+        "label": "Event normalization exists",
+        "evidence": [
+          { "path": "**", "contains_any": ["normalize", "normalized"] }
+        ]
+      },
+      {
+        "id": "AC-WEB-004",
+        "label": "Idempotency by event id exists",
+        "evidence": [
+          { "path": "**", "contains_any": ["idempotent", "duplicate"] }
+        ]
+      },
+      {
+        "id": "AC-WEB-005",
+        "label": "Bounded retry/backoff exists",
+        "evidence": [
+          { "path": "**", "contains_all": ["retry", "backoff"] }
+        ]
+      },
+      {
+        "id": "AC-WEB-006",
+        "label": "Dead-letter queue exists",
+        "evidence": [
+          { "path": "**", "contains_any": ["dead-letter", "deadLetter", "DLQ"] }
+        ]
+      },
+      {
+        "id": "AC-WEB-007",
+        "label": "Health/status entrypoint exists",
+        "evidence": [
+          { "path": "**", "contains_any": ["health", "status"] }
+        ]
+      },
+      {
+        "id": "AC-WEB-008",
+        "label": "Mock provider fixture smoke is runnable",
+        "evidence": [
+          { "path": "**", "contains_all": ["mock provider", "smoke"] }
+        ]
+      },
+      {
+        "id": "AC-WEB-009",
+        "label": "High-risk resume facts exist",
+        "evidence": [
+          { "path": ".codex/state/plan.yaml", "contains_any": ["resume_capsule", "do_not_retry"] },
+          { "path": ".docs/09_runbooks/**", "contains_any": ["Hard Constraints", "do-not-retry", "canonical"] }
+        ]
+      },
+      {
+        "id": "AC-WEB-010",
+        "label": "Evidence levels are separated",
+        "evidence": [
+          { "path": ".docs/**", "contains_all": ["local", "mock", "live"] }
+        ]
+      }
+    ],
+    "change_impact": [
+      {
+        "id": "BLOCK-WEB-001",
+        "label": "Provider credential blocker is explicit",
+        "evidence": [
+          { "path": "**", "contains_any": ["credential", "BLOCKED", "blocker"] },
+          { "path": "**", "contains_any": ["do_not_retry", "do-not-retry"] }
+        ]
+      }
+    ],
+    "handoff": [
+      {
+        "id": "HANDOFF-WEB-001",
+        "label": "Testing can distinguish mock evidence from live evidence",
+        "evidence_mode": "any",
+        "evidence": [
+          { "path": ".docs/07_test/**", "contains_any": ["mock provider", "live provider", "fixture"] },
+          { "path": ".benchmark/**", "contains_any": ["mock provider", "live provider", "fixture"] }
+        ]
+      }
+    ]
+  }
+}

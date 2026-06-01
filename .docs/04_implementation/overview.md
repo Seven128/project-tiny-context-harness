@@ -1,11 +1,11 @@
 # .docs/04_implementation overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 6c2fb8c69bc50397 -->
+<!-- source-hash: a682e9c8c3c6135e -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `6c2fb8c69bc50397`
+Source hash: `a682e9c8c3c6135e`
 
 ## Source Slices
 
@@ -45,7 +45,8 @@ Source: [harness_package/cli_distribution_and_lifecycle.md](harness_package/cli_
 - `sync` materializes managed Harness assets from package canonical assets into the selected `<harnessRoot>`.
 - `upgrade` refreshes `<harnessRoot>/config.yaml` package identity and schema metadata, runs schema migrations and then syncs managed assets.
 - `doctor` reports Harness config, managed file drift, override state and suggested gates. The displayed package version is read from the installed npm package metadata, not from project config.
-- `inspect-workflow` provides a read-only workflow self-inspection command for user repos. It reports `PASS` / `WARN` / `BLOCKED` across workflow weight, fact-source alignment, handoff clarity, TESTING readiness and high-risk recovery safety, and every metric declares `data_source` as `measured`, `inferred`, `self_reported` or `unavailable`.
+- `inspect-workflow` provides a read-only workflow self-inspection command for user repos. It reports `PASS` / `WARN` / `BLOCKED` across workflow weight, fact-source alignment, handoff clarity, TESTING readiness, high-risk recovery safety and outcome comparison. Every metric declares `data_source` as `measured`, `inferred`, `self_reported` or `unavailable`.
+- `examples/delivery-benchmark/` provides repo-local benchmark assets for self-testing Outcome Comparison against real from-scratch project scenarios. It is not synced into user projects and is not a public package command.
 - `validate-*` commands expose package-side validation entry points for Harness state and phase artifacts.
 - 当前 authoring workspace 使用 `.codex` as `harnessFolderName`; `Other` agent selection still falls back to `.agent`.
 
@@ -104,7 +105,9 @@ Existing project runs sdlc-harness upgrade
 - Plan migrations remove stale `current_phase` from active and draft plans, remove draft `current_task_id`, and strip duplicate `phase` / `linked_task_id` from `parallel_execution`.
 - Validation commands mirror the Python Harness gates closely enough for package consumers to run health checks without depending on this authoring workspace.
 - `inspect-workflow` intentionally sits beside `doctor` and `validate-*`: `doctor` checks installation health, validators check stage contracts, and `inspect-workflow` checks whether the workflow is becoming too heavy or unclear. It reuses root resolution and selected validators, but does not run phase gates as proof of completion.
-- Workflow self-inspection only treats file/field counts and validator results as `measured`; context weight and handoff quality are `inferred`; recent minutes, turns and estimated tokens are accepted only through explicit CLI options as `self_reported`; true model token telemetry is `unavailable` unless the user supplies it. This prevents the command from producing fake-precise token/time claims.
+- Workflow self-inspection only treats file/field counts and validator results as `measured`; context weight and handoff quality are `inferred`; recent minutes, turns, estimated tokens and outcome comparison timings are accepted only through explicit CLI options as `self_reported`; true model token telemetry is `unavailable` unless the user supplies it. This prevents the command from producing fake-precise token/time claims.
+- Outcome comparison keeps the pure vibe coding baseline honest: it compares same-quality delivery, not first-code speed. `workflow_overhead_ratio` uses ordinary 30% / 50% thresholds and high-risk 40% / 60% thresholds; `vibe_handoff_delta_minutes` shows the same-quality pure-vibe delta; `net_value_minutes` includes avoided rework so a slower workflow can still be valid when it prevents downstream misses. The command does not persist these values or create an ROI audit history.
+- Delivery benchmark assets keep this claim testable: scenarios define fixed requirements, midstream changes, recovery checkpoints and scoring rubrics; the runner prepares baseline/Harness run dirs, records workflow-control events such as `sync`, `upgrade`, `transition.py` and `validate-*`, and scores final evidence. Raw runs stay in `/tmp` or `.artifacts/delivery-benchmark/`.
 - Python tools and Node validators resolve `<harnessRoot>` consistently, so configured-root projects such as `.workflow` can run CLI validators, Makefile gates and `tools/transition.py` without `.codex` assumptions.
 - `validate-dev` checks `Development Self-Test Report` content against the current `self_test_contract`: it requires legal `Report Status`, Module Application Entry, Module Key Test Path, scenario results, executed gates, Observable Exit, Current Blocker, Testing Handoff Readiness and Evidence Index Refs; only accepts completion when report status and every scenario are `PASS`; rejects template module-key-path text, ambiguous status rows, missing scenario row evidence, missing required gates, embedded debug/operator/runbook/exploration log sections, `Actual Evidence` body fields, overlong reports, high-risk reports without `.docs/09_runbooks/**` evidence refs or Current Operator Path hard constraints, high-risk implementation docs with mainline evidence dump/operator log/failed-attempt sections, unpromoted session / QR / canonical path / do-not-retry judgments, and browser reports without page URL plus browser/Playwright/screenshot evidence. When `graph_required: true` or `module_key_test_graph` is present, validators also require a single-entry DAG with valid node kinds, known edge refs, reachable scenarios, observable exits and short `evidence_ref` pointers, plus an actual `Module Key Test Graph` in the self-test report. It remains a content consistency gate, not a command execution audit.
 - Managed `phase_contracts.yaml` now distributes a lightweight explicit phase graph: `phases` hold node contracts, top-level `transitions` hold legal directed edges and minimal effects. Package `validate-harness` rejects graph drift such as missing `transitions`, legacy `next` / `returns`, unknown targets or invalid `<suspended_phase>` usage; synced `transition.py` consumes the graph while retaining legacy fallback for older consumer policies.
@@ -152,7 +155,8 @@ Existing project runs sdlc-harness upgrade
 | `make docs-overview && make validate-harness && make validate-plan` | source docs, generated overviews, scaffold and active plan after self-test report boundary hardening | PASS on 2026-05-30 |
 | `npm test --workspace agent-project-sdlc` | package regression for configured-root Python/Makefile gates, fresh/adopt lifecycle split and `<harnessRoot>` dirty-path expansion | PASS in current validation batch |
 | `tools/consumer_lab_full_test.mjs` | installed-consumer validation for `.workflow` configured-root CLI validator, Makefile gates and `transition.py` | PASS in current validation batch |
-| `tests/sdlc-harness/workflow-inspector.test.mjs` | `inspect-workflow` report, JSON, prompt, self-reported metrics and workflow-weight blockers | PASS in current validation batch |
+| `tests/sdlc-harness/workflow-inspector.test.mjs` | `inspect-workflow` report, JSON, prompt, self-reported metrics, outcome comparison and workflow-weight blockers | PASS in current validation batch |
+| `tests/sdlc-harness/delivery-benchmark.test.mjs` | delivery benchmark scenario loading, run preparation, event recording, scoring and outcome math | PASS in current validation batch |
 
 ## 8. 变更记录（Change Log）
 
@@ -173,6 +177,8 @@ Existing project runs sdlc-harness upgrade
 | 2026-05-31 | Lightweight test path DAG | Git history | Added optional `module_key_test_graph` contract validation, prompt/template guidance and README migration notes. |
 | 2026-06-01 | Workflow logic corrective batch | Current validation batch | Restored fresh init to `REQUIREMENT_GATHERING`, kept adopt at `SPRINTING`, and made Python/Makefile gates consume configured `<harnessRoot>`. |
 | 2026-06-01 | Workflow self-inspection | Current validation batch | Added read-only `inspect-workflow` with data-source-labeled metrics and prompt-based self-check for real time/token inputs. |
+| 2026-06-01 | Workflow outcome comparison | Current validation batch | Extended `inspect-workflow` with same-quality vibe baseline comparison, workflow overhead ratio and net avoided-rework value metrics. |
+| 2026-06-01 | Delivery benchmark assets | Current validation batch | Added repo-local `examples/delivery-benchmark/` scenarios, prompts, runner and tests to self-test Outcome Comparison against from-scratch project runs. |
 
 ## 9. 后续维护注意事项
 

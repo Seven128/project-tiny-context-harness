@@ -110,6 +110,21 @@ npx sdlc-harness inspect-workflow --recent-minutes 18 --recent-turns 7 --estimat
 
 Use `--prompt` to print a self-inspection prompt for qualitative checks such as whether the current entry, task, next step, hard constraints and Review/Testing handoff are clear. Use `--json` when CI or another agent needs a machine-readable `decision`, `metrics` and `findings` report. `BLOCKED` exits non-zero; `WARN` remains a successful diagnostic exit.
 
+Outcome Comparison answers the core Harness question: whether the added workflow cost buys fewer omissions, less rework and better handoff. The baseline is not "how fast pure vibe coding can write the first code"; it is how long pure vibe coding would take to reach the same quality bar: Review-ready, Testing-ready and handoff/recovery-ready. Missing timing or baseline inputs are reported as `unavailable`.
+
+```sh
+npx sdlc-harness inspect-workflow \
+  --workflow-control-minutes 5 \
+  --total-delivery-minutes 30 \
+  --estimated-vibe-handoff-minutes 30 \
+  --avoided-rework-minutes 10 \
+  --comparison-confidence medium
+```
+
+`workflow_control_minutes` only counts control cost: reading lifecycle/plan to find state, understanding phase rules, filling workflow fields, fixing schema/validator shape, handling transitions, and resolving allowed_paths / overview / source drift. Durable deliverables such as PRD, tech plan, test cases, implementation docs, actual coding, testing, review and release smoke are not workflow control cost. Ordinary tasks warn/block above 30% / 50% `workflow_overhead_ratio`; high-risk tasks use 40% / 60%. `net_value_minutes` combines the same-quality vibe baseline with avoided rework so a slower workflow can still be judged useful when it prevents downstream misses.
+
+The source repository also includes `examples/delivery-benchmark/`, a repo-local benchmark for validating Outcome Comparison against real from-scratch projects. It prepares fixed baseline/Harness scenarios and scores delivery quality, recovery, change handling and workflow control cost. It is intentionally not a public `sdlc-harness` command yet.
+
 `validate-uiux` requires at least one non-overview `.docs/02_experience/**` deliverable. UX slices must cite PRD / requirement IDs or explicitly declare `Applicability: not_applicable`; visual UI slices require root `DESIGN.md` and fail on `@google/design.md` linter errors. Warnings are reported by the linter but are not treated as default blockers.
 
 `validate-design` treats semantic slicing as a hard gate. Generated `overview.md` files do not count as deliverables, development draft tasks in `plan.draft.yaml` must reference existing tech plan slices through `docs.tech_plan`, UI/frontend draft tasks must reference existing UX slices through `docs.uiux` and root `DESIGN.md` through `docs.design_system`, multiple development draft tasks need distinct primary tech plan slices, and explicit AI provider/copilot, external-system, or compliance/permission/audit themes require dedicated architecture slices. Draft tasks with runnable boundaries must also include `self_test_contract`, backed by a `Development Self-Test Contract` section in the tech plan; the contract must include `module_key_test_path` from local start or invocation to all self-test scenarios completion, covering every runnable entry promised by the current task/module and its internal key paths. Complex or high-risk paths may set `graph_required: true` and provide `module_key_test_graph` to express entries, checkpoints, scenarios, exits and evidence refs as a lightweight DAG.
@@ -143,6 +158,7 @@ npx sdlc-harness sync
 npx sdlc-harness upgrade
 npx sdlc-harness doctor
 npx sdlc-harness inspect-workflow
+npx sdlc-harness inspect-workflow --workflow-control-minutes 5 --total-delivery-minutes 30 --estimated-vibe-handoff-minutes 30 --avoided-rework-minutes 10
 npx sdlc-harness validate-plan
 npx sdlc-harness validate-uiux
 npx sdlc-harness validate-design

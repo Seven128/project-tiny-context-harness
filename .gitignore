@@ -32,6 +32,7 @@ temp/
 
 # Local artifacts
 artifacts/
+.artifacts/
 reports/
 
 # Generated Harness compatibility views

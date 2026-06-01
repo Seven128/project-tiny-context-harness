@@ -531,7 +531,9 @@ make validate-release
 make validate-rfc
 ```
 
-`npx sdlc-harness inspect-workflow` 是 package 侧轻量自查入口，用于检查项目 workflow 是否过重、事实源是否漂移、当前交接是否清楚以及 high-risk recovery 是否安全。它只读本地事实源，输出 `PASS` / `WARN` / `BLOCKED`，并为每个 metric 标注 `measured`、`inferred`、`self_reported` 或 `unavailable`。真实 token/time 不是本地事实源；只有用户或 Agent 显式提供时才作为 `self_reported` 指标，否则必须显示为不可测或 proxy 判断。
+`npx sdlc-harness inspect-workflow` 是 package 侧轻量自查入口，用于检查项目 workflow 是否过重、事实源是否漂移、当前交接是否清楚以及 high-risk recovery 是否安全。它只读本地事实源，输出 `PASS` / `WARN` / `BLOCKED`，并为每个 metric 标注 `measured`、`inferred`、`self_reported` 或 `unavailable`。真实 token/time 不是本地事实源；只有用户或 Agent 显式提供时才作为 `self_reported` 指标，否则必须显示为不可测或 proxy 判断。Outcome comparison 使用同等质量基线比较 Harness 与纯 vibe coding：判断口径是 Review-ready、Testing-ready、handoff/recovery-ready，而不是首轮代码生成速度；其稳定目标是确认适度流程成本是否换来更少遗漏、更少返工和更好交接。
+
+`examples/delivery-benchmark/` 是 Outcome Comparison 的公开自测资产：用固定需求、变更、恢复点和评分 rubric 对照 plain AI coding 与 Harness 路径，验证 workflow overhead 是否换来更好的需求覆盖、变更处理、测试边界和交接恢复。它属于示例/benchmark 资产，不是用户项目 managed assets；原始运行日志和临时项目不进入长期 spec。
 
 ### 9.2 阶段 gate
 - `validate-pm`：检查 PRD、验收标准、Out of Scope、Open Questions。

@@ -1,6 +1,6 @@
 ---
 name: harness_package_design
-description: Use only in this repository when changing AI SDLC Harness workflow rules, package distribution, source sync, migrations, validators, release automation, or authoring overlay.
+description: Use only in this repository when changing AI SDLC Harness workflow rules, package distribution, source sync, migrations, validators, release automation, running delivery benchmarks, or authoring overlay.
 ---
 
 # Harness Package Design Authoring Skill
@@ -54,6 +54,11 @@ tech plan 或 RFC 明确晋升路径，再进入通用 Skill、policy、template
 测量；没有真实数据时只能输出 proxy、prompt 自查或 unavailable。诊断命令默认只读，不写报告、
 不上传数据、不跑重型测试，除非用户显式要求。
 
+如果自查能力比较 Harness 与纯 vibe coding，必须使用同等质量交付基线：Review-ready、
+Testing-ready、handoff/recovery-ready，而不是只比较首轮代码生成速度。流程成本只统计为了操作
+工作流本身产生的控制成本；PRD、tech plan、test cases、implementation doc、Review/Test evidence
+等可被后续阶段消费的产物属于交付物，不应算作 workflow overhead。
+
 全量 installed-consumer 验证属于 Harness authoring overlay。它验证 npm 包在新开 consumer
 仓库中的真实行为，而不是普通用户项目默认工作流能力。全量测试流程提示词、脚本使用提示词、
 已知包化缺口归因规则、以及“测试完成后总结问题并进入 RFC 修复”的 SOP 必须写在
@@ -71,6 +76,18 @@ transition、GitHub workflow static check 和 release automation static check。
 时才显式传入 `--keep-lab`，且 `--commit-lab` 必须和 `--keep-lab` 同时使用。每次全量测试后，
 都要把问题总结为 defect candidates，并建议或创建 RFC，再拆 `TASK-*` development task 修复；不要在同一个测试
 task 中顺手修复所有缺陷。
+
+当用户说“跑工作流 benchmark”“跑 delivery benchmark”“跑 benchmark 看工作流效果”或等价自然语言时，
+默认使用 repo-local `examples/delivery-benchmark/`，不要把它当成用户项目 managed workflow。默认场景是
+`expense-policy-engine`，除非用户指定其它 scenario；默认要跑同一 scenario 的 `baseline` 和 `harness`
+两条路径，并尽量使用同一个模型、同一档 reasoning 和同一最终质量标准。执行前先用
+`node examples/delivery-benchmark/runner/delivery_benchmark.mjs list` 确认场景；运行目录默认放在
+`.artifacts/delivery-benchmark/<timestamp>/` 或用户指定目录，raw transcript、临时项目和长日志不提交。
+用 `prepare` 生成 baseline / harness run dirs，按各自 `.benchmark/prompt.md` 真实开发；过程中用
+`record` 记录 `sync`、`upgrade`、`transition.py`、`validate-*`、overview/source drift 和 workflow
+orientation 等 `workflow_control` 成本。完成后用 `score` 生成对比结果；只有实际跑完同质量 baseline 和
+Harness 后，才把短摘要写入 `examples/delivery-benchmark/results/`。如果这是本仓库正式验证，再同步更新
+`.docs/07_test/TEST_REPORT.md` 并运行 `make docs-overview`；不要预填或美化结果数字。
 
 `README.md` 和 package README 是 npm package 的对外能力索引。新增、删除或改变对外 CLI command、
 configuration、workflow behavior、managed path、override mechanism、validator、migration、release

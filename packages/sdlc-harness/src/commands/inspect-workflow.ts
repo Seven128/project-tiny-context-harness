@@ -1,9 +1,12 @@
 import {
+  type ComparisonConfidence,
   renderWorkflowInspection,
   renderWorkflowInspectionPrompt,
   runWorkflowInspection,
   type WorkflowInspectionOptions
 } from "../lib/workflow-inspector.js";
+
+const COMPARISON_CONFIDENCE = new Set(["low", "medium", "high"]);
 
 export async function inspectWorkflow(args: string[]): Promise<void> {
   const options: WorkflowInspectionOptions = {};
@@ -22,6 +25,16 @@ export async function inspectWorkflow(args: string[]): Promise<void> {
       options.recentTurns = parsePositiveNumber(requireValue(args, ++index, arg), arg);
     } else if (arg === "--estimated-tokens") {
       options.estimatedTokens = parsePositiveNumber(requireValue(args, ++index, arg), arg);
+    } else if (arg === "--workflow-control-minutes") {
+      options.workflowControlMinutes = parsePositiveNumber(requireValue(args, ++index, arg), arg);
+    } else if (arg === "--total-delivery-minutes") {
+      options.totalDeliveryMinutes = parsePositiveNumber(requireValue(args, ++index, arg), arg);
+    } else if (arg === "--estimated-vibe-handoff-minutes") {
+      options.estimatedVibeHandoffMinutes = parsePositiveNumber(requireValue(args, ++index, arg), arg);
+    } else if (arg === "--avoided-rework-minutes") {
+      options.avoidedReworkMinutes = parsePositiveNumber(requireValue(args, ++index, arg), arg);
+    } else if (arg === "--comparison-confidence") {
+      options.comparisonConfidence = parseComparisonConfidence(requireValue(args, ++index, arg));
     } else if (arg === "--help" || arg === "-h") {
       printHelp();
       return;
@@ -55,7 +68,17 @@ Options:
   --prompt                   Print an Agent self-inspection prompt after the measured report
   --recent-minutes <n>       Self-reported recent workflow orientation time
   --recent-turns <n>         Self-reported recent workflow conversation turns
-  --estimated-tokens <n>     Self-reported recent workflow token estimate`);
+  --estimated-tokens <n>     Self-reported recent workflow token estimate
+  --workflow-control-minutes <n>
+                             Time spent operating/understanding Harness mechanics
+  --total-delivery-minutes <n>
+                             End-to-end time to reach the current same-quality handoff
+  --estimated-vibe-handoff-minutes <n>
+                             Estimated pure-vibe time to reach the same Review/Testing/handoff quality
+  --avoided-rework-minutes <n>
+                             Estimated rework avoided by Harness constraints
+  --comparison-confidence <low|medium|high>
+                             Confidence in the counterfactual vibe baseline; default low`);
 }
 
 function requireValue(args: string[], index: number, flag: string): string {
@@ -72,4 +95,11 @@ function parsePositiveNumber(value: string, flag: string): number {
     throw new Error(`${flag} must be a non-negative number`);
   }
   return parsed;
+}
+
+function parseComparisonConfidence(value: string): ComparisonConfidence {
+  if (!COMPARISON_CONFIDENCE.has(value)) {
+    throw new Error("--comparison-confidence must be low, medium, or high");
+  }
+  return value as ComparisonConfidence;
 }

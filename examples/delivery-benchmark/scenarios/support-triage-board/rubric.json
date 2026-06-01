@@ -1,0 +1,101 @@
+{
+  "id": "support-triage-board",
+  "sections": {
+    "acceptance": [
+      {
+        "id": "AC-SUP-001",
+        "label": "API can create and list tickets",
+        "evidence": [
+          { "path": "src/**", "contains_all": ["ticket", "create", "list"] },
+          { "path": "tests/**", "contains_any": ["POST", "create", "list"] }
+        ]
+      },
+      {
+        "id": "AC-SUP-002",
+        "label": "Board groups tickets by all statuses",
+        "evidence": [
+          { "path": "**", "contains_all": ["new", "triaged", "waiting", "resolved"] }
+        ]
+      },
+      {
+        "id": "AC-SUP-003",
+        "label": "Priority score uses tier, age and channel",
+        "evidence": [
+          { "path": "src/**", "contains_all": ["priorityScore", "customerTier", "channel"] }
+        ]
+      },
+      {
+        "id": "AC-SUP-004",
+        "label": "Enterprise older-than-2h SLA risk is represented",
+        "evidence": [
+          { "path": "**", "contains_all": ["enterprise", "SLA"] }
+        ]
+      },
+      {
+        "id": "AC-SUP-005",
+        "label": "Assignment and status movement are persisted",
+        "evidence": [
+          { "path": "src/**", "contains_all": ["assignee", "status"] },
+          { "path": "tests/**", "contains_any": ["assignee", "move", "status"] }
+        ]
+      },
+      {
+        "id": "AC-SUP-006",
+        "label": "UI states exist",
+        "evidence": [
+          { "path": "**", "contains_all": ["loading", "empty", "error"] }
+        ]
+      },
+      {
+        "id": "AC-SUP-007",
+        "label": "API errors are structured",
+        "evidence": [
+          { "path": "src/**", "contains_any": ["errorCode", "INVALID", "structured"] }
+        ]
+      },
+      {
+        "id": "AC-SUP-008",
+        "label": "API and UI smoke tests exist",
+        "evidence": [
+          { "path": "tests/**", "contains_any": ["smoke", "browser", "playwright", "fetch"] }
+        ]
+      },
+      {
+        "id": "AC-SUP-009",
+        "label": "UI/UX handoff exists",
+        "evidence_mode": "any",
+        "evidence": [
+          { "path": ".docs/02_experience/**", "contains_any": ["screen", "state", "accessibility", "handoff"] },
+          { "path": ".benchmark/**", "contains_any": ["screen", "state", "accessibility", "handoff"] }
+        ]
+      },
+      {
+        "id": "AC-SUP-010",
+        "label": "TESTING bugfix route is recorded when needed",
+        "evidence_mode": "any",
+        "evidence": [
+          { "path": ".docs/07_test/**", "contains_any": ["bugfix_implementation_gap", "bugfix_replan", "Bugfix Route"] },
+          { "path": ".benchmark/**", "contains_any": ["bugfix_implementation_gap", "bugfix_replan", "Bugfix Route"] }
+        ]
+      }
+    ],
+    "change_impact": [
+      {
+        "id": "BUG-SUP-001",
+        "label": "SLA-risk-first sorting is implemented or planned",
+        "evidence": [
+          { "path": "**", "contains_all": ["SLA", "sort"] }
+        ]
+      }
+    ],
+    "handoff": [
+      {
+        "id": "HANDOFF-SUP-001",
+        "label": "Runnable local entrypoint is documented",
+        "evidence": [
+          { "path": "**", "contains_any": ["npm run", "localhost", "start"] }
+        ]
+      }
+    ]
+  }
+}
