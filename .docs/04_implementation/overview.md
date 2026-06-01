@@ -1,11 +1,11 @@
 # .docs/04_implementation overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: cd96ce71d8da397f -->
+<!-- source-hash: c6ae099699b06e16 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `cd96ce71d8da397f`
+Source hash: `c6ae099699b06e16`
 
 ## Source Slices
 
@@ -108,7 +108,7 @@ Existing project runs sdlc-harness upgrade
 - `inspect-workflow` intentionally sits beside `doctor` and `validate-*`: `doctor` checks installation health, validators check stage contracts, and `inspect-workflow` checks whether the workflow is becoming too heavy or unclear. It reuses root resolution and selected validators, but does not run phase gates as proof of completion.
 - Workflow self-inspection only treats file/field counts and validator results as `measured`; context weight and handoff quality are `inferred`; recent minutes, turns, estimated tokens and outcome comparison timings are accepted only through explicit CLI options as `self_reported`; true model token telemetry is `unavailable` unless the user supplies it. This prevents the command from producing fake-precise token/time claims.
 - Outcome comparison keeps the pure vibe coding baseline honest: it compares same-quality delivery, not first-code speed. `workflow_overhead_ratio` uses ordinary 30% / 50% thresholds and high-risk 40% / 60% thresholds; `vibe_handoff_delta_minutes` shows the same-quality pure-vibe delta; `net_value_minutes` includes avoided rework so a slower workflow can still be valid when it prevents downstream misses. The command does not persist these values or create an ROI audit history.
-- Delivery benchmark assets keep this claim testable: scenarios define fixed requirements, midstream changes, recovery checkpoints and scoring rubrics; the runner prepares baseline/Harness run dirs, supports an external observer for elapsed time and file activity, records workflow-control events such as `sync`, `upgrade`, `transition.py` and `validate-*`, retains lightweight system-timed manual-boundary events through `timer-start` / `timer-stop`, and scores final evidence. Lifecycle probe scenarios can add `lifecycle_probe.md` and report `INITIAL_DELIVERY`, `RECOVERY`, `RFC`, `DEBUG`, `context_recovery_score`, `wrong_path_count` and final quality metrics to distinguish first delivery from recovery/change/debug efficiency. Observer raw logs are excluded from quality rubric evidence. Raw runs stay in `/tmp` or `.artifacts/delivery-benchmark/`.
+- Delivery benchmark assets keep this claim testable: scenarios define fixed requirements, midstream changes, recovery checkpoints and scoring rubrics; the runner prepares baseline/Harness run dirs, supports an external observer for elapsed time and file activity, records workflow-control events such as `sync`, `upgrade`, `transition.py` and `validate-*`, retains lightweight system-timed manual-boundary events through `timer-start` / `timer-stop`, and scores final evidence. Lifecycle probe scenarios can add `lifecycle_probe.md` and report `INITIAL_DELIVERY`, `RECOVERY`, `RFC`, `DEBUG`, `context_recovery_score`, `wrong_path_count` and final quality metrics to distinguish first delivery from recovery/change/debug efficiency. Scenario design is high-signal but not hacked: it targets Harness strengths while preserving same-quality baselines and invalidating runs that reuse implementation context, copy completed artifacts, pre-apply RFC/debug work or selectively publish favorable numbers. Observer raw logs are excluded from quality rubric evidence. Raw runs stay in `/tmp` or `.artifacts/delivery-benchmark/`.
 - Orientation fast path is intentionally represented in AGENTS, workflow Skills and user docs instead of a new structured field or validator. The consumer is the Agent prompt path, not a runtime tool; keeping it textual avoids a schema migration while still reducing accidental startup gates.
 - Python tools and Node validators resolve `<harnessRoot>` consistently, so configured-root projects such as `.workflow` can run CLI validators, Makefile gates and `tools/transition.py` without `.codex` assumptions.
 - `validate-dev` checks `Development Self-Test Report` content against the current `self_test_contract`: it requires legal `Report Status`, Module Application Entry, Module Key Test Path, scenario results, executed gates, Observable Exit, Current Blocker, Testing Handoff Readiness and Evidence Index Refs; only accepts completion when report status and every scenario are `PASS`; rejects template module-key-path text, ambiguous status rows, missing scenario row evidence, missing required gates, embedded debug/operator/runbook/exploration log sections, `Actual Evidence` body fields, overlong reports, high-risk reports without `.docs/09_runbooks/**` evidence refs or Current Operator Path hard constraints, high-risk implementation docs with mainline evidence dump/operator log/failed-attempt sections, unpromoted session / QR / canonical path / do-not-retry judgments, and browser reports without page URL plus browser/Playwright/screenshot evidence. When `graph_required: true` or `module_key_test_graph` is present, validators also require a single-entry DAG with valid node kinds, known edge refs, reachable scenarios, observable exits and short `evidence_ref` pointers, plus an actual `Module Key Test Graph` in the self-test report. It remains a content consistency gate, not a command execution audit.
@@ -188,6 +188,7 @@ Existing project runs sdlc-harness upgrade
 | 2026-06-02 | Delivery benchmark operator runbook | Current validation batch | Added a repo-local operator protocol for the first `project-context-recovery-lab` lifecycle pilot, including baseline/Harness isolation, observer coverage, phase timers, wrong-path scoring and calibration-only publication rules. |
 | 2026-06-02 | Delivery benchmark scenario design ADR | Current validation batch | Added `ADR_008` to explain why benchmark scenarios validate same-quality lifecycle efficiency, context recovery, RFC/debug rework and provider-boundary safety instead of first-patch speed. |
 | 2026-06-02 | Delivery benchmark gate fast path | Current validation batch | Added scenario gate profiles and runner gate cost breakdown so pilots distinguish orientation, product verification gates, workflow-control gates and out-of-scope package regression. |
+| 2026-06-02 | Delivery benchmark honest calibration | Current validation batch | Kept unclean lifecycle pilot numbers out of the visual report and documented high-signal-not-hacked scenario design plus formal invalidation rules. |
 | 2026-06-02 | Orientation fast path | Current validation batch | Documented general new-session/status/next-step orientation as lightweight routing rather than automatic gate execution, while preserving completion, phase-transition, commit and release gates. |
 
 ## 9. 后续维护注意事项
@@ -509,11 +510,11 @@ Author edits Harness source files
 
 ## Development Self-Test Report
 
-- Contract Source: `.docs/rfc/RFC_025_later_stage_rfc_routing_and_tools_distribution.md#8-development-self-test-impact`
-- Scenario Results: `transition-rfc-interrupt` PASS; `package-tools-materialization` PASS.
-- Executed Gates: `npm test --workspace agent-project-sdlc` PASS; `node packages/sdlc-harness/dist/cli.js package sync-source` PASS; `node packages/sdlc-harness/dist/cli.js package check-source` PASS; `make validate-harness` PASS; `make validate-rfc` PASS; `make validate-dev` PASS.
-- Module Key Test Path: `npm test --workspace agent-project-sdlc; python3 tools/transition.py fixture calls in tests/sdlc-harness/transition.test.mjs` starts by building package `dist`, runs node:test package-source/init/sync/upgrade/transition fixtures, verifies `transition-rfc-interrupt` through direct `tools/transition.py` fixture calls for `SPRINTING` / `REVIEWING` / `TESTING` / `RELEASING -> RFC_RECALIBRATION`, illegal pre-development RFC entry, normal `REVIEWING -> TESTING`, and `RFC_RECALIBRATION -> SPRINTING`; the same run verifies `package-tools-materialization` through source mapping, init/sync, stale tool replacement and upgrade backfill assertions.
-- Evidence Index Refs: package regression, package source check and Harness gate outputs are recorded in git/test command history for `TASK-082`.
+- Contract Source: `.docs/rfc/RFC_027_rfc_upstream_resume_and_bugfix_boundary.md#10-development-self-test-impact`
+- Scenario Results: `transition-rfc-upstream-resume` PASS; `package-tools-materialization` PASS.
+- Executed Gates: `node --test tests/sdlc-harness/transition.test.mjs` PASS; `npm test --workspace agent-project-sdlc` PASS; `node packages/sdlc-harness/dist/cli.js package sync-source` PASS; `node packages/sdlc-harness/dist/cli.js package check-source` PASS; `make docs-overview` PASS; `make validate-harness` PASS; `make validate-rfc` PASS.
+- Module Key Test Path: `node --test tests/sdlc-harness/transition.test.mjs; npm test --workspace agent-project-sdlc` starts with direct `tools/transition.py` fixture calls for `SPRINTING` / `REVIEWING` / `TESTING` / `RELEASING -> RFC_RECALIBRATION`, illegal pre-development RFC entry, upstream RFC resume to `REQUIREMENT_GATHERING` / `UI_UX_DESIGNING` / `ARCHITECTING`, illegal `RFC_RECALIBRATION -> SPRINTING`, normal `REVIEWING -> TESTING`, post-development `bugfix_implementation_gap` return to `SPRINTING`, and illegal direct `TESTING -> UI_UX_DESIGNING` / `ARCHITECTING`; full package regression then verifies source mapping, init/sync, stale tool replacement and upgrade backfill assertions.
+- Evidence Index Refs: transition regression, package regression, package source check and Harness gate outputs are recorded in current command history for `RFC_027`.
 - Missing / Blockers: none.
 - Testing Handoff Readiness: PASS; Review/Testing can rerun the commands above without external services.
 
@@ -935,14 +936,14 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 - Architect prompt now treats semantic design slicing as a `make validate-design` hard gate: `plan.draft.yaml` development tasks must reference `docs.tech_plan`, multiple draft tasks need distinct primary tech plan slices, generated `overview.md` cannot satisfy design deliverables, and explicit cross-cutting themes require dedicated architecture slices.
 - Architect prompt now consumes `.docs/02_experience/**` and `DESIGN.md`, requires `Experience Input Review`, and makes UI/frontend draft tasks reference `docs.uiux` plus `docs.design_system`.
 - Manager, PM and Architect prompts now describe the development-before rollback path from `ARCHITECTING` to `REQUIREMENT_GATHERING` for PRD edits, while preserving RFC workflow for changes after `SPRINTING`.
-- Manager prompt routes `/uiux` and natural-language UI/UX requests to `UI_UX_DESIGNING`. It also supports `ARCHITECTING -> UI_UX_DESIGNING` pre-sprint return and TESTING `bugfix_uiux_replan`.
+- Manager prompt routes `/uiux` and natural-language UI/UX requests to `UI_UX_DESIGNING`. It also supports `ARCHITECTING -> UI_UX_DESIGNING` pre-sprint return, RFC upstream resume to PRD / UI/UX / ARCHITECTING, and post-development `bugfix_implementation_gap` returns to SPRINTING.
 - PM, Architect, Reviewer, Tester, Release and RFC prompts now require each main workflow action to run as one small `TASK-*` `plan.yaml` task with `phase` metadata. This covers conversational generation, existing-document slicing, synthesis from prior fact sources, review batches, test evidence, release preparation and RFC recalibration.
 - Dev, Review, Tester and Implementation Doc prompts now treat runnable entry/exit as a hard phase boundary: SPRINTING must implement or block promised API/CLI/adapter/provider/config/fixture-live boundaries, REVIEWING must block missing entry/exit, and TESTING may only exercise existing entrypoints.
 - Dev, Review, Tester, RFC and Implementation Doc prompts now consume UI/UX facts for UI/frontend work: SPRINTING implements screen states, interactions, responsive behavior, focus/keyboard/touch and design tokens; REVIEWING checks UX/design conformance; TESTING derives UI cases from screen contracts and handoff matrix; RFC impact analysis checks `.docs/02_experience/**` and `DESIGN.md`.
 - Review, test and implementation templates include runnable entry/exit sections. `validate-review` and `validate-test` require entry/exit evidence text, and TESTING validators reject runtime, bootstrap, provider, deploy or package runtime script changes.
 - TESTING distinguishes `.docs/07_test/TEST_STRATEGY.md`, `.docs/07_test/TEST_CASES.md` and `.docs/07_test/TEST_REPORT.md`; `TEST_REPORT.md` is execution-only evidence and `validate-test` no longer falls back to `TEST_PLAN.md`.
 - `TEST_CASES.md` now has a lightweight case contract: stable `TC-*` IDs, requirement/risk refs, runnable entry, preconditions, steps, expected exit, type, priority and short evidence pointer. `validate-test` keeps legacy report-only compatibility, but validates case structure when a report references `TC-*`, a TESTING task plans `TEST_CASES.md`, or the file exists.
-- Tester and Manager prompts now classify TESTING bugfix recovery with `Bugfix Route`: `bugfix_replan` returns to `ARCHITECTING` for tech plan / contract / graph changes, `bugfix_implementation_gap` returns to `SPRINTING` for implementation deviations, and requirement or acceptance changes still use RFC.
+- Tester and Manager prompts now classify post-development recovery with `Bugfix Route`: `bugfix_implementation_gap` returns to `SPRINTING` only for implementation deviations, while requirement, acceptance, UI/UX or tech-plan changes use RFC and resume to `REQUIREMENT_GATHERING`, `UI_UX_DESIGNING` or `ARCHITECTING`.
 - RFC recalibration now records `Test Fact Source Impact` and removes superseded `.docs/07_test/**` files from current test facts and `.docs/INDEX.md` when a route, entry/exit or acceptance boundary changes.
 - `validate-dev` now requires implementation docs to include `Runnable Entry/Exit` facts or explicit `Not applicable`, so missing runtime boundaries cannot be deferred into TESTING by omission.
 - `validate-dev` now requires the current open SPRINTING task implementation doc to include structured `Development Evidence`: `Runnable Entry`, `Observable Exit`, `Basic Self-test Evidence`, or a justified `Not applicable`.
@@ -1208,6 +1209,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | `make validate-harness` | Harness scaffold, prompt language and overview consistency after UI/UX stage addition | PASS on 2026-06-01 |
 | `node packages/sdlc-harness/dist/cli.js package sync-source && node packages/sdlc-harness/dist/cli.js package check-source` | Package assets include UI/UX skill, template, validator, policies and README updates | PASS on 2026-06-01 |
 | `node tools/consumer_lab_full_test.mjs --reset-lab --json-report /tmp/sdlc-harness-consumer-lab-uiux.json --markdown-report /tmp/sdlc-harness-consumer-lab-uiux.md` | Installed-consumer validation exposes `validate-uiux`, UI/UX assets and phase graph | PASS on 2026-06-01; 53 PASS, 0 BLOCKED, 0 FAIL |
+| `node --test tests/sdlc-harness/transition.test.mjs` | RFC upstream resume, illegal RFC -> SPRINTING, post-development bugfix return and illegal direct TESTING -> UI_UX_DESIGNING / ARCHITECTING | PASS in current working tree for RFC_027 |
 
 ## 8. 变更记录（Change Log）
 
@@ -1248,7 +1250,8 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-31 | Data-structure calibration | Git history | Added authoring guidance to consider structured contracts for repeated workflow consumers while weighing migration, compatibility, context and over-abstraction costs. |
 | 2026-05-31 | PROJECT_SPEC boundary | Git history | Clarified that version migration and upgrade instructions stay in README/package README or release/implementation docs, not in the zero-to-one project spec. |
 | 2026-05-31 | ADR-backed design rationale | Git history | Required future workflow changes to consult memory / ADR design decision indexes and to add durable rationale as ADR slices instead of expanding `PROJECT_SPEC.md`. |
-| 2026-06-01 | TESTING bugfix return boundary | Git history | Added prompt routing for `Bugfix Route`, keeping bugfix recovery lightweight through existing return edges and avoiding a separate bugfix workflow engine. |
+| 2026-06-01 | TESTING bugfix return boundary | Git history | Added prompt routing for `Bugfix Route`, keeping bugfix recovery lightweight through existing return edges and avoiding a separate bugfix workflow engine. Superseded by `RFC_027` for upstream PRD / UI/UX / ARCHITECTING changes. |
+| 2026-06-02 | `RFC_027` | Current working tree | Updated prompts so RFC returns to PRD / UI/UX / ARCHITECTING and direct SPRINTING returns are only `bugfix_implementation_gap`. |
 | 2026-06-01 | TESTING case contract | Git history | Added lightweight `TEST_CASES.md` case schema and conditional `validate-test` checks for `TC-*` references, preserving report-only compatibility for legacy tasks. |
 | 2026-06-01 | UI/UX design stage | Git history | Added `UI_UX_DESIGNING`, `.docs/02_experience/**`, optional visual UI `DESIGN.md`, `validate-uiux`, downstream consumption rules and package assets. |
 
@@ -1291,7 +1294,8 @@ Source: [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and
 - `.docs/05_decisions/` is not a lifecycle phase; it is an `ARCHITECTING`-produced ADR fact source for durable architecture decisions that may outlive a single architecture or tech plan slice.
 - `phase_contracts.yaml` uses a lightweight explicit directed graph: `phases` are stable phase contract nodes, and top-level `transitions` are legal directed edges with trigger, kind and minimal effects. Canonical phase nodes no longer use `next` / `returns`; `transition.py` keeps a legacy fallback only for older consumer policies that do not yet contain `transitions`.
 - The phase graph is intentionally lightweight. It exists so transition helpers, validators and agents read the same legal flow contract; it does not store task history, operator logs, debug evidence, runbook bodies, implementation doc text or phase execution history, and it does not introduce graph engine classes, traversal frameworks or visualization.
-- TESTING bugfix recovery is modeled as two lightweight return edges, not a new workflow engine: `TESTING -> ARCHITECTING` with trigger `bugfix_replan`, and `TESTING -> SPRINTING` with trigger `bugfix_implementation_gap`. `TEST_REPORT.md#Bugfix Route` chooses the route; transition helper still consumes only the legal graph edge.
+- RFC recovery now resumes to upstream planning/design phases, not directly to development: `RFC_RECALIBRATION -> REQUIREMENT_GATHERING`, `UI_UX_DESIGNING` or `ARCHITECTING` clears `suspended_phase`. The affected upstream phase then advances normally back to SPRINTING.
+- Post-development bugfix recovery is modeled as lightweight return edges, not a new workflow engine: `REVIEWING` / `TESTING` / `RELEASING -> SPRINTING` with trigger `bugfix_implementation_gap`. This path is only for implementation deviations where PRD, UI/UX and tech plan facts remain correct.
 - User migration cost is low for managed consumers: `sdlc-harness upgrade` or `sdlc-harness sync` refreshes the managed policy and transition helper, while existing `lifecycle.yaml`, `plan.yaml` and task data stay valid. Custom phase policies need a manual `next` / `returns` to top-level `transitions` conversion; old policies still work through the transition helper fallback, but canonical validation expects the explicit graph after sync.
 - A SPRINTING task completes in two commits: implementation commit while the task is still present, then completion ledger commit after removing the task.
 - Generic draft-to-plan rule: when any workflow promotes a draft into a formal `TASK-*`, it removes the source draft in the same state update; the current built-in implementation point is SPRINTING consuming `plan.draft.yaml.tasks[]`.
@@ -1317,32 +1321,32 @@ Source: [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and
 
 ## Development Evidence
 
-- Evidence Level: `local_runtime`, verified through package CLI regression and local Harness gates for TASK-084.
+- Evidence Level: `local_runtime`, verified through package CLI regression and local Harness gates for `RFC_027`.
 - Target Runtime Environment: `local`; the handoff entrypoint is `npm test --workspace agent-project-sdlc`.
-- Runnable Entry: `npm test --workspace agent-project-sdlc; npx sdlc-harness validate-plan; npx sdlc-harness validate-dev`.
-- Observable Exit: package regression passed with validator coverage for `workflow_default`, `codex_native_subagents`, legacy `user_requested`, invalid provider cases and SPRINTING path-lock violations; source sync/check also passed.
+- Runnable Entry: `node --test tests/sdlc-harness/transition.test.mjs; npm test --workspace agent-project-sdlc; npx sdlc-harness validate-harness; npx sdlc-harness validate-rfc`.
+- Observable Exit: package regression passed with transition coverage for RFC upstream resume, illegal RFC-to-SPRINTING, post-development bugfix returns and illegal direct TESTING-to-upstream returns; source sync/check also passed.
 - Client / Server Initialization: local Node CLI runtime starts through `npm test --workspace agent-project-sdlc` and package CLI commands; no server process is required.
 - Config Contract: no secrets; Harness root comes from `package.json#sdlcHarness.harnessFolderName` or `sdlc-harness.config.json#harnessFolderName`, and the parallel contract is read from `plan.yaml#parallel_execution`.
-- Testing Handoff Readiness: ready for Review/Testing handoff after package tests, source sync/check, docs overview, validate-harness, validate-rfc and validate-dev pass.
-- Known Missing Runtime Boundaries: no standalone `sdlc-harness parallel run` CLI is implemented in this task; Codex native subagents remain the runtime provider governed by prompt and plan contract.
-- Basic Self-test Evidence: See `Development Self-Test Report`; `npm test --workspace agent-project-sdlc` PASS for TASK-084 package regression and the lightweight phase graph regression.
+- Testing Handoff Readiness: ready for Review/Testing handoff after transition regression, package tests, source sync/check, docs overview, validate-harness and validate-rfc pass.
+- Known Missing Runtime Boundaries: none for this workflow graph change; deployed runtime is out of scope.
+- Basic Self-test Evidence: See `Development Self-Test Report`; `npm test --workspace agent-project-sdlc` PASS for `RFC_027` package regression and the lightweight phase graph regression.
 
 ## Development Self-Test Report
 
 - Report Status: PASS
-- Contract Source: .docs/rfc/RFC_026_default_native_subagent_parallel_execution.md#8-development-self-test-impact
-- Scenario Results: parallel-contract-schema PASS; sprinting-path-lock PASS; source-sync-assets PASS.
-- Executed Gates: `npm test --workspace agent-project-sdlc`; `node packages/sdlc-harness/dist/cli.js package sync-source`; `node packages/sdlc-harness/dist/cli.js package check-source`; `make docs-overview`; `make validate-harness`; `make validate-rfc`; `make validate-dev`.
-- Module Key Test Path: `npm test --workspace agent-project-sdlc; npx sdlc-harness validate-plan; npx sdlc-harness validate-dev` -> parallel-contract-schema -> sprinting-path-lock -> phase-transition-graph -> source-sync-assets -> TypeScript validator schema and path-lock checks -> Python validator parity through `make validate-plan` -> package asset source sync/check -> observable PASS output.
-- Evidence Index Refs: package regression output; package source sync/check output; `make validate-plan`; docs overview and Harness/RFC/dev gate output.
+- Contract Source: .docs/rfc/RFC_027_rfc_upstream_resume_and_bugfix_boundary.md#10-development-self-test-impact
+- Scenario Results: rfc-upstream-resume PASS; post-development-bugfix-return PASS; source-sync-assets PASS.
+- Executed Gates: `node --test tests/sdlc-harness/transition.test.mjs`; `npm test --workspace agent-project-sdlc`; `node packages/sdlc-harness/dist/cli.js package sync-source`; `node packages/sdlc-harness/dist/cli.js package check-source`; `make docs-overview`; `make validate-harness`; `make validate-rfc`.
+- Module Key Test Path: `node --test tests/sdlc-harness/transition.test.mjs; npm test --workspace agent-project-sdlc` -> RFC interrupt from SPRINTING/REVIEWING/TESTING/RELEASING -> RFC upstream resume to REQUIREMENT_GATHERING/UI_UX_DESIGNING/ARCHITECTING -> illegal RFC_RECALIBRATION to SPRINTING -> post-development bugfix_implementation_gap to SPRINTING -> illegal direct TESTING to UI_UX_DESIGNING/ARCHITECTING -> package source sync/check -> observable PASS output.
+- Evidence Index Refs: transition regression output; package regression output; package source sync/check output; docs overview and Harness/RFC gate output.
 - Missing / Blockers: none.
-- Testing Handoff Readiness: ready for Review/Testing handoff with the required package, source sync, overview, Harness, RFC and dev gates recorded above.
+- Testing Handoff Readiness: ready for Review/Testing handoff with the required transition, package, source sync, overview, Harness and RFC gates recorded above.
 
 | Scenario ID | Result | Executed Entry | Actual Exit | Evidence |
 |---|---|---|---|---|
-| parallel-contract-schema | PASS | `npm test --workspace agent-project-sdlc` | Validator tests accepted `workflow_default` and `codex_native_subagents`, and rejected invalid provider combinations. | package regression output |
-| sprinting-path-lock | PASS | `npm test --workspace agent-project-sdlc` | Validator tests rejected overlapping owned paths and owned paths outside current task allowed paths. | package regression output |
-| source-sync-assets | PASS | `node packages/sdlc-harness/dist/cli.js package sync-source && node packages/sdlc-harness/dist/cli.js package check-source` | Managed package assets synchronized and checked without drift. | source sync/check output |
+| rfc-upstream-resume | PASS | `node --test tests/sdlc-harness/transition.test.mjs` | RFC exits to REQUIREMENT_GATHERING / UI_UX_DESIGNING / ARCHITECTING and rejects RFC_RECALIBRATION -> SPRINTING. | transition regression output |
+| post-development-bugfix-return | PASS | `node --test tests/sdlc-harness/transition.test.mjs` | REVIEWING / TESTING / RELEASING can return to SPRINTING through bugfix_implementation_gap; TESTING cannot directly return to UI_UX_DESIGNING / ARCHITECTING. | transition regression output |
+| source-sync-assets | PASS | `node packages/sdlc-harness/dist/cli.js package sync-source`; `node packages/sdlc-harness/dist/cli.js package check-source` | Managed package assets synchronized and checked without drift. | source sync/check output |
 
 ## 3. 真实代码结构
 
@@ -1401,20 +1405,20 @@ ARCHITECTING discovers PRD needs revision before development
 ```
 
 ```txt
-Later-stage review/test/release discovers requirement or development self-test drift
+Later-stage review/test/release discovers requirement, UI/UX or tech-plan drift
 -> python3 tools/transition.py --to RFC_RECALIBRATION is legal from SPRINTING / REVIEWING / TESTING / RELEASING because transitions declare those interrupt edges
 -> lifecycle.suspended_phase records the interrupted phase through transition effects
 -> active_role/active_skill become rfc_owner/pjsdlc_rfc_recalibrate
--> RFC work runs validate-rfc and creates or adjusts downstream SPRINTING tasks
--> transition.py --to SPRINTING follows the RFC resume edge, clears suspended_phase and resumes development
+-> RFC work runs validate-rfc and selects REQUIREMENT_GATHERING / UI_UX_DESIGNING / ARCHITECTING as the recovery phase
+-> transition.py --to <upstream phase> follows the RFC resume edge and clears suspended_phase
+-> the upstream phase updates facts, runs its gate, then advances normally back to SPRINTING
 ```
 
 ```txt
-TESTING discovers a bug in delivered behavior
--> TEST_REPORT.md records Final decision: BLOCKED and Bugfix Route
--> bugfix_replan uses transition.py --to ARCHITECTING for tech plan / contract / graph changes
+REVIEWING / TESTING / RELEASING discovers an implementation deviation
+-> Review/Test/Release finding confirms PRD, UI/UX and tech plan facts are still correct
 -> bugfix_implementation_gap uses transition.py --to SPRINTING for implementation deviation fixes
--> requirement, acceptance or product-boundary changes still use RFC_RECALIBRATION
+-> requirement, acceptance, UI/UX or tech-plan changes use RFC_RECALIBRATION
 ```
 
 ```txt
@@ -1509,8 +1513,8 @@ Stage task starts
 | `node packages/sdlc-harness/dist/cli.js package sync-source && package check-source` | Managed package assets include self-test boundary templates, Skills, tools and README updates | PASS on 2026-05-30; sync changed=48 |
 | `make docs-overview && make validate-harness && make validate-plan` | Generated overview, Harness scaffold and active plan contract after self-test boundary hardening | PASS on 2026-05-30 |
 | `tests/sdlc-harness/transition.test.mjs` | `ARCHITECTING -> REQUIREMENT_GATHERING` rollback, PM role/skill activation and `SPRINTING` rollback rejection | PASS for TASK-061 |
-| `tests/sdlc-harness/transition.test.mjs` | Controlled `RFC_RECALIBRATION` interrupt from SPRINTING/REVIEWING/TESTING/RELEASING, illegal pre-development RFC entry, RFC return cleanup and unchanged REVIEWING -> TESTING | PASS for TASK-082 |
-| `tests/sdlc-harness/transition.test.mjs` | TESTING bugfix return edges to ARCHITECTING / SPRINTING, illegal TESTING -> REQUIREMENT_GATHERING and legacy fallback without bugfix returns | PASS in current working tree |
+| `tests/sdlc-harness/transition.test.mjs` | Controlled `RFC_RECALIBRATION` interrupt from SPRINTING/REVIEWING/TESTING/RELEASING, upstream RFC resume to REQUIREMENT_GATHERING / UI_UX_DESIGNING / ARCHITECTING, illegal RFC -> SPRINTING, and unchanged REVIEWING -> TESTING | PASS in current working tree for RFC_027 |
+| `tests/sdlc-harness/transition.test.mjs` | Post-development `bugfix_implementation_gap` return edges to SPRINTING and illegal direct TESTING -> UI_UX_DESIGNING / ARCHITECTING | PASS in current working tree for RFC_027 |
 | `make validate-current` | Phase-specific gate dispatch | PASS in sprint/review/test transitions |
 | `npm test --workspace agent-project-sdlc` | Package migration, init seed and validator parity | PASS for TASK-065 |
 | `node packages/sdlc-harness/dist/cli.js package sync-source && package check-source` | Package assets synchronized from source README, Skill and template files | PASS for TASK-065 |
@@ -1529,7 +1533,8 @@ Stage task starts
 | 2026-05-30 | Self-test report boundary hardening | Git history | Added Report Status, Current Operator Path, disallowed log-section checks and working_notes limit validation. |
 | 2026-05-31 | Lightweight explicit phase graph | Git history | Moved canonical phase routing from node-local `next` / `returns` and hardcoded RFC interrupt rules to top-level `transitions`, with validator coverage and legacy fallback. |
 | 2026-05-31 | Phase graph migration guidance | Git history | Documented that managed consumers migrate through upgrade/sync with no state schema migration, while custom phase policies convert `next` / `returns` to explicit transition edges. |
-| 2026-06-01 | TESTING bugfix return boundary | Git history | Added lightweight TESTING return edges for `bugfix_replan` and `bugfix_implementation_gap`, keeping bugfix route semantics in triggers and `TEST_REPORT.md` instead of a heavy bugfix state machine. |
+| 2026-06-01 | TESTING bugfix return boundary | Git history | Added lightweight TESTING return edges without introducing a heavy bugfix state machine; `RFC_027` later narrowed direct SPRINTING returns to implementation-gap fixes only. |
+| 2026-06-02 | `RFC_027` | Current working tree | Changed RFC resume to upstream PRD / UI/UX / ARCHITECTING targets and reserved direct SPRINTING returns for `bugfix_implementation_gap`. |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Consolidated legacy state/task implementation docs into module facts. |
 | 2026-05-27 | `DEV-050` | DEV-050 implementation commit | Added opt-in `parallel_execution` contract for multi-agent/worktree coordination. |
 | 2026-05-30 | `TASK-084` | TASK-084 implementation commit | Added default Codex native subagent scheduling semantics and SPRINTING path-lock validation. |
@@ -1543,7 +1548,7 @@ Stage task starts
 | 2026-05-28 | `TASK-065` | Git history | Clarified ADR and memory responsibilities across PROJECT_SPEC, README/package README, architect skill, ADR template and package memory seeds. |
 | 2026-05-29 | `TASK-069` | Git history | Clarified that release history is cold archive while `.docs/08_release/CURRENT_RELEASE.md` remains the active release status fact source. |
 | 2026-05-29 | `TASK-071` | Git history | Split direct `validate-dev` open-task semantics from `validate-current` phase-exit no-open checks and moved managed Makefile dev gate to package CLI. |
-| 2026-05-30 | `TASK-082` | Git history | Constrained RFC interrupts to SPRINTING and later phases, preserved normal REVIEWING -> TESTING routing, and cleared `suspended_phase` when RFC returns to SPRINTING. |
+| 2026-05-30 | `TASK-082` | Git history | Constrained RFC interrupts to SPRINTING and later phases, preserved normal REVIEWING -> TESTING routing, and cleared `suspended_phase` when RFC returns to SPRINTING. Superseded by `RFC_027` for the RFC exit target while retaining the interrupt source constraint. |
 
 ## 9. 后续维护注意事项
 

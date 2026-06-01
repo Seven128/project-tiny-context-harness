@@ -43,5 +43,5 @@
 
 - Decision: `PASS` / `BLOCKED`
 - Evidence:
-- Bugfix Route when bug-related `BLOCKED`: `bugfix_replan` / `bugfix_implementation_gap` / `RFC_RECALIBRATION` / `not_applicable`
+- Bugfix Route when bug-related `BLOCKED`: `bugfix_implementation_gap` / `RFC_RECALIBRATION` / `not_applicable`
 - Recovery condition when `BLOCKED`:

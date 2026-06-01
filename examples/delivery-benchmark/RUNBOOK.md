@@ -14,6 +14,12 @@ Pilot runs are calibration evidence by default. Do not update
 `results/benchmark-data.js` until both `baseline` and `harness` complete the same
 scenario against the same quality rubric.
 
+Benchmark scenarios may be high-signal by design: they should target the places
+where Harness is meant to help, such as context recovery, RFC/debug churn,
+cross-layer drift and provider-boundary safety. This must not become result
+hacking. The protocol must leave room for honest outcomes where Harness is
+slower, shows no advantage or only helps at higher complexity.
+
 ## Isolation Rules
 
 - Run both `baseline` and `harness` for the same scenario, model, reasoning
@@ -29,6 +35,23 @@ scenario against the same quality rubric.
   commit raw transcripts, temporary projects or observer logs.
 - Observer logs and benchmark internals are not quality evidence. Score product
   source, tests, README/docs and Harness deliverables only.
+
+## Formal Result Invalidation Rules
+
+Mark the run as protocol calibration only, and do not publish its numbers in the
+visual report, if any of these happen:
+
+- Either path is not started from a fresh independent agent/thread.
+- The measured agent receives the other path's source, summary, transcript or
+  implementation decisions before finishing the comparable phase.
+- Source, tests or README/docs are copied from the other completed path.
+- RFC or debug work is pre-applied before the timed RFC/DEBUG phase begins.
+- Observer coverage is interrupted and the run is stitched together in a way
+  that changes the measured work boundary.
+- The benchmark operator selectively publishes only favorable phase numbers
+  instead of the full same-quality baseline/Harness comparison.
+- Either path fails the same final quality rubric or uses a different
+  model/configuration, prompt scope, gate profile or observer protocol.
 
 ## Directory Setup
 
@@ -233,3 +256,7 @@ The summary should show lifecycle metrics for `INITIAL_DELIVERY`, `RECOVERY`,
 If either mode fails to reach the same final quality bar, mark the pilot as
 protocol calibration only. Do not publish partial numbers in the visual report,
 and do not claim Harness is faster or more efficient from one incomplete run.
+
+If the pilot is invalidated by the rules above, it can still be useful as
+protocol evidence. Record what the run calibrated, fix the runbook or runner if
+needed, then rerun cleanly before updating public results.

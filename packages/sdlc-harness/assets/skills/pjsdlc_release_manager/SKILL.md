@@ -17,6 +17,8 @@ description: Use during RELEASING to prepare the current release status, smoke e
 
 Current release status 面向当前发布决策，必须说明版本、变更价值、影响范围、smoke 证据、已知限制和注意事项；rollback plan 面向执行者，必须具体到触发条件、操作入口、验证方式和负责人。
 
+如果发布前 smoke、部署检查或人工确认发现实现偏离既有 PRD、UI/UX 和技术方案，Manager 可使用 `bugfix_implementation_gap` 回到 `SPRINTING` 创建小修复 task。若发现需求、验收、体验契约、技术方案、发布边界或回滚策略本身需要变化，进入 `RFC_RECALIBRATION`，再由 RFC 返回 `REQUIREMENT_GATHERING`、`UI_UX_DESIGNING` 或 `ARCHITECTING`。
+
 发布准备本身也是 workflow task。开始 release 工作前，先在 `<harnessRoot>/state/plan.yaml` 创建或选择一个足够小的 `TASK-*` open task，并设置 `phase: "RELEASING"`；当前轮只更新 `.docs/08_release/CURRENT_RELEASE.md` 中的当前发布状态、一次 smoke evidence 补充、一个部署检查或一个 rollback plan 单元。发布动作本身仍需用户明确授权。
 
 发布阶段默认先评估是否适合并行 read-only preflight。适合时，主 Release Manager 使用 `parallel_execution.trigger: "workflow_default"` 和 `runtime.provider: "codex_native_subagents"` 调度 worker 分别检查 release notes、build artifacts、smoke evidence、known limitations 或 rollback risk；用户明确要求并行时使用 `trigger: "user_requested"`。RELEASING worker 必须 `writes_repo: false`，不得执行 publish、tag、push、delete、deploy 或生产变更；最终 `CURRENT_RELEASE.md`、发布结论和任何真实发布动作由主 Release Manager 负责。
@@ -64,7 +66,8 @@ Current release status 面向当前发布决策，必须说明版本、变更价
 3. Rollback plan 必须可执行。
 4. Smoke test evidence 必须链接或摘要记录。
 5. Human confirmation items 必须明确。
-6. 发布阶段一次只执行一个 `TASK-*` task。
+6. 发布阶段发现实现偏差时才走 `bugfix_implementation_gap` 回 `SPRINTING`；上游事实或方案变化走 RFC。
+7. 发布阶段一次只执行一个 `TASK-*` task。
 
 ## 完成检查
 

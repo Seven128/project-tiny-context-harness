@@ -844,6 +844,11 @@
         const scenarioText = copy(scenario.copy);
         const baseline = scenario.modes.baseline;
         const harness = scenario.modes.harness;
+        const costMax = Math.max(
+          baseline.totalDeliveryMinutes ?? 0,
+          harness.totalDeliveryMinutes ?? 0,
+          harness.workflowControlMinutes ?? 0
+        );
         report.innerHTML = `
           <div class="dashboard">
             <div class="stack">
@@ -879,9 +884,9 @@
 
               <section class="panel" aria-labelledby="cost-heading">
                 <h2 id="cost-heading">${escapeHtml(ui.headings.cost)}</h2>
-                ${costChart(ui.costLabels.baselineTotal, baseline.totalDeliveryMinutes, harness.totalDeliveryMinutes)}
-                ${costChart(ui.costLabels.harnessTotal, harness.totalDeliveryMinutes, harness.totalDeliveryMinutes)}
-                ${costChart(ui.costLabels.harnessWorkflowControl, harness.workflowControlMinutes, harness.totalDeliveryMinutes, true)}
+                ${costChart(ui.costLabels.baselineTotal, baseline.totalDeliveryMinutes, costMax)}
+                ${costChart(ui.costLabels.harnessTotal, harness.totalDeliveryMinutes, costMax)}
+                ${costChart(ui.costLabels.harnessWorkflowControl, harness.workflowControlMinutes, costMax, true)}
                 <p class="footnote">${escapeHtml(ui.workflowFootnote)}</p>
               </section>
 
@@ -1075,7 +1080,7 @@
       }
 
       function costChart(label, value, max, control = false) {
-        const width = value === null || max === null || max === 0 ? 0 : Math.max(4, Math.round((value / max) * 100));
+        const width = value === null || max === null || max === 0 ? 0 : Math.min(100, Math.max(4, Math.round((value / max) * 100)));
         return `
           <div class="chart-row">
             <strong>${escapeHtml(label)}</strong>

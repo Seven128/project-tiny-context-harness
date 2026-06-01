@@ -22,6 +22,22 @@ provider/live boundaries where wrong paths are expensive. The full benchmark
 choice and scenario design rationale is recorded in
 [ADR 008: Delivery Benchmark Scenario Design](../../.docs/05_decisions/ADR_008_delivery_benchmark_scenario_design.md).
 
+## High-Signal, Not Hacked
+
+The benchmark deliberately chooses high-signal projects where Harness should have
+room to show its strengths: context recovery, RFC/debug rework, cross-layer
+drift control and provider-boundary safety. That is fair benchmark design, not a
+license to distort results.
+
+Formal results must come from independent, fresh baseline and Harness runs with
+the same model/configuration, the same final rubric and the same observer
+protocol. A run becomes calibration-only if it reuses prior implementation
+context, copies the other path's finished work, pre-applies RFC/debug changes,
+uses a non-fresh measured session or selectively publishes only favorable
+numbers. High-signal scenarios may expose Harness advantages, but they must also
+allow results where Harness is slower, shows no advantage or only helps under a
+specific complexity threshold.
+
 ## Scenarios
 
 | Scenario | Shape | Main Risk Covered |
@@ -43,7 +59,7 @@ For lifecycle benchmark calibration, use the operator protocol in
 recovery, context continuity, RFC churn and debug repair after initial delivery.
 Pilot output is calibration evidence by default; update `results/benchmark-data.js`
 only after both `baseline` and `harness` complete the same scenario against the
-same quality rubric.
+same quality rubric in a clean independent run.
 
 ```sh
 node examples/delivery-benchmark/runner/delivery_benchmark.mjs list
@@ -192,5 +208,7 @@ Does not count as workflow control cost:
 Commit only representative summaries under `results/`. Raw transcripts, temporary generated projects and large run artifacts should stay outside git, for example under `.artifacts/delivery-benchmark/` or `/tmp`.
 
 Do not prefill success numbers. The public comparison table should use actual scored runs only.
+Calibration runs can be documented as protocol evidence, but their numbers must
+not be promoted into the visual report as efficiency proof.
 
 For a user-facing view of completed runs, open `results/index.html`. The visual report supports English/Chinese switching, defaults from the browser language, and uses committed summary data only; raw artifacts remain outside git.

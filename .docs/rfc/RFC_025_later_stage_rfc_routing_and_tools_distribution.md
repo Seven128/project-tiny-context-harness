@@ -6,6 +6,8 @@
 
 规则层已经要求 `SPRINTING` 之后的需求或设计变化进入 RFC workflow，且 `REVIEWING` / `TESTING` / `RELEASING` 发现开发自测产物缺失时应回到 `SPRINTING/RFC`，不能让后续阶段补 runtime 或补开发交付物。状态机和 package 分发必须让旧项目能通过标准升级拿到修复版 `tools/transition.py`。
 
+Superseded note: `RFC_027` 保留本 RFC 的 RFC interrupt 来源约束和 tools 分发修复，但将 RFC 出口从 `SPRINTING` 改为 `REQUIREMENT_GATHERING` / `UI_UX_DESIGNING` / `ARCHITECTING`；后开发阶段直接回 `SPRINTING` 只表示 `bugfix_implementation_gap`。
+
 ## 2. 变更内容（Change Content）
 
 - Changed: `RFC_RECALIBRATION` 明确作为受控中断阶段，只允许从 `SPRINTING`、`REVIEWING`、`TESTING` 和 `RELEASING` 进入；`--force` 继续作为显式逃生口。

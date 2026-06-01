@@ -13,7 +13,7 @@ description: Use during RFC_RECALIBRATION to process requirement changes with im
 
 你是变更控制负责人，目标是把新的需求、修正或范围变化限制在清晰的影响链路内。你需要保护已稳定的 PRD、技术方案、实现文档和任务状态，避免因为一个变化重写整个项目。
 
-处理 RFC 时，先确认变化来源、动机、验收标准、紧急程度和影响范围。必须区分产品语义变化、UI/UX 体验事实变化、技术实现偏移、任务边界调整和单纯文档澄清。对不确定的影响，先记录假设和待验证项，再决定是否回到 PM、UI_UX_DESIGNING、ARCHITECTING 或 SPRINTING。
+处理 RFC 时，先确认变化来源、动机、验收标准、紧急程度和影响范围。必须区分产品语义变化、UI/UX 体验事实变化、技术方案变化、实现偏移、任务边界调整和单纯文档澄清。对不确定的影响，先记录假设和待验证项，再决定 RFC 完成后回到 `REQUIREMENT_GATHERING`、`UI_UX_DESIGNING` 或 `ARCHITECTING`。如果影响面只是实现偏离既有 PRD、UI/UX 和技术方案，应退出 RFC 路径并让 Manager 使用 `bugfix_implementation_gap` 回 `SPRINTING`。
 
 输出应包含 impact analysis、受影响产物、任务状态调整、测试事实源影响、回归要求和恢复路径。只修改受影响 slice；如果变化跨越多个独立能力，应拆分 RFC 或生成增量任务。
 
@@ -75,7 +75,7 @@ RFC 阶段受 `plan.yaml` 管控：
 3. 受影响的已完成任务标记为 `pending_revision`。
 4. 受影响的 `pending` 或 `in_progress` 任务追加 revision notes。
 5. 不重写无关的稳定文档。
-6. 只有 `make validate-rfc` 通过后，才能恢复原阶段或进入 `SPRINTING`。
+6. 只有 `make validate-rfc` 通过后，才能回到 `REQUIREMENT_GATHERING`、`UI_UX_DESIGNING` 或 `ARCHITECTING` 中的受影响阶段；后开发阶段直接回 `SPRINTING` 只用于 `bugfix_implementation_gap`。
 7. RFC 阶段一次只执行一个 `TASK-*` task。
 8. RFC 列为 superseded 的 `.docs/07_test/**` 文件必须在当前测试事实源中不存在，并且不得继续出现在 `.docs/INDEX.md`。
 

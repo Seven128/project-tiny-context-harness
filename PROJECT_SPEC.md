@@ -242,20 +242,20 @@ python3 tools/transition.py --to <PHASE>
 | `UI_UX_DESIGNING` | `pjsdlc_uiux_design` | PRD、既有体验事实、可选 `DESIGN.md` | `.docs/02_experience/**`、visual UI 的 `DESIGN.md`、`.docs/INDEX.md` | `make validate-uiux` | `ARCHITECTING`；开发前可返回 `REQUIREMENT_GATHERING` |
 | `ARCHITECTING` | `pjsdlc_architect_design` | PRD、体验事实、`DESIGN.md`、现有架构、代码结构 | 架构文档、技术方案、`plan.draft.yaml` | `make validate-design` | `SPRINTING`；开发前可返回 `REQUIREMENT_GATHERING` 或 `UI_UX_DESIGNING` |
 | `SPRINTING` | `pjsdlc_dev_sprint` | `plan.yaml`、`plan.draft.yaml`、PRD、体验事实、`DESIGN.md`、技术方案、Development Self-Test Contract | 代码、测试、implementation docs、gate 记录、已消费 draft、runnable entry/exit、Development Evidence、Development Self-Test Report、Module Key Test Path / Graph | `make validate-dev` | `REVIEWING` |
-| `REVIEWING` | `pjsdlc_reviewer` | PRD、体验事实、`DESIGN.md`、技术方案、实现文档、`git diff` | Review report、entry/exit readiness、UX/design conformance 结论 | `make validate-review` | `TESTING` |
-| `TESTING` | `pjsdlc_tester` | PRD、体验事实、`DESIGN.md`、技术方案、实现文档、Review、既有 runnable entry/exit | Test strategy、test cases、test report、回归证据、coverage gaps、final decision | `make validate-test` | `RELEASING`；bugfix 可返回 `UI_UX_DESIGNING`、`ARCHITECTING` 或 `SPRINTING` |
-| `RELEASING` | `pjsdlc_release_manager` | 测试结果、build artifacts | Current release status、smoke result、rollback plan | `make validate-release` | `COMPLETED` |
-| `RFC_RECALIBRATION` | `pjsdlc_rfc_recalibrate` | RFC、PRD、技术方案、任务状态 | 局部补丁、任务回退或增量任务 | `make validate-rfc` | `SPRINTING` |
+| `REVIEWING` | `pjsdlc_reviewer` | PRD、体验事实、`DESIGN.md`、技术方案、实现文档、`git diff` | Review report、entry/exit readiness、UX/design conformance 结论 | `make validate-review` | `TESTING`；实现偏差 bugfix 可返回 `SPRINTING` |
+| `TESTING` | `pjsdlc_tester` | PRD、体验事实、`DESIGN.md`、技术方案、实现文档、Review、既有 runnable entry/exit | Test strategy、test cases、test report、回归证据、coverage gaps、final decision | `make validate-test` | `RELEASING`；实现偏差 bugfix 可返回 `SPRINTING` |
+| `RELEASING` | `pjsdlc_release_manager` | 测试结果、build artifacts | Current release status、smoke result、rollback plan | `make validate-release` | `COMPLETED`；实现偏差 bugfix 可返回 `SPRINTING` |
+| `RFC_RECALIBRATION` | `pjsdlc_rfc_recalibrate` | RFC、PRD、体验事实、技术方案、任务状态 | 局部补丁、任务回退或增量任务 | `make validate-rfc` | `REQUIREMENT_GATHERING`、`UI_UX_DESIGNING` 或 `ARCHITECTING` |
 
 `transitions` 中的 return edge 表达受限回退目标。开发前回退 `ARCHITECTING -> REQUIREMENT_GATHERING` 用于尚未进入 `SPRINTING` 时补充或修正 PRD；`ARCHITECTING -> UI_UX_DESIGNING` 用于技术方案前补屏幕、交互、响应式、a11y 或视觉系统事实。回退后 lifecycle 的 `active_role` 和 `active_skill` 会切到对应 PM 或 designer 工作流；PRD task 完成并通过 `validate-pm` 后，再用 `python3 tools/transition.py --to UI_UX_DESIGNING` 继续体验设计，UI/UX task 完成并通过 `validate-uiux` 后进入 `ARCHITECTING`。进入 `SPRINTING` 后的需求或设计事实变化必须走 RFC recalibration。
 
-TESTING bugfix 回流也使用轻量 return edge：`TESTING -> UI_UX_DESIGNING` 的 trigger 是 `bugfix_uiux_replan`，表示 PRD 正确但 UX contract、screen contract、handoff matrix 或 `DESIGN.md` 错误；`TESTING -> ARCHITECTING` 的 trigger 是 `bugfix_replan`，表示测试证明 tech plan、interface contract、task breakdown、Development Self-Test Contract 或 Module Key Test Graph 需要修正；`TESTING -> SPRINTING` 的 trigger 是 `bugfix_implementation_gap`，表示技术方案仍正确但实现偏离，需要补小的开发修复 task。三者都不记录执行历史，不新增 `bugfix` kind；区别通过 `trigger` 和 `TEST_REPORT.md#Bugfix Route` 保持可搜索、可消费。需求、验收标准或产品边界变化仍进入 RFC recalibration。
+后开发阶段 bugfix 回流也使用轻量 return edge：`REVIEWING`、`TESTING` 和 `RELEASING -> SPRINTING` 的 trigger 是 `bugfix_implementation_gap`，表示既有 PRD、UI/UX 和技术方案仍正确但实现偏离，需要补小的开发修复 task。它不记录执行历史，不新增 `bugfix` kind；区别通过 `trigger`、Review/Test/Release finding 和 `TEST_REPORT.md#Bugfix Route` 保持可搜索、可消费。需求、验收标准、产品边界、UX contract、DESIGN.md、tech plan、interface contract、task breakdown、Development Self-Test Contract 或 Module Key Test Graph 变化进入 RFC recalibration。
 
 `UI_UX_DESIGNING` 的设计取舍见 [ADR 007: UI/UX Design Stage and DESIGN.md Fact Source](.docs/05_decisions/ADR_007_ui_ux_design_stage.md)。`validate-uiux` 要求 `.docs/02_experience/**` 至少有一个非 overview deliverable；非 visual UI 项目必须明确 `Applicability: cli_or_api_experience` 或 `Applicability: not_applicable`；visual UI 项目必须有根目录 `DESIGN.md`，并通过本地 `@google/design.md` linter 的 error 检查。
 
 参考图、截图或视觉稿驱动的 UI/UX、美术、游戏画面和 HUD 重做任务使用轻量 `visual_reconciliation` task profile，而不是新增 lifecycle phase。该 profile 要求先记录 reference images、reference intent、usage boundary、当前截图或 mock、差异分析、下一轮改动和人工视觉确认；`assetKeys`、sprite 渲染、fallback 关闭和自动化 gate 只证明工程链路，不证明视觉已接近参考图。完整设计理由见 [ADR 009: Visual Reconciliation Task Profile](.docs/05_decisions/ADR_009_visual_reconciliation.md)。
 
-`RFC_RECALIBRATION` 是 SPRINTING 之后的受控中断阶段。`SPRINTING`、`REVIEWING`、`TESTING` 和 `RELEASING` 可以通过 `python3 tools/transition.py --to RFC_RECALIBRATION` 进入 RFC；transition helper 从 explicit transition edge 读取 `set_suspended_phase`，切换到 `pjsdlc_rfc_recalibrate`，并把 RFC 出口收敛到 `SPRINTING`。RFC 完成并通过 `make validate-rfc` 后，resume edge 清理 `suspended_phase` 并回到 `SPRINTING`，由开发阶段重新完成自测合同、implementation doc 和 Review/Testing handoff。
+`RFC_RECALIBRATION` 是 SPRINTING 之后的受控中断阶段。`SPRINTING`、`REVIEWING`、`TESTING` 和 `RELEASING` 可以通过 `python3 tools/transition.py --to RFC_RECALIBRATION` 进入 RFC；transition helper 从 explicit transition edge 读取 `set_suspended_phase`，切换到 `pjsdlc_rfc_recalibrate`。RFC 完成并通过 `make validate-rfc` 后，resume edge 清理 `suspended_phase`，并按影响面回到 `REQUIREMENT_GATHERING`、`UI_UX_DESIGNING` 或 `ARCHITECTING` 中的一个阶段；这些上游阶段完成后再按正常顺序进入 `SPRINTING`。RFC 不直接回 `SPRINTING`，后开发阶段回 `SPRINTING` 的路径只表示 `bugfix_implementation_gap`。
 
 `make validate-dev` / `npx sdlc-harness validate-dev` 是 SPRINTING 开发中 gate，允许当前 `current_task_id` 对应的 open task 留在 `plan.yaml`。它校验 lifecycle、当前 task 合同、dirty files、`plan.draft.yaml` 消费状态、runtime evidence task contract、`self_test_contract`、implementation doc、结构化 `Development Evidence` 和 `Development Self-Test Report`。
 
@@ -612,7 +612,7 @@ RFC 必须包含：
 | “现在到哪了 / 状态如何” | 等价 `/status` |
 | “继续 / 下一步 / 推进” | 等价 `/next` |
 | “能进入下一阶段吗 / 进入下一步” | 等价 `/advance` |
-| “需求变了 / 这个设计要改” | 如果当前仍在 `ARCHITECTING` 且尚未进入开发，可回到 `REQUIREMENT_GATHERING` 修改 PRD，或回到 `UI_UX_DESIGNING` 修改体验 / 屏幕 / 视觉事实；如果已经进入 `SPRINTING` 或之后，进入 RFC workflow |
+| “需求变了 / 这个设计要改 / 技术方案要改” | 如果当前仍在 `ARCHITECTING` 且尚未进入开发，可回到 `REQUIREMENT_GATHERING` 修改 PRD，或回到 `UI_UX_DESIGNING` 修改体验 / 屏幕 / 视觉事实；如果已经进入 `SPRINTING` 或之后，进入 RFC workflow，并在 `validate-rfc` 后返回 `REQUIREMENT_GATHERING` / `UI_UX_DESIGNING` / `ARCHITECTING` |
 | “完善产品方案 / 写 PRD / 我提供信息，你帮我完善产品方案” | 等价 `/prd`；在 `REQUIREMENT_GATHERING` 更新 PRD，或在开发前从 `ARCHITECTING` 回到 `REQUIREMENT_GATHERING` 后更新 |
 | “做 UI/UX 设计 / 交互设计 / 视觉设计 / 屏幕设计” | 等价 `/uiux`，在 `UI_UX_DESIGNING` 更新 `.docs/02_experience/**` 和 visual UI 的 `DESIGN.md` |
 | “设计技术方案 / 做架构方案 / 根据 PRD 做技术方案” | 等价 `/design`，在 `ARCHITECTING` 更新 architecture、tech plan 和 `plan.draft.yaml` |

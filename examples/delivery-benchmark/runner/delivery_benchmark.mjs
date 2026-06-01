@@ -659,7 +659,9 @@ function sumEventMinutesByPhase(events, phases) {
 }
 
 function buildObserverSummary(observations) {
-  const stopEvent = observations.filter((observation) => observation.event === "observer_stop").at(-1);
+  const totalObservedDurationMs = observations
+    .filter((observation) => observation.event === "observer_stop" && Number.isFinite(observation.duration_ms))
+    .reduce((sum, observation) => sum + observation.duration_ms, 0);
   const fileEvents = observations.filter((observation) =>
     ["file_added", "file_modified", "file_deleted"].includes(observation.event)
   );
@@ -673,8 +675,8 @@ function buildObserverSummary(observations) {
   );
   return {
     hasObserver: observations.length > 0,
-    observed_total_delivery_minutes: Number.isFinite(stopEvent?.duration_ms)
-      ? roundDurationMinutes(stopEvent.duration_ms / 60000)
+    observed_total_delivery_minutes: totalObservedDurationMs > 0
+      ? roundDurationMinutes(totalObservedDurationMs / 60000)
       : null,
     file_activity_summary: {
       file_added: counts.file_added,

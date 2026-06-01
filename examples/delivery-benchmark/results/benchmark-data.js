@@ -1,5 +1,5 @@
 window.__DELIVERY_BENCHMARK_DATA__ = {
-  generatedAt: "2026-06-01T10:08:26.207Z",
+  generatedAt: "2026-06-01T17:26:59.748Z",
   copy: {
     en: {
       languageName: "English",
@@ -58,7 +58,7 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
       lifecycleEfficiency: {
         label: "Initial delivery vs lifecycle efficiency",
         body:
-          "The current completed run only measures first-scenario delivery. It does not yet test fresh-agent recovery, multi-RFC change, or post-change debugging. The new lifecycle probe will separate initial delivery, recovery orientation, RFC fix, debug fix, and total lifecycle minutes.",
+          "The current completed public run only measures first-scenario delivery. It does not yet provide clean formal evidence for fresh-agent recovery, multi-RFC change, or post-change debugging. A protocol calibration run has exercised the observer/timer/scoring path, but formal lifecycle results still require a clean rerun.",
         metrics: [
           { label: "Initial delivery", value: "pending" },
           { label: "Fresh-agent recovery", value: "pending" },
@@ -69,7 +69,7 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
       contextContinuity: {
         label: "Context continuity",
         body:
-          "Harness should show its advantage when a fresh agent needs to recover current state, history, constraints, test entrypoints, and the next safe action. The context recovery score and wrong-path count are pending until the lifecycle scenario is run.",
+          "Harness should show its advantage when a fresh agent needs to recover current state, history, constraints, test entrypoints, and the next safe action. The context recovery score and wrong-path count remain pending until a clean independent lifecycle run is complete.",
         metrics: [
           { label: "Recovery quiz", value: "pending" },
           { label: "Wrong-path count", value: "pending" },
@@ -78,15 +78,15 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
       },
       keyFinding: {
         eyebrow: "Key Finding",
-        headline: "Current evidence does not show Harness is faster.",
+        headline: "Current public evidence does not show Harness is faster.",
         body:
-          "The completed scenario shows same-quality delivery: both paths reached 13/13 PASS. Baseline finished in 25 min, while Harness took 53 min with 29 min of workflow control. The visible benefit is stronger durable handoff and recovery evidence, not speed. The API/UI and provider-boundary scenarios are still pending, so complex/high-risk efficiency claims remain open.",
+          "The completed public scenario shows same-quality delivery: both paths reached 13/13 PASS. Baseline finished in 25 min, while Harness took 53 min with 29 min of workflow control. An unclean lifecycle calibration has validated the observer/timer/scoring/report path, but it is not formal efficiency evidence. Complex/high-risk efficiency claims remain open until clean independent lifecycle scenarios run.",
         points: [
-          "Efficiency: not proven faster or more efficient in the completed run.",
+          "Efficiency: not proven faster or more efficient in the completed public run.",
           "Quality: both paths met the same final rubric.",
-          "Cost: Harness added recorded workflow control time.",
+          "Cost: Harness added recorded workflow control time in the legacy run.",
           "Handoff: Harness produced review, testing, recovery, and release-ready artifacts.",
-          "Confidence: cost data is an agent-recorded estimate with low comparison confidence."
+          "Integrity: high-signal scenario design is allowed, but unclean calibration data is not published as proof."
         ]
       },
       evidenceMetrics: [
@@ -94,9 +94,9 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
           id: "efficiency",
           label: "Efficiency finding",
           value: "Not proven faster",
-          detail: "25 min baseline vs 53 min Harness in the completed run.",
+          detail: "25 min baseline vs 53 min Harness in the completed public run.",
           help:
-            "This answers the speed/efficiency question for the completed scenario. Because Harness took more recorded time than baseline, this run cannot support a faster-or-more-efficient claim.",
+            "This answers the speed/efficiency question for the completed public scenario. Because Harness took more recorded time than baseline, this run cannot support a faster-or-more-efficient claim.",
           tone: "warn"
         },
         {
@@ -132,21 +132,21 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
           value: "Low",
           detail: "Legacy agent-recorded estimate, not telemetry.",
           help:
-            "Cost confidence is low for the completed run because the minutes were recorded by the agent during the benchmark. New external observer runs can raise elapsed-time confidence without asking the agent to maintain a log, but this historical run is not retroactively upgraded.",
+            "Cost confidence is low for the completed public run because the minutes were recorded by the agent during the benchmark, not telemetry. New external observer runs can raise elapsed-time confidence, but unclean calibration data is not retroactively published as proof.",
           tone: "neutral"
         },
         {
           id: "coverage",
           label: "Scenario coverage",
-          value: "1/4 complete",
-          detail: "API/UI, context-recovery, and provider-boundary scenarios are pending.",
+          value: "1/4 formal",
+          detail: "Context-recovery calibration is not a formal public result.",
           help:
-            "Only one scenario has both baseline and Harness results. The more complex API/UI, fresh-agent recovery, multi-RFC/debug, and provider-boundary scenarios must run before broad complex-project efficiency claims are made.",
+            "Only one scenario has both formal baseline and Harness results. The context-recovery pilot exercised the protocol but was not a clean independent run, so support-triage, context-recovery, and webhook-provider still need clean runs before broad complex-project efficiency claims are made.",
           tone: "neutral"
         }
       ],
       evidenceStatus:
-        "Only expense-policy-engine is complete. support-triage-board, project-context-recovery-lab, and webhook-provider-bridge are pending, so complex API/UI, lifecycle recovery, and provider/live-boundary efficiency conclusions are not closed yet.",
+        "Only expense-policy-engine is a formal completed sample. project-context-recovery-lab has calibration evidence but must be rerun cleanly before publication; support-triage-board and webhook-provider-bridge are still pending, so complex/high-risk efficiency conclusions are not closed yet.",
       metricTemplates: {
         total: "{value} total",
         workflowControl: "{value} workflow control"
@@ -170,9 +170,10 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
         "Raw generated projects and long transcripts are intentionally excluded from git. Public summaries live in this directory; run artifacts stay under .artifacts/delivery-benchmark/.",
       caveats: [
         "This benchmark compares same-quality delivery, not first-patch speed.",
-        "The completed run does not prove Harness is faster or more efficient.",
-        "The completed run does not test fresh-agent recovery, multi-RFC cascade, or debug-fix efficiency.",
-        "The completed run still uses legacy agent-recorded workflow control cost estimates; future external observer runs can improve elapsed-time confidence.",
+        "The completed public run does not prove Harness is faster or more efficient.",
+        "High-signal scenarios are designed to expose Harness strengths, not to hide speed costs or lower the baseline standard.",
+        "An unclean observer pilot has calibrated the protocol, but its numbers are not published as formal efficiency evidence.",
+        "The completed public run still uses legacy agent-recorded workflow control cost estimates; future clean external observer runs can improve elapsed-time confidence.",
         "Raw temporary projects and transcripts stay outside git under .artifacts/."
       ]
     },
@@ -233,7 +234,7 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
       lifecycleEfficiency: {
         label: "首轮交付 vs 生命周期效率",
         body:
-          "当前 completed run 只覆盖一个初始交付样本，还没有测到生命周期效率：新对话恢复、多轮 RFC 变更和变更后的 debug 修复。新的生命周期 probe 会把首轮交付、恢复定向、RFC 修复、debug 修复和总生命周期耗时分开记录。",
+          "当前公开 completed run 只覆盖一个初始交付样本，还没有干净地测到生命周期效率：新对话恢复、多轮 RFC 变更和变更后的 debug 修复。一次 protocol calibration 已经打通 observer/timer/scoring/report 链路，但正式生命周期结果仍需要 clean rerun。",
         metrics: [
           { label: "首轮交付", value: "待运行" },
           { label: "新对话恢复", value: "待运行" },
@@ -244,7 +245,7 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
       contextContinuity: {
         label: "上下文连续性",
         body:
-          "Harness 真正应该拉开差距的地方，是新对话里的 agent 能否快速恢复项目当前状态、历史变更、关键约束、测试入口和下一步安全动作。context recovery score 和 wrong-path count 会等生命周期场景跑完后填写。",
+          "Harness 真正应该拉开差距的地方，是新对话里的 agent 能否快速恢复项目当前状态、历史变更、关键约束、测试入口和下一步安全动作。context recovery score 和 wrong-path count 需要等干净的独立 lifecycle 场景重跑后填写。",
         metrics: [
           { label: "恢复问答", value: "待运行" },
           { label: "走错路径次数", value: "待运行" },
@@ -253,15 +254,15 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
       },
       keyFinding: {
         eyebrow: "核心结论",
-        headline: "当前证据尚不能证明 Harness 更快或更高效。",
+        headline: "当前公开证据尚不能证明 Harness 更快或更高效。",
         body:
-          "已完成的场景说明：两条路径都达到 13/13 PASS，属于同等质量交付；但 Baseline 用时 25 分钟，Harness 用时 53 分钟，其中 29 分钟是工作流控制成本。当前能确认的收益，是 Harness 产出了更强的交接、恢复、review/testing/release 可检查证据，而不是速度优势。API/UI 和 provider 边界场景仍待运行，复杂/高风险项目的效率结论还没有闭合。",
+          "已完成的公开场景说明：两条路径都达到 13/13 PASS，属于同等质量交付；但 Baseline 用时 25 分钟，Harness 用时 53 分钟，其中 29 分钟是工作流控制成本。一次不够干净的 lifecycle calibration 已经打通 observer/timer/scoring/report 链路，但不能作为效率证据。高信号项目可以用来突出 Harness 的优势空间，但不能通过复用上下文、复制成品、预先完成 RFC/debug 或选择性展示数据来制造优势。",
         points: [
-          "效率：已完成样本尚不能证明 Harness 更快或更高效。",
+          "效率：当前公开样本尚不能证明 Harness 更快或更高效。",
           "质量：两条路径都达到同一最终评分标准。",
           "成本：Harness 明确增加了记录下来的工作流控制成本。",
           "交接：Harness 产出了 review、testing、恢复和发布就绪所需的长期产物。",
-          "置信度：成本数据是 agent-recorded estimate，且比较置信度低。"
+          "诚信：项目设计可以高信号，但结果发布必须来自独立、干净、同质量、同条件的双路径运行。"
         ]
       },
       evidenceMetrics: [
@@ -269,9 +270,9 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
           id: "efficiency",
           label: "效率结论",
           value: "尚不能证明更快",
-          detail: "已完成样本：Baseline 25 分钟，Harness 53 分钟。",
+          detail: "已完成公开样本：Baseline 25 分钟，Harness 53 分钟。",
           help:
-            "这一项回答“是否更快/更高效”。在已完成样本里，Harness 记录用时高于 Baseline，所以不能据此宣称 Harness 更快或更高效。",
+            "这一项回答“是否更快/更高效”。在已完成公开样本里，Harness 记录用时高于 Baseline，所以不能据此宣称 Harness 更快或更高效。",
           tone: "warn"
         },
         {
@@ -307,21 +308,21 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
           value: "低",
           detail: "历史运行使用 agent-recorded estimate，不是 telemetry。",
           help:
-            "成本置信度表示耗时数据有多可靠。已完成样本是历史运行，分钟数来自 agent 在 benchmark 过程中的记录/估算，不是 telemetry，所以仍是低置信度。后续用外部 observer 重跑，可以在不要求 agent 写日志的前提下提升耗时置信度，但不会倒推改写这次结果。",
+            "成本置信度表示耗时数据有多可靠。已完成公开样本是历史运行，分钟数来自 agent 在 benchmark 过程中的记录/估算，不是 telemetry，所以仍是低置信度。后续用外部 observer clean rerun，可以在不要求 agent 写日志的前提下提升耗时置信度。",
           tone: "neutral"
         },
         {
           id: "coverage",
           label: "场景覆盖",
-          value: "1/4 已完成",
-          detail: "API/UI、上下文恢复和 provider 边界场景仍待运行。",
+          value: "1/4 正式完成",
+          detail: "context-recovery calibration 不进入正式公开结果。",
           help:
-            "目前只有一个场景完成了 baseline 和 Harness 双路径。更复杂的 API/UI、新对话恢复、多轮 RFC/debug 和 provider 边界场景还没跑完，所以不能把结论扩展到所有复杂项目。",
+            "目前只有一个场景完成了正式 baseline 和 Harness 双路径。不够干净的 context-recovery pilot 只校准协议，不发布数字；更复杂的 API/UI、新对话恢复、多轮 RFC/debug 和 provider 边界场景仍需 clean rerun。",
           tone: "neutral"
         }
       ],
       evidenceStatus:
-        "目前只有费用报销政策引擎完成。支持工单分诊看板、Project Context Recovery Lab 和 Webhook Provider Bridge 仍待运行，所以复杂 API/UI、生命周期恢复与 provider/live 边界场景的效率结论还不能提前下结论。",
+        "目前只有费用报销政策引擎是正式 completed 样本。Project Context Recovery Lab 有 calibration evidence，但必须 clean rerun 后才能发布；Support SLA Escalation Desk 和 Webhook Provider Bridge 仍待运行，所以复杂/高风险场景的总体效率结论还不能提前下结论。",
       metricTemplates: {
         total: "总计 {value}",
         workflowControl: "工作流控制成本 {value}"
@@ -345,9 +346,10 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
         "原始生成项目和长转录不会提交到 git。公开摘要保留在当前目录，运行产物保留在 .artifacts/delivery-benchmark/。",
       caveats: [
         "这个基准测试比较的是同等质量交付，不是首轮代码生成速度。",
-        "已完成样本不能证明 Harness 更快或更高效。",
-        "已完成样本还没有覆盖新对话恢复、多轮 RFC cascade 或 debug 修复效率。",
-        "已完成样本仍使用历史 agent-recorded 工作流控制成本估算；后续外部 observer 运行可以提升耗时置信度。",
+        "已完成公开样本不能证明 Harness 更快或更高效。",
+        "高信号场景是为了对准 Harness 的设计优势，不是为了掩盖速度成本或降低 baseline 标准。",
+        "不够干净的外部 observer pilot 只校准协议，数字不进入正式公开结果。",
+        "已完成公开样本仍使用历史 agent-recorded 工作流控制成本估算；后续外部 observer clean rerun 可以提升耗时置信度。",
         "临时项目和原始转录保留在 .artifacts/ 之外，不进入 git。"
       ]
     }

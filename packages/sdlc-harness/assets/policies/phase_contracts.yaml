@@ -203,14 +203,14 @@ transitions:
     trigger: "advance"
     kind: "normal"
   - from: "TESTING"
-    to: "UI_UX_DESIGNING"
-    trigger: "bugfix_uiux_replan"
+    to: "SPRINTING"
+    trigger: "bugfix_implementation_gap"
     kind: "return"
-  - from: "TESTING"
-    to: "ARCHITECTING"
-    trigger: "bugfix_replan"
+  - from: "REVIEWING"
+    to: "SPRINTING"
+    trigger: "bugfix_implementation_gap"
     kind: "return"
-  - from: "TESTING"
+  - from: "RELEASING"
     to: "SPRINTING"
     trigger: "bugfix_implementation_gap"
     kind: "return"
@@ -259,8 +259,20 @@ transitions:
     effects:
       set_suspended_phase: true
   - from: "RFC_RECALIBRATION"
-    to: "SPRINTING"
-    trigger: "rfc_complete"
+    to: "REQUIREMENT_GATHERING"
+    trigger: "rfc_return_to_prd"
+    kind: "resume"
+    effects:
+      clear_suspended_phase: true
+  - from: "RFC_RECALIBRATION"
+    to: "UI_UX_DESIGNING"
+    trigger: "rfc_return_to_uiux"
+    kind: "resume"
+    effects:
+      clear_suspended_phase: true
+  - from: "RFC_RECALIBRATION"
+    to: "ARCHITECTING"
+    trigger: "rfc_return_to_architecting"
     kind: "resume"
     effects:
       clear_suspended_phase: true

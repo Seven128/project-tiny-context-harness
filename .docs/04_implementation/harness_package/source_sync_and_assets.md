@@ -92,11 +92,11 @@ Author edits Harness source files
 
 ## Development Self-Test Report
 
-- Contract Source: `.docs/rfc/RFC_025_later_stage_rfc_routing_and_tools_distribution.md#8-development-self-test-impact`
-- Scenario Results: `transition-rfc-interrupt` PASS; `package-tools-materialization` PASS.
-- Executed Gates: `npm test --workspace agent-project-sdlc` PASS; `node packages/sdlc-harness/dist/cli.js package sync-source` PASS; `node packages/sdlc-harness/dist/cli.js package check-source` PASS; `make validate-harness` PASS; `make validate-rfc` PASS; `make validate-dev` PASS.
-- Module Key Test Path: `npm test --workspace agent-project-sdlc; python3 tools/transition.py fixture calls in tests/sdlc-harness/transition.test.mjs` starts by building package `dist`, runs node:test package-source/init/sync/upgrade/transition fixtures, verifies `transition-rfc-interrupt` through direct `tools/transition.py` fixture calls for `SPRINTING` / `REVIEWING` / `TESTING` / `RELEASING -> RFC_RECALIBRATION`, illegal pre-development RFC entry, normal `REVIEWING -> TESTING`, and `RFC_RECALIBRATION -> SPRINTING`; the same run verifies `package-tools-materialization` through source mapping, init/sync, stale tool replacement and upgrade backfill assertions.
-- Evidence Index Refs: package regression, package source check and Harness gate outputs are recorded in git/test command history for `TASK-082`.
+- Contract Source: `.docs/rfc/RFC_027_rfc_upstream_resume_and_bugfix_boundary.md#10-development-self-test-impact`
+- Scenario Results: `transition-rfc-upstream-resume` PASS; `package-tools-materialization` PASS.
+- Executed Gates: `node --test tests/sdlc-harness/transition.test.mjs` PASS; `npm test --workspace agent-project-sdlc` PASS; `node packages/sdlc-harness/dist/cli.js package sync-source` PASS; `node packages/sdlc-harness/dist/cli.js package check-source` PASS; `make docs-overview` PASS; `make validate-harness` PASS; `make validate-rfc` PASS.
+- Module Key Test Path: `node --test tests/sdlc-harness/transition.test.mjs; npm test --workspace agent-project-sdlc` starts with direct `tools/transition.py` fixture calls for `SPRINTING` / `REVIEWING` / `TESTING` / `RELEASING -> RFC_RECALIBRATION`, illegal pre-development RFC entry, upstream RFC resume to `REQUIREMENT_GATHERING` / `UI_UX_DESIGNING` / `ARCHITECTING`, illegal `RFC_RECALIBRATION -> SPRINTING`, normal `REVIEWING -> TESTING`, post-development `bugfix_implementation_gap` return to `SPRINTING`, and illegal direct `TESTING -> UI_UX_DESIGNING` / `ARCHITECTING`; full package regression then verifies source mapping, init/sync, stale tool replacement and upgrade backfill assertions.
+- Evidence Index Refs: transition regression, package regression, package source check and Harness gate outputs are recorded in current command history for `RFC_027`.
 - Missing / Blockers: none.
 - Testing Handoff Readiness: PASS; Review/Testing can rerun the commands above without external services.
 

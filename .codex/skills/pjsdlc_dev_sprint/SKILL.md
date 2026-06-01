@@ -31,9 +31,9 @@ UI/frontend/browser/page task 还必须按 `docs.uiux` 和 `docs.design_system` 
 
 `/dev` 和 `/devloop` 是开发阶段的两个入口。`/dev` 创建或选择下一个最小 `TASK-*` development task，设置 `phase: "SPRINTING"`，并只完成一个 task 闭环后停止。通用规则是从任何 draft queue promote 正式 `TASK-*` 时都必须同次消费源 draft；当前开发阶段的内置 draft queue 是 `plan.draft.yaml.tasks[]`，因此如果这个 task 来自 `plan.draft.yaml.tasks[]`，promote 时必须同次删除源 draft，避免已采用草案继续显示为 `pending`。`/devloop` 连续运行 `/dev`，直到 `plan.yaml.tasks[]` 和 `plan.draft.yaml.tasks[]` 都没有明确可创建/执行的任务，或遇到需求、架构、allowed_paths、gate、commit/push blocker。
 
-如果是从 `TESTING` 通过 `bugfix_implementation_gap` 直接回到 `SPRINTING`，先创建或选择一个最小 bugfix `TASK-*`，引用 `.docs/07_test/TEST_REPORT.md` 的 failing scenario、既有 tech plan slice 和相关 implementation doc。该路径只用于“技术方案正确但实现偏离”的修复；如果测试证明技术方案、接口契约、任务拆分或 handoff graph 需要修改，应回 `ARCHITECTING`；如果需求或验收标准变化，应走 RFC。
+如果是从 `REVIEWING`、`TESTING` 或 `RELEASING` 通过 `bugfix_implementation_gap` 直接回到 `SPRINTING`，先创建或选择一个最小 bugfix `TASK-*`，引用 review / test / release finding、既有 PRD、UI/UX、tech plan slice 和相关 implementation doc。该路径只用于“既有 PRD、UI/UX 和技术方案正确但实现偏离”的修复；如果测试或 review 证明需求、验收标准、UX contract、DESIGN.md、技术方案、接口契约、任务拆分或 handoff graph 需要修改，应走 RFC，并由 RFC 返回 `REQUIREMENT_GATHERING`、`UI_UX_DESIGNING` 或 `ARCHITECTING`。
 
-如果测试证明 PRD 和技术方案正确但 UX contract、screen states、handoff matrix 或 DESIGN.md 本身错误，应走 `bugfix_uiux_replan` 回 `UI_UX_DESIGNING`，不要在 SPRINTING 中直接改体验事实。
+如果测试证明实现符合既有技术方案但 UX contract、screen states、handoff matrix 或 DESIGN.md 本身错误，应走 RFC 回 `UI_UX_DESIGNING`，不要在 SPRINTING 中直接改体验事实。
 
 实现时遵循小步闭环：完成 orientation 后检查 `git status`，确认工作区没有未归属到当前 task 的脏变更；再定位相关代码和测试，做必要修改。只有进入验证或完成边界时才运行当前 task 的 `required_gates`，修复失败，写入或更新相关 implementation doc 并刷新文档派生视图。直接运行 `make validate-dev` 或 `npx sdlc-harness validate-dev` 是开发中 gate，允许当前 `SPRINTING` task 仍然 open，并校验 `current_task_id`、task 合同、dirty files、draft queue 和 implementation doc。此时先不要从 `plan.yaml` 移除当前 task，要在当前 task 仍位于 `plan.yaml` 时创建 task implementation commit；随后再移除 task，创建 task completion ledger commit，并 push 两个 commit。`make validate-current` / `/advance` 是阶段出口 gate，必须在 open task 已移除后才通过。不要顺手重构、重排格式或处理无关问题；如果发现无关风险，只记录或报告。
 
@@ -70,7 +70,7 @@ UI/frontend/browser/page task 还必须按 `docs.uiux` 和 `docs.design_system` 
 - task implementation commit 必须发生在 task 移除之前，避免实现变更和计划短期化混在同一个提交里。
 - task completion ledger commit 发生在 implementation commit 之后，只负责将该 task 从当前 `plan.yaml` 移除。
 - 一个开发 task 默认对应一个主要 implementation commit 和一个轻量 completion ledger commit。implementation commit message 应包含 task id，例如 `TASK-003: implement login rate limit`；push 成功前，不进入下一个 task。
-- 本 Skill 不直接重切 PRD、UI/UX contract 或 tech plan；如果发现上游语义边界错误，进入 `BLOCKED`、创建 RFC，或请求回到 `UI_UX_DESIGNING` / `ARCHITECTING`。从 TESTING bugfix 回流的 `bugfix_implementation_gap` task 也不得重切技术方案；它必须引用 `TEST_REPORT.md` 的失败 scenario 和既有 tech plan，并只修实现偏差。
+- 本 Skill 不直接重切 PRD、UI/UX contract 或 tech plan；如果发现上游语义边界错误，进入 `BLOCKED`、创建 RFC，并由 RFC 返回 `REQUIREMENT_GATHERING` / `UI_UX_DESIGNING` / `ARCHITECTING`。从后开发阶段 bugfix 回流的 `bugfix_implementation_gap` task 也不得重切技术方案；它必须引用 finding、既有 tech plan 和 implementation doc，并只修实现偏差。
 - gate 通过后调用 `pjsdlc_implementation_doc`，由该 Skill 按真实实现更新或新增 `.docs/04_implementation/` 模块级 slice。
 - direct dev gate 与 phase-exit gate 语义不同：`validate-dev` 支持当前 open `SPRINTING` task；`validate-current` 在 `SPRINTING` 下仍会拒绝 open task，提示先完成 implementation commit 和 completion ledger。
 - 如果一个任务实际变成多个独立实现边界，应停止扩大范围，拆分后续任务或回到任务规划。
@@ -127,7 +127,7 @@ done task 的执行流水不在当前 `plan.yaml` 长期保留，也不是默认
 - [ ] 如果当前 task 是 high-risk runtime/live/remote-operator 工作，`resume_capsule` 已更新为 5-8 条恢复事实，`recovery_refs` 链接 implementation doc 和 `.docs/09_runbooks/**` runbook/evidence，implementation doc 已填写短的 `Current Operator Path` 和分层 `Gate Breakdown`。
 - [ ] 如果 task 要求 `business_handoff_ready`，implementation doc 已写入 Testing Handoff Contract，包含入口、配置、初始化/health、输入样例、预期出口、清理方式和证据等级。
 - [ ] 如果当前 task 来自 `plan.draft.yaml.tasks[]`，源 draft 已在 promote 时从 draft 列表删除。
-- [ ] 如果当前 task 来自 TESTING bugfix 回流，已确认它是 `bugfix_implementation_gap`，并引用 `TEST_REPORT.md`、既有 tech plan 和 implementation doc；若问题属于 UX contract 或 DESIGN.md，已回到 `UI_UX_DESIGNING`。
+- [ ] 如果当前 task 来自后开发阶段 bugfix 回流，已确认它是 `bugfix_implementation_gap`，并引用 Review/Test/Release finding、既有 tech plan 和 implementation doc；若问题属于 PRD、UX contract、DESIGN.md 或 tech plan，已走 RFC 返回对应上游阶段。
 - [ ] implementation doc 已生成或更新，并反映相关模块的真实代码。
 - [ ] 如果启用了 `parallel_execution`，worker owned paths、forbidden paths、required gates 和主 Agent 集成结果已记录。
 - [ ] gate 结果已写入 implementation doc `Verification`，必要时当前 task `working_notes` 也记录了恢复现场所需的 gate evidence。

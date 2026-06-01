@@ -91,8 +91,15 @@ try {
   assert.match(runbook, /phase GATE/);
   assert.match(runbook, /gate:validate-dev/);
   assert.match(runbook, /package regression/i);
+  assert.match(runbook, /high-signal/i);
+  assert.match(runbook, /Formal Result Invalidation Rules/);
+  assert.match(runbook, /protocol calibration only/);
+  assert.match(runbook, /fresh independent agent\/thread/);
   const benchmarkReadme = await readFile(path.join(repoRoot, "examples", "delivery-benchmark", "README.md"), "utf8");
   assert.match(benchmarkReadme, /Design Rationale/);
+  assert.match(benchmarkReadme, /High-Signal, Not Hacked/);
+  assert.match(benchmarkReadme, /not a\s+license to distort results/);
+  assert.match(benchmarkReadme, /clean independent run/);
   assert.match(benchmarkReadme, /ADR 008: Delivery Benchmark Scenario Design/);
   assert.match(benchmarkReadme, /same-quality delivery efficiency/);
   assert.match(benchmarkReadme, /Gate Profile and Fast Path/);
@@ -112,6 +119,9 @@ try {
   assert.match(benchmarkDesignAdr, /webhook-provider-bridge/);
   assert.match(benchmarkDesignAdr, /gate_profile\.md/);
   assert.match(benchmarkDesignAdr, /out-of-scope package regression/);
+  assert.match(benchmarkDesignAdr, /high-signal/);
+  assert.match(benchmarkDesignAdr, /不是 hack 结果/);
+  assert.match(benchmarkDesignAdr, /不能.*选择性发布有利数字/);
 
   for (const scenarioId of pendingLifecycleScenarios) {
     const lifecycleProbe = await readFile(
@@ -278,6 +288,71 @@ try {
   assert.equal(observerReport.workflow_cost.timing_sources.observer_measured, 1);
   assert.ok(observerReport.workflow_cost.observed_total_delivery_minutes >= 0);
   assert.equal(observerReport.workflow_cost.file_activity_summary.touched_files, 1);
+
+  const multiObserverRunDir = path.join(root, "multi-observer-run");
+  await prepareRunDirectory({
+    scenario: "expense-policy-engine",
+    mode: "baseline",
+    outDir: multiObserverRunDir,
+    force: true
+  });
+  await writeFile(
+    path.join(multiObserverRunDir, ".benchmark", "observations.ndjson"),
+    [
+      {
+        at: new Date().toISOString(),
+        event: "observer_start",
+        path: null,
+        data_source: "observer_measured"
+      },
+      {
+        at: new Date().toISOString(),
+        event: "file_added",
+        path: "src/first.js",
+        size: 1,
+        mtime_ms: 1,
+        sha256: "first",
+        data_source: "observer_measured"
+      },
+      {
+        at: new Date().toISOString(),
+        event: "observer_stop",
+        path: null,
+        duration_ms: 60000,
+        data_source: "observer_measured"
+      },
+      {
+        at: new Date().toISOString(),
+        event: "observer_start",
+        path: null,
+        data_source: "observer_measured"
+      },
+      {
+        at: new Date().toISOString(),
+        event: "file_modified",
+        path: "src/second.js",
+        size: 2,
+        mtime_ms: 2,
+        sha256: "second",
+        data_source: "observer_measured"
+      },
+      {
+        at: new Date().toISOString(),
+        event: "observer_stop",
+        path: null,
+        duration_ms: 30000,
+        data_source: "observer_measured"
+      }
+    ].map((observation) => JSON.stringify(observation)).join("\n") + "\n",
+    "utf8"
+  );
+  const multiObserverReport = await scoreRun({
+    scenario: "expense-policy-engine",
+    mode: "baseline",
+    runDir: multiObserverRunDir
+  });
+  assert.equal(multiObserverReport.workflow_cost.observed_total_delivery_minutes, 1.5);
+  assert.equal(multiObserverReport.workflow_cost.file_activity_summary.touched_files, 2);
 
   const observerOnlyEvidenceRunDir = path.join(root, "observer-evidence-run");
   await prepareRunDirectory({
@@ -516,12 +591,15 @@ try {
   assert.match(benchmarkData.copy.zh.lede, /同等质量交付/);
   assert.match(benchmarkData.copy.zh.keyFinding.headline, /尚不能证明.*(更快|更高效)/);
   assert.match(benchmarkData.copy.zh.keyFinding.body, /工作流控制成本/);
+  assert.match(benchmarkData.copy.zh.keyFinding.body, /高信号项目/);
   assert.match(benchmarkData.copy.zh.evidenceMetrics.find((metric) => metric.id === "confidence").help, /不是.*telemetry/);
-  assert.match(benchmarkData.copy.zh.evidenceStatus, /不能提前下结论/);
+  assert.match(benchmarkData.copy.zh.evidenceStatus, /还不能提前下结论/);
   assert.match(benchmarkData.copy.en.caveats.join("\n"), /workflow control/i);
   assert.match(benchmarkData.copy.zh.caveats.join("\n"), /工作流控制成本/);
   assert.match(benchmarkData.copy.zh.caveats.join("\n"), /不能证明 Harness 更快或更高效/);
+  assert.match(benchmarkData.copy.zh.caveats.join("\n"), /高信号场景/);
   assert.match(benchmarkData.copy.zh.caveats.join("\n"), /外部 observer/);
+  assert.doesNotMatch(dataScript, /4\.3144|3\.6898|0\.1127/);
   assert.ok(benchmarkData.copy.en.lifecycleEfficiency);
   assert.ok(benchmarkData.copy.zh.lifecycleEfficiency);
   assert.match(benchmarkData.copy.zh.lifecycleEfficiency.body, /生命周期效率/);
@@ -557,6 +635,11 @@ try {
   const recoveryLab = benchmarkData.scenarios.find((scenario) => scenario.id === "project-context-recovery-lab");
   assert.ok(recoveryLab);
   assert.equal(recoveryLab.status, "pending");
+  assert.equal(recoveryLab.featured, undefined);
+  assert.equal(Object.keys(recoveryLab.modes).length, 0);
+  assert.equal(recoveryLab.sections.length, 0);
+  assert.equal(recoveryLab.lifecycle.metrics.contextRecoveryScore, null);
+  assert.equal(recoveryLab.lifecycle.metrics.wrongPathCount, null);
   assert.match(recoveryLab.copy.zh.projectBrief.whatItBuilds, /Incident Ops Console/);
   assert.match(
     benchmarkData.scenarios.find((scenario) => scenario.id === "support-triage-board").copy.zh.projectBrief.expectedAdvantage,
