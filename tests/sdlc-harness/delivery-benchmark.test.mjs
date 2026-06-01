@@ -2,15 +2,44 @@ import assert from "node:assert/strict";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+import vm from "node:vm";
 import {
   listScenarios,
+  cancelTimer,
+  getObserverStatus,
+  getTimerStatus,
   prepareRunDirectory,
   recordEvent,
   renderMarkdownReport,
-  scoreRun
+  scoreRun,
+  startObserver,
+  startTimer,
+  stopObserver,
+  stopTimer
 } from "../../examples/delivery-benchmark/runner/delivery_benchmark.mjs";
 
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const root = await mkdtemp(path.join(tmpdir(), "delivery-benchmark-"));
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+async function readObservationEvents(runDir) {
+  const text = await readFile(path.join(runDir, ".benchmark", "observations.ndjson"), "utf8").catch(() => "");
+  return text
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+}
+
+async function waitForObservation(runDir, predicate) {
+  for (let attempt = 0; attempt < 80; attempt += 1) {
+    const observations = await readObservationEvents(runDir);
+    if (observations.some(predicate)) {
+      return observations;
+    }
+    await wait(50);
+  }
+  assert.fail("timed out waiting for observer event");
+}
 
 try {
   const scenarios = await listScenarios();
@@ -28,6 +57,150 @@ try {
   const prompt = await readFile(path.join(runDir, ".benchmark", "prompt.md"), "utf8");
   assert.match(prompt, /Harness Prompt/);
   assert.match(prompt, /Expense Policy Engine Requirements/);
+  const baselineRunDir = path.join(root, "baseline-prompt-run");
+  await prepareRunDirectory({
+    scenario: "expense-policy-engine",
+    mode: "baseline",
+    outDir: baselineRunDir,
+    force: true
+  });
+  const baselinePrompt = await readFile(path.join(baselineRunDir, ".benchmark", "prompt.md"), "utf8");
+  assert.doesNotMatch(baselinePrompt, /\.benchmark\/transcript\.md/);
+
+  const timerRunDir = path.join(root, "timer-run");
+  await prepareRunDirectory({
+    scenario: "expense-policy-engine",
+    mode: "harness",
+    outDir: timerRunDir,
+    force: true
+  });
+  const started = await startTimer({
+    runDir: timerRunDir,
+    event: "workflow_orientation",
+    kind: "workflow_control",
+    phase: "REQUIREMENT_GATHERING",
+    notes: "read scenario and workflow prompt"
+  });
+  assert.equal(started.active, true);
+  assert.equal(started.timing_source, "system_timer");
+  assert.ok(Number.isFinite(started.started_at_epoch_ms));
+  const activeStatus = await getTimerStatus({ runDir: timerRunDir });
+  assert.equal(activeStatus.active, true);
+  assert.equal(activeStatus.event, "workflow_orientation");
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  const stopped = await stopTimer({ runDir: timerRunDir, notes: "orientation complete" });
+  assert.equal(stopped.active, false);
+  assert.equal(stopped.event.timing_source, "system_timer");
+  assert.equal(stopped.event.timing_confidence, "system_timed_manual_boundary");
+  assert.ok(stopped.event.duration_ms >= 0);
+  assert.ok(stopped.event.minutes >= 0);
+  assert.ok(stopped.event.started_at);
+  assert.ok(stopped.event.ended_at);
+  assert.match(stopped.event.notes, /orientation complete/);
+  const inactiveStatus = await getTimerStatus({ runDir: timerRunDir });
+  assert.equal(inactiveStatus.active, false);
+  const timedReport = await scoreRun({
+    scenario: "expense-policy-engine",
+    mode: "harness",
+    runDir: timerRunDir
+  });
+  assert.equal(timedReport.workflow_cost.cost_data_source, "system_timed_manual_boundary");
+  assert.equal(timedReport.workflow_cost.comparison_confidence, "medium");
+  assert.equal(timedReport.workflow_cost.timing_sources.system_timer, 1);
+
+  const observerRunDir = path.join(root, "observer-run");
+  await prepareRunDirectory({
+    scenario: "expense-policy-engine",
+    mode: "baseline",
+    outDir: observerRunDir,
+    force: true
+  });
+  const observer = await startObserver({ runDir: observerRunDir, intervalMs: 25 });
+  assert.equal(observer.active, true);
+  assert.equal(observer.data_source, "observer_measured");
+  await waitForObservation(observerRunDir, (observation) => observation.event === "observer_start");
+  await writeFile(path.join(observerRunDir, "src", "observed.js"), "export const observed = 1;\n", "utf8");
+  await waitForObservation(
+    observerRunDir,
+    (observation) => observation.event === "file_added" && observation.path === "src/observed.js"
+  );
+  await writeFile(path.join(observerRunDir, "src", "observed.js"), "export const observed = 2;\n", "utf8");
+  await waitForObservation(
+    observerRunDir,
+    (observation) => observation.event === "file_modified" && observation.path === "src/observed.js"
+  );
+  await rm(path.join(observerRunDir, "src", "observed.js"));
+  await waitForObservation(
+    observerRunDir,
+    (observation) => observation.event === "file_deleted" && observation.path === "src/observed.js"
+  );
+  const stoppedObserver = await stopObserver({ runDir: observerRunDir });
+  assert.equal(stoppedObserver.stopped, true);
+  assert.equal(stoppedObserver.active, false);
+  const observerStatus = await getObserverStatus({ runDir: observerRunDir });
+  assert.equal(observerStatus.active, false);
+  assert.ok(observerStatus.observation_count >= 4);
+  const observations = await readObservationEvents(observerRunDir);
+  assert.ok(observations.every((observation) => observation.data_source === "observer_measured"));
+  assert.ok(observations.some((observation) => observation.event === "observer_start"));
+  assert.ok(observations.some((observation) => observation.event === "file_added" && observation.path === "src/observed.js"));
+  assert.ok(observations.some((observation) => observation.event === "file_modified" && observation.path === "src/observed.js"));
+  assert.ok(observations.some((observation) => observation.event === "file_deleted" && observation.path === "src/observed.js"));
+  assert.ok(observations.some((observation) => observation.event === "observer_stop" && observation.duration_ms >= 0));
+  const observerReport = await scoreRun({
+    scenario: "expense-policy-engine",
+    mode: "baseline",
+    runDir: observerRunDir
+  });
+  assert.equal(observerReport.workflow_cost.cost_data_source, "observer_measured");
+  assert.equal(observerReport.workflow_cost.comparison_confidence, "high");
+  assert.equal(observerReport.workflow_cost.timing_sources.observer_measured, 1);
+  assert.ok(observerReport.workflow_cost.observed_total_delivery_minutes >= 0);
+  assert.equal(observerReport.workflow_cost.file_activity_summary.touched_files, 1);
+
+  const observerOnlyEvidenceRunDir = path.join(root, "observer-evidence-run");
+  await prepareRunDirectory({
+    scenario: "expense-policy-engine",
+    mode: "baseline",
+    outDir: observerOnlyEvidenceRunDir,
+    force: true
+  });
+  await writeFile(
+    path.join(observerOnlyEvidenceRunDir, ".benchmark", "observations.ndjson"),
+    `${JSON.stringify({
+      at: new Date().toISOString(),
+      event: "file_added",
+      path: "src/fake.js",
+      size: 1,
+      mtime_ms: 1,
+      sha256: "APPROVED auditTrail MEAL_LIMIT_EXCEEDED MISSING_RECEIPT WEEKEND_TRAVEL_REVIEW INVALID_INPUT jurisdiction deprecated alias PASS",
+      data_source: "observer_measured"
+    })}\n`,
+    "utf8"
+  );
+  const observerOnlyEvidenceReport = await scoreRun({
+    scenario: "expense-policy-engine",
+    mode: "baseline",
+    runDir: observerOnlyEvidenceRunDir
+  });
+  assert.equal(observerOnlyEvidenceReport.summary.decision, "WARN");
+
+  const cancelRunDir = path.join(root, "cancel-run");
+  await prepareRunDirectory({
+    scenario: "expense-policy-engine",
+    mode: "baseline",
+    outDir: cancelRunDir,
+    force: true
+  });
+  await startTimer({
+    runDir: cancelRunDir,
+    event: "scratch",
+    kind: "coding",
+    phase: "SPRINTING"
+  });
+  const cancelled = await cancelTimer({ runDir: cancelRunDir });
+  assert.equal(cancelled.cancelled, true);
+  assert.equal((await getTimerStatus({ runDir: cancelRunDir })).active, false);
 
   await recordEvent({
     runDir,
@@ -44,6 +217,12 @@ try {
     phase: "SPRINTING",
     minutes: 12
   });
+  const manualEvents = (await readFile(path.join(runDir, ".benchmark", "events.ndjson"), "utf8"))
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line));
+  assert.ok(manualEvents.every((event) => event.timing_source === "agent_recorded_estimate"));
+  assert.ok(manualEvents.every((event) => event.timing_confidence === "low"));
 
   await mkdir(path.join(runDir, "src"), { recursive: true });
   await mkdir(path.join(runDir, "tests"), { recursive: true });
@@ -86,6 +265,71 @@ try {
   assert.equal(report.sections.acceptance.total, 10);
   assert.ok(report.sections.acceptance.passed > 0);
   assert.match(renderMarkdownReport(report), /Delivery Benchmark Report/);
+
+  const resultsDir = path.join(repoRoot, "examples/delivery-benchmark/results");
+  const dataScript = await readFile(path.join(resultsDir, "benchmark-data.js"), "utf8");
+  const context = { window: {} };
+  vm.createContext(context);
+  vm.runInContext(dataScript, context);
+
+  const benchmarkData = context.window.__DELIVERY_BENCHMARK_DATA__;
+  assert.ok(benchmarkData);
+  assert.ok(benchmarkData.copy.en);
+  assert.ok(benchmarkData.copy.zh);
+  assert.ok(benchmarkData.copy.en.keyFinding);
+  assert.ok(benchmarkData.copy.zh.keyFinding);
+  assert.ok(Array.isArray(benchmarkData.copy.en.evidenceMetrics));
+  assert.ok(Array.isArray(benchmarkData.copy.zh.evidenceMetrics));
+  assert.ok(benchmarkData.copy.en.evidenceMetrics.every((metric) => metric.help));
+  assert.ok(benchmarkData.copy.zh.evidenceMetrics.every((metric) => metric.help));
+  assert.ok(benchmarkData.copy.en.evidenceStatus);
+  assert.ok(benchmarkData.copy.zh.evidenceStatus);
+  assert.match(benchmarkData.copy.zh.documentTitle, /交付可靠性基准测试/);
+  assert.match(benchmarkData.copy.en.lede, /same-quality delivery/);
+  assert.match(benchmarkData.copy.zh.lede, /同等质量交付/);
+  assert.match(benchmarkData.copy.zh.keyFinding.headline, /尚不能证明.*(更快|更高效)/);
+  assert.match(benchmarkData.copy.zh.keyFinding.body, /工作流控制成本/);
+  assert.match(benchmarkData.copy.zh.evidenceMetrics.find((metric) => metric.id === "confidence").help, /不是.*telemetry/);
+  assert.match(benchmarkData.copy.zh.evidenceStatus, /不能提前下结论/);
+  assert.match(benchmarkData.copy.en.caveats.join("\n"), /workflow control/i);
+  assert.match(benchmarkData.copy.zh.caveats.join("\n"), /工作流控制成本/);
+  assert.match(benchmarkData.copy.zh.caveats.join("\n"), /不能证明 Harness 更快或更高效/);
+  assert.match(benchmarkData.copy.zh.caveats.join("\n"), /外部 observer/);
+  assert.ok(benchmarkData.copy.en.scenarioBriefLabels);
+  assert.ok(benchmarkData.copy.zh.scenarioBriefLabels);
+  assert.ok(benchmarkData.copy.en.measurementMethods);
+  assert.ok(benchmarkData.copy.zh.measurementMethods);
+  const completedScenarios = benchmarkData.scenarios.filter((scenario) => scenario.status === "completed");
+  assert.ok(completedScenarios.length >= 1);
+  assert.ok(completedScenarios.some((scenario) => scenario.modes.baseline && scenario.modes.harness));
+  assert.ok(completedScenarios.every((scenario) => scenario.copy.en && scenario.copy.zh));
+  assert.ok(benchmarkData.scenarios.every((scenario) => scenario.copy.en.projectBrief?.whatItBuilds));
+  assert.ok(benchmarkData.scenarios.every((scenario) => scenario.copy.zh.projectBrief?.whatItBuilds));
+  const expenseScenario = completedScenarios.find((scenario) => scenario.id === "expense-policy-engine");
+  assert.equal(expenseScenario.modes.baseline.totalDeliveryMinutes, 25);
+  assert.equal(expenseScenario.modes.harness.totalDeliveryMinutes, 53);
+  assert.equal(expenseScenario.modes.harness.workflowControlMinutes, 29);
+  assert.equal(expenseScenario.measurement.methods[0], "agent_recorded_estimate");
+  assert.match(expenseScenario.measurement.copy.zh.body, /observer-measured/);
+  assert.match(expenseScenario.copy.zh.projectBrief.whatItBuilds, /费用报销政策判定引擎/);
+  assert.match(
+    benchmarkData.scenarios.find((scenario) => scenario.id === "webhook-provider-bridge").copy.zh.projectBrief.complexitySignals,
+    /HMAC/
+  );
+
+  const reportHtml = await readFile(path.join(resultsDir, "index.html"), "utf8");
+  assert.match(reportHtml, /benchmark-data\.js/);
+  assert.match(reportHtml, /id="conclusion"/);
+  assert.match(reportHtml, /id="evidence-metrics"/);
+  assert.match(reportHtml, /id="measurement-method"/);
+  assert.match(reportHtml, /id="scenario-detail"/);
+  assert.match(reportHtml, /scenario-summary/);
+  assert.match(reportHtml, /help-anchor/);
+  assert.match(reportHtml, /data-help=/);
+  assert.match(reportHtml, /language-switch/);
+  assert.match(reportHtml, /data-lang="zh"/);
+  assert.match(reportHtml, /data-lang="en"/);
+  assert.match(reportHtml, /Delivery Reliability Benchmark/);
 } finally {
   await rm(root, { recursive: true, force: true });
 }

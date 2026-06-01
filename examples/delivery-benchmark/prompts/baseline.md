@@ -7,7 +7,6 @@ Rules:
 - Do not use AI SDLC Harness files, lifecycle, plan, workflow skills or validators.
 - Use the requirements and acceptance criteria below as the only product contract.
 - Build the smallest maintainable implementation that satisfies the same final quality bar as the Harness run.
-- Keep a short `.benchmark/transcript.md` with commands you ran, blockers and any known gaps.
 - When the midstream change is introduced, update code, tests and docs as needed.
 - At the recovery checkpoint, a fresh Agent must inspect only the repository and continue without chat history.
 

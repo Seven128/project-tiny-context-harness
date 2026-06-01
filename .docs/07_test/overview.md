@@ -1,11 +1,11 @@
 # .docs/07_test overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 697190009711dfef -->
+<!-- source-hash: c9a4547803e0c9f0 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `697190009711dfef`
+Source hash: `c9a4547803e0c9f0`
 
 ## Source Slices
 
@@ -38,7 +38,7 @@ Source: [TEST_CASES.md](TEST_CASES.md)
 | TC-005 | UI/UX fact source for CLI/package project | smoke | P1 | `make validate-uiux` | CLI/package experience slice exists | Run UI/UX validator | Non-visual CLI experience deliverable passes without `DESIGN.md` | UI/UX gate output |
 | TC-006 | TESTING fact source structure | smoke | P1 | `make validate-test` | `TEST_CASES.md` and `TEST_REPORT.md` exist | Run test validator | Test report references existing cases and has executable evidence | test gate output |
 | TC-007 | Workflow self-inspection command | regression | P0 | `npm test --workspace agent-project-sdlc`; `npx sdlc-harness inspect-workflow` | Package CLI is built and a Harness fixture exists | Run package regression and inspect-workflow in default and configured-root fixtures | Report exposes `PASS/WARN/BLOCKED`, JSON/prompt output, `measured` / `inferred` / `self_reported` / `unavailable` data sources, and outcome comparison metrics without writing files | package test output; consumer lab report |
-| TC-008 | Delivery reliability benchmark assets | regression | P1 | `node --test tests/sdlc-harness/delivery-benchmark.test.mjs`; `npm test --workspace agent-project-sdlc` | Benchmark scenarios and runner exist in `examples/delivery-benchmark/` | Load scenarios, prepare a run dir, record events and score a sample run | Runner computes acceptance sections, workflow-control cost and outcome metrics without touching tracked run artifacts | package test output |
+| TC-008 | Delivery reliability benchmark assets | regression | P1 | `node --test tests/sdlc-harness/delivery-benchmark.test.mjs`; `npm test --workspace agent-project-sdlc` | Benchmark scenarios and runner exist in `examples/delivery-benchmark/` | Load scenarios, prepare run dirs, record external observer activity, record manual and lightweight system-timed events, score sample runs, and load report data | Runner computes acceptance sections, observer elapsed time, file activity summary, workflow-control cost, timing source confidence and outcome metrics without touching tracked run artifacts; observer logs are not quality evidence; report data explains each scenario project and measurement method | package test output |
 
 ---
 
@@ -66,7 +66,7 @@ Source: [TEST_REPORT.md](TEST_REPORT.md)
 | TC-005 | CLI/package UI/UX fact source | `make validate-uiux` | PASS: non-visual CLI experience slice passes without `DESIGN.md`. |
 | TC-006 | TESTING fact source structure | `make validate-test` | PASS: report references existing `TC-*` cases and contains executed regression evidence. |
 | TC-007 | Workflow self-inspection command | `npm test --workspace agent-project-sdlc`; consumer lab `npx sdlc-harness inspect-workflow` checks | PASS: package regression covers unavailable defaults, ordinary/high-risk overhead thresholds, net value confidence, JSON and prompt output; consumer lab covers default plus `.workflow` configured root. |
-| TC-008 | Delivery reliability benchmark assets | `node --test tests/sdlc-harness/delivery-benchmark.test.mjs`; `npm test --workspace agent-project-sdlc` | PASS: regression loads 3 scenarios, prepares a benchmark run dir, records workflow-control/coding events and scores outcome metrics without committing raw run artifacts. |
+| TC-008 | Delivery reliability benchmark assets | `node --test tests/sdlc-harness/delivery-benchmark.test.mjs`; `npm test --workspace agent-project-sdlc` | PASS: regression loads 3 scenarios, prepares benchmark run dirs, records external observer activity plus manual and lightweight system-timed events, scores observer/timing source confidence and outcome metrics, confirms observer logs are not rubric evidence, and validates report scenario/measurement copy without committing raw run artifacts. |
 
 ## 3. Regression Evidence
 

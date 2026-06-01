@@ -32,6 +32,22 @@ node examples/delivery-benchmark/runner/delivery_benchmark.mjs prepare \
   --out-dir /tmp/expense-harness \
   --force
 
+node examples/delivery-benchmark/runner/delivery_benchmark.mjs observe-start \
+  --run-dir /tmp/expense-harness
+
+node examples/delivery-benchmark/runner/delivery_benchmark.mjs observe-stop \
+  --run-dir /tmp/expense-harness
+
+node examples/delivery-benchmark/runner/delivery_benchmark.mjs timer-start \
+  --run-dir /tmp/expense-harness \
+  --event implementation \
+  --kind coding \
+  --phase SPRINTING
+
+node examples/delivery-benchmark/runner/delivery_benchmark.mjs timer-stop \
+  --run-dir /tmp/expense-harness \
+  --notes "implementation block complete"
+
 node examples/delivery-benchmark/runner/delivery_benchmark.mjs record \
   --run-dir /tmp/expense-harness \
   --event sync \
@@ -53,6 +69,26 @@ node examples/delivery-benchmark/runner/delivery_benchmark.mjs score \
 
 Record workflow control cost separately from durable deliverables.
 
+Prefer `observe-start` / `observe-stop` for new runs. The observer runs outside the agent prompt and records elapsed time plus file create/modify/delete activity under the run directory. This keeps the measured path invisible to the agent under test, avoiding the baseline distortion that would come from asking a plain coding agent to maintain its own operation log.
+
+Use `timer-start` / `timer-stop` only when the external observer cannot be used. Use manual `record --minutes` only for legacy data or small events that were not timed.
+
+Cost confidence levels:
+
+- `observe-start` / `observe-stop`: high confidence for elapsed time and file activity, because the measurement is external to the agent prompt. It still does not explain intent by itself.
+- Manual `record --minutes`: low confidence, because the value is an agent-recorded estimate.
+- `timer-start` / `timer-stop`: medium confidence, because elapsed time is system-timed but the start/stop boundary is still manually labeled.
+- Heavy telemetry is intentionally out of scope for this benchmark runner.
+
+Data source layers:
+
+- `observer_measured`: external elapsed time and file activity.
+- `system_timed_manual_boundary`: system clock duration with manual start/stop labels.
+- `agent_recorded_estimate`: legacy agent-entered minutes.
+- `self_reported`: semantic notes from the agent or operator, used only as context.
+
+Observer logs are not quality evidence. The scorer ignores `.benchmark/observations.ndjson` and observer state files when evaluating product acceptance; quality still comes from source files, tests, docs and Harness deliverables.
+
 Counts as workflow control cost:
 
 - Reading lifecycle/plan to find status.
@@ -70,3 +106,5 @@ Does not count as workflow control cost:
 Commit only representative summaries under `results/`. Raw transcripts, temporary generated projects and large run artifacts should stay outside git, for example under `.artifacts/delivery-benchmark/` or `/tmp`.
 
 Do not prefill success numbers. The public comparison table should use actual scored runs only.
+
+For a user-facing view of completed runs, open `results/index.html`. The visual report supports English/Chinese switching, defaults from the browser language, and uses committed summary data only; raw artifacts remain outside git.

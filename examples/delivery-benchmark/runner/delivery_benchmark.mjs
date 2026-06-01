@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-import { spawnSync } from "node:child_process";
-import { appendFile, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { spawn, spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { appendFile, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +11,10 @@ const BENCHMARK_ROOT = path.resolve(HERE, "..");
 const SCENARIOS_ROOT = path.join(BENCHMARK_ROOT, "scenarios");
 const PROMPTS_ROOT = path.join(BENCHMARK_ROOT, "prompts");
 const VALID_MODES = new Set(["baseline", "harness"]);
+const OBSERVER_IGNORED_DIRS = new Set([".benchmark", ".git", "node_modules", "dist", "build", "coverage"]);
+const OBSERVER_STATE_FILE = "observer-state.json";
+const OBSERVER_STOP_FILE = "observer-stop.json";
+const OBSERVATIONS_FILE = "observations.ndjson";
 const VALID_EVENT_KINDS = new Set([
   "workflow_control",
   "requirements",
@@ -49,6 +54,8 @@ export function parseArgs(argv) {
       options.minutes = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
     } else if (arg === "--tokens") {
       options.tokens = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
+    } else if (arg === "--interval-ms") {
+      options.intervalMs = parsePositiveNumber(requireValue(rest, ++index, arg), arg);
     } else if (arg === "--notes") {
       options.notes = requireValue(rest, ++index, arg);
     } else if (arg === "--workflow-control-minutes") {
@@ -148,11 +155,175 @@ export async function recordEvent(options) {
     phase: options.phase ?? "",
     minutes: options.minutes ?? null,
     tokens: options.tokens ?? null,
-    notes: options.notes ?? ""
+    notes: options.notes ?? "",
+    timing_source: options.minutes === undefined ? null : "agent_recorded_estimate",
+    timing_confidence: options.minutes === undefined ? null : "low"
   };
   await mkdir(path.join(runDir, ".benchmark"), { recursive: true });
   await appendFile(path.join(runDir, ".benchmark", "events.ndjson"), `${JSON.stringify(event)}\n`, "utf8");
   return event;
+}
+
+export async function startTimer(options) {
+  const runDir = path.resolve(requireString(options.runDir, "--run-dir is required"));
+  const kind = requireString(options.kind, "--kind is required for timer-start");
+  if (!VALID_EVENT_KINDS.has(kind)) {
+    throw new Error(`--kind must be one of: ${Array.from(VALID_EVENT_KINDS).join(", ")}`);
+  }
+  const benchmarkDir = path.join(runDir, ".benchmark");
+  const timerPath = path.join(benchmarkDir, "timer.json");
+  if (existsSync(timerPath)) {
+    throw new Error(`timer already active for ${runDir}; stop or cancel it first`);
+  }
+  const startedAtEpochMs = Date.now();
+  const state = {
+    run_dir: runDir,
+    event: requireString(options.event, "--event is required"),
+    kind,
+    phase: requireString(options.phase, "--phase is required for timer-start"),
+    notes: options.notes ?? "",
+    tokens: options.tokens ?? null,
+    started_at: new Date(startedAtEpochMs).toISOString(),
+    started_at_epoch_ms: startedAtEpochMs,
+    start_monotonic_ns: process.hrtime.bigint().toString(),
+    timing_source: "system_timer",
+    timing_confidence: "system_timed_manual_boundary"
+  };
+  await mkdir(benchmarkDir, { recursive: true });
+  await writeFile(timerPath, `${JSON.stringify(state, null, 2)}\n`, "utf8");
+  return { active: true, ...state };
+}
+
+export async function stopTimer(options) {
+  const runDir = path.resolve(requireString(options.runDir, "--run-dir is required"));
+  const timerPath = path.join(runDir, ".benchmark", "timer.json");
+  if (!existsSync(timerPath)) {
+    throw new Error(`no active timer for ${runDir}`);
+  }
+  const state = JSON.parse(await readFile(timerPath, "utf8"));
+  const endedAtEpochMs = Date.now();
+  const endedAt = new Date(endedAtEpochMs).toISOString();
+  const durationMs = calculateDurationMs(state, endedAtEpochMs);
+  const notes = mergeNotes(state.notes, options.notes);
+  const event = {
+    at: endedAt,
+    event: state.event,
+    kind: state.kind,
+    phase: state.phase ?? "",
+    minutes: roundDurationMinutes(durationMs / 60000),
+    tokens: state.tokens ?? null,
+    notes,
+    timing_source: "system_timer",
+    timing_confidence: "system_timed_manual_boundary",
+    started_at: state.started_at,
+    ended_at: endedAt,
+    duration_ms: roundDurationMs(durationMs)
+  };
+  await appendFile(path.join(runDir, ".benchmark", "events.ndjson"), `${JSON.stringify(event)}\n`, "utf8");
+  await rm(timerPath, { force: true });
+  return { active: false, event };
+}
+
+export async function getTimerStatus(options) {
+  const runDir = path.resolve(requireString(options.runDir, "--run-dir is required"));
+  const timerPath = path.join(runDir, ".benchmark", "timer.json");
+  if (!existsSync(timerPath)) {
+    return { active: false, run_dir: runDir };
+  }
+  const state = JSON.parse(await readFile(timerPath, "utf8"));
+  const durationMs = calculateDurationMs(state, Date.now());
+  return {
+    active: true,
+    ...state,
+    elapsed_ms: roundDurationMs(durationMs),
+    elapsed_minutes: roundDurationMinutes(durationMs / 60000)
+  };
+}
+
+export async function cancelTimer(options) {
+  const runDir = path.resolve(requireString(options.runDir, "--run-dir is required"));
+  const timerPath = path.join(runDir, ".benchmark", "timer.json");
+  if (!existsSync(timerPath)) {
+    return { active: false, run_dir: runDir, cancelled: false };
+  }
+  const state = JSON.parse(await readFile(timerPath, "utf8"));
+  await rm(timerPath, { force: true });
+  return { active: false, run_dir: runDir, cancelled: true, timer: state };
+}
+
+export async function startObserver(options) {
+  const runDir = path.resolve(requireString(options.runDir, "--run-dir is required"));
+  const benchmarkDir = path.join(runDir, ".benchmark");
+  const intervalMs = Math.max(25, Math.round(options.intervalMs ?? 1000));
+  await mkdir(benchmarkDir, { recursive: true });
+
+  const status = await getObserverStatus({ runDir });
+  if (status.active) {
+    throw new Error(`observer already active for ${runDir}; stop it first`);
+  }
+  await rm(path.join(benchmarkDir, OBSERVER_STOP_FILE), { force: true });
+
+  const child = spawn(
+    process.execPath,
+    [fileURLToPath(import.meta.url), "observe-worker", "--run-dir", runDir, "--interval-ms", String(intervalMs)],
+    { detached: true, stdio: "ignore" }
+  );
+  child.unref();
+
+  const startedAtEpochMs = Date.now();
+  const state = {
+    active: true,
+    pid: child.pid,
+    run_dir: runDir,
+    interval_ms: intervalMs,
+    started_at: new Date(startedAtEpochMs).toISOString(),
+    started_at_epoch_ms: startedAtEpochMs,
+    data_source: "observer_measured"
+  };
+  await writeObserverState(runDir, state);
+  return state;
+}
+
+export async function stopObserver(options) {
+  const runDir = path.resolve(requireString(options.runDir, "--run-dir is required"));
+  const status = await getObserverStatus({ runDir });
+  if (!status.active) {
+    return { ...status, stopped: false };
+  }
+  await writeFile(
+    path.join(runDir, ".benchmark", OBSERVER_STOP_FILE),
+    `${JSON.stringify({ requested_at: new Date().toISOString() }, null, 2)}\n`,
+    "utf8"
+  );
+
+  for (let attempt = 0; attempt < 80; attempt += 1) {
+    await sleep(100);
+    const nextStatus = await getObserverStatus({ runDir });
+    if (!nextStatus.active) {
+      return { ...nextStatus, stopped: true };
+    }
+  }
+  throw new Error(`observer did not stop within timeout for ${runDir}`);
+}
+
+export async function getObserverStatus(options) {
+  const runDir = path.resolve(requireString(options.runDir, "--run-dir is required"));
+  const statePath = path.join(runDir, ".benchmark", OBSERVER_STATE_FILE);
+  if (!existsSync(statePath)) {
+    return { active: false, run_dir: runDir };
+  }
+  const state = JSON.parse(await readFile(statePath, "utf8"));
+  const active = Boolean(state.active && isProcessAlive(state.pid));
+  const observations = await readObservations(runDir);
+  const summary = buildObserverSummary(observations);
+  return {
+    ...state,
+    active,
+    stale: Boolean(state.active && !active),
+    observation_count: observations.length,
+    observed_total_delivery_minutes: summary.observed_total_delivery_minutes,
+    file_activity_summary: summary.file_activity_summary
+  };
 }
 
 export async function scoreRun(options) {
@@ -161,11 +332,12 @@ export async function scoreRun(options) {
   const runDir = path.resolve(requireString(options.runDir, "--run-dir is required"));
   const files = await collectFiles(runDir);
   const events = await readEvents(runDir);
+  const observations = await readObservations(runDir);
   const sections = {};
   for (const [sectionName, checks] of Object.entries(scenario.rubric.sections ?? {})) {
     sections[sectionName] = evaluateChecks(checks, files);
   }
-  const costs = buildCostSummary(events, options);
+  const costs = buildCostSummary(events, options, observations);
   const report = {
     scenario_id: scenario.id,
     mode,
@@ -200,6 +372,8 @@ export function renderMarkdownReport(report) {
     `- Total score: ${report.summary.passed}/${report.summary.total}`,
     `- Workflow control minutes: ${formatValue(report.workflow_cost.workflow_control_minutes)}`,
     `- Total delivery minutes: ${formatValue(report.workflow_cost.total_delivery_minutes)}`,
+    `- Observed total delivery minutes: ${formatValue(report.workflow_cost.observed_total_delivery_minutes)}`,
+    `- Cost data source: ${report.workflow_cost.cost_data_source}`,
     `- Net value minutes: ${formatValue(report.outcome.net_value_minutes)}`,
     "",
     "## Section Summary",
@@ -280,10 +454,20 @@ async function walk(rootDir, currentDir, files) {
       await walk(rootDir, fullPath, files);
     } else if (entry.isFile()) {
       const relative = path.relative(rootDir, fullPath).split(path.sep).join("/");
-      if (relative === ".benchmark/events.ndjson") continue;
+      if (isBenchmarkInternalEvidence(relative)) continue;
       files.push({ relative, text: await readFile(fullPath, "utf8").catch(() => "") });
     }
   }
+}
+
+function isBenchmarkInternalEvidence(relative) {
+  return [
+    ".benchmark/events.ndjson",
+    ".benchmark/observations.ndjson",
+    ".benchmark/observer-state.json",
+    ".benchmark/observer-stop.json",
+    ".benchmark/timer.json"
+  ].includes(relative);
 }
 
 function matchesPattern(relative, pattern) {
@@ -312,20 +496,105 @@ async function readEvents(runDir) {
     .map((line) => JSON.parse(line));
 }
 
-function buildCostSummary(events, options) {
+async function readObservations(runDir) {
+  const observationsPath = path.join(runDir, ".benchmark", OBSERVATIONS_FILE);
+  if (!existsSync(observationsPath)) return [];
+  const text = await readFile(observationsPath, "utf8");
+  return text
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+}
+
+function buildCostSummary(events, options, observations = []) {
   const eventMinutes = events.reduce((sum, event) => sum + (Number.isFinite(event.minutes) ? event.minutes : 0), 0);
   const workflowMinutes = events
     .filter((event) => event.kind === "workflow_control")
     .reduce((sum, event) => sum + (Number.isFinite(event.minutes) ? event.minutes : 0), 0);
+  const observerSummary = buildObserverSummary(observations);
   const workflowControlMinutes = options.workflowControlMinutes ?? (workflowMinutes > 0 ? workflowMinutes : null);
-  const totalDeliveryMinutes = options.totalDeliveryMinutes ?? (eventMinutes > 0 ? eventMinutes : null);
+  const totalDeliveryMinutes =
+    options.totalDeliveryMinutes ?? observerSummary.observed_total_delivery_minutes ?? (eventMinutes > 0 ? eventMinutes : null);
+  const timingSummary = summarizeTiming(events, observerSummary);
   return {
     workflow_control_minutes: workflowControlMinutes,
     total_delivery_minutes: totalDeliveryMinutes,
+    observed_total_delivery_minutes: observerSummary.observed_total_delivery_minutes,
+    file_activity_summary: observerSummary.file_activity_summary,
     estimated_vibe_handoff_minutes: options.estimatedVibeHandoffMinutes ?? null,
     avoided_rework_minutes: options.avoidedReworkMinutes ?? null,
-    comparison_confidence: options.comparisonConfidence ?? "low",
-    events
+    cost_data_source: timingSummary.costDataSource,
+    timing_sources: timingSummary.sources,
+    comparison_confidence: options.comparisonConfidence ?? timingSummary.comparisonConfidence,
+    events,
+    observations
+  };
+}
+
+function buildObserverSummary(observations) {
+  const stopEvent = observations.filter((observation) => observation.event === "observer_stop").at(-1);
+  const fileEvents = observations.filter((observation) =>
+    ["file_added", "file_modified", "file_deleted"].includes(observation.event)
+  );
+  const counts = fileEvents.reduce(
+    (summary, observation) => {
+      summary[observation.event] += 1;
+      if (observation.path) summary.paths.add(observation.path);
+      return summary;
+    },
+    { file_added: 0, file_modified: 0, file_deleted: 0, paths: new Set() }
+  );
+  return {
+    hasObserver: observations.length > 0,
+    observed_total_delivery_minutes: Number.isFinite(stopEvent?.duration_ms)
+      ? roundDurationMinutes(stopEvent.duration_ms / 60000)
+      : null,
+    file_activity_summary: {
+      file_added: counts.file_added,
+      file_modified: counts.file_modified,
+      file_deleted: counts.file_deleted,
+      touched_files: counts.paths.size
+    }
+  };
+}
+
+function summarizeTiming(events, observerSummary = { hasObserver: false }) {
+  const sources = events.reduce((summary, event) => {
+    const source = event.timing_source ?? (Number.isFinite(event.minutes) ? "agent_recorded_estimate" : "unavailable");
+    summary[source] = (summary[source] ?? 0) + 1;
+    return summary;
+  }, {});
+  if (observerSummary.hasObserver) {
+    sources.observer_measured = (sources.observer_measured ?? 0) + 1;
+  }
+  const hasObserver = (sources.observer_measured ?? 0) > 0;
+  const hasSystemTimer = (sources.system_timer ?? 0) > 0;
+  const hasManualEstimate = (sources.agent_recorded_estimate ?? 0) > 0;
+  if (hasObserver) {
+    return {
+      sources,
+      costDataSource: hasManualEstimate ? "mixed_observer_and_agent_estimate" : "observer_measured",
+      comparisonConfidence: hasManualEstimate ? "medium" : "high"
+    };
+  }
+  if (hasSystemTimer) {
+    return {
+      sources,
+      costDataSource: hasManualEstimate ? "mixed_system_timer_and_agent_estimate" : "system_timed_manual_boundary",
+      comparisonConfidence: "medium"
+    };
+  }
+  if (hasManualEstimate) {
+    return {
+      sources,
+      costDataSource: "agent_recorded_estimate",
+      comparisonConfidence: "low"
+    };
+  }
+  return {
+    sources,
+    costDataSource: "unavailable",
+    comparisonConfidence: "low"
   };
 }
 
@@ -392,9 +661,15 @@ function renderRunReadme(scenario, mode) {
     "",
     "Read `.benchmark/prompt.md`, execute the scenario, record workflow events in `.benchmark/events.ndjson`, then score the run.",
     "",
+    "Prefer the external observer for new benchmark runs. It records elapsed time and file activity outside the agent prompt, so the measured path stays invisible to the agent under test. Use the lightweight system timer only when an observer cannot be used.",
+    "",
     "Useful commands:",
     "",
     "```sh",
+    "node examples/delivery-benchmark/runner/delivery_benchmark.mjs observe-start --run-dir <this-dir>",
+    "node examples/delivery-benchmark/runner/delivery_benchmark.mjs observe-stop --run-dir <this-dir>",
+    "node examples/delivery-benchmark/runner/delivery_benchmark.mjs timer-start --run-dir <this-dir> --event implementation --kind coding --phase SPRINTING",
+    "node examples/delivery-benchmark/runner/delivery_benchmark.mjs timer-stop --run-dir <this-dir> --notes \"implementation block complete\"",
     "node examples/delivery-benchmark/runner/delivery_benchmark.mjs record --run-dir <this-dir> --event sync --kind workflow_control --minutes 3",
     "node examples/delivery-benchmark/runner/delivery_benchmark.mjs score --scenario <scenario> --mode <baseline|harness> --run-dir <this-dir>",
     "```"
@@ -446,12 +721,171 @@ function parseNonNegativeNumber(value, flag) {
   return parsed;
 }
 
+function parsePositiveNumber(value, flag) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new Error(`${flag} must be a positive number`);
+  }
+  return parsed;
+}
+
 function formatValue(value) {
   return value === null || value === undefined ? "unavailable" : String(value);
 }
 
 function round(value) {
   return Math.round(value * 100) / 100;
+}
+
+function roundDurationMinutes(value) {
+  return Math.round(value * 10000) / 10000;
+}
+
+function roundDurationMs(value) {
+  return Math.round(value * 1000) / 1000;
+}
+
+function calculateDurationMs(state, endedAtEpochMs) {
+  const startedAtEpochMs = Number(state.started_at_epoch_ms);
+  if (Number.isFinite(startedAtEpochMs)) {
+    return Math.max(0, endedAtEpochMs - startedAtEpochMs);
+  }
+  return Math.max(0, endedAtEpochMs - new Date(state.started_at).getTime());
+}
+
+async function runObserverWorker(options) {
+  const runDir = path.resolve(requireString(options.runDir, "--run-dir is required"));
+  const intervalMs = Math.max(25, Math.round(options.intervalMs ?? 1000));
+  const startedAtEpochMs = Date.now();
+  const state = {
+    active: true,
+    pid: process.pid,
+    run_dir: runDir,
+    interval_ms: intervalMs,
+    started_at: new Date(startedAtEpochMs).toISOString(),
+    started_at_epoch_ms: startedAtEpochMs,
+    data_source: "observer_measured"
+  };
+  await mkdir(path.join(runDir, ".benchmark"), { recursive: true });
+  await writeObserverState(runDir, state);
+
+  let previous = await scanObservedFiles(runDir);
+  await appendObservation(runDir, observerEvent("observer_start", null, { atEpochMs: startedAtEpochMs }));
+  while (!existsSync(path.join(runDir, ".benchmark", OBSERVER_STOP_FILE))) {
+    await sleep(intervalMs);
+    const current = await scanObservedFiles(runDir);
+    await appendObservationDiff(runDir, previous, current);
+    previous = current;
+  }
+
+  const current = await scanObservedFiles(runDir);
+  await appendObservationDiff(runDir, previous, current);
+  const endedAtEpochMs = Date.now();
+  await appendObservation(
+    runDir,
+    observerEvent("observer_stop", null, {
+      atEpochMs: endedAtEpochMs,
+      extra: {
+        started_at: state.started_at,
+        ended_at: new Date(endedAtEpochMs).toISOString(),
+        duration_ms: roundDurationMs(endedAtEpochMs - startedAtEpochMs)
+      }
+    })
+  );
+  await rm(path.join(runDir, ".benchmark", OBSERVER_STOP_FILE), { force: true });
+  await writeObserverState(runDir, {
+    ...state,
+    active: false,
+    ended_at: new Date(endedAtEpochMs).toISOString(),
+    duration_ms: roundDurationMs(endedAtEpochMs - startedAtEpochMs)
+  });
+}
+
+async function appendObservationDiff(runDir, previous, current) {
+  for (const [relative, file] of current.entries()) {
+    const old = previous.get(relative);
+    if (!old) {
+      await appendObservation(runDir, observerEvent("file_added", relative, { file }));
+    } else if (old.sha256 !== file.sha256 || old.size !== file.size || old.mtime_ms !== file.mtime_ms) {
+      await appendObservation(runDir, observerEvent("file_modified", relative, { file }));
+    }
+  }
+  for (const [relative, old] of previous.entries()) {
+    if (!current.has(relative)) {
+      await appendObservation(runDir, observerEvent("file_deleted", relative, { file: old, deleted: true }));
+    }
+  }
+}
+
+function observerEvent(event, relativePath, options = {}) {
+  const file = options.file ?? {};
+  const atEpochMs = options.atEpochMs ?? Date.now();
+  return {
+    at: new Date(atEpochMs).toISOString(),
+    event,
+    path: relativePath,
+    size: options.deleted ? null : file.size ?? null,
+    mtime_ms: options.deleted ? null : file.mtime_ms ?? null,
+    sha256: options.deleted ? null : file.sha256 ?? null,
+    data_source: "observer_measured",
+    ...(options.extra ?? {})
+  };
+}
+
+async function scanObservedFiles(runDir) {
+  const snapshot = new Map();
+  await scanObservedDirectory(runDir, runDir, snapshot);
+  return snapshot;
+}
+
+async function scanObservedDirectory(rootDir, currentDir, snapshot) {
+  const entries = await readdir(currentDir, { withFileTypes: true }).catch(() => []);
+  for (const entry of entries) {
+    if (entry.isDirectory() && OBSERVER_IGNORED_DIRS.has(entry.name)) continue;
+    const fullPath = path.join(currentDir, entry.name);
+    if (entry.isDirectory()) {
+      await scanObservedDirectory(rootDir, fullPath, snapshot);
+    } else if (entry.isFile()) {
+      const relative = path.relative(rootDir, fullPath).split(path.sep).join("/");
+      const fileStat = await stat(fullPath).catch(() => null);
+      if (!fileStat) continue;
+      const bytes = await readFile(fullPath).catch(() => null);
+      if (!bytes) continue;
+      snapshot.set(relative, {
+        size: fileStat.size,
+        mtime_ms: fileStat.mtimeMs,
+        sha256: createHash("sha256").update(bytes).digest("hex")
+      });
+    }
+  }
+}
+
+async function appendObservation(runDir, observation) {
+  await appendFile(path.join(runDir, ".benchmark", OBSERVATIONS_FILE), `${JSON.stringify(observation)}\n`, "utf8");
+}
+
+async function writeObserverState(runDir, state) {
+  await mkdir(path.join(runDir, ".benchmark"), { recursive: true });
+  await writeFile(path.join(runDir, ".benchmark", OBSERVER_STATE_FILE), `${JSON.stringify(state, null, 2)}\n`, "utf8");
+}
+
+function isProcessAlive(pid) {
+  if (!pid) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function mergeNotes(startNotes, stopNotes) {
+  const parts = [startNotes, stopNotes].filter((value) => value && String(value).trim());
+  return parts.join("; ");
 }
 
 async function writeReportOutputs(report, options) {
@@ -477,6 +911,22 @@ async function main(argv = process.argv.slice(2)) {
     console.log(JSON.stringify(await prepareRunDirectory(options), null, 2));
   } else if (options.command === "record") {
     console.log(JSON.stringify(await recordEvent(options), null, 2));
+  } else if (options.command === "timer-start") {
+    console.log(JSON.stringify(await startTimer(options), null, 2));
+  } else if (options.command === "timer-stop") {
+    console.log(JSON.stringify(await stopTimer(options), null, 2));
+  } else if (options.command === "timer-status") {
+    console.log(JSON.stringify(await getTimerStatus(options), null, 2));
+  } else if (options.command === "timer-cancel") {
+    console.log(JSON.stringify(await cancelTimer(options), null, 2));
+  } else if (options.command === "observe-start") {
+    console.log(JSON.stringify(await startObserver(options), null, 2));
+  } else if (options.command === "observe-stop") {
+    console.log(JSON.stringify(await stopObserver(options), null, 2));
+  } else if (options.command === "observe-status") {
+    console.log(JSON.stringify(await getObserverStatus(options), null, 2));
+  } else if (options.command === "observe-worker") {
+    await runObserverWorker(options);
   } else if (options.command === "score") {
     const report = await scoreRun(options);
     await writeReportOutputs(report, options);
@@ -498,6 +948,13 @@ Commands:
   list
   prepare --scenario <id> --mode <baseline|harness> --out-dir <dir> [--force]
   record --run-dir <dir> --event <name> [--kind workflow_control|requirements|design|coding|test|review|release|rework|handoff] [--minutes <n>] [--tokens <n>] [--notes <text>]
+  observe-start --run-dir <dir> [--interval-ms <n>]
+  observe-stop --run-dir <dir>
+  observe-status --run-dir <dir>
+  timer-start --run-dir <dir> --event <name> --kind workflow_control|requirements|design|coding|test|review|release|rework|handoff --phase <phase> [--notes <text>]
+  timer-stop --run-dir <dir> [--notes <text>]
+  timer-status --run-dir <dir>
+  timer-cancel --run-dir <dir>
   score --scenario <id> --mode <baseline|harness> --run-dir <dir> [--json-report <path>] [--markdown-report <path>]
   inspect --run-dir <dir> [inspect-workflow outcome arguments]
 `);

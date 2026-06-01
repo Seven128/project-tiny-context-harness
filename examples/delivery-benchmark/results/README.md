@@ -4,14 +4,18 @@ This directory is for small, representative summaries from actual benchmark runs
 
 Do not commit raw generated projects, full command transcripts or large logs here. Keep raw runs under `/tmp` or `.artifacts/delivery-benchmark/`.
 
+Open [`index.html`](index.html) for a static visual report designed for readers evaluating the project. The report supports English/Chinese switching and defaults from the browser language.
+
+The completed `expense-policy-engine` run was recorded before the external observer existed, so its cost confidence remains low. Future runs should use `observe-start` / `observe-stop` in the benchmark runner to record external elapsed time and file activity without asking the agent under test to maintain a log.
+
 ## Current Status
 
-No public benchmark score is claimed until baseline and Harness paths have both been executed for the same scenario with the same final quality bar.
+Public benchmark scores are claimed only after baseline and Harness paths have both been executed for the same scenario with the same final quality bar.
 
 Use this table only after real scored runs exist:
 
 | Scenario | Baseline Score | Harness Score | Workflow Overhead | Net Value | Notes |
 |---|---:|---:|---:|---:|---|
-| `expense-policy-engine` | pending | pending | pending | pending |  |
+| `expense-policy-engine` | 13/13 PASS | 13/13 PASS | 29 / 53 min | unavailable | [2026-06-01 run](expense-policy-engine-20260601-174424.md); legacy cost confidence low |
 | `support-triage-board` | pending | pending | pending | pending |  |
 | `webhook-provider-bridge` | pending | pending | pending | pending |  |

@@ -8,7 +8,7 @@ Rules:
 - Follow lifecycle, `plan.yaml`, workflow skills, `.docs/**` facts, gates and transition rules.
 - Execute all phases needed for the scenario: requirements, UI/UX if applicable, architecture, development, review, testing, release readiness and RFC/bugfix/BLOCKED routes when triggered.
 - Keep the active task small. Do not leave completed tasks in `plan.yaml`.
-- Record workflow-control events with `delivery_benchmark.mjs record`, especially `sync`, `upgrade`, `transition.py`, `validate-*`, overview/source drift and workflow orientation time.
+- External observer evidence records elapsed benchmark time. Use `delivery_benchmark.mjs record` only for semantic workflow-control labels such as `sync`, `upgrade`, `transition.py`, `validate-*`, overview/source drift and workflow orientation.
 - Do not count PRD, UX, architecture, test cases, implementation docs or release evidence as workflow control cost.
 - When the midstream change is introduced, use the workflow route required by the current phase.
 - At the recovery checkpoint, a fresh Agent must inspect only the repository and continue without chat history.

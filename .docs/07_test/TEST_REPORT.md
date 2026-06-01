@@ -18,7 +18,7 @@
 | TC-005 | CLI/package UI/UX fact source | `make validate-uiux` | PASS: non-visual CLI experience slice passes without `DESIGN.md`. |
 | TC-006 | TESTING fact source structure | `make validate-test` | PASS: report references existing `TC-*` cases and contains executed regression evidence. |
 | TC-007 | Workflow self-inspection command | `npm test --workspace agent-project-sdlc`; consumer lab `npx sdlc-harness inspect-workflow` checks | PASS: package regression covers unavailable defaults, ordinary/high-risk overhead thresholds, net value confidence, JSON and prompt output; consumer lab covers default plus `.workflow` configured root. |
-| TC-008 | Delivery reliability benchmark assets | `node --test tests/sdlc-harness/delivery-benchmark.test.mjs`; `npm test --workspace agent-project-sdlc` | PASS: regression loads 3 scenarios, prepares a benchmark run dir, records workflow-control/coding events and scores outcome metrics without committing raw run artifacts. |
+| TC-008 | Delivery reliability benchmark assets | `node --test tests/sdlc-harness/delivery-benchmark.test.mjs`; `npm test --workspace agent-project-sdlc` | PASS: regression loads 3 scenarios, prepares benchmark run dirs, records external observer activity plus manual and lightweight system-timed events, scores observer/timing source confidence and outcome metrics, confirms observer logs are not rubric evidence, and validates report scenario/measurement copy without committing raw run artifacts. |
 
 ## 3. Regression Evidence
 
