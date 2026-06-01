@@ -98,19 +98,19 @@ export async function runWorkflowInspection(
     "Split sequentially or choose one current task, then remove or defer the other open task contracts."
   );
 
-  const docRefs = inferredTask ? collectTaskDocRefs(inferredTask) : [];
+  const workProductRefs = inferredTask ? collectTaskWorkProductRefs(inferredTask) : [];
   addMetric(
     metrics,
     findings,
-    "workflow_weight.current_task_doc_refs",
-    "current task document refs",
-    inferredTask ? docRefs.length : null,
-    levelByThreshold(docRefs.length, 5, 10),
+    "workflow_weight.current_task_work_product_refs",
+    "current task work product refs",
+    inferredTask ? workProductRefs.length : null,
+    levelByThreshold(workProductRefs.length, 5, 10),
     inferredTask ? "measured" : "unavailable",
     inferredTask
-      ? "Too many task-scoped docs usually means the Agent must hydrate too much context before acting."
-      : "No current/open task is selected, so task-scoped document weight is not measurable.",
-    "Narrow the current task result_docs / implementation_doc / docs refs to the smallest handoff surface."
+      ? "Too many task-scoped work products usually means the Agent must hydrate too much context before acting."
+      : "No current/open task is selected, so task-scoped work product weight is not measurable.",
+    "Narrow the current task result_work_products / implementation_work_product / work_products refs to the smallest handoff surface."
   );
   const allowedPaths = inferredTask ? asStringList(inferredTask.allowed_paths) : [];
   addMetric(
@@ -142,7 +142,7 @@ export async function runWorkflowInspection(
   );
 
   await addSelfTestReportMetric(projectRoot, inferredTask, metrics, findings);
-  await addLargestDocMetric(projectRoot, docRefs, metrics, findings);
+  await addLargestWorkProductMetric(projectRoot, workProductRefs, metrics, findings);
   await addValidatorMetric(projectRoot, "validate-harness", metrics, findings);
   await addValidatorMetric(projectRoot, "validate-plan", metrics, findings);
   await addTestingReadinessMetric(projectRoot, currentPhase, metrics, findings);
@@ -264,8 +264,8 @@ async function addTestingReadinessMetric(
   metrics: WorkflowInspectionMetric[],
   findings: WorkflowInspectionFinding[]
 ): Promise<void> {
-  const reportPath = path.join(projectRoot, ".docs/07_test/TEST_REPORT.md");
-  const casesPath = path.join(projectRoot, ".docs/07_test/TEST_CASES.md");
+  const reportPath = path.join(projectRoot, ".work_products/07_test/TEST_REPORT.md");
+  const casesPath = path.join(projectRoot, ".work_products/07_test/TEST_CASES.md");
   const shouldValidate = currentPhase === "TESTING" || (await pathExists(reportPath)) || (await pathExists(casesPath));
   if (!shouldValidate) {
     addMetric(
@@ -550,7 +550,7 @@ async function addSelfTestReportMetric(
   metrics: WorkflowInspectionMetric[],
   findings: WorkflowInspectionFinding[]
 ): Promise<void> {
-  const implementationDoc = typeof currentTask?.implementation_doc === "string" ? currentTask.implementation_doc.trim() : "";
+  const implementationDoc = typeof currentTask?.implementation_work_product === "string" ? currentTask.implementation_work_product.trim() : "";
   if (!implementationDoc) {
     addMetric(
       metrics,
@@ -560,7 +560,7 @@ async function addSelfTestReportMetric(
       null,
       "PASS",
       "unavailable",
-      "No current implementation_doc is selected, so self-test report size is not measurable.",
+      "No current implementation_work_product is selected, so self-test report size is not measurable.",
       "When SPRINTING is active, keep the report as a short handoff card."
     );
     return;
@@ -576,7 +576,7 @@ async function addSelfTestReportMetric(
       null,
       "BLOCKED",
       "measured",
-      `implementation_doc is missing: ${implementationDoc}`,
+      `implementation_work_product is missing: ${implementationDoc}`,
       "Create or point to the current task implementation doc."
     );
     return;
@@ -612,15 +612,15 @@ async function addSelfTestReportMetric(
   );
 }
 
-async function addLargestDocMetric(
+async function addLargestWorkProductMetric(
   projectRoot: string,
-  docRefs: string[],
+  workProductRefs: string[],
   metrics: WorkflowInspectionMetric[],
   findings: WorkflowInspectionFinding[]
 ): Promise<void> {
   let largest = 0;
   let largestRef = "";
-  for (const ref of docRefs) {
+  for (const ref of workProductRefs) {
     const text = await readIfExists(path.join(projectRoot, ref));
     if (!text) continue;
     const lines = countLines(text);
@@ -632,13 +632,13 @@ async function addLargestDocMetric(
   addMetric(
     metrics,
     findings,
-    "drift_risk.largest_current_doc_lines",
-    "largest current task doc lines",
+    "drift_risk.largest_current_work_product_lines",
+    "largest current task work product lines",
     largestRef ? largest : null,
     largest > 700 ? "WARN" : largest > 300 ? "WARN" : "PASS",
     largestRef ? "inferred" : "unavailable",
-    largestRef ? `${largestRef} is the largest current task doc.` : "No current task document refs were available.",
-    "If a current handoff doc keeps growing, split durable decisions into ADRs, runtime steps into runbooks, and evidence bodies into evidence indexes."
+    largestRef ? `${largestRef} is the largest current task work product.` : "No current task work product refs were available.",
+    "If a current handoff work product keeps growing, split durable decisions into ADRs, runtime steps into runbooks, and evidence bodies into evidence indexes."
   );
 }
 
@@ -710,12 +710,12 @@ function countWorkingNotes(value: unknown): number {
   return 0;
 }
 
-function collectTaskDocRefs(task: Record<string, unknown>): string[] {
+function collectTaskWorkProductRefs(task: Record<string, unknown>): string[] {
   const refs = new Set<string>();
-  for (const ref of asStringList(task.implementation_doc)) refs.add(normalizeDocRef(ref));
-  for (const ref of asStringList(task.result_docs)) refs.add(normalizeDocRef(ref));
-  if (isRecord(task.docs)) {
-    for (const value of Object.values(task.docs)) {
+  for (const ref of asStringList(task.implementation_work_product)) refs.add(normalizeDocRef(ref));
+  for (const ref of asStringList(task.result_work_products)) refs.add(normalizeDocRef(ref));
+  if (isRecord(task.work_products)) {
+    for (const value of Object.values(task.work_products)) {
       for (const ref of asStringList(value)) refs.add(normalizeDocRef(ref));
     }
   }

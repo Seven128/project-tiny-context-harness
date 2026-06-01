@@ -48,7 +48,15 @@
 - Token / component notes:
 - Known deviations:
 
-## 8. Visual reconciliation
+## 8. Design materials
+
+- Asset root: `.work_products/02_experience/assets/<capability>/`
+- Referenced materials:
+  - Path:
+  - Purpose: `mock | screenshot | reference | exported_asset | evidence`
+  - Consumer:
+
+## 9. Visual reconciliation
 
 - Required: `true | false`
 - Reference images:
@@ -69,13 +77,13 @@
 - Human visual approval required: `true | false`
 - Approval status: `pending | approved | changes_requested | not_applicable`
 
-## 9. Handoff matrix
+## 10. Handoff matrix
 
 | Requirement | Screen / state | Component / interaction | Acceptance / test seed |
 |---|---|---|---|
 |  |  |  |  |
 
-## 10. Open Questions / Out of Scope
+## 11. Open Questions / Out of Scope
 
 ### Open Questions
 

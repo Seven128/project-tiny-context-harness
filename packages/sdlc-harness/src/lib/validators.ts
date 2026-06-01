@@ -25,11 +25,11 @@ const PARALLEL_READ_ONLY_PHASES = new Set(["REQUIREMENT_GATHERING", "UI_UX_DESIG
 const PARALLEL_PROTECTED_WRITE_PATTERNS = [
   ".codex/state/**",
   "<harnessRoot>/state/**",
-  ".docs/INDEX.md",
-  ".docs/**/overview.md",
-  ".docs/04_implementation/**",
-  ".docs/06_review/**",
-  ".docs/08_release/**"
+  ".work_products/INDEX.md",
+  ".work_products/**/overview.md",
+  ".work_products/04_implementation/**",
+  ".work_products/06_review/**",
+  ".work_products/08_release/**"
 ];
 const TASK_STATUSES = new Set(["pending", "in_progress", "done", "blocked", "pending_revision", "cancelled"]);
 const OPEN_TASK_STATUSES = new Set(["pending", "in_progress", "blocked", "pending_revision"]);
@@ -96,17 +96,18 @@ const TESTING_DISALLOWED_ALLOWED_PATHS = [
 const TESTING_DISALLOWED_CHANGED_PATHS = [...TESTING_DISALLOWED_ALLOWED_PATHS, "scripts/**", "tools/**"];
 const TESTING_RUNTIME_FILE_TERMS = ["bootstrap", "cloud", "daemon", "poller", "provider", "runtime", "service", "systemd"];
 const TESTING_ALLOWED_TEST_FILE_TERMS = ["assertion", "fixture", "mock", "smoke"];
-const TEST_REPORT_PATH = ".docs/07_test/TEST_REPORT.md";
-const TEST_CASES_PATH = ".docs/07_test/TEST_CASES.md";
-const EXPERIENCE_DOC_PREFIX = ".docs/02_experience/";
+const TEST_REPORT_PATH = ".work_products/07_test/TEST_REPORT.md";
+const TEST_CASES_PATH = ".work_products/07_test/TEST_CASES.md";
+const EXPERIENCE_DOC_PREFIX = ".work_products/02_experience/";
 const DESIGN_SYSTEM_PATH = "DESIGN.md";
-const CURRENT_RELEASE_REPORT_PATH = ".docs/08_release/CURRENT_RELEASE.md";
+const CURRENT_RELEASE_REPORT_PATH = ".work_products/08_release/CURRENT_RELEASE.md";
 const TEST_REPORT_PLACEHOLDER_TERMS = ["pending", "tbd", "todo", "待填", "待补", "placeholder"];
 const TEST_CASE_ID_PATTERN = /\bTC-\d{3,}\b/g;
 const TEST_FACT_SOURCE_PHASES = new Set(["TESTING", "RFC_RECALIBRATION"]);
-const TEST_FACT_SOURCE_PATTERNS = [".docs/07_test/**", ".docs/07_test/"];
-const TEST_FACT_SOURCE_REF = /\.docs\/07_test\/[^\s`,)]+/g;
-const RUNBOOK_DOC_PREFIX = ".docs/09_runbooks/";
+const TEST_FACT_SOURCE_PATTERNS = [".work_products/07_test/**", ".work_products/07_test/"];
+const TEST_FACT_SOURCE_REF = /\.work_products\/07_test\/[^\s`,)]+/g;
+const EXPERIENCE_ASSET_REF = /\.work_products\/02_experience\/assets\/[^\s`"'<>),]+/g;
+const RUNBOOK_DOC_PREFIX = ".work_products/09_runbooks/";
 const RUNNABLE_ENTRY_EXIT_TERMS = [
   "runnable entry/exit",
   "entry/exit",
@@ -508,7 +509,7 @@ const UI_DRAFT_TASK_TERMS = [
   "component",
   "visual_ui",
   "design.md",
-  ".docs/02_experience/",
+  ".work_products/02_experience/",
   "页面",
   "前端",
   "屏幕",
@@ -549,9 +550,9 @@ async function validateHarness(projectRoot: string): Promise<ValidatorReport> {
   const root = await harnessRoot(projectRoot);
   for (const required of [
     "AGENTS.md",
-    ".docs/INDEX.md",
-    ".docs/02_experience",
-    ".docs/09_runbooks",
+    ".work_products/INDEX.md",
+    ".work_products/02_experience",
+    ".work_products/09_runbooks",
     harnessPath(root, "config.yaml"),
     harnessPath(root, "state", "lifecycle.yaml"),
     harnessPath(root, "state", "plan.yaml"),
@@ -591,26 +592,26 @@ async function validateCurrent(projectRoot: string): Promise<ValidatorReport> {
 
 async function validatePm(projectRoot: string): Promise<ValidatorReport> {
   const plan = await validatePlanState(projectRoot, false);
-  const docs = await markdownFiles(path.join(projectRoot, ".docs/01_product"));
-  const text = await combinedText(docs);
+  const workProducts = await markdownFiles(path.join(projectRoot, ".work_products/01_product"));
+  const text = await combinedText(workProducts);
   const errors: string[] = [...plan.errors];
-  if (docs.length === 0) errors.push("No PRD deliverables found");
+  if (workProducts.length === 0) errors.push("No PRD deliverables found");
   if (!containsAny(text, ["acceptance", "验收"])) errors.push("PRD must include acceptance criteria");
   if (!containsAny(text, ["out of scope", "不做", "边界"])) errors.push("PRD must include out-of-scope boundaries");
   if (!containsAny(text, ["open questions", "未决", "待确认"])) errors.push("PRD must include open questions");
-  return { info: [`validate-pm checked ${docs.length} file(s)`], errors };
+  return { info: [`validate-pm checked ${workProducts.length} file(s)`], errors };
 }
 
 async function validateUiux(projectRoot: string): Promise<ValidatorReport> {
   const root = await harnessRoot(projectRoot);
   const lifecycle = await readYamlObject(path.join(projectRoot, root, "state", "lifecycle.yaml"));
   const plan = await validatePlanState(projectRoot, String(lifecycle.current_phase ?? "") !== "UI_UX_DESIGNING");
-  const docs = await markdownFiles(path.join(projectRoot, ".docs/02_experience"));
+  const workProducts = await markdownFiles(path.join(projectRoot, ".work_products/02_experience"));
   const errors: string[] = [...plan.errors];
-  if (docs.length === 0) errors.push("No UI/UX deliverables found in .docs/02_experience/");
+  if (workProducts.length === 0) errors.push("No UI/UX deliverables found in .work_products/02_experience/");
 
   let visualUi = false;
-  for (const doc of docs) {
+  for (const doc of workProducts) {
     const relative = repoRelative(projectRoot, doc);
     const text = await readText(doc);
     const notApplicable = containsAny(text, ["applicability: not_applicable", "applicability: `not_applicable`"]);
@@ -626,6 +627,7 @@ async function validateUiux(projectRoot: string): Promise<ValidatorReport> {
     if (!containsAny(text, ["accessibility", "a11y", "focus", "keyboard", "touch", "无障碍", "焦点", "键盘", "触控"])) {
       errors.push(`${relative} must include accessibility/focus/keyboard/touch expectations`);
     }
+    errors.push(...(await validateExperienceAssetRefs(projectRoot, relative, text)));
   }
 
   if (visualUi) {
@@ -637,17 +639,28 @@ async function validateUiux(projectRoot: string): Promise<ValidatorReport> {
     }
   }
 
-  return { info: [`validate-uiux checked ${docs.length} file(s)`], errors };
+  return { info: [`validate-uiux checked ${workProducts.length} file(s)`], errors };
+}
+
+async function validateExperienceAssetRefs(projectRoot: string, relative: string, text: string): Promise<string[]> {
+  const errors: string[] = [];
+  const refs = new Set([...text.matchAll(EXPERIENCE_ASSET_REF)].map((match) => normalizeDocRef(match[0]).replace(/[.,;:]+$/, "")));
+  for (const ref of refs) {
+    if (!(await pathExists(path.join(projectRoot, ref)))) {
+      errors.push(`${relative} references missing UI/UX design material: ${ref}`);
+    }
+  }
+  return errors;
 }
 
 async function validateDesign(projectRoot: string): Promise<ValidatorReport> {
   const root = await harnessRoot(projectRoot);
   const lifecycle = await readYamlObject(path.join(projectRoot, root, "state", "lifecycle.yaml"));
   const plan = await validatePlanState(projectRoot, String(lifecycle.current_phase ?? "") !== "ARCHITECTING");
-  const architecture = await markdownFiles(path.join(projectRoot, ".docs/02_architecture"));
-  const techPlan = await markdownFiles(path.join(projectRoot, ".docs/03_tech_plan"));
-  const product = await markdownFiles(path.join(projectRoot, ".docs/01_product"));
-  const experience = await markdownFiles(path.join(projectRoot, ".docs/02_experience"));
+  const architecture = await markdownFiles(path.join(projectRoot, ".work_products/02_architecture"));
+  const techPlan = await markdownFiles(path.join(projectRoot, ".work_products/03_tech_plan"));
+  const product = await markdownFiles(path.join(projectRoot, ".work_products/01_product"));
+  const experience = await markdownFiles(path.join(projectRoot, ".work_products/02_experience"));
   const text = await combinedText([...architecture, ...techPlan]);
   const errors: string[] = [...plan.errors];
   if (architecture.length === 0) errors.push("No architecture deliverables found");
@@ -705,19 +718,19 @@ async function validateDesignDraft(
     if (!isDevelopmentDraft(rawTask)) continue;
 
     developmentTasks.push(rawTask);
-    if (!isRecord(rawTask.docs)) {
-      errors.push(`Draft task ${String(rawTask.id ?? "")} docs must be a mapping`);
+    if (!isRecord(rawTask.work_products)) {
+      errors.push(`Draft task ${String(rawTask.id ?? "")} work_products must be a mapping`);
       continue;
     }
-    const techRefs = asStringList(rawTask.docs.tech_plan);
+    const techRefs = asStringList(rawTask.work_products.tech_plan);
     if (techRefs.length === 0) {
-      errors.push(`Draft task ${String(rawTask.id ?? "")} must reference at least one tech plan slice in docs.tech_plan`);
+      errors.push(`Draft task ${String(rawTask.id ?? "")} must reference at least one tech plan slice in work_products.tech_plan`);
       continue;
     }
     const normalizedRefs = techRefs.map(normalizeDocRef);
     for (const ref of normalizedRefs) {
-      if (!ref.startsWith(".docs/03_tech_plan/")) {
-        errors.push(`Draft task ${String(rawTask.id ?? "")} docs.tech_plan must point into .docs/03_tech_plan/: ${ref}`);
+      if (!ref.startsWith(".work_products/03_tech_plan/")) {
+        errors.push(`Draft task ${String(rawTask.id ?? "")} work_products.tech_plan must point into .work_products/03_tech_plan/: ${ref}`);
       } else if (!availableTechPlans.has(ref)) {
         errors.push(`Draft task ${String(rawTask.id ?? "")} references missing or generated tech plan slice: ${ref}`);
       }
@@ -728,10 +741,10 @@ async function validateDesignDraft(
   }
 
   if (developmentTasks.length === 0) {
-    errors.push("plan.draft.yaml must contain at least one development task with implementation_doc");
+    errors.push("plan.draft.yaml must contain at least one development task with implementation_work_product");
   }
   if (developmentTasks.length > 1 && new Set(primaryRefs).size !== primaryRefs.length) {
-    errors.push("Draft development tasks must reference distinct primary tech plan slices in docs.tech_plan");
+    errors.push("Draft development tasks must reference distinct primary tech plan slices in work_products.tech_plan");
   }
   return { errors, tasks };
 }
@@ -742,23 +755,23 @@ async function validateUiuxDesignRefsForDraftTask(
   availableExperienceDocs: Set<string>
 ): Promise<string[]> {
   const errors: string[] = [];
-  if (!isRecord(task.docs)) return errors;
+  if (!isRecord(task.work_products)) return errors;
 
   const taskId = String(task.id ?? "");
-  const uiuxRefs = asStringList(task.docs.uiux).map(normalizeDocRef);
-  const designRefs = asStringList(task.docs.design_system).map(normalizeDocRef);
+  const uiuxRefs = asStringList(task.work_products.uiux).map(normalizeDocRef);
+  const designRefs = asStringList(task.work_products.design_system).map(normalizeDocRef);
   const uiTask = isUiDraftTask(task);
 
   if (uiTask && uiuxRefs.length === 0) {
-    errors.push(`UI/frontend draft task ${taskId} must reference a UI/UX slice in docs.uiux`);
+    errors.push(`UI/frontend draft task ${taskId} must reference a UI/UX slice in work_products.uiux`);
   }
   if (uiTask && designRefs.length === 0) {
-    errors.push(`UI/frontend draft task ${taskId} must reference DESIGN.md in docs.design_system`);
+    errors.push(`UI/frontend draft task ${taskId} must reference DESIGN.md in work_products.design_system`);
   }
 
   for (const ref of uiuxRefs) {
     if (!ref.startsWith(EXPERIENCE_DOC_PREFIX)) {
-      errors.push(`Draft task ${taskId} docs.uiux must point into .docs/02_experience/: ${ref}`);
+      errors.push(`Draft task ${taskId} work_products.uiux must point into .work_products/02_experience/: ${ref}`);
     } else if (!availableExperienceDocs.has(ref)) {
       errors.push(`Draft task ${taskId} references missing or generated UI/UX slice: ${ref}`);
     }
@@ -766,7 +779,7 @@ async function validateUiuxDesignRefsForDraftTask(
 
   for (const ref of designRefs) {
     if (ref !== DESIGN_SYSTEM_PATH) {
-      errors.push(`Draft task ${taskId} docs.design_system must point to DESIGN.md: ${ref}`);
+      errors.push(`Draft task ${taskId} work_products.design_system must point to DESIGN.md: ${ref}`);
     } else if (!(await pathExists(path.join(projectRoot, DESIGN_SYSTEM_PATH)))) {
       errors.push(`Draft task ${taskId} references missing design system: ${DESIGN_SYSTEM_PATH}`);
     }
@@ -776,8 +789,8 @@ async function validateUiuxDesignRefsForDraftTask(
 }
 
 function isUiDraftTask(task: Record<string, unknown>): boolean {
-  const docsText = isRecord(task.docs)
-    ? Object.values(task.docs)
+  const docsText = isRecord(task.work_products)
+    ? Object.values(task.work_products)
         .flatMap((value) => asStringList(value))
         .join("\n")
     : "";
@@ -809,18 +822,18 @@ function validateDraftTaskShape(task: Record<string, unknown>, index: number, er
   if (typeof task.summary !== "string" || !task.summary.trim()) {
     errors.push(`${String(task.id ?? prefix)} must define summary`);
   }
-  const hasImplementationDoc = typeof task.implementation_doc === "string" && task.implementation_doc.trim().length > 0;
-  const hasResultDocs = Array.isArray(task.result_docs) && task.result_docs.length > 0;
+  const hasImplementationDoc = typeof task.implementation_work_product === "string" && task.implementation_work_product.trim().length > 0;
+  const hasResultDocs = Array.isArray(task.result_work_products) && task.result_work_products.length > 0;
   if (!hasImplementationDoc && !hasResultDocs) {
-    errors.push(`${String(task.id ?? prefix)} must define implementation_doc or result_docs`);
+    errors.push(`${String(task.id ?? prefix)} must define implementation_work_product or result_work_products`);
   }
   errors.push(...testFactSourceErrorsForTask(task));
   if (OPEN_TASK_STATUSES.has(String(task.status))) {
     if ("gate_result" in task) errors.push(`${String(task.id ?? prefix)} open task must not define gate_result`);
-    for (const field of ["docs", "allowed_paths", "required_gates", "acceptance_criteria"]) {
+    for (const field of ["work_products", "allowed_paths", "required_gates", "acceptance_criteria"]) {
       if (!task[field]) errors.push(`${String(task.id ?? prefix)} open task missing field: ${field}`);
     }
-    if (!isRecord(task.docs)) errors.push(`${String(task.id ?? prefix)} docs must be a mapping`);
+    if (!isRecord(task.work_products)) errors.push(`${String(task.id ?? prefix)} work_products must be a mapping`);
     if (!Array.isArray(task.allowed_paths) || task.allowed_paths.length === 0) {
       errors.push(`${String(task.id ?? prefix)} must define allowed_paths`);
     }
@@ -832,7 +845,7 @@ function validateDraftTaskShape(task: Record<string, unknown>, index: number, er
     }
     errors.push(...validateRuntimeEvidenceContract(task));
   } else {
-    for (const field of ["docs", "allowed_paths", "required_gates", "acceptance_criteria", "working_notes", "gate_result", "result_docs"]) {
+    for (const field of ["work_products", "allowed_paths", "required_gates", "acceptance_criteria", "working_notes", "gate_result", "result_work_products"]) {
       if (field in task) errors.push(`${String(task.id ?? prefix)} closed task must not retain ${field}`);
     }
   }
@@ -913,8 +926,8 @@ function validateDevOpenTaskState(plan: Record<string, unknown>): string[] {
   if (String(currentTask.phase ?? "") !== "SPRINTING") {
     errors.push(`${currentTaskId} must have phase SPRINTING for validate-dev`);
   }
-  if (typeof currentTask.implementation_doc !== "string" || !currentTask.implementation_doc.trim()) {
-    errors.push(`${currentTaskId} must define implementation_doc for validate-dev`);
+  if (typeof currentTask.implementation_work_product !== "string" || !currentTask.implementation_work_product.trim()) {
+    errors.push(`${currentTaskId} must define implementation_work_product for validate-dev`);
   }
   return errors;
 }
@@ -940,7 +953,7 @@ async function validateDevDraftConsumed(projectRoot: string, root: string): Prom
 
 async function validateReview(projectRoot: string): Promise<ValidatorReport> {
   const plan = await validatePlanState(projectRoot, false);
-  const rawText = await readText(path.join(projectRoot, ".docs/06_review/REVIEW_REPORT.md"));
+  const rawText = await readText(path.join(projectRoot, ".work_products/06_review/REVIEW_REPORT.md"));
   const text = rawText.toLowerCase();
   const errors = [...plan.errors];
   if (!containsAny(text, ["finding", "发现", "风险"])) errors.push("Review report must include findings or risks");
@@ -986,7 +999,7 @@ async function validateRelease(projectRoot: string): Promise<ValidatorReport> {
   const report = await readReleaseReport(projectRoot);
   const text = report?.text ?? "";
   const errors = [...plan.errors];
-  if (!report) errors.push(`Missing current release report: expected ${CURRENT_RELEASE_REPORT_PATH} or legacy .docs/08_release/*.md`);
+  if (!report) errors.push(`Missing current release report: expected ${CURRENT_RELEASE_REPORT_PATH} or legacy .work_products/08_release/*.md`);
   if (!containsAny(text, ["release", "发布"])) errors.push("Current release report must include release notes");
   if (!containsAny(text, ["smoke", "冒烟"])) errors.push("Current release report must include smoke test evidence");
   if (!containsAny(text, ["rollback", "回滚"])) errors.push("Current release report must include rollback plan");
@@ -995,10 +1008,10 @@ async function validateRelease(projectRoot: string): Promise<ValidatorReport> {
 
 async function validateRfc(projectRoot: string): Promise<ValidatorReport> {
   const plan = await validatePlanState(projectRoot, false);
-  const docs = await markdownFiles(path.join(projectRoot, ".docs/rfc"));
-  const text = await combinedText(docs);
+  const workProducts = await markdownFiles(path.join(projectRoot, ".work_products/rfc"));
+  const text = await combinedText(workProducts);
   const errors = [...plan.errors];
-  if (docs.length === 0) errors.push("No RFC documents found");
+  if (workProducts.length === 0) errors.push("No RFC documents found");
   if (!containsAny(text, ["background", "背景"])) errors.push("RFC must include background");
   if (!containsAny(text, ["product impact", "产品影响"])) errors.push("RFC must include product impact");
   if (!containsAny(text, ["technical impact", "技术影响"])) errors.push("RFC must include technical impact candidates");
@@ -1006,24 +1019,24 @@ async function validateRfc(projectRoot: string): Promise<ValidatorReport> {
   if (!containsAny(text, ["test fact source impact", "测试事实源影响"])) {
     errors.push("RFC must include Test Fact Source Impact");
   }
-  const indexPath = path.join(projectRoot, ".docs/INDEX.md");
+  const indexPath = path.join(projectRoot, ".work_products/INDEX.md");
   const indexText = (await pathExists(indexPath)) ? await readText(indexPath) : "";
-  if (!indexText) errors.push("Missing .docs/INDEX.md for RFC test fact source validation");
-  for (const superseded of await supersededTestDocs(docs)) {
+  if (!indexText) errors.push("Missing .work_products/INDEX.md for RFC test fact source validation");
+  for (const superseded of await supersededTestDocs(workProducts)) {
     if (await pathExists(path.join(projectRoot, superseded))) {
       errors.push(`Superseded test doc still exists in current facts: ${superseded}`);
     }
     if (indexText.includes(superseded)) {
-      errors.push(`Superseded test doc still linked from .docs/INDEX.md: ${superseded}`);
+      errors.push(`Superseded test doc still linked from .work_products/INDEX.md: ${superseded}`);
     }
   }
   const statuses = [...text.matchAll(/^\s*-?\s*Status:\s*([A-Z_]+)/gim)].map((match) => match[1].toUpperCase());
   if (statuses.length === 0) errors.push("RFC must include a Status line");
   const invalidStatuses = statuses.filter((status) => !["DRAFT", "APPLIED", "VERIFIED", "ARCHIVED"].includes(status));
   if (invalidStatuses.length > 0) errors.push(`Invalid RFC status: ${invalidStatuses.join(", ")}`);
-  errors.push(...(await validateRfcSelfTestImpact(projectRoot, docs)));
-  errors.push(...(await validateRfcUiuxImpact(projectRoot, docs)));
-  return { info: [`validate-rfc checked ${docs.length} file(s)`], errors };
+  errors.push(...(await validateRfcSelfTestImpact(projectRoot, workProducts)));
+  errors.push(...(await validateRfcUiuxImpact(projectRoot, workProducts)));
+  return { info: [`validate-rfc checked ${workProducts.length} file(s)`], errors };
 }
 
 async function validateRfcSelfTestImpact(projectRoot: string, docs: string[]): Promise<string[]> {
@@ -1101,10 +1114,10 @@ async function validatePlanState(projectRoot: string, allowOpen: boolean): Promi
     if (!["pending", "in_progress", "done", "blocked", "pending_revision", "cancelled"].includes(String(task.status))) {
       errors.push(`${String(task.id ?? `Task #${index + 1}`)} has invalid status: ${String(task.status)}`);
     }
-    const hasImplementationDoc = typeof task.implementation_doc === "string" && task.implementation_doc.trim().length > 0;
-    const hasResultDocs = Array.isArray(task.result_docs) && task.result_docs.length > 0;
+    const hasImplementationDoc = typeof task.implementation_work_product === "string" && task.implementation_work_product.trim().length > 0;
+    const hasResultDocs = Array.isArray(task.result_work_products) && task.result_work_products.length > 0;
     if (!hasImplementationDoc && !hasResultDocs) {
-      errors.push(`${String(task.id ?? `Task #${index + 1}`)} must define implementation_doc or result_docs`);
+      errors.push(`${String(task.id ?? `Task #${index + 1}`)} must define implementation_work_product or result_work_products`);
     }
     const match = taskId.match(/^[A-Z]+-(\d+)$/);
     if (match) {
@@ -1115,11 +1128,11 @@ async function validatePlanState(projectRoot: string, allowOpen: boolean): Promi
       if ("gate_result" in task) {
         errors.push(`Open task ${task.id} must not define gate_result`);
       }
-      for (const field of ["docs", "allowed_paths", "required_gates", "acceptance_criteria"]) {
+      for (const field of ["work_products", "allowed_paths", "required_gates", "acceptance_criteria"]) {
         if (!task[field]) errors.push(`Open task ${task.id} missing ${field}`);
       }
-      if (!isRecord(task.docs)) {
-        errors.push(`${task.id} docs must be a mapping`);
+      if (!isRecord(task.work_products)) {
+        errors.push(`${task.id} work_products must be a mapping`);
       }
       if (!Array.isArray(task.allowed_paths) || task.allowed_paths.length === 0) {
         errors.push(`Open task ${task.id} must define allowed_paths`);
@@ -1135,7 +1148,7 @@ async function validatePlanState(projectRoot: string, allowOpen: boolean): Promi
       errors.push(...testingBoundaryErrorsForAllowedPaths(task));
     } else {
       errors.push(`Completed task ${task.id} must not remain in plan.yaml`);
-      for (const field of ["docs", "allowed_paths", "required_gates", "acceptance_criteria", "working_notes", "gate_result", "result_docs"]) {
+      for (const field of ["work_products", "allowed_paths", "required_gates", "acceptance_criteria", "working_notes", "gate_result", "result_work_products"]) {
         if (field in task) errors.push(`Closed task ${task.id} must not retain ${field}`);
       }
     }
@@ -1211,16 +1224,16 @@ async function validateResumeCapsule(projectRoot: string, plan: Record<string, u
     errors.push(`${taskId} resume_capsule.recovery_refs must link implementation doc and runbook/evidence documents`);
     return errors;
   }
-  const implementationDoc = String(currentTask.implementation_doc ?? "").trim();
+  const implementationDoc = String(currentTask.implementation_work_product ?? "").trim();
   if (implementationDoc && !refs.includes(implementationDoc)) {
-    errors.push(`${taskId} resume_capsule.recovery_refs must include current implementation_doc ${implementationDoc}`);
+    errors.push(`${taskId} resume_capsule.recovery_refs must include current implementation_work_product ${implementationDoc}`);
   }
   if (!refs.some((ref) => ref.startsWith(RUNBOOK_DOC_PREFIX))) {
     errors.push(`${taskId} resume_capsule.recovery_refs must include a runbook/evidence document under ${RUNBOOK_DOC_PREFIX}`);
   }
 
   for (const ref of refs) {
-    if (!ref.startsWith(".docs/04_implementation/") && !ref.startsWith(RUNBOOK_DOC_PREFIX)) {
+    if (!ref.startsWith(".work_products/04_implementation/") && !ref.startsWith(RUNBOOK_DOC_PREFIX)) {
       errors.push(`${taskId} resume_capsule.recovery_refs may only point to implementation docs or runbook/evidence docs: ${ref}`);
       continue;
     }
@@ -1618,7 +1631,7 @@ async function validateSelfTestContractTechPlanBinding(
   const source = normalizeDocRef(String(contract.source ?? ""));
   if (!source) return errors;
   if (!normalizedTechRefs.includes(source)) {
-    errors.push(`${taskId} self_test_contract.source must be listed in docs.tech_plan: ${source}`);
+    errors.push(`${taskId} self_test_contract.source must be listed in work_products.tech_plan: ${source}`);
     return errors;
   }
   const sourcePath = path.join(projectRoot, source);
@@ -1964,27 +1977,27 @@ async function readReleaseReport(projectRoot: string): Promise<{ text: string; s
   if (await pathExists(canonical)) {
     return { text: await readText(canonical), source: CURRENT_RELEASE_REPORT_PATH };
   }
-  const legacyDocs = await markdownFiles(path.join(projectRoot, ".docs/08_release"));
+  const legacyDocs = await markdownFiles(path.join(projectRoot, ".work_products/08_release"));
   if (legacyDocs.length > 0) {
-    return { text: await combinedText(legacyDocs), source: `legacy .docs/08_release/*.md (${legacyDocs.length} file(s))` };
+    return { text: await combinedText(legacyDocs), source: `legacy .work_products/08_release/*.md (${legacyDocs.length} file(s))` };
   }
   return undefined;
 }
 
 async function validateImplementationDocRunnableEntryExit(projectRoot: string): Promise<string[]> {
-  const docs = await markdownFiles(path.join(projectRoot, ".docs/04_implementation"));
+  const workProducts = await markdownFiles(path.join(projectRoot, ".work_products/04_implementation"));
   const errors: string[] = [];
-  const indexPath = path.join(projectRoot, ".docs/INDEX.md");
+  const indexPath = path.join(projectRoot, ".work_products/INDEX.md");
   const indexText = (await pathExists(indexPath)) ? await readText(indexPath) : "";
-  if (docs.length > 0 && !indexText) {
-    errors.push("Missing .docs/INDEX.md for implementation doc validation");
+  if (workProducts.length > 0 && !indexText) {
+    errors.push("Missing .work_products/INDEX.md for implementation doc validation");
   }
-  for (const doc of docs) {
+  for (const doc of workProducts) {
     const relative = repoRelative(projectRoot, doc);
     const dotted = relative.startsWith(".") ? relative : `.${relative}`;
-    const withoutDocsPrefix = dotted.replace(/^\.docs\//, "");
+    const withoutDocsPrefix = dotted.replace(/^\.work_products\//, "");
     if (indexText && !indexText.includes(dotted) && !indexText.includes(withoutDocsPrefix)) {
-      errors.push(`.docs/INDEX.md does not link implementation doc: ${dotted}`);
+      errors.push(`.work_products/INDEX.md does not link implementation doc: ${dotted}`);
     }
     const text = await readText(doc);
     if (!containsAny(text, RUNNABLE_ENTRY_EXIT_TERMS)) {
@@ -2000,11 +2013,11 @@ async function validateCurrentTaskDevelopmentEvidence(projectRoot: string, plan:
   const currentTask = currentOpenSprintTask(plan);
   if (!currentTask) return [];
   const taskId = String(currentTask.id ?? "");
-  const implementationDoc = String(currentTask.implementation_doc ?? "").trim();
+  const implementationDoc = String(currentTask.implementation_work_product ?? "").trim();
   if (!implementationDoc) return [];
   const docPath = path.join(projectRoot, implementationDoc);
   if (!(await pathExists(docPath))) {
-    return [`${taskId} implementation_doc is missing: ${implementationDoc}`];
+    return [`${taskId} implementation_work_product is missing: ${implementationDoc}`];
   }
   const text = await readText(docPath);
   return [
@@ -2025,7 +2038,7 @@ function validateDevelopmentEvidenceText(text: string, task: Record<string, unkn
   const taskId = String(task.id ?? "current task");
   const section = markdownSection(text, DEVELOPMENT_EVIDENCE_TERMS);
   if (!section) {
-    return [`${taskId} implementation_doc must include Development Evidence with Runnable Entry, Observable Exit, and Basic Self-test Evidence: ${implementationDoc}`];
+    return [`${taskId} implementation_work_product must include Development Evidence with Runnable Entry, Observable Exit, and Basic Self-test Evidence: ${implementationDoc}`];
   }
   if (hasJustifiedNotApplicableEvidence(section) && !hasConcreteDevelopmentEvidenceFields(section)) {
     const required = isRecord(task.evidence_level) ? String(task.evidence_level.required ?? "") : "";
@@ -2094,7 +2107,7 @@ function validateDevelopmentSelfTestReport(
 
   const report = markdownSection(fullText, DEVELOPMENT_SELF_TEST_REPORT_TERMS);
   if (!report) {
-    return [`${taskId} implementation_doc must include Development Self-Test Report for self_test_contract: ${implementationDoc}`];
+    return [`${taskId} implementation_work_product must include Development Self-Test Report for self_test_contract: ${implementationDoc}`];
   }
 
   const reportStatus = normalizeSelfTestReportStatus(evidenceFieldValue(report, "Report Status"));
@@ -2270,7 +2283,7 @@ function validateImplementationDocMainlineBoundary(fullText: string, taskId: str
     const title = match[2].trim().toLowerCase();
     const blockedTerm = IMPLEMENTATION_MAINLINE_DISALLOWED_SECTION_TERMS.find((term) => title.includes(term));
     if (blockedTerm) {
-      errors.push(`${taskId} implementation_doc must not keep ${blockedTerm} as a mainline section in ${implementationDoc}; move it to a runbook, evidence index, exploration appendix, or external artifact`);
+      errors.push(`${taskId} implementation_work_product must not keep ${blockedTerm} as a mainline section in ${implementationDoc}; move it to a runbook, evidence index, exploration appendix, or external artifact`);
     }
   }
   return errors;
@@ -2527,7 +2540,7 @@ function validateEvidenceLevelAgainstContract(section: string, fullText: string,
     if (targetRuntime.required_for_done === true && String(targetRuntime.handoff_entrypoint ?? "").trim()) {
       const entrypoint = String(targetRuntime.handoff_entrypoint).trim();
       if (!fullText.includes(entrypoint)) {
-        errors.push(`${taskId} implementation_doc must record handoff_entrypoint ${entrypoint} from target_runtime_environment in ${implementationDoc}`);
+        errors.push(`${taskId} implementation_work_product must record handoff_entrypoint ${entrypoint} from target_runtime_environment in ${implementationDoc}`);
       }
     }
   }
@@ -2543,7 +2556,7 @@ function validateTestingHandoffContract(text: string, task: Record<string, unkno
   const taskId = String(task.id ?? "current task");
   const section = markdownSection(text, TESTING_HANDOFF_TERMS);
   if (!section) {
-    return [`${taskId} required business_handoff_ready but implementation_doc is missing Testing Handoff Contract: ${implementationDoc}`];
+    return [`${taskId} required business_handoff_ready but implementation_work_product is missing Testing Handoff Contract: ${implementationDoc}`];
   }
   const lowered = section.toLowerCase();
   const requiredGroups: Array<[string, string[]]> = [
@@ -2693,7 +2706,7 @@ function planReferencesTestCases(plan: Record<string, unknown>): boolean {
   const tasks = Array.isArray(plan.tasks) ? plan.tasks : [];
   return tasks.some((task) => {
     if (!isRecord(task) || String(task.phase ?? "") !== "TESTING") return false;
-    return asStringList(task.result_docs).includes(TEST_CASES_PATH);
+    return asStringList(task.result_work_products).includes(TEST_CASES_PATH);
   });
 }
 
@@ -2887,14 +2900,14 @@ function testingBoundaryErrorsForChangedFiles(files: string[]): string[] {
 function testFactSourceErrorsForTask(task: Record<string, unknown>): string[] {
   const phase = String(task.phase ?? "");
   if (TEST_FACT_SOURCE_PHASES.has(phase)) return [];
-  const candidates = [...asStringList(task.allowed_paths), ...asStringList(task.result_docs)];
+  const candidates = [...asStringList(task.allowed_paths), ...asStringList(task.result_work_products)];
   const blocked = candidates.filter((candidate) => {
     const normalized = candidate.replace(/\\/g, "/");
-    return normalized.startsWith(".docs/07_test/") || matchesAny(normalized, TEST_FACT_SOURCE_PATTERNS);
+    return normalized.startsWith(".work_products/07_test/") || matchesAny(normalized, TEST_FACT_SOURCE_PATTERNS);
   });
   if (blocked.length === 0) return [];
   return [
-    `Only TESTING or RFC_RECALIBRATION tasks may target current test fact sources under .docs/07_test/**: ${blocked.join(", ")}`
+    `Only TESTING or RFC_RECALIBRATION tasks may target current test fact sources under .work_products/07_test/**: ${blocked.join(", ")}`
   ];
 }
 
@@ -2912,7 +2925,7 @@ async function supersededTestDocs(docs: string[]): Promise<string[]> {
       }
     }
   }
-  return [...refs].filter((ref) => ref.startsWith(".docs/07_test/"));
+  return [...refs].filter((ref) => ref.startsWith(".work_products/07_test/"));
 }
 
 function isTestingBoundaryAllowedPath(file: string): boolean {
@@ -2941,7 +2954,7 @@ function isTestingRuntimeBoundaryChange(file: string): boolean {
 
 function isDevelopmentDraft(task: Record<string, unknown>): boolean {
   const taskId = String(task.id ?? "");
-  return Boolean(task.implementation_doc) || task.phase === "SPRINTING" || taskId.startsWith("DEV-");
+  return Boolean(task.implementation_work_product) || task.phase === "SPRINTING" || taskId.startsWith("DEV-");
 }
 
 function asStringList(value: unknown): string[] {
@@ -2963,8 +2976,8 @@ function repoRelative(projectRoot: string, file: string): string {
 
 function taskText(task: Record<string, unknown>): string {
   const parts = ["id", "title", "summary", "phase"].map((key) => String(task[key] ?? "")).filter(Boolean);
-  if (isRecord(task.docs)) {
-    for (const value of Object.values(task.docs)) {
+  if (isRecord(task.work_products)) {
+    for (const value of Object.values(task.work_products)) {
       parts.push(...asStringList(value));
     }
   }

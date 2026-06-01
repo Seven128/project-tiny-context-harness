@@ -25,7 +25,7 @@ RUNTIME_MISMATCH_TERMS = [
 
 def main() -> None:
     validate_plan_contract(load_plan(), allow_open=False)
-    text = read_text(".docs/06_review/REVIEW_REPORT.md")
+    text = read_text(".work_products/06_review/REVIEW_REPORT.md")
     require(contains_any(text, ["finding", "发现", "风险"]), "Review report must include findings or risks")
     require(contains_any(text, ["test gap", "测试缺口", "coverage"]), "Review report must include test gaps or coverage notes")
     require(

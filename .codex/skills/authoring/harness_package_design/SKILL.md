@@ -24,7 +24,7 @@ tech plan 或 RFC 明确晋升路径，再进入通用 Skill、policy、template
 修改前先区分三类内容：
 
 - 通用 Harness 配置：应进入 `<harnessRoot>/skills/**`、`<harnessRoot>/pjsdlc_managed/**` 或 package assets。
-- 项目实例数据：只描述当前仓库状态和 `.docs/**` 产物，不应被 sync/upgrade 覆盖。
+- 项目实例数据：只描述当前仓库状态和 `.work_products/**` 产物，不应被 sync/upgrade 覆盖。
 - Harness authoring overlay：只约束本仓库维护 Harness 自身的原则、专用 Skill 和包化安全规则。
 
 修改工作流规则时，先回到 `PROJECT_SPEC.md` 的目的：降低遗漏、返工和上下文漂移，让 Agent 更稳定地完成阶段交付，而不是把 Agent 完全自动化或审计化。优先采用足够让 Agent 注意力对齐目标的轻量约束，例如角色提示词红线、完成检查、模板占位约束或局部内容校验。validator、脚本和执行器都可以使用；但如果校验逻辑会明显变重，只有在问题重复发生、高风险、或必须由机器证明时，才升级为复杂 validator、自动执行器、证据清单或审计机制。做归因时区分 Agent execution violation 和 Harness contract gap，避免把执行纪律问题全部升级成复杂机制。
@@ -69,7 +69,7 @@ Testing-ready、handoff/recovery-ready，而不是只比较首轮代码生成速
 当用户要求“全量测试 npm 包所有能力”“新开仓库验收工作流”“验证 README/package README
 所有特性”或等价意图时，使用 `tools/consumer_lab_full_test.mjs` 作为默认脚本入口。脚本应从
 当前源码打包安装到本地 consumer lab，覆盖 init/adopt、configurable root、sync、upgrade、
-doctor、managed assets、override、validators、task protocol、parallel contract、docs overview、
+doctor、managed assets、override、validators、task protocol、parallel contract、work products overview、
 transition、GitHub workflow static check 和 release automation static check。脚本报告必须区分
 `PASS`、`BLOCKED` 和 `FAIL`：已知产品能力缺口使用 `BLOCKED`，脚本错误或非预期行为使用
 `FAIL`。脚本默认在报告写出后删除 consumer lab 测试仓库；只有调试或需要本地 evidence commit/tag
@@ -87,7 +87,7 @@ task 中顺手修复所有缺陷。
 `record` 记录 `sync`、`upgrade`、`transition.py`、`validate-*`、overview/source drift 和 workflow
 orientation 等 `workflow_control` 成本。完成后用 `score` 生成对比结果；只有实际跑完同质量 baseline 和
 Harness 后，才把短摘要写入 `examples/delivery-benchmark/results/`。如果这是本仓库正式验证，再同步更新
-`.docs/07_test/TEST_REPORT.md` 并运行 `make docs-overview`；不要预填或美化结果数字。
+`.work_products/07_test/TEST_REPORT.md` 并运行 `make work-products-overview`；不要预填或美化结果数字。
 
 `README.md` 和 package README 是 npm package 的对外能力索引。新增、删除或改变对外 CLI command、
 configuration、workflow behavior、managed path、override mechanism、validator、migration、release
@@ -97,14 +97,14 @@ capabilities；不能只在 `PROJECT_SPEC.md`、implementation doc 或 release n
 `PROJECT_SPEC.md` 的定位是整个项目从零开始的产品/协议/架构设计思路说明，记录稳定目标、设计理由、
 概念模型和当前 canonical behavior。不要把版本迁移路径、升级操作步骤、某次 release 的兼容说明或
 临时恢复 SOP 放进 `PROJECT_SPEC.md`。用户可执行的迁移和升级说明放在 `README.md` 和
-`packages/sdlc-harness/README.md`；release-specific evidence 放在 `.docs/08_release/**`；实现事实和
+`packages/sdlc-harness/README.md`；release-specific evidence 放在 `.work_products/08_release/**`；实现事实和
 兼容性细节放在对应 implementation doc。若某次迁移暴露出长期设计约束，`PROJECT_SPEC.md` 只记录抽象后的
 稳定设计原则，不记录“从版本 A 升到版本 B”的操作说明。
 
 后续 workflow 变更前，先通过 `.codex/state/memory.md#Harness Design Decisions` 和
-`PROJECT_SPEC.md` 的 ADR index 找相关 `.docs/05_decisions/ADR_*.md`。如果改动涉及已有设计取舍，
+`PROJECT_SPEC.md` 的 ADR index 找相关 `.work_products/05_decisions/ADR_*.md`。如果改动涉及已有设计取舍，
 必须先读取相关 ADR，再决定是保持、补充、supersede 还是新增 ADR。新增重大设计理由、长期约束、
-备选方案或推翻条件时，优先写入 `.docs/05_decisions/` ADR，而不是继续加重 `PROJECT_SPEC.md`。
+备选方案或推翻条件时，优先写入 `.work_products/05_decisions/` ADR，而不是继续加重 `PROJECT_SPEC.md`。
 ADR 拆分或迁移必须保留 source trace：说明原 spec / README / implementation doc section、新 ADR path、
 关键约束是否保留、原文位置是否留下摘要和回链。`memory.md` 只新增一行摘要和 ADR 链接，不复制 ADR 正文。
 
@@ -115,9 +115,9 @@ ADR 拆分或迁移必须保留 source trace：说明原 spec / README / impleme
 - `AGENTS.md`
 - `README.md`
 - `PROJECT_SPEC.md`
-- `.docs/01_product/`
-- `.docs/03_tech_plan/`
-- `.docs/04_implementation/`
+- `.work_products/01_product/`
+- `.work_products/03_tech_plan/`
+- `.work_products/04_implementation/`
 - `packages/sdlc-harness/source-mappings.yaml`
 - `packages/sdlc-harness/assets/**`
 - `packages/sdlc-harness/src/**`
@@ -135,7 +135,7 @@ ADR 拆分或迁移必须保留 source trace：说明原 spec / README / impleme
 8. 每次改动或 RFC impact analysis 都要显式考虑 `PROJECT_SPEC.md` 和 `README.md` 是否需要同步更新；如果不需要，也说明原因。
 9. package 对外能力变化时，`README.md` 和 `packages/sdlc-harness/README.md` 必须覆盖完整 public capability list，包括入口命令、配置方式、sync/upgrade 行为、本地 override、validator 和发布/诊断能力。
 10. 每次新增或修改 CLI、sync、upgrade、migration、validator、managed assets、Makefile、workflow Skill、README、release automation 或 workflow behavior 时，都要显式检查 `tools/consumer_lab_full_test.mjs`、`tests/sdlc-harness/**` 和相关测试文档是否需要同步更新；如果不需要，在 implementation doc 或 task notes 说明理由。
-11. 完成 task 前，更新模块级 implementation doc，并刷新 `.docs/<stage>/overview.md`。
+11. 完成 task 前，更新模块级 implementation doc，并刷新 `.work_products/<stage>/overview.md`。
 12. 修改 workflow graph、phase graph、task graph 或类似数据结构时，必须保持轻量 declarative boundary：固定 source of truth、consumer、validator 和兼容路径，不保存执行历史或证据正文，不引入重型 graph engine，除非 PRD/RFC 已明确批准。
 13. 遇到 workflow 变更时，显式判断是否需要结构化：记录结构化的收益、成本、consumer、validator 和迁移影响；没有明确消费路径或收益不足时，不要把普通说明强行改成数据结构。
 14. `PROJECT_SPEC.md` 只记录从零理解项目设计所需的稳定事实和设计原则；版本迁移、升级步骤和用户操作方案必须写入 README / package README 或 release/implementation 文档。
@@ -156,9 +156,9 @@ ADR 拆分或迁移必须保留 source trace：说明原 spec / README / impleme
 - [ ] 如果存在用户迁移或升级说明，已放入 README / package README；`PROJECT_SPEC.md` 只保留稳定设计原则。
 - [ ] 如果修改了 graph / data-structure 类 workflow contract，已说明轻量设计理由、非重型图边界、consumer、validator、migration/compat path，并移除或兼容旧事实源。
 - [ ] 如果遇到可结构化的 workflow 变更，已权衡信息清晰度、Agent 注意力、validator/tool 消费收益与迁移/兼容/上下文成本，并说明为什么结构化或不结构化。
-- [ ] 如果改动涉及既有长期设计取舍，已读取相关 ADR；如果新增重大设计理由，已写入 `.docs/05_decisions/` 并在 `memory.md` / `PROJECT_SPEC.md` 留短索引。
+- [ ] 如果改动涉及既有长期设计取舍，已读取相关 ADR；如果新增重大设计理由，已写入 `.work_products/05_decisions/` 并在 `memory.md` / `PROJECT_SPEC.md` 留短索引。
 - [ ] 如果发现可脚本化动作，已提示用户或说明暂不脚本化的理由。
 - [ ] 如果改动影响 package public behavior 或 README capability，已运行或更新 `tools/consumer_lab_full_test.mjs`，并把测试脚本影响面纳入 RFC / task evidence。
 - [ ] 全量 consumer lab 发现的问题已总结为 defect candidates，并进入 RFC 或后续 `TASK-*` development task，而不是停留在零散日志中。
-- [ ] 模块级 implementation doc 和 `.docs/INDEX.md` 已按需更新。
+- [ ] 模块级 implementation doc 和 `.work_products/INDEX.md` 已按需更新。
 - [ ] `make validate-harness` 和当前 task required gates 已通过。

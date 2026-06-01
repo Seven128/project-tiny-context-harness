@@ -15,7 +15,7 @@ on:
         type: choice
         options:
           - validate-harness
-          - validate-doc-overviews
+          - validate-work-products-overviews
           - validate-current
           - validate-pm
           - validate-design

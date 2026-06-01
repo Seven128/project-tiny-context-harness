@@ -5,7 +5,7 @@ You are building this product with AI SDLC Harness.
 Rules:
 
 - Start from a fresh repo and run `npx sdlc-harness init`.
-- Follow lifecycle, `plan.yaml`, workflow skills, `.docs/**` facts, gates and transition rules.
+- Follow lifecycle, `plan.yaml`, workflow skills, `.work_products/**` facts, gates and transition rules.
 - Execute all phases needed for the scenario: requirements, UI/UX if applicable, architecture, development, review, testing, release readiness and RFC/bugfix/BLOCKED routes when triggered.
 - Keep the active task small. Do not leave completed tasks in `plan.yaml`.
 - Use the scenario Gate Profile to select the smallest necessary gates for the current boundary.

@@ -4,10 +4,10 @@ import { defaultConfig, readConfig } from "./config.js";
 import { ensureDir, listFiles, pathExists, readText, writeTextIfChanged } from "./fs.js";
 import { harnessConfigPath, harnessPath, harnessRoot } from "./harness-root.js";
 import type { ManagedFile } from "./types.js";
-import { syncDocsIndexMaintenanceSection, syncMemoryGuidanceSection } from "./user-owned-sections.js";
+import { syncMemoryGuidanceSection, syncWorkProductsIndexMaintenanceSection } from "./user-owned-sections.js";
 import { parseYaml, stringifyYaml } from "./yaml.js";
 
-export const CURRENT_SCHEMA_VERSION = "1";
+export const CURRENT_SCHEMA_VERSION = "2";
 
 export interface Migration {
   from: string;
@@ -38,10 +38,12 @@ export async function runMigrations(projectRoot: string): Promise<MigrationRepor
   const report: MigrationReport = { changed: [], skipped: [] };
   const root = await harnessRoot(projectRoot);
   await migrateConfig(projectRoot, root, report);
+  await migrateWorkProductsRoot(projectRoot, report);
   await migrateLegacyManagedPaths(projectRoot, root, report);
   await migrateLifecycle(projectRoot, root, report);
   await migratePlan(projectRoot, root, report, "plan.yaml", "tasks.yaml", { activePlan: true });
   await migratePlan(projectRoot, root, report, "plan.draft.yaml", "tasks.draft.yaml", { activePlan: false });
+  await rewriteWorkflowReferences(projectRoot, root, report);
   await removeLegacyGateResults(projectRoot, root, report);
   await removeLegacyCheckpoints(projectRoot, root, report);
   await ensureUserOwnedGuidanceSections(projectRoot, root, report);
@@ -62,11 +64,101 @@ async function migrateConfig(projectRoot: string, root: string, report: Migratio
   delete (config.core as Record<string, unknown>).version;
   config.managed_files = migrateManagedFiles(config.managed_files, root);
   config.local_overrides = config.local_overrides.map((item) => migrateLocalOverride(item, root));
+  config.never_overwrite = config.never_overwrite.map(rewriteWorkflowReferenceText);
   if (await writeTextIfChanged(configPath, stringifyYaml(config))) {
     report.changed.push(relativeConfigPath);
   } else {
     report.skipped.push(relativeConfigPath);
   }
+}
+
+async function migrateWorkProductsRoot(projectRoot: string, report: MigrationReport): Promise<void> {
+  const legacyPath = path.join(projectRoot, ".docs");
+  const nextPath = path.join(projectRoot, ".work_products");
+  const hasLegacy = await pathExists(legacyPath);
+  if (!hasLegacy) {
+    report.skipped.push(".docs -> .work_products");
+    return;
+  }
+
+  if (await pathExists(nextPath)) {
+    if (await hasUserWorkProducts(legacyPath)) {
+      throw new Error(
+        "Both .docs and .work_products exist and .docs contains user content. Merge them manually, remove .docs, then rerun upgrade."
+      );
+    }
+    await rm(legacyPath, { recursive: true, force: true });
+    report.changed.push("removed empty .docs");
+    return;
+  }
+
+  await rename(legacyPath, nextPath);
+  report.changed.push(".docs -> .work_products");
+}
+
+async function hasUserWorkProducts(rootPath: string): Promise<boolean> {
+  for (const file of await listFiles(rootPath)) {
+    if (path.basename(file) !== ".gitkeep") {
+      return true;
+    }
+    if ((await readText(file)).trim()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+async function rewriteWorkflowReferences(projectRoot: string, root: string, report: MigrationReport): Promise<void> {
+  const candidates = [
+    harnessPath(root, "state", "plan.yaml"),
+    harnessPath(root, "state", "plan.draft.yaml"),
+    harnessPath(root, "state", "memory.md"),
+    ".work_products"
+  ];
+
+  for (const relative of candidates) {
+    const absolute = path.join(projectRoot, relative);
+    if (!(await pathExists(absolute))) {
+      report.skipped.push(relative);
+      continue;
+    }
+    const files = (await isDirectory(absolute))
+      ? (await listFiles(absolute)).filter((file) => /\.(md|ya?ml|json)$/i.test(file))
+      : [absolute];
+    for (const file of files) {
+      const existing = await readText(file);
+      const next = rewriteWorkflowReferenceText(existing);
+      if (next === existing) {
+        continue;
+      }
+      await writeTextIfChanged(file, next);
+      report.changed.push(path.relative(projectRoot, file));
+    }
+  }
+}
+
+async function isDirectory(absolutePath: string): Promise<boolean> {
+  try {
+    const { stat } = await import("node:fs/promises");
+    return (await stat(absolutePath)).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+function rewriteWorkflowReferenceText(value: string): string {
+  return value
+    .replaceAll(".docs", ".work_products")
+    .replaceAll("docs-overview", "work-products-overview")
+    .replaceAll("validate-doc-overviews", "validate-work-products-overviews")
+    .replaceAll("build_doc_overviews", "build_work_product_overviews")
+    .replace(/\bresult_docs\b/g, "result_work_products")
+    .replace(/\bimplementation_doc\b/g, "implementation_work_product")
+    .replace(/\bdocs\./g, "work_products.")
+    .replace(/(^|\n)(\s*)docs:/g, "$1$2work_products:")
+    .replace(/"docs"\s*:/g, '"work_products":')
+    .replace(/"result_docs"\s*:/g, '"result_work_products":')
+    .replace(/"implementation_doc"\s*:/g, '"implementation_work_product":');
 }
 
 async function migrateLegacyManagedPaths(projectRoot: string, root: string, report: MigrationReport): Promise<void> {
@@ -433,5 +525,5 @@ async function removeLegacyGateResults(projectRoot: string, root: string, report
 
 async function ensureUserOwnedGuidanceSections(projectRoot: string, root: string, report: MigrationReport): Promise<void> {
   await syncMemoryGuidanceSection(projectRoot, root, report);
-  await syncDocsIndexMaintenanceSection(projectRoot, report);
+  await syncWorkProductsIndexMaintenanceSection(projectRoot, report);
 }

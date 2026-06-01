@@ -11,6 +11,7 @@ const BENCHMARK_ROOT = path.resolve(HERE, "..");
 const SCENARIOS_ROOT = path.join(BENCHMARK_ROOT, "scenarios");
 const PROMPTS_ROOT = path.join(BENCHMARK_ROOT, "prompts");
 const VALID_MODES = new Set(["baseline", "harness"]);
+const VALID_STAGES = new Set(["recovery", "rfc", "debug"]);
 const OBSERVER_IGNORED_DIRS = new Set([".benchmark", ".git", "node_modules", "dist", "build", "coverage"]);
 const OBSERVER_STATE_FILE = "observer-state.json";
 const OBSERVER_STOP_FILE = "observer-stop.json";
@@ -44,6 +45,8 @@ export function parseArgs(argv) {
       options.scenario = requireValue(rest, ++index, arg);
     } else if (arg === "--mode") {
       options.mode = requireValue(rest, ++index, arg);
+    } else if (arg === "--stage") {
+      options.stage = requireValue(rest, ++index, arg);
     } else if (arg === "--out-dir") {
       options.outDir = requireValue(rest, ++index, arg);
     } else if (arg === "--run-dir") {
@@ -120,6 +123,7 @@ export async function loadScenario(id, scenariosRoot = SCENARIOS_ROOT) {
     acceptance: await readOptional(path.join(scenarioDir, "acceptance_criteria.md")),
     rfc: await readOptional(path.join(scenarioDir, "rfc_change.md")),
     recovery: await readOptional(path.join(scenarioDir, "recovery_checkpoint.md")),
+    debugFix: await readOptional(path.join(scenarioDir, "debug_fix.md")),
     lifecycleProbe: await readOptional(path.join(scenarioDir, "lifecycle_probe.md")),
     gateProfile: await readOptional(path.join(scenarioDir, "gate_profile.md"))
   };
@@ -158,10 +162,17 @@ export async function prepareRunDirectory(options) {
     "utf8"
   );
   await writeFile(path.join(outDir, "README.md"), renderRunReadme(scenario, mode), "utf8");
-  await writeFile(path.join(outDir, ".benchmark", "scenario.md"), renderScenarioBundle(scenario), "utf8");
+  await writeFile(path.join(outDir, ".benchmark", "scenario.md"), renderInitialScenarioBundle(scenario), "utf8");
   await writeFile(path.join(outDir, ".benchmark", "prompt.md"), await renderPrompt(scenario, mode), "utf8");
   await writeFile(path.join(outDir, ".benchmark", "events.ndjson"), "", "utf8");
   return { outDir, scenario: scenario.id, mode };
+}
+
+export async function renderStagePrompt(options) {
+  const mode = requireMode(options.mode);
+  const stage = requireStage(options.stage);
+  const scenario = await loadScenario(options.scenario);
+  return renderStagePromptContent(scenario, mode, stage);
 }
 
 export async function recordEvent(options) {
@@ -757,12 +768,14 @@ function summarizeSections(sections) {
 
 async function renderPrompt(scenario, mode) {
   const common = await readFile(path.join(PROMPTS_ROOT, `${mode}.md`), "utf8");
-  return [common.trim(), "", renderScenarioBundle(scenario)].join("\n");
+  return [common.trim(), "", renderInitialScenarioBundle(scenario)].join("\n");
 }
 
-function renderScenarioBundle(scenario) {
+function renderInitialScenarioBundle(scenario) {
   const sections = [
     `# Scenario: ${scenario.id}`,
+    "",
+    "This initial prompt intentionally includes only the base delivery contract. Later recovery, change and repair materials are injected by the benchmark operator at their measured stage.",
     "",
     "## Requirements",
     "",
@@ -770,23 +783,59 @@ function renderScenarioBundle(scenario) {
     "",
     "## Acceptance Criteria",
     "",
-    scenario.acceptance.trim(),
-    "",
-    "## Midstream Change",
-    "",
-    scenario.rfc.trim(),
-    "",
-    "## Recovery Checkpoint",
-    "",
-    scenario.recovery.trim()
+    scenario.acceptance.trim()
   ];
-  if (scenario.lifecycleProbe.trim()) {
-    sections.push("", "## Lifecycle Probe", "", scenario.lifecycleProbe.trim());
-  }
   if (scenario.gateProfile.trim()) {
     sections.push("", "## Gate Profile", "", scenario.gateProfile.trim());
   }
   return sections.join("\n");
+}
+
+function renderStagePromptContent(scenario, mode, stage) {
+  const modeRule =
+    mode === "baseline"
+      ? "Baseline mode: do not use Harness lifecycle files, workflow skills or validators."
+      : "Harness mode: follow the Harness lifecycle, task contracts, docs facts and relevant gates for this stage.";
+  const sections = [
+    `# Delivery Benchmark Stage Prompt: ${scenario.id} (${mode}/${stage})`,
+    "",
+    "You are continuing the same benchmark scenario in a fresh measured context.",
+    "Use only this run directory's source, tests, README/docs and mode-appropriate durable deliverables.",
+    "Do not inspect another mode's artifacts, raw benchmark observer logs or earlier chat history.",
+    modeRule
+  ];
+  if (stage === "recovery") {
+    sections.push(
+      "",
+      "## Stage: RECOVERY",
+      "",
+      "Inspect the current repository and answer the checkpoint. Do not make source changes until the operator starts the next measured stage.",
+      "",
+      scenario.recovery.trim()
+    );
+  } else if (stage === "rfc") {
+    sections.push(
+      "",
+      "## Stage: RFC",
+      "",
+      "Apply the staged change request to the current implementation. Update code, tests and docs needed for the same final quality bar.",
+      "",
+      scenario.rfc.trim()
+    );
+  } else {
+    sections.push(
+      "",
+      "## Stage: DEBUG",
+      "",
+      "Diagnose and fix the staged repair condition without losing the latest repository context. Add regression coverage for the fixed boundary.",
+      "",
+      scenario.debugFix.trim()
+    );
+  }
+  if (scenario.gateProfile.trim()) {
+    sections.push("", "## Gate Profile", "", scenario.gateProfile.trim());
+  }
+  return `${sections.join("\n")}\n`;
 }
 
 function renderRunReadme(scenario, mode) {
@@ -847,6 +896,13 @@ function requireMode(mode) {
     throw new Error("--mode must be baseline or harness");
   }
   return mode;
+}
+
+function requireStage(stage) {
+  if (!VALID_STAGES.has(stage)) {
+    throw new Error("--stage must be recovery, rfc or debug");
+  }
+  return stage;
 }
 
 function parseNonNegativeNumber(value, flag) {
@@ -1050,6 +1106,8 @@ async function main(argv = process.argv.slice(2)) {
     console.log((await listScenarios()).join("\n"));
   } else if (options.command === "prepare") {
     console.log(JSON.stringify(await prepareRunDirectory(options), null, 2));
+  } else if (options.command === "stage-prompt") {
+    process.stdout.write(await renderStagePrompt(options));
   } else if (options.command === "record") {
     console.log(JSON.stringify(await recordEvent(options), null, 2));
   } else if (options.command === "timer-start") {
@@ -1088,6 +1146,7 @@ function printHelp() {
 Commands:
   list
   prepare --scenario <id> --mode <baseline|harness> --out-dir <dir> [--force]
+  stage-prompt --scenario <id> --mode <baseline|harness> --stage <recovery|rfc|debug>
   record --run-dir <dir> --event <name> [--kind workflow_control|requirements|design|coding|test|review|release|rework|handoff] [--minutes <n>] [--tokens <n>] [--notes <text>]
   observe-start --run-dir <dir> [--interval-ms <n>]
   observe-stop --run-dir <dir>

@@ -43,7 +43,7 @@ UI_DRAFT_TASK_TERMS = [
     "component",
     "visual_ui",
     "design.md",
-    ".docs/02_experience/",
+    ".work_products/02_experience/",
     "页面",
     "前端",
     "屏幕",
@@ -58,12 +58,12 @@ def main() -> None:
     plan = load_plan()
     validate_plan_contract(plan, allow_open=lifecycle.get("current_phase") != "ARCHITECTING")
 
-    architecture_docs = markdown_deliverables(".docs/02_architecture")
-    tech_plan_docs = markdown_deliverables(".docs/03_tech_plan")
-    product_docs = markdown_deliverables(".docs/01_product")
-    experience_docs = markdown_deliverables(".docs/02_experience")
-    require(architecture_docs, "No architecture deliverables found in .docs/02_architecture/")
-    require(tech_plan_docs, "No technical plan deliverables found in .docs/03_tech_plan/")
+    architecture_docs = markdown_deliverables(".work_products/02_architecture")
+    tech_plan_docs = markdown_deliverables(".work_products/03_tech_plan")
+    product_docs = markdown_deliverables(".work_products/01_product")
+    experience_docs = markdown_deliverables(".work_products/02_experience")
+    require(architecture_docs, "No architecture deliverables found in .work_products/02_architecture/")
+    require(tech_plan_docs, "No technical plan deliverables found in .work_products/03_tech_plan/")
 
     text = combined_text(architecture_docs + tech_plan_docs)
     require(contains_any(text, ["prd", "requirement", "需求"]), "Design must cite product requirements")
@@ -92,54 +92,54 @@ def validate_draft_task_tech_plan_refs(tech_plan_docs: list, experience_docs: li
         if not is_development_draft(task):
             continue
         development_tasks.append(task)
-        docs = task.get("docs")
-        require(isinstance(docs, dict), f"Draft task {task.get('id')} docs must be a mapping")
-        tech_refs = as_list(docs.get("tech_plan"))
-        require(tech_refs, f"Draft task {task.get('id')} must reference at least one tech plan slice in docs.tech_plan")
+        work_products = task.get("work_products")
+        require(isinstance(work_products, dict), f"Draft task {task.get('id')} work_products must be a mapping")
+        tech_refs = as_list(work_products.get("tech_plan"))
+        require(tech_refs, f"Draft task {task.get('id')} must reference at least one tech plan slice in work_products.tech_plan")
         normalized_refs = [normalize_doc_ref(ref) for ref in tech_refs]
         for ref in normalized_refs:
-            require(ref.startswith(".docs/03_tech_plan/"), f"Draft task {task.get('id')} docs.tech_plan must point into .docs/03_tech_plan/: {ref}")
+            require(ref.startswith(".work_products/03_tech_plan/"), f"Draft task {task.get('id')} work_products.tech_plan must point into .work_products/03_tech_plan/: {ref}")
             require(ref in available_tech_plans, f"Draft task {task.get('id')} references missing or generated tech plan slice: {ref}")
         validate_uiux_design_refs_for_draft_task(task, available_experience_docs)
         validate_self_test_contract_tech_plan_binding(task, normalized_refs)
         primary_refs.append(normalized_refs[0])
 
-    require(development_tasks, "plan.draft.yaml must contain at least one development task with implementation_doc")
+    require(development_tasks, "plan.draft.yaml must contain at least one development task with implementation_work_product")
     if len(development_tasks) > 1:
         require(
             len(set(primary_refs)) == len(primary_refs),
-            "Draft development tasks must reference distinct primary tech plan slices in docs.tech_plan",
+            "Draft development tasks must reference distinct primary tech plan slices in work_products.tech_plan",
         )
     return tasks
 
 
 def validate_uiux_design_refs_for_draft_task(task: dict, available_experience_docs: set[str]) -> None:
-    docs = task.get("docs")
-    if not isinstance(docs, dict):
+    work_products = task.get("work_products")
+    if not isinstance(work_products, dict):
         return
     task_id = task.get("id")
-    uiux_refs = [normalize_doc_ref(ref) for ref in as_list(docs.get("uiux"))]
-    design_refs = [normalize_doc_ref(ref) for ref in as_list(docs.get("design_system"))]
+    uiux_refs = [normalize_doc_ref(ref) for ref in as_list(work_products.get("uiux"))]
+    design_refs = [normalize_doc_ref(ref) for ref in as_list(work_products.get("design_system"))]
     ui_task = is_ui_draft_task(task)
 
     if ui_task:
-        require(uiux_refs, f"UI/frontend draft task {task_id} must reference a UI/UX slice in docs.uiux")
-        require(design_refs, f"UI/frontend draft task {task_id} must reference DESIGN.md in docs.design_system")
+        require(uiux_refs, f"UI/frontend draft task {task_id} must reference a UI/UX slice in work_products.uiux")
+        require(design_refs, f"UI/frontend draft task {task_id} must reference DESIGN.md in work_products.design_system")
 
     for ref in uiux_refs:
-        require(ref.startswith(".docs/02_experience/"), f"Draft task {task_id} docs.uiux must point into .docs/02_experience/: {ref}")
+        require(ref.startswith(".work_products/02_experience/"), f"Draft task {task_id} work_products.uiux must point into .work_products/02_experience/: {ref}")
         require(ref in available_experience_docs, f"Draft task {task_id} references missing or generated UI/UX slice: {ref}")
 
     for ref in design_refs:
-        require(ref == "DESIGN.md", f"Draft task {task_id} docs.design_system must point to DESIGN.md: {ref}")
+        require(ref == "DESIGN.md", f"Draft task {task_id} work_products.design_system must point to DESIGN.md: {ref}")
         require(repo_path("DESIGN.md").exists(), f"Draft task {task_id} references missing design system: DESIGN.md")
 
 
 def is_ui_draft_task(task: dict) -> bool:
-    docs = task.get("docs")
+    work_products = task.get("work_products")
     docs_text = ""
-    if isinstance(docs, dict):
-        docs_text = "\n".join(ref for value in docs.values() for ref in as_list(value))
+    if isinstance(work_products, dict):
+        docs_text = "\n".join(ref for value in work_products.values() for ref in as_list(value))
     runtime_text = "\n".join(str(task.get(key) or "") for key in ["target_runtime_environment", "self_test_contract"])
     text = "\n".join(str(task.get(key) or "") for key in ["id", "title", "summary", "phase"]) + "\n" + docs_text + "\n" + runtime_text
     return contains_any(text, UI_DRAFT_TASK_TERMS)
@@ -171,7 +171,7 @@ def validate_self_test_contract_tech_plan_binding(task: dict, normalized_tech_re
         return
     source = normalize_doc_ref(str(contract.get("source") or ""))
     task_id = task.get("id")
-    require(source in normalized_tech_refs, f"Draft task {task_id} self_test_contract.source must be listed in docs.tech_plan: {source}")
+    require(source in normalized_tech_refs, f"Draft task {task_id} self_test_contract.source must be listed in work_products.tech_plan: {source}")
     source_path = repo_path(source)
     if not source_path.exists():
         return
@@ -221,7 +221,7 @@ def markdown_section(text: str, header_terms: list[str]) -> str:
 
 def is_development_draft(task: dict) -> bool:
     task_id = str(task.get("id") or "")
-    return bool(task.get("implementation_doc")) or task.get("phase") == "SPRINTING" or task_id.startswith("DEV-")
+    return bool(task.get("implementation_work_product")) or task.get("phase") == "SPRINTING" or task_id.startswith("DEV-")
 
 
 def as_list(value) -> list[str]:
@@ -246,9 +246,9 @@ def task_text(task: dict) -> str:
     for key in ["id", "title", "summary", "phase"]:
         if task.get(key):
             parts.append(str(task[key]))
-    docs = task.get("docs")
-    if isinstance(docs, dict):
-        for value in docs.values():
+    work_products = task.get("work_products")
+    if isinstance(work_products, dict):
+        for value in work_products.values():
             parts.extend(as_list(value))
     return "\n".join(parts)
 

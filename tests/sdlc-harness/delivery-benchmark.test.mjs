@@ -12,6 +12,7 @@ import {
   prepareRunDirectory,
   recordEvent,
   renderMarkdownReport,
+  renderStagePrompt,
   scoreRun,
   startObserver,
   startTimer,
@@ -95,18 +96,23 @@ try {
   assert.match(runbook, /Formal Result Invalidation Rules/);
   assert.match(runbook, /protocol calibration only/);
   assert.match(runbook, /fresh independent agent\/thread/);
+  assert.match(runbook, /Staged Injection/i);
+  assert.match(runbook, /stage-prompt/);
+  assert.match(runbook, /future probe leakage|future materials|later materials/i);
   const benchmarkReadme = await readFile(path.join(repoRoot, "examples", "delivery-benchmark", "README.md"), "utf8");
   assert.match(benchmarkReadme, /Design Rationale/);
   assert.match(benchmarkReadme, /High-Signal, Not Hacked/);
   assert.match(benchmarkReadme, /not a\s+license to distort results/);
   assert.match(benchmarkReadme, /clean independent run/);
+  assert.match(benchmarkReadme, /staged injection/i);
+  assert.match(benchmarkReadme, /stage-prompt/);
   assert.match(benchmarkReadme, /ADR 008: Delivery Benchmark Scenario Design/);
   assert.match(benchmarkReadme, /same-quality delivery efficiency/);
   assert.match(benchmarkReadme, /Gate Profile and Fast Path/);
   assert.match(benchmarkReadme, /Gate Cost Breakdown/);
   assert.match(benchmarkReadme, /package checks/);
   const benchmarkDesignAdr = await readFile(
-    path.join(repoRoot, ".docs", "05_decisions", "ADR_008_delivery_benchmark_scenario_design.md"),
+    path.join(repoRoot, ".work_products", "05_decisions", "ADR_008_delivery_benchmark_scenario_design.md"),
     "utf8"
   );
   assert.match(benchmarkDesignAdr, /same-quality/);
@@ -122,6 +128,8 @@ try {
   assert.match(benchmarkDesignAdr, /high-signal/);
   assert.match(benchmarkDesignAdr, /不是 hack 结果/);
   assert.match(benchmarkDesignAdr, /不能.*选择性发布有利数字/);
+  assert.match(benchmarkDesignAdr, /staged injection/i);
+  assert.match(benchmarkDesignAdr, /不能.*提前.*暴露/);
 
   for (const scenarioId of pendingLifecycleScenarios) {
     const lifecycleProbe = await readFile(
@@ -133,6 +141,24 @@ try {
     assert.match(lifecycleProbe, /RFC/);
     assert.match(lifecycleProbe, /DEBUG/);
     assert.match(lifecycleProbe, /Wrong-Path Count/);
+    const recoveryCheckpoint = await readFile(
+      path.join(repoRoot, "examples", "delivery-benchmark", "scenarios", scenarioId, "recovery_checkpoint.md"),
+      "utf8"
+    );
+    const rfcChange = await readFile(
+      path.join(repoRoot, "examples", "delivery-benchmark", "scenarios", scenarioId, "rfc_change.md"),
+      "utf8"
+    );
+    const debugFix = await readFile(
+      path.join(repoRoot, "examples", "delivery-benchmark", "scenarios", scenarioId, "debug_fix.md"),
+      "utf8"
+    );
+    assert.match(recoveryCheckpoint, /fresh agent|fresh Agent|fresh-agent/i);
+    assert.match(rfcChange, /RFC 1/);
+    assert.match(rfcChange, /RFC 2/);
+    assert.doesNotMatch(rfcChange, /^## Debug Fix/m);
+    assert.match(debugFix, /Debug Fix/);
+    assert.match(debugFix, /regression coverage|regression/i);
     const gateProfile = await readFile(
       path.join(repoRoot, "examples", "delivery-benchmark", "scenarios", scenarioId, "gate_profile.md"),
       "utf8"
@@ -162,14 +188,19 @@ try {
   });
   const lifecyclePrompt = await readFile(path.join(lifecycleRunDir, ".benchmark", "prompt.md"), "utf8");
   const lifecycleScenarioBundle = await readFile(path.join(lifecycleRunDir, ".benchmark", "scenario.md"), "utf8");
-  assert.match(lifecyclePrompt, /Lifecycle Probe/);
   assert.match(lifecyclePrompt, /Gate Profile/);
   assert.match(lifecycleScenarioBundle, /Gate Profile/);
   assert.match(lifecyclePrompt, /Domain Focused Gates/);
-  assert.match(lifecyclePrompt, /Fresh-Agent Recovery Probe/);
-  assert.match(lifecyclePrompt, /RFC Cascade/);
-  assert.match(lifecyclePrompt, /Debug Fix/);
-  assert.match(lifecyclePrompt, /Wrong-Path Count/);
+  assert.match(lifecyclePrompt, /base delivery contract/);
+  assert.doesNotMatch(lifecyclePrompt, /Fresh-Agent Recovery Probe/);
+  assert.doesNotMatch(lifecyclePrompt, /RFC Cascade/);
+  assert.doesNotMatch(lifecyclePrompt, /Debug Fix/);
+  assert.doesNotMatch(lifecyclePrompt, /Wrong-Path Count/);
+  assert.doesNotMatch(lifecyclePrompt, /impactLevel/);
+  assert.doesNotMatch(lifecyclePrompt, /provider\.incident\.opened/);
+  assert.doesNotMatch(lifecycleScenarioBundle, /Fresh-Agent Recovery Probe/);
+  assert.doesNotMatch(lifecycleScenarioBundle, /RFC Cascade/);
+  assert.doesNotMatch(lifecycleScenarioBundle, /Debug Fix/);
   const baselineLifecycleRunDir = path.join(root, "context-recovery-baseline-run");
   await prepareRunDirectory({
     scenario: "project-context-recovery-lab",
@@ -181,6 +212,35 @@ try {
   assert.match(baselineLifecyclePrompt, /Gate Profile/);
   assert.match(baselineLifecyclePrompt, /Baseline mode does not run Harness validators/);
   assert.doesNotMatch(baselineLifecyclePrompt, /must run .*validate-/i);
+  const recoveryStagePrompt = await renderStagePrompt({
+    scenario: "project-context-recovery-lab",
+    mode: "harness",
+    stage: "recovery"
+  });
+  assert.match(recoveryStagePrompt, /Stage: RECOVERY/);
+  assert.match(recoveryStagePrompt, /Incident Ops Console Recovery Checkpoint/);
+  assert.match(recoveryStagePrompt, /Next safe action/);
+  assert.doesNotMatch(recoveryStagePrompt, /RFC 1/);
+  assert.doesNotMatch(recoveryStagePrompt, /Debug Fix/);
+  assert.doesNotMatch(recoveryStagePrompt, /Wrong-Path Count/);
+  const rfcStagePrompt = await renderStagePrompt({
+    scenario: "project-context-recovery-lab",
+    mode: "harness",
+    stage: "rfc"
+  });
+  assert.match(rfcStagePrompt, /Stage: RFC/);
+  assert.match(rfcStagePrompt, /Incident Ops Console RFC Cascade/);
+  assert.match(rfcStagePrompt, /impactLevel/);
+  assert.match(rfcStagePrompt, /provider\.incident\.opened/);
+  assert.doesNotMatch(rfcStagePrompt, /^## Debug Fix/m);
+  const debugStagePrompt = await renderStagePrompt({
+    scenario: "project-context-recovery-lab",
+    mode: "harness",
+    stage: "debug"
+  });
+  assert.match(debugStagePrompt, /Stage: DEBUG/);
+  assert.match(debugStagePrompt, /Incident Ops Console Debug Fix/);
+  assert.match(debugStagePrompt, /old provider event names/);
   for (const scenarioId of ["support-triage-board", "webhook-provider-bridge"]) {
     const promptRunDir = path.join(root, `${scenarioId}-prompt-run`);
     await prepareRunDirectory({
@@ -190,12 +250,15 @@ try {
       force: true
     });
     const scenarioPrompt = await readFile(path.join(promptRunDir, ".benchmark", "prompt.md"), "utf8");
-    assert.match(scenarioPrompt, /Lifecycle Probe/);
     assert.match(scenarioPrompt, /Gate Profile/);
-    assert.match(scenarioPrompt, /Fresh-Agent Recovery Probe/);
-    assert.match(scenarioPrompt, /RFC Cascade/);
-    assert.match(scenarioPrompt, /Debug Fix/);
-    assert.match(scenarioPrompt, /Wrong-Path Count/);
+    assert.doesNotMatch(scenarioPrompt, /Lifecycle Probe/);
+    assert.doesNotMatch(scenarioPrompt, /Fresh-Agent Recovery Probe/);
+    assert.doesNotMatch(scenarioPrompt, /RFC Cascade/);
+    assert.doesNotMatch(scenarioPrompt, /Debug Fix/);
+    assert.doesNotMatch(scenarioPrompt, /Wrong-Path Count/);
+    assert.match(await renderStagePrompt({ scenario: scenarioId, mode: "harness", stage: "recovery" }), /Stage: RECOVERY/);
+    assert.match(await renderStagePrompt({ scenario: scenarioId, mode: "harness", stage: "rfc" }), /Stage: RFC/);
+    assert.match(await renderStagePrompt({ scenario: scenarioId, mode: "harness", stage: "debug" }), /Stage: DEBUG/);
   }
 
   const timerRunDir = path.join(root, "timer-run");

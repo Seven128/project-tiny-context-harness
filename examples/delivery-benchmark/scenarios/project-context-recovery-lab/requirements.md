@@ -4,10 +4,10 @@ Build a small incident operations console that combines an API, a browser board,
 
 Core objects:
 
-- Incident: id, title, customerTier, impactLevel, status, owner, createdAt, updatedAt, providerEventId, auditTrail.
+- Incident: id, title, customerTier, severity, status, owner, createdAt, updatedAt, providerEventId, auditTrail.
 - Status values: `new`, `investigating`, `mitigated`, `resolved`.
 - Customer tiers: `standard`, `premium`, `enterprise`.
-- Impact levels: `low`, `medium`, `high`, `critical`.
+- Severity levels: `low`, `medium`, `high`, `critical`.
 
 Required behavior:
 

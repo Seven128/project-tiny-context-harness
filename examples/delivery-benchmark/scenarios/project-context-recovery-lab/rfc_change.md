@@ -24,7 +24,3 @@ Required impact:
 - Owner/status changes require `incident:write`.
 - Audit trail records the acting user and permission result.
 - Tests and recovery notes expose the latest RFC state to a fresh agent.
-
-## Debug Fix
-
-After RFC 2, verify that the worker rejects old provider event names. If `incident.opened` or `incident.closed` is still accepted, fix it and add regression coverage.

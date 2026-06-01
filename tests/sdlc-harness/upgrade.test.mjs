@@ -51,7 +51,7 @@ local_overrides:
   - ".harness/overrides/**"
   - ".harness/policies/*.local.yaml"
 never_overwrite:
-  - ".docs/**"
+  - ".work_products/**"
   - ".harness/state/**"
 `,
     "utf8"
@@ -84,19 +84,19 @@ parallel_execution:
     required_gates:
       - "validate-dev"
     fact_source_updates:
-      - ".docs/04_implementation/"
+      - ".work_products/04_implementation/"
 tasks:
   - id: DEV-001
     title: Completed legacy task
     status: done
     summary: Done task should leave current plan
-    implementation_doc: .docs/04_implementation/legacy/dev_001.md
+    implementation_work_product: .work_products/04_implementation/legacy/dev_001.md
   - id: DEV-002
     title: Open legacy task
     status: pending
     summary: Open task should stay in current plan
     gate_result: PASS
-    implementation_doc: .docs/04_implementation/legacy/dev_002.md
+    implementation_work_product: .work_products/04_implementation/legacy/dev_002.md
 `,
     "utf8"
   );
@@ -192,8 +192,8 @@ history:
   const memory = await readFile(path.join(root, ".harness/state/memory.md"), "utf8");
   assert.match(memory, /## Harness Guidance/);
   assert.match(memory, /简短摘要和链接/);
-  assert.match(memory, /\.docs\/05_decisions\//);
-  assert.match(memory, /正式 `\.docs\/\*\*` 事实源/);
+  assert.match(memory, /\.work_products\/05_decisions\//);
+  assert.match(memory, /正式 `\.work_products\/\*\*` 事实源/);
   const migratedWorkflow = await readFile(path.join(root, ".github/workflows/harness.yml"), "utf8");
   assert.match(migratedWorkflow, /pjsdlc:sdlc-harness:github-workflow:begin/);
 
@@ -205,7 +205,7 @@ history:
     [
       "# Project Memory",
       "",
-      "短期执行计划写入 plan.yaml；长期稳定知识只在这里记录简短摘要和链接。完整决策背景、备选方案、取舍和后果写入 `.docs/05_decisions/` ADR 或其它 `.docs/**` 正式事实源。",
+      "短期执行计划写入 plan.yaml；长期稳定知识只在这里记录简短摘要和链接。完整决策背景、备选方案、取舍和后果写入 `.work_products/05_decisions/` ADR 或其它 `.work_products/**` 正式事实源。",
       "",
       "## Project Notes",
       "",
@@ -240,6 +240,87 @@ history:
   const customWorkflowReport = await runUpgrade(customWorkflowRoot);
   assert.ok(customWorkflowReport.some((line) => line.includes("sync skipped: .github/workflows/harness.yml: customized")));
   assert.equal(await readFile(path.join(customWorkflowRoot, ".github/workflows/harness.yml"), "utf8"), customWorkflow);
+
+  const legacyDocsRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-legacy-docs-"));
+  rootsToRemove.push(legacyDocsRoot);
+  await runInit(legacyDocsRoot, { adopt: true, force: false });
+  await rm(path.join(legacyDocsRoot, ".work_products"), { recursive: true, force: true });
+  await mkdir(path.join(legacyDocsRoot, ".docs/01_product"), { recursive: true });
+  await writeFile(
+    path.join(legacyDocsRoot, ".docs/01_product/prd.md"),
+    "# PRD\n\nSource: .docs/01_product/prd.md\n\nRun `make docs-overview` before handoff.\n",
+    "utf8"
+  );
+  await writeFile(
+    path.join(legacyDocsRoot, ".agent/state/plan.yaml"),
+    `current_task_id: TASK-001
+tasks:
+  - id: TASK-001
+    title: Legacy docs fields
+    status: pending
+    summary: Legacy task should migrate field names and paths.
+    phase: REQUIREMENT_GATHERING
+    docs:
+      product:
+        - .docs/01_product/prd.md
+    allowed_paths:
+      - .docs/01_product/**
+    required_gates:
+      - make validate-pm
+    acceptance_criteria:
+      - Old docs root is migrated.
+    result_docs:
+      - .docs/01_product/prd.md
+`,
+    "utf8"
+  );
+  await writeFile(
+    path.join(legacyDocsRoot, ".agent/state/plan.draft.yaml"),
+    `tasks:
+  - id: TASK-002
+    title: Legacy implementation field
+    status: pending
+    summary: Draft task should migrate implementation_doc.
+    phase: SPRINTING
+    docs:
+      tech_plan:
+        - .docs/03_tech_plan/plan.md
+    allowed_paths:
+      - src/**
+    required_gates:
+      - npm test
+    acceptance_criteria:
+      - Implementation field is migrated.
+    implementation_doc: .docs/04_implementation/example.md
+`,
+    "utf8"
+  );
+  await runUpgrade(legacyDocsRoot);
+  await assert.rejects(readFile(path.join(legacyDocsRoot, ".docs/01_product/prd.md"), "utf8"));
+  const migratedPrd = await readFile(path.join(legacyDocsRoot, ".work_products/01_product/prd.md"), "utf8");
+  assert.match(migratedPrd, /\.work_products\/01_product\/prd\.md/);
+  assert.match(migratedPrd, /make work-products-overview/);
+  const migratedPlan = await readFile(path.join(legacyDocsRoot, ".agent/state/plan.yaml"), "utf8");
+  assert.match(migratedPlan, /work_products:/);
+  assert.match(migratedPlan, /result_work_products:/);
+  assert.doesNotMatch(migratedPlan, /\.docs/);
+  assert.doesNotMatch(migratedPlan, /(^|\n)\s*docs:/);
+  assert.doesNotMatch(migratedPlan, /result_docs/);
+  const migratedDraft = await readFile(path.join(legacyDocsRoot, ".agent/state/plan.draft.yaml"), "utf8");
+  assert.match(migratedDraft, /work_products:/);
+  assert.match(migratedDraft, /implementation_work_product:/);
+  assert.doesNotMatch(migratedDraft, /\.docs/);
+  assert.doesNotMatch(migratedDraft, /implementation_doc/);
+
+  const conflictingDocsRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-conflicting-docs-"));
+  rootsToRemove.push(conflictingDocsRoot);
+  await runInit(conflictingDocsRoot, { adopt: true, force: false });
+  await mkdir(path.join(conflictingDocsRoot, ".docs/01_product"), { recursive: true });
+  await writeFile(path.join(conflictingDocsRoot, ".docs/01_product/prd.md"), "# Legacy PRD\n", "utf8");
+  await assert.rejects(
+    runUpgrade(conflictingDocsRoot),
+    /Both \.docs and \.work_products exist and \.docs contains user content/
+  );
 } finally {
   await Promise.all(rootsToRemove.map((item) => rm(item, { recursive: true, force: true })));
 }

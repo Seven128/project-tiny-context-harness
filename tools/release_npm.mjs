@@ -9,7 +9,7 @@ const projectRoot = process.cwd();
 const packageName = "agent-project-sdlc";
 const workspaceName = "agent-project-sdlc";
 const packageManifestPath = path.join(projectRoot, "packages", "sdlc-harness", "package.json");
-const releaseDocRelativePath = ".docs/08_release/CURRENT_RELEASE.md";
+const releaseDocRelativePath = ".work_products/08_release/CURRENT_RELEASE.md";
 
 const args = parseArgs(process.argv.slice(2));
 
@@ -81,7 +81,7 @@ async function main() {
 
   report.finishedAt = new Date().toISOString();
   await writeReleaseDoc(report);
-  await step(report, "refresh docs overview", () => run("make", ["docs-overview"]));
+  await step(report, "refresh work products overview", () => run("make", ["work-products-overview"]));
   await step(report, "validate harness", () => run("make", ["validate-harness"]));
   if (await hasOpenTask()) {
     await step(report, "validate allowed paths", () => run("python3", ["tools/validate_allowed_paths.py"]));

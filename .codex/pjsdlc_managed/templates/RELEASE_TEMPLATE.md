@@ -1,6 +1,6 @@
 # Current Release Status（当前发布状态）
 
-本文件是 `.docs/08_release/CURRENT_RELEASE.md` 的模板。每次发布更新当前状态；历史发布证据通过 git tag、npm registry、CI、release commit 或外部发布系统追溯。
+本文件是 `.work_products/08_release/CURRENT_RELEASE.md` 的模板。每次发布更新当前状态；历史发布证据通过 git tag、npm registry、CI、release commit 或外部发布系统追溯。
 
 ## 1. Release Summary（发布摘要）
 

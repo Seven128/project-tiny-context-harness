@@ -49,7 +49,7 @@ Input
 
 | Task ID | 标题（Title） | UI/UX refs | Design system | Allowed Paths | Required Gates | Implementation Doc |
 |---|---|---|---|---|---|---|
-| TASK-001 |  | `.docs/02_experience/...` | `DESIGN.md` | `src/**`, `tests/**` | `make lint`, `make test-current-domain` | `.docs/04_implementation/...` |
+| TASK-001 |  | `.work_products/02_experience/...` | `DESIGN.md` | `src/**`, `tests/**` | `make lint`, `make test-current-domain` | `.work_products/04_implementation/...` |
 
 `Implementation Doc` 应指向模块、子系统或核心数据流级文档；多个 task 可以更新同一份文档，task id 和 commit 记录在该文档的 provenance / Change Log 中。
 

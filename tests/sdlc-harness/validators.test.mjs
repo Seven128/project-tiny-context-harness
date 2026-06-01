@@ -18,8 +18,8 @@ const resumeCapsule = (taskId, canonicalPath, nextStep, lastPassedGate = "npm te
   do_not_retry:
     - "hard constraint: do not collapse high-risk evidence into only validate-dev"
   recovery_refs:
-    - .docs/04_implementation/example/dev.md
-    - .docs/09_runbooks/live_smoke_runbook.md
+    - .work_products/04_implementation/example/dev.md
+    - .work_products/09_runbooks/live_smoke_runbook.md
 `;
 
 try {
@@ -28,76 +28,76 @@ try {
     JSON.stringify({ sdlcHarness: { harnessFolderName: ".harness" } }, null, 2),
     "utf8"
   );
-  await mkdir(path.join(root, ".docs/01_product"), { recursive: true });
-  await mkdir(path.join(root, ".docs/02_experience"), { recursive: true });
-  await mkdir(path.join(root, ".docs/02_architecture"), { recursive: true });
-  await mkdir(path.join(root, ".docs/03_tech_plan"), { recursive: true });
-  await mkdir(path.join(root, ".docs/04_implementation/example"), { recursive: true });
-  await mkdir(path.join(root, ".docs/06_review"), { recursive: true });
-  await mkdir(path.join(root, ".docs/07_test"), { recursive: true });
-  await mkdir(path.join(root, ".docs/08_release"), { recursive: true });
-  await mkdir(path.join(root, ".docs/09_runbooks"), { recursive: true });
-  await mkdir(path.join(root, ".docs/rfc"), { recursive: true });
+  await mkdir(path.join(root, ".work_products/01_product"), { recursive: true });
+  await mkdir(path.join(root, ".work_products/02_experience"), { recursive: true });
+  await mkdir(path.join(root, ".work_products/02_architecture"), { recursive: true });
+  await mkdir(path.join(root, ".work_products/03_tech_plan"), { recursive: true });
+  await mkdir(path.join(root, ".work_products/04_implementation/example"), { recursive: true });
+  await mkdir(path.join(root, ".work_products/06_review"), { recursive: true });
+  await mkdir(path.join(root, ".work_products/07_test"), { recursive: true });
+  await mkdir(path.join(root, ".work_products/08_release"), { recursive: true });
+  await mkdir(path.join(root, ".work_products/09_runbooks"), { recursive: true });
+  await mkdir(path.join(root, ".work_products/rfc"), { recursive: true });
   await mkdir(path.join(root, ".harness/state"), { recursive: true });
   await mkdir(path.join(root, ".harness/skills"), { recursive: true });
   await mkdir(path.join(root, ".harness/pjsdlc_managed/templates"), { recursive: true });
   await mkdir(path.join(root, ".harness/pjsdlc_managed/policies"), { recursive: true });
   await writeFile(path.join(root, "AGENTS.md"), "# Agents\n", "utf8");
-  await writeFile(path.join(root, ".docs/INDEX.md"), "# Index\n.docs/04_implementation/example/dev.md\n", "utf8");
+  await writeFile(path.join(root, ".work_products/INDEX.md"), "# Index\n.work_products/04_implementation/example/dev.md\n", "utf8");
   await writeFile(path.join(root, ".harness/config.yaml"), "core:\n  package: x\n", "utf8");
   await writeFile(
-    path.join(root, ".docs/01_product/prd.md"),
+    path.join(root, ".work_products/01_product/prd.md"),
     "# PRD\n\n## Acceptance Criteria\n\n## Out of Scope\n\n## Open Questions\n",
     "utf8"
   );
   await writeFile(
-    path.join(root, ".docs/02_architecture/arch.md"),
+    path.join(root, ".work_products/02_architecture/arch.md"),
     "# Architecture\n\nPRD requirement interface task\n",
     "utf8"
   );
-  await writeFile(path.join(root, ".docs/02_experience/not_applicable.md"), notApplicableUiuxSlice(), "utf8");
+  await writeFile(path.join(root, ".work_products/02_experience/not_applicable.md"), notApplicableUiuxSlice(), "utf8");
   await writeFile(
-    path.join(root, ".docs/02_architecture/overview.md"),
+    path.join(root, ".work_products/02_architecture/overview.md"),
     "# Generated Architecture Overview\n\nGenerated overview should not count as a deliverable.\n",
     "utf8"
   );
   await writeFile(
-    path.join(root, ".docs/03_tech_plan/plan.md"),
+    path.join(root, ".work_products/03_tech_plan/plan.md"),
       "# Plan\n\nAPI contract task breakdown\n\n## Development Self-Test Contract\n\n- Module key test path: local `npm test` -> ST-001 -> validator CLI entry -> plan and implementation evidence parser key path -> PASS output.\n- Module Key Test Graph: entry-local-npm-test -> checkpoint-cli -> scenario-st-001 -> exit-pass.\n\n| Scenario ID | Entry | Expected Exit | Evidence |\n|---|---|---|---|\n| ST-001 | `npm test` | PASS output | command output |\n",
     "utf8"
   );
   await writeFile(
-    path.join(root, ".docs/03_tech_plan/overview.md"),
+    path.join(root, ".work_products/03_tech_plan/overview.md"),
     "# Generated Technical Plan Overview\n\nGenerated overview should not count as a deliverable.\n",
     "utf8"
   );
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
-    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: shipped CLI fixture.\n- Exit / side effects: validation output only.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` executed through the local package CLI.\n- Target Runtime Environment: `local` CLI runtime.\n- Runnable Entry: CLI command `npx sdlc-harness validate-dev` runs the package validator fixture.\n- Observable Exit: Command output reports validate-dev PASS with no errors.\n- Client / Server Initialization: Local CLI runtime starts from the recorded command and exits with status evidence.\n- Config Contract: no external config required for this fixture.\n- Testing Handoff Readiness: local validation command and output are ready for TESTING handoff.\n- Known Missing Runtime Boundaries: none for this local CLI fixture.\n- Basic Self-test Evidence: See `Development Self-Test Report`; `npm test --workspace agent-project-sdlc` PASS for the fixture regression.\n\n## Development Self-Test Report\n\n- Report Status: PASS\n- Contract Source: .docs/03_tech_plan/plan.md\n- Module Application Entry: current self-test runnable entry from task contract.\n- Scenario Results: ST-001 PASS\n- Executed Gates: npm test\n- Module Key Test Path: local `npm test` -> ST-001 -> validator CLI entry -> plan and implementation evidence parser key path -> PASS output.\n- Observable Exit: observable exit recorded by scenario result.\n- Evidence Index Refs: .docs/09_runbooks/live_smoke_evidence.md;  command output reports PASS.\n- Current Blocker: none; ready to continue through recorded handoff.\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |\n|---|---|---|---|---|\n| ST-001 | PASS | `npm test` | PASS output | command output |\n",
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: shipped CLI fixture.\n- Exit / side effects: validation output only.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` executed through the local package CLI.\n- Target Runtime Environment: `local` CLI runtime.\n- Runnable Entry: CLI command `npx sdlc-harness validate-dev` runs the package validator fixture.\n- Observable Exit: Command output reports validate-dev PASS with no errors.\n- Client / Server Initialization: Local CLI runtime starts from the recorded command and exits with status evidence.\n- Config Contract: no external config required for this fixture.\n- Testing Handoff Readiness: local validation command and output are ready for TESTING handoff.\n- Known Missing Runtime Boundaries: none for this local CLI fixture.\n- Basic Self-test Evidence: See `Development Self-Test Report`; `npm test --workspace agent-project-sdlc` PASS for the fixture regression.\n\n## Development Self-Test Report\n\n- Report Status: PASS\n- Contract Source: .work_products/03_tech_plan/plan.md\n- Module Application Entry: current self-test runnable entry from task contract.\n- Scenario Results: ST-001 PASS\n- Executed Gates: npm test\n- Module Key Test Path: local `npm test` -> ST-001 -> validator CLI entry -> plan and implementation evidence parser key path -> PASS output.\n- Observable Exit: observable exit recorded by scenario result.\n- Evidence Index Refs: .work_products/09_runbooks/live_smoke_evidence.md;  command output reports PASS.\n- Current Blocker: none; ready to continue through recorded handoff.\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |\n|---|---|---|---|---|\n| ST-001 | PASS | `npm test` | PASS output | command output |\n",
     "utf8"
   );
   await writeFile(
-    path.join(root, ".docs/06_review/REVIEW_REPORT.md"),
+    path.join(root, ".work_products/06_review/REVIEW_REPORT.md"),
     "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage is intentionally narrow.\n\n## Runnable Entry/Exit Readiness\n\n- Runnable Entry: PASS\n- Observable Exit: PASS\n- Initialization: PASS\n- Config Contract: PASS\n- Testing Handoff Readiness: PASS\n- Notes: Existing entry/exit is runnable before testing.\n\n## Decision\n\nPASS\n",
     "utf8"
   );
   await writeFile(
-    path.join(root, ".docs/07_test/TEST_REPORT.md"),
+    path.join(root, ".work_products/07_test/TEST_REPORT.md"),
     "# Test Report\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal | PASS |\n\n## Regression Evidence\n\n- focused regression: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped CLI.\n\n## Coverage Gap\n\nNo browser coverage.\n\n## Decision\n\nPASS\n",
     "utf8"
   );
   await writeFile(
-    path.join(root, ".docs/08_release/CURRENT_RELEASE.md"),
+    path.join(root, ".work_products/08_release/CURRENT_RELEASE.md"),
     "# Current Release Status\n\n## Release Notes\n\nInitial test release.\n\n## Smoke Evidence\n\n- smoke test: PASS\n\n## Rollback Plan\n\nRevert the release commit.\n",
     "utf8"
   );
   await writeFile(
-    path.join(root, ".docs/rfc/RFC_001.md"),
+    path.join(root, ".work_products/rfc/RFC_001.md"),
     "# RFC 001\n\nStatus: VERIFIED\n\n## Background\n\nTest RFC.\n\n## Product Impact\n\nNo user-facing change.\n\n## Technical Impact\n\nNo implementation change.\n\n## Regression\n\nKeep validator coverage.\n\n## Test Fact Source Impact\n\nSuperseded test docs: none\n",
     "utf8"
   );
   await writeFile(
-    path.join(root, ".docs/09_runbooks/live_smoke_runbook.md"),
+    path.join(root, ".work_products/09_runbooks/live_smoke_runbook.md"),
     "# Live Smoke Runbook\n\n## Recovery Summary\n\n- Canonical path: cloud VM HTTP endpoint and browser/operator evidence path.\n- Current state: ready for validator fixtures.\n- Next command channel: local test command.\n- Last known good checkpoint: npm test PASS.\n- Primary blocker: none; fixture path is deterministic.\n\n## Hard Constraints\n\n- hard constraint: do not collapse high-risk evidence into only validate-dev.\n",
     "utf8"
   );
@@ -174,22 +174,22 @@ tasks:
     title: Implement baseline fixture
     status: pending
     summary: Build the baseline package validator fixture.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
       architecture:
-        - .docs/02_architecture/arch.md
+        - .work_products/02_architecture/arch.md
       tech_plan:
-        - .docs/03_tech_plan/plan.md
+        - .work_products/03_tech_plan/plan.md
     allowed_paths:
       - src/**
       - tests/**
-      - .docs/04_implementation/example/dev.md
+      - .work_products/04_implementation/example/dev.md
     required_gates:
       - npm test
     self_test_contract:
       status: required
-      source: .docs/03_tech_plan/plan.md
+      source: .work_products/03_tech_plan/plan.md
       capability_refs:
         - PRD-TEST-001
       runnable_entry: npm test
@@ -204,7 +204,7 @@ tasks:
           evidence: command output
     acceptance_criteria:
       - Fixture task has a concrete tech plan slice.
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -293,7 +293,7 @@ transitions:
   graphTaskReport = await runValidator(root, "validate-plan");
   assert.match(graphTaskReport.errors.join("\n"), /scenario ST-001 must reach an observable_exit/);
 
-  await writeGraphTaskPlan(root, graphContract({ graphBlock: validSelfTestGraphYaml().replace('.docs/09_runbooks/live_smoke_evidence.md#ST-001', 'stdout: copied command output body') }));
+  await writeGraphTaskPlan(root, graphContract({ graphBlock: validSelfTestGraphYaml().replace('.work_products/09_runbooks/live_smoke_evidence.md#ST-001', 'stdout: copied command output body') }));
   graphTaskReport = await runValidator(root, "validate-plan");
   assert.match(graphTaskReport.errors.join("\n"), /evidence_ref must be a short evidence pointer/);
 
@@ -305,14 +305,14 @@ transitions:
   await writeFile(path.join(root, ".harness/state/lifecycle.yaml"), 'current_phase: "SPRINTING"\n', "utf8");
   await writeFile(path.join(root, ".harness/state/plan.draft.yaml"), "next_task_sequence: 2\ntasks: []\n", "utf8");
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     graphImplementationDoc({ includeGraph: false }),
     "utf8"
   );
   graphTaskReport = await runValidator(root, "validate-dev");
   assert.match(graphTaskReport.errors.join("\n"), /Module Key Test Graph/);
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     graphImplementationDoc({ includeGraph: true }),
     "utf8"
   );
@@ -321,75 +321,75 @@ transitions:
   await writeFile(path.join(root, ".harness/state/lifecycle.yaml"), 'current_phase: "REQUIREMENT_GATHERING"\n', "utf8");
   await writeFile(path.join(root, ".harness/state/plan.yaml"), "current_task_id: \"\"\nnext_task_sequence: 11\ntasks: []\n", "utf8");
 
-  await writeFile(path.join(root, ".docs/07_test/TEST_PLAN.md"), "# Legacy Test Plan\n\nMissing canonical sections.\n", "utf8");
+  await writeFile(path.join(root, ".work_products/07_test/TEST_PLAN.md"), "# Legacy Test Plan\n\nMissing canonical sections.\n", "utf8");
   const ignoredTestPlan = await runValidator(root, "validate-test");
   assert.deepEqual(ignoredTestPlan.errors, [], "validate-test ignores TEST_PLAN.md when TEST_REPORT.md exists");
   assert.match(ignoredTestPlan.info.join("\n"), /TEST_REPORT\.md/);
 
-  await rm(path.join(root, ".docs/07_test/TEST_REPORT.md"), { force: true });
+  await rm(path.join(root, ".work_products/07_test/TEST_REPORT.md"), { force: true });
   const onlyLegacyPlan = await runValidator(root, "validate-test");
   assert.match(onlyLegacyPlan.errors.join("\n"), /Missing test report/);
-  await rm(path.join(root, ".docs/07_test/TEST_PLAN.md"), { force: true });
-  await writeFile(path.join(root, ".docs/07_test/TEST_CASES.md"), "# Test Cases\n\n## Cases\n\nNo executed evidence.\n", "utf8");
+  await rm(path.join(root, ".work_products/07_test/TEST_PLAN.md"), { force: true });
+  await writeFile(path.join(root, ".work_products/07_test/TEST_CASES.md"), "# Test Cases\n\n## Cases\n\nNo executed evidence.\n", "utf8");
   const onlyTestCases = await runValidator(root, "validate-test");
   assert.match(onlyTestCases.errors.join("\n"), /Missing test report/);
-  await rm(path.join(root, ".docs/07_test/TEST_CASES.md"), { force: true });
+  await rm(path.join(root, ".work_products/07_test/TEST_CASES.md"), { force: true });
   await writeFile(
-    path.join(root, ".docs/07_test/TEST_REPORT.md"),
+    path.join(root, ".work_products/07_test/TEST_REPORT.md"),
     "# Test Report\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal | pending |\n\n## Regression Evidence\n\n- TBD\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised.\n\n## Coverage Gap\n\nTBD\n\n## Decision\n\nBLOCKED\n",
     "utf8"
   );
   const placeholderReport = await runValidator(root, "validate-test");
   assert.match(placeholderReport.errors.join("\n"), /executed evidence/);
   await writeFile(
-    path.join(root, ".docs/07_test/TEST_REPORT.md"),
+    path.join(root, ".work_products/07_test/TEST_REPORT.md"),
     "# Test Report\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Runtime handoff | PASS |\n\n## Regression Evidence\n\n- focused regression: PASS\n\n## Runnable Entry/Exit Coverage\n\nNo runnable entry exists and missing Development Evidence remains.\n\n## Coverage Gap\n\nRuntime entry is missing.\n\n## Decision\n\nPASS\n",
     "utf8"
   );
   const missingReadinessPassReport = await runValidator(root, "validate-test");
   assert.match(missingReadinessPassReport.errors.join("\n"), /cannot PASS/);
   await writeFile(
-    path.join(root, ".docs/07_test/TEST_REPORT.md"),
+    path.join(root, ".work_products/07_test/TEST_REPORT.md"),
     "# Test Report\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal | PASS |\n\n## Regression Evidence\n\n- focused regression: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped CLI.\n\n## Coverage Gap\n\nNo browser coverage.\n\n## Decision\n\nPASS\n",
     "utf8"
   );
   const legacyReportOnly = await runValidator(root, "validate-test");
   assert.deepEqual(legacyReportOnly.errors, [], "validate-test preserves legacy report-only compatibility when no cases are referenced");
 
-  await writeFile(path.join(root, ".docs/07_test/TEST_CASES.md"), validTestCases(), "utf8");
+  await writeFile(path.join(root, ".work_products/07_test/TEST_CASES.md"), validTestCases(), "utf8");
   await writeFile(
-    path.join(root, ".docs/07_test/TEST_REPORT.md"),
+    path.join(root, ".work_products/07_test/TEST_REPORT.md"),
     validTestReportWithCaseRefs(),
     "utf8"
   );
   const validCasesReport = await runValidator(root, "validate-test");
   assert.deepEqual(validCasesReport.errors, [], "validate-test accepts valid TEST_CASES.md referenced by TEST_REPORT.md");
 
-  await writeFile(path.join(root, ".docs/07_test/TEST_CASES.md"), validTestCases().replace("TC-002", "TC-001"), "utf8");
+  await writeFile(path.join(root, ".work_products/07_test/TEST_CASES.md"), validTestCases().replace("TC-002", "TC-001"), "utf8");
   const duplicateCases = await runValidator(root, "validate-test");
   assert.match(duplicateCases.errors.join("\n"), /Case ID must be unique/);
 
-  await writeFile(path.join(root, ".docs/07_test/TEST_CASES.md"), validTestCases(), "utf8");
+  await writeFile(path.join(root, ".work_products/07_test/TEST_CASES.md"), validTestCases(), "utf8");
   await writeFile(
-    path.join(root, ".docs/07_test/TEST_REPORT.md"),
+    path.join(root, ".work_products/07_test/TEST_REPORT.md"),
     validTestReportWithCaseRefs().replace("TC-002", "TC-999"),
     "utf8"
   );
   const missingCaseRef = await runValidator(root, "validate-test");
   assert.match(missingCaseRef.errors.join("\n"), /references case IDs not found/);
 
-  await writeFile(path.join(root, ".docs/07_test/TEST_CASES.md"), validTestCases().replace("Package installed", "TBD"), "utf8");
-  await writeFile(path.join(root, ".docs/07_test/TEST_REPORT.md"), validTestReportWithCaseRefs(), "utf8");
+  await writeFile(path.join(root, ".work_products/07_test/TEST_CASES.md"), validTestCases().replace("Package installed", "TBD"), "utf8");
+  await writeFile(path.join(root, ".work_products/07_test/TEST_REPORT.md"), validTestReportWithCaseRefs(), "utf8");
   const placeholderCases = await runValidator(root, "validate-test");
   assert.match(placeholderCases.errors.join("\n"), /TEST_CASES\.md must not contain/);
 
-  await writeFile(path.join(root, ".docs/07_test/TEST_CASES.md"), casesMissingRunnableEntry(), "utf8");
+  await writeFile(path.join(root, ".work_products/07_test/TEST_CASES.md"), casesMissingRunnableEntry(), "utf8");
   const missingRunnableCase = await runValidator(root, "validate-test");
   assert.match(missingRunnableCase.errors.join("\n"), /Runnable Entry/);
 
-  await rm(path.join(root, ".docs/07_test/TEST_CASES.md"), { force: true });
+  await rm(path.join(root, ".work_products/07_test/TEST_CASES.md"), { force: true });
   await writeFile(
-    path.join(root, ".docs/07_test/TEST_REPORT.md"),
+    path.join(root, ".work_products/07_test/TEST_REPORT.md"),
     "# Test Report\n\n## Matrix\n\n| Case ID | Scenario | Result |\n|---|---|---|\n| TC-001 | Normal | PASS |\n\n## Regression Evidence\n\n- focused regression: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped CLI.\n\n## Coverage Gap\n\nNo browser coverage.\n\n## Decision\n\nPASS\n",
     "utf8"
   );
@@ -397,42 +397,42 @@ transitions:
   assert.match(missingCasesFile.errors.join("\n"), /Missing test cases/);
 
   await writeFile(
-    path.join(root, ".docs/07_test/TEST_REPORT.md"),
+    path.join(root, ".work_products/07_test/TEST_REPORT.md"),
     "# Test Report\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal | PASS |\n\n## Regression Evidence\n\n- focused regression: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped CLI.\n\n## Coverage Gap\n\nNo browser coverage.\n\n## Decision\n\nPASS\n",
     "utf8"
   );
   await writeFile(
-    path.join(root, ".docs/rfc/RFC_002.md"),
-    "# RFC 002\n\nStatus: APPLIED\n\n## Background\n\nRoute change.\n\n## Product Impact\n\nTest facts must be cleaned.\n\n## Technical Impact\n\nNo implementation change.\n\n## Regression\n\nKeep current TEST_REPORT evidence.\n\n## Test Fact Source Impact\n\nSuperseded test docs: .docs/07_test/OLD_ROUTE.md\n",
+    path.join(root, ".work_products/rfc/RFC_002.md"),
+    "# RFC 002\n\nStatus: APPLIED\n\n## Background\n\nRoute change.\n\n## Product Impact\n\nTest facts must be cleaned.\n\n## Technical Impact\n\nNo implementation change.\n\n## Regression\n\nKeep current TEST_REPORT evidence.\n\n## Test Fact Source Impact\n\nSuperseded test docs: .work_products/07_test/OLD_ROUTE.md\n",
     "utf8"
   );
-  await writeFile(path.join(root, ".docs/07_test/OLD_ROUTE.md"), "# Old route result\n", "utf8");
+  await writeFile(path.join(root, ".work_products/07_test/OLD_ROUTE.md"), "# Old route result\n", "utf8");
   const staleRfcDoc = await runValidator(root, "validate-rfc");
   assert.match(staleRfcDoc.errors.join("\n"), /Superseded test doc still exists/);
-  await rm(path.join(root, ".docs/07_test/OLD_ROUTE.md"), { force: true });
-  await writeFile(path.join(root, ".docs/INDEX.md"), "# Index\n\n- Old: .docs/07_test/OLD_ROUTE.md\n", "utf8");
+  await rm(path.join(root, ".work_products/07_test/OLD_ROUTE.md"), { force: true });
+  await writeFile(path.join(root, ".work_products/INDEX.md"), "# Index\n\n- Old: .work_products/07_test/OLD_ROUTE.md\n", "utf8");
   const staleRfcIndex = await runValidator(root, "validate-rfc");
   assert.match(staleRfcIndex.errors.join("\n"), /Superseded test doc still linked/);
-  await writeFile(path.join(root, ".docs/INDEX.md"), "# Index\n.docs/04_implementation/example/dev.md\n", "utf8");
+  await writeFile(path.join(root, ".work_products/INDEX.md"), "# Index\n.work_products/04_implementation/example/dev.md\n", "utf8");
   const cleanedRfc = await runValidator(root, "validate-rfc");
   assert.deepEqual(cleanedRfc.errors, [], "validate-rfc allows superseded test refs only after facts and index are cleaned");
   await writeFile(
-    path.join(root, ".docs/rfc/RFC_023_runtime_change.md"),
+    path.join(root, ".work_products/rfc/RFC_023_runtime_change.md"),
     "# RFC 023 Runtime Change\n\nStatus: APPLIED\n\n## Background\n\nRuntime entry/exit changes.\n\n## Product Impact\n\nRuntime handoff changes.\n\n## Technical Impact\n\nA new runtime gate is required.\n\n## Regression\n\nRun focused validator regression.\n\n## Test Fact Source Impact\n\nSuperseded test docs: none\n",
     "utf8"
   );
   const missingSelfTestImpactRfc = await runValidator(root, "validate-rfc");
   assert.match(missingSelfTestImpactRfc.errors.join("\n"), /Development Self-Test Impact/);
   await writeFile(
-    path.join(root, ".docs/rfc/RFC_023_runtime_change.md"),
+    path.join(root, ".work_products/rfc/RFC_023_runtime_change.md"),
     "# RFC 023 Runtime Change\n\nStatus: APPLIED\n\n## Background\n\nRuntime entry/exit changes.\n\n## Product Impact\n\nRuntime handoff changes.\n\n## Technical Impact\n\nA new runtime gate is required.\n\n## Regression\n\nRun focused validator regression.\n\n## Test Fact Source Impact\n\nSuperseded test docs: none\n\n## Development Self-Test Impact\n\n- Entry/exit impact: runtime entry changes.\n- Required gates impact: task gates are updated.\n",
     "utf8"
   );
   const selfTestImpactRfc = await runValidator(root, "validate-rfc");
   assert.deepEqual(selfTestImpactRfc.errors, [], "validate-rfc accepts RFC self-test impact for runtime changes");
 
-  const currentReleasePath = path.join(root, ".docs/08_release/CURRENT_RELEASE.md");
-  const legacyReleasePath = path.join(root, ".docs/08_release/v0.1.0.md");
+  const currentReleasePath = path.join(root, ".work_products/08_release/CURRENT_RELEASE.md");
+  const legacyReleasePath = path.join(root, ".work_products/08_release/v0.1.0.md");
   await writeFile(
     legacyReleasePath,
     "# Legacy Release v0.1.0\n\n## Release Notes\n\nLegacy release.\n\n## Smoke Evidence\n\n- smoke test: PASS\n\n## Rollback Plan\n\nRevert the release commit.\n",
@@ -441,7 +441,7 @@ transitions:
   await rm(currentReleasePath, { force: true });
   const legacyReleaseReport = await runValidator(root, "validate-release");
   assert.deepEqual(legacyReleaseReport.errors, [], "validate-release accepts legacy versioned release docs");
-  assert.match(legacyReleaseReport.info.join("\n"), /legacy \.docs\/08_release/);
+  assert.match(legacyReleaseReport.info.join("\n"), /legacy \.work_products\/08_release/);
   await writeFile(currentReleasePath, "# Current Release Status\n\n## Release Notes\n\nOnly change notes are present.\n", "utf8");
   const preferredCurrentRelease = await runValidator(root, "validate-release");
   assert.match(preferredCurrentRelease.errors.join("\n"), /smoke test evidence/);
@@ -454,21 +454,21 @@ transitions:
   );
 
   await writeFile(
-    path.join(root, ".docs/06_review/REVIEW_REPORT.md"),
+    path.join(root, ".work_products/06_review/REVIEW_REPORT.md"),
     "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage is intentionally narrow.\n\n## Decision\n\nPASS\n",
     "utf8"
   );
   const missingEntryReview = await runValidator(root, "validate-review");
   assert.match(missingEntryReview.errors.join("\n"), /entry\/exit readiness/);
   await writeFile(
-    path.join(root, ".docs/06_review/REVIEW_REPORT.md"),
+    path.join(root, ".work_products/06_review/REVIEW_REPORT.md"),
     "# Review Report\n\n## Findings\n\nRuntime handoff is incomplete.\n\n## Test Gap\n\nCoverage is blocked by missing runtime readiness.\n\n## Runnable Entry/Exit Readiness\n\n- Runnable Entry: PASS\n- Observable Exit: PASS\n- Initialization: BLOCKED\n- Config Contract: PASS\n- Testing Handoff Readiness: PASS\n- Notes: server startup evidence is missing.\n\n## Decision\n\nBLOCKED\n",
     "utf8"
   );
   const blockedReadinessReview = await runValidator(root, "validate-review");
   assert.match(blockedReadinessReview.errors.join("\n"), /Review readiness is BLOCKED: Initialization/);
   await writeFile(
-    path.join(root, ".docs/06_review/REVIEW_REPORT.md"),
+    path.join(root, ".work_products/06_review/REVIEW_REPORT.md"),
     "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage is intentionally narrow.\n\n## Runnable Entry/Exit Readiness\n\n- Runnable Entry: PASS\n- Observable Exit: PASS\n- Initialization: PASS\n- Config Contract: PASS\n- Testing Handoff Readiness: PASS\n- Notes: Existing entry/exit is runnable before testing.\n\n## Decision\n\nPASS\n",
     "utf8"
   );
@@ -486,19 +486,19 @@ tasks:
     title: Invalid testing runtime task
     status: in_progress
     summary: Invalid testing task that tries to change runtime scripts.
-    docs:
+    work_products:
       review:
-        - .docs/06_review/REVIEW_REPORT.md
+        - .work_products/06_review/REVIEW_REPORT.md
     allowed_paths:
-      - ".docs/07_test/**"
+      - ".work_products/07_test/**"
       - "tests/**"
       - "package.json"
     required_gates:
       - "npx sdlc-harness validate-test"
     acceptance_criteria:
       - "Runtime script changes are rejected in TESTING."
-    result_docs:
-      - .docs/07_test/TEST_REPORT.md
+    result_work_products:
+      - .work_products/07_test/TEST_REPORT.md
 `,
       "utf8"
     );
@@ -515,18 +515,18 @@ tasks:
     title: Invalid premature test docs task
     status: in_progress
     summary: Invalid sprint task that tries to create current test facts before TESTING.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "src/**"
-      - ".docs/07_test/**"
+      - ".work_products/07_test/**"
     required_gates:
       - "npm test"
     acceptance_criteria:
       - "SPRINTING cannot create formal test facts."
-    result_docs:
-      - .docs/07_test/TEST_REPORT.md
+    result_work_products:
+      - .work_products/07_test/TEST_REPORT.md
 `,
       "utf8"
     );
@@ -574,22 +574,22 @@ tasks:
     title: Implement baseline fixture
     status: pending
     summary: Build the baseline package validator fixture.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
       architecture:
-        - .docs/02_architecture/arch.md
+        - .work_products/02_architecture/arch.md
       tech_plan:
-        - .docs/03_tech_plan/plan.md
+        - .work_products/03_tech_plan/plan.md
     allowed_paths:
       - src/**
       - tests/**
-      - .docs/04_implementation/example/dev.md
+      - .work_products/04_implementation/example/dev.md
     required_gates:
       - npm test
     self_test_contract:
       status: required
-      source: .docs/03_tech_plan/plan.md
+      source: .work_products/03_tech_plan/plan.md
       capability_refs:
         - PRD-TEST-001
       runnable_entry: npm test
@@ -604,7 +604,7 @@ tasks:
           evidence: command output
     acceptance_criteria:
       - Fixture task has a concrete tech plan slice.
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -634,52 +634,52 @@ tasks:
     title: Open task
     status: in_progress
     summary: Active task
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "src/**"
     required_gates:
       - "npm test"
     acceptance_criteria:
       - "development evidence is structured"
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
-  await writeFile(path.join(root, ".docs/04_implementation/example/dev.md"), "# Impl\n", "utf8");
+  await writeFile(path.join(root, ".work_products/04_implementation/example/dev.md"), "# Impl\n", "utf8");
   const missingRunnableEntryExitDevReport = await runValidator(root, "validate-dev");
   assert.match(missingRunnableEntryExitDevReport.errors.join("\n"), /Runnable Entry\/Exit/);
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     "# Impl\n\n## Runnable Entry/Exit\n\nNot applicable: validator fixture implementation has no product runtime boundary.\n",
     "utf8"
   );
   const missingDevelopmentEvidenceDevReport = await runValidator(root, "validate-dev");
   assert.match(missingDevelopmentEvidenceDevReport.errors.join("\n"), /Development Evidence/);
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: shipped CLI fixture.\n- Exit / side effects: validation output only.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Runnable Entry:\n- Observable Exit: PASS output.\n- Client / Server Initialization: Local CLI/test runtime starts from the recorded command and exits with status evidence.\n- Config Contract: no external config required for this fixture.\n- Basic Self-test Evidence: `npm test` PASS.\n",
     "utf8"
   );
   const placeholderDevelopmentEvidenceDevReport = await runValidator(root, "validate-dev");
   assert.match(placeholderDevelopmentEvidenceDevReport.errors.join("\n"), /Runnable Entry must contain concrete/);
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: shipped CLI fixture.\n- Exit / side effects: validation output only.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Runnable Entry: CLI command `npx sdlc-harness validate-dev` runs the package validator fixture.\n- Basic Self-test Evidence: `npm test --workspace agent-project-sdlc` PASS for the fixture regression.\n",
     "utf8"
   );
   const missingObservableExitDevReport = await runValidator(root, "validate-dev");
   assert.match(missingObservableExitDevReport.errors.join("\n"), /Observable Exit must contain concrete/);
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: shipped CLI fixture.\n- Exit / side effects: validation output only.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Runnable Entry: CLI command `npx sdlc-harness validate-dev` runs the package validator fixture.\n- Observable Exit: Command output reports validate-dev PASS with no errors.\n",
     "utf8"
   );
   const missingSelfTestEvidenceDevReport = await runValidator(root, "validate-dev");
   assert.match(missingSelfTestEvidenceDevReport.errors.join("\n"), /Basic Self-test Evidence must contain concrete/);
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service.\n- Exit / side effects: fake send adapter output only.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: provider live smoke only.\n\n## Development Evidence\n\n- Runnable Entry: provider live smoke calls DashScope with a one-shot smoke message.\n- Observable Exit: fake adapter output reports PASS for provider smoke.\n- Client / Server Initialization: provider client initializes for the one-shot request.\n- Config Contract: env DASH_SCOPE_API_KEY is required.\n- Basic Self-test Evidence: provider live smoke PASS.\n",
     "utf8"
   );
@@ -693,9 +693,9 @@ tasks:
     title: Open cloud agent runtime task
     status: in_progress
     summary: Active cloud agent runtime task with live mode
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "src/**"
     required_gates:
@@ -712,7 +712,7 @@ tasks:
       handoff_entrypoint: "http://localhost:3000/events"
     self_test_contract:
       status: required
-      source: .docs/03_tech_plan/plan.md
+      source: .work_products/03_tech_plan/plan.md
       capability_refs:
         - PRD-TEST-001
       runnable_entry: "http://localhost:3000/events"
@@ -725,7 +725,7 @@ tasks:
           entry: "http://localhost:3000/events"
           expected_exit: "HTTP response and queue log"
           evidence: "command output"
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -733,14 +733,14 @@ tasks:
   assert.match(providerSmokeOnlyDevReport.errors.join("\n"), /not enough for application readiness/);
   assert.match(providerSmokeOnlyDevReport.errors.join("\n"), /Development Self-Test Report/);
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service.\n- Exit / side effects: HTTP response and queue item.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: runtime HTTP smoke plus provider live smoke.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` runtime HTTP smoke.\n- Target Runtime Environment: `local` service at `http://localhost:3000/events`.\n- Runnable Entry: HTTP endpoint `http://localhost:3000/events` receives a live-mode event.\n- Observable Exit: response output and queue log report PASS for runtime HTTP smoke and application readiness.\n- Testing Handoff Readiness: local endpoint is documented for TESTING handoff.\n- Known Missing Runtime Boundaries: no deployed runtime evidence for this local fixture.\n- Basic Self-test Evidence: runtime HTTP smoke PASS.\n",
     "utf8"
   );
   const missingInitializationDevReport = await runValidator(root, "validate-dev");
   assert.match(missingInitializationDevReport.errors.join("\n"), /Client \/ Server Initialization/);
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service.\n- Exit / side effects: HTTP response and queue item.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: runtime HTTP smoke plus provider live smoke.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` runtime HTTP smoke.\n- Target Runtime Environment: `local` service at `http://localhost:3000/events`.\n- Runnable Entry: HTTP endpoint `http://localhost:3000/events` receives a live-mode event.\n- Observable Exit: response output and queue log report PASS for runtime HTTP smoke and application readiness.\n- Client / Server Initialization: server startup command `npm run agent:start` listens on localhost and health status returns PASS.\n- Testing Handoff Readiness: local endpoint is documented for TESTING handoff.\n- Known Missing Runtime Boundaries: no deployed runtime evidence for this local fixture.\n- Basic Self-test Evidence: runtime HTTP smoke PASS.\n",
     "utf8"
   );
@@ -756,9 +756,9 @@ tasks:
     title: Deploy cloud agent runtime task
     status: in_progress
     summary: Cloud VM agent service must be deployed and handed off to TESTING.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "src/**"
     required_gates:
@@ -773,7 +773,7 @@ tasks:
       handoff_entrypoint: "https://agent.example.test/health"
     self_test_contract:
       status: required
-      source: .docs/03_tech_plan/plan.md
+      source: .work_products/03_tech_plan/plan.md
       capability_refs:
         - PRD-TEST-001
       runnable_entry: "https://agent.example.test/health"
@@ -786,7 +786,7 @@ tasks:
           entry: "https://agent.example.test/health"
           expected_exit: "health response"
           evidence: "command output"
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -806,16 +806,16 @@ resume_capsule:
   do_not_retry:
     - "hard constraint: do not collapse high-risk evidence into only validate-dev"
   recovery_refs:
-    - .docs/04_implementation/example/dev.md
+    - .work_products/04_implementation/example/dev.md
 tasks:
   - id: TASK-003
     phase: SPRINTING
     title: Deploy cloud agent runtime task
     status: in_progress
     summary: Cloud VM agent service must be deployed and handed off to TESTING.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "src/**"
     required_gates:
@@ -830,7 +830,7 @@ tasks:
       handoff_entrypoint: "https://agent.example.test/health"
     self_test_contract:
       status: required
-      source: .docs/03_tech_plan/plan.md
+      source: .work_products/03_tech_plan/plan.md
       capability_refs:
         - PRD-TEST-001
       runnable_entry: "https://agent.example.test/health"
@@ -843,7 +843,7 @@ tasks:
           entry: "https://agent.example.test/health"
           expected_exit: "health response"
           evidence: "command output"
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -860,9 +860,9 @@ tasks:
     title: Deploy cloud agent runtime task
     status: in_progress
     summary: Cloud VM agent service must be deployed and handed off to TESTING.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "src/**"
     required_gates:
@@ -881,7 +881,7 @@ tasks:
       handoff_entrypoint: "https://agent.example.test/health"
     self_test_contract:
       status: required
-      source: .docs/03_tech_plan/plan.md
+      source: .work_products/03_tech_plan/plan.md
       capability_refs:
         - PRD-TEST-001
       runnable_entry: "https://agent.example.test/health"
@@ -894,12 +894,12 @@ tasks:
           entry: "https://agent.example.test/health"
           expected_exit: "health response"
           evidence: "command output"
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service.\n- Exit / side effects: fake send adapter output only.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: provider live smoke only.\n\n## Development Evidence\n\n- Evidence Level: `external_provider_live` provider smoke only.\n- Target Runtime Environment: `cloud_vm` target is not deployed; only localhost and provider live smoke were checked.\n- Runnable Entry: provider live smoke calls DashScope with a one-shot smoke message.\n- Observable Exit: fake adapter output reports PASS for provider smoke.\n- Client / Server Initialization: provider client initializes for the one-shot request.\n- Config Contract: env DASH_SCOPE_API_KEY is required.\n- Testing Handoff Readiness: not deployed, no cloud VM handoff entry is available.\n- Known Missing Runtime Boundaries: cloud VM service initialization and https://agent.example.test/health are missing.\n- Basic Self-test Evidence: provider live smoke PASS.\n",
     "utf8"
   );
@@ -916,9 +916,9 @@ tasks:
     title: Handoff cloud agent runtime task
     status: in_progress
     summary: Cloud VM agent service must be business handoff ready.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "src/**"
     required_gates:
@@ -933,7 +933,7 @@ tasks:
       handoff_entrypoint: "https://agent.example.test/messages"
     self_test_contract:
       status: required
-      source: .docs/03_tech_plan/plan.md
+      source: .work_products/03_tech_plan/plan.md
       capability_refs:
         - PRD-TEST-001
       runnable_entry: "https://agent.example.test/messages"
@@ -946,50 +946,50 @@ tasks:
           entry: "https://agent.example.test/messages"
           expected_exit: "HTTP response and audit log"
           evidence: "command output"
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service at `https://agent.example.test/messages`.\n- Exit / side effects: HTTP response and audit log.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: deployed runtime smoke.\n\n## Development Evidence\n\n- Evidence Level: `business_handoff_ready`.\n- Target Runtime Environment: `cloud_vm` service at `https://agent.example.test/messages`.\n- Runnable Entry: HTTP endpoint `https://agent.example.test/messages` receives a live-mode event.\n- Observable Exit: response output and audit log report PASS.\n- Client / Server Initialization: cloud VM service startup and health status return PASS.\n- Config Contract: env DASH_SCOPE_API_KEY is required.\n- Testing Handoff Readiness: entrypoint exists for TESTING, but the detailed handoff contract is not written.\n- Known Missing Runtime Boundaries: none.\n- Basic Self-test Evidence: deployed runtime smoke PASS.\n",
     "utf8"
   );
   const missingBusinessHandoffContractDevReport = await runValidator(root, "validate-dev");
   assert.match(missingBusinessHandoffContractDevReport.errors.join("\n"), /Testing Handoff Contract/);
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
-    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service at `https://agent.example.test/messages`.\n- Exit / side effects: HTTP response and audit log.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: deployed runtime smoke.\n\n## Development Evidence\n\n- Evidence Level: `business_handoff_ready`.\n- Target Runtime Environment: `cloud_vm` service at `https://agent.example.test/messages`.\n- Runnable Entry: HTTP endpoint `https://agent.example.test/messages` receives a live-mode event.\n- Observable Exit: response output and audit log report PASS.\n- Client / Server Initialization: cloud VM service startup and health status return PASS.\n- Config Contract: env DASH_SCOPE_API_KEY is required.\n- Testing Handoff Readiness: testing handoff contract below includes entry, config, startup, input, expected exit and cleanup.\n- Known Missing Runtime Boundaries: none.\n- Basic Self-test Evidence: See `Development Self-Test Report`; deployed runtime smoke PASS.\n\n## Current Operator Path\n\n- Canonical path: cloud VM messages endpoint.\n- Operator runbook: `.docs/09_runbooks/live_smoke_runbook.md`.\n- Credential reference: Keychain item name only; no secret value is recorded.\n- Command/UI channel: provider/operator command channel.\n- Do-not-retry summary: do not collapse high-risk evidence into only validate-dev.\n- Hard Constraints: strategy-changing recovery decisions must stay promoted before retrying fallback paths.\n\n## Development Self-Test Report\n\n- Report Status: PASS\n- Contract Source: .docs/03_tech_plan/plan.md\n- Module Application Entry: current self-test runnable entry from task contract.\n- Scenario Results: ST-001 PASS\n- Executed Gates: npm test\n- Actual Evidence: command output reports PASS.\n- Current Blocker: none; ready to continue through recorded handoff.\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |\n|---|---|---|---|---|\n| ST-001 | PASS | `https://agent.example.test/messages` | HTTP response and audit log | command output |\n\n## Testing Handoff Contract\n\n- Entry: URL `https://agent.example.test/messages`.\n- Config: env secret `DASH_SCOPE_API_KEY` is required.\n- Initialization: service startup and health endpoint return PASS before tests.\n- Input sample: message request body fixture `{ \"text\": \"hello\" }`.\n- Expected exit / observable exit: HTTP response, queue item, audit log and send result are produced.\n- Cleanup: shutdown or reset is idempotent between test runs.\n- Evidence Level: `business_handoff_ready`.\n",
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service at `https://agent.example.test/messages`.\n- Exit / side effects: HTTP response and audit log.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: deployed runtime smoke.\n\n## Development Evidence\n\n- Evidence Level: `business_handoff_ready`.\n- Target Runtime Environment: `cloud_vm` service at `https://agent.example.test/messages`.\n- Runnable Entry: HTTP endpoint `https://agent.example.test/messages` receives a live-mode event.\n- Observable Exit: response output and audit log report PASS.\n- Client / Server Initialization: cloud VM service startup and health status return PASS.\n- Config Contract: env DASH_SCOPE_API_KEY is required.\n- Testing Handoff Readiness: testing handoff contract below includes entry, config, startup, input, expected exit and cleanup.\n- Known Missing Runtime Boundaries: none.\n- Basic Self-test Evidence: See `Development Self-Test Report`; deployed runtime smoke PASS.\n\n## Current Operator Path\n\n- Canonical path: cloud VM messages endpoint.\n- Operator runbook: `.work_products/09_runbooks/live_smoke_runbook.md`.\n- Credential reference: Keychain item name only; no secret value is recorded.\n- Command/UI channel: provider/operator command channel.\n- Do-not-retry summary: do not collapse high-risk evidence into only validate-dev.\n- Hard Constraints: strategy-changing recovery decisions must stay promoted before retrying fallback paths.\n\n## Development Self-Test Report\n\n- Report Status: PASS\n- Contract Source: .work_products/03_tech_plan/plan.md\n- Module Application Entry: current self-test runnable entry from task contract.\n- Scenario Results: ST-001 PASS\n- Executed Gates: npm test\n- Actual Evidence: command output reports PASS.\n- Current Blocker: none; ready to continue through recorded handoff.\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |\n|---|---|---|---|---|\n| ST-001 | PASS | `https://agent.example.test/messages` | HTTP response and audit log | command output |\n\n## Testing Handoff Contract\n\n- Entry: URL `https://agent.example.test/messages`.\n- Config: env secret `DASH_SCOPE_API_KEY` is required.\n- Initialization: service startup and health endpoint return PASS before tests.\n- Input sample: message request body fixture `{ \"text\": \"hello\" }`.\n- Expected exit / observable exit: HTTP response, queue item, audit log and send result are produced.\n- Cleanup: shutdown or reset is idempotent between test runs.\n- Evidence Level: `business_handoff_ready`.\n",
     "utf8"
   );
   const missingModuleKeyPathDevReport = await runValidator(root, "validate-dev");
   assert.match(missingModuleKeyPathDevReport.errors.join("\n"), /Module Key Test Path/);
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
-    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service at `https://agent.example.test/messages`.\n- Exit / side effects: HTTP response and audit log.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: deployed runtime smoke.\n\n## Development Evidence\n\n- Evidence Level: `business_handoff_ready`.\n- Target Runtime Environment: `cloud_vm` service at `https://agent.example.test/messages`.\n- Runnable Entry: HTTP endpoint `https://agent.example.test/messages` receives a live-mode event.\n- Observable Exit: response output and audit log report PASS.\n- Client / Server Initialization: cloud VM service startup and health status return PASS.\n- Config Contract: env DASH_SCOPE_API_KEY is required.\n- Testing Handoff Readiness: testing handoff contract below includes entry, config, startup, input, expected exit and cleanup.\n- Known Missing Runtime Boundaries: none.\n- Basic Self-test Evidence: See `Development Self-Test Report`; deployed runtime smoke PASS.\n\n## Current Operator Path\n\n- Canonical path: cloud VM messages endpoint.\n- Operator runbook: `.docs/09_runbooks/live_smoke_runbook.md`.\n- Credential reference: Keychain item name only; no secret value is recorded.\n- Command/UI channel: provider/operator command channel.\n- Do-not-retry summary: do not collapse high-risk evidence into only validate-dev.\n- Hard Constraints: strategy-changing recovery decisions must stay promoted before retrying fallback paths.\n\n## Development Self-Test Report\n\n- Report Status: PASS\n- Contract Source: .docs/03_tech_plan/plan.md\n- Module Application Entry: current self-test runnable entry from task contract.\n- Scenario Results: not recorded yet\n- Executed Gates: npm test\n- Module Key Test Path: local `npm test` -> ST-001 -> `https://agent.example.test/messages` runnable entry -> request validation, message handling and audit key path -> audit log.\n- Observable Exit: observable exit recorded by scenario result.\n- Evidence Index Refs: .docs/09_runbooks/live_smoke_evidence.md;  command output reports PASS.\n- Current Blocker: none; ready to continue through recorded handoff.\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n## Testing Handoff Contract\n\n- Entry: URL `https://agent.example.test/messages`.\n- Config: env secret `DASH_SCOPE_API_KEY` is required.\n- Initialization: service startup and health endpoint return PASS before tests.\n- Input sample: message request body fixture `{ \"text\": \"hello\" }`.\n- Expected exit / observable exit: HTTP response, queue item, audit log and send result are produced.\n- Cleanup: shutdown or reset is idempotent between test runs.\n- Evidence Level: `business_handoff_ready`.\n",
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service at `https://agent.example.test/messages`.\n- Exit / side effects: HTTP response and audit log.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: deployed runtime smoke.\n\n## Development Evidence\n\n- Evidence Level: `business_handoff_ready`.\n- Target Runtime Environment: `cloud_vm` service at `https://agent.example.test/messages`.\n- Runnable Entry: HTTP endpoint `https://agent.example.test/messages` receives a live-mode event.\n- Observable Exit: response output and audit log report PASS.\n- Client / Server Initialization: cloud VM service startup and health status return PASS.\n- Config Contract: env DASH_SCOPE_API_KEY is required.\n- Testing Handoff Readiness: testing handoff contract below includes entry, config, startup, input, expected exit and cleanup.\n- Known Missing Runtime Boundaries: none.\n- Basic Self-test Evidence: See `Development Self-Test Report`; deployed runtime smoke PASS.\n\n## Current Operator Path\n\n- Canonical path: cloud VM messages endpoint.\n- Operator runbook: `.work_products/09_runbooks/live_smoke_runbook.md`.\n- Credential reference: Keychain item name only; no secret value is recorded.\n- Command/UI channel: provider/operator command channel.\n- Do-not-retry summary: do not collapse high-risk evidence into only validate-dev.\n- Hard Constraints: strategy-changing recovery decisions must stay promoted before retrying fallback paths.\n\n## Development Self-Test Report\n\n- Report Status: PASS\n- Contract Source: .work_products/03_tech_plan/plan.md\n- Module Application Entry: current self-test runnable entry from task contract.\n- Scenario Results: not recorded yet\n- Executed Gates: npm test\n- Module Key Test Path: local `npm test` -> ST-001 -> `https://agent.example.test/messages` runnable entry -> request validation, message handling and audit key path -> audit log.\n- Observable Exit: observable exit recorded by scenario result.\n- Evidence Index Refs: .work_products/09_runbooks/live_smoke_evidence.md;  command output reports PASS.\n- Current Blocker: none; ready to continue through recorded handoff.\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n## Testing Handoff Contract\n\n- Entry: URL `https://agent.example.test/messages`.\n- Config: env secret `DASH_SCOPE_API_KEY` is required.\n- Initialization: service startup and health endpoint return PASS before tests.\n- Input sample: message request body fixture `{ \"text\": \"hello\" }`.\n- Expected exit / observable exit: HTTP response, queue item, audit log and send result are produced.\n- Cleanup: shutdown or reset is idempotent between test runs.\n- Evidence Level: `business_handoff_ready`.\n",
     "utf8"
   );
   const missingSelfTestScenarioDevReport = await runValidator(root, "validate-dev");
   assert.match(missingSelfTestScenarioDevReport.errors.join("\n"), /scenario ST-001/);
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
-    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service at `https://agent.example.test/messages`.\n- Exit / side effects: HTTP response and audit log.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: deployed runtime smoke.\n\n## Development Evidence\n\n- Evidence Level: `business_handoff_ready`.\n- Target Runtime Environment: `cloud_vm` service at `https://agent.example.test/messages`.\n- Runnable Entry: HTTP endpoint `https://agent.example.test/messages` receives a live-mode event.\n- Observable Exit: response output and audit log report PASS.\n- Client / Server Initialization: cloud VM service startup and health status return PASS.\n- Config Contract: env DASH_SCOPE_API_KEY is required.\n- Testing Handoff Readiness: testing handoff contract below includes entry, config, startup, input, expected exit and cleanup.\n- Known Missing Runtime Boundaries: none.\n- Basic Self-test Evidence: See `Development Self-Test Report`; deployed runtime smoke PASS.\n\n## Current Operator Path\n\n- Canonical path: cloud VM messages endpoint.\n- Operator runbook: `.docs/09_runbooks/live_smoke_runbook.md`.\n- Credential reference: Keychain item name only; no secret value is recorded.\n- Command/UI channel: provider/operator command channel.\n- Do-not-retry summary: do not collapse high-risk evidence into only validate-dev.\n- Hard Constraints: strategy-changing recovery decisions must stay promoted before retrying fallback paths.\n\n## Development Self-Test Report\n\n- Report Status: PASS\n- Contract Source: .docs/03_tech_plan/plan.md\n- Module Application Entry: current self-test runnable entry from task contract.\n- Scenario Results: ST-001 PASS\n- Executed Gates: npm test\n- Module Key Test Path: local `npm test` -> ST-001 -> `https://agent.example.test/messages` runnable entry -> request validation, message handling and audit key path -> HTTP response and audit log.\n- Observable Exit: observable exit recorded by scenario result.\n- Evidence Index Refs: .docs/09_runbooks/live_smoke_evidence.md;  command output and audit log report PASS.\n- Current Blocker: none; ready to continue through recorded handoff.\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |\n|---|---|---|---|---|\n| ST-001 | PASS / BLOCKED |  |  |  |\n\n## Testing Handoff Contract\n\n- Entry: URL `https://agent.example.test/messages`.\n- Config: env secret `DASH_SCOPE_API_KEY` is required; missing config returns a documented error.\n- Initialization: service startup and health endpoint return PASS before tests.\n- Input sample: message request body fixture `{ \"text\": \"hello\" }`.\n- Expected exit / observable exit: HTTP response, queue item, audit log and send result are produced.\n- Cleanup: shutdown or reset is idempotent between test runs.\n- Evidence Level: `business_handoff_ready`.\n",
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service at `https://agent.example.test/messages`.\n- Exit / side effects: HTTP response and audit log.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: deployed runtime smoke.\n\n## Development Evidence\n\n- Evidence Level: `business_handoff_ready`.\n- Target Runtime Environment: `cloud_vm` service at `https://agent.example.test/messages`.\n- Runnable Entry: HTTP endpoint `https://agent.example.test/messages` receives a live-mode event.\n- Observable Exit: response output and audit log report PASS.\n- Client / Server Initialization: cloud VM service startup and health status return PASS.\n- Config Contract: env DASH_SCOPE_API_KEY is required.\n- Testing Handoff Readiness: testing handoff contract below includes entry, config, startup, input, expected exit and cleanup.\n- Known Missing Runtime Boundaries: none.\n- Basic Self-test Evidence: See `Development Self-Test Report`; deployed runtime smoke PASS.\n\n## Current Operator Path\n\n- Canonical path: cloud VM messages endpoint.\n- Operator runbook: `.work_products/09_runbooks/live_smoke_runbook.md`.\n- Credential reference: Keychain item name only; no secret value is recorded.\n- Command/UI channel: provider/operator command channel.\n- Do-not-retry summary: do not collapse high-risk evidence into only validate-dev.\n- Hard Constraints: strategy-changing recovery decisions must stay promoted before retrying fallback paths.\n\n## Development Self-Test Report\n\n- Report Status: PASS\n- Contract Source: .work_products/03_tech_plan/plan.md\n- Module Application Entry: current self-test runnable entry from task contract.\n- Scenario Results: ST-001 PASS\n- Executed Gates: npm test\n- Module Key Test Path: local `npm test` -> ST-001 -> `https://agent.example.test/messages` runnable entry -> request validation, message handling and audit key path -> HTTP response and audit log.\n- Observable Exit: observable exit recorded by scenario result.\n- Evidence Index Refs: .work_products/09_runbooks/live_smoke_evidence.md;  command output and audit log report PASS.\n- Current Blocker: none; ready to continue through recorded handoff.\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |\n|---|---|---|---|---|\n| ST-001 | PASS / BLOCKED |  |  |  |\n\n## Testing Handoff Contract\n\n- Entry: URL `https://agent.example.test/messages`.\n- Config: env secret `DASH_SCOPE_API_KEY` is required; missing config returns a documented error.\n- Initialization: service startup and health endpoint return PASS before tests.\n- Input sample: message request body fixture `{ \"text\": \"hello\" }`.\n- Expected exit / observable exit: HTTP response, queue item, audit log and send result are produced.\n- Cleanup: shutdown or reset is idempotent between test runs.\n- Evidence Level: `business_handoff_ready`.\n",
     "utf8"
   );
   const templateSelfTestRowDevReport = await runValidator(root, "validate-dev");
   assert.match(templateSelfTestRowDevReport.errors.join("\n"), /choose exactly one of PASS or BLOCKED|table Executed Entry/);
   assert.match(templateSelfTestRowDevReport.errors.join("\n"), /Gate Breakdown/);
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
-    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service at `https://agent.example.test/messages`.\n- Exit / side effects: HTTP response and audit log.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: deployed runtime smoke.\n\n## Development Evidence\n\n- Evidence Level: `business_handoff_ready`.\n- Target Runtime Environment: `cloud_vm` service at `https://agent.example.test/messages`.\n- Runnable Entry: HTTP endpoint `https://agent.example.test/messages` receives a live-mode event.\n- Observable Exit: response output and audit log report PASS.\n- Client / Server Initialization: cloud VM service startup and health status return PASS.\n- Config Contract: env DASH_SCOPE_API_KEY is required.\n- Testing Handoff Readiness: testing handoff contract below includes entry, config, startup, input, expected exit and cleanup.\n- Known Missing Runtime Boundaries: none.\n- Basic Self-test Evidence: See `Development Self-Test Report`; deployed runtime smoke PASS.\n\n## Current Operator Path\n\n- Canonical path: cloud VM messages endpoint.\n- Operator runbook: `.docs/09_runbooks/live_smoke_runbook.md`.\n- Credential reference: Keychain item name only; no secret value is recorded.\n- Command/UI channel: provider/operator command channel.\n- Do-not-retry summary: do not collapse high-risk evidence into only validate-dev.\n- Hard Constraints: strategy-changing recovery decisions must stay promoted before retrying fallback paths.\n\n## Development Self-Test Report\n\n- Report Status: PASS\n- Contract Source: .docs/03_tech_plan/plan.md\n- Module Application Entry: current self-test runnable entry from task contract.\n- Scenario Results: ST-001 PASS\n- Executed Gates: npm test\n- Module Key Test Path: local `npm test` -> ST-001 -> `https://agent.example.test/messages` runnable entry -> request validation, message handling and audit key path -> HTTP response and audit log.\n- Observable Exit: observable exit recorded by scenario result.\n- Evidence Index Refs: .docs/09_runbooks/live_smoke_evidence.md;  command output and audit log report PASS.\n- Current Blocker: none; ready to continue through recorded handoff.\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n### Gate Breakdown\n\n| Gate Layer | Status | Evidence | Gap / Next Action |\n|---|---|---|---|\n| Local gate | PASS | `npm test` command output | none |\n| Cloud/service gate | PASS | cloud_vm service startup and health status | none |\n| Executor/operator readiness | PASS | provider/operator command channel ready | none |\n| Live smoke / handoff | PASS | live handoff response and audit log evidence | none |\n\n| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |\n|---|---|---|---|---|\n| ST-001 | PASS | `https://agent.example.test/messages` | HTTP response and audit log | command output |\n\n## Testing Handoff Contract\n\n- Entry: URL `https://agent.example.test/messages`.\n- Config: env secret `DASH_SCOPE_API_KEY` is required; missing config returns a documented error.\n- Initialization: service startup and health endpoint return PASS before tests.\n- Input sample: message request body fixture `{ \"text\": \"hello\" }`.\n- Expected exit / observable exit: HTTP response, queue item, audit log and send result are produced.\n- Cleanup: shutdown or reset is idempotent between test runs.\n- Evidence Level: `business_handoff_ready`.\n",
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: cloud agent service at `https://agent.example.test/messages`.\n- Exit / side effects: HTTP response and audit log.\n- Config contract: DASH_SCOPE_API_KEY.\n- Fixture/live boundary: deployed runtime smoke.\n\n## Development Evidence\n\n- Evidence Level: `business_handoff_ready`.\n- Target Runtime Environment: `cloud_vm` service at `https://agent.example.test/messages`.\n- Runnable Entry: HTTP endpoint `https://agent.example.test/messages` receives a live-mode event.\n- Observable Exit: response output and audit log report PASS.\n- Client / Server Initialization: cloud VM service startup and health status return PASS.\n- Config Contract: env DASH_SCOPE_API_KEY is required.\n- Testing Handoff Readiness: testing handoff contract below includes entry, config, startup, input, expected exit and cleanup.\n- Known Missing Runtime Boundaries: none.\n- Basic Self-test Evidence: See `Development Self-Test Report`; deployed runtime smoke PASS.\n\n## Current Operator Path\n\n- Canonical path: cloud VM messages endpoint.\n- Operator runbook: `.work_products/09_runbooks/live_smoke_runbook.md`.\n- Credential reference: Keychain item name only; no secret value is recorded.\n- Command/UI channel: provider/operator command channel.\n- Do-not-retry summary: do not collapse high-risk evidence into only validate-dev.\n- Hard Constraints: strategy-changing recovery decisions must stay promoted before retrying fallback paths.\n\n## Development Self-Test Report\n\n- Report Status: PASS\n- Contract Source: .work_products/03_tech_plan/plan.md\n- Module Application Entry: current self-test runnable entry from task contract.\n- Scenario Results: ST-001 PASS\n- Executed Gates: npm test\n- Module Key Test Path: local `npm test` -> ST-001 -> `https://agent.example.test/messages` runnable entry -> request validation, message handling and audit key path -> HTTP response and audit log.\n- Observable Exit: observable exit recorded by scenario result.\n- Evidence Index Refs: .work_products/09_runbooks/live_smoke_evidence.md;  command output and audit log report PASS.\n- Current Blocker: none; ready to continue through recorded handoff.\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n### Gate Breakdown\n\n| Gate Layer | Status | Evidence | Gap / Next Action |\n|---|---|---|---|\n| Local gate | PASS | `npm test` command output | none |\n| Cloud/service gate | PASS | cloud_vm service startup and health status | none |\n| Executor/operator readiness | PASS | provider/operator command channel ready | none |\n| Live smoke / handoff | PASS | live handoff response and audit log evidence | none |\n\n| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |\n|---|---|---|---|---|\n| ST-001 | PASS | `https://agent.example.test/messages` | HTTP response and audit log | command output |\n\n## Testing Handoff Contract\n\n- Entry: URL `https://agent.example.test/messages`.\n- Config: env secret `DASH_SCOPE_API_KEY` is required; missing config returns a documented error.\n- Initialization: service startup and health endpoint return PASS before tests.\n- Input sample: message request body fixture `{ \"text\": \"hello\" }`.\n- Expected exit / observable exit: HTTP response, queue item, audit log and send result are produced.\n- Cleanup: shutdown or reset is idempotent between test runs.\n- Evidence Level: `business_handoff_ready`.\n",
     "utf8"
   );
   const businessHandoffReadyDevReport = await runValidator(root, "validate-dev");
   assert.deepEqual(businessHandoffReadyDevReport.errors, [], "validate-dev accepts complete business handoff evidence");
 
-  const completeBusinessReportText = await readFile(path.join(root, ".docs/04_implementation/example/dev.md"), "utf8");
+  const completeBusinessReportText = await readFile(path.join(root, ".work_products/04_implementation/example/dev.md"), "utf8");
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     completeBusinessReportText.replace("- Report Status: PASS\n", ""),
     "utf8"
   );
@@ -997,7 +997,7 @@ tasks:
   assert.match(missingReportStatusDevReport.errors.join("\n"), /Report Status/);
 
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     completeBusinessReportText
       .replace("- Scenario Results: ST-001 PASS", "- Scenario Results: ST-001 BLOCKED")
       .replace("| ST-001 | PASS | `https://agent.example.test/messages`", "| ST-001 | BLOCKED | `https://agent.example.test/messages`"),
@@ -1008,7 +1008,7 @@ tasks:
 
   for (const reportStatus of ["BLOCKED", "IN_PROGRESS", "STALE"]) {
     await writeFile(
-      path.join(root, ".docs/04_implementation/example/dev.md"),
+      path.join(root, ".work_products/04_implementation/example/dev.md"),
       completeBusinessReportText.replace("- Report Status: PASS", `- Report Status: ${reportStatus}`),
       "utf8"
     );
@@ -1017,7 +1017,7 @@ tasks:
   }
 
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     completeBusinessReportText.replace("### Gate Breakdown", "### Debug Log\n\n- command transcript and remote operator notes are intentionally misplaced here.\n\n### Gate Breakdown"),
     "utf8"
   );
@@ -1025,7 +1025,7 @@ tasks:
   assert.match(embeddedDebugLogDevReport.errors.join("\n"), /debug\/operator\/runbook\/exploration log section/);
 
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     completeBusinessReportText.replace(/\n- Evidence Index Refs:[^\n]+/, ""),
     "utf8"
   );
@@ -1033,15 +1033,15 @@ tasks:
   assert.match(missingEvidenceIndexRefsDevReport.errors.join("\n"), /Evidence Index Refs/);
 
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
-    completeBusinessReportText.replace("- Evidence Index Refs: .docs/09_runbooks/live_smoke_evidence.md;  command output and audit log report PASS.", "- Actual Evidence: command transcript copied into the report."),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
+    completeBusinessReportText.replace("- Evidence Index Refs: .work_products/09_runbooks/live_smoke_evidence.md;  command output and audit log report PASS.", "- Actual Evidence: command transcript copied into the report."),
     "utf8"
   );
   const actualEvidenceFieldDevReport = await runValidator(root, "validate-dev");
   assert.match(actualEvidenceFieldDevReport.errors.join("\n"), /must not use Actual Evidence/);
 
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     completeBusinessReportText.replace(/\n- Hard Constraints:[^\n]+/, ""),
     "utf8"
   );
@@ -1050,7 +1050,7 @@ tasks:
 
   const longReportLines = Array.from({ length: 121 }, (_, index) => `- Extra handoff line ${index + 1}: move this detail to evidence index.`);
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     completeBusinessReportText.replace("\n### Gate Breakdown", `\n${longReportLines.join("\n")}\n\n### Gate Breakdown`),
     "utf8"
   );
@@ -1069,7 +1069,7 @@ tasks:
   const overlongWorkingNotesPlanReport = await runValidator(root, "validate-plan");
   assert.match(overlongWorkingNotesPlanReport.errors.join("\n"), /working_notes.*at most 8/);
   await writeFile(path.join(root, ".harness/state/plan.yaml"), highRiskPlanText, "utf8");
-  await writeFile(path.join(root, ".docs/04_implementation/example/dev.md"), completeBusinessReportText, "utf8");
+  await writeFile(path.join(root, ".work_products/04_implementation/example/dev.md"), completeBusinessReportText, "utf8");
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
@@ -1084,13 +1084,13 @@ tasks:
   await writeFile(path.join(root, ".harness/state/plan.yaml"), highRiskPlanText, "utf8");
 
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     `${completeBusinessReportText}\n\n## Evidence Dump\n\n- Full command transcript should move to an evidence index.\n`,
     "utf8"
   );
   const implementationMainlineBloatReport = await runValidator(root, "validate-dev");
   assert.match(implementationMainlineBloatReport.errors.join("\n"), /must not keep evidence dump as a mainline section/);
-  await writeFile(path.join(root, ".docs/04_implementation/example/dev.md"), completeBusinessReportText, "utf8");
+  await writeFile(path.join(root, ".work_products/04_implementation/example/dev.md"), completeBusinessReportText, "utf8");
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
@@ -1103,9 +1103,9 @@ tasks:
     title: Handoff cloud agent runtime task
     status: in_progress
     summary: Cloud VM agent service must be business handoff ready.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "src/**"
     required_gates:
@@ -1121,7 +1121,7 @@ tasks:
       handoff_entrypoint: "https://agent.example.test/messages"
     self_test_contract:
       status: required
-      source: .docs/03_tech_plan/plan.md
+      source: .work_products/03_tech_plan/plan.md
       capability_refs:
         - PRD-TEST-001
       runnable_entry: "https://agent.example.test/messages"
@@ -1135,7 +1135,7 @@ tasks:
           entry: "https://agent.example.test/messages"
           expected_exit: "HTTP response and audit log"
           evidence: "command output"
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -1151,9 +1151,9 @@ tasks:
     title: Static fixture task
     status: in_progress
     summary: Static validator fixture without product runtime boundary.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "src/**"
     required_gates:
@@ -1166,19 +1166,19 @@ tasks:
       kind: not_applicable
       required_for_done: false
       handoff_entrypoint: ""
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     "# Impl\n\n## Runnable Entry/Exit\n\nNot applicable: validator fixture implementation has no product runtime boundary.\n\n## Development Evidence\n\n- Not applicable: because this validator fixture has no product runtime boundary, no user-facing entry, and no observable side effect beyond static validation.\n",
     "utf8"
   );
   const notApplicableDevReport = await runValidator(root, "validate-dev");
   assert.deepEqual(notApplicableDevReport.errors, [], "validate-dev accepts explicit Not applicable entry/exit docs");
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: page module fixture.\n- Exit / side effects: rendered page state.\n- Config contract: fixture.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Runnable Entry: frontend page smoke opens the local UI fixture.\n- Observable Exit: PASS output reports rendered page state.\n- Client / Server Initialization: local page preview startup is recorded for this fixture.\n- Config Contract: fixture config only.\n- Basic Self-test Evidence: smoke PASS.\n",
     "utf8"
   );
@@ -1193,9 +1193,9 @@ tasks:
     title: Open frontend page task
     status: in_progress
     summary: Active page task
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "src/**"
     required_gates:
@@ -1210,7 +1210,7 @@ tasks:
       handoff_entrypoint: "http://localhost:3000/dashboard"
     self_test_contract:
       status: required
-      source: .docs/03_tech_plan/plan.md
+      source: .work_products/03_tech_plan/plan.md
       capability_refs:
         - PRD-TEST-001
       runnable_entry: "http://localhost:3000/dashboard"
@@ -1223,35 +1223,35 @@ tasks:
           entry: "http://localhost:3000/dashboard"
           expected_exit: "rendered page state"
           evidence: "browser check"
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
   const pageMissingUrlDevReport = await runValidator(root, "validate-dev");
   assert.match(pageMissingUrlDevReport.errors.join("\n"), /dev server or page URL/);
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: page module fixture.\n- Exit / side effects: rendered page state.\n- Config contract: fixture.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` browser fixture.\n- Target Runtime Environment: `browser` dev server page URL `http://localhost:3000/dashboard`.\n- Runnable Entry: dev server page URL `http://localhost:3000/dashboard` opens the local UI fixture.\n- Observable Exit: PASS output reports rendered page state.\n- Client / Server Initialization: dev server startup is represented by the recorded page URL.\n- Config Contract: fixture config only.\n- Testing Handoff Readiness: page URL evidence is ready for TESTING handoff.\n- Known Missing Runtime Boundaries: none for this browser fixture.\n- Basic Self-test Evidence: smoke PASS.\n",
     "utf8"
   );
   const pageMissingBrowserCheckDevReport = await runValidator(root, "validate-dev");
   assert.match(pageMissingBrowserCheckDevReport.errors.join("\n"), /browser check/);
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
-    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: page module fixture at `http://localhost:3000/dashboard`.\n- Exit / side effects: rendered page state.\n- Config contract: fixture.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` browser fixture.\n- Target Runtime Environment: `browser` dev server page URL `http://localhost:3000/dashboard`.\n- Runnable Entry: dev server page URL `http://localhost:3000/dashboard` opens the local UI fixture.\n- Observable Exit: browser check reports rendered page state PASS.\n- Client / Server Initialization: dev server startup is represented by the recorded page URL.\n- Config Contract: fixture config only.\n- Testing Handoff Readiness: page URL evidence is ready for TESTING handoff.\n- Known Missing Runtime Boundaries: none for this browser fixture.\n- Basic Self-test Evidence: See `Development Self-Test Report`; browser check PASS.\n\n## Development Self-Test Report\n\n- Report Status: PASS\n- Contract Source: .docs/03_tech_plan/plan.md\n- Module Application Entry: current self-test runnable entry from task contract.\n- Scenario Results: ST-001 PASS\n- Executed Gates: npm test\n- Module Key Test Path: local `npm test` -> ST-001 -> `http://localhost:3000/dashboard` runnable page entry -> render key path -> rendered page state.\n- Observable Exit: observable exit recorded by scenario result.\n- Evidence Index Refs: .docs/09_runbooks/live_smoke_evidence.md;  rendered page state PASS.\n- Current Blocker: none; ready to continue through recorded handoff.\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |\n|---|---|---|---|---|\n| ST-001 | PASS | `http://localhost:3000/dashboard` | rendered page state | command output |\n",
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: page module fixture at `http://localhost:3000/dashboard`.\n- Exit / side effects: rendered page state.\n- Config contract: fixture.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` browser fixture.\n- Target Runtime Environment: `browser` dev server page URL `http://localhost:3000/dashboard`.\n- Runnable Entry: dev server page URL `http://localhost:3000/dashboard` opens the local UI fixture.\n- Observable Exit: browser check reports rendered page state PASS.\n- Client / Server Initialization: dev server startup is represented by the recorded page URL.\n- Config Contract: fixture config only.\n- Testing Handoff Readiness: page URL evidence is ready for TESTING handoff.\n- Known Missing Runtime Boundaries: none for this browser fixture.\n- Basic Self-test Evidence: See `Development Self-Test Report`; browser check PASS.\n\n## Development Self-Test Report\n\n- Report Status: PASS\n- Contract Source: .work_products/03_tech_plan/plan.md\n- Module Application Entry: current self-test runnable entry from task contract.\n- Scenario Results: ST-001 PASS\n- Executed Gates: npm test\n- Module Key Test Path: local `npm test` -> ST-001 -> `http://localhost:3000/dashboard` runnable page entry -> render key path -> rendered page state.\n- Observable Exit: observable exit recorded by scenario result.\n- Evidence Index Refs: .work_products/09_runbooks/live_smoke_evidence.md;  rendered page state PASS.\n- Current Blocker: none; ready to continue through recorded handoff.\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |\n|---|---|---|---|---|\n| ST-001 | PASS | `http://localhost:3000/dashboard` | rendered page state | command output |\n",
     "utf8"
   );
   const pageReportMissingBrowserEvidenceDevReport = await runValidator(root, "validate-dev");
   assert.match(pageReportMissingBrowserEvidenceDevReport.errors.join("\n"), /page Development Self-Test Report.*browser/);
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
-    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: page module fixture at `http://localhost:3000/dashboard`.\n- Exit / side effects: rendered page state.\n- Config contract: fixture.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` browser fixture.\n- Target Runtime Environment: `browser` dev server page URL `http://localhost:3000/dashboard`.\n- Runnable Entry: dev server page URL `http://localhost:3000/dashboard` opens the local UI fixture.\n- Observable Exit: browser check reports rendered page state PASS.\n- Client / Server Initialization: dev server startup is represented by the recorded page URL.\n- Config Contract: fixture config only.\n- Testing Handoff Readiness: page URL evidence is ready for TESTING handoff.\n- Known Missing Runtime Boundaries: none for this browser fixture.\n- Basic Self-test Evidence: See `Development Self-Test Report`; Playwright browser check screenshot PASS.\n\n## Current Operator Path\n\n- Canonical path: browser page URL `http://localhost:3000/dashboard`.\n- Operator runbook: `.docs/09_runbooks/live_smoke_runbook.md`.\n- Credential reference: not applicable; local browser fixture has no credential.\n- Command/UI channel: browser/Playwright command channel.\n- Do-not-retry summary: do not collapse browser evidence into only validate-dev.\n- Hard Constraints: strategy-changing recovery decisions must stay promoted before retrying fallback paths.\n\n## Development Self-Test Report\n\n- Report Status: PASS\n- Contract Source: .docs/03_tech_plan/plan.md\n- Module Application Entry: current self-test runnable entry from task contract.\n- Scenario Results: ST-001 PASS\n- Executed Gates: npm test\n- Module Key Test Path: local `npm test` -> ST-001 -> `http://localhost:3000/dashboard` runnable page entry -> browser render key path -> rendered page state.\n- Observable Exit: observable exit recorded by scenario result.\n- Evidence Index Refs: .docs/09_runbooks/live_smoke_evidence.md;  Playwright browser check screenshot reports rendered page state PASS at `http://localhost:3000/dashboard`.\n- Current Blocker: none; ready to continue through recorded handoff.\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n### Gate Breakdown\n\n| Gate Layer | Status | Evidence | Gap / Next Action |\n|---|---|---|---|\n| Local gate | PASS | `npm test` command output | none |\n| Cloud/service gate | PASS | local browser runtime service URL loaded | none |\n| Executor/operator readiness | PASS | browser/Playwright executor ready | none |\n| Live smoke / handoff | PASS | browser handoff screenshot evidence | none |\n\n| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |\n|---|---|---|---|---|\n| ST-001 | PASS | `http://localhost:3000/dashboard` | rendered page state | Playwright browser check screenshot |\n",
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
+    "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: page module fixture at `http://localhost:3000/dashboard`.\n- Exit / side effects: rendered page state.\n- Config contract: fixture.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` browser fixture.\n- Target Runtime Environment: `browser` dev server page URL `http://localhost:3000/dashboard`.\n- Runnable Entry: dev server page URL `http://localhost:3000/dashboard` opens the local UI fixture.\n- Observable Exit: browser check reports rendered page state PASS.\n- Client / Server Initialization: dev server startup is represented by the recorded page URL.\n- Config Contract: fixture config only.\n- Testing Handoff Readiness: page URL evidence is ready for TESTING handoff.\n- Known Missing Runtime Boundaries: none for this browser fixture.\n- Basic Self-test Evidence: See `Development Self-Test Report`; Playwright browser check screenshot PASS.\n\n## Current Operator Path\n\n- Canonical path: browser page URL `http://localhost:3000/dashboard`.\n- Operator runbook: `.work_products/09_runbooks/live_smoke_runbook.md`.\n- Credential reference: not applicable; local browser fixture has no credential.\n- Command/UI channel: browser/Playwright command channel.\n- Do-not-retry summary: do not collapse browser evidence into only validate-dev.\n- Hard Constraints: strategy-changing recovery decisions must stay promoted before retrying fallback paths.\n\n## Development Self-Test Report\n\n- Report Status: PASS\n- Contract Source: .work_products/03_tech_plan/plan.md\n- Module Application Entry: current self-test runnable entry from task contract.\n- Scenario Results: ST-001 PASS\n- Executed Gates: npm test\n- Module Key Test Path: local `npm test` -> ST-001 -> `http://localhost:3000/dashboard` runnable page entry -> browser render key path -> rendered page state.\n- Observable Exit: observable exit recorded by scenario result.\n- Evidence Index Refs: .work_products/09_runbooks/live_smoke_evidence.md;  Playwright browser check screenshot reports rendered page state PASS at `http://localhost:3000/dashboard`.\n- Current Blocker: none; ready to continue through recorded handoff.\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n### Gate Breakdown\n\n| Gate Layer | Status | Evidence | Gap / Next Action |\n|---|---|---|---|\n| Local gate | PASS | `npm test` command output | none |\n| Cloud/service gate | PASS | local browser runtime service URL loaded | none |\n| Executor/operator readiness | PASS | browser/Playwright executor ready | none |\n| Live smoke / handoff | PASS | browser handoff screenshot evidence | none |\n\n| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |\n|---|---|---|---|---|\n| ST-001 | PASS | `http://localhost:3000/dashboard` | rendered page state | Playwright browser check screenshot |\n",
     "utf8"
   );
   const pageCompleteSelfTestReport = await runValidator(root, "validate-dev");
   assert.deepEqual(pageCompleteSelfTestReport.errors, [], "validate-dev accepts complete browser self-test report evidence");
   await writeFile(
-    path.join(root, ".docs/04_implementation/example/dev.md"),
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
     "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: shipped CLI fixture.\n- Exit / side effects: validation output only.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` executed through the local package CLI.\n- Target Runtime Environment: `local` CLI runtime.\n- Runnable Entry: CLI command `npx sdlc-harness validate-dev` runs the package validator fixture.\n- Observable Exit: Command output reports validate-dev PASS with no errors.\n- Client / Server Initialization: Local CLI runtime starts from the recorded command and exits with status evidence.\n- Config Contract: no external config required for this fixture.\n- Testing Handoff Readiness: local validation command and output are ready for TESTING handoff.\n- Known Missing Runtime Boundaries: none for this local CLI fixture.\n- Basic Self-test Evidence: `npm test --workspace agent-project-sdlc` PASS for the fixture regression.\n",
     "utf8"
   );
@@ -1284,7 +1284,9 @@ tasks: []
     "utf8"
   );
 
-  await writeFile(path.join(root, ".docs/02_experience/dashboard.md"), validUiuxSlice(), "utf8");
+  await mkdir(path.join(root, ".work_products/02_experience/assets/dashboard"), { recursive: true });
+  await writeFile(path.join(root, ".work_products/02_experience/assets/dashboard/mock.png"), "mock", "utf8");
+  await writeFile(path.join(root, ".work_products/02_experience/dashboard.md"), validUiuxSlice(), "utf8");
   await writeFile(path.join(root, "DESIGN.md"), validDesignMd(), "utf8");
   let uiuxReport = await runValidator(root, "validate-uiux");
   assert.deepEqual(uiuxReport.errors, [], "validate-uiux accepts visual UI slice with valid DESIGN.md");
@@ -1294,18 +1296,18 @@ tasks: []
   assert.match(uiuxReport.errors.join("\n"), /requires root DESIGN\.md/);
 
   await writeFile(
-    path.join(root, ".docs/02_experience/dashboard.md"),
+    path.join(root, ".work_products/02_experience/dashboard.md"),
     "# Broken UX\n\nApplicability: cli_or_api_experience\n\n## User journeys\n\n- Operator starts a flow.\n\n## Handoff matrix\n\n- flow -> state -> component -> test seed.\n\n## Screen contracts\n\n- States: loading, empty, error, success, permission.\n- Responsive: desktop and mobile breakpoints.\n- Accessibility: focus, keyboard and touch expectations.\n",
     "utf8"
   );
   uiuxReport = await runValidator(root, "validate-uiux");
   assert.match(uiuxReport.errors.join("\n"), /PRD and requirement IDs/);
 
-  await writeFile(path.join(root, ".docs/02_experience/dashboard.md"), notApplicableUiuxSlice(), "utf8");
+  await writeFile(path.join(root, ".work_products/02_experience/dashboard.md"), notApplicableUiuxSlice(), "utf8");
   uiuxReport = await runValidator(root, "validate-uiux");
   assert.deepEqual(uiuxReport.errors, [], "validate-uiux accepts explicit not_applicable without DESIGN.md");
 
-  await writeFile(path.join(root, ".docs/02_experience/dashboard.md"), validUiuxSlice(), "utf8");
+  await writeFile(path.join(root, ".work_products/02_experience/dashboard.md"), validUiuxSlice(), "utf8");
   await writeFile(path.join(root, "DESIGN.md"), brokenDesignMd(), "utf8");
   uiuxReport = await runValidator(root, "validate-uiux");
   assert.match(uiuxReport.errors.join("\n"), /DESIGN\.md linter reported errors|does not resolve/);
@@ -1319,24 +1321,24 @@ tasks:
     title: Visual dashboard component
     status: pending
     summary: Build the visual dashboard component from the UX contract.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
       tech_plan:
-        - .docs/03_tech_plan/plan.md
+        - .work_products/03_tech_plan/plan.md
     allowed_paths:
       - src/ui/**
     required_gates:
       - npm test
     acceptance_criteria:
       - Dashboard screen follows the UI/UX contract.
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
   let uiDesignReport = await runValidator(root, "validate-design");
-  assert.match(uiDesignReport.errors.join("\n"), /docs\.uiux/);
-  assert.match(uiDesignReport.errors.join("\n"), /docs\.design_system/);
+  assert.match(uiDesignReport.errors.join("\n"), /work_products\.uiux/);
+  assert.match(uiDesignReport.errors.join("\n"), /work_products\.design_system/);
 
   await writeFile(path.join(root, "DESIGN.md"), validDesignMd(), "utf8");
   await writeFile(
@@ -1348,29 +1350,29 @@ tasks:
     title: Visual dashboard component
     status: pending
     summary: Build the visual dashboard component from the UX contract.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
       uiux:
-        - .docs/02_experience/dashboard.md
+        - .work_products/02_experience/dashboard.md
       design_system:
         - DESIGN.md
       tech_plan:
-        - .docs/03_tech_plan/plan.md
+        - .work_products/03_tech_plan/plan.md
     allowed_paths:
       - src/ui/**
     required_gates:
       - npm test
     acceptance_criteria:
       - Dashboard screen follows the UI/UX contract.
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
   uiDesignReport = await runValidator(root, "validate-design");
   assert.deepEqual(uiDesignReport.errors, [], "validate-design accepts UI draft task with UX and DESIGN.md refs");
   await rm(path.join(root, "DESIGN.md"), { force: true });
-  await writeFile(path.join(root, ".docs/02_experience/dashboard.md"), notApplicableUiuxSlice(), "utf8");
+  await writeFile(path.join(root, ".work_products/02_experience/dashboard.md"), notApplicableUiuxSlice(), "utf8");
 
   await writeFile(
     path.join(root, ".harness/state/plan.draft.yaml"),
@@ -1381,16 +1383,16 @@ tasks:
     title: Missing tech plan ref
     status: pending
     summary: Negative design slicing fixture.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - src/**
     required_gates:
       - npm test
     acceptance_criteria:
       - Fixture fails design slicing.
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -1406,11 +1408,11 @@ tasks:
     title: Runtime service task
     status: pending
     summary: Runtime service task needs a self-test contract.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
       tech_plan:
-        - .docs/03_tech_plan/plan.md
+        - .work_products/03_tech_plan/plan.md
     allowed_paths:
       - src/**
     required_gates:
@@ -1423,7 +1425,7 @@ tasks:
       kind: local
       required_for_done: true
       handoff_entrypoint: "http://localhost:3000/health"
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -1439,11 +1441,11 @@ tasks:
     title: Runtime service task
     status: pending
     summary: Runtime service task needs a module key test path.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
       tech_plan:
-        - .docs/03_tech_plan/plan.md
+        - .work_products/03_tech_plan/plan.md
     allowed_paths:
       - src/**
     required_gates:
@@ -1458,7 +1460,7 @@ tasks:
       handoff_entrypoint: "http://localhost:3000/health"
     self_test_contract:
       status: required
-      source: .docs/03_tech_plan/plan.md
+      source: .work_products/03_tech_plan/plan.md
       capability_refs:
         - PRD-TEST-001
       runnable_entry: "http://localhost:3000/health"
@@ -1470,7 +1472,7 @@ tasks:
           entry: "http://localhost:3000/health"
           expected_exit: "health response"
           evidence: "command output"
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -1486,35 +1488,35 @@ tasks:
     title: First shared plan task
     status: pending
     summary: Negative shared tech plan fixture.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
       tech_plan:
-        - .docs/03_tech_plan/plan.md
+        - .work_products/03_tech_plan/plan.md
     allowed_paths:
       - src/one/**
     required_gates:
       - npm test
     acceptance_criteria:
       - First task is scoped.
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
   - id: TASK-002
     phase: SPRINTING
     title: Second shared plan task
     status: pending
     summary: Negative shared tech plan fixture.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
       tech_plan:
-        - .docs/03_tech_plan/plan.md
+        - .work_products/03_tech_plan/plan.md
     allowed_paths:
       - src/two/**
     required_gates:
       - npm test
     acceptance_criteria:
       - Second task is scoped.
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -1522,7 +1524,7 @@ tasks:
   assert.match(designReport.errors.join("\n"), /distinct primary tech plan slices/);
 
   await writeFile(
-    path.join(root, ".docs/03_tech_plan/plan_two.md"),
+    path.join(root, ".work_products/03_tech_plan/plan_two.md"),
     "# Plan Two\n\nAPI contract task breakdown for the second slice.\n",
     "utf8"
   );
@@ -1535,35 +1537,35 @@ tasks:
     title: First sliced plan task
     status: pending
     summary: Positive split tech plan fixture.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
       tech_plan:
-        - .docs/03_tech_plan/plan.md
+        - .work_products/03_tech_plan/plan.md
     allowed_paths:
       - src/one/**
     required_gates:
       - npm test
     acceptance_criteria:
       - First task is scoped.
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
   - id: TASK-002
     phase: SPRINTING
     title: Second sliced plan task
     status: pending
     summary: Positive split tech plan fixture.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
       tech_plan:
-        - .docs/03_tech_plan/plan_two.md
+        - .work_products/03_tech_plan/plan_two.md
     allowed_paths:
       - src/two/**
     required_gates:
       - npm test
     acceptance_criteria:
       - Second task is scoped.
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -1571,7 +1573,7 @@ tasks:
   assert.deepEqual(designReport.errors, [], "validate-design allows distinct tech plan slices");
 
   await writeFile(
-    path.join(root, ".docs/01_product/prd.md"),
+    path.join(root, ".work_products/01_product/prd.md"),
     "# PRD\n\nThe product includes an AI provider, one external system, and compliance audit workflows.\n\n## Acceptance Criteria\n\n## Out of Scope\n\n## Open Questions\n",
     "utf8"
   );
@@ -1581,17 +1583,17 @@ tasks:
   assert.match(designReport.errors.join("\n"), /dedicated compliance\/permission\/audit architecture slice/);
 
   await writeFile(
-    path.join(root, ".docs/02_architecture/ai.md"),
+    path.join(root, ".work_products/02_architecture/ai.md"),
     "# AI Provider Architecture\n\nThe AI provider boundary defines prompt handling and model access.\n",
     "utf8"
   );
   await writeFile(
-    path.join(root, ".docs/02_architecture/external.md"),
+    path.join(root, ".work_products/02_architecture/external.md"),
     "# External System Architecture\n\nThe external system boundary uses an adapter interface.\n",
     "utf8"
   );
   await writeFile(
-    path.join(root, ".docs/02_architecture/compliance.md"),
+    path.join(root, ".work_products/02_architecture/compliance.md"),
     "# Compliance Architecture\n\nCompliance audit and permission controls protect authorization flows.\n",
     "utf8"
   );
@@ -1620,7 +1622,7 @@ tasks:
     status: done
     summary: Completed task
     gate_result: PASS
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -1650,7 +1652,7 @@ tasks:
     title: Open task
     status: in_progress
     summary: Active task
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -1667,16 +1669,16 @@ tasks:
     title: Open task
     status: in_progress
     summary: Active task
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "src/**"
     required_gates:
       - "npm test"
     acceptance_criteria:
       - "plan contract is present"
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -1694,16 +1696,16 @@ tasks:
     title: Open task
     status: in_progress
     summary: Active task
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "src/**"
     required_gates:
       - "npm test"
     acceptance_criteria:
       - "plan contract is present"
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -1720,16 +1722,16 @@ tasks:
     title: Open task
     status: in_progress
     summary: Active task
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "src/**"
     required_gates:
       - "npm test"
     acceptance_criteria:
       - "plan contract is present"
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -1746,16 +1748,16 @@ tasks:
     title: Open task
     status: in_progress
     summary: Active task
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "src/**"
     required_gates:
       - "npm test"
     acceptance_criteria:
       - "plan contract is present"
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -1764,10 +1766,10 @@ tasks:
   const currentWithOpenDevTask = await runValidator(root, "validate-current");
   assert.match(currentWithOpenDevTask.errors.join("\n"), /Open tasks remain: TASK-002/);
 
-  await writeFile(path.join(root, ".docs/INDEX.md"), "# Index\n", "utf8");
+  await writeFile(path.join(root, ".work_products/INDEX.md"), "# Index\n", "utf8");
   devReport = await runValidator(root, "validate-dev");
-  assert.match(devReport.errors.join("\n"), /\.docs\/INDEX\.md does not link implementation doc/);
-  await writeFile(path.join(root, ".docs/INDEX.md"), "# Index\n.docs/04_implementation/example/dev.md\n", "utf8");
+  assert.match(devReport.errors.join("\n"), /\.work_products\/INDEX\.md does not link implementation doc/);
+  await writeFile(path.join(root, ".work_products/INDEX.md"), "# Index\n.work_products/04_implementation/example/dev.md\n", "utf8");
 
   const dirtyRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-dirty-dev-"));
   try {
@@ -1789,8 +1791,8 @@ tasks:
     await writeSprintDevFixture(dirtyHarnessRoot);
     const planPath = path.join(dirtyHarnessRoot, ".harness/state/plan.yaml");
     const planWithRootToken = (await readFile(planPath, "utf8")).replace(
-      '      - ".docs/04_implementation/**"\n',
-      '      - ".docs/04_implementation/**"\n      - "<harnessRoot>/state/plan.yaml"\n'
+      '      - ".work_products/04_implementation/**"\n',
+      '      - ".work_products/04_implementation/**"\n      - "<harnessRoot>/state/plan.yaml"\n'
     );
     await writeFile(planPath, planWithRootToken, "utf8");
     execFileSync("git", ["init"], { cwd: dirtyHarnessRoot, stdio: "ignore" });
@@ -1821,26 +1823,54 @@ tasks:
     title: Draft one PRD slice
     status: in_progress
     summary: Active document-production task
-    docs:
+    work_products:
       raw:
-        - .docs/00_raw/request.md
+        - .work_products/00_raw/request.md
     allowed_paths:
-      - ".docs/01_product/prd.md"
-      - ".docs/INDEX.md"
+      - ".work_products/01_product/prd.md"
+      - ".work_products/INDEX.md"
       - ".harness/state/plan.yaml"
     required_gates:
       - "npx sdlc-harness validate-plan"
     acceptance_criteria:
       - "One PRD slice is updated."
+    result_work_products:
+      - .work_products/01_product/prd.md
+`,
+    "utf8"
+  );
+  const planReport = await runValidator(root, "validate-plan");
+  assert.deepEqual(planReport.errors, [], "validate-plan allows open document task with result_work_products");
+  const pmWithOpenTask = await runValidator(root, "validate-pm");
+  assert.match(pmWithOpenTask.errors.join("\n"), /Open tasks remain: TASK-004/);
+
+  await writeFile(
+    path.join(root, ".harness/state/plan.yaml"),
+    `current_task_id: TASK-OLD-DOCS
+next_task_sequence: 6
+tasks:
+  - id: TASK-OLD-DOCS
+    phase: REQUIREMENT_GATHERING
+    title: Legacy docs field
+    status: in_progress
+    summary: Old task schema should fail after migration.
+    docs:
+      product:
+        - .docs/01_product/prd.md
+    allowed_paths:
+      - ".docs/01_product/prd.md"
+    required_gates:
+      - "npx sdlc-harness validate-plan"
+    acceptance_criteria:
+      - "Old docs fields are rejected."
     result_docs:
       - .docs/01_product/prd.md
 `,
     "utf8"
   );
-  const planReport = await runValidator(root, "validate-plan");
-  assert.deepEqual(planReport.errors, [], "validate-plan allows open document task with result_docs");
-  const pmWithOpenTask = await runValidator(root, "validate-pm");
-  assert.match(pmWithOpenTask.errors.join("\n"), /Open tasks remain: TASK-004/);
+  const legacyDocsTask = await runValidator(root, "validate-plan");
+  assert.match(legacyDocsTask.errors.join("\n"), /TASK-OLD-DOCS must define implementation_work_product or result_work_products/);
+  assert.match(legacyDocsTask.errors.join("\n"), /missing work_products|work_products must be a mapping/);
 
   await writeFile(
     path.join(root, ".harness/state/plan.yaml"),
@@ -1851,17 +1881,17 @@ tasks:
     title: Missing phase
     status: in_progress
     summary: Active document-production task
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
-      - ".docs/01_product/prd.md"
+      - ".work_products/01_product/prd.md"
     required_gates:
       - "npx sdlc-harness validate-plan"
     acceptance_criteria:
       - "One PRD slice is updated."
-    result_docs:
-      - .docs/01_product/prd.md
+    result_work_products:
+      - .work_products/01_product/prd.md
 `,
     "utf8"
   );
@@ -1893,7 +1923,7 @@ parallel_execution:
     required_gates:
       - "validate-pm"
     fact_source_updates:
-      - ".docs/01_product/"
+      - ".work_products/01_product/"
 tasks: []
 `,
     "utf8"
@@ -1933,7 +1963,7 @@ parallel_execution:
     required_gates:
       - "make validate-design"
     fact_source_updates:
-      - ".docs/03_tech_plan/"
+      - ".work_products/03_tech_plan/"
 tasks: []
 `,
     "utf8"
@@ -1974,23 +2004,23 @@ parallel_execution:
     required_gates:
       - "make validate-test"
     fact_source_updates:
-      - ".docs/07_test/"
+      - ".work_products/07_test/"
 tasks:
   - id: TASK-006
     phase: SPRINTING
     title: Open task
     status: in_progress
     summary: Active task
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "tests/smoke/**"
     required_gates:
       - "npm test -- tests/smoke"
     acceptance_criteria:
       - "smoke worker has a path lock"
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -2026,7 +2056,7 @@ parallel_execution:
     required_gates:
       - "validate-pm"
     fact_source_updates:
-      - ".docs/01_product/"
+      - ".work_products/01_product/"
 tasks: []
 `,
     "utf8"
@@ -2060,7 +2090,7 @@ parallel_execution:
     required_gates:
       - "make validate-test"
     fact_source_updates:
-      - ".docs/07_test/"
+      - ".work_products/07_test/"
 tasks: []
 `,
     "utf8"
@@ -2100,7 +2130,7 @@ parallel_execution:
     required_gates:
       - "make validate-test"
     fact_source_updates:
-      - ".docs/07_test/"
+      - ".work_products/07_test/"
 tasks: []
 `,
     "utf8"
@@ -2132,7 +2162,7 @@ parallel_execution:
     required_gates:
       - "make validate-test"
     fact_source_updates:
-      - ".docs/07_test/"
+      - ".work_products/07_test/"
 tasks: []
 `,
     "utf8"
@@ -2185,23 +2215,23 @@ parallel_execution:
     required_gates:
       - "make validate-dev"
     fact_source_updates:
-      - ".docs/04_implementation/"
+      - ".work_products/04_implementation/"
 tasks:
   - id: TASK-007
     phase: SPRINTING
     title: Open task
     status: in_progress
     summary: Active task
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "src/**"
     required_gates:
       - "npm test"
     acceptance_criteria:
       - "path locks are enforced"
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -2236,23 +2266,23 @@ parallel_execution:
     required_gates:
       - "make validate-dev"
     fact_source_updates:
-      - ".docs/04_implementation/"
+      - ".work_products/04_implementation/"
 tasks:
   - id: TASK-007
     phase: SPRINTING
     title: Open task
     status: in_progress
     summary: Active task
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "src/**"
     required_gates:
       - "npm test"
     acceptance_criteria:
       - "path locks are enforced"
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -2304,7 +2334,7 @@ parallel_execution:
     required_gates:
       - "make validate-dev"
     fact_source_updates:
-      - ".docs/04_implementation/"
+      - ".work_products/04_implementation/"
 tasks: []
 `,
     "utf8"
@@ -2341,22 +2371,22 @@ parallel_execution:
     required_gates:
       - "make validate-dev"
     fact_source_updates:
-      - ".docs/04_implementation/"
+      - ".work_products/04_implementation/"
 tasks:
   - id: DEV-002
     title: Open task
     status: in_progress
     summary: Active task
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "src/**"
     required_gates:
       - "npm test"
     acceptance_criteria:
       - "plan contract is present"
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -2377,15 +2407,15 @@ tasks:
     title: Graph self-test contract task
     status: in_progress
     summary: Runtime task with a lightweight module key test graph.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
       tech_plan:
-        - .docs/03_tech_plan/plan.md
+        - .work_products/03_tech_plan/plan.md
     allowed_paths:
       - src/**
       - tests/**
-      - .docs/04_implementation/example/dev.md
+      - .work_products/04_implementation/example/dev.md
     required_gates:
       - npm test
     evidence_level:
@@ -2398,7 +2428,7 @@ tasks:
 ${selfTestContract}
     acceptance_criteria:
       - Lightweight graph handoff is valid.
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );
@@ -2407,7 +2437,7 @@ ${selfTestContract}
 function graphContract({ graphRequired = true, graphBlock = validSelfTestGraphYaml() } = {}) {
   const requiredLine = graphRequired === "omit" ? "" : `      graph_required: ${graphRequired ? "true" : "false"}\n`;
   return `      status: required
-      source: .docs/03_tech_plan/plan.md
+      source: .work_products/03_tech_plan/plan.md
       capability_refs:
         - PRD-TEST-001
       runnable_entry: npm test
@@ -2437,7 +2467,7 @@ function validSelfTestGraphYaml() {
             label: "ST-001 validator CLI evidence"
             scenario_ref: "ST-001"
             expected_exit: "PASS output"
-            evidence_ref: ".docs/09_runbooks/live_smoke_evidence.md#ST-001"
+            evidence_ref: ".work_products/09_runbooks/live_smoke_evidence.md#ST-001"
           - id: "exit-pass"
             kind: "observable_exit"
             label: "PASS output"
@@ -2454,7 +2484,7 @@ function validSelfTestGraphYaml() {
 function graphImplementationDoc({ includeGraph }) {
   const graphSection = includeGraph
     ? `
-- Module Key Test Graph: entry-local-npm-test (entry npm test) -> checkpoint-cli -> scenario-st-001 (ST-001) -> exit-pass (PASS output); evidence_ref .docs/09_runbooks/live_smoke_evidence.md#ST-001.
+- Module Key Test Graph: entry-local-npm-test (entry npm test) -> checkpoint-cli -> scenario-st-001 (ST-001) -> exit-pass (PASS output); evidence_ref .work_products/09_runbooks/live_smoke_evidence.md#ST-001.
 `
     : "";
   return `# Impl
@@ -2481,13 +2511,13 @@ function graphImplementationDoc({ includeGraph }) {
 ## Development Self-Test Report
 
 - Report Status: PASS
-- Contract Source: .docs/03_tech_plan/plan.md
+- Contract Source: .work_products/03_tech_plan/plan.md
 - Module Application Entry: npm test
 - Scenario Results: ST-001 PASS
 - Executed Gates: npm test
 - Module Key Test Path: local \`npm test\` -> ST-001 -> validator CLI entry -> plan and implementation evidence parser key path -> PASS output.
 ${graphSection}- Observable Exit: PASS output recorded by scenario result.
-- Evidence Index Refs: .docs/09_runbooks/live_smoke_evidence.md#ST-001
+- Evidence Index Refs: .work_products/09_runbooks/live_smoke_evidence.md#ST-001
 - Current Blocker: none; ready to continue through recorded handoff.
 - Testing Handoff Readiness: ready for TESTING handoff.
 
@@ -2517,7 +2547,7 @@ function validUiuxSlice() {
 ## PRD refs and Requirement IDs
 
 - Applicability: visual_ui
-- PRD refs: .docs/01_product/prd.md
+- PRD refs: .work_products/01_product/prd.md
 - Requirement IDs: PRD-TEST-001
 
 ## User journeys
@@ -2547,6 +2577,10 @@ function validUiuxSlice() {
 ## Design system reference
 
 - DESIGN.md path: DESIGN.md
+
+## Design materials
+
+- Mock reference: .work_products/02_experience/assets/dashboard/mock.png
 
 ## Handoff matrix
 
@@ -2674,16 +2708,16 @@ async function writeTestingBoundaryFixture(projectRoot) {
     JSON.stringify({ sdlcHarness: { harnessFolderName: ".harness" } }, null, 2),
     "utf8"
   );
-  await mkdir(path.join(projectRoot, ".docs/06_review"), { recursive: true });
-  await mkdir(path.join(projectRoot, ".docs/07_test"), { recursive: true });
+  await mkdir(path.join(projectRoot, ".work_products/06_review"), { recursive: true });
+  await mkdir(path.join(projectRoot, ".work_products/07_test"), { recursive: true });
   await mkdir(path.join(projectRoot, ".harness/state"), { recursive: true });
   await writeFile(
-    path.join(projectRoot, ".docs/06_review/REVIEW_REPORT.md"),
+    path.join(projectRoot, ".work_products/06_review/REVIEW_REPORT.md"),
     "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage exists.\n\n## Runnable Entry/Exit Readiness\n\n- Runnable Entry: PASS\n- Observable Exit: PASS\n- Initialization: PASS\n- Config Contract: PASS\n- Testing Handoff Readiness: PASS\n- Notes: Existing entry/exit is runnable.\n\n## Decision\n\nPASS\n",
     "utf8"
   );
   await writeFile(
-    path.join(projectRoot, ".docs/07_test/TEST_REPORT.md"),
+    path.join(projectRoot, ".work_products/07_test/TEST_REPORT.md"),
     "# Test Report\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal | PASS |\n\n## Regression\n\n- focused regression: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised.\n\n## Coverage Gap\n\nNo gap.\n\n## Decision\n\nPASS\n",
     "utf8"
   );
@@ -2704,11 +2738,11 @@ async function writeSprintDevFixture(projectRoot) {
     JSON.stringify({ sdlcHarness: { harnessFolderName: ".harness" } }, null, 2),
     "utf8"
   );
-  await mkdir(path.join(projectRoot, ".docs/04_implementation/example"), { recursive: true });
+  await mkdir(path.join(projectRoot, ".work_products/04_implementation/example"), { recursive: true });
   await mkdir(path.join(projectRoot, ".harness/state"), { recursive: true });
-  await writeFile(path.join(projectRoot, ".docs/INDEX.md"), "# Index\n.docs/04_implementation/example/dev.md\n", "utf8");
+  await writeFile(path.join(projectRoot, ".work_products/INDEX.md"), "# Index\n.work_products/04_implementation/example/dev.md\n", "utf8");
   await writeFile(
-    path.join(projectRoot, ".docs/04_implementation/example/dev.md"),
+    path.join(projectRoot, ".work_products/04_implementation/example/dev.md"),
     "# Impl\n\n## Runnable Entry/Exit\n\n- Entry points: local fixture API.\n- Exit / side effects: validation output only.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` executed through the local API fixture.\n- Target Runtime Environment: `local` fixture API runtime.\n- Runnable Entry: API command `node tests/fixture-api.mjs` invokes the local fixture API.\n- Observable Exit: Command output reports PASS validation output only.\n- Client / Server Initialization: Local API fixture starts from the recorded command.\n- Config Contract: no external config required for this fixture.\n- Testing Handoff Readiness: local API command and output are ready for TESTING handoff.\n- Known Missing Runtime Boundaries: none for this local fixture.\n- Basic Self-test Evidence: `npm test --workspace agent-project-sdlc` PASS for dirty-file scoping regression.\n",
     "utf8"
   );
@@ -2724,18 +2758,18 @@ tasks:
     title: Active sprint task
     status: in_progress
     summary: Validate dirty-file scoping.
-    docs:
+    work_products:
       product:
-        - .docs/01_product/prd.md
+        - .work_products/01_product/prd.md
     allowed_paths:
       - "src/**"
       - "tests/**"
-      - ".docs/04_implementation/**"
+      - ".work_products/04_implementation/**"
     required_gates:
       - "npm test"
     acceptance_criteria:
       - "Dirty file scoping is enforced."
-    implementation_doc: .docs/04_implementation/example/dev.md
+    implementation_work_product: .work_products/04_implementation/example/dev.md
 `,
     "utf8"
   );

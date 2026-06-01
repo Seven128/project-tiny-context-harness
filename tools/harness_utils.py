@@ -42,11 +42,11 @@ PARALLEL_READ_ONLY_PHASES = {"REQUIREMENT_GATHERING", "UI_UX_DESIGNING", "ARCHIT
 PARALLEL_PROTECTED_WRITE_PATTERNS = {
     ".codex/state/**",
     "<harnessRoot>/state/**",
-    ".docs/INDEX.md",
-    ".docs/**/overview.md",
-    ".docs/04_implementation/**",
-    ".docs/06_review/**",
-    ".docs/08_release/**",
+    ".work_products/INDEX.md",
+    ".work_products/**/overview.md",
+    ".work_products/04_implementation/**",
+    ".work_products/06_review/**",
+    ".work_products/08_release/**",
 }
 TASK_ID_PATTERN = re.compile(r"^[A-Z]+-(\d+)$")
 TASK_PHASES = {
@@ -478,7 +478,7 @@ RESUME_CAPSULE_FIELDS = [
     "do_not_retry",
     "recovery_refs",
 ]
-RUNBOOK_DOC_PREFIX = ".docs/09_runbooks/"
+RUNBOOK_DOC_PREFIX = ".work_products/09_runbooks/"
 MAX_WORKING_NOTES = 8
 
 
@@ -499,9 +499,9 @@ def is_placeholder_evidence(value: str) -> bool:
 
 def task_text_for_contract(task: dict[str, Any]) -> str:
     parts = [str(task.get(key) or "") for key in ["id", "title", "summary", "phase"] if task.get(key)]
-    docs = task.get("docs")
-    if isinstance(docs, dict):
-        for value in docs.values():
+    work_products = task.get("work_products")
+    if isinstance(work_products, dict):
+        for value in work_products.values():
             parts.extend(as_string_list(value))
     return "\n".join(parts)
 
@@ -838,7 +838,7 @@ TESTING_ALLOWED_TEST_FILE_TERMS = [
 ]
 
 TEST_FACT_SOURCE_PHASES = {"TESTING", "RFC_RECALIBRATION"}
-TEST_FACT_SOURCE_PATTERNS = [".docs/07_test/**", ".docs/07_test/"]
+TEST_FACT_SOURCE_PATTERNS = [".work_products/07_test/**", ".work_products/07_test/"]
 
 
 def test_fact_source_errors_for_task(task: dict[str, Any]) -> list[str]:
@@ -846,17 +846,17 @@ def test_fact_source_errors_for_task(task: dict[str, Any]) -> list[str]:
     if phase in TEST_FACT_SOURCE_PHASES:
         return []
     candidates = [str(path) for path in task.get("allowed_paths") or []]
-    candidates.extend(str(path) for path in task.get("result_docs") or [])
+    candidates.extend(str(path) for path in task.get("result_work_products") or [])
     blocked = [
         path
         for path in candidates
         if matches_any(path.replace("\\", "/"), TEST_FACT_SOURCE_PATTERNS)
-        or path.replace("\\", "/").startswith(".docs/07_test/")
+        or path.replace("\\", "/").startswith(".work_products/07_test/")
     ]
     if not blocked:
         return []
     return [
-        "Only TESTING or RFC_RECALIBRATION tasks may target current test fact sources under .docs/07_test/**: "
+        "Only TESTING or RFC_RECALIBRATION tasks may target current test fact sources under .work_products/07_test/**: "
         + ", ".join(blocked)
     ]
 
@@ -1107,16 +1107,16 @@ def validate_task_shape(task: dict[str, Any], index: int) -> None:
         require(task.get("phase") in TASK_PHASES, f"{task_id} has invalid phase: {task.get('phase')}")
     require(task["status"] in TASK_STATUSES, f"{task.get('id', prefix)} has invalid status: {task.get('status')}")
     require(isinstance(task["summary"], str) and task["summary"].strip(), f"{task['id']} must define summary")
-    has_implementation_doc = isinstance(task.get("implementation_doc"), str) and task["implementation_doc"].strip()
-    has_result_docs = isinstance(task.get("result_docs"), list) and bool(task["result_docs"])
-    require(has_implementation_doc or has_result_docs, f"{task['id']} must define implementation_doc or result_docs")
+    has_implementation_work_product = isinstance(task.get("implementation_work_product"), str) and task["implementation_work_product"].strip()
+    has_result_work_products = isinstance(task.get("result_work_products"), list) and bool(task["result_work_products"])
+    require(has_implementation_work_product or has_result_work_products, f"{task['id']} must define implementation_work_product or result_work_products")
     for error in test_fact_source_errors_for_task(task):
         require(False, f"{task['id']} {error}")
     if task["status"] in OPEN_TASK_STATUSES:
         require("gate_result" not in task, f"{task['id']} open task must not define gate_result")
-        for field in ["docs", "allowed_paths", "required_gates", "acceptance_criteria"]:
+        for field in ["work_products", "allowed_paths", "required_gates", "acceptance_criteria"]:
             require(field in task, f"{task['id']} open task missing field: {field}")
-        require(isinstance(task["docs"], dict), f"{task['id']} docs must be a mapping")
+        require(isinstance(task["work_products"], dict), f"{task['id']} work_products must be a mapping")
         require(isinstance(task["allowed_paths"], list) and task["allowed_paths"], f"{task['id']} must define allowed_paths")
         require(isinstance(task["required_gates"], list) and task["required_gates"], f"{task['id']} must define required_gates")
         require(isinstance(task["acceptance_criteria"], list) and task["acceptance_criteria"], f"{task['id']} must define acceptance_criteria")
@@ -1135,7 +1135,7 @@ def validate_task_shape(task: dict[str, Any], index: int) -> None:
         for error in testing_boundary_errors_for_allowed_paths(task):
             require(False, f"{task['id']} {error}")
     else:
-        for field in ["docs", "allowed_paths", "required_gates", "acceptance_criteria", "working_notes", "gate_result", "result_docs"]:
+        for field in ["work_products", "allowed_paths", "required_gates", "acceptance_criteria", "working_notes", "gate_result", "result_work_products"]:
             require(field not in task, f"{task['id']} closed task must not retain {field}")
 
 
@@ -1174,11 +1174,11 @@ def validate_resume_capsule_contract(data: dict[str, Any]) -> None:
 
     refs = as_string_list(capsule.get("recovery_refs"))
     require(refs, f"{current_task_id} resume_capsule.recovery_refs must link implementation doc and runbook/evidence documents")
-    implementation_doc = str(current_task.get("implementation_doc") or "").strip()
-    if implementation_doc:
+    implementation_work_product = str(current_task.get("implementation_work_product") or "").strip()
+    if implementation_work_product:
         require(
-            implementation_doc in refs,
-            f"{current_task_id} resume_capsule.recovery_refs must include current implementation_doc {implementation_doc}",
+            implementation_work_product in refs,
+            f"{current_task_id} resume_capsule.recovery_refs must include current implementation_work_product {implementation_work_product}",
         )
     require(
         any(ref.startswith(RUNBOOK_DOC_PREFIX) for ref in refs),
@@ -1186,7 +1186,7 @@ def validate_resume_capsule_contract(data: dict[str, Any]) -> None:
     )
     for ref in refs:
         require(
-            ref.startswith(".docs/04_implementation/") or ref.startswith(RUNBOOK_DOC_PREFIX),
+            ref.startswith(".work_products/04_implementation/") or ref.startswith(RUNBOOK_DOC_PREFIX),
             f"{current_task_id} resume_capsule.recovery_refs may only point to implementation docs or runbook/evidence docs: {ref}",
         )
         require(repo_path(ref).exists(), f"{current_task_id} resume_capsule recovery_ref does not exist: {ref}")

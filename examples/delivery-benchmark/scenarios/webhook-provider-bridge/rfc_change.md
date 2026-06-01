@@ -33,7 +33,3 @@ Required impact:
 - Tests cover active secret, previous secret inside grace, expired previous secret, and replayed event id.
 - README/docs explain tenant secret rotation and replay protection.
 - Recovery notes make the live credential blocker explicit and preserve the do-not-retry rule.
-
-## Debug Fix
-
-After RFC 2, verify that an expired previous secret or stale timestamp is rejected. If replay/timestamp protection accepts an unsafe event, fix it and add regression coverage.

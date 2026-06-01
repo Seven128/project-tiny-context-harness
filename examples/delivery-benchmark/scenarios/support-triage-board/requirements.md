@@ -20,6 +20,6 @@ Required behavior:
 - API and UI expose loading, empty, error, and invalid-state feedback.
 - API errors are structured and include machine-readable `errorCode`.
 - Tests cover API behavior, priority policy behavior, and at least one UI/browser smoke path.
-- Documentation identifies API/UI entrypoints, priority policy rules, test commands, known RFC/debug state, and next safe action.
+- Documentation identifies API/UI entrypoints, priority policy rules, test commands, and next safe action.
 
 Release readiness means a reviewer can run the API/UI locally, create a ticket, see its priority/SLA state, assign it, move it, run the tests, and understand how to resume after a fresh session.

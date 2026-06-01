@@ -36,6 +36,36 @@ slower, shows no advantage or only helps at higher complexity.
 - Observer logs and benchmark internals are not quality evidence. Score product
   source, tests, README/docs and Harness deliverables only.
 
+## Staged Injection
+
+Formal lifecycle runs must prevent future probe leakage. `prepare` writes only
+the initial delivery prompt to `.benchmark/prompt.md`; it does not expose the
+fresh-agent recovery checkpoint, RFC cascade, debug fix or lifecycle scoring
+notes to the measured agent.
+
+Inject later materials only when that measured stage begins:
+
+```sh
+node examples/delivery-benchmark/runner/delivery_benchmark.mjs stage-prompt \
+  --scenario "$SCENARIO" \
+  --mode baseline \
+  --stage recovery
+
+node examples/delivery-benchmark/runner/delivery_benchmark.mjs stage-prompt \
+  --scenario "$SCENARIO" \
+  --mode baseline \
+  --stage rfc
+
+node examples/delivery-benchmark/runner/delivery_benchmark.mjs stage-prompt \
+  --scenario "$SCENARIO" \
+  --mode baseline \
+  --stage debug
+```
+
+Repeat with `--mode harness` for the Harness path. The operator may paste the
+command output into the measured fresh agent/thread, but should not paste future
+materials early.
+
 ## Formal Result Invalidation Rules
 
 Mark the run as protocol calibration only, and do not publish its numbers in the
@@ -46,6 +76,8 @@ visual report, if any of these happen:
   implementation decisions before finishing the comparable phase.
 - Source, tests or README/docs are copied from the other completed path.
 - RFC or debug work is pre-applied before the timed RFC/DEBUG phase begins.
+- Recovery, RFC, debug or lifecycle probe materials are exposed before their
+  staged injection point.
 - Observer coverage is interrupted and the run is stitched together in a way
   that changes the measured work boundary.
 - The benchmark operator selectively publishes only favorable phase numbers
@@ -90,7 +122,8 @@ node examples/delivery-benchmark/runner/delivery_benchmark.mjs observe-start \
 
 2. Start `INITIAL_DELIVERY` timing, give the fresh agent only
    `$RUN_DIR/.benchmark/prompt.md`, and stop the timer when the first complete
-   implementation is ready for the recovery checkpoint:
+   implementation is ready for the recovery checkpoint. This prompt intentionally
+   excludes future recovery, RFC and debug materials:
 
 ```sh
 node examples/delivery-benchmark/runner/delivery_benchmark.mjs timer-start \
@@ -104,10 +137,17 @@ node examples/delivery-benchmark/runner/delivery_benchmark.mjs timer-stop \
   --notes "initial delivery complete"
 ```
 
-3. Start a new fresh agent/thread for Fresh-Agent Recovery. Ask it to inspect
-   only the repository and answer the recovery quiz from `lifecycle_probe.md`
-   before making changes. Score 0-6 and record the score outside the run
-   directory.
+3. Start a new fresh agent/thread for Fresh-Agent Recovery. Inject only the
+   recovery stage prompt, ask it to inspect the repository and answer the
+   checkpoint before making changes. Score 0-6 and record the score outside the
+   run directory.
+
+```sh
+node examples/delivery-benchmark/runner/delivery_benchmark.mjs stage-prompt \
+  --scenario "$SCENARIO" \
+  --mode "<baseline|harness>" \
+  --stage recovery
+```
 
 ```sh
 node examples/delivery-benchmark/runner/delivery_benchmark.mjs timer-start \
@@ -121,8 +161,15 @@ node examples/delivery-benchmark/runner/delivery_benchmark.mjs timer-stop \
   --notes "recovery quiz complete"
 ```
 
-4. Apply the RFC cascade from `rfc_change.md` in sequence. Use phase `RFC` for
-   the whole cascade unless the pilot explicitly needs per-RFC labels.
+4. Inject the RFC stage prompt and apply that cascade in sequence. Use phase
+   `RFC` for the whole cascade unless the pilot explicitly needs per-RFC labels.
+
+```sh
+node examples/delivery-benchmark/runner/delivery_benchmark.mjs stage-prompt \
+  --scenario "$SCENARIO" \
+  --mode "<baseline|harness>" \
+  --stage rfc
+```
 
 ```sh
 node examples/delivery-benchmark/runner/delivery_benchmark.mjs timer-start \
@@ -136,10 +183,17 @@ node examples/delivery-benchmark/runner/delivery_benchmark.mjs timer-stop \
   --notes "RFC cascade complete"
 ```
 
-5. Run the Debug Fix probe. For `project-context-recovery-lab`, the default
-   debug condition is that old provider event names must be rejected after RFC 2.
-   If the implementation already behaves correctly, require a regression test
-   proving the boundary.
+5. Inject the Debug Fix stage prompt. For `project-context-recovery-lab`, the
+   default debug condition is that old provider event names must be rejected
+   after RFC 2. If the implementation already behaves correctly, require a
+   regression test proving the boundary.
+
+```sh
+node examples/delivery-benchmark/runner/delivery_benchmark.mjs stage-prompt \
+  --scenario "$SCENARIO" \
+  --mode "<baseline|harness>" \
+  --stage debug
+```
 
 ```sh
 node examples/delivery-benchmark/runner/delivery_benchmark.mjs timer-start \

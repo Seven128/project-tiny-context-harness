@@ -15,11 +15,11 @@ phases:
     skill: "pjsdlc_pm_prd"
     inputs:
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/00_raw/"
+      - ".work_products/00_raw/"
     outputs:
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/01_product/"
-      - ".docs/INDEX.md"
+      - ".work_products/01_product/"
+      - ".work_products/INDEX.md"
     gates:
       - "make validate-pm"
 
@@ -29,14 +29,14 @@ phases:
     skill: "pjsdlc_uiux_design"
     inputs:
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/01_product/"
-      - ".docs/02_experience/"
+      - ".work_products/01_product/"
+      - ".work_products/02_experience/"
       - "DESIGN.md"
     outputs:
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/02_experience/"
+      - ".work_products/02_experience/"
       - "DESIGN.md"
-      - ".docs/INDEX.md"
+      - ".work_products/INDEX.md"
     gates:
       - "make validate-uiux"
 
@@ -46,14 +46,14 @@ phases:
     skill: "pjsdlc_architect_design"
     inputs:
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/01_product/"
-      - ".docs/02_experience/"
+      - ".work_products/01_product/"
+      - ".work_products/02_experience/"
       - "DESIGN.md"
-      - ".docs/02_architecture/"
+      - ".work_products/02_architecture/"
     outputs:
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/02_architecture/"
-      - ".docs/03_tech_plan/"
+      - ".work_products/02_architecture/"
+      - ".work_products/03_tech_plan/"
       - "<harnessRoot>/state/plan.draft.yaml"
     gates:
       - "make validate-design"
@@ -66,15 +66,15 @@ phases:
       - "<harnessRoot>/state/plan.yaml"
       - "<harnessRoot>/state/plan.draft.yaml"
       - "current open task plan contract"
-      - ".docs/01_product/"
-      - ".docs/02_experience/"
-      - ".docs/03_tech_plan/"
+      - ".work_products/01_product/"
+      - ".work_products/02_experience/"
+      - ".work_products/03_tech_plan/"
       - "DESIGN.md"
     outputs:
       - "src/"
       - "tests/"
-      - ".docs/04_implementation/"
-      - ".docs/09_runbooks/"
+      - ".work_products/04_implementation/"
+      - ".work_products/09_runbooks/"
       - "<harnessRoot>/state/plan.draft.yaml"
     gates:
       - "make validate-dev"
@@ -85,15 +85,15 @@ phases:
     skill: "pjsdlc_reviewer"
     inputs:
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/01_product/"
-      - ".docs/02_experience/"
-      - ".docs/03_tech_plan/"
-      - ".docs/04_implementation/"
+      - ".work_products/01_product/"
+      - ".work_products/02_experience/"
+      - ".work_products/03_tech_plan/"
+      - ".work_products/04_implementation/"
       - "DESIGN.md"
       - "git diff"
     outputs:
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/06_review/REVIEW_REPORT.md"
+      - ".work_products/06_review/REVIEW_REPORT.md"
     gates:
       - "make validate-review"
 
@@ -103,18 +103,18 @@ phases:
     skill: "pjsdlc_tester"
     inputs:
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/01_product/"
-      - ".docs/02_experience/"
-      - ".docs/03_tech_plan/"
-      - ".docs/04_implementation/"
-      - ".docs/09_runbooks/"
-      - ".docs/06_review/"
+      - ".work_products/01_product/"
+      - ".work_products/02_experience/"
+      - ".work_products/03_tech_plan/"
+      - ".work_products/04_implementation/"
+      - ".work_products/09_runbooks/"
+      - ".work_products/06_review/"
       - "DESIGN.md"
     outputs:
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/07_test/TEST_STRATEGY.md"
-      - ".docs/07_test/TEST_CASES.md"
-      - ".docs/07_test/TEST_REPORT.md"
+      - ".work_products/07_test/TEST_STRATEGY.md"
+      - ".work_products/07_test/TEST_CASES.md"
+      - ".work_products/07_test/TEST_REPORT.md"
       - "tests/"
     gates:
       - "make validate-test"
@@ -125,11 +125,11 @@ phases:
     skill: "pjsdlc_release_manager"
     inputs:
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/07_test/"
+      - ".work_products/07_test/"
       - "build artifacts"
     outputs:
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/08_release/CURRENT_RELEASE.md"
+      - ".work_products/08_release/CURRENT_RELEASE.md"
     gates:
       - "make validate-release"
 
@@ -138,7 +138,7 @@ phases:
     role: "manager"
     skill: "pjsdlc_manager"
     inputs:
-      - ".docs/08_release/CURRENT_RELEASE.md"
+      - ".work_products/08_release/CURRENT_RELEASE.md"
     outputs:
       - "<harnessRoot>/state/lifecycle.yaml"
     gates: []
@@ -148,18 +148,18 @@ phases:
     role: "rfc_owner"
     skill: "pjsdlc_rfc_recalibrate"
     inputs:
-      - ".docs/rfc/"
-      - ".docs/01_product/"
-      - ".docs/02_experience/"
-      - ".docs/03_tech_plan/"
+      - ".work_products/rfc/"
+      - ".work_products/01_product/"
+      - ".work_products/02_experience/"
+      - ".work_products/03_tech_plan/"
       - "DESIGN.md"
       - "<harnessRoot>/state/plan.yaml"
     outputs:
-      - ".docs/rfc/"
-      - ".docs/07_test/"
-      - ".docs/09_runbooks/"
+      - ".work_products/rfc/"
+      - ".work_products/07_test/"
+      - ".work_products/09_runbooks/"
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/INDEX.md"
+      - ".work_products/INDEX.md"
     gates:
       - "make validate-rfc"
 

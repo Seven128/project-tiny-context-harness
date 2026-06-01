@@ -9,30 +9,30 @@ global:
 phases:
   REQUIREMENT_GATHERING:
     write:
-      - ".docs/00_raw/**"
-      - ".docs/01_product/**"
-      - ".docs/INDEX.md"
+      - ".work_products/00_raw/**"
+      - ".work_products/01_product/**"
+      - ".work_products/INDEX.md"
 
   UI_UX_DESIGNING:
     write:
-      - ".docs/02_experience/**"
+      - ".work_products/02_experience/**"
       - "DESIGN.md"
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/INDEX.md"
+      - ".work_products/INDEX.md"
 
   ARCHITECTING:
     write:
-      - ".docs/02_architecture/**"
-      - ".docs/03_tech_plan/**"
-      - ".docs/05_decisions/**"
+      - ".work_products/02_architecture/**"
+      - ".work_products/03_tech_plan/**"
+      - ".work_products/05_decisions/**"
       - "<harnessRoot>/state/plan.draft.yaml"
-      - ".docs/INDEX.md"
+      - ".work_products/INDEX.md"
 
   SPRINTING:
     write_from_task_allowed_paths: true
     always_allow:
-      - ".docs/04_implementation/**"
-      - ".docs/INDEX.md"
+      - ".work_products/04_implementation/**"
+      - ".work_products/INDEX.md"
       - "<harnessRoot>/state/plan.yaml"
       - "<harnessRoot>/state/plan.draft.yaml"
 
@@ -40,30 +40,30 @@ phases:
     read_only_source: true
     write:
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/06_review/**"
-      - ".docs/INDEX.md"
+      - ".work_products/06_review/**"
+      - ".work_products/INDEX.md"
 
   TESTING:
     write:
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/07_test/**"
+      - ".work_products/07_test/**"
       - "tests/**"
-      - ".docs/INDEX.md"
+      - ".work_products/INDEX.md"
 
   RELEASING:
     write:
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/08_release/**"
-      - ".docs/INDEX.md"
+      - ".work_products/08_release/**"
+      - ".work_products/INDEX.md"
 
   RFC_RECALIBRATION:
     write:
-      - ".docs/rfc/**"
-      - ".docs/01_product/**"
-      - ".docs/02_experience/**"
+      - ".work_products/rfc/**"
+      - ".work_products/01_product/**"
+      - ".work_products/02_experience/**"
       - "DESIGN.md"
-      - ".docs/03_tech_plan/**"
-      - ".docs/07_test/**"
-      - ".docs/09_runbooks/**"
+      - ".work_products/03_tech_plan/**"
+      - ".work_products/07_test/**"
+      - ".work_products/09_runbooks/**"
       - "<harnessRoot>/state/plan.yaml"
-      - ".docs/INDEX.md"
+      - ".work_products/INDEX.md"

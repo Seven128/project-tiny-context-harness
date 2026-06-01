@@ -20,7 +20,7 @@ expected to help: fresh-agent recovery from durable project context, RFC/debug
 work after the initial implementation, cross-layer UI/API/test drift, and
 provider/live boundaries where wrong paths are expensive. The full benchmark
 choice and scenario design rationale is recorded in
-[ADR 008: Delivery Benchmark Scenario Design](../../.docs/05_decisions/ADR_008_delivery_benchmark_scenario_design.md).
+[ADR 008: Delivery Benchmark Scenario Design](../../.work_products/05_decisions/ADR_008_delivery_benchmark_scenario_design.md).
 
 ## High-Signal, Not Hacked
 
@@ -61,6 +61,11 @@ Pilot output is calibration evidence by default; update `results/benchmark-data.
 only after both `baseline` and `harness` complete the same scenario against the
 same quality rubric in a clean independent run.
 
+Lifecycle scenarios use staged injection for formal runs. `prepare` writes only
+the initial delivery prompt. The operator injects recovery, RFC and debug
+materials later with `stage-prompt`, so the measured agent cannot optimize the
+initial implementation after seeing future probes.
+
 ```sh
 node examples/delivery-benchmark/runner/delivery_benchmark.mjs list
 
@@ -69,6 +74,11 @@ node examples/delivery-benchmark/runner/delivery_benchmark.mjs prepare \
   --mode harness \
   --out-dir /tmp/expense-harness \
   --force
+
+node examples/delivery-benchmark/runner/delivery_benchmark.mjs stage-prompt \
+  --scenario project-context-recovery-lab \
+  --mode harness \
+  --stage recovery
 
 node examples/delivery-benchmark/runner/delivery_benchmark.mjs observe-start \
   --run-dir /tmp/expense-harness
@@ -150,6 +160,17 @@ The benchmark has two layers:
 
 - Initial delivery: can both paths reach the same final quality bar for a fixed project?
 - Lifecycle efficiency: after the first delivery, can the path recover context, absorb RFCs, fix bugs and finish with less total lifecycle cost?
+
+For a formal lifecycle run, the initial `.benchmark/prompt.md` must not include
+future recovery, RFC or debug probe details. Those materials are injected only at
+their measured stage:
+
+- `stage-prompt --stage recovery`: fresh-agent checkpoint and recovery quiz.
+- `stage-prompt --stage rfc`: staged RFC cascade only.
+- `stage-prompt --stage debug`: staged debug fix only.
+
+If either measured path sees later-stage materials early, the run is useful only
+as protocol calibration and must not be promoted into the public visual report.
 
 The three pending scenarios are designed for the second layer:
 

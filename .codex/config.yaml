@@ -1,6 +1,6 @@
 core:
   package: "agent-project-sdlc"
-  schema_version: "1"
+  schema_version: "2"
 
 managed_files:
   - path: "AGENTS.md"
@@ -23,7 +23,7 @@ local_overrides:
   - ".codex/pjsdlc_managed/policies/*.local.yaml"
 
 never_overwrite:
-  - ".docs/**"
+  - ".work_products/**"
   - ".codex/state/**"
   - "src/**"
   - "tests/**"

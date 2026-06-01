@@ -15,7 +15,7 @@ from harness_utils import (
 )
 
 
-TEST_FACT_SOURCE_REF = re.compile(r"\.docs/07_test/[^\s`,)]+")
+TEST_FACT_SOURCE_REF = re.compile(r"\.work_products/07_test/[^\s`,)]+")
 SELF_TEST_TRIGGER_TERMS = [
     "entry/exit",
     "runnable entry",
@@ -81,8 +81,8 @@ def superseded_test_docs(docs) -> list[str]:
 
 def main() -> None:
     validate_plan_contract(load_plan(), allow_open=False)
-    docs = markdown_deliverables(".docs/rfc")
-    require(docs, "No RFC documents found in .docs/rfc/")
+    docs = markdown_deliverables(".work_products/rfc")
+    require(docs, "No RFC documents found in .work_products/rfc/")
     text = combined_text(docs)
     require(contains_any(text, ["background", "背景"]), "RFC must include background")
     require(contains_any(text, ["product impact", "产品影响"]), "RFC must include product impact")
@@ -92,10 +92,10 @@ def main() -> None:
         contains_any(text, ["test fact source impact", "测试事实源影响"]),
         "RFC must include Test Fact Source Impact",
     )
-    index_text = read_text(".docs/INDEX.md")
+    index_text = read_text(".work_products/INDEX.md")
     for path in superseded_test_docs(docs):
         require(not repo_path(path).exists(), f"Superseded test doc still exists in current facts: {path}")
-        require(path not in index_text, f"Superseded test doc still linked from .docs/INDEX.md: {path}")
+        require(path not in index_text, f"Superseded test doc still linked from .work_products/INDEX.md: {path}")
     statuses = re.findall(r"Status:\s*([A-Z_]+)", text)
     require(statuses, "RFC must include a Status line")
     allowed = {"DRAFT", "APPLIED", "VERIFIED", "ARCHIVED"}

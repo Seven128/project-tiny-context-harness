@@ -66,7 +66,7 @@
         "label": "CLI smoke evidence exists",
         "evidence_mode": "any",
         "evidence": [
-          { "path": ".docs/04_implementation/**", "contains_any": ["CLI smoke", "npm test", "node"] },
+          { "path": ".work_products/04_implementation/**", "contains_any": ["CLI smoke", "npm test", "node"] },
           { "path": ".benchmark/**", "contains_any": ["CLI smoke", "npm test", "node"] }
         ]
       },
@@ -75,7 +75,7 @@
         "label": "Recovery facts exist",
         "evidence_mode": "any",
         "evidence": [
-          { "path": ".docs/**", "contains_any": ["next action", "Current Blocker", "Testing Handoff Readiness", "resume"] },
+          { "path": ".work_products/**", "contains_any": ["next action", "Current Blocker", "Testing Handoff Readiness", "resume"] },
           { "path": ".benchmark/**", "contains_any": ["next action", "recovery", "resume"] }
         ]
       }
@@ -103,7 +103,7 @@
         "label": "Test report or transcript records executed gates",
         "evidence_mode": "any",
         "evidence": [
-          { "path": ".docs/07_test/**", "contains_any": ["PASS", "Test Matrix", "Regression Evidence"] },
+          { "path": ".work_products/07_test/**", "contains_any": ["PASS", "Test Matrix", "Regression Evidence"] },
           { "path": ".benchmark/**", "contains_any": ["PASS", "npm test", "smoke"] }
         ]
       }

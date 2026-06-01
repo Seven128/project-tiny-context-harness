@@ -16,7 +16,7 @@ regression during orientation.
 - Include API tests for ticket create/list/update/assign/status moves.
 - Include priority policy tests for tier, channel, age and contract risk.
 - Include UI smoke for kanban/list views and loading/empty/error/invalid states.
-- Add regression coverage for weighted SLA sorting, bulk assignment, `auditReason`, and API/UI ordering consistency after RFC/debug work.
+- When a later staged prompt injects a change or repair condition, add regression coverage for that injected API/UI/policy boundary before ending the stage.
 
 ## Harness Task Gates
 

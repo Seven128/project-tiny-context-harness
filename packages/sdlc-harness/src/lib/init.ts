@@ -3,26 +3,26 @@ import { writeConfigIfMissing } from "./config.js";
 import { harnessConfigPath, harnessPath, harnessRoot } from "./harness-root.js";
 import { ensureDir, pathExists, writeTextIfChanged } from "./fs.js";
 import { runSync } from "./sync-engine.js";
-import { syncDocsIndexMaintenanceSection, syncMemoryGuidanceSection } from "./user-owned-sections.js";
+import { syncMemoryGuidanceSection, syncWorkProductsIndexMaintenanceSection } from "./user-owned-sections.js";
 
 export interface InitOptions {
   adopt: boolean;
   force: boolean;
 }
 
-const DOC_DIRS = [
-  ".docs/00_raw",
-  ".docs/01_product",
-  ".docs/02_experience",
-  ".docs/02_architecture",
-  ".docs/03_tech_plan",
-  ".docs/04_implementation",
-  ".docs/05_decisions",
-  ".docs/06_review",
-  ".docs/07_test",
-  ".docs/08_release",
-  ".docs/09_runbooks",
-  ".docs/rfc"
+const WORK_PRODUCT_DIRS = [
+  ".work_products/00_raw",
+  ".work_products/01_product",
+  ".work_products/02_experience",
+  ".work_products/02_architecture",
+  ".work_products/03_tech_plan",
+  ".work_products/04_implementation",
+  ".work_products/05_decisions",
+  ".work_products/06_review",
+  ".work_products/07_test",
+  ".work_products/08_release",
+  ".work_products/09_runbooks",
+  ".work_products/rfc"
 ];
 
 export async function runInit(projectRoot: string, options: InitOptions): Promise<string[]> {
@@ -41,7 +41,7 @@ export async function runInit(projectRoot: string, options: InitOptions): Promis
   }
 
   await createProjectState(projectRoot, root, options.adopt, report);
-  await createDocs(projectRoot, report);
+  await createWorkProducts(projectRoot, report);
 
   const syncReport = await runSync(projectRoot);
   report.push(`sync changed=${syncReport.changed.length} skipped=${syncReport.skipped.length} blocked=${syncReport.blocked.length}`);
@@ -84,12 +84,12 @@ async function createProjectState(projectRoot: string, root: string, adopt: bool
   });
 }
 
-async function createDocs(projectRoot: string, report: string[]): Promise<void> {
-  for (const dir of DOC_DIRS) {
+async function createWorkProducts(projectRoot: string, report: string[]): Promise<void> {
+  for (const dir of WORK_PRODUCT_DIRS) {
     await ensureDir(path.join(projectRoot, dir));
     await writeTextIfChanged(path.join(projectRoot, dir, ".gitkeep"), "");
   }
-  await syncDocsIndexMaintenanceSection(projectRoot, {
+  await syncWorkProductsIndexMaintenanceSection(projectRoot, {
     changed: report,
     skipped: []
   });

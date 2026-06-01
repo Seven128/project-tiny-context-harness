@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import re
 import subprocess
 
 from harness_utils import (
@@ -15,6 +16,7 @@ from harness_utils import (
 
 
 DESIGN_MD = "DESIGN.md"
+EXPERIENCE_ASSET_REF = re.compile(r"\.work_products/02_experience/assets/[^\s`\"'<>),]+")
 
 
 def main() -> None:
@@ -22,8 +24,8 @@ def main() -> None:
     plan = load_plan()
     validate_plan_contract(plan, allow_open=lifecycle.get("current_phase") != "UI_UX_DESIGNING")
 
-    docs = markdown_deliverables(".docs/02_experience")
-    require(docs, "No UI/UX deliverables found in .docs/02_experience/")
+    docs = markdown_deliverables(".work_products/02_experience")
+    require(docs, "No UI/UX deliverables found in .work_products/02_experience/")
     visual_ui = False
     for doc in docs:
         text = doc.read_text(encoding="utf-8")
@@ -44,6 +46,7 @@ def main() -> None:
             contains_any(text, ["accessibility", "a11y", "focus", "keyboard", "touch", "无障碍", "焦点", "键盘", "触控"]),
             f"{relative} must include accessibility/focus/keyboard/touch expectations",
         )
+        validate_experience_asset_refs(relative, text)
 
     if visual_ui:
         design_path = repo_path(DESIGN_MD)
@@ -51,6 +54,12 @@ def main() -> None:
         validate_design_md()
 
     print(f"UI/UX artifacts OK: {len(docs)} experience deliverable(s)")
+
+
+def validate_experience_asset_refs(relative: str, text: str) -> None:
+    refs = {match.group(0).rstrip(".,;:") for match in EXPERIENCE_ASSET_REF.finditer(text)}
+    for ref in sorted(refs):
+        require(repo_path(ref).exists(), f"{relative} references missing UI/UX design material: {ref}")
 
 
 def validate_design_md() -> None:

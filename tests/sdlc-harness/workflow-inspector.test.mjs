@@ -139,31 +139,31 @@ tasks:
     title: First task
     status: pending
     summary: Test multiple open tasks.
-    docs:
+    work_products:
       tech_plan:
-        - .docs/03_tech_plan/plan.md
+        - .work_products/03_tech_plan/plan.md
     allowed_paths:
       - src/**
     required_gates:
       - npm test
     acceptance_criteria:
       - First task is executable.
-    implementation_doc: .docs/04_implementation/first.md
+    implementation_work_product: .work_products/04_implementation/first.md
   - id: TASK-002
     phase: SPRINTING
     title: Second task
     status: pending
     summary: Test multiple open tasks.
-    docs:
+    work_products:
       tech_plan:
-        - .docs/03_tech_plan/plan.md
+        - .work_products/03_tech_plan/plan.md
     allowed_paths:
       - src/**
     required_gates:
       - npm test
     acceptance_criteria:
       - Second task is executable.
-    implementation_doc: .docs/04_implementation/second.md
+    implementation_work_product: .work_products/04_implementation/second.md
 `,
     "utf8"
   );
@@ -189,30 +189,30 @@ resume_capsule:
   do_not_retry:
     - do not replace browser smoke with unit-only evidence
   recovery_refs:
-    - .docs/04_implementation/high_risk.md
+    - .work_products/04_implementation/high_risk.md
 tasks:
   - id: TASK-001
     phase: SPRINTING
     title: High-risk runtime task
     status: pending
     summary: Test high-risk workflow overhead threshold.
-    docs:
+    work_products:
       tech_plan:
-        - .docs/03_tech_plan/plan.md
+        - .work_products/03_tech_plan/plan.md
     allowed_paths:
       - src/**
     required_gates:
       - npm test
     acceptance_criteria:
       - High-risk task is executable.
-    implementation_doc: .docs/04_implementation/high_risk.md
+    implementation_work_product: .work_products/04_implementation/high_risk.md
     evidence_level:
       required: external_provider_live
     target_runtime_environment:
       kind: browser
     self_test_contract:
       status: required
-      source: .docs/03_tech_plan/plan.md
+      source: .work_products/03_tech_plan/plan.md
       runnable_entry: npm test
       observable_exit: PASS output
       module_key_test_path: npm test -> browser smoke -> PASS output
@@ -234,7 +234,7 @@ tasks:
     highRiskOverhead.metrics.some((metric) => metric.id === "outcome.workflow_overhead_ratio" && metric.level === "WARN")
   );
 
-  await mkdir(path.join(root, ".docs/04_implementation"), { recursive: true });
+  await mkdir(path.join(root, ".work_products/04_implementation"), { recursive: true });
   const oversizedPlanLines = Array.from({ length: 510 }, (_, index) => `# filler ${index}`).join("\n");
   await writeFile(
     path.join(root, ".agent/state/plan.yaml"),

@@ -1,13 +1,13 @@
 PYTHON ?= python3
 SDLC_HARNESS ?= npx sdlc-harness
 
-.PHONY: help status docs-overview validate-doc-overviews validate-harness validate-current validate-plan validate-pm validate-uiux validate-design validate-dev validate-review validate-test validate-release validate-rfc lint test-current-domain test-all build
+.PHONY: help status work-products-overview validate-work-products-overviews validate-harness validate-current validate-plan validate-pm validate-uiux validate-design validate-dev validate-review validate-test validate-release validate-rfc lint test-current-domain test-all build
 
 help:
 	@echo "AI SDLC Harness commands"
 	@echo "  make status              查看 lifecycle 和 task 状态"
-	@echo "  make docs-overview       生成 .docs 各阶段 overview.md 派生视图"
-	@echo "  make validate-doc-overviews 校验 .docs 各阶段 overview.md 是否最新"
+	@echo "  make work-products-overview       生成 .work_products 各阶段 overview.md 派生视图"
+	@echo "  make validate-work-products-overviews 校验 .work_products 各阶段 overview.md 是否最新"
 	@echo "  make validate-harness    校验 Harness 骨架、配置和提示词语言契约"
 	@echo "  make validate-current    运行当前 lifecycle phase 的 gate"
 	@echo "  make validate-plan       校验 plan.yaml task 合同，允许当前 open task"
@@ -23,16 +23,16 @@ help:
 status:
 	$(PYTHON) tools/status.py
 
-docs-overview:
-	$(PYTHON) tools/build_doc_overviews.py --all
+work-products-overview:
+	$(PYTHON) tools/build_work_product_overviews.py --all
 
-validate-doc-overviews:
-	$(PYTHON) tools/build_doc_overviews.py --all --check
+validate-work-products-overviews:
+	$(PYTHON) tools/build_work_product_overviews.py --all --check
 
 validate-harness:
 	$(PYTHON) tools/validate_harness.py
 	$(PYTHON) tools/validate_prompt_language.py
-	$(PYTHON) tools/build_doc_overviews.py --all --check
+	$(PYTHON) tools/build_work_product_overviews.py --all --check
 
 validate-current:
 	$(PYTHON) tools/run_current_gate.py
@@ -42,7 +42,7 @@ validate-plan:
 	$(PYTHON) tools/validate_allowed_paths.py
 
 validate-pm:
-	test -f .docs/INDEX.md
+	test -f .work_products/INDEX.md
 	$(PYTHON) tools/validate_prd.py
 
 validate-uiux:
@@ -58,7 +58,7 @@ validate-dev:
 	$(MAKE) test-current-domain
 
 validate-review:
-	test -f .docs/06_review/REVIEW_REPORT.md
+	test -f .work_products/06_review/REVIEW_REPORT.md
 	$(PYTHON) tools/validate_review.py
 
 validate-test:

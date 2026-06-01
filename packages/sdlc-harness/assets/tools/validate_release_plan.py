@@ -11,21 +11,21 @@ from harness_utils import (
 )
 
 
-CURRENT_RELEASE_REPORT = ".docs/08_release/CURRENT_RELEASE.md"
+CURRENT_RELEASE_REPORT = ".work_products/08_release/CURRENT_RELEASE.md"
 
 
 def release_deliverables():
     current = repo_path(CURRENT_RELEASE_REPORT)
     if current.exists():
         return [current], CURRENT_RELEASE_REPORT
-    docs = markdown_deliverables(".docs/08_release")
-    return docs, "legacy .docs/08_release/*.md"
+    docs = markdown_deliverables(".work_products/08_release")
+    return docs, "legacy .work_products/08_release/*.md"
 
 
 def main() -> None:
     validate_plan_contract(load_plan(), allow_open=False)
     docs, source = release_deliverables()
-    require(docs, f"Missing current release report: expected {CURRENT_RELEASE_REPORT} or legacy .docs/08_release/*.md")
+    require(docs, f"Missing current release report: expected {CURRENT_RELEASE_REPORT} or legacy .work_products/08_release/*.md")
     text = combined_text(docs)
     require(contains_any(text, ["release", "发布"]), "Current release report must include release notes")
     require(contains_any(text, ["smoke", "冒烟"]), "Current release report must include smoke test evidence")

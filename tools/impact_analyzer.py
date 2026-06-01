@@ -32,7 +32,7 @@ def main() -> None:
     require(query_tokens, "RFC does not contain enough analyzable terms")
 
     candidates = []
-    roots = [".docs", "src", "tests"]
+    roots = [".work_products", "src", "tests"]
     for root in roots:
         base = repo_path(root)
         if not base.exists():

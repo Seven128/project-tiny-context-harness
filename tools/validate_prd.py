@@ -14,8 +14,8 @@ def main() -> None:
     plan = load_plan()
     validate_plan_contract(plan, allow_open=False)
 
-    docs = markdown_deliverables(".docs/01_product")
-    require(docs, "No PRD deliverables found in .docs/01_product/")
+    docs = markdown_deliverables(".work_products/01_product")
+    require(docs, "No PRD deliverables found in .work_products/01_product/")
     text = combined_text(docs)
     require(contains_any(text, ["acceptance", "验收"]), "PRD must include acceptance criteria")
     require(contains_any(text, ["out of scope", "out of scope", "不做", "边界"]), "PRD must include out-of-scope boundaries")

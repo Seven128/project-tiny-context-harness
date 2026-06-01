@@ -1,6 +1,6 @@
 # Lifecycle Probe
 
-This scenario measures RFC/debug efficiency across API, UI, policy, tests, and docs. The expected Harness advantage is fewer partial fixes and lower RFC/debug time after the first delivery.
+This scenario measures RFC/debug efficiency across API, UI, policy, tests, and work_products. The expected Harness advantage is fewer partial fixes and lower RFC/debug time after the first delivery.
 
 ## Phase 1: Initial Delivery
 
@@ -17,7 +17,7 @@ Score the context recovery quiz with one point for each correct answer:
 3. UI views and loading/empty/error/invalid states.
 4. Key test paths for API, policy, and UI smoke.
 5. Latest RFC/debug status and known cross-layer risk.
-6. Next safe action covering API, UI, tests, and docs.
+6. Next safe action covering API, UI, tests, and work_products.
 
 ## Phase 3: RFC Cascade
 

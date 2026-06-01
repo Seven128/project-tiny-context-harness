@@ -16,7 +16,7 @@ during orientation.
 - Include API smoke for incident create/list/update/inspect.
 - Include worker smoke for mock provider event processing, idempotency, retry and dead-letter handling.
 - Include UI smoke for the board states if a browser UI is implemented.
-- Add regression coverage for `impactLevel`, deprecated `severity` alias, `incident:write` permission, and rejection of old provider event names after RFC 2.
+- When a later staged prompt injects a change or repair condition, add regression coverage for that injected boundary before ending the stage.
 
 ## Harness Task Gates
 

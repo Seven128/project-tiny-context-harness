@@ -8,7 +8,7 @@ export function defaultConfig(root: string): HarnessConfig {
   return {
     core: {
       package: "agent-project-sdlc",
-      schema_version: "1"
+      schema_version: "2"
     },
     managed_files: [
       { path: "AGENTS.md", strategy: "merge-block" },
@@ -24,7 +24,7 @@ export function defaultConfig(root: string): HarnessConfig {
       harnessPath(root, "pjsdlc_managed", "override_skills", "*.md"),
       harnessPath(root, "pjsdlc_managed", "policies", "*.local.yaml")
     ],
-    never_overwrite: [".docs/**", harnessPath(root, "state/**"), "src/**", "tests/**"]
+    never_overwrite: [".work_products/**", harnessPath(root, "state/**"), "src/**", "tests/**"]
   };
 }
 

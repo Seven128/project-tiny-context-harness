@@ -7,6 +7,6 @@
 - Worker consumes deterministic mock provider events and never requires live provider credentials for local evidence.
 - Provider events are idempotent by `providerEventId`.
 - Retry policy is bounded and dead-letter handling is visible.
-- Structured errors are returned for invalid incident input, invalid state transitions, old provider events, and missing permission.
+- Structured errors are returned for invalid incident input, invalid state transitions, and duplicate provider events.
 - Tests cover API behavior, worker behavior, and a UI/browser smoke path.
-- README/docs identify entrypoints, test commands, mock/live boundary, canonical data model, RFC/debug status, and next safe action.
+- README/docs identify entrypoints, test commands, mock/live boundary, current data model, and next safe action.

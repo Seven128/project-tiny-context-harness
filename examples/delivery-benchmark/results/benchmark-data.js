@@ -58,7 +58,7 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
       lifecycleEfficiency: {
         label: "Initial delivery vs lifecycle efficiency",
         body:
-          "The current completed public run only measures first-scenario delivery. It does not yet provide clean formal evidence for fresh-agent recovery, multi-RFC change, or post-change debugging. A protocol calibration run has exercised the observer/timer/scoring path, but formal lifecycle results still require a clean rerun.",
+          "The current completed public run only measures first-scenario delivery. It does not yet provide clean formal evidence for fresh-agent recovery, multi-RFC change, or post-change debugging. Future lifecycle results will use staged injection: the initial prompt excludes recovery/RFC/debug probes, and the operator injects each stage only when measured.",
         metrics: [
           { label: "Initial delivery", value: "pending" },
           { label: "Fresh-agent recovery", value: "pending" },
@@ -80,7 +80,7 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
         eyebrow: "Key Finding",
         headline: "Current public evidence does not show Harness is faster.",
         body:
-          "The completed public scenario shows same-quality delivery: both paths reached 13/13 PASS. Baseline finished in 25 min, while Harness took 53 min with 29 min of workflow control. An unclean lifecycle calibration has validated the observer/timer/scoring/report path, but it is not formal efficiency evidence. Complex/high-risk efficiency claims remain open until clean independent lifecycle scenarios run.",
+          "The completed public scenario shows same-quality delivery: both paths reached 13/13 PASS. Baseline finished in 25 min, while Harness took 53 min with 29 min of workflow control. An unclean lifecycle calibration has validated the observer/timer/scoring/report path, but it is not formal efficiency evidence. Complex/high-risk efficiency claims remain open until clean staged-injection lifecycle scenarios run.",
         points: [
           "Efficiency: not proven faster or more efficient in the completed public run.",
           "Quality: both paths met the same final rubric.",
@@ -141,12 +141,12 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
           value: "1/4 formal",
           detail: "Context-recovery calibration is not a formal public result.",
           help:
-            "Only one scenario has both formal baseline and Harness results. The context-recovery pilot exercised the protocol but was not a clean independent run, so support-triage, context-recovery, and webhook-provider still need clean runs before broad complex-project efficiency claims are made.",
+            "Only one scenario has both formal baseline and Harness results. The context-recovery pilot exercised the protocol but was not a clean staged-injection run, so support-triage, context-recovery, and webhook-provider still need clean runs before broad complex-project efficiency claims are made.",
           tone: "neutral"
         }
       ],
       evidenceStatus:
-        "Only expense-policy-engine is a formal completed sample. project-context-recovery-lab has calibration evidence but must be rerun cleanly before publication; support-triage-board and webhook-provider-bridge are still pending, so complex/high-risk efficiency conclusions are not closed yet.",
+        "Only expense-policy-engine is a formal completed sample. project-context-recovery-lab has calibration evidence but must be rerun with staged injection before publication; support-triage-board and webhook-provider-bridge are still pending, so complex/high-risk efficiency conclusions are not closed yet.",
       metricTemplates: {
         total: "{value} total",
         workflowControl: "{value} workflow control"
@@ -172,7 +172,7 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
         "This benchmark compares same-quality delivery, not first-patch speed.",
         "The completed public run does not prove Harness is faster or more efficient.",
         "High-signal scenarios are designed to expose Harness strengths, not to hide speed costs or lower the baseline standard.",
-        "An unclean observer pilot has calibrated the protocol, but its numbers are not published as formal efficiency evidence.",
+        "An unclean observer pilot has calibrated the protocol, but its numbers are not published as formal efficiency evidence. Future formal lifecycle pilots must avoid future probe leakage through staged injection.",
         "The completed public run still uses legacy agent-recorded workflow control cost estimates; future clean external observer runs can improve elapsed-time confidence.",
         "Raw temporary projects and transcripts stay outside git under .artifacts/."
       ]
@@ -234,7 +234,7 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
       lifecycleEfficiency: {
         label: "首轮交付 vs 生命周期效率",
         body:
-          "当前公开 completed run 只覆盖一个初始交付样本，还没有干净地测到生命周期效率：新对话恢复、多轮 RFC 变更和变更后的 debug 修复。一次 protocol calibration 已经打通 observer/timer/scoring/report 链路，但正式生命周期结果仍需要 clean rerun。",
+          "当前公开 completed run 只覆盖一个初始交付样本，还没有干净地测到生命周期效率：新对话恢复、多轮 RFC 变更和变更后的 debug 修复。后续正式 lifecycle 结果会使用 staged injection：初始 prompt 不暴露 recovery/RFC/debug probe，operator 只在对应测量阶段注入材料。",
         metrics: [
           { label: "首轮交付", value: "待运行" },
           { label: "新对话恢复", value: "待运行" },
@@ -256,7 +256,7 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
         eyebrow: "核心结论",
         headline: "当前公开证据尚不能证明 Harness 更快或更高效。",
         body:
-          "已完成的公开场景说明：两条路径都达到 13/13 PASS，属于同等质量交付；但 Baseline 用时 25 分钟，Harness 用时 53 分钟，其中 29 分钟是工作流控制成本。一次不够干净的 lifecycle calibration 已经打通 observer/timer/scoring/report 链路，但不能作为效率证据。高信号项目可以用来突出 Harness 的优势空间，但不能通过复用上下文、复制成品、预先完成 RFC/debug 或选择性展示数据来制造优势。",
+          "已完成的公开场景说明：两条路径都达到 13/13 PASS，属于同等质量交付；但 Baseline 用时 25 分钟，Harness 用时 53 分钟，其中 29 分钟是工作流控制成本。一次不够干净的 lifecycle calibration 已经打通 observer/timer/scoring/report 链路，但不能作为效率证据。高信号项目仍然应该保留，但后续正式 pilot 必须 staged injection，避免初始 agent 提前看到 recovery/RFC/debug 后续题目。",
         points: [
           "效率：当前公开样本尚不能证明 Harness 更快或更高效。",
           "质量：两条路径都达到同一最终评分标准。",
@@ -317,12 +317,12 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
           value: "1/4 正式完成",
           detail: "context-recovery calibration 不进入正式公开结果。",
           help:
-            "目前只有一个场景完成了正式 baseline 和 Harness 双路径。不够干净的 context-recovery pilot 只校准协议，不发布数字；更复杂的 API/UI、新对话恢复、多轮 RFC/debug 和 provider 边界场景仍需 clean rerun。",
+            "目前只有一个场景完成了正式 baseline 和 Harness 双路径。不够干净的 context-recovery pilot 只校准协议，不发布数字；更复杂的 API/UI、新对话恢复、多轮 RFC/debug 和 provider 边界场景仍需 staged-injection clean rerun。",
           tone: "neutral"
         }
       ],
       evidenceStatus:
-        "目前只有费用报销政策引擎是正式 completed 样本。Project Context Recovery Lab 有 calibration evidence，但必须 clean rerun 后才能发布；Support SLA Escalation Desk 和 Webhook Provider Bridge 仍待运行，所以复杂/高风险场景的总体效率结论还不能提前下结论。",
+        "目前只有费用报销政策引擎是正式 completed 样本。Project Context Recovery Lab 有 calibration evidence，但必须按 staged injection clean rerun 后才能发布；Support SLA Escalation Desk 和 Webhook Provider Bridge 仍待运行，所以复杂/高风险场景的总体效率结论还不能提前下结论。",
       metricTemplates: {
         total: "总计 {value}",
         workflowControl: "工作流控制成本 {value}"
@@ -348,7 +348,7 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
         "这个基准测试比较的是同等质量交付，不是首轮代码生成速度。",
         "已完成公开样本不能证明 Harness 更快或更高效。",
         "高信号场景是为了对准 Harness 的设计优势，不是为了掩盖速度成本或降低 baseline 标准。",
-        "不够干净的外部 observer pilot 只校准协议，数字不进入正式公开结果。",
+        "不够干净的外部 observer pilot 只校准协议，数字不进入正式公开结果；后续正式 lifecycle pilot 必须 staged injection，避免提前暴露后续 probe。",
         "已完成公开样本仍使用历史 agent-recorded 工作流控制成本估算；后续外部 observer clean rerun 可以提升耗时置信度。",
         "临时项目和原始转录保留在 .artifacts/ 之外，不进入 git。"
       ]
@@ -496,7 +496,7 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
           }
         },
         {
-          id: "implementation_doc",
+          id: "implementation_work_product",
           copy: {
             en: { label: "Implementation Doc", purpose: "Records runnable entry/exit, development evidence, and verification." },
             zh: { label: "Implementation Doc", purpose: "记录可运行入口/出口、开发证据和验证结果。" }
@@ -636,7 +636,7 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
             midstreamChange:
               "The lifecycle probe changes priority sorting to a weighted policy, adds bulk assignment with auditReason, then checks an API/UI ordering or stale-state debug fix.",
             expectedAdvantage:
-              "Harness should reduce partial fixes where only UI or only API changes, lower RFC/debug time, and preserve same-quality coverage across implementation, tests, and docs."
+              "Harness should reduce partial fixes where only UI or only API changes, lower RFC/debug time, and preserve same-quality coverage across implementation, tests, and work_products."
           }
         },
         zh: {

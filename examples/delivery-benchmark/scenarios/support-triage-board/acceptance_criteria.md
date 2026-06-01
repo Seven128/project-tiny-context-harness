@@ -5,8 +5,7 @@
 - Both views show SLA risk, priority score, owner, status, customer tier, channel, and contract risk.
 - Priority policy uses customer tier, age, channel, and contract risk.
 - Enterprise near-breach or breach tickets are highlighted.
-- Bulk assignment is available after the RFC cascade.
-- Assignment and status movement append audit trail entries with an audit reason.
+- Assignment and status movement append audit trail entries.
 - API and UI cover loading, empty, error, and invalid-state behavior.
 - Tests cover API behavior, priority policy, and UI/browser smoke.
-- README/docs identify entrypoints, priority policy, RFC/debug status, test commands, and next safe action.
+- README/docs identify entrypoints, priority policy, test commands, and next safe action.

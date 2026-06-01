@@ -14,8 +14,8 @@ RUNNABLE_ENTRY_EXIT_TERMS = [
 
 
 def main() -> None:
-    index = read_text(".docs/INDEX.md")
-    docs_root = repo_path(".docs/04_implementation")
+    index = read_text(".work_products/INDEX.md")
+    docs_root = repo_path(".work_products/04_implementation")
     docs = sorted(
         path for path in docs_root.rglob("*.md")
         if path.name != "overview.md"
@@ -26,8 +26,8 @@ def main() -> None:
     for path in docs:
         relative = path.relative_to(repo_path(".")).as_posix()
         doc = relative if relative.startswith(".") else f".{relative}"
-        index_path = doc.removeprefix(".docs/")
-        require(doc in index or index_path in index, f".docs/INDEX.md does not link implementation doc: {doc}")
+        index_path = doc.removeprefix(".work_products/")
+        require(doc in index or index_path in index, f".work_products/INDEX.md does not link implementation doc: {doc}")
         text = read_text(doc)
         require(
             contains_any(text, RUNNABLE_ENTRY_EXIT_TERMS),

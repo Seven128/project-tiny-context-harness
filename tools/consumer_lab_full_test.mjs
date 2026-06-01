@@ -222,11 +222,11 @@ tasks: []
   await verifyPlanProtocol(options.labDir, commandCheck, add);
   await verifyStaticWorkflowText(options.labDir, add);
 
-  commandCheck("Docs overview", "make docs-overview before validate-harness", "make", ["docs-overview"]);
+  commandCheck("Work products overview", "make work-products-overview before validate-harness", "make", ["work-products-overview"]);
   for (const gate of ["validate-harness", "validate-current", "validate-uiux", "validate-review", "validate-test", "validate-release"]) {
     commandCheck("Makefile gates", `make ${gate}`, "make", [gate]);
   }
-  commandCheck("Docs overview", "make docs-overview", "make", ["docs-overview"]);
+  commandCheck("Work products overview", "make work-products-overview", "make", ["work-products-overview"]);
   commandCheck("Lifecycle transition", "python3 tools/transition.py --to REVIEWING", "python3", [
     "tools/transition.py",
     "--to",
@@ -236,6 +236,11 @@ tasks: []
     "tools/transition.py",
     "--to",
     "RFC_RECALIBRATION"
+  ]);
+  commandCheck("Lifecycle transition", "python3 tools/transition.py --to ARCHITECTING", "python3", [
+    "tools/transition.py",
+    "--to",
+    "ARCHITECTING"
   ]);
   commandCheck("Lifecycle transition", "python3 tools/transition.py --to SPRINTING", "python3", [
     "tools/transition.py",
@@ -283,7 +288,7 @@ async function verifyManagedAssets(labDir, add) {
     "Makefile",
     "tools/transition.py",
     ".github/workflows/harness.yml",
-    ".docs/INDEX.md",
+    ".work_products/INDEX.md",
     ".codex/config.yaml",
     ".codex/state/lifecycle.yaml",
     ".codex/state/plan.yaml",
@@ -294,11 +299,15 @@ async function verifyManagedAssets(labDir, add) {
     ".codex/pjsdlc_managed/policies/phase_contracts.yaml"
   ];
   const missing = required.filter((relative) => !existsSync(path.join(labDir, relative)));
+  const hasLegacyDocsRoot = existsSync(path.join(labDir, ".docs"));
   add({
     area: "Managed assets",
     evidence: "expected generated files exist",
-    status: missing.length === 0 ? "PASS" : "FAIL",
-    details: missing.length === 0 ? `${required.length} managed files checked` : `missing: ${missing.join(", ")}`
+    status: missing.length === 0 && !hasLegacyDocsRoot ? "PASS" : "FAIL",
+    details:
+      missing.length === 0 && !hasLegacyDocsRoot
+        ? `${required.length} managed files checked; .docs not created`
+        : `missing: ${missing.join(", ") || "none"}; legacy .docs present: ${hasLegacyDocsRoot}`
   });
 
   if (missing.length === 0) {
@@ -401,13 +410,13 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
       : "FAIL",
     details: trimOutput(`${configuredWorkflowInspect.stdout}\n${configuredWorkflowInspect.stderr}`)
   });
-  const configuredDocsOverview = run("make", ["docs-overview"], configuredDir);
+  const configuredWorkProductsOverview = run("make", ["work-products-overview"], configuredDir);
   add({
     area: "Configurable root",
-    evidence: "Makefile docs-overview consumes configured .workflow root",
-    command: "make docs-overview",
-    status: configuredDocsOverview.status === 0 ? "PASS" : "FAIL",
-    details: trimOutput(`${configuredDocsOverview.stdout}\n${configuredDocsOverview.stderr}`)
+    evidence: "Makefile work-products-overview consumes configured .workflow root",
+    command: "make work-products-overview",
+    status: configuredWorkProductsOverview.status === 0 ? "PASS" : "FAIL",
+    details: trimOutput(`${configuredWorkProductsOverview.stdout}\n${configuredWorkProductsOverview.stderr}`)
   });
   const configuredMakeHarness = run("make", ["validate-harness"], configuredDir);
   add({
@@ -574,17 +583,17 @@ tasks:
     title: "Implement text summary helper"
     status: "pending"
     summary: "Add the toy helper and tests used by the consumer lab lifecycle rehearsal."
-    docs:
+    work_products:
       product:
-        - ".docs/01_product/text_summary_prd.md"
+        - ".work_products/01_product/text_summary_prd.md"
       architecture:
-        - ".docs/02_architecture/text_summary_architecture.md"
+        - ".work_products/02_architecture/text_summary_architecture.md"
       tech_plan:
-        - ".docs/03_tech_plan/text_summary_plan.md"
+        - ".work_products/03_tech_plan/text_summary_plan.md"
     allowed_paths:
       - "src/**"
       - "tests/**"
-      - ".docs/04_implementation/**"
+      - ".work_products/04_implementation/**"
     required_gates:
       - "npm test"
     acceptance_criteria:
@@ -599,7 +608,7 @@ tasks:
       handoff_entrypoint: "npm test"
     self_test_contract:
       status: "required"
-      source: ".docs/03_tech_plan/text_summary_plan.md"
+      source: ".work_products/03_tech_plan/text_summary_plan.md"
       capability_refs:
         - "PRD-TEXT-SUMMARY-001"
       runnable_entry: "npm test"
@@ -612,7 +621,7 @@ tasks:
           entry: "npm test"
           expected_exit: "PASS output for normal and empty text"
           evidence: "command output"
-    implementation_doc: ".docs/04_implementation/text_summary.md"
+    implementation_work_product: ".work_products/04_implementation/text_summary.md"
 `,
     "utf8"
   );
@@ -620,29 +629,29 @@ tasks:
 
 async function writeDocs(labDir) {
   const files = {
-    ".docs/00_raw/text_summary_request.md": "# Raw Request\n\nBuild a tiny text summary helper for consumer lab validation.\n",
-    ".docs/01_product/text_summary_prd.md":
+    ".work_products/00_raw/text_summary_request.md": "# Raw Request\n\nBuild a tiny text summary helper for consumer lab validation.\n",
+    ".work_products/01_product/text_summary_prd.md":
       "# Text Summary PRD\n\n## Goal\n\nValidate Harness lifecycle behavior.\n\n## Acceptance Criteria\n\n- Return character count, word count, and empty state.\n\n## Out Of Scope\n\n- Locale-aware tokenization is out of scope.\n\n## Open Questions\n\n- None.\n",
-    ".docs/02_architecture/text_summary_architecture.md":
+    ".work_products/02_architecture/text_summary_architecture.md":
       "# Text Summary Architecture\n\nThe PRD requirement is implemented as a pure JavaScript API interface in `src/stringStats.js`.\n\nTask breakdown: add helper, add tests, record implementation.\n",
-    ".docs/02_experience/text_summary_experience.md":
+    ".work_products/02_experience/text_summary_experience.md":
       "# Text Summary Experience\n\n## PRD refs and Requirement IDs\n\n- Applicability: not_applicable\n- Reason: This package validator fixture has no visual, CLI, API or operator experience surface that needs separate UI/UX design.\n\n## Open Questions / Out of Scope\n\n- No UI/UX surface is in scope for this consumer lab fixture.\n",
-    ".docs/03_tech_plan/text_summary_plan.md":
-      "# Text Summary Technical Plan\n\nThis plan implements the PRD requirement.\n\n## API Contract\n\n`summarizeText(input)` returns `characters`, `words`, and `empty`.\n\n## Task Breakdown\n\n- `TASK-001`: implement helper and tests.\n\n## Development Self-Test Contract\n\n- Contract source: `.docs/03_tech_plan/text_summary_plan.md`\n- Capability refs: `PRD-TEXT-SUMMARY-001`\n- Runnable entry: `npm test`\n- Observable exit: PASS output for text summary tests\n- Module key test path: local `npm test` -> ST-001 -> `summarizeText(input)` exported API entry -> normal-text and empty-text internal branches -> PASS output.\n- Required gates: `npm test`\n\n| Scenario ID | Entry | Expected Exit | Evidence |\n|---|---|---|---|\n| ST-001 | `npm test` | PASS output for normal and empty text | command output |\n",
-    ".docs/04_implementation/text_summary.md":
-      "# Text Summary Implementation\n\n`src/stringStats.js` exports `summarizeText(input)`.\n\n## Runnable Entry/Exit\n\n- Entry points: `summarizeText(input)` exported API.\n- Exit / side effects: returns `characters`, `words`, and `empty`; no side effects.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only local package validation.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` package test runtime.\n- Target Runtime Environment: `local` node test command `npm test`.\n- Runnable Entry: API command `npm test` invokes `summarizeText(input)` through node:test.\n- Observable Exit: test output reports PASS for character count, word count and empty state.\n- Client / Server Initialization: local package test runtime starts with `npm test` and exits with status evidence.\n- Config Contract: no external config required for this fixture.\n- Testing Handoff Readiness: `npm test` is the handoff entry for TESTING.\n- Known Missing Runtime Boundaries: none for this local helper fixture.\n- Basic Self-test Evidence: See `Development Self-Test Report`; `npm test` PASS for the consumer lab fixture.\n\n## Development Self-Test Report\n\n- Report Status: PASS\n- Contract Source: .docs/03_tech_plan/text_summary_plan.md\n- Module Application Entry: current self-test runnable entry from task contract.\n- Scenario Results: ST-001 PASS\n- Executed Gates: npm test\n- Module Key Test Path: local `npm test` -> ST-001 -> `summarizeText(input)` exported API entry -> normal-text and empty-text internal branches -> PASS output.\n- Observable Exit: observable exit recorded by scenario result.\n- Evidence Index Refs: .docs/09_runbooks/live_smoke_evidence.md;  command output reports PASS for normal and empty text.\n- Current Blocker: none; ready to continue through recorded handoff.\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |\n|---|---|---|---|---|\n| ST-001 | PASS | `npm test` | PASS output for normal and empty text | command output |\n\n## Verification\n\n- `npm test`: PASS\n",
-    ".docs/06_review/REVIEW_REPORT.md":
+    ".work_products/03_tech_plan/text_summary_plan.md":
+      "# Text Summary Technical Plan\n\nThis plan implements the PRD requirement.\n\n## API Contract\n\n`summarizeText(input)` returns `characters`, `words`, and `empty`.\n\n## Task Breakdown\n\n- `TASK-001`: implement helper and tests.\n\n## Development Self-Test Contract\n\n- Contract source: `.work_products/03_tech_plan/text_summary_plan.md`\n- Capability refs: `PRD-TEXT-SUMMARY-001`\n- Runnable entry: `npm test`\n- Observable exit: PASS output for text summary tests\n- Module key test path: local `npm test` -> ST-001 -> `summarizeText(input)` exported API entry -> normal-text and empty-text internal branches -> PASS output.\n- Required gates: `npm test`\n\n| Scenario ID | Entry | Expected Exit | Evidence |\n|---|---|---|---|\n| ST-001 | `npm test` | PASS output for normal and empty text | command output |\n",
+    ".work_products/04_implementation/text_summary.md":
+      "# Text Summary Implementation\n\n`src/stringStats.js` exports `summarizeText(input)`.\n\n## Runnable Entry/Exit\n\n- Entry points: `summarizeText(input)` exported API.\n- Exit / side effects: returns `characters`, `words`, and `empty`; no side effects.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only local package validation.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` package test runtime.\n- Target Runtime Environment: `local` node test command `npm test`.\n- Runnable Entry: API command `npm test` invokes `summarizeText(input)` through node:test.\n- Observable Exit: test output reports PASS for character count, word count and empty state.\n- Client / Server Initialization: local package test runtime starts with `npm test` and exits with status evidence.\n- Config Contract: no external config required for this fixture.\n- Testing Handoff Readiness: `npm test` is the handoff entry for TESTING.\n- Known Missing Runtime Boundaries: none for this local helper fixture.\n- Basic Self-test Evidence: See `Development Self-Test Report`; `npm test` PASS for the consumer lab fixture.\n\n## Development Self-Test Report\n\n- Report Status: PASS\n- Contract Source: .work_products/03_tech_plan/text_summary_plan.md\n- Module Application Entry: current self-test runnable entry from task contract.\n- Scenario Results: ST-001 PASS\n- Executed Gates: npm test\n- Module Key Test Path: local `npm test` -> ST-001 -> `summarizeText(input)` exported API entry -> normal-text and empty-text internal branches -> PASS output.\n- Observable Exit: observable exit recorded by scenario result.\n- Evidence Index Refs: .work_products/09_runbooks/live_smoke_evidence.md;  command output reports PASS for normal and empty text.\n- Current Blocker: none; ready to continue through recorded handoff.\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |\n|---|---|---|---|---|\n| ST-001 | PASS | `npm test` | PASS output for normal and empty text | command output |\n\n## Verification\n\n- `npm test`: PASS\n",
+    ".work_products/06_review/REVIEW_REPORT.md":
       "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage is intentionally narrow.\n\n## Runnable Entry/Exit Readiness\n\n- Runnable Entry: PASS\n- Observable Exit: PASS\n- Initialization: PASS\n- Config Contract: PASS\n- Testing Handoff Readiness: PASS\n- Notes: Existing entry/exit is runnable through `summarizeText(input)`.\n\n## Decision\n\nPASS\n",
-    ".docs/07_test/TEST_REPORT.md":
+    ".work_products/07_test/TEST_REPORT.md":
       "# Test Report\n\n## Matrix\n\n| Case ID | Scenario | Result |\n|---|---|---|\n| TC-001 | Normal text | PASS |\n| TC-002 | Empty text | PASS |\n\n## Regression Evidence\n\n- `npm test`: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped API.\n\n## Coverage Gap\n\nNo locale-specific coverage.\n\n## Decision\n\nPASS\n",
-    ".docs/07_test/TEST_CASES.md":
+    ".work_products/07_test/TEST_CASES.md":
       "# Test Cases\n\n## Scope\n\n- Runnable entry/exit under test: `summarizeText(input)`.\n\n## Cases\n\n| Case ID | Requirement / Risk Ref | Type | Priority | Runnable Entry | Preconditions | Steps | Expected Exit | Evidence Pointer |\n|---|---|---|---|---|---|---|---|---|\n| TC-001 | Character and word count | regression | P1 | `summarizeText(input)` | Package installed | Call `summarizeText(\"hello world\")` | Returns counts and `empty: false` | `npm test` output |\n| TC-002 | Empty state | regression | P1 | `summarizeText(input)` | Package installed | Call `summarizeText(\"\")` | Returns `empty: true` | `npm test` output |\n",
-    ".docs/08_release/CURRENT_RELEASE.md":
+    ".work_products/08_release/CURRENT_RELEASE.md":
       "# Current Release Status\n\n## Release Notes\n\nTiny helper fixture.\n\n## Smoke Evidence\n\n- `npm test`: PASS\n\n## Rollback Plan\n\nRevert the lab helper commit.\n",
-    ".docs/rfc/RFC_001_change_empty_semantics.md":
+    ".work_products/rfc/RFC_001_change_empty_semantics.md":
       "# RFC 001 Change Empty Semantics\n\nStatus: VERIFIED\n\n## Background\n\nThe lab needs one RFC document.\n\n## Product Impact\n\nWhitespace-only strings remain empty.\n\n## Technical Impact\n\nNo code change required.\n\n## Regression\n\nKeep whitespace-only coverage.\n\n## Test Fact Source Impact\n\nSuperseded test docs: none\n",
-    ".docs/INDEX.md":
-      "# Documentation Index\n\n- Product: `.docs/01_product/text_summary_prd.md`\n- Experience: `.docs/02_experience/text_summary_experience.md`\n- Architecture: `.docs/02_architecture/text_summary_architecture.md`\n- Technical plan: `.docs/03_tech_plan/text_summary_plan.md`\n- Implementation: `.docs/04_implementation/text_summary.md`\n- Test cases: `.docs/07_test/TEST_CASES.md`\n- Test report: `.docs/07_test/TEST_REPORT.md`\n"
+    ".work_products/INDEX.md":
+      "# Work Products Index\n\n- Product: `.work_products/01_product/text_summary_prd.md`\n- Experience: `.work_products/02_experience/text_summary_experience.md`\n- Architecture: `.work_products/02_architecture/text_summary_architecture.md`\n- Technical plan: `.work_products/03_tech_plan/text_summary_plan.md`\n- Implementation: `.work_products/04_implementation/text_summary.md`\n- Test cases: `.work_products/07_test/TEST_CASES.md`\n- Test report: `.work_products/07_test/TEST_REPORT.md`\n"
   };
   for (const [relative, content] of Object.entries(files)) {
     await mkdir(path.dirname(path.join(labDir, relative)), { recursive: true });
@@ -667,23 +676,23 @@ tasks:
     title: "Open task should remain until completion"
     status: "in_progress"
     summary: "Positive dev gate check."
-    docs:
+    work_products:
       product:
-        - ".docs/01_product/text_summary_prd.md"
+        - ".work_products/01_product/text_summary_prd.md"
       tech_plan:
-        - ".docs/03_tech_plan/text_summary_plan.md"
+        - ".work_products/03_tech_plan/text_summary_plan.md"
     allowed_paths:
       - ".codex/state/**"
       - "src/**"
       - "tests/**"
-      - ".docs/04_implementation/**"
+      - ".work_products/04_implementation/**"
     required_gates:
       - "npm test"
     acceptance_criteria:
       - "Open task is intentionally present during direct validate-dev."
     self_test_contract:
       status: "required"
-      source: ".docs/03_tech_plan/text_summary_plan.md"
+      source: ".work_products/03_tech_plan/text_summary_plan.md"
       capability_refs:
         - "PRD-TEXT-SUMMARY-001"
       runnable_entry: "npm test"
@@ -696,7 +705,7 @@ tasks:
           entry: "npm test"
           expected_exit: "PASS output for normal and empty text"
           evidence: "command output"
-    implementation_doc: ".docs/04_implementation/text_summary.md"
+    implementation_work_product: ".work_products/04_implementation/text_summary.md"
 `,
     "utf8"
   );
@@ -722,16 +731,16 @@ tasks:
     title: "Stale consumed draft"
     status: "pending"
     summary: "Negative protocol check."
-    docs:
+    work_products:
       tech_plan:
-        - ".docs/03_tech_plan/text_summary_plan.md"
+        - ".work_products/03_tech_plan/text_summary_plan.md"
     allowed_paths:
       - "src/**"
     required_gates:
       - "npm test"
     acceptance_criteria:
       - "Draft should have been consumed."
-    implementation_doc: ".docs/04_implementation/text_summary.md"
+    implementation_work_product: ".work_products/04_implementation/text_summary.md"
 `,
     "utf8"
   );
@@ -755,7 +764,7 @@ tasks:
     title: "Completed task should not remain"
     status: "done"
     summary: "Negative protocol check."
-    implementation_doc: ".docs/04_implementation/text_summary.md"
+    implementation_work_product: ".work_products/04_implementation/text_summary.md"
 `,
     "utf8"
   );
@@ -813,7 +822,7 @@ parallel_execution:
     required_gates:
       - "npx sdlc-harness validate-dev"
     fact_source_updates:
-      - ".docs/07_test/"
+      - ".work_products/07_test/"
 tasks: []
 `,
     "utf8"
@@ -886,8 +895,8 @@ async function verifyReleaseAndGithubStatic(sourceRoot, labDir, add) {
   add({
     area: "Release automation",
     evidence: "release automation static coverage",
-    status: releaseScriptText.includes(".docs/08_release/CURRENT_RELEASE.md") ? "PASS" : "FAIL",
-    details: releaseScriptText.includes(".docs/08_release/CURRENT_RELEASE.md")
+    status: releaseScriptText.includes(".work_products/08_release/CURRENT_RELEASE.md") ? "PASS" : "FAIL",
+    details: releaseScriptText.includes(".work_products/08_release/CURRENT_RELEASE.md")
       ? "release automation writes current release status; npm publish is out of scope for consumer lab"
       : "release automation current release status path missing"
   });

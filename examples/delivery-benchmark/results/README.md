@@ -8,7 +8,7 @@ Open [`index.html`](index.html) for a static visual report designed for readers 
 
 The completed `expense-policy-engine` run was recorded before the external observer existed, so its cost confidence remains low. Future runs should use `observe-start` / `observe-stop` in the benchmark runner to record external elapsed time and file activity without asking the agent under test to maintain a log.
 
-The current completed run also does not measure lifecycle efficiency. Fresh-agent recovery, multi-RFC cascade, debug-fix time, context recovery score and wrong-path count are planned through the three pending lifecycle scenarios and remain pending until those scenarios are run.
+The current completed run also does not measure lifecycle efficiency. Fresh-agent recovery, multi-RFC cascade, debug-fix time, context recovery score and wrong-path count are planned through the three pending lifecycle scenarios and remain pending until those scenarios are rerun cleanly with staged injection. In a formal run, the initial prompt excludes future recovery/RFC/debug probes; the operator injects each stage only when measured.
 
 ## Current Status
 

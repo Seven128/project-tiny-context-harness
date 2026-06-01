@@ -29,7 +29,3 @@ Required impact:
 - Invalid or missing `auditReason` returns a structured error.
 - Tests cover successful bulk assignment and invalid audit reason.
 - Recovery notes identify API/UI/test changes together so a fresh agent does not fix only one layer.
-
-## Debug Fix
-
-After RFC 2, verify that API ordering and UI ordering match. If the UI appears sorted but the API returns stale or unweighted order, or the API is correct but UI state is stale after bulk assignment, fix it and add regression coverage.

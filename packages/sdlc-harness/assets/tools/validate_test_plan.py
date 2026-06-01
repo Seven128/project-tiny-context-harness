@@ -15,8 +15,8 @@ from harness_utils import (
     validate_plan_contract,
 )
 
-TEST_REPORT_PATH = ".docs/07_test/TEST_REPORT.md"
-TEST_CASES_PATH = ".docs/07_test/TEST_CASES.md"
+TEST_REPORT_PATH = ".work_products/07_test/TEST_REPORT.md"
+TEST_CASES_PATH = ".work_products/07_test/TEST_CASES.md"
 PLACEHOLDER_TERMS = ["pending", "tbd", "todo", "待填", "待补", "placeholder"]
 CASE_ID_RE = re.compile(r"\bTC-\d{3,}\b")
 MISSING_READINESS_TERMS = [
@@ -71,7 +71,7 @@ def plan_references_test_cases(plan: dict) -> bool:
             continue
         if str(task.get("phase") or "") != "TESTING":
             continue
-        refs = [str(item) for item in as_list(task.get("result_docs"))]
+        refs = [str(item) for item in as_list(task.get("result_work_products"))]
         if TEST_CASES_PATH in refs:
             return True
     return False

@@ -75,7 +75,7 @@
         "evidence": [
           { "path": "README.md", "contains_all": ["entrypoint", "test"] },
           { "path": "docs/**", "contains_all": ["entrypoint", "test"] },
-          { "path": ".docs/**", "contains_all": ["entrypoint", "test"] }
+          { "path": ".work_products/**", "contains_all": ["entrypoint", "test"] }
         ]
       },
       {
@@ -85,7 +85,7 @@
         "evidence": [
           { "path": "README.md", "contains_all": ["impactLevel", "severity", "deprecated"] },
           { "path": "docs/**", "contains_all": ["impactLevel", "severity", "deprecated"] },
-          { "path": ".docs/**", "contains_all": ["impactLevel", "severity", "deprecated"] }
+          { "path": ".work_products/**", "contains_all": ["impactLevel", "severity", "deprecated"] }
         ]
       },
       {
@@ -95,7 +95,7 @@
         "evidence": [
           { "path": "README.md", "contains_all": ["mock provider", "do-not-retry"] },
           { "path": "docs/**", "contains_all": ["mock provider", "do-not-retry"] },
-          { "path": ".docs/**", "contains_all": ["mock provider", "do-not-retry"] }
+          { "path": ".work_products/**", "contains_all": ["mock provider", "do-not-retry"] }
         ]
       },
       {
@@ -105,7 +105,7 @@
         "evidence": [
           { "path": "README.md", "contains_any": ["RFC 1", "RFC 2", "Debug Fix", "next safe action"] },
           { "path": "docs/**", "contains_any": ["RFC 1", "RFC 2", "Debug Fix", "next safe action"] },
-          { "path": ".docs/**", "contains_any": ["RFC 1", "RFC 2", "Debug Fix", "next safe action"] }
+          { "path": ".work_products/**", "contains_any": ["RFC 1", "RFC 2", "Debug Fix", "next safe action"] }
         ]
       }
     ],
@@ -151,7 +151,7 @@
         "evidence": [
           { "path": "README.md", "contains_all": ["next safe action", "npm test"] },
           { "path": "docs/**", "contains_all": ["next safe action", "npm test"] },
-          { "path": ".docs/**", "contains_all": ["next safe action", "npm test"] }
+          { "path": ".work_products/**", "contains_all": ["next safe action", "npm test"] }
         ]
       }
     ]

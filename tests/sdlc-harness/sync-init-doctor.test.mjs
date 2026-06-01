@@ -67,12 +67,13 @@ try {
   const defaultMemory = await readFile(path.join(defaultRoot, ".agent/state/memory.md"), "utf8");
   assert.match(defaultMemory, /## Harness Guidance/);
   assert.match(defaultMemory, /简短摘要和链接/);
-  assert.match(defaultMemory, /\.docs\/05_decisions\//);
-  assert.match(defaultMemory, /正式 `\.docs\/\*\*` 事实源/);
-  const defaultIndex = await readFile(path.join(defaultRoot, ".docs/INDEX.md"), "utf8");
+  assert.match(defaultMemory, /\.work_products\/05_decisions\//);
+  assert.match(defaultMemory, /正式 `\.work_products\/\*\*` 事实源/);
+  const defaultIndex = await readFile(path.join(defaultRoot, ".work_products/INDEX.md"), "utf8");
   assert.match(defaultIndex, /## Harness Maintenance Rules/);
-  assert.match(defaultIndex, /Markdown slices 和 `.docs\/INDEX\.md` 是事实源/);
-  await stat(path.join(defaultRoot, ".docs/02_experience"));
+  assert.match(defaultIndex, /Markdown slices 和 `.work_products\/INDEX\.md` 是事实源/);
+  await stat(path.join(defaultRoot, ".work_products/02_experience"));
+  await assert.rejects(stat(path.join(defaultRoot, ".docs")));
   await assert.rejects(stat(path.join(defaultRoot, ".agent/state/gate_results.log")));
 
   const defaultAgents = await readFile(path.join(defaultRoot, "AGENTS.md"), "utf8");
@@ -117,7 +118,7 @@ try {
     "utf8"
   );
   await writeFile(
-    path.join(defaultRoot, ".docs/INDEX.md"),
+    path.join(defaultRoot, ".work_products/INDEX.md"),
     `${defaultIndex.trimEnd()}\n\n## Custom Artifact Map\n\n- [Local note](99_local/note.md)\n`,
     "utf8"
   );
@@ -126,7 +127,7 @@ try {
   const resyncedMemory = await readFile(path.join(defaultRoot, ".agent/state/memory.md"), "utf8");
   assert.equal(resyncedMemory.match(/## Harness Guidance/g).length, 1);
   assert.match(resyncedMemory, /用户项目自己的长期提示/);
-  const resyncedIndex = await readFile(path.join(defaultRoot, ".docs/INDEX.md"), "utf8");
+  const resyncedIndex = await readFile(path.join(defaultRoot, ".work_products/INDEX.md"), "utf8");
   assert.equal(resyncedIndex.match(/## Harness Maintenance Rules/g).length, 1);
   assert.match(resyncedIndex, /## Custom Artifact Map/);
   assert.match(resyncedIndex, /\[Local note\]\(99_local\/note\.md\)/);
@@ -193,11 +194,15 @@ try {
   const configuredDoctor = await runDoctor(configuredRoot);
   assert.deepEqual(configuredDoctor.errors, []);
   assert.ok(configuredDoctor.info.some((line) => line.includes("harness root: .harness")));
-  const configuredDocsOverview = spawnSync("make", ["docs-overview"], {
+  const configuredWorkProductsOverview = spawnSync("make", ["work-products-overview"], {
     cwd: configuredRoot,
     encoding: "utf8"
   });
-  assert.equal(configuredDocsOverview.status, 0, `${configuredDocsOverview.stdout}\n${configuredDocsOverview.stderr}`);
+  assert.equal(
+    configuredWorkProductsOverview.status,
+    0,
+    `${configuredWorkProductsOverview.stdout}\n${configuredWorkProductsOverview.stderr}`
+  );
   const configuredMakeHarness = spawnSync("make", ["validate-harness"], {
     cwd: configuredRoot,
     encoding: "utf8"

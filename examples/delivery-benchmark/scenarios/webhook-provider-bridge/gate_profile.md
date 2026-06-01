@@ -16,7 +16,7 @@ orientation.
 - Include HMAC signature, timestamp freshness, replay protection and event idempotency tests.
 - Include retry/backoff and dead-letter queue tests.
 - Include deterministic mock provider fixture smoke.
-- Add regression coverage for v2 signing payload, tenant-level secret rotation, previous-secret expiry and do-not-retry behavior when live credentials are unavailable.
+- When a later staged prompt injects a change or repair condition, add regression coverage for that injected provider-safety boundary before ending the stage.
 
 ## Harness Task Gates
 

@@ -17,9 +17,9 @@ Review 时先建立证据链：PRD 说什么、UI/UX screen contracts 和 DESIGN
 
 不要把个人偏好包装成 blocker。区分 blocking issue、follow-up improvement 和 open question。如果没有发现问题，要明确说明，同时列出剩余测试缺口或残余风险。
 
-Review 必须把“当前模块没有可运行入口/出口”视为阻断项，而不是普通测试缺口。凡 PRD、技术方案或 implementation doc 承诺 API、CLI、server route、service、agent、runtime、adapter、worker、provider、外部发送/写入执行器、配置契约或 live/fixture 双模式边界，Review 都要读取技术方案的 `Development Deliverable Contract`、`Development Self-Test Contract` 或等价交付边界，并核对真实代码和实现文档是否提供可调用入口、初始化方式、输出/副作用边界和验证方式；如果 task 声明了 `evidence_level.required`、`target_runtime_environment` 或 `self_test_contract`，还必须核对实际证据等级、执行地点、目标运行环境、自测 scenario 结果、`module_key_test_path`、`module_key_test_graph`（若声明）和 required gates 是否匹配。high-risk runtime/live/remote-operator 工作要先看 `plan.yaml#resume_capsule` 和 `.docs/09_runbooks/**` runbook，确认 canonical path、do-not-retry、hard constraints、evidence index 和 exploration appendix 已把恢复主线与失败探索分开；Review 不应从失败探索中重新选择主路径。凡会改变下一步动作的判断，如果只埋在 evidence、notes、exploration appendix 或长 implementation doc 中，而没有 promoted 到 `resume_capsule.do_not_retry`、runbook 顶部 `Hard Constraints` 或短 `Current Operator Path`，应判为 blocker。implementation doc 还必须包含结构化 `Development Evidence`，说明 `Evidence Level`、`Target Runtime Environment`、`Runnable Entry`、`Observable Exit`、`Client / Server Initialization`、`Config Contract`、`Testing Handoff Readiness`、`Known Missing Runtime Boundaries` 和 `Basic Self-test Evidence`，或带原因的 `Not applicable`；如果 task 有 `self_test_contract.status: "required"`，还必须包含已执行的 `Development Self-Test Report`，并记录 `Report Status`、`Module Application Entry`、从本地启动或调用入口开始到完成全部自测用例的 `Module Key Test Path`、`Observable Exit`、`Current Blocker`、`Testing Handoff Readiness` 和 `Evidence Index Refs`。如果 contract 设置 `graph_required: true` 或包含 `module_key_test_graph`，报告必须含实际 `Module Key Test Graph`，覆盖 promised entry/exit、scenario、checkpoint 和 evidence refs。该报告不是 debug log、operator log、runbook、evidence dump 或历史流水；看到这些混入 scenario evidence 或 graph node 时应判为 blocker。`Report Status` 必须是 `PASS` 且所有 scenario 都是 `PASS` 才能进入 TESTING。该路径应覆盖本 task / 本模块承诺的所有可运行入口、内部关键路径、关键边界、观察点和可观测完成证据；high-risk task 还必须包含短的 `Current Operator Path` 和分层 `Gate Breakdown`。如果 task 要求 `deployed_runtime` 或 `business_handoff_ready`，但证据只是在开发机 `localhost`、provider live smoke、fixture smoke、fake adapter 或文档描述，应判 `BLOCKED`。缺失时 gate decision 应为 `BLOCKED`；实现偏离既有方案时要求 `bugfix_implementation_gap` 回 `SPRINTING`，上游事实或方案变化时要求进入 RFC，而不是允许进入 TESTING 后补 runtime。Review 报告必须写出 `Runnable Entry`、`Observable Exit`、`Initialization`、`Config Contract`、`Testing Handoff Readiness` 的 `PASS`/`BLOCKED` checklist；任一 `BLOCKED` 不得进入 TESTING。Review 不创建 `.docs/07_test/**` 正式测试产物；如果发现现有测试事实源仍链接已被 RFC supersede 的旧路线证据，应将其列为进入 TESTING 前的 blocker，并要求 RFC 清理或更新索引。
+Review 必须把“当前模块没有可运行入口/出口”视为阻断项，而不是普通测试缺口。凡 PRD、技术方案或 implementation doc 承诺 API、CLI、server route、service、agent、runtime、adapter、worker、provider、外部发送/写入执行器、配置契约或 live/fixture 双模式边界，Review 都要读取技术方案的 `Development Deliverable Contract`、`Development Self-Test Contract` 或等价交付边界，并核对真实代码和实现文档是否提供可调用入口、初始化方式、输出/副作用边界和验证方式；如果 task 声明了 `evidence_level.required`、`target_runtime_environment` 或 `self_test_contract`，还必须核对实际证据等级、执行地点、目标运行环境、自测 scenario 结果、`module_key_test_path`、`module_key_test_graph`（若声明）和 required gates 是否匹配。high-risk runtime/live/remote-operator 工作要先看 `plan.yaml#resume_capsule` 和 `.work_products/09_runbooks/**` runbook，确认 canonical path、do-not-retry、hard constraints、evidence index 和 exploration appendix 已把恢复主线与失败探索分开；Review 不应从失败探索中重新选择主路径。凡会改变下一步动作的判断，如果只埋在 evidence、notes、exploration appendix 或长 implementation doc 中，而没有 promoted 到 `resume_capsule.do_not_retry`、runbook 顶部 `Hard Constraints` 或短 `Current Operator Path`，应判为 blocker。implementation doc 还必须包含结构化 `Development Evidence`，说明 `Evidence Level`、`Target Runtime Environment`、`Runnable Entry`、`Observable Exit`、`Client / Server Initialization`、`Config Contract`、`Testing Handoff Readiness`、`Known Missing Runtime Boundaries` 和 `Basic Self-test Evidence`，或带原因的 `Not applicable`；如果 task 有 `self_test_contract.status: "required"`，还必须包含已执行的 `Development Self-Test Report`，并记录 `Report Status`、`Module Application Entry`、从本地启动或调用入口开始到完成全部自测用例的 `Module Key Test Path`、`Observable Exit`、`Current Blocker`、`Testing Handoff Readiness` 和 `Evidence Index Refs`。如果 contract 设置 `graph_required: true` 或包含 `module_key_test_graph`，报告必须含实际 `Module Key Test Graph`，覆盖 promised entry/exit、scenario、checkpoint 和 evidence refs。该报告不是 debug log、operator log、runbook、evidence dump 或历史流水；看到这些混入 scenario evidence 或 graph node 时应判为 blocker。`Report Status` 必须是 `PASS` 且所有 scenario 都是 `PASS` 才能进入 TESTING。该路径应覆盖本 task / 本模块承诺的所有可运行入口、内部关键路径、关键边界、观察点和可观测完成证据；high-risk task 还必须包含短的 `Current Operator Path` 和分层 `Gate Breakdown`。如果 task 要求 `deployed_runtime` 或 `business_handoff_ready`，但证据只是在开发机 `localhost`、provider live smoke、fixture smoke、fake adapter 或文档描述，应判 `BLOCKED`。缺失时 gate decision 应为 `BLOCKED`；实现偏离既有方案时要求 `bugfix_implementation_gap` 回 `SPRINTING`，上游事实或方案变化时要求进入 RFC，而不是允许进入 TESTING 后补 runtime。Review 报告必须写出 `Runnable Entry`、`Observable Exit`、`Initialization`、`Config Contract`、`Testing Handoff Readiness` 的 `PASS`/`BLOCKED` checklist；任一 `BLOCKED` 不得进入 TESTING。Review 不创建 `.work_products/07_test/**` 正式测试产物；如果发现现有测试事实源仍链接已被 RFC supersede 的旧路线证据，应将其列为进入 TESTING 前的 blocker，并要求 RFC 清理或更新索引。
 
-对 UI/frontend/browser/page 改动，Review 还必须核对实现是否符合 `.docs/02_experience/**` 的 screen contracts、loading/empty/error/success/permission states、interaction behavior、responsive breakpoints、accessibility / focus / keyboard / touch expectations，以及 `DESIGN.md` tokens / components。缺少设计交接证据、实现与 screen contract 不一致、或明显绕过 DESIGN.md，应作为 blocking finding，而不是普通样式建议。
+对 UI/frontend/browser/page 改动，Review 还必须核对实现是否符合 `.work_products/02_experience/**` 的 screen contracts、loading/empty/error/success/permission states、interaction behavior、responsive breakpoints、accessibility / focus / keyboard / touch expectations，以及 `DESIGN.md` tokens / components。缺少设计交接证据、实现与 screen contract 不一致、或明显绕过 DESIGN.md，应作为 blocking finding，而不是普通样式建议。
 
 Review 产出本身也是 workflow task。开始 review 前，先在 `<harnessRoot>/state/plan.yaml` 创建或选择一个足够小的 `TASK-*` open task，并设置 `phase: "REVIEWING"`；当前轮只产出一个 review batch、一个风险主题 slice 或一次 PR review 结论。不要在一个任务里覆盖多个互不相关的 review 主题。
 
@@ -28,19 +28,19 @@ Review 阶段默认先评估是否适合并行只读审查。适合时，主 Rev
 ## 输入
 
 - `<harnessRoot>/state/plan.yaml`
-- `.docs/01_product/`
-- `.docs/02_experience/`
+- `.work_products/01_product/`
+- `.work_products/02_experience/`
 - `DESIGN.md`
-- `.docs/03_tech_plan/`
-- `.docs/04_implementation/`
-- `.docs/07_test/`（只读，用于发现 stale test facts）
+- `.work_products/03_tech_plan/`
+- `.work_products/04_implementation/`
+- `.work_products/07_test/`（只读，用于发现 stale test facts）
 - `git diff`
 - gate/test 结果
 - `<harnessRoot>/pjsdlc_managed/templates/REVIEW_TEMPLATE.md`
 
 ## 输出
 
-- `.docs/06_review/REVIEW_REPORT.md`
+- `.work_products/06_review/REVIEW_REPORT.md`
 - 更新后的 `<harnessRoot>/state/plan.yaml`
 - 风险清单
 - 重构建议
@@ -49,21 +49,21 @@ Review 阶段默认先评估是否适合并行只读审查。适合时，主 Rev
 
 ## 语义切片
 
-- `.docs/06_review/` 默认按一次 Review 批次、一个 PR、一个里程碑或一个模块生成 review slice。
+- `.work_products/06_review/` 默认按一次 Review 批次、一个 PR、一个里程碑或一个模块生成 review slice。
 - 如果 Review 涉及多个互不相关的风险主题，可以拆成多个 review slices，但必须在主 `REVIEW_REPORT.md` 中汇总结论。
 - Findings 按风险项切片组织，每条 finding 应能独立追溯到文件、任务、PRD 或 tech plan。
 - Review 不重切上游 PRD / tech plan；如果发现上游边界错误，记录 blocker 或建议 RFC。
-- 每次新增或拆分 review slice 后，都要更新 `.docs/INDEX.md`。
+- 每次新增或拆分 review slice 后，都要更新 `.work_products/INDEX.md`。
 
 ## Plan Protocol
 
 Review 阶段受 `plan.yaml` 管控：
 
 1. 没有 open task 时，先创建一个最小 `TASK-*` task，设置 `phase: "REVIEWING"` 和 `current_task_id`。
-2. open task 必须包含 `phase`、`docs`、`allowed_paths`、`required_gates`、`acceptance_criteria` 和 `result_docs`；`result_docs` 指向本 task 计划产出的 `.docs/06_review/**` 文件。
+2. open task 必须包含 `phase`、`work_products`、`allowed_paths`、`required_gates`、`acceptance_criteria` 和 `result_work_products`；`result_work_products` 指向本 task 计划产出的 `.work_products/06_review/**` 文件。
 3. 单个 task 的目标应足够小：一次 review batch、一个 PR、一个模块或一个风险主题。
-4. 执行当前 task 时只写 review 产物、`.docs/INDEX.md`、`overview.md` 和 `plan.yaml`，不修改源码。
-5. 完成后运行 `make validate-plan` 和 `make docs-overview`；阶段出口前运行 `make validate-review`。
+4. 执行当前 task 时只写 review 产物、`.work_products/INDEX.md`、`overview.md` 和 `plan.yaml`，不修改源码。
+5. 完成后运行 `make validate-plan` 和 `make work-products-overview`；阶段出口前运行 `make validate-review`。
 6. task 完成后从 `plan.yaml.tasks` 移除；如果还有 pending review task，下一轮 `/review` 或 `/next` 再继续。
 
 ## 规则
@@ -90,5 +90,5 @@ Review 阶段受 `plan.yaml` 管控：
 - [ ] 已核对证据等级和执行地点是否匹配 task / 技术方案承诺的目标运行环境。
 - [ ] 已判断 review slice 的范围和风险主题边界。
 - [ ] 已列出测试缺口。
-- [ ] 已运行 `make docs-overview` 刷新 `.docs/<stage>/overview.md`。
+- [ ] 已运行 `make work-products-overview` 刷新 `.work_products/<stage>/overview.md`。
 - [ ] gate decision 是 `PASS` 或 `BLOCKED`。

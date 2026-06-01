@@ -8,12 +8,15 @@ export interface UserOwnedSectionReport {
 }
 
 const MEMORY_GUIDANCE_HEADING = "## Harness Guidance";
-const DOCS_INDEX_RULES_HEADING = "## Harness Maintenance Rules";
+const WORK_PRODUCTS_INDEX_RULES_HEADING = "## Harness Maintenance Rules";
 
 const LEGACY_MEMORY_PARAGRAPHS = [
   "短期执行计划写入 plan.yaml；长期稳定知识只在这里记录简短摘要和链接。完整决策背景、备选方案、取舍和后果写入 `.docs/05_decisions/` ADR 或其它 `.docs/**` 正式事实源。",
   "记录跨阶段长期有效知识的简短摘要和链接。完整决策背景、备选方案、取舍和后果写入 `.docs/05_decisions/` ADR 或其它 `.docs/**` 正式事实源。",
-  "内容保持简短，详细说明链接到 `.docs/` 下的对应文档。完整决策背景、备选方案、取舍和后果应写入 `.docs/05_decisions/` ADR 或其它正式 `.docs/**` 事实源。"
+  "内容保持简短，详细说明链接到 `.docs/` 下的对应文档。完整决策背景、备选方案、取舍和后果应写入 `.docs/05_decisions/` ADR 或其它正式 `.docs/**` 事实源。",
+  "短期执行计划写入 plan.yaml；长期稳定知识只在这里记录简短摘要和链接。完整决策背景、备选方案、取舍和后果写入 `.work_products/05_decisions/` ADR 或其它 `.work_products/**` 正式事实源。",
+  "记录跨阶段长期有效知识的简短摘要和链接。完整决策背景、备选方案、取舍和后果写入 `.work_products/05_decisions/` ADR 或其它 `.work_products/**` 正式事实源。",
+  "内容保持简短，详细说明链接到 `.work_products/` 下的对应文档。完整决策背景、备选方案、取舍和后果应写入 `.work_products/05_decisions/` ADR 或其它正式 `.work_products/**` 事实源。"
 ];
 
 const LEGACY_INDEX_MAINTENANCE_SECTION = [
@@ -31,7 +34,7 @@ export async function syncProjectGuidanceSections(
   report: UserOwnedSectionReport
 ): Promise<void> {
   await syncMemoryGuidanceSection(projectRoot, root, report);
-  await syncDocsIndexMaintenanceSection(projectRoot, report);
+  await syncWorkProductsIndexMaintenanceSection(projectRoot, report);
 }
 
 export async function syncMemoryGuidanceSection(
@@ -50,19 +53,19 @@ export async function syncMemoryGuidanceSection(
   await writeSectionIfChanged(targetPath, relativePath, next, report);
 }
 
-export async function syncDocsIndexMaintenanceSection(
+export async function syncWorkProductsIndexMaintenanceSection(
   projectRoot: string,
   report: UserOwnedSectionReport
 ): Promise<void> {
-  const relativePath = ".docs/INDEX.md";
+  const relativePath = ".work_products/INDEX.md";
   const targetPath = path.join(projectRoot, relativePath);
   const existing = (await pathExists(targetPath))
     ? await readText(targetPath)
-    : "# Documentation Index\n\n本文件是 AI SDLC Harness 的文档路由表。\n";
+    : "# Work Products Index\n\n本文件是 AI SDLC Harness 的工作产物路由表。\n";
   const next = mergeMarkdownSection(
     removeLegacyIndexMaintenanceSection(existing),
-    DOCS_INDEX_RULES_HEADING,
-    renderDocsIndexMaintenanceSection()
+    WORK_PRODUCTS_INDEX_RULES_HEADING,
+    renderWorkProductsIndexMaintenanceSection()
   );
   await writeSectionIfChanged(targetPath, relativePath, next, report);
 }
@@ -72,20 +75,20 @@ function renderMemoryGuidanceSection(root: string): string {
   return [
     MEMORY_GUIDANCE_HEADING,
     "",
-    "- 内容保持简短，详细说明链接到 `.docs/` 下的对应文档。",
+    "- 内容保持简短，详细说明链接到 `.work_products/` 下的对应工作产物。",
     `- 短期执行计划写入 \`${planPath}\`；长期稳定知识只在这里记录简短摘要和链接。`,
-    "- 完整决策背景、备选方案、取舍和后果应写入 `.docs/05_decisions/` ADR 或其它正式 `.docs/**` 事实源。"
+    "- 完整决策背景、备选方案、取舍和后果应写入 `.work_products/05_decisions/` ADR 或其它正式 `.work_products/**` 事实源。"
   ].join("\n");
 }
 
-function renderDocsIndexMaintenanceSection(): string {
+function renderWorkProductsIndexMaintenanceSection(): string {
   return [
-    DOCS_INDEX_RULES_HEADING,
+    WORK_PRODUCTS_INDEX_RULES_HEADING,
     "",
     "- `overview.md` 是 generated artifact，用于浏览和阶段交接；不要手写或局部编辑。",
-    "- Markdown slices 和 `.docs/INDEX.md` 是事实源。",
-    "- 任意 `.docs/<stage>/**/*.md` 新增、修改、拆分、合并或废弃后，运行 `make docs-overview`。",
-    "- 提交或阶段交付前，运行 `make validate-doc-overviews` 或 `make validate-harness` 确认 overview 未过期。",
+    "- Markdown slices 和 `.work_products/INDEX.md` 是事实源。",
+    "- 任意 `.work_products/<stage>/**/*.md` 新增、修改、拆分、合并或废弃后，运行 `make work-products-overview`。",
+    "- 提交或阶段交付前，运行 `make validate-work-products-overviews` 或 `make validate-harness` 确认 overview 未过期。",
     "- 每个新增产物都要从本索引链接；implementation docs 必须对齐真实代码。"
   ].join("\n");
 }

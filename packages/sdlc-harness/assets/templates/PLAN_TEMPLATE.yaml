@@ -14,8 +14,8 @@ next_task_sequence: 2
 #   do_not_retry:
 #     - "known failed path, repeated trap, or strategy-changing hard constraint; e.g. if PC WeChat shows QR after confirmed login, first classify rule_assumption_gap vs operator_induced_logout_or_session_reset before rescanning"
 #   recovery_refs:
-#     - ".docs/04_implementation/example.md"
-#     - ".docs/09_runbooks/example_live_smoke_runbook.md"
+#     - ".work_products/04_implementation/example.md"
+#     - ".work_products/09_runbooks/example_live_smoke_runbook.md"
 # Optional top-level execution contract. Omit this block when the current task
 # stays serial after the default parallel eligibility check. Use
 # trigger: "workflow_default" when the workflow safely splits the task by
@@ -36,7 +36,7 @@ next_task_sequence: 2
 #         - "tests/feature/**"
 #       forbidden_paths:
 #         - "<harnessRoot>/state/**"
-#         - ".docs/INDEX.md"
+#         - ".work_products/INDEX.md"
 #       expected_output:
 #         - "implementation branch and focused gate evidence"
 #       required_gates:
@@ -47,20 +47,20 @@ next_task_sequence: 2
 #     required_gates:
 #       - "make validate-current"
 #     fact_source_updates:
-#       - ".docs/04_implementation/"
+#       - ".work_products/04_implementation/"
 tasks:
   - id: "TASK-001"
     phase: "REQUIREMENT_GATHERING"
     title: "生成示例 PRD slice"
     status: "pending"
     summary: "一句话描述任务目标和交付边界。"
-    docs:
+    work_products:
       raw:
-        - ".docs/00_raw/example.md"
+        - ".work_products/00_raw/example.md"
       product:
-        - ".docs/01_product/example.md"
+        - ".work_products/01_product/example.md"
       uiux:
-        - ".docs/02_experience/example.md"
+        - ".work_products/02_experience/example.md"
       design_system:
         - "DESIGN.md"
       architecture: []
@@ -68,13 +68,13 @@ tasks:
       rfc: []
       runbook: []
     allowed_paths:
-      - ".docs/00_raw/**"
-      - ".docs/01_product/**"
-      - ".docs/INDEX.md"
+      - ".work_products/00_raw/**"
+      - ".work_products/01_product/**"
+      - ".work_products/INDEX.md"
       - "<harnessRoot>/state/plan.yaml"
     required_gates:
       - "make validate-plan"
-      - "make docs-overview"
+      - "make work-products-overview"
     acceptance_criteria:
       - "验收标准写在 open task 内，完成后从当前 plan 删除。"
     # Required for reference-image-driven UI/UX, art direction, game-screen,
@@ -85,7 +85,7 @@ tasks:
     #   required: true
     #   mode: "visual_spike | design_reconciliation | not_applicable"
     #   reference_images:
-    #     - path: ".docs/00_raw/reference.png"
+    #     - path: ".work_products/00_raw/reference.png"
     #       purpose: "style_target | layout_target | asset_source | inspiration_only | unknown"
     #       usage_boundary: "do_not_copy_directly | user_owned_asset | licensed_asset | unknown"
     #   screenshot_artifacts:
@@ -113,7 +113,7 @@ tasks:
     # ARCHITECTING/RFC and executed during SPRINTING.
     self_test_contract:
       status: "required | not_applicable"
-      source: ".docs/03_tech_plan/example.md"
+      source: ".work_products/03_tech_plan/example.md"
       capability_refs:
         - "PRD-EXAMPLE-001"
       runnable_entry: "command / URL / endpoint / worker command"
@@ -138,7 +138,7 @@ tasks:
             label: "ST-001 expected behavior"
             scenario_ref: "ST-001"
             expected_exit: "observable response / side effect / page state"
-            evidence_ref: ".docs/09_runbooks/example_evidence.md#ST-001"
+            evidence_ref: ".work_products/09_runbooks/example_evidence.md#ST-001"
           - id: "exit-observable"
             kind: "observable_exit"
             label: "observable response / side effect / page state"
@@ -159,5 +159,5 @@ tasks:
       not_applicable_reason: ""
     working_notes:
       - "执行现场备注只保留恢复所需的短备注；目标 5-8 条，validator 上限 8 条；路径选择结论提升到 resume_capsule。"
-    result_docs:
-      - ".docs/01_product/example.md"
+    result_work_products:
+      - ".work_products/01_product/example.md"

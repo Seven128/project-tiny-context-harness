@@ -57,7 +57,7 @@ Input
 ## 7. Current Operator Path（当前操作路径，仅 runtime/live/remote-operator 需要）
 
 - Canonical path:
-- Operator runbook: `.docs/09_runbooks/...`
+- Operator runbook: `.work_products/09_runbooks/...`
 - Credential reference: Keychain item name 或 secret reference name only；不要记录明文密钥。
 - Command/UI channel:
 - Hard Constraints: 会改变下一步动作的判断必须提升到这里和 `plan.yaml#resume_capsule.do_not_retry`；不要只埋在 evidence、notes 或 appendix。
@@ -77,7 +77,7 @@ Input
 - Observable Exit:
 - Current Blocker:
 - Testing Handoff Readiness:
-- Evidence Index Refs: `.docs/09_runbooks/..._evidence.md` 或外部 artifact / CI / command output path；不要复制证据正文。
+- Evidence Index Refs: `.work_products/09_runbooks/..._evidence.md` 或外部 artifact / CI / command output path；不要复制证据正文。
 
 保留：
 - Runnable Entry / Module Key Test Path / Observable Exit
@@ -112,7 +112,7 @@ Input
 | Node ID | Kind | Label | Scenario Ref | Expected Exit | Evidence Ref |
 |---|---|---|---|---|---|
 | entry-local-start | entry |  |  |  |  |
-| scenario-st-001 | scenario |  | ST-001 |  | `.docs/09_runbooks/...#ST-001` |
+| scenario-st-001 | scenario |  | ST-001 |  | `.work_products/09_runbooks/...#ST-001` |
 | exit-observable | observable_exit |  |  |  |  |
 
 | From | To |
