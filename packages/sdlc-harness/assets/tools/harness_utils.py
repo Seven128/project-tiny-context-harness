@@ -12,6 +12,8 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_HARNESS_ROOT = ".agent"
+HARNESS_JSON_CONFIG_PATH = "sdlc-harness.config.json"
 
 TASK_STATUSES = {
     "pending",
@@ -70,7 +72,67 @@ def repo_path(relative: str | Path) -> Path:
     return ROOT / relative
 
 
+def normalize_harness_folder_name(value: str) -> str:
+    normalized = value.strip().replace("\\", "/").rstrip("/")
+    if not normalized or normalized in {".", ".."}:
+        raise HarnessError("harnessFolderName must be a non-empty relative directory")
+    if Path(normalized).is_absolute() or ".." in normalized.split("/"):
+        raise HarnessError("harnessFolderName must not be absolute or contain '..'")
+    return normalized
+
+
+def folder_name_from_object(value: Any) -> str | None:
+    if not isinstance(value, dict):
+        return None
+    folder_name = value.get("harnessFolderName") or value.get("harnessFloderName")
+    if isinstance(folder_name, str) and folder_name.strip():
+        return folder_name
+    return None
+
+
+def read_json_config(relative: str) -> Any:
+    path = repo_path(relative)
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def harness_root() -> str:
+    package_json = read_json_config("package.json")
+    package_config = package_json.get("sdlcHarness") if isinstance(package_json, dict) else None
+    package_value = folder_name_from_object(package_config)
+    if package_value:
+        return normalize_harness_folder_name(package_value)
+
+    explicit_config = read_json_config(HARNESS_JSON_CONFIG_PATH)
+    explicit_value = folder_name_from_object(explicit_config)
+    if explicit_value:
+        return normalize_harness_folder_name(explicit_value)
+
+    return DEFAULT_HARNESS_ROOT
+
+
+def harness_path(*segments: str) -> str:
+    return (Path(harness_root()).joinpath(*segments)).as_posix()
+
+
+def resolve_harness_relative(relative: str | Path) -> str:
+    value = str(relative).replace("\\", "/")
+    root = harness_root()
+    if value == "<harnessRoot>":
+        return root
+    if value.startswith("<harnessRoot>/"):
+        return f"{root}/{value.removeprefix('<harnessRoot>/')}"
+    if root != ".codex":
+        if value == ".codex":
+            return root
+        if value.startswith(".codex/"):
+            return f"{root}/{value.removeprefix('.codex/')}"
+    return value
+
+
 def read_text(relative: str | Path) -> str:
+    relative = resolve_harness_relative(relative)
     path = repo_path(relative)
     if not path.exists():
         raise HarnessError(f"Missing required file: {relative}")
@@ -78,6 +140,7 @@ def read_text(relative: str | Path) -> str:
 
 
 def load_yaml(relative: str | Path) -> Any:
+    relative = resolve_harness_relative(relative)
     path = repo_path(relative)
     if not path.exists():
         raise HarnessError(f"Missing required YAML file: {relative}")
@@ -114,6 +177,7 @@ def parse_yaml_text(text: str) -> Any:
 
 
 def dump_yaml(data: Any, relative: str | Path) -> None:
+    relative = resolve_harness_relative(relative)
     path = repo_path(relative)
     path.write_text(to_simple_yaml(data).rstrip() + "\n", encoding="utf-8")
 
@@ -330,7 +394,8 @@ def require(condition: Any, message: str) -> None:
 
 def require_paths(paths: list[str]) -> None:
     for relative in paths:
-        require(repo_path(relative).exists(), f"Missing required path: {relative}")
+        resolved = resolve_harness_relative(relative)
+        require(repo_path(resolved).exists(), f"Missing required path: {resolved}")
 
 
 def combined_text(paths: list[Path]) -> str:
@@ -844,13 +909,13 @@ def is_testing_runtime_boundary_change(path: str) -> bool:
 
 
 def load_lifecycle() -> dict[str, Any]:
-    data = load_yaml(".codex/state/lifecycle.yaml")
+    data = load_yaml(harness_path("state", "lifecycle.yaml"))
     require(isinstance(data, dict), "lifecycle.yaml must be a mapping")
     return data
 
 
 def load_phase_contract_data() -> dict[str, Any]:
-    data = load_yaml(".codex/pjsdlc_managed/policies/phase_contracts.yaml")
+    data = load_yaml(harness_path("pjsdlc_managed", "policies", "phase_contracts.yaml"))
     require(isinstance(data, dict) and isinstance(data.get("phases"), dict), "phase_contracts.yaml must contain phases")
     return data
 
@@ -1021,11 +1086,12 @@ def phase_transition_contract_errors(contract_data: dict[str, Any], require_tran
     return errors
 
 
-def load_plan(path: str = ".codex/state/plan.yaml") -> dict[str, Any]:
-    data = load_yaml(path)
-    require(isinstance(data, dict), f"{path} must be a mapping")
+def load_plan(path: str | None = None) -> dict[str, Any]:
+    plan_path = path or harness_path("state", "plan.yaml")
+    data = load_yaml(plan_path)
+    require(isinstance(data, dict), f"{resolve_harness_relative(plan_path)} must be a mapping")
     tasks = data.get("tasks", [])
-    require(isinstance(tasks, list), f"{path} must contain a tasks list")
+    require(isinstance(tasks, list), f"{resolve_harness_relative(plan_path)} must contain a tasks list")
     return data
 
 
@@ -1247,28 +1313,34 @@ def validate_parallel_worker_path_lock(data: dict[str, Any], worker: dict[str, A
             require(not glob_patterns_overlap(owned, forbidden), f"{prefix}.owned_paths must not overlap forbidden paths: {owned} vs {forbidden}")
 
 
-def glob_prefix(pattern: str) -> str:
-    normalized = pattern.replace("\\", "/").replace("<harnessRoot>", ".codex")
+def normalize_harness_pattern(pattern: str, root: str | None = None) -> str:
+    actual_root = root or harness_root()
+    return pattern.replace("\\", "/").replace("<harnessRoot>", actual_root)
+
+
+def glob_prefix(pattern: str, root: str | None = None) -> str:
+    normalized = normalize_harness_pattern(pattern, root)
     wildcard_positions = [pos for pos in (normalized.find("*"), normalized.find("["), normalized.find("?")) if pos >= 0]
     if wildcard_positions:
         normalized = normalized[: min(wildcard_positions)]
     return normalized.rstrip("/")
 
 
-def glob_patterns_overlap(left: str, right: str) -> bool:
-    left_clean = left.replace("\\", "/").replace("<harnessRoot>", ".codex")
-    right_clean = right.replace("\\", "/").replace("<harnessRoot>", ".codex")
+def glob_patterns_overlap(left: str, right: str, root: str | None = None) -> bool:
+    left_clean = normalize_harness_pattern(left, root)
+    right_clean = normalize_harness_pattern(right, root)
     if fnmatch.fnmatch(left_clean, right_clean) or fnmatch.fnmatch(right_clean, left_clean):
         return True
-    left_prefix = glob_prefix(left_clean)
-    right_prefix = glob_prefix(right_clean)
+    left_prefix = glob_prefix(left_clean, root)
+    right_prefix = glob_prefix(right_clean, root)
     if not left_prefix or not right_prefix:
         return left_prefix == right_prefix
     return left_prefix.startswith(right_prefix + "/") or right_prefix.startswith(left_prefix + "/") or left_prefix == right_prefix
 
 
-def expand_harness_root(patterns: list[str], root: str = ".codex") -> list[str]:
-    return [str(pattern).replace("<harnessRoot>", root) for pattern in patterns]
+def expand_harness_root(patterns: list[str], root: str | None = None) -> list[str]:
+    actual_root = root or harness_root()
+    return [str(pattern).replace("<harnessRoot>", actual_root) for pattern in patterns]
 
 
 def task_by_id(plan_data: dict[str, Any], task_id: str) -> dict[str, Any] | None:

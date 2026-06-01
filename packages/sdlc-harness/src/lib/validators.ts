@@ -1072,7 +1072,7 @@ async function validatePlanState(projectRoot: string, allowOpen: boolean): Promi
   if ("current_phase" in tasksData) {
     errors.push("plan.yaml must not define current_phase; lifecycle.yaml is the single source for current_phase");
   }
-  validateParallelExecutionContract(tasksData, currentPhase, errors);
+  validateParallelExecutionContract(tasksData, currentPhase, errors, root);
   const tasks = Array.isArray(tasksData.tasks) ? (tasksData.tasks as Array<Record<string, unknown>>) : [];
   const nextTaskSequence = tasksData.next_task_sequence;
   if (!Number.isInteger(nextTaskSequence) || Number(nextTaskSequence) <= 0) {
@@ -1644,7 +1644,7 @@ async function validateSelfTestContractTechPlanBinding(
   return errors;
 }
 
-function validateParallelExecutionContract(plan: Record<string, unknown>, currentPhase: string, errors: string[]): void {
+function validateParallelExecutionContract(plan: Record<string, unknown>, currentPhase: string, errors: string[], root: string): void {
   const contract = plan.parallel_execution;
   if (contract === undefined || contract === null) return;
   if (!isRecord(contract)) {
@@ -1727,8 +1727,8 @@ function validateParallelExecutionContract(plan: Record<string, unknown>, curren
         if (!Array.isArray(worker.owned_paths) || worker.owned_paths.length === 0) {
           errors.push(`${prefix}.owned_paths must not be empty when writes_repo is true`);
         }
-        validateParallelWorkerPathLock(plan, worker, index, errors);
-        for (const owned of stringArray(worker.owned_paths).map(normalizeParallelPattern)) {
+        validateParallelWorkerPathLock(plan, worker, index, errors, root);
+        for (const owned of stringArray(worker.owned_paths).map((pattern) => normalizeParallelPattern(pattern, root))) {
           writeOwnedPaths.push({ index, path: owned });
         }
       }
@@ -1737,7 +1737,7 @@ function validateParallelExecutionContract(plan: Record<string, unknown>, curren
       for (let right = left + 1; right < writeOwnedPaths.length; right += 1) {
         const leftOwned = writeOwnedPaths[left];
         const rightOwned = writeOwnedPaths[right];
-        if (globPatternsOverlap(leftOwned.path, rightOwned.path)) {
+        if (globPatternsOverlap(leftOwned.path, rightOwned.path, root)) {
           errors.push(
             `parallel_execution write worker owned_paths must not overlap: workers[${leftOwned.index}] ${leftOwned.path} vs workers[${rightOwned.index}] ${rightOwned.path}`
           );
@@ -1773,19 +1773,19 @@ function parallelRuntimeProvider(contract: Record<string, unknown>, errors: stri
   return String(runtime.provider ?? "");
 }
 
-function validateParallelWorkerPathLock(plan: Record<string, unknown>, worker: Record<string, unknown>, index: number, errors: string[]): void {
+function validateParallelWorkerPathLock(plan: Record<string, unknown>, worker: Record<string, unknown>, index: number, errors: string[], root: string): void {
   const currentTask = currentPlanTask(plan);
   if (!currentTask) return;
-  const taskAllowed = stringArray(currentTask.allowed_paths).map(normalizeParallelPattern);
-  const workerOwned = stringArray(worker.owned_paths).map(normalizeParallelPattern);
-  const workerForbidden = stringArray(worker.forbidden_paths).map(normalizeParallelPattern);
-  const protectedPatterns = PARALLEL_PROTECTED_WRITE_PATTERNS.map(normalizeParallelPattern);
+  const taskAllowed = stringArray(currentTask.allowed_paths).map((pattern) => normalizeParallelPattern(pattern, root));
+  const workerOwned = stringArray(worker.owned_paths).map((pattern) => normalizeParallelPattern(pattern, root));
+  const workerForbidden = stringArray(worker.forbidden_paths).map((pattern) => normalizeParallelPattern(pattern, root));
+  const protectedPatterns = PARALLEL_PROTECTED_WRITE_PATTERNS.map((pattern) => normalizeParallelPattern(pattern, root));
   for (const owned of workerOwned) {
     if (!matchesAny(owned, taskAllowed)) {
       errors.push(`parallel_execution.workers[${index}].owned_paths must be within current task allowed_paths: ${owned}`);
     }
     for (const forbidden of [...workerForbidden, ...protectedPatterns]) {
-      if (globPatternsOverlap(owned, forbidden)) {
+      if (globPatternsOverlap(owned, forbidden, root)) {
         errors.push(`parallel_execution.workers[${index}].owned_paths must not overlap forbidden paths: ${owned} vs ${forbidden}`);
       }
     }
@@ -1802,36 +1802,37 @@ function stringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.map((item) => String(item)) : [];
 }
 
-function normalizeParallelPattern(pattern: string): string {
-  return pattern.replace(/\\/g, "/").replaceAll("<harnessRoot>", ".codex");
+function normalizeParallelPattern(pattern: string, root: string): string {
+  return pattern.replace(/\\/g, "/").replaceAll("<harnessRoot>", root);
 }
 
-function globPrefix(pattern: string): string {
-  const normalized = normalizeParallelPattern(pattern);
+function globPrefix(pattern: string, root: string): string {
+  const normalized = normalizeParallelPattern(pattern, root);
   const positions = ["*", "[", "?"].map((token) => normalized.indexOf(token)).filter((index) => index >= 0);
   const prefix = positions.length > 0 ? normalized.slice(0, Math.min(...positions)) : normalized;
   return prefix.replace(/\/+$/, "");
 }
 
-function globPatternsOverlap(left: string, right: string): boolean {
-  const leftClean = normalizeParallelPattern(left);
-  const rightClean = normalizeParallelPattern(right);
+function globPatternsOverlap(left: string, right: string, root: string): boolean {
+  const leftClean = normalizeParallelPattern(left, root);
+  const rightClean = normalizeParallelPattern(right, root);
   if (matchesGlob(leftClean, rightClean) || matchesGlob(rightClean, leftClean)) return true;
-  const leftPrefix = globPrefix(leftClean);
-  const rightPrefix = globPrefix(rightClean);
+  const leftPrefix = globPrefix(leftClean, root);
+  const rightPrefix = globPrefix(rightClean, root);
   if (!leftPrefix || !rightPrefix) return leftPrefix === rightPrefix;
   return leftPrefix === rightPrefix || leftPrefix.startsWith(`${rightPrefix}/`) || rightPrefix.startsWith(`${leftPrefix}/`);
 }
 
 async function validateChangedPaths(projectRoot: string, plan: Record<string, unknown>, allowOpen: boolean): Promise<string[]> {
   if (!allowOpen) return [];
+  const root = await harnessRoot(projectRoot);
   const currentTaskId = String(plan.current_task_id ?? "");
   if (!currentTaskId) return [];
   const tasks = Array.isArray(plan.tasks) ? (plan.tasks as unknown[]) : [];
   const task = tasks.find((candidate) => isRecord(candidate) && candidate.id === currentTaskId);
   if (!isRecord(task)) return [`current_task_id does not match a task: ${currentTaskId}`];
   if (!Array.isArray(task.allowed_paths)) return [`${currentTaskId} must define allowed_paths`];
-  const patterns = task.allowed_paths.map((pattern) => String(pattern).replace("<harnessRoot>", ".codex"));
+  const patterns = task.allowed_paths.map((pattern) => String(pattern).replace("<harnessRoot>", root));
   const changed = await changedFiles(projectRoot);
   const blocked = changed.filter((file) => !matchesAny(file, patterns));
   return blocked.length > 0 ? [`Changed files outside current task allowed_paths: ${blocked.join(", ")}`] : [];

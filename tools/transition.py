@@ -2,6 +2,7 @@
 from harness_utils import (
     dump_yaml,
     find_phase_transition,
+    harness_path,
     load_lifecycle,
     load_phase_contract_data,
     make_arg_parser,
@@ -51,7 +52,7 @@ def main() -> None:
         str(lifecycle.get("suspended_phase") or ""),
     )
 
-    dump_yaml(lifecycle, ".codex/state/lifecycle.yaml")
+    dump_yaml(lifecycle, harness_path("state", "lifecycle.yaml"))
     print(f"Transitioned {current} -> {target}")
     if args.reason:
         print(f"Note: {args.reason}")

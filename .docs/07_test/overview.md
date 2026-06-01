@@ -1,16 +1,43 @@
 # .docs/07_test overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 63f37f4d514ca759 -->
+<!-- source-hash: 94bf65a04dae7894 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `63f37f4d514ca759`
+Source hash: `94bf65a04dae7894`
 
 ## Source Slices
 
-1. [TEST_REPORT.md](TEST_REPORT.md)
-2. [harness_consumer_lab.md](harness_consumer_lab.md)
+1. [TEST_CASES.md](TEST_CASES.md)
+2. [TEST_REPORT.md](TEST_REPORT.md)
+3. [harness_consumer_lab.md](harness_consumer_lab.md)
+
+---
+
+## TEST_CASES.md
+
+Source: [TEST_CASES.md](TEST_CASES.md)
+
+# Test Cases
+
+## Scope
+
+- Fact source: TESTING-stage reusable case design for the workflow logic fix batch.
+- Runnable entries: package CLI validators, generated Makefile gates, Python lifecycle tools and consumer lab script.
+- Result recording stays in `.docs/07_test/TEST_REPORT.md`.
+
+## Cases
+
+| Case ID | Requirement / Risk Ref | Type | Priority | Runnable Entry | Preconditions | Steps | Expected Exit | Evidence Pointer |
+|---|---|---|---|---|---|---|---|---|
+| TC-001 | Package regression for init/root/validator behavior | regression | P0 | `npm test --workspace agent-project-sdlc` | Package workspace dependencies installed | Run package node:test suite | Tests pass for fresh init, adopt init, configured root and dirty path scoping | package test output |
+| TC-002 | Package assets match source | regression | P0 | `node packages/sdlc-harness/dist/cli.js package check-source` | Managed assets synced from source | Run source drift check | Command reports `package source OK` | package source check output |
+| TC-003 | Harness scaffold and prompt language gate | smoke | P0 | `make validate-harness` | Generated overviews refreshed | Run harness validation gate | Scaffold, prompt language and overview freshness pass | harness gate output |
+| TC-004 | Configured-root installed-consumer path | integration | P0 | `node tools/consumer_lab_full_test.mjs --report-only --reset-lab` | Current source package is buildable | Run full consumer lab | `.workflow` CLI validator, Makefile gates and `transition.py` pass | consumer lab report |
+| TC-005 | UI/UX fact source for CLI/package project | smoke | P1 | `make validate-uiux` | CLI/package experience slice exists | Run UI/UX validator | Non-visual CLI experience deliverable passes without `DESIGN.md` | UI/UX gate output |
+| TC-006 | TESTING fact source structure | smoke | P1 | `make validate-test` | `TEST_CASES.md` and `TEST_REPORT.md` exist | Run test validator | Test report references existing cases and has executable evidence | test gate output |
+| TC-007 | Workflow self-inspection command | regression | P0 | `npm test --workspace agent-project-sdlc`; `npx sdlc-harness inspect-workflow` | Package CLI is built and a Harness fixture exists | Run package regression and inspect-workflow in default and configured-root fixtures | Report exposes `PASS/WARN/BLOCKED`, JSON/prompt output and `measured` / `inferred` / `self_reported` / `unavailable` data sources without writing files | package test output; consumer lab report |
 
 ---
 
@@ -18,57 +45,57 @@ Source hash: `63f37f4d514ca759`
 
 Source: [TEST_REPORT.md](TEST_REPORT.md)
 
-# Test Report（测试报告）
+# Test Report
 
 ## 1. 测试范围
 
-- Release candidate: `agent-project-sdlc@0.1.0`
-- Latest validation batch: RFC_006 / DEV-020 package rename.
-- Commit range: `8f7f8c8..c7fcd72`
-- Review input: `.docs/06_review/REVIEW_REPORT.md`
-- 覆盖目标：npm package scaffold、sync/init/doctor、upgrade/migration、source sync、validate-* CLI、managed file merge、Markdown overview、角色提示词、task commit workflow。
+- Validation batch: workflow logic corrective validation after `agent-project-sdlc@0.1.25`.
+- Version note: no new npm release is claimed by this report.
+- Review input: repo diagnosis for `<harnessRoot>` drift, fresh init routing, UI/UX fact source gap and stale testing facts.
+- Runnable entry/exit under test: package CLI validators, generated Makefile gates, Python lifecycle tools, package source sync/check and installed-consumer lab.
 
-## 2. Test Matrix（测试矩阵）
+## 2. Test Matrix
 
-| 需求/风险 | 测试项 | 命令/证据 | 结果 |
+| Case ID | Risk / Requirement | Command / Evidence | Result |
 |---|---|---|---|
-| npm package runtime 可构建并通过单元/集成测试 | Full package regression | `npm test` | PASS：5 个 test files 全部通过，workspace selector 为 `agent-project-sdlc`。 |
-| package assets 与仓库事实源无漂移 | Source drift check | `node packages/sdlc-harness/dist/cli.js package check-source` | PASS：`package source OK`。 |
-| Harness 结构、prompt language 和 overview 派生视图一致 | Harness validation | `make validate-harness` | PASS：scaffold、prompt language、overview check 全部通过。 |
-| npm tarball 内容可发布 | Pack dry run | `npm pack --dry-run --workspace agent-project-sdlc` | PASS：81 files，package size 34.7 kB，unpacked size 111.4 kB，tarball `agent-project-sdlc-0.1.0.tgz`。 |
-| package rename consumer path | Local installed-consumer smoke | 从 `agent-project-sdlc-0.1.0.tgz` 安装后运行 `npx sdlc-harness help`、`init --harness-folder .agent`、`doctor` | PASS：`doctor` 输出 `core package: agent-project-sdlc@0.1.0`。 |
-| 阶段 gate 可执行 | TESTING gate placeholder | `make test-all` | PASS：当前 Makefile 仍为占位输出，需要后续替换为项目级 regression suite。 |
+| TC-001 | Package regression for init/root/validator behavior | `npm test --workspace agent-project-sdlc` | PASS: package node:test suite covers fresh init, adopt init, configured root and dirty path scoping. |
+| TC-002 | Managed package assets match source | `node packages/sdlc-harness/dist/cli.js package sync-source`; `node packages/sdlc-harness/dist/cli.js package check-source` | PASS: source sync applied expected asset updates and drift check reported `package source OK`. |
+| TC-003 | Harness scaffold and prompt language gate | `make validate-harness` | PASS: scaffold, prompt language and overview freshness checks passed. |
+| TC-004 | Configured-root installed-consumer path | `node tools/consumer_lab_full_test.mjs --report-only --reset-lab --markdown-report /tmp/sdlc-consumer-lab-workflow-inspect.md --json-report /tmp/sdlc-consumer-lab-workflow-inspect.json` | PASS: consumer lab reported 60 PASS / 0 BLOCKED / 0 FAIL and covers `.workflow` CLI validator, `inspect-workflow`, Makefile gates and `transition.py`. |
+| TC-005 | CLI/package UI/UX fact source | `make validate-uiux` | PASS: non-visual CLI experience slice passes without `DESIGN.md`. |
+| TC-006 | TESTING fact source structure | `make validate-test` | PASS: report references existing `TC-*` cases and contains executed regression evidence. |
+| TC-007 | Workflow self-inspection command | `npm test --workspace agent-project-sdlc`; consumer lab `npx sdlc-harness inspect-workflow` checks | PASS: package regression covers report/JSON/prompt/self-reported metrics, and consumer lab covers default plus `.workflow` configured root. |
 
-## 3. Regression Evidence（回归证据）
+## 3. Regression Evidence
 
-- `npm test` 运行 `npm run build` 后执行 `node --test ../../tests/sdlc-harness/*.test.mjs`，通过：
-  - `harness-root.test.mjs`
-  - `package-source.test.mjs`
-  - `sync-init-doctor.test.mjs`
-  - `upgrade.test.mjs`
-  - `validators.test.mjs`
-- `npm pack --dry-run` 触发 `prepack` build 并列出 tarball 内容，确认 `dist`、`assets`、`migrations`、`source-mappings.yaml` 和 `package.json` 被包含。
-- `make validate-harness` 确认 `.docs/**/overview.md` 未过期。
-- DEV-020 后重新执行 local tarball consumer smoke，确认包名改动不影响 `sdlc-harness` CLI。
+- `npm test --workspace agent-project-sdlc`: PASS.
+- `node packages/sdlc-harness/dist/cli.js package sync-source`: PASS.
+- `node packages/sdlc-harness/dist/cli.js package check-source`: PASS.
+- `node packages/sdlc-harness/dist/cli.js inspect-workflow --json`: PASS, with true token telemetry marked `unavailable`.
+- `node tools/consumer_lab_full_test.mjs --report-only --reset-lab --markdown-report /tmp/sdlc-consumer-lab-workflow-inspect.md --json-report /tmp/sdlc-consumer-lab-workflow-inspect.json`: PASS.
+- `make validate-harness`: PASS.
+- `make validate-uiux`: PASS.
+- `make validate-test`: PASS.
+- `make validate-plan`: PASS.
+- `git diff --check`: PASS.
+- `tests/sdlc-harness/workflow-inspector.test.mjs`: PASS inside package regression.
 
-## 4. Runnable Entry/Exit Coverage（可运行入口/出口覆盖）
+## 4. Runnable Entry/Exit Coverage
 
-- Existing entry points under test: `sdlc-harness` CLI, package validators, package sync/source commands, generated Makefile gates.
-- Expected exits / side effects: validation reports, package asset sync/check output, generated overview checks and consumer lab smoke output.
-- Config contract used: `package.json#sdlcHarness.harnessFolderName`, `<harnessRoot>/config.yaml`, `<harnessRoot>/state/lifecycle.yaml`, `<harnessRoot>/state/plan.yaml`.
-- Fixture/live boundary: npm package and local consumer smoke are fixture/local validation; npm registry publish remains release-stage live validation.
-- Missing entry/exit blocker: none for the recorded package release candidate.
+- Entry points: `sdlc-harness init`, `sync`, `upgrade`, `inspect-workflow`, package validators, generated Makefile gates and `tools/transition.py`.
+- Expected exits / side effects: configured root files are read and written under the configured `<harnessRoot>`, fresh init starts at `REQUIREMENT_GATHERING`, adopt init stays `SPRINTING`, validators report path-specific PASS/FAIL output, and `inspect-workflow` stays read-only while reporting data-source-labeled workflow health.
+- Config contract used: `package.json#sdlcHarness.harnessFolderName`, `sdlc-harness.config.json#harnessFolderName`, `<harnessRoot>/config.yaml`, `<harnessRoot>/state/lifecycle.yaml`, `<harnessRoot>/state/plan.yaml`.
+- Fixture/live boundary: local package and installed-consumer validation only; npm publish remains release-stage live validation.
 
-## 5. Coverage Gaps（覆盖缺口）
+## 5. Coverage Gaps
 
-- `make test-all` 仍是通用占位命令，真实项目级 regression 目前由 `npm test`、source drift check、Harness validation 和 pack dry run 覆盖。
-- npm registry publish 需要在 RELEASING 阶段用实际 npm auth、包名可用性和 2FA/token policy 验证。
-- published package smoke 尚未完成；需要发布后从 registry 安装执行 CLI smoke。
+- No registry publish was performed in this batch.
+- Remote GitHub Actions execution remains outside local TESTING scope.
 
-## 6. Final Decision（最终结论）
+## 6. Final Decision
 
-- Decision: `PASS`
-- Required before release: 完成 release note、publish checklist、smoke evidence 和 rollback plan。
+- Decision: PASS.
+- Required before release: run a separate RELEASING task to bump version, publish, verify registry smoke and replace `CURRENT_RELEASE.md` with that release status.
 
 ---
 
@@ -80,23 +107,23 @@ Source: [harness_consumer_lab.md](harness_consumer_lab.md)
 
 ## Scope
 
-- Package: `agent-project-sdlc@0.1.7`
-- Source root: `/Users/momoooo/Documents/ProjectTemplate`
+- Package: `agent-project-sdlc@0.1.25`
+- Source root: `/Users/momoooo/Documents/project-agent-sdlc`
 - Lab repository: `/Users/momoooo/Documents/sdlc-harness-consumer-lab`
 - Lab cleanup: `deleted`
-- Lab commit: `not recorded`
+- Lab commit: `3c6dc2d`
 - Lab tag: `not recorded`
-- Started: 2026-05-27T09:01:11.496Z
-- Finished: 2026-05-27T09:01:31.465Z
+- Started: 2026-06-01T07:50:50.276Z
+- Finished: 2026-06-01T07:51:17.618Z
 
-This script installs the package tarball into the lab, does not copy source-repo `tools/**` into the consumer repository, and deletes the lab repository after reports are written unless `--keep-lab` is set.
+This script installs the package tarball into the lab, relies on package-managed `tools/**` materialization instead of copying source-repo tools directly, and deletes the lab repository after reports are written unless `--keep-lab` is set.
 
 ## Summary
 
-- PASS: 25
-- BLOCKED: 11
+- PASS: 60
+- BLOCKED: 0
 - FAIL: 0
-- Decision: BLOCKED
+- Decision: PASS
 
 ## Script Usage
 
@@ -111,72 +138,76 @@ Default reports are written to `/Users/momoooo/Documents/sdlc-harness-consumer-l
 
 | Area | Evidence | Result | Details |
 |---|---|---|---|
-| Package smoke | npm pack current source package | PASS | agent-project-sdlc-0.1.7.tgz |
-| Package smoke | install current source tarball | PASS | added 2 packages, and audited 3 packages in 2s  1 package is looking for funding   run `npm fund` for details  found 0 vulnerabilities |
-| CLI lifecycle | init explicit .codex root | PASS | created .codex/config.yaml created .codex/state/lifecycle.yaml created .codex/state/plan.yaml created .codex/state/plan.draft.yaml created .codex/state/memory.md created .docs/INDEX.md sync changed=27 skipped=0 blocked=0 init complete |
-| CLI lifecycle | doctor installed workspace | PASS | harness root: .codex core package: agent-project-sdlc@0.1.7 schema version: 1 doctor complete |
-| CLI lifecycle | sync idempotency | PASS | sync changed=0 skipped=13 blocked=0 |
-| CLI lifecycle | upgrade idempotency | PASS | migrations changed=0 skipped=15 sync changed=0 skipped=13 blocked=0 doctor warnings=0 errors=0 |
-| Managed assets | expected generated files exist | PASS | 10 managed files checked |
-| Adoption | init --adopt existing project | PASS | created .codex/config.yaml created .codex/state/lifecycle.yaml created .codex/state/plan.yaml created .codex/state/plan.draft.yaml created .codex/state/memory.md created .docs/INDEX.md sync changed=27 skipped=0 blocked=0 adopt mode complete |
-| Configurable root | package.json#sdlcHarness.harnessFolderName | PASS | created .workflow/config.yaml created .workflow/state/lifecycle.yaml created .workflow/state/plan.yaml created .workflow/state/plan.draft.yaml created .workflow/state/memory.md created .docs/INDEX.md sync changed=27 skipped=0 blocked=0 adopt mode complete |
+| Package smoke | npm pack current source package | PASS | agent-project-sdlc-0.1.25.tgz |
+| Package smoke | install current source tarball | PASS | added 144 packages, and audited 145 packages in 3s  103 packages are looking for funding   run `npm fund` for details  found 0 vulnerabilities  npm warn deprecated mdast@3.0.0: `mdast` was renamed to `remark` |
+| CLI lifecycle | init explicit .codex root | PASS | created .codex/config.yaml created .codex/state/lifecycle.yaml created .codex/state/plan.yaml created .codex/state/plan.draft.yaml .codex/state/memory.md .docs/INDEX.md sync changed=54 skipped=2 blocked=0 init complete |
+| CLI lifecycle | doctor installed workspace | PASS | harness root: .codex core package: agent-project-sdlc@0.1.25 schema version: 1 doctor complete |
+| CLI lifecycle | inspect-workflow installed workspace | PASS | workflow self-inspection reports PASS and marks unavailable token telemetry instead of inventing exact token data |
+| CLI lifecycle | sync idempotency | PASS | sync changed=0 skipped=16 blocked=0 |
+| CLI lifecycle | upgrade idempotency | PASS | migrations changed=0 skipped=16 sync changed=0 skipped=16 blocked=0 doctor warnings=0 errors=0 |
+| Managed assets | package ships root README as agent-readable docs asset | PASS | node_modules/agent-project-sdlc/assets/docs/README.md exists |
+| Managed assets | expected generated files exist | PASS | 13 managed files checked |
+| Managed assets | fresh init lifecycle starts in requirement gathering | PASS | lifecycle.yaml routes to pjsdlc_pm_prd |
+| Managed assets | phase policy uses explicit transition graph | PASS | phase_contracts.yaml contains transitions without legacy next/returns |
+| Adoption | init --adopt existing project | PASS | created .codex/config.yaml created .codex/state/lifecycle.yaml created .codex/state/plan.yaml created .codex/state/plan.draft.yaml .codex/state/memory.md .docs/INDEX.md sync changed=54 skipped=2 blocked=0 adopt mode complete |
+| Configurable root | package.json#sdlcHarness.harnessFolderName | PASS | created .workflow/config.yaml created .workflow/state/lifecycle.yaml created .workflow/state/plan.yaml created .workflow/state/plan.draft.yaml .workflow/state/memory.md .docs/INDEX.md sync changed=54 skipped=2 blocked=0 adopt mode complete |
+| Configurable root | CLI validator consumes configured .workflow root | PASS | validate-harness checked configured-root fixture with `.workflow` |
+| Configurable root | inspect-workflow consumes configured .workflow root | PASS | workflow self-inspection resolves `.workflow` from package config and reports data-source-labeled PASS |
+| Configurable root | Makefile docs-overview consumes configured .workflow root | PASS | Wrote .docs/03_tech_plan/overview.md Wrote .docs/04_implementation/overview.md Wrote .docs/05_decisions/overview.md Wrote .docs/06_review/overview.md Wrote .docs/07_test/overview.md Wrote .docs/08_release/overview.md Wrote .docs/09_runbooks/overview.md Wrote .docs/rfc/overview.md |
+| Configurable root | Makefile/Python gates consume configured .workflow root | PASS | OK .docs/03_tech_plan/overview.md OK .docs/04_implementation/overview.md OK .docs/05_decisions/overview.md OK .docs/06_review/overview.md OK .docs/07_test/overview.md OK .docs/08_release/overview.md OK .docs/09_runbooks/overview.md OK .docs/rfc/overview.md |
+| Configurable root | phase-exit Makefile gate consumes configured .workflow root | PASS | validate-dev checked 0 task(s) /Library/Developer/CommandLineTools/usr/bin/make lint No project lint command configured yet. Replace this target with your stack-specific lint command. /Library/Developer/CommandLineTools/usr/bin/make test-current-domain No domain test command configured yet. Replace this target with focused tests for current_task_id. Running make validate-dev make validate-dev: PASS Phase exit plan OK: no open tasks |
+| Configurable root | transition.py writes configured .workflow lifecycle | PASS | Transitioned SPRINTING -> REVIEWING |
 | Local overrides | known Skill override appends Local Override | PASS | override appended |
-| Local overrides | unknown Skill override blocks sync | PASS | sync changed=0 skipped=4 blocked=1  blocked: unknown skill override: .codex/pjsdlc_managed/override_skills/pjsdlc_unknown.md |
+| Local overrides | complete Skill override merges description and appends stripped body | PASS | full skill override merged |
+| Local overrides | unknown Skill override blocks sync | PASS | sync changed=0 skipped=6 blocked=1  blocked: unknown skill override: .codex/pjsdlc_managed/override_skills/pjsdlc_unknown.md |
 | Local policy overrides | *.local.yaml preserved across sync | PASS | local policy preserved |
-| Toy project | node:test fixture | PASS | ℹ tests 2 ℹ suites 0 ℹ pass 2 ℹ fail 0 ℹ cancelled 0 ℹ skipped 0 ℹ todo 0 ℹ duration_ms 73.193792 |
+| Toy project | node:test fixture | PASS | ℹ tests 2 ℹ suites 0 ℹ pass 2 ℹ fail 0 ℹ cancelled 0 ℹ skipped 0 ℹ todo 0 ℹ duration_ms 61.858291 |
 | CLI validators | validate-harness | PASS | validate-harness checked /Users/momoooo/Documents/sdlc-harness-consumer-lab (.codex) |
-| CLI validators | validate-current | PASS | validate-pm checked 1 file(s) |
+| CLI validators | validate-plan | PASS | validate-plan checked 0 task(s) |
 | CLI validators | validate-pm | PASS | validate-pm checked 1 file(s) |
+| CLI validators | validate-uiux | PASS | validate-uiux checked 1 file(s) |
 | CLI validators | validate-design | PASS | validate-design checked 2 file(s) |
+| CLI validators | validate-current | PASS | validate-pm checked 1 file(s) |
 | CLI validators | validate-dev final empty plan | PASS | validate-dev checked 0 task(s) |
-| Task protocol | done task retained in plan is rejected | PASS | validate-dev checked 1 task(s)  error: Completed task DEV-001 must not remain in plan.yaml |
-| Task protocol | open task retained is rejected by completion gate | PASS | validate-dev checked 1 task(s)  error: Open tasks remain: DEV-001 |
-| Parallel execution | valid explicit user_requested contract | PASS | validate-dev checked 0 task(s) |
-| Parallel execution | automatic trigger is rejected | PASS | validate-dev checked 0 task(s)  error: parallel_execution.trigger must be "user_requested" |
+| Makefile gates | make validate-dev accepts valid current open SPRINTING task | PASS | npx sdlc-harness validate-dev validate-dev checked 1 task(s) /Library/Developer/CommandLineTools/usr/bin/make lint No project lint command configured yet. Replace this target with your stack-specific lint command. /Library/Developer/CommandLineTools/usr/bin/make test-current-domain No domain test command configured yet. Replace this target with focused tests for current_task_id. |
+| CLI validators | validate-review | PASS | validate-review checked review report |
+| CLI validators | validate-test | PASS | validate-test checked .docs/07_test/TEST_REPORT.md |
+| CLI validators | validate-release | PASS | validate-release checked .docs/08_release/CURRENT_RELEASE.md |
+| CLI validators | validate-rfc | PASS | validate-rfc checked 1 file(s) |
+| Task protocol | stale draft retained after development is rejected | PASS | validate-dev checked 0 task(s)  error: Unconsumed draft tasks remain in plan.draft.yaml: TASK-001. Promote the next draft into plan.yaml or remove already-consumed drafts before validate-dev. |
+| Task protocol | done task retained in plan is rejected | PASS | validate-dev checked 1 task(s)  error: Completed task TASK-001 must not remain in plan.yaml |
+| Task protocol | direct dev gate accepts current open SPRINTING task | PASS | validate-dev checked 1 task(s) |
+| Task protocol | phase exit gate rejects open SPRINTING task | PASS | validate-dev checked 1 task(s) for phase exit  error: Open tasks remain: TASK-001 |
+| Parallel execution | valid workflow_default native subagent contract | PASS | validate-test checked .docs/07_test/TEST_REPORT.md |
+| Parallel execution | unsupported trigger is rejected | PASS | validate-test checked .docs/07_test/TEST_REPORT.md  error: parallel_execution.trigger must be user_requested or workflow_default |
 | Natural-language control | static AGENTS/manager routing text | PASS | natural-language routing text present |
-| Makefile gates | make validate-harness | BLOCKED | consumer repo is missing generated Makefile tools/** dependency |
-| Makefile gates | make validate-current | BLOCKED | consumer repo is missing generated Makefile tools/** dependency |
-| Makefile gates | make validate-review | BLOCKED | consumer repo is missing generated Makefile tools/** dependency |
-| Makefile gates | make validate-test | BLOCKED | consumer repo is missing generated Makefile tools/** dependency |
-| Makefile gates | make validate-release | BLOCKED | consumer repo is missing generated Makefile tools/** dependency |
-| Docs overview | make docs-overview | BLOCKED | consumer repo is missing generated Makefile tools/** dependency |
-| Lifecycle transition | python3 tools/transition.py --to ARCHITECTING | BLOCKED | consumer repo is missing generated Makefile tools/** dependency |
-| Later-stage CLI validators | npx sdlc-harness validate validate-review | BLOCKED | package CLI does not expose this later-stage validator yet |
-| Later-stage CLI validators | npx sdlc-harness validate validate-test | BLOCKED | package CLI does not expose this later-stage validator yet |
-| Later-stage CLI validators | npx sdlc-harness validate validate-release | BLOCKED | package CLI does not expose this later-stage validator yet |
-| Later-stage CLI validators | npx sdlc-harness validate validate-rfc | BLOCKED | package CLI does not expose this later-stage validator yet |
+| Docs overview | make docs-overview before validate-harness | PASS | Wrote .docs/03_tech_plan/overview.md Wrote .docs/04_implementation/overview.md Wrote .docs/05_decisions/overview.md Wrote .docs/06_review/overview.md Wrote .docs/07_test/overview.md Wrote .docs/08_release/overview.md Wrote .docs/09_runbooks/overview.md Wrote .docs/rfc/overview.md |
+| Makefile gates | make validate-harness | PASS | OK .docs/03_tech_plan/overview.md OK .docs/04_implementation/overview.md OK .docs/05_decisions/overview.md OK .docs/06_review/overview.md OK .docs/07_test/overview.md OK .docs/08_release/overview.md OK .docs/09_runbooks/overview.md OK .docs/rfc/overview.md |
+| Makefile gates | make validate-current | PASS | validate-dev checked 0 task(s) /Library/Developer/CommandLineTools/usr/bin/make lint No project lint command configured yet. Replace this target with your stack-specific lint command. /Library/Developer/CommandLineTools/usr/bin/make test-current-domain No domain test command configured yet. Replace this target with focused tests for current_task_id. Running make validate-dev make validate-dev: PASS Phase exit plan OK: no open tasks |
+| Makefile gates | make validate-uiux | PASS | python3 tools/validate_uiux_design.py UI/UX artifacts OK: 1 experience deliverable(s) |
+| Makefile gates | make validate-review | PASS | test -f .docs/06_review/REVIEW_REPORT.md python3 tools/validate_review.py Review report OK |
+| Makefile gates | make validate-test | PASS | /Library/Developer/CommandLineTools/usr/bin/make test-all No full test command configured yet. Replace this target with the project regression suite. python3 tools/validate_test_plan.py Test report OK: .docs/07_test/TEST_REPORT.md |
+| Makefile gates | make validate-release | PASS | /Library/Developer/CommandLineTools/usr/bin/make build No build command configured yet. Replace this target with the project build/package command. python3 tools/validate_release_plan.py Current release status OK: .docs/08_release/CURRENT_RELEASE.md |
+| Docs overview | make docs-overview | PASS | Wrote .docs/03_tech_plan/overview.md Wrote .docs/04_implementation/overview.md Wrote .docs/05_decisions/overview.md Wrote .docs/06_review/overview.md Wrote .docs/07_test/overview.md Wrote .docs/08_release/overview.md Wrote .docs/09_runbooks/overview.md Wrote .docs/rfc/overview.md |
+| Lifecycle transition | python3 tools/transition.py --to REVIEWING | PASS | Transitioned SPRINTING -> REVIEWING |
+| Lifecycle transition | python3 tools/transition.py --to RFC_RECALIBRATION | PASS | Transitioned REVIEWING -> RFC_RECALIBRATION |
+| Lifecycle transition | python3 tools/transition.py --to SPRINTING | PASS | Transitioned RFC_RECALIBRATION -> SPRINTING |
+| Later-stage CLI validators | npx sdlc-harness validate validate-review | PASS | validate-review checked review report |
+| Later-stage CLI validators | npx sdlc-harness validate validate-test | PASS | validate-test checked .docs/07_test/TEST_REPORT.md |
+| Later-stage CLI validators | npx sdlc-harness validate validate-release | PASS | validate-release checked .docs/08_release/CURRENT_RELEASE.md |
+| Later-stage CLI validators | npx sdlc-harness validate validate-rfc | PASS | validate-rfc checked 1 file(s) |
 | GitHub Actions | workflow asset static coverage | PASS | static workflow asset checked; remote GitHub Actions execution is out of scope |
-| Release automation | release automation static coverage | PASS | npm publish is out of scope for consumer lab |
+| Release automation | release automation static coverage | PASS | release automation writes current release status; npm publish is out of scope for consumer lab |
 
 ## Blocked Items
 
-- Makefile gates: make validate-harness (consumer repo is missing generated Makefile tools/** dependency)
-- Makefile gates: make validate-current (consumer repo is missing generated Makefile tools/** dependency)
-- Makefile gates: make validate-review (consumer repo is missing generated Makefile tools/** dependency)
-- Makefile gates: make validate-test (consumer repo is missing generated Makefile tools/** dependency)
-- Makefile gates: make validate-release (consumer repo is missing generated Makefile tools/** dependency)
-- Docs overview: make docs-overview (consumer repo is missing generated Makefile tools/** dependency)
-- Lifecycle transition: python3 tools/transition.py --to ARCHITECTING (consumer repo is missing generated Makefile tools/** dependency)
-- Later-stage CLI validators: npx sdlc-harness validate validate-review (package CLI does not expose this later-stage validator yet)
-- Later-stage CLI validators: npx sdlc-harness validate validate-test (package CLI does not expose this later-stage validator yet)
-- Later-stage CLI validators: npx sdlc-harness validate validate-release (package CLI does not expose this later-stage validator yet)
-- Later-stage CLI validators: npx sdlc-harness validate validate-rfc (package CLI does not expose this later-stage validator yet)
+- None
 
 ## Defect Candidates
 
 | ID | Area | Evidence | Impact |
 |---|---|---|---|
-| LAB-001 | Makefile gates | make validate-harness | consumer repo is missing generated Makefile tools/** dependency |
-| LAB-002 | Makefile gates | make validate-current | consumer repo is missing generated Makefile tools/** dependency |
-| LAB-003 | Makefile gates | make validate-review | consumer repo is missing generated Makefile tools/** dependency |
-| LAB-004 | Makefile gates | make validate-test | consumer repo is missing generated Makefile tools/** dependency |
-| LAB-005 | Makefile gates | make validate-release | consumer repo is missing generated Makefile tools/** dependency |
-| LAB-006 | Docs overview | make docs-overview | consumer repo is missing generated Makefile tools/** dependency |
-| LAB-007 | Lifecycle transition | python3 tools/transition.py --to ARCHITECTING | consumer repo is missing generated Makefile tools/** dependency |
-| LAB-008 | Later-stage CLI validators | npx sdlc-harness validate validate-review | package CLI does not expose this later-stage validator yet |
-| LAB-009 | Later-stage CLI validators | npx sdlc-harness validate validate-test | package CLI does not expose this later-stage validator yet |
-| LAB-010 | Later-stage CLI validators | npx sdlc-harness validate validate-release | package CLI does not expose this later-stage validator yet |
-| LAB-011 | Later-stage CLI validators | npx sdlc-harness validate validate-rfc | package CLI does not expose this later-stage validator yet |
+| None |  |  |  |
 
 ## Failures
 
@@ -184,5 +215,4 @@ Default reports are written to `/Users/momoooo/Documents/sdlc-harness-consumer-l
 
 ## Recommended RFC
 
-- Title: RFC: Close installed-consumer workflow coverage gaps
-- Impact areas: README, PROJECT_SPEC, package CLI, Makefile assets, validators, tools, tests, Makefile gates, Docs overview, Lifecycle transition, Later-stage CLI validators
+- None

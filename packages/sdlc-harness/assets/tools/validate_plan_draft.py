@@ -3,7 +3,7 @@ from harness_utils import load_plan, require, run_main, validate_task_shape
 
 
 def main() -> None:
-    data = load_plan(".codex/state/plan.draft.yaml")
+    data = load_plan("<harnessRoot>/state/plan.draft.yaml")
     require("current_phase" not in data, "plan.draft.yaml must not define current_phase; lifecycle.yaml is the single source for current_phase")
     require("current_task_id" not in data, "plan.draft.yaml must not define current_task_id because drafts are not active task state")
     tasks = data.get("tasks", [])

@@ -1784,6 +1784,27 @@ tasks:
     await rm(dirtyRoot, { recursive: true, force: true });
   }
 
+  const dirtyHarnessRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-dirty-root-dev-"));
+  try {
+    await writeSprintDevFixture(dirtyHarnessRoot);
+    const planPath = path.join(dirtyHarnessRoot, ".harness/state/plan.yaml");
+    const planWithRootToken = (await readFile(planPath, "utf8")).replace(
+      '      - ".docs/04_implementation/**"\n',
+      '      - ".docs/04_implementation/**"\n      - "<harnessRoot>/state/plan.yaml"\n'
+    );
+    await writeFile(planPath, planWithRootToken, "utf8");
+    execFileSync("git", ["init"], { cwd: dirtyHarnessRoot, stdio: "ignore" });
+    execFileSync("git", ["config", "user.name", "Codex"], { cwd: dirtyHarnessRoot });
+    execFileSync("git", ["config", "user.email", "codex@example.local"], { cwd: dirtyHarnessRoot });
+    execFileSync("git", ["add", "."], { cwd: dirtyHarnessRoot });
+    execFileSync("git", ["commit", "-m", "baseline"], { cwd: dirtyHarnessRoot, stdio: "ignore" });
+    await writeFile(planPath, planWithRootToken.replace("Validate dirty-file scoping.", "Validate harness-root scoping."), "utf8");
+    const dirtyHarnessRootReport = await runValidator(dirtyHarnessRoot, "validate-dev");
+    assert.deepEqual(dirtyHarnessRootReport.errors, [], "validate-dev expands <harnessRoot> to the configured root for dirty paths");
+  } finally {
+    await rm(dirtyHarnessRoot, { recursive: true, force: true });
+  }
+
   await writeFile(
     path.join(root, ".harness/state/lifecycle.yaml"),
     'current_phase: "REQUIREMENT_GATHERING"\n',

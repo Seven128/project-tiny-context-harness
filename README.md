@@ -24,7 +24,7 @@ npm install -D agent-project-sdlc
 npx sdlc-harness init
 ```
 
-`init` 会先询问目标 Agent。直接回车选择默认 `Codex`，并把 Harness 配置写到 `.codex`。其它内置选项会写入对应目录，例如 `Claude Code -> .claude`、`Cursor -> .cursor`、`Cline -> .cline`、`Roo Code -> .roo`、`Gemini CLI -> .gemini`。选择 `Other` 时才会继续询问自定义文件夹名，此时直接回车默认 `.agent`。
+`init` 会先询问目标 Agent。直接回车选择默认 `Codex`，并把 Harness 配置写到 `.codex`。其它内置选项会写入对应目录，例如 `Claude Code -> .claude`、`Cursor -> .cursor`、`Cline -> .cline`、`Roo Code -> .roo`、`Gemini CLI -> .gemini`。选择 `Other` 时才会继续询问自定义文件夹名，此时直接回车默认 `.agent`。新项目 fresh init 从 `REQUIREMENT_GATHERING` 开始，避免绕过 PRD / UI/UX / architecture；已有项目使用 `--adopt` 时从 `SPRINTING` 接入，方便先对齐既有代码和 Harness 事实源。
 
 如果已经确定目录，可以跳过交互：
 
@@ -54,12 +54,13 @@ npx sdlc-harness init --adopt
 
 | 能力 | 入口 | 说明 |
 |---|---|---|
-| 新项目初始化 | `npx sdlc-harness init` | 选择目标 Agent，生成 Harness 根目录、状态文件、workflow skills、模板、策略、`.docs/**` 和 Makefile include |
-| 已有项目接入 | `npx sdlc-harness init --adopt` | 非破坏性接入已有仓库，不覆盖业务代码和已有项目事实源 |
-| 可配置 Harness 根目录 | `--harness-folder`、`package.json#sdlcHarness.harnessFolderName`、`sdlc-harness.config.json` | 支持 `.codex`、`.claude`、`.cursor`、`.cline`、`.roo`、`.gemini` 或自定义目录 |
+| 新项目初始化 | `npx sdlc-harness init` | 选择目标 Agent，生成 Harness 根目录、状态文件、workflow skills、模板、策略、`.docs/**` 和 Makefile include；fresh lifecycle 从 `REQUIREMENT_GATHERING` 开始 |
+| 已有项目接入 | `npx sdlc-harness init --adopt` | 非破坏性接入已有仓库，不覆盖业务代码和已有项目事实源；adopt lifecycle 从 `SPRINTING` 开始 |
+| 可配置 Harness 根目录 | `--harness-folder`、`package.json#sdlcHarness.harnessFolderName`、`sdlc-harness.config.json` | 支持 `.codex`、`.claude`、`.cursor`、`.cline`、`.roo`、`.gemini` 或自定义目录；解析优先级为 package.json、config file、默认 `.agent` |
 | 同步 managed workflow 文件 | `npx sdlc-harness sync` | 从包内 canonical assets 物化 `AGENTS.md` managed block、workflow skills、templates、policies、Makefile 片段、GitHub workflow，并安全更新 user-owned Markdown guidance sections |
 | 升级已接入项目 | `npx sdlc-harness upgrade` | 执行迁移并自动 `sync`，保留 state、docs、业务代码和本地 override，同时迁移旧 seed guidance |
 | 接入诊断 | `npx sdlc-harness doctor` | 检查 harness root、版本、schema、关键文件和 managed paths |
+| 工作流自查 | `npx sdlc-harness inspect-workflow` | 只读检查 workflow weight、事实源漂移、交接清晰度和 recovery safety；每个指标标注 `measured` / `inferred` / `self_reported` / `unavailable` |
 | 阶段 gate | `npx sdlc-harness validate-*`、`make validate-current`、`make validate-harness` | 校验需求、UI/UX、架构设计、开发、Review、测试、发布、RFC、Harness 骨架、提示词语言契约和 overview freshness |
 | 生命周期工作流 | `lifecycle.yaml`、`plan.yaml`、`.docs/**` | 固定 REQUIREMENT_GATHERING、UI_UX_DESIGNING、ARCHITECTING、SPRINTING、REVIEWING、TESTING、RELEASING、RFC_RECALIBRATION 等阶段事实链 |
 | 阶段小任务管控 | `plan.yaml`、`make validate-plan` | 每个阶段的 Agent 主任务都应拆成足够小的 `TASK-*` open task，并用 `phase` 标明所属阶段 |
@@ -108,11 +109,42 @@ Agent 会读取 `<harnessRoot>/state/lifecycle.yaml` 和 `<harnessRoot>/state/pl
 
 阶段关系由 `<harnessRoot>/pjsdlc_managed/policies/phase_contracts.yaml` 中的轻量显式有向图表达：`phases` 保存稳定阶段 contract，`transitions` 保存合法流转边和少量效果，例如设置或清理 `suspended_phase`。这样做是为了让正常推进、开发前返回、TESTING bugfix return、RFC interrupt/resume 和 BLOCKED resume 都被 transition helper 与 validator 读取，避免规则埋在长文档或工具硬编码里。它不是重型图引擎，不保存历史、不做复杂遍历、不引入 node/edge class 或可视化；目标只是降低遗漏和漂移。
 
-迁移成本较低：对使用 managed assets 的项目，运行 `npx sdlc-harness upgrade` 即可同步新的 `phase_contracts.yaml`、`tools/transition.py`、`pjsdlc_uiux_design`、`UI_UX_DESIGN_TEMPLATE.md` 和 `validate-uiux`；也可以运行 `npx sdlc-harness sync` 只刷新 managed 文件。`lifecycle.yaml` 和 `plan.yaml` 不需要手动迁移，旧的 `allowed_next_phases` 会在下一次 `transition.py` 执行后按图重新生成。只有维护了自定义 phase policy 的项目需要把阶段内的 `next` / `returns` 转成 top-level `transitions`，并加入 `REQUIREMENT_GATHERING -> UI_UX_DESIGNING -> ARCHITECTING`、`ARCHITECTING -> UI_UX_DESIGNING`、`TESTING -> UI_UX_DESIGNING` / `ARCHITECTING` / `SPRINTING` return edges；如果升级前直接运行新版 `validate-harness` 看到缺少 `transitions`，先执行 `upgrade` / `sync`。
+迁移成本较低：对使用 managed assets 的项目，运行 `npx sdlc-harness upgrade` 即可同步新的 `phase_contracts.yaml`、`tools/transition.py`、`pjsdlc_uiux_design`、`UI_UX_DESIGN_TEMPLATE.md`、`validate-uiux` 和 configured-root Python/Makefile gate 修复；也可以运行 `npx sdlc-harness sync` 只刷新 managed 文件。`lifecycle.yaml` 和 `plan.yaml` 不需要手动迁移，旧的 `allowed_next_phases` 会在下一次 `transition.py` 执行后按图重新生成；fresh/adopt 初始阶段只影响新执行的 `init`，不会重写已有 state。只有维护了自定义 phase policy 的项目需要把阶段内的 `next` / `returns` 转成 top-level `transitions`，并加入 `REQUIREMENT_GATHERING -> UI_UX_DESIGNING -> ARCHITECTING`、`ARCHITECTING -> UI_UX_DESIGNING`、`TESTING -> UI_UX_DESIGNING` / `ARCHITECTING` / `SPRINTING` return edges；如果升级前直接运行新版 `validate-harness` 看到缺少 `transitions`，先执行 `upgrade` / `sync`。
 
 在尚未进入开发前，`ARCHITECTING` 可以回到 `REQUIREMENT_GATHERING` 修改 PRD，也可以回到 `UI_UX_DESIGNING` 补 screen contracts、interaction states、responsive/a11y acceptance 或 `DESIGN.md`：Manager 使用 `python3 tools/transition.py --to REQUIREMENT_GATHERING` 或 `python3 tools/transition.py --to UI_UX_DESIGNING` 切回对应工作流，完成 task 和 gate 后再回到后续阶段。进入 `SPRINTING` 后的需求、验收标准、体验契约或产品边界变化走 RFC workflow；`SPRINTING`、`REVIEWING`、`TESTING` 和 `RELEASING` 都可以通过 `python3 tools/transition.py --to RFC_RECALIBRATION` 进入受控 RFC 中断，RFC 完成后回到 `SPRINTING` 重新完成开发自测和 handoff。
 
 TESTING 阶段发现 bug 时，先在 `.docs/07_test/TEST_REPORT.md` 记录 `Bugfix Route`，再由 Manager 选择轻量 return：`bugfix_uiux_replan` 走 `python3 tools/transition.py --to UI_UX_DESIGNING`，用于 PRD 正确但 UX contract、screen contract、handoff matrix 或 `DESIGN.md` 错误；`bugfix_replan` 走 `python3 tools/transition.py --to ARCHITECTING`，用于技术方案、接口契约、任务拆分、Development Self-Test Contract 或 Module Key Test Graph 需要改；`bugfix_implementation_gap` 走 `python3 tools/transition.py --to SPRINTING`，只用于技术方案正确但实现偏离的修复。需求、验收标准或产品边界变化仍走 RFC。
+
+### 工作流自查
+
+当你想知道“这个项目的 Harness 用法是否符合预期、是不是变得太重”时，运行：
+
+```sh
+npx sdlc-harness inspect-workflow
+```
+
+该命令只读检查本地事实源，不写报告、不跑重型测试、不上传 telemetry。输出状态是 `PASS`、`WARN` 或 `BLOCKED`；`BLOCKED` 会返回非零退出码。每条 metric 都会标注数据来源：
+
+- `measured`：脚本真实读到的文件、字段、validator 结果，例如 `plan.yaml` 行数、open task 数量、`allowed_paths` 数量。
+- `inferred`：脚本只能从体量、重复、字段缺失或长文档现象推断，例如当前交接上下文是否可能过重。
+- `self_reported`：用户或 Agent 显式传入的最近执行耗时、turns 或估算 token。
+- `unavailable`：当前环境没有真实 telemetry，命令不会伪造精确 token 或真实模型耗时。
+
+工作流重量的默认阈值是：`plan.yaml` 超过 200 行 `WARN`、超过 500 行 `BLOCKED`；open task 超过 1 个 `BLOCKED`；当前 task `allowed_paths` 超过 12 个 `WARN`、超过 25 个 `BLOCKED`；当前 task 关联文档超过 5 个 `WARN`、超过 10 个 `BLOCKED`；`working_notes` 超过 8 条 `BLOCKED`；`Development Self-Test Report` 普通任务超过 80 行 `WARN`、超过 120 行 `BLOCKED`，high-risk 任务使用 120 / 180 阈值。
+
+如果 Agent 或客户端知道最近一次 workflow 处理的实际成本，可以显式传入：
+
+```sh
+npx sdlc-harness inspect-workflow --recent-minutes 18 --recent-turns 7 --estimated-tokens 12000
+```
+
+也可以让 Agent 用提示词自查：
+
+```sh
+npx sdlc-harness inspect-workflow --prompt
+```
+
+`--prompt` 会要求 Agent 区分真实可测数据、推断数据、自报数据和不可测数据，并检查入口、当前任务、下一步、hard constraint promotion、交接卡边界和 Review / Testing 可消费性。`--json` 可用于 CI 或自动化读取。
 
 `validate-design` 会把架构阶段的语义切片作为硬 gate：`overview.md` 不计入 deliverables，`plan.draft.yaml` 中每个开发 draft task 必须通过 `docs.tech_plan` 指向存在的 tech plan slice；多个开发 draft task 默认需要不同 primary tech plan slice。PRD、tech plan 或 draft task 明确出现 AI provider / copilot、外部系统边界、合规 / 权限 / 审计等横切主题时，也需要对应的专门 architecture slice。可运行边界类 draft task 还必须带 `self_test_contract`，并在 tech plan 中有 `Development Self-Test Contract`；合同必须记录 `module_key_test_path`，说明从本地启动或调用入口开始，到完成全部自测 scenario 的模块关键测试路径，并覆盖本 task / 本模块承诺的所有可运行入口和内部关键路径。复杂或 high-risk 路径可设置 `graph_required: true` 并提供 `module_key_test_graph`，把入口、checkpoint、scenario、出口和 evidence refs 表达成轻量 DAG。
 
@@ -217,6 +249,13 @@ npx sdlc-harness sync
 
 ```sh
 npx sdlc-harness upgrade
+```
+
+自查工作流重量和交接清晰度：
+
+```sh
+npx sdlc-harness inspect-workflow
+npx sdlc-harness inspect-workflow --prompt
 ```
 
 运行当前阶段 gate：

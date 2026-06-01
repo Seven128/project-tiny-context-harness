@@ -97,8 +97,8 @@ npm run release:npm -- --version patch --publish --yes
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Moved release-flow facts out of the old `npm_package` implementation-doc directory. |
 | 2026-05-26 | `DEV-047` | `338b4b5` | Released `agent-project-sdlc@0.1.6`. |
 | 2026-05-26 | `DEV-048` | DEV-048 implementation commit | Released `agent-project-sdlc@0.1.7` with package README registry data and public capability coverage. |
-| 2026-05-27 | Direct user request | Working tree | Added root README to package assets for installed-package agent reads. |
-| 2026-05-29 | `TASK-069` | Working tree | Changed release docs to a single `.docs/08_release/CURRENT_RELEASE.md` current-state contract with legacy validator compatibility. |
+| 2026-05-27 | Direct user request | Git history | Added root README to package assets for installed-package agent reads. |
+| 2026-05-29 | `TASK-069` | Git history | Changed release docs to a single `.docs/08_release/CURRENT_RELEASE.md` current-state contract with legacy validator compatibility. |
 
 ## 9. 后续维护注意事项
 

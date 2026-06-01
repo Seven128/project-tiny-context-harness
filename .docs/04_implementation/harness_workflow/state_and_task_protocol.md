@@ -259,25 +259,25 @@ Stage task starts
 | 2026-05-25 | `DEV-010`, `DEV-011` | Historical implementation commits | Replaced checkpoint/task archive model with `plan.yaml`. |
 | 2026-05-25 | `DEV-018`, `DEV-019` | Historical implementation commits | Added two-commit task completion and pre-compression implementation commit rule. |
 | 2026-05-25 | `DEV-024` - `DEV-028` | Historical implementation commits | Shortened plan/gate/lifecycle state and strengthened RFC impact handling. |
-| 2026-05-30 | Resume-first runtime task protocol | Working tree | Added high-risk runtime `resume_capsule`, `.docs/09_runbooks` recovery docs and Gate Breakdown validation. |
-| 2026-05-30 | Self-test report boundary hardening | Working tree | Added Report Status, Current Operator Path, disallowed log-section checks and working_notes limit validation. |
-| 2026-05-31 | Lightweight explicit phase graph | Working tree | Moved canonical phase routing from node-local `next` / `returns` and hardcoded RFC interrupt rules to top-level `transitions`, with validator coverage and legacy fallback. |
-| 2026-05-31 | Phase graph migration guidance | Working tree | Documented that managed consumers migrate through upgrade/sync with no state schema migration, while custom phase policies convert `next` / `returns` to explicit transition edges. |
-| 2026-06-01 | TESTING bugfix return boundary | Working tree | Added lightweight TESTING return edges for `bugfix_replan` and `bugfix_implementation_gap`, keeping bugfix route semantics in triggers and `TEST_REPORT.md` instead of a heavy bugfix state machine. |
+| 2026-05-30 | Resume-first runtime task protocol | Git history | Added high-risk runtime `resume_capsule`, `.docs/09_runbooks` recovery docs and Gate Breakdown validation. |
+| 2026-05-30 | Self-test report boundary hardening | Git history | Added Report Status, Current Operator Path, disallowed log-section checks and working_notes limit validation. |
+| 2026-05-31 | Lightweight explicit phase graph | Git history | Moved canonical phase routing from node-local `next` / `returns` and hardcoded RFC interrupt rules to top-level `transitions`, with validator coverage and legacy fallback. |
+| 2026-05-31 | Phase graph migration guidance | Git history | Documented that managed consumers migrate through upgrade/sync with no state schema migration, while custom phase policies convert `next` / `returns` to explicit transition edges. |
+| 2026-06-01 | TESTING bugfix return boundary | Git history | Added lightweight TESTING return edges for `bugfix_replan` and `bugfix_implementation_gap`, keeping bugfix route semantics in triggers and `TEST_REPORT.md` instead of a heavy bugfix state machine. |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Consolidated legacy state/task implementation docs into module facts. |
 | 2026-05-27 | `DEV-050` | DEV-050 implementation commit | Added opt-in `parallel_execution` contract for multi-agent/worktree coordination. |
 | 2026-05-30 | `TASK-084` | TASK-084 implementation commit | Added default Codex native subagent scheduling semantics and SPRINTING path-lock validation. |
-| 2026-05-27 | `DEV-056` | Working tree | Extended `plan.yaml` task control to PRD and design document generation, slicing and fact-source synthesis. |
-| 2026-05-27 | `TASK-057` | Working tree | Unified all new workflow tasks under `TASK-*` with `phase`, expanded plan control to review/test/release/RFC, and kept legacy task prefixes compatible. |
-| 2026-05-28 | `TASK-059` | Pending implementation commit | Removed duplicate current phase state from plan files and parallel execution contracts. |
-| 2026-05-28 | `TASK-061` | Working tree | Added `phase_contracts.yaml#returns` and `transition.py` support so ARCHITECTING can return to REQUIREMENT_GATHERING for PRD edits before SPRINTING, while SPRINTING cannot directly return to PRD. |
-| 2026-05-28 | Spec clarification | Working tree | Clarified that `plan.yaml` is a general recoverable task-splitting container, while default Harness behavior only governs workflow phase tasks; broader task definitions are local configuration concerns. |
-| 2026-05-28 | `TASK-062` | Working tree | Added promote-on-consume semantics for `plan.draft.yaml`, dev-state validation, package validator parity, and cleared the stale `DEV-001` draft from current state. |
-| 2026-05-28 | `TASK-063` | Working tree | Clarified that promote-on-consume is the generic rule for any draft-to-plan workflow, while `plan.draft.yaml` remains the current built-in development draft queue. |
-| 2026-05-28 | `TASK-065` | Pending implementation commit | Clarified ADR and memory responsibilities across PROJECT_SPEC, README/package README, architect skill, ADR template and package memory seeds. |
-| 2026-05-29 | `TASK-069` | Working tree | Clarified that release history is cold archive while `.docs/08_release/CURRENT_RELEASE.md` remains the active release status fact source. |
-| 2026-05-29 | `TASK-071` | Working tree | Split direct `validate-dev` open-task semantics from `validate-current` phase-exit no-open checks and moved managed Makefile dev gate to package CLI. |
-| 2026-05-30 | `TASK-082` | Working tree | Constrained RFC interrupts to SPRINTING and later phases, preserved normal REVIEWING -> TESTING routing, and cleared `suspended_phase` when RFC returns to SPRINTING. |
+| 2026-05-27 | `DEV-056` | Git history | Extended `plan.yaml` task control to PRD and design document generation, slicing and fact-source synthesis. |
+| 2026-05-27 | `TASK-057` | Git history | Unified all new workflow tasks under `TASK-*` with `phase`, expanded plan control to review/test/release/RFC, and kept legacy task prefixes compatible. |
+| 2026-05-28 | `TASK-059` | Git history | Removed duplicate current phase state from plan files and parallel execution contracts. |
+| 2026-05-28 | `TASK-061` | Git history | Added `phase_contracts.yaml#returns` and `transition.py` support so ARCHITECTING can return to REQUIREMENT_GATHERING for PRD edits before SPRINTING, while SPRINTING cannot directly return to PRD. |
+| 2026-05-28 | Spec clarification | Git history | Clarified that `plan.yaml` is a general recoverable task-splitting container, while default Harness behavior only governs workflow phase tasks; broader task definitions are local configuration concerns. |
+| 2026-05-28 | `TASK-062` | Git history | Added promote-on-consume semantics for `plan.draft.yaml`, dev-state validation, package validator parity, and cleared the stale `DEV-001` draft from current state. |
+| 2026-05-28 | `TASK-063` | Git history | Clarified that promote-on-consume is the generic rule for any draft-to-plan workflow, while `plan.draft.yaml` remains the current built-in development draft queue. |
+| 2026-05-28 | `TASK-065` | Git history | Clarified ADR and memory responsibilities across PROJECT_SPEC, README/package README, architect skill, ADR template and package memory seeds. |
+| 2026-05-29 | `TASK-069` | Git history | Clarified that release history is cold archive while `.docs/08_release/CURRENT_RELEASE.md` remains the active release status fact source. |
+| 2026-05-29 | `TASK-071` | Git history | Split direct `validate-dev` open-task semantics from `validate-current` phase-exit no-open checks and moved managed Makefile dev gate to package CLI. |
+| 2026-05-30 | `TASK-082` | Git history | Constrained RFC interrupts to SPRINTING and later phases, preserved normal REVIEWING -> TESTING routing, and cleared `suspended_phase` when RFC returns to SPRINTING. |
 
 ## 9. 后续维护注意事项
 

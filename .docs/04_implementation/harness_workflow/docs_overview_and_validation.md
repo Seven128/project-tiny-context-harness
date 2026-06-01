@@ -107,8 +107,8 @@ Implementation doc slice exists
 | 2026-05-25 | `DEV-030` | Historical implementation commit | Split lightweight README from full product/specification content. |
 | 2026-05-25 | `DEV-032` | Historical implementation commit | Defined implementation docs as module/subsystem/core-flow facts. |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Removed task-grain implementation docs from the active implementation-doc graph. |
-| 2026-05-28 | `TASK-060` | Working tree | Strengthened `validate-design` so generated overviews do not count as deliverables, draft development tasks must link tech plan slices, shared monolithic primary tech plans fail for multiple draft tasks, and explicit cross-cutting themes require dedicated architecture slices. |
-| 2026-05-31 | PROJECT_SPEC ADR split | Working tree | Split durable PROJECT_SPEC rationale into `.docs/05_decisions/` ADR slices, linked them from memory and INDEX, and kept `PROJECT_SPEC.md` as a lighter project map plus canonical behavior. |
+| 2026-05-28 | `TASK-060` | Git history | Strengthened `validate-design` so generated overviews do not count as deliverables, draft development tasks must link tech plan slices, shared monolithic primary tech plans fail for multiple draft tasks, and explicit cross-cutting themes require dedicated architecture slices. |
+| 2026-05-31 | PROJECT_SPEC ADR split | Git history | Split durable PROJECT_SPEC rationale into `.docs/05_decisions/` ADR slices, linked them from memory and INDEX, and kept `PROJECT_SPEC.md` as a lighter project map plus canonical behavior. |
 
 ## 9. 后续维护注意事项
 

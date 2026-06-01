@@ -28,6 +28,12 @@ try {
     "utf8"
   );
   assert.deepEqual(await readHarnessRootConfig(root), {
+    harnessFolderName: ".harness",
+    source: "package.json#sdlcHarness"
+  });
+
+  await rm(path.join(root, "package.json"), { force: true });
+  assert.deepEqual(await readHarnessRootConfig(root), {
     harnessFolderName: ".workflow",
     source: "sdlc-harness.config.json"
   });

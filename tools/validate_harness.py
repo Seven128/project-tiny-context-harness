@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from harness_utils import (
+    harness_path,
     load_lifecycle,
     load_phase_contract_data,
     load_phase_contracts,
@@ -13,19 +14,20 @@ from harness_utils import (
 
 
 def main() -> None:
+    root = harness_path()
     required_files = [
         "AGENTS.md",
         "Makefile",
         ".docs/INDEX.md",
-        ".codex/state/lifecycle.yaml",
-        ".codex/state/plan.yaml",
-        ".codex/state/plan.draft.yaml",
-        ".codex/state/memory.md",
-        ".codex/pjsdlc_managed/templates/PLAN_TEMPLATE.yaml",
-        ".codex/pjsdlc_managed/policies/phase_contracts.yaml",
-        ".codex/pjsdlc_managed/policies/gates.yaml",
-        ".codex/pjsdlc_managed/policies/allowed_paths.yaml",
-        ".codex/pjsdlc_managed/policies/risk_matrix.yaml",
+        harness_path("state", "lifecycle.yaml"),
+        harness_path("state", "plan.yaml"),
+        harness_path("state", "plan.draft.yaml"),
+        harness_path("state", "memory.md"),
+        harness_path("pjsdlc_managed", "templates", "PLAN_TEMPLATE.yaml"),
+        harness_path("pjsdlc_managed", "policies", "phase_contracts.yaml"),
+        harness_path("pjsdlc_managed", "policies", "gates.yaml"),
+        harness_path("pjsdlc_managed", "policies", "allowed_paths.yaml"),
+        harness_path("pjsdlc_managed", "policies", "risk_matrix.yaml"),
         "tools/build_doc_overviews.py",
         "tools/validate_plan.py",
     ]
@@ -42,7 +44,7 @@ def main() -> None:
         ".docs/08_release",
         ".docs/09_runbooks",
         ".docs/rfc",
-        ".codex/skills",
+        harness_path("skills"),
         "tools",
     ]
     require_paths(required_files + required_dirs)
@@ -50,9 +52,9 @@ def main() -> None:
     lifecycle = load_lifecycle()
     phase_contract_data = load_phase_contract_data()
     phases = load_phase_contracts()
-    load_yaml(".codex/pjsdlc_managed/policies/gates.yaml")
-    load_yaml(".codex/pjsdlc_managed/policies/allowed_paths.yaml")
-    load_yaml(".codex/pjsdlc_managed/policies/risk_matrix.yaml")
+    load_yaml(harness_path("pjsdlc_managed", "policies", "gates.yaml"))
+    load_yaml(harness_path("pjsdlc_managed", "policies", "allowed_paths.yaml"))
+    load_yaml(harness_path("pjsdlc_managed", "policies", "risk_matrix.yaml"))
 
     current_phase = lifecycle.get("current_phase")
     require(current_phase in phases, f"Lifecycle current_phase is not declared: {current_phase}")
@@ -62,7 +64,7 @@ def main() -> None:
     for phase_name, contract in phases.items():
         skill = contract.get("skill")
         require(skill, f"{phase_name} missing skill")
-        skill_file = repo_path(f".codex/skills/{skill}/SKILL.md")
+        skill_file = repo_path(f"{root}/skills/{skill}/SKILL.md")
         require(skill_file.exists(), f"Missing skill file for {phase_name}: {skill_file.relative_to(repo_path('.'))}")
         require("inputs" in contract, f"{phase_name} missing inputs")
         require("outputs" in contract, f"{phase_name} missing outputs")

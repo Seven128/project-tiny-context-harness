@@ -1,11 +1,11 @@
 # .docs/04_implementation overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 48e9930be7472c76 -->
+<!-- source-hash: 6c2fb8c69bc50397 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `48e9930be7472c76`
+Source hash: `6c2fb8c69bc50397`
 
 ## Source Slices
 
@@ -41,10 +41,11 @@ Source: [harness_package/cli_distribution_and_lifecycle.md](harness_package/cli_
 
 - `agent-project-sdlc` npm package exposes the `sdlc-harness` CLI binary.
 - `init` / `init --adopt` create or adopt a project Harness without overwriting user-owned project code.
-- Fresh `init` lifecycle routes new projects to `SPRINTING` with `active_role: "developer"` and `active_skill: "pjsdlc_dev_sprint"`; generated plan files do not duplicate `current_phase`.
+- Fresh `init` lifecycle routes new projects to `REQUIREMENT_GATHERING` with `active_role: "product_manager"` and `active_skill: "pjsdlc_pm_prd"`; `init --adopt` routes existing projects to `SPRINTING` for code/fact-source reconciliation. Generated plan files do not duplicate `current_phase`.
 - `sync` materializes managed Harness assets from package canonical assets into the selected `<harnessRoot>`.
 - `upgrade` refreshes `<harnessRoot>/config.yaml` package identity and schema metadata, runs schema migrations and then syncs managed assets.
 - `doctor` reports Harness config, managed file drift, override state and suggested gates. The displayed package version is read from the installed npm package metadata, not from project config.
+- `inspect-workflow` provides a read-only workflow self-inspection command for user repos. It reports `PASS` / `WARN` / `BLOCKED` across workflow weight, fact-source alignment, handoff clarity, TESTING readiness and high-risk recovery safety, and every metric declares `data_source` as `measured`, `inferred`, `self_reported` or `unavailable`.
 - `validate-*` commands expose package-side validation entry points for Harness state and phase artifacts.
 - 当前 authoring workspace 使用 `.codex` as `harnessFolderName`; `Other` agent selection still falls back to `.agent`.
 
@@ -60,13 +61,15 @@ Source: [harness_package/cli_distribution_and_lifecycle.md](harness_package/cli_
 | `packages/sdlc-harness/src/commands/sync.ts` | `sync` adapter | `sync` command parser |
 | `packages/sdlc-harness/src/commands/upgrade.ts` | `upgrade` adapter | `upgrade` command parser |
 | `packages/sdlc-harness/src/commands/doctor.ts` | `doctor` adapter | `doctor` command parser |
+| `packages/sdlc-harness/src/commands/inspect-workflow.ts` | Workflow self-inspection adapter | CLI option parser, JSON / prompt output |
 | `packages/sdlc-harness/src/commands/validate.ts` | Validation command adapter | `validate-*` command parser |
 | `packages/sdlc-harness/src/lib/init.ts` | Project initialization and adoption | agent selection, `harnessFolderName`, scaffold writer |
-| `packages/sdlc-harness/src/lib/harness-root.ts` | Harness root resolution | package/config/env/default precedence |
+| `packages/sdlc-harness/src/lib/harness-root.ts` | Harness root resolution | package/config/default precedence |
 | `packages/sdlc-harness/src/lib/config.ts` | Default package config | `defaultConfig()` |
 | `packages/sdlc-harness/src/lib/upgrade.ts` | Upgrade orchestration | migration runner, sync handoff |
 | `packages/sdlc-harness/src/lib/migrations.ts` | Schema and compatibility migrations | `runMigrations`, legacy root/layout migration |
 | `packages/sdlc-harness/src/lib/doctor.ts` | Diagnostic model | config and managed-file checks |
+| `packages/sdlc-harness/src/lib/workflow-inspector.ts` | Workflow self-inspection model | measured/inferred/self-reported metrics and findings |
 | `packages/sdlc-harness/src/lib/validators.ts` | Node-side Harness validators | plan, lifecycle, docs and phase validators |
 | `tests/sdlc-harness/*.test.mjs` | Package regression coverage | init/sync/doctor, upgrade, root resolution, validators |
 
@@ -92,14 +95,17 @@ Existing project runs sdlc-harness upgrade
 ## 5. 关键实现逻辑
 
 - Agent selection happens before folder selection. `Codex` is the default and writes `.codex`; `Other` asks for a custom folder and defaults to `.agent`.
-- New project lifecycle scaffolding starts at `SPRINTING` and allows `REVIEWING` next. Generated `plan.yaml` stores `current_task_id`, `next_task_sequence` and `tasks`; generated `plan.draft.yaml` stores only draft sequencing and tasks.
-- Explicit CLI flags and existing JSON config have higher priority than interactive defaults.
+- Fresh lifecycle scaffolding starts at `REQUIREMENT_GATHERING` and allows `UI_UX_DESIGNING` next; adopt lifecycle scaffolding starts at `SPRINTING` and allows `REVIEWING` / `RFC_RECALIBRATION` next. Generated `plan.yaml` stores `current_task_id`, `next_task_sequence` and `tasks`; generated `plan.draft.yaml` stores only draft sequencing and tasks.
+- Explicit CLI flags are written into package config before initialization. Runtime root resolution then prefers `package.json#sdlcHarness.harnessFolderName`, falls back to `sdlc-harness.config.json#harnessFolderName`, then `.agent`.
 - Managed files use package metadata blocks and merge strategies instead of blind overwrites.
 - Package name and CLI name are intentionally separate: npm installs `agent-project-sdlc`, users run `sdlc-harness`.
 - Migrations preserve compatibility with earlier `.harness`, `.agents` and `.agent` layouts while converging new installs on the configured `<harnessRoot>`.
 - `migrateConfig` rewrites `core.package`, deletes legacy `core.version`, and preserves `core.schema_version`. Package version is intentionally not persisted in project config because the installed package manifest is the source of truth.
 - Plan migrations remove stale `current_phase` from active and draft plans, remove draft `current_task_id`, and strip duplicate `phase` / `linked_task_id` from `parallel_execution`.
 - Validation commands mirror the Python Harness gates closely enough for package consumers to run health checks without depending on this authoring workspace.
+- `inspect-workflow` intentionally sits beside `doctor` and `validate-*`: `doctor` checks installation health, validators check stage contracts, and `inspect-workflow` checks whether the workflow is becoming too heavy or unclear. It reuses root resolution and selected validators, but does not run phase gates as proof of completion.
+- Workflow self-inspection only treats file/field counts and validator results as `measured`; context weight and handoff quality are `inferred`; recent minutes, turns and estimated tokens are accepted only through explicit CLI options as `self_reported`; true model token telemetry is `unavailable` unless the user supplies it. This prevents the command from producing fake-precise token/time claims.
+- Python tools and Node validators resolve `<harnessRoot>` consistently, so configured-root projects such as `.workflow` can run CLI validators, Makefile gates and `tools/transition.py` without `.codex` assumptions.
 - `validate-dev` checks `Development Self-Test Report` content against the current `self_test_contract`: it requires legal `Report Status`, Module Application Entry, Module Key Test Path, scenario results, executed gates, Observable Exit, Current Blocker, Testing Handoff Readiness and Evidence Index Refs; only accepts completion when report status and every scenario are `PASS`; rejects template module-key-path text, ambiguous status rows, missing scenario row evidence, missing required gates, embedded debug/operator/runbook/exploration log sections, `Actual Evidence` body fields, overlong reports, high-risk reports without `.docs/09_runbooks/**` evidence refs or Current Operator Path hard constraints, high-risk implementation docs with mainline evidence dump/operator log/failed-attempt sections, unpromoted session / QR / canonical path / do-not-retry judgments, and browser reports without page URL plus browser/Playwright/screenshot evidence. When `graph_required: true` or `module_key_test_graph` is present, validators also require a single-entry DAG with valid node kinds, known edge refs, reachable scenarios, observable exits and short `evidence_ref` pointers, plus an actual `Module Key Test Graph` in the self-test report. It remains a content consistency gate, not a command execution audit.
 - Managed `phase_contracts.yaml` now distributes a lightweight explicit phase graph: `phases` hold node contracts, top-level `transitions` hold legal directed edges and minimal effects. Package `validate-harness` rejects graph drift such as missing `transitions`, legacy `next` / `returns`, unknown targets or invalid `<suspended_phase>` usage; synced `transition.py` consumes the graph while retaining legacy fallback for older consumer policies.
 - Migration is handled by existing package flows rather than a standalone migration script: `upgrade` runs sync and refreshes the managed policy/tool files, while state files remain compatible. If a consumer has local custom phase policy edits, the manual migration is to move node-local `next` / `returns` into top-level transition edges and then rerun `validate-harness`.
@@ -114,9 +120,9 @@ Existing project runs sdlc-harness upgrade
 
 ## Development Evidence
 
-- Runnable Entry: `npm test --workspace agent-project-sdlc`, `node packages/sdlc-harness/dist/cli.js package sync-source`, `node packages/sdlc-harness/dist/cli.js package check-source`, `make validate-dev`, and `make validate-harness` are the task verification entrypoints.
-- Observable Exit: `tests/sdlc-harness/sync-init-doctor.test.mjs` asserts generated config omits `core.version` and `doctor` reports `core package: agent-project-sdlc@<installed package version>`; `tests/sdlc-harness/upgrade.test.mjs` asserts migrated config omits legacy `core.version`; `package check-source` output was `package source OK`.
-- Basic Self-test Evidence: `npm test --workspace agent-project-sdlc` PASS with 10/10 tests; `node packages/sdlc-harness/dist/cli.js package sync-source` PASS; `node packages/sdlc-harness/dist/cli.js package check-source` PASS.
+- Runnable Entry: `npm test --workspace agent-project-sdlc`, `node packages/sdlc-harness/dist/cli.js inspect-workflow --json`, `node packages/sdlc-harness/dist/cli.js package sync-source`, `node packages/sdlc-harness/dist/cli.js package check-source`, `make validate-dev`, and `make validate-harness` are the task verification entrypoints.
+- Observable Exit: `tests/sdlc-harness/sync-init-doctor.test.mjs` asserts generated config omits `core.version` and `doctor` reports `core package: agent-project-sdlc@<installed package version>`; `tests/sdlc-harness/workflow-inspector.test.mjs` asserts `inspect-workflow` JSON/prompt output, self-reported metrics and overweight blockers; `tests/sdlc-harness/upgrade.test.mjs` asserts migrated config omits legacy `core.version`; `package check-source` output was `package source OK`.
+- Basic Self-test Evidence: `npm test --workspace agent-project-sdlc` PASS with 11/11 tests; `node packages/sdlc-harness/dist/cli.js inspect-workflow --json` PASS; `node packages/sdlc-harness/dist/cli.js package sync-source` PASS; `node packages/sdlc-harness/dist/cli.js package check-source` PASS.
 
 ## 6. 与技术方案的偏移
 
@@ -129,8 +135,8 @@ Existing project runs sdlc-harness upgrade
 | 测试（Test） | 覆盖范围（Coverage） | 最近记录结果（Result） |
 |---|---|---|
 | `npm test` | TypeScript build and package CLI regression tests | PASS for `TASK-059` on 2026-05-28 |
-| `tests/sdlc-harness/sync-init-doctor.test.mjs` | init, adopt, sync and doctor behavior | PASS for `TASK-059`; asserts generated lifecycle starts at `SPRINTING` and plan files do not duplicate phase |
-| `tools/consumer_lab_full_test.mjs` | full consumer lab lifecycle smoke coverage | Checks generated `.codex/state/lifecycle.yaml` routes to `pjsdlc_dev_sprint` |
+| `tests/sdlc-harness/sync-init-doctor.test.mjs` | init, adopt, sync, configured-root gates and doctor behavior | Covers fresh `REQUIREMENT_GATHERING`, adopt `SPRINTING`, configured-root `make validate-harness` and configured-root `transition.py` |
+| `tools/consumer_lab_full_test.mjs` | full consumer lab lifecycle smoke coverage | Covers fresh `.codex` init and `.workflow` configured-root CLI / Makefile / transition gates |
 | `tests/sdlc-harness/upgrade.test.mjs` | migrations and automatic sync | PASS in package regression suite |
 | `tests/sdlc-harness/harness-root.test.mjs` | root resolution and config precedence | PASS in package regression suite |
 | `tests/sdlc-harness/validators.test.mjs` | package validators, including Development Self-Test Report content checks | PASS in package regression suite on 2026-05-30 |
@@ -144,6 +150,9 @@ Existing project runs sdlc-harness upgrade
 | `node packages/sdlc-harness/dist/cli.js package sync-source` | package assets reflect template and README source changes | PASS on 2026-05-30; changed 48 assets |
 | `node packages/sdlc-harness/dist/cli.js package check-source` | package canonical assets match source after self-test report validation changes | PASS on 2026-05-30 |
 | `make docs-overview && make validate-harness && make validate-plan` | source docs, generated overviews, scaffold and active plan after self-test report boundary hardening | PASS on 2026-05-30 |
+| `npm test --workspace agent-project-sdlc` | package regression for configured-root Python/Makefile gates, fresh/adopt lifecycle split and `<harnessRoot>` dirty-path expansion | PASS in current validation batch |
+| `tools/consumer_lab_full_test.mjs` | installed-consumer validation for `.workflow` configured-root CLI validator, Makefile gates and `transition.py` | PASS in current validation batch |
+| `tests/sdlc-harness/workflow-inspector.test.mjs` | `inspect-workflow` report, JSON, prompt, self-reported metrics and workflow-weight blockers | PASS in current validation batch |
 
 ## 8. 变更记录（Change Log）
 
@@ -153,15 +162,17 @@ Existing project runs sdlc-harness upgrade
 | 2026-05-25 | `DEV-040` | `40552f0` | Added target-agent selection during init. |
 | 2026-05-25 | `DEV-041` | `c34ad14` | Migrated the authoring workspace Harness root to `.codex`. |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Migrated legacy task-grain implementation docs into module-level facts. |
-| 2026-05-27 | `DEV-054` | Pending implementation commit | Changed fresh init lifecycle defaults from `REQUIREMENT_GATHERING` routing to `SPRINTING` developer routing. |
-| 2026-05-28 | `TASK-058` | Pending implementation commit | Updated upgrade config migration to refresh `core.version` from the current package version. |
-| 2026-05-28 | `TASK-059` | Pending implementation commit | Removed duplicate current phase state from generated and migrated plan files. |
-| 2026-05-29 | `TASK-074` | Working tree | Removed redundant persisted `core.version`; doctor now derives package version from installed package metadata. |
-| 2026-05-30 | Direct maintenance | Working tree | Strengthened `validate-dev` Development Self-Test Report content checks and documented that it is not execution-proof auditing. |
-| 2026-05-30 | Self-test report boundary hardening | Working tree | Added Report Status, Current Operator Path, disallowed log-section and working_notes validator coverage. |
-| 2026-05-31 | Lightweight explicit phase graph | Working tree | Distributed top-level phase `transitions`, package graph validation and graph-based transition helper sync behavior. |
-| 2026-05-31 | Phase graph migration guidance | Working tree | Clarified that consumers migrate through `upgrade` / `sync`, with manual conversion only for custom phase policies. |
-| 2026-05-31 | Lightweight test path DAG | Working tree | Added optional `module_key_test_graph` contract validation, prompt/template guidance and README migration notes. |
+| 2026-05-27 | `DEV-054` | Git history | Changed fresh init lifecycle defaults from `REQUIREMENT_GATHERING` routing to `SPRINTING` developer routing. |
+| 2026-05-28 | `TASK-058` | Git history | Updated upgrade config migration to refresh `core.version` from the current package version. |
+| 2026-05-28 | `TASK-059` | Git history | Removed duplicate current phase state from generated and migrated plan files. |
+| 2026-05-29 | `TASK-074` | Git history | Removed redundant persisted `core.version`; doctor now derives package version from installed package metadata. |
+| 2026-05-30 | Direct maintenance | Git history | Strengthened `validate-dev` Development Self-Test Report content checks and documented that it is not execution-proof auditing. |
+| 2026-05-30 | Self-test report boundary hardening | Git history | Added Report Status, Current Operator Path, disallowed log-section and working_notes validator coverage. |
+| 2026-05-31 | Lightweight explicit phase graph | Git history | Distributed top-level phase `transitions`, package graph validation and graph-based transition helper sync behavior. |
+| 2026-05-31 | Phase graph migration guidance | Git history | Clarified that consumers migrate through `upgrade` / `sync`, with manual conversion only for custom phase policies. |
+| 2026-05-31 | Lightweight test path DAG | Git history | Added optional `module_key_test_graph` contract validation, prompt/template guidance and README migration notes. |
+| 2026-06-01 | Workflow logic corrective batch | Current validation batch | Restored fresh init to `REQUIREMENT_GATHERING`, kept adopt at `SPRINTING`, and made Python/Makefile gates consume configured `<harnessRoot>`. |
+| 2026-06-01 | Workflow self-inspection | Current validation batch | Added read-only `inspect-workflow` with data-source-labeled metrics and prompt-based self-check for real time/token inputs. |
 
 ## 9. 后续维护注意事项
 
@@ -374,8 +385,8 @@ npm run release:npm -- --version patch --publish --yes
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Moved release-flow facts out of the old `npm_package` implementation-doc directory. |
 | 2026-05-26 | `DEV-047` | `338b4b5` | Released `agent-project-sdlc@0.1.6`. |
 | 2026-05-26 | `DEV-048` | DEV-048 implementation commit | Released `agent-project-sdlc@0.1.7` with package README registry data and public capability coverage. |
-| 2026-05-27 | Direct user request | Working tree | Added root README to package assets for installed-package agent reads. |
-| 2026-05-29 | `TASK-069` | Working tree | Changed release docs to a single `.docs/08_release/CURRENT_RELEASE.md` current-state contract with legacy validator compatibility. |
+| 2026-05-27 | Direct user request | Git history | Added root README to package assets for installed-package agent reads. |
+| 2026-05-29 | `TASK-069` | Git history | Changed release docs to a single `.docs/08_release/CURRENT_RELEASE.md` current-state contract with legacy validator compatibility. |
 
 ## 9. 后续维护注意事项
 
@@ -473,7 +484,7 @@ Author edits Harness source files
 - Evidence Level: `local_runtime`.
 - Target Runtime Environment: `local`; no external services, credentials or deployed runtime are required.
 - Runnable Entry: `npm test --workspace agent-project-sdlc`, `node packages/sdlc-harness/dist/cli.js package sync-source`, `node packages/sdlc-harness/dist/cli.js package check-source`, `make validate-harness`, `make validate-rfc` and `make validate-dev` from the repository root.
-- Observable Exit: package tests passed 10/10; package source check returned `package source OK`; `packages/sdlc-harness/assets/tools/transition.py` contains `RFC_INTERRUPT_SOURCES`; init/sync/upgrade tests prove `tools/transition.py` is materialized and stale copies are replaced.
+- Observable Exit: package tests passed; package source check returned `package source OK`; `packages/sdlc-harness/assets/tools/transition.py` consumes `phase_contracts.yaml#transitions`; init/sync/upgrade tests prove `tools/*.py` are materialized and stale copies are replaced.
 - Client / Server Initialization: not applicable for servers; local CLI initialization is `npm install` workspace dependencies plus `npm test --workspace agent-project-sdlc` build.
 - Config Contract: default `<harnessRoot>/config.yaml` includes `path: "tools"` with `strategy: "managed"`; upgrade migration backfills the same managed file entry.
 - Testing Handoff Readiness: Review/Testing can inspect `tools/transition.py`, `packages/sdlc-harness/assets/tools/**`, `tests/sdlc-harness/transition.test.mjs`, package source tests and consumer lab script output.
@@ -486,7 +497,7 @@ Author edits Harness source files
 - Scenario Results: `transition-rfc-interrupt` PASS; `package-tools-materialization` PASS.
 - Executed Gates: `npm test --workspace agent-project-sdlc` PASS; `node packages/sdlc-harness/dist/cli.js package sync-source` PASS; `node packages/sdlc-harness/dist/cli.js package check-source` PASS; `make validate-harness` PASS; `make validate-rfc` PASS; `make validate-dev` PASS.
 - Module Key Test Path: `npm test --workspace agent-project-sdlc; python3 tools/transition.py fixture calls in tests/sdlc-harness/transition.test.mjs` starts by building package `dist`, runs node:test package-source/init/sync/upgrade/transition fixtures, verifies `transition-rfc-interrupt` through direct `tools/transition.py` fixture calls for `SPRINTING` / `REVIEWING` / `TESTING` / `RELEASING -> RFC_RECALIBRATION`, illegal pre-development RFC entry, normal `REVIEWING -> TESTING`, and `RFC_RECALIBRATION -> SPRINTING`; the same run verifies `package-tools-materialization` through source mapping, init/sync, stale tool replacement and upgrade backfill assertions.
-- Actual Evidence: package regression output reported 10 pass / 0 fail; package source check reported `package source OK`; Harness gates reported RFC artifacts OK, generated overview freshness and allowed path validation.
+- Evidence Index Refs: package regression, package source check and Harness gate outputs are recorded in git/test command history for `TASK-082`.
 - Missing / Blockers: none.
 - Testing Handoff Readiness: PASS; Review/Testing can rerun the commands above without external services.
 
@@ -523,10 +534,10 @@ Author edits Harness source files
 | 2026-05-25 | `DEV-006` - `DEV-023` | Historical implementation commits | Migrated roots, markers and managed layout to the current package asset shape. |
 | 2026-05-25 | `DEV-037` - `DEV-039` | Historical implementation commits | Added authoring Skill boundary and excluded authoring assets from package sync. |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Consolidated source-sync implementation facts from legacy task docs. |
-| 2026-05-27 | Direct user request | Working tree | Added root README as a packaged docs asset for installed-package agent reads. |
-| 2026-05-28 | `TASK-059` | Pending implementation commit | Synced source changes that remove duplicate phase/task state from distributed assets. |
-| 2026-05-29 | `TASK-073` | Working tree | Added package-managed heading sections for user-owned memory/index files and safe marker/exact-old GitHub workflow migration. |
-| 2026-05-30 | `TASK-082` | Working tree | Added package-managed `tools/*.py` distribution, tools config backfill, source mapping coverage and init/sync/upgrade tests for refreshed `tools/transition.py`. |
+| 2026-05-27 | Direct user request | Git history | Added root README as a packaged docs asset for installed-package agent reads. |
+| 2026-05-28 | `TASK-059` | Git history | Synced source changes that remove duplicate phase/task state from distributed assets. |
+| 2026-05-29 | `TASK-073` | Git history | Added package-managed heading sections for user-owned memory/index files and safe marker/exact-old GitHub workflow migration. |
+| 2026-05-30 | `TASK-082` | Git history | Added package-managed `tools/*.py` distribution, tools config backfill, source mapping coverage and init/sync/upgrade tests for refreshed `tools/transition.py`. |
 
 ## 9. 后续维护注意事项
 
@@ -636,8 +647,8 @@ User input
 | 2026-05-25 | `DEV-036` | `DEV-036` implementation commit | 澄清宏指令是详细提示词别名，并补齐 `/prd`、`/design` 阶段入口。 |
 | 2026-05-27 | `DEV-050` | DEV-050 implementation commit | 增加显式 opt-in 的 parallel execution 意图路由和降级语义。 |
 | 2026-05-30 | `TASK-084` | TASK-084 implementation commit | 将并行入口升级为默认 eligibility check，并记录 Codex native subagent 优先策略。 |
-| 2026-05-27 | `TASK-057` | Working tree | 将 Review、测试、发布和 RFC 入口纳入统一 `TASK-*` 小任务路由语义。 |
-| 2026-05-28 | `TASK-061` | Working tree | 增加开发前从 `ARCHITECTING` 回到 `REQUIREMENT_GATHERING` 的 `/prd` 和需求变化路由规则。 |
+| 2026-05-27 | `TASK-057` | Git history | 将 Review、测试、发布和 RFC 入口纳入统一 `TASK-*` 小任务路由语义。 |
+| 2026-05-28 | `TASK-061` | Git history | 增加开发前从 `ARCHITECTING` 回到 `REQUIREMENT_GATHERING` 的 `/prd` 和需求变化路由规则。 |
 
 ## 9. 后续维护注意事项
 
@@ -759,8 +770,8 @@ Implementation doc slice exists
 | 2026-05-25 | `DEV-030` | Historical implementation commit | Split lightweight README from full product/specification content. |
 | 2026-05-25 | `DEV-032` | Historical implementation commit | Defined implementation docs as module/subsystem/core-flow facts. |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Removed task-grain implementation docs from the active implementation-doc graph. |
-| 2026-05-28 | `TASK-060` | Working tree | Strengthened `validate-design` so generated overviews do not count as deliverables, draft development tasks must link tech plan slices, shared monolithic primary tech plans fail for multiple draft tasks, and explicit cross-cutting themes require dedicated architecture slices. |
-| 2026-05-31 | PROJECT_SPEC ADR split | Working tree | Split durable PROJECT_SPEC rationale into `.docs/05_decisions/` ADR slices, linked them from memory and INDEX, and kept `PROJECT_SPEC.md` as a lighter project map plus canonical behavior. |
+| 2026-05-28 | `TASK-060` | Git history | Strengthened `validate-design` so generated overviews do not count as deliverables, draft development tasks must link tech plan slices, shared monolithic primary tech plans fail for multiple draft tasks, and explicit cross-cutting themes require dedicated architecture slices. |
+| 2026-05-31 | PROJECT_SPEC ADR split | Git history | Split durable PROJECT_SPEC rationale into `.docs/05_decisions/` ADR slices, linked them from memory and INDEX, and kept `PROJECT_SPEC.md` as a lighter project map plus canonical behavior. |
 
 ## 9. 后续维护注意事项
 
@@ -863,7 +874,7 @@ Architecting
 |---|---|---|---|
 | 2026-05-25 | `DEV-032` | `DEV-032` implementation commit | 将 implementation doc 默认粒度从 task 调整为模块、子系统或核心数据流。 |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | 将 legacy `npm_package/dev_*.md` task log 合并进模块级 implementation docs，并更新索引和引用。 |
-| 2026-05-27 | `TASK-057` | Working tree | 明确只有 development task 使用 `implementation_doc`，其它阶段 task 使用 `result_docs`。 |
+| 2026-05-27 | `TASK-057` | Git history | 明确只有 development task 使用 `implementation_doc`，其它阶段 task 使用 `result_docs`。 |
 
 ## 9. 后续维护注意事项
 
@@ -1194,33 +1205,33 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-26 | `DEV-049` | DEV-049 implementation commit | Added authoring rule that README/package README must cover all public package capabilities. |
 | 2026-05-27 | `DEV-050` | DEV-050 implementation commit | Added opt-in parallel execution prompt rules for PM, Manager, Dev and Tester workflows. |
 | 2026-05-30 | `TASK-084` | TASK-084 implementation commit | Updated all workflow Skills to default parallel eligibility checks with Codex native subagent scheduling and fallback modes. |
-| 2026-05-27 | `DEV-055` | Working tree | Required PRD and tech plan slicing workflows to delete superseded complete files after replacement slices and references are complete. |
-| 2026-05-27 | `DEV-056` | Working tree | Routed PRD and design generation/slicing through recoverable `plan.yaml` tasks. |
-| 2026-05-27 | `TASK-057` | Working tree | Generalized prompt rules so every phase main action is a `TASK-*` task governed by `plan.yaml`, with review/test/release/RFC outputs using `result_docs`. |
-| 2026-05-27 | Direct user request | Working tree | Added complete Skill override merge support with description merging and semantic conflict review guidance. |
-| 2026-05-28 | `TASK-060` | Working tree | Promoted architect semantic slicing guidance into explicit hard-gate wording for `plan.draft.yaml` tech plan references and dedicated architecture slices. |
-| 2026-05-28 | `TASK-061` | Working tree | Added Skill routing guidance for returning from `ARCHITECTING` to `REQUIREMENT_GATHERING` before development when PRD facts need revision. |
-| 2026-05-28 | `TASK-066` | Working tree | Hardened SPRINTING/REVIEWING/TESTING runnable entry/exit boundaries and validator checks so TESTING cannot absorb product runtime implementation. |
-| 2026-05-28 | `TASK-067` | Working tree | Replaced the canonical TESTING document contract with `TEST_REPORT.md`, kept legacy `TEST_PLAN.md` validation compatibility and tightened dev/test entry/exit evidence gates. |
-| 2026-05-29 | `TASK-069` | Working tree | Replaced versioned release document generation with canonical `.docs/08_release/CURRENT_RELEASE.md` release status guidance and validator compatibility wording. |
-| 2026-05-29 | `TASK-070` | Working tree | Split test strategy, test cases and execution report semantics; removed `TEST_PLAN.md` report fallback; added RFC cleanup checks for superseded test facts. |
-| 2026-05-29 | `TASK-071` | Working tree | Clarified direct dev gate open-task semantics in Dev/Manager prompts and moved managed Makefile `validate-dev` to package CLI wiring. |
-| 2026-05-29 | `TASK-072` | Working tree | Added structured SPRINTING Development Evidence requirements and `validate-dev` checks for runnable entry, observable exit and basic self-test evidence. |
-| 2026-05-29 | `TASK-075` | Working tree | Hardened application readiness gates so provider/fixture smoke cannot be mistaken for delivered runtime readiness. |
-| 2026-05-29 | `TASK-076` | Working tree | Added task-level Evidence Level, Target Runtime Environment and Testing Handoff Contract validation for runtime/app handoff readiness. |
-| 2026-05-29 | `TASK-078` | Working tree | Added Development Self-Test Contract / Report prompts, templates and validator checks for development handoff readiness. |
-| 2026-05-30 | Direct maintenance | Working tree | Added development self-test report redline prompts and authoring lightweight-constraint guidance. |
-| 2026-05-29 | `TASK-079` | Working tree | Added Module Key Test Path requirements to Development Self-Test Contract / Report and validator checks. |
-| 2026-05-29 | `TASK-080` | Working tree | Clarified Module Key Test Path wording to cover current task/module promised entries and internal key paths without implying whole-system coverage. |
-| 2026-05-30 | Resume-first runtime task protocol | Working tree | Added resume-first prompt rules for high-risk runtime/live tasks and separated runbook/evidence/exploration responsibilities. |
-| 2026-05-30 | Self-test report boundary hardening | Working tree | Added Report Status semantics, Current Operator Path prompt rules, log-section boundary and working_notes limit guidance. |
-| 2026-05-31 | Lightweight explicit phase graph | Working tree | Added authoring guardrails for future workflow graph/data-structure changes: lightweight schema first, explicit consumer/validator/compatibility path and no evidence/history/runbook bodies inside graph nodes. |
-| 2026-05-31 | Data-structure calibration | Working tree | Added authoring guidance to consider structured contracts for repeated workflow consumers while weighing migration, compatibility, context and over-abstraction costs. |
-| 2026-05-31 | PROJECT_SPEC boundary | Working tree | Clarified that version migration and upgrade instructions stay in README/package README or release/implementation docs, not in the zero-to-one project spec. |
-| 2026-05-31 | ADR-backed design rationale | Working tree | Required future workflow changes to consult memory / ADR design decision indexes and to add durable rationale as ADR slices instead of expanding `PROJECT_SPEC.md`. |
-| 2026-06-01 | TESTING bugfix return boundary | Working tree | Added prompt routing for `Bugfix Route`, keeping bugfix recovery lightweight through existing return edges and avoiding a separate bugfix workflow engine. |
-| 2026-06-01 | TESTING case contract | Working tree | Added lightweight `TEST_CASES.md` case schema and conditional `validate-test` checks for `TC-*` references, preserving report-only compatibility for legacy tasks. |
-| 2026-06-01 | UI/UX design stage | Working tree | Added `UI_UX_DESIGNING`, `.docs/02_experience/**`, optional visual UI `DESIGN.md`, `validate-uiux`, downstream consumption rules and package assets. |
+| 2026-05-27 | `DEV-055` | Git history | Required PRD and tech plan slicing workflows to delete superseded complete files after replacement slices and references are complete. |
+| 2026-05-27 | `DEV-056` | Git history | Routed PRD and design generation/slicing through recoverable `plan.yaml` tasks. |
+| 2026-05-27 | `TASK-057` | Git history | Generalized prompt rules so every phase main action is a `TASK-*` task governed by `plan.yaml`, with review/test/release/RFC outputs using `result_docs`. |
+| 2026-05-27 | Direct user request | Git history | Added complete Skill override merge support with description merging and semantic conflict review guidance. |
+| 2026-05-28 | `TASK-060` | Git history | Promoted architect semantic slicing guidance into explicit hard-gate wording for `plan.draft.yaml` tech plan references and dedicated architecture slices. |
+| 2026-05-28 | `TASK-061` | Git history | Added Skill routing guidance for returning from `ARCHITECTING` to `REQUIREMENT_GATHERING` before development when PRD facts need revision. |
+| 2026-05-28 | `TASK-066` | Git history | Hardened SPRINTING/REVIEWING/TESTING runnable entry/exit boundaries and validator checks so TESTING cannot absorb product runtime implementation. |
+| 2026-05-28 | `TASK-067` | Git history | Replaced the canonical TESTING document contract with `TEST_REPORT.md`, kept legacy `TEST_PLAN.md` validation compatibility and tightened dev/test entry/exit evidence gates. |
+| 2026-05-29 | `TASK-069` | Git history | Replaced versioned release document generation with canonical `.docs/08_release/CURRENT_RELEASE.md` release status guidance and validator compatibility wording. |
+| 2026-05-29 | `TASK-070` | Git history | Split test strategy, test cases and execution report semantics; removed `TEST_PLAN.md` report fallback; added RFC cleanup checks for superseded test facts. |
+| 2026-05-29 | `TASK-071` | Git history | Clarified direct dev gate open-task semantics in Dev/Manager prompts and moved managed Makefile `validate-dev` to package CLI wiring. |
+| 2026-05-29 | `TASK-072` | Git history | Added structured SPRINTING Development Evidence requirements and `validate-dev` checks for runnable entry, observable exit and basic self-test evidence. |
+| 2026-05-29 | `TASK-075` | Git history | Hardened application readiness gates so provider/fixture smoke cannot be mistaken for delivered runtime readiness. |
+| 2026-05-29 | `TASK-076` | Git history | Added task-level Evidence Level, Target Runtime Environment and Testing Handoff Contract validation for runtime/app handoff readiness. |
+| 2026-05-29 | `TASK-078` | Git history | Added Development Self-Test Contract / Report prompts, templates and validator checks for development handoff readiness. |
+| 2026-05-30 | Direct maintenance | Git history | Added development self-test report redline prompts and authoring lightweight-constraint guidance. |
+| 2026-05-29 | `TASK-079` | Git history | Added Module Key Test Path requirements to Development Self-Test Contract / Report and validator checks. |
+| 2026-05-29 | `TASK-080` | Git history | Clarified Module Key Test Path wording to cover current task/module promised entries and internal key paths without implying whole-system coverage. |
+| 2026-05-30 | Resume-first runtime task protocol | Git history | Added resume-first prompt rules for high-risk runtime/live tasks and separated runbook/evidence/exploration responsibilities. |
+| 2026-05-30 | Self-test report boundary hardening | Git history | Added Report Status semantics, Current Operator Path prompt rules, log-section boundary and working_notes limit guidance. |
+| 2026-05-31 | Lightweight explicit phase graph | Git history | Added authoring guardrails for future workflow graph/data-structure changes: lightweight schema first, explicit consumer/validator/compatibility path and no evidence/history/runbook bodies inside graph nodes. |
+| 2026-05-31 | Data-structure calibration | Git history | Added authoring guidance to consider structured contracts for repeated workflow consumers while weighing migration, compatibility, context and over-abstraction costs. |
+| 2026-05-31 | PROJECT_SPEC boundary | Git history | Clarified that version migration and upgrade instructions stay in README/package README or release/implementation docs, not in the zero-to-one project spec. |
+| 2026-05-31 | ADR-backed design rationale | Git history | Required future workflow changes to consult memory / ADR design decision indexes and to add durable rationale as ADR slices instead of expanding `PROJECT_SPEC.md`. |
+| 2026-06-01 | TESTING bugfix return boundary | Git history | Added prompt routing for `Bugfix Route`, keeping bugfix recovery lightweight through existing return edges and avoiding a separate bugfix workflow engine. |
+| 2026-06-01 | TESTING case contract | Git history | Added lightweight `TEST_CASES.md` case schema and conditional `validate-test` checks for `TC-*` references, preserving report-only compatibility for legacy tasks. |
+| 2026-06-01 | UI/UX design stage | Git history | Added `UI_UX_DESIGNING`, `.docs/02_experience/**`, optional visual UI `DESIGN.md`, `validate-uiux`, downstream consumption rules and package assets. |
 
 ## 9. 后续维护注意事项
 
@@ -1495,25 +1506,25 @@ Stage task starts
 | 2026-05-25 | `DEV-010`, `DEV-011` | Historical implementation commits | Replaced checkpoint/task archive model with `plan.yaml`. |
 | 2026-05-25 | `DEV-018`, `DEV-019` | Historical implementation commits | Added two-commit task completion and pre-compression implementation commit rule. |
 | 2026-05-25 | `DEV-024` - `DEV-028` | Historical implementation commits | Shortened plan/gate/lifecycle state and strengthened RFC impact handling. |
-| 2026-05-30 | Resume-first runtime task protocol | Working tree | Added high-risk runtime `resume_capsule`, `.docs/09_runbooks` recovery docs and Gate Breakdown validation. |
-| 2026-05-30 | Self-test report boundary hardening | Working tree | Added Report Status, Current Operator Path, disallowed log-section checks and working_notes limit validation. |
-| 2026-05-31 | Lightweight explicit phase graph | Working tree | Moved canonical phase routing from node-local `next` / `returns` and hardcoded RFC interrupt rules to top-level `transitions`, with validator coverage and legacy fallback. |
-| 2026-05-31 | Phase graph migration guidance | Working tree | Documented that managed consumers migrate through upgrade/sync with no state schema migration, while custom phase policies convert `next` / `returns` to explicit transition edges. |
-| 2026-06-01 | TESTING bugfix return boundary | Working tree | Added lightweight TESTING return edges for `bugfix_replan` and `bugfix_implementation_gap`, keeping bugfix route semantics in triggers and `TEST_REPORT.md` instead of a heavy bugfix state machine. |
+| 2026-05-30 | Resume-first runtime task protocol | Git history | Added high-risk runtime `resume_capsule`, `.docs/09_runbooks` recovery docs and Gate Breakdown validation. |
+| 2026-05-30 | Self-test report boundary hardening | Git history | Added Report Status, Current Operator Path, disallowed log-section checks and working_notes limit validation. |
+| 2026-05-31 | Lightweight explicit phase graph | Git history | Moved canonical phase routing from node-local `next` / `returns` and hardcoded RFC interrupt rules to top-level `transitions`, with validator coverage and legacy fallback. |
+| 2026-05-31 | Phase graph migration guidance | Git history | Documented that managed consumers migrate through upgrade/sync with no state schema migration, while custom phase policies convert `next` / `returns` to explicit transition edges. |
+| 2026-06-01 | TESTING bugfix return boundary | Git history | Added lightweight TESTING return edges for `bugfix_replan` and `bugfix_implementation_gap`, keeping bugfix route semantics in triggers and `TEST_REPORT.md` instead of a heavy bugfix state machine. |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Consolidated legacy state/task implementation docs into module facts. |
 | 2026-05-27 | `DEV-050` | DEV-050 implementation commit | Added opt-in `parallel_execution` contract for multi-agent/worktree coordination. |
 | 2026-05-30 | `TASK-084` | TASK-084 implementation commit | Added default Codex native subagent scheduling semantics and SPRINTING path-lock validation. |
-| 2026-05-27 | `DEV-056` | Working tree | Extended `plan.yaml` task control to PRD and design document generation, slicing and fact-source synthesis. |
-| 2026-05-27 | `TASK-057` | Working tree | Unified all new workflow tasks under `TASK-*` with `phase`, expanded plan control to review/test/release/RFC, and kept legacy task prefixes compatible. |
-| 2026-05-28 | `TASK-059` | Pending implementation commit | Removed duplicate current phase state from plan files and parallel execution contracts. |
-| 2026-05-28 | `TASK-061` | Working tree | Added `phase_contracts.yaml#returns` and `transition.py` support so ARCHITECTING can return to REQUIREMENT_GATHERING for PRD edits before SPRINTING, while SPRINTING cannot directly return to PRD. |
-| 2026-05-28 | Spec clarification | Working tree | Clarified that `plan.yaml` is a general recoverable task-splitting container, while default Harness behavior only governs workflow phase tasks; broader task definitions are local configuration concerns. |
-| 2026-05-28 | `TASK-062` | Working tree | Added promote-on-consume semantics for `plan.draft.yaml`, dev-state validation, package validator parity, and cleared the stale `DEV-001` draft from current state. |
-| 2026-05-28 | `TASK-063` | Working tree | Clarified that promote-on-consume is the generic rule for any draft-to-plan workflow, while `plan.draft.yaml` remains the current built-in development draft queue. |
-| 2026-05-28 | `TASK-065` | Pending implementation commit | Clarified ADR and memory responsibilities across PROJECT_SPEC, README/package README, architect skill, ADR template and package memory seeds. |
-| 2026-05-29 | `TASK-069` | Working tree | Clarified that release history is cold archive while `.docs/08_release/CURRENT_RELEASE.md` remains the active release status fact source. |
-| 2026-05-29 | `TASK-071` | Working tree | Split direct `validate-dev` open-task semantics from `validate-current` phase-exit no-open checks and moved managed Makefile dev gate to package CLI. |
-| 2026-05-30 | `TASK-082` | Working tree | Constrained RFC interrupts to SPRINTING and later phases, preserved normal REVIEWING -> TESTING routing, and cleared `suspended_phase` when RFC returns to SPRINTING. |
+| 2026-05-27 | `DEV-056` | Git history | Extended `plan.yaml` task control to PRD and design document generation, slicing and fact-source synthesis. |
+| 2026-05-27 | `TASK-057` | Git history | Unified all new workflow tasks under `TASK-*` with `phase`, expanded plan control to review/test/release/RFC, and kept legacy task prefixes compatible. |
+| 2026-05-28 | `TASK-059` | Git history | Removed duplicate current phase state from plan files and parallel execution contracts. |
+| 2026-05-28 | `TASK-061` | Git history | Added `phase_contracts.yaml#returns` and `transition.py` support so ARCHITECTING can return to REQUIREMENT_GATHERING for PRD edits before SPRINTING, while SPRINTING cannot directly return to PRD. |
+| 2026-05-28 | Spec clarification | Git history | Clarified that `plan.yaml` is a general recoverable task-splitting container, while default Harness behavior only governs workflow phase tasks; broader task definitions are local configuration concerns. |
+| 2026-05-28 | `TASK-062` | Git history | Added promote-on-consume semantics for `plan.draft.yaml`, dev-state validation, package validator parity, and cleared the stale `DEV-001` draft from current state. |
+| 2026-05-28 | `TASK-063` | Git history | Clarified that promote-on-consume is the generic rule for any draft-to-plan workflow, while `plan.draft.yaml` remains the current built-in development draft queue. |
+| 2026-05-28 | `TASK-065` | Git history | Clarified ADR and memory responsibilities across PROJECT_SPEC, README/package README, architect skill, ADR template and package memory seeds. |
+| 2026-05-29 | `TASK-069` | Git history | Clarified that release history is cold archive while `.docs/08_release/CURRENT_RELEASE.md` remains the active release status fact source. |
+| 2026-05-29 | `TASK-071` | Git history | Split direct `validate-dev` open-task semantics from `validate-current` phase-exit no-open checks and moved managed Makefile dev gate to package CLI. |
+| 2026-05-30 | `TASK-082` | Git history | Constrained RFC interrupts to SPRINTING and later phases, preserved normal REVIEWING -> TESTING routing, and cleared `suspended_phase` when RFC returns to SPRINTING. |
 
 ## 9. 后续维护注意事项
 

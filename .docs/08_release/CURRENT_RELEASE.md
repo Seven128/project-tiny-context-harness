@@ -69,4 +69,5 @@ This file is overwritten by each release. Historical release evidence lives in g
 
 ## 7. Known Issues（已知限制）
 
-- None recorded for this release status. Update this section before publish if smoke, registry or consumer install limitations are discovered.
+- Post-release workflow diagnosis found local fact-source drift in `0.1.25`: configured `<harnessRoot>` was not fully consumed by Python / Makefile gates, TESTING and UI/UX docs were stale or missing for the authoring repo, and consumer lab did not cover configured-root Makefile gates.
+- These issues are fixed in the current working tree but are not claimed as a new npm release until a later RELEASING task bumps and publishes the next package version.

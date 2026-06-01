@@ -3,7 +3,7 @@ from harness_utils import load_plan, require, run_main
 
 
 def main() -> None:
-    draft = load_plan(".codex/state/plan.draft.yaml")
+    draft = load_plan("<harnessRoot>/state/plan.draft.yaml")
     require("current_phase" not in draft, "plan.draft.yaml must not define current_phase; lifecycle.yaml is the single source for current_phase")
     require("current_task_id" not in draft, "plan.draft.yaml must not define current_task_id because drafts are not active task state")
     tasks = [task for task in draft.get("tasks", []) if isinstance(task, dict)]

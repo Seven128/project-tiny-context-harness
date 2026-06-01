@@ -19,12 +19,13 @@ npx sdlc-harness init --adopt
 
 | Capability | Entry Point | Description |
 |---|---|---|
-| Project initialization | `npx sdlc-harness init` | Creates `AGENTS.md`, `<harnessRoot>/state/**`, workflow skills, managed templates/policies, `.docs/**` and a Makefile include. |
-| Existing project adoption | `npx sdlc-harness init --adopt` | Adds Harness non-destructively to an existing repository. |
-| Configurable Harness root | `--harness-folder`, `package.json#sdlcHarness.harnessFolderName`, `sdlc-harness.config.json` | Supports Codex `.codex`, Claude `.claude`, Cursor `.cursor`, Cline `.cline`, Roo `.roo`, Gemini `.gemini` or a custom folder. |
+| Project initialization | `npx sdlc-harness init` | Creates `AGENTS.md`, `<harnessRoot>/state/**`, workflow skills, managed templates/policies, `.docs/**` and a Makefile include; fresh lifecycle starts at `REQUIREMENT_GATHERING`. |
+| Existing project adoption | `npx sdlc-harness init --adopt` | Adds Harness non-destructively to an existing repository; adopt lifecycle starts at `SPRINTING`. |
+| Configurable Harness root | `--harness-folder`, `package.json#sdlcHarness.harnessFolderName`, `sdlc-harness.config.json` | Supports Codex `.codex`, Claude `.claude`, Cursor `.cursor`, Cline `.cline`, Roo `.roo`, Gemini `.gemini` or a custom folder; root resolution prefers package.json, then config file, then `.agent`. |
 | Managed file sync | `npx sdlc-harness sync` | Materializes package canonical assets and safely updates package-managed guidance sections inside user-owned Markdown files while preserving project state, docs and local overrides. |
 | Upgrade | `npx sdlc-harness upgrade` | Runs migrations and sync for already-adopted projects, including legacy seed guidance migration. |
 | Diagnostics | `npx sdlc-harness doctor` | Reports Harness root, package version, schema version and key managed paths. |
+| Workflow self-inspection | `npx sdlc-harness inspect-workflow` | Read-only check for workflow weight, fact-source drift, handoff clarity and recovery safety; metrics are labeled `measured`, `inferred`, `self_reported` or `unavailable`. |
 | Validators | `npx sdlc-harness validate-*`, `make validate-current`, `make validate-harness` | Checks product, UI/UX, architecture design slicing, development, review, test, release, RFC, active plan shape, prompt language contract and generated overview freshness. |
 | Harness Python tools | `tools/*.py` | Package-managed local workflow tools, including `transition.py`, Python validators and overview generation helpers. |
 | Lifecycle workflow | `<harnessRoot>/state/lifecycle.yaml`, `<harnessRoot>/state/plan.yaml`, `.docs/**` | Tracks REQUIREMENT_GATHERING, UI_UX_DESIGNING, ARCHITECTING, SPRINTING, REVIEWING, TESTING, RELEASING and RFC_RECALIBRATION facts. |
@@ -87,11 +88,27 @@ The generic rule is that any workflow promoting a draft task into a formal `TASK
 
 Phase routing is expressed as a lightweight explicit directed graph in `<harnessRoot>/pjsdlc_managed/policies/phase_contracts.yaml`: `phases` stores stable phase contracts, while `transitions` stores legal edges and small runtime effects such as setting or clearing `suspended_phase`. This makes normal advance, pre-development return, TESTING bugfix return, RFC interrupt/resume and BLOCKED resume rules consumable by both the transition helper and validators. It is intentionally not a heavy graph engine: no history graph, traversal framework, node/edge classes or visualizer are introduced; the goal is to reduce missed rules and drift.
 
-Migration cost is low for projects that use managed assets: run `npx sdlc-harness upgrade` to sync the new `phase_contracts.yaml`, `tools/transition.py`, `pjsdlc_uiux_design`, `UI_UX_DESIGN_TEMPLATE.md` and `validate-uiux`, or run `npx sdlc-harness sync` if only managed files need refreshing. `lifecycle.yaml` and `plan.yaml` do not need manual migration; old `allowed_next_phases` values are regenerated from the graph on the next transition. Projects with custom phase policies should convert node-local `next` / `returns` to top-level `transitions`, and add `REQUIREMENT_GATHERING -> UI_UX_DESIGNING -> ARCHITECTING`, `ARCHITECTING -> UI_UX_DESIGNING`, and the `TESTING -> UI_UX_DESIGNING` / `ARCHITECTING` / `SPRINTING` bugfix return edges when they want the new routing. If the new `validate-harness` reports missing `transitions`, run `upgrade` or `sync` before validating again.
+Migration cost is low for projects that use managed assets: run `npx sdlc-harness upgrade` to sync the new `phase_contracts.yaml`, `tools/transition.py`, `pjsdlc_uiux_design`, `UI_UX_DESIGN_TEMPLATE.md`, `validate-uiux` and configured-root Python/Makefile gate fixes, or run `npx sdlc-harness sync` if only managed files need refreshing. `lifecycle.yaml` and `plan.yaml` do not need manual migration; old `allowed_next_phases` values are regenerated from the graph on the next transition, and the fresh/adopt initial phase split only affects new `init` runs. Projects with custom phase policies should convert node-local `next` / `returns` to top-level `transitions`, and add `REQUIREMENT_GATHERING -> UI_UX_DESIGNING -> ARCHITECTING`, `ARCHITECTING -> UI_UX_DESIGNING`, and the `TESTING -> UI_UX_DESIGNING` / `ARCHITECTING` / `SPRINTING` bugfix return edges when they want the new routing. If the new `validate-harness` reports missing `transitions`, run `upgrade` or `sync` before validating again.
 
 Before development starts, `ARCHITECTING` can return to `REQUIREMENT_GATHERING` for PRD edits or to `UI_UX_DESIGNING` for missing screen contracts, interaction states, responsive/a11y acceptance or `DESIGN.md`. The manager uses `python3 tools/transition.py --to REQUIREMENT_GATHERING` or `python3 tools/transition.py --to UI_UX_DESIGNING`, completes one stage task, runs that stage gate, then returns to the downstream phase. Requirement, acceptance, experience-contract or product-boundary changes after `SPRINTING` use RFC recalibration; `SPRINTING`, `REVIEWING`, `TESTING` and `RELEASING` can enter the controlled interrupt with `python3 tools/transition.py --to RFC_RECALIBRATION`, then return to `SPRINTING` after `validate-rfc`.
 
 When TESTING finds a bug, first record `Bugfix Route` in `.docs/07_test/TEST_REPORT.md`, then let the manager choose the lightweight return. `bugfix_uiux_replan` uses `python3 tools/transition.py --to UI_UX_DESIGNING` when PRD is correct but UX contract, screen contract, handoff matrix or `DESIGN.md` is wrong. `bugfix_replan` uses `python3 tools/transition.py --to ARCHITECTING` when the technical plan, interface contract, task breakdown, Development Self-Test Contract or Module Key Test Graph must change. `bugfix_implementation_gap` uses `python3 tools/transition.py --to SPRINTING` only when the technical plan is still correct and implementation deviated from it. Requirement, acceptance or product-boundary changes still use RFC recalibration.
+
+## Workflow Self-Inspection
+
+Use `npx sdlc-harness inspect-workflow` when a user agent needs to check whether a repository is running the Harness workflow as intended, especially whether the workflow has become too heavy. The command is read-only: it does not write reports, run heavyweight tests, upload telemetry or invent precise token numbers.
+
+Each metric includes a `data_source`: `measured` for local files, fields or validator results the script actually read; `inferred` for proxies derived from size, duplication, missing fields or long handoff docs; `self_reported` for values explicitly supplied by the user or agent; and `unavailable` for data the local environment cannot know, such as true model token telemetry when the client did not provide it.
+
+Default workflow-weight thresholds are intentionally simple. `plan.yaml` over 200 lines is `WARN` and over 500 lines is `BLOCKED`; more than one open task is `BLOCKED`; current task `allowed_paths` over 12 is `WARN` and over 25 is `BLOCKED`; current task document refs over 5 is `WARN` and over 10 is `BLOCKED`; `working_notes` over 8 is `BLOCKED`; Development Self-Test Report size is `WARN` / `BLOCKED` above 80 / 120 lines for ordinary tasks and 120 / 180 lines for high-risk runtime tasks.
+
+When the agent or client has real recent-cost data, pass it explicitly:
+
+```sh
+npx sdlc-harness inspect-workflow --recent-minutes 18 --recent-turns 7 --estimated-tokens 12000
+```
+
+Use `--prompt` to print a self-inspection prompt for qualitative checks such as whether the current entry, task, next step, hard constraints and Review/Testing handoff are clear. Use `--json` when CI or another agent needs a machine-readable `decision`, `metrics` and `findings` report. `BLOCKED` exits non-zero; `WARN` remains a successful diagnostic exit.
 
 `validate-uiux` requires at least one non-overview `.docs/02_experience/**` deliverable. UX slices must cite PRD / requirement IDs or explicitly declare `Applicability: not_applicable`; visual UI slices require root `DESIGN.md` and fail on `@google/design.md` linter errors. Warnings are reported by the linter but are not treated as default blockers.
 
@@ -125,6 +142,7 @@ npx sdlc-harness init --adopt
 npx sdlc-harness sync
 npx sdlc-harness upgrade
 npx sdlc-harness doctor
+npx sdlc-harness inspect-workflow
 npx sdlc-harness validate-plan
 npx sdlc-harness validate-uiux
 npx sdlc-harness validate-design

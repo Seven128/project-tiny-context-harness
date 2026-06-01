@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from harness_utils import ROOT, HarnessError, load_yaml, require, run_main
+from harness_utils import ROOT, HarnessError, harness_path, load_yaml, require, run_main
 
 
 SKILL_REQUIRED_SECTIONS = ["## 目的", "## 角色提示词", "## 输入", "## 规则", "## 完成检查"]
@@ -45,14 +45,6 @@ MACHINE_IDENTIFIERS = [
     "pending_revision",
 ]
 
-REQUIRED_AGENTS_TERMS = [
-    "Skill Language Contract",
-    "中文解释 + 英文精确标识符",
-    ".codex/state/lifecycle.yaml",
-    ".codex/state/plan.yaml",
-    "make validate-current",
-]
-
 YAML_KEYWORDS = {
     "lifecycle": [
         "project_name",
@@ -78,15 +70,23 @@ def text(path: Path) -> str:
 
 def validate_agents() -> None:
     content = text(ROOT / "AGENTS.md")
-    for term in REQUIRED_AGENTS_TERMS:
+    required_agents_terms = [
+        "Skill Language Contract",
+        "中文解释 + 英文精确标识符",
+        harness_path("state", "lifecycle.yaml"),
+        harness_path("state", "plan.yaml"),
+        "make validate-current",
+    ]
+    for term in required_agents_terms:
         require(term in content, f"AGENTS.md missing skill language contract term: {term}")
     for identifier in MACHINE_IDENTIFIERS:
         require(identifier in content, f"AGENTS.md should preserve machine identifier: {identifier}")
 
 
 def validate_skills() -> None:
-    skill_files = sorted((ROOT / ".codex/skills").glob("*/SKILL.md"))
-    require(skill_files, "No workflow skill files found under .codex/skills/")
+    skill_root = ROOT / harness_path("skills")
+    skill_files = sorted(skill_root.glob("*/SKILL.md"))
+    require(skill_files, f"No workflow skill files found under {skill_root.relative_to(ROOT)}/")
 
     for path in skill_files:
         content = text(path)
@@ -101,8 +101,8 @@ def validate_skills() -> None:
 
 
 def validate_skill_template() -> None:
-    path = ROOT / ".codex/pjsdlc_managed/templates/SKILL_TEMPLATE.md"
-    require(path.exists(), "Missing .codex/pjsdlc_managed/templates/SKILL_TEMPLATE.md")
+    path = ROOT / harness_path("pjsdlc_managed", "templates", "SKILL_TEMPLATE.md")
+    require(path.exists(), f"Missing {path.relative_to(ROOT)}")
     content = text(path)
     for section in SKILL_REQUIRED_SECTIONS:
         require(section in content, f"SKILL_TEMPLATE.md missing Chinese section: {section}")
@@ -111,9 +111,9 @@ def validate_skill_template() -> None:
 
 
 def validate_yaml_keys() -> None:
-    lifecycle = load_yaml(".codex/state/lifecycle.yaml")
-    tasks = load_yaml(".codex/state/plan.yaml")
-    phase_contracts = load_yaml(".codex/pjsdlc_managed/policies/phase_contracts.yaml")
+    lifecycle = load_yaml(harness_path("state", "lifecycle.yaml"))
+    tasks = load_yaml(harness_path("state", "plan.yaml"))
+    phase_contracts = load_yaml(harness_path("pjsdlc_managed", "policies", "phase_contracts.yaml"))
 
     for key in YAML_KEYWORDS["lifecycle"]:
         require(key in lifecycle, f"lifecycle.yaml key was removed or translated: {key}")

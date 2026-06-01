@@ -14,10 +14,11 @@
 
 - `agent-project-sdlc` npm package exposes the `sdlc-harness` CLI binary.
 - `init` / `init --adopt` create or adopt a project Harness without overwriting user-owned project code.
-- Fresh `init` lifecycle routes new projects to `SPRINTING` with `active_role: "developer"` and `active_skill: "pjsdlc_dev_sprint"`; generated plan files do not duplicate `current_phase`.
+- Fresh `init` lifecycle routes new projects to `REQUIREMENT_GATHERING` with `active_role: "product_manager"` and `active_skill: "pjsdlc_pm_prd"`; `init --adopt` routes existing projects to `SPRINTING` for code/fact-source reconciliation. Generated plan files do not duplicate `current_phase`.
 - `sync` materializes managed Harness assets from package canonical assets into the selected `<harnessRoot>`.
 - `upgrade` refreshes `<harnessRoot>/config.yaml` package identity and schema metadata, runs schema migrations and then syncs managed assets.
 - `doctor` reports Harness config, managed file drift, override state and suggested gates. The displayed package version is read from the installed npm package metadata, not from project config.
+- `inspect-workflow` provides a read-only workflow self-inspection command for user repos. It reports `PASS` / `WARN` / `BLOCKED` across workflow weight, fact-source alignment, handoff clarity, TESTING readiness and high-risk recovery safety, and every metric declares `data_source` as `measured`, `inferred`, `self_reported` or `unavailable`.
 - `validate-*` commands expose package-side validation entry points for Harness state and phase artifacts.
 - 当前 authoring workspace 使用 `.codex` as `harnessFolderName`; `Other` agent selection still falls back to `.agent`.
 
@@ -33,13 +34,15 @@
 | `packages/sdlc-harness/src/commands/sync.ts` | `sync` adapter | `sync` command parser |
 | `packages/sdlc-harness/src/commands/upgrade.ts` | `upgrade` adapter | `upgrade` command parser |
 | `packages/sdlc-harness/src/commands/doctor.ts` | `doctor` adapter | `doctor` command parser |
+| `packages/sdlc-harness/src/commands/inspect-workflow.ts` | Workflow self-inspection adapter | CLI option parser, JSON / prompt output |
 | `packages/sdlc-harness/src/commands/validate.ts` | Validation command adapter | `validate-*` command parser |
 | `packages/sdlc-harness/src/lib/init.ts` | Project initialization and adoption | agent selection, `harnessFolderName`, scaffold writer |
-| `packages/sdlc-harness/src/lib/harness-root.ts` | Harness root resolution | package/config/env/default precedence |
+| `packages/sdlc-harness/src/lib/harness-root.ts` | Harness root resolution | package/config/default precedence |
 | `packages/sdlc-harness/src/lib/config.ts` | Default package config | `defaultConfig()` |
 | `packages/sdlc-harness/src/lib/upgrade.ts` | Upgrade orchestration | migration runner, sync handoff |
 | `packages/sdlc-harness/src/lib/migrations.ts` | Schema and compatibility migrations | `runMigrations`, legacy root/layout migration |
 | `packages/sdlc-harness/src/lib/doctor.ts` | Diagnostic model | config and managed-file checks |
+| `packages/sdlc-harness/src/lib/workflow-inspector.ts` | Workflow self-inspection model | measured/inferred/self-reported metrics and findings |
 | `packages/sdlc-harness/src/lib/validators.ts` | Node-side Harness validators | plan, lifecycle, docs and phase validators |
 | `tests/sdlc-harness/*.test.mjs` | Package regression coverage | init/sync/doctor, upgrade, root resolution, validators |
 
@@ -65,14 +68,17 @@ Existing project runs sdlc-harness upgrade
 ## 5. 关键实现逻辑
 
 - Agent selection happens before folder selection. `Codex` is the default and writes `.codex`; `Other` asks for a custom folder and defaults to `.agent`.
-- New project lifecycle scaffolding starts at `SPRINTING` and allows `REVIEWING` next. Generated `plan.yaml` stores `current_task_id`, `next_task_sequence` and `tasks`; generated `plan.draft.yaml` stores only draft sequencing and tasks.
-- Explicit CLI flags and existing JSON config have higher priority than interactive defaults.
+- Fresh lifecycle scaffolding starts at `REQUIREMENT_GATHERING` and allows `UI_UX_DESIGNING` next; adopt lifecycle scaffolding starts at `SPRINTING` and allows `REVIEWING` / `RFC_RECALIBRATION` next. Generated `plan.yaml` stores `current_task_id`, `next_task_sequence` and `tasks`; generated `plan.draft.yaml` stores only draft sequencing and tasks.
+- Explicit CLI flags are written into package config before initialization. Runtime root resolution then prefers `package.json#sdlcHarness.harnessFolderName`, falls back to `sdlc-harness.config.json#harnessFolderName`, then `.agent`.
 - Managed files use package metadata blocks and merge strategies instead of blind overwrites.
 - Package name and CLI name are intentionally separate: npm installs `agent-project-sdlc`, users run `sdlc-harness`.
 - Migrations preserve compatibility with earlier `.harness`, `.agents` and `.agent` layouts while converging new installs on the configured `<harnessRoot>`.
 - `migrateConfig` rewrites `core.package`, deletes legacy `core.version`, and preserves `core.schema_version`. Package version is intentionally not persisted in project config because the installed package manifest is the source of truth.
 - Plan migrations remove stale `current_phase` from active and draft plans, remove draft `current_task_id`, and strip duplicate `phase` / `linked_task_id` from `parallel_execution`.
 - Validation commands mirror the Python Harness gates closely enough for package consumers to run health checks without depending on this authoring workspace.
+- `inspect-workflow` intentionally sits beside `doctor` and `validate-*`: `doctor` checks installation health, validators check stage contracts, and `inspect-workflow` checks whether the workflow is becoming too heavy or unclear. It reuses root resolution and selected validators, but does not run phase gates as proof of completion.
+- Workflow self-inspection only treats file/field counts and validator results as `measured`; context weight and handoff quality are `inferred`; recent minutes, turns and estimated tokens are accepted only through explicit CLI options as `self_reported`; true model token telemetry is `unavailable` unless the user supplies it. This prevents the command from producing fake-precise token/time claims.
+- Python tools and Node validators resolve `<harnessRoot>` consistently, so configured-root projects such as `.workflow` can run CLI validators, Makefile gates and `tools/transition.py` without `.codex` assumptions.
 - `validate-dev` checks `Development Self-Test Report` content against the current `self_test_contract`: it requires legal `Report Status`, Module Application Entry, Module Key Test Path, scenario results, executed gates, Observable Exit, Current Blocker, Testing Handoff Readiness and Evidence Index Refs; only accepts completion when report status and every scenario are `PASS`; rejects template module-key-path text, ambiguous status rows, missing scenario row evidence, missing required gates, embedded debug/operator/runbook/exploration log sections, `Actual Evidence` body fields, overlong reports, high-risk reports without `.docs/09_runbooks/**` evidence refs or Current Operator Path hard constraints, high-risk implementation docs with mainline evidence dump/operator log/failed-attempt sections, unpromoted session / QR / canonical path / do-not-retry judgments, and browser reports without page URL plus browser/Playwright/screenshot evidence. When `graph_required: true` or `module_key_test_graph` is present, validators also require a single-entry DAG with valid node kinds, known edge refs, reachable scenarios, observable exits and short `evidence_ref` pointers, plus an actual `Module Key Test Graph` in the self-test report. It remains a content consistency gate, not a command execution audit.
 - Managed `phase_contracts.yaml` now distributes a lightweight explicit phase graph: `phases` hold node contracts, top-level `transitions` hold legal directed edges and minimal effects. Package `validate-harness` rejects graph drift such as missing `transitions`, legacy `next` / `returns`, unknown targets or invalid `<suspended_phase>` usage; synced `transition.py` consumes the graph while retaining legacy fallback for older consumer policies.
 - Migration is handled by existing package flows rather than a standalone migration script: `upgrade` runs sync and refreshes the managed policy/tool files, while state files remain compatible. If a consumer has local custom phase policy edits, the manual migration is to move node-local `next` / `returns` into top-level transition edges and then rerun `validate-harness`.
@@ -87,9 +93,9 @@ Existing project runs sdlc-harness upgrade
 
 ## Development Evidence
 
-- Runnable Entry: `npm test --workspace agent-project-sdlc`, `node packages/sdlc-harness/dist/cli.js package sync-source`, `node packages/sdlc-harness/dist/cli.js package check-source`, `make validate-dev`, and `make validate-harness` are the task verification entrypoints.
-- Observable Exit: `tests/sdlc-harness/sync-init-doctor.test.mjs` asserts generated config omits `core.version` and `doctor` reports `core package: agent-project-sdlc@<installed package version>`; `tests/sdlc-harness/upgrade.test.mjs` asserts migrated config omits legacy `core.version`; `package check-source` output was `package source OK`.
-- Basic Self-test Evidence: `npm test --workspace agent-project-sdlc` PASS with 10/10 tests; `node packages/sdlc-harness/dist/cli.js package sync-source` PASS; `node packages/sdlc-harness/dist/cli.js package check-source` PASS.
+- Runnable Entry: `npm test --workspace agent-project-sdlc`, `node packages/sdlc-harness/dist/cli.js inspect-workflow --json`, `node packages/sdlc-harness/dist/cli.js package sync-source`, `node packages/sdlc-harness/dist/cli.js package check-source`, `make validate-dev`, and `make validate-harness` are the task verification entrypoints.
+- Observable Exit: `tests/sdlc-harness/sync-init-doctor.test.mjs` asserts generated config omits `core.version` and `doctor` reports `core package: agent-project-sdlc@<installed package version>`; `tests/sdlc-harness/workflow-inspector.test.mjs` asserts `inspect-workflow` JSON/prompt output, self-reported metrics and overweight blockers; `tests/sdlc-harness/upgrade.test.mjs` asserts migrated config omits legacy `core.version`; `package check-source` output was `package source OK`.
+- Basic Self-test Evidence: `npm test --workspace agent-project-sdlc` PASS with 11/11 tests; `node packages/sdlc-harness/dist/cli.js inspect-workflow --json` PASS; `node packages/sdlc-harness/dist/cli.js package sync-source` PASS; `node packages/sdlc-harness/dist/cli.js package check-source` PASS.
 
 ## 6. 与技术方案的偏移
 
@@ -102,8 +108,8 @@ Existing project runs sdlc-harness upgrade
 | 测试（Test） | 覆盖范围（Coverage） | 最近记录结果（Result） |
 |---|---|---|
 | `npm test` | TypeScript build and package CLI regression tests | PASS for `TASK-059` on 2026-05-28 |
-| `tests/sdlc-harness/sync-init-doctor.test.mjs` | init, adopt, sync and doctor behavior | PASS for `TASK-059`; asserts generated lifecycle starts at `SPRINTING` and plan files do not duplicate phase |
-| `tools/consumer_lab_full_test.mjs` | full consumer lab lifecycle smoke coverage | Checks generated `.codex/state/lifecycle.yaml` routes to `pjsdlc_dev_sprint` |
+| `tests/sdlc-harness/sync-init-doctor.test.mjs` | init, adopt, sync, configured-root gates and doctor behavior | Covers fresh `REQUIREMENT_GATHERING`, adopt `SPRINTING`, configured-root `make validate-harness` and configured-root `transition.py` |
+| `tools/consumer_lab_full_test.mjs` | full consumer lab lifecycle smoke coverage | Covers fresh `.codex` init and `.workflow` configured-root CLI / Makefile / transition gates |
 | `tests/sdlc-harness/upgrade.test.mjs` | migrations and automatic sync | PASS in package regression suite |
 | `tests/sdlc-harness/harness-root.test.mjs` | root resolution and config precedence | PASS in package regression suite |
 | `tests/sdlc-harness/validators.test.mjs` | package validators, including Development Self-Test Report content checks | PASS in package regression suite on 2026-05-30 |
@@ -117,6 +123,9 @@ Existing project runs sdlc-harness upgrade
 | `node packages/sdlc-harness/dist/cli.js package sync-source` | package assets reflect template and README source changes | PASS on 2026-05-30; changed 48 assets |
 | `node packages/sdlc-harness/dist/cli.js package check-source` | package canonical assets match source after self-test report validation changes | PASS on 2026-05-30 |
 | `make docs-overview && make validate-harness && make validate-plan` | source docs, generated overviews, scaffold and active plan after self-test report boundary hardening | PASS on 2026-05-30 |
+| `npm test --workspace agent-project-sdlc` | package regression for configured-root Python/Makefile gates, fresh/adopt lifecycle split and `<harnessRoot>` dirty-path expansion | PASS in current validation batch |
+| `tools/consumer_lab_full_test.mjs` | installed-consumer validation for `.workflow` configured-root CLI validator, Makefile gates and `transition.py` | PASS in current validation batch |
+| `tests/sdlc-harness/workflow-inspector.test.mjs` | `inspect-workflow` report, JSON, prompt, self-reported metrics and workflow-weight blockers | PASS in current validation batch |
 
 ## 8. 变更记录（Change Log）
 
@@ -126,15 +135,17 @@ Existing project runs sdlc-harness upgrade
 | 2026-05-25 | `DEV-040` | `40552f0` | Added target-agent selection during init. |
 | 2026-05-25 | `DEV-041` | `c34ad14` | Migrated the authoring workspace Harness root to `.codex`. |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Migrated legacy task-grain implementation docs into module-level facts. |
-| 2026-05-27 | `DEV-054` | Pending implementation commit | Changed fresh init lifecycle defaults from `REQUIREMENT_GATHERING` routing to `SPRINTING` developer routing. |
-| 2026-05-28 | `TASK-058` | Pending implementation commit | Updated upgrade config migration to refresh `core.version` from the current package version. |
-| 2026-05-28 | `TASK-059` | Pending implementation commit | Removed duplicate current phase state from generated and migrated plan files. |
-| 2026-05-29 | `TASK-074` | Working tree | Removed redundant persisted `core.version`; doctor now derives package version from installed package metadata. |
-| 2026-05-30 | Direct maintenance | Working tree | Strengthened `validate-dev` Development Self-Test Report content checks and documented that it is not execution-proof auditing. |
-| 2026-05-30 | Self-test report boundary hardening | Working tree | Added Report Status, Current Operator Path, disallowed log-section and working_notes validator coverage. |
-| 2026-05-31 | Lightweight explicit phase graph | Working tree | Distributed top-level phase `transitions`, package graph validation and graph-based transition helper sync behavior. |
-| 2026-05-31 | Phase graph migration guidance | Working tree | Clarified that consumers migrate through `upgrade` / `sync`, with manual conversion only for custom phase policies. |
-| 2026-05-31 | Lightweight test path DAG | Working tree | Added optional `module_key_test_graph` contract validation, prompt/template guidance and README migration notes. |
+| 2026-05-27 | `DEV-054` | Git history | Changed fresh init lifecycle defaults from `REQUIREMENT_GATHERING` routing to `SPRINTING` developer routing. |
+| 2026-05-28 | `TASK-058` | Git history | Updated upgrade config migration to refresh `core.version` from the current package version. |
+| 2026-05-28 | `TASK-059` | Git history | Removed duplicate current phase state from generated and migrated plan files. |
+| 2026-05-29 | `TASK-074` | Git history | Removed redundant persisted `core.version`; doctor now derives package version from installed package metadata. |
+| 2026-05-30 | Direct maintenance | Git history | Strengthened `validate-dev` Development Self-Test Report content checks and documented that it is not execution-proof auditing. |
+| 2026-05-30 | Self-test report boundary hardening | Git history | Added Report Status, Current Operator Path, disallowed log-section and working_notes validator coverage. |
+| 2026-05-31 | Lightweight explicit phase graph | Git history | Distributed top-level phase `transitions`, package graph validation and graph-based transition helper sync behavior. |
+| 2026-05-31 | Phase graph migration guidance | Git history | Clarified that consumers migrate through `upgrade` / `sync`, with manual conversion only for custom phase policies. |
+| 2026-05-31 | Lightweight test path DAG | Git history | Added optional `module_key_test_graph` contract validation, prompt/template guidance and README migration notes. |
+| 2026-06-01 | Workflow logic corrective batch | Current validation batch | Restored fresh init to `REQUIREMENT_GATHERING`, kept adopt at `SPRINTING`, and made Python/Makefile gates consume configured `<harnessRoot>`. |
+| 2026-06-01 | Workflow self-inspection | Current validation batch | Added read-only `inspect-workflow` with data-source-labeled metrics and prompt-based self-check for real time/token inputs. |
 
 ## 9. 后续维护注意事项
 

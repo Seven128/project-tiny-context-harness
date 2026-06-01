@@ -1,4 +1,5 @@
 import { doctor } from "./doctor.js";
+import { inspectWorkflow } from "./inspect-workflow.js";
 import { init } from "./init.js";
 import { packageSource } from "./package-source.js";
 import { sync } from "./sync.js";
@@ -13,6 +14,7 @@ export const commands: Record<string, CommandHandler> = {
   sync,
   upgrade,
   doctor,
+  "inspect-workflow": inspectWorkflow,
   validate,
   "validate-harness": (args) => validate(["validate-harness", ...args]),
   "validate-current": (args) => validate(["validate-current", ...args]),
@@ -35,6 +37,7 @@ export function help(): void {
   sync                 Materialize canonical assets into the workspace
   upgrade              Run migrations and then sync
   doctor               Diagnose project configuration and drift
+  inspect-workflow     Lightly inspect workflow weight, fact-source drift, and handoff clarity
   validate <gate>      Run a Harness validation gate
   validate-*           Run a named gate directly, including validate-plan/uiux/design/dev/review/test/release/rfc
   package <subcommand> Maintain package canonical source`);

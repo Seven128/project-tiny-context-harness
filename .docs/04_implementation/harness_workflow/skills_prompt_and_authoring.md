@@ -316,33 +316,33 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-26 | `DEV-049` | DEV-049 implementation commit | Added authoring rule that README/package README must cover all public package capabilities. |
 | 2026-05-27 | `DEV-050` | DEV-050 implementation commit | Added opt-in parallel execution prompt rules for PM, Manager, Dev and Tester workflows. |
 | 2026-05-30 | `TASK-084` | TASK-084 implementation commit | Updated all workflow Skills to default parallel eligibility checks with Codex native subagent scheduling and fallback modes. |
-| 2026-05-27 | `DEV-055` | Working tree | Required PRD and tech plan slicing workflows to delete superseded complete files after replacement slices and references are complete. |
-| 2026-05-27 | `DEV-056` | Working tree | Routed PRD and design generation/slicing through recoverable `plan.yaml` tasks. |
-| 2026-05-27 | `TASK-057` | Working tree | Generalized prompt rules so every phase main action is a `TASK-*` task governed by `plan.yaml`, with review/test/release/RFC outputs using `result_docs`. |
-| 2026-05-27 | Direct user request | Working tree | Added complete Skill override merge support with description merging and semantic conflict review guidance. |
-| 2026-05-28 | `TASK-060` | Working tree | Promoted architect semantic slicing guidance into explicit hard-gate wording for `plan.draft.yaml` tech plan references and dedicated architecture slices. |
-| 2026-05-28 | `TASK-061` | Working tree | Added Skill routing guidance for returning from `ARCHITECTING` to `REQUIREMENT_GATHERING` before development when PRD facts need revision. |
-| 2026-05-28 | `TASK-066` | Working tree | Hardened SPRINTING/REVIEWING/TESTING runnable entry/exit boundaries and validator checks so TESTING cannot absorb product runtime implementation. |
-| 2026-05-28 | `TASK-067` | Working tree | Replaced the canonical TESTING document contract with `TEST_REPORT.md`, kept legacy `TEST_PLAN.md` validation compatibility and tightened dev/test entry/exit evidence gates. |
-| 2026-05-29 | `TASK-069` | Working tree | Replaced versioned release document generation with canonical `.docs/08_release/CURRENT_RELEASE.md` release status guidance and validator compatibility wording. |
-| 2026-05-29 | `TASK-070` | Working tree | Split test strategy, test cases and execution report semantics; removed `TEST_PLAN.md` report fallback; added RFC cleanup checks for superseded test facts. |
-| 2026-05-29 | `TASK-071` | Working tree | Clarified direct dev gate open-task semantics in Dev/Manager prompts and moved managed Makefile `validate-dev` to package CLI wiring. |
-| 2026-05-29 | `TASK-072` | Working tree | Added structured SPRINTING Development Evidence requirements and `validate-dev` checks for runnable entry, observable exit and basic self-test evidence. |
-| 2026-05-29 | `TASK-075` | Working tree | Hardened application readiness gates so provider/fixture smoke cannot be mistaken for delivered runtime readiness. |
-| 2026-05-29 | `TASK-076` | Working tree | Added task-level Evidence Level, Target Runtime Environment and Testing Handoff Contract validation for runtime/app handoff readiness. |
-| 2026-05-29 | `TASK-078` | Working tree | Added Development Self-Test Contract / Report prompts, templates and validator checks for development handoff readiness. |
-| 2026-05-30 | Direct maintenance | Working tree | Added development self-test report redline prompts and authoring lightweight-constraint guidance. |
-| 2026-05-29 | `TASK-079` | Working tree | Added Module Key Test Path requirements to Development Self-Test Contract / Report and validator checks. |
-| 2026-05-29 | `TASK-080` | Working tree | Clarified Module Key Test Path wording to cover current task/module promised entries and internal key paths without implying whole-system coverage. |
-| 2026-05-30 | Resume-first runtime task protocol | Working tree | Added resume-first prompt rules for high-risk runtime/live tasks and separated runbook/evidence/exploration responsibilities. |
-| 2026-05-30 | Self-test report boundary hardening | Working tree | Added Report Status semantics, Current Operator Path prompt rules, log-section boundary and working_notes limit guidance. |
-| 2026-05-31 | Lightweight explicit phase graph | Working tree | Added authoring guardrails for future workflow graph/data-structure changes: lightweight schema first, explicit consumer/validator/compatibility path and no evidence/history/runbook bodies inside graph nodes. |
-| 2026-05-31 | Data-structure calibration | Working tree | Added authoring guidance to consider structured contracts for repeated workflow consumers while weighing migration, compatibility, context and over-abstraction costs. |
-| 2026-05-31 | PROJECT_SPEC boundary | Working tree | Clarified that version migration and upgrade instructions stay in README/package README or release/implementation docs, not in the zero-to-one project spec. |
-| 2026-05-31 | ADR-backed design rationale | Working tree | Required future workflow changes to consult memory / ADR design decision indexes and to add durable rationale as ADR slices instead of expanding `PROJECT_SPEC.md`. |
-| 2026-06-01 | TESTING bugfix return boundary | Working tree | Added prompt routing for `Bugfix Route`, keeping bugfix recovery lightweight through existing return edges and avoiding a separate bugfix workflow engine. |
-| 2026-06-01 | TESTING case contract | Working tree | Added lightweight `TEST_CASES.md` case schema and conditional `validate-test` checks for `TC-*` references, preserving report-only compatibility for legacy tasks. |
-| 2026-06-01 | UI/UX design stage | Working tree | Added `UI_UX_DESIGNING`, `.docs/02_experience/**`, optional visual UI `DESIGN.md`, `validate-uiux`, downstream consumption rules and package assets. |
+| 2026-05-27 | `DEV-055` | Git history | Required PRD and tech plan slicing workflows to delete superseded complete files after replacement slices and references are complete. |
+| 2026-05-27 | `DEV-056` | Git history | Routed PRD and design generation/slicing through recoverable `plan.yaml` tasks. |
+| 2026-05-27 | `TASK-057` | Git history | Generalized prompt rules so every phase main action is a `TASK-*` task governed by `plan.yaml`, with review/test/release/RFC outputs using `result_docs`. |
+| 2026-05-27 | Direct user request | Git history | Added complete Skill override merge support with description merging and semantic conflict review guidance. |
+| 2026-05-28 | `TASK-060` | Git history | Promoted architect semantic slicing guidance into explicit hard-gate wording for `plan.draft.yaml` tech plan references and dedicated architecture slices. |
+| 2026-05-28 | `TASK-061` | Git history | Added Skill routing guidance for returning from `ARCHITECTING` to `REQUIREMENT_GATHERING` before development when PRD facts need revision. |
+| 2026-05-28 | `TASK-066` | Git history | Hardened SPRINTING/REVIEWING/TESTING runnable entry/exit boundaries and validator checks so TESTING cannot absorb product runtime implementation. |
+| 2026-05-28 | `TASK-067` | Git history | Replaced the canonical TESTING document contract with `TEST_REPORT.md`, kept legacy `TEST_PLAN.md` validation compatibility and tightened dev/test entry/exit evidence gates. |
+| 2026-05-29 | `TASK-069` | Git history | Replaced versioned release document generation with canonical `.docs/08_release/CURRENT_RELEASE.md` release status guidance and validator compatibility wording. |
+| 2026-05-29 | `TASK-070` | Git history | Split test strategy, test cases and execution report semantics; removed `TEST_PLAN.md` report fallback; added RFC cleanup checks for superseded test facts. |
+| 2026-05-29 | `TASK-071` | Git history | Clarified direct dev gate open-task semantics in Dev/Manager prompts and moved managed Makefile `validate-dev` to package CLI wiring. |
+| 2026-05-29 | `TASK-072` | Git history | Added structured SPRINTING Development Evidence requirements and `validate-dev` checks for runnable entry, observable exit and basic self-test evidence. |
+| 2026-05-29 | `TASK-075` | Git history | Hardened application readiness gates so provider/fixture smoke cannot be mistaken for delivered runtime readiness. |
+| 2026-05-29 | `TASK-076` | Git history | Added task-level Evidence Level, Target Runtime Environment and Testing Handoff Contract validation for runtime/app handoff readiness. |
+| 2026-05-29 | `TASK-078` | Git history | Added Development Self-Test Contract / Report prompts, templates and validator checks for development handoff readiness. |
+| 2026-05-30 | Direct maintenance | Git history | Added development self-test report redline prompts and authoring lightweight-constraint guidance. |
+| 2026-05-29 | `TASK-079` | Git history | Added Module Key Test Path requirements to Development Self-Test Contract / Report and validator checks. |
+| 2026-05-29 | `TASK-080` | Git history | Clarified Module Key Test Path wording to cover current task/module promised entries and internal key paths without implying whole-system coverage. |
+| 2026-05-30 | Resume-first runtime task protocol | Git history | Added resume-first prompt rules for high-risk runtime/live tasks and separated runbook/evidence/exploration responsibilities. |
+| 2026-05-30 | Self-test report boundary hardening | Git history | Added Report Status semantics, Current Operator Path prompt rules, log-section boundary and working_notes limit guidance. |
+| 2026-05-31 | Lightweight explicit phase graph | Git history | Added authoring guardrails for future workflow graph/data-structure changes: lightweight schema first, explicit consumer/validator/compatibility path and no evidence/history/runbook bodies inside graph nodes. |
+| 2026-05-31 | Data-structure calibration | Git history | Added authoring guidance to consider structured contracts for repeated workflow consumers while weighing migration, compatibility, context and over-abstraction costs. |
+| 2026-05-31 | PROJECT_SPEC boundary | Git history | Clarified that version migration and upgrade instructions stay in README/package README or release/implementation docs, not in the zero-to-one project spec. |
+| 2026-05-31 | ADR-backed design rationale | Git history | Required future workflow changes to consult memory / ADR design decision indexes and to add durable rationale as ADR slices instead of expanding `PROJECT_SPEC.md`. |
+| 2026-06-01 | TESTING bugfix return boundary | Git history | Added prompt routing for `Bugfix Route`, keeping bugfix recovery lightweight through existing return edges and avoiding a separate bugfix workflow engine. |
+| 2026-06-01 | TESTING case contract | Git history | Added lightweight `TEST_CASES.md` case schema and conditional `validate-test` checks for `TC-*` references, preserving report-only compatibility for legacy tasks. |
+| 2026-06-01 | UI/UX design stage | Git history | Added `UI_UX_DESIGNING`, `.docs/02_experience/**`, optional visual UI `DESIGN.md`, `validate-uiux`, downstream consumption rules and package assets. |
 
 ## 9. 后续维护注意事项
 

@@ -88,7 +88,7 @@ Architecting
 |---|---|---|---|
 | 2026-05-25 | `DEV-032` | `DEV-032` implementation commit | 将 implementation doc 默认粒度从 task 调整为模块、子系统或核心数据流。 |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | 将 legacy `npm_package/dev_*.md` task log 合并进模块级 implementation docs，并更新索引和引用。 |
-| 2026-05-27 | `TASK-057` | Working tree | 明确只有 development task 使用 `implementation_doc`，其它阶段 task 使用 `result_docs`。 |
+| 2026-05-27 | `TASK-057` | Git history | 明确只有 development task 使用 `implementation_doc`，其它阶段 task 使用 `result_docs`。 |
 
 ## 9. 后续维护注意事项
 

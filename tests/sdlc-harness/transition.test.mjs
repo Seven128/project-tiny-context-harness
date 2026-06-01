@@ -9,6 +9,11 @@ const root = await mkdtemp(path.join(tmpdir(), "sdlc-harness-transition-"));
 const sourceRoot = fileURLToPath(new URL("../..", import.meta.url));
 
 try {
+  await writeFile(
+    path.join(root, "package.json"),
+    JSON.stringify({ sdlcHarness: { harnessFolderName: ".codex" } }, null, 2),
+    "utf8"
+  );
   await mkdir(path.join(root, "tools"), { recursive: true });
   await mkdir(path.join(root, ".codex/state"), { recursive: true });
   await mkdir(path.join(root, ".codex/pjsdlc_managed/policies"), { recursive: true });

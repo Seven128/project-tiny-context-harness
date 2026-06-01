@@ -18,7 +18,7 @@ def main() -> None:
     tasks = [task for task in data.get("tasks", []) if isinstance(task, dict)]
     open_tasks = [task for task in tasks if task.get("status") in OPEN_TASK_STATUSES]
 
-    policies = load_yaml(".codex/pjsdlc_managed/policies/allowed_paths.yaml")
+    policies = load_yaml("<harnessRoot>/pjsdlc_managed/policies/allowed_paths.yaml")
     lifecycle = load_lifecycle()
     current_phase = lifecycle.get("current_phase") or "SPRINTING"
     phase_policy = ((policies.get("phases") or {}).get(current_phase) or {})
@@ -29,7 +29,7 @@ def main() -> None:
         task = task_by_id(data, current_task_id) if current_task_id else None
         require(task, "current_task_id must point to the task being validated")
         require(task.get("status") in OPEN_TASK_STATUSES, "current_task_id must point to an open task for path validation")
-        allowed = list(task.get("allowed_paths") or []) + list(always_allow)
+        allowed = expand_harness_root(list(task.get("allowed_paths") or [])) + list(always_allow)
     else:
         print("Allowed paths skipped: no open task")
         return

@@ -47,6 +47,13 @@ tech plan 或 RFC 明确晋升路径，再进入通用 Skill、policy、template
 说明脚本能减少什么成本或风险，建议脚本边界、输入参数、默认安全行为和验证命令。不要把一次性、
 低风险、低频动作过度脚本化。
 
+新增 workflow 自查、诊断、审计或健康检查类能力时，必须先区分数据是否真实可测。每个指标应明确
+`data_source`：`measured` 表示脚本从本地文件/字段/validator 真实读到，`inferred` 表示只能从体量、
+重复、字段缺失或长文档现象推断，`self_reported` 表示由用户或 Agent 显式提供，`unavailable` 表示
+当前环境没有 telemetry 或事实源。不要把 token/time 这类不可由本地脚本可靠获取的数据伪装成精确
+测量；没有真实数据时只能输出 proxy、prompt 自查或 unavailable。诊断命令默认只读，不写报告、
+不上传数据、不跑重型测试，除非用户显式要求。
+
 全量 installed-consumer 验证属于 Harness authoring overlay。它验证 npm 包在新开 consumer
 仓库中的真实行为，而不是普通用户项目默认工作流能力。全量测试流程提示词、脚本使用提示词、
 已知包化缺口归因规则、以及“测试完成后总结问题并进入 RFC 修复”的 SOP 必须写在

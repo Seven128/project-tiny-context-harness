@@ -1,22 +1,3 @@
-# .docs/02_experience overview
-
-<!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: f4b52ef5e32fbfe8 -->
-
-Generated artifact. Markdown slices remain the source of truth.
-
-Source hash: `f4b52ef5e32fbfe8`
-
-## Source Slices
-
-1. [harness_cli_package_experience.md](harness_cli_package_experience.md)
-
----
-
-## harness_cli_package_experience.md
-
-Source: [harness_cli_package_experience.md](harness_cli_package_experience.md)
-
 # Harness CLI Package Experience
 
 ## Scope

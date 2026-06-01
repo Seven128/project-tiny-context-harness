@@ -8,17 +8,17 @@ export interface HarnessRootConfig {
 }
 
 export async function readHarnessRootConfig(projectRoot: string): Promise<HarnessRootConfig> {
-  const explicitConfig = await readJsonConfig(path.join(projectRoot, HARNESS_JSON_CONFIG_PATH));
-  const explicitValue = folderNameFromObject(explicitConfig);
-  if (explicitValue) {
-    return { harnessFolderName: normalizeHarnessFolderName(explicitValue), source: HARNESS_JSON_CONFIG_PATH };
-  }
-
   const packageJson = await readJsonConfig(path.join(projectRoot, "package.json"));
   const packageConfig = packageJson && typeof packageJson === "object" ? (packageJson as Record<string, unknown>).sdlcHarness : undefined;
   const packageValue = folderNameFromObject(packageConfig);
   if (packageValue) {
     return { harnessFolderName: normalizeHarnessFolderName(packageValue), source: "package.json#sdlcHarness" };
+  }
+
+  const explicitConfig = await readJsonConfig(path.join(projectRoot, HARNESS_JSON_CONFIG_PATH));
+  const explicitValue = folderNameFromObject(explicitConfig);
+  if (explicitValue) {
+    return { harnessFolderName: normalizeHarnessFolderName(explicitValue), source: HARNESS_JSON_CONFIG_PATH };
   }
 
   return { harnessFolderName: DEFAULT_HARNESS_ROOT, source: "default" };

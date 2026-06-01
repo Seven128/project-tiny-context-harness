@@ -10,7 +10,9 @@ import { runInit } from "../../packages/sdlc-harness/dist/lib/init.js";
 import { runSync } from "../../packages/sdlc-harness/dist/lib/sync-engine.js";
 
 const defaultRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-default-"));
+const freshRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-fresh-"));
 const configuredRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-configured-"));
+const cliFreshRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-cli-fresh-"));
 const cliDefaultRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-cli-default-"));
 const cliConfiguredRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-cli-configured-"));
 const cliConfiguredCamelRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-cli-configured-camel-"));
@@ -30,6 +32,16 @@ try {
   assert.equal(resolveAgentHarnessFolderName("cursor"), ".cursor");
   assert.equal(resolveAgentHarnessFolderName("other"), ".agent");
   assert.equal(resolveAgentHarnessFolderName("other", ".workflow"), ".workflow");
+
+  const freshReport = await runInit(freshRoot, { adopt: false, force: false });
+  assert.ok(freshReport.some((line) => line.includes("created .agent/config.yaml")));
+  const freshLifecycle = await readFile(path.join(freshRoot, ".agent/state/lifecycle.yaml"), "utf8");
+  assert.match(freshLifecycle, /current_phase: "REQUIREMENT_GATHERING"/);
+  assert.match(freshLifecycle, /active_role: "product_manager"/);
+  assert.match(freshLifecycle, /active_skill: "pjsdlc_pm_prd"/);
+  assert.match(freshLifecycle, /  - "UI_UX_DESIGNING"/);
+  assert.match(freshLifecycle, /  - "BLOCKED"/);
+  assert.doesNotMatch(freshLifecycle, /  - "REVIEWING"/);
 
   const defaultConfig = await readFile(path.join(defaultRoot, ".agent/config.yaml"), "utf8");
   assert.match(defaultConfig, /agent-project-sdlc/);
@@ -181,6 +193,34 @@ try {
   const configuredDoctor = await runDoctor(configuredRoot);
   assert.deepEqual(configuredDoctor.errors, []);
   assert.ok(configuredDoctor.info.some((line) => line.includes("harness root: .harness")));
+  const configuredDocsOverview = spawnSync("make", ["docs-overview"], {
+    cwd: configuredRoot,
+    encoding: "utf8"
+  });
+  assert.equal(configuredDocsOverview.status, 0, `${configuredDocsOverview.stdout}\n${configuredDocsOverview.stderr}`);
+  const configuredMakeHarness = spawnSync("make", ["validate-harness"], {
+    cwd: configuredRoot,
+    encoding: "utf8"
+  });
+  assert.equal(configuredMakeHarness.status, 0, `${configuredMakeHarness.stdout}\n${configuredMakeHarness.stderr}`);
+  const configuredTransition = spawnSync("python3", ["tools/transition.py", "--to", "REVIEWING"], {
+    cwd: configuredRoot,
+    encoding: "utf8"
+  });
+  assert.equal(configuredTransition.status, 0, configuredTransition.stderr);
+  const transitionedConfiguredLifecycle = await readFile(path.join(configuredRoot, ".harness/state/lifecycle.yaml"), "utf8");
+  assert.match(transitionedConfiguredLifecycle, /current_phase: "REVIEWING"/);
+
+  const cliFresh = spawnSync(process.execPath, [cliPath, "init"], {
+    cwd: cliFreshRoot,
+    encoding: "utf8"
+  });
+  assert.equal(cliFresh.status, 0, cliFresh.stderr);
+  const cliFreshPackage = JSON.parse(await readFile(path.join(cliFreshRoot, "package.json"), "utf8"));
+  assert.equal(cliFreshPackage.sdlcHarness.harnessFolderName, ".codex");
+  const cliFreshLifecycle = await readFile(path.join(cliFreshRoot, ".codex/state/lifecycle.yaml"), "utf8");
+  assert.match(cliFreshLifecycle, /current_phase: "REQUIREMENT_GATHERING"/);
+  assert.match(cliFreshLifecycle, /active_skill: "pjsdlc_pm_prd"/);
 
   const cliDefault = spawnSync(process.execPath, [cliPath, "init", "--adopt"], {
     cwd: cliDefaultRoot,
@@ -331,7 +371,9 @@ try {
   }
 } finally {
   await rm(defaultRoot, { recursive: true, force: true });
+  await rm(freshRoot, { recursive: true, force: true });
   await rm(configuredRoot, { recursive: true, force: true });
+  await rm(cliFreshRoot, { recursive: true, force: true });
   await rm(cliDefaultRoot, { recursive: true, force: true });
   await rm(cliConfiguredRoot, { recursive: true, force: true });
   await rm(cliConfiguredCamelRoot, { recursive: true, force: true });

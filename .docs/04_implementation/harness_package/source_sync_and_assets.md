@@ -83,7 +83,7 @@ Author edits Harness source files
 - Evidence Level: `local_runtime`.
 - Target Runtime Environment: `local`; no external services, credentials or deployed runtime are required.
 - Runnable Entry: `npm test --workspace agent-project-sdlc`, `node packages/sdlc-harness/dist/cli.js package sync-source`, `node packages/sdlc-harness/dist/cli.js package check-source`, `make validate-harness`, `make validate-rfc` and `make validate-dev` from the repository root.
-- Observable Exit: package tests passed 10/10; package source check returned `package source OK`; `packages/sdlc-harness/assets/tools/transition.py` contains `RFC_INTERRUPT_SOURCES`; init/sync/upgrade tests prove `tools/transition.py` is materialized and stale copies are replaced.
+- Observable Exit: package tests passed; package source check returned `package source OK`; `packages/sdlc-harness/assets/tools/transition.py` consumes `phase_contracts.yaml#transitions`; init/sync/upgrade tests prove `tools/*.py` are materialized and stale copies are replaced.
 - Client / Server Initialization: not applicable for servers; local CLI initialization is `npm install` workspace dependencies plus `npm test --workspace agent-project-sdlc` build.
 - Config Contract: default `<harnessRoot>/config.yaml` includes `path: "tools"` with `strategy: "managed"`; upgrade migration backfills the same managed file entry.
 - Testing Handoff Readiness: Review/Testing can inspect `tools/transition.py`, `packages/sdlc-harness/assets/tools/**`, `tests/sdlc-harness/transition.test.mjs`, package source tests and consumer lab script output.
@@ -96,7 +96,7 @@ Author edits Harness source files
 - Scenario Results: `transition-rfc-interrupt` PASS; `package-tools-materialization` PASS.
 - Executed Gates: `npm test --workspace agent-project-sdlc` PASS; `node packages/sdlc-harness/dist/cli.js package sync-source` PASS; `node packages/sdlc-harness/dist/cli.js package check-source` PASS; `make validate-harness` PASS; `make validate-rfc` PASS; `make validate-dev` PASS.
 - Module Key Test Path: `npm test --workspace agent-project-sdlc; python3 tools/transition.py fixture calls in tests/sdlc-harness/transition.test.mjs` starts by building package `dist`, runs node:test package-source/init/sync/upgrade/transition fixtures, verifies `transition-rfc-interrupt` through direct `tools/transition.py` fixture calls for `SPRINTING` / `REVIEWING` / `TESTING` / `RELEASING -> RFC_RECALIBRATION`, illegal pre-development RFC entry, normal `REVIEWING -> TESTING`, and `RFC_RECALIBRATION -> SPRINTING`; the same run verifies `package-tools-materialization` through source mapping, init/sync, stale tool replacement and upgrade backfill assertions.
-- Actual Evidence: package regression output reported 10 pass / 0 fail; package source check reported `package source OK`; Harness gates reported RFC artifacts OK, generated overview freshness and allowed path validation.
+- Evidence Index Refs: package regression, package source check and Harness gate outputs are recorded in git/test command history for `TASK-082`.
 - Missing / Blockers: none.
 - Testing Handoff Readiness: PASS; Review/Testing can rerun the commands above without external services.
 
@@ -133,10 +133,10 @@ Author edits Harness source files
 | 2026-05-25 | `DEV-006` - `DEV-023` | Historical implementation commits | Migrated roots, markers and managed layout to the current package asset shape. |
 | 2026-05-25 | `DEV-037` - `DEV-039` | Historical implementation commits | Added authoring Skill boundary and excluded authoring assets from package sync. |
 | 2026-05-26 | `DEV-043` | DEV-043 implementation commit | Consolidated source-sync implementation facts from legacy task docs. |
-| 2026-05-27 | Direct user request | Working tree | Added root README as a packaged docs asset for installed-package agent reads. |
-| 2026-05-28 | `TASK-059` | Pending implementation commit | Synced source changes that remove duplicate phase/task state from distributed assets. |
-| 2026-05-29 | `TASK-073` | Working tree | Added package-managed heading sections for user-owned memory/index files and safe marker/exact-old GitHub workflow migration. |
-| 2026-05-30 | `TASK-082` | Working tree | Added package-managed `tools/*.py` distribution, tools config backfill, source mapping coverage and init/sync/upgrade tests for refreshed `tools/transition.py`. |
+| 2026-05-27 | Direct user request | Git history | Added root README as a packaged docs asset for installed-package agent reads. |
+| 2026-05-28 | `TASK-059` | Git history | Synced source changes that remove duplicate phase/task state from distributed assets. |
+| 2026-05-29 | `TASK-073` | Git history | Added package-managed heading sections for user-owned memory/index files and safe marker/exact-old GitHub workflow migration. |
+| 2026-05-30 | `TASK-082` | Git history | Added package-managed `tools/*.py` distribution, tools config backfill, source mapping coverage and init/sync/upgrade tests for refreshed `tools/transition.py`. |
 
 ## 9. 后续维护注意事项
 

@@ -161,6 +161,7 @@ export async function runConsumerLabFullTest(rawOptions) {
   commandCheck("Package smoke", "install current source tarball", "npm", ["install", "-D", `./.artifacts/${tarballName}`]);
   commandCheck("CLI lifecycle", "init explicit .codex root", "npx", ["sdlc-harness", "init", "--harness-folder", ".codex"]);
   commandCheck("CLI lifecycle", "doctor installed workspace", "npx", ["sdlc-harness", "doctor"]);
+  commandCheck("CLI lifecycle", "inspect-workflow installed workspace", "npx", ["sdlc-harness", "inspect-workflow"]);
   commandCheck("CLI lifecycle", "sync idempotency", "npx", ["sdlc-harness", "sync"]);
   commandCheck("CLI lifecycle", "upgrade idempotency", "npx", ["sdlc-harness", "upgrade"]);
 
@@ -178,6 +179,7 @@ export async function runConsumerLabFullTest(rawOptions) {
   commandCheck("CLI validators", "validate-design", "npx", ["sdlc-harness", "validate-design"]);
   await writeFile(path.join(options.labDir, ".codex/state/plan.draft.yaml"), "next_task_sequence: 2\ntasks: []\n", "utf8");
   commandCheck("CLI validators", "validate-current", "npx", ["sdlc-harness", "validate-current"]);
+  await writeFile(path.join(options.labDir, ".codex/state/lifecycle.yaml"), 'current_phase: "SPRINTING"\nactive_role: "developer"\nactive_skill: "pjsdlc_dev_sprint"\n', "utf8");
   commandCheck("CLI validators", "validate-dev final empty plan", "npx", ["sdlc-harness", "validate-dev"]);
   await writeOpenSprintTaskPlan(options.labDir);
   commandCheck("Makefile gates", "make validate-dev accepts valid current open SPRINTING task", "make", ["validate-dev"]);
@@ -279,17 +281,16 @@ async function verifyManagedAssets(labDir, add) {
   if (missing.length === 0) {
     const lifecycle = await readFile(path.join(labDir, ".codex/state/lifecycle.yaml"), "utf8");
     const lifecycleReady =
-      lifecycle.includes('current_phase: "SPRINTING"') &&
-      lifecycle.includes('active_role: "developer"') &&
-      lifecycle.includes('active_skill: "pjsdlc_dev_sprint"') &&
-      lifecycle.includes('  - "REVIEWING"') &&
-      lifecycle.includes('  - "RFC_RECALIBRATION"') &&
+      lifecycle.includes('current_phase: "REQUIREMENT_GATHERING"') &&
+      lifecycle.includes('active_role: "product_manager"') &&
+      lifecycle.includes('active_skill: "pjsdlc_pm_prd"') &&
+      lifecycle.includes('  - "UI_UX_DESIGNING"') &&
       lifecycle.includes('  - "BLOCKED"');
     add({
       area: "Managed assets",
-      evidence: "init lifecycle starts in developer sprint",
+      evidence: "fresh init lifecycle starts in requirement gathering",
       status: lifecycleReady ? "PASS" : "FAIL",
-      details: lifecycleReady ? "lifecycle.yaml routes to pjsdlc_dev_sprint" : trimOutput(lifecycle)
+      details: lifecycleReady ? "lifecycle.yaml routes to pjsdlc_pm_prd" : trimOutput(lifecycle)
     });
 
     const phaseContracts = await readFile(path.join(labDir, ".codex/pjsdlc_managed/policies/phase_contracts.yaml"), "utf8");
@@ -340,6 +341,59 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
     command: "npx sdlc-harness init --adopt",
     status: configured.status === 0 && existsSync(path.join(configuredDir, ".workflow/config.yaml")) ? "PASS" : "FAIL",
     details: trimOutput(`${configured.stdout}\n${configured.stderr}`)
+  });
+  const configuredCliValidator = run("npx", ["sdlc-harness", "validate-harness"], configuredDir);
+  add({
+    area: "Configurable root",
+    evidence: "CLI validator consumes configured .workflow root",
+    command: "npx sdlc-harness validate-harness",
+    status: configuredCliValidator.status === 0 ? "PASS" : "FAIL",
+    details: trimOutput(`${configuredCliValidator.stdout}\n${configuredCliValidator.stderr}`)
+  });
+  const configuredWorkflowInspect = run("npx", ["sdlc-harness", "inspect-workflow"], configuredDir);
+  add({
+    area: "Configurable root",
+    evidence: "inspect-workflow consumes configured .workflow root",
+    command: "npx sdlc-harness inspect-workflow",
+    status: configuredWorkflowInspect.status === 0 && configuredWorkflowInspect.stdout.includes("harness root: .workflow")
+      ? "PASS"
+      : "FAIL",
+    details: trimOutput(`${configuredWorkflowInspect.stdout}\n${configuredWorkflowInspect.stderr}`)
+  });
+  const configuredDocsOverview = run("make", ["docs-overview"], configuredDir);
+  add({
+    area: "Configurable root",
+    evidence: "Makefile docs-overview consumes configured .workflow root",
+    command: "make docs-overview",
+    status: configuredDocsOverview.status === 0 ? "PASS" : "FAIL",
+    details: trimOutput(`${configuredDocsOverview.stdout}\n${configuredDocsOverview.stderr}`)
+  });
+  const configuredMakeHarness = run("make", ["validate-harness"], configuredDir);
+  add({
+    area: "Configurable root",
+    evidence: "Makefile/Python gates consume configured .workflow root",
+    command: "make validate-harness",
+    status: configuredMakeHarness.status === 0 ? "PASS" : "FAIL",
+    details: trimOutput(`${configuredMakeHarness.stdout}\n${configuredMakeHarness.stderr}`)
+  });
+  const configuredMakeCurrent = run("make", ["validate-current"], configuredDir);
+  add({
+    area: "Configurable root",
+    evidence: "phase-exit Makefile gate consumes configured .workflow root",
+    command: "make validate-current",
+    status: configuredMakeCurrent.status === 0 ? "PASS" : "FAIL",
+    details: trimOutput(`${configuredMakeCurrent.stdout}\n${configuredMakeCurrent.stderr}`)
+  });
+  const configuredTransition = run("python3", ["tools/transition.py", "--to", "REVIEWING"], configuredDir);
+  const transitionedLifecycle = existsSync(path.join(configuredDir, ".workflow/state/lifecycle.yaml"))
+    ? await readFile(path.join(configuredDir, ".workflow/state/lifecycle.yaml"), "utf8")
+    : "";
+  add({
+    area: "Configurable root",
+    evidence: "transition.py writes configured .workflow lifecycle",
+    command: "python3 tools/transition.py --to REVIEWING",
+    status: configuredTransition.status === 0 && transitionedLifecycle.includes('current_phase: "REVIEWING"') ? "PASS" : "FAIL",
+    details: trimOutput(`${configuredTransition.stdout}\n${configuredTransition.stderr}`)
   });
 }
 
