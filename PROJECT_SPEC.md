@@ -84,6 +84,7 @@ Agent 在单阶段内部仍然以 vibe 方式执行；Harness 负责规定当前
 | [ADR 005](.docs/05_decisions/ADR_005_development_self_test_handoff.md) | Development Self-Test Report 作为短交接卡的边界 |
 | [ADR 006](.docs/05_decisions/ADR_006_authoring_overlay_and_package_boundary.md) | authoring overlay、package sync/upgrade 和文档职责边界 |
 | [ADR 007](.docs/05_decisions/ADR_007_ui_ux_design_stage.md) | `UI_UX_DESIGNING` 独立体验设计阶段和 visual UI `DESIGN.md` 事实源 |
+| [ADR 008](.docs/05_decisions/ADR_008_delivery_benchmark_scenario_design.md) | Delivery Benchmark 为什么选择 lifecycle scenarios 来验证工作流设计目的 |
 
 ### 3.4 事实源与派生产物
 真正的事实源是：

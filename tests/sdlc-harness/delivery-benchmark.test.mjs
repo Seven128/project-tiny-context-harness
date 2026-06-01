@@ -72,6 +72,46 @@ try {
   });
   const baselinePrompt = await readFile(path.join(baselineRunDir, ".benchmark", "prompt.md"), "utf8");
   assert.doesNotMatch(baselinePrompt, /\.benchmark\/transcript\.md/);
+  assert.doesNotMatch(baselinePrompt, /operation log|self[- ]?log|操作日志/i);
+
+  const runbook = await readFile(path.join(repoRoot, "examples", "delivery-benchmark", "RUNBOOK.md"), "utf8");
+  assert.match(runbook, /project-context-recovery-lab/);
+  assert.match(runbook, /observer/i);
+  assert.match(runbook, /Fresh-Agent Recovery/i);
+  assert.match(runbook, /RFC/);
+  assert.match(runbook, /Debug Fix/i);
+  assert.match(runbook, /wrong-path/i);
+  assert.match(runbook, /raw artifacts/i);
+  assert.match(runbook, /do not\s+commit/i);
+  assert.match(runbook, /\.benchmark\/prompt\.md/);
+  assert.match(runbook, /INITIAL_DELIVERY/);
+  assert.match(runbook, /RECOVERY/);
+  assert.match(runbook, /DEBUG/);
+  assert.match(runbook, /Gate Timing Protocol/);
+  assert.match(runbook, /phase GATE/);
+  assert.match(runbook, /gate:validate-dev/);
+  assert.match(runbook, /package regression/i);
+  const benchmarkReadme = await readFile(path.join(repoRoot, "examples", "delivery-benchmark", "README.md"), "utf8");
+  assert.match(benchmarkReadme, /Design Rationale/);
+  assert.match(benchmarkReadme, /ADR 008: Delivery Benchmark Scenario Design/);
+  assert.match(benchmarkReadme, /same-quality delivery efficiency/);
+  assert.match(benchmarkReadme, /Gate Profile and Fast Path/);
+  assert.match(benchmarkReadme, /Gate Cost Breakdown/);
+  assert.match(benchmarkReadme, /package checks/);
+  const benchmarkDesignAdr = await readFile(
+    path.join(repoRoot, ".docs", "05_decisions", "ADR_008_delivery_benchmark_scenario_design.md"),
+    "utf8"
+  );
+  assert.match(benchmarkDesignAdr, /same-quality/);
+  assert.match(benchmarkDesignAdr, /lifecycle/);
+  assert.match(benchmarkDesignAdr, /fresh-agent recovery/);
+  assert.match(benchmarkDesignAdr, /RFC/);
+  assert.match(benchmarkDesignAdr, /debug/);
+  assert.match(benchmarkDesignAdr, /project-context-recovery-lab/);
+  assert.match(benchmarkDesignAdr, /support-triage-board/);
+  assert.match(benchmarkDesignAdr, /webhook-provider-bridge/);
+  assert.match(benchmarkDesignAdr, /gate_profile\.md/);
+  assert.match(benchmarkDesignAdr, /out-of-scope package regression/);
 
   for (const scenarioId of pendingLifecycleScenarios) {
     const lifecycleProbe = await readFile(
@@ -83,6 +123,17 @@ try {
     assert.match(lifecycleProbe, /RFC/);
     assert.match(lifecycleProbe, /DEBUG/);
     assert.match(lifecycleProbe, /Wrong-Path Count/);
+    const gateProfile = await readFile(
+      path.join(repoRoot, "examples", "delivery-benchmark", "scenarios", scenarioId, "gate_profile.md"),
+      "utf8"
+    );
+    assert.match(gateProfile, /Orientation/);
+    assert.match(gateProfile, /Domain Focused Gates/);
+    assert.match(gateProfile, /Harness Task Gates/);
+    assert.match(gateProfile, /Phase Exit Gates/);
+    assert.match(gateProfile, /Out-of-Scope Gates/);
+    assert.match(gateProfile, /Baseline mode does not run Harness validators/);
+    assert.match(gateProfile, /phase GATE/);
     const rubric = JSON.parse(
       await readFile(path.join(repoRoot, "examples", "delivery-benchmark", "scenarios", scenarioId, "rubric.json"), "utf8")
     );
@@ -100,11 +151,26 @@ try {
     force: true
   });
   const lifecyclePrompt = await readFile(path.join(lifecycleRunDir, ".benchmark", "prompt.md"), "utf8");
+  const lifecycleScenarioBundle = await readFile(path.join(lifecycleRunDir, ".benchmark", "scenario.md"), "utf8");
   assert.match(lifecyclePrompt, /Lifecycle Probe/);
+  assert.match(lifecyclePrompt, /Gate Profile/);
+  assert.match(lifecycleScenarioBundle, /Gate Profile/);
+  assert.match(lifecyclePrompt, /Domain Focused Gates/);
   assert.match(lifecyclePrompt, /Fresh-Agent Recovery Probe/);
   assert.match(lifecyclePrompt, /RFC Cascade/);
   assert.match(lifecyclePrompt, /Debug Fix/);
   assert.match(lifecyclePrompt, /Wrong-Path Count/);
+  const baselineLifecycleRunDir = path.join(root, "context-recovery-baseline-run");
+  await prepareRunDirectory({
+    scenario: "project-context-recovery-lab",
+    mode: "baseline",
+    outDir: baselineLifecycleRunDir,
+    force: true
+  });
+  const baselineLifecyclePrompt = await readFile(path.join(baselineLifecycleRunDir, ".benchmark", "prompt.md"), "utf8");
+  assert.match(baselineLifecyclePrompt, /Gate Profile/);
+  assert.match(baselineLifecyclePrompt, /Baseline mode does not run Harness validators/);
+  assert.doesNotMatch(baselineLifecyclePrompt, /must run .*validate-/i);
   for (const scenarioId of ["support-triage-board", "webhook-provider-bridge"]) {
     const promptRunDir = path.join(root, `${scenarioId}-prompt-run`);
     await prepareRunDirectory({
@@ -115,6 +181,7 @@ try {
     });
     const scenarioPrompt = await readFile(path.join(promptRunDir, ".benchmark", "prompt.md"), "utf8");
     assert.match(scenarioPrompt, /Lifecycle Probe/);
+    assert.match(scenarioPrompt, /Gate Profile/);
     assert.match(scenarioPrompt, /Fresh-Agent Recovery Probe/);
     assert.match(scenarioPrompt, /RFC Cascade/);
     assert.match(scenarioPrompt, /Debug Fix/);
@@ -348,6 +415,22 @@ try {
     phase: "DEBUG",
     minutes: 8
   });
+  await startTimer({
+    runDir: lifecycleRunDir,
+    event: "gate:npm-test",
+    kind: "test",
+    phase: "GATE"
+  });
+  await wait(20);
+  await stopTimer({ runDir: lifecycleRunDir, notes: "project-local test gate complete" });
+  await startTimer({
+    runDir: lifecycleRunDir,
+    event: "gate:validate-dev",
+    kind: "workflow_control",
+    phase: "GATE"
+  });
+  await wait(20);
+  await stopTimer({ runDir: lifecycleRunDir, notes: "Harness development gate complete" });
   await mkdir(path.join(lifecycleRunDir, "src"), { recursive: true });
   await mkdir(path.join(lifecycleRunDir, "tests"), { recursive: true });
   await writeFile(
@@ -401,7 +484,14 @@ try {
   assert.equal(lifecycleReport.lifecycle.wrong_path_count, 1);
   assert.equal(lifecycleReport.lifecycle.final_quality_score.total, lifecycleReport.summary.total);
   assert.ok(lifecycleReport.lifecycle.final_quality_score.total > 0);
+  assert.equal(lifecycleReport.workflow_cost.gate_breakdown.has_gate_data, true);
+  assert.ok(lifecycleReport.workflow_cost.gate_breakdown.total_gate_minutes >= 0);
+  assert.ok(lifecycleReport.workflow_cost.gate_breakdown.workflow_gate_minutes >= 0);
+  assert.ok(lifecycleReport.workflow_cost.gate_breakdown.product_gate_minutes >= 0);
+  assert.ok(lifecycleReport.workflow_cost.gate_breakdown.by_event.some((item) => item.event === "gate:npm-test"));
+  assert.ok(lifecycleReport.workflow_cost.gate_breakdown.by_event.some((item) => item.event === "gate:validate-dev"));
   assert.match(renderMarkdownReport(lifecycleReport), /Lifecycle Efficiency/);
+  assert.match(renderMarkdownReport(lifecycleReport), /Gate Cost Breakdown/);
 
   const resultsDir = path.join(repoRoot, "examples/delivery-benchmark/results");
   const dataScript = await readFile(path.join(resultsDir, "benchmark-data.js"), "utf8");

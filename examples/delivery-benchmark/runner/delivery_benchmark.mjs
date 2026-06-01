@@ -120,7 +120,8 @@ export async function loadScenario(id, scenariosRoot = SCENARIOS_ROOT) {
     acceptance: await readOptional(path.join(scenarioDir, "acceptance_criteria.md")),
     rfc: await readOptional(path.join(scenarioDir, "rfc_change.md")),
     recovery: await readOptional(path.join(scenarioDir, "recovery_checkpoint.md")),
-    lifecycleProbe: await readOptional(path.join(scenarioDir, "lifecycle_probe.md"))
+    lifecycleProbe: await readOptional(path.join(scenarioDir, "lifecycle_probe.md")),
+    gateProfile: await readOptional(path.join(scenarioDir, "gate_profile.md"))
   };
 }
 
@@ -437,6 +438,17 @@ export function renderMarkdownReport(report) {
     lines.push(`- wrong_path_count: ${formatValue(report.lifecycle.wrong_path_count)}`);
     lines.push(`- final_quality_score: ${formatScore(report.lifecycle.final_quality_score.passed, report.lifecycle.final_quality_score.total)}`);
   }
+  if (report.workflow_cost.gate_breakdown?.has_gate_data) {
+    lines.push("", "## Gate Cost Breakdown", "");
+    lines.push(`- total_gate_minutes: ${formatValue(report.workflow_cost.gate_breakdown.total_gate_minutes)}`);
+    lines.push(`- workflow_gate_minutes: ${formatValue(report.workflow_cost.gate_breakdown.workflow_gate_minutes)}`);
+    lines.push(`- product_gate_minutes: ${formatValue(report.workflow_cost.gate_breakdown.product_gate_minutes)}`);
+    lines.push("", "| Event | Kind | Count | Minutes |");
+    lines.push("|---|---|---:|---:|");
+    for (const item of report.workflow_cost.gate_breakdown.by_event) {
+      lines.push(`| ${item.event} | ${item.kind} | ${item.count} | ${formatValue(item.minutes)} |`);
+    }
+  }
   return `${lines.join("\n")}\n`;
 }
 
@@ -558,6 +570,7 @@ function buildCostSummary(events, options, observations = []) {
     total_delivery_minutes: totalDeliveryMinutes,
     observed_total_delivery_minutes: observerSummary.observed_total_delivery_minutes,
     file_activity_summary: observerSummary.file_activity_summary,
+    gate_breakdown: buildGateBreakdown(events),
     estimated_vibe_handoff_minutes: options.estimatedVibeHandoffMinutes ?? null,
     avoided_rework_minutes: options.avoidedReworkMinutes ?? null,
     cost_data_source: timingSummary.costDataSource,
@@ -603,6 +616,38 @@ function buildLifecycleSummary(events, options, scoreSummary) {
       decision: scoreSummary.decision
     }
   };
+}
+
+function buildGateBreakdown(events) {
+  const gateEvents = events.filter((event) => isGateEvent(event) && Number.isFinite(event.minutes));
+  const totalGateMinutes = gateEvents.reduce((sum, event) => sum + event.minutes, 0);
+  const workflowGateMinutes = gateEvents
+    .filter((event) => event.kind === "workflow_control")
+    .reduce((sum, event) => sum + event.minutes, 0);
+  const productGateMinutes = totalGateMinutes - workflowGateMinutes;
+  const byEvent = Array.from(
+    gateEvents
+      .reduce((summary, event) => {
+        const key = `${event.event}\0${event.kind}`;
+        const item = summary.get(key) ?? { event: event.event, kind: event.kind, count: 0, minutes: 0 };
+        item.count += 1;
+        item.minutes = round(item.minutes + event.minutes);
+        summary.set(key, item);
+        return summary;
+      }, new Map())
+      .values()
+  ).sort((left, right) => left.event.localeCompare(right.event) || left.kind.localeCompare(right.kind));
+  return {
+    has_gate_data: gateEvents.length > 0,
+    total_gate_minutes: gateEvents.length > 0 ? round(totalGateMinutes) : null,
+    workflow_gate_minutes: gateEvents.length > 0 ? round(workflowGateMinutes) : null,
+    product_gate_minutes: gateEvents.length > 0 ? round(productGateMinutes) : null,
+    by_event: byEvent
+  };
+}
+
+function isGateEvent(event) {
+  return event.phase === "GATE" || String(event.event ?? "").startsWith("gate:");
 }
 
 function sumEventMinutesByPhase(events, phases) {
@@ -735,6 +780,9 @@ function renderScenarioBundle(scenario) {
   ];
   if (scenario.lifecycleProbe.trim()) {
     sections.push("", "## Lifecycle Probe", "", scenario.lifecycleProbe.trim());
+  }
+  if (scenario.gateProfile.trim()) {
+    sections.push("", "## Gate Profile", "", scenario.gateProfile.trim());
   }
   return sections.join("\n");
 }

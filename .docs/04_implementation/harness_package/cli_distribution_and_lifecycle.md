@@ -155,6 +155,9 @@ Existing project runs sdlc-harness upgrade
 | 2026-06-01 | Delivery benchmark timing and report clarity | Current validation batch | Added lightweight system timer commands for benchmark events and expanded the visual report with scenario project briefs. |
 | 2026-06-01 | Delivery benchmark external observer | Current validation batch | Added repo-local observer commands for benchmark elapsed time and file activity, removed baseline self-logging from the prompt, and documented measurement data sources. |
 | 2026-06-01 | Delivery benchmark lifecycle efficiency probes | Current validation batch | Reworked the three pending scenarios into high-signal lifecycle probes for context recovery, cross-layer RFC/debug efficiency and provider-boundary safety, with optional `lifecycle_probe.md` prompt bundling, lifecycle score metrics and visual report sections. |
+| 2026-06-02 | Delivery benchmark operator runbook | Current validation batch | Added a repo-local operator protocol for the first `project-context-recovery-lab` lifecycle pilot, including baseline/Harness isolation, observer coverage, phase timers, wrong-path scoring and calibration-only publication rules. |
+| 2026-06-02 | Delivery benchmark scenario design ADR | Current validation batch | Added `ADR_008` to explain why benchmark scenarios validate same-quality lifecycle efficiency, context recovery, RFC/debug rework and provider-boundary safety instead of first-patch speed. |
+| 2026-06-02 | Delivery benchmark gate fast path | Current validation batch | Added scenario gate profiles and runner gate cost breakdown so pilots distinguish orientation, product verification gates, workflow-control gates and out-of-scope package regression. |
 
 ## 9. 后续维护注意事项
 

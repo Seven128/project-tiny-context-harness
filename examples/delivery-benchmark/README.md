@@ -9,6 +9,19 @@ It compares two paths for the same small product:
 
 The important baseline is same-quality delivery: Review-ready, Testing-ready and handoff/recovery-ready. A Harness run can be slower and still be better if it prevents omissions, rework or failed handoff.
 
+## Design Rationale
+
+This benchmark exists to test whether Harness reaches its workflow design goal:
+better same-quality delivery efficiency in complex project lifecycles. It should
+not be interpreted as a first-patch speed race against plain vibe coding.
+
+The lifecycle scenarios are chosen to expose the places where Harness is
+expected to help: fresh-agent recovery from durable project context, RFC/debug
+work after the initial implementation, cross-layer UI/API/test drift, and
+provider/live boundaries where wrong paths are expensive. The full benchmark
+choice and scenario design rationale is recorded in
+[ADR 008: Delivery Benchmark Scenario Design](../../.docs/05_decisions/ADR_008_delivery_benchmark_scenario_design.md).
+
 ## Scenarios
 
 | Scenario | Shape | Main Risk Covered |
@@ -23,6 +36,14 @@ The important baseline is same-quality delivery: Review-ready, Testing-ready and
 The runner is repo-local on purpose. It is not a public `sdlc-harness` command yet.
 
 In this repository, you can simply tell the Agent: `跑工作流 benchmark`. The default should be `expense-policy-engine`, with both `baseline` and `harness` runs prepared under `.artifacts/delivery-benchmark/<timestamp>/`.
+
+For lifecycle benchmark calibration, use the operator protocol in
+[`RUNBOOK.md`](RUNBOOK.md). The first recommended pilot is
+`project-context-recovery-lab`, because it directly exercises fresh-agent
+recovery, context continuity, RFC churn and debug repair after initial delivery.
+Pilot output is calibration evidence by default; update `results/benchmark-data.js`
+only after both `baseline` and `harness` complete the same scenario against the
+same quality rubric.
 
 ```sh
 node examples/delivery-benchmark/runner/delivery_benchmark.mjs list
@@ -89,6 +110,23 @@ Data source layers:
 - `self_reported`: semantic notes from the agent or operator, used only as context.
 
 Observer logs are not quality evidence. The scorer ignores `.benchmark/observations.ndjson` and observer state files when evaluating product acceptance; quality still comes from source files, tests, docs and Harness deliverables.
+
+## Gate Profile and Fast Path
+
+Lifecycle scenarios include a `gate_profile.md` so both paths know which gates
+are relevant to the scenario. The fast path is a timing and scope boundary: it
+keeps orientation light, runs domain-focused product gates for the current
+scenario, and reserves Harness gates for task or phase boundaries.
+
+This does not lower the same-quality bar. It prevents unrelated package checks,
+source sync/check, workspace full regression or consumer-lab validation from
+being counted as scenario delivery cost unless package source or managed assets
+actually changed.
+
+When timing gates, use `phase GATE` or an event name beginning with `gate:`. Use
+`kind workflow_control` for Harness workflow gates and `kind test` for product
+verification gates. `score` reports these events in `Gate Cost Breakdown` so the
+pilot can explain where time was spent.
 
 ## Lifecycle Efficiency Probe
 

@@ -17,6 +17,7 @@
 - [ADR 005: Development Self-Test Handoff](../../.docs/05_decisions/ADR_005_development_self_test_handoff.md): Development Self-Test Report 是短交接卡，不保存 debug log、operator log、runbook 正文或 evidence body。
 - [ADR 006: Authoring Overlay and Package Boundary](../../.docs/05_decisions/ADR_006_authoring_overlay_and_package_boundary.md): 通用 Harness 配置、项目实例数据和 authoring overlay 分层，README 放用户迁移，PROJECT_SPEC 放稳定设计。
 - [ADR 007: UI/UX Design Stage and DESIGN.md Fact Source](../../.docs/05_decisions/ADR_007_ui_ux_design_stage.md): `UI_UX_DESIGNING` 独立产出体验事实源，visual UI 项目用 `DESIGN.md` 固定视觉系统。
+- [ADR 008: Delivery Benchmark Scenario Design](../../.docs/05_decisions/ADR_008_delivery_benchmark_scenario_design.md): benchmark 用 lifecycle scenarios 验证 Harness 是否降低上下文恢复、RFC/debug 返工和高风险边界错误路径，而不是只比较首轮代码速度。
 
 ## Harness Guidance
 
