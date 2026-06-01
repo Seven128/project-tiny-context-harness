@@ -77,6 +77,28 @@ tasks:
       - "make docs-overview"
     acceptance_criteria:
       - "验收标准写在 open task 内，完成后从当前 plan 删除。"
+    # Required for reference-image-driven UI/UX, art direction, game-screen,
+    # HUD, character, sprite, or other subjective visual restoration work.
+    # This is a task profile, not a lifecycle phase. It separates engineering
+    # gates from human visual acceptance.
+    # visual_reconciliation:
+    #   required: true
+    #   mode: "visual_spike | design_reconciliation | not_applicable"
+    #   reference_images:
+    #     - path: ".docs/00_raw/reference.png"
+    #       purpose: "style_target | layout_target | asset_source | inspiration_only | unknown"
+    #       usage_boundary: "do_not_copy_directly | user_owned_asset | licensed_asset | unknown"
+    #   screenshot_artifacts:
+    #     - viewport: "desktop"
+    #       path: ".artifacts/visual-spike/TASK-001/desktop.png"
+    #     - viewport: "mobile"
+    #       path: ".artifacts/visual-spike/TASK-001/mobile.png"
+    #   comparison_required: true
+    #   difference_analysis: "style / proportion / layering / subject recognition / HUD readability / responsive gaps"
+    #   next_iteration_changes:
+    #     - "one concrete visual change to try next"
+    #   human_visual_approval_required: true
+    #   approval_status: "pending | approved | changes_requested | not_applicable"
     # Required for SPRINTING tasks that deliver a service, agent, runtime,
     # worker, frontend app, provider/live integration, or other runnable boundary.
     evidence_level:

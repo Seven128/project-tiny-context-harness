@@ -74,7 +74,7 @@ npx sdlc-harness init --adopt
 | 阶段 gate | `npx sdlc-harness validate-*`、`make validate-current`、`make validate-harness` | 校验需求、UI/UX、架构设计、开发、Review、测试、发布、RFC、Harness 骨架、提示词语言契约和 overview freshness |
 | 生命周期工作流 | `lifecycle.yaml`、`plan.yaml`、`.docs/**` | 固定 REQUIREMENT_GATHERING、UI_UX_DESIGNING、ARCHITECTING、SPRINTING、REVIEWING、TESTING、RELEASING、RFC_RECALIBRATION 等阶段事实链 |
 | 阶段小任务管控 | `plan.yaml`、`make validate-plan` | 每个阶段的 Agent 主任务都应拆成足够小的 `TASK-*` open task，并用 `phase` 标明所属阶段 |
-| 自然语言控制 | `AGENTS.md` + workflow skills | 用户可说“继续”“开始开发”“跑测试”“需求变了”等，由 Agent 映射到 `/next`、`/dev`、`/test`、RFC 等动作 |
+| 自然语言控制 | `AGENTS.md` + workflow skills | 用户可说“继续”“开始开发”“跑测试”“需求变了”等，由 Agent 映射到 `/next`、`/dev`、`/test`、RFC 等动作；新会话和“继续/下一步”先走 orientation fast path，不自动跑重 gate |
 | 默认并行调度合同 | `plan.yaml#parallel_execution` | 阶段任务默认评估是否可安全并行；适合时优先使用 Codex native subagents，并保留 user-orchestrated / worktree fallback |
 | Workflow skills | `<harnessRoot>/skills/pjsdlc_*/SKILL.md` | 提供 PM、架构、开发、实现文档、Review、测试、发布、RFC 等阶段角色提示词 |
 | 阶段角色提示词本地追加 | `<harnessRoot>/pjsdlc_managed/override_skills/<skill_name>.md` + `sync` | 用户不改 managed Skill，通过本地 override 追加项目规则，下一次 sync/upgrade 会重新合成 |
@@ -111,9 +111,13 @@ npx sdlc-harness init --adopt
 
 Agent 会读取 `<harnessRoot>/state/lifecycle.yaml` 和 `<harnessRoot>/state/plan.yaml`，再按当前阶段选择对应 workflow skill、产物和 gate。任何阶段的 Agent 主任务都不是一次性长生成：产品方案、技术方案、文档切片、基于上一阶段事实源生成、Review、测试、发布和 RFC 处理，都应先落成一个最小 `TASK-*` open task，并设置对应 `phase`；当前轮只执行一个 task，写入 `result_docs` 或 `implementation_doc`、更新索引和 overview，运行 `make validate-plan`，任务完成后再从 `plan.yaml` 移除。
 
+新会话、恢复上下文、用户问“现在到哪了”或说“继续/下一步”时，Agent 默认走 orientation fast path：只读取 lifecycle、必要的 plan、当前 task 合同和直接相关事实源来定位下一步，不自动运行 `make validate-*`、package source sync/check、workspace full regression 或阶段出口 gate。用户明确说“跑测试/验证一下”、要求进入下一阶段、准备提交/发布，或当前 task 已到完成边界时，仍必须运行对应 gate；fast path 降低的是开场定位成本，不降低 Definition of Done。
+
 通用规则是：任何阶段或工作流如果把 draft task promote 成 `plan.yaml` 中的正式 `TASK-*`，必须在同一次状态更新里从源 draft queue 删除该 draft；正式 task 的恢复现场只保存在 `plan.yaml`，完成历史由 implementation docs、git/PR/CI 记录承担。当前 Harness 内置的 draft queue 只有 `plan.draft.yaml.tasks[]`，它表示尚未采用的开发草案；`/devloop` 只有在 `plan.yaml.tasks[]` 和 `plan.draft.yaml.tasks[]` 都没有明确可执行任务时，才把开发队列视为耗尽。
 
 `UI_UX_DESIGNING` 插在 PRD 和架构之间，用 `.docs/02_experience/**` 固定用户旅程、screen contracts、interaction states、responsive/a11y acceptance 和 handoff matrix。visual UI 项目还要维护根目录 `DESIGN.md`，用 Google `DESIGN.md` 格式保存 colors、typography、spacing、components 等设计系统事实；CLI/API/non-visual 项目可以在 UX slice 中声明 `Applicability: cli_or_api_experience` 或 `Applicability: not_applicable`。
+
+参考图、截图或视觉稿驱动的 UI/UX、美术、游戏画面和 HUD 重做使用 `visual_reconciliation` 轻量 task profile，而不是直接进入完整工程闭环。Agent 应先识别 reference image 的用途和授权边界，产出当前运行截图或 mock，记录差异分析和下一轮改动清单，并等待用户人工视觉确认。`assetKeys`、sprite 渲染、fallback 关闭、类型检查和 E2E 只能证明工程链路可运行，不能替代“截图是否接近参考图”的视觉验收；除非用户明确要求跳过预验收，否则包含强视觉目标的 `PLEASE IMPLEMENT THIS PLAN` 也要先走这个截图对齐小循环。
 
 技术方案阶段需要产出 `plan.draft.yaml`，是为了解决跨阶段交接和当前执行队列纯净性的冲突。`ARCHITECTING` 必须在进入开发前证明方案可以拆成具体、可验证的开发单元，包括修改范围、gate、implementation doc、执行顺序，以及 UI/frontend task 对 `.docs/02_experience/**` 和 `DESIGN.md` 的引用；但这些未来开发 task 如果直接进入 `plan.yaml`，会和当前架构阶段 task 混在一起，让阶段 gate 无法区分“架构任务未完成”和“下一阶段任务已预拆”。因此开发任务先作为 draft 暂存，进入 `SPRINTING` 后再逐个 promote 成正式 `TASK-*`。其它阶段默认根据上一阶段已经稳定的事实源即时创建当前阶段 task，只有当某个阶段也需要提前为后续阶段生成具体执行任务时，才应引入同类 draft queue。
 
@@ -264,8 +268,8 @@ SPRINTING 写入 worker 必须使用互不重叠的 `owned_paths`，且这些路
 
 | 指令 | 简单自然语言 | 更完整的意图 |
 |---|---|---|
-| `/status` | 现在到哪一步了 | 读取 lifecycle/plan，报告当前阶段、任务、阻塞项和下一步 |
-| `/next` | 继续推进 | 按当前阶段的 `active_skill` 执行下一步 |
+| `/status` | 现在到哪一步了 | 读取 lifecycle/plan，报告当前阶段、任务、阻塞项和下一步；不自动跑阶段 gate |
+| `/next` | 继续推进 | 先走 orientation fast path，再按当前阶段的 `active_skill` 执行下一步；不自动等价 `/advance` |
 | `/prd` | 完善产品方案 | 在需求阶段创建或选择一个最小 `TASK-*` task；如果当前仍在架构阶段且未进入开发，可先回到 `REQUIREMENT_GATHERING` 修改 PRD |
 | `/uiux` | 做 UI/UX 设计 | 在体验设计阶段创建或选择一个最小 `TASK-*` task，生成 `.docs/02_experience/**` 和 visual UI 的 `DESIGN.md` |
 | `/design` | 设计技术方案 | 在架构阶段创建或选择一个最小 `TASK-*` task，生成或切分当前 architecture / tech plan / `plan.draft.yaml` 产物 |

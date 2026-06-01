@@ -4,10 +4,11 @@
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: workflow Skills, prompt routing, hard/soft indexing and authoring overlay
-- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`, `TASK-060`, `TASK-061`, `TASK-066`, `TASK-067`, `TASK-069`, `TASK-070`, `TASK-071`, `TASK-072`, `TASK-076`, `TASK-079`, `UI_UX_DESIGNING package update`
+- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`, `TASK-060`, `TASK-061`, `TASK-066`, `TASK-067`, `TASK-069`, `TASK-070`, `TASK-071`, `TASK-072`, `TASK-076`, `TASK-079`, `UI_UX_DESIGNING package update`, `visual_reconciliation protocol update`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`, `PROJECT_SPEC.md`
 - Linked RFC: `RFC_007`, `RFC_009`, `RFC_015`, `RFC_017`, `RFC_018`, `RFC_019`, `RFC_020`, `RFC_021`, `RFC_024`
+- Linked ADR: `.docs/05_decisions/ADR_009_visual_reconciliation.md`
 - Linked commits: historical `DEV-*` implementation commits; `DEV-043` migration commit; `DEV-049` implementation commit; `DEV-050` implementation commit
 
 ## 2. 当前实现范围
@@ -25,6 +26,7 @@
 - PM and Architect prompts require deleting the superseded monolithic PRD/product or tech plan file after user-requested slicing creates replacement slices and updates the related fact-source references.
 - `UI_UX_DESIGNING` is now a first-class lifecycle phase between `REQUIREMENT_GATHERING` and `ARCHITECTING`. It uses `pjsdlc_uiux_design`, writes `.docs/02_experience/**`, optionally writes root `DESIGN.md`, and exits through `validate-uiux`.
 - `.docs/02_experience/**` records UX flow, screen contracts, interaction states, responsive/a11y acceptance and handoff matrix. visual UI projects also use Google-format `DESIGN.md` as a design-system fact source; CLI/API/non-visual projects declare `Applicability: cli_or_api_experience` or `Applicability: not_applicable`.
+- Reference-image-driven UI/UX, art direction, game-screen, HUD, character or sprite redesign uses the task-level `visual_reconciliation` profile. Manager and UI/UX prompts require reference intent, usage boundary, screenshot/mock artifacts, difference analysis, next-iteration changes and human visual approval before claiming visual completion.
 - Architect prompt now treats semantic design slicing as a `make validate-design` hard gate: `plan.draft.yaml` development tasks must reference `docs.tech_plan`, multiple draft tasks need distinct primary tech plan slices, generated `overview.md` cannot satisfy design deliverables, and explicit cross-cutting themes require dedicated architecture slices.
 - Architect prompt now consumes `.docs/02_experience/**` and `DESIGN.md`, requires `Experience Input Review`, and makes UI/frontend draft tasks reference `docs.uiux` plus `docs.design_system`.
 - Manager, PM and Architect prompts now describe the development-before rollback path from `ARCHITECTING` to `REQUIREMENT_GATHERING` for PRD edits, while preserving RFC workflow for changes after `SPRINTING`.
@@ -154,6 +156,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 - User convenience comes from natural-language routing and macro aliases; users do not need to memorize every `/xxx`.
 - `/plan` and `/goal` are client modes and are not automatically controlled by Harness.
 - `UI_UX_DESIGNING` is a separate stage rather than an architecture subsection so downstream stages can consume stable screen contracts, interaction states, responsive/a11y expectations and visual tokens before technical task breakdown.
+- `visual_reconciliation` remains a task profile rather than a lifecycle phase so subjective visual exploration can stay fast and screenshot-driven while still protecting formal RFC/SPRINTING completion claims from confusing engineering PASS with visual approval.
 - `DESIGN.md` is only mandatory for visual UI. The validator accepts explicit non-visual applicability in `.docs/02_experience/**` to keep CLI/API/operator experience projects from manufacturing empty design systems.
 - `@google/design.md` is a package dependency. Source Python and package TypeScript validators call the local linter path instead of relying on network `npx` package fetch during gates.
 - Authoring-only prompts help this repository improve the Harness itself and should not be shipped into user projects by default.

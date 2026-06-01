@@ -1,11 +1,11 @@
 # .docs/04_implementation overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 9eb3fbf1468755b4 -->
+<!-- source-hash: cd96ce71d8da397f -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `9eb3fbf1468755b4`
+Source hash: `cd96ce71d8da397f`
 
 ## Source Slices
 
@@ -48,6 +48,7 @@ Source: [harness_package/cli_distribution_and_lifecycle.md](harness_package/cli_
 - `inspect-workflow` provides a read-only workflow self-inspection command for user repos. It reports `PASS` / `WARN` / `BLOCKED` across workflow weight, fact-source alignment, handoff clarity, TESTING readiness, high-risk recovery safety and outcome comparison. Every metric declares `data_source` as `measured`, `inferred`, `self_reported` or `unavailable`.
 - `examples/delivery-benchmark/` provides repo-local benchmark assets for self-testing Outcome Comparison against real from-scratch project scenarios. It is not synced into user projects and is not a public package command.
 - `validate-*` commands expose package-side validation entry points for Harness state and phase artifacts.
+- Orientation fast path is a documented workflow behavior, not a new CLI: new sessions, status checks and "continue/next" requests read lifecycle, necessary plan/task facts and directly relevant docs before routing, but do not automatically run `make validate-*`, package source sync/check, full regression or phase-exit gates. Explicit validation, task completion, phase transition, commit and release boundaries still require their gates.
 - 当前 authoring workspace 使用 `.codex` as `harnessFolderName`; `Other` agent selection still falls back to `.agent`.
 
 ## 3. 真实代码结构
@@ -108,6 +109,7 @@ Existing project runs sdlc-harness upgrade
 - Workflow self-inspection only treats file/field counts and validator results as `measured`; context weight and handoff quality are `inferred`; recent minutes, turns, estimated tokens and outcome comparison timings are accepted only through explicit CLI options as `self_reported`; true model token telemetry is `unavailable` unless the user supplies it. This prevents the command from producing fake-precise token/time claims.
 - Outcome comparison keeps the pure vibe coding baseline honest: it compares same-quality delivery, not first-code speed. `workflow_overhead_ratio` uses ordinary 30% / 50% thresholds and high-risk 40% / 60% thresholds; `vibe_handoff_delta_minutes` shows the same-quality pure-vibe delta; `net_value_minutes` includes avoided rework so a slower workflow can still be valid when it prevents downstream misses. The command does not persist these values or create an ROI audit history.
 - Delivery benchmark assets keep this claim testable: scenarios define fixed requirements, midstream changes, recovery checkpoints and scoring rubrics; the runner prepares baseline/Harness run dirs, supports an external observer for elapsed time and file activity, records workflow-control events such as `sync`, `upgrade`, `transition.py` and `validate-*`, retains lightweight system-timed manual-boundary events through `timer-start` / `timer-stop`, and scores final evidence. Lifecycle probe scenarios can add `lifecycle_probe.md` and report `INITIAL_DELIVERY`, `RECOVERY`, `RFC`, `DEBUG`, `context_recovery_score`, `wrong_path_count` and final quality metrics to distinguish first delivery from recovery/change/debug efficiency. Observer raw logs are excluded from quality rubric evidence. Raw runs stay in `/tmp` or `.artifacts/delivery-benchmark/`.
+- Orientation fast path is intentionally represented in AGENTS, workflow Skills and user docs instead of a new structured field or validator. The consumer is the Agent prompt path, not a runtime tool; keeping it textual avoids a schema migration while still reducing accidental startup gates.
 - Python tools and Node validators resolve `<harnessRoot>` consistently, so configured-root projects such as `.workflow` can run CLI validators, Makefile gates and `tools/transition.py` without `.codex` assumptions.
 - `validate-dev` checks `Development Self-Test Report` content against the current `self_test_contract`: it requires legal `Report Status`, Module Application Entry, Module Key Test Path, scenario results, executed gates, Observable Exit, Current Blocker, Testing Handoff Readiness and Evidence Index Refs; only accepts completion when report status and every scenario are `PASS`; rejects template module-key-path text, ambiguous status rows, missing scenario row evidence, missing required gates, embedded debug/operator/runbook/exploration log sections, `Actual Evidence` body fields, overlong reports, high-risk reports without `.docs/09_runbooks/**` evidence refs or Current Operator Path hard constraints, high-risk implementation docs with mainline evidence dump/operator log/failed-attempt sections, unpromoted session / QR / canonical path / do-not-retry judgments, and browser reports without page URL plus browser/Playwright/screenshot evidence. When `graph_required: true` or `module_key_test_graph` is present, validators also require a single-entry DAG with valid node kinds, known edge refs, reachable scenarios, observable exits and short `evidence_ref` pointers, plus an actual `Module Key Test Graph` in the self-test report. It remains a content consistency gate, not a command execution audit.
 - Managed `phase_contracts.yaml` now distributes a lightweight explicit phase graph: `phases` hold node contracts, top-level `transitions` hold legal directed edges and minimal effects. Package `validate-harness` rejects graph drift such as missing `transitions`, legacy `next` / `returns`, unknown targets or invalid `<suspended_phase>` usage; synced `transition.py` consumes the graph while retaining legacy fallback for older consumer policies.
@@ -157,6 +159,7 @@ Existing project runs sdlc-harness upgrade
 | `tools/consumer_lab_full_test.mjs` | installed-consumer validation for `.workflow` configured-root CLI validator, Makefile gates and `transition.py` | PASS in current validation batch |
 | `tests/sdlc-harness/workflow-inspector.test.mjs` | `inspect-workflow` report, JSON, prompt, self-reported metrics, outcome comparison and workflow-weight blockers | PASS in current validation batch |
 | `tests/sdlc-harness/delivery-benchmark.test.mjs` | delivery benchmark scenario loading, run preparation, observer measurement, manual/timed event recording, scoring, report data and outcome math | PASS in current validation batch |
+| `tests/sdlc-harness/orientation-fast-path.test.mjs` | AGENTS, manager/dev Skills, README/PROJECT_SPEC and synced package assets document orientation fast path without changing gate semantics | Covered by package regression |
 
 ## 8. 变更记录（Change Log）
 
@@ -185,6 +188,7 @@ Existing project runs sdlc-harness upgrade
 | 2026-06-02 | Delivery benchmark operator runbook | Current validation batch | Added a repo-local operator protocol for the first `project-context-recovery-lab` lifecycle pilot, including baseline/Harness isolation, observer coverage, phase timers, wrong-path scoring and calibration-only publication rules. |
 | 2026-06-02 | Delivery benchmark scenario design ADR | Current validation batch | Added `ADR_008` to explain why benchmark scenarios validate same-quality lifecycle efficiency, context recovery, RFC/debug rework and provider-boundary safety instead of first-patch speed. |
 | 2026-06-02 | Delivery benchmark gate fast path | Current validation batch | Added scenario gate profiles and runner gate cost breakdown so pilots distinguish orientation, product verification gates, workflow-control gates and out-of-scope package regression. |
+| 2026-06-02 | Orientation fast path | Current validation batch | Documented general new-session/status/next-step orientation as lightweight routing rather than automatic gate execution, while preserving completion, phase-transition, commit and release gates. |
 
 ## 9. 后续维护注意事项
 
@@ -905,10 +909,11 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: workflow Skills, prompt routing, hard/soft indexing and authoring overlay
-- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`, `TASK-060`, `TASK-061`, `TASK-066`, `TASK-067`, `TASK-069`, `TASK-070`, `TASK-071`, `TASK-072`, `TASK-076`, `TASK-079`, `UI_UX_DESIGNING package update`
+- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`, `TASK-060`, `TASK-061`, `TASK-066`, `TASK-067`, `TASK-069`, `TASK-070`, `TASK-071`, `TASK-072`, `TASK-076`, `TASK-079`, `UI_UX_DESIGNING package update`, `visual_reconciliation protocol update`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`, `PROJECT_SPEC.md`
 - Linked RFC: `RFC_007`, `RFC_009`, `RFC_015`, `RFC_017`, `RFC_018`, `RFC_019`, `RFC_020`, `RFC_021`, `RFC_024`
+- Linked ADR: `.docs/05_decisions/ADR_009_visual_reconciliation.md`
 - Linked commits: historical `DEV-*` implementation commits; `DEV-043` migration commit; `DEV-049` implementation commit; `DEV-050` implementation commit
 
 ## 2. 当前实现范围
@@ -926,6 +931,7 @@ Source: [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skill
 - PM and Architect prompts require deleting the superseded monolithic PRD/product or tech plan file after user-requested slicing creates replacement slices and updates the related fact-source references.
 - `UI_UX_DESIGNING` is now a first-class lifecycle phase between `REQUIREMENT_GATHERING` and `ARCHITECTING`. It uses `pjsdlc_uiux_design`, writes `.docs/02_experience/**`, optionally writes root `DESIGN.md`, and exits through `validate-uiux`.
 - `.docs/02_experience/**` records UX flow, screen contracts, interaction states, responsive/a11y acceptance and handoff matrix. visual UI projects also use Google-format `DESIGN.md` as a design-system fact source; CLI/API/non-visual projects declare `Applicability: cli_or_api_experience` or `Applicability: not_applicable`.
+- Reference-image-driven UI/UX, art direction, game-screen, HUD, character or sprite redesign uses the task-level `visual_reconciliation` profile. Manager and UI/UX prompts require reference intent, usage boundary, screenshot/mock artifacts, difference analysis, next-iteration changes and human visual approval before claiming visual completion.
 - Architect prompt now treats semantic design slicing as a `make validate-design` hard gate: `plan.draft.yaml` development tasks must reference `docs.tech_plan`, multiple draft tasks need distinct primary tech plan slices, generated `overview.md` cannot satisfy design deliverables, and explicit cross-cutting themes require dedicated architecture slices.
 - Architect prompt now consumes `.docs/02_experience/**` and `DESIGN.md`, requires `Experience Input Review`, and makes UI/frontend draft tasks reference `docs.uiux` plus `docs.design_system`.
 - Manager, PM and Architect prompts now describe the development-before rollback path from `ARCHITECTING` to `REQUIREMENT_GATHERING` for PRD edits, while preserving RFC workflow for changes after `SPRINTING`.
@@ -1055,6 +1061,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 - User convenience comes from natural-language routing and macro aliases; users do not need to memorize every `/xxx`.
 - `/plan` and `/goal` are client modes and are not automatically controlled by Harness.
 - `UI_UX_DESIGNING` is a separate stage rather than an architecture subsection so downstream stages can consume stable screen contracts, interaction states, responsive/a11y expectations and visual tokens before technical task breakdown.
+- `visual_reconciliation` remains a task profile rather than a lifecycle phase so subjective visual exploration can stay fast and screenshot-driven while still protecting formal RFC/SPRINTING completion claims from confusing engineering PASS with visual approval.
 - `DESIGN.md` is only mandatory for visual UI. The validator accepts explicit non-visual applicability in `.docs/02_experience/**` to keep CLI/API/operator experience projects from manufacturing empty design systems.
 - `@google/design.md` is a package dependency. Source Python and package TypeScript validators call the local linter path instead of relying on network `npx` package fetch during gates.
 - Authoring-only prompts help this repository improve the Harness itself and should not be shipped into user projects by default.

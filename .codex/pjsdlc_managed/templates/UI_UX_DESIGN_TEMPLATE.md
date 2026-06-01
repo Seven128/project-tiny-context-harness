@@ -48,13 +48,34 @@
 - Token / component notes:
 - Known deviations:
 
-## 8. Handoff matrix
+## 8. Visual reconciliation
+
+- Required: `true | false`
+- Reference images:
+  - Path / artifact:
+  - Intent: `style_target | layout_target | asset_source | inspiration_only | unknown`
+  - Usage boundary: `do_not_copy_directly | user_owned_asset | licensed_asset | unknown`
+- Current screenshot / mock artifacts:
+  - Desktop:
+  - Mobile:
+- Difference analysis:
+  - Style match:
+  - Proportion / layout match:
+  - Layering / depth:
+  - Subject recognition:
+  - HUD / text readability:
+  - Responsive behavior:
+- Next iteration changes:
+- Human visual approval required: `true | false`
+- Approval status: `pending | approved | changes_requested | not_applicable`
+
+## 9. Handoff matrix
 
 | Requirement | Screen / state | Component / interaction | Acceptance / test seed |
 |---|---|---|---|
 |  |  |  |  |
 
-## 9. Open Questions / Out of Scope
+## 10. Open Questions / Out of Scope
 
 ### Open Questions
 

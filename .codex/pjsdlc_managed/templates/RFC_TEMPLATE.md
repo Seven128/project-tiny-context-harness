@@ -31,22 +31,35 @@
 - Retained UX facts:
 - Reason:
 
-## 6. Acceptance Criteria
+## 6. Visual Reconciliation Impact（视觉还原影响）
+
+- Reference images reviewed:
+- Visual target type: `style_target | layout_target | asset_source | inspiration_only | not_applicable`
+- Usage boundary: `do_not_copy_directly | user_owned_asset | licensed_asset | unknown | not_applicable`
+- Existing screenshot / mock:
+- Required screenshot artifacts:
+- Difference analysis required: `true | false`
+- Human visual approval required: `true | false`
+- Approval status: `pending | approved | changes_requested | not_applicable`
+- Engineering gates affected:
+- Visual acceptance affected:
+
+## 7. Acceptance Criteria
 
 - [ ] 
 
-## 7. Regression Requirements（回归要求）
+## 8. Regression Requirements（回归要求）
 
 - [ ] 
 
-## 8. Test Fact Source Impact（测试事实源影响）
+## 9. Test Fact Source Impact（测试事实源影响）
 
 - Reviewed test docs:
 - Superseded test docs: none
 - Retained test docs:
 - Reason:
 
-## 9. Development Self-Test Impact（开发自测影响）
+## 10. Development Self-Test Impact（开发自测影响）
 
 - Entry/exit impact:
 - Runtime / target environment impact:
@@ -57,6 +70,6 @@
 - Module key test path impact:
 - Review / Testing handoff impact:
 
-## 10. Status
+## 11. Status
 
 - Status: DRAFT

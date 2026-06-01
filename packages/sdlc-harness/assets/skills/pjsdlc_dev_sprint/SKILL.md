@@ -13,11 +13,13 @@ description: Use during SPRINTING to execute one task from plan.yaml, respecting
 
 你是资深开发者，目标是在当前 task 合同内完成最小、正确、可验证的实现。你需要把 PRD、技术方案、allowed_paths、required_gates 和 acceptance_criteria 当作执行边界，而不是把开发阶段变成重新规划阶段。
 
-开始编码前，先确认当前 open task 是否完整，修改范围是否覆盖必要文件，验收标准是否能被测试或 gate 验证。如果发现任务边界、产品行为或技术方案不清晰，要停下来说明 blocker、给出可能解释和推荐下一步，而不是扩大范围继续写。
+开始编码前，先走 orientation fast path：读取 lifecycle、plan / draft、当前 open task 合同和直接相关 PRD、体验事实、技术方案与 implementation doc，确认任务是否完整、修改范围是否覆盖必要文件、验收标准是否能被测试或 gate 验证。尚未修改、尚未准备完成 task 时，不先运行 full gate、phase-exit gate、package source sync/check 或 workspace full regression。如果发现任务边界、产品行为或技术方案不清晰，要停下来说明 blocker、给出可能解释和推荐下一步，而不是扩大范围继续写。
 
 开发阶段的 Definition of Done 包含可运行的系统入口/出口。凡技术方案或 task 承诺 API、CLI、server route、service、agent、runtime、adapter、worker、provider、外部发送/写入执行器、配置契约或 live/fixture 双模式边界，当前实现必须提供对应入口、调用方式、初始化方式、输出/副作用边界和验证方式；如果真实入口/出口尚不可运行，不能把 task 当作完成，也不能把缺口留给 TESTING 补 runtime。runtime/app/provider/live 类 task 必须在 `plan.yaml` 声明 `evidence_level.required`、`target_runtime_environment` 和 `self_test_contract`，并按合同交付：`deployed_runtime` 不能用 `unit`、`local_runtime`、`external_provider_live`、provider smoke、fake adapter 或 localhost smoke 单独关闭；`business_handoff_ready` 必须提供 Testing Handoff Contract。Implementation doc 必须写明 `Runnable Entry/Exit`，并在 `Development Evidence` 中记录 `Evidence Level`、`Target Runtime Environment`、`Runnable Entry`、`Observable Exit`、`Client / Server Initialization`、`Config Contract`、`Testing Handoff Readiness`、`Known Missing Runtime Boundaries` 和 `Basic Self-test Evidence`；其中 `Basic Self-test Evidence` 应指向已执行的 `Development Self-Test Report`。确实不适用时也要显式写 `Not applicable` 和具体原因。provider smoke、fixture smoke、fake adapter 或 one-shot smoke 只能证明局部链路，不能单独证明 `Application readiness`。此时应保留或创建 `BLOCKED`/后续 dev task，或通过 RFC/ARCHITECTING 处理边界变更。
 
 UI/frontend/browser/page task 还必须按 `docs.uiux` 和 `docs.design_system` 实现 `.docs/02_experience/**` 中的 screen contracts、interaction states、responsive acceptance、accessibility / focus / keyboard / touch expectations，以及 `DESIGN.md` 中的 design tokens 和 component guidance。开发中不得静默修改 `DESIGN.md` 或 UX contract 来追认实现；开发前发现体验事实缺口，回 `UI_UX_DESIGNING`；进入开发后需要改变体验事实，走 RFC。UI task 的 `Development Self-Test Report` 必须记录 dev server 或 page URL、关键 screen states、responsive check、accessibility/focus smoke，以及必要的 browser / Playwright / screenshot evidence pointer。
+
+如果当前 task 声明 `visual_reconciliation.required: true`，开发阶段必须区分工程完成和视觉完成。`assetKeys` 非空、PNG/sprite 渲染、`assetFallbackUsed: false`、类型检查、单元测试或 E2E PASS 只说明实现链路可运行；它们不能证明画面接近参考图。开发自测可以记录 screenshot evidence pointer 和工程 gate，但只有 `human_visual_approval_required: true` 的视觉验收得到用户确认并写成 `approval_status: approved` 后，才能在总结、implementation doc 或 completion 口径中声称视觉目标达成。若截图与参考图仍存在明显风格、比例、层级、主体辨识度或 HUD/readability 偏差，应把任务保持为 `blocked` / `pending_revision` 或回到 RFC/UI_UX_DESIGNING，而不是用绿色工程 gate 关闭任务。
 
 `self_test_contract` 是开发阶段自测合同，由 ARCHITECTING 或 RFC_RECALIBRATION 先定义，SPRINTING 负责执行并在 implementation doc 填写 `Development Self-Test Report`。开发者不得在开发结束后用现有实现反推自测合同；如果合同缺失、入口不匹配、required gates 未同步或场景无法执行，要先回到 ARCHITECTING/RFC 或把 task 保持为 `BLOCKED`。自测报告不是 TESTING 阶段产物，也不是 debug log、operator log、runbook 或历史流水；它只证明当前模块级可运行交付边界已经能被 Review/Testing 消费。报告必须写 `Report Status: PASS | BLOCKED | IN_PROGRESS | STALE`，只有 `PASS` 且所有 scenario 都是 `PASS` 才能关闭当前 development task；`BLOCKED`、`IN_PROGRESS`、`STALE` 可以作为恢复事实存在，但不能作为交接通过。报告还必须记录 `Module Key Test Path`：从本地启动或调用入口开始，执行并完成 `self_test_contract` 中全部自测用例的模块关键测试路径。该路径应覆盖本 task / 本模块承诺的所有可运行入口，以及自测用例实际经过的内部关键路径、关键边界、观察点和可观测完成证据，供后续 Agent 复用和 debug。如果合同包含 `graph_required: true` 或 `module_key_test_graph`，开发者还必须沿该 DAG 执行并在报告中写入实际 `Module Key Test Graph`：节点只记录 entry、checkpoint、branch、scenario、observable_exit 和 evidence pointer，边只记录路径流向；不要把图扩成 runtime 搭建、执行 trace、debug log 或证据正文。
 
@@ -33,7 +35,7 @@ UI/frontend/browser/page task 还必须按 `docs.uiux` 和 `docs.design_system` 
 
 如果测试证明 PRD 和技术方案正确但 UX contract、screen states、handoff matrix 或 DESIGN.md 本身错误，应走 `bugfix_uiux_replan` 回 `UI_UX_DESIGNING`，不要在 SPRINTING 中直接改体验事实。
 
-实现时遵循小步闭环：先检查 `git status`，确认工作区没有未归属到当前 task 的脏变更；再定位相关代码和测试，做必要修改，运行 gate，修复失败，写入或更新相关 implementation doc 并刷新文档派生视图。直接运行 `make validate-dev` 或 `npx sdlc-harness validate-dev` 是开发中 gate，允许当前 `SPRINTING` task 仍然 open，并校验 `current_task_id`、task 合同、dirty files、draft queue 和 implementation doc。此时先不要从 `plan.yaml` 移除当前 task，要在当前 task 仍位于 `plan.yaml` 时创建 task implementation commit；随后再移除 task，创建 task completion ledger commit，并 push 两个 commit。`make validate-current` / `/advance` 是阶段出口 gate，必须在 open task 已移除后才通过。不要顺手重构、重排格式或处理无关问题；如果发现无关风险，只记录或报告。
+实现时遵循小步闭环：完成 orientation 后检查 `git status`，确认工作区没有未归属到当前 task 的脏变更；再定位相关代码和测试，做必要修改。只有进入验证或完成边界时才运行当前 task 的 `required_gates`，修复失败，写入或更新相关 implementation doc 并刷新文档派生视图。直接运行 `make validate-dev` 或 `npx sdlc-harness validate-dev` 是开发中 gate，允许当前 `SPRINTING` task 仍然 open，并校验 `current_task_id`、task 合同、dirty files、draft queue 和 implementation doc。此时先不要从 `plan.yaml` 移除当前 task，要在当前 task 仍位于 `plan.yaml` 时创建 task implementation commit；随后再移除 task，创建 task completion ledger commit，并 push 两个 commit。`make validate-current` / `/advance` 是阶段出口 gate，必须在 open task 已移除后才通过。不要顺手重构、重排格式或处理无关问题；如果发现无关风险，只记录或报告。
 
 开发阶段默认先评估当前 task 是否能安全并行。适合时，主 Agent 创建 `parallel_execution.trigger: "workflow_default"` 合同，默认使用 `runtime_managed` + `runtime.provider: "codex_native_subagents"` 调度 worker；用户明确要求并行、多 agent 或多 worktree 时使用 `trigger: "user_requested"`。主 Agent 声明每个 worker 的 `owned_paths`、`forbidden_paths`、`expected_output` 和 `required_gates`；非 native fallback 写仓库时还要声明 `branch` 和 `worktree`。worker 可以在各自非空、互不重叠且属于当前 task `allowed_paths` 的 owned paths 内实现，但不得直接修改 `plan.yaml`、`lifecycle.yaml`、`.docs/INDEX.md`、overview 或最终 implementation doc。主 Agent 负责 review、merge/cherry-pick、运行总 gate、更新事实源和完成两段提交。不适合拆分时继续串行 `/dev` 或 `/devloop` 并记录原因。
 
@@ -95,7 +97,7 @@ done task 的执行流水不在当前 `plan.yaml` 长期保留，也不是默认
 1. 一次只执行一个任务。
 2. 开始修改前检查 `git status`；如果存在不属于当前 task 的未提交变更，先完成对应 task 的 commit/push，或报告 blocker，不要混入当前 task。
 3. 只编辑当前 task 的 `allowed_paths` 允许的文件，以及 `SPRINTING` 阶段允许的 Harness 记账文件；如果本轮 promote draft，允许同步编辑 `<harnessRoot>/state/plan.draft.yaml` 来消费源 draft。
-4. 必须运行当前 task 的 `required_gates`。
+4. 必须在完成当前 task 前运行当前 task 的 `required_gates`；orientation 阶段不提前运行 full gate。
 5. 开发中可运行 `make validate-dev` 验证当前 open task；它通过不表示可以进入 `REVIEWING`。
 6. 如果 gate 因代码或测试逻辑失败，在任务范围内修复。
 7. 如果 gate 因基础设施、凭证缺失、产品行为不清或高风险架构变化失败，进入 `BLOCKED`。

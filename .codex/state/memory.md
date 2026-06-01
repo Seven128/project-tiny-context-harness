@@ -18,6 +18,7 @@
 - [ADR 006: Authoring Overlay and Package Boundary](../../.docs/05_decisions/ADR_006_authoring_overlay_and_package_boundary.md): 通用 Harness 配置、项目实例数据和 authoring overlay 分层，README 放用户迁移，PROJECT_SPEC 放稳定设计。
 - [ADR 007: UI/UX Design Stage and DESIGN.md Fact Source](../../.docs/05_decisions/ADR_007_ui_ux_design_stage.md): `UI_UX_DESIGNING` 独立产出体验事实源，visual UI 项目用 `DESIGN.md` 固定视觉系统。
 - [ADR 008: Delivery Benchmark Scenario Design](../../.docs/05_decisions/ADR_008_delivery_benchmark_scenario_design.md): benchmark 用 lifecycle scenarios 验证 Harness 是否降低上下文恢复、RFC/debug 返工和高风险边界错误路径，而不是只比较首轮代码速度。
+- [ADR 009: Visual Reconciliation Task Profile](../../.docs/05_decisions/ADR_009_visual_reconciliation.md): 参考图驱动的 UI/UX、美术和游戏画面任务先做截图对比与人工视觉确认，再进入完整工程闭环。
 
 ## Harness Guidance
 

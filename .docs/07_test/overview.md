@@ -1,11 +1,11 @@
 # .docs/07_test overview
 
 <!-- generated-by: AI SDLC Harness build_doc_overviews.py -->
-<!-- source-hash: 1dbdf356e82022c1 -->
+<!-- source-hash: 7a967f1bbfc193f9 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `1dbdf356e82022c1`
+Source hash: `7a967f1bbfc193f9`
 
 ## Source Slices
 
@@ -39,6 +39,7 @@ Source: [TEST_CASES.md](TEST_CASES.md)
 | TC-006 | TESTING fact source structure | smoke | P1 | `make validate-test` | `TEST_CASES.md` and `TEST_REPORT.md` exist | Run test validator | Test report references existing cases and has executable evidence | test gate output |
 | TC-007 | Workflow self-inspection command | regression | P0 | `npm test --workspace agent-project-sdlc`; `npx sdlc-harness inspect-workflow` | Package CLI is built and a Harness fixture exists | Run package regression and inspect-workflow in default and configured-root fixtures | Report exposes `PASS/WARN/BLOCKED`, JSON/prompt output, `measured` / `inferred` / `self_reported` / `unavailable` data sources, and outcome comparison metrics without writing files | package test output; consumer lab report |
 | TC-008 | Delivery reliability benchmark assets | regression | P1 | `node --test tests/sdlc-harness/delivery-benchmark.test.mjs`; `npm test --workspace agent-project-sdlc` | Benchmark scenarios, design rationale ADR, operator runbook and runner exist in `examples/delivery-benchmark/` | Load scenarios, verify the 3 unscored lifecycle scenarios include lifecycle probes, gate profiles and required rubric sections, verify the benchmark design ADR explains same-quality lifecycle efficiency and gate cost boundaries, verify the pilot runbook preserves fresh-agent isolation, gate timing and raw artifact boundaries, prepare run dirs, record external observer activity, record manual and lightweight system-timed events, score sample runs, and load report data | Runner computes acceptance sections, observer elapsed time, file activity summary, workflow-control cost, gate cost breakdown, lifecycle phase minutes, context recovery score, wrong-path count, timing source confidence and outcome metrics without touching tracked run artifacts; baseline prompt does not require self-logging or Harness validators; observer logs are not quality evidence; report data explains each scenario project, measurement method, expected Harness advantage and context-continuity probe | package test output |
+| TC-009 | Orientation fast path guidance | regression | P0 | `node --test tests/sdlc-harness/orientation-fast-path.test.mjs`; `npm test --workspace agent-project-sdlc`; package source sync/check | Source docs and package assets are synced | Check AGENTS, manager/dev Skills, README, PROJECT_SPEC and synced package assets | Status/next orientation is documented as lightweight routing; `/advance`, explicit validation, task completion, commit and release still require gates; authoring Skills stay excluded from package assets | package test output; package source check output |
 
 ---
 
@@ -67,6 +68,7 @@ Source: [TEST_REPORT.md](TEST_REPORT.md)
 | TC-006 | TESTING fact source structure | `make validate-test` | PASS: report references existing `TC-*` cases and contains executed regression evidence. |
 | TC-007 | Workflow self-inspection command | `npm test --workspace agent-project-sdlc`; consumer lab `npx sdlc-harness inspect-workflow` checks | PASS: package regression covers unavailable defaults, ordinary/high-risk overhead thresholds, net value confidence, JSON and prompt output; consumer lab covers default plus `.workflow` configured root. |
 | TC-008 | Delivery reliability benchmark assets | `node --test tests/sdlc-harness/delivery-benchmark.test.mjs`; `npm test --workspace agent-project-sdlc` | PASS: regression loads 4 scenarios, verifies the 3 unscored lifecycle scenarios have lifecycle probes, gate profiles and required rubric sections, verifies the benchmark design ADR explains same-quality lifecycle efficiency and gate cost boundaries, verifies the pilot runbook preserves fresh-agent isolation, gate timing and raw artifact boundaries, prepares benchmark run dirs, records external observer activity plus manual and lightweight system-timed events, scores observer/timing source confidence, gate cost breakdown, lifecycle phase minutes, context recovery score, wrong-path count and outcome metrics, confirms baseline self-logging and Harness validators are not required and observer logs are not rubric evidence, and validates report scenario/measurement/expected-advantage/context-continuity copy without committing raw run artifacts. |
+| TC-009 | Orientation fast path guidance | `node --test tests/sdlc-harness/orientation-fast-path.test.mjs`; package source sync/check; `make validate-harness` | PASS: static regression verifies AGENTS, manager/dev Skills, README, PROJECT_SPEC and package assets document status/next orientation as lightweight routing, preserve explicit validation and `/advance` gate boundaries, and keep authoring Skills out of package assets. |
 
 ## 3. Regression Evidence
 
@@ -75,6 +77,7 @@ Source: [TEST_REPORT.md](TEST_REPORT.md)
 - `node packages/sdlc-harness/dist/cli.js package check-source`: PASS.
 - `node packages/sdlc-harness/dist/cli.js inspect-workflow --json`: PASS, with true token telemetry and missing outcome inputs marked `unavailable`.
 - `node --test tests/sdlc-harness/delivery-benchmark.test.mjs`: PASS.
+- `node --test tests/sdlc-harness/orientation-fast-path.test.mjs`: PASS.
 - `node tools/consumer_lab_full_test.mjs --report-only --reset-lab --markdown-report /tmp/sdlc-consumer-lab-benchmark.md --json-report /tmp/sdlc-consumer-lab-benchmark.json`: PASS, 60 PASS / 0 BLOCKED / 0 FAIL.
 - `make validate-harness`: PASS.
 - `make validate-uiux`: PASS.
