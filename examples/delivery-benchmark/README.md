@@ -14,8 +14,9 @@ The important baseline is same-quality delivery: Review-ready, Testing-ready and
 | Scenario | Shape | Main Risk Covered |
 |---|---|---|
 | `expense-policy-engine` | CLI/library policy engine | Acceptance criteria, RFC impact, audit trail, fresh-session recovery |
-| `support-triage-board` | Small API/UI workflow | UI/UX handoff, normal phase coverage, TESTING bugfix route |
-| `webhook-provider-bridge` | Provider bridge with mock/live boundary | High-risk runtime, BLOCKED recovery, do-not-retry, evidence boundaries |
+| `project-context-recovery-lab` | Incident Ops Console | Fresh-agent recovery, multi-RFC cascade, debug fix, context continuity |
+| `support-triage-board` | Support SLA Escalation Desk | Cross-layer RFC changes, UI/API drift, debug fix efficiency |
+| `webhook-provider-bridge` | Webhook Provider Safety Bridge | Credential blocker, replay/signature safety, do-not-retry, evidence boundaries |
 
 ## Runner
 
@@ -88,6 +89,53 @@ Data source layers:
 - `self_reported`: semantic notes from the agent or operator, used only as context.
 
 Observer logs are not quality evidence. The scorer ignores `.benchmark/observations.ndjson` and observer state files when evaluating product acceptance; quality still comes from source files, tests, docs and Harness deliverables.
+
+## Lifecycle Efficiency Probe
+
+The benchmark has two layers:
+
+- Initial delivery: can both paths reach the same final quality bar for a fixed project?
+- Lifecycle efficiency: after the first delivery, can the path recover context, absorb RFCs, fix bugs and finish with less total lifecycle cost?
+
+The three pending scenarios are designed for the second layer:
+
+- `project-context-recovery-lab` measures whether a fresh agent can recover current state, history, constraints, test entrypoints and the next safe action.
+- `support-triage-board` measures whether API, UI, policy, tests and docs stay aligned through RFC/debug churn instead of producing partial fixes.
+- `webhook-provider-bridge` measures whether high-risk provider boundaries preserve do-not-retry constraints, avoid credential guessing and keep local/mock/live evidence separate.
+
+After initial delivery, start a fresh agent/session and ask it to recover from committed source, docs and Harness deliverables. Score the recovery answer, then continue through RFC and debug work.
+
+Use these event phases when recording semantic events or system-timed boundaries:
+
+- `INITIAL_DELIVERY`: first implementation against base requirements.
+- `RECOVERY`: fresh-agent orientation and next-safe-action recovery.
+- `RFC`: multi-step RFC cascade implementation and verification.
+- `DEBUG`: post-RFC bug diagnosis and fix.
+
+`score` can also accept explicit lifecycle metrics:
+
+- `--initial-delivery-minutes <n>`
+- `--recovery-orientation-minutes <n>`
+- `--rfc-fix-minutes <n>`
+- `--debug-fix-minutes <n>`
+- `--context-recovery-score <n>` and `--context-recovery-total <n>`
+- `--wrong-path-count <n>`
+
+```sh
+node examples/delivery-benchmark/runner/delivery_benchmark.mjs score \
+  --scenario project-context-recovery-lab \
+  --mode harness \
+  --run-dir /tmp/context-recovery-harness \
+  --initial-delivery-minutes 60 \
+  --recovery-orientation-minutes 8 \
+  --rfc-fix-minutes 24 \
+  --debug-fix-minutes 12 \
+  --context-recovery-score 5 \
+  --context-recovery-total 6 \
+  --wrong-path-count 1
+```
+
+These metrics are intentionally separate from the quality rubric. They help answer whether Harness is only slower on first delivery or whether it wins back time when context recovery, RFC churn and debugging become important.
 
 Counts as workflow control cost:
 

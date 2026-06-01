@@ -1,10 +1,39 @@
-# Midstream Change
+# Webhook Provider Safety Bridge RFC Cascade
 
-The provider token is unavailable during live smoke.
+Apply these changes after initial delivery and the fresh-agent recovery probe.
 
-Expected route:
+## RFC 1: Provider Event Schema v2
 
-- Enter BLOCKED or record an explicit blocker instead of retrying random credentials.
-- Promote the hard constraint: do not retry live provider auth without a named credential reference.
-- Continue with deterministic mock provider fixture evidence.
-- If provider event naming differs from the original plan, RFC_RECALIBRATION must update normalization docs, tests and implementation.
+Provider events move from schema v1 to schema v2:
+
+- `event_id` becomes `eventId`.
+- `event_type` becomes `eventType`.
+- `created_at` becomes `createdAt`.
+- The signing payload now includes `tenantId`, `eventId`, `eventType`, `createdAt`, and raw body.
+
+Required impact:
+
+- Receiver validates v2 payload fields.
+- Signature verification uses the v2 signing payload.
+- Normalizer maps v2 event names to internal events.
+- v1 payloads are rejected with a structured error unless explicitly marked as legacy fixture tests.
+- Tests and docs identify v2 as canonical.
+
+## RFC 2: Tenant Secret Rotation and Replay Protection
+
+Add tenant-level secret rotation and replay protection:
+
+- Each tenant has an active secret and an optional previous secret.
+- Previous secret is accepted only inside a rotation grace window.
+- Event ids must be replay-protected per tenant.
+- Replay rejection must be visible in status or audit output.
+
+Required impact:
+
+- Tests cover active secret, previous secret inside grace, expired previous secret, and replayed event id.
+- README/docs explain tenant secret rotation and replay protection.
+- Recovery notes make the live credential blocker explicit and preserve the do-not-retry rule.
+
+## Debug Fix
+
+After RFC 2, verify that an expired previous secret or stale timestamp is rejected. If replay/timestamp protection accepts an unsafe event, fix it and add regression coverage.

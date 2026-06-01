@@ -15,6 +15,12 @@ const OBSERVER_IGNORED_DIRS = new Set([".benchmark", ".git", "node_modules", "di
 const OBSERVER_STATE_FILE = "observer-state.json";
 const OBSERVER_STOP_FILE = "observer-stop.json";
 const OBSERVATIONS_FILE = "observations.ndjson";
+const LIFECYCLE_PHASES = {
+  initial_delivery_minutes: ["INITIAL_DELIVERY"],
+  recovery_orientation_minutes: ["RECOVERY"],
+  rfc_fix_minutes: ["RFC"],
+  debug_fix_minutes: ["DEBUG"]
+};
 const VALID_EVENT_KINDS = new Set([
   "workflow_control",
   "requirements",
@@ -62,6 +68,20 @@ export function parseArgs(argv) {
       options.workflowControlMinutes = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
     } else if (arg === "--total-delivery-minutes") {
       options.totalDeliveryMinutes = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
+    } else if (arg === "--initial-delivery-minutes") {
+      options.initialDeliveryMinutes = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
+    } else if (arg === "--recovery-orientation-minutes") {
+      options.recoveryOrientationMinutes = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
+    } else if (arg === "--rfc-fix-minutes") {
+      options.rfcFixMinutes = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
+    } else if (arg === "--debug-fix-minutes") {
+      options.debugFixMinutes = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
+    } else if (arg === "--context-recovery-score") {
+      options.contextRecoveryScore = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
+    } else if (arg === "--context-recovery-total") {
+      options.contextRecoveryTotal = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
+    } else if (arg === "--wrong-path-count") {
+      options.wrongPathCount = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
     } else if (arg === "--estimated-vibe-handoff-minutes") {
       options.estimatedVibeHandoffMinutes = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
     } else if (arg === "--avoided-rework-minutes") {
@@ -99,7 +119,8 @@ export async function loadScenario(id, scenariosRoot = SCENARIOS_ROOT) {
     requirements: await readOptional(path.join(scenarioDir, "requirements.md")),
     acceptance: await readOptional(path.join(scenarioDir, "acceptance_criteria.md")),
     rfc: await readOptional(path.join(scenarioDir, "rfc_change.md")),
-    recovery: await readOptional(path.join(scenarioDir, "recovery_checkpoint.md"))
+    recovery: await readOptional(path.join(scenarioDir, "recovery_checkpoint.md")),
+    lifecycleProbe: await readOptional(path.join(scenarioDir, "lifecycle_probe.md"))
   };
 }
 
@@ -338,13 +359,15 @@ export async function scoreRun(options) {
     sections[sectionName] = evaluateChecks(checks, files);
   }
   const costs = buildCostSummary(events, options, observations);
+  const summary = summarizeSections(sections);
   const report = {
     scenario_id: scenario.id,
     mode,
     scored_at: new Date().toISOString(),
     run_dir: runDir,
-    summary: summarizeSections(sections),
+    summary,
     workflow_cost: costs,
+    lifecycle: buildLifecycleSummary(events, options, summary),
     outcome: calculateOutcome(costs, options),
     sections
   };
@@ -373,6 +396,9 @@ export function renderMarkdownReport(report) {
     `- Workflow control minutes: ${formatValue(report.workflow_cost.workflow_control_minutes)}`,
     `- Total delivery minutes: ${formatValue(report.workflow_cost.total_delivery_minutes)}`,
     `- Observed total delivery minutes: ${formatValue(report.workflow_cost.observed_total_delivery_minutes)}`,
+    `- Lifecycle total minutes: ${formatValue(report.lifecycle?.total_lifecycle_minutes)}`,
+    `- Context recovery score: ${formatScore(report.lifecycle?.context_recovery_score, report.lifecycle?.context_recovery_total)}`,
+    `- Wrong-path count: ${formatValue(report.lifecycle?.wrong_path_count)}`,
     `- Cost data source: ${report.workflow_cost.cost_data_source}`,
     `- Net value minutes: ${formatValue(report.outcome.net_value_minutes)}`,
     "",
@@ -400,6 +426,17 @@ export function renderMarkdownReport(report) {
   lines.push(`- vibe_handoff_delta_minutes: ${formatValue(report.outcome.vibe_handoff_delta_minutes)}`);
   lines.push(`- net_value_minutes: ${formatValue(report.outcome.net_value_minutes)}`);
   lines.push(`- comparison_confidence: ${report.outcome.comparison_confidence}`);
+  if (report.lifecycle?.has_lifecycle_data) {
+    lines.push("", "## Lifecycle Efficiency", "");
+    lines.push(`- initial_delivery_minutes: ${formatValue(report.lifecycle.initial_delivery_minutes)}`);
+    lines.push(`- recovery_orientation_minutes: ${formatValue(report.lifecycle.recovery_orientation_minutes)}`);
+    lines.push(`- rfc_fix_minutes: ${formatValue(report.lifecycle.rfc_fix_minutes)}`);
+    lines.push(`- debug_fix_minutes: ${formatValue(report.lifecycle.debug_fix_minutes)}`);
+    lines.push(`- total_lifecycle_minutes: ${formatValue(report.lifecycle.total_lifecycle_minutes)}`);
+    lines.push(`- context_recovery_score: ${formatScore(report.lifecycle.context_recovery_score, report.lifecycle.context_recovery_total)}`);
+    lines.push(`- wrong_path_count: ${formatValue(report.lifecycle.wrong_path_count)}`);
+    lines.push(`- final_quality_score: ${formatScore(report.lifecycle.final_quality_score.passed, report.lifecycle.final_quality_score.total)}`);
+  }
   return `${lines.join("\n")}\n`;
 }
 
@@ -531,6 +568,51 @@ function buildCostSummary(events, options, observations = []) {
   };
 }
 
+function buildLifecycleSummary(events, options, scoreSummary) {
+  const initialDeliveryMinutes =
+    options.initialDeliveryMinutes ?? sumEventMinutesByPhase(events, LIFECYCLE_PHASES.initial_delivery_minutes);
+  const recoveryOrientationMinutes =
+    options.recoveryOrientationMinutes ?? sumEventMinutesByPhase(events, LIFECYCLE_PHASES.recovery_orientation_minutes);
+  const rfcFixMinutes = options.rfcFixMinutes ?? sumEventMinutesByPhase(events, LIFECYCLE_PHASES.rfc_fix_minutes);
+  const debugFixMinutes = options.debugFixMinutes ?? sumEventMinutesByPhase(events, LIFECYCLE_PHASES.debug_fix_minutes);
+  const stageMinutes = [initialDeliveryMinutes, recoveryOrientationMinutes, rfcFixMinutes, debugFixMinutes].filter((value) =>
+    Number.isFinite(value)
+  );
+  const totalLifecycleMinutes = stageMinutes.length > 0 ? round(stageMinutes.reduce((sum, value) => sum + value, 0)) : null;
+  const contextRecoveryScore = options.contextRecoveryScore ?? null;
+  const contextRecoveryTotal = options.contextRecoveryTotal ?? null;
+  const wrongPathCount = options.wrongPathCount ?? null;
+  const hasLifecycleData =
+    totalLifecycleMinutes !== null ||
+    contextRecoveryScore !== null ||
+    contextRecoveryTotal !== null ||
+    wrongPathCount !== null;
+  return {
+    has_lifecycle_data: hasLifecycleData,
+    initial_delivery_minutes: initialDeliveryMinutes,
+    recovery_orientation_minutes: recoveryOrientationMinutes,
+    rfc_fix_minutes: rfcFixMinutes,
+    debug_fix_minutes: debugFixMinutes,
+    total_lifecycle_minutes: totalLifecycleMinutes,
+    context_recovery_score: contextRecoveryScore,
+    context_recovery_total: contextRecoveryTotal,
+    wrong_path_count: wrongPathCount,
+    final_quality_score: {
+      passed: scoreSummary.passed,
+      total: scoreSummary.total,
+      decision: scoreSummary.decision
+    }
+  };
+}
+
+function sumEventMinutesByPhase(events, phases) {
+  const phaseSet = new Set(phases);
+  const minutes = events
+    .filter((event) => phaseSet.has(event.phase))
+    .reduce((sum, event) => sum + (Number.isFinite(event.minutes) ? event.minutes : 0), 0);
+  return minutes > 0 ? round(minutes) : null;
+}
+
 function buildObserverSummary(observations) {
   const stopEvent = observations.filter((observation) => observation.event === "observer_stop").at(-1);
   const fileEvents = observations.filter((observation) =>
@@ -632,7 +714,7 @@ async function renderPrompt(scenario, mode) {
 }
 
 function renderScenarioBundle(scenario) {
-  return [
+  const sections = [
     `# Scenario: ${scenario.id}`,
     "",
     "## Requirements",
@@ -650,7 +732,11 @@ function renderScenarioBundle(scenario) {
     "## Recovery Checkpoint",
     "",
     scenario.recovery.trim()
-  ].join("\n");
+  ];
+  if (scenario.lifecycleProbe.trim()) {
+    sections.push("", "## Lifecycle Probe", "", scenario.lifecycleProbe.trim());
+  }
+  return sections.join("\n");
 }
 
 function renderRunReadme(scenario, mode) {
@@ -659,7 +745,7 @@ function renderRunReadme(scenario, mode) {
     "",
     "This directory is generated by `examples/delivery-benchmark/runner/delivery_benchmark.mjs`.",
     "",
-    "Read `.benchmark/prompt.md`, execute the scenario, record workflow events in `.benchmark/events.ndjson`, then score the run.",
+    "The agent under test should follow `.benchmark/prompt.md`. The benchmark operator can start the observer, add optional semantic event labels and score the run.",
     "",
     "Prefer the external observer for new benchmark runs. It records elapsed time and file activity outside the agent prompt, so the measured path stays invisible to the agent under test. Use the lightweight system timer only when an observer cannot be used.",
     "",
@@ -731,6 +817,11 @@ function parsePositiveNumber(value, flag) {
 
 function formatValue(value) {
   return value === null || value === undefined ? "unavailable" : String(value);
+}
+
+function formatScore(passed, total) {
+  if (passed === null || passed === undefined) return "unavailable";
+  return total === null || total === undefined ? String(passed) : `${passed}/${total}`;
 }
 
 function round(value) {
@@ -955,7 +1046,7 @@ Commands:
   timer-stop --run-dir <dir> [--notes <text>]
   timer-status --run-dir <dir>
   timer-cancel --run-dir <dir>
-  score --scenario <id> --mode <baseline|harness> --run-dir <dir> [--json-report <path>] [--markdown-report <path>]
+  score --scenario <id> --mode <baseline|harness> --run-dir <dir> [--initial-delivery-minutes <n>] [--recovery-orientation-minutes <n>] [--rfc-fix-minutes <n>] [--debug-fix-minutes <n>] [--context-recovery-score <n>] [--context-recovery-total <n>] [--wrong-path-count <n>] [--json-report <path>] [--markdown-report <path>]
   inspect --run-dir <dir> [inspect-workflow outcome arguments]
 `);
 }

@@ -31,6 +31,7 @@
         background: var(--paper);
         color: var(--ink);
         font: 15px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        overflow-wrap: anywhere;
       }
 
       a {
@@ -383,6 +384,7 @@
       }
 
       .panel {
+        min-width: 0;
         border: 1px solid var(--line);
         border-radius: 8px;
         background: var(--panel);
@@ -534,6 +536,35 @@
         color: var(--ink);
       }
 
+      .mini-metric-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .mini-metric {
+        min-height: 76px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px;
+        background: #fbfcf9;
+      }
+
+      .mini-metric span {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .mini-metric strong {
+        display: block;
+        font-size: 17px;
+        line-height: 1.25;
+      }
+
       .caveat-list {
         margin-bottom: 0;
         padding-left: 18px;
@@ -587,6 +618,7 @@
         .artifact-grid,
         .conclusion-layout,
         .evidence-grid,
+        .mini-metric-grid,
         .scenario-detail-grid {
           grid-template-columns: 1fr;
         }
@@ -842,6 +874,8 @@
 
             <div class="stack">
               ${measurementPanel(scenario)}
+              ${lifecyclePanel(scenario)}
+              ${contextContinuityPanel(scenario)}
 
               <section class="panel" aria-labelledby="cost-heading">
                 <h2 id="cost-heading">${escapeHtml(ui.headings.cost)}</h2>
@@ -867,6 +901,73 @@
               </section>
             </div>
           </div>
+        `;
+      }
+
+      function lifecyclePanel(scenario) {
+        const ui = copy(data.copy);
+        const lifecycleCopy = ui.lifecycleEfficiency;
+        const metrics = scenario.lifecycle?.metrics;
+        const defaultMetrics = lifecycleCopy.metrics ?? [];
+        const items = hasLifecycleMetricValues(metrics)
+          ? [
+              { label: defaultMetrics[0]?.label ?? "Initial delivery", value: formatNullableMinutes(metrics.initialDeliveryMinutes) },
+              {
+                label: defaultMetrics[1]?.label ?? "Fresh-agent recovery",
+                value: formatNullableMinutes(metrics.recoveryOrientationMinutes)
+              },
+              {
+                label: defaultMetrics[2]?.label ?? "RFC + debug fix",
+                value: formatLifecyclePair(metrics.rfcFixMinutes, metrics.debugFixMinutes)
+              },
+              { label: defaultMetrics[3]?.label ?? "Total lifecycle", value: formatNullableMinutes(metrics.totalLifecycleMinutes) }
+            ]
+          : defaultMetrics;
+        return `
+          <section class="panel" id="lifecycle-efficiency" aria-labelledby="lifecycle-heading">
+            <h2 id="lifecycle-heading">${escapeHtml(ui.headings.lifecycle)}</h2>
+            <p><strong>${escapeHtml(lifecycleCopy.label)}</strong></p>
+            <p>${escapeHtml(lifecycleCopy.body)}</p>
+            <div class="mini-metric-grid">
+              ${items.map(miniMetric).join("")}
+            </div>
+          </section>
+        `;
+      }
+
+      function contextContinuityPanel(scenario) {
+        const ui = copy(data.copy);
+        const contextCopy = ui.contextContinuity;
+        const metrics = scenario.lifecycle?.metrics;
+        const defaultMetrics = contextCopy.metrics ?? [];
+        const items = hasContextMetricValues(metrics)
+          ? [
+              {
+                label: defaultMetrics[0]?.label ?? "Recovery quiz",
+                value: formatScore(metrics.contextRecoveryScore, metrics.contextRecoveryTotal)
+              },
+              { label: defaultMetrics[1]?.label ?? "Wrong-path count", value: formatNullableValue(metrics.wrongPathCount) },
+              { label: defaultMetrics[2]?.label ?? "Final quality", value: formatNullableValue(metrics.finalQualityScore) }
+            ]
+          : defaultMetrics;
+        return `
+          <section class="panel" id="context-continuity" aria-labelledby="context-heading">
+            <h2 id="context-heading">${escapeHtml(ui.headings.context)}</h2>
+            <p><strong>${escapeHtml(contextCopy.label)}</strong></p>
+            <p>${escapeHtml(contextCopy.body)}</p>
+            <div class="mini-metric-grid">
+              ${items.map(miniMetric).join("")}
+            </div>
+          </section>
+        `;
+      }
+
+      function miniMetric(metric) {
+        return `
+          <article class="mini-metric">
+            <span>${escapeHtml(metric.label)}</span>
+            <strong>${escapeHtml(metric.value)}</strong>
+          </article>
         `;
       }
 
@@ -913,12 +1014,16 @@
               ${briefItem(ui.scenarioBriefLabels.userWorkflow, brief.userWorkflow)}
               ${briefItem(ui.scenarioBriefLabels.complexitySignals, brief.complexitySignals)}
               ${briefItem(ui.scenarioBriefLabels.midstreamChange, brief.midstreamChange)}
+              ${briefItem(ui.scenarioBriefLabels.expectedAdvantage, brief.expectedAdvantage)}
             </dl>
           </section>
         `;
       }
 
       function briefItem(label, value) {
+        if (!value) {
+          return "";
+        }
         return `
           <div class="brief-item">
             <dt>${escapeHtml(label)}</dt>
@@ -998,6 +1103,42 @@
 
       function formatNullableMinutes(value) {
         return value === null || value === undefined ? copy(data.copy).unavailable : formatMinutes(value);
+      }
+
+      function formatNullableValue(value) {
+        return value === null || value === undefined ? copy(data.copy).unavailable : String(value);
+      }
+
+      function formatLifecyclePair(rfcValue, debugValue) {
+        if (rfcValue === null || rfcValue === undefined || debugValue === null || debugValue === undefined) {
+          return copy(data.copy).unavailable;
+        }
+        return `${formatMinutes(rfcValue)} / ${formatMinutes(debugValue)}`;
+      }
+
+      function formatScore(score, total) {
+        if (score === null || score === undefined) {
+          return copy(data.copy).unavailable;
+        }
+        return total === null || total === undefined ? String(score) : `${score}/${total}`;
+      }
+
+      function hasLifecycleMetricValues(metrics) {
+        return Boolean(
+          metrics &&
+            [metrics.initialDeliveryMinutes, metrics.recoveryOrientationMinutes, metrics.rfcFixMinutes, metrics.debugFixMinutes, metrics.totalLifecycleMinutes].some(
+              (value) => value !== null && value !== undefined
+            )
+        );
+      }
+
+      function hasContextMetricValues(metrics) {
+        return Boolean(
+          metrics &&
+            [metrics.contextRecoveryScore, metrics.wrongPathCount, metrics.finalQualityScore].some(
+              (value) => value !== null && value !== undefined
+            )
+        );
       }
 
       function formatTemplate(template, value) {

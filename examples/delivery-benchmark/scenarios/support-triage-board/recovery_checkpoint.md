@@ -1,11 +1,14 @@
-# Recovery Checkpoint
+# Support SLA Escalation Desk Recovery Checkpoint
 
-Pause after UI/API implementation but before final TESTING.
+Pause after initial delivery, before the RFC cascade and debug fix. Start a fresh agent/session and ask it to recover from committed source files, tests, README/docs, and Harness deliverables.
 
-A fresh Agent should identify:
+The fresh agent should identify:
 
-- How to start the API/UI.
-- Which screen states are expected.
-- Whether UI smoke has run.
-- Whether SLA-risk ordering is specified in design/tech plan.
-- Whether a TESTING bug should route back to SPRINTING or ARCHITECTING.
+- How to start the API and browser UI.
+- Where the priority policy lives and which fields affect it.
+- Which UI states and views are expected.
+- Which tests cover API, priority policy, and UI smoke.
+- Whether the latest issue is an RFC change or a debug fix.
+- The next safe action that updates API, UI, tests, and docs together.
+
+The benchmark should measure whether the agent avoids a partial fix, such as updating only UI sorting while leaving API order or tests stale.

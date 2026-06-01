@@ -171,7 +171,7 @@ npx sdlc-harness inspect-workflow \
 
 ### Delivery Reliability Benchmark
 
-本仓库提供 `examples/delivery-benchmark/`，用于自测上面的 Outcome Comparison 是否真实反映交付效果。它不是证明 Harness 首轮写代码更快，而是用 3 个从零项目对照 baseline / Harness 两条路径：CLI policy engine、API/UI triage board、provider bridge。每个场景都固定 requirements、acceptance criteria、midstream change、fresh-session recovery checkpoint 和 scoring rubric。
+本仓库提供 `examples/delivery-benchmark/`，用于自测上面的 Outcome Comparison 是否真实反映交付效果。它不是证明 Harness 首轮写代码更快，而是用 4 个从零项目对照 baseline / Harness 两条路径：CLI policy engine、Incident Ops Console、Support SLA Escalation Desk、Webhook Provider Safety Bridge。每个场景都固定 requirements、acceptance criteria、midstream change、fresh-session recovery checkpoint 和 scoring rubric；三个 pending 场景都带 lifecycle probe，用来测首轮交付之后的新对话恢复、多轮 RFC、debug 修复、wrong-path count 和上下文连续性。
 
 ```sh
 node examples/delivery-benchmark/runner/delivery_benchmark.mjs list
@@ -184,6 +184,8 @@ node examples/delivery-benchmark/runner/delivery_benchmark.mjs score --scenario 
 ```
 
 benchmark runner 只负责准备、观测/记录和评分，不自动驱动 Agent 写代码。新运行优先使用 `observe-start` / `observe-stop`，在 agent prompt 外部记录总耗时和文件活动；`timer-start` / `timer-stop` 只作为无法启动 observer 时的轻量备选，手工 `record --minutes` 仍用于历史数据或未计时小事件。`sync`、`upgrade`、`transition.py`、`validate-*`、overview/source drift 等动作应记录为 `workflow_control` 成本；PRD、tech plan、test cases、implementation doc、coding、testing、review 和 release smoke 属于 durable delivery work。公开结果只在实际跑完 baseline 与 Harness 同质量对照后填写，原始转录和临时项目默认放在 `.artifacts/delivery-benchmark/` 或 `/tmp`。
+
+复杂场景的效率结论会用生命周期指标单独呈现：`INITIAL_DELIVERY`、`RECOVERY`、`RFC`、`DEBUG` 四段耗时，外加 `context_recovery_score`、`wrong_path_count` 和最终质量分。这样可以区分“首轮写代码是否更快”和“项目经过恢复、变更、debug 后是否总体更高效”。
 
 在本仓库维护 Harness 时，可以直接对 Agent 说“跑工作流 benchmark”。Agent 应默认选择 `expense-policy-engine`，在 `.artifacts/delivery-benchmark/<timestamp>/` 准备 baseline / harness 两条路径，真实执行后只把短摘要写入 `examples/delivery-benchmark/results/`，不提交 raw run。
 

@@ -25,6 +25,8 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
         quality: "Quality Heatmap",
         artifact: "Harness Artifact Map",
         cost: "Cost Comparison",
+        lifecycle: "Lifecycle Efficiency",
+        context: "Context Continuity",
         interpretation: "How To Read This",
         caveats: "Evidence Boundaries"
       },
@@ -32,7 +34,8 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
         whatItBuilds: "What this project builds",
         userWorkflow: "User workflow",
         complexitySignals: "Complexity and risk covered",
-        midstreamChange: "Change/recovery pressure"
+        midstreamChange: "Change/recovery pressure",
+        expectedAdvantage: "Expected Harness advantage"
       },
       measurementConfidenceLabel: "Cost confidence",
       measurementMethods: {
@@ -51,6 +54,27 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
           body:
             "Legacy manual minutes recorded during the run. Useful for orientation, but lower confidence than observer-measured data."
         }
+      },
+      lifecycleEfficiency: {
+        label: "Initial delivery vs lifecycle efficiency",
+        body:
+          "The current completed run only measures first-scenario delivery. It does not yet test fresh-agent recovery, multi-RFC change, or post-change debugging. The new lifecycle probe will separate initial delivery, recovery orientation, RFC fix, debug fix, and total lifecycle minutes.",
+        metrics: [
+          { label: "Initial delivery", value: "pending" },
+          { label: "Fresh-agent recovery", value: "pending" },
+          { label: "RFC + debug fix", value: "pending" },
+          { label: "Total lifecycle", value: "pending" }
+        ]
+      },
+      contextContinuity: {
+        label: "Context continuity",
+        body:
+          "Harness should show its advantage when a fresh agent needs to recover current state, history, constraints, test entrypoints, and the next safe action. The context recovery score and wrong-path count are pending until the lifecycle scenario is run.",
+        metrics: [
+          { label: "Recovery quiz", value: "pending" },
+          { label: "Wrong-path count", value: "pending" },
+          { label: "Final quality", value: "pending" }
+        ]
       },
       keyFinding: {
         eyebrow: "Key Finding",
@@ -114,15 +138,15 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
         {
           id: "coverage",
           label: "Scenario coverage",
-          value: "1/3 complete",
-          detail: "API/UI and provider-boundary scenarios are pending.",
+          value: "1/4 complete",
+          detail: "API/UI, context-recovery, and provider-boundary scenarios are pending.",
           help:
-            "Only one scenario has both baseline and Harness results. The more complex API/UI and provider-boundary scenarios must run before broad complex-project efficiency claims are made.",
+            "Only one scenario has both baseline and Harness results. The more complex API/UI, fresh-agent recovery, multi-RFC/debug, and provider-boundary scenarios must run before broad complex-project efficiency claims are made.",
           tone: "neutral"
         }
       ],
       evidenceStatus:
-        "Only expense-policy-engine is complete. support-triage-board and webhook-provider-bridge are pending, so complex API/UI and provider/live-boundary efficiency conclusions are not closed yet.",
+        "Only expense-policy-engine is complete. support-triage-board, project-context-recovery-lab, and webhook-provider-bridge are pending, so complex API/UI, lifecycle recovery, and provider/live-boundary efficiency conclusions are not closed yet.",
       metricTemplates: {
         total: "{value} total",
         workflowControl: "{value} workflow control"
@@ -147,6 +171,7 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
       caveats: [
         "This benchmark compares same-quality delivery, not first-patch speed.",
         "The completed run does not prove Harness is faster or more efficient.",
+        "The completed run does not test fresh-agent recovery, multi-RFC cascade, or debug-fix efficiency.",
         "The completed run still uses legacy agent-recorded workflow control cost estimates; future external observer runs can improve elapsed-time confidence.",
         "Raw temporary projects and transcripts stay outside git under .artifacts/."
       ]
@@ -175,6 +200,8 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
         quality: "质量热力图",
         artifact: "Harness 产物地图",
         cost: "成本对比",
+        lifecycle: "生命周期效率",
+        context: "上下文连续性",
         interpretation: "如何阅读这些数据",
         caveats: "证据边界"
       },
@@ -182,7 +209,8 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
         whatItBuilds: "这个项目做什么",
         userWorkflow: "主要使用流程",
         complexitySignals: "覆盖的复杂度与风险",
-        midstreamChange: "变更 / 恢复压力"
+        midstreamChange: "变更 / 恢复压力",
+        expectedAdvantage: "预期能证明的 Harness 优势"
       },
       measurementConfidenceLabel: "成本置信度",
       measurementMethods: {
@@ -201,6 +229,27 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
           body:
             "历史运行里手动记录的分钟数。它能帮助理解过程，但置信度低于外部 observer 的客观测量。"
         }
+      },
+      lifecycleEfficiency: {
+        label: "首轮交付 vs 生命周期效率",
+        body:
+          "当前 completed run 只覆盖一个初始交付样本，还没有测到生命周期效率：新对话恢复、多轮 RFC 变更和变更后的 debug 修复。新的生命周期 probe 会把首轮交付、恢复定向、RFC 修复、debug 修复和总生命周期耗时分开记录。",
+        metrics: [
+          { label: "首轮交付", value: "待运行" },
+          { label: "新对话恢复", value: "待运行" },
+          { label: "RFC + debug 修复", value: "待运行" },
+          { label: "生命周期总耗时", value: "待运行" }
+        ]
+      },
+      contextContinuity: {
+        label: "上下文连续性",
+        body:
+          "Harness 真正应该拉开差距的地方，是新对话里的 agent 能否快速恢复项目当前状态、历史变更、关键约束、测试入口和下一步安全动作。context recovery score 和 wrong-path count 会等生命周期场景跑完后填写。",
+        metrics: [
+          { label: "恢复问答", value: "待运行" },
+          { label: "走错路径次数", value: "待运行" },
+          { label: "最终质量", value: "待运行" }
+        ]
       },
       keyFinding: {
         eyebrow: "核心结论",
@@ -264,15 +313,15 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
         {
           id: "coverage",
           label: "场景覆盖",
-          value: "1/3 已完成",
-          detail: "API/UI 与 provider 边界场景仍待运行。",
+          value: "1/4 已完成",
+          detail: "API/UI、上下文恢复和 provider 边界场景仍待运行。",
           help:
-            "目前只有一个场景完成了 baseline 和 Harness 双路径。更复杂的 API/UI 和 provider 边界场景还没跑完，所以不能把结论扩展到所有复杂项目。",
+            "目前只有一个场景完成了 baseline 和 Harness 双路径。更复杂的 API/UI、新对话恢复、多轮 RFC/debug 和 provider 边界场景还没跑完，所以不能把结论扩展到所有复杂项目。",
           tone: "neutral"
         }
       ],
       evidenceStatus:
-        "目前只有费用报销政策引擎完成。支持工单分诊看板和 Webhook Provider Bridge 仍待运行，所以复杂 API/UI 与 provider/live 边界场景的效率结论还不能提前下结论。",
+        "目前只有费用报销政策引擎完成。支持工单分诊看板、Project Context Recovery Lab 和 Webhook Provider Bridge 仍待运行，所以复杂 API/UI、生命周期恢复与 provider/live 边界场景的效率结论还不能提前下结论。",
       metricTemplates: {
         total: "总计 {value}",
         workflowControl: "工作流控制成本 {value}"
@@ -297,6 +346,7 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
       caveats: [
         "这个基准测试比较的是同等质量交付，不是首轮代码生成速度。",
         "已完成样本不能证明 Harness 更快或更高效。",
+        "已完成样本还没有覆盖新对话恢复、多轮 RFC cascade 或 debug 修复效率。",
         "已完成样本仍使用历史 agent-recorded 工作流控制成本估算；后续外部 observer 运行可以提升耗时置信度。",
         "临时项目和原始转录保留在 .artifacts/ 之外，不进入 git。"
       ]
@@ -495,39 +545,113 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
       }
     },
     {
+      id: "project-context-recovery-lab",
+      status: "pending",
+      modes: {},
+      sections: [],
+      lifecycle: {
+        status: "pending",
+        metrics: {
+          initialDeliveryMinutes: null,
+          recoveryOrientationMinutes: null,
+          rfcFixMinutes: null,
+          debugFixMinutes: null,
+          totalLifecycleMinutes: null,
+          contextRecoveryScore: null,
+          contextRecoveryTotal: 6,
+          wrongPathCount: null,
+          finalQualityScore: null
+        }
+      },
+      copy: {
+        en: {
+          name: "Project Context Recovery Lab",
+          shape: "Incident Ops Console",
+          mainRisk: "Fresh-agent recovery, multi-RFC cascade, debug fix, context continuity",
+          projectBrief: {
+            whatItBuilds:
+              "An Incident Ops Console with an API, browser board, background worker, deterministic mock provider events, retries, dead-letter handling, and audit trail.",
+            userWorkflow:
+              "An operator creates or imports incidents, reviews the board, assigns owners, moves work through mitigation, processes mock provider events, and checks the audit trail.",
+            complexitySignals:
+              "This scenario combines multiple runnable entrypoints, frontend state, worker behavior, provider boundaries, idempotency, permissions, RFC churn, debug repair, and fresh-session recovery.",
+            midstreamChange:
+              "The lifecycle probe pauses after initial delivery for a fresh-agent recovery quiz, then applies the impactLevel/provider-event/permission RFC cascade and a debug fix.",
+            expectedAdvantage:
+              "Harness should recover project state faster, score higher on the context recovery quiz, and avoid wrong paths such as using deprecated severity or retrying live credentials."
+          }
+        },
+        zh: {
+          name: "Project Context Recovery Lab",
+          shape: "Incident Ops Console",
+          mainRisk: "新对话恢复、多轮 RFC cascade、debug 修复、上下文连续性",
+          projectBrief: {
+            whatItBuilds:
+              "一个 Incident Ops Console，包含 API、浏览器看板、后台 worker、确定性的 mock provider event、retry、dead-letter 和 audit trail。",
+            userWorkflow:
+              "使用者创建或导入 incident，在看板里分配负责人、推进处置状态，处理 mock provider event，并检查 audit trail。",
+            complexitySignals:
+              "这个场景同时包含多个可运行入口、前端状态、worker 行为、provider 边界、幂等、权限、多轮 RFC 变更、debug 修复和新会话恢复。",
+            midstreamChange:
+              "生命周期 probe 会在首轮交付后暂停，让新对话 agent 做恢复问答，然后继续跑 impactLevel / provider event / 权限 RFC cascade 和一个 debug fix。",
+            expectedAdvantage:
+              "Harness 应该能更快恢复项目状态，context recovery quiz 得分更高，并减少继续使用 deprecated severity 或乱试 live credentials 这类 wrong path。"
+          }
+        }
+      }
+    },
+    {
       id: "support-triage-board",
       status: "pending",
       modes: {},
       sections: [],
+      lifecycle: {
+        status: "pending",
+        metrics: {
+          initialDeliveryMinutes: null,
+          recoveryOrientationMinutes: null,
+          rfcFixMinutes: null,
+          debugFixMinutes: null,
+          totalLifecycleMinutes: null,
+          contextRecoveryScore: null,
+          contextRecoveryTotal: 6,
+          wrongPathCount: null,
+          finalQualityScore: null
+        }
+      },
       copy: {
         en: {
-          name: "Support Triage Board",
-          shape: "Small API/UI workflow",
-          mainRisk: "UI/UX handoff, normal phase coverage, TESTING bugfix route",
+          name: "Support SLA Escalation Desk",
+          shape: "API/UI plus SLA policy engine",
+          mainRisk: "Cross-layer RFC changes, UI/API drift, debug fix efficiency",
           projectBrief: {
             whatItBuilds:
-              "A lightweight support ticket triage product with an API and browser board. Tickets have customer tier, channel, age, status, priority score, and assignee.",
+              "A support escalation desk with an API, browser UI, and priority policy engine. Tickets track tier, channel, status, priority, contract risk, owner, and audit trail.",
             userWorkflow:
-              "A support lead opens the board, scans tickets by status, sees priority/SLA risk, assigns owners, and moves tickets through the workflow.",
+              "A support lead switches between kanban and list views, scans SLA risk, assigns owners, bulk assigns selected tickets, and moves tickets through the workflow.",
             complexitySignals:
-              "This scenario adds frontend state, API errors, sorting, SLA risk, assignment/status actions, loading/empty/error UI states, and browser smoke coverage.",
+              "This scenario forces API, UI, priority policy, tests, and docs to change together. It includes loading/empty/error/invalid states and weighted SLA ordering.",
             midstreamChange:
-              "The expected bugfix route centers on SLA-risk sorting: if the requirement was promised it should return to SPRINTING; if not, it should be replanned before implementation."
+              "The lifecycle probe changes priority sorting to a weighted policy, adds bulk assignment with auditReason, then checks an API/UI ordering or stale-state debug fix.",
+            expectedAdvantage:
+              "Harness should reduce partial fixes where only UI or only API changes, lower RFC/debug time, and preserve same-quality coverage across implementation, tests, and docs."
           }
         },
         zh: {
-          name: "支持工单分诊看板",
-          shape: "小型 API/UI 工作流",
-          mainRisk: "UI/UX 交接、完整阶段覆盖、TESTING bugfix route",
+          name: "Support SLA Escalation Desk",
+          shape: "API/UI + SLA policy engine",
+          mainRisk: "跨层 RFC 变更、UI/API 漂移、debug 修复效率",
           projectBrief: {
             whatItBuilds:
-              "一个轻量的支持工单分诊产品，包含 API 和浏览器看板。工单带有客户等级、来源渠道、创建时间、状态、优先级分数和负责人。",
+              "一个支持工单升级处理台，包含 API、浏览器 UI 和 priority policy engine。工单包含客户等级、渠道、状态、优先级、合同风险、负责人和 audit trail。",
             userWorkflow:
-              "支持负责人打开看板，按状态扫描工单，识别优先级和 SLA 风险，分配负责人，并推动工单状态流转。",
+              "支持负责人在 kanban/list 两种视图间切换，查看 SLA 风险，分配负责人，批量分配选中工单，并推动状态流转。",
             complexitySignals:
-              "这个场景引入前端状态、API 错误、排序、SLA 风险、分配/状态操作、loading/empty/error UI，以及浏览器 smoke 覆盖。",
+              "这个场景要求 API、UI、priority policy、tests 和 docs 一起变化，包含 loading/empty/error/invalid 状态，以及 weighted SLA ordering。",
             midstreamChange:
-              "预期的 bugfix route 围绕 SLA 风险排序：如果原需求已承诺，就回到 SPRINTING 修实现；如果没承诺，就先回计划层补设计。"
+              "生命周期 probe 会把排序规则改成 weighted policy，新增带 auditReason 的 bulk assignment，然后检查 API/UI 排序不一致或 stale state debug fix。",
+            expectedAdvantage:
+              "Harness 应该减少只改 UI 或只改 API 的 partial fix，降低 RFC/debug 总耗时，并保持实现、测试和文档的同质量覆盖。"
           }
         }
       }
@@ -537,35 +661,53 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
       status: "pending",
       modes: {},
       sections: [],
+      lifecycle: {
+        status: "pending",
+        metrics: {
+          initialDeliveryMinutes: null,
+          recoveryOrientationMinutes: null,
+          rfcFixMinutes: null,
+          debugFixMinutes: null,
+          totalLifecycleMinutes: null,
+          contextRecoveryScore: null,
+          contextRecoveryTotal: 6,
+          wrongPathCount: null,
+          finalQualityScore: null
+        }
+      },
       copy: {
         en: {
-          name: "Webhook Provider Bridge",
-          shape: "Provider bridge with mock/live boundary",
-          mainRisk: "High-risk runtime, BLOCKED recovery, do-not-retry, evidence boundaries",
+          name: "Webhook Provider Safety Bridge",
+          shape: "Provider bridge with mock/live safety boundary",
+          mainRisk: "Credential blocker, replay/signature safety, do-not-retry, evidence boundaries",
           projectBrief: {
             whatItBuilds:
-              "A webhook bridge service/CLI that receives provider payloads, verifies signatures, normalizes events, protects idempotency, and forwards downstream work.",
+              "A webhook safety bridge with receiver, signature verification, event normalizer, delivery queue, DLQ, deterministic mock provider fixture, and explicit mock/live boundary.",
             userWorkflow:
-              "An integrator configures provider secrets, receives webhooks, rejects stale or invalid requests, retries safe downstream failures, and inspects health/dead-letter status.",
+              "An integrator runs local fixture smoke, receives provider webhooks, rejects invalid or replayed requests, retries safe downstream failures, and inspects health/dead-letter status.",
             complexitySignals:
-              "This is the highest-risk scenario: HMAC verification, timestamp freshness, event normalization, idempotency, retry/backoff, dead-letter handling, and provider fixture smoke tests.",
+              "This is the safety-boundary scenario: HMAC verification, timestamp freshness, replay protection, idempotency, retry/backoff, DLQ, tenant secret rotation, and evidence-level separation.",
             midstreamChange:
-              "If a live provider token is unavailable, the run must stop or mark an explicit blocker instead of random retrying; deterministic mock evidence remains valid."
+              "The lifecycle probe upgrades provider payloads to schema v2, adds tenant secret rotation and replay protection, then checks a stale timestamp or expired-secret debug fix.",
+            expectedAdvantage:
+              "Harness should lower wrong-path count by preserving do-not-retry constraints, avoiding credential guessing, and keeping local/mock/live evidence clearly separated."
           }
         },
         zh: {
-          name: "Webhook Provider Bridge",
-          shape: "带 mock/live 边界的 provider bridge",
-          mainRisk: "高风险 runtime、BLOCKED 恢复、do-not-retry、证据边界",
+          name: "Webhook Provider Safety Bridge",
+          shape: "带 mock/live 安全边界的 provider bridge",
+          mainRisk: "credential blocker、replay/signature 安全、do-not-retry、证据边界",
           projectBrief: {
             whatItBuilds:
-              "一个 webhook 桥接服务 / CLI，用来接收 provider payload、校验签名、规范化事件、保证幂等，并把任务转发给下游。",
+              "一个 webhook 安全桥接服务，包含 receiver、signature verification、event normalizer、delivery queue、DLQ、确定性 mock provider fixture 和明确的 mock/live 边界。",
             userWorkflow:
-              "集成方配置 provider secret，接收 webhook，拒绝过期或非法请求，对安全的下游失败做重试，并查看 health / dead-letter 状态。",
+              "集成方先跑本地 fixture smoke，再接收 provider webhook，拒绝非法或 replay 请求，对安全的下游失败做重试，并查看 health / dead-letter 状态。",
             complexitySignals:
-              "这是风险最高的场景：HMAC 校验、时间戳 freshness、事件名规范化、幂等、retry/backoff、dead-letter queue，以及 provider fixture smoke 测试。",
+              "这是安全边界场景：HMAC 校验、timestamp freshness、replay protection、幂等、retry/backoff、DLQ、tenant secret rotation 和证据等级分离。",
             midstreamChange:
-              "如果 live provider token 不可用，运行必须停止或明确标记 blocker，不能随机重试；确定性的 mock evidence 仍然有效。"
+              "生命周期 probe 会把 provider payload 升级到 schema v2，新增 tenant secret rotation 和 replay protection，然后检查 stale timestamp 或 expired-secret debug fix。",
+            expectedAdvantage:
+              "Harness 应该降低 wrong-path count：保留 do-not-retry 约束，避免猜 credential，并把 local/mock/live evidence 分清楚。"
           }
         }
       }

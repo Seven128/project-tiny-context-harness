@@ -1,22 +1,25 @@
-# Support Triage Board Requirements
+# Support SLA Escalation Desk Requirements
 
-Build a small support ticket triage app. A lightweight API plus simple browser UI is enough.
+Build a support escalation desk with a lightweight API, a browser UI, and a priority policy engine.
 
 Core objects:
 
-- Ticket: id, title, customerTier, channel, createdAt, status, priorityScore, assignee.
+- Ticket: id, title, customerTier, channel, createdAt, status, priorityScore, contractRisk, assignee, auditTrail.
 - Status values: `new`, `triaged`, `waiting`, `resolved`.
 - Customer tiers: `standard`, `premium`, `enterprise`.
+- Channels: `email`, `chat`, `phone`, `partner`.
+- Contract risk values: `none`, `watch`, `breach`.
 
 Required behavior:
 
-- Users can create a ticket through the API and see it on the board.
-- The board groups tickets by status.
-- Priority score considers tier, age and channel.
-- Enterprise tickets older than 2 hours must show SLA risk.
-- A ticket can be assigned and moved between statuses.
-- Empty, loading and error states are visible in the UI.
-- The API returns structured errors.
-- Tests cover API behavior and at least one browser/UI smoke path.
+- Users can create, update, list, inspect, assign, and move tickets through the API.
+- The browser UI has kanban and list views.
+- Both views show SLA risk, priority score, owner, status, customer tier, channel, and contract risk.
+- Priority score considers customer tier, ticket age, channel, and contract risk.
+- Enterprise tickets near or past SLA must be visibly highlighted.
+- API and UI expose loading, empty, error, and invalid-state feedback.
+- API errors are structured and include machine-readable `errorCode`.
+- Tests cover API behavior, priority policy behavior, and at least one UI/browser smoke path.
+- Documentation identifies API/UI entrypoints, priority policy rules, test commands, known RFC/debug state, and next safe action.
 
-Release readiness means a reviewer can run the app locally, create a ticket, move it and verify the board state.
+Release readiness means a reviewer can run the API/UI locally, create a ticket, see its priority/SLA state, assign it, move it, run the tests, and understand how to resume after a fresh session.

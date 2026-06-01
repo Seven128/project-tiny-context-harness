@@ -4,96 +4,152 @@
     "acceptance": [
       {
         "id": "AC-SUP-001",
-        "label": "API can create and list tickets",
+        "label": "API supports create/update/list/inspect/assign/move",
         "evidence": [
-          { "path": "src/**", "contains_all": ["ticket", "create", "list"] },
-          { "path": "tests/**", "contains_any": ["POST", "create", "list"] }
+          { "path": "src/**", "contains_all": ["ticket", "create", "update", "list"] },
+          { "path": "src/**", "contains_any": ["assign", "assignee", "move", "status"] }
         ]
       },
       {
         "id": "AC-SUP-002",
-        "label": "Board groups tickets by all statuses",
+        "label": "Kanban and list views exist",
         "evidence": [
-          { "path": "**", "contains_all": ["new", "triaged", "waiting", "resolved"] }
+          { "path": "src/**", "contains_all": ["kanban", "list"] },
+          { "path": "tests/**", "contains_any": ["kanban", "list", "browser", "UI"] }
         ]
       },
       {
         "id": "AC-SUP-003",
-        "label": "Priority score uses tier, age and channel",
+        "label": "Views show SLA, priority, owner, status, tier, channel, and contract risk",
         "evidence": [
-          { "path": "src/**", "contains_all": ["priorityScore", "customerTier", "channel"] }
+          { "path": "src/**", "contains_all": ["SLA", "priorityScore", "owner", "status", "customerTier", "channel", "contractRisk"] }
         ]
       },
       {
         "id": "AC-SUP-004",
-        "label": "Enterprise older-than-2h SLA risk is represented",
+        "label": "Priority policy uses tier, age, channel, and contract risk",
         "evidence": [
-          { "path": "**", "contains_all": ["enterprise", "SLA"] }
+          { "path": "src/**", "contains_all": ["customerTier", "createdAt", "channel", "contractRisk"] },
+          { "path": "tests/**", "contains_any": ["priority", "weighted", "contractRisk"] }
         ]
       },
       {
         "id": "AC-SUP-005",
-        "label": "Assignment and status movement are persisted",
+        "label": "Enterprise near-breach or breach tickets are highlighted",
         "evidence": [
-          { "path": "src/**", "contains_all": ["assignee", "status"] },
-          { "path": "tests/**", "contains_any": ["assignee", "move", "status"] }
+          { "path": "src/**", "contains_all": ["enterprise", "breach"] },
+          { "path": "tests/**", "contains_any": ["enterprise", "SLA", "breach"] }
         ]
       },
       {
         "id": "AC-SUP-006",
-        "label": "UI states exist",
+        "label": "Loading, empty, error, and invalid states exist",
         "evidence": [
-          { "path": "**", "contains_all": ["loading", "empty", "error"] }
+          { "path": "src/**", "contains_all": ["loading", "empty", "error", "invalid"] }
         ]
       },
       {
         "id": "AC-SUP-007",
         "label": "API errors are structured",
         "evidence": [
-          { "path": "src/**", "contains_any": ["errorCode", "INVALID", "structured"] }
+          { "path": "src/**", "contains_any": ["errorCode", "INVALID", "structured"] },
+          { "path": "tests/**", "contains_any": ["errorCode", "INVALID"] }
         ]
       },
       {
         "id": "AC-SUP-008",
-        "label": "API and UI smoke tests exist",
+        "label": "API, priority policy, and UI smoke tests exist",
         "evidence": [
-          { "path": "tests/**", "contains_any": ["smoke", "browser", "playwright", "fetch"] }
-        ]
-      },
-      {
-        "id": "AC-SUP-009",
-        "label": "UI/UX handoff exists",
-        "evidence_mode": "any",
-        "evidence": [
-          { "path": ".docs/02_experience/**", "contains_any": ["screen", "state", "accessibility", "handoff"] },
-          { "path": ".benchmark/**", "contains_any": ["screen", "state", "accessibility", "handoff"] }
-        ]
-      },
-      {
-        "id": "AC-SUP-010",
-        "label": "TESTING bugfix route is recorded when needed",
-        "evidence_mode": "any",
-        "evidence": [
-          { "path": ".docs/07_test/**", "contains_any": ["bugfix_implementation_gap", "bugfix_replan", "Bugfix Route"] },
-          { "path": ".benchmark/**", "contains_any": ["bugfix_implementation_gap", "bugfix_replan", "Bugfix Route"] }
+          { "path": "tests/**", "contains_all": ["API", "priority"] },
+          { "path": "tests/**", "contains_any": ["UI", "browser", "smoke", "playwright"] }
         ]
       }
     ],
-    "change_impact": [
+    "context_recovery": [
       {
-        "id": "BUG-SUP-001",
-        "label": "SLA-risk-first sorting is implemented or planned",
+        "id": "CTX-SUP-001",
+        "label": "Fresh-agent recovery identifies API/UI entrypoints",
+        "evidence_mode": "any",
         "evidence": [
-          { "path": "**", "contains_all": ["SLA", "sort"] }
+          { "path": "README.md", "contains_all": ["entrypoint", "API", "UI"] },
+          { "path": "docs/**", "contains_all": ["entrypoint", "API", "UI"] },
+          { "path": ".docs/**", "contains_all": ["entrypoint", "API", "UI"] }
+        ]
+      },
+      {
+        "id": "CTX-SUP-002",
+        "label": "Priority policy source of truth is documented",
+        "evidence_mode": "any",
+        "evidence": [
+          { "path": "README.md", "contains_all": ["priority policy", "customerTier", "contractRisk"] },
+          { "path": "docs/**", "contains_all": ["priority policy", "customerTier", "contractRisk"] },
+          { "path": ".docs/**", "contains_all": ["priority policy", "customerTier", "contractRisk"] }
+        ]
+      },
+      {
+        "id": "CTX-SUP-003",
+        "label": "Cross-layer risk and latest RFC/debug status are recoverable",
+        "evidence_mode": "any",
+        "evidence": [
+          { "path": "README.md", "contains_any": ["RFC 1", "RFC 2", "Debug Fix", "cross-layer", "next safe action"] },
+          { "path": "docs/**", "contains_any": ["RFC 1", "RFC 2", "Debug Fix", "cross-layer", "next safe action"] },
+          { "path": ".docs/**", "contains_any": ["RFC 1", "RFC 2", "Debug Fix", "cross-layer", "next safe action"] }
+        ]
+      },
+      {
+        "id": "CTX-SUP-004",
+        "label": "Test paths for API, policy, and UI smoke are documented",
+        "evidence_mode": "any",
+        "evidence": [
+          { "path": "README.md", "contains_all": ["API", "priority", "UI smoke"] },
+          { "path": "docs/**", "contains_all": ["API", "priority", "UI smoke"] },
+          { "path": ".docs/**", "contains_all": ["API", "priority", "UI smoke"] }
+        ]
+      }
+    ],
+    "rfc_debug": [
+      {
+        "id": "RFC-SUP-001",
+        "label": "Weighted SLA priority policy is implemented and tested",
+        "evidence": [
+          { "path": "src/**", "contains_all": ["weighted", "customerTier", "channel", "contractRisk"] },
+          { "path": "tests/**", "contains_any": ["weighted", "priority", "contractRisk"] }
+        ]
+      },
+      {
+        "id": "RFC-SUP-002",
+        "label": "API and UI ordering use the same policy",
+        "evidence": [
+          { "path": "src/**", "contains_all": ["priorityScore", "kanban", "list"] },
+          { "path": "tests/**", "contains_any": ["ordering", "sort", "stale"] }
+        ]
+      },
+      {
+        "id": "RFC-SUP-003",
+        "label": "Bulk assignment requires auditReason",
+        "evidence": [
+          { "path": "src/**", "contains_all": ["bulk", "auditReason", "auditTrail"] },
+          { "path": "tests/**", "contains_any": ["bulk", "auditReason"] }
+        ]
+      },
+      {
+        "id": "DEBUG-SUP-001",
+        "label": "Debug evidence covers API/UI order or stale state mismatch",
+        "evidence": [
+          { "path": "tests/**", "contains_any": ["stale", "ordering", "API", "UI"] },
+          { "path": "README.md", "contains_any": ["Debug Fix", "stale", "ordering"] }
         ]
       }
     ],
     "handoff": [
       {
         "id": "HANDOFF-SUP-001",
-        "label": "Runnable local entrypoint is documented",
+        "label": "Next safe action covers API, UI, tests, and docs",
+        "evidence_mode": "any",
         "evidence": [
-          { "path": "**", "contains_any": ["npm run", "localhost", "start"] }
+          { "path": "README.md", "contains_all": ["next safe action", "API", "UI", "tests"] },
+          { "path": "docs/**", "contains_all": ["next safe action", "API", "UI", "tests"] },
+          { "path": ".docs/**", "contains_all": ["next safe action", "API", "UI", "tests"] }
         ]
       }
     ]

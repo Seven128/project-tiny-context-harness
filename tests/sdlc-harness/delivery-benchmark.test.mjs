@@ -22,6 +22,7 @@ import {
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const root = await mkdtemp(path.join(tmpdir(), "delivery-benchmark-"));
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const pendingLifecycleScenarios = ["project-context-recovery-lab", "support-triage-board", "webhook-provider-bridge"];
 async function readObservationEvents(runDir) {
   const text = await readFile(path.join(runDir, ".benchmark", "observations.ndjson"), "utf8").catch(() => "");
   return text
@@ -43,7 +44,12 @@ async function waitForObservation(runDir, predicate) {
 
 try {
   const scenarios = await listScenarios();
-  assert.deepEqual(scenarios, ["expense-policy-engine", "support-triage-board", "webhook-provider-bridge"]);
+  assert.deepEqual(scenarios, [
+    "expense-policy-engine",
+    "project-context-recovery-lab",
+    "support-triage-board",
+    "webhook-provider-bridge"
+  ]);
 
   const runDir = path.join(root, "expense-run");
   const prepared = await prepareRunDirectory({
@@ -66,6 +72,54 @@ try {
   });
   const baselinePrompt = await readFile(path.join(baselineRunDir, ".benchmark", "prompt.md"), "utf8");
   assert.doesNotMatch(baselinePrompt, /\.benchmark\/transcript\.md/);
+
+  for (const scenarioId of pendingLifecycleScenarios) {
+    const lifecycleProbe = await readFile(
+      path.join(repoRoot, "examples", "delivery-benchmark", "scenarios", scenarioId, "lifecycle_probe.md"),
+      "utf8"
+    );
+    assert.match(lifecycleProbe, /INITIAL_DELIVERY/);
+    assert.match(lifecycleProbe, /RECOVERY/);
+    assert.match(lifecycleProbe, /RFC/);
+    assert.match(lifecycleProbe, /DEBUG/);
+    assert.match(lifecycleProbe, /Wrong-Path Count/);
+    const rubric = JSON.parse(
+      await readFile(path.join(repoRoot, "examples", "delivery-benchmark", "scenarios", scenarioId, "rubric.json"), "utf8")
+    );
+    assert.ok(rubric.sections.acceptance?.length > 0);
+    assert.ok(rubric.sections.context_recovery?.length > 0);
+    assert.ok(rubric.sections.rfc_debug?.length > 0);
+    assert.ok(rubric.sections.handoff?.length > 0);
+  }
+
+  const lifecycleRunDir = path.join(root, "context-recovery-run");
+  await prepareRunDirectory({
+    scenario: "project-context-recovery-lab",
+    mode: "harness",
+    outDir: lifecycleRunDir,
+    force: true
+  });
+  const lifecyclePrompt = await readFile(path.join(lifecycleRunDir, ".benchmark", "prompt.md"), "utf8");
+  assert.match(lifecyclePrompt, /Lifecycle Probe/);
+  assert.match(lifecyclePrompt, /Fresh-Agent Recovery Probe/);
+  assert.match(lifecyclePrompt, /RFC Cascade/);
+  assert.match(lifecyclePrompt, /Debug Fix/);
+  assert.match(lifecyclePrompt, /Wrong-Path Count/);
+  for (const scenarioId of ["support-triage-board", "webhook-provider-bridge"]) {
+    const promptRunDir = path.join(root, `${scenarioId}-prompt-run`);
+    await prepareRunDirectory({
+      scenario: scenarioId,
+      mode: "harness",
+      outDir: promptRunDir,
+      force: true
+    });
+    const scenarioPrompt = await readFile(path.join(promptRunDir, ".benchmark", "prompt.md"), "utf8");
+    assert.match(scenarioPrompt, /Lifecycle Probe/);
+    assert.match(scenarioPrompt, /Fresh-Agent Recovery Probe/);
+    assert.match(scenarioPrompt, /RFC Cascade/);
+    assert.match(scenarioPrompt, /Debug Fix/);
+    assert.match(scenarioPrompt, /Wrong-Path Count/);
+  }
 
   const timerRunDir = path.join(root, "timer-run");
   await prepareRunDirectory({
@@ -266,6 +320,89 @@ try {
   assert.ok(report.sections.acceptance.passed > 0);
   assert.match(renderMarkdownReport(report), /Delivery Benchmark Report/);
 
+  await recordEvent({
+    runDir: lifecycleRunDir,
+    event: "initial_delivery",
+    kind: "coding",
+    phase: "INITIAL_DELIVERY",
+    minutes: 20
+  });
+  await recordEvent({
+    runDir: lifecycleRunDir,
+    event: "fresh_agent_recovery",
+    kind: "handoff",
+    phase: "RECOVERY",
+    minutes: 5
+  });
+  await recordEvent({
+    runDir: lifecycleRunDir,
+    event: "rfc_cascade",
+    kind: "rework",
+    phase: "RFC",
+    minutes: 12
+  });
+  await recordEvent({
+    runDir: lifecycleRunDir,
+    event: "debug_fix",
+    kind: "rework",
+    phase: "DEBUG",
+    minutes: 8
+  });
+  await mkdir(path.join(lifecycleRunDir, "src"), { recursive: true });
+  await mkdir(path.join(lifecycleRunDir, "tests"), { recursive: true });
+  await writeFile(
+    path.join(lifecycleRunDir, "src", "index.js"),
+    [
+      "export const incident = { id: 'INC-1', impactLevel: 'critical', severity: 'deprecated alias', providerEventId: 'evt-1', owner: 'nina', status: 'new', auditTrail: [] };",
+      "export const statuses = ['new', 'investigating', 'mitigated', 'resolved'];",
+      "export const risk = ['enterprise', 'critical', 'risk'];",
+      "export const api = ['create', 'update', 'list', 'inspect'];",
+      "export const provider = 'mock provider providerEventId idempotent duplicate retry dead-letter provider.incident.opened provider.incident.closed incident.opened rejected INVALID_PROVIDER_EVENT';",
+      "export const errors = ['errorCode', 'INVALID', 'structured', 'state transition', 'incident:write', 'permission'];"
+    ].join("\n"),
+    "utf8"
+  );
+  await writeFile(
+    path.join(lifecycleRunDir, "tests", "lifecycle.test.js"),
+    [
+      "console.log('API worker UI smoke browser');",
+      "console.log('inspect GET POST update owner status auditTrail');",
+      "console.log('INVALID state transition permission incident.opened provider.incident.opened');"
+    ].join("\n"),
+    "utf8"
+  );
+  await writeFile(
+    path.join(lifecycleRunDir, "README.md"),
+    [
+      "# Context Recovery Run",
+      "entrypoint: npm test, npm run api, npm run worker, npm run board.",
+      "canonical model: impactLevel is canonical; severity is a deprecated alias.",
+      "provider boundary: use deterministic mock provider; do-not-retry live credentials.",
+      "RFC 1 and RFC 2 are applied. Debug Fix rejected deprecated provider event names.",
+      "next safe action: run npm test and review provider fixture smoke evidence."
+    ].join("\n"),
+    "utf8"
+  );
+  const lifecycleReport = await scoreRun({
+    scenario: "project-context-recovery-lab",
+    mode: "harness",
+    runDir: lifecycleRunDir,
+    contextRecoveryScore: 5,
+    contextRecoveryTotal: 6,
+    wrongPathCount: 1
+  });
+  assert.equal(lifecycleReport.lifecycle.initial_delivery_minutes, 20);
+  assert.equal(lifecycleReport.lifecycle.recovery_orientation_minutes, 5);
+  assert.equal(lifecycleReport.lifecycle.rfc_fix_minutes, 12);
+  assert.equal(lifecycleReport.lifecycle.debug_fix_minutes, 8);
+  assert.equal(lifecycleReport.lifecycle.total_lifecycle_minutes, 45);
+  assert.equal(lifecycleReport.lifecycle.context_recovery_score, 5);
+  assert.equal(lifecycleReport.lifecycle.context_recovery_total, 6);
+  assert.equal(lifecycleReport.lifecycle.wrong_path_count, 1);
+  assert.equal(lifecycleReport.lifecycle.final_quality_score.total, lifecycleReport.summary.total);
+  assert.ok(lifecycleReport.lifecycle.final_quality_score.total > 0);
+  assert.match(renderMarkdownReport(lifecycleReport), /Lifecycle Efficiency/);
+
   const resultsDir = path.join(repoRoot, "examples/delivery-benchmark/results");
   const dataScript = await readFile(path.join(resultsDir, "benchmark-data.js"), "utf8");
   const context = { window: {} };
@@ -295,8 +432,14 @@ try {
   assert.match(benchmarkData.copy.zh.caveats.join("\n"), /工作流控制成本/);
   assert.match(benchmarkData.copy.zh.caveats.join("\n"), /不能证明 Harness 更快或更高效/);
   assert.match(benchmarkData.copy.zh.caveats.join("\n"), /外部 observer/);
+  assert.ok(benchmarkData.copy.en.lifecycleEfficiency);
+  assert.ok(benchmarkData.copy.zh.lifecycleEfficiency);
+  assert.match(benchmarkData.copy.zh.lifecycleEfficiency.body, /生命周期效率/);
+  assert.match(benchmarkData.copy.zh.contextContinuity.body, /新对话/);
   assert.ok(benchmarkData.copy.en.scenarioBriefLabels);
   assert.ok(benchmarkData.copy.zh.scenarioBriefLabels);
+  assert.ok(benchmarkData.copy.en.scenarioBriefLabels.expectedAdvantage);
+  assert.ok(benchmarkData.copy.zh.scenarioBriefLabels.expectedAdvantage);
   assert.ok(benchmarkData.copy.en.measurementMethods);
   assert.ok(benchmarkData.copy.zh.measurementMethods);
   const completedScenarios = benchmarkData.scenarios.filter((scenario) => scenario.status === "completed");
@@ -305,6 +448,11 @@ try {
   assert.ok(completedScenarios.every((scenario) => scenario.copy.en && scenario.copy.zh));
   assert.ok(benchmarkData.scenarios.every((scenario) => scenario.copy.en.projectBrief?.whatItBuilds));
   assert.ok(benchmarkData.scenarios.every((scenario) => scenario.copy.zh.projectBrief?.whatItBuilds));
+  assert.ok(
+    benchmarkData.scenarios
+      .filter((scenario) => pendingLifecycleScenarios.includes(scenario.id))
+      .every((scenario) => scenario.copy.en.projectBrief?.expectedAdvantage && scenario.copy.zh.projectBrief?.expectedAdvantage)
+  );
   const expenseScenario = completedScenarios.find((scenario) => scenario.id === "expense-policy-engine");
   assert.equal(expenseScenario.modes.baseline.totalDeliveryMinutes, 25);
   assert.equal(expenseScenario.modes.harness.totalDeliveryMinutes, 53);
@@ -316,12 +464,26 @@ try {
     benchmarkData.scenarios.find((scenario) => scenario.id === "webhook-provider-bridge").copy.zh.projectBrief.complexitySignals,
     /HMAC/
   );
+  const recoveryLab = benchmarkData.scenarios.find((scenario) => scenario.id === "project-context-recovery-lab");
+  assert.ok(recoveryLab);
+  assert.equal(recoveryLab.status, "pending");
+  assert.match(recoveryLab.copy.zh.projectBrief.whatItBuilds, /Incident Ops Console/);
+  assert.match(
+    benchmarkData.scenarios.find((scenario) => scenario.id === "support-triage-board").copy.zh.projectBrief.expectedAdvantage,
+    /partial fix/
+  );
+  assert.match(
+    benchmarkData.scenarios.find((scenario) => scenario.id === "webhook-provider-bridge").copy.zh.projectBrief.expectedAdvantage,
+    /credential/
+  );
 
   const reportHtml = await readFile(path.join(resultsDir, "index.html"), "utf8");
   assert.match(reportHtml, /benchmark-data\.js/);
   assert.match(reportHtml, /id="conclusion"/);
   assert.match(reportHtml, /id="evidence-metrics"/);
   assert.match(reportHtml, /id="measurement-method"/);
+  assert.match(reportHtml, /id="lifecycle-efficiency"/);
+  assert.match(reportHtml, /id="context-continuity"/);
   assert.match(reportHtml, /id="scenario-detail"/);
   assert.match(reportHtml, /scenario-summary/);
   assert.match(reportHtml, /help-anchor/);
