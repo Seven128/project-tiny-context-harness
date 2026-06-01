@@ -23,6 +23,12 @@ gates:
     required_for:
       - "REQUIREMENT_GATHERING"
 
+  validate-uiux:
+    command: "make validate-uiux"
+    purpose: "验证 UI/UX 体验事实源、屏幕契约、交互状态、响应式 / a11y 验收和 DESIGN.md 设计系统"
+    required_for:
+      - "UI_UX_DESIGNING"
+
   validate-design:
     command: "make validate-design"
     purpose: "验证架构设计、技术方案、任务草案和任务字段完整性"

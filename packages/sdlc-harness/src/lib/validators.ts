@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { harnessPath, harnessRoot } from "./harness-root.js";
 import { listFiles, pathExists, readText } from "./fs.js";
@@ -16,11 +17,11 @@ type Validator = (projectRoot: string) => Promise<ValidatorReport>;
 const PARALLEL_MODES = new Set(["runtime_managed", "user_orchestrated"]);
 const PARALLEL_TRIGGERS = new Set(["user_requested", "workflow_default"]);
 const PARALLEL_RUNTIME_PROVIDERS = new Set(["codex_native_subagents", "user_orchestrated", "codex_exec_worktree"]);
-const TASK_PHASES = new Set(["REQUIREMENT_GATHERING", "ARCHITECTING", "SPRINTING", "REVIEWING", "TESTING", "RELEASING", "RFC_RECALIBRATION"]);
+const TASK_PHASES = new Set(["REQUIREMENT_GATHERING", "UI_UX_DESIGNING", "ARCHITECTING", "SPRINTING", "REVIEWING", "TESTING", "RELEASING", "RFC_RECALIBRATION"]);
 const RESERVED_SUSPENDED_PHASE_TARGET = "<suspended_phase>";
 const TRANSITION_KINDS = new Set(["normal", "return", "interrupt", "resume"]);
-const PARALLEL_ALLOWED_PHASES = new Set(["REQUIREMENT_GATHERING", "ARCHITECTING", "SPRINTING", "REVIEWING", "TESTING", "RELEASING", "RFC_RECALIBRATION"]);
-const PARALLEL_READ_ONLY_PHASES = new Set(["REQUIREMENT_GATHERING", "ARCHITECTING", "REVIEWING", "RELEASING", "RFC_RECALIBRATION"]);
+const PARALLEL_ALLOWED_PHASES = new Set(["REQUIREMENT_GATHERING", "UI_UX_DESIGNING", "ARCHITECTING", "SPRINTING", "REVIEWING", "TESTING", "RELEASING", "RFC_RECALIBRATION"]);
+const PARALLEL_READ_ONLY_PHASES = new Set(["REQUIREMENT_GATHERING", "UI_UX_DESIGNING", "ARCHITECTING", "REVIEWING", "RELEASING", "RFC_RECALIBRATION"]);
 const PARALLEL_PROTECTED_WRITE_PATTERNS = [
   ".codex/state/**",
   "<harnessRoot>/state/**",
@@ -96,8 +97,12 @@ const TESTING_DISALLOWED_CHANGED_PATHS = [...TESTING_DISALLOWED_ALLOWED_PATHS, "
 const TESTING_RUNTIME_FILE_TERMS = ["bootstrap", "cloud", "daemon", "poller", "provider", "runtime", "service", "systemd"];
 const TESTING_ALLOWED_TEST_FILE_TERMS = ["assertion", "fixture", "mock", "smoke"];
 const TEST_REPORT_PATH = ".docs/07_test/TEST_REPORT.md";
+const TEST_CASES_PATH = ".docs/07_test/TEST_CASES.md";
+const EXPERIENCE_DOC_PREFIX = ".docs/02_experience/";
+const DESIGN_SYSTEM_PATH = "DESIGN.md";
 const CURRENT_RELEASE_REPORT_PATH = ".docs/08_release/CURRENT_RELEASE.md";
 const TEST_REPORT_PLACEHOLDER_TERMS = ["pending", "tbd", "todo", "待填", "待补", "placeholder"];
+const TEST_CASE_ID_PATTERN = /\bTC-\d{3,}\b/g;
 const TEST_FACT_SOURCE_PHASES = new Set(["TESTING", "RFC_RECALIBRATION"]);
 const TEST_FACT_SOURCE_PATTERNS = [".docs/07_test/**", ".docs/07_test/"];
 const TEST_FACT_SOURCE_REF = /\.docs\/07_test\/[^\s`,)]+/g;
@@ -476,12 +481,48 @@ const RFC_SELF_TEST_TRIGGER_TERMS = [
   "运行环境",
   "阻塞"
 ];
+const RFC_UIUX_TRIGGER_TERMS = [
+  "ui/ux",
+  "ux",
+  "screen",
+  "interaction",
+  "design.md",
+  "frontend",
+  "browser",
+  "page",
+  "visual",
+  "体验",
+  "屏幕",
+  "交互",
+  "视觉",
+  "前端"
+];
+const RFC_UIUX_IMPACT_TERMS = ["ui/ux impact", "体验影响"];
+const UI_DRAFT_TASK_TERMS = [
+  "frontend",
+  "front-end",
+  "browser",
+  "page",
+  "screen",
+  "route",
+  "component",
+  "visual_ui",
+  "design.md",
+  ".docs/02_experience/",
+  "页面",
+  "前端",
+  "屏幕",
+  "交互",
+  "组件",
+  "视觉"
+];
 
 const validators: Record<string, Validator> = {
   "validate-harness": validateHarness,
   "validate-current": validateCurrent,
   "validate-plan": validatePlan,
   "validate-pm": validatePm,
+  "validate-uiux": validateUiux,
   "validate-design": validateDesign,
   "validate-dev": validateDev,
   "validate-review": validateReview,
@@ -509,6 +550,7 @@ async function validateHarness(projectRoot: string): Promise<ValidatorReport> {
   for (const required of [
     "AGENTS.md",
     ".docs/INDEX.md",
+    ".docs/02_experience",
     ".docs/09_runbooks",
     harnessPath(root, "config.yaml"),
     harnessPath(root, "state", "lifecycle.yaml"),
@@ -536,6 +578,7 @@ async function validateCurrent(projectRoot: string): Promise<ValidatorReport> {
   }
   const gateByPhase: Record<string, string> = {
     REQUIREMENT_GATHERING: "validate-pm",
+    UI_UX_DESIGNING: "validate-uiux",
     ARCHITECTING: "validate-design",
     SPRINTING: "validate-dev",
     REVIEWING: "validate-review",
@@ -558,6 +601,45 @@ async function validatePm(projectRoot: string): Promise<ValidatorReport> {
   return { info: [`validate-pm checked ${docs.length} file(s)`], errors };
 }
 
+async function validateUiux(projectRoot: string): Promise<ValidatorReport> {
+  const root = await harnessRoot(projectRoot);
+  const lifecycle = await readYamlObject(path.join(projectRoot, root, "state", "lifecycle.yaml"));
+  const plan = await validatePlanState(projectRoot, String(lifecycle.current_phase ?? "") !== "UI_UX_DESIGNING");
+  const docs = await markdownFiles(path.join(projectRoot, ".docs/02_experience"));
+  const errors: string[] = [...plan.errors];
+  if (docs.length === 0) errors.push("No UI/UX deliverables found in .docs/02_experience/");
+
+  let visualUi = false;
+  for (const doc of docs) {
+    const relative = repoRelative(projectRoot, doc);
+    const text = await readText(doc);
+    const notApplicable = containsAny(text, ["applicability: not_applicable", "applicability: `not_applicable`"]);
+    visualUi = visualUi || containsAny(text, ["applicability: visual_ui", "applicability: `visual_ui`"]);
+    if (notApplicable) continue;
+    if (!containsAny(text, ["prd", "requirement", "需求"])) errors.push(`${relative} must cite PRD and requirement IDs`);
+    if (!containsAny(text, ["user journey", "user journeys", "用户旅程"])) errors.push(`${relative} must include user journeys`);
+    if (!containsAny(text, ["handoff matrix", "交接矩阵"])) errors.push(`${relative} must include a handoff matrix`);
+    if (!containsAny(text, ["loading", "empty", "error", "success", "permission", "加载", "空状态", "错误", "成功", "权限"])) {
+      errors.push(`${relative} screen contracts must cover applicable loading/empty/error/success/permission states`);
+    }
+    if (!containsAny(text, ["responsive", "breakpoint", "响应式", "断点"])) errors.push(`${relative} must include responsive acceptance`);
+    if (!containsAny(text, ["accessibility", "a11y", "focus", "keyboard", "touch", "无障碍", "焦点", "键盘", "触控"])) {
+      errors.push(`${relative} must include accessibility/focus/keyboard/touch expectations`);
+    }
+  }
+
+  if (visualUi) {
+    const designPath = path.join(projectRoot, DESIGN_SYSTEM_PATH);
+    if (!(await pathExists(designPath))) {
+      errors.push("visual UI experience requires root DESIGN.md");
+    } else {
+      errors.push(...(await validateDesignMd(projectRoot)));
+    }
+  }
+
+  return { info: [`validate-uiux checked ${docs.length} file(s)`], errors };
+}
+
 async function validateDesign(projectRoot: string): Promise<ValidatorReport> {
   const root = await harnessRoot(projectRoot);
   const lifecycle = await readYamlObject(path.join(projectRoot, root, "state", "lifecycle.yaml"));
@@ -565,6 +647,7 @@ async function validateDesign(projectRoot: string): Promise<ValidatorReport> {
   const architecture = await markdownFiles(path.join(projectRoot, ".docs/02_architecture"));
   const techPlan = await markdownFiles(path.join(projectRoot, ".docs/03_tech_plan"));
   const product = await markdownFiles(path.join(projectRoot, ".docs/01_product"));
+  const experience = await markdownFiles(path.join(projectRoot, ".docs/02_experience"));
   const text = await combinedText([...architecture, ...techPlan]);
   const errors: string[] = [...plan.errors];
   if (architecture.length === 0) errors.push("No architecture deliverables found");
@@ -572,7 +655,7 @@ async function validateDesign(projectRoot: string): Promise<ValidatorReport> {
   if (!containsAny(text, ["prd", "requirement", "需求"])) errors.push("Design must cite product requirements");
   if (!containsAny(text, ["api", "interface", "接口", "contract", "契约"])) errors.push("Design must describe interfaces or contracts");
   if (!containsAny(text, ["task", "任务", "breakdown"])) errors.push("Design must include task breakdown");
-  const draft = await validateDesignDraft(projectRoot, root, techPlan);
+  const draft = await validateDesignDraft(projectRoot, root, techPlan, experience);
   errors.push(...draft.errors);
   errors.push(...(await validateCrossCuttingArchitecture(projectRoot, product, techPlan, architecture, draft.tasks)));
   return { info: [`validate-design checked ${architecture.length + techPlan.length} file(s)`], errors };
@@ -587,7 +670,8 @@ async function validatePlan(projectRoot: string): Promise<ValidatorReport> {
 async function validateDesignDraft(
   projectRoot: string,
   root: string,
-  techPlanFiles: string[]
+  techPlanFiles: string[],
+  experienceFiles: string[]
 ): Promise<{ errors: string[]; tasks: Array<Record<string, unknown>> }> {
   const errors: string[] = [];
   const draft = await readYamlObject(path.join(projectRoot, root, "state", "plan.draft.yaml"));
@@ -606,6 +690,7 @@ async function validateDesignDraft(
 
   const tasks = rawTasks.filter(isRecord);
   const availableTechPlans = new Set(techPlanFiles.map((file) => repoRelative(projectRoot, file)));
+  const availableExperienceDocs = new Set(experienceFiles.map((file) => repoRelative(projectRoot, file)));
   const developmentTasks: Array<Record<string, unknown>> = [];
   const primaryRefs: string[] = [];
   for (const [index, rawTask] of rawTasks.entries()) {
@@ -637,6 +722,7 @@ async function validateDesignDraft(
         errors.push(`Draft task ${String(rawTask.id ?? "")} references missing or generated tech plan slice: ${ref}`);
       }
     }
+    errors.push(...(await validateUiuxDesignRefsForDraftTask(projectRoot, rawTask, availableExperienceDocs)));
     errors.push(...(await validateSelfTestContractTechPlanBinding(projectRoot, rawTask, normalizedRefs)));
     primaryRefs.push(normalizedRefs[0]);
   }
@@ -648,6 +734,59 @@ async function validateDesignDraft(
     errors.push("Draft development tasks must reference distinct primary tech plan slices in docs.tech_plan");
   }
   return { errors, tasks };
+}
+
+async function validateUiuxDesignRefsForDraftTask(
+  projectRoot: string,
+  task: Record<string, unknown>,
+  availableExperienceDocs: Set<string>
+): Promise<string[]> {
+  const errors: string[] = [];
+  if (!isRecord(task.docs)) return errors;
+
+  const taskId = String(task.id ?? "");
+  const uiuxRefs = asStringList(task.docs.uiux).map(normalizeDocRef);
+  const designRefs = asStringList(task.docs.design_system).map(normalizeDocRef);
+  const uiTask = isUiDraftTask(task);
+
+  if (uiTask && uiuxRefs.length === 0) {
+    errors.push(`UI/frontend draft task ${taskId} must reference a UI/UX slice in docs.uiux`);
+  }
+  if (uiTask && designRefs.length === 0) {
+    errors.push(`UI/frontend draft task ${taskId} must reference DESIGN.md in docs.design_system`);
+  }
+
+  for (const ref of uiuxRefs) {
+    if (!ref.startsWith(EXPERIENCE_DOC_PREFIX)) {
+      errors.push(`Draft task ${taskId} docs.uiux must point into .docs/02_experience/: ${ref}`);
+    } else if (!availableExperienceDocs.has(ref)) {
+      errors.push(`Draft task ${taskId} references missing or generated UI/UX slice: ${ref}`);
+    }
+  }
+
+  for (const ref of designRefs) {
+    if (ref !== DESIGN_SYSTEM_PATH) {
+      errors.push(`Draft task ${taskId} docs.design_system must point to DESIGN.md: ${ref}`);
+    } else if (!(await pathExists(path.join(projectRoot, DESIGN_SYSTEM_PATH)))) {
+      errors.push(`Draft task ${taskId} references missing design system: ${DESIGN_SYSTEM_PATH}`);
+    }
+  }
+
+  return errors;
+}
+
+function isUiDraftTask(task: Record<string, unknown>): boolean {
+  const docsText = isRecord(task.docs)
+    ? Object.values(task.docs)
+        .flatMap((value) => asStringList(value))
+        .join("\n")
+    : "";
+  const runtimeText = [task.target_runtime_environment, task.self_test_contract]
+    .filter(Boolean)
+    .map((value) => JSON.stringify(value))
+    .join("\n");
+  const text = [task.id, task.title, task.summary, task.phase, docsText, runtimeText].map((value) => String(value ?? "")).join("\n");
+  return containsAny(text, UI_DRAFT_TASK_TERMS);
 }
 
 function validateDraftTaskShape(task: Record<string, unknown>, index: number, errors: string[]): void {
@@ -835,6 +974,7 @@ async function validateTest(projectRoot: string): Promise<ValidatorReport> {
   if (!containsAny(text, ["pass", "blocked", "通过", "阻塞"])) errors.push("Test report must include PASS/BLOCKED decision");
   errors.push(...validateTestReadinessDecision(text));
   errors.push(...validateRuntimeHandoffReport(report?.text ?? "", "Test report"));
+  errors.push(...(await validateTestCasesIfNeeded(projectRoot, plan.plan, report?.text ?? "")));
   if (lifecycle.current_phase === "TESTING") {
     errors.push(...testingBoundaryErrorsForChangedFiles(await changedFiles(projectRoot)));
   }
@@ -882,6 +1022,7 @@ async function validateRfc(projectRoot: string): Promise<ValidatorReport> {
   const invalidStatuses = statuses.filter((status) => !["DRAFT", "APPLIED", "VERIFIED", "ARCHIVED"].includes(status));
   if (invalidStatuses.length > 0) errors.push(`Invalid RFC status: ${invalidStatuses.join(", ")}`);
   errors.push(...(await validateRfcSelfTestImpact(projectRoot, docs)));
+  errors.push(...(await validateRfcUiuxImpact(projectRoot, docs)));
   return { info: [`validate-rfc checked ${docs.length} file(s)`], errors };
 }
 
@@ -896,6 +1037,22 @@ async function validateRfcSelfTestImpact(projectRoot: string, docs: string[]): P
     if (!containsAny(text, RFC_SELF_TEST_TRIGGER_TERMS)) continue;
     if (!containsAny(text, DEVELOPMENT_SELF_TEST_IMPACT_TERMS)) {
       errors.push(`${relative} must include Development Self-Test Impact when RFC changes entry/exit, runtime, gates, handoff, or blockers`);
+    }
+  }
+  return errors;
+}
+
+async function validateRfcUiuxImpact(projectRoot: string, docs: string[]): Promise<string[]> {
+  const errors: string[] = [];
+  for (const doc of docs) {
+    const relative = repoRelative(projectRoot, doc);
+    const basename = path.basename(doc);
+    const number = rfcNumber(basename);
+    if (number !== undefined && number < 27) continue;
+    const text = await readText(doc);
+    if (!containsAny(text, RFC_UIUX_TRIGGER_TERMS)) continue;
+    if (!containsAny(text, RFC_UIUX_IMPACT_TERMS)) {
+      errors.push(`${relative} must include UI/UX Impact when RFC changes experience docs, screen contracts, DESIGN.md, frontend, or browser behavior`);
     }
   }
   return errors;
@@ -1517,7 +1674,7 @@ function validateParallelExecutionContract(plan: Record<string, unknown>, curren
   }
   if (!PARALLEL_ALLOWED_PHASES.has(currentPhase)) {
     errors.push(
-      "parallel_execution is only supported during REQUIREMENT_GATHERING, ARCHITECTING, SPRINTING, REVIEWING, TESTING, RELEASING, or RFC_RECALIBRATION"
+      "parallel_execution is only supported during REQUIREMENT_GATHERING, UI_UX_DESIGNING, ARCHITECTING, SPRINTING, REVIEWING, TESTING, RELEASING, or RFC_RECALIBRATION"
     );
   }
   if (contract.coordinator !== "main_agent") errors.push('parallel_execution.coordinator must be "main_agent"');
@@ -2453,6 +2610,167 @@ function validateTestReadinessDecision(text: string): string[] {
     return ["Test report cannot PASS while runnable entry/exit or Development Evidence is missing; use BLOCKED with recovery conditions"];
   }
   return [];
+}
+
+async function validateDesignMd(projectRoot: string): Promise<string[]> {
+  const errors: string[] = [];
+  try {
+    const cliPath = await findDesignMdCliPath(projectRoot);
+    if (!cliPath) {
+      errors.push("DESIGN.md linter not found; install package dependencies for @google/design.md");
+      return errors;
+    }
+    const { stdout } = await execFileAsync(process.execPath, [cliPath, "lint", DESIGN_SYSTEM_PATH], { cwd: projectRoot });
+    errors.push(...designMdLintErrors(stdout));
+  } catch (caught) {
+    const error = caught as { stdout?: string; stderr?: string; message?: string };
+    const parsedErrors = designMdLintErrors(String(error.stdout ?? ""));
+    if (parsedErrors.length > 0) {
+      errors.push(...parsedErrors);
+    } else {
+      errors.push(`DESIGN.md linter failed: ${String(error.stderr ?? error.message ?? "unknown error").trim()}`);
+    }
+  }
+  return errors;
+}
+
+async function findDesignMdCliPath(projectRoot: string): Promise<string | undefined> {
+  const candidates: string[] = [];
+  const addSearchRoots = (start: string) => {
+    let current = path.resolve(start);
+    while (true) {
+      candidates.push(path.join(current, "node_modules", "@google", "design.md", "dist", "index.js"));
+      const parent = path.dirname(current);
+      if (parent === current) break;
+      current = parent;
+    }
+  };
+  addSearchRoots(projectRoot);
+  addSearchRoots(path.dirname(fileURLToPath(import.meta.url)));
+  for (const candidate of candidates) {
+    if (await pathExists(candidate)) return candidate;
+  }
+  return undefined;
+}
+
+function designMdLintErrors(stdout: string): string[] {
+  const text = stdout.trim();
+  if (!text) return [];
+  try {
+    const diagnostics = JSON.parse(text) as Record<string, unknown>;
+    const errors: string[] = [];
+    const summary = isRecord(diagnostics.summary) ? diagnostics.summary : {};
+    if (Number(summary.errors ?? 0) > 0) {
+      errors.push("DESIGN.md linter reported errors");
+    }
+    const findings = Array.isArray(diagnostics.findings) ? diagnostics.findings : [];
+    for (const finding of findings) {
+      if (!isRecord(finding) || String(finding.severity ?? "").toLowerCase() !== "error") continue;
+      errors.push(String(finding.message ?? "DESIGN.md linter error"));
+    }
+    return errors;
+  } catch {
+    return [];
+  }
+}
+
+async function validateTestCasesIfNeeded(projectRoot: string, plan: Record<string, unknown>, reportText: string): Promise<string[]> {
+  const casesPath = path.join(projectRoot, TEST_CASES_PATH);
+  const shouldValidate = testCaseRefs(reportText).length > 0 || planReferencesTestCases(plan) || (await pathExists(casesPath));
+  if (!shouldValidate) return [];
+  if (!(await pathExists(casesPath))) {
+    return [`Missing test cases: expected ${TEST_CASES_PATH} because TEST_REPORT.md or current TESTING task references test cases`];
+  }
+  return validateTestCases(await readText(casesPath), reportText);
+}
+
+function testCaseRefs(text: string): string[] {
+  return [...new Set(text.match(TEST_CASE_ID_PATTERN) ?? [])].sort();
+}
+
+function planReferencesTestCases(plan: Record<string, unknown>): boolean {
+  const tasks = Array.isArray(plan.tasks) ? plan.tasks : [];
+  return tasks.some((task) => {
+    if (!isRecord(task) || String(task.phase ?? "") !== "TESTING") return false;
+    return asStringList(task.result_docs).includes(TEST_CASES_PATH);
+  });
+}
+
+function validateTestCases(text: string, reportText: string): string[] {
+  const errors: string[] = [];
+  if (containsAny(text, TEST_REPORT_PLACEHOLDER_TERMS)) {
+    errors.push("TEST_CASES.md must not contain pending/TBD/TODO/placeholder content");
+  }
+
+  const lines = text.split(/\r?\n/);
+  const rows: Array<{ lineNumber: number; headers: string[]; cells: string[] }> = [];
+  lines.forEach((line, index) => {
+    if (!line.trim().startsWith("|") || !/\bTC-\d{3,}\b/.test(line)) return;
+    const headers = findMarkdownTableHeader(lines, index);
+    if (!headers) {
+      errors.push("TEST_CASES.md cases must be listed in a Markdown table with headers");
+      return;
+    }
+    rows.push({ lineNumber: index + 1, headers, cells: splitMarkdownRow(line) });
+  });
+  TEST_CASE_ID_PATTERN.lastIndex = 0;
+
+  const ids = rows.flatMap((row) => testCaseRefs(row.cells.join("|")));
+  if (ids.length === 0) {
+    errors.push("TEST_CASES.md must include at least one TC-* case");
+  }
+  const duplicates = [...new Set(ids.filter((id, index) => ids.indexOf(id) !== index))].sort();
+  if (duplicates.length > 0) {
+    errors.push(`TEST_CASES.md Case ID must be unique: ${duplicates.join(", ")}`);
+  }
+
+  for (const row of rows) {
+    const requirement = headerIndex(row.headers, ["requirement", "risk", "需求", "风险"]);
+    const runnableEntry = headerIndex(row.headers, ["runnable entry", "runnable", "entry", "入口"]);
+    const steps = headerIndex(row.headers, ["steps", "步骤"]);
+    const expectedExit = headerIndex(row.headers, ["expected exit", "expected result", "expected", "预期", "出口"]);
+    const missing: string[] = [];
+    if (!requiredCell(row.cells, requirement)) missing.push("Requirement / Risk Ref");
+    if (!requiredCell(row.cells, runnableEntry)) missing.push("Runnable Entry");
+    if (!requiredCell(row.cells, steps)) missing.push("Steps");
+    if (!requiredCell(row.cells, expectedExit)) missing.push("Expected Exit");
+    if (missing.length > 0) {
+      errors.push(`TEST_CASES.md row ${row.lineNumber} missing required case fields: ${missing.join(", ")}`);
+    }
+  }
+
+  const missingRefs = testCaseRefs(reportText).filter((id) => !ids.includes(id));
+  if (missingRefs.length > 0) {
+    errors.push(`TEST_REPORT.md references case IDs not found in TEST_CASES.md: ${[...new Set(missingRefs)].join(", ")}`);
+  }
+  return errors;
+}
+
+function splitMarkdownRow(line: string): string[] {
+  return line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim());
+}
+
+function isMarkdownSeparatorRow(line: string): boolean {
+  const stripped = line.trim();
+  return stripped.startsWith("|") && /^[|:\-\s]+$/.test(stripped);
+}
+
+function findMarkdownTableHeader(lines: string[], rowIndex: number): string[] | undefined {
+  for (let index = rowIndex - 1; index > 0; index -= 1) {
+    if (!isMarkdownSeparatorRow(lines[index])) continue;
+    const header = lines[index - 1];
+    return header.trim().startsWith("|") ? splitMarkdownRow(header) : undefined;
+  }
+  return undefined;
+}
+
+function headerIndex(headers: string[], terms: string[]): number | undefined {
+  return headers.findIndex((header) => terms.some((term) => header.toLowerCase().includes(term.toLowerCase())));
+}
+
+function requiredCell(cells: string[], index: number | undefined): string {
+  if (index === undefined || index < 0 || index >= cells.length) return "";
+  return cells[index].trim();
 }
 
 function validateRuntimeHandoffReport(text: string, label: string): string[] {

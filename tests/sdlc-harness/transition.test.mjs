@@ -26,24 +26,39 @@ current_phase: "REQUIREMENT_GATHERING"
 active_role: "pm"
 active_skill: "pjsdlc_pm_prd"
 allowed_next_phases:
-  - "ARCHITECTING"
+  - "UI_UX_DESIGNING"
 `
   );
-  execFileSync("python3", ["tools/transition.py", "--to", "ARCHITECTING"], { cwd: root });
+  execFileSync("python3", ["tools/transition.py", "--to", "UI_UX_DESIGNING"], { cwd: root });
   let lifecycle = await readLifecycle();
+  assert.match(lifecycle, /current_phase: "UI_UX_DESIGNING"/);
+  assert.match(lifecycle, /active_role: "designer"/);
+  assert.match(lifecycle, /active_skill: "pjsdlc_uiux_design"/);
+  assert.match(lifecycle, /- "ARCHITECTING"/);
+  assert.match(lifecycle, /- "REQUIREMENT_GATHERING"/);
+  assert.match(lifecycle, /- "BLOCKED"/);
+
+  execFileSync("python3", ["tools/transition.py", "--to", "ARCHITECTING"], { cwd: root });
+  lifecycle = await readLifecycle();
   assert.match(lifecycle, /current_phase: "ARCHITECTING"/);
   assert.match(lifecycle, /active_role: "architect"/);
   assert.match(lifecycle, /active_skill: "pjsdlc_architect_design"/);
   assert.match(lifecycle, /- "SPRINTING"/);
+  assert.match(lifecycle, /- "UI_UX_DESIGNING"/);
   assert.match(lifecycle, /- "REQUIREMENT_GATHERING"/);
   assert.match(lifecycle, /- "BLOCKED"/);
+
+  execFileSync("python3", ["tools/transition.py", "--to", "UI_UX_DESIGNING"], { cwd: root });
+  lifecycle = await readLifecycle();
+  assert.match(lifecycle, /current_phase: "UI_UX_DESIGNING"/);
+  assert.match(lifecycle, /active_role: "designer"/);
 
   execFileSync("python3", ["tools/transition.py", "--to", "REQUIREMENT_GATHERING"], { cwd: root });
   lifecycle = await readLifecycle();
   assert.match(lifecycle, /current_phase: "REQUIREMENT_GATHERING"/);
   assert.match(lifecycle, /active_role: "pm"/);
   assert.match(lifecycle, /active_skill: "pjsdlc_pm_prd"/);
-  assert.match(lifecycle, /- "ARCHITECTING"/);
+  assert.match(lifecycle, /- "UI_UX_DESIGNING"/);
   assert.match(lifecycle, /- "BLOCKED"/);
   assert.doesNotMatch(lifecycle, /- "SPRINTING"/);
 
@@ -93,9 +108,30 @@ allowed_next_phases:
   assert.match(lifecycle, /current_phase: "TESTING"/);
   assert.match(lifecycle, /active_role: "tester"/);
   assert.match(lifecycle, /- "RELEASING"/);
+  assert.match(lifecycle, /- "UI_UX_DESIGNING"/);
   assert.match(lifecycle, /- "ARCHITECTING"/);
   assert.match(lifecycle, /- "SPRINTING"/);
   assert.match(lifecycle, /- "RFC_RECALIBRATION"/);
+  assert.match(lifecycle, /- "BLOCKED"/);
+
+  await writeLifecycle(
+    `project_name: "Fixture"
+version: "v0.1"
+current_phase: "TESTING"
+active_role: "tester"
+active_skill: "pjsdlc_tester"
+suspended_phase: ""
+allowed_next_phases:
+  - "RELEASING"
+`
+  );
+  execFileSync("python3", ["tools/transition.py", "--to", "UI_UX_DESIGNING"], { cwd: root });
+  lifecycle = await readLifecycle();
+  assert.match(lifecycle, /current_phase: "UI_UX_DESIGNING"/);
+  assert.match(lifecycle, /active_role: "designer"/);
+  assert.match(lifecycle, /active_skill: "pjsdlc_uiux_design"/);
+  assert.match(lifecycle, /- "ARCHITECTING"/);
+  assert.match(lifecycle, /- "REQUIREMENT_GATHERING"/);
   assert.match(lifecycle, /- "BLOCKED"/);
 
   await writeLifecycle(
@@ -115,6 +151,7 @@ allowed_next_phases:
   assert.match(lifecycle, /active_role: "architect"/);
   assert.match(lifecycle, /active_skill: "pjsdlc_architect_design"/);
   assert.match(lifecycle, /- "SPRINTING"/);
+  assert.match(lifecycle, /- "UI_UX_DESIGNING"/);
   assert.match(lifecycle, /- "REQUIREMENT_GATHERING"/);
   assert.match(lifecycle, /- "BLOCKED"/);
 
@@ -176,7 +213,7 @@ allowed_next_phases:
     assert.match(lifecycle, /- "BLOCKED"/);
   }
 
-  for (const phase of ["REQUIREMENT_GATHERING", "ARCHITECTING"]) {
+  for (const phase of ["REQUIREMENT_GATHERING", "UI_UX_DESIGNING", "ARCHITECTING"]) {
     await writeLifecycle(
       `project_name: "Fixture"
 version: "v0.1"
@@ -241,6 +278,7 @@ allowed_next_phases:
   assert.match(lifecycle, /current_phase: "TESTING"/);
   assert.match(lifecycle, /suspended_phase: ""/);
   assert.match(lifecycle, /- "RELEASING"/);
+  assert.match(lifecycle, /- "UI_UX_DESIGNING"/);
   assert.match(lifecycle, /- "ARCHITECTING"/);
   assert.match(lifecycle, /- "SPRINTING"/);
 

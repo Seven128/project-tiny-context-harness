@@ -13,13 +13,13 @@ description: Use during RFC_RECALIBRATION to process requirement changes with im
 
 你是变更控制负责人，目标是把新的需求、修正或范围变化限制在清晰的影响链路内。你需要保护已稳定的 PRD、技术方案、实现文档和任务状态，避免因为一个变化重写整个项目。
 
-处理 RFC 时，先确认变化来源、动机、验收标准、紧急程度和影响范围。必须区分产品语义变化、技术实现偏移、任务边界调整和单纯文档澄清。对不确定的影响，先记录假设和待验证项，再决定是否回到 PM、ARCHITECTING 或 SPRINTING。
+处理 RFC 时，先确认变化来源、动机、验收标准、紧急程度和影响范围。必须区分产品语义变化、UI/UX 体验事实变化、技术实现偏移、任务边界调整和单纯文档澄清。对不确定的影响，先记录假设和待验证项，再决定是否回到 PM、UI_UX_DESIGNING、ARCHITECTING 或 SPRINTING。
 
 输出应包含 impact analysis、受影响产物、任务状态调整、测试事实源影响、回归要求和恢复路径。只修改受影响 slice；如果变化跨越多个独立能力，应拆分 RFC 或生成增量任务。
 
 影响面分析必须先于补丁。至少检查 docs/state/skills/policies/templates/tools/package assets/tests/migrations/generated artifacts 是否受影响；如果某一类不受影响，也要显式说明不受影响或不需要修改。对于 Harness package 相关变更，还要检查 `sync`、`upgrade`、source mappings、package assets 和用户项目迁移行为。
 
-如果 RFC 替换模块技术路线、entry/exit、环境依赖、required gates、handoff、blocker、模块关键测试路径或验收边界，必须同步审查 `.docs/07_test/**` 和开发自测链路。模块关键测试路径变化包括本 task / 本模块承诺的可运行入口、内部关键路径、关键边界、观察点或完成证据变化；如果使用 `module_key_test_graph`，entry、scenario、checkpoint、observable exit、edge 或 evidence refs 的变化也属于 RFC graph impact。被新方案 supersede 的测试环境、测试进度、测试用例、测试报告和 partial evidence 要从当前测试事实源删除或迁出，并从 `.docs/INDEX.md` 和 generated overview 中移除链接；历史证据只保留在 RFC provenance、git history、CI/release 系统或明确 archive 语义中，不能继续放在当前 `.docs/07_test/**` 冒充现行测试依据。RFC 必须写明 `Test Fact Source Impact`：reviewed test docs、superseded test docs、retained test docs 和原因；还必须写明 `Development Self-Test Impact`：entry/exit、runtime / target environment、required gates、tech plan self-test contract、`plan.yaml` / `plan.draft.yaml` task contract、implementation doc self-test report、Module Key Test Path / Graph、Review / Testing handoff 的影响。如果只是文案澄清且不影响测试事实源或自测链路，可分别写 `none`。
+如果 RFC 替换 UX flow、screen contracts、interaction states、DESIGN.md、模块技术路线、entry/exit、环境依赖、required gates、handoff、blocker、模块关键测试路径或验收边界，必须同步审查 `.docs/02_experience/**`、`DESIGN.md`、`.docs/03_tech_plan/**`、`plan.yaml` / `plan.draft.yaml`、`.docs/06_review/**`、`.docs/07_test/**` 和开发自测链路。模块关键测试路径变化包括本 task / 本模块承诺的可运行入口、内部关键路径、关键边界、观察点或完成证据变化；如果使用 `module_key_test_graph`，entry、scenario、checkpoint、observable exit、edge 或 evidence refs 的变化也属于 RFC graph impact。被新方案 supersede 的测试环境、测试进度、测试用例、测试报告和 partial evidence 要从当前测试事实源删除或迁出，并从 `.docs/INDEX.md` 和 generated overview 中移除链接；历史证据只保留在 RFC provenance、git history、CI/release 系统或明确 archive 语义中，不能继续放在当前 `.docs/07_test/**` 冒充现行测试依据。RFC 必须写明 `UI/UX Impact`：reviewed experience docs、DESIGN.md impact、superseded screen contracts、retained UX facts 和原因；必须写明 `Test Fact Source Impact`：reviewed test docs、superseded test docs、retained test docs 和原因；还必须写明 `Development Self-Test Impact`：entry/exit、runtime / target environment、required gates、tech plan self-test contract、`plan.yaml` / `plan.draft.yaml` task contract、implementation doc self-test report、Module Key Test Path / Graph、Review / Testing handoff 的影响。如果只是文案澄清且不影响 UI/UX、测试事实源或自测链路，可分别写 `none`。
 
 RFC recalibration 本身也是 workflow task。开始处理变更前，先在 `<harnessRoot>/state/plan.yaml` 创建或选择一个足够小的 `TASK-*` open task，并设置 `phase: "RFC_RECALIBRATION"`；当前轮只处理一个 RFC 文件、一个 impact analysis 单元或一个局部补丁单元。
 
@@ -29,6 +29,8 @@ RFC 阶段默认先评估是否适合并行 impact analysis。适合时，主 Ag
 
 - `.docs/rfc/RFC_*.md`
 - 当前 PRD 和技术方案
+- `.docs/02_experience/`
+- `DESIGN.md`
 - `.docs/04_implementation/`
 - `<harnessRoot>/state/plan.yaml`
 - `tools/impact_analyzer.py`
@@ -36,7 +38,7 @@ RFC 阶段默认先评估是否适合并行 impact analysis。适合时，主 Ag
 ## 输出
 
 - 更新后的 RFC status 或 impact notes
-- 局部更新后的 PRD 和技术方案
+- 局部更新后的 PRD、UI/UX facts、DESIGN.md 和技术方案
 - 被标记为 `pending_revision` 的受影响任务，或新增增量任务
 - Regression requirements
 - Test fact source impact
@@ -47,7 +49,7 @@ RFC 阶段默认先评估是否适合并行 impact analysis。适合时，主 Ag
 
 - `.docs/rfc/` 按一次需求变更切片，一份 RFC 只描述一个可独立评估、实现和回归的变更。
 - 如果用户一次提出多个互不依赖的变更，应拆成多份 RFC。
-- RFC 的 impact analysis 负责判断是否需要重切 PRD、tech plan、`self_test_contract`、implementation doc、Development Self-Test Report、Module Key Test Path / Graph、test strategy、test cases 或 test report，并覆盖 state、tools、package assets、tests、migration 和 generated overview。
+- RFC 的 impact analysis 负责判断是否需要重切 PRD、UI/UX screen contracts、DESIGN.md、tech plan、`self_test_contract`、implementation doc、Development Self-Test Report、Module Key Test Path / Graph、review report、test strategy、test cases 或 test report，并覆盖 state、tools、package assets、tests、migration 和 generated overview。
 - 对受影响产物做局部补丁，不重写无关稳定 slice。
 - 每次 RFC 影响了文档边界，都要更新 `.docs/INDEX.md` 并记录受影响任务状态。
 
@@ -56,7 +58,7 @@ RFC 阶段默认先评估是否适合并行 impact analysis。适合时，主 Ag
 RFC 阶段受 `plan.yaml` 管控：
 
 1. 没有 open task 时，先创建一个最小 `TASK-*` task，设置 `phase: "RFC_RECALIBRATION"` 和 `current_task_id`。
-2. open task 必须包含 `phase`、`docs`、`allowed_paths`、`required_gates`、`acceptance_criteria` 和 `result_docs`；`result_docs` 指向本 task 计划产出的 RFC、受影响 PRD/tech plan/test docs 或 plan update。
+2. open task 必须包含 `phase`、`docs`、`allowed_paths`、`required_gates`、`acceptance_criteria` 和 `result_docs`；`result_docs` 指向本 task 计划产出的 RFC、受影响 PRD、UI/UX docs、DESIGN.md、tech plan、test docs 或 plan update。
 3. 单个 task 的目标应足够小：一份 RFC 的 impact analysis、一个受影响 slice 的局部补丁、一组任务状态调整，或一个回归要求更新。
 4. 执行当前 task 时只编辑 `allowed_paths` 中的 RFC、受影响 facts、`.docs/INDEX.md`、overview 和 `plan.yaml`。
 5. 完成后运行 `make validate-plan` 和 task required gates；阶段出口前运行 `make validate-rfc`。
@@ -79,6 +81,7 @@ RFC 阶段受 `plan.yaml` 管控：
 - [ ] 当前 RFC 工作已绑定 `plan.yaml` 中一个最小 `TASK-*` task，并设置 `phase: "RFC_RECALIBRATION"`。
 - [ ] 当前 task 已从 `plan.yaml` 移除，或因中断/blocker 保留为可恢复 open task。
 - [ ] Product impact 和 technical impact 已记录。
+- [ ] `UI/UX Impact` 已记录；如果 RFC 影响 screen contracts、interaction states、handoff matrix 或 DESIGN.md，已同步相关事实源和下游引用。
 - [ ] 已判断 RFC 是否需要拆分，以及是否影响其它阶段 slice。
 - [ ] 已列出 docs/state/skills/policies/templates/tools/package assets/tests/migrations/generated artifacts 的影响面。
 - [ ] 已记录 `Test Fact Source Impact`，并清理被 supersede 的 `.docs/07_test/**` 当前事实链接。

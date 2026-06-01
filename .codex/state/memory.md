@@ -16,6 +16,7 @@
 - [ADR 004: Lightweight Graph Contracts](../../.docs/05_decisions/ADR_004_lightweight_graph_contracts.md): phase graph 和 test path graph 采用轻量 declarative schema，不升级为重型图框架。
 - [ADR 005: Development Self-Test Handoff](../../.docs/05_decisions/ADR_005_development_self_test_handoff.md): Development Self-Test Report 是短交接卡，不保存 debug log、operator log、runbook 正文或 evidence body。
 - [ADR 006: Authoring Overlay and Package Boundary](../../.docs/05_decisions/ADR_006_authoring_overlay_and_package_boundary.md): 通用 Harness 配置、项目实例数据和 authoring overlay 分层，README 放用户迁移，PROJECT_SPEC 放稳定设计。
+- [ADR 007: UI/UX Design Stage and DESIGN.md Fact Source](../../.docs/05_decisions/ADR_007_ui_ux_design_stage.md): `UI_UX_DESIGNING` 独立产出体验事实源，visual UI 项目用 `DESIGN.md` 固定视觉系统。
 
 ## Harness Guidance
 

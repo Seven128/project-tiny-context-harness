@@ -23,22 +23,30 @@
 |---|---|---|
 |  |  | low/medium/high |
 
-## 5. Acceptance Criteria
+## 5. UI/UX Impact（体验影响）
+
+- Reviewed experience docs:
+- DESIGN.md impact:
+- Superseded screen contracts: none
+- Retained UX facts:
+- Reason:
+
+## 6. Acceptance Criteria
 
 - [ ] 
 
-## 6. Regression Requirements（回归要求）
+## 7. Regression Requirements（回归要求）
 
 - [ ] 
 
-## 7. Test Fact Source Impact（测试事实源影响）
+## 8. Test Fact Source Impact（测试事实源影响）
 
 - Reviewed test docs:
 - Superseded test docs: none
 - Retained test docs:
 - Reason:
 
-## 8. Development Self-Test Impact（开发自测影响）
+## 9. Development Self-Test Impact（开发自测影响）
 
 - Entry/exit impact:
 - Runtime / target environment impact:
@@ -49,6 +57,6 @@
 - Module key test path impact:
 - Review / Testing handoff impact:
 
-## 9. Status
+## 10. Status
 
 - Status: DRAFT

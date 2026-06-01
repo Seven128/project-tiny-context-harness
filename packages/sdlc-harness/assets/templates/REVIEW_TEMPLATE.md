@@ -3,6 +3,8 @@
 ## 1. Review 范围
 
 - PRD:
+- UI/UX:
+- DESIGN.md:
 - 技术方案（Technical design）:
 - 实现文档（Implementation docs）:
 - Diff/commit:
@@ -21,11 +23,19 @@
 
 - 
 
-## 5. Test Gaps（测试缺口）
+## 5. UX / Design Conformance（体验与设计一致性）
+
+- Screen contracts:
+- Interaction states:
+- Responsive / accessibility:
+- DESIGN.md token usage:
+- Blocking gaps before TESTING:
+
+## 6. Test Gaps（测试缺口）
 
 - 
 
-## 6. Runnable Entry/Exit Readiness（可运行入口/出口）
+## 7. Runnable Entry/Exit Readiness（可运行入口/出口）
 
 - Entry points:
 - Exit / side effects:
@@ -37,7 +47,7 @@
 - Testing Handoff Contract:
 - Blocking gaps before TESTING:
 
-## 7. Application Readiness Checklist（应用就绪检查）
+## 8. Application Readiness Checklist（应用就绪检查）
 
 - Runnable Entry: `PASS` / `BLOCKED`
 - Observable Exit: `PASS` / `BLOCKED`
@@ -45,7 +55,7 @@
 - Config Contract: `PASS` / `BLOCKED`
 - Testing Handoff Readiness: `PASS` / `BLOCKED`
 
-## 8. Gate Result（阶段结论）
+## 9. Gate Result（阶段结论）
 
 - Decision: `PASS` / `BLOCKED`
 - Required before testing:

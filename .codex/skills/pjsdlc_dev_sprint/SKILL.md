@@ -17,6 +17,8 @@ description: Use during SPRINTING to execute one task from plan.yaml, respecting
 
 开发阶段的 Definition of Done 包含可运行的系统入口/出口。凡技术方案或 task 承诺 API、CLI、server route、service、agent、runtime、adapter、worker、provider、外部发送/写入执行器、配置契约或 live/fixture 双模式边界，当前实现必须提供对应入口、调用方式、初始化方式、输出/副作用边界和验证方式；如果真实入口/出口尚不可运行，不能把 task 当作完成，也不能把缺口留给 TESTING 补 runtime。runtime/app/provider/live 类 task 必须在 `plan.yaml` 声明 `evidence_level.required`、`target_runtime_environment` 和 `self_test_contract`，并按合同交付：`deployed_runtime` 不能用 `unit`、`local_runtime`、`external_provider_live`、provider smoke、fake adapter 或 localhost smoke 单独关闭；`business_handoff_ready` 必须提供 Testing Handoff Contract。Implementation doc 必须写明 `Runnable Entry/Exit`，并在 `Development Evidence` 中记录 `Evidence Level`、`Target Runtime Environment`、`Runnable Entry`、`Observable Exit`、`Client / Server Initialization`、`Config Contract`、`Testing Handoff Readiness`、`Known Missing Runtime Boundaries` 和 `Basic Self-test Evidence`；其中 `Basic Self-test Evidence` 应指向已执行的 `Development Self-Test Report`。确实不适用时也要显式写 `Not applicable` 和具体原因。provider smoke、fixture smoke、fake adapter 或 one-shot smoke 只能证明局部链路，不能单独证明 `Application readiness`。此时应保留或创建 `BLOCKED`/后续 dev task，或通过 RFC/ARCHITECTING 处理边界变更。
 
+UI/frontend/browser/page task 还必须按 `docs.uiux` 和 `docs.design_system` 实现 `.docs/02_experience/**` 中的 screen contracts、interaction states、responsive acceptance、accessibility / focus / keyboard / touch expectations，以及 `DESIGN.md` 中的 design tokens 和 component guidance。开发中不得静默修改 `DESIGN.md` 或 UX contract 来追认实现；开发前发现体验事实缺口，回 `UI_UX_DESIGNING`；进入开发后需要改变体验事实，走 RFC。UI task 的 `Development Self-Test Report` 必须记录 dev server 或 page URL、关键 screen states、responsive check、accessibility/focus smoke，以及必要的 browser / Playwright / screenshot evidence pointer。
+
 `self_test_contract` 是开发阶段自测合同，由 ARCHITECTING 或 RFC_RECALIBRATION 先定义，SPRINTING 负责执行并在 implementation doc 填写 `Development Self-Test Report`。开发者不得在开发结束后用现有实现反推自测合同；如果合同缺失、入口不匹配、required gates 未同步或场景无法执行，要先回到 ARCHITECTING/RFC 或把 task 保持为 `BLOCKED`。自测报告不是 TESTING 阶段产物，也不是 debug log、operator log、runbook 或历史流水；它只证明当前模块级可运行交付边界已经能被 Review/Testing 消费。报告必须写 `Report Status: PASS | BLOCKED | IN_PROGRESS | STALE`，只有 `PASS` 且所有 scenario 都是 `PASS` 才能关闭当前 development task；`BLOCKED`、`IN_PROGRESS`、`STALE` 可以作为恢复事实存在，但不能作为交接通过。报告还必须记录 `Module Key Test Path`：从本地启动或调用入口开始，执行并完成 `self_test_contract` 中全部自测用例的模块关键测试路径。该路径应覆盖本 task / 本模块承诺的所有可运行入口，以及自测用例实际经过的内部关键路径、关键边界、观察点和可观测完成证据，供后续 Agent 复用和 debug。如果合同包含 `graph_required: true` 或 `module_key_test_graph`，开发者还必须沿该 DAG 执行并在报告中写入实际 `Module Key Test Graph`：节点只记录 entry、checkpoint、branch、scenario、observable_exit 和 evidence pointer，边只记录路径流向；不要把图扩成 runtime 搭建、执行 trace、debug log 或证据正文。
 
 开发阶段交付包含两类产物：实现产物（代码、配置、脚本、测试等）和开发自测产物。`Development Self-Test Report` 是开发阶段产物，不是计划、模板或历史记录。若当前 task 或关联技术方案声明 `self_test_contract.status: "required"`，必须先逐条执行 `self_test_contract.scenarios[]` 和 `self_test_contract.required_gates`，再填写或更新 `Development Self-Test Report`。没有本轮执行过的 runnable entry、内部关键路径、observable exit / artifact / screenshot / response / log 等证据时，不得写 `PASS`，不得完成 task。自测报告只保留交接卡字段：`Report Status`、`Contract Source`、`Module Application Entry`、`Module Key Test Path`、`Scenario Results`、`Executed Gates`、`Observable Exit`、`Current Blocker`、`Testing Handoff Readiness` 和 `Evidence Index Refs`；证据正文、长命令输出、截图过程和 UI 操作细节进入 evidence index、外部 artifact 或 `.docs/09_runbooks/**` exploration appendix。主报告目标几十行，fallback / diagnostic 最多一句总结，不写 `Actual Evidence` 正文字段。
@@ -29,6 +31,8 @@ description: Use during SPRINTING to execute one task from plan.yaml, respecting
 
 如果是从 `TESTING` 通过 `bugfix_implementation_gap` 直接回到 `SPRINTING`，先创建或选择一个最小 bugfix `TASK-*`，引用 `.docs/07_test/TEST_REPORT.md` 的 failing scenario、既有 tech plan slice 和相关 implementation doc。该路径只用于“技术方案正确但实现偏离”的修复；如果测试证明技术方案、接口契约、任务拆分或 handoff graph 需要修改，应回 `ARCHITECTING`；如果需求或验收标准变化，应走 RFC。
 
+如果测试证明 PRD 和技术方案正确但 UX contract、screen states、handoff matrix 或 DESIGN.md 本身错误，应走 `bugfix_uiux_replan` 回 `UI_UX_DESIGNING`，不要在 SPRINTING 中直接改体验事实。
+
 实现时遵循小步闭环：先检查 `git status`，确认工作区没有未归属到当前 task 的脏变更；再定位相关代码和测试，做必要修改，运行 gate，修复失败，写入或更新相关 implementation doc 并刷新文档派生视图。直接运行 `make validate-dev` 或 `npx sdlc-harness validate-dev` 是开发中 gate，允许当前 `SPRINTING` task 仍然 open，并校验 `current_task_id`、task 合同、dirty files、draft queue 和 implementation doc。此时先不要从 `plan.yaml` 移除当前 task，要在当前 task 仍位于 `plan.yaml` 时创建 task implementation commit；随后再移除 task，创建 task completion ledger commit，并 push 两个 commit。`make validate-current` / `/advance` 是阶段出口 gate，必须在 open task 已移除后才通过。不要顺手重构、重排格式或处理无关问题；如果发现无关风险，只记录或报告。
 
 开发阶段默认先评估当前 task 是否能安全并行。适合时，主 Agent 创建 `parallel_execution.trigger: "workflow_default"` 合同，默认使用 `runtime_managed` + `runtime.provider: "codex_native_subagents"` 调度 worker；用户明确要求并行、多 agent 或多 worktree 时使用 `trigger: "user_requested"`。主 Agent 声明每个 worker 的 `owned_paths`、`forbidden_paths`、`expected_output` 和 `required_gates`；非 native fallback 写仓库时还要声明 `branch` 和 `worktree`。worker 可以在各自非空、互不重叠且属于当前 task `allowed_paths` 的 owned paths 内实现，但不得直接修改 `plan.yaml`、`lifecycle.yaml`、`.docs/INDEX.md`、overview 或最终 implementation doc。主 Agent 负责 review、merge/cherry-pick、运行总 gate、更新事实源和完成两段提交。不适合拆分时继续串行 `/dev` 或 `/devloop` 并记录原因。
@@ -38,7 +42,7 @@ description: Use during SPRINTING to execute one task from plan.yaml, respecting
 - `<harnessRoot>/state/lifecycle.yaml`
 - `<harnessRoot>/state/plan.yaml`
 - `<harnessRoot>/state/plan.draft.yaml`
-- 当前任务关联的 PRD 和技术方案
+- 当前任务关联的 PRD、`.docs/02_experience/**`、`DESIGN.md` 和技术方案
 - 当前源码和测试文件
 
 ## 输出
@@ -64,7 +68,7 @@ description: Use during SPRINTING to execute one task from plan.yaml, respecting
 - task implementation commit 必须发生在 task 移除之前，避免实现变更和计划短期化混在同一个提交里。
 - task completion ledger commit 发生在 implementation commit 之后，只负责将该 task 从当前 `plan.yaml` 移除。
 - 一个开发 task 默认对应一个主要 implementation commit 和一个轻量 completion ledger commit。implementation commit message 应包含 task id，例如 `TASK-003: implement login rate limit`；push 成功前，不进入下一个 task。
-- 本 Skill 不直接重切 PRD 或 tech plan；如果发现上游语义边界错误，进入 `BLOCKED`、创建 RFC，或请求回到 `ARCHITECTING`。从 TESTING bugfix 回流的 `bugfix_implementation_gap` task 也不得重切技术方案；它必须引用 `TEST_REPORT.md` 的失败 scenario 和既有 tech plan，并只修实现偏差。
+- 本 Skill 不直接重切 PRD、UI/UX contract 或 tech plan；如果发现上游语义边界错误，进入 `BLOCKED`、创建 RFC，或请求回到 `UI_UX_DESIGNING` / `ARCHITECTING`。从 TESTING bugfix 回流的 `bugfix_implementation_gap` task 也不得重切技术方案；它必须引用 `TEST_REPORT.md` 的失败 scenario 和既有 tech plan，并只修实现偏差。
 - gate 通过后调用 `pjsdlc_implementation_doc`，由该 Skill 按真实实现更新或新增 `.docs/04_implementation/` 模块级 slice。
 - direct dev gate 与 phase-exit gate 语义不同：`validate-dev` 支持当前 open `SPRINTING` task；`validate-current` 在 `SPRINTING` 下仍会拒绝 open task，提示先完成 implementation commit 和 completion ledger。
 - 如果一个任务实际变成多个独立实现边界，应停止扩大范围，拆分后续任务或回到任务规划。
@@ -114,13 +118,14 @@ done task 的执行流水不在当前 `plan.yaml` 长期保留，也不是默认
 - [ ] open task 在 `plan.yaml` 中包含完整执行合同。
 - [ ] 当前任务仍然是单一清晰的执行单元。
 - [ ] 技术方案或 task 承诺的 API/CLI/adapter/worker/provider、配置契约、输出/副作用和 fixture/live 边界已可运行并写入 implementation doc，或已明确 `BLOCKED`/后续 dev task。
+- [ ] UI/frontend/browser/page task 已实现 `docs.uiux` / `docs.design_system` 承诺的 screen contracts、interaction states、responsive、a11y/focus/keyboard/touch 和 DESIGN.md tokens，或已按 RFC/回流路径记录 blocker。
 - [ ] implementation doc `Development Evidence` 已记录 `Evidence Level`、`Target Runtime Environment`、`Runnable Entry`、`Observable Exit`、`Client / Server Initialization`、`Config Contract`、`Testing Handoff Readiness`、`Known Missing Runtime Boundaries`、`Basic Self-test Evidence`，或写明带原因的 `Not applicable`。
 - [ ] 如果当前 task 有 `self_test_contract.status: "required"`，已逐条执行当前 `self_test_contract.scenarios[]` 和 `self_test_contract.required_gates`，并在 implementation doc `Development Self-Test Report` 写入 `Report Status`、本轮 contract source、Module Application Entry、scenario results、executed gates、Module Key Test Path、Observable Exit、Current Blocker、Testing Handoff Readiness 和 Evidence Index Refs，且 `Report Status: PASS`、所有 scenario 都是 `PASS`。
 - [ ] 如果 `self_test_contract.graph_required: true` 或存在 `module_key_test_graph`，已在 `Development Self-Test Report` 写入实际 `Module Key Test Graph`，且 graph 覆盖入口、scenario、observable exit 和 evidence refs。
 - [ ] 如果当前 task 是 high-risk runtime/live/remote-operator 工作，`resume_capsule` 已更新为 5-8 条恢复事实，`recovery_refs` 链接 implementation doc 和 `.docs/09_runbooks/**` runbook/evidence，implementation doc 已填写短的 `Current Operator Path` 和分层 `Gate Breakdown`。
 - [ ] 如果 task 要求 `business_handoff_ready`，implementation doc 已写入 Testing Handoff Contract，包含入口、配置、初始化/health、输入样例、预期出口、清理方式和证据等级。
 - [ ] 如果当前 task 来自 `plan.draft.yaml.tasks[]`，源 draft 已在 promote 时从 draft 列表删除。
-- [ ] 如果当前 task 来自 TESTING bugfix 回流，已确认它是 `bugfix_implementation_gap`，并引用 `TEST_REPORT.md`、既有 tech plan 和 implementation doc。
+- [ ] 如果当前 task 来自 TESTING bugfix 回流，已确认它是 `bugfix_implementation_gap`，并引用 `TEST_REPORT.md`、既有 tech plan 和 implementation doc；若问题属于 UX contract 或 DESIGN.md，已回到 `UI_UX_DESIGNING`。
 - [ ] implementation doc 已生成或更新，并反映相关模块的真实代码。
 - [ ] 如果启用了 `parallel_execution`，worker owned paths、forbidden paths、required gates 和主 Agent 集成结果已记录。
 - [ ] gate 结果已写入 implementation doc `Verification`，必要时当前 task `working_notes` 也记录了恢复现场所需的 gate evidence。

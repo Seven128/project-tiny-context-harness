@@ -59,6 +59,10 @@ tasks:
         - ".docs/00_raw/example.md"
       product:
         - ".docs/01_product/example.md"
+      uiux:
+        - ".docs/02_experience/example.md"
+      design_system:
+        - "DESIGN.md"
       architecture: []
       tech_plan: []
       rfc: []

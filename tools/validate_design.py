@@ -33,6 +33,24 @@ CROSS_CUTTING_CATEGORIES = [
         "architecture_terms": ["compliance", "permission", "authorization", "audit", "合规", "权限", "审计", "授权", "客户确认", "回执归档"],
     },
 ]
+UI_DRAFT_TASK_TERMS = [
+    "frontend",
+    "front-end",
+    "browser",
+    "page",
+    "screen",
+    "route",
+    "component",
+    "visual_ui",
+    "design.md",
+    ".docs/02_experience/",
+    "页面",
+    "前端",
+    "屏幕",
+    "交互",
+    "组件",
+    "视觉",
+]
 
 
 def main() -> None:
@@ -43,6 +61,7 @@ def main() -> None:
     architecture_docs = markdown_deliverables(".docs/02_architecture")
     tech_plan_docs = markdown_deliverables(".docs/03_tech_plan")
     product_docs = markdown_deliverables(".docs/01_product")
+    experience_docs = markdown_deliverables(".docs/02_experience")
     require(architecture_docs, "No architecture deliverables found in .docs/02_architecture/")
     require(tech_plan_docs, "No technical plan deliverables found in .docs/03_tech_plan/")
 
@@ -50,12 +69,12 @@ def main() -> None:
     require(contains_any(text, ["prd", "requirement", "需求"]), "Design must cite product requirements")
     require(contains_any(text, ["api", "interface", "接口", "contract", "契约"]), "Design must describe interfaces or contracts")
     require(contains_any(text, ["task", "任务", "breakdown"]), "Design must include task breakdown")
-    draft_tasks = validate_draft_task_tech_plan_refs(tech_plan_docs)
+    draft_tasks = validate_draft_task_tech_plan_refs(tech_plan_docs, experience_docs)
     validate_cross_cutting_architecture(product_docs, tech_plan_docs, architecture_docs, draft_tasks)
     print(f"Design artifacts OK: {len(architecture_docs)} architecture, {len(tech_plan_docs)} tech plan")
 
 
-def validate_draft_task_tech_plan_refs(tech_plan_docs: list) -> list[dict]:
+def validate_draft_task_tech_plan_refs(tech_plan_docs: list, experience_docs: list) -> list[dict]:
     draft = load_plan(".codex/state/plan.draft.yaml")
     require("current_phase" not in draft, "plan.draft.yaml must not define current_phase; lifecycle.yaml is the single source for current_phase")
     require("current_task_id" not in draft, "plan.draft.yaml must not define current_task_id because drafts are not active task state")
@@ -63,6 +82,7 @@ def validate_draft_task_tech_plan_refs(tech_plan_docs: list) -> list[dict]:
     require(tasks, "plan.draft.yaml must contain at least one task before leaving ARCHITECTING")
 
     available_tech_plans = {repo_relative(path) for path in tech_plan_docs}
+    available_experience_docs = {repo_relative(path) for path in experience_docs}
     development_tasks: list[dict] = []
     primary_refs: list[str] = []
     for index, task in enumerate(tasks):
@@ -80,6 +100,7 @@ def validate_draft_task_tech_plan_refs(tech_plan_docs: list) -> list[dict]:
         for ref in normalized_refs:
             require(ref.startswith(".docs/03_tech_plan/"), f"Draft task {task.get('id')} docs.tech_plan must point into .docs/03_tech_plan/: {ref}")
             require(ref in available_tech_plans, f"Draft task {task.get('id')} references missing or generated tech plan slice: {ref}")
+        validate_uiux_design_refs_for_draft_task(task, available_experience_docs)
         validate_self_test_contract_tech_plan_binding(task, normalized_refs)
         primary_refs.append(normalized_refs[0])
 
@@ -90,6 +111,38 @@ def validate_draft_task_tech_plan_refs(tech_plan_docs: list) -> list[dict]:
             "Draft development tasks must reference distinct primary tech plan slices in docs.tech_plan",
         )
     return tasks
+
+
+def validate_uiux_design_refs_for_draft_task(task: dict, available_experience_docs: set[str]) -> None:
+    docs = task.get("docs")
+    if not isinstance(docs, dict):
+        return
+    task_id = task.get("id")
+    uiux_refs = [normalize_doc_ref(ref) for ref in as_list(docs.get("uiux"))]
+    design_refs = [normalize_doc_ref(ref) for ref in as_list(docs.get("design_system"))]
+    ui_task = is_ui_draft_task(task)
+
+    if ui_task:
+        require(uiux_refs, f"UI/frontend draft task {task_id} must reference a UI/UX slice in docs.uiux")
+        require(design_refs, f"UI/frontend draft task {task_id} must reference DESIGN.md in docs.design_system")
+
+    for ref in uiux_refs:
+        require(ref.startswith(".docs/02_experience/"), f"Draft task {task_id} docs.uiux must point into .docs/02_experience/: {ref}")
+        require(ref in available_experience_docs, f"Draft task {task_id} references missing or generated UI/UX slice: {ref}")
+
+    for ref in design_refs:
+        require(ref == "DESIGN.md", f"Draft task {task_id} docs.design_system must point to DESIGN.md: {ref}")
+        require(repo_path("DESIGN.md").exists(), f"Draft task {task_id} references missing design system: DESIGN.md")
+
+
+def is_ui_draft_task(task: dict) -> bool:
+    docs = task.get("docs")
+    docs_text = ""
+    if isinstance(docs, dict):
+        docs_text = "\n".join(ref for value in docs.values() for ref in as_list(value))
+    runtime_text = "\n".join(str(task.get(key) or "") for key in ["target_runtime_environment", "self_test_contract"])
+    text = "\n".join(str(task.get(key) or "") for key in ["id", "title", "summary", "phase"]) + "\n" + docs_text + "\n" + runtime_text
+    return contains_any(text, UI_DRAFT_TASK_TERMS)
 
 
 def validate_cross_cutting_architecture(product_docs: list, tech_plan_docs: list, architecture_docs: list, draft_tasks: list[dict]) -> None:

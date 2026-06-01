@@ -1,7 +1,7 @@
 PYTHON ?= python3
 SDLC_HARNESS ?= npx sdlc-harness
 
-.PHONY: help status docs-overview validate-doc-overviews validate-harness validate-current validate-plan validate-pm validate-design validate-dev validate-review validate-test validate-release validate-rfc lint test-current-domain test-all build
+.PHONY: help status docs-overview validate-doc-overviews validate-harness validate-current validate-plan validate-pm validate-uiux validate-design validate-dev validate-review validate-test validate-release validate-rfc lint test-current-domain test-all build
 
 help:
 	@echo "AI SDLC Harness commands"
@@ -12,6 +12,7 @@ help:
 	@echo "  make validate-current    运行当前 lifecycle phase 的 gate"
 	@echo "  make validate-plan       校验 plan.yaml task 合同，允许当前 open task"
 	@echo "  make validate-pm         校验产品需求产物"
+	@echo "  make validate-uiux       校验 UI/UX 体验事实源和 DESIGN.md"
 	@echo "  make validate-design     校验架构设计、技术方案和任务草案"
 	@echo "  make validate-dev        校验 sprint 任务状态、draft 消费、路径、代码 gate 和实现文档"
 	@echo "  make validate-review     校验 Review report"
@@ -43,6 +44,9 @@ validate-plan:
 validate-pm:
 	test -f .docs/INDEX.md
 	$(PYTHON) tools/validate_prd.py
+
+validate-uiux:
+	$(PYTHON) tools/validate_uiux_design.py
 
 validate-design:
 	$(PYTHON) tools/validate_design.py

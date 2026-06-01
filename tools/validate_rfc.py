@@ -48,6 +48,23 @@ SELF_TEST_TRIGGER_TERMS = [
     "阻塞",
 ]
 SELF_TEST_IMPACT_TERMS = ["development self-test impact", "开发自测影响"]
+UI_UX_TRIGGER_TERMS = [
+    "ui/ux",
+    "ux",
+    "screen",
+    "interaction",
+    "design.md",
+    "frontend",
+    "browser",
+    "page",
+    "visual",
+    "体验",
+    "屏幕",
+    "交互",
+    "视觉",
+    "前端",
+]
+UI_UX_IMPACT_TERMS = ["ui/ux impact", "体验影响"]
 
 
 def superseded_test_docs(docs) -> list[str]:
@@ -85,6 +102,7 @@ def main() -> None:
     invalid = [status for status in statuses if status not in allowed]
     require(not invalid, "Invalid RFC status: " + ", ".join(invalid))
     validate_development_self_test_impact(docs)
+    validate_uiux_impact(docs)
     print(f"RFC artifacts OK: {len(docs)} file(s)")
 
 
@@ -98,6 +116,19 @@ def validate_development_self_test_impact(docs) -> None:
             require(
                 contains_any(text, SELF_TEST_IMPACT_TERMS),
                 f"{doc.relative_to(repo_path('.')).as_posix()} must include Development Self-Test Impact when RFC changes entry/exit, runtime, gates, handoff, or blockers",
+            )
+
+
+def validate_uiux_impact(docs) -> None:
+    for doc in docs:
+        number = rfc_number(doc.name)
+        if number is not None and number < 27:
+            continue
+        text = doc.read_text(encoding="utf-8")
+        if contains_any(text, UI_UX_TRIGGER_TERMS):
+            require(
+                contains_any(text, UI_UX_IMPACT_TERMS),
+                f"{doc.relative_to(repo_path('.')).as_posix()} must include UI/UX Impact when RFC changes experience docs, screen contracts, DESIGN.md, frontend, or browser behavior",
             )
 
 

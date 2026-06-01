@@ -13,6 +13,13 @@ phases:
       - ".docs/01_product/**"
       - ".docs/INDEX.md"
 
+  UI_UX_DESIGNING:
+    write:
+      - ".docs/02_experience/**"
+      - "DESIGN.md"
+      - "<harnessRoot>/state/plan.yaml"
+      - ".docs/INDEX.md"
+
   ARCHITECTING:
     write:
       - ".docs/02_architecture/**"
@@ -53,6 +60,8 @@ phases:
     write:
       - ".docs/rfc/**"
       - ".docs/01_product/**"
+      - ".docs/02_experience/**"
+      - "DESIGN.md"
       - ".docs/03_tech_plan/**"
       - ".docs/07_test/**"
       - ".docs/09_runbooks/**"

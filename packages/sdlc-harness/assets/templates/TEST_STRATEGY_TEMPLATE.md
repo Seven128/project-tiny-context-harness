@@ -5,6 +5,8 @@
 - In scope:
 - Out of scope:
 - Target release/module:
+- UI/UX handoff refs:
+- DESIGN.md:
 
 ## 2. Environment（环境）
 
@@ -12,6 +14,7 @@
 - Expected exits / side effects:
 - Config contract:
 - Fixture/live boundary:
+- Screen states / responsive / a11y environment:
 
 ## 3. Priority（优先级）
 
@@ -25,3 +28,4 @@
 - Manual checks:
 - Regression gates:
 - Blocker handling:
+- UI/UX contract coverage:

@@ -4,7 +4,7 @@
 
 - Domain: `harness_workflow`
 - Module / subsystem / core flow: workflow Skills, prompt routing, hard/soft indexing and authoring overlay
-- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`, `TASK-060`, `TASK-061`, `TASK-066`, `TASK-067`, `TASK-069`, `TASK-070`, `TASK-071`, `TASK-072`, `TASK-076`, `TASK-079`
+- Updated by task: `DEV-014`, `DEV-016`, `DEV-017`, `DEV-021`, `DEV-023`, `DEV-029`, `DEV-036`, `DEV-037`, `DEV-038`, `DEV-039`, `DEV-040`, `DEV-043`, `DEV-044`, `DEV-046`, `DEV-049`, `DEV-050`, `DEV-055`, `DEV-056`, `TASK-057`, `TASK-060`, `TASK-061`, `TASK-066`, `TASK-067`, `TASK-069`, `TASK-070`, `TASK-071`, `TASK-072`, `TASK-076`, `TASK-079`, `UI_UX_DESIGNING package update`
 - Linked PRD: `.docs/01_product/npm_package_distribution.md`
 - Linked technical design: `.docs/03_tech_plan/harness_package_distribution.md`, `PROJECT_SPEC.md`
 - Linked RFC: `RFC_007`, `RFC_009`, `RFC_015`, `RFC_017`, `RFC_018`, `RFC_019`, `RFC_020`, `RFC_021`, `RFC_024`
@@ -23,12 +23,18 @@
 - The authoring Skill requires README/package README coverage to stay aligned with all public package capabilities.
 - PM, Architect, Manager, Dev, Reviewer, Tester, Release and RFC prompts now describe default parallel eligibility checks, Codex native subagent scheduling, fallback modes and final fact-source integration with the main agent.
 - PM and Architect prompts require deleting the superseded monolithic PRD/product or tech plan file after user-requested slicing creates replacement slices and updates the related fact-source references.
+- `UI_UX_DESIGNING` is now a first-class lifecycle phase between `REQUIREMENT_GATHERING` and `ARCHITECTING`. It uses `pjsdlc_uiux_design`, writes `.docs/02_experience/**`, optionally writes root `DESIGN.md`, and exits through `validate-uiux`.
+- `.docs/02_experience/**` records UX flow, screen contracts, interaction states, responsive/a11y acceptance and handoff matrix. visual UI projects also use Google-format `DESIGN.md` as a design-system fact source; CLI/API/non-visual projects declare `Applicability: cli_or_api_experience` or `Applicability: not_applicable`.
 - Architect prompt now treats semantic design slicing as a `make validate-design` hard gate: `plan.draft.yaml` development tasks must reference `docs.tech_plan`, multiple draft tasks need distinct primary tech plan slices, generated `overview.md` cannot satisfy design deliverables, and explicit cross-cutting themes require dedicated architecture slices.
+- Architect prompt now consumes `.docs/02_experience/**` and `DESIGN.md`, requires `Experience Input Review`, and makes UI/frontend draft tasks reference `docs.uiux` plus `docs.design_system`.
 - Manager, PM and Architect prompts now describe the development-before rollback path from `ARCHITECTING` to `REQUIREMENT_GATHERING` for PRD edits, while preserving RFC workflow for changes after `SPRINTING`.
+- Manager prompt routes `/uiux` and natural-language UI/UX requests to `UI_UX_DESIGNING`. It also supports `ARCHITECTING -> UI_UX_DESIGNING` pre-sprint return and TESTING `bugfix_uiux_replan`.
 - PM, Architect, Reviewer, Tester, Release and RFC prompts now require each main workflow action to run as one small `TASK-*` `plan.yaml` task with `phase` metadata. This covers conversational generation, existing-document slicing, synthesis from prior fact sources, review batches, test evidence, release preparation and RFC recalibration.
 - Dev, Review, Tester and Implementation Doc prompts now treat runnable entry/exit as a hard phase boundary: SPRINTING must implement or block promised API/CLI/adapter/provider/config/fixture-live boundaries, REVIEWING must block missing entry/exit, and TESTING may only exercise existing entrypoints.
+- Dev, Review, Tester, RFC and Implementation Doc prompts now consume UI/UX facts for UI/frontend work: SPRINTING implements screen states, interactions, responsive behavior, focus/keyboard/touch and design tokens; REVIEWING checks UX/design conformance; TESTING derives UI cases from screen contracts and handoff matrix; RFC impact analysis checks `.docs/02_experience/**` and `DESIGN.md`.
 - Review, test and implementation templates include runnable entry/exit sections. `validate-review` and `validate-test` require entry/exit evidence text, and TESTING validators reject runtime, bootstrap, provider, deploy or package runtime script changes.
 - TESTING distinguishes `.docs/07_test/TEST_STRATEGY.md`, `.docs/07_test/TEST_CASES.md` and `.docs/07_test/TEST_REPORT.md`; `TEST_REPORT.md` is execution-only evidence and `validate-test` no longer falls back to `TEST_PLAN.md`.
+- `TEST_CASES.md` now has a lightweight case contract: stable `TC-*` IDs, requirement/risk refs, runnable entry, preconditions, steps, expected exit, type, priority and short evidence pointer. `validate-test` keeps legacy report-only compatibility, but validates case structure when a report references `TC-*`, a TESTING task plans `TEST_CASES.md`, or the file exists.
 - Tester and Manager prompts now classify TESTING bugfix recovery with `Bugfix Route`: `bugfix_replan` returns to `ARCHITECTING` for tech plan / contract / graph changes, `bugfix_implementation_gap` returns to `SPRINTING` for implementation deviations, and requirement or acceptance changes still use RFC.
 - RFC recalibration now records `Test Fact Source Impact` and removes superseded `.docs/07_test/**` files from current test facts and `.docs/INDEX.md` when a route, entry/exit or acceptance boundary changes.
 - `validate-dev` now requires implementation docs to include `Runnable Entry/Exit` facts or explicit `Not applicable`, so missing runtime boundaries cannot be deferred into TESTING by omission.
@@ -47,6 +53,9 @@
 - The authoring-only Harness design prompt now states the PROJECT_SPEC boundary: it describes stable zero-to-one project design, product/protocol rationale and canonical behavior, while version migration and upgrade instructions belong in README / package README or release/implementation docs.
 - The authoring-only Harness design prompt now requires future workflow changes to consult `memory.md#Harness Design Decisions` and related `.docs/05_decisions/ADR_*.md` before changing existing design tradeoffs, and to add new durable rationale as ADR slices instead of expanding `PROJECT_SPEC.md`.
 - `validate-rfc` now requires `Development Self-Test Impact` for new RFCs that change entry/exit, runtime, gates, handoff or blocker semantics.
+- `validate-uiux` requires a non-overview `.docs/02_experience/**` deliverable, PRD / requirement references unless `Applicability: not_applicable`, applicable screen states, responsive expectations and a11y/focus/keyboard/touch expectations. visual UI slices require root `DESIGN.md` and run the local `@google/design.md` linter, failing on errors.
+- `validate-design` now rejects UI/frontend draft tasks that omit `docs.uiux` or `docs.design_system`, or reference missing UX slices / missing `DESIGN.md`.
+- `validate-rfc` now requires `UI/UX Impact` for new RFCs that mention UI/UX, frontend, screen, interaction, browser/page or `DESIGN.md` changes.
 - `validate-review` now requires explicit PASS/BLOCKED readiness fields for `Runnable Entry`, `Observable Exit`, `Initialization`, `Config Contract` and `Testing Handoff Readiness`; any `BLOCKED` field blocks TESTING handoff.
 - `validate-review` and `validate-test` now reject `PASS` reports that acknowledge runtime/handoff mismatch, missing deployment, missing initialization, local-only evidence or fake adapters.
 - `validate-test` now rejects `PASS` reports that acknowledge missing runnable entry/exit or missing `Development Evidence`; TESTING must report `BLOCKED` with recovery conditions instead.
@@ -90,6 +99,7 @@
 | `AGENTS.md` | Deterministic workflow router | lifecycle-first rule, natural-language and macro mapping |
 | `.codex/skills/pjsdlc_manager/SKILL.md` | Manager prompt | status/next/advance/dev/test/review routing and phase-exit gate semantics |
 | `.codex/skills/pjsdlc_pm_prd/SKILL.md` | Product prompt | PRD slicing and requirement gathering |
+| `.codex/skills/pjsdlc_uiux_design/SKILL.md` | UI/UX prompt | UX flow, screen contracts, interaction states, responsive/a11y acceptance, handoff matrix and optional `DESIGN.md` |
 | `.codex/skills/pjsdlc_architect_design/SKILL.md` | Architecture prompt | architecture/tech plan and `plan.draft.yaml` |
 | `.codex/skills/pjsdlc_dev_sprint/SKILL.md` | Development prompt | `/dev`, `/devloop`, one-task execution protocol and direct dev gate semantics |
 | `.codex/skills/pjsdlc_implementation_doc/SKILL.md` | Implementation fact prompt | module-level implementation docs |
@@ -100,9 +110,9 @@
 | `.codex/skills/authoring/harness_package_design/SKILL.md` | Authoring-only prompt | package iteration, scriptability heuristic, README capability coverage |
 | `.codex/pjsdlc_managed/make/sdlc-harness.mk` | Managed Makefile fragment | direct `validate-dev` package CLI wiring |
 | `.codex/pjsdlc_managed/policies/phase_contracts.yaml` | Phase-to-skill contract | `skill` per phase |
-| `.codex/pjsdlc_managed/templates/*` | Stage document templates | review/test strategy/cases/report/implementation entry/exit evidence sections |
-| `tools/validate_review.py`, `tools/validate_test_plan.py` | Source workspace validators | review/test document and TESTING boundary checks |
-| `packages/sdlc-harness/src/lib/validators.ts` | Package CLI validators | `npx sdlc-harness validate-*` checks including TESTING boundary rules |
+| `.codex/pjsdlc_managed/templates/*` | Stage document templates | UI/UX design, review/test strategy/cases/report/implementation entry/exit evidence sections |
+| `tools/validate_uiux_design.py`, `tools/validate_review.py`, `tools/validate_test_plan.py` | Source workspace validators | UI/UX, review/test document and TESTING boundary checks |
+| `packages/sdlc-harness/src/lib/validators.ts` | Package CLI validators | `npx sdlc-harness validate-*` checks including UI/UX, design handoff and TESTING boundary rules |
 | `packages/sdlc-harness/src/lib/sync-engine.ts` | Skill materialization | base Skill copy plus local override append |
 | `tools/validate_prompt_language.py` | Prompt contract validator | Chinese explanation + English identifiers |
 
@@ -143,6 +153,9 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 - Workflow reliability comes from the soft index because it is deterministic and tied to lifecycle state.
 - User convenience comes from natural-language routing and macro aliases; users do not need to memorize every `/xxx`.
 - `/plan` and `/goal` are client modes and are not automatically controlled by Harness.
+- `UI_UX_DESIGNING` is a separate stage rather than an architecture subsection so downstream stages can consume stable screen contracts, interaction states, responsive/a11y expectations and visual tokens before technical task breakdown.
+- `DESIGN.md` is only mandatory for visual UI. The validator accepts explicit non-visual applicability in `.docs/02_experience/**` to keep CLI/API/operator experience projects from manufacturing empty design systems.
+- `@google/design.md` is a package dependency. Source Python and package TypeScript validators call the local linter path instead of relying on network `npx` package fetch during gates.
 - Authoring-only prompts help this repository improve the Harness itself and should not be shipped into user projects by default.
 - Package-facing behavior changes must keep both `README.md` and `packages/sdlc-harness/README.md` aligned with the full public capability list, not only `PROJECT_SPEC.md` or release status notes.
 - Local Skill overrides are append-only in v1. They let projects add role preferences or complete local Skill extensions without replacing lifecycle, task, gate or allowed-path rules from the package Skill.
@@ -157,6 +170,7 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 - SPRINTING Definition of Done now includes runnable entry/exit for promised API, CLI, server route, adapter, worker, provider, config contract and fixture/live boundaries. Missing entry/exit remains a dev/RFC blocker instead of becoming testing work.
 - REVIEWING validates entry/exit readiness before TESTING. TESTING validates through existing entrypoints only and blocks product runtime, package runtime script, long-running runtime, systemd, cloud bootstrap, provider adapter and deploy/script changes.
 - `validate-test` requires `.docs/07_test/TEST_REPORT.md`, rejects placeholder report text, and requires test matrix, regression evidence, coverage gaps, runnable entry/exit coverage and PASS/BLOCKED decision text.
+- `validate-test` lightly validates `.docs/07_test/TEST_CASES.md` only when case facts are in scope: report `TC-*` refs, current TESTING task `result_docs`, or an existing cases file. It checks unique `TC-*`, required case fields and report refs without proving execution.
 - `validate-plan` rejects non-`TESTING`/`RFC_RECALIBRATION` tasks that target `.docs/07_test/**`, so SPRINTING cannot create formal test facts before entry/exit delivery.
 - `validate-rfc` checks `Test Fact Source Impact` and rejects RFCs that list superseded `.docs/07_test/**` paths still present in current facts or `.docs/INDEX.md`.
 - TESTING boundary checks still reject `tests/runtime/**` and runtime-like test files, but allow clearly test-only fixture, mock, assertion and smoke files under `tests/**`.
@@ -280,6 +294,12 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | `make docs-overview && make validate-doc-overviews && make validate-harness && make validate-plan && npm test --workspace agent-project-sdlc && git diff --check` | Authoring ADR lookup guidance, memory decision index and PROJECT_SPEC boundary update | PASS on 2026-05-31; package tests 10 passed |
 | `npm test --workspace agent-project-sdlc` | Prompt and transition regression for TESTING bugfix return routing | PASS in current working tree |
 | `node packages/sdlc-harness/dist/cli.js package sync-source && node packages/sdlc-harness/dist/cli.js package check-source` | Package assets reflect TESTING bugfix Skill, policy and README updates | PASS in current working tree |
+| `npm test --workspace agent-project-sdlc` | Package validator regression for lightweight TEST_CASES structure and TEST_REPORT case refs | PASS in current working tree |
+| `npm test --workspace agent-project-sdlc` | UI/UX stage validators, transition graph, init/sync assets and DESIGN.md linter regression | PASS on 2026-06-01; 10 tests passed |
+| `make docs-overview` | Generated overview refresh for new `.docs/02_experience/` and ADR 007 | PASS on 2026-06-01 |
+| `make validate-harness` | Harness scaffold, prompt language and overview consistency after UI/UX stage addition | PASS on 2026-06-01 |
+| `node packages/sdlc-harness/dist/cli.js package sync-source && node packages/sdlc-harness/dist/cli.js package check-source` | Package assets include UI/UX skill, template, validator, policies and README updates | PASS on 2026-06-01 |
+| `node tools/consumer_lab_full_test.mjs --reset-lab --json-report /tmp/sdlc-harness-consumer-lab-uiux.json --markdown-report /tmp/sdlc-harness-consumer-lab-uiux.md` | Installed-consumer validation exposes `validate-uiux`, UI/UX assets and phase graph | PASS on 2026-06-01; 53 PASS, 0 BLOCKED, 0 FAIL |
 
 ## 8. 变更记录（Change Log）
 
@@ -321,6 +341,8 @@ Package asset packages/sdlc-harness/assets/skills/<skill_name>/SKILL.md
 | 2026-05-31 | PROJECT_SPEC boundary | Working tree | Clarified that version migration and upgrade instructions stay in README/package README or release/implementation docs, not in the zero-to-one project spec. |
 | 2026-05-31 | ADR-backed design rationale | Working tree | Required future workflow changes to consult memory / ADR design decision indexes and to add durable rationale as ADR slices instead of expanding `PROJECT_SPEC.md`. |
 | 2026-06-01 | TESTING bugfix return boundary | Working tree | Added prompt routing for `Bugfix Route`, keeping bugfix recovery lightweight through existing return edges and avoiding a separate bugfix workflow engine. |
+| 2026-06-01 | TESTING case contract | Working tree | Added lightweight `TEST_CASES.md` case schema and conditional `validate-test` checks for `TC-*` references, preserving report-only compatibility for legacy tasks. |
+| 2026-06-01 | UI/UX design stage | Working tree | Added `UI_UX_DESIGNING`, `.docs/02_experience/**`, optional visual UI `DESIGN.md`, `validate-uiux`, downstream consumption rules and package assets. |
 
 ## 9. 后续维护注意事项
 

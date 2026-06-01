@@ -3,9 +3,11 @@ import { execFileSync } from "node:child_process";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { runValidator } from "../../packages/sdlc-harness/dist/lib/validators.js";
 
 const root = await mkdtemp(path.join(tmpdir(), "sdlc-harness-validators-"));
+const cliPath = fileURLToPath(new URL("../../packages/sdlc-harness/dist/cli.js", import.meta.url));
 const resumeCapsule = (taskId, canonicalPath, nextStep, lastPassedGate = "npm test") => `resume_capsule:
   task_id: ${taskId}
   state: in_progress with recovery path selected
@@ -27,6 +29,7 @@ try {
     "utf8"
   );
   await mkdir(path.join(root, ".docs/01_product"), { recursive: true });
+  await mkdir(path.join(root, ".docs/02_experience"), { recursive: true });
   await mkdir(path.join(root, ".docs/02_architecture"), { recursive: true });
   await mkdir(path.join(root, ".docs/03_tech_plan"), { recursive: true });
   await mkdir(path.join(root, ".docs/04_implementation/example"), { recursive: true });
@@ -52,6 +55,7 @@ try {
     "# Architecture\n\nPRD requirement interface task\n",
     "utf8"
   );
+  await writeFile(path.join(root, ".docs/02_experience/not_applicable.md"), notApplicableUiuxSlice(), "utf8");
   await writeFile(
     path.join(root, ".docs/02_architecture/overview.md"),
     "# Generated Architecture Overview\n\nGenerated overview should not count as a deliverable.\n",
@@ -209,6 +213,7 @@ tasks:
     "validate-harness",
     "validate-plan",
     "validate-pm",
+    "validate-uiux",
     "validate-design",
     "validate-review",
     "validate-test",
@@ -218,6 +223,8 @@ tasks:
     const report = await runValidator(root, gate);
     assert.deepEqual(report.errors, [], gate);
   }
+  const directUiux = execFileSync(process.execPath, [cliPath, "validate-uiux"], { cwd: root, encoding: "utf8" });
+  assert.match(directUiux, /validate-uiux checked/);
   const validPhaseContracts = await readFile(path.join(root, ".harness/pjsdlc_managed/policies/phase_contracts.yaml"), "utf8");
   await writeFile(
     path.join(root, ".harness/pjsdlc_managed/policies/phase_contracts.yaml"),
@@ -326,6 +333,7 @@ transitions:
   await writeFile(path.join(root, ".docs/07_test/TEST_CASES.md"), "# Test Cases\n\n## Cases\n\nNo executed evidence.\n", "utf8");
   const onlyTestCases = await runValidator(root, "validate-test");
   assert.match(onlyTestCases.errors.join("\n"), /Missing test report/);
+  await rm(path.join(root, ".docs/07_test/TEST_CASES.md"), { force: true });
   await writeFile(
     path.join(root, ".docs/07_test/TEST_REPORT.md"),
     "# Test Report\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal | pending |\n\n## Regression Evidence\n\n- TBD\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised.\n\n## Coverage Gap\n\nTBD\n\n## Decision\n\nBLOCKED\n",
@@ -340,6 +348,54 @@ transitions:
   );
   const missingReadinessPassReport = await runValidator(root, "validate-test");
   assert.match(missingReadinessPassReport.errors.join("\n"), /cannot PASS/);
+  await writeFile(
+    path.join(root, ".docs/07_test/TEST_REPORT.md"),
+    "# Test Report\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal | PASS |\n\n## Regression Evidence\n\n- focused regression: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped CLI.\n\n## Coverage Gap\n\nNo browser coverage.\n\n## Decision\n\nPASS\n",
+    "utf8"
+  );
+  const legacyReportOnly = await runValidator(root, "validate-test");
+  assert.deepEqual(legacyReportOnly.errors, [], "validate-test preserves legacy report-only compatibility when no cases are referenced");
+
+  await writeFile(path.join(root, ".docs/07_test/TEST_CASES.md"), validTestCases(), "utf8");
+  await writeFile(
+    path.join(root, ".docs/07_test/TEST_REPORT.md"),
+    validTestReportWithCaseRefs(),
+    "utf8"
+  );
+  const validCasesReport = await runValidator(root, "validate-test");
+  assert.deepEqual(validCasesReport.errors, [], "validate-test accepts valid TEST_CASES.md referenced by TEST_REPORT.md");
+
+  await writeFile(path.join(root, ".docs/07_test/TEST_CASES.md"), validTestCases().replace("TC-002", "TC-001"), "utf8");
+  const duplicateCases = await runValidator(root, "validate-test");
+  assert.match(duplicateCases.errors.join("\n"), /Case ID must be unique/);
+
+  await writeFile(path.join(root, ".docs/07_test/TEST_CASES.md"), validTestCases(), "utf8");
+  await writeFile(
+    path.join(root, ".docs/07_test/TEST_REPORT.md"),
+    validTestReportWithCaseRefs().replace("TC-002", "TC-999"),
+    "utf8"
+  );
+  const missingCaseRef = await runValidator(root, "validate-test");
+  assert.match(missingCaseRef.errors.join("\n"), /references case IDs not found/);
+
+  await writeFile(path.join(root, ".docs/07_test/TEST_CASES.md"), validTestCases().replace("Package installed", "TBD"), "utf8");
+  await writeFile(path.join(root, ".docs/07_test/TEST_REPORT.md"), validTestReportWithCaseRefs(), "utf8");
+  const placeholderCases = await runValidator(root, "validate-test");
+  assert.match(placeholderCases.errors.join("\n"), /TEST_CASES\.md must not contain/);
+
+  await writeFile(path.join(root, ".docs/07_test/TEST_CASES.md"), casesMissingRunnableEntry(), "utf8");
+  const missingRunnableCase = await runValidator(root, "validate-test");
+  assert.match(missingRunnableCase.errors.join("\n"), /Runnable Entry/);
+
+  await rm(path.join(root, ".docs/07_test/TEST_CASES.md"), { force: true });
+  await writeFile(
+    path.join(root, ".docs/07_test/TEST_REPORT.md"),
+    "# Test Report\n\n## Matrix\n\n| Case ID | Scenario | Result |\n|---|---|---|\n| TC-001 | Normal | PASS |\n\n## Regression Evidence\n\n- focused regression: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped CLI.\n\n## Coverage Gap\n\nNo browser coverage.\n\n## Decision\n\nPASS\n",
+    "utf8"
+  );
+  const missingCasesFile = await runValidator(root, "validate-test");
+  assert.match(missingCasesFile.errors.join("\n"), /Missing test cases/);
+
   await writeFile(
     path.join(root, ".docs/07_test/TEST_REPORT.md"),
     "# Test Report\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal | PASS |\n\n## Regression Evidence\n\n- focused regression: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped CLI.\n\n## Coverage Gap\n\nNo browser coverage.\n\n## Decision\n\nPASS\n",
@@ -1217,9 +1273,104 @@ tasks: []
   assert.deepEqual(testingCurrent.errors, [], "validate-current routes TESTING to validate-test");
   await writeFile(
     path.join(root, ".harness/state/lifecycle.yaml"),
+    'current_phase: "UI_UX_DESIGNING"\n',
+    "utf8"
+  );
+  const uiuxCurrent = await runValidator(root, "validate-current");
+  assert.deepEqual(uiuxCurrent.errors, [], "validate-current routes UI_UX_DESIGNING to validate-uiux");
+  await writeFile(
+    path.join(root, ".harness/state/lifecycle.yaml"),
     'current_phase: "REQUIREMENT_GATHERING"\n',
     "utf8"
   );
+
+  await writeFile(path.join(root, ".docs/02_experience/dashboard.md"), validUiuxSlice(), "utf8");
+  await writeFile(path.join(root, "DESIGN.md"), validDesignMd(), "utf8");
+  let uiuxReport = await runValidator(root, "validate-uiux");
+  assert.deepEqual(uiuxReport.errors, [], "validate-uiux accepts visual UI slice with valid DESIGN.md");
+
+  await rm(path.join(root, "DESIGN.md"), { force: true });
+  uiuxReport = await runValidator(root, "validate-uiux");
+  assert.match(uiuxReport.errors.join("\n"), /requires root DESIGN\.md/);
+
+  await writeFile(
+    path.join(root, ".docs/02_experience/dashboard.md"),
+    "# Broken UX\n\nApplicability: cli_or_api_experience\n\n## User journeys\n\n- Operator starts a flow.\n\n## Handoff matrix\n\n- flow -> state -> component -> test seed.\n\n## Screen contracts\n\n- States: loading, empty, error, success, permission.\n- Responsive: desktop and mobile breakpoints.\n- Accessibility: focus, keyboard and touch expectations.\n",
+    "utf8"
+  );
+  uiuxReport = await runValidator(root, "validate-uiux");
+  assert.match(uiuxReport.errors.join("\n"), /PRD and requirement IDs/);
+
+  await writeFile(path.join(root, ".docs/02_experience/dashboard.md"), notApplicableUiuxSlice(), "utf8");
+  uiuxReport = await runValidator(root, "validate-uiux");
+  assert.deepEqual(uiuxReport.errors, [], "validate-uiux accepts explicit not_applicable without DESIGN.md");
+
+  await writeFile(path.join(root, ".docs/02_experience/dashboard.md"), validUiuxSlice(), "utf8");
+  await writeFile(path.join(root, "DESIGN.md"), brokenDesignMd(), "utf8");
+  uiuxReport = await runValidator(root, "validate-uiux");
+  assert.match(uiuxReport.errors.join("\n"), /DESIGN\.md linter reported errors|does not resolve/);
+
+  await writeFile(
+    path.join(root, ".harness/state/plan.draft.yaml"),
+    `next_task_sequence: 2
+tasks:
+  - id: TASK-001
+    phase: SPRINTING
+    title: Visual dashboard component
+    status: pending
+    summary: Build the visual dashboard component from the UX contract.
+    docs:
+      product:
+        - .docs/01_product/prd.md
+      tech_plan:
+        - .docs/03_tech_plan/plan.md
+    allowed_paths:
+      - src/ui/**
+    required_gates:
+      - npm test
+    acceptance_criteria:
+      - Dashboard screen follows the UI/UX contract.
+    implementation_doc: .docs/04_implementation/example/dev.md
+`,
+    "utf8"
+  );
+  let uiDesignReport = await runValidator(root, "validate-design");
+  assert.match(uiDesignReport.errors.join("\n"), /docs\.uiux/);
+  assert.match(uiDesignReport.errors.join("\n"), /docs\.design_system/);
+
+  await writeFile(path.join(root, "DESIGN.md"), validDesignMd(), "utf8");
+  await writeFile(
+    path.join(root, ".harness/state/plan.draft.yaml"),
+    `next_task_sequence: 2
+tasks:
+  - id: TASK-001
+    phase: SPRINTING
+    title: Visual dashboard component
+    status: pending
+    summary: Build the visual dashboard component from the UX contract.
+    docs:
+      product:
+        - .docs/01_product/prd.md
+      uiux:
+        - .docs/02_experience/dashboard.md
+      design_system:
+        - DESIGN.md
+      tech_plan:
+        - .docs/03_tech_plan/plan.md
+    allowed_paths:
+      - src/ui/**
+    required_gates:
+      - npm test
+    acceptance_criteria:
+      - Dashboard screen follows the UI/UX contract.
+    implementation_doc: .docs/04_implementation/example/dev.md
+`,
+    "utf8"
+  );
+  uiDesignReport = await runValidator(root, "validate-design");
+  assert.deepEqual(uiDesignReport.errors, [], "validate-design accepts UI draft task with UX and DESIGN.md refs");
+  await rm(path.join(root, "DESIGN.md"), { force: true });
+  await writeFile(path.join(root, ".docs/02_experience/dashboard.md"), notApplicableUiuxSlice(), "utf8");
 
   await writeFile(
     path.join(root, ".harness/state/plan.draft.yaml"),
@@ -2322,6 +2473,177 @@ ${graphSection}- Observable Exit: PASS output recorded by scenario result.
 | Scenario ID | Result | Executed Entry | Actual Exit | Evidence |
 |---|---|---|---|---|
 | ST-001 | PASS | \`npm test\` | PASS output | command output |
+`;
+}
+
+function notApplicableUiuxSlice() {
+  return `# Non-visual Experience
+
+## PRD refs and Requirement IDs
+
+- Applicability: not_applicable
+- Reason: This validator fixture has no human-facing visual, CLI, or API experience surface to design.
+
+## Open Questions / Out of Scope
+
+- No UI/UX surface is in scope for this fixture.
+`;
+}
+
+function validUiuxSlice() {
+  return `# Dashboard Experience
+
+## PRD refs and Requirement IDs
+
+- Applicability: visual_ui
+- PRD refs: .docs/01_product/prd.md
+- Requirement IDs: PRD-TEST-001
+
+## User journeys
+
+- Operator opens the dashboard, waits through loading, reviews the empty state, fixes an error, completes the success flow, and sees permission messaging when access is restricted.
+
+## Information architecture / routes / screens
+
+- Route: /dashboard
+- Screen ID: DASHBOARD_HOME
+
+## Screen contracts
+
+| Screen ID | Requirement refs | Entry / route | States | Primary actions | Validation rules | Responsive breakpoints | Accessibility expectations |
+|---|---|---|---|---|---|---|---|
+| DASHBOARD_HOME | PRD-TEST-001 | /dashboard | loading, empty, error, success, permission | Save, retry, open details | required filter input | mobile 375px, tablet 768px, desktop 1280px | visible focus, keyboard tab order, touch target >= 44px |
+
+## Component and interaction contracts
+
+- Navigation: dashboard route keeps active state and keyboard focus.
+- Forms: validation errors announce through aria-live.
+- Tables/lists: empty and loading states preserve stable layout.
+- Modals: focus is trapped and Escape closes the dialog.
+- Feedback: success and error toasts are visible and screen-reader announced.
+- Touch behavior: primary controls have 44px targets.
+
+## Design system reference
+
+- DESIGN.md path: DESIGN.md
+
+## Handoff matrix
+
+| Requirement | Screen/state | Component | Acceptance/test seed |
+|---|---|---|---|
+| PRD-TEST-001 | DASHBOARD_HOME loading/empty/error/success/permission | Dashboard shell, form, toast | Verify all states, responsive breakpoints, focus, keyboard and touch behavior |
+
+## Open Questions / Out of Scope
+
+- None.
+`;
+}
+
+function validDesignMd() {
+  return `---
+colors:
+  primary: "#0055FF"
+  surface: "#FFFFFF"
+typography:
+  body: "16px/24px Inter"
+spacing:
+  md: "16px"
+rounded:
+  sm: "4px"
+components:
+  button:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.surface}"
+    typography: "{typography.body}"
+    rounded: "{rounded.sm}"
+    padding: "{spacing.md}"
+---
+# Overview
+
+Dashboard design system fixture.
+
+## Colors
+
+Primary action and surface colors.
+
+## Typography
+
+Body typography.
+
+## Layout
+
+Responsive page grid.
+
+## Elevation
+
+No elevation token is required in this fixture.
+
+## Shapes
+
+Small rounded controls.
+
+## Components
+
+Button component uses the core tokens.
+
+## Do's and Don'ts
+
+Do use tokens from this file.
+`;
+}
+
+function brokenDesignMd() {
+  return validDesignMd().replace("{colors.primary}", "{colors.missing}");
+}
+
+function validTestCases() {
+  return `# Test Cases
+
+## Cases
+
+| Case ID | Requirement / Risk Ref | Type | Priority | Runnable Entry | Preconditions | Steps | Expected Exit | Evidence Pointer |
+|---|---|---|---|---|---|---|---|---|
+| TC-001 | PRD-001 normal path | regression | P1 | \`npm test\` | Package installed | Run focused CLI regression | PASS output | command output |
+| TC-002 | Review finding empty state | smoke | P1 | \`npm test\` | Package installed | Run empty-state regression | PASS output | command output |
+`;
+}
+
+function validTestReportWithCaseRefs() {
+  return `# Test Report
+
+## Matrix
+
+| Case ID | Scenario | Result |
+|---|---|---|
+| TC-001 | Normal | PASS |
+| TC-002 | Empty state | PASS |
+
+## Regression Evidence
+
+- focused regression: PASS
+
+## Runnable Entry/Exit Coverage
+
+Existing entry/exit is exercised through the shipped CLI.
+
+## Coverage Gap
+
+No browser coverage.
+
+## Decision
+
+PASS
+`;
+}
+
+function casesMissingRunnableEntry() {
+  return `# Test Cases
+
+## Cases
+
+| Case ID | Requirement / Risk Ref | Type | Priority | Preconditions | Steps | Expected Exit | Evidence Pointer |
+|---|---|---|---|---|---|---|---|
+| TC-001 | PRD-001 normal path | regression | P1 | Package installed | Run focused CLI regression | PASS output | command output |
 `;
 }
 

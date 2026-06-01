@@ -13,6 +13,7 @@ export interface InitOptions {
 const DOC_DIRS = [
   ".docs/00_raw",
   ".docs/01_product",
+  ".docs/02_experience",
   ".docs/02_architecture",
   ".docs/03_tech_plan",
   ".docs/04_implementation",

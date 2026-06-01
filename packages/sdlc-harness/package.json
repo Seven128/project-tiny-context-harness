@@ -1,6 +1,6 @@
 {
   "name": "agent-project-sdlc",
-  "version": "0.1.24",
+  "version": "0.1.25",
   "description": "CLI and canonical assets for the AI SDLC Harness workflow.",
   "type": "module",
   "bin": {
@@ -23,6 +23,7 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@google/design.md": "^0.2.0",
     "yaml": "^2.9.0"
   },
   "devDependencies": {

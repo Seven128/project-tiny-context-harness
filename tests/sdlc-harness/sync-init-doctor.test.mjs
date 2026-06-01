@@ -60,6 +60,7 @@ try {
   const defaultIndex = await readFile(path.join(defaultRoot, ".docs/INDEX.md"), "utf8");
   assert.match(defaultIndex, /## Harness Maintenance Rules/);
   assert.match(defaultIndex, /Markdown slices 和 `.docs\/INDEX\.md` 是事实源/);
+  await stat(path.join(defaultRoot, ".docs/02_experience"));
   await assert.rejects(stat(path.join(defaultRoot, ".agent/state/gate_results.log")));
 
   const defaultAgents = await readFile(path.join(defaultRoot, "AGENTS.md"), "utf8");
@@ -73,10 +74,15 @@ try {
   const defaultSyncReport = await runSync(defaultRoot);
   assert.equal(defaultSyncReport.blocked.length, 0);
   await stat(path.join(defaultRoot, ".agent/skills/pjsdlc_manager/SKILL.md"));
+  await stat(path.join(defaultRoot, ".agent/skills/pjsdlc_uiux_design/SKILL.md"));
   await stat(path.join(defaultRoot, ".agent/pjsdlc_managed/templates/PLAN_TEMPLATE.yaml"));
+  await stat(path.join(defaultRoot, ".agent/pjsdlc_managed/templates/UI_UX_DESIGN_TEMPLATE.md"));
   await stat(path.join(defaultRoot, ".agent/pjsdlc_managed/policies/phase_contracts.yaml"));
   const defaultPhaseContracts = await readFile(path.join(defaultRoot, ".agent/pjsdlc_managed/policies/phase_contracts.yaml"), "utf8");
+  assert.match(defaultPhaseContracts, /UI_UX_DESIGNING/);
+  assert.match(defaultPhaseContracts, /pjsdlc_uiux_design/);
   assert.match(defaultPhaseContracts, /^transitions:/m);
+  assert.match(defaultPhaseContracts, /to: "UI_UX_DESIGNING"/);
   assert.match(defaultPhaseContracts, /to: "RFC_RECALIBRATION"/);
   assert.doesNotMatch(defaultPhaseContracts, /^\s+next:/m);
   assert.doesNotMatch(defaultPhaseContracts, /^\s+returns:/m);
@@ -158,7 +164,9 @@ try {
   const configuredMakefile = await readFile(path.join(configuredRoot, "Makefile"), "utf8");
   assert.match(configuredMakefile, /-include \.harness\/pjsdlc_managed\/make\/sdlc-harness\.mk/);
   await stat(path.join(configuredRoot, ".harness/skills/pjsdlc_manager/SKILL.md"));
+  await stat(path.join(configuredRoot, ".harness/skills/pjsdlc_uiux_design/SKILL.md"));
   await stat(path.join(configuredRoot, ".harness/pjsdlc_managed/templates/PLAN_TEMPLATE.yaml"));
+  await stat(path.join(configuredRoot, ".harness/pjsdlc_managed/templates/UI_UX_DESIGN_TEMPLATE.md"));
   await stat(path.join(configuredRoot, ".harness/pjsdlc_managed/policies/phase_contracts.yaml"));
   await stat(path.join(configuredRoot, "tools/transition.py"));
   await assert.rejects(stat(path.join(configuredRoot, ".harness/state/gate_results.log")));

@@ -174,6 +174,7 @@ export async function runConsumerLabFullTest(rawOptions) {
   commandCheck("CLI validators", "validate-harness", "npx", ["sdlc-harness", "validate-harness"]);
   commandCheck("CLI validators", "validate-plan", "npx", ["sdlc-harness", "validate-plan"]);
   commandCheck("CLI validators", "validate-pm", "npx", ["sdlc-harness", "validate-pm"]);
+  commandCheck("CLI validators", "validate-uiux", "npx", ["sdlc-harness", "validate-uiux"]);
   commandCheck("CLI validators", "validate-design", "npx", ["sdlc-harness", "validate-design"]);
   await writeFile(path.join(options.labDir, ".codex/state/plan.draft.yaml"), "next_task_sequence: 2\ntasks: []\n", "utf8");
   commandCheck("CLI validators", "validate-current", "npx", ["sdlc-harness", "validate-current"]);
@@ -196,7 +197,8 @@ tasks: []
   await verifyPlanProtocol(options.labDir, commandCheck, add);
   await verifyStaticWorkflowText(options.labDir, add);
 
-  for (const gate of ["validate-harness", "validate-current", "validate-review", "validate-test", "validate-release"]) {
+  commandCheck("Docs overview", "make docs-overview before validate-harness", "make", ["docs-overview"]);
+  for (const gate of ["validate-harness", "validate-current", "validate-uiux", "validate-review", "validate-test", "validate-release"]) {
     commandCheck("Makefile gates", `make ${gate}`, "make", [gate]);
   }
   commandCheck("Docs overview", "make docs-overview", "make", ["docs-overview"]);
@@ -261,7 +263,9 @@ async function verifyManagedAssets(labDir, add) {
     ".codex/state/lifecycle.yaml",
     ".codex/state/plan.yaml",
     ".codex/skills/pjsdlc_manager/SKILL.md",
+    ".codex/skills/pjsdlc_uiux_design/SKILL.md",
     ".codex/pjsdlc_managed/templates/PLAN_TEMPLATE.yaml",
+    ".codex/pjsdlc_managed/templates/UI_UX_DESIGN_TEMPLATE.md",
     ".codex/pjsdlc_managed/policies/phase_contracts.yaml"
   ];
   const missing = required.filter((relative) => !existsSync(path.join(labDir, relative)));
@@ -291,6 +295,8 @@ async function verifyManagedAssets(labDir, add) {
     const phaseContracts = await readFile(path.join(labDir, ".codex/pjsdlc_managed/policies/phase_contracts.yaml"), "utf8");
     const phaseGraphReady =
       /^transitions:/m.test(phaseContracts) &&
+      phaseContracts.includes('UI_UX_DESIGNING') &&
+      phaseContracts.includes('to: "UI_UX_DESIGNING"') &&
       phaseContracts.includes('to: "RFC_RECALIBRATION"') &&
       !/^\s+next:/m.test(phaseContracts) &&
       !/^\s+returns:/m.test(phaseContracts);
@@ -524,6 +530,8 @@ async function writeDocs(labDir) {
       "# Text Summary PRD\n\n## Goal\n\nValidate Harness lifecycle behavior.\n\n## Acceptance Criteria\n\n- Return character count, word count, and empty state.\n\n## Out Of Scope\n\n- Locale-aware tokenization is out of scope.\n\n## Open Questions\n\n- None.\n",
     ".docs/02_architecture/text_summary_architecture.md":
       "# Text Summary Architecture\n\nThe PRD requirement is implemented as a pure JavaScript API interface in `src/stringStats.js`.\n\nTask breakdown: add helper, add tests, record implementation.\n",
+    ".docs/02_experience/text_summary_experience.md":
+      "# Text Summary Experience\n\n## PRD refs and Requirement IDs\n\n- Applicability: not_applicable\n- Reason: This package validator fixture has no visual, CLI, API or operator experience surface that needs separate UI/UX design.\n\n## Open Questions / Out of Scope\n\n- No UI/UX surface is in scope for this consumer lab fixture.\n",
     ".docs/03_tech_plan/text_summary_plan.md":
       "# Text Summary Technical Plan\n\nThis plan implements the PRD requirement.\n\n## API Contract\n\n`summarizeText(input)` returns `characters`, `words`, and `empty`.\n\n## Task Breakdown\n\n- `TASK-001`: implement helper and tests.\n\n## Development Self-Test Contract\n\n- Contract source: `.docs/03_tech_plan/text_summary_plan.md`\n- Capability refs: `PRD-TEXT-SUMMARY-001`\n- Runnable entry: `npm test`\n- Observable exit: PASS output for text summary tests\n- Module key test path: local `npm test` -> ST-001 -> `summarizeText(input)` exported API entry -> normal-text and empty-text internal branches -> PASS output.\n- Required gates: `npm test`\n\n| Scenario ID | Entry | Expected Exit | Evidence |\n|---|---|---|---|\n| ST-001 | `npm test` | PASS output for normal and empty text | command output |\n",
     ".docs/04_implementation/text_summary.md":
@@ -531,15 +539,15 @@ async function writeDocs(labDir) {
     ".docs/06_review/REVIEW_REPORT.md":
       "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage is intentionally narrow.\n\n## Runnable Entry/Exit Readiness\n\n- Runnable Entry: PASS\n- Observable Exit: PASS\n- Initialization: PASS\n- Config Contract: PASS\n- Testing Handoff Readiness: PASS\n- Notes: Existing entry/exit is runnable through `summarizeText(input)`.\n\n## Decision\n\nPASS\n",
     ".docs/07_test/TEST_REPORT.md":
-      "# Test Report\n\n## Matrix\n\n| Scenario | Result |\n|---|---|\n| Normal text | PASS |\n| Empty text | PASS |\n\n## Regression Evidence\n\n- `npm test`: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped API.\n\n## Coverage Gap\n\nNo locale-specific coverage.\n\n## Decision\n\nPASS\n",
+      "# Test Report\n\n## Matrix\n\n| Case ID | Scenario | Result |\n|---|---|---|\n| TC-001 | Normal text | PASS |\n| TC-002 | Empty text | PASS |\n\n## Regression Evidence\n\n- `npm test`: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped API.\n\n## Coverage Gap\n\nNo locale-specific coverage.\n\n## Decision\n\nPASS\n",
     ".docs/07_test/TEST_CASES.md":
-      "# Test Cases\n\n## Scope\n\n- Runnable entry/exit under test: `summarizeText(input)`.\n\n## Cases\n\n| ID | Requirement | Preconditions | Steps | Expected Result |\n|---|---|---|---|---|\n| TC-001 | Character and word count | Package installed | Call `summarizeText(\"hello world\")` | Returns counts and `empty: false` |\n| TC-002 | Empty state | Package installed | Call `summarizeText(\"\")` | Returns `empty: true` |\n",
+      "# Test Cases\n\n## Scope\n\n- Runnable entry/exit under test: `summarizeText(input)`.\n\n## Cases\n\n| Case ID | Requirement / Risk Ref | Type | Priority | Runnable Entry | Preconditions | Steps | Expected Exit | Evidence Pointer |\n|---|---|---|---|---|---|---|---|---|\n| TC-001 | Character and word count | regression | P1 | `summarizeText(input)` | Package installed | Call `summarizeText(\"hello world\")` | Returns counts and `empty: false` | `npm test` output |\n| TC-002 | Empty state | regression | P1 | `summarizeText(input)` | Package installed | Call `summarizeText(\"\")` | Returns `empty: true` | `npm test` output |\n",
     ".docs/08_release/CURRENT_RELEASE.md":
       "# Current Release Status\n\n## Release Notes\n\nTiny helper fixture.\n\n## Smoke Evidence\n\n- `npm test`: PASS\n\n## Rollback Plan\n\nRevert the lab helper commit.\n",
     ".docs/rfc/RFC_001_change_empty_semantics.md":
       "# RFC 001 Change Empty Semantics\n\nStatus: VERIFIED\n\n## Background\n\nThe lab needs one RFC document.\n\n## Product Impact\n\nWhitespace-only strings remain empty.\n\n## Technical Impact\n\nNo code change required.\n\n## Regression\n\nKeep whitespace-only coverage.\n\n## Test Fact Source Impact\n\nSuperseded test docs: none\n",
     ".docs/INDEX.md":
-      "# Documentation Index\n\n- Product: `.docs/01_product/text_summary_prd.md`\n- Architecture: `.docs/02_architecture/text_summary_architecture.md`\n- Technical plan: `.docs/03_tech_plan/text_summary_plan.md`\n- Implementation: `.docs/04_implementation/text_summary.md`\n- Test cases: `.docs/07_test/TEST_CASES.md`\n- Test report: `.docs/07_test/TEST_REPORT.md`\n"
+      "# Documentation Index\n\n- Product: `.docs/01_product/text_summary_prd.md`\n- Experience: `.docs/02_experience/text_summary_experience.md`\n- Architecture: `.docs/02_architecture/text_summary_architecture.md`\n- Technical plan: `.docs/03_tech_plan/text_summary_plan.md`\n- Implementation: `.docs/04_implementation/text_summary.md`\n- Test cases: `.docs/07_test/TEST_CASES.md`\n- Test report: `.docs/07_test/TEST_REPORT.md`\n"
   };
   for (const [relative, content] of Object.entries(files)) {
     await mkdir(path.dirname(path.join(labDir, relative)), { recursive: true });
@@ -737,14 +745,30 @@ tasks: []
 `,
     "utf8"
   );
-  await writeFile(path.join(labDir, ".codex/state/lifecycle.yaml"), 'current_phase: "SPRINTING"\nactive_role: "developer"\nactive_skill: "pjsdlc_dev_sprint"\n', "utf8");
+  await writeFile(
+    path.join(labDir, ".codex/state/lifecycle.yaml"),
+    `project_name: "Consumer Lab"
+version: "v0.1"
+current_phase: "SPRINTING"
+active_role: "developer"
+active_skill: "pjsdlc_dev_sprint"
+current_milestone: "MVP"
+blocked_reason: ""
+suspended_phase: ""
+allowed_next_phases:
+  - "REVIEWING"
+  - "RFC_RECALIBRATION"
+  - "BLOCKED"
+`,
+    "utf8"
+  );
 }
 
 async function verifyStaticWorkflowText(labDir, add) {
   const agents = await readFile(path.join(labDir, "AGENTS.md"), "utf8");
   const manager = await readFile(path.join(labDir, ".codex/skills/pjsdlc_manager/SKILL.md"), "utf8");
   const text = `${agents}\n${manager}`;
-  const required = ["/status", "/next", "/dev", "/test", "自然语言", "active_skill", "TASK-*", "phase", "validate-plan"];
+  const required = ["/status", "/next", "/uiux", "/dev", "/test", "自然语言", "active_skill", "TASK-*", "phase", "validate-plan"];
   const missing = required.filter((needle) => !text.includes(needle));
   add({
     area: "Natural-language control",

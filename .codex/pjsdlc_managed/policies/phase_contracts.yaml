@@ -23,6 +23,23 @@ phases:
     gates:
       - "make validate-pm"
 
+  UI_UX_DESIGNING:
+    goal: "根据产品方案形成体验事实源、屏幕契约、交互状态和设计系统交接约束"
+    role: "designer"
+    skill: "pjsdlc_uiux_design"
+    inputs:
+      - "<harnessRoot>/state/plan.yaml"
+      - ".docs/01_product/"
+      - ".docs/02_experience/"
+      - "DESIGN.md"
+    outputs:
+      - "<harnessRoot>/state/plan.yaml"
+      - ".docs/02_experience/"
+      - "DESIGN.md"
+      - ".docs/INDEX.md"
+    gates:
+      - "make validate-uiux"
+
   ARCHITECTING:
     goal: "根据产品方案生成架构设计、技术方案和任务草案"
     role: "architect"
@@ -30,6 +47,8 @@ phases:
     inputs:
       - "<harnessRoot>/state/plan.yaml"
       - ".docs/01_product/"
+      - ".docs/02_experience/"
+      - "DESIGN.md"
       - ".docs/02_architecture/"
     outputs:
       - "<harnessRoot>/state/plan.yaml"
@@ -48,7 +67,9 @@ phases:
       - "<harnessRoot>/state/plan.draft.yaml"
       - "current open task plan contract"
       - ".docs/01_product/"
+      - ".docs/02_experience/"
       - ".docs/03_tech_plan/"
+      - "DESIGN.md"
     outputs:
       - "src/"
       - "tests/"
@@ -65,8 +86,10 @@ phases:
     inputs:
       - "<harnessRoot>/state/plan.yaml"
       - ".docs/01_product/"
+      - ".docs/02_experience/"
       - ".docs/03_tech_plan/"
       - ".docs/04_implementation/"
+      - "DESIGN.md"
       - "git diff"
     outputs:
       - "<harnessRoot>/state/plan.yaml"
@@ -81,10 +104,12 @@ phases:
     inputs:
       - "<harnessRoot>/state/plan.yaml"
       - ".docs/01_product/"
+      - ".docs/02_experience/"
       - ".docs/03_tech_plan/"
       - ".docs/04_implementation/"
       - ".docs/09_runbooks/"
       - ".docs/06_review/"
+      - "DESIGN.md"
     outputs:
       - "<harnessRoot>/state/plan.yaml"
       - ".docs/07_test/TEST_STRATEGY.md"
@@ -125,7 +150,9 @@ phases:
     inputs:
       - ".docs/rfc/"
       - ".docs/01_product/"
+      - ".docs/02_experience/"
       - ".docs/03_tech_plan/"
+      - "DESIGN.md"
       - "<harnessRoot>/state/plan.yaml"
     outputs:
       - ".docs/rfc/"
@@ -152,6 +179,10 @@ transitions:
     trigger: "advance"
     kind: "normal"
   - from: "REQUIREMENT_GATHERING"
+    to: "UI_UX_DESIGNING"
+    trigger: "advance"
+    kind: "normal"
+  - from: "UI_UX_DESIGNING"
     to: "ARCHITECTING"
     trigger: "advance"
     kind: "normal"
@@ -172,6 +203,10 @@ transitions:
     trigger: "advance"
     kind: "normal"
   - from: "TESTING"
+    to: "UI_UX_DESIGNING"
+    trigger: "bugfix_uiux_replan"
+    kind: "return"
+  - from: "TESTING"
     to: "ARCHITECTING"
     trigger: "bugfix_replan"
     kind: "return"
@@ -190,6 +225,14 @@ transitions:
   - from: "ARCHITECTING"
     to: "REQUIREMENT_GATHERING"
     trigger: "return_to_prd"
+    kind: "return"
+  - from: "UI_UX_DESIGNING"
+    to: "REQUIREMENT_GATHERING"
+    trigger: "return_to_prd"
+    kind: "return"
+  - from: "ARCHITECTING"
+    to: "UI_UX_DESIGNING"
+    trigger: "return_to_uiux"
     kind: "return"
   - from: "SPRINTING"
     to: "RFC_RECALIBRATION"
@@ -228,6 +271,12 @@ transitions:
     effects:
       set_suspended_phase: true
   - from: "REQUIREMENT_GATHERING"
+    to: "BLOCKED"
+    trigger: "blocked"
+    kind: "interrupt"
+    effects:
+      set_suspended_phase: true
+  - from: "UI_UX_DESIGNING"
     to: "BLOCKED"
     trigger: "blocked"
     kind: "interrupt"

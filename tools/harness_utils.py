@@ -28,6 +28,7 @@ PARALLEL_TRIGGERS = {"user_requested", "workflow_default"}
 PARALLEL_RUNTIME_PROVIDERS = {"codex_native_subagents", "user_orchestrated", "codex_exec_worktree"}
 PARALLEL_ALLOWED_PHASES = {
     "REQUIREMENT_GATHERING",
+    "UI_UX_DESIGNING",
     "ARCHITECTING",
     "SPRINTING",
     "REVIEWING",
@@ -35,7 +36,7 @@ PARALLEL_ALLOWED_PHASES = {
     "RELEASING",
     "RFC_RECALIBRATION",
 }
-PARALLEL_READ_ONLY_PHASES = {"REQUIREMENT_GATHERING", "ARCHITECTING", "REVIEWING", "RELEASING", "RFC_RECALIBRATION"}
+PARALLEL_READ_ONLY_PHASES = {"REQUIREMENT_GATHERING", "UI_UX_DESIGNING", "ARCHITECTING", "REVIEWING", "RELEASING", "RFC_RECALIBRATION"}
 PARALLEL_PROTECTED_WRITE_PATTERNS = {
     ".codex/state/**",
     "<harnessRoot>/state/**",
@@ -48,6 +49,7 @@ PARALLEL_PROTECTED_WRITE_PATTERNS = {
 TASK_ID_PATTERN = re.compile(r"^[A-Z]+-(\d+)$")
 TASK_PHASES = {
     "REQUIREMENT_GATHERING",
+    "UI_UX_DESIGNING",
     "ARCHITECTING",
     "SPRINTING",
     "REVIEWING",
@@ -1172,7 +1174,7 @@ def validate_parallel_execution_contract(data: dict[str, Any], current_phase: st
     require("linked_task_id" not in contract, "parallel_execution must not define linked_task_id; use plan.yaml current_task_id")
     require(
         current_phase in PARALLEL_ALLOWED_PHASES,
-        "parallel_execution is only supported during REQUIREMENT_GATHERING, ARCHITECTING, SPRINTING, REVIEWING, TESTING, RELEASING, or RFC_RECALIBRATION",
+        "parallel_execution is only supported during REQUIREMENT_GATHERING, UI_UX_DESIGNING, ARCHITECTING, SPRINTING, REVIEWING, TESTING, RELEASING, or RFC_RECALIBRATION",
     )
     require(contract.get("coordinator") == "main_agent", 'parallel_execution.coordinator must be "main_agent"')
 

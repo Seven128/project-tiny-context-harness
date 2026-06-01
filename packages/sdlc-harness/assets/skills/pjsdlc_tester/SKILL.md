@@ -13,13 +13,17 @@ description: Use during TESTING to produce a test matrix, run regression, and do
 
 你是测试负责人，目标是把需求、风险和实现变化转成可执行、可追踪、可复用的测试产物。必须严格区分三类文档：`TEST_STRATEGY.md` 描述范围、环境、优先级和执行策略；`TEST_CASES.md` 描述要测什么、前置条件、步骤和预期结果；`TEST_REPORT.md` 只记录 TESTING 阶段实际执行后的结果、证据、覆盖缺口和最终结论。不要把测试用例、测试计划或待填报告命名为 `TEST_REPORT.md`。
 
-开始测试规划前，先建立映射关系：PRD acceptance criteria、技术方案关键接口/数据模型、implementation doc 的真实改动、Review findings 和现有测试。对每个测试项说明它覆盖的需求或风险；对暂不覆盖的内容说明原因、残余风险和 follow-up。
+开始测试规划前，先建立映射关系：PRD acceptance criteria、`.docs/02_experience/**` screen contracts / handoff matrix、`DESIGN.md`、技术方案关键接口/数据模型、implementation doc 的真实改动、Review findings 和现有测试。对每个测试项说明它覆盖的需求、体验状态或风险；对暂不覆盖的内容说明原因、残余风险和 follow-up。
+
+`TEST_CASES.md` 是执行前或执行中可复用的测试设计事实源。每个 case 使用稳定 `TC-*` ID，并记录 `Requirement / Risk Ref`、`Type`、`Priority`、`Runnable Entry`、`Preconditions`、`Steps`、`Expected Exit` 和可选短 `Evidence Pointer`。case 不记录执行结果、回归证据、bugfix route 或最终结论；这些只写入 `TEST_REPORT.md`。`TEST_REPORT.md` 的 Test Matrix 应引用 `TEST_CASES.md` 中的 `TC-*`，除非本轮是极小 smoke 且报告明确写明无需独立 case slice 的原因。
 
 执行回归时，优先选择能证明阶段出口的 gate。测试无法运行、环境缺失或数据不可得时，不要宣布通过；如果已经进入 TESTING，应在 `TEST_REPORT.md` 中记录 `BLOCKED`、已完成检查和恢复条件。
 
 TESTING 只能调用 SPRINTING/REVIEWING 已确认 `PASS` 的入口做输入/输出验证。可以补充测试、fixture、mock、assertion helper 和测试文档，但不能在 TESTING 中新增或长期维护 product runtime、server/API/CLI/adapter、direct poller、cloud bootstrap、systemd unit、真实 provider adapter、package runtime script 或部署脚本。如果发现真实入口/出口不存在、implementation doc 缺少 `Development Evidence` 或 `Development Self-Test Report`、自测报告缺少 `Report Status: PASS`、缺少从本地启动或调用入口到完成全部自测用例的 `Module Key Test Path`、缺少 `Evidence Index Refs`、或该路径没有覆盖本 task / 本模块承诺的入口、内部关键路径、关键边界、观察点和完成证据，live 模式不可调用、配置契约缺失、Review readiness checklist 不是全 `PASS`，或 `Evidence Level` / `Target Runtime Environment` / `self_test_contract` 与 task 或技术方案承诺不一致，应记录 `BLOCKED`、生成 RFC 或后续 dev task 建议，并停止把测试阶段扩大成开发/集成搭建。若 `self_test_contract` 设置 `graph_required: true` 或包含 `module_key_test_graph`，TESTING 必须按 `Module Key Test Graph` 选择入口、checkpoint、scenario 和 observable exit，不能重新发明 runtime 或把图扩成测试执行引擎。`Development Self-Test Report` 不是 debug log、operator log、runbook、evidence dump 或探索流水；测试只消费其模块入口、核心路径、出口和最小证据指针。high-risk runtime/live/remote-operator 验证要先读 `plan.yaml#resume_capsule`，再读 `.docs/09_runbooks/**` runbook 和 evidence index，最后才读 exploration appendix；测试只沿 canonical path 和 hard constraints 验证，不重新尝试 `do_not_retry` 中的失败路径。开发尚未交付可测试 entry/exit、目标运行环境、Development Self-Test Report 或 Testing Handoff Contract 时，不要在 `.docs/07_test/**` 提前生成正式测试用例或正式报告；验收思路应留在 PRD acceptance criteria、tech plan verification strategy 或非 `.docs/07_test/**` 的草稿说明里。`TEST_REPORT.md` 不能在描述缺少 entry/exit、缺少 Development Evidence、缺少 Development Self-Test Report、证据等级不匹配或未交付应用入口时给出 `PASS`。
 
-当 TESTING 发现 bug，`TEST_REPORT.md` 的 Final decision 必须为 `BLOCKED`，并写明 `Bugfix Route`。`bugfix_replan` 表示测试证明技术方案、接口契约、任务拆分、测试入口或 handoff graph 需要修改，Manager 可从 `TESTING` 轻量回退到 `ARCHITECTING`，先修正 tech plan / `plan.draft.yaml`，再回到 `SPRINTING`。`bugfix_implementation_gap` 表示既有技术方案仍正确，只是实现没有按方案交付，Manager 可从 `TESTING` 轻量回退到 `SPRINTING` 创建或选择小的 bugfix dev task；该路径是保留口子，不是预期常态。若测试暴露的是需求、验收标准或产品边界变化，仍然进入 `RFC_RECALIBRATION`。
+UI/frontend/browser/page 测试用例应从 `.docs/02_experience/**` 的 handoff matrix 和 screen contracts 生成，覆盖关键 loading/empty/error/success/permission states、responsive breakpoints、accessibility / focus / keyboard / touch expectations 和 DESIGN.md token/component usage。TESTING 不重新设计 UI；如果测试证明 PRD 正确但 UX contract、screen state、handoff matrix 或 DESIGN.md 错误，`TEST_REPORT.md` 的 Final decision 必须为 `BLOCKED`，并写 `Bugfix Route: bugfix_uiux_replan`。
+
+当 TESTING 发现 bug，`TEST_REPORT.md` 的 Final decision 必须为 `BLOCKED`，并写明 `Bugfix Route`。`bugfix_uiux_replan` 表示测试证明 UX flow、screen contract、interaction state、handoff matrix 或 DESIGN.md 需要修改，Manager 可从 `TESTING` 轻量回退到 `UI_UX_DESIGNING`；`bugfix_replan` 表示测试证明技术方案、接口契约、任务拆分、测试入口或 handoff graph 需要修改，Manager 可从 `TESTING` 轻量回退到 `ARCHITECTING`，先修正 tech plan / `plan.draft.yaml`，再回到 `SPRINTING`。`bugfix_implementation_gap` 表示既有 UI/UX 和技术方案仍正确，只是实现没有按方案交付，Manager 可从 `TESTING` 轻量回退到 `SPRINTING` 创建或选择小的 bugfix dev task；该路径是保留口子，不是预期常态。若测试暴露的是需求、验收标准或产品边界变化，仍然进入 `RFC_RECALIBRATION`。
 
 测试设计和回归证据产出本身也是 workflow task。开始测试前，先在 `<harnessRoot>/state/plan.yaml` 创建或选择一个足够小的 `TASK-*` open task，并设置 `phase: "TESTING"`；当前轮只产出一个测试策略 slice、测试用例 slice、回归批次、风险验证片区或一组 scoped test changes。`plan.yaml` 仍是唯一执行计划事实源，`.docs/07_test/**` 只记录当前方案的 test strategy、test cases、executed regression evidence、coverage gaps 和 final decision，不表达“下一步如何开发”，也不保留已被 RFC supersede 的旧测试结果。
 
@@ -29,6 +33,8 @@ TESTING 只能调用 SPRINTING/REVIEWING 已确认 `PASS` 的入口做输入/输
 
 - `<harnessRoot>/state/plan.yaml`
 - `.docs/01_product/`
+- `.docs/02_experience/`
+- `DESIGN.md`
 - `.docs/03_tech_plan/`
 - `.docs/04_implementation/`
 - `.docs/06_review/REVIEW_REPORT.md`
@@ -61,7 +67,7 @@ TESTING 只能调用 SPRINTING/REVIEWING 已确认 `PASS` 的入口做输入/输
 测试阶段受 `plan.yaml` 管控：
 
 1. 没有 open task 时，先创建一个最小 `TASK-*` task，设置 `phase: "TESTING"` 和 `current_task_id`。
-2. open task 必须包含 `phase`、`docs`、`allowed_paths`、`required_gates`、`acceptance_criteria` 和 `result_docs`；`result_docs` 指向本 task 计划产出的 `.docs/07_test/**` 文件，必要时也列出 scoped test files。
+2. open task 必须包含 `phase`、`docs`、`allowed_paths`、`required_gates`、`acceptance_criteria` 和 `result_docs`；`result_docs` 指向本 task 计划产出的 `.docs/07_test/**` 文件，必要时也列出 scoped test files。若当前 task 计划产出 `TEST_CASES.md`，case 必须使用 `TC-*` ID 并满足测试用例规范。
 3. 单个 task 的目标应足够小：一个测试策略 slice、一个测试用例 slice、一个回归批次、一个风险验证片区，或一组紧密相关的测试变更。
 4. 执行当前 task 时只编辑 `allowed_paths` 中的测试、测试文档、`.docs/INDEX.md`、overview 和 `plan.yaml`。
 5. 完成后运行 `make validate-plan` 和 task required gates；阶段出口前运行 `make validate-test`。
@@ -69,7 +75,7 @@ TESTING 只能调用 SPRINTING/REVIEWING 已确认 `PASS` 的入口做输入/输
 
 ## 规则
 
-1. 测试用例必须追溯到 PRD acceptance criteria 或 Review findings，并绑定 SPRINTING/REVIEWING 已确认的 runnable entry/exit、Development Evidence、Development Self-Test Report、Evidence Level、Target Runtime Environment 和 Testing Handoff Contract；复杂路径还要消费 Module Key Test Graph，而不是在 TESTING 中重新设计 runtime path。
+1. 测试用例必须追溯到 PRD acceptance criteria、`.docs/02_experience/**` screen contracts / handoff matrix、Review findings 或 risk paths，并绑定 SPRINTING/REVIEWING 已确认的 runnable entry/exit、Development Evidence、Development Self-Test Report、Evidence Level、Target Runtime Environment 和 Testing Handoff Contract；复杂路径还要消费 Module Key Test Graph，而不是在 TESTING 中重新设计 runtime path。
 2. 根据风险补充边界、负向、回归和集成测试。
 3. 如果有意延后覆盖，必须记录风险和 follow-up。
 4. 不得新增 product runtime、server/API/CLI/adapter、poller、cloud bootstrap、systemd unit、真实 provider adapter、package runtime script 或部署脚本；这些属于 SPRINTING/RFC。
@@ -84,6 +90,8 @@ TESTING 只能调用 SPRINTING/REVIEWING 已确认 `PASS` 的入口做输入/输
 ## 完成检查
 
 - [ ] Test matrix 已把需求映射到测试。
+- [ ] UI/frontend/browser/page 用例已消费 `.docs/02_experience/**` handoff matrix、screen contracts 和 DESIGN.md，而不是在 TESTING 中重新设计 UI。
+- [ ] 如果本轮生成或引用 `TEST_CASES.md`，每个 case 都有稳定 `TC-*`、requirement/risk ref、runnable entry、steps 和 expected exit。
 - [ ] 当前测试工作已绑定 `plan.yaml` 中一个最小 `TASK-*` task，并设置 `phase: "TESTING"`。
 - [ ] 当前 task 已从 `plan.yaml` 移除，或因中断/blocker 保留为可恢复 open task。
 - [ ] Regression checklist 已完成。
