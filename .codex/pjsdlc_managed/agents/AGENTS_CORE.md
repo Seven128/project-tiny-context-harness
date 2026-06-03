@@ -23,4 +23,5 @@
 
 - `make validate-context`：检查 `project_context/**` 是否足够支持 agent 恢复上下文。
 - `npx sdlc-harness migrate-context --dry-run`：预览从旧用户项目资料到 `project_context/**` 的迁移。
-- `npx sdlc-harness migrate-context --write`：显式写入迁移结果，不删除旧事实源。
+- `npx sdlc-harness migrate-context --write`：显式写入迁移结果，默认保留旧事实源。
+- `npx sdlc-harness migrate-context --write --archive-legacy`：写入迁移结果后，把旧阶段产物归档到 `project_context/_migration/legacy_archive/<timestamp>/`。

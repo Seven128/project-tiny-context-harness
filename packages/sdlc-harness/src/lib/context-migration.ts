@@ -1,14 +1,19 @@
 import path from "node:path";
+import { promises as fs } from "node:fs";
+import { harnessRoot } from "./harness-root.js";
 import { ensureDir, listFiles, pathExists, readText, writeTextIfChanged } from "./fs.js";
 
 export interface ContextMigrationOptions {
   write: boolean;
+  archiveLegacy?: boolean;
 }
 
 export interface ContextMigrationReport {
   mode: "dry-run" | "write";
   changed: string[];
   preview: string[];
+  archivePreview: string[];
+  archived: string[];
   warnings: string[];
 }
 
@@ -23,6 +28,8 @@ export async function runContextMigration(
     mode: options.write ? "write" : "dry-run",
     changed: [],
     preview: [],
+    archivePreview: [],
+    archived: [],
     warnings: []
   };
   const facts = await collectLegacyFacts(projectRoot);
@@ -58,6 +65,9 @@ export async function runContextMigration(
   }
   if (moduleNames.length === 1 && moduleNames[0] === "main") {
     report.warnings.push("No obvious source module names were found; generated project_context/modules/main.md.");
+  }
+  if (options.archiveLegacy) {
+    await archiveLegacyArtifacts(projectRoot, report, options.write);
   }
   return report;
 }
@@ -111,6 +121,63 @@ async function collectLegacyFacts(projectRoot: string): Promise<LegacyFacts> {
     codeEntrypoints: await detectEntrypoints(projectRoot, ["src", "lib", "bin", "server", "app"]),
     testEntrypoints: await detectEntrypoints(projectRoot, ["test", "tests", "__tests__"])
   };
+}
+
+async function archiveLegacyArtifacts(projectRoot: string, report: ContextMigrationReport, write: boolean): Promise<void> {
+  const candidates = await legacyArchiveCandidates(projectRoot);
+  if (candidates.length === 0) {
+    report.warnings.push("No legacy stage artifacts were found to archive.");
+    return;
+  }
+  const archiveRoot = path.join("project_context", "_migration", "legacy_archive", await archiveStamp(projectRoot));
+  for (const relative of candidates) {
+    const destination = path.join(archiveRoot, relative).split(path.sep).join("/");
+    report.archivePreview.push(`${relative} -> ${destination}`);
+    if (!write) {
+      continue;
+    }
+    await ensureDir(path.dirname(path.join(projectRoot, destination)));
+    await fs.rename(path.join(projectRoot, relative), path.join(projectRoot, destination));
+    report.archived.push(destination);
+  }
+}
+
+async function legacyArchiveCandidates(projectRoot: string): Promise<string[]> {
+  const root = await harnessRoot(projectRoot);
+  const candidates = [
+    ".work_products",
+    path.join(root, "state"),
+    path.join(root, "pjsdlc_managed", "templates"),
+    path.join(root, "pjsdlc_managed", "policies")
+  ];
+  const skillRoot = path.join(projectRoot, root, "skills");
+  if (await pathExists(skillRoot)) {
+    const entries = await fs.readdir(skillRoot, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory() && entry.name.startsWith("pjsdlc_")) {
+        candidates.push(path.join(root, "skills", entry.name));
+      }
+    }
+  }
+  const existing: string[] = [];
+  for (const candidate of candidates) {
+    const normalized = candidate.split(path.sep).join("/");
+    if (await pathExists(path.join(projectRoot, normalized))) {
+      existing.push(normalized);
+    }
+  }
+  return existing.sort();
+}
+
+async function archiveStamp(projectRoot: string): Promise<string> {
+  const base = new Date().toISOString().replace(/[-:]/g, "").replace(/\..+$/, "").replace("T", "-");
+  let stamp = base;
+  let suffix = 2;
+  while (await pathExists(path.join(projectRoot, "project_context", "_migration", "legacy_archive", stamp))) {
+    stamp = `${base}-${suffix}`;
+    suffix += 1;
+  }
+  return stamp;
 }
 
 async function readMarkdownUnder(projectRoot: string, relativeRoot: string): Promise<string[]> {

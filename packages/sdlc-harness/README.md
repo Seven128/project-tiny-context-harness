@@ -33,7 +33,8 @@ npx sdlc-harness init --adopt
 | Managed file sync | `npx sdlc-harness sync` | Refreshes package-managed guidance, Makefile include, context templates, tools and workflow YAML. It does not perform semantic Context migration. |
 | Upgrade | `npx sdlc-harness upgrade` | Runs safe migrations and `sync`; if legacy stage facts are detected, it prompts the user to run `migrate-context --dry-run`. |
 | Context migration preview | `npx sdlc-harness migrate-context --dry-run` | Reads existing legacy project facts, then previews `project_context/**` and optional `DESIGN.md` migration output without writing files. |
-| Context migration write | `npx sdlc-harness migrate-context --write` | Writes or updates `project_context/**` and optional `DESIGN.md` candidates without deleting old files. Existing user-authored Context and design files are protected. |
+| Context migration write | `npx sdlc-harness migrate-context --write` | Writes or updates `project_context/**` and optional `DESIGN.md` candidates while keeping old files by default. Existing user-authored Context and design files are protected. |
+| Legacy artifact archive | `npx sdlc-harness migrate-context --write --archive-legacy` | Writes migration output, then moves old stage artifacts such as `.work_products/**` into `project_context/_migration/legacy_archive/<timestamp>/`. |
 | Context validation | `npx sdlc-harness validate-context`, `make validate-context` | Checks required Context sections and rejects fake claims that tests already passed. |
 | Diagnostics | `npx sdlc-harness doctor` | Reports Harness root, package version, schema version and required Minimal Context paths. |
 | Package source checks | `sdlc-harness package sync-source`, `sdlc-harness package check-source` | Maintainer-only commands for keeping package canonical assets aligned with the source workspace. |
@@ -77,9 +78,11 @@ The product planning and UI/UX Skills are Context authoring helpers. They may sh
 Run npx sdlc-harness migrate-context --dry-run to preview Minimal Context migration.
 ```
 
-`migrate-context --write` is the only command that writes semantic migration output. It preserves old files in the user project and avoids overwriting user-authored Context.
+`migrate-context --write` is the only command that writes semantic migration output. It preserves old files by default and avoids overwriting user-authored Context.
 
 If legacy experience/design material is present, `migrate-context` can generate a Google `@google/design.md` compatible `DESIGN.md` candidate. Existing `DESIGN.md` files are preserved; migration output is written to `project_context/_migration/latest/DESIGN.md`.
+
+After reviewing the generated Context, users can run `migrate-context --write --archive-legacy` to move old stage artifacts out of the active workspace. The archive lives under `project_context/_migration/legacy_archive/<timestamp>/`, so `.work_products/**`, old phase state and old `pjsdlc_*` skills stop acting like current fact sources without being hard-deleted.
 
 ## Common Commands
 
@@ -90,6 +93,7 @@ npx sdlc-harness sync
 npx sdlc-harness upgrade
 npx sdlc-harness migrate-context --dry-run
 npx sdlc-harness migrate-context --write
+npx sdlc-harness migrate-context --write --archive-legacy
 npx sdlc-harness validate-context
 npx sdlc-harness doctor
 make validate-context

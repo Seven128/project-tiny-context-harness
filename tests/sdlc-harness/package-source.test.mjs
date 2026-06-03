@@ -40,7 +40,7 @@ try {
     target: "packages/sdlc-harness/assets/agents/AGENTS_CORE.md"
     mode: "copy-file"
   - source: "README.md"
-    target: "packages/sdlc-harness/assets/docs/README.md"
+    target: "packages/sdlc-harness/assets/README.md"
     mode: "copy-file"
   - source: ".agent/pjsdlc_managed/context_templates"
     target: "packages/sdlc-harness/assets/context_templates"
@@ -69,7 +69,7 @@ try {
 
   const agentsCore = await readFile(path.join(fixture, "packages/sdlc-harness/assets/agents/AGENTS_CORE.md"), "utf8");
   assert.match(agentsCore, /Minimal Context Harness/);
-  const packagedReadme = await readFile(path.join(fixture, "packages/sdlc-harness/assets/docs/README.md"), "utf8");
+  const packagedReadme = await readFile(path.join(fixture, "packages/sdlc-harness/assets/README.md"), "utf8");
   assert.match(packagedReadme, /Minimal Context package guide/);
   const packagedGlobal = await readFile(path.join(fixture, "packages/sdlc-harness/assets/context_templates/global.md"), "utf8");
   assert.match(packagedGlobal, /Project \/ Delivery Context/);

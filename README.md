@@ -54,7 +54,8 @@ The two default Skills are Minimal Context authoring helpers. Requests such as �
 | `npx sdlc-harness sync` | Refreshes managed guidance, Makefile include, tools and templates. It does not migrate old semantic facts into Context. |
 | `npx sdlc-harness upgrade` | Runs safe package migrations and `sync`; if old stage facts are detected, it tells you to run `migrate-context`. |
 | `npx sdlc-harness migrate-context --dry-run` | Previews migration from existing legacy project facts into `project_context/**` and optional `DESIGN.md` candidates. |
-| `npx sdlc-harness migrate-context --write` | Writes Minimal Context files and optional `DESIGN.md` migration output. It never deletes old files in the user’s project. |
+| `npx sdlc-harness migrate-context --write` | Writes Minimal Context files and optional `DESIGN.md` migration output. It keeps old files by default. |
+| `npx sdlc-harness migrate-context --write --archive-legacy` | Writes migration output, then moves old stage artifacts such as `.work_products/**` into `project_context/_migration/legacy_archive/<timestamp>/`. |
 | `npx sdlc-harness validate-context` | Checks that Context has the minimum recovery fields and does not fake test execution results. |
 | `make validate-context` | Makefile wrapper for `validate-context`. |
 | `make validate-harness` | Compatibility alias for `validate-context` in vNext projects. |
@@ -99,6 +100,7 @@ Semantic migration is explicit:
 ```sh
 npx sdlc-harness migrate-context --dry-run
 npx sdlc-harness migrate-context --write
+npx sdlc-harness migrate-context --write --archive-legacy
 ```
 
 `sync` never reads legacy `.work_products/**` and never generates Context. `upgrade` never performs semantic migration automatically; it only prints the migration path when it detects legacy stage facts in a user project.
@@ -109,9 +111,11 @@ When Context files do not exist, `migrate-context --write` creates them. When Co
 
 When legacy experience/design material exists, `migrate-context` also previews or writes a Google `@google/design.md` compatible `DESIGN.md` candidate. If the project already has `DESIGN.md`, the candidate is written under `project_context/_migration/latest/DESIGN.md` instead of overwriting the user’s design system.
 
+By default, migration leaves `.work_products/**` and old phase state in place so users can review the generated Context before removing historical material. After the Context has been reviewed, `migrate-context --write --archive-legacy` moves old stage artifacts out of the active workspace and into `project_context/_migration/legacy_archive/<timestamp>/`. This is intentionally an archive, not a hard delete: it removes the old folders as active fact sources while keeping a local recovery path.
+
 ## Legacy Migration
 
-The former stage-based Harness is no longer shipped as a runnable default or compatibility layer. Existing projects that still have old configs and artifacts should migrate deliberately with `migrate-context`; `sync` and `upgrade` will not perform that semantic rewrite automatically.
+The former stage-based Harness is no longer shipped as a runnable default or compatibility layer. Existing projects that still have old configs and artifacts should migrate deliberately with `migrate-context`; `sync` and `upgrade` will not perform that semantic rewrite or archive automatically.
 
 The design reason is evidence-driven: delivery benchmark pilots showed that full SDLC document chains and frequent workflow gates create real time/token friction on ordinary and medium-complexity tasks, while modern agents already handle much of single-stage product/test work internally. The vNext default keeps the part with the clearest expected return: a minimal durable context for recovery, iteration, debug and requirements changes.
 

@@ -108,9 +108,12 @@ npx sdlc-harness migrate-context --dry-run
 - `--dry-run` previews output and writes nothing.
 - `--write` creates or updates `project_context/**`.
 - legacy experience/design material can also produce a Google `@google/design.md` compatible `DESIGN.md` candidate.
-- old files in the user project are preserved; migration never deletes legacy artifacts.
+- old files in the user project are preserved by default.
+- `--archive-legacy` may be combined with `--write` after review; it moves old `.work_products/**`, phase state, stage templates/policies and old `pjsdlc_*` skills into `project_context/_migration/legacy_archive/<timestamp>/`.
 - existing user-authored Context is protected by writing migration output to `project_context/_migration/latest/**` unless a managed migration marker is present.
 - existing user-authored `DESIGN.md` is protected by writing migration output to `project_context/_migration/latest/DESIGN.md`.
+
+Design reason: semantic migration and cleanup are separate operations. Keeping old files by default avoids accidental loss while users review the generated Context. The explicit archive option prevents old stage artifacts from continuing to look like active fact sources after migration, while still preserving a local recovery copy.
 
 `validate-context` checks that Context has the minimum recovery fields and does not fake product verification evidence. It does not replace project tests.
 

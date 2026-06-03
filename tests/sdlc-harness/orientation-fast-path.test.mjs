@@ -23,7 +23,7 @@ const [
   read("packages/sdlc-harness/README.md"),
   read("PROJECT_SPEC.md"),
   read("packages/sdlc-harness/assets/agents/AGENTS_CORE.md"),
-  read("packages/sdlc-harness/assets/docs/README.md"),
+  read("packages/sdlc-harness/assets/README.md"),
   read("packages/sdlc-harness/source-mappings.yaml"),
   read(".codex/skills/authoring/harness_package_design/SKILL.md"),
   read("packages/sdlc-harness/assets/skills/context_product_plan/SKILL.md"),
