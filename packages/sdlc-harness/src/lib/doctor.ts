@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import path from "node:path";
 import { readConfig } from "./config.js";
-import { harnessConfigPath, harnessPath, harnessRoot } from "./harness-root.js";
+import { harnessConfigPath, harnessRoot } from "./harness-root.js";
 import { pathExists } from "./fs.js";
 
 const require = createRequire(import.meta.url);
@@ -29,7 +29,7 @@ export async function runDoctor(projectRoot: string): Promise<DoctorReport> {
   report.info.push(`core package: ${config.core.package}@${packageVersion}`);
   report.info.push(`schema version: ${config.core.schema_version}`);
 
-  for (const required of [harnessPath(root, "state", "lifecycle.yaml"), harnessPath(root, "state", "plan.yaml"), ".work_products/INDEX.md"]) {
+  for (const required of ["project_context/global.md", "project_context/modules"]) {
     if (!(await pathExists(path.join(projectRoot, required)))) {
       report.errors.push(`missing ${required}`);
     }

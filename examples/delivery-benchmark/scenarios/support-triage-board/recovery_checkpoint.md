@@ -1,14 +1,16 @@
-# Support SLA Escalation Desk Recovery Checkpoint
+# Support SLA Escalation Desk Fresh-Agent Takeover Task
 
-Pause after initial delivery, before the RFC cascade and debug fix. Start a fresh agent/session and ask it to recover from committed source files, tests, README/docs, and Harness deliverables.
+You are taking over a support escalation desk after initial delivery. Write a short takeover memo for the operator. Do not change source files during this stage.
 
-The fresh agent should identify:
+Your memo should be based only on committed source files, tests, README/docs, and any Harness deliverables in this run. Use concrete file path citations for every important claim.
 
-- How to start the API and browser UI.
+Cover:
+
+- What the system does and who uses it.
+- How to start or inspect the API and browser UI.
 - Where the priority policy lives and which fields affect it.
-- Which UI states and views are expected.
-- Which tests cover API, priority policy, and UI smoke.
-- Whether the latest issue is an RFC change or a debug fix.
-- The next safe action that updates API, UI, tests, and docs together.
+- Which UI views, loading/empty/error/invalid states, and smoke paths matter.
+- Which tests cover API behavior, priority policy behavior, and UI smoke.
+- What changed most recently, what is risky, and the next safe action that keeps API, UI, tests, and docs aligned.
 
-The benchmark should measure whether the agent avoids a partial fix, such as updating only UI sorting while leaving API order or tests stale.
+The benchmark operator will score the memo against a hidden answer key. The answer key is not part of the prompt.

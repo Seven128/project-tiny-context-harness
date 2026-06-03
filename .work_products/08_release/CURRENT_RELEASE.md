@@ -4,12 +4,12 @@ This file is overwritten by each release. Historical release evidence lives in g
 
 ## 1. Release Summary（发布摘要）
 
-- Version: `agent-project-sdlc@0.2.1`
+- Version: `agent-project-sdlc@0.2.2`
 - Milestone: `MVP`
-- Date: `2026-06-01`
+- Date: `2026-06-03`
 - Owner: `release_manager`
 - Registry: `https://registry.npmjs.org/`
-- Status: `RELEASED`
+- Status: `BLOCKED`
 - Current release report: `.work_products/08_release/CURRENT_RELEASE.md`
 
 ## 2. Included Changes（包含变更）
@@ -21,36 +21,36 @@ This file is overwritten by each release. Historical release evidence lives in g
 
 | 产物（Artifact） | 位置（Location） | Checksum/Version |
 |---|---|---|
-| npm package | `agent-project-sdlc` | `0.2.1` |
-| dry-run tarball | `npm pack --dry-run --json --workspace agent-project-sdlc` | `1ce8df228f9e82ec5a1ff2a8d6e3f3b302564f7a` |
-| dry-run integrity | same | `sha512-6uD2zWq7P/9rv2uBfL3xzU8275/yiZh9iQoPgffUkNgu9eCcjx+10Xp6ziowO3bQYFgium95AuZNdmXL2Z5yhg==` |
-| package content | dry-run output | 116 files, 166.5 kB package size, 620.7 kB unpacked size |
-| registry package | `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json` | `version 0.2.1`, `latest 0.2.1`, `integrity sha512-6uD2zWq7P/9rv2uBfL3xzU8275/yiZh9iQoPgffUkNgu9eCcjx+10Xp6ziowO3bQYFgium95AuZNdmXL2Z5yhg==` |
+| npm package | `agent-project-sdlc` | `0.2.2` |
+| dry-run tarball | `npm pack --dry-run --json --workspace agent-project-sdlc` | `e3f25e47cbfe043df3a807cc76c6308da5fa0e73` |
+| dry-run integrity | same | `sha512-+0MmLZvBtouGlBXAAcDzQ6LBr2uodLVZIDYkeYsIAui1tG4++V8KuWM9fjQjiol5/IoEQfAwqc3Nqprq+9h9HQ==` |
+| package content | dry-run output | 103 files, 117.9 kB package size, 451.8 kB unpacked size |
+| registry package | `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json` | `version 0.2.2`, `latest 0.2.2`, `integrity sha512-+0MmLZvBtouGlBXAAcDzQ6LBr2uodLVZIDYkeYsIAui1tG4++V8KuWM9fjQjiol5/IoEQfAwqc3Nqprq+9h9HQ==` |
 
 ## 4. Smoke Test Result（冒烟测试结果）
 
-- Decision: `PASS`
+- Decision: `BLOCKED`
 - Evidence:
   - `npm test`: PASS。
   - `node packages/sdlc-harness/dist/cli.js package check-source`: PASS。
-  - `make validate-harness`: PASS。
+  - `make validate-harness`: Pending。
   - `npm pack --dry-run --json --workspace agent-project-sdlc`: PASS。
-  - `git diff --check`: PASS。
-  - `npm publish --workspace agent-project-sdlc`: PASS，registry 返回 agent-project-sdlc@0.2.1。
-  - `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json`: PASS，version 和 latest 均为 0.2.1。
-  - Registry installed-consumer smoke: PASS，从 npm registry 安装 agent-project-sdlc@0.2.1 后，init 和 doctor 均通过，doctor 输出 `core package: agent-project-sdlc@0.2.1`。
+  - `git diff --check`: Pending。
+  - `npm publish --workspace agent-project-sdlc`: PASS，registry 返回 agent-project-sdlc@0.2.2。
+  - `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json`: PASS，version 和 latest 均为 0.2.2。
+  - Registry installed-consumer smoke: PASS，从 npm registry 安装 agent-project-sdlc@0.2.2 后，init 和 doctor 均通过，doctor 输出 `core package: agent-project-sdlc@0.2.2`。
 
 ## 5. Deployment Checklist（部署检查清单）
 
 - [x] Confirm registry latest before publishing.
-- [x] Bump package version to `0.2.1`.
+- [x] Bump package version to `0.2.2`.
 - [x] Package source drift check passed.
 - [x] npm tests passed.
 - [x] Pack dry run passed.
 - [x] Publish package with `npm publish --workspace agent-project-sdlc`.
 - [x] Verify registry package with `npm view agent-project-sdlc version dist-tags.latest dist.integrity --json`.
 - [x] Run installed-consumer smoke from npm registry.
-- [ ] Create and push git tag `v0.2.1` after publish success.
+- [ ] Create and push git tag `v0.2.2` after publish success.
 
 ## 6. Rollback Plan（回滚方案）
 

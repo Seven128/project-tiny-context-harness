@@ -1,29 +1,13 @@
 import path from "node:path";
 import { writeConfigIfMissing } from "./config.js";
-import { harnessConfigPath, harnessPath, harnessRoot } from "./harness-root.js";
+import { harnessConfigPath } from "./harness-root.js";
 import { ensureDir, pathExists, writeTextIfChanged } from "./fs.js";
 import { runSync } from "./sync-engine.js";
-import { syncMemoryGuidanceSection, syncWorkProductsIndexMaintenanceSection } from "./user-owned-sections.js";
 
 export interface InitOptions {
   adopt: boolean;
   force: boolean;
 }
-
-const WORK_PRODUCT_DIRS = [
-  ".work_products/00_raw",
-  ".work_products/01_product",
-  ".work_products/02_experience",
-  ".work_products/02_architecture",
-  ".work_products/03_tech_plan",
-  ".work_products/04_implementation",
-  ".work_products/05_decisions",
-  ".work_products/06_review",
-  ".work_products/07_test",
-  ".work_products/08_release",
-  ".work_products/09_runbooks",
-  ".work_products/rfc"
-];
 
 export async function runInit(projectRoot: string, options: InitOptions): Promise<string[]> {
   const report: string[] = [];
@@ -32,7 +16,6 @@ export async function runInit(projectRoot: string, options: InitOptions): Promis
     report.push("Project is not empty; continuing with non-destructive init. Use --adopt to mark this as an existing project adoption.");
   }
 
-  const root = await harnessRoot(projectRoot);
   const configPath = await harnessConfigPath(projectRoot);
   if (await writeConfigIfMissing(projectRoot)) {
     report.push(`created ${configPath}`);
@@ -40,8 +23,7 @@ export async function runInit(projectRoot: string, options: InitOptions): Promis
     report.push(`kept existing ${configPath}`);
   }
 
-  await createProjectState(projectRoot, root, options.adopt, report);
-  await createWorkProducts(projectRoot, report);
+  await createProjectContext(projectRoot, report);
 
   const syncReport = await runSync(projectRoot);
   report.push(`sync changed=${syncReport.changed.length} skipped=${syncReport.skipped.length} blocked=${syncReport.blocked.length}`);
@@ -59,38 +41,90 @@ async function projectHasExistingFiles(projectRoot: string): Promise<boolean> {
   return false;
 }
 
-async function createProjectState(projectRoot: string, root: string, adopt: boolean, report: string[]): Promise<void> {
-  const stateRoot = path.join(projectRoot, root, "state");
-  await ensureDir(stateRoot);
-  const lifecycle = adopt
-    ? `project_name: "Project"\nversion: "v0.1"\ncurrent_phase: "SPRINTING"\nactive_role: "developer"\nactive_skill: "pjsdlc_dev_sprint"\ncurrent_milestone: "MVP"\nblocked_reason: ""\nsuspended_phase: ""\nallowed_next_phases:\n  - "REVIEWING"\n  - "RFC_RECALIBRATION"\n  - "BLOCKED"\n`
-    : `project_name: "Project"\nversion: "v0.1"\ncurrent_phase: "REQUIREMENT_GATHERING"\nactive_role: "product_manager"\nactive_skill: "pjsdlc_pm_prd"\ncurrent_milestone: "MVP"\nblocked_reason: ""\nsuspended_phase: ""\nallowed_next_phases:\n  - "UI_UX_DESIGNING"\n  - "BLOCKED"\n`;
+async function createProjectContext(projectRoot: string, report: string[]): Promise<void> {
+  const modulesRoot = path.join(projectRoot, "project_context", "modules");
+  await ensureDir(modulesRoot);
   const files: Array<[string, string]> = [
-    [
-      harnessPath(root, "state", "lifecycle.yaml"),
-      lifecycle
-    ],
-    [harnessPath(root, "state", "plan.yaml"), `current_task_id: ""\nnext_task_sequence: 1\ntasks: []\n`],
-    [harnessPath(root, "state", "plan.draft.yaml"), `next_task_sequence: 1\ntasks: []\n`],
+    ["project_context/global.md", globalContextTemplate()],
+    ["project_context/modules/main.md", moduleContextTemplate("main")]
   ];
   for (const [relative, content] of files) {
     if (await writeTextIfChanged(path.join(projectRoot, relative), content)) {
       report.push(`created ${relative}`);
     }
   }
-  await syncMemoryGuidanceSection(projectRoot, root, {
-    changed: report,
-    skipped: []
-  });
 }
 
-async function createWorkProducts(projectRoot: string, report: string[]): Promise<void> {
-  for (const dir of WORK_PRODUCT_DIRS) {
-    await ensureDir(path.join(projectRoot, dir));
-    await writeTextIfChanged(path.join(projectRoot, dir, ".gitkeep"), "");
-  }
-  await syncWorkProductsIndexMaintenanceSection(projectRoot, {
-    changed: report,
-    skipped: []
-  });
+function globalContextTemplate(): string {
+  return [
+    "# Project / Delivery Context",
+    "",
+    "## Project Goal",
+    "",
+    "- Describe the user-visible goal this project is trying to achieve.",
+    "",
+    "## Non-goals / Boundaries",
+    "",
+    "- List what this project intentionally does not do.",
+    "",
+    "## Background",
+    "",
+    "- Capture the minimum background a fresh agent needs before changing code.",
+    "",
+    "## Design Rationale",
+    "",
+    "- Record only durable choices that are hard to infer from code or tests.",
+    "",
+    "## Verification Entry Points",
+    "",
+    "- `npm test` or the project-specific command that proves product behavior.",
+    "",
+    "## Current State",
+    "",
+    "- Summarize what is currently implemented or intentionally blocked.",
+    "",
+    "## Next Safe Action",
+    "",
+    "- State the safest next step for a fresh agent.",
+    "",
+    "## Module Index",
+    "",
+    "- [main](modules/main.md)",
+    ""
+  ].join("\n");
+}
+
+function moduleContextTemplate(moduleName: string): string {
+  return [
+    `# Module Context: ${moduleName}`,
+    "",
+    "## Responsibility",
+    "",
+    "- Describe this module's responsibility.",
+    "",
+    "## User / System Contract",
+    "",
+    "- Describe the external behavior, API, CLI, UI, or data contract.",
+    "",
+    "## Core Data / API / State",
+    "",
+    "- Summarize the important data structures, APIs, state transitions, or rules.",
+    "",
+    "## Key Constraints",
+    "",
+    "- List constraints that are not obvious from code alone.",
+    "",
+    "## Code Entry Points",
+    "",
+    "- `src/` or the concrete file/function entry points.",
+    "",
+    "## Test Entry Points",
+    "",
+    "- `npm test` or focused test commands for this module.",
+    "",
+    "## Open Risks",
+    "",
+    "- List unresolved risks or blockers.",
+    ""
+  ].join("\n");
 }

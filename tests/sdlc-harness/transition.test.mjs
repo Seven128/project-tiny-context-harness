@@ -228,7 +228,7 @@ allowed_next_phases:
     assert.match(lifecycle, /- "REQUIREMENT_GATHERING"/);
     assert.match(lifecycle, /- "UI_UX_DESIGNING"/);
     assert.match(lifecycle, /- "ARCHITECTING"/);
-    assert.doesNotMatch(lifecycle, /- "SPRINTING"/);
+    assert.match(lifecycle, /- "SPRINTING"/);
     assert.match(lifecycle, /- "BLOCKED"/);
   }
 
@@ -254,6 +254,7 @@ allowed_next_phases:
     ["REQUIREMENT_GATHERING", "pm", "pjsdlc_pm_prd", "UI_UX_DESIGNING"],
     ["UI_UX_DESIGNING", "designer", "pjsdlc_uiux_design", "ARCHITECTING"],
     ["ARCHITECTING", "architect", "pjsdlc_architect_design", "SPRINTING"],
+    ["SPRINTING", "developer", "pjsdlc_dev_sprint", "REVIEWING"],
   ]) {
     await writeLifecycle(
       `project_name: "Fixture"
@@ -275,22 +276,6 @@ allowed_next_phases:
     assert.match(lifecycle, new RegExp(`- "${nextPhase}"`));
     assert.match(lifecycle, /- "BLOCKED"/);
   }
-
-  await writeLifecycle(
-    `project_name: "Fixture"
-version: "v0.1"
-current_phase: "RFC_RECALIBRATION"
-active_role: "rfc_owner"
-active_skill: "pjsdlc_rfc_recalibrate"
-suspended_phase: "REVIEWING"
-allowed_next_phases:
-  - "REQUIREMENT_GATHERING"
-`
-  );
-  assert.throws(
-    () => execFileSync("python3", ["tools/transition.py", "--to", "SPRINTING"], { cwd: root, stdio: "pipe" }),
-    /Illegal transition RFC_RECALIBRATION -> SPRINTING/
-  );
 
   await writeLifecycle(
     `project_name: "Fixture"

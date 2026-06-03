@@ -65,6 +65,8 @@ export async function runWorkflowInspection(
 
   const lifecyclePath = path.join(projectRoot, harnessPath(root, "state", "lifecycle.yaml"));
   const planPath = path.join(projectRoot, harnessPath(root, "state", "plan.yaml"));
+  const hasMinimalContext = await pathExists(path.join(projectRoot, "project_context", "global.md"));
+  const hasLegacyState = (await pathExists(lifecyclePath)) || (await pathExists(planPath));
   const lifecycle = await readYamlObject(lifecyclePath);
   const plan = await readYamlObject(planPath);
   const currentPhase = String(lifecycle?.current_phase ?? "");
@@ -143,11 +145,15 @@ export async function runWorkflowInspection(
 
   await addSelfTestReportMetric(projectRoot, inferredTask, metrics, findings);
   await addLargestWorkProductMetric(projectRoot, workProductRefs, metrics, findings);
-  await addValidatorMetric(projectRoot, "validate-harness", metrics, findings);
-  await addValidatorMetric(projectRoot, "validate-plan", metrics, findings);
-  await addTestingReadinessMetric(projectRoot, currentPhase, metrics, findings);
-  addLifecycleMetric(lifecycle, plan, currentPhase, currentTaskId, currentTask, openTasks, metrics, findings);
-  addRecoveryMetric(plan, inferredTask, metrics, findings);
+  if (hasMinimalContext && !hasLegacyState) {
+    await addValidatorMetric(projectRoot, "validate-context", metrics, findings);
+  } else {
+    await addValidatorMetric(projectRoot, "validate-harness", metrics, findings);
+    await addValidatorMetric(projectRoot, "validate-plan", metrics, findings);
+    await addTestingReadinessMetric(projectRoot, currentPhase, metrics, findings);
+    addLifecycleMetric(lifecycle, plan, currentPhase, currentTaskId, currentTask, openTasks, metrics, findings);
+    addRecoveryMetric(plan, inferredTask, metrics, findings);
+  }
   addManualMetrics(options, metrics, findings);
   addOutcomeMetrics(options, inferredTask, metrics, findings);
 

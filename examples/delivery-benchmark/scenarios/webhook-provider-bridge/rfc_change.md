@@ -10,6 +10,7 @@ Provider events move from schema v1 to schema v2:
 - `event_type` becomes `eventType`.
 - `created_at` becomes `createdAt`.
 - The signing payload now includes `tenantId`, `eventId`, `eventType`, `createdAt`, and raw body.
+- The exact v2 signing payload is `${tenantId}.${eventId}.${eventType}.${createdAt}.${rawBody}`.
 
 Required impact:
 

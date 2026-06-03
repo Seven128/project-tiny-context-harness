@@ -4,10 +4,9 @@ import { defaultConfig, readConfig } from "./config.js";
 import { ensureDir, listFiles, pathExists, readText, writeTextIfChanged } from "./fs.js";
 import { harnessConfigPath, harnessPath, harnessRoot } from "./harness-root.js";
 import type { ManagedFile } from "./types.js";
-import { syncMemoryGuidanceSection, syncWorkProductsIndexMaintenanceSection } from "./user-owned-sections.js";
 import { parseYaml, stringifyYaml } from "./yaml.js";
 
-export const CURRENT_SCHEMA_VERSION = "2";
+export const CURRENT_SCHEMA_VERSION = "3";
 
 export interface Migration {
   from: string;
@@ -62,9 +61,11 @@ async function migrateConfig(projectRoot: string, root: string, report: Migratio
   config.core.package = currentCore.package;
   config.core.schema_version = CURRENT_SCHEMA_VERSION;
   delete (config.core as Record<string, unknown>).version;
-  config.managed_files = migrateManagedFiles(config.managed_files, root);
-  config.local_overrides = config.local_overrides.map((item) => migrateLocalOverride(item, root));
-  config.never_overwrite = config.never_overwrite.map(rewriteWorkflowReferenceText);
+  config.managed_files = currentDefaultManagedFiles(root);
+  config.local_overrides = currentDefaultLocalOverrides(root);
+  config.never_overwrite = Array.from(
+    new Set([...defaultConfig(root).never_overwrite, ...config.never_overwrite.map(rewriteWorkflowReferenceText)])
+  );
   if (await writeTextIfChanged(configPath, stringifyYaml(config))) {
     report.changed.push(relativeConfigPath);
   } else {
@@ -524,6 +525,13 @@ async function removeLegacyGateResults(projectRoot: string, root: string, report
 }
 
 async function ensureUserOwnedGuidanceSections(projectRoot: string, root: string, report: MigrationReport): Promise<void> {
-  await syncMemoryGuidanceSection(projectRoot, root, report);
-  await syncWorkProductsIndexMaintenanceSection(projectRoot, report);
+  report.skipped.push("legacy memory/index guidance sections");
+}
+
+function currentDefaultManagedFiles(root: string): ManagedFile[] {
+  return defaultConfig(root).managed_files;
+}
+
+function currentDefaultLocalOverrides(root: string): string[] {
+  return defaultConfig(root).local_overrides;
 }

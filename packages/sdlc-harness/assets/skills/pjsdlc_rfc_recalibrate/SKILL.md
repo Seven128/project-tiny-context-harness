@@ -13,7 +13,7 @@ description: Use during RFC_RECALIBRATION to process requirement changes with im
 
 你是变更控制负责人，目标是把新的需求、修正或范围变化限制在清晰的影响链路内。你需要保护已稳定的 PRD、技术方案、实现文档和任务状态，避免因为一个变化重写整个项目。
 
-处理 RFC 时，先确认变化来源、动机、验收标准、紧急程度和影响范围。必须区分产品语义变化、UI/UX 体验事实变化、技术方案变化、实现偏移、任务边界调整和单纯文档澄清。对不确定的影响，先记录假设和待验证项，再决定 RFC 完成后回到 `REQUIREMENT_GATHERING`、`UI_UX_DESIGNING` 或 `ARCHITECTING`。如果影响面只是实现偏离既有 PRD、UI/UX 和技术方案，应退出 RFC 路径并让 Manager 使用 `bugfix_implementation_gap` 回 `SPRINTING`。
+处理 RFC 时，先确认变化来源、动机、验收标准、紧急程度和影响范围。必须区分产品语义变化、UI/UX 体验事实变化、技术方案变化、实现偏移、任务边界调整和单纯文档澄清。对不确定的影响，先记录假设和待验证项，再决定 RFC 完成后回到 `REQUIREMENT_GATHERING`、`UI_UX_DESIGNING`、`ARCHITECTING` 或符合条件时回到 `SPRINTING`。如果影响面只是实现偏离既有 PRD、UI/UX 和技术方案，应退出 RFC 路径并让 Manager 使用 `bugfix_implementation_gap` 回 `SPRINTING`。
 
 输出应包含 impact analysis、受影响产物、任务状态调整、测试事实源影响、回归要求和恢复路径。只修改受影响 slice；如果变化跨越多个独立能力，应拆分 RFC 或生成增量任务。
 
@@ -24,6 +24,10 @@ description: Use during RFC_RECALIBRATION to process requirement changes with im
 参考图驱动的 UI/UX、美术、游戏画面或强主观视觉质量变更，必须写明 `Visual Reconciliation Impact`。RFC 需要记录 reference images、reference intent、usage boundary、当前截图或 mock、所需 screenshot artifacts、人工视觉确认要求、approval status，以及工程验收和视觉验收的分界。未获得视觉方向确认时，RFC 可以生成 visual spike 或局部探索任务，但不得把自动化 gate PASS 当作视觉完成。
 
 RFC recalibration 本身也是 workflow task。开始处理变更前，先在 `<harnessRoot>/state/plan.yaml` 创建或选择一个足够小的 `TASK-*` open task，并设置 `phase: "RFC_RECALIBRATION"`；当前轮只处理一个 RFC 文件、一个 impact analysis 单元或一个局部补丁单元。
+
+RFC 内部循环采用 `Standard Thin` gate 策略：影响分析和局部补丁过程中，优先运行受影响产品行为、UI/API/policy/test/docs 一致性、focused regression 或当前 task `required_gates` 子集；只做必要的 `plan.yaml`、dirty-file、work-product index 和 overview 轻量检查。`make validate-rfc`、阶段出口 gate、package source sync/check、workspace full regression 只在 RFC task completion、返回上游阶段、package/source/managed asset 变更、public CLI / validator 变更、高风险 provider/live 边界，或用户明确要求完整验证时运行。
+
+`rfc_return_to_sprinting` 只用于 localized implementation RFC：PRD、UI/UX、tech plan、self-test contract 和 implementation facts 已按 RFC 更新；没有未解决的产品或架构问题；不需要重新生成 `plan.draft.yaml`；局部产品 gate / required gates 已通过；下一步只是继续实现、回归或 debug 修复。满足这些条件时，RFC 可以在 `make validate-rfc` 通过后直接恢复到 `SPRINTING`，避免为了局部补丁重走 `ARCHITECTING` 和 draft task 队列。需求边界、UX contract、架构方案或任务拆分仍未闭合时，必须回到对应上游阶段。
 
 RFC 阶段默认先评估是否适合并行 impact analysis。适合时，主 Agent 使用 `parallel_execution.trigger: "workflow_default"` 和 `runtime.provider: "codex_native_subagents"` 调度 worker 分别检查 docs、state、skills、policies、templates、tools、package assets、tests、migrations 或 generated artifacts 影响；用户明确要求并行时使用 `trigger: "user_requested"`。worker 必须 `writes_repo: false`，只提交影响面、patch candidates 和风险清单；最终 RFC、事实源补丁和任务调整由主 Agent 汇总。
 
@@ -65,7 +69,7 @@ RFC 阶段受 `plan.yaml` 管控：
 2. open task 必须包含 `phase`、`work_products`、`allowed_paths`、`required_gates`、`acceptance_criteria` 和 `result_work_products`；`result_work_products` 指向本 task 计划产出的 RFC、受影响 PRD、UI/UX docs、DESIGN.md、tech plan、test docs 或 plan update。
 3. 单个 task 的目标应足够小：一份 RFC 的 impact analysis、一个受影响 slice 的局部补丁、一组任务状态调整，或一个回归要求更新。
 4. 执行当前 task 时只编辑 `allowed_paths` 中的 RFC、受影响 facts、`.work_products/INDEX.md`、overview 和 `plan.yaml`。
-5. 完成后运行 `make validate-plan` 和 task required gates；阶段出口前运行 `make validate-rfc`。
+5. 内部循环按 `Standard Thin` 运行 focused regression 和必要轻量状态检查；完成后运行 task required gates，阶段出口前运行 `make validate-rfc`。
 6. task 完成后从 `plan.yaml.tasks` 移除；如果还有 pending RFC task，下一轮 `/rfc` 或 `/next` 再继续。
 
 ## 规则
@@ -75,7 +79,7 @@ RFC 阶段受 `plan.yaml` 管控：
 3. 受影响的已完成任务标记为 `pending_revision`。
 4. 受影响的 `pending` 或 `in_progress` 任务追加 revision notes。
 5. 不重写无关的稳定文档。
-6. 只有 `make validate-rfc` 通过后，才能回到 `REQUIREMENT_GATHERING`、`UI_UX_DESIGNING` 或 `ARCHITECTING` 中的受影响阶段；后开发阶段直接回 `SPRINTING` 只用于 `bugfix_implementation_gap`。
+6. 只有 `make validate-rfc` 通过后，才能回到 `REQUIREMENT_GATHERING`、`UI_UX_DESIGNING` 或 `ARCHITECTING` 中的受影响阶段；满足 localized implementation RFC 条件时，可以用 `rfc_return_to_sprinting` 直接回 `SPRINTING`；纯实现偏差仍应退出 RFC 并使用 `bugfix_implementation_gap`。
 7. RFC 阶段一次只执行一个 `TASK-*` task。
 8. RFC 列为 superseded 的 `.work_products/07_test/**` 文件必须在当前测试事实源中不存在，并且不得继续出现在 `.work_products/INDEX.md`。
 

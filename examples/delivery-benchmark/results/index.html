@@ -511,6 +511,37 @@
         color: var(--muted);
       }
 
+      .inventory-table-wrap {
+        overflow-x: auto;
+        margin-top: 12px;
+      }
+
+      .inventory-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 520px;
+        font-size: 0.92rem;
+      }
+
+      .inventory-table th,
+      .inventory-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--line);
+        text-align: right;
+        white-space: nowrap;
+      }
+
+      .inventory-table th:first-child,
+      .inventory-table td:first-child {
+        text-align: left;
+        white-space: normal;
+      }
+
+      .inventory-table thead th {
+        color: var(--muted);
+        font-weight: 700;
+      }
+
       .interpretation {
         margin: 0;
         padding-left: 18px;
@@ -534,6 +565,44 @@
         display: block;
         margin-bottom: 4px;
         color: var(--ink);
+      }
+
+      .confidence-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .confidence-group-heading {
+        margin: 14px 0 0;
+        color: var(--steel);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .confidence-item {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 11px;
+        background: #fbfcf9;
+      }
+
+      .confidence-item-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 6px;
+      }
+
+      .confidence-item-title strong {
+        min-width: 0;
+      }
+
+      .confidence-item p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
       }
 
       .mini-metric-grid {
@@ -666,7 +735,7 @@
       </p>
     </main>
 
-    <script src="benchmark-data.js"></script>
+    <script src="benchmark-data.js?v=20260602-confidence-gate-thinning"></script>
     <script>
       const data = window.__DELIVERY_BENCHMARK_DATA__;
       const supportedLanguages = ["en", "zh"];
@@ -826,6 +895,8 @@
         report.innerHTML = `
           <div class="stack">
             ${scenarioBrief(scenario)}
+            ${automationBurdenPanel(scenario)}
+            ${gateValuePanel(scenario)}
             <section class="panel pending">
               <div class="pending-inner">
                 <span class="badge badge-pending">${escapeHtml(ui.status.pending)}</span>
@@ -875,10 +946,16 @@
                   ${scenario.artifacts.map(artifactCard).join("")}
                 </div>
               </section>
+
+              ${artifactInventoryPanel(scenario)}
             </div>
 
             <div class="stack">
               ${measurementPanel(scenario)}
+              ${metricConfidencePanel(scenario)}
+              ${automationBurdenPanel(scenario)}
+              ${gateValuePanel(scenario)}
+              ${gateThinningPanel()}
               ${lifecyclePanel(scenario)}
               ${contextContinuityPanel(scenario)}
 
@@ -914,7 +991,29 @@
         const lifecycleCopy = ui.lifecycleEfficiency;
         const metrics = scenario.lifecycle?.metrics;
         const defaultMetrics = lifecycleCopy.metrics ?? [];
-        const items = hasLifecycleMetricValues(metrics)
+        const items = hasComparativeLifecycleMetricValues(metrics)
+          ? [
+              {
+                label: defaultMetrics[0]?.label ?? "Initial delivery",
+                value: formatComparisonMinutes(metrics.baseline.initialDeliveryMinutes, metrics.harness.initialDeliveryMinutes)
+              },
+              {
+                label: defaultMetrics[1]?.label ?? "Fresh-agent recovery",
+                value: formatComparisonMinutes(metrics.baseline.recoveryOrientationMinutes, metrics.harness.recoveryOrientationMinutes)
+              },
+              {
+                label: defaultMetrics[2]?.label ?? "RFC + debug fix",
+                value: formatComparisonMinutes(
+                  sumNullable(metrics.baseline.rfcFixMinutes, metrics.baseline.debugFixMinutes),
+                  sumNullable(metrics.harness.rfcFixMinutes, metrics.harness.debugFixMinutes)
+                )
+              },
+              {
+                label: defaultMetrics[3]?.label ?? "Total lifecycle",
+                value: formatComparisonMinutes(metrics.baseline.totalLifecycleMinutes, metrics.harness.totalLifecycleMinutes)
+              }
+            ]
+          : hasLifecycleMetricValues(metrics)
           ? [
               { label: defaultMetrics[0]?.label ?? "Initial delivery", value: formatNullableMinutes(metrics.initialDeliveryMinutes) },
               {
@@ -945,7 +1044,22 @@
         const contextCopy = ui.contextContinuity;
         const metrics = scenario.lifecycle?.metrics;
         const defaultMetrics = contextCopy.metrics ?? [];
-        const items = hasContextMetricValues(metrics)
+        const items = hasComparativeContextMetricValues(metrics)
+          ? [
+              {
+                label: defaultMetrics[0]?.label ?? "Recovery quiz",
+                value: formatComparisonScore(metrics.baseline.contextRecoveryScore, metrics.baseline.contextRecoveryTotal, metrics.harness.contextRecoveryScore, metrics.harness.contextRecoveryTotal)
+              },
+              {
+                label: defaultMetrics[1]?.label ?? "Wrong-path count",
+                value: formatComparisonValue(metrics.baseline.wrongPathCount, metrics.harness.wrongPathCount)
+              },
+              {
+                label: defaultMetrics[2]?.label ?? "Final quality",
+                value: formatComparisonValue(metrics.baseline.finalQualityScore, metrics.harness.finalQualityScore)
+              }
+            ]
+          : hasContextMetricValues(metrics)
           ? [
               {
                 label: defaultMetrics[0]?.label ?? "Recovery quiz",
@@ -992,6 +1106,132 @@
             <ul class="measurement-list">
               ${(measurement.methods ?? []).map((method) => measurementMethodItem(method)).join("")}
             </ul>
+          </section>
+        `;
+      }
+
+      function metricConfidencePanel(scenario) {
+        const ui = copy(data.copy);
+        const metrics = scenario.metricConfidence ?? [];
+        if (metrics.length === 0) {
+          return "";
+        }
+        const conclusionMetrics = metrics.filter(isConclusionMetric);
+        const diagnosticMetrics = metrics.filter((metric) => !isConclusionMetric(metric));
+        return `
+          <section class="panel" id="metric-confidence" aria-labelledby="metric-confidence-heading">
+            <h2 id="metric-confidence-heading">${escapeHtml(ui.headings.metricConfidence)}</h2>
+            <p>${escapeHtml(ui.metricConfidenceIntro)}</p>
+            ${metricConfidenceGroup(ui.metricConfidenceGroups?.conclusion ?? "Conclusion-grade metrics", conclusionMetrics)}
+            ${metricConfidenceGroup(ui.metricConfidenceGroups?.diagnostic ?? "Diagnostic metrics", diagnosticMetrics)}
+          </section>
+        `;
+      }
+
+      function metricConfidenceGroup(label, metrics) {
+        if (metrics.length === 0) {
+          return "";
+        }
+        return `
+          <h3 class="confidence-group-heading">${escapeHtml(label)}</h3>
+          <div class="confidence-list">
+            ${metrics.map(confidenceItem).join("")}
+          </div>
+        `;
+      }
+
+      function confidenceItem(metric) {
+        const ui = copy(data.copy);
+        const metricText = copy(metric.copy);
+        const levelLabel = ui.confidenceLevelLabels?.[metric.level] ?? metric.level;
+        const eligibilityLabel = isConclusionMetric(metric)
+          ? ui.conclusionEligibilityLabels?.eligible ?? "Conclusion"
+          : ui.conclusionEligibilityLabels?.diagnostic ?? "Diagnostic";
+        return `
+          <article class="confidence-item">
+            <div class="confidence-item-title">
+              <strong>${escapeHtml(metricText.label)}</strong>
+              <span class="metric-chip">${escapeHtml(eligibilityLabel)} · ${escapeHtml(levelLabel)} · ${escapeHtml(metric.dataSource)}</span>
+            </div>
+            <p>${escapeHtml(metricText.explanation)}</p>
+          </article>
+        `;
+      }
+
+      function isConclusionMetric(metric) {
+        return metric.conclusionEligible ?? metric.conclusion_eligible ?? metric.level === "high";
+      }
+
+      function automationBurdenPanel(scenario) {
+        const ui = copy(data.copy);
+        const burden = scenario.automationBurden;
+        if (!burden) {
+          return "";
+        }
+        const burdenText = copy(burden.copy);
+        const metrics = burden.metrics ?? {};
+        const labels = ui.automationBurdenLabels ?? {};
+        const items = [
+          { label: labels.interventionCount ?? "Interventions", value: formatNullableValue(metrics.interventionCount) },
+          { label: labels.operatorPromptChars ?? "Prompt chars", value: formatNullableValue(metrics.operatorPromptChars) },
+          { label: labels.operatorPromptWords ?? "Prompt words", value: formatNullableValue(metrics.operatorPromptWords) },
+          { label: labels.repairLoopCount ?? "Repair loops", value: formatNullableValue(metrics.repairLoopCount) }
+        ];
+        return `
+          <section class="panel" id="automation-burden" aria-labelledby="automation-burden-heading">
+            <h2 id="automation-burden-heading">${escapeHtml(ui.headings.automationBurden)}</h2>
+            <p>${escapeHtml(ui.automationBurdenIntro)}</p>
+            <p>${escapeHtml(burdenText.body)}</p>
+            <div class="mini-metric-grid">
+              ${items.map(miniMetric).join("")}
+            </div>
+          </section>
+        `;
+      }
+
+      function gateValuePanel(scenario) {
+        const ui = copy(data.copy);
+        const gateValue = scenario.gateValue;
+        if (!gateValue) {
+          return "";
+        }
+        const gateText = copy(gateValue.copy);
+        const metrics = gateValue.metrics ?? {};
+        const labels = ui.gateValueLabels ?? {};
+        const items = [
+          { label: labels.defectsCaught ?? "Defects caught", value: formatNullableValue(metrics.defectsCaught) },
+          { label: labels.productGateDefectsCaught ?? "Product gate defects", value: formatNullableValue(metrics.productGateDefectsCaught) },
+          { label: labels.workflowGateDefectsCaught ?? "Workflow gate defects", value: formatNullableValue(metrics.workflowGateDefectsCaught) },
+          { label: labels.escapedDefectCount ?? "Escaped defects", value: formatNullableValue(metrics.escapedDefectCount) },
+          { label: labels.repairLoopCount ?? "Repair loops", value: formatNullableValue(metrics.repairLoopCount) },
+          { label: labels.firstPassQualityScore ?? "First-pass quality", value: formatNullableValue(metrics.firstPassQualityScore) }
+        ];
+        return `
+          <section class="panel" id="gate-value" aria-labelledby="gate-value-heading">
+            <h2 id="gate-value-heading">${escapeHtml(ui.headings.gateValue)}</h2>
+            <p>${escapeHtml(ui.gateValueIntro)}</p>
+            <p>${escapeHtml(gateText.body)}</p>
+            <div class="mini-metric-grid">
+              ${items.map(miniMetric).join("")}
+            </div>
+          </section>
+        `;
+      }
+
+      function gateThinningPanel() {
+        const ui = copy(data.copy);
+        const recommendation = ui.gateThinningRecommendation;
+        if (!recommendation) {
+          return "";
+        }
+        return `
+          <section class="panel" id="gate-thinning-recommendation" aria-labelledby="gate-thinning-heading">
+            <h2 id="gate-thinning-heading">${escapeHtml(ui.headings.gateThinning)}</h2>
+            <p><strong>${escapeHtml(recommendation.label)}</strong></p>
+            <p>${escapeHtml(recommendation.body)}</p>
+            <div class="mini-metric-grid">
+              ${(recommendation.metrics ?? []).map(miniMetric).join("")}
+            </div>
           </section>
         `;
       }
@@ -1079,6 +1319,65 @@
         `;
       }
 
+      function artifactInventoryPanel(scenario) {
+        const ui = copy(data.copy);
+        const inventory = scenario.artifactInventory;
+        if (!inventory?.modes?.baseline || !inventory?.modes?.harness) {
+          return "";
+        }
+        const inventoryText = copy(inventory.copy);
+        const labels = ui.artifactInventoryLabels ?? {};
+        const categories = ui.artifactInventoryCategories ?? {};
+        const categoryIds = Object.keys(categories).filter((id) => {
+          const baseline = inventory.modes.baseline.categories?.[id] ?? {};
+          const harness = inventory.modes.harness.categories?.[id] ?? {};
+          return (baseline.files ?? 0) > 0 || (baseline.lines ?? 0) > 0 || (harness.files ?? 0) > 0 || (harness.lines ?? 0) > 0;
+        });
+        return `
+          <section class="panel" id="artifact-inventory" aria-labelledby="artifact-inventory-heading">
+            <h2 id="artifact-inventory-heading">${escapeHtml(ui.headings.artifactInventory ?? "Artifact Inventory")}</h2>
+            <p>${escapeHtml(inventoryText.body)}</p>
+            <div class="mini-metric-grid">
+              ${miniMetric({ label: labels.runType ?? "Run type", value: inventory.runType ?? "unknown" })}
+              ${miniMetric({ label: labels.dataSource ?? "Data source", value: inventory.dataSource ?? "filesystem_scan" })}
+              ${miniMetric({ label: labels.confidence ?? "Confidence", value: inventoryText.confidence ?? inventory.confidence })}
+              ${miniMetric({ label: labels.totalLines ?? "Total lines", value: formatComparisonValue(inventory.modes.baseline.total.lines, inventory.modes.harness.total.lines) })}
+            </div>
+            <div class="inventory-table-wrap">
+              <table class="inventory-table">
+                <thead>
+                  <tr>
+                    <th>${escapeHtml(labels.category ?? "Category")}</th>
+                    <th>${escapeHtml(labels.baselineFiles ?? "Baseline files")}</th>
+                    <th>${escapeHtml(labels.baselineLines ?? "Baseline lines")}</th>
+                    <th>${escapeHtml(labels.harnessFiles ?? "Harness files")}</th>
+                    <th>${escapeHtml(labels.harnessLines ?? "Harness lines")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${categoryIds.map((id) => artifactInventoryRow(id, inventory, categories)).join("")}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        `;
+      }
+
+      function artifactInventoryRow(categoryId, inventory, categories) {
+        const category = categories[categoryId] ?? categoryId;
+        const baseline = inventory.modes.baseline.categories?.[categoryId] ?? {};
+        const harness = inventory.modes.harness.categories?.[categoryId] ?? {};
+        return `
+          <tr>
+            <td>${escapeHtml(category)}</td>
+            <td>${formatNullableValue(baseline.files)}</td>
+            <td>${formatNullableValue(baseline.lines)}</td>
+            <td>${formatNullableValue(harness.files)}</td>
+            <td>${formatNullableValue(harness.lines)}</td>
+          </tr>
+        `;
+      }
+
       function costChart(label, value, max, control = false) {
         const width = value === null || max === null || max === 0 ? 0 : Math.min(100, Math.max(4, Math.round((value / max) * 100)));
         return `
@@ -1110,8 +1409,27 @@
         return value === null || value === undefined ? copy(data.copy).unavailable : formatMinutes(value);
       }
 
+      function formatComparisonMinutes(baselineValue, harnessValue) {
+        return `${formatNullableMinutes(baselineValue)} / ${formatNullableMinutes(harnessValue)}`;
+      }
+
+      function formatComparisonValue(baselineValue, harnessValue) {
+        return `${formatNullableValue(baselineValue)} / ${formatNullableValue(harnessValue)}`;
+      }
+
+      function formatComparisonScore(baselineScore, baselineTotal, harnessScore, harnessTotal) {
+        return `${formatScore(baselineScore, baselineTotal)} / ${formatScore(harnessScore, harnessTotal)}`;
+      }
+
       function formatNullableValue(value) {
         return value === null || value === undefined ? copy(data.copy).unavailable : String(value);
+      }
+
+      function sumNullable(first, second) {
+        if (first === null || first === undefined || second === null || second === undefined) {
+          return null;
+        }
+        return Number((first + second).toFixed(2));
       }
 
       function formatLifecyclePair(rfcValue, debugValue) {
@@ -1144,6 +1462,14 @@
               (value) => value !== null && value !== undefined
             )
         );
+      }
+
+      function hasComparativeLifecycleMetricValues(metrics) {
+        return Boolean(metrics?.baseline && metrics?.harness);
+      }
+
+      function hasComparativeContextMetricValues(metrics) {
+        return Boolean(metrics?.baseline && metrics?.harness);
       }
 
       function formatTemplate(template, value) {

@@ -1,13 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import {
-  mkdir,
-  mkdtemp,
-  readFile,
-  rm,
-  stat,
-  writeFile
-} from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -111,7 +104,6 @@ export async function runConsumerLabFullTest(rawOptions) {
   );
   const packageVersion = packageManifest.version;
   const checks = [];
-  let report;
   const artifactsDir = path.join(options.labDir, ".artifacts");
 
   const add = (check) => {
@@ -135,6 +127,7 @@ export async function runConsumerLabFullTest(rawOptions) {
     });
     return result;
   };
+
   if (options.resetLab) {
     await rm(options.labDir, { recursive: true, force: true });
   }
@@ -150,7 +143,7 @@ export async function runConsumerLabFullTest(rawOptions) {
     details: tarballName ? tarballName : trimOutput(`${pack.stdout}\n${pack.stderr}`)
   });
   if (pack.status !== 0 || !tarballName) {
-    report = await finishReport({ options, packageVersion, startedAt, checks, labCommit: "", labTag: "" });
+    const report = await finishReport({ options, packageVersion, startedAt, checks, labCommit: "", labTag: "" });
     await cleanupLab(options);
     return report;
   }
@@ -161,22 +154,34 @@ export async function runConsumerLabFullTest(rawOptions) {
   commandCheck("Package smoke", "install current source tarball", "npm", ["install", "-D", `./.artifacts/${tarballName}`]);
   commandCheck("CLI lifecycle", "init explicit .codex root", "npx", ["sdlc-harness", "init", "--harness-folder", ".codex"]);
   commandCheck("CLI lifecycle", "doctor installed workspace", "npx", ["sdlc-harness", "doctor"]);
-  const defaultWorkflowInspect = run("npx", [
-    "sdlc-harness",
-    "inspect-workflow",
-    "--workflow-control-minutes",
-    "5",
-    "--total-delivery-minutes",
-    "30",
-    "--estimated-vibe-handoff-minutes",
-    "30",
-    "--avoided-rework-minutes",
-    "10"
-  ], options.labDir);
+  commandCheck("CLI lifecycle", "sync idempotency", "npx", ["sdlc-harness", "sync"]);
+  commandCheck("CLI lifecycle", "upgrade idempotency", "npx", ["sdlc-harness", "upgrade"]);
+  commandCheck("CLI validators", "validate-context", "npx", ["sdlc-harness", "validate-context"]);
+  commandCheck("CLI validators", "validate-harness compatibility alias", "npx", ["sdlc-harness", "validate-harness"]);
+  commandCheck("Makefile gates", "make validate-context", "make", ["validate-context"]);
+  commandCheck("Makefile gates", "make validate-harness compatibility alias", "make", ["validate-harness"]);
+
+  const defaultWorkflowInspect = run(
+    "npx",
+    [
+      "sdlc-harness",
+      "inspect-workflow",
+      "--workflow-control-minutes",
+      "5",
+      "--total-delivery-minutes",
+      "30",
+      "--estimated-vibe-handoff-minutes",
+      "30",
+      "--avoided-rework-minutes",
+      "10"
+    ],
+    options.labDir
+  );
   add({
     area: "CLI lifecycle",
     evidence: "inspect-workflow installed workspace with outcome metrics",
-    command: "npx sdlc-harness inspect-workflow --workflow-control-minutes 5 --total-delivery-minutes 30 --estimated-vibe-handoff-minutes 30 --avoided-rework-minutes 10",
+    command:
+      "npx sdlc-harness inspect-workflow --workflow-control-minutes 5 --total-delivery-minutes 30 --estimated-vibe-handoff-minutes 30 --avoided-rework-minutes 10",
     status:
       defaultWorkflowInspect.status === 0 &&
       defaultWorkflowInspect.stdout.includes("outcome.workflow_overhead_ratio") &&
@@ -185,78 +190,21 @@ export async function runConsumerLabFullTest(rawOptions) {
         : "FAIL",
     details: trimOutput(`${defaultWorkflowInspect.stdout}\n${defaultWorkflowInspect.stderr}`)
   });
-  commandCheck("CLI lifecycle", "sync idempotency", "npx", ["sdlc-harness", "sync"]);
-  commandCheck("CLI lifecycle", "upgrade idempotency", "npx", ["sdlc-harness", "upgrade"]);
 
   await verifyManagedAssets(options.labDir, add);
   await verifyAdoptAndConfiguredRoots(options.labDir, tarballPath, add);
-  await verifyOverrides(options.labDir, add);
-  await writeToyProject(options.labDir);
-  await commitLabCheckpoint(options.labDir, "Record toy project baseline");
-
+  await verifyContextMigrationConsumer(options.labDir, tarballPath, add);
+  await writeMinimalToyProject(options.labDir);
+  await commitLabCheckpoint(options.labDir, "Record Minimal Context consumer lab fixture");
   commandCheck("Toy project", "node:test fixture", "npm", ["test"]);
-  commandCheck("CLI validators", "validate-harness", "npx", ["sdlc-harness", "validate-harness"]);
-  commandCheck("CLI validators", "validate-plan", "npx", ["sdlc-harness", "validate-plan"]);
-  commandCheck("CLI validators", "validate-pm", "npx", ["sdlc-harness", "validate-pm"]);
-  commandCheck("CLI validators", "validate-uiux", "npx", ["sdlc-harness", "validate-uiux"]);
-  commandCheck("CLI validators", "validate-design", "npx", ["sdlc-harness", "validate-design"]);
-  await writeFile(path.join(options.labDir, ".codex/state/plan.draft.yaml"), "next_task_sequence: 2\ntasks: []\n", "utf8");
-  commandCheck("CLI validators", "validate-current", "npx", ["sdlc-harness", "validate-current"]);
-  await writeFile(path.join(options.labDir, ".codex/state/lifecycle.yaml"), 'current_phase: "SPRINTING"\nactive_role: "developer"\nactive_skill: "pjsdlc_dev_sprint"\n', "utf8");
-  commandCheck("CLI validators", "validate-dev final empty plan", "npx", ["sdlc-harness", "validate-dev"]);
-  await writeOpenSprintTaskPlan(options.labDir);
-  commandCheck("Makefile gates", "make validate-dev accepts valid current open SPRINTING task", "make", ["validate-dev"]);
-  await writeFile(
-    path.join(options.labDir, ".codex/state/plan.yaml"),
-    `current_task_id: ""
-next_task_sequence: 2
-tasks: []
-`,
-    "utf8"
-  );
-  commandCheck("CLI validators", "validate-review", "npx", ["sdlc-harness", "validate-review"]);
-  commandCheck("CLI validators", "validate-test", "npx", ["sdlc-harness", "validate-test"]);
-  commandCheck("CLI validators", "validate-release", "npx", ["sdlc-harness", "validate-release"]);
-  commandCheck("CLI validators", "validate-rfc", "npx", ["sdlc-harness", "validate-rfc"]);
-
-  await verifyPlanProtocol(options.labDir, commandCheck, add);
-  await verifyStaticWorkflowText(options.labDir, add);
-
-  commandCheck("Work products overview", "make work-products-overview before validate-harness", "make", ["work-products-overview"]);
-  for (const gate of ["validate-harness", "validate-current", "validate-uiux", "validate-review", "validate-test", "validate-release"]) {
-    commandCheck("Makefile gates", `make ${gate}`, "make", [gate]);
-  }
-  commandCheck("Work products overview", "make work-products-overview", "make", ["work-products-overview"]);
-  commandCheck("Lifecycle transition", "python3 tools/transition.py --to REVIEWING", "python3", [
-    "tools/transition.py",
-    "--to",
-    "REVIEWING"
-  ]);
-  commandCheck("Lifecycle transition", "python3 tools/transition.py --to RFC_RECALIBRATION", "python3", [
-    "tools/transition.py",
-    "--to",
-    "RFC_RECALIBRATION"
-  ]);
-  commandCheck("Lifecycle transition", "python3 tools/transition.py --to ARCHITECTING", "python3", [
-    "tools/transition.py",
-    "--to",
-    "ARCHITECTING"
-  ]);
-  commandCheck("Lifecycle transition", "python3 tools/transition.py --to SPRINTING", "python3", [
-    "tools/transition.py",
-    "--to",
-    "SPRINTING"
-  ]);
-  for (const validator of ["validate-review", "validate-test", "validate-release", "validate-rfc"]) {
-    commandCheck("Later-stage CLI validators", `npx sdlc-harness validate ${validator}`, "npx", ["sdlc-harness", "validate", validator]);
-  }
-
+  commandCheck("CLI validators", "validate-context after product fixture", "npx", ["sdlc-harness", "validate-context"]);
   await verifyReleaseAndGithubStatic(options.sourceRoot, options.labDir, add);
+
   const { commit: labCommit, tag: labTag } = options.commitLab
     ? await commitLabEvidence(options.labDir, options.tagPrefix, packageVersion)
     : await readLabHead(options.labDir);
 
-  report = await finishReport({ options, packageVersion, startedAt, checks, labCommit, labTag });
+  const report = await finishReport({ options, packageVersion, startedAt, checks, labCommit, labTag });
   await cleanupLab(options);
   return report;
 }
@@ -286,58 +234,62 @@ async function verifyManagedAssets(labDir, add) {
   const required = [
     "AGENTS.md",
     "Makefile",
-    "tools/transition.py",
     ".github/workflows/harness.yml",
-    ".work_products/INDEX.md",
+    "project_context/global.md",
+    "project_context/modules/main.md",
     ".codex/config.yaml",
+    ".codex/pjsdlc_managed/context_templates/global.md",
+    ".codex/pjsdlc_managed/context_templates/module.md",
+    ".codex/pjsdlc_managed/make/sdlc-harness.mk",
+    "tools/validate_context.py"
+  ];
+  const forbidden = [
+    "tools/transition.py",
+    ".work_products/INDEX.md",
     ".codex/state/lifecycle.yaml",
     ".codex/state/plan.yaml",
     ".codex/skills/pjsdlc_manager/SKILL.md",
-    ".codex/skills/pjsdlc_uiux_design/SKILL.md",
     ".codex/pjsdlc_managed/templates/PLAN_TEMPLATE.yaml",
-    ".codex/pjsdlc_managed/templates/UI_UX_DESIGN_TEMPLATE.md",
     ".codex/pjsdlc_managed/policies/phase_contracts.yaml"
   ];
   const missing = required.filter((relative) => !existsSync(path.join(labDir, relative)));
+  const unexpected = forbidden.filter((relative) => existsSync(path.join(labDir, relative)));
   const hasLegacyDocsRoot = existsSync(path.join(labDir, ".docs"));
   add({
     area: "Managed assets",
-    evidence: "expected generated files exist",
-    status: missing.length === 0 && !hasLegacyDocsRoot ? "PASS" : "FAIL",
+    evidence: "Minimal Context default generated files exist without stage assets",
+    status: missing.length === 0 && unexpected.length === 0 && !hasLegacyDocsRoot ? "PASS" : "FAIL",
     details:
-      missing.length === 0 && !hasLegacyDocsRoot
-        ? `${required.length} managed files checked; .docs not created`
-        : `missing: ${missing.join(", ") || "none"}; legacy .docs present: ${hasLegacyDocsRoot}`
+      missing.length === 0 && unexpected.length === 0 && !hasLegacyDocsRoot
+        ? `${required.length} Minimal Context files checked; legacy stage assets not generated`
+        : `missing: ${missing.join(", ") || "none"}; unexpected: ${unexpected.join(", ") || "none"}; legacy .docs present: ${hasLegacyDocsRoot}`
   });
 
   if (missing.length === 0) {
-    const lifecycle = await readFile(path.join(labDir, ".codex/state/lifecycle.yaml"), "utf8");
-    const lifecycleReady =
-      lifecycle.includes('current_phase: "REQUIREMENT_GATHERING"') &&
-      lifecycle.includes('active_role: "product_manager"') &&
-      lifecycle.includes('active_skill: "pjsdlc_pm_prd"') &&
-      lifecycle.includes('  - "UI_UX_DESIGNING"') &&
-      lifecycle.includes('  - "BLOCKED"');
+    const config = await readFile(path.join(labDir, ".codex/config.yaml"), "utf8");
+    const configReady =
+      config.includes('schema_version: "3"') &&
+      config.includes(".codex/pjsdlc_managed/context_templates") &&
+      !config.includes(".codex/skills") &&
+      !config.includes(".codex/pjsdlc_managed/templates");
     add({
       area: "Managed assets",
-      evidence: "fresh init lifecycle starts in requirement gathering",
-      status: lifecycleReady ? "PASS" : "FAIL",
-      details: lifecycleReady ? "lifecycle.yaml routes to pjsdlc_pm_prd" : trimOutput(lifecycle)
+      evidence: "fresh init config is Minimal Context schema",
+      status: configReady ? "PASS" : "FAIL",
+      details: configReady ? "schema_version 3 with context templates and no stage skills/templates" : trimOutput(config)
     });
 
-    const phaseContracts = await readFile(path.join(labDir, ".codex/pjsdlc_managed/policies/phase_contracts.yaml"), "utf8");
-    const phaseGraphReady =
-      /^transitions:/m.test(phaseContracts) &&
-      phaseContracts.includes('UI_UX_DESIGNING') &&
-      phaseContracts.includes('to: "UI_UX_DESIGNING"') &&
-      phaseContracts.includes('to: "RFC_RECALIBRATION"') &&
-      !/^\s+next:/m.test(phaseContracts) &&
-      !/^\s+returns:/m.test(phaseContracts);
+    const agents = await readFile(path.join(labDir, "AGENTS.md"), "utf8");
+    const guidanceReady =
+      agents.includes("Minimal Context Harness") &&
+      agents.includes("project_context/global.md") &&
+      agents.includes("Harness 只维护上下文质量") &&
+      !agents.includes("选择任何角色或 skill 前，先读取");
     add({
       area: "Managed assets",
-      evidence: "phase policy uses explicit transition graph",
-      status: phaseGraphReady ? "PASS" : "FAIL",
-      details: phaseGraphReady ? "phase_contracts.yaml contains transitions without legacy next/returns" : trimOutput(phaseContracts)
+      evidence: "AGENTS guidance is Minimal Context, not stage routing",
+      status: guidanceReady ? "PASS" : "FAIL",
+      details: guidanceReady ? "Minimal Context AGENTS guidance present" : trimOutput(agents)
     });
   }
 }
@@ -355,8 +307,21 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
     area: "Adoption",
     evidence: "init --adopt existing project",
     command: "npx sdlc-harness init --adopt --harness-folder .codex",
-    status: adopt.status === 0 && existsSync(path.join(adoptDir, ".codex/config.yaml")) ? "PASS" : "FAIL",
+    status:
+      adopt.status === 0 &&
+      existsSync(path.join(adoptDir, ".codex/config.yaml")) &&
+      existsSync(path.join(adoptDir, "project_context/global.md"))
+        ? "PASS"
+        : "FAIL",
     details: trimOutput(`${adopt.stdout}\n${adopt.stderr}`)
+  });
+  const adoptValidator = run("npx", ["sdlc-harness", "validate-context"], adoptDir);
+  add({
+    area: "Adoption",
+    evidence: "adopted project validates Minimal Context",
+    command: "npx sdlc-harness validate-context",
+    status: adoptValidator.status === 0 ? "PASS" : "FAIL",
+    details: trimOutput(`${adoptValidator.stdout}\n${adoptValidator.stderr}`)
   });
 
   const configuredDir = await mkdtemp(path.join(runsDir, "configured-root-"));
@@ -371,14 +336,19 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
     area: "Configurable root",
     evidence: "package.json#sdlcHarness.harnessFolderName",
     command: "npx sdlc-harness init --adopt",
-    status: configured.status === 0 && existsSync(path.join(configuredDir, ".workflow/config.yaml")) ? "PASS" : "FAIL",
+    status:
+      configured.status === 0 &&
+      existsSync(path.join(configuredDir, ".workflow/config.yaml")) &&
+      existsSync(path.join(configuredDir, "project_context/global.md"))
+        ? "PASS"
+        : "FAIL",
     details: trimOutput(`${configured.stdout}\n${configured.stderr}`)
   });
-  const configuredCliValidator = run("npx", ["sdlc-harness", "validate-harness"], configuredDir);
+  const configuredCliValidator = run("npx", ["sdlc-harness", "validate-context"], configuredDir);
   add({
     area: "Configurable root",
-    evidence: "CLI validator consumes configured .workflow root",
-    command: "npx sdlc-harness validate-harness",
+    evidence: "CLI context validator consumes configured .workflow root",
+    command: "npx sdlc-harness validate-context",
     status: configuredCliValidator.status === 0 ? "PASS" : "FAIL",
     details: trimOutput(`${configuredCliValidator.stdout}\n${configuredCliValidator.stderr}`)
   });
@@ -401,121 +371,146 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
   add({
     area: "Configurable root",
     evidence: "inspect-workflow consumes configured .workflow root",
-    command: "npx sdlc-harness inspect-workflow --workflow-control-minutes 5 --total-delivery-minutes 30 --estimated-vibe-handoff-minutes 30 --avoided-rework-minutes 10",
+    command:
+      "npx sdlc-harness inspect-workflow --workflow-control-minutes 5 --total-delivery-minutes 30 --estimated-vibe-handoff-minutes 30 --avoided-rework-minutes 10",
     status:
       configuredWorkflowInspect.status === 0 &&
       configuredWorkflowInspect.stdout.includes("harness root: .workflow") &&
       configuredWorkflowInspect.stdout.includes("outcome.workflow_overhead_ratio")
-      ? "PASS"
-      : "FAIL",
+        ? "PASS"
+        : "FAIL",
     details: trimOutput(`${configuredWorkflowInspect.stdout}\n${configuredWorkflowInspect.stderr}`)
   });
-  const configuredWorkProductsOverview = run("make", ["work-products-overview"], configuredDir);
+  const configuredMakeContext = run("make", ["validate-context"], configuredDir);
   add({
     area: "Configurable root",
-    evidence: "Makefile work-products-overview consumes configured .workflow root",
-    command: "make work-products-overview",
-    status: configuredWorkProductsOverview.status === 0 ? "PASS" : "FAIL",
-    details: trimOutput(`${configuredWorkProductsOverview.stdout}\n${configuredWorkProductsOverview.stderr}`)
+    evidence: "Makefile context gate consumes configured .workflow root",
+    command: "make validate-context",
+    status: configuredMakeContext.status === 0 ? "PASS" : "FAIL",
+    details: trimOutput(`${configuredMakeContext.stdout}\n${configuredMakeContext.stderr}`)
   });
   const configuredMakeHarness = run("make", ["validate-harness"], configuredDir);
   add({
     area: "Configurable root",
-    evidence: "Makefile/Python gates consume configured .workflow root",
+    evidence: "Makefile compatibility gate consumes configured .workflow root",
     command: "make validate-harness",
     status: configuredMakeHarness.status === 0 ? "PASS" : "FAIL",
     details: trimOutput(`${configuredMakeHarness.stdout}\n${configuredMakeHarness.stderr}`)
   });
-  const configuredMakeCurrent = run("make", ["validate-current"], configuredDir);
   add({
     area: "Configurable root",
-    evidence: "phase-exit Makefile gate consumes configured .workflow root",
-    command: "make validate-current",
-    status: configuredMakeCurrent.status === 0 ? "PASS" : "FAIL",
-    details: trimOutput(`${configuredMakeCurrent.stdout}\n${configuredMakeCurrent.stderr}`)
-  });
-  const configuredTransition = run("python3", ["tools/transition.py", "--to", "REVIEWING"], configuredDir);
-  const transitionedLifecycle = existsSync(path.join(configuredDir, ".workflow/state/lifecycle.yaml"))
-    ? await readFile(path.join(configuredDir, ".workflow/state/lifecycle.yaml"), "utf8")
-    : "";
-  add({
-    area: "Configurable root",
-    evidence: "transition.py writes configured .workflow lifecycle",
-    command: "python3 tools/transition.py --to REVIEWING",
-    status: configuredTransition.status === 0 && transitionedLifecycle.includes('current_phase: "REVIEWING"') ? "PASS" : "FAIL",
-    details: trimOutput(`${configuredTransition.stdout}\n${configuredTransition.stderr}`)
-  });
-}
-
-async function verifyOverrides(labDir, add) {
-  const overrideDir = path.join(labDir, ".codex/pjsdlc_managed/override_skills");
-  await mkdir(overrideDir, { recursive: true });
-  await writeFile(path.join(overrideDir, "pjsdlc_dev_sprint.md"), "Consumer lab local dev rule.\n", "utf8");
-  const sync = run("npx", ["sdlc-harness", "sync"], labDir);
-  const skill = await readFile(path.join(labDir, ".codex/skills/pjsdlc_dev_sprint/SKILL.md"), "utf8");
-  add({
-    area: "Local overrides",
-    evidence: "known Skill override appends Local Override",
-    command: "npx sdlc-harness sync",
-    status: sync.status === 0 && skill.includes("Local Override") && skill.includes("Consumer lab local dev rule.") ? "PASS" : "FAIL",
-    details: sync.status === 0 ? "override appended" : trimOutput(`${sync.stdout}\n${sync.stderr}`)
-  });
-
-  await writeFile(
-    path.join(overrideDir, "pjsdlc_pm_prd.md"),
-    [
-      "---",
-      "name: pjsdlc_pm_prd",
-      "description: Use during REQUIREMENT_GATHERING for consumer lab full PRD override.",
-      "---",
-      "",
-      "# Consumer Lab PM Skill",
-      "",
-      "Consumer lab full skill body."
-    ].join("\n"),
-    "utf8"
-  );
-  const fullSkillSync = run("npx", ["sdlc-harness", "sync"], labDir);
-  const fullSkill = await readFile(path.join(labDir, ".codex/skills/pjsdlc_pm_prd/SKILL.md"), "utf8");
-  add({
-    area: "Local overrides",
-    evidence: "complete Skill override merges description and appends stripped body",
-    command: "npx sdlc-harness sync",
+    evidence: "configured root does not generate legacy lifecycle state",
     status:
-      fullSkillSync.status === 0 &&
-      fullSkill.includes("Project override: Use during REQUIREMENT_GATHERING for consumer lab full PRD override.") &&
-      fullSkill.includes("# Consumer Lab PM Skill") &&
-      !fullSkill.includes("name: pjsdlc_pm_prd\n---\n\n# Consumer Lab PM Skill")
+      !existsSync(path.join(configuredDir, ".workflow/state/lifecycle.yaml")) &&
+      !existsSync(path.join(configuredDir, "tools/transition.py"))
         ? "PASS"
         : "FAIL",
-    details: fullSkillSync.status === 0 ? "full skill override merged" : trimOutput(`${fullSkillSync.stdout}\n${fullSkillSync.stderr}`)
-  });
-
-  await writeFile(path.join(overrideDir, "pjsdlc_unknown.md"), "unknown\n", "utf8");
-  const unknown = run("npx", ["sdlc-harness", "sync"], labDir);
-  await rm(path.join(overrideDir, "pjsdlc_unknown.md"), { force: true });
-  run("npx", ["sdlc-harness", "sync"], labDir);
-  const unknownOutput = `${unknown.stdout}\n${unknown.stderr}`;
-  add({
-    area: "Local overrides",
-    evidence: "unknown Skill override blocks sync",
-    command: "npx sdlc-harness sync",
-    status: unknown.status !== 0 && unknownOutput.includes("unknown skill override") ? "PASS" : "FAIL",
-    details: trimOutput(unknownOutput)
-  });
-
-  const localPolicy = path.join(labDir, ".codex/pjsdlc_managed/policies/lab.local.yaml");
-  await writeFile(localPolicy, "lab: true\n", "utf8");
-  run("npx", ["sdlc-harness", "sync"], labDir);
-  add({
-    area: "Local policy overrides",
-    evidence: "*.local.yaml preserved across sync",
-    status: existsSync(localPolicy) ? "PASS" : "FAIL",
-    details: existsSync(localPolicy) ? "local policy preserved" : "local policy missing"
+    details: "Minimal Context configured root should not create transition.py or lifecycle.yaml"
   });
 }
 
-async function writeToyProject(labDir) {
+async function verifyContextMigrationConsumer(labDir, tarballPath, add) {
+  const runsDir = path.join(labDir, ".artifacts", "runs");
+  await mkdir(runsDir, { recursive: true });
+
+  const legacyDir = await mkdtemp(path.join(runsDir, "migration-legacy-"));
+  await writeFile(path.join(legacyDir, "package.json"), JSON.stringify({ name: "migration-legacy", version: "1.0.0" }, null, 2), "utf8");
+  run("npm", ["install", "-D", tarballPath], legacyDir);
+  await writeLegacyMigrationFixture(legacyDir, "billing");
+
+  const dryRun = run("npx", ["sdlc-harness", "migrate-context", "--dry-run"], legacyDir);
+  add({
+    area: "Context migration",
+    evidence: "migrate-context dry-run previews without writing",
+    command: "npx sdlc-harness migrate-context --dry-run",
+    status:
+      dryRun.status === 0 &&
+      dryRun.stdout.includes("mode=dry-run") &&
+      dryRun.stdout.includes("preview: project_context/global.md") &&
+      !existsSync(path.join(legacyDir, "project_context/global.md"))
+        ? "PASS"
+        : "FAIL",
+    details: trimOutput(`${dryRun.stdout}\n${dryRun.stderr}`)
+  });
+
+  const write = run("npx", ["sdlc-harness", "migrate-context", "--write"], legacyDir);
+  add({
+    area: "Context migration",
+    evidence: "migrate-context --write creates Context and preserves legacy facts",
+    command: "npx sdlc-harness migrate-context --write",
+    status:
+      write.status === 0 &&
+      existsSync(path.join(legacyDir, "project_context/global.md")) &&
+      existsSync(path.join(legacyDir, "project_context/modules/billing.md")) &&
+      existsSync(path.join(legacyDir, ".work_products/01_product/billing.md"))
+        ? "PASS"
+        : "FAIL",
+    details: trimOutput(`${write.stdout}\n${write.stderr}`)
+  });
+
+  const userContextDir = await mkdtemp(path.join(runsDir, "migration-user-context-"));
+  await writeFile(
+    path.join(userContextDir, "package.json"),
+    JSON.stringify({ name: "migration-user-context", version: "1.0.0" }, null, 2),
+    "utf8"
+  );
+  run("npm", ["install", "-D", tarballPath], userContextDir);
+  await writeLegacyMigrationFixture(userContextDir, "support");
+  await mkdir(path.join(userContextDir, "project_context/modules"), { recursive: true });
+  await writeFile(
+    path.join(userContextDir, "project_context/global.md"),
+    "# User Context\n\nThis user-authored context must not be overwritten.\n",
+    "utf8"
+  );
+
+  const protectedWrite = run("npx", ["sdlc-harness", "migrate-context", "--write"], userContextDir);
+  const userGlobal = await readFile(path.join(userContextDir, "project_context/global.md"), "utf8");
+  add({
+    area: "Context migration",
+    evidence: "existing user Context is protected by _migration/latest output",
+    command: "npx sdlc-harness migrate-context --write",
+    status:
+      protectedWrite.status === 0 &&
+      userGlobal.includes("This user-authored context must not be overwritten.") &&
+      existsSync(path.join(userContextDir, "project_context/_migration/latest/global.md")) &&
+      existsSync(path.join(userContextDir, "project_context/_migration/latest/modules/support.md"))
+        ? "PASS"
+        : "FAIL",
+    details: trimOutput(`${protectedWrite.stdout}\n${protectedWrite.stderr}`)
+  });
+}
+
+async function writeLegacyMigrationFixture(projectDir, moduleName) {
+  await mkdir(path.join(projectDir, ".work_products/01_product"), { recursive: true });
+  await mkdir(path.join(projectDir, ".work_products/03_tech_plan"), { recursive: true });
+  await mkdir(path.join(projectDir, ".work_products/04_implementation"), { recursive: true });
+  await mkdir(path.join(projectDir, "src", moduleName), { recursive: true });
+  await mkdir(path.join(projectDir, "tests"), { recursive: true });
+  await writeFile(
+    path.join(projectDir, "README.md"),
+    `# ${moduleName} service\n\nA tiny legacy fixture used to preview Minimal Context migration.\n`,
+    "utf8"
+  );
+  await writeFile(
+    path.join(projectDir, ".work_products/01_product", `${moduleName}.md`),
+    `# ${moduleName} Product\n\n## Goal\n\nSupport a small ${moduleName} workflow.\n\n## Out of Scope\n\nLive provider calls are out of scope.\n`,
+    "utf8"
+  );
+  await writeFile(
+    path.join(projectDir, ".work_products/03_tech_plan", `${moduleName}.md`),
+    `# ${moduleName} Technical Plan\n\n## API Contract\n\nThe module exports a deterministic local helper.\n\n## Verification\n\nRun \`npm test\`.\n`,
+    "utf8"
+  );
+  await writeFile(
+    path.join(projectDir, ".work_products/04_implementation", `${moduleName}.md`),
+    `# ${moduleName} Implementation\n\nThe source entry lives at \`src/${moduleName}/index.js\`.\n`,
+    "utf8"
+  );
+  await writeFile(path.join(projectDir, "src", moduleName, "index.js"), "export const ready = true;\n", "utf8");
+  await writeFile(path.join(projectDir, "tests", `${moduleName}.test.mjs`), "import 'node:test';\n", "utf8");
+}
+
+async function writeMinimalToyProject(labDir) {
   const packageJsonPath = path.join(labDir, "package.json");
   const pkg = JSON.parse(await readFile(packageJsonPath, "utf8"));
   pkg.type = "module";
@@ -564,322 +559,6 @@ test("summarizeText marks empty input", () => {
 `,
     "utf8"
   );
-
-  await writeDocs(labDir);
-  await writeFile(
-    path.join(labDir, ".codex/state/plan.yaml"),
-    `current_task_id: ""
-next_task_sequence: 2
-tasks: []
-`,
-    "utf8"
-  );
-  await writeFile(
-    path.join(labDir, ".codex/state/plan.draft.yaml"),
-    `next_task_sequence: 2
-tasks:
-  - id: "TASK-001"
-    phase: "SPRINTING"
-    title: "Implement text summary helper"
-    status: "pending"
-    summary: "Add the toy helper and tests used by the consumer lab lifecycle rehearsal."
-    work_products:
-      product:
-        - ".work_products/01_product/text_summary_prd.md"
-      architecture:
-        - ".work_products/02_architecture/text_summary_architecture.md"
-      tech_plan:
-        - ".work_products/03_tech_plan/text_summary_plan.md"
-    allowed_paths:
-      - "src/**"
-      - "tests/**"
-      - ".work_products/04_implementation/**"
-    required_gates:
-      - "npm test"
-    acceptance_criteria:
-      - "summarizeText returns character count, word count, and empty state."
-    evidence_level:
-      required: "local_runtime"
-      supporting:
-        - "unit"
-    target_runtime_environment:
-      kind: "local"
-      required_for_done: true
-      handoff_entrypoint: "npm test"
-    self_test_contract:
-      status: "required"
-      source: ".work_products/03_tech_plan/text_summary_plan.md"
-      capability_refs:
-        - "PRD-TEXT-SUMMARY-001"
-      runnable_entry: "npm test"
-      observable_exit: "PASS output for text summary tests"
-      module_key_test_path: "local npm test -> ST-001 -> summarizeText(input) exported API entry -> normal-text and empty-text internal branches -> PASS output"
-      required_gates:
-        - "npm test"
-      scenarios:
-        - id: "ST-001"
-          entry: "npm test"
-          expected_exit: "PASS output for normal and empty text"
-          evidence: "command output"
-    implementation_work_product: ".work_products/04_implementation/text_summary.md"
-`,
-    "utf8"
-  );
-}
-
-async function writeDocs(labDir) {
-  const files = {
-    ".work_products/00_raw/text_summary_request.md": "# Raw Request\n\nBuild a tiny text summary helper for consumer lab validation.\n",
-    ".work_products/01_product/text_summary_prd.md":
-      "# Text Summary PRD\n\n## Goal\n\nValidate Harness lifecycle behavior.\n\n## Acceptance Criteria\n\n- Return character count, word count, and empty state.\n\n## Out Of Scope\n\n- Locale-aware tokenization is out of scope.\n\n## Open Questions\n\n- None.\n",
-    ".work_products/02_architecture/text_summary_architecture.md":
-      "# Text Summary Architecture\n\nThe PRD requirement is implemented as a pure JavaScript API interface in `src/stringStats.js`.\n\nTask breakdown: add helper, add tests, record implementation.\n",
-    ".work_products/02_experience/text_summary_experience.md":
-      "# Text Summary Experience\n\n## PRD refs and Requirement IDs\n\n- Applicability: not_applicable\n- Reason: This package validator fixture has no visual, CLI, API or operator experience surface that needs separate UI/UX design.\n\n## Open Questions / Out of Scope\n\n- No UI/UX surface is in scope for this consumer lab fixture.\n",
-    ".work_products/03_tech_plan/text_summary_plan.md":
-      "# Text Summary Technical Plan\n\nThis plan implements the PRD requirement.\n\n## API Contract\n\n`summarizeText(input)` returns `characters`, `words`, and `empty`.\n\n## Task Breakdown\n\n- `TASK-001`: implement helper and tests.\n\n## Development Self-Test Contract\n\n- Contract source: `.work_products/03_tech_plan/text_summary_plan.md`\n- Capability refs: `PRD-TEXT-SUMMARY-001`\n- Runnable entry: `npm test`\n- Observable exit: PASS output for text summary tests\n- Module key test path: local `npm test` -> ST-001 -> `summarizeText(input)` exported API entry -> normal-text and empty-text internal branches -> PASS output.\n- Required gates: `npm test`\n\n| Scenario ID | Entry | Expected Exit | Evidence |\n|---|---|---|---|\n| ST-001 | `npm test` | PASS output for normal and empty text | command output |\n",
-    ".work_products/04_implementation/text_summary.md":
-      "# Text Summary Implementation\n\n`src/stringStats.js` exports `summarizeText(input)`.\n\n## Runnable Entry/Exit\n\n- Entry points: `summarizeText(input)` exported API.\n- Exit / side effects: returns `characters`, `words`, and `empty`; no side effects.\n- Config contract: not applicable.\n- Fixture/live boundary: fixture-only local package validation.\n\n## Development Evidence\n\n- Evidence Level: `local_runtime` package test runtime.\n- Target Runtime Environment: `local` node test command `npm test`.\n- Runnable Entry: API command `npm test` invokes `summarizeText(input)` through node:test.\n- Observable Exit: test output reports PASS for character count, word count and empty state.\n- Client / Server Initialization: local package test runtime starts with `npm test` and exits with status evidence.\n- Config Contract: no external config required for this fixture.\n- Testing Handoff Readiness: `npm test` is the handoff entry for TESTING.\n- Known Missing Runtime Boundaries: none for this local helper fixture.\n- Basic Self-test Evidence: See `Development Self-Test Report`; `npm test` PASS for the consumer lab fixture.\n\n## Development Self-Test Report\n\n- Report Status: PASS\n- Contract Source: .work_products/03_tech_plan/text_summary_plan.md\n- Module Application Entry: current self-test runnable entry from task contract.\n- Scenario Results: ST-001 PASS\n- Executed Gates: npm test\n- Module Key Test Path: local `npm test` -> ST-001 -> `summarizeText(input)` exported API entry -> normal-text and empty-text internal branches -> PASS output.\n- Observable Exit: observable exit recorded by scenario result.\n- Evidence Index Refs: .work_products/09_runbooks/live_smoke_evidence.md;  command output reports PASS for normal and empty text.\n- Current Blocker: none; ready to continue through recorded handoff.\n- Testing Handoff Readiness: ready for TESTING handoff.\n\n| Scenario ID | Result | Executed Entry | Actual Exit | Evidence |\n|---|---|---|---|---|\n| ST-001 | PASS | `npm test` | PASS output for normal and empty text | command output |\n\n## Verification\n\n- `npm test`: PASS\n",
-    ".work_products/06_review/REVIEW_REPORT.md":
-      "# Review Report\n\n## Findings\n\nNo blocking finding.\n\n## Test Gap\n\nCoverage is intentionally narrow.\n\n## Runnable Entry/Exit Readiness\n\n- Runnable Entry: PASS\n- Observable Exit: PASS\n- Initialization: PASS\n- Config Contract: PASS\n- Testing Handoff Readiness: PASS\n- Notes: Existing entry/exit is runnable through `summarizeText(input)`.\n\n## Decision\n\nPASS\n",
-    ".work_products/07_test/TEST_REPORT.md":
-      "# Test Report\n\n## Matrix\n\n| Case ID | Scenario | Result |\n|---|---|---|\n| TC-001 | Normal text | PASS |\n| TC-002 | Empty text | PASS |\n\n## Regression Evidence\n\n- `npm test`: PASS\n\n## Runnable Entry/Exit Coverage\n\nExisting entry/exit is exercised through the shipped API.\n\n## Coverage Gap\n\nNo locale-specific coverage.\n\n## Decision\n\nPASS\n",
-    ".work_products/07_test/TEST_CASES.md":
-      "# Test Cases\n\n## Scope\n\n- Runnable entry/exit under test: `summarizeText(input)`.\n\n## Cases\n\n| Case ID | Requirement / Risk Ref | Type | Priority | Runnable Entry | Preconditions | Steps | Expected Exit | Evidence Pointer |\n|---|---|---|---|---|---|---|---|---|\n| TC-001 | Character and word count | regression | P1 | `summarizeText(input)` | Package installed | Call `summarizeText(\"hello world\")` | Returns counts and `empty: false` | `npm test` output |\n| TC-002 | Empty state | regression | P1 | `summarizeText(input)` | Package installed | Call `summarizeText(\"\")` | Returns `empty: true` | `npm test` output |\n",
-    ".work_products/08_release/CURRENT_RELEASE.md":
-      "# Current Release Status\n\n## Release Notes\n\nTiny helper fixture.\n\n## Smoke Evidence\n\n- `npm test`: PASS\n\n## Rollback Plan\n\nRevert the lab helper commit.\n",
-    ".work_products/rfc/RFC_001_change_empty_semantics.md":
-      "# RFC 001 Change Empty Semantics\n\nStatus: VERIFIED\n\n## Background\n\nThe lab needs one RFC document.\n\n## Product Impact\n\nWhitespace-only strings remain empty.\n\n## Technical Impact\n\nNo code change required.\n\n## Regression\n\nKeep whitespace-only coverage.\n\n## Test Fact Source Impact\n\nSuperseded test docs: none\n",
-    ".work_products/INDEX.md":
-      "# Work Products Index\n\n- Product: `.work_products/01_product/text_summary_prd.md`\n- Experience: `.work_products/02_experience/text_summary_experience.md`\n- Architecture: `.work_products/02_architecture/text_summary_architecture.md`\n- Technical plan: `.work_products/03_tech_plan/text_summary_plan.md`\n- Implementation: `.work_products/04_implementation/text_summary.md`\n- Test cases: `.work_products/07_test/TEST_CASES.md`\n- Test report: `.work_products/07_test/TEST_REPORT.md`\n"
-  };
-  for (const [relative, content] of Object.entries(files)) {
-    await mkdir(path.dirname(path.join(labDir, relative)), { recursive: true });
-    await writeFile(path.join(labDir, relative), content, "utf8");
-  }
-}
-
-async function writeOpenSprintTaskPlan(labDir) {
-  await writeFile(
-    path.join(labDir, ".codex/state/lifecycle.yaml"),
-    'current_phase: "SPRINTING"\nactive_role: "developer"\nactive_skill: "pjsdlc_dev_sprint"\n',
-    "utf8"
-  );
-  await writeFile(path.join(labDir, ".codex/state/plan.draft.yaml"), "next_task_sequence: 2\ntasks: []\n", "utf8");
-  await writeFile(
-    path.join(labDir, ".codex/state/plan.yaml"),
-    `current_task_id: "TASK-001"
-next_task_sequence: 2
-tasks:
-  - id: "TASK-001"
-    phase: "SPRINTING"
-    title: "Open task should remain until completion"
-    status: "in_progress"
-    summary: "Positive dev gate check."
-    work_products:
-      product:
-        - ".work_products/01_product/text_summary_prd.md"
-      tech_plan:
-        - ".work_products/03_tech_plan/text_summary_plan.md"
-    allowed_paths:
-      - ".codex/state/**"
-      - "src/**"
-      - "tests/**"
-      - ".work_products/04_implementation/**"
-    required_gates:
-      - "npm test"
-    acceptance_criteria:
-      - "Open task is intentionally present during direct validate-dev."
-    self_test_contract:
-      status: "required"
-      source: ".work_products/03_tech_plan/text_summary_plan.md"
-      capability_refs:
-        - "PRD-TEXT-SUMMARY-001"
-      runnable_entry: "npm test"
-      observable_exit: "PASS output for text summary tests"
-      module_key_test_path: "local npm test -> ST-001 -> summarizeText(input) exported API entry -> normal-text and empty-text internal branches -> PASS output"
-      required_gates:
-        - "npm test"
-      scenarios:
-        - id: "ST-001"
-          entry: "npm test"
-          expected_exit: "PASS output for normal and empty text"
-          evidence: "command output"
-    implementation_work_product: ".work_products/04_implementation/text_summary.md"
-`,
-    "utf8"
-  );
-}
-
-async function verifyPlanProtocol(labDir, commandCheck, add) {
-  const planPath = path.join(labDir, ".codex/state/plan.yaml");
-  const draftPath = path.join(labDir, ".codex/state/plan.draft.yaml");
-  await writeFile(
-    planPath,
-    `current_task_id: ""
-next_task_sequence: 2
-tasks: []
-`,
-    "utf8"
-  );
-  await writeFile(
-    draftPath,
-    `next_task_sequence: 2
-tasks:
-  - id: "TASK-001"
-    phase: "SPRINTING"
-    title: "Stale consumed draft"
-    status: "pending"
-    summary: "Negative protocol check."
-    work_products:
-      tech_plan:
-        - ".work_products/03_tech_plan/text_summary_plan.md"
-    allowed_paths:
-      - "src/**"
-    required_gates:
-      - "npm test"
-    acceptance_criteria:
-      - "Draft should have been consumed."
-    implementation_work_product: ".work_products/04_implementation/text_summary.md"
-`,
-    "utf8"
-  );
-  const staleDraft = run("npx", ["sdlc-harness", "validate-dev"], labDir);
-  add({
-    area: "Task protocol",
-    evidence: "stale draft retained after development is rejected",
-    command: "npx sdlc-harness validate-dev",
-    status: staleDraft.status !== 0 && `${staleDraft.stdout}\n${staleDraft.stderr}`.includes("Unconsumed draft tasks remain") ? "PASS" : "FAIL",
-    details: trimOutput(`${staleDraft.stdout}\n${staleDraft.stderr}`)
-  });
-  await writeFile(draftPath, "next_task_sequence: 2\ntasks: []\n", "utf8");
-
-  await writeFile(
-    planPath,
-    `current_task_id: ""
-next_task_sequence: 2
-tasks:
-  - id: "TASK-001"
-    phase: "SPRINTING"
-    title: "Completed task should not remain"
-    status: "done"
-    summary: "Negative protocol check."
-    implementation_work_product: ".work_products/04_implementation/text_summary.md"
-`,
-    "utf8"
-  );
-  const done = run("npx", ["sdlc-harness", "validate-dev"], labDir);
-  add({
-    area: "Task protocol",
-    evidence: "done task retained in plan is rejected",
-    command: "npx sdlc-harness validate-dev",
-    status: done.status !== 0 && `${done.stdout}\n${done.stderr}`.includes("Completed task TASK-001") ? "PASS" : "FAIL",
-    details: trimOutput(`${done.stdout}\n${done.stderr}`)
-  });
-
-  await writeOpenSprintTaskPlan(labDir);
-  const open = run("npx", ["sdlc-harness", "validate-dev"], labDir);
-  add({
-    area: "Task protocol",
-    evidence: "direct dev gate accepts current open SPRINTING task",
-    command: "npx sdlc-harness validate-dev",
-    status: open.status === 0 ? "PASS" : "FAIL",
-    details: trimOutput(`${open.stdout}\n${open.stderr}`)
-  });
-  const phaseExit = run("npx", ["sdlc-harness", "validate-current"], labDir);
-  add({
-    area: "Task protocol",
-    evidence: "phase exit gate rejects open SPRINTING task",
-    command: "npx sdlc-harness validate-current",
-    status: phaseExit.status !== 0 && `${phaseExit.stdout}\n${phaseExit.stderr}`.includes("Open tasks remain") ? "PASS" : "FAIL",
-    details: trimOutput(`${phaseExit.stdout}\n${phaseExit.stderr}`)
-  });
-
-  await writeFile(
-    planPath,
-    `current_task_id: ""
-next_task_sequence: 2
-parallel_execution:
-  enabled: true
-  trigger: "workflow_default"
-  mode: "runtime_managed"
-  runtime:
-    provider: "codex_native_subagents"
-  coordinator: "main_agent"
-  workers:
-    - id: "worker-smoke"
-      writes_repo: false
-      owned_paths: []
-      forbidden_paths:
-        - ".codex/state/**"
-      expected_output:
-        - "smoke test evidence"
-      required_gates:
-        - "npm test"
-  integration:
-    owner: "main_agent"
-    merge_strategy: "main agent reviews evidence"
-    required_gates:
-      - "npx sdlc-harness validate-dev"
-    fact_source_updates:
-      - ".work_products/07_test/"
-tasks: []
-`,
-    "utf8"
-  );
-  await writeFile(path.join(labDir, ".codex/state/lifecycle.yaml"), 'current_phase: "TESTING"\nactive_role: "tester"\nactive_skill: "pjsdlc_tester"\n', "utf8");
-  commandCheck("Parallel execution", "valid workflow_default native subagent contract", "npx", ["sdlc-harness", "validate-test"]);
-
-  const valid = await readFile(planPath, "utf8");
-  await writeFile(planPath, valid.replace('trigger: "workflow_default"', 'trigger: "automatic"'), "utf8");
-  const invalid = run("npx", ["sdlc-harness", "validate-test"], labDir);
-  add({
-    area: "Parallel execution",
-    evidence: "unsupported trigger is rejected",
-    command: "npx sdlc-harness validate-test",
-    status: invalid.status !== 0 && `${invalid.stdout}\n${invalid.stderr}`.includes("workflow_default") ? "PASS" : "FAIL",
-    details: trimOutput(`${invalid.stdout}\n${invalid.stderr}`)
-  });
-
-  await writeFile(
-    planPath,
-    `current_task_id: ""
-next_task_sequence: 2
-tasks: []
-`,
-    "utf8"
-  );
-  await writeFile(
-    path.join(labDir, ".codex/state/lifecycle.yaml"),
-    `project_name: "Consumer Lab"
-version: "v0.1"
-current_phase: "SPRINTING"
-active_role: "developer"
-active_skill: "pjsdlc_dev_sprint"
-current_milestone: "MVP"
-blocked_reason: ""
-suspended_phase: ""
-allowed_next_phases:
-  - "REVIEWING"
-  - "RFC_RECALIBRATION"
-  - "BLOCKED"
-`,
-    "utf8"
-  );
-}
-
-async function verifyStaticWorkflowText(labDir, add) {
-  const agents = await readFile(path.join(labDir, "AGENTS.md"), "utf8");
-  const manager = await readFile(path.join(labDir, ".codex/skills/pjsdlc_manager/SKILL.md"), "utf8");
-  const text = `${agents}\n${manager}`;
-  const required = ["/status", "/next", "/uiux", "/dev", "/test", "自然语言", "active_skill", "TASK-*", "phase", "validate-plan"];
-  const missing = required.filter((needle) => !text.includes(needle));
-  add({
-    area: "Natural-language control",
-    evidence: "static AGENTS/manager routing text",
-    status: missing.length === 0 ? "PASS" : "FAIL",
-    details: missing.length === 0 ? "natural-language routing text present" : `missing: ${missing.join(", ")}`
-  });
 }
 
 async function verifyReleaseAndGithubStatic(sourceRoot, labDir, add) {
@@ -887,7 +566,7 @@ async function verifyReleaseAndGithubStatic(sourceRoot, labDir, add) {
   add({
     area: "GitHub Actions",
     evidence: "workflow asset static coverage",
-    status: workflow.includes("validate-harness") && workflow.includes("workflow_dispatch") ? "PASS" : "FAIL",
+    status: workflow.includes("validate-context") && workflow.includes("workflow_dispatch") ? "PASS" : "FAIL",
     details: "static workflow asset checked; remote GitHub Actions execution is out of scope"
   });
   const releaseScript = path.join(sourceRoot, "tools/release_npm.mjs");
@@ -897,7 +576,7 @@ async function verifyReleaseAndGithubStatic(sourceRoot, labDir, add) {
     evidence: "release automation static coverage",
     status: releaseScriptText.includes(".work_products/08_release/CURRENT_RELEASE.md") ? "PASS" : "FAIL",
     details: releaseScriptText.includes(".work_products/08_release/CURRENT_RELEASE.md")
-      ? "release automation writes current release status; npm publish is out of scope for consumer lab"
+      ? "release automation keeps historical current release status; npm publish is out of scope for consumer lab"
       : "release automation current release status path missing"
   });
 }
@@ -920,7 +599,7 @@ async function commitLabCheckpoint(labDir, message) {
 }
 
 async function commitLabEvidence(labDir, tagPrefix, packageVersion) {
-  await commitLabCheckpoint(labDir, "Record full Harness consumer lab evidence");
+  await commitLabCheckpoint(labDir, "Record Minimal Context consumer lab evidence");
   const commit = run("git", ["rev-parse", "--short", "HEAD"], labDir).stdout.trim();
   const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..+$/, "Z");
   const tag = `${tagPrefix}-${packageVersion}-${stamp}`;
@@ -981,8 +660,8 @@ function buildRecommendedRfc(checks) {
   }
   const areas = [...new Set(blocked.map((check) => check.area))];
   return {
-    title: "RFC: Close installed-consumer workflow coverage gaps",
-    impactAreas: ["README", "PROJECT_SPEC", "package CLI", "Makefile assets", "validators", "tools", "tests", ...areas]
+    title: "RFC: Close installed-consumer Minimal Context coverage gaps",
+    impactAreas: ["README", "PROJECT_SPEC", "package CLI", "Makefile assets", "validators", "migration", "tests", ...areas]
   };
 }
 
@@ -1024,7 +703,7 @@ export function renderMarkdownReport(report) {
 - Started: ${report.startedAt}
 - Finished: ${report.finishedAt}
 
-This script installs the package tarball into the lab, relies on package-managed \`tools/**\` materialization instead of copying source-repo tools directly, and deletes the lab repository after reports are written unless \`--keep-lab\` is set.
+This script installs the package tarball into the lab and validates the vNext Minimal Context default: \`project_context/**\`, \`validate-context\`, configured harness roots, explicit \`migrate-context\` behavior, and absence of default lifecycle/plan/stage assets.
 
 ## Summary
 

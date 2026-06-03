@@ -1,5 +1,5 @@
 window.__DELIVERY_BENCHMARK_DATA__ = {
-  generatedAt: "2026-06-01T17:26:59.748Z",
+  generatedAt: "2026-06-02T05:42:00.000Z",
   copy: {
     en: {
       languageName: "English",
@@ -21,9 +21,14 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
       headings: {
         scenarioDetail: "Scenario Brief",
         measurement: "Measurement Method",
+        metricConfidence: "Metric Confidence",
+        automationBurden: "Automation Burden",
+        gateValue: "Gate Value",
+        gateThinning: "Gate Thinning Recommendation",
         scorecard: "Scorecard",
         quality: "Quality Heatmap",
         artifact: "Harness Artifact Map",
+        artifactInventory: "Artifact Inventory",
         cost: "Cost Comparison",
         lifecycle: "Lifecycle Efficiency",
         context: "Context Continuity",
@@ -38,6 +43,73 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
         expectedAdvantage: "Expected Harness advantage"
       },
       measurementConfidenceLabel: "Cost confidence",
+      metricConfidenceIntro:
+        "Not every benchmark number has the same evidence strength. Only high-confidence metrics are conclusion-grade here. Medium, low, mixed and unavailable metrics remain diagnostic evidence and cannot prove Harness efficiency, gate value, automation burden, or context-recovery advantage.",
+      metricConfidenceGroups: {
+        conclusion: "Conclusion-grade metrics",
+        diagnostic: "Diagnostic metrics"
+      },
+      conclusionEligibilityLabels: {
+        eligible: "Conclusion-grade",
+        diagnostic: "Diagnostic"
+      },
+      automationBurdenIntro:
+        "This measures how much unplanned operator help was needed after the benchmark prompt was already injected. Initial prompts and staged recovery/RFC/debug prompts are excluded.",
+      gateValueIntro:
+        "This checks whether gates created quality value by catching defects, reducing repair loops, or preventing defects that would otherwise escape.",
+      gateThinningRecommendation: {
+        label: "Recommended thickness: Standard Thin",
+        body:
+          "Current evidence supports thinning default workflow gates, not deleting gates. Keep focused product quality gates inside the loop; move strict workflow gates to task completion, pre-commit, phase transition, release, and package/source-change boundaries; keep strict gates for high-risk provider/live work.",
+        metrics: [
+          { label: "Benefit", value: "Less ordinary-task drag" },
+          { label: "Loss", value: "Later workflow drift detection" },
+          { label: "Best tradeoff", value: "Product quality stays strict" },
+          { label: "Why", value: "Cuts repeat cost without dropping boundaries" }
+        ]
+      },
+      automationBurdenLabels: {
+        interventionCount: "Interventions",
+        operatorPromptChars: "Prompt chars",
+        operatorPromptWords: "Prompt words",
+        repairLoopCount: "Repair loops"
+      },
+      gateValueLabels: {
+        defectsCaught: "Defects caught",
+        productGateDefectsCaught: "Product gate defects",
+        workflowGateDefectsCaught: "Workflow gate defects",
+        escapedDefectCount: "Escaped defects",
+        repairLoopCount: "Repair loops",
+        firstPassQualityScore: "First-pass quality"
+      },
+      artifactInventoryLabels: {
+        runType: "Run type",
+        dataSource: "Data source",
+        confidence: "Confidence",
+        totalLines: "Total lines",
+        category: "Category",
+        baselineFiles: "Baseline files",
+        baselineLines: "Baseline lines",
+        harnessFiles: "Harness files",
+        harnessLines: "Harness lines"
+      },
+      artifactInventoryCategories: {
+        managed_runtime: "Harness managed runtime",
+        project_facts: "Project facts",
+        product_source_tests: "Product source, tests and UI assets",
+        product_docs: "Product docs and handoff",
+        scaffold: "Project scaffold",
+        raw_artifacts: "Raw artifacts",
+        other: "Other"
+      },
+      confidenceLevelLabels: {
+        high: "High",
+        "medium-high": "Medium-high",
+        medium: "Medium",
+        low: "Low",
+        mixed: "Mixed",
+        unavailable: "Unavailable"
+      },
       measurementMethods: {
         observer_measured: {
           label: "External observer",
@@ -58,35 +130,35 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
       lifecycleEfficiency: {
         label: "Initial delivery vs lifecycle efficiency",
         body:
-          "The current completed public run only measures first-scenario delivery. It does not yet provide clean formal evidence for fresh-agent recovery, multi-RFC change, or post-change debugging. Future lifecycle results will use staged injection: the initial prompt excludes recovery/RFC/debug probes, and the operator injects each stage only when measured.",
+          "Completed lifecycle pilots should be read as same-quality lifecycle delivery, not first-patch speed. The support-triage pilot is now the strongest conclusion-grade sample: hidden quality tied, but Harness took materially longer. Context-lab also showed slower observer elapsed time for Harness, though its published quality score is lower-confidence static evidence.",
         metrics: [
-          { label: "Initial delivery", value: "pending" },
-          { label: "Fresh-agent recovery", value: "pending" },
-          { label: "RFC + debug fix", value: "pending" },
-          { label: "Total lifecycle", value: "pending" }
+          { label: "Initial delivery", value: "5.72 / 8.10 min" },
+          { label: "Fresh-agent recovery", value: "1.19 / 2.29 min" },
+          { label: "RFC + debug fix", value: "5.35 / 8.77 min" },
+          { label: "Total lifecycle", value: "12.26 / 19.16 min" }
         ]
       },
       contextContinuity: {
         label: "Context continuity",
         body:
-          "Harness should show its advantage when a fresh agent needs to recover current state, history, constraints, test entrypoints, and the next safe action. The context recovery score and wrong-path count remain pending until a clean independent lifecycle run is complete.",
+          "Context continuity remains diagnostic rather than conclusion-grade. Context-lab tied at 6/6 on an operator-recorded checkpoint, and support-triage tied at 3/4 with hidden answer-key scoring. Neither proves a high-confidence recovery advantage yet.",
         metrics: [
-          { label: "Recovery quiz", value: "pending" },
-          { label: "Wrong-path count", value: "pending" },
-          { label: "Final quality", value: "pending" }
+          { label: "Recovery quiz", value: "6/6 both" },
+          { label: "Wrong-path count", value: "0 both" },
+          { label: "Final quality", value: "17/17 PASS both" }
         ]
       },
       keyFinding: {
         eyebrow: "Key Finding",
         headline: "Current public evidence does not show Harness is faster.",
         body:
-          "The completed public scenario shows same-quality delivery: both paths reached 13/13 PASS. Baseline finished in 25 min, while Harness took 53 min with 29 min of workflow control. An unclean lifecycle calibration has validated the observer/timer/scoring/report path, but it is not formal efficiency evidence. Complex/high-risk efficiency claims remain open until clean staged-injection lifecycle scenarios run.",
+          "Three public scenarios are now completed. The strongest conclusion-grade evidence is negative for Harness speed: support-triage-board reached 12/12 PASS on both paths with hidden quality probes, while observer-measured elapsed time was 26.9158 min baseline vs 48.4984 min Harness. project-context-recovery-lab also has observer-measured elapsed time against Harness, and expense-policy-engine remains a low-confidence legacy cost sample. These results make gate cost and workflow thickness the next priority before seeking more favorable high-complexity wins.",
         points: [
-          "Efficiency: not proven faster or more efficient in the completed public run.",
-          "Quality: both paths met the same final rubric.",
-          "Cost: Harness added recorded workflow control time in the legacy run.",
-          "Handoff: Harness produced review, testing, recovery, and release-ready artifacts.",
-          "Integrity: high-signal scenario design is allowed, but unclean calibration data is not published as proof."
+          "Efficiency: conclusion-grade support-triage data shows Harness was materially slower at the same hidden quality bar.",
+          "Quality: support-triage reached 12/12 PASS on both paths with hidden probes, so the elapsed-time comparison is same-quality evidence.",
+          "Gate value: Harness recorded gate findings, but those are operator-recorded diagnostic evidence and do not yet prove gate net value.",
+          "Automation burden and context recovery: current records are diagnostic or unavailable, not high-confidence conclusions.",
+          "Gate thinning: current best tradeoff is Standard Thin, not keep-current and not gate deletion."
         ]
       },
       evidenceMetrics: [
@@ -94,59 +166,59 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
           id: "efficiency",
           label: "Efficiency finding",
           value: "Not proven faster",
-          detail: "25 min baseline vs 53 min Harness in the completed public run.",
+          detail: "Support: 26.9158 min baseline vs 48.4984 min Harness.",
           help:
-            "This answers the speed/efficiency question for the completed public scenario. Because Harness took more recorded time than baseline, this run cannot support a faster-or-more-efficient claim.",
+            "This answers the speed/efficiency question for the support gate-value pilot. Because both paths passed the hidden quality probe and Harness took more observer-measured elapsed time, this is conclusion-grade evidence against a faster-or-more-efficient claim for this scenario.",
           tone: "warn"
         },
         {
           id: "quality",
           label: "Quality result",
-          value: "13/13 PASS both",
-          detail: "Same acceptance, change impact, and handoff rubric.",
+          value: "12/12 PASS both",
+          detail: "Support-triage hidden quality probe passed on both paths.",
           help:
-            "Both paths were scored against the same final rubric: acceptance, change impact, and handoff. This is why the comparison is same-quality delivery rather than first-patch speed.",
+            "Both support-triage paths passed the same hidden black-box quality probe after staged RFC/debug work. That makes product quality conclusion-grade for this scenario; static rubric and recovery scoring remain supplemental.",
           tone: "good"
         },
         {
           id: "workflow_control",
           label: "Harness workflow control",
-          value: "29 min",
-          detail: "Lifecycle, gates, transitions, and source/overview control work.",
+          value: "Diagnostic only",
+          detail: "Gate findings were operator-recorded, not conclusion-grade.",
           help:
-            "Workflow control is time spent operating the workflow itself: orientation, lifecycle/plan handling, gates, transitions, and source/overview drift work. Durable deliverables are not counted here.",
+            "Workflow control is time spent operating the workflow itself. Support-triage recorded gate findings, but the evidence is operator-recorded and therefore diagnostic. It can motivate gate thinning analysis, but cannot by itself prove gate net value.",
           tone: "warn"
         },
         {
           id: "handoff_artifacts",
           label: "Durable handoff",
-          value: "9 artifact groups",
-          detail: "PRD, UX, architecture, tech plan, implementation, runbook, review, test, release.",
+          value: "Present",
+          detail: "Harness left work_products, RFC notes, runbook, and test/implementation records.",
           help:
-            "These are the extra materials Harness produced for later review, testing, recovery, and release readiness. They are the main visible benefit in this run.",
+            "These are the extra materials Harness produced for later recovery, RFC handling, testing, and implementation review. They are visible benefits, but this pilot did not convert them into lower elapsed time.",
           tone: "good"
         },
         {
           id: "confidence",
-          label: "Cost confidence",
-          value: "Low",
-          detail: "Legacy agent-recorded estimate, not telemetry.",
+          label: "Conclusion confidence",
+          value: "Split by metric",
+          detail: "Elapsed time and hidden support quality are high; gate/context metrics are not.",
           help:
-            "Cost confidence is low for the completed public run because the minutes were recorded by the agent during the benchmark, not telemetry. New external observer runs can raise elapsed-time confidence, but unclean calibration data is not retroactively published as proof.",
+            "Conclusion confidence is checked per metric. Support elapsed time and hidden product quality are high-confidence; gate value, human intervention and context recovery remain diagnostic until they are measured with stronger objective evidence.",
           tone: "neutral"
         },
         {
           id: "coverage",
           label: "Scenario coverage",
-          value: "1/4 formal",
-          detail: "Context-recovery calibration is not a formal public result.",
+          value: "3/4 formal",
+          detail: "Expense, context recovery, and support are complete; webhook remains pending.",
           help:
-            "Only one scenario has both formal baseline and Harness results. The context-recovery pilot exercised the protocol but was not a clean staged-injection run, so support-triage, context-recovery, and webhook-provider still need clean runs before broad complex-project efficiency claims are made.",
+            "Three scenarios now have formal baseline and Harness results. The webhook-provider scenario still needs a clean staged run before broad high-risk boundary claims are closed.",
           tone: "neutral"
         }
       ],
       evidenceStatus:
-        "Only expense-policy-engine is a formal completed sample. project-context-recovery-lab has calibration evidence but must be rerun with staged injection before publication; support-triage-board and webhook-provider-bridge are still pending, so complex/high-risk efficiency conclusions are not closed yet.",
+        "expense-policy-engine, project-context-recovery-lab and support-triage-board are formal completed samples. The strongest conclusion-grade sample is support-triage-board: both paths passed hidden quality, but Harness was about 1.8x slower. Gate value and automation-burden records remain diagnostic or unavailable, so they should guide workflow iteration rather than support a gate net-value claim.",
       metricTemplates: {
         total: "{value} total",
         workflowControl: "{value} workflow control"
@@ -170,10 +242,17 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
         "Raw generated projects and long transcripts are intentionally excluded from git. Public summaries live in this directory; run artifacts stay under .artifacts/delivery-benchmark/.",
       caveats: [
         "This benchmark compares same-quality delivery, not first-patch speed.",
-        "The completed public run does not prove Harness is faster or more efficient.",
+        "The completed public runs do not prove Harness is faster or more efficient.",
+        "Only high-confidence metrics are conclusion-grade. Medium, low, mixed and unavailable metrics are diagnostic only.",
+        "The support-triage-board pilot is the strongest current conclusion-grade sample: hidden quality tied at 12/12, but Harness took 48.4984 min vs 26.9158 min baseline.",
         "High-signal scenarios are designed to expose Harness strengths, not to hide speed costs or lower the baseline standard.",
-        "An unclean observer pilot has calibrated the protocol, but its numbers are not published as formal efficiency evidence. Future formal lifecycle pilots must avoid future probe leakage through staged injection.",
-        "The completed public run still uses legacy agent-recorded workflow control cost estimates; future clean external observer runs can improve elapsed-time confidence.",
+        "The project-context-recovery-lab pilot used staged injection and external observer measurement, but the result is negative for Harness elapsed-time efficiency.",
+        "The context pilot's elapsed-time totals are high-confidence observer data; its quality and recovery scores are still static/operator-scored evidence, not hidden-probe evidence.",
+        "Support gate findings are operator-recorded diagnostic evidence. They motivate gate-thinning analysis but do not prove gate net value.",
+        "Current gate-thinning recommendation is Standard Thin: focused product gates inside the loop, strict workflow gates at completion/phase/release/package boundaries, and strict gates for high-risk work.",
+        "Automation burden and escaped-defect metrics remain unavailable where operator prompts or escaped defects were not explicitly recorded.",
+        "The Harness initial delivery timer was split after a CLI output stream interruption, so treat its phase split as operational evidence; the total observer elapsed time is the stronger cost signal.",
+        "The expense-policy-engine run still uses legacy agent-recorded workflow control cost estimates.",
         "Raw temporary projects and transcripts stay outside git under .artifacts/."
       ]
     },
@@ -197,9 +276,14 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
       headings: {
         scenarioDetail: "项目说明",
         measurement: "测量方式",
+        metricConfidence: "指标置信度",
+        automationBurden: "自动化负担",
+        gateValue: "Gate 价值",
+        gateThinning: "Gate 打薄建议",
         scorecard: "记分卡",
         quality: "质量热力图",
         artifact: "Harness 产物地图",
+        artifactInventory: "产物数量拆解",
         cost: "成本对比",
         lifecycle: "生命周期效率",
         context: "上下文连续性",
@@ -214,6 +298,73 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
         expectedAdvantage: "预期能证明的 Harness 优势"
       },
       measurementConfidenceLabel: "成本置信度",
+      metricConfidenceIntro:
+        "不是每个 benchmark 数字都有同样强的证据。这里约定只有高置信度指标可以进入核心结论；中、低、混合或不可用指标只能作为诊断线索，不能用来证明 Harness 更高效、gate 有净价值、自动化负担更低或上下文恢复更强。",
+      metricConfidenceGroups: {
+        conclusion: "结论级指标",
+        diagnostic: "诊断级指标"
+      },
+      conclusionEligibilityLabels: {
+        eligible: "结论级",
+        diagnostic: "诊断级"
+      },
+      automationBurdenIntro:
+        "这里衡量 benchmark prompt 已注入之后，operator 额外补了多少计划外提示。初始 prompt 和 recovery/RFC/debug 分段注入不计入人工介入。",
+      gateValueIntro:
+        "这里衡量 gate 是否真的创造质量价值：是否提前抓到缺陷、减少修复循环，或阻止本来会逃逸到最终结果的问题。",
+      gateThinningRecommendation: {
+        label: "推荐厚度：Standard Thin",
+        body:
+          "当前证据支持打薄默认 workflow gate，而不是删除 gate。循环内保留 focused product quality gate；严格 workflow gate 放到 task completion、pre-commit、phase transition、release 和 package/source 变更边界；高风险 provider/live 任务继续 strict。",
+        metrics: [
+          { label: "好处", value: "降低普通任务拖累" },
+          { label: "坏处", value: "workflow 漂移更晚暴露" },
+          { label: "性价比", value: "产品质量仍严格" },
+          { label: "为什么", value: "减少重复成本但保留边界" }
+        ]
+      },
+      automationBurdenLabels: {
+        interventionCount: "人工介入次数",
+        operatorPromptChars: "额外提示字符数",
+        operatorPromptWords: "额外提示词数",
+        repairLoopCount: "修复循环数"
+      },
+      gateValueLabels: {
+        defectsCaught: "捕获缺陷数",
+        productGateDefectsCaught: "产品 gate 捕获",
+        workflowGateDefectsCaught: "工作流 gate 捕获",
+        escapedDefectCount: "逃逸缺陷数",
+        repairLoopCount: "修复循环数",
+        firstPassQualityScore: "首轮质量分"
+      },
+      artifactInventoryLabels: {
+        runType: "运行类型",
+        dataSource: "数据源",
+        confidence: "置信度",
+        totalLines: "总行数",
+        category: "类别",
+        baselineFiles: "Baseline 文件数",
+        baselineLines: "Baseline 行数",
+        harnessFiles: "Harness 文件数",
+        harnessLines: "Harness 行数"
+      },
+      artifactInventoryCategories: {
+        managed_runtime: "Harness managed runtime",
+        project_facts: "项目事实源",
+        product_source_tests: "产品源码、测试和 UI 资产",
+        product_docs: "产品文档和交接材料",
+        scaffold: "项目脚手架",
+        raw_artifacts: "原始运行产物",
+        other: "其它"
+      },
+      confidenceLevelLabels: {
+        high: "高",
+        "medium-high": "中高",
+        medium: "中",
+        low: "低",
+        mixed: "混合",
+        unavailable: "不可用"
+      },
       measurementMethods: {
         observer_measured: {
           label: "外部 observer",
@@ -234,35 +385,35 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
       lifecycleEfficiency: {
         label: "首轮交付 vs 生命周期效率",
         body:
-          "当前公开 completed run 只覆盖一个初始交付样本，还没有干净地测到生命周期效率：新对话恢复、多轮 RFC 变更和变更后的 debug 修复。后续正式 lifecycle 结果会使用 staged injection：初始 prompt 不暴露 recovery/RFC/debug probe，operator 只在对应测量阶段注入材料。",
+          "已完成的 lifecycle pilot 应按同等质量生命周期效率阅读，不是首轮代码速度。Support-triage 现在是最强的结论级样本：hidden quality 打平，但 Harness 总耗时明显更长。Context-lab 的 observer 总耗时也对 Harness 不利，但它公开质量分仍是低置信度静态证据。",
         metrics: [
-          { label: "首轮交付", value: "待运行" },
-          { label: "新对话恢复", value: "待运行" },
-          { label: "RFC + debug 修复", value: "待运行" },
-          { label: "生命周期总耗时", value: "待运行" }
+          { label: "首轮交付", value: "5.72 / 8.10 分钟" },
+          { label: "新对话恢复", value: "1.19 / 2.29 分钟" },
+          { label: "RFC + debug 修复", value: "5.35 / 8.77 分钟" },
+          { label: "生命周期总耗时", value: "12.26 / 19.16 分钟" }
         ]
       },
       contextContinuity: {
         label: "上下文连续性",
         body:
-          "Harness 真正应该拉开差距的地方，是新对话里的 agent 能否快速恢复项目当前状态、历史变更、关键约束、测试入口和下一步安全动作。context recovery score 和 wrong-path count 需要等干净的独立 lifecycle 场景重跑后填写。",
+          "上下文连续性目前仍是诊断级，而不是结论级。Context-lab 的新对话恢复在 operator-recorded checkpoint 上双方 6/6；support-triage 用 hidden answer key 评分双方 3/4。它们都还不能高置信证明恢复优势。",
         metrics: [
-          { label: "恢复问答", value: "待运行" },
-          { label: "走错路径次数", value: "待运行" },
-          { label: "最终质量", value: "待运行" }
+          { label: "恢复问答", value: "双方均 6/6" },
+          { label: "走错路径次数", value: "双方均 0" },
+          { label: "最终质量", value: "双方均 17/17 PASS" }
         ]
       },
       keyFinding: {
         eyebrow: "核心结论",
         headline: "当前公开证据尚不能证明 Harness 更快或更高效。",
         body:
-          "已完成的公开场景说明：两条路径都达到 13/13 PASS，属于同等质量交付；但 Baseline 用时 25 分钟，Harness 用时 53 分钟，其中 29 分钟是工作流控制成本。一次不够干净的 lifecycle calibration 已经打通 observer/timer/scoring/report 链路，但不能作为效率证据。高信号项目仍然应该保留，但后续正式 pilot 必须 staged injection，避免初始 agent 提前看到 recovery/RFC/debug 后续题目。",
+          "现在有三个正式 completed 场景。最强的结论级证据对 Harness 速度不利：support-triage-board 两条路径都通过 hidden quality probe，都是 12/12 PASS，但外部 observer 测到 Baseline 26.9158 分钟、Harness 48.4984 分钟。project-context-recovery-lab 的 observer 总耗时同样对 Harness 不利；expense-policy-engine 仍是低置信度历史成本样本。这说明下一步应该优先分析 gate 成本和工作流厚度，而不是只继续寻找更有利的高复杂度场景。",
         points: [
-          "效率：当前公开样本尚不能证明 Harness 更快或更高效。",
-          "质量：两条路径都达到同一最终评分标准。",
-          "成本：Harness 明确增加了记录下来的工作流控制成本。",
-          "交接：Harness 产出了 review、testing、恢复和发布就绪所需的长期产物。",
-          "诚信：项目设计可以高信号，但结果发布必须来自独立、干净、同质量、同条件的双路径运行。"
+          "效率：support-triage 的结论级数据说明，在同等 hidden quality 下 Harness 明显更慢。",
+          "质量：support-triage 两条路径都通过 12/12 hidden probe，因此耗时对比具备同等质量前提。",
+          "Gate 价值：Harness 记录到 gate finding，但它们是 operator-recorded 诊断证据，还不能证明 gate 净价值。",
+          "自动化负担和上下文恢复：当前证据仍是诊断级或不可用，不能当作高置信结论。",
+          "Gate 打薄：当前最高性价比是 Standard Thin，而不是保持现状或删除 gate。"
         ]
       },
       evidenceMetrics: [
@@ -270,59 +421,59 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
           id: "efficiency",
           label: "效率结论",
           value: "尚不能证明更快",
-          detail: "已完成公开样本：Baseline 25 分钟，Harness 53 分钟。",
+          detail: "Support：Baseline 26.9158 分钟，Harness 48.4984 分钟。",
           help:
-            "这一项回答“是否更快/更高效”。在已完成公开样本里，Harness 记录用时高于 Baseline，所以不能据此宣称 Harness 更快或更高效。",
+            "这一项回答“是否更快/更高效”。support gate-value pilot 里，两条路径都通过 hidden quality probe，但 Harness 的外部 observer 总耗时高于 Baseline，所以它是反对“更快/更高效”结论的结论级证据。",
           tone: "warn"
         },
         {
           id: "quality",
           label: "质量结果",
-          value: "双方均 13/13 PASS",
-          detail: "验收、变更影响、交接评分标准相同。",
+          value: "双方均 12/12 PASS",
+          detail: "Support-triage hidden quality probe 双方均通过。",
           help:
-            "两条路径使用同一套最终评分规则：验收、变更影响和交接。这保证比较的是同等质量交付，而不是谁先写出第一版代码。",
+            "Support-triage 两条路径在 staged RFC/debug 后都通过同一套隐藏黑盒质量 probe。这让产品质量在这个场景里具备结论级证据；静态 rubric 和 recovery score 仍是补充证据。",
           tone: "good"
         },
         {
           id: "workflow_control",
           label: "Harness 工作流控制成本",
-          value: "29 分钟",
-          detail: "包括 lifecycle、gate、阶段流转和 source/overview 控制工作。",
+          value: "仅诊断",
+          detail: "Gate finding 是 operator-recorded，不是结论级。",
           help:
-            "工作流控制成本指操作工作流本身花掉的时间，例如定位上下文、处理 lifecycle/plan、跑 gate、阶段流转和处理 source/overview drift。PRD、测试、实现文档等可复用交付物不计入这里。",
+            "工作流控制成本指操作工作流本身花掉的时间。Support-triage 记录了 gate finding，但它们是 operator-recorded 诊断证据，可以用来分析 gate 打薄，不足以证明 gate 净价值。",
           tone: "warn"
         },
         {
           id: "handoff_artifacts",
           label: "长期交接产物",
-          value: "9 组产物",
-          detail: "PRD、UX、架构、技术方案、实现、runbook、review、test、release。",
+          value: "有",
+          detail: "Harness 留下 work_products、RFC 记录、runbook、测试和实现记录。",
           help:
-            "这些是 Harness 额外留下的可复用材料，用来支撑后续 review、testing、恢复和发布就绪检查。这是本次 completed run 最明确的收益。",
+            "这些是 Harness 额外留下的可复用材料，用来支撑后续恢复、RFC 处理、测试和实现 review。它们是可见收益，但这次 pilot 没有把这些收益转化成更短耗时。",
           tone: "good"
         },
         {
           id: "confidence",
-          label: "成本置信度",
-          value: "低",
-          detail: "历史运行使用 agent-recorded estimate，不是 telemetry。",
+          label: "结论置信度",
+          value: "按指标拆分",
+          detail: "耗时和 support 隐藏质量为高；gate/context 不是。",
           help:
-            "成本置信度表示耗时数据有多可靠。已完成公开样本是历史运行，分钟数来自 agent 在 benchmark 过程中的记录/估算，不是 telemetry，所以仍是低置信度。后续用外部 observer clean rerun，可以在不要求 agent 写日志的前提下提升耗时置信度。",
+            "结论置信度按指标判断。Support 的总耗时和隐藏产品质量是高置信度；Gate 价值、人工介入和上下文恢复目前仍是诊断级，除非后续用更客观的记录链路升级。",
           tone: "neutral"
         },
         {
           id: "coverage",
           label: "场景覆盖",
-          value: "1/4 正式完成",
-          detail: "context-recovery calibration 不进入正式公开结果。",
+          value: "3/4 正式完成",
+          detail: "expense、context recovery 和 support 已完成；webhook 待运行。",
           help:
-            "目前只有一个场景完成了正式 baseline 和 Harness 双路径。不够干净的 context-recovery pilot 只校准协议，不发布数字；更复杂的 API/UI、新对话恢复、多轮 RFC/debug 和 provider 边界场景仍需 staged-injection clean rerun。",
+            "目前有三个场景完成正式 baseline 和 Harness 双路径。Webhook Provider 还没完成 clean staged run，所以高风险边界场景的整体效率结论还不能提前下结论。",
           tone: "neutral"
         }
       ],
       evidenceStatus:
-        "目前只有费用报销政策引擎是正式 completed 样本。Project Context Recovery Lab 有 calibration evidence，但必须按 staged injection clean rerun 后才能发布；Support SLA Escalation Desk 和 Webhook Provider Bridge 仍待运行，所以复杂/高风险场景的总体效率结论还不能提前下结论。",
+        "费用报销政策引擎、Project Context Recovery Lab 和 Support SLA Escalation Desk 都是正式 completed 样本。最强的结论级样本是 support-triage-board：两条路径都通过 hidden quality，但 Harness 约慢 1.8 倍。Gate 价值和自动化负担仍是诊断级或不可用，应该作为 workflow 迭代输入，而不是当作 gate 净价值证明。",
       metricTemplates: {
         total: "总计 {value}",
         workflowControl: "工作流控制成本 {value}"
@@ -346,10 +497,17 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
         "原始生成项目和长转录不会提交到 git。公开摘要保留在当前目录，运行产物保留在 .artifacts/delivery-benchmark/。",
       caveats: [
         "这个基准测试比较的是同等质量交付，不是首轮代码生成速度。",
-        "已完成公开样本不能证明 Harness 更快或更高效。",
+        "已完成公开样本不能证明 Harness 更快或更高效；新的 lifecycle pilot 反而显示 Harness 更慢。",
+        "只有高置信度指标是结论级；中、低、混合和不可用指标都只能作为诊断线索。",
+        "Support-triage-board 是当前最强的结论级样本：hidden quality 双方 12/12，但 Harness 48.4984 分钟，Baseline 26.9158 分钟。",
         "高信号场景是为了对准 Harness 的设计优势，不是为了掩盖速度成本或降低 baseline 标准。",
-        "不够干净的外部 observer pilot 只校准协议，数字不进入正式公开结果；后续正式 lifecycle pilot 必须 staged injection，避免提前暴露后续 probe。",
-        "已完成公开样本仍使用历史 agent-recorded 工作流控制成本估算；后续外部 observer clean rerun 可以提升耗时置信度。",
+        "Project Context Recovery Lab 使用 staged injection 和外部 observer 测量，结果可以发布，但它对 Harness 的耗时效率是负向证据。",
+        "Context pilot 的总耗时是高置信度 observer 数据；质量分和恢复分仍是静态 / operator 评分证据，不是 hidden-probe 证据。",
+        "Support gate finding 是 operator-recorded 诊断证据，可以驱动 gate 打薄分析，但不能证明 gate 净价值。",
+        "当前 gate 打薄建议是 Standard Thin：循环内 focused product gate，completion/phase/release/package 边界 strict workflow gate，高风险任务继续 strict。",
+        "没有显式记录 operator 额外提示或 escaped defect 的地方，自动化负担和逃逸缺陷指标必须保持不可用。",
+        "Harness 首轮交付计时因为 CLI 输出流中断被拆成两段；阶段拆分按操作证据阅读，总耗时以 observer elapsed time 为更强信号。",
+        "费用报销政策引擎仍使用历史 agent-recorded 工作流控制成本估算。",
         "临时项目和原始转录保留在 .artifacts/ 之外，不进入 git。"
       ]
     }
@@ -375,6 +533,144 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
             confidence: "低",
             body:
               "这次运行完成时外部 observer 还不存在。它的分钟数仍然是历史 agent-recorded estimate，所以报告不会把它当作 observer-measured 数据。"
+          }
+        }
+      },
+      metricConfidence: [
+        {
+          id: "elapsed_time",
+          level: "low",
+          conclusionEligible: false,
+          dataSource: "agent_recorded_estimate",
+          copy: {
+            en: {
+              label: "Elapsed time",
+              explanation: "The 25 vs 53 min cost came from legacy agent-recorded estimates, not external telemetry."
+            },
+            zh: {
+              label: "总耗时",
+              explanation: "25 vs 53 分钟来自历史 agent-recorded estimate，不是外部 telemetry。"
+            }
+          }
+        },
+        {
+          id: "quality_score",
+          level: "low",
+          conclusionEligible: false,
+          dataSource: "static_keyword_path_rubric",
+          copy: {
+            en: {
+              label: "Quality score",
+              explanation: "The 13/13 score is based on static path/keyword evidence and should be read as supplemental, not a hidden behavioral probe."
+            },
+            zh: {
+              label: "质量分",
+              explanation: "13/13 来自静态 path/keyword evidence，应作为补充证据阅读，不是隐藏行为 probe。"
+            }
+          }
+        },
+        {
+          id: "context_recovery",
+          level: "unavailable",
+          conclusionEligible: false,
+          dataSource: "unavailable",
+          copy: {
+            en: {
+              label: "Context recovery",
+              explanation: "This historical run did not include the new hidden answer-key recovery scoring path."
+            },
+            zh: {
+              label: "上下文恢复",
+              explanation: "这个历史样本没有使用新的隐藏 answer key recovery 评分路径。"
+            }
+          }
+        },
+        {
+          id: "gate_value",
+          level: "unavailable",
+          conclusionEligible: false,
+          dataSource: "unavailable",
+          copy: {
+            en: {
+              label: "Gate value",
+              explanation: "This historical run did not record gate findings, escaped defects, or repair loops."
+            },
+            zh: {
+              label: "Gate 价值",
+              explanation: "这个历史样本没有记录 gate finding、escaped defect 或 repair loop。"
+            }
+          }
+        },
+        {
+          id: "human_intervention",
+          level: "unavailable",
+          conclusionEligible: false,
+          dataSource: "unavailable",
+          copy: {
+            en: {
+              label: "Human intervention",
+              explanation: "This historical run did not record out-of-protocol operator prompt count or prompt size."
+            },
+            zh: {
+              label: "人工介入",
+              explanation: "这个历史样本没有记录协议之外的 operator 提示次数或提示词字数。"
+            }
+          }
+        },
+        {
+          id: "prompt_ledger",
+          level: "unavailable",
+          conclusionEligible: false,
+          dataSource: "unavailable",
+          copy: {
+            en: {
+              label: "Prompt ledger",
+              explanation: "This historical run did not record protocol or operator prompt fingerprints in prompts.ndjson."
+            },
+            zh: {
+              label: "Prompt ledger",
+              explanation: "这个历史样本没有在 prompts.ndjson 中记录协议 prompt 或 operator prompt 指纹。"
+            }
+          }
+        }
+      ],
+      automationBurden: {
+        status: "unrecorded",
+        metrics: {
+          interventionCount: null,
+          operatorPromptChars: null,
+          operatorPromptWords: null,
+          repairLoopCount: null
+        },
+        copy: {
+          en: {
+            body:
+              "This historical run did not record out-of-protocol operator interventions, so it cannot support an automation-burden conclusion."
+          },
+          zh: {
+            body:
+              "这个历史样本没有记录协议之外的 operator 额外介入，因此不能用来判断自动化负担。"
+          }
+        }
+      },
+      gateValue: {
+        status: "unrecorded",
+        metrics: {
+          defectsCaught: null,
+          productGateDefectsCaught: null,
+          workflowGateDefectsCaught: null,
+          escapedDefectCount: null,
+          repairLoopCount: null,
+          firstPassQualityScore: null
+        },
+        copy: {
+          en: {
+            body:
+              "This run did not record gate findings, first-pass hidden probe failures, escaped defects, or repair loops."
+          },
+          zh: {
+            body:
+              "这次运行没有记录 gate finding、first-pass hidden probe failure、escaped defect 或 repair loop。"
           }
         }
       },
@@ -548,23 +844,308 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
     },
     {
       id: "project-context-recovery-lab",
-      status: "pending",
-      modes: {},
-      sections: [],
-      lifecycle: {
-        status: "pending",
-        metrics: {
-          initialDeliveryMinutes: null,
-          recoveryOrientationMinutes: null,
-          rfcFixMinutes: null,
-          debugFixMinutes: null,
-          totalLifecycleMinutes: null,
-          contextRecoveryScore: null,
-          contextRecoveryTotal: 6,
-          wrongPathCount: null,
-          finalQualityScore: null
+      status: "completed",
+      runId: "20260602-033759",
+      summaryPath: "project-context-recovery-lab-20260602-033759.md",
+      measurement: {
+        confidence: "high",
+        methods: ["observer_measured", "system_timed_manual_boundary"],
+        copy: {
+          en: {
+            label: "External observer lifecycle measurement",
+            confidence: "high for elapsed time",
+            body:
+              "The clean staged pilot used an external observer for total elapsed time and system timers for phase boundaries. Baseline and Harness both ran the same staged recovery/RFC/debug protocol. Harness initial delivery was split after a CLI output stream interruption, so the total observer elapsed time is the stronger cost signal than any one phase split."
+          },
+          zh: {
+            label: "外部 observer 生命周期测量",
+            confidence: "总耗时高置信度",
+            body:
+              "这次 clean staged pilot 使用外部 observer 测总耗时，并用系统计时记录阶段边界。Baseline 和 Harness 都按同一套 recovery/RFC/debug 分段协议运行。Harness 首轮交付因为 CLI 输出流中断被拆成两段，所以总耗时比单个阶段拆分更值得信任。"
+          }
         }
       },
+      metricConfidence: [
+        {
+          id: "elapsed_time",
+          level: "high",
+          conclusionEligible: true,
+          dataSource: "observer_measured",
+          copy: {
+            en: {
+              label: "Elapsed time",
+              explanation: "The 14.0196 vs 21.0036 min totals came from an external observer outside the measured agent prompt."
+            },
+            zh: {
+              label: "总耗时",
+              explanation: "14.0196 vs 21.0036 分钟来自被测 agent prompt 外部的 observer。"
+            }
+          }
+        },
+        {
+          id: "quality_score",
+          level: "low",
+          conclusionEligible: false,
+          dataSource: "static_keyword_path_rubric",
+          copy: {
+            en: {
+              label: "Quality score",
+              explanation: "The published 17/17 score still comes from static rubric evidence; the hidden quality probe was added after this run and does not retroactively upgrade it."
+            },
+            zh: {
+              label: "质量分",
+              explanation: "公开的 17/17 仍来自静态 rubric evidence；隐藏 quality probe 是这次之后补上的，不能倒推升级旧分数。"
+            }
+          }
+        },
+        {
+          id: "context_recovery",
+          level: "medium",
+          conclusionEligible: false,
+          dataSource: "operator_recorded_checkpoint_score",
+          copy: {
+            en: {
+              label: "Context recovery",
+              explanation: "The 6/6 recovery score was operator-recorded from a visible checkpoint, not yet scored by the hidden answer-key workflow."
+            },
+            zh: {
+              label: "上下文恢复",
+              explanation: "6/6 是 operator 根据可见 checkpoint 记录的分数，还不是隐藏 answer key 工作流评分。"
+            }
+          }
+        },
+        {
+          id: "gate_value",
+          level: "unavailable",
+          conclusionEligible: false,
+          dataSource: "unavailable",
+          copy: {
+            en: {
+              label: "Gate value",
+              explanation: "This pilot did not record first-pass hidden probe failures, defects caught by gates, escaped defects, or repair loops."
+            },
+            zh: {
+              label: "Gate 价值",
+              explanation: "这次 pilot 没有记录 first-pass hidden probe failure、gate 捕获缺陷、escaped defect 或 repair loop。"
+            }
+          }
+        },
+        {
+          id: "human_intervention",
+          level: "unavailable",
+          conclusionEligible: false,
+          dataSource: "unavailable",
+          copy: {
+            en: {
+              label: "Human intervention",
+              explanation: "Operator intervention count and prompt-size metrics start with the next support-triage gate-value pilot."
+            },
+            zh: {
+              label: "人工介入",
+              explanation: "operator 介入次数和提示词字数指标会从下一轮 support-triage gate-value pilot 开始记录。"
+            }
+          }
+        },
+        {
+          id: "prompt_ledger",
+          level: "unavailable",
+          conclusionEligible: false,
+          dataSource: "unavailable",
+          copy: {
+            en: {
+              label: "Prompt ledger",
+              explanation: "This pilot ran before prompt fingerprints were written to prompts.ndjson."
+            },
+            zh: {
+              label: "Prompt ledger",
+              explanation: "这次 pilot 发生时还没有把 prompt 指纹写入 prompts.ndjson。"
+            }
+          }
+        }
+      ],
+      automationBurden: {
+        status: "unrecorded",
+        metrics: {
+          interventionCount: null,
+          operatorPromptChars: null,
+          operatorPromptWords: null,
+          repairLoopCount: null
+        },
+        copy: {
+          en: {
+            body:
+              "The clean context pilot did not record operator intervention count or prompt-size metrics. Do not infer low automation burden from missing data."
+          },
+          zh: {
+            body:
+              "这次 clean context pilot 没有记录 operator 介入次数或额外提示词字数。不能把缺失数据解读成自动化负担低。"
+          }
+        }
+      },
+      gateValue: {
+        status: "unrecorded",
+        metrics: {
+          defectsCaught: null,
+          productGateDefectsCaught: null,
+          workflowGateDefectsCaught: null,
+          escapedDefectCount: null,
+          repairLoopCount: null,
+          firstPassQualityScore: null
+        },
+        copy: {
+          en: {
+            body:
+              "This pilot measured elapsed time and final quality, but did not record whether gates caught defects before they escaped. Gate value remains unproven here."
+          },
+          zh: {
+            body:
+              "这次 pilot 测了总耗时和最终质量，但没有记录 gate 是否提前抓住缺陷。这里不能证明 gate 净价值。"
+          }
+        }
+      },
+      modes: {
+        baseline: {
+          scorePassed: 17,
+          scoreTotal: 17,
+          decision: "pass",
+          totalDeliveryMinutes: 14.0196,
+          workflowControlMinutes: null,
+          copy: {
+            en: {
+              label: "Baseline",
+              notes: "Clean staged lifecycle run with external observer measurement; no Harness validators or self-maintained benchmark log."
+            },
+            zh: {
+              label: "Baseline",
+              notes: "clean staged lifecycle run，由外部 observer 测量；不运行 Harness validator，也不要求自写 benchmark 日志。"
+            }
+          }
+        },
+        harness: {
+          scorePassed: 17,
+          scoreTotal: 17,
+          decision: "pass",
+          totalDeliveryMinutes: 21.0036,
+          workflowControlMinutes: null,
+          copy: {
+            en: {
+              label: "AI SDLC Harness",
+              notes: "Clean staged lifecycle run with Harness fast path and external observer measurement; workflow-control minutes were not separately tagged."
+            },
+            zh: {
+              label: "AI SDLC Harness",
+              notes: "clean staged lifecycle run，使用 Harness fast path 和外部 observer；本次没有单独标注 workflow-control 分钟数。"
+            }
+          }
+        }
+      },
+      sections: [
+        {
+          id: "acceptance",
+          passed: 8,
+          total: 8,
+          copy: { en: { label: "Acceptance" }, zh: { label: "验收" } }
+        },
+        {
+          id: "context_recovery",
+          passed: 4,
+          total: 4,
+          copy: { en: { label: "Context Recovery" }, zh: { label: "上下文恢复" } }
+        },
+        {
+          id: "rfc_debug",
+          passed: 4,
+          total: 4,
+          copy: { en: { label: "RFC / Debug" }, zh: { label: "RFC / Debug" } }
+        },
+        {
+          id: "handoff",
+          passed: 1,
+          total: 1,
+          copy: { en: { label: "Handoff" }, zh: { label: "交接" } }
+        }
+      ],
+      lifecycle: {
+        status: "completed",
+        metrics: {
+          baseline: {
+            initialDeliveryMinutes: 5.72,
+            recoveryOrientationMinutes: 1.19,
+            rfcFixMinutes: 4.26,
+            debugFixMinutes: 1.09,
+            totalLifecycleMinutes: 12.26,
+            contextRecoveryScore: 6,
+            contextRecoveryTotal: 6,
+            wrongPathCount: 0,
+            finalQualityScore: "17/17 PASS"
+          },
+          harness: {
+            initialDeliveryMinutes: 8.1,
+            recoveryOrientationMinutes: 2.29,
+            rfcFixMinutes: 6.24,
+            debugFixMinutes: 2.53,
+            totalLifecycleMinutes: 19.16,
+            contextRecoveryScore: 6,
+            contextRecoveryTotal: 6,
+            wrongPathCount: 0,
+            finalQualityScore: "17/17 PASS"
+          }
+        }
+      },
+      artifacts: [
+        {
+          id: "work_products",
+          copy: {
+            en: {
+              label: "Work Products",
+              purpose: "Captured product, implementation, test, runbook, and RFC facts for fresh-session recovery."
+            },
+            zh: {
+              label: "Work Products",
+              purpose: "沉淀产品、实现、测试、runbook 和 RFC 事实，服务新对话恢复。"
+            }
+          }
+        },
+        {
+          id: "rfc_record",
+          copy: {
+            en: {
+              label: "RFC Record",
+              purpose: "Recorded the impactLevel/provider event/permission cascade and the applied repair boundary."
+            },
+            zh: {
+              label: "RFC 记录",
+              purpose: "记录 impactLevel、provider event、权限 cascade，以及实际修复边界。"
+            }
+          }
+        },
+        {
+          id: "test_evidence",
+          copy: {
+            en: {
+              label: "Test Evidence",
+              purpose: "Kept local API/domain/UI smoke evidence for the final 17/17 rubric."
+            },
+            zh: {
+              label: "测试证据",
+              purpose: "保留 API、domain、UI smoke 证据，对应最终 17/17 rubric。"
+            }
+          }
+        },
+        {
+          id: "recovery_notes",
+          copy: {
+            en: {
+              label: "Recovery Notes",
+              purpose: "Documented entrypoints, current model, provider boundary, and next safe action."
+            },
+            zh: {
+              label: "恢复备注",
+              purpose: "记录入口、当前模型、provider 边界和下一步安全动作。"
+            }
+          }
+        }
+      ],
       copy: {
         en: {
           name: "Project Context Recovery Lab",
@@ -580,7 +1161,7 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
             midstreamChange:
               "The lifecycle probe pauses after initial delivery for a fresh-agent recovery quiz, then applies the impactLevel/provider-event/permission RFC cascade and a debug fix.",
             expectedAdvantage:
-              "Harness should recover project state faster, score higher on the context recovery quiz, and avoid wrong paths such as using deprecated severity or retrying live credentials."
+              "This scenario is designed to give Harness room to recover project state faster, score higher on the context recovery quiz, and avoid wrong paths. The clean pilot did not show that advantage: both paths scored 6/6 recovery and 0 wrong paths, while Baseline was faster."
           }
         },
         zh: {
@@ -597,28 +1178,335 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
             midstreamChange:
               "生命周期 probe 会在首轮交付后暂停，让新对话 agent 做恢复问答，然后继续跑 impactLevel / provider event / 权限 RFC cascade 和一个 debug fix。",
             expectedAdvantage:
-              "Harness 应该能更快恢复项目状态，context recovery quiz 得分更高，并减少继续使用 deprecated severity 或乱试 live credentials 这类 wrong path。"
+              "这个场景本来是为了给 Harness 留出优势空间：更快恢复项目状态、更高 context recovery quiz 得分，并减少继续使用 deprecated severity 或乱试 live credentials 这类 wrong path。clean pilot 没有体现这个优势：双方恢复都是 6/6、wrong path 都是 0，Baseline 反而更快。"
           }
         }
+      },
+      interpretation: {
+        en: [
+          "This is a clean formal lifecycle pilot, not calibration data.",
+          "The quality result is tied: both paths reached 17/17 PASS.",
+          "The efficiency result is negative for Harness: Baseline was faster overall and in every measured lifecycle segment.",
+          "The context-continuity hypothesis remains plausible for harder or messier work, but it was not demonstrated by this run."
+        ],
+        zh: [
+          "这是一次 clean formal lifecycle pilot，不是 calibration 数字。",
+          "质量结果打平：两条路径都是 17/17 PASS。",
+          "效率结果对 Harness 不利：Baseline 总耗时更短，并且每个已测生命周期阶段都更快。",
+          "上下文连续性的假设在更难、更混乱的任务里仍可能成立，但这次运行没有证明它。"
+        ]
       }
     },
     {
       id: "support-triage-board",
-      status: "pending",
-      modes: {},
-      sections: [],
+      status: "completed",
+      runId: "20260602-083512",
+      summaryPath: "support-triage-board-20260602-083512.md",
+      measurement: {
+        confidence: "high",
+        methods: ["observer_measured", "system_timed_manual_boundary"],
+        copy: {
+          en: {
+            label: "External observer with hidden quality probe",
+            confidence: "high for elapsed time and product quality",
+            body:
+              "The formal support gate-value pilot used an external observer for total elapsed time and a scenario-owned hidden quality probe after staged RFC/debug work. Both paths reached 12/12 PASS on that hidden probe, while Harness took materially longer."
+          },
+          zh: {
+            label: "外部 observer + 隐藏质量 probe",
+            confidence: "总耗时和产品质量均为高置信度",
+            body:
+              "正式 support gate-value pilot 使用外部 observer 测总耗时，并在 staged RFC/debug 后运行场景自带 hidden quality probe。两条路径都达到 12/12 PASS，但 Harness 总耗时明显更长。"
+          }
+        }
+      },
+      metricConfidence: [
+        {
+          id: "elapsed_time",
+          level: "high",
+          conclusionEligible: true,
+          dataSource: "observer_measured",
+          copy: {
+            en: {
+              label: "Elapsed time",
+              explanation: "The 26.9158 vs 48.4984 min totals came from an external observer outside the measured agent prompt, so they are conclusion-grade cost evidence."
+            },
+            zh: {
+              label: "总耗时",
+              explanation: "26.9158 vs 48.4984 分钟来自被测 agent prompt 外部的 observer，因此是结论级耗时证据。"
+            }
+          }
+        },
+        {
+          id: "quality_score",
+          level: "high",
+          conclusionEligible: true,
+          dataSource: "hidden_quality_probe",
+          copy: {
+            en: {
+              label: "Product quality",
+              explanation: "Both paths passed the same hidden 12/12 supportDesk quality probe after RFC/debug, so product quality is conclusion-grade for this scenario."
+            },
+            zh: {
+              label: "产品质量",
+              explanation: "两条路径在 RFC/debug 后都通过同一套隐藏 12/12 supportDesk quality probe，因此这个场景的产品质量是结论级证据。"
+            }
+          }
+        },
+        {
+          id: "context_recovery",
+          level: "medium",
+          conclusionEligible: false,
+          dataSource: "hidden_answer_key_with_file_references",
+          copy: {
+            en: {
+              label: "Context recovery",
+              explanation: "Both paths scored 3/4 against a hidden answer key with file references. This is useful diagnostic evidence, but not high-confidence enough to prove context-continuity advantage."
+            },
+            zh: {
+              label: "上下文恢复",
+              explanation: "两条路径都按隐藏 answer key 和文件引用评分为 3/4。这是有用的诊断证据，但还不足以证明上下文连续性优势。"
+            }
+          }
+        },
+        {
+          id: "gate_value",
+          level: "medium",
+          conclusionEligible: false,
+          dataSource: "operator_recorded",
+          copy: {
+            en: {
+              label: "Gate value",
+              explanation: "Harness recorded 9 gate-caught defects, but these records are operator-recorded. They motivate gate analysis; they do not yet prove gate net value."
+            },
+            zh: {
+              label: "Gate 价值",
+              explanation: "Harness 记录到 9 个 gate 捕获缺陷，但这些记录来自 operator 事后标注。它们可以驱动 gate 分析，不能直接证明 gate 净价值。"
+            }
+          }
+        },
+        {
+          id: "human_intervention",
+          level: "unavailable",
+          conclusionEligible: false,
+          dataSource: "unavailable",
+          copy: {
+            en: {
+              label: "Human intervention",
+              explanation: "No out-of-protocol operator prompts were recorded. Missing records are unavailable evidence, not proof of low automation burden."
+            },
+            zh: {
+              label: "人工介入",
+              explanation: "这次没有记录协议之外的 operator 额外提示。缺失记录表示证据不可用，不等于自动化负担低。"
+            }
+          }
+        },
+        {
+          id: "prompt_ledger",
+          level: "unavailable",
+          conclusionEligible: false,
+          dataSource: "unavailable",
+          copy: {
+            en: {
+              label: "Prompt ledger",
+              explanation: "This support pilot did not yet record prompts.ndjson, so prompt character burden remains unavailable."
+            },
+            zh: {
+              label: "Prompt ledger",
+              explanation: "这次 support pilot 还没有记录 prompts.ndjson，因此提示词字数负担仍不可用。"
+            }
+          }
+        },
+        {
+          id: "artifact_inventory",
+          level: "high",
+          conclusionEligible: false,
+          dataSource: "filesystem_scan",
+          copy: {
+            en: {
+              label: "Artifact inventory",
+              explanation:
+                "File and line counts were measured from the raw run directories. They explain artifact volume, but do not by themselves prove those artifacts created value."
+            },
+            zh: {
+              label: "产物数量拆解",
+              explanation:
+                "文件数和行数来自 raw run directory 的文件系统扫描。它能解释产物体量，但不能单独证明这些产物创造了价值。"
+            }
+          }
+        }
+      ],
+      modes: {
+        baseline: {
+          scorePassed: 12,
+          scoreTotal: 12,
+          decision: "pass",
+          totalDeliveryMinutes: 26.9158,
+          workflowControlMinutes: null,
+          copy: {
+            en: {
+              label: "Baseline",
+              notes: "Plain coding path with staged recovery/RFC/debug and the same hidden supportDesk quality probe."
+            },
+            zh: {
+              label: "Baseline",
+              notes: "直接编码路径，按相同 staged recovery/RFC/debug 协议运行，并通过同一套隐藏 supportDesk 质量 probe。"
+            }
+          }
+        },
+        harness: {
+          scorePassed: 12,
+          scoreTotal: 12,
+          decision: "pass",
+          totalDeliveryMinutes: 48.4984,
+          workflowControlMinutes: null,
+          copy: {
+            en: {
+              label: "AI SDLC Harness",
+              notes: "Harness lifecycle path with staged injection. It reached the same hidden quality bar but took about 1.8x the elapsed time."
+            },
+            zh: {
+              label: "AI SDLC Harness",
+              notes: "Harness 生命周期路径，按 staged injection 运行。它达到同一 hidden quality bar，但总耗时约为 Baseline 的 1.8 倍。"
+            }
+          }
+        }
+      },
+      artifactInventory: {
+        dataSource: "filesystem_scan",
+        confidence: "high",
+        conclusionEligible: false,
+        runType: "warm",
+        copy: {
+          en: {
+            confidence: "high-count diagnostic",
+            body:
+              "This inventory was measured from the raw support-triage run directories after scoring. It separates product source/tests/UI assets from Harness managed runtime and project facts, so line counts can explain cost without pretending that artifact volume proves value."
+          },
+          zh: {
+            confidence: "高置信计数，诊断级",
+            body:
+              "这份清单来自 support-triage raw run directory 的 score 后文件系统扫描。它把产品源码/测试/UI 资产、Harness managed runtime 和项目事实源分开，能解释成本来源，但不能单独作为价值证明。"
+          }
+        },
+        modes: {
+          baseline: {
+            total: { files: 10, lines: 2319, bytes: 73873 },
+            categories: {
+              managed_runtime: { files: 0, lines: 0, bytes: 0 },
+              project_facts: { files: 0, lines: 0, bytes: 0 },
+              product_source_tests: { files: 6, lines: 2151, bytes: 61161 },
+              product_docs: { files: 2, lines: 149, bytes: 12396 },
+              raw_artifacts: { files: 0, lines: 0, bytes: 0 },
+              scaffold: { files: 2, lines: 19, bytes: 316 },
+              other: { files: 0, lines: 0, bytes: 0 }
+            }
+          },
+          harness: {
+            total: { files: 100, lines: 9191, bytes: 474873 },
+            categories: {
+              managed_runtime: { files: 59, lines: 5818, bytes: 310941 },
+              project_facts: { files: 33, lines: 1828, bytes: 112208 },
+              product_source_tests: { files: 4, lines: 1365, bytes: 45027 },
+              product_docs: { files: 2, lines: 159, bytes: 6360 },
+              raw_artifacts: { files: 0, lines: 0, bytes: 0 },
+              scaffold: { files: 2, lines: 21, bytes: 337 },
+              other: { files: 0, lines: 0, bytes: 0 }
+            }
+          }
+        }
+      },
+      sections: [
+        {
+          id: "hidden_quality",
+          passed: 12,
+          total: 12,
+          copy: { en: { label: "Hidden Quality Probe" }, zh: { label: "隐藏质量 Probe" } }
+        },
+        {
+          id: "static_supplemental",
+          passed: 17,
+          total: 18,
+          copy: { en: { label: "Static Supplemental" }, zh: { label: "静态补充检查" } }
+        },
+        {
+          id: "context_recovery",
+          passed: 3,
+          total: 4,
+          copy: { en: { label: "Context Recovery" }, zh: { label: "上下文恢复" } }
+        },
+        {
+          id: "rfc_debug",
+          passed: 12,
+          total: 12,
+          copy: { en: { label: "RFC / Debug Behavior" }, zh: { label: "RFC / Debug 行为" } }
+        }
+      ],
       lifecycle: {
-        status: "pending",
+        status: "completed",
         metrics: {
-          initialDeliveryMinutes: null,
-          recoveryOrientationMinutes: null,
-          rfcFixMinutes: null,
-          debugFixMinutes: null,
-          totalLifecycleMinutes: null,
-          contextRecoveryScore: null,
-          contextRecoveryTotal: 6,
-          wrongPathCount: null,
-          finalQualityScore: null
+          baseline: {
+            initialDeliveryMinutes: 11.16,
+            recoveryOrientationMinutes: 3.06,
+            rfcFixMinutes: 9.89,
+            debugFixMinutes: 2.78,
+            totalLifecycleMinutes: 26.89,
+            contextRecoveryScore: 3,
+            contextRecoveryTotal: 4,
+            wrongPathCount: null,
+            finalQualityScore: "12/12 PASS"
+          },
+          harness: {
+            initialDeliveryMinutes: 20.7,
+            recoveryOrientationMinutes: 3.58,
+            rfcFixMinutes: 22.86,
+            debugFixMinutes: 1.34,
+            totalLifecycleMinutes: 48.48,
+            contextRecoveryScore: 3,
+            contextRecoveryTotal: 4,
+            wrongPathCount: null,
+            finalQualityScore: "12/12 PASS"
+          }
+        }
+      },
+      automationBurden: {
+        status: "unavailable",
+        metrics: {
+          interventionCount: null,
+          operatorPromptChars: null,
+          operatorPromptWords: null,
+          repairLoopCount: null
+        },
+        copy: {
+          en: {
+            body:
+              "This pilot did not record out-of-protocol operator prompt count or prompt size. Do not infer low automation burden from missing intervention records."
+          },
+          zh: {
+            body:
+              "这次 pilot 没有记录协议之外的 operator 额外提示次数或提示词字数。不能把缺失介入记录解读成自动化负担低。"
+          }
+        }
+      },
+      gateValue: {
+        status: "diagnostic",
+        metrics: {
+          defectsCaught: 9,
+          productGateDefectsCaught: 1,
+          workflowGateDefectsCaught: 8,
+          escapedDefectCount: null,
+          repairLoopCount: 0,
+          firstPassQualityScore: "9/9 both"
+        },
+        copy: {
+          en: {
+            body:
+              "Harness recorded 9 gate findings while Baseline recorded 0. Because those findings are operator-recorded and escaped defects were not independently measured, this is diagnostic evidence for gate-thinning analysis, not conclusion-grade proof of gate net value."
+          },
+          zh: {
+            body:
+              "Harness 记录到 9 个 gate finding，Baseline 为 0。由于这些 finding 来自 operator 记录，且 escaped defect 没有被独立测量，这只能作为 gate 打薄分析的诊断证据，不能作为 gate 净价值的结论级证明。"
+          }
         }
       },
       copy: {
@@ -636,7 +1524,7 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
             midstreamChange:
               "The lifecycle probe changes priority sorting to a weighted policy, adds bulk assignment with auditReason, then checks an API/UI ordering or stale-state debug fix.",
             expectedAdvantage:
-              "Harness should reduce partial fixes where only UI or only API changes, lower RFC/debug time, and preserve same-quality coverage across implementation, tests, and work_products."
+              "This scenario was designed to test whether Harness reduces UI/API/policy/test/docs partial fixes. The formal pilot did not show an efficiency win: both paths reached 12/12 hidden quality, but Harness took about 1.8x longer. Gate findings are useful diagnostics, not proof that the extra gate cost paid for itself."
           }
         },
         zh: {
@@ -653,9 +1541,77 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
             midstreamChange:
               "生命周期 probe 会把排序规则改成 weighted policy，新增带 auditReason 的 bulk assignment，然后检查 API/UI 排序不一致或 stale state debug fix。",
             expectedAdvantage:
-              "Harness 应该减少只改 UI 或只改 API 的 partial fix，降低 RFC/debug 总耗时，并保持实现、测试和文档的同质量覆盖。"
+              "这个场景本来用于测试 Harness 是否能减少 UI/API/policy/test/docs 的 partial fix。正式 pilot 没有体现效率优势：两条路径都达到 12/12 hidden quality，但 Harness 约慢 1.8 倍。Gate finding 是有用诊断，不等于额外 gate 成本已经被证明值得。"
           }
         }
+      },
+      artifacts: [
+        {
+          id: "support_desk_contract",
+          copy: {
+            en: {
+              label: "SupportDesk Contract",
+              purpose: "Provides the hidden-probe smoke contract for API, policy, list view, kanban view, bulk assignment, and stale-state checks."
+            },
+            zh: {
+              label: "SupportDesk Contract",
+              purpose: "提供 hidden-probe smoke contract，用来检查 API、policy、list view、kanban view、bulk assignment 和 stale state。"
+            }
+          }
+        },
+        {
+          id: "policy_rfc",
+          copy: {
+            en: {
+              label: "Weighted Policy RFC",
+              purpose: "Exercises cross-layer changes across API sorting, UI rendering, tests, docs, and audit reason handling."
+            },
+            zh: {
+              label: "Weighted Policy RFC",
+              purpose: "覆盖 API 排序、UI 渲染、测试、文档和 audit reason 处理的跨层变更。"
+            }
+          }
+        },
+        {
+          id: "gate_findings",
+          copy: {
+            en: {
+              label: "Gate Findings",
+              purpose: "Records diagnostic gate findings that can guide workflow thinning, while staying below conclusion-grade confidence."
+            },
+            zh: {
+              label: "Gate Findings",
+              purpose: "记录诊断级 gate finding，用于指导 workflow 打薄，但不把它当成结论级证据。"
+            }
+          }
+        },
+        {
+          id: "recovery_score",
+          copy: {
+            en: {
+              label: "Recovery Score",
+              purpose: "Scores takeover memos against a hidden answer key with file references; useful, but still diagnostic."
+            },
+            zh: {
+              label: "Recovery Score",
+              purpose: "用隐藏 answer key 和文件引用评分 takeover memo；有诊断价值，但仍不是结论级。"
+            }
+          }
+        }
+      ],
+      interpretation: {
+        en: [
+          "This is the strongest current same-quality efficiency data point because both paths passed the hidden 12/12 product probe.",
+          "The result is negative for Harness elapsed-time efficiency: 48.4984 min vs 26.9158 min.",
+          "Gate findings suggest Harness gates caught workflow and product issues, but the evidence is operator-recorded and does not yet prove net gate value.",
+          "Use this result to analyze thinner or conditional gate profiles before designing only more favorable high-complexity scenarios."
+        ],
+        zh: [
+          "这是当前最强的同等质量效率数据点，因为两条路径都通过隐藏 12/12 产品 probe。",
+          "耗时效率结果对 Harness 不利：48.4984 分钟 vs 26.9158 分钟。",
+          "Gate finding 暗示 Harness gate 抓到了 workflow 和 product 问题，但证据是 operator-recorded，尚不能证明 gate 净价值。",
+          "这份结果更适合作为打薄或条件化 gate 的分析输入，而不是只继续设计更有利的高复杂度场景。"
+        ]
       }
     },
     {
@@ -675,6 +1631,46 @@ window.__DELIVERY_BENCHMARK_DATA__ = {
           contextRecoveryTotal: 6,
           wrongPathCount: null,
           finalQualityScore: null
+        }
+      },
+      automationBurden: {
+        status: "unrecorded",
+        metrics: {
+          interventionCount: null,
+          operatorPromptChars: null,
+          operatorPromptWords: null,
+          repairLoopCount: null
+        },
+        copy: {
+          en: {
+            body:
+              "No webhook pilot has been run with intervention logging yet. Automation burden remains unavailable for this scenario."
+          },
+          zh: {
+            body:
+              "Webhook pilot 还没有带 intervention logging 正式运行，因此这个场景的自动化负担数据不可用。"
+          }
+        }
+      },
+      gateValue: {
+        status: "unrecorded",
+        metrics: {
+          defectsCaught: null,
+          productGateDefectsCaught: null,
+          workflowGateDefectsCaught: null,
+          escapedDefectCount: null,
+          repairLoopCount: null,
+          firstPassQualityScore: null
+        },
+        copy: {
+          en: {
+            body:
+              "No gate-value findings have been recorded for this pending safety-boundary scenario."
+          },
+          zh: {
+            body:
+              "这个 pending 的安全边界场景还没有记录 gate-value finding。"
+          }
         }
       },
       copy: {

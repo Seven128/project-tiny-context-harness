@@ -4,49 +4,45 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-
 const read = (relativePath) => readFile(path.join(repoRoot, relativePath), "utf8");
 
-const [
-  agents,
-  managerSkill,
-  devSkill,
-  readme,
-  packageReadme,
-  spec,
-  packageAgents,
-  packageManagerSkill,
-  packageDevSkill,
-  packageGuide
-] = await Promise.all([
-  read("AGENTS.md"),
-  read(".codex/skills/pjsdlc_manager/SKILL.md"),
-  read(".codex/skills/pjsdlc_dev_sprint/SKILL.md"),
+const [sourceAgents, rootReadme, packageReadme, spec, packageAgents, packageGuide, sourceMappings] = await Promise.all([
+  read(".codex/pjsdlc_managed/agents/AGENTS_CORE.md"),
   read("README.md"),
   read("packages/sdlc-harness/README.md"),
   read("PROJECT_SPEC.md"),
   read("packages/sdlc-harness/assets/agents/AGENTS_CORE.md"),
-  read("packages/sdlc-harness/assets/skills/pjsdlc_manager/SKILL.md"),
-  read("packages/sdlc-harness/assets/skills/pjsdlc_dev_sprint/SKILL.md"),
-  read("packages/sdlc-harness/assets/docs/README.md")
+  read("packages/sdlc-harness/assets/docs/README.md"),
+  read("packages/sdlc-harness/source-mappings.yaml")
 ]);
 
-for (const content of [agents, readme, packageReadme, spec, packageAgents, packageGuide]) {
-  assert.match(content, /orientation fast path/i);
+for (const content of [sourceAgents, rootReadme, packageReadme, spec, packageAgents, packageGuide]) {
+  assert.match(content, /Minimal Context Harness/);
+  assert.match(content, /project_context\/global\.md/);
 }
 
-assert.match(agents, /不要在开场运行 `make validate-\*`/);
-assert.match(agents, /“跑测试 \/ 验证一下”.*对应 gate/s);
-assert.match(agents, /`\/status`.*不自动运行阶段 gate/s);
-assert.match(agents, /`\/next`.*不自动等价 `\/advance`/s);
+for (const content of [sourceAgents, rootReadme, packageReadme, packageAgents, packageGuide]) {
+  assert.match(content, /Harness (?:maintains context quality|只维护上下文质量)/i);
+  assert.match(
+    content,
+    /(?:does not replace product tests|project tests.*(?:own|remain responsible for) product quality|不替项目证明产品质量|不替代产品测试)/i
+  );
+}
 
-assert.match(managerSkill, /`\/status`、`\/next`.*orientation fast path/s);
-assert.match(managerSkill, /`\/advance` 仍必须运行 `make validate-current`/);
-assert.match(managerSkill, /用户自然语言要求跑测试或验证时，运行当前 task 或当前阶段的对应 gate/);
+for (const content of [rootReadme, packageReadme, spec, packageGuide]) {
+  assert.match(content, /migrate-context --dry-run/);
+  assert.match(content, /sync.*(?:does not.*semantic|never.*generates|refreshes managed assets only|refreshes managed assets)/i);
+  assert.match(content, /upgrade.*migrate-context/s);
+}
 
-assert.match(devSkill, /开始编码前，先走 orientation fast path/);
-assert.match(devSkill, /尚未修改、尚未准备完成 task 时，不先运行 full gate/);
-assert.match(devSkill, /必须在完成当前 task 前运行当前 task 的 `required_gates`/);
+assert.match(spec, /Historical Iteration: Stage-Based SDLC Harness/);
+assert.match(spec, /Benchmark Findings And Convergence Reason/);
+assert.match(spec, /full document chains and frequent workflow gates add real time and token friction/i);
 
-assert.match(packageManagerSkill, /`\/status`、`\/next`.*orientation fast path/s);
-assert.match(packageDevSkill, /开始编码前，先走 orientation fast path/);
+assert.match(sourceMappings, /context_templates/);
+assert.match(sourceMappings, /minimal_tools/);
+assert.doesNotMatch(sourceMappings, /\.codex\/skills/);
+assert.doesNotMatch(sourceMappings, /assets\/skills/);
+
+assert.doesNotMatch(packageReadme, /Project initialization.*workflow skills/s);
+assert.doesNotMatch(packageReadme, /fresh lifecycle starts at/);

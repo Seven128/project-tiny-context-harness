@@ -23,6 +23,8 @@ Current release status 面向当前发布决策，必须说明版本、变更价
 
 发布阶段默认先评估是否适合并行 read-only preflight。适合时，主 Release Manager 使用 `parallel_execution.trigger: "workflow_default"` 和 `runtime.provider: "codex_native_subagents"` 调度 worker 分别检查 release notes、build artifacts、smoke evidence、known limitations 或 rollback risk；用户明确要求并行时使用 `trigger: "user_requested"`。RELEASING worker 必须 `writes_repo: false`，不得执行 publish、tag、push、delete、deploy 或生产变更；最终 `CURRENT_RELEASE.md`、发布结论和任何真实发布动作由主 Release Manager 负责。
 
+`Standard Thin` 不打薄 release boundary。发布准备内部可以先做 focused smoke、build artifact check 和 release doc preflight，但进入发布结论、tag/publish/deploy 前仍必须运行 release strict gate、记录 rollback plan 和 human confirmation items。若 package/source/managed asset、public CLI、validator 或 npm package 行为发生变化，还必须保留 package source sync/check 和对应 regression。
+
 ## 输入
 
 - `<harnessRoot>/state/plan.yaml`

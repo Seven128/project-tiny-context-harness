@@ -2,6 +2,7 @@ import { execFile } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import { readConfig } from "./config.js";
 import { harnessPath, harnessRoot } from "./harness-root.js";
 import { listFiles, pathExists, readText } from "./fs.js";
 import { parseYaml } from "./yaml.js";
@@ -519,6 +520,7 @@ const UI_DRAFT_TASK_TERMS = [
 ];
 
 const validators: Record<string, Validator> = {
+  "validate-context": validateContext,
   "validate-harness": validateHarness,
   "validate-current": validateCurrent,
   "validate-plan": validatePlan,
@@ -534,6 +536,10 @@ const validators: Record<string, Validator> = {
 
 export async function runValidator(projectRoot: string, gate: string): Promise<ValidatorReport> {
   const normalized = normalizeGate(gate);
+  const config = await readConfig(projectRoot);
+  if (normalized === "validate-harness" && config.core.schema_version === "3") {
+    return validateContext(projectRoot);
+  }
   const validator = validators[normalized];
   if (!validator) {
     return { info: [], errors: [`unknown validator: ${gate}`] };
@@ -543,6 +549,68 @@ export async function runValidator(projectRoot: string, gate: string): Promise<V
 
 function normalizeGate(gate: string): string {
   return gate.replace(/^make\s+/, "").trim();
+}
+
+async function validateContext(projectRoot: string): Promise<ValidatorReport> {
+  const errors: string[] = [];
+  const globalPath = path.join(projectRoot, "project_context", "global.md");
+  if (!(await pathExists(globalPath))) {
+    return { info: ["validate-context checked 0 context file(s)"], errors: ["missing project_context/global.md"] };
+  }
+
+  const globalText = await readText(globalPath);
+  const globalChecks: Array<[string, string[]]> = [
+    ["project goal", ["project goal", "项目目标", "目标"]],
+    ["non-goals or boundaries", ["non-goals", "non-goals / boundaries", "boundaries", "非目标", "边界"]],
+    ["design rationale", ["design rationale", "设计思路", "设计原因"]],
+    ["verification entry points", ["verification entry", "verification entry points", "验证入口", "测试入口"]],
+    ["current state", ["current state", "当前状态"]],
+    ["next safe action", ["next safe action", "下一步安全动作"]],
+    ["module index", ["module index", "模块索引"]]
+  ];
+  for (const [label, terms] of globalChecks) {
+    if (!containsAny(globalText, terms)) {
+      errors.push(`project_context/global.md must include ${label}`);
+    }
+  }
+  errors.push(...validateNoFakeContextEvidence("project_context/global.md", globalText));
+
+  const moduleFiles = (await markdownFiles(path.join(projectRoot, "project_context", "modules"))).filter(
+    (file) => !file.includes(`${path.sep}_migration${path.sep}`)
+  );
+  if (moduleFiles.length === 0) {
+    errors.push("No module context files found in project_context/modules/");
+  }
+  for (const file of moduleFiles) {
+    const relative = repoRelative(projectRoot, file);
+    const text = await readText(file);
+    const checks: Array<[string, string[]]> = [
+      ["responsibility", ["responsibility", "模块职责", "职责"]],
+      ["code entry points", ["code entry", "code entry points", "代码入口"]],
+      ["test entry points", ["test entry", "test entry points", "测试入口"]],
+      ["key constraints", ["key constraints", "关键约束", "约束"]]
+    ];
+    for (const [label, terms] of checks) {
+      if (!containsAny(text, terms)) {
+        errors.push(`${relative} must include ${label}`);
+      }
+    }
+    errors.push(...validateNoFakeContextEvidence(relative, text));
+  }
+
+  return { info: [`validate-context checked ${moduleFiles.length + 1} context file(s)`], errors };
+}
+
+function validateNoFakeContextEvidence(relative: string, text: string): string[] {
+  const lower = text.toLowerCase();
+  const claimsPass =
+    /(?:^|\n)\s*[-*]?\s*(?:npm test|pytest|go test|cargo test|make test|test-all)[^\n]*(?:pass|passed|通过)/i.test(text) ||
+    containsAny(lower, ["all tests passed", "tests pass", "全部测试通过"]);
+  const statesEntryOnly = containsAny(lower, ["verification entry", "验证入口", "test entry", "测试入口"]);
+  if (claimsPass && statesEntryOnly) {
+    return [`${relative} must list verification entry points without claiming tests were executed; keep test results in project test output or external evidence`];
+  }
+  return [];
 }
 
 async function validateHarness(projectRoot: string): Promise<ValidatorReport> {
@@ -2413,16 +2481,35 @@ function validateGateBreakdown(fullText: string, taskId: string, implementationD
 type SelfTestScenarioStatus = "PASS" | "BLOCKED" | "IN_PROGRESS" | "STALE" | "AMBIGUOUS";
 
 function scenarioStatus(text: string, scenarioId: string): SelfTestScenarioStatus | undefined {
-  const escaped = scenarioId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const pattern = new RegExp("^.*" + escaped + ".*$", "gim");
   const seen = new Set<SelfTestScenarioStatus>();
-  for (const match of text.matchAll(pattern)) {
-    const status = selfTestLineStatus(match[0]);
+  for (const line of text.split(/\r?\n/)) {
+    const status = inlineScenarioStatus(line, scenarioId);
     if (status === "AMBIGUOUS") return status;
     if (status) seen.add(status);
   }
+  for (const cells of markdownTableRows(text)) {
+    const [id, result] = cells;
+    if (id && normalizeCell(id) === scenarioId && result) {
+      const status = selfTestLineStatus(result);
+      if (status === "AMBIGUOUS") return status;
+      if (status) seen.add(status);
+    }
+  }
   if (seen.size > 1) return "AMBIGUOUS";
   return [...seen][0];
+}
+
+function inlineScenarioStatus(line: string, scenarioId: string): SelfTestScenarioStatus | undefined {
+  const escaped = scenarioId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const patterns = [
+    new RegExp(`^\\s*[-*]?\\s*Scenario Results?\\s*:\\s*.*\\b${escaped}\\b\\s+(.+)$`, "i"),
+    new RegExp(`^\\s*[-*]?\\s*${escaped}\\s*[:=-]\\s*(.+)$`, "i")
+  ];
+  for (const pattern of patterns) {
+    const match = line.match(pattern);
+    if (match) return selfTestLineStatus(match[1] ?? "");
+  }
+  return undefined;
 }
 
 function selfTestLineStatus(line: string): SelfTestScenarioStatus | undefined {
@@ -2458,7 +2545,7 @@ function validateScenarioTableEvidence(report: string, scenarioId: string, taskI
         errors.push(`${taskId} Development Self-Test Report scenario ${scenarioId} table ${label} must contain concrete evidence in ${implementationDoc}`);
       }
     }
-    const tableStatus = result ? scenarioStatus(`| ${cells.join(" | ")} |`, scenarioId) : undefined;
+    const tableStatus = result ? selfTestLineStatus(result) : undefined;
     if (tableStatus === "AMBIGUOUS") {
       errors.push(`${taskId} Development Self-Test Report scenario ${scenarioId} table Result must choose exactly one status in ${implementationDoc}`);
     } else if (tableStatus && tableStatus !== "PASS") {

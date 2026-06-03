@@ -11,19 +11,11 @@ on:
       gate:
         description: "Make target to run"
         required: true
-        default: "validate-harness"
+        default: "validate-context"
         type: choice
         options:
+          - validate-context
           - validate-harness
-          - validate-work-products-overviews
-          - validate-current
-          - validate-pm
-          - validate-design
-          - validate-dev
-          - validate-review
-          - validate-test
-          - validate-release
-          - validate-rfc
 
 jobs:
   harness:
@@ -43,5 +35,5 @@ jobs:
       - name: Run harness gate
         run: make "${HARNESS_GATE}"
         env:
-          HARNESS_GATE: ${{ github.event.inputs.gate || 'validate-harness' }}
+          HARNESS_GATE: ${{ github.event.inputs.gate || 'validate-context' }}
 # pjsdlc:sdlc-harness:github-workflow:end

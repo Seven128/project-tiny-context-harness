@@ -63,6 +63,14 @@
           { "path": "tests/**", "contains_all": ["API", "priority"] },
           { "path": "tests/**", "contains_any": ["UI", "browser", "smoke", "playwright"] }
         ]
+      },
+      {
+        "id": "AC-SUP-009",
+        "label": "Deterministic supportDesk smoke contract exists",
+        "evidence": [
+          { "path": "src/supportDesk.js", "contains_all": ["createSupportDesk", "listTickets", "renderListView", "renderKanbanView", "bulkAssign"] },
+          { "path": "README.md", "contains_any": ["supportDesk", "createSupportDesk", "smoke contract"] }
+        ]
       }
     ],
     "context_recovery": [
@@ -120,7 +128,7 @@
         "id": "RFC-SUP-002",
         "label": "API and UI ordering use the same policy",
         "evidence": [
-          { "path": "src/**", "contains_all": ["priorityScore", "kanban", "list"] },
+          { "path": "src/**", "contains_all": ["priorityScore", "kanban", "list", "renderListView", "renderKanbanView"] },
           { "path": "tests/**", "contains_any": ["ordering", "sort", "stale"] }
         ]
       },
@@ -137,7 +145,7 @@
         "label": "Debug evidence covers API/UI order or stale state mismatch",
         "evidence": [
           { "path": "tests/**", "contains_any": ["stale", "ordering", "API", "UI"] },
-          { "path": "README.md", "contains_any": ["Debug Fix", "stale", "ordering"] }
+          { "path": "README.md", "contains_any": ["Debug Fix", "stale", "ordering", "supportDesk"] }
         ]
       }
     ],

@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { runValidator } from "../../packages/sdlc-harness/dist/lib/validators.js";
 
 const root = await mkdtemp(path.join(tmpdir(), "sdlc-harness-validators-"));
+const contextRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-context-validator-"));
 const cliPath = fileURLToPath(new URL("../../packages/sdlc-harness/dist/cli.js", import.meta.url));
 const resumeCapsule = (taskId, canonicalPath, nextStep, lastPassedGate = "npm test") => `resume_capsule:
   task_id: ${taskId}
@@ -23,6 +24,92 @@ const resumeCapsule = (taskId, canonicalPath, nextStep, lastPassedGate = "npm te
 `;
 
 try {
+  await mkdir(path.join(contextRoot, "project_context/modules"), { recursive: true });
+  await writeFile(
+    path.join(contextRoot, "project_context/global.md"),
+    `# Project / Delivery Context
+
+## Project Goal
+
+- Validate Minimal Context Harness fixtures.
+
+## Non-goals / Boundaries
+
+- Do not replace product tests.
+
+## Background
+
+- This fixture checks context shape only.
+
+## Design Rationale
+
+- Minimal Context keeps only durable recovery facts.
+
+## Verification Entry Points
+
+- \`npm test\`
+
+## Current State
+
+- Fixture is ready for context validation.
+
+## Next Safe Action
+
+- Run the focused context validator.
+
+## Module Index
+
+- [main](modules/main.md)
+`,
+    "utf8"
+  );
+  await writeFile(
+    path.join(contextRoot, "project_context/modules/main.md"),
+    `# Module Context: main
+
+## Responsibility
+
+- Provide a validation fixture.
+
+## User / System Contract
+
+- The fixture exposes no public runtime.
+
+## Core Data / API / State
+
+- Context files are the only data.
+
+## Key Constraints
+
+- Verification entry points must not fake pass results.
+
+## Code Entry Points
+
+- \`src/index.js\`
+
+## Test Entry Points
+
+- \`npm test\`
+
+## Open Risks
+
+- None for this fixture.
+`,
+    "utf8"
+  );
+  let contextResult = await runValidator(contextRoot, "validate-context");
+  assert.deepEqual(contextResult.errors, []);
+  contextResult = await runValidator(contextRoot, "validate-harness");
+  assert.deepEqual(contextResult.errors, [], "validate-harness aliases validate-context for schema v3/default projects");
+
+  await writeFile(
+    path.join(contextRoot, "project_context/global.md"),
+    `${await readFile(path.join(contextRoot, "project_context/global.md"), "utf8")}\nAll tests passed.\n`,
+    "utf8"
+  );
+  contextResult = await runValidator(contextRoot, "validate-context");
+  assert.ok(contextResult.errors.some((error) => error.includes("must list verification entry points")));
+
   await writeFile(
     path.join(root, "package.json"),
     JSON.stringify({ sdlcHarness: { harnessFolderName: ".harness" } }, null, 2),
@@ -44,7 +131,7 @@ try {
   await mkdir(path.join(root, ".harness/pjsdlc_managed/policies"), { recursive: true });
   await writeFile(path.join(root, "AGENTS.md"), "# Agents\n", "utf8");
   await writeFile(path.join(root, ".work_products/INDEX.md"), "# Index\n.work_products/04_implementation/example/dev.md\n", "utf8");
-  await writeFile(path.join(root, ".harness/config.yaml"), "core:\n  package: x\n", "utf8");
+  await writeFile(path.join(root, ".harness/config.yaml"), 'core:\n  package: x\n  schema_version: "2"\n', "utf8");
   await writeFile(
     path.join(root, ".work_products/01_product/prd.md"),
     "# PRD\n\n## Acceptance Criteria\n\n## Out of Scope\n\n## Open Questions\n",
@@ -988,6 +1075,21 @@ tasks:
   assert.deepEqual(businessHandoffReadyDevReport.errors, [], "validate-dev accepts complete business handoff evidence");
 
   const completeBusinessReportText = await readFile(path.join(root, ".work_products/04_implementation/example/dev.md"), "utf8");
+  await writeFile(
+    path.join(root, ".work_products/04_implementation/example/dev.md"),
+    completeBusinessReportText.replace(
+      "- Module Key Test Path: local `npm test` -> ST-001 -> `https://agent.example.test/messages` runnable entry -> request validation, message handling and audit key path -> HTTP response and audit log.",
+      "- Module Key Test Path: local `npm test` -> ST-001 -> `https://agent.example.test/messages` runnable entry -> request validation, message handling, PASS output, and BLOCKED live-provider caveat -> HTTP response and audit log."
+    ),
+    "utf8"
+  );
+  const narrativeScenarioReferenceDevReport = await runValidator(root, "validate-dev");
+  assert.deepEqual(
+    narrativeScenarioReferenceDevReport.errors,
+    [],
+    "validate-dev ignores non-status narrative ST-* references when explicit scenario results pass"
+  );
+  await writeFile(path.join(root, ".work_products/04_implementation/example/dev.md"), completeBusinessReportText, "utf8");
   await writeFile(
     path.join(root, ".work_products/04_implementation/example/dev.md"),
     completeBusinessReportText.replace("- Report Status: PASS\n", ""),
@@ -2393,6 +2495,7 @@ tasks:
   devReport = await runValidator(root, "validate-dev");
   assert.match(devReport.errors.join("\n"), /parallel_execution must not define linked_task_id/);
 } finally {
+  await rm(contextRoot, { recursive: true, force: true });
   await rm(root, { recursive: true, force: true });
 }
 

@@ -1,83 +1,24 @@
 PYTHON ?= python3
 SDLC_HARNESS ?= npx sdlc-harness
 
-.PHONY: help status work-products-overview validate-work-products-overviews validate-harness validate-current validate-plan validate-pm validate-uiux validate-design validate-dev validate-review validate-test validate-release validate-rfc lint test-current-domain test-all build
+.PHONY: help validate-context validate-harness lint test-current-domain test-all build
 
 help:
-	@echo "AI SDLC Harness commands"
-	@echo "  make status              查看 lifecycle 和 task 状态"
-	@echo "  make work-products-overview       生成 .work_products 各阶段 overview.md 派生视图"
-	@echo "  make validate-work-products-overviews 校验 .work_products 各阶段 overview.md 是否最新"
-	@echo "  make validate-harness    校验 Harness 骨架、配置和提示词语言契约"
-	@echo "  make validate-current    运行当前 lifecycle phase 的 gate"
-	@echo "  make validate-plan       校验 plan.yaml task 合同，允许当前 open task"
-	@echo "  make validate-pm         校验产品需求产物"
-	@echo "  make validate-uiux       校验 UI/UX 体验事实源和 DESIGN.md"
-	@echo "  make validate-design     校验架构设计、技术方案和任务草案"
-	@echo "  make validate-dev        校验 sprint 任务状态、draft 消费、路径、代码 gate 和实现文档"
-	@echo "  make validate-review     校验 Review report"
-	@echo "  make validate-test       校验 TEST_REPORT 执行证据和测试阶段边界"
-	@echo "  make validate-release    校验 current release status、smoke result 和 rollback plan"
-	@echo "  make validate-rfc        校验 RFC 产物并运行完整回归入口"
+	@echo "Minimal Context Harness commands"
+	@echo "  make validate-context    校验 project_context/** 是否足够支持上下文恢复"
+	@echo "  make validate-harness    兼容别名，等价 validate-context"
+	@echo "  make test-all            运行项目自己的完整测试入口（请按项目替换）"
 
-status:
-	$(PYTHON) tools/status.py
+validate-context:
+	$(SDLC_HARNESS) validate-context
 
-work-products-overview:
-	$(PYTHON) tools/build_work_product_overviews.py --all
-
-validate-work-products-overviews:
-	$(PYTHON) tools/build_work_product_overviews.py --all --check
-
-validate-harness:
-	$(PYTHON) tools/validate_harness.py
-	$(PYTHON) tools/validate_prompt_language.py
-	$(PYTHON) tools/build_work_product_overviews.py --all --check
-
-validate-current:
-	$(PYTHON) tools/run_current_gate.py
-
-validate-plan:
-	$(PYTHON) tools/validate_plan.py --allow-open
-	$(PYTHON) tools/validate_allowed_paths.py
-
-validate-pm:
-	test -f .work_products/INDEX.md
-	$(PYTHON) tools/validate_prd.py
-
-validate-uiux:
-	$(PYTHON) tools/validate_uiux_design.py
-
-validate-design:
-	$(PYTHON) tools/validate_design.py
-	$(PYTHON) tools/validate_plan_draft.py
-
-validate-dev:
-	$(SDLC_HARNESS) validate-dev
-	$(MAKE) lint
-	$(MAKE) test-current-domain
-
-validate-review:
-	test -f .work_products/06_review/REVIEW_REPORT.md
-	$(PYTHON) tools/validate_review.py
-
-validate-test:
-	$(MAKE) test-all
-	$(PYTHON) tools/validate_test_plan.py
-
-validate-release:
-	$(MAKE) build
-	$(PYTHON) tools/validate_release_plan.py
-
-validate-rfc:
-	$(PYTHON) tools/validate_rfc.py
-	$(MAKE) test-all
+validate-harness: validate-context
 
 lint:
 	@echo "No project lint command configured yet. Replace this target with your stack-specific lint command."
 
 test-current-domain:
-	@echo "No domain test command configured yet. Replace this target with focused tests for current_task_id."
+	@echo "No domain test command configured yet. Replace this target with focused tests for the current change."
 
 test-all:
 	@echo "No full test command configured yet. Replace this target with the project regression suite."

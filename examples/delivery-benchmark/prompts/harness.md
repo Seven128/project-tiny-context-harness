@@ -1,24 +1,24 @@
 # Harness Prompt
 
-You are building this product with AI SDLC Harness.
+You are building this product with Minimal Context Harness.
 
 Rules:
 
-- Start from a fresh repo and run `npx sdlc-harness init`.
-- Follow lifecycle, `plan.yaml`, workflow skills, `.work_products/**` facts, gates and transition rules.
-- Execute all phases needed for the scenario: requirements, UI/UX if applicable, architecture, development, review, testing, release readiness and RFC/bugfix/BLOCKED routes when triggered.
-- Keep the active task small. Do not leave completed tasks in `plan.yaml`.
-- Use the scenario Gate Profile to select the smallest necessary gates for the current boundary.
-- Do not turn initial orientation into full validation; inspect state and facts first, then run gates only when they prove a task or phase boundary.
+- Start from the prepared fresh git repo in the current run directory. For warm benchmark runs, Harness is already initialized and committed before the observer starts; do not run `npx sdlc-harness init` inside the measured delivery window.
+- If the prepared run is missing `project_context/global.md`, stop and report `BLOCKED`; do not create an alternate fallback context root in a formal run.
+- Maintain context quality in `project_context/**`. Harness does not replace product tests, smoke checks, hidden probes or human acceptance.
+- During `INITIAL_DELIVERY`, implement the requested product behavior and update only the minimum `project_context/global.md` and `project_context/modules/*.md` facts needed for a fresh agent to recover goal, boundaries, design rationale, code entry points, test entry points, current state and next safe action.
+- Do not create lifecycle phase state, `plan.yaml`, PRD, UX, architecture, implementation docs, review reports, test reports, release docs or RFC docs unless a later staged prompt explicitly asks for a temporary working note.
+- Use the scenario Gate Profile to select the smallest necessary product/domain gates for the current boundary.
+- Run `make validate-context` before handoff when Context changed.
 - Package source sync/check, workspace full regression and consumer-lab validation are out of scope unless package source or managed assets changed.
-- External observer evidence records elapsed benchmark time. Use `delivery_benchmark.mjs record` only for semantic workflow-control labels such as `sync`, `upgrade`, `transition.py`, `validate-*`, overview/source drift and workflow orientation.
-- Time gate commands with `timer-start` / `timer-stop` using `phase GATE` or `event gate:<name>` so the pilot can explain where gate cost came from.
-- Do not count PRD, UX, architecture, test cases, implementation docs or release evidence as workflow control cost.
-- When the midstream change is introduced, use the workflow route required by the current phase.
+- The benchmark operator owns observer, timer, intervention and gate-value recording. Do not call benchmark observer/timer/intervention/gate-record commands unless the operator explicitly asks you to.
+- When you run a product gate, report the command and result in your normal response so the operator can record cost and value outside the measured agent prompt.
+- When the midstream change is introduced, update product code/tests and the minimum affected Context facts.
 - At the recovery checkpoint, a fresh Agent must inspect only the repository and continue without chat history.
 
 Quality bar:
 
-- Review-ready: requirement and design facts are traceable.
-- Testing-ready: test cases/report consume the implemented runnable entrypoints.
-- Handoff-ready: lifecycle, plan, implementation docs, runbooks and evidence refs explain current state and next action.
+- Product quality: project tests, smoke checks, hidden probes or human acceptance prove behavior.
+- Context quality: `project_context/**` lets a fresh agent quickly recover project goal, module boundaries, verification entry points, current state and next safe action.
+- Handoff-ready: code/tests plus Minimal Context explain what exists, how to verify it and what to do safely next.

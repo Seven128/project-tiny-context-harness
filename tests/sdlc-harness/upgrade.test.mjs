@@ -1,20 +1,11 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, writeFile, mkdir } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { runInit } from "../../packages/sdlc-harness/dist/lib/init.js";
 import { runUpgrade } from "../../packages/sdlc-harness/dist/lib/upgrade.js";
 
-const root = await mkdtemp(path.join(tmpdir(), "sdlc-harness-upgrade-"));
-const rootsToRemove = [root];
-
-function stripWorkflowMarkers(content) {
-  return content
-    .split(/\r?\n/)
-    .filter((line) => !line.includes("pjsdlc:sdlc-harness:github-workflow:"))
-    .join("\n");
-}
+const root = await mkdtemp(path.join(tmpdir(), "sdlc-harness-upgrade-minimal-"));
 
 try {
   await writeFile(
@@ -23,304 +14,52 @@ try {
     "utf8"
   );
   await runInit(root, { adopt: true, force: false });
-  await rm(path.join(root, ".harness/state/memory.md"), { force: true });
-  const packageWorkflow = await readFile(
-    fileURLToPath(new URL("../../packages/sdlc-harness/assets/github/harness.yml", import.meta.url)),
-    "utf8"
-  );
-  await writeFile(path.join(root, ".github/workflows/harness.yml"), stripWorkflowMarkers(packageWorkflow), "utf8");
+
+  await mkdir(path.join(root, ".work_products/01_product"), { recursive: true });
   await mkdir(path.join(root, ".harness/state"), { recursive: true });
+  await writeFile(path.join(root, ".work_products/01_product/prd.md"), "# Legacy PRD\n", "utf8");
+  await writeFile(path.join(root, ".harness/state/lifecycle.yaml"), 'current_phase: "SPRINTING"\n', "utf8");
+  await rm(path.join(root, "project_context"), { recursive: true, force: true });
   await writeFile(
     path.join(root, ".harness/config.yaml"),
     `core:
   package: "agent-project-sdlc"
-  version: "0.1.0"
   schema_version: "1"
 managed_files:
   - path: "AGENTS.md"
     strategy: "merge-block"
-  - path: ".agents/skills"
-    strategy: "generated"
-  - path: ".harness/templates"
+  - path: ".harness/skills"
     strategy: "managed"
-  - path: ".harness/policies"
-    strategy: "merge-with-local"
-  - path: ".harness/make/sdlc-harness.mk"
+  - path: ".harness/pjsdlc_managed/templates"
     strategy: "managed"
-local_overrides:
-  - ".harness/overrides/**"
-  - ".harness/policies/*.local.yaml"
 never_overwrite:
   - ".work_products/**"
   - ".harness/state/**"
 `,
     "utf8"
   );
-  await mkdir(path.join(root, "tools"), { recursive: true });
-  await writeFile(path.join(root, "tools/transition.py"), "# stale transition helper\n", "utf8");
-  await writeFile(
-    path.join(root, ".harness/state/plan.yaml"),
-    `current_phase: "SPRINTING"
-current_task_id: DEV-002
-parallel_execution:
-  enabled: true
-  trigger: user_requested
-  mode: user_orchestrated
-  phase: SPRINTING
-  coordinator: main_agent
-  linked_task_id: DEV-002
-  workers:
-    - id: worker-feature
-      writes_repo: false
-      owned_paths: []
-      forbidden_paths: []
-      expected_output:
-        - "legacy notes"
-      required_gates:
-        - "main review"
-  integration:
-    owner: main_agent
-    merge_strategy: "main agent integrates"
-    required_gates:
-      - "validate-dev"
-    fact_source_updates:
-      - ".work_products/04_implementation/"
-tasks:
-  - id: DEV-001
-    title: Completed legacy task
-    status: done
-    summary: Done task should leave current plan
-    implementation_work_product: .work_products/04_implementation/legacy/dev_001.md
-  - id: DEV-002
-    title: Open legacy task
-    status: pending
-    summary: Open task should stay in current plan
-    gate_result: PASS
-    implementation_work_product: .work_products/04_implementation/legacy/dev_002.md
-`,
-    "utf8"
-  );
-  await writeFile(
-    path.join(root, ".harness/state/tasks.draft.yaml"),
-    `current_phase: "SPRINTING"
-current_task_id: DEV-003
-tasks: []
-`,
-    "utf8"
-  );
-  await writeFile(path.join(root, ".harness/state/gate_results.log"), "legacy gate evidence\n", "utf8");
-  await writeFile(
-    path.join(root, ".harness/state/lifecycle.yaml"),
-    `current_phase: "REQUIREMENT_GATHERING"
-active_skill: "pm_prd"
-history:
-  - phase: "IDLE"
-    note: "legacy phase history should be removed"
-`,
-    "utf8"
-  );
-  await rm(path.join(root, ".harness/pjsdlc_managed"), { recursive: true, force: true });
-  await mkdir(path.join(root, ".harness/managed/policies"), { recursive: true });
-  await writeFile(path.join(root, ".harness/managed/policies/custom.local.yaml"), "custom: true\n", "utf8");
-  await mkdir(path.join(root, ".harness/overrides/skills"), { recursive: true });
-  await writeFile(
-    path.join(root, ".harness/overrides/skills/pjsdlc_dev_sprint.md"),
-    "升级后的开发阶段仍保留本地提示词。\n",
-    "utf8"
-  );
 
   const report = await runUpgrade(root);
   assert.ok(report.some((line) => line.startsWith("migrations changed=")));
   assert.ok(report.some((line) => line.startsWith("sync changed=")));
+  assert.ok(report.some((line) => line.includes("migrate-context --dry-run")));
 
-  const plan = await readFile(path.join(root, ".harness/state/plan.yaml"), "utf8");
-  assert.doesNotMatch(plan, /current_phase/);
-  assert.match(plan, /current_task_id/);
-  assert.doesNotMatch(plan, /phase: SPRINTING/);
-  assert.doesNotMatch(plan, /linked_task_id/);
-  assert.match(plan, /id: DEV-002/);
-  assert.match(plan, /next_task_sequence: 3/);
-  assert.doesNotMatch(plan, /DEV-001/);
-  assert.doesNotMatch(plan, /gate_result/);
-  await assert.rejects(readFile(path.join(root, ".harness/state/gate_results.log"), "utf8"));
-  const draft = await readFile(path.join(root, ".harness/state/plan.draft.yaml"), "utf8");
-  assert.doesNotMatch(draft, /current_phase/);
-  assert.doesNotMatch(draft, /current_task_id/);
+  await assert.rejects(stat(path.join(root, "project_context/global.md")));
+  await stat(path.join(root, ".work_products/01_product/prd.md"));
+  await stat(path.join(root, ".harness/state/lifecycle.yaml"));
 
   const config = await readFile(path.join(root, ".harness/config.yaml"), "utf8");
-  assert.doesNotMatch(config, /^\s*version:/m);
-  assert.match(config, /\.harness\/skills/);
-  assert.doesNotMatch(config, /\.harness\/prompts/);
-  assert.match(config, /path: "?Makefile"?/);
-  assert.doesNotMatch(config, /\.harness\/agents\/skills/);
-  assert.doesNotMatch(config, /\.agents\/skills/);
-  assert.match(config, /\.harness\/pjsdlc_managed\/templates/);
-  assert.match(config, /\.harness\/pjsdlc_managed\/policies/);
-  assert.match(config, /path: "?tools"?/);
-  assert.match(config, /\.harness\/pjsdlc_managed\/override_skills\/\*\.md/);
-  assert.doesNotMatch(config, /\.harness\/overrides\/\*\*/);
-  assert.doesNotMatch(config, /\.harness\/managed\/templates/);
-  assert.doesNotMatch(config, /\.harness\/managed\/policies/);
-  const localOverride = await readFile(path.join(root, ".harness/pjsdlc_managed/policies/custom.local.yaml"), "utf8");
-  assert.match(localOverride, /custom: true/);
-  await assert.rejects(readFile(path.join(root, ".harness/managed/policies/custom.local.yaml"), "utf8"));
-  const skillOverride = await readFile(path.join(root, ".harness/pjsdlc_managed/override_skills/pjsdlc_dev_sprint.md"), "utf8");
-  assert.match(skillOverride, /升级后的开发阶段仍保留本地提示词。/);
-  await assert.rejects(readFile(path.join(root, ".harness/overrides/skills/pjsdlc_dev_sprint.md"), "utf8"));
-  const generatedDevSkill = await readFile(path.join(root, ".harness/skills/pjsdlc_dev_sprint/SKILL.md"), "utf8");
-  assert.match(generatedDevSkill, /\.harness\/pjsdlc_managed\/override_skills\/pjsdlc_dev_sprint\.md/);
-  assert.match(generatedDevSkill, /升级后的开发阶段仍保留本地提示词。/);
+  assert.match(config, /schema_version: "3"/);
+  assert.match(config, /\.harness\/pjsdlc_managed\/context_templates/);
+  assert.match(config, /project_context\/\*\*/);
+  assert.doesNotMatch(config, /\.harness\/skills/);
+  assert.doesNotMatch(config, /\.harness\/pjsdlc_managed\/templates/);
 
+  const agents = await readFile(path.join(root, "AGENTS.md"), "utf8");
+  assert.match(agents, /Minimal Context Harness/);
   const makefile = await readFile(path.join(root, "Makefile"), "utf8");
-  assert.match(makefile, /pjsdlc:sdlc-harness:make:begin/);
   assert.match(makefile, /-include \.harness\/pjsdlc_managed\/make\/sdlc-harness\.mk/);
-  const transitionTool = await readFile(path.join(root, "tools/transition.py"), "utf8");
-  assert.match(transitionTool, /phase_transition_targets/);
-  assert.doesNotMatch(transitionTool, /stale transition helper/);
-  const phaseContracts = await readFile(path.join(root, ".harness/pjsdlc_managed/policies/phase_contracts.yaml"), "utf8");
-  assert.match(phaseContracts, /^transitions:/m);
-  assert.match(phaseContracts, /to: "RFC_RECALIBRATION"/);
-  assert.doesNotMatch(phaseContracts, /^\s+next:/m);
-  assert.doesNotMatch(phaseContracts, /^\s+returns:/m);
-
-  const lifecycle = await readFile(path.join(root, ".harness/state/lifecycle.yaml"), "utf8");
-  assert.match(lifecycle, /active_skill: "?pjsdlc_pm_prd"?/);
-  assert.doesNotMatch(lifecycle, /active_prompt/);
-  assert.doesNotMatch(lifecycle, /active_skill: "pm_prd"/);
-  assert.doesNotMatch(lifecycle, /history:/);
-  assert.doesNotMatch(lifecycle, /legacy phase history/);
-  const memory = await readFile(path.join(root, ".harness/state/memory.md"), "utf8");
-  assert.match(memory, /## Harness Guidance/);
-  assert.match(memory, /简短摘要和链接/);
-  assert.match(memory, /\.work_products\/05_decisions\//);
-  assert.match(memory, /正式 `\.work_products\/\*\*` 事实源/);
-  const migratedWorkflow = await readFile(path.join(root, ".github/workflows/harness.yml"), "utf8");
-  assert.match(migratedWorkflow, /pjsdlc:sdlc-harness:github-workflow:begin/);
-
-  const legacyMemoryRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-legacy-memory-"));
-  rootsToRemove.push(legacyMemoryRoot);
-  await runInit(legacyMemoryRoot, { adopt: true, force: false });
-  await writeFile(
-    path.join(legacyMemoryRoot, ".agent/state/memory.md"),
-    [
-      "# Project Memory",
-      "",
-      "短期执行计划写入 plan.yaml；长期稳定知识只在这里记录简短摘要和链接。完整决策背景、备选方案、取舍和后果写入 `.work_products/05_decisions/` ADR 或其它 `.work_products/**` 正式事实源。",
-      "",
-      "## Project Notes",
-      "",
-      "- 保留用户自己的 memory 条目。"
-    ].join("\n"),
-    "utf8"
-  );
-  await runUpgrade(legacyMemoryRoot);
-  const legacyMemory = await readFile(path.join(legacyMemoryRoot, ".agent/state/memory.md"), "utf8");
-  assert.equal(legacyMemory.match(/## Harness Guidance/g).length, 1);
-  assert.doesNotMatch(legacyMemory, /短期执行计划写入 plan\.yaml/);
-  assert.match(legacyMemory, /保留用户自己的 memory 条目/);
-
-  const customMemoryRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-custom-memory-"));
-  rootsToRemove.push(customMemoryRoot);
-  await runInit(customMemoryRoot, { adopt: true, force: false });
-  await writeFile(
-    path.join(customMemoryRoot, ".agent/state/memory.md"),
-    "# Project Memory\n\n## Project Notes\n\n- 本项目自定义事实保留。\n",
-    "utf8"
-  );
-  await runUpgrade(customMemoryRoot);
-  const customMemory = await readFile(path.join(customMemoryRoot, ".agent/state/memory.md"), "utf8");
-  assert.match(customMemory, /## Harness Guidance/);
-  assert.match(customMemory, /本项目自定义事实保留/);
-
-  const customWorkflowRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-custom-workflow-"));
-  rootsToRemove.push(customWorkflowRoot);
-  await runInit(customWorkflowRoot, { adopt: true, force: false });
-  const customWorkflow = "name: Custom Harness\n\non: workflow_dispatch\n\njobs: {}\n";
-  await writeFile(path.join(customWorkflowRoot, ".github/workflows/harness.yml"), customWorkflow, "utf8");
-  const customWorkflowReport = await runUpgrade(customWorkflowRoot);
-  assert.ok(customWorkflowReport.some((line) => line.includes("sync skipped: .github/workflows/harness.yml: customized")));
-  assert.equal(await readFile(path.join(customWorkflowRoot, ".github/workflows/harness.yml"), "utf8"), customWorkflow);
-
-  const legacyDocsRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-legacy-docs-"));
-  rootsToRemove.push(legacyDocsRoot);
-  await runInit(legacyDocsRoot, { adopt: true, force: false });
-  await rm(path.join(legacyDocsRoot, ".work_products"), { recursive: true, force: true });
-  await mkdir(path.join(legacyDocsRoot, ".docs/01_product"), { recursive: true });
-  await writeFile(
-    path.join(legacyDocsRoot, ".docs/01_product/prd.md"),
-    "# PRD\n\nSource: .docs/01_product/prd.md\n\nRun `make docs-overview` before handoff.\n",
-    "utf8"
-  );
-  await writeFile(
-    path.join(legacyDocsRoot, ".agent/state/plan.yaml"),
-    `current_task_id: TASK-001
-tasks:
-  - id: TASK-001
-    title: Legacy docs fields
-    status: pending
-    summary: Legacy task should migrate field names and paths.
-    phase: REQUIREMENT_GATHERING
-    docs:
-      product:
-        - .docs/01_product/prd.md
-    allowed_paths:
-      - .docs/01_product/**
-    required_gates:
-      - make validate-pm
-    acceptance_criteria:
-      - Old docs root is migrated.
-    result_docs:
-      - .docs/01_product/prd.md
-`,
-    "utf8"
-  );
-  await writeFile(
-    path.join(legacyDocsRoot, ".agent/state/plan.draft.yaml"),
-    `tasks:
-  - id: TASK-002
-    title: Legacy implementation field
-    status: pending
-    summary: Draft task should migrate implementation_doc.
-    phase: SPRINTING
-    docs:
-      tech_plan:
-        - .docs/03_tech_plan/plan.md
-    allowed_paths:
-      - src/**
-    required_gates:
-      - npm test
-    acceptance_criteria:
-      - Implementation field is migrated.
-    implementation_doc: .docs/04_implementation/example.md
-`,
-    "utf8"
-  );
-  await runUpgrade(legacyDocsRoot);
-  await assert.rejects(readFile(path.join(legacyDocsRoot, ".docs/01_product/prd.md"), "utf8"));
-  const migratedPrd = await readFile(path.join(legacyDocsRoot, ".work_products/01_product/prd.md"), "utf8");
-  assert.match(migratedPrd, /\.work_products\/01_product\/prd\.md/);
-  assert.match(migratedPrd, /make work-products-overview/);
-  const migratedPlan = await readFile(path.join(legacyDocsRoot, ".agent/state/plan.yaml"), "utf8");
-  assert.match(migratedPlan, /work_products:/);
-  assert.match(migratedPlan, /result_work_products:/);
-  assert.doesNotMatch(migratedPlan, /\.docs/);
-  assert.doesNotMatch(migratedPlan, /(^|\n)\s*docs:/);
-  assert.doesNotMatch(migratedPlan, /result_docs/);
-  const migratedDraft = await readFile(path.join(legacyDocsRoot, ".agent/state/plan.draft.yaml"), "utf8");
-  assert.match(migratedDraft, /work_products:/);
-  assert.match(migratedDraft, /implementation_work_product:/);
-  assert.doesNotMatch(migratedDraft, /\.docs/);
-  assert.doesNotMatch(migratedDraft, /implementation_doc/);
-
-  const conflictingDocsRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-conflicting-docs-"));
-  rootsToRemove.push(conflictingDocsRoot);
-  await runInit(conflictingDocsRoot, { adopt: true, force: false });
-  await mkdir(path.join(conflictingDocsRoot, ".docs/01_product"), { recursive: true });
-  await writeFile(path.join(conflictingDocsRoot, ".docs/01_product/prd.md"), "# Legacy PRD\n", "utf8");
-  await assert.rejects(
-    runUpgrade(conflictingDocsRoot),
-    /Both \.docs and \.work_products exist and \.docs contains user content/
-  );
+  await stat(path.join(root, ".harness/pjsdlc_managed/context_templates/global.md"));
 } finally {
-  await Promise.all(rootsToRemove.map((item) => rm(item, { recursive: true, force: true })));
+  await rm(root, { recursive: true, force: true });
 }

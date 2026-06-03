@@ -7,385 +7,158 @@ import { fileURLToPath } from "node:url";
 import { resolveAgentHarnessFolderName } from "../../packages/sdlc-harness/dist/commands/init.js";
 import { runDoctor } from "../../packages/sdlc-harness/dist/lib/doctor.js";
 import { runInit } from "../../packages/sdlc-harness/dist/lib/init.js";
+import { runContextMigration } from "../../packages/sdlc-harness/dist/lib/context-migration.js";
 import { runSync } from "../../packages/sdlc-harness/dist/lib/sync-engine.js";
 
-const defaultRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-default-"));
-const freshRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-fresh-"));
-const configuredRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-configured-"));
-const cliFreshRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-cli-fresh-"));
-const cliDefaultRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-cli-default-"));
-const cliConfiguredRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-cli-configured-"));
-const cliConfiguredCamelRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-cli-configured-camel-"));
-const cliExistingConfigRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-cli-existing-"));
-const makefileMergeRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-makefile-merge-"));
-const brokenMarkerRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-broken-marker-"));
-const unknownSkillOverrideRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-unknown-skill-override-"));
-const fullSkillOverrideRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-full-skill-override-"));
-const mismatchedSkillOverrideRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-mismatched-skill-override-"));
+const root = await mkdtemp(path.join(tmpdir(), "sdlc-harness-minimal-"));
+const configuredRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-minimal-configured-"));
+const migrationRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-minimal-migration-"));
+const gitkeepMigrationRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-gitkeep-migration-"));
+const existingContextMigrationRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-existing-context-migration-"));
+const cliRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-minimal-cli-"));
 const cliPath = fileURLToPath(new URL("../../packages/sdlc-harness/dist/cli.js", import.meta.url));
 
 try {
-  const initReport = await runInit(defaultRoot, { adopt: true, force: false });
-  assert.ok(initReport.some((line) => line.includes("created .agent/config.yaml")));
   assert.equal(resolveAgentHarnessFolderName(""), ".codex");
   assert.equal(resolveAgentHarnessFolderName("2"), ".claude");
   assert.equal(resolveAgentHarnessFolderName("cursor"), ".cursor");
   assert.equal(resolveAgentHarnessFolderName("other"), ".agent");
   assert.equal(resolveAgentHarnessFolderName("other", ".workflow"), ".workflow");
 
-  const freshReport = await runInit(freshRoot, { adopt: false, force: false });
-  assert.ok(freshReport.some((line) => line.includes("created .agent/config.yaml")));
-  const freshLifecycle = await readFile(path.join(freshRoot, ".agent/state/lifecycle.yaml"), "utf8");
-  assert.match(freshLifecycle, /current_phase: "REQUIREMENT_GATHERING"/);
-  assert.match(freshLifecycle, /active_role: "product_manager"/);
-  assert.match(freshLifecycle, /active_skill: "pjsdlc_pm_prd"/);
-  assert.match(freshLifecycle, /  - "UI_UX_DESIGNING"/);
-  assert.match(freshLifecycle, /  - "BLOCKED"/);
-  assert.doesNotMatch(freshLifecycle, /  - "REVIEWING"/);
+  const initReport = await runInit(root, { adopt: false, force: false });
+  assert.ok(initReport.some((line) => line.includes("created .agent/config.yaml")));
+  assert.ok(initReport.some((line) => line.includes("created project_context/global.md")));
+  assert.ok(initReport.some((line) => line.includes("created project_context/modules/main.md")));
 
-  const defaultConfig = await readFile(path.join(defaultRoot, ".agent/config.yaml"), "utf8");
-  assert.match(defaultConfig, /agent-project-sdlc/);
-  assert.match(defaultConfig, /\.agent\/pjsdlc_managed\/override_skills\/\*\.md/);
-  assert.match(defaultConfig, /path: "?tools"?/);
-  assert.doesNotMatch(defaultConfig, /\.agent\/overrides\/\*\*/);
-  const packageMetadata = JSON.parse(await readFile(path.join(path.dirname(cliPath), "..", "package.json"), "utf8"));
-  assert.doesNotMatch(defaultConfig, /^\s*version:/m);
-  const defaultLifecycle = await readFile(path.join(defaultRoot, ".agent/state/lifecycle.yaml"), "utf8");
-  assert.match(defaultLifecycle, /current_phase: "SPRINTING"/);
-  assert.match(defaultLifecycle, /active_role: "developer"/);
-  assert.match(defaultLifecycle, /active_skill: "pjsdlc_dev_sprint"/);
-  assert.match(defaultLifecycle, /  - "REVIEWING"/);
-  assert.match(defaultLifecycle, /  - "RFC_RECALIBRATION"/);
-  assert.match(defaultLifecycle, /  - "BLOCKED"/);
-  assert.doesNotMatch(defaultLifecycle, /history:/);
-  const defaultPlan = await readFile(path.join(defaultRoot, ".agent/state/plan.yaml"), "utf8");
-  assert.doesNotMatch(defaultPlan, /current_phase/);
-  assert.match(defaultPlan, /current_task_id: ""/);
-  const defaultDraft = await readFile(path.join(defaultRoot, ".agent/state/plan.draft.yaml"), "utf8");
-  assert.doesNotMatch(defaultDraft, /current_phase/);
-  assert.doesNotMatch(defaultDraft, /current_task_id/);
-  const defaultMemory = await readFile(path.join(defaultRoot, ".agent/state/memory.md"), "utf8");
-  assert.match(defaultMemory, /## Harness Guidance/);
-  assert.match(defaultMemory, /简短摘要和链接/);
-  assert.match(defaultMemory, /\.work_products\/05_decisions\//);
-  assert.match(defaultMemory, /正式 `\.work_products\/\*\*` 事实源/);
-  const defaultIndex = await readFile(path.join(defaultRoot, ".work_products/INDEX.md"), "utf8");
-  assert.match(defaultIndex, /## Harness Maintenance Rules/);
-  assert.match(defaultIndex, /Markdown slices 和 `.work_products\/INDEX\.md` 是事实源/);
-  await stat(path.join(defaultRoot, ".work_products/02_experience"));
-  await assert.rejects(stat(path.join(defaultRoot, ".docs")));
-  await assert.rejects(stat(path.join(defaultRoot, ".agent/state/gate_results.log")));
+  const config = await readFile(path.join(root, ".agent/config.yaml"), "utf8");
+  assert.match(config, /schema_version: "3"/);
+  assert.match(config, /project_context\/\*\*/);
+  assert.match(config, /\.agent\/pjsdlc_managed\/context_templates/);
+  assert.doesNotMatch(config, /skills/);
+  assert.doesNotMatch(config, /\.agent\/pjsdlc_managed\/templates/);
+  assert.doesNotMatch(config, /\.agent\/pjsdlc_managed\/policies/);
 
-  const defaultAgents = await readFile(path.join(defaultRoot, "AGENTS.md"), "utf8");
-  assert.match(defaultAgents, /pjsdlc:sdlc-harness:begin/);
-  const defaultMakefile = await readFile(path.join(defaultRoot, "Makefile"), "utf8");
-  assert.match(defaultMakefile, /pjsdlc:sdlc-harness:make:begin/);
-  assert.match(defaultMakefile, /-include \.agent\/pjsdlc_managed\/make\/sdlc-harness\.mk/);
-  const defaultWorkflow = await readFile(path.join(defaultRoot, ".github/workflows/harness.yml"), "utf8");
-  assert.match(defaultWorkflow, /pjsdlc:sdlc-harness:github-workflow:begin/);
+  const globalContext = await readFile(path.join(root, "project_context/global.md"), "utf8");
+  assert.match(globalContext, /## Project Goal/);
+  assert.match(globalContext, /## Verification Entry Points/);
+  assert.match(globalContext, /## Next Safe Action/);
+  const moduleContext = await readFile(path.join(root, "project_context/modules/main.md"), "utf8");
+  assert.match(moduleContext, /## Responsibility/);
+  assert.match(moduleContext, /## Code Entry Points/);
+  assert.match(moduleContext, /## Test Entry Points/);
 
-  const defaultSyncReport = await runSync(defaultRoot);
-  assert.equal(defaultSyncReport.blocked.length, 0);
-  await stat(path.join(defaultRoot, ".agent/skills/pjsdlc_manager/SKILL.md"));
-  await stat(path.join(defaultRoot, ".agent/skills/pjsdlc_uiux_design/SKILL.md"));
-  await stat(path.join(defaultRoot, ".agent/pjsdlc_managed/templates/PLAN_TEMPLATE.yaml"));
-  await stat(path.join(defaultRoot, ".agent/pjsdlc_managed/templates/UI_UX_DESIGN_TEMPLATE.md"));
-  await stat(path.join(defaultRoot, ".agent/pjsdlc_managed/policies/phase_contracts.yaml"));
-  const defaultPhaseContracts = await readFile(path.join(defaultRoot, ".agent/pjsdlc_managed/policies/phase_contracts.yaml"), "utf8");
-  assert.match(defaultPhaseContracts, /UI_UX_DESIGNING/);
-  assert.match(defaultPhaseContracts, /pjsdlc_uiux_design/);
-  assert.match(defaultPhaseContracts, /^transitions:/m);
-  assert.match(defaultPhaseContracts, /to: "UI_UX_DESIGNING"/);
-  assert.match(defaultPhaseContracts, /to: "RFC_RECALIBRATION"/);
-  assert.doesNotMatch(defaultPhaseContracts, /^\s+next:/m);
-  assert.doesNotMatch(defaultPhaseContracts, /^\s+returns:/m);
-  const defaultTransition = await readFile(path.join(defaultRoot, "tools/transition.py"), "utf8");
-  assert.match(defaultTransition, /phase_transition_targets/);
-  await writeFile(path.join(defaultRoot, "tools/transition.py"), "# stale transition\n", "utf8");
-  const staleToolSyncReport = await runSync(defaultRoot);
-  assert.equal(staleToolSyncReport.blocked.length, 0);
-  const refreshedTransition = await readFile(path.join(defaultRoot, "tools/transition.py"), "utf8");
-  assert.match(refreshedTransition, /phase_transition_targets/);
-  assert.doesNotMatch(refreshedTransition, /stale transition/);
-  await assert.rejects(stat(path.join(defaultRoot, ".agent/managed/templates/PLAN_TEMPLATE.yaml")));
-  await assert.rejects(stat(path.join(defaultRoot, ".agent/managed/policies/phase_contracts.yaml")));
-  await assert.rejects(stat(path.join(defaultRoot, ".agent/templates/PLAN_TEMPLATE.yaml")));
-  await assert.rejects(stat(path.join(defaultRoot, ".agent/policies/phase_contracts.yaml")));
+  await assert.rejects(stat(path.join(root, ".agent/state/lifecycle.yaml")));
+  await assert.rejects(stat(path.join(root, ".agent/state/plan.yaml")));
+  await assert.rejects(stat(path.join(root, ".agent/skills/pjsdlc_manager/SKILL.md")));
+  await assert.rejects(stat(path.join(root, ".work_products/INDEX.md")));
+
+  const agents = await readFile(path.join(root, "AGENTS.md"), "utf8");
+  assert.match(agents, /Minimal Context Harness/);
+  assert.match(agents, /project_context\/global\.md/);
+  assert.match(agents, /Harness (?:maintains context quality|只维护上下文质量)/i);
+
+  const makefile = await readFile(path.join(root, "Makefile"), "utf8");
+  assert.match(makefile, /-include \.agent\/pjsdlc_managed\/make\/sdlc-harness\.mk/);
+  const managedMake = await readFile(path.join(root, ".agent/pjsdlc_managed/make/sdlc-harness.mk"), "utf8");
+  assert.match(managedMake, /validate-context/);
+  await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/global.md"));
+  await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/module.md"));
 
   await writeFile(
-    path.join(defaultRoot, ".agent/state/memory.md"),
-    `${defaultMemory.trimEnd()}\n\n## Project Notes\n\n- 用户项目自己的长期提示。\n`,
+    path.join(root, "project_context/global.md"),
+    `${globalContext}\n## User Notes\n\n- Keep this user-authored note.\n`,
     "utf8"
   );
-  await writeFile(
-    path.join(defaultRoot, ".work_products/INDEX.md"),
-    `${defaultIndex.trimEnd()}\n\n## Custom Artifact Map\n\n- [Local note](99_local/note.md)\n`,
-    "utf8"
-  );
-  const userOwnedSectionReport = await runSync(defaultRoot);
-  assert.equal(userOwnedSectionReport.blocked.length, 0);
-  const resyncedMemory = await readFile(path.join(defaultRoot, ".agent/state/memory.md"), "utf8");
-  assert.equal(resyncedMemory.match(/## Harness Guidance/g).length, 1);
-  assert.match(resyncedMemory, /用户项目自己的长期提示/);
-  const resyncedIndex = await readFile(path.join(defaultRoot, ".work_products/INDEX.md"), "utf8");
-  assert.equal(resyncedIndex.match(/## Harness Maintenance Rules/g).length, 1);
-  assert.match(resyncedIndex, /## Custom Artifact Map/);
-  assert.match(resyncedIndex, /\[Local note\]\(99_local\/note\.md\)/);
+  const syncReport = await runSync(root);
+  assert.equal(syncReport.blocked.length, 0);
+  const syncedGlobal = await readFile(path.join(root, "project_context/global.md"), "utf8");
+  assert.match(syncedGlobal, /Keep this user-authored note/);
+  await assert.rejects(stat(path.join(root, ".agent/skills/pjsdlc_manager/SKILL.md")));
 
-  await mkdir(path.join(defaultRoot, ".agent/pjsdlc_managed/override_skills"), { recursive: true });
-  await writeFile(
-    path.join(defaultRoot, ".agent/pjsdlc_managed/override_skills/pjsdlc_dev_sprint.md"),
-    "项目开发阶段必须优先检查本地业务约束。\n",
-    "utf8"
-  );
-  const overrideSyncReport = await runSync(defaultRoot);
-  assert.equal(overrideSyncReport.blocked.length, 0);
-  const overriddenDevSkill = await readFile(path.join(defaultRoot, ".agent/skills/pjsdlc_dev_sprint/SKILL.md"), "utf8");
-  assert.match(overriddenDevSkill, /# Dev Sprint Skill/);
-  assert.match(overriddenDevSkill, /## Local Override/);
-  assert.match(overriddenDevSkill, /\.agent\/pjsdlc_managed\/override_skills\/pjsdlc_dev_sprint\.md/);
-  assert.match(overriddenDevSkill, /project-local snippet/);
-  assert.match(overriddenDevSkill, /review the merged Skill for semantic conflicts/);
-  assert.match(overriddenDevSkill, /项目开发阶段必须优先检查本地业务约束。/);
-  const secondOverrideSyncReport = await runSync(defaultRoot);
-  assert.equal(secondOverrideSyncReport.blocked.length, 0);
-  const idempotentDevSkill = await readFile(path.join(defaultRoot, ".agent/skills/pjsdlc_dev_sprint/SKILL.md"), "utf8");
-  assert.equal(idempotentDevSkill.match(/## Local Override/g).length, 1);
-
-  const defaultDoctor = await runDoctor(defaultRoot);
-  assert.deepEqual(defaultDoctor.errors, []);
-  assert.ok(defaultDoctor.info.some((line) => line.includes("harness root: .agent")));
-  assert.ok(defaultDoctor.info.some((line) => line.includes(`core package: agent-project-sdlc@${packageMetadata.version}`)));
-  assert.ok(defaultDoctor.info.some((line) => line.includes("doctor complete")));
+  const doctor = await runDoctor(root);
+  assert.deepEqual(doctor.errors, []);
+  assert.ok(doctor.info.some((line) => line.includes("harness root: .agent")));
+  assert.ok(doctor.info.some((line) => line.includes("doctor complete")));
 
   await writeFile(
     path.join(configuredRoot, "package.json"),
     JSON.stringify({ sdlcHarness: { harnessFolderName: ".harness" } }, null, 2),
     "utf8"
   );
-  const configuredInitReport = await runInit(configuredRoot, { adopt: true, force: false });
-  assert.ok(configuredInitReport.some((line) => line.includes("created .harness/config.yaml")));
-  await mkdir(path.join(configuredRoot, ".harness/pjsdlc_managed/override_skills"), { recursive: true });
-  await writeFile(
-    path.join(configuredRoot, ".harness/pjsdlc_managed/override_skills/pjsdlc_manager.md"),
-    "项目管理阶段必须用本项目的交接口径报告状态。\n",
-    "utf8"
-  );
-
-  const configuredSyncReport = await runSync(configuredRoot);
-  assert.equal(configuredSyncReport.blocked.length, 0);
+  await runInit(configuredRoot, { adopt: true, force: false });
+  await stat(path.join(configuredRoot, ".harness/config.yaml"));
+  await stat(path.join(configuredRoot, "project_context/global.md"));
   const configuredMakefile = await readFile(path.join(configuredRoot, "Makefile"), "utf8");
   assert.match(configuredMakefile, /-include \.harness\/pjsdlc_managed\/make\/sdlc-harness\.mk/);
-  await stat(path.join(configuredRoot, ".harness/skills/pjsdlc_manager/SKILL.md"));
-  await stat(path.join(configuredRoot, ".harness/skills/pjsdlc_uiux_design/SKILL.md"));
-  await stat(path.join(configuredRoot, ".harness/pjsdlc_managed/templates/PLAN_TEMPLATE.yaml"));
-  await stat(path.join(configuredRoot, ".harness/pjsdlc_managed/templates/UI_UX_DESIGN_TEMPLATE.md"));
-  await stat(path.join(configuredRoot, ".harness/pjsdlc_managed/policies/phase_contracts.yaml"));
-  await stat(path.join(configuredRoot, "tools/transition.py"));
-  await assert.rejects(stat(path.join(configuredRoot, ".harness/state/gate_results.log")));
-  await assert.rejects(stat(path.join(configuredRoot, ".harness/managed/templates/PLAN_TEMPLATE.yaml")));
-  await assert.rejects(stat(path.join(configuredRoot, ".harness/managed/policies/phase_contracts.yaml")));
-  await assert.rejects(stat(path.join(configuredRoot, ".harness/templates/PLAN_TEMPLATE.yaml")));
-  await assert.rejects(stat(path.join(configuredRoot, ".harness/policies/phase_contracts.yaml")));
-  const configuredManagerSkill = await readFile(path.join(configuredRoot, ".harness/skills/pjsdlc_manager/SKILL.md"), "utf8");
-  assert.match(configuredManagerSkill, /\.harness\/pjsdlc_managed\/override_skills\/pjsdlc_manager\.md/);
-  assert.match(configuredManagerSkill, /项目管理阶段必须用本项目的交接口径报告状态。/);
 
-  const configuredDoctor = await runDoctor(configuredRoot);
-  assert.deepEqual(configuredDoctor.errors, []);
-  assert.ok(configuredDoctor.info.some((line) => line.includes("harness root: .harness")));
-  const configuredWorkProductsOverview = spawnSync("make", ["work-products-overview"], {
-    cwd: configuredRoot,
-    encoding: "utf8"
-  });
-  assert.equal(
-    configuredWorkProductsOverview.status,
-    0,
-    `${configuredWorkProductsOverview.stdout}\n${configuredWorkProductsOverview.stderr}`
-  );
-  const configuredMakeHarness = spawnSync("make", ["validate-harness"], {
-    cwd: configuredRoot,
-    encoding: "utf8"
-  });
-  assert.equal(configuredMakeHarness.status, 0, `${configuredMakeHarness.stdout}\n${configuredMakeHarness.stderr}`);
-  const configuredTransition = spawnSync("python3", ["tools/transition.py", "--to", "REVIEWING"], {
-    cwd: configuredRoot,
-    encoding: "utf8"
-  });
-  assert.equal(configuredTransition.status, 0, configuredTransition.stderr);
-  const transitionedConfiguredLifecycle = await readFile(path.join(configuredRoot, ".harness/state/lifecycle.yaml"), "utf8");
-  assert.match(transitionedConfiguredLifecycle, /current_phase: "REVIEWING"/);
+  await writeFile(path.join(migrationRoot, "README.md"), "# Legacy App\n\nBuilds a CLI for support ops.\n", "utf8");
+  await mkdir(path.join(migrationRoot, ".work_products/01_product"), { recursive: true });
+  await mkdir(path.join(migrationRoot, ".work_products/03_tech_plan"), { recursive: true });
+  await mkdir(path.join(migrationRoot, ".work_products/05_decisions"), { recursive: true });
+  await mkdir(path.join(migrationRoot, ".work_products/04_implementation"), { recursive: true });
+  await mkdir(path.join(migrationRoot, "src/support"), { recursive: true });
+  await mkdir(path.join(migrationRoot, "tests"), { recursive: true });
+  await writeFile(path.join(migrationRoot, ".work_products/01_product/support.md"), "Goal: support desk.\n", "utf8");
+  await writeFile(path.join(migrationRoot, ".work_products/03_tech_plan/support.md"), "API module support.\n", "utf8");
+  await writeFile(path.join(migrationRoot, ".work_products/05_decisions/ADR_001.md"), "Use local JSON storage.\n", "utf8");
+  await writeFile(path.join(migrationRoot, ".work_products/04_implementation/support.md"), "Entrypoint src/support/index.js.\n", "utf8");
+  await writeFile(path.join(migrationRoot, "src/support/index.js"), "export const ok = true;\n", "utf8");
+  await writeFile(path.join(migrationRoot, "tests/support.test.js"), "import 'node:test';\n", "utf8");
 
-  const cliFresh = spawnSync(process.execPath, [cliPath, "init"], {
-    cwd: cliFreshRoot,
-    encoding: "utf8"
-  });
-  assert.equal(cliFresh.status, 0, cliFresh.stderr);
-  const cliFreshPackage = JSON.parse(await readFile(path.join(cliFreshRoot, "package.json"), "utf8"));
-  assert.equal(cliFreshPackage.sdlcHarness.harnessFolderName, ".codex");
-  const cliFreshLifecycle = await readFile(path.join(cliFreshRoot, ".codex/state/lifecycle.yaml"), "utf8");
-  assert.match(cliFreshLifecycle, /current_phase: "REQUIREMENT_GATHERING"/);
-  assert.match(cliFreshLifecycle, /active_skill: "pjsdlc_pm_prd"/);
+  const dryRun = await runContextMigration(migrationRoot, { write: false });
+  assert.equal(dryRun.mode, "dry-run");
+  assert.equal(dryRun.changed.length, 0);
+  assert.match(dryRun.preview.join("\n"), /project_context\/global\.md/);
+  await assert.rejects(stat(path.join(migrationRoot, "project_context/global.md")));
 
-  const cliDefault = spawnSync(process.execPath, [cliPath, "init", "--adopt"], {
-    cwd: cliDefaultRoot,
-    encoding: "utf8"
-  });
-  assert.equal(cliDefault.status, 0, cliDefault.stderr);
-  const cliDefaultPackage = JSON.parse(await readFile(path.join(cliDefaultRoot, "package.json"), "utf8"));
-  assert.equal(cliDefaultPackage.sdlcHarness.harnessFolderName, ".codex");
-  await stat(path.join(cliDefaultRoot, ".codex/config.yaml"));
+  const writeRun = await runContextMigration(migrationRoot, { write: true });
+  assert.equal(writeRun.mode, "write");
+  assert.ok(writeRun.changed.some((line) => line.includes("project_context/global.md")));
+  const migratedGlobal = await readFile(path.join(migrationRoot, "project_context/global.md"), "utf8");
+  assert.match(migratedGlobal, /Legacy Source Trace/);
+  assert.match(migratedGlobal, /README\.md/);
+  await stat(path.join(migrationRoot, ".work_products/01_product/support.md"));
 
-  const cliConfigured = spawnSync(process.execPath, [cliPath, "init", "--adopt", "--harness-folder", ".harness"], {
-    cwd: cliConfiguredRoot,
-    encoding: "utf8"
-  });
-  assert.equal(cliConfigured.status, 0, cliConfigured.stderr);
-  const cliConfiguredPackage = JSON.parse(await readFile(path.join(cliConfiguredRoot, "package.json"), "utf8"));
-  assert.equal(cliConfiguredPackage.sdlcHarness.harnessFolderName, ".harness");
-  await stat(path.join(cliConfiguredRoot, ".harness/config.yaml"));
+  const migrationSecondRun = await runContextMigration(migrationRoot, { write: true });
+  assert.equal(migrationSecondRun.mode, "write");
+  await assert.rejects(stat(path.join(migrationRoot, "project_context/_migration/latest/global.md")));
 
-  const cliConfiguredCamel = spawnSync(process.execPath, [cliPath, "init", "--adopt", "--harnessFolderName", ".workflow"], {
-    cwd: cliConfiguredCamelRoot,
-    encoding: "utf8"
-  });
-  assert.equal(cliConfiguredCamel.status, 0, cliConfiguredCamel.stderr);
-  const cliConfiguredCamelPackage = JSON.parse(await readFile(path.join(cliConfiguredCamelRoot, "package.json"), "utf8"));
-  assert.equal(cliConfiguredCamelPackage.sdlcHarness.harnessFolderName, ".workflow");
-  await stat(path.join(cliConfiguredCamelRoot, ".workflow/config.yaml"));
+  await mkdir(path.join(gitkeepMigrationRoot, "src"), { recursive: true });
+  await writeFile(path.join(gitkeepMigrationRoot, "src/.gitkeep"), "", "utf8");
+  const gitkeepDryRun = await runContextMigration(gitkeepMigrationRoot, { write: false });
+  assert.ok(gitkeepDryRun.preview.some((line) => line.includes("project_context/modules/main.md")));
+  assert.ok(gitkeepDryRun.warnings.some((line) => line.includes("No obvious source module names")));
+  assert.ok(!gitkeepDryRun.preview.some((line) => line.includes("gitkeep.md")));
 
-  await writeFile(
-    path.join(cliExistingConfigRoot, "package.json"),
-    JSON.stringify({ name: "existing", sdlcHarness: { harnessFolderName: ".harness" } }, null, 2),
-    "utf8"
-  );
-  const cliExisting = spawnSync(process.execPath, [cliPath, "init", "--adopt"], {
-    cwd: cliExistingConfigRoot,
-    encoding: "utf8"
-  });
-  assert.equal(cliExisting.status, 0, cliExisting.stderr);
-  const cliExistingPackage = JSON.parse(await readFile(path.join(cliExistingConfigRoot, "package.json"), "utf8"));
-  assert.equal(cliExistingPackage.sdlcHarness.harnessFolderName, ".harness");
-  await stat(path.join(cliExistingConfigRoot, ".harness/config.yaml"));
-
-  await writeFile(
-    path.join(makefileMergeRoot, "Makefile"),
-    "PROJECT_VAR := 1\n\nlint:\n\t@echo project lint\n",
-    "utf8"
-  );
-  const makefileMergeReport = await runSync(makefileMergeRoot);
-  assert.equal(makefileMergeReport.blocked.length, 0);
-  const mergedMakefile = await readFile(path.join(makefileMergeRoot, "Makefile"), "utf8");
-  assert.ok(mergedMakefile.indexOf("# pjsdlc:sdlc-harness:make:begin") < mergedMakefile.indexOf("PROJECT_VAR := 1"));
-  assert.match(mergedMakefile, /-include \.agent\/pjsdlc_managed\/make\/sdlc-harness\.mk/);
-  assert.match(mergedMakefile, /PROJECT_VAR := 1/);
-  assert.match(mergedMakefile, /lint:\n\t@echo project lint/);
-  const projectLint = spawnSync("make", ["lint"], { cwd: makefileMergeRoot, encoding: "utf8" });
-  assert.equal(projectLint.status, 0, projectLint.stderr);
-  assert.match(projectLint.stdout, /project lint/);
-
-  await writeFile(path.join(brokenMarkerRoot, "AGENTS.md"), "before\n<!-- pjsdlc:sdlc-harness:begin -->\n", "utf8");
-  await writeFile(path.join(brokenMarkerRoot, "Makefile"), "# pjsdlc:sdlc-harness:make:end\n", "utf8");
-  const brokenMarkerReport = await runSync(brokenMarkerRoot);
-  assert.ok(brokenMarkerReport.blocked.some((line) => line.includes("AGENTS.md")));
-  assert.ok(brokenMarkerReport.blocked.some((line) => line.includes("Makefile")));
-
-  await runInit(unknownSkillOverrideRoot, { adopt: true, force: false });
-  await mkdir(path.join(unknownSkillOverrideRoot, ".agent/pjsdlc_managed/override_skills"), { recursive: true });
-  await writeFile(path.join(unknownSkillOverrideRoot, ".agent/pjsdlc_managed/override_skills/pjsdlc_unknown.md"), "unknown\n", "utf8");
-  const unknownSkillOverrideReport = await runSync(unknownSkillOverrideRoot);
+  await mkdir(path.join(existingContextMigrationRoot, "project_context/modules"), { recursive: true });
+  await mkdir(path.join(existingContextMigrationRoot, "src/support"), { recursive: true });
+  await writeFile(path.join(existingContextMigrationRoot, "project_context/global.md"), "# User Context\n", "utf8");
+  await writeFile(path.join(existingContextMigrationRoot, "src/support/index.js"), "export const ok = true;\n", "utf8");
+  const existingContextDryRun = await runContextMigration(existingContextMigrationRoot, { write: false });
   assert.ok(
-    unknownSkillOverrideReport.blocked.some((line) =>
-      line.includes("unknown skill override: .agent/pjsdlc_managed/override_skills/pjsdlc_unknown.md")
+    existingContextDryRun.preview.some((line) =>
+      line.includes("project_context/global.md -> project_context/_migration/latest/global.md")
+    )
+  );
+  assert.ok(
+    existingContextDryRun.preview.some((line) =>
+      line.includes("project_context/modules/support.md -> project_context/_migration/latest/modules/support.md")
     )
   );
 
-  await runInit(fullSkillOverrideRoot, { adopt: true, force: false });
-  await mkdir(path.join(fullSkillOverrideRoot, ".agent/pjsdlc_managed/override_skills"), { recursive: true });
-  await writeFile(
-    path.join(fullSkillOverrideRoot, ".agent/pjsdlc_managed/override_skills/pjsdlc_pm_prd.md"),
-    [
-      "---",
-      "name: pjsdlc_pm_prd",
-      "description: Use during REQUIREMENT_GATHERING for project-local complete PRD role.",
-      "---",
-      "",
-      "# Project PM PRD Skill",
-      "",
-      "## 目的",
-      "",
-      "项目 PRD 必须体现本地业务对象。",
-      "",
-      "## 完成检查",
-      "",
-      "- [ ] 本地业务验收标准已覆盖。"
-    ].join("\n"),
-    "utf8"
-  );
-  const fullSkillOverrideReport = await runSync(fullSkillOverrideRoot);
-  assert.equal(fullSkillOverrideReport.blocked.length, 0);
-  const fullSkill = await readFile(path.join(fullSkillOverrideRoot, ".agent/skills/pjsdlc_pm_prd/SKILL.md"), "utf8");
-  assert.match(fullSkill, /Use during REQUIREMENT_GATHERING to turn raw input into PRD slices with acceptance criteria and boundaries\. Project override: Use during REQUIREMENT_GATHERING for project-local complete PRD role\./);
-  assert.match(fullSkill, /full Skill extension/);
-  assert.match(fullSkill, /frontmatter has been merged into the generated Skill metadata/);
-  assert.match(fullSkill, /review the merged Skill for semantic conflicts/);
-  assert.match(fullSkill, /# Project PM PRD Skill/);
-  assert.match(fullSkill, /项目 PRD 必须体现本地业务对象。/);
-  assert.match(fullSkill, /- \[ \] 本地业务验收标准已覆盖。/);
-  assert.equal(fullSkill.match(/^---$/gm)?.length, 2);
-
-  await runInit(mismatchedSkillOverrideRoot, { adopt: true, force: false });
-  await mkdir(path.join(mismatchedSkillOverrideRoot, ".agent/pjsdlc_managed/override_skills"), { recursive: true });
-  await writeFile(
-    path.join(mismatchedSkillOverrideRoot, ".agent/pjsdlc_managed/override_skills/pjsdlc_pm_prd.md"),
-    "---\nname: pjsdlc_dev_sprint\ndescription: Wrong skill name.\n---\n\n# Wrong Skill\n",
-    "utf8"
-  );
-  const mismatchedSkillOverrideReport = await runSync(mismatchedSkillOverrideRoot);
-  assert.ok(
-    mismatchedSkillOverrideReport.blocked.some((line) =>
-      line.includes("skill override name mismatch: .agent/pjsdlc_managed/override_skills/pjsdlc_pm_prd.md declares name pjsdlc_dev_sprint")
-    )
-  );
-
-  const legacyMarkerRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-legacy-marker-"));
-  try {
-    await writeFile(
-      path.join(legacyMarkerRoot, "AGENTS.md"),
-      "custom before\n<!-- sdlc-harness:begin -->\nlegacy agents\n<!-- sdlc-harness:end -->\ncustom after\n",
-      "utf8"
-    );
-    await writeFile(
-      path.join(legacyMarkerRoot, "Makefile"),
-      "# sdlc-harness:make:begin\n-include .agent/managed/make/sdlc-harness.mk\n# sdlc-harness:make:end\n\nlint:\n\t@echo project lint\n",
-      "utf8"
-    );
-    const legacyReport = await runSync(legacyMarkerRoot);
-    assert.equal(legacyReport.blocked.length, 0);
-    const legacyAgents = await readFile(path.join(legacyMarkerRoot, "AGENTS.md"), "utf8");
-    assert.match(legacyAgents, /pjsdlc:sdlc-harness:begin/);
-    assert.doesNotMatch(legacyAgents, /<!-- sdlc-harness:begin -->/);
-    assert.match(legacyAgents, /custom before/);
-    assert.match(legacyAgents, /custom after/);
-    const legacyMakefile = await readFile(path.join(legacyMarkerRoot, "Makefile"), "utf8");
-    assert.match(legacyMakefile, /pjsdlc:sdlc-harness:make:begin/);
-    assert.doesNotMatch(legacyMakefile, /# sdlc-harness:make:begin/);
-    assert.match(legacyMakefile, /lint:\n\t@echo project lint/);
-  } finally {
-    await rm(legacyMarkerRoot, { recursive: true, force: true });
-  }
+  const cliInit = spawnSync(process.execPath, [cliPath, "init"], { cwd: cliRoot, encoding: "utf8" });
+  assert.equal(cliInit.status, 0, `${cliInit.stdout}\n${cliInit.stderr}`);
+  await stat(path.join(cliRoot, "project_context/global.md"));
+  const cliValidate = spawnSync(process.execPath, [cliPath, "validate-context"], { cwd: cliRoot, encoding: "utf8" });
+  assert.equal(cliValidate.status, 0, `${cliValidate.stdout}\n${cliValidate.stderr}`);
+  const cliValidateHarnessAlias = spawnSync(process.execPath, [cliPath, "validate-harness"], { cwd: cliRoot, encoding: "utf8" });
+  assert.equal(cliValidateHarnessAlias.status, 0, `${cliValidateHarnessAlias.stdout}\n${cliValidateHarnessAlias.stderr}`);
+  assert.match(cliValidateHarnessAlias.stdout, /validate-context checked/);
 } finally {
-  await rm(defaultRoot, { recursive: true, force: true });
-  await rm(freshRoot, { recursive: true, force: true });
+  await rm(root, { recursive: true, force: true });
   await rm(configuredRoot, { recursive: true, force: true });
-  await rm(cliFreshRoot, { recursive: true, force: true });
-  await rm(cliDefaultRoot, { recursive: true, force: true });
-  await rm(cliConfiguredRoot, { recursive: true, force: true });
-  await rm(cliConfiguredCamelRoot, { recursive: true, force: true });
-  await rm(cliExistingConfigRoot, { recursive: true, force: true });
-  await rm(makefileMergeRoot, { recursive: true, force: true });
-  await rm(brokenMarkerRoot, { recursive: true, force: true });
-  await rm(unknownSkillOverrideRoot, { recursive: true, force: true });
-  await rm(fullSkillOverrideRoot, { recursive: true, force: true });
-  await rm(mismatchedSkillOverrideRoot, { recursive: true, force: true });
+  await rm(migrationRoot, { recursive: true, force: true });
+  await rm(gitkeepMigrationRoot, { recursive: true, force: true });
+  await rm(existingContextMigrationRoot, { recursive: true, force: true });
+  await rm(cliRoot, { recursive: true, force: true });
 }

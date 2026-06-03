@@ -10,3 +10,5 @@
 - Health/status entrypoint exists.
 - Mock provider fixture smoke is runnable without live credentials.
 - Live-provider blocker, credential reference, do-not-retry rule, evidence levels, and next safe action are documented.
+- `src/webhookBridge.js#createWebhookBridge()` exposes the deterministic smoke contract for receiver, signature, replay, queue, DLQ, mock smoke, status, and evidence-boundary checks.
+- The smoke contract can be exercised by a hidden probe without live credentials, using only deterministic fixture secrets and local inputs.

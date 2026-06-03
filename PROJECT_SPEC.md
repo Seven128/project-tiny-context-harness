@@ -1,220 +1,94 @@
-# AI SDLC Harness 项目规格说明
+# AI SDLC Harness Project Spec
 
-本文件保存 AI SDLC Harness 的产品地图、设计原则、阶段契约、当前 canonical behavior 和包化策略。面向用户的安装与日常使用入口见 [README.md](README.md)。长期设计原因、历史取舍和后续变更边界拆分到 [.work_products/05_decisions/](.work_products/05_decisions/) ADR slices；本文件只保留从零理解项目所需的摘要和链接。
+This document explains the stable product direction, design rationale and package behavior for AI SDLC Harness. User-facing commands live in [README.md](README.md). Long-form historical details and evidence remain in `.work_products/**` and ADR files.
 
-## 一、最终目的
-设计一套面向 AI Agent 的需求全链路 Harness 工作流，提高 Agent 在需求各阶段的完成效率。
-这里的效率不是单次代码生成速度，而是 Agent 在复杂项目中完成阶段目标、产出阶段交付物、衔接上下游信息、处理需求变更和通过交付约束的整体效率。
-这套工作流主要降低三类成本：
-- 阶段执行成本：通过阶段角色 Skill、模板和上下文约束，让 Agent 在对应阶段更快产出符合预期的交付物。
-- 阶段衔接成本：通过统一事实源、文档索引、任务状态和变更协议，减少阶段切换、产物同步和重新理解的成本。
-- 阶段交付成本：通过把质量检查、Review 清单、测试与发布检查固定为阶段完成条件，减少每次交付时重新组织约束的心智成本。
-## 二、当前现状与要解决的问题
-### 2.1 稍有复杂度的软件项目天然需要多阶段软件工程
-现状： 软件工程阶段不是 Harness 额外发明出来的流程负担，而是任何软件项目中客观存在的工作内容。区别只在于复杂度低时，这些阶段会被自然压缩甚至隐式完成；当项目稍有复杂度后，需求澄清、产品边界、技术取舍、任务拆分、实现记录、Review、测试、发布和变更处理都会开始产生真实工作量。
+## Product Goal
 
-核心判断：工作流的价值是把阶段性工作显性化和契约化，让每个阶段明确该读什么、做什么、交付什么、何时算完成，从而减少遗漏和返工。设计原因见 [ADR 001: Stage Contracts and Gates](.work_products/05_decisions/ADR_001_stage_contracts_and_gates.md)。
+AI SDLC Harness helps AI coding agents deliver requirements projects more efficiently by preserving the minimum durable context needed for recovery, iteration, debug and requirement changes.
 
-开发阶段自测是这个原则在 `SPRINTING` 中的具体体现：开发阶段先证明本 task / 本模块承诺的 runnable entry、核心路径和 observable exit 已经实际跑通；TESTING 基于已有入口和开发自测证据做独立验证、回归覆盖和最终判断。自测报告边界见 [ADR 005: Development Self-Test Handoff](.work_products/05_decisions/ADR_005_development_self_test_handoff.md)。
+Efficiency is not first-turn code generation speed. The target is same-quality delivery over a project lifecycle: a fresh agent should quickly know what the project is for, what not to change, where the code and tests are, what design choices matter, what is currently true and what the next safe action is.
 
-只要项目超过 demo、脚本或一次性页面的复杂度，就不能长期只靠“想到什么就让 Agent 写什么”的方式推进。软件工程本身要求需求被拆成多个阶段，例如需求收集、产品方案、技术方案、开发实现、Review、测试、发布和需求变更。每个阶段都有独立目标，也会形成对应交付产物。
-需求收集 -> 原始需求记录、问题澄清、需求边界
-产品方案 -> PRD、用户场景、验收标准、Out of Scope
-体验设计 -> UX flow、screen contracts、interaction states、responsive/a11y acceptance、可选 DESIGN.md
-技术方案 -> 架构设计、接口契约、数据结构、任务拆分
-开发实现 -> 代码、测试、实现记录、提交记录
-Review -> Review 报告、风险清单、重构建议
-测试验证 -> 测试报告、测试矩阵、回归证据、覆盖缺口
-发布上线 -> Current Release Status、部署检查、回滚方案
-需求变更 -> RFC、影响范围、任务回退或增量计划
-要解决的问题： 需要把每个阶段的目标、输入、输出和完成条件固定下来，让 Agent 在正确阶段完成正确交付物，而不是把需求、方案、开发、Review 和测试混成一段连续聊天。否则项目复杂度上升后，容易出现需求边界不清、方案和实现偏移、Review 缺少依据、测试缺少覆盖目标、变更无法回溯等问题。
-### 2.2 阶段产物分散，跨阶段衔接存在切换成本和理解成本
-现状： 在没有统一到同一个 Agent 客户端或同一套项目工作区的情况下，不同阶段的产物容易分散在不同位置：产品文档可能在 Web AI、Notion、飞书、Confluence 或 Google Docs 中生成；技术方案可能在 IDE Agent 对话里生成；开发过程发生在 coding agent 中；Review 准则可能是临时 skill；测试策略可能靠人工补充。
-这种分散会带来两类成本：
-- 切换成本：人需要在多个工具、文档、会话和代码仓库之间复制、同步、解释和校对。
-- 理解成本：Agent 进入新阶段时，无法天然继承上一阶段的产物、边界、取舍和未解决问题，需要重新读取、总结和对齐。
-需求变更是这个问题的典型放大场景。需求变化后，受影响的通常不是单个代码点，而是 PRD、技术方案、接口契约、任务计划、实现代码、测试用例、Review 结论和实现文档组成的一整条链。阶段产物越分散，Agent 越容易漏改受影响内容，或误改未受影响的稳定内容。
+## Current Design: Minimal Context Harness
 
-因此每个阶段都需要留下对应产物。阶段产物不是为了堆文档，而是项目上下文的一部分：它记录该阶段已经确认的事实、边界、路径、用例、结果、风险和未决问题，并成为后续阶段继续工作的前提。fact source、memory、overview 和 ADR 边界见 [ADR 002: Fact Sources, Memory and Overviews](.work_products/05_decisions/ADR_002_fact_sources_memory_and_overviews.md)；Development Self-Test handoff 边界见 [ADR 005](.work_products/05_decisions/ADR_005_development_self_test_handoff.md)。
+The vNext default is **Minimal Context Harness**.
 
-要解决的问题： 需要把阶段产物统一到一套可寻址、可引用、可版本化的项目事实源中，并建立阶段之间的连续链路。Agent 进入下一阶段时，应能明确读取上一阶段产物；需求变更时，应通过 RFC、影响范围分析、局部补丁、任务回退或增量计划，把变更限制在受影响链路内，而不是重新理解或重写整个项目。
-### 2.3 单阶段主要依靠 vibe 推进，但阶段 Skill 与交付硬约束需要固定进工作流
-现状： 在单个阶段内部，Agent 的主要工作方式仍然是 vibe：人给出目标，Agent 结合上下文进行生成、修改、总结、补充和修正。阶段角色 Skill 不替代 vibe，而是沉淀该阶段的最佳实践，用来提高 vibe 的效率和稳定性。
-不同阶段需要不同 Skill：PM 阶段需要需求澄清、边界定义和验收标准；架构阶段需要模块拆分、接口契约和风险识别；开发阶段需要按任务落地、控制修改范围和补测试；Review 阶段需要只读审查、风险分级和需求一致性检查；测试阶段需要边界条件、回归范围和覆盖矩阵。
-但从阶段开始到阶段交付完成，不能只依赖 Agent 自我声明完成。为了保证产物质量，交付环节通常需要硬约束，例如 Lint、typecheck、unit test、integration test、build、coverage、review checklist、release smoke test 等。这些约束可能通过本地插件、脚本、Makefile、npm script、Agent 工具调用执行；团队协作时，也可能放在 CI/CD、GitHub Actions、GitLab CI、分支保护、PR check 或部署流水线中执行。执行形式不同，但本质上都属于阶段交付条件。
-要解决的问题： 需要把阶段 Skill 和交付硬约束都固定进工作流。Skill 负责提高单阶段 vibe 的产出效率；硬约束负责保证阶段交付质量。硬约束不一定由 Harness 自己执行，但必须被声明为阶段完成和状态流转的判断依据。Agent 可以触发脚本、修复失败、记录结果，但不能绕过这些约束直接推进状态。
-## 三、采用的方案
-### 3.1 总体思路
-AI SDLC Harness 不替代 Agent，也不把软件工程完全自动化。它在仓库中固定一套工作流骨架：
-阶段定义
--> 阶段产物
--> 阶段 Skill
--> 阶段事实源
--> 阶段交付硬约束
--> 阶段流转规则
--> 需求变更回退规则
+Default durable facts:
 
-Agent 在单阶段内部仍然以 vibe 方式执行；Harness 负责规定当前阶段、应读内容、应写产物、应使用 Skill、完成前必须通过的 gate，以及需求变更时如何局部修正链路。
+- `project_context/global.md`
+- `project_context/modules/<module>.md`
+- code, tests and necessary code comments
 
-Orientation fast path 是 gate 语义的配套规则：新会话、恢复上下文、状态查询和“继续/下一步”只做当前状态定位、task 合同读取和必要事实源恢复，不自动运行 `make validate-*`、package source sync/check、workspace full regression 或阶段出口 gate。gate 仍然属于交付、阶段流转、提交、发布或用户显式验证请求的边界动作。
+Default non-goals:
 
-### 3.2 核心设计原则
-- 阶段契约化：每个阶段都有输入、输出、Skill、gate 和下一阶段入口。
-- 产物仓库化：关键产物进入 `.work_products/`、`.codex/` 或同一工作区，成为可寻址、可版本化事实源。
-- 语义切片化：阶段文档按业务能力、技术主题、任务、风险或变更事件切片，避免长文档被固定 chunk 检索时丢失边界信息。
-- Skill 阶段化：每个 Skill 只沉淀一个阶段或动作的 SOP，不写成巨型 skill。
-- Gate 声明化：lint、typecheck、test、build、review checklist、release smoke test 等硬约束必须作为阶段完成条件。
-- Orientation 轻量化：开场定位只恢复当前阶段、当前 task 和下一步，不把上下文恢复误当成阶段验收。
-- 变更补丁化：需求变化先进入 RFC，再做影响分析、局部补丁、任务回退或增量任务。
-- 实现文档增量化：技术方案是计划，implementation doc 是开发后的事实。
-- 派生视图自动化：`overview.md` 由脚本生成，只用于浏览，不作为事实源。
-- Plan 短期化：open task 在 `plan.yaml` 中保存当前执行合同，done task 完成后移出当前计划，避免历史现场长期占用上下文。
-- 工作流轻量自查：Harness 可以提供只读诊断来发现 workflow weight、事实源漂移、交接不清和 recovery 风险，但必须区分真实可测数据、推断数据、自报数据和不可测数据，不能把缺少 telemetry 的 token/time 伪装成精确结论。
-- 项目级单例：Harness 串联软件工程全链路，是一个项目的 singleton workflow；多人协作应限制在单一阶段产物内，不应多人并行推进同一项目的全链路状态。
-- 包与项目解耦：Harness npm 包只提供默认工作流能力、schema、模板、策略、迁移和同步规则；项目状态、业务内容和本地定制属于用户仓库，`sync` / `upgrade` 必须增量合并，不得全量覆盖。
-- 自举配置分层：开发 Harness 自身时可以有只服务于本仓库的 authoring overlay，用于记录工作流演进原则、包化约束和专用 Skill；这些内容默认不进入通用 npm 包，也不默认分发给用户项目。
+- no lifecycle phase state by default
+- no `plan.yaml` task protocol by default
+- no stage skills by default
+- no default PRD / UX / architecture / tech plan / implementation / review / test / release / RFC product chain
+- no phase gates by default
 
-### 3.3 设计决策索引（ADR）
+Harness now maintains context quality, not project test quality. Product quality is proven by the project’s own tests, smoke checks, hidden probes, CI, review and human acceptance.
 
-`PROJECT_SPEC.md` 只保留当前 canonical behavior 和从零理解项目所需的摘要。长期设计原因、历史取舍、备选方案和后续变更边界进入 ADR：
+## Context Contract
 
-| ADR | 决策主题 |
-|---|---|
-| [ADR 001](.work_products/05_decisions/ADR_001_stage_contracts_and_gates.md) | 阶段契约、阶段 Skill 和交付 gate 为什么是工作流核心 |
-| [ADR 002](.work_products/05_decisions/ADR_002_fact_sources_memory_and_overviews.md) | `.work_products/**` 事实源、`memory.md` 短索引和 generated `overview.md` 边界 |
-| [ADR 003](.work_products/05_decisions/ADR_003_plan_state_and_task_history.md) | `plan.yaml` 短期化、draft queue、active state 不保存历史流水 |
-| [ADR 004](.work_products/05_decisions/ADR_004_lightweight_graph_contracts.md) | 轻量显式阶段图和轻量 DAG 测试路径图，为什么不是重型图框架 |
-| [ADR 005](.work_products/05_decisions/ADR_005_development_self_test_handoff.md) | Development Self-Test Report 作为短交接卡的边界 |
-| [ADR 006](.work_products/05_decisions/ADR_006_authoring_overlay_and_package_boundary.md) | authoring overlay、package sync/upgrade 和文档职责边界 |
-| [ADR 007](.work_products/05_decisions/ADR_007_ui_ux_design_stage.md) | `UI_UX_DESIGNING` 独立体验设计阶段和 visual UI `DESIGN.md` 事实源 |
-| [ADR 008](.work_products/05_decisions/ADR_008_delivery_benchmark_scenario_design.md) | Delivery Benchmark 为什么选择 lifecycle scenarios 来验证工作流设计目的 |
-| [ADR 009](.work_products/05_decisions/ADR_009_visual_reconciliation.md) | 参考图驱动视觉任务为什么使用轻量 `visual_reconciliation` task profile，而不是新增完整 phase |
-| [ADR 010](.work_products/05_decisions/ADR_010_work_products_root.md) | 为什么 canonical 阶段产物根目录是 `.work_products/**`，而不是 `.docs/**` 或 `.artifacts/**` |
+`project_context/global.md` stores the cross-project facts a fresh agent needs:
 
-### 3.4 事实源与派生产物
-真正的事实源是：
-- `.codex/state/*.yaml`
-- `.codex/pjsdlc_managed/policies/*.yaml`
-- `<harnessRoot>/skills/*/SKILL.md`
-- `.work_products/**`
-- `.work_products/INDEX.md`
-- `Makefile`
-- `tools/*.py`
+- project goal
+- non-goals / boundaries
+- background
+- design rationale, including still-relevant ADR decisions
+- verification entry points
+- current state
+- next safe action
+- module index
 
-派生产物是：
-- `.work_products/<stage>/overview.md`
+`project_context/modules/<module>.md` stores module-local facts:
 
-`overview.md` 由 `tools/build_work_product_overviews.py` 生成。它把某阶段 Markdown slices 合成 Markdown 总览，方便人类浏览和阶段交接，但需求引用、Review、测试和变更影响分析仍应引用原始 Markdown slice。
+- responsibility
+- user / system contract
+- core data / API / state
+- key constraints
+- code entry points
+- test entry points
+- open risks
 
-这里需要区分状态协议和状态数据：
-- `lifecycle.yaml`、`plan.yaml`、`plan.draft.yaml`、memory 的字段结构、状态枚举、迁移规则和校验逻辑属于 Harness 工作流能力，应由包提供 schema、模板、validator 和 migration。
-- 某个项目当前处于哪个阶段、当前任务是什么、open task 的执行备注是什么、memory 记录了哪些具体事实，属于项目实例数据，不应被包升级覆盖。
+The Context should be compact and semantically split. It should not duplicate code, test logs, release ledgers or implementation narration that the source already exposes. Former ADR content is downgraded into `Design Rationale`; implementation documentation is downgraded into code comments, test names and short Context constraints when the code does not make the fact obvious.
 
-fact source、memory 和 overview 的完整设计原因见 [ADR 002: Fact Sources, Memory and Overviews](.work_products/05_decisions/ADR_002_fact_sources_memory_and_overviews.md)；`.work_products/**` 命名和 `.artifacts/**` 边界见 [ADR 010: Workflow Work Products Root](.work_products/05_decisions/ADR_010_work_products_root.md)。
+## Package Behavior
 
-### 3.5 协作边界：项目级 singleton workflow
-AI SDLC Harness 集成的是软件工程的所有主要环节：需求、产品方案、架构、技术方案、开发、Review、测试、发布和 RFC 变更。对一个项目来说，这套连续事实链应被视为项目级 singleton workflow，也就是同一时间只有一条主线负责维护当前生命周期状态、当前计划和阶段间事实衔接。
+`init` creates Minimal Context assets and managed guidance:
 
-这不是适合多人同时并行推进同一项目全链路状态的协作层。如果多个人从某个时间点分别开分支，每个人可变更的内容都不只是代码，还可能包括需求边界、产品方案、技术方案、任务计划、实现事实、测试策略和发布判断。合并时冲突就不再是局部文本冲突，而是整条软件工程事实链的冲突；这种合并成本来自设计本身，不能依赖普通 git merge 稳定解决。完整取舍见 [ADR 006: Authoring Overlay and Package Boundary](.work_products/05_decisions/ADR_006_authoring_overlay_and_package_boundary.md)。
+- `AGENTS.md`
+- `project_context/global.md`
+- `project_context/modules/main.md`
+- `<harnessRoot>/config.yaml`
+- `<harnessRoot>/pjsdlc_managed/context_templates/**`
+- `<harnessRoot>/pjsdlc_managed/make/sdlc-harness.mk`
+- `tools/**`
+- `.github/workflows/harness.yml` when absent or managed
 
-多人协作仍然应该采用传统的软件工程边界：把协作限制在单个阶段内，例如多人共同完善 PRD、一起评审技术方案、多人并行开发同一已确认方案下的代码任务，或共同补测试矩阵。此时需要合并的是同一阶段内的产物变更，边界清楚、冲突可控。各阶段产物被确认并串联起来后，才进入项目级 singleton workflow，作为下一阶段的事实源继续推进。
+`init` does not create `.work_products/**`, lifecycle state, plan state, stage skills, stage templates or stage policies by default.
 
-## 四、仓库结构
-推荐模板结构如下：
+`sync` refreshes managed assets only. It never reads old `.work_products/**` and never generates `project_context/**`.
 
-```txt
-/project-root
-├── AGENTS.md
-├── Makefile
-├── README.md           # 用户视角的安装、接入和日常使用指南
-├── PROJECT_SPEC.md     # Harness 产品说明、设计原则和包化策略
-│
-├── .work_products/
-│   ├── INDEX.md
-│   ├── 00_raw/
-│   ├── 01_product/
-│   ├── 02_experience/
-│   ├── 02_architecture/
-│   ├── 03_tech_plan/
-│   ├── 04_implementation/
-│   ├── 05_decisions/
-│   ├── 06_review/
-│   ├── 07_test/
-│   ├── 08_release/
-│   └── rfc/
-│
-├── .codex/
-│   ├── state/
-│   │   ├── lifecycle.yaml
-│   │   ├── plan.yaml
-│   │   ├── plan.draft.yaml
-│   │   └── memory.md
-│   ├── skills/
-│   ├── pjsdlc_managed/
-│   │   ├── policies/
-│   │   │   ├── phase_contracts.yaml
-│   │   │   ├── gates.yaml
-│   │   │   ├── allowed_paths.yaml
-│   │   │   └── risk_matrix.yaml
-│   │   ├── templates/
-│   │   └── make/
-│   │       └── sdlc-harness.mk
-│
-├── tools/
-├── .github/workflows/
-└── src/ or services/
+`upgrade` runs safe migrations and `sync`. If legacy stage facts are detected, it prompts the user to run:
+
+```sh
+npx sdlc-harness migrate-context --dry-run
 ```
 
-### 关键目录说明：
-- `AGENTS.md`：Agent 全局协议，包含事实源、工作规则、提示词语言契约、plan 和 overview 规则。
-- `.work_products/`：阶段产物事实源。每个阶段目录可包含多个 Markdown slice 和一个 generated `overview.md`。
-- `.codex/state/`：当前项目的状态数据，包括生命周期、执行计划、gate 结果和项目记忆；其 schema、初始模板、迁移和校验规则属于 Harness 工作流能力。
-- `<harnessRoot>/skills/`：阶段角色 Skill 的 canonical source。`sdlc-harness init` 默认选择 `Codex -> .codex`；配置兜底值和 `Other` 的空输入默认值是 `.agent`。配置解析优先使用 `package.json#sdlcHarness.harnessFolderName`，再读 `sdlc-harness.config.json#harnessFolderName`，最后使用默认 `.agent`。当前仓库作为 Harness authoring workspace 使用 `.codex/skills/**`。
-- `.codex/pjsdlc_managed/policies/`：阶段契约、gate、路径约束和风险矩阵；默认内容来自 Harness 包，项目可通过 local override 调整。
-- `.codex/pjsdlc_managed/templates/`：PRD、技术方案、计划、实现文档、Review、测试、RFC、Release 等模板；默认内容来自 Harness 包。
-- `.codex/pjsdlc_managed/make/sdlc-harness.mk`：Harness 默认命令目标；根 `Makefile` 只保留 include block，避免与用户项目目标耦合。
-- `tools/`：确定性脚本和校验工具。
-- `Makefile`：统一命令入口，作为用户仓库入口文件存在，只通过 include block 引入 `.codex/pjsdlc_managed/make/sdlc-harness.mk`。
+`migrate-context` is explicit and safe by default:
 
-除 `<harnessRoot>/skills/**` 需要保持稳定的 Harness hard file index 之外，工作流相关默认配置统一放在 `<harnessRoot>/pjsdlc_managed/**`。不要再维护 `<harnessRoot>/policies/**` 或 `<harnessRoot>/templates/**` 这类 legacy mirror，避免同一份配置出现多个事实源。
+- `--dry-run` previews output and writes nothing.
+- `--write` creates or updates `project_context/**`.
+- old `.work_products/**`, `.docs/**`, stage state and stage assets are preserved.
+- existing user-authored Context is protected by writing migration output to `project_context/_migration/latest/**` unless a managed migration marker is present.
 
-`AGENTS.md` 和根 `Makefile` 这类桥接文件使用 `pjsdlc:sdlc-harness:*` marker 隔离包管理内容和用户内容：
+`validate-context` checks that Context has the minimum recovery fields and does not fake product verification evidence. It does not replace project tests.
 
-```txt
-<!-- pjsdlc:sdlc-harness:begin -->
-...
-<!-- pjsdlc:sdlc-harness:end -->
-```
+## Historical Iteration: Stage-Based SDLC Harness
 
-```make
-# pjsdlc:sdlc-harness:make:begin
--include .codex/pjsdlc_managed/make/sdlc-harness.mk
-# pjsdlc:sdlc-harness:make:end
-```
+The previous default attempted to encode a full stage-based software lifecycle:
 
-旧的 `sdlc-harness:*` marker 只作为 legacy marker 识别；`sync` 会把完整旧 block 原位替换为新的 `pjsdlc:sdlc-harness:*` block。`config.yaml` 不使用文本块隔离，它通过 YAML schema、known fields、migration 和 local override 规则管理。
-
-用户耦合 Markdown 文件不做整文件覆盖；包只维护固定标题区块。`<harnessRoot>/state/memory.md` 中的 `## Harness Guidance` 和 `.work_products/INDEX.md` 中的 `## Harness Maintenance Rules` 属于 package-managed sections，`sync` / `upgrade` 可以更新这些区块并迁移旧版无标题 seed 文案；用户自己的 memory 条目、文档产物地图和链接必须保留在区块之外。`.github/workflows/harness.yml` 使用 `pjsdlc:sdlc-harness:github-workflow:*` 注释 marker；只有 marker-managed workflow 或内容等于旧版 generated workflow 时才自动更新，自定义无 marker workflow 跳过并报告 `customized`。
-
-## 五、生命周期与阶段契约
-### 5.1 生命周期状态
-`.codex/state/lifecycle.yaml` 只记录当前项目处于哪个阶段，不记录所有任务细节。核心字段：
-
-```yaml
-project_name: "ProjectTemplate"
-version: "v0.1"
-current_phase: "REQUIREMENT_GATHERING"
-active_role: "pm"
-active_skill: "pjsdlc_pm_prd"
-current_milestone: "MVP"
-allowed_next_phases:
-  - "UI_UX_DESIGNING"
-```
-
-`lifecycle.yaml` 不保存 phase transition history。过去阶段流转是 git/PR/CI/release 系统里的 cold archive，不是 Agent 默认上下文。
-
-### 阶段枚举：
-- `IDLE`
 - `REQUIREMENT_GATHERING`
 - `UI_UX_DESIGNING`
 - `ARCHITECTING`
@@ -222,742 +96,45 @@ allowed_next_phases:
 - `REVIEWING`
 - `TESTING`
 - `RELEASING`
-- `COMPLETED`
 - `RFC_RECALIBRATION`
-- `BLOCKED`
 
-阶段流转不手改 `lifecycle.yaml`，使用：
+It used `.codex/state/lifecycle.yaml`, `plan.yaml`, `plan.draft.yaml`, `.work_products/**`, stage skills, stage templates, generated overviews, phase validators and phase transition helpers.
 
-```sh
-python3 tools/transition.py --to <PHASE>
-```
+The design goal was reasonable: make requirements, design, implementation, review, testing, release and requirement changes explicit so agents would miss less, recover faster and hand off better. The repository still keeps this historical implementation as source, legacy compatibility material and benchmark evidence.
 
-### 5.2 阶段契约
-阶段契约的 canonical source 写在 `.codex/pjsdlc_managed/policies/phase_contracts.yaml`。核心关系如下：
+## Benchmark Findings And Convergence Reason
 
-`phase_contracts.yaml` 使用轻量显式有向图表达阶段关系：`phases` 是阶段节点，只保存稳定的阶段 contract，例如 `goal`、`role`、`skill`、`inputs`、`outputs` 和 `gates`；`transitions` 是有向边，只保存合法流转、触发语义和少量运行期效果，例如设置或清理 `suspended_phase`。TESTING bugfix 回流也用普通 return edge 加 searchable trigger 表达，不新增重型 bugfix 状态机。完整设计原因和非重型图边界见 [ADR 004: Lightweight Graph Contracts](.work_products/05_decisions/ADR_004_lightweight_graph_contracts.md)。
+Delivery benchmark work exposed an important cost signal. Full document chains and frequent workflow gates add real time and token friction. On ordinary and medium-complexity projects, modern coding agents already internalize much of the single-stage product/design/test behavior that the stage Harness tried to force through default artifacts.
 
-| 阶段 | Skill | 主要输入 | 主要输出 | 出口 Gate | 下一阶段 |
-|---|---|---|---|---|---|
-| `REQUIREMENT_GATHERING` | `pjsdlc_pm_prd` | `.work_products/00_raw/` | `.work_products/01_product/`, `.work_products/INDEX.md` | `make validate-pm` | `UI_UX_DESIGNING` |
-| `UI_UX_DESIGNING` | `pjsdlc_uiux_design` | PRD、既有体验事实、可选 `DESIGN.md` | `.work_products/02_experience/**`、visual UI 的 `DESIGN.md`、`.work_products/INDEX.md` | `make validate-uiux` | `ARCHITECTING`；开发前可返回 `REQUIREMENT_GATHERING` |
-| `ARCHITECTING` | `pjsdlc_architect_design` | PRD、体验事实、`DESIGN.md`、现有架构、代码结构 | 架构文档、技术方案、`plan.draft.yaml` | `make validate-design` | `SPRINTING`；开发前可返回 `REQUIREMENT_GATHERING` 或 `UI_UX_DESIGNING` |
-| `SPRINTING` | `pjsdlc_dev_sprint` | `plan.yaml`、`plan.draft.yaml`、PRD、体验事实、`DESIGN.md`、技术方案、Development Self-Test Contract | 代码、测试、implementation docs、gate 记录、已消费 draft、runnable entry/exit、Development Evidence、Development Self-Test Report、Module Key Test Path / Graph | `make validate-dev` | `REVIEWING` |
-| `REVIEWING` | `pjsdlc_reviewer` | PRD、体验事实、`DESIGN.md`、技术方案、实现文档、`git diff` | Review report、entry/exit readiness、UX/design conformance 结论 | `make validate-review` | `TESTING`；实现偏差 bugfix 可返回 `SPRINTING` |
-| `TESTING` | `pjsdlc_tester` | PRD、体验事实、`DESIGN.md`、技术方案、实现文档、Review、既有 runnable entry/exit | Test strategy、test cases、test report、回归证据、coverage gaps、final decision | `make validate-test` | `RELEASING`；实现偏差 bugfix 可返回 `SPRINTING` |
-| `RELEASING` | `pjsdlc_release_manager` | 测试结果、build artifacts | Current release status、smoke result、rollback plan | `make validate-release` | `COMPLETED`；实现偏差 bugfix 可返回 `SPRINTING` |
-| `RFC_RECALIBRATION` | `pjsdlc_rfc_recalibrate` | RFC、PRD、体验事实、技术方案、任务状态 | 局部补丁、任务回退或增量任务 | `make validate-rfc` | `REQUIREMENT_GATHERING`、`UI_UX_DESIGNING` 或 `ARCHITECTING` |
+Observed implication:
 
-`transitions` 中的 return edge 表达受限回退目标。开发前回退 `ARCHITECTING -> REQUIREMENT_GATHERING` 用于尚未进入 `SPRINTING` 时补充或修正 PRD；`ARCHITECTING -> UI_UX_DESIGNING` 用于技术方案前补屏幕、交互、响应式、a11y 或视觉系统事实。回退后 lifecycle 的 `active_role` 和 `active_skill` 会切到对应 PM 或 designer 工作流；PRD task 完成并通过 `validate-pm` 后，再用 `python3 tools/transition.py --to UI_UX_DESIGNING` 继续体验设计，UI/UX task 完成并通过 `validate-uiux` 后进入 `ARCHITECTING`。进入 `SPRINTING` 后的需求或设计事实变化必须走 RFC recalibration。
+- stages, gate checks and fact-source writes are objective workflow friction and cannot be erased entirely;
+- the clearest remaining value is faster context recovery for future iteration, debug and requirement changes;
+- the highest-leverage durable fact source is likely a small Project / Delivery Context, not a full SDLC document chain;
+- full gates and rich process artifacts should be conditional, not default.
 
-后开发阶段 bugfix 回流也使用轻量 return edge：`REVIEWING`、`TESTING` 和 `RELEASING -> SPRINTING` 的 trigger 是 `bugfix_implementation_gap`，表示既有 PRD、UI/UX 和技术方案仍正确但实现偏离，需要补小的开发修复 task。它不记录执行历史，不新增 `bugfix` kind；区别通过 `trigger`、Review/Test/Release finding 和 `TEST_REPORT.md#Bugfix Route` 保持可搜索、可消费。需求、验收标准、产品边界、UX contract、DESIGN.md、tech plan、interface contract、task breakdown、Development Self-Test Contract 或 Module Key Test Graph 变化进入 RFC recalibration。
+Therefore the canonical product direction changed: preserve minimal durable context, leave product quality to project-specific validation, and use benchmark work to find the break-even curve where extra workflow structure pays back.
 
-`UI_UX_DESIGNING` 的设计取舍见 [ADR 007: UI/UX Design Stage and DESIGN.md Fact Source](.work_products/05_decisions/ADR_007_ui_ux_design_stage.md)。`validate-uiux` 要求 `.work_products/02_experience/**` 至少有一个非 overview deliverable；非 visual UI 项目必须明确 `Applicability: cli_or_api_experience` 或 `Applicability: not_applicable`；visual UI 项目必须有根目录 `DESIGN.md`，并通过本地 `@google/design.md` linter 的 error 检查。
+## Design Principles
 
-参考图、截图或视觉稿驱动的 UI/UX、美术、游戏画面和 HUD 重做任务使用轻量 `visual_reconciliation` task profile，而不是新增 lifecycle phase。该 profile 要求先记录 reference images、reference intent、usage boundary、当前截图或 mock、差异分析、下一轮改动和人工视觉确认；`assetKeys`、sprite 渲染、fallback 关闭和自动化 gate 只证明工程链路，不证明视觉已接近参考图。完整设计理由见 [ADR 009: Visual Reconciliation Task Profile](.work_products/05_decisions/ADR_009_visual_reconciliation.md)。
+- Minimal durable facts beat broad default ceremonies.
+- Context is for recovery and safe continuation, not for duplicating source code.
+- Harness should not claim product quality; it should point agents to verification entry points.
+- Semantic migration must be explicit and reversible.
+- Managed asset sync must be narrow and predictable.
+- Legacy stage assets can remain available without being the default new-project path.
+- Benchmark conclusions must distinguish high-confidence measured data from diagnostic or historical evidence.
 
-`RFC_RECALIBRATION` 是 SPRINTING 之后的受控中断阶段。`SPRINTING`、`REVIEWING`、`TESTING` 和 `RELEASING` 可以通过 `python3 tools/transition.py --to RFC_RECALIBRATION` 进入 RFC；transition helper 从 explicit transition edge 读取 `set_suspended_phase`，切换到 `pjsdlc_rfc_recalibrate`。RFC 完成并通过 `make validate-rfc` 后，resume edge 清理 `suspended_phase`，并按影响面回到 `REQUIREMENT_GATHERING`、`UI_UX_DESIGNING` 或 `ARCHITECTING` 中的一个阶段；这些上游阶段完成后再按正常顺序进入 `SPRINTING`。RFC 不直接回 `SPRINTING`，后开发阶段回 `SPRINTING` 的路径只表示 `bugfix_implementation_gap`。
+## Repository Product Areas
 
-`make validate-dev` / `npx sdlc-harness validate-dev` 是 SPRINTING 开发中 gate，允许当前 `current_task_id` 对应的 open task 留在 `plan.yaml`。它校验 lifecycle、当前 task 合同、dirty files、`plan.draft.yaml` 消费状态、runtime evidence task contract、`self_test_contract`、implementation doc、结构化 `Development Evidence` 和 `Development Self-Test Report`。
+This source workspace contains three maintained areas:
 
-新会话和 `/next` 入口不自动运行 `validate-dev` 或 `validate-current`。Agent 先使用 orientation fast path 读取当前状态和 task 合同；只有当用户要求验证、当前 task 到完成边界、阶段要流转、准备提交/发布，或本轮已经修改代码/文档需要收尾时，才运行对应 gate。
+- Harness source and package assets: `packages/sdlc-harness/**`, `.codex/pjsdlc_managed/**`, `tools/**`.
+- Package release and source-sync logic: build/test/release scripts and `packages/sdlc-harness/source-mappings.yaml`.
+- Delivery benchmark: `examples/delivery-benchmark/**`, used to test whether the Harness product direction improves same-quality lifecycle delivery efficiency.
 
-核心规则：
-- runtime/app/provider/live 类 task 必须声明 `evidence_level.required`、`target_runtime_environment` 和 `self_test_contract`。
-- `self_test_contract.required_gates` 必须同步出现在 task `required_gates`。
-- `module_key_test_path` 是短摘要和兼容入口；复杂或高风险任务可以设置 `graph_required: true` 并提供 `module_key_test_graph`。
-- `module_key_test_graph` 只保存入口、checkpoint、branch、scenario、observable exit、边和短 evidence pointer，不保存证据正文或执行历史。
-- implementation doc 必须包含 `Evidence Level`、`Target Runtime Environment`、`Runnable Entry`、`Observable Exit`、`Client / Server Initialization`、`Config Contract`、`Testing Handoff Readiness`、`Known Missing Runtime Boundaries`、`Basic Self-test Evidence`，或带原因的 `Not applicable`。
-- 当 `self_test_contract.status: "required"` 时，implementation doc 必须包含已执行的 `Development Self-Test Report`；只有 `Report Status: PASS` 且所有 scenario 为 `PASS` 才能关闭 development task。
-- `validate-dev` 校验自测报告与当前 contract 的一致性和完整性，不证明命令真实执行；Agent 必须先实际运行 current task `required_gates` 后再填写报告。
+## Legacy Material
 
-Module Key Test Graph 的 DAG 取舍见 [ADR 004](.work_products/05_decisions/ADR_004_lightweight_graph_contracts.md)；Development Self-Test Report 的 handoff-card 边界见 [ADR 005](.work_products/05_decisions/ADR_005_development_self_test_handoff.md)。`make validate-current` / `/advance` 是阶段出口 gate；在 `SPRINTING` 下会在 dev gate 后继续执行 no-open 检查，确保进入 `REVIEWING` 前已经完成 implementation commit 和 completion ledger。
+`.work_products/**` and `.codex/state/**` remain in this repository as historical self-authoring facts and migration input. They are not the package default for new projects.
 
-复杂 runtime/live/remote-operator task 使用 resume-first 现场模型。当当前 `SPRINTING` task 的 `evidence_level.required` 是 `external_provider_live`、`deployed_runtime`、`business_handoff_ready`，或 `target_runtime_environment.kind` 是 `cloud_vm`、`managed_service`、`browser`、`worker` 时，`plan.yaml` 顶层必须包含 `resume_capsule`。它只保存恢复卡片：`task_id`、`state`、`canonical_path`、`next_step`、`blocker`、`last_passed_gate`、`do_not_retry`、`recovery_refs`。凡会改变下一步动作的判断，必须 promoted 到 `resume_capsule.do_not_retry`、runbook 顶部 `Hard Constraints` 或短 `Current Operator Path`；不能只埋在 evidence、notes、appendix 或长 implementation doc 中。validator 会扫描 `working_notes`、implementation doc 和 runbook 中的 session / QR / canonical path / do-not-retry 类关键判断，未 promoted 时 fail。open task 的 `working_notes` 只保存恢复短备注，目标 5-8 条且 validator 上限 8 条。implementation doc 保存长期实现事实和短的 `Current Operator Path`；`.work_products/09_runbooks/**` 保存操作 runbook、evidence index 和 exploration appendix；证据正文和失败探索不得压进主线 implementation doc，也不得转移成 implementation doc 的 `Evidence Dump`、`Operator Log`、`Failed Attempts` 或 `Screenshot Index` 等主线章节。此类 task 的 `Development Self-Test Report` 还必须包含 `Gate Breakdown`，分开记录 local gate、cloud/service gate、executor/operator readiness 和 live smoke / handoff。
-
-TESTING 阶段 gate 仍命名为 `validate-test`。`.work_products/07_test/TEST_STRATEGY.md` 只描述测试范围、环境、优先级和执行策略；`.work_products/07_test/TEST_CASES.md` 只描述绑定真实 runnable entry/exit 的测试用例；`.work_products/07_test/TEST_REPORT.md` 只记录 TESTING 阶段实际执行后的测试矩阵、回归证据、runnable entry/exit coverage、coverage gaps 和 final decision。`TEST_CASES.md` case 使用稳定 `TC-*` ID，记录 requirement/risk ref、runnable entry、preconditions、steps、expected exit、type、priority 和短 evidence pointer；执行结果、bugfix route 和最终结论只属于 `TEST_REPORT.md`。`validate-test` 只接受 `.work_products/07_test/TEST_REPORT.md`，不再把 `.work_products/07_test/TEST_PLAN.md` 当作 report fallback。缺少 `TEST_CASES.md` 不会 retroactive fail；当报告引用 `TC-*`、当前 TESTING task 计划产出 `TEST_CASES.md`，或 case 文件已存在时，validator 才轻量校验 case 结构和 report 引用。
-
-开发尚未交付可测试入口/出口前，不在 `.work_products/07_test/**` 生成正式测试用例或测试报告；提前沉淀的验收思路应放在 PRD acceptance criteria、tech plan verification strategy 或非执行性 draft。RFC 替换模块技术路线、entry/exit 或验收边界后，必须同步检查 `.work_products/07_test/**`；被新方案 supersede 的旧测试环境、旧测试进度和旧测试结果要从当前测试事实源和 `.work_products/INDEX.md` 中移除，只通过 RFC provenance、git history、CI/release 系统或明确 archive 语义追溯。
-
-## 六、文档切片与阶段产物
-### 6.1 为什么要语义切片
-RAG 能减少一次性塞进上下文的内容，但固定 chunk 和余弦召回存在信息损失。对 README 这类说明文档，RAG 损失通常可以接受；对需求边界、否定约束、接口契约、测试矩阵、RFC 影响范围等执行约束，不能只依赖 RAG。
-
-所以 `.work_products/` 采用粗粒度语义切片：
-- 小到足以被稳定检索和引用。
-- 大到保持一个完整语义单元。
-- 不按固定 token 或段落机械切。
-
-### 6.2 各阶段切片责任
-文档切片不是统一由 `pjsdlc_pm_prd` 完成，而是谁生成阶段产物，谁负责按该阶段语义边界切片。
-
-| 目录 | 负责 Skill | 切片边界 |
-|---|---|---|
-| `.work_products/00_raw/` | `pjsdlc_pm_prd` | 一次会议、一段用户输入、一份外部需求文档或一次聊天记录 |
-| `.work_products/01_product/` | `pjsdlc_pm_prd` | 业务能力、用户场景、验收边界、Out of Scope |
-| `.work_products/02_experience/` | `pjsdlc_uiux_design` | 业务能力对应的 user journey、screen contract、interaction state、responsive/a11y acceptance 和 handoff matrix |
-| `.work_products/02_architecture/` | `pjsdlc_architect_design` | 领域边界、子系统、跨模块架构问题、关键技术风险 |
-| `.work_products/03_tech_plan/` | `pjsdlc_architect_design` | 可实现范围、接口契约、数据模型、模块方案、任务组 |
-| `.work_products/04_implementation/` | `pjsdlc_implementation_doc` | 真实实现模块、子系统、核心数据流 |
-| `.work_products/05_decisions/` | `pjsdlc_architect_design` | 单个架构决策，一份 ADR 对应一个 durable decision |
-| `.work_products/06_review/` | `pjsdlc_reviewer` | 一次 Review 批次、一个 PR、一个里程碑、一个模块或一个风险主题 |
-| `.work_products/07_test/` | `pjsdlc_tester` | 测试策略、测试用例、执行后测试报告、回归证据、覆盖缺口、领域测试范围 |
-| `.work_products/08_release/` | `pjsdlc_release_manager` | 当前发布状态、release notes、smoke evidence、rollback plan、known issues |
-| `.work_products/09_runbooks/` | `pjsdlc_dev_sprint` / `pjsdlc_tester` | runtime/live/remote-operator 恢复路径、证据索引和探索附录 |
-| `.work_products/rfc/` | `pjsdlc_rfc_recalibrate` | 一次可独立评估、实现和回归的需求变更 |
-
-`.work_products/05_decisions/` 采用 ADR（Architecture Decision Record）实践，用来记录关键长期决策的“为什么”。`<harnessRoot>/state/memory.md` 不承担完整决策记录，只保存跨阶段高频事实、约束摘要和到 `.work_products/**` 正式事实源的链接。ADR、memory 和 overview 边界见 [ADR 002: Fact Sources, Memory and Overviews](.work_products/05_decisions/ADR_002_fact_sources_memory_and_overviews.md)。
-
-如果文档变化没有改变语义边界，更新原 slice；如果新增独立场景、拆分模块、合并流程或 RFC 改变影响范围，应新增、拆分、合并或废弃 slice，并更新 `.work_products/INDEX.md`。
-
-`validate-design` 将 architecture / tech plan 语义切片作为硬约束。生成的 `overview.md` 不计入 deliverables；`plan.draft.yaml` 中每个开发 draft task 必须通过 `work_products.tech_plan` 引用存在的 `.work_products/03_tech_plan/` slice；多个开发 draft task 默认需要不同 primary tech plan slice。PRD、tech plan 或 draft task 明确包含 AI provider / copilot、外部系统边界、合规 / 权限 / 审计等横切主题时，必须有对应的专门 architecture slice。
-
-当用户明确要求把 `.work_products/01_product/` 中既有完整 PRD/产品方案文件，或 `.work_products/03_tech_plan/` 中既有完整技术方案文件切成多个 slices 时，完成条件不是“完整文件 + slices”并存。主 Agent 必须先确认 replacement slices 覆盖原文件中仍有效的事实；切片完成后更新 `.work_products/INDEX.md`，技术方案还要同步 `plan.draft.yaml` 引用，并运行 `make work-products-overview`；随后删除被替代的完整文件，避免同一事实源被重复检索和重复维护。`.work_products/00_raw/` 原始记录不因 PRD slicing 自动删除。
-
-implementation doc 是最终实现产物的事实层，默认与技术架构和技术方案中的模块、子系统或核心数据流对应。task 是执行和提交边界，task id、commit 和 RFC 只作为 implementation doc 的 provenance；多个 task 可以更新同一份 implementation doc。不要在 `.work_products/04_implementation/` 下维护按 task 编号铺开的 `dev_*.md` ledger；历史动作记录由 git commit、tag、release evidence 和模块级 implementation doc 共同承担。
-
-### 6.3 overview.md
-每个 `.work_products/<stage>/` 目录生成一个 `overview.md`：
-
-```sh
-make work-products-overview
-make validate-work-products-overviews
-```
-
-规则：
-- `overview.md` 不手写。
-- Markdown slices 和 `.work_products/INDEX.md` 才是事实源。
-- 任意 `.work_products/<stage>/**/*.md` 变化后，运行 `make work-products-overview`。
-- `make validate-harness` 会检查 overview 是否最新。
-
-## 七、任务状态与开发循环
-### 7.1 plan.yaml
-`.codex/state/plan.yaml` 是阶段任务的机器可读短期执行记忆，只保留当前和未来任务。`current_phase` 只保存在 `.codex/state/lifecycle.yaml`，`plan.yaml` 不重复保存当前阶段。open task 直接保存当前任务需要的执行合同；任务完成后从 `plan.yaml` 移除，避免过往任务变成无效上下文。
-
-从设计理念上说，`plan.yaml` 是长程目标被拆分后的短期任务容器，而不是只服务开发阶段的 sprint board。Harness 默认只解释 workflow 关心的任务，例如产品方案生成、文档切片、架构设计、技术方案生成、开发实现、Review、测试、发布准备和 RFC recalibration；更宽的团队任务定义属于本地配置或 overlay。完整 active state / task history 取舍见 [ADR 003: Plan State and Task History](.work_products/05_decisions/ADR_003_plan_state_and_task_history.md)。
-
-历史 `PRD-*`、`DES-*`、`DEV-*` 前缀只作为兼容旧记录和旧提交的 provenance。`next_task_sequence` 负责在历史 task 被移除后继续分配后续 `TASK-*` id，避免 id 冲突。典型 open task 字段：
-
-```yaml
-current_task_id: "TASK-003"
-next_task_sequence: 4
-tasks:
-  - id: "TASK-003"
-    phase: "REQUIREMENT_GATHERING"
-    title: "生成登录安全 PRD slice"
-    status: "in_progress"
-    summary: "根据用户输入生成一个登录安全产品方案 slice。"
-    work_products:
-      raw:
-        - ".work_products/00_raw/login_security_notes.md"
-      product:
-        - ".work_products/01_product/auth/login_security.md"
-    allowed_paths:
-      - ".work_products/00_raw/**"
-      - ".work_products/01_product/auth/login_security.md"
-      - ".work_products/INDEX.md"
-      - ".codex/state/plan.yaml"
-    required_gates:
-      - "make validate-plan"
-      - "make work-products-overview"
-    acceptance_criteria:
-      - "PRD slice 包含验收标准、Out of Scope 和 Open Questions。"
-    working_notes:
-      - "只记录恢复现场所需的短备注；目标 5-8 条且不得超过 8 条。"
-    result_work_products:
-      - ".work_products/01_product/auth/login_security.md"
-```
-
-文档、Review、测试、发布和 RFC 类 task 使用 `result_work_products` 指向本 task 产出的 PRD、architecture、tech plan、ADR、review report、test report、current release status、RFC 或 `plan.draft.yaml`。开发 task 使用 `implementation_work_product` 指向模块级实现事实文档。
-
-通用规则：任何阶段或工作流如果把 draft task promote 成 `plan.yaml` 中的正式 `TASK-*`，必须在同一次状态更新中从源 draft queue 删除该 draft；若正式 task 后续中断或 blocked，恢复现场只读取 `plan.yaml` 中的 open task。draft queue 只表示尚未采用的草案，不是完成历史或半 ledger。当前 Harness 内置 draft queue 只有 `plan.draft.yaml.tasks[]`，默认由 `ARCHITECTING` 生成开发草案、由 `SPRINTING` 消费开发草案。已完成历史继续由 implementation docs、git commit、PR/CI 和 release evidence 承担，不写回 draft queue。
-
-`ARCHITECTING` 产出 `plan.draft.yaml` 是为了在不污染当前执行状态的前提下完成开发交接。`plan.draft.yaml` 是跨阶段开发任务草案缓冲，而不是第二个 plan；只有当某阶段也需要提前为后续阶段生成具体执行任务、且这些任务不能马上进入当前 `plan.yaml` 时，才应引入同类 draft queue。
-
-task 完成后不再长期保留 done task 字段，当前 plan 回到只含待做任务或空列表：
-
-```yaml
-current_task_id: ""
-next_task_sequence: 4
-tasks: []
-```
-
-`parallel_execution` 是按需顶层合同，缺省不存在表示当前任务串行执行。每个阶段 task 开始时，主 Agent 默认执行 parallel eligibility check；适合安全拆分时加入 `parallel_execution.trigger: "workflow_default"` 并优先使用 `runtime.provider: "codex_native_subagents"`，不适合拆分时保持串行并记录原因。用户明确提出“并行”“多 agent”或“多 worktree”时，使用 `trigger: "user_requested"`。`parallel_execution` 不保存 `phase` 或 `linked_task_id`；当前阶段从 lifecycle 的 `current_phase` 读取，当前任务从 plan 的 `current_task_id` 读取。`user_orchestrated` 用于用户手动打开多个对话或 worktree 并粘贴 worker prompt；`codex_exec_worktree` 用于高风险写入或用户要求强隔离的 fallback，第一版不新增独立并行调度 CLI。
-
-```yaml
-parallel_execution:
-  enabled: true
-  trigger: "workflow_default"
-  mode: "runtime_managed"
-  runtime:
-    provider: "codex_native_subagents"
-  coordinator: "main_agent"
-  workers:
-    - id: "worker-auth"
-      writes_repo: true
-      owned_paths:
-        - "src/auth/**"
-      forbidden_paths:
-        - "<harnessRoot>/state/**"
-        - ".work_products/INDEX.md"
-      expected_output:
-        - "implementation branch and focused gate evidence"
-      required_gates:
-        - "npm test -- tests/auth"
-  integration:
-    owner: "main_agent"
-    merge_strategy: "main agent reviews worker output, merges or cherry-picks, then runs total gates"
-    required_gates:
-      - "make validate-current"
-    fact_source_updates:
-      - ".work_products/04_implementation/"
-```
-
-需求、架构、Review 和 RFC 阶段的 worker 只产出调研、草稿、风险、findings 或 impact analysis，最终事实源由主 Agent 合成。开发阶段 worker 只能改自己的非空、互不重叠且位于当前 task `allowed_paths` 内的 `owned_paths`，不得直接改 `plan.yaml`、`lifecycle.yaml`、`.work_products/INDEX.md`、overview 或最终 implementation doc。测试阶段 worker 可以并行产出验证证据或 scoped test changes，最终 test report 和 PASS/BLOCKED 决策由主 Agent 汇总。发布阶段 worker 只做 read-only preflight，publish/tag/push/delete/deploy 由主 Agent 执行。
-
-### 任务状态：
-- `pending`
-- `in_progress`
-- `done`
-- `blocked`
-- `pending_revision`
-- `cancelled`
-
-### 7.2 开发阶段循环
-开发阶段不是反复重写整个 Sprint 计划，而是：
-
-```txt
-检查 git status，确认没有未归属到当前 task 的脏变更
--> 如存在历史 task 残留变更，先完成对应 task commit/push 或报告 blocker
--> 如果 plan.yaml 没有 open task，从 plan.draft.yaml.tasks[] promote 下一个 draft 为正式 TASK-* 并同次删除源 draft
--> 读取 current_task
--> 读取当前 open task 的 allowed_paths / required_gates / acceptance_criteria
--> 执行代码和测试
--> 运行 current_task.required_gates
--> 写入或更新相关 implementation doc
--> 刷新 overview.md
--> 保持当前 task 仍位于 plan.yaml
--> 创建 task implementation commit
--> 从 plan.yaml 中移除当前 task
--> 创建 task completion ledger commit
--> git push 两个 commit 到当前 upstream branch
--> 重新读取 plan.yaml 和 plan.draft.yaml，选择下一个 open task 或未采用 draft
-```
-
-开发阶段默认一个 task 对应一个主要实现提交和一个轻量完成记录提交。task implementation commit 的 commit message 应包含 task id，例如 `TASK-003: implement login rate limit`。这个 commit 应包含该 task 的代码、测试、被更新的模块级 implementation doc、`.work_products/INDEX.md`、`overview.md` 和必要验证证据；不要把多个 task 混进同一个 commit，也不要把未归属变更顺手带入。
-
-task completion ledger commit 发生在 implementation commit 之后，只负责把当前 task 从 `plan.yaml` 移除。不要把这个清理动作 amend 回 implementation commit，否则 task 的实现变更和当前计划短期化会混在一起，后续追溯不清晰。
-
-默认不要追溯 done task 的执行流水。修 bug、补功能和继续开发时，以当前代码、测试、PRD、技术方案和模块级 implementation doc 为准；历史 task 查询主要看“做了什么、为什么做、影响哪个模块、验证了什么”。task id 和 commit 只作为 provenance；`allowed_paths`、`required_gates`、临时 `working_notes` 是执行期约束，不作为历史查询 API。只有用户明确要求 forensic/audit/regression 追溯时，才临时查询 git、PR、CI 或 release 记录。
-
-两个 commit 都 `git push` 成功前，不认为该 task 完成，也不要进入下一个 pending task。如果仓库没有 remote/upstream、没有权限、凭证失效或 push 被拒绝，当前 task 应停在需要人工处理的状态并报告 blocker；不能为了继续执行而静默跳过 push。
-
-只有这些情况才回到 RFC 或架构阶段重新规划：
-- 技术方案被实现证明不可行。
-- 当前任务暴露新的架构风险或跨模块边界变化。
-- 需求发生变化。
-- 当前 task 的 `allowed_paths` 无法覆盖必要修改。
-- gate 失败不是普通代码问题，而是设计、基建或环境阻塞。
-
-### 7.3 Plan Protocol
-`plan.yaml` 是 open task 的执行合同和现场快照，用来约束当前修改范围、记录必要 gate，并降低上下文压缩、中断、新开对话或多人交接时的信息损失。它不是 PRD、不是技术方案，也不是完成后的 implementation doc。
-
-这里的 `task` 有两层含义：产品理念上，它可以表示任何被拆分出来、服务项目目标的可执行小任务；workflow 协议上，Harness 只对阶段产物和阶段 gate 需要处理的任务作默认约束。这个边界让 `plan.yaml` 保持开放，同时避免通用工作流把所有 Agent 辅助动作、临时查询和本地团队事务都强制写进阶段协议。项目需要更广义的任务跟踪时，应通过本地配置或 overlay 扩展，而不是修改通用 `TASK-*` workflow contract 的核心语义。
-
-层级关系：
-
-```txt
-PRD
--> tech plan
--> plan.draft.yaml 中的未采用开发草案
--> plan.yaml 中的 TASK task
--> `.work_products/**` slices 或代码/测试
--> 模块级 implementation doc
-```
-
-每个 open task 都必须在 `plan.yaml` 中包含 `phase`、`work_products`、`allowed_paths`、`required_gates` 和 `acceptance_criteria`。文档、Review、测试、发布和 RFC 类 task 使用 `result_work_products`，开发 task 使用 `implementation_work_product`。执行中只把必要现场写成短 `working_notes`；任务完成并写入或更新相关事实源后，把该 task 从当前 `plan.yaml` 移除。历史动作记录以 git/PR/CI/release 系统作为 cold archive，产物结果以 `.work_products/**` slice、Review/Test/Release/RFC 文档或模块级 implementation doc 为准。任何 draft queue 都只表示尚未采用的草案，不表示已完成历史；当前内置的 `plan.draft.yaml.tasks[]` 是开发草案队列。
-
-过去 phase/task/gate 执行流水不是 Agent 默认上下文。`plan.yaml` 不长期保存 commit hash，`lifecycle.yaml` 不保存 `history`，completion ledger commit 只负责把当前 plan 恢复为短期、低噪声状态。只有用户明确要求 forensic/audit/regression 追溯时，才临时查询 git、PR、CI 或 release 记录。
-
-Gate evidence 不再使用独立 state 文件。执行中如需恢复现场，可把关键 gate 结果写入当前 task 的 `working_notes`；任务完成后，最终验证事实写入相关 implementation doc 的 `Verification`，CI logs 或 release 记录也可以作为长期外部记录。
-
-## 八、阶段 Skill
-每个 Skill 只负责一个阶段或动作。
-
-通用阶段 Skill 不只是文档切片规则，也必须包含可直接用于对话的专业角色提示词。角色提示词负责说明该角色如何澄清需求、提出取舍、识别 blocker、与用户共同生成阶段产物，并把产物落到 `.work_products/`、`plan.yaml`、gate 或实现记录中。因为这些 Skill 会作为 npm 包默认能力分发，角色提示词应保持通用、专业、强约束，不绑定具体业务项目，也不要求用户直接修改 managed Skill。
-
-如果业务项目需要补充不同阶段的角色提示词，不直接编辑 `<harnessRoot>/skills/**/SKILL.md`。项目应在 `<harnessRoot>/pjsdlc_managed/override_skills/<skill_name>.md` 写本地 override，并运行 `sdlc-harness sync`，由 sync 把 package base Skill 和本地 `Local Override` 区块合成到最终 managed Skill 输出。v1 只支持追加覆盖，不支持整段替换通用 Skill；`<skill_name>` 必须匹配已有 workflow Skill，例如 `pjsdlc_pm_prd`、`pjsdlc_architect_design` 或 `pjsdlc_dev_sprint`。override 可以是普通追加片段，也可以是带 `name` 和 `description` frontmatter 的完整 `SKILL.md` extension；完整 Skill override 的 `name` 必须匹配 `<skill_name>`，`description` 会合并进最终 metadata，正文会在剥离 override frontmatter 后完整追加。合并后用户或用户的 Agent 应检查 base Skill 与 local override 是否存在阶段边界、`allowed_paths`、`required_gates`、提交/发布规则或完成检查的语义冲突。
-
-### 8.1 Skill 索引模型：hard index 与 soft index
-
-Harness workflow skill 同时支持 native skill hard index 和 Harness soft index。这里的 “hard / soft” 有两个层次，必须分清：
-
-- **Native skill hard index**：Agent 客户端或 runtime 在模型回答前扫描自己的固定 skill root 或 registry，枚举候选 `SKILL.md`，再按语义命中并水合。它是否生效由具体 Agent 决定；只在 `AGENTS.md` 里写“skill 路径是 `<harnessRoot>/skills`”不能强行改变客户端预水合机制。
-- **Harness hard file index**：Harness 在项目内稳定生成 `<harnessRoot>/skills/<skill_name>/SKILL.md`。这是 workflow 的文件路径契约，保证 `AGENTS.md`、`lifecycle.yaml` 和 `phase_contracts.yaml` 能确定性找到对应角色提示词；它本身不等于 native skill 注册。
-- **Harness soft index**：Agent 启动后读取 `AGENTS.md`，按 `lifecycle.yaml.current_phase`、`active_skill` 和 `phase_contracts.yaml` 决定下一步该读取哪个 `<harnessRoot>/skills/<skill>/SKILL.md`。这是跨 Agent 的默认路由方式，依赖模型遵守项目协议，但不要求客户端原生支持 skill registry。
-
-| 通道 | 触发时机 | 机制 | 适用场景 |
-|---|---|---|---|
-| Native skill hard index | Agent 回答前 | Agent 客户端扫描自己的 native skill root / registry，命中后把 `SKILL.md` 作为首轮上下文水合 | 用户说“产品方案”“技术方案”“开发循环”等片段时，客户端可在首轮直接命中对应 skill |
-| Harness soft index | Agent 进入项目后 | `AGENTS.md` 要求先读 `lifecycle.yaml`，再按 `active_skill` / `phase_contracts.yaml` 读取 `<harnessRoot>/skills/<skill>/SKILL.md` | 跨 Agent 默认路径；即使没有 native skill 注册，也能按当前阶段稳定路由 |
-
-`<harnessRoot>/skills/**` 是项目内 source of truth；它不自动等同于任意 Agent 的 native skill root。若要获得 native skill 首轮水合，需要由具体 Agent adapter、安装命令或客户端配置把这些 workflow skills 注册到该 Agent 支持的目录中。Harness 本身仍保留 soft index，保证不同 Agent 都能在读取项目规则后工作。
-
-| Skill | 负责内容 |
-|---|---|
-| `pjsdlc_manager` | 读取 lifecycle/plan/index，将自然语言意图或 `/status`、`/next`、`/advance`、`/rfc` 路由到 workflow action，执行阶段切换 |
-| `pjsdlc_pm_prd` | 原始需求归档、PRD 切片、验收标准、Out of Scope、Open Questions，并按 `phase: "REQUIREMENT_GATHERING"` 的 `TASK-*` 小步产出 |
-| `pjsdlc_uiux_design` | 基于 PRD 产出 UX flow、screen contracts、interaction states、responsive/a11y acceptance、handoff matrix、参考图驱动任务的 visual reconciliation 和 visual UI 的 `DESIGN.md`，并按 `phase: "UI_UX_DESIGNING"` 的 `TASK-*` 小步产出 |
-| `pjsdlc_architect_design` | 架构设计、技术方案、接口契约、任务草案、ADR，并按 `phase: "ARCHITECTING"` 的 `TASK-*` 小步产出 |
-| `pjsdlc_dev_sprint` | 按 `current_task_id` 执行开发、控制 `allowed_paths`、运行 `required_gates`，交付已承诺的 runnable entry/exit，并在每个 task 完成后 commit/push |
-| `pjsdlc_implementation_doc` | 记录真实实现结构、数据流、runnable entry/exit、测试覆盖和方案偏移 |
-| `pjsdlc_reviewer` | 只读 Review，输出 findings、风险、重构建议、entry/exit readiness 和测试入口结论 |
-| `pjsdlc_tester` | 生成 test strategy/test cases、补测试、调用既有入口记录执行后 test report、回归和覆盖缺口；发现入口/出口缺失时返回 `BLOCKED` |
-| `pjsdlc_release_manager` | Current release status、build artifacts、smoke test、deployment checklist、rollback plan |
-| `pjsdlc_rfc_recalibrate` | RFC 影响分析、局部补丁、任务回退或增量任务 |
-
-### 提示词语言契约：
-- 面向人阅读的说明、规则、SOP、检查清单使用中文。
-- 机器契约保持英文，包括字段名、路径、命令、阶段枚举、状态枚举、脚本参数。
-- 不翻译 `current_phase`、`active_skill`、`allowed_paths`、`required_gates`、`implementation_work_product` 等字段名。
-- 不翻译 `REQUIREMENT_GATHERING`、`UI_UX_DESIGNING`、`SPRINTING`、`done`、`pending_revision` 等枚举。
-- 后续更新提示词时运行 `make validate-harness`。
-
-## 九、Gate 与命令入口
-### 9.1 常用命令
-```sh
-make status
-make work-products-overview
-make validate-work-products-overviews
-make validate-harness
-make validate-current
-make validate-pm
-make validate-uiux
-make validate-design
-make validate-dev
-make validate-review
-make validate-test
-make validate-release
-make validate-rfc
-```
-
-`npx sdlc-harness inspect-workflow` 是 package 侧轻量自查入口，用于检查项目 workflow 是否过重、事实源是否漂移、当前交接是否清楚以及 high-risk recovery 是否安全。它只读本地事实源，输出 `PASS` / `WARN` / `BLOCKED`，并为每个 metric 标注 `measured`、`inferred`、`self_reported` 或 `unavailable`。真实 token/time 不是本地事实源；只有用户或 Agent 显式提供时才作为 `self_reported` 指标，否则必须显示为不可测或 proxy 判断。Outcome comparison 使用同等质量基线比较 Harness 与纯 vibe coding：判断口径是 Review-ready、Testing-ready、handoff/recovery-ready，而不是首轮代码生成速度；其稳定目标是确认适度流程成本是否换来更少遗漏、更少返工和更好交接。
-
-`examples/delivery-benchmark/` 是 Outcome Comparison 的公开自测资产：用固定需求、变更、恢复点和评分 rubric 对照 plain AI coding 与 Harness 路径，验证 workflow overhead 是否换来更好的需求覆盖、变更处理、测试边界和交接恢复。它属于示例/benchmark 资产，不是用户项目 managed assets；原始运行日志和临时项目不进入长期 spec。
-
-### 9.2 阶段 gate
-- `validate-pm`：检查 PRD、验收标准、Out of Scope、Open Questions。
-- `validate-design`：检查架构、技术方案、`plan.draft.yaml`、draft task 的 `work_products.tech_plan` 引用、tech plan primary slice 去重、横切 architecture slice，以及可运行边界 task 的 `self_test_contract` 与 tech plan `Development Self-Test Contract` 绑定，包括 `module_key_test_path` 和 graph-required task 的 `module_key_test_graph`。
-- `validate-dev`：作为 direct SPRINTING gate，允许合法当前 open task，检查 lifecycle、当前 task 合同、runtime evidence task contract、`self_test_contract`、dirty files、已消费 draft、lint、测试、implementation docs、已承诺 runnable entry/exit、目标运行环境、结构化 Development Evidence、Development Self-Test Report、Module Key Test Path 和必要时的 Module Key Test Graph；它校验自测报告与当前 contract 的内容一致性，不证明命令真实执行；阶段出口仍由 `validate-current` 追加 no-open 检查。
-- `validate-review`：检查 Review report 和进入 TESTING 前的 runnable entry/exit readiness 结论。
-- `validate-test`：检查 `TEST_REPORT.md` 执行证据、test matrix、回归证据、覆盖缺口和 TESTING 阶段边界；测试阶段不能新增 product runtime、bootstrap、provider adapter、deploy 或 package runtime script，也不能用 `TEST_PLAN.md` 充当执行报告。
-- `validate-release`：检查 current release status、smoke result 和 rollback plan。
-- `validate-rfc`：检查 RFC、影响范围、回归要求和涉及 entry/exit、runtime、gate、handoff、blocker、模块关键测试路径或 Module Key Test Graph 变化时的 Development Self-Test Impact。
-
-### 9.3 CI/CD
-团队协作时，Makefile gate 可以映射到 GitHub Actions、GitLab CI、PR check 或分支保护。当前模板提供 `.github/workflows/harness.yml`，默认运行 `validate-harness`，也可手动选择其它 gate。
-
-## 十、需求变更机制
-### 10.1 RFC 原则
-需求变更不能直接改 PRD、技术方案、任务或代码。先写 RFC，再影响分析，再局部补丁。
-
-RFC 必须包含：
-- 变更背景
-- 变更内容
-- Product impact
-- Technical impact candidates
-- Acceptance Criteria
-- Regression Requirements
-- Status: `DRAFT` / `APPLIED` / `VERIFIED` / `ARCHIVED`
-
-### 10.2 开发中途变更
-触发条件：`plan.yaml` 中仍有 `pending` 或 `in_progress` 任务。
-
-处理流程：
-```txt
-进入 RFC_RECALIBRATION
--> 局部修改 PRD / 技术方案
--> 标记受影响 done 任务为 pending_revision
--> 未完成但受影响任务追加 revision notes
--> 恢复 SPRINTING
--> 重新执行受影响任务
--> 运行回归测试
-```
-
-### 10.3 封版后变更
-触发条件：当前里程碑已完成或准备新版本。
-
-处理流程：
-```txt
-用 git tag 或 release commit 固化当前版本
--> 新建增量 tasks
--> 局部修改文档
--> 执行增量任务
--> 全局回归测试
--> 更新 `.work_products/08_release/CURRENT_RELEASE.md` 或外部发布记录
-```
-
-### 10.4 影响分析边界
-影响分析不能假定绝对精确。推荐组合：
-- LLM 语义识别：找业务入口和概念入口。
-- 静态分析：从导入关系、调用关系、测试引用生成候选范围。
-- 回归测试：验证未变更模块没有被破坏。
-
-## 十一、宏指令协议
-用户不需要记忆宏指令。自然语言意图和约定宏指令是两层入口：自然语言是主要控制方式，宏指令由 `manager` 根据生命周期路由，作为更完整、更细节的提示词别名、调试入口或自动化入口保留。两层入口必须映射到同一组 workflow action，避免“自然语言一套、命令一套”。区别在于宏指令携带更稳定的细节约束；简单自然语言入口成本更低，但更依赖 Agent 根据当前上下文补足细节。
-
-常见自然语言映射：
-
-| 用户表达 | 内部 workflow action |
-|---|---|
-| “现在到哪了 / 状态如何” | 等价 `/status` |
-| “继续 / 下一步 / 推进” | 等价 `/next` |
-| “能进入下一阶段吗 / 进入下一步” | 等价 `/advance` |
-| “需求变了 / 这个设计要改 / 技术方案要改” | 如果当前仍在 `ARCHITECTING` 且尚未进入开发，可回到 `REQUIREMENT_GATHERING` 修改 PRD，或回到 `UI_UX_DESIGNING` 修改体验 / 屏幕 / 视觉事实；如果已经进入 `SPRINTING` 或之后，进入 RFC workflow，并在 `validate-rfc` 后返回 `REQUIREMENT_GATHERING` / `UI_UX_DESIGNING` / `ARCHITECTING` |
-| “完善产品方案 / 写 PRD / 我提供信息，你帮我完善产品方案” | 等价 `/prd`；在 `REQUIREMENT_GATHERING` 更新 PRD，或在开发前从 `ARCHITECTING` 回到 `REQUIREMENT_GATHERING` 后更新 |
-| “做 UI/UX 设计 / 交互设计 / 视觉设计 / 屏幕设计” | 等价 `/uiux`，在 `UI_UX_DESIGNING` 更新 `.work_products/02_experience/**` 和 visual UI 的 `DESIGN.md` |
-| “设计技术方案 / 做架构方案 / 根据 PRD 做技术方案” | 等价 `/design`，在 `ARCHITECTING` 更新 architecture、tech plan 和 `plan.draft.yaml` |
-| “开始开发 / 做当前任务 / 做下一个任务” | 等价 `/dev`，在 `SPRINTING` 创建或选择下一个最小 `TASK-*` development task；如来自 draft，同次消费源 draft；并完成一个 task 闭环 |
-| “开始循环：写任务，执行任务 / 把开发循环跑完” | 等价 `/devloop`，连续运行开发循环直到 `plan.yaml` 和 `plan.draft.yaml` 都没有明确任务或遇到 blocker |
-| “跑测试 / 验证一下” | 运行当前 task 或阶段对应 gate |
-| “准备 review / 帮我 review” | 进入只读 Review |
-| “刷新文档总览 / 同步 overview” | 等价 `/overview` |
-
-`/status` 和 `/next` 默认只做 orientation fast path，不自动触发 `/advance`、`make validate-current` 或 full regression。“跑测试 / 验证一下”仍运行当前 task 或阶段对应 gate；“能进入下一阶段吗 / 进入下一步”才进入 `/advance` 的阶段出口验证。
-
-当自然语言意图会改变阶段、创建或删除 task、提交、push 或发布时，Agent 先说明即将执行的动作和验证方式，再继续。
-
-快捷宏指令：
-
-| 宏指令 | 作用 |
-|---|---|
-| `/status` | 读取 lifecycle、tasks、gate 结果，报告当前状态 |
-| `/next` | 根据当前阶段调用对应 Skill |
-| `/advance` | 运行当前阶段出口 gate，通过后流转 |
-| `/rfc <file>` | 挂起当前流程，进入 RFC 变更处理 |
-| `/prd` | 在需求阶段澄清用户目标，更新 PRD、验收标准、open questions、`.work_products/INDEX.md` 和 overview；开发前处于 `ARCHITECTING` 时可先回到 `REQUIREMENT_GATHERING` |
-| `/uiux` | 在体验设计阶段生成 UX flow、screen contracts、interaction states、responsive/a11y acceptance、handoff matrix 和必要时的 `DESIGN.md` |
-| `/design` | 在架构阶段基于 PRD 更新 architecture、tech plan 和 `plan.draft.yaml` |
-| `/dev` | 创建或选择下一个最小 `TASK-*` development task；如来自 draft，同次消费源 draft；执行一个 task，完成 gate、implementation doc、两段 commit/push 后停止 |
-| `/devloop` | 连续运行 `/dev`，直到 `plan.yaml` 和 `plan.draft.yaml` 都没有明确可创建/执行的 task 或遇到需求、架构、allowed_paths、gate、commit/push blocker |
-| `/sync-work-products` | 归档/切分长文档，更新 `.work_products/INDEX.md` |
-| `/overview` | 运行 `make work-products-overview` |
-| `/review` | 进入只读 Review |
-| `/test` | 进入测试报告和验证流程 |
-
-## 十二、Codex 适配方式
-Codex 不需要真实“模式切换”：
-- 阶段由 `lifecycle.yaml` 决定。
-- 角色由 `active_skill` 决定。
-- 阶段切换由 `transition.py` 完成。
-- 切换裁决由 Makefile / Hook / CI 完成。
-- `/plan` 和 `/goal` 是 Codex 客户端模式，不由 Harness 自动开启；用户可以手动组合 `/plan /prd`、`/plan 完善产品方案`、`/goal /devloop` 或 `/goal 开始循环：写任务，执行任务`。
-
-新对话或上下文压缩后的恢复入口：
-1. 读取 `AGENTS.md`。
-2. 运行 `make status`。
-3. 读取 `.codex/state/lifecycle.yaml`。
-4. 读取 `.codex/state/plan.yaml`。
-5. 根据 `active_skill` 进入当前阶段。
-
-## 十三、最小可落地版本
-最小闭环可以先保留：
-
-```txt
-/project-root
-├── AGENTS.md
-├── Makefile
-├── .work_products/
-│   ├── INDEX.md
-│   ├── 01_product/
-│   ├── 02_experience/
-│   ├── 03_tech_plan/
-│   ├── 04_implementation/
-│   └── rfc/
-├── .codex/state/
-│   ├── lifecycle.yaml
-│   └── plan.yaml
-├── .codex/skills/
-│   ├── pjsdlc_manager/
-│   ├── pjsdlc_uiux_design/
-│   ├── pjsdlc_dev_sprint/
-│   ├── pjsdlc_implementation_doc/
-│   └── pjsdlc_rfc_recalibrate/
-└── tools/
-    ├── build_work_product_overviews.py
-    ├── transition.py
-    ├── validate_plan.py
-    └── validate_task_docs.py
-```
-
-`tools/*.py` 是 npm package-managed Harness workflow tools。`sdlc-harness init`、`sync` 和 `upgrade` 会从 package assets 生成或更新这些 Python 脚本，保证旧项目能拿到 `transition.py`、validators 和 overview 生成器的修复；authoring-only `.mjs` scripts 不分发到用户项目。
-
-可选快捷命令：
-- `/status`
-- `/next`
-- `/advance`
-- `/rfc`
-- `/prd`
-- `/uiux`
-- `/design`
-- `/overview`
-
-最小任务完成标准：
-1. 代码已修改。
-2. 相关检查已通过。
-3. 相关 implementation doc 已生成或更新。
-4. `.work_products/INDEX.md` 已更新。
-5. `overview.md` 已刷新。
-6. open task 的 plan 执行合同已完整。
-7. `plan.yaml` 已在 implementation commit 之后移除 done task。
-8. 已在当前 task 移除前创建 task implementation commit。
-9. 已在 implementation commit 之后短期化 `plan.yaml`，并创建 task completion ledger commit。
-10. 已 `git push` 两个 commit 到当前 upstream branch；如果 push 失败，任务不能视为完成。
-
-## 十四、完整工作流示例
-场景：新增“登录失败 5 次后锁定账号 10 分钟”功能。
-
-1. 需求进入系统：
-   - 保存原始需求到 `.work_products/00_raw/`。
-   - 生成 `.work_products/01_product/auth/account_lock.md`。
-   - 记录 Open Questions，例如管理员解锁是否需要审计日志。
-   - 更新 `.work_products/INDEX.md` 和 `overview.md`。
-
-2. 进入体验设计阶段：
-   - 运行 `make validate-pm`。
-   - `transition.py --to UI_UX_DESIGNING`。
-   - 生成 `.work_products/02_experience/auth/account_lock_experience.md`，覆盖用户旅程、screen contracts、错误/成功/权限状态、responsive/a11y acceptance 和 handoff matrix。
-   - 如果这是 visual UI 能力，同步生成或更新根目录 `DESIGN.md`。
-
-3. 进入架构阶段：
-   - 运行 `make validate-uiux`。
-   - `transition.py --to ARCHITECTING`。
-   - 基于 PRD、体验事实和 `DESIGN.md` 生成架构文档、技术方案和 `plan.draft.yaml`。
-
-4. 进入开发阶段：
-   - 确认任务后进入 `SPRINTING`。
-   - `pjsdlc_dev_sprint` 读取当前 task、PRD、UI/UX contract、`DESIGN.md` 和技术方案。
-   - 读取当前 task 的 `allowed_paths`，并在范围内修改代码和测试。
-   - 运行当前 task 的 `required_gates`。
-   - 如果任务过长或 gate 失败，更新当前 task 的短 `working_notes`。
-
-5. 任务完成：
-   - gate 通过后调用 `pjsdlc_implementation_doc`。
-   - 写 `.work_products/04_implementation/auth/account_lock_impl.md`。
-   - 更新 `.work_products/INDEX.md`、`overview.md`，并在当前 task 仍位于 `plan.yaml` 时创建 task implementation commit。
-   - 从当前 `plan.yaml` 移除该 task 并创建 task completion ledger commit。
-
-6. Review、测试、发布：
-   - `pjsdlc_reviewer` 输出 Review report。
-   - `pjsdlc_tester` 生成 test strategy / test cases，调用既有 entry/exit 跑回归，并输出执行后的 `TEST_REPORT.md`。
-   - `pjsdlc_release_manager` 输出 current release status、smoke result 和 rollback plan。
-
-7. 后续变更：
-   - 新需求写入 `.work_products/rfc/RFC_*.md`。
-   - `pjsdlc_rfc_recalibrate` 做影响分析。
-   - 受影响任务标记为 `pending_revision` 或生成增量任务。
-   - 执行回归测试。
-
-## 十五、新旧方式对比
-### 15.1 单纯 vibe coding
-- 优点：Agent 能快速生成局部代码、修复局部 bug、补测试、解释代码。
-- 瓶颈：阶段产物、任务状态、交付约束和需求变更记录没有统一固定下来。
-- 风险：项目越长，越依赖人类手动同步上下文；需求变更时容易漏改或误改。
-
-### 15.2 AI SDLC Harness
-- 新增机制：阶段契约、统一事实源、阶段 Skill、执行计划、交付 gate、实现文档、RFC、overview。
-- 改变层级：不是提升 Agent 单次生成能力，而是提升 Agent 参与复杂软件工程时的阶段衔接和交付可验证性。
-- 收益来源：降低阶段执行成本、阶段衔接成本和阶段交付成本。
-
-## 十六、总结
-AI SDLC Harness 是面向 AI Agent 的需求全链路工作流骨架。它把阶段目标、阶段产物、阶段 Skill、执行计划、交付 gate、实现文档、语义切片、派生总览和 RFC 变更协议固定进仓库。
-
-Agent 仍然以 vibe 方式完成单阶段任务；Harness 负责让整个项目保持阶段连续、事实可寻址、交付可验证、变更可回溯。
-
-## 十七、本工作流项目如何使用工作流迭代自己
-本仓库是 AI SDLC Harness 的自举开发仓库。它既保存工作流能力本身，也使用这套工作流来迭代工作流能力本身。
-
-本章记录当前 canonical behavior；自举 authoring overlay、通用 package asset 和项目实例数据的长期职责边界见 [ADR 006: Authoring Overlay and Package Boundary](.work_products/05_decisions/ADR_006_authoring_overlay_and_package_boundary.md)。
-
-### 17.1 工作流配置的定义与范围
-这里的“工作流配置”是定义 Harness 如何运行的一整套协议，包括：
-
-- Agent 入口和角色规则：`AGENTS.md`、`<harnessRoot>/skills/**/SKILL.md`。
-- 阶段与 gate 策略：`<harnessRoot>/pjsdlc_managed/policies/**`。
-- 阶段产物模板：`<harnessRoot>/pjsdlc_managed/templates/**`。
-- state protocol：`lifecycle.yaml`、`plan.yaml`、`plan.draft.yaml`、memory 的字段结构、状态枚举、迁移规则和校验逻辑。
-- task/plan protocol：`current_task_id`、`next_task_sequence`、`tasks[]`、`result_work_products` / `implementation_work_product`、`allowed_paths` / `required_gates`。
-- validators、lifecycle transition、sync、upgrade、migration 等确定性工具逻辑。
-
-关键边界是：状态结构 / schema / 生命周期规则属于 Harness 工作流配置；状态实例 / 当前值属于当前项目运行数据。详细 source trace 和 package 边界见 [ADR 006](.work_products/05_decisions/ADR_006_authoring_overlay_and_package_boundary.md)。
-
-### 17.2 为什么可以自迭代
-这个仓库既是 reference implementation，也是 authoring workspace：它不是在工作流之外手工维护工作流，而是在工作流内部把工作流当作当前项目来需求分析、架构设计、开发实现、Review、测试和发布。
-
-### 17.3 本仓库实际开发的项目
-当前仓库中实际开发的项目有两个紧密相关的目标：迭代 AI SDLC Harness 工作流配置本身；开发并迭代 npm 包分发能力。
-
-本仓库保存的是：
-
-```txt
-Harness 工作流能力源码
-+ 当前自举项目的 state data
-+ 当前自举项目的 .work_products 产物
-+ 面向其它项目分发的 npm 包源码
-```
-
-而 npm 包导出的是：
-
-```txt
-state schemas / initial state templates / validators / lifecycle transition logic
-task-plan protocol / memory protocol
-skills / policies / templates / sync / upgrade / migrations
-```
-
-不导出的是当前项目的具体运行数据，例如当前 `current_phase`、当前 `plan.yaml` 内容、open task 执行备注、memory 条目和 `.work_products/**` 产物。
-
-### 17.4 Harness Authoring Overlay
-本仓库还有一类特殊配置：开发 Harness 自身时才需要的 authoring overlay。它不是通用工作流的一部分，而是本仓库作为 Harness authoring workspace 时使用的本地增强层，用于回答：
-
-- 迭代 Harness npm 包时必须遵守哪些额外原则？
-- 哪些规则只约束工作流源码仓库，而不应分发给普通业务项目？
-- 当新增 package sync、migration、validator、Skill、模板或策略时，Agent 应额外读取哪些约束？
-- 某条自举规则什么时候应该晋升为通用 Harness 能力？
-
-语义边界如下：
-
-| 层级 | 示例路径 | 是否默认进入 npm 包 | 责任 |
-|---|---|---|---|
-| 通用 Harness 配置 | `.codex/skills/**`, `.codex/pjsdlc_managed/**` | 是 | 面向所有接入项目的阶段 Skill、模板、策略和默认规则 |
-| 项目实例数据 | `.codex/state/**`, `.work_products/**` | 否 | 当前项目的状态、需求、方案、实现、测试和发布事实 |
-| Harness authoring overlay | `.codex/skills/authoring/**` | 否 | 只约束本仓库迭代 Harness 自身的原则、专用 Skill 和包化安全规则 |
-
-Authoring overlay 的默认规则：
-- `AGENTS.md` 可以声明本仓库作为 authoring workspace 时需要额外读取 `.codex/skills/authoring/**`。
-- `package sync-source` 默认不复制 `.codex/skills/authoring/**` 到 `packages/sdlc-harness/assets/**`。
-- `sdlc-harness sync` 和 `upgrade` 默认不把 authoring overlay materialize 到用户项目。
-- 如果某条 authoring rule 对所有用户项目都有价值，必须通过 PRD / tech plan / RFC 明确晋升为通用 Skill、policy、template、PROJECT_SPEC 或 README 规则，再进入包内 canonical assets。
-- 只服务于 Harness 包源码维护的 prompt、consumer lab SOP、测试脚本使用提示词和缺陷归因规则留在 authoring overlay，不污染通用阶段 Skill。
-
-这个分层解决的是自举开发中的边界问题：本仓库需要比普通用户项目更多的工作流开发约束，但这些约束不能因为本仓库是 package source 就自动成为所有用户项目的默认配置。
-
-### 17.5 Authoring Overlay 的影响面
-判断一条规则放在哪里，可以使用这个准则：
-
-```txt
-所有业务项目都应该遵守 -> 通用 Harness 配置
-只有当前项目的事实或状态 -> 项目实例数据
-只有开发 Harness 包自身时需要 -> Harness authoring overlay
-```
-
-## 十八、npm 包化与项目接入
-当前仓库可以作为参考实现和模板仓库，但长期产品形态不应依赖每个业务项目直接 fork 整套配置。更稳的方式是把通用 Harness 能力拆成可版本化的 npm 包，并把业务项目中的工作流文件视为由包同步出来的 agent-readable artifact。
-
-本章只描述稳定接入模型和当前 canonical behavior；版本迁移步骤和用户升级操作放在 [README.md](README.md) 与 [packages/sdlc-harness/README.md](packages/sdlc-harness/README.md)。package / project / authoring overlay 的职责边界见 [ADR 006](.work_products/05_decisions/ADR_006_authoring_overlay_and_package_boundary.md)。
-
-### 18.1 包与命令名称
-npm 包当前命名为 `agent-project-sdlc`，命令入口统一使用：
-
-```sh
-sdlc-harness <command>
-```
-
-不要把命令直接命名为 `harness`，避免与其它工具、脚本或项目内部概念冲突。
-
-### 18.2 分层模型
-包内维护 canonical source：CLI、默认 Skill、模板、策略、Makefile fragment、state schema / templates / migrations、validators、migration scripts 和 overview 生成脚本。
-
-业务项目内保留 agent 实际读取和项目事实源：`AGENTS.md`、materialized `<harnessRoot>/skills/**`、`<harnessRoot>/pjsdlc_managed/**`、`<harnessRoot>/state/**` 的具体数据、`<harnessRoot>/config.yaml` 和 `.work_products/**`。其中 state data 与 `.work_products/**` 属于项目实例，包升级不得覆盖。详细边界见 [ADR 006](.work_products/05_decisions/ADR_006_authoring_overlay_and_package_boundary.md)。
-
-### 18.3 Harness 根目录配置
-`sdlc-harness init` 先询问目标 Agent，而不是直接询问 folder name。直接回车选择默认 `Codex`，并把 Harness folder 写为 `.codex`。内置选项与目录映射如下：
-
-| Agent 选项 | harnessFolderName |
-|---|---|
-| `Codex` | `.codex` |
-| `Claude Code` | `.claude` |
-| `Cursor` | `.cursor` |
-| `Cline` | `.cline` |
-| `Roo Code` | `.roo` |
-| `Gemini CLI` | `.gemini` |
-| `Other` | 继续询问自定义 folder；直接回车默认 `.agent` |
-
-只有选择 `Other` 时，CLI 才继续询问 Harness folder name。配置可以来自 `package.json#sdlcHarness.harnessFolderName`、`sdlc-harness.config.json#harnessFolderName` 或显式 `--harness-folder` / `--harnessFolderName`；实际解析优先级是 package.json、config file、默认 `.agent`，显式 init 参数会先写入 package.json 再初始化。未配置且不经过交互式 init 时，配置层默认 `<harnessRoot>` 仍是 `.agent`；交互式 `init` 默认生成 `.codex/**`。
-
-`harnessFloderName` 作为历史兼容别名会被读取，但新配置应使用 `harnessFolderName`。
-
-### 18.4 为什么仍要同步到工作区
-多数 Agent 在启动或路由 Skill 时，只读取工作区内固定目录，例如 `AGENTS.md`、`.codex/skills/**/SKILL.md`、`.agent/skills/**/SKILL.md` 或类似约定。它们通常不会直接扫描 `node_modules` 中的包内容。
-
-因此 npm 包不能只把 Skill 藏在包里。正确流程是：
-
-```txt
-npm package = canonical source / version source / migration source
-sdlc-harness sync = materialize 到工作区固定目录
-workspace files = Agent 实际读取入口
-state protocol = 包提供 schema / template / validator / migration
-<harnessRoot>/state concrete data + .work_products = 项目事实源，升级不覆盖
-```
-
-完整 materialization 设计取舍见 [ADR 006](.work_products/05_decisions/ADR_006_authoring_overlay_and_package_boundary.md)。
-
-### 18.5 新项目和已有项目接入
-新项目接入：
-
-```sh
-npm install -D agent-project-sdlc
-npx sdlc-harness init
-```
-
-fresh init 的初始 lifecycle 是 `REQUIREMENT_GATHERING`，用于从 PRD、体验和技术方案逐步建立事实源，避免新项目直接跳到开发阶段。
-
-已有项目中途接入：
-
-```sh
-npm install -D agent-project-sdlc
-npx sdlc-harness init --adopt
-```
-
-`init --adopt` 不假设项目为空，应尽量只创建最小 Harness 入口、扫描已有 README/docs/src/tests，并通过 `sdlc-harness doctor` 报告缺失产物或推荐阶段；adopt 的初始 lifecycle 保持 `SPRINTING`，用于先把既有代码与 Harness 开发事实源对齐。
-
-### 18.6 同步与升级
-同步命令：
-
-```sh
-npx sdlc-harness sync
-```
-
-`sync` 负责把包内默认 Skill、模板、策略文件和默认 Makefile targets materialize 到工作区固定位置，并为 managed files 写入版本和 checksum metadata。
-
-升级命令：
-
-```sh
-npm update agent-project-sdlc
-npx sdlc-harness upgrade
-```
-
-`sdlc-harness upgrade` 必须自动执行 `sdlc-harness sync`。state schema migration 只能升级结构并保留项目自己的状态值；版本迁移步骤和用户操作说明放在 README / package README。
-
-### 18.7 包与项目解耦原则
-Harness npm 包的设计必须像普通 npm 依赖一样，与用户仓库内容保持边界清晰。包可以提供默认规则和升级能力，但不能假设用户仓库仍是初始化时的模板状态；用户可能已经改过 `AGENTS.md`、`Makefile`、local policies、Skill overrides、模板覆盖、状态数据或业务文档。
-
-因此 `sync` 和 `upgrade` 的核心原则是：
-- 包内 canonical source 只是默认输入，不是用户仓库的最终事实源。
-- `AGENTS.md`、`Makefile`、`.github/workflows/harness.yml` 等高冲突入口只能通过 managed block、include block、marker-managed file 或 create-if-missing 方式接入。
-- `<harnessRoot>/state/memory.md`、`.work_products/INDEX.md` 等用户耦合 Markdown 文件只能通过固定 heading section 更新 package-managed guidance。
-- 除 `<harnessRoot>/skills/**` 作为 Harness hard file index 保留在固定位置外，模板、策略、默认 Makefile targets 等工作流配置都收敛到 `<harnessRoot>/pjsdlc_managed/**`。
-- `<harnessRoot>/state/**`、`.work_products/**`、`src/**`、`tests/**` 和用户业务配置属于项目实例，包升级不得覆盖其具体内容。
-- 用户自定义配置必须通过 local overrides、`.local.yaml`、受控 merge 或显式 migration 合并；不能要求用户直接修改包内文件，也不能在升级时丢弃本地差异。
-- migration 只能做可解释、可回滚、可诊断的结构变更；无法判定的本地改动应停止并报告 blocker。
-
-一句话：npm 包负责“提供和升级工作流能力”，用户仓库负责“保存项目事实和本地取舍”；两者通过明确的同步契约连接，而不是通过模板全量重写连接。
-
-### 18.8 本地覆盖规则
-项目本地定制不应直接改 managed files。推荐使用：
-
-```txt
-<harnessRoot>/pjsdlc_managed/override_skills/<skill_name>.md
-<harnessRoot>/pjsdlc_managed/policies/*.local.yaml
-```
-
-`sdlc-harness sync` 负责合并 canonical source 和 local overrides，生成最终工作区文件。Skill override 的 v1 行为是追加合成；未知或嵌套的 skill override 路径必须阻塞 sync，避免用户误以为本地提示词已生效。未来如果实现模板或其它 workflow config override，也必须放在 `<harnessRoot>/pjsdlc_managed/**` 下，不在 `<harnessRoot>` 顶层新增泛用 `overrides/` 目录。
+Major historical design reasons are still traceable through ADR slices under `.work_products/05_decisions/**`, especially the benchmark scenario design ADR and stage contract ADR. Future updates should add concise ADRs only when they introduce durable tradeoffs, not as routine implementation logs.

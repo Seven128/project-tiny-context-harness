@@ -276,6 +276,12 @@ transitions:
     kind: "resume"
     effects:
       clear_suspended_phase: true
+  - from: "RFC_RECALIBRATION"
+    to: "SPRINTING"
+    trigger: "rfc_return_to_sprinting"
+    kind: "resume"
+    effects:
+      clear_suspended_phase: true
   - from: "IDLE"
     to: "BLOCKED"
     trigger: "blocked"

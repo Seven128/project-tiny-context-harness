@@ -7,57 +7,38 @@ import { checkSource, syncSource } from "../../packages/sdlc-harness/dist/lib/pa
 const fixture = await mkdtemp(path.join(tmpdir(), "sdlc-harness-source-"));
 
 try {
-  await mkdir(path.join(fixture, ".agent/skills/pjsdlc_example"), { recursive: true });
-  await mkdir(path.join(fixture, ".agent/skills/authoring/local_only"), { recursive: true });
-  await mkdir(path.join(fixture, ".agent/pjsdlc_managed/templates"), { recursive: true });
-  await mkdir(path.join(fixture, ".agent/pjsdlc_managed/policies"), { recursive: true });
+  await mkdir(path.join(fixture, ".agent/pjsdlc_managed/agents"), { recursive: true });
+  await mkdir(path.join(fixture, ".agent/pjsdlc_managed/context_templates"), { recursive: true });
+  await mkdir(path.join(fixture, ".agent/pjsdlc_managed/minimal_tools"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/pjsdlc_managed/make"), { recursive: true });
   await mkdir(path.join(fixture, ".github/workflows"), { recursive: true });
-  await mkdir(path.join(fixture, "tools"), { recursive: true });
   await mkdir(path.join(fixture, "packages/sdlc-harness"), { recursive: true });
-  await writeFile(
-    path.join(fixture, "AGENTS.md"),
-    "before\n<!-- pjsdlc:sdlc-harness:begin -->\n# AI SDLC Harness\n<!-- pjsdlc:sdlc-harness:end -->\nafter\n",
-    "utf8"
-  );
-  await writeFile(path.join(fixture, "README.md"), "# User Guide\n\nAgent-readable package guide.\n", "utf8");
-  await writeFile(path.join(fixture, ".agent/skills/pjsdlc_example/SKILL.md"), "# Skill\n", "utf8");
-  await writeFile(path.join(fixture, ".agent/skills/authoring/local_only/SKILL.md"), "# Local only\n", "utf8");
-  await writeFile(path.join(fixture, ".agent/pjsdlc_managed/templates/EXAMPLE.md"), "# Template\n", "utf8");
-  await writeFile(path.join(fixture, ".agent/pjsdlc_managed/policies/example.yaml"), "ok: true\n", "utf8");
-  await writeFile(path.join(fixture, ".agent/pjsdlc_managed/make/sdlc-harness.mk"), "help:\n\t@echo ok\n", "utf8");
+
+  await writeFile(path.join(fixture, ".agent/pjsdlc_managed/agents/AGENTS_CORE.md"), "# Minimal Context Harness\n", "utf8");
+  await writeFile(path.join(fixture, "README.md"), "# User Guide\n\nMinimal Context package guide.\n", "utf8");
+  await writeFile(path.join(fixture, ".agent/pjsdlc_managed/context_templates/global.md"), "# Project / Delivery Context\n", "utf8");
+  await writeFile(path.join(fixture, ".agent/pjsdlc_managed/context_templates/module.md"), "# Module Context\n", "utf8");
+  await writeFile(path.join(fixture, ".agent/pjsdlc_managed/minimal_tools/validate_context.py"), "print('ok')\n", "utf8");
+  await writeFile(path.join(fixture, ".agent/pjsdlc_managed/make/sdlc-harness.mk"), "validate-context:\n\t@echo ok\n", "utf8");
   await writeFile(path.join(fixture, ".github/workflows/harness.yml"), "name: Harness\n", "utf8");
-  await writeFile(path.join(fixture, "Makefile"), "help:\n\t@echo ok\n", "utf8");
-  await writeFile(path.join(fixture, "tools/example.py"), "print('ok')\n", "utf8");
-  await writeFile(path.join(fixture, "tools/authoring.mjs"), "console.log('local only')\n", "utf8");
   await writeFile(
     path.join(fixture, "packages/sdlc-harness/source-mappings.yaml"),
     `source_mappings:
-  - source: "AGENTS.md"
+  - source: ".agent/pjsdlc_managed/agents/AGENTS_CORE.md"
     target: "packages/sdlc-harness/assets/agents/AGENTS_CORE.md"
-    mode: "extract-managed-block"
+    mode: "copy-file"
   - source: "README.md"
     target: "packages/sdlc-harness/assets/docs/README.md"
     mode: "copy-file"
-  - source: ".agent/skills"
-    target: "packages/sdlc-harness/assets/skills"
-    mode: "copy-tree"
-    exclude:
-      - "authoring/**"
-  - source: ".agent/pjsdlc_managed/templates"
-    target: "packages/sdlc-harness/assets/templates"
-    mode: "copy-tree"
-  - source: ".agent/pjsdlc_managed/policies"
-    target: "packages/sdlc-harness/assets/policies"
+  - source: ".agent/pjsdlc_managed/context_templates"
+    target: "packages/sdlc-harness/assets/context_templates"
     mode: "copy-tree"
   - source: ".agent/pjsdlc_managed/make/sdlc-harness.mk"
     target: "packages/sdlc-harness/assets/make/sdlc-harness.mk"
     mode: "copy-file"
-  - source: "tools"
+  - source: ".agent/pjsdlc_managed/minimal_tools"
     target: "packages/sdlc-harness/assets/tools"
     mode: "copy-tree"
-    exclude:
-      - "authoring.mjs"
   - source: ".github/workflows/harness.yml"
     target: "packages/sdlc-harness/assets/github/harness.yml"
     mode: "copy-file"
@@ -72,16 +53,13 @@ try {
   assert.deepEqual(checkReport.drift, []);
 
   const agentsCore = await readFile(path.join(fixture, "packages/sdlc-harness/assets/agents/AGENTS_CORE.md"), "utf8");
-  assert.match(agentsCore, /AI SDLC Harness/);
-  assert.doesNotMatch(agentsCore, /before|after/);
+  assert.match(agentsCore, /Minimal Context Harness/);
   const packagedReadme = await readFile(path.join(fixture, "packages/sdlc-harness/assets/docs/README.md"), "utf8");
-  assert.match(packagedReadme, /Agent-readable package guide/);
-  const workflowSkill = await readFile(path.join(fixture, "packages/sdlc-harness/assets/skills/pjsdlc_example/SKILL.md"), "utf8");
-  assert.match(workflowSkill, /Skill/);
-  await assert.rejects(readFile(path.join(fixture, "packages/sdlc-harness/assets/skills/authoring/local_only/SKILL.md"), "utf8"));
-  const packagedTool = await readFile(path.join(fixture, "packages/sdlc-harness/assets/tools/example.py"), "utf8");
+  assert.match(packagedReadme, /Minimal Context package guide/);
+  const packagedGlobal = await readFile(path.join(fixture, "packages/sdlc-harness/assets/context_templates/global.md"), "utf8");
+  assert.match(packagedGlobal, /Project \/ Delivery Context/);
+  const packagedTool = await readFile(path.join(fixture, "packages/sdlc-harness/assets/tools/validate_context.py"), "utf8");
   assert.match(packagedTool, /print\('ok'\)/);
-  await assert.rejects(readFile(path.join(fixture, "packages/sdlc-harness/assets/tools/authoring.mjs"), "utf8"));
 } finally {
   await rm(fixture, { recursive: true, force: true });
 }

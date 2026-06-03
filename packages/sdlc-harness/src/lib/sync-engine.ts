@@ -55,7 +55,9 @@ export async function runSync(projectRoot: string): Promise<SyncReport> {
   for (const managedFile of config.managed_files) {
     await syncManagedFile(projectRoot, root, managedFile, report);
   }
-  await syncProjectGuidanceSections(projectRoot, root, report);
+  if (config.core.schema_version !== "3") {
+    await syncProjectGuidanceSections(projectRoot, root, report);
+  }
 
   return report;
 }
@@ -76,6 +78,10 @@ async function syncManagedFile(projectRoot: string, root: string, managedFile: M
   }
   if (managedFile.path === path.join(root, "pjsdlc_managed", "templates")) {
     await syncTree(packageAssetPath("templates"), destination, report);
+    return;
+  }
+  if (managedFile.path === path.join(root, "pjsdlc_managed", "context_templates")) {
+    await syncTree(packageAssetPath("context_templates"), destination, report);
     return;
   }
   if (managedFile.path === path.join(root, "pjsdlc_managed", "policies")) {

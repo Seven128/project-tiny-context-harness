@@ -129,6 +129,9 @@ try {
     )
   );
 
+  await mkdir(path.join(root, ".agent/state"), { recursive: true });
+  await writeFile(path.join(root, ".agent/state/lifecycle.yaml"), 'current_phase: "SPRINTING"\n', "utf8");
+
   await writeFile(
     path.join(root, ".agent/state/plan.yaml"),
     `current_task_id: "TASK-001"

@@ -1,23 +1,226 @@
 # .work_products/04_implementation overview
 
 <!-- generated-by: AI SDLC Harness build_work_product_overviews.py -->
-<!-- source-hash: d6ecc75caa9dd20b -->
+<!-- source-hash: 488d810546e8eb06 -->
 
 Generated artifact. Markdown slices remain the source of truth.
 
-Source hash: `d6ecc75caa9dd20b`
+Source hash: `488d810546e8eb06`
 
 ## Source Slices
 
-1. [harness_package/cli_distribution_and_lifecycle.md](harness_package/cli_distribution_and_lifecycle.md)
-2. [harness_package/consumer_lab_validation.md](harness_package/consumer_lab_validation.md)
-3. [harness_package/release_automation.md](harness_package/release_automation.md)
-4. [harness_package/source_sync_and_assets.md](harness_package/source_sync_and_assets.md)
-5. [harness_workflow/command_intent_model.md](harness_workflow/command_intent_model.md)
-6. [harness_workflow/implementation_doc_model.md](harness_workflow/implementation_doc_model.md)
-7. [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skills_prompt_and_authoring.md)
-8. [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and_task_protocol.md)
-9. [harness_workflow/work_products_overview_and_validation.md](harness_workflow/work_products_overview_and_validation.md)
+1. [delivery_benchmark/evidence_model_and_runner.md](delivery_benchmark/evidence_model_and_runner.md)
+2. [harness_package/cli_distribution_and_lifecycle.md](harness_package/cli_distribution_and_lifecycle.md)
+3. [harness_package/consumer_lab_validation.md](harness_package/consumer_lab_validation.md)
+4. [harness_package/release_automation.md](harness_package/release_automation.md)
+5. [harness_package/source_sync_and_assets.md](harness_package/source_sync_and_assets.md)
+6. [harness_workflow/command_intent_model.md](harness_workflow/command_intent_model.md)
+7. [harness_workflow/implementation_doc_model.md](harness_workflow/implementation_doc_model.md)
+8. [harness_workflow/skills_prompt_and_authoring.md](harness_workflow/skills_prompt_and_authoring.md)
+9. [harness_workflow/state_and_task_protocol.md](harness_workflow/state_and_task_protocol.md)
+10. [harness_workflow/work_products_overview_and_validation.md](harness_workflow/work_products_overview_and_validation.md)
+
+---
+
+## delivery_benchmark/evidence_model_and_runner.md
+
+Source: [delivery_benchmark/evidence_model_and_runner.md](delivery_benchmark/evidence_model_and_runner.md)
+
+# Delivery Benchmark Evidence Model And Runner Implementation
+
+## 1. 关联信息
+
+- Domain: `delivery_benchmark`
+- Module / subsystem / core flow: repo-local benchmark runner, scenarios, visual report and evidence model
+- Linked PRD: `.work_products/01_product/delivery_benchmark_evidence_model.md`
+- Linked technical design: `.work_products/03_tech_plan/delivery_benchmark_evidence_model.md`
+- Linked ADR: `.work_products/05_decisions/ADR_008_delivery_benchmark_scenario_design.md`
+- Runnable implementation: `examples/delivery-benchmark/**`
+
+## 2. 当前实现范围
+
+- `examples/delivery-benchmark/runner/delivery_benchmark.mjs` provides repo-local commands for scenario listing, run preparation, staged prompts, observer timing, manual/system timers, quality probes, recovery scoring, prompt ledger records, intervention records, gate findings and scoring.
+- `examples/delivery-benchmark/scenarios/**` stores fixed scenario requirements, acceptance criteria, lifecycle probes, staged recovery/RFC/debug materials, hidden quality probes and hidden recovery answer keys.
+- `examples/delivery-benchmark/prompts/**` stores mode-specific prompt shells for `baseline` and `harness`.
+- `examples/delivery-benchmark/results/index.html` and `benchmark-data.js` provide a static bilingual visual report.
+- The visual report displays metric confidence, automation burden, gate value,
+  lifecycle segments and artifact inventory when committed result data contains
+  those fields.
+- `examples/delivery-benchmark/README.md` and `RUNBOOK.md` remain operator/user entry documents, while `.work_products/**` now holds product, technical and implementation facts.
+- `.artifacts/delivery-benchmark/**` holds raw run directories, observer logs, summaries and calibration output; it is not committed and not a long-term fact source.
+
+## 3. 真实代码结构
+
+| 路径 | 作用 |
+|---|---|
+| `examples/delivery-benchmark/runner/delivery_benchmark.mjs` | Repo-local benchmark CLI and scoring engine |
+| `examples/delivery-benchmark/prompts/baseline.md` | Plain AI coding mode rules |
+| `examples/delivery-benchmark/prompts/harness.md` | AI SDLC Harness mode rules |
+| `examples/delivery-benchmark/scenarios/<id>/requirements.md` | Initial visible product contract |
+| `examples/delivery-benchmark/scenarios/<id>/acceptance_criteria.md` | Shared final acceptance criteria |
+| `examples/delivery-benchmark/scenarios/<id>/gate_profile.md` | Scenario-specific gate boundary |
+| `examples/delivery-benchmark/scenarios/<id>/recovery_checkpoint.md` | Staged recovery prompt |
+| `examples/delivery-benchmark/scenarios/<id>/rfc_change.md` | Staged RFC prompt |
+| `examples/delivery-benchmark/scenarios/<id>/debug_fix.md` | Staged debug prompt |
+| `examples/delivery-benchmark/scenarios/<id>/quality_probe.mjs` | Hidden quality probe |
+| `examples/delivery-benchmark/scenarios/<id>/recovery_answer_key.json` | Hidden recovery scoring key |
+| `examples/delivery-benchmark/results/index.html` | Static visual report |
+| `examples/delivery-benchmark/results/benchmark-data.js` | Report-internal data model |
+| `tests/sdlc-harness/delivery-benchmark.test.mjs` | Runner/report/scenario regression tests |
+
+## 4. Runner Interfaces
+
+These commands are repo-local benchmark interfaces and are not npm package public CLI:
+
+| Command | Purpose |
+|---|---|
+| `list` | Print available scenarios |
+| `prepare` | Create a baseline or Harness run dir with initial prompt only |
+| `stage-prompt` | Print recovery/RFC/debug material at the correct measured stage |
+| `observe-start` / `observe-stop` / `observe-status` | External elapsed-time and file-activity observer |
+| `timer-start` / `timer-stop` / `timer-status` / `timer-cancel` | System-timed manual-boundary stage/gate events |
+| `record` | Legacy/manual event record |
+| `prompt-record` | Record saved prompt fingerprints without counting them as an intervention |
+| `quality-probe` | Run scenario-owned hidden behavior probe |
+| `recovery-score` | Score takeover memo with hidden answer key and file references |
+| `intervention-record` | Record protocol-external operator help |
+| `gate-record` | Record whether a gate caught defects |
+| `score` | Merge evidence into JSON and markdown summaries, including run type, cost boundary and artifact inventory |
+| `evidence-check` | Compare baseline/Harness summary JSON files and report publishable conclusion eligibility |
+
+## 5. 核心数据流
+
+```txt
+operator chooses scenario
+-> prepare baseline and harness run dirs
+-> observer starts outside measured prompt
+-> measured agent executes initial prompt
+-> operator injects recovery/RFC/debug stages with stage-prompt
+-> prompt ledger records protocol and operator prompt hashes/chars
+-> hidden quality probe runs after delivery
+-> optional recovery/intervention/gate records are added outside measured prompt
+-> score writes summary JSON/Markdown
+-> evidence-check verifies publishable pair gates and allowed conclusions
+-> visual report consumes curated committed summary data only
+```
+
+## 6. 当前场景
+
+| Scenario | Purpose |
+|---|---|
+| `expense-policy-engine` | Historical same-quality sample with legacy low-confidence cost |
+| `project-context-recovery-lab` | Context continuity and fresh-agent recovery |
+| `support-triage-board` | UI/API/policy/test/docs RFC/debug drift and gate value |
+| `webhook-provider-bridge` | Provider/live boundary, credential blocker and do-not-retry safety, with executable `createWebhookBridge()` smoke contract |
+
+## 7. Metric Confidence Implementation
+
+- `quality_assessment.primary_source` uses `hidden_quality_probe` when available.
+- `workflow_cost.observed_total_delivery_minutes` uses observer-measured elapsed time when available.
+- `workflow_cost.run_type` records `cold`, `warm` or `unknown`; `workflow_cost.bootstrap_minutes` can preserve separately measured bootstrap/adoption cost.
+- For `harness` mode, `prepare` materializes the warm Harness scaffold before the initial run-dir git commit. The measured prompt no longer asks the agent to run `npx sdlc-harness init`.
+- `workflow_cost.cost_boundary.observed_harness_bootstrap` records whether observer data saw managed runtime scaffold files added during measurement; `evidence-check` rejects conclusion-grade warm elapsed comparisons when bootstrap leakage is detected.
+- `metric_confidence` marks each metric with confidence, data source and `conclusion_eligible`.
+- `automation_burden.prompt_ledger` summarizes `.benchmark/prompts.ndjson`: protocol prompt count/chars, intervention prompt count/chars, operator-note count/chars and per-kind breakdown. `prepare` records `protocol_initial`, `stage-prompt --run-dir` records `protocol_stage`, `intervention-record` records `operator_intervention`, and `prompt-record` can record `operator_note`.
+- `artifact_inventory` scans the run directory outside `.benchmark`, `.git`, `node_modules`, build output and coverage directories. It reports high-confidence diagnostic counts for `managed_runtime`, `project_facts`, `product_source_tests`, `product_docs`, `raw_artifacts`, `scaffold` and `other`.
+- Static rubric sections remain supplemental and can show WARN even when hidden quality probe passes.
+- Recovery scoring remains medium confidence because it uses hidden answer keys but still depends on natural language memo quality and file-reference interpretation.
+- Prompt ledger length/hash is high confidence for saved prompt text, but it does not prove that every possible operator prompt was recorded.
+- Gate value and intervention records are diagnostic until they are backed by first-pass hidden probes and automated event boundaries.
+- `webhook-provider-bridge/quality_probe.mjs` imports `src/webhookBridge.js#createWebhookBridge()`, computes HMAC signatures independently, and verifies valid request acceptance, invalid signature rejection, stale timestamp rejection, replay/idempotency, bounded retry/DLQ behavior, mock/live evidence boundaries, schema-v2 rejection of unmarked v1 payloads, tenant previous-secret grace/expiry, and per-tenant replay scope.
+- The mock-provider smoke probe treats an explicit `passed: true` result as accepted and runs smoke checks on a fresh bridge instance so earlier negative-path audit entries cannot contaminate the smoke result. This keeps the hidden probe deterministic and fair across baseline and Harness paths.
+
+## 8. Cold/Warm Cost Boundary
+
+Current runner can measure cold runs directly. Warm run support is implemented in `prepare --mode harness`:
+
+1. Prepare the Harness run directory and materialize the Harness scaffold with the package CLI.
+2. Commit/adopt the Harness bootstrap state before delivery timing starts.
+3. Start observer for the scenario delivery task only.
+4. Score bootstrap separately from delivery elapsed time.
+
+This boundary is necessary because `npx sdlc-harness init` materializes `.codex/**`, `tools/**`, templates, policies and skills. Those files are adoption runtime assets, not product-specific delivery output.
+
+The `score` command accepts `--run-type cold|warm|unknown` and `--bootstrap-minutes <n>` so summaries can state whether bootstrap is included in delivery timing. When scored as `warm`, observer-added managed runtime files such as `.codex/**`, `AGENTS.md`, `Makefile` or managed `tools/**` are treated as bootstrap leakage and block conclusion-grade elapsed comparison.
+
+## 9. Artifact Inventory Implementation
+
+`score` computes `artifact_inventory` from the measured run directory:
+
+| Category | Included paths | Interpretation |
+|---|---|---|
+| `managed_runtime` | `.codex/**`, `tools/**`, `AGENTS.md`, `Makefile`, workflow-adjacent agent folders | Harness runtime/adoption assets; not product-specific output |
+| `project_facts` | `.work_products/**` | Durable project context and handoff facts |
+| `product_source_tests` | `src/**`, `test/**`, `tests/**`, `lib/**`, `bin/**`, `public/**` | Product implementation, executable tests and browser UI assets |
+| `product_docs` | `README.md`, `DESIGN.md`, `docs/**`, takeover/handoff memos | Product-facing docs and recovery notes |
+| `raw_artifacts` | `.artifacts/**` if present in a run dir | Should normally remain outside committed source |
+| `scaffold` | `package.json`, lockfiles, `.gitignore`, config files | Project setup scaffolding |
+| `other` | Any remaining files | Requires manual interpretation |
+
+The inventory is high-confidence for file/line/byte counts because it comes from filesystem scan, but it remains diagnostic: more lines or files do not prove value. It exists to explain whether Harness overhead came from runtime bootstrap, durable facts, product code/tests/docs or unrelated artifacts.
+
+The committed visual report consumes this structure as `scenario.artifactInventory`
+when a public result has a matching raw scored summary. As of the support-triage
+formal pilot, the report shows that the product source/test/UI asset volume is
+comparable while Harness adds managed runtime and `.work_products` fact volume.
+Expense and context results do not invent inventory data when matching raw scored
+summaries are unavailable or lower-confidence.
+
+## 10. Evidence Check Implementation
+
+`evidence-check` reads a baseline summary JSON and Harness summary JSON, then
+returns:
+
+- `checks`: same scenario, expected modes, protocol status, same hidden quality,
+  observer elapsed, cost boundary and artifact inventory availability.
+- `elapsed_comparison`: baseline minutes, Harness minutes, delta and ratio.
+- `allowed_conclusions`: the elapsed-time conclusion that is safe to publish if
+  the pair is conclusion-grade.
+- `design_purpose_status`: `supports_direct_efficiency`,
+  `negative_elapsed_signal`, `neutral_elapsed_signal` or `not_evaluable`.
+- `missing_for_design_purpose`: high-confidence evidence still missing for
+  context recovery, automation burden, gate value, artifact inventory or
+  high-risk provider boundary claims.
+
+The command does not replace operator protocol review. The operator still marks
+`--protocol-status formal|calibration|blocked|unreviewed` after checking fresh
+sessions, staged injection, cross-path contamination and observer boundaries.
+
+## 11. Current Paused Pilot Snapshot
+
+- Detailed snapshot: `.work_products/07_test/delivery_benchmark_pilot_progress_20260603.md`.
+- Active artifact at pause: `.artifacts/delivery-benchmark/20260602-195213-webhook-warm-optimized/`.
+- Scenario: `webhook-provider-bridge`.
+- Mode paused: `harness`.
+- Status: diagnostic incomplete; the run stopped during staged `RFC` and is not public-result eligible.
+- High-confidence facts preserved so far: initial hidden quality `13/13 PASS`, external observer elapsed through pause, and recovery score `4/4 PASS` with medium-high confidence.
+- The paused RFC produced useful workflow-friction evidence, especially plan task contract shape retries and validator/evidence-formatting costs, but it has no final RFC/debug quality score.
+
+## 12. Calibration Lessons Captured
+
+- Formal lifecycle runs must not expose future recovery/RFC/debug materials in initial prompts.
+- Raw operator artifacts must not dirty the measured product git surface.
+- Run dirs must be independent git repositories with local bare remotes so Harness commit/push closure does not touch the source repository.
+- Measured-agent environments must allow writes to the configured Harness root and run-dir git index. A 2026-06-03 `webhook-provider-bridge` pilot attempt passed hidden initial quality on both paths, but the Harness `codex exec` sandbox blocked `.codex/**` creation and `.git/index.lock` writes, causing a `codex/**` fallback root and incomplete task commit/push closure; that attempt is calibration-only.
+- Baseline must also create a clean product delivery commit before fresh-agent recovery and after later mutating RFC/debug stages. A later 2026-06-03 `webhook-provider-bridge` rerun passed local tests and recovery scored `4/4`, but the baseline product source/tests/docs were still uncommitted when recovery started. That attempt is calibration-only because recovery inspected a dirty worktree instead of a stable delivered repository state.
+- `stage-prompt` now tells recovery agents to write `.benchmark/takeover-answer.md` and tells mutating RFC/debug stages to finish with mode-appropriate commit/push closure.
+- Support pilot data shows hidden quality can pass on both paths while Harness elapsed remains higher; this is valid negative evidence and must drive gate/artifact thinning analysis instead of being hidden.
+- Artifact volume must be reported by category because Harness managed runtime can dominate line counts and distort product-output interpretation.
+- Recovery answer-key scoring supports alternative term/reference groups so a fair takeover memo can cite either README-level facts or `.work_products/**` facts when both are valid project context sources.
+- Paused or interrupted runs must be snapshotted in `.work_products/07_test/**` before resuming or discarding. This preserves benchmark iteration experience without promoting incomplete data into the visual report.
+- Workflow optimization should first target friction that does not create product quality or durable context value: invalid task skeleton retries, ambiguous validator evidence formatting, repeated overview regeneration and overly broad internal-loop gates.
+
+## 13. Verification
+
+Current verification coverage lives in:
+
+- `tests/sdlc-harness/delivery-benchmark.test.mjs`
+- `node --check examples/delivery-benchmark/runner/delivery_benchmark.mjs`
+- `node --check examples/delivery-benchmark/results/benchmark-data.js`
+- `make work-products-overview`
+- `make validate-harness`
+
+When benchmark source behavior changes, update this implementation doc, refresh `.work_products/**/overview.md`, and keep README/RUNBOOK/ADR/report wording aligned with the evidence boundary.
 
 ---
 
@@ -40,15 +243,17 @@ Source: [harness_package/cli_distribution_and_lifecycle.md](harness_package/cli_
 ## 2. 当前实现范围
 
 - `agent-project-sdlc` npm package exposes the `sdlc-harness` CLI binary.
-- `init` / `init --adopt` create or adopt a project Harness without overwriting user-owned project code.
-- Fresh `init` lifecycle routes new projects to `REQUIREMENT_GATHERING` with `active_role: "product_manager"` and `active_skill: "pjsdlc_pm_prd"`; `init --adopt` routes existing projects to `SPRINTING` for code/fact-source reconciliation. Generated plan files do not duplicate `current_phase`.
-- `sync` materializes managed Harness assets from package canonical assets into the selected `<harnessRoot>`.
-- `upgrade` refreshes `<harnessRoot>/config.yaml` package identity and schema metadata, runs schema migrations and then syncs managed assets.
+- `init` / `init --adopt` create or adopt a Minimal Context Harness without overwriting user-owned project code.
+- Fresh `init` and `init --adopt` create `project_context/global.md`, `project_context/modules/main.md`, `<harnessRoot>/config.yaml`, Minimal Context managed guidance, context templates, Makefile include, lightweight tools and GitHub workflow. They do not create lifecycle state, `plan.yaml`, stage skills, stage templates or `.work_products/**` by default.
+- `sync` materializes managed Harness assets from package canonical assets into the selected `<harnessRoot>` and never performs semantic migration from old `.work_products/**`.
+- `upgrade` refreshes config/schema metadata, runs safe migrations and then syncs managed assets. When legacy stage facts are detected, it prompts `migrate-context --dry-run` instead of generating Context automatically.
 - `doctor` reports Harness config, managed file drift, override state and suggested gates. The displayed package version is read from the installed npm package metadata, not from project config.
 - `inspect-workflow` provides a read-only workflow self-inspection command for user repos. It reports `PASS` / `WARN` / `BLOCKED` across workflow weight, fact-source alignment, handoff clarity, TESTING readiness, high-risk recovery safety and outcome comparison. Every metric declares `data_source` as `measured`, `inferred`, `self_reported` or `unavailable`.
 - `examples/delivery-benchmark/` provides repo-local benchmark assets for self-testing Outcome Comparison against real from-scratch project scenarios. It is not synced into user projects and is not a public package command.
-- `validate-*` commands expose package-side validation entry points for Harness state and phase artifacts.
-- Orientation fast path is a documented workflow behavior, not a new CLI: new sessions, status checks and "continue/next" requests read lifecycle, necessary plan/task facts and directly relevant docs before routing, but do not automatically run `make validate-*`, package source sync/check, full regression or phase-exit gates. Explicit validation, task completion, phase transition, commit and release boundaries still require their gates.
+- `migrate-context` is the explicit semantic migration command. It previews by default, writes only with `--write`, preserves old `.work_products/**` / state files, and protects user-authored Context by writing generated material under `project_context/_migration/latest/**`.
+- `validate-context` checks `project_context/**` recovery fields and blocks fake test-result claims. In schema v3/default projects, `validate-harness` is a compatibility alias for `validate-context`; explicit schema v2 legacy projects keep the old stage validator behavior.
+- Minimal Context orientation is a documented workflow behavior, not a new CLI: new sessions, status checks and "continue/next" requests read `project_context/global.md`, relevant module Context and directly related code/tests before routing, but do not automatically run package source sync/check, full regression or legacy phase gates. Explicit validation still runs the relevant project tests or `validate-context` when Context changed.
+- `Standard Thin` is the default gate thickness in common Harness guidance. Ordinary development, RFC and debug loops run focused product/domain gates plus light state checks; strict workflow gates are concentrated at task completion, pre-commit, phase transition, release, package/source/managed asset changes, public CLI / validator changes and high-risk provider/live boundaries. This is a workflow behavior change, not a new CLI or validator.
 - 当前 authoring workspace 使用 `.codex` as `harnessFolderName`; `Other` agent selection still falls back to `.agent`.
 
 ## 3. 真实代码结构
@@ -72,7 +277,7 @@ Source: [harness_package/cli_distribution_and_lifecycle.md](harness_package/cli_
 | `packages/sdlc-harness/src/lib/migrations.ts` | Schema and compatibility migrations | `runMigrations`, legacy root/layout migration |
 | `packages/sdlc-harness/src/lib/doctor.ts` | Diagnostic model | config and managed-file checks |
 | `packages/sdlc-harness/src/lib/workflow-inspector.ts` | Workflow self-inspection model | measured/inferred/self-reported metrics and findings |
-| `packages/sdlc-harness/src/lib/validators.ts` | Node-side Harness validators | plan, lifecycle, docs and phase validators |
+| `packages/sdlc-harness/src/lib/validators.ts` | Node-side Harness validators | `validate-context`, v3 `validate-harness` alias and legacy schema v2 phase validators |
 | `tests/sdlc-harness/*.test.mjs` | Package regression coverage | init/sync/doctor, upgrade, root resolution, validators |
 
 ## 4. 核心数据流
@@ -81,7 +286,7 @@ Source: [harness_package/cli_distribution_and_lifecycle.md](harness_package/cli_
 User runs sdlc-harness init/init --adopt
 -> choose target Agent unless explicit harness folder/config exists
 -> resolve <harnessRoot>
--> write config/state/docs scaffold
+-> write Minimal Context config and project_context/** templates
 -> sync package canonical assets
 -> doctor reports readiness
 ```
@@ -89,30 +294,41 @@ User runs sdlc-harness init/init --adopt
 ```txt
 Existing project runs sdlc-harness upgrade
 -> read current package/config/schema
--> run migrations for root names, managed layout, markers, plan/lifecycle shape
+-> run safe config/managed-layout migrations
 -> sync canonical assets
+-> if legacy stage facts exist, print migrate-context --dry-run guidance
 -> doctor reports remaining drift or blockers
+```
+
+```txt
+Operator runs sdlc-harness migrate-context --dry-run/--write
+-> read README, legacy .work_products/**, ADR/decision docs, implementation docs and source/test layout
+-> preview generated project_context/** by default
+-> with --write, create/update managed migration blocks or write _migration/latest when user Context exists
+-> never delete old legacy facts
 ```
 
 ## 5. 关键实现逻辑
 
 - Agent selection happens before folder selection. `Codex` is the default and writes `.codex`; `Other` asks for a custom folder and defaults to `.agent`.
-- Fresh lifecycle scaffolding starts at `REQUIREMENT_GATHERING` and allows `UI_UX_DESIGNING` next; adopt lifecycle scaffolding starts at `SPRINTING` and allows `REVIEWING` / `RFC_RECALIBRATION` next. Generated `plan.yaml` stores `current_task_id`, `next_task_sequence` and `tasks`; generated `plan.draft.yaml` stores only draft sequencing and tasks.
+- Minimal Context scaffolding starts with durable Context, not lifecycle phases. `project_context/global.md` stores project goal, boundaries, design rationale, verification entry points, current state, next safe action and module index. `project_context/modules/*.md` stores module responsibilities, contracts, constraints, code entries and test entries.
 - Explicit CLI flags are written into package config before initialization. Runtime root resolution then prefers `package.json#sdlcHarness.harnessFolderName`, falls back to `sdlc-harness.config.json#harnessFolderName`, then `.agent`.
 - Managed files use package metadata blocks and merge strategies instead of blind overwrites.
 - Package name and CLI name are intentionally separate: npm installs `agent-project-sdlc`, users run `sdlc-harness`.
 - Migrations preserve compatibility with earlier `.harness`, `.agents` and `.agent` layouts while converging new installs on the configured `<harnessRoot>`.
+- Legacy stage validators/assets remain compatibility-only. Existing schema v2 projects can still run old phase validators; schema v3 projects use `validate-context` as the default and `validate-harness` compatibility gate.
 - `migrateConfig` rewrites `core.package`, deletes legacy `core.version`, and preserves `core.schema_version`. Package version is intentionally not persisted in project config because the installed package manifest is the source of truth.
 - Plan migrations remove stale `current_phase` from active and draft plans, remove draft `current_task_id`, and strip duplicate `phase` / `linked_task_id` from `parallel_execution`.
 - Validation commands mirror the Python Harness gates closely enough for package consumers to run health checks without depending on this authoring workspace.
 - `inspect-workflow` intentionally sits beside `doctor` and `validate-*`: `doctor` checks installation health, validators check stage contracts, and `inspect-workflow` checks whether the workflow is becoming too heavy or unclear. It reuses root resolution and selected validators, but does not run phase gates as proof of completion.
 - Workflow self-inspection only treats file/field counts and validator results as `measured`; context weight and handoff quality are `inferred`; recent minutes, turns, estimated tokens and outcome comparison timings are accepted only through explicit CLI options as `self_reported`; true model token telemetry is `unavailable` unless the user supplies it. This prevents the command from producing fake-precise token/time claims.
 - Outcome comparison keeps the pure vibe coding baseline honest: it compares same-quality delivery, not first-code speed. `workflow_overhead_ratio` uses ordinary 30% / 50% thresholds and high-risk 40% / 60% thresholds; `vibe_handoff_delta_minutes` shows the same-quality pure-vibe delta; `net_value_minutes` includes avoided rework so a slower workflow can still be valid when it prevents downstream misses. The command does not persist these values or create an ROI audit history.
-- Delivery benchmark assets keep this claim testable: scenarios define fixed requirements, staged recovery/RFC/debug materials and scoring rubrics; the runner prepares baseline/Harness run dirs, keeps initial `.benchmark/prompt.md` limited to base requirements/acceptance/gate profile, exposes later lifecycle materials only through repo-local `stage-prompt`, supports an external observer for elapsed time and file activity, records workflow-control events such as `sync`, `upgrade`, `transition.py` and `validate-*`, retains lightweight system-timed manual-boundary events through `timer-start` / `timer-stop`, and scores final evidence. Lifecycle probe scenarios can add `lifecycle_probe.md` and report `INITIAL_DELIVERY`, `RECOVERY`, `RFC`, `DEBUG`, `context_recovery_score`, `wrong_path_count` and final quality metrics to distinguish first delivery from recovery/change/debug efficiency. Scenario design is high-signal but not hacked: it targets Harness strengths while preserving same-quality baselines and invalidating runs that reuse implementation context, copy completed artifacts, pre-apply RFC/debug work, expose future probe materials early or selectively publish favorable numbers. Observer raw logs are excluded from quality rubric evidence. Raw runs stay in `/tmp` or `.artifacts/delivery-benchmark/`.
+- Delivery benchmark assets keep this claim testable: scenarios define fixed requirements, staged recovery/RFC/debug materials and scoring rubrics; the runner prepares baseline/Harness run dirs as independent local git repositories with local bare remotes under `.benchmark/remote.git`, keeps initial `.benchmark/prompt.md` limited to base requirements/acceptance/gate profile, exposes later lifecycle materials only through repo-local `stage-prompt`, supports an external observer for elapsed time and file activity, records workflow-control events such as `sync`, `upgrade`, `transition.py` and `validate-*`, retains lightweight system-timed manual-boundary events through `timer-start` / `timer-stop`, and scores final evidence. Lifecycle probe scenarios can add `lifecycle_probe.md` and report `INITIAL_DELIVERY`, `RECOVERY`, `RFC`, `DEBUG`, `context_recovery_score`, `wrong_path_count` and final quality metrics to distinguish first delivery from recovery/change/debug efficiency. Scenario design is high-signal but not hacked: it targets Harness strengths while preserving same-quality baselines and invalidating runs that reuse implementation context, copy completed artifacts, pre-apply RFC/debug work, expose future probe materials early, fail run-dir git isolation/commit-push closure or selectively publish favorable numbers. The operator runbook now also requires a compact calibration ledger for repeated pilot attempts so stage-boundary failures, dirty operator artifacts, infrastructure reconnects, scoring conflicts and gate-value findings are retained as reusable protocol evidence. Observer raw logs are excluded from quality rubric evidence. Runner confidence reporting now separates high-confidence observer time from lower-confidence static keyword/path rubric evidence; `metric_confidence` includes `conclusion_eligible` so only high-confidence metrics can support core report conclusions. When a scenario-owned hidden `quality-probe` exists, summary and lifecycle final-quality score use the hidden probe as the primary quality result while static rubric failures remain supplemental evidence. The runner can also score fresh-agent takeover memos with hidden `recovery_answer_key.json` plus file-reference requirements. Repo-local `intervention-record` and `gate-record` capture automation burden and gate value as operator-side diagnostic evidence without requiring the agent under test to maintain benchmark measurement logs; they are not npm package public commands. `GATE_THINNING_ANALYSIS.md` records benefits and risks/losses for gate thinning and concludes `Standard Thin` has the best current cost/value tradeoff: focused product gates inside the loop, strict workflow gates at task/pre-commit/phase/release/package boundaries, and strict gates for high-risk provider/live work. That recommendation is now promoted into common Harness guidance while preserving same-quality gates. Raw runs stay in `/tmp` or `.artifacts/delivery-benchmark/`.
 - Orientation fast path is intentionally represented in AGENTS, workflow Skills and user docs instead of a new structured field or validator. The consumer is the Agent prompt path, not a runtime tool; keeping it textual avoids a schema migration while still reducing accidental startup gates.
-- Python tools and Node validators resolve `<harnessRoot>` consistently, so configured-root projects such as `.workflow` can run CLI validators, Makefile gates and `tools/transition.py` without `.codex` assumptions.
+- `Standard Thin` is also represented in AGENTS, workflow Skills and user docs instead of a new profile field. There is not yet a machine consumer for `thin | standard | strict`, so a textual rule gives agents the intended default without adding schema or migration cost.
+- CLI validators and Makefile gates resolve `<harnessRoot>` consistently, so configured-root projects such as `.workflow` can run `validate-context`, `validate-harness` and `inspect-workflow` without `.codex` assumptions.
 - `validate-dev` checks `Development Self-Test Report` content against the current `self_test_contract`: it requires legal `Report Status`, Module Application Entry, Module Key Test Path, scenario results, executed gates, Observable Exit, Current Blocker, Testing Handoff Readiness and Evidence Index Refs; only accepts completion when report status and every scenario are `PASS`; rejects template module-key-path text, ambiguous status rows, missing scenario row evidence, missing required gates, embedded debug/operator/runbook/exploration log sections, `Actual Evidence` body fields, overlong reports, high-risk reports without `.work_products/09_runbooks/**` evidence refs or Current Operator Path hard constraints, high-risk implementation docs with mainline evidence dump/operator log/failed-attempt sections, unpromoted session / QR / canonical path / do-not-retry judgments, and browser reports without page URL plus browser/Playwright/screenshot evidence. When `graph_required: true` or `module_key_test_graph` is present, validators also require a single-entry DAG with valid node kinds, known edge refs, reachable scenarios, observable exits and short `evidence_ref` pointers, plus an actual `Module Key Test Graph` in the self-test report. It remains a content consistency gate, not a command execution audit.
-- Managed `phase_contracts.yaml` now distributes a lightweight explicit phase graph: `phases` hold node contracts, top-level `transitions` hold legal directed edges and minimal effects. Package `validate-harness` rejects graph drift such as missing `transitions`, legacy `next` / `returns`, unknown targets or invalid `<suspended_phase>` usage; synced `transition.py` consumes the graph while retaining legacy fallback for older consumer policies.
+- Legacy managed `phase_contracts.yaml` still documents the old lightweight explicit phase graph for schema v2 compatibility. In schema v3 Minimal Context projects, that policy is not part of the default managed asset set and `validate-harness` aliases `validate-context`.
 - Migration is handled by existing package flows rather than a standalone migration script: `upgrade` runs sync and refreshes the managed policy/tool files, while state files remain compatible. If a consumer has local custom phase policy edits, the manual migration is to move node-local `next` / `returns` into top-level transition edges and then rerun `validate-harness`.
 - Lightweight Module Key Test Graph migration is also handled without an automatic script. Existing `module_key_test_path`-only tasks remain valid; new high-risk or multi-scenario tasks are prompted to add `graph_required: true` and a DAG skeleton. Users can manually split old high-risk paths into graph nodes when better handoff quality is worth it, but no text-to-graph converter is shipped because checkpoint and exit boundaries require judgment.
 
@@ -125,9 +341,9 @@ Existing project runs sdlc-harness upgrade
 
 ## Development Evidence
 
-- Runnable Entry: `npm test --workspace agent-project-sdlc`, `node packages/sdlc-harness/dist/cli.js inspect-workflow --json`, `node packages/sdlc-harness/dist/cli.js package sync-source`, `node packages/sdlc-harness/dist/cli.js package check-source`, `make validate-dev`, and `make validate-harness` are the task verification entrypoints.
-- Observable Exit: `tests/sdlc-harness/sync-init-doctor.test.mjs` asserts generated config omits `core.version` and `doctor` reports `core package: agent-project-sdlc@<installed package version>`; `tests/sdlc-harness/workflow-inspector.test.mjs` asserts `inspect-workflow` JSON/prompt output, self-reported metrics and overweight blockers; `tests/sdlc-harness/upgrade.test.mjs` asserts migrated config omits legacy `core.version`; `package check-source` output was `package source OK`.
-- Basic Self-test Evidence: `npm test --workspace agent-project-sdlc` PASS with 11/11 tests; `node packages/sdlc-harness/dist/cli.js inspect-workflow --json` PASS; `node packages/sdlc-harness/dist/cli.js package sync-source` PASS; `node packages/sdlc-harness/dist/cli.js package check-source` PASS.
+- Runnable Entry: `npm test --workspace agent-project-sdlc`, `node packages/sdlc-harness/dist/cli.js inspect-workflow --json`, `node packages/sdlc-harness/dist/cli.js package sync-source`, `node packages/sdlc-harness/dist/cli.js package check-source`, `make validate-context`, `make validate-harness`, and `node tools/consumer_lab_full_test.mjs --reset-lab --markdown-report /tmp/minimal-context-consumer-lab.md --json-report /tmp/minimal-context-consumer-lab.json` are the task verification entrypoints.
+- Observable Exit: `tests/sdlc-harness/sync-init-doctor.test.mjs` asserts Minimal Context init/adopt/sync/doctor/migrate behavior and v3 `validate-harness` aliasing; `tests/sdlc-harness/workflow-inspector.test.mjs` asserts `inspect-workflow` JSON/prompt output, self-reported metrics and Minimal Context validator selection; `tests/sdlc-harness/upgrade.test.mjs` asserts upgrade prompts explicit semantic migration without auto-generating Context; `tools/consumer_lab_full_test.mjs` validates the packed package in an installed consumer lab; `package check-source` output was `package source OK`.
+- Basic Self-test Evidence: `npm test --workspace agent-project-sdlc` PASS with 13/13 test files; `node tools/consumer_lab_full_test.mjs --reset-lab --markdown-report /tmp/minimal-context-consumer-lab.md --json-report /tmp/minimal-context-consumer-lab.json` PASS with 30 PASS / 0 BLOCKED / 0 FAIL; `node packages/sdlc-harness/dist/cli.js package sync-source` PASS; `node packages/sdlc-harness/dist/cli.js package check-source` PASS; `make validate-context` PASS; `make validate-harness` PASS.
 
 ## 6. 与技术方案的偏移
 
@@ -140,8 +356,8 @@ Existing project runs sdlc-harness upgrade
 | 测试（Test） | 覆盖范围（Coverage） | 最近记录结果（Result） |
 |---|---|---|
 | `npm test` | TypeScript build and package CLI regression tests | PASS for `TASK-059` on 2026-05-28 |
-| `tests/sdlc-harness/sync-init-doctor.test.mjs` | init, adopt, sync, configured-root gates and doctor behavior | Covers fresh `REQUIREMENT_GATHERING`, adopt `SPRINTING`, configured-root `make validate-harness` and configured-root `transition.py` |
-| `tools/consumer_lab_full_test.mjs` | full consumer lab lifecycle smoke coverage | Covers fresh `.codex` init and `.workflow` configured-root CLI / Makefile / transition gates |
+| `tests/sdlc-harness/sync-init-doctor.test.mjs` | Minimal Context init, adopt, sync, configured-root gates, doctor behavior and migration safety | Covers fresh/adopt `project_context/**`, no default lifecycle/stage assets, v3 `validate-harness` aliasing and `migrate-context` dry-run/write behavior |
+| `tools/consumer_lab_full_test.mjs` | full installed-consumer Minimal Context smoke coverage | Covers packed-package fresh `.codex` init, adopt, `.workflow` configured root, CLI/Makefile `validate-context` / `validate-harness`, and `migrate-context` dry-run/write/protected-user-context behavior |
 | `tests/sdlc-harness/upgrade.test.mjs` | migrations and automatic sync | PASS in package regression suite |
 | `tests/sdlc-harness/harness-root.test.mjs` | root resolution and config precedence | PASS in package regression suite |
 | `tests/sdlc-harness/validators.test.mjs` | package validators, including Development Self-Test Report content checks | PASS in package regression suite on 2026-05-30 |
@@ -155,11 +371,16 @@ Existing project runs sdlc-harness upgrade
 | `node packages/sdlc-harness/dist/cli.js package sync-source` | package assets reflect template and README source changes | PASS on 2026-05-30; changed 48 assets |
 | `node packages/sdlc-harness/dist/cli.js package check-source` | package canonical assets match source after self-test report validation changes | PASS on 2026-05-30 |
 | `make work-products-overview && make validate-harness && make validate-plan` | source docs, generated overviews, scaffold and active plan after self-test report boundary hardening | PASS on 2026-05-30 |
-| `npm test --workspace agent-project-sdlc` | package regression for configured-root Python/Makefile gates, fresh/adopt lifecycle split and `<harnessRoot>` dirty-path expansion | PASS in current validation batch |
-| `tools/consumer_lab_full_test.mjs` | installed-consumer validation for `.workflow` configured-root CLI validator, Makefile gates and `transition.py` | PASS in current validation batch |
+| `npm test --workspace agent-project-sdlc` | package regression for Minimal Context defaults, v3 `validate-harness` aliasing, configured-root Context gates and explicit schema v2 legacy validators | PASS in current validation batch |
+| `tools/consumer_lab_full_test.mjs` | installed-consumer validation for `.workflow` configured-root Context gates and explicit `migrate-context` behavior | PASS in current validation batch |
 | `tests/sdlc-harness/workflow-inspector.test.mjs` | `inspect-workflow` report, JSON, prompt, self-reported metrics, outcome comparison and workflow-weight blockers | PASS in current validation batch |
 | `tests/sdlc-harness/delivery-benchmark.test.mjs` | delivery benchmark scenario loading, run preparation, observer measurement, manual/timed event recording, scoring, report data and outcome math | PASS in current validation batch |
 | `tests/sdlc-harness/orientation-fast-path.test.mjs` | AGENTS, manager/dev Skills, README/PROJECT_SPEC and synced package assets document orientation fast path without changing gate semantics | Covered by package regression |
+| `tests/sdlc-harness/sync-init-doctor.test.mjs` | Minimal Context init/sync/doctor and explicit `migrate-context` safety behavior | PASS in current validation batch |
+| `tests/sdlc-harness/upgrade.test.mjs` | `upgrade` syncs managed Minimal Context assets and prompts `migrate-context --dry-run` without semantic migration | PASS in current validation batch |
+| `tests/sdlc-harness/validators.test.mjs` | `validate-context` verifies global/module Context shape and blocks fake test-result claims | PASS in current validation batch |
+| `tests/sdlc-harness/workflow-inspector.test.mjs` | Minimal Context projects inspect with `validate-context`; legacy stage fixtures still exercise old workflow-weight diagnostics | PASS in current validation batch |
+| `tools/consumer_lab_full_test.mjs --reset-lab --markdown-report /tmp/minimal-context-consumer-lab.md --json-report /tmp/minimal-context-consumer-lab.json` | installed-consumer Minimal Context default, configured-root and migration behavior | PASS on 2026-06-03; 30 PASS / 0 BLOCKED / 0 FAIL |
 
 ## 8. 变更记录（Change Log）
 
@@ -190,7 +411,15 @@ Existing project runs sdlc-harness upgrade
 | 2026-06-02 | Delivery benchmark gate fast path | Current validation batch | Added scenario gate profiles and runner gate cost breakdown so pilots distinguish orientation, product verification gates, workflow-control gates and out-of-scope package regression. |
 | 2026-06-02 | Delivery benchmark honest calibration | Current validation batch | Kept unclean lifecycle pilot numbers out of the visual report and documented high-signal-not-hacked scenario design plus formal invalidation rules. |
 | 2026-06-02 | Delivery benchmark staged injection | Current validation batch | Changed formal lifecycle benchmark prompts so initial delivery sees only base requirements/acceptance/gate profile, while recovery/RFC/debug materials are injected later with `stage-prompt`. |
+| 2026-06-02 | Delivery benchmark metric confidence | Current validation batch | Added repo-local hidden quality probe and recovery answer-key scoring support, plus report confidence labels so static rubric and operator-scored recovery results are not overclaimed; hidden probe results are the primary quality summary when available. |
+| 2026-06-02 | Delivery benchmark automation burden and gate value | Current validation batch | Added repo-local intervention and gate finding records so support-triage pilots can test whether gates reduce operator prompts, repair loops and escaped defects rather than only adding elapsed time. |
+| 2026-06-02 | Delivery benchmark run-dir git isolation | Current validation batch | Updated benchmark `prepare` to initialize each run directory as an independent local git repo with a local bare remote, and clarified that observer/timer/gate-value records are operator-side measurement rather than measured-agent work. |
+| 2026-06-02 | Delivery benchmark pilot calibration ledger | Current validation batch | Documented repeated pilot rerun lessons so invalidated attempts, dirty operator artifacts, infrastructure instability, scoring conflicts and gate-value findings are preserved as protocol evidence. |
+| 2026-06-02 | Delivery benchmark conclusion eligibility and gate thinning analysis | Current validation batch | Added `conclusion_eligible` metric confidence semantics, published the support gate-value pilot as same-hidden-quality negative elapsed-time evidence, and added `GATE_THINNING_ANALYSIS.md` to conclude `Standard Thin` currently has the best cost/value tradeoff. |
+| 2026-06-02 | Standard Thin workflow gate guidance | Current validation batch | Promoted `Standard Thin` into common Harness guidance, concentrating strict workflow gates at completion, pre-commit, phase, release, package/source and high-risk boundaries while keeping focused product gates in ordinary loops. |
 | 2026-06-02 | Orientation fast path | Current validation batch | Documented general new-session/status/next-step orientation as lightweight routing rather than automatic gate execution, while preserving completion, phase-transition, commit and release gates. |
+| 2026-06-03 | Minimal Context Harness vNext | Current validation batch | Changed package defaults to `project_context/**`, added `migrate-context` and `validate-context`, kept semantic migration out of `sync` / `upgrade`, and updated README, package README, PROJECT_SPEC, benchmark prompt and package assets. |
+| 2026-06-03 | Minimal Context consumer lab and v3 gate alias | Current validation batch | Updated the full consumer lab to validate vNext defaults from a packed tarball, verified explicit migration behavior, and made schema v3 `validate-harness` alias `validate-context` while preserving explicit schema v2 legacy stage validation. |
 
 ## 9. 后续维护注意事项
 
