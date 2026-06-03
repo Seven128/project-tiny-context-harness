@@ -153,7 +153,7 @@ try {
   assert.equal(cliValidate.status, 0, `${cliValidate.stdout}\n${cliValidate.stderr}`);
   const cliValidateHarnessAlias = spawnSync(process.execPath, [cliPath, "validate-harness"], { cwd: cliRoot, encoding: "utf8" });
   assert.equal(cliValidateHarnessAlias.status, 0, `${cliValidateHarnessAlias.stdout}\n${cliValidateHarnessAlias.stderr}`);
-  assert.match(cliValidateHarnessAlias.stdout, /validate-context checked/);
+  assert.match(cliValidateHarnessAlias.stdout, /Minimal Context validation passed/);
 } finally {
   await rm(root, { recursive: true, force: true });
   await rm(configuredRoot, { recursive: true, force: true });

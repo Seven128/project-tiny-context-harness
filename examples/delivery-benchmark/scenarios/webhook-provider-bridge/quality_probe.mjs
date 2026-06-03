@@ -35,7 +35,7 @@ async function readText(relativePath) {
 
 async function readDocumentationCorpus() {
   const parts = [await readText("README.md")];
-  for (const root of ["docs", ".work_products"]) {
+  for (const root of ["docs", "project_context"]) {
     parts.push(await readMarkdownTree(root));
   }
   return parts.filter(Boolean).join("\n\n");

@@ -8,19 +8,21 @@
 ## Non-goals / Boundaries
 
 - The package does not replace project tests, CI, review or human acceptance.
-- New consumer projects should not default to lifecycle phases, `plan.yaml`, stage skills, `.work_products/**` or phase gates.
+- New consumer projects should not default to lifecycle phases, stage task state, stage skills, stage work-product trees or phase gates.
 - `sync` must not perform semantic migration from legacy stage facts into Context.
-- Legacy stage assets may remain for compatibility, but they are no longer the default new-project path.
+- Legacy stage assets are not shipped as a runnable default or compatibility layer; only `migrate-context` reads old user-project files as migration input.
 
 ## Background
 
 - This repository contains the Harness package source, npm package release/source-sync logic and delivery benchmark logic.
-- Earlier versions used a stage-based SDLC workflow with lifecycle state, plan tasks, stage skills, stage work products and many validators.
+- Earlier versions used a stage-based SDLC workflow with lifecycle state, plan tasks, stage skills, stage work-product trees and many validators.
 - Benchmark pilots showed that full default ceremonies and frequent workflow gates create substantial time/token friction on ordinary and medium-complexity tasks.
 
 ## Design Rationale
 
 - The durable value with the clearest expected return is context recovery, not forcing a full SDLC document chain for every project.
+- The historical stage-based Harness externalized the whole SDLC through lifecycle state, plan tasks, PRD / tech plan / implementation / review / test / release artifacts and phase gates. Benchmark pilots showed those writes, transitions and gates are objective time/token cost; details are summarized in `PROJECT_SPEC.md`.
+- Modern coding agents have internalized much of the ordinary single-task loop: compact requirement understanding, local design choice, code editing, test execution and simple repair. The default Harness should not duplicate that capability with broad ceremonies.
 - ADR-level rationale is downgraded into `project_context/global.md#Design Rationale` or module Context when it still affects future work.
 - Implementation facts should live in code, tests, comments and short module Context constraints when the code is not self-explanatory.
 - Explicit `migrate-context` protects users from accidental semantic rewrites during `sync` or `upgrade`.
@@ -35,9 +37,10 @@
 
 ## Current State
 
-- vNext implementation is switching package defaults to Minimal Context Harness.
-- Historical `.work_products/**` and `.codex/state/**` are kept as repository history and migration input.
-- Delivery benchmark prompts should evaluate Minimal Context behavior for new Harness runs while marking old stage-based data as historical evidence.
+- vNext implementation is Minimal Context Harness.
+- Old stage-based assets, state files and work-product trees are removed from the current source tree.
+- Historical stage design is summarized in `PROJECT_SPEC.md`; migration support remains in `migrate-context` for existing user projects.
+- Delivery benchmark prompts should evaluate Minimal Context behavior for new Harness runs; old stage-based public result data has been removed.
 
 ## Next Safe Action
 

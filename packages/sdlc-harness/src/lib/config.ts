@@ -19,7 +19,7 @@ export function defaultConfig(root: string): HarnessConfig {
       { path: ".github/workflows/harness.yml", strategy: "create-if-missing" }
     ],
     local_overrides: [],
-    never_overwrite: ["project_context/**", ".work_products/**", harnessPath(root, "state/**"), "src/**", "tests/**"]
+    never_overwrite: ["project_context/**", "src/**", "tests/**"]
   };
 }
 

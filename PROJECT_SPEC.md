@@ -1,6 +1,6 @@
 # AI SDLC Harness Project Spec
 
-This document explains the stable product direction, design rationale and package behavior for AI SDLC Harness. User-facing commands live in [README.md](README.md). Long-form historical details and evidence remain in `.work_products/**` and ADR files.
+This document explains the stable product direction, design rationale and package behavior for AI SDLC Harness. User-facing commands live in [README.md](README.md). Historical stage-based workflow details are retained here only as a concise design summary.
 
 ## Product Goal
 
@@ -27,6 +27,24 @@ Default non-goals:
 - no phase gates by default
 
 Harness now maintains context quality, not project test quality. Product quality is proven by the project’s own tests, smoke checks, hidden probes, CI, review and human acceptance.
+
+## Why Minimal Context / 为什么是最小上下文
+
+The stage-based Harness was built from a reasonable premise: if an agent explicitly writes requirements, design, architecture, implementation notes, review evidence, test reports, release notes and RFCs, then later agents should miss less and recover faster.
+
+Benchmark pilots changed the default product judgment. The workflow’s fact-source writes, stage decisions, phase transitions and gates are real process cost; they consume time and tokens even when the final product quality is the same. At the same time, modern coding agents have internalized much of the ordinary single-task loop: understanding a compact requirement, choosing a local design, editing code, running tests and repairing simple failures. For ordinary and medium-complexity work, forcing a full SDLC document chain duplicates work the model can already do well.
+
+The part that remains clearly valuable is not the ceremony itself. It is durable, compact context that survives a new conversation: project goal, non-goals, design rationale, module responsibilities, code entry points, test entry points, current state and next safe action. Those facts are hard to recover from code alone and expensive to re-explain every time.
+
+Therefore the current design keeps the product goal unchanged, but narrows the default mechanism:
+
+- preserve the smallest context that helps future agents resume safely;
+- let code, tests and project-specific probes prove product quality;
+- move ADR decisions into Context `Design Rationale` instead of standalone default ADR files;
+- move implementation narration into code comments, tests and short module constraints;
+- make richer process artifacts and strict gates conditional, not default.
+
+In short: Harness no longer tries to externalize the whole SDLC by default. It maintains the minimum durable context needed for recovery and continuation.
 
 ## Context Contract
 
@@ -80,7 +98,7 @@ npx sdlc-harness migrate-context --dry-run
 
 - `--dry-run` previews output and writes nothing.
 - `--write` creates or updates `project_context/**`.
-- old `.work_products/**`, `.docs/**`, stage state and stage assets are preserved.
+- old files in the user project are preserved; migration never deletes legacy artifacts.
 - existing user-authored Context is protected by writing migration output to `project_context/_migration/latest/**` unless a managed migration marker is present.
 
 `validate-context` checks that Context has the minimum recovery fields and does not fake product verification evidence. It does not replace project tests.
@@ -98,9 +116,13 @@ The previous default attempted to encode a full stage-based software lifecycle:
 - `RELEASING`
 - `RFC_RECALIBRATION`
 
-It used `.codex/state/lifecycle.yaml`, `plan.yaml`, `plan.draft.yaml`, `.work_products/**`, stage skills, stage templates, generated overviews, phase validators and phase transition helpers.
+It used lifecycle state, `plan.yaml`, `plan.draft.yaml`, `.work_products/**`, stage skills, stage templates, generated overviews, phase validators and phase transition helpers.
 
-The design goal was reasonable: make requirements, design, implementation, review, testing, release and requirement changes explicit so agents would miss less, recover faster and hand off better. The repository still keeps this historical implementation as source, legacy compatibility material and benchmark evidence.
+The design goal was reasonable: make requirements, design, implementation, review, testing, release and requirement changes explicit so agents would miss less, recover faster and hand off better.
+
+The implementation was broad: each lifecycle phase owned a role prompt, allowed paths, required gates and work-product templates. Development tracked current tasks in plan state; phase changes used transition helpers; validators checked PRD / UX / design / implementation / review / test / release / RFC completeness; generated overviews tried to make large document trees easier to browse.
+
+The cost was also broad: agents spent time reading phase state, deciding allowed actions, writing durable artifacts, refreshing generated views and running gates. Benchmark pilots showed this overhead remained even when final product quality matched direct coding.
 
 ## Benchmark Findings And Convergence Reason
 
@@ -122,7 +144,7 @@ Therefore the canonical product direction changed: preserve minimal durable cont
 - Harness should not claim product quality; it should point agents to verification entry points.
 - Semantic migration must be explicit and reversible.
 - Managed asset sync must be narrow and predictable.
-- Legacy stage assets can remain available without being the default new-project path.
+- Historical stage design is documentation-only in the current source tree; runnable defaults are Minimal Context.
 - Benchmark conclusions must distinguish high-confidence measured data from diagnostic or historical evidence.
 
 ## Repository Product Areas
@@ -133,8 +155,8 @@ This source workspace contains three maintained areas:
 - Package release and source-sync logic: build/test/release scripts and `packages/sdlc-harness/source-mappings.yaml`.
 - Delivery benchmark: `examples/delivery-benchmark/**`, used to test whether the Harness product direction improves same-quality lifecycle delivery efficiency.
 
-## Legacy Material
+## Historical Material
 
-`.work_products/**` and `.codex/state/**` remain in this repository as historical self-authoring facts and migration input. They are not the package default for new projects.
+Old stage-based source assets, state files and work-product trees are removed from the current implementation. The durable information kept from that era is this spec summary: what the stage Harness tried to do, how it was implemented, what benchmark work found and why the product converged to Minimal Context.
 
-Major historical design reasons are still traceable through ADR slices under `.work_products/05_decisions/**`, especially the benchmark scenario design ADR and stage contract ADR. Future updates should add concise ADRs only when they introduce durable tradeoffs, not as routine implementation logs.
+Future design changes should keep the same discipline: preserve the reasoning that affects current behavior, but avoid recreating large default document chains unless measured evidence shows they pay back their cost.

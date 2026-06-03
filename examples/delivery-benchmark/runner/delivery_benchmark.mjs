@@ -674,19 +674,6 @@ export function buildEvidenceCheck(baselineReport, harnessReport, options = {}) 
   };
 }
 
-export async function inspectWorkflow(options) {
-  const runDir = path.resolve(requireString(options.runDir, "--run-dir is required"));
-  const args = ["sdlc-harness", "inspect-workflow", "--json"];
-  addOptionalMetricArgs(args, options);
-  const result = spawnSync("npx", args, { cwd: runDir, encoding: "utf8" });
-  return {
-    status: result.status,
-    stdout: result.stdout,
-    stderr: result.stderr,
-    report: result.status === 0 ? JSON.parse(result.stdout) : null
-  };
-}
-
 export function renderMarkdownReport(report) {
   const lines = [
     `# Delivery Benchmark Report: ${report.scenario_id} (${report.mode})`,
@@ -1359,7 +1346,7 @@ function categorizeArtifact(relative) {
   ) {
     return "managed_runtime";
   }
-  if (relative.startsWith(".work_products/") || relative.startsWith("project_context/")) return "project_facts";
+  if (relative.startsWith("project_context/")) return "project_facts";
   if (
     relative.startsWith("src/") ||
     relative.startsWith("test/") ||
@@ -1897,12 +1884,12 @@ function renderInitialScenarioBundle(scenario) {
 function renderStagePromptContent(scenario, mode, stage) {
   const modeRule =
     mode === "baseline"
-      ? "Baseline mode: do not use Harness lifecycle files, workflow skills or validators."
-      : "Harness mode: follow the Harness lifecycle, task contracts, docs facts and relevant gates for this stage.";
+      ? "Baseline mode: do not use Harness context files or validators."
+      : "Harness mode: maintain Minimal Context facts and run only relevant product/context gates for this stage.";
   const mutationCompletionRule =
     mode === "baseline"
       ? "At the end of this mutating stage, after product tests/smoke pass, create one normal product commit and push `main` to the existing local `origin`. Do not commit `.benchmark/**`. If commit or push fails, stop and report `BLOCKED`."
-      : "At the end of this mutating stage, after required product and Harness task gates pass, use the normal Harness task commit/push protocol for changed product and durable fact files. If commit or push fails, stop and report `BLOCKED`.";
+      : "At the end of this mutating stage, after required product and context gates pass, create one normal product/context commit and push `main` to the existing local `origin`. Do not commit `.benchmark/**`. If commit or push fails, stop and report `BLOCKED`.";
   const sections = [
     `# Delivery Benchmark Stage Prompt: ${scenario.id} (${mode}/${stage})`,
     "",
@@ -2023,19 +2010,6 @@ function runCommand(command, args, cwd, options = {}) {
 
 async function readOptional(filePath) {
   return existsSync(filePath) ? readFile(filePath, "utf8") : "";
-}
-
-function addOptionalMetricArgs(args, options) {
-  const entries = [
-    ["--workflow-control-minutes", options.workflowControlMinutes],
-    ["--total-delivery-minutes", options.totalDeliveryMinutes],
-    ["--estimated-vibe-handoff-minutes", options.estimatedVibeHandoffMinutes],
-    ["--avoided-rework-minutes", options.avoidedReworkMinutes],
-    ["--comparison-confidence", options.comparisonConfidence]
-  ];
-  for (const [flag, value] of entries) {
-    if (value !== undefined) args.push(flag, String(value));
-  }
 }
 
 function requireValue(argv, index, flag) {
@@ -2394,11 +2368,6 @@ async function main(argv = process.argv.slice(2)) {
       await writeJsonFile(path.resolve(options.out), result);
     }
     console.log(JSON.stringify(result, null, 2));
-  } else if (options.command === "inspect") {
-    const result = await inspectWorkflow(options);
-    process.stdout.write(result.stdout);
-    process.stderr.write(result.stderr);
-    if (result.status !== 0) process.exitCode = result.status ?? 1;
   } else {
     throw new Error(`unknown command: ${options.command}`);
   }
@@ -2426,7 +2395,6 @@ Commands:
   recovery-score --scenario <id> --run-dir <dir> --answer <file> [--out <json>]
   score --scenario <id> --mode <baseline|harness> --run-dir <dir> [--run-type cold|warm|unknown] [--bootstrap-minutes <n>] [--initial-delivery-minutes <n>] [--recovery-orientation-minutes <n>] [--rfc-fix-minutes <n>] [--debug-fix-minutes <n>] [--context-recovery-score <n>] [--context-recovery-total <n>] [--wrong-path-count <n>] [--json-report <path>] [--markdown-report <path>]
   evidence-check --baseline-report <json> --harness-report <json> --protocol-status formal|calibration|blocked|unreviewed [--out <json>]
-  inspect --run-dir <dir> [inspect-workflow outcome arguments]
 `);
 }
 

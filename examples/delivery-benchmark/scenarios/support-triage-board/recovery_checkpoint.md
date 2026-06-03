@@ -2,7 +2,7 @@
 
 You are taking over a support escalation desk after initial delivery. Write a short takeover memo for the operator. Do not change source files during this stage.
 
-Your memo should be based only on committed source files, tests, README/docs, and any Harness deliverables in this run. Use concrete file path citations for every important claim.
+Your memo should be based only on committed source files, tests, README/docs, and any Minimal Context facts in this run. Use concrete file path citations for every important claim.
 
 Cover:
 

@@ -21,5 +21,5 @@
 ## 常用命令
 
 - `make validate-context`：检查 `project_context/**` 是否足够支持 agent 恢复上下文。
-- `npx sdlc-harness migrate-context --dry-run`：预览从旧 `.work_products/**` 到 `project_context/**` 的迁移。
+- `npx sdlc-harness migrate-context --dry-run`：预览从旧用户项目资料到 `project_context/**` 的迁移。
 - `npx sdlc-harness migrate-context --write`：显式写入迁移结果，不删除旧事实源。

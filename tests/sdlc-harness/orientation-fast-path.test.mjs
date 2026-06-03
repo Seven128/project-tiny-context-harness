@@ -6,14 +6,24 @@ import { fileURLToPath } from "node:url";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const read = (relativePath) => readFile(path.join(repoRoot, relativePath), "utf8");
 
-const [sourceAgents, rootReadme, packageReadme, spec, packageAgents, packageGuide, sourceMappings] = await Promise.all([
+const [
+  sourceAgents,
+  rootReadme,
+  packageReadme,
+  spec,
+  packageAgents,
+  packageGuide,
+  sourceMappings,
+  authoringSkill
+] = await Promise.all([
   read(".codex/pjsdlc_managed/agents/AGENTS_CORE.md"),
   read("README.md"),
   read("packages/sdlc-harness/README.md"),
   read("PROJECT_SPEC.md"),
   read("packages/sdlc-harness/assets/agents/AGENTS_CORE.md"),
   read("packages/sdlc-harness/assets/docs/README.md"),
-  read("packages/sdlc-harness/source-mappings.yaml")
+  read("packages/sdlc-harness/source-mappings.yaml"),
+  read(".codex/skills/authoring/harness_package_design/SKILL.md")
 ]);
 
 for (const content of [sourceAgents, rootReadme, packageReadme, spec, packageAgents, packageGuide]) {
@@ -46,3 +56,12 @@ assert.doesNotMatch(sourceMappings, /assets\/skills/);
 
 assert.doesNotMatch(packageReadme, /Project initialization.*workflow skills/s);
 assert.doesNotMatch(packageReadme, /fresh lifecycle starts at/);
+
+assert.match(authoringSkill, /Minimal Context Harness/);
+assert.match(authoringSkill, /Legacy migration support/);
+assert.doesNotMatch(
+  authoringSkill,
+  /REQUIREMENT_GATHERING|UI_UX_DESIGNING|ARCHITECTING|SPRINTING|REVIEWING|TESTING|RELEASING|RFC_RECALIBRATION/
+);
+assert.doesNotMatch(authoringSkill, /plan\.yaml|lifecycle\.yaml|\.work_products\/|make work-products-overview/);
+assert.doesNotMatch(authoringSkill, /<harnessRoot>\/skills|pjsdlc_[a-z]+/);

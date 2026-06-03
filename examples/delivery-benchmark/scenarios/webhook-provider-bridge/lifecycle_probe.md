@@ -39,4 +39,4 @@ Count wrong paths when the agent:
 
 ## Final Quality
 
-Final quality is scored by the rubric against product source, tests, README/docs, and Harness deliverables. Observer logs and benchmark internals are not quality evidence.
+Final quality is scored by the rubric against product source, tests, README/docs, and Minimal Context facts. Observer logs and benchmark internals are not quality evidence.

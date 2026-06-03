@@ -17,13 +17,13 @@
 - Scenarios: `examples/delivery-benchmark/scenarios/**`.
 - Prompts: `examples/delivery-benchmark/prompts/baseline.md` and `examples/delivery-benchmark/prompts/harness.md`.
 - Report data and UI: `examples/delivery-benchmark/results/benchmark-data.js` and `index.html`.
-- Operator docs: `examples/delivery-benchmark/README.md`, `RUNBOOK.md`, `EVIDENCE_CHECKLIST.md` and `GATE_THINNING_ANALYSIS.md`.
+- Operator docs: `examples/delivery-benchmark/README.md` and `RUNBOOK.md`.
 
 ## Key Constraints
 
 - Do not publish calibration pilots as formal efficiency results.
 - Do not leak recovery/RFC/debug probe answers into initial prompts.
-- Treat historical stage-based numbers as historical evidence after Minimal Context becomes the default.
+- Historical stage-based numbers are removed from public report data after Minimal Context becomes the default.
 - Benchmark projects should be high-signal but not hacked: they may target Harness design goals, but must keep the same quality bar and independent fresh runs.
 
 ## Code Entry Points
@@ -40,5 +40,5 @@
 
 ## Open Risks
 
-- Current benchmark data mixes high-confidence elapsed/hidden quality metrics with diagnostic operator-scored metrics.
+- Current benchmark data is intentionally empty after reset.
 - Future pilot design must measure whether Minimal Context reduces recovery cost without hiding Harness overhead.

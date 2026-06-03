@@ -18,25 +18,25 @@ during orientation.
 - Include UI smoke for the board states if a browser UI is implemented.
 - When a later staged prompt injects a change or repair condition, add regression coverage for that injected boundary before ending the stage.
 
-## Harness Task Gates
+## Harness Context Gates
 
-- Harness mode may run `make validate-plan` after task or RFC planning changes.
-- Harness mode may run `make validate-dev` at development handoff boundaries.
+- Harness mode may run `make validate-context` after durable `project_context/**` changes.
+- Harness mode may run the scenario hidden quality probe at delivery boundaries.
 - Harness mode should time these gates with `event gate:<name>` and `phase GATE`.
 - Baseline mode does not run Harness validators.
 
-## Phase Exit Gates
+## Boundary Gates
 
-- Run the smallest phase exit gate needed for the current Harness phase only when crossing that phase boundary.
-- Do not run `make validate-current` at initial orientation.
-- Do not treat a green workflow gate as a substitute for product smoke tests.
+- Run context validation only when Context changed or when handing off a completed run.
+- Do not run package or workspace-wide validation at initial orientation.
+- Do not treat a green Context gate as a substitute for product smoke tests or hidden probes.
 
 ## Out-of-Scope Gates
 
 - `node packages/sdlc-harness/dist/cli.js package sync-source`
 - `node packages/sdlc-harness/dist/cli.js package check-source`
 - `npm test --workspace agent-project-sdlc`
-- `make validate-harness`
+- `make validate-harness` unless it is only being used as the `validate-context` alias for this run
 - consumer lab / installed-consumer validation
 
 These gates belong to Harness package source changes, not this scenario pilot.

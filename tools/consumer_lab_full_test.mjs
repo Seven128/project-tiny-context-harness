@@ -161,36 +161,6 @@ export async function runConsumerLabFullTest(rawOptions) {
   commandCheck("Makefile gates", "make validate-context", "make", ["validate-context"]);
   commandCheck("Makefile gates", "make validate-harness compatibility alias", "make", ["validate-harness"]);
 
-  const defaultWorkflowInspect = run(
-    "npx",
-    [
-      "sdlc-harness",
-      "inspect-workflow",
-      "--workflow-control-minutes",
-      "5",
-      "--total-delivery-minutes",
-      "30",
-      "--estimated-vibe-handoff-minutes",
-      "30",
-      "--avoided-rework-minutes",
-      "10"
-    ],
-    options.labDir
-  );
-  add({
-    area: "CLI lifecycle",
-    evidence: "inspect-workflow installed workspace with outcome metrics",
-    command:
-      "npx sdlc-harness inspect-workflow --workflow-control-minutes 5 --total-delivery-minutes 30 --estimated-vibe-handoff-minutes 30 --avoided-rework-minutes 10",
-    status:
-      defaultWorkflowInspect.status === 0 &&
-      defaultWorkflowInspect.stdout.includes("outcome.workflow_overhead_ratio") &&
-      defaultWorkflowInspect.stdout.includes("outcome.net_value_minutes")
-        ? "PASS"
-        : "FAIL",
-    details: trimOutput(`${defaultWorkflowInspect.stdout}\n${defaultWorkflowInspect.stderr}`)
-  });
-
   await verifyManagedAssets(options.labDir, add);
   await verifyAdoptAndConfiguredRoots(options.labDir, tarballPath, add);
   await verifyContextMigrationConsumer(options.labDir, tarballPath, add);
@@ -351,35 +321,6 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
     command: "npx sdlc-harness validate-context",
     status: configuredCliValidator.status === 0 ? "PASS" : "FAIL",
     details: trimOutput(`${configuredCliValidator.stdout}\n${configuredCliValidator.stderr}`)
-  });
-  const configuredWorkflowInspect = run(
-    "npx",
-    [
-      "sdlc-harness",
-      "inspect-workflow",
-      "--workflow-control-minutes",
-      "5",
-      "--total-delivery-minutes",
-      "30",
-      "--estimated-vibe-handoff-minutes",
-      "30",
-      "--avoided-rework-minutes",
-      "10"
-    ],
-    configuredDir
-  );
-  add({
-    area: "Configurable root",
-    evidence: "inspect-workflow consumes configured .workflow root",
-    command:
-      "npx sdlc-harness inspect-workflow --workflow-control-minutes 5 --total-delivery-minutes 30 --estimated-vibe-handoff-minutes 30 --avoided-rework-minutes 10",
-    status:
-      configuredWorkflowInspect.status === 0 &&
-      configuredWorkflowInspect.stdout.includes("harness root: .workflow") &&
-      configuredWorkflowInspect.stdout.includes("outcome.workflow_overhead_ratio")
-        ? "PASS"
-        : "FAIL",
-    details: trimOutput(`${configuredWorkflowInspect.stdout}\n${configuredWorkflowInspect.stderr}`)
   });
   const configuredMakeContext = run("make", ["validate-context"], configuredDir);
   add({
@@ -574,10 +515,16 @@ async function verifyReleaseAndGithubStatic(sourceRoot, labDir, add) {
   add({
     area: "Release automation",
     evidence: "release automation static coverage",
-    status: releaseScriptText.includes(".work_products/08_release/CURRENT_RELEASE.md") ? "PASS" : "FAIL",
-    details: releaseScriptText.includes(".work_products/08_release/CURRENT_RELEASE.md")
-      ? "release automation keeps historical current release status; npm publish is out of scope for consumer lab"
-      : "release automation current release status path missing"
+    status:
+      releaseScriptText.includes(".artifacts/releases/current-release-status.md") &&
+      !releaseScriptText.includes(".work_products/08_release/CURRENT_RELEASE.md")
+        ? "PASS"
+        : "FAIL",
+    details:
+      releaseScriptText.includes(".artifacts/releases/current-release-status.md") &&
+      !releaseScriptText.includes(".work_products/08_release/CURRENT_RELEASE.md")
+        ? "release automation writes a generated .artifacts report instead of legacy work products; npm publish is out of scope for consumer lab"
+        : "release automation report path is not Minimal Context aligned"
   });
 }
 

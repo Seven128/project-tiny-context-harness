@@ -75,7 +75,7 @@
         "evidence": [
           { "path": "README.md", "contains_all": ["receiver", "health", "test"] },
           { "path": "docs/**", "contains_all": ["receiver", "health", "test"] },
-          { "path": ".work_products/**", "contains_all": ["receiver", "health", "test"] }
+          { "path": "project_context/**", "contains_all": ["receiver", "health", "test"] }
         ]
       },
       {
@@ -85,7 +85,7 @@
         "evidence": [
           { "path": "README.md", "contains_all": ["local", "mock-provider", "live-provider"] },
           { "path": "docs/**", "contains_all": ["local", "mock-provider", "live-provider"] },
-          { "path": ".work_products/**", "contains_all": ["local", "mock-provider", "live-provider"] }
+          { "path": "project_context/**", "contains_all": ["local", "mock-provider", "live-provider"] }
         ]
       },
       {
@@ -95,7 +95,7 @@
         "evidence": [
           { "path": "README.md", "contains_all": ["credential", "do-not-retry"] },
           { "path": "docs/**", "contains_all": ["credential", "do-not-retry"] },
-          { "path": ".work_products/**", "contains_all": ["credential", "do-not-retry"] }
+          { "path": "project_context/**", "contains_all": ["credential", "do-not-retry"] }
         ]
       },
       {
@@ -105,7 +105,7 @@
         "evidence": [
           { "path": "README.md", "contains_any": ["RFC 1", "RFC 2", "Debug Fix", "next safe action"] },
           { "path": "docs/**", "contains_any": ["RFC 1", "RFC 2", "Debug Fix", "next safe action"] },
-          { "path": ".work_products/**", "contains_any": ["RFC 1", "RFC 2", "Debug Fix", "next safe action"] }
+          { "path": "project_context/**", "contains_any": ["RFC 1", "RFC 2", "Debug Fix", "next safe action"] }
         ]
       }
     ],
@@ -151,7 +151,7 @@
         "evidence": [
           { "path": "README.md", "contains_all": ["next safe action", "do-not-retry", "mock-provider"] },
           { "path": "docs/**", "contains_all": ["next safe action", "do-not-retry", "mock-provider"] },
-          { "path": ".work_products/**", "contains_all": ["next safe action", "do-not-retry", "mock-provider"] }
+          { "path": "project_context/**", "contains_all": ["next safe action", "do-not-retry", "mock-provider"] }
         ]
       }
     ]

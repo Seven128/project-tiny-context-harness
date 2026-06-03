@@ -19,7 +19,7 @@ For existing projects:
 npx sdlc-harness init --adopt
 ```
 
-`init` creates Minimal Context files, agent guidance, managed templates/tools and a Makefile include. It does not create `.work_products/**`, lifecycle state or stage skills by default.
+`init` creates Minimal Context files, agent guidance, managed templates/tools and a Makefile include. It does not create stage work-product trees, lifecycle state or stage skills by default.
 
 ## Capabilities
 
@@ -30,12 +30,10 @@ npx sdlc-harness init --adopt
 | Configurable Harness root | `--harness-folder`, `package.json#sdlcHarness.harnessFolderName`, `sdlc-harness.config.json` | Supports Codex `.codex`, Claude `.claude`, Cursor `.cursor`, Cline `.cline`, Roo `.roo`, Gemini `.gemini` or a custom folder. |
 | Managed file sync | `npx sdlc-harness sync` | Refreshes package-managed guidance, Makefile include, context templates, tools and workflow YAML. It does not perform semantic Context migration. |
 | Upgrade | `npx sdlc-harness upgrade` | Runs safe migrations and `sync`; if legacy stage facts are detected, it prompts the user to run `migrate-context --dry-run`. |
-| Context migration preview | `npx sdlc-harness migrate-context --dry-run` | Reads README, `.work_products/**`, ADR / decision docs, implementation docs and source/test layout, then previews Minimal Context output without writing files. |
-| Context migration write | `npx sdlc-harness migrate-context --write` | Writes or updates `project_context/**` without deleting old `.work_products/**` or state files. Existing user-authored Context is protected. |
+| Context migration preview | `npx sdlc-harness migrate-context --dry-run` | Reads an existing legacy project’s README, `.work_products/**`, ADR / decision docs, implementation docs and source/test layout, then previews Minimal Context output without writing files. |
+| Context migration write | `npx sdlc-harness migrate-context --write` | Writes or updates `project_context/**` without deleting old files in the user’s project. Existing user-authored Context is protected. |
 | Context validation | `npx sdlc-harness validate-context`, `make validate-context` | Checks required Context sections and rejects fake claims that tests already passed. |
 | Diagnostics | `npx sdlc-harness doctor` | Reports Harness root, package version, schema version and required Minimal Context paths. |
-| Workflow self-inspection | `npx sdlc-harness inspect-workflow` | Legacy-compatible diagnostic for workflow weight and handoff clarity. Metrics still label their data source. |
-| Legacy validators | `npx sdlc-harness validate-*` | Stage validators remain available for legacy projects, but are no longer the default new-project path. |
 | Package source checks | `sdlc-harness package sync-source`, `sdlc-harness package check-source` | Maintainer-only commands for keeping package canonical assets aligned with the source workspace. |
 
 ## Minimal Context Contract
@@ -67,13 +65,13 @@ The Context should be dense, durable and short. Former ADR content belongs in `D
 
 `sync` is intentionally narrow. It refreshes managed files and never generates Context from old stage facts.
 
-`upgrade` performs safe package migrations and `sync`. It does not perform semantic migration. When legacy `.work_products/**`, `.docs/**` or stage state are detected, it prints:
+`upgrade` performs safe package migrations and `sync`. It does not perform semantic migration. When legacy `.work_products/**`, `.docs/**` or stage state are detected in a user project, it prints:
 
 ```txt
 Run npx sdlc-harness migrate-context --dry-run to preview Minimal Context migration.
 ```
 
-`migrate-context --write` is the only command that writes semantic migration output. It preserves old artifacts and avoids overwriting user-authored Context.
+`migrate-context --write` is the only command that writes semantic migration output. It preserves old files in the user project and avoids overwriting user-authored Context.
 
 ## Common Commands
 
@@ -92,8 +90,8 @@ make validate-harness
 
 `make validate-harness` is a compatibility alias for `validate-context` in vNext projects.
 
-## Legacy Stage Harness
+## Legacy Migration
 
-The former stage-based SDLC Harness remains available for legacy consumers that already depend on lifecycle phases, `plan.yaml`, stage skills, `.work_products/**` and phase validators. It is no longer the default for new projects because benchmark work showed that full document chains and frequent workflow gates add real friction on ordinary and medium-complexity tasks.
+The former stage-based SDLC Harness is no longer shipped as a runnable default or compatibility layer. Existing projects that still contain lifecycle phases, `plan.yaml`, stage skills or `.work_products/**` should use `migrate-context` to summarize useful facts into `project_context/**`.
 
 The package direction is now smaller: keep the minimum durable facts that help agents recover context and continue safely.

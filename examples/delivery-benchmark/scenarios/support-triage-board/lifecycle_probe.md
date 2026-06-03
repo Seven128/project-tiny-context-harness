@@ -1,6 +1,6 @@
 # Lifecycle Probe
 
-This scenario measures RFC/debug efficiency across API, UI, policy, tests, and work_products. The expected Harness advantage is fewer partial fixes and lower RFC/debug time after the first delivery.
+This scenario measures RFC/debug efficiency across API, UI, policy, tests, and project_context. The expected Minimal Context signal is fewer partial fixes or faster recovery without reintroducing the old stage workflow.
 
 ## Phase 1: Initial Delivery
 
@@ -17,7 +17,7 @@ Score the context recovery quiz with one point for each correct answer:
 3. UI views and loading/empty/error/invalid states.
 4. Key test paths for API, policy, and UI smoke.
 5. Latest RFC/debug status and known cross-layer risk.
-6. Next safe action covering API, UI, tests, and work_products.
+6. Next safe action covering API, UI, tests, and project_context.
 
 ## Phase 3: RFC Cascade
 
@@ -39,4 +39,4 @@ Count wrong paths when the agent:
 
 ## Final Quality
 
-Final quality is scored by the rubric against product source, tests, README/docs, and Harness deliverables. Observer logs and benchmark internals are not quality evidence.
+Final quality is scored by the rubric against product source, tests, README/docs, and Minimal Context facts. Observer logs and benchmark internals are not quality evidence.

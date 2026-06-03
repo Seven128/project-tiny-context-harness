@@ -9,7 +9,7 @@ const projectRoot = process.cwd();
 const packageName = "agent-project-sdlc";
 const workspaceName = "agent-project-sdlc";
 const packageManifestPath = path.join(projectRoot, "packages", "sdlc-harness", "package.json");
-const releaseDocRelativePath = ".work_products/08_release/CURRENT_RELEASE.md";
+const releaseReportRelativePath = ".artifacts/releases/current-release-status.md";
 
 const args = parseArgs(process.argv.slice(2));
 
@@ -80,18 +80,14 @@ async function main() {
   }
 
   report.finishedAt = new Date().toISOString();
-  await writeReleaseDoc(report);
-  await step(report, "refresh work products overview", () => run("make", ["work-products-overview"]));
+  await writeReleaseReport(report);
   await step(report, "validate harness", () => run("make", ["validate-harness"]));
-  if (await hasOpenTask()) {
-    await step(report, "validate allowed paths", () => run("python3", ["tools/validate_allowed_paths.py"]));
-  }
   await step(report, "final diff check", () => run("git", ["diff", "--check"]));
-  await writeReleaseDoc(report);
+  await writeReleaseReport(report);
 
   console.log("");
   console.log(`${args.publish ? "Published" : "Prepared"} ${packageName}@${targetVersion}`);
-  console.log(`Current release status: ${releaseDocRelativePath}`);
+  console.log(`Current release report: ${releaseReportRelativePath}`);
 }
 
 function parseArgs(argv) {
@@ -129,7 +125,7 @@ function printHelp() {
   node tools/release_npm.mjs [--version patch|minor|major|x.y.z] [--publish --yes]
 
 Default mode is a dry run that bumps the package version, runs release gates, and writes
-the current release status doc. Pass --publish --yes to publish to npm and run registry smoke.`);
+the current release report. Pass --publish --yes to publish to npm and run registry smoke.`);
 }
 
 async function step(report, label, action) {
@@ -148,7 +144,7 @@ async function step(report, label, action) {
       error: error instanceof Error ? error.message : String(error)
     });
     report.finishedAt = new Date().toISOString();
-    await writeReleaseDoc(report, "BLOCKED");
+    await writeReleaseReport(report, "BLOCKED");
     throw error;
   }
 }
@@ -381,11 +377,11 @@ function extractJsonCandidate(input, startIndex) {
   return undefined;
 }
 
-async function writeReleaseDoc(report, forcedStatus) {
+async function writeReleaseReport(report, forcedStatus) {
   const version = report.targetVersion;
   const status = forcedStatus ?? (report.publish ? "RELEASED" : "DRY_RUN");
   const decision = status === "RELEASED" || status === "DRY_RUN" ? "PASS" : "BLOCKED";
-  const docPath = path.join(projectRoot, releaseDocRelativePath);
+  const docPath = path.join(projectRoot, releaseReportRelativePath);
   const pack = report.pack;
   const registry = report.registry;
   const smoke = report.smoke;
@@ -405,9 +401,9 @@ async function writeReleaseDoc(report, forcedStatus) {
       ? "Pending。"
       : "SKIPPED，dry-run 未安装 registry package。";
 
-  const content = `# Current Release Status（当前发布状态）
+  const content = `# Current Release Report（当前发布报告）
 
-This file is overwritten by each release. Historical release evidence lives in git tags, npm registry metadata, CI logs and release commits.
+This report is a generated release artifact under \`.artifacts/**\`. Historical release evidence lives in git tags, npm registry metadata, CI logs and release commits.
 
 ## 1. Release Summary（发布摘要）
 
@@ -417,7 +413,7 @@ This file is overwritten by each release. Historical release evidence lives in g
 - Owner: \`release_manager\`
 - Registry: \`https://registry.npmjs.org/\`
 - Status: \`${status}\`
-- Current release report: \`${releaseDocRelativePath}\`
+- Current release report: \`${releaseReportRelativePath}\`
 
 ## 2. Included Changes（包含变更）
 
@@ -503,15 +499,6 @@ function formatBytes(value) {
     return `${value} B`;
   }
   return `${(value / 1024).toFixed(1)} kB`;
-}
-
-async function hasOpenTask() {
-  try {
-    const plan = await fs.readFile(path.join(projectRoot, ".codex", "state", "plan.yaml"), "utf8");
-    return /^current_task_id:\s*"[^"]+"/m.test(plan) && !/^current_task_id:\s*""/m.test(plan);
-  } catch {
-    return false;
-  }
 }
 
 function delay(ms) {

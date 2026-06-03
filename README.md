@@ -14,7 +14,7 @@ This repository is both the source workspace and a reference workspace for `agen
 - npm package release logic: package metadata, build/test scripts and source asset drift checks for `agent-project-sdlc`.
 - Delivery benchmark logic: `examples/delivery-benchmark/**`, used to compare baseline coding against Harness-assisted delivery under the same quality bar.
 
-The old `.work_products/**` and `.codex/state/**` content remains in this repository as historical/self-authoring material and migration input. New package consumers default to `project_context/**`.
+Earlier stage-based workflow assets have been removed from the current source tree. The historical design and convergence reason are summarized in [PROJECT_SPEC.md](PROJECT_SPEC.md); new package consumers default to `project_context/**`.
 
 ## Install
 
@@ -40,7 +40,7 @@ npx sdlc-harness init --adopt
 - `tools/**`
 - a root `Makefile` include block
 
-`init` does not create lifecycle state, plan state, stage skills or `.work_products/**` by default.
+`init` does not create lifecycle state, plan state, stage skills or stage work-product trees by default.
 
 ## Core Commands
 
@@ -49,8 +49,8 @@ npx sdlc-harness init --adopt
 | `npx sdlc-harness init` | Non-destructively installs Minimal Context Harness into the current project. |
 | `npx sdlc-harness sync` | Refreshes managed guidance, Makefile include, tools and templates. It does not migrate old semantic facts into Context. |
 | `npx sdlc-harness upgrade` | Runs safe package migrations and `sync`; if old stage facts are detected, it tells you to run `migrate-context`. |
-| `npx sdlc-harness migrate-context --dry-run` | Previews a migration from README / `.work_products/**` / ADR / implementation docs into `project_context/**`. |
-| `npx sdlc-harness migrate-context --write` | Writes Minimal Context files or migration output. It never deletes old `.work_products/**` or state files. |
+| `npx sdlc-harness migrate-context --dry-run` | Previews a migration from an existing legacy project’s README / `.work_products/**` / ADR / implementation docs into `project_context/**`. |
+| `npx sdlc-harness migrate-context --write` | Writes Minimal Context files or migration output. It never deletes old files in the user’s project. |
 | `npx sdlc-harness validate-context` | Checks that Context has the minimum recovery fields and does not fake test execution results. |
 | `make validate-context` | Makefile wrapper for `validate-context`. |
 | `make validate-harness` | Compatibility alias for `validate-context` in vNext projects. |
@@ -91,19 +91,19 @@ npx sdlc-harness migrate-context --dry-run
 npx sdlc-harness migrate-context --write
 ```
 
-`sync` never reads `.work_products/**` and never generates Context. `upgrade` never performs semantic migration automatically; it only prints the migration path when it detects legacy stage facts.
+`sync` never reads legacy `.work_products/**` and never generates Context. `upgrade` never performs semantic migration automatically; it only prints the migration path when it detects legacy stage facts in a user project.
 
 When Context files do not exist, `migrate-context --write` creates them. When Context files already exist and contain the managed migration marker, it updates that marker block. When Context files already exist without the marker, it writes migration output under `project_context/_migration/latest/**` to avoid overwriting user-authored Context.
 
-## Legacy Compatibility
+## Legacy Migration
 
-The former stage-based Harness remains as historical / legacy compatibility material. Existing projects that still have old configs and assets can keep using them while migrating deliberately. New projects should not default to lifecycle phases, `plan.yaml`, stage skills, stage product directories or phase gates.
+The former stage-based Harness is no longer shipped as a runnable default or compatibility layer. Existing projects that still have old configs and artifacts should migrate deliberately with `migrate-context`; `sync` and `upgrade` will not perform that semantic rewrite automatically.
 
 The design reason is evidence-driven: delivery benchmark pilots showed that full SDLC document chains and frequent workflow gates create real time/token friction on ordinary and medium-complexity tasks, while modern agents already handle much of single-stage product/test work internally. The vNext default keeps the part with the clearest expected return: a minimal durable context for recovery, iteration, debug and requirements changes.
 
 ## Delivery Benchmark
 
-`examples/delivery-benchmark/` remains repo-local. It is used to test whether Harness changes improve same-quality lifecycle delivery efficiency. Historical stage-based results are marked as historical evidence; future Harness prompts use Minimal Context.
+`examples/delivery-benchmark/` remains repo-local. It is used to test whether Harness changes improve same-quality lifecycle delivery efficiency. Historical stage-based result summaries were removed from the public report; future Harness prompts use Minimal Context and require fresh reruns.
 
 The benchmark should not prove that Harness is always faster. It should find the break-even curve: which complexity, risk and recovery conditions make context maintenance pay back its cost.
 

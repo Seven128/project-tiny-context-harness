@@ -21,7 +21,6 @@ import {
 } from "./managed-file.js";
 import { packageAssetPath } from "./paths.js";
 import type { ManagedFile } from "./types.js";
-import { syncProjectGuidanceSections } from "./user-owned-sections.js";
 import { parseYaml, stringifyYaml } from "./yaml.js";
 
 export interface SyncReport {
@@ -54,9 +53,6 @@ export async function runSync(projectRoot: string): Promise<SyncReport> {
 
   for (const managedFile of config.managed_files) {
     await syncManagedFile(projectRoot, root, managedFile, report);
-  }
-  if (config.core.schema_version !== "3") {
-    await syncProjectGuidanceSections(projectRoot, root, report);
   }
 
   return report;

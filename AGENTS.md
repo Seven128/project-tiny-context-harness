@@ -7,7 +7,6 @@
 - 全局上下文：`project_context/global.md`
 - 模块上下文：`project_context/modules/*.md`
 - 产品质量事实：项目代码、测试、smoke、CI、hidden probe 或人工验收
-- 历史事实源：`.work_products/**`、`.codex/state/**` 和阶段 Skill 仍保留为本仓库历史/迁移材料，不再作为新项目默认入口
 
 ## 工作规则
 
@@ -21,11 +20,11 @@
 
 ## 本仓库 authoring 例外
 
-本仓库仍维护 AI SDLC Harness package、delivery benchmark 和历史阶段式实现。修改这些区域时，可以读取对应历史事实源作为设计和迁移证据：
+本仓库仍维护 AI SDLC Harness package、delivery benchmark 和 Minimal Context 迁移逻辑。修改这些区域时，读取对应 Context 与源码；旧阶段式工作流只在 `PROJECT_SPEC.md` 中保留精简历史说明。
 
 - package / CLI / managed assets：`packages/sdlc-harness/**`、`.codex/pjsdlc_managed/**`、`tools/**`
 - benchmark：`examples/delivery-benchmark/**`
-- 历史设计与测试证据：`.work_products/**`、`PROJECT_SPEC.md`
+- 历史设计摘要：`PROJECT_SPEC.md`
 - authoring-only skill：`.codex/skills/authoring/**`
 
 这些文件是本仓库自举与迁移材料，不代表新 package consumer 的默认文件结构。
@@ -63,6 +62,6 @@
 ## 常用命令
 
 - `make validate-context`：检查 `project_context/**` 是否足够支持 agent 恢复上下文。
-- `npx sdlc-harness migrate-context --dry-run`：预览从旧 `.work_products/**` 到 `project_context/**` 的迁移。
+- `npx sdlc-harness migrate-context --dry-run`：预览从旧用户项目资料到 `project_context/**` 的迁移。
 - `npx sdlc-harness migrate-context --write`：显式写入迁移结果，不删除旧事实源。
 <!-- pjsdlc:sdlc-harness:end -->

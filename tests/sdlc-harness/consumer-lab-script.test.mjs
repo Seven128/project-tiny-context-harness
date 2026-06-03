@@ -48,7 +48,7 @@ test("consumer lab script classifies missing managed tools as failure", () => {
     classifyMissingTools({
       status: 2,
       stdout: "",
-      stderr: "python3: can't open file '/lab/tools/validate_harness.py': [Errno 2] No such file or directory"
+      stderr: "python3: can't open file '/lab/tools/validate_context.py': [Errno 2] No such file or directory"
     }),
     {
       status: "FAIL",
