@@ -13,13 +13,14 @@ export function defaultConfig(root: string): HarnessConfig {
     managed_files: [
       { path: "AGENTS.md", strategy: "merge-block" },
       { path: "Makefile", strategy: "merge-block" },
+      { path: harnessPath(root, "skills"), strategy: "managed" },
       { path: harnessPath(root, "pjsdlc_managed", "context_templates"), strategy: "managed" },
       { path: harnessPath(root, "pjsdlc_managed", "make", "sdlc-harness.mk"), strategy: "managed" },
       { path: "tools", strategy: "managed" },
       { path: ".github/workflows/harness.yml", strategy: "create-if-missing" }
     ],
     local_overrides: [],
-    never_overwrite: ["project_context/**", "src/**", "tests/**"]
+    never_overwrite: ["project_context/**", "DESIGN.md", "src/**", "tests/**"]
   };
 }
 

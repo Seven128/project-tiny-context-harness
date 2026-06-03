@@ -35,12 +35,16 @@ npx sdlc-harness init --adopt
 - `project_context/global.md`
 - `project_context/modules/main.md`
 - `<harnessRoot>/config.yaml`
+- `<harnessRoot>/skills/context_product_plan/SKILL.md`
+- `<harnessRoot>/skills/context_uiux_design/SKILL.md`
 - `<harnessRoot>/pjsdlc_managed/context_templates/**`
 - `<harnessRoot>/pjsdlc_managed/make/sdlc-harness.mk`
 - `tools/**`
 - a root `Makefile` include block
 
 `init` does not create lifecycle state, plan state, stage skills or stage work-product trees by default.
+
+The two default Skills are Minimal Context authoring helpers. Requests such as “产品方案 / 产品经理” use the product planning Skill; requests such as “设计稿 / UI/UX” use the design Skill. Product and screen-flow conclusions go to `project_context/**`; visual identity and design tokens go to `DESIGN.md` using Google’s open `@google/design.md` format when a visual design system is needed.
 
 ## Core Commands
 
@@ -49,8 +53,8 @@ npx sdlc-harness init --adopt
 | `npx sdlc-harness init` | Non-destructively installs Minimal Context Harness into the current project. |
 | `npx sdlc-harness sync` | Refreshes managed guidance, Makefile include, tools and templates. It does not migrate old semantic facts into Context. |
 | `npx sdlc-harness upgrade` | Runs safe package migrations and `sync`; if old stage facts are detected, it tells you to run `migrate-context`. |
-| `npx sdlc-harness migrate-context --dry-run` | Previews a migration from an existing legacy project’s README / `.work_products/**` / ADR / implementation docs into `project_context/**`. |
-| `npx sdlc-harness migrate-context --write` | Writes Minimal Context files or migration output. It never deletes old files in the user’s project. |
+| `npx sdlc-harness migrate-context --dry-run` | Previews migration from existing legacy project facts into `project_context/**` and optional `DESIGN.md` candidates. |
+| `npx sdlc-harness migrate-context --write` | Writes Minimal Context files and optional `DESIGN.md` migration output. It never deletes old files in the user’s project. |
 | `npx sdlc-harness validate-context` | Checks that Context has the minimum recovery fields and does not fake test execution results. |
 | `make validate-context` | Makefile wrapper for `validate-context`. |
 | `make validate-harness` | Compatibility alias for `validate-context` in vNext projects. |
@@ -65,6 +69,8 @@ npx sdlc-harness init --adopt
 - non-goals / boundaries
 - background
 - design rationale, including former ADR-level decisions that still matter
+- product / delivery brief for durable product goals, users, flows and acceptance signals
+- UX / screen brief for durable screen, interaction, responsive and accessibility facts
 - verification entry points
 - current state
 - next safe action
@@ -82,6 +88,10 @@ npx sdlc-harness init --adopt
 
 The Context should be short enough to read at session start and specific enough to prevent fresh-agent drift. It should not copy code, test logs, release ledgers or implementation narration that the code already makes obvious.
 
+Product and UI/UX Skills are prompts for keeping that Context sharp. They may help draft a product plan or screen design, but the long-lived asset is still the compact Context.
+
+For visual UI projects, `DESIGN.md` can sit beside Context as the design-system fact source. Use `npx @google/design.md lint DESIGN.md` to validate its structure when the file is created or changed.
+
 ## Migration Policy
 
 Semantic migration is explicit:
@@ -93,7 +103,11 @@ npx sdlc-harness migrate-context --write
 
 `sync` never reads legacy `.work_products/**` and never generates Context. `upgrade` never performs semantic migration automatically; it only prints the migration path when it detects legacy stage facts in a user project.
 
+`sync` also leaves `DESIGN.md` alone. Visual design migration is semantic work and only happens through `migrate-context`.
+
 When Context files do not exist, `migrate-context --write` creates them. When Context files already exist and contain the managed migration marker, it updates that marker block. When Context files already exist without the marker, it writes migration output under `project_context/_migration/latest/**` to avoid overwriting user-authored Context.
+
+When legacy experience/design material exists, `migrate-context` also previews or writes a Google `@google/design.md` compatible `DESIGN.md` candidate. If the project already has `DESIGN.md`, the candidate is written under `project_context/_migration/latest/DESIGN.md` instead of overwriting the user’s design system.
 
 ## Legacy Migration
 

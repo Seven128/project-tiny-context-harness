@@ -15,6 +15,7 @@ const configuredRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-minimal-c
 const migrationRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-minimal-migration-"));
 const gitkeepMigrationRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-gitkeep-migration-"));
 const existingContextMigrationRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-existing-context-migration-"));
+const existingDesignMigrationRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-existing-design-migration-"));
 const cliRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-minimal-cli-"));
 const cliPath = fileURLToPath(new URL("../../packages/sdlc-harness/dist/cli.js", import.meta.url));
 
@@ -33,13 +34,17 @@ try {
   const config = await readFile(path.join(root, ".agent/config.yaml"), "utf8");
   assert.match(config, /schema_version: "3"/);
   assert.match(config, /project_context\/\*\*/);
+  assert.match(config, /\.agent\/skills/);
   assert.match(config, /\.agent\/pjsdlc_managed\/context_templates/);
-  assert.doesNotMatch(config, /skills/);
+  assert.match(config, /DESIGN\.md/);
   assert.doesNotMatch(config, /\.agent\/pjsdlc_managed\/templates/);
   assert.doesNotMatch(config, /\.agent\/pjsdlc_managed\/policies/);
 
   const globalContext = await readFile(path.join(root, "project_context/global.md"), "utf8");
   assert.match(globalContext, /## Project Goal/);
+  assert.match(globalContext, /## Product \/ Delivery Brief/);
+  assert.match(globalContext, /## UX \/ Screen Brief/);
+  assert.match(globalContext, /DESIGN\.md/);
   assert.match(globalContext, /## Verification Entry Points/);
   assert.match(globalContext, /## Next Safe Action/);
   const moduleContext = await readFile(path.join(root, "project_context/modules/main.md"), "utf8");
@@ -50,6 +55,8 @@ try {
   await assert.rejects(stat(path.join(root, ".agent/state/lifecycle.yaml")));
   await assert.rejects(stat(path.join(root, ".agent/state/plan.yaml")));
   await assert.rejects(stat(path.join(root, ".agent/skills/pjsdlc_manager/SKILL.md")));
+  await stat(path.join(root, ".agent/skills/context_product_plan/SKILL.md"));
+  await stat(path.join(root, ".agent/skills/context_uiux_design/SKILL.md"));
   await assert.rejects(stat(path.join(root, ".work_products/INDEX.md")));
 
   const agents = await readFile(path.join(root, "AGENTS.md"), "utf8");
@@ -74,6 +81,12 @@ try {
   const syncedGlobal = await readFile(path.join(root, "project_context/global.md"), "utf8");
   assert.match(syncedGlobal, /Keep this user-authored note/);
   await assert.rejects(stat(path.join(root, ".agent/skills/pjsdlc_manager/SKILL.md")));
+  const productSkill = await readFile(path.join(root, ".agent/skills/context_product_plan/SKILL.md"), "utf8");
+  assert.match(productSkill, /产品方案/);
+  assert.match(productSkill, /project_context\/\*\*/);
+  const uiuxSkill = await readFile(path.join(root, ".agent/skills/context_uiux_design/SKILL.md"), "utf8");
+  assert.match(uiuxSkill, /设计稿/);
+  assert.match(uiuxSkill, /UI\/UX/);
 
   const doctor = await runDoctor(root);
   assert.deepEqual(doctor.errors, []);
@@ -87,18 +100,26 @@ try {
   );
   await runInit(configuredRoot, { adopt: true, force: false });
   await stat(path.join(configuredRoot, ".harness/config.yaml"));
+  await stat(path.join(configuredRoot, ".harness/skills/context_product_plan/SKILL.md"));
+  await stat(path.join(configuredRoot, ".harness/skills/context_uiux_design/SKILL.md"));
   await stat(path.join(configuredRoot, "project_context/global.md"));
   const configuredMakefile = await readFile(path.join(configuredRoot, "Makefile"), "utf8");
   assert.match(configuredMakefile, /-include \.harness\/pjsdlc_managed\/make\/sdlc-harness\.mk/);
 
   await writeFile(path.join(migrationRoot, "README.md"), "# Legacy App\n\nBuilds a CLI for support ops.\n", "utf8");
   await mkdir(path.join(migrationRoot, ".work_products/01_product"), { recursive: true });
+  await mkdir(path.join(migrationRoot, ".work_products/02_experience"), { recursive: true });
   await mkdir(path.join(migrationRoot, ".work_products/03_tech_plan"), { recursive: true });
   await mkdir(path.join(migrationRoot, ".work_products/05_decisions"), { recursive: true });
   await mkdir(path.join(migrationRoot, ".work_products/04_implementation"), { recursive: true });
   await mkdir(path.join(migrationRoot, "src/support"), { recursive: true });
   await mkdir(path.join(migrationRoot, "tests"), { recursive: true });
   await writeFile(path.join(migrationRoot, ".work_products/01_product/support.md"), "Goal: support desk.\n", "utf8");
+  await writeFile(
+    path.join(migrationRoot, ".work_products/02_experience/support_ui.md"),
+    "Use a calm support dashboard palette with #123456 primary and #abcdef neutral. Show loading, empty and error states.\n",
+    "utf8"
+  );
   await writeFile(path.join(migrationRoot, ".work_products/03_tech_plan/support.md"), "API module support.\n", "utf8");
   await writeFile(path.join(migrationRoot, ".work_products/05_decisions/ADR_001.md"), "Use local JSON storage.\n", "utf8");
   await writeFile(path.join(migrationRoot, ".work_products/04_implementation/support.md"), "Entrypoint src/support/index.js.\n", "utf8");
@@ -109,14 +130,21 @@ try {
   assert.equal(dryRun.mode, "dry-run");
   assert.equal(dryRun.changed.length, 0);
   assert.match(dryRun.preview.join("\n"), /project_context\/global\.md/);
+  assert.match(dryRun.preview.join("\n"), /DESIGN\.md -> DESIGN\.md/);
   await assert.rejects(stat(path.join(migrationRoot, "project_context/global.md")));
+  await assert.rejects(stat(path.join(migrationRoot, "DESIGN.md")));
 
   const writeRun = await runContextMigration(migrationRoot, { write: true });
   assert.equal(writeRun.mode, "write");
   assert.ok(writeRun.changed.some((line) => line.includes("project_context/global.md")));
   const migratedGlobal = await readFile(path.join(migrationRoot, "project_context/global.md"), "utf8");
   assert.match(migratedGlobal, /Legacy Source Trace/);
+  assert.match(migratedGlobal, /UX \/ Screen Brief/);
   assert.match(migratedGlobal, /README\.md/);
+  const migratedDesign = await readFile(path.join(migrationRoot, "DESIGN.md"), "utf8");
+  assert.match(migratedDesign, /@google\/design\.md lint DESIGN\.md/);
+  assert.match(migratedDesign, /primary: "#123456"/);
+  assert.match(migratedDesign, /secondary: "#ABCDEF"/);
   await stat(path.join(migrationRoot, ".work_products/01_product/support.md"));
 
   const migrationSecondRun = await runContextMigration(migrationRoot, { write: true });
@@ -146,6 +174,23 @@ try {
     )
   );
 
+  await mkdir(path.join(existingDesignMigrationRoot, ".work_products/02_experience"), { recursive: true });
+  await writeFile(path.join(existingDesignMigrationRoot, "DESIGN.md"), "# Existing Design\n", "utf8");
+  await writeFile(
+    path.join(existingDesignMigrationRoot, ".work_products/02_experience/ui.md"),
+    "Legacy visual direction uses #654321 as a warm accent.\n",
+    "utf8"
+  );
+  const existingDesignRun = await runContextMigration(existingDesignMigrationRoot, { write: true });
+  assert.ok(existingDesignRun.changed.some((line) => line.includes("project_context/_migration/latest/DESIGN.md")));
+  const preservedDesign = await readFile(path.join(existingDesignMigrationRoot, "DESIGN.md"), "utf8");
+  assert.equal(preservedDesign, "# Existing Design\n");
+  const designCandidate = await readFile(
+    path.join(existingDesignMigrationRoot, "project_context/_migration/latest/DESIGN.md"),
+    "utf8"
+  );
+  assert.match(designCandidate, /#654321/);
+
   const cliInit = spawnSync(process.execPath, [cliPath, "init"], { cwd: cliRoot, encoding: "utf8" });
   assert.equal(cliInit.status, 0, `${cliInit.stdout}\n${cliInit.stderr}`);
   await stat(path.join(cliRoot, "project_context/global.md"));
@@ -160,5 +205,6 @@ try {
   await rm(migrationRoot, { recursive: true, force: true });
   await rm(gitkeepMigrationRoot, { recursive: true, force: true });
   await rm(existingContextMigrationRoot, { recursive: true, force: true });
+  await rm(existingDesignMigrationRoot, { recursive: true, force: true });
   await rm(cliRoot, { recursive: true, force: true });
 }

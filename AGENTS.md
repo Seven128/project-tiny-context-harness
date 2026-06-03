@@ -38,6 +38,72 @@
 - `node packages/sdlc-harness/dist/cli.js package sync-source`
 - `node packages/sdlc-harness/dist/cli.js package check-source`
 
+## Karpathy 编码准则（外部 Skill 中文翻译）
+
+来源：`https://github.com/forrestchang/andrej-karpathy-skills`，文件：`skills/karpathy-guidelines/SKILL.md`，许可证：MIT。以下文本块为中文翻译，和本仓库指引隔离保存。
+
+```text
+Karpathy 编码准则
+
+用于减少常见 LLM 编码错误的行为准则。适用于编写、审查或重构代码：避免过度复杂，做精准修改，暴露假设，并定义可验证的成功标准。源自 Andrej Karpathy 对 LLM 编码陷阱的观察。
+
+权衡：这些准则偏向谨慎而不是速度。对于琐碎任务，请自行判断。
+
+1. 编码前思考
+
+不要假设。不要隐藏困惑。呈现权衡。
+
+实现前：
+- 明确说明你的假设。不确定时就询问。
+- 如果存在多种解释，说明这些解释，不要默默选择。
+- 如果有更简单的方法，直接说出来。必要时提出异议。
+- 如果事情不清楚，停下来。说清楚哪里让你困惑，然后询问。
+
+2. 简洁优先
+
+用能解决问题的最少代码。不要做投机性设计。
+
+- 不添加用户没有要求的功能。
+- 不为一次性代码创建抽象。
+- 不添加用户没有要求的“灵活性”或“可配置性”。
+- 不为不可能发生的场景做错误处理。
+- 如果你写了 200 行，而它本可以是 50 行，就重写。
+
+自问：“资深工程师会认为这过度复杂吗？”如果会，就简化。
+
+3. 精准修改
+
+只碰必须碰的内容。只清理你自己造成的混乱。
+
+编辑现有代码时：
+- 不“改进”相邻代码、注释或格式。
+- 不重构没有坏掉的东西。
+- 匹配现有风格，即使你会用不同写法。
+- 如果注意到无关的死代码，提出来，不要删除。
+
+当你的修改产生孤儿代码时：
+- 删除因你的修改而变得无用的导入、变量或函数。
+- 不删除预先存在的死代码，除非用户要求。
+
+检验标准：每一行修改都应该能直接追溯到用户请求。
+
+4. 目标驱动执行
+
+定义成功标准。循环验证直到达成。
+
+将任务转化为可验证目标：
+- “添加校验” -> “为无效输入编写测试，然后让测试通过”
+- “修复 bug” -> “编写能重现 bug 的测试，然后让测试通过”
+- “重构 X” -> “确保重构前后测试都能通过”
+
+对于多步骤任务，说明简短计划：
+1. [步骤] -> 验证：[检查]
+2. [步骤] -> 验证：[检查]
+3. [步骤] -> 验证：[检查]
+
+强成功标准能让 agent 独立循环执行。弱标准（“让它能用”）会不断需要澄清。
+```
+
 <!-- pjsdlc:sdlc-harness:begin -->
 # Minimal Context Harness Protocol
 
@@ -54,10 +120,11 @@
 1. 新会话或继续工作时，先读取 `project_context/global.md` 和相关 `project_context/modules/*.md`。
 2. 如果用户请求新需求、debug、RFC 或后续迭代，先判断需要更新哪些 Context 模块，再修改代码。
 3. 长期事实只写入 `project_context/**`；不要默认创建 PRD、tech plan、ADR、implementation doc、review/test/release 文档。
-4. ADR 降级为 Context 中的 `Design Rationale`；实现说明优先写成代码注释、测试名或模块 Context 中的关键约束。
-5. Harness workflow gate 只运行 `validate-context`，用于检查上下文是否可恢复。
-6. 产品质量由项目自己的验证入口证明；Context 只能声明验证入口，不能伪造“测试已通过”。
-7. `sync` 只刷新 managed guidance 和工具；语义迁移必须由 `migrate-context --write` 显式触发。
+4. 用户要求“产品方案 / 产品经理”或“设计稿 / UI/UX”时，使用对应 Context authoring Skill，把长期结论写回 `project_context/**`。
+5. ADR 降级为 Context 中的 `Design Rationale`；实现说明优先写成代码注释、测试名或模块 Context 中的关键约束。
+6. Harness workflow gate 只运行 `validate-context`，用于检查上下文是否可恢复。
+7. 产品质量由项目自己的验证入口证明；Context 只能声明验证入口，不能伪造“测试已通过”。
+8. `sync` 只刷新 managed guidance 和工具；语义迁移必须由 `migrate-context --write` 显式触发。
 
 ## 常用命令
 

@@ -16,6 +16,14 @@
 
 - Record durable choices that are hard to infer from code or tests.
 
+## Product / Delivery Brief
+
+- Capture durable product goals, users, core flows, acceptance signals and non-goals.
+
+## UX / Screen Brief
+
+- Capture durable screen, flow, interaction, responsive and accessibility facts. Use `DESIGN.md` for visual identity and design tokens when needed.
+
 ## Verification Entry Points
 
 - `npm test` or the project-specific command that proves product behavior.

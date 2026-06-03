@@ -392,7 +392,7 @@ function renderSkillWithOverride(
     "",
     `${guidance} Keep package-managed Skill files unchanged; edit the override source instead.`,
     "",
-    "After sync, review the merged Skill for semantic conflicts between the package base and local override, especially phase boundaries, `allowed_paths`, `required_gates`, commit/release rules and completion checks. Package-managed phase boundaries stay authoritative; overrides may narrow local behavior but must not expand TESTING, REVIEWING or other roles into implementation/runtime ownership.",
+    "After sync, review the merged Skill for semantic conflicts between the package base and local override. Overrides may narrow Context authoring behavior for the project, but must not restore the legacy stage workflow, long document chain or product-quality gate responsibilities.",
     ""
   ].join("\n");
   return `${renderedBase.trimEnd()}${header}\n${override.content.trim()}\n`;

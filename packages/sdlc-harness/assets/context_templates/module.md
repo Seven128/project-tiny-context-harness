@@ -6,7 +6,7 @@
 
 ## User / System Contract
 
-- Describe the external behavior, API, CLI, UI or data contract.
+- Describe the external behavior, API, CLI, UI, screen state, interaction or data contract.
 
 ## Core Data / API / State
 
@@ -14,7 +14,7 @@
 
 ## Key Constraints
 
-- List constraints that are not obvious from code alone.
+- List constraints that are not obvious from code alone, including product rules, responsive/a11y needs or visual boundaries.
 
 ## Code Entry Points
 

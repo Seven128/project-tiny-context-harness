@@ -27,7 +27,7 @@ export function help(): void {
                        Initialize/adopt a project; without --harness-folder, choose target agent first
   sync                 Materialize canonical assets into the workspace
   upgrade              Run migrations and then sync
-  migrate-context      Preview or write project_context/** from legacy work products
+  migrate-context      Preview or write project_context/** and DESIGN.md candidates from legacy artifacts
   doctor               Diagnose project configuration and drift
   validate <gate>      Run a Harness validation gate (Minimal Context only)
   validate-context     Validate Minimal Context fact-source recoverability

@@ -33,15 +33,21 @@ export async function runContextMigration(
   for (const moduleName of moduleNames) {
     generated.set(`project_context/modules/${moduleName}.md`, renderModuleContext(moduleName, facts));
   }
+  if (hasDesignMigrationFacts(facts)) {
+    generated.set("DESIGN.md", renderDesignMd(facts));
+  }
 
   for (const [relative, content] of generated) {
-    const destination = await migrationDestination(projectRoot, relative, protectUserAuthoredContext);
+    const destination =
+      relative === "DESIGN.md"
+        ? await designMigrationDestination(projectRoot)
+        : await migrationDestination(projectRoot, relative, protectUserAuthoredContext);
     report.preview.push(`${relative} -> ${destination}`);
     if (!options.write) {
       continue;
     }
     const targetPath = path.join(projectRoot, destination);
-    const next = await mergeContextContent(targetPath, content);
+    const next = relative === "DESIGN.md" ? content : await mergeContextContent(targetPath, content);
     if (await writeTextIfChanged(targetPath, next)) {
       report.changed.push(destination);
     }
@@ -58,36 +64,50 @@ export async function runContextMigration(
 
 interface LegacyFacts {
   readme: string;
+  existingDesign: string;
   product: string[];
+  experience: string[];
   techPlan: string[];
   decisions: string[];
   implementation: string[];
   sources: string[];
+  designSources: string[];
   codeEntrypoints: string[];
   testEntrypoints: string[];
 }
 
 async function collectLegacyFacts(projectRoot: string): Promise<LegacyFacts> {
   const readmePath = path.join(projectRoot, "README.md");
+  const designPath = path.join(projectRoot, "DESIGN.md");
   const readme = (await pathExists(readmePath)) ? await readText(readmePath) : "";
+  const existingDesign = (await pathExists(designPath)) ? await readText(designPath) : "";
   const product = await readMarkdownUnder(projectRoot, ".work_products/01_product");
+  const experience = await readMarkdownUnder(projectRoot, ".work_products/02_experience");
   const techPlan = await readMarkdownUnder(projectRoot, ".work_products/03_tech_plan");
   const decisions = await readMarkdownUnder(projectRoot, ".work_products/05_decisions");
   const implementation = await readMarkdownUnder(projectRoot, ".work_products/04_implementation");
+  const designSources = [
+    ...(existingDesign ? ["DESIGN.md"] : []),
+    ...(await relativeMarkdownPaths(projectRoot, ".work_products/02_experience"))
+  ];
   const sources = [
     ...(readme ? ["README.md"] : []),
     ...(await relativeMarkdownPaths(projectRoot, ".work_products/01_product")),
+    ...(await relativeMarkdownPaths(projectRoot, ".work_products/02_experience")),
     ...(await relativeMarkdownPaths(projectRoot, ".work_products/03_tech_plan")),
     ...(await relativeMarkdownPaths(projectRoot, ".work_products/05_decisions")),
     ...(await relativeMarkdownPaths(projectRoot, ".work_products/04_implementation"))
   ];
   return {
     readme,
+    existingDesign,
     product,
+    experience,
     techPlan,
     decisions,
     implementation,
     sources,
+    designSources,
     codeEntrypoints: await detectEntrypoints(projectRoot, ["src", "lib", "bin", "server", "app"]),
     testEntrypoints: await detectEntrypoints(projectRoot, ["test", "tests", "__tests__"])
   };
@@ -144,6 +164,7 @@ async function detectEntrypoints(projectRoot: string, roots: string[]): Promise<
 
 function renderGlobalContext(facts: LegacyFacts, moduleNames: string[]): string {
   const productText = summarize(facts.product.join("\n\n") || facts.readme);
+  const experienceText = summarize(facts.experience.join("\n\n") || facts.existingDesign);
   const techText = summarize(facts.techPlan.join("\n\n"));
   const decisionText = summarize(facts.decisions.join("\n\n"));
   const stateText = summarize(facts.implementation.join("\n\n"));
@@ -165,6 +186,14 @@ function renderGlobalContext(facts: LegacyFacts, moduleNames: string[]): string 
     "## Design Rationale",
     "",
     decisionText || techText || "- Record durable design choices that are hard to infer from code.",
+    "",
+    "## Product / Delivery Brief",
+    "",
+    productText || "- Fill in durable product goals, users, core flows, acceptance signals and non-goals.",
+    "",
+    "## UX / Screen Brief",
+    "",
+    experienceText || "- Fill in durable screen, flow, interaction, responsive and accessibility facts. Use `DESIGN.md` for visual identity and design tokens when needed.",
     "",
     "## Verification Entry Points",
     "",
@@ -222,6 +251,101 @@ function renderModuleContext(moduleName: string, facts: LegacyFacts): string {
   ]);
 }
 
+function hasDesignMigrationFacts(facts: LegacyFacts): boolean {
+  return Boolean(facts.existingDesign.trim() || facts.experience.join("").trim());
+}
+
+function renderDesignMd(facts: LegacyFacts): string {
+  const designText = [facts.existingDesign, ...facts.experience].filter(Boolean).join("\n\n");
+  const colors = extractHexColors(designText);
+  const [primary = "#111827", secondary = "#4B5563", tertiary = "#2563EB", neutral = "#F9FAFB"] = colors;
+  const overview = summarize(designText) || "- Review legacy design notes and replace this starter visual system with project-specific facts.";
+  return [
+    "---",
+    "version: alpha",
+    "name: Migrated Design System",
+    "description: Visual design facts migrated by sdlc-harness migrate-context. Review before relying on these tokens.",
+    "colors:",
+    `  primary: "${primary}"`,
+    `  secondary: "${secondary}"`,
+    `  tertiary: "${tertiary}"`,
+    `  neutral: "${neutral}"`,
+    "typography:",
+    "  body:",
+    "    fontFamily: Inter",
+    "    fontSize: 16px",
+    "    fontWeight: 400",
+    "    lineHeight: 1.5",
+    "  heading:",
+    "    fontFamily: Inter",
+    "    fontSize: 32px",
+    "    fontWeight: 700",
+    "    lineHeight: 1.2",
+    "spacing:",
+    "  xs: 4px",
+    "  sm: 8px",
+    "  md: 16px",
+    "  lg: 24px",
+    "  xl: 32px",
+    "rounded:",
+    "  sm: 4px",
+    "  md: 8px",
+    "components:",
+    "  button-primary:",
+    "    backgroundColor: \"{colors.tertiary}\"",
+    "    textColor: \"#ffffff\"",
+    "    rounded: \"{rounded.md}\"",
+    "    padding: 12px",
+    "---",
+    "",
+    "# DESIGN.md",
+    "",
+    "## Overview",
+    "",
+    overview,
+    "",
+    "## Colors",
+    "",
+    "- Review migrated color tokens and rename them to match the product's visual language.",
+    "",
+    "## Typography",
+    "",
+    "- Review migrated typography tokens and replace starter font choices if the legacy design specified a stronger system.",
+    "",
+    "## Layout",
+    "",
+    "- Review spacing, density and responsive layout expectations from the legacy design notes.",
+    "",
+    "## Elevation & Depth",
+    "",
+    "- Define whether hierarchy uses shadows, borders, tonal layers or flat contrast.",
+    "",
+    "## Shapes",
+    "",
+    "- Review corner radius and component shape rules.",
+    "",
+    "## Components",
+    "",
+    "- Add component-specific tokens for buttons, fields, cards, navigation and repeated UI surfaces.",
+    "",
+    "## Do's and Don'ts",
+    "",
+    "- Do keep this file as the visual design-system source of truth.",
+    "- Do validate structural changes with `npx @google/design.md lint DESIGN.md`.",
+    "- Don't claim lint passed unless it was actually run.",
+    "",
+    "## Legacy Source Trace",
+    "",
+    renderList(facts.designSources, "- No legacy design source trace found."),
+    ""
+  ].join("\n");
+}
+
+function extractHexColors(text: string): string[] {
+  const matches = text.match(/#[0-9a-fA-F]{6}\b/g) ?? [];
+  return [...new Set(matches.map((value) => value.toUpperCase()))].slice(0, 4);
+}
+
 function wrapMigrationBlock(lines: string[]): string {
   return `${MIGRATION_START}\n${lines.join("\n").trimEnd()}\n${MIGRATION_END}\n`;
 }
@@ -269,6 +393,14 @@ async function migrationDestination(projectRoot: string, relative: string, prote
     }
   }
   return path.join("project_context", "_migration", "latest", path.relative("project_context", relative)).split(path.sep).join("/");
+}
+
+async function designMigrationDestination(projectRoot: string): Promise<string> {
+  const target = path.join(projectRoot, "DESIGN.md");
+  if (!(await pathExists(target))) {
+    return "DESIGN.md";
+  }
+  return path.join("project_context", "_migration", "latest", "DESIGN.md").split(path.sep).join("/");
 }
 
 async function mergeContextContent(targetPath: string, content: string): Promise<string> {

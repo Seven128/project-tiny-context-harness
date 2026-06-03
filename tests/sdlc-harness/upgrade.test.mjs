@@ -51,14 +51,17 @@ never_overwrite:
   const config = await readFile(path.join(root, ".harness/config.yaml"), "utf8");
   assert.match(config, /schema_version: "3"/);
   assert.match(config, /\.harness\/pjsdlc_managed\/context_templates/);
+  assert.match(config, /\.harness\/skills/);
   assert.match(config, /project_context\/\*\*/);
-  assert.doesNotMatch(config, /\.harness\/skills/);
+  assert.match(config, /DESIGN\.md/);
   assert.doesNotMatch(config, /\.harness\/pjsdlc_managed\/templates/);
 
   const agents = await readFile(path.join(root, "AGENTS.md"), "utf8");
   assert.match(agents, /Minimal Context Harness/);
   const makefile = await readFile(path.join(root, "Makefile"), "utf8");
   assert.match(makefile, /-include \.harness\/pjsdlc_managed\/make\/sdlc-harness\.mk/);
+  await stat(path.join(root, ".harness/skills/context_product_plan/SKILL.md"));
+  await stat(path.join(root, ".harness/skills/context_uiux_design/SKILL.md"));
   await stat(path.join(root, ".harness/pjsdlc_managed/context_templates/global.md"));
 } finally {
   await rm(root, { recursive: true, force: true });

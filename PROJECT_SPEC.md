@@ -16,7 +16,9 @@ Default durable facts:
 
 - `project_context/global.md`
 - `project_context/modules/<module>.md`
+- `DESIGN.md` for visual identity and design tokens when a UI project needs a design system
 - code, tests and necessary code comments
+- default Context authoring Skills for product planning and UI/UX design
 
 Default non-goals:
 
@@ -39,6 +41,7 @@ The part that remains clearly valuable is not the ceremony itself. It is durable
 Therefore the current design keeps the product goal unchanged, but narrows the default mechanism:
 
 - preserve the smallest context that helps future agents resume safely;
+- keep product-plan and UI/UX prompting as optional Context authoring helpers, not as stage artifacts;
 - let code, tests and project-specific probes prove product quality;
 - move ADR decisions into Context `Design Rationale` instead of standalone default ADR files;
 - move implementation narration into code comments, tests and short module constraints;
@@ -54,6 +57,8 @@ In short: Harness no longer tries to externalize the whole SDLC by default. It m
 - non-goals / boundaries
 - background
 - design rationale, including still-relevant ADR decisions
+- product / delivery brief for durable product goals, users, flows and acceptance signals
+- UX / screen brief for durable screen, interaction, responsive and accessibility facts
 - verification entry points
 - current state
 - next safe action
@@ -71,6 +76,8 @@ In short: Harness no longer tries to externalize the whole SDLC by default. It m
 
 The Context should be compact and semantically split. It should not duplicate code, test logs, release ledgers or implementation narration that the source already exposes. Former ADR content is downgraded into `Design Rationale`; implementation documentation is downgraded into code comments, test names and short Context constraints when the code does not make the fact obvious.
 
+The default product planning and UI/UX Skills are a thin authoring layer. Product and screen-flow conclusions are durable only when compressed into Context. Visual identity, design tokens and component styling rules are durable in `DESIGN.md` using Google’s open `@google/design.md` format.
+
 ## Package Behavior
 
 `init` creates Minimal Context assets and managed guidance:
@@ -79,6 +86,8 @@ The Context should be compact and semantically split. It should not duplicate co
 - `project_context/global.md`
 - `project_context/modules/main.md`
 - `<harnessRoot>/config.yaml`
+- `<harnessRoot>/skills/context_product_plan/SKILL.md`
+- `<harnessRoot>/skills/context_uiux_design/SKILL.md`
 - `<harnessRoot>/pjsdlc_managed/context_templates/**`
 - `<harnessRoot>/pjsdlc_managed/make/sdlc-harness.mk`
 - `tools/**`
@@ -86,7 +95,7 @@ The Context should be compact and semantically split. It should not duplicate co
 
 `init` does not create `.work_products/**`, lifecycle state, plan state, stage skills, stage templates or stage policies by default.
 
-`sync` refreshes managed assets only. It never reads old `.work_products/**` and never generates `project_context/**`.
+`sync` refreshes managed assets only. It never reads old `.work_products/**` and never generates `project_context/**` or `DESIGN.md`.
 
 `upgrade` runs safe migrations and `sync`. If legacy stage facts are detected, it prompts the user to run:
 
@@ -98,8 +107,10 @@ npx sdlc-harness migrate-context --dry-run
 
 - `--dry-run` previews output and writes nothing.
 - `--write` creates or updates `project_context/**`.
+- legacy experience/design material can also produce a Google `@google/design.md` compatible `DESIGN.md` candidate.
 - old files in the user project are preserved; migration never deletes legacy artifacts.
 - existing user-authored Context is protected by writing migration output to `project_context/_migration/latest/**` unless a managed migration marker is present.
+- existing user-authored `DESIGN.md` is protected by writing migration output to `project_context/_migration/latest/DESIGN.md`.
 
 `validate-context` checks that Context has the minimum recovery fields and does not fake product verification evidence. It does not replace project tests.
 
