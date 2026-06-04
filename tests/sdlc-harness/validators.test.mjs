@@ -54,6 +54,18 @@ test("validate-context rejects verification-result claims inside context", async
   }
 });
 
+test("validate-context rejects verification-result claims inside architecture context", async () => {
+  const root = await createContextProject({
+    architecture: completeArchitectureContext().replace("- npm test --workspace agent-project-sdlc", "- npm test passed")
+  });
+  try {
+    const report = await runValidator(root, "validate-context");
+    assert.match(report.errors.join("\n"), /must list verification entry points/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("old stage validators are not supported by Minimal Context Harness", async () => {
   const root = await createContextProject();
   try {
@@ -84,6 +96,11 @@ async function createContextProject(overrides = {}) {
     "utf8"
   );
   await writeFile(
+    path.join(root, "project_context", "architecture.md"),
+    overrides.architecture ?? completeArchitectureContext(),
+    "utf8"
+  );
+  await writeFile(
     path.join(root, "project_context", "modules", "main.md"),
     overrides.module ?? completeModuleContext(),
     "utf8"
@@ -110,6 +127,10 @@ function completeGlobalContext() {
 
 - Context quality is the Harness responsibility; product quality remains with project tests.
 
+## Architecture Context
+
+- See project_context/architecture.md for the restrained architecture context.
+
 ## Verification Entry Points
 
 - npm test
@@ -126,6 +147,39 @@ function completeGlobalContext() {
 ## Module Index
 
 - [main](modules/main.md)
+`;
+}
+
+function completeArchitectureContext() {
+  return `# Architecture Context
+
+## System Boundary
+
+- The package owns CLI commands, managed assets, sync behavior and Context validation.
+
+## Component Map
+
+- CLI commands call library modules for init, sync, upgrade, doctor and validation.
+
+## Data / Control Flow
+
+- Users run the CLI; the package reads configuration, writes managed assets and validates project_context files.
+
+## Design Rationale
+
+- Architecture context stays minimal and records only durable boundaries that are hard to infer from code.
+
+## Constraints And Tradeoffs
+
+- The Harness keeps context quality small and does not own project product quality.
+
+## Verification Implications
+
+- npm test --workspace agent-project-sdlc
+
+## Open Risks
+
+- Package assets can drift if source sync is skipped.
 `;
 }
 
@@ -158,6 +212,6 @@ function completeModuleContext() {
 
 ## Open Risks
 
-- Existing users may still need migrate-context to summarize old work products.
+- Context could become too verbose if architecture notes duplicate implementation details.
 `;
 }

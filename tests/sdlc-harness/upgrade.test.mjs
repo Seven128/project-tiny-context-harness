@@ -19,7 +19,6 @@ try {
   await mkdir(path.join(root, ".harness/state"), { recursive: true });
   await writeFile(path.join(root, ".work_products/01_product/prd.md"), "# Legacy PRD\n", "utf8");
   await writeFile(path.join(root, ".harness/state/lifecycle.yaml"), 'current_phase: "SPRINTING"\n', "utf8");
-  await rm(path.join(root, "project_context"), { recursive: true, force: true });
   await writeFile(
     path.join(root, ".harness/config.yaml"),
     `core:
@@ -42,9 +41,10 @@ never_overwrite:
   const report = await runUpgrade(root);
   assert.ok(report.some((line) => line.startsWith("migrations changed=")));
   assert.ok(report.some((line) => line.startsWith("sync changed=")));
-  assert.ok(report.some((line) => line.includes("migrate-context --dry-run")));
+  assert.ok(!report.some((line) => line.includes("migrate-context")));
 
-  await assert.rejects(stat(path.join(root, "project_context/global.md")));
+  await stat(path.join(root, "project_context/global.md"));
+  await stat(path.join(root, "project_context/architecture.md"));
   await stat(path.join(root, ".work_products/01_product/prd.md"));
   await stat(path.join(root, ".harness/state/lifecycle.yaml"));
 

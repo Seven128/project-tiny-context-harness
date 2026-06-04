@@ -1,6 +1,5 @@
 import { doctor } from "./doctor.js";
 import { init } from "./init.js";
-import { migrateContext } from "./migrate-context.js";
 import { packageSource } from "./package-source.js";
 import { sync } from "./sync.js";
 import { upgrade } from "./upgrade.js";
@@ -11,7 +10,6 @@ export type CommandHandler = (args: string[]) => Promise<void> | void;
 export const commands: Record<string, CommandHandler> = {
   help,
   init,
-  "migrate-context": migrateContext,
   sync,
   upgrade,
   doctor,
@@ -27,7 +25,6 @@ export function help(): void {
                        Initialize/adopt a project; without --harness-folder, choose target agent first
   sync                 Materialize canonical assets into the workspace
   upgrade              Run migrations and then sync
-  migrate-context      Preview or write project_context/**; use --archive-legacy to move old stage artifacts aside
   doctor               Diagnose project configuration and drift
   validate <gate>      Run a Harness validation gate (Minimal Context only)
   validate-context     Validate Minimal Context fact-source recoverability

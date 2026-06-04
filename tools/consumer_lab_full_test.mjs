@@ -163,7 +163,6 @@ export async function runConsumerLabFullTest(rawOptions) {
 
   await verifyManagedAssets(options.labDir, add);
   await verifyAdoptAndConfiguredRoots(options.labDir, tarballPath, add);
-  await verifyContextMigrationConsumer(options.labDir, tarballPath, add);
   await writeMinimalToyProject(options.labDir);
   await commitLabCheckpoint(options.labDir, "Record Minimal Context consumer lab fixture");
   commandCheck("Toy project", "node:test fixture", "npm", ["test"]);
@@ -206,11 +205,16 @@ async function verifyManagedAssets(labDir, add) {
     "Makefile",
     ".github/workflows/harness.yml",
     "project_context/global.md",
+    "project_context/architecture.md",
     "project_context/modules/main.md",
     ".codex/config.yaml",
     ".codex/pjsdlc_managed/context_templates/global.md",
+    ".codex/pjsdlc_managed/context_templates/architecture.md",
     ".codex/pjsdlc_managed/context_templates/module.md",
+    ".codex/pjsdlc_managed/override_skills",
     ".codex/pjsdlc_managed/make/sdlc-harness.mk",
+    ".codex/skills/context_product_plan/SKILL.md",
+    ".codex/skills/context_uiux_design/SKILL.md",
     "tools/validate_context.py"
   ];
   const forbidden = [
@@ -240,7 +244,7 @@ async function verifyManagedAssets(labDir, add) {
     const configReady =
       config.includes('schema_version: "3"') &&
       config.includes(".codex/pjsdlc_managed/context_templates") &&
-      !config.includes(".codex/skills") &&
+      config.includes(".codex/skills") &&
       !config.includes(".codex/pjsdlc_managed/templates");
     add({
       area: "Managed assets",
@@ -348,107 +352,6 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
         : "FAIL",
     details: "Minimal Context configured root should not create transition.py or lifecycle.yaml"
   });
-}
-
-async function verifyContextMigrationConsumer(labDir, tarballPath, add) {
-  const runsDir = path.join(labDir, ".artifacts", "runs");
-  await mkdir(runsDir, { recursive: true });
-
-  const legacyDir = await mkdtemp(path.join(runsDir, "migration-legacy-"));
-  await writeFile(path.join(legacyDir, "package.json"), JSON.stringify({ name: "migration-legacy", version: "1.0.0" }, null, 2), "utf8");
-  run("npm", ["install", "-D", tarballPath], legacyDir);
-  await writeLegacyMigrationFixture(legacyDir, "billing");
-
-  const dryRun = run("npx", ["sdlc-harness", "migrate-context", "--dry-run"], legacyDir);
-  add({
-    area: "Context migration",
-    evidence: "migrate-context dry-run previews without writing",
-    command: "npx sdlc-harness migrate-context --dry-run",
-    status:
-      dryRun.status === 0 &&
-      dryRun.stdout.includes("mode=dry-run") &&
-      dryRun.stdout.includes("preview: project_context/global.md") &&
-      !existsSync(path.join(legacyDir, "project_context/global.md"))
-        ? "PASS"
-        : "FAIL",
-    details: trimOutput(`${dryRun.stdout}\n${dryRun.stderr}`)
-  });
-
-  const write = run("npx", ["sdlc-harness", "migrate-context", "--write"], legacyDir);
-  add({
-    area: "Context migration",
-    evidence: "migrate-context --write creates Context and preserves legacy facts",
-    command: "npx sdlc-harness migrate-context --write",
-    status:
-      write.status === 0 &&
-      existsSync(path.join(legacyDir, "project_context/global.md")) &&
-      existsSync(path.join(legacyDir, "project_context/modules/billing.md")) &&
-      existsSync(path.join(legacyDir, ".work_products/01_product/billing.md"))
-        ? "PASS"
-        : "FAIL",
-    details: trimOutput(`${write.stdout}\n${write.stderr}`)
-  });
-
-  const userContextDir = await mkdtemp(path.join(runsDir, "migration-user-context-"));
-  await writeFile(
-    path.join(userContextDir, "package.json"),
-    JSON.stringify({ name: "migration-user-context", version: "1.0.0" }, null, 2),
-    "utf8"
-  );
-  run("npm", ["install", "-D", tarballPath], userContextDir);
-  await writeLegacyMigrationFixture(userContextDir, "support");
-  await mkdir(path.join(userContextDir, "project_context/modules"), { recursive: true });
-  await writeFile(
-    path.join(userContextDir, "project_context/global.md"),
-    "# User Context\n\nThis user-authored context must not be overwritten.\n",
-    "utf8"
-  );
-
-  const protectedWrite = run("npx", ["sdlc-harness", "migrate-context", "--write"], userContextDir);
-  const userGlobal = await readFile(path.join(userContextDir, "project_context/global.md"), "utf8");
-  add({
-    area: "Context migration",
-    evidence: "existing user Context is protected by _migration/latest output",
-    command: "npx sdlc-harness migrate-context --write",
-    status:
-      protectedWrite.status === 0 &&
-      userGlobal.includes("This user-authored context must not be overwritten.") &&
-      existsSync(path.join(userContextDir, "project_context/_migration/latest/global.md")) &&
-      existsSync(path.join(userContextDir, "project_context/_migration/latest/modules/support.md"))
-        ? "PASS"
-        : "FAIL",
-    details: trimOutput(`${protectedWrite.stdout}\n${protectedWrite.stderr}`)
-  });
-}
-
-async function writeLegacyMigrationFixture(projectDir, moduleName) {
-  await mkdir(path.join(projectDir, ".work_products/01_product"), { recursive: true });
-  await mkdir(path.join(projectDir, ".work_products/03_tech_plan"), { recursive: true });
-  await mkdir(path.join(projectDir, ".work_products/04_implementation"), { recursive: true });
-  await mkdir(path.join(projectDir, "src", moduleName), { recursive: true });
-  await mkdir(path.join(projectDir, "tests"), { recursive: true });
-  await writeFile(
-    path.join(projectDir, "README.md"),
-    `# ${moduleName} service\n\nA tiny legacy fixture used to preview Minimal Context migration.\n`,
-    "utf8"
-  );
-  await writeFile(
-    path.join(projectDir, ".work_products/01_product", `${moduleName}.md`),
-    `# ${moduleName} Product\n\n## Goal\n\nSupport a small ${moduleName} workflow.\n\n## Out of Scope\n\nLive provider calls are out of scope.\n`,
-    "utf8"
-  );
-  await writeFile(
-    path.join(projectDir, ".work_products/03_tech_plan", `${moduleName}.md`),
-    `# ${moduleName} Technical Plan\n\n## API Contract\n\nThe module exports a deterministic local helper.\n\n## Verification\n\nRun \`npm test\`.\n`,
-    "utf8"
-  );
-  await writeFile(
-    path.join(projectDir, ".work_products/04_implementation", `${moduleName}.md`),
-    `# ${moduleName} Implementation\n\nThe source entry lives at \`src/${moduleName}/index.js\`.\n`,
-    "utf8"
-  );
-  await writeFile(path.join(projectDir, "src", moduleName, "index.js"), "export const ready = true;\n", "utf8");
-  await writeFile(path.join(projectDir, "tests", `${moduleName}.test.mjs`), "import 'node:test';\n", "utf8");
 }
 
 async function writeMinimalToyProject(labDir) {
@@ -608,7 +511,7 @@ function buildRecommendedRfc(checks) {
   const areas = [...new Set(blocked.map((check) => check.area))];
   return {
     title: "RFC: Close installed-consumer Minimal Context coverage gaps",
-    impactAreas: ["README", "PROJECT_SPEC", "package CLI", "Makefile assets", "validators", "migration", "tests", ...areas]
+    impactAreas: ["README", "PROJECT_SPEC", "package CLI", "Makefile assets", "validators", "skills", "tests", ...areas]
   };
 }
 
@@ -650,7 +553,7 @@ export function renderMarkdownReport(report) {
 - Started: ${report.startedAt}
 - Finished: ${report.finishedAt}
 
-This script installs the package tarball into the lab and validates the vNext Minimal Context default: \`project_context/**\`, \`validate-context\`, configured harness roots, explicit \`migrate-context\` behavior, and absence of default lifecycle/plan/stage assets.
+This script installs the package tarball into the lab and validates the vNext Minimal Context default: \`project_context/**\`, \`validate-context\`, configured harness roots, default Context authoring Skills, and absence of default lifecycle/plan/stage assets.
 
 ## Summary
 

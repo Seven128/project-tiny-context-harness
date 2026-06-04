@@ -36,12 +36,13 @@ The stage-based Harness was built from a reasonable premise: if an agent explici
 
 Benchmark pilots changed the default product judgment. The workflow’s fact-source writes, stage decisions, phase transitions and gates are real process cost; they consume time and tokens even when the final product quality is the same. At the same time, modern coding agents have internalized much of the ordinary single-task loop: understanding a compact requirement, choosing a local design, editing code, running tests and repairing simple failures. For ordinary and medium-complexity work, forcing a full SDLC document chain duplicates work the model can already do well.
 
-The part that remains clearly valuable is not the ceremony itself. It is durable, compact context that survives a new conversation: project goal, non-goals, design rationale, module responsibilities, code entry points, test entry points, current state and next safe action. Those facts are hard to recover from code alone and expensive to re-explain every time.
+The part that remains clearly valuable is not the ceremony itself. It is durable, compact context that survives a new conversation: project goal, non-goals, design rationale, restrained architecture context, module responsibilities, code entry points, test entry points, current state and next safe action. Those facts are hard to recover from code alone and expensive to re-explain every time.
 
 Therefore the current design keeps the product goal unchanged, but narrows the default mechanism:
 
 - preserve the smallest context that helps future agents resume safely;
 - keep product-plan and UI/UX prompting as optional Context authoring helpers, not as stage artifacts;
+- keep one restrained architecture context for system boundary, component map and durable constraints;
 - let code, tests and project-specific probes prove product quality;
 - move ADR decisions into Context `Design Rationale` instead of standalone default ADR files;
 - move implementation narration into code comments, tests and short module constraints;
@@ -57,12 +58,23 @@ In short: Harness no longer tries to externalize the whole SDLC by default. It m
 - non-goals / boundaries
 - background
 - design rationale, including still-relevant ADR decisions
+- architecture context link
 - product / delivery brief for durable product goals, users, flows and acceptance signals
 - UX / screen brief for durable screen, interaction, responsive and accessibility facts
 - verification entry points
 - current state
 - next safe action
 - module index
+
+`project_context/architecture.md` stores restrained architecture facts:
+
+- system boundary
+- component map
+- data / control flow
+- architecture-level design rationale
+- constraints and tradeoffs
+- verification implications
+- open risks
 
 `project_context/modules/<module>.md` stores module-local facts:
 
@@ -84,10 +96,12 @@ The default product planning and UI/UX Skills are a thin authoring layer. Produc
 
 - `AGENTS.md`
 - `project_context/global.md`
+- `project_context/architecture.md`
 - `project_context/modules/main.md`
 - `<harnessRoot>/config.yaml`
 - `<harnessRoot>/skills/context_product_plan/SKILL.md`
 - `<harnessRoot>/skills/context_uiux_design/SKILL.md`
+- `<harnessRoot>/pjsdlc_managed/override_skills/`
 - `<harnessRoot>/pjsdlc_managed/context_templates/**`
 - `<harnessRoot>/pjsdlc_managed/make/sdlc-harness.mk`
 - `tools/**`
@@ -95,25 +109,11 @@ The default product planning and UI/UX Skills are a thin authoring layer. Produc
 
 `init` does not create `.work_products/**`, lifecycle state, plan state, stage skills, stage templates or stage policies by default.
 
-`sync` refreshes managed assets only. It never reads old `.work_products/**` and never generates `project_context/**` or `DESIGN.md`.
+`sync` refreshes managed assets only. It never generates project semantics.
 
-`upgrade` runs safe migrations and `sync`. If legacy stage facts are detected, it prompts the user to run:
+Product and UI/UX Skill customization lives under `<harnessRoot>/pjsdlc_managed/override_skills/*.md`; `sync` appends those local rules into `<harnessRoot>/skills/**`.
 
-```sh
-npx sdlc-harness migrate-context --dry-run
-```
-
-`migrate-context` is explicit and safe by default:
-
-- `--dry-run` previews output and writes nothing.
-- `--write` creates or updates `project_context/**`.
-- legacy experience/design material can also produce a Google `@google/design.md` compatible `DESIGN.md` candidate.
-- old files in the user project are preserved by default.
-- `--archive-legacy` may be combined with `--write` after review; it moves old `.work_products/**`, phase state, stage templates/policies and old `pjsdlc_*` skills into `project_context/_migration/legacy_archive/<timestamp>/`.
-- existing user-authored Context is protected by writing migration output to `project_context/_migration/latest/**` unless a managed migration marker is present.
-- existing user-authored `DESIGN.md` is protected by writing migration output to `project_context/_migration/latest/DESIGN.md`.
-
-Design reason: semantic migration and cleanup are separate operations. Keeping old files by default avoids accidental loss while users review the generated Context. The explicit archive option prevents old stage artifacts from continuing to look like active fact sources after migration, while still preserving a local recovery copy.
+`upgrade` runs safe migrations and `sync`. The old semantic migration command has been removed because user migrations are complete.
 
 `validate-context` checks that Context has the minimum recovery fields and does not fake product verification evidence. It does not replace project tests.
 

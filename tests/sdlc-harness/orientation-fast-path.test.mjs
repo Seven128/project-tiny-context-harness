@@ -33,6 +33,7 @@ const [
 for (const content of [sourceAgents, rootReadme, packageReadme, spec, packageAgents, packageGuide]) {
   assert.match(content, /Minimal Context Harness/);
   assert.match(content, /project_context\/global\.md/);
+  assert.match(content, /project_context\/architecture\.md/);
 }
 
 for (const content of [sourceAgents, rootReadme, packageReadme, packageAgents, packageGuide]) {
@@ -44,9 +45,10 @@ for (const content of [sourceAgents, rootReadme, packageReadme, packageAgents, p
 }
 
 for (const content of [rootReadme, packageReadme, spec, packageGuide]) {
-  assert.match(content, /migrate-context --dry-run/);
-  assert.match(content, /sync.*(?:does not.*semantic|never.*generates|refreshes managed assets only|refreshes managed assets)/i);
-  assert.match(content, /upgrade.*migrate-context/s);
+  assert.doesNotMatch(content, /migrate-context/);
+  assert.match(content, /sync.*(?:refreshes managed|刷新 managed|只刷新)/i);
+  assert.match(content, /upgrade.*sync/s);
+  assert.match(content, /override_skills/);
 }
 
 for (const content of [rootReadme, packageReadme, spec]) {
@@ -68,13 +70,15 @@ assert.doesNotMatch(packageReadme, /Project initialization.*workflow skills/s);
 assert.doesNotMatch(packageReadme, /fresh lifecycle starts at/);
 
 assert.match(authoringSkill, /Minimal Context Harness/);
-assert.match(authoringSkill, /Legacy migration support/);
+assert.doesNotMatch(authoringSkill, /Legacy migration support/);
+assert.doesNotMatch(authoringSkill, /migrate-context|context-migration/);
 assert.doesNotMatch(
   authoringSkill,
   /REQUIREMENT_GATHERING|UI_UX_DESIGNING|ARCHITECTING|SPRINTING|REVIEWING|TESTING|RELEASING|RFC_RECALIBRATION/
 );
 assert.doesNotMatch(authoringSkill, /plan\.yaml|lifecycle\.yaml|\.work_products\/|make work-products-overview/);
-assert.doesNotMatch(authoringSkill, /<harnessRoot>\/skills|pjsdlc_[a-z]+/);
+assert.match(authoringSkill, /override_skills/);
+assert.doesNotMatch(authoringSkill, /pjsdlc_manager|pjsdlc_dev_sprint|pjsdlc_reviewer|pjsdlc_tester/);
 
 assert.match(productSkill, /description:.*产品方案.*产品经理/s);
 assert.match(productSkill, /project_context\/\*\*/);

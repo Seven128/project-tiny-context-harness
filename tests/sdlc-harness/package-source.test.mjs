@@ -19,6 +19,7 @@ try {
   await writeFile(path.join(fixture, ".agent/pjsdlc_managed/agents/AGENTS_CORE.md"), "# Minimal Context Harness\n", "utf8");
   await writeFile(path.join(fixture, "README.md"), "# User Guide\n\nMinimal Context package guide.\n", "utf8");
   await writeFile(path.join(fixture, ".agent/pjsdlc_managed/context_templates/global.md"), "# Project / Delivery Context\n", "utf8");
+  await writeFile(path.join(fixture, ".agent/pjsdlc_managed/context_templates/architecture.md"), "# Architecture Context\n", "utf8");
   await writeFile(path.join(fixture, ".agent/pjsdlc_managed/context_templates/module.md"), "# Module Context\n", "utf8");
   await writeFile(
     path.join(fixture, ".agent/pjsdlc_managed/skills/context_product_plan/SKILL.md"),
@@ -73,6 +74,11 @@ try {
   assert.match(packagedReadme, /Minimal Context package guide/);
   const packagedGlobal = await readFile(path.join(fixture, "packages/sdlc-harness/assets/context_templates/global.md"), "utf8");
   assert.match(packagedGlobal, /Project \/ Delivery Context/);
+  const packagedArchitecture = await readFile(
+    path.join(fixture, "packages/sdlc-harness/assets/context_templates/architecture.md"),
+    "utf8"
+  );
+  assert.match(packagedArchitecture, /Architecture Context/);
   const packagedProductSkill = await readFile(
     path.join(fixture, "packages/sdlc-harness/assets/skills/context_product_plan/SKILL.md"),
     "utf8"

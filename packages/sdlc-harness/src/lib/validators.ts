@@ -19,10 +19,21 @@ const GLOBAL_REQUIRED_SECTIONS = [
   "Non-goals / Boundaries",
   "Background",
   "Design Rationale",
+  "Architecture Context",
   "Verification Entry Points",
   "Current State",
   "Next Safe Action",
   "Module Index"
+];
+
+const ARCHITECTURE_REQUIRED_SECTIONS = [
+  "System Boundary",
+  "Component Map",
+  "Data / Control Flow",
+  "Design Rationale",
+  "Constraints And Tradeoffs",
+  "Verification Implications",
+  "Open Risks"
 ];
 
 const MODULE_REQUIRED_SECTIONS = [
@@ -62,6 +73,7 @@ async function validateContext(projectRoot: string): Promise<ValidatorReport> {
   const root = await harnessRoot(projectRoot);
 
   const globalPath = path.join(projectRoot, "project_context", "global.md");
+  const architecturePath = path.join(projectRoot, "project_context", "architecture.md");
   const modulesRoot = path.join(projectRoot, "project_context", "modules");
   const configPath = path.join(projectRoot, harnessPath(root, "config.yaml"));
 
@@ -77,6 +89,16 @@ async function validateContext(projectRoot: string): Promise<ValidatorReport> {
     assertSectionHasContent("project_context/global.md", global, "Verification Entry Points", errors);
     assertSectionHasContent("project_context/global.md", global, "Next Safe Action", errors);
     assertNoFakeVerification("project_context/global.md", global, errors);
+  }
+
+  if (!(await pathExists(architecturePath))) {
+    errors.push("project_context/architecture.md is missing");
+  } else {
+    const architecture = await readText(architecturePath);
+    assertSections("project_context/architecture.md", architecture, ARCHITECTURE_REQUIRED_SECTIONS, errors);
+    assertSectionHasContent("project_context/architecture.md", architecture, "System Boundary", errors);
+    assertSectionHasContent("project_context/architecture.md", architecture, "Component Map", errors);
+    assertNoFakeVerification("project_context/architecture.md", architecture, errors);
   }
 
   const moduleFiles = (await listFiles(modulesRoot))
@@ -96,7 +118,7 @@ async function validateContext(projectRoot: string): Promise<ValidatorReport> {
     assertNoFakeVerification(relative, content, errors);
   }
 
-  info.push(`checked project_context/global.md and ${moduleFiles.length} module context file(s)`);
+  info.push(`checked project_context/global.md, project_context/architecture.md and ${moduleFiles.length} module context file(s)`);
   if (errors.length === 0) {
     info.push("Minimal Context validation passed");
   }
@@ -119,7 +141,10 @@ function assertSectionHasContent(file: string, content: string, section: string,
 }
 
 function assertNoFakeVerification(file: string, content: string, errors: string[]): void {
-  const verification = sectionBody(content, "Verification Entry Points") ?? sectionBody(content, "Test Entry Points");
+  const verification =
+    sectionBody(content, "Verification Entry Points") ??
+    sectionBody(content, "Test Entry Points") ??
+    sectionBody(content, "Verification Implications");
   if (!verification) {
     return;
   }

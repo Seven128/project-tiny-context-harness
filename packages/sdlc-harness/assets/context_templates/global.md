@@ -16,6 +16,10 @@
 
 - Record durable choices that are hard to infer from code or tests.
 
+## Architecture Context
+
+- Link to `project_context/architecture.md`; keep architecture notes minimal and focused on boundaries, components and constraints that are not obvious from code.
+
 ## Product / Delivery Brief
 
 - Capture durable product goals, users, core flows, acceptance signals and non-goals.

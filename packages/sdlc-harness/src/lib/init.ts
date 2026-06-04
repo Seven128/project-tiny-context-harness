@@ -1,6 +1,6 @@
 import path from "node:path";
 import { writeConfigIfMissing } from "./config.js";
-import { harnessConfigPath } from "./harness-root.js";
+import { harnessConfigPath, harnessRoot } from "./harness-root.js";
 import { ensureDir, pathExists, writeTextIfChanged } from "./fs.js";
 import { runSync } from "./sync-engine.js";
 
@@ -24,11 +24,21 @@ export async function runInit(projectRoot: string, options: InitOptions): Promis
   }
 
   await createProjectContext(projectRoot, report);
+  await createSkillOverrideEntry(projectRoot, report);
 
   const syncReport = await runSync(projectRoot);
   report.push(`sync changed=${syncReport.changed.length} skipped=${syncReport.skipped.length} blocked=${syncReport.blocked.length}`);
   report.push(options.adopt ? "adopt mode complete" : "init complete");
   return report;
+}
+
+async function createSkillOverrideEntry(projectRoot: string, report: string[]): Promise<void> {
+  const root = await harnessRoot(projectRoot);
+  const overrideRoot = path.join(projectRoot, root, "pjsdlc_managed", "override_skills");
+  if (!(await pathExists(overrideRoot))) {
+    await ensureDir(overrideRoot);
+    report.push(`created ${path.join(root, "pjsdlc_managed", "override_skills")}`);
+  }
 }
 
 async function projectHasExistingFiles(projectRoot: string): Promise<boolean> {
@@ -46,6 +56,7 @@ async function createProjectContext(projectRoot: string, report: string[]): Prom
   await ensureDir(modulesRoot);
   const files: Array<[string, string]> = [
     ["project_context/global.md", globalContextTemplate()],
+    ["project_context/architecture.md", architectureContextTemplate()],
     ["project_context/modules/main.md", moduleContextTemplate("main")]
   ];
   for (const [relative, content] of files) {
@@ -75,6 +86,10 @@ function globalContextTemplate(): string {
     "",
     "- Record only durable choices that are hard to infer from code or tests.",
     "",
+    "## Architecture Context",
+    "",
+    "- Link to `project_context/architecture.md`; keep architecture notes minimal and focused on boundaries, components and constraints that are not obvious from code.",
+    "",
     "## Product / Delivery Brief",
     "",
     "- Capture durable product goals, users, core flows, acceptance signals and non-goals.",
@@ -98,6 +113,43 @@ function globalContextTemplate(): string {
     "## Module Index",
     "",
     "- [main](modules/main.md)",
+    ""
+  ].join("\n");
+}
+
+function architectureContextTemplate(): string {
+  return [
+    "# Architecture Context",
+    "",
+    "This is the restrained architecture context. Keep only facts that help a fresh agent recover system shape, boundaries and durable constraints quickly.",
+    "",
+    "## System Boundary",
+    "",
+    "- Describe what is inside this project and what external systems, providers or runtime assumptions sit outside it.",
+    "",
+    "## Component Map",
+    "",
+    "- List the smallest useful set of components/modules and how they relate.",
+    "",
+    "## Data / Control Flow",
+    "",
+    "- Summarize only the durable request, event, state or data flow that is hard to infer from code alone.",
+    "",
+    "## Design Rationale",
+    "",
+    "- Record architecture-level choices that still constrain future work.",
+    "",
+    "## Constraints And Tradeoffs",
+    "",
+    "- Capture performance, safety, integration, deployment or maintainability constraints that matter for future changes.",
+    "",
+    "## Verification Implications",
+    "",
+    "- List project-specific verification entry points affected by architectural changes; do not claim tests already passed.",
+    "",
+    "## Open Risks",
+    "",
+    "- List unresolved architectural risks or unknowns.",
     ""
   ].join("\n");
 }

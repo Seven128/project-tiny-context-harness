@@ -9,8 +9,8 @@
 
 - The package does not replace project tests, CI, review or human acceptance.
 - New consumer projects should not default to lifecycle phases, stage task state, stage skills, stage work-product trees or phase gates.
-- `sync` must not perform semantic migration from legacy stage facts into Context.
-- Legacy stage assets are not shipped as a runnable default or compatibility layer; only `migrate-context` reads old user-project files as migration input.
+- `sync` refreshes managed assets and default Context authoring Skills; migration support has been removed after user migrations completed.
+- Legacy stage assets are not shipped as a runnable default or compatibility layer.
 
 ## Background
 
@@ -25,7 +25,12 @@
 - Modern coding agents have internalized much of the ordinary single-task loop: compact requirement understanding, local design choice, code editing, test execution and simple repair. The default Harness should not duplicate that capability with broad ceremonies.
 - ADR-level rationale is downgraded into `project_context/global.md#Design Rationale` or module Context when it still affects future work.
 - Implementation facts should live in code, tests, comments and short module Context constraints when the code is not self-explanatory.
-- Explicit `migrate-context` protects users from accidental semantic rewrites during `sync` or `upgrade`.
+- Product/UIUX Skill customization uses `<harnessRoot>/pjsdlc_managed/override_skills/*.md`; sync merges those local rules into `<harnessRoot>/skills/**`.
+- Architecture Context is intentionally restrained: it records durable boundaries, component relationships and constraints, not implementation narration.
+
+## Architecture Context
+
+- See `project_context/architecture.md` for the minimal architecture context.
 
 ## Verification Entry Points
 
@@ -39,7 +44,7 @@
 
 - vNext implementation is Minimal Context Harness.
 - Old stage-based assets, state files and work-product trees are removed from the current source tree.
-- Historical stage design is summarized in `PROJECT_SPEC.md`; migration support remains in `migrate-context` for existing user projects.
+- Historical stage design is summarized in `PROJECT_SPEC.md`; migration support has been removed after user migrations completed.
 - Delivery benchmark prompts should evaluate Minimal Context behavior for new Harness runs; old stage-based public result data has been removed.
 
 ## Next Safe Action
