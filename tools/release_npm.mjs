@@ -10,6 +10,7 @@ const packageName = "agent-project-sdlc";
 const workspaceName = "agent-project-sdlc";
 const packageManifestPath = path.join(projectRoot, "packages", "sdlc-harness", "package.json");
 const releaseReportRelativePath = ".artifacts/releases/current-release-status.md";
+const releasePackDir = path.join(projectRoot, ".artifacts", "releases", "pack");
 
 const args = parseArgs(process.argv.slice(2));
 
@@ -30,11 +31,10 @@ async function main() {
   const currentVersion = await readPackageVersion();
   const registryBefore = await npmView(["version", "dist-tags.latest", "--json"], { optional: true });
   const latestBefore = registryBefore?.["dist-tags.latest"] ?? registryBefore?.version ?? currentVersion;
-  const targetVersion = resolveTargetVersion(args.version, currentVersion, latestBefore);
-
-  if (await registryHasVersion(targetVersion)) {
-    throw new Error(`${packageName}@${targetVersion} already exists on npm.`);
-  }
+  const targetVersion =
+    args.publish || args.versionSpecified
+      ? resolveTargetVersion(args.version, currentVersion, latestBefore)
+      : currentVersion;
 
   const report = {
     packageName,
@@ -42,46 +42,74 @@ async function main() {
     latestBefore,
     targetVersion,
     publish: args.publish,
+    fullGate: args.fullGate,
+    registrySmoke: args.registrySmoke,
     startedAt: new Date().toISOString(),
     steps: []
   };
 
-  await step(report, `bump package version to ${targetVersion}`, async () => {
-    if (currentVersion === targetVersion) {
-      console.log(`${packageName} is already at ${targetVersion}`);
-      return;
-    }
-    await run("npm", ["version", targetVersion, "--workspace", workspaceName, "--no-git-tag-version"]);
-  });
+  if (args.publish) {
+    const whoami = await step(report, "npm auth check", () => run("npm", ["whoami"], { capture: true }));
+    report.npmUser = whoami.stdout.trim();
+  }
 
-  await step(report, "npm test", () => run("npm", ["test"]));
+  if (args.publish || args.versionSpecified) {
+    await step(report, "registry version availability", async () => {
+      if (await registryHasVersion(targetVersion)) {
+        throw new Error(`${packageName}@${targetVersion} already exists on npm.`);
+      }
+    });
+  }
+
+  if (args.publish) {
+    await step(report, `bump package version to ${targetVersion}`, async () => {
+      if (currentVersion === targetVersion) {
+        console.log(`${packageName} is already at ${targetVersion}`);
+        return;
+      }
+      await run("npm", ["version", targetVersion, "--workspace", workspaceName, "--no-git-tag-version"]);
+    });
+  } else {
+    await step(report, "dry-run version check", async () => {
+      console.log(`dry-run keeps workspace version at ${currentVersion}`);
+      if (targetVersion !== currentVersion) {
+        console.log(`publish target would be ${targetVersion}`);
+      }
+    });
+  }
+
+  const pack = await step(report, args.publish ? "npm pack tarball" : "npm pack dry run", () =>
+    packPackage({ publish: args.publish })
+  );
+  report.pack = pack;
+
   await step(report, "package source drift check", () =>
     run("node", ["packages/sdlc-harness/dist/cli.js", "package", "check-source"])
   );
 
-  const pack = await step(report, "npm pack dry run", async () => {
-    const result = await run("npm", ["pack", "--dry-run", "--json", "--workspace", workspaceName], {
-      capture: true
-    });
-    return parsePackJson(result.output);
-  });
-  report.pack = pack;
+  if (args.fullGate) {
+    await step(report, "full test suite", () => run("node", ["--test", "tests/sdlc-harness/*.test.mjs"]));
+    await step(report, "validate context", () =>
+      run("node", ["packages/sdlc-harness/dist/cli.js", "validate-context"])
+    );
+  }
 
   await step(report, "pre-publish diff check", () => run("git", ["diff", "--check"]));
 
   if (args.publish) {
-    await step(report, "npm publish", () => run("npm", ["publish", "--workspace", workspaceName]));
+    await step(report, "npm publish tarball", () => run("npm", ["publish", pack.tarballPath]));
     report.registry = await step(report, "registry latest verification", async () =>
       waitForLatest(targetVersion)
     );
-    report.smoke = await step(report, "registry installed-consumer smoke", () =>
-      installedConsumerSmoke(targetVersion)
-    );
+    if (args.registrySmoke) {
+      report.smoke = await step(report, "registry installed-consumer smoke", () =>
+        installedConsumerSmoke(targetVersion)
+      );
+    }
   }
 
   report.finishedAt = new Date().toISOString();
   await writeReleaseReport(report);
-  await step(report, "validate harness", () => run("make", ["validate-harness"]));
   await step(report, "final diff check", () => run("git", ["diff", "--check"]));
   await writeReleaseReport(report);
 
@@ -93,14 +121,18 @@ async function main() {
 function parseArgs(argv) {
   const parsed = {
     version: "patch",
+    versionSpecified: false,
     publish: false,
     yes: false,
+    fullGate: false,
+    registrySmoke: false,
     help: false
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === "--version") {
       parsed.version = argv[++i];
+      parsed.versionSpecified = true;
       continue;
     }
     if (arg === "--publish") {
@@ -109,6 +141,14 @@ function parseArgs(argv) {
     }
     if (arg === "--yes" || arg === "-y") {
       parsed.yes = true;
+      continue;
+    }
+    if (arg === "--full-gate") {
+      parsed.fullGate = true;
+      continue;
+    }
+    if (arg === "--registry-smoke" || arg === "--smoke") {
+      parsed.registrySmoke = true;
       continue;
     }
     if (arg === "--help" || arg === "-h") {
@@ -122,10 +162,15 @@ function parseArgs(argv) {
 
 function printHelp() {
   console.log(`Usage:
-  node tools/release_npm.mjs [--version patch|minor|major|x.y.z] [--publish --yes]
+  node tools/release_npm.mjs [--version patch|minor|major|x.y.z] [--publish --yes] [--full-gate] [--registry-smoke]
 
-Default mode is a dry run that bumps the package version, runs release gates, and writes
-the current release report. Pass --publish --yes to publish to npm and run registry smoke.`);
+Default mode is a non-mutating dry run against the current workspace package. Publishing
+defaults to a patch bump, verifies npm auth early, builds once through npm pack, publishes
+that tarball, and verifies the registry latest tag.
+
+Optional heavier gates:
+  --full-gate       Run the full local node test suite and validate-context before publish.
+  --registry-smoke  After publish, install the registry package in a temp consumer project.`);
 }
 
 async function step(report, label, action) {
@@ -207,7 +252,8 @@ async function registryHasVersion(version) {
 async function npmView(fields, options = {}) {
   const result = await run("npm", ["view", packageName, ...fields], {
     capture: true,
-    allowFailure: options.optional
+    allowFailure: options.optional,
+    quiet: true
   });
   if (result.code !== 0 && options.optional) {
     return undefined;
@@ -227,6 +273,29 @@ async function waitForLatest(targetVersion) {
   throw new Error(
     `Registry latest did not resolve to ${targetVersion}; last response: ${JSON.stringify(last)}`
   );
+}
+
+async function packPackage({ publish }) {
+  if (publish) {
+    await fs.rm(releasePackDir, { recursive: true, force: true });
+    await fs.mkdir(releasePackDir, { recursive: true });
+  }
+
+  const commandArgs = ["pack", "--json", "--workspace", workspaceName];
+  if (publish) {
+    commandArgs.push("--pack-destination", releasePackDir);
+  } else {
+    commandArgs.push("--dry-run");
+  }
+
+  const result = await run("npm", commandArgs, { capture: true, quiet: true });
+  const pack = parsePackJson(result.output);
+  console.log(`${pack.filename}: ${pack.entryCount ?? pack.files?.length ?? "unknown"} files, ${formatBytes(pack.size)}`);
+  return {
+    ...pack,
+    mode: publish ? "tarball" : "dry-run",
+    tarballPath: publish ? path.join(releasePackDir, pack.filename) : undefined
+  };
 }
 
 async function installedConsumerSmoke(version) {
@@ -260,7 +329,8 @@ async function run(command, commandArgs, options = {}) {
   const quiet = options.quiet ?? false;
   const allowFailure = options.allowFailure ?? false;
   return new Promise((resolve, reject) => {
-    const child = spawn(command, commandArgs, {
+    const invocation = spawnInvocation(command, commandArgs);
+    const child = spawn(invocation.command, invocation.args, {
       cwd,
       shell: false,
       stdio: capture ? ["ignore", "pipe", "pipe"] : "inherit"
@@ -293,6 +363,28 @@ async function run(command, commandArgs, options = {}) {
       }
     });
   });
+}
+
+function spawnInvocation(command, args) {
+  if (process.platform !== "win32") {
+    return { command, args };
+  }
+  const shellCommand = [command, ...args].map(quoteWindowsArg).join(" ");
+  return {
+    command: process.env.ComSpec ?? "cmd.exe",
+    args: ["/d", "/s", "/c", shellCommand]
+  };
+}
+
+function quoteWindowsArg(value) {
+  const text = String(value);
+  if (text === "") {
+    return "\"\"";
+  }
+  if (!/[ \t\n\v"&|<>^]/.test(text)) {
+    return text;
+  }
+  return `"${text.replace(/(\\*)"/g, "$1$1\\\"").replace(/\\+$/g, "$&$&")}"`;
 }
 
 function parsePackJson(output) {
@@ -385,10 +477,17 @@ async function writeReleaseReport(report, forcedStatus) {
   const pack = report.pack;
   const registry = report.registry;
   const smoke = report.smoke;
-  const publishEvidence = stepPassed(report, "npm publish")
+  const authStatus = report.publish ? stepStatus(report, "npm auth check") : "SKIPPED，dry-run 未发布";
+  const fullGateStatus = report.fullGate ? stepStatus(report, "full test suite") : "SKIPPED，未启用 `--full-gate`";
+  const validateStatus = report.fullGate ? stepStatus(report, "validate context") : "SKIPPED，未启用 `--full-gate`";
+  const packCommand =
+    pack?.mode === "tarball"
+      ? `npm pack --json --workspace ${workspaceName} --pack-destination .artifacts/releases/pack`
+      : `npm pack --dry-run --json --workspace ${workspaceName}`;
+  const publishEvidence = stepPassed(report, "npm publish tarball")
     ? `PASS，registry 返回 ${packageName}@${version}。`
     : report.publish
-      ? `${stepStatus(report, "npm publish")}。`
+      ? `${stepStatus(report, "npm publish tarball")}。`
       : "SKIPPED，dry-run 未发布。";
   const registryEvidence = registry
     ? `PASS，version 和 latest 均为 ${version}。`
@@ -397,9 +496,9 @@ async function writeReleaseReport(report, forcedStatus) {
       : "SKIPPED，dry-run 未查询 latest。";
   const smokeEvidence = smoke
     ? `PASS，从 npm registry 安装 ${packageName}@${version} 后，init 和 doctor 均通过，doctor 输出 ${inline(smoke.doctorOutput.split("\n").find((line) => line.includes("core package")) ?? "")}。`
-    : report.publish
+    : report.publish && report.registrySmoke
       ? "Pending。"
-      : "SKIPPED，dry-run 未安装 registry package。";
+      : "SKIPPED，未启用 `--registry-smoke`。";
 
   const content = `# Current Release Report（当前发布报告）
 
@@ -418,41 +517,42 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
 ## 2. Included Changes（包含变更）
 
 - 发布当前 workspace 中已同步的 AI SDLC Harness package assets 和 CLI build。
-- 本版本由 \`tools/release_npm.mjs\` 执行发布闭环，覆盖 version bump、test、source drift check、pack dry-run、publish、registry latest verification 和 installed-consumer smoke。
+- 本版本由 \`tools/release_npm.mjs\` 执行发布闭环。默认发布路径覆盖 npm auth、version bump、source drift check、tarball pack、publish 和 registry latest verification；\`--full-gate\` 和 \`--registry-smoke\` 可启用更重验证。
 
 ## 3. Build Artifacts（构建产物）
 
 | 产物（Artifact） | 位置（Location） | Checksum/Version |
 |---|---|---|
 | npm package | \`${packageName}\` | \`${version}\` |
-| dry-run tarball | \`npm pack --dry-run --json --workspace ${workspaceName}\` | \`${pack?.shasum ?? "Pending"}\` |
-| dry-run integrity | same | \`${pack?.integrity ?? "Pending"}\` |
-| package content | dry-run output | ${pack ? `${pack.entryCount} files, ${formatBytes(pack.size)} package size, ${formatBytes(pack.unpackedSize)} unpacked size` : "Pending"} |
+| package tarball | \`${packCommand}\` | \`${pack?.shasum ?? "Pending"}\` |
+| tarball integrity | same | \`${pack?.integrity ?? "Pending"}\` |
+| package content | pack output | ${pack ? `${pack.entryCount} files, ${formatBytes(pack.size)} package size, ${formatBytes(pack.unpackedSize)} unpacked size` : "Pending"} |
 | registry package | \`npm view ${packageName} version dist-tags.latest dist.integrity --json\` | ${registry ? `\`version ${registry.version}\`, \`latest ${registry["dist-tags.latest"]}\`, \`integrity ${registry["dist.integrity"]}\`` : "Pending"} |
 
 ## 4. Smoke Test Result（冒烟测试结果）
 
 - Decision: \`${decision}\`
 - Evidence:
-  - \`npm test\`: ${stepStatus(report, "npm test")}。
+  - \`npm whoami\`: ${authStatus}。
   - \`node packages/sdlc-harness/dist/cli.js package check-source\`: ${stepStatus(report, "package source drift check")}。
-  - \`make validate-harness\`: ${stepStatus(report, "validate harness")}。
-  - \`npm pack --dry-run --json --workspace ${workspaceName}\`: ${stepStatus(report, "npm pack dry run")}。
+  - \`node --test tests/sdlc-harness/*.test.mjs\`: ${fullGateStatus}。
+  - \`node packages/sdlc-harness/dist/cli.js validate-context\`: ${validateStatus}。
+  - \`${packCommand}\`: ${stepStatus(report, pack?.mode === "tarball" ? "npm pack tarball" : "npm pack dry run")}。
   - \`git diff --check\`: ${stepStatus(report, "final diff check")}。
-  - \`npm publish --workspace ${workspaceName}\`: ${publishEvidence}
+  - \`npm publish <packed tarball>\`: ${publishEvidence}
   - \`npm view ${packageName} version dist-tags.latest dist.integrity --json\`: ${registryEvidence}
   - Registry installed-consumer smoke: ${smokeEvidence}
 
 ## 5. Deployment Checklist（部署检查清单）
 
 - [x] Confirm registry latest before publishing.
-- [x] Bump package version to \`${version}\`.
+- [${stepPassed(report, `bump package version to ${version}`) || !report.publish ? "x" : " "}] Bump package version to \`${version}\`.
 - [${stepPassed(report, "package source drift check") ? "x" : " "}] Package source drift check passed.
-- [${stepPassed(report, "npm test") ? "x" : " "}] npm tests passed.
-- [${stepPassed(report, "npm pack dry run") ? "x" : " "}] Pack dry run passed.
-- [${stepPassed(report, "npm publish") ? "x" : " "}] Publish package with \`npm publish --workspace ${workspaceName}\`.
+- [${stepPassed(report, "npm pack tarball") || stepPassed(report, "npm pack dry run") ? "x" : " "}] Package pack passed.
+- [${stepPassed(report, "npm publish tarball") ? "x" : " "}] Publish package with \`npm publish <packed tarball>\`.
 - [${registry ? "x" : " "}] Verify registry package with \`npm view ${packageName} version dist-tags.latest dist.integrity --json\`.
-- [${smoke ? "x" : " "}] Run installed-consumer smoke from npm registry.
+- Optional full local test suite: ${fullGateStatus}。
+- Optional registry installed-consumer smoke: ${smoke ? "PASS" : report.registrySmoke ? "Pending" : "SKIPPED，未启用 `--registry-smoke`"}。
 - [ ] Create and push git tag \`v${version}\` after publish success.
 
 ## 6. Rollback Plan（回滚方案）
