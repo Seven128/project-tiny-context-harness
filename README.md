@@ -38,6 +38,7 @@ npx sdlc-harness init --adopt
 - `<harnessRoot>/config.yaml`
 - `<harnessRoot>/skills/context_product_plan/SKILL.md`
 - `<harnessRoot>/skills/context_uiux_design/SKILL.md`
+- `<harnessRoot>/skills/context_development_engineer/SKILL.md`
 - `<harnessRoot>/pjsdlc_managed/context_templates/**`
 - `<harnessRoot>/pjsdlc_managed/make/sdlc-harness.mk`
 - `tools/**`
@@ -45,9 +46,9 @@ npx sdlc-harness init --adopt
 
 `init` does not create lifecycle state, plan state, stage skills or stage work-product trees by default.
 
-The two default Skills are Minimal Context authoring helpers. Requests such as “产品方案 / 产品经理” use the product planning Skill; requests such as “设计稿 / UI/UX” use the design Skill. Product and screen-flow conclusions go to `project_context/**`; visual identity and design tokens go to `DESIGN.md` using Google’s open `@google/design.md` format when a visual design system is needed.
+The three default Skills are Minimal Context authoring helpers. Explicit requests such as “产品方案 / 产品经理 / 产品专家” use the product planning Skill; requests such as “设计稿 / UI/UX 设计方案 / 视觉专家” use the design Skill; requests such as “开发工程师 / 开发方案 / 技术专家” use the development engineer Skill. They intentionally avoid broad generic triggers such as “产品”, “设计” or “开发” alone. Product, screen-flow and durable engineering conclusions go to `project_context/**`; visual identity and design tokens go to `DESIGN.md` using Google’s open `@google/design.md` format when a visual design system is needed.
 
-`init` also creates `.codex/pjsdlc_managed/override_skills/` as the project-local Skill customization entry. Files such as `context_product_plan.md` and `context_uiux_design.md` in that directory are merged into the generated `.codex/skills/**` files by `sync`.
+`init` also creates `.codex/pjsdlc_managed/override_skills/` as the project-local Skill customization entry. Files such as `context_product_plan.md`, `context_uiux_design.md` and `context_development_engineer.md` in that directory are merged into the generated `.codex/skills/**` files by `sync`.
 
 ## Core Commands
 
@@ -100,7 +101,7 @@ The two default Skills are Minimal Context authoring helpers. Requests such as �
 
 The Context should be short enough to read at session start and specific enough to prevent fresh-agent drift. It should not copy code, test logs, release ledgers or implementation narration that the code already makes obvious.
 
-Product and UI/UX Skills are prompts for keeping that Context sharp. They may help draft a product plan or screen design, but the long-lived asset is still the compact Context.
+Product, UI/UX and development engineer Skills are prompts for keeping that Context sharp. They may help draft a product plan, screen design or implementation plan, but the long-lived asset is still the compact Context.
 
 Projects can customize these Skills without editing package-managed files:
 
@@ -108,10 +109,11 @@ Projects can customize these Skills without editing package-managed files:
 mkdir -p .codex/pjsdlc_managed/override_skills
 $EDITOR .codex/pjsdlc_managed/override_skills/context_product_plan.md
 $EDITOR .codex/pjsdlc_managed/override_skills/context_uiux_design.md
+$EDITOR .codex/pjsdlc_managed/override_skills/context_development_engineer.md
 npx sdlc-harness sync
 ```
 
-`sync` appends those local rules into `.codex/skills/context_product_plan/SKILL.md` and `.codex/skills/context_uiux_design/SKILL.md`. The override can narrow product/design behavior for the project, but conclusions should still land in `project_context/**` and `DESIGN.md`.
+`sync` appends those local rules into `.codex/skills/context_product_plan/SKILL.md`, `.codex/skills/context_uiux_design/SKILL.md` and `.codex/skills/context_development_engineer/SKILL.md`. The override can narrow product/design/development behavior for the project, but conclusions should still land in `project_context/**` and `DESIGN.md`.
 
 For visual UI projects, `DESIGN.md` can sit beside Context as the design-system fact source. Use `npx @google/design.md lint DESIGN.md` to validate its structure when the file is created or changed.
 

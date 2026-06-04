@@ -1,6 +1,6 @@
 ---
 name: context_uiux_design
-description: Use when the user asks for 设计稿, UI/UX, uiux, UIUX, UI 设计, UX 设计, 交互设计, 界面设计, 页面设计, 视觉设计, 原型, 线框图, 视觉规范, 组件状态, 响应式设计, 用户体验, wireframe, mockup, design system, DESIGN.md, screen design, interaction design, visual design, responsive design, or frontend handoff in a Minimal Context Harness project. Do not trigger for ordinary coding, bug fixing, local CSS tweaks, or generic mentions of design.
+description: Use when the user explicitly asks for 设计稿, UI/UX 设计方案, UI 设计师, UX 设计师, 视觉设计方案, 视觉专家, 交互设计方案, 界面设计方案, 页面设计方案, 原型设计, 线框图方案, 视觉规范, 设计系统方案, DESIGN.md, UX designer, UI designer, or design system spec in a Minimal Context Harness project. Do not trigger for ordinary UI implementation, CSS tweaks, bug fixes, or generic mentions of 设计, design, or user experience.
 ---
 
 # Context UIUX Design
@@ -28,7 +28,7 @@ description: Use when the user asks for 设计稿, UI/UX, uiux, UIUX, UI 设计,
 - 不要求 lifecycle phase、plan task、phase gate 或阶段 Skill。
 - 如果用户明确要求独立设计稿、mock 或页面说明，可以临时生成；长期事实仍要提炼回 `project_context/**` 和 `DESIGN.md`。
 - `DESIGN.md` 是视觉设计系统事实源；项目流程、模块契约和下一步动作仍以 `project_context/**` 为准。
-- 如果用户只是要求实现页面、修复 UI bug、局部改 CSS 或换一个颜色，不需要触发本 Skill；只有需要设计方向、界面方案、视觉体系、交互规则或长期设计事实沉淀时才使用。
+- 如果用户只是要求实现页面、修复 UI bug、局部改 CSS、换颜色，或只是泛泛提到“设计 / design / user experience”，不需要触发本 Skill；只有明确角色名或强相关产物名指向设计方向、界面方案、视觉体系、交互规则或长期设计事实沉淀时才使用。
 
 ## DESIGN.md 使用规则
 

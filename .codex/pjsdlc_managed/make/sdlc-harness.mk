@@ -1,5 +1,5 @@
 PYTHON ?= python3
-SDLC_HARNESS ?= npx sdlc-harness
+SDLC_HARNESS ?= $(if $(wildcard packages/sdlc-harness/dist/cli.js),node packages/sdlc-harness/dist/cli.js,npx --no-install sdlc-harness)
 
 .PHONY: help validate-context validate-harness lint test-current-domain test-all build
 

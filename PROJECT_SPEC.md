@@ -18,7 +18,7 @@ Default durable facts:
 - `project_context/modules/<module>.md`
 - `DESIGN.md` for visual identity and design tokens when a UI project needs a design system
 - code, tests and necessary code comments
-- default Context authoring Skills for product planning and UI/UX design
+- default Context authoring Skills for product planning, UI/UX design and development engineering
 
 Default non-goals:
 
@@ -41,7 +41,7 @@ The part that remains clearly valuable is not the ceremony itself. It is durable
 Therefore the current design keeps the product goal unchanged, but narrows the default mechanism:
 
 - preserve the smallest context that helps future agents resume safely;
-- keep product-plan and UI/UX prompting as optional Context authoring helpers, not as stage artifacts;
+- keep product-plan, UI/UX and development-engineering prompting as optional Context authoring helpers, not as stage artifacts;
 - keep one restrained architecture context for system boundary, component map and durable constraints;
 - let code, tests and project-specific probes prove product quality;
 - move ADR decisions into Context `Design Rationale` instead of standalone default ADR files;
@@ -88,7 +88,7 @@ In short: Harness no longer tries to externalize the whole SDLC by default. It m
 
 The Context should be compact and semantically split. It should not duplicate code, test logs, release ledgers or implementation narration that the source already exposes. Former ADR content is downgraded into `Design Rationale`; implementation documentation is downgraded into code comments, test names and short Context constraints when the code does not make the fact obvious.
 
-The default product planning and UI/UX Skills are a thin authoring layer. Product and screen-flow conclusions are durable only when compressed into Context. Visual identity, design tokens and component styling rules are durable in `DESIGN.md` using Google’s open `@google/design.md` format.
+The default product planning, UI/UX and development engineer Skills are a thin authoring layer. Their trigger descriptions stay narrow: explicit role names or strong artifact names should activate them, while generic mentions of product, design or development should not. Product, screen-flow and durable engineering conclusions are durable only when compressed into Context. Visual identity, design tokens and component styling rules are durable in `DESIGN.md` using Google’s open `@google/design.md` format.
 
 ## Package Behavior
 
@@ -101,6 +101,7 @@ The default product planning and UI/UX Skills are a thin authoring layer. Produc
 - `<harnessRoot>/config.yaml`
 - `<harnessRoot>/skills/context_product_plan/SKILL.md`
 - `<harnessRoot>/skills/context_uiux_design/SKILL.md`
+- `<harnessRoot>/skills/context_development_engineer/SKILL.md`
 - `<harnessRoot>/pjsdlc_managed/override_skills/`
 - `<harnessRoot>/pjsdlc_managed/context_templates/**`
 - `<harnessRoot>/pjsdlc_managed/make/sdlc-harness.mk`
@@ -111,7 +112,7 @@ The default product planning and UI/UX Skills are a thin authoring layer. Produc
 
 `sync` refreshes managed assets only. It never generates project semantics.
 
-Product and UI/UX Skill customization lives under `<harnessRoot>/pjsdlc_managed/override_skills/*.md`; `sync` appends those local rules into `<harnessRoot>/skills/**`.
+Product, UI/UX and development engineer Skill customization lives under `<harnessRoot>/pjsdlc_managed/override_skills/*.md`; `sync` appends those local rules into `<harnessRoot>/skills/**`.
 
 `upgrade` runs safe migrations and `sync`. The old semantic migration command has been removed because user migrations are complete.
 

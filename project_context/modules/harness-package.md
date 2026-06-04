@@ -7,8 +7,9 @@
 ## User / System Contract
 
 - `init` installs Minimal Context Harness into the current repository without deleting user files.
-- Default product planning and UI/UX Skills write durable conclusions to `project_context/**`.
-- Projects can customize those Skills via `<harnessRoot>/pjsdlc_managed/override_skills/context_product_plan.md` and `context_uiux_design.md`; `sync` appends those rules into `<harnessRoot>/skills/**`.
+- Default product planning, UI/UX and development engineer Skills write durable conclusions to `project_context/**`.
+- Projects can customize those Skills via `<harnessRoot>/pjsdlc_managed/override_skills/context_product_plan.md`, `context_uiux_design.md` and `context_development_engineer.md`; `sync` appends those rules into `<harnessRoot>/skills/**`.
+- The default Skill trigger descriptions should stay narrow: explicit role names or strong artifact names, not generic mentions of product, design, development, code or requirements.
 - `project_context/architecture.md` is a default Minimal Context fact source for restrained system boundary, component map and durable architecture constraints.
 - The UI/UX Skill uses Google `@google/design.md` for `DESIGN.md` visual design tokens when a UI design system is needed.
 - `sync` refreshes managed assets only and does not migrate old semantic facts.
@@ -30,7 +31,7 @@
 - Do not put authoring-only skills under `.codex/skills/authoring/**` into package assets.
 - Default Skills must stay Minimal Context oriented and must not restore stage documents or phase gates.
 - UI/UX guidance may create or update `DESIGN.md`; it should use `npx @google/design.md lint DESIGN.md` when structure validation is needed.
-- Skill overrides may narrow product/design guidance for a project but must keep conclusions in Minimal Context.
+- Skill overrides may narrow product/design/development guidance for a project but must keep conclusions in Minimal Context.
 - Do not reintroduce legacy migration commands or stage assets.
 - Package source changes that affect managed assets require `package sync-source` and `package check-source`.
 

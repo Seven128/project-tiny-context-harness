@@ -1,6 +1,6 @@
 import path from "node:path";
 import { readConfig } from "./config.js";
-import { harnessRoot } from "./harness-root.js";
+import { harnessPath, harnessRoot } from "./harness-root.js";
 import {
   copyTree,
   listFiles,
@@ -72,19 +72,20 @@ async function syncManagedFile(projectRoot: string, root: string, managedFile: M
     await syncSkillsTree(packageAssetPath("skills"), path.join(projectRoot, root, "skills"), projectRoot, root, report);
     return;
   }
-  if (managedFile.path === path.join(root, "pjsdlc_managed", "templates")) {
+  const managedPath = normalizeManagedPath(managedFile.path);
+  if (managedPath === harnessPath(root, "pjsdlc_managed", "templates")) {
     await syncTree(packageAssetPath("templates"), destination, report);
     return;
   }
-  if (managedFile.path === path.join(root, "pjsdlc_managed", "context_templates")) {
+  if (managedPath === harnessPath(root, "pjsdlc_managed", "context_templates")) {
     await syncTree(packageAssetPath("context_templates"), destination, report);
     return;
   }
-  if (managedFile.path === path.join(root, "pjsdlc_managed", "policies")) {
+  if (managedPath === harnessPath(root, "pjsdlc_managed", "policies")) {
     await syncTree(packageAssetPath("policies"), destination, report);
     return;
   }
-  if (managedFile.path === path.join(root, "pjsdlc_managed", "make", "sdlc-harness.mk")) {
+  if (managedPath === harnessPath(root, "pjsdlc_managed", "make", "sdlc-harness.mk")) {
     await syncFile(packageAssetPath("make", "sdlc-harness.mk"), destination, report, "skip-if-missing");
     return;
   }
@@ -100,11 +101,16 @@ async function syncManagedFile(projectRoot: string, root: string, managedFile: M
 }
 
 function isSkillsManagedPath(managedPath: string, root: string): boolean {
+  const normalized = normalizeManagedPath(managedPath);
   return (
-    managedPath === path.join(root, "skills") ||
-    managedPath === ".harness/agents/skills" ||
-    (managedPath === ".agents/skills" && root !== ".agents")
+    normalized === harnessPath(root, "skills") ||
+    normalized === ".harness/agents/skills" ||
+    (normalized === ".agents/skills" && root !== ".agents")
   );
+}
+
+function normalizeManagedPath(managedPath: string): string {
+  return managedPath.replace(/\\/g, "/");
 }
 
 async function syncAgentsBlock(destination: string, root: string, report: SyncReport): Promise<void> {

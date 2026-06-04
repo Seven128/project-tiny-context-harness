@@ -62,6 +62,7 @@ never_overwrite:
   assert.match(makefile, /-include \.harness\/pjsdlc_managed\/make\/sdlc-harness\.mk/);
   await stat(path.join(root, ".harness/skills/context_product_plan/SKILL.md"));
   await stat(path.join(root, ".harness/skills/context_uiux_design/SKILL.md"));
+  await stat(path.join(root, ".harness/skills/context_development_engineer/SKILL.md"));
   await stat(path.join(root, ".harness/pjsdlc_managed/context_templates/global.md"));
 } finally {
   await rm(root, { recursive: true, force: true });

@@ -121,8 +121,8 @@ Karpathy 编码准则
 1. 新会话或继续工作时，先读取 `project_context/global.md`、`project_context/architecture.md` 和相关 `project_context/modules/*.md`。
 2. 如果用户请求新需求、debug、RFC 或后续迭代，先判断需要更新哪些 Context 模块，再修改代码。
 3. 长期事实只写入 `project_context/**`；不要默认创建 PRD、tech plan、ADR、implementation doc、review/test/release 文档。
-4. 用户要求“产品方案 / 产品经理”或“设计稿 / UI/UX”时，使用对应 Context authoring Skill，把长期结论写回 `project_context/**`。
-5. 用户可以在 `.codex/pjsdlc_managed/override_skills/context_product_plan.md` 或 `.codex/pjsdlc_managed/override_skills/context_uiux_design.md` 中追加项目本地 Skill 规则；`sync` 会合并到 `.codex/skills/**`。
+4. 用户明确要求“产品方案 / 产品经理 / 产品专家”、“设计稿 / UI/UX 设计方案 / 视觉专家”或“开发工程师 / 开发方案 / 技术专家”这类角色或强产物名时，使用对应 Context authoring Skill，把长期结论写回 `project_context/**`。
+5. 用户可以在 `.codex/pjsdlc_managed/override_skills/context_product_plan.md`、`.codex/pjsdlc_managed/override_skills/context_uiux_design.md` 或 `.codex/pjsdlc_managed/override_skills/context_development_engineer.md` 中追加项目本地 Skill 规则；`sync` 会合并到 `.codex/skills/**`。
 6. ADR 降级为 Context 中的 `Design Rationale`；实现说明优先写成代码注释、测试名或模块 Context 中的关键约束。
 7. Harness workflow gate 只运行 `validate-context`，用于检查上下文是否可恢复。
 8. 产品质量由项目自己的验证入口证明；Context 只能声明验证入口，不能伪造“测试已通过”。

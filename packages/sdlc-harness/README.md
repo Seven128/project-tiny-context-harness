@@ -19,7 +19,7 @@ For existing projects:
 npx sdlc-harness init --adopt
 ```
 
-`init` creates `project_context/global.md`, `project_context/architecture.md`, `project_context/modules/main.md`, agent guidance, two Context authoring Skills, managed templates/tools and a Makefile include. It does not create stage work-product trees, lifecycle state or stage skills by default.
+`init` creates `project_context/global.md`, `project_context/architecture.md`, `project_context/modules/main.md`, agent guidance, three Context authoring Skills, managed templates/tools and a Makefile include. It does not create stage work-product trees, lifecycle state or stage skills by default.
 
 ## Capabilities
 
@@ -28,9 +28,10 @@ npx sdlc-harness init --adopt
 | Project initialization | `npx sdlc-harness init` | Creates `project_context/global.md`, `project_context/architecture.md`, `project_context/modules/main.md`, `AGENTS.md`, minimal managed assets and a Makefile include. |
 | Existing project adoption | `npx sdlc-harness init --adopt` | Adds Minimal Context Harness non-destructively to an existing repository. |
 | Configurable Harness root | `--harness-folder`, `package.json#sdlcHarness.harnessFolderName`, `sdlc-harness.config.json` | Supports Codex `.codex`, Claude `.claude`, Cursor `.cursor`, Cline `.cline`, Roo `.roo`, Gemini `.gemini` or a custom folder. |
-| Product planning Skill | `<harnessRoot>/skills/context_product_plan/SKILL.md` | Triggers on “产品方案 / 产品经理” style requests and writes durable product conclusions to `project_context/**`. |
-| UI/UX design Skill | `<harnessRoot>/skills/context_uiux_design/SKILL.md` | Triggers on “设计稿 / UI/UX” style requests, writes screen/interaction conclusions to `project_context/**`, and uses Google `@google/design.md` for `DESIGN.md` visual tokens when needed. |
-| Project Skill overrides | `<harnessRoot>/pjsdlc_managed/override_skills/*.md` | Optional local product/UIUX Skill rules merged into `<harnessRoot>/skills/**` by `sync`. |
+| Product planning Skill | `<harnessRoot>/skills/context_product_plan/SKILL.md` | Triggers on “产品方案 / 产品经理 / 产品专家” style requests and writes durable product conclusions to `project_context/**`. |
+| UI/UX design Skill | `<harnessRoot>/skills/context_uiux_design/SKILL.md` | Triggers on “设计稿 / UI/UX 设计方案 / 视觉专家” style requests, writes screen/interaction conclusions to `project_context/**`, and uses Google `@google/design.md` for `DESIGN.md` visual tokens when needed. |
+| Development engineer Skill | `<harnessRoot>/skills/context_development_engineer/SKILL.md` | Triggers on “开发工程师 / 开发方案 / 技术专家” style requests and writes durable engineering conclusions to `project_context/**`. In Codex-like environments it may enable multi-agent work when supported. |
+| Project Skill overrides | `<harnessRoot>/pjsdlc_managed/override_skills/*.md` | Optional local product/design/development Skill rules merged into `<harnessRoot>/skills/**` by `sync`. |
 | Managed file sync | `npx sdlc-harness sync` | Refreshes package-managed guidance, default Skills, Makefile include, context templates, tools and workflow YAML. It does not perform semantic Context generation. |
 | Upgrade | `npx sdlc-harness upgrade` | Runs safe migrations and `sync`. |
 | Context validation | `npx sdlc-harness validate-context`, `make validate-context` | Checks required Context sections and rejects fake claims that tests already passed. |
@@ -75,7 +76,7 @@ npx sdlc-harness init --adopt
 
 The Context should be dense, durable and short. Former ADR content belongs in `Design Rationale` when it still affects future changes. Implementation details that are obvious from code should stay in code and tests; only non-obvious constraints belong in Context.
 
-The product planning and UI/UX Skills are Context authoring helpers. They may shape product plans, requirements, screen flows or design handoff, but they do not create a default PRD/UIUX document chain. For visual systems, `DESIGN.md` is the durable source for colors, typography, spacing, shapes and component tokens; validate it with `npx @google/design.md lint DESIGN.md`.
+The product planning, UI/UX and development engineer Skills are Context authoring helpers. They may shape product plans, screen flows, design handoff, implementation plans or technical decisions, but they do not create a default PRD/UIUX/tech-plan document chain. Their descriptions intentionally avoid broad generic triggers such as “产品”, “设计” or “开发” alone. For visual systems, `DESIGN.md` is the durable source for colors, typography, spacing, shapes and component tokens; validate it with `npx @google/design.md lint DESIGN.md`.
 
 Project-specific Skill rules can be added without editing package-managed Skill files:
 
@@ -83,10 +84,11 @@ Project-specific Skill rules can be added without editing package-managed Skill 
 mkdir -p <harnessRoot>/pjsdlc_managed/override_skills
 $EDITOR <harnessRoot>/pjsdlc_managed/override_skills/context_product_plan.md
 $EDITOR <harnessRoot>/pjsdlc_managed/override_skills/context_uiux_design.md
+$EDITOR <harnessRoot>/pjsdlc_managed/override_skills/context_development_engineer.md
 npx sdlc-harness sync
 ```
 
-`sync` appends those local rules into `<harnessRoot>/skills/**`. Overrides may narrow product/design behavior for the project, but should keep durable conclusions in `project_context/**` and `DESIGN.md`.
+`sync` appends those local rules into `<harnessRoot>/skills/**`. Overrides may narrow product/design/development behavior for the project, but should keep durable conclusions in `project_context/**` and `DESIGN.md`.
 
 ## Sync And Upgrade Boundary
 

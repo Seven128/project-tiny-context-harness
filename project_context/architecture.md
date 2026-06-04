@@ -35,7 +35,7 @@ This file is the restrained architecture context for the source repository. It i
 
 - Do not restore lifecycle phases, plan state, stage Skills, work-product trees or phase gates as default package behavior.
 - Do not let `sync` perform semantic project rewriting; it refreshes managed assets only.
-- Keep product/UIUX Skill overrides additive and project-local.
+- Keep product/design/development Skill overrides additive and project-local.
 - Keep `architecture.md` concise; implementation details belong in code, tests or module Context only when not obvious.
 
 ## Verification Implications

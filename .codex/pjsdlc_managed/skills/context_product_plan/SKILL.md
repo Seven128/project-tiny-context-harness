@@ -1,6 +1,6 @@
 ---
 name: context_product_plan
-description: Use when the user asks for 产品方案, 产品经理, 需求方案, 产品规划, product plan, product manager, PM, requirements shaping, or product-facing delivery planning in a Minimal Context Harness project.
+description: Use when the user explicitly asks for 产品方案, 产品经理, 产品专家, 需求方案, 功能方案, 业务规则方案, 用户故事方案, 验收标准方案, 产品规划方案, product plan, product manager, product expert, product spec, or PM spec in a Minimal Context Harness project. Do not trigger for ordinary coding, debugging, package work, or generic mentions of 产品, product, or requirements.
 ---
 
 # Context Product Plan
@@ -25,6 +25,7 @@ description: Use when the user asks for 产品方案, 产品经理, 需求方案
 - 不默认创建 `.work_products/**`、PRD、tech plan、ADR、implementation doc、review/test/release 文档。
 - 不要求 lifecycle phase、plan task、phase gate 或阶段 Skill。
 - 如果用户明确要求独立方案文档，可以临时生成；长期事实仍要提炼回 `project_context/**`。
+- 如果用户只是要求实现功能、修 bug、调整代码、处理 package/release，或只是泛泛提到“产品 / product / requirements”，不需要触发本 Skill；只有明确角色名或强相关产物名指向产品判断、需求整理、验收口径或长期产品事实沉淀时才使用。
 
 ## 建议沉淀位置
 

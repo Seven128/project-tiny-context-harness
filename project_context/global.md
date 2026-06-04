@@ -25,7 +25,7 @@
 - Modern coding agents have internalized much of the ordinary single-task loop: compact requirement understanding, local design choice, code editing, test execution and simple repair. The default Harness should not duplicate that capability with broad ceremonies.
 - ADR-level rationale is downgraded into `project_context/global.md#Design Rationale` or module Context when it still affects future work.
 - Implementation facts should live in code, tests, comments and short module Context constraints when the code is not self-explanatory.
-- Product/UIUX Skill customization uses `<harnessRoot>/pjsdlc_managed/override_skills/*.md`; sync merges those local rules into `<harnessRoot>/skills/**`.
+- Product/UIUX/development engineer Skill customization uses `<harnessRoot>/pjsdlc_managed/override_skills/*.md`; sync merges those local rules into `<harnessRoot>/skills/**`.
 - Architecture Context is intentionally restrained: it records durable boundaries, component relationships and constraints, not implementation narration.
 
 ## Architecture Context
@@ -49,7 +49,7 @@
 
 ## Next Safe Action
 
-- When changing public package behavior, update CLI/source assets, README, package README, PROJECT_SPEC, tests and package source sync together.
+- When changing public package behavior, update CLI/source assets, README, package README, PROJECT_SPEC, Context, tests and package source sync together.
 - Run focused tests first, then package source sync/check and context validation before handoff.
 
 ## Module Index

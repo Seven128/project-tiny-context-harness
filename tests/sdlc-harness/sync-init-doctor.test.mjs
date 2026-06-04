@@ -63,6 +63,7 @@ try {
   await assert.rejects(stat(path.join(root, ".agent/skills/pjsdlc_manager/SKILL.md")));
   await stat(path.join(root, ".agent/skills/context_product_plan/SKILL.md"));
   await stat(path.join(root, ".agent/skills/context_uiux_design/SKILL.md"));
+  await stat(path.join(root, ".agent/skills/context_development_engineer/SKILL.md"));
   await assert.rejects(stat(path.join(root, ".work_products/INDEX.md")));
 
   const agents = await readFile(path.join(root, "AGENTS.md"), "utf8");
@@ -97,6 +98,9 @@ try {
   const uiuxSkill = await readFile(path.join(root, ".agent/skills/context_uiux_design/SKILL.md"), "utf8");
   assert.match(uiuxSkill, /设计稿/);
   assert.match(uiuxSkill, /UI\/UX/);
+  const developmentSkill = await readFile(path.join(root, ".agent/skills/context_development_engineer/SKILL.md"), "utf8");
+  assert.match(developmentSkill, /开发工程师/);
+  assert.match(developmentSkill, /启动多 agent 能力/);
 
   await mkdir(path.join(root, ".agent/pjsdlc_managed/override_skills"), { recursive: true });
   await writeFile(
@@ -125,6 +129,7 @@ try {
   await stat(path.join(configuredRoot, ".harness/config.yaml"));
   await stat(path.join(configuredRoot, ".harness/skills/context_product_plan/SKILL.md"));
   await stat(path.join(configuredRoot, ".harness/skills/context_uiux_design/SKILL.md"));
+  await stat(path.join(configuredRoot, ".harness/skills/context_development_engineer/SKILL.md"));
   await stat(path.join(configuredRoot, ".harness/pjsdlc_managed/override_skills"));
   await stat(path.join(configuredRoot, "project_context/global.md"));
   await stat(path.join(configuredRoot, "project_context/architecture.md"));

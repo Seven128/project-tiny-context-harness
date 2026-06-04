@@ -16,7 +16,8 @@ const [
   sourceMappings,
   authoringSkill,
   productSkill,
-  uiuxSkill
+  uiuxSkill,
+  developmentSkill
 ] = await Promise.all([
   read(".codex/pjsdlc_managed/agents/AGENTS_CORE.md"),
   read("README.md"),
@@ -27,7 +28,8 @@ const [
   read("packages/sdlc-harness/source-mappings.yaml"),
   read(".codex/skills/authoring/harness_package_design/SKILL.md"),
   read("packages/sdlc-harness/assets/skills/context_product_plan/SKILL.md"),
-  read("packages/sdlc-harness/assets/skills/context_uiux_design/SKILL.md")
+  read("packages/sdlc-harness/assets/skills/context_uiux_design/SKILL.md"),
+  read("packages/sdlc-harness/assets/skills/context_development_engineer/SKILL.md")
 ]);
 
 for (const content of [sourceAgents, rootReadme, packageReadme, spec, packageAgents, packageGuide]) {
@@ -80,13 +82,15 @@ assert.doesNotMatch(authoringSkill, /plan\.yaml|lifecycle\.yaml|\.work_products\
 assert.match(authoringSkill, /override_skills/);
 assert.doesNotMatch(authoringSkill, /pjsdlc_manager|pjsdlc_dev_sprint|pjsdlc_reviewer|pjsdlc_tester/);
 
-assert.match(productSkill, /description:.*产品方案.*产品经理/s);
+assert.match(productSkill, /description:.*产品方案.*产品经理.*产品专家/s);
+assert.match(productSkill, /generic mentions of 产品, product, or requirements/);
 assert.match(productSkill, /project_context\/\*\*/);
 assert.match(productSkill, /不默认创建 `\.work_products\/\*\*`/);
 assert.doesNotMatch(productSkill, /恢复\s*旧/);
 assert.doesNotMatch(productSkill, /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|pjsdlc_/);
 
-assert.match(uiuxSkill, /description:.*设计稿.*UI\/UX/s);
+assert.match(uiuxSkill, /description:.*设计稿.*UI\/UX 设计方案.*视觉专家/s);
+assert.match(uiuxSkill, /generic mentions of 设计, design, or user experience/);
 assert.match(uiuxSkill, /project_context\/\*\*/);
 assert.match(uiuxSkill, /@google\/design\.md/);
 assert.match(uiuxSkill, /DESIGN\.md/);
@@ -95,3 +99,12 @@ assert.match(uiuxSkill, /export --format (?:css-tailwind|json-tailwind)/);
 assert.match(uiuxSkill, /不默认创建 `\.work_products\/\*\*`/);
 assert.doesNotMatch(uiuxSkill, /恢复\s*旧/);
 assert.doesNotMatch(uiuxSkill, /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|pjsdlc_/);
+
+assert.match(developmentSkill, /description:.*开发工程师.*开发方案.*技术专家/s);
+assert.match(developmentSkill, /generic mentions of code, development, or engineering/);
+assert.match(developmentSkill, /启动多 agent 能力/);
+assert.match(developmentSkill, /project_context\/architecture\.md/);
+assert.match(developmentSkill, /project_context\/\*\*/);
+assert.match(developmentSkill, /不默认创建 `\.work_products\/\*\*`/);
+assert.doesNotMatch(developmentSkill, /恢复\s*旧/);
+assert.doesNotMatch(developmentSkill, /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|pjsdlc_/);

@@ -215,6 +215,7 @@ async function verifyManagedAssets(labDir, add) {
     ".codex/pjsdlc_managed/make/sdlc-harness.mk",
     ".codex/skills/context_product_plan/SKILL.md",
     ".codex/skills/context_uiux_design/SKILL.md",
+    ".codex/skills/context_development_engineer/SKILL.md",
     "tools/validate_context.py"
   ];
   const forbidden = [
