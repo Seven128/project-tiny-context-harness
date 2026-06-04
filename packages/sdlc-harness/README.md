@@ -19,7 +19,7 @@ For existing projects:
 npx sdlc-harness init --adopt
 ```
 
-`init` creates Minimal Context files, agent guidance, two Context authoring Skills, managed templates/tools and a Makefile include. It does not create stage work-product trees, lifecycle state or stage skills by default.
+`init` creates `project_context/global.md`, `project_context/architecture.md`, `project_context/modules/main.md`, agent guidance, two Context authoring Skills, managed templates/tools and a Makefile include. It does not create stage work-product trees, lifecycle state or stage skills by default.
 
 ## Capabilities
 

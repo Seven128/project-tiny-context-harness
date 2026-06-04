@@ -33,6 +33,7 @@ npx sdlc-harness init --adopt
 
 - `AGENTS.md`
 - `project_context/global.md`
+- `project_context/architecture.md`
 - `project_context/modules/main.md`
 - `<harnessRoot>/config.yaml`
 - `<harnessRoot>/skills/context_product_plan/SKILL.md`
