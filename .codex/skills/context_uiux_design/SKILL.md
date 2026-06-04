@@ -22,6 +22,16 @@ description: Use when the user explicitly asks for 设计稿, UI/UX 设计方案
    - 新 UI 模块可新增 `project_context/modules/<module>.md`，并更新 `global.md#Module Index`。
 6. Context 只能声明设计验收入口或 smoke 入口，不能伪造“已验证通过”。
 
+## 视觉质量校准
+
+- 先判断界面 register：品牌页、营销页、作品集等让设计承载表达；产品工具、后台、dashboard、表单等让设计服务任务。品牌界面可以更强烈地使用图像、色彩和编排；产品界面优先可扫读、稳定组件、熟悉交互和任务效率。
+- 已有 UI 优先保持身份连续性：先找现有 token、组件库、全局 CSS、Tailwind config、截图或代表性页面；除非用户明确要求重设计，不要推翻已建立的字体、颜色、组件语言。
+- 绿色地设计视觉体系时，先说明场景和色彩策略，再选 token：谁在什么环境下使用、界面应该 restrained / committed / full palette / drenched 到什么程度。不要按品类套默认审美。
+- 做设计方案或视觉规范时，显式检查：文字对比度、65-75ch 正文行长、清晰字号层级、响应式边界、44px 触控目标、焦点态、hover/active/disabled/loading/error/success 状态、空态/错误态/长文本、reduced motion 和文本不溢出。
+- 避免常见 AI 视觉反模式：嵌套卡片、无意义玻璃拟态、紫蓝渐变或渐变文字、灰字压在彩色背景上、默认米色/奶油色大背景、过度圆角、边框加大模糊阴影的幽灵卡片、每段一个圆角 icon tile、每节重复小号全大写 eyebrow 或 `01 / 02 / 03` 标记、bounce/elastic easing、空泛营销 buzzword。
+- 视觉审查时先分清问题类型：a11y / responsive / theming / interaction / copy / performance / anti-pattern。把真正影响用户理解、操作或品牌信任的问题列为高优先级；少量纯审美偏好不要淹没关键问题。
+- 如果项目已经安装 Impeccable，或用户明确要求外部视觉反模式扫描，可运行 `npx impeccable detect <target>` 作为可选辅助证据。其输出只能作为设计缺陷线索，不是 Harness gate，也不能替代人工截图检查、项目测试或 `validate-context`。
+
 ## 输出边界
 
 - 不默认创建 `.work_products/**`、UI/UX 独立文档、handoff matrix、review/test/release 文档。
