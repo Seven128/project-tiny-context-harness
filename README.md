@@ -46,7 +46,7 @@ npx sdlc-harness init --adopt
 
 `init` does not create lifecycle state, plan state, stage skills or stage work-product trees by default.
 
-The three default Skills are Minimal Context authoring helpers. Explicit requests such as “产品方案 / 产品经理 / 产品专家” use the product planning Skill; requests such as “设计稿 / UI/UX 设计方案 / 视觉专家” use the design Skill; requests such as “开发工程师 / 技术方案 / 开发方案 / 实现 / 实现方案 / 技术专家” use the development engineer Skill. They intentionally avoid broad generic triggers such as “产品”, “设计” or “开发” alone. Product, screen-flow and durable engineering conclusions go to `project_context/**`; visual identity and design tokens go to `DESIGN.md` using Google’s open `@google/design.md` format when a visual design system is needed. The UI/UX Skill also includes a compact frontend visual-quality calibration layer for brand/product register, design-system continuity, accessibility, responsive behavior, interaction states and common AI-design anti-patterns.
+The three default Skills are Minimal Context authoring helpers. Explicit requests such as “产品方案 / 产品经理 / 产品专家” use the product planning Skill; requests such as “设计稿 / UI/UX 设计方案 / 视觉专家” use the design Skill; requests such as “开发工程师 / 技术方案 / 开发方案 / 实现 / 实现方案 / 技术专家” use the development engineer Skill. They intentionally avoid broad generic triggers such as “产品”, “设计” or “开发” alone. Product, screen-flow and durable engineering conclusions go to `project_context/**`; visual identity and design tokens go to root `DESIGN.md` using Google’s open `@google/design.md` format. The UI/UX Skill also includes a compact frontend visual-quality calibration layer for brand/product register, design-system continuity, accessibility, responsive behavior, interaction states and common AI-design anti-patterns.
 
 `init` also creates `.codex/pjsdlc_managed/override_skills/` as the project-local Skill customization entry. Files such as `context_product_plan.md`, `context_uiux_design.md` and `context_development_engineer.md` in that directory are merged into the generated `.codex/skills/**` files by `sync`.
 
@@ -115,7 +115,7 @@ npx sdlc-harness sync
 
 `sync` appends those local rules into `.codex/skills/context_product_plan/SKILL.md`, `.codex/skills/context_uiux_design/SKILL.md` and `.codex/skills/context_development_engineer/SKILL.md`. The override can narrow product/design/development behavior for the project, but conclusions should still land in `project_context/**` and `DESIGN.md`.
 
-For visual UI projects, `DESIGN.md` can sit beside Context as the design-system fact source. Use `npx @google/design.md lint DESIGN.md` to validate its structure when the file is created or changed.
+`init` creates root `DESIGN.md` beside Context as the design-system fact source, and `upgrade` creates it for existing Harness projects when missing. It starts as a neutral starter baseline with visual tokens, background/color logic, typography, spacing, component states and do/don't guidance; user-authored design rules take precedence once present. Use `npx @google/design.md lint DESIGN.md` to validate its structure when the file is changed.
 
 Projects that want a stronger optional frontend design lint can install or run Impeccable separately:
 

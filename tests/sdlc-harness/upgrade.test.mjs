@@ -14,6 +14,7 @@ try {
     "utf8"
   );
   await runInit(root, { adopt: true, force: false });
+  await rm(path.join(root, "DESIGN.md"), { force: true });
 
   await mkdir(path.join(root, ".work_products/01_product"), { recursive: true });
   await mkdir(path.join(root, ".harness/state"), { recursive: true });
@@ -45,6 +46,7 @@ never_overwrite:
 
   await stat(path.join(root, "project_context/global.md"));
   await stat(path.join(root, "project_context/architecture.md"));
+  await stat(path.join(root, "DESIGN.md"));
   await stat(path.join(root, ".work_products/01_product/prd.md"));
   await stat(path.join(root, ".harness/state/lifecycle.yaml"));
 

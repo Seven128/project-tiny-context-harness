@@ -1,5 +1,6 @@
 import path from "node:path";
 import { defaultConfig, readConfig } from "./config.js";
+import { createDesignMdIfMissing, DESIGN_MD_PATH } from "./design-md.js";
 import { pathExists, writeTextIfChanged } from "./fs.js";
 import { harnessConfigPath, harnessRoot } from "./harness-root.js";
 import { stringifyYaml } from "./yaml.js";
@@ -23,7 +24,16 @@ export async function runMigrations(projectRoot: string): Promise<MigrationRepor
   const report: MigrationReport = { changed: [], skipped: [] };
   const root = await harnessRoot(projectRoot);
   await migrateConfig(projectRoot, root, report);
+  await migrateDesignMd(projectRoot, report);
   return report;
+}
+
+async function migrateDesignMd(projectRoot: string, report: MigrationReport): Promise<void> {
+  if (await createDesignMdIfMissing(projectRoot)) {
+    report.changed.push(DESIGN_MD_PATH);
+  } else {
+    report.skipped.push(DESIGN_MD_PATH);
+  }
 }
 
 async function migrateConfig(projectRoot: string, root: string, report: MigrationReport): Promise<void> {

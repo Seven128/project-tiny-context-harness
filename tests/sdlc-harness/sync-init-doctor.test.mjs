@@ -26,6 +26,7 @@ try {
   assert.ok(initReport.some((line) => line.includes("created project_context/global.md")));
   assert.ok(initReport.some((line) => line.includes("created project_context/architecture.md")));
   assert.ok(initReport.some((line) => line.includes("created project_context/modules/main.md")));
+  assert.ok(initReport.some((line) => line.includes("created DESIGN.md")));
 
   const config = await readFile(path.join(root, ".agent/config.yaml"), "utf8");
   assert.match(config, /schema_version: "3"/);
@@ -45,6 +46,13 @@ try {
   assert.match(globalContext, /DESIGN\.md/);
   assert.match(globalContext, /## Verification Entry Points/);
   assert.match(globalContext, /## Next Safe Action/);
+
+  const designMd = await readFile(path.join(root, "DESIGN.md"), "utf8");
+  assert.match(designMd, /name: "Starter Design System"/);
+  assert.match(designMd, /primary-action/);
+  assert.match(designMd, /User-authored tokens/);
+  assert.match(designMd, /# Design System/);
+  assert.match(designMd, /## Do's and Don'ts/);
 
   const architectureContext = await readFile(path.join(root, "project_context/architecture.md"), "utf8");
   assert.match(architectureContext, /# Architecture Context/);
@@ -133,6 +141,7 @@ try {
   await stat(path.join(configuredRoot, ".harness/pjsdlc_managed/override_skills"));
   await stat(path.join(configuredRoot, "project_context/global.md"));
   await stat(path.join(configuredRoot, "project_context/architecture.md"));
+  await stat(path.join(configuredRoot, "DESIGN.md"));
   const configuredMakefile = await readFile(path.join(configuredRoot, "Makefile"), "utf8");
   assert.match(configuredMakefile, /-include \.harness\/pjsdlc_managed\/make\/sdlc-harness\.mk/);
 
@@ -140,6 +149,7 @@ try {
   assert.equal(cliInit.status, 0, `${cliInit.stdout}\n${cliInit.stderr}`);
   await stat(path.join(cliRoot, "project_context/global.md"));
   await stat(path.join(cliRoot, "project_context/architecture.md"));
+  await stat(path.join(cliRoot, "DESIGN.md"));
   const cliValidate = spawnSync(process.execPath, [cliPath, "validate-context"], { cwd: cliRoot, encoding: "utf8" });
   assert.equal(cliValidate.status, 0, `${cliValidate.stdout}\n${cliValidate.stderr}`);
   const cliValidateHarnessAlias = spawnSync(process.execPath, [cliPath, "validate-harness"], { cwd: cliRoot, encoding: "utf8" });

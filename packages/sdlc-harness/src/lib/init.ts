@@ -1,5 +1,6 @@
 import path from "node:path";
 import { writeConfigIfMissing } from "./config.js";
+import { createDesignMdIfMissing, DESIGN_MD_PATH } from "./design-md.js";
 import { harnessConfigPath, harnessRoot } from "./harness-root.js";
 import { ensureDir, pathExists, writeTextIfChanged } from "./fs.js";
 import { runSync } from "./sync-engine.js";
@@ -24,6 +25,7 @@ export async function runInit(projectRoot: string, options: InitOptions): Promis
   }
 
   await createProjectContext(projectRoot, report);
+  await createDesignMd(projectRoot, report);
   await createSkillOverrideEntry(projectRoot, report);
 
   const syncReport = await runSync(projectRoot);
@@ -38,6 +40,12 @@ async function createSkillOverrideEntry(projectRoot: string, report: string[]): 
   if (!(await pathExists(overrideRoot))) {
     await ensureDir(overrideRoot);
     report.push(`created ${path.join(root, "pjsdlc_managed", "override_skills")}`);
+  }
+}
+
+async function createDesignMd(projectRoot: string, report: string[]): Promise<void> {
+  if (await createDesignMdIfMissing(projectRoot)) {
+    report.push(`created ${DESIGN_MD_PATH}`);
   }
 }
 
