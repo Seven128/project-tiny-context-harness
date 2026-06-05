@@ -1,6 +1,6 @@
 ---
 name: context_development_engineer
-description: Use when the user explicitly asks for 开发工程师, 软件工程师, 研发工程师, 开发专家, 工程专家, 技术专家, 开发方案, 研发方案, 工程方案, 技术方案, 实现, 实现方案, software engineer, senior engineer, engineering expert, development plan, engineering plan, or technical implementation plan in a Minimal Context Harness project. Do not trigger for routine coding, bug fixes, small refactors, package/release work, or generic mentions of code, development, or engineering.
+description: Use when the user explicitly asks for 开发工程师, 软件工程师, 研发工程师, 开发专家, 工程专家, 技术专家, 开发方案, 研发方案, 工程方案, 技术方案, 实现, 实现方案, 实施计划, software engineer, senior engineer, engineering expert, development plan, engineering plan, or technical implementation plan in a Minimal Context Harness project. Do not trigger for routine coding, bug fixes, small refactors, package/release work, or generic mentions of code, development, or engineering.
 ---
 
 # Context Development Engineer
@@ -26,7 +26,7 @@ description: Use when the user explicitly asks for 开发工程师, 软件工程
 - 不默认创建 `.work_products/**`、tech plan、ADR、implementation doc、review/test/release 文档。
 - 不要求 lifecycle phase、plan task、phase gate 或阶段 Skill。
 - 如果用户明确要求独立开发方案、技术方案或实现说明，可以临时生成；长期事实仍要提炼回 `project_context/**`。
-- 如果用户只是要求普通代码修改、修 bug、小重构、package/release 处理，或只是泛泛提到“代码 / 开发 / engineering”，不需要触发本 Skill；只有明确角色名或强相关产物名指向工程方案、实现方案、技术判断或长期工程事实沉淀时才使用。
+- 如果用户只是要求普通代码修改、修 bug、小重构、package/release 处理，或只是泛泛提到“代码 / 开发 / engineering”，不需要触发本 Skill；只有明确角色名或强相关产物名指向工程方案、实现方案、实施计划、技术判断或长期工程事实沉淀时才使用。
 
 ## 建议沉淀位置
 

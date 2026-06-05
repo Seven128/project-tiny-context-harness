@@ -100,7 +100,7 @@ assert.match(uiuxSkill, /不默认创建 `\.work_products\/\*\*`/);
 assert.doesNotMatch(uiuxSkill, /恢复\s*旧/);
 assert.doesNotMatch(uiuxSkill, /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|pjsdlc_/);
 
-assert.match(developmentSkill, /description:.*开发工程师.*开发方案.*技术专家/s);
+assert.match(developmentSkill, /description:.*开发工程师.*开发方案.*实施计划.*技术专家/s);
 assert.match(developmentSkill, /generic mentions of code, development, or engineering/);
 assert.match(developmentSkill, /启动多 agent 能力/);
 assert.match(developmentSkill, /project_context\/architecture\.md/);
