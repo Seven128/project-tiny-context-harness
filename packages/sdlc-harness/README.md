@@ -34,7 +34,7 @@ npx sdlc-harness init --adopt
 | Project Skill overrides | `<harnessRoot>/pjsdlc_managed/override_skills/*.md` | Optional local product/design/development Skill rules merged into `<harnessRoot>/skills/**` by `sync`. |
 | Managed file sync | `npx sdlc-harness sync` | Refreshes package-managed guidance, default Skills, Makefile include, context templates, tools and workflow YAML. It does not perform semantic Context generation. |
 | Upgrade | `npx sdlc-harness upgrade` | Runs safe migrations and `sync`, including Schema v4 Context graph manifest creation when missing. |
-| Context validation | `npx sdlc-harness validate-context`, `make validate-context` | Checks required recovery sections, Context graph metadata, declared paths/roles and fake test-execution claims. |
+| Context validation | `npx sdlc-harness validate-context`, `make validate-context` | Checks required project recovery fields, Context graph metadata, declared paths/roles and fake test-execution claims. |
 | Diagnostics | `npx sdlc-harness doctor` | Reports Harness root, package version, schema version and required Minimal Context paths. |
 | Package source checks | `sdlc-harness package sync-source`, `sdlc-harness package check-source` | Maintainer-only commands for keeping package canonical assets aligned with the source workspace. |
 
@@ -66,7 +66,7 @@ npx sdlc-harness init --adopt
 
 `project_context/context.toml` is the Schema v4 Context graph manifest. `init` creates a default `main` area for ordinary projects, and `upgrade` creates a baseline manifest for existing projects by registering current `project_context/areas/**/*.md` files as areas. Larger projects can add `[[areas]]` and `[[context]]` entries with role, trigger/read policy, default children and monorepo boundary metadata such as `forbidden_runtime_dependencies`.
 
-`project_context/areas/<unit>.md` should contain area, domain or subdomain context by default:
+`project_context/areas/<unit>.md` should contain area, domain or subdomain context by default. Complex projects can freely nest context nodes under `areas/`, such as `areas/<area>/README.md`, `areas/<area>/contracts/*.md`, `areas/<area>/foundation/*.md` or other durable context files:
 
 - responsibility
 - user / system contract
@@ -76,7 +76,7 @@ npx sdlc-harness init --adopt
 - test entry points
 - open risks
 
-Other context files under `project_context/**` can declare `context_role` in front matter or receive a role from `context.toml`. Roles are semantic labels for agent reading and authoring behavior; `validate-context` checks graph structure, paths and field shapes instead of enforcing a writing template for every role.
+Other context files under `project_context/**` can declare `context_role` in front matter or receive a role from `context.toml`. Roles are semantic labels for agent reading and authoring behavior; `validate-context` checks graph structure, paths and field shapes instead of enforcing a writing template for every role. Supported roles are `global`, `architecture`, `area`, `domain`, `subdomain`, `contract`, `foundation`, `archive`, `implementation-index` and `decision-rationale`.
 
 Automatic migration moves legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md`, creates a usable graph baseline and does not infer deep semantic roles. If an existing deep area file is really a foundation, contract, archive or implementation index, a later agent should update `context.toml` explicitly. Boundary rules are metadata only; Harness does not scan source imports or build a runtime dependency graph.
 

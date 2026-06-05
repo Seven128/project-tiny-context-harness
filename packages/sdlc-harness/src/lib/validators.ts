@@ -68,16 +68,6 @@ const ARCHITECTURE_REQUIRED_SECTIONS = sectionSpecs([
   "Open Risks"
 ]);
 
-const AREA_REQUIRED_SECTIONS = sectionSpecs([
-  "Responsibility",
-  "User / System Contract",
-  "Core Data / API / State",
-  "Key Constraints",
-  "Code Entry Points",
-  "Test Entry Points",
-  "Open Risks"
-]);
-
 const ROLE_ALIASES: Record<string, ContextRole> = {
   global: "global",
   architecture: "architecture",
@@ -93,7 +83,6 @@ const ROLE_ALIASES: Record<string, ContextRole> = {
   decision_rationale: "decision-rationale"
 };
 
-const AREA_LIKE_ROLES = new Set<ContextRole>(["area", "domain", "subdomain"]);
 const VALID_READ_POLICIES = new Set(["default", "always", "optional", "on-demand", "never-default"]);
 
 const FAKE_VERIFICATION_PATTERNS = [
@@ -206,11 +195,7 @@ async function validateContext(projectRoot: string): Promise<ValidatorReport> {
 }
 
 function validateContextFile(file: string, content: string, role: ContextRole, errors: string[]): void {
-  if (AREA_LIKE_ROLES.has(role)) {
-    assertSections(file, content, AREA_REQUIRED_SECTIONS, errors);
-    assertSectionHasContent(file, content, sectionSpec("Code Entry Points"), errors);
-    assertSectionHasContent(file, content, sectionSpec("Test Entry Points"), errors);
-  }
+  void role;
   assertNoFakeVerification(file, content, errors);
 }
 

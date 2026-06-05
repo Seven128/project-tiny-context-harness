@@ -37,9 +37,13 @@ test("validate-context accepts role-based context graph entries", async () => {
   }
 });
 
-test("validate-context treats non-area roles as semantic labels", async () => {
+test("validate-context treats context roles as semantic labels", async () => {
   const root = await createContextProject({
     manifest: completeContextManifest(),
+    module: `# Main Area
+
+This compact area context is intentionally not forced into a section template.
+`,
     extraFiles: {
       "project_context/areas/main/foundation/trading.md": `---
 context_role: foundation

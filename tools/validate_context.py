@@ -24,20 +24,6 @@ ARCHITECTURE_CHECKS = [
     ("verification implications", ["verification implications", "验证影响", "验证入口"]),
 ]
 
-AREA_CHECKS = [
-    ("responsibility", ["responsibility", "模块职责", "职责"]),
-    ("user or system contract", ["user / system contract", "system contract", "契约"]),
-    ("code entry points", ["code entry", "代码入口"]),
-    ("test entry points", ["test entry", "测试入口"]),
-    ("key constraints", ["key constraints", "关键约束", "约束"]),
-]
-
-ROLE_CHECKS = {
-    "area": AREA_CHECKS,
-    "domain": AREA_CHECKS,
-    "subdomain": AREA_CHECKS,
-}
-
 VALID_ROLES = {
     "global",
     "architecture",
@@ -194,8 +180,8 @@ def validate_manifest(errors):
             errors.append(f"project_context/context.toml line {area['line']} default must be a boolean")
         has_default_area = has_default_area or default_area is True
         deps = area.get("forbidden_runtime_dependencies")
-        if deps is not None and not isinstance(deps, list):
-            errors.append(f"project_context/context.toml line {area['line']} forbidden_runtime_dependencies must be an array")
+        if deps is not None and not is_string_array(deps):
+            errors.append(f"project_context/context.toml line {area['line']} forbidden_runtime_dependencies must be an array of strings")
         add_manifest_role(area, "area", roles, errors)
     if manifest["areas"] and not has_default_area:
         errors.append("project_context/context.toml must mark one [[areas]] entry with default = true")
@@ -207,11 +193,16 @@ def validate_manifest(errors):
         read_policy = context.get("read_policy")
         if read_policy is not None and read_policy not in READ_POLICIES:
             errors.append(f"project_context/context.toml line {context['line']} has unsupported read_policy: {read_policy}")
-        triggers = context.get("triggers")
-        if triggers is not None and not isinstance(triggers, list):
-            errors.append(f"project_context/context.toml line {context['line']} triggers must be an array")
+        for key in ["triggers", "default_children"]:
+            value = context.get(key)
+            if value is not None and not is_string_array(value):
+                errors.append(f"project_context/context.toml line {context['line']} {key} must be an array of strings")
         add_manifest_role(context, role, roles, errors)
     return roles
+
+
+def is_string_array(value):
+    return isinstance(value, list) and all(isinstance(item, str) for item in value)
 
 
 def schema_requires_manifest():
@@ -268,11 +259,8 @@ def main():
         if read_policy and read_policy not in READ_POLICIES:
             errors.append(f"{rel} has unsupported read_policy: {read_policy}")
         role = manifest_roles.get(rel) or front_matter_role
-        if role is None or role in {"global", "architecture"}:
-            continue
-        if role in ROLE_CHECKS:
-            validate_checks(rel, text, ROLE_CHECKS[role], errors)
-        checked += 1
+        if role is not None and role not in {"global", "architecture"}:
+            checked += 1
 
     if errors:
         for error in errors:

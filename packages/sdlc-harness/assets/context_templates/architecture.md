@@ -8,7 +8,7 @@ This is the restrained architecture context. Keep only facts that help a fresh a
 
 ## Component Map
 
-- List the smallest useful set of components/modules and how they relate.
+- List the smallest useful set of components, areas or context units and how they relate.
 
 ## Data / Control Flow
 

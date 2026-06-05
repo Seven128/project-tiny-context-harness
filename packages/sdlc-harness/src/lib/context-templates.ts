@@ -65,7 +65,7 @@ export function architectureContextTemplate(): string {
     "",
     "## Component Map",
     "",
-    "- List the smallest useful set of components/modules and how they relate.",
+    "- List the smallest useful set of components, areas or context units and how they relate.",
     "",
     "## Data / Control Flow",
     "",
