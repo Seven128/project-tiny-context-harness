@@ -66,7 +66,7 @@
         "label": "CLI smoke evidence exists",
         "evidence_mode": "any",
         "evidence": [
-          { "path": "project_context/modules/*.md", "contains_any": ["CLI smoke", "npm test", "node"] },
+          { "path": "project_context/areas/*.md", "contains_any": ["CLI smoke", "npm test", "node"] },
           { "path": ".benchmark/**", "contains_any": ["CLI smoke", "npm test", "node"] }
         ]
       },
@@ -103,7 +103,7 @@
         "label": "Test report or transcript records executed gates",
         "evidence_mode": "any",
         "evidence": [
-          { "path": "project_context/modules/*.md", "contains_any": ["PASS", "Test Matrix", "Regression Evidence"] },
+          { "path": "project_context/areas/*.md", "contains_any": ["PASS", "Test Matrix", "Regression Evidence"] },
           { "path": ".benchmark/**", "contains_any": ["PASS", "npm test", "smoke"] }
         ]
       }

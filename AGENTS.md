@@ -7,7 +7,7 @@
 - 全局上下文：`project_context/global.md`
 - 架构上下文：`project_context/architecture.md`（克制、最小，只记录系统边界、组件关系和长期约束）
 - Context 图谱：`project_context/context.toml`（Schema v4 默认事实源；声明 area/context_unit、role、触发条件和按需读取策略）
-- 模块 / context unit 上下文：`project_context/modules/**/*.md`
+- Area / context unit 上下文：`project_context/areas/**/*.md`
 - 产品质量事实：项目代码、测试、smoke、CI、hidden probe 或人工验收
 
 ## 工作规则
@@ -15,7 +15,7 @@
 1. 新会话、继续工作、debug 或需求变更时，先读 `project_context/global.md`、`project_context/architecture.md` 和 `project_context/context.toml`；按其中 default area 和触发条件读取相关 context。
 2. Harness 只维护上下文质量，不替项目证明产品质量；产品质量由项目自己的测试、probe、CI 或人工验收负责。
 3. 长期事实默认只写入 `project_context/**`。不要默认新增 PRD、tech plan、ADR、implementation doc、review/test/release 文档。
-4. ADR 内容降级为 Context 的 `Design Rationale`；实现说明优先进入代码注释、测试名或模块 Context 的关键约束。
+4. ADR 内容降级为 Context 的 `Design Rationale`；实现说明优先进入代码注释、测试名或 area Context 的关键约束。
 5. `validate-context` 只检查 Context 是否足够支持恢复上下文，并阻止伪造“测试已通过”的说法。
 6. `sync` 只刷新 managed guidance、Skill、Context template 和工具。
 7. 用户可通过 `.codex/pjsdlc_managed/override_skills/context_product_plan.md` 和 `.codex/pjsdlc_managed/override_skills/context_uiux_design.md` 定制本项目的产品方案 / UIUX Skill；`sync` 会合并到 `.codex/skills/**`。
@@ -115,7 +115,7 @@ Karpathy 编码准则
 - 项目全局上下文：`project_context/global.md`
 - 架构上下文：`project_context/architecture.md`（克制、最小，只记录系统边界、组件关系和长期约束）
 - Context 图谱：`project_context/context.toml`（Schema v4 默认事实源；声明 area/context_unit、role、触发条件和按需读取策略）
-- 模块 / context unit 上下文：`project_context/modules/**/*.md`
+- 模块 / context unit 上下文：`project_context/areas/**/*.md`
 - 产品质量事实：项目自己的代码、测试、smoke、CI、hidden probe 或人工验收
 
 ## 工作规则

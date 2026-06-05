@@ -5,13 +5,13 @@
 [[areas]]
 id = "main"
 root = "."
-context = "project_context/modules/main.md"
+context = "project_context/areas/main.md"
 kind = "app"
 default = true
 
 # Example optional node:
 # [[context]]
-# path = "project_context/modules/main/contracts/api.md"
+# path = "project_context/areas/main/contracts/api.md"
 # role = "contract"
 # read_policy = "on-demand"
 # triggers = ["api", "contract", "compatibility"]

@@ -23,8 +23,8 @@ test("validate-context accepts role-based context graph entries", async () => {
   const root = await createContextProject({
     manifest: completeContextManifest(),
     extraFiles: {
-      "project_context/modules/main/foundation/trading.md": completeFoundationContext(),
-      "project_context/modules/main/contracts/order.md": completeContractContext()
+      "project_context/areas/main/foundation/trading.md": completeFoundationContext(),
+      "project_context/areas/main/contracts/order.md": completeContractContext()
     }
   });
   try {
@@ -37,11 +37,11 @@ test("validate-context accepts role-based context graph entries", async () => {
   }
 });
 
-test("validate-context applies role-specific schemas", async () => {
+test("validate-context treats non-area roles as semantic labels", async () => {
   const root = await createContextProject({
     manifest: completeContextManifest(),
     extraFiles: {
-      "project_context/modules/main/foundation/trading.md": `---
+      "project_context/areas/main/foundation/trading.md": `---
 context_role: foundation
 read_policy: optional
 ---
@@ -63,12 +63,12 @@ read_policy: optional
 
 - Source assertions live here.
 `,
-      "project_context/modules/main/contracts/order.md": completeContractContext()
+      "project_context/areas/main/contracts/order.md": completeContractContext()
     }
   });
   try {
     const report = await runValidator(root, "validate-context");
-    assert.match(report.errors.join("\n"), /Derived Contracts/);
+    assert.deepEqual(report.errors, []);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -89,19 +89,19 @@ test("validate-context rejects invalid context graph metadata", async () => {
     manifest: `[[areas]]
 id = "main"
 root = "."
-context = "project_context/modules/main.md"
+context = "project_context/areas/main.md"
 kind = "app"
 default = true
 forbidden_runtime_dependencies = "domains/intelhub"
 
 [[context]]
-path = "project_context/modules/main/foundation/trading.md"
+path = "project_context/areas/main/foundation/trading.md"
 role = "glossary"
 read_policy = "sometimes"
 triggers = ["trading"]
 `,
     extraFiles: {
-      "project_context/modules/main/foundation/trading.md": completeFoundationContext()
+      "project_context/areas/main/foundation/trading.md": completeFoundationContext()
     }
   });
   try {
@@ -132,7 +132,7 @@ test("validate-context rejects missing required recovery facts", async () => {
     const report = await runValidator(root, "validate-context");
     assert.match(report.errors.join("\n"), /Non-goals \/ Boundaries/);
     assert.match(report.errors.join("\n"), /Next Safe Action/);
-    assert.match(report.errors.join("\n"), /Module Index/);
+    assert.match(report.errors.join("\n"), /Context Index/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -177,7 +177,7 @@ test("old stage validators are not supported by Minimal Context Harness", async 
 async function createContextProject(overrides = {}) {
   const root = await mkdtemp(path.join(os.tmpdir(), "sdlc-harness-context-validator-"));
   await mkdir(path.join(root, ".agent", "pjsdlc_managed"), { recursive: true });
-  await mkdir(path.join(root, "project_context", "modules"), { recursive: true });
+  await mkdir(path.join(root, "project_context", "areas"), { recursive: true });
   await writeFile(
     path.join(root, ".agent", "config.yaml"),
     `core:
@@ -197,8 +197,8 @@ async function createContextProject(overrides = {}) {
     "utf8"
   );
   await writeFile(
-    path.join(root, "project_context", "modules", "main.md"),
-    overrides.module ?? completeModuleContext(),
+    path.join(root, "project_context", "areas", "main.md"),
+    overrides.module ?? completeAreaContext(),
     "utf8"
   );
   const manifest = overrides.manifest === undefined ? completeDefaultContextManifest() : overrides.manifest;
@@ -247,11 +247,11 @@ function completeGlobalContext() {
 
 ## Next Safe Action
 
-- Read project_context/global.md, then the affected module context before changing code.
+- Read project_context/global.md, then the affected area context before changing code.
 
-## Module Index
+## Context Index
 
-- [main](modules/main.md)
+- [main](areas/main.md)
 `;
 }
 
@@ -288,8 +288,8 @@ function completeArchitectureContext() {
 `;
 }
 
-function completeModuleContext() {
-  return `# Module Context: main
+function completeAreaContext() {
+  return `# Area Context: main
 
 ## Responsibility
 
@@ -301,7 +301,7 @@ function completeModuleContext() {
 
 ## Core Data / API / State
 
-- project_context/global.md, project_context/context.toml and project_context/modules/**/*.md are the durable facts.
+- project_context/global.md, project_context/context.toml and project_context/areas/**/*.md are the durable facts.
 
 ## Key Constraints
 
@@ -325,18 +325,18 @@ function completeContextManifest() {
   return `[[areas]]
 id = "main"
 root = "."
-context = "project_context/modules/main.md"
+context = "project_context/areas/main.md"
 kind = "app"
 default = true
 
 [[context]]
-path = "project_context/modules/main/foundation/trading.md"
+path = "project_context/areas/main/foundation/trading.md"
 role = "foundation"
 read_policy = "optional"
 triggers = ["trading", "foundation"]
 
 [[context]]
-path = "project_context/modules/main/contracts/order.md"
+path = "project_context/areas/main/contracts/order.md"
 role = "contract"
 triggers = ["order", "contract", "compatibility"]
 `;
@@ -346,7 +346,7 @@ function completeDefaultContextManifest() {
   return `[[areas]]
 id = "main"
 root = "."
-context = "project_context/modules/main.md"
+context = "project_context/areas/main.md"
 kind = "app"
 default = true
 `;

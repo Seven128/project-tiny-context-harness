@@ -1,6 +1,6 @@
 import path from "node:path";
 import { CONTEXT_MANIFEST_PATH, defaultContextManifestTemplate } from "./context-manifest.js";
-import { architectureContextTemplate, globalContextTemplate, moduleContextTemplate } from "./context-templates.js";
+import { architectureContextTemplate, areaContextTemplate, globalContextTemplate } from "./context-templates.js";
 import { writeConfigIfMissing } from "./config.js";
 import { createDesignMdIfMissing, DESIGN_MD_PATH } from "./design-md.js";
 import { harnessConfigPath, harnessRoot } from "./harness-root.js";
@@ -62,13 +62,13 @@ async function projectHasExistingFiles(projectRoot: string): Promise<boolean> {
 }
 
 async function createProjectContext(projectRoot: string, report: string[]): Promise<void> {
-  const modulesRoot = path.join(projectRoot, "project_context", "modules");
-  await ensureDir(modulesRoot);
+  const areasRoot = path.join(projectRoot, "project_context", "areas");
+  await ensureDir(areasRoot);
   const files: Array<[string, string]> = [
     [CONTEXT_MANIFEST_PATH, defaultContextManifestTemplate()],
     ["project_context/global.md", globalContextTemplate()],
     ["project_context/architecture.md", architectureContextTemplate()],
-    ["project_context/modules/main.md", moduleContextTemplate("main")]
+    ["project_context/areas/main.md", areaContextTemplate("main")]
   ];
   for (const [relative, content] of files) {
     const target = path.join(projectRoot, relative);

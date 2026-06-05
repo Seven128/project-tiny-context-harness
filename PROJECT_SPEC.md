@@ -17,7 +17,7 @@ Default durable facts:
 - `project_context/global.md`
 - `project_context/architecture.md`
 - `project_context/context.toml` as the Schema v4 Context graph manifest
-- `project_context/modules/<unit>.md`
+- `project_context/areas/<unit>.md`
 - `DESIGN.md` for visual identity and design tokens when a UI project needs a design system
 - code, tests and necessary code comments
 - default Context authoring Skills for product planning, UI/UX design and development engineering
@@ -38,7 +38,7 @@ The stage-based Harness was built from a reasonable premise: if an agent explici
 
 Benchmark pilots changed the default product judgment. The workflow’s fact-source writes, stage decisions, phase transitions and gates are real process cost; they consume time and tokens even when the final product quality is the same. At the same time, modern coding agents have internalized much of the ordinary single-task loop: understanding a compact requirement, choosing a local design, editing code, running tests and repairing simple failures. For ordinary and medium-complexity work, forcing a full SDLC document chain duplicates work the model can already do well.
 
-The part that remains clearly valuable is not the ceremony itself. It is durable, compact context that survives a new conversation: project goal, non-goals, design rationale, restrained architecture context, module responsibilities, code entry points, test entry points, current state and next safe action. Those facts are hard to recover from code alone and expensive to re-explain every time.
+The part that remains clearly valuable is not the ceremony itself. It is durable, compact context that survives a new conversation: project goal, non-goals, design rationale, restrained architecture context, area responsibilities, code entry points, test entry points, current state and next safe action. Those facts are hard to recover from code alone and expensive to re-explain every time.
 
 Therefore the current design keeps the product goal unchanged, but narrows the default mechanism:
 
@@ -66,7 +66,7 @@ In short: Harness no longer tries to externalize the whole SDLC by default. It m
 - verification entry points
 - current state
 - next safe action
-- module index
+- context index
 
 `project_context/architecture.md` stores restrained architecture facts:
 
@@ -83,10 +83,10 @@ In short: Harness no longer tries to externalize the whole SDLC by default. It m
 - ordinary projects default to one `main` area rooted at `.`;
 - monorepo or product-family projects can declare multiple `area` / `context_unit` entries;
 - context nodes can declare role, trigger/read policy, default children and optional boundary metadata;
-- `upgrade` creates a conservative baseline manifest for existing projects by registering current module Context files as areas;
+- `upgrade` creates a conservative baseline manifest for existing projects by registering current area Context files as areas;
 - boundary support is metadata validation only, not a replacement for project-specific import/path checks.
 
-`project_context/modules/<unit>.md` stores area, domain or subdomain facts by default:
+`project_context/areas/<unit>.md` stores area, domain or subdomain facts by default:
 
 - responsibility
 - user / system contract
@@ -96,7 +96,7 @@ In short: Harness no longer tries to externalize the whole SDLC by default. It m
 - test entry points
 - open risks
 
-Additional `project_context/**` Markdown files can declare `context_role` in front matter or receive a role from `context.toml`. `validate-context` applies role-specific schemas for foundations, archives, contracts, implementation indexes and decision rationales so non-module context does not need to fit the module schema. Automatic migration does not infer those semantic roles or rewrite user-authored Context Markdown; a later agent should refine the manifest explicitly when a migrated area is really a foundation, contract, archive or implementation index.
+Additional `project_context/**` Markdown files can declare `context_role` in front matter or receive a role from `context.toml`. Roles are semantic labels for agent reading and authoring behavior; `validate-context` checks graph structure, paths and field shapes instead of enforcing a writing template for every role. Automatic migration moves legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md` and does not infer deep semantic roles; a later agent should refine the manifest explicitly when a migrated area is really a foundation, contract, archive or implementation index.
 
 The Context should be compact and semantically split. It should not duplicate code, test logs, release ledgers or implementation narration that the source already exposes. Former ADR content is downgraded into `Design Rationale`; implementation documentation is downgraded into code comments, test names and short Context constraints when the code does not make the fact obvious.
 
@@ -110,7 +110,7 @@ The default product planning, UI/UX and development engineer Skills are a thin a
 - `project_context/context.toml`
 - `project_context/global.md`
 - `project_context/architecture.md`
-- `project_context/modules/main.md`
+- `project_context/areas/main.md`
 - `<harnessRoot>/config.yaml`
 - `<harnessRoot>/skills/context_product_plan/SKILL.md`
 - `<harnessRoot>/skills/context_uiux_design/SKILL.md`

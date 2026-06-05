@@ -12,13 +12,13 @@ export function defaultContextManifestTemplate(): string {
     "[[areas]]",
     "id = \"main\"",
     "root = \".\"",
-    "context = \"project_context/modules/main.md\"",
+    "context = \"project_context/areas/main.md\"",
     "kind = \"app\"",
     "default = true",
     "",
     "# Example optional node:",
     "# [[context]]",
-    "# path = \"project_context/modules/main/contracts/api.md\"",
+    "# path = \"project_context/areas/main/contracts/api.md\"",
     "# role = \"contract\"",
     "# read_policy = \"on-demand\"",
     "# triggers = [\"api\", \"contract\", \"compatibility\"]",
@@ -26,35 +26,40 @@ export function defaultContextManifestTemplate(): string {
   ].join("\n");
 }
 
-export async function contextManifestFromExistingModules(projectRoot: string): Promise<string> {
-  const modulesRoot = path.join(projectRoot, "project_context", "modules");
-  const modules = (await listFiles(modulesRoot))
+export async function contextManifestFromExistingAreas(projectRoot: string): Promise<string> {
+  const areasRoot = path.join(projectRoot, "project_context", "areas");
+  const areas = (await listFiles(areasRoot))
     .filter((file) => file.endsWith(".md"))
     .sort();
 
-  if (modules.length === 0) {
+  if (areas.length === 0) {
     return defaultContextManifestTemplate();
   }
 
   const lines = [
     "# Minimal Context graph manifest.",
-    "# Auto-created by upgrade from existing project_context/modules/**/*.md files.",
-    "# Review deep or non-module context and move it to explicit [[context]] role entries",
+    "# Auto-created by upgrade from existing project_context/areas/**/*.md files.",
+    "# Review deep or non-area context and move it to explicit [[context]] role entries",
     "# such as foundation, contract, archive, implementation-index or decision-rationale when needed.",
     ""
   ];
 
-  for (const modulePath of modules) {
-    const relativeToModules = path.relative(modulesRoot, modulePath).split(path.sep).join("/");
-    const contextPath = `project_context/modules/${relativeToModules}`;
-    const id = moduleContextId(relativeToModules);
+  const areaEntries = areas.map((areaPath) => {
+    const relativeToAreas = path.relative(areasRoot, areaPath).split(path.sep).join("/");
+    const contextPath = `project_context/areas/${relativeToAreas}`;
+    const id = contextUnitId(relativeToAreas);
+    return { contextPath, id };
+  });
+  const defaultId = areaEntries.some((entry) => entry.id === "main") ? "main" : areaEntries[0]?.id;
+
+  for (const { contextPath, id } of areaEntries) {
     lines.push(
       "[[areas]]",
       `id = "${id}"`,
       "root = \".\"",
       `context = "${contextPath}"`,
       `kind = "${id === "main" ? "app" : "context-unit"}"`,
-      id === "main" ? "default = true" : "default = false",
+      id === defaultId ? "default = true" : "default = false",
       ""
     );
   }
@@ -62,8 +67,8 @@ export async function contextManifestFromExistingModules(projectRoot: string): P
   return lines.join("\n");
 }
 
-function moduleContextId(relativeToModules: string): string {
-  const withoutExtension = relativeToModules.replace(/\.md$/i, "");
+function contextUnitId(relativeToAreas: string): string {
+  const withoutExtension = relativeToAreas.replace(/\.md$/i, "");
   const parts = withoutExtension.split("/");
   const last = parts.at(-1)?.toLowerCase();
   const semanticParts = last === "readme" || last === "index" ? parts.slice(0, -1) : parts;

@@ -9,7 +9,7 @@
 
 - The package does not replace project tests, CI, review or human acceptance.
 - New consumer projects should not default to lifecycle phases, stage task state, stage skills, stage work-product trees or phase gates.
-- `sync` refreshes managed assets and default Context authoring Skills; migration support has been removed after user migrations completed.
+- `sync` refreshes managed assets and default Context authoring Skills; legacy stage semantic migration has been removed, while safe Schema v4 upgrade migrations remain.
 - Legacy stage assets are not shipped as a runnable default or compatibility layer.
 
 ## Background
@@ -23,8 +23,8 @@
 - The durable value with the clearest expected return is context recovery, not forcing a full SDLC document chain for every project.
 - The historical stage-based Harness externalized the whole SDLC through lifecycle state, plan tasks, PRD / tech plan / implementation / review / test / release artifacts and phase gates. Benchmark pilots showed those writes, transitions and gates are objective time/token cost; details are summarized in `PROJECT_SPEC.md`.
 - Modern coding agents have internalized much of the ordinary single-task loop: compact requirement understanding, local design choice, code editing, test execution and simple repair. The default Harness should not duplicate that capability with broad ceremonies.
-- ADR-level rationale is downgraded into `project_context/global.md#Design Rationale` or module Context when it still affects future work.
-- Implementation facts should live in code, tests, comments and short module Context constraints when the code is not self-explanatory.
+- ADR-level rationale is downgraded into `project_context/global.md#Design Rationale` or area Context when it still affects future work.
+- Implementation facts should live in code, tests, comments and short area Context constraints when the code is not self-explanatory.
 - Product/UIUX/development engineer Skill customization uses `<harnessRoot>/pjsdlc_managed/override_skills/*.md`; sync merges those local rules into `<harnessRoot>/skills/**`.
 - Architecture Context is intentionally restrained: it records durable boundaries, component relationships and constraints, not implementation narration.
 - Schema v4 makes the lightweight Context graph the default: `project_context/context.toml` declares areas/context units, role-based context files, read triggers and monorepo boundary metadata while ordinary projects keep one default `main` area.
@@ -44,11 +44,11 @@
 ## Current State
 
 - vNext implementation is Minimal Context Harness.
-- `init` creates `project_context/context.toml` with one default `main` area; `upgrade` creates it for existing projects by registering current module Context files as areas.
+- `init` creates `project_context/context.toml` with one default `main` area at `project_context/areas/main.md`; `upgrade` migrates legacy `project_context/modules/**/*.md` into `project_context/areas/**/*.md` and registers area Context files in the manifest.
 - v4 `validate-context` requires `project_context/context.toml`; older config versions should run `upgrade` before relying on the v4 gate.
-- `validate-context` supports role-based validation for area/domain/subdomain, foundation, archive, contract, implementation-index and decision-rationale context files.
+- `validate-context` validates the Context graph structure, area recovery sections, role names, paths and field shapes; non-area roles are semantic labels rather than writing-template gates.
 - Old stage-based assets, state files and work-product trees are removed from the current source tree.
-- Historical stage design is summarized in `PROJECT_SPEC.md`; migration support has been removed after user migrations completed.
+- Historical stage design is summarized in `PROJECT_SPEC.md`; legacy stage semantic migration support has been removed after user migrations completed.
 - Delivery benchmark prompts should evaluate Minimal Context behavior for new Harness runs; old stage-based public result data has been removed.
 
 ## Next Safe Action
@@ -56,7 +56,11 @@
 - When changing public package behavior, update CLI/source assets, README, package README, PROJECT_SPEC, Context, tests and package source sync together.
 - Run focused tests first, then package source sync/check and context validation before handoff.
 
-## Module Index
+## Context Index
 
-- [harness-package](modules/harness-package.md)
-- [delivery-benchmark](modules/delivery-benchmark.md)
+- [harness-package](areas/harness-package.md)
+- [delivery-benchmark](areas/delivery-benchmark.md)
+
+## Context Graph
+
+- See `project_context/context.toml` for area/context_unit roles, read policy and boundary metadata.

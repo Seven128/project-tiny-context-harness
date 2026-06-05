@@ -3,12 +3,12 @@
 [[areas]]
 id = "harness-package"
 root = "packages/sdlc-harness"
-context = "project_context/modules/harness-package.md"
+context = "project_context/areas/harness-package.md"
 kind = "npm-package"
 default = true
 
 [[areas]]
 id = "delivery-benchmark"
 root = "examples/delivery-benchmark"
-context = "project_context/modules/delivery-benchmark.md"
+context = "project_context/areas/delivery-benchmark.md"
 kind = "benchmark"

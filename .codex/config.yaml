@@ -1,29 +1,26 @@
 core:
-  package: "agent-project-sdlc"
+  package: agent-project-sdlc
   schema_version: "4"
-
 managed_files:
-  - path: "AGENTS.md"
-    strategy: "merge-block"
-  - path: "Makefile"
-    strategy: "merge-block"
-  - path: ".codex/skills"
-    strategy: "managed"
-  - path: ".codex/pjsdlc_managed/context_templates"
-    strategy: "managed"
-  - path: ".codex/pjsdlc_managed/make/sdlc-harness.mk"
-    strategy: "managed"
-  - path: "tools"
-    strategy: "managed"
-  - path: ".github/workflows/harness.yml"
-    strategy: "create-if-missing"
-
+  - path: AGENTS.md
+    strategy: merge-block
+  - path: Makefile
+    strategy: merge-block
+  - path: .codex/skills
+    strategy: managed
+  - path: .codex/pjsdlc_managed/context_templates
+    strategy: managed
+  - path: .codex/pjsdlc_managed/make/sdlc-harness.mk
+    strategy: managed
+  - path: tools
+    strategy: managed
+  - path: .github/workflows/harness.yml
+    strategy: create-if-missing
 local_overrides: []
-
 never_overwrite:
-  - "project_context/**"
-  - "DESIGN.md"
-  - ".work_products/**"
-  - ".codex/state/**"
-  - "src/**"
-  - "tests/**"
+  - project_context/**
+  - DESIGN.md
+  - src/**
+  - tests/**
+  - .work_products/**
+  - .codex/state/**

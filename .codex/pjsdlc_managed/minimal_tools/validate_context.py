@@ -13,7 +13,7 @@ GLOBAL_CHECKS = [
     ("verification entry points", ["verification entry", "验证入口", "测试入口"]),
     ("current state", ["current state", "当前状态"]),
     ("next safe action", ["next safe action", "下一步安全动作"]),
-    ("module index", ["module index", "模块索引"]),
+    ("context index", ["context index", "module index", "上下文索引", "模块索引"]),
 ]
 
 ARCHITECTURE_CHECKS = [
@@ -36,38 +36,19 @@ ROLE_CHECKS = {
     "area": AREA_CHECKS,
     "domain": AREA_CHECKS,
     "subdomain": AREA_CHECKS,
-    "foundation": [
-        ("role", ["## role", "角色"]),
-        ("use when", ["use when", "使用条件"]),
-        ("do not use for", ["do not use for", "不要用于"]),
-        ("derived contracts", ["derived contracts", "派生契约"]),
-        ("source body", ["source body", "源正文"]),
-    ],
-    "archive": [
-        ("archive role", ["archive role", "归档角色"]),
-        ("external location policy", ["external location policy", "外部位置"]),
-        ("read when", ["read when", "读取条件"]),
-        ("non-uses", ["non-uses", "不用于"]),
-    ],
-    "contract": [
-        ("producer", ["producer", "生产者"]),
-        ("consumer", ["consumer", "消费者"]),
-        ("schema/shape", ["schema/shape", "schema / shape", "结构"]),
-        ("compatibility", ["compatibility", "兼容"]),
-        ("tests", ["## tests", "测试"]),
-    ],
-    "implementation-index": [
-        ("owned paths", ["owned paths", "拥有路径"]),
-        ("responsibilities", ["responsibilities", "职责"]),
-        ("tests", ["## tests", "测试"]),
-        ("known risks", ["known risks", "已知风险"]),
-    ],
-    "decision-rationale": [
-        ("decision", ["decision", "决策"]),
-        ("rationale", ["rationale", "理由"]),
-        ("applies to", ["applies to", "适用"]),
-        ("tradeoffs", ["tradeoffs", "取舍"]),
-    ],
+}
+
+VALID_ROLES = {
+    "global",
+    "architecture",
+    "area",
+    "domain",
+    "subdomain",
+    "foundation",
+    "archive",
+    "contract",
+    "implementation-index",
+    "decision-rationale",
 }
 
 ROLE_ALIASES = {
@@ -95,7 +76,7 @@ def has_any(text, terms):
 
 def normalize_role(value):
     role = ROLE_ALIASES.get(value.strip().lower(), value.strip().lower())
-    return role if role in ROLE_CHECKS or role in {"global", "architecture"} else None
+    return role if role in VALID_ROLES else None
 
 
 def parse_front_matter(text):
@@ -203,14 +184,21 @@ def validate_manifest(errors):
     manifest = parse_manifest(manifest_path, errors)
     if not manifest["areas"]:
         errors.append("project_context/context.toml must declare at least one [[areas]] entry")
+    has_default_area = False
     for area in manifest["areas"]:
         for key in ["id", "root", "context"]:
             if not isinstance(area.get(key), str):
                 errors.append(f"project_context/context.toml line {area['line']} must include string field {key}")
+        default_area = area.get("default")
+        if default_area is not None and not isinstance(default_area, bool):
+            errors.append(f"project_context/context.toml line {area['line']} default must be a boolean")
+        has_default_area = has_default_area or default_area is True
         deps = area.get("forbidden_runtime_dependencies")
         if deps is not None and not isinstance(deps, list):
             errors.append(f"project_context/context.toml line {area['line']} forbidden_runtime_dependencies must be an array")
         add_manifest_role(area, "area", roles, errors)
+    if manifest["areas"] and not has_default_area:
+        errors.append("project_context/context.toml must mark one [[areas]] entry with default = true")
     for context in manifest["context"]:
         role = normalize_role(context.get("role", "")) if isinstance(context.get("role"), str) else None
         if role is None:
@@ -222,8 +210,6 @@ def validate_manifest(errors):
         triggers = context.get("triggers")
         if triggers is not None and not isinstance(triggers, list):
             errors.append(f"project_context/context.toml line {context['line']} triggers must be an array")
-        if (role in {"foundation", "archive"} or read_policy in {"optional", "on-demand"}) and not context.get("read_when") and not triggers:
-            errors.append(f"project_context/context.toml line {context['line']} must include read_when or triggers for on-demand context")
         add_manifest_role(context, role, roles, errors)
     return roles
 
@@ -265,11 +251,6 @@ def main():
         validate_checks("project_context/architecture.md", architecture_path.read_text(encoding="utf-8"), ARCHITECTURE_CHECKS, errors)
 
     manifest_roles = validate_manifest(errors)
-    modules_root = ROOT / "project_context/modules"
-    module_files = sorted(modules_root.rglob("*.md")) if modules_root.exists() else []
-    if not module_files:
-        errors.append("No module context files found in project_context/modules/")
-
     context_root = ROOT / "project_context"
     context_files = sorted(context_root.rglob("*.md")) if context_root.exists() else []
     checked = 0
@@ -287,11 +268,10 @@ def main():
         if read_policy and read_policy not in READ_POLICIES:
             errors.append(f"{rel} has unsupported read_policy: {read_policy}")
         role = manifest_roles.get(rel) or front_matter_role
-        if role is None and rel.startswith("project_context/modules/"):
-            role = "area"
         if role is None or role in {"global", "architecture"}:
             continue
-        validate_checks(rel, text, ROLE_CHECKS[role], errors)
+        if role in ROLE_CHECKS:
+            validate_checks(rel, text, ROLE_CHECKS[role], errors)
         checked += 1
 
     if errors:

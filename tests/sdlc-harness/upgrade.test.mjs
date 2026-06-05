@@ -88,7 +88,9 @@ never_overwrite:
   await stat(path.join(root, "project_context/global.md"));
   await stat(path.join(root, "project_context/context.toml"));
   await stat(path.join(root, "project_context/architecture.md"));
-  await stat(path.join(root, "project_context/modules/main.md"));
+  await stat(path.join(root, "project_context/areas/main.md"));
+  await stat(path.join(root, "project_context/areas/analytics/reporting.md"));
+  await assert.rejects(stat(path.join(root, "project_context/modules/analytics/reporting.md")));
   await stat(path.join(root, "DESIGN.md"));
   await stat(path.join(root, ".work_products/01_product/prd.md"));
   await stat(path.join(root, ".harness/state/lifecycle.yaml"));
@@ -104,9 +106,9 @@ never_overwrite:
   const migratedManifest = await readFile(path.join(root, "project_context/context.toml"), "utf8");
   assert.match(migratedManifest, /Auto-created by upgrade/);
   assert.match(migratedManifest, /id = "main"/);
-  assert.match(migratedManifest, /context = "project_context\/modules\/main\.md"/);
+  assert.match(migratedManifest, /context = "project_context\/areas\/main\.md"/);
   assert.match(migratedManifest, /id = "analytics-reporting"/);
-  assert.match(migratedManifest, /context = "project_context\/modules\/analytics\/reporting\.md"/);
+  assert.match(migratedManifest, /context = "project_context\/areas\/analytics\/reporting\.md"/);
 
   const agents = await readFile(path.join(root, "AGENTS.md"), "utf8");
   assert.match(agents, /Minimal Context Harness/);
@@ -135,7 +137,7 @@ default = true
   await writeFile(path.join(existingManifestRoot, "project_context/context.toml"), customManifest, "utf8");
   await runUpgrade(existingManifestRoot);
   const keptManifest = await readFile(path.join(existingManifestRoot, "project_context/context.toml"), "utf8");
-  assert.equal(keptManifest, customManifest);
+  assert.equal(keptManifest, customManifest.replace("project_context/modules/main.md", "project_context/areas/main.md"));
 
   await writeFile(
     path.join(missingSectionsRoot, "package.json"),
@@ -185,6 +187,8 @@ default = true
   const migratedGlobal = await readFile(path.join(missingSectionsRoot, "project_context/global.md"), "utf8");
   assert.match(migratedGlobal, /## Architecture Context/);
   assert.match(migratedGlobal, /## Context Graph/);
+  assert.match(migratedGlobal, /## Context Index/);
+  assert.match(migratedGlobal, /\(areas\/main\.md\)/);
 } finally {
   await rm(root, { recursive: true, force: true });
   await rm(existingManifestRoot, { recursive: true, force: true });

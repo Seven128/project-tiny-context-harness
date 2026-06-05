@@ -35,7 +35,7 @@ npx sdlc-harness init --adopt
 - `project_context/context.toml`
 - `project_context/global.md`
 - `project_context/architecture.md`
-- `project_context/modules/main.md`
+- `project_context/areas/main.md`
 - `<harnessRoot>/config.yaml`
 - `<harnessRoot>/skills/context_product_plan/SKILL.md`
 - `<harnessRoot>/skills/context_uiux_design/SKILL.md`
@@ -58,7 +58,7 @@ The three default Skills are Minimal Context authoring helpers. Explicit request
 | `npx sdlc-harness init` | Non-destructively installs Minimal Context Harness into the current project. |
 | `npx sdlc-harness sync` | Refreshes managed guidance, default Skills, Makefile include, tools and templates. It does not generate project semantics. |
 | `npx sdlc-harness upgrade` | Runs safe package migrations and `sync`, including Schema v4 Context graph manifest creation when missing. |
-| `npx sdlc-harness validate-context` | Checks that Context has the minimum recovery fields, validates role-based context graph files when declared, and does not fake test execution results. |
+| `npx sdlc-harness validate-context` | Checks minimum recovery fields, Context graph metadata, declared paths/roles and fake test-execution claims. |
 | `make validate-context` | Makefile wrapper for `validate-context`. |
 | `make validate-harness` | Compatibility alias for `validate-context` in vNext projects. |
 | `sdlc-harness package sync-source` | Maintainer-only command to sync source workspace assets into `packages/sdlc-harness/assets/**`. |
@@ -78,7 +78,7 @@ The three default Skills are Minimal Context authoring helpers. Explicit request
 - verification entry points
 - current state
 - next safe action
-- module index
+- context index
 
 `project_context/architecture.md` is the restrained architecture document. It contains:
 
@@ -90,9 +90,9 @@ The three default Skills are Minimal Context authoring helpers. Explicit request
 - verification implications
 - open risks
 
-`project_context/context.toml` is the Schema v4 Context graph manifest. `init` creates a default `main` area for ordinary projects, and `upgrade` creates a baseline manifest for existing projects by registering current `project_context/modules/**/*.md` files as areas. Larger projects can add `[[areas]]` and `[[context]]` entries with role, trigger/read policy, default children and monorepo boundary metadata such as `forbidden_runtime_dependencies`.
+`project_context/context.toml` is the Schema v4 Context graph manifest. `init` creates a default `main` area for ordinary projects, and `upgrade` creates a baseline manifest for existing projects by registering current `project_context/areas/**/*.md` files as areas. Larger projects can add `[[areas]]` and `[[context]]` entries with role, trigger/read policy, default children and monorepo boundary metadata such as `forbidden_runtime_dependencies`.
 
-`project_context/modules/<unit>.md` contains area, domain or subdomain context by default:
+`project_context/areas/<unit>.md` contains area, domain or subdomain context by default:
 
 - responsibility
 - user / system contract
@@ -102,7 +102,7 @@ The three default Skills are Minimal Context authoring helpers. Explicit request
 - test entry points
 - open risks
 
-Additional Markdown context files under `project_context/**` can declare `context_role` in front matter or receive a role from `context.toml`. `validate-context` applies role-specific schemas so foundations, archives, contracts, implementation indexes and decision rationales do not have to masquerade as modules:
+Additional Markdown context files under `project_context/**` can declare `context_role` in front matter or receive a role from `context.toml`. Roles are semantic labels that help agents choose when and how to read context; `validate-context` checks graph structure, paths and field shapes rather than enforcing a writing template for every role:
 
 - `foundation`: role, use when, do not use for, derived contracts, source body
 - `archive`: archive role, external location policy, read when, non-uses
@@ -110,7 +110,7 @@ Additional Markdown context files under `project_context/**` can declare `contex
 - `implementation-index`: owned paths, responsibilities, tests, known risks
 - `decision-rationale`: decision, rationale, applies to, tradeoffs
 
-Automatic migration is conservative: it only creates a usable graph baseline and does not rewrite user-authored Context Markdown or infer deep semantic roles. If an existing deep module file is really a foundation, contract, archive or implementation index, a later agent should update `context.toml` explicitly. Boundary rules are metadata only; Harness does not scan source imports or build a runtime dependency graph.
+Automatic migration moves legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md`, creates a usable graph baseline and does not infer deep semantic roles. If an existing deep area file is really a foundation, contract, archive or implementation index, a later agent should update `context.toml` explicitly. Boundary rules are metadata only; Harness does not scan source imports or build a runtime dependency graph.
 
 The Context should be short enough to read at session start and specific enough to prevent fresh-agent drift. It should not copy code, test logs, release ledgers or implementation narration that the code already makes obvious.
 

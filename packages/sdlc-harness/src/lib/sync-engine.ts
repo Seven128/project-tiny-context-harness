@@ -1,4 +1,5 @@
 import path from "node:path";
+import { promises as fs } from "node:fs";
 import { readConfig } from "./config.js";
 import { harnessPath, harnessRoot } from "./harness-root.js";
 import {
@@ -78,7 +79,7 @@ async function syncManagedFile(projectRoot: string, root: string, managedFile: M
     return;
   }
   if (managedPath === harnessPath(root, "pjsdlc_managed", "context_templates")) {
-    await syncTree(packageAssetPath("context_templates"), destination, report);
+    await syncTree(packageAssetPath("context_templates"), destination, report, { prune: true });
     return;
   }
   if (managedPath === harnessPath(root, "pjsdlc_managed", "policies")) {
@@ -256,7 +257,12 @@ function findManagedBlock(existing: string, markersList: ManagedBlockMarkers[]):
   return matches[0] ? { status: "found", ...matches[0] } : { status: "missing" };
 }
 
-async function syncTree(source: string, destination: string, report: SyncReport): Promise<void> {
+async function syncTree(
+  source: string,
+  destination: string,
+  report: SyncReport,
+  options: { prune?: boolean } = {}
+): Promise<void> {
   if (!(await pathExists(source))) {
     report.skipped.push(path.basename(destination));
     return;
@@ -268,7 +274,31 @@ async function syncTree(source: string, destination: string, report: SyncReport)
     return;
   }
   const changed = await copyTree(source, destination, { skipGitkeep: true });
+  if (options.prune) {
+    changed.push(...(await removeStaleManagedFiles(source, destination)));
+  }
   report.changed.push(...changed);
+}
+
+async function removeStaleManagedFiles(source: string, destination: string): Promise<string[]> {
+  if (!(await pathExists(destination))) {
+    return [];
+  }
+  const sourceFiles = new Set(
+    (await listFiles(source))
+      .filter((file) => !file.endsWith(".gitkeep"))
+      .map((file) => path.relative(source, file).split(path.sep).join("/"))
+  );
+  const removed: string[] = [];
+  for (const destinationFile of await listFiles(destination)) {
+    const relative = path.relative(destination, destinationFile).split(path.sep).join("/");
+    if (sourceFiles.has(relative)) {
+      continue;
+    }
+    await fs.rm(destinationFile, { force: true });
+    removed.push(destinationFile);
+  }
+  return removed;
 }
 
 async function syncSkillsTree(

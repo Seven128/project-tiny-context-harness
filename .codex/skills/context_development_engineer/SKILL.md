@@ -19,7 +19,7 @@ description: Use when the user explicitly asks for 开发工程师, 软件工程
    - 全局工程取舍、验证入口或当前状态写入 `global.md`。
    - 模块级 API、数据契约、关键约束、入口和风险写入对应 area / subdomain Context。
    - 跨域接口语义写入 `context_role: contract` 或 manifest role 为 `contract` 的 Context；代码入口索引用 `implementation-index`；底层理论源用 `foundation`；历史归档索引用 `archive`。
-   - 新 context unit 可新增 `project_context/modules/<unit>.md`，并更新 `global.md#Module Index`；复杂项目同时更新 `project_context/context.toml`。
+   - 新 context unit 可新增 `project_context/areas/<unit>.md`，并更新 `global.md#Context Index`；复杂项目同时更新 `project_context/context.toml`。
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
 6. Context 只能声明验证入口或验收信号，不能伪造“测试已通过”。
 
@@ -35,9 +35,9 @@ description: Use when the user explicitly asks for 开发工程师, 软件工程
 - `global.md#Design Rationale`：跨模块工程取舍。
 - `global.md#Verification Entry Points`：项目级验证入口；只记录入口，不记录未执行结果。
 - `global.md#Current State`：影响后续恢复的实现状态。
-- `modules/*.md#User / System Contract`：模块可见行为、API、CLI、UI 或数据契约。
-- `modules/*.md#Core Data / API / State`：关键数据结构、接口、状态流或规则。
-- `modules/*.md#Key Constraints`：性能、安全、兼容、集成、部署或维护约束。
-- `modules/*.md#Code Entry Points`：未来 agent 需要快速定位的代码入口。
-- `modules/*.md#Test Entry Points`：模块级测试、smoke 或检查命令。
+- `areas/*.md#User / System Contract`：模块可见行为、API、CLI、UI 或数据契约。
+- `areas/*.md#Core Data / API / State`：关键数据结构、接口、状态流或规则。
+- `areas/*.md#Key Constraints`：性能、安全、兼容、集成、部署或维护约束。
+- `areas/*.md#Code Entry Points`：未来 agent 需要快速定位的代码入口。
+- `areas/*.md#Test Entry Points`：模块级测试、smoke 或检查命令。
 - `project_context/context.toml`：复杂项目的 area/context_unit、role、触发词、按需读取策略和可选边界规则。

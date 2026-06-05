@@ -46,9 +46,9 @@ export function globalContextTemplate(): string {
     "",
     "- State the safest next step for a fresh agent.",
     "",
-    "## Module Index",
+    "## Context Index",
     "",
-    "- [main](modules/main.md)",
+    "- [main](areas/main.md)",
     ""
   ].join("\n");
 }
@@ -90,13 +90,13 @@ export function architectureContextTemplate(): string {
   ].join("\n");
 }
 
-export function moduleContextTemplate(moduleName: string): string {
+export function areaContextTemplate(areaName: string): string {
   return [
-    `# Module Context: ${moduleName}`,
+    `# Area Context: ${areaName}`,
     "",
     "## Responsibility",
     "",
-    "- Describe this module's responsibility.",
+    "- Describe this area or context unit's responsibility.",
     "",
     "## User / System Contract",
     "",
@@ -116,7 +116,7 @@ export function moduleContextTemplate(moduleName: string): string {
     "",
     "## Test Entry Points",
     "",
-    "- `npm test` or focused test commands for this module.",
+    "- `npm test` or focused test commands for this area.",
     "",
     "## Open Risks",
     "",

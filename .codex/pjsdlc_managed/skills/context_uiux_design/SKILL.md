@@ -19,7 +19,7 @@ description: Use when the user explicitly asks for 设计稿, UI/UX 设计方案
    - 项目级体验原则和屏幕清单写入 `global.md`。
    - 模块级 screen contract、state、interaction 和视觉约束写入对应 area / subdomain Context。
    - 颜色、字体、间距、圆角、组件视觉 token 和视觉 rationale 写入 `DESIGN.md`。
-   - 新 UI context unit 可新增 `project_context/modules/<unit>.md`，并更新 `global.md#Module Index`；复杂项目同时更新 `project_context/context.toml`。
+   - 新 UI context unit 可新增 `project_context/areas/<unit>.md`，并更新 `global.md#Context Index`；复杂项目同时更新 `project_context/context.toml`。
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
 6. Context 只能声明设计验收入口或 smoke 入口，不能伪造“已验证通过”。
 
@@ -52,8 +52,8 @@ description: Use when the user explicitly asks for 设计稿, UI/UX 设计方案
 ## 建议沉淀位置
 
 - `global.md#UX / Screen Brief`：全局体验原则、主要屏幕、跨模块流程。
-- `modules/*.md#User / System Contract`：页面、组件、状态、交互和数据展示契约。
-- `modules/*.md#Key Constraints`：responsive、a11y、品牌/视觉边界、加载/空态/错误态约束。
-- `modules/*.md#Test Entry Points`：UI smoke、截图验收、可访问性检查或项目自己的测试入口。
+- `areas/*.md#User / System Contract`：页面、组件、状态、交互和数据展示契约。
+- `areas/*.md#Key Constraints`：responsive、a11y、品牌/视觉边界、加载/空态/错误态约束。
+- `areas/*.md#Test Entry Points`：UI smoke、截图验收、可访问性检查或项目自己的测试入口。
 - `project_context/context.toml`：复杂项目的 area/context_unit、role、触发词、按需读取策略和可选边界规则。
 - `DESIGN.md`：视觉 identity、design tokens、组件视觉规则和 do/don't。

@@ -21,7 +21,7 @@ try {
   await writeFile(path.join(fixture, "README.md"), "# User Guide\n\nMinimal Context package guide.\n", "utf8");
   await writeFile(path.join(fixture, ".agent/pjsdlc_managed/context_templates/global.md"), "# Project / Delivery Context\n", "utf8");
   await writeFile(path.join(fixture, ".agent/pjsdlc_managed/context_templates/architecture.md"), "# Architecture Context\n", "utf8");
-  await writeFile(path.join(fixture, ".agent/pjsdlc_managed/context_templates/module.md"), "# Module Context\n", "utf8");
+  await writeFile(path.join(fixture, ".agent/pjsdlc_managed/context_templates/area.md"), "# Area Context\n", "utf8");
   await writeFile(
     path.join(fixture, ".agent/pjsdlc_managed/skills/context_product_plan/SKILL.md"),
     "---\nname: context_product_plan\ndescription: 产品方案 product plan\n---\n\n# Product\n",

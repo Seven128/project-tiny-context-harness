@@ -1,4 +1,4 @@
-# Module Context: harness-package
+# Area Context: harness-package
 
 ## Responsibility
 
@@ -15,8 +15,8 @@
 - The development engineer Skill trigger list includes `实现`, `实现方案` and `实施计划`, while its negative trigger rule still excludes routine coding, bug fixes, small refactors and package/release work.
 - `project_context/architecture.md` is a default Minimal Context fact source for restrained system boundary, component map and durable architecture constraints.
 - `project_context/context.toml` is created by `init` as the Schema v4 Context graph manifest; ordinary projects start with one default `main` area.
-- Schema v4 makes `project_context/context.toml` required for `validate-context`; `upgrade` creates it for existing projects by registering module Context files as areas.
-- `validate-context` uses `context.toml` and `context_role` front matter to apply role-specific schemas for `area` / `domain` / `subdomain`, `foundation`, `archive`, `contract`, `implementation-index` and `decision-rationale` files while preserving legacy module validation when no manifest exists.
+- Schema v4 makes `project_context/context.toml` required for `validate-context`; `upgrade` migrates legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md` and registers area Context files in the manifest.
+- `validate-context` uses `context.toml` and `context_role` front matter to validate graph structure, paths, role names and field shapes; `area` / `domain` / `subdomain` keep lightweight recovery-section checks, while `foundation`, `archive`, `contract`, `implementation-index` and `decision-rationale` are semantic labels rather than role-specific writing-template gates.
 - Context graph boundary rules are metadata validation only for now; Harness does not perform import/path dependency analysis.
 - The UI/UX Skill uses Google `@google/design.md` for root `DESIGN.md` visual design tokens, and carries compact visual-quality calibration for brand/product register, design-system continuity and common AI-design anti-patterns.
 - README docs may present Impeccable as optional external frontend design linting; it is not installed by default and is not a Harness validation gate.
@@ -42,7 +42,7 @@
 - UI/UX guidance may update `DESIGN.md`; it should use `npx @google/design.md lint DESIGN.md` when structure validation is needed.
 - Optional Impeccable usage must remain opt-in evidence for visual review, not a default package dependency, workflow command set or `validate-context` requirement.
 - Skill overrides may narrow product/design/development guidance for a project but must keep conclusions in Minimal Context.
-- Role-based Context must stay lightweight and optional; do not make monorepo-specific area names or boundary checks mandatory for ordinary projects.
+- Context graph roles must stay lightweight and optional; do not make monorepo-specific area names or boundary checks mandatory for ordinary projects.
 - Do not reintroduce legacy migration commands or stage assets.
 - Package source changes that affect managed assets require `package sync-source` and `package check-source`.
 

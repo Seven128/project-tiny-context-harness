@@ -7,7 +7,7 @@
 - 项目全局上下文：`project_context/global.md`
 - 架构上下文：`project_context/architecture.md`（克制、最小，只记录系统边界、组件关系和长期约束）
 - Context 图谱：`project_context/context.toml`（Schema v4 默认事实源；声明 area/context_unit、role、触发条件和按需读取策略）
-- 模块 / context unit 上下文：`project_context/modules/**/*.md`
+- 模块 / context unit 上下文：`project_context/areas/**/*.md`
 - 产品质量事实：项目自己的代码、测试、smoke、CI、hidden probe 或人工验收
 
 ## 工作规则

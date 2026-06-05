@@ -44,6 +44,6 @@
 
 - State the safest next step for a fresh agent.
 
-## Module Index
+## Context Index
 
-- [main](modules/main.md)
+- [main](areas/main.md)

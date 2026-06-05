@@ -1,8 +1,8 @@
-# Module Context: main
+# Area Context: main
 
 ## Responsibility
 
-- Describe this module's responsibility.
+- Describe this area or context unit's responsibility.
 
 ## User / System Contract
 
@@ -10,7 +10,7 @@
 
 ## Core Data / API / State
 
-- Summarize important data structures, APIs, state transitions or rules.
+- Summarize the important data structures, APIs, state transitions, or rules.
 
 ## Key Constraints
 
@@ -22,7 +22,7 @@
 
 ## Test Entry Points
 
-- `npm test` or focused test commands for this module.
+- `npm test` or focused test commands for this area.
 
 ## Open Risks
 

@@ -26,7 +26,7 @@ try {
   assert.ok(initReport.some((line) => line.includes("created project_context/context.toml")));
   assert.ok(initReport.some((line) => line.includes("created project_context/global.md")));
   assert.ok(initReport.some((line) => line.includes("created project_context/architecture.md")));
-  assert.ok(initReport.some((line) => line.includes("created project_context/modules/main.md")));
+  assert.ok(initReport.some((line) => line.includes("created project_context/areas/main.md")));
   assert.ok(initReport.some((line) => line.includes("created DESIGN.md")));
 
   const config = await readFile(path.join(root, ".agent/config.yaml"), "utf8");
@@ -51,7 +51,7 @@ try {
   const contextManifest = await readFile(path.join(root, "project_context/context.toml"), "utf8");
   assert.match(contextManifest, /\[\[areas\]\]/);
   assert.match(contextManifest, /id = "main"/);
-  assert.match(contextManifest, /context = "project_context\/modules\/main\.md"/);
+  assert.match(contextManifest, /context = "project_context\/areas\/main\.md"/);
 
   const designMd = await readFile(path.join(root, "DESIGN.md"), "utf8");
   assert.match(designMd, /name: "Starter Design System"/);
@@ -67,10 +67,10 @@ try {
   assert.match(architectureContext, /## Component Map/);
   assert.match(architectureContext, /## Verification Implications/);
 
-  const moduleContext = await readFile(path.join(root, "project_context/modules/main.md"), "utf8");
-  assert.match(moduleContext, /## Responsibility/);
-  assert.match(moduleContext, /## Code Entry Points/);
-  assert.match(moduleContext, /## Test Entry Points/);
+  const areaContext = await readFile(path.join(root, "project_context/areas/main.md"), "utf8");
+  assert.match(areaContext, /## Responsibility/);
+  assert.match(areaContext, /## Code Entry Points/);
+  assert.match(areaContext, /## Test Entry Points/);
 
   await assert.rejects(stat(path.join(root, ".agent/state/lifecycle.yaml")));
   await assert.rejects(stat(path.join(root, ".agent/state/plan.yaml")));
@@ -93,7 +93,8 @@ try {
   await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/global.md"));
   await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/context.toml"));
   await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/architecture.md"));
-  await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/module.md"));
+  await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/area.md"));
+  await assert.rejects(stat(path.join(root, ".agent/pjsdlc_managed/context_templates/module.md")));
   await stat(path.join(root, ".agent/pjsdlc_managed/override_skills"));
 
   await writeFile(

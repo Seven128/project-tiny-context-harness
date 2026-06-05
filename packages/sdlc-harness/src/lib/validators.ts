@@ -44,17 +44,19 @@ const VALIDATORS: Record<string, Validator> = {
   "validate-harness": validateContext
 };
 
-const GLOBAL_REQUIRED_SECTIONS = sectionSpecs([
-  "Project Goal",
-  "Non-goals / Boundaries",
-  "Background",
-  "Design Rationale",
-  "Architecture Context",
-  "Verification Entry Points",
-  "Current State",
-  "Next Safe Action",
-  "Module Index"
-]);
+const GLOBAL_REQUIRED_SECTIONS = [
+  ...sectionSpecs([
+    "Project Goal",
+    "Non-goals / Boundaries",
+    "Background",
+    "Design Rationale",
+    "Architecture Context",
+    "Verification Entry Points",
+    "Current State",
+    "Next Safe Action"
+  ]),
+  sectionSpec("Context Index", ["Context Index", "Module Index"])
+];
 
 const ARCHITECTURE_REQUIRED_SECTIONS = sectionSpecs([
   "System Boundary",
@@ -75,46 +77,6 @@ const AREA_REQUIRED_SECTIONS = sectionSpecs([
   "Test Entry Points",
   "Open Risks"
 ]);
-
-const ROLE_REQUIRED_SECTIONS: Record<ContextRole, SectionSpec[]> = {
-  global: GLOBAL_REQUIRED_SECTIONS,
-  architecture: ARCHITECTURE_REQUIRED_SECTIONS,
-  area: AREA_REQUIRED_SECTIONS,
-  domain: AREA_REQUIRED_SECTIONS,
-  subdomain: AREA_REQUIRED_SECTIONS,
-  foundation: sectionSpecs([
-    "Role",
-    "Use When",
-    "Do Not Use For",
-    "Derived Contracts",
-    "Source Body"
-  ]),
-  archive: sectionSpecs([
-    "Archive Role",
-    "External Location Policy",
-    "Read When",
-    "Non-Uses"
-  ]),
-  contract: [
-    sectionSpec("Producer"),
-    sectionSpec("Consumer"),
-    sectionSpec("Schema/Shape", ["Schema/Shape", "Schema / Shape"]),
-    sectionSpec("Compatibility"),
-    sectionSpec("Tests")
-  ],
-  "implementation-index": sectionSpecs([
-    "Owned Paths",
-    "Responsibilities",
-    "Tests",
-    "Known Risks"
-  ]),
-  "decision-rationale": sectionSpecs([
-    "Decision",
-    "Rationale",
-    "Applies To",
-    "Tradeoffs"
-  ])
-};
 
 const ROLE_ALIASES: Record<string, ContextRole> = {
   global: "global",
@@ -163,7 +125,6 @@ async function validateContext(projectRoot: string): Promise<ValidatorReport> {
   const globalPath = path.join(projectRoot, "project_context", "global.md");
   const architecturePath = path.join(projectRoot, "project_context", "architecture.md");
   const projectContextRoot = path.join(projectRoot, "project_context");
-  const modulesRoot = path.join(projectRoot, "project_context", "modules");
   const configPath = path.join(projectRoot, harnessPath(root, "config.yaml"));
   const manifestPath = path.join(projectRoot, "project_context", "context.toml");
   const manifestRoles = new Map<string, ContextRole>();
@@ -210,11 +171,6 @@ async function validateContext(projectRoot: string): Promise<ValidatorReport> {
     .filter((file) => file !== globalPath && file !== architecturePath)
     .sort();
 
-  const moduleFiles = contextFiles.filter((file) => isInsidePath(modulesRoot, file));
-  if (moduleFiles.length === 0) {
-    errors.push("project_context/modules/ must contain at least one module context markdown file");
-  }
-
   const validatedContextFiles = new Map<string, ContextRole>();
   for (const file of contextFiles) {
     const relative = repoRelative(projectRoot, file);
@@ -224,7 +180,7 @@ async function validateContext(projectRoot: string): Promise<ValidatorReport> {
     if (frontMatter.read_policy && !VALID_READ_POLICIES.has(frontMatter.read_policy)) {
       errors.push(`${relative} has unsupported read_policy: ${frontMatter.read_policy}`);
     }
-    const role = manifestRoles.get(relative) ?? frontMatterRole ?? (isInsidePath(modulesRoot, file) ? "area" : undefined);
+    const role = manifestRoles.get(relative) ?? frontMatterRole;
     if (!role) {
       continue;
     }
@@ -250,15 +206,10 @@ async function validateContext(projectRoot: string): Promise<ValidatorReport> {
 }
 
 function validateContextFile(file: string, content: string, role: ContextRole, errors: string[]): void {
-  const sections = ROLE_REQUIRED_SECTIONS[role];
-  assertSections(file, content, sections, errors);
   if (AREA_LIKE_ROLES.has(role)) {
+    assertSections(file, content, AREA_REQUIRED_SECTIONS, errors);
     assertSectionHasContent(file, content, sectionSpec("Code Entry Points"), errors);
     assertSectionHasContent(file, content, sectionSpec("Test Entry Points"), errors);
-  } else {
-    for (const section of sections) {
-      assertSectionHasContent(file, content, section, errors);
-    }
   }
   assertNoFakeVerification(file, content, errors);
 }
@@ -273,16 +224,21 @@ async function validateContextManifest(
     errors.push("project_context/context.toml must declare at least one [[areas]] entry");
   }
 
+  let hasDefaultArea = false;
   for (const area of manifest.areas) {
     const id = stringManifestValue(area, "id", "project_context/context.toml", errors);
     stringManifestValue(area, "root", "project_context/context.toml", errors);
     const context = stringManifestValue(area, "context", "project_context/context.toml", errors);
     optionalStringManifestValue(area, "kind", "project_context/context.toml", errors);
-    optionalBooleanManifestValue(area, "default", "project_context/context.toml", errors);
+    const defaultArea = optionalBooleanManifestValue(area, "default", "project_context/context.toml", errors);
+    hasDefaultArea = hasDefaultArea || defaultArea === true;
     optionalStringArrayManifestValue(area, "forbidden_runtime_dependencies", "project_context/context.toml", errors);
     if (id && context) {
       await addManifestRole(projectRoot, manifestRoles, context, "area", `area ${id}`, errors);
     }
+  }
+  if (manifest.areas.length > 0 && !hasDefaultArea) {
+    errors.push("project_context/context.toml must mark one [[areas]] entry with default = true");
   }
 
   for (const context of manifest.contexts) {
@@ -290,7 +246,7 @@ async function validateContextManifest(
     const roleValue = stringManifestValue(context, "role", "project_context/context.toml", errors);
     optionalStringManifestValue(context, "read_when", "project_context/context.toml", errors);
     const readPolicy = optionalStringManifestValue(context, "read_policy", "project_context/context.toml", errors);
-    const triggers = optionalStringArrayManifestValue(context, "triggers", "project_context/context.toml", errors);
+    optionalStringArrayManifestValue(context, "triggers", "project_context/context.toml", errors);
     optionalStringArrayManifestValue(context, "default_children", "project_context/context.toml", errors);
     if (readPolicy && !VALID_READ_POLICIES.has(readPolicy)) {
       errors.push(`project_context/context.toml line ${context.line} has unsupported read_policy: ${readPolicy}`);
@@ -301,9 +257,6 @@ async function validateContextManifest(
     }
     if (role && pathValue) {
       await addManifestRole(projectRoot, manifestRoles, pathValue, role, `context ${pathValue}`, errors);
-    }
-    if ((readPolicy === "optional" || readPolicy === "on-demand" || role === "foundation" || role === "archive") && !context.values.read_when && (!triggers || triggers.length === 0)) {
-      errors.push(`project_context/context.toml line ${context.line} must include read_when or triggers for on-demand context`);
     }
   }
 }
@@ -406,11 +359,6 @@ function repoRelative(root: string, file: string): string {
 function schemaRequiresContextManifest(schemaVersion: string): boolean {
   const major = Number.parseInt(schemaVersion, 10);
   return Number.isNaN(major) || major >= 4;
-}
-
-function isInsidePath(root: string, file: string): boolean {
-  const relative = path.relative(root, file);
-  return relative !== "" && !relative.startsWith("..") && !path.isAbsolute(relative);
 }
 
 function frontMatterContextRole(frontMatter: Record<string, string>, file: string, errors: string[]): ContextRole | undefined {
