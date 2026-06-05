@@ -1,0 +1,17 @@
+# Schema v4 Minimal Context graph manifest.
+# Keep the default area for ordinary projects. Add [[context]] nodes only for durable
+# on-demand context such as contracts, foundations, archives or implementation indexes.
+
+[[areas]]
+id = "main"
+root = "."
+context = "project_context/modules/main.md"
+kind = "app"
+default = true
+
+# Example optional node:
+# [[context]]
+# path = "project_context/modules/main/contracts/api.md"
+# role = "contract"
+# read_policy = "on-demand"
+# triggers = ["api", "contract", "compatibility"]

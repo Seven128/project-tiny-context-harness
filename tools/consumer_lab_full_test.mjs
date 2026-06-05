@@ -205,10 +205,12 @@ async function verifyManagedAssets(labDir, add) {
     "Makefile",
     ".github/workflows/harness.yml",
     "project_context/global.md",
+    "project_context/context.toml",
     "project_context/architecture.md",
     "project_context/modules/main.md",
     ".codex/config.yaml",
     ".codex/pjsdlc_managed/context_templates/global.md",
+    ".codex/pjsdlc_managed/context_templates/context.toml",
     ".codex/pjsdlc_managed/context_templates/architecture.md",
     ".codex/pjsdlc_managed/context_templates/module.md",
     ".codex/pjsdlc_managed/override_skills",
@@ -243,7 +245,7 @@ async function verifyManagedAssets(labDir, add) {
   if (missing.length === 0) {
     const config = await readFile(path.join(labDir, ".codex/config.yaml"), "utf8");
     const configReady =
-      config.includes('schema_version: "3"') &&
+      config.includes('schema_version: "4"') &&
       config.includes(".codex/pjsdlc_managed/context_templates") &&
       config.includes(".codex/skills") &&
       !config.includes(".codex/pjsdlc_managed/templates");
@@ -251,7 +253,7 @@ async function verifyManagedAssets(labDir, add) {
       area: "Managed assets",
       evidence: "fresh init config is Minimal Context schema",
       status: configReady ? "PASS" : "FAIL",
-      details: configReady ? "schema_version 3 with context templates and no stage skills/templates" : trimOutput(config)
+      details: configReady ? "schema_version 4 with context templates and no stage skills/templates" : trimOutput(config)
     });
 
     const agents = await readFile(path.join(labDir, "AGENTS.md"), "utf8");

@@ -27,6 +27,7 @@
 - Implementation facts should live in code, tests, comments and short module Context constraints when the code is not self-explanatory.
 - Product/UIUX/development engineer Skill customization uses `<harnessRoot>/pjsdlc_managed/override_skills/*.md`; sync merges those local rules into `<harnessRoot>/skills/**`.
 - Architecture Context is intentionally restrained: it records durable boundaries, component relationships and constraints, not implementation narration.
+- Schema v4 makes the lightweight Context graph the default: `project_context/context.toml` declares areas/context units, role-based context files, read triggers and monorepo boundary metadata while ordinary projects keep one default `main` area.
 
 ## Architecture Context
 
@@ -43,6 +44,9 @@
 ## Current State
 
 - vNext implementation is Minimal Context Harness.
+- `init` creates `project_context/context.toml` with one default `main` area; `upgrade` creates it for existing projects by registering current module Context files as areas.
+- v4 `validate-context` requires `project_context/context.toml`; older config versions should run `upgrade` before relying on the v4 gate.
+- `validate-context` supports role-based validation for area/domain/subdomain, foundation, archive, contract, implementation-index and decision-rationale context files.
 - Old stage-based assets, state files and work-product trees are removed from the current source tree.
 - Historical stage design is summarized in `PROJECT_SPEC.md`; migration support has been removed after user migrations completed.
 - Delivery benchmark prompts should evaluate Minimal Context behavior for new Harness runs; old stage-based public result data has been removed.

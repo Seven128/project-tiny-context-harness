@@ -1,4 +1,5 @@
 import path from "node:path";
+import { CONTEXT_MANIFEST_PATH, defaultContextManifestTemplate } from "./context-manifest.js";
 import { writeConfigIfMissing } from "./config.js";
 import { createDesignMdIfMissing, DESIGN_MD_PATH } from "./design-md.js";
 import { harnessConfigPath, harnessRoot } from "./harness-root.js";
@@ -63,12 +64,18 @@ async function createProjectContext(projectRoot: string, report: string[]): Prom
   const modulesRoot = path.join(projectRoot, "project_context", "modules");
   await ensureDir(modulesRoot);
   const files: Array<[string, string]> = [
+    [CONTEXT_MANIFEST_PATH, defaultContextManifestTemplate()],
     ["project_context/global.md", globalContextTemplate()],
     ["project_context/architecture.md", architectureContextTemplate()],
     ["project_context/modules/main.md", moduleContextTemplate("main")]
   ];
   for (const [relative, content] of files) {
-    if (await writeTextIfChanged(path.join(projectRoot, relative), content)) {
+    const target = path.join(projectRoot, relative);
+    if (await pathExists(target)) {
+      report.push(`kept existing ${relative}`);
+      continue;
+    }
+    if (await writeTextIfChanged(target, content)) {
       report.push(`created ${relative}`);
     }
   }
@@ -97,6 +104,10 @@ function globalContextTemplate(): string {
     "## Architecture Context",
     "",
     "- Link to `project_context/architecture.md`; keep architecture notes minimal and focused on boundaries, components and constraints that are not obvious from code.",
+    "",
+    "## Context Graph",
+    "",
+    "- Link to `project_context/context.toml` and keep its default area, role, trigger, read policy and boundary metadata aligned with this Context.",
     "",
     "## Product / Delivery Brief",
     "",

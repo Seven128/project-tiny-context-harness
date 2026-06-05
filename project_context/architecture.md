@@ -20,15 +20,18 @@ This file is the restrained architecture context for the source repository. It i
 ## Data / Control Flow
 
 - `init` creates `project_context/global.md`, `project_context/architecture.md`, `project_context/modules/main.md`, then runs `sync`.
+- `init` also creates `project_context/context.toml`, declaring the default `main` area for ordinary projects.
+- `upgrade` creates missing `project_context/context.toml` by registering existing module Context files as areas, without rewriting user-authored Context Markdown.
 - `sync` reads `packages/sdlc-harness/assets/**` and writes managed guidance, templates, tools and Skills into the configured harness root.
 - Skill customization flows from `<harnessRoot>/pjsdlc_managed/override_skills/*.md` into generated `<harnessRoot>/skills/**` during sync.
 - `package sync-source` copies source workspace assets into `packages/sdlc-harness/assets/**`; `package check-source` verifies no drift.
-- `validate-context` checks Context recoverability and rejects fake verification-result claims.
+- `validate-context` checks Context recoverability, applies role-based schemas when `context.toml` or `context_role` front matter declares non-module Context, and rejects fake verification-result claims.
 
 ## Design Rationale
 
 - Minimal Context keeps only durable facts that improve recovery, iteration, debug and requirements changes.
 - Architecture deserves one small shared file because system boundaries and component relationships are cross-module facts that code alone can make slow to recover.
+- Context graph support is metadata-first: it improves read targeting and validation without turning Harness into a monorepo dependency analyzer or import/path scanner.
 - Migration support has been removed now that users have completed migration; keeping it would expand public surface and preserve a path back to legacy stage artifacts.
 
 ## Constraints And Tradeoffs

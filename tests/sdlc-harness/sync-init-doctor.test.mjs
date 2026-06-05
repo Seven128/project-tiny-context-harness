@@ -23,13 +23,14 @@ try {
 
   const initReport = await runInit(root, { adopt: false, force: false });
   assert.ok(initReport.some((line) => line.includes("created .agent/config.yaml")));
+  assert.ok(initReport.some((line) => line.includes("created project_context/context.toml")));
   assert.ok(initReport.some((line) => line.includes("created project_context/global.md")));
   assert.ok(initReport.some((line) => line.includes("created project_context/architecture.md")));
   assert.ok(initReport.some((line) => line.includes("created project_context/modules/main.md")));
   assert.ok(initReport.some((line) => line.includes("created DESIGN.md")));
 
   const config = await readFile(path.join(root, ".agent/config.yaml"), "utf8");
-  assert.match(config, /schema_version: "3"/);
+  assert.match(config, /schema_version: "4"/);
   assert.match(config, /project_context\/\*\*/);
   assert.match(config, /\.agent\/skills/);
   assert.match(config, /\.agent\/pjsdlc_managed\/context_templates/);
@@ -46,6 +47,11 @@ try {
   assert.match(globalContext, /DESIGN\.md/);
   assert.match(globalContext, /## Verification Entry Points/);
   assert.match(globalContext, /## Next Safe Action/);
+
+  const contextManifest = await readFile(path.join(root, "project_context/context.toml"), "utf8");
+  assert.match(contextManifest, /\[\[areas\]\]/);
+  assert.match(contextManifest, /id = "main"/);
+  assert.match(contextManifest, /context = "project_context\/modules\/main\.md"/);
 
   const designMd = await readFile(path.join(root, "DESIGN.md"), "utf8");
   assert.match(designMd, /name: "Starter Design System"/);
@@ -85,6 +91,7 @@ try {
   const managedMake = await readFile(path.join(root, ".agent/pjsdlc_managed/make/sdlc-harness.mk"), "utf8");
   assert.match(managedMake, /validate-context/);
   await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/global.md"));
+  await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/context.toml"));
   await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/architecture.md"));
   await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/module.md"));
   await stat(path.join(root, ".agent/pjsdlc_managed/override_skills"));
@@ -140,6 +147,7 @@ try {
   await stat(path.join(configuredRoot, ".harness/skills/context_development_engineer/SKILL.md"));
   await stat(path.join(configuredRoot, ".harness/pjsdlc_managed/override_skills"));
   await stat(path.join(configuredRoot, "project_context/global.md"));
+  await stat(path.join(configuredRoot, "project_context/context.toml"));
   await stat(path.join(configuredRoot, "project_context/architecture.md"));
   await stat(path.join(configuredRoot, "DESIGN.md"));
   const configuredMakefile = await readFile(path.join(configuredRoot, "Makefile"), "utf8");
@@ -148,6 +156,7 @@ try {
   const cliInit = spawnSync(process.execPath, [cliPath, "init"], { cwd: cliRoot, encoding: "utf8" });
   assert.equal(cliInit.status, 0, `${cliInit.stdout}\n${cliInit.stderr}`);
   await stat(path.join(cliRoot, "project_context/global.md"));
+  await stat(path.join(cliRoot, "project_context/context.toml"));
   await stat(path.join(cliRoot, "project_context/architecture.md"));
   await stat(path.join(cliRoot, "DESIGN.md"));
   const cliValidate = spawnSync(process.execPath, [cliPath, "validate-context"], { cwd: cliRoot, encoding: "utf8" });

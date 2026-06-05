@@ -29,7 +29,7 @@ export async function runDoctor(projectRoot: string): Promise<DoctorReport> {
   report.info.push(`core package: ${config.core.package}@${packageVersion}`);
   report.info.push(`schema version: ${config.core.schema_version}`);
 
-  for (const required of ["project_context/global.md", "project_context/architecture.md", "project_context/modules"]) {
+  for (const required of ["project_context/context.toml", "project_context/global.md", "project_context/architecture.md", "project_context/modules"]) {
     if (!(await pathExists(path.join(projectRoot, required)))) {
       report.errors.push(`missing ${required}`);
     }

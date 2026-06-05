@@ -1,4 +1,5 @@
 import path from "node:path";
+import { readConfig } from "./config.js";
 import { harnessPath, harnessRoot } from "./harness-root.js";
 import { listFiles, pathExists, readText } from "./fs.js";
 
@@ -8,13 +9,42 @@ export interface ValidatorReport {
 }
 
 type Validator = (projectRoot: string) => Promise<ValidatorReport>;
+type ContextRole =
+  | "global"
+  | "architecture"
+  | "area"
+  | "domain"
+  | "subdomain"
+  | "foundation"
+  | "archive"
+  | "contract"
+  | "implementation-index"
+  | "decision-rationale";
+
+type SectionSpec = {
+  label: string;
+  headings: string[];
+};
+
+type ManifestValue = string | boolean | string[];
+
+interface ManifestEntry {
+  table: "areas" | "context";
+  line: number;
+  values: Record<string, ManifestValue>;
+}
+
+interface ContextManifest {
+  areas: ManifestEntry[];
+  contexts: ManifestEntry[];
+}
 
 const VALIDATORS: Record<string, Validator> = {
   "validate-context": validateContext,
   "validate-harness": validateContext
 };
 
-const GLOBAL_REQUIRED_SECTIONS = [
+const GLOBAL_REQUIRED_SECTIONS = sectionSpecs([
   "Project Goal",
   "Non-goals / Boundaries",
   "Background",
@@ -24,9 +54,9 @@ const GLOBAL_REQUIRED_SECTIONS = [
   "Current State",
   "Next Safe Action",
   "Module Index"
-];
+]);
 
-const ARCHITECTURE_REQUIRED_SECTIONS = [
+const ARCHITECTURE_REQUIRED_SECTIONS = sectionSpecs([
   "System Boundary",
   "Component Map",
   "Data / Control Flow",
@@ -34,9 +64,9 @@ const ARCHITECTURE_REQUIRED_SECTIONS = [
   "Constraints And Tradeoffs",
   "Verification Implications",
   "Open Risks"
-];
+]);
 
-const MODULE_REQUIRED_SECTIONS = [
+const AREA_REQUIRED_SECTIONS = sectionSpecs([
   "Responsibility",
   "User / System Contract",
   "Core Data / API / State",
@@ -44,7 +74,65 @@ const MODULE_REQUIRED_SECTIONS = [
   "Code Entry Points",
   "Test Entry Points",
   "Open Risks"
-];
+]);
+
+const ROLE_REQUIRED_SECTIONS: Record<ContextRole, SectionSpec[]> = {
+  global: GLOBAL_REQUIRED_SECTIONS,
+  architecture: ARCHITECTURE_REQUIRED_SECTIONS,
+  area: AREA_REQUIRED_SECTIONS,
+  domain: AREA_REQUIRED_SECTIONS,
+  subdomain: AREA_REQUIRED_SECTIONS,
+  foundation: sectionSpecs([
+    "Role",
+    "Use When",
+    "Do Not Use For",
+    "Derived Contracts",
+    "Source Body"
+  ]),
+  archive: sectionSpecs([
+    "Archive Role",
+    "External Location Policy",
+    "Read When",
+    "Non-Uses"
+  ]),
+  contract: [
+    sectionSpec("Producer"),
+    sectionSpec("Consumer"),
+    sectionSpec("Schema/Shape", ["Schema/Shape", "Schema / Shape"]),
+    sectionSpec("Compatibility"),
+    sectionSpec("Tests")
+  ],
+  "implementation-index": sectionSpecs([
+    "Owned Paths",
+    "Responsibilities",
+    "Tests",
+    "Known Risks"
+  ]),
+  "decision-rationale": sectionSpecs([
+    "Decision",
+    "Rationale",
+    "Applies To",
+    "Tradeoffs"
+  ])
+};
+
+const ROLE_ALIASES: Record<string, ContextRole> = {
+  global: "global",
+  architecture: "architecture",
+  area: "area",
+  domain: "domain",
+  subdomain: "subdomain",
+  foundation: "foundation",
+  archive: "archive",
+  contract: "contract",
+  "implementation-index": "implementation-index",
+  implementation_index: "implementation-index",
+  "decision-rationale": "decision-rationale",
+  decision_rationale: "decision-rationale"
+};
+
+const AREA_LIKE_ROLES = new Set<ContextRole>(["area", "domain", "subdomain"]);
+const VALID_READ_POLICIES = new Set(["default", "always", "optional", "on-demand", "never-default"]);
 
 const FAKE_VERIFICATION_PATTERNS = [
   /\btests?\s+(?:pass(?:ed|es)?|green)\b/i,
@@ -74,11 +162,17 @@ async function validateContext(projectRoot: string): Promise<ValidatorReport> {
 
   const globalPath = path.join(projectRoot, "project_context", "global.md");
   const architecturePath = path.join(projectRoot, "project_context", "architecture.md");
+  const projectContextRoot = path.join(projectRoot, "project_context");
   const modulesRoot = path.join(projectRoot, "project_context", "modules");
   const configPath = path.join(projectRoot, harnessPath(root, "config.yaml"));
+  const manifestPath = path.join(projectRoot, "project_context", "context.toml");
+  const manifestRoles = new Map<string, ContextRole>();
+  let schemaVersion = "4";
 
   if (!(await pathExists(configPath))) {
     errors.push(`${harnessPath(root, "config.yaml")} is missing`);
+  } else {
+    schemaVersion = (await readConfig(projectRoot)).core.schema_version;
   }
 
   if (!(await pathExists(globalPath))) {
@@ -86,8 +180,8 @@ async function validateContext(projectRoot: string): Promise<ValidatorReport> {
   } else {
     const global = await readText(globalPath);
     assertSections("project_context/global.md", global, GLOBAL_REQUIRED_SECTIONS, errors);
-    assertSectionHasContent("project_context/global.md", global, "Verification Entry Points", errors);
-    assertSectionHasContent("project_context/global.md", global, "Next Safe Action", errors);
+    assertSectionHasContent("project_context/global.md", global, sectionSpec("Verification Entry Points"), errors);
+    assertSectionHasContent("project_context/global.md", global, sectionSpec("Next Safe Action"), errors);
     assertNoFakeVerification("project_context/global.md", global, errors);
   }
 
@@ -96,47 +190,160 @@ async function validateContext(projectRoot: string): Promise<ValidatorReport> {
   } else {
     const architecture = await readText(architecturePath);
     assertSections("project_context/architecture.md", architecture, ARCHITECTURE_REQUIRED_SECTIONS, errors);
-    assertSectionHasContent("project_context/architecture.md", architecture, "System Boundary", errors);
-    assertSectionHasContent("project_context/architecture.md", architecture, "Component Map", errors);
+    assertSectionHasContent("project_context/architecture.md", architecture, sectionSpec("System Boundary"), errors);
+    assertSectionHasContent("project_context/architecture.md", architecture, sectionSpec("Component Map"), errors);
     assertNoFakeVerification("project_context/architecture.md", architecture, errors);
   }
 
-  const moduleFiles = (await listFiles(modulesRoot))
+  if (await pathExists(manifestPath)) {
+    const manifest = parseContextManifest(await readText(manifestPath), "project_context/context.toml", errors);
+    if (manifest) {
+      await validateContextManifest(projectRoot, manifest, manifestRoles, errors);
+      info.push(`loaded project_context/context.toml with ${manifest.areas.length} area(s) and ${manifest.contexts.length} context node(s)`);
+    }
+  } else if (schemaRequiresContextManifest(schemaVersion)) {
+    errors.push("project_context/context.toml is missing; run sdlc-harness upgrade to create the Schema v4 Context graph manifest");
+  }
+
+  const contextFiles = (await listFiles(projectContextRoot))
     .filter((file) => file.endsWith(".md"))
+    .filter((file) => file !== globalPath && file !== architecturePath)
     .sort();
 
+  const moduleFiles = contextFiles.filter((file) => isInsidePath(modulesRoot, file));
   if (moduleFiles.length === 0) {
     errors.push("project_context/modules/ must contain at least one module context markdown file");
   }
 
-  for (const file of moduleFiles) {
+  const validatedContextFiles = new Map<string, ContextRole>();
+  for (const file of contextFiles) {
     const relative = repoRelative(projectRoot, file);
     const content = await readText(file);
-    assertSections(relative, content, MODULE_REQUIRED_SECTIONS, errors);
-    assertSectionHasContent(relative, content, "Code Entry Points", errors);
-    assertSectionHasContent(relative, content, "Test Entry Points", errors);
-    assertNoFakeVerification(relative, content, errors);
+    const frontMatter = parseFrontMatter(content);
+    const frontMatterRole = frontMatterContextRole(frontMatter, relative, errors);
+    if (frontMatter.read_policy && !VALID_READ_POLICIES.has(frontMatter.read_policy)) {
+      errors.push(`${relative} has unsupported read_policy: ${frontMatter.read_policy}`);
+    }
+    const role = manifestRoles.get(relative) ?? frontMatterRole ?? (isInsidePath(modulesRoot, file) ? "area" : undefined);
+    if (!role) {
+      continue;
+    }
+    validateContextFile(relative, content, role, errors);
+    validatedContextFiles.set(relative, role);
   }
 
-  info.push(`checked project_context/global.md, project_context/architecture.md and ${moduleFiles.length} module context file(s)`);
+  for (const [relative, role] of manifestRoles.entries()) {
+    if (!validatedContextFiles.has(relative)) {
+      const absolute = path.join(projectRoot, ...relative.split("/"));
+      if (await pathExists(absolute)) {
+        validateContextFile(relative, await readText(absolute), role, errors);
+        validatedContextFiles.set(relative, role);
+      }
+    }
+  }
+
+  info.push(`checked project_context/global.md, project_context/architecture.md and ${validatedContextFiles.size} context graph file(s)`);
   if (errors.length === 0) {
     info.push("Minimal Context validation passed");
   }
   return { info, errors };
 }
 
-function assertSections(file: string, content: string, sections: string[], errors: string[]): void {
-  for (const section of sections) {
-    if (!hasHeading(content, section)) {
-      errors.push(`${file} is missing section: ${section}`);
+function validateContextFile(file: string, content: string, role: ContextRole, errors: string[]): void {
+  const sections = ROLE_REQUIRED_SECTIONS[role];
+  assertSections(file, content, sections, errors);
+  if (AREA_LIKE_ROLES.has(role)) {
+    assertSectionHasContent(file, content, sectionSpec("Code Entry Points"), errors);
+    assertSectionHasContent(file, content, sectionSpec("Test Entry Points"), errors);
+  } else {
+    for (const section of sections) {
+      assertSectionHasContent(file, content, section, errors);
+    }
+  }
+  assertNoFakeVerification(file, content, errors);
+}
+
+async function validateContextManifest(
+  projectRoot: string,
+  manifest: ContextManifest,
+  manifestRoles: Map<string, ContextRole>,
+  errors: string[]
+): Promise<void> {
+  if (manifest.areas.length === 0) {
+    errors.push("project_context/context.toml must declare at least one [[areas]] entry");
+  }
+
+  for (const area of manifest.areas) {
+    const id = stringManifestValue(area, "id", "project_context/context.toml", errors);
+    stringManifestValue(area, "root", "project_context/context.toml", errors);
+    const context = stringManifestValue(area, "context", "project_context/context.toml", errors);
+    optionalStringManifestValue(area, "kind", "project_context/context.toml", errors);
+    optionalBooleanManifestValue(area, "default", "project_context/context.toml", errors);
+    optionalStringArrayManifestValue(area, "forbidden_runtime_dependencies", "project_context/context.toml", errors);
+    if (id && context) {
+      await addManifestRole(projectRoot, manifestRoles, context, "area", `area ${id}`, errors);
+    }
+  }
+
+  for (const context of manifest.contexts) {
+    const pathValue = stringManifestValue(context, "path", "project_context/context.toml", errors);
+    const roleValue = stringManifestValue(context, "role", "project_context/context.toml", errors);
+    optionalStringManifestValue(context, "read_when", "project_context/context.toml", errors);
+    const readPolicy = optionalStringManifestValue(context, "read_policy", "project_context/context.toml", errors);
+    const triggers = optionalStringArrayManifestValue(context, "triggers", "project_context/context.toml", errors);
+    optionalStringArrayManifestValue(context, "default_children", "project_context/context.toml", errors);
+    if (readPolicy && !VALID_READ_POLICIES.has(readPolicy)) {
+      errors.push(`project_context/context.toml line ${context.line} has unsupported read_policy: ${readPolicy}`);
+    }
+    const role = roleValue ? normalizeRole(roleValue) : undefined;
+    if (roleValue && !role) {
+      errors.push(`project_context/context.toml line ${context.line} has unsupported context role: ${roleValue}`);
+    }
+    if (role && pathValue) {
+      await addManifestRole(projectRoot, manifestRoles, pathValue, role, `context ${pathValue}`, errors);
+    }
+    if ((readPolicy === "optional" || readPolicy === "on-demand" || role === "foundation" || role === "archive") && !context.values.read_when && (!triggers || triggers.length === 0)) {
+      errors.push(`project_context/context.toml line ${context.line} must include read_when or triggers for on-demand context`);
     }
   }
 }
 
-function assertSectionHasContent(file: string, content: string, section: string, errors: string[]): void {
-  const body = sectionBody(content, section);
+async function addManifestRole(
+  projectRoot: string,
+  roles: Map<string, ContextRole>,
+  rawPath: string,
+  role: ContextRole,
+  source: string,
+  errors: string[]
+): Promise<void> {
+  const relative = normalizeContextPath(rawPath);
+  if (!relative.startsWith("project_context/") || !relative.endsWith(".md")) {
+    errors.push(`project_context/context.toml ${source} must reference a markdown file under project_context/: ${rawPath}`);
+    return;
+  }
+  const existing = roles.get(relative);
+  if (existing && existing !== role) {
+    errors.push(`project_context/context.toml assigns conflicting roles to ${relative}: ${existing} and ${role}`);
+    return;
+  }
+  roles.set(relative, role);
+  if (!(await pathExists(path.join(projectRoot, ...relative.split("/"))))) {
+    errors.push(`project_context/context.toml references missing context file: ${relative}`);
+  }
+}
+
+function assertSections(file: string, content: string, sections: SectionSpec[], errors: string[]): void {
+  for (const section of sections) {
+    if (!hasAnyHeading(content, section)) {
+      errors.push(`${file} is missing section: ${section.label}`);
+    }
+  }
+}
+
+function assertSectionHasContent(file: string, content: string, section: SectionSpec, errors: string[]): void {
+  const body = sectionBodyForSpec(content, section);
   if (!body || body.replace(/[-*`\s]/g, "").length === 0) {
-    errors.push(`${file} section ${section} must describe concrete project facts`);
+    errors.push(`${file} section ${section.label} must describe concrete project facts`);
   }
 }
 
@@ -144,7 +351,8 @@ function assertNoFakeVerification(file: string, content: string, errors: string[
   const verification =
     sectionBody(content, "Verification Entry Points") ??
     sectionBody(content, "Test Entry Points") ??
-    sectionBody(content, "Verification Implications");
+    sectionBody(content, "Verification Implications") ??
+    sectionBody(content, "Tests");
   if (!verification) {
     return;
   }
@@ -156,9 +364,23 @@ function assertNoFakeVerification(file: string, content: string, errors: string[
   }
 }
 
+function hasAnyHeading(content: string, section: SectionSpec): boolean {
+  return section.headings.some((heading) => hasHeading(content, heading));
+}
+
 function hasHeading(content: string, heading: string): boolean {
   const escaped = escapeRegExp(heading);
   return new RegExp(`^##\\s+${escaped}\\s*$`, "im").test(content);
+}
+
+function sectionBodyForSpec(content: string, section: SectionSpec): string | undefined {
+  for (const heading of section.headings) {
+    const body = sectionBody(content, heading);
+    if (body !== undefined) {
+      return body;
+    }
+  }
+  return undefined;
 }
 
 function sectionBody(content: string, heading: string): string | undefined {
@@ -179,4 +401,186 @@ function escapeRegExp(value: string): string {
 
 function repoRelative(root: string, file: string): string {
   return path.relative(root, file).split(path.sep).join("/");
+}
+
+function schemaRequiresContextManifest(schemaVersion: string): boolean {
+  const major = Number.parseInt(schemaVersion, 10);
+  return Number.isNaN(major) || major >= 4;
+}
+
+function isInsidePath(root: string, file: string): boolean {
+  const relative = path.relative(root, file);
+  return relative !== "" && !relative.startsWith("..") && !path.isAbsolute(relative);
+}
+
+function frontMatterContextRole(frontMatter: Record<string, string>, file: string, errors: string[]): ContextRole | undefined {
+  const role = frontMatter.context_role;
+  if (!role) {
+    return undefined;
+  }
+  const normalized = normalizeRole(role);
+  if (!normalized) {
+    errors.push(`${file} has unsupported context_role: ${role}`);
+  }
+  return normalized;
+}
+
+function parseFrontMatter(content: string): Record<string, string> {
+  const lines = content.split(/\r?\n/);
+  if (lines[0]?.trim() !== "---") {
+    return {};
+  }
+  const values: Record<string, string> = {};
+  for (let index = 1; index < lines.length; index += 1) {
+    const line = lines[index].trim();
+    if (line === "---") {
+      return values;
+    }
+    const match = /^([A-Za-z0-9_-]+):\s*(.+?)\s*$/.exec(line);
+    if (match) {
+      values[match[1]] = stripQuotes(match[2]);
+    }
+  }
+  return {};
+}
+
+function parseContextManifest(content: string, file: string, errors: string[]): ContextManifest | undefined {
+  const manifest: ContextManifest = { areas: [], contexts: [] };
+  let current: ManifestEntry | undefined;
+  const lines = content.split(/\r?\n/);
+  for (let index = 0; index < lines.length; index += 1) {
+    const lineNumber = index + 1;
+    const line = stripTomlComment(lines[index]).trim();
+    if (!line) {
+      continue;
+    }
+    const tableMatch = /^\[\[(areas|context)\]\]$/.exec(line);
+    if (tableMatch) {
+      current = { table: tableMatch[1] as "areas" | "context", line: lineNumber, values: {} };
+      if (current.table === "areas") {
+        manifest.areas.push(current);
+      } else {
+        manifest.contexts.push(current);
+      }
+      continue;
+    }
+    if (!current) {
+      errors.push(`${file} line ${lineNumber} must appear inside [[areas]] or [[context]]`);
+      continue;
+    }
+    const assignment = /^([A-Za-z0-9_-]+)\s*=\s*(.+)$/.exec(line);
+    if (!assignment) {
+      errors.push(`${file} line ${lineNumber} is not a supported manifest assignment`);
+      continue;
+    }
+    const parsed = parseTomlValue(assignment[2]);
+    if (parsed === undefined) {
+      errors.push(`${file} line ${lineNumber} has an unsupported value; use strings, booleans or string arrays`);
+      continue;
+    }
+    current.values[assignment[1]] = parsed;
+  }
+  return manifest;
+}
+
+function parseTomlValue(raw: string): ManifestValue | undefined {
+  const value = raw.trim();
+  if (value === "true") {
+    return true;
+  }
+  if (value === "false") {
+    return false;
+  }
+  if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    return stripQuotes(value);
+  }
+  if (value.startsWith("[") && value.endsWith("]")) {
+    const inner = value.slice(1, -1).trim();
+    if (!inner) {
+      return [];
+    }
+    const values: string[] = [];
+    for (const part of inner.split(",")) {
+      const item = part.trim();
+      if (!((item.startsWith('"') && item.endsWith('"')) || (item.startsWith("'") && item.endsWith("'")))) {
+        return undefined;
+      }
+      values.push(stripQuotes(item));
+    }
+    return values;
+  }
+  return undefined;
+}
+
+function stripTomlComment(line: string): string {
+  let quote: string | undefined;
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    if ((char === '"' || char === "'") && line[index - 1] !== "\\") {
+      quote = quote === char ? undefined : quote ?? char;
+    }
+    if (char === "#" && !quote) {
+      return line.slice(0, index);
+    }
+  }
+  return line;
+}
+
+function stringManifestValue(entry: ManifestEntry, key: string, file: string, errors: string[]): string | undefined {
+  const value = entry.values[key];
+  if (typeof value === "string") {
+    return value;
+  }
+  errors.push(`${file} line ${entry.line} must include string field ${key}`);
+  return undefined;
+}
+
+function optionalStringManifestValue(entry: ManifestEntry, key: string, file: string, errors: string[]): string | undefined {
+  const value = entry.values[key];
+  if (value === undefined || typeof value === "string") {
+    return value;
+  }
+  errors.push(`${file} line ${entry.line} field ${key} must be a string`);
+  return undefined;
+}
+
+function optionalBooleanManifestValue(entry: ManifestEntry, key: string, file: string, errors: string[]): boolean | undefined {
+  const value = entry.values[key];
+  if (value === undefined || typeof value === "boolean") {
+    return value;
+  }
+  errors.push(`${file} line ${entry.line} field ${key} must be a boolean`);
+  return undefined;
+}
+
+function optionalStringArrayManifestValue(entry: ManifestEntry, key: string, file: string, errors: string[]): string[] | undefined {
+  const value = entry.values[key];
+  if (value === undefined || (Array.isArray(value) && value.every((item) => typeof item === "string"))) {
+    return value as string[] | undefined;
+  }
+  errors.push(`${file} line ${entry.line} field ${key} must be an array of strings`);
+  return undefined;
+}
+
+function normalizeRole(value: string): ContextRole | undefined {
+  return ROLE_ALIASES[value.trim().toLowerCase()];
+}
+
+function normalizeContextPath(value: string): string {
+  return value.replace(/\\/g, "/").replace(/^\.\//, "");
+}
+
+function stripQuotes(value: string): string {
+  if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    return value.slice(1, -1);
+  }
+  return value;
+}
+
+function sectionSpec(label: string, headings = [label]): SectionSpec {
+  return { label, headings };
+}
+
+function sectionSpecs(labels: string[]): SectionSpec[] {
+  return labels.map((label) => sectionSpec(label));
 }

@@ -15,7 +15,9 @@ The vNext default is **Minimal Context Harness**.
 Default durable facts:
 
 - `project_context/global.md`
-- `project_context/modules/<module>.md`
+- `project_context/architecture.md`
+- `project_context/context.toml` as the Schema v4 Context graph manifest
+- `project_context/modules/<unit>.md`
 - `DESIGN.md` for visual identity and design tokens when a UI project needs a design system
 - code, tests and necessary code comments
 - default Context authoring Skills for product planning, UI/UX design and development engineering
@@ -76,7 +78,15 @@ In short: Harness no longer tries to externalize the whole SDLC by default. It m
 - verification implications
 - open risks
 
-`project_context/modules/<module>.md` stores module-local facts:
+`project_context/context.toml` stores the Schema v4 Context graph:
+
+- ordinary projects default to one `main` area rooted at `.`;
+- monorepo or product-family projects can declare multiple `area` / `context_unit` entries;
+- context nodes can declare role, trigger/read policy, default children and optional boundary metadata;
+- `upgrade` creates a conservative baseline manifest for existing projects by registering current module Context files as areas;
+- boundary support is metadata validation only, not a replacement for project-specific import/path checks.
+
+`project_context/modules/<unit>.md` stores area, domain or subdomain facts by default:
 
 - responsibility
 - user / system contract
@@ -85,6 +95,8 @@ In short: Harness no longer tries to externalize the whole SDLC by default. It m
 - code entry points
 - test entry points
 - open risks
+
+Additional `project_context/**` Markdown files can declare `context_role` in front matter or receive a role from `context.toml`. `validate-context` applies role-specific schemas for foundations, archives, contracts, implementation indexes and decision rationales so non-module context does not need to fit the module schema. Automatic migration does not infer those semantic roles or rewrite user-authored Context Markdown; a later agent should refine the manifest explicitly when a migrated area is really a foundation, contract, archive or implementation index.
 
 The Context should be compact and semantically split. It should not duplicate code, test logs, release ledgers or implementation narration that the source already exposes. Former ADR content is downgraded into `Design Rationale`; implementation documentation is downgraded into code comments, test names and short Context constraints when the code does not make the fact obvious.
 
@@ -95,6 +107,7 @@ The default product planning, UI/UX and development engineer Skills are a thin a
 `init` creates Minimal Context assets and managed guidance:
 
 - `AGENTS.md`
+- `project_context/context.toml`
 - `project_context/global.md`
 - `project_context/architecture.md`
 - `project_context/modules/main.md`

@@ -11,15 +11,16 @@ description: Use when the user explicitly asks for 设计稿, UI/UX 设计方案
 
 ## 工作方式
 
-1. 先读取 `project_context/global.md` 和相关 `project_context/modules/*.md`。
+1. 先读取 `project_context/global.md` 和 `project_context/context.toml`，按 default area、triggers、read_when 选择相关 context。
 2. 如果项目存在 `DESIGN.md`，先读取它；如果用户要求视觉体系、设计稿或界面风格，按 Google `@google/design.md` 的 DESIGN.md 格式创建或更新根目录 `DESIGN.md`。
 3. 整理或生成：用户流程、页面/组件清单、关键状态、交互反馈、响应式边界、a11y 要求、视觉约束和设计 token。
 4. 如果涉及已有 UI，优先结合代码入口、运行截图或用户提供的参考图来描述差异。
 5. 需要长期沉淀时：
    - 项目级体验原则和屏幕清单写入 `global.md`。
-   - 模块级 screen contract、state、interaction 和视觉约束写入对应 module Context。
+   - 模块级 screen contract、state、interaction 和视觉约束写入对应 area / subdomain Context。
    - 颜色、字体、间距、圆角、组件视觉 token 和视觉 rationale 写入 `DESIGN.md`。
-   - 新 UI 模块可新增 `project_context/modules/<module>.md`，并更新 `global.md#Module Index`。
+   - 新 UI context unit 可新增 `project_context/modules/<unit>.md`，并更新 `global.md#Module Index`；复杂项目同时更新 `project_context/context.toml`。
+   - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
 6. Context 只能声明设计验收入口或 smoke 入口，不能伪造“已验证通过”。
 
 ## 视觉质量校准
@@ -54,4 +55,5 @@ description: Use when the user explicitly asks for 设计稿, UI/UX 设计方案
 - `modules/*.md#User / System Contract`：页面、组件、状态、交互和数据展示契约。
 - `modules/*.md#Key Constraints`：responsive、a11y、品牌/视觉边界、加载/空态/错误态约束。
 - `modules/*.md#Test Entry Points`：UI smoke、截图验收、可访问性检查或项目自己的测试入口。
+- `project_context/context.toml`：复杂项目的 area/context_unit、role、触发词、按需读取策略和可选边界规则。
 - `DESIGN.md`：视觉 identity、design tokens、组件视觉规则和 do/don't。

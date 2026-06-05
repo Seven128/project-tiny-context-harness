@@ -20,6 +20,10 @@
 
 - Link to `project_context/architecture.md`; keep architecture notes minimal and focused on boundaries, components and constraints that are not obvious from code.
 
+## Context Graph
+
+- Link to `project_context/context.toml` and keep its default area, role, trigger, read policy and boundary metadata aligned with this Context.
+
 ## Product / Delivery Brief
 
 - Capture durable product goals, users, core flows, acceptance signals and non-goals.

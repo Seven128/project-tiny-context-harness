@@ -1,11 +1,12 @@
 import path from "node:path";
+import { CONTEXT_MANIFEST_PATH, contextManifestFromExistingModules } from "./context-manifest.js";
 import { defaultConfig, readConfig } from "./config.js";
 import { createDesignMdIfMissing, DESIGN_MD_PATH } from "./design-md.js";
 import { pathExists, writeTextIfChanged } from "./fs.js";
 import { harnessConfigPath, harnessRoot } from "./harness-root.js";
 import { stringifyYaml } from "./yaml.js";
 
-export const CURRENT_SCHEMA_VERSION = "3";
+export const CURRENT_SCHEMA_VERSION = "4";
 
 export interface Migration {
   from: string;
@@ -24,8 +25,22 @@ export async function runMigrations(projectRoot: string): Promise<MigrationRepor
   const report: MigrationReport = { changed: [], skipped: [] };
   const root = await harnessRoot(projectRoot);
   await migrateConfig(projectRoot, root, report);
+  await migrateContextManifest(projectRoot, report);
   await migrateDesignMd(projectRoot, report);
   return report;
+}
+
+async function migrateContextManifest(projectRoot: string, report: MigrationReport): Promise<void> {
+  const manifestPath = path.join(projectRoot, CONTEXT_MANIFEST_PATH);
+  if (await pathExists(manifestPath)) {
+    report.skipped.push(CONTEXT_MANIFEST_PATH);
+    return;
+  }
+  if (await writeTextIfChanged(manifestPath, await contextManifestFromExistingModules(projectRoot))) {
+    report.changed.push(CONTEXT_MANIFEST_PATH);
+  } else {
+    report.skipped.push(CONTEXT_MANIFEST_PATH);
+  }
 }
 
 async function migrateDesignMd(projectRoot: string, report: MigrationReport): Promise<void> {

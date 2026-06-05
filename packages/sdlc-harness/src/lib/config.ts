@@ -8,7 +8,7 @@ export function defaultConfig(root: string): HarnessConfig {
   return {
     core: {
       package: "agent-project-sdlc",
-      schema_version: "3"
+      schema_version: "4"
     },
     managed_files: [
       { path: "AGENTS.md", strategy: "merge-block" },
