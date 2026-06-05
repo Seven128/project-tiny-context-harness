@@ -5,6 +5,7 @@ import { writeConfigIfMissing } from "./config.js";
 import { createDesignMdIfMissing, DESIGN_MD_PATH } from "./design-md.js";
 import { harnessConfigPath, harnessRoot } from "./harness-root.js";
 import { ensureDir, pathExists, writeTextIfChanged } from "./fs.js";
+import { assertSupportedSchema } from "./schema-guard.js";
 import { runSync } from "./sync-engine.js";
 
 export interface InitOptions {
@@ -14,6 +15,7 @@ export interface InitOptions {
 
 export async function runInit(projectRoot: string, options: InitOptions): Promise<string[]> {
   const report: string[] = [];
+  await assertSupportedSchema(projectRoot, "init");
   const existingEntries = await projectHasExistingFiles(projectRoot);
   if (existingEntries && !options.adopt && !options.force) {
     report.push("Project is not empty; continuing with non-destructive init. Use --adopt to mark this as an existing project adoption.");

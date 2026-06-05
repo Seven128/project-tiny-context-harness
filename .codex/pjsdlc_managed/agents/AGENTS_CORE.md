@@ -16,14 +16,16 @@
 2. 新需求、需求变更、debug 结论或后续迭代后，如有影响未来恢复的长期事实，更新 `project_context/**`；普通局部实现细节不写。
 3. 长期事实只写入 `project_context/**`；不要默认创建 PRD、tech plan、ADR、implementation doc、review/test/release 文档。
 4. 用户明确要求“产品方案 / 产品经理 / 产品专家”、“设计稿 / UI/UX 设计方案 / 视觉专家”或“开发工程师 / 技术方案 / 开发方案 / 实现 / 实现方案 / 实施计划 / 技术专家”这类角色或强产物名时，使用对应 Context authoring Skill，把长期结论写回 `project_context/**`。
-5. 用户可以在 `.agent/pjsdlc_managed/override_skills/context_product_plan.md`、`.agent/pjsdlc_managed/override_skills/context_uiux_design.md` 或 `.agent/pjsdlc_managed/override_skills/context_development_engineer.md` 中追加项目本地 Skill 规则；`sync` 会合并到 `.agent/skills/**`。
-6. ADR 降级为 Context 中的 `Design Rationale`；实现说明优先写成代码注释、测试名或模块 Context 中的关键约束。
-7. Harness workflow gate 只运行 `validate-context`，用于检查上下文是否可恢复。
-8. 产品质量由项目自己的验证入口证明；Context 只能声明验证入口，不能伪造“测试已通过”。
-9. `sync` 只刷新 managed guidance、Skill 和工具。
-10. 普通项目默认只有一个 `main` area；monorepo 或 product-family 项目可在 `context.toml` 中增加多个 `area` / `context_unit`，并用 `context_role` 或 manifest role 区分 `area`、`subdomain`、`contract`、`foundation`、`archive`、`implementation-index` 和 `decision-rationale` 等不同 Context 类型。
+5. 当任务涉及设计稿、重做设计、视觉方案、设计系统、visual polish、frontend redesign 或 frontend styling，且存在可扫描的 UI 代码、页面文件、构建产物目录或本地/远程 URL 时，默认运行 `npx impeccable detect <target>` 做 Impeccable 视觉审查；没有可扫描目标、命令不可用或扫描失败时，说明原因并继续。Impeccable 不是 `validate-context` gate，也不替代截图检查、项目测试或人工判断。
+6. 用户可以在 `.agent/pjsdlc_managed/override_skills/context_product_plan.md`、`.agent/pjsdlc_managed/override_skills/context_uiux_design.md` 或 `.agent/pjsdlc_managed/override_skills/context_development_engineer.md` 中追加项目本地 Skill 规则；`sync` 会合并到 `.agent/skills/**`。
+7. ADR 降级为 Context 中的 `Design Rationale`；实现说明优先写成代码注释、测试名或模块 Context 中的关键约束。
+8. Harness workflow gate 只运行 `validate-context`，用于检查上下文是否可恢复。
+9. 产品质量由项目自己的验证入口证明；Context 只能声明验证入口，不能伪造“测试已通过”。
+10. `sync` 只刷新 managed guidance、Skill 和工具。
+11. 普通项目默认只有一个 `main` area；monorepo 或 product-family 项目可在 `context.toml` 中增加多个 `area` / `context_unit`，并用 `context_role` 或 manifest role 区分 `area`、`subdomain`、`contract`、`foundation`、`archive`、`implementation-index` 和 `decision-rationale` 等不同 Context 类型。
 
 ## 常用命令
 
 - `make validate-context`：检查 `project_context/**` 是否足够支持 agent 恢复上下文。
-- `npx sdlc-harness sync`：刷新 managed guidance、Context template、默认 Skill 和工具。
+- `make sdlc-sync`：刷新 managed guidance、Context template、默认 Skill 和工具。
+- `npx --yes --package agent-project-sdlc@latest sdlc-harness doctor`：临时诊断 canonical SDLC CLI；避免裸 `npx sdlc-harness` 解析到旧包名或旧本地缓存。

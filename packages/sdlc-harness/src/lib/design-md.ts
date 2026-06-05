@@ -123,6 +123,13 @@ function designMdTemplate(): string {
     "- Do keep accessibility, responsive behavior and interaction states explicit.",
     "- Don't treat this starter as a user brand decision once project-specific rules exist.",
     "- Don't add generic AI-looking hero gradients, oversized cards or decorative blobs unless the product direction asks for them.",
+    "",
+    "## Design Change Workflow",
+    "",
+    "- Read this file before creating design drafts, redesigning UI, changing visual systems or polishing frontend styling.",
+    "- When there is a scan target such as UI source, page files, build output or a local/remote URL, run `npx impeccable detect <target>` before finalizing design changes.",
+    "- Treat Impeccable findings as design-review signals: fix issues that affect clarity, consistency, accessibility or trust, and note when there is no suitable scan target.",
+    "- After design decisions stabilize, update this file with durable tokens, component rules and do/don't guidance so later UI work stays aligned.",
     ""
   ].join("\n");
 }

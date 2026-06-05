@@ -59,6 +59,9 @@ try {
   assert.match(designMd, /User-authored tokens/);
   assert.match(designMd, /# Design System/);
   assert.match(designMd, /## Do's and Don'ts/);
+  assert.match(designMd, /## Design Change Workflow/);
+  assert.match(designMd, /Impeccable/);
+  assert.match(designMd, /npx impeccable detect <target>/);
 
   const architectureContext = await readFile(path.join(root, "project_context/architecture.md"), "utf8");
   assert.match(architectureContext, /# Architecture Context/);
@@ -85,11 +88,18 @@ try {
   assert.match(agents, /project_context\/global\.md/);
   assert.match(agents, /project_context\/architecture\.md/);
   assert.match(agents, /Harness (?:maintains context quality|只维护上下文质量)/i);
+  assert.match(agents, /Impeccable/);
+  assert.match(agents, /npx impeccable detect <target>/);
+  assert.doesNotMatch(agents, /multi_agent_v1/);
 
   const makefile = await readFile(path.join(root, "Makefile"), "utf8");
   assert.match(makefile, /-include \.agent\/pjsdlc_managed\/make\/sdlc-harness\.mk/);
   const managedMake = await readFile(path.join(root, ".agent/pjsdlc_managed/make/sdlc-harness.mk"), "utf8");
   assert.match(managedMake, /validate-context/);
+  assert.match(managedMake, /npx --yes --package agent-project-sdlc@latest sdlc-harness/);
+  assert.match(managedMake, /^sdlc-doctor:/m);
+  assert.match(managedMake, /^sdlc-sync:/m);
+  assert.match(managedMake, /^sdlc-upgrade:/m);
   await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/global.md"));
   await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/context.toml"));
   await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/architecture.md"));
@@ -114,9 +124,11 @@ try {
   const uiuxSkill = await readFile(path.join(root, ".agent/skills/context_uiux_design/SKILL.md"), "utf8");
   assert.match(uiuxSkill, /设计稿/);
   assert.match(uiuxSkill, /UI\/UX/);
+  assert.match(uiuxSkill, /Impeccable review/);
+  assert.match(uiuxSkill, /npx impeccable detect <target>/);
   const developmentSkill = await readFile(path.join(root, ".agent/skills/context_development_engineer/SKILL.md"), "utf8");
   assert.match(developmentSkill, /开发工程师/);
-  assert.match(developmentSkill, /启动多 agent 能力/);
+  assert.doesNotMatch(developmentSkill, /multi_agent_v1/);
 
   await mkdir(path.join(root, ".agent/pjsdlc_managed/override_skills"), { recursive: true });
   await writeFile(

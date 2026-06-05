@@ -311,8 +311,8 @@ async function installedConsumerSmoke(version) {
   if (installedVersion !== version) {
     throw new Error(`Installed package version ${installedVersion} did not match ${version}`);
   }
-  await run("npx", ["sdlc-harness", "init", "--harness-folder", ".codex"], { cwd: tmp });
-  const doctor = await run("npx", ["sdlc-harness", "doctor"], { cwd: tmp, capture: true });
+  await run("npx", ["--no-install", "sdlc-harness", "init", "--harness-folder", ".codex"], { cwd: tmp });
+  const doctor = await run("npx", ["--no-install", "sdlc-harness", "doctor"], { cwd: tmp, capture: true });
   if (!doctor.output.includes(`core package: ${packageName}@${version}`)) {
     throw new Error("Doctor output did not include the expected package version.");
   }

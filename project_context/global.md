@@ -46,6 +46,8 @@
 - vNext implementation is Minimal Context Harness.
 - `init` creates `project_context/context.toml` with one default `main` area at `project_context/areas/main.md`; `upgrade` migrates legacy `project_context/modules/**/*.md` into `project_context/areas/**/*.md` and registers area Context files in the manifest.
 - v4 `validate-context` requires `project_context/context.toml`; older config versions should run `upgrade` before relying on the v4 gate.
+- Ad hoc CLI docs and managed Makefile wrappers use the canonical package-qualified entry `npx --yes --package agent-project-sdlc@latest sdlc-harness`; bare `npx sdlc-harness` is treated as ambiguous because it can resolve the legacy npm package name or a stale local binary.
+- Current CLI commands guard unsupported future schema major versions before applying v4 assumptions; write commands fail before modifying files.
 - `validate-context` validates the Context graph structure, area recovery sections, role names, paths and field shapes; non-area roles are semantic labels rather than writing-template gates.
 - Old stage-based assets, state files and work-product trees are removed from the current source tree.
 - Historical stage design is summarized in `PROJECT_SPEC.md`; legacy stage semantic migration support has been removed after user migrations completed.

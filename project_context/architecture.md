@@ -21,6 +21,7 @@ This file is the restrained architecture context for the source repository. It i
 
 - `init` creates `project_context/global.md`, `project_context/architecture.md`, `project_context/areas/main.md`, then runs `sync`.
 - `init` also creates `project_context/context.toml`, declaring the default `main` area for ordinary projects.
+- CLI write commands check the configured schema major before writing; unsupported future schemas fail fast with the canonical package-qualified `npx` command hint.
 - `upgrade` migrates legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md`, creates missing `project_context/context.toml` by registering area Context files, and only rewrites legacy module paths in manifest/global references.
 - `sync` reads `packages/sdlc-harness/assets/**` and writes managed guidance, templates, tools and Skills into the configured harness root.
 - Skill customization flows from `<harnessRoot>/pjsdlc_managed/override_skills/*.md` into generated `<harnessRoot>/skills/**` during sync.

@@ -1,4 +1,5 @@
 import path from "node:path";
+import { CANONICAL_CORE_PACKAGE, CURRENT_SCHEMA_VERSION } from "./constants.js";
 import type { HarnessConfig } from "./types.js";
 import { harnessConfigPath, harnessPath, harnessRoot } from "./harness-root.js";
 import { pathExists, readText, writeTextIfChanged } from "./fs.js";
@@ -7,8 +8,8 @@ import { parseYaml, stringifyYaml } from "./yaml.js";
 export function defaultConfig(root: string): HarnessConfig {
   return {
     core: {
-      package: "agent-project-sdlc",
-      schema_version: "4"
+      package: CANONICAL_CORE_PACKAGE,
+      schema_version: CURRENT_SCHEMA_VERSION
     },
     managed_files: [
       { path: "AGENTS.md", strategy: "merge-block" },

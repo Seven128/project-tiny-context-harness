@@ -3,6 +3,7 @@ import path from "node:path";
 import { readConfig } from "./config.js";
 import { harnessConfigPath, harnessRoot } from "./harness-root.js";
 import { pathExists } from "./fs.js";
+import { unsupportedSchemaMessage } from "./schema-guard.js";
 
 const require = createRequire(import.meta.url);
 const packageMetadata = require("../../package.json") as { version?: string };
@@ -28,6 +29,11 @@ export async function runDoctor(projectRoot: string): Promise<DoctorReport> {
   report.info.push(`harness root: ${root}`);
   report.info.push(`core package: ${config.core.package}@${packageVersion}`);
   report.info.push(`schema version: ${config.core.schema_version}`);
+  const unsupportedSchema = unsupportedSchemaMessage(config.core.schema_version, "doctor");
+  if (unsupportedSchema) {
+    report.errors.push(unsupportedSchema);
+    return report;
+  }
 
   for (const required of ["project_context/context.toml", "project_context/global.md", "project_context/architecture.md", "project_context/areas"]) {
     if (!(await pathExists(path.join(projectRoot, required)))) {

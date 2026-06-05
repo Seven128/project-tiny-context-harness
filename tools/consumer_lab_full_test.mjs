@@ -105,6 +105,8 @@ export async function runConsumerLabFullTest(rawOptions) {
   const packageVersion = packageManifest.version;
   const checks = [];
   const artifactsDir = path.join(options.labDir, ".artifacts");
+  const localHarnessArgs = (...args) => ["--no-install", "sdlc-harness", ...args];
+  const localHarnessMake = "SDLC_HARNESS=npx --no-install sdlc-harness";
 
   const add = (check) => {
     checks.push({
@@ -152,21 +154,21 @@ export async function runConsumerLabFullTest(rawOptions) {
   await ensureBaseLab(options.labDir, tarballPath);
 
   commandCheck("Package smoke", "install current source tarball", "npm", ["install", "-D", `./.artifacts/${tarballName}`]);
-  commandCheck("CLI lifecycle", "init explicit .codex root", "npx", ["sdlc-harness", "init", "--harness-folder", ".codex"]);
-  commandCheck("CLI lifecycle", "doctor installed workspace", "npx", ["sdlc-harness", "doctor"]);
-  commandCheck("CLI lifecycle", "sync idempotency", "npx", ["sdlc-harness", "sync"]);
-  commandCheck("CLI lifecycle", "upgrade idempotency", "npx", ["sdlc-harness", "upgrade"]);
-  commandCheck("CLI validators", "validate-context", "npx", ["sdlc-harness", "validate-context"]);
-  commandCheck("CLI validators", "validate-harness compatibility alias", "npx", ["sdlc-harness", "validate-harness"]);
-  commandCheck("Makefile gates", "make validate-context", "make", ["validate-context"]);
-  commandCheck("Makefile gates", "make validate-harness compatibility alias", "make", ["validate-harness"]);
+  commandCheck("CLI lifecycle", "init explicit .codex root", "npx", localHarnessArgs("init", "--harness-folder", ".codex"));
+  commandCheck("CLI lifecycle", "doctor installed workspace", "npx", localHarnessArgs("doctor"));
+  commandCheck("CLI lifecycle", "sync idempotency", "npx", localHarnessArgs("sync"));
+  commandCheck("CLI lifecycle", "upgrade idempotency", "npx", localHarnessArgs("upgrade"));
+  commandCheck("CLI validators", "validate-context", "npx", localHarnessArgs("validate-context"));
+  commandCheck("CLI validators", "validate-harness compatibility alias", "npx", localHarnessArgs("validate-harness"));
+  commandCheck("Makefile gates", "make validate-context", "make", [localHarnessMake, "validate-context"]);
+  commandCheck("Makefile gates", "make validate-harness compatibility alias", "make", [localHarnessMake, "validate-harness"]);
 
   await verifyManagedAssets(options.labDir, add);
   await verifyAdoptAndConfiguredRoots(options.labDir, tarballPath, add);
   await writeMinimalToyProject(options.labDir);
   await commitLabCheckpoint(options.labDir, "Record Minimal Context consumer lab fixture");
   commandCheck("Toy project", "node:test fixture", "npm", ["test"]);
-  commandCheck("CLI validators", "validate-context after product fixture", "npx", ["sdlc-harness", "validate-context"]);
+  commandCheck("CLI validators", "validate-context after product fixture", "npx", localHarnessArgs("validate-context"));
   await verifyReleaseAndGithubStatic(options.sourceRoot, options.labDir, add);
 
   const { commit: labCommit, tag: labTag } = options.commitLab
@@ -279,11 +281,11 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
   run("npm", ["init", "-y"], adoptDir);
   await writeFile(path.join(adoptDir, "README.md"), "# Existing Project\n", "utf8");
   run("npm", ["install", "-D", tarballPath], adoptDir);
-  const adopt = run("npx", ["sdlc-harness", "init", "--adopt", "--harness-folder", ".codex"], adoptDir);
+  const adopt = run("npx", ["--no-install", "sdlc-harness", "init", "--adopt", "--harness-folder", ".codex"], adoptDir);
   add({
     area: "Adoption",
     evidence: "init --adopt existing project",
-    command: "npx sdlc-harness init --adopt --harness-folder .codex",
+    command: "npx --no-install sdlc-harness init --adopt --harness-folder .codex",
     status:
       adopt.status === 0 &&
       existsSync(path.join(adoptDir, ".codex/config.yaml")) &&
@@ -292,11 +294,11 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
         : "FAIL",
     details: trimOutput(`${adopt.stdout}\n${adopt.stderr}`)
   });
-  const adoptValidator = run("npx", ["sdlc-harness", "validate-context"], adoptDir);
+  const adoptValidator = run("npx", ["--no-install", "sdlc-harness", "validate-context"], adoptDir);
   add({
     area: "Adoption",
     evidence: "adopted project validates Minimal Context",
-    command: "npx sdlc-harness validate-context",
+    command: "npx --no-install sdlc-harness validate-context",
     status: adoptValidator.status === 0 ? "PASS" : "FAIL",
     details: trimOutput(`${adoptValidator.stdout}\n${adoptValidator.stderr}`)
   });
@@ -308,11 +310,11 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
     "utf8"
   );
   run("npm", ["install", "-D", tarballPath], configuredDir);
-  const configured = run("npx", ["sdlc-harness", "init", "--adopt"], configuredDir);
+  const configured = run("npx", ["--no-install", "sdlc-harness", "init", "--adopt"], configuredDir);
   add({
     area: "Configurable root",
     evidence: "package.json#sdlcHarness.harnessFolderName",
-    command: "npx sdlc-harness init --adopt",
+    command: "npx --no-install sdlc-harness init --adopt",
     status:
       configured.status === 0 &&
       existsSync(path.join(configuredDir, ".workflow/config.yaml")) &&
@@ -321,15 +323,15 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
         : "FAIL",
     details: trimOutput(`${configured.stdout}\n${configured.stderr}`)
   });
-  const configuredCliValidator = run("npx", ["sdlc-harness", "validate-context"], configuredDir);
+  const configuredCliValidator = run("npx", ["--no-install", "sdlc-harness", "validate-context"], configuredDir);
   add({
     area: "Configurable root",
     evidence: "CLI context validator consumes configured .workflow root",
-    command: "npx sdlc-harness validate-context",
+    command: "npx --no-install sdlc-harness validate-context",
     status: configuredCliValidator.status === 0 ? "PASS" : "FAIL",
     details: trimOutput(`${configuredCliValidator.stdout}\n${configuredCliValidator.stderr}`)
   });
-  const configuredMakeContext = run("make", ["validate-context"], configuredDir);
+  const configuredMakeContext = run("make", ["SDLC_HARNESS=npx --no-install sdlc-harness", "validate-context"], configuredDir);
   add({
     area: "Configurable root",
     evidence: "Makefile context gate consumes configured .workflow root",
@@ -337,7 +339,7 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
     status: configuredMakeContext.status === 0 ? "PASS" : "FAIL",
     details: trimOutput(`${configuredMakeContext.stdout}\n${configuredMakeContext.stderr}`)
   });
-  const configuredMakeHarness = run("make", ["validate-harness"], configuredDir);
+  const configuredMakeHarness = run("make", ["SDLC_HARNESS=npx --no-install sdlc-harness", "validate-harness"], configuredDir);
   add({
     area: "Configurable root",
     evidence: "Makefile compatibility gate consumes configured .workflow root",

@@ -88,6 +88,17 @@ test("validate-context rejects missing Schema v4 context graph manifest", async 
   }
 });
 
+test("validate-context rejects unsupported future schema versions", async () => {
+  const root = await createContextProject({ schemaVersion: "5" });
+  try {
+    const report = await runValidator(root, "validate-context");
+    assert.match(report.errors.join("\n"), /unsupported Harness schema version 5/);
+    assert.match(report.errors.join("\n"), /npx --yes --package agent-project-sdlc@latest sdlc-harness validate-context/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("validate-context rejects invalid context graph metadata", async () => {
   const root = await createContextProject({
     manifest: `[[areas]]

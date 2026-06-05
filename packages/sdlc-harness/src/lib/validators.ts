@@ -2,6 +2,7 @@ import path from "node:path";
 import { readConfig } from "./config.js";
 import { harnessPath, harnessRoot } from "./harness-root.js";
 import { listFiles, pathExists, readText } from "./fs.js";
+import { unsupportedSchemaMessage } from "./schema-guard.js";
 
 export interface ValidatorReport {
   info: string[];
@@ -123,6 +124,11 @@ async function validateContext(projectRoot: string): Promise<ValidatorReport> {
     errors.push(`${harnessPath(root, "config.yaml")} is missing`);
   } else {
     schemaVersion = (await readConfig(projectRoot)).core.schema_version;
+    const unsupportedSchema = unsupportedSchemaMessage(schemaVersion, "validate-context");
+    if (unsupportedSchema) {
+      errors.push(unsupportedSchema);
+      return { info, errors };
+    }
   }
 
   if (!(await pathExists(globalPath))) {

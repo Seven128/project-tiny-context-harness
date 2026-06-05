@@ -13,21 +13,26 @@
 - Projects can customize those Skills via `<harnessRoot>/pjsdlc_managed/override_skills/context_product_plan.md`, `context_uiux_design.md` and `context_development_engineer.md`; `sync` appends those rules into `<harnessRoot>/skills/**`.
 - The default Skill trigger descriptions should stay narrow: explicit role names or strong artifact names, not generic mentions of product, design, development, code or requirements.
 - The development engineer Skill trigger list includes `实现`, `实现方案` and `实施计划`, while its negative trigger rule still excludes routine coding, bug fixes, small refactors and package/release work.
+- The canonical npm package is `agent-project-sdlc`; `sdlc-harness` is the bin name. Public docs and managed Makefile wrappers avoid bare `npx sdlc-harness` for ad hoc commands because npm can resolve the legacy `sdlc-harness` package name or a stale local install.
+- Managed Makefile defaults `SDLC_HARNESS` to the source workspace CLI when `packages/sdlc-harness/dist/cli.js` exists, otherwise to `npx --yes --package agent-project-sdlc@latest sdlc-harness`; generated projects can override `SDLC_HARNESS` when intentionally testing a pinned local package.
+- Managed Makefile exposes `sdlc-doctor`, `sdlc-sync` and `sdlc-upgrade` wrappers in addition to `validate-context` and `validate-harness`.
 - `project_context/architecture.md` is a default Minimal Context fact source for restrained system boundary, component map and durable architecture constraints.
 - `project_context/context.toml` is created by `init` as the Schema v4 Context graph manifest; ordinary projects start with one default `main` area.
 - Schema v4 makes `project_context/context.toml` required for `validate-context`; `upgrade` migrates legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md` and registers area Context files in the manifest.
 - `validate-context` uses `context.toml` and `context_role` front matter to validate graph structure, paths, role names and field shapes; roles such as `area`, `domain`, `subdomain`, `foundation`, `archive`, `contract`, `implementation-index` and `decision-rationale` are semantic labels rather than writing-template gates.
 - Context graph boundary rules are metadata validation only for now; Harness does not perform import/path dependency analysis.
 - The UI/UX Skill uses Google `@google/design.md` for root `DESIGN.md` visual design tokens, and carries compact visual-quality calibration for brand/product register, design-system continuity and common AI-design anti-patterns.
-- Harness installs Impeccable as a default package dependency so UI/UX agents can use it during design-draft, visual-spec or existing-UI review work; its detector remains optional evidence, not a `validate-context` gate.
+- Harness installs Impeccable as a default package dependency; design-draft, redesign, visual polish, frontend styling and existing-UI review tasks should run `npx impeccable detect <target>` by default when a scan target exists, while treating findings as review evidence rather than a `validate-context` gate.
 - `sync` refreshes managed assets only and does not migrate old semantic facts.
 - `upgrade` runs safe migrations plus `sync`; it no longer prompts or runs semantic migration.
+- `init`, `sync`, `upgrade`, `doctor` and `validate-context` guard unsupported future schema major versions before applying v4 assumptions; write commands fail before modifying files.
 - `validate-context` checks Context completeness but does not prove product test execution.
 
 ## Core Data / API / State
 
 - CLI command routing lives in `packages/sdlc-harness/src/commands/index.ts`.
 - Default managed file configuration lives in `packages/sdlc-harness/src/lib/config.ts`.
+- Shared package/schema constants live in `packages/sdlc-harness/src/lib/constants.ts`; unsupported schema handling lives in `packages/sdlc-harness/src/lib/schema-guard.ts`.
 - Init behavior lives in `packages/sdlc-harness/src/lib/init.ts`.
 - Sync behavior lives in `packages/sdlc-harness/src/lib/sync-engine.ts`.
 - Default Skill assets live in `.codex/pjsdlc_managed/skills/**` and `packages/sdlc-harness/assets/skills/**`.
@@ -40,7 +45,7 @@
 - Do not put authoring-only skills under `.codex/skills/authoring/**` into package assets.
 - Default Skills must stay Minimal Context oriented and must not restore stage documents or phase gates.
 - UI/UX guidance may update `DESIGN.md`; it should use `npx @google/design.md lint DESIGN.md` when structure validation is needed.
-- Impeccable may be used proactively by the UI/UX Skill as optional visual-review evidence, but it must not become a required workflow command set or `validate-context` requirement.
+- Impeccable should be attempted by the UI/UX Skill when a scan target exists, but it must not become a `validate-context` requirement or block tasks that have no suitable target.
 - Skill overrides may narrow product/design/development guidance for a project but must keep conclusions in Minimal Context.
 - Context graph roles must stay lightweight and optional; do not make role-specific writing formats, monorepo-specific area names or boundary checks mandatory for ordinary projects.
 - Do not reintroduce legacy migration commands or stage assets.

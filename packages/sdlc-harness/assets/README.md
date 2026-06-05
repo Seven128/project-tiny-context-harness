@@ -19,14 +19,14 @@ Earlier stage-based workflow assets have been removed from the current source tr
 ## Install
 
 ```sh
-npm install -D agent-project-sdlc
-npx sdlc-harness init
+npm install -D agent-project-sdlc@latest
+npx --yes --package agent-project-sdlc@latest sdlc-harness init
 ```
 
 For an existing project:
 
 ```sh
-npx sdlc-harness init --adopt
+npx --yes --package agent-project-sdlc@latest sdlc-harness init --adopt
 ```
 
 `init` creates:
@@ -51,14 +51,20 @@ The three default Skills are Minimal Context authoring helpers. Explicit request
 
 `init` also creates `.codex/pjsdlc_managed/override_skills/` as the project-local Skill customization entry. Files such as `context_product_plan.md`, `context_uiux_design.md` and `context_development_engineer.md` in that directory are merged into the generated `.codex/skills/**` files by `sync`.
 
+## CLI Entry Safety
+
+The canonical npm package is `agent-project-sdlc`; `sdlc-harness` is the bin name. Prefer package-qualified `npx` commands for ad hoc use because bare `npx sdlc-harness` can resolve an older package name or a stale local install. After `init`, the managed Makefile wrapper uses the canonical latest CLI by default and can be overridden with `SDLC_HARNESS=...` when a project intentionally pins a local package.
+
+Use `npx --no-install sdlc-harness ...` only when you explicitly want the already installed local package, such as release smoke tests against a packed tarball.
+
 ## Core Commands
 
 | Command | Purpose |
 |---|---|
-| `npx sdlc-harness init` | Non-destructively installs Minimal Context Harness into the current project. |
-| `npx sdlc-harness sync` | Refreshes managed guidance, default Skills, Makefile include, tools and templates. It does not generate project semantics. |
-| `npx sdlc-harness upgrade` | Runs safe package migrations and `sync`, including Schema v4 Context graph manifest creation when missing. |
-| `npx sdlc-harness validate-context` | Checks minimum project recovery fields, Context graph metadata, declared paths/roles and fake test-execution claims. |
+| `npx --yes --package agent-project-sdlc@latest sdlc-harness init` | Non-destructively installs Minimal Context Harness into the current project. |
+| `make sdlc-sync` or `npx --yes --package agent-project-sdlc@latest sdlc-harness sync` | Refreshes managed guidance, default Skills, Makefile include, tools and templates. It does not generate project semantics. |
+| `make sdlc-upgrade` or `npx --yes --package agent-project-sdlc@latest sdlc-harness upgrade` | Runs safe package migrations and `sync`, including Schema v4 Context graph manifest creation when missing. |
+| `npx --yes --package agent-project-sdlc@latest sdlc-harness validate-context` | Checks minimum project recovery fields, Context graph metadata, declared paths/roles and fake test-execution claims. |
 | `make validate-context` | Makefile wrapper for `validate-context`. |
 | `make validate-harness` | Compatibility alias for `validate-context` in vNext projects. |
 | `sdlc-harness package sync-source` | Maintainer-only command to sync source workspace assets into `packages/sdlc-harness/assets/**`. |
@@ -128,20 +134,20 @@ mkdir -p .codex/pjsdlc_managed/override_skills
 $EDITOR .codex/pjsdlc_managed/override_skills/context_product_plan.md
 $EDITOR .codex/pjsdlc_managed/override_skills/context_uiux_design.md
 $EDITOR .codex/pjsdlc_managed/override_skills/context_development_engineer.md
-npx sdlc-harness sync
+make sdlc-sync
 ```
 
 `sync` appends those local rules into `.codex/skills/context_product_plan/SKILL.md`, `.codex/skills/context_uiux_design/SKILL.md` and `.codex/skills/context_development_engineer/SKILL.md`. The override can narrow product/design/development behavior for the project, but conclusions should still land in `project_context/**` and `DESIGN.md`.
 
 `init` creates root `DESIGN.md` beside Context as the design-system fact source, and `upgrade` creates it for existing Harness projects when missing. It starts as a neutral starter baseline with visual tokens, background/color logic, typography, spacing, component states and do/don't guidance; user-authored design rules take precedence once present. Use `npx @google/design.md lint DESIGN.md` to validate its structure when the file is changed.
 
-Harness installs Impeccable as a default package dependency so UI/UX agents can use its frontend design detector during design-draft, visual-spec or existing-UI review work:
+Harness installs Impeccable as a default package dependency. For design drafts, redesigns, visual polish, frontend redesign/styling or existing-UI review work, agents should run Impeccable by default when there is a scan target such as UI source, page files, build output or a local/remote URL:
 
 ```bash
 npx impeccable detect src/
 ```
 
-Impeccable usage is still optional evidence. Harness does not treat its detector as a `validate-context` gate, and the UI/UX Skill should use its findings as design-review signals rather than as a replacement for screenshots, project tests or human review.
+Impeccable is a default design-review step when a scan target exists, but it is not a `validate-context` gate. If there is no suitable target or the command cannot run, the agent should say why and continue. Its findings are design-review signals, not a replacement for screenshots, project tests or human review.
 
 ## Current Boundary
 

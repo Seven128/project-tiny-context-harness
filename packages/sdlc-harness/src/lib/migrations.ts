@@ -2,13 +2,12 @@ import path from "node:path";
 import { promises as fs } from "node:fs";
 import { CONTEXT_MANIFEST_PATH, contextManifestFromExistingAreas } from "./context-manifest.js";
 import { architectureContextTemplate, areaContextTemplate, globalContextTemplate } from "./context-templates.js";
+import { CURRENT_SCHEMA_VERSION } from "./constants.js";
 import { defaultConfig, readConfig } from "./config.js";
 import { createDesignMdIfMissing, DESIGN_MD_PATH } from "./design-md.js";
 import { ensureDir, listFiles, pathExists, readText, writeTextIfChanged } from "./fs.js";
 import { harnessConfigPath, harnessRoot } from "./harness-root.js";
 import { stringifyYaml } from "./yaml.js";
-
-export const CURRENT_SCHEMA_VERSION = "4";
 
 export interface Migration {
   from: string;

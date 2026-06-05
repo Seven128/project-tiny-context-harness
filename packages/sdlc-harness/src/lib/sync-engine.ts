@@ -23,6 +23,7 @@ import {
 import { packageAssetPath } from "./paths.js";
 import type { ManagedFile } from "./types.js";
 import { parseYaml, stringifyYaml } from "./yaml.js";
+import { assertSupportedSchema } from "./schema-guard.js";
 
 export interface SyncReport {
   changed: string[];
@@ -48,6 +49,7 @@ interface SkillFrontmatter {
 }
 
 export async function runSync(projectRoot: string): Promise<SyncReport> {
+  await assertSupportedSchema(projectRoot, "sync");
   const root = await harnessRoot(projectRoot);
   const config = await readConfig(projectRoot);
   const report = emptySyncReport();

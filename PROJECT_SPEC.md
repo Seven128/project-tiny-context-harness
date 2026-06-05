@@ -131,6 +131,8 @@ Product, UI/UX and development engineer Skill customization lives under `<harnes
 
 `validate-context` checks that Context has the minimum recovery fields and does not fake product verification evidence. It does not replace project tests.
 
+The canonical npm package is `agent-project-sdlc`; `sdlc-harness` is the bin name. Public commands and managed Makefile wrappers prefer `npx --yes --package agent-project-sdlc@latest sdlc-harness` for ad hoc use so bare `npx sdlc-harness` cannot resolve a legacy package name or stale local binary. Current CLI commands guard unsupported future schema major versions before applying v4 assumptions, and write commands fail before modifying files.
+
 ## Historical Iteration: Stage-Based SDLC Harness
 
 The previous default attempted to encode a full stage-based software lifecycle:

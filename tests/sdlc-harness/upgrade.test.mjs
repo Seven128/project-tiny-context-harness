@@ -3,11 +3,13 @@ import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { runInit } from "../../packages/sdlc-harness/dist/lib/init.js";
+import { runSync } from "../../packages/sdlc-harness/dist/lib/sync-engine.js";
 import { runUpgrade } from "../../packages/sdlc-harness/dist/lib/upgrade.js";
 
 const root = await mkdtemp(path.join(tmpdir(), "sdlc-harness-upgrade-minimal-"));
 const existingManifestRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-upgrade-existing-manifest-"));
 const missingSectionsRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-upgrade-missing-sections-"));
+const futureSchemaRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-upgrade-future-schema-"));
 
 try {
   await writeFile(
@@ -189,8 +191,23 @@ default = true
   assert.match(migratedGlobal, /## Context Graph/);
   assert.match(migratedGlobal, /## Context Index/);
   assert.match(migratedGlobal, /\(areas\/main\.md\)/);
+
+  await mkdir(path.join(futureSchemaRoot, ".agent"), { recursive: true });
+  await writeFile(
+    path.join(futureSchemaRoot, ".agent/config.yaml"),
+    `core:
+  package: "agent-project-sdlc"
+  schema_version: "5"
+`,
+    "utf8"
+  );
+  await assert.rejects(() => runSync(futureSchemaRoot), /unsupported Harness schema version 5/);
+  await assert.rejects(() => runUpgrade(futureSchemaRoot), /unsupported Harness schema version 5/);
+  await assert.rejects(stat(path.join(futureSchemaRoot, "AGENTS.md")));
+  await assert.rejects(stat(path.join(futureSchemaRoot, "project_context")));
 } finally {
   await rm(root, { recursive: true, force: true });
   await rm(existingManifestRoot, { recursive: true, force: true });
   await rm(missingSectionsRoot, { recursive: true, force: true });
+  await rm(futureSchemaRoot, { recursive: true, force: true });
 }
