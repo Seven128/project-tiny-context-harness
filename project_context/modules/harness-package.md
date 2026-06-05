@@ -10,6 +10,7 @@
 - Default product planning, UI/UX and development engineer Skills write durable conclusions to `project_context/**`.
 - Projects can customize those Skills via `<harnessRoot>/pjsdlc_managed/override_skills/context_product_plan.md`, `context_uiux_design.md` and `context_development_engineer.md`; `sync` appends those rules into `<harnessRoot>/skills/**`.
 - The default Skill trigger descriptions should stay narrow: explicit role names or strong artifact names, not generic mentions of product, design, development, code or requirements.
+- The development engineer Skill trigger list includes `实现` and `实现方案`, while its negative trigger rule still excludes routine coding, bug fixes, small refactors and package/release work.
 - `project_context/architecture.md` is a default Minimal Context fact source for restrained system boundary, component map and durable architecture constraints.
 - The UI/UX Skill uses Google `@google/design.md` for `DESIGN.md` visual design tokens when a UI design system is needed, and carries compact visual-quality calibration for brand/product register, design-system continuity and common AI-design anti-patterns.
 - README docs may present Impeccable as optional external frontend design linting; it is not installed by default and is not a Harness validation gate.
