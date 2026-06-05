@@ -123,8 +123,14 @@ try {
     "项目本地产品方案规则：优先记录本项目的付费版本边界。\n",
     "utf8"
   );
+  await writeFile(
+    path.join(root, ".agent/pjsdlc_managed/override_skills/pjsdlc_dev_sprint.md"),
+    "Legacy stage override should be ignored by Minimal Context sync.\n",
+    "utf8"
+  );
   const overrideSyncReport = await runSync(root);
   assert.equal(overrideSyncReport.blocked.length, 0);
+  assert.ok(overrideSyncReport.skipped.some((line) => line.includes("legacy stage skill override ignored")));
   const overriddenProductSkill = await readFile(path.join(root, ".agent/skills/context_product_plan/SKILL.md"), "utf8");
   assert.match(overriddenProductSkill, /## Local Override/);
   assert.match(overriddenProductSkill, /项目本地产品方案规则/);

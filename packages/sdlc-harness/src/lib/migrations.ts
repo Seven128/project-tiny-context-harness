@@ -1,8 +1,9 @@
 import path from "node:path";
 import { CONTEXT_MANIFEST_PATH, contextManifestFromExistingModules } from "./context-manifest.js";
+import { architectureContextTemplate, globalContextTemplate, moduleContextTemplate } from "./context-templates.js";
 import { defaultConfig, readConfig } from "./config.js";
 import { createDesignMdIfMissing, DESIGN_MD_PATH } from "./design-md.js";
-import { pathExists, writeTextIfChanged } from "./fs.js";
+import { ensureDir, pathExists, writeTextIfChanged } from "./fs.js";
 import { harnessConfigPath, harnessRoot } from "./harness-root.js";
 import { stringifyYaml } from "./yaml.js";
 
@@ -25,9 +26,31 @@ export async function runMigrations(projectRoot: string): Promise<MigrationRepor
   const report: MigrationReport = { changed: [], skipped: [] };
   const root = await harnessRoot(projectRoot);
   await migrateConfig(projectRoot, root, report);
+  await migrateBaseProjectContext(projectRoot, report);
   await migrateContextManifest(projectRoot, report);
   await migrateDesignMd(projectRoot, report);
   return report;
+}
+
+async function migrateBaseProjectContext(projectRoot: string, report: MigrationReport): Promise<void> {
+  await ensureDir(path.join(projectRoot, "project_context", "modules"));
+  const files: Array<[string, string]> = [
+    ["project_context/global.md", globalContextTemplate()],
+    ["project_context/architecture.md", architectureContextTemplate()],
+    ["project_context/modules/main.md", moduleContextTemplate("main")]
+  ];
+  for (const [relative, content] of files) {
+    const target = path.join(projectRoot, ...relative.split("/"));
+    if (await pathExists(target)) {
+      report.skipped.push(relative);
+      continue;
+    }
+    if (await writeTextIfChanged(target, content)) {
+      report.changed.push(relative);
+    } else {
+      report.skipped.push(relative);
+    }
+  }
 }
 
 async function migrateContextManifest(projectRoot: string, report: MigrationReport): Promise<void> {

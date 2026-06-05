@@ -336,6 +336,10 @@ async function readSkillOverrides(
     const relativePath = path.relative(overrideRoot, file).split(path.sep).join("/");
     const match = relativePath.match(/^([^/]+)\.md$/);
     if (!match || !knownSkills.has(match[1])) {
+      if (isLegacyStageSkillOverride(relativePath)) {
+        report.skipped.push(`legacy stage skill override ignored: ${path.join(root, "pjsdlc_managed", "override_skills", relativePath)}`);
+        continue;
+      }
       report.blocked.push(`unknown skill override: ${path.join(root, "pjsdlc_managed", "override_skills", relativePath)}`);
       continue;
     }
@@ -369,6 +373,10 @@ async function readSkillOverrides(
 
 function skillOverrideRoot(projectRoot: string, root: string): string {
   return path.join(projectRoot, root, "pjsdlc_managed", "override_skills");
+}
+
+function isLegacyStageSkillOverride(relativePath: string): boolean {
+  return /^pjsdlc_[^/]+\.md$/.test(relativePath);
 }
 
 function skillNameForSourceFile(sourceRoot: string, file: string): string | undefined {

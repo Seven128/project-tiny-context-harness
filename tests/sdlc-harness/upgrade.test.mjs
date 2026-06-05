@@ -17,6 +17,9 @@ try {
   await runInit(root, { adopt: true, force: false });
   await rm(path.join(root, "DESIGN.md"), { force: true });
   await rm(path.join(root, "project_context/context.toml"), { force: true });
+  await rm(path.join(root, "project_context/global.md"), { force: true });
+  await rm(path.join(root, "project_context/architecture.md"), { force: true });
+  await rm(path.join(root, "project_context/modules/main.md"), { force: true });
   await mkdir(path.join(root, "project_context/modules/analytics"), { recursive: true });
   await writeFile(
     path.join(root, "project_context/modules/analytics/reporting.md"),
@@ -84,6 +87,7 @@ never_overwrite:
   await stat(path.join(root, "project_context/global.md"));
   await stat(path.join(root, "project_context/context.toml"));
   await stat(path.join(root, "project_context/architecture.md"));
+  await stat(path.join(root, "project_context/modules/main.md"));
   await stat(path.join(root, "DESIGN.md"));
   await stat(path.join(root, ".work_products/01_product/prd.md"));
   await stat(path.join(root, ".harness/state/lifecycle.yaml"));
