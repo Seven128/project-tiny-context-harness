@@ -3,7 +3,7 @@ import { CONTEXT_MANIFEST_PATH, contextManifestFromExistingModules } from "./con
 import { architectureContextTemplate, globalContextTemplate, moduleContextTemplate } from "./context-templates.js";
 import { defaultConfig, readConfig } from "./config.js";
 import { createDesignMdIfMissing, DESIGN_MD_PATH } from "./design-md.js";
-import { ensureDir, pathExists, writeTextIfChanged } from "./fs.js";
+import { ensureDir, pathExists, readText, writeTextIfChanged } from "./fs.js";
 import { harnessConfigPath, harnessRoot } from "./harness-root.js";
 import { stringifyYaml } from "./yaml.js";
 
@@ -51,6 +51,40 @@ async function migrateBaseProjectContext(projectRoot: string, report: MigrationR
       report.skipped.push(relative);
     }
   }
+  await migrateGlobalContextSections(projectRoot, report);
+}
+
+async function migrateGlobalContextSections(projectRoot: string, report: MigrationReport): Promise<void> {
+  const relative = "project_context/global.md";
+  const target = path.join(projectRoot, ...relative.split("/"));
+  if (!(await pathExists(target))) {
+    return;
+  }
+  const original = await readText(target);
+  const additions: string[] = [];
+  if (!hasHeading(original, "Architecture Context")) {
+    additions.push(
+      "## Architecture Context",
+      "",
+      "- See `project_context/architecture.md` for the restrained architecture context.",
+      ""
+    );
+  }
+  if (!hasHeading(original, "Context Graph")) {
+    additions.push(
+      "## Context Graph",
+      "",
+      "- See `project_context/context.toml` for area/context_unit roles, read policy and boundary metadata.",
+      ""
+    );
+  }
+  if (additions.length === 0) {
+    return;
+  }
+  const next = `${original.replace(/\s*$/, "\n\n")}${additions.join("\n")}`;
+  if (await writeTextIfChanged(target, next)) {
+    report.changed.push(`${relative}#schema-v4-sections`);
+  }
 }
 
 async function migrateContextManifest(projectRoot: string, report: MigrationReport): Promise<void> {
@@ -94,4 +128,9 @@ async function migrateConfig(projectRoot: string, root: string, report: Migratio
   } else {
     report.skipped.push(relativeConfigPath);
   }
+}
+
+function hasHeading(content: string, heading: string): boolean {
+  const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`^##\\s+${escaped}\\s*$`, "im").test(content);
 }

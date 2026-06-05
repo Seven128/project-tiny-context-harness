@@ -7,6 +7,7 @@ import { runUpgrade } from "../../packages/sdlc-harness/dist/lib/upgrade.js";
 
 const root = await mkdtemp(path.join(tmpdir(), "sdlc-harness-upgrade-minimal-"));
 const existingManifestRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-upgrade-existing-manifest-"));
+const missingSectionsRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-upgrade-missing-sections-"));
 
 try {
   await writeFile(
@@ -135,7 +136,57 @@ default = true
   await runUpgrade(existingManifestRoot);
   const keptManifest = await readFile(path.join(existingManifestRoot, "project_context/context.toml"), "utf8");
   assert.equal(keptManifest, customManifest);
+
+  await writeFile(
+    path.join(missingSectionsRoot, "package.json"),
+    JSON.stringify({ sdlcHarness: { harnessFolderName: ".harness" } }, null, 2),
+    "utf8"
+  );
+  await runInit(missingSectionsRoot, { adopt: true, force: false });
+  await writeFile(
+    path.join(missingSectionsRoot, "project_context/global.md"),
+    `# Project / Delivery Context
+
+## Project Goal
+
+- Keep a small context.
+
+## Non-goals / Boundaries
+
+- Do not replace tests.
+
+## Background
+
+- Old context predates architecture context.
+
+## Design Rationale
+
+- Preserve existing content.
+
+## Verification Entry Points
+
+- npm test
+
+## Current State
+
+- Migrating.
+
+## Next Safe Action
+
+- Run upgrade.
+
+## Module Index
+
+- [main](modules/main.md)
+`,
+    "utf8"
+  );
+  await runUpgrade(missingSectionsRoot);
+  const migratedGlobal = await readFile(path.join(missingSectionsRoot, "project_context/global.md"), "utf8");
+  assert.match(migratedGlobal, /## Architecture Context/);
+  assert.match(migratedGlobal, /## Context Graph/);
 } finally {
   await rm(root, { recursive: true, force: true });
   await rm(existingManifestRoot, { recursive: true, force: true });
+  await rm(missingSectionsRoot, { recursive: true, force: true });
 }
