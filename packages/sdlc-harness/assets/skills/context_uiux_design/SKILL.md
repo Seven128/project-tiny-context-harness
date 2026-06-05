@@ -14,15 +14,16 @@ description: Use when the user explicitly asks for 设计稿, 重做设计, UI/U
 1. 先读取 `project_context/global.md` 和 `project_context/context.toml`，按 default area、triggers、read_when 选择相关 context。
 2. 如果项目存在 `DESIGN.md`，先读取它；如果用户要求视觉体系、设计稿或界面风格，按 Google `@google/design.md` 的 DESIGN.md 格式创建或更新根目录 `DESIGN.md`。
 3. 整理或生成：用户流程、页面/组件清单、关键状态、交互反馈、响应式边界、a11y 要求、视觉约束和设计 token。
-4. 如果涉及已有 UI，优先结合代码入口、运行截图或用户提供的参考图来描述差异。
-5. 当任务涉及设计稿、重做设计、视觉方案、设计系统、visual polish、frontend redesign 或 frontend styling，且存在可扫描的 UI 代码、页面文件、构建产物目录或本地/远程 URL 时，默认运行 `npx impeccable detect <target>`；实现前可用于识别既有视觉问题，实现后或交付前用于审查结果。没有可扫描目标、命令不可用或扫描失败时，说明原因并继续。
-6. 需要长期沉淀时：
+4. 界面职责、流程归属和长期交互契约以 `project_context/**` 为准；`DESIGN.md` 负责视觉 token 和视觉 rationale；代码、截图和搜索结果只说明当前实现状态。如果二者冲突，显式标记为实现漂移、缺失工作或 Context 过期。
+5. 如果涉及已有 UI，优先结合代码入口、运行截图或用户提供的参考图来描述差异。
+6. 当任务涉及设计稿、重做设计、视觉方案、设计系统、visual polish、frontend redesign 或 frontend styling，且存在可扫描的 UI 代码、页面文件、构建产物目录或本地/远程 URL 时，默认运行 `npx impeccable detect <target>`；实现前可用于识别既有视觉问题，实现后或交付前用于审查结果。没有可扫描目标、命令不可用或扫描失败时，说明原因并继续。
+7. 需要长期沉淀时：
    - 项目级体验原则和屏幕清单写入 `global.md`。
    - 模块级 screen contract、state、interaction 和视觉约束写入对应 area / subdomain Context。
    - 颜色、字体、间距、圆角、组件视觉 token 和视觉 rationale 写入 `DESIGN.md`。
    - 新 UI context unit 可新增 `project_context/areas/<unit>.md`，并更新 `global.md#Context Index`；复杂项目同时更新 `project_context/context.toml`。
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
-7. Context 只能声明设计验收入口或 smoke 入口，不能伪造“已验证通过”。
+8. Context 只能声明设计验收入口或 smoke 入口，不能伪造“已验证通过”。
 
 ## 视觉质量校准
 

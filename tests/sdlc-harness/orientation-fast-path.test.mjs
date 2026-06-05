@@ -38,6 +38,12 @@ for (const content of [sourceAgents, rootReadme, packageReadme, spec, packageAge
   assert.match(content, /project_context\/architecture\.md/);
 }
 
+for (const content of [sourceAgents, rootReadme, packageReadme, spec, packageAgents, packageGuide]) {
+  assert.match(content, /project_context\/\*\*.*(?:authoritative|权威事实源)/s);
+  assert.match(content, /(?:current implementation state|当前实现状态)/);
+  assert.match(content, /(?:implementation drift|实现漂移)/);
+}
+
 for (const content of [sourceAgents, rootReadme, packageReadme, packageAgents, packageGuide]) {
   assert.match(content, /Harness (?:maintains context quality|只维护上下文质量)/i);
   assert.match(
@@ -85,6 +91,7 @@ assert.doesNotMatch(authoringSkill, /pjsdlc_manager|pjsdlc_dev_sprint|pjsdlc_rev
 assert.match(productSkill, /description:.*产品方案.*产品经理.*产品专家/s);
 assert.match(productSkill, /generic mentions of 产品, product, or requirements/);
 assert.match(productSkill, /project_context\/\*\*/);
+assert.match(productSkill, /实现漂移/);
 assert.match(productSkill, /不默认创建 `\.work_products\/\*\*`/);
 assert.doesNotMatch(productSkill, /恢复\s*旧/);
 assert.doesNotMatch(productSkill, /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|pjsdlc_/);
@@ -92,6 +99,7 @@ assert.doesNotMatch(productSkill, /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTI
 assert.match(uiuxSkill, /description:.*设计稿.*UI\/UX 设计方案.*视觉专家/s);
 assert.match(uiuxSkill, /generic mentions of 设计, design, or user experience/);
 assert.match(uiuxSkill, /project_context\/\*\*/);
+assert.match(uiuxSkill, /实现漂移/);
 assert.match(uiuxSkill, /@google\/design\.md/);
 assert.match(uiuxSkill, /DESIGN\.md/);
 assert.match(uiuxSkill, /npx @google\/design\.md lint DESIGN\.md/);
@@ -110,6 +118,9 @@ assert.match(developmentSkill, /generic mentions of code, development, or engine
 assert.doesNotMatch(developmentSkill, /multi_agent_v1/);
 assert.match(developmentSkill, /project_context\/architecture\.md/);
 assert.match(developmentSkill, /project_context\/\*\*/);
+assert.match(developmentSkill, /Context expectation/);
+assert.match(developmentSkill, /Current code evidence/);
+assert.match(developmentSkill, /实现漂移/);
 assert.match(developmentSkill, /不默认创建 `\.work_products\/\*\*`/);
 assert.doesNotMatch(developmentSkill, /恢复\s*旧/);
 assert.doesNotMatch(developmentSkill, /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|pjsdlc_/);

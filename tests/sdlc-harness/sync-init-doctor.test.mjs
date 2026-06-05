@@ -87,6 +87,9 @@ try {
   assert.match(agents, /Minimal Context Harness/);
   assert.match(agents, /project_context\/global\.md/);
   assert.match(agents, /project_context\/architecture\.md/);
+  assert.match(agents, /权威事实源/);
+  assert.match(agents, /当前实现状态/);
+  assert.match(agents, /实现漂移/);
   assert.match(agents, /Harness (?:maintains context quality|只维护上下文质量)/i);
   assert.match(agents, /Impeccable/);
   assert.match(agents, /npx impeccable detect <target>/);
@@ -121,13 +124,18 @@ try {
   const productSkill = await readFile(path.join(root, ".agent/skills/context_product_plan/SKILL.md"), "utf8");
   assert.match(productSkill, /产品方案/);
   assert.match(productSkill, /project_context\/\*\*/);
+  assert.match(productSkill, /实现漂移/);
   const uiuxSkill = await readFile(path.join(root, ".agent/skills/context_uiux_design/SKILL.md"), "utf8");
   assert.match(uiuxSkill, /设计稿/);
   assert.match(uiuxSkill, /UI\/UX/);
+  assert.match(uiuxSkill, /实现漂移/);
   assert.match(uiuxSkill, /Impeccable review/);
   assert.match(uiuxSkill, /npx impeccable detect <target>/);
   const developmentSkill = await readFile(path.join(root, ".agent/skills/context_development_engineer/SKILL.md"), "utf8");
   assert.match(developmentSkill, /开发工程师/);
+  assert.match(developmentSkill, /Context expectation/);
+  assert.match(developmentSkill, /Current code evidence/);
+  assert.match(developmentSkill, /实现漂移/);
   assert.doesNotMatch(developmentSkill, /multi_agent_v1/);
 
   await mkdir(path.join(root, ".agent/pjsdlc_managed/override_skills"), { recursive: true });

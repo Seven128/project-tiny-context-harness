@@ -13,14 +13,20 @@ description: Use when the user explicitly asks for 开发工程师, 软件工程
 
 1. 先读取 `project_context/global.md`、`project_context/architecture.md` 和 `project_context/context.toml`，按 default area、triggers、read_when 选择相关 context。
 2. 先确认用户目标、约束、成功标准、影响模块、现有测试入口和风险；能从代码或 Context 发现的事实不要反复询问用户。
-3. 实现时保持精准修改，优先遵循仓库现有框架、接口、测试和代码风格。
-4. 需要沉淀长期事实时，只更新 `project_context/**`：
+3. `project_context/**` 决定“应该是什么”：模块职责、归属、架构边界、接口方向和禁止依赖；代码决定“现在实现到了哪里”。如果代码、搜索结果或相邻实现与 Context 冲突，显式标记为实现漂移、缺失工作或 Context 过期，不要用当前代码形态反推模块归属。
+4. 涉及已有 Context 的实现判断，先做轻量对齐：
+   - Context expectation
+   - Current code evidence
+   - Gap
+   - Proposed change
+5. 实现时保持精准修改，优先遵循仓库现有框架、接口、测试和代码风格。
+6. 需要沉淀长期事实时，只更新 `project_context/**`：
    - 全局工程取舍、验证入口或当前状态写入 `global.md`。
    - 模块级 API、数据契约、关键约束、入口和风险写入对应 area / subdomain Context。
    - 跨域接口语义写入 `context_role: contract` 或 manifest role 为 `contract` 的 Context；代码入口索引用 `implementation-index`；底层理论源用 `foundation`；历史归档索引用 `archive`。
    - 新 context unit 可新增 `project_context/areas/<unit>.md`，并更新 `global.md#Context Index`；复杂项目同时更新 `project_context/context.toml`。
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
-5. Context 只能声明验证入口或验收信号，不能伪造“测试已通过”。
+7. Context 只能声明验证入口或验收信号，不能伪造“测试已通过”。
 
 ## 输出边界
 

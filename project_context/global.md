@@ -28,6 +28,7 @@
 - Product/UIUX/development engineer Skill customization uses `<harnessRoot>/pjsdlc_managed/override_skills/*.md`; sync merges those local rules into `<harnessRoot>/skills/**`.
 - Architecture Context is intentionally restrained: it records durable boundaries, component relationships and constraints, not implementation narration.
 - Schema v4 makes the lightweight Context graph the default: `project_context/context.toml` declares areas/context units, role-based context files, read triggers and monorepo boundary metadata while ordinary projects keep one default `main` area.
+- `project_context/**` is authoritative for intended ownership, responsibility, architecture boundaries, integration direction, allowed/forbidden dependencies and verification entry points; code is authoritative for current implementation state. Gaps between them should be treated as implementation drift, missing work or stale Context that must be called out.
 
 ## Architecture Context
 
