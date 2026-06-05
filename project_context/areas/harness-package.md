@@ -19,7 +19,7 @@
 - `validate-context` uses `context.toml` and `context_role` front matter to validate graph structure, paths, role names and field shapes; roles such as `area`, `domain`, `subdomain`, `foundation`, `archive`, `contract`, `implementation-index` and `decision-rationale` are semantic labels rather than writing-template gates.
 - Context graph boundary rules are metadata validation only for now; Harness does not perform import/path dependency analysis.
 - The UI/UX Skill uses Google `@google/design.md` for root `DESIGN.md` visual design tokens, and carries compact visual-quality calibration for brand/product register, design-system continuity and common AI-design anti-patterns.
-- README docs may present Impeccable as optional external frontend design linting; it is not installed by default and is not a Harness validation gate.
+- Harness installs Impeccable as a default package dependency so UI/UX agents can use it during design-draft, visual-spec or existing-UI review work; its detector remains optional evidence, not a `validate-context` gate.
 - `sync` refreshes managed assets only and does not migrate old semantic facts.
 - `upgrade` runs safe migrations plus `sync`; it no longer prompts or runs semantic migration.
 - `validate-context` checks Context completeness but does not prove product test execution.
@@ -40,7 +40,7 @@
 - Do not put authoring-only skills under `.codex/skills/authoring/**` into package assets.
 - Default Skills must stay Minimal Context oriented and must not restore stage documents or phase gates.
 - UI/UX guidance may update `DESIGN.md`; it should use `npx @google/design.md lint DESIGN.md` when structure validation is needed.
-- Optional Impeccable usage must remain opt-in evidence for visual review, not a default package dependency, workflow command set or `validate-context` requirement.
+- Impeccable may be used proactively by the UI/UX Skill as optional visual-review evidence, but it must not become a required workflow command set or `validate-context` requirement.
 - Skill overrides may narrow product/design/development guidance for a project but must keep conclusions in Minimal Context.
 - Context graph roles must stay lightweight and optional; do not make role-specific writing formats, monorepo-specific area names or boundary checks mandatory for ordinary projects.
 - Do not reintroduce legacy migration commands or stage assets.

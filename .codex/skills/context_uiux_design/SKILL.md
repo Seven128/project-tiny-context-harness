@@ -31,7 +31,7 @@ description: Use when the user explicitly asks for 设计稿, UI/UX 设计方案
 - 做设计方案或视觉规范时，显式检查：文字对比度、65-75ch 正文行长、清晰字号层级、响应式边界、44px 触控目标、焦点态、hover/active/disabled/loading/error/success 状态、空态/错误态/长文本、reduced motion 和文本不溢出。
 - 避免常见 AI 视觉反模式：嵌套卡片、无意义玻璃拟态、紫蓝渐变或渐变文字、灰字压在彩色背景上、默认米色/奶油色大背景、过度圆角、边框加大模糊阴影的幽灵卡片、每段一个圆角 icon tile、每节重复小号全大写 eyebrow 或 `01 / 02 / 03` 标记、bounce/elastic easing、空泛营销 buzzword。
 - 视觉审查时先分清问题类型：a11y / responsive / theming / interaction / copy / performance / anti-pattern。把真正影响用户理解、操作或品牌信任的问题列为高优先级；少量纯审美偏好不要淹没关键问题。
-- 如果项目已经安装 Impeccable，或用户明确要求外部视觉反模式扫描，可运行 `npx impeccable detect <target>` 作为可选辅助证据。其输出只能作为设计缺陷线索，不是 Harness gate，也不能替代人工截图检查、项目测试或 `validate-context`。
+- Harness 默认携带 Impeccable CLI 能力；做设计稿、视觉设计方案、设计系统方案或既有 UI 视觉审查时，可主动运行 `npx impeccable detect <target>` 作为可选辅助证据，不必等待用户点名。其输出只能作为设计缺陷线索，不是 Harness gate，也不能替代人工截图检查、项目测试或 `validate-context`。
 
 ## 输出边界
 

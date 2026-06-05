@@ -84,14 +84,13 @@ The Context should be dense, durable and short. Former ADR content belongs in `D
 
 The product planning, UI/UX and development engineer Skills are Context authoring helpers. They may shape product plans, screen flows, design handoff, implementation plans or technical decisions, but they do not create a default PRD/UIUX/tech-plan document chain. Their descriptions intentionally avoid broad generic triggers such as “产品”, “设计” or “开发” alone. For visual systems, `init` creates root `DESIGN.md` as the durable source for colors, typography, spacing, shapes and component tokens; `upgrade` creates it for existing Harness projects when missing. The generated file starts as a neutral starter baseline with visual tokens, background/color logic, typography, spacing, component states and do/don't guidance; user-authored design rules take precedence once present. Validate it with `npx @google/design.md lint DESIGN.md`. The UI/UX Skill keeps a compact frontend visual-quality calibration layer for register choice, design-system continuity, accessibility, responsive behavior, interaction states and common AI-design anti-patterns.
 
-Projects that want stronger optional frontend design linting can install or run Impeccable separately:
+Harness installs Impeccable as a default package dependency so UI/UX agents can use its frontend design detector during design-draft, visual-spec or existing-UI review work:
 
 ```bash
-npx impeccable skills install
 npx impeccable detect src/
 ```
 
-Impeccable is optional. Harness does not install it by default, does not add its commands to the Minimal Context workflow, and does not treat its detector as a `validate-context` gate.
+Impeccable usage is still optional evidence. Harness does not treat its detector as a `validate-context` gate, and the UI/UX Skill should use its findings as design-review signals rather than as a replacement for screenshots, project tests or human review.
 
 Project-specific Skill rules can be added without editing package-managed Skill files:
 

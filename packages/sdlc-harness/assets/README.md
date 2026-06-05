@@ -135,14 +135,13 @@ npx sdlc-harness sync
 
 `init` creates root `DESIGN.md` beside Context as the design-system fact source, and `upgrade` creates it for existing Harness projects when missing. It starts as a neutral starter baseline with visual tokens, background/color logic, typography, spacing, component states and do/don't guidance; user-authored design rules take precedence once present. Use `npx @google/design.md lint DESIGN.md` to validate its structure when the file is changed.
 
-Projects that want a stronger optional frontend design lint can install or run Impeccable separately:
+Harness installs Impeccable as a default package dependency so UI/UX agents can use its frontend design detector during design-draft, visual-spec or existing-UI review work:
 
 ```bash
-npx impeccable skills install
 npx impeccable detect src/
 ```
 
-Impeccable is optional. Harness does not install it by default, does not add its commands to the Minimal Context workflow, and does not treat its detector as a `validate-context` gate.
+Impeccable usage is still optional evidence. Harness does not treat its detector as a `validate-context` gate, and the UI/UX Skill should use its findings as design-review signals rather than as a replacement for screenshots, project tests or human review.
 
 ## Current Boundary
 
