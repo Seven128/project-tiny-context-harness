@@ -129,7 +129,7 @@ Shared design rules:
 - Use narrow trigger descriptions so ordinary coding, small fixes and package work do not activate role-heavy prompting by accident.
 - Read Context before making durable product, design or engineering judgments; treat `project_context/**` as intended ownership and boundary context, and code as current implementation evidence.
 - Keep outputs lightweight: use Context and `DESIGN.md` for durable facts, and keep implementation details in code, tests and concise comments when they are self-explanatory there.
-- Prefer separate project-local Skills for consumer customization; package-managed default Skills should remain broadly useful, sync-overwritten and Minimal Context oriented.
+- Prefer separate project-local Skills for consumer customization; package-managed default Skills should remain broadly useful, sync-overwritten and Minimal Context oriented. Project-local Skill front matter `description` trigger keywords should stay aligned with the matching default Skill and project `AGENTS.md` role-trigger rule so activation behavior and SDLC guidance do not diverge.
 - When a default Skill changes, update this design section and the relevant source workspace Context so future maintainers know the problem, tradeoff and intended failure mode being addressed.
 
 The product planning Skill exists to prevent product intent, user flows, business rules and acceptance signals from living only in a chat transcript or being inferred from current code shape. It helps agents clarify goals, non-goals, users, behavior, edge cases and verification signals, then records only durable product conclusions in Context. It deliberately avoids becoming a default PRD workflow: if a conclusion does not help future recovery, implementation alignment or acceptance reasoning, it should not become long-lived product context.
@@ -164,7 +164,7 @@ The development engineer Skill exists to keep technical intent recoverable when 
 
 `sync` refreshes managed assets only. It never generates project semantics.
 
-Product, UI/UX and development engineer Skill customization lives in separate project-local Skills under paths such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` and `<harnessRoot>/skills/development_engineer/SKILL.md`. `sync` overwrites package-managed default `context_*` Skills from package assets, does not merge Skill overrides, and leaves separate project-local Skills untouched. When both apply, the more specific project-local Skill should supersede the default Skill while keeping durable conclusions in Minimal Context.
+Product, UI/UX and development engineer Skill customization lives in separate project-local Skills under paths such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` and `<harnessRoot>/skills/development_engineer/SKILL.md`. `sync` overwrites package-managed default `context_*` Skills from package assets, does not merge Skill overrides, and leaves separate project-local Skills untouched. When both apply, the more specific project-local Skill should supersede the default Skill while keeping durable conclusions in Minimal Context. Project-local Skill front matter `description` trigger keywords should be maintained together with project `AGENTS.md` role-trigger guidance and the default `context_*` trigger intent.
 
 `upgrade` runs safe migrations and `sync`. The old semantic migration command has been removed because user migrations are complete.
 

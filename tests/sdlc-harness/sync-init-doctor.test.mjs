@@ -133,6 +133,7 @@ try {
 
   const productSkill = await readFile(path.join(root, ".agent/skills/context_product_plan/SKILL.md"), "utf8");
   assert.match(productSkill, /产品方案/);
+  assert.match(productSkill, /front matter `description` trigger keywords aligned/);
   assert.match(productSkill, /project_context\/\*\*/);
   assert.match(productSkill, /实现漂移/);
   assert.match(productSkill, /代码不能静默重定义 Context/);
@@ -140,6 +141,7 @@ try {
   const uiuxSkill = await readFile(path.join(root, ".agent/skills/context_uiux_design/SKILL.md"), "utf8");
   assert.match(uiuxSkill, /设计稿/);
   assert.match(uiuxSkill, /UI\/UX/);
+  assert.match(uiuxSkill, /front matter `description` trigger keywords aligned/);
   assert.match(uiuxSkill, /实现漂移/);
   assert.match(uiuxSkill, /代码不能静默重定义 Context/);
   assert.match(uiuxSkill, /不要把 Context 机械补成代码改动摘要/);
@@ -147,6 +149,7 @@ try {
   assert.match(uiuxSkill, /npx impeccable detect <target>/);
   const developmentSkill = await readFile(path.join(root, ".agent/skills/context_development_engineer/SKILL.md"), "utf8");
   assert.match(developmentSkill, /开发工程师/);
+  assert.match(developmentSkill, /front matter `description` trigger keywords aligned/);
   assert.match(developmentSkill, /Context expectation/);
   assert.match(developmentSkill, /Current code evidence/);
   assert.match(developmentSkill, /实现漂移/);
@@ -159,14 +162,14 @@ try {
     fileURLToPath(new URL("../../packages/sdlc-harness/assets/skills/context_product_plan/SKILL.md", import.meta.url)),
     "utf8"
   );
-  const localSkillPath = path.join(root, ".agent/skills/acme_product_plan/SKILL.md");
+  const localSkillPath = path.join(root, ".agent/skills/product_plan/SKILL.md");
   const localSkillContent = [
     "---",
-    "name: acme_product_plan",
-    "description: Use for Acme-specific product planning.",
+    "name: product_plan",
+    "description: Use when Acme asks for product plan decisions; keep these triggers aligned with AGENTS.md.",
     "---",
     "",
-    "# Acme Product Plan",
+    "# Product Plan",
     "",
     "Acme-specific product rule."
   ].join("\n");
