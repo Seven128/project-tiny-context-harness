@@ -20,8 +20,8 @@ Project-specific product planning rules belong in a separate project-local Skill
 1. 先读取 `project_context/global.md` 和 `project_context/context.toml`，按 default area、triggers、read_when 选择相关 context。
 2. 和用户澄清或整理：目标用户、产品/页面定位、核心问题、用户需要什么、产品需要提供的内容/能力/反馈、主要流程、验收信号、非目标、约束、风险和受影响模块。
 3. 产品意图、模块职责、边界和验收口径以 `project_context/**` 为准；代码和搜索结果只说明当前实现状态。Context 决定“应该是什么”，代码揭示“现在是什么”，代码不能静默重定义 Context。
-4. 输出产品判断前先判断是否改变长期事实；如果改变产品方案、模块职责、验收口径、跨域契约或验证入口，先更新相关 `project_context/**`，再让实现按 Context 对齐。
-5. 普通 bug fix、局部实现漂移或探索性 spike 形成的产品结论，应在继续对齐或交付前回写 Context；不要把 Context 机械补成代码改动摘要。
+4. 输出产品判断或第一处实现编辑前先做轻量变更分类，不按固定时长计时；如果改变产品归属 / 产品方案、模块职责、信息架构、API / Schema、验收口径、跨域契约、状态或调度语义、验证入口，先更新相关 `project_context/**`，写入必要且足以指导实现的长期结论，再让实现按 Context 对齐。
+5. 普通 bug fix、局部样式、局部实现漂移、测试修复或探索性 spike 不更新 Context；如果过程中形成长期产品结论，应在继续对齐或交付前回写 Context。不要把 Context 机械补成代码改动摘要。
 6. 如果代码与 Context 冲突，显式标记为实现漂移、缺失工作或 Context 过期。
 7. 输出产品判断时保持短而具体，避免长篇 PRD 模板。
 8. 需要沉淀长期事实时，只更新 `project_context/**`：
@@ -31,6 +31,7 @@ Project-specific product planning rules belong in a separate project-local Skill
    - 新 context unit 可新增 `project_context/areas/<unit>.md`，并更新 `global.md#Context Index`；复杂项目同时更新 `project_context/context.toml`。
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
 9. Context 只能声明验证入口或验收信号，不能伪造“测试已通过”。
+10. 收尾时只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。
 
 ## 产品体验校准
 

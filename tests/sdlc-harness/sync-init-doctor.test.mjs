@@ -45,7 +45,8 @@ try {
   assert.match(globalContext, /## Product \/ Delivery Brief/);
   assert.match(globalContext, /## UX \/ Screen Brief/);
   assert.match(globalContext, /DESIGN\.md/);
-  assert.match(globalContext, /update Context before implementation alignment/);
+  assert.match(globalContext, /Classify changes before implementation/);
+  assert.match(globalContext, /update Context before code with enough durable context to guide implementation/);
   assert.match(globalContext, /## Verification Entry Points/);
   assert.match(globalContext, /## Next Safe Action/);
   assert.match(globalContext, /whether the next change should update Context before code/);
@@ -95,6 +96,9 @@ try {
   assert.match(agents, /当前实现状态/);
   assert.match(agents, /实现漂移/);
   assert.match(agents, /context-first/);
+  assert.match(agents, /轻量变更分类/);
+  assert.match(agents, /必要且足以指导实现的长期结论/);
+  assert.match(agents, /Context: 本次无长期事实变化/);
   assert.match(agents, /Context drift check/);
   assert.match(agents, /不检查 context\/code 修改顺序/);
   assert.match(agents, /Harness (?:maintains context quality|只维护上下文质量)/i);

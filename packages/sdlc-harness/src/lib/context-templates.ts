@@ -16,7 +16,7 @@ export function globalContextTemplate(): string {
     "",
     "## Design Rationale",
     "",
-    "- Record only durable choices that are hard to infer from code or tests. If a change alters product or technical facts, update Context before implementation alignment.",
+    "- Record only durable choices that are hard to infer from code or tests. Classify changes before implementation; if a change alters product ownership/plans, module responsibilities, information architecture, API/Schema, state/scheduler semantics, cross-area boundaries or verification entry points, update Context before code with enough durable context to guide implementation.",
     "",
     "## Architecture Context",
     "",

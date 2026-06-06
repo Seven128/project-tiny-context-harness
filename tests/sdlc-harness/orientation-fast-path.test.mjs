@@ -53,10 +53,21 @@ for (const content of [rootReadme, packageReadme, spec, packageGuide]) {
     /implementation discovery -> context update if long-term fact changed -> implementation alignment -> verification/
   );
   assert.match(content, /guidance, not a new validator gate|guidance contract, not a new phase gate/);
+  assert.match(content, /Before the first code edit.*classify the change/s);
+  assert.match(content, /fixed timer/);
+  assert.match(content, /enough durable context to guide implementation/);
+  assert.match(content, /without a fixed line-count limit/);
+  assert.match(content, /Automation.*warn.*should not block|Automation can warn.*must not block/s);
+  assert.match(content, /Context: (?:updated|no durable fact change)/);
 }
 
 for (const content of [sourceAgents, packageAgents]) {
   assert.match(content, /长期事实/);
+  assert.match(content, /轻量变更分类/);
+  assert.match(content, /不按固定时长计时/);
+  assert.match(content, /必要且足以指导实现的长期结论/);
+  assert.match(content, /Context: 本次无长期事实变化/);
+  assert.match(content, /自动化最多提示 context-first 风险，不做阻断/);
   assert.match(content, /不检查 context\/code 修改顺序/);
 }
 

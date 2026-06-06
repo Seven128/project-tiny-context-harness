@@ -20,8 +20,8 @@ Project-specific engineering rules belong in a separate project-local Skill unde
 1. 先读取 `project_context/global.md`、`project_context/architecture.md` 和 `project_context/context.toml`，按 default area、triggers、read_when 选择相关 context。
 2. 先确认用户目标、约束、成功标准、影响模块、现有测试入口和风险；能从代码或 Context 发现的事实不要反复询问用户。
 3. `project_context/**` 决定“应该是什么”：模块职责、归属、架构边界、接口方向、契约语义和禁止依赖；代码决定“现在实现到了哪里”。代码不能静默重定义 Context。
-4. 开始实现前先判断是否改变长期事实；如果改变技术方案、架构边界、模块职责、跨域依赖、数据契约、状态机语义或验证入口，先更新相关 `project_context/**`，再让代码按 Context 对齐。
-5. 普通 bug fix、局部实现漂移修复、测试修复或探索性 spike 可先改代码；一旦形成长期工程结论，继续对齐或交付前必须回写 Context。不要把 Context 机械补成代码改动摘要。
+4. 第一处代码编辑前先做轻量变更分类，不按固定时长计时；如果改变技术方案、架构边界、模块职责、跨域依赖、API / Schema、数据契约、状态机或调度语义、验证入口，先更新相关 `project_context/**`，写入必要且足以指导实现的长期结论，再让代码按 Context 对齐。
+5. 普通 bug fix、局部样式、局部实现漂移修复、测试修复或探索性 spike 不更新 Context，可先改代码；一旦形成长期工程结论，继续对齐或交付前必须回写 Context。不要把 Context 机械补成代码改动摘要。
 6. 如果代码、搜索结果或相邻实现与 Context 冲突，显式标记为实现漂移、缺失工作或 Context 过期，不要用当前代码形态反推模块归属。
 7. 涉及已有 Context 的实现判断，先做轻量对齐：
    - Context expectation
@@ -41,7 +41,7 @@ Project-specific engineering rules belong in a separate project-local Skill unde
    - 跨域接口语义写入 `context_role: contract` 或 manifest role 为 `contract` 的 Context；代码入口索引用 `implementation-index`；底层理论源用 `foundation`；历史归档索引用 `archive`。
    - 新 context unit 可新增 `project_context/areas/<unit>.md`，并更新 `global.md#Context Index`；复杂项目同时更新 `project_context/context.toml`。
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
-11. 实现收尾时做 Context drift check：确认代码没有引入未沉淀的长期事实，且 Context 没有退化成普通实现摘要。
+11. 实现收尾时做 Context drift check：确认代码没有引入未沉淀的长期事实，且 Context 没有退化成普通实现摘要；交付说明只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。
 12. Context 只能声明验证入口或验收信号，不能伪造“测试已通过”。
 
 ## 输出边界

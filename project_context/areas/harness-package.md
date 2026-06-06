@@ -12,7 +12,8 @@
 - Default product planning, UI/UX and development engineer Skills write durable conclusions to `project_context/**`.
 - The product planning Skill asks agents doing product surfaces to reason from product/page positioning: what problem it solves, what the user needs, what content/capabilities/feedback it should provide, what belongs on the surface, where it belongs and why it deserves persistent attention.
 - Managed guidance tells agents to treat `project_context/**` as authoritative for intended responsibilities, ownership, architecture boundaries, integration direction, dependencies and verification entry points, while treating code as current implementation evidence.
-- Managed guidance requires an upfront long-term fact impact judgment: context-first for product/technical plans, architecture boundaries, module responsibilities, cross-domain dependencies, data contracts, state semantics and verification entry points; code-first only as a controlled exception for ordinary fixes or spikes.
+- Managed guidance requires a lightweight change classification before the first code edit: context-first for product ownership/plans, module responsibilities, information architecture, API/Schema, state or scheduler semantics, cross-domain boundaries and verification entry points; code-first only for ordinary bug fixes, local styling, drift repair, test fixes and spikes unless they produce a durable fact.
+- Context-first remains prompt-level habit, not a hard gate: the first edit for a durable-fact change should update the relevant `project_context/**` with enough durable context to guide implementation, without a fixed line-count limit; automation may warn about ordering drift but must not block.
 - Projects customize those Skills by creating separate project-local Skills such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` and `<harnessRoot>/skills/development_engineer/SKILL.md`; `sync` overwrites package-managed default `context_*` Skills and leaves separate local Skills untouched.
 - Project-local Skill front matter `description` trigger keywords should stay aligned with the matching default Skill and the project `AGENTS.md` role-trigger rule; project-specific keyword additions or narrowing should update both surfaces together.
 - The default Skill trigger descriptions should stay narrow: explicit role names or strong artifact names, not generic mentions of product, design, development, code or requirements.
@@ -54,7 +55,7 @@
 - Impeccable should be attempted by the UI/UX Skill when a scan target exists, but it must not become a `validate-context` requirement or block tasks that have no suitable target.
 - Project-local product/design/development Skills may narrow guidance for a project but must keep durable conclusions in Minimal Context.
 - Context graph roles must stay lightweight and optional; do not make role-specific writing formats, monorepo-specific area names or boundary checks mandatory for ordinary projects.
-- Context-first guidance must stay prompt-level and must not become a validator, phase gate or required document chain.
+- Context-first guidance must stay prompt-level and must not become a validator, phase gate, edit-order gate or required document chain.
 - Do not reintroduce legacy migration commands or stage assets.
 - Package source changes that affect managed assets require `package sync-source` and `package check-source`.
 

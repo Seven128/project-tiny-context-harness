@@ -104,19 +104,19 @@ The Context should be compact and semantically split. It should not duplicate co
 
 This clarification preserves an original SDLC design principle that was easy to weaken during the Minimal Context redesign: removing stage ceremony does not mean implementation should silently decide product or technical intent. Context is where durable intent, boundaries and contracts are named because those facts are expensive and unreliable to infer from code alone. Code remains the best evidence for current behavior and can expose missing or stale facts, but current implementation shape should not automatically become project intent.
 
-The default workflow is context-first when a task changes durable product or technical facts:
+Before the first code edit, an agent should classify the change instead of relying on a fixed timer. Durable fact changes include product ownership or plans, module responsibilities, information architecture, API / Schema, state-machine or scheduler semantics, cross-area boundaries and verification entry points. When a task hits one of those categories, the default workflow is context-first and the first update should be the relevant `project_context/**` entry with enough durable context to guide implementation, without a fixed line-count limit:
 
 ```text
 context -> implementation -> verification -> context drift check
 ```
 
-Code-first remains a controlled exception for ordinary bug fixes, local implementation-drift repairs, test fixes and exploratory spikes:
+Code-first remains a controlled exception for ordinary bug fixes, local styling changes, local implementation-drift repairs, test fixes and exploratory spikes:
 
 ```text
 implementation discovery -> context update if long-term fact changed -> implementation alignment -> verification
 ```
 
-This is a guidance contract, not a new phase gate. `validate-context` still checks Context recoverability and fake verification-result claims; it does not infer edit order.
+This is a guidance contract, not a new phase gate. `validate-context` still checks Context recoverability and fake verification-result claims; it does not infer edit order. Automation can warn about context-first drift, but must not block work for edit-order reasons. Handoffs should report only a lightweight status such as `Context: updated ...` or `Context: no durable fact change`.
 
 The default product planning, UI/UX and development engineer Skills are a thin authoring layer. Their trigger descriptions stay narrow: explicit role names or strong artifact names should activate them, while generic mentions of product, design or development should not. Product, screen-flow and durable engineering conclusions are durable only when compressed into Context. Visual identity, design tokens and component styling rules are durable in `DESIGN.md` using Google’s open `@google/design.md` format.
 
