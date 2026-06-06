@@ -29,6 +29,8 @@
 - Architecture Context is intentionally restrained: it records durable boundaries, component relationships and constraints, not implementation narration.
 - Schema v4 makes the lightweight Context graph the default: `project_context/context.toml` declares areas/context units, role-based context files, read triggers and monorepo boundary metadata while ordinary projects keep one default `main` area.
 - `project_context/**` is authoritative for intended ownership, responsibility, architecture boundaries, integration direction, allowed/forbidden dependencies and verification entry points; code is authoritative for current implementation state. Gaps between them should be treated as implementation drift, missing work or stale Context that must be called out.
+- Context-first is the default workflow for changes to durable product or technical facts; code-first is a controlled exception for ordinary bug fixes, local drift repair, test fixes and exploratory spikes. `validate-context` remains a recoverability gate, not an edit-order gate.
+- The context-first clarification preserves the original plan-before-implementation principle while keeping Minimal Context slim: removing stage ceremony did not remove Context authority over durable product intent, engineering boundaries or contracts.
 
 ## Architecture Context
 
@@ -50,6 +52,7 @@
 - Ad hoc CLI docs and managed Makefile wrappers use the canonical package-qualified entry `npx --yes --package agent-project-sdlc@latest sdlc-harness`; bare `npx sdlc-harness` is treated as ambiguous because it can resolve the legacy npm package name or a stale local binary.
 - Current CLI commands guard unsupported future schema major versions before applying v4 assumptions; write commands fail before modifying files.
 - `validate-context` validates the Context graph structure, area recovery sections, role names, paths and field shapes; non-area roles are semantic labels rather than writing-template gates.
+- Managed guidance documents the canonical loops `context -> implementation -> verification -> context drift check` and `implementation discovery -> context update if long-term fact changed -> implementation alignment -> verification`.
 - Old stage-based assets, state files and work-product trees are removed from the current source tree.
 - Historical stage design is summarized in `PROJECT_SPEC.md`; legacy stage semantic migration support has been removed after user migrations completed.
 - Delivery benchmark prompts should evaluate Minimal Context behavior for new Harness runs; old stage-based public result data has been removed.

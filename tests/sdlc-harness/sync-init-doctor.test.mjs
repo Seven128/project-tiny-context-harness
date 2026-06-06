@@ -45,8 +45,10 @@ try {
   assert.match(globalContext, /## Product \/ Delivery Brief/);
   assert.match(globalContext, /## UX \/ Screen Brief/);
   assert.match(globalContext, /DESIGN\.md/);
+  assert.match(globalContext, /update Context before implementation alignment/);
   assert.match(globalContext, /## Verification Entry Points/);
   assert.match(globalContext, /## Next Safe Action/);
+  assert.match(globalContext, /whether the next change should update Context before code/);
 
   const contextManifest = await readFile(path.join(root, "project_context/context.toml"), "utf8");
   assert.match(contextManifest, /\[\[areas\]\]/);
@@ -68,10 +70,12 @@ try {
   assert.match(architectureContext, /restrained architecture context/i);
   assert.match(architectureContext, /## System Boundary/);
   assert.match(architectureContext, /## Component Map/);
+  assert.match(architectureContext, /architecture boundary changes should be captured here/);
   assert.match(architectureContext, /## Verification Implications/);
 
   const areaContext = await readFile(path.join(root, "project_context/areas/main.md"), "utf8");
   assert.match(areaContext, /## Responsibility/);
+  assert.match(areaContext, /Contract changes should be captured here/);
   assert.match(areaContext, /## Code Entry Points/);
   assert.match(areaContext, /## Test Entry Points/);
 
@@ -90,6 +94,9 @@ try {
   assert.match(agents, /权威事实源/);
   assert.match(agents, /当前实现状态/);
   assert.match(agents, /实现漂移/);
+  assert.match(agents, /context-first/);
+  assert.match(agents, /Context drift check/);
+  assert.match(agents, /不检查 context\/code 修改顺序/);
   assert.match(agents, /Harness (?:maintains context quality|只维护上下文质量)/i);
   assert.match(agents, /Impeccable/);
   assert.match(agents, /npx impeccable detect <target>/);
@@ -125,10 +132,14 @@ try {
   assert.match(productSkill, /产品方案/);
   assert.match(productSkill, /project_context\/\*\*/);
   assert.match(productSkill, /实现漂移/);
+  assert.match(productSkill, /代码不能静默重定义 Context/);
+  assert.match(productSkill, /不要把 Context 机械补成代码改动摘要/);
   const uiuxSkill = await readFile(path.join(root, ".agent/skills/context_uiux_design/SKILL.md"), "utf8");
   assert.match(uiuxSkill, /设计稿/);
   assert.match(uiuxSkill, /UI\/UX/);
   assert.match(uiuxSkill, /实现漂移/);
+  assert.match(uiuxSkill, /代码不能静默重定义 Context/);
+  assert.match(uiuxSkill, /不要把 Context 机械补成代码改动摘要/);
   assert.match(uiuxSkill, /Impeccable review/);
   assert.match(uiuxSkill, /npx impeccable detect <target>/);
   const developmentSkill = await readFile(path.join(root, ".agent/skills/context_development_engineer/SKILL.md"), "utf8");
@@ -136,6 +147,8 @@ try {
   assert.match(developmentSkill, /Context expectation/);
   assert.match(developmentSkill, /Current code evidence/);
   assert.match(developmentSkill, /实现漂移/);
+  assert.match(developmentSkill, /代码不能静默重定义 Context/);
+  assert.match(developmentSkill, /Context drift check/);
   assert.doesNotMatch(developmentSkill, /multi_agent_v1/);
 
   await mkdir(path.join(root, ".agent/pjsdlc_managed/override_skills"), { recursive: true });

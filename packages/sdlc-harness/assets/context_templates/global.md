@@ -14,7 +14,7 @@
 
 ## Design Rationale
 
-- Record durable choices that are hard to infer from code or tests.
+- Record durable choices that are hard to infer from code or tests. If a change alters product or technical facts, update Context before implementation alignment.
 
 ## Architecture Context
 
@@ -42,7 +42,7 @@
 
 ## Next Safe Action
 
-- State the safest next step for a fresh agent.
+- State the safest next step for a fresh agent, including whether the next change should update Context before code.
 
 ## Context Index
 

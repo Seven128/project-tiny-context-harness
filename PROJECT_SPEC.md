@@ -102,6 +102,22 @@ The Context should be compact and semantically split. It should not duplicate co
 
 `project_context/**` is the authoritative source for intended responsibilities, ownership, product intent, architecture boundaries, integration direction, allowed and forbidden dependencies and verification entry points. Code remains authoritative for current implementation state. If search results or current code shape conflict with Context-declared ownership or intent, agents should identify implementation drift, missing work or stale Context explicitly instead of inferring the intended module boundary from the code shape alone.
 
+This clarification preserves an original SDLC design principle that was easy to weaken during the Minimal Context redesign: removing stage ceremony does not mean implementation should silently decide product or technical intent. Context is where durable intent, boundaries and contracts are named because those facts are expensive and unreliable to infer from code alone. Code remains the best evidence for current behavior and can expose missing or stale facts, but current implementation shape should not automatically become project intent.
+
+The default workflow is context-first when a task changes durable product or technical facts:
+
+```text
+context -> implementation -> verification -> context drift check
+```
+
+Code-first remains a controlled exception for ordinary bug fixes, local implementation-drift repairs, test fixes and exploratory spikes:
+
+```text
+implementation discovery -> context update if long-term fact changed -> implementation alignment -> verification
+```
+
+This is a guidance contract, not a new phase gate. `validate-context` still checks Context recoverability and fake verification-result claims; it does not infer edit order.
+
 The default product planning, UI/UX and development engineer Skills are a thin authoring layer. Their trigger descriptions stay narrow: explicit role names or strong artifact names should activate them, while generic mentions of product, design or development should not. Product, screen-flow and durable engineering conclusions are durable only when compressed into Context. Visual identity, design tokens and component styling rules are durable in `DESIGN.md` using Google’s open `@google/design.md` format.
 
 ## Package Behavior

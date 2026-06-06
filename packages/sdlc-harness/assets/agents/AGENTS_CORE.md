@@ -13,18 +13,21 @@
 ## 工作规则
 
 1. 新会话或继续工作时，先读取 `project_context/global.md`、`project_context/architecture.md` 和 `project_context/context.toml`；按其中 default area 和触发条件读取相关 context。
-2. `project_context/**` 是项目意图、模块职责、架构边界、集成方向、允许/禁止依赖和验证入口的权威事实源；代码是当前实现状态的权威事实源。
-3. 当代码形态、搜索结果或相邻实现与 Context 声明冲突时，把差异视为实现漂移、缺失工作或 Context 过期并显式说明；不要用当前代码形态或关键词搜索结果覆盖 Context 已声明的职责、归属或集成意图。
-4. 新需求、需求变更、debug 结论或后续迭代后，如有影响未来恢复的长期事实，更新 `project_context/**`；普通局部实现细节不写。
-5. 长期事实只写入 `project_context/**`；不要默认创建 PRD、tech plan、ADR、implementation doc、review/test/release 文档。
-6. 用户明确要求“产品方案 / 产品经理 / 产品专家”、“设计稿 / UI/UX 设计方案 / 视觉专家”或“开发工程师 / 技术方案 / 开发方案 / 实现 / 实现方案 / 实施计划 / 技术专家”这类角色或强产物名时，使用对应 Context authoring Skill，把长期结论写回 `project_context/**`。
-7. 当任务涉及设计稿、重做设计、视觉方案、设计系统、visual polish、frontend redesign 或 frontend styling，且存在可扫描的 UI 代码、页面文件、构建产物目录或本地/远程 URL 时，默认运行 `npx impeccable detect <target>` 做 Impeccable 视觉审查；没有可扫描目标、命令不可用或扫描失败时，说明原因并继续。Impeccable 不是 `validate-context` gate，也不替代截图检查、项目测试或人工判断。
-8. 用户可以在 `.agent/pjsdlc_managed/override_skills/context_product_plan.md`、`.agent/pjsdlc_managed/override_skills/context_uiux_design.md` 或 `.agent/pjsdlc_managed/override_skills/context_development_engineer.md` 中追加项目本地 Skill 规则；`sync` 会合并到 `.agent/skills/**`。
-9. ADR 降级为 Context 中的 `Design Rationale`；实现说明优先写成代码注释、测试名或模块 Context 中的关键约束。
-10. Harness workflow gate 只运行 `validate-context`，用于检查上下文是否可恢复。
-11. 产品质量由项目自己的验证入口证明；Context 只能声明验证入口，不能伪造“测试已通过”。
-12. `sync` 只刷新 managed guidance、Skill 和工具。
-13. 普通项目默认只有一个 `main` area；monorepo 或 product-family 项目可在 `context.toml` 中增加多个 `area` / `context_unit`，并用 `context_role` 或 manifest role 区分 `area`、`subdomain`、`contract`、`foundation`、`archive`、`implementation-index` 和 `decision-rationale` 等不同 Context 类型。
+2. 开始实现前先判断本次任务是否改变长期事实：产品方案、技术方案、架构边界、模块职责、跨域依赖、数据契约、状态机语义或验证入口。
+3. 若改变长期事实，默认走 context-first：先更新相关 `project_context/**`，再按 Context 对齐实现、验证和收尾。
+4. 普通 bug fix、局部实现漂移修复、测试修复或探索性 spike 可先改代码；一旦形成长期结论，继续对齐或交付前必须回写 `project_context/**`。
+5. `project_context/**` 是项目意图、模块职责、架构边界、集成方向、允许/禁止依赖和验证入口的权威事实源；代码是当前实现状态的权威事实源。
+6. 当代码形态、搜索结果或相邻实现与 Context 声明冲突时，把差异视为实现漂移、缺失工作或 Context 过期并显式说明；不要用当前代码形态或关键词搜索结果覆盖 Context 已声明的职责、归属或集成意图。
+7. 每个有意义的方案或实现变更收尾时做 Context drift check：确认代码没有引入未沉淀的长期事实，且 Context 没有退化成普通实现摘要。
+8. 长期事实只写入 `project_context/**`；不要默认创建 PRD、tech plan、ADR、implementation doc、review/test/release 文档。
+9. 用户明确要求“产品方案 / 产品经理 / 产品专家”、“设计稿 / UI/UX 设计方案 / 视觉专家”或“开发工程师 / 技术方案 / 开发方案 / 实现 / 实现方案 / 实施计划 / 技术专家”这类角色或强产物名时，使用对应 Context authoring Skill，把长期结论写回 `project_context/**`。
+10. 当任务涉及设计稿、重做设计、视觉方案、设计系统、visual polish、frontend redesign 或 frontend styling，且存在可扫描的 UI 代码、页面文件、构建产物目录或本地/远程 URL 时，默认运行 `npx impeccable detect <target>` 做 Impeccable 视觉审查；没有可扫描目标、命令不可用或扫描失败时，说明原因并继续。Impeccable 不是 `validate-context` gate，也不替代截图检查、项目测试或人工判断。
+11. 用户可以在 `.agent/pjsdlc_managed/override_skills/context_product_plan.md`、`.agent/pjsdlc_managed/override_skills/context_uiux_design.md` 或 `.agent/pjsdlc_managed/override_skills/context_development_engineer.md` 中追加项目本地 Skill 规则；`sync` 会合并到 `.agent/skills/**`。
+12. ADR 降级为 Context 中的 `Design Rationale`；实现说明优先写成代码注释、测试名或模块 Context 中的关键约束。
+13. Harness workflow gate 只运行 `validate-context`，用于检查上下文是否可恢复；不检查 context/code 修改顺序。
+14. 产品质量由项目自己的验证入口证明；Context 只能声明验证入口，不能伪造“测试已通过”。
+15. `sync` 只刷新 managed guidance、Skill 和工具。
+16. 普通项目默认只有一个 `main` area；monorepo 或 product-family 项目可在 `context.toml` 中增加多个 `area` / `context_unit`，并用 `context_role` 或 manifest role 区分 `area`、`subdomain`、`contract`、`foundation`、`archive`、`implementation-index` 和 `decision-rationale` 等不同 Context 类型。
 
 ## 常用命令
 

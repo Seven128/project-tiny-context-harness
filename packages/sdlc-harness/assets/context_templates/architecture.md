@@ -16,7 +16,7 @@ This is the restrained architecture context. Keep only facts that help a fresh a
 
 ## Design Rationale
 
-- Record architecture-level choices that still constrain future work.
+- Record architecture-level choices that still constrain future work; architecture boundary changes should be captured here before implementation alignment.
 
 ## Constraints And Tradeoffs
 

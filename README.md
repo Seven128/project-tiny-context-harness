@@ -127,6 +127,20 @@ The Context should be short enough to read at session start and specific enough 
 
 `project_context/**` is authoritative for intended responsibility, ownership, product intent, architecture boundaries, integration direction, allowed or forbidden dependencies and verification entry points. Source code is authoritative for current implementation state. When code shape, keyword search results or nearby implementations disagree with Context, agents should treat the difference as implementation drift, missing work or stale Context that must be called out, not as evidence that overrides Context-declared ownership or intent.
 
+Context-first is the default path for changes that alter product plans, technical plans, architecture boundaries, module responsibilities, cross-area dependencies, data contracts, state-machine semantics or verification entry points:
+
+```text
+context -> implementation -> verification -> context drift check
+```
+
+Code-first is a controlled exception for ordinary bug fixes, local implementation-drift repairs, test fixes and exploratory spikes. Once code discovery produces a durable fact, the agent should update Context before final alignment or handoff:
+
+```text
+implementation discovery -> context update if long-term fact changed -> implementation alignment -> verification
+```
+
+This ordering is guidance, not a new validator gate. `validate-context` checks recoverability and fake verification claims; it does not infer whether Context or code was edited first.
+
 Product, UI/UX and development engineer Skills are prompts for keeping that Context sharp. They may help draft a product plan, screen design or implementation plan, but the long-lived asset is still the compact Context.
 
 Projects can customize these Skills without editing package-managed files:

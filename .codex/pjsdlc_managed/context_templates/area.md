@@ -6,7 +6,7 @@
 
 ## User / System Contract
 
-- Describe the external behavior, API, CLI, UI, screen state, interaction or data contract.
+- Describe the external behavior, API, CLI, UI, screen state, interaction or data contract. Contract changes should be captured here before implementation alignment.
 
 ## Core Data / API / State
 
