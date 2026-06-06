@@ -37,7 +37,7 @@ Use `npx --no-install sdlc-harness ...` only when you explicitly want the alread
 | Product planning Skill | `<harnessRoot>/skills/context_product_plan/SKILL.md` | Triggers on “产品方案 / 产品经理 / 产品专家” style requests and writes durable product conclusions to `project_context/**`. |
 | UI/UX design Skill | `<harnessRoot>/skills/context_uiux_design/SKILL.md` | Triggers on “设计稿 / UI/UX 设计方案 / 视觉专家” style requests, writes screen/interaction conclusions to `project_context/**`, updates root `DESIGN.md` visual tokens with Google `@google/design.md`, and includes compact visual-quality calibration for product/page positioning, user needs, information density, brand/product UI and common AI-design anti-patterns. |
 | Development engineer Skill | `<harnessRoot>/skills/context_development_engineer/SKILL.md` | Triggers on “开发工程师 / 技术方案 / 开发方案 / 实现 / 实现方案 / 实施计划 / 技术专家” style requests and writes durable engineering conclusions to `project_context/**`. |
-| Project-local Skills | `<harnessRoot>/skills/<project>_<role>/SKILL.md` | Optional local product/design/development Skills created by the project. They supersede package-managed default Skills when more specific and are not overwritten by `sync`. |
+| Project-local Skills | `<harnessRoot>/skills/<role>/SKILL.md` | Optional local product/design/development Skills created by the project, such as `product_plan`, `uiux_design` or `development_engineer`. They supersede package-managed default Skills when more specific and are not overwritten by `sync`. |
 | Managed file sync | `make sdlc-sync` or `npx --yes --package agent-project-sdlc@latest sdlc-harness sync` | Refreshes package-managed guidance, default Skills, Makefile include, context templates, tools and workflow YAML. It does not perform semantic Context generation. |
 | Upgrade | `make sdlc-upgrade` or `npx --yes --package agent-project-sdlc@latest sdlc-harness upgrade` | Runs safe migrations and `sync`, including Schema v4 Context graph manifest creation when missing. |
 | Context validation | `npx --yes --package agent-project-sdlc@latest sdlc-harness validate-context`, `make validate-context` | Checks required project recovery fields, Context graph metadata, declared paths/roles and fake test-execution claims. |
@@ -117,8 +117,8 @@ Impeccable is a default design-review step when a scan target exists, but it is 
 Project-specific Skill rules can be added as separate project-local Skills. Do not edit package-managed `context_*` Skills directly; `sync` overwrites them:
 
 ```sh
-mkdir -p <harnessRoot>/skills/myhub_uiux_design
-$EDITOR <harnessRoot>/skills/myhub_uiux_design/SKILL.md
+mkdir -p <harnessRoot>/skills/uiux_design
+$EDITOR <harnessRoot>/skills/uiux_design/SKILL.md
 ```
 
 When a project-local Skill and a package-managed default Skill both apply, agents should use the more specific project-local Skill first. The local Skill should keep durable conclusions in `project_context/**` and `DESIGN.md`. `sync` does not merge Skill overrides and does not overwrite separate project-local Skills. Existing `<harnessRoot>/pjsdlc_managed/override_skills/*.md` files should be migrated into standalone project-local Skills before running `sync`.

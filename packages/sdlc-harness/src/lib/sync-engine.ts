@@ -341,7 +341,7 @@ async function blockDeprecatedSkillOverrides(projectRoot: string, root: string, 
 
   const relativeRoot = path.join(root, "pjsdlc_managed", "override_skills").split(path.sep).join("/");
   report.blocked.push(
-    `${relativeRoot}: Skill overrides are no longer supported. Move these rules into a separate project-local Skill under ${root.replace(/\\/g, "/")}/skills/<project>_<role>/SKILL.md. Deprecated files: ${deprecatedFiles.join(", ")}`
+    `${relativeRoot}: Skill overrides are no longer supported. Move these rules into a separate project-local Skill such as ${root.replace(/\\/g, "/")}/skills/product_plan/SKILL.md, ${root.replace(/\\/g, "/")}/skills/uiux_design/SKILL.md or ${root.replace(/\\/g, "/")}/skills/development_engineer/SKILL.md. Deprecated files: ${deprecatedFiles.join(", ")}`
   );
 }
 

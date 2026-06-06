@@ -164,7 +164,7 @@ The development engineer Skill exists to keep technical intent recoverable when 
 
 `sync` refreshes managed assets only. It never generates project semantics.
 
-Product, UI/UX and development engineer Skill customization lives in separate project-local Skills under `<harnessRoot>/skills/<project>_<role>/SKILL.md`. `sync` overwrites package-managed default `context_*` Skills from package assets, does not merge Skill overrides, and leaves separate project-local Skills untouched. When both apply, the more specific project-local Skill should supersede the default Skill while keeping durable conclusions in Minimal Context.
+Product, UI/UX and development engineer Skill customization lives in separate project-local Skills under paths such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` and `<harnessRoot>/skills/development_engineer/SKILL.md`. `sync` overwrites package-managed default `context_*` Skills from package assets, does not merge Skill overrides, and leaves separate project-local Skills untouched. When both apply, the more specific project-local Skill should supersede the default Skill while keeping durable conclusions in Minimal Context.
 
 `upgrade` runs safe migrations and `sync`. The old semantic migration command has been removed because user migrations are complete.
 

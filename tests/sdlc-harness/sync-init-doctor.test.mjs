@@ -101,7 +101,7 @@ try {
   assert.match(agents, /Impeccable/);
   assert.match(agents, /npx impeccable detect <target>/);
   assert.match(agents, /独立项目本地 Skill/);
-  assert.match(agents, /<project>_uiux_design\/SKILL\.md/);
+  assert.match(agents, /uiux_design\/SKILL\.md/);
   assert.doesNotMatch(agents, /override_skills/);
   assert.doesNotMatch(agents, /multi_agent_v1/);
 
@@ -197,7 +197,9 @@ try {
   assert.equal(overrideSyncReport.blocked.length, 1);
   assert.match(overrideSyncReport.blocked[0], /\.agent\/pjsdlc_managed\/override_skills/);
   assert.match(overrideSyncReport.blocked[0], /Skill overrides are no longer supported/);
-  assert.match(overrideSyncReport.blocked[0], /\.agent\/skills\/<project>_<role>\/SKILL\.md/);
+  assert.match(overrideSyncReport.blocked[0], /\.agent\/skills\/product_plan\/SKILL\.md/);
+  assert.match(overrideSyncReport.blocked[0], /\.agent\/skills\/uiux_design\/SKILL\.md/);
+  assert.match(overrideSyncReport.blocked[0], /\.agent\/skills\/development_engineer\/SKILL\.md/);
   assert.match(overrideSyncReport.blocked[0], /context_product_plan\.md/);
   assert.match(overrideSyncReport.blocked[0], /pjsdlc_dev_sprint\.md/);
   const blockedProductSkill = await readFile(path.join(root, ".agent/skills/context_product_plan/SKILL.md"), "utf8");
@@ -245,7 +247,9 @@ try {
   assert.match(cliSyncWithDeprecatedOverride.stdout, /sync changed=0 skipped=0 blocked=1/);
   assert.match(cliSyncWithDeprecatedOverride.stderr, /\.codex\/pjsdlc_managed\/override_skills/);
   assert.match(cliSyncWithDeprecatedOverride.stderr, /Skill overrides are no longer supported/);
-  assert.match(cliSyncWithDeprecatedOverride.stderr, /\.codex\/skills\/<project>_<role>\/SKILL\.md/);
+  assert.match(cliSyncWithDeprecatedOverride.stderr, /\.codex\/skills\/product_plan\/SKILL\.md/);
+  assert.match(cliSyncWithDeprecatedOverride.stderr, /\.codex\/skills\/uiux_design\/SKILL\.md/);
+  assert.match(cliSyncWithDeprecatedOverride.stderr, /\.codex\/skills\/development_engineer\/SKILL\.md/);
 } finally {
   await rm(root, { recursive: true, force: true });
   await rm(configuredRoot, { recursive: true, force: true });
