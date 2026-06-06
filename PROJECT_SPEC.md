@@ -120,6 +120,24 @@ This is a guidance contract, not a new phase gate. `validate-context` still chec
 
 The default product planning, UI/UX and development engineer Skills are a thin authoring layer. Their trigger descriptions stay narrow: explicit role names or strong artifact names should activate them, while generic mentions of product, design or development should not. Product, screen-flow and durable engineering conclusions are durable only when compressed into Context. Visual identity, design tokens and component styling rules are durable in `DESIGN.md` using Google’s open `@google/design.md` format.
 
+## Default Context Authoring Skill Design
+
+The default Skills exist because important product, design and engineering reasoning often happens inside one agent conversation, but the next agent cannot recover it reliably from code alone. The Skills give the agent a role-specific thinking lens, then compress only durable conclusions into Minimal Context or `DESIGN.md`. They are not a replacement for project tests, review or human judgment, and they must not recreate the old PRD / UX / tech-plan document chain.
+
+Shared design rules:
+
+- Use narrow trigger descriptions so ordinary coding, small fixes and package work do not activate role-heavy prompting by accident.
+- Read Context before making durable product, design or engineering judgments; treat `project_context/**` as intended ownership and boundary context, and code as current implementation evidence.
+- Keep outputs lightweight: use Context and `DESIGN.md` for durable facts, and keep implementation details in code, tests and concise comments when they are self-explanatory there.
+- Prefer project-local override files for consumer customization; package-managed Skills should remain broadly useful and Minimal Context oriented.
+- When a default Skill changes, update this design section and the relevant source workspace Context so future maintainers know the problem, tradeoff and intended failure mode being addressed.
+
+The product planning Skill exists to prevent product intent, user flows, business rules and acceptance signals from living only in a chat transcript or being inferred from current code shape. It helps agents clarify goals, non-goals, users, behavior, edge cases and verification signals, then records only durable product conclusions in Context. It deliberately avoids becoming a default PRD workflow: if a conclusion does not help future recovery, implementation alignment or acceptance reasoning, it should not become long-lived product context.
+
+The UI/UX design Skill exists because interface work carries visual identity, interaction, accessibility and responsive-design intent that source code alone often exposes poorly. It writes durable screen-flow and interaction facts to Context, keeps visual identity and design-system tokens in `DESIGN.md`, and uses Impeccable as a review signal when a scan target exists. Its design goal is to reduce common AI UI failures such as generic visual registers, disconnected styling, inaccessible states, weak responsive behavior and decorative redesign churn, without requiring a standalone UI/UX document chain.
+
+The development engineer Skill exists to keep technical intent recoverable when work changes implementation strategy, module responsibilities, architecture boundaries, data contracts, state semantics or verification entry points. It asks agents to compare Context expectation with current code evidence before proposing durable changes. Its abstraction / decomposition scan is specifically meant to reduce AI failure modes such as over-abstracting for visual cleanliness, treating syntactic duplication as semantic sameness, splitting files without reducing coupling, or optimizing locally against the recorded architecture. It should default to stable, high-value, low-risk changes and leave speculative architecture for explicit user direction or stronger project evidence.
+
 ## Package Behavior
 
 `init` creates Minimal Context assets and managed guidance:

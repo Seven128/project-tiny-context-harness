@@ -23,14 +23,20 @@ description: Use when the user explicitly asks for 开发工程师, 软件工程
    - Gap
    - Proposed change
 8. 实现时保持精准修改，优先遵循仓库现有框架、接口、测试和代码风格。
-9. 需要沉淀长期事实时，只更新 `project_context/**`：
+9. 当任务涉及新实现、重构、重复逻辑、模块边界或影响面控制时，先做轻量 abstraction / decomposition scan：
+   - 查找相似实现、重复逻辑、紧耦合模块或影响面异常扩散点。
+   - 将候选项分为局部重构与长期边界变化，后者按既有 Context-first 规则处理。
+   - 对候选点说明当前重复 / 耦合证据、抽象后的边界、收益、风险和是否值得现在做。
+   - 默认只实施高收益、低风险、语义稳定的候选项。
+   - 不为一次性代码、不稳定语义或纯粹好看的架构做抽象。
+10. 需要沉淀长期事实时，只更新 `project_context/**`：
    - 全局工程取舍、验证入口或当前状态写入 `global.md`。
    - 模块级 API、数据契约、关键约束、入口和风险写入对应 area / subdomain Context。
    - 跨域接口语义写入 `context_role: contract` 或 manifest role 为 `contract` 的 Context；代码入口索引用 `implementation-index`；底层理论源用 `foundation`；历史归档索引用 `archive`。
    - 新 context unit 可新增 `project_context/areas/<unit>.md`，并更新 `global.md#Context Index`；复杂项目同时更新 `project_context/context.toml`。
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
-10. 实现收尾时做 Context drift check：确认代码没有引入未沉淀的长期事实，且 Context 没有退化成普通实现摘要。
-11. Context 只能声明验证入口或验收信号，不能伪造“测试已通过”。
+11. 实现收尾时做 Context drift check：确认代码没有引入未沉淀的长期事实，且 Context 没有退化成普通实现摘要。
+12. Context 只能声明验证入口或验收信号，不能伪造“测试已通过”。
 
 ## 输出边界
 
