@@ -72,7 +72,10 @@ for (const content of [rootReadme, packageReadme, spec, packageGuide]) {
   assert.doesNotMatch(content, /migrate-context/);
   assert.match(content, /sync.*(?:refreshes managed|刷新 managed|只刷新)/i);
   assert.match(content, /upgrade.*sync/s);
-  assert.match(content, /override_skills/);
+  assert.match(content, /<project>_<role>\/SKILL\.md/);
+  assert.doesNotMatch(content, /sync\s+(?:appends|merges).*override/i);
+  assert.doesNotMatch(content, /override.*merged into/i);
+  assert.doesNotMatch(content, /init.*override_skills/i);
 }
 
 for (const content of [rootReadme, packageReadme, spec]) {
@@ -101,10 +104,13 @@ assert.doesNotMatch(
   /REQUIREMENT_GATHERING|UI_UX_DESIGNING|ARCHITECTING|SPRINTING|REVIEWING|TESTING|RELEASING|RFC_RECALIBRATION/
 );
 assert.doesNotMatch(authoringSkill, /plan\.yaml|lifecycle\.yaml|\.work_products\/|make work-products-overview/);
-assert.match(authoringSkill, /override_skills/);
+assert.match(authoringSkill, /<project>_product_plan\/SKILL\.md/);
+assert.match(authoringSkill, /不得恢复 `<harnessRoot>\/pjsdlc_managed\/override_skills\/\*\.md` 合并机制/);
 assert.doesNotMatch(authoringSkill, /pjsdlc_manager|pjsdlc_dev_sprint|pjsdlc_reviewer|pjsdlc_tester/);
 
 assert.match(productSkill, /description:.*产品方案.*产品经理.*产品专家/s);
+assert.match(productSkill, /Package-Managed Boundary/);
+assert.match(productSkill, /myhub_product_plan\/SKILL\.md/);
 assert.match(productSkill, /generic mentions of 产品, product, or requirements/);
 assert.match(productSkill, /project_context\/\*\*/);
 assert.match(productSkill, /实现漂移/);
@@ -115,6 +121,8 @@ assert.doesNotMatch(productSkill, /恢复\s*旧/);
 assert.doesNotMatch(productSkill, /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|pjsdlc_/);
 
 assert.match(uiuxSkill, /description:.*设计稿.*UI\/UX 设计方案.*视觉专家/s);
+assert.match(uiuxSkill, /Package-Managed Boundary/);
+assert.match(uiuxSkill, /myhub_uiux_design\/SKILL\.md/);
 assert.match(uiuxSkill, /generic mentions of 设计, design, or user experience/);
 assert.match(uiuxSkill, /project_context\/\*\*/);
 assert.match(uiuxSkill, /实现漂移/);
@@ -134,6 +142,8 @@ assert.doesNotMatch(uiuxSkill, /恢复\s*旧/);
 assert.doesNotMatch(uiuxSkill, /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|pjsdlc_/);
 
 assert.match(developmentSkill, /description:.*开发工程师.*开发方案.*实施计划.*技术专家/s);
+assert.match(developmentSkill, /Package-Managed Boundary/);
+assert.match(developmentSkill, /myhub_development_engineer\/SKILL\.md/);
 assert.match(developmentSkill, /generic mentions of code, development, or engineering/);
 assert.doesNotMatch(developmentSkill, /multi_agent_v1/);
 assert.match(developmentSkill, /project_context\/architecture\.md/);

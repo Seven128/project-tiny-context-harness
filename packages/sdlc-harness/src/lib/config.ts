@@ -20,7 +20,6 @@ export function defaultConfig(root: string): HarnessConfig {
       { path: "tools", strategy: "managed" },
       { path: ".github/workflows/harness.yml", strategy: "create-if-missing" }
     ],
-    local_overrides: [],
     never_overwrite: ["project_context/**", "DESIGN.md", "src/**", "tests/**"]
   };
 }
@@ -53,7 +52,6 @@ export function normalizeConfig(value: Partial<HarnessConfig>, root = ".agent"):
       schema_version: value.core?.schema_version ?? fallback.core.schema_version
     },
     managed_files: value.managed_files ?? fallback.managed_files,
-    local_overrides: value.local_overrides ?? fallback.local_overrides,
     never_overwrite: value.never_overwrite ?? fallback.never_overwrite
   };
 }

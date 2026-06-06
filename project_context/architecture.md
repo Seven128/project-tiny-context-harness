@@ -24,7 +24,7 @@ This file is the restrained architecture context for the source repository. It i
 - CLI write commands check the configured schema major before writing; unsupported future schemas fail fast with the canonical package-qualified `npx` command hint.
 - `upgrade` migrates legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md`, creates missing `project_context/context.toml` by registering area Context files, and only rewrites legacy module paths in manifest/global references.
 - `sync` reads `packages/sdlc-harness/assets/**` and writes managed guidance, templates, tools and Skills into the configured harness root.
-- Skill customization flows from `<harnessRoot>/pjsdlc_managed/override_skills/*.md` into generated `<harnessRoot>/skills/**` during sync.
+- Skill customization uses separate project-local Skills under `<harnessRoot>/skills/<project>_<role>/SKILL.md`; `sync` overwrites package-managed default `context_*` Skills and leaves those separate local Skills untouched.
 - `package sync-source` copies source workspace assets into `packages/sdlc-harness/assets/**`; `package check-source` verifies no drift.
 - `validate-context` checks Context recoverability, validates graph metadata and area recovery sections, treats non-area roles as semantic labels, and rejects fake verification-result claims.
 
@@ -39,7 +39,7 @@ This file is the restrained architecture context for the source repository. It i
 
 - Do not restore lifecycle phases, plan state, stage Skills, work-product trees or phase gates as default package behavior.
 - Do not let `sync` perform semantic project rewriting; it refreshes managed assets only.
-- Keep product/design/development Skill overrides additive and project-local.
+- Keep product/design/development Skill customization project-local through separate Skills, not package-managed default Skill edits or override merging.
 - Keep `architecture.md` concise; implementation details belong in code, tests or area Context only when not obvious.
 
 ## Verification Implications

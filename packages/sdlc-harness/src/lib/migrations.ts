@@ -174,7 +174,6 @@ async function migrateConfig(projectRoot: string, root: string, report: Migratio
   const current = defaultConfig(root);
   config.core = current.core;
   config.managed_files = current.managed_files;
-  config.local_overrides = current.local_overrides;
   config.never_overwrite = Array.from(new Set([...current.never_overwrite, ...config.never_overwrite]));
 
   if (await writeTextIfChanged(configPath, stringifyYaml(config))) {

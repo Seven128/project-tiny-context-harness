@@ -18,7 +18,7 @@
 4. ADR 内容降级为 Context 的 `Design Rationale`；实现说明优先进入代码注释、测试名或 area Context 的关键约束。
 5. `validate-context` 只检查 Context 是否足够支持恢复上下文，并阻止伪造“测试已通过”的说法。
 6. `sync` 只刷新 managed guidance、Skill、Context template 和工具。
-7. 用户可通过 `.codex/pjsdlc_managed/override_skills/context_product_plan.md` 和 `.codex/pjsdlc_managed/override_skills/context_uiux_design.md` 定制本项目的产品方案 / UIUX Skill；`sync` 会合并到 `.codex/skills/**`。
+7. `.codex/skills/context_product_plan/**`、`.codex/skills/context_uiux_design/**` 和 `.codex/skills/context_development_engineer/**` 是 package-managed 默认 Skill，禁止直接编辑；本项目如需定制产品 / UIUX / 开发规则，应新建独立项目本地 Skill，例如 `.codex/skills/<project>_product_plan/SKILL.md`、`.codex/skills/<project>_uiux_design/SKILL.md` 或 `.codex/skills/<project>_development_engineer/SKILL.md`。
 
 ## 本仓库 authoring 例外
 
@@ -130,11 +130,11 @@ Karpathy 编码准则
 8. 长期事实只写入 `project_context/**`；不要默认创建 PRD、tech plan、ADR、implementation doc、review/test/release 文档。
 9. 用户明确要求“产品方案 / 产品经理 / 产品专家”、“设计稿 / UI/UX 设计方案 / 视觉专家”或“开发工程师 / 技术方案 / 开发方案 / 实现 / 实现方案 / 实施计划 / 技术专家”这类角色或强产物名时，使用对应 Context authoring Skill，把长期结论写回 `project_context/**`。
 10. 当任务涉及设计稿、重做设计、视觉方案、设计系统、visual polish、frontend redesign 或 frontend styling，且存在可扫描的 UI 代码、页面文件、构建产物目录或本地/远程 URL 时，默认运行 `npx impeccable detect <target>` 做 Impeccable 视觉审查；没有可扫描目标、命令不可用或扫描失败时，说明原因并继续。Impeccable 不是 `validate-context` gate，也不替代截图检查、项目测试或人工判断。
-11. 用户可以在 `.codex/pjsdlc_managed/override_skills/context_product_plan.md`、`.codex/pjsdlc_managed/override_skills/context_uiux_design.md` 或 `.codex/pjsdlc_managed/override_skills/context_development_engineer.md` 中追加项目本地 Skill 规则；`sync` 会合并到 `.codex/skills/**`。
+11. `.codex/skills/context_product_plan/**`、`.codex/skills/context_uiux_design/**` 和 `.codex/skills/context_development_engineer/**` 是 package-managed 默认 Skill，禁止直接编辑；`sync` 会覆盖这些生成产物。项目本地产品 / UIUX / 开发规则必须新建独立 Skill，例如 `.codex/skills/<project>_product_plan/SKILL.md`、`.codex/skills/<project>_uiux_design/SKILL.md` 或 `.codex/skills/<project>_development_engineer/SKILL.md`；当项目本地 Skill 与默认 Skill 同时适用时，优先使用更具体的项目本地 Skill。
 12. ADR 降级为 Context 中的 `Design Rationale`；实现说明优先写成代码注释、测试名或模块 Context 中的关键约束。
 13. Harness workflow gate 只运行 `validate-context`，用于检查上下文是否可恢复；不检查 context/code 修改顺序。
 14. 产品质量由项目自己的验证入口证明；Context 只能声明验证入口，不能伪造“测试已通过”。
-15. `sync` 只刷新 managed guidance、Skill 和工具。
+15. `sync` 只刷新 managed guidance、默认 Skill 和工具；不会合并 Skill override，也不会覆盖用户新建的独立项目本地 Skill。
 16. 普通项目默认只有一个 `main` area；monorepo 或 product-family 项目可在 `context.toml` 中增加多个 `area` / `context_unit`，并用 `context_role` 或 manifest role 区分 `area`、`subdomain`、`contract`、`foundation`、`archive`、`implementation-index` 和 `decision-rationale` 等不同 Context 类型。
 
 ## 常用命令

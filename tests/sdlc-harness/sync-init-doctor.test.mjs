@@ -100,6 +100,9 @@ try {
   assert.match(agents, /Harness (?:maintains context quality|只维护上下文质量)/i);
   assert.match(agents, /Impeccable/);
   assert.match(agents, /npx impeccable detect <target>/);
+  assert.match(agents, /独立项目本地 Skill/);
+  assert.match(agents, /<project>_uiux_design\/SKILL\.md/);
+  assert.doesNotMatch(agents, /override_skills/);
   assert.doesNotMatch(agents, /multi_agent_v1/);
 
   const makefile = await readFile(path.join(root, "Makefile"), "utf8");
@@ -115,7 +118,7 @@ try {
   await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/architecture.md"));
   await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/area.md"));
   await assert.rejects(stat(path.join(root, ".agent/pjsdlc_managed/context_templates/module.md")));
-  await stat(path.join(root, ".agent/pjsdlc_managed/override_skills"));
+  await assert.rejects(stat(path.join(root, ".agent/pjsdlc_managed/override_skills")));
 
   await writeFile(
     path.join(root, "project_context/global.md"),
@@ -151,6 +154,32 @@ try {
   assert.match(developmentSkill, /Context drift check/);
   assert.doesNotMatch(developmentSkill, /multi_agent_v1/);
 
+  const managedProductSkillPath = path.join(root, ".agent/skills/context_product_plan/SKILL.md");
+  const packagedProductSkill = await readFile(
+    fileURLToPath(new URL("../../packages/sdlc-harness/assets/skills/context_product_plan/SKILL.md", import.meta.url)),
+    "utf8"
+  );
+  const localSkillPath = path.join(root, ".agent/skills/acme_product_plan/SKILL.md");
+  const localSkillContent = [
+    "---",
+    "name: acme_product_plan",
+    "description: Use for Acme-specific product planning.",
+    "---",
+    "",
+    "# Acme Product Plan",
+    "",
+    "Acme-specific product rule."
+  ].join("\n");
+  await writeFile(managedProductSkillPath, "This user edit should be overwritten by sync.\n", "utf8");
+  await mkdir(path.dirname(localSkillPath), { recursive: true });
+  await writeFile(localSkillPath, localSkillContent, "utf8");
+  await mkdir(path.join(root, ".agent/pjsdlc_managed/override_skills"), { recursive: true });
+  await writeFile(path.join(root, ".agent/pjsdlc_managed/override_skills/.gitkeep"), "", "utf8");
+  const localSkillSyncReport = await runSync(root);
+  assert.equal(localSkillSyncReport.blocked.length, 0);
+  assert.equal(await readFile(managedProductSkillPath, "utf8"), packagedProductSkill);
+  assert.equal(await readFile(localSkillPath, "utf8"), localSkillContent);
+
   await mkdir(path.join(root, ".agent/pjsdlc_managed/override_skills"), { recursive: true });
   await writeFile(
     path.join(root, ".agent/pjsdlc_managed/override_skills/context_product_plan.md"),
@@ -163,12 +192,17 @@ try {
     "utf8"
   );
   const overrideSyncReport = await runSync(root);
-  assert.equal(overrideSyncReport.blocked.length, 0);
-  assert.ok(overrideSyncReport.skipped.some((line) => line.includes("legacy stage skill override ignored")));
-  const overriddenProductSkill = await readFile(path.join(root, ".agent/skills/context_product_plan/SKILL.md"), "utf8");
-  assert.match(overriddenProductSkill, /## Local Override/);
-  assert.match(overriddenProductSkill, /项目本地产品方案规则/);
-  assert.match(overriddenProductSkill, /\.agent\/pjsdlc_managed\/override_skills\/context_product_plan\.md/);
+  assert.equal(overrideSyncReport.changed.length, 0);
+  assert.equal(overrideSyncReport.skipped.length, 0);
+  assert.equal(overrideSyncReport.blocked.length, 1);
+  assert.match(overrideSyncReport.blocked[0], /\.agent\/pjsdlc_managed\/override_skills/);
+  assert.match(overrideSyncReport.blocked[0], /Skill overrides are no longer supported/);
+  assert.match(overrideSyncReport.blocked[0], /\.agent\/skills\/<project>_<role>\/SKILL\.md/);
+  assert.match(overrideSyncReport.blocked[0], /context_product_plan\.md/);
+  assert.match(overrideSyncReport.blocked[0], /pjsdlc_dev_sprint\.md/);
+  const blockedProductSkill = await readFile(path.join(root, ".agent/skills/context_product_plan/SKILL.md"), "utf8");
+  assert.doesNotMatch(blockedProductSkill, /## Local Override/);
+  assert.doesNotMatch(blockedProductSkill, /项目本地产品方案规则/);
 
   const doctor = await runDoctor(root);
   assert.deepEqual(doctor.errors, []);
@@ -185,7 +219,7 @@ try {
   await stat(path.join(configuredRoot, ".harness/skills/context_product_plan/SKILL.md"));
   await stat(path.join(configuredRoot, ".harness/skills/context_uiux_design/SKILL.md"));
   await stat(path.join(configuredRoot, ".harness/skills/context_development_engineer/SKILL.md"));
-  await stat(path.join(configuredRoot, ".harness/pjsdlc_managed/override_skills"));
+  await assert.rejects(stat(path.join(configuredRoot, ".harness/pjsdlc_managed/override_skills")));
   await stat(path.join(configuredRoot, "project_context/global.md"));
   await stat(path.join(configuredRoot, "project_context/context.toml"));
   await stat(path.join(configuredRoot, "project_context/architecture.md"));
@@ -204,6 +238,14 @@ try {
   const cliValidateHarnessAlias = spawnSync(process.execPath, [cliPath, "validate-harness"], { cwd: cliRoot, encoding: "utf8" });
   assert.equal(cliValidateHarnessAlias.status, 0, `${cliValidateHarnessAlias.stdout}\n${cliValidateHarnessAlias.stderr}`);
   assert.match(cliValidateHarnessAlias.stdout, /Minimal Context validation passed/);
+  await mkdir(path.join(cliRoot, ".codex/pjsdlc_managed/override_skills"), { recursive: true });
+  await writeFile(path.join(cliRoot, ".codex/pjsdlc_managed/override_skills/context_uiux_design.md"), "old local UI rule\n", "utf8");
+  const cliSyncWithDeprecatedOverride = spawnSync(process.execPath, [cliPath, "sync"], { cwd: cliRoot, encoding: "utf8" });
+  assert.equal(cliSyncWithDeprecatedOverride.status, 1, `${cliSyncWithDeprecatedOverride.stdout}\n${cliSyncWithDeprecatedOverride.stderr}`);
+  assert.match(cliSyncWithDeprecatedOverride.stdout, /sync changed=0 skipped=0 blocked=1/);
+  assert.match(cliSyncWithDeprecatedOverride.stderr, /\.codex\/pjsdlc_managed\/override_skills/);
+  assert.match(cliSyncWithDeprecatedOverride.stderr, /Skill overrides are no longer supported/);
+  assert.match(cliSyncWithDeprecatedOverride.stderr, /\.codex\/skills\/<project>_<role>\/SKILL\.md/);
 } finally {
   await rm(root, { recursive: true, force: true });
   await rm(configuredRoot, { recursive: true, force: true });

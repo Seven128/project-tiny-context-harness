@@ -30,21 +30,11 @@ export async function runInit(projectRoot: string, options: InitOptions): Promis
 
   await createProjectContext(projectRoot, report);
   await createDesignMd(projectRoot, report);
-  await createSkillOverrideEntry(projectRoot, report);
 
   const syncReport = await runSync(projectRoot);
   report.push(`sync changed=${syncReport.changed.length} skipped=${syncReport.skipped.length} blocked=${syncReport.blocked.length}`);
   report.push(options.adopt ? "adopt mode complete" : "init complete");
   return report;
-}
-
-async function createSkillOverrideEntry(projectRoot: string, report: string[]): Promise<void> {
-  const root = await harnessRoot(projectRoot);
-  const overrideRoot = path.join(projectRoot, root, "pjsdlc_managed", "override_skills");
-  if (!(await pathExists(overrideRoot))) {
-    await ensureDir(overrideRoot);
-    report.push(`created ${path.join(root, "pjsdlc_managed", "override_skills")}`);
-  }
 }
 
 async function createDesignMd(projectRoot: string, report: string[]): Promise<void> {

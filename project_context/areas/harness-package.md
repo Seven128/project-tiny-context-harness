@@ -13,7 +13,7 @@
 - The product planning Skill asks agents doing product surfaces to reason from product/page positioning: what problem it solves, what the user needs, what content/capabilities/feedback it should provide, what belongs on the surface, where it belongs and why it deserves persistent attention.
 - Managed guidance tells agents to treat `project_context/**` as authoritative for intended responsibilities, ownership, architecture boundaries, integration direction, dependencies and verification entry points, while treating code as current implementation evidence.
 - Managed guidance requires an upfront long-term fact impact judgment: context-first for product/technical plans, architecture boundaries, module responsibilities, cross-domain dependencies, data contracts, state semantics and verification entry points; code-first only as a controlled exception for ordinary fixes or spikes.
-- Projects can customize those Skills via `<harnessRoot>/pjsdlc_managed/override_skills/context_product_plan.md`, `context_uiux_design.md` and `context_development_engineer.md`; `sync` appends those rules into `<harnessRoot>/skills/**`.
+- Projects customize those Skills by creating separate project-local Skills under `<harnessRoot>/skills/<project>_<role>/SKILL.md`; `sync` overwrites package-managed default `context_*` Skills and leaves separate local Skills untouched.
 - The default Skill trigger descriptions should stay narrow: explicit role names or strong artifact names, not generic mentions of product, design, development, code or requirements.
 - `PROJECT_SPEC.md` records the design rationale for the default product planning, UI/UX and development engineer Skills; changes to their triggers, workflow, output boundaries or default judgment rules should update that rationale and this Context when the long-term contract changes.
 - The development engineer Skill trigger list includes `实现`, `实现方案` and `实施计划`, while its negative trigger rule still excludes routine coding, bug fixes, small refactors and package/release work.
@@ -51,7 +51,7 @@
 - Default Skills must stay Minimal Context oriented and must not restore stage documents or phase gates.
 - UI/UX guidance may update `DESIGN.md`; it should use `npx @google/design.md lint DESIGN.md` when structure validation is needed.
 - Impeccable should be attempted by the UI/UX Skill when a scan target exists, but it must not become a `validate-context` requirement or block tasks that have no suitable target.
-- Skill overrides may narrow product/design/development guidance for a project but must keep conclusions in Minimal Context.
+- Project-local product/design/development Skills may narrow guidance for a project but must keep durable conclusions in Minimal Context.
 - Context graph roles must stay lightweight and optional; do not make role-specific writing formats, monorepo-specific area names or boundary checks mandatory for ordinary projects.
 - Context-first guidance must stay prompt-level and must not become a validator, phase gate or required document chain.
 - Do not reintroduce legacy migration commands or stage assets.

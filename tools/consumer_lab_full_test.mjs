@@ -215,7 +215,6 @@ async function verifyManagedAssets(labDir, add) {
     ".codex/pjsdlc_managed/context_templates/context.toml",
     ".codex/pjsdlc_managed/context_templates/architecture.md",
     ".codex/pjsdlc_managed/context_templates/area.md",
-    ".codex/pjsdlc_managed/override_skills",
     ".codex/pjsdlc_managed/make/sdlc-harness.mk",
     ".codex/skills/context_product_plan/SKILL.md",
     ".codex/skills/context_uiux_design/SKILL.md",

@@ -4,7 +4,6 @@ export interface HarnessConfig {
     schema_version: string;
   };
   managed_files: ManagedFile[];
-  local_overrides: string[];
   never_overwrite: string[];
 }
 
