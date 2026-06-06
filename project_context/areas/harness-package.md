@@ -10,6 +10,7 @@
 - `upgrade` creates root `DESIGN.md` for existing Harness projects when missing, without overwriting an existing user-authored design file.
 - The generated `DESIGN.md` contains neutral starter tokens and design logic; user-authored `DESIGN.md` content takes precedence over the starter baseline.
 - Default product planning, UI/UX and development engineer Skills write durable conclusions to `project_context/**`.
+- The product planning Skill asks agents doing product surfaces to reason from product/page positioning: what problem it solves, what the user needs, what content/capabilities/feedback it should provide, what belongs on the surface, where it belongs and why it deserves persistent attention.
 - Managed guidance tells agents to treat `project_context/**` as authoritative for intended responsibilities, ownership, architecture boundaries, integration direction, dependencies and verification entry points, while treating code as current implementation evidence.
 - Managed guidance requires an upfront long-term fact impact judgment: context-first for product/technical plans, architecture boundaries, module responsibilities, cross-domain dependencies, data contracts, state semantics and verification entry points; code-first only as a controlled exception for ordinary fixes or spikes.
 - Projects can customize those Skills via `<harnessRoot>/pjsdlc_managed/override_skills/context_product_plan.md`, `context_uiux_design.md` and `context_development_engineer.md`; `sync` appends those rules into `<harnessRoot>/skills/**`.
@@ -25,7 +26,7 @@
 - Schema v4 makes `project_context/context.toml` required for `validate-context`; `upgrade` migrates legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md` and registers area Context files in the manifest.
 - `validate-context` uses `context.toml` and `context_role` front matter to validate graph structure, paths, role names and field shapes; roles such as `area`, `domain`, `subdomain`, `foundation`, `archive`, `contract`, `implementation-index` and `decision-rationale` are semantic labels rather than writing-template gates.
 - Context graph boundary rules are metadata validation only for now; Harness does not perform import/path dependency analysis.
-- The UI/UX Skill uses Google `@google/design.md` for root `DESIGN.md` visual design tokens, and carries compact visual-quality calibration for brand/product register, design-system continuity and common AI-design anti-patterns.
+- The UI/UX Skill uses Google `@google/design.md` for root `DESIGN.md` visual design tokens, and carries compact visual-quality calibration for brand/product register, information density, persistent text, space/value fit, true states, layout stability, design-system continuity and common AI-design anti-patterns.
 - Harness installs Impeccable as a default package dependency; design-draft, redesign, visual polish, frontend styling and existing-UI review tasks should run `npx impeccable detect <target>` by default when a scan target exists, while treating findings as review evidence rather than a `validate-context` gate.
 - `sync` refreshes managed assets only and does not migrate old semantic facts.
 - `upgrade` runs safe migrations plus `sync`; it no longer prompts or runs semantic migration.
