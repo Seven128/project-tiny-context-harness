@@ -31,6 +31,7 @@
 ## UX / Screen Brief
 
 - Capture durable screen, flow, interaction, responsive and accessibility facts. Use `DESIGN.md` for visual identity and design tokens when needed.
+- For web/front-end surfaces, record durable page responsibilities, core user judgments, persistent information boundaries and cross-page or cross-layer ownership when they guide future changes.
 
 ## Verification Entry Points
 

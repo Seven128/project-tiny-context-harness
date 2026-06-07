@@ -7,6 +7,7 @@
 ## User / System Contract
 
 - Describe the external behavior, API, CLI, UI, screen state, interaction or data contract. Contract changes should be captured here before implementation alignment.
+- For UI/page areas, name the page responsibility, core user judgment, persistent information/actions/feedback, non-persistent information, and what belongs in downstream consumption, ops, detail or other surfaces when those facts are durable.
 
 ## Core Data / API / State
 

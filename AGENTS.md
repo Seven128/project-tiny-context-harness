@@ -1,114 +1,32 @@
-# Minimal Context Harness Protocol
+# Project Agent Overlay
 
-本仓库当前使用 Minimal Context Harness。默认工作流目标是维护最小长期事实源，让新会话 agent 能快速恢复项目意图、边界、验证入口和下一步安全动作。
+本文件是 agent 启动路由器和硬边界，不承载完整设计思想、长原则或角色流程；默认 Minimal Context 规则见下方 managed block。
 
-## 默认事实源
+## 本仓库 Authoring 例外
 
-- 全局上下文：`project_context/global.md`
-- 架构上下文：`project_context/architecture.md`（克制、最小，只记录系统边界、组件关系和长期约束）
-- Context 图谱：`project_context/context.toml`（Schema v4 默认事实源；声明 area/context_unit、role、触发条件和按需读取策略）
-- Area / context unit 上下文：`project_context/areas/**/*.md`
-- 产品质量事实：项目代码、测试、smoke、CI、hidden probe 或人工验收
-
-## 工作规则
-
-1. 新会话、继续工作、debug 或需求变更时，先读 `project_context/global.md`、`project_context/architecture.md` 和 `project_context/context.toml`；按其中 default area 和触发条件读取相关 context。
-2. Harness 只维护上下文质量，不替项目证明产品质量；产品质量由项目自己的测试、probe、CI 或人工验收负责。
-3. 长期事实默认只写入 `project_context/**`。不要默认新增 PRD、tech plan、ADR、implementation doc、review/test/release 文档。
-4. ADR 内容降级为 Context 的 `Design Rationale`；实现说明优先进入代码注释、测试名或 area Context 的关键约束。
-5. `validate-context` 只检查 Context 是否足够支持恢复上下文，并阻止伪造“测试已通过”的说法。
-6. `sync` 只刷新 managed guidance、Skill、Context template 和工具。
-7. `.codex/skills/context_product_plan/**`、`.codex/skills/context_uiux_design/**` 和 `.codex/skills/context_development_engineer/**` 是 package-managed 默认 Skill，禁止直接编辑；本项目如需定制产品 / UIUX / 开发规则，应新建独立项目本地 Skill，例如 `.codex/skills/product_plan/SKILL.md`、`.codex/skills/uiux_design/SKILL.md` 或 `.codex/skills/development_engineer/SKILL.md`。
-
-## 本仓库 authoring 例外
-
-本仓库仍维护 AI SDLC Harness package、delivery benchmark 和 Minimal Context 规则。修改这些区域时，读取对应 Context 与源码；旧阶段式工作流只在 `PROJECT_SPEC.md` 中保留精简历史说明。
-
-- package / CLI / managed assets：`packages/sdlc-harness/**`、`.codex/pjsdlc_managed/**`、`tools/**`
-- benchmark：`examples/delivery-benchmark/**`
-- 历史设计摘要：`PROJECT_SPEC.md`
-- authoring-only skill：`.codex/skills/authoring/**`
-
-这些文件是本仓库自举与迁移材料，不代表新 package consumer 的默认文件结构。
-
-## 常用命令
-
-- `make validate-context`
-- `make validate-harness`（vNext 兼容别名）
-- `make sdlc-sync`（或 `npx --yes --package agent-project-sdlc@latest sdlc-harness sync`）
-- `node packages/sdlc-harness/dist/cli.js package sync-source`
-- `node packages/sdlc-harness/dist/cli.js package check-source`
-
-## Karpathy 编码准则（外部 Skill 中文翻译）
-
-来源：`https://github.com/forrestchang/andrej-karpathy-skills`，文件：`skills/karpathy-guidelines/SKILL.md`，许可证：MIT。以下文本块为中文翻译，和本仓库指引隔离保存。
-
-```text
-Karpathy 编码准则
-
-用于减少常见 LLM 编码错误的行为准则。适用于编写、审查或重构代码：避免过度复杂，做精准修改，暴露假设，并定义可验证的成功标准。源自 Andrej Karpathy 对 LLM 编码陷阱的观察。
-
-权衡：这些准则偏向谨慎而不是速度。对于琐碎任务，请自行判断。
-
-1. 编码前思考
-
-不要假设。不要隐藏困惑。呈现权衡。
-
-实现前：
-- 明确说明你的假设。不确定时就询问。
-- 如果存在多种解释，说明这些解释，不要默默选择。
-- 如果有更简单的方法，直接说出来。必要时提出异议。
-- 如果事情不清楚，停下来。说清楚哪里让你困惑，然后询问。
-
-2. 简洁优先
-
-用能解决问题的最少代码。不要做投机性设计。
-
-- 不添加用户没有要求的功能。
-- 不为一次性代码创建抽象。
-- 不添加用户没有要求的“灵活性”或“可配置性”。
-- 不为不可能发生的场景做错误处理。
-- 如果你写了 200 行，而它本可以是 50 行，就重写。
-
-自问：“资深工程师会认为这过度复杂吗？”如果会，就简化。
-
-3. 精准修改
-
-只碰必须碰的内容。只清理你自己造成的混乱。
-
-编辑现有代码时：
-- 不“改进”相邻代码、注释或格式。
-- 不重构没有坏掉的东西。
-- 匹配现有风格，即使你会用不同写法。
-- 如果注意到无关的死代码，提出来，不要删除。
-
-当你的修改产生孤儿代码时：
-- 删除因你的修改而变得无用的导入、变量或函数。
-- 不删除预先存在的死代码，除非用户要求。
-
-检验标准：每一行修改都应该能直接追溯到用户请求。
-
-4. 目标驱动执行
-
-定义成功标准。循环验证直到达成。
-
-将任务转化为可验证目标：
-- “添加校验” -> “为无效输入编写测试，然后让测试通过”
-- “修复 bug” -> “编写能重现 bug 的测试，然后让测试通过”
-- “重构 X” -> “确保重构前后测试都能通过”
-
-对于多步骤任务，说明简短计划：
-1. [步骤] -> 验证：[检查]
-2. [步骤] -> 验证：[检查]
-3. [步骤] -> 验证：[检查]
-
-强成功标准能让 agent 独立循环执行。弱标准（“让它能用”）会不断需要澄清。
-```
+- 本仓库维护 `agent-project-sdlc` package、Minimal Context managed assets、source sync、validator 和 delivery benchmark。
+- 修改 `packages/sdlc-harness/**`、`.codex/pjsdlc_managed/**`、`tools/**` 或 `examples/delivery-benchmark/**` 时，先读 `project_context/**`，并使用 `.codex/skills/authoring/harness_package_design/SKILL.md`。
+- 旧阶段式工作流只作为历史设计摘要保留在 `PROJECT_SPEC.md`；不要把 stage artifacts 恢复成默认 package 能力。
+- Karpathy 编码准则是本仓库 agent 的底层行为原则：先思考并暴露假设，优先简洁，精准修改，目标驱动验证；不要把长原则常驻在 AGENTS 启动路径。
 
 <!-- pjsdlc:sdlc-harness:begin -->
 # Minimal Context Harness Protocol
 
 本项目使用 Minimal Context Harness。Harness 只维护上下文质量，不替项目证明产品质量。
+
+## AGENTS.md 定位
+
+- `AGENTS.md` 是 agent 启动路由器和硬边界，只放事实源入口、不可违反规则、关键触发器和最短验证入口。
+- 长设计理由默认压缩进 `project_context/**`；若项目已有明确的本地 spec / design 文档，可按项目约定使用。角色流程 / checklist 放 Skills，人类使用说明放 README；新增 AGENTS 规则前优先压缩或替换旧规则，不默认追加。
+- 建议把 AGENTS 主路径保持在约 40-70 行；这是软预算，不是 validator 或 CI gate。
+
+## Context 优先级阶梯
+
+1. 先读 `project_context/global.md`、`project_context/architecture.md` 和 `project_context/context.toml`，再按 graph 读取相关 area / context unit。
+2. 若任务涉及 Web 页面、前端布局、UI/UX、产品模块边界或信息放置，先做页面产品定位检查，再完成变更分类。
+3. 判断是否改变长期事实：产品归属 / 方案、模块职责、信息架构、页面职责、常驻信息边界、API / Schema、状态或调度语义、跨域边界、验证入口。
+4. 命中长期事实则 context-first；普通 bug fix、局部样式、局部漂移修复、测试修复或 spike 默认 code-first，但一旦产生长期结论必须回写 Context。
+5. 收尾做 Context drift check，只报告 `Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。
 
 ## 事实源
 
@@ -121,22 +39,23 @@ Karpathy 编码准则
 ## 工作规则
 
 1. 新会话或继续工作时，先读取 `project_context/global.md`、`project_context/architecture.md` 和 `project_context/context.toml`；按其中 default area 和触发条件读取相关 context。
-2. 第一处代码编辑前先做轻量变更分类，不按固定时长计时：判断本次是否改变长期事实，包括产品归属 / 产品方案、模块职责、信息架构、API / Schema、状态机或调度语义、跨域边界和验证入口。
-3. 若命中长期事实，默认走 context-first：第一处代码编辑前先更新相关 `project_context/**`，写入必要且足以指导实现的长期结论，再按 Context 对齐实现、验证和收尾。
-4. 普通 bug fix、局部样式、局部实现漂移修复、测试修复或探索性 spike 不更新 Context，可先改代码；一旦形成长期结论，继续对齐或交付前必须回写 `project_context/**`。
-5. `project_context/**` 是项目意图、模块职责、架构边界、集成方向、允许/禁止依赖和验证入口的权威事实源；代码是当前实现状态的权威事实源。
-6. 当代码形态、搜索结果或相邻实现与 Context 声明冲突时，把差异视为实现漂移、缺失工作或 Context 过期并显式说明；不要用当前代码形态或关键词搜索结果覆盖 Context 已声明的职责、归属或集成意图。
-7. 每个有意义的方案或实现变更收尾时做 Context drift check：确认代码没有引入未沉淀的长期事实，且 Context 没有退化成普通实现摘要；交付说明只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。
-8. 长期事实只写入 `project_context/**`；不要默认创建 PRD、tech plan、ADR、implementation doc、review/test/release 文档。
-9. 用户明确要求“产品方案 / 产品经理 / 产品专家”、“设计稿 / UI/UX 设计方案 / 视觉专家”或“开发工程师 / 技术方案 / 开发方案 / 实现 / 实现方案 / 实施计划 / 技术专家 / 多开agent / subagent”这类角色或强产物名时，使用对应 Context authoring Skill，把长期结论写回 `project_context/**`。
-10. 当任务涉及设计稿、重做设计、视觉方案、设计系统、visual polish、frontend redesign 或 frontend styling，且存在可扫描的 UI 代码、页面文件、构建产物目录或本地/远程 URL 时，默认运行 `npx impeccable detect <target>` 做 Impeccable 视觉审查；没有可扫描目标、命令不可用或扫描失败时，说明原因并继续。Impeccable 不是 `validate-context` gate，也不替代截图检查、项目测试或人工判断。
-11. `.codex/skills/context_product_plan/**`、`.codex/skills/context_uiux_design/**` 和 `.codex/skills/context_development_engineer/**` 是 package-managed 默认 Skill，禁止直接编辑；`sync` 会覆盖这些生成产物。项目本地产品 / UIUX / 开发规则必须新建独立 Skill，例如 `.codex/skills/product_plan/SKILL.md`、`.codex/skills/uiux_design/SKILL.md` 或 `.codex/skills/development_engineer/SKILL.md`；当项目本地 Skill 与默认 Skill 同时适用时，优先使用更具体的项目本地 Skill。项目本地 Skill 的 front matter `description` 触发词应与本文件中的角色触发规则和对应默认 `context_*` Skill 保持一致；新增或收窄关键词时，同步更新本地 Skill 描述和项目级 agent 指引，避免 Skill 触发条件与 SDLC 工作规则漂移。
-12. ADR 降级为 Context 中的 `Design Rationale`；实现说明优先写成代码注释、测试名或模块 Context 中的关键约束。
-13. Harness workflow gate 只运行 `validate-context`，用于检查上下文是否可恢复；不检查 context/code 修改顺序。自动化最多提示 context-first 风险，不做阻断。
-14. 产品质量由项目自己的验证入口证明；Context 只能声明验证入口，不能伪造“测试已通过”。
-15. Verification Path Context 规则：Context 不记录一次性测试日志、完整命令输出、临时 JSON、CI artifact、测试报告、secret、token、cookie、device id 或 raw payload；但当测试 / smoke / 验证路径具备长期复用价值时，应以 minimal 粒度写入对应验证入口，包括特殊准备、最短命令、预期阶段 / 信号、可接受 warning、已排除的重复探索点。全局默认入口写 `project_context/global.md#Verification Entry Points`；模块级复测路径写 owner area 的 `Test Entry Points`；跨模块 smoke 写主要 owner，其他相关模块只保留短引用。
-16. `sync` 只刷新 managed guidance、默认 Skill 和工具；不会合并 Skill override，也不会覆盖用户新建的独立项目本地 Skill。
-17. 普通项目默认只有一个 `main` area；monorepo 或 product-family 项目可在 `context.toml` 中增加多个 `area` / `context_unit`，并用 `context_role` 或 manifest role 区分 `area`、`subdomain`、`contract`、`foundation`、`archive`、`implementation-index` 和 `decision-rationale` 等不同 Context 类型。
+2. 第一处代码编辑前先做轻量变更分类，不按固定时长计时。若任务涉及 Web 页面、前端布局、UI/UX、产品模块边界或信息应该放在哪个页面 / 模块，先做页面产品定位检查，再完成变更分类：用户在这个页面要完成什么判断，产品必须提供哪些信息 / 动作 / 反馈，哪些信息不应常驻，哪些属于下游消费层 / 运维层 / 详情层 / 其他页面，当前布局和信息密度是否匹配页面任务。多页面或多模块归属不清时，先审查全站或相关页面的信息架构，再收窄到代码模块实现。该检查是判断是否需要 context-first 的输入，不等于必须更新 Context，也不要求独立文档或新的 gate。
+3. 判断本次是否改变长期事实，包括产品归属 / 产品方案、模块职责、信息架构、页面职责、常驻信息边界、API / Schema、状态机或调度语义、跨域边界和验证入口。
+4. 若页面产品定位检查或其他变更分类命中长期事实，默认走 context-first：第一处代码编辑前先更新相关 `project_context/**`，写入必要且足以指导实现的长期结论，再按 Context 对齐实现、验证和收尾。
+5. 普通 bug fix、局部样式、局部实现漂移修复、测试修复或探索性 spike 不更新 Context，可先改代码；一旦形成长期结论，继续对齐或交付前必须回写 `project_context/**`。
+6. `project_context/**` 是项目意图、模块职责、架构边界、集成方向、允许/禁止依赖和验证入口的权威事实源；代码是当前实现状态的权威事实源。
+7. 当代码形态、搜索结果或相邻实现与 Context 声明冲突时，把差异视为实现漂移、缺失工作或 Context 过期并显式说明；不要用当前代码形态或关键词搜索结果覆盖 Context 已声明的职责、归属或集成意图。
+8. 每个有意义的方案或实现变更收尾时做 Context drift check：确认代码没有引入未沉淀的长期事实，且 Context 没有退化成普通实现摘要；交付说明只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。
+9. 长期事实只写入 `project_context/**`；不要默认创建 PRD、tech plan、ADR、implementation doc、review/test/release 文档。
+10. 用户明确要求“产品方案 / 产品经理 / 产品专家”、“设计稿 / UI/UX 设计方案 / 视觉专家”或“开发工程师 / 技术方案 / 开发方案 / 实现 / 实现方案 / 实施计划 / 技术专家 / 多开agent / subagent”这类角色或强产物名时，使用对应 Context authoring Skill，把长期结论写回 `project_context/**`。
+11. 当任务涉及设计稿、重做设计、视觉方案、设计系统、visual polish、frontend redesign 或 frontend styling，且存在可扫描的 UI 代码、页面文件、构建产物目录或本地/远程 URL 时，默认运行 `npx impeccable detect <target>` 做 Impeccable 视觉审查；没有可扫描目标、命令不可用或扫描失败时，说明原因并继续。Impeccable 不是 `validate-context` gate，也不替代截图检查、项目测试或人工判断。
+12. `.codex/skills/context_product_plan/**`、`.codex/skills/context_uiux_design/**` 和 `.codex/skills/context_development_engineer/**` 是 package-managed 默认 Skill，禁止直接编辑；`sync` 会覆盖这些生成产物。项目本地产品 / UIUX / 开发规则必须新建独立 Skill，例如 `.codex/skills/product_plan/SKILL.md`、`.codex/skills/uiux_design/SKILL.md` 或 `.codex/skills/development_engineer/SKILL.md`；当项目本地 Skill 与默认 Skill 同时适用时，优先使用更具体的项目本地 Skill。项目本地 Skill 的 front matter `description` 触发词应与本文件中的角色触发规则和对应默认 `context_*` Skill 保持一致；新增或收窄关键词时，同步更新本地 Skill 描述和项目级 agent 指引，避免 Skill 触发条件与 SDLC 工作规则漂移。
+13. ADR 降级为 Context 中的 `Design Rationale`；实现说明优先写成代码注释、测试名或模块 Context 中的关键约束。
+14. Harness workflow gate 只运行 `validate-context`，用于检查上下文是否可恢复；不检查 context/code 修改顺序。自动化最多提示 context-first 风险，不做阻断。
+15. 产品质量由项目自己的验证入口证明；Context 只能声明验证入口，不能伪造“测试已通过”。
+16. Verification Path Context 规则：Context 不记录一次性测试日志、完整命令输出、临时 JSON、CI artifact、测试报告、secret、token、cookie、device id 或 raw payload；但当测试 / smoke / 验证路径具备长期复用价值时，应以 minimal 粒度写入对应验证入口，包括特殊准备、最短命令、预期阶段 / 信号、可接受 warning、已排除的重复探索点。全局默认入口写 `project_context/global.md#Verification Entry Points`；模块级复测路径写 owner area 的 `Test Entry Points`；跨模块 smoke 写主要 owner，其他相关模块只保留短引用。
+17. `sync` 只刷新 managed guidance、默认 Skill 和工具；不会合并 Skill override，也不会覆盖用户新建的独立项目本地 Skill。
+18. 普通项目默认只有一个 `main` area；monorepo 或 product-family 项目可在 `context.toml` 中增加多个 `area` / `context_unit`，并用 `context_role` 或 manifest role 区分 `area`、`subdomain`、`contract`、`foundation`、`archive`、`implementation-index` 和 `decision-rationale` 等不同 Context 类型。
 
 ## 常用命令
 
