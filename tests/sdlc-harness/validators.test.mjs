@@ -130,6 +130,58 @@ triggers = ["trading"]
   }
 });
 
+test("validate-context rejects export artifacts registered in context graph", async () => {
+  const root = await createContextProject({
+    manifest: `[[areas]]
+id = "main"
+root = "."
+context = "project_context/areas/main.md"
+kind = "app"
+default = true
+
+[[context]]
+path = "project_context/full-project-context.md"
+role = "archive"
+`,
+    extraFiles: {
+      "project_context/full-project-context.md": "# Export\n"
+    }
+  });
+  try {
+    const report = await runValidator(root, "validate-context");
+    assert.match(report.errors.join("\n"), /temporary export artifact/);
+    assert.match(report.errors.join("\n"), /tmp\/sdlc\/context-exports/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("validate-context rejects export artifacts registered as implementation-index", async () => {
+  const root = await createContextProject({
+    manifest: `[[areas]]
+id = "main"
+root = "."
+context = "project_context/areas/main.md"
+kind = "app"
+default = true
+
+[[context]]
+path = "project_context/context-bundle.md"
+role = "implementation-index"
+`,
+    extraFiles: {
+      "project_context/context-bundle.md": "# Bundle\n"
+    }
+  });
+  try {
+    const report = await runValidator(root, "validate-context");
+    assert.match(report.errors.join("\n"), /must not reference temporary export artifact/);
+    assert.match(report.errors.join("\n"), /implementation-index/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("validate-context rejects missing required recovery facts", async () => {
   const root = await createContextProject({
     global: `# Project / Delivery Context

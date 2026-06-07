@@ -90,6 +90,7 @@ try {
   await stat(path.join(root, ".agent/skills/context_product_plan/SKILL.md"));
   await stat(path.join(root, ".agent/skills/context_uiux_design/SKILL.md"));
   await stat(path.join(root, ".agent/skills/context_development_engineer/SKILL.md"));
+  await stat(path.join(root, ".agent/skills/context_full_project_export/SKILL.md"));
   await assert.rejects(stat(path.join(root, ".work_products/INDEX.md")));
 
   const agents = await readFile(path.join(root, "AGENTS.md"), "utf8");
@@ -110,6 +111,9 @@ try {
   assert.match(agents, /raw payload/);
   assert.match(agents, /Impeccable/);
   assert.match(agents, /npx impeccable detect <target>/);
+  assert.match(agents, /全量上下文导出/);
+  assert.match(agents, /export-context --full/);
+  assert.match(agents, /tmp\/sdlc\/context-exports/);
   assert.match(agents, /独立项目本地 Skill/);
   assert.match(agents, /uiux_design\/SKILL\.md/);
   assert.doesNotMatch(agents, /override_skills/);
@@ -178,6 +182,11 @@ try {
   assert.match(developmentSkill, /Verification Path Context/);
   assert.match(developmentSkill, /长期复用验证路径/);
   assert.doesNotMatch(developmentSkill, /multi_agent_v1/);
+  const exportSkill = await readFile(path.join(root, ".agent/skills/context_full_project_export/SKILL.md"), "utf8");
+  assert.match(exportSkill, /导出尽可能详细的项目全量上下文/);
+  assert.match(exportSkill, /export-context --full/);
+  assert.match(exportSkill, /tmp\/sdlc\/context-exports/);
+  assert.match(exportSkill, /禁止修改 `project_context\/context\.toml`/);
 
   const managedProductSkillPath = path.join(root, ".agent/skills/context_product_plan/SKILL.md");
   const packagedProductSkill = await readFile(
@@ -246,6 +255,7 @@ try {
   await stat(path.join(configuredRoot, ".harness/skills/context_product_plan/SKILL.md"));
   await stat(path.join(configuredRoot, ".harness/skills/context_uiux_design/SKILL.md"));
   await stat(path.join(configuredRoot, ".harness/skills/context_development_engineer/SKILL.md"));
+  await stat(path.join(configuredRoot, ".harness/skills/context_full_project_export/SKILL.md"));
   await assert.rejects(stat(path.join(configuredRoot, ".harness/pjsdlc_managed/override_skills")));
   await stat(path.join(configuredRoot, "project_context/global.md"));
   await stat(path.join(configuredRoot, "project_context/context.toml"));

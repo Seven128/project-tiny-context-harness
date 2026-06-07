@@ -36,17 +36,19 @@
 8. 每个有意义的方案或实现变更收尾时做 Context drift check：确认代码没有引入未沉淀的长期事实，且 Context 没有退化成普通实现摘要；交付说明只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。
 9. 长期事实只写入 `project_context/**`；不要默认创建 PRD、tech plan、ADR、implementation doc、review/test/release 文档。
 10. 用户明确要求“产品方案 / 产品经理 / 产品专家”、“设计稿 / UI/UX 设计方案 / 视觉专家”或“开发工程师 / 技术方案 / 开发方案 / 实现 / 实现方案 / 实施计划 / 技术专家 / 多开agent / subagent”这类角色或强产物名时，使用对应 Context authoring Skill，把长期结论写回 `project_context/**`。
-11. 当任务涉及设计稿、重做设计、视觉方案、设计系统、visual polish、frontend redesign 或 frontend styling，且存在可扫描的 UI 代码、页面文件、构建产物目录或本地/远程 URL 时，默认运行 `npx impeccable detect <target>` 做 Impeccable 视觉审查；没有可扫描目标、命令不可用或扫描失败时，说明原因并继续。Impeccable 不是 `validate-context` gate，也不替代截图检查、项目测试或人工判断。
-12. `.agent/skills/context_product_plan/**`、`.agent/skills/context_uiux_design/**` 和 `.agent/skills/context_development_engineer/**` 是 package-managed 默认 Skill，禁止直接编辑；`sync` 会覆盖这些生成产物。项目本地产品 / UIUX / 开发规则必须新建独立 Skill，例如 `.agent/skills/product_plan/SKILL.md`、`.agent/skills/uiux_design/SKILL.md` 或 `.agent/skills/development_engineer/SKILL.md`；当项目本地 Skill 与默认 Skill 同时适用时，优先使用更具体的项目本地 Skill。项目本地 Skill 的 front matter `description` 触发词应与本文件中的角色触发规则和对应默认 `context_*` Skill 保持一致；新增或收窄关键词时，同步更新本地 Skill 描述和项目级 agent 指引，避免 Skill 触发条件与 SDLC 工作规则漂移。
-13. ADR 降级为 Context 中的 `Design Rationale`；实现说明优先写成代码注释、测试名或模块 Context 中的关键约束。
-14. Harness workflow gate 只运行 `validate-context`，用于检查上下文是否可恢复；不检查 context/code 修改顺序。自动化最多提示 context-first 风险，不做阻断。
-15. 产品质量由项目自己的验证入口证明；Context 只能声明验证入口，不能伪造“测试已通过”。
-16. Verification Path Context 规则：Context 不记录一次性测试日志、完整命令输出、临时 JSON、CI artifact、测试报告、secret、token、cookie、device id 或 raw payload；但当测试 / smoke / 验证路径具备长期复用价值时，应以 minimal 粒度写入对应验证入口，包括特殊准备、最短命令、预期阶段 / 信号、可接受 warning、已排除的重复探索点。全局默认入口写 `project_context/global.md#Verification Entry Points`；模块级复测路径写 owner area 的 `Test Entry Points`；跨模块 smoke 写主要 owner，其他相关模块只保留短引用。
-17. `sync` 只刷新 managed guidance、默认 Skill 和工具；不会合并 Skill override，也不会覆盖用户新建的独立项目本地 Skill。
-18. 普通项目默认只有一个 `main` area；monorepo 或 product-family 项目可在 `context.toml` 中增加多个 `area` / `context_unit`，并用 `context_role` 或 manifest role 区分 `area`、`subdomain`、`contract`、`foundation`、`archive`、`implementation-index` 和 `decision-rationale` 等不同 Context 类型。
+11. 用户明确要求“导出尽可能详细的项目全量上下文 / 全量上下文导出 / full project context export”时，使用 `context_full_project_export` Skill，并优先运行 `sdlc-harness export-context --full`；导出产物只放 `tmp/sdlc/context-exports/**`，不得放入或注册到 `project_context/**` / `project_context/context.toml`。
+12. 当任务涉及设计稿、重做设计、视觉方案、设计系统、visual polish、frontend redesign 或 frontend styling，且存在可扫描的 UI 代码、页面文件、构建产物目录或本地/远程 URL 时，默认运行 `npx impeccable detect <target>` 做 Impeccable 视觉审查；没有可扫描目标、命令不可用或扫描失败时，说明原因并继续。Impeccable 不是 `validate-context` gate，也不替代截图检查、项目测试或人工判断。
+13. `.agent/skills/context_product_plan/**`、`.agent/skills/context_uiux_design/**`、`.agent/skills/context_development_engineer/**` 和 `.agent/skills/context_full_project_export/**` 是 package-managed 默认 Skill，禁止直接编辑；`sync` 会覆盖这些生成产物。项目本地产品 / UIUX / 开发规则必须新建独立 Skill，例如 `.agent/skills/product_plan/SKILL.md`、`.agent/skills/uiux_design/SKILL.md` 或 `.agent/skills/development_engineer/SKILL.md`；当项目本地 Skill 与默认 Skill 同时适用时，优先使用更具体的项目本地 Skill。项目本地 Skill 的 front matter `description` 触发词应与本文件中的角色触发规则和对应默认 `context_*` Skill 保持一致；新增或收窄关键词时，同步更新本地 Skill 描述和项目级 agent 指引，避免 Skill 触发条件与 SDLC 工作规则漂移。
+14. ADR 降级为 Context 中的 `Design Rationale`；实现说明优先写成代码注释、测试名或模块 Context 中的关键约束。
+15. Harness workflow gate 只运行 `validate-context`，用于检查上下文是否可恢复；不检查 context/code 修改顺序。自动化最多提示 context-first 风险，不做阻断。
+16. 产品质量由项目自己的验证入口证明；Context 只能声明验证入口，不能伪造“测试已通过”。
+17. Verification Path Context 规则：Context 不记录一次性测试日志、完整命令输出、临时 JSON、CI artifact、测试报告、secret、token、cookie、device id 或 raw payload；但当测试 / smoke / 验证路径具备长期复用价值时，应以 minimal 粒度写入对应验证入口，包括特殊准备、最短命令、预期阶段 / 信号、可接受 warning、已排除的重复探索点。全局默认入口写 `project_context/global.md#Verification Entry Points`；模块级复测路径写 owner area 的 `Test Entry Points`；跨模块 smoke 写主要 owner，其他相关模块只保留短引用。
+18. `sync` 只刷新 managed guidance、默认 Skill 和工具；不会合并 Skill override，也不会覆盖用户新建的独立项目本地 Skill。
+19. 普通项目默认只有一个 `main` area；monorepo 或 product-family 项目可在 `context.toml` 中增加多个 `area` / `context_unit`，并用 `context_role` 或 manifest role 区分 `area`、`subdomain`、`contract`、`foundation`、`archive`、`implementation-index` 和 `decision-rationale` 等不同 Context 类型。
 
 ## 常用命令
 
 - `make validate-context`：检查 `project_context/**` 是否足够支持 agent 恢复上下文。
 - `make sdlc-sync`：刷新 managed guidance、Context template、默认 Skill 和工具。
+- `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full`：导出临时全量上下文 Markdown 到 `tmp/sdlc/context-exports/**`。
 - `npx --yes --package agent-project-sdlc@latest sdlc-harness doctor`：临时诊断 canonical SDLC CLI；避免裸 `npx sdlc-harness` 解析到旧包名或旧本地缓存。

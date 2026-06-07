@@ -40,15 +40,19 @@
 - `upgrade` runs safe migrations plus `sync`; it no longer prompts or runs semantic migration.
 - `init`, `sync`, `upgrade`, `doctor` and `validate-context` guard unsupported future schema major versions before applying v4 assumptions; write commands fail before modifying files.
 - `validate-context` checks Context completeness but does not prove product test execution.
+- `export-context --full` creates a one-off Markdown export for copying, external-tool ingestion or temporary discussion. It defaults to `tmp/sdlc/context-exports/full-project-context-<timestamp>.md`, refuses `project_context/**` and non-temporary output paths, and must never register the export as a Context graph node.
+- The package-managed `context_full_project_export` Skill triggers on “导出尽可能详细的项目全量上下文 / 全量上下文导出 / full project context export” style requests and tells agents to use the CLI instead of hand-writing a tracked Context summary.
+- `validate-context` rejects obvious export artifact names such as `full-project-context`, `project-overview`, `context-bundle`, `context-summary` or `context-export` when they appear in `project_context/context.toml`.
 
 ## Core Data / API / State
 
 - CLI command routing lives in `packages/sdlc-harness/src/commands/index.ts`.
+- Full context export command behavior lives in `packages/sdlc-harness/src/commands/export-context.ts` and `packages/sdlc-harness/src/lib/context-export.ts`.
 - Default managed file configuration lives in `packages/sdlc-harness/src/lib/config.ts`.
 - Shared package/schema constants live in `packages/sdlc-harness/src/lib/constants.ts`; unsupported schema handling lives in `packages/sdlc-harness/src/lib/schema-guard.ts`.
 - Init behavior lives in `packages/sdlc-harness/src/lib/init.ts`.
 - Sync behavior lives in `packages/sdlc-harness/src/lib/sync-engine.ts`.
-- Default Skill assets live in `.codex/pjsdlc_managed/skills/**` and `packages/sdlc-harness/assets/skills/**`.
+- Default Skill assets, including Context authoring Skills and the full-project export Skill, live in `.codex/pjsdlc_managed/skills/**` and `packages/sdlc-harness/assets/skills/**`.
 - Default Context graph template lives in `.codex/pjsdlc_managed/context_templates/context.toml` and `packages/sdlc-harness/assets/context_templates/context.toml`.
 - Safe config migrations live in `packages/sdlc-harness/src/lib/migrations.ts`.
 - Validators live in `packages/sdlc-harness/src/lib/validators.ts`.
@@ -72,7 +76,9 @@
 
 - `packages/sdlc-harness/src/cli.ts`
 - `packages/sdlc-harness/src/commands/index.ts`
+- `packages/sdlc-harness/src/commands/export-context.ts`
 - `packages/sdlc-harness/src/lib/config.ts`
+- `packages/sdlc-harness/src/lib/context-export.ts`
 - `packages/sdlc-harness/src/lib/init.ts`
 - `packages/sdlc-harness/src/lib/sync-engine.ts`
 - `packages/sdlc-harness/src/lib/validators.ts`
@@ -80,6 +86,7 @@
 ## Test Entry Points
 
 - `npm test --workspace agent-project-sdlc`
+- `node --test tests/sdlc-harness/export-context.test.mjs`
 - `node --test tests/sdlc-harness/sync-init-doctor.test.mjs`
 - `node --test tests/sdlc-harness/package-source.test.mjs`
 - `node --test tests/sdlc-harness/validators.test.mjs`

@@ -85,6 +85,13 @@ const ROLE_ALIASES: Record<string, ContextRole> = {
 };
 
 const VALID_READ_POLICIES = new Set(["default", "always", "optional", "on-demand", "never-default"]);
+const EXPORT_ARTIFACT_NAME_PATTERNS = [
+  /full-project-context/i,
+  /project-overview/i,
+  /context-bundle/i,
+  /context-summary/i,
+  /context-export/i
+];
 
 const FAKE_VERIFICATION_PATTERNS = [
   /\btests?\s+(?:pass(?:ed|es)?|green)\b/i,
@@ -261,6 +268,12 @@ async function addManifestRole(
   errors: string[]
 ): Promise<void> {
   const relative = normalizeContextPath(rawPath);
+  if (looksLikeExportArtifact(relative)) {
+    errors.push(
+      `project_context/context.toml ${source} must not reference temporary export artifact ${rawPath}; export artifacts belong in tmp/sdlc/context-exports/** and must not be registered as Context graph nodes or implementation-index`
+    );
+    return;
+  }
   if (!relative.startsWith("project_context/") || !relative.endsWith(".md")) {
     errors.push(`project_context/context.toml ${source} must reference a markdown file under project_context/: ${rawPath}`);
     return;
@@ -507,6 +520,11 @@ function normalizeRole(value: string): ContextRole | undefined {
 
 function normalizeContextPath(value: string): string {
   return value.replace(/\\/g, "/").replace(/^\.\//, "");
+}
+
+function looksLikeExportArtifact(value: string): boolean {
+  const normalized = value.replace(/\\/g, "/");
+  return EXPORT_ARTIFACT_NAME_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
 function stripQuotes(value: string): string {
