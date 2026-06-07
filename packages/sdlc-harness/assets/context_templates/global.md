@@ -34,7 +34,9 @@
 
 ## Verification Entry Points
 
-- `npm test` or the project-specific command that proves product behavior.
+- List project-level default commands or durable smoke paths that prove product behavior.
+- For reusable complex paths, keep only special preparation, shortest command, expected stage/signal, acceptable warnings and excluded dead ends.
+- Do not record one-off logs, full output, temporary JSON, CI artifacts, reports, secrets, tokens, cookies, device ids or raw payloads.
 
 ## Current State
 

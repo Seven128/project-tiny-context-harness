@@ -44,6 +44,7 @@ Project-specific engineering rules belong in a separate project-local Skill unde
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
 12. 实现收尾时做 Context drift check：确认代码没有引入未沉淀的长期事实，且 Context 没有退化成普通实现摘要；交付说明只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。
 13. Context 只能声明验证入口或验收信号，不能伪造“测试已通过”。
+14. Verification Path Context 只记录长期可复用的验证路径事实：特殊准备、最短命令、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、secret、token、cookie、device id 或 raw payload。
 
 ## 输出边界
 
@@ -55,11 +56,11 @@ Project-specific engineering rules belong in a separate project-local Skill unde
 ## 建议沉淀位置
 
 - `global.md#Design Rationale`：跨模块工程取舍。
-- `global.md#Verification Entry Points`：项目级验证入口；只记录入口，不记录未执行结果。
+- `global.md#Verification Entry Points`：项目级验证入口和长期复用验证路径；可记录特殊准备、最短命令、预期阶段 / 信号、可接受 warning 和已排除的重复探索点，不记录执行结果、日志或 secrets。
 - `global.md#Current State`：影响后续恢复的实现状态。
 - `areas/*.md#User / System Contract`：模块可见行为、API、CLI、UI 或数据契约。
 - `areas/*.md#Core Data / API / State`：关键数据结构、接口、状态流或规则。
 - `areas/*.md#Key Constraints`：性能、安全、兼容、集成、部署或维护约束。
 - `areas/*.md#Code Entry Points`：未来 agent 需要快速定位的代码入口。
-- `areas/*.md#Test Entry Points`：模块级测试、smoke 或检查命令。
+- `areas/*.md#Test Entry Points`：模块级测试、smoke、检查命令或长期复测路径；跨模块 smoke 写主要 owner，其他相关模块只保留短引用。
 - `project_context/context.toml`：复杂项目的 area/context_unit、role、触发词、按需读取策略和可选边界规则。

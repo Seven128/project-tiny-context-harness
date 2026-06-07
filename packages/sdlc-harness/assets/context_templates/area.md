@@ -23,6 +23,8 @@
 ## Test Entry Points
 
 - `npm test` or focused test commands for this area.
+- For durable smoke/re-test paths, record only special preparation, shortest command, expected stage/signal, acceptable warnings and excluded dead ends.
+- Cross-area smoke should live in the primary owner area; related areas should keep only a short reference.
 
 ## Open Risks
 

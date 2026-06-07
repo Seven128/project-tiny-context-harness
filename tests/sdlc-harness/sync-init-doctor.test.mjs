@@ -48,6 +48,8 @@ try {
   assert.match(globalContext, /Classify changes before implementation/);
   assert.match(globalContext, /update Context before code with enough durable context to guide implementation/);
   assert.match(globalContext, /## Verification Entry Points/);
+  assert.match(globalContext, /durable smoke paths/);
+  assert.match(globalContext, /temporary JSON/);
   assert.match(globalContext, /## Next Safe Action/);
   assert.match(globalContext, /whether the next change should update Context before code/);
 
@@ -79,6 +81,8 @@ try {
   assert.match(areaContext, /Contract changes should be captured here/);
   assert.match(areaContext, /## Code Entry Points/);
   assert.match(areaContext, /## Test Entry Points/);
+  assert.match(areaContext, /durable smoke\/re-test paths/);
+  assert.match(areaContext, /Cross-area smoke should live in the primary owner area/);
 
   await assert.rejects(stat(path.join(root, ".agent/state/lifecycle.yaml")));
   await assert.rejects(stat(path.join(root, ".agent/state/plan.yaml")));
@@ -102,6 +106,8 @@ try {
   assert.match(agents, /Context drift check/);
   assert.match(agents, /不检查 context\/code 修改顺序/);
   assert.match(agents, /Harness (?:maintains context quality|只维护上下文质量)/i);
+  assert.match(agents, /Verification Path Context/);
+  assert.match(agents, /raw payload/);
   assert.match(agents, /Impeccable/);
   assert.match(agents, /npx impeccable detect <target>/);
   assert.match(agents, /独立项目本地 Skill/);
@@ -121,6 +127,12 @@ try {
   await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/context.toml"));
   await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/architecture.md"));
   await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/area.md"));
+  const managedGlobalTemplate = await readFile(path.join(root, ".agent/pjsdlc_managed/context_templates/global.md"), "utf8");
+  assert.match(managedGlobalTemplate, /durable smoke paths/);
+  assert.match(managedGlobalTemplate, /secrets, tokens, cookies/);
+  const managedAreaTemplate = await readFile(path.join(root, ".agent/pjsdlc_managed/context_templates/area.md"), "utf8");
+  assert.match(managedAreaTemplate, /durable smoke\/re-test paths/);
+  assert.match(managedAreaTemplate, /Cross-area smoke/);
   await assert.rejects(stat(path.join(root, ".agent/pjsdlc_managed/context_templates/module.md")));
   await assert.rejects(stat(path.join(root, ".agent/pjsdlc_managed/override_skills")));
 
@@ -142,6 +154,8 @@ try {
   assert.match(productSkill, /实现漂移/);
   assert.match(productSkill, /代码不能静默重定义 Context/);
   assert.match(productSkill, /不要把 Context 机械补成代码改动摘要/);
+  assert.match(productSkill, /Verification Path Context/);
+  assert.match(productSkill, /raw payload/);
   const uiuxSkill = await readFile(path.join(root, ".agent/skills/context_uiux_design/SKILL.md"), "utf8");
   assert.match(uiuxSkill, /设计稿/);
   assert.match(uiuxSkill, /UI\/UX/);
@@ -151,6 +165,8 @@ try {
   assert.match(uiuxSkill, /不要把 Context 机械补成代码改动摘要/);
   assert.match(uiuxSkill, /Impeccable review/);
   assert.match(uiuxSkill, /npx impeccable detect <target>/);
+  assert.match(uiuxSkill, /Verification Path Context/);
+  assert.match(uiuxSkill, /完整截图报告/);
   const developmentSkill = await readFile(path.join(root, ".agent/skills/context_development_engineer/SKILL.md"), "utf8");
   assert.match(developmentSkill, /开发工程师/);
   assert.match(developmentSkill, /front matter `description` trigger keywords aligned/);
@@ -159,6 +175,8 @@ try {
   assert.match(developmentSkill, /实现漂移/);
   assert.match(developmentSkill, /代码不能静默重定义 Context/);
   assert.match(developmentSkill, /Context drift check/);
+  assert.match(developmentSkill, /Verification Path Context/);
+  assert.match(developmentSkill, /长期复用验证路径/);
   assert.doesNotMatch(developmentSkill, /multi_agent_v1/);
 
   const managedProductSkillPath = path.join(root, ".agent/skills/context_product_plan/SKILL.md");

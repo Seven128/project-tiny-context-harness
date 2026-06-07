@@ -134,8 +134,9 @@ Karpathy 编码准则
 12. ADR 降级为 Context 中的 `Design Rationale`；实现说明优先写成代码注释、测试名或模块 Context 中的关键约束。
 13. Harness workflow gate 只运行 `validate-context`，用于检查上下文是否可恢复；不检查 context/code 修改顺序。自动化最多提示 context-first 风险，不做阻断。
 14. 产品质量由项目自己的验证入口证明；Context 只能声明验证入口，不能伪造“测试已通过”。
-15. `sync` 只刷新 managed guidance、默认 Skill 和工具；不会合并 Skill override，也不会覆盖用户新建的独立项目本地 Skill。
-16. 普通项目默认只有一个 `main` area；monorepo 或 product-family 项目可在 `context.toml` 中增加多个 `area` / `context_unit`，并用 `context_role` 或 manifest role 区分 `area`、`subdomain`、`contract`、`foundation`、`archive`、`implementation-index` 和 `decision-rationale` 等不同 Context 类型。
+15. Verification Path Context 规则：Context 不记录一次性测试日志、完整命令输出、临时 JSON、CI artifact、测试报告、secret、token、cookie、device id 或 raw payload；但当测试 / smoke / 验证路径具备长期复用价值时，应以 minimal 粒度写入对应验证入口，包括特殊准备、最短命令、预期阶段 / 信号、可接受 warning、已排除的重复探索点。全局默认入口写 `project_context/global.md#Verification Entry Points`；模块级复测路径写 owner area 的 `Test Entry Points`；跨模块 smoke 写主要 owner，其他相关模块只保留短引用。
+16. `sync` 只刷新 managed guidance、默认 Skill 和工具；不会合并 Skill override，也不会覆盖用户新建的独立项目本地 Skill。
+17. 普通项目默认只有一个 `main` area；monorepo 或 product-family 项目可在 `context.toml` 中增加多个 `area` / `context_unit`，并用 `context_role` 或 manifest role 区分 `area`、`subdomain`、`contract`、`foundation`、`archive`、`implementation-index` 和 `decision-rationale` 等不同 Context 类型。
 
 ## 常用命令
 

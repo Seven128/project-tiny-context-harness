@@ -32,6 +32,7 @@
 - Context-first is the default workflow habit for changes to durable product or technical facts; before the first code edit, agents classify whether the task changes product ownership/plans, module responsibilities, information architecture, API/Schema, state or scheduler semantics, cross-domain boundaries or verification entry points.
 - Context updates for those changes should be as small as the fact allows, but not line-count limited: write enough durable context to guide implementation before code alignment. Ordinary bug fixes, local styling, drift repair, test fixes and exploratory spikes stay code-first unless they produce a durable fact. Automation may warn about context-first drift but must not become an edit-order gate.
 - The context-first clarification preserves the original plan-before-implementation principle while keeping Minimal Context slim: removing stage ceremony did not remove Context authority over durable product intent, engineering boundaries or contracts.
+- Verification Path Context is part of the Minimal Context boundary: Context must not keep one-off logs, raw outputs, temporary JSON, CI artifacts, reports or secrets, but should keep durable smoke or verification paths when special setup, bridge inputs, external services, agent/runtime state or prior exploration cost would otherwise be rediscovered by future agents.
 
 ## Architecture Context
 
@@ -53,6 +54,7 @@
 - Ad hoc CLI docs and managed Makefile wrappers use the canonical package-qualified entry `npx --yes --package agent-project-sdlc@latest sdlc-harness`; bare `npx sdlc-harness` is treated as ambiguous because it can resolve the legacy npm package name or a stale local binary.
 - Current CLI commands guard unsupported future schema major versions before applying v4 assumptions; write commands fail before modifying files.
 - `validate-context` validates the Context graph structure, area recovery sections, role names, paths and field shapes; non-area roles are semantic labels rather than writing-template gates.
+- Managed guidance and default Context templates distinguish verification path facts from test reports: global defaults belong in `global.md#Verification Entry Points`, module-level repeatable paths belong in `areas/**#Test Entry Points`, and cross-module smoke belongs to the primary owner with short references elsewhere.
 - Managed guidance documents the canonical loops `context -> implementation -> verification -> context drift check` and `implementation discovery -> context update if long-term fact changed -> implementation alignment -> verification`.
 - Old stage-based assets, state files and work-product trees are removed from the current source tree.
 - Historical stage design is summarized in `PROJECT_SPEC.md`; legacy stage semantic migration support has been removed after user migrations completed.

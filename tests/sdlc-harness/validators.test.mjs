@@ -165,6 +165,27 @@ test("validate-context rejects verification-result claims inside context", async
   }
 });
 
+test("validate-context accepts durable verification path context without execution claims", async () => {
+  const root = await createContextProject({
+    global: completeGlobalContext().replace(
+      "- npm test\n- make validate-context",
+      [
+        "- Bridge smoke: prepare local runtime env, start the mock provider, and publish the fixture through the bridge publisher.",
+        "- Command: `node scripts/provider-smoke.mjs --fixture local`.",
+        "- Expected signal: receiver reaches queued stage and status output names mock-provider mode.",
+        "- Acceptable warning: local self-signed TLS warning from the mock endpoint.",
+        "- Excluded dead end: do not retry the live provider path without an operator session."
+      ].join("\n")
+    )
+  });
+  try {
+    const report = await runValidator(root, "validate-context");
+    assert.deepEqual(report.errors, []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("validate-context rejects verification-result claims inside architecture context", async () => {
   const root = await createContextProject({
     architecture: completeArchitectureContext().replace("- npm test --workspace agent-project-sdlc", "- npm test passed")

@@ -14,6 +14,8 @@
 - Managed guidance tells agents to treat `project_context/**` as authoritative for intended responsibilities, ownership, architecture boundaries, integration direction, dependencies and verification entry points, while treating code as current implementation evidence.
 - Managed guidance requires a lightweight change classification before the first code edit: context-first for product ownership/plans, module responsibilities, information architecture, API/Schema, state or scheduler semantics, cross-domain boundaries and verification entry points; code-first only for ordinary bug fixes, local styling, drift repair, test fixes and spikes unless they produce a durable fact.
 - Context-first remains prompt-level habit, not a hard gate: the first edit for a durable-fact change should update the relevant `project_context/**` with enough durable context to guide implementation, without a fixed line-count limit; automation may warn about ordering drift but must not block.
+- Managed guidance includes Verification Path Context: agents must not record one-off test logs, full command output, temporary JSON, CI artifacts, test reports, secrets, tokens, cookies, device ids or raw payloads in Context, but should record minimal repeatable smoke paths when they have durable recovery value.
+- Global default verification paths belong in `project_context/global.md#Verification Entry Points`; module-level repeatable paths belong in the owning area `Test Entry Points`; cross-module smoke belongs to the primary owner with short references from related areas.
 - Projects customize those Skills by creating separate project-local Skills such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` and `<harnessRoot>/skills/development_engineer/SKILL.md`; `sync` overwrites package-managed default `context_*` Skills and leaves separate local Skills untouched.
 - Project-local Skill front matter `description` trigger keywords should stay aligned with the matching default Skill and the project `AGENTS.md` role-trigger rule; project-specific keyword additions or narrowing should update both surfaces together.
 - The default Skill trigger descriptions should stay narrow: explicit role names or strong artifact names, not generic mentions of product, design, development, code or requirements.
@@ -57,6 +59,7 @@
 - Project-local product/design/development Skills may narrow guidance for a project but must keep durable conclusions in Minimal Context.
 - Context graph roles must stay lightweight and optional; do not make role-specific writing formats, monorepo-specific area names or boundary checks mandatory for ordinary projects.
 - Context-first guidance must stay prompt-level and must not become a validator, phase gate, edit-order gate or required document chain.
+- Verification Path Context must stay authoring guidance and template text; do not add machine-level log, secret or artifact scanning to `validate-context` without an explicit product-boundary change.
 - Do not reintroduce legacy migration commands or stage assets.
 - Package source changes that affect managed assets require `package sync-source` and `package check-source`.
 

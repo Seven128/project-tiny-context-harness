@@ -33,7 +33,8 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
    - 新 UI context unit 可新增 `project_context/areas/<unit>.md`，并更新 `global.md#Context Index`；复杂项目同时更新 `project_context/context.toml`。
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
 11. Context 只能声明设计验收入口或 smoke 入口，不能伪造“已验证通过”。
-12. 收尾时只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。
+12. Verification Path Context 只记录长期可复用的设计验证或 smoke 路径事实：特殊准备、最短命令、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、secret、token、cookie、device id、raw payload 或完整截图报告。
+13. 收尾时只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。
 
 ## 信息呈现校准
 
