@@ -19,14 +19,14 @@ This file is the restrained architecture context for the source repository. It i
 
 ## Data / Control Flow
 
-- `init` creates `project_context/global.md`, `project_context/architecture.md`, `project_context/areas/main.md`, then runs `sync`.
-- `init` also creates `project_context/context.toml`, declaring the default `main` area for ordinary projects.
+- `init` creates `project_context/global.md`, `project_context/architecture.md`, `project_context/areas/main.md`, `project_context/areas/main/verification.md`, then runs `sync`.
+- `init` also creates `project_context/context.toml`, declaring the default `main` product/domain area and its default `verification` role context for ordinary projects.
 - CLI write commands check the configured schema major before writing; unsupported future schemas fail fast with the canonical package-qualified `npx` command hint.
 - `upgrade` migrates legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md`, creates missing `project_context/context.toml` by registering area Context files, and only rewrites legacy module paths in manifest/global references.
 - `sync` reads `packages/sdlc-harness/assets/**` and writes managed guidance, templates, tools and Skills into the configured harness root.
 - Skill customization uses separate project-local Skills such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` and `<harnessRoot>/skills/development_engineer/SKILL.md`; `sync` overwrites package-managed default `context_*` Skills and leaves those separate local Skills untouched. Project-local Skill front matter `description` trigger keywords are expected to stay aligned with the default Skill trigger intent and the project `AGENTS.md` role-trigger rule.
 - `package sync-source` copies source workspace assets into `packages/sdlc-harness/assets/**`; `package check-source` verifies no drift.
-- `validate-context` checks Context recoverability, validates graph metadata and area recovery sections, treats non-area roles as semantic labels, and rejects fake verification-result claims.
+- `validate-context` checks Context recoverability, validates graph metadata, treats non-area roles as semantic labels, and rejects fake verification-result claims.
 
 ## Design Rationale
 
@@ -40,7 +40,7 @@ This file is the restrained architecture context for the source repository. It i
 - Do not restore lifecycle phases, plan state, stage Skills, work-product trees or phase gates as default package behavior.
 - Do not let `sync` perform semantic project rewriting; it refreshes managed assets only.
 - Keep product/design/development Skill customization project-local through separate Skills, not package-managed default Skill edits or override merging.
-- Keep `architecture.md` concise; implementation details belong in code, tests or area Context only when not obvious.
+- Keep `architecture.md` concise; implementation details belong in code, tests, owner area Context, or verification/deployment role Context only when not obvious and useful for future repeat execution.
 
 ## Verification Implications
 

@@ -36,6 +36,7 @@ npx --yes --package agent-project-sdlc@latest sdlc-harness init --adopt
 - `project_context/global.md`
 - `project_context/architecture.md`
 - `project_context/areas/main.md`
+- `project_context/areas/main/verification.md`
 - `<harnessRoot>/config.yaml`
 - `<harnessRoot>/skills/context_product_plan/SKILL.md`
 - `<harnessRoot>/skills/context_uiux_design/SKILL.md`
@@ -89,7 +90,7 @@ Use `npx --no-install sdlc-harness ...` only when you explicitly want the alread
 - architecture context link
 - product / delivery brief for durable product goals, users, flows and acceptance signals
 - UX / screen brief for durable screen, interaction, responsive and accessibility facts
-- verification entry points
+- short verification context pointers
 - current state
 - next safe action
 - context index
@@ -104,30 +105,34 @@ Use `npx --no-install sdlc-harness ...` only when you explicitly want the alread
 - verification implications
 - open risks
 
-`project_context/context.toml` is the Schema v4 Context graph manifest. `init` creates a default `main` area for ordinary projects, and `upgrade` creates a baseline manifest for existing projects by registering current `project_context/areas/**/*.md` files as areas. Larger projects can add `[[areas]]` and `[[context]]` entries with role, trigger/read policy, default children and monorepo boundary metadata such as `forbidden_runtime_dependencies`.
+`project_context/context.toml` is the Schema v4 Context graph manifest. `init` creates a default `main` product/domain area for ordinary projects and registers `project_context/areas/main/verification.md` as its default `verification` role Context. `upgrade` creates a conservative baseline manifest for existing projects by registering current `project_context/areas/**/*.md` files as areas, except obvious `verification.md` and `deployment.md` role files. Larger projects can add `[[areas]]` and `[[context]]` entries with role, trigger/read policy, default children and monorepo boundary metadata such as `forbidden_runtime_dependencies`.
 
-`project_context/areas/<unit>.md` contains area, domain or subdomain context by default. For larger projects, `areas/` may contain nested files such as `areas/<area>/README.md`, `areas/<area>/contracts/*.md`, `areas/<area>/foundation/*.md` or other durable context nodes:
+`project_context/areas/<unit>.md` contains product/domain ownership context by default. For larger projects, `areas/` may contain nested files such as `areas/<area>/README.md`, `areas/<area>/contracts/*.md`, `areas/<area>/foundation/*.md`, `areas/<area>/verification.md`, `areas/<area>/deployment.md` or other durable context nodes:
 
 - responsibility
 - user / system contract
 - core data, API or state
 - key constraints
 - code entry points
-- test entry points
+- related role context pointers
 - open risks
 
 Additional Markdown context files under `project_context/**` can declare `context_role` in front matter or receive a role from `context.toml`. Roles are semantic labels that help agents choose when and how to read context; `validate-context` checks graph structure, paths and field shapes rather than enforcing a writing template for each role:
 
 - `global`: project-level fact source and reading entry point.
 - `architecture`: durable system boundary, component relationship and architecture constraints.
-- `area`: a primary context unit; ordinary projects usually have one `main` area.
+- `area`: a primary product/domain ownership context; ordinary projects usually have one `main` area.
 - `domain`: a business-oriented area label for product-family or monorepo contexts.
 - `subdomain`: a smaller context unit inside an area.
 - `contract`: cross-area or cross-subdomain interface, event, API or schema semantics.
 - `foundation`: durable theory, vocabulary or conceptual source material.
+- `verification`: critical test, smoke, CI, probe or validation repeat-execution paths for an owning area or cross-domain project path.
+- `deployment`: critical deploy, CI/CD, cloud/bootstrap, runtime topology, service initialization, health-check or rollback/degradation repeat-execution paths.
 - `archive`: historical or external source index that should not be read by default.
 - `implementation-index`: code navigation map for owned paths, responsibilities and tests.
 - `decision-rationale`: stable reasons behind durable design choices.
+
+When authoring, migrating or cleaning up `project_context/areas/**`, run a soft role placement scan before registering every Markdown file as an `[[areas]]` entry. Keep `area` / `domain` for product ownership, use `subdomain` only for a smaller owned product context, move interface semantics into `contract`, stable theory or vocabulary into `foundation`, repeatable test/deploy execution paths into `verification` / `deployment`, code maps into `implementation-index`, design reasons into `decision-rationale`, and non-default historical or external material into `archive`. This is prompt-level guidance, not a validator gate.
 
 Automatic migration moves legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md`, creates a usable graph baseline and does not infer deep semantic roles. If an existing deep area file is really a foundation, contract, archive or implementation index, a later agent should update `context.toml` explicitly. Boundary rules are metadata only; Harness does not scan source imports or build a runtime dependency graph.
 
@@ -147,11 +152,11 @@ The export is not a long-lived fact source. The CLI refuses `project_context/**`
 
 The Context should be short enough to read at session start and specific enough to prevent fresh-agent drift. It should not copy code, test logs, release ledgers or implementation narration that the code already makes obvious.
 
-Verification Path Context is the narrow exception for reusable validation knowledge. Do not record one-off test logs, full command output, temporary JSON, CI artifacts, test reports, secrets, tokens, cookies, device ids or raw payloads. When a test, smoke or verification path has durable recovery value, record only the special preparation, shortest command, expected stage or signal, acceptable warnings and dead ends already ruled out. Project-level defaults belong in `project_context/global.md#Verification Entry Points`; module-level repeatable paths belong in the owner `project_context/areas/**#Test Entry Points`; cross-module smoke should live with the primary owner and be referenced briefly elsewhere.
+Verification and deployment role Context are narrow exceptions for reusable execution knowledge. Do not record one-off test logs, full command output, temporary JSON, CI artifacts, test reports, release ledgers, secrets, tokens, cookies, device ids or raw payloads. When a test, smoke, CI, deployment, bootstrap or runtime path has durable recovery value, record only the special preparation, shortest command/path, expected stage or signal, acceptable warnings and dead ends already ruled out. These paths should live in the owning area's `verification` or `deployment` role Context; use project-level references only for truly cross-domain paths.
 
-`project_context/**` is authoritative for intended responsibility, ownership, product intent, architecture boundaries, integration direction, allowed or forbidden dependencies and verification entry points. Source code is authoritative for current implementation state. When code shape, keyword search results or nearby implementations disagree with Context, agents should treat the difference as implementation drift, missing work or stale Context that must be called out, not as evidence that overrides Context-declared ownership or intent.
+`project_context/**` is authoritative for intended responsibility, ownership, product intent, architecture boundaries, integration direction, allowed or forbidden dependencies and verification/deployment entry paths. Source code is authoritative for current implementation state. When code shape, keyword search results or nearby implementations disagree with Context, agents should treat the difference as implementation drift, missing work or stale Context that must be called out, not as evidence that overrides Context-declared ownership or intent.
 
-Before the first code edit, agents should classify the change instead of relying on a fixed timer. Long-term fact changes include product ownership or plans, module responsibilities, information architecture, API / Schema, state-machine or scheduler semantics, cross-area boundaries and verification entry points. If a task hits one of these categories, Context-first is the default path and the first update should be the relevant `project_context/**` entry with enough durable context to guide implementation, without a fixed line-count limit:
+Before the first code edit, agents should classify the change instead of relying on a fixed timer. Long-term fact changes include product ownership or plans, module responsibilities, information architecture, API / Schema, state-machine or scheduler semantics, cross-area boundaries and verification/deployment entry paths. If a task hits one of these categories, Context-first is the default path and the first update should be the relevant `project_context/**` entry with enough durable context to guide implementation, without a fixed line-count limit:
 
 ```text
 context -> implementation -> verification -> context drift check

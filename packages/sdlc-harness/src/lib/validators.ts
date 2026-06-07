@@ -19,6 +19,8 @@ type ContextRole =
   | "foundation"
   | "archive"
   | "contract"
+  | "verification"
+  | "deployment"
   | "implementation-index"
   | "decision-rationale";
 
@@ -78,6 +80,8 @@ const ROLE_ALIASES: Record<string, ContextRole> = {
   foundation: "foundation",
   archive: "archive",
   contract: "contract",
+  verification: "verification",
+  deployment: "deployment",
   "implementation-index": "implementation-index",
   implementation_index: "implementation-index",
   "decision-rationale": "decision-rationale",
@@ -96,9 +100,11 @@ const EXPORT_ARTIFACT_NAME_PATTERNS = [
 const FAKE_VERIFICATION_PATTERNS = [
   /\btests?\s+(?:pass(?:ed|es)?|green)\b/i,
   /\bverified\b/i,
+  /\bdeployed\s+successfully\b/i,
   /\bvalidation\s+passed\b/i,
   /\b测试(?:已)?通过\b/,
-  /\b验证(?:已)?通过\b/
+  /\b验证(?:已)?通过\b/,
+  /\b部署(?:已)?成功\b/
 ];
 
 export async function runValidator(projectRoot: string, gate: string): Promise<ValidatorReport> {
@@ -307,6 +313,8 @@ function assertSectionHasContent(file: string, content: string, section: Section
 function assertNoFakeVerification(file: string, content: string, errors: string[]): void {
   const verification =
     sectionBody(content, "Verification Entry Points") ??
+    sectionBody(content, "Verification Paths") ??
+    sectionBody(content, "Deployment Paths") ??
     sectionBody(content, "Test Entry Points") ??
     sectionBody(content, "Verification Implications") ??
     sectionBody(content, "Tests");

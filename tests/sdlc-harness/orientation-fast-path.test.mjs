@@ -46,6 +46,13 @@ for (const content of [sourceAgents, rootReadme, packageReadme, spec, packageAge
   assert.match(content, /context drift check/i);
 }
 
+for (const content of [sourceAgents, rootReadme, packageReadme, spec, packageAgents, packageGuide]) {
+  assert.match(content, /role placement scan/i);
+  assert.match(content, /area.*(?:product|产品域).*ownership|area 是产品域归属/s);
+  assert.match(content, /contract.*foundation.*verification.*deployment/s);
+  assert.match(content, /(?:prompt-level guidance|soft authoring scan|软约束).*not a (?:validator|migration) gate|软约束，不做 gate/s);
+}
+
 for (const content of [rootReadme, packageReadme, spec, packageGuide]) {
   assert.match(content, /context -> implementation -> verification -> context drift check/);
   assert.match(

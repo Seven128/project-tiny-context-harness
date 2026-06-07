@@ -6,7 +6,7 @@
 
 ## User / System Contract
 
-- `init` installs Minimal Context Harness into the current repository without deleting user files, and creates a root `DESIGN.md` starter baseline for visual design-system facts when absent.
+- `init` installs Minimal Context Harness into the current repository without deleting user files, creates a default product/domain owner area, creates a default area-owned verification role Context, and creates a root `DESIGN.md` starter baseline for visual design-system facts when absent.
 - `upgrade` creates root `DESIGN.md` for existing Harness projects when missing, without overwriting an existing user-authored design file.
 - The generated `DESIGN.md` contains neutral starter tokens and design logic; user-authored `DESIGN.md` content takes precedence over the starter baseline.
 - Default product planning, UI/UX and development engineer Skills write durable conclusions to `project_context/**`.
@@ -17,8 +17,10 @@
 - Managed guidance tells agents to treat `project_context/**` as authoritative for intended responsibilities, ownership, architecture boundaries, integration direction, dependencies and verification entry points, while treating code as current implementation evidence.
 - Managed guidance requires a lightweight change classification before the first code edit: context-first for product ownership/plans, module responsibilities, information architecture, API/Schema, state or scheduler semantics, cross-domain boundaries and verification entry points; code-first only for ordinary bug fixes, local styling, drift repair, test fixes and spikes unless they produce a durable fact.
 - Context-first remains prompt-level habit, not a hard gate: the first edit for a durable-fact change should update the relevant `project_context/**` with enough durable context to guide implementation, without a fixed line-count limit; automation may warn about ordering drift but must not block.
-- Managed guidance includes Verification Path Context: agents must not record one-off test logs, full command output, temporary JSON, CI artifacts, test reports, secrets, tokens, cookies, device ids or raw payloads in Context, but should record minimal repeatable smoke paths when they have durable recovery value.
-- Global default verification paths belong in `project_context/global.md#Verification Entry Points`; module-level repeatable paths belong in the owning area `Test Entry Points`; cross-module smoke belongs to the primary owner with short references from related areas.
+- Managed guidance defines `area` as product/domain ownership. Role Context files are read-purpose slices owned by an area or, only when truly cross-domain, by the project root.
+- Managed guidance includes a soft role placement scan for `project_context/areas/**` authoring and migration so agents do not leave every deep Context file as an `area`: `area` / `domain` mean product ownership; `subdomain` means smaller owned product context; `contract`, `foundation`, `implementation-index`, `decision-rationale` and `archive` are read-purpose roles; `verification` and `deployment` are repeat-execution roles.
+- Managed guidance includes verification and deployment role Context: agents must not record one-off test logs, full command output, temporary JSON, CI artifacts, test reports, release ledgers, secrets, tokens, cookies, device ids or raw payloads in Context, but should record minimal critical repeat-execution paths when they have durable recovery value.
+- `verification` role Context owns repeatable test, smoke, CI, probe and validation execution paths. `deployment` role Context owns repeatable deploy, runtime bootstrap, cloud initialization, service topology, health-check and rollback/degradation paths. Both roles keep only necessary preparation, shortest command/path, expected stage or signal, acceptable warnings and known dead ends.
 - Projects customize those Skills by creating separate project-local Skills such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` and `<harnessRoot>/skills/development_engineer/SKILL.md`; `sync` overwrites package-managed default `context_*` Skills and leaves separate local Skills untouched.
 - Project-local Skill front matter `description` trigger keywords should stay aligned with the matching default Skill and the project `AGENTS.md` role-trigger rule; project-specific keyword additions or narrowing should update both surfaces together.
 - The default Skill trigger descriptions should stay narrow: explicit role names or strong artifact names, not generic mentions of product, design, development, code or requirements.
@@ -30,9 +32,9 @@
 - Managed Makefile defaults `SDLC_HARNESS` to the source workspace CLI when `packages/sdlc-harness/dist/cli.js` exists, otherwise to `npx --yes --package agent-project-sdlc@latest sdlc-harness`; generated projects can override `SDLC_HARNESS` when intentionally testing a pinned local package.
 - Managed Makefile exposes `sdlc-doctor`, `sdlc-sync` and `sdlc-upgrade` wrappers in addition to `validate-context` and `validate-harness`.
 - `project_context/architecture.md` is a default Minimal Context fact source for restrained system boundary, component map and durable architecture constraints.
-- `project_context/context.toml` is created by `init` as the Schema v4 Context graph manifest; ordinary projects start with one default `main` area.
+- `project_context/context.toml` is created by `init` as the Schema v4 Context graph manifest; ordinary projects start with one default `main` product/domain area and `project_context/areas/main/verification.md` registered as a default verification role Context.
 - Schema v4 makes `project_context/context.toml` required for `validate-context`; `upgrade` migrates legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md` and registers area Context files in the manifest.
-- `validate-context` uses `context.toml` and `context_role` front matter to validate graph structure, paths, role names and field shapes; roles such as `area`, `domain`, `subdomain`, `foundation`, `archive`, `contract`, `implementation-index` and `decision-rationale` are semantic labels rather than writing-template gates.
+- `validate-context` uses `context.toml` and `context_role` front matter to validate graph structure, paths, role names and field shapes; roles such as `area`, `domain`, `subdomain`, `foundation`, `archive`, `contract`, `verification`, `deployment`, `implementation-index` and `decision-rationale` are semantic labels rather than writing-template gates.
 - Context graph boundary rules are metadata validation only for now; Harness does not perform import/path dependency analysis.
 - The UI/UX Skill uses Google `@google/design.md` for root `DESIGN.md` visual design tokens, and carries compact visual-quality calibration for brand/product register, information density, persistent text, space/value fit, true states, layout stability, design-system continuity and common AI-design anti-patterns.
 - Harness installs Impeccable as a default package dependency; design-draft, redesign, visual polish, frontend styling and existing-UI review tasks should run `npx impeccable detect <target>` by default when a scan target exists, while treating findings as review evidence rather than a `validate-context` gate.
@@ -54,6 +56,7 @@
 - Sync behavior lives in `packages/sdlc-harness/src/lib/sync-engine.ts`.
 - Default Skill assets, including Context authoring Skills and the full-project export Skill, live in `.codex/pjsdlc_managed/skills/**` and `packages/sdlc-harness/assets/skills/**`.
 - Default Context graph template lives in `.codex/pjsdlc_managed/context_templates/context.toml` and `packages/sdlc-harness/assets/context_templates/context.toml`.
+- Default verification/deployment Context templates live in `.codex/pjsdlc_managed/context_templates/verification.md`, `.codex/pjsdlc_managed/context_templates/deployment.md` and the matching package assets.
 - Safe config migrations live in `packages/sdlc-harness/src/lib/migrations.ts`.
 - Validators live in `packages/sdlc-harness/src/lib/validators.ts`.
 
@@ -64,11 +67,12 @@
 - UI/UX guidance may update `DESIGN.md`; it should use `npx @google/design.md lint DESIGN.md` when structure validation is needed.
 - Impeccable should be attempted by the UI/UX Skill when a scan target exists, but it must not become a `validate-context` requirement or block tasks that have no suitable target.
 - Project-local product/design/development Skills may narrow guidance for a project but must keep durable conclusions in Minimal Context.
-- Context graph roles must stay lightweight and optional; do not make role-specific writing formats, monorepo-specific area names or boundary checks mandatory for ordinary projects.
+- Context graph roles must stay lightweight and optional except for the default verification Context created by `init`; do not make role-specific writing formats, monorepo-specific area names or boundary checks mandatory for ordinary projects.
+- Role placement scan is soft authoring pressure, not a semantic migration gate; `upgrade` may create conservative `area` baselines, and later agents refine obvious `contract`, `foundation`, `subdomain`, `verification`, `deployment`, `implementation-index`, `decision-rationale` or `archive` roles explicitly in `context.toml`.
 - The page product-positioning check must remain prompt-level guidance and classification input; do not turn it into "all UI changes update Context", a validator, phase gate, required PRD/UIUX artifact or mandatory template section beyond minimal Context hints.
 - AGENTS line count remains a soft budget, not a validator or CI gate; enforce slimness through placement discipline in managed guidance, Context and authoring Skill.
 - Context-first guidance must stay prompt-level and must not become a validator, phase gate, edit-order gate or required document chain.
-- Verification Path Context must stay authoring guidance and template text; do not add machine-level log, secret or artifact scanning to `validate-context` without an explicit product-boundary change.
+- Verification and deployment role Context must stay authoring guidance and template text; do not add machine-level log, secret, release ledger or artifact scanning to `validate-context` without an explicit product-boundary change.
 - Do not reintroduce legacy migration commands or stage assets.
 - Package source changes that affect managed assets require `package sync-source` and `package check-source`.
 

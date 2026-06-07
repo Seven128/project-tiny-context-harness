@@ -6,8 +6,12 @@ export const CONTEXT_MANIFEST_PATH = "project_context/context.toml";
 export function defaultContextManifestTemplate(): string {
   return [
     "# Schema v4 Minimal Context graph manifest.",
-    "# Keep the default area for ordinary projects. Add [[context]] nodes only for durable",
-    "# on-demand context such as contracts, foundations, archives or implementation indexes.",
+    "# Keep the default product/domain area for ordinary projects. Role context nodes",
+    "# are read-purpose slices owned by an area or, only when cross-domain, by the project root.",
+    "# When migrating deep files under project_context/areas/**, refine obvious",
+    "# contract/foundation/subdomain/verification/deployment/implementation-index/",
+    "# decision-rationale/archive files into [[context]] entries instead of keeping",
+    "# every Markdown file as an [[areas]] product owner.",
     "",
     "[[areas]]",
     "id = \"main\"",
@@ -16,12 +20,18 @@ export function defaultContextManifestTemplate(): string {
     "kind = \"app\"",
     "default = true",
     "",
+    "[[context]]",
+    "path = \"project_context/areas/main/verification.md\"",
+    "role = \"verification\"",
+    "read_policy = \"default\"",
+    "triggers = [\"test\", \"verify\", \"verification\", \"smoke\", \"ci\"]",
+    "",
     "# Example optional node:",
     "# [[context]]",
-    "# path = \"project_context/areas/main/contracts/api.md\"",
-    "# role = \"contract\"",
+    "# path = \"project_context/areas/main/deployment.md\"",
+    "# role = \"deployment\"",
     "# read_policy = \"on-demand\"",
-    "# triggers = [\"api\", \"contract\", \"compatibility\"]",
+    "# triggers = [\"deploy\", \"deployment\", \"runtime\", \"cloud\", \"docker\"]",
     ""
   ].join("\n");
 }
@@ -37,19 +47,36 @@ export async function contextManifestFromExistingAreas(projectRoot: string): Pro
   }
 
   const lines = [
-    "# Minimal Context graph manifest.",
+    "# Schema v4 Minimal Context graph manifest.",
     "# Auto-created by upgrade from existing project_context/areas/**/*.md files.",
     "# Review deep or non-area context and move it to explicit [[context]] role entries",
-    "# such as foundation, contract, archive, implementation-index or decision-rationale when needed.",
+    "# such as subdomain, contract, foundation, verification, deployment, archive,",
+    "# implementation-index or decision-rationale when needed.",
     ""
   ];
 
-  const areaEntries = areas.map((areaPath) => {
+  const areaEntries: Array<{ contextPath: string; id: string }> = [];
+  const contextEntries: Array<{ path: string; role: "verification" | "deployment"; triggers: string[] }> = [];
+
+  for (const areaPath of areas) {
     const relativeToAreas = path.relative(areasRoot, areaPath).split(path.sep).join("/");
     const contextPath = `project_context/areas/${relativeToAreas}`;
     const id = contextUnitId(relativeToAreas);
-    return { contextPath, id };
-  });
+    const role = inferredRoleContext(relativeToAreas);
+    if (role) {
+      contextEntries.push({
+        path: contextPath,
+        role,
+        triggers:
+          role === "verification"
+            ? ["test", "verify", "verification", "smoke", "ci"]
+            : ["deploy", "deployment", "runtime", "cloud", "docker"]
+      });
+    } else {
+      areaEntries.push({ contextPath, id });
+    }
+  }
+
   const defaultId = areaEntries.some((entry) => entry.id === "main") ? "main" : areaEntries[0]?.id;
 
   for (const { contextPath, id } of areaEntries) {
@@ -64,7 +91,29 @@ export async function contextManifestFromExistingAreas(projectRoot: string): Pro
     );
   }
 
+  for (const context of contextEntries) {
+    lines.push(
+      "[[context]]",
+      `path = "${context.path}"`,
+      `role = "${context.role}"`,
+      context.role === "verification" ? "read_policy = \"default\"" : "read_policy = \"on-demand\"",
+      `triggers = [${context.triggers.map((trigger) => `"${trigger}"`).join(", ")}]`,
+      ""
+    );
+  }
+
   return lines.join("\n");
+}
+
+function inferredRoleContext(relativeToAreas: string): "verification" | "deployment" | undefined {
+  const normalized = relativeToAreas.toLowerCase();
+  if (normalized.endsWith("/verification.md") || normalized === "verification.md") {
+    return "verification";
+  }
+  if (normalized.endsWith("/deployment.md") || normalized === "deployment.md") {
+    return "deployment";
+  }
+  return undefined;
 }
 
 function contextUnitId(relativeToAreas: string): string {

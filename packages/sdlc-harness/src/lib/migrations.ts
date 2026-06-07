@@ -1,7 +1,12 @@
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import { CONTEXT_MANIFEST_PATH, contextManifestFromExistingAreas } from "./context-manifest.js";
-import { architectureContextTemplate, areaContextTemplate, globalContextTemplate } from "./context-templates.js";
+import {
+  architectureContextTemplate,
+  areaContextTemplate,
+  globalContextTemplate,
+  verificationContextTemplate
+} from "./context-templates.js";
 import { CURRENT_SCHEMA_VERSION } from "./constants.js";
 import { defaultConfig, readConfig } from "./config.js";
 import { createDesignMdIfMissing, DESIGN_MD_PATH } from "./design-md.js";
@@ -39,7 +44,8 @@ async function migrateBaseProjectContext(projectRoot: string, report: MigrationR
   const files: Array<[string, string]> = [
     ["project_context/global.md", globalContextTemplate()],
     ["project_context/architecture.md", architectureContextTemplate()],
-    ["project_context/areas/main.md", areaContextTemplate("main")]
+    ["project_context/areas/main.md", areaContextTemplate("main")],
+    ["project_context/areas/main/verification.md", verificationContextTemplate("main")]
   ];
   for (const [relative, content] of files) {
     const target = path.join(projectRoot, ...relative.split("/"));

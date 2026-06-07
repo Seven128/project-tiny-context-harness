@@ -27,6 +27,7 @@ try {
   assert.ok(initReport.some((line) => line.includes("created project_context/global.md")));
   assert.ok(initReport.some((line) => line.includes("created project_context/architecture.md")));
   assert.ok(initReport.some((line) => line.includes("created project_context/areas/main.md")));
+  assert.ok(initReport.some((line) => line.includes("created project_context/areas/main/verification.md")));
   assert.ok(initReport.some((line) => line.includes("created DESIGN.md")));
 
   const config = await readFile(path.join(root, ".agent/config.yaml"), "utf8");
@@ -47,9 +48,11 @@ try {
   assert.match(globalContext, /DESIGN\.md/);
   assert.match(globalContext, /Classify changes before implementation/);
   assert.match(globalContext, /update Context before code with enough durable context to guide implementation/);
+  assert.match(globalContext, /role placement scan/);
+  assert.match(globalContext, /registering every Markdown file as an area/);
   assert.match(globalContext, /## Verification Entry Points/);
-  assert.match(globalContext, /durable smoke paths/);
-  assert.match(globalContext, /temporary JSON/);
+  assert.match(globalContext, /default verification context/);
+  assert.match(globalContext, /verification` role Context/);
   assert.match(globalContext, /## Next Safe Action/);
   assert.match(globalContext, /whether the next change should update Context before code/);
 
@@ -57,6 +60,11 @@ try {
   assert.match(contextManifest, /\[\[areas\]\]/);
   assert.match(contextManifest, /id = "main"/);
   assert.match(contextManifest, /context = "project_context\/areas\/main\.md"/);
+  assert.match(contextManifest, /\[\[context\]\]/);
+  assert.match(contextManifest, /path = "project_context\/areas\/main\/verification\.md"/);
+  assert.match(contextManifest, /role = "verification"/);
+  assert.match(contextManifest, /refine obvious/);
+  assert.match(contextManifest, /instead of keeping/);
 
   const designMd = await readFile(path.join(root, "DESIGN.md"), "utf8");
   assert.match(designMd, /name: "Starter Design System"/);
@@ -80,9 +88,15 @@ try {
   assert.match(areaContext, /## Responsibility/);
   assert.match(areaContext, /Contract changes should be captured here/);
   assert.match(areaContext, /## Code Entry Points/);
-  assert.match(areaContext, /## Test Entry Points/);
-  assert.match(areaContext, /durable smoke\/re-test paths/);
-  assert.match(areaContext, /Cross-area smoke should live in the primary owner area/);
+  assert.match(areaContext, /## Related Role Context/);
+  assert.match(areaContext, /verification` role Context/);
+  assert.match(areaContext, /deployment` role Context/);
+
+  const verificationContext = await readFile(path.join(root, "project_context/areas/main/verification.md"), "utf8");
+  assert.match(verificationContext, /# Verification Context: main/);
+  assert.match(verificationContext, /critical repeat-execution paths/);
+  assert.match(verificationContext, /## Verification Paths/);
+  assert.match(verificationContext, /## Forbidden Content/);
 
   await assert.rejects(stat(path.join(root, ".agent/state/lifecycle.yaml")));
   await assert.rejects(stat(path.join(root, ".agent/state/plan.yaml")));
@@ -107,7 +121,7 @@ try {
   assert.match(agents, /Context drift check/);
   assert.match(agents, /不检查 context\/code 修改顺序/);
   assert.match(agents, /Harness (?:maintains context quality|只维护上下文质量)/i);
-  assert.match(agents, /Verification Path Context/);
+  assert.match(agents, /Verification \/ Deployment Role Context/);
   assert.match(agents, /raw payload/);
   assert.match(agents, /Impeccable/);
   assert.match(agents, /npx impeccable detect <target>/);
@@ -131,12 +145,15 @@ try {
   await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/context.toml"));
   await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/architecture.md"));
   await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/area.md"));
+  await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/verification.md"));
+  await stat(path.join(root, ".agent/pjsdlc_managed/context_templates/deployment.md"));
   const managedGlobalTemplate = await readFile(path.join(root, ".agent/pjsdlc_managed/context_templates/global.md"), "utf8");
-  assert.match(managedGlobalTemplate, /durable smoke paths/);
-  assert.match(managedGlobalTemplate, /secrets, tokens, cookies/);
+  assert.match(managedGlobalTemplate, /default verification context/);
+  assert.match(managedGlobalTemplate, /verification` role Context/);
+  assert.match(managedGlobalTemplate, /role placement scan/);
   const managedAreaTemplate = await readFile(path.join(root, ".agent/pjsdlc_managed/context_templates/area.md"), "utf8");
-  assert.match(managedAreaTemplate, /durable smoke\/re-test paths/);
-  assert.match(managedAreaTemplate, /Cross-area smoke/);
+  assert.match(managedAreaTemplate, /Related Role Context/);
+  assert.match(managedAreaTemplate, /deployment` role Context/);
   await assert.rejects(stat(path.join(root, ".agent/pjsdlc_managed/context_templates/module.md")));
   await assert.rejects(stat(path.join(root, ".agent/pjsdlc_managed/override_skills")));
 
@@ -158,7 +175,7 @@ try {
   assert.match(productSkill, /实现漂移/);
   assert.match(productSkill, /代码不能静默重定义 Context/);
   assert.match(productSkill, /不要把 Context 机械补成代码改动摘要/);
-  assert.match(productSkill, /Verification Path Context/);
+  assert.match(productSkill, /Verification \/ Deployment Role Context/);
   assert.match(productSkill, /raw payload/);
   const uiuxSkill = await readFile(path.join(root, ".agent/skills/context_uiux_design/SKILL.md"), "utf8");
   assert.match(uiuxSkill, /设计稿/);
@@ -169,7 +186,7 @@ try {
   assert.match(uiuxSkill, /不要把 Context 机械补成代码改动摘要/);
   assert.match(uiuxSkill, /Impeccable review/);
   assert.match(uiuxSkill, /npx impeccable detect <target>/);
-  assert.match(uiuxSkill, /Verification Path Context/);
+  assert.match(uiuxSkill, /Verification \/ Deployment Role Context/);
   assert.match(uiuxSkill, /完整截图报告/);
   const developmentSkill = await readFile(path.join(root, ".agent/skills/context_development_engineer/SKILL.md"), "utf8");
   assert.match(developmentSkill, /开发工程师/);
@@ -179,8 +196,8 @@ try {
   assert.match(developmentSkill, /实现漂移/);
   assert.match(developmentSkill, /代码不能静默重定义 Context/);
   assert.match(developmentSkill, /Context drift check/);
-  assert.match(developmentSkill, /Verification Path Context/);
-  assert.match(developmentSkill, /长期复用验证路径/);
+  assert.match(developmentSkill, /Verification \/ Deployment Role Context/);
+  assert.match(developmentSkill, /重复执行路径/);
   assert.doesNotMatch(developmentSkill, /multi_agent_v1/);
   const exportSkill = await readFile(path.join(root, ".agent/skills/context_full_project_export/SKILL.md"), "utf8");
   assert.match(exportSkill, /导出尽可能详细的项目全量上下文/);

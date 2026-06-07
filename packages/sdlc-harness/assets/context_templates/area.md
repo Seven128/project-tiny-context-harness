@@ -2,7 +2,7 @@
 
 ## Responsibility
 
-- Describe this area or context unit's responsibility.
+- Describe this product/domain area or context unit's responsibility.
 
 ## User / System Contract
 
@@ -21,11 +21,10 @@
 
 - `src/` or the concrete file/function entry points.
 
-## Test Entry Points
+## Related Role Context
 
-- `npm test` or focused test commands for this area.
-- For durable smoke/re-test paths, record only special preparation, shortest command, expected stage/signal, acceptable warnings and excluded dead ends.
-- Cross-area smoke should live in the primary owner area; related areas should keep only a short reference.
+- Verification paths live in this area's `verification` role Context, such as `project_context/areas/main/verification.md`.
+- Deployment/runtime/bootstrap paths live in this area's optional `deployment` role Context when those facts exist.
 
 ## Open Risks
 

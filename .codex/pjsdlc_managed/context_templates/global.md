@@ -14,7 +14,7 @@
 
 ## Design Rationale
 
-- Record durable choices that are hard to infer from code or tests. Classify changes before implementation; if a change alters product ownership/plans, module responsibilities, information architecture, API/Schema, state/scheduler semantics, cross-area boundaries or verification entry points, update Context before code with enough durable context to guide implementation.
+- Record durable choices that are hard to infer from code or tests. Classify changes before implementation; if a change alters product ownership/plans, module responsibilities, information architecture, API/Schema, state/scheduler semantics, cross-area boundaries, verification role paths or deployment role paths, update Context before code with enough durable context to guide implementation.
 
 ## Architecture Context
 
@@ -23,6 +23,7 @@
 ## Context Graph
 
 - Link to `project_context/context.toml` and keep its default area, role, trigger, read policy and boundary metadata aligned with this Context.
+- When adding or reorganizing files under `project_context/areas/**`, run a soft role placement scan before registering every Markdown file as an area: product ownership stays in `area` / `domain` / `subdomain`; contracts, foundations, verification, deployment, implementation indexes, decision rationale and archives should use role Context when that better fits the reading purpose.
 
 ## Product / Delivery Brief
 
@@ -35,9 +36,8 @@
 
 ## Verification Entry Points
 
-- List project-level default commands or durable smoke paths that prove product behavior.
-- For reusable complex paths, keep only special preparation, shortest command, expected stage/signal, acceptable warnings and excluded dead ends.
-- Do not record one-off logs, full output, temporary JSON, CI artifacts, reports, secrets, tokens, cookies, device ids or raw payloads.
+- Point to the default verification context for repeatable test, smoke, CI or validation paths.
+- Project-level cross-domain verification may live here only as a short index; execution details belong in `verification` role Context.
 
 ## Current State
 
@@ -50,3 +50,4 @@
 ## Context Index
 
 - [main](areas/main.md)
+- [main verification](areas/main/verification.md)

@@ -1,6 +1,11 @@
 import path from "node:path";
 import { CONTEXT_MANIFEST_PATH, defaultContextManifestTemplate } from "./context-manifest.js";
-import { architectureContextTemplate, areaContextTemplate, globalContextTemplate } from "./context-templates.js";
+import {
+  architectureContextTemplate,
+  areaContextTemplate,
+  globalContextTemplate,
+  verificationContextTemplate
+} from "./context-templates.js";
 import { writeConfigIfMissing } from "./config.js";
 import { createDesignMdIfMissing, DESIGN_MD_PATH } from "./design-md.js";
 import { harnessConfigPath, harnessRoot } from "./harness-root.js";
@@ -60,7 +65,8 @@ async function createProjectContext(projectRoot: string, report: string[]): Prom
     [CONTEXT_MANIFEST_PATH, defaultContextManifestTemplate()],
     ["project_context/global.md", globalContextTemplate()],
     ["project_context/architecture.md", architectureContextTemplate()],
-    ["project_context/areas/main.md", areaContextTemplate("main")]
+    ["project_context/areas/main.md", areaContextTemplate("main")],
+    ["project_context/areas/main/verification.md", verificationContextTemplate("main")]
   ];
   for (const [relative, content] of files) {
     const target = path.join(projectRoot, relative);

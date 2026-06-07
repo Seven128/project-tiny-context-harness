@@ -91,6 +91,7 @@ never_overwrite:
   await stat(path.join(root, "project_context/context.toml"));
   await stat(path.join(root, "project_context/architecture.md"));
   await stat(path.join(root, "project_context/areas/main.md"));
+  await stat(path.join(root, "project_context/areas/main/verification.md"));
   await stat(path.join(root, "project_context/areas/analytics/reporting.md"));
   await assert.rejects(stat(path.join(root, "project_context/modules/analytics/reporting.md")));
   await stat(path.join(root, "DESIGN.md"));
@@ -107,8 +108,12 @@ never_overwrite:
 
   const migratedManifest = await readFile(path.join(root, "project_context/context.toml"), "utf8");
   assert.match(migratedManifest, /Auto-created by upgrade/);
+  assert.match(migratedManifest, /Review deep or non-area context/);
+  assert.match(migratedManifest, /subdomain, contract, foundation, verification, deployment/);
   assert.match(migratedManifest, /id = "main"/);
   assert.match(migratedManifest, /context = "project_context\/areas\/main\.md"/);
+  assert.match(migratedManifest, /path = "project_context\/areas\/main\/verification\.md"/);
+  assert.match(migratedManifest, /role = "verification"/);
   assert.match(migratedManifest, /id = "analytics-reporting"/);
   assert.match(migratedManifest, /context = "project_context\/areas\/analytics\/reporting\.md"/);
 

@@ -24,13 +24,15 @@ test("validate-context accepts role-based context graph entries", async () => {
     manifest: completeContextManifest(),
     extraFiles: {
       "project_context/areas/main/foundation/trading.md": completeFoundationContext(),
-      "project_context/areas/main/contracts/order.md": completeContractContext()
+      "project_context/areas/main/contracts/order.md": completeContractContext(),
+      "project_context/areas/main/verification.md": completeVerificationContext(),
+      "project_context/areas/main/deployment.md": completeDeploymentContext()
     }
   });
   try {
     const report = await runValidator(root, "validate-context");
     assert.deepEqual(report.errors, []);
-    assert.match(report.info.join("\n"), /loaded project_context\/context\.toml with 1 area\(s\) and 2 context node\(s\)/);
+    assert.match(report.info.join("\n"), /loaded project_context\/context\.toml with 1 area\(s\) and 4 context node\(s\)/);
     assert.match(report.info.join("\n"), /context graph file\(s\)/);
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -67,7 +69,27 @@ read_policy: optional
 
 - Source assertions live here.
 `,
-      "project_context/areas/main/contracts/order.md": completeContractContext()
+      "project_context/areas/main/contracts/order.md": completeContractContext(),
+      "project_context/areas/main/verification.md": `---
+context_role: verification
+read_policy: default
+---
+# Verification
+
+## Verification Paths
+
+- npm test
+`,
+      "project_context/areas/main/deployment.md": `---
+context_role: deployment
+read_policy: on-demand
+---
+# Deployment
+
+## Deployment Paths
+
+- docker compose config
+`
     }
   });
   try {
@@ -241,6 +263,34 @@ test("validate-context accepts durable verification path context without executi
 test("validate-context rejects verification-result claims inside architecture context", async () => {
   const root = await createContextProject({
     architecture: completeArchitectureContext().replace("- npm test --workspace agent-project-sdlc", "- npm test passed")
+  });
+  try {
+    const report = await runValidator(root, "validate-context");
+    assert.match(report.errors.join("\n"), /must list verification entry points/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("validate-context rejects deployment-result claims inside deployment context", async () => {
+  const root = await createContextProject({
+    manifest: `[[areas]]
+id = "main"
+root = "."
+context = "project_context/areas/main.md"
+kind = "app"
+default = true
+
+[[context]]
+path = "project_context/areas/main/deployment.md"
+role = "deployment"
+`,
+    extraFiles: {
+      "project_context/areas/main/deployment.md": completeDeploymentContext().replace(
+        "- docker compose config",
+        "- deployed successfully"
+      )
+    }
   });
   try {
     const report = await runValidator(root, "validate-context");
@@ -427,6 +477,18 @@ triggers = ["trading", "foundation"]
 path = "project_context/areas/main/contracts/order.md"
 role = "contract"
 triggers = ["order", "contract", "compatibility"]
+
+[[context]]
+path = "project_context/areas/main/verification.md"
+role = "verification"
+read_policy = "default"
+triggers = ["test", "verify", "verification", "smoke", "ci"]
+
+[[context]]
+path = "project_context/areas/main/deployment.md"
+role = "deployment"
+read_policy = "on-demand"
+triggers = ["deploy", "deployment", "runtime", "cloud", "docker"]
 `;
 }
 
@@ -494,5 +556,47 @@ context_role: contract
 ## Tests
 
 - npm test --workspace agent-project-sdlc
+`;
+}
+
+function completeVerificationContext() {
+  return `---
+context_role: verification
+read_policy: default
+---
+# Verification
+
+## Verification Paths
+
+- npm test
+
+## Required Preparation
+
+- No special setup.
+
+## Expected Signals
+
+- Test runner reaches completion.
+`;
+}
+
+function completeDeploymentContext() {
+  return `---
+context_role: deployment
+read_policy: on-demand
+---
+# Deployment
+
+## Deployment Paths
+
+- docker compose config
+
+## Required Preparation
+
+- Docker Compose file is present.
+
+## Expected Signals
+
+- Compose config renders services.
 `;
 }

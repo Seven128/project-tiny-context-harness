@@ -22,7 +22,7 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
 3. 整理或生成：用户流程、页面/组件清单、关键状态、交互反馈、响应式边界、a11y 要求、视觉约束和设计 token。
 4. 涉及 Web 页面、前端布局、UI/UX、产品模块边界或信息放置时，把页面产品定位检查作为前置动作：用户在页面要完成的判断、产品必须提供的信息/动作/反馈、不应常驻的信息、下游消费层/运维层/详情层/其他页面归属、布局和信息密度是否匹配页面任务。多页面或多模块归属不清时，先读取相关 Context、搜索页面入口并结合已有 UI 代码/截图做全站或相关页面的信息架构 sweep，再收窄到具体视觉或交互实现。该检查是下一步变更分类的输入；只有形成长期页面职责、信息架构、交互契约或模块边界结论时才更新 Context 或 `DESIGN.md`。
 5. 界面职责、流程归属和长期交互契约以 `project_context/**` 为准；`DESIGN.md` 负责视觉 token 和视觉 rationale；代码、截图和搜索结果只说明当前实现状态。Context 决定“应该是什么”，代码和截图揭示“现在是什么”，代码不能静默重定义 Context。
-6. 设计判断或第一处实现编辑前先做轻量变更分类，不按固定时长计时；如果改变页面职责、流程边界、信息架构、交互契约、状态或调度语义、可访问性约束、设计验证入口，先更新相关 `project_context/**`/`DESIGN.md`，写入必要且足以指导实现的长期结论，再让实现按这些事实对齐。
+6. 设计判断或第一处实现编辑前先做轻量变更分类，不按固定时长计时；如果改变页面职责、流程边界、信息架构、交互契约、状态或调度语义、可访问性约束、设计验证关键路径或部署关键路径，先更新相关 `project_context/**`/`DESIGN.md`，写入必要且足以指导实现的长期结论，再让实现按这些事实对齐。
 7. 普通 UI bug、局部样式或 CSS 修复、测试修复或探索性 spike 不更新 Context，可先改代码；一旦形成长期交互或视觉结论，继续对齐或交付前必须回写 Context 或 `DESIGN.md`。不要把 Context 机械补成代码改动摘要。
 8. 如果二者冲突，显式标记为实现漂移、缺失工作或 Context 过期。
 9. 如果涉及已有 UI，优先结合代码入口、运行截图或用户提供的参考图来描述差异。
@@ -34,7 +34,7 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
    - 新 UI context unit 可新增 `project_context/areas/<unit>.md`，并更新 `global.md#Context Index`；复杂项目同时更新 `project_context/context.toml`。
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
 12. Context 只能声明设计验收入口或 smoke 入口，不能伪造“已验证通过”。
-13. Verification Path Context 只记录长期可复用的设计验证或 smoke 路径事实：特殊准备、最短命令、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、secret、token、cookie、device id、raw payload 或完整截图报告。
+13. Verification / Deployment Role Context 只记录长期可复用的设计验证、smoke、部署或运行初始化路径事实：特殊准备、最短命令或路径、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、release ledger、secret、token、cookie、device id、raw payload 或完整截图报告。
 14. 收尾时只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。
 
 ## 信息呈现校准
@@ -80,6 +80,7 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
 - `global.md#UX / Screen Brief`：全局体验原则、主要屏幕、跨模块流程。
 - `areas/*.md#User / System Contract`：页面、组件、状态、交互和数据展示契约。
 - `areas/*.md#Key Constraints`：responsive、a11y、品牌/视觉边界、加载/空态/错误态约束。
-- `areas/*.md#Test Entry Points`：UI smoke、截图验收、可访问性检查或项目自己的测试入口。
-- `project_context/context.toml`：复杂项目的 area/context_unit、role、触发词、按需读取策略和可选边界规则。
+- `areas/*/verification.md` 或 role=`verification` Context：UI smoke、截图验收、可访问性检查或项目自己的关键验证重复执行路径。
+- `areas/*/deployment.md` 或 role=`deployment` Context：前端部署、预览环境、运行拓扑或健康检查重复执行路径。
+- `project_context/context.toml`：复杂项目的产品域 area/context_unit、role、触发词、按需读取策略和可选边界规则。
 - `DESIGN.md`：视觉 identity、design tokens、组件视觉规则和 do/don't。

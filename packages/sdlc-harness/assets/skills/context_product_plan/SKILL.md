@@ -21,18 +21,18 @@ Project-specific product planning rules belong in a separate project-local Skill
 2. 和用户澄清或整理：目标用户、产品/页面定位、核心问题、用户需要什么、产品需要提供的内容/能力/反馈、主要流程、验收信号、非目标、约束、风险和受影响模块。
 3. 涉及 Web 页面、前端布局、UI/UX、产品模块边界或信息放置时，把页面产品定位检查作为前置动作：用户在页面要完成的判断、产品必须提供的信息/动作/反馈、不应常驻的信息、下游消费层/运维层/详情层/其他页面归属、布局和信息密度是否匹配页面任务。多页面或多模块归属不清时，先读取相关 Context 并搜索页面入口，做全站或相关页面的信息架构 sweep，再收窄到具体实现。该检查是下一步变更分类的输入；只有形成长期产品归属、页面职责、信息架构或模块边界结论时才更新 Context。
 4. 产品意图、模块职责、边界和验收口径以 `project_context/**` 为准；代码和搜索结果只说明当前实现状态。Context 决定“应该是什么”，代码揭示“现在是什么”，代码不能静默重定义 Context。
-5. 输出产品判断或第一处实现编辑前先做轻量变更分类，不按固定时长计时；如果改变产品归属 / 产品方案、模块职责、信息架构、API / Schema、验收口径、跨域契约、状态或调度语义、验证入口，先更新相关 `project_context/**`，写入必要且足以指导实现的长期结论，再让实现按 Context 对齐。
+5. 输出产品判断或第一处实现编辑前先做轻量变更分类，不按固定时长计时；如果改变产品归属 / 产品方案、模块职责、信息架构、API / Schema、验收口径、跨域契约、状态或调度语义、验证关键路径或部署关键路径，先更新相关 `project_context/**`，写入必要且足以指导实现的长期结论，再让实现按 Context 对齐。
 6. 普通 bug fix、局部样式、局部实现漂移、测试修复或探索性 spike 不更新 Context；如果过程中形成长期产品结论，应在继续对齐或交付前回写 Context。不要把 Context 机械补成代码改动摘要。
 7. 如果代码与 Context 冲突，显式标记为实现漂移、缺失工作或 Context 过期。
 8. 输出产品判断时保持短而具体，避免长篇 PRD 模板。
 9. 需要沉淀长期事实时，只更新 `project_context/**`：
    - 全局产品目标、边界、背景写入 `global.md`。
-   - 模块级用户/系统契约、规则、风险写入对应 area / subdomain Context。
-   - 跨域契约写入 `context_role: contract` 或 manifest role 为 `contract` 的 Context；底层理论源写入 `foundation`，历史索引写入 `archive`，不要伪装成 module。
+   - 产品域用户/系统契约、规则、风险写入对应 area / subdomain Context。
+   - 跨域契约写入 `context_role: contract` 或 manifest role 为 `contract` 的 Context；底层理论源写入 `foundation`，关键重复验证路径写入 `verification`，关键部署/运行初始化路径写入 `deployment`，历史索引写入 `archive`，不要伪装成 area。
    - 新 context unit 可新增 `project_context/areas/<unit>.md`，并更新 `global.md#Context Index`；复杂项目同时更新 `project_context/context.toml`。
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
-10. Context 只能声明验证入口或验收信号，不能伪造“测试已通过”。
-11. Verification Path Context 只记录长期可复用的验证路径事实：特殊准备、最短命令、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、secret、token、cookie、device id 或 raw payload。
+10. Context 只能声明验证 / 部署关键路径或验收信号，不能伪造“测试已通过”或“部署已成功”。
+11. Verification / Deployment Role Context 只记录长期可复用的重复执行路径事实：特殊准备、最短命令或路径、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、release ledger、secret、token、cookie、device id 或 raw payload。
 12. 收尾时只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。
 
 ## 产品体验校准
@@ -54,6 +54,8 @@ Project-specific product planning rules belong in a separate project-local Skill
 
 - `global.md#Product / Delivery Brief`：项目级产品目标、用户、核心流程和非目标。
 - `global.md#Design Rationale`：长期产品取舍。
-- `areas/*.md#User / System Contract`：模块可见行为、API、CLI、UI 或数据契约。
+- `areas/*.md#User / System Contract`：产品域可见行为、API、CLI、UI 或数据契约。
 - `areas/*.md#Key Constraints`：业务规则、边界、风险和不易从代码看出的约束。
-- `project_context/context.toml`：复杂项目的 area/context_unit、role、触发词、按需读取策略和可选边界规则。
+- `areas/*/verification.md` 或 role=`verification` Context：关键测试、smoke、CI、probe 或验证重复执行路径。
+- `areas/*/deployment.md` 或 role=`deployment` Context：关键部署、云端初始化、运行拓扑、健康检查或回滚重复执行路径。
+- `project_context/context.toml`：复杂项目的产品域 area/context_unit、role、触发词、按需读取策略和可选边界规则。

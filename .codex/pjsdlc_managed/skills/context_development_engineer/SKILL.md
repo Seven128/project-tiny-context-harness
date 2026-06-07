@@ -18,9 +18,9 @@ Project-specific engineering rules belong in a separate project-local Skill unde
 ## 工作方式
 
 1. 先读取 `project_context/global.md`、`project_context/architecture.md` 和 `project_context/context.toml`，按 default area、triggers、read_when 选择相关 context。
-2. 先确认用户目标、约束、成功标准、影响模块、现有测试入口和风险；能从代码或 Context 发现的事实不要反复询问用户。
+2. 先确认用户目标、约束、成功标准、影响产品域、现有验证 / 部署关键路径和风险；能从代码或 Context 发现的事实不要反复询问用户。
 3. `project_context/**` 决定“应该是什么”：模块职责、归属、架构边界、接口方向、契约语义和禁止依赖；代码决定“现在实现到了哪里”。代码不能静默重定义 Context。
-4. 第一处代码编辑前先做轻量变更分类，不按固定时长计时；如果改变技术方案、架构边界、模块职责、跨域依赖、API / Schema、数据契约、状态机或调度语义、验证入口，先更新相关 `project_context/**`，写入必要且足以指导实现的长期结论，再让代码按 Context 对齐。
+4. 第一处代码编辑前先做轻量变更分类，不按固定时长计时；如果改变技术方案、架构边界、产品域职责、跨域依赖、API / Schema、数据契约、状态机或调度语义、验证关键路径或部署关键路径，先更新相关 `project_context/**`，写入必要且足以指导实现的长期结论，再让代码按 Context 对齐。
 5. 普通 bug fix、局部样式、局部实现漂移修复、测试修复或探索性 spike 不更新 Context，可先改代码；一旦形成长期工程结论，继续对齐或交付前必须回写 Context。不要把 Context 机械补成代码改动摘要。
 6. 如果代码、搜索结果或相邻实现与 Context 冲突，显式标记为实现漂移、缺失工作或 Context 过期，不要用当前代码形态反推模块归属。
 7. 涉及已有 Context 的实现判断，先做轻量对齐：
@@ -37,14 +37,14 @@ Project-specific engineering rules belong in a separate project-local Skill unde
    - 默认只实施高收益、低风险、语义稳定的候选项。
    - 不为一次性代码、不稳定语义或纯粹好看的架构做抽象。
 11. 需要沉淀长期事实时，只更新 `project_context/**`：
-   - 全局工程取舍、验证入口或当前状态写入 `global.md`。
-   - 模块级 API、数据契约、关键约束、入口和风险写入对应 area / subdomain Context。
-   - 跨域接口语义写入 `context_role: contract` 或 manifest role 为 `contract` 的 Context；代码入口索引用 `implementation-index`；底层理论源用 `foundation`；历史归档索引用 `archive`。
+   - 全局工程取舍、跨产品域索引或当前状态写入 `global.md`。
+   - 产品域 API、数据契约、关键约束、入口和风险写入对应 area / subdomain Context。
+   - 跨域接口语义写入 `context_role: contract` 或 manifest role 为 `contract` 的 Context；关键重复验证路径写入 `verification`；关键部署、运行拓扑或云端初始化路径写入 `deployment`；代码入口索引用 `implementation-index`；底层理论源用 `foundation`；历史归档索引用 `archive`。
    - 新 context unit 可新增 `project_context/areas/<unit>.md`，并更新 `global.md#Context Index`；复杂项目同时更新 `project_context/context.toml`。
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
 12. 实现收尾时做 Context drift check：确认代码没有引入未沉淀的长期事实，且 Context 没有退化成普通实现摘要；交付说明只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。
-13. Context 只能声明验证入口或验收信号，不能伪造“测试已通过”。
-14. Verification Path Context 只记录长期可复用的验证路径事实：特殊准备、最短命令、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、secret、token、cookie、device id 或 raw payload。
+13. Context 只能声明验证 / 部署关键路径或验收信号，不能伪造“测试已通过”或“部署已成功”。
+14. Verification / Deployment Role Context 只记录长期可复用的重复执行路径事实：特殊准备、最短命令或路径、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、release ledger、secret、token、cookie、device id 或 raw payload。
 
 ## 输出边界
 
@@ -56,11 +56,11 @@ Project-specific engineering rules belong in a separate project-local Skill unde
 ## 建议沉淀位置
 
 - `global.md#Design Rationale`：跨模块工程取舍。
-- `global.md#Verification Entry Points`：项目级验证入口和长期复用验证路径；可记录特殊准备、最短命令、预期阶段 / 信号、可接受 warning 和已排除的重复探索点，不记录执行结果、日志或 secrets。
 - `global.md#Current State`：影响后续恢复的实现状态。
 - `areas/*.md#User / System Contract`：模块可见行为、API、CLI、UI 或数据契约。
 - `areas/*.md#Core Data / API / State`：关键数据结构、接口、状态流或规则。
-- `areas/*.md#Key Constraints`：性能、安全、兼容、集成、部署或维护约束。
+- `areas/*.md#Key Constraints`：性能、安全、兼容、集成或维护约束。
 - `areas/*.md#Code Entry Points`：未来 agent 需要快速定位的代码入口。
-- `areas/*.md#Test Entry Points`：模块级测试、smoke、检查命令或长期复测路径；跨模块 smoke 写主要 owner，其他相关模块只保留短引用。
-- `project_context/context.toml`：复杂项目的 area/context_unit、role、触发词、按需读取策略和可选边界规则。
+- `areas/*/verification.md` 或 role=`verification` Context：关键测试、smoke、CI、probe 或验证重复执行路径。
+- `areas/*/deployment.md` 或 role=`deployment` Context：关键部署、云端初始化、运行拓扑、健康检查或回滚重复执行路径。
+- `project_context/context.toml`：复杂项目的产品域 area/context_unit、role、触发词、按需读取策略和可选边界规则。

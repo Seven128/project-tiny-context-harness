@@ -33,6 +33,8 @@ VALID_ROLES = {
     "foundation",
     "archive",
     "contract",
+    "verification",
+    "deployment",
     "implementation-index",
     "decision-rationale",
 }
