@@ -37,7 +37,7 @@ This Skill creates a temporary export artifact only. It does not author durable 
 ## 输出边界
 
 - 导出产物必须是 temporary export artifact，不是 Context。
-- `--full` 默认位置是 `tmp/sdlc/context-exports/当前项目代码实现context-<timestamp>.md`。
+- `--full` 默认位置是 `tmp/sdlc/context-exports/当前项目context-<timestamp>.md`。
 - `--code` 默认位置是 `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/当前项目代码实现.md`。
 - `--all` 用同一 timestamp 生成上述两份默认产物。
 - `--all` 不接受 `--output`；自定义文件名只支持 `--full` 或 `--code` 单产物模式。

@@ -155,7 +155,7 @@ function helpText(): string {
   export-context --all [--check]
 
 Creates temporary Markdown artifacts for copying or external-tool ingestion.
---full exports the project Context summary as 当前项目代码实现context.
+--full exports the project Context summary as 当前项目context.
 --code exports one current implementation snapshot as 当前项目代码实现.
 --all exports both default artifacts in one command.
 The artifact must stay under tmp/sdlc/context-exports/** and must not be referenced from project_context/context.toml.`;

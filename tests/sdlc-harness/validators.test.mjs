@@ -162,11 +162,11 @@ kind = "app"
 default = true
 
 [[context]]
-path = "project_context/当前项目代码实现context-20260607T080910Z.md"
+path = "project_context/当前项目context-20260607T080910Z.md"
 role = "archive"
 `,
     extraFiles: {
-      "project_context/当前项目代码实现context-20260607T080910Z.md": "# Export\n"
+      "project_context/当前项目context-20260607T080910Z.md": "# Export\n"
     }
   });
   try {

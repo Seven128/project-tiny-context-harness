@@ -150,7 +150,7 @@ The Context should be compact and semantically split:
 
 Temporary exports are explicit exceptions for external-tool ingestion, not durable Context:
 
-- `export-context --full` emits a one-off project Context summary named `当前项目代码实现context-<timestamp>.md` by default.
+- `export-context --full` emits a one-off project Context summary named `当前项目context-<timestamp>.md` by default.
 - `export-context --code` emits a one-off single-file current implementation snapshot named `当前项目代码实现.md` under a timestamped `code-level-implementation-*` directory by default.
 - `export-context --all` emits both default artifacts in one command using the same timestamp and does not accept `--output`.
 - Both modes must stay under `tmp/sdlc/context-exports/**`, must not be registered in `project_context/context.toml`, and must not revive implementation documents as tracked package defaults.

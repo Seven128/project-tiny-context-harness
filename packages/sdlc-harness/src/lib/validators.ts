@@ -91,6 +91,7 @@ const ROLE_ALIASES: Record<string, ContextRole> = {
 const VALID_READ_POLICIES = new Set(["default", "always", "optional", "on-demand", "never-default"]);
 const EXPORT_ARTIFACT_NAME_PATTERNS = [
   /full-project-context/i,
+  /当前项目context/i,
   /当前项目代码实现(?:context)?/i,
   /code-level-implementation/i,
   /project-overview/i,

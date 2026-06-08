@@ -92,7 +92,7 @@ const EXCLUDED_FILE_PATTERNS = [
   /(^|[-_.])(raw-capture|capture-dump|licensed-payload|license-payload|test-report)([-_.]|$)/i,
   /^(?:package-lock\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|yarn\.lock|poetry\.lock|pipfile\.lock|cargo\.lock)$/i,
   /full-project-context-\d{8}T\d{6}Z\.md$/i,
-  /当前项目代码实现context-\d{8}T\d{6}Z\.md$/i,
+  /当前项目context-\d{8}T\d{6}Z\.md$/i,
   /当前项目代码实现\.md$/i,
   /(^|[-_.])(code-level-implementation|context-export|context-bundle)([-_.]|$)/i
 ];
@@ -194,7 +194,7 @@ async function runFullContextExport(projectRoot: string, options: ExportContextO
   const directoryTree = await buildDirectoryTree(projectRoot, warnings);
   const generatedAt = (options.now ?? new Date()).toISOString();
   const content = [
-    "# 当前项目代码实现context",
+    "# 当前项目context",
     "",
     `> ${EXPORT_HEADER}`,
     "",
@@ -340,7 +340,7 @@ function resolveOutputPath(
   const defaultOutput =
     mode === "code"
       ? path.join(DEFAULT_EXPORT_DIR, `code-level-implementation-${timestamp}`, CODE_EXPORT_FILE_NAME)
-      : path.join(DEFAULT_EXPORT_DIR, `当前项目代码实现context-${timestamp}.md`);
+      : path.join(DEFAULT_EXPORT_DIR, `当前项目context-${timestamp}.md`);
   const rawOutput = requestedOutput?.trim() || defaultOutput;
   const absoluteOutput = path.resolve(projectRoot, rawOutput);
   const relative = repoRelative(projectRoot, absoluteOutput);
