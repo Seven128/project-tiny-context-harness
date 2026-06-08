@@ -21,21 +21,22 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
 2. 如果项目存在 `DESIGN.md`，先读取它；如果用户要求视觉体系、设计稿或界面风格，按 Google `@google/design.md` 的 DESIGN.md 格式创建或更新根目录 `DESIGN.md`。
 3. 整理或生成：用户流程、页面/组件清单、关键状态、交互反馈、响应式边界、a11y 要求、视觉约束和设计 token。
 4. 涉及 Web 页面、前端布局、UI/UX、产品模块边界或信息放置时，把页面产品定位检查作为前置动作：用户在页面要完成的判断、产品必须提供的信息/动作/反馈、不应常驻的信息、下游消费层/运维层/详情层/其他页面归属、布局和信息密度是否匹配页面任务。多页面或多模块归属不清时，先读取相关 Context、搜索页面入口并结合已有 UI 代码/截图做全站或相关页面的信息架构 sweep，再收窄到具体视觉或交互实现。该检查是下一步变更分类的输入；只有形成长期页面职责、信息架构、交互契约或模块边界结论时才更新 Context 或 `DESIGN.md`。
-5. 界面职责、流程归属和长期交互契约以 `project_context/**` 为准；`DESIGN.md` 负责视觉 token 和视觉 rationale；代码、截图和搜索结果只说明当前实现状态。Context 决定“应该是什么”，代码和截图揭示“现在是什么”，代码不能静默重定义 Context。
-6. 设计判断或第一处实现编辑前先做轻量变更分类，不按固定时长计时；如果改变页面职责、流程边界、信息架构、交互契约、状态或调度语义、可访问性约束、设计验证关键路径或部署关键路径，先更新相关 `project_context/**`/`DESIGN.md`，写入必要且足以指导实现的长期结论，再让实现按这些事实对齐。
-7. 普通 UI bug、局部样式或 CSS 修复、测试修复或探索性 spike 不更新 Context，可先改代码；一旦形成长期交互或视觉结论，继续对齐或交付前必须回写 Context 或 `DESIGN.md`。不要把 Context 机械补成代码改动摘要。
-8. 如果二者冲突，显式标记为实现漂移、缺失工作或 Context 过期。
-9. 如果涉及已有 UI，优先结合代码入口、运行截图或用户提供的参考图来描述差异。
-10. 当任务涉及设计稿、重做设计、视觉方案、设计系统、visual polish、frontend redesign 或 frontend styling，且存在可扫描的 UI 代码、页面文件、构建产物目录或本地/远程 URL 时，默认运行 `npx impeccable detect <target>`；实现前可用于识别既有视觉问题，实现后或交付前用于审查结果。没有可扫描目标、命令不可用或扫描失败时，说明原因并继续。
-11. 需要长期沉淀时：
+5. 涉及输入、选择、搜索、筛选、表单/配置、调度/时间窗口、预算/配额/限流或加载/空态/错误态等 UI 控件时，用“控件交互框架”检查控件语义、反馈状态、校验、错误预防、可供性和信息密度；这只是通用判断框架，不是固定控件处方。
+6. 界面职责、流程归属和长期交互契约以 `project_context/**` 为准；`DESIGN.md` 负责视觉 token 和视觉 rationale；代码、截图和搜索结果只说明当前实现状态。Context 决定“应该是什么”，代码和截图揭示“现在是什么”，代码不能静默重定义 Context。
+7. 设计判断或第一处实现编辑前先做轻量变更分类，不按固定时长计时；如果改变页面职责、流程边界、信息架构、交互契约、状态或调度语义、可访问性约束、设计验证关键路径或部署关键路径，先更新相关 `project_context/**`/`DESIGN.md`，写入必要且足以指导实现的长期结论，再让实现按这些事实对齐。
+8. 普通 UI bug、局部样式或 CSS 修复、测试修复或探索性 spike 不更新 Context，可先改代码；一旦形成长期交互或视觉结论，继续对齐或交付前必须回写 Context 或 `DESIGN.md`。不要把 Context 机械补成代码改动摘要。
+9. 如果二者冲突，显式标记为实现漂移、缺失工作或 Context 过期。
+10. 如果涉及已有 UI，优先结合代码入口、运行截图或用户提供的参考图来描述差异。
+11. 当任务涉及设计稿、重做设计、视觉方案、设计系统、visual polish、frontend redesign 或 frontend styling，且存在可扫描的 UI 代码、页面文件、构建产物目录或本地/远程 URL 时，默认运行 `npx impeccable detect <target>`；实现前可用于识别既有视觉问题，实现后或交付前用于审查结果。没有可扫描目标、命令不可用或扫描失败时，说明原因并继续。
+12. 需要长期沉淀时：
    - 项目级体验原则和屏幕清单写入 `global.md`。
    - 模块级 screen contract、state、interaction 和视觉约束写入对应 area / subdomain Context。
    - 颜色、字体、间距、圆角、组件视觉 token 和视觉 rationale 写入 `DESIGN.md`。
    - 新 UI context unit 可新增 `project_context/areas/<unit>.md`，并更新 `global.md#Context Index`；复杂项目同时更新 `project_context/context.toml`。
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
-12. Context 只能声明设计验收入口或 smoke 入口，不能伪造“已验证通过”。
-13. Verification / Deployment Role Context 只记录长期可复用的设计验证、smoke、部署或运行初始化路径事实：特殊准备、最短命令或路径、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、release ledger、secret、token、cookie、device id、raw payload 或完整截图报告。
-14. 收尾时只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。
+13. Context 只能声明设计验收入口或 smoke 入口，不能伪造“已验证通过”。
+14. Verification / Deployment Role Context 只记录长期可复用的设计验证、smoke、部署或运行初始化路径事实：特殊准备、最短命令或路径、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、release ledger、secret、token、cookie、device id、raw payload 或完整截图报告。
+15. 收尾时只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。高风险 UI 命中已有 Context 或页面/控件契约时，另补简短 `Context Conformance` 交付说明；一次性证据、截图结果、测试日志和实现摘要不写入 Context。
 
 ## 信息呈现校准
 
@@ -48,6 +49,16 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
 - 空态、加载态和错误态必须真实。不要用 fixture、看似真实的 fallback 行或“这里不展示示例数据”这类元说明遮住没有数据；筛选无结果、系统无数据和连接失败要视觉上可区分。
 - 页面稳定性是 UX 合同。滚动条出现、列表加载、tab 切换、虚拟列表高度变化、面板展开收起都不应导致布局跳动；需要时预留 `scrollbar-gutter`、稳定容器尺寸、固定关键控件尺寸和可预测的 loading skeleton。
 - 文案服务任务，不解释设计。主界面避免内部黑话、实现边界说明、生产/示例数据规则和后端来源说明；必要技术细节放到详情、日志、调试视图或运维区域。
+
+## 控件交互框架
+
+- 当界面涉及输入、选择、搜索、筛选、表单/配置、调度/时间窗口、预算/配额/限流或状态反馈时，先判断控件承载的交互语义，而不是直接沿用后端字段形态。
+- 判断输入数据是自由文本、枚举、实体选择、时间/区间、数量/预算还是规则配置；不同语义需要不同的可供性、约束、校验和错误恢复。
+- 明确用户完成动作前后需要的反馈状态：loading、empty、no results、error、disabled、saving、success 和 validation feedback 应该支持用户判断下一步。
+- 检查控件是否给足单位、范围、默认值、示例、推荐值、风险/成本/影响提示；解释应靠近决策点，低频细节可以进 tooltip、详情或帮助。
+- 检查可见标签、helper text、错误文案和状态文案是否是用户语言，而不是内部字段、接口名或枚举名。
+- 自由输入不是禁用项，但要和错误成本匹配：当格式固定、错误代价高或反馈复杂时，应考虑更明确的约束、选择机制或校验反馈。
+- 不把本框架读成固定控件清单：搜索是否自动触发、时间是否用 picker、预算是否用 stepper，都应由数据规模、API 成本、用户任务、错误成本和项目组件体系决定。
 
 ## 视觉质量校准
 

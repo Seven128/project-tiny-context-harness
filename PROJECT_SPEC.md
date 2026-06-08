@@ -6,7 +6,14 @@ This document explains the stable product direction, design rationale and packag
 
 AI SDLC Harness helps AI coding agents deliver requirements projects more efficiently by preserving the minimum durable context needed for recovery, iteration, debug and requirement changes.
 
-Efficiency is not first-turn code generation speed. The target is same-quality delivery over a project lifecycle: a fresh agent should quickly know what the project is for, what not to change, where the code and tests are, what design choices matter, what is currently true and what the next safe action is.
+Efficiency is not first-turn code generation speed. The target is same-quality delivery over a project lifecycle:
+
+- A fresh agent should quickly know what the project is for.
+- It should know what not to change.
+- It should know where the code and tests are.
+- It should know what design choices matter.
+- It should know what is currently true.
+- It should know what the next safe action is.
 
 ## Current Design: Minimal Context Harness
 
@@ -37,9 +44,26 @@ Harness now maintains context quality, not project test quality. Product quality
 
 The stage-based Harness was built from a reasonable premise: if an agent explicitly writes requirements, design, architecture, implementation notes, review evidence, test reports, release notes and RFCs, then later agents should miss less and recover faster.
 
-Benchmark pilots changed the default product judgment. The workflow’s fact-source writes, stage decisions, phase transitions and gates are real process cost; they consume time and tokens even when the final product quality is the same. At the same time, modern coding agents have internalized much of the ordinary single-task loop: understanding a compact requirement, choosing a local design, editing code, running tests and repairing simple failures. For ordinary and medium-complexity work, forcing a full SDLC document chain duplicates work the model can already do well.
+Benchmark pilots changed the default product judgment:
 
-The part that remains clearly valuable is not the ceremony itself. It is durable, compact context that survives a new conversation: project goal, non-goals, design rationale, restrained architecture context, product/domain area responsibilities, code entry points, critical repeat-execution verification paths, current state and next safe action. Those facts are hard to recover from code alone and expensive to re-explain every time.
+- The workflow’s fact-source writes, stage decisions, phase transitions and gates are real process cost.
+- That cost consumes time and tokens even when the final product quality is the same.
+- Modern coding agents have internalized much of the ordinary single-task loop: understanding a compact requirement, choosing a local design, editing code, running tests and repairing simple failures.
+- For ordinary and medium-complexity work, forcing a full SDLC document chain duplicates work the model can already do well.
+
+The part that remains clearly valuable is not the ceremony itself. It is durable, compact context that survives a new conversation:
+
+- project goal
+- non-goals
+- design rationale
+- restrained architecture context
+- product/domain area responsibilities
+- code entry points
+- critical repeat-execution verification paths
+- current state
+- next safe action
+
+Those facts are hard to recover from code alone and expensive to re-explain every time.
 
 Therefore the current design keeps the product goal unchanged, but narrows the default mechanism:
 
@@ -97,29 +121,95 @@ In short: Harness no longer tries to externalize the whole SDLC by default. It m
 - related role context pointers
 - open risks
 
-Additional `project_context/**` Markdown files can declare `context_role` in front matter or receive a role from `context.toml`. Roles are semantic labels for agent reading and authoring behavior; `validate-context` checks graph structure, paths and field shapes instead of enforcing a writing template for every role. Automatic migration moves legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md` and does not infer deep semantic roles; a later agent should refine the manifest explicitly when a migrated area is really a foundation, contract, archive or implementation index.
+Additional `project_context/**` Markdown files can declare `context_role` in front matter or receive a role from `context.toml`:
 
-Role placement is intentionally a soft authoring scan, not a migration gate. When an agent creates, migrates or cleans up context under `areas/`, it should ask whether each file is a product/domain ownership surface or a read-purpose slice: `area` / `domain` for product ownership, `subdomain` for a smaller owned product context, `contract` for API / schema / event / cross-domain interface semantics, `foundation` for stable theory, vocabulary or background material, `verification` and `deployment` for repeat-execution paths, `implementation-index` for code navigation, `decision-rationale` for stable design reasons and `archive` for non-default historical or external material. This is the missing pressure that prevents conservative migration baselines from leaving every deep file as an area forever.
+- Roles are semantic labels for agent reading and authoring behavior.
+- `validate-context` checks graph structure, paths and field shapes instead of enforcing a writing template for every role.
+- Automatic migration moves legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md`.
+- Automatic migration does not infer deep semantic roles.
+- A later agent should refine the manifest explicitly when a migrated area is really a foundation, contract, archive or implementation index.
 
-The Context should be compact and semantically split. It should not duplicate code, test logs, release ledgers or implementation narration that the source already exposes. Former ADR content is downgraded into `Design Rationale`; implementation documentation is downgraded into code comments, test names and short Context constraints when the code does not make the fact obvious.
+Role placement is intentionally a soft authoring scan, not a migration gate. When an agent creates, migrates or cleans up context under `areas/`, it should ask whether each file is a product/domain ownership surface or a read-purpose slice:
 
-Area is the product/domain ownership boundary. Role Context files are read-purpose slices owned by an area or, only when truly cross-domain, by the project root. This keeps product/domain facts separate from the operational knowledge needed to repeat a test, smoke, deploy or bootstrap path.
+- `area` / `domain` for product ownership
+- `subdomain` for a smaller owned product context
+- `contract` for API / schema / event / cross-domain interface semantics
+- `foundation` for stable theory, vocabulary or background material
+- `verification` and `deployment` for repeat-execution paths
+- `implementation-index` for code navigation
+- `decision-rationale` for stable design reasons
+- `archive` for non-default historical or external material
 
-Verification and deployment role Context are narrow boundary rules for critical repeat-execution knowledge. Context should still reject one-off logs, full command output, temporary JSON, CI artifacts, reports, release ledgers and secrets. When a test, smoke, CI, deployment, bootstrap or runtime path has durable recovery value because it needs special local setup, runtime environment, external services, bridge inputs, proxy/session state, cloud initialization, service topology or previously expensive exploration, Context may record only preparation, shortest command/path, expected stage or signal, acceptable warnings and dead ends already ruled out. Execution details live in the owning area's `verification` or optional `deployment` role Context; project-level references are for truly cross-domain paths.
+This is the missing pressure that prevents conservative migration baselines from leaving every deep file as an area forever.
 
-`project_context/**` is the authoritative source for intended responsibilities, ownership, product intent, architecture boundaries, integration direction, allowed and forbidden dependencies and verification/deployment entry paths. Code remains authoritative for current implementation state. If search results or current code shape conflict with Context-declared ownership or intent, agents should identify implementation drift, missing work or stale Context explicitly instead of inferring the intended module boundary from the code shape alone.
+The Context should be compact and semantically split:
 
-This clarification preserves an original SDLC design principle that was easy to weaken during the Minimal Context redesign: removing stage ceremony does not mean implementation should silently decide product or technical intent. Context is where durable intent, boundaries and contracts are named because those facts are expensive and unreliable to infer from code alone. Code remains the best evidence for current behavior and can expose missing or stale facts, but current implementation shape should not automatically become project intent.
+- It should not duplicate code, test logs, release ledgers or implementation narration that the source already exposes.
+- Former ADR content is downgraded into `Design Rationale`.
+- Implementation documentation is downgraded into code comments, test names and short Context constraints when the code does not make the fact obvious.
 
-Before the first code edit, an agent should classify the change instead of relying on a fixed timer. Durable fact changes include product ownership or plans, module responsibilities, information architecture, API / Schema, state-machine or scheduler semantics, cross-area boundaries and verification/deployment entry paths. When a task hits one of those categories, the default workflow is context-first and the first update should be the relevant `project_context/**` entry with enough durable context to guide implementation, without a fixed line-count limit:
+Area is the product/domain ownership boundary:
+
+- Role Context files are read-purpose slices owned by an area or, only when truly cross-domain, by the project root.
+- This keeps product/domain facts separate from the operational knowledge needed to repeat a test, smoke, deploy or bootstrap path.
+
+Verification and deployment role Context are narrow boundary rules for critical repeat-execution knowledge:
+
+- Context should still reject one-off logs, full command output, temporary JSON, CI artifacts, reports, release ledgers and secrets.
+- A test, smoke, CI, deployment, bootstrap or runtime path has durable recovery value only when it needs special local setup, runtime environment, external services, bridge inputs, proxy/session state, cloud initialization, service topology or previously expensive exploration.
+- When that durable recovery value exists, Context may record only preparation, shortest command/path, expected stage or signal, acceptable warnings and dead ends already ruled out.
+- Execution details live in the owning area's `verification` or optional `deployment` role Context.
+- Project-level references are for truly cross-domain paths.
+
+Authority is split by fact type:
+
+- `project_context/**` is the authoritative source for intended responsibilities, ownership, product intent, architecture boundaries, integration direction, allowed and forbidden dependencies and verification/deployment entry paths.
+- Code remains authoritative for current implementation state.
+
+- If search results or current code shape conflict with Context-declared ownership or intent, agents should identify implementation drift, missing work or stale Context explicitly.
+- Agents should not infer the intended module boundary from code shape alone.
+
+This clarification preserves an original SDLC design principle that was easy to weaken during the Minimal Context redesign:
+
+- Removing stage ceremony does not mean implementation should silently decide product or technical intent.
+- Context is where durable intent, boundaries and contracts are named because those facts are expensive and unreliable to infer from code alone.
+- Code remains the best evidence for current behavior and can expose missing or stale facts.
+- Current implementation shape should not automatically become project intent.
+
+Before the first code edit, an agent should classify the change instead of relying on a fixed timer:
+
+- Durable fact changes include product ownership or plans, module responsibilities, information architecture, API / Schema, state-machine or scheduler semantics, cross-area boundaries and verification/deployment entry paths.
+- When a task hits one of those categories, the default workflow is context-first.
+- The first update should be the relevant `project_context/**` entry with enough durable context to guide implementation, without a fixed line-count limit.
 
 ```text
 context -> implementation -> verification -> context drift check
 ```
 
-Web page and front-end layout tasks have an additional lightweight product-positioning check before implementation narrows to a code module, even when the user did not explicitly ask for a product plan or UI/UX design Skill. The check is intentionally ordered before the context-first decision: it supplies evidence for change classification rather than competing with it. The agent should ask what judgment the user needs to make on the page, what information/actions/feedback the product must provide, what should not be persistent, what belongs in downstream consumption, ops, detail or another page, and whether layout and information density match the page task. When ownership is unclear, the agent should inspect the relevant pages and Context before choosing the implementation home. Only durable conclusions such as page responsibility, information architecture, persistent-information boundaries or module ownership trigger Context updates. This raises the weight of product/page principles without creating a PRD/UIUX artifact chain or a validator gate.
+Web page and front-end layout tasks have an additional lightweight product-positioning check before implementation narrows to a code module, even when the user did not explicitly ask for a product plan or UI/UX design Skill:
 
-This operational order is the **Context Priority Ladder**: read Context first, run the page product-positioning check when applicable, run the role placement scan when creating or reorganizing Context, classify whether durable facts changed, choose context-first or code-first accordingly, then perform a Context drift check before handoff. The ladder is expected agent behavior, but it remains prompt-level guidance rather than an edit-order validator.
+- The check is intentionally ordered before the context-first decision.
+- It supplies evidence for change classification rather than competing with it.
+- The agent should ask what judgment the user needs to make on the page.
+- The agent should ask what information/actions/feedback the product must provide.
+- The agent should ask what should not be persistent.
+- The agent should ask what belongs in downstream consumption, ops, detail or another page.
+- The agent should ask whether layout and information density match the page task.
+- When ownership is unclear, the agent should inspect the relevant pages and Context before choosing the implementation home.
+- Only durable conclusions such as page responsibility, information architecture, persistent-information boundaries or module ownership trigger Context updates.
+
+This raises the weight of product/page principles without creating a PRD/UIUX artifact chain or a validator gate.
+
+This operational order is the **Context Priority Ladder**:
+
+- read Context first
+- run the page product-positioning check when applicable
+- run the role placement scan when creating or reorganizing Context
+- classify whether durable facts changed
+- choose context-first or code-first accordingly
+- perform a Context drift check before handoff
+
+The ladder is expected agent behavior, but it remains prompt-level guidance rather than an edit-order validator.
 
 Code-first remains a controlled exception for ordinary bug fixes, local styling changes, local implementation-drift repairs, test fixes and exploratory spikes:
 
@@ -127,44 +217,125 @@ Code-first remains a controlled exception for ordinary bug fixes, local styling 
 implementation discovery -> context update if long-term fact changed -> implementation alignment -> verification
 ```
 
-This is a guidance contract, not a new phase gate. `validate-context` still checks Context recoverability and fake verification-result claims; it does not infer edit order. Automation can warn about context-first drift, but must not block work for edit-order reasons. Handoffs should report only a lightweight status such as `Context: updated ...` or `Context: no durable fact change`.
+This is a guidance contract, not a new phase gate:
 
-The default product planning, UI/UX and development engineer Skills are a thin authoring layer. Their trigger descriptions stay narrow: explicit role names or strong artifact names should activate them, while generic mentions of product, design or development should not. Product, screen-flow and durable engineering conclusions are durable only when compressed into Context. Visual identity, design tokens and component styling rules are durable in `DESIGN.md` using Google’s open `@google/design.md` format.
+- `validate-context` still checks Context recoverability and fake verification-result claims.
+- `validate-context` does not infer edit order.
+- Automation can warn about context-first drift, but must not block work for edit-order reasons.
+- Handoffs should report only a lightweight status such as `Context: updated ...` or `Context: no durable fact change`.
+
+The default product planning, UI/UX and development engineer Skills are a thin authoring layer:
+
+- Their trigger descriptions stay narrow.
+- Explicit role names or strong artifact names should activate them.
+- Generic mentions of product, design or development should not activate them.
+- Product, screen-flow and durable engineering conclusions are durable only when compressed into Context.
+- Visual identity, design tokens and component styling rules are durable in `DESIGN.md` using Google’s open `@google/design.md` format.
 
 ## AGENTS Placement Policy
 
-`AGENTS.md` is the startup router and hard-boundary surface for coding agents, not a full workflow manual or design-spec container. It should stay short enough that a fresh agent can absorb the launch path quickly: fact-source entry points, non-negotiable boundaries, key triggers, and the shortest validation commands belong there.
+`AGENTS.md` is the startup router and hard-boundary surface for coding agents, not a full workflow manual or design-spec container. It should stay short enough that a fresh agent can absorb the launch path quickly:
 
-In this source workspace, `PROJECT_SPEC.md` is the workflow design-spec surface for stable Harness rationale and historical convergence notes. Package consumers should not be pushed to create it by default: their long-lived design reasoning belongs in compact `project_context/**` facts unless they already maintain a local spec/design document by project convention. Role-specific procedures and checklists belong in Skills, human package usage belongs in README files, and machine-enforceable checks belong in validators or tests only when they match the Minimal Context product boundary. New AGENTS guidance should usually compress or replace existing guidance instead of appending another principle.
+- fact-source entry points
+- non-negotiable boundaries
+- key triggers
+- the shortest validation commands
 
-The 40-70 line target is a soft budget, not a validator or CI gate. A hard line-count gate would recreate the kind of process ceremony that Minimal Context intentionally removed; the intended control is placement discipline through managed guidance, source Context, and the package authoring Skill.
+In this source workspace, `PROJECT_SPEC.md` is the workflow design-spec surface for stable Harness rationale and historical convergence notes. Package consumers should not be pushed to create it by default:
+
+- Their long-lived design reasoning belongs in compact `project_context/**` facts unless they already maintain a local spec/design document by project convention.
+- Role-specific procedures and checklists belong in Skills.
+- Human package usage belongs in README files.
+- Machine-enforceable checks belong in validators or tests only when they match the Minimal Context product boundary.
+- New AGENTS guidance should usually compress or replace existing guidance instead of appending another principle.
+
+The 40-70 line target is a soft budget, not a validator or CI gate:
+
+- A hard line-count gate would recreate the kind of process ceremony that Minimal Context intentionally removed.
+- The intended control is placement discipline through managed guidance, source Context, and the package authoring Skill.
 
 ## Default Context Authoring Skill Design
 
-The default Skills exist because important product, design and engineering reasoning often happens inside one agent conversation, but the next agent cannot recover it reliably from code alone. The Skills give the agent a role-specific thinking lens, then compress only durable conclusions into Minimal Context or `DESIGN.md`. They are not a replacement for project tests, review or human judgment, and they must not recreate the old PRD / UX / tech-plan document chain.
+The default Skills exist because important product, design and engineering reasoning often happens inside one agent conversation, but the next agent cannot recover it reliably from code alone:
+
+- The Skills give the agent a role-specific thinking lens.
+- They compress only durable conclusions into Minimal Context or `DESIGN.md`.
+- They are not a replacement for project tests, review or human judgment.
+- They must not recreate the old PRD / UX / tech-plan document chain.
 
 Shared design rules:
 
 - Use narrow trigger descriptions so ordinary coding, small fixes and package work do not activate role-heavy prompting by accident.
 - Preserve the Context Priority Ladder in managed guidance: Context read -> page product-positioning check when applicable -> durable-fact classification -> context-first/code-first choice -> drift check.
 - Elevate lightweight page product-positioning checks into managed AGENTS guidance for Web page, layout and information-placement tasks, and treat the check as input to change classification while keeping the default product/UIUX Skill triggers narrow.
+- Keep broad product/UIUX principles as judgment philosophy, then put slightly more concrete reusable prompt questions in the default Skills. Going more specific than that becomes project or business logic and belongs in project Context or project-local Skills.
+- Treat high-risk UI categories such as input, selection, search, filters, configuration, scheduling/time, budgets/quotas/limits and feedback states as triggers for thinking, not as a library of fixed control prescriptions.
 - Read Context before making durable product, design or engineering judgments; treat `project_context/**` as intended ownership and boundary context, and code as current implementation evidence.
-- Keep outputs lightweight: use Context and `DESIGN.md` for durable facts, and keep implementation details in code, tests and concise comments when they are self-explanatory there.
+- Keep outputs lightweight: use Context and `DESIGN.md` for durable facts, keep implementation details in code, tests and concise comments when they are self-explanatory there, and keep per-change Context Conformance evidence in handoff / final / PR text rather than Context.
 - Treat verification/deployment role Context as reusable repeat-execution knowledge, not evidence reporting: record minimal setup/command-or-path/expected signal/warnings/dead ends, never raw logs, artifacts, release ledgers, secrets or pass/fail claims.
 - Prefer separate project-local Skills for consumer customization; package-managed default Skills should remain broadly useful, sync-overwritten and Minimal Context oriented. Project-local Skill front matter `description` trigger keywords should stay aligned with the matching default Skill and project `AGENTS.md` role-trigger rule so activation behavior and SDLC guidance do not diverge.
 - When a default Skill changes, update this design section and the relevant source workspace Context so future maintainers know the problem, tradeoff and intended failure mode being addressed.
 
-The product planning Skill exists to prevent product intent, user flows, business rules and acceptance signals from living only in a chat transcript or being inferred from current code shape. It helps agents clarify goals, non-goals, users, behavior, edge cases and verification signals, then records only durable product conclusions in Context. It deliberately avoids becoming a default PRD workflow: if a conclusion does not help future recovery, implementation alignment or acceptance reasoning, it should not become long-lived product context.
+The product planning Skill exists to prevent product intent, user flows, business rules and acceptance signals from living only in a chat transcript or being inferred from current code shape:
 
-For product surfaces, the product planning Skill also asks agents to reason from the product or page positioning: what problem it solves, what the user needs from it, what content, capabilities and feedback the product should provide, what belongs on the surface, where it belongs and why it deserves persistent attention. This is meant to avoid product plans that prove hierarchy with repeated navigation, low-value titles, implementation explanations, fake data or status noise instead of helping the user act.
+- It helps agents clarify goals, non-goals, users, behavior, edge cases and verification signals.
+- It records only durable product conclusions in Context.
+- It deliberately avoids becoming a default PRD workflow.
+- If a conclusion does not help future recovery, implementation alignment or acceptance reasoning, it should not become long-lived product context.
 
-That same page-positioning check is now a lightweight pre-implementation habit for ordinary Web page, layout and module-boundary changes. The Skill remains the deeper product-planning lens for explicit product requests, not the only way the principle becomes active. The check should not be interpreted as "all UI changes update Context"; it only affects Context when it reveals durable product or information-architecture facts.
+For product surfaces, the product planning Skill also asks agents to reason from product or page positioning:
 
-The UI/UX design Skill exists because interface work carries visual identity, interaction, accessibility and responsive-design intent that source code alone often exposes poorly. It writes durable screen-flow and interaction facts to Context, keeps visual identity and design-system tokens in `DESIGN.md`, and uses Impeccable as a review signal when a scan target exists. Its design goal is to reduce common AI UI failures such as generic visual registers, disconnected styling, inaccessible states, weak responsive behavior and decorative redesign churn, without requiring a standalone UI/UX document chain.
+- what problem the surface solves
+- what the user needs from it
+- what content, capabilities and feedback the product should provide
+- what belongs on the surface
+- where it belongs
+- why it deserves persistent attention
 
-The UI/UX Skill's visual-quality calibration includes product-positioning, information-density and attention-allocation prompts rather than fixed layout prescriptions: persistent text, whitespace, chrome, cards and repeated headers should be justified by user value; familiar actions may use icon-only controls when that best reduces attention cost and accessibility labels and hover/focus explanations are preserved; true empty/error/loading states should replace fixture-like fallback rows; and layout stability is treated as a UX contract. The intent is not to make every interface sparse, but to choose the presentation that best supports the user's need with the least avoidable attention cost.
+This is meant to avoid product plans that prove hierarchy with repeated navigation, low-value titles, implementation explanations, fake data or status noise instead of helping the user act.
 
-The development engineer Skill exists to keep technical intent recoverable when work changes implementation strategy, module responsibilities, architecture boundaries, data contracts, state semantics or verification/deployment repeat-execution paths. It asks agents to compare Context expectation with current code evidence before proposing durable changes. Its trigger list includes explicit subagent orchestration terms such as `多开agent` and `subagent`; when the user has explicitly allowed that capability and the tools exist, the Skill should encourage parallel decomposition while reusing existing agents first and closing completed, idle or no-longer-needed agents with `close_agent`. This is a resource lifecycle constraint, not permission to bypass the user's explicit subagent trigger. Its abstraction / decomposition scan is specifically meant to reduce AI failure modes such as over-abstracting for visual cleanliness, treating syntactic duplication as semantic sameness, splitting files without reducing coupling, or optimizing locally against the recorded architecture. It should default to stable, high-value, low-risk changes and leave speculative architecture for explicit user direction or stronger project evidence.
+That same page-positioning check is now a lightweight pre-implementation habit for ordinary Web page, layout and module-boundary changes:
+
+- The Skill remains the deeper product-planning lens for explicit product requests.
+- The Skill is not the only way the principle becomes active.
+- The check should not be interpreted as "all UI changes update Context".
+- The check only affects Context when it reveals durable product or information-architecture facts.
+
+The control-task framing sits one level below broad principles and one level above business-specific rules:
+
+- Broad statements such as "understand the user's task, information density and feedback" remain valuable as a thinking philosophy.
+- Those broad statements are too abstract to reliably wake up an implementation agent editing a form or configuration page.
+- The default product/UIUX/development Skills therefore make that philosophy a little more concrete by asking what task the control serves, what kind of data it accepts, what feedback confirms correctness, whether units/ranges/defaults/risks/costs are needed, whether visible language is user-facing or backend-shaped, and whether free-form input has acceptable validation cost.
+- The Skills intentionally stop there.
+- Concrete answers such as which fields require which ranges, which search mode is acceptable, or which schedule format is stable are durable project facts for Context or project-local Skills.
+- Proof that one change satisfied those facts is handoff evidence, not Context.
+
+The UI/UX design Skill exists because interface work carries visual identity, interaction, accessibility and responsive-design intent that source code alone often exposes poorly:
+
+- It writes durable screen-flow and interaction facts to Context.
+- It keeps visual identity and design-system tokens in `DESIGN.md`.
+- It uses Impeccable as a review signal when a scan target exists.
+- Its design goal is to reduce common AI UI failures such as generic visual registers, disconnected styling, inaccessible states, weak responsive behavior and decorative redesign churn.
+- It avoids requiring a standalone UI/UX document chain.
+
+The UI/UX Skill's visual-quality calibration includes product-positioning, information-density, attention-allocation and control-interaction prompts rather than fixed layout or widget prescriptions:
+
+- Persistent text, whitespace, chrome, cards and repeated headers should be justified by user value.
+- Familiar actions may use icon-only controls when that best reduces attention cost and accessibility labels and hover/focus explanations are preserved.
+- True empty/error/loading states should replace fixture-like fallback rows.
+- Layout stability is treated as a UX contract.
+- The intent is not to make every interface sparse or every search/time/budget control follow one pattern.
+- The intent is to choose the presentation that best supports the user's need with the least avoidable attention cost.
+
+The development engineer Skill exists to keep technical intent recoverable when work changes implementation strategy, module responsibilities, architecture boundaries, data contracts, state semantics or verification/deployment repeat-execution paths:
+
+- It asks agents to compare Context expectation with current code evidence before proposing durable changes.
+- For UI surfaces, it explicitly checks whether the code is merely exposing fields or satisfying the page/control contract described by Context and the product/UIUX framing.
+- Its trigger list includes explicit subagent orchestration terms such as `多开agent` and `subagent`.
+- When the user has explicitly allowed that capability and the tools exist, the Skill should encourage parallel decomposition while reusing existing agents first and closing completed, idle or no-longer-needed agents with `close_agent`.
+- This is a resource lifecycle constraint, not permission to bypass the user's explicit subagent trigger.
+- Its abstraction / decomposition scan is specifically meant to reduce AI failure modes such as over-abstracting for visual cleanliness, treating syntactic duplication as semantic sameness, splitting files without reducing coupling, or optimizing locally against the recorded architecture.
+- It should default to stable, high-value, low-risk changes and leave speculative architecture for explicit user direction or stronger project evidence.
 
 ## Package Behavior
 
@@ -189,13 +360,30 @@ The development engineer Skill exists to keep technical intent recoverable when 
 
 `sync` refreshes managed assets only. It never generates project semantics.
 
-Product, UI/UX and development engineer Skill customization lives in separate project-local Skills under paths such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` and `<harnessRoot>/skills/development_engineer/SKILL.md`. `sync` overwrites package-managed default `context_*` Skills from package assets, does not merge Skill overrides, and leaves separate project-local Skills untouched. When both apply, the more specific project-local Skill should supersede the default Skill while keeping durable conclusions in Minimal Context. Project-local Skill front matter `description` trigger keywords should be maintained together with project `AGENTS.md` role-trigger guidance and the default `context_*` trigger intent.
+Product, UI/UX and development engineer Skill customization lives in separate project-local Skills:
+
+- `<harnessRoot>/skills/product_plan/SKILL.md`
+- `<harnessRoot>/skills/uiux_design/SKILL.md`
+- `<harnessRoot>/skills/development_engineer/SKILL.md`
+
+The customization behavior is:
+
+- `sync` overwrites package-managed default `context_*` Skills from package assets.
+- `sync` does not merge Skill overrides.
+- `sync` leaves separate project-local Skills untouched.
+- When both apply, the more specific project-local Skill should supersede the default Skill while keeping durable conclusions in Minimal Context.
+- Project-local Skill front matter `description` trigger keywords should be maintained together with project `AGENTS.md` role-trigger guidance and the default `context_*` trigger intent.
 
 `upgrade` runs safe migrations and `sync`. The old semantic migration command has been removed because user migrations are complete.
 
 `validate-context` checks that Context has the minimum recovery fields and does not fake product verification evidence. It does not replace project tests.
 
-The canonical npm package is `agent-project-sdlc`; `sdlc-harness` is the bin name. Public commands and managed Makefile wrappers prefer `npx --yes --package agent-project-sdlc@latest sdlc-harness` for ad hoc use so bare `npx sdlc-harness` cannot resolve a legacy package name or stale local binary. Current CLI commands guard unsupported future schema major versions before applying v4 assumptions, and write commands fail before modifying files.
+The canonical npm package is `agent-project-sdlc`; `sdlc-harness` is the bin name:
+
+- Public commands and managed Makefile wrappers prefer `npx --yes --package agent-project-sdlc@latest sdlc-harness` for ad hoc use.
+- This avoids bare `npx sdlc-harness` resolving a legacy package name or stale local binary.
+- Current CLI commands guard unsupported future schema major versions before applying v4 assumptions.
+- Write commands fail before modifying files.
 
 ## Historical Iteration: Stage-Based SDLC Harness
 
@@ -214,13 +402,25 @@ It used lifecycle state, `plan.yaml`, `plan.draft.yaml`, `.work_products/**`, st
 
 The design goal was reasonable: make requirements, design, implementation, review, testing, release and requirement changes explicit so agents would miss less, recover faster and hand off better.
 
-The implementation was broad: each lifecycle phase owned a role prompt, allowed paths, required gates and work-product templates. Development tracked current tasks in plan state; phase changes used transition helpers; validators checked PRD / UX / design / implementation / review / test / release / RFC completeness; generated overviews tried to make large document trees easier to browse.
+The implementation was broad:
 
-The cost was also broad: agents spent time reading phase state, deciding allowed actions, writing durable artifacts, refreshing generated views and running gates. Benchmark pilots showed this overhead remained even when final product quality matched direct coding.
+- Each lifecycle phase owned a role prompt, allowed paths, required gates and work-product templates.
+- Development tracked current tasks in plan state.
+- Phase changes used transition helpers.
+- Validators checked PRD / UX / design / implementation / review / test / release / RFC completeness.
+- Generated overviews tried to make large document trees easier to browse.
+
+The cost was also broad:
+
+- Agents spent time reading phase state, deciding allowed actions, writing durable artifacts, refreshing generated views and running gates.
+- Benchmark pilots showed this overhead remained even when final product quality matched direct coding.
 
 ## Benchmark Findings And Convergence Reason
 
-Delivery benchmark work exposed an important cost signal. Full document chains and frequent workflow gates add real time and token friction. On ordinary and medium-complexity projects, modern coding agents already internalize much of the single-stage product/design/test behavior that the stage Harness tried to force through default artifacts.
+Delivery benchmark work exposed an important cost signal:
+
+- Full document chains and frequent workflow gates add real time and token friction.
+- On ordinary and medium-complexity projects, modern coding agents already internalize much of the single-stage product/design/test behavior that the stage Harness tried to force through default artifacts.
 
 Observed implication:
 
@@ -251,6 +451,11 @@ This source workspace contains three maintained areas:
 
 ## Historical Material
 
-Old stage-based source assets, state files and work-product trees are removed from the current implementation. The durable information kept from that era is this spec summary: what the stage Harness tried to do, how it was implemented, what benchmark work found and why the product converged to Minimal Context.
+Old stage-based source assets, state files and work-product trees are removed from the current implementation. The durable information kept from that era is this spec summary:
+
+- what the stage Harness tried to do
+- how it was implemented
+- what benchmark work found
+- why the product converged to Minimal Context
 
 Future design changes should keep the same discipline: preserve the reasoning that affects current behavior, but avoid recreating large default document chains unless measured evidence shows they pay back their cost.

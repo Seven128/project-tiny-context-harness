@@ -28,23 +28,30 @@ Project-specific engineering rules belong in a separate project-local Skill unde
    - Current code evidence
    - Gap
    - Proposed change
-8. 实现时保持精准修改，优先遵循仓库现有框架、接口、测试和代码风格。
-9. 当用户明确要求 / 允许“多开agent”或使用 subagent，且当前会话存在可用 subagent 工具时，积极把可并行的探索、审查或实现拆分交给 subagent；使用前先复用已有相关 agent，没有合适 agent 或并行度不足时再新开。`wait_agent` 只表示取得结果，不释放资源；subagent 完成、空闲或不再需要时必须调用 `close_agent`，收尾前清理已完成 / 空闲 / 不再需要的 subagent，避免占满后续资源。
-10. 当任务涉及新实现、重构、重复逻辑、模块边界或影响面控制时，先做轻量 abstraction / decomposition scan：
+8. 涉及 UI surface、表单/配置、输入、选择、搜索、筛选、调度/时间、预算/配额/限流或状态反馈的实现方案时，检查当前代码是否只是暴露字段，还是满足了已有 Context、页面职责和控件任务框架；实现收尾要能给出简短 Context Conformance 证据。
+9. 实现时保持精准修改，优先遵循仓库现有框架、接口、测试和代码风格。
+10. 当用户明确要求 / 允许“多开agent”或使用 subagent，且当前会话存在可用 subagent 工具时，积极把可并行的探索、审查或实现拆分交给 subagent；使用前先复用已有相关 agent，没有合适 agent 或并行度不足时再新开。`wait_agent` 只表示取得结果，不释放资源；subagent 完成、空闲或不再需要时必须调用 `close_agent`，收尾前清理已完成 / 空闲 / 不再需要的 subagent，避免占满后续资源。
+11. 当任务涉及新实现、重构、重复逻辑、模块边界或影响面控制时，先做轻量 abstraction / decomposition scan：
    - 查找相似实现、重复逻辑、紧耦合模块或影响面异常扩散点。
    - 将候选项分为局部重构与长期边界变化，后者按既有 Context-first 规则处理。
    - 对候选点说明当前重复 / 耦合证据、抽象后的边界、收益、风险和是否值得现在做。
    - 默认只实施高收益、低风险、语义稳定的候选项。
    - 不为一次性代码、不稳定语义或纯粹好看的架构做抽象。
-11. 需要沉淀长期事实时，只更新 `project_context/**`：
+12. 需要沉淀长期事实时，只更新 `project_context/**`：
    - 全局工程取舍、跨产品域索引或当前状态写入 `global.md`。
    - 产品域 API、数据契约、关键约束、入口和风险写入对应 area / subdomain Context。
    - 跨域接口语义写入 `context_role: contract` 或 manifest role 为 `contract` 的 Context；关键重复验证路径写入 `verification`；关键部署、运行拓扑或云端初始化路径写入 `deployment`；代码入口索引用 `implementation-index`；底层理论源用 `foundation`；历史归档索引用 `archive`。
    - 新 context unit 可新增 `project_context/areas/<unit>.md`，并更新 `global.md#Context Index`；复杂项目同时更新 `project_context/context.toml`。
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
-12. 实现收尾时做 Context drift check：确认代码没有引入未沉淀的长期事实，且 Context 没有退化成普通实现摘要；交付说明只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。
-13. Context 只能声明验证 / 部署关键路径或验收信号，不能伪造“测试已通过”或“部署已成功”。
-14. Verification / Deployment Role Context 只记录长期可复用的重复执行路径事实：特殊准备、最短命令或路径、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、release ledger、secret、token、cookie、device id 或 raw payload。
+13. 实现收尾时做 Context drift check：确认代码没有引入未沉淀的长期事实，且 Context 没有退化成普通实现摘要；交付说明只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。高风险 UI 命中已有 Context 或页面/控件契约时，另补简短 `Context Conformance` 交付说明；一次性证据、截图结果、测试日志和实现摘要不写入 Context。
+14. Context 只能声明验证 / 部署关键路径或验收信号，不能伪造“测试已通过”或“部署已成功”。
+15. Verification / Deployment Role Context 只记录长期可复用的重复执行路径事实：特殊准备、最短命令或路径、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、release ledger、secret、token、cookie、device id 或 raw payload。
+
+## UI 实现对齐
+
+- UI 实现方案不只检查字段是否接上，还要检查控件是否支持用户任务、输入语义、反馈状态、错误恢复和已有页面/控件契约。
+- 当 current code evidence 显示后端字段、枚举或自由输入直接暴露给用户时，不默认把它当作产品意图；先对照 Context、产品/UIUX Skill 的控件任务框架和项目组件体系判断是否是实现漂移或缺失契约。
+- Context Conformance 证据应短而具体：命中的已有 Context / 页面契约、实现如何满足、未满足或延期项、验证入口或手动检查。它属于交付说明，不属于 `project_context/**`。
 
 ## 输出边界
 
