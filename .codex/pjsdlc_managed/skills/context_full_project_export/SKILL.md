@@ -1,6 +1,6 @@
 ---
 name: context_full_project_export
-description: Use when the user explicitly asks to 导出尽可能详细的项目全量上下文, 全量上下文导出, 项目上下文全量导出, full project context export, export full project context, or project context export in a Minimal Context Harness project.
+description: Use when the user explicitly asks to 导出尽可能详细的项目全量上下文, 全量上下文导出, 项目上下文全量导出, full project context export, export full project context, project context export, 当前项目代码实现, 代码级实现导出, or code-level implementation export in a Minimal Context Harness project.
 ---
 
 # Context Full Project Export
@@ -15,24 +15,37 @@ This Skill creates a temporary export artifact only. It does not author durable 
 
 当用户需要“导出尽可能详细的项目全量上下文”时，把项目 Context、关键 agent 指引、架构 / 模块事实和必要入口汇总成可复制、可投喂外部工具、可用于一次性讨论的 Markdown 包。
 
+当用户需要“当前项目代码实现 / 代码级实现导出”时，生成当前源码和工程配置的单文件实现快照，方便上传到 Web GPT 或外部模型。
+
 ## 工作方式
 
-1. 优先运行包级 CLI，不要手写 tracked 文档：
+1. 默认优先运行包级 CLI 一次生成两份临时产物，不要手写 tracked 文档：
+   - `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --all`
+2. 只需要项目级 Context 汇总时使用 `--full`：
    - `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full`
-2. 如需指定文件名，只能写入临时目录：
+3. 只需要代码级实现快照时使用 `--code`，默认只生成一个 Markdown：
+   - `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code`
+4. 如需指定单份产物文件名，只能写入临时目录；`--all` 不接受 `--output`：
    - `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full --output tmp/sdlc/context-exports/my-export.md`
-3. 如需先查看会收集哪些来源，使用 dry-run：
+   - `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code --output tmp/sdlc/context-exports/my-code-export.md`
+5. 如需先查看会收集哪些来源，使用 dry-run：
+   - `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --all --check`
    - `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full --check`
-4. 导出后向用户报告 artifact 路径、来源数量和 warnings。不要把导出内容摘要回写进 Context。
+   - `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code --check`
+6. 导出后向用户报告 artifact 路径、来源数量和 warnings。不要把导出内容摘要回写进 Context。
 
 ## 输出边界
 
 - 导出产物必须是 temporary export artifact，不是 Context。
-- 默认位置是 `tmp/sdlc/context-exports/full-project-context-<timestamp>.md`。
+- `--full` 默认位置是 `tmp/sdlc/context-exports/当前项目代码实现context-<timestamp>.md`。
+- `--code` 默认位置是 `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/当前项目代码实现.md`。
+- `--all` 用同一 timestamp 生成上述两份默认产物。
+- `--all` 不接受 `--output`；自定义文件名只支持 `--full` 或 `--code` 单产物模式。
+- `--code` 只生成一个 Markdown 文件，不生成分片或 `all.md`。
 - 禁止输出到 `project_context/**`。
 - 禁止修改 `project_context/context.toml`。
 - 禁止把导出产物注册为 `[[context]]`、`implementation-index` 或任何 Context graph 节点。
-- v1 不支持写入 tracked docs；即使用户指定普通文档路径，也应改用 `tmp/sdlc/context-exports/**`。
+- 不支持写入 tracked docs；即使用户指定普通文档路径，也应改用 `tmp/sdlc/context-exports/**`。
 - 导出内容可能包含 redaction warnings；不要尝试绕过 secret/token/cookie/password/api_key 过滤。
 
 ## 交付说明

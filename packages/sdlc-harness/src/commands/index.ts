@@ -28,8 +28,8 @@ export function help(): void {
   sync                 Materialize canonical assets into the workspace
   upgrade              Run migrations and then sync
   doctor               Diagnose project configuration and drift
-  export-context --full [--output <path>] [--check]
-                       Export a temporary full project context Markdown artifact
+  export-context --full|--code|--all [--output <path>] [--check]
+                       Export a temporary Context summary or code implementation Markdown artifact
   validate <gate>      Run a Harness validation gate (Minimal Context only)
   validate-context     Validate Minimal Context fact-source recoverability
   validate-harness     Compatibility alias for validate-context

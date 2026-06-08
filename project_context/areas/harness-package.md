@@ -45,8 +45,10 @@
 - `upgrade` runs safe migrations plus `sync`; it no longer prompts or runs semantic migration.
 - `init`, `sync`, `upgrade`, `doctor` and `validate-context` guard unsupported future schema major versions before applying v4 assumptions; write commands fail before modifying files.
 - `validate-context` checks Context completeness but does not prove product test execution.
-- `export-context --full` creates a one-off Markdown export for copying, external-tool ingestion or temporary discussion. It defaults to `tmp/sdlc/context-exports/full-project-context-<timestamp>.md`, refuses `project_context/**` and non-temporary output paths, and must never register the export as a Context graph node.
-- The package-managed `context_full_project_export` Skill triggers on “导出尽可能详细的项目全量上下文 / 全量上下文导出 / full project context export” style requests and tells agents to use the CLI instead of hand-writing a tracked Context summary.
+- `export-context --full` creates a one-off Markdown Context export for copying, external-tool ingestion or temporary discussion. It defaults to `tmp/sdlc/context-exports/当前项目代码实现context-<timestamp>.md`, refuses `project_context/**` and non-temporary output paths, and must never register the export as a Context graph node.
+- `export-context --code` creates a one-off Markdown current implementation snapshot with source file paths, metadata, heuristic summaries and redacted code blocks. It defaults to `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/当前项目代码实现.md`, uses one Markdown file only, refuses `project_context/**` and non-temporary output paths, and must never register the export as a Context graph node.
+- `export-context --all` creates both default `--full` and `--code` artifacts in one command with the same timestamp. It does not accept `--output` because one custom Markdown path cannot unambiguously represent two artifacts.
+- The package-managed `context_full_project_export` Skill triggers on “导出尽可能详细的项目全量上下文 / 全量上下文导出 / full project context export / 代码级实现导出 / 当前项目代码实现” style requests and tells agents to prefer `export-context --all` when both context and code snapshots are useful, instead of hand-writing a tracked Context or implementation summary.
 - `validate-context` rejects obvious export artifact names such as `full-project-context`, `project-overview`, `context-bundle`, `context-summary` or `context-export` when they appear in `project_context/context.toml`.
 
 ## Core Data / API / State

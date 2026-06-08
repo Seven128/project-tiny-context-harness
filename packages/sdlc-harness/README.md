@@ -37,11 +37,13 @@ Use `npx --no-install sdlc-harness ...` only when you explicitly want the alread
 | Product planning Skill | `<harnessRoot>/skills/context_product_plan/SKILL.md` | Triggers on “产品方案 / 产品经理 / 产品专家” style requests and writes durable product conclusions to `project_context/**`. |
 | UI/UX design Skill | `<harnessRoot>/skills/context_uiux_design/SKILL.md` | Triggers on “设计稿 / UI/UX 设计方案 / 视觉专家” style requests, writes screen/interaction conclusions to `project_context/**`, updates root `DESIGN.md` visual tokens with Google `@google/design.md`, and includes compact visual-quality calibration for product/page positioning, user needs, information density, brand/product UI and common AI-design anti-patterns. |
 | Development engineer Skill | `<harnessRoot>/skills/context_development_engineer/SKILL.md` | Triggers on “开发工程师 / 技术方案 / 开发方案 / 实现 / 实现方案 / 实施计划 / 技术专家 / 多开agent / subagent” style requests and writes durable engineering conclusions to `project_context/**`. |
-| Full project context export Skill | `<harnessRoot>/skills/context_full_project_export/SKILL.md` | Triggers on “导出尽可能详细的项目全量上下文 / 全量上下文导出 / full project context export” style requests and uses `export-context --full` to create a temporary artifact under `tmp/sdlc/context-exports/**`. |
+| Full project context export Skill | `<harnessRoot>/skills/context_full_project_export/SKILL.md` | Triggers on “导出尽可能详细的项目全量上下文 / 全量上下文导出 / full project context export / 当前项目代码实现 / 代码级实现导出” style requests and uses `export-context --all`, `--full` or `--code` to create temporary artifacts under `tmp/sdlc/context-exports/**`. |
 | Project-local Skills | `<harnessRoot>/skills/<role>/SKILL.md` | Optional local product/design/development Skills created by the project, such as `product_plan`, `uiux_design` or `development_engineer`. They supersede package-managed default Skills when more specific, are not overwritten by `sync`, and should keep front matter trigger keywords aligned with the project `AGENTS.md` role-trigger rule. |
 | Managed file sync | `make sdlc-sync` or `npx --yes --package agent-project-sdlc@latest sdlc-harness sync` | Refreshes package-managed guidance, default Skills, Makefile include, context templates, tools and workflow YAML. It does not perform semantic Context generation. |
 | Upgrade | `make sdlc-upgrade` or `npx --yes --package agent-project-sdlc@latest sdlc-harness upgrade` | Runs safe migrations and `sync`, including Schema v4 Context graph manifest creation when missing. |
-| Full project context export | `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary Markdown artifact for copying, external-tool ingestion or one-off discussion. It is not Context and must not be registered in `project_context/context.toml`. |
+| Combined project export | `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --all [--check]` | Creates both default temporary exports with one timestamp: `当前项目代码实现context-<timestamp>.md` and `当前项目代码实现.md`. |
+| Project Context export | `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary Context summary artifact named `当前项目代码实现context-<timestamp>.md` by default. It is not Context and must not be registered in `project_context/context.toml`. |
+| Code implementation export | `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary single-file code implementation artifact named `当前项目代码实现.md` by default. It is not Context and must not be registered in `project_context/context.toml`. |
 | Context validation | `npx --yes --package agent-project-sdlc@latest sdlc-harness validate-context`, `make validate-context` | Checks required project recovery fields, Context graph metadata, declared paths/roles and fake test-execution claims. |
 | Diagnostics | `make sdlc-doctor` or `npx --yes --package agent-project-sdlc@latest sdlc-harness doctor` | Reports Harness root, package version, schema version and required Minimal Context paths. |
 | Package source checks | `sdlc-harness package sync-source`, `sdlc-harness package check-source` | Maintainer-only commands for keeping package canonical assets aligned with the source workspace. |
@@ -96,9 +98,18 @@ When authoring, migrating or cleaning up `project_context/areas/**`, run a soft 
 
 Automatic migration moves legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md`, creates a usable graph baseline and does not infer deep semantic roles. If an existing deep area file is really a foundation, contract, archive or implementation index, a later agent should update `context.toml` explicitly. Boundary rules are metadata only; Harness does not scan source imports or build a runtime dependency graph.
 
-## Full Project Context Export
+## Temporary Project Exports
 
-`export-context --full` creates a temporary Markdown bundle for copying into an external tool, archiving an ad hoc discussion or handing context to a one-off collaborator:
+`export-context --all` creates both temporary Markdown artifacts for copying into an external tool, archiving an ad hoc discussion or handing context to a one-off collaborator:
+
+```sh
+npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --all
+npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --all --check
+```
+
+This generates both default artifacts with the same timestamp: `tmp/sdlc/context-exports/当前项目代码实现context-<timestamp>.md` and `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/当前项目代码实现.md`. `--all` does not accept `--output`; use `--full` or `--code` for custom single-artifact paths.
+
+`export-context --full` creates only the temporary Markdown Context bundle:
 
 ```sh
 npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full
@@ -106,11 +117,21 @@ npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full
 npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full --check
 ```
 
-The default output is `tmp/sdlc/context-exports/full-project-context-<timestamp>.md`. `--check` reports the planned output path, source count, source file list and warnings without writing a file. The artifact header always says `Export artifact. Do not reference from project_context/context.toml.`
+The default output is `tmp/sdlc/context-exports/当前项目代码实现context-<timestamp>.md`. The file title is `# 当前项目代码实现context`. `--check` reports the planned output path, source count, source file list and warnings without writing a file. The artifact header always says `Export artifact. Do not reference from project_context/context.toml.`
 
 The exporter includes Context files, key README / AGENTS / DESIGN documents, managed Skill guidance, Makefile verification-entry summaries, a directory tree summary and Context code-entry indexes. It excludes `.env*`, secret/token/cookie-oriented files, raw captures, licensed payload dumps, `node_modules`, build output, caches, coverage, test reports and existing export artifacts; obvious sensitive assignment values are redacted and reported as warnings.
 
-The CLI refuses `project_context/**` and non-temporary output paths. `validate-context` also rejects obvious export artifact names such as `full-project-context`, `project-overview`, `context-bundle`, `context-summary` or `context-export` if they are registered in `project_context/context.toml`.
+`export-context --code` creates one temporary Markdown file for handing the current implementation state to an external model:
+
+```sh
+npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code
+npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code --output tmp/sdlc/context-exports/my-code-export.md
+npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code --check
+```
+
+The default output is `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/当前项目代码实现.md`. The file title is `# 当前项目代码实现`. It scans main source and engineering configuration files, adds each file path, type, line count, character count, SHA256, a heuristic one-sentence summary and a fenced redacted code block. It does not split output into multiple Markdown files.
+
+Both export modes refuse `project_context/**` and non-temporary output paths. `validate-context` also rejects obvious export artifact names such as `当前项目代码实现`, `当前项目代码实现context`, `code-level-implementation`, `full-project-context`, `project-overview`, `context-bundle`, `context-summary` or `context-export` if they are registered in `project_context/context.toml`.
 
 The Context should be dense, durable and short. Former ADR content belongs in `Design Rationale` when it still affects future changes. Implementation details that are obvious from code should stay in code and tests; only non-obvious constraints belong in Context.
 
@@ -162,7 +183,9 @@ When a project-local Skill and a package-managed default Skill both apply, agent
 ```sh
 npx --yes --package agent-project-sdlc@latest sdlc-harness init
 npx --yes --package agent-project-sdlc@latest sdlc-harness init --adopt
+npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --all
 npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full
+npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code
 make sdlc-sync
 make sdlc-upgrade
 npx --yes --package agent-project-sdlc@latest sdlc-harness validate-context

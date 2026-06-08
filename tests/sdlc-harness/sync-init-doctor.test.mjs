@@ -126,7 +126,9 @@ try {
   assert.match(agents, /Impeccable/);
   assert.match(agents, /npx impeccable detect <target>/);
   assert.match(agents, /全量上下文导出/);
+  assert.match(agents, /export-context --all/);
   assert.match(agents, /export-context --full/);
+  assert.match(agents, /export-context --code/);
   assert.match(agents, /tmp\/sdlc\/context-exports/);
   assert.match(agents, /独立项目本地 Skill/);
   assert.match(agents, /uiux_design\/SKILL\.md/);
@@ -201,7 +203,10 @@ try {
   assert.doesNotMatch(developmentSkill, /multi_agent_v1/);
   const exportSkill = await readFile(path.join(root, ".agent/skills/context_full_project_export/SKILL.md"), "utf8");
   assert.match(exportSkill, /导出尽可能详细的项目全量上下文/);
+  assert.match(exportSkill, /export-context --all/);
   assert.match(exportSkill, /export-context --full/);
+  assert.match(exportSkill, /export-context --code/);
+  assert.match(exportSkill, /当前项目代码实现/);
   assert.match(exportSkill, /tmp\/sdlc\/context-exports/);
   assert.match(exportSkill, /禁止修改 `project_context\/context\.toml`/);
 

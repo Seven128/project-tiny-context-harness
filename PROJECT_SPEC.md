@@ -63,7 +63,7 @@ The part that remains clearly valuable is not the ceremony itself. It is durable
 - current state
 - next safe action
 
-Those facts are hard to recover from code alone and expensive to re-explain every time.
+Those facts are hard to recover from code or comments alone and expensive to re-explain every time. Source code is the best record of current behavior, and focused comments can clarify local implementation intent, but they do not reliably preserve durable product intent, non-goals, ownership boundaries, architecture constraints, accepted verification paths, or the reason a current implementation shape should not automatically become project intent.
 
 Therefore the current design keeps the product goal unchanged, but narrows the default mechanism:
 
@@ -75,7 +75,7 @@ Therefore the current design keeps the product goal unchanged, but narrows the d
 - move implementation narration into code comments, tests and short module constraints;
 - make richer process artifacts and strict gates conditional, not default.
 
-In short: Harness no longer tries to externalize the whole SDLC by default. It maintains the minimum durable context needed for recovery and continuation.
+In short: Harness no longer tries to externalize the whole SDLC by default. It maintains the minimum durable context needed for recovery and continuation. The design question is not which human software-engineering phase should own a document; it is what smallest recovery surface lets an agent understand and continue the whole delivery loop without re-creating phase artifacts that the model can already reason through internally.
 
 ## Context Contract
 
@@ -147,6 +147,13 @@ The Context should be compact and semantically split:
 - It should not duplicate code, test logs, release ledgers or implementation narration that the source already exposes.
 - Former ADR content is downgraded into `Design Rationale`.
 - Implementation documentation is downgraded into code comments, test names and short Context constraints when the code does not make the fact obvious.
+
+Temporary exports are explicit exceptions for external-tool ingestion, not durable Context:
+
+- `export-context --full` emits a one-off project Context summary named `当前项目代码实现context-<timestamp>.md` by default.
+- `export-context --code` emits a one-off single-file current implementation snapshot named `当前项目代码实现.md` under a timestamped `code-level-implementation-*` directory by default.
+- `export-context --all` emits both default artifacts in one command using the same timestamp and does not accept `--output`.
+- Both modes must stay under `tmp/sdlc/context-exports/**`, must not be registered in `project_context/context.toml`, and must not revive implementation documents as tracked package defaults.
 
 Area is the product/domain ownership boundary:
 

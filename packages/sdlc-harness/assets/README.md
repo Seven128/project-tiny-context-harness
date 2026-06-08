@@ -49,7 +49,7 @@ npx --yes --package agent-project-sdlc@latest sdlc-harness init --adopt
 
 `init` does not create lifecycle state, plan state, stage skills or stage work-product trees by default.
 
-The default Skills are Minimal Context helpers. Explicit requests such as “产品方案 / 产品经理 / 产品专家” use the product planning Skill; requests such as “设计稿 / UI/UX 设计方案 / 视觉专家” use the design Skill; requests such as “开发工程师 / 技术方案 / 开发方案 / 实现 / 实现方案 / 实施计划 / 技术专家 / 多开agent / subagent” use the development engineer Skill. Requests such as “导出尽可能详细的项目全量上下文 / 全量上下文导出 / full project context export” use the full-project export Skill and the `export-context --full` CLI. Product, screen-flow and durable engineering conclusions go to `project_context/**`; visual identity and design tokens go to root `DESIGN.md`. Full-project exports are temporary artifacts under `tmp/sdlc/context-exports/**`, not Context.
+The default Skills are Minimal Context helpers. Explicit requests such as “产品方案 / 产品经理 / 产品专家” use the product planning Skill; requests such as “设计稿 / UI/UX 设计方案 / 视觉专家” use the design Skill; requests such as “开发工程师 / 技术方案 / 开发方案 / 实现 / 实现方案 / 实施计划 / 技术专家 / 多开agent / subagent” use the development engineer Skill. Requests such as “导出尽可能详细的项目全量上下文 / 全量上下文导出 / full project context export / 当前项目代码实现 / 代码级实现导出” use the full-project export Skill and the `export-context --all` CLI when both snapshots are useful. Product, screen-flow and durable engineering conclusions go to `project_context/**`; visual identity and design tokens go to root `DESIGN.md`. Export artifacts are temporary files under `tmp/sdlc/context-exports/**`, not Context.
 
 For Web pages, frontend layout, UI/UX, product module boundaries or decisions about where information belongs, agents should run a lightweight page product-positioning check before deciding whether the change is context-first. The check asks what judgment the user needs to make on the page, what information/actions/feedback the product must provide, what should not be persistent, what belongs in downstream consumption, ops, detail or another page, and whether layout and information density match the page task. If ownership is unclear, inspect the relevant pages and Context first. The check is input to change classification: it does not by itself require a Context update, new document chain or validator gate.
 
@@ -72,7 +72,9 @@ Use `npx --no-install sdlc-harness ...` only when you explicitly want the alread
 | `npx --yes --package agent-project-sdlc@latest sdlc-harness init` | Non-destructively installs Minimal Context Harness into the current project. |
 | `make sdlc-sync` or `npx --yes --package agent-project-sdlc@latest sdlc-harness sync` | Refreshes managed guidance, default Skills, Makefile include, tools and templates. It does not generate project semantics. |
 | `make sdlc-upgrade` or `npx --yes --package agent-project-sdlc@latest sdlc-harness upgrade` | Runs safe package migrations and `sync`, including Schema v4 Context graph manifest creation when missing. |
-| `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary full-project Context export Markdown artifact for copying or external-tool ingestion. |
+| `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --all [--check]` | Creates both default temporary exports: `当前项目代码实现context-<timestamp>.md` and `当前项目代码实现.md`. |
+| `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary project Context summary Markdown artifact named `当前项目代码实现context-<timestamp>.md` by default. |
+| `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary single-file code implementation Markdown artifact named `当前项目代码实现.md` by default. |
 | `npx --yes --package agent-project-sdlc@latest sdlc-harness validate-context` | Checks minimum project recovery fields, Context graph metadata, declared paths/roles and fake test-execution claims. |
 | `make validate-context` | Makefile wrapper for `validate-context`. |
 | `make validate-harness` | Compatibility alias for `validate-context` in vNext projects. |
@@ -136,9 +138,18 @@ When authoring, migrating or cleaning up `project_context/areas/**`, run a soft 
 
 Automatic migration moves legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md`, creates a usable graph baseline and does not infer deep semantic roles. If an existing deep area file is really a foundation, contract, archive or implementation index, a later agent should update `context.toml` explicitly. Boundary rules are metadata only; Harness does not scan source imports or build a runtime dependency graph.
 
-## Full Project Context Export
+## Temporary Project Exports
 
-Use `export-context --full` when you need a one-off Markdown bundle for copying into an external tool or discussion:
+Use `export-context --all` when you want both one-off project exports for copying into an external tool or discussion:
+
+```sh
+npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --all
+npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --all --check
+```
+
+This generates both default artifacts with the same timestamp: `tmp/sdlc/context-exports/当前项目代码实现context-<timestamp>.md` and `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/当前项目代码实现.md`. `--all` does not accept `--output`; use the single-artifact commands below for custom names.
+
+Use `export-context --full` when you need only the project Context bundle:
 
 ```sh
 npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full
@@ -146,9 +157,21 @@ npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full
 npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full --check
 ```
 
-The default artifact path is `tmp/sdlc/context-exports/full-project-context-<timestamp>.md`. The file header says `Export artifact. Do not reference from project_context/context.toml.` The export includes Context files, key README / AGENTS / DESIGN documents, managed Skill guidance, Makefile verification-entry summaries, a directory tree summary and Context code-entry indexes. It excludes `.env*`, secret/token/cookie-oriented files, raw captures, licensed payload dumps, `node_modules`, build output, caches, coverage, test reports and existing export artifacts; obvious sensitive assignment values are redacted and reported as warnings.
+The default artifact path is `tmp/sdlc/context-exports/当前项目代码实现context-<timestamp>.md`. The file title is `# 当前项目代码实现context`. The file header says `Export artifact. Do not reference from project_context/context.toml.` The export includes Context files, key README / AGENTS / DESIGN documents, managed Skill guidance, Makefile verification-entry summaries, a directory tree summary and Context code-entry indexes.
 
-The export is not a long-lived fact source. The CLI refuses `project_context/**` and non-temporary output paths, and `validate-context` rejects obvious export artifact names such as `full-project-context`, `project-overview`, `context-bundle`, `context-summary` or `context-export` if someone tries to register them in `project_context/context.toml`.
+Use `export-context --code` when an external model needs the current implementation state in one uploadable Markdown file:
+
+```sh
+npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code
+npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code --output tmp/sdlc/context-exports/my-code-export.md
+npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code --check
+```
+
+The default code artifact path is `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/当前项目代码实现.md`. The file title is `# 当前项目代码实现`. It scans main source and engineering configuration files, adds each file path, type, line count, character count, SHA256, a heuristic one-sentence summary and a fenced redacted code block. It does not split output into multiple Markdown files.
+
+Both export modes exclude `.env*` except safe examples such as `.env.example`, secret/token/cookie-oriented files, raw captures, licensed payload dumps, `node_modules`, build output, caches, coverage, test reports, logs and existing export artifacts; obvious sensitive assignment values are redacted and reported as warnings.
+
+Exports are not long-lived fact sources. The CLI refuses `project_context/**` and non-temporary output paths, and `validate-context` rejects obvious export artifact names such as `当前项目代码实现`, `当前项目代码实现context`, `code-level-implementation`, `full-project-context`, `project-overview`, `context-bundle`, `context-summary` or `context-export` if someone tries to register them in `project_context/context.toml`.
 
 The Context should be short enough to read at session start and specific enough to prevent fresh-agent drift. It should not copy code, test logs, release ledgers or implementation narration that the code already makes obvious.
 
