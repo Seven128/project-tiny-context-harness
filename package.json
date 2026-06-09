@@ -1,18 +1,18 @@
 {
-  "name": "project-agent-sdlc",
+  "name": "project-tiny-context-harness",
   "private": true,
   "version": "0.1.0",
-  "description": "Reference workspace for Tiny Context Harness.",
+  "description": "Reference workspace for Project Tiny Context Harness.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Seven128/project-agent-sdlc.git"
+    "url": "git+https://github.com/Seven128/project-tiny-context-harness.git"
   },
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "test": "npm test --workspace agent-project-sdlc",
+    "test": "npm test --workspace project-tiny-context-harness",
     "launch:check": "node tools/launch_readiness_check.mjs --offline",
     "launch:demo": "node tools/launch_demo_capture.mjs",
     "smoke:quickstart": "node tools/quickstart_smoke.mjs --clean",

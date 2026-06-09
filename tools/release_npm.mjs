@@ -6,8 +6,8 @@ import os from "node:os";
 import path from "node:path";
 
 const projectRoot = process.cwd();
-const packageName = "agent-project-sdlc";
-const workspaceName = "agent-project-sdlc";
+const packageName = "project-tiny-context-harness";
+const workspaceName = "project-tiny-context-harness";
 const packageManifestPath = path.join(projectRoot, "packages", "sdlc-harness", "package.json");
 const releaseReportRelativePath = ".artifacts/releases/current-release-status.md";
 const releasePackDir = path.join(projectRoot, ".artifacts", "releases", "pack");
@@ -303,7 +303,7 @@ async function installedConsumerSmoke(version) {
   await run("npm", ["init", "-y"], { cwd: tmp });
   await run("npm", ["install", "-D", `${packageName}@${version}`], { cwd: tmp });
   const installedVersion = (
-    await run("node", ["-p", "require('./node_modules/agent-project-sdlc/package.json').version"], {
+    await run("node", ["-p", "require('./node_modules/project-tiny-context-harness/package.json').version"], {
       cwd: tmp,
       capture: true
     })
@@ -516,7 +516,7 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
 
 ## 2. Included Changes（包含变更）
 
-- 发布当前 workspace 中已同步的 Tiny Context Harness package assets 和 CLI build。
+- 发布当前 workspace 中已同步的 Project Tiny Context Harness package assets 和 CLI build。
 - 本版本由 \`tools/release_npm.mjs\` 执行发布闭环。默认发布路径覆盖 npm auth、version bump、source drift check、tarball pack、publish 和 registry latest verification；\`--full-gate\` 和 \`--registry-smoke\` 可启用更重验证。
 
 ## 3. Build Artifacts（构建产物）

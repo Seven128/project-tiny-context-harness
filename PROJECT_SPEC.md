@@ -1,10 +1,10 @@
-# Tiny Context Harness Project Spec
+# Project Tiny Context Harness Project Spec
 
-This document explains the stable product direction, design rationale and package behavior for Tiny Context Harness. The public display name is Tiny Context Harness; the npm package remains `agent-project-sdlc` and the CLI remains `sdlc-harness`. User-facing commands live in [README.md](README.md). Historical stage-based workflow details are retained here only as a concise design summary.
+This document explains the stable product direction, design rationale and package behavior for Project Tiny Context Harness. The public display name is Project Tiny Context Harness; the npm package remains `project-tiny-context-harness` and the CLI remains `sdlc-harness`. User-facing commands live in [README.md](README.md). Historical stage-based workflow details are retained here only as a concise design summary.
 
 ## Product Goal
 
-Tiny Context Harness helps AI coding agents deliver requirements projects more efficiently by preserving the minimum durable context needed for recovery, iteration, debug and requirement changes.
+Project Tiny Context Harness helps AI coding agents deliver requirements projects more efficiently by preserving the minimum durable context needed for recovery, iteration, debug and requirement changes.
 
 Efficiency is not first-turn code generation speed. The target is same-quality delivery over a project lifecycle:
 
@@ -422,7 +422,7 @@ The development engineer Skill exists to keep technical intent recoverable when 
 - `tools/**`
 - `.github/workflows/harness.yml` when absent or managed
 
-The package-managed `.github/workflows/harness.yml` is a consumer project workflow. It installs the Node runtime required by the Harness CLI and runs the selected `validate-context` / `validate-harness` Make target. Maintainer-only checks for this source repository, such as `npm test --workspace agent-project-sdlc` and package source-drift checks, must live in separate source-repository CI and must not be copied into consumer projects.
+The package-managed `.github/workflows/harness.yml` is a consumer project workflow. It installs the Node runtime required by the Harness CLI and runs the selected `validate-context` / `validate-harness` Make target. Maintainer-only checks for this source repository, such as `npm test --workspace project-tiny-context-harness` and package source-drift checks, must live in separate source-repository CI and must not be copied into consumer projects.
 
 `init` does not create `.work_products/**`, lifecycle state, plan state, stage skills, stage templates or stage policies by default.
 
@@ -446,9 +446,9 @@ The customization behavior is:
 
 `validate-context` checks that Context has the minimum recovery fields and does not fake product verification evidence. It does not replace project tests.
 
-The canonical npm package is `agent-project-sdlc`; `sdlc-harness` is the bin name:
+The canonical npm package is `project-tiny-context-harness`; `sdlc-harness` is the bin name:
 
-- Public commands and managed Makefile wrappers prefer `npx --yes --package agent-project-sdlc@latest sdlc-harness` for ad hoc use.
+- Public commands and managed Makefile wrappers prefer `npx --yes --package project-tiny-context-harness@latest sdlc-harness` for ad hoc use.
 - This avoids bare `npx sdlc-harness` resolving a legacy package name or stale local binary.
 - Current CLI commands guard unsupported future schema major versions before applying v4 assumptions.
 - Write commands fail before modifying files.

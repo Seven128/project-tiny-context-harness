@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for taking a look at AI SDLC Harness. This project is still small, so the highest-value contributions are clear bug reports, adoption feedback and narrowly scoped fixes.
+Thanks for taking a look at Project Tiny Context Harness. This project is still small, so the highest-value contributions are clear bug reports, adoption feedback and narrowly scoped fixes.
 
 ## Project Boundary
 
@@ -15,7 +15,7 @@ The current product is **Minimal Context Harness**: small durable project memory
 
 ```sh
 npm ci
-npm test --workspace agent-project-sdlc
+npm test --workspace project-tiny-context-harness
 make validate-context
 ```
 

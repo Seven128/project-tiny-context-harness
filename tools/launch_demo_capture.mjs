@@ -10,7 +10,7 @@ function parseArgs(argv) {
   const options = {
     clean: false,
     outDir: null,
-    packageSpec: "agent-project-sdlc@latest",
+    packageSpec: "project-tiny-context-harness@latest",
     help: false
   };
   for (let index = 0; index < argv.length; index += 1) {
@@ -48,7 +48,7 @@ terminal transcript for Show HN, Product Hunt and README/social copy.
 
 Usage:
   node tools/launch_demo_capture.mjs [--out-dir tmp/sdlc/launch-demo/latest] [--clean]
-  node tools/launch_demo_capture.mjs --package-spec agent-project-sdlc@0.2.39
+  node tools/launch_demo_capture.mjs --package-spec project-tiny-context-harness@0.2.39
 `);
 }
 
@@ -188,7 +188,7 @@ if (options.help) {
 }
 
 const outDir = options.outDir ?? makeDefaultOutDir();
-const demoDir = path.join(outDir, "tiny-context-harness-demo");
+const demoDir = path.join(outDir, "project-tiny-context-harness-demo");
 const expectedFiles = [
   "AGENTS.md",
   "DESIGN.md",

@@ -4,7 +4,7 @@ This is the recording packet for issue #5. It prepares a real terminal transcrip
 
 Current status:
 
-- The public package is `agent-project-sdlc@0.2.39`.
+- The public package is `project-tiny-context-harness@0.2.39`.
 - The repo and npm metadata pass `node tools/launch_readiness_check.mjs --strict-external`.
 - Repo-hosted demo media exists under `docs/launch/assets/`: `demo-terminal.gif`, two Product Hunt gallery PNGs and a 240x240 thumbnail.
 - No external video has been uploaded yet.
@@ -17,11 +17,11 @@ Run this from the repository root:
 npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest
 ```
 
-The command creates a disposable demo repository, installs `agent-project-sdlc@latest`, runs `sdlc-harness init`, validates the generated Context, runs `doctor`, and writes:
+The command creates a disposable demo repository, installs `project-tiny-context-harness@latest`, runs `sdlc-harness init`, validates the generated Context, runs `doctor`, and writes:
 
 - `tmp/sdlc/launch-demo/latest/transcript.md`
 - `tmp/sdlc/launch-demo/latest/summary.json`
-- `tmp/sdlc/launch-demo/latest/tiny-context-harness-demo/`
+- `tmp/sdlc/launch-demo/latest/project-tiny-context-harness-demo/`
 
 ## Recording Beats
 
@@ -30,7 +30,7 @@ Keep the recording under 90 seconds.
 | Beat | Terminal action | Narration |
 |---|---|---|
 | Problem | Show an empty temp repo. | "Agents are strong in one thread. New chats often lose repo-specific intent." |
-| Install | `npm install --save-dev agent-project-sdlc@latest` | "This installs minimal repo-native project memory, not a task manager." |
+| Install | `npm install --save-dev project-tiny-context-harness@latest` | "This installs minimal repo-native project memory, not a task manager." |
 | Init | `npx --no-install sdlc-harness init` | "It creates AGENTS.md and project_context files a fresh agent should read first." |
 | Surface | Show `AGENTS.md` and `project_context/`. | "The durable facts are project goal, boundaries and validation paths." |
 | Gate | `npx --no-install sdlc-harness validate-context` | "This validates recovery facts. It does not replace tests or review." |
@@ -58,7 +58,7 @@ If the agent skips these facts, stop and improve the generated Context or README
 ## Transcript Excerpt For Posts
 
 ```text
-$ npm install --save-dev agent-project-sdlc@latest
+$ npm install --save-dev project-tiny-context-harness@latest
 
 $ npx --no-install sdlc-harness init
 created AGENTS.md

@@ -135,12 +135,12 @@ export async function runConsumerLabFullTest(rawOptions) {
   }
   await mkdir(artifactsDir, { recursive: true });
 
-  const pack = run("npm", ["pack", "--workspace", "agent-project-sdlc", "--pack-destination", artifactsDir], options.sourceRoot);
+  const pack = run("npm", ["pack", "--workspace", "project-tiny-context-harness", "--pack-destination", artifactsDir], options.sourceRoot);
   const tarballName = findTarballName(pack.stdout);
   add({
     area: "Package smoke",
     evidence: "npm pack current source package",
-    command: "npm pack --workspace agent-project-sdlc --pack-destination <lab>/.artifacts",
+    command: "npm pack --workspace project-tiny-context-harness --pack-destination <lab>/.artifacts",
     status: pack.status === 0 && tarballName ? "PASS" : "FAIL",
     details: tarballName ? tarballName : trimOutput(`${pack.stdout}\n${pack.stderr}`)
   });
@@ -193,13 +193,13 @@ async function ensureBaseLab(labDir, tarballPath) {
 }
 
 async function verifyManagedAssets(labDir, add) {
-  const packagedReadmePath = path.join(labDir, "node_modules/agent-project-sdlc/assets/README.md");
+  const packagedReadmePath = path.join(labDir, "node_modules/project-tiny-context-harness/assets/README.md");
   const packagedReadmeExists = existsSync(packagedReadmePath);
   add({
     area: "Managed assets",
     evidence: "package ships root README as agent-readable docs asset",
     status: packagedReadmeExists ? "PASS" : "FAIL",
-    details: packagedReadmeExists ? "node_modules/agent-project-sdlc/assets/README.md exists" : "packaged README asset missing"
+    details: packagedReadmeExists ? "node_modules/project-tiny-context-harness/assets/README.md exists" : "packaged README asset missing"
   });
 
   const required = [
@@ -476,7 +476,7 @@ async function finishReport({ options, packageVersion, startedAt, checks, labCom
   const report = {
     startedAt,
     finishedAt,
-    packageName: "agent-project-sdlc",
+    packageName: "project-tiny-context-harness",
     packageVersion,
     sourceRoot: options.sourceRoot,
     labDir: options.labDir,

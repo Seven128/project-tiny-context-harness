@@ -1,6 +1,6 @@
 # Delivery Reliability Benchmark
 
-This directory is the repo-local benchmark module for AI SDLC Harness.
+This directory is the repo-local benchmark module for Project Tiny Context Harness.
 
 The benchmark has been reset for **Minimal Context Harness**. Historical results
 from the former stage-based workflow were removed because they answer the wrong

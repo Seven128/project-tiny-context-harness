@@ -34,7 +34,7 @@ function parseArgs(argv) {
 function printHelp() {
   console.log(`quickstart_smoke.mjs
 
-Packs the local agent-project-sdlc workspace, installs it into a temporary demo
+Packs the local project-tiny-context-harness workspace, installs it into a temporary demo
 repository, runs sdlc-harness init, then validates the generated Minimal Context.
 
 Usage:
@@ -120,7 +120,7 @@ try {
   mkdirSync(packageDir, { recursive: true });
   mkdirSync(demoDir, { recursive: true });
 
-  const packArgs = ["pack", "--workspace", "agent-project-sdlc", "--pack-destination", packageDir];
+  const packArgs = ["pack", "--workspace", "project-tiny-context-harness", "--pack-destination", packageDir];
   if (options.packIgnoreScripts) {
     packArgs.push("--ignore-scripts");
   }

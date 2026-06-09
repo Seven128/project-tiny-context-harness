@@ -66,7 +66,7 @@ try {
   await writeFile(
     path.join(root, ".harness/config.yaml"),
     `core:
-  package: "agent-project-sdlc"
+  package: "project-tiny-context-harness"
   schema_version: "1"
 managed_files:
   - path: "AGENTS.md"
@@ -201,7 +201,7 @@ default = true
   await writeFile(
     path.join(futureSchemaRoot, ".agent/config.yaml"),
     `core:
-  package: "agent-project-sdlc"
+  package: "project-tiny-context-harness"
   schema_version: "5"
 `,
     "utf8"

@@ -52,7 +52,7 @@
 
 - `make validate-context`：检查 `project_context/**` 是否足够支持 agent 恢复上下文。
 - `make sdlc-sync`：刷新 managed guidance、Context template、默认 Skill 和工具。
-- `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --all`：同时导出临时项目级 Context 汇总和代码级实现 Markdown 到 `tmp/sdlc/context-exports/**`。
-- `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full`：导出临时项目级 Context 汇总 Markdown 到 `tmp/sdlc/context-exports/**`。
-- `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code`：导出临时代码级实现 Markdown 到 `tmp/sdlc/context-exports/**`。
-- `npx --yes --package agent-project-sdlc@latest sdlc-harness doctor`：临时诊断 canonical SDLC CLI；避免裸 `npx sdlc-harness` 解析到旧包名或旧本地缓存。
+- `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --all`：同时导出临时项目级 Context 汇总和代码级实现 Markdown 到 `tmp/sdlc/context-exports/**`。
+- `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --full`：导出临时项目级 Context 汇总 Markdown 到 `tmp/sdlc/context-exports/**`。
+- `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code`：导出临时代码级实现 Markdown 到 `tmp/sdlc/context-exports/**`。
+- `npx --yes --package project-tiny-context-harness@latest sdlc-harness doctor`：临时诊断 canonical SDLC CLI；避免裸 `npx sdlc-harness` 解析到旧包名或旧本地缓存。

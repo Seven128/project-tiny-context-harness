@@ -4,7 +4,7 @@ You are building this product with plain AI coding.
 
 Rules:
 
-- Do not use AI SDLC Harness files, lifecycle, plan, workflow skills or validators.
+- Do not use Project Tiny Context Harness files, lifecycle, plan, workflow skills or validators.
 - Use the requirements and acceptance criteria below as the only product contract.
 - Build the smallest maintainable implementation that satisfies the same final quality bar as the Harness run.
 - Use the scenario Gate Profile for product verification boundaries, but do not run Harness validators.

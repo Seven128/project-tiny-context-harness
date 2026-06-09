@@ -68,7 +68,7 @@ test("consumer lab script summarizes and renders reports", () => {
   assert.deepEqual(summary, { PASS: 1, BLOCKED: 1, FAIL: 1, worst: "FAIL" });
 
   const markdown = renderMarkdownReport({
-    packageName: "agent-project-sdlc",
+    packageName: "project-tiny-context-harness",
     packageVersion: "0.0.0",
     sourceRoot: "/source",
     labDir: "/lab",

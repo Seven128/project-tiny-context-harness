@@ -1,5 +1,5 @@
 core:
-  package: agent-project-sdlc
+  package: project-tiny-context-harness
   schema_version: "4"
 managed_files:
   - path: AGENTS.md

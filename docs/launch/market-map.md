@@ -10,12 +10,12 @@ Public state after the launch-readiness release, checked against public GitHub a
 
 | Surface | Snapshot |
 |---|---|
-| GitHub repository | `Seven128/project-agent-sdlc` on default branch `main` |
+| GitHub repository | `Seven128/project-tiny-context-harness` on default branch `main` |
 | GitHub stars / forks | 0 stars, 0 forks |
 | GitHub description / license | `Minimal project memory and validation harness for AI coding agents.`, MIT detected |
 | GitHub topics | `agent-context`, `agents-md`, `ai-agents`, `claude-code`, `cli`, `codex`, `coding-agent`, `context-engineering`, `cursor`, `developer-productivity`, `developer-tools`, `sdlc`, `workflow` |
 | GitHub release | `v0.2.39` published and marked latest |
-| npm package | `agent-project-sdlc@0.2.39` |
+| npm package | `project-tiny-context-harness@0.2.39` |
 | npm public metadata | Updated description, MIT license, homepage, repository, bugs URL and discovery keywords |
 | npm downloads | 3,573 downloads for 2026-05-27 through 2026-06-02 |
 | Launch readiness | `node tools/launch_readiness_check.mjs --strict-external` reports `Status: pass` |
@@ -37,11 +37,11 @@ GitHub public repository snapshot:
 | [oraios/serena](https://github.com/oraios/serena) | 25,157 | MCP toolkit and semantic code agent IDE | Semantic retrieval/editing |
 | [SuperClaude-Org/SuperClaude_Framework](https://github.com/SuperClaude-Org/SuperClaude_Framework) | 23,235 | Claude Code commands, personas and methodology | Agent configuration framework |
 
-Interpretation: the visible AI coding/dev workflow market already has several 20k-170k star projects. Tiny Context Harness should not compete head-on as another agent, task manager, full SDLC method or retrieval engine.
+Interpretation: the visible AI coding/dev workflow market already has several 20k-170k star projects. Project Tiny Context Harness should not compete head-on as another agent, task manager, full SDLC method or retrieval engine.
 
 ## Wedge
 
-Tiny Context Harness has the strongest wedge if it stays narrow:
+Project Tiny Context Harness has the strongest wedge if it stays narrow:
 
 ```text
 Repo-native project memory for fresh-agent recovery.
@@ -111,7 +111,7 @@ Recommended sequence:
 
 ## Evidence To Gather Next
 
-- One clean 60-90 second demo using `agent-project-sdlc@latest`.
+- One clean 60-90 second demo using `project-tiny-context-harness@latest`.
 - One example PR showing how `project_context/**` prevents agent drift.
 - One fresh benchmark rerun that compares baseline vs Minimal Context without old stage results.
 - User quotes or issues that mention real handoff/recovery value.

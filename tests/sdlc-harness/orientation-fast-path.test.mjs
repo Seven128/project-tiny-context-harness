@@ -144,13 +144,13 @@ for (const content of [rootReadme, packageReadme, packageGuide]) {
   assert.match(content, /Context7\/Serena-style/);
   assert.match(content, /Portable fallback/);
   assert.match(content, /Try It In 60 Seconds/);
-  assert.match(content, /tiny-context-harness-demo/);
+  assert.match(content, /project-tiny-context-harness-demo/);
 }
 
 assert.match(contributing, /Minimal Context Harness/);
 assert.match(contributing, /Do not reintroduce lifecycle phases/);
 assert.match(contributing, /Do not claim benchmark wins/);
-assert.match(contributing, /npm test --workspace agent-project-sdlc/);
+assert.match(contributing, /npm test --workspace project-tiny-context-harness/);
 assert.match(contributing, /Context: updated/);
 
 assert.match(launchKit, /Launch Kit/);
@@ -224,16 +224,16 @@ assert.doesNotMatch(sourceMappings, /\.codex\/skills/);
 for (const workflow of [sourceWorkflow, packageWorkflow]) {
   assert.match(workflow, /Run harness gate/);
   assert.match(workflow, /validate-context/);
-  assert.doesNotMatch(workflow, /npm test --workspace agent-project-sdlc/);
+  assert.doesNotMatch(workflow, /npm test --workspace project-tiny-context-harness/);
   assert.doesNotMatch(workflow, /package check-source/);
   assert.doesNotMatch(workflow, /npm install/);
 }
 
 assert.equal(packageJson.license, "MIT");
-assert.equal(packageJson.homepage, "https://github.com/Seven128/project-agent-sdlc#readme");
-assert.equal(packageJson.repository.url, "git+https://github.com/Seven128/project-agent-sdlc.git");
+assert.equal(packageJson.homepage, "https://github.com/Seven128/project-tiny-context-harness#readme");
+assert.equal(packageJson.repository.url, "git+https://github.com/Seven128/project-tiny-context-harness.git");
 assert.equal(packageJson.repository.directory, "packages/sdlc-harness");
-assert.equal(packageJson.bugs.url, "https://github.com/Seven128/project-agent-sdlc/issues");
+assert.equal(packageJson.bugs.url, "https://github.com/Seven128/project-tiny-context-harness/issues");
 assert.ok(packageJson.keywords.includes("ai-agents"));
 assert.ok(packageJson.keywords.includes("context-engineering"));
 assert.ok(packageJson.keywords.includes("developer-tools"));

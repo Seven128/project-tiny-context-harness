@@ -23,7 +23,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: agent-project-sdlc version
+      label: project-tiny-context-harness version
       placeholder: "0.2.38"
     validations:
       required: false

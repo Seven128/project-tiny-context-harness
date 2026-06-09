@@ -12,7 +12,7 @@
 
 ## Validation
 
-- [ ] `npm test --workspace agent-project-sdlc`
+- [ ] `npm test --workspace project-tiny-context-harness`
 - [ ] `node packages/sdlc-harness/dist/cli.js package sync-source`
 - [ ] `node packages/sdlc-harness/dist/cli.js package check-source`
 - [ ] `make validate-context`

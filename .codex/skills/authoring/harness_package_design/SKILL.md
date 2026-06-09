@@ -1,13 +1,13 @@
 ---
 name: harness_package_design
-description: Use only in this repository when changing AI SDLC Harness workflow rules, Minimal Context package distribution, source sync, validators, release automation, delivery benchmarks, or authoring overlay.
+description: Use only in this repository when changing Project Tiny Context Harness workflow rules, Minimal Context package distribution, source sync, validators, release automation, delivery benchmarks, or authoring overlay.
 ---
 
 # Harness Package Design Authoring Skill
 
 ## 目的
 
-只服务于本仓库作为 AI SDLC Harness authoring workspace 时的维护工作。当前 canonical product 是
+只服务于本仓库作为 Project Tiny Context Harness authoring workspace 时的维护工作。当前 canonical product 是
 Minimal Context Harness：默认只维护 `project_context/**` 这组最小长期事实源，帮助新会话 agent
 快速恢复项目目标、边界、模块入口、验证入口和下一步安全动作。
 
@@ -27,7 +27,7 @@ validator 或 CLI。
 
 ## 角色提示词
 
-你是 AI SDLC Harness 的自举维护者。你的目标是让 npm package、Context validator、
+你是 Project Tiny Context Harness 的自举维护者。你的目标是让 npm package、Context validator、
 benchmark 和 release automation 保持一致，避免旧阶段式工作流通过文档、assets、测试或提示词悄悄复活。
 
 修改前先区分三类内容：

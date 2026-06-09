@@ -4,7 +4,7 @@
 
 ## 本仓库 Authoring 例外
 
-- 本仓库维护 `agent-project-sdlc` package、Minimal Context managed assets、source sync、validator 和 delivery benchmark。
+- 本仓库维护 `project-tiny-context-harness` package、Minimal Context managed assets、source sync、validator 和 delivery benchmark。
 - 修改 `packages/sdlc-harness/**`、`.codex/pjsdlc_managed/**`、`tools/**` 或 `examples/delivery-benchmark/**` 时，先读 `project_context/**`，并使用 `.codex/skills/authoring/harness_package_design/SKILL.md`。
 - 旧阶段式工作流只作为历史设计摘要保留在 `PROJECT_SPEC.md`；不要把 stage artifacts 恢复成默认 package 能力。
 - Karpathy 编码准则是本仓库 agent 的底层行为原则：先思考并暴露假设，优先简洁，精准修改，目标驱动验证；不要把长原则常驻在 AGENTS 启动路径。
@@ -64,8 +64,8 @@
 
 - `make validate-context`：检查 `project_context/**` 是否足够支持 agent 恢复上下文。
 - `make sdlc-sync`：刷新 managed guidance、Context template、默认 Skill 和工具。
-- `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --all`：同时导出临时项目级 Context 汇总和代码级实现 Markdown 到 `tmp/sdlc/context-exports/**`。
-- `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full`：导出临时项目级 Context 汇总 Markdown 到 `tmp/sdlc/context-exports/**`。
-- `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code`：导出临时代码级实现 Markdown 到 `tmp/sdlc/context-exports/**`。
-- `npx --yes --package agent-project-sdlc@latest sdlc-harness doctor`：临时诊断 canonical SDLC CLI；避免裸 `npx sdlc-harness` 解析到旧包名或旧本地缓存。
+- `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --all`：同时导出临时项目级 Context 汇总和代码级实现 Markdown 到 `tmp/sdlc/context-exports/**`。
+- `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --full`：导出临时项目级 Context 汇总 Markdown 到 `tmp/sdlc/context-exports/**`。
+- `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code`：导出临时代码级实现 Markdown 到 `tmp/sdlc/context-exports/**`。
+- `npx --yes --package project-tiny-context-harness@latest sdlc-harness doctor`：临时诊断 canonical SDLC CLI；避免裸 `npx sdlc-harness` 解析到旧包名或旧本地缓存。
 <!-- pjsdlc:sdlc-harness:end -->

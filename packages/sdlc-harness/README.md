@@ -1,10 +1,10 @@
-# Tiny Context Harness
+# Project Tiny Context Harness
 
-[![npm version](https://img.shields.io/npm/v/agent-project-sdlc.svg)](https://www.npmjs.com/package/agent-project-sdlc)
-[![Package CI](https://github.com/Seven128/project-agent-sdlc/actions/workflows/package.yml/badge.svg)](https://github.com/Seven128/project-agent-sdlc/actions/workflows/package.yml)
+[![npm version](https://img.shields.io/npm/v/project-tiny-context-harness.svg)](https://www.npmjs.com/package/project-tiny-context-harness)
+[![Package CI](https://github.com/Seven128/project-tiny-context-harness/actions/workflows/package.yml/badge.svg)](https://github.com/Seven128/project-tiny-context-harness/actions/workflows/package.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-`agent-project-sdlc` ships the `sdlc-harness` CLI for Tiny Context Harness: repo-native project memory for AI coding agents.
+`project-tiny-context-harness` ships the `sdlc-harness` CLI for Project Tiny Context Harness: repo-native project memory for AI coding agents.
 
 The default is **Minimal Context Harness**. It maintains a compact `project_context/**` fact source, a short `AGENTS.md` startup router, role Skills and a `validate-context` gate so fresh agents can recover project intent, constraints, verification entry points and next safe actions quickly.
 
@@ -12,7 +12,7 @@ It does not default to lifecycle phases, plan tasks, stage skills, stage documen
 
 Use it when coding agents repeatedly lose project intent across new chats, handoffs, RFC/debug turns or tool changes. The intended tradeoff is: keep durable intent and recovery paths; leave execution evidence to code, tests and review.
 
-![Tiny Context Harness terminal demo](https://raw.githubusercontent.com/Seven128/project-agent-sdlc/main/docs/launch/assets/demo-terminal.gif)
+![Project Tiny Context Harness terminal demo](https://raw.githubusercontent.com/Seven128/project-tiny-context-harness/main/docs/launch/assets/demo-terminal.gif)
 
 The demo shows the core loop: install the npm package, initialize `AGENTS.md` and `project_context/**`, run `validate-context`, then ask a fresh agent to recover intent before proposing code.
 
@@ -22,7 +22,7 @@ Coding agents can move quickly inside one thread and still drift when a new chat
 
 Minimal Context Harness creates a small, explicit recovery path: project goal, boundaries, architecture context, validation entry points and durable task conclusions. It is designed to sit beside specs, tests, issues, docs and code intelligence tools instead of replacing them.
 
-The core bet is: **keep the memory, drop the ceremony**. Earlier stage-based workflows pushed ordinary software work through explicit phase artifacts and gates. Modern coding agents already internalize much of the understand, design, implement, test and repair loop, so Tiny Context Harness keeps the high-density repo context that survives fresh chats without making every task follow SDLC-stage choreography.
+The core bet is: **keep the memory, drop the ceremony**. Earlier stage-based workflows pushed ordinary software work through explicit phase artifacts and gates. Modern coding agents already internalize much of the understand, design, implement, test and repair loop, so Project Tiny Context Harness keeps the high-density repo context that survives fresh chats without making every task follow SDLC-stage choreography.
 
 ## Positioning
 
@@ -37,12 +37,12 @@ The core bet is: **keep the memory, drop the ceremony**. Earlier stage-based wor
 ## Try It In 60 Seconds
 
 ```sh
-mkdir tiny-context-harness-demo
-cd tiny-context-harness-demo
+mkdir project-tiny-context-harness-demo
+cd project-tiny-context-harness-demo
 git init
 npm init -y
-npm install -D agent-project-sdlc@latest
-npx --yes --package agent-project-sdlc@latest sdlc-harness init
+npm install -D project-tiny-context-harness@latest
+npx --yes --package project-tiny-context-harness@latest sdlc-harness init
 make validate-context
 ```
 
@@ -73,14 +73,14 @@ A useful first answer should recover the project goal, non-goals, architecture b
 ## Install
 
 ```sh
-npm install -D agent-project-sdlc@latest
-npx --yes --package agent-project-sdlc@latest sdlc-harness init
+npm install -D project-tiny-context-harness@latest
+npx --yes --package project-tiny-context-harness@latest sdlc-harness init
 ```
 
 For existing projects:
 
 ```sh
-npx --yes --package agent-project-sdlc@latest sdlc-harness init --adopt
+npx --yes --package project-tiny-context-harness@latest sdlc-harness init --adopt
 ```
 
 `init` creates `project_context/context.toml`, `project_context/global.md`, `project_context/architecture.md`, `project_context/areas/main.md`, `project_context/areas/main/verification.md`, agent guidance, Context authoring Skills, a full-project export Skill, managed templates/tools, a Makefile include and `.github/workflows/harness.yml`. The generated workflow runs only the selected Harness gate, `validate-context` or `validate-harness`; maintainer-only package tests and source-drift checks are intentionally kept out of consumer projects. It does not create stage work-product trees, lifecycle state or stage skills by default.
@@ -105,7 +105,7 @@ It should stay smaller than a full process. Ordinary bug fixes and local refacto
 
 ## CLI Entry Safety
 
-The canonical npm package is `agent-project-sdlc`; `sdlc-harness` is the bin name. Prefer package-qualified `npx` commands for ad hoc use because bare `npx sdlc-harness` can resolve an older package name or a stale local install. After `init`, the managed Makefile wrapper uses the canonical latest CLI by default and can be overridden with `SDLC_HARNESS=...` when a project intentionally pins a local package.
+The canonical npm package is `project-tiny-context-harness`; `sdlc-harness` is the bin name. Prefer package-qualified `npx` commands for ad hoc use because bare `npx sdlc-harness` can resolve an older package name or a stale local install. After `init`, the managed Makefile wrapper uses the canonical latest CLI by default and can be overridden with `SDLC_HARNESS=...` when a project intentionally pins a local package.
 
 Use `npx --no-install sdlc-harness ...` only when you explicitly want the already installed local package, such as release smoke tests against a packed tarball.
 
@@ -113,21 +113,21 @@ Use `npx --no-install sdlc-harness ...` only when you explicitly want the alread
 
 | Capability | Entry Point | Description |
 |---|---|---|
-| Project initialization | `npx --yes --package agent-project-sdlc@latest sdlc-harness init` | Creates `project_context/context.toml`, `project_context/global.md`, `project_context/architecture.md`, `project_context/areas/main.md`, `project_context/areas/main/verification.md`, `AGENTS.md`, minimal managed assets and a Makefile include. |
-| Existing project adoption | `npx --yes --package agent-project-sdlc@latest sdlc-harness init --adopt` | Adds Minimal Context Harness non-destructively to an existing repository. |
+| Project initialization | `npx --yes --package project-tiny-context-harness@latest sdlc-harness init` | Creates `project_context/context.toml`, `project_context/global.md`, `project_context/architecture.md`, `project_context/areas/main.md`, `project_context/areas/main/verification.md`, `AGENTS.md`, minimal managed assets and a Makefile include. |
+| Existing project adoption | `npx --yes --package project-tiny-context-harness@latest sdlc-harness init --adopt` | Adds Minimal Context Harness non-destructively to an existing repository. |
 | Configurable Harness root | `--harness-folder`, `package.json#sdlcHarness.harnessFolderName`, `sdlc-harness.config.json` | Supports Codex `.codex`, Claude `.claude`, Cursor `.cursor`, Cline `.cline`, Roo `.roo`, Gemini `.gemini` or a custom folder. |
 | Product planning Skill | `<harnessRoot>/skills/context_product_plan/SKILL.md` | Triggers on “产品方案 / 产品经理 / 产品专家” style requests and writes durable product conclusions to `project_context/**`. |
 | UI/UX design Skill | `<harnessRoot>/skills/context_uiux_design/SKILL.md` | Triggers on “设计稿 / UI/UX 设计方案 / 视觉专家” style requests, writes screen/interaction conclusions to `project_context/**`, updates root `DESIGN.md` visual tokens with Google `@google/design.md`, and includes compact visual-quality calibration for product/page positioning, user needs, information density, brand/product UI and common AI-design anti-patterns. |
 | Development engineer Skill | `<harnessRoot>/skills/context_development_engineer/SKILL.md` | Triggers on “开发工程师 / 技术方案 / 开发方案 / 实现 / 实现方案 / 实施计划 / 技术专家 / 多开agent / subagent” style requests and writes durable engineering conclusions to `project_context/**`. |
 | Full project context export Skill | `<harnessRoot>/skills/context_full_project_export/SKILL.md` | Triggers on “导出尽可能详细的项目全量上下文 / 全量上下文导出 / full project context export / 当前项目代码实现 / 代码级实现导出” style requests and uses `export-context --all`, `--full` or `--code` to create temporary artifacts under `tmp/sdlc/context-exports/**`. |
 | Project-local Skills | `<harnessRoot>/skills/<role>/SKILL.md` | Optional local product/design/development Skills created by the project, such as `product_plan`, `uiux_design` or `development_engineer`. They supersede package-managed default Skills when more specific, are not overwritten by `sync`, and should keep front matter trigger keywords aligned with the project `AGENTS.md` role-trigger rule. |
-| Managed file sync | `make sdlc-sync` or `npx --yes --package agent-project-sdlc@latest sdlc-harness sync` | Refreshes package-managed guidance, default Skills, Makefile include, context templates, tools and workflow YAML. It does not perform semantic Context generation. |
-| Upgrade | `make sdlc-upgrade` or `npx --yes --package agent-project-sdlc@latest sdlc-harness upgrade` | Runs safe migrations and `sync`, including Schema v4 Context graph manifest creation when missing. |
-| Combined project export | `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --all [--check]` | Creates both default temporary exports with one timestamp: `当前项目context-<timestamp>.md` and `当前项目代码实现.md`. |
-| Project Context export | `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary Context summary artifact named `当前项目context-<timestamp>.md` by default. It is not Context and must not be registered in `project_context/context.toml`. |
-| Code implementation export | `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary single-file code implementation artifact named `当前项目代码实现.md` by default. It is not Context and must not be registered in `project_context/context.toml`. |
-| Context validation | `npx --yes --package agent-project-sdlc@latest sdlc-harness validate-context`, `make validate-context` | Checks required project recovery fields, Context graph metadata, declared paths/roles and fake test-execution claims. |
-| Diagnostics | `make sdlc-doctor` or `npx --yes --package agent-project-sdlc@latest sdlc-harness doctor` | Reports Harness root, package version, schema version and required Minimal Context paths. |
+| Managed file sync | `make sdlc-sync` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness sync` | Refreshes package-managed guidance, default Skills, Makefile include, context templates, tools and workflow YAML. It does not perform semantic Context generation. |
+| Upgrade | `make sdlc-upgrade` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade` | Runs safe migrations and `sync`, including Schema v4 Context graph manifest creation when missing. |
+| Combined project export | `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --all [--check]` | Creates both default temporary exports with one timestamp: `当前项目context-<timestamp>.md` and `当前项目代码实现.md`. |
+| Project Context export | `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --full [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary Context summary artifact named `当前项目context-<timestamp>.md` by default. It is not Context and must not be registered in `project_context/context.toml`. |
+| Code implementation export | `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary single-file code implementation artifact named `当前项目代码实现.md` by default. It is not Context and must not be registered in `project_context/context.toml`. |
+| Context validation | `npx --yes --package project-tiny-context-harness@latest sdlc-harness validate-context`, `make validate-context` | Checks required project recovery fields, Context graph metadata, declared paths/roles and fake test-execution claims. |
+| Diagnostics | `make sdlc-doctor` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness doctor` | Reports Harness root, package version, schema version and required Minimal Context paths. |
 | Package source checks | `sdlc-harness package sync-source`, `sdlc-harness package check-source` | Maintainer-only commands for keeping package canonical assets aligned with the source workspace. |
 
 For product, UI/UX and engineering tasks that touch design intent, API/Schema, state/runtime behavior, architecture boundaries or verification design, the default Skills compile a short current-task contract before implementation. The contract starts with `Context Delta: none|required`; `required` preserves context-first behavior, while `none` means the task can proceed against existing Context. The task contract and Contract Conformance are handoff evidence, not new PRD, tech-plan, validator or gate surfaces.
@@ -189,8 +189,8 @@ Automatic migration moves legacy `project_context/modules/**/*.md` files into `p
 `export-context --all` creates both temporary Markdown artifacts for copying into an external tool, archiving an ad hoc discussion or handing context to a one-off collaborator:
 
 ```sh
-npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --all
-npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --all --check
+npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --all
+npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --all --check
 ```
 
 This generates both default artifacts with the same timestamp: `tmp/sdlc/context-exports/当前项目context-<timestamp>.md` and `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/当前项目代码实现.md`. `--all` does not accept `--output`; use `--full` or `--code` for custom single-artifact paths.
@@ -198,9 +198,9 @@ This generates both default artifacts with the same timestamp: `tmp/sdlc/context
 `export-context --full` creates only the temporary Markdown Context bundle:
 
 ```sh
-npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full
-npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full --output tmp/sdlc/context-exports/my-export.md
-npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full --check
+npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --full
+npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --full --output tmp/sdlc/context-exports/my-export.md
+npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --full --check
 ```
 
 The default output is `tmp/sdlc/context-exports/当前项目context-<timestamp>.md`. The file title is `# 当前项目context`. `--check` reports the planned output path, source count, source file list and warnings without writing a file. The artifact header always says `Export artifact. Do not reference from project_context/context.toml.`
@@ -210,9 +210,9 @@ The exporter includes Context files, key README / AGENTS / DESIGN documents, man
 `export-context --code` creates one temporary Markdown file for handing the current implementation state to an external model:
 
 ```sh
-npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code
-npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code --output tmp/sdlc/context-exports/my-code-export.md
-npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code --check
+npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code
+npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code --output tmp/sdlc/context-exports/my-code-export.md
+npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code --check
 ```
 
 The default output is `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/当前项目代码实现.md`. The file title is `# 当前项目代码实现`. It scans main source and engineering configuration files, adds each file path, type, line count, character count, SHA256, a heuristic one-sentence summary and a fenced redacted code block. It does not split output into multiple Markdown files.
@@ -267,15 +267,15 @@ When a project-local Skill and a package-managed default Skill both apply, agent
 ## Common Commands
 
 ```sh
-npx --yes --package agent-project-sdlc@latest sdlc-harness init
-npx --yes --package agent-project-sdlc@latest sdlc-harness init --adopt
-npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --all
-npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full
-npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code
+npx --yes --package project-tiny-context-harness@latest sdlc-harness init
+npx --yes --package project-tiny-context-harness@latest sdlc-harness init --adopt
+npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --all
+npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --full
+npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code
 make sdlc-sync
 make sdlc-upgrade
-npx --yes --package agent-project-sdlc@latest sdlc-harness validate-context
-npx --yes --package agent-project-sdlc@latest sdlc-harness doctor
+npx --yes --package project-tiny-context-harness@latest sdlc-harness validate-context
+npx --yes --package project-tiny-context-harness@latest sdlc-harness doctor
 make sdlc-doctor
 make validate-context
 make validate-harness

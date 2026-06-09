@@ -1,6 +1,6 @@
 # Launch Kit
 
-This is the maintainer launch kit for Tiny Context Harness. It is copy-ready material for public release posts, repository metadata, demo scripting and submission prep.
+This is the maintainer launch kit for Project Tiny Context Harness. It is copy-ready material for public release posts, repository metadata, demo scripting and submission prep.
 
 Do not claim benchmark wins yet. Current public positioning is based on product design and smoke evidence: the package installs a small, durable recovery surface and `validate-context` gate. Fresh Minimal Context benchmark runs are still required before publishing efficiency claims.
 
@@ -31,7 +31,7 @@ Minimal project memory for AI coding agents: keep the repo facts a fresh agent n
 Short description:
 
 ```text
-Tiny Context Harness packages the Minimal Context Harness approach into a repository: compact project_context files, a short AGENTS.md startup router, role Skills and a validate-context gate. It keeps the useful part of earlier stage-based workflows, durable project memory, without making every task pass through phase gates, task state or work-product trees.
+Project Tiny Context Harness packages the Minimal Context Harness approach into a repository: compact project_context files, a short AGENTS.md startup router, role Skills and a validate-context gate. It keeps the useful part of earlier stage-based workflows, durable project memory, without making every task pass through phase gates, task state or work-product trees.
 ```
 
 Not this:
@@ -78,9 +78,9 @@ Use this if agents keep losing project intent between chats. It adds a small pro
 - Run `npm run launch:check` locally; run it again without `--offline` before external launch to see current GitHub/npm metadata drift.
 - Confirm README first screen shows badges, install command, positioning and 60-second trial.
 - Set GitHub description and topics from this file.
-- Publish a new npm version after `npm test --workspace agent-project-sdlc`, `npm run smoke:quickstart`, `make validate-context` and package source check pass.
+- Publish a new npm version after `npm test --workspace project-tiny-context-harness`, `npm run smoke:quickstart`, `make validate-context` and package source check pass.
 - Confirm npm package page renders the updated package README and MIT license.
-- Run `npm run smoke:quickstart` after publish against `agent-project-sdlc@latest` or a clean test project.
+- Run `npm run smoke:quickstart` after publish against `project-tiny-context-harness@latest` or a clean test project.
 - Record a short terminal demo from the 60-second trial.
 - Post to one primary technical venue first, then reuse the same claim across smaller channels.
 - Ask for feedback on whether the recovery surface is useful, not for stars.
@@ -114,7 +114,7 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 
 Create these after merge and before the first broad launch:
 
-- Discussion or pinned issue: `Show how Tiny Context Harness helped or failed in your repo`.
+- Discussion or pinned issue: `Show how Project Tiny Context Harness helped or failed in your repo`.
 - Labels: `good first issue`, `help wanted`, `docs`, `demo`, `question`, `adoption-report`, `benchmark`.
 - Starter issues:
   - Add a small example repository showing Minimal Context before and after.
@@ -177,8 +177,8 @@ Goal: show the problem, install path and generated recovery surface in under two
 3. Run:
 
 ```sh
-npm install -D agent-project-sdlc@latest
-npx --yes --package agent-project-sdlc@latest sdlc-harness init
+npm install -D project-tiny-context-harness@latest
+npx --yes --package project-tiny-context-harness@latest sdlc-harness init
 make validate-context
 ```
 
@@ -197,15 +197,15 @@ Show HN: Minimal project memory for AI coding agents
 Body:
 
 ```text
-I built Tiny Context Harness after seeing coding agents do well inside one chat but lose project-specific intent across new chats, handoffs, RFC/debug turns and tool changes.
+I built Project Tiny Context Harness after seeing coding agents do well inside one chat but lose project-specific intent across new chats, handoffs, RFC/debug turns and tool changes.
 
 The current package installs the Minimal Context recovery surface: project_context files, a short AGENTS.md startup router, role Skills and a validate-context gate. The product lesson is: keep the memory, drop the ceremony. Modern coding agents already internalize much of the ordinary understand/design/implement/test loop, so the package keeps durable repo facts small instead of forcing every task through SDLC phases.
 
 It leaves product quality to tests, CI, review and human acceptance.
 
 Install:
-npm install -D agent-project-sdlc@latest
-npx --yes --package agent-project-sdlc@latest sdlc-harness init
+npm install -D project-tiny-context-harness@latest
+npx --yes --package project-tiny-context-harness@latest sdlc-harness init
 make validate-context
 
 I am looking for feedback from people who use Codex, Claude Code, Cursor or other coding agents on larger repos: is this recovery surface useful, too much, or missing the real handoff problem?
@@ -222,7 +222,7 @@ Minimal project memory for AI coding agents
 Description:
 
 ```text
-Tiny Context Harness helps coding agents recover project intent across new chats, handoffs and debugging turns. It installs compact project_context files, AGENTS.md guidance and a validate-context gate without adding a full SDLC ceremony.
+Project Tiny Context Harness helps coding agents recover project intent across new chats, handoffs and debugging turns. It installs compact project_context files, AGENTS.md guidance and a validate-context gate without adding a full SDLC ceremony.
 ```
 
 First comment:
@@ -230,7 +230,7 @@ First comment:
 ```text
 I built this for the boring failure mode of AI coding: the agent is capable, but each new chat has to rediscover the project goal, architecture boundaries, validation commands and what must not change.
 
-Tiny Context Harness keeps those durable facts in the repo as Minimal Context. The idea is to keep the memory and drop the ceremony: no task state, phase gates or work-product trees by default. It is not a benchmark-proven productivity claim yet and it does not replace tests, CI or review. I would like feedback on whether this is the right minimal surface for teams using coding agents across real repos.
+Project Tiny Context Harness keeps those durable facts in the repo as Minimal Context. The idea is to keep the memory and drop the ceremony: no task state, phase gates or work-product trees by default. It is not a benchmark-proven productivity claim yet and it does not replace tests, CI or review. I would like feedback on whether this is the right minimal surface for teams using coding agents across real repos.
 ```
 
 ## Reddit Draft
@@ -244,7 +244,7 @@ I made a minimal project-memory harness for AI coding agents
 Body:
 
 ```text
-I am working on Tiny Context Harness, an npm package for adding Minimal Context to a repo.
+I am working on Project Tiny Context Harness, an npm package for adding Minimal Context to a repo.
 
 The idea is simple: new agent chats often lose project-specific context. Instead of adding a full SDLC workflow, the package keeps the memory and drops the ceremony: a small project_context fact source, AGENTS.md startup guidance and a validate-context gate so a fresh agent can recover intent, boundaries and validation paths.
 
@@ -260,7 +260,7 @@ AI coding agents are strong inside one thread.
 
 The boring failure mode is the next thread: project intent, architecture boundaries, validation commands and "do not change this" constraints get rediscovered again.
 
-I built Tiny Context Harness as minimal project memory for that handoff.
+I built Project Tiny Context Harness as minimal project memory for that handoff.
 
 The product bet: keep the memory, drop the ceremony.
 
@@ -278,8 +278,8 @@ It does not install:
 
 The goal is small repo-native memory that any agent can read before changing code.
 
-npm install -D agent-project-sdlc@latest
-npx --yes --package agent-project-sdlc@latest sdlc-harness init
+npm install -D project-tiny-context-harness@latest
+npx --yes --package project-tiny-context-harness@latest sdlc-harness init
 ```
 
 ## Follow-Up Signals

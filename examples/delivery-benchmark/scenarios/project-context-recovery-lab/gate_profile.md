@@ -35,7 +35,7 @@ during orientation.
 
 - `node packages/sdlc-harness/dist/cli.js package sync-source`
 - `node packages/sdlc-harness/dist/cli.js package check-source`
-- `npm test --workspace agent-project-sdlc`
+- `npm test --workspace project-tiny-context-harness`
 - `make validate-harness` unless it is only being used as the `validate-context` alias for this run
 - consumer lab / installed-consumer validation
 

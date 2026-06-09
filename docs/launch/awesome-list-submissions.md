@@ -6,7 +6,7 @@ This packet prepares curated-list pull requests. It is intentionally narrower th
 
 ## Submission Rules
 
-- Submit only to lists where Tiny Context Harness fits the maintainer's stated scope.
+- Submit only to lists where Project Tiny Context Harness fits the maintainer's stated scope.
 - Keep the listing factual and short.
 - Do not claim adoption, benchmark wins, awards or superiority over other tools.
 - Prefer "project memory / context recovery for coding agents" over "SDLC framework".
@@ -16,7 +16,7 @@ This packet prepares curated-list pull requests. It is intentionally narrower th
 
 Target: [Transcenda/awesome-agentic-coding](https://github.com/Transcenda/awesome-agentic-coding)
 
-Why it fits now: the list has an `Agentic Coding Toolbox` section with `Agent instructions and Skills`. Tiny Context Harness directly supports repo-level agent instructions plus maintained Context recovery.
+Why it fits now: the list has an `Agentic Coding Toolbox` section with `Agent instructions and Skills`. Project Tiny Context Harness directly supports repo-level agent instructions plus maintained Context recovery.
 
 Suggested section: `Agent instructions and Skills`.
 
@@ -25,19 +25,19 @@ Patch packet: [external-prs/README.md](external-prs/README.md).
 Suggested entry:
 
 ```md
-- [Tiny Context Harness](https://github.com/Seven128/project-agent-sdlc) — minimal project-memory harness for AI coding agents, installing `AGENTS.md`, `project_context/**`, role Skills, and `validate-context`.
+- [Project Tiny Context Harness](https://github.com/Seven128/project-tiny-context-harness) — minimal project-memory harness for AI coding agents, installing `AGENTS.md`, `project_context/**`, role Skills, and `validate-context`.
 ```
 
 PR title:
 
 ```text
-Add Tiny Context Harness to agent instructions and skills
+Add Project Tiny Context Harness to agent instructions and skills
 ```
 
 PR body:
 
 ```text
-Adds Tiny Context Harness to the Agent instructions and Skills toolbox.
+Adds Project Tiny Context Harness to the Agent instructions and Skills toolbox.
 
 It gives teams a practical in-repo recovery path for AI coding agents: project intent, boundaries, verification paths, role Skills, and a `validate-context` check across new chats, handoffs, and tool changes.
 ```
@@ -55,19 +55,19 @@ Patch packet: [external-prs/README.md](external-prs/README.md).
 Suggested entry:
 
 ```md
-- [Tiny Context Harness](https://github.com/Seven128/project-agent-sdlc) — Minimal project-memory and validation harness for teams adopting AI coding agents, so fresh agents recover project intent, boundaries, and verification paths across chats and handoffs.
+- [Project Tiny Context Harness](https://github.com/Seven128/project-tiny-context-harness) — Minimal project-memory and validation harness for teams adopting AI coding agents, so fresh agents recover project intent, boundaries, and verification paths across chats and handoffs.
 ```
 
 PR title:
 
 ```text
-Add Tiny Context Harness to team adoption resources
+Add Project Tiny Context Harness to team adoption resources
 ```
 
 PR body:
 
 ```text
-Adds Tiny Context Harness under Team Adoption.
+Adds Project Tiny Context Harness under Team Adoption.
 
 It is a practical, team-applicable resource for keeping minimal durable project memory in-repo so AI coding agents can recover intent, boundaries, and validation paths across chats and handoffs.
 ```
@@ -83,14 +83,14 @@ Candidate category: `Configuration & Context Management` if it still exists when
 Candidate line:
 
 ```md
-- [Tiny Context Harness](https://github.com/Seven128/project-agent-sdlc) - Minimal repo-native project memory for AI coding agents, with `AGENTS.md`, `project_context/**` and a `validate-context` gate for fresh-agent recovery.
+- [Project Tiny Context Harness](https://github.com/Seven128/project-tiny-context-harness) - Minimal repo-native project memory for AI coding agents, with `AGENTS.md`, `project_context/**` and a `validate-context` gate for fresh-agent recovery.
 ```
 
 ## P1: Awesome Agent Skills
 
 Target: [heilcheng/awesome-agent-skills](https://github.com/heilcheng/awesome-agent-skills)
 
-Gate before submitting: expose a clean, standalone Skill URL or package story. This list is about the `SKILL.md` ecosystem, while Tiny Context Harness currently ships several project-local and package-managed Skills as part of the harness. A generic repo submission would be weaker than a clear Skill-specific entry.
+Gate before submitting: expose a clean, standalone Skill URL or package story. This list is about the `SKILL.md` ecosystem, while Project Tiny Context Harness currently ships several project-local and package-managed Skills as part of the harness. A generic repo submission would be weaker than a clear Skill-specific entry.
 
 ## Execution Order
 

@@ -2,7 +2,7 @@
 
 ## Project Goal
 
-- Maintain `agent-project-sdlc`, the npm package and `sdlc-harness` CLI behind the public Tiny Context Harness display name.
+- Maintain `project-tiny-context-harness`, the npm package and `sdlc-harness` CLI behind the public Project Tiny Context Harness display name.
 - Current product direction is Minimal Context Harness: preserve the smallest durable facts needed for fresh-agent recovery, iteration, debug and requirement changes.
 
 ## Non-goals / Boundaries
@@ -47,7 +47,7 @@
 
 ## Verification Entry Points
 
-- `npm test --workspace agent-project-sdlc`
+- `npm test --workspace project-tiny-context-harness`
 - `node packages/sdlc-harness/dist/cli.js package sync-source`
 - `node packages/sdlc-harness/dist/cli.js package check-source`
 - `make validate-context`
@@ -58,7 +58,7 @@
 - vNext implementation is Minimal Context Harness.
 - `init` creates `project_context/context.toml` with one default `main` product/domain area at `project_context/areas/main.md` and a default verification role context at `project_context/areas/main/verification.md`; `upgrade` migrates legacy `project_context/modules/**/*.md` into `project_context/areas/**/*.md` and registers recoverable Context graph files in the manifest.
 - v4 `validate-context` requires `project_context/context.toml`; older config versions should run `upgrade` before relying on the v4 gate.
-- Ad hoc CLI docs and managed Makefile wrappers use the canonical package-qualified entry `npx --yes --package agent-project-sdlc@latest sdlc-harness`; bare `npx sdlc-harness` is treated as ambiguous because it can resolve the legacy npm package name or a stale local binary.
+- Ad hoc CLI docs and managed Makefile wrappers use the canonical package-qualified entry `npx --yes --package project-tiny-context-harness@latest sdlc-harness`; bare `npx sdlc-harness` is treated as ambiguous because it can resolve the legacy npm package name or a stale local binary.
 - Current CLI commands guard unsupported future schema major versions before applying v4 assumptions; write commands fail before modifying files.
 - `validate-context` validates the Context graph structure, role names, paths and field shapes; non-area roles are semantic labels rather than writing-template gates.
 - Managed guidance and default Context templates distinguish verification/deployment path facts from test reports and release ledgers: area files own product/domain facts, `verification` role files own repeatable validation paths, and optional `deployment` role files own repeatable deploy/runtime/bootstrap paths.

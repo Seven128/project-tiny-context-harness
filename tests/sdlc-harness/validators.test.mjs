@@ -115,7 +115,7 @@ test("validate-context rejects unsupported future schema versions", async () => 
   try {
     const report = await runValidator(root, "validate-context");
     assert.match(report.errors.join("\n"), /unsupported Harness schema version 5/);
-    assert.match(report.errors.join("\n"), /npx --yes --package agent-project-sdlc@latest sdlc-harness validate-context/);
+    assert.match(report.errors.join("\n"), /npx --yes --package project-tiny-context-harness@latest sdlc-harness validate-context/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -262,7 +262,7 @@ test("validate-context accepts durable verification path context without executi
 
 test("validate-context rejects verification-result claims inside architecture context", async () => {
   const root = await createContextProject({
-    architecture: completeArchitectureContext().replace("- npm test --workspace agent-project-sdlc", "- npm test passed")
+    architecture: completeArchitectureContext().replace("- npm test --workspace project-tiny-context-harness", "- npm test passed")
   });
   try {
     const report = await runValidator(root, "validate-context");
@@ -319,7 +319,7 @@ async function createContextProject(overrides = {}) {
   await writeFile(
     path.join(root, ".agent", "config.yaml"),
     `core:
-  package: agent-project-sdlc
+  package: project-tiny-context-harness
   schema_version: "${overrides.schemaVersion ?? "4"}"
 `,
     "utf8"
@@ -418,7 +418,7 @@ function completeArchitectureContext() {
 
 ## Verification Implications
 
-- npm test --workspace agent-project-sdlc
+- npm test --workspace project-tiny-context-harness
 
 ## Open Risks
 
@@ -451,7 +451,7 @@ function completeAreaContext() {
 
 ## Test Entry Points
 
-- npm test --workspace agent-project-sdlc
+- npm test --workspace project-tiny-context-harness
 
 ## Open Risks
 
@@ -555,7 +555,7 @@ context_role: contract
 
 ## Tests
 
-- npm test --workspace agent-project-sdlc
+- npm test --workspace project-tiny-context-harness
 `;
 }
 

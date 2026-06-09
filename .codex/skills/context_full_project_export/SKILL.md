@@ -20,18 +20,18 @@ This Skill creates a temporary export artifact only. It does not author durable 
 ## 工作方式
 
 1. 默认优先运行包级 CLI 一次生成两份临时产物，不要手写 tracked 文档：
-   - `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --all`
+   - `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --all`
 2. 只需要项目级 Context 汇总时使用 `--full`：
-   - `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full`
+   - `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --full`
 3. 只需要代码级实现快照时使用 `--code`，默认只生成一个 Markdown：
-   - `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code`
+   - `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code`
 4. 如需指定单份产物文件名，只能写入临时目录；`--all` 不接受 `--output`：
-   - `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full --output tmp/sdlc/context-exports/my-export.md`
-   - `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code --output tmp/sdlc/context-exports/my-code-export.md`
+   - `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --full --output tmp/sdlc/context-exports/my-export.md`
+   - `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code --output tmp/sdlc/context-exports/my-code-export.md`
 5. 如需先查看会收集哪些来源，使用 dry-run：
-   - `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --all --check`
-   - `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --full --check`
-   - `npx --yes --package agent-project-sdlc@latest sdlc-harness export-context --code --check`
+   - `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --all --check`
+   - `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --full --check`
+   - `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code --check`
 6. 导出后向用户报告 artifact 路径、来源数量和 warnings。不要把导出内容摘要回写进 Context。
 
 ## 输出边界

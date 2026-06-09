@@ -2,7 +2,7 @@
 
 Snapshot date: 2026-06-10.
 
-This is the copy-ready launch packet for the first public push after `agent-project-sdlc@0.2.39`. It assumes the repository, npm package, release, demo packet and adoption issue are already live.
+This is the copy-ready launch packet for the first public push after `project-tiny-context-harness@0.2.39`. It assumes the repository, npm package, release, demo packet and adoption issue are already live.
 
 ## Launch Decision
 
@@ -19,7 +19,7 @@ Run these before posting:
 ```sh
 npm run launch:check
 node tools/launch_readiness_check.mjs --strict-external
-npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec agent-project-sdlc@0.2.39 --clean
+npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.39 --clean
 ```
 
 Confirm:
@@ -37,7 +37,7 @@ Source: [Show HN guidelines](https://news.ycombinator.com/showhn.html).
 Recommended URL:
 
 ```text
-https://github.com/Seven128/project-agent-sdlc
+https://github.com/Seven128/project-tiny-context-harness
 ```
 
 Title:
@@ -49,24 +49,24 @@ Show HN: Minimal project memory for AI coding agents
 Body:
 
 ```text
-I built Tiny Context Harness after seeing coding agents do well inside one chat but lose project-specific intent across new chats, handoffs, RFC/debug turns and tool changes.
+I built Project Tiny Context Harness after seeing coding agents do well inside one chat but lose project-specific intent across new chats, handoffs, RFC/debug turns and tool changes.
 
-It installs a small repo-native recovery surface: project_context/**, AGENTS.md guidance, role Skills and a validate-context gate. The product lesson is: keep the memory, drop the ceremony. Modern coding agents already internalize much of the ordinary understand/design/implement/test loop, so Tiny Context Harness keeps durable repo facts small instead of forcing every task through SDLC phases.
+It installs a small repo-native recovery surface: project_context/**, AGENTS.md guidance, role Skills and a validate-context gate. The product lesson is: keep the memory, drop the ceremony. Modern coding agents already internalize much of the ordinary understand/design/implement/test loop, so Project Tiny Context Harness keeps durable repo facts small instead of forcing every task through SDLC phases.
 
 It is not a task manager, spec generator, autonomous agent framework, or benchmark-proven productivity claim.
 
 The difference from using only AGENTS.md is that AGENTS.md stays the short startup router, while project_context keeps the maintained facts a fresh agent should recover: project goal, non-goals, architecture boundaries, ownership and validation paths. validate-context checks that recovery surface and blocks false "tests passed" claims from being stored as durable facts.
 
 Try it:
-npm install -D agent-project-sdlc@latest
-npx --yes --package agent-project-sdlc@latest sdlc-harness init
+npm install -D project-tiny-context-harness@latest
+npx --yes --package project-tiny-context-harness@latest sdlc-harness init
 npx --no-install sdlc-harness validate-context
 
 Demo packet/transcript:
-https://github.com/Seven128/project-agent-sdlc/blob/main/docs/launch/demo.md
+https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/launch/demo.md
 
 Adoption reports / missing facts:
-https://github.com/Seven128/project-agent-sdlc/issues/4
+https://github.com/Seven128/project-tiny-context-harness/issues/4
 
 I am looking for feedback from people using Codex, Claude Code, Cursor, OpenCode or similar agents on larger repos: does this minimal recovery surface solve a real handoff problem, or is the missing context somewhere else?
 ```
@@ -98,7 +98,7 @@ Gate: wait for Show HN or first feedback unless there is a scheduling reason to 
 Name:
 
 ```text
-Tiny Context Harness
+Project Tiny Context Harness
 ```
 
 Tagline:
@@ -116,7 +116,7 @@ Developer Tools, Artificial Intelligence, Open Source
 Description:
 
 ```text
-Tiny Context Harness helps coding agents recover project intent across new chats, handoffs and debugging turns. It installs compact project_context files, AGENTS.md guidance and a validate-context gate without adding a full SDLC ceremony.
+Project Tiny Context Harness helps coding agents recover project intent across new chats, handoffs and debugging turns. It installs compact project_context files, AGENTS.md guidance and a validate-context gate without adding a full SDLC ceremony.
 ```
 
 First comment:
@@ -124,7 +124,7 @@ First comment:
 ```text
 I built this for the boring failure mode of AI coding: the model is capable, but each new chat has to rediscover the project goal, architecture boundaries, validation commands and "do not change this" constraints.
 
-Tiny Context Harness keeps those durable facts in the repo as Minimal Context. The idea is to keep the memory and drop the ceremony: no task state, phase gates or work-product trees by default. It is not a benchmark-proven productivity claim yet and it does not replace tests, CI or review.
+Project Tiny Context Harness keeps those durable facts in the repo as Minimal Context. The idea is to keep the memory and drop the ceremony: no task state, phase gates or work-product trees by default. It is not a benchmark-proven productivity claim yet and it does not replace tests, CI or review.
 
 I would like feedback from people using coding agents on real projects: what project facts should a fresh agent recover before it proposes code, and is this the smallest useful surface?
 ```
@@ -149,7 +149,7 @@ I made a minimal project-memory harness for AI coding agents
 Body:
 
 ```text
-I am working on Tiny Context Harness, an npm package for adding Minimal Context to a repo.
+I am working on Project Tiny Context Harness, an npm package for adding Minimal Context to a repo.
 
 The idea is simple: new agent chats often lose project-specific context. Instead of adding a full SDLC workflow, the package keeps the memory and drops the ceremony: a small project_context fact source, AGENTS.md startup guidance and a validate-context gate so a fresh agent can recover intent, boundaries and validation paths.
 
@@ -165,7 +165,7 @@ Use after a stable demo URL exists.
 Candidate line:
 
 ```text
-- [Tiny Context Harness](https://github.com/Seven128/project-agent-sdlc) - Minimal repo-native project memory for AI coding agents. Installs project_context files, AGENTS.md guidance and a validate-context gate so fresh agent chats can recover project intent and validation paths.
+- [Project Tiny Context Harness](https://github.com/Seven128/project-tiny-context-harness) - Minimal repo-native project memory for AI coding agents. Installs project_context files, AGENTS.md guidance and a validate-context gate so fresh agent chats can recover project intent and validation paths.
 ```
 
 PR note:

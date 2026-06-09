@@ -2,14 +2,14 @@
 
 Snapshot date: 2026-06-10.
 
-This is the execution map after `agent-project-sdlc@0.2.39` was published and launch readiness passed. Recheck rules, deadlines and categories before submitting anywhere.
+This is the execution map after `project-tiny-context-harness@0.2.39` was published and launch readiness passed. Recheck rules, deadlines and categories before submitting anywhere.
 
 ## Current Launch Position
 
 Ready now:
 
 - GitHub metadata is complete: description, homepage, MIT license and discovery topics are visible.
-- npm latest is `agent-project-sdlc@0.2.39` with updated description, MIT license, homepage, repository, bugs URL and keywords.
+- npm latest is `project-tiny-context-harness@0.2.39` with updated description, MIT license, homepage, repository, bugs URL and keywords.
 - GitHub Release `v0.2.39` is published.
 - `node tools/launch_readiness_check.mjs --strict-external` reports `Status: pass`.
 - Adoption handoff issue #4 is pinned; starter issues #5-#8 exist.
@@ -63,8 +63,8 @@ Use Product Hunt after Show HN or first feedback unless there is a scheduling re
 
 Submission packet:
 
-- URL: `https://github.com/Seven128/project-agent-sdlc`
-- Name: `Tiny Context Harness`
+- URL: `https://github.com/Seven128/project-tiny-context-harness`
+- Name: `Project Tiny Context Harness`
 - Tagline: `Minimal project memory for AI coding agents`
 - Topics: Developer Tools, Artificial Intelligence, Open Source
 - First comment: use the Product Hunt draft in `docs/launch/README.md`, updated with the demo link.
@@ -82,7 +82,7 @@ Then try [awesome-ai-devtools](https://github.com/jamesmurdza/awesome-ai-devtool
 Possible listing text:
 
 ```text
-Tiny Context Harness - Minimal repo-native project memory for AI coding agents. Installs project_context files, AGENTS.md guidance and a validate-context gate so fresh agent chats can recover project intent and validation paths.
+Project Tiny Context Harness - Minimal repo-native project memory for AI coding agents. Installs project_context files, AGENTS.md guidance and a validate-context gate so fresh agent chats can recover project intent and validation paths.
 ```
 
 Hold on [awesome-opencode](https://github.com/awesome-opencode/awesome-opencode) unless the README gains an OpenCode-specific note. It is an ecosystem list, and a generic Harness entry would be weaker without a concrete OpenCode usage story.

@@ -104,7 +104,7 @@ function requestJson(url) {
       url,
       {
         headers: {
-          "User-Agent": "project-agent-sdlc-launch-readiness",
+          "User-Agent": "project-tiny-context-harness-launch-readiness",
           Accept: "application/vnd.github+json, application/json"
         },
         timeout: 20_000
@@ -153,15 +153,15 @@ function localChecks() {
   const sourceWorkflow = read(".github/workflows/harness.yml");
   const maintainerWorkflow = read(".github/workflows/package.yml");
 
-  addCheck(checks, "root-package-name", rootPackage.name === "project-agent-sdlc", "Root package name is project-agent-sdlc.");
+  addCheck(checks, "root-package-name", rootPackage.name === "project-tiny-context-harness", "Root package name is project-tiny-context-harness.");
   addCheck(checks, "root-license", rootPackage.license === "MIT" && hasFile("LICENSE"), "Root package has MIT license metadata and LICENSE file.");
   addCheck(
     checks,
     "package-metadata",
     packageJson.license === "MIT" &&
-      packageJson.homepage === "https://github.com/Seven128/project-agent-sdlc#readme" &&
-      packageJson.repository?.url === "git+https://github.com/Seven128/project-agent-sdlc.git" &&
-      packageJson.bugs?.url === "https://github.com/Seven128/project-agent-sdlc/issues",
+      packageJson.homepage === "https://github.com/Seven128/project-tiny-context-harness#readme" &&
+      packageJson.repository?.url === "git+https://github.com/Seven128/project-tiny-context-harness.git" &&
+      packageJson.bugs?.url === "https://github.com/Seven128/project-tiny-context-harness/issues",
     "npm package has license, homepage, repository and bugs metadata."
   );
   for (const keyword of ["ai-agents", "coding-agent", "context-engineering", "developer-productivity", "claude-code"]) {
@@ -176,10 +176,10 @@ function localChecks() {
     addCheck(
       checks,
       `${id}-positioning`,
-      contains(content, /Tiny Context Harness/) &&
+      contains(content, /Project Tiny Context Harness/) &&
         contains(content, /repo-native project memory for AI coding agents/i) &&
         contains(content, /keep the memory, drop the ceremony/i),
-      `${id} states Tiny Context Harness positioning.`
+      `${id} states Project Tiny Context Harness positioning.`
     );
     addCheck(checks, `${id}-why`, contains(content, /Why It Exists/), `${id} includes Why It Exists.`);
     addCheck(checks, `${id}-positioning-table`, contains(content, /Positioning/) && contains(content, /Spec-first kits/) && contains(content, /Task Master-style/), `${id} includes competitor positioning table.`);
@@ -240,8 +240,8 @@ function localChecks() {
       contains(externalPrPacket, /gh repo fork Transcenda\/awesome-agentic-coding --clone/) &&
       contains(externalPrPacket, /gh repo fork jordimas\/awesome-agentic-engineering --clone/) &&
       contains(externalPrPacket, /gh pr create/) &&
-      contains(externalPrPacket, /Add Tiny Context Harness to agent instructions and skills/) &&
-      contains(externalPrPacket, /Add Tiny Context Harness to team adoption resources/) &&
+      contains(externalPrPacket, /Add Project Tiny Context Harness to agent instructions and skills/) &&
+      contains(externalPrPacket, /Add Project Tiny Context Harness to team adoption resources/) &&
       contains(transcendaPatch, /Agent instructions and Skills/) &&
       contains(transcendaPatch, /minimal project-memory harness for AI coding agents/) &&
       contains(jordimasPatch, /Team Adoption/) &&
@@ -294,7 +294,7 @@ function localChecks() {
   addCheck(checks, "quickstart-smoke", hasFile("tools/quickstart_smoke.mjs") && rootPackage.scripts?.["smoke:quickstart"], "Quickstart smoke script and npm script exist.");
   addCheck(checks, "launch-check-script", rootPackage.scripts?.["launch:check"] === "node tools/launch_readiness_check.mjs --offline", "launch:check script runs offline readiness check.");
 
-  addCheck(checks, "consumer-workflow-boundary", contains(sourceWorkflow, /Run harness gate/) && !contains(sourceWorkflow, /npm test --workspace agent-project-sdlc|package check-source|npm install/), "Consumer workflow only runs Harness gate.");
+  addCheck(checks, "consumer-workflow-boundary", contains(sourceWorkflow, /Run harness gate/) && !contains(sourceWorkflow, /npm test --workspace project-tiny-context-harness|package check-source|npm install/), "Consumer workflow only runs Harness gate.");
   addCheck(
     checks,
     "maintainer-workflow",
@@ -318,7 +318,7 @@ function localChecks() {
 
 async function externalChecks(localPackageJson) {
   const checks = [];
-  const github = await requestJson("https://api.github.com/repos/Seven128/project-agent-sdlc");
+  const github = await requestJson("https://api.github.com/repos/Seven128/project-tiny-context-harness");
   const requiredTopics = ["ai-agents", "coding-agent", "codex", "claude-code", "cursor", "agent-context", "context-engineering", "agents-md", "developer-tools", "developer-productivity", "cli", "sdlc", "workflow"];
   const githubTopics = Array.isArray(github.topics) ? github.topics : [];
   addCheck(checks, "github-description", github.description === "Minimal project memory and validation harness for AI coding agents.", `GitHub description: ${github.description ?? "(empty)"}`, "external");
@@ -327,7 +327,7 @@ async function externalChecks(localPackageJson) {
   addCheck(checks, "github-stars", typeof github.stargazers_count === "number", `GitHub stars: ${github.stargazers_count}`, "external-info");
   addCheck(checks, "github-forks", typeof github.forks_count === "number", `GitHub forks: ${github.forks_count}`, "external-info");
 
-  const npmLatest = await requestJson("https://registry.npmjs.org/agent-project-sdlc/latest");
+  const npmLatest = await requestJson("https://registry.npmjs.org/project-tiny-context-harness/latest");
   addCheck(checks, "npm-description", npmLatest.description === localPackageJson.description, `npm latest description: ${npmLatest.description ?? "(empty)"}`, "external");
   addCheck(checks, "npm-license", npmLatest.license === localPackageJson.license, `npm latest license: ${npmLatest.license ?? "(none)"}`, "external");
   addCheck(checks, "npm-homepage", npmLatest.homepage === localPackageJson.homepage, `npm latest homepage: ${npmLatest.homepage ?? "(none)"}`, "external");
@@ -336,7 +336,7 @@ async function externalChecks(localPackageJson) {
   addCheck(checks, "npm-bugs", npmLatest.bugs?.url === localPackageJson.bugs?.url, `npm latest bugs URL: ${npmLatest.bugs?.url ?? "(none)"}`, "external");
   addCheck(checks, "npm-version", npmLatest.version === localPackageJson.version, `npm latest version: ${npmLatest.version}`, "external-info");
 
-  const downloads = await requestJson("https://api.npmjs.org/downloads/point/last-week/agent-project-sdlc");
+  const downloads = await requestJson("https://api.npmjs.org/downloads/point/last-week/project-tiny-context-harness");
   addCheck(checks, "npm-downloads", typeof downloads.downloads === "number", `npm downloads last week: ${downloads.downloads} (${downloads.start} to ${downloads.end})`, "external-info");
   return { checks, github, npmLatest, downloads };
 }

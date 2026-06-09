@@ -4,7 +4,7 @@ This file is the restrained architecture context for the source repository. It i
 
 ## System Boundary
 
-- The repository owns the `agent-project-sdlc` / `sdlc-harness` npm package, package-managed Minimal Context assets, source-sync checks, validators, release automation and delivery benchmark skeleton.
+- The repository owns the `project-tiny-context-harness` / `sdlc-harness` npm package, package-managed Minimal Context assets, source-sync checks, validators, release automation and delivery benchmark skeleton.
 - Consumer projects receive Minimal Context guidance, templates, Skills, Makefile include, validator tool and optional GitHub workflow assets.
 - Product quality remains outside Harness ownership and belongs to each project’s tests, CI, smoke checks, hidden probes or human acceptance.
 
@@ -44,7 +44,7 @@ This file is the restrained architecture context for the source repository. It i
 
 ## Verification Implications
 
-- `npm test --workspace agent-project-sdlc`
+- `npm test --workspace project-tiny-context-harness`
 - `node packages/sdlc-harness/dist/cli.js package sync-source`
 - `node packages/sdlc-harness/dist/cli.js package check-source`
 - `make validate-context`
