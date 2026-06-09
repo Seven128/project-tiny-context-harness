@@ -13,16 +13,15 @@ Public state after the repository rename, checked against public GitHub and npm 
 | GitHub repository | `Seven128/project-tiny-context-harness` on default branch `main` |
 | GitHub stars / forks | 0 stars, 0 forks |
 | GitHub description / license | `Minimal project memory and validation harness for AI coding agents.`, MIT detected |
-| GitHub homepage | Still points to the old npm package URL; update it to `https://www.npmjs.com/package/project-tiny-context-harness` before launch |
-| GitHub topics | `agent-context`, `agents-md`, `ai-agents`, `claude-code`, `cli`, `codex`, `coding-agent`, `context-engineering`, `cursor`, `developer-productivity`, `developer-tools`, `sdlc`, `workflow` |
-| Recommended missing GitHub topics | `project-memory`, `agent-memory`, `context-management`, `gemini-cli`, `opencode`, `ai-coding` |
+| GitHub homepage | `https://www.npmjs.com/package/project-tiny-context-harness` |
+| GitHub topics | `agent-context`, `agent-memory`, `agents-md`, `ai-agents`, `ai-coding`, `claude-code`, `cli`, `codex`, `coding-agent`, `context-engineering`, `context-management`, `cursor`, `developer-productivity`, `developer-tools`, `gemini-cli`, `opencode`, `project-memory`, `sdlc`, `workflow` |
 | GitHub release | Renamed release still pending after npm publish |
 | npm package | `project-tiny-context-harness` is not published yet; registry returns 404 |
 | npm public metadata | Pending npm publish |
 | npm downloads | No downloads for the renamed package yet |
-| Launch readiness | Local `npm run launch:check` passes; strict external check fails on GitHub homepage/topics drift and npm 404 |
+| Launch readiness | Local `npm run launch:check` passes; strict external check fails on npm 404 |
 
-Interpretation: GitHub source metadata is mostly ready, but the repository homepage still links to the old npm package and the broader discovery topics have not been applied. npm distribution is also blocked until `project-tiny-context-harness` is published. The remaining blockers for serious public distribution are metadata cleanup, npm availability and the demo/evidence surface: a short recording, one primary launch post, then rapid README/FAQ updates from real feedback.
+Interpretation: GitHub metadata is launch-ready, but npm distribution is still blocked until `project-tiny-context-harness` is published. The remaining blockers for serious public distribution are npm availability plus the demo/evidence surface: a short recording, one primary launch post, then rapid README/FAQ updates from real feedback.
 
 ## Competitive Snapshot
 

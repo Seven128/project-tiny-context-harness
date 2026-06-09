@@ -8,7 +8,7 @@ This is the execution map after the GitHub repository was renamed to Project Tin
 
 Ready now:
 
-- GitHub description, MIT license and baseline discovery topics are visible.
+- GitHub metadata is complete: description, homepage, MIT license and discovery topics are visible.
 - Adoption handoff issue #4 is pinned; starter issues #5-#8 exist.
 - Repo-hosted launch media exists: README GIF, two Product Hunt gallery PNGs and a 240x240 thumbnail.
 - Trust surface exists: `SECURITY.md`, Dependabot and issue templates.
@@ -18,9 +18,8 @@ Ready now:
 Not ready yet:
 
 - npm latest for `project-tiny-context-harness` is not published; current registry state is 404.
-- GitHub homepage still needs to point to `https://www.npmjs.com/package/project-tiny-context-harness`, and recommended discovery topics from `docs/launch/README.md` still need to be applied.
 - GitHub Release for the renamed package should wait until npm publish succeeds.
-- `node tools/launch_readiness_check.mjs --strict-external` fails until GitHub metadata and npm publish both match the renamed package.
+- `node tools/launch_readiness_check.mjs --strict-external` fails until npm publish succeeds.
 - No external launch post.
 - No outside adoption report, testimonial or contribution.
 - 0 GitHub stars and 0 forks at snapshot time.
