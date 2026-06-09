@@ -516,7 +516,7 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
 
 ## 2. Included Changes（包含变更）
 
-- 发布当前 workspace 中已同步的 AI SDLC Harness package assets 和 CLI build。
+- 发布当前 workspace 中已同步的 Tiny Context Harness package assets 和 CLI build。
 - 本版本由 \`tools/release_npm.mjs\` 执行发布闭环。默认发布路径覆盖 npm auth、version bump、source drift check、tarball pack、publish 和 registry latest verification；\`--full-gate\` 和 \`--registry-smoke\` 可启用更重验证。
 
 ## 3. Build Artifacts（构建产物）

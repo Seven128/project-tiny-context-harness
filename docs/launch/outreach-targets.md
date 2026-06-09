@@ -64,7 +64,7 @@ Use Product Hunt after Show HN or first feedback unless there is a scheduling re
 Submission packet:
 
 - URL: `https://github.com/Seven128/project-agent-sdlc`
-- Name: `AI SDLC Harness`
+- Name: `Tiny Context Harness`
 - Tagline: `Minimal project memory for AI coding agents`
 - Topics: Developer Tools, Artificial Intelligence, Open Source
 - First comment: use the Product Hunt draft in `docs/launch/README.md`, updated with the demo link.
@@ -82,7 +82,7 @@ Then try [awesome-ai-devtools](https://github.com/jamesmurdza/awesome-ai-devtool
 Possible listing text:
 
 ```text
-AI SDLC Harness - Minimal repo-native project memory for AI coding agents. Installs project_context files, AGENTS.md guidance and a validate-context gate so fresh agent chats can recover project intent and validation paths.
+Tiny Context Harness - Minimal repo-native project memory for AI coding agents. Installs project_context files, AGENTS.md guidance and a validate-context gate so fresh agent chats can recover project intent and validation paths.
 ```
 
 Hold on [awesome-opencode](https://github.com/awesome-opencode/awesome-opencode) unless the README gains an OpenCode-specific note. It is an ecosystem list, and a generic Harness entry would be weaker without a concrete OpenCode usage story.

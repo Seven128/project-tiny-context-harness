@@ -2,7 +2,7 @@
   "name": "project-agent-sdlc",
   "private": true,
   "version": "0.1.0",
-  "description": "Reference workspace for the AI SDLC Harness.",
+  "description": "Reference workspace for Tiny Context Harness.",
   "license": "MIT",
   "repository": {
     "type": "git",

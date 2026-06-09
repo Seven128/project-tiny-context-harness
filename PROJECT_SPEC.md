@@ -1,10 +1,10 @@
-# AI SDLC Harness Project Spec
+# Tiny Context Harness Project Spec
 
-This document explains the stable product direction, design rationale and package behavior for AI SDLC Harness. User-facing commands live in [README.md](README.md). Historical stage-based workflow details are retained here only as a concise design summary.
+This document explains the stable product direction, design rationale and package behavior for Tiny Context Harness. The public display name is Tiny Context Harness; the npm package remains `agent-project-sdlc` and the CLI remains `sdlc-harness`. User-facing commands live in [README.md](README.md). Historical stage-based workflow details are retained here only as a concise design summary.
 
 ## Product Goal
 
-AI SDLC Harness helps AI coding agents deliver requirements projects more efficiently by preserving the minimum durable context needed for recovery, iteration, debug and requirement changes.
+Tiny Context Harness helps AI coding agents deliver requirements projects more efficiently by preserving the minimum durable context needed for recovery, iteration, debug and requirement changes.
 
 Efficiency is not first-turn code generation speed. The target is same-quality delivery over a project lifecycle:
 

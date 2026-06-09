@@ -2,7 +2,7 @@
 
 ## Project Goal
 
-- Maintain `agent-project-sdlc`, an npm package that installs AI SDLC Harness guidance, tools and validators into user repositories.
+- Maintain `agent-project-sdlc`, the npm package and `sdlc-harness` CLI behind the public Tiny Context Harness display name.
 - Current product direction is Minimal Context Harness: preserve the smallest durable facts needed for fresh-agent recovery, iteration, debug and requirement changes.
 
 ## Non-goals / Boundaries

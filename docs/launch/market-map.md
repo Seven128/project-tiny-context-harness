@@ -37,11 +37,11 @@ GitHub public repository snapshot:
 | [oraios/serena](https://github.com/oraios/serena) | 25,157 | MCP toolkit and semantic code agent IDE | Semantic retrieval/editing |
 | [SuperClaude-Org/SuperClaude_Framework](https://github.com/SuperClaude-Org/SuperClaude_Framework) | 23,235 | Claude Code commands, personas and methodology | Agent configuration framework |
 
-Interpretation: the visible AI coding/dev workflow market already has several 20k-170k star projects. AI SDLC Harness should not compete head-on as another agent, task manager, full SDLC method or retrieval engine.
+Interpretation: the visible AI coding/dev workflow market already has several 20k-170k star projects. Tiny Context Harness should not compete head-on as another agent, task manager, full SDLC method or retrieval engine.
 
 ## Wedge
 
-AI SDLC Harness has the strongest wedge if it stays narrow:
+Tiny Context Harness has the strongest wedge if it stays narrow:
 
 ```text
 Repo-native project memory for fresh-agent recovery.

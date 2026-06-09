@@ -21,7 +21,7 @@ The command creates a disposable demo repository, installs `agent-project-sdlc@l
 
 - `tmp/sdlc/launch-demo/latest/transcript.md`
 - `tmp/sdlc/launch-demo/latest/summary.json`
-- `tmp/sdlc/launch-demo/latest/ai-sdlc-harness-demo/`
+- `tmp/sdlc/launch-demo/latest/tiny-context-harness-demo/`
 
 ## Recording Beats
 

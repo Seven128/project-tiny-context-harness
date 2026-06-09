@@ -144,7 +144,7 @@ for (const content of [rootReadme, packageReadme, packageGuide]) {
   assert.match(content, /Context7\/Serena-style/);
   assert.match(content, /Portable fallback/);
   assert.match(content, /Try It In 60 Seconds/);
-  assert.match(content, /ai-sdlc-harness-demo/);
+  assert.match(content, /tiny-context-harness-demo/);
 }
 
 assert.match(contributing, /Minimal Context Harness/);

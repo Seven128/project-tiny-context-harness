@@ -1,16 +1,16 @@
-# AI SDLC Harness
+# Tiny Context Harness
 
 [![npm version](https://img.shields.io/npm/v/agent-project-sdlc.svg)](https://www.npmjs.com/package/agent-project-sdlc)
 [![Package CI](https://github.com/Seven128/project-agent-sdlc/actions/workflows/package.yml/badge.svg)](https://github.com/Seven128/project-agent-sdlc/actions/workflows/package.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-AI SDLC Harness is a minimal project-memory harness for AI coding agents.
+Tiny Context Harness is repo-native project memory for AI coding agents.
 
-`agent-project-sdlc` installs **Minimal Context Harness**: a compact `project_context/**` fact source, a short `AGENTS.md` startup router, role Skills and a `validate-context` gate so fresh agents can recover project intent, boundaries, verification entry points and next safe actions quickly.
+`agent-project-sdlc` ships Tiny Context Harness through the `sdlc-harness` CLI. It installs **Minimal Context Harness**: a compact `project_context/**` fact source, a short `AGENTS.md` startup router, role Skills and a `validate-context` gate so fresh agents can recover project intent, boundaries, verification entry points and next safe actions quickly.
 
 It is not another full SDLC ceremony. The Harness maintains context quality; project tests, reviews, CI and human acceptance still own product quality.
 
-![AI SDLC Harness terminal demo](https://raw.githubusercontent.com/Seven128/project-agent-sdlc/main/docs/launch/assets/demo-terminal.gif)
+![Tiny Context Harness terminal demo](https://raw.githubusercontent.com/Seven128/project-agent-sdlc/main/docs/launch/assets/demo-terminal.gif)
 
 The demo shows the core loop: install the npm package, initialize `AGENTS.md` and `project_context/**`, run `validate-context`, then ask a fresh agent to recover intent before proposing code.
 
@@ -27,6 +27,8 @@ Coding agents can move quickly inside one thread and still drift when a new chat
 
 Most repositories already have README files, specs, tests and issue history, but fresh agents need a small, explicit recovery path: what the project is trying to do, what it must not do, where architecture boundaries live, how to validate changes and what durable facts changed after the last task. Minimal Context Harness makes that recovery path a first-class repo surface without adding a full planning ceremony.
 
+The product lesson is: **keep the memory, drop the ceremony**. Earlier stage-based workflows externalized requirements, design, implementation, review, test and release into explicit phase artifacts. Modern coding agents already internalize much of that ordinary software loop. Tiny Context Harness keeps the useful part: the smallest high-density repo context that survives fresh chats without forcing every task through phase transitions, work-product validation or SDLC-stage context splits.
+
 ## Positioning
 
 | Adjacent tool type | Use it for | Harness stance |
@@ -40,8 +42,8 @@ Most repositories already have README files, specs, tests and issue history, but
 ## Try It In 60 Seconds
 
 ```sh
-mkdir ai-sdlc-harness-demo
-cd ai-sdlc-harness-demo
+mkdir tiny-context-harness-demo
+cd tiny-context-harness-demo
 git init
 npm init -y
 npm install -D agent-project-sdlc@latest

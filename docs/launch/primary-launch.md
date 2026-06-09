@@ -49,9 +49,11 @@ Show HN: Minimal project memory for AI coding agents
 Body:
 
 ```text
-I built AI SDLC Harness after seeing coding agents do well inside one chat but lose project-specific intent across new chats, handoffs, RFC/debug turns and tool changes.
+I built Tiny Context Harness after seeing coding agents do well inside one chat but lose project-specific intent across new chats, handoffs, RFC/debug turns and tool changes.
 
-It installs a small repo-native recovery surface: project_context/**, AGENTS.md guidance, role Skills and a validate-context gate. It is not a task manager, spec generator, autonomous agent framework, or benchmark-proven productivity claim.
+It installs a small repo-native recovery surface: project_context/**, AGENTS.md guidance, role Skills and a validate-context gate. The product lesson is: keep the memory, drop the ceremony. Modern coding agents already internalize much of the ordinary understand/design/implement/test loop, so Tiny Context Harness keeps durable repo facts small instead of forcing every task through SDLC phases.
+
+It is not a task manager, spec generator, autonomous agent framework, or benchmark-proven productivity claim.
 
 The difference from using only AGENTS.md is that AGENTS.md stays the short startup router, while project_context keeps the maintained facts a fresh agent should recover: project goal, non-goals, architecture boundaries, ownership and validation paths. validate-context checks that recovery surface and blocks false "tests passed" claims from being stored as durable facts.
 
@@ -96,7 +98,7 @@ Gate: wait for Show HN or first feedback unless there is a scheduling reason to 
 Name:
 
 ```text
-AI SDLC Harness
+Tiny Context Harness
 ```
 
 Tagline:
@@ -114,7 +116,7 @@ Developer Tools, Artificial Intelligence, Open Source
 Description:
 
 ```text
-AI SDLC Harness helps coding agents recover project intent across new chats, handoffs and debugging turns. It installs compact project_context files, AGENTS.md guidance and a validate-context gate without adding a full SDLC ceremony.
+Tiny Context Harness helps coding agents recover project intent across new chats, handoffs and debugging turns. It installs compact project_context files, AGENTS.md guidance and a validate-context gate without adding a full SDLC ceremony.
 ```
 
 First comment:
@@ -122,7 +124,7 @@ First comment:
 ```text
 I built this for the boring failure mode of AI coding: the model is capable, but each new chat has to rediscover the project goal, architecture boundaries, validation commands and "do not change this" constraints.
 
-AI SDLC Harness keeps those durable facts in the repo as Minimal Context. It is not a benchmark-proven productivity claim yet and it does not replace tests, CI or review.
+Tiny Context Harness keeps those durable facts in the repo as Minimal Context. The idea is to keep the memory and drop the ceremony: no task state, phase gates or work-product trees by default. It is not a benchmark-proven productivity claim yet and it does not replace tests, CI or review.
 
 I would like feedback from people using coding agents on real projects: what project facts should a fresh agent recover before it proposes code, and is this the smallest useful surface?
 ```
@@ -147,9 +149,9 @@ I made a minimal project-memory harness for AI coding agents
 Body:
 
 ```text
-I am working on AI SDLC Harness, an npm package that installs Minimal Context Harness into a repo.
+I am working on Tiny Context Harness, an npm package for adding Minimal Context to a repo.
 
-The idea is simple: new agent chats often lose project-specific context. Instead of adding a full SDLC workflow, the package creates a small project_context fact source, AGENTS.md startup guidance and a validate-context gate so a fresh agent can recover intent, boundaries and validation paths.
+The idea is simple: new agent chats often lose project-specific context. Instead of adding a full SDLC workflow, the package keeps the memory and drops the ceremony: a small project_context fact source, AGENTS.md startup guidance and a validate-context gate so a fresh agent can recover intent, boundaries and validation paths.
 
 It is meant to complement specs, tests, CI and code intelligence tools. It does not own task state or claim to replace review.
 
@@ -163,7 +165,7 @@ Use after a stable demo URL exists.
 Candidate line:
 
 ```text
-- [AI SDLC Harness](https://github.com/Seven128/project-agent-sdlc) - Minimal repo-native project memory for AI coding agents. Installs project_context files, AGENTS.md guidance and a validate-context gate so fresh agent chats can recover project intent and validation paths.
+- [Tiny Context Harness](https://github.com/Seven128/project-agent-sdlc) - Minimal repo-native project memory for AI coding agents. Installs project_context files, AGENTS.md guidance and a validate-context gate so fresh agent chats can recover project intent and validation paths.
 ```
 
 PR note:

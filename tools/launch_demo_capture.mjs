@@ -188,7 +188,7 @@ if (options.help) {
 }
 
 const outDir = options.outDir ?? makeDefaultOutDir();
-const demoDir = path.join(outDir, "ai-sdlc-harness-demo");
+const demoDir = path.join(outDir, "tiny-context-harness-demo");
 const expectedFiles = [
   "AGENTS.md",
   "DESIGN.md",

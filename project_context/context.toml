@@ -1,4 +1,4 @@
-# Context graph for the AI SDLC Harness source workspace.
+# Context graph for the Tiny Context Harness source workspace.
 
 [[areas]]
 id = "harness-package"

@@ -173,7 +173,14 @@ function localChecks() {
     ["root-readme", rootReadme],
     ["package-readme", packageReadme]
   ]) {
-    addCheck(checks, `${id}-positioning`, contains(content, /minimal project-memory harness for AI coding agents/i), `${id} states minimal project-memory positioning.`);
+    addCheck(
+      checks,
+      `${id}-positioning`,
+      contains(content, /Tiny Context Harness/) &&
+        contains(content, /repo-native project memory for AI coding agents/i) &&
+        contains(content, /keep the memory, drop the ceremony/i),
+      `${id} states Tiny Context Harness positioning.`
+    );
     addCheck(checks, `${id}-why`, contains(content, /Why It Exists/), `${id} includes Why It Exists.`);
     addCheck(checks, `${id}-positioning-table`, contains(content, /Positioning/) && contains(content, /Spec-first kits/) && contains(content, /Task Master-style/), `${id} includes competitor positioning table.`);
     addCheck(checks, `${id}-quickstart`, contains(content, /Try It In 60 Seconds/) && contains(content, /make validate-context/), `${id} includes quickstart.`);
@@ -190,6 +197,7 @@ function localChecks() {
       contains(launchKit, /awesome-list-submissions\.md/) &&
       contains(launchKit, /Readiness boundary/) &&
       contains(launchKit, /repo-hosted media/) &&
+      contains(launchKit, /Keep the memory\. Drop the ceremony\./) &&
       contains(launchKit, /does not mean Product Hunt, curated-list submissions or awards are ready/),
     "Launch kit has copy-ready channel drafts, media pointers, readiness boundary and no-benchmark boundary."
   );
@@ -232,8 +240,8 @@ function localChecks() {
       contains(externalPrPacket, /gh repo fork Transcenda\/awesome-agentic-coding --clone/) &&
       contains(externalPrPacket, /gh repo fork jordimas\/awesome-agentic-engineering --clone/) &&
       contains(externalPrPacket, /gh pr create/) &&
-      contains(externalPrPacket, /Add AI SDLC Harness to agent instructions and skills/) &&
-      contains(externalPrPacket, /Add AI SDLC Harness to team adoption resources/) &&
+      contains(externalPrPacket, /Add Tiny Context Harness to agent instructions and skills/) &&
+      contains(externalPrPacket, /Add Tiny Context Harness to team adoption resources/) &&
       contains(transcendaPatch, /Agent instructions and Skills/) &&
       contains(transcendaPatch, /minimal project-memory harness for AI coding agents/) &&
       contains(jordimasPatch, /Team Adoption/) &&
