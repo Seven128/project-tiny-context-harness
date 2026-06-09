@@ -1,0 +1,12 @@
+diff --git a/README.md b/README.md
+index 0342a2c..65d84e4 100644
+--- a/README.md
++++ b/README.md
+@@ -248,6 +248,7 @@ Large prompts and connected tools can waste quota and silently degrade results.
+ ### Agent instructions and Skills
+ 
+ - [AGENTS.md](https://agents.md/) — open format for repo-level agent instructions
++- [AI SDLC Harness](https://github.com/Seven128/project-agent-sdlc) — minimal project-memory harness for AI coding agents, installing `AGENTS.md`, `project_context/**`, role Skills, and `validate-context`.
+ - [Superpowers](https://github.com/obra/superpowers) — composable Skills framework with sub-agent patterns
+ - [Context7](https://github.com/upstash/context7) — up-to-date library documentation for AI agents, loadable selectively
+ - [GSD (Get Sh*t Done)](https://github.com/gsd-build/get-shit-done) — meta-prompting, context-engineering, spec-driven Skills system for Claude Code

@@ -31,6 +31,7 @@ for (const expected of [
   "launch-operating-plan",
   "primary-launch-packet",
   "awesome-list-submissions",
+  "external-pr-packets",
   "launch-demo-storyboard",
   "launch-demo-packet",
   "launch-demo-media",

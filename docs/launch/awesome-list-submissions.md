@@ -16,32 +16,30 @@ This packet prepares curated-list pull requests. It is intentionally narrower th
 
 Target: [Transcenda/awesome-agentic-coding](https://github.com/Transcenda/awesome-agentic-coding)
 
-Why it fits now: the list has an `Agent instructions and Skills` section and asks for concrete use cases, a clear why and an "In practice" prompt. AI SDLC Harness directly supports repo-level agent instructions plus maintained Context recovery.
+Why it fits now: the list has an `Agentic Coding Toolbox` section with `Agent instructions and Skills`. AI SDLC Harness directly supports repo-level agent instructions plus maintained Context recovery.
 
 Suggested section: `Agent instructions and Skills`.
+
+Patch packet: [external-prs/README.md](external-prs/README.md).
 
 Suggested entry:
 
 ```md
-- [AI SDLC Harness](https://github.com/Seven128/project-agent-sdlc) - Minimal repo-native project memory for AI coding agents. It installs `AGENTS.md`, `project_context/**` and a `validate-context` gate so fresh agent sessions recover project intent, boundaries and validation paths without a full SDLC ceremony.
-
-**Why:** agent instructions are more reliable when they point to a small maintained fact source instead of forcing every new chat to rediscover the project goal, non-goals and test commands.
-
-**In practice:** before asking a new agent to change code, have it read `AGENTS.md` and `project_context/**`, then summarize the project goal, boundaries and validation commands; run `validate-context` to keep those recovery facts honest.
+- [AI SDLC Harness](https://github.com/Seven128/project-agent-sdlc) — minimal project-memory harness for AI coding agents, installing `AGENTS.md`, `project_context/**`, role Skills, and `validate-context`.
 ```
 
 PR title:
 
 ```text
-Add AI SDLC Harness for minimal agent context recovery
+Add AI SDLC Harness to agent instructions and skills
 ```
 
 PR body:
 
 ```text
-Adds AI SDLC Harness as a practical repo-level context recovery tool for agentic coding teams.
+Adds AI SDLC Harness to the Agent instructions and Skills toolbox.
 
-It fits the Agent instructions and Skills section because it keeps AGENTS.md short while maintaining project_context facts that fresh coding-agent sessions can read before editing code.
+It gives teams a practical in-repo recovery path for AI coding agents: project intent, boundaries, verification paths, role Skills, and a `validate-context` check across new chats, handoffs, and tool changes.
 ```
 
 ## P0: Awesome Agentic Engineering
@@ -52,10 +50,12 @@ Why it fits now: the list prioritizes practical, team-applicable resources for t
 
 Suggested section: `Team Adoption`.
 
+Patch packet: [external-prs/README.md](external-prs/README.md).
+
 Suggested entry:
 
 ```md
-- [AI SDLC Harness](https://github.com/Seven128/project-agent-sdlc) - Minimal Context Harness for teams using coding agents; keeps project goals, non-goals, architecture boundaries and validation paths in repo-native files so new agent sessions recover intent before editing code.
+- [AI SDLC Harness](https://github.com/Seven128/project-agent-sdlc) — Minimal project-memory and validation harness for teams adopting AI coding agents, so fresh agents recover project intent, boundaries, and verification paths across chats and handoffs.
 ```
 
 PR title:
@@ -67,9 +67,9 @@ Add AI SDLC Harness to team adoption resources
 PR body:
 
 ```text
-Adds AI SDLC Harness as a practical team-adoption resource for keeping coding-agent context recoverable across new chats, handoffs and debugging sessions.
+Adds AI SDLC Harness under Team Adoption.
 
-It is not an autonomous coding agent; it complements tools like Codex, Claude Code, Cursor and OpenCode by maintaining the repo facts those agents should read before proposing changes.
+It is a practical, team-applicable resource for keeping minimal durable project memory in-repo so AI coding agents can recover intent, boundaries, and validation paths across chats and handoffs.
 ```
 
 ## P1: Awesome AI Devtools
