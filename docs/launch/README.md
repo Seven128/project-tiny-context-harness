@@ -82,6 +82,7 @@ Use this if agents keep losing project intent between chats. It adds a small pro
 - Confirm npm package page renders the updated package README and MIT license.
 - Run `npm run smoke:quickstart` after publish against `project-tiny-context-harness@latest` or a clean test project.
 - Confirm `SECURITY.md`, Dependabot and adoption-report issue template are visible on GitHub.
+- Confirm the fresh-agent recovery walkthrough is linked from README.
 - Record a short terminal demo from the 60-second trial.
 - Post to one primary technical venue first, then reuse the same claim across smaller channels.
 - Ask for feedback on whether the recovery surface is useful, not for stars.
@@ -100,6 +101,7 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 | First support surface | Create a GitHub Discussion or pinned issue for adoption reports. | Launch posts have one feedback link beyond the README. |
 | First contribution queue | Create low-risk docs/demo/example issues with `good first issue` and `help wanted`. | New visitors can contribute without understanding package internals. |
 | Trust surface | Keep `SECURITY.md`, Dependabot and issue templates visible. | New users can see how to report risk, dependency drift and adoption feedback. |
+| Example surface | Keep a before/after fresh-agent walkthrough linked from README. | New visitors can see how Context prevents rediscovery without claiming benchmark wins. |
 
 ### Channel Matrix
 

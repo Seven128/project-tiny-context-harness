@@ -76,7 +76,7 @@ It is a practical, team-applicable resource for keeping minimal durable project 
 
 Target: [jamesmurdza/awesome-ai-devtools](https://github.com/jamesmurdza/awesome-ai-devtools)
 
-Gate before submitting: publish a demo GIF/video or a concrete walkthrough that proves the tool improves an AI-agent workflow. The list is a higher-exposure AI developer-tool directory, but the current project is a harness/context tool rather than a direct AI-powered product. The submission is stronger after the demo shows the agent workflow end to end.
+Gate before submitting: publish a demo GIF/video or the concrete fresh-agent recovery walkthrough that shows the tool's workflow. The list is a higher-exposure AI developer-tool directory, but the current project is a harness/context tool rather than a direct AI-powered product. The submission is stronger after the demo shows the agent workflow end to end.
 
 Candidate category: `Configuration & Context Management` if it still exists when submitting.
 

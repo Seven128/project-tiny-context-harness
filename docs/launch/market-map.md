@@ -6,7 +6,7 @@ This file is a launch planning snapshot, not durable product truth. Recheck star
 
 ## Current Public State
 
-Public state after the launch-readiness release, checked against public GitHub and npm APIs:
+Public state after the repository rename, checked against public GitHub and npm APIs:
 
 | Surface | Snapshot |
 |---|---|
@@ -14,13 +14,13 @@ Public state after the launch-readiness release, checked against public GitHub a
 | GitHub stars / forks | 0 stars, 0 forks |
 | GitHub description / license | `Minimal project memory and validation harness for AI coding agents.`, MIT detected |
 | GitHub topics | `agent-context`, `agents-md`, `ai-agents`, `claude-code`, `cli`, `codex`, `coding-agent`, `context-engineering`, `cursor`, `developer-productivity`, `developer-tools`, `sdlc`, `workflow` |
-| GitHub release | `v0.2.39` published and marked latest |
-| npm package | `project-tiny-context-harness@0.2.39` |
-| npm public metadata | Updated description, MIT license, homepage, repository, bugs URL and discovery keywords |
-| npm downloads | 3,573 downloads for 2026-05-27 through 2026-06-02 |
-| Launch readiness | `node tools/launch_readiness_check.mjs --strict-external` reports `Status: pass` |
+| GitHub release | Renamed release still pending after npm publish |
+| npm package | `project-tiny-context-harness` is not published yet; registry returns 404 |
+| npm public metadata | Pending npm publish |
+| npm downloads | No downloads for the renamed package yet |
+| Launch readiness | Local `npm run launch:check` passes; strict external check fails only on npm 404 |
 
-Interpretation: repository and npm metadata are now launch-ready. The remaining blocker for serious public distribution is not metadata; it is the demo/evidence surface: a short recording, one primary launch post, then rapid README/FAQ updates from real feedback.
+Interpretation: GitHub metadata is launch-ready, but npm distribution is still blocked until `project-tiny-context-harness` is published. The remaining blockers for serious public distribution are npm availability plus the demo/evidence surface: a short recording, one primary launch post, then rapid README/FAQ updates from real feedback.
 
 ## Competitive Snapshot
 

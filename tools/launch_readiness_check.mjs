@@ -144,6 +144,7 @@ function localChecks() {
   const launchKit = read("docs/launch/README.md");
   const primaryLaunch = read("docs/launch/primary-launch.md");
   const awesomeListSubmissions = read("docs/launch/awesome-list-submissions.md");
+  const freshAgentWalkthrough = read("docs/examples/fresh-agent-recovery.md");
   const externalPrPacket = read("docs/launch/external-prs/README.md");
   const transcendaPatch = read("docs/launch/external-prs/transcenda-awesome-agentic-coding.patch");
   const jordimasPatch = read("docs/launch/external-prs/jordimas-awesome-agentic-engineering.patch");
@@ -187,6 +188,16 @@ function localChecks() {
     addCheck(checks, `${id}-success-surface`, contains(content, /Expected result/) && contains(content, /Fresh-agent test prompt/), `${id} shows expected generated files and a fresh-agent test prompt.`);
     addCheck(checks, `${id}-demo-media`, contains(content, /demo-terminal\.gif/) && contains(content, /The demo shows the core loop/), `${id} embeds the launch demo GIF and explains the recovery loop.`);
   }
+  addCheck(
+    checks,
+    "fresh-agent-walkthrough",
+    hasFile("docs/examples/fresh-agent-recovery.md") &&
+      contains(rootReadme, /fresh-agent recovery walkthrough/) &&
+      contains(freshAgentWalkthrough, /Before Minimal Context/) &&
+      contains(freshAgentWalkthrough, /After Minimal Context/) &&
+      contains(freshAgentWalkthrough, /not benchmark evidence/),
+    "Fresh-agent recovery walkthrough exists, is linked from README and avoids benchmark claims."
+  );
 
   addCheck(
     checks,

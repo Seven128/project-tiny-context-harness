@@ -2,26 +2,28 @@
 
 Snapshot date: 2026-06-10.
 
-This is the execution map after `project-tiny-context-harness@0.2.39` was published and launch readiness passed. Recheck rules, deadlines and categories before submitting anywhere.
+This is the execution map after the GitHub repository was renamed to Project Tiny Context Harness. npm publication for `project-tiny-context-harness@0.2.39` is still required before broad launch. Recheck rules, deadlines and categories before submitting anywhere.
 
 ## Current Launch Position
 
 Ready now:
 
 - GitHub metadata is complete: description, homepage, MIT license and discovery topics are visible.
-- npm latest is `project-tiny-context-harness@0.2.39` with updated description, MIT license, homepage, repository, bugs URL and keywords.
-- GitHub Release `v0.2.39` is published.
-- `node tools/launch_readiness_check.mjs --strict-external` reports `Status: pass`.
 - Adoption handoff issue #4 is pinned; starter issues #5-#8 exist.
 - Repo-hosted launch media exists: README GIF, two Product Hunt gallery PNGs and a 240x240 thumbnail.
+- Trust surface exists: `SECURITY.md`, Dependabot and issue templates.
+- Fresh-agent recovery walkthrough is linked from README.
 
 Not ready yet:
 
+- npm latest for `project-tiny-context-harness` is not published; current registry state is 404.
+- GitHub Release for the renamed package should wait until npm publish succeeds.
+- `node tools/launch_readiness_check.mjs --strict-external` fails until npm publish succeeds.
 - No external launch post.
 - No outside adoption report, testimonial or contribution.
 - 0 GitHub stars and 0 forks at snapshot time.
 
-Practical implication: public launch is now feasible, but awards and high-star outcomes are still evidence-gated.
+Practical implication: broad public launch should wait for npm publish. Awards and high-star outcomes are still evidence-gated.
 
 ## Priority Sequence
 

@@ -4,8 +4,8 @@ This is the recording packet for issue #5. It prepares a real terminal transcrip
 
 Current status:
 
-- The public package is `project-tiny-context-harness@0.2.39`.
-- The repo and npm metadata pass `node tools/launch_readiness_check.mjs --strict-external`.
+- The renamed GitHub repository is live.
+- The public npm package `project-tiny-context-harness@0.2.39` is still pending publish; strict external readiness fails on npm 404 until that is fixed.
 - Repo-hosted demo media exists under `docs/launch/assets/`: `demo-terminal.gif`, two Product Hunt gallery PNGs and a 240x240 thumbnail.
 - No external video has been uploaded yet.
 

@@ -88,6 +88,8 @@ For the stable product/design rationale, see [PROJECT_SPEC.md](PROJECT_SPEC.md).
 
 Feedback from real repositories is especially useful right now. If you try the Harness, open an [adoption report](https://github.com/Seven128/project-tiny-context-harness/issues/new?template=adoption_report.yml) with what your agent was forgetting, what Minimal Context made easier and what recovery facts were still missing.
 
+For a concrete before/after story, read the [fresh-agent recovery walkthrough](docs/examples/fresh-agent-recovery.md).
+
 ## Repository Scope
 
 This repository is both the source workspace and a reference workspace for `project-tiny-context-harness`. It contains three product areas:
