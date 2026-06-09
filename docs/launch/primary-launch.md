@@ -1,0 +1,241 @@
+# Primary Launch Packet
+
+Snapshot date: 2026-06-10.
+
+This is the copy-ready launch packet for the first public push after `agent-project-sdlc@0.2.39`. It assumes the repository, npm package, release, demo packet and adoption issue are already live.
+
+## Launch Decision
+
+Primary first channel: Hacker News Show HN.
+
+Why: the project is installable now, the pitch is technical, and the most valuable early signal is whether experienced agent users recognize the recovery problem. Product Hunt should follow after a public demo GIF or video exists because its launch surface depends more on visual media and broad product clarity.
+
+Do not post to multiple broad channels on the same day. Use the first channel to collect objections, then patch README, FAQ, demo or issues before the second channel.
+
+## Preflight
+
+Run these before posting:
+
+```sh
+npm run launch:check
+node tools/launch_readiness_check.mjs --strict-external
+npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec agent-project-sdlc@0.2.39 --clean
+```
+
+Confirm:
+
+- GitHub stars/forks and npm downloads baseline are noted from the strict external report.
+- Issue #4 is pinned and open for adoption reports.
+- Issue #5 has the current demo packet or final demo URL.
+- README first screen still shows install, 60-second trial and non-goals.
+- No copy claims benchmark wins, adoption, awards or productivity multipliers.
+
+## Show HN
+
+Source: [Show HN guidelines](https://news.ycombinator.com/showhn.html).
+
+Recommended URL:
+
+```text
+https://github.com/Seven128/project-agent-sdlc
+```
+
+Title:
+
+```text
+Show HN: Minimal project memory for AI coding agents
+```
+
+Body:
+
+```text
+I built AI SDLC Harness after seeing coding agents do well inside one chat but lose project-specific intent across new chats, handoffs, RFC/debug turns and tool changes.
+
+It installs a small repo-native recovery surface: project_context/**, AGENTS.md guidance, role Skills and a validate-context gate. It is not a task manager, spec generator, autonomous agent framework, or benchmark-proven productivity claim.
+
+The difference from using only AGENTS.md is that AGENTS.md stays the short startup router, while project_context keeps the maintained facts a fresh agent should recover: project goal, non-goals, architecture boundaries, ownership and validation paths. validate-context checks that recovery surface and blocks false "tests passed" claims from being stored as durable facts.
+
+Try it:
+npm install -D agent-project-sdlc@latest
+npx --yes --package agent-project-sdlc@latest sdlc-harness init
+npx --no-install sdlc-harness validate-context
+
+Demo packet/transcript:
+https://github.com/Seven128/project-agent-sdlc/blob/main/docs/launch/demo.md
+
+Adoption reports / missing facts:
+https://github.com/Seven128/project-agent-sdlc/issues/4
+
+I am looking for feedback from people using Codex, Claude Code, Cursor, OpenCode or similar agents on larger repos: does this minimal recovery surface solve a real handoff problem, or is the missing context somewhere else?
+```
+
+Comment if asked "How is this different from AGENTS.md?":
+
+```text
+AGENTS.md is the startup router. The part I found missing was a small maintained fact source behind it: project goal, non-goals, architecture boundary, ownership and repeatable validation paths. The harness keeps AGENTS.md short and uses validate-context to catch missing or misleading recovery facts.
+```
+
+Comment if asked "Isn't this just documentation?":
+
+```text
+Partly, yes. The bet is that the documentation surface has to be deliberately small, repo-native and maintained for fresh-agent recovery. It should not become a second spec system or task manager. The validator checks recoverability and false test claims, while product quality still belongs to the repo's own tests, CI and review.
+```
+
+Comment if asked for benchmarks:
+
+```text
+I am intentionally not claiming speedups yet. The old stage-heavy workflow was removed because it had obvious ceremony cost. The current claim is narrower: a minimal recovery surface is useful if agents repeatedly rediscover project intent and validation paths. Fresh benchmark work still has to be rerun against this minimal design.
+```
+
+## Product Hunt
+
+Sources: [Product Hunt launch guide](https://www.producthunt.com/launch), [Preparing for Launch](https://www.producthunt.com/launch/preparing-for-launch), [How Product Hunt works](https://www.producthunt.com/launch/how-product-hunt-works).
+
+Gate: wait for a public GIF or short video from `docs/launch/demo.md`.
+
+Name:
+
+```text
+AI SDLC Harness
+```
+
+Tagline:
+
+```text
+Minimal project memory for AI coding agents
+```
+
+Topics:
+
+```text
+Developer Tools, Artificial Intelligence, Open Source
+```
+
+Description:
+
+```text
+AI SDLC Harness helps coding agents recover project intent across new chats, handoffs and debugging turns. It installs compact project_context files, AGENTS.md guidance and a validate-context gate without adding a full SDLC ceremony.
+```
+
+First comment:
+
+```text
+I built this for the boring failure mode of AI coding: the model is capable, but each new chat has to rediscover the project goal, architecture boundaries, validation commands and "do not change this" constraints.
+
+AI SDLC Harness keeps those durable facts in the repo as Minimal Context. It is not a benchmark-proven productivity claim yet and it does not replace tests, CI or review.
+
+I would like feedback from people using coding agents on real projects: what project facts should a fresh agent recover before it proposes code, and is this the smallest useful surface?
+```
+
+Media order:
+
+1. 60-90 second terminal demo GIF/video.
+2. Screenshot of generated `project_context/**`.
+3. Screenshot of `validate-context` passing.
+
+## Reddit / Niche Communities
+
+Use only after the first broad post has at least a few comments or after the demo video is public. Pick communities where self-promotion rules allow project feedback posts.
+
+Title:
+
+```text
+I made a minimal project-memory harness for AI coding agents
+```
+
+Body:
+
+```text
+I am working on AI SDLC Harness, an npm package that installs Minimal Context Harness into a repo.
+
+The idea is simple: new agent chats often lose project-specific context. Instead of adding a full SDLC workflow, the package creates a small project_context fact source, AGENTS.md startup guidance and a validate-context gate so a fresh agent can recover intent, boundaries and validation paths.
+
+It is meant to complement specs, tests, CI and code intelligence tools. It does not own task state or claim to replace review.
+
+I would appreciate feedback from people using coding agents on non-trivial projects: what facts do your agents keep rediscovering, and would you want those facts maintained in the repo?
+```
+
+## Curated List PR
+
+Use after a stable demo URL exists.
+
+Candidate line:
+
+```text
+- [AI SDLC Harness](https://github.com/Seven128/project-agent-sdlc) - Minimal repo-native project memory for AI coding agents. Installs project_context files, AGENTS.md guidance and a validate-context gate so fresh agent chats can recover project intent and validation paths.
+```
+
+PR note:
+
+```text
+This is a small npm/CLI tool for agent-context recovery rather than an autonomous coding agent. It fits best under developer tools, AI coding tools or context-engineering categories.
+```
+
+## 24-Hour Response Playbook
+
+Within 1 hour:
+
+- Answer direct technical questions.
+- Do not argue with dismissive comments.
+- Link the exact README or demo section instead of pasting long explanations.
+- Move valid confusion into a README/FAQ patch or GitHub issue.
+
+Within 6 hours:
+
+- Count comments by theme: unclear positioning, install friction, AGENTS.md overlap, benchmark ask, integration ask, examples ask.
+- Patch the README only for repeated or high-severity confusion.
+- Comment on issue #3 with launch URL, baseline metrics and major objections.
+
+Within 24 hours:
+
+- Record stars, forks, npm downloads, issues and external comments.
+- Decide whether the next move is Product Hunt, a curated-list PR, or a docs/demo repair.
+- Convert real adoption examples into issue #4 reports or linked discussions.
+- If the biggest objection is "this is just AGENTS.md", patch the README before any second-channel post.
+
+Second action if comments are not exposing a major positioning flaw: submit the two P0 curated-list PRs from `docs/launch/awesome-list-submissions.md`. Defer Product Hunt until a public demo GIF/video and two gallery images exist.
+
+## Claims Boundary
+
+Allowed:
+
+- "Minimal project memory for AI coding agents."
+- "Helps fresh chats recover project intent, boundaries and validation paths."
+- "Complements tests, CI and review."
+- "The package is installable from npm."
+
+Avoid:
+
+- "Automates the SDLC."
+- "Replaces tests, CI, review, specs or project management."
+- "Benchmark-proven faster."
+- "Award-winning."
+- "Used by teams" unless public adoption exists.
+- Asking for stars, upvotes or awards.
+
+## Measurement
+
+Baseline before first post:
+
+```text
+GitHub stars:
+GitHub forks:
+npm downloads last week:
+Open issues:
+Open external posts:
+```
+
+Post after each channel:
+
+```text
+Channel:
+URL:
+Posted at:
+Stars after 24h:
+Forks after 24h:
+npm downloads after 24h:
+New issues:
+Most repeated question:
+README/demo patch needed:
+Next channel decision:
+```

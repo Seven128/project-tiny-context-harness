@@ -28,10 +28,11 @@ Practical implication: public launch is now feasible, but awards and high-star o
 | Priority | Target | Why now | Required packet | Success signal |
 |---:|---|---|---|---|
 | 1 | Hacker News Show HN | HN's Show HN format is for something people can try and discuss; this package is now installable. | GitHub URL, short text post, demo link if possible, explicit feedback ask. | Comments discuss agent handoff/context drift rather than generic AI tooling. |
-| 2 | Product Hunt | Product Hunt is useful for distribution, feedback and social proof; submissions can be scheduled up to one month ahead. | Demo media, tagline, maker comment, screenshots/GIF, GitHub/npm links. | Reviews/comments from developer-tool users and enough traffic to validate messaging. |
-| 3 | Reddit / niche communities | Good for focused feedback from Codex, Claude Code, Cursor and local-first tool users. | Reddit draft from launch kit, demo, #4 adoption issue link. | Replies describe missing facts agents rediscover in real repos. |
-| 4 | Awesome lists | Curated lists create durable discovery after the README/demo are clear. | One-line description, category fit, demo link, no award/benchmark claims. | Listing accepted or maintainer feedback gives clearer positioning. |
-| 5 | Awards | Awards need visible adoption or explicit eligibility thresholds. | Launch metrics, adoption reports, demo, docs quality evidence. | Nomination accepted or shortlist feedback. |
+| 2 | Agentic-coding awesome lists | Two smaller lists match repo-level agent instructions and team adoption now. | PR copy from `docs/launch/awesome-list-submissions.md`, no benchmark/adoption claims. | Listing accepted or maintainer feedback clarifies the category. |
+| 3 | Product Hunt | Product Hunt is useful for distribution, feedback and social proof; submissions can be scheduled up to one month ahead. | Demo media, tagline, maker comment, at least two gallery images/GIFs, GitHub/npm links. | Reviews/comments from developer-tool users and enough traffic to validate messaging. |
+| 4 | Reddit / niche communities | Good for focused feedback from Codex, Claude Code, Cursor and local-first tool users. | Reddit draft from launch kit, demo, #4 adoption issue link. | Replies describe missing facts agents rediscover in real repos. |
+| 5 | Broader awesome lists | Higher-exposure lists create durable discovery after the README/demo are clear. | One-line description, category fit, demo link, no award/benchmark claims. | Listing accepted or maintainers give positioning feedback. |
+| 6 | Awards | Awards need visible adoption or explicit eligibility thresholds. | Launch metrics, adoption reports, demo, docs quality evidence. | Nomination accepted or shortlist feedback. |
 
 ## Channel Details
 
@@ -67,11 +68,16 @@ Submission packet:
 - Tagline: `Minimal project memory for AI coding agents`
 - Topics: Developer Tools, Artificial Intelligence, Open Source
 - First comment: use the Product Hunt draft in `docs/launch/README.md`, updated with the demo link.
-- Media: terminal demo GIF or short video, plus one screenshot of generated `project_context/**`.
+- Media: two or more 1270x760 gallery images/GIFs, plus optional YouTube demo video. Product Hunt recommends a square 240x240 thumbnail under 3MB, a tagline under 60 characters, a description under 500 characters, up to three launch tags and a first maker comment.
 
 ### Curated Lists
 
-Start with [awesome-ai-devtools](https://github.com/jamesmurdza/awesome-ai-devtools) after the demo is live. It is broad enough for a repo-native agent-context tool.
+Start with the two P0 agentic-coding lists in [awesome-list-submissions.md](awesome-list-submissions.md):
+
+- [Transcenda/awesome-agentic-coding](https://github.com/Transcenda/awesome-agentic-coding), under `Agent instructions and Skills`.
+- [jordimas/awesome-agentic-engineering](https://github.com/jordimas/awesome-agentic-engineering), under `Team Adoption`.
+
+Then try [awesome-ai-devtools](https://github.com/jamesmurdza/awesome-ai-devtools) after the demo is live. It is broad enough for a repo-native agent-context tool, but the submission is stronger once the demo proves the AI-agent workflow.
 
 Possible listing text:
 
@@ -85,10 +91,10 @@ Hold on [awesome-opencode](https://github.com/awesome-opencode/awesome-opencode)
 
 | Target | Current official signal | Fit now | Gate |
 |---|---|---|---|
-| [The Commits](https://www.commits.dev/) | 2026 event page lists Small/Large Project, Documentation & Design Excellence and Community Choice categories. | Medium later; docs angle is plausible. | Submit after demo, first launch and at least one real adoption signal. |
+| [The Commits](https://www.commits.dev/) | 2026 event page lists Small/Large Project, Documentation & Design Excellence and Community Choice categories, with an August 11, 2026 award show. | Medium after first launch; docs angle is plausible. | Submit after demo, first launch and at least one real adoption signal, or submit Documentation & Design Excellence if nomination timing is at risk. |
 | [JavaScript Open Source Awards](https://osawards.com/javascript/) | Requirements include OSI-approved license, active contribution in last 6 months and 100+ stars. | Not eligible now because stars are 0. | Revisit at 100+ stars. |
-| [OpenUK Awards](https://openuk.uk/awards/) | 2026 awards are UK-focused open tech, with ceremony on 2026-11-05; OpenUK notes nominations in June. | Low unless maintainer/project geography and category fit are confirmed. | Confirm eligibility before spending effort. |
-| [DevOps Dozen](https://devopsdozen.com/) | 2025 page lists public nominations, finalist voting and DevOps categories; community nominations are closed on the category page. | Low now; project is not primarily DevOps. | Revisit only with DevOps adoption evidence. |
+| [OpenUK Awards](https://openuk.uk/awards/) | 2026 awards are UK-focused open tech, with ceremony on 2026-11-05. | Low unless maintainer/project geography and category fit are confirmed. | Confirm UK presence and category eligibility before spending effort. |
+| [DevOps Dozen](https://devopsdozen.com/) | 2025 process had public nominations, finalist voting and judge weighting; the OSS category recognizes community value around open source development assets. | Low now; project is not primarily DevOps and has no community evidence yet. | Revisit only with DevOps/tooling adoption evidence. |
 | [Product Hunt Golden Kitty Awards](https://www.producthunt.com/golden-kitty-awards) | Product Hunt has Engineering & Development and AI Agents award surfaces. | Possible only after Product Hunt launch. | Product Hunt launch must happen first and show traction. |
 
 ## Operating Rules
@@ -103,7 +109,7 @@ Hold on [awesome-opencode](https://github.com/awesome-opencode/awesome-opencode)
 ## Next Concrete Actions
 
 1. Finish #5: record the 60-90 second recovery demo from `docs/launch/demo.md`.
-2. Post one Show HN or Product Hunt launch, not both on the same day.
-3. Track stars, forks, npm downloads and comments for 24 hours.
-4. Patch README/FAQ from repeated confusion.
-5. Submit the first curated-list PR only after the demo link is stable.
+2. Post Show HN first; defer Product Hunt until the demo media packet is stronger.
+3. Submit the two P0 agentic-coding awesome-list PRs from `docs/launch/awesome-list-submissions.md`.
+4. Track stars, forks, npm downloads and comments for 24 hours.
+5. Patch README/FAQ from repeated confusion.

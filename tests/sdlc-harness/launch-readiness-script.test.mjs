@@ -27,6 +27,8 @@ for (const expected of [
   "package-readme-success-surface",
   "launch-kit",
   "launch-operating-plan",
+  "primary-launch-packet",
+  "awesome-list-submissions",
   "launch-demo-storyboard",
   "launch-demo-packet",
   "launch-milestones",

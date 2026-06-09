@@ -4,7 +4,9 @@ This is the maintainer launch kit for AI SDLC Harness. It is copy-ready material
 
 Do not claim benchmark wins yet. Current public positioning is based on product design and smoke evidence: the package installs a small, durable recovery surface and `validate-context` gate. Fresh Minimal Context benchmark runs are still required before publishing efficiency claims.
 
-For competitor and feasibility context, see [market-map.md](market-map.md). For current launch, award and curated-list execution targets, see [outreach-targets.md](outreach-targets.md). For the recording packet, see [demo.md](demo.md).
+For competitor and feasibility context, see [market-map.md](market-map.md). For current launch, award and curated-list execution targets, see [outreach-targets.md](outreach-targets.md). For copy-ready primary launch execution, see [primary-launch.md](primary-launch.md). For curated-list PR copy, see [awesome-list-submissions.md](awesome-list-submissions.md). For the recording packet, see [demo.md](demo.md).
+
+Readiness boundary: `npm run launch:check` means the metadata, docs and launch packets are internally coherent. It does not mean Product Hunt, curated-list submissions or awards are ready. Those still require a public demo recording, first feedback and adoption evidence.
 
 ## Core Positioning
 

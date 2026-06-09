@@ -108,6 +108,8 @@ function localChecks() {
   const rootReadme = read("README.md");
   const packageReadme = read("packages/sdlc-harness/README.md");
   const launchKit = read("docs/launch/README.md");
+  const primaryLaunch = read("docs/launch/primary-launch.md");
+  const awesomeListSubmissions = read("docs/launch/awesome-list-submissions.md");
   const demoPacket = read("docs/launch/demo.md");
   const marketMap = read("docs/launch/market-map.md");
   const outreachTargets = read("docs/launch/outreach-targets.md");
@@ -141,8 +143,43 @@ function localChecks() {
     addCheck(checks, `${id}-success-surface`, contains(content, /Expected result/) && contains(content, /Fresh-agent test prompt/), `${id} shows expected generated files and a fresh-agent test prompt.`);
   }
 
-  addCheck(checks, "launch-kit", contains(launchKit, /Launch Kit/) && contains(launchKit, /Do not claim benchmark wins/) && contains(launchKit, /Hacker News Draft/), "Launch kit has copy-ready channel drafts and no-benchmark boundary.");
+  addCheck(
+    checks,
+    "launch-kit",
+    contains(launchKit, /Launch Kit/) &&
+      contains(launchKit, /Do not claim benchmark wins/) &&
+      contains(launchKit, /Hacker News Draft/) &&
+      contains(launchKit, /awesome-list-submissions\.md/) &&
+      contains(launchKit, /Readiness boundary/) &&
+      contains(launchKit, /does not mean Product Hunt, curated-list submissions or awards are ready/),
+    "Launch kit has copy-ready channel drafts, readiness boundary and no-benchmark boundary."
+  );
   addCheck(checks, "launch-operating-plan", contains(launchKit, /Launch Operating Plan/) && contains(launchKit, /Channel Matrix/) && contains(launchKit, /Community Handoff Surface/), "Launch kit has an operating plan, channel matrix and community handoff surface.");
+  addCheck(
+    checks,
+    "primary-launch-packet",
+    contains(launchKit, /primary-launch\.md/) &&
+      hasFile("docs/launch/primary-launch.md") &&
+      contains(primaryLaunch, /Primary Launch Packet/) &&
+      contains(primaryLaunch, /Hacker News Show HN/) &&
+      contains(primaryLaunch, /Product Hunt/) &&
+      contains(primaryLaunch, /difference from using only AGENTS\.md/) &&
+      contains(primaryLaunch, /Adoption reports \/ missing facts/) &&
+      contains(primaryLaunch, /24-Hour Response Playbook/) &&
+      contains(primaryLaunch, /Do not ask for stars|Asking for stars/),
+    "Primary launch packet has copy-ready first-channel copy, Product Hunt follow-up, response playbook and claims boundary."
+  );
+  addCheck(
+    checks,
+    "awesome-list-submissions",
+    hasFile("docs/launch/awesome-list-submissions.md") &&
+      contains(awesomeListSubmissions, /Awesome List Submission Packet/) &&
+      contains(awesomeListSubmissions, /Transcenda\/awesome-agentic-coding/) &&
+      contains(awesomeListSubmissions, /jordimas\/awesome-agentic-engineering/) &&
+      contains(awesomeListSubmissions, /awesome-ai-devtools/) &&
+      contains(awesomeListSubmissions, /Do not claim adoption, benchmark wins, awards/),
+    "Awesome-list submission packet has P0 PR copy and deferred-list gates."
+  );
   addCheck(checks, "launch-demo-storyboard", contains(launchKit, /Demo Storyboard/) && contains(launchKit, /fresh-agent test prompt/i) && contains(launchKit, /make validate-context/), "Launch kit has a demo storyboard tied to the README recovery test.");
   addCheck(
     checks,
@@ -166,6 +203,7 @@ function localChecks() {
     contains(outreachTargets, /Outreach Targets/) &&
       contains(outreachTargets, /Priority Sequence/) &&
       contains(outreachTargets, /Curated Lists/) &&
+      contains(outreachTargets, /awesome-list-submissions\.md/) &&
       contains(outreachTargets, /Awards/) &&
       contains(outreachTargets, /Do not submit to award programs before the demo and first public feedback exist/),
     "Outreach targets map current launch, curated-list and award gates."
