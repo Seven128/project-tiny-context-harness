@@ -86,6 +86,39 @@ Candidate line:
 - [Project Tiny Context Harness](https://github.com/Seven128/project-tiny-context-harness) - Minimal repo-native project memory for AI coding agents, with `AGENTS.md`, `project_context/**` and a `validate-context` gate for fresh-agent recovery.
 ```
 
+## P1: Awesome OpenCode
+
+Target: [awesome-opencode/awesome-opencode](https://github.com/awesome-opencode/awesome-opencode)
+
+Why it fits now: the list accepts YAML entries under `data/projects/` for tools, integrations and utilities. Project Tiny Context Harness now has a documented OpenCode setup path in `docs/agent-surface-recipes.md`, while the product remains tool-neutral and avoids claiming to be an OpenCode plugin.
+
+Suggested category: `data/projects/`.
+
+Patch packet: [external-prs/README.md](external-prs/README.md).
+
+Suggested entry:
+
+```yaml
+name: Project Tiny Context Harness
+repo: https://github.com/Seven128/project-tiny-context-harness
+tagline: Minimal project memory for coding agents
+description: Repo-native context recovery for OpenCode and other AI coding agents. Installs AGENTS.md, project_context/**, role Skills, and validate-context so fresh sessions can recover project intent, boundaries, and validation paths without SDLC phase ceremony.
+```
+
+PR title:
+
+```text
+Add Project Tiny Context Harness to projects
+```
+
+PR body:
+
+```text
+Adds Project Tiny Context Harness under Projects.
+
+It is a repo-native context recovery tool that OpenCode users can adopt through root AGENTS.md, project_context/** and an optional .opencode support-assets folder without creating separate project memories per agent.
+```
+
 ## P1: Awesome Agent Skills
 
 Target: [heilcheng/awesome-agent-skills](https://github.com/heilcheng/awesome-agent-skills)
@@ -96,6 +129,7 @@ Gate before submitting: expose a clean, standalone Skill URL or package story. T
 
 1. Submit Transcenda PR after the Show HN packet is ready.
 2. Submit jordimas PR after Transcenda, using the shorter team-adoption copy.
-3. Wait for demo video/GIF before `awesome-ai-devtools`.
-4. Wait for standalone Skill packaging before `awesome-agent-skills`.
-5. If a maintainer rejects the wording as too framework-like, revise toward "repo-native context recovery" and away from "SDLC".
+3. Submit `awesome-opencode` after npm publish if the README still links the OpenCode setup note.
+4. Wait for demo video/GIF before `awesome-ai-devtools`.
+5. Wait for standalone Skill packaging before `awesome-agent-skills`.
+6. If a maintainer rejects the wording as too framework-like, revise toward "repo-native context recovery" and away from "SDLC".

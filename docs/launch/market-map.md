@@ -124,6 +124,6 @@ These are lower priority than the first public launch, but useful after the demo
 | List | Current scale | Fit | Gate before PR |
 |---|---:|---|---|
 | [awesome-ai-devtools](https://github.com/jamesmurdza/awesome-ai-devtools) | 3,825 stars | Broad AI developer tools list; likely the best first curated-list target. | Demo live, README concise, one-line category fit ready. |
-| [awesome-opencode](https://github.com/awesome-opencode/awesome-opencode) | 7,766 stars | OpenCode ecosystem list; fit is indirect unless Harness documents OpenCode usage. | Add an OpenCode-specific usage note or skip. |
+| [awesome-opencode](https://github.com/awesome-opencode/awesome-opencode) | 7,766 stars | OpenCode ecosystem list; fit is now plausible because README links an OpenCode setup note. | Submit the prepared `data/projects/` YAML patch after npm publish; do not claim this is an OpenCode plugin. |
 | [awesome-agents](https://github.com/kyrolabs/awesome-agents) | 2,403 stars | Broad AI agent list; Harness is support infrastructure, not an agent. | Position as agent workflow/context infrastructure, not an autonomous agent. |
 | [awesome-opensource-ai](https://github.com/alvinreal/awesome-opensource-ai) | 3,833 stars | Broad open-source AI list; possible after visible adoption. | Wait for demo and at least one adoption report. |

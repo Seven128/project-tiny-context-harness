@@ -32,10 +32,11 @@ Practical implication: broad public launch should wait for npm publish. Awards a
 |---:|---|---|---|---|
 | 1 | Hacker News Show HN | HN's Show HN format is for something people can try and discuss; this package is now installable. | GitHub URL, short text post, demo link if possible, explicit feedback ask. | Comments discuss agent handoff/context drift rather than generic AI tooling. |
 | 2 | Agentic-coding awesome lists | Two smaller lists match repo-level agent instructions and team adoption now. | PR copy and exact patches from `docs/launch/awesome-list-submissions.md` and `docs/launch/external-prs/`, no benchmark/adoption claims. | Listing accepted or maintainer feedback clarifies the category. |
-| 3 | Product Hunt | Product Hunt is useful for distribution, feedback and social proof; submissions can be scheduled up to one month ahead. | Demo media, tagline, maker comment, at least two gallery images/GIFs, GitHub/npm links. | Reviews/comments from developer-tool users and enough traffic to validate messaging. |
-| 4 | Reddit / niche communities | Good for focused feedback from Codex, Claude Code, Cursor and local-first tool users. | Reddit draft from launch kit, demo, #4 adoption issue link. | Replies describe missing facts agents rediscover in real repos. |
-| 5 | Broader awesome lists | Higher-exposure lists create durable discovery after the README/demo are clear. | One-line description, category fit, demo link, no award/benchmark claims. | Listing accepted or maintainers give positioning feedback. |
-| 6 | Awards | Awards need visible adoption or explicit eligibility thresholds. | Launch metrics, adoption reports, demo, docs quality evidence. | Nomination accepted or shortlist feedback. |
+| 3 | Awesome OpenCode | The README now includes an OpenCode setup note; the list accepts project YAML entries for tools and utilities. | `data/projects/` YAML patch from `docs/launch/external-prs/`, no plugin claim. | Listing accepted or maintainers clarify OpenCode relevance. |
+| 4 | Product Hunt | Product Hunt is useful for distribution, feedback and social proof; submissions can be scheduled up to one month ahead. | Demo media, tagline, maker comment, at least two gallery images/GIFs, GitHub/npm links. | Reviews/comments from developer-tool users and enough traffic to validate messaging. |
+| 5 | Reddit / niche communities | Good for focused feedback from Codex, Claude Code, Cursor and local-first tool users. | Reddit draft from launch kit, demo, #4 adoption issue link. | Replies describe missing facts agents rediscover in real repos. |
+| 6 | Broader awesome lists | Higher-exposure lists create durable discovery after the README/demo are clear. | One-line description, category fit, demo link, no award/benchmark claims. | Listing accepted or maintainers give positioning feedback. |
+| 7 | Awards | Awards need visible adoption or explicit eligibility thresholds. | Launch metrics, adoption reports, demo, docs quality evidence. | Nomination accepted or shortlist feedback. |
 
 ## Channel Details
 
@@ -88,7 +89,7 @@ Possible listing text:
 Project Tiny Context Harness - Minimal repo-native project memory for AI coding agents. Installs project_context files, AGENTS.md guidance and a validate-context gate so fresh agent chats can recover project intent and validation paths.
 ```
 
-[awesome-opencode](https://github.com/awesome-opencode/awesome-opencode) is now plausible after npm publish because the README links an OpenCode setup note in `docs/agent-surface-recipes.md`. Keep the listing narrow: root `AGENTS.md` and `project_context/**` are the portable contract; `.opencode` is only a custom support-assets folder.
+[awesome-opencode](https://github.com/awesome-opencode/awesome-opencode) is now plausible after npm publish because the README links an OpenCode setup note in `docs/agent-surface-recipes.md`. Keep the listing narrow: root `AGENTS.md` and `project_context/**` are the portable contract; `.opencode` is only a custom support-assets folder. Use the exact `data/projects/` patch in [external-prs/README.md](external-prs/README.md).
 
 ### Awards
 
@@ -113,7 +114,7 @@ Project Tiny Context Harness - Minimal repo-native project memory for AI coding 
 ## Next Concrete Actions
 
 1. Post Show HN first using `docs/launch/primary-launch.md` and the repo-hosted GIF if useful.
-2. Submit the two P0 agentic-coding awesome-list PRs from `docs/launch/external-prs/README.md`.
+2. Submit the two P0 agentic-coding awesome-list PRs and the OpenCode project-list PR from `docs/launch/external-prs/README.md`.
 3. Track stars, forks, npm downloads and comments for 24 hours.
 4. Patch README/FAQ from repeated confusion.
 5. Use the Product Hunt media packet only after the first feedback loop or with a deliberate scheduling decision.
