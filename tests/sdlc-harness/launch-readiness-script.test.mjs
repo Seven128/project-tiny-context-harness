@@ -30,6 +30,7 @@ for (const expected of [
   "launch-demo-storyboard",
   "launch-milestones",
   "market-map",
+  "outreach-targets",
   "quickstart-smoke",
   "launch-check-script",
   "consumer-workflow-boundary",

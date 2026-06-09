@@ -109,6 +109,7 @@ function localChecks() {
   const packageReadme = read("packages/sdlc-harness/README.md");
   const launchKit = read("docs/launch/README.md");
   const marketMap = read("docs/launch/market-map.md");
+  const outreachTargets = read("docs/launch/outreach-targets.md");
   const sourceWorkflow = read(".github/workflows/harness.yml");
   const maintainerWorkflow = read(".github/workflows/package.yml");
 
@@ -144,6 +145,16 @@ function localChecks() {
   addCheck(checks, "launch-demo-storyboard", contains(launchKit, /Demo Storyboard/) && contains(launchKit, /fresh-agent test prompt/i) && contains(launchKit, /make validate-context/), "Launch kit has a demo storyboard tied to the README recovery test.");
   addCheck(checks, "launch-milestones", contains(launchKit, /Star \/ Adoption Milestones/) && contains(launchKit, /10 stars/) && contains(launchKit, /500 stars/), "Launch kit has star/adoption milestone triggers without treating stars as proof.");
   addCheck(checks, "market-map", contains(marketMap, /Market Map/) && contains(marketMap, /Competitive Snapshot/) && contains(marketMap, /10-100 stars/), "Market map has competitor snapshot and feasibility bands.");
+  addCheck(
+    checks,
+    "outreach-targets",
+    contains(outreachTargets, /Outreach Targets/) &&
+      contains(outreachTargets, /Priority Sequence/) &&
+      contains(outreachTargets, /Curated Lists/) &&
+      contains(outreachTargets, /Awards/) &&
+      contains(outreachTargets, /Do not submit to award programs before the demo and first public feedback exist/),
+    "Outreach targets map current launch, curated-list and award gates."
+  );
   addCheck(checks, "contributing", hasFile("CONTRIBUTING.md") && contains(read("CONTRIBUTING.md"), /Do not claim benchmark wins/), "CONTRIBUTING.md exists and preserves benchmark-claim boundary.");
   addCheck(checks, "issue-templates", hasFile(".github/ISSUE_TEMPLATE/bug_report.yml") && hasFile(".github/ISSUE_TEMPLATE/feature_request.yml"), "Bug and feature issue templates exist.");
   addCheck(checks, "pr-template", hasFile(".github/PULL_REQUEST_TEMPLATE.md"), "Pull request template exists.");
