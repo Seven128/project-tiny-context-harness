@@ -47,7 +47,7 @@ Use `Show HN: Minimal project memory for AI coding agents`.
 Do:
 
 - Link to the GitHub repository, not a blog post.
-- Make clear that the package can be installed and tried immediately.
+- After npm publish, make clear that the package can be installed and tried immediately.
 - Ask for technical feedback from people using agents on real repositories.
 - Keep language factual and avoid award/star asks.
 
@@ -61,7 +61,7 @@ Do not:
 
 Sources: [Product Hunt Launch Guide](https://www.producthunt.com/launch), [Preparing for Launch](https://www.producthunt.com/launch/preparing-for-launch), [How Product Hunt Works](https://www.producthunt.com/launch/how-product-hunt-works).
 
-Use Product Hunt after Show HN or first feedback unless there is a scheduling reason to move sooner. Product Hunt is better for broader distribution than deep technical critique, so the page needs visuals and very simple language. The current repo already has a GIF, two gallery images and a thumbnail under `docs/launch/assets/`.
+Use Product Hunt after Show HN or first feedback unless there is a scheduling reason to move sooner. Product Hunt is better for broader distribution than deep technical critique, so the page needs visuals and very simple language. The current repo already has a social preview image, GIF, two gallery images and a thumbnail under `docs/launch/assets/`.
 
 Submission packet:
 
@@ -70,7 +70,7 @@ Submission packet:
 - Tagline: `Minimal project memory for AI coding agents`
 - Topics: Developer Tools, Artificial Intelligence, Open Source
 - First comment: use the Product Hunt draft in `docs/launch/README.md`, updated with the demo link.
-- Media: `docs/launch/assets/product-hunt-gallery-1.png`, `docs/launch/assets/product-hunt-gallery-2.png`, `docs/launch/assets/product-hunt-thumbnail.png` and optional YouTube demo video. Product Hunt recommends a square 240x240 thumbnail under 3MB, a tagline under 60 characters, a description under 500 characters, up to three launch tags and a first maker comment.
+- Media: `docs/launch/assets/social-preview.png`, `docs/launch/assets/product-hunt-gallery-1.png`, `docs/launch/assets/product-hunt-gallery-2.png`, `docs/launch/assets/product-hunt-thumbnail.png` and optional YouTube demo video. Product Hunt recommends a square 240x240 thumbnail under 3MB, a tagline under 60 characters, a description under 500 characters, up to three launch tags and a first maker comment.
 
 ### Curated Lists
 

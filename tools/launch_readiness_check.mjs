@@ -271,6 +271,7 @@ function localChecks() {
       contains(demoPacket, /npm run launch:demo/) &&
       contains(demoPacket, /Repo-hosted demo media exists/) &&
       contains(demoPacket, /demo-terminal\.gif/) &&
+      contains(demoPacket, /social-preview\.png/) &&
       contains(demoPacket, /product-hunt-gallery-1\.png/) &&
       contains(demoPacket, /Fresh-Agent Prompt/) &&
       contains(demoPacket, /Fresh-Agent Recovery Check/),
@@ -281,10 +282,11 @@ function localChecks() {
     "launch-demo-media",
     isGif("docs/launch/assets/demo-terminal.gif") &&
       fileSize("docs/launch/assets/demo-terminal.gif") > 100_000 &&
+      pngIs("docs/launch/assets/social-preview.png", 1280, 640) &&
       pngIs("docs/launch/assets/product-hunt-gallery-1.png", 1270, 760) &&
       pngIs("docs/launch/assets/product-hunt-gallery-2.png", 1270, 760) &&
       pngIs("docs/launch/assets/product-hunt-thumbnail.png", 240, 240),
-    "Launch media includes an animated GIF, two 1270x760 Product Hunt gallery images and a 240x240 thumbnail."
+    "Launch media includes a 1280x640 social preview, animated GIF, two 1270x760 Product Hunt gallery images and a 240x240 thumbnail."
   );
   addCheck(checks, "launch-milestones", contains(launchKit, /Star \/ Adoption Milestones/) && contains(launchKit, /10 stars/) && contains(launchKit, /500 stars/), "Launch kit has star/adoption milestone triggers without treating stars as proof.");
   addCheck(checks, "market-map", contains(marketMap, /Market Map/) && contains(marketMap, /Competitive Snapshot/) && contains(marketMap, /10-100 stars/), "Market map has competitor snapshot and feasibility bands.");

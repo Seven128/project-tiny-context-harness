@@ -10,6 +10,7 @@ Readiness boundary: `npm run launch:check` means the metadata, docs, launch pack
 
 Launch media:
 
+- GitHub/social preview image: [assets/social-preview.png](assets/social-preview.png)
 - README demo GIF: [assets/demo-terminal.gif](assets/demo-terminal.gif)
 - Product Hunt gallery images: [assets/product-hunt-gallery-1.png](assets/product-hunt-gallery-1.png), [assets/product-hunt-gallery-2.png](assets/product-hunt-gallery-2.png)
 - Product Hunt thumbnail: [assets/product-hunt-thumbnail.png](assets/product-hunt-thumbnail.png)

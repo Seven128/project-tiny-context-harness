@@ -6,7 +6,7 @@ Current status:
 
 - The renamed GitHub repository is live.
 - The public npm package `project-tiny-context-harness@0.2.39` is still pending publish; strict external readiness fails on npm 404 until that is fixed.
-- Repo-hosted demo media exists under `docs/launch/assets/`: `demo-terminal.gif`, two Product Hunt gallery PNGs and a 240x240 thumbnail.
+- Repo-hosted demo media exists under `docs/launch/assets/`: `social-preview.png`, `demo-terminal.gif`, two Product Hunt gallery PNGs and a 240x240 thumbnail.
 - No external video has been uploaded yet.
 
 ## Capture Command
@@ -80,6 +80,10 @@ Minimal Context validation passed
 Use the GIF in the README and launch posts where animated media is supported:
 
 ![Terminal demo animation](assets/demo-terminal.gif)
+
+Use the social preview image for GitHub social preview and link cards:
+
+- [GitHub/social preview](assets/social-preview.png)
 
 Use these assets for Product Hunt draft prep:
 

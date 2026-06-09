@@ -2,13 +2,13 @@
 
 Snapshot date: 2026-06-10.
 
-This is the copy-ready launch packet for the first public push after `project-tiny-context-harness@0.2.39`. It assumes the repository, npm package, release, demo packet and adoption issue are already live.
+This is the copy-ready launch packet for the first public push after `project-tiny-context-harness@0.2.39` is published. Do not post broadly while the npm package still returns 404.
 
 ## Launch Decision
 
 Primary first channel: Hacker News Show HN.
 
-Why: the project is installable now, the pitch is technical, and the most valuable early signal is whether experienced agent users recognize the recovery problem. Product Hunt should follow after a public demo GIF or video exists because its launch surface depends more on visual media and broad product clarity.
+Why: after npm publish, the project will be immediately installable, the pitch is technical, and the most valuable early signal is whether experienced agent users recognize the recovery problem. Product Hunt should follow after a public demo GIF or video exists because its launch surface depends more on visual media and broad product clarity.
 
 Do not post to multiple broad channels on the same day. Use the first channel to collect objections, then patch README, FAQ, demo or issues before the second channel.
 
@@ -25,6 +25,7 @@ npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec proj
 Confirm:
 
 - GitHub stars/forks and npm downloads baseline are noted from the strict external report.
+- npm `project-tiny-context-harness@0.2.39` is published and installable.
 - Issue #4 is pinned and open for adoption reports.
 - Issue #5 has the current demo packet and repo-hosted GIF URL.
 - README first screen still shows install, 60-second trial and non-goals.
@@ -205,7 +206,7 @@ Allowed:
 - "Minimal project memory for AI coding agents."
 - "Helps fresh chats recover project intent, boundaries and validation paths."
 - "Complements tests, CI and review."
-- "The package is installable from npm."
+- "The package is installable from npm." only after npm publish succeeds.
 
 Avoid:
 
