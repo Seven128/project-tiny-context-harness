@@ -10,6 +10,20 @@ Project Tiny Context Harness is repo-native project memory for AI coding agents.
 
 It is not another full SDLC ceremony. The Harness maintains context quality; project tests, reviews, CI and human acceptance still own product quality.
 
+Think of it as durable project memory behind `AGENTS.md`, not another agent, process framework or task manager.
+
+Best for:
+
+- repos where coding agents keep rediscovering project intent
+- teams using multiple agents or frequent fresh chats
+- maintainers who want durable context without a full planning ceremony
+
+Not for:
+
+- replacing tests, review, CI or issue trackers
+- autonomous SDLC execution
+- codebase semantic indexing or external docs retrieval
+
 ![Project Tiny Context Harness terminal demo](https://raw.githubusercontent.com/Seven128/project-tiny-context-harness/main/docs/launch/assets/demo-terminal.gif)
 
 The demo shows the core loop: install the npm package, initialize `AGENTS.md` and `project_context/**`, run `validate-context`, then ask a fresh agent to recover intent before proposing code.

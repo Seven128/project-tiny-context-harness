@@ -187,6 +187,17 @@ function localChecks() {
     );
     addCheck(checks, `${id}-why`, contains(content, /Why It Exists/), `${id} includes Why It Exists.`);
     addCheck(checks, `${id}-positioning-table`, contains(content, /Positioning/) && contains(content, /Spec-first kits/) && contains(content, /Task Master-style/), `${id} includes competitor positioning table.`);
+    addCheck(
+      checks,
+      `${id}-fit-boundary`,
+      contains(content, /Best for:/) &&
+        contains(content, /Not for:/) &&
+        contains(content, /durable project memory behind `AGENTS\.md`/) &&
+        contains(content, /multiple agents or frequent fresh chats/) &&
+        contains(content, /autonomous SDLC execution/) &&
+        contains(content, /codebase semantic indexing or external docs retrieval/),
+      `${id} gives first-visitor fit and non-fit boundaries.`
+    );
     addCheck(checks, `${id}-quickstart`, contains(content, /Try It In 60 Seconds/) && contains(content, /make validate-context/), `${id} includes quickstart.`);
     addCheck(checks, `${id}-success-surface`, contains(content, /Expected result/) && contains(content, /Fresh-agent test prompt/), `${id} shows expected generated files and a fresh-agent test prompt.`);
     addCheck(checks, `${id}-demo-media`, contains(content, /demo-terminal\.gif/) && contains(content, /The demo shows the core loop/), `${id} embeds the launch demo GIF and explains the recovery loop.`);

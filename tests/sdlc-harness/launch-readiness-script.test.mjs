@@ -23,6 +23,8 @@ for (const expected of [
   "package-metadata",
   "root-readme-positioning",
   "package-readme-positioning",
+  "root-readme-fit-boundary",
+  "package-readme-fit-boundary",
   "root-readme-success-surface",
   "package-readme-success-surface",
   "root-readme-demo-media",

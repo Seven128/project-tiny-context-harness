@@ -12,6 +12,20 @@ It does not default to lifecycle phases, plan tasks, stage skills, stage documen
 
 Use it when coding agents repeatedly lose project intent across new chats, handoffs, RFC/debug turns or tool changes. The intended tradeoff is: keep durable intent and recovery paths; leave execution evidence to code, tests and review.
 
+Think of it as durable project memory behind `AGENTS.md`, not another agent, process framework or task manager.
+
+Best for:
+
+- repos where coding agents keep rediscovering project intent
+- teams using multiple agents or frequent fresh chats
+- maintainers who want durable context without a full planning ceremony
+
+Not for:
+
+- replacing tests, review, CI or issue trackers
+- autonomous SDLC execution
+- codebase semantic indexing or external docs retrieval
+
 ![Project Tiny Context Harness terminal demo](https://raw.githubusercontent.com/Seven128/project-tiny-context-harness/main/docs/launch/assets/demo-terminal.gif)
 
 The demo shows the core loop: install the npm package, initialize `AGENTS.md` and `project_context/**`, run `validate-context`, then ask a fresh agent to recover intent before proposing code.
