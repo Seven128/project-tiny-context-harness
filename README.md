@@ -24,6 +24,13 @@ Not for:
 - autonomous SDLC execution
 - codebase semantic indexing or external docs retrieval
 
+Concrete shift:
+
+```text
+Before: ask a fresh agent to read the repo and tell you what matters.
+After: ask it to read AGENTS.md and project_context/** first, then summarize goal, non-goals, architecture boundaries and validation paths before proposing code.
+```
+
 ![Project Tiny Context Harness terminal demo](https://raw.githubusercontent.com/Seven128/project-tiny-context-harness/main/docs/launch/assets/demo-terminal.gif)
 
 The demo shows the core loop: install the npm package, initialize `AGENTS.md` and `project_context/**`, run `validate-context`, then ask a fresh agent to recover intent before proposing code.

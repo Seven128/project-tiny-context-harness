@@ -198,6 +198,15 @@ function localChecks() {
         contains(content, /codebase semantic indexing or external docs retrieval/),
       `${id} gives first-visitor fit and non-fit boundaries.`
     );
+    addCheck(
+      checks,
+      `${id}-before-after`,
+      contains(content, /Concrete shift:/) &&
+        contains(content, /Before: ask a fresh agent to read the repo and tell you what matters\./) &&
+        contains(content, /After: ask it to read AGENTS\.md and project_context\/\*\* first/) &&
+        contains(content, /validation paths before proposing code/),
+      `${id} gives a static before/after recovery example.`
+    );
     addCheck(checks, `${id}-quickstart`, contains(content, /Try It In 60 Seconds/) && contains(content, /make validate-context/), `${id} includes quickstart.`);
     addCheck(checks, `${id}-success-surface`, contains(content, /Expected result/) && contains(content, /Fresh-agent test prompt/), `${id} shows expected generated files and a fresh-agent test prompt.`);
     addCheck(checks, `${id}-demo-media`, contains(content, /demo-terminal\.gif/) && contains(content, /The demo shows the core loop/), `${id} embeds the launch demo GIF and explains the recovery loop.`);
