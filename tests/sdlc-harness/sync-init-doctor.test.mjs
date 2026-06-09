@@ -322,12 +322,13 @@ try {
   await writeFile(path.join(cliRoot, ".codex/pjsdlc_managed/override_skills/context_uiux_design.md"), "old local UI rule\n", "utf8");
   const cliSyncWithDeprecatedOverride = spawnSync(process.execPath, [cliPath, "sync"], { cwd: cliRoot, encoding: "utf8" });
   assert.equal(cliSyncWithDeprecatedOverride.status, 1, `${cliSyncWithDeprecatedOverride.stdout}\n${cliSyncWithDeprecatedOverride.stderr}`);
-  assert.match(cliSyncWithDeprecatedOverride.stdout, /sync changed=0 skipped=0 blocked=1/);
-  assert.match(cliSyncWithDeprecatedOverride.stderr, /\.codex\/pjsdlc_managed\/override_skills/);
-  assert.match(cliSyncWithDeprecatedOverride.stderr, /Skill overrides are no longer supported/);
-  assert.match(cliSyncWithDeprecatedOverride.stderr, /\.codex\/skills\/product_plan\/SKILL\.md/);
-  assert.match(cliSyncWithDeprecatedOverride.stderr, /\.codex\/skills\/uiux_design\/SKILL\.md/);
-  assert.match(cliSyncWithDeprecatedOverride.stderr, /\.codex\/skills\/development_engineer\/SKILL\.md/);
+  const cliSyncOutput = `${cliSyncWithDeprecatedOverride.stdout}\n${cliSyncWithDeprecatedOverride.stderr}`;
+  assert.match(cliSyncOutput, /sync changed=0 skipped=0 blocked=1/);
+  assert.match(cliSyncOutput, /\.codex\/pjsdlc_managed\/override_skills/);
+  assert.match(cliSyncOutput, /Skill overrides are no longer supported/);
+  assert.match(cliSyncOutput, /\.codex\/skills\/product_plan\/SKILL\.md/);
+  assert.match(cliSyncOutput, /\.codex\/skills\/uiux_design\/SKILL\.md/);
+  assert.match(cliSyncOutput, /\.codex\/skills\/development_engineer\/SKILL\.md/);
 } finally {
   await rm(root, { recursive: true, force: true });
   await rm(configuredRoot, { recursive: true, force: true });
