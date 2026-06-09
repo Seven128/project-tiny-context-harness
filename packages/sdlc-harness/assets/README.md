@@ -146,6 +146,10 @@ README is for humans and broad orientation. Minimal Context is a smaller machine
 
 No. The generated files are plain repository assets. Codex, Claude Code, Cursor, Gemini CLI, Cline, Roo or a human reviewer can read the same facts.
 
+**Is this an English-only or Chinese-only tool?**
+
+Neither. Public docs, npm copy and launch posts are English-first so new visitors can evaluate the project quickly. Generated Skills may include multilingual trigger examples, and export defaults may use local-language filenames; those are compatibility details, not a Chinese-only product boundary.
+
 **Does `validate-context` prove the project works?**
 
 No. It checks that recovery facts exist and avoids fake test-result claims. Product quality still belongs to tests, CI, review and human acceptance.

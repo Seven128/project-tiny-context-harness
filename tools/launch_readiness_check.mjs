@@ -190,6 +190,17 @@ function localChecks() {
   }
   addCheck(
     checks,
+    "public-language-posture",
+    contains(rootReadme, /English-first/) &&
+      contains(packageReadme, /English-first/) &&
+      contains(launchKit, /Language Posture/) &&
+      contains(launchKit, /GitHub description, README first screen, npm copy/) &&
+      contains(primaryLaunch, /Public-facing copy is English-first/) &&
+      contains(outreachTargets, /README, npm and launch copy English-first/),
+    "Public README, npm README and launch packet keep external promotion English-first while allowing literal multilingual compatibility examples."
+  );
+  addCheck(
+    checks,
     "fresh-agent-walkthrough",
     hasFile("docs/examples/fresh-agent-recovery.md") &&
       contains(rootReadme, /fresh-agent recovery walkthrough/) &&

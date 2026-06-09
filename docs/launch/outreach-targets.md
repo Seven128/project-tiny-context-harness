@@ -103,6 +103,7 @@ Hold on [awesome-opencode](https://github.com/awesome-opencode/awesome-opencode)
 
 - Lead with the problem: new agent chats lose project intent.
 - Keep the claim narrow: repo-native Minimal Context for fresh-agent recovery.
+- Keep README, npm and launch copy English-first; keep localized material behind secondary links or as literal compatibility examples.
 - Ask for feedback and missing facts, not stars.
 - Treat stars as distribution telemetry, not proof of quality.
 - Turn repeated questions into README/FAQ or issues within 24 hours.

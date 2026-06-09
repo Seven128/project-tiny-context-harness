@@ -27,6 +27,7 @@ for (const expected of [
   "package-readme-success-surface",
   "root-readme-demo-media",
   "package-readme-demo-media",
+  "public-language-posture",
   "launch-kit",
   "launch-operating-plan",
   "primary-launch-packet",

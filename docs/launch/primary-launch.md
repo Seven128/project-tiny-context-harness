@@ -29,6 +29,7 @@ Confirm:
 - Issue #4 is pinned and open for adoption reports.
 - Issue #5 has the current demo packet and repo-hosted GIF URL.
 - README first screen still shows install, 60-second trial and non-goals.
+- Public-facing copy is English-first; any Chinese or other non-English strings are clearly literal trigger examples, generated filenames or maintainer notes.
 - No copy claims benchmark wins, adoption, awards or productivity multipliers.
 
 ## Show HN

@@ -41,6 +41,12 @@ Not this:
 Another autonomous SDLC framework, task manager, spec generator or benchmark-proven productivity multiplier.
 ```
 
+## Language Posture
+
+Keep public-facing launch material English-first: GitHub description, README first screen, npm copy, Show HN, Product Hunt, curated-list PRs and social posts. Optional localized docs can exist behind secondary links, but they should not be the first evaluation path for strangers.
+
+Chinese or other non-English strings are acceptable when they are literal generated filenames, request-trigger examples or maintainer notes. If they appear in launch-facing docs, frame them as multilingual compatibility examples, not as the default product language.
+
 ## GitHub Metadata
 
 Repository description:
