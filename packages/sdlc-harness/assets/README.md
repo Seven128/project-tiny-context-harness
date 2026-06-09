@@ -47,6 +47,26 @@ make validate-context
 
 Then open `AGENTS.md`, `project_context/global.md` and `project_context/architecture.md`. Those files are the small recovery surface a fresh agent should read before changing the project.
 
+Expected result:
+
+```text
+AGENTS.md
+project_context/
+  context.toml
+  global.md
+  architecture.md
+  areas/main.md
+  areas/main/verification.md
+```
+
+Fresh-agent test prompt:
+
+```text
+Read AGENTS.md and project_context/** first. Summarize the project goal, non-goals, architecture boundaries, validation entry points and next safe action before proposing code changes.
+```
+
+If the agent can answer that without rediscovering the repo from scratch, the Harness is doing its job.
+
 Maintainers can verify the local package artifact with the same flow:
 
 ```sh
@@ -103,6 +123,24 @@ npx --yes --package agent-project-sdlc@latest sdlc-harness init --adopt
 The generated workflow runs only the selected Harness gate, `validate-context` or `validate-harness`. Maintainer-only package tests and source-drift checks are intentionally kept out of consumer projects.
 
 `init` does not create lifecycle state, plan state, stage skills or stage work-product trees by default.
+
+## FAQ
+
+**Why not just write a better README?**
+
+README is for humans and broad orientation. Minimal Context is a smaller machine-readable recovery path for fresh agents: durable intent, non-goals, boundaries, validation commands and context drift notes.
+
+**Is this only for Codex?**
+
+No. The generated files are plain repository assets. Codex, Claude Code, Cursor, Gemini CLI, Cline, Roo or a human reviewer can read the same facts.
+
+**Does `validate-context` prove the project works?**
+
+No. It checks that recovery facts exist and avoids fake test-result claims. Product quality still belongs to tests, CI, review and human acceptance.
+
+**Will this create documentation burden?**
+
+It should stay smaller than a full process. Ordinary bug fixes and local refactors do not update Context unless they produce durable product, architecture, API, state or validation facts.
 
 The default Skills are Minimal Context helpers. Explicit requests such as “产品方案 / 产品经理 / 产品专家” use the product planning Skill; requests such as “设计稿 / UI/UX 设计方案 / 视觉专家” use the design Skill; requests such as “开发工程师 / 技术方案 / 开发方案 / 实现 / 实现方案 / 实施计划 / 技术专家 / 多开agent / subagent” use the development engineer Skill. Requests such as “导出尽可能详细的项目全量上下文 / 全量上下文导出 / full project context export / 当前项目代码实现 / 代码级实现导出” use the full-project export Skill and the `export-context --all` CLI when both snapshots are useful. Product, screen-flow and durable engineering conclusions go to `project_context/**`; visual identity and design tokens go to root `DESIGN.md`. Export artifacts are temporary files under `tmp/sdlc/context-exports/**`, not Context.
 

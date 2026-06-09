@@ -1,12 +1,12 @@
 # Market Map
 
-Snapshot date: 2026-06-09.
+Snapshot date: 2026-06-10.
 
 This file is a launch planning snapshot, not durable product truth. Recheck stars, descriptions, categories and eligibility before using it externally.
 
 ## Current Public State
 
-Public state before the launch-readiness changes are merged and published:
+Public state before the launch-readiness changes are merged and published, checked against public GitHub and npm APIs:
 
 | Surface | Snapshot |
 |---|---|
@@ -25,13 +25,13 @@ GitHub public repository snapshot:
 
 | Project | Stars | Positioning | What it owns |
 |---|---:|---|---|
-| [anomalyco/opencode](https://github.com/anomalyco/opencode) | 172,042 | Open source coding agent | Agent runtime |
-| [github/spec-kit](https://github.com/github/spec-kit) | 110,751 | Spec-driven development toolkit | Spec workflow |
-| [OpenHands/OpenHands](https://github.com/OpenHands/OpenHands) | 76,314 | AI-driven development platform | Agent/runtime platform |
-| [upstash/context7](https://github.com/upstash/context7) | 57,056 | Up-to-date docs for LLMs/code editors | External documentation context |
-| [bmad-code-org/BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD) | 48,836 | Agile AI-driven development method | Role/process workflow |
+| [anomalyco/opencode](https://github.com/anomalyco/opencode) | 172,052 | Open source coding agent | Agent runtime |
+| [github/spec-kit](https://github.com/github/spec-kit) | 110,757 | Spec-driven development toolkit | Spec workflow |
+| [OpenHands/OpenHands](https://github.com/OpenHands/OpenHands) | 76,316 | AI-driven development platform | Agent/runtime platform |
+| [upstash/context7](https://github.com/upstash/context7) | 57,057 | Up-to-date docs for LLMs/code editors | External documentation context |
+| [bmad-code-org/BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD) | 48,838 | Agile AI-driven development method | Role/process workflow |
 | [eyaltoledano/claude-task-master](https://github.com/eyaltoledano/claude-task-master) | 27,358 | AI task-management system | Task state and decomposition |
-| [oraios/serena](https://github.com/oraios/serena) | 25,154 | MCP toolkit and semantic code agent IDE | Semantic retrieval/editing |
+| [oraios/serena](https://github.com/oraios/serena) | 25,155 | MCP toolkit and semantic code agent IDE | Semantic retrieval/editing |
 | [SuperClaude-Org/SuperClaude_Framework](https://github.com/SuperClaude-Org/SuperClaude_Framework) | 23,235 | Claude Code commands, personas and methodology | Agent configuration framework |
 
 Interpretation: the visible AI coding/dev workflow market already has several 20k-170k star projects. AI SDLC Harness should not compete head-on as another agent, task manager, full SDLC method or retrieval engine.

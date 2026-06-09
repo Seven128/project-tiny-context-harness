@@ -168,10 +168,15 @@ assert.match(launchKit, /Product Hunt Golden Kitty Awards/);
 assert.match(launchKit, /The Commits/);
 assert.match(launchKit, /JavaScript Open Source Awards/);
 assert.match(launchKit, /Verify current eligibility/);
+assert.match(launchKit, /Launch Operating Plan/);
+assert.match(launchKit, /Channel Matrix/);
+assert.match(launchKit, /Community Handoff Surface/);
+assert.match(launchKit, /Demo Storyboard/);
+assert.match(launchKit, /Star \/ Adoption Milestones/);
 assert.match(launchKit, /market-map\.md/);
 
 assert.match(marketMap, /Market Map/);
-assert.match(marketMap, /Snapshot date: 2026-06-09/);
+assert.match(marketMap, /Snapshot date: 2026-06-10/);
 assert.match(marketMap, /Current Public State/);
 assert.match(marketMap, /Competitive Snapshot/);
 assert.match(marketMap, /github\/spec-kit/);

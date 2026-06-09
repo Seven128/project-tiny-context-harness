@@ -71,6 +71,56 @@ Use this if agents keep losing project intent between chats. It adds a small pro
 - Post to one primary technical venue first, then reuse the same claim across smaller channels.
 - Ask for feedback on whether the recovery surface is useful, not for stars.
 
+## Launch Operating Plan
+
+Do not post everywhere at once. Use one primary launch to test whether strangers understand the wedge, then update copy from the actual questions people ask.
+
+### Required Assets
+
+| Asset | Owner action | Ready signal |
+|---|---|---|
+| GitHub metadata | Set description and topics from this file. | Online `launch_readiness_check` no longer reports GitHub metadata TODOs. |
+| npm metadata | Publish a new package version after PR merge. | npm page shows updated README, MIT license, homepage and description. |
+| 60-90 second demo | Record the demo storyboard below. | Viewer can see install, generated files and fresh-agent recovery prompt. |
+| First support surface | Create a GitHub Discussion or pinned issue for adoption reports. | Launch posts have one feedback link beyond the README. |
+| First contribution queue | Create low-risk docs/demo/example issues with `good first issue` and `help wanted`. | New visitors can contribute without understanding package internals. |
+
+### Channel Matrix
+
+| Channel | Primary audience | CTA | Success signal | Follow-up |
+|---|---|---|---|---|
+| Hacker News | Developers using agents on real repos. | Ask whether this recovery surface solves their handoff problem. | Comments discuss agent drift, AGENTS.md, Context files or workflow overhead. | Patch README/FAQ from confusion points within 24 hours. |
+| Product Hunt | Broader developer-tool audience. | Watch the demo and try the 60-second install. | Upvotes plus concrete comments from agent users. | Add screenshots/GIF and answer every substantive comment. |
+| Reddit / niche communities | Codex, Claude Code, Cursor and local-first tooling users. | Ask what facts their agents rediscover. | Replies describe real repo pain, not generic AI enthusiasm. | Convert repeated asks into issues or FAQ entries. |
+| GitHub Discussions | People who tried the package. | Share adoption reports and missing recovery facts. | Real examples of Context preventing drift. | Extract durable product lessons into Context or README. |
+| Awesome lists / directories | Maintainers of curated AI dev-tool indexes. | Submit only after README/npm metadata and demo are live. | Listing accepted or maintainers give positioning feedback. | Use rejection reasons to improve description/category fit. |
+| X / LinkedIn | Existing network and second-wave traffic. | Point to the primary launch post and demo. | Clicks/stars from people already using coding agents. | Post milestone updates only when there is real adoption evidence. |
+
+### Community Handoff Surface
+
+Create these after merge and before the first broad launch:
+
+- Discussion or pinned issue: `Show how AI SDLC Harness helped or failed in your repo`.
+- Labels: `good first issue`, `help wanted`, `docs`, `demo`, `question`, `adoption-report`, `benchmark`.
+- Starter issues:
+  - Add a small example repository showing Minimal Context before and after.
+  - Record an asciinema or GIF from the 60-second demo.
+  - Improve docs for adopting an existing repo with `init --adopt`.
+  - Test the package with Claude Code, Cursor, Codex and Gemini CLI and report rough friction.
+  - Design a fresh Minimal Context benchmark rerun without old stage-result claims.
+
+### Star / Adoption Milestones
+
+Treat stars as distribution signals, not proof that the product works.
+
+| Signal | Action |
+|---|---|
+| 10 stars or first external issue | Ask what made the repo worth saving; update README/FAQ from that reason. |
+| 50 stars or 3 adoption reports | Publish a short follow-up with examples, not a victory claim. |
+| 100 stars or first outside contribution | Create a small roadmap focused on examples, integrations and benchmark evidence. |
+| 500 stars | Re-evaluate award submissions and curated-list outreach with visible adoption proof. |
+| 1,000+ stars | Consider deeper integrations only if users consistently ask for them; do not abandon the minimal-memory wedge automatically. |
+
 ## Award / Recognition Targets
 
 Verify current eligibility, deadlines and categories before submitting. Treat these as optional follow-up channels after the package has a clean public launch, working demo and at least some real adoption signal.
@@ -84,6 +134,25 @@ Verify current eligibility, deadlines and categories before submitting. Treat th
 | [DevOps Dozen](https://devopsdozen.com/) | Developer workflow and DevOps tooling recognition channel. | Submit only if the project has DevOps/tooling adoption evidence and the current fee/category terms make sense. |
 
 Do not submit to CI/CD-specific community awards unless the product scope changes; Minimal Context Harness is not a continuous delivery project.
+
+## Demo Storyboard
+
+Use a clean terminal and keep the recording under 90 seconds.
+
+| Beat | Screen | Narration |
+|---|---|---|
+| Problem | Empty demo repo or new terminal. | "Agents are strong in one thread. The next thread often loses repo-specific intent." |
+| Install | Run the 60-second install commands. | "This adds minimal repo-native project memory, not a task manager." |
+| Generated surface | Show `AGENTS.md` and the `project_context/` tree. | "These are the files a fresh agent should read before changing the repo." |
+| Recovery test | Paste the fresh-agent test prompt from README. | "A good result is a summary of intent, boundaries and validation paths before code changes." |
+| Boundary | Show `make validate-context`. | "This validates recovery facts; it does not replace tests or review." |
+| Ask | Show GitHub README. | "Try it where new agent chats currently drift, and tell me what facts are missing." |
+
+Thumbnail text:
+
+```text
+Minimal project memory for AI coding agents
+```
 
 ## Demo Script
 

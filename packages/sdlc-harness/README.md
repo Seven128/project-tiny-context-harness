@@ -42,6 +42,26 @@ make validate-context
 
 Then open `AGENTS.md`, `project_context/global.md` and `project_context/architecture.md`. Those files are the small recovery surface a fresh agent should read before changing the project.
 
+Expected result:
+
+```text
+AGENTS.md
+project_context/
+  context.toml
+  global.md
+  architecture.md
+  areas/main.md
+  areas/main/verification.md
+```
+
+Fresh-agent test prompt:
+
+```text
+Read AGENTS.md and project_context/** first. Summarize the project goal, non-goals, architecture boundaries, validation entry points and next safe action before proposing code changes.
+```
+
+If the agent can answer that without rediscovering the repo from scratch, the Harness is doing its job.
+
 ## Install
 
 ```sh
@@ -56,6 +76,24 @@ npx --yes --package agent-project-sdlc@latest sdlc-harness init --adopt
 ```
 
 `init` creates `project_context/context.toml`, `project_context/global.md`, `project_context/architecture.md`, `project_context/areas/main.md`, `project_context/areas/main/verification.md`, agent guidance, Context authoring Skills, a full-project export Skill, managed templates/tools, a Makefile include and `.github/workflows/harness.yml`. The generated workflow runs only the selected Harness gate, `validate-context` or `validate-harness`; maintainer-only package tests and source-drift checks are intentionally kept out of consumer projects. It does not create stage work-product trees, lifecycle state or stage skills by default.
+
+## FAQ
+
+**Why not just write a better README?**
+
+README is for humans and broad orientation. Minimal Context is a smaller machine-readable recovery path for fresh agents: durable intent, non-goals, boundaries, validation commands and context drift notes.
+
+**Is this only for Codex?**
+
+No. The generated files are plain repository assets. Codex, Claude Code, Cursor, Gemini CLI, Cline, Roo or a human reviewer can read the same facts.
+
+**Does `validate-context` prove the project works?**
+
+No. It checks that recovery facts exist and avoids fake test-result claims. Product quality still belongs to tests, CI, review and human acceptance.
+
+**Will this create documentation burden?**
+
+It should stay smaller than a full process. Ordinary bug fixes and local refactors do not update Context unless they produce durable product, architecture, API, state or validation facts.
 
 ## CLI Entry Safety
 

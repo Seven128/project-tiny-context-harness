@@ -23,12 +23,18 @@ for (const expected of [
   "package-metadata",
   "root-readme-positioning",
   "package-readme-positioning",
+  "root-readme-success-surface",
+  "package-readme-success-surface",
   "launch-kit",
+  "launch-operating-plan",
+  "launch-demo-storyboard",
+  "launch-milestones",
   "market-map",
   "quickstart-smoke",
   "launch-check-script",
   "consumer-workflow-boundary",
-  "maintainer-workflow"
+  "maintainer-workflow",
+  "node-engine-ci-matrix"
 ]) {
   assert.ok(ids.has(expected), `expected readiness check ${expected}`);
 }
