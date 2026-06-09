@@ -289,7 +289,10 @@ function localChecks() {
     "Outreach targets map current launch, curated-list and award gates."
   );
   addCheck(checks, "contributing", hasFile("CONTRIBUTING.md") && contains(read("CONTRIBUTING.md"), /Do not claim benchmark wins/), "CONTRIBUTING.md exists and preserves benchmark-claim boundary.");
+  addCheck(checks, "security-policy", hasFile("SECURITY.md") && contains(read("SECURITY.md"), /Reporting A Vulnerability/) && contains(read("SECURITY.md"), /Unsafe file writes/), "SECURITY.md exists with private reporting and Harness-specific scope.");
+  addCheck(checks, "dependabot", hasFile(".github/dependabot.yml") && contains(read(".github/dependabot.yml"), /package-ecosystem: "npm"/) && contains(read(".github/dependabot.yml"), /package-ecosystem: "github-actions"/), "Dependabot checks npm and GitHub Actions ecosystems.");
   addCheck(checks, "issue-templates", hasFile(".github/ISSUE_TEMPLATE/bug_report.yml") && hasFile(".github/ISSUE_TEMPLATE/feature_request.yml"), "Bug and feature issue templates exist.");
+  addCheck(checks, "adoption-report-template", hasFile(".github/ISSUE_TEMPLATE/adoption_report.yml") && contains(read(".github/ISSUE_TEMPLATE/adoption_report.yml"), /What was the agent forgetting or rediscovering/) && contains(rootReadme, /adoption report/), "Adoption-report issue template exists and README links to it.");
   addCheck(checks, "pr-template", hasFile(".github/PULL_REQUEST_TEMPLATE.md"), "Pull request template exists.");
   addCheck(checks, "quickstart-smoke", hasFile("tools/quickstart_smoke.mjs") && rootPackage.scripts?.["smoke:quickstart"], "Quickstart smoke script and npm script exist.");
   addCheck(checks, "launch-check-script", rootPackage.scripts?.["launch:check"] === "node tools/launch_readiness_check.mjs --offline", "launch:check script runs offline readiness check.");

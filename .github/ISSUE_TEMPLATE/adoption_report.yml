@@ -1,0 +1,47 @@
+name: Adoption report
+description: Share how Project Tiny Context Harness helped or failed in a real repository.
+title: "[Adoption]: "
+labels: ["question"]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Repository context
+      description: What kind of project did you try it on? Public links are welcome, but keep private details out.
+      placeholder: "Example: TypeScript CLI, 40k LOC, 4 active contributors, agents used across new chats."
+    validations:
+      required: true
+  - type: textarea
+    id: drift
+    attributes:
+      label: What was the agent forgetting or rediscovering?
+      description: Describe the project facts, validation paths or boundaries that were hard to preserve across chats.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: What changed after adding Minimal Context?
+      description: Mention what helped, what stayed confusing and whether the generated files were too much or too little.
+    validations:
+      required: true
+  - type: textarea
+    id: missing
+    attributes:
+      label: Missing recovery facts
+      description: What should a fresh agent recover that the Harness did not make obvious?
+    validations:
+      required: false
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Agent surface used
+      options:
+        - Codex
+        - Claude Code
+        - Cursor
+        - OpenCode
+        - Gemini CLI
+        - Other
+    validations:
+      required: false
