@@ -30,6 +30,7 @@ Confirm:
 - Issue #5 has the current demo packet and repo-hosted GIF URL.
 - README first screen still shows install, 60-second trial and non-goals.
 - Public-facing copy is English-first; any Chinese or other non-English strings are clearly literal trigger examples, generated filenames or maintainer notes.
+- Agent surface recipes are linked for Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness folders.
 - No copy claims benchmark wins, adoption, awards or productivity multipliers.
 
 ## Show HN

@@ -144,6 +144,7 @@ function localChecks() {
   const launchKit = read("docs/launch/README.md");
   const primaryLaunch = read("docs/launch/primary-launch.md");
   const awesomeListSubmissions = read("docs/launch/awesome-list-submissions.md");
+  const agentSurfaceRecipes = read("docs/agent-surface-recipes.md");
   const freshAgentWalkthrough = read("docs/examples/fresh-agent-recovery.md");
   const externalPrPacket = read("docs/launch/external-prs/README.md");
   const transcendaPatch = read("docs/launch/external-prs/transcenda-awesome-agentic-coding.patch");
@@ -208,6 +209,25 @@ function localChecks() {
       contains(freshAgentWalkthrough, /After Minimal Context/) &&
       contains(freshAgentWalkthrough, /not benchmark evidence/),
     "Fresh-agent recovery walkthrough exists, is linked from README and avoids benchmark claims."
+  );
+  addCheck(
+    checks,
+    "agent-surface-recipes",
+    hasFile("docs/agent-surface-recipes.md") &&
+      contains(rootReadme, /agent surface recipes/) &&
+      contains(packageReadme, /agent surface recipes/) &&
+      contains(agentSurfaceRecipes, /Codex/) &&
+      contains(agentSurfaceRecipes, /Claude Code/) &&
+      contains(agentSurfaceRecipes, /Cursor/) &&
+      contains(agentSurfaceRecipes, /Gemini CLI/) &&
+      contains(agentSurfaceRecipes, /OpenCode/) &&
+      contains(agentSurfaceRecipes, /--harness-folder \.opencode/) &&
+      contains(agentSurfaceRecipes, /root `AGENTS\.md` plus `project_context\/\*\*`/) &&
+      contains(agentSurfaceRecipes, /splits the repo memory and creates drift/) &&
+      contains(launchKit, /Agent-surface recipes/) &&
+      contains(primaryLaunch, /Agent surface recipes are linked/) &&
+      contains(outreachTargets, /OpenCode setup note/),
+    "Agent-surface recipes explain multi-agent adoption without splitting project_context."
   );
 
   addCheck(

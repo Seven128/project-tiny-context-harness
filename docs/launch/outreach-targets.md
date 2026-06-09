@@ -13,6 +13,7 @@ Ready now:
 - Repo-hosted launch media exists: README GIF, two Product Hunt gallery PNGs and a 240x240 thumbnail.
 - Trust surface exists: `SECURITY.md`, Dependabot and issue templates.
 - Fresh-agent recovery walkthrough is linked from README.
+- Agent surface recipes explain Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness-folder adoption without splitting `project_context/**`.
 
 Not ready yet:
 
@@ -87,7 +88,7 @@ Possible listing text:
 Project Tiny Context Harness - Minimal repo-native project memory for AI coding agents. Installs project_context files, AGENTS.md guidance and a validate-context gate so fresh agent chats can recover project intent and validation paths.
 ```
 
-Hold on [awesome-opencode](https://github.com/awesome-opencode/awesome-opencode) unless the README gains an OpenCode-specific note. It is an ecosystem list, and a generic Harness entry would be weaker without a concrete OpenCode usage story.
+[awesome-opencode](https://github.com/awesome-opencode/awesome-opencode) is now plausible after npm publish because the README links an OpenCode setup note in `docs/agent-surface-recipes.md`. Keep the listing narrow: root `AGENTS.md` and `project_context/**` are the portable contract; `.opencode` is only a custom support-assets folder.
 
 ### Awards
 

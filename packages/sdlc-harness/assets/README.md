@@ -90,6 +90,8 @@ Feedback from real repositories is especially useful right now. If you try the H
 
 For a concrete before/after story, read the [fresh-agent recovery walkthrough](docs/examples/fresh-agent-recovery.md).
 
+For Codex, Claude Code, Cursor, Gemini CLI, OpenCode and other tool-specific setup notes, see [agent surface recipes](docs/agent-surface-recipes.md).
+
 ## Repository Scope
 
 This repository is both the source workspace and a reference workspace for `project-tiny-context-harness`. It contains three product areas:
@@ -145,6 +147,8 @@ README is for humans and broad orientation. Minimal Context is a smaller machine
 **Is this only for Codex?**
 
 No. The generated files are plain repository assets. Codex, Claude Code, Cursor, Gemini CLI, Cline, Roo or a human reviewer can read the same facts.
+
+The support assets can live in a tool-specific harness folder such as `.codex`, `.claude`, `.cursor`, `.cline`, `.roo`, `.gemini` or a custom folder; the durable recovery contract stays in root `AGENTS.md` and `project_context/**`. See [agent surface recipes](docs/agent-surface-recipes.md).
 
 **Is this an English-only or Chinese-only tool?**
 
