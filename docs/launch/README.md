@@ -6,7 +6,13 @@ Do not claim benchmark wins yet. Current public positioning is based on product 
 
 For competitor and feasibility context, see [market-map.md](market-map.md). For current launch, award and curated-list execution targets, see [outreach-targets.md](outreach-targets.md). For copy-ready primary launch execution, see [primary-launch.md](primary-launch.md). For curated-list PR copy, see [awesome-list-submissions.md](awesome-list-submissions.md). For the recording packet, see [demo.md](demo.md).
 
-Readiness boundary: `npm run launch:check` means the metadata, docs and launch packets are internally coherent. It does not mean Product Hunt, curated-list submissions or awards are ready. Those still require a public demo recording, first feedback and adoption evidence.
+Readiness boundary: `npm run launch:check` means the metadata, docs, launch packets and repo-hosted media are internally coherent. It does not mean Product Hunt, curated-list submissions or awards are ready. Those still require final account-specific submission review, first feedback or adoption evidence.
+
+Launch media:
+
+- README demo GIF: [assets/demo-terminal.gif](assets/demo-terminal.gif)
+- Product Hunt gallery images: [assets/product-hunt-gallery-1.png](assets/product-hunt-gallery-1.png), [assets/product-hunt-gallery-2.png](assets/product-hunt-gallery-2.png)
+- Product Hunt thumbnail: [assets/product-hunt-thumbnail.png](assets/product-hunt-thumbnail.png)
 
 ## Core Positioning
 

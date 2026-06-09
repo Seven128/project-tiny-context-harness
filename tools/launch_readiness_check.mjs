@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -54,6 +54,40 @@ function readJson(relativePath) {
 
 function hasFile(relativePath) {
   return existsSync(path.join(repoRoot, relativePath));
+}
+
+function fileSize(relativePath) {
+  return statSync(path.join(repoRoot, relativePath)).size;
+}
+
+function readBytes(relativePath) {
+  return readFileSync(path.join(repoRoot, relativePath));
+}
+
+function isGif(relativePath) {
+  if (!hasFile(relativePath)) {
+    return false;
+  }
+  const bytes = readBytes(relativePath);
+  const header = bytes.subarray(0, 6).toString("ascii");
+  return (header === "GIF89a" || header === "GIF87a") && bytes.includes(Buffer.from("NETSCAPE2.0", "ascii"));
+}
+
+function pngDimensions(relativePath) {
+  if (!hasFile(relativePath)) {
+    return null;
+  }
+  const bytes = readBytes(relativePath);
+  const pngHeader = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  if (bytes.length < 24 || !pngHeader.every((value, index) => bytes[index] === value)) {
+    return null;
+  }
+  return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+}
+
+function pngIs(relativePath, width, height) {
+  const dimensions = pngDimensions(relativePath);
+  return dimensions?.width === width && dimensions?.height === height;
 }
 
 function addCheck(checks, id, ok, detail, severity = "required") {
@@ -141,6 +175,7 @@ function localChecks() {
     addCheck(checks, `${id}-positioning-table`, contains(content, /Positioning/) && contains(content, /Spec-first kits/) && contains(content, /Task Master-style/), `${id} includes competitor positioning table.`);
     addCheck(checks, `${id}-quickstart`, contains(content, /Try It In 60 Seconds/) && contains(content, /make validate-context/), `${id} includes quickstart.`);
     addCheck(checks, `${id}-success-surface`, contains(content, /Expected result/) && contains(content, /Fresh-agent test prompt/), `${id} shows expected generated files and a fresh-agent test prompt.`);
+    addCheck(checks, `${id}-demo-media`, contains(content, /demo-terminal\.gif/) && contains(content, /The demo shows the core loop/), `${id} embeds the launch demo GIF and explains the recovery loop.`);
   }
 
   addCheck(
@@ -151,8 +186,9 @@ function localChecks() {
       contains(launchKit, /Hacker News Draft/) &&
       contains(launchKit, /awesome-list-submissions\.md/) &&
       contains(launchKit, /Readiness boundary/) &&
+      contains(launchKit, /repo-hosted media/) &&
       contains(launchKit, /does not mean Product Hunt, curated-list submissions or awards are ready/),
-    "Launch kit has copy-ready channel drafts, readiness boundary and no-benchmark boundary."
+    "Launch kit has copy-ready channel drafts, media pointers, readiness boundary and no-benchmark boundary."
   );
   addCheck(checks, "launch-operating-plan", contains(launchKit, /Launch Operating Plan/) && contains(launchKit, /Channel Matrix/) && contains(launchKit, /Community Handoff Surface/), "Launch kit has an operating plan, channel matrix and community handoff surface.");
   addCheck(
@@ -190,10 +226,22 @@ function localChecks() {
       hasFile("docs/launch/assets/demo-terminal.svg") &&
       contains(demoPacket, /Launch Demo Packet/) &&
       contains(demoPacket, /npm run launch:demo/) &&
-      contains(demoPacket, /No public video has been uploaded yet/) &&
+      contains(demoPacket, /Repo-hosted demo media exists/) &&
+      contains(demoPacket, /demo-terminal\.gif/) &&
+      contains(demoPacket, /product-hunt-gallery-1\.png/) &&
       contains(demoPacket, /Fresh-Agent Prompt/) &&
       contains(demoPacket, /Fresh-Agent Recovery Check/),
-    "Launch demo packet has a reproducible capture command, transcript guide and visual placeholder."
+    "Launch demo packet has a reproducible capture command, transcript guide and repo-hosted media."
+  );
+  addCheck(
+    checks,
+    "launch-demo-media",
+    isGif("docs/launch/assets/demo-terminal.gif") &&
+      fileSize("docs/launch/assets/demo-terminal.gif") > 100_000 &&
+      pngIs("docs/launch/assets/product-hunt-gallery-1.png", 1270, 760) &&
+      pngIs("docs/launch/assets/product-hunt-gallery-2.png", 1270, 760) &&
+      pngIs("docs/launch/assets/product-hunt-thumbnail.png", 240, 240),
+    "Launch media includes an animated GIF, two 1270x760 Product Hunt gallery images and a 240x240 thumbnail."
   );
   addCheck(checks, "launch-milestones", contains(launchKit, /Star \/ Adoption Milestones/) && contains(launchKit, /10 stars/) && contains(launchKit, /500 stars/), "Launch kit has star/adoption milestone triggers without treating stars as proof.");
   addCheck(checks, "market-map", contains(marketMap, /Market Map/) && contains(marketMap, /Competitive Snapshot/) && contains(marketMap, /10-100 stars/), "Market map has competitor snapshot and feasibility bands.");

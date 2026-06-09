@@ -12,6 +12,10 @@ It does not default to lifecycle phases, plan tasks, stage skills, stage documen
 
 Use it when coding agents repeatedly lose project intent across new chats, handoffs, RFC/debug turns or tool changes. The intended tradeoff is: keep durable intent and recovery paths; leave execution evidence to code, tests and review.
 
+![AI SDLC Harness terminal demo](https://raw.githubusercontent.com/Seven128/project-agent-sdlc/main/docs/launch/assets/demo-terminal.gif)
+
+The demo shows the core loop: install the npm package, initialize `AGENTS.md` and `project_context/**`, run `validate-context`, then ask a fresh agent to recover intent before proposing code.
+
 ## Why It Exists
 
 Coding agents can move quickly inside one thread and still drift when a new chat, model, tool, reviewer or debugging session loses the project-specific facts that were never encoded anywhere stable.
@@ -61,6 +65,8 @@ Read AGENTS.md and project_context/** first. Summarize the project goal, non-goa
 ```
 
 If the agent can answer that without rediscovering the repo from scratch, the Harness is doing its job.
+
+A useful first answer should recover the project goal, non-goals, architecture boundaries, validation entry points and next safe action. It should not invent benchmark results or claim tests passed.
 
 ## Install
 

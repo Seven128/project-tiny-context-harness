@@ -10,6 +10,10 @@ AI SDLC Harness is a minimal project-memory harness for AI coding agents.
 
 It is not another full SDLC ceremony. The Harness maintains context quality; project tests, reviews, CI and human acceptance still own product quality.
 
+![AI SDLC Harness terminal demo](https://raw.githubusercontent.com/Seven128/project-agent-sdlc/main/docs/launch/assets/demo-terminal.gif)
+
+The demo shows the core loop: install the npm package, initialize `AGENTS.md` and `project_context/**`, run `validate-context`, then ask a fresh agent to recover intent before proposing code.
+
 ```sh
 npm install -D agent-project-sdlc@latest
 npx --yes --package agent-project-sdlc@latest sdlc-harness init
@@ -66,6 +70,8 @@ Read AGENTS.md and project_context/** first. Summarize the project goal, non-goa
 ```
 
 If the agent can answer that without rediscovering the repo from scratch, the Harness is doing its job.
+
+A useful first answer should recover the project goal, non-goals, architecture boundaries, validation entry points and next safe action. It should not invent benchmark results or claim tests passed.
 
 Maintainers can verify the local package artifact with the same flow:
 

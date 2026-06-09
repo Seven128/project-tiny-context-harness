@@ -13,10 +13,10 @@ Ready now:
 - GitHub Release `v0.2.39` is published.
 - `node tools/launch_readiness_check.mjs --strict-external` reports `Status: pass`.
 - Adoption handoff issue #4 is pinned; starter issues #5-#8 exist.
+- Repo-hosted launch media exists: README GIF, two Product Hunt gallery PNGs and a 240x240 thumbnail.
 
 Not ready yet:
 
-- No public demo recording. The recording packet lives in `docs/launch/demo.md`.
 - No external launch post.
 - No outside adoption report, testimonial or contribution.
 - 0 GitHub stars and 0 forks at snapshot time.
@@ -59,7 +59,7 @@ Do not:
 
 Sources: [Product Hunt Launch Guide](https://www.producthunt.com/launch), [Preparing for Launch](https://www.producthunt.com/launch/preparing-for-launch), [How Product Hunt Works](https://www.producthunt.com/launch/how-product-hunt-works).
 
-Use Product Hunt after the demo exists. Product Hunt is better for broader distribution than deep technical critique, so the page needs visuals and very simple language.
+Use Product Hunt after Show HN or first feedback unless there is a scheduling reason to move sooner. Product Hunt is better for broader distribution than deep technical critique, so the page needs visuals and very simple language. The current repo already has a GIF, two gallery images and a thumbnail under `docs/launch/assets/`.
 
 Submission packet:
 
@@ -68,7 +68,7 @@ Submission packet:
 - Tagline: `Minimal project memory for AI coding agents`
 - Topics: Developer Tools, Artificial Intelligence, Open Source
 - First comment: use the Product Hunt draft in `docs/launch/README.md`, updated with the demo link.
-- Media: two or more 1270x760 gallery images/GIFs, plus optional YouTube demo video. Product Hunt recommends a square 240x240 thumbnail under 3MB, a tagline under 60 characters, a description under 500 characters, up to three launch tags and a first maker comment.
+- Media: `docs/launch/assets/product-hunt-gallery-1.png`, `docs/launch/assets/product-hunt-gallery-2.png`, `docs/launch/assets/product-hunt-thumbnail.png` and optional YouTube demo video. Product Hunt recommends a square 240x240 thumbnail under 3MB, a tagline under 60 characters, a description under 500 characters, up to three launch tags and a first maker comment.
 
 ### Curated Lists
 
@@ -108,8 +108,8 @@ Hold on [awesome-opencode](https://github.com/awesome-opencode/awesome-opencode)
 
 ## Next Concrete Actions
 
-1. Finish #5: record the 60-90 second recovery demo from `docs/launch/demo.md`.
-2. Post Show HN first; defer Product Hunt until the demo media packet is stronger.
-3. Submit the two P0 agentic-coding awesome-list PRs from `docs/launch/awesome-list-submissions.md`.
-4. Track stars, forks, npm downloads and comments for 24 hours.
-5. Patch README/FAQ from repeated confusion.
+1. Post Show HN first using `docs/launch/primary-launch.md` and the repo-hosted GIF if useful.
+2. Submit the two P0 agentic-coding awesome-list PRs from `docs/launch/awesome-list-submissions.md`.
+3. Track stars, forks, npm downloads and comments for 24 hours.
+4. Patch README/FAQ from repeated confusion.
+5. Use the Product Hunt media packet only after the first feedback loop or with a deliberate scheduling decision.

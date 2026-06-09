@@ -6,7 +6,8 @@ Current status:
 
 - The public package is `agent-project-sdlc@0.2.39`.
 - The repo and npm metadata pass `node tools/launch_readiness_check.mjs --strict-external`.
-- No public video has been uploaded yet.
+- Repo-hosted demo media exists under `docs/launch/assets/`: `demo-terminal.gif`, two Product Hunt gallery PNGs and a 240x240 thumbnail.
+- No external video has been uploaded yet.
 
 ## Capture Command
 
@@ -74,15 +75,24 @@ loaded project_context/context.toml with 1 area(s) and 0 context node(s)
 Minimal Context validation passed
 ```
 
-## Visual Placeholder
+## Demo Media
 
-Use this image as a screenshot placeholder until the video/GIF exists:
+Use the GIF in the README and launch posts where animated media is supported:
 
-![Terminal demo still](assets/demo-terminal.svg)
+![Terminal demo animation](assets/demo-terminal.gif)
+
+Use these assets for Product Hunt draft prep:
+
+- [Product Hunt gallery 1](assets/product-hunt-gallery-1.png)
+- [Product Hunt gallery 2](assets/product-hunt-gallery-2.png)
+- [Product Hunt thumbnail](assets/product-hunt-thumbnail.png)
+
+The older still placeholder remains available at [assets/demo-terminal.svg](assets/demo-terminal.svg).
 
 ## Post-Recording Checklist
 
-- Upload the recording or GIF before posting to Product Hunt.
+- Use the repo-hosted GIF for README and Show HN if an external video is not ready.
+- Upload an external video only if it adds clarity beyond the GIF and gallery images.
 - Link the recording from the Show HN body only if it is short and directly demonstrates the package.
 - Comment on #5 with the final URL.
 - Keep benchmark and award claims out of the demo.

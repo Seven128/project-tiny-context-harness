@@ -26,7 +26,7 @@ Confirm:
 
 - GitHub stars/forks and npm downloads baseline are noted from the strict external report.
 - Issue #4 is pinned and open for adoption reports.
-- Issue #5 has the current demo packet or final demo URL.
+- Issue #5 has the current demo packet and repo-hosted GIF URL.
 - README first screen still shows install, 60-second trial and non-goals.
 - No copy claims benchmark wins, adoption, awards or productivity multipliers.
 
@@ -91,7 +91,7 @@ I am intentionally not claiming speedups yet. The old stage-heavy workflow was r
 
 Sources: [Product Hunt launch guide](https://www.producthunt.com/launch), [Preparing for Launch](https://www.producthunt.com/launch/preparing-for-launch), [How Product Hunt works](https://www.producthunt.com/launch/how-product-hunt-works).
 
-Gate: wait for a public GIF or short video from `docs/launch/demo.md`.
+Gate: wait for Show HN or first feedback unless there is a scheduling reason to move sooner. Repo-hosted Product Hunt media is ready under `docs/launch/assets/`, but the launch still needs a personal Product Hunt account, final draft review and same-day comment coverage.
 
 Name:
 
@@ -129,9 +129,10 @@ I would like feedback from people using coding agents on real projects: what pro
 
 Media order:
 
-1. 60-90 second terminal demo GIF/video.
-2. Screenshot of generated `project_context/**`.
-3. Screenshot of `validate-context` passing.
+1. `docs/launch/assets/product-hunt-gallery-1.png`
+2. `docs/launch/assets/product-hunt-gallery-2.png`
+3. `docs/launch/assets/product-hunt-thumbnail.png`
+4. Optional YouTube demo video if recorded.
 
 ## Reddit / Niche Communities
 
@@ -193,7 +194,7 @@ Within 24 hours:
 - Convert real adoption examples into issue #4 reports or linked discussions.
 - If the biggest objection is "this is just AGENTS.md", patch the README before any second-channel post.
 
-Second action if comments are not exposing a major positioning flaw: submit the two P0 curated-list PRs from `docs/launch/awesome-list-submissions.md`. Defer Product Hunt until a public demo GIF/video and two gallery images exist.
+Second action if comments are not exposing a major positioning flaw: submit the two P0 curated-list PRs from `docs/launch/awesome-list-submissions.md`. Defer Product Hunt if the first comments show unclear positioning, even though the media packet now exists.
 
 ## Claims Boundary
 
