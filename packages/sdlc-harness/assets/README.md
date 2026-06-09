@@ -162,7 +162,9 @@ No. It checks that recovery facts exist and avoids fake test-result claims. Prod
 
 It should stay smaller than a full process. Ordinary bug fixes and local refactors do not update Context unless they produce durable product, architecture, API, state or validation facts.
 
-The default Skills are Minimal Context helpers. Explicit requests such as “产品方案 / 产品经理 / 产品专家” use the product planning Skill; requests such as “设计稿 / UI/UX 设计方案 / 视觉专家” use the design Skill; requests such as “开发工程师 / 技术方案 / 开发方案 / 实现 / 实现方案 / 实施计划 / 技术专家 / 多开agent / subagent” use the development engineer Skill. Requests such as “导出尽可能详细的项目全量上下文 / 全量上下文导出 / full project context export / 当前项目代码实现 / 代码级实现导出” use the full-project export Skill and the `export-context --all` CLI when both snapshots are useful. Product, screen-flow and durable engineering conclusions go to `project_context/**`; visual identity and design tokens go to root `DESIGN.md`. Export artifacts are temporary files under `tmp/sdlc/context-exports/**`, not Context.
+The default Skills are Minimal Context helpers for explicit product-planning, UI/UX-design, development-engineering and full-project-export requests. Product, screen-flow and durable engineering conclusions go to `project_context/**`; visual identity and design tokens go to root `DESIGN.md`. Export artifacts are temporary files under `tmp/sdlc/context-exports/**`, not Context.
+
+Multilingual trigger phrases and local-language export filenames are compatibility details. Public README, npm and launch copy stay English-first; literal non-English examples are documented only where they explain generated Skill matching or default export filenames.
 
 For product, UI/UX and engineering tasks that touch design intent, API/Schema, state/runtime behavior, architecture boundaries or verification design, the default Skills compile a short current-task contract before implementation. The contract starts with `Context Delta: none|required`; `required` preserves context-first behavior, while `none` means the task can proceed against existing Context. The task contract and Contract Conformance are handoff evidence, not new PRD, tech-plan, validator or gate surfaces.
 
@@ -189,9 +191,9 @@ Use `npx --no-install sdlc-harness ...` only when you explicitly want the alread
 | `npx --yes --package project-tiny-context-harness@latest sdlc-harness init` | Non-destructively installs Minimal Context Harness into the current project. |
 | `make sdlc-sync` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness sync` | Refreshes managed guidance, default Skills, Makefile include, tools and templates. It does not generate project semantics. |
 | `make sdlc-upgrade` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade` | Runs safe package migrations and `sync`, including Schema v4 Context graph manifest creation when missing. |
-| `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --all [--check]` | Creates both default temporary exports: `当前项目context-<timestamp>.md` and `当前项目代码实现.md`. |
-| `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --full [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary project Context summary Markdown artifact named `当前项目context-<timestamp>.md` by default. |
-| `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary single-file code implementation Markdown artifact named `当前项目代码实现.md` by default. |
+| `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --all [--check]` | Creates both default temporary exports under `tmp/sdlc/context-exports/**`. |
+| `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --full [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary project Context summary Markdown artifact. |
+| `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary single-file code implementation Markdown artifact. |
 | `npx --yes --package project-tiny-context-harness@latest sdlc-harness validate-context` | Checks minimum project recovery fields, Context graph metadata, declared paths/roles and fake test-execution claims. |
 | `make validate-context` | Makefile wrapper for `validate-context`. |
 | `make validate-harness` | Compatibility alias for `validate-context` in vNext projects. |
@@ -265,6 +267,8 @@ npx --yes --package project-tiny-context-harness@latest sdlc-harness export-cont
 ```
 
 This generates both default artifacts with the same timestamp: `tmp/sdlc/context-exports/当前项目context-<timestamp>.md` and `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/当前项目代码实现.md`. `--all` does not accept `--output`; use the single-artifact commands below for custom names.
+
+Those default filenames are literal compatibility examples. They do not make the public package Chinese-first, and single-artifact exports can use custom English filenames through `--output`.
 
 Use `export-context --full` when you need only the project Context bundle:
 
