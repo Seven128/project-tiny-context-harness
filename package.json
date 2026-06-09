@@ -1,13 +1,20 @@
 {
-  "name": "projecttemplate",
+  "name": "project-agent-sdlc",
   "private": true,
   "version": "0.1.0",
   "description": "Reference workspace for the AI SDLC Harness.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Seven128/project-agent-sdlc.git"
+  },
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
     "test": "npm test --workspace agent-project-sdlc",
+    "launch:check": "node tools/launch_readiness_check.mjs --offline",
+    "smoke:quickstart": "node tools/quickstart_smoke.mjs --clean",
     "release:npm": "node tools/release_npm.mjs",
     "sdlc-harness": "node packages/sdlc-harness/dist/cli.js"
   },

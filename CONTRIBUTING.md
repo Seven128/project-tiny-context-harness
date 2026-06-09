@@ -1,0 +1,46 @@
+# Contributing
+
+Thanks for taking a look at AI SDLC Harness. This project is still small, so the highest-value contributions are clear bug reports, adoption feedback and narrowly scoped fixes.
+
+## Project Boundary
+
+The current product is **Minimal Context Harness**: small durable project memory for AI coding agents. Contributions should preserve that boundary:
+
+- Keep long-lived project facts in `project_context/**`.
+- Keep product quality in the user's own tests, CI, review and acceptance.
+- Do not reintroduce lifecycle phases, phase gates, stage state, stage Skills or work-product trees as default package behavior.
+- Do not claim benchmark wins until fresh Minimal Context benchmark evidence exists.
+
+## Local Setup
+
+```sh
+npm ci
+npm test --workspace agent-project-sdlc
+make validate-context
+```
+
+If you change package-managed assets, also run:
+
+```sh
+node packages/sdlc-harness/dist/cli.js package sync-source
+node packages/sdlc-harness/dist/cli.js package check-source
+git diff --check
+```
+
+## Useful Contribution Areas
+
+- Reproduction cases where `init`, `sync`, `upgrade`, `doctor` or `validate-context` behaves poorly in a real repository.
+- Documentation that helps a new user understand when Minimal Context is useful and when it is not.
+- Tests for Windows/macOS path behavior, configured harness roots and non-destructive sync/upgrade behavior.
+- Benchmark protocol improvements that keep evidence honest and do not reuse old stage-workflow results.
+
+## Pull Requests
+
+Keep PRs small enough to review. Include:
+
+- What changed and why.
+- Whether the change affects package behavior, managed assets, docs only or tests only.
+- Validation commands you ran.
+- Context status: `Context: updated ...` or `Context: no durable fact change`.
+
+Maintainers handle npm releases.

@@ -1,9 +1,11 @@
 import { runDoctor } from "./doctor.js";
 import { runMigrations } from "./migrations.js";
+import { assertSupportedSchema } from "./schema-guard.js";
 import { runSync } from "./sync-engine.js";
 
 export async function runUpgrade(projectRoot: string): Promise<string[]> {
   const lines: string[] = [];
+  await assertSupportedSchema(projectRoot, "upgrade");
   const migrationReport = await runMigrations(projectRoot);
   lines.push(`migrations changed=${migrationReport.changed.length} skipped=${migrationReport.skipped.length}`);
 

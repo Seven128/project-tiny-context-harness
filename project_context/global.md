@@ -9,7 +9,7 @@
 
 - The package does not replace project tests, CI, review or human acceptance.
 - New consumer projects should not default to lifecycle phases, stage task state, stage skills, stage work-product trees or phase gates.
-- `sync` refreshes managed assets and default Context authoring Skills; migration support has been removed after user migrations completed.
+- `sync` refreshes managed assets and default Context authoring Skills; legacy stage semantic migration has been removed, while safe Schema v4 upgrade migrations remain.
 - Legacy stage assets are not shipped as a runnable default or compatibility layer.
 
 ## Background
@@ -23,10 +23,23 @@
 - The durable value with the clearest expected return is context recovery, not forcing a full SDLC document chain for every project.
 - The historical stage-based Harness externalized the whole SDLC through lifecycle state, plan tasks, PRD / tech plan / implementation / review / test / release artifacts and phase gates. Benchmark pilots showed those writes, transitions and gates are objective time/token cost; details are summarized in `PROJECT_SPEC.md`.
 - Modern coding agents have internalized much of the ordinary single-task loop: compact requirement understanding, local design choice, code editing, test execution and simple repair. The default Harness should not duplicate that capability with broad ceremonies.
-- ADR-level rationale is downgraded into `project_context/global.md#Design Rationale` or module Context when it still affects future work.
-- Implementation facts should live in code, tests, comments and short module Context constraints when the code is not self-explanatory.
-- Product/UIUX Skill customization uses `<harnessRoot>/pjsdlc_managed/override_skills/*.md`; sync merges those local rules into `<harnessRoot>/skills/**`.
+- ADR-level rationale is downgraded into `project_context/global.md#Design Rationale` or area Context when it still affects future work.
+- Implementation facts should live in code, tests, comments and short area Context constraints when the code is not self-explanatory.
+- Product/UIUX/development engineer Skill customization uses separate project-local Skills such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` and `<harnessRoot>/skills/development_engineer/SKILL.md`; `sync` overwrites package-managed default `context_*` Skills and leaves separate local Skills untouched. Project-local Skill front matter `description` trigger keywords should stay aligned with the matching default Skill and the project `AGENTS.md` role-trigger rule.
 - Architecture Context is intentionally restrained: it records durable boundaries, component relationships and constraints, not implementation narration.
+- Schema v4 makes the lightweight Context graph the default: `project_context/context.toml` declares product/domain-owned areas, role-based context files, read triggers and monorepo boundary metadata while ordinary projects keep one default `main` area.
+- `project_context/**` is authoritative for intended ownership, responsibility, architecture boundaries, integration direction, allowed/forbidden dependencies and verification/deployment entry paths; code is authoritative for current implementation state. Gaps between them should be treated as implementation drift, missing work or stale Context that must be called out.
+- Context-first is the default workflow habit for changes to durable product or technical facts; before the first code edit, agents classify whether the task changes product ownership/plans, module responsibilities, information architecture, API/Schema, state or scheduler semantics, cross-domain boundaries or verification/deployment entry paths.
+- `PROJECT_SPEC.md` owns the stable Harness mental model and core term vocabulary: Minimal Context Harness is a set of expected agent behavior constraints, not a document workflow.
+- Context Priority Ladder is expected agent behavior: read Context first, run the page product-positioning check for Web/page/layout/module-boundary/information-placement tasks, classify durable-fact impact or use `Context Delta` inside task-contract scenarios, choose context-first or code-first, then perform Contract Conformance when applicable and Context drift check before handoff.
+- For Web page, frontend layout, UI/UX, product module boundary and information-placement tasks, the lightweight page product-positioning check runs before context-first classification and supplies the evidence for it; the check does not itself require a Context update unless it reveals durable page responsibility, information architecture, persistent-information boundary or ownership facts.
+- Broad product/UIUX principles remain as judgment philosophy, while reusable control-task questions for inputs, selection, search, configuration, scheduling, budgets/quotas/limits and feedback states live in the default Skills; project-specific answers belong in Context or project-local Skills, and per-change Context Conformance evidence belongs in handoff/final/PR text.
+- AGENTS placement policy is part of the Minimal Context design: `AGENTS.md` is a startup router and hard-boundary surface. For package consumers, long design reasoning defaults to compact `project_context/**` facts unless a project already has a local spec/design convention; in this source workspace, `PROJECT_SPEC.md` is the Harness workflow design-spec surface. Role procedures belong in Skills, human usage docs in README, and machine checks in validators/tests only when they fit the product boundary.
+- Context updates for those changes should be as small as the fact allows, but not line-count limited: write enough durable context to guide implementation before code alignment. Ordinary bug fixes, local styling, drift repair, test fixes and exploratory spikes stay code-first unless they produce a durable fact. Automation may warn about context-first drift but must not become an edit-order gate.
+- The context-first clarification preserves the original plan-before-implementation principle while keeping Minimal Context slim: removing stage ceremony did not remove Context authority over durable product intent, engineering boundaries or contracts.
+- Area Context is the product/domain ownership boundary. Role context files are read-purpose slices owned by an area or, only when truly cross-domain, by the project root.
+- Managed guidance now includes a soft role placement scan for `project_context/areas/**` authoring and migration: use `area` / `domain` for product ownership, `subdomain` for smaller owned product context, `contract` for API/schema/event/interface semantics, `foundation` for stable concepts or vocabulary, `verification` / `deployment` for repeat-execution paths, `implementation-index` for code navigation, `decision-rationale` for stable design reasons and `archive` for non-default historical or external material.
+- Verification and deployment role Context are Minimal Context surfaces for critical repeat-execution paths: they record only durable preparation, shortest command/path, expected stage or signal, acceptable warnings and known dead ends that reduce future retest, CI, deploy, runtime bootstrap or environment-initialization rediscovery. They must not keep one-off logs, raw outputs, temporary JSON, CI artifacts, release ledgers, reports or secrets.
 
 ## Architecture Context
 
@@ -43,16 +56,27 @@
 ## Current State
 
 - vNext implementation is Minimal Context Harness.
+- `init` creates `project_context/context.toml` with one default `main` product/domain area at `project_context/areas/main.md` and a default verification role context at `project_context/areas/main/verification.md`; `upgrade` migrates legacy `project_context/modules/**/*.md` into `project_context/areas/**/*.md` and registers recoverable Context graph files in the manifest.
+- v4 `validate-context` requires `project_context/context.toml`; older config versions should run `upgrade` before relying on the v4 gate.
+- Ad hoc CLI docs and managed Makefile wrappers use the canonical package-qualified entry `npx --yes --package agent-project-sdlc@latest sdlc-harness`; bare `npx sdlc-harness` is treated as ambiguous because it can resolve the legacy npm package name or a stale local binary.
+- Current CLI commands guard unsupported future schema major versions before applying v4 assumptions; write commands fail before modifying files.
+- `validate-context` validates the Context graph structure, role names, paths and field shapes; non-area roles are semantic labels rather than writing-template gates.
+- Managed guidance and default Context templates distinguish verification/deployment path facts from test reports and release ledgers: area files own product/domain facts, `verification` role files own repeatable validation paths, and optional `deployment` role files own repeatable deploy/runtime/bootstrap paths.
+- Managed guidance documents the canonical loops `context -> implementation -> verification -> context drift check` and `implementation discovery -> context update if long-term fact changed -> implementation alignment -> verification`.
 - Old stage-based assets, state files and work-product trees are removed from the current source tree.
-- Historical stage design is summarized in `PROJECT_SPEC.md`; migration support has been removed after user migrations completed.
+- Historical stage design is summarized in `PROJECT_SPEC.md`; legacy stage semantic migration support has been removed after user migrations completed.
 - Delivery benchmark prompts should evaluate Minimal Context behavior for new Harness runs; old stage-based public result data has been removed.
 
 ## Next Safe Action
 
-- When changing public package behavior, update CLI/source assets, README, package README, PROJECT_SPEC, tests and package source sync together.
+- When changing public package behavior, update CLI/source assets, README, package README, PROJECT_SPEC, Context, tests and package source sync together.
 - Run focused tests first, then package source sync/check and context validation before handoff.
 
-## Module Index
+## Context Index
 
-- [harness-package](modules/harness-package.md)
-- [delivery-benchmark](modules/delivery-benchmark.md)
+- [harness-package](areas/harness-package.md)
+- [delivery-benchmark](areas/delivery-benchmark.md)
+
+## Context Graph
+
+- See `project_context/context.toml` for area/context_unit roles, read policy and boundary metadata.

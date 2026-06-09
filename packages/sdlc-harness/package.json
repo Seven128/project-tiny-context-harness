@@ -1,7 +1,35 @@
 {
   "name": "agent-project-sdlc",
-  "version": "0.2.8",
-  "description": "CLI and canonical assets for the AI SDLC Harness workflow.",
+  "version": "0.2.38",
+  "description": "Minimal project memory and validation harness for AI coding agents.",
+  "license": "MIT",
+  "author": "Seven128",
+  "homepage": "https://github.com/Seven128/project-agent-sdlc#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Seven128/project-agent-sdlc.git",
+    "directory": "packages/sdlc-harness"
+  },
+  "bugs": {
+    "url": "https://github.com/Seven128/project-agent-sdlc/issues"
+  },
+  "keywords": [
+    "ai-agents",
+    "coding-agent",
+    "codex",
+    "agent-context",
+    "context-engineering",
+    "agents-md",
+    "multi-agent",
+    "claude-code",
+    "cursor",
+    "llm",
+    "developer-tools",
+    "developer-productivity",
+    "cli",
+    "sdlc",
+    "workflow"
+  ],
   "type": "module",
   "bin": {
     "sdlc-harness": "dist/cli.js"
@@ -24,6 +52,7 @@
   },
   "dependencies": {
     "@google/design.md": "^0.2.0",
+    "impeccable": "^2.3.2",
     "yaml": "^2.9.0"
   },
   "devDependencies": {

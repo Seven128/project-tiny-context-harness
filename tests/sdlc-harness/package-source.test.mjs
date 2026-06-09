@@ -11,6 +11,7 @@ try {
   await mkdir(path.join(fixture, ".agent/pjsdlc_managed/context_templates"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/pjsdlc_managed/skills/context_product_plan"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/pjsdlc_managed/skills/context_uiux_design"), { recursive: true });
+  await mkdir(path.join(fixture, ".agent/pjsdlc_managed/skills/context_development_engineer"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/pjsdlc_managed/minimal_tools"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/pjsdlc_managed/make"), { recursive: true });
   await mkdir(path.join(fixture, ".github/workflows"), { recursive: true });
@@ -20,7 +21,7 @@ try {
   await writeFile(path.join(fixture, "README.md"), "# User Guide\n\nMinimal Context package guide.\n", "utf8");
   await writeFile(path.join(fixture, ".agent/pjsdlc_managed/context_templates/global.md"), "# Project / Delivery Context\n", "utf8");
   await writeFile(path.join(fixture, ".agent/pjsdlc_managed/context_templates/architecture.md"), "# Architecture Context\n", "utf8");
-  await writeFile(path.join(fixture, ".agent/pjsdlc_managed/context_templates/module.md"), "# Module Context\n", "utf8");
+  await writeFile(path.join(fixture, ".agent/pjsdlc_managed/context_templates/area.md"), "# Area Context\n", "utf8");
   await writeFile(
     path.join(fixture, ".agent/pjsdlc_managed/skills/context_product_plan/SKILL.md"),
     "---\nname: context_product_plan\ndescription: 产品方案 product plan\n---\n\n# Product\n",
@@ -29,6 +30,11 @@ try {
   await writeFile(
     path.join(fixture, ".agent/pjsdlc_managed/skills/context_uiux_design/SKILL.md"),
     "---\nname: context_uiux_design\ndescription: 设计稿 UI/UX\n---\n\n# UIUX\n",
+    "utf8"
+  );
+  await writeFile(
+    path.join(fixture, ".agent/pjsdlc_managed/skills/context_development_engineer/SKILL.md"),
+    "---\nname: context_development_engineer\ndescription: 开发工程师 development plan\n---\n\n# Development\n",
     "utf8"
   );
   await writeFile(path.join(fixture, ".agent/pjsdlc_managed/minimal_tools/validate_context.py"), "print('ok')\n", "utf8");
@@ -89,6 +95,11 @@ try {
     "utf8"
   );
   assert.match(packagedUiuxSkill, /UI\/UX/);
+  const packagedDevelopmentSkill = await readFile(
+    path.join(fixture, "packages/sdlc-harness/assets/skills/context_development_engineer/SKILL.md"),
+    "utf8"
+  );
+  assert.match(packagedDevelopmentSkill, /开发工程师/);
   const packagedTool = await readFile(path.join(fixture, "packages/sdlc-harness/assets/tools/validate_context.py"), "utf8");
   assert.match(packagedTool, /print\('ok'\)/);
 } finally {

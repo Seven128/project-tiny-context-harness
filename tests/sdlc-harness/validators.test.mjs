@@ -19,6 +19,191 @@ test("Minimal Context validators accept complete project_context facts", async (
   }
 });
 
+test("validate-context accepts role-based context graph entries", async () => {
+  const root = await createContextProject({
+    manifest: completeContextManifest(),
+    extraFiles: {
+      "project_context/areas/main/foundation/trading.md": completeFoundationContext(),
+      "project_context/areas/main/contracts/order.md": completeContractContext(),
+      "project_context/areas/main/verification.md": completeVerificationContext(),
+      "project_context/areas/main/deployment.md": completeDeploymentContext()
+    }
+  });
+  try {
+    const report = await runValidator(root, "validate-context");
+    assert.deepEqual(report.errors, []);
+    assert.match(report.info.join("\n"), /loaded project_context\/context\.toml with 1 area\(s\) and 4 context node\(s\)/);
+    assert.match(report.info.join("\n"), /context graph file\(s\)/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("validate-context treats context roles as semantic labels", async () => {
+  const root = await createContextProject({
+    manifest: completeContextManifest(),
+    module: `# Main Area
+
+This compact area context is intentionally not forced into a section template.
+`,
+    extraFiles: {
+      "project_context/areas/main/foundation/trading.md": `---
+context_role: foundation
+read_policy: optional
+---
+# Trading Foundation
+
+## Role
+
+- Define trading vocabulary.
+
+## Use When
+
+- Extending trading concepts.
+
+## Do Not Use For
+
+- Routine UI edits.
+
+## Source Body
+
+- Source assertions live here.
+`,
+      "project_context/areas/main/contracts/order.md": completeContractContext(),
+      "project_context/areas/main/verification.md": `---
+context_role: verification
+read_policy: default
+---
+# Verification
+
+## Verification Paths
+
+- npm test
+`,
+      "project_context/areas/main/deployment.md": `---
+context_role: deployment
+read_policy: on-demand
+---
+# Deployment
+
+## Deployment Paths
+
+- docker compose config
+`
+    }
+  });
+  try {
+    const report = await runValidator(root, "validate-context");
+    assert.deepEqual(report.errors, []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("validate-context rejects missing Schema v4 context graph manifest", async () => {
+  const root = await createContextProject({ manifest: null });
+  try {
+    const report = await runValidator(root, "validate-context");
+    assert.match(report.errors.join("\n"), /project_context\/context\.toml is missing/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("validate-context rejects unsupported future schema versions", async () => {
+  const root = await createContextProject({ schemaVersion: "5" });
+  try {
+    const report = await runValidator(root, "validate-context");
+    assert.match(report.errors.join("\n"), /unsupported Harness schema version 5/);
+    assert.match(report.errors.join("\n"), /npx --yes --package agent-project-sdlc@latest sdlc-harness validate-context/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("validate-context rejects invalid context graph metadata", async () => {
+  const root = await createContextProject({
+    manifest: `[[areas]]
+id = "main"
+root = "."
+context = "project_context/areas/main.md"
+kind = "app"
+default = true
+forbidden_runtime_dependencies = "domains/intelhub"
+
+[[context]]
+path = "project_context/areas/main/foundation/trading.md"
+role = "glossary"
+read_policy = "sometimes"
+triggers = ["trading"]
+`,
+    extraFiles: {
+      "project_context/areas/main/foundation/trading.md": completeFoundationContext()
+    }
+  });
+  try {
+    const report = await runValidator(root, "validate-context");
+    const errors = report.errors.join("\n");
+    assert.match(errors, /forbidden_runtime_dependencies/);
+    assert.match(errors, /unsupported context role: glossary/);
+    assert.match(errors, /unsupported read_policy: sometimes/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("validate-context rejects export artifacts registered in context graph", async () => {
+  const root = await createContextProject({
+    manifest: `[[areas]]
+id = "main"
+root = "."
+context = "project_context/areas/main.md"
+kind = "app"
+default = true
+
+[[context]]
+path = "project_context/当前项目context-20260607T080910Z.md"
+role = "archive"
+`,
+    extraFiles: {
+      "project_context/当前项目context-20260607T080910Z.md": "# Export\n"
+    }
+  });
+  try {
+    const report = await runValidator(root, "validate-context");
+    assert.match(report.errors.join("\n"), /temporary export artifact/);
+    assert.match(report.errors.join("\n"), /tmp\/sdlc\/context-exports/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("validate-context rejects export artifacts registered as implementation-index", async () => {
+  const root = await createContextProject({
+    manifest: `[[areas]]
+id = "main"
+root = "."
+context = "project_context/areas/main.md"
+kind = "app"
+default = true
+
+[[context]]
+path = "project_context/code-level-implementation-20260607T080910Z.md"
+role = "implementation-index"
+`,
+    extraFiles: {
+      "project_context/code-level-implementation-20260607T080910Z.md": "# Bundle\n"
+    }
+  });
+  try {
+    const report = await runValidator(root, "validate-context");
+    assert.match(report.errors.join("\n"), /must not reference temporary export artifact/);
+    assert.match(report.errors.join("\n"), /implementation-index/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("validate-context rejects missing required recovery facts", async () => {
   const root = await createContextProject({
     global: `# Project / Delivery Context
@@ -36,7 +221,7 @@ test("validate-context rejects missing required recovery facts", async () => {
     const report = await runValidator(root, "validate-context");
     assert.match(report.errors.join("\n"), /Non-goals \/ Boundaries/);
     assert.match(report.errors.join("\n"), /Next Safe Action/);
-    assert.match(report.errors.join("\n"), /Module Index/);
+    assert.match(report.errors.join("\n"), /Context Index/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -54,9 +239,58 @@ test("validate-context rejects verification-result claims inside context", async
   }
 });
 
+test("validate-context accepts durable verification path context without execution claims", async () => {
+  const root = await createContextProject({
+    global: completeGlobalContext().replace(
+      "- npm test\n- make validate-context",
+      [
+        "- Bridge smoke: prepare local runtime env, start the mock provider, and publish the fixture through the bridge publisher.",
+        "- Command: `node scripts/provider-smoke.mjs --fixture local`.",
+        "- Expected signal: receiver reaches queued stage and status output names mock-provider mode.",
+        "- Acceptable warning: local self-signed TLS warning from the mock endpoint.",
+        "- Excluded dead end: do not retry the live provider path without an operator session."
+      ].join("\n")
+    )
+  });
+  try {
+    const report = await runValidator(root, "validate-context");
+    assert.deepEqual(report.errors, []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("validate-context rejects verification-result claims inside architecture context", async () => {
   const root = await createContextProject({
     architecture: completeArchitectureContext().replace("- npm test --workspace agent-project-sdlc", "- npm test passed")
+  });
+  try {
+    const report = await runValidator(root, "validate-context");
+    assert.match(report.errors.join("\n"), /must list verification entry points/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("validate-context rejects deployment-result claims inside deployment context", async () => {
+  const root = await createContextProject({
+    manifest: `[[areas]]
+id = "main"
+root = "."
+context = "project_context/areas/main.md"
+kind = "app"
+default = true
+
+[[context]]
+path = "project_context/areas/main/deployment.md"
+role = "deployment"
+`,
+    extraFiles: {
+      "project_context/areas/main/deployment.md": completeDeploymentContext().replace(
+        "- docker compose config",
+        "- deployed successfully"
+      )
+    }
   });
   try {
     const report = await runValidator(root, "validate-context");
@@ -81,12 +315,12 @@ test("old stage validators are not supported by Minimal Context Harness", async 
 async function createContextProject(overrides = {}) {
   const root = await mkdtemp(path.join(os.tmpdir(), "sdlc-harness-context-validator-"));
   await mkdir(path.join(root, ".agent", "pjsdlc_managed"), { recursive: true });
-  await mkdir(path.join(root, "project_context", "modules"), { recursive: true });
+  await mkdir(path.join(root, "project_context", "areas"), { recursive: true });
   await writeFile(
     path.join(root, ".agent", "config.yaml"),
     `core:
   package: agent-project-sdlc
-  schema_version: "3"
+  schema_version: "${overrides.schemaVersion ?? "4"}"
 `,
     "utf8"
   );
@@ -101,10 +335,19 @@ async function createContextProject(overrides = {}) {
     "utf8"
   );
   await writeFile(
-    path.join(root, "project_context", "modules", "main.md"),
-    overrides.module ?? completeModuleContext(),
+    path.join(root, "project_context", "areas", "main.md"),
+    overrides.module ?? completeAreaContext(),
     "utf8"
   );
+  const manifest = overrides.manifest === undefined ? completeDefaultContextManifest() : overrides.manifest;
+  if (manifest !== null) {
+    await writeFile(path.join(root, "project_context", "context.toml"), manifest, "utf8");
+  }
+  for (const [relative, content] of Object.entries(overrides.extraFiles ?? {})) {
+    const target = path.join(root, ...relative.split("/"));
+    await mkdir(path.dirname(target), { recursive: true });
+    await writeFile(target, content, "utf8");
+  }
   return root;
 }
 
@@ -142,11 +385,11 @@ function completeGlobalContext() {
 
 ## Next Safe Action
 
-- Read project_context/global.md, then the affected module context before changing code.
+- Read project_context/global.md, then the affected area context before changing code.
 
-## Module Index
+## Context Index
 
-- [main](modules/main.md)
+- [main](areas/main.md)
 `;
 }
 
@@ -183,8 +426,8 @@ function completeArchitectureContext() {
 `;
 }
 
-function completeModuleContext() {
-  return `# Module Context: main
+function completeAreaContext() {
+  return `# Area Context: main
 
 ## Responsibility
 
@@ -196,7 +439,7 @@ function completeModuleContext() {
 
 ## Core Data / API / State
 
-- project_context/global.md and project_context/modules/*.md are the durable facts.
+- project_context/global.md, project_context/context.toml and project_context/areas/**/*.md are the durable facts.
 
 ## Key Constraints
 
@@ -213,5 +456,147 @@ function completeModuleContext() {
 ## Open Risks
 
 - Context could become too verbose if architecture notes duplicate implementation details.
+`;
+}
+
+function completeContextManifest() {
+  return `[[areas]]
+id = "main"
+root = "."
+context = "project_context/areas/main.md"
+kind = "app"
+default = true
+
+[[context]]
+path = "project_context/areas/main/foundation/trading.md"
+role = "foundation"
+read_policy = "optional"
+triggers = ["trading", "foundation"]
+
+[[context]]
+path = "project_context/areas/main/contracts/order.md"
+role = "contract"
+triggers = ["order", "contract", "compatibility"]
+
+[[context]]
+path = "project_context/areas/main/verification.md"
+role = "verification"
+read_policy = "default"
+triggers = ["test", "verify", "verification", "smoke", "ci"]
+
+[[context]]
+path = "project_context/areas/main/deployment.md"
+role = "deployment"
+read_policy = "on-demand"
+triggers = ["deploy", "deployment", "runtime", "cloud", "docker"]
+`;
+}
+
+function completeDefaultContextManifest() {
+  return `[[areas]]
+id = "main"
+root = "."
+context = "project_context/areas/main.md"
+kind = "app"
+default = true
+`;
+}
+
+function completeFoundationContext() {
+  return `---
+context_role: foundation
+read_policy: optional
+---
+# Trading Foundation
+
+## Role
+
+- Define durable trading vocabulary and conceptual assertions.
+
+## Use When
+
+- Extending or calibrating trading concepts.
+
+## Do Not Use For
+
+- Routine implementation work that only needs code entry points.
+
+## Derived Contracts
+
+- Area contexts must not treat these concepts as product test evidence.
+
+## Source Body
+
+- Foundational assertions live here as source material for future contracts.
+`;
+}
+
+function completeContractContext() {
+  return `---
+context_role: contract
+---
+# Order Contract
+
+## Producer
+
+- The order service produces normalized order payloads.
+
+## Consumer
+
+- UI and reporting modules consume order payloads.
+
+## Schema/Shape
+
+- The payload contains id, status and timestamps.
+
+## Compatibility
+
+- Additive fields are allowed; renaming existing fields requires migration.
+
+## Tests
+
+- npm test --workspace agent-project-sdlc
+`;
+}
+
+function completeVerificationContext() {
+  return `---
+context_role: verification
+read_policy: default
+---
+# Verification
+
+## Verification Paths
+
+- npm test
+
+## Required Preparation
+
+- No special setup.
+
+## Expected Signals
+
+- Test runner reaches completion.
+`;
+}
+
+function completeDeploymentContext() {
+  return `---
+context_role: deployment
+read_policy: on-demand
+---
+# Deployment
+
+## Deployment Paths
+
+- docker compose config
+
+## Required Preparation
+
+- Docker Compose file is present.
+
+## Expected Signals
+
+- Compose config renders services.
 `;
 }

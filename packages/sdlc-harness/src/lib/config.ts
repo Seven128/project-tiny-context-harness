@@ -1,4 +1,5 @@
 import path from "node:path";
+import { CANONICAL_CORE_PACKAGE, CURRENT_SCHEMA_VERSION } from "./constants.js";
 import type { HarnessConfig } from "./types.js";
 import { harnessConfigPath, harnessPath, harnessRoot } from "./harness-root.js";
 import { pathExists, readText, writeTextIfChanged } from "./fs.js";
@@ -7,8 +8,8 @@ import { parseYaml, stringifyYaml } from "./yaml.js";
 export function defaultConfig(root: string): HarnessConfig {
   return {
     core: {
-      package: "agent-project-sdlc",
-      schema_version: "3"
+      package: CANONICAL_CORE_PACKAGE,
+      schema_version: CURRENT_SCHEMA_VERSION
     },
     managed_files: [
       { path: "AGENTS.md", strategy: "merge-block" },
@@ -19,7 +20,6 @@ export function defaultConfig(root: string): HarnessConfig {
       { path: "tools", strategy: "managed" },
       { path: ".github/workflows/harness.yml", strategy: "create-if-missing" }
     ],
-    local_overrides: [],
     never_overwrite: ["project_context/**", "DESIGN.md", "src/**", "tests/**"]
   };
 }
@@ -52,7 +52,6 @@ export function normalizeConfig(value: Partial<HarnessConfig>, root = ".agent"):
       schema_version: value.core?.schema_version ?? fallback.core.schema_version
     },
     managed_files: value.managed_files ?? fallback.managed_files,
-    local_overrides: value.local_overrides ?? fallback.local_overrides,
     never_overwrite: value.never_overwrite ?? fallback.never_overwrite
   };
 }

@@ -1,4 +1,4 @@
-# Module Context: delivery-benchmark
+# Area Context: delivery-benchmark
 
 ## Responsibility
 

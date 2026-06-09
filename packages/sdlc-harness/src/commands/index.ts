@@ -1,4 +1,5 @@
 import { doctor } from "./doctor.js";
+import { exportContext } from "./export-context.js";
 import { init } from "./init.js";
 import { packageSource } from "./package-source.js";
 import { sync } from "./sync.js";
@@ -13,6 +14,7 @@ export const commands: Record<string, CommandHandler> = {
   sync,
   upgrade,
   doctor,
+  "export-context": exportContext,
   validate,
   "validate-context": (args) => validate(["validate-context", ...args]),
   "validate-harness": (args) => validate(["validate-harness", ...args]),
@@ -26,6 +28,8 @@ export function help(): void {
   sync                 Materialize canonical assets into the workspace
   upgrade              Run migrations and then sync
   doctor               Diagnose project configuration and drift
+  export-context --full|--code|--all [--output <path>] [--check]
+                       Export a temporary Context summary or code implementation Markdown artifact
   validate <gate>      Run a Harness validation gate (Minimal Context only)
   validate-context     Validate Minimal Context fact-source recoverability
   validate-harness     Compatibility alias for validate-context

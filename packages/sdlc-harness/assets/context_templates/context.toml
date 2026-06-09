@@ -1,0 +1,27 @@
+# Schema v4 Minimal Context graph manifest.
+# Keep the default product/domain area for ordinary projects. Role context nodes
+# are read-purpose slices owned by an area or, only when cross-domain, by the project root.
+# When migrating deep files under project_context/areas/**, refine obvious
+# contract/foundation/subdomain/verification/deployment/implementation-index/
+# decision-rationale/archive files into [[context]] entries instead of keeping
+# every Markdown file as an [[areas]] product owner.
+
+[[areas]]
+id = "main"
+root = "."
+context = "project_context/areas/main.md"
+kind = "app"
+default = true
+
+[[context]]
+path = "project_context/areas/main/verification.md"
+role = "verification"
+read_policy = "default"
+triggers = ["test", "verify", "verification", "smoke", "ci"]
+
+# Example optional node:
+# [[context]]
+# path = "project_context/areas/main/deployment.md"
+# role = "deployment"
+# read_policy = "on-demand"
+# triggers = ["deploy", "deployment", "runtime", "cloud", "docker"]

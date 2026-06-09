@@ -29,11 +29,11 @@ export async function harnessRoot(projectRoot: string): Promise<string> {
 }
 
 export async function harnessConfigPath(projectRoot: string): Promise<string> {
-  return path.join(await harnessRoot(projectRoot), "config.yaml");
+  return harnessPath(await harnessRoot(projectRoot), "config.yaml");
 }
 
 export function harnessPath(root: string, ...segments: string[]): string {
-  return path.join(root, ...segments);
+  return [root, ...segments].join("/").replace(/\/+/g, "/");
 }
 
 function folderNameFromObject(value: unknown): string | undefined {

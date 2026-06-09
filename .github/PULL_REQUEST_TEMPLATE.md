@@ -1,0 +1,27 @@
+## Summary
+
+-
+
+## Change Type
+
+- [ ] Package behavior / CLI
+- [ ] Managed assets / source sync
+- [ ] Documentation / launch surface
+- [ ] Tests / CI
+- [ ] Benchmark protocol
+
+## Validation
+
+- [ ] `npm test --workspace agent-project-sdlc`
+- [ ] `node packages/sdlc-harness/dist/cli.js package sync-source`
+- [ ] `node packages/sdlc-harness/dist/cli.js package check-source`
+- [ ] `make validate-context`
+- [ ] `git diff --check`
+
+## Context
+
+Context:
+
+## Notes
+
+-

@@ -1,7 +1,16 @@
 import path from "node:path";
+import { CONTEXT_MANIFEST_PATH, defaultContextManifestTemplate } from "./context-manifest.js";
+import {
+  architectureContextTemplate,
+  areaContextTemplate,
+  globalContextTemplate,
+  verificationContextTemplate
+} from "./context-templates.js";
 import { writeConfigIfMissing } from "./config.js";
+import { createDesignMdIfMissing, DESIGN_MD_PATH } from "./design-md.js";
 import { harnessConfigPath, harnessRoot } from "./harness-root.js";
 import { ensureDir, pathExists, writeTextIfChanged } from "./fs.js";
+import { assertSupportedSchema } from "./schema-guard.js";
 import { runSync } from "./sync-engine.js";
 
 export interface InitOptions {
@@ -11,6 +20,7 @@ export interface InitOptions {
 
 export async function runInit(projectRoot: string, options: InitOptions): Promise<string[]> {
   const report: string[] = [];
+  await assertSupportedSchema(projectRoot, "init");
   const existingEntries = await projectHasExistingFiles(projectRoot);
   if (existingEntries && !options.adopt && !options.force) {
     report.push("Project is not empty; continuing with non-destructive init. Use --adopt to mark this as an existing project adoption.");
@@ -24,7 +34,7 @@ export async function runInit(projectRoot: string, options: InitOptions): Promis
   }
 
   await createProjectContext(projectRoot, report);
-  await createSkillOverrideEntry(projectRoot, report);
+  await createDesignMd(projectRoot, report);
 
   const syncReport = await runSync(projectRoot);
   report.push(`sync changed=${syncReport.changed.length} skipped=${syncReport.skipped.length} blocked=${syncReport.blocked.length}`);
@@ -32,12 +42,9 @@ export async function runInit(projectRoot: string, options: InitOptions): Promis
   return report;
 }
 
-async function createSkillOverrideEntry(projectRoot: string, report: string[]): Promise<void> {
-  const root = await harnessRoot(projectRoot);
-  const overrideRoot = path.join(projectRoot, root, "pjsdlc_managed", "override_skills");
-  if (!(await pathExists(overrideRoot))) {
-    await ensureDir(overrideRoot);
-    report.push(`created ${path.join(root, "pjsdlc_managed", "override_skills")}`);
+async function createDesignMd(projectRoot: string, report: string[]): Promise<void> {
+  if (await createDesignMdIfMissing(projectRoot)) {
+    report.push(`created ${DESIGN_MD_PATH}`);
   }
 }
 
@@ -52,139 +59,23 @@ async function projectHasExistingFiles(projectRoot: string): Promise<boolean> {
 }
 
 async function createProjectContext(projectRoot: string, report: string[]): Promise<void> {
-  const modulesRoot = path.join(projectRoot, "project_context", "modules");
-  await ensureDir(modulesRoot);
+  const areasRoot = path.join(projectRoot, "project_context", "areas");
+  await ensureDir(areasRoot);
   const files: Array<[string, string]> = [
+    [CONTEXT_MANIFEST_PATH, defaultContextManifestTemplate()],
     ["project_context/global.md", globalContextTemplate()],
     ["project_context/architecture.md", architectureContextTemplate()],
-    ["project_context/modules/main.md", moduleContextTemplate("main")]
+    ["project_context/areas/main.md", areaContextTemplate("main")],
+    ["project_context/areas/main/verification.md", verificationContextTemplate("main")]
   ];
   for (const [relative, content] of files) {
-    if (await writeTextIfChanged(path.join(projectRoot, relative), content)) {
+    const target = path.join(projectRoot, relative);
+    if (await pathExists(target)) {
+      report.push(`kept existing ${relative}`);
+      continue;
+    }
+    if (await writeTextIfChanged(target, content)) {
       report.push(`created ${relative}`);
     }
   }
-}
-
-function globalContextTemplate(): string {
-  return [
-    "# Project / Delivery Context",
-    "",
-    "## Project Goal",
-    "",
-    "- Describe the user-visible goal this project is trying to achieve.",
-    "",
-    "## Non-goals / Boundaries",
-    "",
-    "- List what this project intentionally does not do.",
-    "",
-    "## Background",
-    "",
-    "- Capture the minimum background a fresh agent needs before changing code.",
-    "",
-    "## Design Rationale",
-    "",
-    "- Record only durable choices that are hard to infer from code or tests.",
-    "",
-    "## Architecture Context",
-    "",
-    "- Link to `project_context/architecture.md`; keep architecture notes minimal and focused on boundaries, components and constraints that are not obvious from code.",
-    "",
-    "## Product / Delivery Brief",
-    "",
-    "- Capture durable product goals, users, core flows, acceptance signals and non-goals.",
-    "",
-    "## UX / Screen Brief",
-    "",
-    "- Capture durable screen, flow, interaction, responsive and accessibility facts. Use `DESIGN.md` for visual identity and design tokens when needed.",
-    "",
-    "## Verification Entry Points",
-    "",
-    "- `npm test` or the project-specific command that proves product behavior.",
-    "",
-    "## Current State",
-    "",
-    "- Summarize what is currently implemented or intentionally blocked.",
-    "",
-    "## Next Safe Action",
-    "",
-    "- State the safest next step for a fresh agent.",
-    "",
-    "## Module Index",
-    "",
-    "- [main](modules/main.md)",
-    ""
-  ].join("\n");
-}
-
-function architectureContextTemplate(): string {
-  return [
-    "# Architecture Context",
-    "",
-    "This is the restrained architecture context. Keep only facts that help a fresh agent recover system shape, boundaries and durable constraints quickly.",
-    "",
-    "## System Boundary",
-    "",
-    "- Describe what is inside this project and what external systems, providers or runtime assumptions sit outside it.",
-    "",
-    "## Component Map",
-    "",
-    "- List the smallest useful set of components/modules and how they relate.",
-    "",
-    "## Data / Control Flow",
-    "",
-    "- Summarize only the durable request, event, state or data flow that is hard to infer from code alone.",
-    "",
-    "## Design Rationale",
-    "",
-    "- Record architecture-level choices that still constrain future work.",
-    "",
-    "## Constraints And Tradeoffs",
-    "",
-    "- Capture performance, safety, integration, deployment or maintainability constraints that matter for future changes.",
-    "",
-    "## Verification Implications",
-    "",
-    "- List project-specific verification entry points affected by architectural changes; do not claim tests already passed.",
-    "",
-    "## Open Risks",
-    "",
-    "- List unresolved architectural risks or unknowns.",
-    ""
-  ].join("\n");
-}
-
-function moduleContextTemplate(moduleName: string): string {
-  return [
-    `# Module Context: ${moduleName}`,
-    "",
-    "## Responsibility",
-    "",
-    "- Describe this module's responsibility.",
-    "",
-    "## User / System Contract",
-    "",
-    "- Describe the external behavior, API, CLI, UI, screen state, interaction or data contract.",
-    "",
-    "## Core Data / API / State",
-    "",
-    "- Summarize the important data structures, APIs, state transitions, or rules.",
-    "",
-    "## Key Constraints",
-    "",
-    "- List constraints that are not obvious from code alone, including product rules, responsive/a11y needs or visual boundaries.",
-    "",
-    "## Code Entry Points",
-    "",
-    "- `src/` or the concrete file/function entry points.",
-    "",
-    "## Test Entry Points",
-    "",
-    "- `npm test` or focused test commands for this module.",
-    "",
-    "## Open Risks",
-    "",
-    "- List unresolved risks or blockers.",
-    ""
-  ].join("\n");
 }

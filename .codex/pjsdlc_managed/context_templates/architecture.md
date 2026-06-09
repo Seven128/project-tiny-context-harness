@@ -8,7 +8,7 @@ This is the restrained architecture context. Keep only facts that help a fresh a
 
 ## Component Map
 
-- List the smallest useful set of components/modules and how they relate.
+- List the smallest useful set of components, areas or context units and how they relate.
 
 ## Data / Control Flow
 
@@ -16,7 +16,7 @@ This is the restrained architecture context. Keep only facts that help a fresh a
 
 ## Design Rationale
 
-- Record architecture-level choices that still constrain future work.
+- Record architecture-level choices that still constrain future work; architecture boundary changes should be captured here before implementation alignment.
 
 ## Constraints And Tradeoffs
 

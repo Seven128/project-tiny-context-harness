@@ -7,7 +7,7 @@ Rules:
 - Start from the prepared fresh git repo in the current run directory. For warm benchmark runs, Harness is already initialized and committed before the observer starts; do not run `npx sdlc-harness init` inside the measured delivery window.
 - If the prepared run is missing `project_context/global.md` or `project_context/architecture.md`, stop and report `BLOCKED`; do not create an alternate fallback context root in a formal run.
 - Maintain context quality in `project_context/**`. Harness does not replace product tests, smoke checks, hidden probes or human acceptance.
-- During `INITIAL_DELIVERY`, implement the requested product behavior and update only the minimum `project_context/global.md`, `project_context/architecture.md` and `project_context/modules/*.md` facts needed for a fresh agent to recover goal, boundaries, restrained architecture, code entry points, test entry points, current state and next safe action.
+- During `INITIAL_DELIVERY`, implement the requested product behavior and update only the minimum `project_context/global.md`, `project_context/architecture.md` and `project_context/areas/*.md` facts needed for a fresh agent to recover goal, boundaries, restrained architecture, code entry points, test entry points, current state and next safe action.
 - Do not create lifecycle phase state, `plan.yaml`, PRD, UX, standalone architecture docs, implementation docs, review reports, test reports, release docs or RFC docs unless a later staged prompt explicitly asks for a temporary working note.
 - Use the scenario Gate Profile to select the smallest necessary product/domain gates for the current boundary.
 - Run `make validate-context` before handoff when Context changed.

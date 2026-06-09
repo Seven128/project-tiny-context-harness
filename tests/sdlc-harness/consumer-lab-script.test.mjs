@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import path from "node:path";
 import test from "node:test";
 import {
   classifyMissingTools,
@@ -25,8 +26,8 @@ test("consumer lab script parses safety and report options", () => {
     "/tmp/report.md"
   ]);
 
-  assert.equal(options.labDir, "/tmp/lab");
-  assert.equal(options.sourceRoot, "/tmp/source");
+  assert.equal(options.labDir, path.resolve("/tmp/lab"));
+  assert.equal(options.sourceRoot, path.resolve("/tmp/source"));
   assert.equal(options.resetLab, true);
   assert.equal(options.keepLab, true);
   assert.equal(options.reportOnly, true);

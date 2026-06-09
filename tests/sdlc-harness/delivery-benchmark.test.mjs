@@ -34,7 +34,7 @@ test("benchmark docs keep skeleton protocol and remove old pilot conclusions", a
     read("examples/delivery-benchmark/README.md"),
     read("examples/delivery-benchmark/RUNBOOK.md"),
     read("examples/delivery-benchmark/results/README.md"),
-    read("project_context/modules/delivery-benchmark.md")
+    read("project_context/areas/delivery-benchmark.md")
   ]);
 
   for (const content of [readme, runbook, resultsReadme]) {
