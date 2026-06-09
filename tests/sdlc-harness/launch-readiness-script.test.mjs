@@ -28,6 +28,7 @@ for (const expected of [
   "launch-kit",
   "launch-operating-plan",
   "launch-demo-storyboard",
+  "launch-demo-packet",
   "launch-milestones",
   "market-map",
   "outreach-targets",

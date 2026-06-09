@@ -14,6 +14,7 @@
   "scripts": {
     "test": "npm test --workspace agent-project-sdlc",
     "launch:check": "node tools/launch_readiness_check.mjs --offline",
+    "launch:demo": "node tools/launch_demo_capture.mjs",
     "smoke:quickstart": "node tools/quickstart_smoke.mjs --clean",
     "release:npm": "node tools/release_npm.mjs",
     "sdlc-harness": "node packages/sdlc-harness/dist/cli.js"

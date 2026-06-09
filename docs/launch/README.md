@@ -4,7 +4,7 @@ This is the maintainer launch kit for AI SDLC Harness. It is copy-ready material
 
 Do not claim benchmark wins yet. Current public positioning is based on product design and smoke evidence: the package installs a small, durable recovery surface and `validate-context` gate. Fresh Minimal Context benchmark runs are still required before publishing efficiency claims.
 
-For competitor and feasibility context, see [market-map.md](market-map.md). For current launch, award and curated-list execution targets, see [outreach-targets.md](outreach-targets.md).
+For competitor and feasibility context, see [market-map.md](market-map.md). For current launch, award and curated-list execution targets, see [outreach-targets.md](outreach-targets.md). For the recording packet, see [demo.md](demo.md).
 
 ## Core Positioning
 

@@ -16,7 +16,7 @@ Ready now:
 
 Not ready yet:
 
-- No public demo recording.
+- No public demo recording. The recording packet lives in `docs/launch/demo.md`.
 - No external launch post.
 - No outside adoption report, testimonial or contribution.
 - 0 GitHub stars and 0 forks at snapshot time.
@@ -102,7 +102,7 @@ Hold on [awesome-opencode](https://github.com/awesome-opencode/awesome-opencode)
 
 ## Next Concrete Actions
 
-1. Finish #5: record the 60-90 second recovery demo.
+1. Finish #5: record the 60-90 second recovery demo from `docs/launch/demo.md`.
 2. Post one Show HN or Product Hunt launch, not both on the same day.
 3. Track stars, forks, npm downloads and comments for 24 hours.
 4. Patch README/FAQ from repeated confusion.

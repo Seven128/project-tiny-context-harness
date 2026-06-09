@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-label="Terminal demo still for AI SDLC Harness">
+  <rect width="1200" height="675" fill="#111827"/>
+  <rect x="54" y="54" width="1092" height="567" rx="14" fill="#0b1020" stroke="#263244" stroke-width="2"/>
+  <rect x="54" y="54" width="1092" height="44" rx="14" fill="#1f2937"/>
+  <circle cx="82" cy="76" r="7" fill="#ef4444"/>
+  <circle cx="106" cy="76" r="7" fill="#f59e0b"/>
+  <circle cx="130" cy="76" r="7" fill="#22c55e"/>
+  <text x="170" y="82" font-family="Consolas, 'SFMono-Regular', monospace" font-size="17" fill="#d1d5db">ai-sdlc-harness-demo</text>
+
+  <text x="82" y="142" font-family="Consolas, 'SFMono-Regular', monospace" font-size="22" fill="#93c5fd">$ npm install --save-dev agent-project-sdlc@latest</text>
+  <text x="82" y="180" font-family="Consolas, 'SFMono-Regular', monospace" font-size="20" fill="#cbd5e1">added packages from npm registry</text>
+
+  <text x="82" y="236" font-family="Consolas, 'SFMono-Regular', monospace" font-size="22" fill="#93c5fd">$ npx --no-install sdlc-harness init</text>
+  <text x="82" y="274" font-family="Consolas, 'SFMono-Regular', monospace" font-size="20" fill="#a7f3d0">created AGENTS.md</text>
+  <text x="82" y="310" font-family="Consolas, 'SFMono-Regular', monospace" font-size="20" fill="#a7f3d0">created project_context/context.toml</text>
+  <text x="82" y="346" font-family="Consolas, 'SFMono-Regular', monospace" font-size="20" fill="#a7f3d0">created project_context/global.md</text>
+  <text x="82" y="382" font-family="Consolas, 'SFMono-Regular', monospace" font-size="20" fill="#a7f3d0">created project_context/architecture.md</text>
+  <text x="82" y="418" font-family="Consolas, 'SFMono-Regular', monospace" font-size="20" fill="#cbd5e1">sync changed=15 skipped=0 blocked=0</text>
+
+  <text x="82" y="474" font-family="Consolas, 'SFMono-Regular', monospace" font-size="22" fill="#93c5fd">$ npx --no-install sdlc-harness validate-context</text>
+  <text x="82" y="512" font-family="Consolas, 'SFMono-Regular', monospace" font-size="20" fill="#cbd5e1">loaded project_context/context.toml with 1 area(s)</text>
+  <text x="82" y="548" font-family="Consolas, 'SFMono-Regular', monospace" font-size="20" fill="#22c55e">Minimal Context validation passed</text>
+
+  <rect x="760" y="142" width="336" height="324" rx="12" fill="#111827" stroke="#334155"/>
+  <text x="790" y="184" font-family="Inter, Arial, sans-serif" font-size="25" fill="#f8fafc" font-weight="700">Fresh-agent recovery</text>
+  <text x="790" y="231" font-family="Consolas, 'SFMono-Regular', monospace" font-size="19" fill="#cbd5e1">AGENTS.md</text>
+  <text x="790" y="265" font-family="Consolas, 'SFMono-Regular', monospace" font-size="19" fill="#cbd5e1">project_context/global.md</text>
+  <text x="790" y="299" font-family="Consolas, 'SFMono-Regular', monospace" font-size="19" fill="#cbd5e1">project_context/architecture.md</text>
+  <text x="790" y="333" font-family="Consolas, 'SFMono-Regular', monospace" font-size="19" fill="#cbd5e1">areas/main/verification.md</text>
+  <line x1="790" y1="366" x2="1066" y2="366" stroke="#334155"/>
+  <text x="790" y="406" font-family="Inter, Arial, sans-serif" font-size="20" fill="#a7f3d0">Small repo-native memory.</text>
+  <text x="790" y="438" font-family="Inter, Arial, sans-serif" font-size="20" fill="#a7f3d0">No phase gates.</text>
+
+  <text x="760" y="548" font-family="Inter, Arial, sans-serif" font-size="24" fill="#f8fafc" font-weight="700">AI SDLC Harness</text>
+  <text x="760" y="584" font-family="Inter, Arial, sans-serif" font-size="19" fill="#cbd5e1">Minimal project memory for AI coding agents</text>
+</svg>

@@ -108,6 +108,7 @@ function localChecks() {
   const rootReadme = read("README.md");
   const packageReadme = read("packages/sdlc-harness/README.md");
   const launchKit = read("docs/launch/README.md");
+  const demoPacket = read("docs/launch/demo.md");
   const marketMap = read("docs/launch/market-map.md");
   const outreachTargets = read("docs/launch/outreach-targets.md");
   const sourceWorkflow = read(".github/workflows/harness.yml");
@@ -143,6 +144,20 @@ function localChecks() {
   addCheck(checks, "launch-kit", contains(launchKit, /Launch Kit/) && contains(launchKit, /Do not claim benchmark wins/) && contains(launchKit, /Hacker News Draft/), "Launch kit has copy-ready channel drafts and no-benchmark boundary.");
   addCheck(checks, "launch-operating-plan", contains(launchKit, /Launch Operating Plan/) && contains(launchKit, /Channel Matrix/) && contains(launchKit, /Community Handoff Surface/), "Launch kit has an operating plan, channel matrix and community handoff surface.");
   addCheck(checks, "launch-demo-storyboard", contains(launchKit, /Demo Storyboard/) && contains(launchKit, /fresh-agent test prompt/i) && contains(launchKit, /make validate-context/), "Launch kit has a demo storyboard tied to the README recovery test.");
+  addCheck(
+    checks,
+    "launch-demo-packet",
+    rootPackage.scripts?.["launch:demo"] === "node tools/launch_demo_capture.mjs" &&
+      hasFile("tools/launch_demo_capture.mjs") &&
+      hasFile("docs/launch/demo.md") &&
+      hasFile("docs/launch/assets/demo-terminal.svg") &&
+      contains(demoPacket, /Launch Demo Packet/) &&
+      contains(demoPacket, /npm run launch:demo/) &&
+      contains(demoPacket, /No public video has been uploaded yet/) &&
+      contains(demoPacket, /Fresh-Agent Prompt/) &&
+      contains(demoPacket, /Fresh-Agent Recovery Check/),
+    "Launch demo packet has a reproducible capture command, transcript guide and visual placeholder."
+  );
   addCheck(checks, "launch-milestones", contains(launchKit, /Star \/ Adoption Milestones/) && contains(launchKit, /10 stars/) && contains(launchKit, /500 stars/), "Launch kit has star/adoption milestone triggers without treating stars as proof.");
   addCheck(checks, "market-map", contains(marketMap, /Market Map/) && contains(marketMap, /Competitive Snapshot/) && contains(marketMap, /10-100 stars/), "Market map has competitor snapshot and feasibility bands.");
   addCheck(
