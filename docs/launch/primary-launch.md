@@ -17,6 +17,7 @@ Do not post to multiple broad channels on the same day. Use the first channel to
 Run these before posting:
 
 ```sh
+npm run release:npm
 npm run launch:check
 node tools/launch_readiness_check.mjs --strict-external
 npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.39 --clean
@@ -24,6 +25,7 @@ npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec proj
 
 Confirm:
 
+- `docs/launch/npm-publish-runbook.md` has been followed if npm still returns 404 before publish.
 - GitHub stars/forks and npm downloads baseline are noted from the strict external report.
 - npm `project-tiny-context-harness@0.2.39` is published and installable.
 - Issue #4 is pinned and open for adoption reports.

@@ -4,7 +4,7 @@ This is the maintainer launch kit for Project Tiny Context Harness. It is copy-r
 
 Do not claim benchmark wins yet. Current public positioning is based on product design and smoke evidence: the package installs a small, durable recovery surface and `validate-context` gate. Fresh Minimal Context benchmark runs are still required before publishing efficiency claims.
 
-For competitor and feasibility context, see [market-map.md](market-map.md). For current launch, award and curated-list execution targets, see [outreach-targets.md](outreach-targets.md). For copy-ready primary launch execution, see [primary-launch.md](primary-launch.md). For curated-list PR copy, see [awesome-list-submissions.md](awesome-list-submissions.md). For the recording packet, see [demo.md](demo.md).
+For competitor and feasibility context, see [market-map.md](market-map.md). For current launch, award and curated-list execution targets, see [outreach-targets.md](outreach-targets.md). For copy-ready primary launch execution, see [primary-launch.md](primary-launch.md). For npm publication, see [npm-publish-runbook.md](npm-publish-runbook.md). For curated-list PR copy, see [awesome-list-submissions.md](awesome-list-submissions.md). For the recording packet, see [demo.md](demo.md).
 
 Readiness boundary: `npm run launch:check` means the metadata, docs, launch packets and repo-hosted media are internally coherent. It does not mean Product Hunt, curated-list submissions or awards are ready. Those still require final account-specific submission review, first feedback or adoption evidence.
 
@@ -97,6 +97,7 @@ Use this if agents keep losing project intent between chats. It adds a small pro
 - Run `npm run launch:check` locally; run it again without `--offline` before external launch to see current GitHub/npm metadata drift.
 - Confirm README first screen shows badges, install command, positioning and 60-second trial.
 - Set GitHub description, homepage and topics from this file.
+- Follow [npm-publish-runbook.md](npm-publish-runbook.md) while the renamed package still returns 404.
 - Publish a new npm version after `npm test --workspace project-tiny-context-harness`, `npm run smoke:quickstart`, `make validate-context` and package source check pass.
 - Confirm npm package page renders the updated package README and MIT license.
 - Run `npm run smoke:quickstart` after publish against `project-tiny-context-harness@latest` or a clean test project.

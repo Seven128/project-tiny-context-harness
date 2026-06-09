@@ -36,6 +36,8 @@ for (const expected of [
   "launch-kit",
   "launch-operating-plan",
   "primary-launch-packet",
+  "npm-publish-runbook",
+  "release-npm-first-publish-target",
   "awesome-list-submissions",
   "external-pr-packets",
   "launch-demo-storyboard",

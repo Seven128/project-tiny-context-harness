@@ -31,7 +31,7 @@ Practical implication: broad public launch should wait for npm publish. Awards a
 
 | Priority | Target | Why now | Required packet | Success signal |
 |---:|---|---|---|---|
-| 1 | Hacker News Show HN | HN's Show HN format is for something people can try and discuss; this package is now installable. | GitHub URL, short text post, demo link if possible, explicit feedback ask. | Comments discuss agent handoff/context drift rather than generic AI tooling. |
+| 1 | Hacker News Show HN | HN's Show HN format is for something people can try and discuss; use it after npm publish makes the renamed package installable. | GitHub URL, short text post, demo link if possible, explicit feedback ask. | Comments discuss agent handoff/context drift rather than generic AI tooling. |
 | 2 | Agentic-coding awesome lists | Two smaller lists match repo-level agent instructions and team adoption now. | PR copy and exact patches from `docs/launch/awesome-list-submissions.md` and `docs/launch/external-prs/`, no benchmark/adoption claims. | Listing accepted or maintainer feedback clarifies the category. |
 | 3 | Awesome OpenCode | The README now includes an OpenCode setup note; the list accepts project YAML entries for tools and utilities. | `data/projects/` YAML patch from `docs/launch/external-prs/`, no plugin claim. | Listing accepted or maintainers clarify OpenCode relevance. |
 | 4 | Awesome AI Devtools | Higher-exposure directory with a matching Agent Infrastructure / Configuration & Context Management category. | README patch and PR-template body from `docs/launch/external-prs/`, no benchmark claim. | Listing accepted or maintainer feedback clarifies category fit. |
@@ -115,8 +115,9 @@ Project Tiny Context Harness - Minimal repo-native project memory for AI coding 
 
 ## Next Concrete Actions
 
-1. Post Show HN first using `docs/launch/primary-launch.md` and the repo-hosted GIF if useful.
-2. Submit the two P0 agentic-coding awesome-list PRs, the OpenCode project-list PR and the Awesome AI Devtools PR from `docs/launch/external-prs/README.md`.
-3. Track stars, forks, npm downloads and comments for 24 hours.
-4. Patch README/FAQ from repeated confusion.
-5. Use the Product Hunt media packet only after the first feedback loop or with a deliberate scheduling decision.
+1. Publish `project-tiny-context-harness@0.2.39` by following `docs/launch/npm-publish-runbook.md`.
+2. Post Show HN first using `docs/launch/primary-launch.md` and the repo-hosted GIF if useful.
+3. Submit the two P0 agentic-coding awesome-list PRs, the OpenCode project-list PR and the Awesome AI Devtools PR from `docs/launch/external-prs/README.md`.
+4. Track stars, forks, npm downloads and comments for 24 hours.
+5. Patch README/FAQ from repeated confusion.
+6. Use the Product Hunt media packet only after the first feedback loop or with a deliberate scheduling decision.

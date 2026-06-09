@@ -143,6 +143,7 @@ function localChecks() {
   const packageReadme = read("packages/sdlc-harness/README.md");
   const launchKit = read("docs/launch/README.md");
   const primaryLaunch = read("docs/launch/primary-launch.md");
+  const npmPublishRunbook = read("docs/launch/npm-publish-runbook.md");
   const awesomeListSubmissions = read("docs/launch/awesome-list-submissions.md");
   const agentSurfaceRecipes = read("docs/agent-surface-recipes.md");
   const freshAgentWalkthrough = read("docs/examples/fresh-agent-recovery.md");
@@ -156,6 +157,7 @@ function localChecks() {
   const outreachTargets = read("docs/launch/outreach-targets.md");
   const sourceWorkflow = read(".github/workflows/harness.yml");
   const maintainerWorkflow = read(".github/workflows/package.yml");
+  const releaseScript = read("tools/release_npm.mjs");
 
   addCheck(checks, "root-package-name", rootPackage.name === "project-tiny-context-harness", "Root package name is project-tiny-context-harness.");
   addCheck(checks, "root-license", rootPackage.license === "MIT" && hasFile("LICENSE"), "Root package has MIT license metadata and LICENSE file.");
@@ -258,6 +260,7 @@ function localChecks() {
     contains(launchKit, /Launch Kit/) &&
       contains(launchKit, /Do not claim benchmark wins/) &&
       contains(launchKit, /Hacker News Draft/) &&
+      contains(launchKit, /npm-publish-runbook\.md/) &&
       contains(launchKit, /awesome-list-submissions\.md/) &&
       contains(launchKit, /Readiness boundary/) &&
       contains(launchKit, /repo-hosted media/) &&
@@ -273,12 +276,35 @@ function localChecks() {
       hasFile("docs/launch/primary-launch.md") &&
       contains(primaryLaunch, /Primary Launch Packet/) &&
       contains(primaryLaunch, /Hacker News Show HN/) &&
+      contains(primaryLaunch, /npm run release:npm/) &&
+      contains(primaryLaunch, /npm-publish-runbook\.md/) &&
       contains(primaryLaunch, /Product Hunt/) &&
       contains(primaryLaunch, /difference from using only AGENTS\.md/) &&
       contains(primaryLaunch, /Adoption reports \/ missing facts/) &&
       contains(primaryLaunch, /24-Hour Response Playbook/) &&
       contains(primaryLaunch, /Do not ask for stars|Asking for stars/),
     "Primary launch packet has copy-ready first-channel copy, Product Hunt follow-up, response playbook and claims boundary."
+  );
+  addCheck(
+    checks,
+    "npm-publish-runbook",
+    hasFile("docs/launch/npm-publish-runbook.md") &&
+      contains(npmPublishRunbook, /project-tiny-context-harness@0\.2\.39/) &&
+      contains(npmPublishRunbook, /npm run release:npm -- --version 0\.2\.39 --publish --yes --full-gate --registry-smoke/) &&
+      contains(npmPublishRunbook, /--otp 123456/) &&
+      contains(npmPublishRunbook, /Do not post broad launch copy while the renamed package still returns 404/) &&
+      contains(npmPublishRunbook, /node tools\/launch_readiness_check\.mjs --strict-external/),
+    "npm publish runbook documents first renamed publish, OTP path, npm 404 gate and post-publish verification."
+  );
+  addCheck(
+    checks,
+    "release-npm-first-publish-target",
+    contains(releaseScript, /registryPackageExists/) &&
+      contains(releaseScript, /publish && !versionSpecified && !registryPackageExists/) &&
+      contains(releaseScript, /return currentVersion/) &&
+      contains(releaseScript, /--otp/) &&
+      contains(releaseScript, /otpProvided/),
+    "release npm script keeps first renamed publish on the current workspace version and supports OTP without reporting the code."
   );
   addCheck(
     checks,

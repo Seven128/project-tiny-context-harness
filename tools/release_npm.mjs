@@ -30,20 +30,27 @@ async function main() {
 
   const currentVersion = await readPackageVersion();
   const registryBefore = await npmView(["version", "dist-tags.latest", "--json"], { optional: true });
+  const registryPackageExists = Boolean(registryBefore);
   const latestBefore = registryBefore?.["dist-tags.latest"] ?? registryBefore?.version ?? currentVersion;
-  const targetVersion =
-    args.publish || args.versionSpecified
-      ? resolveTargetVersion(args.version, currentVersion, latestBefore)
-      : currentVersion;
+  const targetVersion = resolveRequestedTargetVersion({
+    publish: args.publish,
+    versionSpecified: args.versionSpecified,
+    specifier: args.version,
+    currentVersion,
+    latestVersion: latestBefore,
+    registryPackageExists
+  });
 
   const report = {
     packageName,
     currentVersion,
+    registryPackageExists,
     latestBefore,
     targetVersion,
     publish: args.publish,
     fullGate: args.fullGate,
     registrySmoke: args.registrySmoke,
+    otpProvided: Boolean(args.otp),
     startedAt: new Date().toISOString(),
     steps: []
   };
@@ -97,7 +104,7 @@ async function main() {
   await step(report, "pre-publish diff check", () => run("git", ["diff", "--check"]));
 
   if (args.publish) {
-    await step(report, "npm publish tarball", () => run("npm", ["publish", pack.tarballPath]));
+    await step(report, "npm publish tarball", () => publishTarball(pack.tarballPath));
     report.registry = await step(report, "registry latest verification", async () =>
       waitForLatest(targetVersion)
     );
@@ -126,6 +133,7 @@ function parseArgs(argv) {
     yes: false,
     fullGate: false,
     registrySmoke: false,
+    otp: null,
     help: false
   };
   for (let i = 0; i < argv.length; i += 1) {
@@ -151,6 +159,14 @@ function parseArgs(argv) {
       parsed.registrySmoke = true;
       continue;
     }
+    if (arg === "--otp") {
+      const value = argv[++i];
+      if (!value) {
+        throw new Error("--otp requires a one-time password value");
+      }
+      parsed.otp = value;
+      continue;
+    }
     if (arg === "--help" || arg === "-h") {
       parsed.help = true;
       continue;
@@ -162,15 +178,17 @@ function parseArgs(argv) {
 
 function printHelp() {
   console.log(`Usage:
-  node tools/release_npm.mjs [--version patch|minor|major|x.y.z] [--publish --yes] [--full-gate] [--registry-smoke]
+  node tools/release_npm.mjs [--version patch|minor|major|x.y.z] [--publish --yes] [--full-gate] [--registry-smoke] [--otp 123456]
 
 Default mode is a non-mutating dry run against the current workspace package. Publishing
-defaults to a patch bump, verifies npm auth early, builds once through npm pack, publishes
-that tarball, and verifies the registry latest tag.
+defaults to the current workspace version when the renamed package has no registry entry
+yet; otherwise it defaults to a patch bump. The script verifies npm auth early, builds
+once through npm pack, publishes that tarball, and verifies the registry latest tag.
 
 Optional heavier gates:
   --full-gate       Run the full local node test suite and validate-context before publish.
-  --registry-smoke  After publish, install the registry package in a temp consumer project.`);
+  --registry-smoke  After publish, install the registry package in a temp consumer project.
+  --otp             Pass an npm publish one-time password without writing it to the report.`);
 }
 
 async function step(report, label, action) {
@@ -215,6 +233,23 @@ function resolveTargetVersion(specifier, currentVersion, latestVersion) {
     return `${parsed.major + 1}.0.0`;
   }
   throw new Error(`Unsupported --version value: ${specifier}`);
+}
+
+function resolveRequestedTargetVersion({
+  publish,
+  versionSpecified,
+  specifier,
+  currentVersion,
+  latestVersion,
+  registryPackageExists
+}) {
+  if (!publish && !versionSpecified) {
+    return currentVersion;
+  }
+  if (publish && !versionSpecified && !registryPackageExists) {
+    return currentVersion;
+  }
+  return resolveTargetVersion(specifier, currentVersion, latestVersion);
 }
 
 function parseVersion(version) {
@@ -321,6 +356,14 @@ async function installedConsumerSmoke(version) {
     installedVersion,
     doctorOutput: doctor.output.trim()
   };
+}
+
+async function publishTarball(tarballPath) {
+  const commandArgs = ["publish", tarballPath];
+  if (args.otp) {
+    commandArgs.push("--otp", args.otp);
+  }
+  return run("npm", commandArgs);
 }
 
 async function run(command, commandArgs, options = {}) {
@@ -517,7 +560,7 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
 ## 2. Included Changes（包含变更）
 
 - 发布当前 workspace 中已同步的 Project Tiny Context Harness package assets 和 CLI build。
-- 本版本由 \`tools/release_npm.mjs\` 执行发布闭环。默认发布路径覆盖 npm auth、version bump、source drift check、tarball pack、publish 和 registry latest verification；\`--full-gate\` 和 \`--registry-smoke\` 可启用更重验证。
+- 本版本由 \`tools/release_npm.mjs\` 执行发布闭环。若 renamed package 尚无 registry entry，默认发布当前 workspace version；已有 registry latest 后默认 patch bump。发布路径覆盖 npm auth、version check/bump、source drift check、tarball pack、publish 和 registry latest verification；\`--full-gate\` 和 \`--registry-smoke\` 可启用更重验证。
 
 ## 3. Build Artifacts（构建产物）
 
@@ -534,6 +577,7 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
 - Decision: \`${decision}\`
 - Evidence:
   - \`npm whoami\`: ${authStatus}。
+  - npm publish OTP: ${report.otpProvided ? "PROVIDED，未写入报告。" : "NOT PROVIDED"}。
   - \`node packages/sdlc-harness/dist/cli.js package check-source\`: ${stepStatus(report, "package source drift check")}。
   - \`node --test tests/sdlc-harness/*.test.mjs\`: ${fullGateStatus}。
   - \`node packages/sdlc-harness/dist/cli.js validate-context\`: ${validateStatus}。
