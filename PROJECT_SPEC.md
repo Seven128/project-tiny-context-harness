@@ -77,6 +77,44 @@ Therefore the current design keeps the product goal unchanged, but narrows the d
 
 In short: Harness no longer tries to externalize the whole SDLC by default. It maintains the minimum durable context needed for recovery and continuation. The design question is not which human software-engineering phase should own a document; it is what smallest recovery surface lets an agent understand and continue the whole delivery loop without re-creating phase artifacts that the model can already reason through internally.
 
+## Core Terms
+
+The adopted approach uses a small vocabulary so the same mechanism is not described with several competing names:
+
+- **Harness**: the managed guidance, Context templates, default Skills, validators and source-sync checks that shape expected agent behavior. It is not a workflow engine.
+- **Context**: durable project facts stored in `project_context/**` or `DESIGN.md` so future agents can recover intent, boundaries and repeat-execution paths. It is not a log or evidence archive.
+- **Durable fact**: a fact expected to guide later work, such as product ownership, page responsibility, information architecture, API/Schema, state semantics, cross-domain boundary or verification/deployment path.
+- **Workflow contract**: prompt-level order of thought that the agent is expected to follow. It is a soft constraint, not a validator, phase gate or machine-enforced edit-order gate.
+- **Context Delta**: the current task's durable-fact decision point inside task-contract scenarios. `required` means Context is updated before implementation continues; `none` means implementation proceeds against existing Context.
+- **Task Contract**: a temporary task-local compilation of upstream principles and Context into implementation constraints. It guides the current task, but is not a source of truth.
+- **Temporary plan surface**: `plan.md` or an equivalent scratchpad used only when complex work needs visible execution state. It serves the workflow contract and Context without replacing either.
+- **Conformance**: a handoff self-check that compares implementation against the relevant Context and task contract. It produces delivery evidence, not durable Context by itself.
+- **Validator / gate**: machine-enforced checks. Minimal Context uses them only for recoverability, generated-asset consistency and fake verification-claim prevention, not for proving product quality or enforcing edit order.
+
+## Harness Mental Model
+
+The user-facing mental model for Minimal Context Harness is: **the Harness is a set of expected agent behavior constraints, not a document workflow**. Installing the Harness should make a user expect that each agent conversation starts from the right facts, respects project intent, uses the right thinking path for the task and leaves behind only durable recovery value.
+
+That model has five layers:
+
+- **Fact-source model**: durable product, architecture, ownership, interface, state and verification/deployment path facts live in `project_context/**` or `DESIGN.md`; code is evidence of current implementation; tests, smoke, CI, review and human acceptance prove product quality; one-off logs, screenshots, task contracts and temporary plans are evidence or scratch space, not durable facts.
+- **Authority model**: Context describes what should be true; code describes what is currently true. When they conflict, the agent should name implementation drift, missing work or stale Context instead of silently letting current code redefine product or architecture intent.
+- **Workflow-contract model**: the agent follows prompt-level thought order at high-risk moments: read Context, run page/product-positioning or role-placement checks when applicable, use `Context Delta` inside task-contract scenarios, update Context first when durable facts changed, implement, verify and finish with Conformance / drift checks.
+- **Artifact-placement model**: AGENTS is startup routing and hard boundaries; Skills are role-specific thinking frameworks; Context / `DESIGN.md` are long-lived fact sources; `plan.md` or equivalent plan surfaces are temporary execution cache; README is human usage; validators guard recoverability and fake verification claims only.
+- **Soft-constraint model**: most Harness behavior is guidance for a probabilistic coding agent, not a deterministic runtime. The design therefore repeats the same intent through small managed surfaces, narrow Skill triggers, Context authority, temporary-plan boundaries, handoff evidence, source-sync tests and a small validator instead of relying on a single heavy gate.
+
+The implementation design follows from how agents actually run. A coding agent does not execute a workflow engine; it reads prompt context, selects relevant instructions, inspects files, uses tools, edits code and summarizes evidence. Harness therefore implements the mental model by placing each constraint at the moment where the agent is most likely to use it:
+
+- `AGENTS.md` carries only the startup facts and hard boundaries that must be visible immediately.
+- `project_context/**` carries durable intent because future agents can recover it before reading all code.
+- Default Context authoring Skills expand product, UI/UX and engineering reasoning only when explicit role or strong artifact triggers make that extra frame useful.
+- Task-contract compilation turns broad principles into task-local constraints before implementation, while `Context Delta` prevents a second durable-fact decision point.
+- Temporary plan surfaces can keep the contract visible during long work, but durable facts discovered there must be extracted back to Context.
+- Contract Conformance and Context drift checks create a final self-check without storing one-off evidence as long-lived Context.
+- `validate-context`, tests and package source checks enforce only the boundaries that are appropriate for Minimal Context: recoverability, generated-asset consistency and absence of fake verification claims.
+
+This mental model is intentionally lighter than the historical stage workflow. Its goal is to make the Harness easy to use and reason about: users do not need to follow a ceremony, but they can predict the behavior the Harness is trying to induce in agents.
+
 ## Context Contract
 
 `project_context/global.md` stores the cross-project facts a fresh agent needs:
@@ -218,6 +256,24 @@ This operational order is the **Context Priority Ladder**:
 
 The ladder is expected agent behavior, but it remains prompt-level guidance rather than an edit-order validator.
 
+This is a **workflow contract**: a soft, prompt-level order of thought that raises the chance that agents apply upstream principles before editing code. It is not a machine-enforced contract, validator, phase gate or required document chain. Its value comes from adding short, explicit thinking points inside the existing loop while keeping durable facts in Context.
+
+For product, UI/UX, system design, architecture-boundary, API/Schema, state/runtime and verification-design tasks, the durable-fact classification is folded into a short current-task contract instead of becoming a second independent checkpoint:
+
+```text
+read Context / inspect code / understand request
+-> compile current task contract
+   - Context Delta: none|required
+   - Task Contract: implementation constraints for this task
+-> update Context first when Context Delta is required
+-> implement against the Task Contract
+-> Contract Conformance + Context drift check
+```
+
+`Context Delta` is the only formal durable-fact decision point inside contract-compilation scenarios. This avoids asking the agent to classify once, then classify again while compiling the task contract. The task contract is a temporary compiled artifact for the current task, not a new source of truth. If Conformance reveals an implementation miss, the code is fixed; if it reveals an incomplete task contract, the contract is revised; if it reveals a missing durable fact, the agent returns to `Context Delta` and updates Context before continuing.
+
+For long tasks, multi-module work, multi-agent work or changes likely to require several verification loops, `plan.md` or an equivalent temporary plan surface can hold the current task contract, implementation steps and Conformance notes as an execution scratchpad. This use is an aid to the workflow contract, not the workflow contract itself. It helps keep `Context Delta`, `Task Contract` and Conformance visible while work is in flight, but it must not become a long-lived source of truth, a default project asset, a registered Context node, plan state, stage artifact or work-product tree. Durable facts discovered there must be extracted into `project_context/**` or `DESIGN.md`; otherwise the temporary plan is only execution cache.
+
 Code-first remains a controlled exception for ordinary bug fixes, local styling changes, local implementation-drift repairs, test fixes and exploratory spikes:
 
 ```text
@@ -273,12 +329,15 @@ The default Skills exist because important product, design and engineering reaso
 Shared design rules:
 
 - Use narrow trigger descriptions so ordinary coding, small fixes and package work do not activate role-heavy prompting by accident.
-- Preserve the Context Priority Ladder in managed guidance: Context read -> page product-positioning check when applicable -> durable-fact classification -> context-first/code-first choice -> drift check.
+- Preserve the Context Priority Ladder in managed guidance: Context read -> page product-positioning check when applicable -> durable-fact classification or `Context Delta` inside task-contract scenarios -> context-first/code-first choice -> drift check.
+- Treat task-contract compilation as a light refactor of that workflow contract for higher-risk product, UI/UX and engineering tasks: `Context Delta` replaces a separate durable-fact classification inside those scenarios, `Task Contract` translates upstream principles into task-local constraints, and `Contract Conformance` checks the result before handoff.
+- Allow `plan.md` or an equivalent temporary plan surface to assist complex task-contract work as scratch space only; it must serve Context and the workflow contract without becoming either one.
 - Elevate lightweight page product-positioning checks into managed AGENTS guidance for Web page, layout and information-placement tasks, and treat the check as input to change classification while keeping the default product/UIUX Skill triggers narrow.
 - Keep broad product/UIUX principles as judgment philosophy, then put slightly more concrete reusable prompt questions in the default Skills. Going more specific than that becomes project or business logic and belongs in project Context or project-local Skills.
 - Treat high-risk UI categories such as input, selection, search, filters, configuration, scheduling/time, budgets/quotas/limits and feedback states as triggers for thinking, not as a library of fixed control prescriptions.
 - Read Context before making durable product, design or engineering judgments; treat `project_context/**` as intended ownership and boundary context, and code as current implementation evidence.
 - Keep outputs lightweight: use Context and `DESIGN.md` for durable facts, keep implementation details in code, tests and concise comments when they are self-explanatory there, and keep per-change Context Conformance evidence in handoff / final / PR text rather than Context.
+- Keep task contracts out of long-lived Context by default; only their durable `Context Delta` facts are extracted into `project_context/**` or `DESIGN.md`.
 - Treat verification/deployment role Context as reusable repeat-execution knowledge, not evidence reporting: record minimal setup/command-or-path/expected signal/warnings/dead ends, never raw logs, artifacts, release ledgers, secrets or pass/fail claims.
 - Prefer separate project-local Skills for consumer customization; package-managed default Skills should remain broadly useful, sync-overwritten and Minimal Context oriented. Project-local Skill front matter `description` trigger keywords should stay aligned with the matching default Skill and project `AGENTS.md` role-trigger rule so activation behavior and SDLC guidance do not diverge.
 - When a default Skill changes, update this design section and the relevant source workspace Context so future maintainers know the problem, tradeoff and intended failure mode being addressed.

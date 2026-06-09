@@ -177,6 +177,11 @@ try {
   assert.match(productSkill, /实现漂移/);
   assert.match(productSkill, /代码不能静默重定义 Context/);
   assert.match(productSkill, /不要把 Context 机械补成代码改动摘要/);
+  assert.match(productSkill, /Context Delta/);
+  assert.match(productSkill, /Task Contract/);
+  assert.match(productSkill, /Contract Conformance/);
+  assert.match(productSkill, /plan\.md/);
+  assert.match(productSkill, /临时执行缓存/);
   assert.match(productSkill, /Verification \/ Deployment Role Context/);
   assert.match(productSkill, /raw payload/);
   const uiuxSkill = await readFile(path.join(root, ".agent/skills/context_uiux_design/SKILL.md"), "utf8");
@@ -186,6 +191,11 @@ try {
   assert.match(uiuxSkill, /实现漂移/);
   assert.match(uiuxSkill, /代码不能静默重定义 Context/);
   assert.match(uiuxSkill, /不要把 Context 机械补成代码改动摘要/);
+  assert.match(uiuxSkill, /Context Delta/);
+  assert.match(uiuxSkill, /Task Contract/);
+  assert.match(uiuxSkill, /Contract Conformance/);
+  assert.match(uiuxSkill, /plan\.md/);
+  assert.match(uiuxSkill, /临时执行缓存/);
   assert.match(uiuxSkill, /Impeccable review/);
   assert.match(uiuxSkill, /npx impeccable detect <target>/);
   assert.match(uiuxSkill, /Verification \/ Deployment Role Context/);
@@ -198,6 +208,11 @@ try {
   assert.match(developmentSkill, /实现漂移/);
   assert.match(developmentSkill, /代码不能静默重定义 Context/);
   assert.match(developmentSkill, /Context drift check/);
+  assert.match(developmentSkill, /Context Delta/);
+  assert.match(developmentSkill, /Task Contract/);
+  assert.match(developmentSkill, /Contract Conformance/);
+  assert.match(developmentSkill, /plan\.md/);
+  assert.match(developmentSkill, /临时执行缓存/);
   assert.match(developmentSkill, /Verification \/ Deployment Role Context/);
   assert.match(developmentSkill, /重复执行路径/);
   assert.doesNotMatch(developmentSkill, /multi_agent_v1/);

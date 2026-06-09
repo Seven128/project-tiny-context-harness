@@ -23,7 +23,7 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
 4. 涉及 Web 页面、前端布局、UI/UX、产品模块边界或信息放置时，把页面产品定位检查作为前置动作：用户在页面要完成的判断、产品必须提供的信息/动作/反馈、不应常驻的信息、下游消费层/运维层/详情层/其他页面归属、布局和信息密度是否匹配页面任务。多页面或多模块归属不清时，先读取相关 Context、搜索页面入口并结合已有 UI 代码/截图做全站或相关页面的信息架构 sweep，再收窄到具体视觉或交互实现。该检查是下一步变更分类的输入；只有形成长期页面职责、信息架构、交互契约或模块边界结论时才更新 Context 或 `DESIGN.md`。
 5. 涉及输入、选择、搜索、筛选、表单/配置、调度/时间窗口、预算/配额/限流或加载/空态/错误态等 UI 控件时，用“控件交互框架”检查控件语义、反馈状态、校验、错误预防、可供性和信息密度；这只是通用判断框架，不是固定控件处方。
 6. 界面职责、流程归属和长期交互契约以 `project_context/**` 为准；`DESIGN.md` 负责视觉 token 和视觉 rationale；代码、截图和搜索结果只说明当前实现状态。Context 决定“应该是什么”，代码和截图揭示“现在是什么”，代码不能静默重定义 Context。
-7. 设计判断或第一处实现编辑前先做轻量变更分类，不按固定时长计时；如果改变页面职责、流程边界、信息架构、交互契约、状态或调度语义、可访问性约束、设计验证关键路径或部署关键路径，先更新相关 `project_context/**`/`DESIGN.md`，写入必要且足以指导实现的长期结论，再让实现按这些事实对齐。
+7. 设计判断或第一处实现编辑前，若任务涉及页面职责、流程边界、信息架构、交互契约、状态或调度语义、可访问性约束、设计验证关键路径或部署关键路径，先编译当前任务契约；契约第一段用 `Context Delta: none|required` 完成唯一正式长期事实判断，再写本次 `Task Contract`。
 8. 普通 UI bug、局部样式或 CSS 修复、测试修复或探索性 spike 不更新 Context，可先改代码；一旦形成长期交互或视觉结论，继续对齐或交付前必须回写 Context 或 `DESIGN.md`。不要把 Context 机械补成代码改动摘要。
 9. 如果二者冲突，显式标记为实现漂移、缺失工作或 Context 过期。
 10. 如果涉及已有 UI，优先结合代码入口、运行截图或用户提供的参考图来描述差异。
@@ -36,7 +36,20 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
 13. Context 只能声明设计验收入口或 smoke 入口，不能伪造“已验证通过”。
 14. Verification / Deployment Role Context 只记录长期可复用的设计验证、smoke、部署或运行初始化路径事实：特殊准备、最短命令或路径、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、release ledger、secret、token、cookie、device id、raw payload 或完整截图报告。
-15. 收尾时只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。高风险 UI 命中已有 Context 或页面/控件契约时，另补简短 `Context Conformance` 交付说明；一次性证据、截图结果、测试日志和实现摘要不写入 Context。
+15. 收尾时做 `Contract Conformance` 和 Context drift check，只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。Conformance 说明本次契约满足情况、未满足或延期项和截图 / 手动检查入口；一次性证据、截图结果、测试日志、任务契约和实现摘要不写入 Context。
+
+## 任务契约编译
+
+- 任务契约是当前界面任务的编译产物，不是事实源、设计稿文档链、handoff matrix 或长期 Context；默认留在方案、交付说明或 PR 文本中。
+- `Context Delta` 必须先出现，取值为 `none` 或 `required`：
+  - `none`：本次只是按既有 Context / `DESIGN.md` / 设计原则落地，不新增长期事实。
+  - `required`：说明长期事实类型、应写入的 Context / role 或 `DESIGN.md` 位置、需要沉淀的事实，以及明确不写入 Context 的一次性内容。
+- `Task Contract` 用短列表说明页面 / 组件任务、用户判断、主信息和辅助信息归属、动作层级、输入语义、loading / empty / no results / stale / error / degraded / success 状态、布局稳定性、非目标和验收入口。
+- 对长任务、多页面/组件、多 agent、容易发生 `Context Delta` 调头或多轮截图 / 手动验证的任务，可以用 `plan.md` 或等价临时计划面暂存 `Context Delta`、`Task Contract`、`Implementation Steps` 和 `Contract Conformance`；它只是临时执行缓存。
+- `plan.md` 中出现的长期界面、交互或视觉事实必须提炼回 `project_context/**` 或 `DESIGN.md`；否则不要把临时计划当作事实源、交付产物或后续引用依据。
+- `Context Delta: required` 时先更新 `project_context/**` 或 `DESIGN.md`，再继续实现；`none` 时直接按 Task Contract 实现。
+- `Contract Conformance` 是交付前的软检查：实现偏差修实现，契约遗漏回 Task Contract，长期事实缺失回 `Context Delta` 并先更新 Context / `DESIGN.md`。
+- 不为普通 UI bug、局部 CSS 修复、小重构、测试修复或探索性 spike 强制编译任务契约。
 
 ## 信息呈现校准
 

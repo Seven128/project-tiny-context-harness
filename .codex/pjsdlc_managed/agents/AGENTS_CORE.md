@@ -13,9 +13,9 @@
 1. 先读 `project_context/global.md`、`project_context/architecture.md` 和 `project_context/context.toml`，再按 graph 读取相关 area / context unit。
 2. 若任务涉及 Web 页面、前端布局、UI/UX、产品模块边界或信息放置，先做页面产品定位检查，再完成变更分类；若 UI 改动涉及输入、选择、搜索、筛选、表单/配置、调度/时间窗口、预算/配额/限流或加载/空态/错误态，按产品/UIUX Skill 的控件任务框架做轻量检查。
 3. 若任务新增、迁移或整理 Context 文件，先做 role placement scan：area 只代表产品域归属；contract / foundation / subdomain / verification / deployment / implementation-index / decision-rationale 等按读取目的拆成 role Context。
-4. 判断是否改变长期事实：产品归属 / 方案、模块职责、信息架构、页面职责、常驻信息边界、API / Schema、状态或调度语义、跨域边界、验证 / 部署关键路径。
-5. 命中长期事实则 context-first；普通 bug fix、局部样式、局部漂移修复、测试修复或 spike 默认 code-first，但一旦产生长期结论必须回写 Context。
-6. 收尾做 Context drift check，只报告 `Context: 已更新 ...` 或 `Context: 本次无长期事实变化`；高风险 UI 命中已有 Context / 页面契约时另加简短 `Context Conformance: 已检查 ...`，不要把一次性证据写入 Context。
+4. 对产品方案、UI/UX、系统设计、架构边界、API / Schema、状态或运行语义、验证设计等任务，先编译当前任务契约；契约第一段用 `Context Delta: none|required` 声明是否改变长期事实，再写本次 Task Contract。
+5. `Context Delta: required` 则 context-first；普通 bug fix、局部样式、局部漂移修复、测试修复或 spike 默认 code-first，但一旦产生长期结论必须回写 Context。
+6. 收尾做 Contract Conformance 和 Context drift check，只报告 `Context: 已更新 ...` 或 `Context: 本次无长期事实变化`；不要把一次性证据、任务契约或实现摘要写入 Context。
 
 ## 事实源
 
@@ -29,13 +29,13 @@
 
 1. 新会话或继续工作时，先读取 `project_context/global.md`、`project_context/architecture.md` 和 `project_context/context.toml`；按其中 default area 和触发条件读取相关 context。
 2. 第一处代码编辑前先做轻量变更分类，不按固定时长计时。若任务涉及 Web 页面、前端布局、UI/UX、产品模块边界或信息应该放在哪个页面 / 模块，先做页面产品定位检查，再完成变更分类：用户在这个页面要完成什么判断，产品必须提供哪些信息 / 动作 / 反馈，哪些信息不应常驻，哪些属于下游消费层 / 运维层 / 详情层 / 其他页面，当前布局和信息密度是否匹配页面任务。若 UI 改动涉及输入、选择、搜索、筛选、表单/配置、调度/时间窗口、预算/配额/限流或加载/空态/错误态，按产品/UIUX Skill 的控件任务框架做轻量检查，识别既有 Context 是否适用以及是否缺少长期页面/控件契约。多页面或多模块归属不清时，先审查全站或相关页面的信息架构，再收窄到代码模块实现。该检查是判断是否需要 context-first 的输入，不等于必须更新 Context，也不要求独立文档或新的 gate。
-3. 判断本次是否改变长期事实，包括产品归属 / 产品方案、模块职责、信息架构、页面职责、常驻信息边界、API / Schema、状态机或调度语义、跨域边界、验证关键路径和部署关键路径。
+3. 对产品方案、UI/UX、系统设计、架构边界、API / Schema、状态机或运行语义、验证设计等任务，第一处代码编辑前先编译当前任务契约：用 `Context Delta: none|required` 作为唯一正式长期事实判断点，再写本次 Task Contract（目标、边界、状态、反馈、非目标和验收信号）。普通 bug fix、局部样式、小重构、局部漂移修复、测试修复或 spike 不强制编译任务契约。
 4. 当新增、迁移或整理 `project_context/areas/**` 时，做 role placement scan（软约束，不做 gate）：`area` / `domain` 保留产品域归属，`subdomain` 用于产品域内较小 ownership，`contract` 用于 API / schema / event / 跨域接口语义，`foundation` 用于稳定理论 / 词汇 / 背景材料，`verification` / `deployment` 用于可复用执行路径，`implementation-index` 只做代码导航索引，`decision-rationale` 记录稳定设计原因，`archive` 用于非默认读取的历史或外部材料。
-5. 若页面产品定位检查或其他变更分类命中长期事实，默认走 context-first：第一处代码编辑前先更新相关 `project_context/**`，写入必要且足以指导实现的长期结论，再按 Context 对齐实现、验证和收尾。
+5. 若任务契约声明 `Context Delta: required`，默认走 context-first：第一处代码编辑前先更新相关 `project_context/**`，写入必要且足以指导实现的长期结论，再按 Context 和 Task Contract 对齐实现、验证和收尾。
 6. 普通 bug fix、局部样式、局部实现漂移修复、测试修复或探索性 spike 不更新 Context，可先改代码；一旦形成长期结论，继续对齐或交付前必须回写 `project_context/**`。
 7. `project_context/**` 是项目意图、产品域职责、架构边界、集成方向、允许/禁止依赖、验证关键路径和部署关键路径的权威事实源；代码是当前实现状态的权威事实源。
 8. 当代码形态、搜索结果或相邻实现与 Context 声明冲突时，把差异视为实现漂移、缺失工作或 Context 过期并显式说明；不要用当前代码形态或关键词搜索结果覆盖 Context 已声明的职责、归属或集成意图。
-9. 每个有意义的方案或实现变更收尾时做 Context drift check：确认代码没有引入未沉淀的长期事实，且 Context 没有退化成普通实现摘要；交付说明只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。高风险 UI 命中已有 Context / 页面契约时，另补一行简短 `Context Conformance: 已检查 ...`，说明实现如何满足或有哪些延期；该证据属于本次交付，不写入 `project_context/**`。
+9. 每个有意义的方案或实现变更收尾时做 Contract Conformance 和 Context drift check：对照 Task Contract 区分实现偏差、契约遗漏或长期事实缺失；实现偏差修实现，契约遗漏回 Task Contract，长期事实缺失回 `Context Delta` 并先更新 Context。交付说明只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`；Conformance 证据属于本次交付，不写入 `project_context/**`。
 10. 长期事实只写入 `project_context/**`；不要默认创建 PRD、tech plan、ADR、implementation doc、review/test/release 文档。
 11. 用户明确要求“产品方案 / 产品经理 / 产品专家”、“设计稿 / UI/UX 设计方案 / 视觉专家”或“开发工程师 / 技术方案 / 开发方案 / 实现 / 实现方案 / 实施计划 / 技术专家 / 多开agent / subagent”这类角色或强产物名时，使用对应 Context authoring Skill，把长期结论写回 `project_context/**`。
 12. 用户明确要求“导出尽可能详细的项目全量上下文 / 全量上下文导出 / full project context export / 当前项目代码实现 / 代码级实现导出”时，使用 `context_full_project_export` Skill；默认优先运行 `sdlc-harness export-context --all` 同时生成项目级 Context 汇总和代码级实现快照；只需要单份产物时再用 `--full` 或 `--code`；导出产物只放 `tmp/sdlc/context-exports/**`，不得放入或注册到 `project_context/**` / `project_context/context.toml`。

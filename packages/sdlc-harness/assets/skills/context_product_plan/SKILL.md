@@ -22,7 +22,7 @@ Project-specific product planning rules belong in a separate project-local Skill
 3. 涉及 Web 页面、前端布局、UI/UX、产品模块边界或信息放置时，把页面产品定位检查作为前置动作：用户在页面要完成的判断、产品必须提供的信息/动作/反馈、不应常驻的信息、下游消费层/运维层/详情层/其他页面归属、布局和信息密度是否匹配页面任务。多页面或多模块归属不清时，先读取相关 Context 并搜索页面入口，做全站或相关页面的信息架构 sweep，再收窄到具体实现。该检查是下一步变更分类的输入；只有形成长期产品归属、页面职责、信息架构或模块边界结论时才更新 Context。
 4. 涉及输入、选择、搜索、筛选、表单/配置、调度/时间窗口、预算/配额/限流或加载/空态/错误态等 UI 控件时，用“控件任务框架”重新理解用户任务和产品反馈；这只是通用判断框架，不是业务处方库。
 5. 产品意图、模块职责、边界和验收口径以 `project_context/**` 为准；代码和搜索结果只说明当前实现状态。Context 决定“应该是什么”，代码揭示“现在是什么”，代码不能静默重定义 Context。
-6. 输出产品判断或第一处实现编辑前先做轻量变更分类，不按固定时长计时；如果改变产品归属 / 产品方案、模块职责、信息架构、API / Schema、验收口径、跨域契约、状态或调度语义、验证关键路径或部署关键路径，先更新相关 `project_context/**`，写入必要且足以指导实现的长期结论，再让实现按 Context 对齐。
+6. 输出产品判断或第一处实现编辑前，若任务涉及产品方案、页面/模块边界、信息架构、API / Schema、验收口径、跨域契约、状态或调度语义，先编译当前任务契约；契约第一段用 `Context Delta: none|required` 完成唯一正式长期事实判断，再写本次 `Task Contract`。
 7. 普通 bug fix、局部样式、局部实现漂移、测试修复或探索性 spike 不更新 Context；如果过程中形成长期产品结论，应在继续对齐或交付前回写 Context。不要把 Context 机械补成代码改动摘要。
 8. 如果代码与 Context 冲突，显式标记为实现漂移、缺失工作或 Context 过期。
 9. 输出产品判断时保持短而具体，避免长篇 PRD 模板。
@@ -34,7 +34,20 @@ Project-specific product planning rules belong in a separate project-local Skill
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
 11. Context 只能声明验证 / 部署关键路径或验收信号，不能伪造“测试已通过”或“部署已成功”。
 12. Verification / Deployment Role Context 只记录长期可复用的重复执行路径事实：特殊准备、最短命令或路径、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、release ledger、secret、token、cookie、device id 或 raw payload。
-13. 收尾时只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。高风险 UI 命中已有 Context 或页面/控件契约时，另补简短 `Context Conformance` 交付说明；一次性证据、测试日志、截图结果和实现摘要不写入 Context。
+13. 收尾时做 `Contract Conformance` 和 Context drift check，只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。Conformance 说明本次契约满足情况、未满足或延期项和验证入口；一次性证据、测试日志、截图结果、任务契约和实现摘要不写入 Context。
+
+## 任务契约编译
+
+- 任务契约是当前任务的编译产物，不是事实源、PRD、ADR 或长期文档；默认留在方案、交付说明或 PR 文本中。
+- `Context Delta` 必须先出现，取值为 `none` 或 `required`：
+  - `none`：本次只是按既有 Context / 原则落地，不新增长期事实。
+  - `required`：说明长期事实类型、应写入的 Context / role、需要沉淀的事实，以及明确不写入 Context 的一次性内容。
+- `Task Contract` 用短列表说明本次产品实现必须满足的目标、用户任务、信息 / 动作 / 状态 / 反馈、边界、非目标和验收信号。
+- 对长任务、多模块、多 agent、容易发生 `Context Delta` 调头或多轮验证的任务，可以用 `plan.md` 或等价临时计划面暂存 `Context Delta`、`Task Contract`、`Implementation Steps` 和 `Contract Conformance`；它只是临时执行缓存。
+- `plan.md` 中出现的长期事实必须提炼回 `project_context/**`；否则不要把临时计划当作事实源、交付产物或后续引用依据。
+- `Context Delta: required` 时先更新 `project_context/**`，再继续实现；`none` 时直接按 Task Contract 实现。
+- `Contract Conformance` 是交付前的软检查：实现偏差修实现，契约遗漏回 Task Contract，长期事实缺失回 `Context Delta` 并先更新 Context。
+- 不为普通 bug fix、局部样式、小重构、局部实现漂移、测试修复或探索性 spike 强制编译任务契约。
 
 ## 产品体验校准
 
