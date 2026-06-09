@@ -10,7 +10,7 @@ const scriptPath = path.join(repoRoot, "tools/quickstart_smoke.mjs");
 const outDir = await mkdtemp(path.join(tmpdir(), "sdlc-quickstart-smoke-test-"));
 
 try {
-  const result = spawnSync(process.execPath, [scriptPath, "--out-dir", outDir], {
+  const result = spawnSync(process.execPath, [scriptPath, "--out-dir", outDir, "--pack-ignore-scripts"], {
     cwd: repoRoot,
     encoding: "utf8",
     timeout: 120_000

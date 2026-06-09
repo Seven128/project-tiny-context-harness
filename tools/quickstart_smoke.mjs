@@ -8,11 +8,13 @@ import { fileURLToPath } from "node:url";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function parseArgs(argv) {
-  const options = { clean: false, outDir: null };
+  const options = { clean: false, outDir: null, packIgnoreScripts: false };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--clean") {
       options.clean = true;
+    } else if (arg === "--pack-ignore-scripts") {
+      options.packIgnoreScripts = true;
     } else if (arg === "--out-dir") {
       const value = argv[index + 1];
       if (!value) {
@@ -36,7 +38,12 @@ Packs the local agent-project-sdlc workspace, installs it into a temporary demo
 repository, runs sdlc-harness init, then validates the generated Minimal Context.
 
 Usage:
-  node tools/quickstart_smoke.mjs [--out-dir tmp/sdlc/quickstart-smoke/demo] [--clean]
+  node tools/quickstart_smoke.mjs [--out-dir tmp/sdlc/quickstart-smoke/demo] [--clean] [--pack-ignore-scripts]
+
+Options:
+  --pack-ignore-scripts  Skip npm pack lifecycle scripts. Intended for package tests
+                         that already built dist and run concurrently with other
+                         dist-dependent tests.
 `);
 }
 
@@ -113,7 +120,11 @@ try {
   mkdirSync(packageDir, { recursive: true });
   mkdirSync(demoDir, { recursive: true });
 
-  run("npm", ["pack", "--workspace", "agent-project-sdlc", "--pack-destination", packageDir], repoRoot);
+  const packArgs = ["pack", "--workspace", "agent-project-sdlc", "--pack-destination", packageDir];
+  if (options.packIgnoreScripts) {
+    packArgs.push("--ignore-scripts");
+  }
+  run("npm", packArgs, repoRoot);
   const tarballs = readdirSync(packageDir).filter((file) => file.endsWith(".tgz"));
   if (tarballs.length !== 1) {
     throw new Error(`expected one packed tarball in ${packageDir}, found ${tarballs.length}`);
