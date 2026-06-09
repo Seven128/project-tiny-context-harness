@@ -150,6 +150,7 @@ function localChecks() {
   const transcendaPatch = read("docs/launch/external-prs/transcenda-awesome-agentic-coding.patch");
   const jordimasPatch = read("docs/launch/external-prs/jordimas-awesome-agentic-engineering.patch");
   const awesomeOpenCodePatch = read("docs/launch/external-prs/awesome-opencode-project-tiny-context-harness.patch");
+  const awesomeAiDevtoolsPatch = read("docs/launch/external-prs/jamesmurdza-awesome-ai-devtools.patch");
   const demoPacket = read("docs/launch/demo.md");
   const marketMap = read("docs/launch/market-map.md");
   const outreachTargets = read("docs/launch/outreach-targets.md");
@@ -268,6 +269,7 @@ function localChecks() {
       contains(awesomeListSubmissions, /jordimas\/awesome-agentic-engineering/) &&
       contains(awesomeListSubmissions, /awesome-opencode\/awesome-opencode/) &&
       contains(awesomeListSubmissions, /awesome-ai-devtools/) &&
+      contains(awesomeListSubmissions, /Agent Infrastructure \/ Configuration & Context Management/) &&
       contains(awesomeListSubmissions, /external-prs\/README\.md/) &&
       contains(awesomeListSubmissions, /Do not claim adoption, benchmark wins, awards/),
     "Awesome-list submission packet has P0 PR copy and deferred-list gates."
@@ -279,24 +281,31 @@ function localChecks() {
       hasFile("docs/launch/external-prs/transcenda-awesome-agentic-coding.patch") &&
       hasFile("docs/launch/external-prs/jordimas-awesome-agentic-engineering.patch") &&
       hasFile("docs/launch/external-prs/awesome-opencode-project-tiny-context-harness.patch") &&
+      hasFile("docs/launch/external-prs/jamesmurdza-awesome-ai-devtools.patch") &&
       contains(externalPrPacket, /Transcenda\/awesome-agentic-coding/) &&
       contains(externalPrPacket, /jordimas\/awesome-agentic-engineering/) &&
       contains(externalPrPacket, /awesome-opencode\/awesome-opencode/) &&
+      contains(externalPrPacket, /jamesmurdza\/awesome-ai-devtools/) &&
       contains(externalPrPacket, /No direct pull request was opened by automation/) &&
       contains(externalPrPacket, /gh repo fork Transcenda\/awesome-agentic-coding --clone/) &&
       contains(externalPrPacket, /gh repo fork jordimas\/awesome-agentic-engineering --clone/) &&
       contains(externalPrPacket, /gh repo fork awesome-opencode\/awesome-opencode --clone/) &&
+      contains(externalPrPacket, /gh repo fork jamesmurdza\/awesome-ai-devtools --clone/) &&
       contains(externalPrPacket, /gh pr create/) &&
       contains(externalPrPacket, /Add Project Tiny Context Harness to agent instructions and skills/) &&
       contains(externalPrPacket, /Add Project Tiny Context Harness to team adoption resources/) &&
       contains(externalPrPacket, /Add Project Tiny Context Harness to projects/) &&
+      contains(externalPrPacket, /Add Project Tiny Context Harness/) &&
       contains(transcendaPatch, /Agent instructions and Skills/) &&
       contains(transcendaPatch, /minimal project-memory harness for AI coding agents/) &&
       contains(jordimasPatch, /Team Adoption/) &&
       contains(jordimasPatch, /Minimal project-memory and validation harness for teams adopting AI coding agents/) &&
       contains(awesomeOpenCodePatch, /data\/projects\/project-tiny-context-harness\.yaml/) &&
       contains(awesomeOpenCodePatch, /Minimal project memory for coding agents/) &&
-      contains(awesomeOpenCodePatch, /OpenCode and other AI coding agents/),
+      contains(awesomeOpenCodePatch, /OpenCode and other AI coding agents/) &&
+      contains(awesomeAiDevtoolsPatch, /Tools that manage and sync AI agent configurations/) &&
+      contains(awesomeAiDevtoolsPatch, /AI coding-agent project memory/) &&
+      contains(awesomeAiDevtoolsPatch, /Codex, Claude Code, Cursor, Gemini CLI, OpenCode/),
     "External PR packet has exact patches, PR copy, manual gh commands and automation-boundary notes."
   );
   addCheck(checks, "launch-demo-storyboard", contains(launchKit, /Demo Storyboard/) && contains(launchKit, /fresh-agent test prompt/i) && contains(launchKit, /make validate-context/), "Launch kit has a demo storyboard tied to the README recovery test.");

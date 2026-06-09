@@ -76,14 +76,39 @@ It is a practical, team-applicable resource for keeping minimal durable project 
 
 Target: [jamesmurdza/awesome-ai-devtools](https://github.com/jamesmurdza/awesome-ai-devtools)
 
-Gate before submitting: publish a demo GIF/video or the concrete fresh-agent recovery walkthrough that shows the tool's workflow. The list is a higher-exposure AI developer-tool directory, but the current project is a harness/context tool rather than a direct AI-powered product. The submission is stronger after the demo shows the agent workflow end to end.
+Gate before submitting: npm package publish should succeed first, and the README should keep the demo GIF, fresh-agent walkthrough and agent-surface recipes visible. The list is a higher-exposure AI developer-tool directory, so the entry must be framed as AI coding-agent context/configuration infrastructure, not a general-purpose SDLC framework.
 
-Candidate category: `Configuration & Context Management` if it still exists when submitting.
+Suggested category: `Agent Infrastructure / Configuration & Context Management`.
 
-Candidate line:
+Patch packet: [external-prs/README.md](external-prs/README.md).
+
+Suggested entry:
 
 ```md
-- [Project Tiny Context Harness](https://github.com/Seven128/project-tiny-context-harness) - Minimal repo-native project memory for AI coding agents, with `AGENTS.md`, `project_context/**` and a `validate-context` gate for fresh-agent recovery.
+- [Project Tiny Context Harness](https://github.com/Seven128/project-tiny-context-harness) — Open-source CLI for AI coding-agent project memory. Installs `AGENTS.md`, `project_context/**`, role Skills, and a `validate-context` gate so Codex, Claude Code, Cursor, Gemini CLI, OpenCode, and similar agents can recover project intent, boundaries, and validation paths across fresh sessions.
+```
+
+PR title:
+
+```text
+Add Project Tiny Context Harness
+```
+
+PR body:
+
+```md
+## Description
+
+Adds Project Tiny Context Harness to Agent Infrastructure / Configuration & Context Management.
+
+It is a developer-focused tool for AI coding-agent context recovery: it installs `AGENTS.md`, `project_context/**`, role Skills, and a `validate-context` gate so agents can recover project intent, boundaries, and validation paths across fresh sessions.
+
+## Checklist
+
+- [x] The entry is a tool that uses AI
+- [x] The entry is a developer-focused tool
+- [x] The description is unambiguous and clear
+- [x] The description matches the style of other entries
 ```
 
 ## P1: Awesome OpenCode
@@ -130,6 +155,6 @@ Gate before submitting: expose a clean, standalone Skill URL or package story. T
 1. Submit Transcenda PR after the Show HN packet is ready.
 2. Submit jordimas PR after Transcenda, using the shorter team-adoption copy.
 3. Submit `awesome-opencode` after npm publish if the README still links the OpenCode setup note.
-4. Wait for demo video/GIF before `awesome-ai-devtools`.
+4. Submit `awesome-ai-devtools` after npm publish if the README still shows the demo GIF and agent-surface recipes.
 5. Wait for standalone Skill packaging before `awesome-agent-skills`.
 6. If a maintainer rejects the wording as too framework-like, revise toward "repo-native context recovery" and away from "SDLC".

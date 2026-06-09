@@ -165,6 +165,63 @@ git push -u origin add-project-tiny-context-harness
 gh pr create --base main --head Seven128:add-project-tiny-context-harness --title "Add Project Tiny Context Harness to projects" --body-file /path/to/pr-body.md
 ```
 
+## Awesome AI Devtools
+
+Target: `jamesmurdza/awesome-ai-devtools`
+
+Patch: [jamesmurdza-awesome-ai-devtools.patch](jamesmurdza-awesome-ai-devtools.patch)
+
+Branch:
+
+```text
+add-project-tiny-context-harness
+```
+
+PR title:
+
+```text
+Add Project Tiny Context Harness
+```
+
+PR body:
+
+```md
+## Description
+
+Adds Project Tiny Context Harness to Agent Infrastructure / Configuration & Context Management.
+
+It is a developer-focused tool for AI coding-agent context recovery: it installs `AGENTS.md`, `project_context/**`, role Skills, and a `validate-context` gate so agents can recover project intent, boundaries, and validation paths across fresh sessions.
+
+## Checklist
+
+- [x] The entry is a tool that uses AI
+- [x] The entry is a developer-focused tool
+- [x] The description is unambiguous and clear
+- [x] The description matches the style of other entries
+```
+
+Entry added:
+
+```md
+- [Project Tiny Context Harness](https://github.com/Seven128/project-tiny-context-harness) — Open-source CLI for AI coding-agent project memory. Installs `AGENTS.md`, `project_context/**`, role Skills, and a `validate-context` gate so Codex, Claude Code, Cursor, Gemini CLI, OpenCode, and similar agents can recover project intent, boundaries, and validation paths across fresh sessions.
+```
+
+Commands:
+
+Save the PR body block above to `pr-body.md` before running the final `gh pr create` command, or replace `--body-file` with an inline `--body` value.
+
+```sh
+PATCH_ROOT=/path/to/project-tiny-context-harness/docs/launch/external-prs
+gh repo fork jamesmurdza/awesome-ai-devtools --clone
+cd awesome-ai-devtools
+git checkout -b add-project-tiny-context-harness
+git apply "$PATCH_ROOT/jamesmurdza-awesome-ai-devtools.patch"
+git diff --check
+git commit -am "Add Project Tiny Context Harness"
+git push -u origin add-project-tiny-context-harness
+gh pr create --base main --head Seven128:add-project-tiny-context-harness --title "Add Project Tiny Context Harness" --body-file /path/to/pr-body.md
+```
+
 ## Submission Notes
 
 - Use the GitHub repository URL, not npm.
