@@ -137,6 +137,12 @@ try {
 
   const makefile = await readFile(path.join(root, "Makefile"), "utf8");
   assert.match(makefile, /-include \.agent\/pjsdlc_managed\/make\/sdlc-harness\.mk/);
+  const workflow = await readFile(path.join(root, ".github/workflows/harness.yml"), "utf8");
+  assert.match(workflow, /Run harness gate/);
+  assert.match(workflow, /validate-context/);
+  assert.doesNotMatch(workflow, /npm test --workspace agent-project-sdlc/);
+  assert.doesNotMatch(workflow, /package check-source/);
+  assert.doesNotMatch(workflow, /npm install/);
   const managedMake = await readFile(path.join(root, ".agent/pjsdlc_managed/make/sdlc-harness.mk"), "utf8");
   assert.match(managedMake, /validate-context/);
   assert.match(managedMake, /npx --yes --package agent-project-sdlc@latest sdlc-harness/);

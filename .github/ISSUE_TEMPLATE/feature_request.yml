@@ -1,0 +1,33 @@
+name: Feature request
+description: Suggest a change that fits Minimal Context Harness.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What agent drift, recovery, validation or adoption problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the smallest behavior or documentation change that would help.
+    validations:
+      required: true
+  - type: textarea
+    id: boundary
+    attributes:
+      label: Minimal Context boundary check
+      description: Explain why this belongs in the Harness rather than in project-specific tests, docs, CI, agent memory or a local Skill.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Mention any workaround, local project convention or adjacent tool that could cover the need.
+    validations:
+      required: false

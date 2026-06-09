@@ -422,6 +422,8 @@ The development engineer Skill exists to keep technical intent recoverable when 
 - `tools/**`
 - `.github/workflows/harness.yml` when absent or managed
 
+The package-managed `.github/workflows/harness.yml` is a consumer project workflow. It installs the Node runtime required by the Harness CLI and runs the selected `validate-context` / `validate-harness` Make target. Maintainer-only checks for this source repository, such as `npm test --workspace agent-project-sdlc` and package source-drift checks, must live in separate source-repository CI and must not be copied into consumer projects.
+
 `init` does not create `.work_products/**`, lifecycle state, plan state, stage skills, stage templates or stage policies by default.
 
 `sync` refreshes managed assets only. It never generates project semantics.

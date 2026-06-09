@@ -1,0 +1,61 @@
+name: Package CI
+
+on:
+  pull_request:
+    paths:
+      - ".codex/pjsdlc_managed/**"
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/PULL_REQUEST_TEMPLATE.md"
+      - ".github/workflows/harness.yml"
+      - ".github/workflows/package.yml"
+      - "CONTRIBUTING.md"
+      - "docs/launch/**"
+      - "LICENSE"
+      - "packages/sdlc-harness/**"
+      - "project_context/**"
+      - "tests/sdlc-harness/**"
+      - "tools/**"
+      - "package.json"
+      - "package-lock.json"
+      - "PROJECT_SPEC.md"
+      - "README.md"
+  push:
+    branches:
+      - main
+      - "codex/**"
+    paths:
+      - ".codex/pjsdlc_managed/**"
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/PULL_REQUEST_TEMPLATE.md"
+      - ".github/workflows/harness.yml"
+      - ".github/workflows/package.yml"
+      - "CONTRIBUTING.md"
+      - "docs/launch/**"
+      - "LICENSE"
+      - "packages/sdlc-harness/**"
+      - "project_context/**"
+      - "tests/sdlc-harness/**"
+      - "tools/**"
+      - "package.json"
+      - "package-lock.json"
+      - "PROJECT_SPEC.md"
+      - "README.md"
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Test package
+        run: npm test --workspace agent-project-sdlc
+      - name: Check package canonical source drift
+        run: npm --workspace agent-project-sdlc exec -- sdlc-harness package check-source
+      - name: Validate source Context
+        run: make validate-context

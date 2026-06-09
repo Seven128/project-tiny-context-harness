@@ -1,10 +1,46 @@
 # AI SDLC Harness
 
-`agent-project-sdlc` ships the `sdlc-harness` CLI and canonical managed assets for AI-assisted software delivery.
+[![npm version](https://img.shields.io/npm/v/agent-project-sdlc.svg)](https://www.npmjs.com/package/agent-project-sdlc)
+[![Package CI](https://github.com/Seven128/project-agent-sdlc/actions/workflows/package.yml/badge.svg)](https://github.com/Seven128/project-agent-sdlc/actions/workflows/package.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-The vNext default is **Minimal Context Harness**. It maintains a compact `project_context/**` fact source so fresh agents can recover project intent, constraints, verification entry points and next safe actions quickly. It does not default to lifecycle phases, plan tasks, stage skills, stage documents or phase gates.
+`agent-project-sdlc` ships the `sdlc-harness` CLI: a minimal project-memory harness for AI coding agents.
 
-Harness maintains context quality. Your project tests, CI, review process and human acceptance remain responsible for product quality.
+The default is **Minimal Context Harness**. It maintains a compact `project_context/**` fact source, a short `AGENTS.md` startup router, role Skills and a `validate-context` gate so fresh agents can recover project intent, constraints, verification entry points and next safe actions quickly.
+
+It does not default to lifecycle phases, plan tasks, stage skills, stage documents or phase gates. Harness maintains context quality; your project tests, CI, review process and human acceptance remain responsible for product quality.
+
+Use it when coding agents repeatedly lose project intent across new chats, handoffs, RFC/debug turns or tool changes. The intended tradeoff is: keep durable intent and recovery paths; leave execution evidence to code, tests and review.
+
+## Why It Exists
+
+Coding agents can move quickly inside one thread and still drift when a new chat, model, tool, reviewer or debugging session loses the project-specific facts that were never encoded anywhere stable.
+
+Minimal Context Harness creates a small, explicit recovery path: project goal, boundaries, architecture context, validation entry points and durable task conclusions. It is designed to sit beside specs, tests, issues, docs and code intelligence tools instead of replacing them.
+
+## Positioning
+
+| Adjacent tool type | Use it for | Harness stance |
+|---|---|---|
+| Spec-first kits | Turning feature ideas into structured specs and plans. | Complementary; Harness keeps durable project facts, not a required spec chain. |
+| BMAD-style workflows and full SDLC processes | Coordinated role/process ceremonies on high-risk work. | Lighter default; no phase gates or work-product trees. |
+| Task Master-style planners | Backlog decomposition and task execution state. | Complementary; Harness does not own task state. |
+| Context7/Serena-style retrieval or code-intelligence tools | Pulling external docs, symbols or repository facts on demand. | Complementary; Harness stores local repo truth. |
+| IDE or agent memory | Tool-specific continuity inside one product surface. | Portable fallback; plain files any agent can read. |
+
+## Try It In 60 Seconds
+
+```sh
+mkdir ai-sdlc-harness-demo
+cd ai-sdlc-harness-demo
+git init
+npm init -y
+npm install -D agent-project-sdlc@latest
+npx --yes --package agent-project-sdlc@latest sdlc-harness init
+make validate-context
+```
+
+Then open `AGENTS.md`, `project_context/global.md` and `project_context/architecture.md`. Those files are the small recovery surface a fresh agent should read before changing the project.
 
 ## Install
 
@@ -19,7 +55,7 @@ For existing projects:
 npx --yes --package agent-project-sdlc@latest sdlc-harness init --adopt
 ```
 
-`init` creates `project_context/context.toml`, `project_context/global.md`, `project_context/architecture.md`, `project_context/areas/main.md`, `project_context/areas/main/verification.md`, agent guidance, Context authoring Skills, a full-project export Skill, managed templates/tools and a Makefile include. It does not create stage work-product trees, lifecycle state or stage skills by default.
+`init` creates `project_context/context.toml`, `project_context/global.md`, `project_context/architecture.md`, `project_context/areas/main.md`, `project_context/areas/main/verification.md`, agent guidance, Context authoring Skills, a full-project export Skill, managed templates/tools, a Makefile include and `.github/workflows/harness.yml`. The generated workflow runs only the selected Harness gate, `validate-context` or `validate-harness`; maintainer-only package tests and source-drift checks are intentionally kept out of consumer projects. It does not create stage work-product trees, lifecycle state or stage skills by default.
 
 ## CLI Entry Safety
 

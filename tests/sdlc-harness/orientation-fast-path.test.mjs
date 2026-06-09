@@ -17,7 +17,16 @@ const [
   authoringSkill,
   productSkill,
   uiuxSkill,
-  developmentSkill
+  developmentSkill,
+  sourceWorkflow,
+  packageWorkflow,
+  packageJsonRaw,
+  contributing,
+  launchKit,
+  marketMap,
+  prTemplate,
+  bugTemplate,
+  featureTemplate
 ] = await Promise.all([
   read(".codex/pjsdlc_managed/agents/AGENTS_CORE.md"),
   read("README.md"),
@@ -29,8 +38,18 @@ const [
   read(".codex/skills/authoring/harness_package_design/SKILL.md"),
   read("packages/sdlc-harness/assets/skills/context_product_plan/SKILL.md"),
   read("packages/sdlc-harness/assets/skills/context_uiux_design/SKILL.md"),
-  read("packages/sdlc-harness/assets/skills/context_development_engineer/SKILL.md")
+  read("packages/sdlc-harness/assets/skills/context_development_engineer/SKILL.md"),
+  read(".github/workflows/harness.yml"),
+  read("packages/sdlc-harness/assets/github/harness.yml"),
+  read("packages/sdlc-harness/package.json"),
+  read("CONTRIBUTING.md"),
+  read("docs/launch/README.md"),
+  read("docs/launch/market-map.md"),
+  read(".github/PULL_REQUEST_TEMPLATE.md"),
+  read(".github/ISSUE_TEMPLATE/bug_report.yml"),
+  read(".github/ISSUE_TEMPLATE/feature_request.yml")
 ]);
+const packageJson = JSON.parse(packageJsonRaw);
 
 for (const content of [sourceAgents, rootReadme, packageReadme, spec, packageAgents, packageGuide]) {
   assert.match(content, /Minimal Context Harness/);
@@ -116,6 +135,60 @@ for (const content of [sourceAgents, rootReadme, packageReadme, packageAgents, p
   );
 }
 
+for (const content of [rootReadme, packageReadme, packageGuide]) {
+  assert.match(content, /Why It Exists/);
+  assert.match(content, /Positioning/);
+  assert.match(content, /Spec-first kits/);
+  assert.match(content, /BMAD-style workflows/);
+  assert.match(content, /Task Master-style planners/);
+  assert.match(content, /Context7\/Serena-style/);
+  assert.match(content, /Portable fallback/);
+  assert.match(content, /Try It In 60 Seconds/);
+  assert.match(content, /ai-sdlc-harness-demo/);
+}
+
+assert.match(contributing, /Minimal Context Harness/);
+assert.match(contributing, /Do not reintroduce lifecycle phases/);
+assert.match(contributing, /Do not claim benchmark wins/);
+assert.match(contributing, /npm test --workspace agent-project-sdlc/);
+assert.match(contributing, /Context: updated/);
+
+assert.match(launchKit, /Launch Kit/);
+assert.match(launchKit, /Minimal project memory for AI coding agents/);
+assert.match(launchKit, /Do not claim benchmark wins/);
+assert.match(launchKit, /Suggested topics/);
+assert.match(launchKit, /Show HN/);
+assert.match(launchKit, /Product Hunt Draft/);
+assert.match(launchKit, /Reddit Draft/);
+assert.match(launchKit, /Social Thread Draft/);
+assert.match(launchKit, /npm run smoke:quickstart/);
+assert.match(launchKit, /npm run launch:check/);
+assert.match(launchKit, /Award \/ Recognition Targets/);
+assert.match(launchKit, /Product Hunt Golden Kitty Awards/);
+assert.match(launchKit, /The Commits/);
+assert.match(launchKit, /JavaScript Open Source Awards/);
+assert.match(launchKit, /Verify current eligibility/);
+assert.match(launchKit, /market-map\.md/);
+
+assert.match(marketMap, /Market Map/);
+assert.match(marketMap, /Snapshot date: 2026-06-09/);
+assert.match(marketMap, /Current Public State/);
+assert.match(marketMap, /Competitive Snapshot/);
+assert.match(marketMap, /github\/spec-kit/);
+assert.match(marketMap, /bmad-code-org\/BMAD-METHOD/);
+assert.match(marketMap, /upstash\/context7/);
+assert.match(marketMap, /Repo-native project memory for fresh-agent recovery/);
+assert.match(marketMap, /Do not say/);
+assert.match(marketMap, /Faster delivery proven by benchmark/);
+assert.match(marketMap, /10-100 stars/);
+
+assert.match(prTemplate, /Package behavior \/ CLI/);
+assert.match(prTemplate, /Managed assets \/ source sync/);
+assert.match(prTemplate, /make validate-context/);
+assert.match(prTemplate, /Context:/);
+assert.match(bugTemplate, /Reproduction steps/);
+assert.match(featureTemplate, /Minimal Context boundary check/);
+
 for (const content of [rootReadme, packageReadme, spec, packageGuide]) {
   assert.doesNotMatch(content, /migrate-context/);
   assert.match(content, /sync.*(?:refreshes managed|刷新 managed|只刷新)/i);
@@ -142,6 +215,26 @@ assert.match(sourceMappings, /minimal_tools/);
 assert.match(sourceMappings, /\.codex\/pjsdlc_managed\/skills/);
 assert.match(sourceMappings, /assets\/skills/);
 assert.doesNotMatch(sourceMappings, /\.codex\/skills/);
+
+for (const workflow of [sourceWorkflow, packageWorkflow]) {
+  assert.match(workflow, /Run harness gate/);
+  assert.match(workflow, /validate-context/);
+  assert.doesNotMatch(workflow, /npm test --workspace agent-project-sdlc/);
+  assert.doesNotMatch(workflow, /package check-source/);
+  assert.doesNotMatch(workflow, /npm install/);
+}
+
+assert.equal(packageJson.license, "MIT");
+assert.equal(packageJson.homepage, "https://github.com/Seven128/project-agent-sdlc#readme");
+assert.equal(packageJson.repository.url, "git+https://github.com/Seven128/project-agent-sdlc.git");
+assert.equal(packageJson.repository.directory, "packages/sdlc-harness");
+assert.equal(packageJson.bugs.url, "https://github.com/Seven128/project-agent-sdlc/issues");
+assert.ok(packageJson.keywords.includes("ai-agents"));
+assert.ok(packageJson.keywords.includes("context-engineering"));
+assert.ok(packageJson.keywords.includes("developer-tools"));
+assert.ok(packageJson.keywords.includes("multi-agent"));
+assert.ok(packageJson.keywords.includes("claude-code"));
+assert.ok(packageJson.keywords.includes("developer-productivity"));
 
 assert.doesNotMatch(packageReadme, /Project initialization.*workflow skills/s);
 assert.doesNotMatch(packageReadme, /fresh lifecycle starts at/);

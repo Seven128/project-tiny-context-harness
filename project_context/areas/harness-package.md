@@ -39,8 +39,11 @@
 - When a user explicitly allows subagent use and the tools exist, the development engineer Skill should encourage parallel decomposition while reusing existing agents first and closing completed, idle or no-longer-needed agents with `close_agent`; this is a resource lifecycle constraint, not permission to bypass the user's explicit subagent trigger.
 - The development engineer Skill includes a lightweight abstraction / decomposition scan for new implementation, refactoring, repeated logic, module-boundary or impact-scope work; candidates are evaluated by evidence, boundary, benefit, risk and timing, split into local refactoring versus long-term boundary changes, and only stable high-value candidates should be implemented by default.
 - The canonical npm package is `agent-project-sdlc`; `sdlc-harness` is the bin name. Public docs and managed Makefile wrappers avoid bare `npx sdlc-harness` for ad hoc commands because npm can resolve the legacy `sdlc-harness` package name or a stale local install.
+- Public package positioning is "minimal project memory for AI coding agents": README/npm surfaces should quickly explain the fresh-agent recovery problem, when to use the Harness, and how it differs from spec-first kits, task planners, external context/retrieval tools, IDE memory and full SDLC process tools. Public positioning must not claim benchmark wins until fresh Minimal Context benchmark evidence exists.
+- Maintainer launch materials live under `docs/launch/**`. They are copy-ready external communication assets, market snapshots and channel plans for GitHub, npm, launch sites, social channels and demo scripting; they are not package-managed consumer assets and must keep the same Minimal Context positioning and no-unproven-benchmark-claim boundary as README/npm surfaces. `tools/launch_readiness_check.mjs` is the maintainer prelaunch check: offline mode validates local launch surface and online mode also reports current GitHub/npm metadata drift without publishing or mutating external state.
 - Managed Makefile defaults `SDLC_HARNESS` to the source workspace CLI when `packages/sdlc-harness/dist/cli.js` exists, otherwise to `npx --yes --package agent-project-sdlc@latest sdlc-harness`; generated projects can override `SDLC_HARNESS` when intentionally testing a pinned local package.
 - Managed Makefile exposes `sdlc-doctor`, `sdlc-sync` and `sdlc-upgrade` wrappers in addition to `validate-context` and `validate-harness`.
+- The package-managed `.github/workflows/harness.yml` is consumer-facing: it installs only the Node runtime needed by the Harness CLI and runs the selected `validate-context` / `validate-harness` Make target. Maintainer-only checks such as package tests and source-drift checks belong in this source repository's separate CI, not in the workflow copied into user projects.
 - `project_context/architecture.md` is a default Minimal Context fact source for restrained system boundary, component map and durable architecture constraints.
 - `project_context/context.toml` is created by `init` as the Schema v4 Context graph manifest; ordinary projects start with one default `main` product/domain area and `project_context/areas/main/verification.md` registered as a default verification role Context.
 - Schema v4 makes `project_context/context.toml` required for `validate-context`; `upgrade` migrates legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md` and registers area Context files in the manifest.
@@ -105,6 +108,8 @@
 ## Test Entry Points
 
 - `npm test --workspace agent-project-sdlc`
+- `node tools/quickstart_smoke.mjs --clean`
+- `node tools/launch_readiness_check.mjs --offline`
 - `node --test tests/sdlc-harness/export-context.test.mjs`
 - `node --test tests/sdlc-harness/sync-init-doctor.test.mjs`
 - `node --test tests/sdlc-harness/package-source.test.mjs`

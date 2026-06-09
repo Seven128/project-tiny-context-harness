@@ -1,10 +1,62 @@
 # AI SDLC Harness
 
-AI SDLC Harness is a lightweight workflow package for AI coding agents. Its vNext default is **Minimal Context Harness**: keep a small, durable project context in the repository so fresh agents can recover intent, constraints, verification entry points and next safe actions quickly.
+[![npm version](https://img.shields.io/npm/v/agent-project-sdlc.svg)](https://www.npmjs.com/package/agent-project-sdlc)
+[![Package CI](https://github.com/Seven128/project-agent-sdlc/actions/workflows/package.yml/badge.svg)](https://github.com/Seven128/project-agent-sdlc/actions/workflows/package.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-The current goal is not to make agents follow a full SDLC ceremony by default. The Harness maintains context quality; project tests, reviews, CI and human acceptance still own product quality.
+AI SDLC Harness is a minimal project-memory harness for AI coding agents.
 
-For the product and design rationale, see [PROJECT_SPEC.md](PROJECT_SPEC.md).
+`agent-project-sdlc` installs **Minimal Context Harness**: a compact `project_context/**` fact source, a short `AGENTS.md` startup router, role Skills and a `validate-context` gate so fresh agents can recover project intent, boundaries, verification entry points and next safe actions quickly.
+
+It is not another full SDLC ceremony. The Harness maintains context quality; project tests, reviews, CI and human acceptance still own product quality.
+
+```sh
+npm install -D agent-project-sdlc@latest
+npx --yes --package agent-project-sdlc@latest sdlc-harness init
+```
+
+Use it when coding agents repeatedly lose project intent across new chats, handoffs, RFC/debug turns or tool changes. The intended tradeoff is: keep durable intent and recovery paths; leave execution evidence to code, tests and review.
+
+## Why It Exists
+
+Coding agents can move quickly inside one thread and still drift when a new chat, model, tool, reviewer or debugging session loses the project-specific facts that were never encoded anywhere stable.
+
+Most repositories already have README files, specs, tests and issue history, but fresh agents need a small, explicit recovery path: what the project is trying to do, what it must not do, where architecture boundaries live, how to validate changes and what durable facts changed after the last task. Minimal Context Harness makes that recovery path a first-class repo surface without adding a full planning ceremony.
+
+## Positioning
+
+| Adjacent tool type | Use it for | Harness stance |
+|---|---|---|
+| Spec-first kits | Turning a feature idea into structured specs and implementation plans. | Complementary. Keep final durable project facts in `project_context/**`; do not require spec documents for every task. |
+| BMAD-style workflows and full SDLC processes | Coordinated role/process ceremonies on high-risk work. | Lighter default. Preserve context quality without shipping phase gates or work-product trees. |
+| Task Master-style planners | Backlog decomposition and task execution state. | Complementary. Harness does not own task state; it owns durable project memory. |
+| Context7/Serena-style retrieval or code-intelligence tools | Pulling external docs, symbols or repository facts on demand. | Complementary. Harness keeps the local project truth that should travel with the repo. |
+| IDE or agent memory | Tool-specific continuity inside one product surface. | Portable fallback. Harness files are plain repo assets that any agent can read. |
+
+## Try It In 60 Seconds
+
+```sh
+mkdir ai-sdlc-harness-demo
+cd ai-sdlc-harness-demo
+git init
+npm init -y
+npm install -D agent-project-sdlc@latest
+npx --yes --package agent-project-sdlc@latest sdlc-harness init
+make validate-context
+```
+
+Then open `AGENTS.md`, `project_context/global.md` and `project_context/architecture.md`. Those files are the small recovery surface a fresh agent should read before changing the project.
+
+Maintainers can verify the local package artifact with the same flow:
+
+```sh
+npm run launch:check
+npm run smoke:quickstart
+```
+
+Copy-ready launch materials live in [docs/launch/README.md](https://github.com/Seven128/project-agent-sdlc/blob/main/docs/launch/README.md).
+
+For the stable product/design rationale, see [PROJECT_SPEC.md](PROJECT_SPEC.md).
 
 ## Repository Scope
 
@@ -46,6 +98,9 @@ npx --yes --package agent-project-sdlc@latest sdlc-harness init --adopt
 - `<harnessRoot>/pjsdlc_managed/make/sdlc-harness.mk`
 - `tools/**`
 - a root `Makefile` include block
+- `.github/workflows/harness.yml`
+
+The generated workflow runs only the selected Harness gate, `validate-context` or `validate-harness`. Maintainer-only package tests and source-drift checks are intentionally kept out of consumer projects.
 
 `init` does not create lifecycle state, plan state, stage skills or stage work-product trees by default.
 
