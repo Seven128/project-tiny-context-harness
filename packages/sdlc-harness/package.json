@@ -1,6 +1,6 @@
 {
   "name": "agent-project-sdlc",
-  "version": "0.2.38",
+  "version": "0.2.39",
   "description": "Minimal project memory and validation harness for AI coding agents.",
   "license": "MIT",
   "author": "Seven128",
