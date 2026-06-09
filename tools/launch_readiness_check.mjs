@@ -383,26 +383,64 @@ function localChecks() {
 
 async function externalChecks(localPackageJson) {
   const checks = [];
-  const github = await requestJson("https://api.github.com/repos/Seven128/project-tiny-context-harness");
-  const requiredTopics = ["ai-agents", "coding-agent", "codex", "claude-code", "cursor", "agent-context", "context-engineering", "agents-md", "developer-tools", "developer-productivity", "cli", "sdlc", "workflow"];
-  const githubTopics = Array.isArray(github.topics) ? github.topics : [];
-  addCheck(checks, "github-description", github.description === "Minimal project memory and validation harness for AI coding agents.", `GitHub description: ${github.description ?? "(empty)"}`, "external");
-  addCheck(checks, "github-license", github.license?.spdx_id === "MIT", `GitHub detected license: ${github.license?.spdx_id ?? "(none)"}`, "external");
-  addCheck(checks, "github-topics", requiredTopics.every((topic) => githubTopics.includes(topic)), `GitHub topics: ${githubTopics.length > 0 ? githubTopics.join(", ") : "(none)"}`, "external");
-  addCheck(checks, "github-stars", typeof github.stargazers_count === "number", `GitHub stars: ${github.stargazers_count}`, "external-info");
-  addCheck(checks, "github-forks", typeof github.forks_count === "number", `GitHub forks: ${github.forks_count}`, "external-info");
+  let github = null;
+  let npmLatest = null;
+  let downloads = null;
 
-  const npmLatest = await requestJson("https://registry.npmjs.org/project-tiny-context-harness/latest");
-  addCheck(checks, "npm-description", npmLatest.description === localPackageJson.description, `npm latest description: ${npmLatest.description ?? "(empty)"}`, "external");
-  addCheck(checks, "npm-license", npmLatest.license === localPackageJson.license, `npm latest license: ${npmLatest.license ?? "(none)"}`, "external");
-  addCheck(checks, "npm-homepage", npmLatest.homepage === localPackageJson.homepage, `npm latest homepage: ${npmLatest.homepage ?? "(none)"}`, "external");
-  addCheck(checks, "npm-keywords", localPackageJson.keywords.every((keyword) => npmLatest.keywords?.includes(keyword)), `npm latest keywords: ${npmLatest.keywords?.join(", ") ?? "(none)"}`, "external");
-  addCheck(checks, "npm-repository", npmLatest.repository?.url === localPackageJson.repository?.url, `npm latest repository: ${npmLatest.repository?.url ?? "(none)"}`, "external");
-  addCheck(checks, "npm-bugs", npmLatest.bugs?.url === localPackageJson.bugs?.url, `npm latest bugs URL: ${npmLatest.bugs?.url ?? "(none)"}`, "external");
-  addCheck(checks, "npm-version", npmLatest.version === localPackageJson.version, `npm latest version: ${npmLatest.version}`, "external-info");
+  try {
+    github = await requestJson("https://api.github.com/repos/Seven128/project-tiny-context-harness");
+    const expectedHomepage = "https://www.npmjs.com/package/project-tiny-context-harness";
+    const requiredTopics = [
+      "ai-agents",
+      "coding-agent",
+      "codex",
+      "claude-code",
+      "cursor",
+      "gemini-cli",
+      "opencode",
+      "agent-context",
+      "context-engineering",
+      "context-management",
+      "agents-md",
+      "project-memory",
+      "agent-memory",
+      "ai-coding",
+      "developer-tools",
+      "developer-productivity",
+      "cli",
+      "sdlc",
+      "workflow"
+    ];
+    const githubTopics = Array.isArray(github.topics) ? github.topics : [];
+    addCheck(checks, "github-description", github.description === "Minimal project memory and validation harness for AI coding agents.", `GitHub description: ${github.description ?? "(empty)"}`, "external");
+    addCheck(checks, "github-homepage", github.homepage === expectedHomepage, `GitHub homepage: ${github.homepage ?? "(empty)"}`, "external");
+    addCheck(checks, "github-license", github.license?.spdx_id === "MIT", `GitHub detected license: ${github.license?.spdx_id ?? "(none)"}`, "external");
+    addCheck(checks, "github-topics", requiredTopics.every((topic) => githubTopics.includes(topic)), `GitHub topics: ${githubTopics.length > 0 ? githubTopics.join(", ") : "(none)"}`, "external");
+    addCheck(checks, "github-stars", typeof github.stargazers_count === "number", `GitHub stars: ${github.stargazers_count}`, "external-info");
+    addCheck(checks, "github-forks", typeof github.forks_count === "number", `GitHub forks: ${github.forks_count}`, "external-info");
+  } catch (error) {
+    addCheck(checks, "github-fetch", false, error instanceof Error ? error.message : String(error), "external");
+  }
 
-  const downloads = await requestJson("https://api.npmjs.org/downloads/point/last-week/project-tiny-context-harness");
-  addCheck(checks, "npm-downloads", typeof downloads.downloads === "number", `npm downloads last week: ${downloads.downloads} (${downloads.start} to ${downloads.end})`, "external-info");
+  try {
+    npmLatest = await requestJson("https://registry.npmjs.org/project-tiny-context-harness/latest");
+    addCheck(checks, "npm-description", npmLatest.description === localPackageJson.description, `npm latest description: ${npmLatest.description ?? "(empty)"}`, "external");
+    addCheck(checks, "npm-license", npmLatest.license === localPackageJson.license, `npm latest license: ${npmLatest.license ?? "(none)"}`, "external");
+    addCheck(checks, "npm-homepage", npmLatest.homepage === localPackageJson.homepage, `npm latest homepage: ${npmLatest.homepage ?? "(none)"}`, "external");
+    addCheck(checks, "npm-keywords", localPackageJson.keywords.every((keyword) => npmLatest.keywords?.includes(keyword)), `npm latest keywords: ${npmLatest.keywords?.join(", ") ?? "(none)"}`, "external");
+    addCheck(checks, "npm-repository", npmLatest.repository?.url === localPackageJson.repository?.url, `npm latest repository: ${npmLatest.repository?.url ?? "(none)"}`, "external");
+    addCheck(checks, "npm-bugs", npmLatest.bugs?.url === localPackageJson.bugs?.url, `npm latest bugs URL: ${npmLatest.bugs?.url ?? "(none)"}`, "external");
+    addCheck(checks, "npm-version", npmLatest.version === localPackageJson.version, `npm latest version: ${npmLatest.version}`, "external-info");
+  } catch (error) {
+    addCheck(checks, "npm-fetch", false, error instanceof Error ? error.message : String(error), "external");
+  }
+
+  try {
+    downloads = await requestJson("https://api.npmjs.org/downloads/point/last-week/project-tiny-context-harness");
+    addCheck(checks, "npm-downloads", typeof downloads.downloads === "number", `npm downloads last week: ${downloads.downloads} (${downloads.start} to ${downloads.end})`, "external-info");
+  } catch (error) {
+    addCheck(checks, "npm-downloads-fetch", false, error instanceof Error ? error.message : String(error), "external-info");
+  }
   return { checks, github, npmLatest, downloads };
 }
 

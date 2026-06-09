@@ -55,6 +55,12 @@ Repository description:
 Minimal project memory and validation harness for AI coding agents.
 ```
 
+Repository homepage:
+
+```text
+https://www.npmjs.com/package/project-tiny-context-harness
+```
+
 Suggested topics:
 
 ```text
@@ -63,9 +69,15 @@ coding-agent
 codex
 claude-code
 cursor
+gemini-cli
+opencode
 agent-context
 context-engineering
+context-management
 agents-md
+project-memory
+agent-memory
+ai-coding
 developer-tools
 developer-productivity
 cli
@@ -84,7 +96,7 @@ Use this if agents keep losing project intent between chats. It adds a small pro
 - Merge current launch-readiness changes into the GitHub default branch.
 - Run `npm run launch:check` locally; run it again without `--offline` before external launch to see current GitHub/npm metadata drift.
 - Confirm README first screen shows badges, install command, positioning and 60-second trial.
-- Set GitHub description and topics from this file.
+- Set GitHub description, homepage and topics from this file.
 - Publish a new npm version after `npm test --workspace project-tiny-context-harness`, `npm run smoke:quickstart`, `make validate-context` and package source check pass.
 - Confirm npm package page renders the updated package README and MIT license.
 - Run `npm run smoke:quickstart` after publish against `project-tiny-context-harness@latest` or a clean test project.
@@ -103,7 +115,7 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 
 | Asset | Owner action | Ready signal |
 |---|---|---|
-| GitHub metadata | Set description and topics from this file. | Online `launch_readiness_check` no longer reports GitHub metadata TODOs. |
+| GitHub metadata | Set description, homepage and topics from this file. | Online `launch_readiness_check` no longer reports GitHub metadata TODOs. |
 | npm metadata | Publish a new package version after PR merge. | npm page shows updated README, MIT license, homepage and description. |
 | 60-90 second demo | Record the demo storyboard below. | Viewer can see install, generated files and fresh-agent recovery prompt. |
 | First support surface | Create a GitHub Discussion or pinned issue for adoption reports. | Launch posts have one feedback link beyond the README. |
