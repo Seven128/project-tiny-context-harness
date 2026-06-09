@@ -147,7 +147,15 @@ function localChecks() {
   addCheck(checks, "launch-check-script", rootPackage.scripts?.["launch:check"] === "node tools/launch_readiness_check.mjs --offline", "launch:check script runs offline readiness check.");
 
   addCheck(checks, "consumer-workflow-boundary", contains(sourceWorkflow, /Run harness gate/) && !contains(sourceWorkflow, /npm test --workspace agent-project-sdlc|package check-source|npm install/), "Consumer workflow only runs Harness gate.");
-  addCheck(checks, "maintainer-workflow", contains(maintainerWorkflow, /Test package/) && contains(maintainerWorkflow, /Check package canonical source drift/) && contains(maintainerWorkflow, /Validate source Context/), "Maintainer package CI runs package tests, source drift and Context validation.");
+  addCheck(
+    checks,
+    "maintainer-workflow",
+    contains(maintainerWorkflow, /Test package/) &&
+      contains(maintainerWorkflow, /Check package canonical source drift/) &&
+      contains(maintainerWorkflow, /node packages\/sdlc-harness\/dist\/cli\.js package check-source/) &&
+      contains(maintainerWorkflow, /Validate source Context/),
+    "Maintainer package CI runs package tests, source drift from the source root, and Context validation."
+  );
 
   return checks;
 }

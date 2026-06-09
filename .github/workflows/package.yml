@@ -56,6 +56,6 @@ jobs:
       - name: Test package
         run: npm test --workspace agent-project-sdlc
       - name: Check package canonical source drift
-        run: npm --workspace agent-project-sdlc exec -- sdlc-harness package check-source
+        run: node packages/sdlc-harness/dist/cli.js package check-source
       - name: Validate source Context
         run: make validate-context
