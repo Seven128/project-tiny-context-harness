@@ -384,6 +384,7 @@ function localChecks() {
 async function externalChecks(localPackageJson) {
   const checks = [];
   let github = null;
+  let latestRelease = null;
   let npmLatest = null;
   let downloads = null;
 
@@ -423,6 +424,29 @@ async function externalChecks(localPackageJson) {
   }
 
   try {
+    latestRelease = await requestJson("https://api.github.com/repos/Seven128/project-tiny-context-harness/releases/latest");
+    addCheck(
+      checks,
+      "github-release-title",
+      latestRelease.name === "Project Tiny Context Harness 0.2.39 - legacy npm package",
+      `GitHub latest release title: ${latestRelease.name ?? "(empty)"}`,
+      "external"
+    );
+    addCheck(
+      checks,
+      "github-release-rename-boundary",
+      /predates the npm package rename/i.test(latestRelease.body ?? "") &&
+        /agent-project-sdlc version 0\.2\.39/i.test(latestRelease.body ?? "") &&
+        /project-tiny-context-harness latest/i.test(latestRelease.body ?? "") &&
+        /does not claim benchmark-proven delivery speedups/i.test(latestRelease.body ?? ""),
+      "GitHub latest release explains the legacy package name, renamed-package gate and no-benchmark boundary.",
+      "external"
+    );
+  } catch (error) {
+    addCheck(checks, "github-release-fetch", false, error instanceof Error ? error.message : String(error), "external");
+  }
+
+  try {
     npmLatest = await requestJson("https://registry.npmjs.org/project-tiny-context-harness/latest");
     addCheck(checks, "npm-description", npmLatest.description === localPackageJson.description, `npm latest description: ${npmLatest.description ?? "(empty)"}`, "external");
     addCheck(checks, "npm-license", npmLatest.license === localPackageJson.license, `npm latest license: ${npmLatest.license ?? "(none)"}`, "external");
@@ -441,7 +465,7 @@ async function externalChecks(localPackageJson) {
   } catch (error) {
     addCheck(checks, "npm-downloads-fetch", false, error instanceof Error ? error.message : String(error), "external-info");
   }
-  return { checks, github, npmLatest, downloads };
+  return { checks, github, latestRelease, npmLatest, downloads };
 }
 
 function summarize(checks, options) {
