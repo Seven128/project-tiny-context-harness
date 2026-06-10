@@ -164,6 +164,7 @@ function localChecks() {
   const governance = read("GOVERNANCE.md");
   const contributing = read("CONTRIBUTING.md");
   const launchKit = read("docs/launch/README.md");
+  const githubMetadataRunbook = read("docs/launch/github-metadata.md");
   const launchProfile = read("docs/launch/profile.md");
   const primaryLaunch = read("docs/launch/primary-launch.md");
   const feedbackTriage = read("docs/launch/feedback-triage.md");
@@ -735,6 +736,7 @@ function localChecks() {
     "launch-kit",
     contains(launchKit, /Launch Kit/) &&
       contains(launchKit, /Do not claim benchmark wins/) &&
+      contains(launchKit, /github-metadata\.md/) &&
       contains(launchKit, /Hacker News Draft/) &&
       contains(launchKit, /npm-publish-runbook\.md/) &&
       contains(launchKit, /npm-trusted-publishing\.md/) &&
@@ -761,6 +763,23 @@ function localChecks() {
       contains(outreachTargets, /GitHub repository homepage should point to `https:\/\/github\.com\/Seven128\/project-tiny-context-harness` while npm returns 404/) &&
       contains(outreachTargets, /switch it to the npm package page only after the renamed package is published/),
     "Launch docs keep GitHub About homepage on the repository while npm is 404, then switch it to npm after first publish."
+  );
+  addCheck(
+    checks,
+    "github-metadata-runbook",
+    hasFile("docs/launch/github-metadata.md") &&
+      contains(launchKit, /github-metadata\.md/) &&
+      contains(githubMetadataRunbook, /GitHub Metadata Runbook/) &&
+      contains(githubMetadataRunbook, /Minimal project memory and validation harness for AI coding agents\./) &&
+      contains(githubMetadataRunbook, /Homepage while npm publish is pending/) &&
+      contains(githubMetadataRunbook, /https:\/\/github\.com\/Seven128\/project-tiny-context-harness/) &&
+      contains(githubMetadataRunbook, /Homepage after `project-tiny-context-harness` is published on npm/) &&
+      contains(githubMetadataRunbook, /https:\/\/www\.npmjs\.com\/package\/project-tiny-context-harness/) &&
+      contains(githubMetadataRunbook, /github-homepage: PASS/) &&
+      contains(githubMetadataRunbook, /npm-fetch: TODO/) &&
+      contains(githubMetadataRunbook, /X-GitHub-Api-Version/) &&
+      contains(githubMetadataRunbook, /Do not point GitHub homepage to the npm package while npm returns 404/),
+    "GitHub metadata runbook gives exact UI/API steps for fixing About homepage before and after npm publication."
   );
   addCheck(
     checks,

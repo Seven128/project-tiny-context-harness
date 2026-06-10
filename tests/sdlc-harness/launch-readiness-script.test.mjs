@@ -60,6 +60,7 @@ for (const expected of [
   "launch-profile-sheet",
   "launch-kit",
   "github-homepage-stage-boundary",
+  "github-metadata-runbook",
   "launch-operating-plan",
   "primary-launch-packet",
   "feedback-triage-runbook",
