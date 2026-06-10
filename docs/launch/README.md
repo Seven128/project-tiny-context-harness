@@ -265,28 +265,9 @@ make validate-context
 
 ## Hacker News Draft
 
-Title:
+Use [primary-launch.md](primary-launch.md) as the canonical Show HN source. It contains the current title, repository URL, HN prefill URL, final body copy and first-hour response playbook.
 
-```text
-Show HN: Minimal project memory for AI coding agents
-```
-
-Body:
-
-```text
-I built Project Tiny Context Harness after seeing coding agents do well inside one chat but lose project-specific intent across new chats, handoffs, RFC/debug turns and tool changes.
-
-The current package installs the Minimal Context recovery surface: project_context files, a short AGENTS.md startup router, role Skills and a validate-context gate. The product lesson is: keep the memory, drop the ceremony. Modern coding agents already internalize much of the ordinary understand/design/implement/test loop, so the package keeps durable repo facts small instead of forcing every task through SDLC phases.
-
-It leaves product quality to tests, CI, review and human acceptance.
-
-Install:
-npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init
-make validate-context
-
-I am looking for feedback from people who use Codex, Claude Code, Cursor or other coding agents on larger repos: is this recovery surface useful, too much, or missing the real handoff problem?
-```
+Do not copy an older draft from this file. Run `npm run launch:next -- --live` and use the `show-hn` prefill URL after logging in to Hacker News.
 
 ## Product Hunt Draft
 

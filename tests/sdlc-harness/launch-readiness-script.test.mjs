@@ -111,6 +111,10 @@ for (const expected of [
   assert.ok(ids.has(expected), `expected readiness check ${expected}`);
 }
 
+const launchKit = readFileSync(path.join(repoRoot, "docs/launch/README.md"), "utf8");
+assert.doesNotMatch(launchKit, /Show HN: Minimal project memory for AI coding agents/);
+assert.match(launchKit, /Use \[primary-launch\.md\]\(primary-launch\.md\) as the canonical Show HN source/);
+
 const scriptSource = readFileSync(scriptPath, "utf8");
 for (const expected of [
   "function nextActionForFailedCheck",

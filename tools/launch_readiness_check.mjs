@@ -847,6 +847,9 @@ function localChecks() {
       contains(launchKit, /Do not claim benchmark wins/) &&
       contains(launchKit, /github-metadata\.md/) &&
       contains(launchKit, /Hacker News Draft/) &&
+      contains(launchKit, /Use \[primary-launch\.md\]\(primary-launch\.md\) as the canonical Show HN source/) &&
+      contains(launchKit, /show-hn` prefill URL/) &&
+      !contains(launchKit, /Show HN: Minimal project memory for AI coding agents/) &&
       contains(launchKit, /npm-publish-runbook\.md/) &&
       contains(launchKit, /npm-trusted-publishing\.md/) &&
       contains(launchKit, /awesome-list-submissions\.md/) &&
