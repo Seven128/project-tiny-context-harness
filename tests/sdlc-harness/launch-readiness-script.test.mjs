@@ -43,6 +43,7 @@ for (const expected of [
   "technical-article",
   "existing-repo-adoption-guide",
   "minimal-context-sample",
+  "browseable-sample-repository",
   "launch-faq",
   "benchmarking-guide",
   "launch-response-templates",

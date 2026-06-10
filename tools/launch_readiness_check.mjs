@@ -182,6 +182,15 @@ function localChecks() {
   const roadmap = read("docs/roadmap.md");
   const freshAgentWalkthrough = read("docs/examples/fresh-agent-recovery.md");
   const minimalContextSample = read("docs/examples/minimal-context-sample.md");
+  const browseableSampleReadme = read("examples/minimal-context-sample/README.md");
+  const browseableSamplePackage = readJson("examples/minimal-context-sample/package.json");
+  const browseableSampleAgents = read("examples/minimal-context-sample/AGENTS.md");
+  const browseableSampleGlobal = read("examples/minimal-context-sample/project_context/global.md");
+  const browseableSampleArchitecture = read("examples/minimal-context-sample/project_context/architecture.md");
+  const browseableSampleArea = read("examples/minimal-context-sample/project_context/areas/main.md");
+  const browseableSampleVerification = read("examples/minimal-context-sample/project_context/areas/main/verification.md");
+  const browseableSampleSource = read("examples/minimal-context-sample/src/label-routing/suggest-labels.mjs");
+  const browseableSampleTest = read("examples/minimal-context-sample/tests/label-routing.test.mjs");
   const externalPrPacket = read("docs/launch/external-prs/README.md");
   const transcendaPatch = read("docs/launch/external-prs/transcenda-awesome-agentic-coding.patch");
   const jordimasPatch = read("docs/launch/external-prs/jordimas-awesome-agentic-engineering.patch");
@@ -392,9 +401,12 @@ function localChecks() {
     checks,
     "minimal-context-sample",
     hasFile("docs/examples/minimal-context-sample.md") &&
-      contains(rootReadme, /Minimal Context sample project/) &&
-      contains(packageReadme, /Minimal Context sample project/) &&
+      contains(rootReadme, /Minimal Context sample guide/) &&
+      contains(packageReadme, /Minimal Context sample guide/) &&
+      contains(rootReadme, /examples\/minimal-context-sample\//) &&
+      contains(packageReadme, /examples\/minimal-context-sample/) &&
       contains(minimalContextSample, /Minimal Context Sample Project/) &&
+      contains(minimalContextSample, /examples\/minimal-context-sample\//) &&
       contains(minimalContextSample, /AGENTS\.md/) &&
       contains(minimalContextSample, /project_context\/global\.md/) &&
       contains(minimalContextSample, /project_context\/architecture\.md/) &&
@@ -402,6 +414,31 @@ function localChecks() {
       contains(minimalContextSample, /project_context\/areas\/main\/verification\.md/) &&
       contains(minimalContextSample, /not a benchmark, template requirement or product-quality proof/i),
     "Minimal Context sample project exists, is linked from README and shows concrete Context file shape without benchmark claims."
+  );
+  addCheck(
+    checks,
+    "browseable-sample-repository",
+    hasFile("examples/minimal-context-sample/README.md") &&
+      hasFile("examples/minimal-context-sample/AGENTS.md") &&
+      hasFile("examples/minimal-context-sample/.codex/config.yaml") &&
+      hasFile("examples/minimal-context-sample/project_context/context.toml") &&
+      hasFile("examples/minimal-context-sample/project_context/global.md") &&
+      hasFile("examples/minimal-context-sample/project_context/architecture.md") &&
+      hasFile("examples/minimal-context-sample/project_context/areas/main.md") &&
+      hasFile("examples/minimal-context-sample/project_context/areas/main/verification.md") &&
+      hasFile("examples/minimal-context-sample/src/label-routing/suggest-labels.mjs") &&
+      hasFile("examples/minimal-context-sample/tests/label-routing.test.mjs") &&
+      browseableSamplePackage.scripts?.test === "node --test tests/*.test.mjs" &&
+      browseableSamplePackage.scripts?.["validate-context"] === "node ../../packages/sdlc-harness/dist/cli.js validate-context" &&
+      contains(browseableSampleReadme, /not a template requirement, benchmark result or product-quality proof/i) &&
+      contains(browseableSampleAgents, /Scope: this file demonstrates what a consumer repository might give to coding agents/) &&
+      contains(browseableSampleGlobal, /Do not apply labels to GitHub issues automatically/) &&
+      contains(browseableSampleArchitecture, /GitHub write behavior is outside this sample/) &&
+      contains(browseableSampleArea, /Do not mutate GitHub issue labels in suggestion code/) &&
+      contains(browseableSampleVerification, /Context validation checks the sample recovery files without storing execution results/) &&
+      contains(browseableSampleSource, /advisoryOnly: true/) &&
+      contains(browseableSampleTest, /builds an advisory-only review payload without an apply URL/),
+    "Browseable sample repository includes AGENTS.md, project_context/**, tiny source code and tests without benchmark claims."
   );
   addCheck(
     checks,

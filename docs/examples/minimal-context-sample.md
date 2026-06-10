@@ -2,6 +2,8 @@
 
 This sample shows what a small project can look like after adopting Project Tiny Context Harness. It is not a benchmark, template requirement or product-quality proof. It is a concrete shape for the recovery surface a fresh coding agent should read first.
 
+For a file-by-file version with tiny source code, tests and `validate-context`, browse [`examples/minimal-context-sample/`](../../examples/minimal-context-sample/).
+
 ## Scenario
 
 Imagine a small issue-labeling service:

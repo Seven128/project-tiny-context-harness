@@ -1,0 +1,12 @@
+{
+  "name": "minimal-context-sample",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "validate-context": "node ../../packages/sdlc-harness/dist/cli.js validate-context"
+  },
+  "sdlcHarness": {
+    "harnessFolderName": ".codex"
+  }
+}

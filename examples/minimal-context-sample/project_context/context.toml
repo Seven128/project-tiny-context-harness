@@ -1,0 +1,15 @@
+# Context graph for the Minimal Context sample repository.
+
+[[areas]]
+id = "main"
+root = "."
+context = "project_context/areas/main.md"
+kind = "app"
+default = true
+
+[[context]]
+path = "project_context/areas/main/verification.md"
+role = "verification"
+read_when = "when changing label suggestion behavior or checking the sample"
+read_policy = "on-demand"
+triggers = ["test", "label", "verification"]

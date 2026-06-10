@@ -140,7 +140,7 @@ For benchmark boundaries, read [Benchmarking And Evidence](https://github.com/Se
 
 For contribution, support, security, conduct and governance, see [CONTRIBUTING.md](https://github.com/Seven128/project-tiny-context-harness/blob/main/CONTRIBUTING.md), [SUPPORT.md](https://github.com/Seven128/project-tiny-context-harness/blob/main/SUPPORT.md), [SECURITY.md](https://github.com/Seven128/project-tiny-context-harness/blob/main/SECURITY.md), [CODE_OF_CONDUCT.md](https://github.com/Seven128/project-tiny-context-harness/blob/main/CODE_OF_CONDUCT.md) and [GOVERNANCE.md](https://github.com/Seven128/project-tiny-context-harness/blob/main/GOVERNANCE.md).
 
-For concrete examples, read the [fresh-agent recovery walkthrough](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/examples/fresh-agent-recovery.md) and the [Minimal Context sample project](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/examples/minimal-context-sample.md).
+For concrete examples, read the [fresh-agent recovery walkthrough](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/examples/fresh-agent-recovery.md), the [Minimal Context sample guide](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/examples/minimal-context-sample.md) and the [browseable sample repository](https://github.com/Seven128/project-tiny-context-harness/tree/main/examples/minimal-context-sample).
 
 For the longer technical argument, read [Fresh coding-agent sessions need project memory, not more ceremony](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/articles/fresh-agent-project-memory.md).
 
