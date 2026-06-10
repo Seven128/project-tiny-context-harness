@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const scriptPath = path.join(repoRoot, "tools/launch_next_steps.mjs");
-const { buildNextSteps, renderMarkdown } = await import(pathToFileURL(scriptPath));
+const { applyStatusHints, buildNextSteps, renderMarkdown } = await import(pathToFileURL(scriptPath));
 
 const steps = buildNextSteps({ packageVersion: "0.2.41" });
 assert.deepEqual(
@@ -40,3 +40,31 @@ assert.equal(jsonResult.status, 0, jsonResult.stderr);
 const json = JSON.parse(jsonResult.stdout);
 assert.equal(json.steps[0].id, "npm-trusted-publish");
 assert.equal(json.steps[0].inputs[0], "expected_version: 0.2.41");
+assert.equal(json.live, false);
+
+const liveSteps = applyStatusHints(steps, {
+  status: "ready-with-cleanup",
+  npm: { summary: { status: "published" } },
+  releaseDelta: {
+    localVersion: "0.2.41",
+    publishedVersion: "0.2.40"
+  },
+  readiness: {
+    externalChecks: [
+      {
+        id: "github-release-title",
+        detail: "GitHub latest release title: Project Tiny Context Harness 0.2.39 - legacy npm package"
+      }
+    ]
+  }
+});
+assert.equal(liveSteps[0].status, "pending-cleanup");
+assert.match(liveSteps[0].statusDetail, /local 0\.2\.41; npm latest 0\.2\.40/);
+assert.equal(liveSteps[1].status, "pending-cleanup");
+assert.equal(liveSteps[2].status, "ready");
+assert.equal(liveSteps[3].status, "waiting-for-url");
+assert.equal(liveSteps[4].status, "wait-for-first-feedback");
+
+const liveMarkdown = renderMarkdown(liveSteps);
+assert.match(liveMarkdown, /status: pending-cleanup \(local 0\.2\.41; npm latest 0\.2\.40\)/);
+assert.match(liveMarkdown, /status: ready \(required broad-launch gate is clear\.\)/);

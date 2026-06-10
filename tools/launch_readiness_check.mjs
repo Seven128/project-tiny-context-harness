@@ -993,14 +993,18 @@ function localChecks() {
       hasFile("tools/launch_next_steps.mjs") &&
       contains(launchNextScript, /This script is read-only/) &&
       contains(launchNextScript, /does not publish to npm/) &&
+      contains(launchNextScript, /--live/) &&
+      contains(launchNextScript, /applyStatusHints/) &&
+      contains(launchNextScript, /pending-cleanup/) &&
+      contains(launchNextScript, /waiting-for-url/) &&
       contains(launchNextScript, /actions\/workflows\/npm-publish\.yml/) &&
       contains(launchNextScript, /releases\/new\?tag=v0\.2\.40/) &&
       contains(launchNextScript, /news\.ycombinator\.com\/submit/) &&
       contains(launchNextScript, /npm run launch:feedback-note -- --channel show-hn --url <show-hn-url>/) &&
       contains(launchNextScript, /npm run launch:external-prs -- --live --clean/) &&
-      contains(launchKit, /npm run launch:next/) &&
-      contains(launchKit, /ordered owner action board/),
-    "Launch next steps command gives maintainers one ordered, read-only action board for npm, release, first post and follow-up execution."
+      contains(launchKit, /npm run launch:next -- --live/) &&
+      contains(launchKit, /ordered owner action board with status hints/),
+    "Launch next steps command gives maintainers one ordered, read-only action board with status hints for npm, release, first post and follow-up execution."
   );
   addCheck(
     checks,

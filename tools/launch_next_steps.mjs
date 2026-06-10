@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -15,10 +16,12 @@ const urls = {
 };
 
 function parseArgs(argv) {
-  const options = { json: false };
+  const options = { json: false, live: false };
   for (const arg of argv) {
     if (arg === "--json") {
       options.json = true;
+    } else if (arg === "--live") {
+      options.live = true;
     } else if (arg === "--help" || arg === "-h") {
       options.help = true;
     } else {
@@ -37,7 +40,77 @@ This script is read-only: it does not publish to npm, create releases, post to H
 Usage:
   node tools/launch_next_steps.mjs
   node tools/launch_next_steps.mjs --json
+  node tools/launch_next_steps.mjs --live
 `);
+}
+
+function runJson(args) {
+  const result = spawnSync(process.execPath, args, {
+    cwd: repoRoot,
+    encoding: "utf8",
+    timeout: 180_000,
+    windowsHide: true
+  });
+  const stdout = result.stdout.trim();
+  if (!stdout) {
+    throw new Error(`${args.join(" ")} did not return JSON output:\n${result.stderr}`);
+  }
+  try {
+    return JSON.parse(stdout);
+  } catch (error) {
+    throw new Error(`${args.join(" ")} returned non-JSON output:\n${stdout}\n${error.message}`);
+  }
+}
+
+function checkById(report, id) {
+  return report?.readiness?.externalChecks?.find((check) => check.id === id) ?? null;
+}
+
+export function applyStatusHints(steps, report) {
+  if (!report) {
+    return steps;
+  }
+
+  const githubReleaseTitle = checkById(report, "github-release-title");
+  const latestReleaseDetail = githubReleaseTitle?.detail ?? "";
+  const currentReleaseVisible = /Project Tiny Context Harness 0\.2\.40/.test(latestReleaseDetail);
+  const requiredGateClear = report.status === "ready" || report.status === "ready-with-cleanup";
+
+  return steps.map((step) => {
+    if (step.id === "npm-trusted-publish") {
+      if (report.npm?.summary?.status !== "published") {
+        return { ...step, status: "blocked", statusDetail: report.npm?.summary?.nextAction ?? "npm package is not published." };
+      }
+      if (report.releaseDelta) {
+        return {
+          ...step,
+          status: "pending-cleanup",
+          statusDetail: `local ${report.releaseDelta.localVersion}; npm latest ${report.releaseDelta.publishedVersion}`
+        };
+      }
+      return { ...step, status: "done", statusDetail: "npm latest matches the local package version." };
+    }
+    if (step.id === "github-release-0.2.40") {
+      if (currentReleaseVisible) {
+        return { ...step, status: "done", statusDetail: "latest GitHub Release is the renamed-package release." };
+      }
+      return { ...step, status: "pending-cleanup", statusDetail: latestReleaseDetail || "latest GitHub Release still needs maintainer review." };
+    }
+    if (step.id === "show-hn") {
+      return {
+        ...step,
+        status: requiredGateClear ? "ready" : "blocked",
+        statusDetail: requiredGateClear ? "required broad-launch gate is clear." : "required broad-launch gate is blocked."
+      };
+    }
+    if (step.id === "feedback-note") {
+      return { ...step, status: "waiting-for-url", statusDetail: "run after the Show HN URL exists." };
+    }
+    if (step.id === "curated-list-prs") {
+      return { ...step, status: "wait-for-first-feedback", statusDetail: "run after first-channel feedback does not expose a positioning flaw." };
+    }
+    return step;
+  });
 }
 
 export function buildNextSteps({ packageVersion = packageJson.version } = {}) {
@@ -117,6 +190,9 @@ export function renderMarkdown(steps = buildNextSteps()) {
   for (const [index, step] of steps.entries()) {
     lines.push(`## ${index + 1}. ${step.title}`, "");
     lines.push(`- id: ${step.id}`);
+    if (step.status) {
+      lines.push(`- status: ${step.status}${step.statusDetail ? ` (${step.statusDetail})` : ""}`);
+    }
     lines.push(`- owner: ${step.owner}`);
     lines.push(`- why: ${step.why}`);
     if (step.url) {
@@ -149,9 +225,10 @@ function main() {
     printHelp();
     return;
   }
-  const steps = buildNextSteps();
+  const statusReport = options.live ? runJson(["tools/launch_unblock_check.mjs", "--json"]) : null;
+  const steps = applyStatusHints(buildNextSteps(), statusReport);
   if (options.json) {
-    process.stdout.write(`${JSON.stringify({ steps }, null, 2)}\n`);
+    process.stdout.write(`${JSON.stringify({ live: options.live, steps }, null, 2)}\n`);
     return;
   }
   process.stdout.write(renderMarkdown(steps));
