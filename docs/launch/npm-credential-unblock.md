@@ -1,0 +1,161 @@
+# npm Credential Unblock Checklist
+
+Snapshot date: 2026-06-10.
+
+Use this checklist when `npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke` reaches npm and fails with:
+
+```text
+403 Forbidden - PUT https://registry.npmjs.org/project-tiny-context-harness - You may not perform that action with these credentials.
+```
+
+This means the local package artifact may be valid, but the active npm credentials cannot create or publish `project-tiny-context-harness`.
+
+Do not paste tokens into issues, commits, release reports, shell transcripts or `project_context/**`.
+
+## Official npm References
+
+- npm access tokens: <https://docs.npmjs.com/about-access-tokens/>
+- Creating access tokens: <https://docs.npmjs.com/creating-and-viewing-access-tokens/>
+- 2FA for publishing: <https://docs.npmjs.com/requiring-2fa-for-package-publishing-and-settings-modification/>
+- CI/CD token guidance: <https://docs.npmjs.com/using-private-packages-in-a-ci-cd-workflow/>
+- Trusted publishing: <https://docs.npmjs.com/trusted-publishers/>
+
+## Current Failure Pattern
+
+Known current pattern:
+
+```text
+npm whoami
+-> steve1998
+
+npm access list collaborators agent-project-sdlc steve1998 --json
+-> read-write on the legacy package
+
+npm publish project-tiny-context-harness tarball
+-> 403 credentials error
+```
+
+Interpretation:
+
+- The account is authenticated.
+- The token can still see or maintain the legacy package.
+- The token does not have enough authority to create or publish the renamed package.
+- The package name still returning 404 means broad launch should remain blocked until publish succeeds.
+
+## Choose One Publish Path
+
+### Path A: Interactive Login With OTP
+
+Use this if you can log in interactively and respond to npm 2FA.
+
+```sh
+npm login
+npm whoami
+npm profile get name email tfa --json
+npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke --otp <current-otp>
+```
+
+Use a fresh OTP for each publish attempt. Do not store OTP values in notes.
+
+### Path B: Website-Created Granular Token
+
+Use this if local publishing needs a token.
+
+Create the token on npmjs.com, not from this repository:
+
+1. Sign in to npmjs.com.
+2. Open account menu -> Access Tokens.
+3. Generate a new granular token.
+4. Set package/scopes access broad enough to publish a new package.
+5. Use read/write permissions for packages and scopes.
+6. Enable bypass 2FA only if this non-interactive token publish path requires it.
+7. Use a short expiration.
+8. Avoid CIDR restrictions unless the publishing machine has a stable outbound IP.
+9. Copy the token once and store it only in the local credential store or a trusted secret manager.
+
+Temporary local use on PowerShell:
+
+```powershell
+$env:NPM_TOKEN = "<token>"
+npm config set //registry.npmjs.org/:_authToken "$env:NPM_TOKEN" --location=user
+npm whoami
+npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke
+```
+
+After publish succeeds, either keep the token only if needed for future releases or revoke it on npmjs.com and remove it from local config:
+
+```powershell
+npm config delete //registry.npmjs.org/:_authToken --location=user
+Remove-Item Env:NPM_TOKEN
+```
+
+## Safety Checks Before Retrying
+
+Run:
+
+```sh
+npm run release:npm
+npm run launch:check
+node packages/sdlc-harness/dist/cli.js package check-source
+make validate-context
+git diff --check
+```
+
+Then confirm:
+
+```sh
+npm view project-tiny-context-harness name version dist-tags --json
+```
+
+Expected before publish:
+
+```text
+404 Not Found
+```
+
+Expected after publish:
+
+```json
+{
+  "name": "project-tiny-context-harness",
+  "version": "0.2.39"
+}
+```
+
+## Retry Publish
+
+Run:
+
+```sh
+npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke
+```
+
+If using interactive OTP:
+
+```sh
+npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke --otp <current-otp>
+```
+
+## Post-Publish Gate
+
+After publish succeeds:
+
+```sh
+node tools/launch_readiness_check.mjs --strict-external
+npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.39 --clean
+```
+
+Only after these pass:
+
+- create a new GitHub Release for the renamed npm package,
+- remove or revise README copy that says npm publish is pending,
+- post Show HN or Product Hunt,
+- submit curated-list PRs that assume the npm package is installable.
+
+## Do Not Do
+
+- Do not publish broad launch copy while `npm-fetch` still fails.
+- Do not commit `.npmrc`, tokens, OTP values or screenshots showing token values.
+- Do not infer that `agent-project-sdlc` read/write access means the renamed package can be created.
+- Do not create a GitHub Release for the renamed package until registry smoke passes.
+- Do not reuse `0.2.39` if a publish partially succeeds and a fix is needed; npm versions are immutable.

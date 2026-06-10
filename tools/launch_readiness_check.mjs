@@ -150,6 +150,7 @@ function localChecks() {
   const privateReviewLogTemplate = read("docs/launch/private-review-log-template.md");
   const adoptionStoryTemplate = read("docs/launch/adoption-story-template.md");
   const npmPublishRunbook = read("docs/launch/npm-publish-runbook.md");
+  const npmCredentialUnblock = read("docs/launch/npm-credential-unblock.md");
   const awesomeListSubmissions = read("docs/launch/awesome-list-submissions.md");
   const responseTemplates = read("docs/launch/response-templates.md");
   const agentSurfaceRecipes = read("docs/agent-surface-recipes.md");
@@ -576,6 +577,7 @@ function localChecks() {
     "npm-publish-runbook",
     hasFile("docs/launch/npm-publish-runbook.md") &&
       contains(npmPublishRunbook, /project-tiny-context-harness@0\.2\.39/) &&
+      contains(npmPublishRunbook, /npm-credential-unblock\.md/) &&
       contains(npmPublishRunbook, /npm run release:npm -- --version 0\.2\.39 --publish --yes --full-gate --registry-smoke/) &&
       contains(npmPublishRunbook, /--otp 123456/) &&
       contains(npmPublishRunbook, /Do not post broad launch copy while the renamed package still returns 404/) &&
@@ -587,6 +589,25 @@ function localChecks() {
       contains(npmPublishRunbook, /granular access tokens must be created on npmjs\.com, not from the CLI/) &&
       contains(npmPublishRunbook, /node tools\/launch_readiness_check\.mjs --strict-external/),
     "npm publish runbook documents first renamed publish, OTP path, npm 404 gate and post-publish verification."
+  );
+  addCheck(
+    checks,
+    "npm-credential-unblock",
+    hasFile("docs/launch/npm-credential-unblock.md") &&
+      contains(launchKit, /npm-credential-unblock\.md/) &&
+      contains(launchKit, /npm credential unblock/) &&
+      contains(npmCredentialUnblock, /npm Credential Unblock Checklist/i) &&
+      contains(npmCredentialUnblock, /403 Forbidden - PUT https:\/\/registry\.npmjs\.org\/project-tiny-context-harness/) &&
+      contains(npmCredentialUnblock, /Official npm References/) &&
+      contains(npmCredentialUnblock, /Creating access tokens/) &&
+      contains(npmCredentialUnblock, /2FA for publishing/) &&
+      contains(npmCredentialUnblock, /Interactive Login With OTP/) &&
+      contains(npmCredentialUnblock, /Website-Created Granular Token/) &&
+      contains(npmCredentialUnblock, /Enable bypass 2FA only if this non-interactive token publish path requires it/) &&
+      contains(npmCredentialUnblock, /npm config set \/\/registry\.npmjs\.org\/:_authToken/) &&
+      contains(npmCredentialUnblock, /Post-Publish Gate/) &&
+      contains(npmCredentialUnblock, /Do not commit `.npmrc`, tokens, OTP values/),
+    "npm credential unblock checklist gives a safe path from 403 credentials failure to publish retry."
   );
   addCheck(
     checks,

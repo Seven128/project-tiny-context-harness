@@ -47,6 +47,8 @@ npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-s
 
 ## If Publish Fails
 
+Use [npm-credential-unblock.md](npm-credential-unblock.md) for the detailed interactive-login and granular-token checklist.
+
 If publish fails with auth or permission errors:
 
 1. Confirm the active account:

@@ -52,6 +52,7 @@ for (const expected of [
   "primary-launch-packet",
   "feedback-triage-runbook",
   "npm-publish-runbook",
+  "npm-credential-unblock",
   "release-npm-first-publish-target",
   "awesome-list-submissions",
   "external-pr-packets",
