@@ -15,6 +15,22 @@ Reason:
 - No `Seven128` fork of these upstream repositories currently exists.
 - Public PR creation should use the maintainer's GitHub-authenticated session so forks, branch ownership and notifications are correct.
 
+## Packet Check
+
+Run the local packet check before preparing branches:
+
+```sh
+npm run launch:external-prs
+```
+
+Run the live upstream check immediately before opening curated-list PRs:
+
+```sh
+npm run launch:external-prs -- --live --clean
+```
+
+Default mode is read-only and does not access the network. Live mode clones upstream repositories under `tmp/sdlc/external-pr-packets/repos`, verifies each patch with `git apply --check`, applies it in the temporary clone and runs `git diff --check`. It does not fork repositories, push branches or open PRs.
+
 ## Transcenda Awesome Agentic Coding
 
 Target: `Transcenda/awesome-agentic-coding`
@@ -332,5 +348,6 @@ gh pr create --base main --head Seven128:add-project-tiny-context-harness --titl
 
 - Use the GitHub repository URL, not npm.
 - Do not include benchmark, adoption, award or star claims.
+- Run `npm run launch:external-prs` before branch preparation and `npm run launch:external-prs -- --live --clean` just before PR creation.
 - If a maintainer asks for a different category, keep the same claim boundary: repo-native project memory for coding-agent recovery.
 - If either upstream changes before submission, re-clone and re-apply the patch before opening the PR.

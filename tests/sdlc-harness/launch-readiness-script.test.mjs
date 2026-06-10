@@ -80,6 +80,7 @@ for (const expected of [
   "openssf-best-practices-packet",
   "release-npm-first-publish-target",
   "awesome-list-submissions",
+  "external-pr-packet-check",
   "external-pr-packets",
   "launch-demo-storyboard",
   "launch-demo-packet",

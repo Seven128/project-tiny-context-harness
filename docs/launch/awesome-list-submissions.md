@@ -11,6 +11,7 @@ This packet prepares curated-list pull requests. It is intentionally narrower th
 - Do not claim adoption, benchmark wins, awards or superiority over other tools.
 - Prefer "project memory / context recovery for coding agents" over "SDLC framework".
 - Link to the GitHub repository, not npm, because list maintainers usually review source and README quality.
+- Run `npm run launch:external-prs` before preparing PR branches; run `npm run launch:external-prs -- --live --clean` immediately before opening PRs to verify the prepared patches against current upstream repositories.
 
 ## P0: Transcenda Awesome Agentic Coding
 

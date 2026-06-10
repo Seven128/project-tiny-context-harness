@@ -212,6 +212,7 @@ function localChecks() {
   const githubMetadataScript = read("tools/github_metadata_update.mjs");
   const npmAccessScript = read("tools/npm_publish_access_check.mjs");
   const launchUnblockScript = read("tools/launch_unblock_check.mjs");
+  const externalPrPacketScript = read("tools/external_pr_packet_check.mjs");
   const sourcePreviewScript = read("tools/source_preview_pack.mjs");
   const marketMap = read("docs/launch/market-map.md");
   const outreachTargets = read("docs/launch/outreach-targets.md");
@@ -817,6 +818,7 @@ function localChecks() {
       contains(launchKit, /npm-publish-runbook\.md/) &&
       contains(launchKit, /npm-trusted-publishing\.md/) &&
       contains(launchKit, /awesome-list-submissions\.md/) &&
+      contains(launchKit, /npm run launch:external-prs/) &&
       contains(launchKit, /Readiness boundary/) &&
       contains(launchKit, /repo-hosted media/) &&
       contains(launchKit, /Keep the memory\. Drop the ceremony\./) &&
@@ -1125,6 +1127,8 @@ function localChecks() {
     "awesome-list-submissions",
     hasFile("docs/launch/awesome-list-submissions.md") &&
       contains(awesomeListSubmissions, /Awesome List Submission Packet/) &&
+      contains(awesomeListSubmissions, /npm run launch:external-prs/) &&
+      contains(awesomeListSubmissions, /--live --clean/) &&
       contains(awesomeListSubmissions, /Transcenda\/awesome-agentic-coding/) &&
       contains(awesomeListSubmissions, /jordimas\/awesome-agentic-engineering/) &&
       contains(awesomeListSubmissions, /awesome-opencode\/awesome-opencode/) &&
@@ -1135,6 +1139,24 @@ function localChecks() {
       contains(awesomeListSubmissions, /external-prs\/README\.md/) &&
       contains(awesomeListSubmissions, /Do not claim adoption, benchmark wins, awards/),
     "Awesome-list submission packet has P0 PR copy and deferred-list gates."
+  );
+  addCheck(
+    checks,
+    "external-pr-packet-check",
+    rootPackage.scripts?.["launch:external-prs"] === "node tools/external_pr_packet_check.mjs" &&
+      hasFile("tools/external_pr_packet_check.mjs") &&
+      contains(externalPrPacketScript, /Default mode is local and read-only/) &&
+      contains(externalPrPacketScript, /--live clones upstream repositories into tmp/) &&
+      contains(externalPrPacketScript, /git apply/) &&
+      contains(externalPrPacketScript, /git diff/) &&
+      contains(externalPrPacketScript, /No direct pull request was opened by automation/) &&
+      contains(externalPrPacketScript, /benchmark-proven\|proven/) &&
+      contains(launchKit, /npm run launch:external-prs/) &&
+      contains(launchKit, /Curated-list patch packets/) &&
+      contains(awesomeListSubmissions, /npm run launch:external-prs -- --live --clean/) &&
+      contains(externalPrPacket, /npm run launch:external-prs/) &&
+      contains(externalPrPacket, /does not fork repositories, push branches or open PRs/),
+    "External PR packet check verifies curated-list packet integrity and offers an optional live patch-apply check before PR creation."
   );
   addCheck(
     checks,
