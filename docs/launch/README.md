@@ -172,7 +172,7 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 | Hacker News | Developers using agents on real repos. | Ask whether this recovery surface solves their handoff problem. | Comments discuss agent drift, AGENTS.md, Context files or workflow overhead. | Patch README/FAQ from confusion points within 24 hours. |
 | Product Hunt | Broader developer-tool audience. | Watch the demo and try the 60-second install. | Upvotes plus concrete comments from agent users. | Add screenshots/GIF and answer every substantive comment. |
 | Reddit / niche communities | Codex, Claude Code, Cursor and local-first tooling users. | Ask what facts their agents rediscover. | Replies describe real repo pain, not generic AI enthusiasm. | Convert repeated asks into issues or FAQ entries. |
-| GitHub Discussions | People who tried the package. | Share adoption reports and missing recovery facts. | Real examples of Context preventing drift. | Extract durable product lessons into Context or README. |
+| GitHub issues / adoption reports | People who tried the package. | Share adoption reports and missing recovery facts through issue #4 or the adoption-report template. | Real examples of Context preventing drift. | Extract durable product lessons into README, FAQ or future Context only when they become stable product facts. |
 | Awesome lists / directories | Maintainers of curated AI dev-tool indexes. | Submit only after README/npm metadata and demo are live. | Listing accepted or maintainers give positioning feedback. | Use rejection reasons to improve description/category fit. |
 | X / LinkedIn | Existing network and second-wave traffic. | Point to the primary launch post and demo. | Clicks/stars from people already using coding agents. | Post milestone updates only when there is real adoption evidence. |
 
@@ -180,7 +180,7 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 
 Keep these visible before the first broad launch:
 
-- Discussion or pinned issue: `Show how Project Tiny Context Harness helped or failed in your repo`.
+- Pinned issue: `Show how Project Tiny Context Harness helped or failed in your repo`.
 - Current labels: #4 uses `question`; #5, #6 and #8 use `documentation`, `good first issue` and `help wanted`; #7 uses `help wanted`.
 - Starter issues:
   - Add a small example repository showing Minimal Context before and after.

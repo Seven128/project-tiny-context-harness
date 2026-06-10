@@ -209,7 +209,7 @@ Within 24 hours:
 
 - Record stars, forks, npm downloads, issues and external comments.
 - Decide whether the next move is Product Hunt, a curated-list PR, or a docs/demo repair.
-- Convert real adoption examples into issue #4 reports or linked discussions.
+- Convert real adoption examples into issue #4 reports, linked issue comments or consented adoption-story notes.
 - If the biggest objection is "this is just AGENTS.md", patch the README before any second-channel post.
 
 Second action if comments are not exposing a major positioning flaw: submit the two P0 curated-list PRs from `docs/launch/awesome-list-submissions.md`. Defer Product Hunt if the first comments show unclear positioning, even though the media packet now exists.

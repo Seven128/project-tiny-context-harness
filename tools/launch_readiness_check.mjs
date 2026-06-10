@@ -768,6 +768,10 @@ function localChecks() {
     contains(launchKit, /Launch Operating Plan/) &&
       contains(launchKit, /Channel Matrix/) &&
       contains(launchKit, /Community Handoff Surface/) &&
+      contains(launchKit, /GitHub issues \/ adoption reports/) &&
+      !contains(launchKit, /GitHub Discussions/) &&
+      contains(launchKit, /issue #4 or the adoption-report template/) &&
+      contains(launchKit, /Pinned issue: `Show how Project Tiny Context Harness helped or failed in your repo`/) &&
       contains(launchKit, /adoption handoff issue and starter issues are visible and labeled for discovery/) &&
       contains(launchKit, /good first issue`, `help wanted` and `documentation`/) &&
       contains(launchKit, /#4 uses `question`; #5, #6 and #8 use `documentation`, `good first issue` and `help wanted`; #7 uses `help wanted`/),
