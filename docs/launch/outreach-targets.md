@@ -13,7 +13,7 @@ Ready now:
 - Adoption handoff issue #4 is pinned; starter issues #5-#8 exist and have discovery labels for question, documentation, good first issue and help wanted.
 - Repo-hosted launch media exists: README GIF, two Product Hunt gallery PNGs and a 240x240 thumbnail.
 - Trust surface exists: `SECURITY.md`, Dependabot, OpenSSF Scorecard workflow and issue templates.
-- Fresh-agent recovery walkthrough is linked from README.
+- Fresh-agent recovery walkthrough and Minimal Context sample project are linked from README.
 - Agent surface recipes explain Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness-folder adoption without splitting `project_context/**`.
 
 Not ready yet:

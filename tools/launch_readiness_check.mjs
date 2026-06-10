@@ -148,6 +148,7 @@ function localChecks() {
   const awesomeListSubmissions = read("docs/launch/awesome-list-submissions.md");
   const agentSurfaceRecipes = read("docs/agent-surface-recipes.md");
   const freshAgentWalkthrough = read("docs/examples/fresh-agent-recovery.md");
+  const minimalContextSample = read("docs/examples/minimal-context-sample.md");
   const externalPrPacket = read("docs/launch/external-prs/README.md");
   const transcendaPatch = read("docs/launch/external-prs/transcenda-awesome-agentic-coding.patch");
   const jordimasPatch = read("docs/launch/external-prs/jordimas-awesome-agentic-engineering.patch");
@@ -272,6 +273,21 @@ function localChecks() {
   );
   addCheck(
     checks,
+    "minimal-context-sample",
+    hasFile("docs/examples/minimal-context-sample.md") &&
+      contains(rootReadme, /Minimal Context sample project/) &&
+      contains(packageReadme, /Minimal Context sample project/) &&
+      contains(minimalContextSample, /Minimal Context Sample Project/) &&
+      contains(minimalContextSample, /AGENTS\.md/) &&
+      contains(minimalContextSample, /project_context\/global\.md/) &&
+      contains(minimalContextSample, /project_context\/architecture\.md/) &&
+      contains(minimalContextSample, /project_context\/areas\/main\.md/) &&
+      contains(minimalContextSample, /project_context\/areas\/main\/verification\.md/) &&
+      contains(minimalContextSample, /not a benchmark, template requirement or product-quality proof/i),
+    "Minimal Context sample project exists, is linked from README and shows concrete Context file shape without benchmark claims."
+  );
+  addCheck(
+    checks,
     "community-starter-issues",
     contains(rootReadme, /Early feedback and starter issues/) &&
       contains(packageReadme, /Early feedback and starter issues/) &&
@@ -321,6 +337,7 @@ function localChecks() {
       contains(launchKit, /repo-hosted media/) &&
       contains(launchKit, /Keep the memory\. Drop the ceremony\./) &&
       contains(launchKit, /OpenSSF Scorecard workflow/) &&
+      contains(launchKit, /Minimal Context sample project/) &&
       contains(launchKit, /does not mean Product Hunt, curated-list submissions or awards are ready/),
     "Launch kit has copy-ready channel drafts, media pointers, readiness boundary and no-benchmark boundary."
   );
@@ -467,6 +484,7 @@ function localChecks() {
       contains(outreachTargets, /starter issues #5-#8 exist and have discovery labels/) &&
       contains(outreachTargets, /question, documentation, good first issue and help wanted/) &&
       contains(outreachTargets, /OpenSSF Scorecard workflow/) &&
+      contains(outreachTargets, /Minimal Context sample project/) &&
       contains(outreachTargets, /awesome-list-submissions\.md/) &&
       contains(outreachTargets, /Awards/) &&
       contains(outreachTargets, /Do not submit to award programs before the demo and first public feedback exist/),

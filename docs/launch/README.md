@@ -103,7 +103,7 @@ Use this if agents keep losing project intent between chats. It adds a small pro
 - Run `npm run smoke:quickstart` after publish against `project-tiny-context-harness@latest` or a clean test project.
 - Confirm `SECURITY.md`, Dependabot and adoption-report issue template are visible on GitHub.
 - Confirm OpenSSF Scorecard workflow is present and runs on `main`, weekly schedule and manual dispatch.
-- Confirm the fresh-agent recovery walkthrough is linked from README.
+- Confirm the fresh-agent recovery walkthrough and Minimal Context sample project are linked from README.
 - Confirm agent surface recipes are linked from README and explain Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness folders without splitting `project_context/**`.
 - Confirm the adoption handoff issue and starter issues are visible and labeled for discovery.
 - Record a short terminal demo from the 60-second trial.
@@ -124,7 +124,7 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 | First support surface | Create a GitHub Discussion or pinned issue for adoption reports. | Launch posts have one feedback link beyond the README. |
 | First contribution queue | Keep low-risk demo/docs/example issues labeled with `good first issue`, `help wanted` and `documentation` where appropriate. | New visitors can contribute without understanding package internals. |
 | Trust surface | Keep `SECURITY.md`, Dependabot, OpenSSF Scorecard workflow and issue templates visible. | New users can see how to report risk, dependency drift, supply-chain posture and adoption feedback. |
-| Example surface | Keep a before/after fresh-agent walkthrough linked from README. | New visitors can see how Context prevents rediscovery without claiming benchmark wins. |
+| Example surface | Keep a before/after fresh-agent walkthrough and Minimal Context sample project linked from README. | New visitors can see how Context prevents rediscovery and what the generated recovery surface looks like without claiming benchmark wins. |
 | Agent-surface recipes | Keep `docs/agent-surface-recipes.md` linked from README. | Users of Codex, Claude Code, Cursor, Gemini CLI, OpenCode or custom tools can adopt without assuming separate project memories. |
 
 ### Channel Matrix
