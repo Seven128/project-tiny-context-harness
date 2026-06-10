@@ -65,6 +65,17 @@ const tempRoot = mkdtempSync(path.join(os.tmpdir(), "launch-next-steps-"));
 const tempFeedbackDir = path.join(tempRoot, "tmp", "sdlc", "launch-feedback");
 mkdirSync(tempFeedbackDir, { recursive: true });
 writeFileSync(
+  path.join(tempFeedbackDir, "show-hn-template-smoke.md"),
+  [
+    "# Launch Feedback Note",
+    "",
+    "Channel: show-hn",
+    "URL: https://news.ycombinator.com/item?id=11111111",
+    ""
+  ].join("\n"),
+  "utf8"
+);
+writeFileSync(
   path.join(tempFeedbackDir, "2026-06-10-show-hn.md"),
   [
     "# Launch Feedback Note",

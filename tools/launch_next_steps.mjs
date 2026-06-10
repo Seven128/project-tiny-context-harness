@@ -86,7 +86,7 @@ export function findShowHnFeedbackNote({ root = repoRoot } = {}) {
     return null;
   }
   const files = readdirSync(feedbackDir)
-    .filter((file) => file.endsWith(".md"))
+    .filter((file) => /^\d{4}-\d{2}-\d{2}-show-hn\.md$/.test(file))
     .sort()
     .reverse();
   for (const file of files) {
