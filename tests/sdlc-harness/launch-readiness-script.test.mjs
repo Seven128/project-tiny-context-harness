@@ -33,6 +33,8 @@ for (const expected of [
   "package-readme-success-surface",
   "root-readme-demo-media",
   "package-readme-demo-media",
+  "root-readme-no-install-preview",
+  "package-readme-no-install-preview",
   "public-language-posture",
   "localized-readme",
   "scorecard-badge",

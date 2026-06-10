@@ -53,6 +53,12 @@ flowchart LR
 
 The demo shows the core loop: install the npm package, initialize `AGENTS.md` and `project_context/**`, run `validate-context`, then ask a fresh agent to recover intent before proposing code.
 
+No-install preview:
+
+- Read the [fresh-agent recovery walkthrough](docs/examples/fresh-agent-recovery.md).
+- Inspect the [Minimal Context sample guide](docs/examples/minimal-context-sample.md).
+- Browse a tiny generated sample repository at [examples/minimal-context-sample/](examples/minimal-context-sample/).
+
 Post-publish install path:
 
 ```sh

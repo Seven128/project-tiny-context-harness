@@ -289,6 +289,15 @@ function localChecks() {
     addCheck(checks, `${id}-quickstart`, contains(content, /Try It In 60 Seconds/) && contains(content, /make validate-context/), `${id} includes quickstart.`);
     addCheck(checks, `${id}-success-surface`, contains(content, /Expected result/) && contains(content, /Fresh-agent test prompt/), `${id} shows expected generated files and a fresh-agent test prompt.`);
     addCheck(checks, `${id}-demo-media`, contains(content, /demo-terminal\.gif/) && contains(content, /The demo shows the core loop/), `${id} embeds the launch demo GIF and explains the recovery loop.`);
+    addCheck(
+      checks,
+      `${id}-no-install-preview`,
+      contains(firstLines(content, 70), /No-install preview:/) &&
+        contains(firstLines(content, 70), /fresh-agent recovery walkthrough/) &&
+        contains(firstLines(content, 70), /Minimal Context sample guide/) &&
+        contains(firstLines(content, 70), /examples\/minimal-context-sample/),
+      `${id} gives first-screen no-install links to the walkthrough and browseable sample.`
+    );
   }
   addCheck(
     checks,
