@@ -25,6 +25,14 @@ Use one temporary note per channel:
 tmp/sdlc/launch-feedback/YYYY-MM-DD-<channel>.md
 ```
 
+Create the note with:
+
+```sh
+npm run launch:feedback-note -- --channel show-hn --url <channel-url>
+```
+
+The generated note is intentionally temporary. It repeats the metrics snapshot commands, theme table, docs/package patch checklist, adoption evidence boundary and next-channel decision fields so channel feedback does not get lost in chat history.
+
 ## First Hour
 
 Do:

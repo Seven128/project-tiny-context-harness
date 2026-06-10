@@ -195,6 +195,7 @@ Use [feedback-triage.md](feedback-triage.md) for the full channel note template,
 
 Within 1 hour:
 
+- Create the channel note: `npm run launch:feedback-note -- --channel show-hn --url <channel-url>`.
 - Answer direct technical questions.
 - Do not argue with dismissive comments.
 - Link the exact README or demo section instead of pasting long explanations.
@@ -205,6 +206,7 @@ Within 6 hours:
 - Count comments by theme: unclear positioning, install friction, AGENTS.md overlap, benchmark ask, integration ask, examples ask.
 - Patch the README only for repeated or high-severity confusion.
 - Comment on issue #3 with launch URL, baseline metrics and major objections.
+- Keep the channel note from `npm run launch:feedback-note` updated with repeated themes, docs/package changes and adoption evidence.
 
 Within 24 hours:
 

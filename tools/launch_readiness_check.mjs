@@ -210,6 +210,7 @@ function localChecks() {
   const demoPacket = read("docs/launch/demo.md");
   const metricsPacket = read("docs/launch/metrics.md");
   const metricsScript = read("tools/launch_metrics_snapshot.mjs");
+  const feedbackNoteScript = read("tools/launch_feedback_note.mjs");
   const githubMetadataScript = read("tools/github_metadata_update.mjs");
   const npmAccessScript = read("tools/npm_publish_access_check.mjs");
   const launchUnblockScript = read("tools/launch_unblock_check.mjs");
@@ -1278,6 +1279,20 @@ function localChecks() {
       contains(metricsScript, /agent-project-sdlc/) &&
       contains(metricsScript, /npm 404 does not fail the launch/),
     "Launch metrics snapshot script and runbook record distribution telemetry without turning it into product proof."
+  );
+  addCheck(
+    checks,
+    "launch-feedback-note",
+    rootPackage.scripts?.["launch:feedback-note"] === "node tools/launch_feedback_note.mjs" &&
+      hasFile("tools/launch_feedback_note.mjs") &&
+      contains(feedbackTriage, /npm run launch:feedback-note/) &&
+      contains(launchKit, /npm run launch:feedback-note/) &&
+      contains(primaryLaunch, /npm run launch:feedback-note/) &&
+      contains(feedbackNoteScript, /tmp\/sdlc\/launch-feedback/) &&
+      contains(feedbackNoteScript, /Do not store raw private logs/) &&
+      contains(feedbackNoteScript, /adoption reports only for concrete recovery evidence/) &&
+      contains(feedbackNoteScript, /Do not ask for stars, upvotes, awards or nominations/),
+    "Launch feedback note command creates temporary channel triage notes that capture metrics, repeated themes and adoption evidence without becoming project Context."
   );
   addCheck(
     checks,

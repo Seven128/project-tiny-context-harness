@@ -91,6 +91,7 @@ for (const expected of [
   "launch-demo-storyboard",
   "launch-demo-packet",
   "launch-metrics-snapshot",
+  "launch-feedback-note",
   "launch-demo-media",
   "launch-milestones",
   "market-map",
