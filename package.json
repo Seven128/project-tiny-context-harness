@@ -15,6 +15,7 @@
     "test": "npm test --workspace project-tiny-context-harness",
     "launch:check": "node tools/launch_readiness_check.mjs --offline",
     "launch:demo": "node tools/launch_demo_capture.mjs",
+    "launch:metrics": "node tools/launch_metrics_snapshot.mjs",
     "smoke:quickstart": "node tools/quickstart_smoke.mjs --clean",
     "release:npm": "node tools/release_npm.mjs",
     "sdlc-harness": "node packages/sdlc-harness/dist/cli.js"

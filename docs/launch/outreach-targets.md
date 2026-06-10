@@ -120,8 +120,9 @@ Project Tiny Context Harness - Minimal repo-native project memory for AI coding 
 ## Next Concrete Actions
 
 1. Publish `project-tiny-context-harness@0.2.39` by following `docs/launch/npm-publish-runbook.md`.
-2. Post Show HN first using `docs/launch/primary-launch.md` and the repo-hosted GIF if useful.
-3. Submit the two P0 agentic-coding awesome-list PRs, the OpenCode project-list PR and the Awesome AI Devtools PR from `docs/launch/external-prs/README.md`.
-4. Track stars, forks, npm downloads and comments for 24 hours.
-5. Patch README/FAQ from repeated confusion.
-6. Use the Product Hunt media packet only after the first feedback loop or with a deliberate scheduling decision.
+2. Run `npm run launch:metrics -- --output tmp/sdlc/launch-metrics/show-hn-before.md`.
+3. Post Show HN first using `docs/launch/primary-launch.md` and the repo-hosted GIF if useful.
+4. Submit prepared curated-list PRs from `docs/launch/external-prs/README.md`, starting with the two P0 agentic-coding lists and then the matching harness/context-engineering directories.
+5. Track stars, forks, npm downloads and comments for 24 hours with `npm run launch:metrics`.
+6. Patch README/FAQ from repeated confusion.
+7. Use the Product Hunt media packet only after the first feedback loop or with a deliberate scheduling decision.

@@ -20,13 +20,14 @@ Run these before posting:
 npm run release:npm
 npm run launch:check
 node tools/launch_readiness_check.mjs --strict-external
+npm run launch:metrics -- --output tmp/sdlc/launch-metrics/baseline.md
 npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.39 --clean
 ```
 
 Confirm:
 
 - `docs/launch/npm-publish-runbook.md` has been followed if npm still returns 404 before publish.
-- GitHub stars/forks and npm downloads baseline are noted from the strict external report.
+- GitHub stars/forks and npm downloads baseline are recorded with `npm run launch:metrics`.
 - npm `project-tiny-context-harness@0.2.39` is published and installable.
 - Issue #4 is pinned and open for adoption reports.
 - Issue #5 has the current demo packet and repo-hosted GIF URL.
@@ -235,6 +236,8 @@ npm downloads last week:
 Open issues:
 Open external posts:
 ```
+
+Use `npm run launch:metrics -- --output tmp/sdlc/launch-metrics/<channel>-before.md` for the baseline and repeat it after 6 hours / 24 hours. Treat the output as distribution telemetry, not product-quality evidence.
 
 Post after each channel:
 

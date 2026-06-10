@@ -49,6 +49,7 @@ for (const expected of [
   "external-pr-packets",
   "launch-demo-storyboard",
   "launch-demo-packet",
+  "launch-metrics-snapshot",
   "launch-demo-media",
   "launch-milestones",
   "market-map",

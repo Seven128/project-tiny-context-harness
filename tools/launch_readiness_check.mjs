@@ -159,6 +159,8 @@ function localChecks() {
   const aiBoostPatch = read("docs/launch/external-prs/ai-boost-awesome-harness-engineering.patch");
   const picrewPatch = read("docs/launch/external-prs/picrew-awesome-agent-harness-data.patch");
   const demoPacket = read("docs/launch/demo.md");
+  const metricsPacket = read("docs/launch/metrics.md");
+  const metricsScript = read("tools/launch_metrics_snapshot.mjs");
   const marketMap = read("docs/launch/market-map.md");
   const outreachTargets = read("docs/launch/outreach-targets.md");
   const sourceWorkflow = read(".github/workflows/harness.yml");
@@ -514,6 +516,22 @@ function localChecks() {
       contains(demoPacket, /Fresh-Agent Prompt/) &&
       contains(demoPacket, /Fresh-Agent Recovery Check/),
     "Launch demo packet has a reproducible capture command, transcript guide and repo-hosted media."
+  );
+  addCheck(
+    checks,
+    "launch-metrics-snapshot",
+    rootPackage.scripts?.["launch:metrics"] === "node tools/launch_metrics_snapshot.mjs" &&
+      hasFile("tools/launch_metrics_snapshot.mjs") &&
+      hasFile("docs/launch/metrics.md") &&
+      contains(launchKit, /metrics\.md/) &&
+      contains(primaryLaunch, /npm run launch:metrics/) &&
+      contains(outreachTargets, /npm run launch:metrics/) &&
+      contains(metricsPacket, /Launch Metrics Snapshot/) &&
+      contains(metricsPacket, /Do not treat stars, forks or downloads as product-quality proof/) &&
+      contains(metricsScript, /project-tiny-context-harness/) &&
+      contains(metricsScript, /agent-project-sdlc/) &&
+      contains(metricsScript, /npm 404 does not fail the launch/),
+    "Launch metrics snapshot script and runbook record distribution telemetry without turning it into product proof."
   );
   addCheck(
     checks,
