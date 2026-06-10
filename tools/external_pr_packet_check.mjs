@@ -149,9 +149,9 @@ function staticChecks() {
   addCheck(
     checks,
     "no-automation-side-effect",
-    /Remaining packets have not been opened/.test(packetReadme) &&
+    /Remaining P2 packets have not been opened/.test(packetReadme) &&
       /does not fork repositories, push branches or open PRs/.test(packetReadme),
-    "Packet documents opened P0 PRs while keeping remaining PR creation out of automation."
+    "Packet documents opened curated-list PRs while keeping remaining PR creation out of automation."
   );
   addCheck(checks, "maintainer-session-boundary", /maintainer's GitHub-authenticated session/.test(packetReadme), "Packet routes PR creation through the maintainer's GitHub session.");
   addCheck(checks, "claim-boundary", /Do not include benchmark, adoption, award or star claims/.test(packetReadme), "Packet keeps external PR claims narrow.");

@@ -1274,7 +1274,7 @@ function localChecks() {
       contains(awesomeListSubmissions, /Agent Infrastructure \/ Configuration & Context Management/) &&
       contains(awesomeListSubmissions, /external-prs\/README\.md/) &&
       contains(awesomeListSubmissions, /Do not claim adoption, benchmark wins, awards/),
-    "Awesome-list submission packet has narrow-first P0 PR copy and deferred-list gates."
+    "Awesome-list submission packet has narrow-first curated-list PR copy and deferred-list gates."
   );
   addCheck(
     checks,
@@ -1285,7 +1285,7 @@ function localChecks() {
       contains(externalPrPacketScript, /--live clones upstream repositories into tmp/) &&
       contains(externalPrPacketScript, /git apply/) &&
       contains(externalPrPacketScript, /git diff/) &&
-      contains(externalPrPacketScript, /Remaining packets have not been opened/) &&
+      contains(externalPrPacketScript, /Remaining P2 packets have not been opened/) &&
       contains(externalPrPacketScript, /benchmark-proven\|proven/) &&
       contains(launchKit, /npm run launch:external-prs/) &&
       contains(launchKit, /Curated-list patch packets/) &&
@@ -1315,7 +1315,9 @@ function localChecks() {
       contains(externalPrPacket, /Picrew\/awesome-agent-harness/) &&
       contains(externalPrPacket, /ai-boost\/awesome-harness-engineering\/pull\/58/) &&
       contains(externalPrPacket, /Picrew\/awesome-agent-harness\/pull\/22/) &&
-      contains(externalPrPacket, /Remaining packets have not been opened/) &&
+      contains(externalPrPacket, /Transcenda\/awesome-agentic-coding\/pull\/4/) &&
+      contains(externalPrPacket, /jordimas\/awesome-agentic-engineering\/pull\/4/) &&
+      contains(externalPrPacket, /Remaining P2 packets have not been opened/) &&
       contains(externalPrPacket, /gh repo fork Transcenda\/awesome-agentic-coding --clone/) &&
       contains(externalPrPacket, /gh repo fork jordimas\/awesome-agentic-engineering --clone/) &&
       contains(externalPrPacket, /gh repo fork awesome-opencode\/awesome-opencode --clone/) &&
@@ -1440,7 +1442,7 @@ function localChecks() {
       contains(outreachTargets, /`v0\.2\.41` is published on npm through Trusted Publishing/) &&
       contains(outreachTargets, /first public post and first regular HN comment are live/) &&
       contains(outreachTargets, /https:\/\/news\.ycombinator\.com\/item\?id=48481205/) &&
-      contains(outreachTargets, /two narrow curated-list PRs are open/) &&
+      contains(outreachTargets, /four narrow\/P1 curated-list PRs are open/) &&
       contains(outreachTargets, /awesome-list-submissions\.md/) &&
       contains(outreachTargets, /Awards/) &&
       contains(outreachTargets, /Do not submit to award programs before the demo and first public feedback exist/),

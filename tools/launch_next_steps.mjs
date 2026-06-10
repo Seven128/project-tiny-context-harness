@@ -118,11 +118,19 @@ export function findOpenedCuratedListPrs({ root = repoRoot } = {}) {
   const prs = [];
   const aiBoostUrl = "https://github.com/ai-boost/awesome-harness-engineering/pull/58";
   const picrewUrl = "https://github.com/Picrew/awesome-agent-harness/pull/22";
+  const transcendaUrl = "https://github.com/Transcenda/awesome-agentic-coding/pull/4";
+  const jordimasUrl = "https://github.com/jordimas/awesome-agentic-engineering/pull/4";
   if (content.includes(aiBoostUrl)) {
     prs.push({ repo: "ai-boost/awesome-harness-engineering", url: aiBoostUrl });
   }
   if (content.includes(picrewUrl)) {
     prs.push({ repo: "Picrew/awesome-agent-harness", url: picrewUrl });
+  }
+  if (content.includes(transcendaUrl)) {
+    prs.push({ repo: "Transcenda/awesome-agentic-coding", url: transcendaUrl });
+  }
+  if (content.includes(jordimasUrl)) {
+    prs.push({ repo: "jordimas/awesome-agentic-engineering", url: jordimasUrl });
   }
   return prs;
 }
@@ -191,12 +199,12 @@ export function applyStatusHints(steps, report, { showHnFeedback = null, curated
       return { ...step, status: "waiting-for-url", statusDetail: "run after the Show HN URL exists." };
     }
     if (step.id === "curated-list-prs") {
-      if (curatedListPrs.length >= 2) {
+      if (curatedListPrs.length >= 4) {
         return {
           ...step,
           title: "Monitor the open narrow-first curated-list PRs",
           status: "open",
-          statusDetail: "P0 curated-list PRs are open; monitor maintainer feedback before broader lists.",
+          statusDetail: "P0/P1 curated-list PRs are open; monitor maintainer feedback before broader lists.",
           prs: curatedListPrs
         };
       }
@@ -209,7 +217,7 @@ export function applyStatusHints(steps, report, { showHnFeedback = null, curated
       if (!showHnFeedback?.firstCommentUrl) {
         return { ...step, status: "waiting-for-comment", statusDetail: "run after the first regular HN comment is posted." };
       }
-      return { ...step, status: "ready", statusDetail: "monitor HN replies, P0 PR feedback and 6h/24h telemetry." };
+      return { ...step, status: "ready", statusDetail: "monitor HN replies, curated-list PR feedback and 6h/24h telemetry." };
     }
     return step;
   });
@@ -288,7 +296,7 @@ export function buildNextSteps({ packageVersion = packageJson.version } = {}) {
       title: "Open the narrow-first curated-list PRs after first feedback",
       owner: "maintainer",
       requiredBeforeBroadLaunch: false,
-      why: "Curated-list PRs are second-wave distribution, starting with the two narrow harness/context targets.",
+      why: "Curated-list PRs are second-wave distribution, starting with narrow harness/context, agent-instruction and team-adoption targets.",
       command: "npm run launch:external-prs -- --live --clean",
       source: "docs/launch/external-prs/README.md",
       stopIf: "Show HN feedback exposes positioning confusion that should be patched first"

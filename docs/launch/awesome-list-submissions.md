@@ -19,16 +19,18 @@ Open PRs from narrowest fit to broadest fit:
 
 1. `ai-boost/awesome-harness-engineering` - open as https://github.com/ai-boost/awesome-harness-engineering/pull/58
 2. `Picrew/awesome-agent-harness` - open as https://github.com/Picrew/awesome-agent-harness/pull/22
-3. `Transcenda/awesome-agentic-coding`
-4. `jordimas/awesome-agentic-engineering`
+3. `Transcenda/awesome-agentic-coding` - open as https://github.com/Transcenda/awesome-agentic-coding/pull/4
+4. `jordimas/awesome-agentic-engineering` - open as https://github.com/jordimas/awesome-agentic-engineering/pull/4
 5. `awesome-opencode/awesome-opencode`
 6. `jamesmurdza/awesome-ai-devtools`
 
-Reason: a 0-star package has the best chance when the target category already expects context delivery, working-state engineering or harness primitives. Broader AI dev-tool directories are useful after the README/demo has absorbed first feedback, P0 maintainer feedback or one narrower listing is accepted.
+Reason: a 0-star package has the best chance when the target category already expects context delivery, working-state engineering or harness primitives. Broader AI dev-tool directories are useful after the README/demo has absorbed first feedback, P0/P1 maintainer feedback or one narrower listing is accepted.
 
 ## P1: Transcenda Awesome Agentic Coding
 
 Target: [Transcenda/awesome-agentic-coding](https://github.com/Transcenda/awesome-agentic-coding)
+
+Status: opened as https://github.com/Transcenda/awesome-agentic-coding/pull/4.
 
 Why it fits now: the list has an `Agentic Coding Toolbox` section with `Agent instructions and Skills`. Project Tiny Context Harness directly supports repo-level agent instructions plus maintained Context recovery.
 
@@ -59,6 +61,8 @@ It gives teams a practical in-repo recovery path for AI coding agents: project i
 ## P1: Awesome Agentic Engineering
 
 Target: [jordimas/awesome-agentic-engineering](https://github.com/jordimas/awesome-agentic-engineering)
+
+Status: opened as https://github.com/jordimas/awesome-agentic-engineering/pull/4.
 
 Why it fits now: the list prioritizes practical, team-applicable resources for teams adopting agentic engineering.
 
@@ -215,8 +219,8 @@ Add Project Tiny Context Harness to context engineering catalog
 
 1. Monitor `ai-boost/awesome-harness-engineering#58`; respond only within the same claim boundary.
 2. Monitor `Picrew/awesome-agent-harness#22`; respond only within the same claim boundary.
-3. Submit Transcenda PR after P0 feedback or Show HN feedback confirms the wording.
-4. Submit jordimas PR after Transcenda, using the shorter team-adoption copy.
+3. Monitor `Transcenda/awesome-agentic-coding#4`; respond only within the same claim boundary.
+4. Monitor `jordimas/awesome-agentic-engineering#4`; respond only within the same claim boundary.
 5. Submit `awesome-opencode` if the README still links the OpenCode setup note and broader-list timing is deliberate.
 6. Submit `awesome-ai-devtools` if the README still shows the demo GIF and agent-surface recipes and broader-list timing is deliberate.
 7. Wait for standalone Skill packaging before `awesome-agent-skills`.

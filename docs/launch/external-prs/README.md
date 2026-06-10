@@ -6,17 +6,21 @@ These packets prepare curated-list pull requests for Project Tiny Context Harnes
 
 ## Direct PR Status
 
-P0 direct PRs opened from the maintainer-authenticated `gh` session on 2026-06-11:
+Curated-list direct PRs opened from the maintainer-authenticated `gh` session on 2026-06-11:
 
 - `ai-boost/awesome-harness-engineering`: https://github.com/ai-boost/awesome-harness-engineering/pull/58
 - `Picrew/awesome-agent-harness`: https://github.com/Picrew/awesome-agent-harness/pull/22
+- `Transcenda/awesome-agentic-coding`: https://github.com/Transcenda/awesome-agentic-coding/pull/4
+- `jordimas/awesome-agentic-engineering`: https://github.com/jordimas/awesome-agentic-engineering/pull/4
 
 Forks used:
 
 - https://github.com/Seven128/awesome-harness-engineering
 - https://github.com/Seven128/awesome-agent-harness
+- https://github.com/Seven128/awesome-agentic-coding
+- https://github.com/Seven128/awesome-agentic-engineering
 
-Remaining packets have not been opened. Wait for P0 maintainer feedback before opening broader lists.
+Remaining P2 packets have not been opened. Wait for open curated-list maintainer feedback before opening broader lists.
 
 Public PR creation should continue through the maintainer's GitHub-authenticated session so forks, branch ownership and notifications are correct.
 
@@ -42,8 +46,8 @@ Open PRs from narrowest category fit to broadest fit:
 
 1. `ai-boost/awesome-harness-engineering` - opened as https://github.com/ai-boost/awesome-harness-engineering/pull/58
 2. `Picrew/awesome-agent-harness` - opened as https://github.com/Picrew/awesome-agent-harness/pull/22
-3. `Transcenda/awesome-agentic-coding`
-4. `jordimas/awesome-agentic-engineering`
+3. `Transcenda/awesome-agentic-coding` - opened as https://github.com/Transcenda/awesome-agentic-coding/pull/4
+4. `jordimas/awesome-agentic-engineering` - opened as https://github.com/jordimas/awesome-agentic-engineering/pull/4
 5. `awesome-opencode/awesome-opencode`
 6. `jamesmurdza/awesome-ai-devtools`
 

@@ -111,10 +111,12 @@ writeFileSync(
   [
     "# External PR Packets",
     "",
-    "P0 direct PRs opened:",
+    "Curated-list direct PRs opened:",
     "",
     "- https://github.com/ai-boost/awesome-harness-engineering/pull/58",
     "- https://github.com/Picrew/awesome-agent-harness/pull/22",
+    "- https://github.com/Transcenda/awesome-agentic-coding/pull/4",
+    "- https://github.com/jordimas/awesome-agentic-engineering/pull/4",
     ""
   ].join("\n"),
   "utf8"
@@ -132,6 +134,14 @@ assert.deepEqual(findOpenedCuratedListPrs({ root: tempRoot }), [
   {
     repo: "Picrew/awesome-agent-harness",
     url: "https://github.com/Picrew/awesome-agent-harness/pull/22"
+  },
+  {
+    repo: "Transcenda/awesome-agentic-coding",
+    url: "https://github.com/Transcenda/awesome-agentic-coding/pull/4"
+  },
+  {
+    repo: "jordimas/awesome-agentic-engineering",
+    url: "https://github.com/jordimas/awesome-agentic-engineering/pull/4"
   }
 ]);
 
@@ -198,7 +208,7 @@ assert.equal(livePostedSteps[4].status, "done");
 assert.equal(livePostedSteps[4].url, "https://news.ycombinator.com/item?id=48479619");
 assert.equal(livePostedSteps[4].commentUrl, "https://news.ycombinator.com/item?id=48481205");
 assert.equal(livePostedSteps[5].status, "open");
-assert.equal(livePostedSteps[5].prs.length, 2);
+assert.equal(livePostedSteps[5].prs.length, 4);
 assert.equal(livePostedSteps[6].status, "ready");
 assert.equal(recommendedNext(livePostedSteps).id, "monitor-feedback");
 

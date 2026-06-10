@@ -28,11 +28,11 @@ Ready now:
 Still pending:
 
 - First-channel 6-hour and 24-hour metrics are not complete yet.
-- Two P0 curated-list PRs are open and waiting for maintainer feedback: [ai-boost/awesome-harness-engineering#58](https://github.com/ai-boost/awesome-harness-engineering/pull/58) and [Picrew/awesome-agent-harness#22](https://github.com/Picrew/awesome-agent-harness/pull/22).
+- Four curated-list PRs are open and waiting for maintainer feedback: [ai-boost/awesome-harness-engineering#58](https://github.com/ai-boost/awesome-harness-engineering/pull/58), [Picrew/awesome-agent-harness#22](https://github.com/Picrew/awesome-agent-harness/pull/22), [Transcenda/awesome-agentic-coding#4](https://github.com/Transcenda/awesome-agentic-coding/pull/4) and [jordimas/awesome-agentic-engineering#4](https://github.com/jordimas/awesome-agentic-engineering/pull/4).
 - No outside adoption report, testimonial or contribution.
 - 0 GitHub stars and 0 forks at snapshot time.
 
-Practical implication: broad public launch is no longer blocked by npm availability, GitHub About metadata, release metadata, demo media or HN maintainer context. The first public post and first regular HN comment are live, and the two narrow curated-list PRs are open. The next work is feedback handling, 6-hour/24-hour metrics and PR-response handling. Awards and high-star outcomes are still evidence-gated.
+Practical implication: broad public launch is no longer blocked by npm availability, GitHub About metadata, release metadata, demo media or HN maintainer context. The first public post and first regular HN comment are live, and the four narrow/P1 curated-list PRs are open. The next work is feedback handling, 6-hour/24-hour metrics and PR-response handling. Awards and high-star outcomes are still evidence-gated.
 
 ## Priority Sequence
 
@@ -40,7 +40,7 @@ Practical implication: broad public launch is no longer blocked by npm availabil
 |---:|---|---|---|---|
 | 0 | Private review | 5-10 experienced coding-agent users can still catch README, install or positioning confusion before broad promotion. | `docs/launch/reviewer-quickstart.md`, `docs/launch/private-review.md`, `docs/launch/private-review-shortlist.md`, `docs/launch/adoption-story-template.md`, npm install path, optional source preview path, no star ask. | Reviewers describe concrete agent-memory drift, README confusion or missing recovery facts. |
 | 1 | Hacker News Show HN | Live at https://news.ycombinator.com/item?id=48479619. | GitHub URL, first regular comment, demo link and explicit feedback ask. | Comments discuss agent handoff/context drift rather than generic AI tooling. |
-| 2 | Agentic-coding awesome lists | Two smaller lists match repo-level agent instructions and team adoption now. | P0 PRs are open: [#58](https://github.com/ai-boost/awesome-harness-engineering/pull/58) and [#22](https://github.com/Picrew/awesome-agent-harness/pull/22). Use `docs/launch/awesome-list-submissions.md` and `docs/launch/external-prs/` only for remaining PRs, no benchmark/adoption claims. | Listing accepted or maintainer feedback clarifies the category. |
+| 2 | Agentic-coding awesome lists | Four narrow/P1 lists match repo-level context delivery, agent instructions and team adoption now. | Curated-list PRs are open: [#58](https://github.com/ai-boost/awesome-harness-engineering/pull/58), [#22](https://github.com/Picrew/awesome-agent-harness/pull/22), [Transcenda#4](https://github.com/Transcenda/awesome-agentic-coding/pull/4) and [jordimas#4](https://github.com/jordimas/awesome-agentic-engineering/pull/4). Use `docs/launch/awesome-list-submissions.md` and `docs/launch/external-prs/` only for remaining P2 PRs, no benchmark/adoption claims. | Listing accepted or maintainer feedback clarifies the category. |
 | 3 | Awesome OpenCode | The README now includes an OpenCode setup note; the list accepts project YAML entries for tools and utilities. | `data/projects/` YAML patch from `docs/launch/external-prs/`, no plugin claim. | Listing accepted or maintainers clarify OpenCode relevance. |
 | 4 | Awesome AI Devtools | Higher-exposure directory with a matching Agent Infrastructure / Configuration & Context Management category. | README patch and PR-template body from `docs/launch/external-prs/`, no benchmark claim. | Listing accepted or maintainer feedback clarifies category fit. |
 | 5 | Product Hunt | Product Hunt is useful for distribution, feedback and social proof; submissions can be scheduled up to one month ahead. | Demo media, tagline, maker comment, at least two gallery images/GIFs, GitHub/npm links. | Reviews/comments from developer-tool users and enough traffic to validate messaging. |
@@ -88,14 +88,14 @@ Submission packet:
 
 ### Curated Lists
 
-The two P0 harness/context PRs are open. Monitor maintainer feedback before opening broader lists:
+The four narrow/P1 curated-list PRs are open. Monitor maintainer feedback before opening broader lists:
 
 - [ai-boost/awesome-harness-engineering#58](https://github.com/ai-boost/awesome-harness-engineering/pull/58), under `Context Delivery & Compaction`.
 - [Picrew/awesome-agent-harness#22](https://github.com/Picrew/awesome-agent-harness/pull/22), under `Context & Working-State Engineering`.
+- [Transcenda/awesome-agentic-coding#4](https://github.com/Transcenda/awesome-agentic-coding/pull/4), under `Agent instructions and Skills`.
+- [jordimas/awesome-agentic-engineering#4](https://github.com/jordimas/awesome-agentic-engineering/pull/4), under `Team Adoption`.
 
 Exact patch files, PR titles, PR bodies and manual `gh` commands for remaining lists live in [external-prs/README.md](external-prs/README.md).
-
-Then try [Transcenda/awesome-agentic-coding](https://github.com/Transcenda/awesome-agentic-coding) and [jordimas/awesome-agentic-engineering](https://github.com/jordimas/awesome-agentic-engineering) if the wording remains narrowly focused on agent instructions, Skills or team adoption rather than a broad SDLC framework. Use the exact patches and PR bodies in [external-prs/README.md](external-prs/README.md), and do not claim benchmark wins or adoption.
 
 Then try [awesome-ai-devtools](https://github.com/jamesmurdza/awesome-ai-devtools). It has an `Agent Infrastructure / Configuration & Context Management` category that fits repo-native AI agent context recovery. Use the exact README patch and PR-template body in [external-prs/README.md](external-prs/README.md), and keep the wording focused on AI coding-agent project memory.
 
@@ -148,7 +148,7 @@ Do not add a Best Practices or Baseline badge to README until the official site 
 1. Monitor the HN story and first regular comment for direct technical questions or repeated confusion.
 2. Track stars, forks, npm downloads and comments for 6 hours and 24 hours with `npm run launch:metrics`.
 3. Patch README/FAQ from repeated confusion.
-4. Monitor the two open P0 curated-list PRs; open broader agentic-coding lists only after P0 maintainer feedback or a deliberate second-wave decision.
+4. Monitor the four open curated-list PRs; open broader agentic-coding lists only after maintainer feedback or a deliberate second-wave decision.
 5. Use the Product Hunt media packet only after the first feedback loop or with a deliberate scheduling decision.
 6. Apply to Codex for Open Source with `docs/launch/codex-for-oss-application.md` if the maintainer wants to disclose current metrics and can submit manually.
 7. Start the OpenSSF Best Practices / Baseline self-assessment with `docs/launch/openssf-best-practices.md` if the maintainer wants another trust signal before broader launch.
