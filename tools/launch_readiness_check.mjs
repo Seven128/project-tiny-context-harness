@@ -629,7 +629,7 @@ function localChecks() {
       contains(launchKit, /Private review packet/) &&
       contains(launchKit, /reviewer-quickstart\.md/) &&
       contains(outreachTargets, /Private review/) &&
-      contains(outreachTargets, /5-10 private reviewers/) &&
+      contains(outreachTargets, /5-10 experienced coding-agent users/) &&
       contains(outreachTargets, /reviewer-quickstart\.md/) &&
       contains(privateReview, /Copy-Paste DM/) &&
       contains(privateReview, /reviewer-quickstart\.md/) &&
@@ -641,7 +641,8 @@ function localChecks() {
       contains(privateReview, /private-review-log-template\.md/) &&
       contains(privateReview, /adoption story/) &&
       contains(privateReview, /Do not ask private reviewers for stars/) &&
-      contains(privateReview, /Broad launch still waits for `npm run launch:strict-external` to pass/) &&
+      contains(privateReview, /strict external launch gate/) &&
+      contains(privateReview, /after Show HN/) &&
       contains(privateReview, /quote consent: none, anonymous, public name, or public link/) &&
       contains(privateReview, /Private review is for copy and product clarity, not proof of quality/),
     "Private review packet supports small pre-launch feedback before broad promotion, without asking for stars or making proof claims."
@@ -1404,9 +1405,9 @@ function localChecks() {
       contains(marketMap, /Market Map/) &&
       contains(marketMap, /Competitive Snapshot/) &&
       contains(marketMap, /10-100 stars/) &&
-      contains(marketMap, /0\.2\.41` GitHub Release/) &&
-      contains(marketMap, /conversion\/trust surface/) &&
-      contains(marketMap, /not an npm availability blocker/) &&
+      contains(marketMap, /Latest release is `Project Tiny Context Harness 0\.2\.41`/) &&
+      contains(marketMap, /first public Show HN post is live/) &&
+      contains(marketMap, /HN first-comment feedback/) &&
       contains(marketMap, /download window is not available yet/),
     "Market map has competitor snapshot, feasibility bands and current release/readiness state."
   );
@@ -1416,14 +1417,14 @@ function localChecks() {
     contains(outreachTargets, /Outreach Targets/) &&
       contains(outreachTargets, /Priority Sequence/) &&
       contains(outreachTargets, /Curated Lists/) &&
-      contains(outreachTargets, /starter issues #5-#8 exist and have discovery labels/) &&
-      contains(outreachTargets, /question, documentation, good first issue and help wanted/) &&
+      contains(outreachTargets, /starter issues #6-#8 remain open/) &&
+      contains(outreachTargets, /#5 is closed after the repo-hosted demo packet landed/) &&
       contains(outreachTargets, /OpenSSF Scorecard workflow/) &&
       contains(outreachTargets, /Minimal Context sample project/) &&
       contains(outreachTargets, /FAQ answers/) &&
       contains(outreachTargets, /`v0\.2\.41` is published on npm through Trusted Publishing/) &&
-      contains(outreachTargets, /conversion\/trust improvement/) &&
-      contains(outreachTargets, /not an npm unblock step/) &&
+      contains(outreachTargets, /first public post is live/) &&
+      contains(outreachTargets, /HN first regular comment is prepared/) &&
       contains(outreachTargets, /awesome-list-submissions\.md/) &&
       contains(outreachTargets, /Awards/) &&
       contains(outreachTargets, /Do not submit to award programs before the demo and first public feedback exist/),

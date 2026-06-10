@@ -15,13 +15,13 @@ Public state after the repository rename, checked against public GitHub and npm 
 | GitHub description / license | `Minimal project memory and validation harness for AI coding agents.`, MIT detected |
 | GitHub homepage | `https://www.npmjs.com/package/project-tiny-context-harness` |
 | GitHub topics | `agent-context`, `agent-memory`, `agents-md`, `ai-agents`, `ai-coding`, `claude-code`, `cli`, `codex`, `coding-agent`, `context-engineering`, `context-management`, `cursor`, `developer-productivity`, `developer-tools`, `gemini-cli`, `opencode`, `project-memory`, `sdlc`, `workflow` |
-| GitHub release | Latest release remains `Project Tiny Context Harness 0.2.39 - legacy npm package` until the prepared `0.2.41` GitHub Release is published |
+| GitHub release | Latest release is `Project Tiny Context Harness 0.2.41` |
 | npm package | `project-tiny-context-harness@0.2.41` is published and installable through `@latest` |
 | npm public metadata | Live npm package metadata |
 | npm downloads | Renamed package download window is not available yet through the npm downloads API; legacy package last-week downloads remain useful only as historical distribution telemetry |
-| Launch readiness | Local `npm run launch:check` and strict external check pass; the remaining release-page gap is a conversion/trust surface, not an npm availability blocker |
+| Launch readiness | Local `npm run launch:check` and strict external check pass; the first public Show HN post is live |
 
-Interpretation: GitHub metadata and npm distribution are launch-ready enough for a first public post. The remaining work for serious public distribution is the demo/evidence surface: a short recording, one primary launch post, then rapid README/FAQ updates from real feedback.
+Interpretation: GitHub metadata, npm distribution, the renamed GitHub Release and demo media are live. The remaining work for serious public distribution is feedback handling and durable discovery: post the HN maintainer comment, track 6-hour and 24-hour metrics, patch README/FAQ from repeated confusion, then submit narrow curated-list PRs.
 
 ## Competitive Snapshot
 
@@ -103,16 +103,17 @@ Do not say:
 
 Recommended sequence:
 
-1. Record the two-minute terminal demo from `docs/launch/README.md`.
-2. Post one primary launch first, ideally Hacker News for technical feedback or Product Hunt for broader discovery.
-3. Reuse the same claim on smaller communities only after the first feedback pass.
-4. Update README/launch copy from actual confusion points within 24 hours.
-5. Submit to curated lists after the demo is live and the README has absorbed first feedback.
+1. Keep the Show HN thread focused on technical feedback and missing recovery facts.
+2. Update README/launch copy from actual confusion points within 24 hours.
+3. Submit narrow curated-list PRs after the first feedback pass, starting with harness/context lists.
+4. Reuse the same claim on smaller communities only after the first feedback pass.
+5. Use Product Hunt only after the HN feedback loop or with a deliberate scheduling decision.
 6. Nominate for awards only after real use appears or a minimum eligibility threshold is met.
 
 ## Evidence To Gather Next
 
-- One clean 60-90 second demo using `project-tiny-context-harness@latest`.
+- HN first-comment feedback and direct replies from the live Show HN thread.
+- 6-hour and 24-hour metrics after the first public post.
 - One example PR showing how `project_context/**` prevents agent drift.
 - One fresh benchmark rerun that compares baseline vs Minimal Context without old stage results.
 - User quotes or issues that mention real handoff/recovery value.

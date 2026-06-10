@@ -19,6 +19,8 @@ Historical first-publish rule: Do not post broad launch copy while the renamed p
 
 ## First Renamed Publish Record
 
+This section is historical evidence from the first renamed publish path. Do not rerun these exact versioned commands; npm versions are immutable and future releases should use a new version through Trusted Publishing.
+
 The first publish created:
 
 ```text

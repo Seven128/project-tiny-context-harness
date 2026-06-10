@@ -13,8 +13,8 @@ Ready now:
 - GitHub description, MIT license and discovery topics are visible.
 - `project-tiny-context-harness` is published on npm and installable through `@latest`.
 - GitHub repository homepage points to the npm package page; the primary public post should still link to the GitHub repository.
-- `v0.2.41` is published on npm through Trusted Publishing, and the current latest GitHub Release is still the Project Tiny Context Harness legacy-package release until the prepared `0.2.41` release page is published.
-- Adoption handoff issue #4 is pinned; starter issues #5-#8 exist and have discovery labels for question, documentation, good first issue and help wanted.
+- `v0.2.41` is published on npm through Trusted Publishing, and the current latest GitHub Release is `Project Tiny Context Harness 0.2.41`.
+- Adoption handoff issue #4 is pinned; starter issues #6-#8 remain open for follow-up docs/examples/benchmark work, and #5 is closed after the repo-hosted demo packet landed.
 - Repo-hosted launch media exists: README GIF, two Product Hunt gallery PNGs and a 240x240 thumbnail.
 - Trust surface exists: `SECURITY.md`, Dependabot, OpenSSF Scorecard workflow, OpenSSF Best Practices self-assessment prep and issue templates.
 - Fresh-agent recovery walkthrough and Minimal Context sample project are linked from README.
@@ -24,21 +24,22 @@ Ready now:
 - Launch claims boundary checklist exists for final public copy review before posting or submitting.
 - Codex for Open Source application copy exists for maintainer-reviewed submission without claiming official OpenAI integration.
 
-Still not ready yet:
+Still pending:
 
-- A new GitHub Release for the renamed npm package has not been created.
-- No external launch post.
+- HN first regular comment is prepared but should only be submitted after action-time maintainer confirmation.
+- First-channel 6-hour and 24-hour metrics are not complete yet.
+- Curated-list PRs have not been opened from the maintainer's GitHub session.
 - No outside adoption report, testimonial or contribution.
 - 0 GitHub stars and 0 forks at snapshot time.
 
-Practical implication: broad public launch is no longer blocked by npm availability or GitHub About metadata, but it still needs a final strict external launch gate, fresh metrics snapshot and claims-boundary review. Publishing the `0.2.41` GitHub Release is a conversion/trust improvement before broad launch, not an npm unblock step. Awards and high-star outcomes are still evidence-gated.
+Practical implication: broad public launch is no longer blocked by npm availability, GitHub About metadata, release metadata or demo media. The first public post is live; the next work is feedback handling, 6-hour/24-hour metrics and narrow curated-list PRs. Awards and high-star outcomes are still evidence-gated.
 
 ## Priority Sequence
 
 | Priority | Target | Why now | Required packet | Success signal |
 |---:|---|---|---|---|
 | 0 | Private review | 5-10 experienced coding-agent users can still catch README, install or positioning confusion before broad promotion. | `docs/launch/reviewer-quickstart.md`, `docs/launch/private-review.md`, `docs/launch/private-review-shortlist.md`, `docs/launch/adoption-story-template.md`, npm install path, optional source preview path, no star ask. | Reviewers describe concrete agent-memory drift, README confusion or missing recovery facts. |
-| 1 | Hacker News Show HN | HN's Show HN format is for something people can try and discuss; the package is now installable. | GitHub URL, short text post, demo link if possible, explicit feedback ask. | Comments discuss agent handoff/context drift rather than generic AI tooling. |
+| 1 | Hacker News Show HN | Live at https://news.ycombinator.com/item?id=48479619. | GitHub URL, first regular comment, demo link and explicit feedback ask. | Comments discuss agent handoff/context drift rather than generic AI tooling. |
 | 2 | Agentic-coding awesome lists | Two smaller lists match repo-level agent instructions and team adoption now. | PR copy and exact patches from `docs/launch/awesome-list-submissions.md` and `docs/launch/external-prs/`, no benchmark/adoption claims. | Listing accepted or maintainer feedback clarifies the category. |
 | 3 | Awesome OpenCode | The README now includes an OpenCode setup note; the list accepts project YAML entries for tools and utilities. | `data/projects/` YAML patch from `docs/launch/external-prs/`, no plugin claim. | Listing accepted or maintainers clarify OpenCode relevance. |
 | 4 | Awesome AI Devtools | Higher-exposure directory with a matching Agent Infrastructure / Configuration & Context Management category. | README patch and PR-template body from `docs/launch/external-prs/`, no benchmark claim. | Listing accepted or maintainer feedback clarifies category fit. |
@@ -55,7 +56,7 @@ Practical implication: broad public launch is no longer blocked by npm availabil
 
 Source: [Show HN Guidelines](https://news.ycombinator.com/showhn.html).
 
-Use `Show HN: Minimal project memory for AI coding agents`.
+Use the live title: `Show HN: Tiny project memory for coding agents`.
 
 Do:
 
@@ -142,13 +143,10 @@ Do not add a Best Practices or Baseline badge to README until the official site 
 
 ## Next Concrete Actions
 
-1. Check `docs/launch/prelaunch-external-blockers.md`; if `npm-fetch` or `github-homepage` is a TODO, do not post broad launch copy.
-2. Run `npm run launch:metrics -- --output tmp/sdlc/launch-metrics/show-hn-before.md`.
-3. Select 5-10 private reviewers with `docs/launch/private-review-shortlist.md` if the maintainer wants one final clarity pass before broad promotion.
-4. Post Show HN first using `docs/launch/primary-launch.md` and the repo-hosted GIF if useful.
-5. Submit prepared curated-list PRs from `docs/launch/external-prs/README.md`, starting with the two P0 harness/context directories and then the broader agentic-coding lists.
-6. Track stars, forks, npm downloads and comments for 24 hours with `npm run launch:metrics`.
-7. Patch README/FAQ from repeated confusion.
-8. Use the Product Hunt media packet only after the first feedback loop or with a deliberate scheduling decision.
-9. Apply to Codex for Open Source with `docs/launch/codex-for-oss-application.md` if the maintainer wants to disclose current metrics and can submit manually.
-10. Start the OpenSSF Best Practices / Baseline self-assessment with `docs/launch/openssf-best-practices.md` if the maintainer wants another trust signal before broader launch.
+1. Submit the prepared HN first regular comment after maintainer action-time confirmation.
+2. Track stars, forks, npm downloads and comments for 6 hours and 24 hours with `npm run launch:metrics`.
+3. Patch README/FAQ from repeated confusion.
+4. Submit prepared curated-list PRs from `docs/launch/external-prs/README.md`, starting with the two P0 harness/context directories and then the broader agentic-coding lists.
+5. Use the Product Hunt media packet only after the first feedback loop or with a deliberate scheduling decision.
+6. Apply to Codex for Open Source with `docs/launch/codex-for-oss-application.md` if the maintainer wants to disclose current metrics and can submit manually.
+7. Start the OpenSSF Best Practices / Baseline self-assessment with `docs/launch/openssf-best-practices.md` if the maintainer wants another trust signal before broader launch.

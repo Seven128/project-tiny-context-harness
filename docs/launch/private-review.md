@@ -2,18 +2,18 @@
 
 Snapshot date: 2026-06-10.
 
-Use this packet before the first broad launch. The goal is to get high-signal feedback from a small number of real coding-agent users, not to create a public launch wave.
+Use this packet for a small, high-signal clarity pass before a broad launch or as targeted follow-up after the first public post. The goal is to get feedback from real coding-agent users, not to create a public launch wave.
 
 Do not ask private reviewers for stars. Ask whether the recovery surface solves a real handoff problem and which facts were still missing.
 
 ## When To Use
 
-Use this before Show HN, Product Hunt, Reddit or curated-list PRs when any of these are true:
+Use this before Product Hunt, Reddit, additional community posts or curated-list PRs when any of these are true:
 
 - The README and demo are ready, but the project has no outside adoption report.
 - You want one concrete before/after story before spending a broad launch channel.
 
-Do not use it as a substitute for the strict external launch gate. Broad launch still waits for `npm run launch:strict-external` to pass.
+Do not use it as a substitute for the strict external launch gate or first-channel feedback triage. If running it before a broad public post, `npm run launch:strict-external` must pass first; if running it after Show HN, use it to clarify repeated questions before the next channel.
 
 ## Reviewer Profile
 
