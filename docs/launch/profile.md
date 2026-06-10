@@ -138,6 +138,12 @@ https://codespaces.new/Seven128/project-tiny-context-harness
 Fresh-agent walkthrough:
 https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/examples/fresh-agent-recovery.md
 
+Minimal Context sample guide:
+https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/examples/minimal-context-sample.md
+
+Browseable sample repository:
+https://github.com/Seven128/project-tiny-context-harness/tree/main/examples/minimal-context-sample
+
 Comparison guide:
 https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/comparison.md
 

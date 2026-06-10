@@ -42,6 +42,10 @@ If you have 10-15 minutes, could you skim the README and try the source preview 
 Repo:
 https://github.com/Seven128/project-tiny-context-harness
 
+No-install preview:
+https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/examples/fresh-agent-recovery.md
+https://github.com/Seven128/project-tiny-context-harness/tree/main/examples/minimal-context-sample
+
 Source preview:
 Open https://codespaces.new/Seven128/project-tiny-context-harness
 Then run:

@@ -584,6 +584,9 @@ function localChecks() {
       contains(outreachTargets, /Private review/) &&
       contains(outreachTargets, /5-10 private reviewers/) &&
       contains(privateReview, /Copy-Paste DM/) &&
+      contains(privateReview, /No-install preview/) &&
+      contains(privateReview, /docs\/examples\/fresh-agent-recovery\.md/) &&
+      contains(privateReview, /examples\/minimal-context-sample/) &&
       contains(privateReview, /Source preview/) &&
       contains(privateReview, /private-review-shortlist\.md/) &&
       contains(privateReview, /private-review-log-template\.md/) &&
@@ -757,6 +760,9 @@ function localChecks() {
       contains(launchProfile, /Keep the memory\. Drop the ceremony\./) &&
       contains(launchProfile, /Developer Tools \/ AI coding-agent infrastructure \/ Context engineering/) &&
       contains(launchProfile, /AI coding-agent infrastructure/) &&
+      contains(launchProfile, /Minimal Context sample guide/) &&
+      contains(launchProfile, /Browseable sample repository/) &&
+      contains(launchProfile, /examples\/minimal-context-sample/) &&
       contains(launchProfile, /Avoid using `sdlc` as the first tag/) &&
       contains(launchProfile, /Use GitHub as the primary launch URL and GitHub repository homepage until the renamed npm package is published/) &&
       contains(launchProfile, /Use npm as the GitHub repository homepage only after/) &&
