@@ -65,6 +65,7 @@ for (const expected of [
   "launch-kit",
   "github-homepage-stage-boundary",
   "github-metadata-runbook",
+  "github-metadata-script",
   "prelaunch-external-blockers",
   "launch-operating-plan",
   "primary-launch-packet",
@@ -104,7 +105,7 @@ for (const expected of [
   "docs/launch/npm-credential-unblock.md",
   "docs/launch/github-metadata.md",
   "docs/launch/prelaunch-external-blockers.md",
-  "Set the GitHub About homepage to `https://github.com/Seven128/project-tiny-context-harness` while npm returns 404"
+  "npm run launch:github-metadata -- --apply"
 ]) {
   assert.match(scriptSource, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 }

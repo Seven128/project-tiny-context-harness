@@ -81,26 +81,25 @@ After the renamed npm package is published, switch Website to the npm package UR
 
 Only use this from a trusted local shell with a GitHub token that has permission to update repository metadata. Do not commit tokens, paste tokens into docs, or save them in the repository.
 
-PowerShell:
+Dry-run current and desired metadata:
 
-```powershell
-$body = @{
-  description = "Minimal project memory and validation harness for AI coding agents."
-  homepage = "https://github.com/Seven128/project-tiny-context-harness"
-} | ConvertTo-Json
-
-Invoke-RestMethod `
-  -Method Patch `
-  -Uri "https://api.github.com/repos/Seven128/project-tiny-context-harness" `
-  -Headers @{
-    "Accept" = "application/vnd.github+json"
-    "Authorization" = "Bearer $env:GH_TOKEN"
-    "X-GitHub-Api-Version" = "2022-11-28"
-  } `
-  -Body $body
+```sh
+npm run launch:github-metadata
 ```
 
-If the renamed npm package is already published, set `homepage` to:
+Apply from a trusted shell after setting `GITHUB_TOKEN` or `GH_TOKEN`:
+
+```sh
+npm run launch:github-metadata -- --apply
+```
+
+The script auto-detects whether `project-tiny-context-harness/latest` is published on npm. While npm returns 404, it sets the homepage to:
+
+```text
+https://github.com/Seven128/project-tiny-context-harness
+```
+
+After the renamed npm package is published, it sets the homepage to:
 
 ```text
 https://www.npmjs.com/package/project-tiny-context-harness

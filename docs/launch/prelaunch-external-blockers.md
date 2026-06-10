@@ -35,7 +35,7 @@ github-homepage: PASS
 | Check | Blocker | Owner action | Evidence |
 |---|---|---|---|
 | `npm-fetch` | `https://registry.npmjs.org/project-tiny-context-harness/latest` still returns 404. | Publish `project-tiny-context-harness@0.2.39` with [npm-publish-runbook.md](npm-publish-runbook.md). If publish fails with 403, use [npm-credential-unblock.md](npm-credential-unblock.md). | The strict external check no longer reports `npm-fetch`. |
-| `github-homepage` | GitHub About homepage must not point to a missing npm package page while npm returns 404. | Use [github-metadata.md](github-metadata.md) to set the homepage to `https://github.com/Seven128/project-tiny-context-harness` until npm publish succeeds. After publish, switch it to `https://www.npmjs.com/package/project-tiny-context-harness`. | The strict external check no longer reports `github-homepage`. |
+| `github-homepage` | GitHub About homepage must not point to a missing npm package page while npm returns 404. | Run `npm run launch:github-metadata` to dry-run the current/desired metadata. From a trusted shell with `GITHUB_TOKEN` or `GH_TOKEN`, run `npm run launch:github-metadata -- --apply`, or use [github-metadata.md](github-metadata.md) to set the homepage manually. The prepublish homepage is `https://github.com/Seven128/project-tiny-context-harness`; the postpublish homepage is `https://www.npmjs.com/package/project-tiny-context-harness`. | The strict external check no longer reports `github-homepage`. |
 
 ## Launch Rule
 

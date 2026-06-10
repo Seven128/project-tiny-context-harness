@@ -208,6 +208,7 @@ function localChecks() {
   const demoPacket = read("docs/launch/demo.md");
   const metricsPacket = read("docs/launch/metrics.md");
   const metricsScript = read("tools/launch_metrics_snapshot.mjs");
+  const githubMetadataScript = read("tools/github_metadata_update.mjs");
   const sourcePreviewScript = read("tools/source_preview_pack.mjs");
   const marketMap = read("docs/launch/market-map.md");
   const outreachTargets = read("docs/launch/outreach-targets.md");
@@ -804,11 +805,11 @@ function localChecks() {
   addCheck(
     checks,
     "github-homepage-stage-boundary",
-    contains(launchKit, /Repository homepage while npm publish is pending/) &&
+      contains(launchKit, /Repository homepage while npm publish is pending/) &&
       contains(launchKit, /https:\/\/github\.com\/Seven128\/project-tiny-context-harness/) &&
       contains(launchKit, /Repository homepage after `project-tiny-context-harness` is published on npm/) &&
-      contains(launchKit, /Set GitHub description, prepublish homepage and topics/) &&
-      contains(launchKit, /switch homepage to npm only after the renamed package is published/) &&
+      contains(launchKit, /Run `npm run launch:github-metadata` to inspect GitHub description, homepage and topics/) &&
+      contains(launchKit, /Switch homepage to npm only after the renamed package is published/) &&
       contains(launchProfile, /Use GitHub as the primary launch URL and GitHub repository homepage until the renamed npm package is published/) &&
       contains(launchProfile, /Use npm as the GitHub repository homepage only after/) &&
       contains(outreachTargets, /GitHub repository homepage should point to `https:\/\/github\.com\/Seven128\/project-tiny-context-harness` while npm returns 404/) &&
@@ -828,9 +829,28 @@ function localChecks() {
       contains(githubMetadataRunbook, /https:\/\/www\.npmjs\.com\/package\/project-tiny-context-harness/) &&
       contains(githubMetadataRunbook, /github-homepage: PASS/) &&
       contains(githubMetadataRunbook, /npm-fetch: TODO/) &&
-      contains(githubMetadataRunbook, /X-GitHub-Api-Version/) &&
+      contains(githubMetadataRunbook, /GITHUB_TOKEN/) &&
+      contains(githubMetadataRunbook, /GH_TOKEN/) &&
+      contains(githubMetadataRunbook, /auto-detects whether `project-tiny-context-harness\/latest` is published on npm/) &&
       contains(githubMetadataRunbook, /Do not point GitHub homepage to the npm package while npm returns 404/),
     "GitHub metadata runbook gives exact UI/API steps for fixing About homepage before and after npm publication."
+  );
+  addCheck(
+    checks,
+    "github-metadata-script",
+    rootPackage.scripts?.["launch:github-metadata"] === "node tools/github_metadata_update.mjs" &&
+      hasFile("tools/github_metadata_update.mjs") &&
+      contains(githubMetadataScript, /--apply/) &&
+      contains(githubMetadataScript, /GITHUB_TOKEN/) &&
+      contains(githubMetadataScript, /GH_TOKEN/) &&
+      contains(githubMetadataScript, /PATCH/) &&
+      contains(githubMetadataScript, /topicsUrl/) &&
+      contains(githubMetadataScript, /method: "PUT"/) &&
+      contains(githubMetadataScript, /project-tiny-context-harness\/latest/) &&
+      contains(githubMetadataRunbook, /npm run launch:github-metadata/) &&
+      contains(prelaunchExternalBlockers, /npm run launch:github-metadata -- --apply/) &&
+      contains(launchKit, /npm run launch:github-metadata/),
+    "GitHub metadata script can dry-run and apply repository About metadata without copying API commands by hand."
   );
   addCheck(
     checks,
@@ -1433,7 +1453,7 @@ function nextActionForFailedCheck(check) {
     return "Publish `project-tiny-context-harness@0.2.39` with [docs/launch/npm-publish-runbook.md](docs/launch/npm-publish-runbook.md); if npm returns E403, use [docs/launch/npm-credential-unblock.md](docs/launch/npm-credential-unblock.md).";
   }
   if (check.id === "github-homepage") {
-    return "Set the GitHub About homepage to `https://github.com/Seven128/project-tiny-context-harness` while npm returns 404, using [docs/launch/github-metadata.md](docs/launch/github-metadata.md) and [docs/launch/prelaunch-external-blockers.md](docs/launch/prelaunch-external-blockers.md).";
+    return "Run `npm run launch:github-metadata` to inspect the GitHub About drift; from a trusted shell with `GITHUB_TOKEN` or `GH_TOKEN`, run `npm run launch:github-metadata -- --apply`, or use [docs/launch/github-metadata.md](docs/launch/github-metadata.md) manually.";
   }
   return `Update external metadata or publish a new package for \`${check.id}\`.`;
 }

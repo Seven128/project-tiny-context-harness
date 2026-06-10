@@ -105,7 +105,7 @@ Use this if agents keep losing project intent between chats. It adds a small pro
 - Run `npm run launch:check` locally; run `npm run launch:strict-external` before external launch to see current GitHub/npm metadata drift.
 - Review [prelaunch-external-blockers.md](prelaunch-external-blockers.md); do not post broad launch copy while `npm-fetch` or `github-homepage` is still a TODO.
 - Confirm README first screen shows badges, including OpenSSF Scorecard, install command, positioning and 60-second trial.
-- Set GitHub description, prepublish homepage and topics from this file; switch homepage to npm only after the renamed package is published.
+- Run `npm run launch:github-metadata` to inspect GitHub description, homepage and topics; apply it with `GITHUB_TOKEN` or `GH_TOKEN`, or set those values manually from this file. Switch homepage to npm only after the renamed package is published.
 - Follow [npm-publish-runbook.md](npm-publish-runbook.md) while the renamed package still returns 404.
 - Publish a new npm version after `npm test --workspace project-tiny-context-harness`, `npm run smoke:quickstart`, `make validate-context` and package source check pass.
 - After the first renamed npm publish succeeds, configure GitHub Actions Trusted Publishing with [npm-trusted-publishing.md](npm-trusted-publishing.md) so future publishes use OIDC instead of a long-lived publish token.
@@ -139,7 +139,7 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 |---|---|---|
 | Launch profile sheet | Keep `docs/launch/profile.md` aligned with README, package metadata and launch copy. | External submissions reuse one English-first name, tagline, description, category, tag and claims-boundary source. |
 | Prelaunch external blockers | Keep [prelaunch-external-blockers.md](prelaunch-external-blockers.md) aligned with current `npm-fetch` and `github-homepage` TODOs. | Broad launch is held until `npm run launch:strict-external` no longer reports either blocker. |
-| GitHub metadata | Use [github-metadata.md](github-metadata.md) to set description, prepublish homepage and topics; switch homepage to npm only after the renamed package is published. | Online `launch_readiness_check` no longer reports GitHub metadata TODOs. |
+| GitHub metadata | Run `npm run launch:github-metadata` to dry-run description, prepublish homepage and topics; apply with `GITHUB_TOKEN` or `GH_TOKEN`, or use [github-metadata.md](github-metadata.md) manually. Switch homepage to npm only after the renamed package is published. | Online `launch_readiness_check` no longer reports GitHub metadata TODOs. |
 | npm metadata | Publish a new package version after PR merge. | npm page shows updated README, MIT license, homepage and description. |
 | Source preview path | Keep the Codespaces link, local smoke command, source-preview tarball path and source-preview report form visible while npm publish is blocked. | Private reviewers can open `https://codespaces.new/Seven128/project-tiny-context-harness`, run `npm run smoke:quickstart` / `npm run preview:pack`, use the generated tarball in a disposable repo, or report setup failure through `source_preview_report.yml`. |
 | npm credential unblock | Use `docs/launch/npm-credential-unblock.md` if publish reaches npm and fails with a 403 credentials error. | The maintainer can choose interactive OTP login or a website-created granular token without leaking tokens into the repo. |
