@@ -145,6 +145,7 @@ function localChecks() {
   const launchKit = read("docs/launch/README.md");
   const primaryLaunch = read("docs/launch/primary-launch.md");
   const privateReview = read("docs/launch/private-review.md");
+  const privateReviewLogTemplate = read("docs/launch/private-review-log-template.md");
   const adoptionStoryTemplate = read("docs/launch/adoption-story-template.md");
   const npmPublishRunbook = read("docs/launch/npm-publish-runbook.md");
   const awesomeListSubmissions = read("docs/launch/awesome-list-submissions.md");
@@ -335,18 +336,36 @@ function localChecks() {
     "private-review-packet",
     hasFile("docs/launch/private-review.md") &&
       contains(launchKit, /private-review\.md/) &&
+      contains(launchKit, /private-review-log-template\.md/) &&
       contains(launchKit, /adoption-story-template\.md/) &&
       contains(launchKit, /Private review packet/) &&
       contains(outreachTargets, /Private review/) &&
       contains(outreachTargets, /5-10 private reviewers/) &&
       contains(privateReview, /Copy-Paste DM/) &&
       contains(privateReview, /Source preview/) &&
+      contains(privateReview, /private-review-log-template\.md/) &&
       contains(privateReview, /adoption story/) &&
       contains(privateReview, /Do not ask private reviewers for stars/) &&
       contains(privateReview, /Broad launch still waits for the renamed package to be installable/) &&
       contains(privateReview, /quote consent: none, anonymous, public name, or public link/) &&
       contains(privateReview, /Private review is for copy and product clarity, not proof of quality/),
     "Private review packet supports small pre-launch feedback while npm publish is blocked, without asking for stars or making proof claims."
+  );
+  addCheck(
+    checks,
+    "private-review-log-template",
+    hasFile("docs/launch/private-review-log-template.md") &&
+      contains(launchKit, /Private review log template/) &&
+      contains(privateReviewLogTemplate, /Keep filled logs under `tmp\/sdlc\/private-review\/\*\*`/) &&
+      contains(privateReviewLogTemplate, /not in `project_context\/\*\*`/) &&
+      contains(privateReviewLogTemplate, /Do not commit filled logs unless every reviewer explicitly approved/) &&
+      contains(privateReviewLogTemplate, /Reviewer Tracker/) &&
+      contains(privateReviewLogTemplate, /Consent level/) &&
+      contains(privateReviewLogTemplate, /Triage Summary/) &&
+      contains(privateReviewLogTemplate, /Conversion Decisions/) &&
+      contains(privateReviewLogTemplate, /24-Hour Actions/) &&
+      contains(privateReviewLogTemplate, /Do not claim adoption, benchmark wins, productivity gains or production validation/),
+    "Private review log template captures consent and repeated feedback without leaking private details or becoming project Context."
   );
   addCheck(
     checks,

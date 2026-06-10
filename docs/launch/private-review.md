@@ -72,7 +72,7 @@ Then open `docs/examples/minimal-context-sample.md` and `docs/examples/fresh-age
 
 ## Feedback Log
 
-Track private feedback in a temporary file, not in `project_context/**`:
+Track private feedback with [private-review-log-template.md](private-review-log-template.md) in a temporary file, not in `project_context/**`:
 
 ```text
 tmp/sdlc/private-review/YYYY-MM-DD-review-notes.md
