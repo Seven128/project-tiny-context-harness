@@ -159,6 +159,11 @@ git clone https://github.com/Seven128/project-tiny-context-harness.git
 cd project-tiny-context-harness
 npm ci
 npm run smoke:quickstart
+npm run preview:pack
+cd /path/to/your/test-repo
+npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.39.tgz
+npx --no-install sdlc-harness init --adopt
+make validate-context
 ```
 
 ## First Comment Shape

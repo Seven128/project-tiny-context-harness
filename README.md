@@ -56,6 +56,18 @@ npm run smoke:quickstart
 
 That smoke packs the local workspace, installs it into a disposable repo, runs `sdlc-harness init` and validates the generated Minimal Context files.
 
+To try the unpublished package in a separate test repository:
+
+```sh
+npm run preview:pack
+cd /path/to/your/test-repo
+npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.39.tgz
+npx --no-install sdlc-harness init --adopt
+make validate-context
+```
+
+Use this tarball path only for source-preview testing while npm publication is pending.
+
 Use it when coding agents repeatedly lose project intent across new chats, handoffs, RFC/debug turns or tool changes. The intended tradeoff is: keep durable intent and recovery paths; leave execution evidence to code, tests and review.
 
 ## Why It Exists

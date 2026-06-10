@@ -191,6 +191,7 @@ function localChecks() {
   const demoPacket = read("docs/launch/demo.md");
   const metricsPacket = read("docs/launch/metrics.md");
   const metricsScript = read("tools/launch_metrics_snapshot.mjs");
+  const sourcePreviewScript = read("tools/source_preview_pack.mjs");
   const marketMap = read("docs/launch/market-map.md");
   const outreachTargets = read("docs/launch/outreach-targets.md");
   const sourceWorkflow = read(".github/workflows/harness.yml");
@@ -323,9 +324,29 @@ function localChecks() {
     contains(rootReadme, /Source preview while npm publish is pending/) &&
       contains(rootReadme, /git clone https:\/\/github\.com\/Seven128\/project-tiny-context-harness\.git/) &&
       contains(rootReadme, /npm run smoke:quickstart/) &&
+      contains(rootReadme, /npm run preview:pack/) &&
+      contains(rootReadme, /tmp\/sdlc\/source-preview\/package\/project-tiny-context-harness-0\.2\.39\.tgz/) &&
+      contains(rootReadme, /npx --no-install sdlc-harness init --adopt/) &&
       contains(rootReadme, /packs the local workspace, installs it into a disposable repo/) &&
-      contains(rootReadme, /validates the generated Minimal Context files/),
+      contains(rootReadme, /validates the generated Minimal Context files/) &&
+      contains(rootReadme, /Use this tarball path only for source-preview testing while npm publication is pending/),
     "Root README gives reviewers a source-based preview path while npm publish is pending."
+  );
+  addCheck(
+    checks,
+    "source-preview-pack",
+    rootPackage.scripts?.["preview:pack"] === "node tools/source_preview_pack.mjs --clean" &&
+      hasFile("tools/source_preview_pack.mjs") &&
+      contains(sourcePreviewScript, /Packs the local project-tiny-context-harness workspace into an installable tarball/) &&
+      contains(sourcePreviewScript, /source-preview-report\.json/) &&
+      contains(sourcePreviewScript, /npx --no-install sdlc-harness init --adopt/) &&
+      contains(existingRepoAdoption, /npm run preview:pack/) &&
+      contains(existingRepoAdoption, /local packed tarball/) &&
+      contains(privateReview, /npm run preview:pack/) &&
+      contains(privateReview, /disposable copy of your own repo/) &&
+      contains(launchProfile, /npm run preview:pack/) &&
+      contains(launchProfile, /tmp\/sdlc\/source-preview\/package\/project-tiny-context-harness-0\.2\.39\.tgz/),
+    "Source-preview tarball path lets private reviewers test a local package before npm publication."
   );
   addCheck(
     checks,

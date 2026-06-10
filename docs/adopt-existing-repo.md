@@ -38,9 +38,19 @@ git clone https://github.com/Seven128/project-tiny-context-harness.git
 cd project-tiny-context-harness
 npm ci
 npm run smoke:quickstart
+npm run preview:pack
 ```
 
-For an external repository before npm publish, use a local packed tarball only if you are comfortable testing unpublished packages.
+For an external repository before npm publish, use the local packed tarball only if you are comfortable testing unpublished packages:
+
+```sh
+cd /path/to/your/test-repo
+npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.39.tgz
+npx --no-install sdlc-harness init --adopt
+make validate-context
+```
+
+Do this on a branch or disposable copy first. The tarball path is a source-preview path, not a stable install URL.
 
 ## What To Check
 

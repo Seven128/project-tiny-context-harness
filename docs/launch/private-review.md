@@ -47,6 +47,13 @@ git clone https://github.com/Seven128/project-tiny-context-harness.git
 cd project-tiny-context-harness
 npm ci
 npm run smoke:quickstart
+npm run preview:pack
+
+If you want to try it in a disposable copy of your own repo:
+cd /path/to/your/test-repo
+npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.39.tgz
+npx --no-install sdlc-harness init --adopt
+make validate-context
 
 The main question: does this minimal recovery surface solve a real "new agent chat lost the project context" problem, or is the missing context somewhere else?
 ```
@@ -68,9 +75,12 @@ git clone https://github.com/Seven128/project-tiny-context-harness.git
 cd project-tiny-context-harness
 npm ci
 npm run smoke:quickstart
+npm run preview:pack
 ```
 
-Then open `docs/examples/minimal-context-sample.md` and `docs/examples/fresh-agent-recovery.md`.
+Then either inspect the disposable smoke repo output, or install the generated `tmp/sdlc/source-preview/package/*.tgz` tarball into a disposable copy of one real repository and run `npx --no-install sdlc-harness init --adopt`.
+
+Open `docs/examples/minimal-context-sample.md` and `docs/examples/fresh-agent-recovery.md` if a hands-on test is not practical.
 
 ## Feedback Log
 

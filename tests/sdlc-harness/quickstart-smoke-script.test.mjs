@@ -7,7 +7,9 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const scriptPath = path.join(repoRoot, "tools/quickstart_smoke.mjs");
+const sourcePreviewScriptPath = path.join(repoRoot, "tools/source_preview_pack.mjs");
 const outDir = await mkdtemp(path.join(tmpdir(), "sdlc-quickstart-smoke-test-"));
+const sourcePreviewOutDir = await mkdtemp(path.join(tmpdir(), "sdlc-source-preview-pack-test-"));
 
 try {
   const result = spawnSync(process.execPath, [scriptPath, "--out-dir", outDir, "--pack-ignore-scripts"], {
@@ -30,6 +32,23 @@ try {
   assert.equal(report.status, "passed");
   assert.ok(report.generatedFiles.includes("AGENTS.md"));
   assert.ok(report.generatedFiles.includes("project_context/context.toml"));
+
+  const sourcePreviewResult = spawnSync(process.execPath, [sourcePreviewScriptPath, "--out-dir", sourcePreviewOutDir, "--pack-ignore-scripts"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+    timeout: 120_000
+  });
+
+  assert.equal(sourcePreviewResult.status, 0, `${sourcePreviewResult.stdout}\n${sourcePreviewResult.stderr}`);
+  assert.match(sourcePreviewResult.stdout, /Source preview package ready/);
+  assert.match(sourcePreviewResult.stdout, /npx --no-install sdlc-harness init --adopt/);
+
+  const previewReport = JSON.parse(await readFile(path.join(sourcePreviewOutDir, "source-preview-report.json"), "utf8"));
+  assert.equal(previewReport.status, "packed");
+  assert.equal(previewReport.package, "project-tiny-context-harness@0.2.39");
+  assert.match(previewReport.tarballPath, /project-tiny-context-harness-0\.2\.39\.tgz$/);
+  await stat(previewReport.tarballPath);
 } finally {
   await rm(outDir, { recursive: true, force: true });
+  await rm(sourcePreviewOutDir, { recursive: true, force: true });
 }
