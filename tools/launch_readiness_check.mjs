@@ -922,6 +922,8 @@ function localChecks() {
       contains(prelaunchExternalBlockers, /Prelaunch External Blockers/) &&
       contains(prelaunchExternalBlockers, /npm run launch:unblock/) &&
       contains(prelaunchExternalBlockers, /node tools\/launch_readiness_check\.mjs --strict-external/) &&
+      contains(prelaunchExternalBlockers, /Current expected state/) &&
+      contains(prelaunchExternalBlockers, /Fallback failure state/) &&
       contains(prelaunchExternalBlockers, /npm-fetch: TODO/) &&
       contains(prelaunchExternalBlockers, /github-homepage: TODO/) &&
       contains(prelaunchExternalBlockers, /npm-fetch: PASS/) &&
@@ -933,6 +935,8 @@ function localChecks() {
       contains(prelaunchExternalBlockers, /npm-credential-unblock\.md/) &&
       contains(prelaunchExternalBlockers, /github-metadata\.md/) &&
       contains(prelaunchExternalBlockers, /Do not post broad launch copy if either `npm-fetch` or `github-homepage` returns as a TODO/) &&
+      contains(prelaunchExternalBlockers, /Allowed while the strict external gate is blocked/) &&
+      contains(prelaunchExternalBlockers, /Not allowed while the strict external gate is blocked/) &&
       contains(prelaunchExternalBlockers, /Private review/) &&
       contains(prelaunchExternalBlockers, /No token, OTP, `.npmrc` or account credential/),
     "Prelaunch external blockers checklist centralizes npm-fetch and GitHub homepage stop/go actions for broad launch."
@@ -1326,7 +1330,18 @@ function localChecks() {
     "Launch media includes a 1280x640 social preview, animated GIF, two 1270x760 Product Hunt gallery images and a 240x240 thumbnail."
   );
   addCheck(checks, "launch-milestones", contains(launchKit, /Star \/ Adoption Milestones/) && contains(launchKit, /10 stars/) && contains(launchKit, /500 stars/), "Launch kit has star/adoption milestone triggers without treating stars as proof.");
-  addCheck(checks, "market-map", contains(marketMap, /Market Map/) && contains(marketMap, /Competitive Snapshot/) && contains(marketMap, /10-100 stars/), "Market map has competitor snapshot and feasibility bands.");
+  addCheck(
+    checks,
+    "market-map",
+    contains(marketMap, /Market Map/) &&
+      contains(marketMap, /Competitive Snapshot/) &&
+      contains(marketMap, /10-100 stars/) &&
+      contains(marketMap, /`v0\.2\.40` tag exists/) &&
+      contains(marketMap, /conversion\/trust surface/) &&
+      contains(marketMap, /not an npm availability blocker/) &&
+      contains(marketMap, /download window is not available yet/),
+    "Market map has competitor snapshot, feasibility bands and current release/readiness state."
+  );
   addCheck(
     checks,
     "outreach-targets",
@@ -1338,6 +1353,9 @@ function localChecks() {
       contains(outreachTargets, /OpenSSF Scorecard workflow/) &&
       contains(outreachTargets, /Minimal Context sample project/) &&
       contains(outreachTargets, /FAQ answers/) &&
+      contains(outreachTargets, /`v0\.2\.40` tag exists/) &&
+      contains(outreachTargets, /conversion\/trust improvement/) &&
+      contains(outreachTargets, /not an npm unblock step/) &&
       contains(outreachTargets, /awesome-list-submissions\.md/) &&
       contains(outreachTargets, /Awards/) &&
       contains(outreachTargets, /Do not submit to award programs before the demo and first public feedback exist/),

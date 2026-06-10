@@ -2,7 +2,7 @@
 
 Snapshot date: 2026-06-10.
 
-Use this template for the 5-10 person private review pass before broad launch or while `project-tiny-context-harness` is not yet published on npm.
+Use this template for the 5-10 person private review pass before broad launch. The npm package is now published; source preview remains an optional fallback for reviewers who want to inspect a local package build or report setup friction.
 
 Keep filled logs under `tmp/sdlc/private-review/**`, not in `project_context/**`, because private review notes are launch evidence and feedback triage, not durable project context.
 

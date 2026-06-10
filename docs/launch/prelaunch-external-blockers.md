@@ -2,7 +2,9 @@
 
 Snapshot date: 2026-06-10.
 
-Broad public launch is blocked only when the strict external launch check reports required TODOs. Private review can continue before that point, but it should use the no-install preview, npm install path, Codespaces or source-preview path and should not ask for stars.
+Broad public launch is blocked only when the strict external launch check reports required TODOs. Current expected state is clear: `npm-fetch` and `github-homepage` should both pass.
+
+Private review can continue even if a future external drift appears, but it should use the no-install preview, npm install path, Codespaces or source-preview path and should not ask for stars.
 
 Run the gate before posting broad launch copy:
 
@@ -22,18 +24,18 @@ Equivalent direct command:
 node tools/launch_readiness_check.mjs --strict-external
 ```
 
-Expected state before unblock:
-
-```text
-npm-fetch: TODO
-github-homepage: TODO
-```
-
-Expected state after unblock:
+Expected current state:
 
 ```text
 npm-fetch: PASS
 github-homepage: PASS
+```
+
+Fallback failure state if npm registry or GitHub metadata drifts again:
+
+```text
+npm-fetch: TODO
+github-homepage: TODO
 ```
 
 ## Current Stop/Go Checks
@@ -47,14 +49,14 @@ github-homepage: PASS
 
 Do not post broad launch copy if either `npm-fetch` or `github-homepage` returns as a TODO.
 
-Allowed before unblock:
+Allowed while the strict external gate is blocked:
 
 - Private review with [private-review.md](private-review.md).
 - No-install preview links from the README first screen.
 - Codespaces or local source-preview testing.
 - Source preview failure reports through `source_preview_report.yml`.
 
-Not allowed before unblock:
+Not allowed while the strict external gate is blocked:
 
 - Show HN or broad Reddit launch.
 - Product Hunt launch.
