@@ -17,6 +17,7 @@ Ready now:
 - Agent surface recipes explain Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness-folder adoption without splitting `project_context/**`.
 - FAQ answers AGENTS.md overlap, README overlap, benchmark boundaries, Context update rules and npm-pending source preview.
 - Response templates cover predictable HN/Reddit/Product Hunt questions without benchmark, adoption, award or star claims.
+- Codex for Open Source application copy exists for maintainer-reviewed submission without claiming official OpenAI integration.
 
 Not ready yet:
 
@@ -42,6 +43,7 @@ Practical implication: broad public launch should wait for npm publish. Small pr
 | 6 | Reddit / niche communities | Good for focused feedback from Codex, Claude Code, Cursor and local-first tool users. | Reddit draft from launch kit, demo, #4 adoption issue link. | Replies describe missing facts agents rediscover in real repos. |
 | 7 | Broader awesome lists | Higher-exposure lists create durable discovery after the README/demo are clear. | One-line description, category fit, demo link, no award/benchmark claims. | Listing accepted or maintainers give positioning feedback. |
 | 8 | Awards | Awards need visible adoption or explicit eligibility thresholds. | Launch metrics, adoption reports, demo, docs quality evidence. | Nomination accepted or shortlist feedback. |
+| 9 | Codex for Open Source | Direct fit with coding-agent maintainer workflows; application is rolling and maintainer-submitted. | `docs/launch/codex-for-oss-application.md`, fresh metrics snapshot, no official-integration claim. | Application submitted by maintainer or deferred with a clearer evidence gap. |
 
 ## Channel Details
 
@@ -128,3 +130,4 @@ Project Tiny Context Harness - Minimal repo-native project memory for AI coding 
 6. Track stars, forks, npm downloads and comments for 24 hours with `npm run launch:metrics`.
 7. Patch README/FAQ from repeated confusion.
 8. Use the Product Hunt media packet only after the first feedback loop or with a deliberate scheduling decision.
+9. Apply to Codex for Open Source with `docs/launch/codex-for-oss-application.md` if the maintainer wants to disclose current metrics and can submit manually.

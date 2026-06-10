@@ -163,6 +163,7 @@ function localChecks() {
   const adoptionStoryTemplate = read("docs/launch/adoption-story-template.md");
   const npmPublishRunbook = read("docs/launch/npm-publish-runbook.md");
   const npmCredentialUnblock = read("docs/launch/npm-credential-unblock.md");
+  const codexForOssApplication = read("docs/launch/codex-for-oss-application.md");
   const awesomeListSubmissions = read("docs/launch/awesome-list-submissions.md");
   const responseTemplates = read("docs/launch/response-templates.md");
   const agentSurfaceRecipes = read("docs/agent-surface-recipes.md");
@@ -662,6 +663,22 @@ function localChecks() {
       contains(npmCredentialUnblock, /Post-Publish Gate/) &&
       contains(npmCredentialUnblock, /Do not commit `.npmrc`, tokens, OTP values/),
     "npm credential unblock checklist gives a safe path from 403 credentials failure to publish retry."
+  );
+  addCheck(
+    checks,
+    "codex-for-oss-application",
+    hasFile("docs/launch/codex-for-oss-application.md") &&
+      contains(launchKit, /codex-for-oss-application\.md/) &&
+      contains(outreachTargets, /codex-for-oss-application\.md/) &&
+      contains(codexForOssApplication, /Codex For OSS Application Packet/) &&
+      contains(codexForOssApplication, /Official sources checked on 2026-06-10/) &&
+      contains(codexForOssApplication, /Character count: 384/) &&
+      contains(codexForOssApplication, /Character count: 302/) &&
+      contains(codexForOssApplication, /Character count: 299/) &&
+      contains(codexForOssApplication, /Do not claim official OpenAI integration/) &&
+      contains(codexForOssApplication, /Selected for Codex for Open Source/) &&
+      contains(codexForOssApplication, /not in `project_context\/\*\*`/),
+    "Codex for OSS application packet has maintainer-reviewed copy fields, current-source links and no official-integration overclaim."
   );
   addCheck(
     checks,

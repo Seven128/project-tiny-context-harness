@@ -56,6 +56,7 @@ for (const expected of [
   "feedback-triage-runbook",
   "npm-publish-runbook",
   "npm-credential-unblock",
+  "codex-for-oss-application",
   "release-npm-first-publish-target",
   "awesome-list-submissions",
   "external-pr-packets",
