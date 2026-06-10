@@ -40,6 +40,7 @@ for (const expected of [
   "launch-faq",
   "launch-response-templates",
   "private-review-packet",
+  "adoption-story-template",
   "community-starter-issues",
   "launch-kit",
   "launch-operating-plan",

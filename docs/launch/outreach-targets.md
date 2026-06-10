@@ -120,7 +120,7 @@ Project Tiny Context Harness - Minimal repo-native project memory for AI coding 
 
 ## Next Concrete Actions
 
-1. While npm publish is blocked, invite 5-10 private reviewers using `docs/launch/private-review.md`.
+1. While npm publish is blocked, invite 5-10 private reviewers using `docs/launch/private-review.md`; convert any consented concrete examples with `docs/launch/adoption-story-template.md`.
 2. Publish `project-tiny-context-harness@0.2.39` by following `docs/launch/npm-publish-runbook.md`.
 3. Run `npm run launch:metrics -- --output tmp/sdlc/launch-metrics/show-hn-before.md`.
 4. Post Show HN first using `docs/launch/primary-launch.md` and the repo-hosted GIF if useful.

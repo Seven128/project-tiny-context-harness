@@ -96,7 +96,7 @@ Within 24 hours of the private pass:
 
 - Patch README or FAQ for repeated confusion.
 - Turn repeated missing-fact requests into GitHub issues.
-- Move public-consent examples into an adoption report or launch reply.
+- Move public-consent examples into an adoption report, launch reply or [adoption story](adoption-story-template.md).
 - Leave one-off private notes in `tmp/sdlc/private-review/**`.
 - Do not claim adoption, benchmark wins or productivity multipliers from private feedback.
 

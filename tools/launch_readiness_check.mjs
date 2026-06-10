@@ -145,6 +145,7 @@ function localChecks() {
   const launchKit = read("docs/launch/README.md");
   const primaryLaunch = read("docs/launch/primary-launch.md");
   const privateReview = read("docs/launch/private-review.md");
+  const adoptionStoryTemplate = read("docs/launch/adoption-story-template.md");
   const npmPublishRunbook = read("docs/launch/npm-publish-runbook.md");
   const awesomeListSubmissions = read("docs/launch/awesome-list-submissions.md");
   const responseTemplates = read("docs/launch/response-templates.md");
@@ -330,16 +331,36 @@ function localChecks() {
     "private-review-packet",
     hasFile("docs/launch/private-review.md") &&
       contains(launchKit, /private-review\.md/) &&
+      contains(launchKit, /adoption-story-template\.md/) &&
       contains(launchKit, /Private review packet/) &&
       contains(outreachTargets, /Private review/) &&
       contains(outreachTargets, /5-10 private reviewers/) &&
       contains(privateReview, /Copy-Paste DM/) &&
       contains(privateReview, /Source preview/) &&
+      contains(privateReview, /adoption story/) &&
       contains(privateReview, /Do not ask private reviewers for stars/) &&
       contains(privateReview, /Broad launch still waits for the renamed package to be installable/) &&
       contains(privateReview, /quote consent: none, anonymous, public name, or public link/) &&
       contains(privateReview, /Private review is for copy and product clarity, not proof of quality/),
     "Private review packet supports small pre-launch feedback while npm publish is blocked, without asking for stars or making proof claims."
+  );
+  addCheck(
+    checks,
+    "adoption-story-template",
+    hasFile("docs/launch/adoption-story-template.md") &&
+      contains(launchKit, /Adoption story template/) &&
+      contains(outreachTargets, /adoption-story-template\.md/) &&
+      contains(adoptionStoryTemplate, /Do not publish a story without explicit consent/) &&
+      contains(adoptionStoryTemplate, /Attribution level:/) &&
+      contains(adoptionStoryTemplate, /Approved surfaces:/) &&
+      contains(adoptionStoryTemplate, /Story Shape/) &&
+      contains(adoptionStoryTemplate, /Repo \/ team type:/) &&
+      contains(adoptionStoryTemplate, /Still missing:/) &&
+      contains(adoptionStoryTemplate, /Only use these after the underlying feedback exists/) &&
+      contains(adoptionStoryTemplate, /Do not publish:/) &&
+      contains(adoptionStoryTemplate, /Benchmark-backed speedup/) &&
+      contains(adoptionStoryTemplate, /Conversion Checklist/),
+    "Adoption story template converts consented feedback into concrete recovery evidence without leaking private details or making proof claims."
   );
   addCheck(
     checks,
