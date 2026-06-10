@@ -991,7 +991,10 @@ function localChecks() {
       hasFile("docs/launch/primary-launch.md") &&
       contains(primaryLaunch, /Primary Launch Packet/) &&
       contains(primaryLaunch, /Hacker News Show HN/) &&
-      contains(primaryLaunch, /npm run release:npm/) &&
+      !contains(primaryLaunch, /npm run release:npm/) &&
+      contains(primaryLaunch, /npm run launch:strict-external/) &&
+      contains(primaryLaunch, /project-tiny-context-harness@latest/) &&
+      contains(primaryLaunch, /github-release-0\.2\.40\.md/) &&
       contains(primaryLaunch, /npm-publish-runbook\.md/) &&
       contains(primaryLaunch, /Product Hunt/) &&
       contains(primaryLaunch, /difference from using only AGENTS\.md/) &&

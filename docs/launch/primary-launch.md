@@ -17,11 +17,10 @@ Do not post to multiple broad channels on the same day. Use the first channel to
 Run these before posting:
 
 ```sh
-npm run release:npm
 npm run launch:check
 npm run launch:strict-external
-npm run launch:metrics -- --output tmp/sdlc/launch-metrics/baseline.md
-npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.40 --clean
+npm run launch:metrics -- --output tmp/sdlc/launch-metrics/show-hn-before.md
+npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@latest --clean
 ```
 
 Confirm:
@@ -29,6 +28,7 @@ Confirm:
 - `npm run launch:strict-external` passes; if npm ever returns 404 again, use `docs/launch/npm-publish-runbook.md` before broad posting.
 - GitHub stars/forks and npm downloads baseline are recorded with `npm run launch:metrics`.
 - npm `project-tiny-context-harness@0.2.40` is published and installable.
+- The `v0.2.40` GitHub Release is published from [github-release-0.2.40.md](github-release-0.2.40.md), or the maintainer consciously accepts the temporary legacy release page before broad posting.
 - Issue #4 is pinned and open for adoption reports.
 - Issue #5 has the current demo packet and repo-hosted GIF URL.
 - README first screen still shows install, 60-second trial and non-goals.
