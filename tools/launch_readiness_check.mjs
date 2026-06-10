@@ -1412,6 +1412,16 @@ function summarize(checks, options) {
   return { status, exitOk, requiredFailures, externalFailures };
 }
 
+function nextActionForFailedCheck(check) {
+  if (check.id === "npm-fetch") {
+    return "Publish `project-tiny-context-harness@0.2.39` with [docs/launch/npm-publish-runbook.md](docs/launch/npm-publish-runbook.md); if npm returns E403, use [docs/launch/npm-credential-unblock.md](docs/launch/npm-credential-unblock.md).";
+  }
+  if (check.id === "github-homepage") {
+    return "Set the GitHub About homepage to `https://github.com/Seven128/project-tiny-context-harness` while npm returns 404, using [docs/launch/github-metadata.md](docs/launch/github-metadata.md) and [docs/launch/prelaunch-external-blockers.md](docs/launch/prelaunch-external-blockers.md).";
+  }
+  return `Update external metadata or publish a new package for \`${check.id}\`.`;
+}
+
 function renderMarkdown(report) {
   const lines = [
     "# Launch Readiness Report",
@@ -1448,7 +1458,7 @@ function renderMarkdown(report) {
   }
   if (report.summary.externalFailures.length > 0) {
     for (const check of report.summary.externalFailures) {
-      lines.push(`- Update external metadata or publish a new package: ${check.id}.`);
+      lines.push(`- ${check.id}: ${nextActionForFailedCheck(check)}`);
     }
   }
   if (report.offline) {

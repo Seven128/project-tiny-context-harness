@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -94,4 +95,16 @@ for (const expected of [
   "node-engine-ci-matrix"
 ]) {
   assert.ok(ids.has(expected), `expected readiness check ${expected}`);
+}
+
+const scriptSource = readFileSync(scriptPath, "utf8");
+for (const expected of [
+  "function nextActionForFailedCheck",
+  "docs/launch/npm-publish-runbook.md",
+  "docs/launch/npm-credential-unblock.md",
+  "docs/launch/github-metadata.md",
+  "docs/launch/prelaunch-external-blockers.md",
+  "Set the GitHub About homepage to `https://github.com/Seven128/project-tiny-context-harness` while npm returns 404"
+]) {
+  assert.match(scriptSource, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 }
