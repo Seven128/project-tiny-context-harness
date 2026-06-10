@@ -64,6 +64,7 @@ for (const expected of [
   "launch-kit",
   "github-homepage-stage-boundary",
   "github-metadata-runbook",
+  "prelaunch-external-blockers",
   "launch-operating-plan",
   "primary-launch-packet",
   "feedback-triage-runbook",

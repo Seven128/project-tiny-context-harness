@@ -4,6 +4,8 @@ Snapshot date: 2026-06-10.
 
 This is the execution map after the GitHub repository was renamed to Project Tiny Context Harness. npm publication for `project-tiny-context-harness@0.2.39` is still required before broad launch. Recheck rules, deadlines and categories before submitting anywhere.
 
+Use [prelaunch-external-blockers.md](prelaunch-external-blockers.md) as the current broad-launch stop/go checklist for `npm-fetch` and `github-homepage`.
+
 ## Current Launch Position
 
 Ready now:
@@ -139,13 +141,14 @@ Do not add a Best Practices or Baseline badge to README until the official site 
 
 ## Next Concrete Actions
 
-1. While npm publish is blocked, select 5-10 private reviewers with `docs/launch/private-review-shortlist.md`, invite them using `docs/launch/private-review.md`, and convert any consented concrete examples with `docs/launch/adoption-story-template.md`.
-2. Publish `project-tiny-context-harness@0.2.39` by following `docs/launch/npm-publish-runbook.md`.
-3. Run `npm run launch:metrics -- --output tmp/sdlc/launch-metrics/show-hn-before.md`.
-4. Post Show HN first using `docs/launch/primary-launch.md` and the repo-hosted GIF if useful.
-5. Submit prepared curated-list PRs from `docs/launch/external-prs/README.md`, starting with the two P0 agentic-coding lists and then the matching harness/context-engineering directories.
-6. Track stars, forks, npm downloads and comments for 24 hours with `npm run launch:metrics`.
-7. Patch README/FAQ from repeated confusion.
-8. Use the Product Hunt media packet only after the first feedback loop or with a deliberate scheduling decision.
-9. Apply to Codex for Open Source with `docs/launch/codex-for-oss-application.md` if the maintainer wants to disclose current metrics and can submit manually.
-10. Start the OpenSSF Best Practices / Baseline self-assessment with `docs/launch/openssf-best-practices.md` if the maintainer wants another trust signal before broader launch.
+1. Check `docs/launch/prelaunch-external-blockers.md`; if `npm-fetch` or `github-homepage` is still a TODO, do not post broad launch copy.
+2. While npm publish is blocked, select 5-10 private reviewers with `docs/launch/private-review-shortlist.md`, invite them using `docs/launch/private-review.md`, and convert any consented concrete examples with `docs/launch/adoption-story-template.md`.
+3. Publish `project-tiny-context-harness@0.2.39` by following `docs/launch/npm-publish-runbook.md`.
+4. Run `npm run launch:metrics -- --output tmp/sdlc/launch-metrics/show-hn-before.md`.
+5. Post Show HN first using `docs/launch/primary-launch.md` and the repo-hosted GIF if useful.
+6. Submit prepared curated-list PRs from `docs/launch/external-prs/README.md`, starting with the two P0 agentic-coding lists and then the matching harness/context-engineering directories.
+7. Track stars, forks, npm downloads and comments for 24 hours with `npm run launch:metrics`.
+8. Patch README/FAQ from repeated confusion.
+9. Use the Product Hunt media packet only after the first feedback loop or with a deliberate scheduling decision.
+10. Apply to Codex for Open Source with `docs/launch/codex-for-oss-application.md` if the maintainer wants to disclose current metrics and can submit manually.
+11. Start the OpenSSF Best Practices / Baseline self-assessment with `docs/launch/openssf-best-practices.md` if the maintainer wants another trust signal before broader launch.

@@ -175,6 +175,7 @@ function localChecks() {
   const npmPublishRunbook = read("docs/launch/npm-publish-runbook.md");
   const npmCredentialUnblock = read("docs/launch/npm-credential-unblock.md");
   const npmTrustedPublishing = read("docs/launch/npm-trusted-publishing.md");
+  const prelaunchExternalBlockers = read("docs/launch/prelaunch-external-blockers.md");
   const codexForOssApplication = read("docs/launch/codex-for-oss-application.md");
   const openssfBestPractices = read("docs/launch/openssf-best-practices.md");
   const awesomeListSubmissions = read("docs/launch/awesome-list-submissions.md");
@@ -822,6 +823,32 @@ function localChecks() {
       contains(githubMetadataRunbook, /X-GitHub-Api-Version/) &&
       contains(githubMetadataRunbook, /Do not point GitHub homepage to the npm package while npm returns 404/),
     "GitHub metadata runbook gives exact UI/API steps for fixing About homepage before and after npm publication."
+  );
+  addCheck(
+    checks,
+    "prelaunch-external-blockers",
+    hasFile("docs/launch/prelaunch-external-blockers.md") &&
+      contains(launchKit, /prelaunch-external-blockers\.md/) &&
+      contains(launchKit, /Prelaunch external blockers/) &&
+      contains(outreachTargets, /prelaunch-external-blockers\.md/) &&
+      contains(outreachTargets, /npm-fetch/) &&
+      contains(outreachTargets, /github-homepage/) &&
+      contains(prelaunchExternalBlockers, /Prelaunch External Blockers/) &&
+      contains(prelaunchExternalBlockers, /node tools\/launch_readiness_check\.mjs --strict-external/) &&
+      contains(prelaunchExternalBlockers, /npm-fetch: TODO/) &&
+      contains(prelaunchExternalBlockers, /github-homepage: TODO/) &&
+      contains(prelaunchExternalBlockers, /npm-fetch: PASS/) &&
+      contains(prelaunchExternalBlockers, /github-homepage: PASS/) &&
+      contains(prelaunchExternalBlockers, /https:\/\/registry\.npmjs\.org\/project-tiny-context-harness\/latest/) &&
+      contains(prelaunchExternalBlockers, /https:\/\/github\.com\/Seven128\/project-tiny-context-harness/) &&
+      contains(prelaunchExternalBlockers, /https:\/\/www\.npmjs\.com\/package\/project-tiny-context-harness/) &&
+      contains(prelaunchExternalBlockers, /npm-publish-runbook\.md/) &&
+      contains(prelaunchExternalBlockers, /npm-credential-unblock\.md/) &&
+      contains(prelaunchExternalBlockers, /github-metadata\.md/) &&
+      contains(prelaunchExternalBlockers, /Do not post broad launch copy/) &&
+      contains(prelaunchExternalBlockers, /Private review/) &&
+      contains(prelaunchExternalBlockers, /No token, OTP, `.npmrc` or account credential/),
+    "Prelaunch external blockers checklist centralizes npm-fetch and GitHub homepage stop/go actions before broad launch."
   );
   addCheck(
     checks,
