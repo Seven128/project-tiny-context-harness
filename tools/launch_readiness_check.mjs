@@ -141,6 +141,7 @@ function localChecks() {
   const packageJson = readJson("packages/sdlc-harness/package.json");
   const rootReadme = read("README.md");
   const packageReadme = read("packages/sdlc-harness/README.md");
+  const zhReadme = read("README.zh-CN.md");
   const launchKit = read("docs/launch/README.md");
   const primaryLaunch = read("docs/launch/primary-launch.md");
   const npmPublishRunbook = read("docs/launch/npm-publish-runbook.md");
@@ -224,6 +225,19 @@ function localChecks() {
       contains(primaryLaunch, /Public-facing copy is English-first/) &&
       contains(outreachTargets, /README, npm and launch copy English-first/),
     "Public README, npm README and launch packet keep external promotion English-first while allowing literal multilingual compatibility examples."
+  );
+  addCheck(
+    checks,
+    "localized-readme",
+    hasFile("README.zh-CN.md") &&
+      hasFile("packages/sdlc-harness/assets/README.zh-CN.md") &&
+      contains(rootReadme, /Translations: \[简体中文\]\(README\.zh-CN\.md\)/) &&
+      contains(packageReadme, /Translations: \[简体中文\]\(https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/blob\/main\/README\.zh-CN\.md\)/) &&
+      contains(zhReadme, /Project Tiny Context Harness 是给 AI coding agents 用的轻量项目记忆层/) &&
+      contains(zhReadme, /保留项目记忆，丢掉流程仪式感/) &&
+      contains(zhReadme, /英文主入口/) &&
+      contains(zhReadme, /中文文档作为二级入口/),
+    "Localized Chinese README exists as a secondary entry while public launch surfaces remain English-first."
   );
   addCheck(
     checks,

@@ -1,0 +1,131 @@
+# Project Tiny Context Harness 中文快速说明
+
+[English README](README.md)
+
+Project Tiny Context Harness 是给 AI coding agents 用的轻量项目记忆层。
+
+它不是新的全流程 SDLC 框架，也不是任务管理器。它做一件小事：把新会话 agent 最容易丢掉、但又必须长期稳定保留的项目事实放进仓库里，让下一次聊天、交接、调试或换工具时不用从头重新发现。
+
+一句话：
+
+```text
+Keep the memory. Drop the ceremony.
+保留项目记忆，丢掉流程仪式感。
+```
+
+## 它解决什么问题
+
+很多 agent 在一个对话里表现很好，但换到新对话后会重新问、重新猜或重新扫描：
+
+- 项目到底要解决什么问题
+- 哪些事情明确不做
+- 架构边界在哪里
+- 哪些文件是事实源
+- 改完以后应该跑什么验证
+- 上一次任务留下了哪些长期约束
+
+Project Tiny Context Harness 把这些内容压缩到几个 repo-native 文件里：
+
+- `AGENTS.md`
+- `project_context/context.toml`
+- `project_context/global.md`
+- `project_context/architecture.md`
+- `project_context/areas/**`
+
+Fresh agent 先读这些文件，再开始改代码。
+
+## 和传统 SDLC 流程的区别
+
+这个项目以前尝试过更重的阶段式 SDLC：阶段状态、任务流转、PRD / 技术方案 / 实现 / 评审 / 测试 / 发布产物和多个 gate。
+
+后来放弃这个方向，原因很直接：
+
+- 中小任务里，阶段流转和产物校验会显著拖慢执行。
+- 现代 coding agents 已经内化了很多普通软件工程循环：理解、设计、实现、测试、修复。
+- 真正值得保留下来的不是“每次任务都走完整流程”，而是“新 agent 能快速恢复项目长期事实”。
+
+所以当前默认方向是 Minimal Context Harness：只维护高密度、长期有效、能帮助恢复上下文的项目事实。
+
+## 适合谁
+
+适合：
+
+- 经常用 Codex、Claude Code、Cursor、Gemini CLI、OpenCode 等 agent 改代码的项目。
+- 经常开新 chat，agent 反复重新理解项目的项目。
+- 想保留项目意图、边界和验证路径，但不想引入完整流程文档链的维护者。
+- 多 agent / 多工具协作时，需要一个工具无关的 repo 内事实源。
+
+不适合：
+
+- 替代测试、CI、review 或人工验收。
+- 自动执行完整 SDLC。
+- 做代码语义索引或外部文档检索。
+- 给每个任务强制生成 PRD、技术方案、测试报告和发布文档。
+
+## 快速试用
+
+npm 新包名还在等待发布。如果 `project-tiny-context-harness@latest` 尚未可用，可以先用源码 smoke 路径：
+
+```sh
+git clone https://github.com/Seven128/project-tiny-context-harness.git
+cd project-tiny-context-harness
+npm ci
+npm run smoke:quickstart
+```
+
+发布完成后，普通项目使用：
+
+```sh
+npm install -D project-tiny-context-harness@latest
+npx --yes --package project-tiny-context-harness@latest sdlc-harness init
+make validate-context
+```
+
+生成的核心结构类似：
+
+```text
+AGENTS.md
+project_context/
+  context.toml
+  global.md
+  architecture.md
+  areas/main.md
+  areas/main/verification.md
+```
+
+## 一个简单的使用方式
+
+在新 agent 会话里先发：
+
+```text
+Read AGENTS.md and project_context/** first. Summarize the project goal, non-goals, architecture boundaries, validation entry points and next safe action before proposing code changes.
+```
+
+如果 agent 能快速说清楚项目目标、非目标、边界和验证入口，而不是重新扫描整个仓库猜测方向，这个 Harness 就发挥作用了。
+
+## Benchmark 说明
+
+不要把旧阶段式 SDLC 的 benchmark 数字当成当前 Minimal Context Harness 的性能证明。
+
+当前公开卖点是产品设计和 smoke 证据：它能安装一个小的项目记忆面，并用 `validate-context` 检查恢复事实是否存在。真正的效率结论需要重新设计 fresh baseline 和 Minimal Context Harness 的对照实验。
+
+## 反馈
+
+现在最有价值的反馈不是“能不能多加流程”，而是：
+
+- 你的 agent 经常忘掉什么项目事实？
+- 哪些事实应该长期留在仓库里？
+- `project_context/**` 是否太多、太少或不够好读？
+- 新 chat 是否更快恢复了项目意图？
+
+可以在 GitHub issue 里反馈：
+
+- [Adoption reports](https://github.com/Seven128/project-tiny-context-harness/issues/4)
+- [Demo starter issue](https://github.com/Seven128/project-tiny-context-harness/issues/5)
+- [Sample walkthrough starter issue](https://github.com/Seven128/project-tiny-context-harness/issues/6)
+
+## 语言策略
+
+本项目的默认 README、npm copy 和公开 launch 文案保持英文优先，方便 GitHub、Hacker News、Reddit、Product Hunt 和 curated lists 上的开发者快速判断项目价值。
+
+中文文档作为二级入口保留，用来服务中文用户和维护者，但不会替代英文主入口。
