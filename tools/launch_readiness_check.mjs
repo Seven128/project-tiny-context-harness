@@ -241,7 +241,21 @@ function localChecks() {
       packageJson.bugs?.url === "https://github.com/Seven128/project-tiny-context-harness/issues",
     "npm package has license, homepage, repository and bugs metadata."
   );
-  for (const keyword of ["ai-agents", "coding-agent", "context-engineering", "developer-productivity", "claude-code"]) {
+  for (const keyword of [
+    "ai-agents",
+    "coding-agent",
+    "context-engineering",
+    "context-management",
+    "project-memory",
+    "agent-memory",
+    "agents-md",
+    "claude-code",
+    "cursor",
+    "gemini-cli",
+    "opencode",
+    "ai-coding",
+    "developer-productivity"
+  ]) {
     addCheck(checks, `package-keyword-${keyword}`, packageJson.keywords?.includes(keyword), `npm package keyword includes ${keyword}.`);
   }
   addCheck(checks, "package-license-file", hasFile("packages/sdlc-harness/LICENSE"), "Packaged npm workspace includes LICENSE.");

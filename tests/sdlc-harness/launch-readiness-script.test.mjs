@@ -22,6 +22,11 @@ assert.equal(report.externalChecks.length, 0);
 const ids = new Set(report.localChecks.map((check) => check.id));
 for (const expected of [
   "package-metadata",
+  "package-keyword-project-memory",
+  "package-keyword-agent-memory",
+  "package-keyword-context-management",
+  "package-keyword-gemini-cli",
+  "package-keyword-opencode",
   "root-readme-positioning",
   "package-readme-positioning",
   "root-readme-fit-boundary",
