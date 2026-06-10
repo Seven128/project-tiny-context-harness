@@ -8,7 +8,7 @@
 
 Translations: [Chinese (Simplified)](README.zh-CN.md)
 
-> Rename publish status: GitHub is already renamed, but npm `project-tiny-context-harness` is still pending registry publication. The install commands below are the post-publish path; until `node tools/launch_readiness_check.mjs --strict-external` no longer reports `npm-fetch`, use `npm run release:npm` and `npm run launch:check` as source verification.
+> Rename publish status: GitHub is already renamed, but npm `project-tiny-context-harness` is still pending registry publication. The install commands below are the post-publish path; until `node tools/launch_readiness_check.mjs --strict-external` no longer reports `npm-fetch`, use the Codespaces or source-preview path in this README. Maintainers can follow [the npm publish runbook](docs/launch/npm-publish-runbook.md).
 
 Project Tiny Context Harness is repo-native project memory for AI coding agents.
 

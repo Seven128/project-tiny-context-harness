@@ -356,8 +356,8 @@ function localChecks() {
       contains(rootReadme, /npm `project-tiny-context-harness` is still pending registry publication/) &&
       contains(rootReadme, /install commands below are the post-publish path/) &&
       contains(rootReadme, /strict-external` no longer reports `npm-fetch`/) &&
-      contains(rootReadme, /npm run release:npm/) &&
-      contains(rootReadme, /npm run launch:check/),
+      contains(rootReadme, /Codespaces or source-preview path/) &&
+      contains(rootReadme, /docs\/launch\/npm-publish-runbook\.md/),
     "Root README transparently labels install commands as post-publish while npm still returns 404."
   );
   addCheck(
