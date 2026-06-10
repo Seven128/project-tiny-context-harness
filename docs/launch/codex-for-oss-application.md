@@ -89,7 +89,7 @@ Before submitting:
 - [ ] Confirm the repository visibility is public.
 - [ ] Confirm the ChatGPT account email and OpenAI organization ID.
 - [ ] Run `npm run launch:metrics -- --output tmp/sdlc/launch-metrics/codex-for-oss-before.md`.
-- [ ] Run `node tools/launch_readiness_check.mjs --strict-external` and note that npm 404 is the known blocker if it still appears.
+- [ ] Run `npm run launch:strict-external` and note that npm 404 is the known blocker if it still appears.
 - [ ] Update any metrics in the copy from current evidence only.
 - [ ] Do not claim official OpenAI integration, broad adoption, awards, benchmark wins or productivity multipliers.
 - [ ] Save the submitted form timestamp and non-private summary under `tmp/sdlc/recognition/**`, not in `project_context/**`.

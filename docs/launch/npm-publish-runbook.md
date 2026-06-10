@@ -11,7 +11,7 @@ For future releases after the first renamed publish, use [npm-trusted-publishing
 - `npm whoami` returns an authenticated npm user.
 - `npm view agent-project-sdlc name version dist-tags --json` returns `agent-project-sdlc@0.2.39`.
 - `npm view project-tiny-context-harness name version dist-tags --json` returns 404.
-- `node tools/launch_readiness_check.mjs --strict-external` should keep failing on `npm-fetch` until the renamed package is published.
+- `npm run launch:strict-external` should keep failing on `npm-fetch` until the renamed package is published.
 
 Do not post broad launch copy while the renamed package still returns 404.
 
@@ -94,7 +94,7 @@ If publish succeeds but smoke fails, stop broad launch and publish the fix as a 
 After publish, run:
 
 ```sh
-node tools/launch_readiness_check.mjs --strict-external
+npm run launch:strict-external
 npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.39 --clean
 ```
 

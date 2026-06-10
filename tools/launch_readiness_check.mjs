@@ -369,7 +369,7 @@ function localChecks() {
       contains(rootReadme, /install commands below are the post-publish path/) &&
       contains(rootReadme, /Post-publish install path:/) &&
       contains(rootReadme, /Try now before npm publish:/) &&
-      contains(rootReadme, /strict-external` no longer reports `npm-fetch`/) &&
+      contains(rootReadme, /npm run launch:strict-external` no longer reports `npm-fetch`/) &&
       contains(rootReadme, /Codespaces or source-preview path/) &&
       contains(rootReadme, /docs\/launch\/npm-publish-runbook\.md/),
     "Root README transparently labels install commands as post-publish while npm still returns 404."
@@ -917,7 +917,7 @@ function localChecks() {
       contains(npmPublishRunbook, /npm access list collaborators agent-project-sdlc steve1998 --json/) &&
       contains(npmPublishRunbook, /current token can maintain the legacy package but cannot create or manage the renamed package namespace/) &&
       contains(npmPublishRunbook, /granular access tokens must be created on npmjs\.com, not from the CLI/) &&
-      contains(npmPublishRunbook, /node tools\/launch_readiness_check\.mjs --strict-external/),
+      contains(npmPublishRunbook, /npm run launch:strict-external/),
     "npm publish runbook documents first renamed publish, OTP path, npm 404 gate and post-publish verification."
   );
   addCheck(

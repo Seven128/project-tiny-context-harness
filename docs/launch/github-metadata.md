@@ -66,7 +66,7 @@ Use the repository page, not the npm page, while `project-tiny-context-harness` 
 4. Keep the description as `Minimal project memory and validation harness for AI coding agents.`
 5. Keep topics aligned with the list above.
 6. Save changes.
-7. Run `node tools/launch_readiness_check.mjs --strict-external`.
+7. Run `npm run launch:strict-external`.
 
 Expected prepublish result:
 
@@ -109,7 +109,7 @@ https://www.npmjs.com/package/project-tiny-context-harness
 Then verify:
 
 ```sh
-node tools/launch_readiness_check.mjs --strict-external
+npm run launch:strict-external
 ```
 
 ## Do Not
@@ -118,4 +118,3 @@ node tools/launch_readiness_check.mjs --strict-external
 - Do not use the old package name as the homepage.
 - Do not add topics that imply autonomous SDLC, benchmark wins, production adoption or official integration.
 - Do not keep a live npm homepage after unpublishing, failed first publish or package-name rollback.
-

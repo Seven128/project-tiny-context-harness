@@ -82,7 +82,7 @@ npm run launch:metrics -- --output tmp/sdlc/launch-metrics/openssf-best-practice
 
 ```sh
 npm run launch:check
-node tools/launch_readiness_check.mjs --strict-external
+npm run launch:strict-external
 ```
 
 3. Visit <https://www.bestpractices.dev/en> and log in with GitHub or a site account.

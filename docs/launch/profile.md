@@ -120,7 +120,7 @@ Use GitHub as the primary launch URL and GitHub repository homepage until the re
 https://github.com/Seven128/project-tiny-context-harness
 ```
 
-Use npm as the GitHub repository homepage only after `node tools/launch_readiness_check.mjs --strict-external` no longer reports `npm-fetch`:
+Use npm as the GitHub repository homepage only after `npm run launch:strict-external` no longer reports `npm-fetch`:
 
 ```text
 https://www.npmjs.com/package/project-tiny-context-harness

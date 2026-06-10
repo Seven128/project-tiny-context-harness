@@ -156,7 +156,7 @@ npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-s
 After publish succeeds:
 
 ```sh
-node tools/launch_readiness_check.mjs --strict-external
+npm run launch:strict-external
 npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.39 --clean
 ```
 

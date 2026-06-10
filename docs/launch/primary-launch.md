@@ -19,7 +19,7 @@ Run these before posting:
 ```sh
 npm run release:npm
 npm run launch:check
-node tools/launch_readiness_check.mjs --strict-external
+npm run launch:strict-external
 npm run launch:metrics -- --output tmp/sdlc/launch-metrics/baseline.md
 npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.39 --clean
 ```

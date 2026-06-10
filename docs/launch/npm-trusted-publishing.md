@@ -91,7 +91,7 @@ dry_run: false
 Then verify:
 
 ```sh
-node tools/launch_readiness_check.mjs --strict-external
+npm run launch:strict-external
 npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.39 --clean
 ```
 

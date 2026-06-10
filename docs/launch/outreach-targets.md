@@ -26,7 +26,7 @@ Not ready yet:
 - npm latest for `project-tiny-context-harness` is not published; current registry state is 404.
 - GitHub repository homepage should point to `https://github.com/Seven128/project-tiny-context-harness` while npm returns 404; switch it to the npm package page only after the renamed package is published.
 - A new GitHub Release for the renamed npm package should wait until npm publish succeeds.
-- `node tools/launch_readiness_check.mjs --strict-external` fails until npm publish succeeds.
+- `npm run launch:strict-external` fails until npm publish succeeds.
 - No external launch post.
 - No outside adoption report, testimonial or contribution.
 - 0 GitHub stars and 0 forks at snapshot time.
