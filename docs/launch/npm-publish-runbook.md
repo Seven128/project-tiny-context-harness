@@ -6,7 +6,7 @@ This runbook records the first renamed publish path from the repository rename w
 
 For future releases after the first renamed publish, use [npm-trusted-publishing.md](npm-trusted-publishing.md) to configure GitHub Actions OIDC publishing instead of a long-lived npm publish token.
 
-Current state: `project-tiny-context-harness@0.2.40` is published. Do not reuse `0.2.40`; npm versions are immutable.
+Current state: `project-tiny-context-harness@0.2.41` is published. Do not reuse `0.2.41`; npm versions are immutable.
 
 ## Historical First-Publish State
 
@@ -22,7 +22,7 @@ Historical first-publish rule: Do not post broad launch copy while the renamed p
 The first publish created:
 
 ```text
-project-tiny-context-harness@0.2.39
+project-tiny-context-harness@0.2.40
 ```
 
 Run the dry run first:
@@ -34,19 +34,19 @@ npm run release:npm
 Expected dry-run outcome while the renamed package has no registry entry:
 
 ```text
-Prepared project-tiny-context-harness@0.2.39
+Prepared project-tiny-context-harness@0.2.40
 ```
 
 Then publish with the full gate:
 
 ```sh
-npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke
+npm run release:npm -- --version 0.2.40 --publish --yes --full-gate --registry-smoke
 ```
 
 If npm requires a one-time password for publish, pass it without storing it in the release report:
 
 ```sh
-npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke --otp 123456
+npm run release:npm -- --version 0.2.40 --publish --yes --full-gate --registry-smoke --otp 123456
 ```
 
 ## If Publish Fails

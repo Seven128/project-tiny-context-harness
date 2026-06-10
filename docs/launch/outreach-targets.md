@@ -13,7 +13,7 @@ Ready now:
 - GitHub description, MIT license and discovery topics are visible.
 - `project-tiny-context-harness` is published on npm and installable through `@latest`.
 - GitHub repository homepage points to the npm package page; the primary public post should still link to the GitHub repository.
-- `v0.2.40` tag exists for the renamed npm package, and the current latest GitHub Release is still the Project Tiny Context Harness legacy-package release until the prepared `0.2.40` release page is published.
+- `v0.2.41` is published on npm through Trusted Publishing, and the current latest GitHub Release is still the Project Tiny Context Harness legacy-package release until the prepared `0.2.41` release page is published.
 - Adoption handoff issue #4 is pinned; starter issues #5-#8 exist and have discovery labels for question, documentation, good first issue and help wanted.
 - Repo-hosted launch media exists: README GIF, two Product Hunt gallery PNGs and a 240x240 thumbnail.
 - Trust surface exists: `SECURITY.md`, Dependabot, OpenSSF Scorecard workflow, OpenSSF Best Practices self-assessment prep and issue templates.
@@ -31,7 +31,7 @@ Still not ready yet:
 - No outside adoption report, testimonial or contribution.
 - 0 GitHub stars and 0 forks at snapshot time.
 
-Practical implication: broad public launch is no longer blocked by npm availability or GitHub About metadata, but it still needs a final strict external launch gate, fresh metrics snapshot and claims-boundary review. Publishing the `0.2.40` GitHub Release is a conversion/trust improvement before broad launch, not an npm unblock step. Awards and high-star outcomes are still evidence-gated.
+Practical implication: broad public launch is no longer blocked by npm availability or GitHub About metadata, but it still needs a final strict external launch gate, fresh metrics snapshot and claims-boundary review. Publishing the `0.2.41` GitHub Release is a conversion/trust improvement before broad launch, not an npm unblock step. Awards and high-star outcomes are still evidence-gated.
 
 ## Priority Sequence
 

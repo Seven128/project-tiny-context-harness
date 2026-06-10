@@ -10,10 +10,11 @@ const packageJson = JSON.parse(readFileSync(path.join(repoRoot, "packages/sdlc-h
 const urls = {
   npmTrustedPublish:
     "https://github.com/Seven128/project-tiny-context-harness/actions/workflows/npm-publish.yml",
-  githubRelease: "https://github.com/Seven128/project-tiny-context-harness/releases/new?tag=v0.2.40",
   showHnSubmit: "https://news.ycombinator.com/submit",
   repository: "https://github.com/Seven128/project-tiny-context-harness"
 };
+
+const releaseTargetSha = "dfda8fd2c07143fca137aa609a28a5eb6d8a6697";
 
 function parseArgs(argv) {
   const options = { json: false, live: false };
@@ -73,7 +74,7 @@ export function applyStatusHints(steps, report) {
 
   const githubReleaseTitle = checkById(report, "github-release-title");
   const latestReleaseDetail = githubReleaseTitle?.detail ?? "";
-  const currentReleaseVisible = /Project Tiny Context Harness 0\.2\.40/.test(latestReleaseDetail);
+  const currentReleaseVisible = latestReleaseDetail.includes(`Project Tiny Context Harness ${packageJson.version}`);
   const requiredGateClear = report.status === "ready" || report.status === "ready-with-cleanup";
 
   return steps.map((step) => {
@@ -90,7 +91,7 @@ export function applyStatusHints(steps, report) {
       }
       return { ...step, status: "done", statusDetail: "npm latest matches the local package version." };
     }
-    if (step.id === "github-release-0.2.40") {
+    if (step.id === `github-release-${packageJson.version}`) {
       if (currentReleaseVisible) {
         return { ...step, status: "done", statusDetail: "latest GitHub Release is the renamed-package release." };
       }
@@ -130,21 +131,21 @@ export function buildNextSteps({ packageVersion = packageJson.version } = {}) {
       title: `Refresh npm package page with ${packageVersion}`,
       owner: "maintainer",
       requiredBeforeBroadLaunch: false,
-      why: "Live npm still shows the immutable 0.2.40 README until the prepared patch version is published.",
+      why: "The live npm README follows immutable package versions; this step is done once npm latest matches the prepared patch version.",
       url: urls.npmTrustedPublish,
       commands: ["npm run launch:unblock -- --strict"],
       inputs: [`expected_version: ${packageVersion}`, "dry_run: true", "then dry_run: false"],
       stopIf: "dry run fails or npm Trusted Publishing asks for NPM_TOKEN / NODE_AUTH_TOKEN"
     },
     {
-      id: "github-release-0.2.40",
+      id: `github-release-${packageVersion}`,
       title: "Publish the renamed-package GitHub Release",
       owner: "maintainer",
       requiredBeforeBroadLaunch: false,
-      why: "The tag exists, but the latest visible release is still the legacy rename-boundary release.",
-      url: urls.githubRelease,
-      source: "docs/launch/github-release-0.2.40.md",
-      stopIf: "the release form targets anything other than v0.2.40 / d125dfd172defa195ed79050151216505bbaf9f4"
+      why: "The npm package is current, but the latest visible GitHub Release is still the legacy rename-boundary release.",
+      url: `https://github.com/Seven128/project-tiny-context-harness/releases/new?tag=v${packageVersion}`,
+      source: `docs/launch/github-release-${packageVersion}.md`,
+      stopIf: `the release form targets anything other than v${packageVersion} / ${releaseTargetSha}`
     },
     {
       id: "show-hn",

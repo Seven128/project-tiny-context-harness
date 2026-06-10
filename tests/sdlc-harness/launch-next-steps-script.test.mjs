@@ -10,7 +10,7 @@ const { applyStatusHints, buildNextSteps, recommendedNext, renderMarkdown } = aw
 const steps = buildNextSteps({ packageVersion: "0.2.41" });
 assert.deepEqual(
   steps.map((step) => step.id),
-  ["npm-trusted-publish", "github-release-0.2.40", "show-hn", "feedback-note", "curated-list-prs"]
+  ["npm-trusted-publish", "github-release-0.2.41", "show-hn", "feedback-note", "curated-list-prs"]
 );
 
 const markdown = renderMarkdown(steps);
@@ -21,8 +21,8 @@ assert.match(markdown, /https:\/\/github\.com\/Seven128\/project-tiny-context-ha
 assert.match(markdown, /expected_version: 0\.2\.41/);
 assert.match(markdown, /dry_run: true/);
 assert.match(markdown, /then dry_run: false/);
-assert.match(markdown, /https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/releases\/new\?tag=v0\.2\.40/);
-assert.match(markdown, /docs\/launch\/github-release-0\.2\.40\.md/);
+assert.match(markdown, /https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/releases\/new\?tag=v0\.2\.41/);
+assert.match(markdown, /docs\/launch\/github-release-0\.2\.41\.md/);
 assert.match(markdown, /https:\/\/news\.ycombinator\.com\/submit/);
 assert.match(markdown, /docs\/launch\/primary-launch\.md/);
 assert.match(markdown, /npm run launch:feedback-note -- --channel show-hn --url <show-hn-url>/);

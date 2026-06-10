@@ -2,7 +2,7 @@
 
 Snapshot date: 2026-06-10.
 
-This runbook prepares the post-first-publish release path for `project-tiny-context-harness`. The package now exists on npm, and the maintainer has verified the manual dry-run workflow. Trusted Publishing is the preferred path for the next new version.
+This runbook records the post-first-publish release path for `project-tiny-context-harness`. The package now exists on npm, and Trusted Publishing is the preferred path for each new version.
 
 ## Official npm Sources Checked
 
@@ -16,15 +16,15 @@ Important current constraints:
 - GitHub Actions workflows need `permissions: id-token: write` and `permissions: contents: read`.
 - GitHub-hosted runners are supported; self-hosted runners are not currently supported.
 - npm does not verify trusted publisher fields when saving them. Repository, workflow filename and environment details must match exactly.
-- Trusted publishing from GitHub Actions for a public package in a public repository automatically generates provenance attestations. Do not claim a provenance badge or trusted-publish release until a real publish has used this path.
+- Trusted publishing from GitHub Actions for a public package in a public repository automatically generates provenance attestations.
 
 ## Current Boundary
 
 The renamed package exists on npm. Use local token publishing only as an emergency fallback.
 
-The current published package is `project-tiny-context-harness@0.2.40`. A real Trusted Publishing run must publish a new version, such as `0.2.41` after `packages/sdlc-harness/package.json` is bumped and the normal release checks pass. Do not run a real publish for `0.2.40` again; npm versions are immutable.
+The current published package is `project-tiny-context-harness@0.2.41`. It was published through the GitHub Actions Trusted Publishing workflow after a successful dry run. A future real Trusted Publishing run must publish a new version after `packages/sdlc-harness/package.json` is bumped and the normal release checks pass. Do not run a real publish for `0.2.41` again; npm versions are immutable.
 
-Because npm package README content is also tied to the immutable published version, local README copy changes after `0.2.40` will not appear on npm until a new version is published. Treat a stale `npm-readme-renamed-surfaces` info item from `npm run launch:strict-external` as a conversion cleanup task for the next patch release, not as permission to republish the existing version.
+Because npm package README content is also tied to the immutable published version, local README copy changes will not appear on npm until a new version is published. Treat a stale `npm-readme-renamed-surfaces` info item from `npm run launch:strict-external` as a conversion cleanup task for the next patch release, not as permission to republish the existing version.
 
 For an emergency local fallback after a future version bump, use:
 
@@ -74,10 +74,10 @@ It is manual-only:
 
 ## Dry Run
 
-Open <https://github.com/Seven128/project-tiny-context-harness/actions/workflows/npm-publish.yml>, click **Run workflow**, choose branch `main`, then run **npm Trusted Publish** with:
+Open <https://github.com/Seven128/project-tiny-context-harness/actions/workflows/npm-publish.yml>, click **Run workflow**, choose branch `main`, then run **npm Trusted Publish** with the next committed package version:
 
 ```text
-expected_version: 0.2.41
+expected_version: <new-version>
 dry_run: true
 ```
 
@@ -89,7 +89,7 @@ Expected result:
 - `npm pack --dry-run --workspace project-tiny-context-harness` succeeds,
 - no npm publish occurs.
 
-The maintainer verified this dry run on 2026-06-10 after configuring npm Trusted Publishing.
+The maintainer verified the `0.2.41` dry run and real publish on 2026-06-10 after configuring npm Trusted Publishing.
 
 ## Real Publish
 
@@ -120,6 +120,6 @@ The strict external check must no longer fail `npm-fetch`. The npm README should
 ## Do Not Do
 
 - Do not configure `NPM_TOKEN` or `NODE_AUTH_TOKEN` for the publish job.
-- Do not claim Trusted Publishing or provenance until a real release used this workflow.
+- Do not claim future releases used Trusted Publishing unless that specific version was actually published by this workflow.
 - Do not post broad launch copy if `npm-fetch` fails.
 - Do not change the workflow filename, GitHub environment name or repository owner without updating the npm trusted publisher configuration.

@@ -15,8 +15,8 @@ Public state after the repository rename, checked against public GitHub and npm 
 | GitHub description / license | `Minimal project memory and validation harness for AI coding agents.`, MIT detected |
 | GitHub homepage | `https://www.npmjs.com/package/project-tiny-context-harness` |
 | GitHub topics | `agent-context`, `agent-memory`, `agents-md`, `ai-agents`, `ai-coding`, `claude-code`, `cli`, `codex`, `coding-agent`, `context-engineering`, `context-management`, `cursor`, `developer-productivity`, `developer-tools`, `gemini-cli`, `opencode`, `project-memory`, `sdlc`, `workflow` |
-| GitHub release | `v0.2.40` tag exists for the renamed npm package; latest release remains `Project Tiny Context Harness 0.2.39 - legacy npm package` until the prepared `0.2.40` GitHub Release is published |
-| npm package | `project-tiny-context-harness` is published and installable through `@latest` |
+| GitHub release | Latest release remains `Project Tiny Context Harness 0.2.39 - legacy npm package` until the prepared `0.2.41` GitHub Release is published |
+| npm package | `project-tiny-context-harness@0.2.41` is published and installable through `@latest` |
 | npm public metadata | Live npm package metadata |
 | npm downloads | Renamed package download window is not available yet through the npm downloads API; legacy package last-week downloads remain useful only as historical distribution telemetry |
 | Launch readiness | Local `npm run launch:check` and strict external check pass; the remaining release-page gap is a conversion/trust surface, not an npm availability blocker |

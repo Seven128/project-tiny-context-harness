@@ -98,6 +98,10 @@ function contains(content, pattern) {
   return pattern.test(content);
 }
 
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -177,7 +181,8 @@ function localChecks() {
   const npmPublishRunbook = read("docs/launch/npm-publish-runbook.md");
   const npmCredentialUnblock = read("docs/launch/npm-credential-unblock.md");
   const npmTrustedPublishing = read("docs/launch/npm-trusted-publishing.md");
-  const githubReleasePacket = read("docs/launch/github-release-0.2.40.md");
+  const githubReleasePacketPath = `docs/launch/github-release-${packageJson.version}.md`;
+  const githubReleasePacket = read(githubReleasePacketPath);
   const prelaunchExternalBlockers = read("docs/launch/prelaunch-external-blockers.md");
   const codexForOssApplication = read("docs/launch/codex-for-oss-application.md");
   const openssfBestPractices = read("docs/launch/openssf-best-practices.md");
@@ -1000,7 +1005,7 @@ function localChecks() {
       contains(launchNextScript, /pending-cleanup/) &&
       contains(launchNextScript, /waiting-for-url/) &&
       contains(launchNextScript, /actions\/workflows\/npm-publish\.yml/) &&
-      contains(launchNextScript, /releases\/new\?tag=v0\.2\.40/) &&
+      contains(launchNextScript, /releases\/new\?tag=v\$\{packageVersion\}/) &&
       contains(launchNextScript, /news\.ycombinator\.com\/submit/) &&
       contains(launchNextScript, /npm run launch:feedback-note -- --channel show-hn --url <show-hn-url>/) &&
       contains(launchNextScript, /npm run launch:external-prs -- --live --clean/) &&
@@ -1033,7 +1038,7 @@ function localChecks() {
       !contains(primaryLaunch, /npm run release:npm/) &&
       contains(primaryLaunch, /npm run launch:strict-external/) &&
       contains(primaryLaunch, /project-tiny-context-harness@latest/) &&
-      contains(primaryLaunch, /github-release-0\.2\.40\.md/) &&
+      contains(primaryLaunch, new RegExp(`github-release-${escapeRegex(packageJson.version)}\\.md`)) &&
       contains(primaryLaunch, /npm-publish-runbook\.md/) &&
       contains(primaryLaunch, /Product Hunt/) &&
       contains(primaryLaunch, /difference from using only AGENTS\.md/) &&
@@ -1066,10 +1071,10 @@ function localChecks() {
     checks,
     "npm-publish-runbook",
     hasFile("docs/launch/npm-publish-runbook.md") &&
-      contains(npmPublishRunbook, /project-tiny-context-harness@0\.2\.39/) &&
+      contains(npmPublishRunbook, /project-tiny-context-harness@0\.2\.40/) &&
       contains(npmPublishRunbook, /npm-credential-unblock\.md/) &&
       contains(npmPublishRunbook, /npm-trusted-publishing\.md/) &&
-      contains(npmPublishRunbook, /npm run release:npm -- --version 0\.2\.39 --publish --yes --full-gate --registry-smoke/) &&
+      contains(npmPublishRunbook, /npm run release:npm -- --version 0\.2\.40 --publish --yes --full-gate --registry-smoke/) &&
       contains(npmPublishRunbook, /--otp 123456/) &&
       contains(npmPublishRunbook, /Do not post broad launch copy while the renamed package still returns 404/) &&
       contains(npmPublishRunbook, /You may not perform that action with these credentials/) &&
@@ -1142,7 +1147,8 @@ function localChecks() {
       contains(npmTrustedPublishing, /post-first-publish release path/) &&
       contains(npmTrustedPublishing, /package now exists on npm/) &&
       contains(npmTrustedPublishing, /must not define `NPM_TOKEN` or `NODE_AUTH_TOKEN`/) &&
-      contains(npmTrustedPublishing, new RegExp(`expected_version: ${packageVersionPattern}`)) &&
+      contains(npmTrustedPublishing, /expected_version: <new-version>/) &&
+      contains(npmTrustedPublishing, /0\.2\.41` dry run and real publish/) &&
       contains(npmTrustedPublishWorkflow, /name: npm Trusted Publish/) &&
       contains(npmTrustedPublishWorkflow, /workflow_dispatch:/) &&
       contains(npmTrustedPublishWorkflow, /dry_run:/) &&
@@ -1169,17 +1175,17 @@ function localChecks() {
   addCheck(
     checks,
     "github-release-packet",
-    hasFile("docs/launch/github-release-0.2.40.md") &&
-      contains(launchKit, /github-release-0\.2\.40\.md/) &&
+    hasFile(githubReleasePacketPath) &&
+      contains(launchKit, new RegExp(`github-release-${escapeRegex(packageJson.version)}\\.md`)) &&
       contains(githubReleasePacket, /Tag:/) &&
-      contains(githubReleasePacket, /v0\.2\.40/) &&
-      contains(githubReleasePacket, /d125dfd172defa195ed79050151216505bbaf9f4/) &&
-      contains(githubReleasePacket, /Project Tiny Context Harness 0\.2\.40/) &&
+      contains(githubReleasePacket, new RegExp(`v${escapeRegex(packageJson.version)}`)) &&
+      contains(githubReleasePacket, /dfda8fd2c07143fca137aa609a28a5eb6d8a6697/) &&
+      contains(githubReleasePacket, new RegExp(`Project Tiny Context Harness ${escapeRegex(packageJson.version)}`)) &&
       contains(githubReleasePacket, /npm install -D project-tiny-context-harness@latest/) &&
       contains(githubReleasePacket, /keep the memory, drop the ceremony/i) &&
-      contains(githubReleasePacket, /Do not retarget `v0\.2\.40` to current `main`/) &&
+      contains(githubReleasePacket, new RegExp(`Do not retarget \`v${escapeRegex(packageJson.version)}\``)) &&
       contains(githubReleasePacket, /Do not claim benchmark wins or adoption/),
-    "GitHub Release packet provides exact v0.2.40 fields, correct tag target and claims boundaries."
+    `GitHub Release packet provides exact v${packageJson.version} fields, correct tag target and claims boundaries.`
   );
   addCheck(
     checks,
@@ -1384,10 +1390,10 @@ function localChecks() {
   addCheck(
     checks,
     "market-map",
-    contains(marketMap, /Market Map/) &&
+      contains(marketMap, /Market Map/) &&
       contains(marketMap, /Competitive Snapshot/) &&
       contains(marketMap, /10-100 stars/) &&
-      contains(marketMap, /`v0\.2\.40` tag exists/) &&
+      contains(marketMap, /0\.2\.41` GitHub Release/) &&
       contains(marketMap, /conversion\/trust surface/) &&
       contains(marketMap, /not an npm availability blocker/) &&
       contains(marketMap, /download window is not available yet/),
@@ -1404,7 +1410,7 @@ function localChecks() {
       contains(outreachTargets, /OpenSSF Scorecard workflow/) &&
       contains(outreachTargets, /Minimal Context sample project/) &&
       contains(outreachTargets, /FAQ answers/) &&
-      contains(outreachTargets, /`v0\.2\.40` tag exists/) &&
+      contains(outreachTargets, /`v0\.2\.41` is published on npm through Trusted Publishing/) &&
       contains(outreachTargets, /conversion\/trust improvement/) &&
       contains(outreachTargets, /not an npm unblock step/) &&
       contains(outreachTargets, /awesome-list-submissions\.md/) &&
@@ -1616,9 +1622,10 @@ async function externalChecks(localPackageJson) {
       /agent-project-sdlc version 0\.2\.39/i.test(latestReleaseBody) &&
       /project-tiny-context-harness latest/i.test(latestReleaseBody) &&
       /does not claim benchmark-proven delivery speedups/i.test(latestReleaseBody);
+    const currentReleaseTitle = `Project Tiny Context Harness ${localPackageJson.version}`;
     const currentRenamedRelease =
-      latestReleaseName === "Project Tiny Context Harness 0.2.40" &&
-      /first public release line under the renamed npm package/i.test(latestReleaseBody) &&
+      latestReleaseName === currentReleaseTitle &&
+      /current public release line under the renamed npm package/i.test(latestReleaseBody) &&
       /project-tiny-context-harness@latest/i.test(latestReleaseBody) &&
       /keep the memory, drop the ceremony/i.test(latestReleaseBody) &&
       /does not claim benchmark-proven speedups/i.test(latestReleaseBody);

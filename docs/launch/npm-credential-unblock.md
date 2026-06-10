@@ -10,7 +10,7 @@ Use this checklist when an emergency local publish reaches npm and fails with:
 
 This means the local package artifact may be valid, but the active npm credentials cannot create or publish `project-tiny-context-harness`.
 
-Current state: the original first-publish blocker has been cleared and `project-tiny-context-harness@0.2.40` is published. Prefer [npm-trusted-publishing.md](npm-trusted-publishing.md) for future releases. Keep this file only as the fallback path if a future local publish must be retried with `<new-version>`.
+Current state: the original first-publish blocker has been cleared and `project-tiny-context-harness@0.2.41` is published. Prefer [npm-trusted-publishing.md](npm-trusted-publishing.md) for future releases. Keep this file only as the fallback path if a future local publish must be retried with `<new-version>`.
 
 Do not paste tokens into issues, commits, release reports, shell transcripts or `project_context/**`.
 
@@ -138,7 +138,7 @@ Expected current state:
 ```json
 {
   "name": "project-tiny-context-harness",
-  "version": "0.2.40"
+  "version": "0.2.41"
 }
 ```
 
