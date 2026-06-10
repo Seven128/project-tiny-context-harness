@@ -237,6 +237,16 @@ function localChecks() {
   );
   addCheck(
     checks,
+    "root-readme-source-preview",
+    contains(rootReadme, /Source preview while npm publish is pending/) &&
+      contains(rootReadme, /git clone https:\/\/github\.com\/Seven128\/project-tiny-context-harness\.git/) &&
+      contains(rootReadme, /npm run smoke:quickstart/) &&
+      contains(rootReadme, /packs the local workspace, installs it into a disposable repo/) &&
+      contains(rootReadme, /validates the generated Minimal Context files/),
+    "Root README gives reviewers a source-based preview path while npm publish is pending."
+  );
+  addCheck(
+    checks,
     "fresh-agent-walkthrough",
     hasFile("docs/examples/fresh-agent-recovery.md") &&
       contains(rootReadme, /fresh-agent recovery walkthrough/) &&

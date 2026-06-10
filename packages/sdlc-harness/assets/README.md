@@ -42,6 +42,17 @@ npm install -D project-tiny-context-harness@latest
 npx --yes --package project-tiny-context-harness@latest sdlc-harness init
 ```
 
+Source preview while npm publish is pending:
+
+```sh
+git clone https://github.com/Seven128/project-tiny-context-harness.git
+cd project-tiny-context-harness
+npm ci
+npm run smoke:quickstart
+```
+
+That smoke packs the local workspace, installs it into a disposable repo, runs `sdlc-harness init` and validates the generated Minimal Context files.
+
 Use it when coding agents repeatedly lose project intent across new chats, handoffs, RFC/debug turns or tool changes. The intended tradeoff is: keep durable intent and recovery paths; leave execution evidence to code, tests and review.
 
 ## Why It Exists
