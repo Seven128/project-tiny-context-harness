@@ -245,9 +245,7 @@ npx --yes --package project-tiny-context-harness@latest sdlc-harness export-cont
 npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --all --check
 ```
 
-This generates both default artifacts with the same timestamp: `tmp/sdlc/context-exports/当前项目context-<timestamp>.md` and `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/当前项目代码实现.md`. `--all` does not accept `--output`; use `--full` or `--code` for custom single-artifact paths.
-
-Those default filenames are literal compatibility examples. They do not make the public package Chinese-first, and single-artifact exports can use custom English filenames through `--output`.
+This generates both default artifacts with the same timestamp: `tmp/sdlc/context-exports/full-project-context-<timestamp>.md` and `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/code-level-implementation.md`. `--all` does not accept `--output`; use `--full` or `--code` for custom single-artifact paths.
 
 `export-context --full` creates only the temporary Markdown Context bundle:
 
@@ -257,7 +255,7 @@ npx --yes --package project-tiny-context-harness@latest sdlc-harness export-cont
 npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --full --check
 ```
 
-The default output is `tmp/sdlc/context-exports/当前项目context-<timestamp>.md`. The file title is `# 当前项目context`. `--check` reports the planned output path, source count, source file list and warnings without writing a file. The artifact header always says `Export artifact. Do not reference from project_context/context.toml.`
+The default output is `tmp/sdlc/context-exports/full-project-context-<timestamp>.md`. The file title is `# Full Project Context Export`. `--check` reports the planned output path, source count, source file list and warnings without writing a file. The artifact header always says `Export artifact. Do not reference from project_context/context.toml.`
 
 The exporter includes Context files, key README / AGENTS / DESIGN documents, managed Skill guidance, Makefile verification-entry summaries, a directory tree summary and Context code-entry indexes. It excludes `.env*`, secret/token/cookie-oriented files, raw captures, licensed payload dumps, `node_modules`, build output, caches, coverage, test reports and existing export artifacts; obvious sensitive assignment values are redacted and reported as warnings.
 
@@ -269,9 +267,9 @@ npx --yes --package project-tiny-context-harness@latest sdlc-harness export-cont
 npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code --check
 ```
 
-The default output is `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/当前项目代码实现.md`. The file title is `# 当前项目代码实现`. It scans main source and engineering configuration files, adds each file path, type, line count, character count, SHA256, a heuristic one-sentence summary and a fenced redacted code block. It does not split output into multiple Markdown files.
+The default output is `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/code-level-implementation.md`. The file title is `# Code-Level Implementation Export`. It scans main source and engineering configuration files, adds each file path, type, line count, character count, SHA256, a heuristic one-sentence summary and a fenced redacted code block. It does not split output into multiple Markdown files.
 
-Both export modes refuse `project_context/**` and non-temporary output paths. `validate-context` also rejects obvious export artifact names such as `当前项目代码实现`, `当前项目context`, `code-level-implementation`, `full-project-context`, `project-overview`, `context-bundle`, `context-summary` or `context-export` if they are registered in `project_context/context.toml`.
+Both export modes refuse `project_context/**` and non-temporary output paths. `validate-context` also rejects obvious export artifact names such as `code-level-implementation`, `full-project-context`, legacy Chinese export names, `project-overview`, `context-bundle`, `context-summary` or `context-export` if they are registered in `project_context/context.toml`.
 
 The Context should be dense, durable and short. Former ADR content belongs in `Design Rationale` when it still affects future changes. Implementation details that are obvious from code should stay in code and tests; only non-obvious constraints belong in Context.
 

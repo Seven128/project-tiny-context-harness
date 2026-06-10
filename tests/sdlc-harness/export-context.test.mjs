@@ -12,7 +12,7 @@ const execFileAsync = promisify(execFile);
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const cliPath = path.join(repoRoot, "packages", "sdlc-harness", "dist", "cli.js");
 
-test("export-context writes default temporary full project context artifact with Chinese name", async () => {
+test("export-context writes default temporary full project context artifact", async () => {
   const root = await createExportProject();
   try {
     const report = await runExportContext(root, {
@@ -21,10 +21,10 @@ test("export-context writes default temporary full project context artifact with
     });
     assert.equal(report.mode, "full");
     assert.equal(report.wrote, true);
-    assert.equal(report.outputRelativePath, "tmp/sdlc/context-exports/当前项目context-20260607T080910Z.md");
+    assert.equal(report.outputRelativePath, "tmp/sdlc/context-exports/full-project-context-20260607T080910Z.md");
     assert.ok(report.sourceContextCount >= 4);
     const content = await readFile(report.outputPath, "utf8");
-    assert.match(content, /^# 当前项目context/m);
+    assert.match(content, /^# Full Project Context Export/m);
     assert.match(content, /Export artifact\. Do not reference from project_context\/context\.toml\./);
     assert.match(content, /generated_at: 2026-06-07T08:09:10\.000Z/);
     assert.match(content, /source_context_count:/);
@@ -57,7 +57,7 @@ test("export-context writes default single-file code implementation artifact", a
     assert.equal(report.wrote, true);
     assert.equal(
       report.outputRelativePath,
-      "tmp/sdlc/context-exports/code-level-implementation-20260607T080910Z/当前项目代码实现.md"
+      "tmp/sdlc/context-exports/code-level-implementation-20260607T080910Z/code-level-implementation.md"
     );
     assert.equal(report.sourceCodeCount, report.sourceFiles.length);
     await assert.rejects(
@@ -65,7 +65,7 @@ test("export-context writes default single-file code implementation artifact", a
     );
 
     const content = await readFile(report.outputPath, "utf8");
-    assert.match(content, /^# 当前项目代码实现/m);
+    assert.match(content, /^# Code-Level Implementation Export/m);
     assert.match(content, /Implementation Guide/);
     assert.match(content, /Source File Index/);
     assert.match(content, /## packages\/app\/src\/index\.ts/);
@@ -124,9 +124,11 @@ test("export-context --all check reports both default artifacts without writing"
     assert.match(result.stdout, /source context count: \d+/);
     assert.match(result.stdout, /source code count: \d+/);
 
-    const fullOutput = /- full: (tmp\/sdlc\/context-exports\/当前项目context-\d{8}T\d{6}Z\.md)/.exec(result.stdout)?.[1];
+    const fullOutput = /- full: (tmp\/sdlc\/context-exports\/full-project-context-\d{8}T\d{6}Z\.md)/.exec(
+      result.stdout
+    )?.[1];
     const codeOutput =
-      /- code: (tmp\/sdlc\/context-exports\/code-level-implementation-\d{8}T\d{6}Z\/当前项目代码实现\.md)/.exec(
+      /- code: (tmp\/sdlc\/context-exports\/code-level-implementation-\d{8}T\d{6}Z\/code-level-implementation\.md)/.exec(
         result.stdout
       )?.[1];
     assert.ok(fullOutput);
@@ -142,11 +144,11 @@ test("export-context refuses project_context and non-temporary outputs", async (
   const root = await createExportProject();
   try {
     await assert.rejects(
-      runExportContext(root, { full: true, output: "project_context/当前项目context.md" }),
+      runExportContext(root, { full: true, output: "project_context/full-project-context.md" }),
       /tmp\/sdlc\/context-exports/
     );
     await assert.rejects(
-      runExportContext(root, { code: true, output: "docs/当前项目代码实现.md" }),
+      runExportContext(root, { code: true, output: "docs/code-level-implementation.md" }),
       /only writes temporary artifacts/
     );
   } finally {

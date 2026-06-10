@@ -317,9 +317,7 @@ npx --yes --package project-tiny-context-harness@latest sdlc-harness export-cont
 npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --all --check
 ```
 
-This generates both default artifacts with the same timestamp: `tmp/sdlc/context-exports/当前项目context-<timestamp>.md` and `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/当前项目代码实现.md`. `--all` does not accept `--output`; use the single-artifact commands below for custom names.
-
-Those default filenames are literal compatibility examples. They do not make the public package Chinese-first, and single-artifact exports can use custom English filenames through `--output`.
+This generates both default artifacts with the same timestamp: `tmp/sdlc/context-exports/full-project-context-<timestamp>.md` and `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/code-level-implementation.md`. `--all` does not accept `--output`; use the single-artifact commands below for custom names.
 
 Use `export-context --full` when you need only the project Context bundle:
 
@@ -329,7 +327,7 @@ npx --yes --package project-tiny-context-harness@latest sdlc-harness export-cont
 npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --full --check
 ```
 
-The default artifact path is `tmp/sdlc/context-exports/当前项目context-<timestamp>.md`. The file title is `# 当前项目context`. The file header says `Export artifact. Do not reference from project_context/context.toml.` The export includes Context files, key README / AGENTS / DESIGN documents, managed Skill guidance, Makefile verification-entry summaries, a directory tree summary and Context code-entry indexes.
+The default artifact path is `tmp/sdlc/context-exports/full-project-context-<timestamp>.md`. The file title is `# Full Project Context Export`. The file header says `Export artifact. Do not reference from project_context/context.toml.` The export includes Context files, key README / AGENTS / DESIGN documents, managed Skill guidance, Makefile verification-entry summaries, a directory tree summary and Context code-entry indexes.
 
 Use `export-context --code` when an external model needs the current implementation state in one uploadable Markdown file:
 
@@ -339,11 +337,11 @@ npx --yes --package project-tiny-context-harness@latest sdlc-harness export-cont
 npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code --check
 ```
 
-The default code artifact path is `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/当前项目代码实现.md`. The file title is `# 当前项目代码实现`. It scans main source and engineering configuration files, adds each file path, type, line count, character count, SHA256, a heuristic one-sentence summary and a fenced redacted code block. It does not split output into multiple Markdown files.
+The default code artifact path is `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/code-level-implementation.md`. The file title is `# Code-Level Implementation Export`. It scans main source and engineering configuration files, adds each file path, type, line count, character count, SHA256, a heuristic one-sentence summary and a fenced redacted code block. It does not split output into multiple Markdown files.
 
 Both export modes exclude `.env*` except safe examples such as `.env.example`, secret/token/cookie-oriented files, raw captures, licensed payload dumps, `node_modules`, build output, caches, coverage, test reports, logs and existing export artifacts; obvious sensitive assignment values are redacted and reported as warnings.
 
-Exports are not long-lived fact sources. The CLI refuses `project_context/**` and non-temporary output paths, and `validate-context` rejects obvious export artifact names such as `当前项目代码实现`, `当前项目context`, `code-level-implementation`, `full-project-context`, `project-overview`, `context-bundle`, `context-summary` or `context-export` if someone tries to register them in `project_context/context.toml`.
+Exports are not long-lived fact sources. The CLI refuses `project_context/**` and non-temporary output paths, and `validate-context` rejects obvious export artifact names such as `code-level-implementation`, `full-project-context`, legacy Chinese export names, `project-overview`, `context-bundle`, `context-summary` or `context-export` if someone tries to register them in `project_context/context.toml`.
 
 The Context should be short enough to read at session start and specific enough to prevent fresh-agent drift. It should not copy code, test logs, release ledgers or implementation narration that the code already makes obvious.
 

@@ -49,7 +49,7 @@ const execFileAsync = promisify(execFile);
 
 const EXPORT_HEADER = "Export artifact. Do not reference from project_context/context.toml.";
 const DEFAULT_EXPORT_DIR = "tmp/sdlc/context-exports";
-const CODE_EXPORT_FILE_NAME = "当前项目代码实现.md";
+const CODE_EXPORT_FILE_NAME = "code-level-implementation.md";
 const MAX_TREE_ENTRIES = 300;
 const MAX_TREE_DEPTH = 4;
 const GIT_LS_MAX_BUFFER = 64 * 1024 * 1024;
@@ -194,7 +194,7 @@ async function runFullContextExport(projectRoot: string, options: ExportContextO
   const directoryTree = await buildDirectoryTree(projectRoot, warnings);
   const generatedAt = (options.now ?? new Date()).toISOString();
   const content = [
-    "# 当前项目context",
+    "# Full Project Context Export",
     "",
     `> ${EXPORT_HEADER}`,
     "",
@@ -282,7 +282,7 @@ async function runCodeImplementationExport(projectRoot: string, options: ExportC
 
   const generatedAt = (options.now ?? new Date()).toISOString();
   const content = [
-    "# 当前项目代码实现",
+    "# Code-Level Implementation Export",
     "",
     `> ${EXPORT_HEADER}`,
     "",
@@ -340,7 +340,7 @@ function resolveOutputPath(
   const defaultOutput =
     mode === "code"
       ? path.join(DEFAULT_EXPORT_DIR, `code-level-implementation-${timestamp}`, CODE_EXPORT_FILE_NAME)
-      : path.join(DEFAULT_EXPORT_DIR, `当前项目context-${timestamp}.md`);
+      : path.join(DEFAULT_EXPORT_DIR, `full-project-context-${timestamp}.md`);
   const rawOutput = requestedOutput?.trim() || defaultOutput;
   const absoluteOutput = path.resolve(projectRoot, rawOutput);
   const relative = repoRelative(projectRoot, absoluteOutput);
@@ -600,7 +600,7 @@ function renderCodeFileIndex(records: CodeFileRecord[]): string {
 
 function buildImplementationGuide(records: CodeFileRecord[]): string {
   if (records.length === 0) {
-    return "- 本导出未发现匹配的源码或工程配置文件。";
+    return "- This export did not find matching source or engineering configuration files.";
   }
   const moduleCounts = new Map<string, number>();
   for (const record of records) {
@@ -617,11 +617,11 @@ function buildImplementationGuide(records: CodeFileRecord[]): string {
     .slice(0, 12)
     .map((record) => record.relative);
   return [
-    `- 本导出包含 ${records.length} 个当前源码或工程配置文件，按 Git ignore / Harness 安全排除规则过滤后生成。`,
-    `- 主要模块：${modules || "未识别出明显模块"}.`,
-    `- 关键入口：${entrypoints.length > 0 ? entrypoints.join(", ") : "未识别出明显入口文件"}.`,
-    "- 每个文件块都保留相对路径、启发式摘要、行数、字符数、SHA256 和 redacted 源码正文。",
-    "- 本文件是临时实现快照，不是长期 Context；长期项目事实仍应写入 project_context/**。"
+    `- This export includes ${records.length} current source or engineering configuration files after Git ignore and Harness safety exclusions.`,
+    `- Main modules: ${modules || "no obvious modules identified"}.`,
+    `- Key entry points: ${entrypoints.length > 0 ? entrypoints.join(", ") : "no obvious entry points identified"}.`,
+    "- Each file block keeps the relative path, heuristic summary, line count, character count, SHA256 and redacted source body.",
+    "- This file is a temporary implementation snapshot, not durable Context; durable project facts still belong in project_context/**."
   ].join("\n");
 }
 

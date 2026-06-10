@@ -231,8 +231,10 @@ try {
   assert.match(exportSkill, /export-context --full/);
   assert.match(exportSkill, /export-context --code/);
   assert.match(exportSkill, /当前项目代码实现/);
+  assert.match(exportSkill, /full-project-context-<timestamp>\.md/);
+  assert.match(exportSkill, /code-level-implementation-<timestamp>\/code-level-implementation\.md/);
   assert.match(exportSkill, /tmp\/sdlc\/context-exports/);
-  assert.match(exportSkill, /禁止修改 `project_context\/context\.toml`/);
+  assert.match(exportSkill, /Do not modify `project_context\/context\.toml`/);
 
   const managedProductSkillPath = path.join(root, ".agent/skills/context_product_plan/SKILL.md");
   const packagedProductSkill = await readFile(
