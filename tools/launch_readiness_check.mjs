@@ -247,6 +247,25 @@ function localChecks() {
   );
   addCheck(
     checks,
+    "community-starter-issues",
+    contains(rootReadme, /Early feedback and starter issues/) &&
+      contains(packageReadme, /Early feedback and starter issues/) &&
+      contains(rootReadme, /github\.com\/Seven128\/project-tiny-context-harness\/issues\/4/) &&
+      contains(packageReadme, /github\.com\/Seven128\/project-tiny-context-harness\/issues\/4/) &&
+      contains(rootReadme, /github\.com\/Seven128\/project-tiny-context-harness\/issues\/5/) &&
+      contains(rootReadme, /github\.com\/Seven128\/project-tiny-context-harness\/issues\/6/) &&
+      contains(rootReadme, /github\.com\/Seven128\/project-tiny-context-harness\/issues\/7/) &&
+      contains(rootReadme, /github\.com\/Seven128\/project-tiny-context-harness\/issues\/8/) &&
+      contains(packageReadme, /github\.com\/Seven128\/project-tiny-context-harness\/issues\/5/) &&
+      contains(packageReadme, /github\.com\/Seven128\/project-tiny-context-harness\/issues\/6/) &&
+      contains(packageReadme, /github\.com\/Seven128\/project-tiny-context-harness\/issues\/7/) &&
+      contains(packageReadme, /github\.com\/Seven128\/project-tiny-context-harness\/issues\/8/) &&
+      contains(rootReadme, /benchmark speedup claims need fresh Minimal Context benchmark runs/) &&
+      contains(packageReadme, /benchmark speedup claims need fresh Minimal Context benchmark runs/),
+    "README and package README expose adoption handoff and starter issues without benchmark overclaiming."
+  );
+  addCheck(
+    checks,
     "agent-surface-recipes",
     hasFile("docs/agent-surface-recipes.md") &&
       contains(rootReadme, /agent surface recipes/) &&

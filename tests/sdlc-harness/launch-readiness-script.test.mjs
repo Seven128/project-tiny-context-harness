@@ -34,6 +34,7 @@ for (const expected of [
   "public-language-posture",
   "root-readme-prepublish-boundary",
   "agent-surface-recipes",
+  "community-starter-issues",
   "launch-kit",
   "launch-operating-plan",
   "primary-launch-packet",
