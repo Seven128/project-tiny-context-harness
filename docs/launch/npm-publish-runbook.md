@@ -4,6 +4,8 @@ Snapshot date: 2026-06-10.
 
 This runbook exists for the repository rename window. The GitHub repository and package metadata now use Project Tiny Context Harness, but the renamed npm package is not public until `project-tiny-context-harness` has a registry entry.
 
+For future releases after the first renamed publish, use [npm-trusted-publishing.md](npm-trusted-publishing.md) to configure GitHub Actions OIDC publishing instead of a long-lived npm publish token.
+
 ## Current Registry State
 
 - `npm whoami` returns an authenticated npm user.
@@ -101,6 +103,7 @@ The strict external check should pass npm metadata, and the demo should install 
 Only after that:
 
 - create a new GitHub Release for the renamed npm package,
+- configure Trusted Publishing with [npm-trusted-publishing.md](npm-trusted-publishing.md) for future releases,
 - update launch docs that currently say npm is pending,
 - post Show HN or any broad public launch,
 - submit curated-list PRs that assume the package is installable.

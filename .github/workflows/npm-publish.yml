@@ -1,0 +1,66 @@
+name: npm Trusted Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_version:
+        description: "Must match packages/sdlc-harness/package.json version."
+        required: true
+        default: "0.2.39"
+      dry_run:
+        description: "Run all checks and pack without publishing."
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Ensure npm supports trusted publishing
+        run: |
+          npm install -g npm@latest
+          npm --version
+          node -e "const v=require('child_process').execFileSync('npm',['--version'],{encoding:'utf8'}).trim().split('.').map(Number); if (v[0] < 11 || (v[0] === 11 && (v[1] < 5 || (v[1] === 5 && v[2] < 1)))) { throw new Error('npm CLI 11.5.1 or later is required for trusted publishing'); }"
+
+      - name: Check package version
+        shell: bash
+        run: |
+          PACKAGE_VERSION="$(node -p "require('./packages/sdlc-harness/package.json').version")"
+          if [ "$PACKAGE_VERSION" != "${{ inputs.expected_version }}" ]; then
+            echo "Expected ${{ inputs.expected_version }} but package is $PACKAGE_VERSION" >&2
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test package
+        run: npm test --workspace project-tiny-context-harness
+
+      - name: Check package canonical source drift
+        run: node packages/sdlc-harness/dist/cli.js package check-source
+
+      - name: Validate source Context
+        run: make validate-context
+
+      - name: Pack dry run
+        run: npm pack --dry-run --workspace project-tiny-context-harness
+
+      - name: Publish package with npm trusted publishing
+        if: ${{ !inputs.dry_run }}
+        env:
+          NPM_CONFIG_PROVENANCE: "true"
+        run: npm publish --workspace project-tiny-context-harness --access public

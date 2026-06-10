@@ -19,6 +19,7 @@ Do not paste tokens into issues, commits, release reports, shell transcripts or 
 - 2FA for publishing: <https://docs.npmjs.com/requiring-2fa-for-package-publishing-and-settings-modification/>
 - CI/CD token guidance: <https://docs.npmjs.com/using-private-packages-in-a-ci-cd-workflow/>
 - Trusted publishing: <https://docs.npmjs.com/trusted-publishers/>
+- Project Trusted Publishing runbook: [npm-trusted-publishing.md](npm-trusted-publishing.md)
 
 ## Current Failure Pattern
 
@@ -88,6 +89,20 @@ After publish succeeds, either keep the token only if needed for future releases
 npm config delete //registry.npmjs.org/:_authToken --location=user
 Remove-Item Env:NPM_TOKEN
 ```
+
+### Path C: Trusted Publishing After First Publish
+
+Use this after `project-tiny-context-harness` exists on npm and the package settings page is available.
+
+Trusted Publishing is the preferred future release path because GitHub Actions can publish through OIDC without storing a long-lived npm publish token. It is not the current first-publish unblock path while the renamed package still returns 404 and package settings are unavailable.
+
+Follow [npm-trusted-publishing.md](npm-trusted-publishing.md) to configure:
+
+- GitHub owner `Seven128`,
+- repository `project-tiny-context-harness`,
+- workflow filename `npm-publish.yml`,
+- environment `npm-publish`,
+- allowed action `npm publish`.
 
 ## Safety Checks Before Retrying
 

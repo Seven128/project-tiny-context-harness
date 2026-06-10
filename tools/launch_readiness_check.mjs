@@ -163,6 +163,7 @@ function localChecks() {
   const adoptionStoryTemplate = read("docs/launch/adoption-story-template.md");
   const npmPublishRunbook = read("docs/launch/npm-publish-runbook.md");
   const npmCredentialUnblock = read("docs/launch/npm-credential-unblock.md");
+  const npmTrustedPublishing = read("docs/launch/npm-trusted-publishing.md");
   const codexForOssApplication = read("docs/launch/codex-for-oss-application.md");
   const openssfBestPractices = read("docs/launch/openssf-best-practices.md");
   const awesomeListSubmissions = read("docs/launch/awesome-list-submissions.md");
@@ -189,6 +190,7 @@ function localChecks() {
   const outreachTargets = read("docs/launch/outreach-targets.md");
   const sourceWorkflow = read(".github/workflows/harness.yml");
   const maintainerWorkflow = read(".github/workflows/package.yml");
+  const npmTrustedPublishWorkflow = read(".github/workflows/npm-publish.yml");
   const scorecardWorkflow = read(".github/workflows/scorecard.yml");
   const adoptionReportTemplate = read(".github/ISSUE_TEMPLATE/adoption_report.yml");
   const releaseScript = read("tools/release_npm.mjs");
@@ -571,6 +573,7 @@ function localChecks() {
       contains(launchKit, /Do not claim benchmark wins/) &&
       contains(launchKit, /Hacker News Draft/) &&
       contains(launchKit, /npm-publish-runbook\.md/) &&
+      contains(launchKit, /npm-trusted-publishing\.md/) &&
       contains(launchKit, /awesome-list-submissions\.md/) &&
       contains(launchKit, /Readiness boundary/) &&
       contains(launchKit, /repo-hosted media/) &&
@@ -634,6 +637,7 @@ function localChecks() {
     hasFile("docs/launch/npm-publish-runbook.md") &&
       contains(npmPublishRunbook, /project-tiny-context-harness@0\.2\.39/) &&
       contains(npmPublishRunbook, /npm-credential-unblock\.md/) &&
+      contains(npmPublishRunbook, /npm-trusted-publishing\.md/) &&
       contains(npmPublishRunbook, /npm run release:npm -- --version 0\.2\.39 --publish --yes --full-gate --registry-smoke/) &&
       contains(npmPublishRunbook, /--otp 123456/) &&
       contains(npmPublishRunbook, /Do not post broad launch copy while the renamed package still returns 404/) &&
@@ -652,6 +656,7 @@ function localChecks() {
     hasFile("docs/launch/npm-credential-unblock.md") &&
       contains(launchKit, /npm-credential-unblock\.md/) &&
       contains(launchKit, /npm credential unblock/) &&
+      contains(npmCredentialUnblock, /npm-trusted-publishing\.md/) &&
       contains(npmCredentialUnblock, /npm Credential Unblock Checklist/i) &&
       contains(npmCredentialUnblock, /403 Forbidden - PUT https:\/\/registry\.npmjs\.org\/project-tiny-context-harness/) &&
       contains(npmCredentialUnblock, /Official npm References/) &&
@@ -664,6 +669,48 @@ function localChecks() {
       contains(npmCredentialUnblock, /Post-Publish Gate/) &&
       contains(npmCredentialUnblock, /Do not commit `.npmrc`, tokens, OTP values/),
     "npm credential unblock checklist gives a safe path from 403 credentials failure to publish retry."
+  );
+  addCheck(
+    checks,
+    "npm-trusted-publishing-packet",
+    hasFile("docs/launch/npm-trusted-publishing.md") &&
+      hasFile(".github/workflows/npm-publish.yml") &&
+      contains(launchKit, /npm-trusted-publishing\.md/) &&
+      contains(npmPublishRunbook, /npm-trusted-publishing\.md/) &&
+      contains(npmCredentialUnblock, /npm-trusted-publishing\.md/) &&
+      contains(npmTrustedPublishing, /Official npm Sources Checked/) &&
+      contains(npmTrustedPublishing, /https:\/\/docs\.npmjs\.com\/trusted-publishers\//) &&
+      contains(npmTrustedPublishing, /https:\/\/docs\.npmjs\.com\/generating-provenance-statements\//) &&
+      contains(npmTrustedPublishing, /npm CLI version 11\.5\.1 or later/) &&
+      contains(npmTrustedPublishing, /Node version 22\.14\.0 or higher/) &&
+      contains(npmTrustedPublishing, /permissions: id-token: write/) &&
+      contains(npmTrustedPublishing, /Organization or user \| `Seven128`/) &&
+      contains(npmTrustedPublishing, /Repository \| `project-tiny-context-harness`/) &&
+      contains(npmTrustedPublishing, /Workflow filename \| `npm-publish\.yml`/) &&
+      contains(npmTrustedPublishing, /Environment name \| `npm-publish`/) &&
+      contains(npmTrustedPublishing, /Allowed actions \| `npm publish`/) &&
+      contains(npmTrustedPublishing, /does not replace the first renamed package publish/) &&
+      contains(npmTrustedPublishing, /package still returns 404/) &&
+      contains(npmTrustedPublishing, /must not define `NPM_TOKEN` or `NODE_AUTH_TOKEN`/) &&
+      contains(npmTrustedPublishWorkflow, /name: npm Trusted Publish/) &&
+      contains(npmTrustedPublishWorkflow, /workflow_dispatch:/) &&
+      contains(npmTrustedPublishWorkflow, /dry_run:/) &&
+      contains(npmTrustedPublishWorkflow, /default: true/) &&
+      contains(npmTrustedPublishWorkflow, /id-token:\s*write/) &&
+      contains(npmTrustedPublishWorkflow, /contents:\s*read/) &&
+      contains(npmTrustedPublishWorkflow, /environment:\s*npm-publish/) &&
+      contains(npmTrustedPublishWorkflow, /node-version:\s*"24"/) &&
+      contains(npmTrustedPublishWorkflow, /registry-url:\s*"https:\/\/registry\.npmjs\.org"/) &&
+      contains(npmTrustedPublishWorkflow, /npm install -g npm@latest/) &&
+      contains(npmTrustedPublishWorkflow, /npm CLI 11\.5\.1 or later is required/) &&
+      contains(npmTrustedPublishWorkflow, /npm test --workspace project-tiny-context-harness/) &&
+      contains(npmTrustedPublishWorkflow, /node packages\/sdlc-harness\/dist\/cli\.js package check-source/) &&
+      contains(npmTrustedPublishWorkflow, /make validate-context/) &&
+      contains(npmTrustedPublishWorkflow, /npm pack --dry-run --workspace project-tiny-context-harness/) &&
+      contains(npmTrustedPublishWorkflow, /NPM_CONFIG_PROVENANCE:\s*"true"/) &&
+      contains(npmTrustedPublishWorkflow, /npm publish --workspace project-tiny-context-harness --access public/) &&
+      !contains(npmTrustedPublishWorkflow, /NPM_TOKEN|NODE_AUTH_TOKEN/),
+    "npm trusted publishing packet documents post-first-publish OIDC setup and provides a manual dry-run-first workflow without long-lived npm publish tokens."
   );
   addCheck(
     checks,
@@ -896,6 +943,7 @@ function localChecks() {
     checks,
     "maintainer-workflow",
     contains(maintainerWorkflow, /Test package/) &&
+      contains(maintainerWorkflow, /\.github\/workflows\/npm-publish\.yml/) &&
       contains(maintainerWorkflow, /\.github\/workflows\/scorecard\.yml/) &&
       contains(maintainerWorkflow, /Check package canonical source drift/) &&
       contains(maintainerWorkflow, /node packages\/sdlc-harness\/dist\/cli\.js package check-source/) &&
