@@ -150,6 +150,7 @@ function localChecks() {
   const awesomeListSubmissions = read("docs/launch/awesome-list-submissions.md");
   const responseTemplates = read("docs/launch/response-templates.md");
   const agentSurfaceRecipes = read("docs/agent-surface-recipes.md");
+  const comparisonGuide = read("docs/comparison.md");
   const existingRepoAdoption = read("docs/adopt-existing-repo.md");
   const faq = read("docs/faq.md");
   const roadmap = read("docs/roadmap.md");
@@ -402,6 +403,28 @@ function localChecks() {
       contains(roadmap, /Full SDLC phase gates, lifecycle state or work-product trees/) &&
       contains(roadmap, /validate-context` proves product quality/),
     "Public roadmap is linked from README/package README and keeps next steps bounded to Minimal Context without proof claims."
+  );
+  addCheck(
+    checks,
+    "comparison-guide",
+    hasFile("docs/comparison.md") &&
+      contains(rootReadme, /comparison guide]\(docs\/comparison\.md\)/) &&
+      contains(packageReadme, /comparison guide]\(https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/blob\/main\/docs\/comparison\.md\)/) &&
+      contains(faq, /comparison guide]\(comparison\.md\)/) &&
+      contains(launchKit, /\.\.\/comparison\.md/) &&
+      contains(launchKit, /Comparison guide/) &&
+      contains(comparisonGuide, /Project Tiny Context Harness owns durable repo memory for fresh-agent recovery/) &&
+      contains(comparisonGuide, /AGENTS\.md.*alone/) &&
+      contains(comparisonGuide, /Spec-first kits/) &&
+      contains(comparisonGuide, /Task planners/) &&
+      contains(comparisonGuide, /Code intelligence \/ retrieval/) &&
+      contains(comparisonGuide, /Use Harness When/) &&
+      contains(comparisonGuide, /Use Something Else When/) &&
+      contains(comparisonGuide, /Common Combinations/) &&
+      contains(comparisonGuide, /Would a fresh coding agent need this fact before proposing a safe code change/) &&
+      contains(comparisonGuide, /Do not evaluate Harness as/) &&
+      contains(comparisonGuide, /benchmark-proven productivity multiplier/),
+    "Comparison guide is linked from public docs and explains adjacent-tool fit without superiority or benchmark claims."
   );
   addCheck(
     checks,

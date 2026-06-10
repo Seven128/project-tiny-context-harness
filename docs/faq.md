@@ -42,6 +42,8 @@ avoid stage ceremony
 leave product quality to tests, CI, review and humans
 ```
 
+For adjacent-tool fit across `AGENTS.md`, spec-first kits, task planners, retrieval tools and agent memory, see the [comparison guide](comparison.md).
+
 ## Why did you remove the old stage-based workflow?
 
 The old direction externalized too much of ordinary software work into phase transitions and work products. That added real time and token cost, especially for small and medium tasks.

@@ -44,6 +44,7 @@ for (const expected of [
   "adoption-story-template",
   "community-starter-issues",
   "public-roadmap",
+  "comparison-guide",
   "launch-kit",
   "launch-operating-plan",
   "primary-launch-packet",
