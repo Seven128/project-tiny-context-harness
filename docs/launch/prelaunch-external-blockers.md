@@ -4,6 +4,8 @@ Snapshot date: 2026-06-10.
 
 Broad public launch is blocked only when the strict external launch check reports required TODOs. Current expected state is clear: `npm-fetch` and `github-homepage` should both pass.
 
+If `npm run launch:unblock` reports `ready-with-cleanup`, the required broad-launch gate is clear but a prepared local package version has not reached npm yet. Use the listed npm Trusted Publishing dry run and real publish steps to refresh the live npm README before broad launch when polish matters.
+
 Private review can continue even if a future external drift appears, but it should use the no-install preview, npm install path, Codespaces or source-preview path and should not ask for stars.
 
 Run the gate before posting broad launch copy:

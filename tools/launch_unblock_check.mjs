@@ -72,10 +72,73 @@ function externalTodos(readiness) {
     .map((check) => ({ id: check.id, detail: check.detail }));
 }
 
+function externalInfoActions(readiness) {
+  return readiness.externalChecks
+    .filter((check) => !check.ok && check.severity === "external-info")
+    .map((check) => ({ id: check.id, detail: check.detail }));
+}
+
+function releaseDelta(npmAccess) {
+  const localVersion = npmAccess.package?.version ?? packageJson.version;
+  const publishedVersion = npmAccess.registryPackage?.version ?? null;
+  if (!publishedVersion || localVersion === publishedVersion) {
+    return null;
+  }
+  return {
+    localVersion,
+    publishedVersion,
+    nextAction: `Run GitHub Actions npm Trusted Publish with expected_version ${localVersion}. Use dry_run true first, then dry_run false when ready.`
+  };
+}
+
 function reportStatus({ npmAccess, githubMetadata, readiness }) {
   const todos = externalTodos(readiness);
-  if (todos.length === 0 && npmAccess.summary.status === "published" && githubMetadata.aligned) {
+  if (todos.length > 0 || npmAccess.summary.status !== "published" || !githubMetadata.aligned) {
+    return "blocked";
+  }
+  if (releaseDelta(npmAccess)) {
+    return "ready-with-cleanup";
+  }
+  return "ready";
+}
+
+function appendNpmTrustedPublishCommands(lines, report) {
+  if (!report.releaseDelta) {
+    return;
+  }
+
+  lines.push("### npm Trusted Publishing cleanup", "");
+  lines.push(`Status: local package is ${report.releaseDelta.localVersion}; npm latest is ${report.releaseDelta.publishedVersion}.`);
+  lines.push(`Next action: ${report.releaseDelta.nextAction}`);
+  lines.push("");
+  lines.push("GitHub Actions inputs:");
+  lines.push("");
+  lines.push("```text");
+  lines.push(`expected_version: ${report.releaseDelta.localVersion}`);
+  lines.push("dry_run: true");
+  lines.push("```");
+  lines.push("");
+  lines.push("If the dry run succeeds and you want the npm page refreshed:");
+  lines.push("");
+  lines.push("```text");
+  lines.push(`expected_version: ${report.releaseDelta.localVersion}`);
+  lines.push("dry_run: false");
+  lines.push("```");
+  lines.push("");
+  lines.push("This is not a local token publish path; the workflow must continue using npm Trusted Publishing without `NPM_TOKEN` or `NODE_AUTH_TOKEN`.");
+  lines.push("");
+}
+
+function isRequiredGateClear(report) {
+  return report.status === "ready" || report.status === "ready-with-cleanup";
+}
+
+function requiredGateMessage(report) {
+  if (report.status === "ready") {
     return "ready";
+  }
+  if (report.status === "ready-with-cleanup") {
+    return "ready; npm publish cleanup remains";
   }
   return "blocked";
 }
@@ -147,6 +210,7 @@ export function renderMarkdown(report) {
     `- npm access: ${report.npm.summary.status}`,
     `- GitHub metadata: ${report.github.aligned ? "aligned" : "drift"}`,
     `- strict external gate: ${report.readiness.summary.status}`,
+    `- required broad-launch gate: ${requiredGateMessage(report)}`,
     ""
   ];
 
@@ -158,8 +222,17 @@ export function renderMarkdown(report) {
     lines.push("");
   }
 
+  if (report.externalInfoActions.length > 0) {
+    lines.push("## Non-Blocking External Info", "");
+    for (const info of report.externalInfoActions) {
+      lines.push(`- ${info.id}: ${info.detail}`);
+    }
+    lines.push("");
+  }
+
   lines.push("## Owner Commands", "");
   appendNpmOwnerCommands(lines, report);
+  appendNpmTrustedPublishCommands(lines, report);
   appendGitHubOwnerCommands(lines, report);
 
   lines.push("## Launch Gate", "");
@@ -169,6 +242,8 @@ export function renderMarkdown(report) {
   lines.push("");
   if (report.status === "ready") {
     lines.push("Broad launch gate is clear; keep final channel-specific review and claims-boundary checks before posting.");
+  } else if (report.status === "ready-with-cleanup") {
+    lines.push("Required broad launch gate is clear, but npm publish cleanup remains. Run the Trusted Publishing dry run and real publish before broad launch if you want the live npm README to match current main.");
   } else {
     lines.push("Broad launch remains blocked until the strict external gate has no TODOs.");
   }
@@ -215,12 +290,14 @@ async function main() {
     npm: npmAccess,
     github: githubMetadata,
     readiness,
-    externalTodos: externalTodos(readiness)
+    externalTodos: externalTodos(readiness),
+    externalInfoActions: externalInfoActions(readiness),
+    releaseDelta: releaseDelta(npmAccess)
   };
 
   writeReport(report, options);
 
-  if (options.strict && report.status !== "ready") {
+  if (options.strict && !isRequiredGateClear(report)) {
     process.exitCode = 1;
   }
 }

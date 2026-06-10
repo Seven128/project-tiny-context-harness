@@ -30,7 +30,9 @@ function baseReport(npmStatus) {
         id: "github-homepage",
         detail: "GitHub homepage should point to the repository while npm returns 404"
       }
-    ]
+    ],
+    externalInfoActions: [],
+    releaseDelta: null
   };
 }
 
@@ -52,9 +54,42 @@ const ready = renderMarkdown({
   npm: { summary: { status: "published", nextAction: "ok" } },
   github: { aligned: true },
   readiness: { summary: { status: "pass" } },
-  externalTodos: []
+  externalTodos: [],
+  externalInfoActions: [],
+  releaseDelta: null
 });
 assert.doesNotMatch(ready, /npm login/);
 assert.doesNotMatch(ready, /npm run launch:github-metadata -- --apply/);
 assert.doesNotMatch(ready, /Broad launch remains blocked/);
 assert.match(ready, /Broad launch gate is clear/);
+
+const readyWithCleanup = renderMarkdown({
+  generatedAt: "2026-06-10T00:00:00.000Z",
+  status: "ready-with-cleanup",
+  npm: { summary: { status: "published", nextAction: "ok" } },
+  github: { aligned: true },
+  readiness: { summary: { status: "pass" } },
+  externalTodos: [],
+  externalInfoActions: [
+    {
+      id: "npm-readme-renamed-surfaces",
+      detail: "npm README still contains stale pre-rename copy."
+    }
+  ],
+  releaseDelta: {
+    localVersion: "0.2.41",
+    publishedVersion: "0.2.40",
+    nextAction: "Run GitHub Actions npm Trusted Publish with expected_version 0.2.41."
+  }
+});
+assert.match(readyWithCleanup, /Status: ready-with-cleanup/);
+assert.match(readyWithCleanup, /required broad-launch gate: ready; npm publish cleanup remains/);
+assert.match(readyWithCleanup, /Non-Blocking External Info/);
+assert.match(readyWithCleanup, /npm-readme-renamed-surfaces/);
+assert.match(readyWithCleanup, /npm Trusted Publishing cleanup/);
+assert.match(readyWithCleanup, /local package is 0\.2\.41; npm latest is 0\.2\.40/);
+assert.match(readyWithCleanup, /expected_version: 0\.2\.41/);
+assert.match(readyWithCleanup, /dry_run: true/);
+assert.match(readyWithCleanup, /dry_run: false/);
+assert.match(readyWithCleanup, /without `NPM_TOKEN` or `NODE_AUTH_TOKEN`/);
+assert.match(readyWithCleanup, /Required broad launch gate is clear, but npm publish cleanup remains/);
