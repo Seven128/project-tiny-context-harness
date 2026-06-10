@@ -2,6 +2,8 @@
 
 Thanks for taking a look at Project Tiny Context Harness. This project is still small, so the highest-value contributions are clear bug reports, adoption feedback and narrowly scoped fixes.
 
+For support routing, see [SUPPORT.md](SUPPORT.md). All project participation is covered by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+
 ## Project Boundary
 
 The current product is **Minimal Context Harness**: small durable project memory for AI coding agents. Contributions should preserve that boundary:

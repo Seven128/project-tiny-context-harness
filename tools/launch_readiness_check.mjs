@@ -153,6 +153,9 @@ function localChecks() {
   const rootReadme = read("README.md");
   const packageReadme = read("packages/sdlc-harness/README.md");
   const zhReadme = read("README.zh-CN.md");
+  const codeOfConduct = read("CODE_OF_CONDUCT.md");
+  const support = read("SUPPORT.md");
+  const contributing = read("CONTRIBUTING.md");
   const launchKit = read("docs/launch/README.md");
   const launchProfile = read("docs/launch/profile.md");
   const primaryLaunch = read("docs/launch/primary-launch.md");
@@ -889,7 +892,30 @@ function localChecks() {
       contains(outreachTargets, /Do not submit to award programs before the demo and first public feedback exist/),
     "Outreach targets map current launch, curated-list and award gates."
   );
-  addCheck(checks, "contributing", hasFile("CONTRIBUTING.md") && contains(read("CONTRIBUTING.md"), /Do not claim benchmark wins/), "CONTRIBUTING.md exists and preserves benchmark-claim boundary.");
+  addCheck(
+    checks,
+    "community-health-files",
+    hasFile("CODE_OF_CONDUCT.md") &&
+      hasFile("SUPPORT.md") &&
+      contains(codeOfConduct, /Expected Behavior/) &&
+      contains(codeOfConduct, /Unacceptable Behavior/) &&
+      contains(codeOfConduct, /Conduct contact needed/) &&
+      contains(codeOfConduct, /Security vulnerabilities should follow \[SECURITY\.md\]/) &&
+      contains(support, /Before Opening An Issue/) &&
+      contains(support, /Where To Ask/) &&
+      contains(support, /Adoption report issue template/) &&
+      contains(support, /CODE_OF_CONDUCT\.md/) &&
+      contains(support, /SECURITY\.md/) &&
+      contains(support, /npm renamed package still returns 404/) &&
+      contains(contributing, /SUPPORT\.md/) &&
+      contains(contributing, /CODE_OF_CONDUCT\.md/) &&
+      contains(launchKit, /CODE_OF_CONDUCT\.md/) &&
+      contains(launchKit, /SUPPORT\.md/) &&
+      contains(openssfBestPractices, /Conduct standards/) &&
+      contains(openssfBestPractices, /Support path/),
+    "Community health files route support, conduct, security and adoption feedback for public contributors."
+  );
+  addCheck(checks, "contributing", hasFile("CONTRIBUTING.md") && contains(contributing, /Do not claim benchmark wins/), "CONTRIBUTING.md exists and preserves benchmark-claim boundary.");
   addCheck(checks, "security-policy", hasFile("SECURITY.md") && contains(read("SECURITY.md"), /Reporting A Vulnerability/) && contains(read("SECURITY.md"), /Unsafe file writes/), "SECURITY.md exists with private reporting and Harness-specific scope.");
   addCheck(checks, "dependabot", hasFile(".github/dependabot.yml") && contains(read(".github/dependabot.yml"), /package-ecosystem: "npm"/) && contains(read(".github/dependabot.yml"), /package-ecosystem: "github-actions"/), "Dependabot checks npm and GitHub Actions ecosystems.");
   addCheck(

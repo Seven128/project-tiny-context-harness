@@ -52,6 +52,8 @@ Use current repository evidence only. Recheck paths before submitting.
 | How to obtain | README source preview and post-publish npm install path. | Renamed npm package still returns 404 until publish succeeds. |
 | Contribution path | `CONTRIBUTING.md`, issue templates, PR template, starter issues. | Keep contribution requirements factual and lightweight. |
 | Security reporting | `SECURITY.md`. | Use private vulnerability reporting instructions from that file. |
+| Conduct standards | `CODE_OF_CONDUCT.md`. | Short project-specific policy; do not claim it was selected through the GitHub template UI. |
+| Support path | `SUPPORT.md`. | Routes bugs, adoption reports, security issues, conduct concerns and npm-pending questions. |
 | Dependency monitoring | `.github/dependabot.yml`. | Covers npm and GitHub Actions. |
 | CI / validation | `.github/workflows/package.yml`, `.github/workflows/harness.yml`, `npm test --workspace project-tiny-context-harness`, `make validate-context`. | Do not imply Context validation replaces product tests. |
 | Scorecard | `.github/workflows/scorecard.yml` and README OpenSSF Scorecard badge. | Scorecard is separate from Best Practices/Baseline. |
@@ -62,7 +64,6 @@ Use current repository evidence only. Recheck paths before submitting.
 Do not mark these as met without maintainer review:
 
 - Governance: if the form asks for governance, the project likely needs a short public governance note before claiming it.
-- Code of Conduct: add one only if the maintainer wants to adopt and enforce it.
 - DCO / CLA: do not claim a legal contribution mechanism unless it is actually required and documented.
 - Release security policy: verify whether `SECURITY.md`, release workflow and npm publish runbook are enough for the selected criteria.
 - npm availability: if a criterion asks how users obtain the software, note that renamed npm publish is pending until the 404 is resolved.

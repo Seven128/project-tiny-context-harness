@@ -104,7 +104,7 @@ Use this if agents keep losing project intent between chats. It adds a small pro
 - After the first renamed npm publish succeeds, configure GitHub Actions Trusted Publishing with [npm-trusted-publishing.md](npm-trusted-publishing.md) so future publishes use OIDC instead of a long-lived publish token.
 - Confirm npm package page renders the updated package README and MIT license.
 - Run `npm run smoke:quickstart` after publish against `project-tiny-context-harness@latest` or a clean test project.
-- Confirm `SECURITY.md`, Dependabot and adoption-report issue template are visible on GitHub.
+- Confirm `SECURITY.md`, `CODE_OF_CONDUCT.md`, `SUPPORT.md`, Dependabot and adoption-report issue template are visible on GitHub.
 - Confirm OpenSSF Scorecard badge is visible from README and OpenSSF Scorecard workflow runs on `main`, weekly schedule and manual dispatch.
 - If starting an OpenSSF Best Practices or Baseline self-assessment, use [openssf-best-practices.md](openssf-best-practices.md) and do not add a badge until the official site grants one.
 - Confirm the fresh-agent recovery walkthrough and Minimal Context sample project are linked from README.
@@ -137,7 +137,7 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 | 60-90 second demo | Record the demo storyboard below. | Viewer can see install, generated files and fresh-agent recovery prompt. |
 | First support surface | Keep the adoption-report issue form and pinned feedback issue visible. | Launch posts have one feedback link beyond the README, and consented reports can become public adoption stories without another authorization round. |
 | First contribution queue | Keep low-risk demo/docs/example issues labeled with `good first issue`, `help wanted` and `documentation` where appropriate. | New visitors can contribute without understanding package internals. |
-| Trust surface | Keep `SECURITY.md`, Dependabot, OpenSSF Scorecard badge, OpenSSF Scorecard workflow, OpenSSF Best Practices self-assessment prep and issue templates visible. | New users can see how to report risk, dependency drift, supply-chain posture, badge-readiness work and adoption feedback. |
+| Trust surface | Keep `SECURITY.md`, `CODE_OF_CONDUCT.md`, `SUPPORT.md`, Dependabot, OpenSSF Scorecard badge, OpenSSF Scorecard workflow, OpenSSF Best Practices self-assessment prep and issue templates visible. | New users can see how to report risk, conduct concerns, support needs, dependency drift, supply-chain posture, badge-readiness work and adoption feedback. |
 | Example surface | Keep a before/after fresh-agent walkthrough and Minimal Context sample project linked from README. | New visitors can see how Context prevents rediscovery and what the generated recovery surface looks like without claiming benchmark wins. |
 | Technical article | Keep `docs/articles/fresh-agent-project-memory.md` linked from README and this launch kit. | Follow-up posts can explain the design thesis without expanding README or claiming benchmark wins. |
 | Agent-surface recipes | Keep `docs/agent-surface-recipes.md` linked from README. | Users of Codex, Claude Code, Cursor, Gemini CLI, OpenCode or custom tools can adopt without assuming separate project memories. |

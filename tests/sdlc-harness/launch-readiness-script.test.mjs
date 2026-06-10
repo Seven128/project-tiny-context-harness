@@ -69,6 +69,7 @@ for (const expected of [
   "launch-milestones",
   "market-map",
   "outreach-targets",
+  "community-health-files",
   "scorecard-workflow",
   "quickstart-smoke",
   "launch-check-script",
