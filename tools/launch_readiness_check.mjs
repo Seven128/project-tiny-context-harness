@@ -210,6 +210,7 @@ function localChecks() {
   const metricsScript = read("tools/launch_metrics_snapshot.mjs");
   const githubMetadataScript = read("tools/github_metadata_update.mjs");
   const npmAccessScript = read("tools/npm_publish_access_check.mjs");
+  const launchUnblockScript = read("tools/launch_unblock_check.mjs");
   const sourcePreviewScript = read("tools/source_preview_pack.mjs");
   const marketMap = read("docs/launch/market-map.md");
   const outreachTargets = read("docs/launch/outreach-targets.md");
@@ -859,10 +860,12 @@ function localChecks() {
     hasFile("docs/launch/prelaunch-external-blockers.md") &&
       contains(launchKit, /prelaunch-external-blockers\.md/) &&
       contains(launchKit, /Prelaunch external blockers/) &&
+      contains(launchKit, /npm run launch:unblock/) &&
       contains(outreachTargets, /prelaunch-external-blockers\.md/) &&
       contains(outreachTargets, /npm-fetch/) &&
       contains(outreachTargets, /github-homepage/) &&
       contains(prelaunchExternalBlockers, /Prelaunch External Blockers/) &&
+      contains(prelaunchExternalBlockers, /npm run launch:unblock/) &&
       contains(prelaunchExternalBlockers, /node tools\/launch_readiness_check\.mjs --strict-external/) &&
       contains(prelaunchExternalBlockers, /npm-fetch: TODO/) &&
       contains(prelaunchExternalBlockers, /github-homepage: TODO/) &&
@@ -878,6 +881,22 @@ function localChecks() {
       contains(prelaunchExternalBlockers, /Private review/) &&
       contains(prelaunchExternalBlockers, /No token, OTP, `.npmrc` or account credential/),
     "Prelaunch external blockers checklist centralizes npm-fetch and GitHub homepage stop/go actions before broad launch."
+  );
+  addCheck(
+    checks,
+    "launch-unblock-report",
+    rootPackage.scripts?.["launch:unblock"] === "node tools/launch_unblock_check.mjs" &&
+      hasFile("tools/launch_unblock_check.mjs") &&
+      contains(launchUnblockScript, /This script is read-only/) &&
+      contains(launchUnblockScript, /tools\/npm_publish_access_check\.mjs/) &&
+      contains(launchUnblockScript, /tools\/github_metadata_update\.mjs/) &&
+      contains(launchUnblockScript, /tools\/launch_readiness_check\.mjs/) &&
+      contains(launchUnblockScript, /Remaining External TODOs/) &&
+      contains(launchUnblockScript, /Owner Commands/) &&
+      contains(launchUnblockScript, /Broad launch remains blocked until the strict external gate has no TODOs/) &&
+      contains(launchKit, /npm run launch:unblock/) &&
+      contains(prelaunchExternalBlockers, /npm run launch:unblock/),
+    "Launch unblock report combines npm access, GitHub metadata and strict external checks into one owner-facing stop/go report."
   );
   addCheck(
     checks,

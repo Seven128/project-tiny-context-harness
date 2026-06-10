@@ -17,6 +17,7 @@
     "launch:strict-external": "node tools/launch_readiness_check.mjs --strict-external",
     "launch:github-metadata": "node tools/github_metadata_update.mjs",
     "launch:npm-access": "node tools/npm_publish_access_check.mjs",
+    "launch:unblock": "node tools/launch_unblock_check.mjs",
     "launch:demo": "node tools/launch_demo_capture.mjs",
     "launch:metrics": "node tools/launch_metrics_snapshot.mjs",
     "preview:pack": "node tools/source_preview_pack.mjs --clean",
