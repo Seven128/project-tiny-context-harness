@@ -359,7 +359,7 @@ async function installedConsumerSmoke(version) {
 }
 
 async function publishTarball(tarballPath) {
-  const commandArgs = ["publish", tarballPath];
+  const commandArgs = ["publish", tarballPath, "--access", "public"];
   if (args.otp) {
     commandArgs.push("--otp", args.otp);
   }
@@ -527,6 +527,7 @@ async function writeReleaseReport(report, forcedStatus) {
     pack?.mode === "tarball"
       ? `npm pack --json --workspace ${workspaceName} --pack-destination .artifacts/releases/pack`
       : `npm pack --dry-run --json --workspace ${workspaceName}`;
+  const publishCommand = "npm publish <packed tarball> --access public";
   const publishEvidence = stepPassed(report, "npm publish tarball")
     ? `PASS，registry 返回 ${packageName}@${version}。`
     : report.publish
@@ -561,6 +562,7 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
 
 - 发布当前 workspace 中已同步的 Project Tiny Context Harness package assets 和 CLI build。
 - 本版本由 \`tools/release_npm.mjs\` 执行发布闭环。若 renamed package 尚无 registry entry，默认发布当前 workspace version；已有 registry latest 后默认 patch bump。发布路径覆盖 npm auth、version check/bump、source drift check、tarball pack、publish 和 registry latest verification；\`--full-gate\` 和 \`--registry-smoke\` 可启用更重验证。
+- 发布 tarball 时显式传递 \`--access public\`，避免 rename 窗口中依赖 npm 默认 access 语义。
 
 ## 3. Build Artifacts（构建产物）
 
@@ -583,7 +585,7 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
   - \`node packages/sdlc-harness/dist/cli.js validate-context\`: ${validateStatus}。
   - \`${packCommand}\`: ${stepStatus(report, pack?.mode === "tarball" ? "npm pack tarball" : "npm pack dry run")}。
   - \`git diff --check\`: ${stepStatus(report, "final diff check")}。
-  - \`npm publish <packed tarball>\`: ${publishEvidence}
+  - \`${publishCommand}\`: ${publishEvidence}
   - \`npm view ${packageName} version dist-tags.latest dist.integrity --json\`: ${registryEvidence}
   - Registry installed-consumer smoke: ${smokeEvidence}
 
@@ -593,7 +595,7 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
 - [${stepPassed(report, `bump package version to ${version}`) || !report.publish ? "x" : " "}] Bump package version to \`${version}\`.
 - [${stepPassed(report, "package source drift check") ? "x" : " "}] Package source drift check passed.
 - [${stepPassed(report, "npm pack tarball") || stepPassed(report, "npm pack dry run") ? "x" : " "}] Package pack passed.
-- [${stepPassed(report, "npm publish tarball") ? "x" : " "}] Publish package with \`npm publish <packed tarball>\`.
+- [${stepPassed(report, "npm publish tarball") ? "x" : " "}] Publish package with \`${publishCommand}\`.
 - [${registry ? "x" : " "}] Verify registry package with \`npm view ${packageName} version dist-tags.latest dist.integrity --json\`.
 - Optional full local test suite: ${fullGateStatus}。
 - Optional registry installed-consumer smoke: ${smoke ? "PASS" : report.registrySmoke ? "Pending" : "SKIPPED，未启用 `--registry-smoke`"}。

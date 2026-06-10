@@ -63,15 +63,25 @@ If publish fails with auth or permission errors:
 
    treat it as an npm credential, account policy or token permission issue. The tarball, package version and local gates may still be correct.
 
-3. Confirm the renamed package is still absent:
+3. Run the permission probes without printing token values:
+
+   ```sh
+   npm profile get name email tfa --json
+   npm access list packages steve1998 --json
+   npm access list collaborators agent-project-sdlc steve1998 --json
+   ```
+
+   A useful diagnostic pattern is: `npm whoami` works, the legacy package reports `read-write`, but profile or package-list commands return E403. That means the current token can maintain the legacy package but cannot create or manage the renamed package namespace.
+
+4. Confirm the renamed package is still absent:
 
    ```sh
    npm view project-tiny-context-harness name version dist-tags --json
    ```
 
-4. Re-authenticate npm locally or replace the npm token with one allowed to publish new public packages.
-5. If the npm account has publish 2FA enabled, rerun with `--otp`.
-6. Do not create a GitHub release for the renamed npm package until registry verification passes.
+5. Re-authenticate npm locally or replace the npm token with one allowed to publish new public packages. npm granular access tokens must be created on npmjs.com, not from the CLI. For a token-based publish path, create a granular access token with package read/write access broad enough for a new package and enable bypass 2FA if the account or package policy requires it.
+6. If using an interactive login with publish 2FA, rerun with `--otp`.
+7. Do not create a GitHub release for the renamed npm package until registry verification passes.
 
 If publish succeeds but smoke fails, stop broad launch and publish the fix as a new patch version. npm versions cannot be reused.
 

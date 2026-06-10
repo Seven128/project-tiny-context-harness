@@ -306,6 +306,10 @@ function localChecks() {
       contains(npmPublishRunbook, /Do not post broad launch copy while the renamed package still returns 404/) &&
       contains(npmPublishRunbook, /You may not perform that action with these credentials/) &&
       contains(npmPublishRunbook, /credential, account policy or token permission issue/) &&
+      contains(npmPublishRunbook, /npm profile get name email tfa --json/) &&
+      contains(npmPublishRunbook, /npm access list collaborators agent-project-sdlc steve1998 --json/) &&
+      contains(npmPublishRunbook, /current token can maintain the legacy package but cannot create or manage the renamed package namespace/) &&
+      contains(npmPublishRunbook, /granular access tokens must be created on npmjs\.com, not from the CLI/) &&
       contains(npmPublishRunbook, /node tools\/launch_readiness_check\.mjs --strict-external/),
     "npm publish runbook documents first renamed publish, OTP path, npm 404 gate and post-publish verification."
   );
@@ -315,6 +319,7 @@ function localChecks() {
     contains(releaseScript, /registryPackageExists/) &&
       contains(releaseScript, /publish && !versionSpecified && !registryPackageExists/) &&
       contains(releaseScript, /return currentVersion/) &&
+      contains(releaseScript, /"--access", "public"/) &&
       contains(releaseScript, /--otp/) &&
       contains(releaseScript, /otpProvided/),
     "release npm script keeps first renamed publish on the current workspace version and supports OTP without reporting the code."
