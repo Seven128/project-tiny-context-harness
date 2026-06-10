@@ -120,11 +120,13 @@ Recommended sequence:
 
 ## Adjacent Curated Lists
 
-These are lower priority than the first public launch, but useful after the demo exists.
+These are lower priority than the first public launch, but useful after the demo exists. Start with narrow harness/context lists before broader AI dev-tool lists because a new 0-star package is easier to evaluate on category fit than on social proof.
 
 | List | Current scale | Fit | Gate before PR |
 |---|---:|---|---|
-| [awesome-ai-devtools](https://github.com/jamesmurdza/awesome-ai-devtools) | 3,825 stars | Broad AI developer tools list; likely the best first curated-list target. | Demo live, README concise, one-line category fit ready. |
+| [awesome-harness-engineering](https://github.com/ai-boost/awesome-harness-engineering) | niche | Direct context-delivery and harness-engineering fit. | Use the prepared context-delivery patch and avoid benchmark claims. |
+| [awesome-agent-harness](https://github.com/Picrew/awesome-agent-harness) | niche | Direct Context & Working-State Engineering fit. | Run the upstream renderer/verification workflow after applying the data patch. |
+| [awesome-ai-devtools](https://github.com/jamesmurdza/awesome-ai-devtools) | 3,825 stars | Broad AI developer tools list; likely the best larger-list target after a narrow listing or public feedback. | Demo live, README concise, one-line category fit ready. |
 | [awesome-opencode](https://github.com/awesome-opencode/awesome-opencode) | 7,766 stars | OpenCode ecosystem list; fit is now plausible because README links an OpenCode setup note. | Submit the prepared `data/projects/` YAML patch after npm publish; do not claim this is an OpenCode plugin. |
 | [awesome-agents](https://github.com/kyrolabs/awesome-agents) | 2,403 stars | Broad AI agent list; Harness is support infrastructure, not an agent. | Position as agent workflow/context infrastructure, not an autonomous agent. |
 | [awesome-opensource-ai](https://github.com/alvinreal/awesome-opensource-ai) | 3,833 stars | Broad open-source AI list; possible after visible adoption. | Wait for demo and at least one adoption report. |

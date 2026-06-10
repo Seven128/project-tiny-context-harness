@@ -87,12 +87,12 @@ Submission packet:
 
 ### Curated Lists
 
-Start with the two P0 agentic-coding lists in [awesome-list-submissions.md](awesome-list-submissions.md). Exact patch files, PR titles, PR bodies and manual `gh` commands live in [external-prs/README.md](external-prs/README.md):
+Start with the two P0 harness/context lists in [awesome-list-submissions.md](awesome-list-submissions.md). Exact patch files, PR titles, PR bodies and manual `gh` commands live in [external-prs/README.md](external-prs/README.md):
 
-- [Transcenda/awesome-agentic-coding](https://github.com/Transcenda/awesome-agentic-coding), under `Agent instructions and Skills`.
-- [jordimas/awesome-agentic-engineering](https://github.com/jordimas/awesome-agentic-engineering), under `Team Adoption`.
+- [ai-boost/awesome-harness-engineering](https://github.com/ai-boost/awesome-harness-engineering), under `Context Delivery & Compaction`.
+- [Picrew/awesome-agent-harness](https://github.com/Picrew/awesome-agent-harness), under `Context & Working-State Engineering`.
 
-Then try [awesome-harness-engineering](https://github.com/ai-boost/awesome-harness-engineering) and [awesome-agent-harness](https://github.com/Picrew/awesome-agent-harness) if the wording remains narrowly focused on context delivery / working-state engineering. Use the exact patches and PR bodies in [external-prs/README.md](external-prs/README.md), and do not claim benchmark wins or adoption.
+Then try [Transcenda/awesome-agentic-coding](https://github.com/Transcenda/awesome-agentic-coding) and [jordimas/awesome-agentic-engineering](https://github.com/jordimas/awesome-agentic-engineering) if the wording remains narrowly focused on agent instructions, Skills or team adoption rather than a broad SDLC framework. Use the exact patches and PR bodies in [external-prs/README.md](external-prs/README.md), and do not claim benchmark wins or adoption.
 
 Then try [awesome-ai-devtools](https://github.com/jamesmurdza/awesome-ai-devtools). It has an `Agent Infrastructure / Configuration & Context Management` category that fits repo-native AI agent context recovery. Use the exact README patch and PR-template body in [external-prs/README.md](external-prs/README.md), and keep the wording focused on AI coding-agent project memory.
 
@@ -146,7 +146,7 @@ Do not add a Best Practices or Baseline badge to README until the official site 
 2. Run `npm run launch:metrics -- --output tmp/sdlc/launch-metrics/show-hn-before.md`.
 3. Select 5-10 private reviewers with `docs/launch/private-review-shortlist.md` if the maintainer wants one final clarity pass before broad promotion.
 4. Post Show HN first using `docs/launch/primary-launch.md` and the repo-hosted GIF if useful.
-5. Submit prepared curated-list PRs from `docs/launch/external-prs/README.md`, starting with the two P0 agentic-coding lists and then the matching harness/context-engineering directories.
+5. Submit prepared curated-list PRs from `docs/launch/external-prs/README.md`, starting with the two P0 harness/context directories and then the broader agentic-coding lists.
 6. Track stars, forks, npm downloads and comments for 24 hours with `npm run launch:metrics`.
 7. Patch README/FAQ from repeated confusion.
 8. Use the Product Hunt media packet only after the first feedback loop or with a deliberate scheduling decision.

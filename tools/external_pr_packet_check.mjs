@@ -150,6 +150,12 @@ function staticChecks() {
   addCheck(checks, "maintainer-session-boundary", /maintainer's GitHub-authenticated session/.test(packetReadme), "Packet routes PR creation through the maintainer's GitHub session.");
   addCheck(checks, "claim-boundary", /Do not include benchmark, adoption, award or star claims/.test(packetReadme), "Packet keeps external PR claims narrow.");
   addCheck(checks, "github-url-primary", /Use the GitHub repository URL, not npm/.test(packetReadme), "Packet uses GitHub repository URL as listing target.");
+  addCheck(
+    checks,
+    "recommended-order-narrow-first",
+    /Recommended Order[\s\S]*1\. `ai-boost\/awesome-harness-engineering`[\s\S]*2\. `Picrew\/awesome-agent-harness`/.test(awesomeListSubmissions),
+    "Awesome-list packet starts with narrow harness/context targets before broader AI dev-tool directories."
+  );
 
   checkForbidden(checks, "external-pr-readme", packetReadme);
   checkForbidden(checks, "awesome-list-submissions", awesomeListSubmissions);

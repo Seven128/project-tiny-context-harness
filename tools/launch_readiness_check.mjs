@@ -1194,6 +1194,9 @@ function localChecks() {
     "awesome-list-submissions",
     hasFile("docs/launch/awesome-list-submissions.md") &&
       contains(awesomeListSubmissions, /Awesome List Submission Packet/) &&
+      contains(awesomeListSubmissions, /Recommended Order/) &&
+      contains(awesomeListSubmissions, /1\. `ai-boost\/awesome-harness-engineering`/) &&
+      contains(awesomeListSubmissions, /2\. `Picrew\/awesome-agent-harness`/) &&
       contains(awesomeListSubmissions, /npm run launch:external-prs/) &&
       contains(awesomeListSubmissions, /--live --clean/) &&
       contains(awesomeListSubmissions, /Transcenda\/awesome-agentic-coding/) &&
@@ -1205,7 +1208,7 @@ function localChecks() {
       contains(awesomeListSubmissions, /Agent Infrastructure \/ Configuration & Context Management/) &&
       contains(awesomeListSubmissions, /external-prs\/README\.md/) &&
       contains(awesomeListSubmissions, /Do not claim adoption, benchmark wins, awards/),
-    "Awesome-list submission packet has P0 PR copy and deferred-list gates."
+    "Awesome-list submission packet has narrow-first P0 PR copy and deferred-list gates."
   );
   addCheck(
     checks,

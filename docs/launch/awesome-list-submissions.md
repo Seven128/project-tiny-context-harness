@@ -13,7 +13,20 @@ This packet prepares curated-list pull requests. It is intentionally narrower th
 - Link to the GitHub repository, not npm, because list maintainers usually review source and README quality.
 - Run `npm run launch:external-prs` before preparing PR branches; run `npm run launch:external-prs -- --live --clean` immediately before opening PRs to verify the prepared patches against current upstream repositories.
 
-## P0: Transcenda Awesome Agentic Coding
+## Recommended Order
+
+Open PRs from narrowest fit to broadest fit:
+
+1. `ai-boost/awesome-harness-engineering`
+2. `Picrew/awesome-agent-harness`
+3. `Transcenda/awesome-agentic-coding`
+4. `jordimas/awesome-agentic-engineering`
+5. `awesome-opencode/awesome-opencode`
+6. `jamesmurdza/awesome-ai-devtools`
+
+Reason: a 0-star package has the best chance when the target category already expects context delivery, working-state engineering or harness primitives. Broader AI dev-tool directories are useful after the README/demo has absorbed first feedback or one narrower listing is accepted.
+
+## P1: Transcenda Awesome Agentic Coding
 
 Target: [Transcenda/awesome-agentic-coding](https://github.com/Transcenda/awesome-agentic-coding)
 
@@ -43,7 +56,7 @@ Adds Project Tiny Context Harness to the Agent instructions and Skills toolbox.
 It gives teams a practical in-repo recovery path for AI coding agents: project intent, boundaries, verification paths, role Skills, and a `validate-context` check across new chats, handoffs, and tool changes.
 ```
 
-## P0: Awesome Agentic Engineering
+## P1: Awesome Agentic Engineering
 
 Target: [jordimas/awesome-agentic-engineering](https://github.com/jordimas/awesome-agentic-engineering)
 
@@ -73,7 +86,7 @@ Adds Project Tiny Context Harness under Team Adoption.
 It is a practical, team-applicable resource for keeping minimal durable project memory in-repo so AI coding agents can recover intent, boundaries, and validation paths across chats and handoffs.
 ```
 
-## P1: Awesome AI Devtools
+## P2: Awesome AI Devtools
 
 Target: [jamesmurdza/awesome-ai-devtools](https://github.com/jamesmurdza/awesome-ai-devtools)
 
@@ -112,7 +125,7 @@ It is a developer-focused tool for AI coding-agent context recovery: it installs
 - [x] The description matches the style of other entries
 ```
 
-## P1: Awesome OpenCode
+## P2: Awesome OpenCode
 
 Target: [awesome-opencode/awesome-opencode](https://github.com/awesome-opencode/awesome-opencode)
 
@@ -145,13 +158,13 @@ Adds Project Tiny Context Harness under Projects.
 It is a repo-native context recovery tool that OpenCode users can adopt through root AGENTS.md, project_context/** and an optional .opencode support-assets folder without creating separate project memories per agent.
 ```
 
-## P1: Awesome Agent Skills
+## P3: Awesome Agent Skills
 
 Target: [heilcheng/awesome-agent-skills](https://github.com/heilcheng/awesome-agent-skills)
 
 Gate before submitting: expose a clean, standalone Skill URL or package story. This list is about the `SKILL.md` ecosystem, while Project Tiny Context Harness currently ships several project-local and package-managed Skills as part of the harness. A generic repo submission would be weaker than a clear Skill-specific entry.
 
-## P1: Awesome Harness Engineering
+## P0: Awesome Harness Engineering
 
 Target: [ai-boost/awesome-harness-engineering](https://github.com/ai-boost/awesome-harness-engineering)
 
@@ -173,7 +186,7 @@ PR title:
 Add Project Tiny Context Harness to context delivery resources
 ```
 
-## P1: Awesome Agent Harness
+## P0: Awesome Agent Harness
 
 Target: [Picrew/awesome-agent-harness](https://github.com/Picrew/awesome-agent-harness)
 
@@ -200,11 +213,11 @@ Add Project Tiny Context Harness to context engineering catalog
 
 ## Execution Order
 
-1. Submit Transcenda PR after the Show HN packet is ready.
-2. Submit jordimas PR after Transcenda, using the shorter team-adoption copy.
-3. Submit `ai-boost/awesome-harness-engineering` when the launch packet is ready and the wording stays focused on context delivery.
-4. Submit `Picrew/awesome-agent-harness` when the generated catalog workflow can be run locally.
-5. Submit `awesome-opencode` after npm publish if the README still links the OpenCode setup note.
-6. Submit `awesome-ai-devtools` after npm publish if the README still shows the demo GIF and agent-surface recipes.
+1. Submit `ai-boost/awesome-harness-engineering` when the launch packet is ready and the wording stays focused on context delivery.
+2. Submit `Picrew/awesome-agent-harness` when the generated catalog workflow can be run locally.
+3. Submit Transcenda PR after the two narrower harness/context targets or after Show HN feedback confirms the wording.
+4. Submit jordimas PR after Transcenda, using the shorter team-adoption copy.
+5. Submit `awesome-opencode` if the README still links the OpenCode setup note.
+6. Submit `awesome-ai-devtools` if the README still shows the demo GIF and agent-surface recipes.
 7. Wait for standalone Skill packaging before `awesome-agent-skills`.
 8. If a maintainer rejects the wording as too framework-like, revise toward "repo-native context recovery" and away from "SDLC".
