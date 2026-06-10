@@ -214,6 +214,7 @@ function localChecks() {
   const maintainerWorkflow = read(".github/workflows/package.yml");
   const npmTrustedPublishWorkflow = read(".github/workflows/npm-publish.yml");
   const scorecardWorkflow = read(".github/workflows/scorecard.yml");
+  const issueTemplateConfig = read(".github/ISSUE_TEMPLATE/config.yml");
   const adoptionReportTemplate = read(".github/ISSUE_TEMPLATE/adoption_report.yml");
   const contextGapTemplate = read(".github/ISSUE_TEMPLATE/context_gap.yml");
   const releaseScript = read("tools/release_npm.mjs");
@@ -1145,6 +1146,21 @@ function localChecks() {
     "OpenSSF Scorecard workflow publishes SARIF results and public scorecard data with narrow permissions."
   );
   addCheck(checks, "issue-templates", hasFile(".github/ISSUE_TEMPLATE/bug_report.yml") && hasFile(".github/ISSUE_TEMPLATE/feature_request.yml"), "Bug and feature issue templates exist.");
+  addCheck(
+    checks,
+    "issue-template-routing",
+    hasFile(".github/ISSUE_TEMPLATE/config.yml") &&
+      contains(issueTemplateConfig, /blank_issues_enabled:\s*false/) &&
+      contains(issueTemplateConfig, /Security vulnerability/) &&
+      contains(issueTemplateConfig, /SECURITY\.md/) &&
+      contains(issueTemplateConfig, /Support routing/) &&
+      contains(issueTemplateConfig, /SUPPORT\.md/) &&
+      contains(issueTemplateConfig, /Context recovery gap/) &&
+      contains(issueTemplateConfig, /context_gap\.yml/) &&
+      contains(support, /issue chooser/) &&
+      contains(launchKit, /issue chooser routing/),
+    "Issue chooser disables blank issues and routes security, support and Context recovery feedback to the prepared surfaces."
+  );
   addCheck(
     checks,
     "context-gap-template",

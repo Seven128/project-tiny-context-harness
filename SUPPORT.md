@@ -12,6 +12,8 @@ Check:
 - [docs/agent-surface-recipes.md](docs/agent-surface-recipes.md) for Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness-folder setup notes.
 - [GOVERNANCE.md](GOVERNANCE.md) for decision, release and maintainer authority.
 
+Use the GitHub issue chooser instead of blank issues; it routes public feedback through privacy-aware forms and keeps security reports private.
+
 ## Where To Ask
 
 | Need | Use |

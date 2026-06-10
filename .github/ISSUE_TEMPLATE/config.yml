@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/Seven128/project-tiny-context-harness/blob/main/SECURITY.md
+    about: Report vulnerabilities privately instead of opening a public issue.
+  - name: Support routing
+    url: https://github.com/Seven128/project-tiny-context-harness/blob/main/SUPPORT.md
+    about: Choose the right public issue form or private reporting path.
+  - name: Context recovery gap
+    url: https://github.com/Seven128/project-tiny-context-harness/issues/new?template=context_gap.yml
+    about: Report README confusion, missing recovery facts or fresh-agent handoff gaps.

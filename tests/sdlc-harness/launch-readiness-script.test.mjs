@@ -81,6 +81,7 @@ for (const expected of [
   "outreach-targets",
   "community-health-files",
   "scorecard-workflow",
+  "issue-template-routing",
   "context-gap-template",
   "quickstart-smoke",
   "launch-check-script",
