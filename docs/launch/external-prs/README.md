@@ -222,6 +222,112 @@ git push -u origin add-project-tiny-context-harness
 gh pr create --base main --head Seven128:add-project-tiny-context-harness --title "Add Project Tiny Context Harness" --body-file /path/to/pr-body.md
 ```
 
+## Awesome Harness Engineering
+
+Target: `ai-boost/awesome-harness-engineering`
+
+Patch: [ai-boost-awesome-harness-engineering.patch](ai-boost-awesome-harness-engineering.patch)
+
+Branch:
+
+```text
+add-project-tiny-context-harness
+```
+
+PR title:
+
+```text
+Add Project Tiny Context Harness to context delivery resources
+```
+
+PR body:
+
+```text
+Adds Project Tiny Context Harness under Context Delivery & Compaction.
+
+It fits this list because it addresses repo-local context delivery and fresh-agent recovery: durable project facts, AGENTS.md guidance, role Skills, and validate-context checks for recovering project intent, boundaries, ownership, and validation paths across sessions.
+
+No benchmark, adoption, award, star-growth or productivity-speed claims are included.
+```
+
+Entry added:
+
+```md
+- [Project Tiny Context Harness](https://github.com/Seven128/project-tiny-context-harness) — Minimal repo-native project memory for AI coding agents: `project_context/**`, `AGENTS.md` guidance, role Skills, and `validate-context` help fresh agent sessions recover project intent, boundaries, ownership, and validation paths without adding SDLC phase ceremony. ![Stars](https://img.shields.io/github/stars/Seven128/project-tiny-context-harness?style=flat-square&label=★&color=yellow)
+```
+
+Commands:
+
+Save the PR body block above to `pr-body.md` before running the final `gh pr create` command, or replace `--body-file` with an inline `--body` value.
+
+```sh
+PATCH_ROOT=/path/to/project-tiny-context-harness/docs/launch/external-prs
+gh repo fork ai-boost/awesome-harness-engineering --clone
+cd awesome-harness-engineering
+git checkout -b add-project-tiny-context-harness
+git apply "$PATCH_ROOT/ai-boost-awesome-harness-engineering.patch"
+git diff --check
+git commit -am "Add Project Tiny Context Harness"
+git push -u origin add-project-tiny-context-harness
+gh pr create --base main --head Seven128:add-project-tiny-context-harness --title "Add Project Tiny Context Harness to context delivery resources" --body-file /path/to/pr-body.md
+```
+
+## Awesome Agent Harness
+
+Target: `Picrew/awesome-agent-harness`
+
+Patch: [picrew-awesome-agent-harness-data.patch](picrew-awesome-agent-harness-data.patch)
+
+Branch:
+
+```text
+add-project-tiny-context-harness
+```
+
+PR title:
+
+```text
+Add Project Tiny Context Harness to context engineering catalog
+```
+
+PR body:
+
+```text
+Adds Project Tiny Context Harness to Context & Working-State Engineering.
+
+It is a small MIT npm package for repo-local fresh-agent recovery: project context files, AGENTS.md guidance, role Skills, and validation checks. The entry is intentionally scoped to context recovery rather than claiming autonomous coding, benchmark wins, broad adoption, awards, or star growth.
+```
+
+Entry added:
+
+```yaml
+name: Project Tiny Context Harness
+repo_url: https://github.com/Seven128/project-tiny-context-harness
+category: Context & Working-State Engineering
+summary_en: Minimal Context Harness package that installs repo-local project memory, AGENTS.md guidance, role Skills, and validation for fresh-agent recovery without SDLC phase ceremony.
+summary_zh: Minimal Context Harness 包，用于安装仓库本地项目记忆、AGENTS.md 指引、角色 Skills 与验证入口，帮助新的编码代理会话恢复项目事实，而不引入 SDLC 阶段仪式。
+```
+
+Commands:
+
+Save the PR body block above to `pr-body.md` before running the final `gh pr create` command, or replace `--body-file` with an inline `--body` value. This upstream is data-driven, so run its renderer and verification scripts after applying the data patch and commit the generated files together.
+
+```sh
+PATCH_ROOT=/path/to/project-tiny-context-harness/docs/launch/external-prs
+gh repo fork Picrew/awesome-agent-harness --clone
+cd awesome-agent-harness
+git checkout -b add-project-tiny-context-harness
+git apply "$PATCH_ROOT/picrew-awesome-agent-harness-data.patch"
+python3 scripts/sync_github_metadata.py
+python3 scripts/render_readme.py
+python3 scripts/verify_catalog.py
+git diff --check
+git add data/projects.yaml README.md README_zh.md reports/verification
+git commit -m "Add Project Tiny Context Harness"
+git push -u origin add-project-tiny-context-harness
+gh pr create --base main --head Seven128:add-project-tiny-context-harness --title "Add Project Tiny Context Harness to context engineering catalog" --body-file /path/to/pr-body.md
+```
+
 ## Submission Notes
 
 - Use the GitHub repository URL, not npm.

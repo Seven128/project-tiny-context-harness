@@ -150,11 +150,60 @@ Target: [heilcheng/awesome-agent-skills](https://github.com/heilcheng/awesome-ag
 
 Gate before submitting: expose a clean, standalone Skill URL or package story. This list is about the `SKILL.md` ecosystem, while Project Tiny Context Harness currently ships several project-local and package-managed Skills as part of the harness. A generic repo submission would be weaker than a clear Skill-specific entry.
 
+## P1: Awesome Harness Engineering
+
+Target: [ai-boost/awesome-harness-engineering](https://github.com/ai-boost/awesome-harness-engineering)
+
+Why it fits now: the list has a `Context Delivery & Compaction` section for context-shaping resources in coding-agent harnesses. Project Tiny Context Harness fits as repo-native project memory and fresh-agent recovery, not as a benchmark-speed claim.
+
+Suggested section: `Context Delivery & Compaction`.
+
+Patch packet: [external-prs/README.md](external-prs/README.md).
+
+Suggested entry:
+
+```md
+- [Project Tiny Context Harness](https://github.com/Seven128/project-tiny-context-harness) — Minimal repo-native project memory for AI coding agents: `project_context/**`, `AGENTS.md` guidance, role Skills, and `validate-context` help fresh agent sessions recover project intent, boundaries, ownership, and validation paths without adding SDLC phase ceremony.
+```
+
+PR title:
+
+```text
+Add Project Tiny Context Harness to context delivery resources
+```
+
+## P1: Awesome Agent Harness
+
+Target: [Picrew/awesome-agent-harness](https://github.com/Picrew/awesome-agent-harness)
+
+Why it fits now: the data-driven catalog has a `Context & Working-State Engineering` category, no hard star threshold, and accepts practical harness engineering projects. Project Tiny Context Harness fits as a small repo-local context recovery package.
+
+Suggested category: `Context & Working-State Engineering`.
+
+Patch packet: [external-prs/README.md](external-prs/README.md).
+
+Suggested entry:
+
+```yaml
+name: Project Tiny Context Harness
+repo_url: https://github.com/Seven128/project-tiny-context-harness
+category: Context & Working-State Engineering
+summary_en: Minimal Context Harness package that installs repo-local project memory, AGENTS.md guidance, role Skills, and validation for fresh-agent recovery without SDLC phase ceremony.
+```
+
+PR title:
+
+```text
+Add Project Tiny Context Harness to context engineering catalog
+```
+
 ## Execution Order
 
 1. Submit Transcenda PR after the Show HN packet is ready.
 2. Submit jordimas PR after Transcenda, using the shorter team-adoption copy.
-3. Submit `awesome-opencode` after npm publish if the README still links the OpenCode setup note.
-4. Submit `awesome-ai-devtools` after npm publish if the README still shows the demo GIF and agent-surface recipes.
-5. Wait for standalone Skill packaging before `awesome-agent-skills`.
-6. If a maintainer rejects the wording as too framework-like, revise toward "repo-native context recovery" and away from "SDLC".
+3. Submit `ai-boost/awesome-harness-engineering` when the launch packet is ready and the wording stays focused on context delivery.
+4. Submit `Picrew/awesome-agent-harness` when the generated catalog workflow can be run locally.
+5. Submit `awesome-opencode` after npm publish if the README still links the OpenCode setup note.
+6. Submit `awesome-ai-devtools` after npm publish if the README still shows the demo GIF and agent-surface recipes.
+7. Wait for standalone Skill packaging before `awesome-agent-skills`.
+8. If a maintainer rejects the wording as too framework-like, revise toward "repo-native context recovery" and away from "SDLC".
