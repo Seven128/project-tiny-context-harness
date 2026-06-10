@@ -51,6 +51,7 @@ Use current repository evidence only. Recheck paths before submitting.
 | Project purpose | README first screen states Minimal project memory for AI coding agents. | Use README as the project website while no separate website exists. |
 | How to obtain | README source preview and post-publish npm install path. | Renamed npm package still returns 404 until publish succeeds. |
 | Contribution path | `CONTRIBUTING.md`, issue templates, PR template, starter issues. | Keep contribution requirements factual and lightweight. |
+| Governance | `GOVERNANCE.md`. | Current single-maintainer governance is documented; do not overstate maturity or multi-maintainer coverage. |
 | Security reporting | `SECURITY.md`. | Use private vulnerability reporting instructions from that file. |
 | Conduct standards | `CODE_OF_CONDUCT.md`. | Short project-specific policy; do not claim it was selected through the GitHub template UI. |
 | Support path | `SUPPORT.md`. | Routes bugs, adoption reports, security issues, conduct concerns and npm-pending questions. |
@@ -63,7 +64,7 @@ Use current repository evidence only. Recheck paths before submitting.
 
 Do not mark these as met without maintainer review:
 
-- Governance: if the form asks for governance, the project likely needs a short public governance note before claiming it.
+- Governance maturity: if the form asks about multi-maintainer governance, bus factor or formal roles, answer conservatively; current governance is single-maintainer.
 - DCO / CLA: do not claim a legal contribution mechanism unless it is actually required and documented.
 - Release security policy: verify whether `SECURITY.md`, release workflow and npm publish runbook are enough for the selected criteria.
 - npm availability: if a criterion asks how users obtain the software, note that renamed npm publish is pending until the 404 is resolved.

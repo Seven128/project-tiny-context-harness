@@ -10,6 +10,7 @@ Check:
 - [docs/faq.md](docs/faq.md) for common adoption and positioning questions.
 - [docs/adopt-existing-repo.md](docs/adopt-existing-repo.md) for adding Minimal Context to an existing repository.
 - [docs/agent-surface-recipes.md](docs/agent-surface-recipes.md) for Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness-folder setup notes.
+- [GOVERNANCE.md](GOVERNANCE.md) for decision, release and maintainer authority.
 
 ## Where To Ask
 
@@ -20,6 +21,7 @@ Check:
 | Real adoption feedback from a repository | Adoption report issue template |
 | Security vulnerability | [SECURITY.md](SECURITY.md) |
 | Conduct or moderation concern | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) |
+| Governance or release authority question | [GOVERNANCE.md](GOVERNANCE.md) |
 | npm renamed package still returns 404 | Follow the README source-preview path until the publish blocker is resolved |
 
 ## Project Scope

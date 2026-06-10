@@ -135,6 +135,8 @@ For current priorities and non-goals, see the [roadmap](docs/roadmap.md).
 
 For benchmark boundaries, read [Benchmarking And Evidence](docs/benchmarking.md).
 
+For contribution, support, security, conduct and governance, see [CONTRIBUTING.md](CONTRIBUTING.md), [SUPPORT.md](SUPPORT.md), [SECURITY.md](SECURITY.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and [GOVERNANCE.md](GOVERNANCE.md).
+
 For concrete examples, read the [fresh-agent recovery walkthrough](docs/examples/fresh-agent-recovery.md) and the [Minimal Context sample project](docs/examples/minimal-context-sample.md).
 
 For the longer technical argument, read [Fresh coding-agent sessions need project memory, not more ceremony](docs/articles/fresh-agent-project-memory.md).

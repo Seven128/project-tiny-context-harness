@@ -155,6 +155,7 @@ function localChecks() {
   const zhReadme = read("README.zh-CN.md");
   const codeOfConduct = read("CODE_OF_CONDUCT.md");
   const support = read("SUPPORT.md");
+  const governance = read("GOVERNANCE.md");
   const contributing = read("CONTRIBUTING.md");
   const launchKit = read("docs/launch/README.md");
   const launchProfile = read("docs/launch/profile.md");
@@ -918,6 +919,7 @@ function localChecks() {
     "community-health-files",
     hasFile("CODE_OF_CONDUCT.md") &&
       hasFile("SUPPORT.md") &&
+      hasFile("GOVERNANCE.md") &&
       contains(codeOfConduct, /Expected Behavior/) &&
       contains(codeOfConduct, /Unacceptable Behavior/) &&
       contains(codeOfConduct, /Conduct contact needed/) &&
@@ -927,14 +929,25 @@ function localChecks() {
       contains(support, /Adoption report issue template/) &&
       contains(support, /CODE_OF_CONDUCT\.md/) &&
       contains(support, /SECURITY\.md/) &&
+      contains(support, /GOVERNANCE\.md/) &&
       contains(support, /npm renamed package still returns 404/) &&
+      contains(governance, /single-maintainer open source project/) &&
+      contains(governance, /Repo-native project memory for fresh-agent recovery/) &&
+      contains(governance, /Minimal Context boundary/) &&
+      contains(governance, /Maintainers handle releases/) &&
+      contains(governance, /Do not create a renamed npm-package GitHub Release or broad launch post until registry verification passes/) &&
+      contains(governance, /single-maintainer and evidence-gated/) &&
       contains(contributing, /SUPPORT\.md/) &&
+      contains(contributing, /GOVERNANCE\.md/) &&
       contains(contributing, /CODE_OF_CONDUCT\.md/) &&
       contains(launchKit, /CODE_OF_CONDUCT\.md/) &&
       contains(launchKit, /SUPPORT\.md/) &&
+      contains(launchKit, /GOVERNANCE\.md/) &&
+      contains(openssfBestPractices, /Governance/) &&
+      contains(openssfBestPractices, /single-maintainer governance/) &&
       contains(openssfBestPractices, /Conduct standards/) &&
       contains(openssfBestPractices, /Support path/),
-    "Community health files route support, conduct, security and adoption feedback for public contributors."
+    "Community health files route support, conduct, governance, security and adoption feedback for public contributors."
   );
   addCheck(checks, "contributing", hasFile("CONTRIBUTING.md") && contains(contributing, /Do not claim benchmark wins/), "CONTRIBUTING.md exists and preserves benchmark-claim boundary.");
   addCheck(checks, "security-policy", hasFile("SECURITY.md") && contains(read("SECURITY.md"), /Reporting A Vulnerability/) && contains(read("SECURITY.md"), /Unsafe file writes/), "SECURITY.md exists with private reporting and Harness-specific scope.");
