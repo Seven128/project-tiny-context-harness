@@ -53,12 +53,14 @@ flowchart LR
 
 The demo shows the core loop: install the npm package, initialize `AGENTS.md` and `project_context/**`, run `validate-context`, then ask a fresh agent to recover intent before proposing code.
 
+Post-publish install path:
+
 ```sh
 npm install -D project-tiny-context-harness@latest
 npx --yes --package project-tiny-context-harness@latest sdlc-harness init
 ```
 
-Source preview while npm publish is pending:
+Try now before npm publish:
 
 Browser preview:
 

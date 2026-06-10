@@ -355,6 +355,8 @@ function localChecks() {
     contains(rootReadme, /Rename publish status:/) &&
       contains(rootReadme, /npm `project-tiny-context-harness` is still pending registry publication/) &&
       contains(rootReadme, /install commands below are the post-publish path/) &&
+      contains(rootReadme, /Post-publish install path:/) &&
+      contains(rootReadme, /Try now before npm publish:/) &&
       contains(rootReadme, /strict-external` no longer reports `npm-fetch`/) &&
       contains(rootReadme, /Codespaces or source-preview path/) &&
       contains(rootReadme, /docs\/launch\/npm-publish-runbook\.md/),
@@ -363,7 +365,7 @@ function localChecks() {
   addCheck(
     checks,
     "root-readme-source-preview",
-    contains(rootReadme, /Source preview while npm publish is pending/) &&
+    contains(rootReadme, /Try now before npm publish:/) &&
       contains(rootReadme, /git clone https:\/\/github\.com\/Seven128\/project-tiny-context-harness\.git/) &&
       contains(rootReadme, /npm run smoke:quickstart/) &&
       contains(rootReadme, /npm run preview:pack/) &&
