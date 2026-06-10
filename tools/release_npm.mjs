@@ -520,35 +520,35 @@ async function writeReleaseReport(report, forcedStatus) {
   const pack = report.pack;
   const registry = report.registry;
   const smoke = report.smoke;
-  const authStatus = report.publish ? stepStatus(report, "npm auth check") : "SKIPPED，dry-run 未发布";
-  const fullGateStatus = report.fullGate ? stepStatus(report, "full test suite") : "SKIPPED，未启用 `--full-gate`";
-  const validateStatus = report.fullGate ? stepStatus(report, "validate context") : "SKIPPED，未启用 `--full-gate`";
+  const authStatus = report.publish ? stepStatus(report, "npm auth check") : "SKIPPED, dry-run did not publish";
+  const fullGateStatus = report.fullGate ? stepStatus(report, "full test suite") : "SKIPPED, --full-gate not enabled";
+  const validateStatus = report.fullGate ? stepStatus(report, "validate context") : "SKIPPED, --full-gate not enabled";
   const packCommand =
     pack?.mode === "tarball"
       ? `npm pack --json --workspace ${workspaceName} --pack-destination .artifacts/releases/pack`
       : `npm pack --dry-run --json --workspace ${workspaceName}`;
   const publishCommand = "npm publish <packed tarball> --access public";
   const publishEvidence = stepPassed(report, "npm publish tarball")
-    ? `PASS，registry 返回 ${packageName}@${version}。`
+    ? `PASS, registry returned ${packageName}@${version}.`
     : report.publish
-      ? `${stepStatus(report, "npm publish tarball")}。`
-      : "SKIPPED，dry-run 未发布。";
+      ? `${stepStatus(report, "npm publish tarball")}.`
+      : "SKIPPED, dry-run did not publish.";
   const registryEvidence = registry
-    ? `PASS，version 和 latest 均为 ${version}。`
+    ? `PASS, version and latest both resolve to ${version}.`
     : report.publish
-      ? "Pending。"
-      : "SKIPPED，dry-run 未查询 latest。";
+      ? "Pending."
+      : "SKIPPED, dry-run did not query latest.";
   const smokeEvidence = smoke
-    ? `PASS，从 npm registry 安装 ${packageName}@${version} 后，init 和 doctor 均通过，doctor 输出 ${inline(smoke.doctorOutput.split("\n").find((line) => line.includes("core package")) ?? "")}。`
+    ? `PASS, installed ${packageName}@${version} from the npm registry; init and doctor passed; doctor output ${inline(smoke.doctorOutput.split("\n").find((line) => line.includes("core package")) ?? "")}.`
     : report.publish && report.registrySmoke
-      ? "Pending。"
-      : "SKIPPED，未启用 `--registry-smoke`。";
+      ? "Pending."
+      : "SKIPPED, --registry-smoke not enabled.";
 
-  const content = `# Current Release Report（当前发布报告）
+  const content = `# Current Release Report
 
 This report is a generated release artifact under \`.artifacts/**\`. Historical release evidence lives in git tags, npm registry metadata, CI logs and release commits.
 
-## 1. Release Summary（发布摘要）
+## 1. Release Summary
 
 - Version: \`${packageName}@${version}\`
 - Milestone: \`MVP\`
@@ -558,15 +558,15 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
 - Status: \`${status}\`
 - Current release report: \`${releaseReportRelativePath}\`
 
-## 2. Included Changes（包含变更）
+## 2. Included Changes
 
-- 发布当前 workspace 中已同步的 Project Tiny Context Harness package assets 和 CLI build。
-- 本版本由 \`tools/release_npm.mjs\` 执行发布闭环。若 renamed package 尚无 registry entry，默认发布当前 workspace version；已有 registry latest 后默认 patch bump。发布路径覆盖 npm auth、version check/bump、source drift check、tarball pack、publish 和 registry latest verification；\`--full-gate\` 和 \`--registry-smoke\` 可启用更重验证。
-- 发布 tarball 时显式传递 \`--access public\`，避免 rename 窗口中依赖 npm 默认 access 语义。
+- Publish the synchronized Project Tiny Context Harness package assets and CLI build from the current workspace.
+- This release is produced by \`tools/release_npm.mjs\`. If the renamed package has no registry entry yet, the script publishes the current workspace version by default; once registry latest exists, the default path bumps patch versions. The release path covers npm auth, version check/bump, source drift check, tarball pack, publish and registry latest verification. \`--full-gate\` and \`--registry-smoke\` enable heavier validation.
+- The tarball publish command passes \`--access public\` explicitly so the rename window does not depend on npm default access semantics.
 
-## 3. Build Artifacts（构建产物）
+## 3. Build Artifacts
 
-| 产物（Artifact） | 位置（Location） | Checksum/Version |
+| Artifact | Location | Checksum/Version |
 |---|---|---|
 | npm package | \`${packageName}\` | \`${version}\` |
 | package tarball | \`${packCommand}\` | \`${pack?.shasum ?? "Pending"}\` |
@@ -574,22 +574,22 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
 | package content | pack output | ${pack ? `${pack.entryCount} files, ${formatBytes(pack.size)} package size, ${formatBytes(pack.unpackedSize)} unpacked size` : "Pending"} |
 | registry package | \`npm view ${packageName} version dist-tags.latest dist.integrity --json\` | ${registry ? `\`version ${registry.version}\`, \`latest ${registry["dist-tags.latest"]}\`, \`integrity ${registry["dist.integrity"]}\`` : "Pending"} |
 
-## 4. Smoke Test Result（冒烟测试结果）
+## 4. Smoke Test Result
 
 - Decision: \`${decision}\`
 - Evidence:
-  - \`npm whoami\`: ${authStatus}。
-  - npm publish OTP: ${report.otpProvided ? "PROVIDED，未写入报告。" : "NOT PROVIDED"}。
-  - \`node packages/sdlc-harness/dist/cli.js package check-source\`: ${stepStatus(report, "package source drift check")}。
-  - \`node --test tests/sdlc-harness/*.test.mjs\`: ${fullGateStatus}。
-  - \`node packages/sdlc-harness/dist/cli.js validate-context\`: ${validateStatus}。
-  - \`${packCommand}\`: ${stepStatus(report, pack?.mode === "tarball" ? "npm pack tarball" : "npm pack dry run")}。
-  - \`git diff --check\`: ${stepStatus(report, "final diff check")}。
+  - \`npm whoami\`: ${authStatus}.
+  - npm publish OTP: ${report.otpProvided ? "PROVIDED, not written to the report." : "NOT PROVIDED"}.
+  - \`node packages/sdlc-harness/dist/cli.js package check-source\`: ${stepStatus(report, "package source drift check")}.
+  - \`node --test tests/sdlc-harness/*.test.mjs\`: ${fullGateStatus}.
+  - \`node packages/sdlc-harness/dist/cli.js validate-context\`: ${validateStatus}.
+  - \`${packCommand}\`: ${stepStatus(report, pack?.mode === "tarball" ? "npm pack tarball" : "npm pack dry run")}.
+  - \`git diff --check\`: ${stepStatus(report, "final diff check")}.
   - \`${publishCommand}\`: ${publishEvidence}
   - \`npm view ${packageName} version dist-tags.latest dist.integrity --json\`: ${registryEvidence}
   - Registry installed-consumer smoke: ${smokeEvidence}
 
-## 5. Deployment Checklist（部署检查清单）
+## 5. Deployment Checklist
 
 - [x] Confirm registry latest before publishing.
 - [${stepPassed(report, `bump package version to ${version}`) || !report.publish ? "x" : " "}] Bump package version to \`${version}\`.
@@ -597,26 +597,26 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
 - [${stepPassed(report, "npm pack tarball") || stepPassed(report, "npm pack dry run") ? "x" : " "}] Package pack passed.
 - [${stepPassed(report, "npm publish tarball") ? "x" : " "}] Publish package with \`${publishCommand}\`.
 - [${registry ? "x" : " "}] Verify registry package with \`npm view ${packageName} version dist-tags.latest dist.integrity --json\`.
-- Optional full local test suite: ${fullGateStatus}。
-- Optional registry installed-consumer smoke: ${smoke ? "PASS" : report.registrySmoke ? "Pending" : "SKIPPED，未启用 `--registry-smoke`"}。
+- Optional full local test suite: ${fullGateStatus}.
+- Optional registry installed-consumer smoke: ${smoke ? "PASS" : report.registrySmoke ? "Pending" : "SKIPPED, --registry-smoke not enabled"}.
 - [ ] Create and push git tag \`v${version}\` after publish success.
 
-## 6. Rollback Plan（回滚方案）
+## 6. Rollback Plan
 
-- 触发条件（Trigger）:
-  - \`npm publish\` 失败且 package 未创建。
-  - 发布成功后发现 CLI 无法安装、初始化、doctor 失败，或包内 assets 与仓库事实源漂移。
-- 步骤（Steps）:
-  1. 如果 publish 未成功，不创建 release tag，保留当前 release status 的 blocker 状态，修复后重新执行 release gate。
-  2. 如果 publish 已成功但 smoke 失败，立即停止推广该版本。
-  3. 由于 npm package version 不可复用，修复后 bump 到下一个 patch version，重新执行 test/release gate 后发布。
-  4. 如需让消费者回退，指导安装上一稳定版本或从 git commit/tag 固定依赖。
-- 数据注意事项（Data considerations）:
-  - 本包发布的是 CLI 和 Harness assets，不迁移 npm registry 外的数据。
-  - 用户仓库 sync/upgrade 遵循 managed file 增量策略；回滚时不得覆盖用户本地自定义配置。
-- 负责人（Owner）: \`release_manager\`
+- Triggers:
+  - \`npm publish\` fails and the package was not created.
+  - Publish succeeds, but install, init, doctor or packaged asset/source drift verification fails.
+- Steps:
+  1. If publish did not succeed, do not create a release tag. Keep the current release status blocked, fix the issue and rerun the release gate.
+  2. If publish succeeded but smoke failed, stop promoting that version immediately.
+  3. Because npm package versions cannot be reused, bump to the next patch version after the fix, then rerun the test/release gate and publish again.
+  4. If consumers need to roll back, tell them to install the previous stable version or pin the dependency by git commit/tag.
+- Data considerations:
+  - This package ships the CLI and Harness assets; it does not migrate data outside the npm registry.
+  - Consumer repository sync/upgrade follows managed-file incremental rules; rollback must not overwrite user-owned local customization.
+- Owner: \`release_manager\`
 
-## 7. Known Issues（已知限制）
+## 7. Known Issues
 
 - None recorded for this release status. Update this section before publish if smoke, registry or consumer install limitations are discovered.
 `;

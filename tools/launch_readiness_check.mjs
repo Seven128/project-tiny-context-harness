@@ -199,6 +199,8 @@ function localChecks() {
   const scorecardWorkflow = read(".github/workflows/scorecard.yml");
   const adoptionReportTemplate = read(".github/ISSUE_TEMPLATE/adoption_report.yml");
   const releaseScript = read("tools/release_npm.mjs");
+  const managedMakefile = read(".codex/pjsdlc_managed/make/sdlc-harness.mk");
+  const packagedMakefile = read("packages/sdlc-harness/assets/make/sdlc-harness.mk");
 
   addCheck(checks, "root-package-name", rootPackage.name === "project-tiny-context-harness", "Root package name is project-tiny-context-harness.");
   addCheck(checks, "root-license", rootPackage.license === "MIT" && hasFile("LICENSE"), "Root package has MIT license metadata and LICENSE file.");
@@ -279,6 +281,22 @@ function localChecks() {
       contains(zhReadme, /英文主入口/) &&
       contains(zhReadme, /中文文档作为二级入口/),
     "Localized Chinese README exists as a secondary entry while public launch surfaces remain English-first."
+  );
+  addCheck(
+    checks,
+    "english-first-generated-surfaces",
+    !hasCjk(managedMakefile) &&
+      !hasCjk(packagedMakefile) &&
+      !hasCjk(releaseScript) &&
+      contains(managedMakefile, /Diagnose Harness root, core package and schema version/) &&
+      contains(managedMakefile, /Refresh managed guidance, Context templates, default Skills and tools/) &&
+      contains(packagedMakefile, /Check whether project_context\/\*\* supports context recovery/) &&
+      contains(releaseScript, /# Current Release Report/) &&
+      contains(releaseScript, /## 2\. Included Changes/) &&
+      contains(releaseScript, /SKIPPED, --full-gate not enabled/) &&
+      contains(releaseScript, /Rollback Plan/) &&
+      contains(releaseScript, /Consumer repository sync\/upgrade follows managed-file incremental rules/),
+    "Generated Makefile help and release reports stay English-first for npm/package users."
   );
   addCheck(
     checks,
