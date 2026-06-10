@@ -144,6 +144,7 @@ function localChecks() {
   const zhReadme = read("README.zh-CN.md");
   const launchKit = read("docs/launch/README.md");
   const primaryLaunch = read("docs/launch/primary-launch.md");
+  const privateReview = read("docs/launch/private-review.md");
   const npmPublishRunbook = read("docs/launch/npm-publish-runbook.md");
   const awesomeListSubmissions = read("docs/launch/awesome-list-submissions.md");
   const responseTemplates = read("docs/launch/response-templates.md");
@@ -323,6 +324,22 @@ function localChecks() {
       contains(responseTemplates, /Do not say old stage-based results prove the current package is faster/) &&
       contains(responseTemplates, /Adoption report issue form/),
     "Launch response templates exist and keep public replies narrow, factual and non-hype."
+  );
+  addCheck(
+    checks,
+    "private-review-packet",
+    hasFile("docs/launch/private-review.md") &&
+      contains(launchKit, /private-review\.md/) &&
+      contains(launchKit, /Private review packet/) &&
+      contains(outreachTargets, /Private review/) &&
+      contains(outreachTargets, /5-10 private reviewers/) &&
+      contains(privateReview, /Copy-Paste DM/) &&
+      contains(privateReview, /Source preview/) &&
+      contains(privateReview, /Do not ask private reviewers for stars/) &&
+      contains(privateReview, /Broad launch still waits for the renamed package to be installable/) &&
+      contains(privateReview, /quote consent: none, anonymous, public name, or public link/) &&
+      contains(privateReview, /Private review is for copy and product clarity, not proof of quality/),
+    "Private review packet supports small pre-launch feedback while npm publish is blocked, without asking for stars or making proof claims."
   );
   addCheck(
     checks,

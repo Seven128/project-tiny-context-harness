@@ -4,7 +4,7 @@ This is the maintainer launch kit for Project Tiny Context Harness. It is copy-r
 
 Do not claim benchmark wins yet. Current public positioning is based on product design and smoke evidence: the package installs a small, durable recovery surface and `validate-context` gate. Fresh Minimal Context benchmark runs are still required before publishing efficiency claims.
 
-For competitor and feasibility context, see [market-map.md](market-map.md). For current launch, award and curated-list execution targets, see [outreach-targets.md](outreach-targets.md). For copy-ready primary launch execution, see [primary-launch.md](primary-launch.md). For launch reply handling, see [response-templates.md](response-templates.md). For metrics snapshots, see [metrics.md](metrics.md). For npm publication, see [npm-publish-runbook.md](npm-publish-runbook.md). For curated-list PR copy, see [awesome-list-submissions.md](awesome-list-submissions.md). For the recording packet, see [demo.md](demo.md).
+For competitor and feasibility context, see [market-map.md](market-map.md). For current launch, award and curated-list execution targets, see [outreach-targets.md](outreach-targets.md). For small pre-launch feedback while npm publication is blocked, see [private-review.md](private-review.md). For copy-ready primary launch execution, see [primary-launch.md](primary-launch.md). For launch reply handling, see [response-templates.md](response-templates.md). For metrics snapshots, see [metrics.md](metrics.md). For npm publication, see [npm-publish-runbook.md](npm-publish-runbook.md). For curated-list PR copy, see [awesome-list-submissions.md](awesome-list-submissions.md). For the recording packet, see [demo.md](demo.md).
 
 Readiness boundary: `npm run launch:check` means the metadata, docs, launch packets and repo-hosted media are internally coherent. It does not mean Product Hunt, curated-list submissions or awards are ready. Those still require final account-specific submission review, first feedback or adoption evidence.
 
@@ -107,6 +107,7 @@ Use this if agents keep losing project intent between chats. It adds a small pro
 - Confirm agent surface recipes are linked from README and explain Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness folders without splitting `project_context/**`.
 - Confirm the FAQ is linked from README and answers AGENTS.md overlap, README overlap, benchmark boundaries, Context update rules and npm-pending source preview.
 - Confirm response templates cover AGENTS.md overlap, benchmark asks, stage-ceremony questions, test/CI boundaries, existing-repo adoption and feedback triage.
+- If npm publish is still blocked, invite a small private review group with [private-review.md](private-review.md) instead of posting broad launch copy.
 - Run `npm run launch:metrics -- --output tmp/sdlc/launch-metrics/baseline.md` before the first public post.
 - Confirm the adoption handoff issue and starter issues are visible and labeled for discovery.
 - Record a short terminal demo from the 60-second trial.
@@ -131,12 +132,14 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 | Agent-surface recipes | Keep `docs/agent-surface-recipes.md` linked from README. | Users of Codex, Claude Code, Cursor, Gemini CLI, OpenCode or custom tools can adopt without assuming separate project memories. |
 | FAQ surface | Keep `docs/faq.md` linked from README. | Launch replies can point to concise answers for AGENTS.md overlap, README overlap, benchmarks, Context update rules and npm-pending source preview. |
 | Response templates | Keep `docs/launch/response-templates.md` linked from this launch kit. | Maintainer replies stay narrow, factual and non-hype when HN/Reddit/Product Hunt comments ask predictable questions. |
+| Private review packet | Use `docs/launch/private-review.md` for 5-10 high-signal reviewers while npm publish is blocked or before broad launch. | Feedback identifies concrete agent-memory drift, README confusion or missing recovery facts without asking for stars. |
 | Metrics snapshot | Run `npm run launch:metrics` before and after public channels. | Stars, forks, issues and npm downloads are recorded as distribution telemetry without implying product quality. |
 
 ### Channel Matrix
 
 | Channel | Primary audience | CTA | Success signal | Follow-up |
 |---|---|---|---|---|
+| Private review | 5-10 developers already using coding agents on real repos. | Ask whether the recovery surface solves a real handoff problem. | Specific comments about missing project facts, README clarity or trial friction. | Patch README/FAQ before broad launch and only quote reviewers with consent. |
 | Hacker News | Developers using agents on real repos. | Ask whether this recovery surface solves their handoff problem. | Comments discuss agent drift, AGENTS.md, Context files or workflow overhead. | Patch README/FAQ from confusion points within 24 hours. |
 | Product Hunt | Broader developer-tool audience. | Watch the demo and try the 60-second install. | Upvotes plus concrete comments from agent users. | Add screenshots/GIF and answer every substantive comment. |
 | Reddit / niche communities | Codex, Claude Code, Cursor and local-first tooling users. | Ask what facts their agents rediscover. | Replies describe real repo pain, not generic AI enthusiasm. | Convert repeated asks into issues or FAQ entries. |

@@ -27,12 +27,13 @@ Not ready yet:
 - No outside adoption report, testimonial or contribution.
 - 0 GitHub stars and 0 forks at snapshot time.
 
-Practical implication: broad public launch should wait for npm publish. Awards and high-star outcomes are still evidence-gated.
+Practical implication: broad public launch should wait for npm publish. Small private review can happen before npm publish if it uses the source preview path and does not ask for stars. Awards and high-star outcomes are still evidence-gated.
 
 ## Priority Sequence
 
 | Priority | Target | Why now | Required packet | Success signal |
 |---:|---|---|---|---|
+| 0 | Private review | npm publish is blocked, but 5-10 experienced coding-agent users can still review the source preview path and README. | `docs/launch/private-review.md`, source preview path, no star ask. | Reviewers describe concrete agent-memory drift, README confusion or missing recovery facts. |
 | 1 | Hacker News Show HN | HN's Show HN format is for something people can try and discuss; use it after npm publish makes the renamed package installable. | GitHub URL, short text post, demo link if possible, explicit feedback ask. | Comments discuss agent handoff/context drift rather than generic AI tooling. |
 | 2 | Agentic-coding awesome lists | Two smaller lists match repo-level agent instructions and team adoption now. | PR copy and exact patches from `docs/launch/awesome-list-submissions.md` and `docs/launch/external-prs/`, no benchmark/adoption claims. | Listing accepted or maintainer feedback clarifies the category. |
 | 3 | Awesome OpenCode | The README now includes an OpenCode setup note; the list accepts project YAML entries for tools and utilities. | `data/projects/` YAML patch from `docs/launch/external-prs/`, no plugin claim. | Listing accepted or maintainers clarify OpenCode relevance. |
@@ -119,10 +120,11 @@ Project Tiny Context Harness - Minimal repo-native project memory for AI coding 
 
 ## Next Concrete Actions
 
-1. Publish `project-tiny-context-harness@0.2.39` by following `docs/launch/npm-publish-runbook.md`.
-2. Run `npm run launch:metrics -- --output tmp/sdlc/launch-metrics/show-hn-before.md`.
-3. Post Show HN first using `docs/launch/primary-launch.md` and the repo-hosted GIF if useful.
-4. Submit prepared curated-list PRs from `docs/launch/external-prs/README.md`, starting with the two P0 agentic-coding lists and then the matching harness/context-engineering directories.
-5. Track stars, forks, npm downloads and comments for 24 hours with `npm run launch:metrics`.
-6. Patch README/FAQ from repeated confusion.
-7. Use the Product Hunt media packet only after the first feedback loop or with a deliberate scheduling decision.
+1. While npm publish is blocked, invite 5-10 private reviewers using `docs/launch/private-review.md`.
+2. Publish `project-tiny-context-harness@0.2.39` by following `docs/launch/npm-publish-runbook.md`.
+3. Run `npm run launch:metrics -- --output tmp/sdlc/launch-metrics/show-hn-before.md`.
+4. Post Show HN first using `docs/launch/primary-launch.md` and the repo-hosted GIF if useful.
+5. Submit prepared curated-list PRs from `docs/launch/external-prs/README.md`, starting with the two P0 agentic-coding lists and then the matching harness/context-engineering directories.
+6. Track stars, forks, npm downloads and comments for 24 hours with `npm run launch:metrics`.
+7. Patch README/FAQ from repeated confusion.
+8. Use the Product Hunt media packet only after the first feedback loop or with a deliberate scheduling decision.

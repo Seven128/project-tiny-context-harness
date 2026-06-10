@@ -39,6 +39,7 @@ for (const expected of [
   "minimal-context-sample",
   "launch-faq",
   "launch-response-templates",
+  "private-review-packet",
   "community-starter-issues",
   "launch-kit",
   "launch-operating-plan",
