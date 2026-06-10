@@ -24,6 +24,8 @@ The renamed package exists on npm. Use local token publishing only as an emergen
 
 The current published package is `project-tiny-context-harness@0.2.40`. A real Trusted Publishing run must publish a new version, such as `0.2.41` after `packages/sdlc-harness/package.json` is bumped and the normal release checks pass. Do not run a real publish for `0.2.40` again; npm versions are immutable.
 
+Because npm package README content is also tied to the immutable published version, local README copy changes after `0.2.40` will not appear on npm until a new version is published. Treat a stale `npm-readme-renamed-surfaces` info item from `npm run launch:strict-external` as a conversion cleanup task for the next patch release, not as permission to republish the existing version.
+
 For an emergency local fallback after a future version bump, use:
 
 ```sh
@@ -99,9 +101,10 @@ Then verify:
 ```sh
 npm run launch:strict-external
 npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@latest --clean
+npm view project-tiny-context-harness readme --json
 ```
 
-The strict external check must no longer fail `npm-fetch`.
+The strict external check must no longer fail `npm-fetch`. The npm README should no longer report stale pre-rename display, package or repository names.
 
 ## After Trusted Publishing Works
 

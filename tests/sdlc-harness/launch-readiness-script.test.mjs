@@ -118,6 +118,7 @@ for (const expected of [
   "docs/launch/npm-credential-unblock.md",
   "docs/launch/github-metadata.md",
   "docs/launch/prelaunch-external-blockers.md",
+  "npm-readme-renamed-surfaces",
   "npm run launch:github-metadata -- --apply"
 ]) {
   assert.match(scriptSource, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));

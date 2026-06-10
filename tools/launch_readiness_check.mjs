@@ -1614,6 +1614,33 @@ async function externalChecks(localPackageJson) {
     addCheck(checks, "npm-repository", npmLatest.repository?.url === localPackageJson.repository?.url, `npm latest repository: ${npmLatest.repository?.url ?? "(none)"}`, "external");
     addCheck(checks, "npm-bugs", npmLatest.bugs?.url === localPackageJson.bugs?.url, `npm latest bugs URL: ${npmLatest.bugs?.url ?? "(none)"}`, "external");
     addCheck(checks, "npm-version", npmLatest.version === localPackageJson.version, `npm latest version: ${npmLatest.version}`, "external-info");
+    let npmReadme = npmLatest.readme ?? "";
+    let npmReadmeSource = "npm latest metadata";
+    let npmReadmeFetchError = null;
+    if (!npmReadme) {
+      try {
+        const npmPackage = await requestJson("https://registry.npmjs.org/project-tiny-context-harness");
+        npmReadme = npmPackage.readme ?? "";
+        npmReadmeSource = "npm package metadata";
+      } catch (error) {
+        npmReadmeFetchError = error instanceof Error ? error.message : String(error);
+      }
+    }
+    const npmReadmeHasOldSurface = contains(
+      npmReadme,
+      /AI SDLC Harness|agent-project-sdlc|project-agent-sdlc|stage-based SDLC Harness/
+    );
+    addCheck(
+      checks,
+      "npm-readme-renamed-surfaces",
+      Boolean(npmReadme) && !npmReadmeHasOldSurface,
+      !npmReadme
+        ? `npm registry did not return README content${npmReadmeFetchError ? `: ${npmReadmeFetchError}` : "."}`
+        : npmReadmeHasOldSurface
+          ? `npm README from ${npmReadmeSource} still contains a pre-rename phrase from the immutable published version; publish a new patch version after local README changes to refresh the npm page.`
+          : `npm README from ${npmReadmeSource} has no old display, package or repository names.`,
+      "external-info"
+    );
   } catch (error) {
     addCheck(checks, "npm-fetch", false, error instanceof Error ? error.message : String(error), "external");
   }

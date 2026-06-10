@@ -106,9 +106,10 @@ After the first publish and any postpublish patch, run:
 ```sh
 npm run launch:strict-external
 npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.40 --clean
+npm view project-tiny-context-harness readme --json
 ```
 
-The strict external check should pass npm metadata, and the demo should install the renamed package from the registry.
+The strict external check should pass npm metadata, and the demo should install the renamed package from the registry. If the live npm README still has stale pre-rename wording, publish the next patch version after the normal gates pass; do not try to overwrite an existing npm version.
 
 Only after that:
 
