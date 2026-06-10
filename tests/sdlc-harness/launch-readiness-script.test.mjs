@@ -32,6 +32,7 @@ for (const expected of [
   "root-readme-demo-media",
   "package-readme-demo-media",
   "public-language-posture",
+  "root-readme-prepublish-boundary",
   "agent-surface-recipes",
   "launch-kit",
   "launch-operating-plan",

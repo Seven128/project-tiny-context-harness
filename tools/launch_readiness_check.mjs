@@ -226,6 +226,17 @@ function localChecks() {
   );
   addCheck(
     checks,
+    "root-readme-prepublish-boundary",
+    contains(rootReadme, /Rename publish status:/) &&
+      contains(rootReadme, /npm `project-tiny-context-harness` is still pending registry publication/) &&
+      contains(rootReadme, /install commands below are the post-publish path/) &&
+      contains(rootReadme, /strict-external` no longer reports `npm-fetch`/) &&
+      contains(rootReadme, /npm run release:npm/) &&
+      contains(rootReadme, /npm run launch:check/),
+    "Root README transparently labels install commands as post-publish while npm still returns 404."
+  );
+  addCheck(
+    checks,
     "fresh-agent-walkthrough",
     hasFile("docs/examples/fresh-agent-recovery.md") &&
       contains(rootReadme, /fresh-agent recovery walkthrough/) &&

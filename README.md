@@ -4,6 +4,8 @@
 [![Package CI](https://github.com/Seven128/project-tiny-context-harness/actions/workflows/package.yml/badge.svg)](https://github.com/Seven128/project-tiny-context-harness/actions/workflows/package.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+> Rename publish status: GitHub is already renamed, but npm `project-tiny-context-harness` is still pending registry publication. The install commands below are the post-publish path; until `node tools/launch_readiness_check.mjs --strict-external` no longer reports `npm-fetch`, use `npm run release:npm` and `npm run launch:check` as source verification.
+
 Project Tiny Context Harness is repo-native project memory for AI coding agents.
 
 `project-tiny-context-harness` ships Project Tiny Context Harness through the `sdlc-harness` CLI. It installs **Minimal Context Harness**: a compact `project_context/**` fact source, a short `AGENTS.md` startup router, role Skills and a `validate-context` gate so fresh agents can recover project intent, boundaries, verification entry points and next safe actions quickly.
