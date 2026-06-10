@@ -43,6 +43,7 @@ for (const expected of [
   "launch-faq",
   "launch-response-templates",
   "private-review-packet",
+  "private-review-shortlist",
   "private-review-log-template",
   "adoption-story-template",
   "community-starter-issues",

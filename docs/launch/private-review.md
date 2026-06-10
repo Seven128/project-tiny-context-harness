@@ -26,6 +26,8 @@ Invite 5-10 people who already use coding agents on non-trivial repositories:
 
 Avoid generic AI-tool collectors for this pass. The useful signal is about project-memory recovery, not broad AI enthusiasm.
 
+For candidate scoring and a two-wave outreach plan, use [private-review-shortlist.md](private-review-shortlist.md). Keep filled shortlists under `tmp/sdlc/private-review/**`, not in the repository.
+
 ## Copy-Paste DM
 
 ```text

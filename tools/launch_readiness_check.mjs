@@ -158,6 +158,7 @@ function localChecks() {
   const primaryLaunch = read("docs/launch/primary-launch.md");
   const feedbackTriage = read("docs/launch/feedback-triage.md");
   const privateReview = read("docs/launch/private-review.md");
+  const privateReviewShortlist = read("docs/launch/private-review-shortlist.md");
   const privateReviewLogTemplate = read("docs/launch/private-review-log-template.md");
   const adoptionStoryTemplate = read("docs/launch/adoption-story-template.md");
   const npmPublishRunbook = read("docs/launch/npm-publish-runbook.md");
@@ -376,6 +377,7 @@ function localChecks() {
     "private-review-packet",
     hasFile("docs/launch/private-review.md") &&
       contains(launchKit, /private-review\.md/) &&
+      contains(launchKit, /private-review-shortlist\.md/) &&
       contains(launchKit, /private-review-log-template\.md/) &&
       contains(launchKit, /adoption-story-template\.md/) &&
       contains(launchKit, /Private review packet/) &&
@@ -383,6 +385,7 @@ function localChecks() {
       contains(outreachTargets, /5-10 private reviewers/) &&
       contains(privateReview, /Copy-Paste DM/) &&
       contains(privateReview, /Source preview/) &&
+      contains(privateReview, /private-review-shortlist\.md/) &&
       contains(privateReview, /private-review-log-template\.md/) &&
       contains(privateReview, /adoption story/) &&
       contains(privateReview, /Do not ask private reviewers for stars/) &&
@@ -390,6 +393,20 @@ function localChecks() {
       contains(privateReview, /quote consent: none, anonymous, public name, or public link/) &&
       contains(privateReview, /Private review is for copy and product clarity, not proof of quality/),
     "Private review packet supports small pre-launch feedback while npm publish is blocked, without asking for stars or making proof claims."
+  );
+  addCheck(
+    checks,
+    "private-review-shortlist",
+    hasFile("docs/launch/private-review-shortlist.md") &&
+      contains(launchKit, /Private review shortlist/) &&
+      contains(outreachTargets, /private-review-shortlist\.md/) &&
+      contains(privateReview, /private-review-shortlist\.md/) &&
+      contains(privateReviewShortlist, /Aim for 5-10 people across at least three profiles/) &&
+      contains(privateReviewShortlist, /Do not commit a filled shortlist/) &&
+      contains(privateReviewShortlist, /Do not send the review DM to anyone who expects promotion, compensation or a reciprocal star/) &&
+      contains(privateReviewShortlist, /Send in two waves/) &&
+      contains(privateReviewShortlist, /It is not useful as a popularity signal/),
+    "Private review shortlist helps select high-signal reviewers while avoiding private-data commits, star asks and fake adoption proof."
   );
   addCheck(
     checks,
