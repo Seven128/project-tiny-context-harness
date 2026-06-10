@@ -215,6 +215,7 @@ function localChecks() {
   const githubMetadataScript = read("tools/github_metadata_update.mjs");
   const npmAccessScript = read("tools/npm_publish_access_check.mjs");
   const launchUnblockScript = read("tools/launch_unblock_check.mjs");
+  const launchNextScript = read("tools/launch_next_steps.mjs");
   const externalPrPacketScript = read("tools/external_pr_packet_check.mjs");
   const sourcePreviewScript = read("tools/source_preview_pack.mjs");
   const marketMap = read("docs/launch/market-map.md");
@@ -984,6 +985,22 @@ function localChecks() {
       contains(launchUnblockScript, /If npm returns E403/) &&
       contains(launchUnblockScript, /packageVersion/),
     "Launch unblock report gives status-aware npm owner commands before broad launch."
+  );
+  addCheck(
+    checks,
+    "launch-next-steps",
+    rootPackage.scripts?.["launch:next"] === "node tools/launch_next_steps.mjs" &&
+      hasFile("tools/launch_next_steps.mjs") &&
+      contains(launchNextScript, /This script is read-only/) &&
+      contains(launchNextScript, /does not publish to npm/) &&
+      contains(launchNextScript, /actions\/workflows\/npm-publish\.yml/) &&
+      contains(launchNextScript, /releases\/new\?tag=v0\.2\.40/) &&
+      contains(launchNextScript, /news\.ycombinator\.com\/submit/) &&
+      contains(launchNextScript, /npm run launch:feedback-note -- --channel show-hn --url <show-hn-url>/) &&
+      contains(launchNextScript, /npm run launch:external-prs -- --live --clean/) &&
+      contains(launchKit, /npm run launch:next/) &&
+      contains(launchKit, /ordered owner action board/),
+    "Launch next steps command gives maintainers one ordered, read-only action board for npm, release, first post and follow-up execution."
   );
   addCheck(
     checks,

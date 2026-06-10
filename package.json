@@ -18,6 +18,7 @@
     "launch:github-metadata": "node tools/github_metadata_update.mjs",
     "launch:npm-access": "node tools/npm_publish_access_check.mjs",
     "launch:unblock": "node tools/launch_unblock_check.mjs",
+    "launch:next": "node tools/launch_next_steps.mjs",
     "launch:external-prs": "node tools/external_pr_packet_check.mjs",
     "launch:demo": "node tools/launch_demo_capture.mjs",
     "launch:metrics": "node tools/launch_metrics_snapshot.mjs",
