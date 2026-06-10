@@ -48,6 +48,12 @@ Recommended URL:
 https://github.com/Seven128/project-tiny-context-harness
 ```
 
+Prefill URL for the HN submit form after login:
+
+```text
+https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fgithub.com%2FSeven128%2Fproject-tiny-context-harness&t=Show%20HN%3A%20Tiny%20project%20memory%20for%20coding%20agents
+```
+
 Title:
 
 ```text

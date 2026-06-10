@@ -15,6 +15,14 @@ const urls = {
 };
 
 const releaseTargetSha = "dfda8fd2c07143fca137aa609a28a5eb6d8a6697";
+const showHnPost = {
+  title: "Show HN: Tiny project memory for coding agents",
+  url: urls.repository
+};
+
+export function showHnPrefillUrl({ title = showHnPost.title, url = showHnPost.url } = {}) {
+  return `https://news.ycombinator.com/submitlink?u=${encodeURIComponent(url)}&t=${encodeURIComponent(title)}`;
+}
 
 function parseArgs(argv) {
   const options = { json: false, live: false };
@@ -154,6 +162,7 @@ export function buildNextSteps({ packageVersion = packageJson.version } = {}) {
       requiredBeforeBroadLaunch: true,
       why: "Hacker News is the primary first channel for testing whether technical users recognize the agent handoff problem.",
       url: urls.showHnSubmit,
+      prefillUrl: showHnPrefillUrl(),
       source: "docs/launch/primary-launch.md",
       preflight: [
         "npm run launch:strict-external",
@@ -207,6 +216,9 @@ export function renderMarkdown(steps = buildNextSteps(), { recommended = recomme
     if (recommended.url) {
       lines.push(`- URL: ${recommended.url}`);
     }
+    if (recommended.prefillUrl) {
+      lines.push(`- prefill URL: ${recommended.prefillUrl}`);
+    }
     if (recommended.command) {
       lines.push(`- command: \`${recommended.command}\``);
     }
@@ -229,6 +241,9 @@ export function renderMarkdown(steps = buildNextSteps(), { recommended = recomme
     lines.push(`- why: ${step.why}`);
     if (step.url) {
       lines.push(`- URL: ${step.url}`);
+    }
+    if (step.prefillUrl) {
+      lines.push(`- prefill URL: ${step.prefillUrl}`);
     }
     if (step.source) {
       lines.push(`- source: ${step.source}`);

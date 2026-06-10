@@ -5,7 +5,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const scriptPath = path.join(repoRoot, "tools/launch_next_steps.mjs");
-const { applyStatusHints, buildNextSteps, recommendedNext, renderMarkdown } = await import(pathToFileURL(scriptPath));
+const { applyStatusHints, buildNextSteps, recommendedNext, renderMarkdown, showHnPrefillUrl } = await import(
+  pathToFileURL(scriptPath)
+);
 
 const steps = buildNextSteps({ packageVersion: "0.2.41" });
 assert.deepEqual(
@@ -24,6 +26,10 @@ assert.match(markdown, /then dry_run: false/);
 assert.match(markdown, /https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/releases\/new\?tag=v0\.2\.41/);
 assert.match(markdown, /docs\/launch\/github-release-0\.2\.41\.md/);
 assert.match(markdown, /https:\/\/news\.ycombinator\.com\/submit/);
+assert.match(
+  markdown,
+  /https:\/\/news\.ycombinator\.com\/submitlink\?u=https%3A%2F%2Fgithub\.com%2FSeven128%2Fproject-tiny-context-harness&t=Show%20HN%3A%20Tiny%20project%20memory%20for%20coding%20agents/
+);
 assert.match(markdown, /docs\/launch\/primary-launch\.md/);
 assert.match(markdown, /npm run launch:feedback-note -- --channel show-hn --url <show-hn-url>/);
 assert.match(markdown, /npm run launch:external-prs -- --live --clean/);
@@ -40,8 +46,17 @@ assert.equal(jsonResult.status, 0, jsonResult.stderr);
 const json = JSON.parse(jsonResult.stdout);
 assert.equal(json.steps[0].id, "npm-trusted-publish");
 assert.equal(json.steps[0].inputs[0], "expected_version: 0.2.41");
+assert.equal(
+  json.steps[2].prefillUrl,
+  "https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fgithub.com%2FSeven128%2Fproject-tiny-context-harness&t=Show%20HN%3A%20Tiny%20project%20memory%20for%20coding%20agents"
+);
 assert.equal(json.live, false);
 assert.equal(json.recommendedNext, "npm-trusted-publish");
+
+assert.equal(
+  showHnPrefillUrl(),
+  "https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fgithub.com%2FSeven128%2Fproject-tiny-context-harness&t=Show%20HN%3A%20Tiny%20project%20memory%20for%20coding%20agents"
+);
 
 const liveSteps = applyStatusHints(steps, {
   status: "ready-with-cleanup",

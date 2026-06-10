@@ -1007,6 +1007,8 @@ function localChecks() {
       contains(launchNextScript, /actions\/workflows\/npm-publish\.yml/) &&
       contains(launchNextScript, /releases\/new\?tag=v\$\{packageVersion\}/) &&
       contains(launchNextScript, /news\.ycombinator\.com\/submit/) &&
+      contains(launchNextScript, /submitlink\?u=/) &&
+      contains(launchNextScript, /prefillUrl/) &&
       contains(launchNextScript, /npm run launch:feedback-note -- --channel show-hn --url <show-hn-url>/) &&
       contains(launchNextScript, /npm run launch:external-prs -- --live --clean/) &&
       contains(launchKit, /npm run launch:next -- --live/) &&
@@ -1038,6 +1040,8 @@ function localChecks() {
       !contains(primaryLaunch, /npm run release:npm/) &&
       contains(primaryLaunch, /npm run launch:strict-external/) &&
       contains(primaryLaunch, /project-tiny-context-harness@latest/) &&
+      contains(primaryLaunch, /Prefill URL for the HN submit form after login/) &&
+      contains(primaryLaunch, /news\.ycombinator\.com\/submitlink\?u=https%3A%2F%2Fgithub\.com%2FSeven128%2Fproject-tiny-context-harness&t=Show%20HN%3A%20Tiny%20project%20memory%20for%20coding%20agents/) &&
       contains(primaryLaunch, new RegExp(`github-release-${escapeRegex(packageJson.version)}\\.md`)) &&
       contains(primaryLaunch, /npm-publish-runbook\.md/) &&
       contains(primaryLaunch, /Product Hunt/) &&
