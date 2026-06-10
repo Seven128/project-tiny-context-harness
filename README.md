@@ -134,6 +134,8 @@ For concrete examples, read the [fresh-agent recovery walkthrough](docs/examples
 
 For Codex, Claude Code, Cursor, Gemini CLI, OpenCode and other tool-specific setup notes, see [agent surface recipes](docs/agent-surface-recipes.md).
 
+For common launch and adoption questions, see the [FAQ](docs/faq.md).
+
 ## Repository Scope
 
 This repository is both the source workspace and a reference workspace for `project-tiny-context-harness`. It contains three product areas:

@@ -105,6 +105,8 @@ For concrete examples, read the [fresh-agent recovery walkthrough](https://githu
 
 For Codex, Claude Code, Cursor, Gemini CLI, OpenCode and other tool-specific setup notes, see [agent surface recipes](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/agent-surface-recipes.md).
 
+For common launch and adoption questions, see the [FAQ](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/faq.md).
+
 ## Install
 
 ```sh

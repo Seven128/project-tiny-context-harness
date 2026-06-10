@@ -15,6 +15,7 @@ Ready now:
 - Trust surface exists: `SECURITY.md`, Dependabot, OpenSSF Scorecard workflow and issue templates.
 - Fresh-agent recovery walkthrough and Minimal Context sample project are linked from README.
 - Agent surface recipes explain Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness-folder adoption without splitting `project_context/**`.
+- FAQ answers AGENTS.md overlap, README overlap, benchmark boundaries, Context update rules and npm-pending source preview.
 
 Not ready yet:
 

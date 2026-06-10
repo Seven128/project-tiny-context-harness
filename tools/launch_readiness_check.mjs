@@ -147,6 +147,7 @@ function localChecks() {
   const npmPublishRunbook = read("docs/launch/npm-publish-runbook.md");
   const awesomeListSubmissions = read("docs/launch/awesome-list-submissions.md");
   const agentSurfaceRecipes = read("docs/agent-surface-recipes.md");
+  const faq = read("docs/faq.md");
   const freshAgentWalkthrough = read("docs/examples/fresh-agent-recovery.md");
   const minimalContextSample = read("docs/examples/minimal-context-sample.md");
   const externalPrPacket = read("docs/launch/external-prs/README.md");
@@ -288,6 +289,21 @@ function localChecks() {
   );
   addCheck(
     checks,
+    "launch-faq",
+    hasFile("docs/faq.md") &&
+      contains(rootReadme, /FAQ]\(docs\/faq\.md\)/) &&
+      contains(packageReadme, /FAQ]\(https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/blob\/main\/docs\/faq\.md\)/) &&
+      contains(faq, /Is this just AGENTS\.md\?/) &&
+      contains(faq, /Why not just write a better README\?/) &&
+      contains(faq, /Why did you remove the old stage-based workflow\?/) &&
+      contains(faq, /When should Context be updated\?/) &&
+      contains(faq, /Does this replace tests or CI\?/) &&
+      contains(faq, /Do not publish benchmark speedup claims from old stage-based results/) &&
+      contains(faq, /source preview path/),
+    "FAQ exists, is linked from README and answers launch/adoption objections without benchmark overclaiming."
+  );
+  addCheck(
+    checks,
     "community-starter-issues",
     contains(rootReadme, /Early feedback and starter issues/) &&
       contains(packageReadme, /Early feedback and starter issues/) &&
@@ -338,6 +354,7 @@ function localChecks() {
       contains(launchKit, /Keep the memory\. Drop the ceremony\./) &&
       contains(launchKit, /OpenSSF Scorecard workflow/) &&
       contains(launchKit, /Minimal Context sample project/) &&
+      contains(launchKit, /FAQ/) &&
       contains(launchKit, /does not mean Product Hunt, curated-list submissions or awards are ready/),
     "Launch kit has copy-ready channel drafts, media pointers, readiness boundary and no-benchmark boundary."
   );
@@ -485,6 +502,7 @@ function localChecks() {
       contains(outreachTargets, /question, documentation, good first issue and help wanted/) &&
       contains(outreachTargets, /OpenSSF Scorecard workflow/) &&
       contains(outreachTargets, /Minimal Context sample project/) &&
+      contains(outreachTargets, /FAQ answers/) &&
       contains(outreachTargets, /awesome-list-submissions\.md/) &&
       contains(outreachTargets, /Awards/) &&
       contains(outreachTargets, /Do not submit to award programs before the demo and first public feedback exist/),

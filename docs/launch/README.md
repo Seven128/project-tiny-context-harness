@@ -105,6 +105,7 @@ Use this if agents keep losing project intent between chats. It adds a small pro
 - Confirm OpenSSF Scorecard workflow is present and runs on `main`, weekly schedule and manual dispatch.
 - Confirm the fresh-agent recovery walkthrough and Minimal Context sample project are linked from README.
 - Confirm agent surface recipes are linked from README and explain Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness folders without splitting `project_context/**`.
+- Confirm the FAQ is linked from README and answers AGENTS.md overlap, README overlap, benchmark boundaries, Context update rules and npm-pending source preview.
 - Confirm the adoption handoff issue and starter issues are visible and labeled for discovery.
 - Record a short terminal demo from the 60-second trial.
 - Post to one primary technical venue first, then reuse the same claim across smaller channels.
@@ -126,6 +127,7 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 | Trust surface | Keep `SECURITY.md`, Dependabot, OpenSSF Scorecard workflow and issue templates visible. | New users can see how to report risk, dependency drift, supply-chain posture and adoption feedback. |
 | Example surface | Keep a before/after fresh-agent walkthrough and Minimal Context sample project linked from README. | New visitors can see how Context prevents rediscovery and what the generated recovery surface looks like without claiming benchmark wins. |
 | Agent-surface recipes | Keep `docs/agent-surface-recipes.md` linked from README. | Users of Codex, Claude Code, Cursor, Gemini CLI, OpenCode or custom tools can adopt without assuming separate project memories. |
+| FAQ surface | Keep `docs/faq.md` linked from README. | Launch replies can point to concise answers for AGENTS.md overlap, README overlap, benchmarks, Context update rules and npm-pending source preview. |
 
 ### Channel Matrix
 

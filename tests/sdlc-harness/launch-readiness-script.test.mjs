@@ -37,6 +37,7 @@ for (const expected of [
   "root-readme-source-preview",
   "agent-surface-recipes",
   "minimal-context-sample",
+  "launch-faq",
   "community-starter-issues",
   "launch-kit",
   "launch-operating-plan",
