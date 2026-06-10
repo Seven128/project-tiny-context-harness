@@ -57,7 +57,13 @@ Repository description:
 Minimal project memory and validation harness for AI coding agents.
 ```
 
-Repository homepage:
+Repository homepage while npm publish is pending:
+
+```text
+https://github.com/Seven128/project-tiny-context-harness
+```
+
+Repository homepage after `project-tiny-context-harness` is published on npm:
 
 ```text
 https://www.npmjs.com/package/project-tiny-context-harness
@@ -98,7 +104,7 @@ Use this if agents keep losing project intent between chats. It adds a small pro
 - Merge current launch-readiness changes into the GitHub default branch.
 - Run `npm run launch:check` locally; run it again without `--offline` before external launch to see current GitHub/npm metadata drift.
 - Confirm README first screen shows badges, including OpenSSF Scorecard, install command, positioning and 60-second trial.
-- Set GitHub description, homepage and topics from this file.
+- Set GitHub description, prepublish homepage and topics from this file; switch homepage to npm only after the renamed package is published.
 - Follow [npm-publish-runbook.md](npm-publish-runbook.md) while the renamed package still returns 404.
 - Publish a new npm version after `npm test --workspace project-tiny-context-harness`, `npm run smoke:quickstart`, `make validate-context` and package source check pass.
 - After the first renamed npm publish succeeds, configure GitHub Actions Trusted Publishing with [npm-trusted-publishing.md](npm-trusted-publishing.md) so future publishes use OIDC instead of a long-lived publish token.
@@ -131,7 +137,7 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 | Asset | Owner action | Ready signal |
 |---|---|---|
 | Launch profile sheet | Keep `docs/launch/profile.md` aligned with README, package metadata and launch copy. | External submissions reuse one English-first name, tagline, description, category, tag and claims-boundary source. |
-| GitHub metadata | Set description, homepage and topics from this file. | Online `launch_readiness_check` no longer reports GitHub metadata TODOs. |
+| GitHub metadata | Set description, prepublish homepage and topics from this file; switch homepage to npm only after the renamed package is published. | Online `launch_readiness_check` no longer reports GitHub metadata TODOs. |
 | npm metadata | Publish a new package version after PR merge. | npm page shows updated README, MIT license, homepage and description. |
 | Source preview path | Keep the Codespaces link, local smoke command and source-preview tarball path visible while npm publish is blocked. | Private reviewers can open `https://codespaces.new/Seven128/project-tiny-context-harness`, run `npm run smoke:quickstart` / `npm run preview:pack`, or use the generated tarball in a disposable repo. |
 | npm credential unblock | Use `docs/launch/npm-credential-unblock.md` if publish reaches npm and fails with a 403 credentials error. | The maintainer can choose interactive OTP login or a website-created granular token without leaking tokens into the repo. |

@@ -721,7 +721,8 @@ function localChecks() {
       contains(launchProfile, /Developer Tools \/ AI coding-agent infrastructure \/ Context engineering/) &&
       contains(launchProfile, /AI coding-agent infrastructure/) &&
       contains(launchProfile, /Avoid using `sdlc` as the first tag/) &&
-      contains(launchProfile, /Use GitHub as the primary launch URL until the renamed npm package is published/) &&
+      contains(launchProfile, /Use GitHub as the primary launch URL and GitHub repository homepage until the renamed npm package is published/) &&
+      contains(launchProfile, /Use npm as the GitHub repository homepage only after/) &&
       contains(launchProfile, /Use only after npm publish/) &&
       contains(launchProfile, /Use while npm publish is pending/) &&
       contains(launchProfile, /Benchmark-proven faster/) &&
@@ -746,6 +747,20 @@ function localChecks() {
       contains(launchKit, /FAQ/) &&
       contains(launchKit, /does not mean Product Hunt, curated-list submissions or awards are ready/),
     "Launch kit has copy-ready channel drafts, media pointers, readiness boundary and no-benchmark boundary."
+  );
+  addCheck(
+    checks,
+    "github-homepage-stage-boundary",
+    contains(launchKit, /Repository homepage while npm publish is pending/) &&
+      contains(launchKit, /https:\/\/github\.com\/Seven128\/project-tiny-context-harness/) &&
+      contains(launchKit, /Repository homepage after `project-tiny-context-harness` is published on npm/) &&
+      contains(launchKit, /Set GitHub description, prepublish homepage and topics/) &&
+      contains(launchKit, /switch homepage to npm only after the renamed package is published/) &&
+      contains(launchProfile, /Use GitHub as the primary launch URL and GitHub repository homepage until the renamed npm package is published/) &&
+      contains(launchProfile, /Use npm as the GitHub repository homepage only after/) &&
+      contains(outreachTargets, /GitHub repository homepage should point to `https:\/\/github\.com\/Seven128\/project-tiny-context-harness` while npm returns 404/) &&
+      contains(outreachTargets, /switch it to the npm package page only after the renamed package is published/),
+    "Launch docs keep GitHub About homepage on the repository while npm is 404, then switch it to npm after first publish."
   );
   addCheck(
     checks,
@@ -1185,7 +1200,6 @@ async function externalChecks(localPackageJson) {
 
   try {
     github = await requestJson("https://api.github.com/repos/Seven128/project-tiny-context-harness");
-    const expectedHomepage = "https://www.npmjs.com/package/project-tiny-context-harness";
     const requiredTopics = [
       "ai-agents",
       "coding-agent",
@@ -1209,7 +1223,6 @@ async function externalChecks(localPackageJson) {
     ];
     const githubTopics = Array.isArray(github.topics) ? github.topics : [];
     addCheck(checks, "github-description", github.description === "Minimal project memory and validation harness for AI coding agents.", `GitHub description: ${github.description ?? "(empty)"}`, "external");
-    addCheck(checks, "github-homepage", github.homepage === expectedHomepage, `GitHub homepage: ${github.homepage ?? "(empty)"}`, "external");
     addCheck(checks, "github-license", github.license?.spdx_id === "MIT", `GitHub detected license: ${github.license?.spdx_id ?? "(none)"}`, "external");
     addCheck(checks, "github-topics", requiredTopics.every((topic) => githubTopics.includes(topic)), `GitHub topics: ${githubTopics.length > 0 ? githubTopics.join(", ") : "(none)"}`, "external");
     addCheck(checks, "github-stars", typeof github.stargazers_count === "number", `GitHub stars: ${github.stargazers_count}`, "external-info");
@@ -1252,6 +1265,20 @@ async function externalChecks(localPackageJson) {
     addCheck(checks, "npm-version", npmLatest.version === localPackageJson.version, `npm latest version: ${npmLatest.version}`, "external-info");
   } catch (error) {
     addCheck(checks, "npm-fetch", false, error instanceof Error ? error.message : String(error), "external");
+  }
+
+  if (github) {
+    const prepublishHomepage = "https://github.com/Seven128/project-tiny-context-harness";
+    const postpublishHomepage = "https://www.npmjs.com/package/project-tiny-context-harness";
+    const expectedHomepage = npmLatest ? postpublishHomepage : prepublishHomepage;
+    const expectedState = npmLatest ? "published npm package page" : "GitHub repository while npm returns 404";
+    addCheck(
+      checks,
+      "github-homepage",
+      github.homepage === expectedHomepage,
+      `GitHub homepage: ${github.homepage ?? "(empty)"}; expected ${expectedHomepage} (${expectedState}).`,
+      "external"
+    );
   }
 
   try {

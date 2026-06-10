@@ -59,6 +59,7 @@ for (const expected of [
   "comparison-guide",
   "launch-profile-sheet",
   "launch-kit",
+  "github-homepage-stage-boundary",
   "launch-operating-plan",
   "primary-launch-packet",
   "feedback-triage-runbook",

@@ -8,7 +8,7 @@ This is the execution map after the GitHub repository was renamed to Project Tin
 
 Ready now:
 
-- GitHub metadata is complete: description, homepage, MIT license and discovery topics are visible.
+- GitHub description, MIT license and discovery topics are visible.
 - Latest GitHub Release is labeled as a Project Tiny Context Harness legacy-package release and no longer presents the old project name as the public product name.
 - Adoption handoff issue #4 is pinned; starter issues #5-#8 exist and have discovery labels for question, documentation, good first issue and help wanted.
 - Repo-hosted launch media exists: README GIF, two Product Hunt gallery PNGs and a 240x240 thumbnail.
@@ -22,6 +22,7 @@ Ready now:
 Not ready yet:
 
 - npm latest for `project-tiny-context-harness` is not published; current registry state is 404.
+- GitHub repository homepage should point to `https://github.com/Seven128/project-tiny-context-harness` while npm returns 404; switch it to the npm package page only after the renamed package is published.
 - A new GitHub Release for the renamed npm package should wait until npm publish succeeds.
 - `node tools/launch_readiness_check.mjs --strict-external` fails until npm publish succeeds.
 - No external launch post.

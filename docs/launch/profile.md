@@ -114,13 +114,13 @@ Avoid using `sdlc` as the first tag on broad launch surfaces. It is acceptable a
 
 ## URLs
 
-Use GitHub as the primary launch URL until the renamed npm package is published:
+Use GitHub as the primary launch URL and GitHub repository homepage until the renamed npm package is published:
 
 ```text
 https://github.com/Seven128/project-tiny-context-harness
 ```
 
-Use npm only after `node tools/launch_readiness_check.mjs --strict-external` no longer reports `npm-fetch`:
+Use npm as the GitHub repository homepage only after `node tools/launch_readiness_check.mjs --strict-external` no longer reports `npm-fetch`:
 
 ```text
 https://www.npmjs.com/package/project-tiny-context-harness
