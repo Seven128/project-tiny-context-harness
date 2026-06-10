@@ -995,6 +995,8 @@ function localChecks() {
       contains(launchNextScript, /does not publish to npm/) &&
       contains(launchNextScript, /--live/) &&
       contains(launchNextScript, /applyStatusHints/) &&
+      contains(launchNextScript, /recommendedNext/) &&
+      contains(launchNextScript, /Recommended Next/) &&
       contains(launchNextScript, /pending-cleanup/) &&
       contains(launchNextScript, /waiting-for-url/) &&
       contains(launchNextScript, /actions\/workflows\/npm-publish\.yml/) &&

@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const scriptPath = path.join(repoRoot, "tools/launch_next_steps.mjs");
-const { applyStatusHints, buildNextSteps, renderMarkdown } = await import(pathToFileURL(scriptPath));
+const { applyStatusHints, buildNextSteps, recommendedNext, renderMarkdown } = await import(pathToFileURL(scriptPath));
 
 const steps = buildNextSteps({ packageVersion: "0.2.41" });
 assert.deepEqual(
@@ -41,6 +41,7 @@ const json = JSON.parse(jsonResult.stdout);
 assert.equal(json.steps[0].id, "npm-trusted-publish");
 assert.equal(json.steps[0].inputs[0], "expected_version: 0.2.41");
 assert.equal(json.live, false);
+assert.equal(json.recommendedNext, "npm-trusted-publish");
 
 const liveSteps = applyStatusHints(steps, {
   status: "ready-with-cleanup",
@@ -64,7 +65,17 @@ assert.equal(liveSteps[1].status, "pending-cleanup");
 assert.equal(liveSteps[2].status, "ready");
 assert.equal(liveSteps[3].status, "waiting-for-url");
 assert.equal(liveSteps[4].status, "wait-for-first-feedback");
+assert.equal(recommendedNext(liveSteps).id, "npm-trusted-publish");
 
 const liveMarkdown = renderMarkdown(liveSteps);
+assert.match(liveMarkdown, /Recommended Next/);
+assert.match(liveMarkdown, /npm-trusted-publish: Refresh npm package page with 0\.2\.41/);
 assert.match(liveMarkdown, /status: pending-cleanup \(local 0\.2\.41; npm latest 0\.2\.40\)/);
 assert.match(liveMarkdown, /status: ready \(required broad-launch gate is clear\.\)/);
+
+const blockedFirst = recommendedNext([
+  { id: "later-cleanup", status: "pending-cleanup" },
+  { id: "fix-first", status: "blocked" },
+  { id: "ready-later", status: "ready" }
+]);
+assert.equal(blockedFirst.id, "fix-first");

@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageJson = JSON.parse(readFileSync(path.join(repoRoot, "packages/sdlc-harness/package.json"), "utf8"));
@@ -103,14 +103,20 @@ async function fetchPackage() {
   };
 }
 
-function summarize(report) {
-  if (!report.whoami.ok) {
+export function summarize(report) {
+  if (report.registryPackage.ok) {
     return {
-      status: "auth-needed",
-      nextAction: "Run npm login or configure a publish-capable npm token, then rerun npm run launch:npm-access."
+      status: "published",
+      nextAction: "Run npm run launch:strict-external. Use GitHub Actions Trusted Publishing for future new versions; local npm login is not required for broad launch once the package is published."
     };
   }
   if (report.registryPackage.state === "missing") {
+    if (!report.whoami.ok) {
+      return {
+        status: "auth-needed",
+        nextAction: "Run npm login or configure a publish-capable npm token, then rerun npm run launch:npm-access."
+      };
+    }
     return {
       status: "first-publish-needed",
       nextAction: `Run npm run release:npm -- --version ${PACKAGE_VERSION} --publish --yes --full-gate --registry-smoke. If npm returns E403, use docs/launch/npm-credential-unblock.md.`
@@ -123,8 +129,8 @@ function summarize(report) {
     };
   }
   return {
-    status: "published",
-    nextAction: "Run npm run launch:strict-external and switch GitHub homepage to the npm package if the package is installable."
+    status: "registry-check-failed",
+    nextAction: "Retry the registry check or inspect npm registry availability before publishing."
   };
 }
 
@@ -202,7 +208,9 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(`npm publish access check failed: ${error.message}`);
-  process.exitCode = 1;
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    console.error(`npm publish access check failed: ${error.message}`);
+    process.exitCode = 1;
+  });
+}

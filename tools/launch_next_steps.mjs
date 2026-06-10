@@ -113,6 +113,16 @@ export function applyStatusHints(steps, report) {
   });
 }
 
+export function recommendedNext(steps) {
+  return (
+    steps.find((step) => step.status === "blocked") ??
+    steps.find((step) => step.status === "pending-cleanup") ??
+    steps.find((step) => step.status === "ready") ??
+    steps.find((step) => !step.status) ??
+    null
+  );
+}
+
 export function buildNextSteps({ packageVersion = packageJson.version } = {}) {
   return [
     {
@@ -173,7 +183,7 @@ export function buildNextSteps({ packageVersion = packageJson.version } = {}) {
   ];
 }
 
-export function renderMarkdown(steps = buildNextSteps()) {
+export function renderMarkdown(steps = buildNextSteps(), { recommended = recommendedNext(steps) } = {}) {
   const lines = [
     "# Launch Next Steps",
     "",
@@ -186,6 +196,27 @@ export function renderMarkdown(steps = buildNextSteps()) {
     "```",
     ""
   ];
+
+  if (recommended) {
+    lines.push("## Recommended Next", "");
+    lines.push(`- ${recommended.id}: ${recommended.title}`);
+    if (recommended.status) {
+      lines.push(`- status: ${recommended.status}${recommended.statusDetail ? ` (${recommended.statusDetail})` : ""}`);
+    }
+    if (recommended.url) {
+      lines.push(`- URL: ${recommended.url}`);
+    }
+    if (recommended.command) {
+      lines.push(`- command: \`${recommended.command}\``);
+    }
+    if (recommended.commands) {
+      lines.push(`- commands: ${recommended.commands.map((command) => `\`${command}\``).join(", ")}`);
+    }
+    if (recommended.inputs) {
+      lines.push(`- inputs: ${recommended.inputs.map((input) => `\`${input}\``).join(", ")}`);
+    }
+    lines.push("");
+  }
 
   for (const [index, step] of steps.entries()) {
     lines.push(`## ${index + 1}. ${step.title}`, "");
@@ -227,11 +258,12 @@ function main() {
   }
   const statusReport = options.live ? runJson(["tools/launch_unblock_check.mjs", "--json"]) : null;
   const steps = applyStatusHints(buildNextSteps(), statusReport);
+  const recommended = recommendedNext(steps);
   if (options.json) {
-    process.stdout.write(`${JSON.stringify({ live: options.live, steps }, null, 2)}\n`);
+    process.stdout.write(`${JSON.stringify({ live: options.live, recommendedNext: recommended?.id ?? null, steps }, null, 2)}\n`);
     return;
   }
-  process.stdout.write(renderMarkdown(steps));
+  process.stdout.write(renderMarkdown(steps, { recommended }));
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
