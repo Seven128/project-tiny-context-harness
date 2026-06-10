@@ -26,10 +26,45 @@ body:
     validations:
       required: true
   - type: textarea
+    id: story
+    attributes:
+      label: Short adoption story
+      description: Optional. If this can become a public example, summarize the before/after in 3-6 sentences without private repo details.
+      placeholder: "Before: new chats kept rediscovering ... After: AGENTS.md and project_context/** made ... recoverable. Still missing: ..."
+    validations:
+      required: false
+  - type: textarea
     id: missing
     attributes:
       label: Missing recovery facts
       description: What should a fresh agent recover that the Harness did not make obvious?
+    validations:
+      required: false
+  - type: dropdown
+    id: quote_consent
+    attributes:
+      label: Public quote / story consent
+      description: Choose whether maintainers may reuse your report in README, launch replies or future adoption-story docs. No benchmark or productivity claims will be inferred from one report.
+      options:
+        - No public quote
+        - Anonymous role only
+        - GitHub username
+        - GitHub username and public link
+    validations:
+      required: true
+  - type: textarea
+    id: approved_quote
+    attributes:
+      label: Approved quote or paraphrase
+      description: Optional. If you selected a public quote option above, paste the exact sentence or paraphrase maintainers may use.
+      placeholder: "Example: Fresh chats stopped rediscovering which validation command mattered before release."
+    validations:
+      required: false
+  - type: input
+    id: public_link
+    attributes:
+      label: Public link for attribution
+      description: Optional. Add a public repo, blog post, issue, profile or comment link only if it is okay to show publicly.
     validations:
       required: false
   - type: dropdown
@@ -45,3 +80,10 @@ body:
         - Other
     validations:
       required: false
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed secrets, customer details, private repository names, raw chat logs and private code.
+          required: true

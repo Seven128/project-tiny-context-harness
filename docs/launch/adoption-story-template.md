@@ -2,7 +2,7 @@
 
 Snapshot date: 2026-06-10.
 
-Use this template after a private review, adoption report or public launch reply produces a real example. The goal is to turn useful feedback into a concise evidence surface without overstating adoption, speed or product quality.
+Use this template after a private review, adoption report or public launch reply produces a real example. The public adoption-report issue form already asks for quote/story consent; use those fields as the source of truth before publishing. The goal is to turn useful feedback into a concise evidence surface without overstating adoption, speed or product quality.
 
 Do not publish a story without explicit consent for the quoted detail and attribution level.
 

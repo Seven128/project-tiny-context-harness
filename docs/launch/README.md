@@ -126,7 +126,7 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 | GitHub metadata | Set description, homepage and topics from this file. | Online `launch_readiness_check` no longer reports GitHub metadata TODOs. |
 | npm metadata | Publish a new package version after PR merge. | npm page shows updated README, MIT license, homepage and description. |
 | 60-90 second demo | Record the demo storyboard below. | Viewer can see install, generated files and fresh-agent recovery prompt. |
-| First support surface | Create a GitHub Discussion or pinned issue for adoption reports. | Launch posts have one feedback link beyond the README. |
+| First support surface | Keep the adoption-report issue form and pinned feedback issue visible. | Launch posts have one feedback link beyond the README, and consented reports can become public adoption stories without another authorization round. |
 | First contribution queue | Keep low-risk demo/docs/example issues labeled with `good first issue`, `help wanted` and `documentation` where appropriate. | New visitors can contribute without understanding package internals. |
 | Trust surface | Keep `SECURITY.md`, Dependabot, OpenSSF Scorecard workflow and issue templates visible. | New users can see how to report risk, dependency drift, supply-chain posture and adoption feedback. |
 | Example surface | Keep a before/after fresh-agent walkthrough and Minimal Context sample project linked from README. | New visitors can see how Context prevents rediscovery and what the generated recovery surface looks like without claiming benchmark wins. |

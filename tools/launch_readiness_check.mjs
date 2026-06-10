@@ -168,6 +168,7 @@ function localChecks() {
   const sourceWorkflow = read(".github/workflows/harness.yml");
   const maintainerWorkflow = read(".github/workflows/package.yml");
   const scorecardWorkflow = read(".github/workflows/scorecard.yml");
+  const adoptionReportTemplate = read(".github/ISSUE_TEMPLATE/adoption_report.yml");
   const releaseScript = read("tools/release_npm.mjs");
 
   addCheck(checks, "root-package-name", rootPackage.name === "project-tiny-context-harness", "Root package name is project-tiny-context-harness.");
@@ -350,6 +351,7 @@ function localChecks() {
     hasFile("docs/launch/adoption-story-template.md") &&
       contains(launchKit, /Adoption story template/) &&
       contains(outreachTargets, /adoption-story-template\.md/) &&
+      contains(adoptionStoryTemplate, /adoption-report issue form already asks for quote\/story consent/) &&
       contains(adoptionStoryTemplate, /Do not publish a story without explicit consent/) &&
       contains(adoptionStoryTemplate, /Attribution level:/) &&
       contains(adoptionStoryTemplate, /Approved surfaces:/) &&
@@ -620,7 +622,22 @@ function localChecks() {
     "OpenSSF Scorecard workflow publishes SARIF results and public scorecard data with narrow permissions."
   );
   addCheck(checks, "issue-templates", hasFile(".github/ISSUE_TEMPLATE/bug_report.yml") && hasFile(".github/ISSUE_TEMPLATE/feature_request.yml"), "Bug and feature issue templates exist.");
-  addCheck(checks, "adoption-report-template", hasFile(".github/ISSUE_TEMPLATE/adoption_report.yml") && contains(read(".github/ISSUE_TEMPLATE/adoption_report.yml"), /What was the agent forgetting or rediscovering/) && contains(rootReadme, /adoption report/), "Adoption-report issue template exists and README links to it.");
+  addCheck(
+    checks,
+    "adoption-report-template",
+    hasFile(".github/ISSUE_TEMPLATE/adoption_report.yml") &&
+      contains(adoptionReportTemplate, /What was the agent forgetting or rediscovering/) &&
+      contains(adoptionReportTemplate, /Short adoption story/) &&
+      contains(adoptionReportTemplate, /Public quote \/ story consent/) &&
+      contains(adoptionReportTemplate, /No public quote/) &&
+      contains(adoptionReportTemplate, /Anonymous role only/) &&
+      contains(adoptionReportTemplate, /GitHub username and public link/) &&
+      contains(adoptionReportTemplate, /Approved quote or paraphrase/) &&
+      contains(adoptionReportTemplate, /Public link for attribution/) &&
+      contains(adoptionReportTemplate, /I removed secrets, customer details, private repository names, raw chat logs and private code/) &&
+      contains(rootReadme, /adoption report/),
+    "Adoption-report issue template exists, README links to it, and public story consent/privacy fields are present."
+  );
   addCheck(checks, "pr-template", hasFile(".github/PULL_REQUEST_TEMPLATE.md"), "Pull request template exists.");
   addCheck(checks, "quickstart-smoke", hasFile("tools/quickstart_smoke.mjs") && rootPackage.scripts?.["smoke:quickstart"], "Quickstart smoke script and npm script exist.");
   addCheck(checks, "launch-check-script", rootPackage.scripts?.["launch:check"] === "node tools/launch_readiness_check.mjs --offline", "launch:check script runs offline readiness check.");
