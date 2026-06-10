@@ -145,6 +145,7 @@ function localChecks() {
   const launchKit = read("docs/launch/README.md");
   const launchProfile = read("docs/launch/profile.md");
   const primaryLaunch = read("docs/launch/primary-launch.md");
+  const feedbackTriage = read("docs/launch/feedback-triage.md");
   const privateReview = read("docs/launch/private-review.md");
   const privateReviewLogTemplate = read("docs/launch/private-review-log-template.md");
   const adoptionStoryTemplate = read("docs/launch/adoption-story-template.md");
@@ -547,8 +548,28 @@ function localChecks() {
       contains(primaryLaunch, /difference from using only AGENTS\.md/) &&
       contains(primaryLaunch, /Adoption reports \/ missing facts/) &&
       contains(primaryLaunch, /24-Hour Response Playbook/) &&
+      contains(primaryLaunch, /feedback-triage\.md/) &&
       contains(primaryLaunch, /Do not ask for stars|Asking for stars/),
     "Primary launch packet has copy-ready first-channel copy, Product Hunt follow-up, response playbook and claims boundary."
+  );
+  addCheck(
+    checks,
+    "feedback-triage-runbook",
+    hasFile("docs/launch/feedback-triage.md") &&
+      contains(launchKit, /feedback-triage\.md/) &&
+      contains(launchKit, /Feedback triage runbook/) &&
+      contains(primaryLaunch, /feedback-triage\.md/) &&
+      contains(feedbackTriage, /Launch Feedback Triage/) &&
+      contains(feedbackTriage, /tmp\/sdlc\/launch-feedback/) &&
+      contains(feedbackTriage, /First Hour/) &&
+      contains(feedbackTriage, /Six-Hour Triage/) &&
+      contains(feedbackTriage, /Patch Rules/) &&
+      contains(feedbackTriage, /Issue Rules/) &&
+      contains(feedbackTriage, /Adoption Evidence/) &&
+      contains(feedbackTriage, /Channel Decision/) &&
+      contains(feedbackTriage, /24-Hour Summary Template/) &&
+      contains(feedbackTriage, /Treat stars, upvotes, comments and downloads as distribution telemetry/),
+    "Feedback triage runbook turns launch comments into docs, issues or consented evidence without product-proof overclaims."
   );
   addCheck(
     checks,

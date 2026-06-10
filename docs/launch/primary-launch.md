@@ -185,6 +185,8 @@ This is a small npm/CLI tool for agent-context recovery rather than an autonomou
 
 ## 24-Hour Response Playbook
 
+Use [feedback-triage.md](feedback-triage.md) for the full channel note template, issue rules, adoption-evidence rules and next-channel decision matrix.
+
 Within 1 hour:
 
 - Answer direct technical questions.
