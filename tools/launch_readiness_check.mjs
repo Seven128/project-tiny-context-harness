@@ -150,6 +150,7 @@ function localChecks() {
   const awesomeListSubmissions = read("docs/launch/awesome-list-submissions.md");
   const responseTemplates = read("docs/launch/response-templates.md");
   const agentSurfaceRecipes = read("docs/agent-surface-recipes.md");
+  const existingRepoAdoption = read("docs/adopt-existing-repo.md");
   const faq = read("docs/faq.md");
   const roadmap = read("docs/roadmap.md");
   const freshAgentWalkthrough = read("docs/examples/fresh-agent-recovery.md");
@@ -420,6 +421,23 @@ function localChecks() {
       contains(primaryLaunch, /Agent surface recipes are linked/) &&
       contains(outreachTargets, /OpenCode setup note/),
     "Agent-surface recipes explain multi-agent adoption without splitting project_context."
+  );
+  addCheck(
+    checks,
+    "existing-repo-adoption-guide",
+    hasFile("docs/adopt-existing-repo.md") &&
+      contains(rootReadme, /adoption guide]\(docs\/adopt-existing-repo\.md\)/) &&
+      contains(packageReadme, /adoption guide]\(https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/blob\/main\/docs\/adopt-existing-repo\.md\)/) &&
+      contains(launchKit, /Existing-repo adoption guide/) &&
+      contains(roadmap, /existing-repo adoption guide]\(adopt-existing-repo\.md\)/) &&
+      contains(existingRepoAdoption, /git switch -c try-project-tiny-context-harness/) &&
+      contains(existingRepoAdoption, /init --adopt/) &&
+      contains(existingRepoAdoption, /AGENTS\.md \+ project_context\/\*\*/) &&
+      contains(existingRepoAdoption, /Tool-specific files can still exist/) &&
+      contains(existingRepoAdoption, /Duplicated memory drifts/) &&
+      contains(existingRepoAdoption, /validate-context` checks recovery facts; it does not prove product quality/) &&
+      contains(existingRepoAdoption, /adoption report/),
+    "Existing-repo adoption guide is linked from public docs and explains safe init --adopt use without duplicating project memory."
   );
 
   addCheck(

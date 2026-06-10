@@ -36,6 +36,7 @@ for (const expected of [
   "root-readme-prepublish-boundary",
   "root-readme-source-preview",
   "agent-surface-recipes",
+  "existing-repo-adoption-guide",
   "minimal-context-sample",
   "launch-faq",
   "launch-response-templates",

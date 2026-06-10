@@ -134,7 +134,7 @@ For current priorities and non-goals, see the [roadmap](docs/roadmap.md).
 
 For concrete examples, read the [fresh-agent recovery walkthrough](docs/examples/fresh-agent-recovery.md) and the [Minimal Context sample project](docs/examples/minimal-context-sample.md).
 
-For Codex, Claude Code, Cursor, Gemini CLI, OpenCode and other tool-specific setup notes, see [agent surface recipes](docs/agent-surface-recipes.md).
+For existing repositories, read the [adoption guide](docs/adopt-existing-repo.md). For Codex, Claude Code, Cursor, Gemini CLI, OpenCode and other tool-specific setup notes, see [agent surface recipes](docs/agent-surface-recipes.md).
 
 For common launch and adoption questions, see the [FAQ](docs/faq.md).
 

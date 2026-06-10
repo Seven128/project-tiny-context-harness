@@ -20,7 +20,7 @@ Repo-native project memory for fresh-agent recovery.
 
 ## Next
 
-- Improve existing-repo adoption guidance for `init --adopt`, especially for projects that already have `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md` or tool-specific rules.
+- Improve the [existing-repo adoption guide](adopt-existing-repo.md) for `init --adopt`, especially for projects that already have `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md` or tool-specific rules.
 - Add more small before/after examples showing what belongs in `project_context/**` and what should stay in code, tests or issue trackers.
 - Re-run delivery benchmarks against the current Minimal Context design, not the removed stage-based workflow.
 - Submit prepared curated-list PRs after npm publish and the first feedback loop.
