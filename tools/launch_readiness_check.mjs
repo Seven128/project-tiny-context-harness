@@ -295,7 +295,9 @@ function localChecks() {
       contains(firstLines(content, 70), /No-install preview:/) &&
         contains(firstLines(content, 70), /fresh-agent recovery walkthrough/) &&
         contains(firstLines(content, 70), /Minimal Context sample guide/) &&
-        contains(firstLines(content, 70), /examples\/minimal-context-sample/),
+        contains(firstLines(content, 70), /examples\/minimal-context-sample/) &&
+        contains(launchKit, /No-install preview/) &&
+        contains(launchKit, /Visitors can understand the generated recovery surface before npm publish/),
       `${id} gives first-screen no-install links to the walkthrough and browseable sample.`
     );
   }
