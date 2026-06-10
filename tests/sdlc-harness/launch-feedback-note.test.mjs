@@ -34,6 +34,8 @@ assert.match(note, /Channel: Show HN!/);
 assert.match(note, /URL: https:\/\/news\.ycombinator\.com\/item\?id=123/);
 assert.match(note, /Posted at: 2026-06-10T12:00:00Z/);
 assert.match(note, /tmp\/sdlc\/launch-metrics\/show-hn-before\.md/);
+assert.match(note, /npm run launch:hn-snapshot -- --url https:\/\/news\.ycombinator\.com\/item\?id=123 --output tmp\/sdlc\/launch-metrics\/show-hn-hn-6h\.md/);
+assert.match(note, /npm run launch:hn-snapshot -- --url https:\/\/news\.ycombinator\.com\/item\?id=123 --output tmp\/sdlc\/launch-metrics\/show-hn-hn-24h\.md/);
 assert.match(note, /Do not store raw private logs/);
 assert.match(note, /Use adoption reports only for concrete recovery evidence/);
 assert.match(note, /Do not ask for stars, upvotes, awards or nominations/);
@@ -52,4 +54,6 @@ const forced = spawnSync(process.execPath, [scriptPath, "--channel", "Reddit", "
 });
 
 assert.equal(forced.status, 0, `${forced.stdout}\n${forced.stderr}`);
-assert.match(readFileSync(outputPath, "utf8"), /Channel: Reddit/);
+const redditNote = readFileSync(outputPath, "utf8");
+assert.match(redditNote, /Channel: Reddit/);
+assert.doesNotMatch(redditNote, /launch:hn-snapshot/);

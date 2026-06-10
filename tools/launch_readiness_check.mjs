@@ -1389,6 +1389,7 @@ function localChecks() {
       contains(launchKit, /npm run launch:feedback-note/) &&
       contains(primaryLaunch, /npm run launch:feedback-note/) &&
       contains(feedbackNoteScript, /tmp\/sdlc\/launch-feedback/) &&
+      contains(feedbackNoteScript, /npm run launch:hn-snapshot/) &&
       contains(feedbackNoteScript, /Do not store raw private logs/) &&
       contains(feedbackNoteScript, /adoption reports only for concrete recovery evidence/) &&
       contains(feedbackNoteScript, /Do not ask for stars, upvotes, awards or nominations/),

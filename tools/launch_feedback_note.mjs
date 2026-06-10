@@ -87,8 +87,23 @@ function isoDateOnly(date) {
   return date.toISOString().slice(0, 10);
 }
 
+function isShowHn({ slug, url }) {
+  return slug === "show-hn" || /news\.ycombinator\.com\/item\?id=\d+/.test(String(url || ""));
+}
+
 function renderNote({ channel, slug, url, postedAt, generatedAt }) {
   const metricsPrefix = `tmp/sdlc/launch-metrics/${slug}`;
+  const hnTelemetry = isShowHn({ slug, url })
+    ? `
+Show HN story telemetry:
+
+\`\`\`sh
+npm run launch:hn-snapshot -- --url ${url || "<channel-url>"} --output ${metricsPrefix}-hn-6h.md
+npm run launch:hn-snapshot -- --url ${url || "<channel-url>"} --output ${metricsPrefix}-hn-24h.md
+\`\`\`
+`
+    : "";
+
   return `# Launch Feedback Note
 
 Channel: ${channel}
@@ -117,6 +132,7 @@ After 24 hours:
 \`\`\`sh
 npm run launch:metrics -- --output ${metricsPrefix}-24h.md
 \`\`\`
+${hnTelemetry}
 
 ## Repeated Themes
 
