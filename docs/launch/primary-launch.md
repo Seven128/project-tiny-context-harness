@@ -51,19 +51,23 @@ https://github.com/Seven128/project-tiny-context-harness
 Title:
 
 ```text
-Show HN: Minimal project memory for AI coding agents
+Show HN: Tiny project memory for coding agents
 ```
 
 Body:
 
 ```text
-I built Project Tiny Context Harness after seeing coding agents do well inside one chat but lose project-specific intent across new chats, handoffs, RFC/debug turns and tool changes.
+I made this because I kept running into a boring problem: a coding agent can be useful in one chat, then a new chat has to rediscover the same project facts all over again.
 
-It installs a small repo-native recovery surface: project_context/**, AGENTS.md guidance, role Skills and a validate-context gate. The product lesson is: keep the memory, drop the ceremony. Modern coding agents already internalize much of the ordinary understand/design/implement/test loop, so Project Tiny Context Harness keeps durable repo facts small instead of forcing every task through SDLC phases.
+Project Tiny Context Harness is a small npm package that adds a repo-native recovery surface:
 
-It is not a task manager, spec generator, autonomous agent framework, or benchmark-proven productivity claim.
+- AGENTS.md stays a short startup router
+- project_context/** keeps durable facts: goal, non-goals, boundaries, ownership and validation paths
+- validate-context checks that the recovery surface exists and does not store fake "tests passed" notes
 
-The difference from using only AGENTS.md is that AGENTS.md stays the short startup router, while project_context keeps the maintained facts a fresh agent should recover: project goal, non-goals, architecture boundaries, ownership and validation paths. validate-context checks that recovery surface and blocks false "tests passed" claims from being stored as durable facts.
+The earlier version of this project tried a heavier SDLC-style workflow. I removed that. For most small and medium tasks, the phase ceremony was the cost. The current version is just the memory layer.
+
+It is not a task manager, spec generator, autonomous agent framework, or benchmark claim. It sits next to tests, CI, review and whatever agent you already use.
 
 Try it:
 npm install -D project-tiny-context-harness@latest
@@ -79,7 +83,7 @@ https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/articles
 Adoption reports / missing facts:
 https://github.com/Seven128/project-tiny-context-harness/issues/4
 
-I am looking for feedback from people using Codex, Claude Code, Cursor, OpenCode or similar agents on larger repos: does this minimal recovery surface solve a real handoff problem, or is the missing context somewhere else?
+I would like feedback from people using Codex, Claude Code, Cursor, OpenCode or similar tools on real repos: what project facts do your agents keep rediscovering, and is this surface small enough that you would actually maintain it?
 ```
 
 Comment if asked "How is this different from AGENTS.md?":

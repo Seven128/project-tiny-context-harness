@@ -1041,7 +1041,8 @@ function localChecks() {
       contains(primaryLaunch, new RegExp(`github-release-${escapeRegex(packageJson.version)}\\.md`)) &&
       contains(primaryLaunch, /npm-publish-runbook\.md/) &&
       contains(primaryLaunch, /Product Hunt/) &&
-      contains(primaryLaunch, /difference from using only AGENTS\.md/) &&
+      contains(primaryLaunch, /AGENTS\.md stays a short startup router/) &&
+      contains(primaryLaunch, /project_context\/\*\* keeps durable facts/) &&
       contains(primaryLaunch, /Adoption reports \/ missing facts/) &&
       contains(primaryLaunch, /24-Hour Response Playbook/) &&
       contains(primaryLaunch, /feedback-triage\.md/) &&
