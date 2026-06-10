@@ -25,6 +25,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
+      - name: Prepare source workspace CLI
+        if: ${{ hashFiles('packages/sdlc-harness/package.json') != '' }}
+        run: |
+          npm ci
+          npm run build --workspace project-tiny-context-harness
       - name: Run harness gate
         run: make "${HARNESS_GATE}"
         env:

@@ -224,9 +224,12 @@ assert.doesNotMatch(sourceMappings, /\.codex\/skills/);
 for (const workflow of [sourceWorkflow, packageWorkflow]) {
   assert.match(workflow, /Run harness gate/);
   assert.match(workflow, /validate-context/);
+  assert.match(workflow, /Prepare source workspace CLI/);
+  assert.match(workflow, /hashFiles\('packages\/sdlc-harness\/package\.json'\) != ''/);
+  assert.match(workflow, /npm run build --workspace project-tiny-context-harness/);
   assert.doesNotMatch(workflow, /npm test --workspace project-tiny-context-harness/);
   assert.doesNotMatch(workflow, /package check-source/);
-  assert.doesNotMatch(workflow, /npm install/);
+  assert.doesNotMatch(workflow, /npm publish/);
 }
 
 assert.equal(packageJson.license, "MIT");

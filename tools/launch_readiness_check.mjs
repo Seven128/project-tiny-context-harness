@@ -483,7 +483,16 @@ function localChecks() {
   addCheck(checks, "quickstart-smoke", hasFile("tools/quickstart_smoke.mjs") && rootPackage.scripts?.["smoke:quickstart"], "Quickstart smoke script and npm script exist.");
   addCheck(checks, "launch-check-script", rootPackage.scripts?.["launch:check"] === "node tools/launch_readiness_check.mjs --offline", "launch:check script runs offline readiness check.");
 
-  addCheck(checks, "consumer-workflow-boundary", contains(sourceWorkflow, /Run harness gate/) && !contains(sourceWorkflow, /npm test --workspace project-tiny-context-harness|package check-source|npm install/), "Consumer workflow only runs Harness gate.");
+  addCheck(
+    checks,
+    "consumer-workflow-boundary",
+    contains(sourceWorkflow, /Run harness gate/) &&
+      contains(sourceWorkflow, /Prepare source workspace CLI/) &&
+      contains(sourceWorkflow, /hashFiles\('packages\/sdlc-harness\/package\.json'\) != ''/) &&
+      contains(sourceWorkflow, /npm run build --workspace project-tiny-context-harness/) &&
+      !contains(sourceWorkflow, /npm test --workspace project-tiny-context-harness|package check-source|npm publish/),
+    "Consumer workflow runs the Harness gate, allows a source-workspace-only local CLI build, and excludes maintainer package checks."
+  );
   addCheck(
     checks,
     "maintainer-workflow",

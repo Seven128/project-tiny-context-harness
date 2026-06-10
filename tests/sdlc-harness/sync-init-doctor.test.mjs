@@ -140,9 +140,12 @@ try {
   const workflow = await readFile(path.join(root, ".github/workflows/harness.yml"), "utf8");
   assert.match(workflow, /Run harness gate/);
   assert.match(workflow, /validate-context/);
+  assert.match(workflow, /Prepare source workspace CLI/);
+  assert.match(workflow, /hashFiles\('packages\/sdlc-harness\/package\.json'\) != ''/);
+  assert.match(workflow, /npm run build --workspace project-tiny-context-harness/);
   assert.doesNotMatch(workflow, /npm test --workspace project-tiny-context-harness/);
   assert.doesNotMatch(workflow, /package check-source/);
-  assert.doesNotMatch(workflow, /npm install/);
+  assert.doesNotMatch(workflow, /npm publish/);
   const managedMake = await readFile(path.join(root, ".agent/pjsdlc_managed/make/sdlc-harness.mk"), "utf8");
   assert.match(managedMake, /validate-context/);
   assert.match(managedMake, /npx --yes --package project-tiny-context-harness@latest sdlc-harness/);
