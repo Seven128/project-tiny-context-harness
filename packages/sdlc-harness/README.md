@@ -104,6 +104,8 @@ Early feedback and starter issues:
 
 For current priorities and non-goals, see the [roadmap](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/roadmap.md).
 
+For benchmark boundaries, read [Benchmarking And Evidence](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/benchmarking.md).
+
 For concrete examples, read the [fresh-agent recovery walkthrough](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/examples/fresh-agent-recovery.md) and the [Minimal Context sample project](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/examples/minimal-context-sample.md).
 
 For the longer technical argument, read [Fresh coding-agent sessions need project memory, not more ceremony](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/articles/fresh-agent-project-memory.md).

@@ -133,6 +133,8 @@ Early feedback and starter issues:
 
 For current priorities and non-goals, see the [roadmap](docs/roadmap.md).
 
+For benchmark boundaries, read [Benchmarking And Evidence](docs/benchmarking.md).
+
 For concrete examples, read the [fresh-agent recovery walkthrough](docs/examples/fresh-agent-recovery.md) and the [Minimal Context sample project](docs/examples/minimal-context-sample.md).
 
 For the longer technical argument, read [Fresh coding-agent sessions need project memory, not more ceremony](docs/articles/fresh-agent-project-memory.md).
@@ -396,4 +398,4 @@ The design reason is evidence-driven: delivery benchmark pilots showed that full
 
 The benchmark should not prove that Harness is always faster. It should find the break-even curve: which complexity, risk and recovery conditions make context maintenance pay back its cost.
 
-Open the static report at [examples/delivery-benchmark/results/index.html](examples/delivery-benchmark/results/index.html).
+Read [Benchmarking And Evidence](docs/benchmarking.md) for the claim boundary and evidence rules. Open the static report at [examples/delivery-benchmark/results/index.html](examples/delivery-benchmark/results/index.html).

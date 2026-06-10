@@ -98,6 +98,8 @@ The tradeoff is that agents spend a little time reading durable facts up front s
 
 Do not publish benchmark speedup claims from old stage-based results. Fresh performance claims require a new baseline and a Minimal Context Harness comparison.
 
+For the benchmark boundary and evidence rules, see [Benchmarking And Evidence](benchmarking.md).
+
 ## Is this useful for solo projects?
 
 Yes, if you use fresh agent chats often. The user does not have to be a team for project memory to drift.

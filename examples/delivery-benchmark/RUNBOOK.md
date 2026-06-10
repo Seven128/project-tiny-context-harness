@@ -9,6 +9,9 @@ Historical stage-workflow pilot results are not current benchmark evidence.
 Treat every scenario as pending until a new fresh baseline/Harness pair is run
 with the current Minimal Context prompt.
 
+For public claim boundaries and interpretation rules, see
+`docs/benchmarking.md`.
+
 ## Operator Duties
 
 - Prepare separate `baseline` and `harness` run directories.

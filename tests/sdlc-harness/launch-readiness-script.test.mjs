@@ -41,6 +41,7 @@ for (const expected of [
   "existing-repo-adoption-guide",
   "minimal-context-sample",
   "launch-faq",
+  "benchmarking-guide",
   "launch-response-templates",
   "private-review-packet",
   "private-review-shortlist",

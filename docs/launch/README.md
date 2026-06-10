@@ -111,6 +111,7 @@ Use this if agents keep losing project intent between chats. It adds a small pro
 - Confirm the long-form technical article is linked from README for DEV, Reddit or follow-up launch replies.
 - Confirm agent surface recipes are linked from README and explain Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness folders without splitting `project_context/**`.
 - Confirm the FAQ is linked from README and answers AGENTS.md overlap, README overlap, benchmark boundaries, Context update rules and npm-pending source preview.
+- Confirm [../benchmarking.md](../benchmarking.md) is linked from README/FAQ and explains why public speedup claims need fresh baseline and Minimal Context comparisons.
 - Confirm response templates cover AGENTS.md overlap, benchmark asks, stage-ceremony questions, test/CI boundaries, existing-repo adoption and feedback triage.
 - If npm publish is still blocked, invite a small private review group with [private-review.md](private-review.md) and [private-review-shortlist.md](private-review-shortlist.md) instead of posting broad launch copy.
 - Convert consented private feedback with [adoption-story-template.md](adoption-story-template.md) before quoting it in README, launch replies or future case-study docs.
@@ -142,6 +143,7 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 | Technical article | Keep `docs/articles/fresh-agent-project-memory.md` linked from README and this launch kit. | Follow-up posts can explain the design thesis without expanding README or claiming benchmark wins. |
 | Agent-surface recipes | Keep `docs/agent-surface-recipes.md` linked from README. | Users of Codex, Claude Code, Cursor, Gemini CLI, OpenCode or custom tools can adopt without assuming separate project memories. |
 | FAQ surface | Keep `docs/faq.md` linked from README. | Launch replies can point to concise answers for AGENTS.md overlap, README overlap, benchmarks, Context update rules and npm-pending source preview. |
+| Benchmark integrity | Keep `docs/benchmarking.md` linked from README and FAQ. | Visitors can see why single-run speed claims are avoided and what evidence would be needed for future claims. |
 | Comparison guide | Keep `docs/comparison.md` linked from README and FAQ. | Launch replies can explain adjacent-tool fit without claiming superiority over agents, specs, task planners or retrieval tools. |
 | Response templates | Keep `docs/launch/response-templates.md` linked from this launch kit. | Maintainer replies stay narrow, factual and non-hype when HN/Reddit/Product Hunt comments ask predictable questions. |
 | Feedback triage runbook | Keep `docs/launch/feedback-triage.md` linked from this launch kit and primary launch packet. | Real comments become README/FAQ/profile patches, issues or consented adoption stories without turning distribution telemetry into product proof. |

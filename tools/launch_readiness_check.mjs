@@ -173,6 +173,7 @@ function localChecks() {
   const responseTemplates = read("docs/launch/response-templates.md");
   const agentSurfaceRecipes = read("docs/agent-surface-recipes.md");
   const comparisonGuide = read("docs/comparison.md");
+  const benchmarkingGuide = read("docs/benchmarking.md");
   const technicalArticle = read("docs/articles/fresh-agent-project-memory.md");
   const existingRepoAdoption = read("docs/adopt-existing-repo.md");
   const faq = read("docs/faq.md");
@@ -361,6 +362,26 @@ function localChecks() {
       contains(faq, /Do not publish benchmark speedup claims from old stage-based results/) &&
       contains(faq, /source preview path/),
     "FAQ exists, is linked from README and answers launch/adoption objections without benchmark overclaiming."
+  );
+  addCheck(
+    checks,
+    "benchmarking-guide",
+    hasFile("docs/benchmarking.md") &&
+      contains(rootReadme, /Benchmarking And Evidence]\(docs\/benchmarking\.md\)/) &&
+      contains(packageReadme, /Benchmarking And Evidence]\(https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/blob\/main\/docs\/benchmarking\.md\)/) &&
+      contains(faq, /Benchmarking And Evidence]\(benchmarking\.md\)/) &&
+      contains(launchKit, /\.\.\/benchmarking\.md/) &&
+      contains(benchmarkingGuide, /should not be marketed as benchmark-proven faster yet/) &&
+      contains(benchmarkingGuide, /Coding-agent delivery benchmarks rarely have a clean single variable/) &&
+      contains(benchmarkingGuide, /Context reading and maintenance cost/) &&
+      contains(benchmarkingGuide, /reduced rediscovery/) &&
+      contains(benchmarkingGuide, /recovery checkpoint/) &&
+      contains(benchmarkingGuide, /same product quality bar/) &&
+      contains(benchmarkingGuide, /old stage-based SDLC results/) &&
+      contains(benchmarkingGuide, /break-even curve/) &&
+      contains(benchmarkingGuide, /Old stage-based results prove the current Minimal Context package is faster/) &&
+      contains(read("examples/delivery-benchmark/RUNBOOK.md"), /docs\/benchmarking\.md/),
+    "Benchmarking guide explains the no-speedup-claim boundary, single-variable difficulty and evidence rules for future Minimal Context reruns."
   );
   addCheck(
     checks,
