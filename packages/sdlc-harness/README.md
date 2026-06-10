@@ -37,6 +37,18 @@ Before: ask a fresh agent to read the repo and tell you what matters.
 After: ask it to read AGENTS.md and project_context/** first, then summarize goal, non-goals, architecture boundaries and validation paths before proposing code.
 ```
 
+What gets added:
+
+```mermaid
+flowchart LR
+  A["Fresh agent session"] --> B["AGENTS.md startup router"]
+  B --> C["project_context/** durable facts"]
+  C --> D["Goal, non-goals, architecture boundaries, validation paths"]
+  D --> E["Code proposal starts with repo intent loaded"]
+  F["Tests / CI / review"] --> G["Product quality evidence"]
+  C -. "does not own" .-> G
+```
+
 ![Project Tiny Context Harness terminal demo](https://raw.githubusercontent.com/Seven128/project-tiny-context-harness/main/docs/launch/assets/demo-terminal.gif)
 
 The demo shows the core loop: install the npm package, initialize `AGENTS.md` and `project_context/**`, run `validate-context`, then ask a fresh agent to recover intent before proposing code.

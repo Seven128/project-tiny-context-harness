@@ -27,6 +27,8 @@ for (const expected of [
   "package-readme-fit-boundary",
   "root-readme-before-after",
   "package-readme-before-after",
+  "root-readme-recovery-diagram",
+  "package-readme-recovery-diagram",
   "root-readme-success-surface",
   "package-readme-success-surface",
   "root-readme-demo-media",

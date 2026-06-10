@@ -264,6 +264,19 @@ function localChecks() {
         contains(content, /validation paths before proposing code/),
       `${id} gives a static before/after recovery example.`
     );
+    addCheck(
+      checks,
+      `${id}-recovery-diagram`,
+      contains(content, /What gets added:/) &&
+        contains(content, /```mermaid/) &&
+        contains(content, /Fresh agent session/) &&
+        contains(content, /AGENTS\.md startup router/) &&
+        contains(content, /project_context\/\*\* durable facts/) &&
+        contains(content, /Tests \/ CI \/ review/) &&
+        contains(content, /Product quality evidence/) &&
+        contains(content, /does not own/),
+      `${id} includes a visual recovery diagram that separates Context recovery from product-quality evidence.`
+    );
     addCheck(checks, `${id}-quickstart`, contains(content, /Try It In 60 Seconds/) && contains(content, /make validate-context/), `${id} includes quickstart.`);
     addCheck(checks, `${id}-success-surface`, contains(content, /Expected result/) && contains(content, /Fresh-agent test prompt/), `${id} shows expected generated files and a fresh-agent test prompt.`);
     addCheck(checks, `${id}-demo-media`, contains(content, /demo-terminal\.gif/) && contains(content, /The demo shows the core loop/), `${id} embeds the launch demo GIF and explains the recovery loop.`);
