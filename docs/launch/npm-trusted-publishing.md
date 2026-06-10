@@ -2,7 +2,7 @@
 
 Snapshot date: 2026-06-10.
 
-This runbook prepares the post-first-publish release path for `project-tiny-context-harness`. The package now exists on npm, so this is the preferred next release path once npmjs.com Trusted Publishing settings are configured.
+This runbook prepares the post-first-publish release path for `project-tiny-context-harness`. The package now exists on npm, and the maintainer has verified the manual dry-run workflow. Trusted Publishing is the preferred path for the next new version.
 
 ## Official npm Sources Checked
 
@@ -20,15 +20,19 @@ Important current constraints:
 
 ## Current Boundary
 
-The renamed package exists on npm. Use local token publishing only as a fallback while configuring Trusted Publishing. For the current patch, the local fallback path is:
+The renamed package exists on npm. Use local token publishing only as an emergency fallback.
+
+The current published package is `project-tiny-context-harness@0.2.40`. A real Trusted Publishing run must publish a new version, such as `0.2.41` after `packages/sdlc-harness/package.json` is bumped and the normal release checks pass. Do not run a real publish for `0.2.40` again; npm versions are immutable.
+
+For an emergency local fallback after a future version bump, use:
 
 ```sh
-npm run release:npm -- --version 0.2.40 --publish --yes --full-gate --registry-smoke
+npm run release:npm -- --version <new-version> --publish --yes --full-gate --registry-smoke
 ```
 
 Use [npm-credential-unblock.md](npm-credential-unblock.md) if that fails with a 403 credentials error.
 
-After `project-tiny-context-harness@0.2.39` exists on npm, configure Trusted Publishing for future releases and use `.github/workflows/npm-publish.yml` instead of a local long-lived publish token.
+Now that `project-tiny-context-harness` exists on npm, use `.github/workflows/npm-publish.yml` instead of a local long-lived publish token for future releases whenever possible.
 
 ## npm Trusted Publisher Configuration
 
@@ -79,12 +83,14 @@ Expected result:
 - `npm pack --dry-run --workspace project-tiny-context-harness` succeeds,
 - no npm publish occurs.
 
+The maintainer verified this dry run on 2026-06-10 after configuring npm Trusted Publishing.
+
 ## Real Publish
 
-Only after the npm trusted publisher configuration above is saved, run:
+Only after a new package version is committed on `main`, run the workflow with that version:
 
 ```text
-expected_version: 0.2.40
+expected_version: <new-version>
 dry_run: false
 ```
 
@@ -92,7 +98,7 @@ Then verify:
 
 ```sh
 npm run launch:strict-external
-npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.40 --clean
+npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@latest --clean
 ```
 
 The strict external check must no longer fail `npm-fetch`.

@@ -2,13 +2,15 @@
 
 Snapshot date: 2026-06-10.
 
-Use this checklist when `npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke` reaches npm and fails with:
+Use this checklist when an emergency local publish reaches npm and fails with:
 
 ```text
 403 Forbidden - PUT https://registry.npmjs.org/project-tiny-context-harness - You may not perform that action with these credentials.
 ```
 
 This means the local package artifact may be valid, but the active npm credentials cannot create or publish `project-tiny-context-harness`.
+
+Current state: the original first-publish blocker has been cleared and `project-tiny-context-harness@0.2.40` is published. Prefer [npm-trusted-publishing.md](npm-trusted-publishing.md) for future releases. Keep this file only as the fallback path if a future local publish must be retried with `<new-version>`.
 
 Do not paste tokens into issues, commits, release reports, shell transcripts or `project_context/**`.
 
@@ -21,9 +23,9 @@ Do not paste tokens into issues, commits, release reports, shell transcripts or 
 - Trusted publishing: <https://docs.npmjs.com/trusted-publishers/>
 - Project Trusted Publishing runbook: [npm-trusted-publishing.md](npm-trusted-publishing.md)
 
-## Current Failure Pattern
+## Historical First-Publish Failure Pattern
 
-Known current pattern:
+Known historical pattern from the rename window:
 
 ```text
 npm whoami
@@ -41,7 +43,7 @@ Interpretation:
 - The account is authenticated.
 - The token can still see or maintain the legacy package.
 - The token does not have enough authority to create or publish the renamed package.
-- If the package name returns 404, broad launch should remain blocked until publish succeeds.
+- If the package name returns 404 again, broad launch should remain blocked until registry state is recovered.
 
 ## Choose One Publish Path
 
@@ -53,7 +55,7 @@ Use this if you can log in interactively and respond to npm 2FA.
 npm login
 npm whoami
 npm profile get name email tfa --json
-npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke --otp <current-otp>
+npm run release:npm -- --version <new-version> --publish --yes --full-gate --registry-smoke --otp <current-otp>
 ```
 
 Use a fresh OTP for each publish attempt. Do not store OTP values in notes.
@@ -80,7 +82,7 @@ Temporary local use on PowerShell:
 $env:NPM_TOKEN = "<token>"
 npm config set //registry.npmjs.org/:_authToken "$env:NPM_TOKEN" --location=user
 npm whoami
-npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke
+npm run release:npm -- --version <new-version> --publish --yes --full-gate --registry-smoke
 ```
 
 After publish succeeds, either keep the token only if needed for future releases or revoke it on npmjs.com and remove it from local config:
@@ -125,18 +127,18 @@ Then confirm:
 npm view project-tiny-context-harness name version dist-tags --json
 ```
 
-Expected before publish:
+Expected if registry state is broken before recovery:
 
 ```text
 404 Not Found
 ```
 
-Expected after publish:
+Expected current state:
 
 ```json
 {
   "name": "project-tiny-context-harness",
-  "version": "0.2.39"
+  "version": "0.2.40"
 }
 ```
 
@@ -145,13 +147,13 @@ Expected after publish:
 Run:
 
 ```sh
-npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke
+npm run release:npm -- --version <new-version> --publish --yes --full-gate --registry-smoke
 ```
 
 If using interactive OTP:
 
 ```sh
-npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke --otp <current-otp>
+npm run release:npm -- --version <new-version> --publish --yes --full-gate --registry-smoke --otp <current-otp>
 ```
 
 ## Post-Publish Gate
@@ -160,7 +162,7 @@ After publish succeeds:
 
 ```sh
 npm run launch:strict-external
-npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.39 --clean
+npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@latest --clean
 ```
 
 Only after these pass:
@@ -176,4 +178,4 @@ Only after these pass:
 - Do not commit `.npmrc`, tokens, OTP values or screenshots showing token values.
 - Do not infer that `agent-project-sdlc` read/write access means the renamed package can be created.
 - Do not create a GitHub Release for the renamed package until registry smoke passes.
-- Do not reuse `0.2.39` if a publish partially succeeds and a fix is needed; npm versions are immutable.
+- Do not reuse a published version if a publish partially succeeds and a fix is needed; npm versions are immutable.

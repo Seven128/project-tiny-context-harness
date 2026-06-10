@@ -2,9 +2,11 @@
 
 Snapshot date: 2026-06-10.
 
-This runbook records the first renamed publish path from the repository rename window and remains the fallback for future local publishes. The GitHub repository and package metadata now use Project Tiny Context Harness, and `project-tiny-context-harness` has a registry entry.
+This runbook records the first renamed publish path from the repository rename window and remains the fallback for emergency local publishes. The GitHub repository and package metadata now use Project Tiny Context Harness, and `project-tiny-context-harness` has a registry entry.
 
 For future releases after the first renamed publish, use [npm-trusted-publishing.md](npm-trusted-publishing.md) to configure GitHub Actions OIDC publishing instead of a long-lived npm publish token.
+
+Current state: `project-tiny-context-harness@0.2.40` is published. Do not reuse `0.2.40`; npm versions are immutable.
 
 ## Historical First-Publish State
 
@@ -99,19 +101,19 @@ If publish succeeds but smoke fails, stop broad launch and publish the fix as a 
 
 ## Post-Publish Verification
 
-After publish, run:
+After the first publish and any postpublish patch, run:
 
 ```sh
 npm run launch:strict-external
-npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.39 --clean
+npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.40 --clean
 ```
 
 The strict external check should pass npm metadata, and the demo should install the renamed package from the registry.
 
 Only after that:
 
-- create a new GitHub Release for the renamed npm package,
-- configure Trusted Publishing with [npm-trusted-publishing.md](npm-trusted-publishing.md) for future releases,
+- create a new GitHub Release for the current renamed npm package if it has not been created yet,
+- configure and verify Trusted Publishing with [npm-trusted-publishing.md](npm-trusted-publishing.md) for future releases,
 - update any launch docs that still say npm is pending,
 - post Show HN or any broad public launch,
 - submit curated-list PRs that assume the package is installable.
