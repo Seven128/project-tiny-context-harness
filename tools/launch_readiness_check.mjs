@@ -173,6 +173,7 @@ function localChecks() {
   const npmPublishRunbook = read("docs/launch/npm-publish-runbook.md");
   const npmCredentialUnblock = read("docs/launch/npm-credential-unblock.md");
   const npmTrustedPublishing = read("docs/launch/npm-trusted-publishing.md");
+  const githubReleasePacket = read("docs/launch/github-release-0.2.40.md");
   const prelaunchExternalBlockers = read("docs/launch/prelaunch-external-blockers.md");
   const codexForOssApplication = read("docs/launch/codex-for-oss-application.md");
   const openssfBestPractices = read("docs/launch/openssf-best-practices.md");
@@ -1118,6 +1119,21 @@ function localChecks() {
   );
   addCheck(
     checks,
+    "github-release-packet",
+    hasFile("docs/launch/github-release-0.2.40.md") &&
+      contains(launchKit, /github-release-0\.2\.40\.md/) &&
+      contains(githubReleasePacket, /Tag:/) &&
+      contains(githubReleasePacket, /v0\.2\.40/) &&
+      contains(githubReleasePacket, /d125dfd172defa195ed79050151216505bbaf9f4/) &&
+      contains(githubReleasePacket, /Project Tiny Context Harness 0\.2\.40/) &&
+      contains(githubReleasePacket, /npm install -D project-tiny-context-harness@latest/) &&
+      contains(githubReleasePacket, /keep the memory, drop the ceremony/i) &&
+      contains(githubReleasePacket, /Do not retarget `v0\.2\.40` to current `main`/) &&
+      contains(githubReleasePacket, /Do not claim benchmark wins or adoption/),
+    "GitHub Release packet provides exact v0.2.40 fields, correct tag target and claims boundaries."
+  );
+  addCheck(
+    checks,
     "codex-for-oss-application",
     hasFile("docs/launch/codex-for-oss-application.md") &&
       contains(launchKit, /codex-for-oss-application\.md/) &&
@@ -1523,21 +1539,32 @@ async function externalChecks(localPackageJson) {
 
   try {
     latestRelease = await requestJson("https://api.github.com/repos/Seven128/project-tiny-context-harness/releases/latest");
+    const latestReleaseName = latestRelease.name ?? "";
+    const latestReleaseBody = latestRelease.body ?? "";
+    const legacyRenameRelease =
+      latestReleaseName === "Project Tiny Context Harness 0.2.39 - legacy npm package" &&
+      /predates the npm package rename/i.test(latestReleaseBody) &&
+      /agent-project-sdlc version 0\.2\.39/i.test(latestReleaseBody) &&
+      /project-tiny-context-harness latest/i.test(latestReleaseBody) &&
+      /does not claim benchmark-proven delivery speedups/i.test(latestReleaseBody);
+    const currentRenamedRelease =
+      latestReleaseName === "Project Tiny Context Harness 0.2.40" &&
+      /first public release line under the renamed npm package/i.test(latestReleaseBody) &&
+      /project-tiny-context-harness@latest/i.test(latestReleaseBody) &&
+      /keep the memory, drop the ceremony/i.test(latestReleaseBody) &&
+      /does not claim benchmark-proven speedups/i.test(latestReleaseBody);
     addCheck(
       checks,
       "github-release-title",
-      latestRelease.name === "Project Tiny Context Harness 0.2.39 - legacy npm package",
+      legacyRenameRelease || currentRenamedRelease,
       `GitHub latest release title: ${latestRelease.name ?? "(empty)"}`,
       "external"
     );
     addCheck(
       checks,
       "github-release-rename-boundary",
-      /predates the npm package rename/i.test(latestRelease.body ?? "") &&
-        /agent-project-sdlc version 0\.2\.39/i.test(latestRelease.body ?? "") &&
-        /project-tiny-context-harness latest/i.test(latestRelease.body ?? "") &&
-        /does not claim benchmark-proven delivery speedups/i.test(latestRelease.body ?? ""),
-      "GitHub latest release explains the legacy package name, renamed-package gate and no-benchmark boundary.",
+      legacyRenameRelease || currentRenamedRelease,
+      "GitHub latest release is either the legacy rename-boundary release or the current renamed-package release, with no benchmark/adoption overclaim.",
       "external"
     );
   } catch (error) {
