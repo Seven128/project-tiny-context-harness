@@ -106,9 +106,12 @@ Follow [npm-trusted-publishing.md](npm-trusted-publishing.md) to configure:
 
 ## Safety Checks Before Retrying
 
+Start with the read-only access diagnostic. It checks npm login, registry reachability and whether the renamed package already exists; it does not publish and does not print token, OTP or `.npmrc` values.
+
 Run:
 
 ```sh
+npm run launch:npm-access
 npm run release:npm
 npm run launch:check
 node packages/sdlc-harness/dist/cli.js package check-source

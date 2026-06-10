@@ -53,13 +53,21 @@ Use [npm-credential-unblock.md](npm-credential-unblock.md) for the detailed inte
 
 If publish fails with auth or permission errors:
 
-1. Confirm the active account:
+1. Run the read-only npm access diagnostic:
+
+   ```sh
+   npm run launch:npm-access
+   ```
+
+   It checks registry reachability, active npm login and whether the renamed package already exists without publishing or printing token values.
+
+2. Confirm the active account if you need a raw npm check:
 
    ```sh
    npm whoami
    ```
 
-2. If the failure is:
+3. If the failure is:
 
    ```text
    npm error 403 Forbidden - PUT https://registry.npmjs.org/project-tiny-context-harness - You may not perform that action with these credentials.
@@ -67,7 +75,7 @@ If publish fails with auth or permission errors:
 
    treat it as an npm credential, account policy or token permission issue. The tarball, package version and local gates may still be correct.
 
-3. Run the permission probes without printing token values:
+4. Run the low-level permission probes only if the diagnostic is not enough:
 
    ```sh
    npm profile get name email tfa --json
@@ -77,15 +85,15 @@ If publish fails with auth or permission errors:
 
    A useful diagnostic pattern is: `npm whoami` works, the legacy package reports `read-write`, but profile or package-list commands return E403. That means the current token can maintain the legacy package but cannot create or manage the renamed package namespace.
 
-4. Confirm the renamed package is still absent:
+5. Confirm the renamed package is still absent:
 
    ```sh
    npm view project-tiny-context-harness name version dist-tags --json
    ```
 
-5. Re-authenticate npm locally or replace the npm token with one allowed to publish new public packages. npm granular access tokens must be created on npmjs.com, not from the CLI. For a token-based publish path, create a granular access token with package read/write access broad enough for a new package and enable bypass 2FA if the account or package policy requires it.
-6. If using an interactive login with publish 2FA, rerun with `--otp`.
-7. Do not create a GitHub release for the renamed npm package until registry verification passes.
+6. Re-authenticate npm locally or replace the npm token with one allowed to publish new public packages. npm granular access tokens must be created on npmjs.com, not from the CLI. For a token-based publish path, create a granular access token with package read/write access broad enough for a new package and enable bypass 2FA if the account or package policy requires it.
+7. If using an interactive login with publish 2FA, rerun with `--otp`.
+8. Do not create a GitHub release for the renamed npm package until registry verification passes.
 
 If publish succeeds but smoke fails, stop broad launch and publish the fix as a new patch version. npm versions cannot be reused.
 

@@ -72,6 +72,7 @@ for (const expected of [
   "feedback-triage-runbook",
   "npm-publish-runbook",
   "npm-credential-unblock",
+  "npm-access-diagnostic",
   "npm-trusted-publishing-packet",
   "codex-for-oss-application",
   "openssf-best-practices-packet",

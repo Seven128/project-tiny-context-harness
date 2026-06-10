@@ -209,6 +209,7 @@ function localChecks() {
   const metricsPacket = read("docs/launch/metrics.md");
   const metricsScript = read("tools/launch_metrics_snapshot.mjs");
   const githubMetadataScript = read("tools/github_metadata_update.mjs");
+  const npmAccessScript = read("tools/npm_publish_access_check.mjs");
   const sourcePreviewScript = read("tools/source_preview_pack.mjs");
   const marketMap = read("docs/launch/market-map.md");
   const outreachTargets = read("docs/launch/outreach-targets.md");
@@ -970,6 +971,24 @@ function localChecks() {
   );
   addCheck(
     checks,
+    "npm-access-diagnostic",
+    rootPackage.scripts?.["launch:npm-access"] === "node tools/npm_publish_access_check.mjs" &&
+      hasFile("tools/npm_publish_access_check.mjs") &&
+      contains(npmAccessScript, /This script is read-only/) &&
+      contains(npmAccessScript, /does not run npm publish/) &&
+      contains(npmAccessScript, /No token, OTP, \.npmrc content or credential value/) &&
+      contains(npmAccessScript, /npm whoami/) &&
+      contains(npmAccessScript, /PACKAGE_NAME/) &&
+      contains(npmAccessScript, /\/latest/) &&
+      contains(npmAccessScript, /first-publish-needed/) &&
+      contains(launchKit, /npm run launch:npm-access/) &&
+      contains(npmPublishRunbook, /npm run launch:npm-access/) &&
+      contains(npmCredentialUnblock, /npm run launch:npm-access/) &&
+      contains(prelaunchExternalBlockers, /npm run launch:npm-access/),
+    "npm access diagnostic gives maintainers a read-only way to inspect npm login, registry and package-existence state before retrying publish."
+  );
+  addCheck(
+    checks,
     "npm-trusted-publishing-packet",
     hasFile("docs/launch/npm-trusted-publishing.md") &&
       hasFile(".github/workflows/npm-publish.yml") &&
@@ -1450,7 +1469,7 @@ function summarize(checks, options) {
 
 function nextActionForFailedCheck(check) {
   if (check.id === "npm-fetch") {
-    return "Publish `project-tiny-context-harness@0.2.39` with [docs/launch/npm-publish-runbook.md](docs/launch/npm-publish-runbook.md); if npm returns E403, use [docs/launch/npm-credential-unblock.md](docs/launch/npm-credential-unblock.md).";
+    return "Run `npm run launch:npm-access` to inspect npm auth and package state, then publish `project-tiny-context-harness@0.2.39` with [docs/launch/npm-publish-runbook.md](docs/launch/npm-publish-runbook.md); if npm returns E403, use [docs/launch/npm-credential-unblock.md](docs/launch/npm-credential-unblock.md).";
   }
   if (check.id === "github-homepage") {
     return "Run `npm run launch:github-metadata` to inspect the GitHub About drift; from a trusted shell with `GITHUB_TOKEN` or `GH_TOKEN`, run `npm run launch:github-metadata -- --apply`, or use [docs/launch/github-metadata.md](docs/launch/github-metadata.md) manually.";
