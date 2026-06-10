@@ -7,13 +7,29 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const scriptPath = path.join(repoRoot, "tools/launch_next_steps.mjs");
-const { applyStatusHints, buildNextSteps, findShowHnFeedbackNote, recommendedNext, renderMarkdown, showHnPrefillUrl } =
+const {
+  applyStatusHints,
+  buildNextSteps,
+  findOpenedCuratedListPrs,
+  findShowHnFeedbackNote,
+  recommendedNext,
+  renderMarkdown,
+  showHnPrefillUrl
+} =
   await import(pathToFileURL(scriptPath));
 
 const steps = buildNextSteps({ packageVersion: "0.2.41" });
 assert.deepEqual(
   steps.map((step) => step.id),
-  ["npm-trusted-publish", "github-release-0.2.41", "show-hn", "feedback-note", "show-hn-first-comment", "curated-list-prs"]
+  [
+    "npm-trusted-publish",
+    "github-release-0.2.41",
+    "show-hn",
+    "feedback-note",
+    "show-hn-first-comment",
+    "curated-list-prs",
+    "monitor-feedback"
+  ]
 );
 
 const markdown = renderMarkdown(steps);
@@ -36,6 +52,8 @@ assert.match(markdown, /npm run launch:feedback-note -- --channel show-hn --url 
 assert.match(markdown, /show-hn-first-comment/);
 assert.match(markdown, /Post the first regular HN comment/);
 assert.match(markdown, /npm run launch:external-prs -- --live --clean/);
+assert.match(markdown, /Monitor launch feedback and first-day metrics/);
+assert.match(markdown, /show-hn-hn-6h\.md/);
 assert.match(markdown, /NPM_TOKEN \/ NODE_AUTH_TOKEN/);
 assert.doesNotMatch(markdown, /npm publish --workspace/);
 
@@ -82,14 +100,40 @@ writeFileSync(
     "",
     "Channel: show-hn",
     "URL: https://news.ycombinator.com/item?id=48479619",
+    "HN first comment: https://news.ycombinator.com/item?id=48481205",
+    ""
+  ].join("\n"),
+  "utf8"
+);
+mkdirSync(path.join(tempRoot, "docs", "launch", "external-prs"), { recursive: true });
+writeFileSync(
+  path.join(tempRoot, "docs", "launch", "external-prs", "README.md"),
+  [
+    "# External PR Packets",
+    "",
+    "P0 direct PRs opened:",
+    "",
+    "- https://github.com/ai-boost/awesome-harness-engineering/pull/58",
+    "- https://github.com/Picrew/awesome-agent-harness/pull/22",
     ""
   ].join("\n"),
   "utf8"
 );
 assert.deepEqual(findShowHnFeedbackNote({ root: tempRoot }), {
   url: "https://news.ycombinator.com/item?id=48479619",
-  path: "tmp/sdlc/launch-feedback/2026-06-10-show-hn.md"
+  path: "tmp/sdlc/launch-feedback/2026-06-10-show-hn.md",
+  firstCommentUrl: "https://news.ycombinator.com/item?id=48481205"
 });
+assert.deepEqual(findOpenedCuratedListPrs({ root: tempRoot }), [
+  {
+    repo: "ai-boost/awesome-harness-engineering",
+    url: "https://github.com/ai-boost/awesome-harness-engineering/pull/58"
+  },
+  {
+    repo: "Picrew/awesome-agent-harness",
+    url: "https://github.com/Picrew/awesome-agent-harness/pull/22"
+  }
+]);
 
 const liveSteps = applyStatusHints(steps, {
   status: "ready-with-cleanup",
@@ -114,6 +158,7 @@ assert.equal(liveSteps[2].status, "ready");
 assert.equal(liveSteps[3].status, "waiting-for-url");
 assert.equal(liveSteps[4].status, "waiting-for-url");
 assert.equal(liveSteps[5].status, "wait-for-first-feedback");
+assert.equal(liveSteps[6].status, "waiting-for-url");
 assert.equal(recommendedNext(liveSteps).id, "npm-trusted-publish");
 
 const liveMarkdown = renderMarkdown(liveSteps);
@@ -139,17 +184,23 @@ const livePostedSteps = applyStatusHints(
   {
     showHnFeedback: {
       url: "https://news.ycombinator.com/item?id=48479619",
-      path: "tmp/sdlc/launch-feedback/2026-06-10-show-hn.md"
-    }
+      path: "tmp/sdlc/launch-feedback/2026-06-10-show-hn.md",
+      firstCommentUrl: "https://news.ycombinator.com/item?id=48481205"
+    },
+    curatedListPrs: findOpenedCuratedListPrs({ root: tempRoot })
   }
 );
 assert.equal(livePostedSteps[0].status, "done");
 assert.equal(livePostedSteps[1].status, "done");
 assert.equal(livePostedSteps[2].status, "done");
 assert.equal(livePostedSteps[3].status, "done");
-assert.equal(livePostedSteps[4].status, "ready");
+assert.equal(livePostedSteps[4].status, "done");
 assert.equal(livePostedSteps[4].url, "https://news.ycombinator.com/item?id=48479619");
-assert.equal(recommendedNext(livePostedSteps).id, "show-hn-first-comment");
+assert.equal(livePostedSteps[4].commentUrl, "https://news.ycombinator.com/item?id=48481205");
+assert.equal(livePostedSteps[5].status, "open");
+assert.equal(livePostedSteps[5].prs.length, 2);
+assert.equal(livePostedSteps[6].status, "ready");
+assert.equal(recommendedNext(livePostedSteps).id, "monitor-feedback");
 
 const blockedFirst = recommendedNext([
   { id: "later-cleanup", status: "pending-cleanup" },

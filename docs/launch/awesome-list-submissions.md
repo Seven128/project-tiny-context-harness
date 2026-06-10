@@ -17,14 +17,14 @@ This packet prepares curated-list pull requests. It is intentionally narrower th
 
 Open PRs from narrowest fit to broadest fit:
 
-1. `ai-boost/awesome-harness-engineering`
-2. `Picrew/awesome-agent-harness`
+1. `ai-boost/awesome-harness-engineering` - open as https://github.com/ai-boost/awesome-harness-engineering/pull/58
+2. `Picrew/awesome-agent-harness` - open as https://github.com/Picrew/awesome-agent-harness/pull/22
 3. `Transcenda/awesome-agentic-coding`
 4. `jordimas/awesome-agentic-engineering`
 5. `awesome-opencode/awesome-opencode`
 6. `jamesmurdza/awesome-ai-devtools`
 
-Reason: a 0-star package has the best chance when the target category already expects context delivery, working-state engineering or harness primitives. Broader AI dev-tool directories are useful after the README/demo has absorbed first feedback or one narrower listing is accepted.
+Reason: a 0-star package has the best chance when the target category already expects context delivery, working-state engineering or harness primitives. Broader AI dev-tool directories are useful after the README/demo has absorbed first feedback, P0 maintainer feedback or one narrower listing is accepted.
 
 ## P1: Transcenda Awesome Agentic Coding
 
@@ -213,11 +213,11 @@ Add Project Tiny Context Harness to context engineering catalog
 
 ## Execution Order
 
-1. Submit `ai-boost/awesome-harness-engineering` when the launch packet is ready and the wording stays focused on context delivery.
-2. Submit `Picrew/awesome-agent-harness` when the generated catalog workflow can be run locally.
-3. Submit Transcenda PR after the two narrower harness/context targets or after Show HN feedback confirms the wording.
+1. Monitor `ai-boost/awesome-harness-engineering#58`; respond only within the same claim boundary.
+2. Monitor `Picrew/awesome-agent-harness#22`; respond only within the same claim boundary.
+3. Submit Transcenda PR after P0 feedback or Show HN feedback confirms the wording.
 4. Submit jordimas PR after Transcenda, using the shorter team-adoption copy.
-5. Submit `awesome-opencode` if the README still links the OpenCode setup note.
-6. Submit `awesome-ai-devtools` if the README still shows the demo GIF and agent-surface recipes.
+5. Submit `awesome-opencode` if the README still links the OpenCode setup note and broader-list timing is deliberate.
+6. Submit `awesome-ai-devtools` if the README still shows the demo GIF and agent-surface recipes and broader-list timing is deliberate.
 7. Wait for standalone Skill packaging before `awesome-agent-skills`.
 8. If a maintainer rejects the wording as too framework-like, revise toward "repo-native context recovery" and away from "SDLC".

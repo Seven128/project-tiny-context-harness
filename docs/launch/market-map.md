@@ -19,9 +19,9 @@ Public state after the repository rename, checked against public GitHub and npm 
 | npm package | `project-tiny-context-harness@0.2.41` is published and installable through `@latest` |
 | npm public metadata | Live npm package metadata |
 | npm downloads | Renamed package download window is not available yet through the npm downloads API; legacy package last-week downloads remain useful only as historical distribution telemetry |
-| Launch readiness | Local `npm run launch:check` and strict external check pass; the first public Show HN post is live |
+| Launch readiness | Local `npm run launch:check` and strict external check pass; the first public Show HN post and first regular HN comment are live |
 
-Interpretation: GitHub metadata, npm distribution, the renamed GitHub Release and demo media are live. The remaining work for serious public distribution is feedback handling and durable discovery: post the HN maintainer comment, track 6-hour and 24-hour metrics, patch README/FAQ from repeated confusion, then submit narrow curated-list PRs.
+Interpretation: GitHub metadata, npm distribution, the renamed GitHub Release and demo media are live. The first public Show HN post and first regular HN comment are live, and the first two narrow curated-list PRs are open. The remaining work for serious public distribution is feedback handling: track 6-hour and 24-hour metrics, patch README/FAQ from repeated confusion and respond to curated-list maintainer feedback.
 
 ## Competitive Snapshot
 
@@ -105,14 +105,14 @@ Recommended sequence:
 
 1. Keep the Show HN thread focused on technical feedback and missing recovery facts.
 2. Update README/launch copy from actual confusion points within 24 hours.
-3. Submit narrow curated-list PRs after the first feedback pass, starting with harness/context lists.
+3. Monitor the two open narrow curated-list PRs, then open broader lists only after P0 feedback or acceptance.
 4. Reuse the same claim on smaller communities only after the first feedback pass.
 5. Use Product Hunt only after the HN feedback loop or with a deliberate scheduling decision.
 6. Nominate for awards only after real use appears or a minimum eligibility threshold is met.
 
 ## Evidence To Gather Next
 
-- HN first-comment feedback and direct replies from the live Show HN thread.
+- HN first-comment replies and direct replies from the live Show HN thread.
 - 6-hour and 24-hour metrics after the first public post.
 - One example PR showing how `project_context/**` prevents agent drift.
 - One fresh benchmark rerun that compares baseline vs Minimal Context without old stage results.
@@ -125,8 +125,8 @@ These are lower priority than the first public launch, but useful after the demo
 
 | List | Current scale | Fit | Gate before PR |
 |---|---:|---|---|
-| [awesome-harness-engineering](https://github.com/ai-boost/awesome-harness-engineering) | niche | Direct context-delivery and harness-engineering fit. | Use the prepared context-delivery patch and avoid benchmark claims. |
-| [awesome-agent-harness](https://github.com/Picrew/awesome-agent-harness) | niche | Direct Context & Working-State Engineering fit. | Run the upstream renderer/verification workflow after applying the data patch. |
+| [awesome-harness-engineering](https://github.com/ai-boost/awesome-harness-engineering) | niche | Direct context-delivery and harness-engineering fit. | Open as [PR #58](https://github.com/ai-boost/awesome-harness-engineering/pull/58); monitor maintainer feedback. |
+| [awesome-agent-harness](https://github.com/Picrew/awesome-agent-harness) | niche | Direct Context & Working-State Engineering fit. | Open as [PR #22](https://github.com/Picrew/awesome-agent-harness/pull/22); monitor maintainer feedback. |
 | [awesome-ai-devtools](https://github.com/jamesmurdza/awesome-ai-devtools) | 3,825 stars | Broad AI developer tools list; likely the best larger-list target after a narrow listing or public feedback. | Demo live, README concise, one-line category fit ready. |
 | [awesome-opencode](https://github.com/awesome-opencode/awesome-opencode) | 7,766 stars | OpenCode ecosystem list; fit is now plausible because README links an OpenCode setup note. | Submit the prepared `data/projects/` YAML patch after npm publish; do not claim this is an OpenCode plugin. |
 | [awesome-agents](https://github.com/kyrolabs/awesome-agents) | 2,403 stars | Broad AI agent list; Harness is support infrastructure, not an agent. | Position as agent workflow/context infrastructure, not an autonomous agent. |

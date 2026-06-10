@@ -99,15 +99,35 @@ export function findShowHnFeedbackNote({ root = repoRoot } = {}) {
     if (!urlMatch) {
       continue;
     }
+    const firstCommentMatch = content.match(/HN first comment:\s*(https:\/\/news\.ycombinator\.com\/item\?id=\d+)/);
     return {
       url: urlMatch[1],
-      path: slashPath(path.relative(root, fullPath))
+      path: slashPath(path.relative(root, fullPath)),
+      firstCommentUrl: firstCommentMatch?.[1] ?? null
     };
   }
   return null;
 }
 
-export function applyStatusHints(steps, report, { showHnFeedback = null } = {}) {
+export function findOpenedCuratedListPrs({ root = repoRoot } = {}) {
+  const packetPath = path.join(root, "docs", "launch", "external-prs", "README.md");
+  if (!existsSync(packetPath)) {
+    return [];
+  }
+  const content = readFileSync(packetPath, "utf8");
+  const prs = [];
+  const aiBoostUrl = "https://github.com/ai-boost/awesome-harness-engineering/pull/58";
+  const picrewUrl = "https://github.com/Picrew/awesome-agent-harness/pull/22";
+  if (content.includes(aiBoostUrl)) {
+    prs.push({ repo: "ai-boost/awesome-harness-engineering", url: aiBoostUrl });
+  }
+  if (content.includes(picrewUrl)) {
+    prs.push({ repo: "Picrew/awesome-agent-harness", url: picrewUrl });
+  }
+  return prs;
+}
+
+export function applyStatusHints(steps, report, { showHnFeedback = null, curatedListPrs = [] } = {}) {
   if (!report) {
     return steps;
   }
@@ -152,6 +172,15 @@ export function applyStatusHints(steps, report, { showHnFeedback = null } = {}) 
       if (!showHnUrl) {
         return { ...step, status: "waiting-for-url", statusDetail: "run after the Show HN URL exists." };
       }
+      if (showHnFeedback?.firstCommentUrl) {
+        return {
+          ...step,
+          status: "done",
+          statusDetail: `first comment posted at ${showHnFeedback.firstCommentUrl}`,
+          url: showHnUrl,
+          commentUrl: showHnFeedback.firstCommentUrl
+        };
+      }
       return { ...step, status: "ready", statusDetail: "post the maintainer context as the first regular HN comment.", url: showHnUrl };
     }
     if (step.id === "feedback-note") {
@@ -162,7 +191,25 @@ export function applyStatusHints(steps, report, { showHnFeedback = null } = {}) 
       return { ...step, status: "waiting-for-url", statusDetail: "run after the Show HN URL exists." };
     }
     if (step.id === "curated-list-prs") {
+      if (curatedListPrs.length >= 2) {
+        return {
+          ...step,
+          title: "Monitor the open narrow-first curated-list PRs",
+          status: "open",
+          statusDetail: "P0 curated-list PRs are open; monitor maintainer feedback before broader lists.",
+          prs: curatedListPrs
+        };
+      }
       return { ...step, status: "wait-for-first-feedback", statusDetail: "run after first-channel feedback does not expose a positioning flaw." };
+    }
+    if (step.id === "monitor-feedback") {
+      if (!showHnUrl) {
+        return { ...step, status: "waiting-for-url", statusDetail: "run after the Show HN URL exists." };
+      }
+      if (!showHnFeedback?.firstCommentUrl) {
+        return { ...step, status: "waiting-for-comment", statusDetail: "run after the first regular HN comment is posted." };
+      }
+      return { ...step, status: "ready", statusDetail: "monitor HN replies, P0 PR feedback and 6h/24h telemetry." };
     }
     return step;
   });
@@ -245,6 +292,19 @@ export function buildNextSteps({ packageVersion = packageJson.version } = {}) {
       command: "npm run launch:external-prs -- --live --clean",
       source: "docs/launch/external-prs/README.md",
       stopIf: "Show HN feedback exposes positioning confusion that should be patched first"
+    },
+    {
+      id: "monitor-feedback",
+      title: "Monitor launch feedback and first-day metrics",
+      owner: "maintainer",
+      requiredBeforeBroadLaunch: false,
+      why: "The useful next signal is whether HN readers or list maintainers report positioning, install, examples or category-fit problems.",
+      commands: [
+        "npm run launch:hn-snapshot -- --url https://news.ycombinator.com/item?id=48479619 --output tmp/sdlc/launch-metrics/show-hn-hn-6h.md",
+        "npm run launch:metrics -- --output tmp/sdlc/launch-metrics/show-hn-6h.md"
+      ],
+      source: "tmp/sdlc/launch-feedback/2026-06-10-show-hn.md",
+      stopIf: "feedback shows repeated positioning confusion; patch README/FAQ before any broader channel"
     }
   ];
 }
@@ -330,7 +390,8 @@ function main() {
   }
   const statusReport = options.live ? runJson(["tools/launch_unblock_check.mjs", "--json"]) : null;
   const showHnFeedback = options.live ? findShowHnFeedbackNote() : null;
-  const steps = applyStatusHints(buildNextSteps(), statusReport, { showHnFeedback });
+  const curatedListPrs = options.live ? findOpenedCuratedListPrs() : [];
+  const steps = applyStatusHints(buildNextSteps(), statusReport, { showHnFeedback, curatedListPrs });
   const recommended = recommendedNext(steps);
   if (options.json) {
     process.stdout.write(
@@ -339,6 +400,7 @@ function main() {
           live: options.live,
           recommendedNext: recommended?.id ?? null,
           showHnUrl: showHnFeedback?.url ?? null,
+          curatedListPrs,
           steps
         },
         null,

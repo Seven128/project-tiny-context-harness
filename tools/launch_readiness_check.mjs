@@ -120,13 +120,18 @@ const liveNpmVersionBadgePattern = /https:\/\/img\.shields\.io\/npm\/v\/project-
 
 function requestJson(url) {
   return new Promise((resolve, reject) => {
+    const headers = {
+      "User-Agent": "project-tiny-context-harness-launch-readiness",
+      Accept: "application/vnd.github+json, application/json"
+    };
+    const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+    if (token && url.startsWith("https://api.github.com/")) {
+      headers.Authorization = `Bearer ${token}`;
+    }
     const request = https.get(
       url,
       {
-        headers: {
-          "User-Agent": "project-tiny-context-harness-launch-readiness",
-          Accept: "application/vnd.github+json, application/json"
-        },
+        headers,
         timeout: 20_000
       },
       (response) => {
@@ -1280,7 +1285,7 @@ function localChecks() {
       contains(externalPrPacketScript, /--live clones upstream repositories into tmp/) &&
       contains(externalPrPacketScript, /git apply/) &&
       contains(externalPrPacketScript, /git diff/) &&
-      contains(externalPrPacketScript, /No direct pull request was opened by automation/) &&
+      contains(externalPrPacketScript, /Remaining packets have not been opened/) &&
       contains(externalPrPacketScript, /benchmark-proven\|proven/) &&
       contains(launchKit, /npm run launch:external-prs/) &&
       contains(launchKit, /Curated-list patch packets/) &&
@@ -1308,7 +1313,9 @@ function localChecks() {
       contains(externalPrPacket, /jamesmurdza\/awesome-ai-devtools/) &&
       contains(externalPrPacket, /ai-boost\/awesome-harness-engineering/) &&
       contains(externalPrPacket, /Picrew\/awesome-agent-harness/) &&
-      contains(externalPrPacket, /No direct pull request was opened by automation/) &&
+      contains(externalPrPacket, /ai-boost\/awesome-harness-engineering\/pull\/58/) &&
+      contains(externalPrPacket, /Picrew\/awesome-agent-harness\/pull\/22/) &&
+      contains(externalPrPacket, /Remaining packets have not been opened/) &&
       contains(externalPrPacket, /gh repo fork Transcenda\/awesome-agentic-coding --clone/) &&
       contains(externalPrPacket, /gh repo fork jordimas\/awesome-agentic-engineering --clone/) &&
       contains(externalPrPacket, /gh repo fork awesome-opencode\/awesome-opencode --clone/) &&
@@ -1414,8 +1421,8 @@ function localChecks() {
       contains(marketMap, /Competitive Snapshot/) &&
       contains(marketMap, /10-100 stars/) &&
       contains(marketMap, /Latest release is `Project Tiny Context Harness 0\.2\.41`/) &&
-      contains(marketMap, /first public Show HN post is live/) &&
-      contains(marketMap, /HN first-comment feedback/) &&
+      contains(marketMap, /first public Show HN post and first regular HN comment are live/) &&
+      contains(marketMap, /HN first-comment replies/) &&
       contains(marketMap, /download window is not available yet/),
     "Market map has competitor snapshot, feasibility bands and current release/readiness state."
   );
@@ -1431,8 +1438,9 @@ function localChecks() {
       contains(outreachTargets, /Minimal Context sample project/) &&
       contains(outreachTargets, /FAQ answers/) &&
       contains(outreachTargets, /`v0\.2\.41` is published on npm through Trusted Publishing/) &&
-      contains(outreachTargets, /first public post is live/) &&
-      contains(outreachTargets, /HN first regular comment is prepared/) &&
+      contains(outreachTargets, /first public post and first regular HN comment are live/) &&
+      contains(outreachTargets, /https:\/\/news\.ycombinator\.com\/item\?id=48481205/) &&
+      contains(outreachTargets, /two narrow curated-list PRs are open/) &&
       contains(outreachTargets, /awesome-list-submissions\.md/) &&
       contains(outreachTargets, /Awards/) &&
       contains(outreachTargets, /Do not submit to award programs before the demo and first public feedback exist/),

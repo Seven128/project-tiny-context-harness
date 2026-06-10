@@ -6,14 +6,19 @@ These packets prepare curated-list pull requests for Project Tiny Context Harnes
 
 ## Direct PR Status
 
-No direct pull request was opened by automation in this workspace.
+P0 direct PRs opened from the maintainer-authenticated `gh` session on 2026-06-11:
 
-Reason:
+- `ai-boost/awesome-harness-engineering`: https://github.com/ai-boost/awesome-harness-engineering/pull/58
+- `Picrew/awesome-agent-harness`: https://github.com/Picrew/awesome-agent-harness/pull/22
 
-- `gh` is not installed in the local environment.
-- The GitHub connector can read upstream repositories, but it does not have push permission there.
-- No `Seven128` fork of these upstream repositories currently exists.
-- Public PR creation should use the maintainer's GitHub-authenticated session so forks, branch ownership and notifications are correct.
+Forks used:
+
+- https://github.com/Seven128/awesome-harness-engineering
+- https://github.com/Seven128/awesome-agent-harness
+
+Remaining packets have not been opened. Wait for P0 maintainer feedback before opening broader lists.
+
+Public PR creation should continue through the maintainer's GitHub-authenticated session so forks, branch ownership and notifications are correct.
 
 ## Packet Check
 
@@ -35,8 +40,8 @@ Default mode is read-only and does not access the network. Live mode clones upst
 
 Open PRs from narrowest category fit to broadest fit:
 
-1. `ai-boost/awesome-harness-engineering`
-2. `Picrew/awesome-agent-harness`
+1. `ai-boost/awesome-harness-engineering` - opened as https://github.com/ai-boost/awesome-harness-engineering/pull/58
+2. `Picrew/awesome-agent-harness` - opened as https://github.com/Picrew/awesome-agent-harness/pull/22
 3. `Transcenda/awesome-agentic-coding`
 4. `jordimas/awesome-agentic-engineering`
 5. `awesome-opencode/awesome-opencode`

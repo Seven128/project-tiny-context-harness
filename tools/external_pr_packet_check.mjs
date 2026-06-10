@@ -146,7 +146,13 @@ function staticChecks() {
 
   addCheck(checks, "packet-readme-exists", hasFile("docs/launch/external-prs/README.md"), "External PR packet README exists.");
   addCheck(checks, "submission-packet-exists", hasFile("docs/launch/awesome-list-submissions.md"), "Awesome-list submission packet exists.");
-  addCheck(checks, "no-automation-side-effect", /No direct pull request was opened by automation/.test(packetReadme), "Packet documents that automation does not open external PRs.");
+  addCheck(
+    checks,
+    "no-automation-side-effect",
+    /Remaining packets have not been opened/.test(packetReadme) &&
+      /does not fork repositories, push branches or open PRs/.test(packetReadme),
+    "Packet documents opened P0 PRs while keeping remaining PR creation out of automation."
+  );
   addCheck(checks, "maintainer-session-boundary", /maintainer's GitHub-authenticated session/.test(packetReadme), "Packet routes PR creation through the maintainer's GitHub session.");
   addCheck(checks, "claim-boundary", /Do not include benchmark, adoption, award or star claims/.test(packetReadme), "Packet keeps external PR claims narrow.");
   addCheck(checks, "github-url-primary", /Use the GitHub repository URL, not npm/.test(packetReadme), "Packet uses GitHub repository URL as listing target.");
