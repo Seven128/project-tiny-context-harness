@@ -37,7 +37,7 @@ It adds minimal repo-native project memory for AI coding agents: AGENTS.md plus 
 
 I am not asking for a star or a public post. I am looking for private feedback from people who use Codex, Claude Code, Cursor, OpenCode or similar agents on real repos.
 
-If you have 10-15 minutes, could you skim the README and try the source preview path? The renamed npm package is still pending, so this is not a public launch yet.
+If you have 10-15 minutes, could you skim the README and start with the no-install preview? If the idea looks relevant, try the source preview path. The renamed npm package is still pending, so this is not a public launch yet.
 
 Repo:
 https://github.com/Seven128/project-tiny-context-harness

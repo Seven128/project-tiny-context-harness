@@ -51,7 +51,7 @@ flowchart LR
 
 ![Project Tiny Context Harness terminal demo](https://raw.githubusercontent.com/Seven128/project-tiny-context-harness/main/docs/launch/assets/demo-terminal.gif)
 
-The demo shows the core loop: install the npm package, initialize `AGENTS.md` and `project_context/**`, run `validate-context`, then ask a fresh agent to recover intent before proposing code.
+The demo shows the core loop: initialize `AGENTS.md` and `project_context/**`, run `validate-context`, then ask a fresh agent to recover intent before proposing code. While npm publication is pending, use the no-install and source-preview paths below; after publish, use the npm install path.
 
 No-install preview:
 
