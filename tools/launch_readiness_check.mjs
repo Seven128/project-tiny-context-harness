@@ -342,6 +342,13 @@ function localChecks() {
   );
   addCheck(
     checks,
+    "public-readme-renamed-surfaces",
+    !contains(rootReadme, /AI SDLC Harness|agent-project-sdlc|project-agent-sdlc|stage-based SDLC Harness/) &&
+      !contains(packageReadme, /AI SDLC Harness|agent-project-sdlc|project-agent-sdlc|stage-based SDLC Harness/),
+    "Root README and package README use the Project Tiny Context Harness surface without old display, package or repository names."
+  );
+  addCheck(
+    checks,
     "localized-readme",
     hasFile("README.zh-CN.md") &&
       hasFile("packages/sdlc-harness/assets/README.zh-CN.md") &&

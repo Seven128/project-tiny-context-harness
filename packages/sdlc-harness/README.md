@@ -394,6 +394,6 @@ make validate-harness
 
 ## Current Boundary
 
-The former stage-based SDLC Harness is no longer shipped as a runnable default, compatibility layer or migration command.
+The former stage-based workflow is no longer shipped as a runnable default, compatibility layer or migration command.
 
 The package direction is now smaller: keep the minimum durable facts that help agents recover context and continue safely.

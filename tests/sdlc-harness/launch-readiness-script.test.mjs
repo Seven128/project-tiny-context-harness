@@ -42,6 +42,7 @@ for (const expected of [
   "root-readme-no-install-preview",
   "package-readme-no-install-preview",
   "public-language-posture",
+  "public-readme-renamed-surfaces",
   "localized-readme",
   "scorecard-badge",
   "npm-version-badge",
