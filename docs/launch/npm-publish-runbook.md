@@ -55,15 +55,23 @@ If publish fails with auth or permission errors:
    npm whoami
    ```
 
-2. Confirm the renamed package is still absent:
+2. If the failure is:
+
+   ```text
+   npm error 403 Forbidden - PUT https://registry.npmjs.org/project-tiny-context-harness - You may not perform that action with these credentials.
+   ```
+
+   treat it as an npm credential, account policy or token permission issue. The tarball, package version and local gates may still be correct.
+
+3. Confirm the renamed package is still absent:
 
    ```sh
    npm view project-tiny-context-harness name version dist-tags --json
    ```
 
-3. Re-authenticate npm locally or replace the npm token with one allowed to publish packages.
-4. If the npm account has publish 2FA enabled, rerun with `--otp`.
-5. Do not create a GitHub release for the renamed npm package until registry verification passes.
+4. Re-authenticate npm locally or replace the npm token with one allowed to publish new public packages.
+5. If the npm account has publish 2FA enabled, rerun with `--otp`.
+6. Do not create a GitHub release for the renamed npm package until registry verification passes.
 
 If publish succeeds but smoke fails, stop broad launch and publish the fix as a new patch version. npm versions cannot be reused.
 

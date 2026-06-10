@@ -304,6 +304,8 @@ function localChecks() {
       contains(npmPublishRunbook, /npm run release:npm -- --version 0\.2\.39 --publish --yes --full-gate --registry-smoke/) &&
       contains(npmPublishRunbook, /--otp 123456/) &&
       contains(npmPublishRunbook, /Do not post broad launch copy while the renamed package still returns 404/) &&
+      contains(npmPublishRunbook, /You may not perform that action with these credentials/) &&
+      contains(npmPublishRunbook, /credential, account policy or token permission issue/) &&
       contains(npmPublishRunbook, /node tools\/launch_readiness_check\.mjs --strict-external/),
     "npm publish runbook documents first renamed publish, OTP path, npm 404 gate and post-publish verification."
   );
