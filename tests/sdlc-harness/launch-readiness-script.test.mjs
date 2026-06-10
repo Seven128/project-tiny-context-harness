@@ -49,6 +49,7 @@ for (const expected of [
   "launch-milestones",
   "market-map",
   "outreach-targets",
+  "scorecard-workflow",
   "quickstart-smoke",
   "launch-check-script",
   "consumer-workflow-boundary",

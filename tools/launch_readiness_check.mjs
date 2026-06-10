@@ -157,6 +157,7 @@ function localChecks() {
   const outreachTargets = read("docs/launch/outreach-targets.md");
   const sourceWorkflow = read(".github/workflows/harness.yml");
   const maintainerWorkflow = read(".github/workflows/package.yml");
+  const scorecardWorkflow = read(".github/workflows/scorecard.yml");
   const releaseScript = read("tools/release_npm.mjs");
 
   addCheck(checks, "root-package-name", rootPackage.name === "project-tiny-context-harness", "Root package name is project-tiny-context-harness.");
@@ -305,6 +306,7 @@ function localChecks() {
       contains(launchKit, /Readiness boundary/) &&
       contains(launchKit, /repo-hosted media/) &&
       contains(launchKit, /Keep the memory\. Drop the ceremony\./) &&
+      contains(launchKit, /OpenSSF Scorecard workflow/) &&
       contains(launchKit, /does not mean Product Hunt, curated-list submissions or awards are ready/),
     "Launch kit has copy-ready channel drafts, media pointers, readiness boundary and no-benchmark boundary."
   );
@@ -450,6 +452,7 @@ function localChecks() {
       contains(outreachTargets, /Curated Lists/) &&
       contains(outreachTargets, /starter issues #5-#8 exist and have discovery labels/) &&
       contains(outreachTargets, /question, documentation, good first issue and help wanted/) &&
+      contains(outreachTargets, /OpenSSF Scorecard workflow/) &&
       contains(outreachTargets, /awesome-list-submissions\.md/) &&
       contains(outreachTargets, /Awards/) &&
       contains(outreachTargets, /Do not submit to award programs before the demo and first public feedback exist/),
@@ -458,6 +461,22 @@ function localChecks() {
   addCheck(checks, "contributing", hasFile("CONTRIBUTING.md") && contains(read("CONTRIBUTING.md"), /Do not claim benchmark wins/), "CONTRIBUTING.md exists and preserves benchmark-claim boundary.");
   addCheck(checks, "security-policy", hasFile("SECURITY.md") && contains(read("SECURITY.md"), /Reporting A Vulnerability/) && contains(read("SECURITY.md"), /Unsafe file writes/), "SECURITY.md exists with private reporting and Harness-specific scope.");
   addCheck(checks, "dependabot", hasFile(".github/dependabot.yml") && contains(read(".github/dependabot.yml"), /package-ecosystem: "npm"/) && contains(read(".github/dependabot.yml"), /package-ecosystem: "github-actions"/), "Dependabot checks npm and GitHub Actions ecosystems.");
+  addCheck(
+    checks,
+    "scorecard-workflow",
+    hasFile(".github/workflows/scorecard.yml") &&
+      contains(scorecardWorkflow, /name: OpenSSF Scorecard/) &&
+      contains(scorecardWorkflow, /branches:\s*\n\s+- main/) &&
+      contains(scorecardWorkflow, /schedule:\s*\n\s+- cron:/) &&
+      contains(scorecardWorkflow, /workflow_dispatch:/) &&
+      contains(scorecardWorkflow, /security-events: write/) &&
+      contains(scorecardWorkflow, /id-token: write/) &&
+      contains(scorecardWorkflow, /uses: ossf\/scorecard-action@v2\.4\.3/) &&
+      contains(scorecardWorkflow, /results_format: sarif/) &&
+      contains(scorecardWorkflow, /publish_results: true/) &&
+      contains(scorecardWorkflow, /uses: github\/codeql-action\/upload-sarif@v3/),
+    "OpenSSF Scorecard workflow publishes SARIF results and public scorecard data with narrow permissions."
+  );
   addCheck(checks, "issue-templates", hasFile(".github/ISSUE_TEMPLATE/bug_report.yml") && hasFile(".github/ISSUE_TEMPLATE/feature_request.yml"), "Bug and feature issue templates exist.");
   addCheck(checks, "adoption-report-template", hasFile(".github/ISSUE_TEMPLATE/adoption_report.yml") && contains(read(".github/ISSUE_TEMPLATE/adoption_report.yml"), /What was the agent forgetting or rediscovering/) && contains(rootReadme, /adoption report/), "Adoption-report issue template exists and README links to it.");
   addCheck(checks, "pr-template", hasFile(".github/PULL_REQUEST_TEMPLATE.md"), "Pull request template exists.");
@@ -469,6 +488,7 @@ function localChecks() {
     checks,
     "maintainer-workflow",
     contains(maintainerWorkflow, /Test package/) &&
+      contains(maintainerWorkflow, /\.github\/workflows\/scorecard\.yml/) &&
       contains(maintainerWorkflow, /Check package canonical source drift/) &&
       contains(maintainerWorkflow, /node packages\/sdlc-harness\/dist\/cli\.js package check-source/) &&
       contains(maintainerWorkflow, /Validate source Context/),
