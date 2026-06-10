@@ -143,6 +143,7 @@ function localChecks() {
   const packageReadme = read("packages/sdlc-harness/README.md");
   const zhReadme = read("README.zh-CN.md");
   const launchKit = read("docs/launch/README.md");
+  const launchProfile = read("docs/launch/profile.md");
   const primaryLaunch = read("docs/launch/primary-launch.md");
   const privateReview = read("docs/launch/private-review.md");
   const privateReviewLogTemplate = read("docs/launch/private-review-log-template.md");
@@ -480,6 +481,29 @@ function localChecks() {
       contains(existingRepoAdoption, /validate-context` checks recovery facts; it does not prove product quality/) &&
       contains(existingRepoAdoption, /adoption report/),
     "Existing-repo adoption guide is linked from public docs and explains safe init --adopt use without duplicating project memory."
+  );
+
+  addCheck(
+    checks,
+    "launch-profile-sheet",
+    hasFile("docs/launch/profile.md") &&
+      contains(launchKit, /profile\.md/) &&
+      contains(launchKit, /Launch profile sheet/) &&
+      contains(launchProfile, /Launch Profile Sheet/) &&
+      contains(launchProfile, /Project Tiny Context Harness/) &&
+      contains(launchProfile, /Minimal project memory for AI coding agents/) &&
+      contains(launchProfile, /Minimal project memory and validation harness for AI coding agents\./) &&
+      contains(launchProfile, /Repo-native project memory for fresh AI coding-agent sessions\./) &&
+      contains(launchProfile, /Keep the memory\. Drop the ceremony\./) &&
+      contains(launchProfile, /Developer Tools \/ AI coding-agent infrastructure \/ Context engineering/) &&
+      contains(launchProfile, /AI coding-agent infrastructure/) &&
+      contains(launchProfile, /Avoid using `sdlc` as the first tag/) &&
+      contains(launchProfile, /Use GitHub as the primary launch URL until the renamed npm package is published/) &&
+      contains(launchProfile, /Use only after npm publish/) &&
+      contains(launchProfile, /Use while npm publish is pending/) &&
+      contains(launchProfile, /Benchmark-proven faster/) &&
+      contains(launchProfile, /Do not make external submission copy look Chinese-first/),
+    "Launch profile sheet centralizes English-first external-submission fields and claims boundaries."
   );
 
   addCheck(

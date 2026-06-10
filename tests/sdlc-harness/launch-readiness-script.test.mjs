@@ -46,6 +46,7 @@ for (const expected of [
   "community-starter-issues",
   "public-roadmap",
   "comparison-guide",
+  "launch-profile-sheet",
   "launch-kit",
   "launch-operating-plan",
   "primary-launch-packet",
