@@ -1265,7 +1265,15 @@ function localChecks() {
   );
   addCheck(checks, "pr-template", hasFile(".github/PULL_REQUEST_TEMPLATE.md"), "Pull request template exists.");
   addCheck(checks, "quickstart-smoke", hasFile("tools/quickstart_smoke.mjs") && rootPackage.scripts?.["smoke:quickstart"], "Quickstart smoke script and npm script exist.");
-  addCheck(checks, "launch-check-script", rootPackage.scripts?.["launch:check"] === "node tools/launch_readiness_check.mjs --offline", "launch:check script runs offline readiness check.");
+  addCheck(
+    checks,
+    "launch-check-script",
+    rootPackage.scripts?.["launch:check"] === "node tools/launch_readiness_check.mjs --offline" &&
+      rootPackage.scripts?.["launch:strict-external"] === "node tools/launch_readiness_check.mjs --strict-external" &&
+      contains(launchKit, /npm run launch:strict-external/) &&
+      contains(prelaunchExternalBlockers, /npm run launch:strict-external/),
+    "launch:check runs the offline readiness check and launch:strict-external runs the live GitHub/npm gate."
+  );
 
   addCheck(
     checks,

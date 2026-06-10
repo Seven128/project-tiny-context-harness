@@ -14,6 +14,7 @@
   "scripts": {
     "test": "npm test --workspace project-tiny-context-harness",
     "launch:check": "node tools/launch_readiness_check.mjs --offline",
+    "launch:strict-external": "node tools/launch_readiness_check.mjs --strict-external",
     "launch:demo": "node tools/launch_demo_capture.mjs",
     "launch:metrics": "node tools/launch_metrics_snapshot.mjs",
     "preview:pack": "node tools/source_preview_pack.mjs --clean",

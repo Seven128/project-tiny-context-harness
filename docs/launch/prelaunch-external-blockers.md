@@ -7,6 +7,12 @@ Broad public launch is blocked until the strict external launch check has no TOD
 Run the gate before posting broad launch copy:
 
 ```sh
+npm run launch:strict-external
+```
+
+Equivalent direct command:
+
+```sh
 node tools/launch_readiness_check.mjs --strict-external
 ```
 
