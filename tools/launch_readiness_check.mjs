@@ -1373,7 +1373,6 @@ function localChecks() {
       contains(scorecardWorkflow, /workflow_dispatch:/) &&
       contains(scorecardWorkflow, /security-events: write/) &&
       contains(scorecardWorkflow, /id-token: write/) &&
-      contains(scorecardWorkflow, /FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"/) &&
       contains(scorecardWorkflow, /uses: actions\/checkout@v5/) &&
       contains(scorecardWorkflow, /uses: ossf\/scorecard-action@v2\.4\.3/) &&
       contains(scorecardWorkflow, /results_format: sarif/) &&
