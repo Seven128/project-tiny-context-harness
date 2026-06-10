@@ -42,6 +42,9 @@ If you have 10-15 minutes, could you skim the README and start with the no-insta
 Repo:
 https://github.com/Seven128/project-tiny-context-harness
 
+One-page reviewer quickstart:
+https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/launch/reviewer-quickstart.md
+
 No-install preview:
 https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/examples/fresh-agent-recovery.md
 https://github.com/Seven128/project-tiny-context-harness/tree/main/examples/minimal-context-sample
@@ -71,6 +74,8 @@ The main question: does this minimal recovery surface solve a real "new agent ch
 ## Reviewer Task
 
 Ask reviewers to answer only what they can answer from experience:
+
+Send [reviewer-quickstart.md](reviewer-quickstart.md) when you want one link with the no-install path, source-preview path, feedback questions and consent boundary.
 
 1. What project facts do your agents repeatedly rediscover?
 2. Would `AGENTS.md` plus `project_context/**` have helped in that situation?

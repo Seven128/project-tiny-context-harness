@@ -37,7 +37,7 @@ Practical implication: broad public launch should wait for npm publish. Small pr
 
 | Priority | Target | Why now | Required packet | Success signal |
 |---:|---|---|---|---|
-| 0 | Private review | npm publish is blocked, but 5-10 experienced coding-agent users can still review the source preview path and README. | `docs/launch/private-review.md`, `docs/launch/private-review-shortlist.md`, source preview path, no star ask. | Reviewers describe concrete agent-memory drift, README confusion or missing recovery facts. |
+| 0 | Private review | npm publish is blocked, but 5-10 experienced coding-agent users can still review the source preview path and README. | `docs/launch/reviewer-quickstart.md`, `docs/launch/private-review.md`, `docs/launch/private-review-shortlist.md`, source preview path, no star ask. | Reviewers describe concrete agent-memory drift, README confusion or missing recovery facts. |
 | 1 | Hacker News Show HN | HN's Show HN format is for something people can try and discuss; use it after npm publish makes the renamed package installable. | GitHub URL, short text post, demo link if possible, explicit feedback ask. | Comments discuss agent handoff/context drift rather than generic AI tooling. |
 | 2 | Agentic-coding awesome lists | Two smaller lists match repo-level agent instructions and team adoption now. | PR copy and exact patches from `docs/launch/awesome-list-submissions.md` and `docs/launch/external-prs/`, no benchmark/adoption claims. | Listing accepted or maintainer feedback clarifies the category. |
 | 3 | Awesome OpenCode | The README now includes an OpenCode setup note; the list accepts project YAML entries for tools and utilities. | `data/projects/` YAML patch from `docs/launch/external-prs/`, no plugin claim. | Listing accepted or maintainers clarify OpenCode relevance. |
@@ -142,7 +142,7 @@ Do not add a Best Practices or Baseline badge to README until the official site 
 ## Next Concrete Actions
 
 1. Check `docs/launch/prelaunch-external-blockers.md`; if `npm-fetch` or `github-homepage` is still a TODO, do not post broad launch copy.
-2. While npm publish is blocked, select 5-10 private reviewers with `docs/launch/private-review-shortlist.md`, invite them using `docs/launch/private-review.md`, and convert any consented concrete examples with `docs/launch/adoption-story-template.md`.
+2. While npm publish is blocked, select 5-10 private reviewers with `docs/launch/private-review-shortlist.md`, send `docs/launch/reviewer-quickstart.md` through the DM in `docs/launch/private-review.md`, and convert any consented concrete examples with `docs/launch/adoption-story-template.md`.
 3. Publish `project-tiny-context-harness@0.2.39` by following `docs/launch/npm-publish-runbook.md`.
 4. Run `npm run launch:metrics -- --output tmp/sdlc/launch-metrics/show-hn-before.md`.
 5. Post Show HN first using `docs/launch/primary-launch.md` and the repo-hosted GIF if useful.

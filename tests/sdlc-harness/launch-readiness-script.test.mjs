@@ -55,6 +55,7 @@ for (const expected of [
   "benchmarking-guide",
   "launch-response-templates",
   "private-review-packet",
+  "reviewer-quickstart",
   "private-review-shortlist",
   "private-review-log-template",
   "adoption-story-template",

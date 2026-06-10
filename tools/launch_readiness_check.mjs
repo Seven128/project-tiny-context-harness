@@ -168,6 +168,7 @@ function localChecks() {
   const launchProfile = read("docs/launch/profile.md");
   const primaryLaunch = read("docs/launch/primary-launch.md");
   const feedbackTriage = read("docs/launch/feedback-triage.md");
+  const reviewerQuickstart = read("docs/launch/reviewer-quickstart.md");
   const privateReview = read("docs/launch/private-review.md");
   const privateReviewShortlist = read("docs/launch/private-review-shortlist.md");
   const privateReviewLogTemplate = read("docs/launch/private-review-log-template.md");
@@ -593,9 +594,12 @@ function localChecks() {
       contains(launchKit, /private-review-log-template\.md/) &&
       contains(launchKit, /adoption-story-template\.md/) &&
       contains(launchKit, /Private review packet/) &&
+      contains(launchKit, /reviewer-quickstart\.md/) &&
       contains(outreachTargets, /Private review/) &&
       contains(outreachTargets, /5-10 private reviewers/) &&
+      contains(outreachTargets, /reviewer-quickstart\.md/) &&
       contains(privateReview, /Copy-Paste DM/) &&
+      contains(privateReview, /reviewer-quickstart\.md/) &&
       contains(privateReview, /No-install preview/) &&
       contains(privateReview, /docs\/examples\/fresh-agent-recovery\.md/) &&
       contains(privateReview, /examples\/minimal-context-sample/) &&
@@ -608,6 +612,24 @@ function localChecks() {
       contains(privateReview, /quote consent: none, anonymous, public name, or public link/) &&
       contains(privateReview, /Private review is for copy and product clarity, not proof of quality/),
     "Private review packet supports small pre-launch feedback while npm publish is blocked, without asking for stars or making proof claims."
+  );
+  addCheck(
+    checks,
+    "reviewer-quickstart",
+    hasFile("docs/launch/reviewer-quickstart.md") &&
+      contains(launchKit, /Reviewer quickstart/) &&
+      contains(launchKit, /5-minute no-install path/) &&
+      contains(privateReview, /One-page reviewer quickstart/) &&
+      contains(outreachTargets, /reviewer-quickstart\.md/) &&
+      contains(reviewerQuickstart, /This is the one-page link to send to a private reviewer/) &&
+      contains(reviewerQuickstart, /Fastest Review Path/) &&
+      contains(reviewerQuickstart, /Hands-On Source Preview/) &&
+      contains(reviewerQuickstart, /Open https:\/\/codespaces\.new\/Seven128\/project-tiny-context-harness/) &&
+      contains(reviewerQuickstart, /Feedback Questions/) &&
+      contains(reviewerQuickstart, /Source preview report/) &&
+      contains(reviewerQuickstart, /Consent Boundary/) &&
+      contains(reviewerQuickstart, /not benchmark evidence, adoption proof or a request for stars/),
+    "Reviewer quickstart gives private reviewers one low-friction page for no-install review, source preview, feedback questions and consent boundaries."
   );
   addCheck(
     checks,
