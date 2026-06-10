@@ -12,7 +12,7 @@ Ready now:
 - Latest GitHub Release is labeled as a Project Tiny Context Harness legacy-package release and no longer presents the old project name as the public product name.
 - Adoption handoff issue #4 is pinned; starter issues #5-#8 exist and have discovery labels for question, documentation, good first issue and help wanted.
 - Repo-hosted launch media exists: README GIF, two Product Hunt gallery PNGs and a 240x240 thumbnail.
-- Trust surface exists: `SECURITY.md`, Dependabot, OpenSSF Scorecard workflow and issue templates.
+- Trust surface exists: `SECURITY.md`, Dependabot, OpenSSF Scorecard workflow, OpenSSF Best Practices self-assessment prep and issue templates.
 - Fresh-agent recovery walkthrough and Minimal Context sample project are linked from README.
 - Agent surface recipes explain Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness-folder adoption without splitting `project_context/**`.
 - FAQ answers AGENTS.md overlap, README overlap, benchmark boundaries, Context update rules and npm-pending source preview.
@@ -44,6 +44,7 @@ Practical implication: broad public launch should wait for npm publish. Small pr
 | 7 | Broader awesome lists | Higher-exposure lists create durable discovery after the README/demo are clear. | One-line description, category fit, demo link, no award/benchmark claims. | Listing accepted or maintainers give positioning feedback. |
 | 8 | Awards | Awards need visible adoption or explicit eligibility thresholds. | Launch metrics, adoption reports, demo, docs quality evidence. | Nomination accepted or shortlist feedback. |
 | 9 | Codex for Open Source | Direct fit with coding-agent maintainer workflows; application is rolling and maintainer-submitted. | `docs/launch/codex-for-oss-application.md`, fresh metrics snapshot, no official-integration claim. | Application submitted by maintainer or deferred with a clearer evidence gap. |
+| 10 | OpenSSF Best Practices / Baseline | Trust signal for maintainers evaluating a new npm developer tool; no broad adoption required to begin self-assessment. | `docs/launch/openssf-best-practices.md`, fresh metrics snapshot, current repo evidence, no premature badge claim. | Self-assessment started, or badge added only after the official site grants it. |
 
 ## Channel Details
 
@@ -110,6 +111,21 @@ Project Tiny Context Harness - Minimal repo-native project memory for AI coding 
 | [DevOps Dozen](https://devopsdozen.com/) | 2025 process had public nominations, finalist voting and judge weighting; the OSS category recognizes community value around open source development assets. | Low now; project is not primarily DevOps and has no community evidence yet. | Revisit only with DevOps/tooling adoption evidence. |
 | [Product Hunt Golden Kitty Awards](https://www.producthunt.com/golden-kitty-awards) | Product Hunt has Engineering & Development and AI Agents award surfaces. | Possible only after Product Hunt launch. | Product Hunt launch must happen first and show traction. |
 
+### OpenSSF Best Practices / Baseline
+
+Source: [OpenSSF Best Practices Badge Program](https://openssf.org/projects/best-practices-badge/), [Best Practices site](https://www.bestpractices.dev/en), [OpenSSF Baseline guide](https://openssf.org/blog/2026/02/25/getting-an-openssf-baseline-badge-with-the-best-practices-badge-system/).
+
+This is a trust-readiness channel, not an award launch channel. It can start before broad public launch because the badge process is a maintainer self-assessment against current repository evidence.
+
+Use [openssf-best-practices.md](openssf-best-practices.md) to gather:
+
+- repository URL and homepage URL,
+- current evidence from README, `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md`, Dependabot, CI and Scorecard,
+- known gaps that require maintainer review,
+- claims boundary before and after a badge is actually granted.
+
+Do not add a Best Practices or Baseline badge to README until the official site grants one.
+
 ## Operating Rules
 
 - Lead with the problem: new agent chats lose project intent.
@@ -131,3 +147,4 @@ Project Tiny Context Harness - Minimal repo-native project memory for AI coding 
 7. Patch README/FAQ from repeated confusion.
 8. Use the Product Hunt media packet only after the first feedback loop or with a deliberate scheduling decision.
 9. Apply to Codex for Open Source with `docs/launch/codex-for-oss-application.md` if the maintainer wants to disclose current metrics and can submit manually.
+10. Start the OpenSSF Best Practices / Baseline self-assessment with `docs/launch/openssf-best-practices.md` if the maintainer wants another trust signal before broader launch.

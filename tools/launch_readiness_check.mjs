@@ -164,6 +164,7 @@ function localChecks() {
   const npmPublishRunbook = read("docs/launch/npm-publish-runbook.md");
   const npmCredentialUnblock = read("docs/launch/npm-credential-unblock.md");
   const codexForOssApplication = read("docs/launch/codex-for-oss-application.md");
+  const openssfBestPractices = read("docs/launch/openssf-best-practices.md");
   const awesomeListSubmissions = read("docs/launch/awesome-list-submissions.md");
   const responseTemplates = read("docs/launch/response-templates.md");
   const agentSurfaceRecipes = read("docs/agent-surface-recipes.md");
@@ -679,6 +680,29 @@ function localChecks() {
       contains(codexForOssApplication, /Selected for Codex for Open Source/) &&
       contains(codexForOssApplication, /not in `project_context\/\*\*`/),
     "Codex for OSS application packet has maintainer-reviewed copy fields, current-source links and no official-integration overclaim."
+  );
+  addCheck(
+    checks,
+    "openssf-best-practices-packet",
+    hasFile("docs/launch/openssf-best-practices.md") &&
+      contains(launchKit, /openssf-best-practices\.md/) &&
+      contains(outreachTargets, /openssf-best-practices\.md/) &&
+      contains(outreachTargets, /OpenSSF Best Practices \/ Baseline/) &&
+      contains(openssfBestPractices, /OpenSSF Best Practices Badge Packet/) &&
+      contains(openssfBestPractices, /Official sources checked on 2026-06-10/) &&
+      contains(openssfBestPractices, /https:\/\/openssf\.org\/projects\/best-practices-badge\//) &&
+      contains(openssfBestPractices, /https:\/\/www\.bestpractices\.dev\/en/) &&
+      contains(openssfBestPractices, /getting-an-openssf-baseline-badge-with-the-best-practices-badge-system/) &&
+      contains(openssfBestPractices, /Do not add a Best Practices or Baseline badge to README until the project has actually earned it/) &&
+      contains(openssfBestPractices, /OpenSSF Baseline first, then Best Practices metal series/) &&
+      contains(openssfBestPractices, /Current Evidence To Reuse/) &&
+      contains(openssfBestPractices, /Known Gaps To Review/) &&
+      contains(openssfBestPractices, /Do not mark these as met without maintainer review/) &&
+      contains(openssfBestPractices, /not `project_context\/\*\*`/) &&
+      contains(openssfBestPractices, /Allowed only after the official site grants a badge/) &&
+      contains(openssfBestPractices, /Avoid before a badge is granted/) &&
+      contains(openssfBestPractices, /Do not use badge progress as benchmark, adoption, award or productivity evidence/),
+    "OpenSSF Best Practices packet prepares a maintainer-reviewed self-assessment without premature badge or compliance claims."
   );
   addCheck(
     checks,
