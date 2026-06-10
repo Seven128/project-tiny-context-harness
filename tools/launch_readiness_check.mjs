@@ -308,7 +308,17 @@ function localChecks() {
       contains(launchKit, /does not mean Product Hunt, curated-list submissions or awards are ready/),
     "Launch kit has copy-ready channel drafts, media pointers, readiness boundary and no-benchmark boundary."
   );
-  addCheck(checks, "launch-operating-plan", contains(launchKit, /Launch Operating Plan/) && contains(launchKit, /Channel Matrix/) && contains(launchKit, /Community Handoff Surface/), "Launch kit has an operating plan, channel matrix and community handoff surface.");
+  addCheck(
+    checks,
+    "launch-operating-plan",
+    contains(launchKit, /Launch Operating Plan/) &&
+      contains(launchKit, /Channel Matrix/) &&
+      contains(launchKit, /Community Handoff Surface/) &&
+      contains(launchKit, /adoption handoff issue and starter issues are visible and labeled for discovery/) &&
+      contains(launchKit, /good first issue`, `help wanted` and `documentation`/) &&
+      contains(launchKit, /#4 uses `question`; #5, #6 and #8 use `documentation`, `good first issue` and `help wanted`; #7 uses `help wanted`/),
+    "Launch kit has an operating plan, channel matrix and labeled community handoff surface."
+  );
   addCheck(
     checks,
     "primary-launch-packet",
@@ -438,6 +448,8 @@ function localChecks() {
     contains(outreachTargets, /Outreach Targets/) &&
       contains(outreachTargets, /Priority Sequence/) &&
       contains(outreachTargets, /Curated Lists/) &&
+      contains(outreachTargets, /starter issues #5-#8 exist and have discovery labels/) &&
+      contains(outreachTargets, /question, documentation, good first issue and help wanted/) &&
       contains(outreachTargets, /awesome-list-submissions\.md/) &&
       contains(outreachTargets, /Awards/) &&
       contains(outreachTargets, /Do not submit to award programs before the demo and first public feedback exist/),

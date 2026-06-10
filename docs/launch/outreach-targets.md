@@ -10,7 +10,7 @@ Ready now:
 
 - GitHub metadata is complete: description, homepage, MIT license and discovery topics are visible.
 - Latest GitHub Release is labeled as a Project Tiny Context Harness legacy-package release and no longer presents the old project name as the public product name.
-- Adoption handoff issue #4 is pinned; starter issues #5-#8 exist.
+- Adoption handoff issue #4 is pinned; starter issues #5-#8 exist and have discovery labels for question, documentation, good first issue and help wanted.
 - Repo-hosted launch media exists: README GIF, two Product Hunt gallery PNGs and a 240x240 thumbnail.
 - Trust surface exists: `SECURITY.md`, Dependabot and issue templates.
 - Fresh-agent recovery walkthrough is linked from README.

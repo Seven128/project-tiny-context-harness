@@ -104,6 +104,7 @@ Use this if agents keep losing project intent between chats. It adds a small pro
 - Confirm `SECURITY.md`, Dependabot and adoption-report issue template are visible on GitHub.
 - Confirm the fresh-agent recovery walkthrough is linked from README.
 - Confirm agent surface recipes are linked from README and explain Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness folders without splitting `project_context/**`.
+- Confirm the adoption handoff issue and starter issues are visible and labeled for discovery.
 - Record a short terminal demo from the 60-second trial.
 - Post to one primary technical venue first, then reuse the same claim across smaller channels.
 - Ask for feedback on whether the recovery surface is useful, not for stars.
@@ -120,7 +121,7 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 | npm metadata | Publish a new package version after PR merge. | npm page shows updated README, MIT license, homepage and description. |
 | 60-90 second demo | Record the demo storyboard below. | Viewer can see install, generated files and fresh-agent recovery prompt. |
 | First support surface | Create a GitHub Discussion or pinned issue for adoption reports. | Launch posts have one feedback link beyond the README. |
-| First contribution queue | Create low-risk docs/demo/example issues with `good first issue` and `help wanted`. | New visitors can contribute without understanding package internals. |
+| First contribution queue | Keep low-risk demo/docs/example issues labeled with `good first issue`, `help wanted` and `documentation` where appropriate. | New visitors can contribute without understanding package internals. |
 | Trust surface | Keep `SECURITY.md`, Dependabot and issue templates visible. | New users can see how to report risk, dependency drift and adoption feedback. |
 | Example surface | Keep a before/after fresh-agent walkthrough linked from README. | New visitors can see how Context prevents rediscovery without claiming benchmark wins. |
 | Agent-surface recipes | Keep `docs/agent-surface-recipes.md` linked from README. | Users of Codex, Claude Code, Cursor, Gemini CLI, OpenCode or custom tools can adopt without assuming separate project memories. |
@@ -138,10 +139,10 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 
 ### Community Handoff Surface
 
-Create these after merge and before the first broad launch:
+Keep these visible before the first broad launch:
 
 - Discussion or pinned issue: `Show how Project Tiny Context Harness helped or failed in your repo`.
-- Labels: `good first issue`, `help wanted`, `docs`, `demo`, `question`, `adoption-report`, `benchmark`.
+- Current labels: #4 uses `question`; #5, #6 and #8 use `documentation`, `good first issue` and `help wanted`; #7 uses `help wanted`.
 - Starter issues:
   - Add a small example repository showing Minimal Context before and after.
   - Record an asciinema or GIF from the 60-second demo.
