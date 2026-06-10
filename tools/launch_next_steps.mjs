@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -45,6 +45,7 @@ function printHelp() {
 
 Prints the ordered maintainer actions for the public launch.
 This script is read-only: it does not publish to npm, create releases, post to HN or open PRs.
+In --live mode it also reads tmp/sdlc/launch-feedback notes to detect an existing Show HN URL.
 
 Usage:
   node tools/launch_next_steps.mjs
@@ -75,7 +76,38 @@ function checkById(report, id) {
   return report?.readiness?.externalChecks?.find((check) => check.id === id) ?? null;
 }
 
-export function applyStatusHints(steps, report) {
+function slashPath(filePath) {
+  return filePath.split(path.sep).join("/");
+}
+
+export function findShowHnFeedbackNote({ root = repoRoot } = {}) {
+  const feedbackDir = path.join(root, "tmp", "sdlc", "launch-feedback");
+  if (!existsSync(feedbackDir)) {
+    return null;
+  }
+  const files = readdirSync(feedbackDir)
+    .filter((file) => file.endsWith(".md"))
+    .sort()
+    .reverse();
+  for (const file of files) {
+    const fullPath = path.join(feedbackDir, file);
+    const content = readFileSync(fullPath, "utf8");
+    if (!/Channel:\s*show-hn\b/.test(content)) {
+      continue;
+    }
+    const urlMatch = content.match(/URL:\s*(https:\/\/news\.ycombinator\.com\/item\?id=\d+)/);
+    if (!urlMatch) {
+      continue;
+    }
+    return {
+      url: urlMatch[1],
+      path: slashPath(path.relative(root, fullPath))
+    };
+  }
+  return null;
+}
+
+export function applyStatusHints(steps, report, { showHnFeedback = null } = {}) {
   if (!report) {
     return steps;
   }
@@ -84,6 +116,7 @@ export function applyStatusHints(steps, report) {
   const latestReleaseDetail = githubReleaseTitle?.detail ?? "";
   const currentReleaseVisible = latestReleaseDetail.includes(`Project Tiny Context Harness ${packageJson.version}`);
   const requiredGateClear = report.status === "ready" || report.status === "ready-with-cleanup";
+  const showHnUrl = showHnFeedback?.url ?? null;
 
   return steps.map((step) => {
     if (step.id === "npm-trusted-publish") {
@@ -106,13 +139,26 @@ export function applyStatusHints(steps, report) {
       return { ...step, status: "pending-cleanup", statusDetail: latestReleaseDetail || "latest GitHub Release still needs maintainer review." };
     }
     if (step.id === "show-hn") {
+      if (showHnUrl) {
+        return { ...step, status: "done", statusDetail: `live at ${showHnUrl}`, url: showHnUrl };
+      }
       return {
         ...step,
         status: requiredGateClear ? "ready" : "blocked",
         statusDetail: requiredGateClear ? "required broad-launch gate is clear." : "required broad-launch gate is blocked."
       };
     }
+    if (step.id === "show-hn-first-comment") {
+      if (!showHnUrl) {
+        return { ...step, status: "waiting-for-url", statusDetail: "run after the Show HN URL exists." };
+      }
+      return { ...step, status: "ready", statusDetail: "post the maintainer context as the first regular HN comment.", url: showHnUrl };
+    }
     if (step.id === "feedback-note") {
+      if (showHnFeedback) {
+        const { command, ...doneStep } = step;
+        return { ...doneStep, status: "done", statusDetail: `feedback note exists at ${showHnFeedback.path}` };
+      }
       return { ...step, status: "waiting-for-url", statusDetail: "run after the Show HN URL exists." };
     }
     if (step.id === "curated-list-prs") {
@@ -179,6 +225,16 @@ export function buildNextSteps({ packageVersion = packageJson.version } = {}) {
       command: "npm run launch:feedback-note -- --channel show-hn --url <show-hn-url>",
       source: "docs/launch/feedback-triage.md",
       stopIf: "there is no public channel URL yet"
+    },
+    {
+      id: "show-hn-first-comment",
+      title: "Post the first regular HN comment",
+      owner: "maintainer",
+      requiredBeforeBroadLaunch: false,
+      why: "The link post needs concise maintainer context in a normal HN comment, not in the submit form.",
+      url: "<show-hn-url>",
+      source: "docs/launch/primary-launch.md",
+      stopIf: "there is no public HN URL yet, or the comment copy claims benchmark wins, adoption, awards, replacement of tests/CI/review, or asks for stars"
     },
     {
       id: "curated-list-prs",
@@ -273,10 +329,22 @@ function main() {
     return;
   }
   const statusReport = options.live ? runJson(["tools/launch_unblock_check.mjs", "--json"]) : null;
-  const steps = applyStatusHints(buildNextSteps(), statusReport);
+  const showHnFeedback = options.live ? findShowHnFeedbackNote() : null;
+  const steps = applyStatusHints(buildNextSteps(), statusReport, { showHnFeedback });
   const recommended = recommendedNext(steps);
   if (options.json) {
-    process.stdout.write(`${JSON.stringify({ live: options.live, recommendedNext: recommended?.id ?? null, steps }, null, 2)}\n`);
+    process.stdout.write(
+      `${JSON.stringify(
+        {
+          live: options.live,
+          recommendedNext: recommended?.id ?? null,
+          showHnUrl: showHnFeedback?.url ?? null,
+          steps
+        },
+        null,
+        2
+      )}\n`
+    );
     return;
   }
   process.stdout.write(renderMarkdown(steps, { recommended }));

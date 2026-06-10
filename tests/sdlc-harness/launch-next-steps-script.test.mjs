@@ -1,18 +1,19 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const scriptPath = path.join(repoRoot, "tools/launch_next_steps.mjs");
-const { applyStatusHints, buildNextSteps, recommendedNext, renderMarkdown, showHnPrefillUrl } = await import(
-  pathToFileURL(scriptPath)
-);
+const { applyStatusHints, buildNextSteps, findShowHnFeedbackNote, recommendedNext, renderMarkdown, showHnPrefillUrl } =
+  await import(pathToFileURL(scriptPath));
 
 const steps = buildNextSteps({ packageVersion: "0.2.41" });
 assert.deepEqual(
   steps.map((step) => step.id),
-  ["npm-trusted-publish", "github-release-0.2.41", "show-hn", "feedback-note", "curated-list-prs"]
+  ["npm-trusted-publish", "github-release-0.2.41", "show-hn", "feedback-note", "show-hn-first-comment", "curated-list-prs"]
 );
 
 const markdown = renderMarkdown(steps);
@@ -32,6 +33,8 @@ assert.match(
 );
 assert.match(markdown, /docs\/launch\/primary-launch\.md/);
 assert.match(markdown, /npm run launch:feedback-note -- --channel show-hn --url <show-hn-url>/);
+assert.match(markdown, /show-hn-first-comment/);
+assert.match(markdown, /Post the first regular HN comment/);
 assert.match(markdown, /npm run launch:external-prs -- --live --clean/);
 assert.match(markdown, /NPM_TOKEN \/ NODE_AUTH_TOKEN/);
 assert.doesNotMatch(markdown, /npm publish --workspace/);
@@ -58,6 +61,25 @@ assert.equal(
   "https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fgithub.com%2FSeven128%2Fproject-tiny-context-harness&t=Show%20HN%3A%20Tiny%20project%20memory%20for%20coding%20agents"
 );
 
+const tempRoot = mkdtempSync(path.join(os.tmpdir(), "launch-next-steps-"));
+const tempFeedbackDir = path.join(tempRoot, "tmp", "sdlc", "launch-feedback");
+mkdirSync(tempFeedbackDir, { recursive: true });
+writeFileSync(
+  path.join(tempFeedbackDir, "2026-06-10-show-hn.md"),
+  [
+    "# Launch Feedback Note",
+    "",
+    "Channel: show-hn",
+    "URL: https://news.ycombinator.com/item?id=48479619",
+    ""
+  ].join("\n"),
+  "utf8"
+);
+assert.deepEqual(findShowHnFeedbackNote({ root: tempRoot }), {
+  url: "https://news.ycombinator.com/item?id=48479619",
+  path: "tmp/sdlc/launch-feedback/2026-06-10-show-hn.md"
+});
+
 const liveSteps = applyStatusHints(steps, {
   status: "ready-with-cleanup",
   npm: { summary: { status: "published" } },
@@ -79,7 +101,8 @@ assert.match(liveSteps[0].statusDetail, /local 0\.2\.41; npm latest 0\.2\.40/);
 assert.equal(liveSteps[1].status, "pending-cleanup");
 assert.equal(liveSteps[2].status, "ready");
 assert.equal(liveSteps[3].status, "waiting-for-url");
-assert.equal(liveSteps[4].status, "wait-for-first-feedback");
+assert.equal(liveSteps[4].status, "waiting-for-url");
+assert.equal(liveSteps[5].status, "wait-for-first-feedback");
 assert.equal(recommendedNext(liveSteps).id, "npm-trusted-publish");
 
 const liveMarkdown = renderMarkdown(liveSteps);
@@ -87,6 +110,35 @@ assert.match(liveMarkdown, /Recommended Next/);
 assert.match(liveMarkdown, /npm-trusted-publish: Refresh npm package page with 0\.2\.41/);
 assert.match(liveMarkdown, /status: pending-cleanup \(local 0\.2\.41; npm latest 0\.2\.40\)/);
 assert.match(liveMarkdown, /status: ready \(required broad-launch gate is clear\.\)/);
+
+const livePostedSteps = applyStatusHints(
+  steps,
+  {
+    status: "ready",
+    npm: { summary: { status: "published" } },
+    readiness: {
+      externalChecks: [
+        {
+          id: "github-release-title",
+          detail: "GitHub latest release title: Project Tiny Context Harness 0.2.41"
+        }
+      ]
+    }
+  },
+  {
+    showHnFeedback: {
+      url: "https://news.ycombinator.com/item?id=48479619",
+      path: "tmp/sdlc/launch-feedback/2026-06-10-show-hn.md"
+    }
+  }
+);
+assert.equal(livePostedSteps[0].status, "done");
+assert.equal(livePostedSteps[1].status, "done");
+assert.equal(livePostedSteps[2].status, "done");
+assert.equal(livePostedSteps[3].status, "done");
+assert.equal(livePostedSteps[4].status, "ready");
+assert.equal(livePostedSteps[4].url, "https://news.ycombinator.com/item?id=48479619");
+assert.equal(recommendedNext(livePostedSteps).id, "show-hn-first-comment");
 
 const blockedFirst = recommendedNext([
   { id: "later-cleanup", status: "pending-cleanup" },
