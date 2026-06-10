@@ -36,6 +36,7 @@ for (const expected of [
   "public-language-posture",
   "localized-readme",
   "scorecard-badge",
+  "prepublish-status-badge",
   "root-readme-prepublish-boundary",
   "root-readme-source-preview",
   "package-readme-source-preview",

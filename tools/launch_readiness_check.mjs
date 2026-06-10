@@ -108,6 +108,11 @@ function hasCjk(content) {
 
 const scorecardBadgePattern =
   /\[!\[OpenSSF Scorecard\]\(https:\/\/api\.securityscorecards\.dev\/projects\/github\.com\/Seven128\/project-tiny-context-harness\/badge\)\]\(https:\/\/securityscorecards\.dev\/viewer\/\?uri=github\.com\/Seven128\/project-tiny-context-harness\)/;
+const rootPendingNpmBadgePattern =
+  /\[!\[npm publish status\]\(https:\/\/img\.shields\.io\/badge\/npm-pending%20first%20publish-orange\.svg\)\]\(docs\/launch\/npm-publish-runbook\.md\)/;
+const packagePendingNpmBadgePattern =
+  /\[!\[npm publish status\]\(https:\/\/img\.shields\.io\/badge\/npm-pending%20first%20publish-orange\.svg\)\]\(https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/blob\/main\/docs\/launch\/npm-publish-runbook\.md\)/;
+const liveNpmVersionBadgePattern = /https:\/\/img\.shields\.io\/npm\/v\/project-tiny-context-harness\.svg/;
 
 function requestJson(url) {
   return new Promise((resolve, reject) => {
@@ -331,6 +336,15 @@ function localChecks() {
       scorecardBadgePattern.test(packageReadme) &&
       contains(launchKit, /OpenSSF Scorecard badge/),
     "README and package README expose the OpenSSF Scorecard badge as a first-screen trust surface."
+  );
+  addCheck(
+    checks,
+    "prepublish-status-badge",
+    rootPendingNpmBadgePattern.test(rootReadme) &&
+      packagePendingNpmBadgePattern.test(packageReadme) &&
+      !liveNpmVersionBadgePattern.test(firstLines(rootReadme, 16)) &&
+      !liveNpmVersionBadgePattern.test(firstLines(packageReadme, 16)),
+    "README and package README show a transparent pending-npm badge instead of a live npm version badge while the renamed package returns 404."
   );
   addCheck(
     checks,
