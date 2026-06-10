@@ -4,7 +4,7 @@
 [![Package CI](https://github.com/Seven128/project-tiny-context-harness/actions/workflows/package.yml/badge.svg)](https://github.com/Seven128/project-tiny-context-harness/actions/workflows/package.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Translations: [简体中文](https://github.com/Seven128/project-tiny-context-harness/blob/main/README.zh-CN.md)
+Translations: [Chinese (Simplified)](https://github.com/Seven128/project-tiny-context-harness/blob/main/README.zh-CN.md)
 
 `project-tiny-context-harness` ships the `sdlc-harness` CLI for Project Tiny Context Harness: repo-native project memory for AI coding agents.
 

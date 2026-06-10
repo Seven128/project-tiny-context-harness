@@ -98,6 +98,14 @@ function contains(content, pattern) {
   return pattern.test(content);
 }
 
+function firstLines(content, count) {
+  return content.split(/\r?\n/).slice(0, count).join("\n");
+}
+
+function hasCjk(content) {
+  return /[\u3400-\u9fff]/.test(content);
+}
+
 function requestJson(url) {
   return new Promise((resolve, reject) => {
     const request = https.get(
@@ -237,19 +245,21 @@ function localChecks() {
     "public-language-posture",
     contains(rootReadme, /English-first/) &&
       contains(packageReadme, /English-first/) &&
+      !hasCjk(firstLines(rootReadme, 24)) &&
+      !hasCjk(firstLines(packageReadme, 24)) &&
       contains(launchKit, /Language Posture/) &&
       contains(launchKit, /GitHub description, README first screen, npm copy/) &&
       contains(primaryLaunch, /Public-facing copy is English-first/) &&
       contains(outreachTargets, /README, npm and launch copy English-first/),
-    "Public README, npm README and launch packet keep external promotion English-first while allowing literal multilingual compatibility examples."
+    "Public README, npm README and launch packet keep external promotion English-first, with no CJK text in the README first screen and only secondary localized docs."
   );
   addCheck(
     checks,
     "localized-readme",
     hasFile("README.zh-CN.md") &&
       hasFile("packages/sdlc-harness/assets/README.zh-CN.md") &&
-      contains(rootReadme, /Translations: \[简体中文\]\(README\.zh-CN\.md\)/) &&
-      contains(packageReadme, /Translations: \[简体中文\]\(https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/blob\/main\/README\.zh-CN\.md\)/) &&
+      contains(rootReadme, /Translations: \[Chinese \(Simplified\)\]\(README\.zh-CN\.md\)/) &&
+      contains(packageReadme, /Translations: \[Chinese \(Simplified\)\]\(https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/blob\/main\/README\.zh-CN\.md\)/) &&
       contains(zhReadme, /Project Tiny Context Harness 是给 AI coding agents 用的轻量项目记忆层/) &&
       contains(zhReadme, /保留项目记忆，丢掉流程仪式感/) &&
       contains(zhReadme, /英文主入口/) &&

@@ -45,6 +45,8 @@ Another autonomous SDLC framework, task manager, spec generator or benchmark-pro
 
 Keep public-facing launch material English-first: GitHub description, README first screen, npm copy, Show HN, Product Hunt, curated-list PRs and social posts. Optional localized docs can exist behind secondary links, but they should not be the first evaluation path for strangers.
 
+Use English labels for first-screen localization links, such as `Chinese (Simplified)`, so repository and npm previews do not look Chinese-first to global visitors.
+
 Chinese or other non-English strings are acceptable when they are literal generated filenames, request-trigger examples or maintainer notes. If they appear in launch-facing docs, frame them as multilingual compatibility examples, not as the default product language.
 
 ## GitHub Metadata
