@@ -4,6 +4,7 @@
 [![Package CI](https://github.com/Seven128/project-tiny-context-harness/actions/workflows/package.yml/badge.svg)](https://github.com/Seven128/project-tiny-context-harness/actions/workflows/package.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/Seven128/project-tiny-context-harness/badge)](https://securityscorecards.dev/viewer/?uri=github.com/Seven128/project-tiny-context-harness)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Open in GitHub Codespaces](https://img.shields.io/badge/open%20in-Codespaces-181717?logo=github)](https://codespaces.new/Seven128/project-tiny-context-harness)
 
 Translations: [Chinese (Simplified)](https://github.com/Seven128/project-tiny-context-harness/blob/main/README.zh-CN.md)
 
@@ -73,6 +74,21 @@ make validate-context
 Then open `AGENTS.md`, `project_context/global.md` and `project_context/architecture.md`. Those files are the small recovery surface a fresh agent should read before changing the project.
 
 Source preview while npm publish is pending:
+
+Browser preview:
+
+```text
+Open https://codespaces.new/Seven128/project-tiny-context-harness
+```
+
+When the Codespace finishes `npm ci`, run:
+
+```sh
+npm run smoke:quickstart
+npm run preview:pack
+```
+
+Local preview:
 
 ```sh
 git clone https://github.com/Seven128/project-tiny-context-harness.git

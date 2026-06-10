@@ -132,6 +132,9 @@ Useful deep links:
 README demo GIF:
 https://raw.githubusercontent.com/Seven128/project-tiny-context-harness/main/docs/launch/assets/demo-terminal.gif
 
+Codespaces source preview:
+https://codespaces.new/Seven128/project-tiny-context-harness
+
 Fresh-agent walkthrough:
 https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/examples/fresh-agent-recovery.md
 
@@ -153,6 +156,21 @@ make validate-context
 ```
 
 Use while npm publish is pending:
+
+Browser preview:
+
+```text
+Open https://codespaces.new/Seven128/project-tiny-context-harness
+```
+
+When the Codespace finishes `npm ci`, run:
+
+```sh
+npm run smoke:quickstart
+npm run preview:pack
+```
+
+Local preview:
 
 ```sh
 git clone https://github.com/Seven128/project-tiny-context-harness.git

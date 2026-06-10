@@ -43,6 +43,12 @@ Repo:
 https://github.com/Seven128/project-tiny-context-harness
 
 Source preview:
+Open https://codespaces.new/Seven128/project-tiny-context-harness
+Then run:
+npm run smoke:quickstart
+npm run preview:pack
+
+Or use a local checkout:
 git clone https://github.com/Seven128/project-tiny-context-harness.git
 cd project-tiny-context-harness
 npm ci
@@ -77,6 +83,8 @@ npm ci
 npm run smoke:quickstart
 npm run preview:pack
 ```
+
+If local setup is inconvenient, open <https://codespaces.new/Seven128/project-tiny-context-harness> and run `npm run smoke:quickstart` / `npm run preview:pack` there.
 
 Then either inspect the disposable smoke repo output, or install the generated `tmp/sdlc/source-preview/package/*.tgz` tarball into a disposable copy of one real repository and run `npx --no-install sdlc-harness init --adopt`.
 

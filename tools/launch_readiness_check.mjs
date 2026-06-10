@@ -150,6 +150,7 @@ function localChecks() {
   const checks = [];
   const rootPackage = readJson("package.json");
   const packageJson = readJson("packages/sdlc-harness/package.json");
+  const devcontainerConfig = readJson(".devcontainer/devcontainer.json");
   const rootReadme = read("README.md");
   const packageReadme = read("packages/sdlc-harness/README.md");
   const zhReadme = read("README.zh-CN.md");
@@ -202,6 +203,7 @@ function localChecks() {
   const releaseScript = read("tools/release_npm.mjs");
   const managedMakefile = read(".codex/pjsdlc_managed/make/sdlc-harness.mk");
   const packagedMakefile = read("packages/sdlc-harness/assets/make/sdlc-harness.mk");
+  const codespacesUrlPattern = /https:\/\/codespaces\.new\/Seven128\/project-tiny-context-harness/;
 
   addCheck(checks, "root-package-name", rootPackage.name === "project-tiny-context-harness", "Root package name is project-tiny-context-harness.");
   addCheck(checks, "root-license", rootPackage.license === "MIT" && hasFile("LICENSE"), "Root package has MIT license metadata and LICENSE file.");
@@ -359,6 +361,22 @@ function localChecks() {
       contains(launchProfile, /npm run preview:pack/) &&
       contains(launchProfile, /tmp\/sdlc\/source-preview\/package\/project-tiny-context-harness-0\.2\.39\.tgz/),
     "Source-preview tarball path lets private reviewers test a local package before npm publication."
+  );
+  addCheck(
+    checks,
+    "codespaces-preview",
+    hasFile(".devcontainer/devcontainer.json") &&
+      devcontainerConfig.name === "Project Tiny Context Harness" &&
+      devcontainerConfig.image === "mcr.microsoft.com/devcontainers/javascript-node:1-24-bookworm" &&
+      devcontainerConfig.postCreateCommand === "npm ci" &&
+      contains(rootReadme, codespacesUrlPattern) &&
+      contains(packageReadme, codespacesUrlPattern) &&
+      contains(existingRepoAdoption, codespacesUrlPattern) &&
+      contains(privateReview, codespacesUrlPattern) &&
+      contains(launchProfile, codespacesUrlPattern) &&
+      contains(launchKit, codespacesUrlPattern) &&
+      contains(maintainerWorkflow, /\.devcontainer\/\*\*/),
+    "Codespaces source preview gives private reviewers a no-local-setup path while npm publication is pending."
   );
   addCheck(
     checks,

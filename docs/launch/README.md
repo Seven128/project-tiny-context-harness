@@ -133,6 +133,7 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 | Launch profile sheet | Keep `docs/launch/profile.md` aligned with README, package metadata and launch copy. | External submissions reuse one English-first name, tagline, description, category, tag and claims-boundary source. |
 | GitHub metadata | Set description, homepage and topics from this file. | Online `launch_readiness_check` no longer reports GitHub metadata TODOs. |
 | npm metadata | Publish a new package version after PR merge. | npm page shows updated README, MIT license, homepage and description. |
+| Source preview path | Keep the Codespaces link, local smoke command and source-preview tarball path visible while npm publish is blocked. | Private reviewers can open `https://codespaces.new/Seven128/project-tiny-context-harness`, run `npm run smoke:quickstart` / `npm run preview:pack`, or use the generated tarball in a disposable repo. |
 | npm credential unblock | Use `docs/launch/npm-credential-unblock.md` if publish reaches npm and fails with a 403 credentials error. | The maintainer can choose interactive OTP login or a website-created granular token without leaking tokens into the repo. |
 | npm trusted publishing | Use `docs/launch/npm-trusted-publishing.md` after the first renamed package exists. | Future releases can use GitHub Actions OIDC and npm provenance without storing a long-lived npm publish token. |
 | 60-90 second demo | Record the demo storyboard below. | Viewer can see install, generated files and fresh-agent recovery prompt. |

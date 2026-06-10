@@ -33,6 +33,21 @@ make validate-context
 
 Source preview while npm publish is pending:
 
+Browser preview:
+
+```text
+Open https://codespaces.new/Seven128/project-tiny-context-harness
+```
+
+When the Codespace finishes `npm ci`, run:
+
+```sh
+npm run smoke:quickstart
+npm run preview:pack
+```
+
+Local preview:
+
 ```sh
 git clone https://github.com/Seven128/project-tiny-context-harness.git
 cd project-tiny-context-harness

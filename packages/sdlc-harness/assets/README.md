@@ -4,6 +4,7 @@
 [![Package CI](https://github.com/Seven128/project-tiny-context-harness/actions/workflows/package.yml/badge.svg)](https://github.com/Seven128/project-tiny-context-harness/actions/workflows/package.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/Seven128/project-tiny-context-harness/badge)](https://securityscorecards.dev/viewer/?uri=github.com/Seven128/project-tiny-context-harness)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Open in GitHub Codespaces](https://img.shields.io/badge/open%20in-Codespaces-181717?logo=github)](https://codespaces.new/Seven128/project-tiny-context-harness)
 
 Translations: [Chinese (Simplified)](README.zh-CN.md)
 
@@ -47,11 +48,27 @@ npx --yes --package project-tiny-context-harness@latest sdlc-harness init
 
 Source preview while npm publish is pending:
 
+Browser preview:
+
+```text
+Open https://codespaces.new/Seven128/project-tiny-context-harness
+```
+
+When the Codespace finishes `npm ci`, run:
+
+```sh
+npm run smoke:quickstart
+npm run preview:pack
+```
+
+Local preview:
+
 ```sh
 git clone https://github.com/Seven128/project-tiny-context-harness.git
 cd project-tiny-context-harness
 npm ci
 npm run smoke:quickstart
+npm run preview:pack
 ```
 
 That smoke packs the local workspace, installs it into a disposable repo, runs `sdlc-harness init` and validates the generated Minimal Context files.

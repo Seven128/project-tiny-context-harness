@@ -38,6 +38,7 @@ for (const expected of [
   "root-readme-source-preview",
   "package-readme-source-preview",
   "source-preview-pack",
+  "codespaces-preview",
   "agent-surface-recipes",
   "technical-article",
   "existing-repo-adoption-guide",
