@@ -964,6 +964,16 @@ function localChecks() {
   );
   addCheck(
     checks,
+    "launch-unblock-status-aware",
+    contains(launchUnblockScript, /Status: \$\{report\.npm\.summary\.status\}/) &&
+      contains(launchUnblockScript, /npm login/) &&
+      contains(launchUnblockScript, /After npm auth or token permissions are fixed/) &&
+      contains(launchUnblockScript, /docs\/launch\/npm-credential-unblock\.md/) &&
+      contains(launchUnblockScript, /If npm returns E403/),
+    "Launch unblock report gives status-aware npm owner commands before broad launch."
+  );
+  addCheck(
+    checks,
     "launch-operating-plan",
     contains(launchKit, /Launch Operating Plan/) &&
       contains(launchKit, /Channel Matrix/) &&

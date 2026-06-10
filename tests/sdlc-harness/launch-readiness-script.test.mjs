@@ -75,6 +75,7 @@ for (const expected of [
   "github-metadata-script",
   "prelaunch-external-blockers",
   "launch-unblock-report",
+  "launch-unblock-status-aware",
   "launch-operating-plan",
   "primary-launch-packet",
   "feedback-triage-runbook",

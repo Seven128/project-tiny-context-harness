@@ -2,7 +2,7 @@
 import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -79,7 +79,61 @@ function reportStatus({ npmAccess, githubMetadata, readiness }) {
   return "blocked";
 }
 
-function renderMarkdown(report) {
+function appendNpmOwnerCommands(lines, report) {
+  if (report.npm.summary.status === "published") {
+    return;
+  }
+
+  lines.push("### npm", "");
+  lines.push(`Status: ${report.npm.summary.status}`);
+  lines.push(`Next action: ${report.npm.summary.nextAction}`);
+  lines.push("");
+
+  if (report.npm.summary.status === "auth-needed") {
+    lines.push("```sh");
+    lines.push("npm run launch:npm-access");
+    lines.push("npm login");
+    lines.push("npm run launch:npm-access");
+    lines.push("# After npm auth or token permissions are fixed:");
+    lines.push("npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke");
+    lines.push("```");
+    lines.push("");
+    lines.push("If token-based publishing is required, create a publish-capable granular token on npmjs.com and follow `docs/launch/npm-credential-unblock.md`. Do not store tokens, OTP values or `.npmrc` content in this repository.");
+    lines.push("");
+    return;
+  }
+
+  if (report.npm.summary.status === "first-publish-needed") {
+    lines.push("```sh");
+    lines.push("npm run launch:npm-access");
+    lines.push("npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke");
+    lines.push("```");
+    lines.push("");
+    lines.push("If npm returns E403, stop and use `docs/launch/npm-credential-unblock.md` before retrying.");
+    lines.push("");
+    return;
+  }
+
+  lines.push("```sh");
+  lines.push("npm run launch:npm-access");
+  lines.push("```");
+  lines.push("");
+}
+
+function appendGitHubOwnerCommands(lines, report) {
+  if (report.github.aligned) {
+    return;
+  }
+
+  lines.push("### GitHub metadata", "");
+  lines.push("```sh");
+  lines.push("npm run launch:github-metadata");
+  lines.push("npm run launch:github-metadata -- --apply");
+  lines.push("```");
+  lines.push("");
+}
+
+export function renderMarkdown(report) {
   const lines = [
     "# Launch Unblock Report",
     "",
@@ -103,20 +157,8 @@ function renderMarkdown(report) {
   }
 
   lines.push("## Owner Commands", "");
-  if (report.npm.summary.status !== "published") {
-    lines.push("```sh");
-    lines.push("npm run launch:npm-access");
-    lines.push("npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke");
-    lines.push("```");
-    lines.push("");
-  }
-  if (!report.github.aligned) {
-    lines.push("```sh");
-    lines.push("npm run launch:github-metadata");
-    lines.push("npm run launch:github-metadata -- --apply");
-    lines.push("```");
-    lines.push("");
-  }
+  appendNpmOwnerCommands(lines, report);
+  appendGitHubOwnerCommands(lines, report);
 
   lines.push("## Launch Gate", "");
   lines.push("```sh");
@@ -177,7 +219,9 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(`launch unblock check failed: ${error.message}`);
-  process.exitCode = 1;
-});
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    console.error(`launch unblock check failed: ${error.message}`);
+    process.exitCode = 1;
+  });
+}
