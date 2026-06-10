@@ -120,6 +120,9 @@ export function findOpenedCuratedListPrs({ root = repoRoot } = {}) {
   const picrewUrl = "https://github.com/Picrew/awesome-agent-harness/pull/22";
   const transcendaUrl = "https://github.com/Transcenda/awesome-agentic-coding/pull/4";
   const jordimasUrl = "https://github.com/jordimas/awesome-agentic-engineering/pull/4";
+  const aiDevtoolsUrl = "https://github.com/jamesmurdza/awesome-ai-devtools/pull/636";
+  const cliCodingAgentsUrl = "https://github.com/bradAGI/awesome-cli-coding-agents/pull/125";
+  const aiCodingToolsUrl = "https://github.com/ai-for-developers/awesome-ai-coding-tools/pull/408";
   if (content.includes(aiBoostUrl)) {
     prs.push({ repo: "ai-boost/awesome-harness-engineering", url: aiBoostUrl });
   }
@@ -131,6 +134,15 @@ export function findOpenedCuratedListPrs({ root = repoRoot } = {}) {
   }
   if (content.includes(jordimasUrl)) {
     prs.push({ repo: "jordimas/awesome-agentic-engineering", url: jordimasUrl });
+  }
+  if (content.includes(aiDevtoolsUrl)) {
+    prs.push({ repo: "jamesmurdza/awesome-ai-devtools", url: aiDevtoolsUrl });
+  }
+  if (content.includes(cliCodingAgentsUrl)) {
+    prs.push({ repo: "bradAGI/awesome-cli-coding-agents", url: cliCodingAgentsUrl });
+  }
+  if (content.includes(aiCodingToolsUrl)) {
+    prs.push({ repo: "ai-for-developers/awesome-ai-coding-tools", url: aiCodingToolsUrl });
   }
   return prs;
 }
@@ -202,9 +214,9 @@ export function applyStatusHints(steps, report, { showHnFeedback = null, curated
       if (curatedListPrs.length >= 4) {
         return {
           ...step,
-          title: "Monitor the open narrow-first curated-list PRs",
+          title: "Monitor the open high-score curated-list PRs",
           status: "open",
-          statusDetail: "P0/P1 curated-list PRs are open; monitor maintainer feedback before broader lists.",
+          statusDetail: "curated-list PRs are open; monitor maintainer feedback and prioritize future targets by fit x activity x audience.",
           prs: curatedListPrs
         };
       }
@@ -293,13 +305,13 @@ export function buildNextSteps({ packageVersion = packageJson.version } = {}) {
     },
     {
       id: "curated-list-prs",
-      title: "Open the narrow-first curated-list PRs after first feedback",
+      title: "Open or monitor high-score curated-list PRs after first feedback",
       owner: "maintainer",
       requiredBeforeBroadLaunch: false,
-      why: "Curated-list PRs are second-wave distribution, starting with narrow harness/context, agent-instruction and team-adoption targets.",
+      why: "Curated-list PRs are durable discovery; target scoring should combine category fit, maintainer activity and audience scale.",
       command: "npm run launch:external-prs -- --live --clean",
       source: "docs/launch/external-prs/README.md",
-      stopIf: "Show HN feedback exposes positioning confusion that should be patched first"
+      stopIf: "Show HN feedback exposes positioning confusion that should be patched first, or the target is stale despite having many stars"
     },
     {
       id: "monitor-feedback",

@@ -12,6 +12,9 @@ Curated-list direct PRs opened from the maintainer-authenticated `gh` session on
 - `Picrew/awesome-agent-harness`: https://github.com/Picrew/awesome-agent-harness/pull/22
 - `Transcenda/awesome-agentic-coding`: https://github.com/Transcenda/awesome-agentic-coding/pull/4
 - `jordimas/awesome-agentic-engineering`: https://github.com/jordimas/awesome-agentic-engineering/pull/4
+- `jamesmurdza/awesome-ai-devtools`: https://github.com/jamesmurdza/awesome-ai-devtools/pull/636
+- `bradAGI/awesome-cli-coding-agents`: https://github.com/bradAGI/awesome-cli-coding-agents/pull/125
+- `ai-for-developers/awesome-ai-coding-tools`: https://github.com/ai-for-developers/awesome-ai-coding-tools/pull/408
 
 Forks used:
 
@@ -19,8 +22,11 @@ Forks used:
 - https://github.com/Seven128/awesome-agent-harness
 - https://github.com/Seven128/awesome-agentic-coding
 - https://github.com/Seven128/awesome-agentic-engineering
+- https://github.com/Seven128/awesome-ai-devtools
+- https://github.com/Seven128/awesome-cli-coding-agents
+- https://github.com/Seven128/awesome-ai-coding-tools
 
-Remaining P2 packets have not been opened. Wait for open curated-list maintainer feedback before opening broader lists.
+No remaining packet should be opened automatically. Score any next target by `fit x maintenance activity x audience scale`; downgrade inactive repositories even when they have more stars.
 
 Public PR creation should continue through the maintainer's GitHub-authenticated session so forks, branch ownership and notifications are correct.
 
@@ -42,16 +48,19 @@ Default mode is read-only and does not access the network. Live mode clones upst
 
 ## Recommended Opening Order
 
-Open PRs from narrowest category fit to broadest fit:
+Open PRs by score: category fit x maintenance activity x audience scale.
+
+Current opened set:
 
 1. `ai-boost/awesome-harness-engineering` - opened as https://github.com/ai-boost/awesome-harness-engineering/pull/58
 2. `Picrew/awesome-agent-harness` - opened as https://github.com/Picrew/awesome-agent-harness/pull/22
 3. `Transcenda/awesome-agentic-coding` - opened as https://github.com/Transcenda/awesome-agentic-coding/pull/4
 4. `jordimas/awesome-agentic-engineering` - opened as https://github.com/jordimas/awesome-agentic-engineering/pull/4
-5. `awesome-opencode/awesome-opencode`
-6. `jamesmurdza/awesome-ai-devtools`
+5. `jamesmurdza/awesome-ai-devtools` - opened as https://github.com/jamesmurdza/awesome-ai-devtools/pull/636
+6. `bradAGI/awesome-cli-coding-agents` - opened as https://github.com/bradAGI/awesome-cli-coding-agents/pull/125
+7. `ai-for-developers/awesome-ai-coding-tools` - opened as https://github.com/ai-for-developers/awesome-ai-coding-tools/pull/408
 
-Reason: a new 0-star package is easier for maintainers to evaluate when the target category already expects context delivery, working-state engineering or harness primitives. Broader AI dev-tool directories are useful after first feedback, an accepted narrow listing or clearer social proof.
+Reason: a new 0-star package is easiest to evaluate when the target category already expects context delivery, working-state engineering or harness primitives. The second wave adds broader directories only where maintainers are active enough that a factual PR is likely to be reviewed.
 
 ## Transcenda Awesome Agentic Coding
 
@@ -207,12 +216,14 @@ gh pr create --base main --head Seven128:add-project-tiny-context-harness --titl
 
 Target: `jamesmurdza/awesome-ai-devtools`
 
+Status: opened as https://github.com/jamesmurdza/awesome-ai-devtools/pull/636.
+
 Patch: [jamesmurdza-awesome-ai-devtools.patch](jamesmurdza-awesome-ai-devtools.patch)
 
 Branch:
 
 ```text
-add-project-tiny-context-harness
+add-project-tiny-context-harness-20260611
 ```
 
 PR title:
@@ -252,12 +263,76 @@ Save the PR body block above to `pr-body.md` before running the final `gh pr cre
 PATCH_ROOT=/path/to/project-tiny-context-harness/docs/launch/external-prs
 gh repo fork jamesmurdza/awesome-ai-devtools --clone
 cd awesome-ai-devtools
-git checkout -b add-project-tiny-context-harness
+git checkout -b add-project-tiny-context-harness-20260611
 git apply "$PATCH_ROOT/jamesmurdza-awesome-ai-devtools.patch"
 git diff --check
 git commit -am "Add Project Tiny Context Harness"
-git push -u origin add-project-tiny-context-harness
-gh pr create --base main --head Seven128:add-project-tiny-context-harness --title "Add Project Tiny Context Harness" --body-file /path/to/pr-body.md
+git push -u origin add-project-tiny-context-harness-20260611
+gh pr create --base main --head Seven128:add-project-tiny-context-harness-20260611 --title "Add Project Tiny Context Harness" --body-file /path/to/pr-body.md
+```
+
+## Awesome CLI Coding Agents
+
+Target: `bradAGI/awesome-cli-coding-agents`
+
+Status: opened as https://github.com/bradAGI/awesome-cli-coding-agents/pull/125.
+
+Branch:
+
+```text
+add-project-tiny-context-harness-20260611
+```
+
+PR title:
+
+```text
+Add Project Tiny Context Harness to agent infrastructure
+```
+
+PR body:
+
+```text
+Adds Project Tiny Context Harness under Agent infrastructure.
+
+It fits this list as a small CLI-distributed harness for coding-agent recovery: repo-local AGENTS.md guidance, project_context/** files, role Skills, and validate-context checks help fresh Codex, Claude Code, Cursor, Gemini CLI, OpenCode, and similar sessions recover project intent and validation paths.
+```
+
+Entry added:
+
+```md
+- **[Project Tiny Context Harness](https://github.com/Seven128/project-tiny-context-harness)** `⭐ 0` — Minimal repo-native project memory for CLI coding agents. Installs `AGENTS.md`, `project_context/**`, role Skills, and a `validate-context` gate so Codex, Claude Code, Cursor, Gemini CLI, OpenCode, and similar agents can recover project intent, boundaries, and validation paths across fresh sessions. MIT.
+```
+
+## Awesome AI Coding Tools
+
+Target: `ai-for-developers/awesome-ai-coding-tools`
+
+Status: opened as https://github.com/ai-for-developers/awesome-ai-coding-tools/pull/408.
+
+Branch:
+
+```text
+add-project-tiny-context-harness-20260611
+```
+
+PR title:
+
+```text
+Add Project Tiny Context Harness
+```
+
+PR body:
+
+```text
+Adds Project Tiny Context Harness under Developer Productivity Tools.
+
+It is an open-source CLI for AI coding-agent context recovery: repo-local AGENTS.md, project_context/**, role Skills, and validate-context checks help fresh agent sessions recover project intent and validation paths without adding a full SDLC workflow.
+```
+
+Entry added:
+
+```md
+- **[Project Tiny Context Harness](https://github.com/Seven128/project-tiny-context-harness)** – Minimal repo-native project memory for AI coding agents. Installs `AGENTS.md`, `project_context/**`, role Skills, and a `validate-context` gate so fresh Codex, Claude Code, Cursor, Gemini CLI, OpenCode, and similar sessions can recover project intent, boundaries, and validation paths.
 ```
 
 ## Awesome Harness Engineering

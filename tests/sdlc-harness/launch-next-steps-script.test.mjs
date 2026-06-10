@@ -117,6 +117,9 @@ writeFileSync(
     "- https://github.com/Picrew/awesome-agent-harness/pull/22",
     "- https://github.com/Transcenda/awesome-agentic-coding/pull/4",
     "- https://github.com/jordimas/awesome-agentic-engineering/pull/4",
+    "- https://github.com/jamesmurdza/awesome-ai-devtools/pull/636",
+    "- https://github.com/bradAGI/awesome-cli-coding-agents/pull/125",
+    "- https://github.com/ai-for-developers/awesome-ai-coding-tools/pull/408",
     ""
   ].join("\n"),
   "utf8"
@@ -142,6 +145,18 @@ assert.deepEqual(findOpenedCuratedListPrs({ root: tempRoot }), [
   {
     repo: "jordimas/awesome-agentic-engineering",
     url: "https://github.com/jordimas/awesome-agentic-engineering/pull/4"
+  },
+  {
+    repo: "jamesmurdza/awesome-ai-devtools",
+    url: "https://github.com/jamesmurdza/awesome-ai-devtools/pull/636"
+  },
+  {
+    repo: "bradAGI/awesome-cli-coding-agents",
+    url: "https://github.com/bradAGI/awesome-cli-coding-agents/pull/125"
+  },
+  {
+    repo: "ai-for-developers/awesome-ai-coding-tools",
+    url: "https://github.com/ai-for-developers/awesome-ai-coding-tools/pull/408"
   }
 ]);
 
@@ -208,7 +223,7 @@ assert.equal(livePostedSteps[4].status, "done");
 assert.equal(livePostedSteps[4].url, "https://news.ycombinator.com/item?id=48479619");
 assert.equal(livePostedSteps[4].commentUrl, "https://news.ycombinator.com/item?id=48481205");
 assert.equal(livePostedSteps[5].status, "open");
-assert.equal(livePostedSteps[5].prs.length, 4);
+assert.equal(livePostedSteps[5].prs.length, 7);
 assert.equal(livePostedSteps[6].status, "ready");
 assert.equal(recommendedNext(livePostedSteps).id, "monitor-feedback");
 

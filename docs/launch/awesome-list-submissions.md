@@ -11,20 +11,24 @@ This packet prepares curated-list pull requests. It is intentionally narrower th
 - Do not claim adoption, benchmark wins, awards or superiority over other tools.
 - Prefer "project memory / context recovery for coding agents" over "SDLC framework".
 - Link to the GitHub repository, not npm, because list maintainers usually review source and README quality.
+- Prioritize targets by `fit x maintenance activity x audience scale`; a high-star list with stale PR handling is lower priority than an active, well-matched list.
 - Run `npm run launch:external-prs` before preparing PR branches; run `npm run launch:external-prs -- --live --clean` immediately before opening PRs to verify the prepared patches against current upstream repositories.
 
 ## Recommended Order
 
-Open PRs from narrowest fit to broadest fit:
+Open PRs by score: category fit x maintenance activity x audience scale.
+
+Current opened set:
 
 1. `ai-boost/awesome-harness-engineering` - open as https://github.com/ai-boost/awesome-harness-engineering/pull/58
 2. `Picrew/awesome-agent-harness` - open as https://github.com/Picrew/awesome-agent-harness/pull/22
 3. `Transcenda/awesome-agentic-coding` - open as https://github.com/Transcenda/awesome-agentic-coding/pull/4
 4. `jordimas/awesome-agentic-engineering` - open as https://github.com/jordimas/awesome-agentic-engineering/pull/4
-5. `awesome-opencode/awesome-opencode`
-6. `jamesmurdza/awesome-ai-devtools`
+5. `jamesmurdza/awesome-ai-devtools` - open as https://github.com/jamesmurdza/awesome-ai-devtools/pull/636
+6. `bradAGI/awesome-cli-coding-agents` - open as https://github.com/bradAGI/awesome-cli-coding-agents/pull/125
+7. `ai-for-developers/awesome-ai-coding-tools` - open as https://github.com/ai-for-developers/awesome-ai-coding-tools/pull/408
 
-Reason: a 0-star package has the best chance when the target category already expects context delivery, working-state engineering or harness primitives. Broader AI dev-tool directories are useful after the README/demo has absorbed first feedback, P0/P1 maintainer feedback or one narrower listing is accepted.
+Reason: the first four PRs used narrow category fit. The second wave adds higher-score directories where the category still fits and maintainers have recent activity. Do not wait on lower-activity lists simply because they appeared earlier in the previous plan.
 
 ## P1: Transcenda Awesome Agentic Coding
 
@@ -90,11 +94,13 @@ Adds Project Tiny Context Harness under Team Adoption.
 It is a practical, team-applicable resource for keeping minimal durable project memory in-repo so AI coding agents can recover intent, boundaries, and validation paths across chats and handoffs.
 ```
 
-## P2: Awesome AI Devtools
+## P0: Awesome AI Devtools
 
 Target: [jamesmurdza/awesome-ai-devtools](https://github.com/jamesmurdza/awesome-ai-devtools)
 
-Gate before submitting: npm package publish should succeed first, and the README should keep the demo GIF, fresh-agent walkthrough and agent-surface recipes visible. The list is a higher-exposure AI developer-tool directory, so the entry must be framed as AI coding-agent context/configuration infrastructure, not a general-purpose SDLC framework.
+Status: opened as https://github.com/jamesmurdza/awesome-ai-devtools/pull/636.
+
+Why it fits now: the list has a matching `Agent Infrastructure / Configuration & Context Management` section, a larger AI developer-tool audience and recent upstream activity. The entry is framed as AI coding-agent context/configuration infrastructure, not a general-purpose SDLC framework.
 
 Suggested category: `Agent Infrastructure / Configuration & Context Management`.
 
@@ -129,11 +135,71 @@ It is a developer-focused tool for AI coding-agent context recovery: it installs
 - [x] The description matches the style of other entries
 ```
 
-## P2: Awesome OpenCode
+## P0: Awesome CLI Coding Agents
+
+Target: [bradAGI/awesome-cli-coding-agents](https://github.com/bradAGI/awesome-cli-coding-agents)
+
+Status: opened as https://github.com/bradAGI/awesome-cli-coding-agents/pull/125.
+
+Why it fits now: the list explicitly covers CLI coding agents and the harnesses that orchestrate, sandbox or extend them. Project Tiny Context Harness is a CLI-distributed repo-memory harness for Codex, Claude Code, Cursor, Gemini CLI, OpenCode and similar agents.
+
+Suggested section: `Harnesses & orchestration / Agent infrastructure`.
+
+Suggested entry:
+
+```md
+- **[Project Tiny Context Harness](https://github.com/Seven128/project-tiny-context-harness)** `⭐ 0` — Minimal repo-native project memory for CLI coding agents. Installs `AGENTS.md`, `project_context/**`, role Skills, and a `validate-context` gate so Codex, Claude Code, Cursor, Gemini CLI, OpenCode, and similar agents can recover project intent, boundaries, and validation paths across fresh sessions. MIT.
+```
+
+PR title:
+
+```text
+Add Project Tiny Context Harness to agent infrastructure
+```
+
+PR body:
+
+```text
+Adds Project Tiny Context Harness under Agent infrastructure.
+
+It fits this list as a small CLI-distributed harness for coding-agent recovery: repo-local AGENTS.md guidance, project_context/** files, role Skills, and validate-context checks help fresh Codex, Claude Code, Cursor, Gemini CLI, OpenCode, and similar sessions recover project intent and validation paths.
+```
+
+## P0: Awesome AI Coding Tools
+
+Target: [ai-for-developers/awesome-ai-coding-tools](https://github.com/ai-for-developers/awesome-ai-coding-tools)
+
+Status: opened as https://github.com/ai-for-developers/awesome-ai-coding-tools/pull/408.
+
+Why it fits now: the list has a `Developer Productivity Tools` section with adjacent project-memory and coding-agent productivity tools, a larger audience and recent merge activity.
+
+Suggested section: `Developer Productivity Tools`.
+
+Suggested entry:
+
+```md
+- **[Project Tiny Context Harness](https://github.com/Seven128/project-tiny-context-harness)** – Minimal repo-native project memory for AI coding agents. Installs `AGENTS.md`, `project_context/**`, role Skills, and a `validate-context` gate so fresh Codex, Claude Code, Cursor, Gemini CLI, OpenCode, and similar sessions can recover project intent, boundaries, and validation paths.
+```
+
+PR title:
+
+```text
+Add Project Tiny Context Harness
+```
+
+PR body:
+
+```text
+Adds Project Tiny Context Harness under Developer Productivity Tools.
+
+It is an open-source CLI for AI coding-agent context recovery: repo-local AGENTS.md, project_context/**, role Skills, and validate-context checks help fresh agent sessions recover project intent and validation paths without adding a full SDLC workflow.
+```
+
+## P1: Awesome OpenCode
 
 Target: [awesome-opencode/awesome-opencode](https://github.com/awesome-opencode/awesome-opencode)
 
-Why it fits now: the list accepts YAML entries under `data/projects/` for tools, integrations and utilities. Project Tiny Context Harness now has a documented OpenCode setup path in `docs/agent-surface-recipes.md`, while the product remains tool-neutral and avoids claiming to be an OpenCode plugin.
+Why it fits, but lower priority now: the list accepts YAML entries under `data/projects/` for tools, integrations and utilities. Project Tiny Context Harness now has a documented OpenCode setup path in `docs/agent-surface-recipes.md`, while the product remains tool-neutral and avoids claiming to be an OpenCode plugin. Its audience is good, but recent maintainer activity is weaker than the opened P0 targets.
 
 Suggested category: `data/projects/`.
 
@@ -221,7 +287,10 @@ Add Project Tiny Context Harness to context engineering catalog
 2. Monitor `Picrew/awesome-agent-harness#22`; respond only within the same claim boundary.
 3. Monitor `Transcenda/awesome-agentic-coding#4`; respond only within the same claim boundary.
 4. Monitor `jordimas/awesome-agentic-engineering#4`; respond only within the same claim boundary.
-5. Submit `awesome-opencode` if the README still links the OpenCode setup note and broader-list timing is deliberate.
-6. Submit `awesome-ai-devtools` if the README still shows the demo GIF and agent-surface recipes and broader-list timing is deliberate.
-7. Wait for standalone Skill packaging before `awesome-agent-skills`.
-8. If a maintainer rejects the wording as too framework-like, revise toward "repo-native context recovery" and away from "SDLC".
+5. Monitor `jamesmurdza/awesome-ai-devtools#636`; respond only within the same claim boundary.
+6. Monitor `bradAGI/awesome-cli-coding-agents#125`; respond only within the same claim boundary.
+7. Monitor `ai-for-developers/awesome-ai-coding-tools#408`; respond only within the same claim boundary.
+8. Revisit `kyrolabs/awesome-agents` only after traction or accepted-list signal because its rules caution against brand-new projects without demonstrated traction.
+9. Submit `awesome-opencode` only if OpenCode-specific relevance becomes useful or maintainer activity improves.
+10. Wait for standalone Skill packaging before `awesome-agent-skills`.
+11. If a maintainer rejects the wording as too framework-like, revise toward "repo-native context recovery" and away from "SDLC".

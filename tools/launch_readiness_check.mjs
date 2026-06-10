@@ -1261,20 +1261,24 @@ function localChecks() {
     hasFile("docs/launch/awesome-list-submissions.md") &&
       contains(awesomeListSubmissions, /Awesome List Submission Packet/) &&
       contains(awesomeListSubmissions, /Recommended Order/) &&
-      contains(awesomeListSubmissions, /1\. `ai-boost\/awesome-harness-engineering`/) &&
-      contains(awesomeListSubmissions, /2\. `Picrew\/awesome-agent-harness`/) &&
+      contains(awesomeListSubmissions, /fit x maintenance activity x audience scale/) &&
       contains(awesomeListSubmissions, /npm run launch:external-prs/) &&
       contains(awesomeListSubmissions, /--live --clean/) &&
       contains(awesomeListSubmissions, /Transcenda\/awesome-agentic-coding/) &&
       contains(awesomeListSubmissions, /jordimas\/awesome-agentic-engineering/) &&
       contains(awesomeListSubmissions, /awesome-opencode\/awesome-opencode/) &&
       contains(awesomeListSubmissions, /awesome-ai-devtools/) &&
+      contains(awesomeListSubmissions, /bradAGI\/awesome-cli-coding-agents/) &&
+      contains(awesomeListSubmissions, /ai-for-developers\/awesome-ai-coding-tools/) &&
+      contains(awesomeListSubmissions, /awesome-ai-devtools\/pull\/636/) &&
+      contains(awesomeListSubmissions, /awesome-cli-coding-agents\/pull\/125/) &&
+      contains(awesomeListSubmissions, /awesome-ai-coding-tools\/pull\/408/) &&
       contains(awesomeListSubmissions, /ai-boost\/awesome-harness-engineering/) &&
       contains(awesomeListSubmissions, /Picrew\/awesome-agent-harness/) &&
       contains(awesomeListSubmissions, /Agent Infrastructure \/ Configuration & Context Management/) &&
       contains(awesomeListSubmissions, /external-prs\/README\.md/) &&
       contains(awesomeListSubmissions, /Do not claim adoption, benchmark wins, awards/),
-    "Awesome-list submission packet has narrow-first curated-list PR copy and deferred-list gates."
+    "Awesome-list submission packet has high-score curated-list PR copy and deferred-list gates."
   );
   addCheck(
     checks,
@@ -1285,15 +1289,14 @@ function localChecks() {
       contains(externalPrPacketScript, /--live clones upstream repositories into tmp/) &&
       contains(externalPrPacketScript, /git apply/) &&
       contains(externalPrPacketScript, /git diff/) &&
-      contains(externalPrPacketScript, /Remaining P2 packets have not been opened/) &&
+      contains(externalPrPacketScript, /No remaining packet should be opened automatically/) &&
       contains(externalPrPacketScript, /benchmark-proven\|proven/) &&
       contains(launchKit, /npm run launch:external-prs/) &&
       contains(launchKit, /Curated-list patch packets/) &&
       contains(awesomeListSubmissions, /npm run launch:external-prs -- --live --clean/) &&
       contains(externalPrPacket, /npm run launch:external-prs/) &&
       contains(externalPrPacket, /Recommended Opening Order/) &&
-      contains(externalPrPacket, /1\. `ai-boost\/awesome-harness-engineering`/) &&
-      contains(externalPrPacket, /2\. `Picrew\/awesome-agent-harness`/) &&
+      contains(externalPrPacket, /fit x maintenance activity x audience scale/) &&
       contains(externalPrPacket, /does not fork repositories, push branches or open PRs/),
     "External PR packet check verifies curated-list packet integrity and offers an optional live patch-apply check before PR creation."
   );
@@ -1317,7 +1320,10 @@ function localChecks() {
       contains(externalPrPacket, /Picrew\/awesome-agent-harness\/pull\/22/) &&
       contains(externalPrPacket, /Transcenda\/awesome-agentic-coding\/pull\/4/) &&
       contains(externalPrPacket, /jordimas\/awesome-agentic-engineering\/pull\/4/) &&
-      contains(externalPrPacket, /Remaining P2 packets have not been opened/) &&
+      contains(externalPrPacket, /jamesmurdza\/awesome-ai-devtools\/pull\/636/) &&
+      contains(externalPrPacket, /bradAGI\/awesome-cli-coding-agents\/pull\/125/) &&
+      contains(externalPrPacket, /ai-for-developers\/awesome-ai-coding-tools\/pull\/408/) &&
+      contains(externalPrPacket, /No remaining packet should be opened automatically/) &&
       contains(externalPrPacket, /gh repo fork Transcenda\/awesome-agentic-coding --clone/) &&
       contains(externalPrPacket, /gh repo fork jordimas\/awesome-agentic-engineering --clone/) &&
       contains(externalPrPacket, /gh repo fork awesome-opencode\/awesome-opencode --clone/) &&
@@ -1424,6 +1430,8 @@ function localChecks() {
       contains(marketMap, /10-100 stars/) &&
       contains(marketMap, /Latest release is `Project Tiny Context Harness 0\.2\.41`/) &&
       contains(marketMap, /first public Show HN post and first regular HN comment are live/) &&
+      contains(marketMap, /fit x maintenance activity x audience scale/) &&
+      contains(marketMap, /jamesmurdza\/awesome-ai-devtools\/pull\/636/) &&
       contains(marketMap, /HN first-comment replies/) &&
       contains(marketMap, /download window is not available yet/),
     "Market map has competitor snapshot, feasibility bands and current release/readiness state."
@@ -1442,7 +1450,11 @@ function localChecks() {
       contains(outreachTargets, /`v0\.2\.41` is published on npm through Trusted Publishing/) &&
       contains(outreachTargets, /first public post and first regular HN comment are live/) &&
       contains(outreachTargets, /https:\/\/news\.ycombinator\.com\/item\?id=48481205/) &&
-      contains(outreachTargets, /four narrow\/P1 curated-list PRs are open/) &&
+      contains(outreachTargets, /Seven curated-list PRs are open/) &&
+      contains(outreachTargets, /fit x maintenance activity x audience scale/) &&
+      contains(outreachTargets, /awesome-ai-devtools\/pull\/636/) &&
+      contains(outreachTargets, /awesome-cli-coding-agents\/pull\/125/) &&
+      contains(outreachTargets, /awesome-ai-coding-tools\/pull\/408/) &&
       contains(outreachTargets, /awesome-list-submissions\.md/) &&
       contains(outreachTargets, /Awards/) &&
       contains(outreachTargets, /Do not submit to award programs before the demo and first public feedback exist/),

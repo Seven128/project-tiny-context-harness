@@ -28,11 +28,11 @@ Ready now:
 Still pending:
 
 - First-channel 6-hour and 24-hour metrics are not complete yet.
-- Four curated-list PRs are open and waiting for maintainer feedback: [ai-boost/awesome-harness-engineering#58](https://github.com/ai-boost/awesome-harness-engineering/pull/58), [Picrew/awesome-agent-harness#22](https://github.com/Picrew/awesome-agent-harness/pull/22), [Transcenda/awesome-agentic-coding#4](https://github.com/Transcenda/awesome-agentic-coding/pull/4) and [jordimas/awesome-agentic-engineering#4](https://github.com/jordimas/awesome-agentic-engineering/pull/4).
+- Seven curated-list PRs are open and waiting for maintainer feedback: [ai-boost/awesome-harness-engineering#58](https://github.com/ai-boost/awesome-harness-engineering/pull/58), [Picrew/awesome-agent-harness#22](https://github.com/Picrew/awesome-agent-harness/pull/22), [Transcenda/awesome-agentic-coding#4](https://github.com/Transcenda/awesome-agentic-coding/pull/4), [jordimas/awesome-agentic-engineering#4](https://github.com/jordimas/awesome-agentic-engineering/pull/4), [jamesmurdza/awesome-ai-devtools#636](https://github.com/jamesmurdza/awesome-ai-devtools/pull/636), [bradAGI/awesome-cli-coding-agents#125](https://github.com/bradAGI/awesome-cli-coding-agents/pull/125) and [ai-for-developers/awesome-ai-coding-tools#408](https://github.com/ai-for-developers/awesome-ai-coding-tools/pull/408).
 - No outside adoption report, testimonial or contribution.
 - 0 GitHub stars and 0 forks at snapshot time.
 
-Practical implication: broad public launch is no longer blocked by npm availability, GitHub About metadata, release metadata, demo media or HN maintainer context. The first public post and first regular HN comment are live, and the four narrow/P1 curated-list PRs are open. The next work is feedback handling, 6-hour/24-hour metrics and PR-response handling. Awards and high-star outcomes are still evidence-gated.
+Practical implication: broad public launch is no longer blocked by npm availability, GitHub About metadata, release metadata, demo media or HN maintainer context. The first public post and first regular HN comment are live, and seven curated-list PRs are open. The next work is feedback handling, 6-hour/24-hour metrics and PR-response handling. Awards and high-star outcomes are still evidence-gated.
 
 ## Priority Sequence
 
@@ -40,9 +40,9 @@ Practical implication: broad public launch is no longer blocked by npm availabil
 |---:|---|---|---|---|
 | 0 | Private review | 5-10 experienced coding-agent users can still catch README, install or positioning confusion before broad promotion. | `docs/launch/reviewer-quickstart.md`, `docs/launch/private-review.md`, `docs/launch/private-review-shortlist.md`, `docs/launch/adoption-story-template.md`, npm install path, optional source preview path, no star ask. | Reviewers describe concrete agent-memory drift, README confusion or missing recovery facts. |
 | 1 | Hacker News Show HN | Live at https://news.ycombinator.com/item?id=48479619. | GitHub URL, first regular comment, demo link and explicit feedback ask. | Comments discuss agent handoff/context drift rather than generic AI tooling. |
-| 2 | Agentic-coding awesome lists | Four narrow/P1 lists match repo-level context delivery, agent instructions and team adoption now. | Curated-list PRs are open: [#58](https://github.com/ai-boost/awesome-harness-engineering/pull/58), [#22](https://github.com/Picrew/awesome-agent-harness/pull/22), [Transcenda#4](https://github.com/Transcenda/awesome-agentic-coding/pull/4) and [jordimas#4](https://github.com/jordimas/awesome-agentic-engineering/pull/4). Use `docs/launch/awesome-list-submissions.md` and `docs/launch/external-prs/` only for remaining P2 PRs, no benchmark/adoption claims. | Listing accepted or maintainer feedback clarifies the category. |
-| 3 | Awesome OpenCode | The README now includes an OpenCode setup note; the list accepts project YAML entries for tools and utilities. | `data/projects/` YAML patch from `docs/launch/external-prs/`, no plugin claim. | Listing accepted or maintainers clarify OpenCode relevance. |
-| 4 | Awesome AI Devtools | Higher-exposure directory with a matching Agent Infrastructure / Configuration & Context Management category. | README patch and PR-template body from `docs/launch/external-prs/`, no benchmark claim. | Listing accepted or maintainer feedback clarifies category fit. |
+| 2 | High-score curated-list PRs | Current best durable-discovery targets are selected by `fit x maintenance activity x audience scale`, not by stars alone. | Seven PRs are open: [#58](https://github.com/ai-boost/awesome-harness-engineering/pull/58), [#22](https://github.com/Picrew/awesome-agent-harness/pull/22), [Transcenda#4](https://github.com/Transcenda/awesome-agentic-coding/pull/4), [jordimas#4](https://github.com/jordimas/awesome-agentic-engineering/pull/4), [awesome-ai-devtools#636](https://github.com/jamesmurdza/awesome-ai-devtools/pull/636), [awesome-cli-coding-agents#125](https://github.com/bradAGI/awesome-cli-coding-agents/pull/125) and [awesome-ai-coding-tools#408](https://github.com/ai-for-developers/awesome-ai-coding-tools/pull/408). | Listing accepted or maintainer feedback clarifies the category. |
+| 3 | P0-watch directories | `kyrolabs/awesome-agents` is very active but has stricter traction rules; `awesome-opencode` has high audience but lower recent activity. | Submit only after a feedback/listing signal, a specific category request, or activity improvement. | Maintainer rules and recent PR handling still support the submission. |
+| 4 | Awesome OpenCode | The README now includes an OpenCode setup note; the list accepts project YAML entries for tools and utilities, but recent activity makes it lower priority than active targets. | `data/projects/` YAML patch from `docs/launch/external-prs/`, no plugin claim. | Listing accepted or maintainers clarify OpenCode relevance. |
 | 5 | Product Hunt | Product Hunt is useful for distribution, feedback and social proof; submissions can be scheduled up to one month ahead. | Demo media, tagline, maker comment, at least two gallery images/GIFs, GitHub/npm links. | Reviews/comments from developer-tool users and enough traffic to validate messaging. |
 | 6 | Reddit / niche communities | Good for focused feedback from Codex, Claude Code, Cursor and local-first tool users. | Reddit draft from launch kit, demo, #4 adoption issue link. | Replies describe missing facts agents rediscover in real repos. |
 | 7 | Broader awesome lists | Higher-exposure lists create durable discovery after the README/demo are clear. | One-line description, category fit, demo link, no award/benchmark claims. | Listing accepted or maintainers give positioning feedback. |
@@ -88,16 +88,27 @@ Submission packet:
 
 ### Curated Lists
 
-The four narrow/P1 curated-list PRs are open. Monitor maintainer feedback before opening broader lists:
+The list-priority rule is:
+
+```text
+target score = category fit x maintenance activity x audience scale
+```
+
+Do not treat star count as a standalone priority. A high-star list with no recent PR handling should be lower than a smaller list whose maintainers are actively merging relevant entries.
+
+Seven curated-list PRs are open:
 
 - [ai-boost/awesome-harness-engineering#58](https://github.com/ai-boost/awesome-harness-engineering/pull/58), under `Context Delivery & Compaction`.
 - [Picrew/awesome-agent-harness#22](https://github.com/Picrew/awesome-agent-harness/pull/22), under `Context & Working-State Engineering`.
 - [Transcenda/awesome-agentic-coding#4](https://github.com/Transcenda/awesome-agentic-coding/pull/4), under `Agent instructions and Skills`.
 - [jordimas/awesome-agentic-engineering#4](https://github.com/jordimas/awesome-agentic-engineering/pull/4), under `Team Adoption`.
+- [jamesmurdza/awesome-ai-devtools#636](https://github.com/jamesmurdza/awesome-ai-devtools/pull/636), under `Agent Infrastructure / Configuration & Context Management`.
+- [bradAGI/awesome-cli-coding-agents#125](https://github.com/bradAGI/awesome-cli-coding-agents/pull/125), under `Harnesses & orchestration / Agent infrastructure`.
+- [ai-for-developers/awesome-ai-coding-tools#408](https://github.com/ai-for-developers/awesome-ai-coding-tools/pull/408), under `Developer Productivity Tools`.
 
-Exact patch files, PR titles, PR bodies and manual `gh` commands for remaining lists live in [external-prs/README.md](external-prs/README.md).
+Prioritization and listing copy live in [awesome-list-submissions.md](awesome-list-submissions.md). Exact patch files, PR titles, PR bodies and manual `gh` commands for remaining prepared lists live in [external-prs/README.md](external-prs/README.md). Keep future submissions factual: project memory and context recovery for coding agents, no benchmark/adoption/award claims.
 
-Then try [awesome-ai-devtools](https://github.com/jamesmurdza/awesome-ai-devtools). It has an `Agent Infrastructure / Configuration & Context Management` category that fits repo-native AI agent context recovery. Use the exact README patch and PR-template body in [external-prs/README.md](external-prs/README.md), and keep the wording focused on AI coding-agent project memory.
+`kyrolabs/awesome-agents` is a P0-watch target because its activity and audience are strong, but its contribution rules caution against brand-new projects without traction. Revisit after one accepted listing, an external comment, or visible stars/adoption.
 
 Possible listing text:
 
@@ -139,6 +150,7 @@ Do not add a Best Practices or Baseline badge to README until the official site 
 - Keep README, npm and launch copy English-first; keep localized material behind secondary links or as literal compatibility examples.
 - Ask for feedback and missing facts, not stars.
 - Treat stars as distribution telemetry, not proof of quality.
+- Prioritize directory PRs by `fit x maintenance activity x audience scale`; downgrade inactive targets even if they have more stars.
 - Check [claims-boundary.md](claims-boundary.md) before final public copy, awards copy or directory PR wording.
 - Turn repeated questions into README/FAQ or issues within 24 hours.
 - Do not submit to award programs before the demo and first public feedback exist.
@@ -148,7 +160,7 @@ Do not add a Best Practices or Baseline badge to README until the official site 
 1. Monitor the HN story and first regular comment for direct technical questions or repeated confusion.
 2. Track stars, forks, npm downloads and comments for 6 hours and 24 hours with `npm run launch:metrics`.
 3. Patch README/FAQ from repeated confusion.
-4. Monitor the four open curated-list PRs; open broader agentic-coding lists only after maintainer feedback or a deliberate second-wave decision.
+4. Monitor the seven open curated-list PRs; open any further directory PR only after applying the `fit x activity x audience` rule and checking current maintainer responsiveness.
 5. Use the Product Hunt media packet only after the first feedback loop or with a deliberate scheduling decision.
 6. Apply to Codex for Open Source with `docs/launch/codex-for-oss-application.md` if the maintainer wants to disclose current metrics and can submit manually.
 7. Start the OpenSSF Best Practices / Baseline self-assessment with `docs/launch/openssf-best-practices.md` if the maintainer wants another trust signal before broader launch.

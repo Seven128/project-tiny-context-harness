@@ -231,7 +231,7 @@ Within 24 hours:
 - Convert real adoption examples into issue #4 reports, linked issue comments or consented adoption-story notes.
 - If the biggest objection is "this is just AGENTS.md", patch the README before any second-channel post.
 
-Second action if comments are not exposing a major positioning flaw: monitor the four open curated-list PRs from `docs/launch/awesome-list-submissions.md` and respond inside the same claim boundary. Defer Product Hunt and broader P2 list PRs if the first comments show unclear positioning, even though the media packet now exists.
+Second action if comments are not exposing a major positioning flaw: monitor the seven open curated-list PRs from `docs/launch/awesome-list-submissions.md` and respond inside the same claim boundary. Any further list target should be scored by fit x maintenance activity x audience scale; defer Product Hunt and extra directory PRs if the first comments show unclear positioning, even though the media packet now exists.
 
 ## Claims Boundary
 

@@ -149,7 +149,7 @@ function staticChecks() {
   addCheck(
     checks,
     "no-automation-side-effect",
-    /Remaining P2 packets have not been opened/.test(packetReadme) &&
+    /No remaining packet should be opened automatically/.test(packetReadme) &&
       /does not fork repositories, push branches or open PRs/.test(packetReadme),
     "Packet documents opened curated-list PRs while keeping remaining PR creation out of automation."
   );
@@ -158,15 +158,15 @@ function staticChecks() {
   addCheck(checks, "github-url-primary", /Use the GitHub repository URL, not npm/.test(packetReadme), "Packet uses GitHub repository URL as listing target.");
   addCheck(
     checks,
-    "recommended-order-narrow-first",
-    /Recommended Order[\s\S]*1\. `ai-boost\/awesome-harness-engineering`[\s\S]*2\. `Picrew\/awesome-agent-harness`/.test(awesomeListSubmissions),
-    "Awesome-list packet starts with narrow harness/context targets before broader AI dev-tool directories."
+    "recommended-order-high-score",
+    /Recommended Order[\s\S]*fit x maintenance activity x audience scale[\s\S]*jamesmurdza\/awesome-ai-devtools[\s\S]*bradAGI\/awesome-cli-coding-agents[\s\S]*ai-for-developers\/awesome-ai-coding-tools/.test(awesomeListSubmissions),
+    "Awesome-list packet prioritizes targets by category fit, maintainer activity and audience scale."
   );
   addCheck(
     checks,
-    "external-pr-readme-order-narrow-first",
-    /Recommended Opening Order[\s\S]*1\. `ai-boost\/awesome-harness-engineering`[\s\S]*2\. `Picrew\/awesome-agent-harness`/.test(packetReadme),
-    "External PR execution packet starts with narrow harness/context targets before broader AI dev-tool directories."
+    "external-pr-readme-order-high-score",
+    /Recommended Opening Order[\s\S]*fit x maintenance activity x audience scale[\s\S]*jamesmurdza\/awesome-ai-devtools[\s\S]*bradAGI\/awesome-cli-coding-agents[\s\S]*ai-for-developers\/awesome-ai-coding-tools/.test(packetReadme),
+    "External PR execution packet records the high-score target rule and opened active-directory PRs."
   );
 
   checkForbidden(checks, "external-pr-readme", packetReadme);

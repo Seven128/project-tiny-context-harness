@@ -21,7 +21,7 @@ Public state after the repository rename, checked against public GitHub and npm 
 | npm downloads | Renamed package download window is not available yet through the npm downloads API; legacy package last-week downloads remain useful only as historical distribution telemetry |
 | Launch readiness | Local `npm run launch:check` and strict external check pass; the first public Show HN post and first regular HN comment are live |
 
-Interpretation: GitHub metadata, npm distribution, the renamed GitHub Release and demo media are live. The first public Show HN post and first regular HN comment are live, and the first four narrow/P1 curated-list PRs are open. The remaining work for serious public distribution is feedback handling: track 6-hour and 24-hour metrics, patch README/FAQ from repeated confusion and respond to curated-list maintainer feedback.
+Interpretation: GitHub metadata, npm distribution, the renamed GitHub Release and demo media are live. The first public Show HN post and first regular HN comment are live. Seven curated-list PRs are open: four narrow/P1 category-fit PRs plus three higher-activity P0 directory PRs selected by fit x maintenance activity x audience scale. The remaining work for serious public distribution is feedback handling: track 6-hour and 24-hour metrics, patch README/FAQ from repeated confusion and respond to curated-list maintainer feedback.
 
 ## Competitive Snapshot
 
@@ -105,7 +105,7 @@ Recommended sequence:
 
 1. Keep the Show HN thread focused on technical feedback and missing recovery facts.
 2. Update README/launch copy from actual confusion points within 24 hours.
-3. Monitor the four open narrow/P1 curated-list PRs, then open broader lists only after maintainer feedback or acceptance.
+3. Monitor the seven open curated-list PRs, then choose any next list by `fit x maintenance activity x audience scale`; do not wait on inactive lists just because they were in the older queue.
 4. Reuse the same claim on smaller communities only after the first feedback pass.
 5. Use Product Hunt only after the HN feedback loop or with a deliberate scheduling decision.
 6. Nominate for awards only after real use appears or a minimum eligibility threshold is met.
@@ -121,15 +121,22 @@ Recommended sequence:
 
 ## Adjacent Curated Lists
 
-These are lower priority than the first public launch, but useful after the demo exists. Start with narrow harness/context lists before broader AI dev-tool lists because a new 0-star package is easier to evaluate on category fit than on social proof.
+Use a three-factor score before opening more PRs:
 
-| List | Current scale | Fit | Gate before PR |
+```text
+target score = category fit x maintenance activity x audience scale
+```
+
+Maintenance activity is a hard factor. A large list with no recent merged PRs can be worse than a smaller list whose maintainer is actively merging. This avoids spending launch time waiting on stale directories.
+
+| List | Current scale / activity | Fit | Status / gate |
 |---|---:|---|---|
-| [awesome-harness-engineering](https://github.com/ai-boost/awesome-harness-engineering) | niche | Direct context-delivery and harness-engineering fit. | Open as [PR #58](https://github.com/ai-boost/awesome-harness-engineering/pull/58); monitor maintainer feedback. |
+| [awesome-harness-engineering](https://github.com/ai-boost/awesome-harness-engineering) | niche, lower recent activity | Direct context-delivery and harness-engineering fit. | Open as [PR #58](https://github.com/ai-boost/awesome-harness-engineering/pull/58); monitor, but do not let slower response block higher-activity targets. |
 | [awesome-agent-harness](https://github.com/Picrew/awesome-agent-harness) | niche | Direct Context & Working-State Engineering fit. | Open as [PR #22](https://github.com/Picrew/awesome-agent-harness/pull/22); monitor maintainer feedback. |
 | [awesome-agentic-coding](https://github.com/Transcenda/awesome-agentic-coding) | niche | Direct agent-instructions and Skills toolbox fit. | Open as [PR #4](https://github.com/Transcenda/awesome-agentic-coding/pull/4); monitor maintainer feedback. |
 | [awesome-agentic-engineering](https://github.com/jordimas/awesome-agentic-engineering) | niche | Team-adoption fit for practical AI coding-agent workflow resources. | Open as [PR #4](https://github.com/jordimas/awesome-agentic-engineering/pull/4); monitor maintainer feedback. |
-| [awesome-ai-devtools](https://github.com/jamesmurdza/awesome-ai-devtools) | 3,825 stars | Broad AI developer tools list; likely the best larger-list target after a narrow listing or public feedback. | Demo live, README concise, one-line category fit ready. |
-| [awesome-opencode](https://github.com/awesome-opencode/awesome-opencode) | 7,766 stars | OpenCode ecosystem list; fit is now plausible because README links an OpenCode setup note. | Submit the prepared `data/projects/` YAML patch after npm publish; do not claim this is an OpenCode plugin. |
-| [awesome-agents](https://github.com/kyrolabs/awesome-agents) | 2,403 stars | Broad AI agent list; Harness is support infrastructure, not an agent. | Position as agent workflow/context infrastructure, not an autonomous agent. |
-| [awesome-opensource-ai](https://github.com/alvinreal/awesome-opensource-ai) | 3,833 stars | Broad open-source AI list; possible after visible adoption. | Wait for demo and at least one adoption report. |
+| [awesome-ai-devtools](https://github.com/jamesmurdza/awesome-ai-devtools) | 3,827 stars, pushed 2026-06-07 | Strong Agent Infrastructure / Configuration & Context Management fit and larger dev-tool audience. | Open as [PR #636](https://github.com/jamesmurdza/awesome-ai-devtools/pull/636). |
+| [awesome-cli-coding-agents](https://github.com/bradAGI/awesome-cli-coding-agents) | 538 stars, pushed 2026-06-08 | Very strong CLI coding-agent harness / agent-infrastructure fit. | Open as [PR #125](https://github.com/bradAGI/awesome-cli-coding-agents/pull/125). |
+| [awesome-ai-coding-tools](https://github.com/ai-for-developers/awesome-ai-coding-tools) | 1,775 stars, pushed 2026-04-25 | Good Developer Productivity Tools fit beside project-memory and agent-productivity tools. | Open as [PR #408](https://github.com/ai-for-developers/awesome-ai-coding-tools/pull/408). |
+| [awesome-agents](https://github.com/kyrolabs/awesome-agents) | 2,407 stars, highly active | Broad agent list; fit is plausible as knowledge/context infrastructure, but contribution rules caution against brand-new projects without traction. | P0-watch: defer until at least one listing, feedback signal or visible traction reduces rejection risk. |
+| [awesome-opencode](https://github.com/awesome-opencode/awesome-opencode) | 7,800 stars, lower recent activity | OpenCode ecosystem list; fit is plausible because README links an OpenCode setup note. | Downgrade below active targets despite higher stars; submit only if OpenCode relevance is requested or activity resumes. |
