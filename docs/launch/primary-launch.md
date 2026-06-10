@@ -2,7 +2,7 @@
 
 Snapshot date: 2026-06-10.
 
-This is the copy-ready launch packet for the first public push after `project-tiny-context-harness@0.2.39` is published. Do not post broadly while the npm package still returns 404.
+This is the copy-ready launch packet for the first public push after `project-tiny-context-harness@0.2.40` is published.
 
 ## Launch Decision
 
@@ -21,14 +21,14 @@ npm run release:npm
 npm run launch:check
 npm run launch:strict-external
 npm run launch:metrics -- --output tmp/sdlc/launch-metrics/baseline.md
-npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.39 --clean
+npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.40 --clean
 ```
 
 Confirm:
 
-- `docs/launch/npm-publish-runbook.md` has been followed if npm still returns 404 before publish.
+- `npm run launch:strict-external` passes; if npm ever returns 404 again, use `docs/launch/npm-publish-runbook.md` before broad posting.
 - GitHub stars/forks and npm downloads baseline are recorded with `npm run launch:metrics`.
-- npm `project-tiny-context-harness@0.2.39` is published and installable.
+- npm `project-tiny-context-harness@0.2.40` is published and installable.
 - Issue #4 is pinned and open for adoption reports.
 - Issue #5 has the current demo packet and repo-hosted GIF URL.
 - README first screen still shows install, 60-second trial and non-goals.

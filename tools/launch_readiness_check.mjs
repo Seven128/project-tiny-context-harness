@@ -108,10 +108,6 @@ function hasCjk(content) {
 
 const scorecardBadgePattern =
   /\[!\[OpenSSF Scorecard\]\(https:\/\/api\.securityscorecards\.dev\/projects\/github\.com\/Seven128\/project-tiny-context-harness\/badge\)\]\(https:\/\/securityscorecards\.dev\/viewer\/\?uri=github\.com\/Seven128\/project-tiny-context-harness\)/;
-const rootPendingNpmBadgePattern =
-  /\[!\[npm publish status\]\(https:\/\/img\.shields\.io\/badge\/npm-pending%20first%20publish-orange\.svg\)\]\(docs\/launch\/npm-publish-runbook\.md\)/;
-const packagePendingNpmBadgePattern =
-  /\[!\[npm publish status\]\(https:\/\/img\.shields\.io\/badge\/npm-pending%20first%20publish-orange\.svg\)\]\(https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/blob\/main\/docs\/launch\/npm-publish-runbook\.md\)/;
 const liveNpmVersionBadgePattern = /https:\/\/img\.shields\.io\/npm\/v\/project-tiny-context-harness\.svg/;
 
 function requestJson(url) {
@@ -315,9 +311,8 @@ function localChecks() {
       `${id}-demo-media`,
       contains(content, /demo-terminal\.gif/) &&
         contains(content, /The demo shows the core loop/) &&
-        contains(content, /While npm publication is pending, use the no-install and source-preview paths below/) &&
-        contains(content, /after publish, use the npm install path/),
-      `${id} embeds the launch demo GIF and explains the recovery loop without sending prepublish visitors to npm first.`
+        contains(content, /Use the npm install path below, or inspect the no-install previews first/),
+      `${id} embeds the launch demo GIF and explains the recovery loop while routing visitors to npm install first.`
     );
     addCheck(
       checks,
@@ -327,7 +322,7 @@ function localChecks() {
         contains(firstLines(content, 70), /Minimal Context sample guide/) &&
         contains(firstLines(content, 70), /examples\/minimal-context-sample/) &&
         contains(launchKit, /No-install preview/) &&
-        contains(launchKit, /Visitors can understand the generated recovery surface before npm publish/),
+        contains(launchKit, /Visitors can understand the generated recovery surface before local setup, source checkout or Codespaces startup/),
       `${id} gives first-screen no-install links to the walkthrough and browseable sample.`
     );
   }
@@ -383,53 +378,51 @@ function localChecks() {
   );
   addCheck(
     checks,
-    "prepublish-status-badge",
-    rootPendingNpmBadgePattern.test(rootReadme) &&
-      packagePendingNpmBadgePattern.test(packageReadme) &&
-      !liveNpmVersionBadgePattern.test(firstLines(rootReadme, 16)) &&
-      !liveNpmVersionBadgePattern.test(firstLines(packageReadme, 16)),
-    "README and package README show a transparent pending-npm badge instead of a live npm version badge while the renamed package returns 404."
+    "npm-version-badge",
+    liveNpmVersionBadgePattern.test(firstLines(rootReadme, 16)) &&
+      liveNpmVersionBadgePattern.test(firstLines(packageReadme, 16)) &&
+      !contains(firstLines(rootReadme, 16), /npm-pending/) &&
+      !contains(firstLines(packageReadme, 16), /npm-pending/),
+    "README and package README show the live npm version badge now that the renamed package is published."
   );
   addCheck(
     checks,
-    "root-readme-prepublish-boundary",
-    contains(rootReadme, /Rename publish status:/) &&
-      contains(rootReadme, /npm `project-tiny-context-harness` is still pending registry publication/) &&
-      contains(rootReadme, /install commands below are the post-publish path/) &&
-      contains(rootReadme, /Post-publish install path:/) &&
-      contains(rootReadme, /Try now before npm publish:/) &&
-      contains(rootReadme, /npm run launch:strict-external` no longer reports `npm-fetch`/) &&
-      contains(rootReadme, /Codespaces or source-preview path/) &&
-      contains(rootReadme, /docs\/launch\/npm-publish-runbook\.md/),
-    "Root README transparently labels install commands as post-publish while npm still returns 404."
+    "root-readme-install-path",
+    contains(rootReadme, /Install:/) &&
+      contains(rootReadme, /npm install -D project-tiny-context-harness@latest/) &&
+      contains(rootReadme, /npx --yes --package project-tiny-context-harness@latest sdlc-harness init/) &&
+      !contains(firstLines(rootReadme, 120), /pending registry publication/) &&
+      !contains(firstLines(rootReadme, 120), /Post-publish install path:/) &&
+      !contains(firstLines(rootReadme, 120), /Try now before npm publish:/),
+    "Root README shows the live npm install path without prepublish caveats."
   );
   addCheck(
     checks,
     "root-readme-source-preview",
-    contains(rootReadme, /Try now before npm publish:/) &&
+    contains(rootReadme, /Source checkout preview:/) &&
       contains(rootReadme, /git clone https:\/\/github\.com\/Seven128\/project-tiny-context-harness\.git/) &&
       contains(rootReadme, /npm run smoke:quickstart/) &&
       contains(rootReadme, /npm run preview:pack/) &&
-      contains(rootReadme, /tmp\/sdlc\/source-preview\/package\/project-tiny-context-harness-0\.2\.39\.tgz/) &&
+      contains(rootReadme, /tmp\/sdlc\/source-preview\/package\/project-tiny-context-harness-0\.2\.40\.tgz/) &&
       contains(rootReadme, /npx --no-install sdlc-harness init --adopt/) &&
       contains(rootReadme, /packs the local workspace, installs it into a disposable repo/) &&
       contains(rootReadme, /validates the generated Minimal Context files/) &&
-      contains(rootReadme, /Use this tarball path only for source-preview testing while npm publication is pending/) &&
+      contains(rootReadme, /Use this path for package development, source-preview testing or private review/) &&
       contains(rootReadme, /source_preview_report\.yml/),
-    "Root README gives reviewers a source-based preview path while npm publish is pending."
+    "Root README gives maintainers and reviewers a source-based preview path without making it the normal install route."
   );
   addCheck(
     checks,
     "package-readme-source-preview",
-    contains(packageReadme, /Source preview while npm publish is pending/) &&
+    contains(packageReadme, /Source checkout preview/) &&
       contains(packageReadme, /git clone https:\/\/github\.com\/Seven128\/project-tiny-context-harness\.git/) &&
       contains(packageReadme, /npm run smoke:quickstart/) &&
       contains(packageReadme, /npm run preview:pack/) &&
-      contains(packageReadme, /tmp\/sdlc\/source-preview\/package\/project-tiny-context-harness-0\.2\.39\.tgz/) &&
+      contains(packageReadme, /tmp\/sdlc\/source-preview\/package\/project-tiny-context-harness-0\.2\.40\.tgz/) &&
       contains(packageReadme, /npx --no-install sdlc-harness init --adopt/) &&
-      contains(packageReadme, /Use this tarball path only for source-preview testing while npm publication is pending/) &&
+      contains(packageReadme, /For normal installs, use `project-tiny-context-harness@latest` from npm/) &&
       contains(packageReadme, /source_preview_report\.yml/),
-    "Package README gives reviewers a source-preview tarball path while npm publish is pending."
+    "Package README gives a source-preview tarball path as a fallback for review and package development."
   );
   addCheck(
     checks,
@@ -444,8 +437,8 @@ function localChecks() {
       contains(privateReview, /npm run preview:pack/) &&
       contains(privateReview, /disposable copy of your own repo/) &&
       contains(launchProfile, /npm run preview:pack/) &&
-      contains(launchProfile, /tmp\/sdlc\/source-preview\/package\/project-tiny-context-harness-0\.2\.39\.tgz/),
-    "Source-preview tarball path lets private reviewers test a local package before npm publication."
+      contains(launchProfile, /tmp\/sdlc\/source-preview\/package\/project-tiny-context-harness-0\.2\.40\.tgz/),
+    "Source-preview tarball path lets reviewers and maintainers test a local package build outside the normal npm install route."
   );
   addCheck(
     checks,
@@ -464,7 +457,7 @@ function localChecks() {
       contains(privateReview, /source_preview_report\.yml/) &&
       contains(support, /Source preview report issue template/) &&
       contains(launchKit, /source-preview report form/),
-    "Source preview report issue template gives pre-npm reviewers a focused way to report setup failures without sharing private data."
+    "Source preview report issue template gives reviewers a focused way to report setup failures without sharing private data."
   );
   addCheck(
     checks,
@@ -480,7 +473,7 @@ function localChecks() {
       contains(launchProfile, codespacesUrlPattern) &&
       contains(launchKit, codespacesUrlPattern) &&
       contains(maintainerWorkflow, /\.devcontainer\/\*\*/),
-    "Codespaces source preview gives private reviewers a no-local-setup path while npm publication is pending."
+    "Codespaces source preview gives private reviewers and package developers a no-local-setup path."
   );
   addCheck(
     checks,
@@ -547,7 +540,8 @@ function localChecks() {
       contains(technicalArticle, /repo-native project memory for AI coding agents, not an autonomous SDLC system/) &&
       contains(technicalArticle, /Why Drop The Stage Ceremony/) &&
       contains(technicalArticle, /It is not a benchmark-proven productivity multiplier/) &&
-      contains(technicalArticle, /While npm publication is still pending, use the source preview/),
+      contains(technicalArticle, /Use npm for the normal install path/) &&
+      contains(technicalArticle, /Use the source checkout path for private review, source-preview testing or package development/),
     "Long-form technical article exists, is linked from launch surfaces and keeps claims within the project-memory/no-benchmark boundary."
   );
   addCheck(
@@ -625,10 +619,10 @@ function localChecks() {
       contains(privateReview, /private-review-log-template\.md/) &&
       contains(privateReview, /adoption story/) &&
       contains(privateReview, /Do not ask private reviewers for stars/) &&
-      contains(privateReview, /Broad launch still waits for the renamed package to be installable/) &&
+      contains(privateReview, /Broad launch still waits for `npm run launch:strict-external` to pass/) &&
       contains(privateReview, /quote consent: none, anonymous, public name, or public link/) &&
       contains(privateReview, /Private review is for copy and product clarity, not proof of quality/),
-    "Private review packet supports small pre-launch feedback while npm publish is blocked, without asking for stars or making proof claims."
+    "Private review packet supports small pre-launch feedback before broad promotion, without asking for stars or making proof claims."
   );
   addCheck(
     checks,
@@ -731,7 +725,7 @@ function localChecks() {
       contains(roadmap, /## Next/) &&
       contains(roadmap, /## Later/) &&
       contains(roadmap, /## Not Planned/) &&
-      contains(roadmap, /Publish the renamed npm package/) &&
+      contains(roadmap, /Keep the npm package installable and aligned with README\/package README/) &&
       contains(roadmap, /public adoption stories/) &&
       contains(roadmap, /Re-run delivery benchmarks against the current Minimal Context design/) &&
       contains(roadmap, /Full SDLC phase gates, lifecycle state or work-product trees/) &&
@@ -815,10 +809,10 @@ function localChecks() {
       contains(launchProfile, /Browseable sample repository/) &&
       contains(launchProfile, /examples\/minimal-context-sample/) &&
       contains(launchProfile, /Avoid using `sdlc` as the first tag/) &&
-      contains(launchProfile, /Use GitHub as the primary launch URL and GitHub repository homepage until the renamed npm package is published/) &&
-      contains(launchProfile, /Use npm as the GitHub repository homepage only after/) &&
-      contains(launchProfile, /Use only after npm publish/) &&
-      contains(launchProfile, /Use while npm publish is pending/) &&
+      contains(launchProfile, /Use GitHub as the primary launch URL for public posts/) &&
+      contains(launchProfile, /Use npm as the GitHub repository homepage now that the renamed package is published/) &&
+      contains(launchProfile, /Normal install path/) &&
+      contains(launchProfile, /Source checkout preview/) &&
       contains(launchProfile, /Benchmark-proven faster/) &&
       contains(launchProfile, /Do not make external submission copy look Chinese-first/),
     "Launch profile sheet centralizes English-first external-submission fields and claims boundaries."
@@ -871,16 +865,15 @@ function localChecks() {
   addCheck(
     checks,
     "github-homepage-stage-boundary",
-      contains(launchKit, /Repository homepage while npm publish is pending/) &&
-      contains(launchKit, /https:\/\/github\.com\/Seven128\/project-tiny-context-harness/) &&
-      contains(launchKit, /Repository homepage after `project-tiny-context-harness` is published on npm/) &&
+      contains(launchKit, /Primary launch URL/) &&
+      contains(launchKit, /GitHub repository homepage/) &&
+      contains(launchKit, /https:\/\/www\.npmjs\.com\/package\/project-tiny-context-harness/) &&
       contains(launchKit, /Run `npm run launch:github-metadata` to inspect GitHub description, homepage and topics/) &&
-      contains(launchKit, /Switch homepage to npm only after the renamed package is published/) &&
-      contains(launchProfile, /Use GitHub as the primary launch URL and GitHub repository homepage until the renamed npm package is published/) &&
-      contains(launchProfile, /Use npm as the GitHub repository homepage only after/) &&
-      contains(outreachTargets, /GitHub repository homepage should point to `https:\/\/github\.com\/Seven128\/project-tiny-context-harness` while npm returns 404/) &&
-      contains(outreachTargets, /switch it to the npm package page only after the renamed package is published/),
-    "Launch docs keep GitHub About homepage on the repository while npm is 404, then switch it to npm after first publish."
+      contains(launchProfile, /Use GitHub as the primary launch URL for public posts/) &&
+      contains(launchProfile, /Use npm as the GitHub repository homepage now that the renamed package is published/) &&
+      contains(outreachTargets, /GitHub repository homepage points to the npm package page/) &&
+      contains(outreachTargets, /primary public post should still link to the GitHub repository/),
+    "Launch docs distinguish the public post URL from the GitHub About homepage now that npm is live."
   );
   addCheck(
     checks,
@@ -889,12 +882,10 @@ function localChecks() {
       contains(launchKit, /github-metadata\.md/) &&
       contains(githubMetadataRunbook, /GitHub Metadata Runbook/) &&
       contains(githubMetadataRunbook, /Minimal project memory and validation harness for AI coding agents\./) &&
-      contains(githubMetadataRunbook, /Homepage while npm publish is pending/) &&
-      contains(githubMetadataRunbook, /https:\/\/github\.com\/Seven128\/project-tiny-context-harness/) &&
       contains(githubMetadataRunbook, /Homepage after `project-tiny-context-harness` is published on npm/) &&
       contains(githubMetadataRunbook, /https:\/\/www\.npmjs\.com\/package\/project-tiny-context-harness/) &&
       contains(githubMetadataRunbook, /github-homepage: PASS/) &&
-      contains(githubMetadataRunbook, /npm-fetch: TODO/) &&
+      contains(githubMetadataRunbook, /npm-fetch: PASS/) &&
       contains(githubMetadataRunbook, /GITHUB_TOKEN/) &&
       contains(githubMetadataRunbook, /GH_TOKEN/) &&
       contains(githubMetadataRunbook, /auto-detects whether `project-tiny-context-harness\/latest` is published on npm/) &&
@@ -926,8 +917,7 @@ function localChecks() {
       contains(launchKit, /Prelaunch external blockers/) &&
       contains(launchKit, /npm run launch:unblock/) &&
       contains(outreachTargets, /prelaunch-external-blockers\.md/) &&
-      contains(outreachTargets, /npm-fetch/) &&
-      contains(outreachTargets, /github-homepage/) &&
+      contains(outreachTargets, /strict external launch gate/) &&
       contains(prelaunchExternalBlockers, /Prelaunch External Blockers/) &&
       contains(prelaunchExternalBlockers, /npm run launch:unblock/) &&
       contains(prelaunchExternalBlockers, /node tools\/launch_readiness_check\.mjs --strict-external/) &&
@@ -941,10 +931,10 @@ function localChecks() {
       contains(prelaunchExternalBlockers, /npm-publish-runbook\.md/) &&
       contains(prelaunchExternalBlockers, /npm-credential-unblock\.md/) &&
       contains(prelaunchExternalBlockers, /github-metadata\.md/) &&
-      contains(prelaunchExternalBlockers, /Do not post broad launch copy/) &&
+      contains(prelaunchExternalBlockers, /Do not post broad launch copy if either `npm-fetch` or `github-homepage` returns as a TODO/) &&
       contains(prelaunchExternalBlockers, /Private review/) &&
       contains(prelaunchExternalBlockers, /No token, OTP, `.npmrc` or account credential/),
-    "Prelaunch external blockers checklist centralizes npm-fetch and GitHub homepage stop/go actions before broad launch."
+    "Prelaunch external blockers checklist centralizes npm-fetch and GitHub homepage stop/go actions for broad launch."
   );
   addCheck(
     checks,
@@ -957,6 +947,7 @@ function localChecks() {
       contains(launchUnblockScript, /tools\/launch_readiness_check\.mjs/) &&
       contains(launchUnblockScript, /Remaining External TODOs/) &&
       contains(launchUnblockScript, /Owner Commands/) &&
+      contains(launchUnblockScript, /Broad launch gate is clear/) &&
       contains(launchUnblockScript, /Broad launch remains blocked until the strict external gate has no TODOs/) &&
       contains(launchKit, /npm run launch:unblock/) &&
       contains(prelaunchExternalBlockers, /npm run launch:unblock/),
@@ -969,7 +960,8 @@ function localChecks() {
       contains(launchUnblockScript, /npm login/) &&
       contains(launchUnblockScript, /After npm auth or token permissions are fixed/) &&
       contains(launchUnblockScript, /docs\/launch\/npm-credential-unblock\.md/) &&
-      contains(launchUnblockScript, /If npm returns E403/),
+      contains(launchUnblockScript, /If npm returns E403/) &&
+      contains(launchUnblockScript, /packageVersion/),
     "Launch unblock report gives status-aware npm owner commands before broad launch."
   );
   addCheck(
@@ -1099,8 +1091,8 @@ function localChecks() {
       contains(npmTrustedPublishing, /Workflow filename \| `npm-publish\.yml`/) &&
       contains(npmTrustedPublishing, /Environment name \| `npm-publish`/) &&
       contains(npmTrustedPublishing, /Allowed actions \| `npm publish`/) &&
-      contains(npmTrustedPublishing, /does not replace the first renamed package publish/) &&
-      contains(npmTrustedPublishing, /package still returns 404/) &&
+      contains(npmTrustedPublishing, /post-first-publish release path/) &&
+      contains(npmTrustedPublishing, /package now exists on npm/) &&
       contains(npmTrustedPublishing, /must not define `NPM_TOKEN` or `NODE_AUTH_TOKEN`/) &&
       contains(npmTrustedPublishWorkflow, /name: npm Trusted Publish/) &&
       contains(npmTrustedPublishWorkflow, /workflow_dispatch:/) &&
@@ -1132,7 +1124,7 @@ function localChecks() {
       contains(codexForOssApplication, /Official sources checked on 2026-06-10/) &&
       contains(codexForOssApplication, /Character count: 384/) &&
       contains(codexForOssApplication, /Character count: 302/) &&
-      contains(codexForOssApplication, /Character count: 299/) &&
+      contains(codexForOssApplication, /Character count: 276/) &&
       contains(codexForOssApplication, /Do not claim official OpenAI integration/) &&
       contains(codexForOssApplication, /Selected for Codex for Open Source/) &&
       contains(codexForOssApplication, /not in `project_context\/\*\*`/),
@@ -1287,7 +1279,7 @@ function localChecks() {
       contains(metricsPacket, /Do not treat stars, forks or downloads as product-quality proof/) &&
       contains(metricsScript, /project-tiny-context-harness/) &&
       contains(metricsScript, /agent-project-sdlc/) &&
-      contains(metricsScript, /npm 404 does not fail the launch/),
+      contains(metricsScript, /missing npm download data does not fail the launch/),
     "Launch metrics snapshot script and runbook record distribution telemetry without turning it into product proof."
   );
   addCheck(
@@ -1349,12 +1341,12 @@ function localChecks() {
       contains(support, /CODE_OF_CONDUCT\.md/) &&
       contains(support, /SECURITY\.md/) &&
       contains(support, /GOVERNANCE\.md/) &&
-      contains(support, /npm renamed package still returns 404/) &&
+      contains(support, /npm install or registry metadata is failing/) &&
       contains(governance, /single-maintainer open source project/) &&
       contains(governance, /Repo-native project memory for fresh-agent recovery/) &&
       contains(governance, /Minimal Context boundary/) &&
       contains(governance, /Maintainers handle releases/) &&
-      contains(governance, /Do not create a renamed npm-package GitHub Release or broad launch post until registry verification passes/) &&
+      contains(governance, /Do not create a renamed npm-package GitHub Release or broad launch post if registry verification or the strict external launch gate fails/) &&
       contains(governance, /single-maintainer and evidence-gated/) &&
       contains(contributing, /SUPPORT\.md/) &&
       contains(contributing, /GOVERNANCE\.md/) &&
@@ -1381,6 +1373,8 @@ function localChecks() {
       contains(scorecardWorkflow, /workflow_dispatch:/) &&
       contains(scorecardWorkflow, /security-events: write/) &&
       contains(scorecardWorkflow, /id-token: write/) &&
+      contains(scorecardWorkflow, /FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"/) &&
+      contains(scorecardWorkflow, /uses: actions\/checkout@v5/) &&
       contains(scorecardWorkflow, /uses: ossf\/scorecard-action@v2\.4\.3/) &&
       contains(scorecardWorkflow, /results_format: sarif/) &&
       contains(scorecardWorkflow, /publish_results: true/) &&
@@ -1596,7 +1590,7 @@ function summarize(checks, options) {
 
 function nextActionForFailedCheck(check) {
   if (check.id === "npm-fetch") {
-    return "Run `npm run launch:npm-access` to inspect npm auth and package state, then publish `project-tiny-context-harness@0.2.39` with [docs/launch/npm-publish-runbook.md](docs/launch/npm-publish-runbook.md); if npm returns E403, use [docs/launch/npm-credential-unblock.md](docs/launch/npm-credential-unblock.md).";
+    return `Run \`npm run launch:npm-access\` to inspect npm auth and package state, then publish \`project-tiny-context-harness@${localPackageJson.version}\` with [docs/launch/npm-publish-runbook.md](docs/launch/npm-publish-runbook.md); if npm returns E403, use [docs/launch/npm-credential-unblock.md](docs/launch/npm-credential-unblock.md).`;
   }
   if (check.id === "github-homepage") {
     return "Run `npm run launch:github-metadata` to inspect the GitHub About drift; from a trusted shell with `GITHUB_TOKEN` or `GH_TOKEN`, run `npm run launch:github-metadata -- --apply`, or use [docs/launch/github-metadata.md](docs/launch/github-metadata.md) manually.";

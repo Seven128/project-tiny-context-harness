@@ -1,14 +1,12 @@
 # Project Tiny Context Harness
 
-[![npm publish status](https://img.shields.io/badge/npm-pending%20first%20publish-orange.svg)](docs/launch/npm-publish-runbook.md)
+[![npm version](https://img.shields.io/npm/v/project-tiny-context-harness.svg)](https://www.npmjs.com/package/project-tiny-context-harness)
 [![Package CI](https://github.com/Seven128/project-tiny-context-harness/actions/workflows/package.yml/badge.svg)](https://github.com/Seven128/project-tiny-context-harness/actions/workflows/package.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/Seven128/project-tiny-context-harness/badge)](https://securityscorecards.dev/viewer/?uri=github.com/Seven128/project-tiny-context-harness)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Open in GitHub Codespaces](https://img.shields.io/badge/open%20in-Codespaces-181717?logo=github)](https://codespaces.new/Seven128/project-tiny-context-harness)
 
 Translations: [Chinese (Simplified)](README.zh-CN.md)
-
-> Rename publish status: GitHub is already renamed, but npm `project-tiny-context-harness` is still pending registry publication. The install commands below are the post-publish path; until `npm run launch:strict-external` no longer reports `npm-fetch`, use the Codespaces or source-preview path in this README. Maintainers can follow [the npm publish runbook](docs/launch/npm-publish-runbook.md).
 
 Project Tiny Context Harness is repo-native project memory for AI coding agents.
 
@@ -51,7 +49,14 @@ flowchart LR
 
 ![Project Tiny Context Harness terminal demo](https://raw.githubusercontent.com/Seven128/project-tiny-context-harness/main/docs/launch/assets/demo-terminal.gif)
 
-The demo shows the core loop: initialize `AGENTS.md` and `project_context/**`, run `validate-context`, then ask a fresh agent to recover intent before proposing code. While npm publication is pending, use the no-install and source-preview paths below; after publish, use the npm install path.
+The demo shows the core loop: initialize `AGENTS.md` and `project_context/**`, run `validate-context`, then ask a fresh agent to recover intent before proposing code. Use the npm install path below, or inspect the no-install previews first.
+
+Install:
+
+```sh
+npm install -D project-tiny-context-harness@latest
+npx --yes --package project-tiny-context-harness@latest sdlc-harness init
+```
 
 No-install preview:
 
@@ -59,14 +64,7 @@ No-install preview:
 - Inspect the [Minimal Context sample guide](docs/examples/minimal-context-sample.md).
 - Browse a tiny generated sample repository at [examples/minimal-context-sample/](examples/minimal-context-sample/).
 
-Post-publish install path:
-
-```sh
-npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init
-```
-
-Try now before npm publish:
+Source checkout preview:
 
 Browser preview:
 
@@ -91,19 +89,15 @@ npm run smoke:quickstart
 npm run preview:pack
 ```
 
-That smoke packs the local workspace, installs it into a disposable repo, runs `sdlc-harness init` and validates the generated Minimal Context files.
-
-To try the unpublished package in a separate test repository:
+That smoke packs the local workspace, installs it into a disposable repo, runs `sdlc-harness init` and validates the generated Minimal Context files. Use this path for package development, source-preview testing or private review.
 
 ```sh
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.39.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.40.tgz
 npx --no-install sdlc-harness init --adopt
 make validate-context
 ```
-
-Use this tarball path only for source-preview testing while npm publication is pending.
 
 If the source preview path fails, open a [Source preview report](https://github.com/Seven128/project-tiny-context-harness/issues/new?template=source_preview_report.yml) with the command, environment and shortest useful output.
 

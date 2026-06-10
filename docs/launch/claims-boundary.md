@@ -29,7 +29,7 @@ These are safe for README, npm copy, Show HN, Product Hunt and curated-list PRs:
 - Complements tests, CI, review, issue tracking, specs and code-intelligence tools.
 - Avoids SDLC phase ceremony, task state and work-product trees by default.
 - Works through plain repository files that Codex, Claude Code, Cursor, Gemini CLI, OpenCode and similar agents can read.
-- `project-tiny-context-harness@latest` is installable from npm only after npm publication succeeds.
+- `project-tiny-context-harness@latest` is installable from npm.
 
 ## Claims That Need Evidence First
 

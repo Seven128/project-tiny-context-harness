@@ -55,13 +55,13 @@ For larger changes, open an issue first. Maintainer decisions should prefer:
 
 Maintainers handle releases.
 
-The current renamed npm package `project-tiny-context-harness` is still blocked until the first publish succeeds. Follow:
+The renamed npm package `project-tiny-context-harness` is published. For future releases or registry/credential failures, follow:
 
 - [docs/launch/npm-publish-runbook.md](docs/launch/npm-publish-runbook.md)
 - [docs/launch/npm-credential-unblock.md](docs/launch/npm-credential-unblock.md)
 - [docs/launch/npm-trusted-publishing.md](docs/launch/npm-trusted-publishing.md)
 
-Do not create a renamed npm-package GitHub Release or broad launch post until registry verification passes.
+Do not create a renamed npm-package GitHub Release or broad launch post if registry verification or the strict external launch gate fails.
 
 ## Security And Conduct
 

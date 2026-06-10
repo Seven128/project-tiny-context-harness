@@ -20,12 +20,6 @@ Description:
 Minimal project memory and validation harness for AI coding agents.
 ```
 
-Homepage while npm publish is pending:
-
-```text
-https://github.com/Seven128/project-tiny-context-harness
-```
-
 Homepage after `project-tiny-context-harness` is published on npm:
 
 ```text
@@ -58,24 +52,22 @@ workflow
 
 ## Manual UI Path
 
-Use the repository page, not the npm page, while `project-tiny-context-harness` still returns 404 on npm.
-
 1. Open `https://github.com/Seven128/project-tiny-context-harness`.
 2. In the right-hand About box, choose the settings gear or edit control.
-3. Set Website to `https://github.com/Seven128/project-tiny-context-harness` while npm publish is pending.
+3. Set Website to `https://www.npmjs.com/package/project-tiny-context-harness`.
 4. Keep the description as `Minimal project memory and validation harness for AI coding agents.`
 5. Keep topics aligned with the list above.
 6. Save changes.
 7. Run `npm run launch:strict-external`.
 
-Expected prepublish result:
+Expected postpublish result:
 
 ```text
 github-homepage: PASS
-npm-fetch: TODO
+npm-fetch: PASS
 ```
 
-After the renamed npm package is published, switch Website to the npm package URL and run the same strict check again.
+If npm ever returns 404 again, use the repository URL as a temporary homepage and rerun the strict check.
 
 ## API Path
 
@@ -93,13 +85,13 @@ Apply from a trusted shell after setting `GITHUB_TOKEN` or `GH_TOKEN`:
 npm run launch:github-metadata -- --apply
 ```
 
-The script auto-detects whether `project-tiny-context-harness/latest` is published on npm. While npm returns 404, it sets the homepage to:
+The script auto-detects whether `project-tiny-context-harness/latest` is published on npm. When npm returns 404, it sets the homepage to:
 
 ```text
 https://github.com/Seven128/project-tiny-context-harness
 ```
 
-After the renamed npm package is published, it sets the homepage to:
+When the renamed npm package is published, it sets the homepage to:
 
 ```text
 https://www.npmjs.com/package/project-tiny-context-harness

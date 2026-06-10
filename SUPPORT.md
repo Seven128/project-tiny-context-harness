@@ -6,7 +6,7 @@ Use this file to choose the right support path for Project Tiny Context Harness.
 
 Check:
 
-- [README.md](README.md) for the current install, source-preview and npm-publish status.
+- [README.md](README.md) for the current install and source-preview paths.
 - [docs/faq.md](docs/faq.md) for common adoption and positioning questions.
 - [docs/adopt-existing-repo.md](docs/adopt-existing-repo.md) for adding Minimal Context to an existing repository.
 - [docs/agent-surface-recipes.md](docs/agent-surface-recipes.md) for Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness-folder setup notes.
@@ -20,13 +20,13 @@ Use the GitHub issue chooser instead of blank issues; it routes public feedback 
 |---|---|
 | Bug in `init`, `sync`, `upgrade`, `doctor`, `export-context` or `validate-context` | GitHub bug report issue template |
 | Feature idea that preserves the Minimal Context boundary | GitHub feature request issue template |
-| Codespaces, local checkout or source-preview tarball failed before npm publish | Source preview report issue template |
+| Codespaces, local checkout or source-preview tarball failed | Source preview report issue template |
 | Missing recovery fact, README confusion or fresh-agent handoff gap | Context recovery gap issue template |
 | Real adoption feedback from a repository | Adoption report issue template |
 | Security vulnerability | [SECURITY.md](SECURITY.md) |
 | Conduct or moderation concern | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) |
 | Governance or release authority question | [GOVERNANCE.md](GOVERNANCE.md) |
-| npm renamed package still returns 404 | Follow the README source-preview path until the publish blocker is resolved |
+| npm install or registry metadata is failing | Run the README source-preview path, then open a bug report with the command and environment |
 
 ## Project Scope
 

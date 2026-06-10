@@ -15,13 +15,13 @@ Public state after the repository rename, checked against public GitHub and npm 
 | GitHub description / license | `Minimal project memory and validation harness for AI coding agents.`, MIT detected |
 | GitHub homepage | `https://www.npmjs.com/package/project-tiny-context-harness` |
 | GitHub topics | `agent-context`, `agent-memory`, `agents-md`, `ai-agents`, `ai-coding`, `claude-code`, `cli`, `codex`, `coding-agent`, `context-engineering`, `context-management`, `cursor`, `developer-productivity`, `developer-tools`, `gemini-cli`, `opencode`, `project-memory`, `sdlc`, `workflow` |
-| GitHub release | Latest release title is `Project Tiny Context Harness 0.2.39 - legacy npm package`; a new renamed npm-package release still waits for npm publish |
-| npm package | `project-tiny-context-harness` is not published yet; registry returns 404 |
-| npm public metadata | Pending npm publish |
+| GitHub release | Latest release title is `Project Tiny Context Harness 0.2.39 - legacy npm package`; a new renamed npm-package release should follow the first postpublish patch |
+| npm package | `project-tiny-context-harness` is published and installable through `@latest` |
+| npm public metadata | Live npm package metadata |
 | npm downloads | No downloads for the renamed package yet |
-| Launch readiness | Local `npm run launch:check` passes; strict external check fails on npm 404 |
+| Launch readiness | Local `npm run launch:check` passes; strict external check should pass after npm/GitHub metadata is aligned |
 
-Interpretation: GitHub metadata and the visible latest-release title/body are launch-ready, but npm distribution is still blocked until `project-tiny-context-harness` is published. The remaining blockers for serious public distribution are npm availability plus the demo/evidence surface: a short recording, one primary launch post, then rapid README/FAQ updates from real feedback.
+Interpretation: GitHub metadata and npm distribution are launch-ready enough for a first public post. The remaining work for serious public distribution is the demo/evidence surface: a short recording, one primary launch post, then rapid README/FAQ updates from real feedback.
 
 ## Competitive Snapshot
 
@@ -74,7 +74,7 @@ Deprioritize:
 
 ## Feasibility
 
-Short-term realistic outcomes after GitHub default branch, npm metadata and launch kit are fixed:
+Short-term realistic outcomes after GitHub default branch, npm metadata and launch kit are aligned:
 
 - 10-100 stars: feasible with a clear HN/Reddit/Product Hunt style launch and working smoke/demo.
 - 100-1,000 stars: requires repeated distribution, a short demo, adoption examples and clear differentiation from task/spec/agent tools.

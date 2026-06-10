@@ -115,7 +115,7 @@ It is less useful when:
 
 ## Try It
 
-After the renamed npm package is published:
+Use npm for the normal install path:
 
 ```sh
 npm install -D project-tiny-context-harness@latest
@@ -123,7 +123,7 @@ npx --yes --package project-tiny-context-harness@latest sdlc-harness init
 make validate-context
 ```
 
-While npm publication is still pending, use the source preview:
+Use the source checkout path for private review, source-preview testing or package development:
 
 ```sh
 git clone https://github.com/Seven128/project-tiny-context-harness.git

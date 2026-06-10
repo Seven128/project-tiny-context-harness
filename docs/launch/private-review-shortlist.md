@@ -22,7 +22,7 @@ Avoid filling the list with generic AI-tool fans, product launch friends or peop
 
 Score candidates before outreach. Use broad public-safe descriptions only.
 
-| Candidate ID | Public-safe profile | Uses coding agents on real repos? | Has handoff/context pain? | Likely to be candid? | Can try source preview? | Consent sensitivity | Priority |
+| Candidate ID | Public-safe profile | Uses coding agents on real repos? | Has handoff/context pain? | Likely to be candid? | Can try npm or source preview? | Consent sensitivity | Priority |
 |---|---|---:|---:|---:|---:|---|---:|
 | C1 | <solo OSS maintainer> | 0-2 | 0-2 | 0-2 | 0-2 | <low/medium/high> | <1-5> |
 | C2 |  |  |  |  |  |  |  |
@@ -41,7 +41,7 @@ Send in two waves:
 
 | Wave | Size | When | Why |
 |---|---:|---|---|
-| 1 | 3-4 reviewers | While npm publish is blocked | Tests whether source preview and README are understandable. |
+| 1 | 3-4 reviewers | Before broad promotion | Tests whether install/source preview and README are understandable. |
 | 2 | 3-6 reviewers | After wave 1 confusion is patched | Checks whether the corrected pitch works better. |
 
 Stop after 10 reviewers unless there is a repeated, actionable confusion pattern that needs one more targeted check.
@@ -53,7 +53,7 @@ Use the copy-paste DM from [private-review.md](private-review.md). Keep the ask 
 - Ask for one concrete agent-memory failure.
 - Ask whether `AGENTS.md + project_context/**` would help.
 - Ask what felt unclear in the first screen.
-- Ask whether source preview is enough before npm publish.
+- Ask whether the no-install and source preview paths are enough before touching a real repository.
 
 Do not ask for:
 
@@ -80,6 +80,6 @@ The private review pass is useful if it produces any of these:
 - one concrete fresh-agent recovery failure
 - one repeated README confusion point
 - one missing recovery fact or recipe
-- one reviewer who would try the package after npm publish
+- one reviewer who would try the package through npm
 
 It is not useful as a popularity signal. Do not describe private review as adoption, validation, production use or benchmark proof.

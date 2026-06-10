@@ -18,7 +18,7 @@ Current fit:
 
 Current weak points:
 
-- The renamed npm package is still not published, so use GitHub as the primary project URL.
+- The npm package is published, but stars are still low and adoption evidence is early.
 - Stars are still low; do not overstate broad adoption.
 - No public adoption report exists yet; describe ecosystem importance and maintainer workflow fit, not validation by users.
 
@@ -76,10 +76,10 @@ Character count: 302.
 ### Anything Else We Should Know?
 
 ```text
-The project is intentionally narrow: it keeps durable project memory in plain repo files and leaves product quality to tests, CI, review and maintainers. The main current blocker is npm credential access for publishing the renamed package; the GitHub repo and source preview path are already public.
+The project is intentionally narrow: it keeps durable project memory in plain repo files and leaves product quality to tests, CI, review and maintainers. The GitHub repo, npm package and source preview path are public; current evidence is launch readiness, not broad adoption.
 ```
 
-Character count: 299.
+Character count: 276.
 
 ## Submission Checklist
 
@@ -89,7 +89,7 @@ Before submitting:
 - [ ] Confirm the repository visibility is public.
 - [ ] Confirm the ChatGPT account email and OpenAI organization ID.
 - [ ] Run `npm run launch:metrics -- --output tmp/sdlc/launch-metrics/codex-for-oss-before.md`.
-- [ ] Run `npm run launch:strict-external` and note that npm 404 is the known blocker if it still appears.
+- [ ] Run `npm run launch:strict-external` and note any external blocker if it appears.
 - [ ] Update any metrics in the copy from current evidence only.
 - [ ] Do not claim official OpenAI integration, broad adoption, awards, benchmark wins or productivity multipliers.
 - [ ] Save the submitted form timestamp and non-private summary under `tmp/sdlc/recognition/**`, not in `project_context/**`.

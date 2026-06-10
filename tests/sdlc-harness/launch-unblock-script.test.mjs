@@ -10,12 +10,13 @@ function baseReport(npmStatus) {
     generatedAt: "2026-06-10T00:00:00.000Z",
     status: "blocked",
     npm: {
+      package: { version: "0.2.40" },
       summary: {
         status: npmStatus,
         nextAction:
           npmStatus === "auth-needed"
             ? "Run npm login or configure a publish-capable npm token, then rerun npm run launch:npm-access."
-            : "Run npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke."
+            : "Run npm run release:npm -- --version 0.2.40 --publish --yes --full-gate --registry-smoke."
       }
     },
     github: { aligned: false },
@@ -42,7 +43,7 @@ assert.match(authNeeded, /Do not store tokens, OTP values or `\.npmrc` content/)
 
 const firstPublish = renderMarkdown(baseReport("first-publish-needed"));
 assert.match(firstPublish, /Status: first-publish-needed/);
-assert.match(firstPublish, /npm run release:npm -- --version 0\.2\.39 --publish --yes --full-gate --registry-smoke/);
+assert.match(firstPublish, /npm run release:npm -- --version 0\.2\.40 --publish --yes --full-gate --registry-smoke/);
 assert.match(firstPublish, /If npm returns E403/);
 
 const ready = renderMarkdown({
@@ -55,3 +56,5 @@ const ready = renderMarkdown({
 });
 assert.doesNotMatch(ready, /npm login/);
 assert.doesNotMatch(ready, /npm run launch:github-metadata -- --apply/);
+assert.doesNotMatch(ready, /Broad launch remains blocked/);
+assert.match(ready, /Broad launch gate is clear/);

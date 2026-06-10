@@ -111,18 +111,18 @@ Use when someone compares it to semantic code search, IDE memory or MCP code nav
 ```text
 Yes, use it on a branch first.
 
-After the renamed npm package is published, the intended path is:
+The normal path is:
 
 npm install -D project-tiny-context-harness@latest
 npx --yes --package project-tiny-context-harness@latest sdlc-harness init --adopt
 make validate-context
 
-While npm publish is pending, the README has a source-preview path that packs the local workspace into a disposable repo.
+The README also has a source-preview path that packs the local workspace into a disposable repo for private review or package development.
 ```
 
 Use when someone asks whether this is only for new projects.
 
-Link: [README source preview](../../README.md#source-preview-while-npm-publish-is-pending)
+Link: [README source preview](../../README.md#source-checkout-preview)
 
 ## Agent Surface Lock-In
 

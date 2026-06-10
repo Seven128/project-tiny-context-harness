@@ -2,7 +2,7 @@
 
 Snapshot date: 2026-06-10.
 
-Broad public launch is blocked until the strict external launch check has no TODOs. Private review can continue before that point, but it should use the no-install preview, Codespaces or source-preview path and should not ask for stars.
+Broad public launch is blocked only when the strict external launch check reports required TODOs. Private review can continue before that point, but it should use the no-install preview, npm install path, Codespaces or source-preview path and should not ask for stars.
 
 Run the gate before posting broad launch copy:
 
@@ -36,16 +36,16 @@ npm-fetch: PASS
 github-homepage: PASS
 ```
 
-## Current TODOs
+## Current Stop/Go Checks
 
 | Check | Blocker | Owner action | Evidence |
 |---|---|---|---|
-| `npm-fetch` | `https://registry.npmjs.org/project-tiny-context-harness/latest` still returns 404. | Run `npm run launch:npm-access` to inspect npm login, registry reachability and package existence. Then publish `project-tiny-context-harness@0.2.39` with [npm-publish-runbook.md](npm-publish-runbook.md). If publish fails with 403, use [npm-credential-unblock.md](npm-credential-unblock.md). | The strict external check no longer reports `npm-fetch`. |
-| `github-homepage` | GitHub About homepage must not point to a missing npm package page while npm returns 404. | Run `npm run launch:github-metadata` to dry-run the current/desired metadata. From a trusted shell with `GITHUB_TOKEN` or `GH_TOKEN`, run `npm run launch:github-metadata -- --apply`, or use [github-metadata.md](github-metadata.md) to set the homepage manually. The prepublish homepage is `https://github.com/Seven128/project-tiny-context-harness`; the postpublish homepage is `https://www.npmjs.com/package/project-tiny-context-harness`. | The strict external check no longer reports `github-homepage`. |
+| `npm-fetch` | `https://registry.npmjs.org/project-tiny-context-harness/latest` must resolve before broad launch. | If it returns 404 again, run `npm run launch:npm-access`, then use [npm-publish-runbook.md](npm-publish-runbook.md). If publish fails with 403, use [npm-credential-unblock.md](npm-credential-unblock.md). | The strict external check no longer reports `npm-fetch`. |
+| `github-homepage` | GitHub About homepage should point to the npm package page once npm is live. | Run `npm run launch:github-metadata` to dry-run the current/desired metadata. From a trusted shell with `GITHUB_TOKEN` or `GH_TOKEN`, run `npm run launch:github-metadata -- --apply`, or use [github-metadata.md](github-metadata.md) to set the homepage manually. The postpublish homepage is `https://www.npmjs.com/package/project-tiny-context-harness`; the fallback repository URL is `https://github.com/Seven128/project-tiny-context-harness`. | The strict external check no longer reports `github-homepage`. |
 
 ## Launch Rule
 
-Do not post broad launch copy while either `npm-fetch` or `github-homepage` is still a TODO.
+Do not post broad launch copy if either `npm-fetch` or `github-homepage` returns as a TODO.
 
 Allowed before unblock:
 
@@ -59,6 +59,6 @@ Not allowed before unblock:
 - Show HN or broad Reddit launch.
 - Product Hunt launch.
 - New GitHub Release for the renamed npm package.
-- Curated-list PRs that imply the npm package is already installable.
+- Curated-list PRs that imply the npm package is installable while the strict external gate says otherwise.
 
 No token, OTP, `.npmrc` or account credential should be stored in this repository. Keep credential handling in the maintainer shell or npm website only.

@@ -11,4 +11,4 @@ contact_links:
     about: Report README confusion, missing recovery facts or fresh-agent handoff gaps.
   - name: Source preview report
     url: https://github.com/Seven128/project-tiny-context-harness/issues/new?template=source_preview_report.yml
-    about: Report Codespaces, local checkout or packed tarball failures before npm publish.
+    about: Report Codespaces, local checkout or packed tarball failures.

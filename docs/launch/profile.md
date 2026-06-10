@@ -114,13 +114,13 @@ Avoid using `sdlc` as the first tag on broad launch surfaces. It is acceptable a
 
 ## URLs
 
-Use GitHub as the primary launch URL and GitHub repository homepage until the renamed npm package is published:
+Use GitHub as the primary launch URL for public posts:
 
 ```text
 https://github.com/Seven128/project-tiny-context-harness
 ```
 
-Use npm as the GitHub repository homepage only after `npm run launch:strict-external` no longer reports `npm-fetch`:
+Use npm as the GitHub repository homepage now that the renamed package is published:
 
 ```text
 https://www.npmjs.com/package/project-tiny-context-harness
@@ -153,7 +153,7 @@ https://github.com/Seven128/project-tiny-context-harness/issues/4
 
 ## Install Copy
 
-Use only after npm publish:
+Normal install path:
 
 ```sh
 npm install -D project-tiny-context-harness@latest
@@ -161,7 +161,7 @@ npx --yes --package project-tiny-context-harness@latest sdlc-harness init
 make validate-context
 ```
 
-Use while npm publish is pending:
+Source checkout preview:
 
 Browser preview:
 
@@ -185,7 +185,7 @@ npm ci
 npm run smoke:quickstart
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.39.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.40.tgz
 npx --no-install sdlc-harness init --adopt
 make validate-context
 ```
@@ -208,7 +208,7 @@ Allowed:
 - Helps fresh chats recover project intent, boundaries and validation paths.
 - Complements tests, CI, review, specs and retrieval tools.
 - English-first public launch material with secondary localized docs.
-- Installable from npm only after the renamed package is actually published.
+- Installable from npm through `project-tiny-context-harness@latest`.
 
 Avoid:
 

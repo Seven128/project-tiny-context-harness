@@ -2,7 +2,7 @@
 
 Snapshot date: 2026-06-10.
 
-This is the one-page link to send to a private reviewer while `project-tiny-context-harness` is still pending npm publication. It is for focused product feedback, not for stars, upvotes, public promotion or proof claims.
+This is the one-page link to send to a private reviewer before broad promotion. It is for focused product feedback, not for stars, upvotes, public promotion or proof claims.
 
 ## What To Review
 
@@ -30,7 +30,7 @@ Does this solve a real "new agent chat lost the project context" problem, or is 
 
 ## Hands-On Source Preview
 
-Use this if the idea looks relevant and you can spend 10-15 minutes. The renamed npm package is not published yet, so this uses the repository source path.
+Use this if the idea looks relevant and you can spend 10-15 minutes on the repository source path. For a normal install, use `project-tiny-context-harness@latest` from npm.
 
 Browser path:
 
@@ -59,7 +59,7 @@ Optional disposable-repo trial:
 
 ```sh
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.39.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.40.tgz
 npx --no-install sdlc-harness init --adopt
 make validate-context
 ```
@@ -73,8 +73,8 @@ Answer whichever are easy from your experience:
 1. What project facts do your coding agents repeatedly rediscover?
 2. Would `AGENTS.md` plus `project_context/**` have helped in one real handoff, debug or fresh-chat situation?
 3. Which README concept felt unclear or too internal?
-4. Was the no-install preview enough before npm publish?
-5. What would make this worth trying on one real repo after npm publish?
+4. Was the no-install preview enough before touching a real repository?
+5. What would make this worth trying on one real repo through npm?
 
 ## If Setup Fails
 

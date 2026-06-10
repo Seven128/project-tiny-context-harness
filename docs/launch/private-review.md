@@ -2,7 +2,7 @@
 
 Snapshot date: 2026-06-10.
 
-Use this packet while the renamed npm package is still blocked or before the first broad launch. The goal is to get high-signal feedback from a small number of real coding-agent users, not to create a public launch wave.
+Use this packet before the first broad launch. The goal is to get high-signal feedback from a small number of real coding-agent users, not to create a public launch wave.
 
 Do not ask private reviewers for stars. Ask whether the recovery surface solves a real handoff problem and which facts were still missing.
 
@@ -10,11 +10,10 @@ Do not ask private reviewers for stars. Ask whether the recovery surface solves 
 
 Use this before Show HN, Product Hunt, Reddit or curated-list PRs when any of these are true:
 
-- `project-tiny-context-harness@latest` is not installable yet.
 - The README and demo are ready, but the project has no outside adoption report.
 - You want one concrete before/after story before spending a broad launch channel.
 
-Do not use it as a substitute for npm publish. Broad launch still waits for the renamed package to be installable.
+Do not use it as a substitute for the strict external launch gate. Broad launch still waits for `npm run launch:strict-external` to pass.
 
 ## Reviewer Profile
 
@@ -37,7 +36,7 @@ It adds minimal repo-native project memory for AI coding agents: AGENTS.md plus 
 
 I am not asking for a star or a public post. I am looking for private feedback from people who use Codex, Claude Code, Cursor, OpenCode or similar agents on real repos.
 
-If you have 10-15 minutes, could you skim the README and start with the no-install preview? If the idea looks relevant, try the source preview path. The renamed npm package is still pending, so this is not a public launch yet.
+If you have 10-15 minutes, could you skim the README and start with the no-install preview? If the idea looks relevant, try the npm install path or the source preview path in a disposable repo. This is a private clarity pass before broad launch.
 
 Repo:
 https://github.com/Seven128/project-tiny-context-harness
@@ -64,7 +63,12 @@ npm run preview:pack
 
 If you want to try it in a disposable copy of your own repo:
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.39.tgz
+npm install -D project-tiny-context-harness@latest
+npx --yes --package project-tiny-context-harness@latest sdlc-harness init --adopt
+make validate-context
+
+Or use the local source-preview tarball:
+npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.40.tgz
 npx --no-install sdlc-harness init --adopt
 make validate-context
 
@@ -80,8 +84,8 @@ Send [reviewer-quickstart.md](reviewer-quickstart.md) when you want one link wit
 1. What project facts do your agents repeatedly rediscover?
 2. Would `AGENTS.md` plus `project_context/**` have helped in that situation?
 3. Which file or concept felt unclear in the README first screen?
-4. Was the source preview enough before npm publish?
-5. What would make this worth trying on one real repo after npm publish?
+4. Was the no-install preview enough before touching a real repository?
+5. What would make this worth trying on one real repo through npm?
 
 Optional hands-on path:
 
@@ -116,7 +120,7 @@ Capture:
 - repo size/type in broad terms
 - confusion points
 - missing recovery facts
-- whether they would try it after npm publish
+- whether they would try it through npm
 - quote consent: none, anonymous, public name, or public link
 
 Do not store secrets, private repo names, raw chat logs or private code.
@@ -137,7 +141,7 @@ Strong signal:
 
 - A reviewer names a specific handoff/debug/new-chat failure this would have helped.
 - A reviewer asks for one concrete missing Context field or recipe.
-- A reviewer says they would try it after npm publish.
+- A reviewer says they would try it through npm.
 
 Weak signal:
 

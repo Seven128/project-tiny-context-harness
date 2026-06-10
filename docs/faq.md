@@ -135,9 +135,17 @@ GitHub, Hacker News, Product Hunt, Reddit and curated lists are mostly evaluated
 
 Localized docs can exist behind secondary links. The Simplified Chinese entry is [README.zh-CN.md](../README.zh-CN.md).
 
-## Can I try it before the renamed npm package is published?
+## Can I try it without installing from npm?
 
-Yes. While `project-tiny-context-harness@latest` is still pending registry publication, use the source preview path from the root README:
+Yes. The normal path is npm:
+
+```sh
+npm install -D project-tiny-context-harness@latest
+npx --yes --package project-tiny-context-harness@latest sdlc-harness init
+make validate-context
+```
+
+Use the source preview path from the root README for private review, source checkout testing or package development:
 
 ```sh
 git clone https://github.com/Seven128/project-tiny-context-harness.git
@@ -146,7 +154,7 @@ npm ci
 npm run smoke:quickstart
 ```
 
-Broad launch should still wait until the renamed npm package is published and installable.
+The source path is useful when you want to inspect the repository or packed tarball behavior before trying it on a real project.
 
 ## What should I report if I try it?
 

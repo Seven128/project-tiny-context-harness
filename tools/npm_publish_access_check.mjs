@@ -113,7 +113,7 @@ function summarize(report) {
   if (report.registryPackage.state === "missing") {
     return {
       status: "first-publish-needed",
-      nextAction: "Run npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke. If npm returns E403, use docs/launch/npm-credential-unblock.md."
+      nextAction: `Run npm run release:npm -- --version ${PACKAGE_VERSION} --publish --yes --full-gate --registry-smoke. If npm returns E403, use docs/launch/npm-credential-unblock.md.`
     };
   }
   if (!report.registryPackage.ok) {

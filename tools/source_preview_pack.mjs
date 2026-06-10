@@ -34,7 +34,7 @@ function printHelp() {
   console.log(`source_preview_pack.mjs
 
 Packs the local project-tiny-context-harness workspace into an installable tarball
-for private review or source-preview testing while npm publication is pending.
+for private review, source-preview testing or package development.
 
 Usage:
   node tools/source_preview_pack.mjs [--out-dir tmp/sdlc/source-preview/package] [--clean] [--pack-ignore-scripts]
@@ -132,7 +132,7 @@ try {
   console.log("  npx --no-install sdlc-harness init --adopt");
   console.log("  make validate-context");
   console.log("");
-  console.log("Use this only for source-preview testing while npm publication is pending.");
+  console.log("Use this only for source-preview testing, private review or package development.");
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   console.error(`Source preview output kept at: ${outDir}`);

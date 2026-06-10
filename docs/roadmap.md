@@ -12,7 +12,7 @@ Repo-native project memory for fresh-agent recovery.
 
 ## Now
 
-- Publish the renamed npm package `project-tiny-context-harness` so the README install path works without source checkout.
+- Keep the npm package installable and aligned with README/package README.
 - Keep the first-screen README clear: problem, install, demo, non-goals and 60-second trial.
 - Collect private review and public adoption reports that describe real project-memory drift.
 - Convert only consented examples into public adoption stories.
@@ -23,7 +23,7 @@ Repo-native project memory for fresh-agent recovery.
 - Improve the [existing-repo adoption guide](adopt-existing-repo.md) for `init --adopt`, especially for projects that already have `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md` or tool-specific rules.
 - Add more small before/after examples showing what belongs in `project_context/**` and what should stay in code, tests or issue trackers.
 - Re-run delivery benchmarks against the current Minimal Context design, not the removed stage-based workflow.
-- Submit prepared curated-list PRs after npm publish and the first feedback loop.
+- Submit prepared curated-list PRs after the first feedback loop.
 - Expand agent-surface recipes only when users report real friction with Codex, Claude Code, Cursor, Gemini CLI, OpenCode or similar tools.
 
 ## Later
@@ -43,6 +43,6 @@ Repo-native project memory for fresh-agent recovery.
 
 ## How To Help
 
-- Try the source preview path while npm publication is pending and open an [adoption report](https://github.com/Seven128/project-tiny-context-harness/issues/new?template=adoption_report.yml).
+- Try `project-tiny-context-harness@latest` or the source preview path and open an [adoption report](https://github.com/Seven128/project-tiny-context-harness/issues/new?template=adoption_report.yml).
 - Pick a starter issue: [demo](https://github.com/Seven128/project-tiny-context-harness/issues/5), [sample walkthrough](https://github.com/Seven128/project-tiny-context-harness/issues/6), [benchmark rerun](https://github.com/Seven128/project-tiny-context-harness/issues/7) or [launch FAQ](https://github.com/Seven128/project-tiny-context-harness/issues/8).
 - File focused feature requests only when the problem is durable project-memory recovery, not project-specific testing, CI, review or local agent preference.

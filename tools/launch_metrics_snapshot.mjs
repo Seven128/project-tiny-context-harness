@@ -35,7 +35,7 @@ function printHelp() {
   console.log(`launch_metrics_snapshot.mjs
 
 Captures public launch telemetry for Project Tiny Context Harness.
-The snapshot is informational; npm 404 does not fail the launch.
+The snapshot is informational; missing npm download data does not fail the launch.
 
 Usage:
   node tools/launch_metrics_snapshot.mjs

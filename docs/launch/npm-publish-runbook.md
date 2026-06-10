@@ -2,22 +2,22 @@
 
 Snapshot date: 2026-06-10.
 
-This runbook exists for the repository rename window. The GitHub repository and package metadata now use Project Tiny Context Harness, but the renamed npm package is not public until `project-tiny-context-harness` has a registry entry.
+This runbook records the first renamed publish path from the repository rename window and remains the fallback for future local publishes. The GitHub repository and package metadata now use Project Tiny Context Harness, and `project-tiny-context-harness` has a registry entry.
 
 For future releases after the first renamed publish, use [npm-trusted-publishing.md](npm-trusted-publishing.md) to configure GitHub Actions OIDC publishing instead of a long-lived npm publish token.
 
-## Current Registry State
+## Historical First-Publish State
 
 - `npm whoami` returns an authenticated npm user.
 - `npm view agent-project-sdlc name version dist-tags --json` returns `agent-project-sdlc@0.2.39`.
 - `npm view project-tiny-context-harness name version dist-tags --json` returns 404.
 - `npm run launch:strict-external` should keep failing on `npm-fetch` until the renamed package is published.
 
-Do not post broad launch copy while the renamed package still returns 404.
+Historical first-publish rule: Do not post broad launch copy while the renamed package still returns 404.
 
-## First Renamed Publish
+## First Renamed Publish Record
 
-The first publish should create:
+The first publish created:
 
 ```text
 project-tiny-context-harness@0.2.39
@@ -112,6 +112,6 @@ Only after that:
 
 - create a new GitHub Release for the renamed npm package,
 - configure Trusted Publishing with [npm-trusted-publishing.md](npm-trusted-publishing.md) for future releases,
-- update launch docs that currently say npm is pending,
+- update any launch docs that still say npm is pending,
 - post Show HN or any broad public launch,
 - submit curated-list PRs that assume the package is installable.

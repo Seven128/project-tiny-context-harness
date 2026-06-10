@@ -48,7 +48,7 @@ terminal transcript for Show HN, Product Hunt and README/social copy.
 
 Usage:
   node tools/launch_demo_capture.mjs [--out-dir tmp/sdlc/launch-demo/latest] [--clean]
-  node tools/launch_demo_capture.mjs --package-spec project-tiny-context-harness@0.2.39
+  node tools/launch_demo_capture.mjs --package-spec project-tiny-context-harness@0.2.40
 `);
 }
 

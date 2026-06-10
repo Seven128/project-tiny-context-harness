@@ -41,7 +41,7 @@ Interpretation:
 - The account is authenticated.
 - The token can still see or maintain the legacy package.
 - The token does not have enough authority to create or publish the renamed package.
-- The package name still returning 404 means broad launch should remain blocked until publish succeeds.
+- If the package name returns 404, broad launch should remain blocked until publish succeeds.
 
 ## Choose One Publish Path
 
@@ -94,7 +94,7 @@ Remove-Item Env:NPM_TOKEN
 
 Use this after `project-tiny-context-harness` exists on npm and the package settings page is available.
 
-Trusted Publishing is the preferred future release path because GitHub Actions can publish through OIDC without storing a long-lived npm publish token. It is not the current first-publish unblock path while the renamed package still returns 404 and package settings are unavailable.
+Trusted Publishing is the preferred future release path because GitHub Actions can publish through OIDC without storing a long-lived npm publish token. If the renamed package ever returns 404 and package settings are unavailable, recover the registry state before relying on this path.
 
 Follow [npm-trusted-publishing.md](npm-trusted-publishing.md) to configure:
 
@@ -166,13 +166,13 @@ npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec proj
 Only after these pass:
 
 - create a new GitHub Release for the renamed npm package,
-- remove or revise README copy that says npm publish is pending,
+- remove or revise any stale README copy that says npm publish is pending,
 - post Show HN or Product Hunt,
 - submit curated-list PRs that assume the npm package is installable.
 
 ## Do Not Do
 
-- Do not publish broad launch copy while `npm-fetch` still fails.
+- Do not publish broad launch copy if `npm-fetch` fails.
 - Do not commit `.npmrc`, tokens, OTP values or screenshots showing token values.
 - Do not infer that `agent-project-sdlc` read/write access means the renamed package can be created.
 - Do not create a GitHub Release for the renamed package until registry smoke passes.

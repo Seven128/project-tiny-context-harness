@@ -2,8 +2,6 @@
 
 Use this guide when a repository already has code, tests, documentation, agent rules or team conventions. The goal is to add Minimal Context Harness without turning the project into a full SDLC process.
 
-If the renamed npm package is not published yet, use the source preview path from the root README before trying this on an important repository.
-
 ## Before You Start
 
 Create a branch and check the current state:
@@ -23,7 +21,7 @@ The Harness should preserve useful local guidance. It should not replace project
 
 ## Add The Harness
 
-After npm publish:
+Normal npm path:
 
 ```sh
 npm install -D project-tiny-context-harness@latest
@@ -31,7 +29,7 @@ npx --yes --package project-tiny-context-harness@latest sdlc-harness init --adop
 make validate-context
 ```
 
-Source preview while npm publish is pending:
+Source checkout preview:
 
 Browser preview:
 
@@ -56,11 +54,11 @@ npm run smoke:quickstart
 npm run preview:pack
 ```
 
-For an external repository before npm publish, use the local packed tarball only if you are comfortable testing unpublished packages:
+For source-preview testing in an external repository, use the local packed tarball only if you are comfortable testing a local package build:
 
 ```sh
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.39.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.40.tgz
 npx --no-install sdlc-harness init --adopt
 make validate-context
 ```

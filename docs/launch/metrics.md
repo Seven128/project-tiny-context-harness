@@ -28,7 +28,7 @@ npm run launch:metrics -- --offline --json
 - Renamed npm package status and last-week downloads for `project-tiny-context-harness`.
 - Legacy npm package status and last-week downloads for `agent-project-sdlc`.
 
-The renamed npm package currently returning 404 is an action item, not a metrics-script failure. The snapshot keeps running so launch notes can show the blocker explicitly.
+Missing npm download data for a newly published package is an informational signal, not a metrics-script failure. The snapshot keeps running so launch notes can show the current telemetry explicitly.
 
 ## Boundary
 
@@ -48,4 +48,3 @@ Use product evidence for product claims:
 - issue comments from users who tried it
 
 Do not publish "benchmark-proven faster", adoption, award or productivity claims from this metrics snapshot.
-

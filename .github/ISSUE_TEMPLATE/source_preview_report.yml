@@ -1,12 +1,12 @@
 name: Source preview report
-description: Report Codespaces, local checkout or packed tarball failures before npm publish.
+description: Report Codespaces, local checkout or packed tarball failures.
 title: "[Source preview]: "
 labels: ["question"]
 body:
   - type: markdown
     attributes:
       value: |
-        Use this form when the renamed npm package is not published yet and the source preview path failed.
+        Use this form when the source checkout, Codespaces or packed tarball path failed.
 
         Do not include secrets, private code, customer data, tokens or raw private chat logs.
   - type: dropdown

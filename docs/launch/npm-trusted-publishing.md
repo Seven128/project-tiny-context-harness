@@ -2,7 +2,7 @@
 
 Snapshot date: 2026-06-10.
 
-This runbook prepares the post-first-publish release path for `project-tiny-context-harness`. It does not replace the first renamed package publish while `npm view project-tiny-context-harness` still returns 404 and package settings are unavailable.
+This runbook prepares the post-first-publish release path for `project-tiny-context-harness`. The package now exists on npm, so this is the preferred next release path once npmjs.com Trusted Publishing settings are configured.
 
 ## Official npm Sources Checked
 
@@ -20,10 +20,10 @@ Important current constraints:
 
 ## Current Boundary
 
-The renamed package is still absent from the npm registry. The current first-publish path remains:
+The renamed package exists on npm. Use local token publishing only as a fallback while configuring Trusted Publishing. For the current patch, the local fallback path is:
 
 ```sh
-npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke
+npm run release:npm -- --version 0.2.40 --publish --yes --full-gate --registry-smoke
 ```
 
 Use [npm-credential-unblock.md](npm-credential-unblock.md) if that fails with a 403 credentials error.
@@ -45,7 +45,7 @@ On npmjs.com, open the package settings for `project-tiny-context-harness` and c
 
 Enter only `npm-publish.yml` for the workflow filename, not `.github/workflows/npm-publish.yml`.
 
-If the npm settings page cannot be opened because the package still returns 404, finish the first renamed publish before using this runbook.
+If the npm settings page cannot be opened because the package unexpectedly returns 404, recover the registry state before using this runbook.
 
 ## GitHub Workflow
 
@@ -67,7 +67,7 @@ It is manual-only:
 In GitHub Actions, run **npm Trusted Publish** with:
 
 ```text
-expected_version: 0.2.39
+expected_version: 0.2.40
 dry_run: true
 ```
 
@@ -81,10 +81,10 @@ Expected result:
 
 ## Real Publish
 
-Only after the first renamed package exists and the npm trusted publisher configuration above is saved, run:
+Only after the npm trusted publisher configuration above is saved, run:
 
 ```text
-expected_version: 0.2.39
+expected_version: 0.2.40
 dry_run: false
 ```
 
@@ -92,7 +92,7 @@ Then verify:
 
 ```sh
 npm run launch:strict-external
-npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.39 --clean
+npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.40 --clean
 ```
 
 The strict external check must no longer fail `npm-fetch`.
@@ -108,5 +108,5 @@ The strict external check must no longer fail `npm-fetch`.
 
 - Do not configure `NPM_TOKEN` or `NODE_AUTH_TOKEN` for the publish job.
 - Do not claim Trusted Publishing or provenance until a real release used this workflow.
-- Do not post broad launch copy while `npm-fetch` still fails.
+- Do not post broad launch copy if `npm-fetch` fails.
 - Do not change the workflow filename, GitHub environment name or repository owner without updating the npm trusted publisher configuration.

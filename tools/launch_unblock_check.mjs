@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const packageJson = JSON.parse(readFileSync(path.join(repoRoot, "packages/sdlc-harness/package.json"), "utf8"));
 
 function parseArgs(argv) {
   const options = { json: false, output: null, strict: false };
@@ -83,6 +84,7 @@ function appendNpmOwnerCommands(lines, report) {
   if (report.npm.summary.status === "published") {
     return;
   }
+  const packageVersion = report.npm.package?.version ?? packageJson.version;
 
   lines.push("### npm", "");
   lines.push(`Status: ${report.npm.summary.status}`);
@@ -95,7 +97,7 @@ function appendNpmOwnerCommands(lines, report) {
     lines.push("npm login");
     lines.push("npm run launch:npm-access");
     lines.push("# After npm auth or token permissions are fixed:");
-    lines.push("npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke");
+    lines.push(`npm run release:npm -- --version ${packageVersion} --publish --yes --full-gate --registry-smoke`);
     lines.push("```");
     lines.push("");
     lines.push("If token-based publishing is required, create a publish-capable granular token on npmjs.com and follow `docs/launch/npm-credential-unblock.md`. Do not store tokens, OTP values or `.npmrc` content in this repository.");
@@ -106,7 +108,7 @@ function appendNpmOwnerCommands(lines, report) {
   if (report.npm.summary.status === "first-publish-needed") {
     lines.push("```sh");
     lines.push("npm run launch:npm-access");
-    lines.push("npm run release:npm -- --version 0.2.39 --publish --yes --full-gate --registry-smoke");
+    lines.push(`npm run release:npm -- --version ${packageVersion} --publish --yes --full-gate --registry-smoke`);
     lines.push("```");
     lines.push("");
     lines.push("If npm returns E403, stop and use `docs/launch/npm-credential-unblock.md` before retrying.");
@@ -165,7 +167,11 @@ export function renderMarkdown(report) {
   lines.push("npm run launch:strict-external");
   lines.push("```");
   lines.push("");
-  lines.push("Broad launch remains blocked until the strict external gate has no TODOs.");
+  if (report.status === "ready") {
+    lines.push("Broad launch gate is clear; keep final channel-specific review and claims-boundary checks before posting.");
+  } else {
+    lines.push("Broad launch remains blocked until the strict external gate has no TODOs.");
+  }
   return `${lines.join("\n")}\n`;
 }
 
