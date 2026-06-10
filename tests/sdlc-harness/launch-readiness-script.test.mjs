@@ -78,6 +78,7 @@ for (const expected of [
   "outreach-targets",
   "community-health-files",
   "scorecard-workflow",
+  "context-gap-template",
   "quickstart-smoke",
   "launch-check-script",
   "consumer-workflow-boundary",

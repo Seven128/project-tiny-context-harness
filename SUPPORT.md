@@ -18,6 +18,7 @@ Check:
 |---|---|
 | Bug in `init`, `sync`, `upgrade`, `doctor`, `export-context` or `validate-context` | GitHub bug report issue template |
 | Feature idea that preserves the Minimal Context boundary | GitHub feature request issue template |
+| Missing recovery fact, README confusion or fresh-agent handoff gap | Context recovery gap issue template |
 | Real adoption feedback from a repository | Adoption report issue template |
 | Security vulnerability | [SECURITY.md](SECURITY.md) |
 | Conduct or moderation concern | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) |

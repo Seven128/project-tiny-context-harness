@@ -209,6 +209,7 @@ function localChecks() {
   const npmTrustedPublishWorkflow = read(".github/workflows/npm-publish.yml");
   const scorecardWorkflow = read(".github/workflows/scorecard.yml");
   const adoptionReportTemplate = read(".github/ISSUE_TEMPLATE/adoption_report.yml");
+  const contextGapTemplate = read(".github/ISSUE_TEMPLATE/context_gap.yml");
   const releaseScript = read("tools/release_npm.mjs");
   const managedMakefile = read(".codex/pjsdlc_managed/make/sdlc-harness.mk");
   const packagedMakefile = read("packages/sdlc-harness/assets/make/sdlc-harness.mk");
@@ -596,6 +597,10 @@ function localChecks() {
     "community-starter-issues",
     contains(rootReadme, /Early feedback and starter issues/) &&
       contains(packageReadme, /Early feedback and starter issues/) &&
+      contains(rootReadme, /Context recovery gap/) &&
+      contains(packageReadme, /Context recovery gap/) &&
+      contains(rootReadme, /context_gap\.yml/) &&
+      contains(packageReadme, /context_gap\.yml/) &&
       contains(rootReadme, /github\.com\/Seven128\/project-tiny-context-harness\/issues\/4/) &&
       contains(packageReadme, /github\.com\/Seven128\/project-tiny-context-harness\/issues\/4/) &&
       contains(rootReadme, /github\.com\/Seven128\/project-tiny-context-harness\/issues\/5/) &&
@@ -1088,6 +1093,22 @@ function localChecks() {
     "OpenSSF Scorecard workflow publishes SARIF results and public scorecard data with narrow permissions."
   );
   addCheck(checks, "issue-templates", hasFile(".github/ISSUE_TEMPLATE/bug_report.yml") && hasFile(".github/ISSUE_TEMPLATE/feature_request.yml"), "Bug and feature issue templates exist.");
+  addCheck(
+    checks,
+    "context-gap-template",
+    hasFile(".github/ISSUE_TEMPLATE/context_gap.yml") &&
+      contains(contextGapTemplate, /Context recovery gap/) &&
+      contains(contextGapTemplate, /Missing or unclear recovery fact/) &&
+      contains(contextGapTemplate, /README first screen/) &&
+      contains(contextGapTemplate, /Browseable sample repository/) &&
+      contains(contextGapTemplate, /Package-generated project_context\/\*\*/) &&
+      contains(contextGapTemplate, /I removed secrets, customer details, private repository names, raw chat logs and private code/) &&
+      contains(support, /Context recovery gap issue template/) &&
+      contains(launchKit, /Context recovery gap form/) &&
+      contains(rootReadme, /context_gap\.yml/) &&
+      contains(packageReadme, /context_gap\.yml/),
+    "Context recovery gap issue template gives non-adopters a low-friction way to report unclear recovery facts without sharing private data."
+  );
   addCheck(
     checks,
     "adoption-report-template",

@@ -1,0 +1,68 @@
+name: Context recovery gap
+description: Report a missing recovery fact, README confusion or fresh-agent handoff gap.
+title: "[Context gap]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for lightweight feedback before or after adoption. Do not paste secrets, private code, raw chat logs or customer data.
+  - type: textarea
+    id: situation
+    attributes:
+      label: Situation
+      description: What were you trying to understand or ask a fresh coding agent to do?
+      placeholder: "Example: I wanted a fresh agent to understand whether Context files replace tests, or where verification paths should live."
+    validations:
+      required: true
+  - type: textarea
+    id: missing_fact
+    attributes:
+      label: Missing or unclear recovery fact
+      description: What should the README, sample repo, AGENTS.md or project_context/** have made obvious?
+      placeholder: "Example: It was unclear whether validation results belong in project_context/** or only the command path belongs there."
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface where you noticed it
+      options:
+        - README first screen
+        - Try It / source preview
+        - Browseable sample repository
+        - Existing-repo adoption guide
+        - Package-generated AGENTS.md
+        - Package-generated project_context/**
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Better wording or expected behavior
+      description: Optional. Suggest the smallest sentence, example or generated-file change that would have helped.
+    validations:
+      required: false
+  - type: dropdown
+    id: agent_surface
+    attributes:
+      label: Agent surface
+      options:
+        - Codex
+        - Claude Code
+        - Cursor
+        - OpenCode
+        - Gemini CLI
+        - Other
+        - Not agent-specific
+    validations:
+      required: false
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed secrets, customer details, private repository names, raw chat logs and private code.
+          required: true
+
