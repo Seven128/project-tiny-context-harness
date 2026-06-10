@@ -19,6 +19,7 @@ Ready now:
 - Agent surface recipes explain Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness-folder adoption without splitting `project_context/**`.
 - FAQ answers AGENTS.md overlap, README overlap, benchmark boundaries, Context update rules and npm-pending source preview.
 - Response templates cover predictable HN/Reddit/Product Hunt questions without benchmark, adoption, award or star claims.
+- Launch claims boundary checklist exists for final public copy review before posting or submitting.
 - Codex for Open Source application copy exists for maintainer-reviewed submission without claiming official OpenAI integration.
 
 Not ready yet:
@@ -136,6 +137,7 @@ Do not add a Best Practices or Baseline badge to README until the official site 
 - Keep README, npm and launch copy English-first; keep localized material behind secondary links or as literal compatibility examples.
 - Ask for feedback and missing facts, not stars.
 - Treat stars as distribution telemetry, not proof of quality.
+- Check [claims-boundary.md](claims-boundary.md) before final public copy, awards copy or directory PR wording.
 - Turn repeated questions into README/FAQ or issues within 24 hours.
 - Do not submit to award programs before the demo and first public feedback exist.
 

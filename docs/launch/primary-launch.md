@@ -33,6 +33,7 @@ Confirm:
 - Issue #5 has the current demo packet and repo-hosted GIF URL.
 - README first screen still shows install, 60-second trial and non-goals.
 - Public-facing copy is English-first; any Chinese or other non-English strings are clearly literal trigger examples, generated filenames or maintainer notes.
+- [claims-boundary.md](claims-boundary.md) has been checked against the exact final Show HN, Product Hunt or Reddit text.
 - Agent surface recipes are linked for Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness folders.
 - Response templates in `docs/launch/response-templates.md` are open for AGENTS.md overlap, benchmark asks, stage-ceremony questions and feedback triage.
 - No copy claims benchmark wins, adoption, awards or productivity multipliers.
@@ -215,6 +216,8 @@ Within 24 hours:
 Second action if comments are not exposing a major positioning flaw: submit the two P0 curated-list PRs from `docs/launch/awesome-list-submissions.md`. Defer Product Hunt if the first comments show unclear positioning, even though the media packet now exists.
 
 ## Claims Boundary
+
+Use [claims-boundary.md](claims-boundary.md) as the final single-page check before posting.
 
 Allowed:
 

@@ -166,6 +166,7 @@ function localChecks() {
   const launchKit = read("docs/launch/README.md");
   const githubMetadataRunbook = read("docs/launch/github-metadata.md");
   const launchProfile = read("docs/launch/profile.md");
+  const claimsBoundary = read("docs/launch/claims-boundary.md");
   const primaryLaunch = read("docs/launch/primary-launch.md");
   const feedbackTriage = read("docs/launch/feedback-triage.md");
   const reviewerQuickstart = read("docs/launch/reviewer-quickstart.md");
@@ -819,6 +820,7 @@ function localChecks() {
       contains(launchKit, /npm-trusted-publishing\.md/) &&
       contains(launchKit, /awesome-list-submissions\.md/) &&
       contains(launchKit, /npm run launch:external-prs/) &&
+      contains(launchKit, /claims-boundary\.md/) &&
       contains(launchKit, /Readiness boundary/) &&
       contains(launchKit, /repo-hosted media/) &&
       contains(launchKit, /Keep the memory\. Drop the ceremony\./) &&
@@ -827,6 +829,29 @@ function localChecks() {
       contains(launchKit, /FAQ/) &&
       contains(launchKit, /does not mean Product Hunt, curated-list submissions or awards are ready/),
     "Launch kit has copy-ready channel drafts, media pointers, readiness boundary and no-benchmark boundary."
+  );
+  addCheck(
+    checks,
+    "launch-claims-boundary",
+    hasFile("docs/launch/claims-boundary.md") &&
+      contains(launchKit, /Launch claims boundary/) &&
+      contains(launchKit, /no benchmark, adoption, award, test-replacement or SDLC-automation overclaim/) &&
+      contains(primaryLaunch, /claims-boundary\.md/) &&
+      contains(responseTemplates, /claims-boundary\.md/) &&
+      contains(outreachTargets, /claims-boundary\.md/) &&
+      contains(claimsBoundary, /Launch Claims Boundary/) &&
+      contains(claimsBoundary, /minimal repo-native project memory for AI coding agents/) &&
+      contains(claimsBoundary, /not benchmark-proven faster/) &&
+      contains(claimsBoundary, /not adoption-proven/) &&
+      contains(claimsBoundary, /not a replacement for tests, CI, review or issue tracking/) &&
+      contains(claimsBoundary, /Claims That Need Evidence First/) &&
+      contains(claimsBoundary, /OpenSSF Best Practices \/ Baseline badge/) &&
+      contains(claimsBoundary, /Before Show HN/) &&
+      contains(claimsBoundary, /Before Product Hunt/) &&
+      contains(claimsBoundary, /Before curated-list PRs/) &&
+      contains(claimsBoundary, /Before private-review summaries/) &&
+      contains(claimsBoundary, /does it ask for feedback instead of stars, upvotes or awards/i),
+    "Launch claims boundary gives a single final copy-review surface for avoiding benchmark, adoption, award and replacement overclaims."
   );
   addCheck(
     checks,

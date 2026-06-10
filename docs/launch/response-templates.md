@@ -9,6 +9,7 @@ Public stance:
 - Ask for technical feedback, not stars or upvotes.
 - Keep the claim narrow: repo-native Minimal Context for fresh-agent recovery.
 - Do not claim adoption, awards, benchmark wins or productivity multipliers.
+- Use [claims-boundary.md](claims-boundary.md) before writing a new public reply pattern.
 - Link the FAQ for repeated objections: [../faq.md](../faq.md).
 
 ## AGENTS.md Overlap
@@ -157,4 +158,3 @@ Link: [Adoption report issue form](https://github.com/Seven128/project-tiny-cont
 | Integration request | Ask which agent/tool and what fact recovery failed. Do not promise scope. |
 | Dismissive one-liner | Do not argue. Save energy for substantive comments. |
 | Real adoption example | Ask them to file or comment on the adoption report issue. |
-
