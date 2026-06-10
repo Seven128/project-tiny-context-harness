@@ -1101,6 +1101,8 @@ function localChecks() {
       contains(npmTrustedPublishWorkflow, /id-token:\s*write/) &&
       contains(npmTrustedPublishWorkflow, /contents:\s*read/) &&
       contains(npmTrustedPublishWorkflow, /environment:\s*npm-publish/) &&
+      contains(npmTrustedPublishWorkflow, /uses: actions\/checkout@v6/) &&
+      contains(npmTrustedPublishWorkflow, /uses: actions\/setup-node@v6/) &&
       contains(npmTrustedPublishWorkflow, /node-version:\s*"24"/) &&
       contains(npmTrustedPublishWorkflow, /registry-url:\s*"https:\/\/registry\.npmjs\.org"/) &&
       contains(npmTrustedPublishWorkflow, /npm install -g npm@latest/) &&
@@ -1373,7 +1375,7 @@ function localChecks() {
       contains(scorecardWorkflow, /workflow_dispatch:/) &&
       contains(scorecardWorkflow, /security-events: write/) &&
       contains(scorecardWorkflow, /id-token: write/) &&
-      contains(scorecardWorkflow, /uses: actions\/checkout@v5/) &&
+      contains(scorecardWorkflow, /uses: actions\/checkout@v6/) &&
       contains(scorecardWorkflow, /uses: ossf\/scorecard-action@v2\.4\.3/) &&
       contains(scorecardWorkflow, /results_format: sarif/) &&
       contains(scorecardWorkflow, /publish_results: true/) &&
@@ -1447,6 +1449,8 @@ function localChecks() {
     "consumer-workflow-boundary",
     contains(sourceWorkflow, /Run harness gate/) &&
       contains(sourceWorkflow, /Prepare source workspace CLI/) &&
+      contains(sourceWorkflow, /uses: actions\/checkout@v6/) &&
+      contains(sourceWorkflow, /uses: actions\/setup-node@v6/) &&
       contains(sourceWorkflow, /hashFiles\('packages\/sdlc-harness\/package\.json'\) != ''/) &&
       contains(sourceWorkflow, /npm run build --workspace project-tiny-context-harness/) &&
       !contains(sourceWorkflow, /npm test --workspace project-tiny-context-harness|package check-source|npm publish/),
@@ -1458,6 +1462,8 @@ function localChecks() {
     contains(maintainerWorkflow, /Test package/) &&
       contains(maintainerWorkflow, /\.github\/workflows\/npm-publish\.yml/) &&
       contains(maintainerWorkflow, /\.github\/workflows\/scorecard\.yml/) &&
+      contains(maintainerWorkflow, /uses: actions\/checkout@v6/) &&
+      contains(maintainerWorkflow, /uses: actions\/setup-node@v6/) &&
       contains(maintainerWorkflow, /Check package canonical source drift/) &&
       contains(maintainerWorkflow, /node packages\/sdlc-harness\/dist\/cli\.js package check-source/) &&
       contains(maintainerWorkflow, /Validate source Context/),
