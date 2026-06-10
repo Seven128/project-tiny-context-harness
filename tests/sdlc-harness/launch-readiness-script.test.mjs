@@ -42,6 +42,7 @@ for (const expected of [
   "private-review-packet",
   "adoption-story-template",
   "community-starter-issues",
+  "public-roadmap",
   "launch-kit",
   "launch-operating-plan",
   "primary-launch-packet",

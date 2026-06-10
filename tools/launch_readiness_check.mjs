@@ -151,6 +151,7 @@ function localChecks() {
   const responseTemplates = read("docs/launch/response-templates.md");
   const agentSurfaceRecipes = read("docs/agent-surface-recipes.md");
   const faq = read("docs/faq.md");
+  const roadmap = read("docs/roadmap.md");
   const freshAgentWalkthrough = read("docs/examples/fresh-agent-recovery.md");
   const minimalContextSample = read("docs/examples/minimal-context-sample.md");
   const externalPrPacket = read("docs/launch/external-prs/README.md");
@@ -382,6 +383,24 @@ function localChecks() {
       contains(rootReadme, /benchmark speedup claims need fresh Minimal Context benchmark runs/) &&
       contains(packageReadme, /benchmark speedup claims need fresh Minimal Context benchmark runs/),
     "README and package README expose adoption handoff and starter issues without benchmark overclaiming."
+  );
+  addCheck(
+    checks,
+    "public-roadmap",
+    hasFile("docs/roadmap.md") &&
+      contains(rootReadme, /roadmap]\(docs\/roadmap\.md\)/) &&
+      contains(packageReadme, /roadmap]\(https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/blob\/main\/docs\/roadmap\.md\)/) &&
+      contains(roadmap, /Repo-native project memory for fresh-agent recovery/) &&
+      contains(roadmap, /## Now/) &&
+      contains(roadmap, /## Next/) &&
+      contains(roadmap, /## Later/) &&
+      contains(roadmap, /## Not Planned/) &&
+      contains(roadmap, /Publish the renamed npm package/) &&
+      contains(roadmap, /public adoption stories/) &&
+      contains(roadmap, /Re-run delivery benchmarks against the current Minimal Context design/) &&
+      contains(roadmap, /Full SDLC phase gates, lifecycle state or work-product trees/) &&
+      contains(roadmap, /validate-context` proves product quality/),
+    "Public roadmap is linked from README/package README and keeps next steps bounded to Minimal Context without proof claims."
   );
   addCheck(
     checks,
