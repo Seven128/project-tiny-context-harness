@@ -97,14 +97,14 @@ Use this if agents keep losing project intent between chats. It adds a small pro
 
 - Merge current launch-readiness changes into the GitHub default branch.
 - Run `npm run launch:check` locally; run it again without `--offline` before external launch to see current GitHub/npm metadata drift.
-- Confirm README first screen shows badges, install command, positioning and 60-second trial.
+- Confirm README first screen shows badges, including OpenSSF Scorecard, install command, positioning and 60-second trial.
 - Set GitHub description, homepage and topics from this file.
 - Follow [npm-publish-runbook.md](npm-publish-runbook.md) while the renamed package still returns 404.
 - Publish a new npm version after `npm test --workspace project-tiny-context-harness`, `npm run smoke:quickstart`, `make validate-context` and package source check pass.
 - Confirm npm package page renders the updated package README and MIT license.
 - Run `npm run smoke:quickstart` after publish against `project-tiny-context-harness@latest` or a clean test project.
 - Confirm `SECURITY.md`, Dependabot and adoption-report issue template are visible on GitHub.
-- Confirm OpenSSF Scorecard workflow is present and runs on `main`, weekly schedule and manual dispatch.
+- Confirm OpenSSF Scorecard badge is visible from README and OpenSSF Scorecard workflow runs on `main`, weekly schedule and manual dispatch.
 - Confirm the fresh-agent recovery walkthrough and Minimal Context sample project are linked from README.
 - Confirm agent surface recipes are linked from README and explain Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness folders without splitting `project_context/**`.
 - Confirm the FAQ is linked from README and answers AGENTS.md overlap, README overlap, benchmark boundaries, Context update rules and npm-pending source preview.
@@ -132,7 +132,7 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 | 60-90 second demo | Record the demo storyboard below. | Viewer can see install, generated files and fresh-agent recovery prompt. |
 | First support surface | Keep the adoption-report issue form and pinned feedback issue visible. | Launch posts have one feedback link beyond the README, and consented reports can become public adoption stories without another authorization round. |
 | First contribution queue | Keep low-risk demo/docs/example issues labeled with `good first issue`, `help wanted` and `documentation` where appropriate. | New visitors can contribute without understanding package internals. |
-| Trust surface | Keep `SECURITY.md`, Dependabot, OpenSSF Scorecard workflow and issue templates visible. | New users can see how to report risk, dependency drift, supply-chain posture and adoption feedback. |
+| Trust surface | Keep `SECURITY.md`, Dependabot, OpenSSF Scorecard badge, OpenSSF Scorecard workflow and issue templates visible. | New users can see how to report risk, dependency drift, supply-chain posture and adoption feedback. |
 | Example surface | Keep a before/after fresh-agent walkthrough and Minimal Context sample project linked from README. | New visitors can see how Context prevents rediscovery and what the generated recovery surface looks like without claiming benchmark wins. |
 | Agent-surface recipes | Keep `docs/agent-surface-recipes.md` linked from README. | Users of Codex, Claude Code, Cursor, Gemini CLI, OpenCode or custom tools can adopt without assuming separate project memories. |
 | FAQ surface | Keep `docs/faq.md` linked from README. | Launch replies can point to concise answers for AGENTS.md overlap, README overlap, benchmarks, Context update rules and npm-pending source preview. |

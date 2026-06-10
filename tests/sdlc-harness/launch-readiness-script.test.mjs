@@ -33,6 +33,7 @@ for (const expected of [
   "package-readme-demo-media",
   "public-language-posture",
   "localized-readme",
+  "scorecard-badge",
   "root-readme-prepublish-boundary",
   "root-readme-source-preview",
   "agent-surface-recipes",

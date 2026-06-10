@@ -106,6 +106,9 @@ function hasCjk(content) {
   return /[\u3400-\u9fff]/.test(content);
 }
 
+const scorecardBadgePattern =
+  /\[!\[OpenSSF Scorecard\]\(https:\/\/api\.securityscorecards\.dev\/projects\/github\.com\/Seven128\/project-tiny-context-harness\/badge\)\]\(https:\/\/securityscorecards\.dev\/viewer\/\?uri=github\.com\/Seven128\/project-tiny-context-harness\)/;
+
 function requestJson(url) {
   return new Promise((resolve, reject) => {
     const request = https.get(
@@ -265,6 +268,14 @@ function localChecks() {
       contains(zhReadme, /英文主入口/) &&
       contains(zhReadme, /中文文档作为二级入口/),
     "Localized Chinese README exists as a secondary entry while public launch surfaces remain English-first."
+  );
+  addCheck(
+    checks,
+    "scorecard-badge",
+    scorecardBadgePattern.test(rootReadme) &&
+      scorecardBadgePattern.test(packageReadme) &&
+      contains(launchKit, /OpenSSF Scorecard badge/),
+    "README and package README expose the OpenSSF Scorecard badge as a first-screen trust surface."
   );
   addCheck(
     checks,
