@@ -114,6 +114,13 @@ for (const expected of [
 const launchKit = readFileSync(path.join(repoRoot, "docs/launch/README.md"), "utf8");
 assert.doesNotMatch(launchKit, /Show HN: Minimal project memory for AI coding agents/);
 assert.match(launchKit, /Use \[primary-launch\.md\]\(primary-launch\.md\) as the canonical Show HN source/);
+assert.doesNotMatch(launchKit, /final body copy/);
+assert.match(launchKit, /first-comment copy/);
+
+const primaryLaunch = readFileSync(path.join(repoRoot, "docs/launch/primary-launch.md"), "utf8");
+assert.match(primaryLaunch, /Do not put the long text below in the HN submit form/);
+assert.match(primaryLaunch, /First comment after the story is live/);
+assert.match(primaryLaunch, /final maintainer pass/);
 
 const scriptSource = readFileSync(scriptPath, "utf8");
 for (const expected of [

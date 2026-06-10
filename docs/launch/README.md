@@ -265,7 +265,7 @@ make validate-context
 
 ## Hacker News Draft
 
-Use [primary-launch.md](primary-launch.md) as the canonical Show HN source. It contains the current title, repository URL, HN prefill URL, final body copy and first-hour response playbook.
+Use [primary-launch.md](primary-launch.md) as the canonical Show HN source. It contains the current title, repository URL, HN prefill URL, first-comment copy and first-hour response playbook.
 
 Do not copy an older draft from this file. Run `npm run launch:next -- --live` and use the `show-hn` prefill URL after logging in to Hacker News.
 

@@ -1045,6 +1045,9 @@ function localChecks() {
       contains(primaryLaunch, /project-tiny-context-harness@latest/) &&
       contains(primaryLaunch, /Prefill URL for the HN submit form after login/) &&
       contains(primaryLaunch, /news\.ycombinator\.com\/submitlink\?u=https%3A%2F%2Fgithub\.com%2FSeven128%2Fproject-tiny-context-harness&t=Show%20HN%3A%20Tiny%20project%20memory%20for%20coding%20agents/) &&
+      contains(primaryLaunch, /Do not put the long text below in the HN submit form/) &&
+      contains(primaryLaunch, /First comment after the story is live/) &&
+      contains(primaryLaunch, /final maintainer pass/) &&
       contains(primaryLaunch, new RegExp(`github-release-${escapeRegex(packageJson.version)}\\.md`)) &&
       contains(primaryLaunch, /npm-publish-runbook\.md/) &&
       contains(primaryLaunch, /Product Hunt/) &&
@@ -1054,7 +1057,7 @@ function localChecks() {
       contains(primaryLaunch, /24-Hour Response Playbook/) &&
       contains(primaryLaunch, /feedback-triage\.md/) &&
       contains(primaryLaunch, /Do not ask for stars|Asking for stars/),
-    "Primary launch packet has copy-ready first-channel copy, Product Hunt follow-up, response playbook and claims boundary."
+    "Primary launch packet has link-first Show HN guidance, copy-ready first-comment copy, Product Hunt follow-up, response playbook and claims boundary."
   );
   addCheck(
     checks,

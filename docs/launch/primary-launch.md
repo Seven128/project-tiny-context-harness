@@ -40,7 +40,7 @@ Confirm:
 
 ## Show HN
 
-Source: [Show HN guidelines](https://news.ycombinator.com/showhn.html).
+Source: [Show HN guidelines](https://news.ycombinator.com/showhn.html), [HN FAQ](https://news.ycombinator.com/newsfaq.html), [HN guidelines](https://news.ycombinator.com/newsguidelines.html).
 
 Recommended URL:
 
@@ -60,7 +60,11 @@ Title:
 Show HN: Tiny project memory for coding agents
 ```
 
-Body:
+Submit the repository URL and title first. Do not put the long text below in the HN submit form; when a link needs context, the HN FAQ points submitters to add a regular comment after the story is live.
+
+Before posting the comment, do one final maintainer pass so it sounds like you.
+
+First comment after the story is live:
 
 ```text
 I made this because I kept running into a boring problem: a coding agent can be useful in one chat, then a new chat has to rediscover the same project facts all over again.
