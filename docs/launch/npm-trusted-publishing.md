@@ -73,7 +73,7 @@ It is manual-only:
 In GitHub Actions, run **npm Trusted Publish** with:
 
 ```text
-expected_version: 0.2.40
+expected_version: 0.2.41
 dry_run: true
 ```
 

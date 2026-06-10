@@ -45,8 +45,8 @@ try {
 
   const previewReport = JSON.parse(await readFile(path.join(sourcePreviewOutDir, "source-preview-report.json"), "utf8"));
   assert.equal(previewReport.status, "packed");
-  assert.equal(previewReport.package, "project-tiny-context-harness@0.2.40");
-  assert.match(previewReport.tarballPath, /project-tiny-context-harness-0\.2\.40\.tgz$/);
+  assert.equal(previewReport.package, "project-tiny-context-harness@0.2.41");
+  assert.match(previewReport.tarballPath, /project-tiny-context-harness-0\.2\.41\.tgz$/);
   await stat(previewReport.tarballPath);
 } finally {
   await rm(outDir, { recursive: true, force: true });

@@ -98,6 +98,10 @@ function contains(content, pattern) {
   return pattern.test(content);
 }
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function firstLines(content, count) {
   return content.split(/\r?\n/).slice(0, count).join("\n");
 }
@@ -227,6 +231,10 @@ function localChecks() {
   const managedMakefile = read(".codex/pjsdlc_managed/make/sdlc-harness.mk");
   const packagedMakefile = read("packages/sdlc-harness/assets/make/sdlc-harness.mk");
   const codespacesUrlPattern = /https:\/\/codespaces\.new\/Seven128\/project-tiny-context-harness/;
+  const packageVersionPattern = escapeRegExp(packageJson.version);
+  const sourcePreviewTarballPattern = new RegExp(
+    `tmp\\/sdlc\\/source-preview\\/package\\/project-tiny-context-harness-${packageVersionPattern}\\.tgz`
+  );
 
   addCheck(checks, "root-package-name", rootPackage.name === "project-tiny-context-harness", "Root package name is project-tiny-context-harness.");
   addCheck(checks, "root-license", rootPackage.license === "MIT" && hasFile("LICENSE"), "Root package has MIT license metadata and LICENSE file.");
@@ -411,7 +419,7 @@ function localChecks() {
       contains(rootReadme, /git clone https:\/\/github\.com\/Seven128\/project-tiny-context-harness\.git/) &&
       contains(rootReadme, /npm run smoke:quickstart/) &&
       contains(rootReadme, /npm run preview:pack/) &&
-      contains(rootReadme, /tmp\/sdlc\/source-preview\/package\/project-tiny-context-harness-0\.2\.40\.tgz/) &&
+      contains(rootReadme, sourcePreviewTarballPattern) &&
       contains(rootReadme, /npx --no-install sdlc-harness init --adopt/) &&
       contains(rootReadme, /packs the local workspace, installs it into a disposable repo/) &&
       contains(rootReadme, /validates the generated Minimal Context files/) &&
@@ -426,7 +434,7 @@ function localChecks() {
       contains(packageReadme, /git clone https:\/\/github\.com\/Seven128\/project-tiny-context-harness\.git/) &&
       contains(packageReadme, /npm run smoke:quickstart/) &&
       contains(packageReadme, /npm run preview:pack/) &&
-      contains(packageReadme, /tmp\/sdlc\/source-preview\/package\/project-tiny-context-harness-0\.2\.40\.tgz/) &&
+      contains(packageReadme, sourcePreviewTarballPattern) &&
       contains(packageReadme, /npx --no-install sdlc-harness init --adopt/) &&
       contains(packageReadme, /For normal installs, use `project-tiny-context-harness@latest` from npm/) &&
       contains(packageReadme, /source_preview_report\.yml/),
@@ -445,7 +453,7 @@ function localChecks() {
       contains(privateReview, /npm run preview:pack/) &&
       contains(privateReview, /disposable copy of your own repo/) &&
       contains(launchProfile, /npm run preview:pack/) &&
-      contains(launchProfile, /tmp\/sdlc\/source-preview\/package\/project-tiny-context-harness-0\.2\.40\.tgz/),
+      contains(launchProfile, sourcePreviewTarballPattern),
     "Source-preview tarball path lets reviewers and maintainers test a local package build outside the normal npm install route."
   );
   addCheck(
@@ -1109,9 +1117,11 @@ function localChecks() {
       contains(npmTrustedPublishing, /post-first-publish release path/) &&
       contains(npmTrustedPublishing, /package now exists on npm/) &&
       contains(npmTrustedPublishing, /must not define `NPM_TOKEN` or `NODE_AUTH_TOKEN`/) &&
+      contains(npmTrustedPublishing, new RegExp(`expected_version: ${packageVersionPattern}`)) &&
       contains(npmTrustedPublishWorkflow, /name: npm Trusted Publish/) &&
       contains(npmTrustedPublishWorkflow, /workflow_dispatch:/) &&
       contains(npmTrustedPublishWorkflow, /dry_run:/) &&
+      contains(npmTrustedPublishWorkflow, new RegExp(`default:\\s*"${packageVersionPattern}"`)) &&
       contains(npmTrustedPublishWorkflow, /default: true/) &&
       contains(npmTrustedPublishWorkflow, /id-token:\s*write/) &&
       contains(npmTrustedPublishWorkflow, /contents:\s*read/) &&

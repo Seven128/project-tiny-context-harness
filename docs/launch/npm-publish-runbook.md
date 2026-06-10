@@ -105,7 +105,7 @@ After the first publish and any postpublish patch, run:
 
 ```sh
 npm run launch:strict-external
-npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@0.2.40 --clean
+npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@latest --clean
 npm view project-tiny-context-harness readme --json
 ```
 
