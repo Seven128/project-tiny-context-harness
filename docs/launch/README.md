@@ -4,7 +4,7 @@ This is the maintainer launch kit for Project Tiny Context Harness. It is copy-r
 
 Do not claim benchmark wins yet. Current public positioning is based on product design and smoke evidence: the package installs a small, durable recovery surface and `validate-context` gate. Fresh Minimal Context benchmark runs are still required before publishing efficiency claims.
 
-For competitor and feasibility context, see [market-map.md](market-map.md). For current launch, award and curated-list execution targets, see [outreach-targets.md](outreach-targets.md). For copy-ready primary launch execution, see [primary-launch.md](primary-launch.md). For npm publication, see [npm-publish-runbook.md](npm-publish-runbook.md). For curated-list PR copy, see [awesome-list-submissions.md](awesome-list-submissions.md). For the recording packet, see [demo.md](demo.md).
+For competitor and feasibility context, see [market-map.md](market-map.md). For current launch, award and curated-list execution targets, see [outreach-targets.md](outreach-targets.md). For copy-ready primary launch execution, see [primary-launch.md](primary-launch.md). For launch reply handling, see [response-templates.md](response-templates.md). For npm publication, see [npm-publish-runbook.md](npm-publish-runbook.md). For curated-list PR copy, see [awesome-list-submissions.md](awesome-list-submissions.md). For the recording packet, see [demo.md](demo.md).
 
 Readiness boundary: `npm run launch:check` means the metadata, docs, launch packets and repo-hosted media are internally coherent. It does not mean Product Hunt, curated-list submissions or awards are ready. Those still require final account-specific submission review, first feedback or adoption evidence.
 
@@ -106,6 +106,7 @@ Use this if agents keep losing project intent between chats. It adds a small pro
 - Confirm the fresh-agent recovery walkthrough and Minimal Context sample project are linked from README.
 - Confirm agent surface recipes are linked from README and explain Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness folders without splitting `project_context/**`.
 - Confirm the FAQ is linked from README and answers AGENTS.md overlap, README overlap, benchmark boundaries, Context update rules and npm-pending source preview.
+- Confirm response templates cover AGENTS.md overlap, benchmark asks, stage-ceremony questions, test/CI boundaries, existing-repo adoption and feedback triage.
 - Confirm the adoption handoff issue and starter issues are visible and labeled for discovery.
 - Record a short terminal demo from the 60-second trial.
 - Post to one primary technical venue first, then reuse the same claim across smaller channels.
@@ -128,6 +129,7 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 | Example surface | Keep a before/after fresh-agent walkthrough and Minimal Context sample project linked from README. | New visitors can see how Context prevents rediscovery and what the generated recovery surface looks like without claiming benchmark wins. |
 | Agent-surface recipes | Keep `docs/agent-surface-recipes.md` linked from README. | Users of Codex, Claude Code, Cursor, Gemini CLI, OpenCode or custom tools can adopt without assuming separate project memories. |
 | FAQ surface | Keep `docs/faq.md` linked from README. | Launch replies can point to concise answers for AGENTS.md overlap, README overlap, benchmarks, Context update rules and npm-pending source preview. |
+| Response templates | Keep `docs/launch/response-templates.md` linked from this launch kit. | Maintainer replies stay narrow, factual and non-hype when HN/Reddit/Product Hunt comments ask predictable questions. |
 
 ### Channel Matrix
 

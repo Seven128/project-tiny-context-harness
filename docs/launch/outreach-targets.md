@@ -16,6 +16,7 @@ Ready now:
 - Fresh-agent recovery walkthrough and Minimal Context sample project are linked from README.
 - Agent surface recipes explain Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness-folder adoption without splitting `project_context/**`.
 - FAQ answers AGENTS.md overlap, README overlap, benchmark boundaries, Context update rules and npm-pending source preview.
+- Response templates cover predictable HN/Reddit/Product Hunt questions without benchmark, adoption, award or star claims.
 
 Not ready yet:
 

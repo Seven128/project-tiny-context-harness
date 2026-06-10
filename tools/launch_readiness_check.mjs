@@ -146,6 +146,7 @@ function localChecks() {
   const primaryLaunch = read("docs/launch/primary-launch.md");
   const npmPublishRunbook = read("docs/launch/npm-publish-runbook.md");
   const awesomeListSubmissions = read("docs/launch/awesome-list-submissions.md");
+  const responseTemplates = read("docs/launch/response-templates.md");
   const agentSurfaceRecipes = read("docs/agent-surface-recipes.md");
   const faq = read("docs/faq.md");
   const freshAgentWalkthrough = read("docs/examples/fresh-agent-recovery.md");
@@ -301,6 +302,23 @@ function localChecks() {
       contains(faq, /Do not publish benchmark speedup claims from old stage-based results/) &&
       contains(faq, /source preview path/),
     "FAQ exists, is linked from README and answers launch/adoption objections without benchmark overclaiming."
+  );
+  addCheck(
+    checks,
+    "launch-response-templates",
+    hasFile("docs/launch/response-templates.md") &&
+      contains(launchKit, /response-templates\.md/) &&
+      contains(primaryLaunch, /response-templates\.md/) &&
+      contains(outreachTargets, /Response templates cover/) &&
+      contains(responseTemplates, /AGENTS\.md Overlap/) &&
+      contains(responseTemplates, /Benchmark Questions/) &&
+      contains(responseTemplates, /Stage Ceremony/) &&
+      contains(responseTemplates, /Tests And CI Boundary/) &&
+      contains(responseTemplates, /Existing Repos/) &&
+      contains(responseTemplates, /Do not claim adoption, awards, benchmark wins or productivity multipliers/) &&
+      contains(responseTemplates, /Do not say old stage-based results prove the current package is faster/) &&
+      contains(responseTemplates, /Adoption report issue form/),
+    "Launch response templates exist and keep public replies narrow, factual and non-hype."
   );
   addCheck(
     checks,

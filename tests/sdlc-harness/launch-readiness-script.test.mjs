@@ -38,6 +38,7 @@ for (const expected of [
   "agent-surface-recipes",
   "minimal-context-sample",
   "launch-faq",
+  "launch-response-templates",
   "community-starter-issues",
   "launch-kit",
   "launch-operating-plan",

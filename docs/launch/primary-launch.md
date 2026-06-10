@@ -33,6 +33,7 @@ Confirm:
 - README first screen still shows install, 60-second trial and non-goals.
 - Public-facing copy is English-first; any Chinese or other non-English strings are clearly literal trigger examples, generated filenames or maintainer notes.
 - Agent surface recipes are linked for Codex, Claude Code, Cursor, Gemini CLI, OpenCode and custom harness folders.
+- Response templates in `docs/launch/response-templates.md` are open for AGENTS.md overlap, benchmark asks, stage-ceremony questions and feedback triage.
 - No copy claims benchmark wins, adoption, awards or productivity multipliers.
 
 ## Show HN
@@ -81,6 +82,8 @@ Comment if asked "How is this different from AGENTS.md?":
 ```text
 AGENTS.md is the startup router. The part I found missing was a small maintained fact source behind it: project goal, non-goals, architecture boundary, ownership and repeatable validation paths. The harness keeps AGENTS.md short and uses validate-context to catch missing or misleading recovery facts.
 ```
+
+For more comment replies, use [response-templates.md](response-templates.md).
 
 Comment if asked "Isn't this just documentation?":
 
