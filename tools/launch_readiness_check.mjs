@@ -1225,6 +1225,9 @@ function localChecks() {
       contains(launchKit, /Curated-list patch packets/) &&
       contains(awesomeListSubmissions, /npm run launch:external-prs -- --live --clean/) &&
       contains(externalPrPacket, /npm run launch:external-prs/) &&
+      contains(externalPrPacket, /Recommended Opening Order/) &&
+      contains(externalPrPacket, /1\. `ai-boost\/awesome-harness-engineering`/) &&
+      contains(externalPrPacket, /2\. `Picrew\/awesome-agent-harness`/) &&
       contains(externalPrPacket, /does not fork repositories, push branches or open PRs/),
     "External PR packet check verifies curated-list packet integrity and offers an optional live patch-apply check before PR creation."
   );

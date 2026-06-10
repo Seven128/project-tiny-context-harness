@@ -156,6 +156,12 @@ function staticChecks() {
     /Recommended Order[\s\S]*1\. `ai-boost\/awesome-harness-engineering`[\s\S]*2\. `Picrew\/awesome-agent-harness`/.test(awesomeListSubmissions),
     "Awesome-list packet starts with narrow harness/context targets before broader AI dev-tool directories."
   );
+  addCheck(
+    checks,
+    "external-pr-readme-order-narrow-first",
+    /Recommended Opening Order[\s\S]*1\. `ai-boost\/awesome-harness-engineering`[\s\S]*2\. `Picrew\/awesome-agent-harness`/.test(packetReadme),
+    "External PR execution packet starts with narrow harness/context targets before broader AI dev-tool directories."
+  );
 
   checkForbidden(checks, "external-pr-readme", packetReadme);
   checkForbidden(checks, "awesome-list-submissions", awesomeListSubmissions);

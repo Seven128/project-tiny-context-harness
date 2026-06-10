@@ -31,6 +31,19 @@ npm run launch:external-prs -- --live --clean
 
 Default mode is read-only and does not access the network. Live mode clones upstream repositories under `tmp/sdlc/external-pr-packets/repos`, verifies each patch with `git apply --check`, applies it in the temporary clone and runs `git diff --check`. It does not fork repositories, push branches or open PRs.
 
+## Recommended Opening Order
+
+Open PRs from narrowest category fit to broadest fit:
+
+1. `ai-boost/awesome-harness-engineering`
+2. `Picrew/awesome-agent-harness`
+3. `Transcenda/awesome-agentic-coding`
+4. `jordimas/awesome-agentic-engineering`
+5. `awesome-opencode/awesome-opencode`
+6. `jamesmurdza/awesome-ai-devtools`
+
+Reason: a new 0-star package is easier for maintainers to evaluate when the target category already expects context delivery, working-state engineering or harness primitives. Broader AI dev-tool directories are useful after first feedback, an accepted narrow listing or clearer social proof.
+
 ## Transcenda Awesome Agentic Coding
 
 Target: `Transcenda/awesome-agentic-coding`
