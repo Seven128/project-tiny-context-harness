@@ -41,6 +41,7 @@ for (const expected of [
   "root-readme-source-preview",
   "package-readme-source-preview",
   "source-preview-pack",
+  "source-preview-report-template",
   "codespaces-preview",
   "agent-surface-recipes",
   "technical-article",

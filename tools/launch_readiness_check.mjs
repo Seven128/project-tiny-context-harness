@@ -217,6 +217,7 @@ function localChecks() {
   const issueTemplateConfig = read(".github/ISSUE_TEMPLATE/config.yml");
   const adoptionReportTemplate = read(".github/ISSUE_TEMPLATE/adoption_report.yml");
   const contextGapTemplate = read(".github/ISSUE_TEMPLATE/context_gap.yml");
+  const sourcePreviewReportTemplate = read(".github/ISSUE_TEMPLATE/source_preview_report.yml");
   const releaseScript = read("tools/release_npm.mjs");
   const managedMakefile = read(".codex/pjsdlc_managed/make/sdlc-harness.mk");
   const packagedMakefile = read("packages/sdlc-harness/assets/make/sdlc-harness.mk");
@@ -370,7 +371,8 @@ function localChecks() {
       contains(rootReadme, /npx --no-install sdlc-harness init --adopt/) &&
       contains(rootReadme, /packs the local workspace, installs it into a disposable repo/) &&
       contains(rootReadme, /validates the generated Minimal Context files/) &&
-      contains(rootReadme, /Use this tarball path only for source-preview testing while npm publication is pending/),
+      contains(rootReadme, /Use this tarball path only for source-preview testing while npm publication is pending/) &&
+      contains(rootReadme, /source_preview_report\.yml/),
     "Root README gives reviewers a source-based preview path while npm publish is pending."
   );
   addCheck(
@@ -382,7 +384,8 @@ function localChecks() {
       contains(packageReadme, /npm run preview:pack/) &&
       contains(packageReadme, /tmp\/sdlc\/source-preview\/package\/project-tiny-context-harness-0\.2\.39\.tgz/) &&
       contains(packageReadme, /npx --no-install sdlc-harness init --adopt/) &&
-      contains(packageReadme, /Use this tarball path only for source-preview testing while npm publication is pending/),
+      contains(packageReadme, /Use this tarball path only for source-preview testing while npm publication is pending/) &&
+      contains(packageReadme, /source_preview_report\.yml/),
     "Package README gives reviewers a source-preview tarball path while npm publish is pending."
   );
   addCheck(
@@ -400,6 +403,25 @@ function localChecks() {
       contains(launchProfile, /npm run preview:pack/) &&
       contains(launchProfile, /tmp\/sdlc\/source-preview\/package\/project-tiny-context-harness-0\.2\.39\.tgz/),
     "Source-preview tarball path lets private reviewers test a local package before npm publication."
+  );
+  addCheck(
+    checks,
+    "source-preview-report-template",
+    hasFile(".github/ISSUE_TEMPLATE/source_preview_report.yml") &&
+      contains(sourcePreviewReportTemplate, /Source preview report/) &&
+      contains(sourcePreviewReportTemplate, /Codespaces/) &&
+      contains(sourcePreviewReportTemplate, /Local checkout/) &&
+      contains(sourcePreviewReportTemplate, /Generated tarball in a disposable repo/) &&
+      contains(sourcePreviewReportTemplate, /npm run preview:pack/) &&
+      contains(sourcePreviewReportTemplate, /npx --no-install sdlc-harness init --adopt/) &&
+      contains(sourcePreviewReportTemplate, /I removed secrets, customer details, private repository names, raw chat logs and private code/) &&
+      contains(issueTemplateConfig, /source_preview_report\.yml/) &&
+      contains(rootReadme, /source_preview_report\.yml/) &&
+      contains(packageReadme, /source_preview_report\.yml/) &&
+      contains(privateReview, /source_preview_report\.yml/) &&
+      contains(support, /Source preview report issue template/) &&
+      contains(launchKit, /source-preview report form/),
+    "Source preview report issue template gives pre-npm reviewers a focused way to report setup failures without sharing private data."
   );
   addCheck(
     checks,
@@ -1157,6 +1179,8 @@ function localChecks() {
       contains(issueTemplateConfig, /SUPPORT\.md/) &&
       contains(issueTemplateConfig, /Context recovery gap/) &&
       contains(issueTemplateConfig, /context_gap\.yml/) &&
+      contains(issueTemplateConfig, /Source preview report/) &&
+      contains(issueTemplateConfig, /source_preview_report\.yml/) &&
       contains(support, /issue chooser/) &&
       contains(launchKit, /issue chooser routing/),
     "Issue chooser disables blank issues and routes security, support and Context recovery feedback to the prepared surfaces."

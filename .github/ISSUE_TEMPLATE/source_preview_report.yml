@@ -1,0 +1,65 @@
+name: Source preview report
+description: Report Codespaces, local checkout or packed tarball failures before npm publish.
+title: "[Source preview]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form when the renamed npm package is not published yet and the source preview path failed.
+
+        Do not include secrets, private code, customer data, tokens or raw private chat logs.
+  - type: dropdown
+    id: preview_path
+    attributes:
+      label: Preview path
+      description: Which source preview route failed?
+      options:
+        - Codespaces
+        - Local checkout
+        - Generated tarball in a disposable repo
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: Paste the shortest command or command sequence that failed.
+      placeholder: |
+        npm run smoke:quickstart
+        npm run preview:pack
+        npx --no-install sdlc-harness init --adopt
+      render: sh
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Short output
+      description: Paste only the shortest useful error output.
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Node version, npm version and whether this was Codespaces or local.
+      placeholder: "Codespaces, Node 24, npm 11"
+    validations:
+      required: false
+  - type: textarea
+    id: expected_actual
+    attributes:
+      label: Expected vs actual
+      description: What did you expect to happen, and what happened instead?
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed secrets, customer details, private repository names, raw chat logs and private code.
+          required: true

@@ -97,6 +97,8 @@ make validate-context
 
 Use this tarball path only for source-preview testing while npm publication is pending.
 
+If the source preview path fails, open a [Source preview report](https://github.com/Seven128/project-tiny-context-harness/issues/new?template=source_preview_report.yml) with the command, environment and shortest useful output.
+
 Use it when coding agents repeatedly lose project intent across new chats, handoffs, RFC/debug turns or tool changes. The intended tradeoff is: keep durable intent and recovery paths; leave execution evidence to code, tests and review.
 
 ## Why It Exists

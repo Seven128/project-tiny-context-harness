@@ -20,6 +20,7 @@ Use the GitHub issue chooser instead of blank issues; it routes public feedback 
 |---|---|
 | Bug in `init`, `sync`, `upgrade`, `doctor`, `export-context` or `validate-context` | GitHub bug report issue template |
 | Feature idea that preserves the Minimal Context boundary | GitHub feature request issue template |
+| Codespaces, local checkout or source-preview tarball failed before npm publish | Source preview report issue template |
 | Missing recovery fact, README confusion or fresh-agent handoff gap | Context recovery gap issue template |
 | Real adoption feedback from a repository | Adoption report issue template |
 | Security vulnerability | [SECURITY.md](SECURITY.md) |

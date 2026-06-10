@@ -88,6 +88,8 @@ If local setup is inconvenient, open <https://codespaces.new/Seven128/project-ti
 
 Then either inspect the disposable smoke repo output, or install the generated `tmp/sdlc/source-preview/package/*.tgz` tarball into a disposable copy of one real repository and run `npx --no-install sdlc-harness init --adopt`.
 
+If the source preview path fails, ask reviewers to open a [Source preview report](https://github.com/Seven128/project-tiny-context-harness/issues/new?template=source_preview_report.yml) with the command, environment and shortest useful output.
+
 Open `docs/examples/minimal-context-sample.md` and `docs/examples/fresh-agent-recovery.md` if a hands-on test is not practical.
 
 ## Feedback Log
