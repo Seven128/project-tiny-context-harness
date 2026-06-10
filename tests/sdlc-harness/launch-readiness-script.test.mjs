@@ -36,6 +36,7 @@ for (const expected of [
   "scorecard-badge",
   "root-readme-prepublish-boundary",
   "root-readme-source-preview",
+  "package-readme-source-preview",
   "source-preview-pack",
   "agent-surface-recipes",
   "technical-article",

@@ -334,6 +334,18 @@ function localChecks() {
   );
   addCheck(
     checks,
+    "package-readme-source-preview",
+    contains(packageReadme, /Source preview while npm publish is pending/) &&
+      contains(packageReadme, /git clone https:\/\/github\.com\/Seven128\/project-tiny-context-harness\.git/) &&
+      contains(packageReadme, /npm run smoke:quickstart/) &&
+      contains(packageReadme, /npm run preview:pack/) &&
+      contains(packageReadme, /tmp\/sdlc\/source-preview\/package\/project-tiny-context-harness-0\.2\.39\.tgz/) &&
+      contains(packageReadme, /npx --no-install sdlc-harness init --adopt/) &&
+      contains(packageReadme, /Use this tarball path only for source-preview testing while npm publication is pending/),
+    "Package README gives reviewers a source-preview tarball path while npm publish is pending."
+  );
+  addCheck(
+    checks,
     "source-preview-pack",
     rootPackage.scripts?.["preview:pack"] === "node tools/source_preview_pack.mjs --clean" &&
       hasFile("tools/source_preview_pack.mjs") &&

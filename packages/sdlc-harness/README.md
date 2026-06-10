@@ -72,6 +72,22 @@ make validate-context
 
 Then open `AGENTS.md`, `project_context/global.md` and `project_context/architecture.md`. Those files are the small recovery surface a fresh agent should read before changing the project.
 
+Source preview while npm publish is pending:
+
+```sh
+git clone https://github.com/Seven128/project-tiny-context-harness.git
+cd project-tiny-context-harness
+npm ci
+npm run smoke:quickstart
+npm run preview:pack
+cd /path/to/your/test-repo
+npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.39.tgz
+npx --no-install sdlc-harness init --adopt
+make validate-context
+```
+
+Use this tarball path only for source-preview testing while npm publication is pending.
+
 Expected result:
 
 ```text
