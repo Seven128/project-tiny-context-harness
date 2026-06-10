@@ -135,6 +135,8 @@ For current priorities and non-goals, see the [roadmap](docs/roadmap.md).
 
 For concrete examples, read the [fresh-agent recovery walkthrough](docs/examples/fresh-agent-recovery.md) and the [Minimal Context sample project](docs/examples/minimal-context-sample.md).
 
+For the longer technical argument, read [Fresh coding-agent sessions need project memory, not more ceremony](docs/articles/fresh-agent-project-memory.md).
+
 For adjacent-tool fit, read the [comparison guide](docs/comparison.md).
 
 For existing repositories, read the [adoption guide](docs/adopt-existing-repo.md). For Codex, Claude Code, Cursor, Gemini CLI, OpenCode and other tool-specific setup notes, see [agent surface recipes](docs/agent-surface-recipes.md).

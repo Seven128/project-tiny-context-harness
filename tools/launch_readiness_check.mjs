@@ -166,6 +166,7 @@ function localChecks() {
   const responseTemplates = read("docs/launch/response-templates.md");
   const agentSurfaceRecipes = read("docs/agent-surface-recipes.md");
   const comparisonGuide = read("docs/comparison.md");
+  const technicalArticle = read("docs/articles/fresh-agent-project-memory.md");
   const existingRepoAdoption = read("docs/adopt-existing-repo.md");
   const faq = read("docs/faq.md");
   const roadmap = read("docs/roadmap.md");
@@ -322,6 +323,21 @@ function localChecks() {
       contains(minimalContextSample, /project_context\/areas\/main\/verification\.md/) &&
       contains(minimalContextSample, /not a benchmark, template requirement or product-quality proof/i),
     "Minimal Context sample project exists, is linked from README and shows concrete Context file shape without benchmark claims."
+  );
+  addCheck(
+    checks,
+    "technical-article",
+    hasFile("docs/articles/fresh-agent-project-memory.md") &&
+      contains(rootReadme, /docs\/articles\/fresh-agent-project-memory\.md/) &&
+      contains(packageReadme, /docs\/articles\/fresh-agent-project-memory\.md/) &&
+      contains(launchKit, /\.\.\/articles\/fresh-agent-project-memory\.md/) &&
+      contains(primaryLaunch, /fresh-agent-project-memory\.md/) &&
+      contains(technicalArticle, /Fresh Coding-Agent Sessions Need Project Memory, Not More Ceremony/) &&
+      contains(technicalArticle, /repo-native project memory for AI coding agents, not an autonomous SDLC system/) &&
+      contains(technicalArticle, /Why Drop The Stage Ceremony/) &&
+      contains(technicalArticle, /It is not a benchmark-proven productivity multiplier/) &&
+      contains(technicalArticle, /While npm publication is still pending, use the source preview/),
+    "Long-form technical article exists, is linked from launch surfaces and keeps claims within the project-memory/no-benchmark boundary."
   );
   addCheck(
     checks,

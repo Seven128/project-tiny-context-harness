@@ -72,6 +72,9 @@ npx --no-install sdlc-harness validate-context
 Demo packet/transcript:
 https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/launch/demo.md
 
+Long-form technical article:
+https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/articles/fresh-agent-project-memory.md
+
 Adoption reports / missing facts:
 https://github.com/Seven128/project-tiny-context-harness/issues/4
 
@@ -166,6 +169,8 @@ It is meant to complement specs, tests, CI and code intelligence tools. It does 
 
 I would appreciate feedback from people using coding agents on non-trivial projects: what facts do your agents keep rediscovering, and would you want those facts maintained in the repo?
 ```
+
+If the community expects an article rather than a product link, use `docs/articles/fresh-agent-project-memory.md` as the primary URL and keep the GitHub repo as the secondary link.
 
 ## Curated List PR
 
