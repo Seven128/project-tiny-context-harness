@@ -980,6 +980,7 @@ function localChecks() {
       contains(launchUnblockScript, /npm login/) &&
       contains(launchUnblockScript, /After npm auth or token permissions are fixed/) &&
       contains(launchUnblockScript, /docs\/launch\/npm-credential-unblock\.md/) &&
+      contains(launchUnblockScript, /actions\/workflows\/npm-publish\.yml/) &&
       contains(launchUnblockScript, /If npm returns E403/) &&
       contains(launchUnblockScript, /packageVersion/),
     "Launch unblock report gives status-aware npm owner commands before broad launch."
@@ -1114,6 +1115,7 @@ function localChecks() {
       contains(npmTrustedPublishing, /Workflow filename \| `npm-publish\.yml`/) &&
       contains(npmTrustedPublishing, /Environment name \| `npm-publish`/) &&
       contains(npmTrustedPublishing, /Allowed actions \| `npm publish`/) &&
+      contains(npmTrustedPublishing, /https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/actions\/workflows\/npm-publish\.yml/) &&
       contains(npmTrustedPublishing, /post-first-publish release path/) &&
       contains(npmTrustedPublishing, /package now exists on npm/) &&
       contains(npmTrustedPublishing, /must not define `NPM_TOKEN` or `NODE_AUTH_TOKEN`/) &&

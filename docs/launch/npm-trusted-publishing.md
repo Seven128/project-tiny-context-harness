@@ -34,7 +34,9 @@ npm run release:npm -- --version <new-version> --publish --yes --full-gate --reg
 
 Use [npm-credential-unblock.md](npm-credential-unblock.md) if that fails with a 403 credentials error.
 
-Now that `project-tiny-context-harness` exists on npm, use `.github/workflows/npm-publish.yml` instead of a local long-lived publish token for future releases whenever possible.
+Now that `project-tiny-context-harness` exists on npm, use `.github/workflows/npm-publish.yml` instead of a local long-lived publish token for future releases whenever possible. Direct GitHub Actions URL:
+
+<https://github.com/Seven128/project-tiny-context-harness/actions/workflows/npm-publish.yml>
 
 ## npm Trusted Publisher Configuration
 
@@ -55,7 +57,9 @@ If the npm settings page cannot be opened because the package unexpectedly retur
 
 ## GitHub Workflow
 
-The repository workflow is `.github/workflows/npm-publish.yml`.
+The repository workflow is `.github/workflows/npm-publish.yml`:
+
+<https://github.com/Seven128/project-tiny-context-harness/actions/workflows/npm-publish.yml>
 
 It is manual-only:
 
@@ -70,7 +74,7 @@ It is manual-only:
 
 ## Dry Run
 
-In GitHub Actions, run **npm Trusted Publish** with:
+Open <https://github.com/Seven128/project-tiny-context-harness/actions/workflows/npm-publish.yml>, click **Run workflow**, choose branch `main`, then run **npm Trusted Publish** with:
 
 ```text
 expected_version: 0.2.41

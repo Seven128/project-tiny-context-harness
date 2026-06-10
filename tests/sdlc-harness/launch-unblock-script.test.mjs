@@ -79,6 +79,7 @@ const readyWithCleanup = renderMarkdown({
   releaseDelta: {
     localVersion: "0.2.41",
     publishedVersion: "0.2.40",
+    workflowUrl: "https://github.com/Seven128/project-tiny-context-harness/actions/workflows/npm-publish.yml",
     nextAction: "Run GitHub Actions npm Trusted Publish with expected_version 0.2.41."
   }
 });
@@ -88,6 +89,7 @@ assert.match(readyWithCleanup, /Non-Blocking External Info/);
 assert.match(readyWithCleanup, /npm-readme-renamed-surfaces/);
 assert.match(readyWithCleanup, /npm Trusted Publishing cleanup/);
 assert.match(readyWithCleanup, /local package is 0\.2\.41; npm latest is 0\.2\.40/);
+assert.match(readyWithCleanup, /https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/actions\/workflows\/npm-publish\.yml/);
 assert.match(readyWithCleanup, /expected_version: 0\.2\.41/);
 assert.match(readyWithCleanup, /dry_run: true/);
 assert.match(readyWithCleanup, /dry_run: false/);

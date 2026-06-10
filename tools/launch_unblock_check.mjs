@@ -6,6 +6,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageJson = JSON.parse(readFileSync(path.join(repoRoot, "packages/sdlc-harness/package.json"), "utf8"));
+const npmTrustedPublishWorkflowUrl =
+  "https://github.com/Seven128/project-tiny-context-harness/actions/workflows/npm-publish.yml";
 
 function parseArgs(argv) {
   const options = { json: false, output: null, strict: false };
@@ -87,6 +89,7 @@ function releaseDelta(npmAccess) {
   return {
     localVersion,
     publishedVersion,
+    workflowUrl: npmTrustedPublishWorkflowUrl,
     nextAction: `Run GitHub Actions npm Trusted Publish with expected_version ${localVersion}. Use dry_run true first, then dry_run false when ready.`
   };
 }
@@ -110,6 +113,7 @@ function appendNpmTrustedPublishCommands(lines, report) {
   lines.push("### npm Trusted Publishing cleanup", "");
   lines.push(`Status: local package is ${report.releaseDelta.localVersion}; npm latest is ${report.releaseDelta.publishedVersion}.`);
   lines.push(`Next action: ${report.releaseDelta.nextAction}`);
+  lines.push(`Workflow: ${report.releaseDelta.workflowUrl ?? npmTrustedPublishWorkflowUrl}`);
   lines.push("");
   lines.push("GitHub Actions inputs:");
   lines.push("");
