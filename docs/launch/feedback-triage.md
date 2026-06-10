@@ -15,6 +15,7 @@ Before triage, collect:
 - Channel name and URL.
 - Timestamp.
 - Metrics snapshot from `npm run launch:metrics`.
+- HN story snapshot from `npm run launch:hn-snapshot` when the channel is Show HN.
 - Comment links or summarized objection themes.
 - Any adoption report issue links.
 - Any maintainer feedback from curated-list PRs.

@@ -217,6 +217,7 @@ Within 1 hour:
 
 Within 6 hours:
 
+- Save HN story telemetry: `npm run launch:hn-snapshot -- --url <channel-url> --output tmp/sdlc/launch-metrics/show-hn-hn-6h.md`.
 - Count comments by theme: unclear positioning, install friction, AGENTS.md overlap, benchmark ask, integration ask, examples ask.
 - Patch the README only for repeated or high-severity confusion.
 - Comment on issue #3 with launch URL, baseline metrics and major objections.
@@ -224,6 +225,7 @@ Within 6 hours:
 
 Within 24 hours:
 
+- Save the final first-day HN telemetry: `npm run launch:hn-snapshot -- --url <channel-url> --output tmp/sdlc/launch-metrics/show-hn-hn-24h.md`.
 - Record stars, forks, npm downloads, issues and external comments.
 - Decide whether the next move is Product Hunt, a curated-list PR, or a docs/demo repair.
 - Convert real adoption examples into issue #4 reports, linked issue comments or consented adoption-story notes.
@@ -263,7 +265,7 @@ Open issues:
 Open external posts:
 ```
 
-Use `npm run launch:metrics -- --output tmp/sdlc/launch-metrics/<channel>-before.md` for the baseline and repeat it after 6 hours / 24 hours. Treat the output as distribution telemetry, not product-quality evidence.
+Use `npm run launch:metrics -- --output tmp/sdlc/launch-metrics/<channel>-before.md` for the baseline and repeat it after 6 hours / 24 hours. For Show HN, also use `npm run launch:hn-snapshot -- --url <channel-url> --output tmp/sdlc/launch-metrics/<channel>-hn-24h.md`. Treat the output as distribution telemetry, not product-quality evidence.
 
 Post after each channel:
 

@@ -22,6 +22,7 @@
     "launch:external-prs": "node tools/external_pr_packet_check.mjs",
     "launch:demo": "node tools/launch_demo_capture.mjs",
     "launch:metrics": "node tools/launch_metrics_snapshot.mjs",
+    "launch:hn-snapshot": "node tools/launch_hn_snapshot.mjs",
     "launch:feedback-note": "node tools/launch_feedback_note.mjs",
     "preview:pack": "node tools/source_preview_pack.mjs --clean",
     "smoke:quickstart": "node tools/quickstart_smoke.mjs --clean",

@@ -216,6 +216,7 @@ function localChecks() {
   const demoPacket = read("docs/launch/demo.md");
   const metricsPacket = read("docs/launch/metrics.md");
   const metricsScript = read("tools/launch_metrics_snapshot.mjs");
+  const hnSnapshotScript = read("tools/launch_hn_snapshot.mjs");
   const feedbackNoteScript = read("tools/launch_feedback_note.mjs");
   const githubMetadataScript = read("tools/github_metadata_update.mjs");
   const npmAccessScript = read("tools/npm_publish_access_check.mjs");
@@ -1361,17 +1362,23 @@ function localChecks() {
     checks,
     "launch-metrics-snapshot",
     rootPackage.scripts?.["launch:metrics"] === "node tools/launch_metrics_snapshot.mjs" &&
+      rootPackage.scripts?.["launch:hn-snapshot"] === "node tools/launch_hn_snapshot.mjs" &&
       hasFile("tools/launch_metrics_snapshot.mjs") &&
+      hasFile("tools/launch_hn_snapshot.mjs") &&
       hasFile("docs/launch/metrics.md") &&
       contains(launchKit, /metrics\.md/) &&
       contains(primaryLaunch, /npm run launch:metrics/) &&
+      contains(primaryLaunch, /npm run launch:hn-snapshot/) &&
+      contains(feedbackTriage, /npm run launch:hn-snapshot/) &&
       contains(outreachTargets, /npm run launch:metrics/) &&
       contains(metricsPacket, /Launch Metrics Snapshot/) &&
       contains(metricsPacket, /Do not treat stars, forks or downloads as product-quality proof/) &&
       contains(metricsScript, /project-tiny-context-harness/) &&
       contains(metricsScript, /agent-project-sdlc/) &&
-      contains(metricsScript, /missing npm download data does not fail the launch/),
-    "Launch metrics snapshot script and runbook record distribution telemetry without turning it into product proof."
+      contains(metricsScript, /missing npm download data does not fail the launch/) &&
+      contains(hnSnapshotScript, /hacker-news\.firebaseio\.com/) &&
+      contains(hnSnapshotScript, /distribution telemetry only/),
+    "Launch metrics snapshot scripts and runbook record GitHub, npm and HN distribution telemetry without turning it into product proof."
   );
   addCheck(
     checks,
