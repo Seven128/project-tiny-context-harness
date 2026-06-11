@@ -58,7 +58,7 @@ For source-preview testing in an external repository, use the local packed tarba
 
 ```sh
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.41.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.42.tgz
 npx --no-install sdlc-harness init --adopt
 make validate-context
 ```

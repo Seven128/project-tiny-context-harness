@@ -33,6 +33,7 @@ Project-specific engineering rules belong in a separate project-local Skill unde
 10. 当用户明确要求 / 允许“多开agent”或使用 subagent，且当前会话存在可用 subagent 工具时，积极把可并行的探索、审查或实现拆分交给 subagent；使用前先复用已有相关 agent，没有合适 agent 或并行度不足时再新开。`wait_agent` 只表示取得结果，不释放资源；subagent 完成、空闲或不再需要时必须调用 `close_agent`，收尾前清理已完成 / 空闲 / 不再需要的 subagent，避免占满后续资源。
 11. 当任务涉及新实现、重构、重复逻辑、模块边界或影响面控制时，先做轻量 abstraction / decomposition scan：
    - 查找相似实现、重复逻辑、紧耦合模块或影响面异常扩散点。
+   - 当一个业务对象、能力或接口的变更需要跨多个 Context、产品域或实现层同步调整时，将该影响范围视为模块边界复核信号；优先评估是否应通过独立模块、服务、facade 或稳定接口收敛依赖，避免通过手工 manifest 长期复制实现暴露面。
    - 将候选项分为局部重构与长期边界变化，后者按既有 Context-first 规则处理。
    - 对候选点说明当前重复 / 耦合证据、抽象后的边界、收益、风险和是否值得现在做。
    - 默认只实施高收益、低风险、语义稳定的候选项。

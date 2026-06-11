@@ -1,12 +1,16 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const scriptPath = path.join(repoRoot, "tools/launch_next_steps.mjs");
+const packageManifest = JSON.parse(
+  readFileSync(path.join(repoRoot, "packages", "sdlc-harness", "package.json"), "utf8")
+);
+const packageVersionPattern = packageManifest.version.replace(/\./g, "\\.");
 const {
   applyStatusHints,
   buildNextSteps,
@@ -18,12 +22,12 @@ const {
 } =
   await import(pathToFileURL(scriptPath));
 
-const steps = buildNextSteps({ packageVersion: "0.2.41" });
+const steps = buildNextSteps({ packageVersion: packageManifest.version });
 assert.deepEqual(
   steps.map((step) => step.id),
   [
     "npm-trusted-publish",
-    "github-release-0.2.41",
+    `github-release-${packageManifest.version}`,
     "show-hn",
     "feedback-note",
     "show-hn-first-comment",
@@ -37,11 +41,11 @@ assert.match(markdown, /Launch Next Steps/);
 assert.match(markdown, /read-only: it does not publish to npm, create releases, post to HN or open PRs/);
 assert.match(markdown, /npm run launch:unblock -- --strict/);
 assert.match(markdown, /https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/actions\/workflows\/npm-publish\.yml/);
-assert.match(markdown, /expected_version: 0\.2\.41/);
+assert.match(markdown, new RegExp(`expected_version: ${packageVersionPattern}`));
 assert.match(markdown, /dry_run: true/);
 assert.match(markdown, /then dry_run: false/);
-assert.match(markdown, /https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/releases\/new\?tag=v0\.2\.41/);
-assert.match(markdown, /docs\/launch\/github-release-0\.2\.41\.md/);
+assert.match(markdown, new RegExp(`https://github\\.com/Seven128/project-tiny-context-harness/releases/new\\?tag=v${packageVersionPattern}`));
+assert.match(markdown, new RegExp(`docs/launch/github-release-${packageVersionPattern}\\.md`));
 assert.match(markdown, /https:\/\/news\.ycombinator\.com\/submit/);
 assert.match(
   markdown,
@@ -66,7 +70,7 @@ const jsonResult = spawnSync(process.execPath, [scriptPath, "--json"], {
 assert.equal(jsonResult.status, 0, jsonResult.stderr);
 const json = JSON.parse(jsonResult.stdout);
 assert.equal(json.steps[0].id, "npm-trusted-publish");
-assert.equal(json.steps[0].inputs[0], "expected_version: 0.2.41");
+assert.equal(json.steps[0].inputs[0], `expected_version: ${packageManifest.version}`);
 assert.equal(
   json.steps[2].prefillUrl,
   "https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fgithub.com%2FSeven128%2Fproject-tiny-context-harness&t=Show%20HN%3A%20Tiny%20project%20memory%20for%20coding%20agents"
@@ -164,8 +168,8 @@ const liveSteps = applyStatusHints(steps, {
   status: "ready-with-cleanup",
   npm: { summary: { status: "published" } },
   releaseDelta: {
-    localVersion: "0.2.41",
-    publishedVersion: "0.2.40"
+    localVersion: packageManifest.version,
+    publishedVersion: "0.2.41"
   },
   readiness: {
     externalChecks: [
@@ -177,7 +181,7 @@ const liveSteps = applyStatusHints(steps, {
   }
 });
 assert.equal(liveSteps[0].status, "pending-cleanup");
-assert.match(liveSteps[0].statusDetail, /local 0\.2\.41; npm latest 0\.2\.40/);
+assert.match(liveSteps[0].statusDetail, new RegExp(`local ${packageVersionPattern}; npm latest 0\\.2\\.41`));
 assert.equal(liveSteps[1].status, "pending-cleanup");
 assert.equal(liveSteps[2].status, "ready");
 assert.equal(liveSteps[3].status, "waiting-for-url");
@@ -188,8 +192,8 @@ assert.equal(recommendedNext(liveSteps).id, "npm-trusted-publish");
 
 const liveMarkdown = renderMarkdown(liveSteps);
 assert.match(liveMarkdown, /Recommended Next/);
-assert.match(liveMarkdown, /npm-trusted-publish: Refresh npm package page with 0\.2\.41/);
-assert.match(liveMarkdown, /status: pending-cleanup \(local 0\.2\.41; npm latest 0\.2\.40\)/);
+assert.match(liveMarkdown, new RegExp(`npm-trusted-publish: Refresh npm package page with ${packageVersionPattern}`));
+assert.match(liveMarkdown, new RegExp(`status: pending-cleanup \\(local ${packageVersionPattern}; npm latest 0\\.2\\.41\\)`));
 assert.match(liveMarkdown, /status: ready \(required broad-launch gate is clear\.\)/);
 
 const livePostedSteps = applyStatusHints(
@@ -201,7 +205,7 @@ const livePostedSteps = applyStatusHints(
       externalChecks: [
         {
           id: "github-release-title",
-          detail: "GitHub latest release title: Project Tiny Context Harness 0.2.41"
+          detail: `GitHub latest release title: Project Tiny Context Harness ${packageManifest.version}`
         }
       ]
     }

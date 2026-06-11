@@ -21,20 +21,21 @@ Project-specific product planning rules belong in a separate project-local Skill
 2. 和用户澄清或整理：目标用户、产品/页面定位、核心问题、用户需要什么、产品需要提供的内容/能力/反馈、主要流程、验收信号、非目标、约束、风险和受影响模块。
 3. 涉及 Web 页面、前端布局、UI/UX、产品模块边界或信息放置时，把页面产品定位检查作为前置动作：用户在页面要完成的判断、产品必须提供的信息/动作/反馈、不应常驻的信息、下游消费层/运维层/详情层/其他页面归属、布局和信息密度是否匹配页面任务。多页面或多模块归属不清时，先读取相关 Context 并搜索页面入口，做全站或相关页面的信息架构 sweep，再收窄到具体实现。该检查是下一步变更分类的输入；只有形成长期产品归属、页面职责、信息架构或模块边界结论时才更新 Context。
 4. 涉及输入、选择、搜索、筛选、表单/配置、调度/时间窗口、预算/配额/限流或加载/空态/错误态等 UI 控件时，用“控件任务框架”重新理解用户任务和产品反馈；这只是通用判断框架，不是业务处方库。
-5. 产品意图、模块职责、边界和验收口径以 `project_context/**` 为准；代码和搜索结果只说明当前实现状态。Context 决定“应该是什么”，代码揭示“现在是什么”，代码不能静默重定义 Context。
-6. 输出产品判断或第一处实现编辑前，若任务涉及产品方案、页面/模块边界、信息架构、API / Schema、验收口径、跨域契约、状态或调度语义，先编译当前任务契约；契约第一段用 `Context Delta: none|required` 完成唯一正式长期事实判断，再写本次 `Task Contract`。
-7. 普通 bug fix、局部样式、局部实现漂移、测试修复或探索性 spike 不更新 Context；如果过程中形成长期产品结论，应在继续对齐或交付前回写 Context。不要把 Context 机械补成代码改动摘要。
-8. 如果代码与 Context 冲突，显式标记为实现漂移、缺失工作或 Context 过期。
-9. 输出产品判断时保持短而具体，避免长篇 PRD 模板。
-10. 需要沉淀长期事实时，只更新 `project_context/**`：
+5. 当一个产品对象、能力或接口的增删改需要跨多个页面、模块、Context 或产品域同步调整时，将该影响范围视为产品边界复核信号；先判断它是否应沉淀为独立能力、subdomain 或 area，并明确对外契约、所有权和消费方边界，避免通过手工清单长期维护各消费面的重复映射。
+6. 产品意图、模块职责、边界和验收口径以 `project_context/**` 为准；代码和搜索结果只说明当前实现状态。Context 决定“应该是什么”，代码揭示“现在是什么”，代码不能静默重定义 Context。
+7. 输出产品判断或第一处实现编辑前，若任务涉及产品方案、页面/模块边界、信息架构、API / Schema、验收口径、跨域契约、状态或调度语义，先编译当前任务契约；契约第一段用 `Context Delta: none|required` 完成唯一正式长期事实判断，再写本次 `Task Contract`。
+8. 普通 bug fix、局部样式、局部实现漂移、测试修复或探索性 spike 不更新 Context；如果过程中形成长期产品结论，应在继续对齐或交付前回写 Context。不要把 Context 机械补成代码改动摘要。
+9. 如果代码与 Context 冲突，显式标记为实现漂移、缺失工作或 Context 过期。
+10. 输出产品判断时保持短而具体，避免长篇 PRD 模板。
+11. 需要沉淀长期事实时，只更新 `project_context/**`：
    - 全局产品目标、边界、背景写入 `global.md`。
    - 产品域用户/系统契约、规则、风险写入对应 area / subdomain Context。
    - 跨域契约写入 `context_role: contract` 或 manifest role 为 `contract` 的 Context；底层理论源写入 `foundation`，关键重复验证路径写入 `verification`，关键部署/运行初始化路径写入 `deployment`，历史索引写入 `archive`，不要伪装成 area。
    - 新 context unit 可新增 `project_context/areas/<unit>.md`，并更新 `global.md#Context Index`；复杂项目同时更新 `project_context/context.toml`。
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
-11. Context 只能声明验证 / 部署关键路径或验收信号，不能伪造“测试已通过”或“部署已成功”。
-12. Verification / Deployment Role Context 只记录长期可复用的重复执行路径事实：特殊准备、最短命令或路径、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、release ledger、secret、token、cookie、device id 或 raw payload。
-13. 收尾时做 `Contract Conformance` 和 Context drift check，只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。Conformance 说明本次契约满足情况、未满足或延期项和验证入口；一次性证据、测试日志、截图结果、任务契约和实现摘要不写入 Context。
+12. Context 只能声明验证 / 部署关键路径或验收信号，不能伪造“测试已通过”或“部署已成功”。
+13. Verification / Deployment Role Context 只记录长期可复用的重复执行路径事实：特殊准备、最短命令或路径、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、release ledger、secret、token、cookie、device id 或 raw payload。
+14. 收尾时做 `Contract Conformance` 和 Context drift check，只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。Conformance 说明本次契约满足情况、未满足或延期项和验证入口；一次性证据、测试日志、截图结果、任务契约和实现摘要不写入 Context。
 
 ## 任务契约编译
 

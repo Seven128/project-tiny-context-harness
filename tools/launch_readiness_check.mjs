@@ -1197,7 +1197,7 @@ function localChecks() {
       contains(launchKit, new RegExp(`github-release-${escapeRegex(packageJson.version)}\\.md`)) &&
       contains(githubReleasePacket, /Tag:/) &&
       contains(githubReleasePacket, new RegExp(`v${escapeRegex(packageJson.version)}`)) &&
-      contains(githubReleasePacket, /dfda8fd2c07143fca137aa609a28a5eb6d8a6697/) &&
+      contains(githubReleasePacket, /Target:/) &&
       contains(githubReleasePacket, new RegExp(`Project Tiny Context Harness ${escapeRegex(packageJson.version)}`)) &&
       contains(githubReleasePacket, /npm install -D project-tiny-context-harness@latest/) &&
       contains(githubReleasePacket, /keep the memory, drop the ceremony/i) &&
@@ -1428,7 +1428,7 @@ function localChecks() {
       contains(marketMap, /Market Map/) &&
       contains(marketMap, /Competitive Snapshot/) &&
       contains(marketMap, /10-100 stars/) &&
-      contains(marketMap, /Latest release is `Project Tiny Context Harness 0\.2\.41`/) &&
+      contains(marketMap, new RegExp(`Latest release is \`Project Tiny Context Harness ${escapeRegex(packageJson.version)}\``)) &&
       contains(marketMap, /first public Show HN post and first regular HN comment are live/) &&
       contains(marketMap, /fit x maintenance activity x audience scale/) &&
       contains(marketMap, /jamesmurdza\/awesome-ai-devtools\/pull\/636/) &&
@@ -1447,7 +1447,7 @@ function localChecks() {
       contains(outreachTargets, /OpenSSF Scorecard workflow/) &&
       contains(outreachTargets, /Minimal Context sample project/) &&
       contains(outreachTargets, /FAQ answers/) &&
-      contains(outreachTargets, /`v0\.2\.41` is published on npm through Trusted Publishing/) &&
+      contains(outreachTargets, new RegExp(`\`v${escapeRegex(packageJson.version)}\` is published on npm through Trusted Publishing`)) &&
       contains(outreachTargets, /first public post and first regular HN comment are live/) &&
       contains(outreachTargets, /https:\/\/news\.ycombinator\.com\/item\?id=48481205/) &&
       contains(outreachTargets, /Seven curated-list PRs are open/) &&

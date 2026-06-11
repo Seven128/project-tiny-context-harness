@@ -10,6 +10,9 @@ const scriptPath = path.join(repoRoot, "tools/quickstart_smoke.mjs");
 const sourcePreviewScriptPath = path.join(repoRoot, "tools/source_preview_pack.mjs");
 const outDir = await mkdtemp(path.join(tmpdir(), "sdlc-quickstart-smoke-test-"));
 const sourcePreviewOutDir = await mkdtemp(path.join(tmpdir(), "sdlc-source-preview-pack-test-"));
+const packageManifest = JSON.parse(
+  await readFile(path.join(repoRoot, "packages", "sdlc-harness", "package.json"), "utf8")
+);
 
 try {
   const result = spawnSync(process.execPath, [scriptPath, "--out-dir", outDir, "--pack-ignore-scripts"], {
@@ -45,8 +48,8 @@ try {
 
   const previewReport = JSON.parse(await readFile(path.join(sourcePreviewOutDir, "source-preview-report.json"), "utf8"));
   assert.equal(previewReport.status, "packed");
-  assert.equal(previewReport.package, "project-tiny-context-harness@0.2.41");
-  assert.match(previewReport.tarballPath, /project-tiny-context-harness-0\.2\.41\.tgz$/);
+  assert.equal(previewReport.package, `project-tiny-context-harness@${packageManifest.version}`);
+  assert.ok(previewReport.tarballPath.endsWith(`project-tiny-context-harness-${packageManifest.version}.tgz`));
   await stat(previewReport.tarballPath);
 } finally {
   await rm(outDir, { recursive: true, force: true });

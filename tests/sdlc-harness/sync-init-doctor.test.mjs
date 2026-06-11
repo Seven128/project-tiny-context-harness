@@ -193,6 +193,8 @@ try {
   assert.match(productSkill, /临时执行缓存/);
   assert.match(productSkill, /Verification \/ Deployment Role Context/);
   assert.match(productSkill, /raw payload/);
+  assert.match(productSkill, /产品边界复核信号/);
+  assert.match(productSkill, /手工清单长期维护各消费面的重复映射/);
   const uiuxSkill = await readFile(path.join(root, ".agent/skills/context_uiux_design/SKILL.md"), "utf8");
   assert.match(uiuxSkill, /设计稿/);
   assert.match(uiuxSkill, /UI\/UX/);
@@ -224,6 +226,8 @@ try {
   assert.match(developmentSkill, /临时执行缓存/);
   assert.match(developmentSkill, /Verification \/ Deployment Role Context/);
   assert.match(developmentSkill, /重复执行路径/);
+  assert.match(developmentSkill, /模块边界复核信号/);
+  assert.match(developmentSkill, /手工 manifest 长期复制实现暴露面/);
   assert.doesNotMatch(developmentSkill, /multi_agent_v1/);
   const exportSkill = await readFile(path.join(root, ".agent/skills/context_full_project_export/SKILL.md"), "utf8");
   assert.match(exportSkill, /导出尽可能详细的项目全量上下文/);

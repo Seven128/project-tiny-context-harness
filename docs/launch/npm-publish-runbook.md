@@ -6,7 +6,7 @@ This runbook records the first renamed publish path from the repository rename w
 
 For future releases after the first renamed publish, use [npm-trusted-publishing.md](npm-trusted-publishing.md) to configure GitHub Actions OIDC publishing instead of a long-lived npm publish token.
 
-Current state: `project-tiny-context-harness@0.2.41` is published. Do not reuse `0.2.41`; npm versions are immutable.
+Current state: `project-tiny-context-harness@0.2.42` is published. Do not reuse an existing version; npm versions are immutable.
 
 ## Historical First-Publish State
 
