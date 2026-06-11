@@ -9,6 +9,7 @@ This role Context records critical repeat-execution paths for the owning area. K
 ## Verification Paths
 
 - `npm test` or the shortest project-specific test, smoke, CI, probe or validation command.
+- Verification paths are reusable execution instances, not independent definitions of the verification target. For capability, metric or acceptance claims, first use the owning module's design Context to decide what claim should be proven, then choose the command or probe.
 
 ## Required Preparation
 
