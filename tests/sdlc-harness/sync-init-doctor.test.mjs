@@ -87,6 +87,8 @@ try {
   const areaContext = await readFile(path.join(root, "project_context/areas/main.md"), "utf8");
   assert.match(areaContext, /## Responsibility/);
   assert.match(areaContext, /Contract changes should be captured here/);
+  assert.match(areaContext, /Module Design Capsule/);
+  assert.match(areaContext, /Principles: stable execution constraints/);
   assert.match(areaContext, /## Code Entry Points/);
   assert.match(areaContext, /## Related Role Context/);
   assert.match(areaContext, /verification` role Context/);
@@ -96,6 +98,7 @@ try {
   assert.match(verificationContext, /# Verification Context: main/);
   assert.match(verificationContext, /critical repeat-execution paths/);
   assert.match(verificationContext, /## Verification Paths/);
+  assert.match(verificationContext, /Verification paths are reusable execution instances/);
   assert.match(verificationContext, /## Forbidden Content/);
 
   await assert.rejects(stat(path.join(root, ".agent/state/lifecycle.yaml")));
@@ -119,6 +122,8 @@ try {
   assert.match(agents, /必要且足以指导实现的长期结论/);
   assert.match(agents, /Context: 本次无长期事实变化/);
   assert.match(agents, /Context drift check/);
+  assert.match(agents, /模块设计上下文/);
+  assert.match(agents, /fallback \/ degraded path/);
   assert.match(agents, /不检查 context\/code 修改顺序/);
   assert.match(agents, /Harness (?:maintains context quality|只维护上下文质量)/i);
   assert.match(agents, /Verification \/ Deployment Role Context/);
@@ -165,6 +170,12 @@ try {
   const managedAreaTemplate = await readFile(path.join(root, ".agent/pjsdlc_managed/context_templates/area.md"), "utf8");
   assert.match(managedAreaTemplate, /Related Role Context/);
   assert.match(managedAreaTemplate, /deployment` role Context/);
+  assert.match(managedAreaTemplate, /Module Design Capsule/);
+  const managedVerificationTemplate = await readFile(
+    path.join(root, ".agent/pjsdlc_managed/context_templates/verification.md"),
+    "utf8"
+  );
+  assert.match(managedVerificationTemplate, /Verification paths are reusable execution instances/);
   await assert.rejects(stat(path.join(root, ".agent/pjsdlc_managed/context_templates/module.md")));
   await assert.rejects(stat(path.join(root, ".agent/pjsdlc_managed/override_skills")));
 
@@ -221,6 +232,9 @@ try {
   assert.match(developmentSkill, /Context drift check/);
   assert.match(developmentSkill, /Context Delta/);
   assert.match(developmentSkill, /Task Contract/);
+  assert.match(developmentSkill, /Applicable Module Design/);
+  assert.match(developmentSkill, /Principle Decision Gate/);
+  assert.match(developmentSkill, /Module Principle \/ Design Gate/);
   assert.match(developmentSkill, /Contract Conformance/);
   assert.match(developmentSkill, /plan\.md/);
   assert.match(developmentSkill, /临时执行缓存/);

@@ -89,6 +89,8 @@ for (const content of [rootReadme, packageReadme, spec, packageGuide]) {
 
 for (const content of [rootReadme, packageReadme, spec, packageGuide]) {
   assert.match(content, /Context Delta: none\|required/);
+  assert.match(content, /Applicable Module Design/);
+  assert.match(content, /module design capsule/i);
   assert.match(content, /Contract Conformance/);
   assert.match(content, /plan\.md/);
   assert.match(content, /temporary plan surface|execution scratchpad|execution cache/i);
@@ -104,6 +106,7 @@ assert.match(spec, /## Core Terms/);
 assert.match(spec, /Durable fact/);
 assert.match(spec, /Context Delta.*durable-fact decision point/s);
 assert.match(spec, /Task Contract.*temporary task-local compilation/s);
+assert.match(spec, /Module Design Capsule.*stable module principles/s);
 assert.match(spec, /Temporary plan surface.*scratchpad/s);
 assert.match(spec, /## Harness Mental Model/);
 assert.match(spec, /expected agent behavior constraints, not a document workflow/);
@@ -122,6 +125,8 @@ for (const content of [sourceAgents, packageAgents]) {
   assert.match(content, /Context: 本次无长期事实变化/);
   assert.match(content, /Context Delta: none\|required/);
   assert.match(content, /Task Contract/);
+  assert.match(content, /模块设计上下文/);
+  assert.match(content, /fallback \/ degraded path/);
   assert.match(content, /Contract Conformance/);
   assert.match(content, /自动化最多提示 context-first 风险，不做阻断/);
   assert.match(content, /不检查 context\/code 修改顺序/);
@@ -320,6 +325,10 @@ assert.match(developmentSkill, /代码不能静默重定义 Context/);
 assert.match(developmentSkill, /Context drift check/);
 assert.match(developmentSkill, /Context Delta/);
 assert.match(developmentSkill, /Task Contract/);
+assert.match(developmentSkill, /Applicable Module Design/);
+assert.match(developmentSkill, /Principle Decision Gate/);
+assert.match(developmentSkill, /Module Principle \/ Design Gate/);
+assert.match(developmentSkill, /模块设计上下文写法/);
 assert.match(developmentSkill, /Contract Conformance/);
 assert.match(developmentSkill, /plan\.md/);
 assert.match(developmentSkill, /临时执行缓存/);

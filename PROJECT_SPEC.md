@@ -87,6 +87,7 @@ The adopted approach uses a small vocabulary so the same mechanism is not descri
 - **Workflow contract**: prompt-level order of thought that the agent is expected to follow. It is a soft constraint, not a validator, phase gate or machine-enforced edit-order gate.
 - **Context Delta**: the current task's durable-fact decision point inside task-contract scenarios. `required` means Context is updated before implementation continues; `none` means implementation proceeds against existing Context.
 - **Task Contract**: a temporary task-local compilation of upstream principles and Context into implementation constraints. It guides the current task, but is not a source of truth.
+- **Module Design Capsule**: a compact area or role Context section for stable module principles, minimal design logic and durable rationale that should affect future implementation or verification choices.
 - **Temporary plan surface**: `plan.md` or an equivalent scratchpad used only when complex work needs visible execution state. It serves the workflow contract and Context without replacing either.
 - **Conformance**: a handoff self-check that compares implementation against the relevant Context and task contract. It produces delivery evidence, not durable Context by itself.
 - **Validator / gate**: machine-enforced checks. Minimal Context uses them only for recoverability, generated-asset consistency and fake verification-claim prevention, not for proving product quality or enforcing edit order.
@@ -99,7 +100,7 @@ That model has five layers:
 
 - **Fact-source model**: durable product, architecture, ownership, interface, state and verification/deployment path facts live in `project_context/**` or `DESIGN.md`; code is evidence of current implementation; tests, smoke, CI, review and human acceptance prove product quality; one-off logs, screenshots, task contracts and temporary plans are evidence or scratch space, not durable facts.
 - **Authority model**: Context describes what should be true; code describes what is currently true. When they conflict, the agent should name implementation drift, missing work or stale Context instead of silently letting current code redefine product or architecture intent.
-- **Workflow-contract model**: the agent follows prompt-level thought order at high-risk moments: read Context, run page/product-positioning or role-placement checks when applicable, use `Context Delta` inside task-contract scenarios, update Context first when durable facts changed, implement, verify and finish with Conformance / drift checks.
+- **Workflow-contract model**: the agent follows prompt-level thought order at high-risk moments: read Context, run page/product-positioning or role-placement checks when applicable, compile applicable module design into the task contract, use `Context Delta` inside task-contract scenarios, update Context first when durable facts changed, implement, verify and finish with Conformance / drift checks.
 - **Artifact-placement model**: AGENTS is startup routing and hard boundaries; Skills are role-specific thinking frameworks; Context / `DESIGN.md` are long-lived fact sources; `plan.md` or equivalent plan surfaces are temporary execution cache; README is human usage; validators guard recoverability and fake verification claims only.
 - **Soft-constraint model**: most Harness behavior is guidance for a probabilistic coding agent, not a deterministic runtime. The design therefore repeats the same intent through small managed surfaces, narrow Skill triggers, Context authority, temporary-plan boundaries, handoff evidence, source-sync tests and a small validator instead of relying on a single heavy gate.
 
@@ -108,7 +109,7 @@ The implementation design follows from how agents actually run. A coding agent d
 - `AGENTS.md` carries only the startup facts and hard boundaries that must be visible immediately.
 - `project_context/**` carries durable intent because future agents can recover it before reading all code.
 - Default Context authoring Skills expand product, UI/UX and engineering reasoning only when explicit role or strong artifact triggers make that extra frame useful.
-- Task-contract compilation turns broad principles into task-local constraints before implementation, while `Context Delta` prevents a second durable-fact decision point.
+- Task-contract compilation turns broad principles and applicable module design into task-local constraints before implementation, while `Context Delta` prevents a second durable-fact decision point.
 - Temporary plan surfaces can keep the contract visible during long work, but durable facts discovered there must be extracted back to Context.
 - Contract Conformance and Context drift checks create a final self-check without storing one-off evidence as long-lived Context.
 - `validate-context`, tests and package source checks enforce only the boundaries that are appropriate for Minimal Context: recoverability, generated-asset consistency and absence of fake verification claims.
@@ -154,10 +155,18 @@ This mental model is intentionally lighter than the historical stage workflow. I
 - responsibility
 - user / system contract
 - core data / API / state
+- module design capsule when stable module principles, logic or rationale should affect future work
 - key constraints
 - code entry points
 - related role context pointers
 - open risks
+
+A Module Design Capsule is deliberately compact:
+
+- `Principles` are stable execution constraints, not a design essay.
+- `Design Logic` states the smallest decision logic for choosing, rejecting, degrading or composing module behavior.
+- `Design Rationale` keeps only reasons that should change later implementation or verification decisions.
+- Current standards, thresholds, commands and probe parameters belong in contract or verification Context as execution instances, not as permanent principles.
 
 Additional `project_context/**` Markdown files can declare `context_role` in front matter or receive a role from `context.toml`:
 
@@ -250,6 +259,7 @@ This operational order is the **Context Priority Ladder**:
 - read Context first
 - run the page product-positioning check when applicable
 - run the role placement scan when creating or reorganizing Context
+- compile applicable module design principles, logic and rationale before choosing implementation or verification paths
 - classify whether durable facts changed
 - choose context-first or code-first accordingly
 - perform a Context drift check before handoff
@@ -262,15 +272,16 @@ For product, UI/UX, system design, architecture-boundary, API/Schema, state/runt
 
 ```text
 read Context / inspect code / understand request
--> compile current task contract
+-> compile applicable module design into the current task contract
    - Context Delta: none|required
+   - Applicable Module Design: sources, principles, design logic, rationale and controlled choices
    - Task Contract: implementation constraints for this task
 -> update Context first when Context Delta is required
 -> implement against the Task Contract
 -> Contract Conformance + Context drift check
 ```
 
-`Context Delta` is the only formal durable-fact decision point inside contract-compilation scenarios. This avoids asking the agent to classify once, then classify again while compiling the task contract. The task contract is a temporary compiled artifact for the current task, not a new source of truth. If Conformance reveals an implementation miss, the code is fixed; if it reveals an incomplete task contract, the contract is revised; if it reveals a missing durable fact, the agent returns to `Context Delta` and updates Context before continuing.
+Applicable module design is a short gate inside task-contract compilation: list the source Context / Skill principles, state which current implementation or verification choices they control, name the preferred path and name fallback or degraded paths only with their entry conditions. Commands, probes and current implementation shape are execution evidence; they do not independently define the module target. `Context Delta` is the only formal durable-fact decision point inside contract-compilation scenarios. This avoids asking the agent to classify once, then classify again while compiling the task contract. The task contract is a temporary compiled artifact for the current task, not a new source of truth. If Conformance reveals an implementation miss, the code is fixed; if it reveals an incomplete task contract, the contract is revised; if it reveals a missing durable fact, the agent returns to `Context Delta` and updates Context before continuing.
 
 For long tasks, multi-module work, multi-agent work or changes likely to require several verification loops, `plan.md` or an equivalent temporary plan surface can hold the current task contract, implementation steps and Conformance notes as an execution scratchpad. This use is an aid to the workflow contract, not the workflow contract itself. It helps keep `Context Delta`, `Task Contract` and Conformance visible while work is in flight, but it must not become a long-lived source of truth, a default project asset, a registered Context node, plan state, stage artifact or work-product tree. Durable facts discovered there must be extracted into `project_context/**` or `DESIGN.md`; otherwise the temporary plan is only execution cache.
 
@@ -331,6 +342,7 @@ Shared design rules:
 - Use narrow trigger descriptions so ordinary coding, small fixes and package work do not activate role-heavy prompting by accident.
 - Preserve the Context Priority Ladder in managed guidance: Context read -> page product-positioning check when applicable -> durable-fact classification or `Context Delta` inside task-contract scenarios -> context-first/code-first choice -> drift check.
 - Treat task-contract compilation as a light refactor of that workflow contract for higher-risk product, UI/UX and engineering tasks: `Context Delta` replaces a separate durable-fact classification inside those scenarios, `Task Contract` translates upstream principles into task-local constraints, and `Contract Conformance` checks the result before handoff.
+- For module design, API/Schema, state/runtime and verification-design work, require the development engineer Skill to compile `Applicable Module Design` before choosing implementation, claim, command, probe or fallback paths.
 - Allow `plan.md` or an equivalent temporary plan surface to assist complex task-contract work as scratch space only; it must serve Context and the workflow contract without becoming either one.
 - Elevate lightweight page product-positioning checks into managed AGENTS guidance for Web page, layout and information-placement tasks, and treat the check as input to change classification while keeping the default product/UIUX Skill triggers narrow.
 - Keep broad product/UIUX principles as judgment philosophy, then put slightly more concrete reusable prompt questions in the default Skills. Going more specific than that becomes project or business logic and belongs in project Context or project-local Skills.
@@ -338,6 +350,7 @@ Shared design rules:
 - Read Context before making durable product, design or engineering judgments; treat `project_context/**` as intended ownership and boundary context, and code as current implementation evidence.
 - Keep outputs lightweight: use Context and `DESIGN.md` for durable facts, keep implementation details in code, tests and concise comments when they are self-explanatory there, and keep per-change Context Conformance evidence in handoff / final / PR text rather than Context.
 - Keep task contracts out of long-lived Context by default; only their durable `Context Delta` facts are extracted into `project_context/**` or `DESIGN.md`.
+- Keep module design capsules short enough for high-frequency reading: principles, design logic and rationale should be precise, stable and decision-shaping; history, current thresholds, commands and one-off evidence belong elsewhere or stay out of Context.
 - Treat verification/deployment role Context as reusable repeat-execution knowledge, not evidence reporting: record minimal setup/command-or-path/expected signal/warnings/dead ends, never raw logs, artifacts, release ledgers, secrets or pass/fail claims.
 - Prefer separate project-local Skills for consumer customization; package-managed default Skills should remain broadly useful, sync-overwritten and Minimal Context oriented. Project-local Skill front matter `description` trigger keywords should stay aligned with the matching default Skill and project `AGENTS.md` role-trigger rule so activation behavior and SDLC guidance do not diverge.
 - When a default Skill changes, update this design section and the relevant source workspace Context so future maintainers know the problem, tradeoff and intended failure mode being addressed.
@@ -396,6 +409,7 @@ The UI/UX Skill's visual-quality calibration includes product-positioning, infor
 The development engineer Skill exists to keep technical intent recoverable when work changes implementation strategy, module responsibilities, architecture boundaries, data contracts, state semantics or verification/deployment repeat-execution paths:
 
 - It asks agents to compare Context expectation with current code evidence before proposing durable changes.
+- It raises module design principles, design logic and durable rationale into a short `Applicable Module Design` gate before selecting implementation or verification paths.
 - For UI surfaces, it explicitly checks whether the code is merely exposing fields or satisfying the page/control contract described by Context and the product/UIUX framing.
 - Its trigger list includes explicit subagent orchestration terms such as `多开agent` and `subagent`.
 - When the user has explicitly allowed that capability and the tools exist, the Skill should encourage parallel decomposition while reusing existing agents first and closing completed, idle or no-longer-needed agents with `close_agent`.

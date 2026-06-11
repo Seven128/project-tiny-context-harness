@@ -237,7 +237,7 @@ Use `npx --no-install sdlc-harness ...` only when you explicitly want the alread
 | Diagnostics | `make sdlc-doctor` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness doctor` | Reports Harness root, package version, schema version and required Minimal Context paths. |
 | Package source checks | `sdlc-harness package sync-source`, `sdlc-harness package check-source` | Maintainer-only commands for keeping package canonical assets aligned with the source workspace. |
 
-For product, UI/UX and engineering tasks that touch design intent, API/Schema, state/runtime behavior, architecture boundaries or verification design, the default Skills compile a short current-task contract before implementation. The contract starts with `Context Delta: none|required`; `required` preserves context-first behavior, while `none` means the task can proceed against existing Context. The task contract and Contract Conformance are handoff evidence, not new PRD, tech-plan, validator or gate surfaces.
+For product, UI/UX and engineering tasks that touch design intent, API/Schema, state/runtime behavior, architecture boundaries or verification design, the default Skills compile a short current-task contract before implementation. The contract starts with `Context Delta: none|required`; `required` preserves context-first behavior, while `none` means the task can proceed against existing Context. For module design work, the development engineer Skill also compiles `Applicable Module Design`: the relevant principles, minimal design logic and durable rationale that control the current implementation or verification choice. The task contract and Contract Conformance are handoff evidence, not new PRD, tech-plan, validator or gate surfaces.
 
 Multilingual trigger phrases and local-language export filenames are compatibility details. Public README, npm and launch copy stay English-first; literal non-English examples are documented only where they explain generated Skill matching or default export filenames.
 
@@ -282,10 +282,13 @@ Managed `AGENTS.md` guidance is intentionally a startup router, not a full manua
 - responsibility
 - user / system contract
 - core data / API / state
+- module design capsule when stable principles, design logic or rationale should affect future work
 - key constraints
 - code entry points
 - related role context pointers
 - open risks
+
+A module design capsule should stay small and decision-shaped: `Principles` are stable execution constraints, `Design Logic` is the minimum choose/reject/degrade/compose logic, and `Design Rationale` keeps only reasons that change later implementation or verification decisions. Current thresholds, commands and probe parameters belong in the relevant contract or verification Context as execution instances, not as permanent principles.
 
 Other context files under `project_context/**` can declare `context_role` in front matter or receive a role from `context.toml`. Roles are semantic labels for agent reading and authoring behavior; `validate-context` checks graph structure, paths and field shapes instead of enforcing a writing template for every role. Supported roles are `global`, `architecture`, `area`, `domain`, `subdomain`, `contract`, `foundation`, `verification`, `deployment`, `archive`, `implementation-index` and `decision-rationale`.
 
@@ -330,7 +333,7 @@ Both export modes refuse `project_context/**` and non-temporary output paths. `v
 
 The Context should be dense, durable and short. Former ADR content belongs in `Design Rationale` when it still affects future changes. Implementation details that are obvious from code should stay in code and tests; only non-obvious constraints belong in Context.
 
-Verification and deployment role Context are allowed only when a test, smoke, CI, deployment, bootstrap or runtime path has durable recovery value. Record minimal preparation, the shortest command/path, expected stage or signal, acceptable warnings and dead ends already ruled out. Do not record one-off logs, full output, temporary JSON, CI artifacts, release ledgers, reports, secrets, tokens, cookies, device ids or raw payloads. Put execution details in the owning area's `verification` or `deployment` role Context; use project-level references only for truly cross-domain paths.
+Verification and deployment role Context are allowed only when a test, smoke, CI, deployment, bootstrap or runtime path has durable recovery value. Record minimal preparation, the shortest command/path, expected stage or signal, acceptable warnings and dead ends already ruled out. Verification paths are reusable execution instances, not independent definitions of capability, metric or acceptance targets; first use the owning module's design Context to decide what claim should be proven, then choose the command or probe. Do not record one-off logs, full output, temporary JSON, CI artifacts, release ledgers, reports, secrets, tokens, cookies, device ids or raw payloads. Put execution details in the owning area's `verification` or `deployment` role Context; use project-level references only for truly cross-domain paths.
 
 `project_context/**` is authoritative for intended responsibility, ownership, product intent, architecture boundaries, integration direction, allowed or forbidden dependencies and verification/deployment entry paths. Source code is authoritative for current implementation state. If code shape, keyword search results or nearby implementations disagree with Context, agents should call out implementation drift, missing work or stale Context instead of overriding Context-declared ownership or intent.
 

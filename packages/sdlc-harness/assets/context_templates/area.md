@@ -13,6 +13,13 @@
 
 - Summarize important data structures, APIs, state transitions or rules.
 
+## Module Design Capsule
+
+- Principles: stable execution constraints that should affect future module work.
+- Design Logic: the minimum logic for choosing, rejecting, degrading or composing module behavior.
+- Design Rationale: only durable reasons that change later implementation or verification decisions.
+- Current standards, thresholds and commands belong in the relevant contract or verification Context, not as permanent principles.
+
 ## Key Constraints
 
 - List constraints that are not obvious from code alone, including product rules, responsive/a11y needs or visual boundaries.

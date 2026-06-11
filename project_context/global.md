@@ -56,7 +56,7 @@
 ## Current State
 
 - vNext implementation is Minimal Context Harness.
-- `init` creates `project_context/context.toml` with one default `main` product/domain area at `project_context/areas/main.md` and a default verification role context at `project_context/areas/main/verification.md`; `upgrade` migrates legacy `project_context/modules/**/*.md` into `project_context/areas/**/*.md` and registers recoverable Context graph files in the manifest.
+- `init` creates `project_context/context.toml` with one default `main` product/domain area at `project_context/areas/main.md` and a default verification role context at `project_context/areas/main/verification.md`; `upgrade` migrates legacy `project_context/areas/**/*.md` into `project_context/areas/**/*.md` and registers recoverable Context graph files in the manifest.
 - v4 `validate-context` requires `project_context/context.toml`; older config versions should run `upgrade` before relying on the v4 gate.
 - Ad hoc CLI docs and managed Makefile wrappers use the canonical package-qualified entry `npx --yes --package project-tiny-context-harness@latest sdlc-harness`; bare `npx sdlc-harness` is treated as ambiguous because it can resolve the legacy npm package name or a stale local binary.
 - Current CLI commands guard unsupported future schema major versions before applying v4 assumptions; write commands fail before modifying files.

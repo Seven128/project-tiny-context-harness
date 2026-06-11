@@ -16,7 +16,6 @@ managed_files:
     strategy: managed
   - path: .github/workflows/harness.yml
     strategy: create-if-missing
-local_overrides: []
 never_overwrite:
   - project_context/**
   - DESIGN.md
