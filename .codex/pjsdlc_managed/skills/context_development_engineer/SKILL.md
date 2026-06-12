@@ -39,15 +39,16 @@ Project-specific engineering rules belong in a separate project-local Skill unde
    - 对候选点说明当前重复 / 耦合证据、抽象后的边界、收益、风险和是否值得现在做。
    - 默认只实施高收益、低风险、语义稳定的候选项。
    - 不为一次性代码、不稳定语义或纯粹好看的架构做抽象。
-13. 需要沉淀长期事实时，只更新 `project_context/**`：
+13. 当人工流程呈现重复、确定性、容易漏步骤或顺序影响正确性时，主动评估是否应沉淀为 repo-local tool/script。脚本应放在 owning module 的工具目录并配测试；可恢复的执行入口、参数约束和适用边界写入对应 verification / deployment Context。Skill 只记录这类脚本化机会识别原则，不承载具体模块命令、provider id、artifact 路径或一次性运行结果。
+14. 需要沉淀长期事实时，只更新 `project_context/**`：
    - 全局工程取舍、跨产品域索引或当前状态写入 `global.md`。
    - 产品域 API、数据契约、关键约束、入口和风险写入对应 area / subdomain Context。
    - 跨域接口语义写入 `context_role: contract` 或 manifest role 为 `contract` 的 Context；关键重复验证路径写入 `verification`；关键部署、运行拓扑或云端初始化路径写入 `deployment`；代码入口索引用 `implementation-index`；底层理论源用 `foundation`；历史归档索引用 `archive`。
    - 新 context unit 可新增 `project_context/areas/<unit>.md`，并更新 `global.md#Context Index`；复杂项目同时更新 `project_context/context.toml`。
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
-14. 实现收尾时做 `Contract Conformance` 和 Context drift check：确认代码没有引入未沉淀的长期事实，且 Context 没有退化成普通实现摘要；交付说明只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。Conformance 说明本次契约满足情况、未满足或延期项和验证入口；一次性证据、截图结果、测试日志、任务契约和实现摘要不写入 Context。
-15. Context 只能声明验证 / 部署关键路径或验收信号，不能伪造“测试已通过”或“部署已成功”。
-16. Verification / Deployment Role Context 只记录长期可复用的重复执行路径事实：特殊准备、最短命令或路径、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、release ledger、secret、token、cookie、device id 或 raw payload。
+15. 实现收尾时做 `Contract Conformance` 和 Context drift check：确认代码没有引入未沉淀的长期事实，且 Context 没有退化成普通实现摘要；交付说明只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。Conformance 说明本次契约满足情况、未满足或延期项和验证入口；一次性证据、截图结果、测试日志、任务契约和实现摘要不写入 Context。
+16. Context 只能声明验证 / 部署关键路径或验收信号，不能伪造“测试已通过”或“部署已成功”。
+17. Verification / Deployment Role Context 只记录长期可复用的重复执行路径事实：特殊准备、最短命令或路径、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、release ledger、secret、token、cookie、device id 或 raw payload。
 
 ## UI 实现对齐
 

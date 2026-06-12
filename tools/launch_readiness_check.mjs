@@ -1165,8 +1165,12 @@ function localChecks() {
       contains(npmTrustedPublishing, /post-first-publish release path/) &&
       contains(npmTrustedPublishing, /package now exists on npm/) &&
       contains(npmTrustedPublishing, /must not define `NPM_TOKEN` or `NODE_AUTH_TOKEN`/) &&
+      contains(npmTrustedPublishing, /npm run release:sync-version/) &&
+      contains(npmTrustedPublishing, /npm run release:check-version/) &&
       contains(npmTrustedPublishing, /expected_version: <new-version>/) &&
       contains(npmTrustedPublishing, /0\.2\.41` dry run and real publish/) &&
+      rootPackage.scripts?.["release:sync-version"] === "node tools/sync_release_version.mjs" &&
+      rootPackage.scripts?.["release:check-version"] === "node tools/sync_release_version.mjs --check" &&
       contains(npmTrustedPublishWorkflow, /name: npm Trusted Publish/) &&
       contains(npmTrustedPublishWorkflow, /workflow_dispatch:/) &&
       contains(npmTrustedPublishWorkflow, /dry_run:/) &&
@@ -1182,6 +1186,7 @@ function localChecks() {
       contains(npmTrustedPublishWorkflow, /npm install -g npm@latest/) &&
       contains(npmTrustedPublishWorkflow, /npm CLI 11\.5\.1 or later is required/) &&
       contains(npmTrustedPublishWorkflow, /npm test --workspace project-tiny-context-harness/) &&
+      contains(npmTrustedPublishWorkflow, /npm run release:check-version/) &&
       contains(npmTrustedPublishWorkflow, /node packages\/sdlc-harness\/dist\/cli\.js package check-source/) &&
       contains(npmTrustedPublishWorkflow, /make validate-context/) &&
       contains(npmTrustedPublishWorkflow, /npm pack --dry-run --workspace project-tiny-context-harness/) &&

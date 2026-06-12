@@ -6,7 +6,7 @@ on:
       expected_version:
         description: "Must match packages/sdlc-harness/package.json version."
         required: true
-        default: "0.2.42"
+        default: "0.2.49"
       dry_run:
         description: "Run all checks and pack without publishing."
         required: true
@@ -49,6 +49,9 @@ jobs:
 
       - name: Test package
         run: npm test --workspace project-tiny-context-harness
+
+      - name: Check release version surfaces
+        run: npm run release:check-version
 
       - name: Check package canonical source drift
         run: node packages/sdlc-harness/dist/cli.js package check-source

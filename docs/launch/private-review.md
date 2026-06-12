@@ -68,7 +68,7 @@ npx --yes --package project-tiny-context-harness@latest sdlc-harness init --adop
 make validate-context
 
 Or use the local source-preview tarball:
-npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.42.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.49.tgz
 npx --no-install sdlc-harness init --adopt
 make validate-context
 

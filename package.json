@@ -26,6 +26,8 @@
     "launch:feedback-note": "node tools/launch_feedback_note.mjs",
     "preview:pack": "node tools/source_preview_pack.mjs --clean",
     "smoke:quickstart": "node tools/quickstart_smoke.mjs --clean",
+    "release:sync-version": "node tools/sync_release_version.mjs",
+    "release:check-version": "node tools/sync_release_version.mjs --check",
     "release:npm": "node tools/release_npm.mjs",
     "sdlc-harness": "node packages/sdlc-harness/dist/cli.js"
   },

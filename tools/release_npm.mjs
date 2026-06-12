@@ -85,6 +85,20 @@ async function main() {
     });
   }
 
+  await step(report, args.publish ? "release version surface sync" : "release version surface check", async () => {
+    const syncArgs = ["tools/sync_release_version.mjs"];
+    if (!args.publish) {
+      syncArgs.push("--check");
+    }
+    await run("node", syncArgs);
+  });
+
+  if (args.publish) {
+    await step(report, "package source sync", () =>
+      run("node", ["packages/sdlc-harness/dist/cli.js", "package", "sync-source"])
+    );
+  }
+
   const pack = await step(report, args.publish ? "npm pack tarball" : "npm pack dry run", () =>
     packPackage({ publish: args.publish })
   );
@@ -182,8 +196,8 @@ function printHelp() {
 
 Default mode is a non-mutating dry run against the current workspace package. Publishing
 defaults to the current workspace version when the renamed package has no registry entry
-yet; otherwise it defaults to a patch bump. The script verifies npm auth early, builds
-once through npm pack, publishes that tarball, and verifies the registry latest tag.
+yet; otherwise it defaults to a patch bump. The script verifies npm auth early, syncs
+versioned release surfaces, builds once through npm pack, publishes that tarball, and verifies the registry latest tag.
 
 Optional heavier gates:
   --full-gate       Run the full local node test suite and validate-context before publish.
@@ -523,6 +537,10 @@ async function writeReleaseReport(report, forcedStatus) {
   const authStatus = report.publish ? stepStatus(report, "npm auth check") : "SKIPPED, dry-run did not publish";
   const fullGateStatus = report.fullGate ? stepStatus(report, "full test suite") : "SKIPPED, --full-gate not enabled";
   const validateStatus = report.fullGate ? stepStatus(report, "validate context") : "SKIPPED, --full-gate not enabled";
+  const versionSurfaceLabel = report.publish ? "release version surface sync" : "release version surface check";
+  const packageSourceSyncStatus = report.publish
+    ? stepStatus(report, "package source sync")
+    : "SKIPPED, dry-run did not mutate package assets";
   const packCommand =
     pack?.mode === "tarball"
       ? `npm pack --json --workspace ${workspaceName} --pack-destination .artifacts/releases/pack`
@@ -562,6 +580,7 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
 
 - Publish the synchronized Project Tiny Context Harness package assets and CLI build from the current workspace.
 - This release is produced by \`tools/release_npm.mjs\`. If the renamed package has no registry entry yet, the script publishes the current workspace version by default; once registry latest exists, the default path bumps patch versions. The release path covers npm auth, version check/bump, source drift check, tarball pack, publish and registry latest verification. \`--full-gate\` and \`--registry-smoke\` enable heavier validation.
+- Versioned release surfaces are synchronized by \`tools/sync_release_version.mjs\` before packing during publish runs. Dry runs use \`--check\` so ordinary validation does not rewrite the repository.
 - The tarball publish command passes \`--access public\` explicitly so the rename window does not depend on npm default access semantics.
 
 ## 3. Build Artifacts
@@ -580,6 +599,8 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
 - Evidence:
   - \`npm whoami\`: ${authStatus}.
   - npm publish OTP: ${report.otpProvided ? "PROVIDED, not written to the report." : "NOT PROVIDED"}.
+  - \`node tools/sync_release_version.mjs${report.publish ? "" : " --check"}\`: ${stepStatus(report, versionSurfaceLabel)}.
+  - \`node packages/sdlc-harness/dist/cli.js package sync-source\`: ${packageSourceSyncStatus}.
   - \`node packages/sdlc-harness/dist/cli.js package check-source\`: ${stepStatus(report, "package source drift check")}.
   - \`node --test tests/sdlc-harness/*.test.mjs\`: ${fullGateStatus}.
   - \`node packages/sdlc-harness/dist/cli.js validate-context\`: ${validateStatus}.
