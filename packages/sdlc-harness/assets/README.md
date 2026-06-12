@@ -229,6 +229,7 @@ npx --yes --package project-tiny-context-harness@latest sdlc-harness init --adop
 - `<harnessRoot>/skills/context_uiux_design/SKILL.md`
 - `<harnessRoot>/skills/context_development_engineer/SKILL.md`
 - `<harnessRoot>/skills/context_full_project_export/SKILL.md`
+- `<harnessRoot>/skills/context_harness_upgrade/SKILL.md`
 - `<harnessRoot>/pjsdlc_managed/context_templates/**`
 - `<harnessRoot>/pjsdlc_managed/make/sdlc-harness.mk`
 - `tools/**`
@@ -253,7 +254,7 @@ The support assets can live in a tool-specific harness folder such as `.codex`, 
 
 **Is this an English-only or Chinese-only tool?**
 
-Neither. Public docs, npm copy and launch posts are English-first so new visitors can evaluate the project quickly. Generated Skills may include multilingual trigger examples, and export defaults may use local-language filenames; those are compatibility details, not a Chinese-only product boundary.
+Neither. Public docs, npm copy, launch posts, CLI help/errors, generated Skill activation and default artifact names must be fully usable in English. Generated Skills may include multilingual trigger examples, but those examples are additive compatibility; every supported non-English trigger needs an equivalent narrow English trigger.
 
 **Does `validate-context` prove the project works?**
 
@@ -263,9 +264,9 @@ No. It checks that recovery facts exist and avoids fake test-result claims. Prod
 
 It should stay smaller than a full process. Ordinary bug fixes and local refactors do not update Context unless they produce durable product, architecture, API, state or validation facts.
 
-The default Skills are Minimal Context helpers for explicit product-planning, UI/UX-design, development-engineering and full-project-export requests. Product, screen-flow and durable engineering conclusions go to `project_context/**`; visual identity and design tokens go to root `DESIGN.md`. Export artifacts are temporary files under `tmp/sdlc/context-exports/**`, not Context.
+The default Skills are Minimal Context helpers for explicit product-planning, UI/UX-design, development-engineering, full-project-export and Tiny Context upgrade requests. Product, screen-flow and durable engineering conclusions go to `project_context/**`; visual identity and design tokens go to root `DESIGN.md`. Export artifacts are temporary files under `tmp/sdlc/context-exports/**`, not Context. The Harness upgrade Skill handles requests such as “upgrade Tiny Context” and “use the Tiny Context upgrade skill to upgrade this project” by running `upgrade` first, handling only migration-scoped follow-up, and avoiding standalone `sync` before the upgrade path.
 
-Multilingual trigger phrases and local-language export filenames are compatibility details. Public README, npm and launch copy stay English-first; literal non-English examples are documented only where they explain generated Skill matching or default export filenames.
+Multilingual trigger phrases are compatibility details. Public README, npm and launch copy stay English-first, and public/package-managed surfaces must remain English-complete; literal non-English examples are documented only where they explain generated Skill matching and must not be the sole activation path.
 
 For product, UI/UX and engineering tasks that touch design intent, API/Schema, state/runtime behavior, architecture boundaries or verification design, the default Skills compile a short current-task contract before implementation. The contract starts with `Context Delta: none|required`; `required` preserves context-first behavior, while `none` means the task can proceed against existing Context. For module design work, the development engineer Skill also compiles `Applicable Module Design`: the relevant principles, minimal design logic and durable rationale that control the current implementation or verification choice. The task contract and Contract Conformance are handoff evidence, not new PRD, tech-plan, validator or gate surfaces.
 
@@ -277,7 +278,7 @@ The expected Context Priority Ladder is: read Context first, run the page produc
 
 Managed `AGENTS.md` guidance is intentionally a startup router, not a full manual. It should contain fact-source entry points, hard boundaries, key triggers and shortest validation commands; package consumers default long design reasoning to Context unless they already have a local spec/design convention. In this source workspace, `PROJECT_SPEC.md` holds stable Harness workflow rationale. Role procedures belong in Skills and human usage guidance in README. The recommended 40-70 line range is a soft budget, not a validator gate.
 
-The default `context_*` Skills are package-managed generated files. `sync` overwrites them, so project-specific product/design/development rules should live in separate project-local Skills such as `.codex/skills/product_plan/SKILL.md`, `.codex/skills/uiux_design/SKILL.md` or `.codex/skills/development_engineer/SKILL.md`. When a project-local Skill and a default Skill both apply, agents should use the more specific project-local Skill first while keeping durable conclusions in `project_context/**` and `DESIGN.md`. Keep the project-local Skill front matter `description` triggers aligned with the matching default `context_*` Skill and the project `AGENTS.md` role-trigger rule; if a project adds or narrows product/design/development keywords, update both the local Skill and the agent guidance together.
+The default `context_*` Skills are package-managed generated files. `sync` overwrites them, so project-specific product/design/development rules should live in separate project-local Skills such as `.codex/skills/product_plan/SKILL.md`, `.codex/skills/uiux_design/SKILL.md` or `.codex/skills/development_engineer/SKILL.md`. When a project-local Skill and a default Skill both apply, agents should use the more specific project-local Skill first while keeping durable conclusions in `project_context/**` and `DESIGN.md`. Keep the project-local Skill front matter `description` triggers aligned with the matching default `context_*` Skill and the project `AGENTS.md` role-trigger rule; if a project adds or narrows product/design/development keywords, update both the local Skill and the agent guidance together. The Harness upgrade Skill is also package-managed; customize project semantics in Context, not by editing that generated Skill.
 
 ## CLI Entry Safety
 

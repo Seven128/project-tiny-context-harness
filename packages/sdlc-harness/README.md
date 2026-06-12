@@ -184,7 +184,7 @@ For existing projects:
 npx --yes --package project-tiny-context-harness@latest sdlc-harness init --adopt
 ```
 
-`init` creates `project_context/context.toml`, `project_context/global.md`, `project_context/architecture.md`, `project_context/areas/main.md`, `project_context/areas/main/verification.md`, agent guidance, Context authoring Skills, a full-project export Skill, managed templates/tools, a Makefile include and `.github/workflows/harness.yml`. The generated workflow runs only the selected Harness gate, `validate-context` or `validate-harness`; maintainer-only package tests and source-drift checks are intentionally kept out of consumer projects. It does not create stage work-product trees, lifecycle state or stage skills by default.
+`init` creates `project_context/context.toml`, `project_context/global.md`, `project_context/architecture.md`, `project_context/areas/main.md`, `project_context/areas/main/verification.md`, agent guidance, Context authoring Skills, a full-project export Skill, a Harness upgrade Skill, managed templates/tools, a Makefile include and `.github/workflows/harness.yml`. The generated workflow runs only the selected Harness gate, `validate-context` or `validate-harness`; maintainer-only package tests and source-drift checks are intentionally kept out of consumer projects. It does not create stage work-product trees, lifecycle state or stage skills by default.
 
 ## FAQ
 
@@ -200,7 +200,7 @@ The support assets can live in a tool-specific harness folder such as `.codex`, 
 
 **Is this an English-only or Chinese-only tool?**
 
-Neither. Public docs, npm copy and launch posts are English-first so new visitors can evaluate the project quickly. Generated Skills may include multilingual trigger examples, and export defaults may use local-language filenames; those are compatibility details, not a Chinese-only product boundary.
+Neither. Public docs, npm copy, launch posts, CLI help/errors, generated Skill activation and default artifact names must be fully usable in English. Generated Skills may include multilingual trigger examples, but those examples are additive compatibility; every supported non-English trigger needs an equivalent narrow English trigger.
 
 **Does `validate-context` prove the project works?**
 
@@ -227,6 +227,7 @@ Use `npx --no-install sdlc-harness ...` only when you explicitly want the alread
 | UI/UX design Skill | `<harnessRoot>/skills/context_uiux_design/SKILL.md` | Handles explicit UI/UX design requests, writes screen/interaction conclusions to `project_context/**`, updates root `DESIGN.md` visual tokens with Google `@google/design.md`, and includes compact visual-quality calibration for product/page positioning, user needs, information density, brand/product UI and common AI-design anti-patterns. |
 | Development engineer Skill | `<harnessRoot>/skills/context_development_engineer/SKILL.md` | Handles explicit development-engineering requests and writes durable engineering conclusions to `project_context/**`. |
 | Full project context export Skill | `<harnessRoot>/skills/context_full_project_export/SKILL.md` | Handles explicit full-project or code-level export requests and uses `export-context --all`, `--full` or `--code` to create temporary artifacts under `tmp/sdlc/context-exports/**`. |
+| Harness upgrade Skill | `<harnessRoot>/skills/context_harness_upgrade/SKILL.md` | Handles explicit Tiny Context / Project Tiny Context Harness upgrade requests such as “upgrade Tiny Context” and “use the Tiny Context upgrade skill to upgrade this project”; it runs `upgrade` first, handles only migration-scoped `manual_required` / `blocked` follow-up, then runs diagnostics. |
 | Project-local Skills | `<harnessRoot>/skills/<role>/SKILL.md` | Optional local product/design/development Skills created by the project, such as `product_plan`, `uiux_design` or `development_engineer`. They supersede package-managed default Skills when more specific, are not overwritten by `sync`, and should keep front matter trigger keywords aligned with the project `AGENTS.md` role-trigger rule. |
 | Managed file sync | `make sdlc-sync` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness sync` | Refreshes package-managed guidance, default Skills, Makefile include, context templates, tools and workflow YAML. It does not run migrations or perform semantic Context generation; when migration work is pending it refuses to write and tells you to run `upgrade`. |
 | Upgrade | `make sdlc-upgrade` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade` | Default command after updating the npm package. Builds an upgrade plan, applies `safe_pending` migrations, runs `sync` and `doctor`, and exits non-zero when manual or blocked follow-up remains. |
@@ -240,7 +241,9 @@ Use `npx --no-install sdlc-harness ...` only when you explicitly want the alread
 
 For product, UI/UX and engineering tasks that touch design intent, API/Schema, state/runtime behavior, architecture boundaries or verification design, the default Skills compile a short current-task contract before implementation. The contract starts with `Context Delta: none|required`; `required` preserves context-first behavior, while `none` means the task can proceed against existing Context. For module design work, the development engineer Skill also compiles `Applicable Module Design`: the relevant principles, minimal design logic and durable rationale that control the current implementation or verification choice. The task contract and Contract Conformance are handoff evidence, not new PRD, tech-plan, validator or gate surfaces.
 
-Multilingual trigger phrases and local-language export filenames are compatibility details. Public README, npm and launch copy stay English-first; literal non-English examples are documented only where they explain generated Skill matching or default export filenames.
+Multilingual trigger phrases are compatibility details. Public README, npm and launch copy stay English-first, and public/package-managed surfaces must remain English-complete; literal non-English examples are documented only where they explain generated Skill matching and must not be the sole activation path.
+
+The Harness upgrade Skill exists so consumer agents have a short, repeatable upgrade procedure for existing projects. It treats `sdlc-harness upgrade` as the default command after package updates, forbids standalone `sync` before upgrade, and limits manual handling to the migration scope reported by the CLI instead of guessing project semantics.
 
 For complex task-contract work, agents may use `plan.md` or an equivalent temporary plan surface as scratch space for `Context Delta`, `Task Contract`, implementation steps and Conformance notes. It is execution cache only: durable facts must be extracted into `project_context/**` or `DESIGN.md`, and temporary plans are not Context, not registered in `context.toml` and not default project assets.
 
@@ -370,6 +373,8 @@ $EDITOR <harnessRoot>/skills/uiux_design/SKILL.md
 ```
 
 When a project-local Skill and a package-managed default Skill both apply, agents should use the more specific project-local Skill first. The local Skill should keep durable conclusions in `project_context/**` and `DESIGN.md`. Its front matter `description` should stay aligned with the matching default `context_*` Skill and the project `AGENTS.md` role-trigger rule; update both the local Skill and agent guidance when adding or narrowing product/design/development trigger terms. `sync` does not merge Skill overrides and does not overwrite separate project-local Skills. Existing `<harnessRoot>/pjsdlc_managed/override_skills/*.md` files should be migrated into standalone project-local Skills before running `sync`.
+
+Do not customize the package-managed Harness upgrade Skill directly. Project-specific upgrade facts belong in `project_context/**`; recurring project-local procedures belong in separate project-local Skills.
 
 ## Sync And Upgrade Boundary
 

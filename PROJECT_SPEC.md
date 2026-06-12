@@ -200,8 +200,8 @@ The Context should be compact and semantically split:
 
 Temporary exports are explicit exceptions for external-tool ingestion, not durable Context:
 
-- `export-context --full` emits a one-off project Context summary named `当前项目context-<timestamp>.md` by default.
-- `export-context --code` emits a one-off single-file current implementation snapshot named `当前项目代码实现.md` under a timestamped `code-level-implementation-*` directory by default.
+- `export-context --full` emits a one-off project Context summary named `full-project-context-<timestamp>.md` by default.
+- `export-context --code` emits a one-off single-file current implementation snapshot named `code-level-implementation.md` under a timestamped `code-level-implementation-*` directory by default.
 - `export-context --all` emits both default artifacts in one command using the same timestamp and does not accept `--output`.
 - Both modes must stay under `tmp/sdlc/context-exports/**`, must not be registered in `project_context/context.toml`, and must not revive implementation documents as tracked package defaults.
 
@@ -343,6 +343,7 @@ The default Skills exist because important product, design and engineering reaso
 Shared design rules:
 
 - Use narrow trigger descriptions so ordinary coding, small fixes and package work do not activate role-heavy prompting by accident.
+- Keep public and package-managed surfaces English-complete. README/npm/release copy, CLI help/errors, generated AGENTS trigger examples, default Skill front matter descriptions and default artifact names must provide a complete English path; multilingual trigger examples are additive compatibility and must never be the only activation path.
 - Preserve the Context Priority Ladder in managed guidance: Context read -> page product-positioning check when applicable -> durable-fact classification or `Context Delta` inside task-contract scenarios -> context-first/code-first choice -> drift check.
 - Treat task-contract compilation as a light refactor of that workflow contract for higher-risk product, UI/UX and engineering tasks: `Context Delta` replaces a separate durable-fact classification inside those scenarios, `Task Contract` translates upstream principles into task-local constraints, and `Contract Conformance` checks the result before handoff.
 - For module design, API/Schema, state/runtime and verification-design work, require the development engineer Skill to compile `Applicable Module Design` before choosing implementation, claim, command, probe or fallback paths.
@@ -422,6 +423,13 @@ The development engineer Skill exists to keep technical intent recoverable when 
 - The scan also treats repeated, deterministic, easy-to-miss or order-sensitive manual workflows as repo-local tool/script opportunities: scripts belong in the owning module's tool area with tests, while recoverable entry points, parameter constraints and applicability boundaries belong in verification/deployment Context rather than in provider-specific Skill text or one-off evidence notes.
 - It should default to stable, high-value, low-risk changes and leave speculative architecture for explicit user direction or stronger project evidence.
 
+The Harness upgrade Skill exists because existing consumer projects need a short, repeatable procedure after package updates:
+
+- It triggers on explicit Tiny Context / Project Tiny Context Harness upgrade requests, including English requests such as `upgrade Tiny Context` and `use the Tiny Context upgrade skill to upgrade this project`; Chinese trigger examples are compatibility-only additions.
+- It treats `sdlc-harness upgrade` as the default command after an npm package update, not standalone `sync`.
+- It tells agents to handle only migration-scoped `manual_required` / `blocked` follow-up and to use `context.toml`, role placement scan and existing project Context rather than guessing business semantics.
+- It is package-managed guidance for operating the Harness, not a project-local product/design/development customization surface.
+
 ## Package Behavior
 
 `init` creates Minimal Context assets and managed guidance:
@@ -436,6 +444,8 @@ The development engineer Skill exists to keep technical intent recoverable when 
 - `<harnessRoot>/skills/context_product_plan/SKILL.md`
 - `<harnessRoot>/skills/context_uiux_design/SKILL.md`
 - `<harnessRoot>/skills/context_development_engineer/SKILL.md`
+- `<harnessRoot>/skills/context_full_project_export/SKILL.md`
+- `<harnessRoot>/skills/context_harness_upgrade/SKILL.md`
 - `<harnessRoot>/pjsdlc_managed/context_templates/**`
 - `<harnessRoot>/pjsdlc_managed/make/sdlc-harness.mk`
 - `tools/**`
@@ -450,6 +460,8 @@ The package-managed `.github/workflows/harness.yml` is a consumer project workfl
 ### Upgrade Model / Migration Model
 
 The public npm update path is now: after updating the package, run `sdlc-harness upgrade`. `sync` is only the right direct command when release notes say the release update mode is `sync-only`.
+
+The package also ships `context_harness_upgrade` as a managed Skill so agents can turn explicit requests like `upgrade Tiny Context` into the canonical upgrade sequence: inspect Context, run `upgrade --check` when useful, run `upgrade`, handle only scoped manual/blocked items, then run `doctor` and `validate-context`.
 
 The core design split is:
 

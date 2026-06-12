@@ -109,6 +109,7 @@ try {
   await stat(path.join(root, ".agent/skills/context_uiux_design/SKILL.md"));
   await stat(path.join(root, ".agent/skills/context_development_engineer/SKILL.md"));
   await stat(path.join(root, ".agent/skills/context_full_project_export/SKILL.md"));
+  await stat(path.join(root, ".agent/skills/context_harness_upgrade/SKILL.md"));
   await assert.rejects(stat(path.join(root, ".work_products/INDEX.md")));
 
   const agents = await readFile(path.join(root, "AGENTS.md"), "utf8");
@@ -136,6 +137,12 @@ try {
   assert.match(agents, /export-context --full/);
   assert.match(agents, /export-context --code/);
   assert.match(agents, /tmp\/sdlc\/context-exports/);
+  assert.match(agents, /product plan/);
+  assert.match(agents, /UX designer/);
+  assert.match(agents, /software engineer/);
+  assert.match(agents, /full project context export/);
+  assert.match(agents, /upgrade Tiny Context/);
+  assert.match(agents, /context_harness_upgrade/);
   assert.match(agents, /独立项目本地 Skill/);
   assert.match(agents, /uiux_design\/SKILL\.md/);
   assert.doesNotMatch(agents, /override_skills/);
@@ -246,6 +253,8 @@ try {
   assert.doesNotMatch(developmentSkill, /multi_agent_v1/);
   const exportSkill = await readFile(path.join(root, ".agent/skills/context_full_project_export/SKILL.md"), "utf8");
   assert.match(exportSkill, /导出尽可能详细的项目全量上下文/);
+  assert.match(exportSkill, /full project context export/);
+  assert.match(exportSkill, /code-level implementation export/);
   assert.match(exportSkill, /export-context --all/);
   assert.match(exportSkill, /export-context --full/);
   assert.match(exportSkill, /export-context --code/);
@@ -254,6 +263,19 @@ try {
   assert.match(exportSkill, /code-level-implementation-<timestamp>\/code-level-implementation\.md/);
   assert.match(exportSkill, /tmp\/sdlc\/context-exports/);
   assert.match(exportSkill, /Do not modify `project_context\/context\.toml`/);
+  const upgradeSkill = await readFile(path.join(root, ".agent/skills/context_harness_upgrade/SKILL.md"), "utf8");
+  assert.match(upgradeSkill, /用 Tiny Context upgrade skill 升级这个项目/);
+  assert.match(upgradeSkill, /升级 tiny context/);
+  assert.match(upgradeSkill, /upgrade Tiny Context/);
+  assert.match(upgradeSkill, /use the Tiny Context upgrade skill to upgrade this project/);
+  assert.match(upgradeSkill, /sdlc-harness upgrade --check/);
+  assert.match(upgradeSkill, /Do not run standalone `sync` before `upgrade`/);
+  assert.match(upgradeSkill, /manual_required/);
+  assert.match(upgradeSkill, /blocked/);
+  assert.match(upgradeSkill, /role placement scan/);
+  assert.match(upgradeSkill, /project_context\/context\.toml/);
+  assert.match(upgradeSkill, /make validate-context/);
+  assert.match(upgradeSkill, /Context: no durable project facts changed/);
 
   const managedProductSkillPath = path.join(root, ".agent/skills/context_product_plan/SKILL.md");
   const packagedProductSkill = await readFile(
@@ -323,6 +345,7 @@ try {
   await stat(path.join(configuredRoot, ".harness/skills/context_uiux_design/SKILL.md"));
   await stat(path.join(configuredRoot, ".harness/skills/context_development_engineer/SKILL.md"));
   await stat(path.join(configuredRoot, ".harness/skills/context_full_project_export/SKILL.md"));
+  await stat(path.join(configuredRoot, ".harness/skills/context_harness_upgrade/SKILL.md"));
   await assert.rejects(stat(path.join(configuredRoot, ".harness/pjsdlc_managed/override_skills")));
   await stat(path.join(configuredRoot, "project_context/global.md"));
   await stat(path.join(configuredRoot, "project_context/context.toml"));

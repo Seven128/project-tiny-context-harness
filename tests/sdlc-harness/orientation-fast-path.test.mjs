@@ -18,6 +18,8 @@ const [
   productSkill,
   uiuxSkill,
   developmentSkill,
+  exportSkill,
+  harnessUpgradeSkill,
   sourceWorkflow,
   packageWorkflow,
   packageJsonRaw,
@@ -39,6 +41,8 @@ const [
   read("packages/sdlc-harness/assets/skills/context_product_plan/SKILL.md"),
   read("packages/sdlc-harness/assets/skills/context_uiux_design/SKILL.md"),
   read("packages/sdlc-harness/assets/skills/context_development_engineer/SKILL.md"),
+  read("packages/sdlc-harness/assets/skills/context_full_project_export/SKILL.md"),
+  read("packages/sdlc-harness/assets/skills/context_harness_upgrade/SKILL.md"),
   read(".github/workflows/harness.yml"),
   read("packages/sdlc-harness/assets/github/harness.yml"),
   read("packages/sdlc-harness/package.json"),
@@ -201,6 +205,8 @@ assert.match(featureTemplate, /Minimal Context boundary check/);
 
 for (const content of [rootReadme, packageReadme, spec, packageGuide]) {
   assert.doesNotMatch(content, /migrate-context/);
+  assert.match(content, /English-complete|fully usable in English/);
+  assert.doesNotMatch(content, /local-language export filenames/);
   assert.match(content, /sync.*(?:refreshes managed|刷新 managed|只刷新)/i);
   assert.match(content, /upgrade.*sync/s);
   assert.match(content, /upgrade --check/);
@@ -267,6 +273,9 @@ assert.doesNotMatch(packageReadme, /Project initialization.*workflow skills/s);
 assert.doesNotMatch(packageReadme, /fresh lifecycle starts at/);
 
 assert.match(authoringSkill, /Minimal Context Harness/);
+assert.match(authoringSkill, /Open-source English-complete rule/);
+assert.match(authoringSkill, /default Skill front matter descriptions/);
+assert.match(authoringSkill, /Non-English trigger examples are additive compatibility only/);
 assert.doesNotMatch(authoringSkill, /Legacy migration support/);
 assert.doesNotMatch(authoringSkill, /migrate-context|context-migration/);
 assert.doesNotMatch(
@@ -279,7 +288,25 @@ assert.match(authoringSkill, /不得恢复 `<harnessRoot>\/pjsdlc_managed\/overr
 assert.match(authoringSkill, /description.*触发关键词.*AGENTS\.md/s);
 assert.doesNotMatch(authoringSkill, /pjsdlc_manager|pjsdlc_dev_sprint|pjsdlc_reviewer|pjsdlc_tester/);
 
+for (const content of [sourceAgents, packageAgents]) {
+  assert.match(content, /product plan/);
+  assert.match(content, /product manager/);
+  assert.match(content, /product spec/);
+  assert.match(content, /UX designer/);
+  assert.match(content, /UI designer/);
+  assert.match(content, /visual polish/);
+  assert.match(content, /design system spec/);
+  assert.match(content, /software engineer/);
+  assert.match(content, /development plan/);
+  assert.match(content, /technical implementation plan/);
+  assert.match(content, /full project context export/);
+  assert.match(content, /code-level implementation export/);
+  assert.match(content, /upgrade Tiny Context/);
+  assert.match(content, /context_harness_upgrade/);
+}
+
 assert.match(productSkill, /description:.*产品方案.*产品经理.*产品专家/s);
+assert.match(productSkill, /description:.*product plan.*product manager.*product expert.*product spec.*PM spec/s);
 assert.match(productSkill, /Package-Managed Boundary/);
 assert.match(productSkill, /skills\/product_plan\/SKILL\.md/);
 assert.match(productSkill, /front matter `description` trigger keywords aligned/);
@@ -298,6 +325,7 @@ assert.doesNotMatch(productSkill, /恢复\s*旧/);
 assert.doesNotMatch(productSkill, /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|pjsdlc_/);
 
 assert.match(uiuxSkill, /description:.*设计稿.*UI\/UX 设计方案.*视觉专家/s);
+assert.match(uiuxSkill, /description:.*UX designer.*UI designer.*frontend redesign.*visual polish.*design system spec/s);
 assert.match(uiuxSkill, /Package-Managed Boundary/);
 assert.match(uiuxSkill, /skills\/uiux_design\/SKILL\.md/);
 assert.match(uiuxSkill, /front matter `description` trigger keywords aligned/);
@@ -325,6 +353,10 @@ assert.doesNotMatch(uiuxSkill, /恢复\s*旧/);
 assert.doesNotMatch(uiuxSkill, /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|pjsdlc_/);
 
 assert.match(developmentSkill, /description:.*开发工程师.*开发方案.*实施计划.*技术专家/s);
+assert.match(
+  developmentSkill,
+  /description:.*software engineer.*senior engineer.*engineering expert.*development plan.*engineering plan.*technical implementation plan/s
+);
 assert.match(developmentSkill, /Package-Managed Boundary/);
 assert.match(developmentSkill, /skills\/development_engineer\/SKILL\.md/);
 assert.match(developmentSkill, /front matter `description` trigger keywords aligned/);
@@ -349,6 +381,28 @@ assert.match(developmentSkill, /临时执行缓存/);
 assert.match(developmentSkill, /不默认创建 `\.work_products\/\*\*`/);
 assert.doesNotMatch(developmentSkill, /恢复\s*旧/);
 assert.doesNotMatch(developmentSkill, /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|pjsdlc_/);
+
+assert.match(exportSkill, /description:.*full project context export.*export full project context.*project context export.*code-level implementation export/s);
+assert.match(exportSkill, /description:.*导出尽可能详细的项目全量上下文.*代码级实现导出/s);
+assert.match(exportSkill, /full-project-context-<timestamp>\.md/);
+assert.match(exportSkill, /code-level-implementation-<timestamp>\/code-level-implementation\.md/);
+
+assert.match(harnessUpgradeSkill, /description:.*upgrade Tiny Context.*update Tiny Context.*use the Tiny Context upgrade skill to upgrade this project/s);
+assert.match(harnessUpgradeSkill, /description:.*用 Tiny Context upgrade skill 升级这个项目.*升级 tiny context/s);
+assert.match(harnessUpgradeSkill, /Package-Managed Boundary/);
+assert.match(harnessUpgradeSkill, /sdlc-harness upgrade --check/);
+assert.match(harnessUpgradeSkill, /Do not run standalone `sync` before `upgrade`/);
+assert.match(harnessUpgradeSkill, /manual_required/);
+assert.match(harnessUpgradeSkill, /blocked/);
+assert.match(harnessUpgradeSkill, /role placement scan/);
+assert.match(harnessUpgradeSkill, /project_context\/context\.toml/);
+assert.match(harnessUpgradeSkill, /context\.toml.*real project areas/s);
+assert.match(harnessUpgradeSkill, /Do not restore legacy stage workflow/);
+assert.match(harnessUpgradeSkill, /Context: no durable project facts changed/);
+assert.doesNotMatch(
+  harnessUpgradeSkill,
+  /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|pjsdlc_manager|pjsdlc_dev_sprint|pjsdlc_reviewer|pjsdlc_tester/
+);
 
 assert.match(sourceAgents, /Impeccable/);
 assert.match(sourceAgents, /重做设计/);

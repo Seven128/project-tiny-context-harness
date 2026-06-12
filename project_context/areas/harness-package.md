@@ -13,6 +13,8 @@
 - `upgrade` creates root `DESIGN.md` for existing Harness projects when missing, without overwriting an existing user-authored design file.
 - The generated `DESIGN.md` contains neutral starter tokens and design logic; user-authored `DESIGN.md` content takes precedence over the starter baseline.
 - Default product planning, UI/UX and development engineer Skills write durable conclusions to `project_context/**`.
+- Public package surfaces are English-complete: README/npm/release copy, CLI help/errors, generated AGENTS trigger examples, default Skill front matter descriptions and default artifact names must all provide an English path. Non-English trigger examples are additive compatibility only.
+- The package-managed `context_harness_upgrade` Skill triggers on English requests such as “upgrade Tiny Context / use the Tiny Context upgrade skill to upgrade this project” plus compatibility Chinese examples such as “用 Tiny Context upgrade skill 升级这个项目 / 升级 tiny context / 升级tiny context”, and tells agents to run the canonical `upgrade` path before any standalone `sync`.
 - `PROJECT_SPEC.md` owns the stable Harness mental model and core term vocabulary: Minimal Context Harness is a set of expected agent behavior constraints, not a document workflow. It explains fact-source authority, workflow contracts, artifact placement, soft constraints and how these are implemented through AGENTS, Context, Skills, temporary plan surfaces, handoff checks, validators and source-sync tests.
 - The product planning Skill asks agents doing product surfaces to reason from product/page positioning: what problem it solves, what the user needs, what content/capabilities/feedback it should provide, what belongs on the surface, where it belongs and why it deserves persistent attention.
 - Managed AGENTS guidance requires a lightweight page product-positioning check for Web pages, frontend layout, UI/UX, product module boundaries and information-placement tasks even when product/UIUX Skills are not explicitly triggered; the check runs before context-first classification and supplies evidence for whether durable page responsibility, information architecture, persistent-information boundary or module ownership facts changed.
@@ -40,7 +42,7 @@
 - Project-local Skill front matter `description` trigger keywords should stay aligned with the matching default Skill and the project `AGENTS.md` role-trigger rule; project-specific keyword additions or narrowing should update both surfaces together.
 - The default Skill trigger descriptions should stay narrow: explicit role names or strong artifact names, not generic mentions of product, design, development, code or requirements.
 - `PROJECT_SPEC.md` records the design rationale for the default product planning, UI/UX and development engineer Skills; changes to their triggers, workflow, output boundaries or default judgment rules should update that rationale and this Context when the long-term contract changes.
-- The development engineer Skill trigger list includes `实现`, `实现方案`, `实施计划`, `多开agent` and `subagent`, while its negative trigger rule still excludes routine coding, bug fixes, small refactors and package/release work.
+- The development engineer Skill trigger list includes English triggers such as `software engineer`, `development plan`, `technical implementation plan` and `subagent`, plus compatibility Chinese triggers such as `实现`, `实现方案`, `实施计划` and `多开agent`, while its negative trigger rule still excludes routine coding, bug fixes, small refactors and package/release work.
 - When a user explicitly allows subagent use and the tools exist, the development engineer Skill should encourage parallel decomposition while reusing existing agents first and closing completed, idle or no-longer-needed agents with `close_agent`; this is a resource lifecycle constraint, not permission to bypass the user's explicit subagent trigger.
 - The development engineer Skill includes a lightweight abstraction / decomposition scan for new implementation, refactoring, repeated logic, module-boundary or impact-scope work; candidates are evaluated by evidence, boundary, benefit, risk and timing, split into local refactoring versus long-term boundary changes, and only stable high-value candidates should be implemented by default.
 - The development engineer Skill treats repeated, deterministic, easy-to-miss or order-sensitive manual workflows as repo-local tool/script opportunities; scripts belong in the owning module's tool area with tests, and recoverable entry points, parameter constraints and applicability boundaries belong in verification/deployment Context rather than provider-specific Skill text, artifact paths or one-off run results.
@@ -68,10 +70,11 @@
 - `upgrade` does not infer arbitrary project semantics, choose every Context role, repair project-local Skills, invent business verification paths, update product/deployment facts or turn old projects into best-practice state.
 - `init`, `sync`, `upgrade`, `doctor` and `validate-context` guard unsupported future schema major versions before applying v4 assumptions; write commands fail before modifying files.
 - `validate-context` checks Context completeness but does not prove product test execution.
-- `export-context --full` creates a one-off Markdown Context export for copying, external-tool ingestion or temporary discussion. It defaults to `tmp/sdlc/context-exports/当前项目context-<timestamp>.md`, refuses `project_context/**` and non-temporary output paths, and must never register the export as a Context graph node.
-- `export-context --code` creates a one-off Markdown current implementation snapshot with source file paths, metadata, heuristic summaries and redacted code blocks. It defaults to `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/当前项目代码实现.md`, uses one Markdown file only, refuses `project_context/**` and non-temporary output paths, and must never register the export as a Context graph node.
+- `export-context --full` creates a one-off Markdown Context export for copying, external-tool ingestion or temporary discussion. It defaults to `tmp/sdlc/context-exports/full-project-context-<timestamp>.md`, refuses `project_context/**` and non-temporary output paths, and must never register the export as a Context graph node.
+- `export-context --code` creates a one-off Markdown current implementation snapshot with source file paths, metadata, heuristic summaries and redacted code blocks. It defaults to `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/code-level-implementation.md`, uses one Markdown file only, refuses `project_context/**` and non-temporary output paths, and must never register the export as a Context graph node.
 - `export-context --all` creates both default `--full` and `--code` artifacts in one command with the same timestamp. It does not accept `--output` because one custom Markdown path cannot unambiguously represent two artifacts.
 - The package-managed `context_full_project_export` Skill triggers on “导出尽可能详细的项目全量上下文 / 全量上下文导出 / full project context export / 代码级实现导出 / 当前项目代码实现” style requests and tells agents to prefer `export-context --all` when both context and code snapshots are useful, instead of hand-writing a tracked Context or implementation summary.
+- The package-managed `context_harness_upgrade` Skill is a consumer-agent operation guide for existing project upgrades: inspect Context and dirty state, run `upgrade --check` / `upgrade`, handle only migration-scoped `manual_required` or `blocked` items using `context.toml` and role placement scan, then run `doctor` and `validate-context`.
 - `validate-context` rejects obvious export artifact names such as `full-project-context`, `project-overview`, `context-bundle`, `context-summary` or `context-export` when they appear in `project_context/context.toml`.
 
 ## Core Data / API / State
@@ -85,7 +88,7 @@
 - Init behavior lives in `packages/sdlc-harness/src/lib/init.ts`.
 - Sync behavior and the public pending-migration refusal live in `packages/sdlc-harness/src/lib/sync-engine.ts`.
 - Upgrade orchestration lives in `packages/sdlc-harness/src/lib/upgrade.ts`.
-- Default Skill assets, including Context authoring Skills and the full-project export Skill, live in `.codex/pjsdlc_managed/skills/**` and `packages/sdlc-harness/assets/skills/**`.
+- Default Skill assets, including Context authoring Skills, the full-project export Skill and the Harness upgrade Skill, live in `.codex/pjsdlc_managed/skills/**` and `packages/sdlc-harness/assets/skills/**`.
 - Default Context graph template lives in `.codex/pjsdlc_managed/context_templates/context.toml` and `packages/sdlc-harness/assets/context_templates/context.toml`.
 - Default verification/deployment Context templates live in `.codex/pjsdlc_managed/context_templates/verification.md`, `.codex/pjsdlc_managed/context_templates/deployment.md` and the matching package assets.
 - The migration registry, upgrade plan, release update mode calculation and safe migration application live in `packages/sdlc-harness/src/lib/migrations.ts`.
@@ -94,7 +97,9 @@
 ## Key Constraints
 
 - Do not put authoring-only skills under `.codex/skills/authoring/**` into package assets.
+- Public/package-managed user paths must stay English-complete; do not add a non-English-only trigger, default filename, CLI message, release note or package doc path.
 - Default Skills must stay Minimal Context oriented and must not restore stage documents or phase gates.
+- The Harness upgrade Skill must not tell agents to run standalone `sync` before `upgrade`, must not guess business semantics, and must limit manual cleanup to the migration scope reported by the CLI.
 - UI/UX guidance may update `DESIGN.md`; it should use `npx @google/design.md lint DESIGN.md` when structure validation is needed.
 - Impeccable should be attempted by the UI/UX Skill when a scan target exists, but it must not become a `validate-context` requirement or block tasks that have no suitable target.
 - Project-local product/design/development Skills may narrow guidance for a project but must keep durable conclusions in Minimal Context.
