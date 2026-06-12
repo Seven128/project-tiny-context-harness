@@ -203,6 +203,14 @@ for (const content of [rootReadme, packageReadme, spec, packageGuide]) {
   assert.doesNotMatch(content, /migrate-context/);
   assert.match(content, /sync.*(?:refreshes managed|刷新 managed|只刷新)/i);
   assert.match(content, /upgrade.*sync/s);
+  assert.match(content, /upgrade --check/);
+  assert.match(content, /sync-only/);
+  assert.match(content, /upgrade-required/);
+  assert.match(content, /manual-required/);
+  assert.match(content, /safe_pending/);
+  assert.match(content, /manual_required/);
+  assert.match(content, /blocked/);
+  assert.match(content, /sync.*does not run migrations|does not run migrations/s);
   assert.match(content, /(?:product_plan|uiux_design|development_engineer)\/SKILL\.md/);
   assert.match(content, /(?:front matter|frontmatter).*description.*trigger/i);
   assert.match(content, /AGENTS\.md.*role-trigger|角色触发规则/);
@@ -210,6 +218,12 @@ for (const content of [rootReadme, packageReadme, spec, packageGuide]) {
   assert.doesNotMatch(content, /override.*merged into/i);
   assert.doesNotMatch(content, /init.*override_skills/i);
 }
+
+for (const content of [rootReadme, packageReadme, packageGuide]) {
+  assert.match(content, /After updating the package, run `sdlc-harness upgrade`/);
+}
+
+assert.match(spec, /Release update mode is part of the release contract/);
 
 for (const content of [rootReadme, packageReadme, spec]) {
   assert.match(content, /DESIGN\.md/);

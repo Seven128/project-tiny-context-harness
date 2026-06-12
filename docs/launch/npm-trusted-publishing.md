@@ -13,7 +13,7 @@ Important current constraints:
 
 - Trusted publishing uses OIDC from a supported CI/CD workflow instead of long-lived npm publish tokens.
 - GitHub Actions trusted publishing requires npm CLI version 11.5.1 or later and Node version 22.14.0 or higher.
-- GitHub Actions workflows need `permissions: id-token: write` and `permissions: contents: read`.
+- GitHub Actions workflows need `permissions: id-token: write` for npm trusted publishing and `permissions: contents: write` for the post-publish GitHub Release create/update step.
 - GitHub-hosted runners are supported; self-hosted runners are not currently supported.
 - npm does not verify trusted publisher fields when saving them. Repository, workflow filename and environment details must match exactly.
 - Trusted publishing from GitHub Actions for a public package in a public repository automatically generates provenance attestations.
@@ -22,7 +22,9 @@ Important current constraints:
 
 The renamed package exists on npm. Use local token publishing only as an emergency fallback.
 
-The current published package is `project-tiny-context-harness@0.2.49`. It is published through the GitHub Actions Trusted Publishing workflow after a successful dry run. A future real Trusted Publishing run must publish a new version after `packages/sdlc-harness/package.json` is bumped and the normal release checks pass. Do not run a real publish for an existing version again; npm versions are immutable.
+The current published package is `project-tiny-context-harness@0.2.50`. It is published through the GitHub Actions Trusted Publishing workflow after a successful dry run. A future real Trusted Publishing run must publish a new version after `packages/sdlc-harness/package.json` is bumped and the normal release checks pass. Do not run a real publish for an existing version again; npm versions are immutable.
+
+Real publish runs also create or update the matching GitHub Release from `docs/launch/github-release-<version>.md` by running `node tools/github_release_publish.mjs --version <version> --target <github.sha>`. Dry runs do not create or edit GitHub releases.
 
 Because npm package README content is also tied to the immutable published version, local README copy changes will not appear on npm until a new version is published. Treat a stale `npm-readme-renamed-surfaces` info item from `npm run launch:strict-external` as a conversion cleanup task for the next patch release, not as permission to republish the existing version.
 
@@ -71,6 +73,7 @@ It is manual-only:
 - The workflow installs the latest npm CLI and asserts npm CLI 11.5.1 or later.
 - It runs package tests, package source drift check, `make validate-context` and `npm pack --dry-run --workspace project-tiny-context-harness`.
 - The publish step runs only when `dry_run` is false.
+- The GitHub Release create/update step runs only after a real publish, uses the release packet body and marks `v<version>` as the latest release.
 - The workflow must not define `NPM_TOKEN` or `NODE_AUTH_TOKEN`; publish authentication should come from OIDC.
 
 ## Dry Run
@@ -88,7 +91,8 @@ Expected result:
 - source drift check passes,
 - Context validation passes,
 - `npm pack --dry-run --workspace project-tiny-context-harness` succeeds,
-- no npm publish occurs.
+- no npm publish occurs,
+- no GitHub Release is created or edited.
 
 The maintainer verified the `0.2.41` dry run and real publish on 2026-06-10 after configuring npm Trusted Publishing.
 
@@ -107,9 +111,10 @@ Then verify:
 npm run launch:strict-external
 npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@latest --clean
 npm view project-tiny-context-harness readme --json
+gh release view v<new-version>
 ```
 
-The strict external check must no longer fail `npm-fetch`. The npm README should no longer report stale pre-rename display, package or repository names.
+The strict external check must no longer fail `npm-fetch`. The npm README should no longer report stale pre-rename display, package or repository names. The latest GitHub Release should be `Project Tiny Context Harness <new-version>`.
 
 ## After Trusted Publishing Works
 

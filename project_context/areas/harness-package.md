@@ -7,6 +7,9 @@
 ## User / System Contract
 
 - `init` installs Minimal Context Harness into the current repository without deleting user files, creates a default product/domain owner area, creates a default area-owned verification role Context, and creates a root `DESIGN.md` starter baseline for visual design-system facts when absent.
+- After a public npm package update, the default user path is `sdlc-harness upgrade`; direct `sync` is for releases explicitly marked `sync-only`.
+- `upgrade` creates an upgrade plan, applies only `safe_pending` migrations, refreshes managed assets through internal `sync`, runs diagnostics, and exits non-zero when `manual_required` or `blocked` follow-up remains.
+- `sync` refreshes package-managed assets only. Public `sync` does not run migrations and refuses to write when an upgrade plan contains pending, manual or blocked migration work.
 - `upgrade` creates root `DESIGN.md` for existing Harness projects when missing, without overwriting an existing user-authored design file.
 - The generated `DESIGN.md` contains neutral starter tokens and design logic; user-authored `DESIGN.md` content takes precedence over the starter baseline.
 - Default product planning, UI/UX and development engineer Skills write durable conclusions to `project_context/**`.
@@ -47,18 +50,22 @@
 - Core public selling point: keep the memory, drop the ceremony. Public docs may explain that the former stage-based workflow taught a product lesson: modern coding agents already internalize much of the ordinary understand/design/implement/test loop, so the default value is not phase choreography or work-product validation; it is the smallest high-density repo context that preserves durable intent, boundaries and validation paths across fresh chats. Do not publish old stage benchmark numbers as a current Minimal Context performance claim without fresh reruns.
 - Maintainer launch materials live under `docs/launch/**`. They are copy-ready external communication assets, market snapshots, channel plans, demo storyboards, community handoff plans and adoption/star milestone triggers for GitHub, npm, launch sites and social channels; they are not package-managed consumer assets and must keep the same Minimal Context positioning and no-unproven-benchmark-claim boundary as README/npm surfaces. `tools/launch_readiness_check.mjs` is the maintainer prelaunch check: offline mode validates local launch surface and online mode also reports current GitHub/npm metadata drift without publishing or mutating external state.
 - `tools/sync_release_version.mjs` is the release-prep synchronization entry for versioned surfaces: it aligns source-preview tarball examples, the npm Trusted Publishing `expected_version` default, current launch/release references and the GitHub release packet to `packages/sdlc-harness/package.json`. Its `--check` mode is used by dry-run/CI/publish gates; the mutating mode belongs in release prep or publish flows before package source sync and pack.
+- `tools/github_release_publish.mjs` is the post-npm-publish GitHub Release automation entry: it reads `docs/launch/github-release-<version>.md`, extracts the copy-ready release body, and uses GitHub CLI to create or update `v<version>` as the latest GitHub Release after registry publish succeeds. Dry-run mode reports the planned release without contacting GitHub.
+- The npm Trusted Publishing workflow creates or updates the matching GitHub Release after a real publish; dry-run workflow executions do not mutate GitHub releases.
 - Managed Makefile defaults `SDLC_HARNESS` to the source workspace CLI when `packages/sdlc-harness/dist/cli.js` exists, otherwise to `npx --yes --package project-tiny-context-harness@latest sdlc-harness`; generated projects can override `SDLC_HARNESS` when intentionally testing a pinned local package.
 - Managed Makefile exposes `sdlc-doctor`, `sdlc-sync` and `sdlc-upgrade` wrappers in addition to `validate-context` and `validate-harness`.
 - The package-managed `.github/workflows/harness.yml` is consumer-facing: ordinary consumer projects install only the Node runtime needed by the Harness CLI and run the selected `validate-context` / `validate-harness` Make target. This source workspace may conditionally build the local CLI when `packages/sdlc-harness/package.json` exists so main CI does not depend on an already-published npm package. Maintainer-only checks such as package tests and source-drift checks belong in this source repository's separate CI, not in the workflow copied into user projects.
 - `project_context/architecture.md` is a default Minimal Context fact source for restrained system boundary, component map and durable architecture constraints.
 - `project_context/context.toml` is created by `init` as the Schema v4 Context graph manifest; ordinary projects start with one default `main` product/domain area and `project_context/areas/main/verification.md` registered as a default verification role Context.
-- Schema v4 makes `project_context/context.toml` required for `validate-context`; `upgrade` migrates legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md` and registers area Context files in the manifest.
+- Schema v4 makes `project_context/context.toml` required for `validate-context`; `upgrade` migrates legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md` and registers area Context files in the manifest only when the migration is mechanically safe.
+- Upgrade planning classifies migration scope as `safe_pending`, `manual_required` or `blocked`. `safe_pending` is limited to known Harness-owned schema/config/path conventions; `manual_required` means the file is in scope but needs semantic judgment; `blocked` means the CLI cannot write without a conflict or overwrite risk.
+- Release update mode is part of the public release contract and uses `sync-only`, `upgrade-required` and `manual-required`.
 - `validate-context` uses `context.toml` and `context_role` front matter to validate graph structure, paths, role names and field shapes; roles such as `area`, `domain`, `subdomain`, `foundation`, `archive`, `contract`, `verification`, `deployment`, `implementation-index` and `decision-rationale` are semantic labels rather than writing-template gates.
 - Context graph boundary rules are metadata validation only for now; Harness does not perform import/path dependency analysis.
 - The UI/UX Skill uses Google `@google/design.md` for root `DESIGN.md` visual design tokens, and carries compact visual-quality calibration for brand/product register, information density, persistent text, space/value fit, true states, layout stability, design-system continuity and common AI-design anti-patterns.
 - Harness installs Impeccable as a default package dependency; design-draft, redesign, visual polish, frontend styling and existing-UI review tasks should run `npx impeccable detect <target>` by default when a scan target exists, while treating findings as review evidence rather than a `validate-context` gate.
 - `sync` refreshes managed assets only and does not migrate old semantic facts.
-- `upgrade` runs safe migrations plus `sync`; it no longer prompts or runs semantic migration.
+- `upgrade` does not infer arbitrary project semantics, choose every Context role, repair project-local Skills, invent business verification paths, update product/deployment facts or turn old projects into best-practice state.
 - `init`, `sync`, `upgrade`, `doctor` and `validate-context` guard unsupported future schema major versions before applying v4 assumptions; write commands fail before modifying files.
 - `validate-context` checks Context completeness but does not prove product test execution.
 - `export-context --full` creates a one-off Markdown Context export for copying, external-tool ingestion or temporary discussion. It defaults to `tmp/sdlc/context-exports/当前项目context-<timestamp>.md`, refuses `project_context/**` and non-temporary output paths, and must never register the export as a Context graph node.
@@ -70,16 +77,18 @@
 ## Core Data / API / State
 
 - CLI command routing lives in `packages/sdlc-harness/src/commands/index.ts`.
+- Upgrade CLI option parsing for `upgrade`, `upgrade --check` and `upgrade --check --json` lives in `packages/sdlc-harness/src/commands/upgrade.ts`.
 - Full context export command behavior lives in `packages/sdlc-harness/src/commands/export-context.ts` and `packages/sdlc-harness/src/lib/context-export.ts`.
-- Release version surface sync lives in `tools/sync_release_version.mjs`; release publishing orchestration lives in `tools/release_npm.mjs`.
+- Release version surface sync lives in `tools/sync_release_version.mjs`; release publishing orchestration lives in `tools/release_npm.mjs`; GitHub Release create/update automation lives in `tools/github_release_publish.mjs`.
 - Default managed file configuration lives in `packages/sdlc-harness/src/lib/config.ts`.
 - Shared package/schema constants live in `packages/sdlc-harness/src/lib/constants.ts`; unsupported schema handling lives in `packages/sdlc-harness/src/lib/schema-guard.ts`.
 - Init behavior lives in `packages/sdlc-harness/src/lib/init.ts`.
-- Sync behavior lives in `packages/sdlc-harness/src/lib/sync-engine.ts`.
+- Sync behavior and the public pending-migration refusal live in `packages/sdlc-harness/src/lib/sync-engine.ts`.
+- Upgrade orchestration lives in `packages/sdlc-harness/src/lib/upgrade.ts`.
 - Default Skill assets, including Context authoring Skills and the full-project export Skill, live in `.codex/pjsdlc_managed/skills/**` and `packages/sdlc-harness/assets/skills/**`.
 - Default Context graph template lives in `.codex/pjsdlc_managed/context_templates/context.toml` and `packages/sdlc-harness/assets/context_templates/context.toml`.
 - Default verification/deployment Context templates live in `.codex/pjsdlc_managed/context_templates/verification.md`, `.codex/pjsdlc_managed/context_templates/deployment.md` and the matching package assets.
-- Safe config migrations live in `packages/sdlc-harness/src/lib/migrations.ts`.
+- The migration registry, upgrade plan, release update mode calculation and safe migration application live in `packages/sdlc-harness/src/lib/migrations.ts`.
 - Validators live in `packages/sdlc-harness/src/lib/validators.ts`.
 
 ## Key Constraints
@@ -92,6 +101,8 @@
 - Control-task framing must stay business-agnostic: package-managed Skills may ask reusable questions, but project-specific control choices, ranges, defaults, copy and acceptance signals belong in project Context or project-local Skills.
 - Context graph roles must stay lightweight and optional except for the default verification Context created by `init`; do not make role-specific writing formats, monorepo-specific area names or boundary checks mandatory for ordinary projects.
 - Role placement scan is soft authoring pressure, not a semantic migration gate; `upgrade` may create conservative `area` baselines, and later agents refine obvious `contract`, `foundation`, `subdomain`, `verification`, `deployment`, `implementation-index`, `decision-rationale` or `archive` roles explicitly in `context.toml`.
+- Migration detection must first limit scope to known Harness-owned surfaces. Files outside migration scope should not be reported, and scoped files that require semantic interpretation should be `manual_required`, not guessed.
+- Blocked migrations must not write files or overwrite user content.
 - The page product-positioning check must remain prompt-level guidance and classification input; do not turn it into "all UI changes update Context", a validator, phase gate, required PRD/UIUX artifact or mandatory template section beyond minimal Context hints.
 - AGENTS line count remains a soft budget, not a validator or CI gate; enforce slimness through placement discipline in managed guidance, Context and authoring Skill.
 - Context-first guidance must stay prompt-level and must not become a validator, phase gate, edit-order gate or required document chain.

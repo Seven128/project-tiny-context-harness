@@ -28,6 +28,7 @@
     "smoke:quickstart": "node tools/quickstart_smoke.mjs --clean",
     "release:sync-version": "node tools/sync_release_version.mjs",
     "release:check-version": "node tools/sync_release_version.mjs --check",
+    "release:github": "node tools/github_release_publish.mjs",
     "release:npm": "node tools/release_npm.mjs",
     "sdlc-harness": "node packages/sdlc-harness/dist/cli.js"
   },

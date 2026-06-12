@@ -25,8 +25,9 @@ export function help(): void {
   console.log(`sdlc-harness commands:
   init [--adopt] [--harness-folder <path>]
                        Initialize/adopt a project; without --harness-folder, choose target agent first
-  sync                 Materialize canonical assets into the workspace
-  upgrade              Run migrations and then sync
+  sync                 Refresh managed assets; refuses when upgrade migrations are pending
+  upgrade [--check] [--json]
+                       Run safe migrations, sync managed assets and doctor
   doctor               Diagnose project configuration and drift
   export-context --full|--code|--all [--output <path>] [--check]
                        Export a temporary Context summary or code implementation Markdown artifact

@@ -127,6 +127,9 @@ async function main() {
         installedConsumerSmoke(targetVersion)
       );
     }
+    report.githubRelease = await step(report, "github release publish", () =>
+      publishGitHubRelease(targetVersion)
+    );
   }
 
   report.finishedAt = new Date().toISOString();
@@ -380,6 +383,13 @@ async function publishTarball(tarballPath) {
   return run("npm", commandArgs);
 }
 
+async function publishGitHubRelease(version) {
+  const result = await run("node", ["tools/github_release_publish.mjs", "--version", version], {
+    capture: true
+  });
+  return result.output.trim();
+}
+
 async function run(command, commandArgs, options = {}) {
   const cwd = options.cwd ?? projectRoot;
   const capture = options.capture ?? false;
@@ -534,6 +544,7 @@ async function writeReleaseReport(report, forcedStatus) {
   const pack = report.pack;
   const registry = report.registry;
   const smoke = report.smoke;
+  const githubRelease = report.githubRelease;
   const authStatus = report.publish ? stepStatus(report, "npm auth check") : "SKIPPED, dry-run did not publish";
   const fullGateStatus = report.fullGate ? stepStatus(report, "full test suite") : "SKIPPED, --full-gate not enabled";
   const validateStatus = report.fullGate ? stepStatus(report, "validate context") : "SKIPPED, --full-gate not enabled";
@@ -561,6 +572,12 @@ async function writeReleaseReport(report, forcedStatus) {
     : report.publish && report.registrySmoke
       ? "Pending."
       : "SKIPPED, --registry-smoke not enabled.";
+  const githubReleaseEvidence = githubRelease
+    ? `PASS, ${inline(singleLine(githubRelease))}.`
+    : report.publish
+      ? `${stepStatus(report, "github release publish")}.`
+      : "SKIPPED, dry-run did not mutate GitHub releases.";
+  const releaseUpdateMode = await readReleaseUpdateMode(version);
 
   const content = `# Current Release Report
 
@@ -574,13 +591,15 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
 - Owner: \`release_manager\`
 - Registry: \`https://registry.npmjs.org/\`
 - Status: \`${status}\`
+- Update mode: \`${releaseUpdateMode}\`
 - Current release report: \`${releaseReportRelativePath}\`
 
 ## 2. Included Changes
 
 - Publish the synchronized Project Tiny Context Harness package assets and CLI build from the current workspace.
-- This release is produced by \`tools/release_npm.mjs\`. If the renamed package has no registry entry yet, the script publishes the current workspace version by default; once registry latest exists, the default path bumps patch versions. The release path covers npm auth, version check/bump, source drift check, tarball pack, publish and registry latest verification. \`--full-gate\` and \`--registry-smoke\` enable heavier validation.
+- This release is produced by \`tools/release_npm.mjs\`. If the renamed package has no registry entry yet, the script publishes the current workspace version by default; once registry latest exists, the default path bumps patch versions. The release path covers npm auth, version check/bump, source drift check, tarball pack, publish, registry latest verification and GitHub Release create/update. \`--full-gate\` and \`--registry-smoke\` enable heavier validation.
 - Versioned release surfaces are synchronized by \`tools/sync_release_version.mjs\` before packing during publish runs. Dry runs use \`--check\` so ordinary validation does not rewrite the repository.
+- Release update mode is read from \`docs/launch/github-release-${version}.md\`; users should follow that packet's \`sync-only\`, \`upgrade-required\` or \`manual-required\` path after updating.
 - The tarball publish command passes \`--access public\` explicitly so the rename window does not depend on npm default access semantics.
 
 ## 3. Build Artifacts
@@ -599,6 +618,7 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
 - Evidence:
   - \`npm whoami\`: ${authStatus}.
   - npm publish OTP: ${report.otpProvided ? "PROVIDED, not written to the report." : "NOT PROVIDED"}.
+  - Release update mode: \`${releaseUpdateMode}\` from \`docs/launch/github-release-${version}.md\`.
   - \`node tools/sync_release_version.mjs${report.publish ? "" : " --check"}\`: ${stepStatus(report, versionSurfaceLabel)}.
   - \`node packages/sdlc-harness/dist/cli.js package sync-source\`: ${packageSourceSyncStatus}.
   - \`node packages/sdlc-harness/dist/cli.js package check-source\`: ${stepStatus(report, "package source drift check")}.
@@ -609,6 +629,7 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
   - \`${publishCommand}\`: ${publishEvidence}
   - \`npm view ${packageName} version dist-tags.latest dist.integrity --json\`: ${registryEvidence}
   - Registry installed-consumer smoke: ${smokeEvidence}
+  - GitHub Release create/update: ${githubReleaseEvidence}
 
 ## 5. Deployment Checklist
 
@@ -618,23 +639,25 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
 - [${stepPassed(report, "npm pack tarball") || stepPassed(report, "npm pack dry run") ? "x" : " "}] Package pack passed.
 - [${stepPassed(report, "npm publish tarball") ? "x" : " "}] Publish package with \`${publishCommand}\`.
 - [${registry ? "x" : " "}] Verify registry package with \`npm view ${packageName} version dist-tags.latest dist.integrity --json\`.
+- [${stepPassed(report, "github release publish") ? "x" : " "}] Create or update GitHub Release \`v${version}\`.
 - Optional full local test suite: ${fullGateStatus}.
 - Optional registry installed-consumer smoke: ${smoke ? "PASS" : report.registrySmoke ? "Pending" : "SKIPPED, --registry-smoke not enabled"}.
-- [ ] Create and push git tag \`v${version}\` after publish success.
 
 ## 6. Rollback Plan
 
 - Triggers:
   - \`npm publish\` fails and the package was not created.
   - Publish succeeds, but install, init, doctor or packaged asset/source drift verification fails.
+  - Publish succeeds, but GitHub Release create/update fails.
 - Steps:
   1. If publish did not succeed, do not create a release tag. Keep the current release status blocked, fix the issue and rerun the release gate.
   2. If publish succeeded but smoke failed, stop promoting that version immediately.
-  3. Because npm package versions cannot be reused, bump to the next patch version after the fix, then rerun the test/release gate and publish again.
-  4. If consumers need to roll back, tell them to install the previous stable version or pin the dependency by git commit/tag.
+  3. If only GitHub Release create/update failed, fix credentials or release conflicts and rerun \`node tools/github_release_publish.mjs --version ${version}\`.
+  4. Because npm package versions cannot be reused, bump to the next patch version after package-content fixes, then rerun the test/release gate and publish again.
+  5. If consumers need to roll back, tell them to install the previous stable version or pin the dependency by git commit/tag.
 - Data considerations:
   - This package ships the CLI and Harness assets; it does not migrate data outside the npm registry.
-  - Consumer repository sync/upgrade follows managed-file incremental rules; rollback must not overwrite user-owned local customization.
+  - Consumer repository sync/upgrade follows the release update mode and managed-file incremental rules; rollback must not overwrite user-owned local customization.
 - Owner: \`release_manager\`
 
 ## 7. Known Issues
@@ -643,6 +666,16 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
 `;
   await fs.mkdir(path.dirname(docPath), { recursive: true });
   await fs.writeFile(docPath, content);
+}
+
+async function readReleaseUpdateMode(version) {
+  const packetPath = path.join(projectRoot, "docs", "launch", `github-release-${version}.md`);
+  const packet = await fs.readFile(packetPath, "utf8");
+  const match = packet.match(/Update Mode:\s*`(sync-only|upgrade-required|manual-required)`/);
+  if (!match) {
+    throw new Error(`Release update mode missing from ${path.relative(projectRoot, packetPath)}`);
+  }
+  return match[1];
 }
 
 function stepStatus(report, label) {
@@ -656,6 +689,10 @@ function stepPassed(report, label) {
 
 function inline(value) {
   return value ? `\`${value}\`` : "`doctor output missing core package line`";
+}
+
+function singleLine(value) {
+  return String(value).replace(/\s+/g, " ").trim();
 }
 
 function formatBytes(value) {

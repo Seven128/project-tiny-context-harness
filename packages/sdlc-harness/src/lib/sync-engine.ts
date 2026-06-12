@@ -23,11 +23,16 @@ import {
 import { packageAssetPath } from "./paths.js";
 import type { ManagedFile } from "./types.js";
 import { assertSupportedSchema } from "./schema-guard.js";
+import { createUpgradePlan, formatUpgradePlan, hasUpgradePlanWork } from "./migrations.js";
 
 export interface SyncReport {
   changed: string[];
   skipped: string[];
   blocked: string[];
+}
+
+export interface SyncOptions {
+  allowPendingMigrations?: boolean;
 }
 
 export function emptySyncReport(): SyncReport {
@@ -38,11 +43,19 @@ export function emptySyncReport(): SyncReport {
   };
 }
 
-export async function runSync(projectRoot: string): Promise<SyncReport> {
+export async function runSync(projectRoot: string, options: SyncOptions = {}): Promise<SyncReport> {
   await assertSupportedSchema(projectRoot, "sync");
   const root = await harnessRoot(projectRoot);
   const config = await readConfig(projectRoot);
   const report = emptySyncReport();
+
+  if (!options.allowPendingMigrations) {
+    const upgradePlan = await createUpgradePlan(projectRoot);
+    if (hasUpgradePlanWork(upgradePlan)) {
+      report.blocked.push(`upgrade required before sync: ${formatUpgradePlan(upgradePlan).join(" | ")}`);
+      return report;
+    }
+  }
 
   await blockDeprecatedSkillOverrides(projectRoot, root, report);
   if (report.blocked.length > 0) {

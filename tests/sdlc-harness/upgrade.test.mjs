@@ -1,15 +1,21 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { runInit } from "../../packages/sdlc-harness/dist/lib/init.js";
 import { runSync } from "../../packages/sdlc-harness/dist/lib/sync-engine.js";
 import { runUpgrade } from "../../packages/sdlc-harness/dist/lib/upgrade.js";
 
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const cliPath = path.join(repoRoot, "packages/sdlc-harness/dist/cli.js");
 const root = await mkdtemp(path.join(tmpdir(), "sdlc-harness-upgrade-minimal-"));
 const existingManifestRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-upgrade-existing-manifest-"));
 const missingSectionsRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-upgrade-missing-sections-"));
 const futureSchemaRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-upgrade-future-schema-"));
+const manualRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-upgrade-manual-"));
+const blockedRoot = await mkdtemp(path.join(tmpdir(), "sdlc-harness-upgrade-blocked-"));
 
 try {
   await writeFile(
@@ -82,8 +88,22 @@ never_overwrite:
     "utf8"
   );
 
+  const checkBefore = spawnSync(process.execPath, [cliPath, "upgrade", "--check", "--json"], {
+    cwd: root,
+    encoding: "utf8"
+  });
+  assert.equal(checkBefore.status, 1, checkBefore.stdout + checkBefore.stderr);
+  const checkBeforeJson = JSON.parse(checkBefore.stdout);
+  assert.equal(checkBeforeJson.mode, "upgrade-required");
+  assert.ok(checkBeforeJson.safe_pending.some((entry) => entry.id === "legacy-modules-to-areas"));
+  assert.ok(checkBeforeJson.safe_pending.some((entry) => entry.id === "context-manifest-baseline"));
+  await stat(path.join(root, "project_context/modules/analytics/reporting.md"));
+  const configBeforeUpgrade = await readFile(path.join(root, ".harness/config.yaml"), "utf8");
+  assert.match(configBeforeUpgrade, /schema_version: "1"/);
+
   const report = await runUpgrade(root);
   assert.ok(report.some((line) => line.startsWith("migrations changed=")));
+  assert.ok(report.some((line) => line.includes("manual_required=0 blocked=0")));
   assert.ok(report.some((line) => line.startsWith("sync changed=")));
   assert.ok(!report.some((line) => line.includes("migrate-context")));
 
@@ -197,6 +217,46 @@ default = true
   assert.match(migratedGlobal, /## Context Index/);
   assert.match(migratedGlobal, /\(areas\/main\.md\)/);
 
+  await writeFile(
+    path.join(manualRoot, "package.json"),
+    JSON.stringify({ sdlcHarness: { harnessFolderName: ".harness" } }, null, 2),
+    "utf8"
+  );
+  await runInit(manualRoot, { adopt: true, force: false });
+  await rm(path.join(manualRoot, "project_context/context.toml"), { force: true });
+  await mkdir(path.join(manualRoot, "project_context/areas/payment"), { recursive: true });
+  await writeFile(path.join(manualRoot, "project_context/areas/payment/api.md"), "# Payment API\n", "utf8");
+  const manualCheck = spawnSync(process.execPath, [cliPath, "upgrade", "--check", "--json"], {
+    cwd: manualRoot,
+    encoding: "utf8"
+  });
+  assert.equal(manualCheck.status, 1, manualCheck.stdout + manualCheck.stderr);
+  const manualPlan = JSON.parse(manualCheck.stdout);
+  assert.equal(manualPlan.mode, "manual-required");
+  assert.ok(manualPlan.safe_pending.some((entry) => entry.id === "context-manifest-baseline"));
+  assert.ok(manualPlan.manual_required.some((entry) => entry.path === "project_context/areas/payment/api.md"));
+  await assert.rejects(() => runUpgrade(manualRoot), /upgrade completed with blockers/);
+  await stat(path.join(manualRoot, "project_context/context.toml"));
+
+  await writeFile(
+    path.join(blockedRoot, "package.json"),
+    JSON.stringify({ sdlcHarness: { harnessFolderName: ".harness" } }, null, 2),
+    "utf8"
+  );
+  await runInit(blockedRoot, { adopt: true, force: false });
+  await mkdir(path.join(blockedRoot, "project_context/modules"), { recursive: true });
+  await writeFile(path.join(blockedRoot, "project_context/modules/main.md"), "# Legacy Main\n", "utf8");
+  const blockedCheck = spawnSync(process.execPath, [cliPath, "upgrade", "--check", "--json"], {
+    cwd: blockedRoot,
+    encoding: "utf8"
+  });
+  assert.equal(blockedCheck.status, 1, blockedCheck.stdout + blockedCheck.stderr);
+  const blockedPlan = JSON.parse(blockedCheck.stdout);
+  assert.equal(blockedPlan.mode, "manual-required");
+  assert.ok(blockedPlan.blocked.some((entry) => entry.id === "legacy-modules-to-areas"));
+  await assert.rejects(() => runUpgrade(blockedRoot), /upgrade completed with blockers/);
+  await stat(path.join(blockedRoot, "project_context/modules/main.md"));
+
   await mkdir(path.join(futureSchemaRoot, ".agent"), { recursive: true });
   await writeFile(
     path.join(futureSchemaRoot, ".agent/config.yaml"),
@@ -215,4 +275,6 @@ default = true
   await rm(existingManifestRoot, { recursive: true, force: true });
   await rm(missingSectionsRoot, { recursive: true, force: true });
   await rm(futureSchemaRoot, { recursive: true, force: true });
+  await rm(manualRoot, { recursive: true, force: true });
+  await rm(blockedRoot, { recursive: true, force: true });
 }

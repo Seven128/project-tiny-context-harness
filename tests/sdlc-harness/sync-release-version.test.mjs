@@ -95,6 +95,16 @@ for (const relativePath of [
 
 const releasePacket = read("docs/launch/github-release-1.2.3.md");
 assert.match(releasePacket, /Project Tiny Context Harness 1\.2\.3/);
+assert.match(releasePacket, /Update Mode: `manual-required`/);
+assert.match(releasePacket, /sync-only/);
+assert.match(releasePacket, /upgrade-required/);
+assert.match(releasePacket, /manual-required/);
+assert.match(releasePacket, /sdlc-harness upgrade --check/);
+assert.match(releasePacket, /tools\/github_release_publish\.mjs/);
+assert.match(releasePacket, /Dry runs do not create or edit GitHub releases/);
+assert.match(releasePacket, /safe_pending/);
+assert.match(releasePacket, /manual_required/);
+assert.match(releasePacket, /blocked/);
 assert.match(releasePacket, /Do not retarget `v1\.2\.3`/);
 assert.match(releasePacket, /Do not claim benchmark wins or adoption/);
 

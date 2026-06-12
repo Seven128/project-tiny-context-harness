@@ -1,4 +1,4 @@
-# GitHub Release Packet: 0.2.49
+# GitHub Release Packet: 0.2.50
 
 Snapshot date: 2026-06-12.
 
@@ -9,19 +9,19 @@ Use this packet to create the GitHub Release for the current public `project-tin
 Tag:
 
 ```text
-v0.2.49
+v0.2.50
 ```
 
 Target:
 
 ```text
-Use the commit that bumps `packages/sdlc-harness/package.json` to 0.2.49 and is published to npm.
+Use the commit that bumps `packages/sdlc-harness/package.json` to 0.2.50 and is published to npm.
 ```
 
 Title:
 
 ```text
-Project Tiny Context Harness 0.2.49
+Project Tiny Context Harness 0.2.50
 ```
 
 Update Mode: `manual-required`
@@ -31,7 +31,7 @@ Allowed modes: `sync-only`, `upgrade-required`, `manual-required`.
 ## Release Body
 
 ````markdown
-Project Tiny Context Harness 0.2.49 is the current public release line under the renamed npm package:
+Project Tiny Context Harness 0.2.50 is the current public release line under the renamed npm package:
 
 ```sh
 npm install -D project-tiny-context-harness@latest
@@ -50,7 +50,7 @@ Use `sync` only for releases explicitly marked `sync-only`; sync does not run mi
 
 ## What Changed
 
-- Publishes `project-tiny-context-harness@0.2.49` through npm Trusted Publishing.
+- Publishes `project-tiny-context-harness@0.2.50` through npm Trusted Publishing.
 - Keeps the install path on the renamed package: `project-tiny-context-harness`.
 - Keeps the core positioning tight: minimal repo-native project memory for AI coding agents.
 - Keeps the Minimal Context boundary explicit: `AGENTS.md` is the startup router, `project_context/**` keeps durable recovery facts, and `validate-context` checks recoverability.
@@ -75,7 +75,7 @@ This release does not claim benchmark-proven speedups, production adoption, awar
 After npm publish and registry verification, run:
 
 ```sh
-node tools/github_release_publish.mjs --version 0.2.49
+node tools/github_release_publish.mjs --version 0.2.50
 ```
 
 The npm Trusted Publishing workflow runs this automatically for real publish runs. Dry runs do not create or edit GitHub releases.
@@ -83,15 +83,15 @@ The npm Trusted Publishing workflow runs this automatically for real publish run
 ## Manual UI Fallback
 
 1. Open `https://github.com/Seven128/project-tiny-context-harness/releases/new`.
-2. Choose tag `v0.2.49`.
-3. Confirm the target is the commit that was published to npm for `project-tiny-context-harness@0.2.49`.
-4. Use title `Project Tiny Context Harness 0.2.49`.
+2. Choose tag `v0.2.50`.
+3. Confirm the target is the commit that was published to npm for `project-tiny-context-harness@0.2.50`.
+4. Use title `Project Tiny Context Harness 0.2.50`.
 5. Paste the release body above.
 6. Publish the release.
 7. Run `npm run launch:strict-external`.
 
 ## Do Not
 
-- Do not retarget `v0.2.49` after the npm publish; it should point to the commit used by the published package.
+- Do not retarget `v0.2.50` after the npm publish; it should point to the commit used by the published package.
 - Do not claim benchmark wins or adoption in the release.
-- Do not mark this as a pre-release if npm `project-tiny-context-harness@0.2.49` remains live and installable.
+- Do not mark this as a pre-release if npm `project-tiny-context-harness@0.2.50` remains live and installable.

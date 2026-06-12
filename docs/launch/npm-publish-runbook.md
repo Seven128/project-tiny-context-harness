@@ -97,9 +97,15 @@ If publish fails with auth or permission errors:
 
 6. Re-authenticate npm locally or replace the npm token with one allowed to publish new public packages. npm granular access tokens must be created on npmjs.com, not from the CLI. For a token-based publish path, create a granular access token with package read/write access broad enough for a new package and enable bypass 2FA if the account or package policy requires it.
 7. If using an interactive login with publish 2FA, rerun with `--otp`.
-8. Do not create a GitHub release for the renamed npm package until registry verification passes.
+8. Do not create a GitHub release for the renamed npm package until registry verification passes. The release automation creates or updates it only after publish and registry verification succeed.
 
 If publish succeeds but smoke fails, stop broad launch and publish the fix as a new patch version. npm versions cannot be reused.
+
+If publish succeeds but GitHub Release create/update fails, fix GitHub CLI authentication or release conflicts and rerun:
+
+```sh
+npm run release:github -- --version <published-version>
+```
 
 ## Post-Publish Verification
 
@@ -109,13 +115,13 @@ After the first publish and any postpublish patch, run:
 npm run launch:strict-external
 npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@latest --clean
 npm view project-tiny-context-harness readme --json
+gh release view v<published-version>
 ```
 
 The strict external check should pass npm metadata, and the demo should install the renamed package from the registry. If the live npm README still has stale pre-rename wording, publish the next patch version after the normal gates pass; do not try to overwrite an existing npm version.
 
 Only after that:
 
-- create a new GitHub Release for the current renamed npm package if it has not been created yet,
 - configure and verify Trusted Publishing with [npm-trusted-publishing.md](npm-trusted-publishing.md) for future releases,
 - update any launch docs that still say npm is pending,
 - post Show HN or any broad public launch,

@@ -94,7 +94,7 @@ That smoke packs the local workspace, installs it into a disposable repo, runs `
 ```sh
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.49.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.50.tgz
 npx --no-install sdlc-harness init --adopt
 make validate-context
 ```
@@ -290,8 +290,9 @@ Use `npx --no-install sdlc-harness ...` only when you explicitly want the alread
 | Command | Purpose |
 |---|---|
 | `npx --yes --package project-tiny-context-harness@latest sdlc-harness init` | Non-destructively installs Minimal Context Harness into the current project. |
-| `make sdlc-sync` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness sync` | Refreshes managed guidance, default Skills, Makefile include, tools and templates. It does not generate project semantics. |
-| `make sdlc-upgrade` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade` | Runs safe package migrations and `sync`, including Schema v4 Context graph manifest creation when missing. |
+| `make sdlc-sync` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness sync` | Refreshes managed guidance, default Skills, Makefile include, tools and templates. It does not run migrations or generate project semantics; when migration work is pending it refuses to write and tells you to run `upgrade`. |
+| `make sdlc-upgrade` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade` | Default command after updating the npm package. Builds an upgrade plan, applies `safe_pending` migrations, runs `sync` and `doctor`, and exits non-zero when manual or blocked follow-up remains. |
+| `npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade --check [--json]` | Checks the upgrade plan without writing files. Reports `safe_pending`, `manual_required` and `blocked`; exits non-zero when any work remains. |
 | `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --all [--check]` | Creates both default temporary exports under `tmp/sdlc/context-exports/**`. |
 | `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --full [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary project Context summary Markdown artifact. |
 | `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary single-file code implementation Markdown artifact. |
@@ -300,6 +301,42 @@ Use `npx --no-install sdlc-harness ...` only when you explicitly want the alread
 | `make validate-harness` | Compatibility alias for `validate-context` in vNext projects. |
 | `sdlc-harness package sync-source` | Maintainer-only command to sync source workspace assets into `packages/sdlc-harness/assets/**`. |
 | `sdlc-harness package check-source` | Maintainer-only drift check for package canonical assets. |
+
+## Updating Existing Projects
+
+After updating the package, run `sdlc-harness upgrade`. Use `sync` only when release notes say the update is `sync-only`; sync does not run migrations.
+
+```sh
+npm install -D project-tiny-context-harness@latest
+npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade --check
+npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade
+```
+
+Release notes and release readiness use this update mode vocabulary:
+
+| Update mode | What to run | Meaning |
+|---|---|---|
+| `sync-only` | `sdlc-harness sync` | The release changes only package-managed assets. No migrations are required. |
+| `upgrade-required` | `sdlc-harness upgrade` | The release includes safe mechanical migrations and managed asset refresh. |
+| `manual-required` | `sdlc-harness upgrade`, then manual follow-up | The release includes items that cannot be mechanically changed without user intent. |
+
+`upgrade --check` prints the plan without writing files. The plan groups work as:
+
+| Status | Meaning |
+|---|---|
+| `safe_pending` | The Harness can prove the change is inside a known Harness-owned schema, config or path convention and can apply it mechanically. |
+| `manual_required` | The file is in migration scope, but the Harness cannot prove the right semantic role or user intent. It prints the path and follow-up. |
+| `blocked` | A safe target cannot be written, usually because the destination already exists or another conflict would require overwriting user content. |
+
+`upgrade` promises to refresh package-managed assets, apply known safe migrations, avoid overwriting user custom content, expose manual-required migration scope, and run `doctor` / `validate-context` style diagnostics so remaining problems are visible. It does not automatically understand the user's project semantics, decide every Context role, repair project-local Skills, invent business verification paths, update product/deployment facts or turn an old project into the current best-practice shape.
+
+Examples:
+
+- `project_context/modules/main.md` -> `project_context/areas/main.md` is a safe mechanical migration when the target does not already exist.
+- A missing `project_context/context.toml` can receive a conservative baseline manifest.
+- `project_context/areas/main/verification.md` can be registered as a `verification` role by path convention.
+- `project_context/areas/payment/api.md` without a manifest role is reported as `manual_required`; the Harness does not guess whether it is an area, contract, foundation or implementation index.
+- If `project_context/areas/main.md` already exists while `project_context/modules/main.md` still exists, the migration is `blocked` and no file is overwritten.
 
 ## Minimal Context Files
 

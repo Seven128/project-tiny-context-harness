@@ -6,8 +6,8 @@ SDLC_HARNESS ?= $(if $(wildcard packages/sdlc-harness/dist/cli.js),node packages
 help:
 	@echo "Minimal Context Harness commands"
 	@echo "  make sdlc-doctor         Diagnose Harness root, core package and schema version"
-	@echo "  make sdlc-sync           Refresh managed guidance, Context templates, default Skills and tools"
-	@echo "  make sdlc-upgrade        Run safe upgrade migrations and refresh managed assets"
+	@echo "  make sdlc-sync           Refresh managed assets; refuses when upgrade migrations are pending"
+	@echo "  make sdlc-upgrade        Run safe upgrade migrations, sync managed assets and doctor"
 	@echo "  make validate-context    Check whether project_context/** supports context recovery"
 	@echo "  make validate-harness    Compatibility alias for validate-context"
 	@echo "  make test-all            Run the project regression suite after replacing this placeholder"

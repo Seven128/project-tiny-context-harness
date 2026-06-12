@@ -167,6 +167,8 @@ function localChecks() {
   const devcontainerConfig = readJson(".devcontainer/devcontainer.json");
   const rootReadme = read("README.md");
   const packageReadme = read("packages/sdlc-harness/README.md");
+  const packageGuide = read("packages/sdlc-harness/assets/README.md");
+  const spec = read("PROJECT_SPEC.md");
   const zhReadme = read("README.zh-CN.md");
   const codeOfConduct = read("CODE_OF_CONDUCT.md");
   const support = read("SUPPORT.md");
@@ -240,6 +242,7 @@ function localChecks() {
   const contextGapTemplate = read(".github/ISSUE_TEMPLATE/context_gap.yml");
   const sourcePreviewReportTemplate = read(".github/ISSUE_TEMPLATE/source_preview_report.yml");
   const releaseScript = read("tools/release_npm.mjs");
+  const githubReleasePublishScript = read("tools/github_release_publish.mjs");
   const managedMakefile = read(".codex/pjsdlc_managed/make/sdlc-harness.mk");
   const packagedMakefile = read("packages/sdlc-harness/assets/make/sdlc-harness.mk");
   const codespacesUrlPattern = /https:\/\/codespaces\.new\/Seven128\/project-tiny-context-harness/;
@@ -277,6 +280,31 @@ function localChecks() {
     addCheck(checks, `package-keyword-${keyword}`, packageJson.keywords?.includes(keyword), `npm package keyword includes ${keyword}.`);
   }
   addCheck(checks, "package-license-file", hasFile("packages/sdlc-harness/LICENSE"), "Packaged npm workspace includes LICENSE.");
+
+  const updateModeDocs = [rootReadme, packageReadme, packageGuide, spec];
+  addCheck(
+    checks,
+    "harness-update-mode-contract",
+    updateModeDocs.every(
+      (content) =>
+        contains(content, /upgrade --check/) &&
+        contains(content, /sync-only/) &&
+        contains(content, /upgrade-required/) &&
+        contains(content, /manual-required/) &&
+        contains(content, /safe_pending/) &&
+        contains(content, /manual_required/) &&
+        contains(content, /blocked/) &&
+        contains(content, /sync.*does not run migrations|does not run migrations/s)
+    ) &&
+      contains(rootReadme, /After updating the package, run `sdlc-harness upgrade`/) &&
+      contains(packageReadme, /After updating the package, run `sdlc-harness upgrade`/) &&
+      contains(spec, /Release update mode is part of the release contract/) &&
+      contains(githubReleasePacket, /Update Mode: `manual-required`/) &&
+      contains(githubReleasePacket, /sdlc-harness upgrade --check/) &&
+      contains(releaseScript, /Release update mode:/) &&
+      contains(releaseScript, /readReleaseUpdateMode/),
+    "README, package README, package asset README, spec, release packet and release report generator expose sync-only / upgrade-required / manual-required update semantics."
+  );
 
   for (const [id, content] of [
     ["root-readme", rootReadme],
@@ -383,17 +411,19 @@ function localChecks() {
   addCheck(
     checks,
     "english-first-generated-surfaces",
-    !hasCjk(managedMakefile) &&
+      !hasCjk(managedMakefile) &&
       !hasCjk(packagedMakefile) &&
       !hasCjk(releaseScript) &&
       contains(managedMakefile, /Diagnose Harness root, core package and schema version/) &&
-      contains(managedMakefile, /Refresh managed guidance, Context templates, default Skills and tools/) &&
+      contains(managedMakefile, /Refresh managed assets; refuses when upgrade migrations are pending/) &&
+      contains(packagedMakefile, /Run safe upgrade migrations, sync managed assets and doctor/) &&
       contains(packagedMakefile, /Check whether project_context\/\*\* supports context recovery/) &&
       contains(releaseScript, /# Current Release Report/) &&
       contains(releaseScript, /## 2\. Included Changes/) &&
+      contains(releaseScript, /Update mode:/) &&
       contains(releaseScript, /SKIPPED, --full-gate not enabled/) &&
       contains(releaseScript, /Rollback Plan/) &&
-      contains(releaseScript, /Consumer repository sync\/upgrade follows managed-file incremental rules/),
+      contains(releaseScript, /Consumer repository sync\/upgrade follows the release update mode and managed-file incremental rules/),
     "Generated Makefile help and release reports stay English-first for npm/package users."
   );
   addCheck(
@@ -1156,6 +1186,7 @@ function localChecks() {
       contains(npmTrustedPublishing, /npm CLI version 11\.5\.1 or later/) &&
       contains(npmTrustedPublishing, /Node version 22\.14\.0 or higher/) &&
       contains(npmTrustedPublishing, /permissions: id-token: write/) &&
+      contains(npmTrustedPublishing, /permissions: contents: write/) &&
       contains(npmTrustedPublishing, /Organization or user \| `Seven128`/) &&
       contains(npmTrustedPublishing, /Repository \| `project-tiny-context-harness`/) &&
       contains(npmTrustedPublishing, /Workflow filename \| `npm-publish\.yml`/) &&
@@ -1167,6 +1198,7 @@ function localChecks() {
       contains(npmTrustedPublishing, /must not define `NPM_TOKEN` or `NODE_AUTH_TOKEN`/) &&
       contains(npmTrustedPublishing, /npm run release:sync-version/) &&
       contains(npmTrustedPublishing, /npm run release:check-version/) &&
+      contains(npmTrustedPublishing, /tools\/github_release_publish\.mjs/) &&
       contains(npmTrustedPublishing, /expected_version: <new-version>/) &&
       contains(npmTrustedPublishing, /0\.2\.41` dry run and real publish/) &&
       rootPackage.scripts?.["release:sync-version"] === "node tools/sync_release_version.mjs" &&
@@ -1177,7 +1209,7 @@ function localChecks() {
       contains(npmTrustedPublishWorkflow, new RegExp(`default:\\s*"${packageVersionPattern}"`)) &&
       contains(npmTrustedPublishWorkflow, /default: true/) &&
       contains(npmTrustedPublishWorkflow, /id-token:\s*write/) &&
-      contains(npmTrustedPublishWorkflow, /contents:\s*read/) &&
+      contains(npmTrustedPublishWorkflow, /contents:\s*write/) &&
       contains(npmTrustedPublishWorkflow, /environment:\s*npm-publish/) &&
       contains(npmTrustedPublishWorkflow, /uses: actions\/checkout@v6/) &&
       contains(npmTrustedPublishWorkflow, /uses: actions\/setup-node@v6/) &&
@@ -1192,8 +1224,30 @@ function localChecks() {
       contains(npmTrustedPublishWorkflow, /npm pack --dry-run --workspace project-tiny-context-harness/) &&
       contains(npmTrustedPublishWorkflow, /NPM_CONFIG_PROVENANCE:\s*"true"/) &&
       contains(npmTrustedPublishWorkflow, /npm publish --workspace project-tiny-context-harness --access public/) &&
+      contains(npmTrustedPublishWorkflow, /Create or update GitHub Release/) &&
+      contains(npmTrustedPublishWorkflow, /GH_TOKEN:\s*\$\{\{ github\.token \}\}/) &&
+      contains(npmTrustedPublishWorkflow, /node tools\/github_release_publish\.mjs --version "\$\{\{ inputs\.expected_version \}\}" --target "\$\{\{ github\.sha \}\}"/) &&
       !contains(npmTrustedPublishWorkflow, /NPM_TOKEN|NODE_AUTH_TOKEN/),
     "npm trusted publishing packet documents post-first-publish OIDC setup and provides a manual dry-run-first workflow without long-lived npm publish tokens."
+  );
+  addCheck(
+    checks,
+    "github-release-automation",
+    rootPackage.scripts?.["release:github"] === "node tools/github_release_publish.mjs" &&
+      hasFile("tools/github_release_publish.mjs") &&
+      contains(githubReleasePublishScript, /gh\(\["release", "create"/) &&
+      contains(githubReleasePublishScript, /gh\(\["release", "edit"/) &&
+      contains(githubReleasePublishScript, /extractReleaseBody/) &&
+      contains(githubReleasePublishScript, /--dry-run/) &&
+      contains(githubReleasePublishScript, /--target/) &&
+      contains(githubReleasePublishScript, /--latest/) &&
+      contains(releaseScript, /github release publish/) &&
+      contains(releaseScript, /tools\/github_release_publish\.mjs/) &&
+      contains(releaseScript, /GitHub Release create\/update/) &&
+      contains(npmPublishRunbook, /npm run release:github -- --version <published-version>/) &&
+      contains(npmTrustedPublishing, /Dry runs do not create or edit GitHub releases/) &&
+      contains(primaryLaunch, /future npm Trusted Publishing real runs create or update this release automatically/),
+    "GitHub Release automation creates or updates v<version> from the release packet after successful npm publish, while dry runs remain non-mutating."
   );
   addCheck(
     checks,
@@ -1204,6 +1258,16 @@ function localChecks() {
       contains(githubReleasePacket, new RegExp(`v${escapeRegex(packageJson.version)}`)) &&
       contains(githubReleasePacket, /Target:/) &&
       contains(githubReleasePacket, new RegExp(`Project Tiny Context Harness ${escapeRegex(packageJson.version)}`)) &&
+      contains(githubReleasePacket, /Update Mode: `manual-required`/) &&
+      contains(githubReleasePacket, /sync-only/) &&
+      contains(githubReleasePacket, /upgrade-required/) &&
+      contains(githubReleasePacket, /manual-required/) &&
+      contains(githubReleasePacket, /safe_pending/) &&
+      contains(githubReleasePacket, /manual_required/) &&
+      contains(githubReleasePacket, /blocked/) &&
+      contains(githubReleasePacket, /sdlc-harness upgrade --check/) &&
+      contains(githubReleasePacket, /tools\/github_release_publish\.mjs/) &&
+      contains(githubReleasePacket, /Dry runs do not create or edit GitHub releases/) &&
       contains(githubReleasePacket, /npm install -D project-tiny-context-harness@latest/) &&
       contains(githubReleasePacket, /keep the memory, drop the ceremony/i) &&
       contains(githubReleasePacket, new RegExp(`Do not retarget \`v${escapeRegex(packageJson.version)}\``)) &&

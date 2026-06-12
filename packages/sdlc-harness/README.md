@@ -115,7 +115,7 @@ npm ci
 npm run smoke:quickstart
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.49.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.50.tgz
 npx --no-install sdlc-harness init --adopt
 make validate-context
 ```
@@ -228,8 +228,9 @@ Use `npx --no-install sdlc-harness ...` only when you explicitly want the alread
 | Development engineer Skill | `<harnessRoot>/skills/context_development_engineer/SKILL.md` | Handles explicit development-engineering requests and writes durable engineering conclusions to `project_context/**`. |
 | Full project context export Skill | `<harnessRoot>/skills/context_full_project_export/SKILL.md` | Handles explicit full-project or code-level export requests and uses `export-context --all`, `--full` or `--code` to create temporary artifacts under `tmp/sdlc/context-exports/**`. |
 | Project-local Skills | `<harnessRoot>/skills/<role>/SKILL.md` | Optional local product/design/development Skills created by the project, such as `product_plan`, `uiux_design` or `development_engineer`. They supersede package-managed default Skills when more specific, are not overwritten by `sync`, and should keep front matter trigger keywords aligned with the project `AGENTS.md` role-trigger rule. |
-| Managed file sync | `make sdlc-sync` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness sync` | Refreshes package-managed guidance, default Skills, Makefile include, context templates, tools and workflow YAML. It does not perform semantic Context generation. |
-| Upgrade | `make sdlc-upgrade` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade` | Runs safe migrations and `sync`, including Schema v4 Context graph manifest creation when missing. |
+| Managed file sync | `make sdlc-sync` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness sync` | Refreshes package-managed guidance, default Skills, Makefile include, context templates, tools and workflow YAML. It does not run migrations or perform semantic Context generation; when migration work is pending it refuses to write and tells you to run `upgrade`. |
+| Upgrade | `make sdlc-upgrade` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade` | Default command after updating the npm package. Builds an upgrade plan, applies `safe_pending` migrations, runs `sync` and `doctor`, and exits non-zero when manual or blocked follow-up remains. |
+| Upgrade check | `npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade --check [--json]` | Checks the upgrade plan without writing files. Reports `safe_pending`, `manual_required` and `blocked`; exits non-zero when any work remains. |
 | Combined project export | `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --all [--check]` | Creates both default temporary exports under `tmp/sdlc/context-exports/**`. |
 | Project Context export | `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --full [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary Context summary artifact. It is not Context and must not be registered in `project_context/context.toml`. |
 | Code implementation export | `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary single-file code implementation artifact. It is not Context and must not be registered in `project_context/context.toml`. |
@@ -372,9 +373,37 @@ When a project-local Skill and a package-managed default Skill both apply, agent
 
 ## Sync And Upgrade Boundary
 
-`sync` is intentionally narrow. It refreshes managed files and never generates project semantics.
+`sync` is intentionally narrow. It refreshes managed files and never generates project semantics. `sync` does not run migrations; if it detects `safe_pending`, `manual_required` or `blocked` migration work, it refuses to write and points the user to `upgrade`.
 
-`upgrade` performs safe package migrations and `sync`. The former migration command has been removed because existing users have completed migration.
+After updating the package, run `sdlc-harness upgrade`. Use `sync` only when release notes say the update is `sync-only`.
+
+`upgrade` first builds an upgrade plan, applies only `safe_pending` migrations, then runs `sync` and `doctor`. If `manual_required` or `blocked` items remain, the command exits non-zero and prints follow-up. `upgrade --check` performs the same planning step without writing files; `upgrade --check --json` is intended for release checks and CI.
+
+Release update modes:
+
+| Update mode | What to run | Meaning |
+|---|---|---|
+| `sync-only` | `sdlc-harness sync` | The release changes only package-managed assets. No migrations are required. |
+| `upgrade-required` | `sdlc-harness upgrade` | The release includes safe mechanical migrations and managed asset refresh. |
+| `manual-required` | `sdlc-harness upgrade`, then manual follow-up | The release includes items that cannot be mechanically changed without user intent. |
+
+Migration statuses:
+
+| Status | Meaning |
+|---|---|
+| `safe_pending` | A known Harness schema, config or path convention can be migrated mechanically. |
+| `manual_required` | The path is in migration scope, but the Harness cannot prove the right semantic role or user intent. |
+| `blocked` | A target conflict or overwrite risk prevents a safe write. |
+
+Examples:
+
+- `project_context/modules/main.md` -> `project_context/areas/main.md` is safe when the target does not already exist.
+- Missing `project_context/context.toml` can receive a conservative baseline manifest.
+- `project_context/areas/main/verification.md` can be registered as `verification` by path convention.
+- `project_context/areas/payment/api.md` without a manifest role is `manual_required`; the Harness does not guess whether it is an area, contract, foundation or implementation index.
+- If the target already exists, the migration is `blocked` and no file is overwritten.
+
+The former migration command has been removed because existing users have completed that migration path.
 
 ## Common Commands
 
@@ -386,6 +415,8 @@ npx --yes --package project-tiny-context-harness@latest sdlc-harness export-cont
 npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code
 make sdlc-sync
 make sdlc-upgrade
+npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade --check
+npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade --check --json
 npx --yes --package project-tiny-context-harness@latest sdlc-harness validate-context
 npx --yes --package project-tiny-context-harness@latest sdlc-harness doctor
 make sdlc-doctor

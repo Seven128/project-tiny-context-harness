@@ -90,6 +90,9 @@ The adopted approach uses a small vocabulary so the same mechanism is not descri
 - **Module Design Capsule**: a compact area or role Context section for stable module principles, minimal design logic and durable rationale that should affect future implementation or verification choices.
 - **Temporary plan surface**: `plan.md` or an equivalent scratchpad used only when complex work needs visible execution state. It serves the workflow contract and Context without replacing either.
 - **Conformance**: a handoff self-check that compares implementation against the relevant Context and task contract. It produces delivery evidence, not durable Context by itself.
+- **Upgrade plan**: the machine-readable result of checking a project after a package update. It is scoped to known Harness-owned schema, config and path conventions; it is not a semantic interpretation of the user's project.
+- **Migration status**: the upgrade plan classifies scoped work as `safe_pending`, `manual_required` or `blocked`. Safe pending work can be applied mechanically; manual required work needs user or agent judgment; blocked work cannot be written without an overwrite/conflict risk.
+- **Release update mode**: the release contract that tells users whether an update is `sync-only`, `upgrade-required` or `manual-required`.
 - **Validator / gate**: machine-enforced checks. Minimal Context uses them only for recoverability, generated-asset consistency and fake verification-claim prevention, not for proving product quality or enforcing edit order.
 
 ## Harness Mental Model
@@ -442,7 +445,47 @@ The package-managed `.github/workflows/harness.yml` is a consumer project workfl
 
 `init` does not create `.work_products/**`, lifecycle state, plan state, stage skills, stage templates or stage policies by default.
 
-`sync` refreshes managed assets only. It never generates project semantics.
+`sync` refreshes managed assets only. It never generates project semantics and it does not run migrations. If an upgrade plan contains `safe_pending`, `manual_required` or `blocked` items, public `sync` refuses to write and tells the user to run `upgrade`; internal `upgrade` may bypass that guard only after it has planned and applied safe migrations.
+
+### Upgrade Model / Migration Model
+
+The public npm update path is now: after updating the package, run `sdlc-harness upgrade`. `sync` is only the right direct command when release notes say the release update mode is `sync-only`.
+
+The core design split is:
+
+- `sync` is managed asset refresh.
+- `upgrade` is safe migration orchestration.
+
+`upgrade --check` generates an upgrade plan without writing files. `upgrade` generates the same plan, applies only `safe_pending` migrations, then runs `sync` and `doctor`. If any `manual_required` or `blocked` item remains, the command exits non-zero after printing follow-up so users do not mistake a partial upgrade for complete migration.
+
+The migration model is a safe/manual/blocked migration model:
+
+- `safe_pending`: the CLI can prove the change is inside a known Harness schema, config or path convention and can apply it without overwriting user content.
+- `manual_required`: the path is in migration scope, but the CLI cannot prove the right semantic role or user intent.
+- `blocked`: a safe target cannot be written because of a conflict, existing destination or other overwrite risk.
+
+The migration registry shape is intentionally explicit. Each migration declares `id`, `introducedIn`, `scope`, `risk`, `detect`, `apply`, `verify` and `manualMessage`. `detect` must first narrow the scope; files outside that scope are not reported. `apply` is implemented only for safe migrations. Blocked scenarios must not write files.
+
+Initial registry entries cover:
+
+- `schema-v4-config-refresh`
+- `legacy-modules-to-areas`
+- `context-manifest-baseline`
+- `global-context-v4-sections`
+- `design-md-baseline`
+- `deprecated-skill-overrides`
+
+The model covers Harness-owned surfaces such as config schema refresh, `project_context/modules/**` to `project_context/areas/**`, conservative manifest baseline creation, obvious `verification.md` / `deployment.md` role registration and generated design baseline creation. It does not infer arbitrary project semantics. For example, `project_context/areas/payment/api.md` without manifest role is `manual_required`, not automatically guessed as `contract`, `foundation`, `area` or `implementation-index`.
+
+Anti-goals:
+
+- Do not restore the stage workflow or legacy migration command.
+- Do not make scripts guess user intent.
+- Do not perform whole-project semantic migration.
+- Do not auto-rewrite project-local Skills, business verification paths, product facts or deployment facts.
+- Do not promise that an old project becomes best practice after one command.
+
+Release update mode is part of the release contract. Release readiness must report `sync-only`, `upgrade-required` or `manual-required`; if code, assets, docs or this spec change public migration semantics, the release cannot claim `sync-only`.
 
 Product, UI/UX and development engineer Skill customization lives in separate project-local Skills:
 
@@ -458,7 +501,7 @@ The customization behavior is:
 - When both apply, the more specific project-local Skill should supersede the default Skill while keeping durable conclusions in Minimal Context.
 - Project-local Skill front matter `description` trigger keywords should be maintained together with project `AGENTS.md` role-trigger guidance and the default `context_*` trigger intent.
 
-`upgrade` runs safe migrations and `sync`. The old semantic migration command has been removed because user migrations are complete.
+`upgrade` runs safe migrations, managed asset refresh and diagnostics. The old semantic migration command has been removed because user migrations are complete.
 
 `validate-context` checks that Context has the minimum recovery fields and does not fake product verification evidence. It does not replace project tests.
 

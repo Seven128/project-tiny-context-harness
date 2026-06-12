@@ -6,7 +6,7 @@ on:
       expected_version:
         description: "Must match packages/sdlc-harness/package.json version."
         required: true
-        default: "0.2.49"
+        default: "0.2.50"
       dry_run:
         description: "Run all checks and pack without publishing."
         required: true
@@ -14,7 +14,7 @@ on:
         default: true
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 jobs:
@@ -67,3 +67,9 @@ jobs:
         env:
           NPM_CONFIG_PROVENANCE: "true"
         run: npm publish --workspace project-tiny-context-harness --access public
+
+      - name: Create or update GitHub Release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node tools/github_release_publish.mjs --version "${{ inputs.expected_version }}" --target "${{ github.sha }}"

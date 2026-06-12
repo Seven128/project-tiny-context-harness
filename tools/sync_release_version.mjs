@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 
 const defaultRepoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageName = "project-tiny-context-harness";
+const releaseUpdateMode = "manual-required";
+const releaseUpdateModes = ["sync-only", "upgrade-required", "manual-required"];
 
 const args = parseArgs(process.argv.slice(2));
 
@@ -169,6 +171,17 @@ function validateReleasePacket(relativePath, content, version) {
   for (const pattern of [
     new RegExp(`v${escapeRegExp(version)}`),
     new RegExp(`Project Tiny Context Harness ${escapeRegExp(version)}`),
+    /Update Mode:/,
+    new RegExp(escapeRegExp(releaseUpdateMode)),
+    /sync-only/,
+    /upgrade-required/,
+    /manual-required/,
+    /sdlc-harness upgrade --check/,
+    /tools\/github_release_publish\.mjs/,
+    /Dry runs do not create or edit GitHub releases/,
+    /safe_pending/,
+    /manual_required/,
+    /blocked/,
     /npm install -D project-tiny-context-harness@latest/,
     /keep the memory, drop the ceremony/i,
     new RegExp(`Do not retarget \`v${escapeRegExp(version)}\``),
@@ -207,6 +220,10 @@ Title:
 Project Tiny Context Harness ${version}
 \`\`\`
 
+Update Mode: \`${releaseUpdateMode}\`
+
+Allowed modes: ${releaseUpdateModes.map((mode) => `\`${mode}\``).join(", ")}.
+
 ## Release Body
 
 \`\`\`\`markdown
@@ -218,12 +235,22 @@ npx --yes --package project-tiny-context-harness@latest sdlc-harness init
 make validate-context
 \`\`\`
 
+Update mode: \`${releaseUpdateMode}\`. After updating the package, run:
+
+\`\`\`sh
+npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade --check
+npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade
+\`\`\`
+
+Use \`sync\` only for releases explicitly marked \`sync-only\`; sync does not run migrations. Upgrade plans report \`safe_pending\`, \`manual_required\` and \`blocked\`.
+
 ## What Changed
 
 - Publishes \`${packageName}@${version}\` through npm Trusted Publishing.
 - Keeps the install path on the renamed package: \`${packageName}\`.
 - Keeps the core positioning tight: minimal repo-native project memory for AI coding agents.
 - Keeps the Minimal Context boundary explicit: \`AGENTS.md\` is the startup router, \`project_context/**\` keeps durable recovery facts, and \`validate-context\` checks recoverability.
+- Makes package updates explicit through release update modes: ${releaseUpdateModes.map((mode) => `\`${mode}\``).join(", ")}.
 - Keeps the old stage-based SDLC workflow out of the default package surface.
 
 ## Boundary
@@ -239,7 +266,17 @@ This release does not claim benchmark-proven speedups, production adoption, awar
 - Comparison guide: https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/comparison.md
 \`\`\`\`
 
-## Manual UI Path
+## GitHub Release Automation
+
+After npm publish and registry verification, run:
+
+\`\`\`sh
+node tools/github_release_publish.mjs --version ${version}
+\`\`\`
+
+The npm Trusted Publishing workflow runs this automatically for real publish runs. Dry runs do not create or edit GitHub releases.
+
+## Manual UI Fallback
 
 1. Open \`https://github.com/Seven128/project-tiny-context-harness/releases/new\`.
 2. Choose tag \`v${version}\`.
