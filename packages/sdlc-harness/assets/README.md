@@ -94,7 +94,7 @@ That smoke packs the local workspace, installs it into a disposable repo, runs `
 ```sh
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.51.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.52.tgz
 npx --no-install sdlc-harness init --adopt
 make validate-context
 ```
