@@ -152,19 +152,24 @@ never_overwrite:
     "utf8"
   );
   await runInit(existingManifestRoot, { adopt: true, force: false });
+  await rm(path.join(existingManifestRoot, "project_context/areas/main.md"), { force: true });
+  await rm(path.join(existingManifestRoot, "project_context/areas/main"), { recursive: true, force: true });
+  await writeFile(path.join(existingManifestRoot, "project_context/areas/custom.md"), "# Custom Area\n", "utf8");
   const customManifest = `# Custom manifest
 
 [[areas]]
 id = "custom"
 root = "."
-context = "project_context/modules/main.md"
+context = "project_context/areas/custom.md"
 kind = "app"
 default = true
 `;
   await writeFile(path.join(existingManifestRoot, "project_context/context.toml"), customManifest, "utf8");
   await runUpgrade(existingManifestRoot);
   const keptManifest = await readFile(path.join(existingManifestRoot, "project_context/context.toml"), "utf8");
-  assert.equal(keptManifest, customManifest.replace("project_context/modules/main.md", "project_context/areas/main.md"));
+  assert.equal(keptManifest, customManifest);
+  await assert.rejects(stat(path.join(existingManifestRoot, "project_context/areas/main.md")));
+  await assert.rejects(stat(path.join(existingManifestRoot, "project_context/areas/main/verification.md")));
 
   await writeFile(
     path.join(missingSectionsRoot, "package.json"),
@@ -244,6 +249,12 @@ default = true
     "utf8"
   );
   await runInit(blockedRoot, { adopt: true, force: false });
+  const blockedConfigPath = path.join(blockedRoot, ".harness/config.yaml");
+  await writeFile(
+    blockedConfigPath,
+    (await readFile(blockedConfigPath, "utf8")).replace('schema_version: "4"', 'schema_version: "1"'),
+    "utf8"
+  );
   await mkdir(path.join(blockedRoot, "project_context/modules"), { recursive: true });
   await writeFile(path.join(blockedRoot, "project_context/modules/main.md"), "# Legacy Main\n", "utf8");
   const blockedCheck = spawnSync(process.execPath, [cliPath, "upgrade", "--check", "--json"], {
@@ -254,6 +265,15 @@ default = true
   const blockedPlan = JSON.parse(blockedCheck.stdout);
   assert.equal(blockedPlan.mode, "manual-required");
   assert.ok(blockedPlan.blocked.some((entry) => entry.id === "legacy-modules-to-areas"));
+  const blockedUpgrade = spawnSync(process.execPath, [cliPath, "upgrade"], {
+    cwd: blockedRoot,
+    encoding: "utf8"
+  });
+  assert.equal(blockedUpgrade.status, 1, blockedUpgrade.stdout + blockedUpgrade.stderr);
+  assert.match(blockedUpgrade.stdout, /upgrade plan mode=manual-required/);
+  assert.match(blockedUpgrade.stdout, /blocked: legacy-modules-to-areas/);
+  assert.match(blockedUpgrade.stdout, /upgrade blocked: resolve blocked migration items/);
+  assert.match(await readFile(blockedConfigPath, "utf8"), /schema_version: "1"/);
   await assert.rejects(() => runUpgrade(blockedRoot), /upgrade completed with blockers/);
   await stat(path.join(blockedRoot, "project_context/modules/main.md"));
 

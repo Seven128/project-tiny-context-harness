@@ -6,6 +6,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { ensureDir, listFiles, pathExists, readText, writeTextIfChanged } from "./fs.js";
 import { harnessRoot } from "./harness-root.js";
+import { SAFE_EXAMPLE_FILE_NAMES, shouldExcludeRelativePath, shouldIncludeCodeFile, toPosix } from "./source-files.js";
 
 export type ExportContextMode = "full" | "code";
 
@@ -54,97 +55,6 @@ const MAX_TREE_ENTRIES = 300;
 const MAX_TREE_DEPTH = 4;
 const GIT_LS_MAX_BUFFER = 64 * 1024 * 1024;
 const APPROX_TEXT_TOKEN_LIMIT_CHARS = 8_000_000;
-
-const EXCLUDED_DIR_NAMES = new Set([
-  ".git",
-  ".artifacts",
-  ".cache",
-  ".next",
-  ".nuxt",
-  ".runtime",
-  ".turbo",
-  "artifacts",
-  "build",
-  "cache",
-  "captures",
-  "coverage",
-  "dist",
-  "logs",
-  "node_modules",
-  "out",
-  "playwright-report",
-  "raw-captures",
-  "reports",
-  "target",
-  "temp",
-  "test-reports",
-  "test-results",
-  "tmp"
-]);
-
-const SAFE_EXAMPLE_FILE_NAMES = new Set([".env.example", ".env.sample", ".env.template", "example.env", "sample.env"]);
-
-const EXCLUDED_FILE_PATTERNS = [
-  /^\.env(?:\.|$)/i,
-  /\.log$/i,
-  /\.min\.(?:css|js|mjs)$/i,
-  /(^|[-_.])(secret|secrets|cookie|cookies|credential|credentials|api-key|apikey|access-token|refresh-token|auth-token|private-key)([-_.]|$)/i,
-  /(^|[-_.])(raw-capture|capture-dump|licensed-payload|license-payload|test-report)([-_.]|$)/i,
-  /^(?:package-lock\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|yarn\.lock|poetry\.lock|pipfile\.lock|cargo\.lock)$/i,
-  /full-project-context-\d{8}T\d{6}Z\.md$/i,
-  /当前项目context-\d{8}T\d{6}Z\.md$/i,
-  /当前项目代码实现\.md$/i,
-  /(^|[-_.])(code-level-implementation|context-export|context-bundle)([-_.]|$)/i
-];
-
-const CODE_FILE_EXTENSIONS = [
-  ".bat",
-  ".cjs",
-  ".cmd",
-  ".go",
-  ".gql",
-  ".graphql",
-  ".js",
-  ".jsx",
-  ".jsonc",
-  ".mjs",
-  ".proto",
-  ".ps1",
-  ".py",
-  ".sh",
-  ".sql",
-  ".toml",
-  ".ts",
-  ".tsx",
-  ".vue",
-  ".yaml",
-  ".yml"
-];
-
-const CODE_FILE_BASE_NAMES = new Set([
-  ".env.example",
-  ".env.sample",
-  ".env.template",
-  "dockerfile",
-  "makefile",
-  "package.json",
-  "pyproject.toml",
-  "requirements.txt",
-  "setup.cfg",
-  "tsconfig.json"
-]);
-
-const CONFIG_JSON_NAMES = new Set([
-  "babel.config.json",
-  "biome.json",
-  "composer.json",
-  "deno.json",
-  "eslint.config.json",
-  "jsconfig.json",
-  "package.json",
-  "tsconfig.json",
-  "vite.config.json"
-]);
 
 const SENSITIVE_ASSIGNMENT_PATTERN =
   /^(\s*(?:[-*]\s*)?(?:[`"']?[\w.-]*(?:secret|token|cookie|password|api[_-]?key)[\w.-]*[`"']?\s*[:=]\s*))(.+?)\s*$/i;
@@ -625,60 +535,6 @@ function buildImplementationGuide(records: CodeFileRecord[]): string {
   ].join("\n");
 }
 
-function shouldIncludeCodeFile(relative: string): boolean {
-  if (shouldExcludeRelativePath(relative)) {
-    return false;
-  }
-  const normalized = toPosix(relative);
-  const lower = normalized.toLowerCase();
-  const base = path.posix.basename(lower);
-  if (CODE_FILE_BASE_NAMES.has(base) || base.startsWith("dockerfile.")) {
-    return true;
-  }
-  if (lower.endsWith(".dockerfile")) {
-    return true;
-  }
-  if (lower.endsWith(".json")) {
-    return isConfigJson(lower);
-  }
-  return CODE_FILE_EXTENSIONS.some((extension) => lower.endsWith(extension));
-}
-
-function shouldExcludeRelativePath(relative: string): boolean {
-  const normalized = toPosix(relative);
-  const segments = normalized.split("/");
-  if (segments.some((segment) => EXCLUDED_DIR_NAMES.has(segment))) {
-    return true;
-  }
-  const base = segments[segments.length - 1] ?? "";
-  const lowerBase = base.toLowerCase();
-  return EXCLUDED_FILE_PATTERNS.some((pattern) => {
-    if (SAFE_EXAMPLE_FILE_NAMES.has(lowerBase) && pattern.source.startsWith("^\\.env")) {
-      return false;
-    }
-    return pattern.test(base) || pattern.test(normalized);
-  });
-}
-
-function isConfigJson(lowerRelative: string): boolean {
-  const base = path.posix.basename(lowerRelative);
-  return (
-    CONFIG_JSON_NAMES.has(base) ||
-    lowerRelative.endsWith(".schema.json") ||
-    lowerRelative.includes("/schema/") ||
-    lowerRelative.includes("/schemas/") ||
-    lowerRelative.includes("/config/") ||
-    lowerRelative.includes("/configs/") ||
-    lowerRelative.includes("/examples/") ||
-    lowerRelative.includes("/sample/") ||
-    lowerRelative.includes("/samples/") ||
-    base.includes("config") ||
-    base.includes("schema") ||
-    base.includes("example") ||
-    base.includes("sample")
-  );
-}
-
 function summarizeCodeFile(relative: string, content: string, language: string): string {
   const lower = relative.toLowerCase();
   const base = path.posix.basename(relative);
@@ -967,10 +823,6 @@ function timestampForFile(now: Date): string {
 
 function repoRelative(root: string, file: string): string {
   return toPosix(path.relative(root, file));
-}
-
-function toPosix(value: string): string {
-  return value.replace(/\\/g, "/");
 }
 
 function escapeTableCell(value: string): string {

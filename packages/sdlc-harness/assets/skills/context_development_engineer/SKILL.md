@@ -33,6 +33,9 @@ Project-specific engineering rules belong in a separate project-local Skill unde
 10. 实现时保持精准修改，优先遵循仓库现有框架、接口、测试和代码风格。
 11. 当用户明确要求 / 允许“多开agent”或使用 subagent，且当前会话存在可用 subagent 工具时，积极把可并行的探索、审查或实现拆分交给 subagent；使用前先复用已有相关 agent，没有合适 agent 或并行度不足时再新开。`wait_agent` 只表示取得结果，不释放资源；subagent 完成、空闲或不再需要时必须调用 `close_agent`，收尾前清理已完成 / 空闲 / 不再需要的 subagent，避免占满后续资源。
 12. 当任务涉及新实现、重构、重复逻辑、模块边界或影响面控制时，先做轻量 abstraction / decomposition scan：
+   - 工程 / RFC / 实现类 Task Contract 包含 `Modularity Check: none|required|exception`；可用 `sdlc-harness check-modularity --file <path> --limit 300` 审计计划编辑文件，用 `sdlc-harness check-modularity --touched --limit 300` 做交付前审计。若项目本地 Skill 定义了不同 limit，使用项目本地值。
+   - 发现超限 touched file 后，不只记录行数；判断本次是否在该文件加入新职责，并回到本节拆分原则选择产品面、hook、model、adapter、component、service / facade 或 verification helper 等边界。避免只按行数机械拆分、但耦合和职责仍留在原处。
+   - 如果本次不拆，`Modularity Check` 取 `exception`，交付说明写 `Modularity: exception documented` 并列出文件、暂不拆原因和后续拆分边界。
    - 查找相似实现、重复逻辑、紧耦合模块或影响面异常扩散点。
    - 当一个业务对象、能力或接口的变更需要跨多个 Context、产品域或实现层同步调整时，将该影响范围视为模块边界复核信号；优先评估是否应通过独立模块、服务、facade 或稳定接口收敛依赖，避免通过手工 manifest 长期复制实现暴露面。
    - 将候选项分为局部重构与长期边界变化，后者按既有 Context-first 规则处理。
@@ -63,6 +66,10 @@ Project-specific engineering rules belong in a separate project-local Skill unde
   - `none`：本次只是按既有 Context / 架构原则落地，不新增长期事实。
   - `required`：说明长期事实类型、应写入的 Context / role、需要沉淀的事实，以及明确不写入 Context 的一次性内容。
 - `Task Contract` 用短列表说明 capability、owner、upstream / downstream、allowed / forbidden dependency、input / output / state / persistence、failure / retry / timeout / degraded / recovery、observability、performance、security、non-goals 和 verification path。
+- 工程 / RFC / 实现类任务的 `Task Contract` 必须包含 `Modularity Check: none|required|exception`：
+  - `none`：没有超限计划 / touched 手写源码文件，或本次没有向超限文件增加新职责。
+  - `required`：拆分是本次验收条件，应按 abstraction / decomposition scan 的职责边界完成。
+  - `exception`：本次触碰超限文件但暂不拆；交付说明必须记录文件、原因和后续拆分边界。
 - `Applicable Module Design` 是高风险任务的前置字段：列出命中的 Context / Skill 来源、适用的 Principles、Design Logic 和 Design Rationale，以及它们控制的当前实现或验证选择。
 - `Principle Decision Gate` 要写明首选执行路径、fallback / degraded path 的进入条件，以及什么证据不能证明本次目标。涉及 capability、metric 或 acceptance claim 时，先声明要证明的 claim，再选择命令或 probe。
 - 对长任务、多模块、多 agent、容易发生 `Context Delta` 调头或多轮验证的任务，可以用 `plan.md` 或等价临时计划面暂存 `Context Delta`、`Task Contract`、`Implementation Steps` 和 `Contract Conformance`；它只是临时执行缓存。

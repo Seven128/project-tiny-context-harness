@@ -1,3 +1,4 @@
+import { checkModularity } from "./check-modularity.js";
 import { doctor } from "./doctor.js";
 import { exportContext } from "./export-context.js";
 import { init } from "./init.js";
@@ -14,6 +15,7 @@ export const commands: Record<string, CommandHandler> = {
   sync,
   upgrade,
   doctor,
+  "check-modularity": checkModularity,
   "export-context": exportContext,
   validate,
   "validate-context": (args) => validate(["validate-context", ...args]),
@@ -29,6 +31,8 @@ export function help(): void {
   upgrade [--check] [--json]
                        Run safe migrations, sync managed assets and doctor
   doctor               Diagnose project configuration and drift
+  check-modularity --touched|--file <path>|--base <ref> [--limit 300] [--fail-on-warning]
+                       Warn when selected handwritten source files exceed a line-count limit
   export-context --full|--code|--all [--output <path>] [--check]
                        Export a temporary Context summary or code implementation Markdown artifact
   validate <gate>      Run a Harness validation gate (Minimal Context only)

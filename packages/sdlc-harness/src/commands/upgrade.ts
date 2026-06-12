@@ -1,5 +1,5 @@
 import { createUpgradePlan, formatUpgradePlan, hasUpgradePlanWork, updateModeForPlan } from "../lib/migrations.js";
-import { runUpgrade } from "../lib/upgrade.js";
+import { runUpgradeReport } from "../lib/upgrade.js";
 
 export async function upgrade(args: string[] = []): Promise<void> {
   const options = parseArgs(args);
@@ -23,13 +23,19 @@ export async function upgrade(args: string[] = []): Promise<void> {
     return;
   }
 
-  const report = await runUpgrade(process.cwd());
+  const report = await runUpgradeReport(process.cwd());
   if (options.json) {
-    console.log(JSON.stringify({ lines: report }, null, 2));
+    console.log(JSON.stringify(report, null, 2));
+    if (report.blocked) {
+      process.exitCode = 1;
+    }
     return;
   }
-  for (const line of report) {
+  for (const line of report.lines) {
     console.log(line);
+  }
+  if (report.blocked) {
+    process.exitCode = 1;
   }
 }
 

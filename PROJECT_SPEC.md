@@ -86,7 +86,7 @@ The adopted approach uses a small vocabulary so the same mechanism is not descri
 - **Durable fact**: a fact expected to guide later work, such as product ownership, page responsibility, information architecture, API/Schema, state semantics, cross-domain boundary or verification/deployment path.
 - **Workflow contract**: prompt-level order of thought that the agent is expected to follow. It is a soft constraint, not a validator, phase gate or machine-enforced edit-order gate.
 - **Context Delta**: the current task's durable-fact decision point inside task-contract scenarios. `required` means Context is updated before implementation continues; `none` means implementation proceeds against existing Context.
-- **Task Contract**: a temporary task-local compilation of upstream principles and Context into implementation constraints. It guides the current task, but is not a source of truth.
+- **Task Contract**: a temporary task-local compilation of upstream principles and Context into implementation constraints. It guides the current task, but is not a source of truth. Engineering, RFC and implementation Task Contracts include `Modularity Check: none|required|exception` so oversized touched files force split-or-exception reasoning inside the existing contract.
 - **Module Design Capsule**: a compact area or role Context section for stable module principles, minimal design logic and durable rationale that should affect future implementation or verification choices.
 - **Temporary plan surface**: `plan.md` or an equivalent scratchpad used only when complex work needs visible execution state. It serves the workflow contract and Context without replacing either.
 - **Conformance**: a handoff self-check that compares implementation against the relevant Context and task contract. It produces delivery evidence, not durable Context by itself.
@@ -277,6 +277,7 @@ For product, UI/UX, system design, architecture-boundary, API/Schema, state/runt
 read Context / inspect code / understand request
 -> compile applicable module design into the current task contract
    - Context Delta: none|required
+   - Modularity Check: none|required|exception (engineering / RFC / implementation tasks)
    - Applicable Module Design: sources, principles, design logic, rationale and controlled choices
    - Task Contract: implementation constraints for this task
 -> update Context first when Context Delta is required
@@ -285,6 +286,8 @@ read Context / inspect code / understand request
 ```
 
 Applicable module design is a short gate inside task-contract compilation: list the source Context / Skill principles, state which current implementation or verification choices they control, name the preferred path and name fallback or degraded paths only with their entry conditions. Commands, probes and current implementation shape are execution evidence; they do not independently define the module target. `Context Delta` is the only formal durable-fact decision point inside contract-compilation scenarios. This avoids asking the agent to classify once, then classify again while compiling the task contract. The task contract is a temporary compiled artifact for the current task, not a new source of truth. If Conformance reveals an implementation miss, the code is fixed; if it reveals an incomplete task contract, the contract is revised; if it reveals a missing durable fact, the agent returns to `Context Delta` and updates Context before continuing.
+
+`Modularity Check` is a maintenance self-check inside engineering / RFC / implementation Task Contracts, not a second contract and not `validate-context`. Its values are `none` when there is no oversized touched-source risk or no new responsibility added to an over-limit file, `required` when decomposition is part of the task's acceptance criteria, and `exception` when an over-limit touched file is not split now and the handoff must list file, reason and future split boundary. The CLI can provide facts with `sdlc-harness check-modularity`, but the agent still chooses the outcome through module-boundary and decomposition reasoning.
 
 For long tasks, multi-module work, multi-agent work or changes likely to require several verification loops, `plan.md` or an equivalent temporary plan surface can hold the current task contract, implementation steps and Conformance notes as an execution scratchpad. This use is an aid to the workflow contract, not the workflow contract itself. It helps keep `Context Delta`, `Task Contract` and Conformance visible while work is in flight, but it must not become a long-lived source of truth, a default project asset, a registered Context node, plan state, stage artifact or work-product tree. Durable facts discovered there must be extracted into `project_context/**` or `DESIGN.md`; otherwise the temporary plan is only execution cache.
 
@@ -347,6 +350,7 @@ Shared design rules:
 - Preserve the Context Priority Ladder in managed guidance: Context read -> page product-positioning check when applicable -> durable-fact classification or `Context Delta` inside task-contract scenarios -> context-first/code-first choice -> drift check.
 - Treat task-contract compilation as a light refactor of that workflow contract for higher-risk product, UI/UX and engineering tasks: `Context Delta` replaces a separate durable-fact classification inside those scenarios, `Task Contract` translates upstream principles into task-local constraints, and `Contract Conformance` checks the result before handoff.
 - For module design, API/Schema, state/runtime and verification-design work, require the development engineer Skill to compile `Applicable Module Design` before choosing implementation, claim, command, probe or fallback paths.
+- For engineering, RFC and implementation work, include `Modularity Check: none|required|exception` in the existing Task Contract; this catches oversized touched files without creating a new validator gate.
 - Allow `plan.md` or an equivalent temporary plan surface to assist complex task-contract work as scratch space only; it must serve Context and the workflow contract without becoming either one.
 - Elevate lightweight page product-positioning checks into managed AGENTS guidance for Web page, layout and information-placement tasks, and treat the check as input to change classification while keeping the default product/UIUX Skill triggers narrow.
 - Keep broad product/UIUX principles as judgment philosophy, then put slightly more concrete reusable prompt questions in the default Skills. Going more specific than that becomes project or business logic and belongs in project Context or project-local Skills.
@@ -419,6 +423,7 @@ The development engineer Skill exists to keep technical intent recoverable when 
 - When the user has explicitly allowed that capability and the tools exist, the Skill should encourage parallel decomposition while reusing existing agents first and closing completed, idle or no-longer-needed agents with `close_agent`.
 - This is a resource lifecycle constraint, not permission to bypass the user's explicit subagent trigger.
 - Its abstraction / decomposition scan is specifically meant to reduce AI failure modes such as over-abstracting for visual cleanliness, treating syntactic duplication as semantic sameness, splitting files without reducing coupling, or optimizing locally against the recorded architecture.
+- Its modularity check uses `sdlc-harness check-modularity` as a warning-only fact source by default, then routes over-limit findings through the same abstraction / decomposition scan: identify whether the change adds a responsibility, split by a real boundary when warranted, or document an exception with a future split boundary.
 - The scan also treats cross-Context, cross-domain or cross-layer changes required for one object or capability as a boundary-review signal: agents should evaluate whether a product capability, module, service, facade or stable interface can shrink future change scope before introducing hand-maintained manifests that duplicate implementation surfaces.
 - The scan also treats repeated, deterministic, easy-to-miss or order-sensitive manual workflows as repo-local tool/script opportunities: scripts belong in the owning module's tool area with tests, while recoverable entry points, parameter constraints and applicability boundaries belong in verification/deployment Context rather than in provider-specific Skill text or one-off evidence notes.
 - It should default to stable, high-value, low-risk changes and leave speculative architecture for explicit user direction or stronger project evidence.
@@ -468,13 +473,13 @@ The core design split is:
 - `sync` is managed asset refresh.
 - `upgrade` is safe migration orchestration.
 
-`upgrade --check` generates an upgrade plan without writing files. `upgrade` generates the same plan, applies only `safe_pending` migrations, then runs `sync` and `doctor`. If any `manual_required` or `blocked` item remains, the command exits non-zero after printing follow-up so users do not mistake a partial upgrade for complete migration.
+`upgrade --check` generates an upgrade plan without writing files. `upgrade` generates the same plan and treats `blocked` as a write preflight failure: if a blocked item exists, it prints the plan, runs diagnostics and exits non-zero without applying safe migrations or internal `sync`. Without blockers, it applies only `safe_pending` migrations, then runs `sync` and `doctor`. If `manual_required` follow-up or diagnostics remain, the command exits non-zero after printing follow-up so users do not mistake a partial upgrade for complete migration.
 
 The migration model is a safe/manual/blocked migration model:
 
 - `safe_pending`: the CLI can prove the change is inside a known Harness schema, config or path convention and can apply it without overwriting user content.
 - `manual_required`: the path is in migration scope, but the CLI cannot prove the right semantic role or user intent.
-- `blocked`: a safe target cannot be written because of a conflict, existing destination or other overwrite risk.
+- `blocked`: a safe target cannot be written because of a conflict, existing destination or other overwrite risk. Blocked items stop upgrade writes until the conflict is resolved.
 
 The migration registry shape is intentionally explicit. Each migration declares `id`, `introducedIn`, `scope`, `risk`, `detect`, `apply`, `verify` and `manualMessage`. `detect` must first narrow the scope; files outside that scope are not reported. `apply` is implemented only for safe migrations. Blocked scenarios must not write files.
 
@@ -516,6 +521,8 @@ The customization behavior is:
 `upgrade` runs safe migrations, managed asset refresh and diagnostics. The old semantic migration command has been removed because user migrations are complete.
 
 `validate-context` checks that Context has the minimum recovery fields and does not fake product verification evidence. It does not replace project tests.
+
+`check-modularity` audits selected handwritten source files for physical line-count risk. It is warning-only by default and supports `--fail-on-warning` for projects that intentionally opt into CI enforcement. It does not infer module quality or replace the development engineer Skill's split-or-exception judgment.
 
 The canonical npm package is `project-tiny-context-harness`; `sdlc-harness` is the bin name:
 

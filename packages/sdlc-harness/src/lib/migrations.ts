@@ -163,12 +163,15 @@ export function formatUpgradePlan(plan: UpgradePlan): string[] {
   return lines;
 }
 
-export async function runMigrations(projectRoot: string): Promise<MigrationReport> {
+export async function runMigrations(projectRoot: string, existingPlan?: UpgradePlan): Promise<MigrationReport> {
   const report: MigrationReport = { changed: [], skipped: [], manualRequired: [], blocked: [] };
   const root = await harnessRoot(projectRoot);
-  const plan = await createUpgradePlan(projectRoot);
+  const plan = existingPlan ?? (await createUpgradePlan(projectRoot));
   report.manualRequired.push(...plan.manual_required);
   report.blocked.push(...plan.blocked);
+  if (plan.blocked.length > 0) {
+    return report;
+  }
 
   for (const migration of migrations) {
     if (!migration.apply) {
@@ -191,10 +194,14 @@ async function migrateBaseProjectContext(projectRoot: string, report: MigrationR
   await ensureDir(path.join(projectRoot, "project_context", "areas"));
   const files: Array<[string, string]> = [
     ["project_context/global.md", globalContextTemplate()],
-    ["project_context/architecture.md", architectureContextTemplate()],
-    ["project_context/areas/main.md", areaContextTemplate("main")],
-    ["project_context/areas/main/verification.md", verificationContextTemplate("main")]
+    ["project_context/architecture.md", architectureContextTemplate()]
   ];
+  if (await contextManifestReferences(projectRoot, "project_context/areas/main.md")) {
+    files.push(["project_context/areas/main.md", areaContextTemplate("main")]);
+  }
+  if (await contextManifestReferences(projectRoot, "project_context/areas/main/verification.md")) {
+    files.push(["project_context/areas/main/verification.md", verificationContextTemplate("main")]);
+  }
   for (const [relative, content] of files) {
     const target = path.join(projectRoot, ...relative.split("/"));
     if (await pathExists(target)) {
@@ -207,6 +214,14 @@ async function migrateBaseProjectContext(projectRoot: string, report: MigrationR
       report.skipped.push(relative);
     }
   }
+}
+
+async function contextManifestReferences(projectRoot: string, relative: string): Promise<boolean> {
+  const manifestPath = path.join(projectRoot, CONTEXT_MANIFEST_PATH);
+  if (!(await pathExists(manifestPath))) {
+    return true;
+  }
+  return manifestReferencesPath(await readText(manifestPath), relative);
 }
 
 async function detectGlobalContextSections(projectRoot: string, _root: string, migration: string): Promise<UpgradePlanItem[]> {
@@ -536,4 +551,9 @@ function ensureManifestDefaultArea(content: string): string {
   }
   lines.splice(nextTableIndex, 0, "default = true");
   return lines.join("\n");
+}
+
+function manifestReferencesPath(content: string, relative: string): boolean {
+  const escaped = relative.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`^(?:\\s*)(?:context|path)\\s*=\\s*["']${escaped}["']\\s*$`, "im").test(content);
 }

@@ -94,7 +94,7 @@ That smoke packs the local workspace, installs it into a disposable repo, runs `
 ```sh
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.52.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.53.tgz
 npx --no-install sdlc-harness init --adopt
 make validate-context
 ```
@@ -268,7 +268,9 @@ The default Skills are Minimal Context helpers for explicit product-planning, UI
 
 Multilingual trigger phrases are compatibility details. Public README, npm and launch copy stay English-first, and public/package-managed surfaces must remain English-complete; literal non-English examples are documented only where they explain generated Skill matching and must not be the sole activation path.
 
-For product, UI/UX and engineering tasks that touch design intent, API/Schema, state/runtime behavior, architecture boundaries or verification design, the default Skills compile a short current-task contract before implementation. The contract starts with `Context Delta: none|required`; `required` preserves context-first behavior, while `none` means the task can proceed against existing Context. For module design work, the development engineer Skill also compiles `Applicable Module Design`: the relevant principles, minimal design logic and durable rationale that control the current implementation or verification choice. The task contract and Contract Conformance are handoff evidence, not new PRD, tech-plan, validator or gate surfaces.
+For product, UI/UX and engineering tasks that touch design intent, API/Schema, state/runtime behavior, architecture boundaries or verification design, the default Skills compile a short current-task contract before implementation. The contract starts with `Context Delta: none|required`; `required` preserves context-first behavior, while `none` means the task can proceed against existing Context. For engineering, RFC and implementation work, the existing Task Contract also includes `Modularity Check: none|required|exception` so oversized touched files trigger split-or-exception reasoning. For module design work, the development engineer Skill also compiles `Applicable Module Design`: the relevant principles, minimal design logic and durable rationale that control the current implementation or verification choice. The task contract and Contract Conformance are handoff evidence, not new PRD, tech-plan, validator or gate surfaces.
+
+`sdlc-harness check-modularity` supports that field by auditing selected handwritten source files for physical line-count risk. It is warning-only by default and is not `validate-context`; teams that want CI enforcement can opt in with `--fail-on-warning`. The command provides file/line facts, while the agent still decides `none`, `required` or `exception` through the development engineer decomposition guidance.
 
 For complex task-contract work, agents may use `plan.md` or an equivalent temporary plan surface as scratch space for `Context Delta`, `Task Contract`, implementation steps and Conformance notes. It is execution cache only: durable facts must be extracted into `project_context/**` or `DESIGN.md`, and temporary plans are not Context, not registered in `context.toml` and not default project assets.
 
@@ -292,11 +294,12 @@ Use `npx --no-install sdlc-harness ...` only when you explicitly want the alread
 |---|---|
 | `npx --yes --package project-tiny-context-harness@latest sdlc-harness init` | Non-destructively installs Minimal Context Harness into the current project. |
 | `make sdlc-sync` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness sync` | Refreshes managed guidance, default Skills, Makefile include, tools and templates. It does not run migrations or generate project semantics; when migration work is pending it refuses to write and tells you to run `upgrade`. |
-| `make sdlc-upgrade` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade` | Default command after updating the npm package. Builds an upgrade plan, applies `safe_pending` migrations, runs `sync` and `doctor`, and exits non-zero when manual or blocked follow-up remains. |
+| `make sdlc-upgrade` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade` | Default command after updating the npm package. Builds an upgrade plan, stops before writes when `blocked` items exist, otherwise applies `safe_pending` migrations, runs `sync` and `doctor`, and exits non-zero when manual follow-up or diagnostics remain. |
 | `npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade --check [--json]` | Checks the upgrade plan without writing files. Reports `safe_pending`, `manual_required` and `blocked`; exits non-zero when any work remains. |
 | `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --all [--check]` | Creates both default temporary exports under `tmp/sdlc/context-exports/**`. |
 | `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --full [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary project Context summary Markdown artifact. |
 | `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary single-file code implementation Markdown artifact. |
+| `npx --yes --package project-tiny-context-harness@latest sdlc-harness check-modularity --touched [--limit 300] [--fail-on-warning]` | Warns when selected handwritten source files exceed a physical line-count limit; `--file <path>` and `--base <ref>` select explicit files or branch changes. |
 | `npx --yes --package project-tiny-context-harness@latest sdlc-harness validate-context` | Checks minimum project recovery fields, Context graph metadata, declared paths/roles and fake test-execution claims. |
 | `make validate-context` | Makefile wrapper for `validate-context`. |
 | `make validate-harness` | Compatibility alias for `validate-context` in vNext projects. |
@@ -327,9 +330,9 @@ Release notes and release readiness use this update mode vocabulary:
 |---|---|
 | `safe_pending` | The Harness can prove the change is inside a known Harness-owned schema, config or path convention and can apply it mechanically. |
 | `manual_required` | The file is in migration scope, but the Harness cannot prove the right semantic role or user intent. It prints the path and follow-up. |
-| `blocked` | A safe target cannot be written, usually because the destination already exists or another conflict would require overwriting user content. |
+| `blocked` | A safe target cannot be written, usually because the destination already exists or another conflict would require overwriting user content. Blocked items stop upgrade writes until resolved. |
 
-`upgrade` promises to refresh package-managed assets, apply known safe migrations, avoid overwriting user custom content, expose manual-required migration scope, and run `doctor` / `validate-context` style diagnostics so remaining problems are visible. It does not automatically understand the user's project semantics, decide every Context role, repair project-local Skills, invent business verification paths, update product/deployment facts or turn an old project into the current best-practice shape.
+`upgrade` promises to refresh package-managed assets, apply known safe migrations when no blocked target conflict exists, avoid overwriting user custom content, expose manual-required migration scope, and run `doctor` / `validate-context` style diagnostics so remaining problems are visible. It does not automatically understand the user's project semantics, decide every Context role, repair project-local Skills, invent business verification paths, update product/deployment facts or turn an old project into the current best-practice shape.
 
 Examples:
 
@@ -337,7 +340,7 @@ Examples:
 - A missing `project_context/context.toml` can receive a conservative baseline manifest.
 - `project_context/areas/main/verification.md` can be registered as a `verification` role by path convention.
 - `project_context/areas/payment/api.md` without a manifest role is reported as `manual_required`; the Harness does not guess whether it is an area, contract, foundation or implementation index.
-- If `project_context/areas/main.md` already exists while `project_context/modules/main.md` still exists, the migration is `blocked` and no file is overwritten.
+- If `project_context/areas/main.md` already exists while `project_context/modules/main.md` still exists, the migration is `blocked`; `upgrade` stops before migrations or `sync`, and no file is overwritten.
 
 ## Minimal Context Files
 

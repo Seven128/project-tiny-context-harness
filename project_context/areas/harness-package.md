@@ -8,7 +8,7 @@
 
 - `init` installs Minimal Context Harness into the current repository without deleting user files, creates a default product/domain owner area, creates a default area-owned verification role Context, and creates a root `DESIGN.md` starter baseline for visual design-system facts when absent.
 - After a public npm package update, the default user path is `sdlc-harness upgrade`; direct `sync` is for releases explicitly marked `sync-only`.
-- `upgrade` creates an upgrade plan, applies only `safe_pending` migrations, refreshes managed assets through internal `sync`, runs diagnostics, and exits non-zero when `manual_required` or `blocked` follow-up remains.
+- `upgrade` creates an upgrade plan and treats `blocked` items as a write preflight failure: when blockers exist, it reports the plan and runs diagnostics without applying migrations or internal `sync`; otherwise it applies `safe_pending` migrations, refreshes managed assets through internal `sync`, runs diagnostics, and exits non-zero when `manual_required` follow-up or diagnostics remain.
 - `sync` refreshes package-managed assets only. Public `sync` does not run migrations and refuses to write when an upgrade plan contains pending, manual or blocked migration work.
 - `upgrade` creates root `DESIGN.md` for existing Harness projects when missing, without overwriting an existing user-authored design file.
 - The generated `DESIGN.md` contains neutral starter tokens and design logic; user-authored `DESIGN.md` content takes precedence over the starter baseline.
@@ -24,6 +24,7 @@
 - For product, UI/UX, system design, architecture-boundary, API/Schema, module-design, state/runtime and verification-design tasks, default Skills compile upstream principles and Context into a short current-task contract before implementation.
 - Module Design Capsule is the compact Context shape for stable module principles, minimal design logic and durable rationale that should affect future implementation or verification choices; it must stay short and decision-shaping rather than becoming a design essay.
 - The development engineer Skill raises applicable module design into the task contract before choosing implementation paths, verification claims, commands, probes or fallback/degraded paths.
+- Engineering, RFC and implementation Task Contracts include `Modularity Check: none|required|exception`; this is part of the existing Task Contract and forces oversized touched files through split-or-exception reasoning without creating a new contract type.
 - The task contract starts with `Context Delta: none|required`; this is the formal durable-fact decision point inside contract-compilation scenarios and replaces a separate second classification pass.
 - `Task Contract` is a task-local compiled artifact for implementation constraints such as goal, boundary, state, feedback, non-goals and verification signal. It is not a source of truth and is not stored in `project_context/**` by default.
 - `Context Delta: required` preserves context-first behavior: durable facts are written to `project_context/**` or `DESIGN.md` before implementation continues.
@@ -45,6 +46,7 @@
 - The development engineer Skill trigger list includes English triggers such as `software engineer`, `development plan`, `technical implementation plan` and `subagent`, plus compatibility Chinese triggers such as `实现`, `实现方案`, `实施计划` and `多开agent`, while its negative trigger rule still excludes routine coding, bug fixes, small refactors and package/release work.
 - When a user explicitly allows subagent use and the tools exist, the development engineer Skill should encourage parallel decomposition while reusing existing agents first and closing completed, idle or no-longer-needed agents with `close_agent`; this is a resource lifecycle constraint, not permission to bypass the user's explicit subagent trigger.
 - The development engineer Skill includes a lightweight abstraction / decomposition scan for new implementation, refactoring, repeated logic, module-boundary or impact-scope work; candidates are evaluated by evidence, boundary, benefit, risk and timing, split into local refactoring versus long-term boundary changes, and only stable high-value candidates should be implemented by default.
+- `sdlc-harness check-modularity` audits selected handwritten source files for physical line-count risk with `--touched`, `--file <path>`, `--base <ref>`, `--limit <n>` and optional `--fail-on-warning`; it is warning-only by default and feeds the development engineer Skill's split-or-exception judgment.
 - The development engineer Skill treats repeated, deterministic, easy-to-miss or order-sensitive manual workflows as repo-local tool/script opportunities; scripts belong in the owning module's tool area with tests, and recoverable entry points, parameter constraints and applicability boundaries belong in verification/deployment Context rather than provider-specific Skill text, artifact paths or one-off run results.
 - The product planning and development engineer Skills treat one object or capability requiring coordinated changes across multiple Context files, product domains or implementation layers as a boundary-review signal: product planning evaluates whether it should become an explicit capability, subdomain or area with a simple consumer contract, while development engineering evaluates whether a module, service, facade or stable interface should shrink future change scope before introducing hand-maintained manifests that duplicate implementation surfaces.
 - The public display name is Project Tiny Context Harness. The canonical npm package remains `project-tiny-context-harness`; `sdlc-harness` remains the bin name. Public docs and managed Makefile wrappers avoid bare `npx sdlc-harness` for ad hoc commands because npm can resolve the legacy `sdlc-harness` package name or a stale local install.
@@ -81,6 +83,7 @@
 
 - CLI command routing lives in `packages/sdlc-harness/src/commands/index.ts`.
 - Upgrade CLI option parsing for `upgrade`, `upgrade --check` and `upgrade --check --json` lives in `packages/sdlc-harness/src/commands/upgrade.ts`.
+- Modularity check CLI option parsing lives in `packages/sdlc-harness/src/commands/check-modularity.ts`; source file filtering and line-count audit logic live in `packages/sdlc-harness/src/lib/source-files.ts` and `packages/sdlc-harness/src/lib/modularity.ts`.
 - Full context export command behavior lives in `packages/sdlc-harness/src/commands/export-context.ts` and `packages/sdlc-harness/src/lib/context-export.ts`.
 - Release version surface sync lives in `tools/sync_release_version.mjs`; release publishing orchestration lives in `tools/release_npm.mjs`; GitHub Release create/update automation lives in `tools/github_release_publish.mjs`.
 - Default managed file configuration lives in `packages/sdlc-harness/src/lib/config.ts`.
@@ -107,11 +110,12 @@
 - Context graph roles must stay lightweight and optional except for the default verification Context created by `init`; do not make role-specific writing formats, monorepo-specific area names or boundary checks mandatory for ordinary projects.
 - Role placement scan is soft authoring pressure, not a semantic migration gate; `upgrade` may create conservative `area` baselines, and later agents refine obvious `contract`, `foundation`, `subdomain`, `verification`, `deployment`, `implementation-index`, `decision-rationale` or `archive` roles explicitly in `context.toml`.
 - Migration detection must first limit scope to known Harness-owned surfaces. Files outside migration scope should not be reported, and scoped files that require semantic interpretation should be `manual_required`, not guessed.
-- Blocked migrations must not write files or overwrite user content.
+- Blocked migrations are write preflight failures; `upgrade` must not apply safe migrations or internal `sync` while a `blocked` item remains, and blocked items must never overwrite user content.
 - The page product-positioning check must remain prompt-level guidance and classification input; do not turn it into "all UI changes update Context", a validator, phase gate, required PRD/UIUX artifact or mandatory template section beyond minimal Context hints.
 - AGENTS line count remains a soft budget, not a validator or CI gate; enforce slimness through placement discipline in managed guidance, Context and authoring Skill.
 - Context-first guidance must stay prompt-level and must not become a validator, phase gate, edit-order gate or required document chain.
 - Task-contract compilation is prompt-level workflow contract guidance. It must stay short and temporary, must not become a PRD / tech-plan / handoff document chain, and must not become a validator or machine-enforced edit-order gate.
+- `Modularity Check` must remain a narrow Task Contract field for engineering/RFC/implementation maintenance risk; `check-modularity` may warn or opt into CI via `--fail-on-warning`, but it must not become part of `validate-context` or claim to infer semantic module quality.
 - Temporary plan surfaces must serve the workflow contract and Context without replacing either; durable facts discovered there are extracted into Context / `DESIGN.md`, while ordinary plan details remain temporary execution cache.
 - Verification and deployment role Context must stay authoring guidance and template text; do not add machine-level log, secret, release ledger or artifact scanning to `validate-context` without an explicit product-boundary change.
 - Do not reintroduce legacy migration commands or stage assets.
@@ -137,6 +141,7 @@
 - `node --test tests/sdlc-harness/sync-init-doctor.test.mjs`
 - `node --test tests/sdlc-harness/package-source.test.mjs`
 - `node --test tests/sdlc-harness/validators.test.mjs`
+- `node --test tests/sdlc-harness/check-modularity.test.mjs`
 - `node --test tests/sdlc-harness/upgrade.test.mjs`
 
 ## Open Risks

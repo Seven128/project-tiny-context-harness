@@ -35,10 +35,11 @@ When the user asks to upgrade Tiny Context / Project Tiny Context Harness in an 
 6. Do not run standalone `sync` after a successful `upgrade` unless release notes say the update is `sync-only`, the project wrapper did not run sync, or the user explicitly asks for a managed-asset refresh.
 7. If `upgrade --check` or `upgrade` reports only `safe_pending` items and the command succeeds, do not invent additional manual cleanup.
 8. If the report includes `manual_required` or `blocked`, handle only the listed migration scope. Use `project_context/context.toml`, role placement scan and the existing area graph to decide placement. Do not guess product or business semantics.
-9. Run diagnostics after migration-scoped follow-up:
+9. If the report includes `blocked`, treat it as a write preflight failure: resolve the blocked migration scope and rerun `upgrade` before expecting safe migrations or managed asset sync to have been applied.
+10. Run diagnostics after migration-scoped follow-up:
    - `make sdlc-doctor` or the CLI `doctor`
    - `make validate-context`
-10. Report commands run, migration status, diagnostics, files changed and any remaining manual items. Use `Context: no durable project facts changed` unless the upgrade exposed or required a real long-term project fact change.
+11. Report commands run, migration status, diagnostics, files changed and any remaining manual items. Use `Context: no durable project facts changed` unless the upgrade exposed or required a real long-term project fact change.
 
 ## Manual Handling Rules
 
