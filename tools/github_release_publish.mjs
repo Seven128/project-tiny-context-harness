@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 
 const defaultRepoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageName = "project-tiny-context-harness";
+const ghCommand = commandOverrideFromEnv("SDLC_HARNESS_GH_COMMAND") ?? defaultToolCommand("gh");
+const gitCommand = commandOverrideFromEnv("SDLC_HARNESS_GIT_COMMAND") ?? defaultToolCommand("git");
 
 const args = parseArgs(process.argv.slice(2));
 
@@ -137,7 +139,7 @@ function extractReleaseBody(packet) {
 }
 
 async function gitHead() {
-  const result = await run("git", ["rev-parse", "HEAD"], { capture: true, quiet: true });
+  const result = await runTool(gitCommand, ["rev-parse", "HEAD"], { capture: true, quiet: true });
   return result.stdout.trim();
 }
 
@@ -148,7 +150,11 @@ async function ghReleaseExists(tag) {
 
 function gh(commandArgs, options = {}) {
   const repoArgs = args.repo ? ["--repo", args.repo] : [];
-  return run("gh", [...commandArgs, ...repoArgs], options);
+  return runTool(ghCommand, [...commandArgs, ...repoArgs], options);
+}
+
+function runTool(tool, commandArgs, options = {}) {
+  return run(tool.command, [...tool.args, ...commandArgs], options);
 }
 
 async function run(command, commandArgs, options = {}) {
@@ -156,8 +162,7 @@ async function run(command, commandArgs, options = {}) {
   const quiet = options.quiet ?? false;
   const allowFailure = options.allowFailure ?? false;
   return new Promise((resolve, reject) => {
-    const invocation = spawnInvocation(command, commandArgs);
-    const child = spawn(invocation.command, invocation.args, {
+    const child = spawn(command, commandArgs, {
       cwd: args.root,
       shell: false,
       stdio: capture ? ["ignore", "pipe", "pipe"] : "inherit"
@@ -192,26 +197,23 @@ async function run(command, commandArgs, options = {}) {
   });
 }
 
-function spawnInvocation(command, commandArgs) {
+function defaultToolCommand(command) {
   if (process.platform !== "win32") {
-    return { command, args: commandArgs };
+    return { command, args: [] };
   }
-  const shellCommand = [command, ...commandArgs].map(quoteWindowsArg).join(" ");
-  return {
-    command: process.env.ComSpec ?? "cmd.exe",
-    args: ["/d", "/s", "/c", shellCommand]
-  };
+  return { command: `${command}.exe`, args: [] };
 }
 
-function quoteWindowsArg(value) {
-  const text = String(value);
-  if (text === "") {
-    return "\"\"";
+function commandOverrideFromEnv(name) {
+  const raw = process.env[name];
+  if (!raw) {
+    return null;
   }
-  if (!/[ \t\n\v"&|<>^]/.test(text)) {
-    return text;
+  const parsed = JSON.parse(raw);
+  if (!Array.isArray(parsed) || parsed.length === 0 || parsed.some((value) => typeof value !== "string")) {
+    throw new Error(`${name} must be a JSON string array like ["node","script.mjs"].`);
   }
-  return `"${text.replace(/(\\*)"/g, "$1$1\\\"").replace(/\\+$/g, "$&$&")}"`;
+  return { command: parsed[0], args: parsed.slice(1) };
 }
 
 function slash(value) {
