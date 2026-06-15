@@ -15,6 +15,7 @@ on:
         type: choice
         options:
           - validate-context
+          - validate-code-modularity
           - validate-harness
 
 jobs:
@@ -22,6 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
@@ -33,5 +36,6 @@ jobs:
       - name: Run harness gate
         run: make "${HARNESS_GATE}"
         env:
-          HARNESS_GATE: ${{ github.event.inputs.gate || 'validate-context' }}
+          HARNESS_GATE: ${{ github.event.inputs.gate || 'validate-harness' }}
+          SDLC_MODULARITY_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before || '' }}
 # pjsdlc:sdlc-harness:github-workflow:end

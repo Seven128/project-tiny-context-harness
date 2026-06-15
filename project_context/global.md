@@ -50,7 +50,7 @@
 - `npm test --workspace project-tiny-context-harness`
 - `node packages/sdlc-harness/dist/cli.js package sync-source`
 - `node packages/sdlc-harness/dist/cli.js package check-source`
-- `make validate-context`
+- `make validate-harness`
 - `git diff --check`
 
 ## Current State
@@ -61,6 +61,7 @@
 - Ad hoc CLI docs and managed Makefile wrappers use the canonical package-qualified entry `npx --yes --package project-tiny-context-harness@latest sdlc-harness`; bare `npx sdlc-harness` is treated as ambiguous because it can resolve the legacy npm package name or a stale local binary.
 - Current CLI commands guard unsupported future schema major versions before applying v4 assumptions; write commands fail before modifying files.
 - `validate-context` validates the Context graph structure, role names, paths and field shapes; non-area roles are semantic labels rather than writing-template gates.
+- `validate-code-modularity` enforces touched handwritten source line-count risk as a separate maintainability gate; `validate-harness` composes `validate-context` and `validate-code-modularity`.
 - Managed guidance and default Context templates distinguish verification/deployment path facts from test reports and release ledgers: area files own product/domain facts, `verification` role files own repeatable validation paths, and optional `deployment` role files own repeatable deploy/runtime/bootstrap paths.
 - Managed guidance documents the canonical loops `context -> implementation -> verification -> context drift check` and `implementation discovery -> context update if long-term fact changed -> implementation alignment -> verification`.
 - Old stage-based assets, state files and work-product trees are removed from the current source tree.

@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -18,6 +19,247 @@ test("Minimal Context validators accept complete project_context facts", async (
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("validate-context ignores code modularity findings and waiver metadata", async () => {
+  const root = await createContextGitProject({
+    configExtra: `
+modularity:
+  waivers:
+    - path: src/large.ts
+      category: hurry
+      reason: "Invalid category should not affect validate-context."
+      future_split_boundary: "Split later."
+`
+  });
+  try {
+    const report = await runValidator(root, "validate-context");
+    assert.deepEqual(report.errors, []);
+    assert.match(report.info.join("\n"), /Minimal Context validation passed/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("validate-code-modularity fails on over-limit touched handwritten source", async () => {
+  const root = await createContextGitProject();
+  try {
+    const report = await runValidator(root, "validate-code-modularity");
+    assert.match(report.errors.join("\n"), /src\/large\.ts: 3 physical lines exceeds limit 2/);
+    assert.match(report.info.join("\n"), /code modularity audited=1 warning=1 waived=0 limit=2/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("validate-harness fails when code modularity fails", async () => {
+  const root = await createContextGitProject();
+  try {
+    const report = await runValidator(root, "validate-harness");
+    assert.match(report.info.join("\n"), /Minimal Context validation passed/);
+    assert.match(report.errors.join("\n"), /src\/large\.ts: 3 physical lines exceeds limit 2/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("validate-harness fails when context validation fails", async () => {
+  const root = await createContextProject({
+    global: `# Project / Delivery Context
+
+## Project Goal
+
+- Ship the package.
+`
+  });
+  try {
+    const report = await runValidator(root, "validate-harness");
+    assert.match(report.errors.join("\n"), /Non-goals \/ Boundaries/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("omitted modularity policy behaves as scoped_waivers and allows valid waivers", async () => {
+  const root = await createContextGitProject({
+    configExtra: `
+modularity:
+  limit: 2
+  waivers:
+    - path: src/large.ts
+      category: legacy_migration
+      reason: "Existing legacy module exceeds the hard source size bound."
+      future_split_boundary: "Extract provider adapters and retry policy."
+`
+  });
+  try {
+    const report = await runValidator(root, "validate-code-modularity");
+    assert.deepEqual(report.errors, []);
+    assert.match(report.info.join("\n"), /waived: src\/large\.ts: 3 physical lines exceeds limit 2 but is waived as legacy_migration/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("explicit scoped_waivers policy allows valid waivers", async () => {
+  const root = await createContextGitProject({
+    configExtra: `
+modularity:
+  limit: 2
+  policy: scoped_waivers
+  waivers:
+    - path: src/large.ts
+      category: legacy_migration
+      reason: "Existing legacy module exceeds the hard source size bound."
+      future_split_boundary: "Extract provider adapters and retry policy."
+`
+  });
+  try {
+    const report = await runValidator(root, "validate-code-modularity");
+    assert.deepEqual(report.errors, []);
+    assert.match(report.info.join("\n"), /waived: src\/large\.ts: 3 physical lines exceeds limit 2 but is waived as legacy_migration/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("strict_except_generated policy rejects any waiver config", async () => {
+  const root = await createContextGitProject({
+    configExtra: `
+modularity:
+  limit: 2
+  policy: strict_except_generated
+  waivers:
+    - path: src/large.ts
+      category: legacy_migration
+      reason: "Existing legacy module exceeds the hard source size bound."
+      future_split_boundary: "Extract provider adapters and retry policy."
+`
+  });
+  try {
+    const report = await runValidator(root, "validate-code-modularity");
+    assert.match(report.errors.join("\n"), /modularity\.waivers is not allowed when modularity\.policy is strict_except_generated/);
+    assert.match(report.errors.join("\n"), /src\/large\.ts: 3 physical lines exceeds limit 2/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("strict_except_generated policy still skips generated touched source", async () => {
+  const root = await createContextProject({
+    configExtra: `
+modularity:
+  limit: 1
+  policy: strict_except_generated
+`
+  });
+  try {
+    await mkdir(path.join(root, "src"), { recursive: true });
+    await writeFile(path.join(root, "src", "generated.ts"), lines(["// Code generated by tool. DO NOT EDIT.", "one"]), "utf8");
+    run("git", ["init"], root);
+    run("git", ["config", "user.name", "Codex"], root);
+    run("git", ["config", "user.email", "codex@example.local"], root);
+    run("git", ["add", "."], root);
+    run("git", ["commit", "-m", "initial"], root);
+    await writeFile(
+      path.join(root, "src", "generated.ts"),
+      lines(["// Code generated by tool. DO NOT EDIT.", "one", "two", "three"]),
+      "utf8"
+    );
+
+    const report = await runValidator(root, "validate-code-modularity");
+    assert.deepEqual(report.errors, []);
+    assert.match(report.info.join("\n"), /code modularity audited=0 warning=0 waived=0 limit=1/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("unknown modularity policy fails validate-code-modularity and validate-harness", async () => {
+  const root = await createContextGitProject({
+    configExtra: `
+modularity:
+  limit: 2
+  policy: freestyle
+`
+  });
+  try {
+    const codeReport = await runValidator(root, "validate-code-modularity");
+    const harnessReport = await runValidator(root, "validate-harness");
+    assert.match(
+      codeReport.errors.join("\n"),
+      /modularity\.policy must be one of scoped_waivers, strict_except_generated/
+    );
+    assert.match(
+      harnessReport.errors.join("\n"),
+      /modularity\.policy must be one of scoped_waivers, strict_except_generated/
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+for (const [name, configExtra, pattern] of [
+  [
+    "unknown waiver category",
+    `
+modularity:
+  limit: 2
+  waivers:
+    - path: src/large.ts
+      category: hurry
+      reason: "This should not pass."
+      future_split_boundary: "Split later."
+`,
+    /category must be one of/
+  ],
+  [
+    "missing reason",
+    `
+modularity:
+  limit: 2
+  waivers:
+    - path: src/large.ts
+      category: legacy_migration
+      future_split_boundary: "Split later."
+`,
+    /reason must be a non-empty string/
+  ],
+  [
+    "missing future split boundary",
+    `
+modularity:
+  limit: 2
+  waivers:
+    - path: src/large.ts
+      category: legacy_migration
+      reason: "This should not pass."
+`,
+    /future_split_boundary must be a non-empty string/
+  ],
+  [
+    "outside-root path",
+    `
+modularity:
+  limit: 2
+  waivers:
+    - path: ../outside.ts
+      category: legacy_migration
+      reason: "This should not pass."
+      future_split_boundary: "Split later."
+`,
+    /path must stay inside the project root/
+  ]
+]) {
+  test(`validate-code-modularity rejects ${name}`, async () => {
+    const root = await createContextGitProject({ configExtra });
+    try {
+      const report = await runValidator(root, "validate-code-modularity");
+      assert.match(report.errors.join("\n"), pattern);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+}
 
 test("validate-context accepts role-based context graph entries", async () => {
   const root = await createContextProject({
@@ -306,7 +548,7 @@ test("old stage validators are not supported by Minimal Context Harness", async 
     const report = await runValidator(root, "validate-dev");
     assert.deepEqual(report.info, []);
     assert.match(report.errors.join("\n"), /unknown validator: validate-dev/);
-    assert.match(report.errors.join("\n"), /Minimal Context Harness supports validate-context and validate-harness only/);
+    assert.match(report.errors.join("\n"), /Minimal Context Harness supports validate-context, validate-code-modularity and validate-harness only/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -321,6 +563,7 @@ async function createContextProject(overrides = {}) {
     `core:
   package: project-tiny-context-harness
   schema_version: "${overrides.schemaVersion ?? "4"}"
+${overrides.configExtra ?? ""}
 `,
     "utf8"
   );
@@ -349,6 +592,37 @@ async function createContextProject(overrides = {}) {
     await writeFile(target, content, "utf8");
   }
   return root;
+}
+
+async function createContextGitProject(overrides = {}) {
+  const root = await createContextProject({
+    ...overrides,
+    configExtra:
+      overrides.configExtra ??
+      `
+modularity:
+  limit: 2
+`
+  });
+  await mkdir(path.join(root, "src"), { recursive: true });
+  await writeFile(path.join(root, "src", "large.ts"), lines(["one", "two"]), "utf8");
+  run("git", ["init"], root);
+  run("git", ["config", "user.name", "Codex"], root);
+  run("git", ["config", "user.email", "codex@example.local"], root);
+  run("git", ["add", "."], root);
+  run("git", ["commit", "-m", "initial"], root);
+  await writeFile(path.join(root, "src", "large.ts"), lines(["one", "two", "three"]), "utf8");
+  return root;
+}
+
+function run(command, args, cwd) {
+  const result = spawnSync(command, args, { cwd, encoding: "utf8" });
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  return result;
+}
+
+function lines(values) {
+  return `${values.join("\n")}\n`;
 }
 
 function completeGlobalContext() {

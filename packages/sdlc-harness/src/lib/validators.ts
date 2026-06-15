@@ -2,6 +2,7 @@ import path from "node:path";
 import { readConfig } from "./config.js";
 import { harnessPath, harnessRoot } from "./harness-root.js";
 import { listFiles, pathExists, readText } from "./fs.js";
+import { runModularityCheck } from "./modularity.js";
 import { unsupportedSchemaMessage } from "./schema-guard.js";
 
 export interface ValidatorReport {
@@ -44,7 +45,8 @@ interface ContextManifest {
 
 const VALIDATORS: Record<string, Validator> = {
   "validate-context": validateContext,
-  "validate-harness": validateContext
+  "validate-code-modularity": validateCodeModularity,
+  "validate-harness": validateHarness
 };
 
 const GLOBAL_REQUIRED_SECTIONS = [
@@ -116,11 +118,44 @@ export async function runValidator(projectRoot: string, gate: string): Promise<V
     return {
       info: [],
       errors: [
-        `unknown validator: ${gate}. Minimal Context Harness supports validate-context and validate-harness only.`
+        `unknown validator: ${gate}. Minimal Context Harness supports validate-context, validate-code-modularity and validate-harness only.`
       ]
     };
   }
   return validator(projectRoot);
+}
+
+async function validateHarness(projectRoot: string): Promise<ValidatorReport> {
+  const contextReport = await validateContext(projectRoot);
+  const modularityReport = await validateCodeModularity(projectRoot);
+  return {
+    info: [...contextReport.info, ...modularityReport.info],
+    errors: [...contextReport.errors, ...modularityReport.errors]
+  };
+}
+
+async function validateCodeModularity(projectRoot: string): Promise<ValidatorReport> {
+  const report = await runModularityCheck(projectRoot, { touched: true });
+  const info = [
+    `code modularity audited=${report.files.length} warning=${report.warnings.length} waived=${report.waivedWarnings.length} limit=${report.limit}`
+  ];
+  if (report.files.length === 0) {
+    info.push("No handwritten source files matched the selected scope.");
+  }
+  for (const file of report.files) {
+    const prefix = file.overLimit && file.waived ? "waived" : file.overLimit ? "over-limit" : "ok";
+    info.push(`${prefix}: ${file.relativePath} ${file.lines} lines`);
+  }
+  for (const waiver of report.waivedWarnings) {
+    info.push(`waived: ${waiver}`);
+  }
+  if (report.errors.length === 0 && report.warnings.length === 0) {
+    info.push("Code modularity validation passed");
+  }
+  return {
+    info,
+    errors: [...report.errors, ...report.warnings]
+  };
 }
 
 async function validateContext(projectRoot: string): Promise<ValidatorReport> {

@@ -19,6 +19,7 @@ export const commands: Record<string, CommandHandler> = {
   "export-context": exportContext,
   validate,
   "validate-context": (args) => validate(["validate-context", ...args]),
+  "validate-code-modularity": (args) => validate(["validate-code-modularity", ...args]),
   "validate-harness": (args) => validate(["validate-harness", ...args]),
   package: packageSource
 };
@@ -35,8 +36,10 @@ export function help(): void {
                        Warn when selected handwritten source files exceed a line-count limit
   export-context --full|--code|--all [--output <path>] [--check]
                        Export a temporary Context summary or code implementation Markdown artifact
-  validate <gate>      Run a Harness validation gate (Minimal Context only)
+  validate <gate>      Run a Harness validation gate
   validate-context     Validate Minimal Context fact-source recoverability
-  validate-harness     Compatibility alias for validate-context
+  validate-code-modularity
+                       Enforce touched handwritten source file modularity
+  validate-harness     Run validate-context and validate-code-modularity
   package <subcommand> Maintain package canonical source`);
 }

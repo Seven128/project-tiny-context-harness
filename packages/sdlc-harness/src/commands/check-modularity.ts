@@ -35,24 +35,30 @@ export async function checkModularity(args: string[]): Promise<void> {
       limit: parsed.limit
     });
     console.log(
-      `check-modularity audited=${report.files.length} warning=${report.warnings.length} limit=${report.limit}`
+      `check-modularity audited=${report.files.length} warning=${report.warnings.length} limit=${report.limit} waived=${report.waivedWarnings.length}`
     );
     if (report.files.length === 0) {
       console.log("No handwritten source files matched the selected scope.");
     }
     for (const file of report.files) {
-      const prefix = file.overLimit ? "over-limit" : "ok";
+      const prefix = file.overLimit && file.waived ? "waived" : file.overLimit ? "over-limit" : "ok";
       console.log(`${prefix}: ${file.relativePath} ${file.lines} lines`);
+    }
+    for (const error of report.errors) {
+      console.error(`error: ${error}`);
     }
     for (const warning of report.warnings) {
       console.warn(`warning: ${warning}`);
     }
+    for (const waiver of report.waivedWarnings) {
+      console.warn(`waived: ${waiver}`);
+    }
     if (report.warnings.length > 0) {
       console.warn(
-        "warning: over-limit touched files need a split, or final handoff should include `Modularity: exception documented` with file, reason and future boundary."
+        "warning: over-limit touched files need a split or, when modularity.policy is scoped_waivers, a valid <harnessRoot>/config.yaml modularity waiver with file, reason and future split boundary."
       );
     }
-    if (report.warnings.length > 0 && parsed.failOnWarning) {
+    if (report.errors.length > 0 || (report.warnings.length > 0 && parsed.failOnWarning)) {
       process.exitCode = 1;
     }
   } catch (error) {
@@ -150,5 +156,7 @@ function helpText(): string {
   check-modularity --base <ref> [--limit 300] [--fail-on-warning]
 
 Audits selected handwritten source files for physical line-count risk.
-The default is warning-only; --fail-on-warning lets projects opt into CI enforcement.`;
+The default is warning-only; --fail-on-warning lets projects opt into CI enforcement.
+Generated configs default to modularity.policy: strict_except_generated; omitted policy is treated as scoped_waivers for compatibility.
+Over-limit files can be waived only through <harnessRoot>/config.yaml modularity.waivers when policy is scoped_waivers.`;
 }

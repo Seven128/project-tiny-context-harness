@@ -184,7 +184,7 @@ For existing projects:
 npx --yes --package project-tiny-context-harness@latest sdlc-harness init --adopt
 ```
 
-`init` creates `project_context/context.toml`, `project_context/global.md`, `project_context/architecture.md`, `project_context/areas/main.md`, `project_context/areas/main/verification.md`, agent guidance, Context authoring Skills, a full-project export Skill, a Harness upgrade Skill, managed templates/tools, a Makefile include and `.github/workflows/harness.yml`. The generated workflow runs only the selected Harness gate, `validate-context` or `validate-harness`; maintainer-only package tests and source-drift checks are intentionally kept out of consumer projects. It does not create stage work-product trees, lifecycle state or stage skills by default.
+`init` creates `project_context/context.toml`, `project_context/global.md`, `project_context/architecture.md`, `project_context/areas/main.md`, `project_context/areas/main/verification.md`, agent guidance, Context authoring Skills, a full-project export Skill, a Harness upgrade Skill, managed templates/tools, a Makefile include and `.github/workflows/harness.yml`. The generated workflow runs only the selected Harness gate: `validate-context`, `validate-code-modularity` or the composite `validate-harness`; maintainer-only package tests and source-drift checks are intentionally kept out of consumer projects. It does not create stage work-product trees, lifecycle state or stage skills by default.
 
 ## FAQ
 
@@ -235,14 +235,43 @@ Use `npx --no-install sdlc-harness ...` only when you explicitly want the alread
 | Combined project export | `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --all [--check]` | Creates both default temporary exports under `tmp/sdlc/context-exports/**`. |
 | Project Context export | `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --full [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary Context summary artifact. It is not Context and must not be registered in `project_context/context.toml`. |
 | Code implementation export | `npx --yes --package project-tiny-context-harness@latest sdlc-harness export-context --code [--output tmp/sdlc/context-exports/name.md] [--check]` | Creates a temporary single-file code implementation artifact. It is not Context and must not be registered in `project_context/context.toml`. |
-| Modularity check | `npx --yes --package project-tiny-context-harness@latest sdlc-harness check-modularity --touched [--limit 300] [--fail-on-warning]` | Warns when selected handwritten source files exceed a physical line-count limit; `--file <path>` and `--base <ref>` select explicit files or branch changes. |
+| Modularity check | `npx --yes --package project-tiny-context-harness@latest sdlc-harness check-modularity --touched [--limit 300] [--fail-on-warning]` | Reports selected handwritten source files over the physical line-count limit; `--file <path>` and `--base <ref>` select explicit files or branch changes, and config waivers are reported distinctly. |
+| Code modularity validation | `make validate-code-modularity` | Hard gate for touched handwritten source modularity; CI can set `SDLC_MODULARITY_BASE=<ref>` to audit PR/base changes. |
+| Harness validation | `make validate-harness` | Composite gate for `validate-context` and `validate-code-modularity`. |
 | Context validation | `npx --yes --package project-tiny-context-harness@latest sdlc-harness validate-context`, `make validate-context` | Checks required project recovery fields, Context graph metadata, declared paths/roles and fake test-execution claims. |
 | Diagnostics | `make sdlc-doctor` or `npx --yes --package project-tiny-context-harness@latest sdlc-harness doctor` | Reports Harness root, package version, schema version and required Minimal Context paths. |
 | Package source checks | `sdlc-harness package sync-source`, `sdlc-harness package check-source` | Maintainer-only commands for keeping package canonical assets aligned with the source workspace. |
 
 For product, UI/UX and engineering tasks that touch design intent, API/Schema, state/runtime behavior, architecture boundaries or verification design, the default Skills compile a short current-task contract before implementation. The contract starts with `Context Delta: none|required`; `required` preserves context-first behavior, while `none` means the task can proceed against existing Context. For engineering, RFC and implementation work, the existing Task Contract also includes `Modularity Check: none|required|exception` so oversized touched files trigger split-or-exception reasoning. For module design work, the development engineer Skill also compiles `Applicable Module Design`: the relevant principles, minimal design logic and durable rationale that control the current implementation or verification choice. The task contract and Contract Conformance are handoff evidence, not new PRD, tech-plan, validator or gate surfaces.
 
-`sdlc-harness check-modularity` supports that field by auditing selected handwritten source files for physical line-count risk. It is warning-only by default and is not `validate-context`; teams that want CI enforcement can opt in with `--fail-on-warning`. The command provides file/line facts, while the agent still decides `none`, `required` or `exception` through the development engineer decomposition guidance.
+`sdlc-harness check-modularity` supports that field by auditing selected handwritten source files for physical line-count risk. It is warning-only by default as a report command, while `validate-code-modularity` and `validate-harness` run it as a hard gate. The gate is not `validate-context`: `validate-context` remains pure Context recoverability. When `policy` is `scoped_waivers`, over-limit exceptions must be backed by `<harnessRoot>/config.yaml` `modularity.waivers` entries with `path`, narrow `category`, `reason` and `future_split_boundary`; handoff prose alone is not a machine waiver.
+
+### Modularity Policy
+
+Newly generated Harness configs default to `strict_except_generated`, which enforces the touched/PR handwritten source limit without legacy waivers:
+
+```yaml
+modularity:
+  limit: 300
+  policy: strict_except_generated
+```
+
+Generated and non-source files are still auto-skipped when they match existing lock/build/dist/path exclusions or generated-file headers such as `@generated` / `Code generated ... DO NOT EDIT`. `strict_except_generated` does not allow `modularity.waivers`; any configured waiver fails the modularity gate.
+
+Use `scoped_waivers` when a small number of legacy exceptions must be explicit and time-bounded:
+
+```yaml
+modularity:
+  limit: 300
+  policy: scoped_waivers
+  waivers:
+    - path: src/legacy/big-file.ts
+      category: legacy_migration
+      reason: "Existing legacy module exceeds the hard source size bound."
+      future_split_boundary: "Extract provider adapters and retry policy."
+```
+
+Omitting `policy` behaves the same as `scoped_waivers` for compatibility with existing projects. Allowed waiver categories are `generated`, `third_party_reference`, `legacy_migration`, `aggregate_styles` and `fixture_snapshot`.
 
 Multilingual trigger phrases are compatibility details. Public README, npm and launch copy stay English-first, and public/package-managed surfaces must remain English-complete; literal non-English examples are documented only where they explain generated Skill matching and must not be the sole activation path.
 
@@ -431,10 +460,11 @@ npx --yes --package project-tiny-context-harness@latest sdlc-harness validate-co
 npx --yes --package project-tiny-context-harness@latest sdlc-harness doctor
 make sdlc-doctor
 make validate-context
+make validate-code-modularity
 make validate-harness
 ```
 
-`make validate-harness` is a compatibility alias for `validate-context` in vNext projects.
+`make validate-harness` runs `validate-context` and the hard touched-source modularity gate.
 
 ## Current Boundary
 

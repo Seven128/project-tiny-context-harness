@@ -11,6 +11,10 @@ export function defaultConfig(root: string): HarnessConfig {
       package: CANONICAL_CORE_PACKAGE,
       schema_version: CURRENT_SCHEMA_VERSION
     },
+    modularity: {
+      limit: 300,
+      policy: "strict_except_generated"
+    },
     managed_files: [
       { path: "AGENTS.md", strategy: "merge-block" },
       { path: "Makefile", strategy: "merge-block" },
@@ -51,6 +55,7 @@ export function normalizeConfig(value: Partial<HarnessConfig>, root = ".agent"):
       package: value.core?.package ?? fallback.core.package,
       schema_version: value.core?.schema_version ?? fallback.core.schema_version
     },
+    modularity: value.modularity,
     managed_files: value.managed_files ?? fallback.managed_files,
     never_overwrite: value.never_overwrite ?? fallback.never_overwrite
   };

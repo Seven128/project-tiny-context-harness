@@ -1,6 +1,26 @@
 core:
   package: project-tiny-context-harness
   schema_version: "4"
+modularity:
+  limit: 300
+  policy: scoped_waivers
+  waivers:
+    - path: packages/sdlc-harness/src/lib/validators.ts
+      category: legacy_migration
+      reason: Existing combined Context and gate validator module predates the modularity gate.
+      future_split_boundary: Extract code modularity validation and Context manifest validation into separate validator modules.
+    - path: tests/sdlc-harness/validators.test.mjs
+      category: legacy_migration
+      reason: Existing combined validator regression suite predates the modularity gate.
+      future_split_boundary: Split Context manifest validation, code modularity validation and composite gate tests into focused files.
+    - path: tests/sdlc-harness/sync-init-doctor.test.mjs
+      category: legacy_migration
+      reason: Existing end-to-end init/sync/doctor regression suite predates the modularity gate.
+      future_split_boundary: Split init asset assertions, sync behavior and CLI validation smoke tests into focused files.
+    - path: tools/consumer_lab_full_test.mjs
+      category: legacy_migration
+      reason: Existing consumer lab orchestration script predates the modularity gate.
+      future_split_boundary: Extract command profile definitions and report generation helpers from the orchestration flow.
 managed_files:
   - path: AGENTS.md
     strategy: merge-block

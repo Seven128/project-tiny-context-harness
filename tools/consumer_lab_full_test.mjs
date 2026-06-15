@@ -159,9 +159,9 @@ export async function runConsumerLabFullTest(rawOptions) {
   commandCheck("CLI lifecycle", "sync idempotency", "npx", localHarnessArgs("sync"));
   commandCheck("CLI lifecycle", "upgrade idempotency", "npx", localHarnessArgs("upgrade"));
   commandCheck("CLI validators", "validate-context", "npx", localHarnessArgs("validate-context"));
-  commandCheck("CLI validators", "validate-harness compatibility alias", "npx", localHarnessArgs("validate-harness"));
+  commandCheck("CLI validators", "validate-harness composite gate", "npx", localHarnessArgs("validate-harness"));
   commandCheck("Makefile gates", "make validate-context", "make", [localHarnessMake, "validate-context"]);
-  commandCheck("Makefile gates", "make validate-harness compatibility alias", "make", [localHarnessMake, "validate-harness"]);
+  commandCheck("Makefile gates", "make validate-harness composite gate", "make", [localHarnessMake, "validate-harness"]);
 
   await verifyManagedAssets(options.labDir, add);
   await verifyAdoptAndConfiguredRoots(options.labDir, tarballPath, add);
@@ -341,7 +341,7 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
   const configuredMakeHarness = run("make", ["SDLC_HARNESS=npx --no-install sdlc-harness", "validate-harness"], configuredDir);
   add({
     area: "Configurable root",
-    evidence: "Makefile compatibility gate consumes configured .workflow root",
+    evidence: "Makefile composite gate consumes configured .workflow root",
     command: "make validate-harness",
     status: configuredMakeHarness.status === 0 ? "PASS" : "FAIL",
     details: trimOutput(`${configuredMakeHarness.stdout}\n${configuredMakeHarness.stderr}`)

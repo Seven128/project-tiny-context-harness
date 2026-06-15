@@ -33,6 +33,9 @@ try {
 
   const config = await readFile(path.join(root, ".agent/config.yaml"), "utf8");
   assert.match(config, /schema_version: "4"/);
+  assert.match(config, /modularity:/);
+  assert.match(config, /limit: 300/);
+  assert.match(config, /policy: strict_except_generated/);
   assert.match(config, /project_context\/\*\*/);
   assert.match(config, /\.agent\/skills/);
   assert.match(config, /\.agent\/pjsdlc_managed\/context_templates/);
@@ -153,6 +156,9 @@ try {
   const workflow = await readFile(path.join(root, ".github/workflows/harness.yml"), "utf8");
   assert.match(workflow, /Run harness gate/);
   assert.match(workflow, /validate-context/);
+  assert.match(workflow, /validate-code-modularity/);
+  assert.match(workflow, /validate-harness/);
+  assert.match(workflow, /SDLC_MODULARITY_BASE/);
   assert.match(workflow, /Prepare source workspace CLI/);
   assert.match(workflow, /hashFiles\('packages\/sdlc-harness\/package\.json'\) != ''/);
   assert.match(workflow, /npm run build --workspace project-tiny-context-harness/);
@@ -161,6 +167,8 @@ try {
   assert.doesNotMatch(workflow, /npm publish/);
   const managedMake = await readFile(path.join(root, ".agent/pjsdlc_managed/make/sdlc-harness.mk"), "utf8");
   assert.match(managedMake, /validate-context/);
+  assert.match(managedMake, /validate-code-modularity/);
+  assert.match(managedMake, /SDLC_MODULARITY_BASE/);
   assert.match(managedMake, /npx --yes --package project-tiny-context-harness@latest sdlc-harness/);
   assert.match(managedMake, /^sdlc-doctor:/m);
   assert.match(managedMake, /^sdlc-sync:/m);
@@ -374,9 +382,10 @@ try {
   await stat(path.join(cliRoot, "DESIGN.md"));
   const cliValidate = spawnSync(process.execPath, [cliPath, "validate-context"], { cwd: cliRoot, encoding: "utf8" });
   assert.equal(cliValidate.status, 0, `${cliValidate.stdout}\n${cliValidate.stderr}`);
-  const cliValidateHarnessAlias = spawnSync(process.execPath, [cliPath, "validate-harness"], { cwd: cliRoot, encoding: "utf8" });
-  assert.equal(cliValidateHarnessAlias.status, 0, `${cliValidateHarnessAlias.stdout}\n${cliValidateHarnessAlias.stderr}`);
-  assert.match(cliValidateHarnessAlias.stdout, /Minimal Context validation passed/);
+  const cliValidateHarness = spawnSync(process.execPath, [cliPath, "validate-harness"], { cwd: cliRoot, encoding: "utf8" });
+  assert.equal(cliValidateHarness.status, 0, `${cliValidateHarness.stdout}\n${cliValidateHarness.stderr}`);
+  assert.match(cliValidateHarness.stdout, /Minimal Context validation passed/);
+  assert.match(cliValidateHarness.stdout, /Code modularity validation passed/);
   await mkdir(path.join(cliRoot, ".codex/pjsdlc_managed/override_skills"), { recursive: true });
   await writeFile(path.join(cliRoot, ".codex/pjsdlc_managed/override_skills/context_uiux_design.md"), "old local UI rule\n", "utf8");
   const cliSyncWithDeprecatedOverride = spawnSync(process.execPath, [cliPath, "sync"], { cwd: cliRoot, encoding: "utf8" });

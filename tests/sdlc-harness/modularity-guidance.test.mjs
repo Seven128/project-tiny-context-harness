@@ -20,23 +20,30 @@ test("managed guidance includes Modularity Check workflow contract hints", () =>
   }
   for (const skill of [managedSkill, packagedSkill]) {
     assert.match(skill, /Modularity Check: none\|required\|exception/);
-    assert.match(skill, /check-modularity --touched/);
-    assert.match(skill, /exception documented/);
+    assert.match(skill, /validate-code-modularity/);
+    assert.match(skill, /strict_except_generated/);
+    assert.match(skill, /scoped_waivers/);
+    assert.match(skill, /modularity\.waivers/);
     assert.match(skill, /service \/ facade/);
     assert.match(skill, /verification helper/);
   }
   for (const makefile of [managedMake, packagedMake]) {
     assert.match(makefile, /sdlc-check-modularity/);
-    assert.match(makefile, /check-modularity --touched/);
+    assert.match(makefile, /validate-code-modularity/);
+    assert.match(makefile, /SDLC_MODULARITY_SCOPE/);
   }
 });
 
-test("public docs describe Modularity Check as warning-only and outside validate-context", () => {
+test("public docs describe Modularity Check hard gate and scoped waivers", () => {
   for (const doc of [read("README.md"), read("packages/sdlc-harness/README.md")]) {
     assert.match(doc, /Modularity Check: none\|required\|exception/);
-    assert.match(doc, /warning-only by default/);
-    assert.match(doc, /--fail-on-warning/);
-    assert.match(doc, /is not `validate-context`/);
+    assert.match(doc, /validate-code-modularity/);
+    assert.match(doc, /validate-context` remains pure Context recoverability/);
+    assert.match(doc, /Modularity Policy/);
+    assert.match(doc, /Newly generated Harness configs default to `strict_except_generated`/);
+    assert.match(doc, /strict_except_generated/);
+    assert.match(doc, /scoped_waivers/);
+    assert.match(doc, /modularity\.waivers/);
   }
 });
 

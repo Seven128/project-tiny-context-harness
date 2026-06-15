@@ -27,6 +27,7 @@ This file is the restrained architecture context for the source repository. It i
 - Skill customization uses separate project-local Skills such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` and `<harnessRoot>/skills/development_engineer/SKILL.md`; `sync` overwrites package-managed default `context_*` Skills and leaves those separate local Skills untouched. Project-local Skill front matter `description` trigger keywords are expected to stay aligned with the default Skill trigger intent and the project `AGENTS.md` role-trigger rule.
 - `package sync-source` copies source workspace assets into `packages/sdlc-harness/assets/**`; `package check-source` verifies no drift.
 - `validate-context` checks Context recoverability, validates graph metadata, treats non-area roles as semantic labels, and rejects fake verification-result claims.
+- `validate-code-modularity` checks touched handwritten source modularity separately from Context recoverability; `validate-harness` composes both gates.
 
 ## Design Rationale
 
@@ -47,7 +48,7 @@ This file is the restrained architecture context for the source repository. It i
 - `npm test --workspace project-tiny-context-harness`
 - `node packages/sdlc-harness/dist/cli.js package sync-source`
 - `node packages/sdlc-harness/dist/cli.js package check-source`
-- `make validate-context`
+- `make validate-harness`
 - `git diff --check`
 
 ## Open Risks
