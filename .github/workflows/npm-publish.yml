@@ -6,7 +6,7 @@ on:
       expected_version:
         description: "Must match packages/sdlc-harness/package.json version."
         required: true
-        default: "0.2.53"
+        default: "0.2.54"
       dry_run:
         description: "Run all checks and pack without publishing."
         required: true
