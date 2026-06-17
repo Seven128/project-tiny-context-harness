@@ -5,6 +5,13 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const read = (relativePath) => readFile(path.join(repoRoot, relativePath), "utf8");
+const frontMatterDescription = (content) => {
+  const match = content.match(/^---\s*\r?\n(?<frontMatter>[\s\S]*?)\r?\n---/);
+  assert.ok(match?.groups?.frontMatter, "expected skill front matter");
+  const description = match.groups.frontMatter.match(/^description:\s*(?<description>.*)$/m);
+  assert.ok(description?.groups?.description, "expected skill description");
+  return description.groups.description.trim();
+};
 
 const [
   sourceAgents,
@@ -42,8 +49,17 @@ for (const content of [rootReadme, packageReadme, spec, sourceContext]) {
 }
 
 for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
-  assert.match(content, /description:.*acceptance checklist for this plan.*goal-mode prompt.*target-mode prompt/s);
-  assert.match(content, /description:.*为这份方案生成验收清单.*长程任务方案验收/s);
+  const description = frontMatterDescription(content);
+  assert.ok(description.length <= 900, `expected description <= 900 chars, got ${description.length}`);
+  assert.match(description, /acceptance checklist for this plan/);
+  assert.match(description, /goal-mode prompt for this implementation plan/);
+  assert.match(description, /target-mode prompt for this plan/);
+  assert.match(description, /为这份方案生成验收清单/);
+  assert.match(description, /tmp\/ty-context\/plan-acceptance/);
+  assert.match(content, /long-task plan acceptance/);
+  assert.match(content, /audit this plan for acceptance criteria/);
+  assert.match(content, /长程任务方案验收/);
+  assert.match(content, /为这份 md 生成目标模式验收文本/);
   assert.match(content, /Package-Managed Boundary/);
   assert.match(content, /tmp\/ty-context\/plan-acceptance/);
   assert.match(content, /Context confirmation gate/i);
