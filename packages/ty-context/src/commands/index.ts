@@ -28,7 +28,7 @@ export function help(): void {
   console.log(`ty-context commands:
   init [--adopt] [--harness-folder <path>]
                        Initialize/adopt a project; without --harness-folder, choose target agent first
-  sync                 Refresh managed assets; refuses when upgrade migrations are pending
+  sync                 Refresh managed assets; does not run migrations
   upgrade [--check] [--json]
                        Run safe migrations, sync managed assets and doctor
   doctor               Diagnose project configuration and drift

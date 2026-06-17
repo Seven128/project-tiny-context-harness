@@ -13,7 +13,7 @@ This Skill handles Harness package upgrade and migration orchestration only. It 
 
 ## Purpose
 
-When the user asks to upgrade Tiny Context / Project Tiny Context Harness in an existing project, run the canonical upgrade path, handle only migration-scoped follow-up, and leave durable project semantics to the project Context and user-owned code.
+When the user asks to upgrade Tiny Context / Project Tiny Context Harness in an existing project, run the canonical `upgrade` path, handle only migration-scoped follow-up, and leave durable project semantics to the project Context and user-owned code. A `sync-only` release means no new migration is expected; it does not change the default upgrade entry for explicit upgrade requests.
 
 ## Workflow
 
@@ -24,22 +24,25 @@ When the user asks to upgrade Tiny Context / Project Tiny Context Harness in an 
    - `project_context/context.toml`
 2. Inspect the working tree with `git status --short`. Do not revert unrelated user changes.
 3. Prefer project wrappers when present:
+   - `make ty-context-sync`
    - `make ty-context-upgrade`
    - `make ty-context-doctor`
    - `make validate-context`
 4. If no wrapper exists, use the package CLI explicitly:
+   - `npx --yes --package project-tiny-context-harness@latest ty-context sync`
    - `npx --yes --package project-tiny-context-harness@latest ty-context upgrade --check`
    - `npx --yes --package project-tiny-context-harness@latest ty-context upgrade`
    - `npx --yes --package project-tiny-context-harness@latest ty-context doctor`
-5. Do not run standalone `sync` before `upgrade`. `upgrade` is the default path after an npm package update because it plans migrations, applies safe migrations, refreshes managed assets and runs diagnostics.
-6. Do not run standalone `sync` after a successful `upgrade` unless release notes say the update is `sync-only`, the project wrapper did not run sync, or the user explicitly asks for a managed-asset refresh.
-7. If `upgrade --check` or `upgrade` reports only `safe_pending` items and the command succeeds, do not invent additional manual cleanup.
-8. If the report includes `manual_required` or `blocked`, handle only the listed migration scope. Use `project_context/context.toml`, role placement scan and the existing area graph to decide placement. Do not guess product or business semantics.
-9. If the report includes `blocked`, treat it as a write preflight failure: resolve the blocked migration scope and rerun `upgrade` before expecting safe migrations or managed asset sync to have been applied.
-10. Run diagnostics after migration-scoped follow-up:
+5. Run `upgrade --check` when useful, then run `upgrade`. This remains the default after package updates and for explicit upgrade requests because it plans migrations, applies safe migrations, refreshes managed assets and runs diagnostics.
+6. Do not run standalone `sync` before `upgrade` for explicit upgrade requests. A direct `sync` is only a shortcut for releases explicitly marked `sync-only` when the user asks for managed-asset refresh instead of upgrade diagnostics.
+7. Do not run standalone `sync` after a successful `upgrade` unless the project wrapper did not run sync or the user explicitly asks for another managed-asset refresh.
+8. If `upgrade --check` or `upgrade` reports only `safe_pending` items and the command succeeds, do not invent additional manual cleanup.
+9. If the report includes `manual_required` or `blocked`, handle only the listed migration scope. Use `project_context/context.toml`, role placement scan and the existing area graph to decide placement. Do not guess product or business semantics.
+10. If the report includes `blocked`, treat it as a write preflight failure: resolve the blocked migration scope and rerun `upgrade` before expecting safe migrations or managed asset sync to have been applied.
+11. Run diagnostics after migration-scoped follow-up:
    - `make ty-context-doctor` or the CLI `doctor`
    - `make validate-context`
-11. Report commands run, migration status, diagnostics, files changed and any remaining manual items. Use `Context: no durable project facts changed` unless the upgrade exposed or required a real long-term project fact change.
+12. Report commands run, migration status, diagnostics, files changed and any remaining manual items. Use `Context: no durable project facts changed` unless the upgrade exposed or required a real long-term project fact change.
 
 ## Manual Handling Rules
 

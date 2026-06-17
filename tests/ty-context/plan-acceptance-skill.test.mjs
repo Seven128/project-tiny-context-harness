@@ -64,6 +64,10 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /tmp\/ty-context\/plan-acceptance/);
   assert.match(content, /Context confirmation gate/i);
   assert.match(content, /falsifiable acceptance items/);
+  assert.match(content, /Hard Blocker Handling/);
+  assert.match(content, /Treat any unresolved required blocker as non-completion/);
+  assert.match(content, /if only locally unsatisfiable hard blockers remain, pause for the user or external owner instead of marking the goal complete/);
+  assert.match(content, /强卡点未解除/);
   assert.match(content, /Do not execute the plan/);
   assert.match(content, /Do not include concrete business-domain logic/);
   assert.match(content, /可多开agent，agent名额不够了就关掉不用的。/);

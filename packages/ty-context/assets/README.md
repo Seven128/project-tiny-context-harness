@@ -94,7 +94,7 @@ That smoke packs the local workspace, installs it into a disposable repo, runs `
 ```sh
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.2.56.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.2.57.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -266,7 +266,7 @@ No. It checks that recovery facts exist and avoids fake test-result claims. Prod
 
 It should stay smaller than a full process. Ordinary bug fixes and local refactors do not update Context unless they produce durable product, architecture, API, state or validation facts.
 
-The default Skills are Minimal Context helpers for explicit product-planning, UI/UX-design, development-engineering, Product Surface Contract, full-project-export, Tiny Context upgrade and plan-acceptance-checklist requests. Product, screen-flow, surface responsibility and durable engineering conclusions go to `project_context/**`; visual identity and design tokens go to root `DESIGN.md`. Export artifacts are temporary files under `tmp/ty-context/context-exports/**`, not Context. Plan acceptance artifacts are temporary files under `tmp/ty-context/plan-acceptance/**`; they define completion criteria for a referenced plan but do not execute it or prove acceptance. The Harness upgrade Skill handles requests such as “upgrade Tiny Context” and “use the Tiny Context upgrade skill to upgrade this project” by running `upgrade` first, handling only migration-scoped follow-up, and avoiding standalone `sync` before the upgrade path.
+The default Skills are Minimal Context helpers for explicit product-planning, UI/UX-design, development-engineering, Product Surface Contract, full-project-export, Tiny Context upgrade and plan-acceptance-checklist requests. Product, screen-flow, surface responsibility and durable engineering conclusions go to `project_context/**`; visual identity and design tokens go to root `DESIGN.md`. Export artifacts are temporary files under `tmp/ty-context/context-exports/**`, not Context. Plan acceptance artifacts are temporary files under `tmp/ty-context/plan-acceptance/**`; they define completion criteria for a referenced plan but do not execute it or prove acceptance. The Harness upgrade Skill handles requests such as “upgrade Tiny Context” and “use the Tiny Context upgrade skill to upgrade this project” by following the release update mode, using `upgrade` for migration-bearing releases, and limiting manual cleanup to migration-scoped follow-up.
 
 Multilingual trigger phrases are compatibility details. Public README, npm and launch copy stay English-first, and public/package-managed surfaces must remain English-complete; literal non-English examples are documented only where they explain generated Skill matching and must not be the sole activation path.
 
@@ -338,8 +338,8 @@ Use `npx --no-install ty-context ...` only when you explicitly want the already 
 | Command | Purpose |
 |---|---|
 | `npx --yes --package project-tiny-context-harness@latest ty-context init` | Non-destructively installs Minimal Context Harness into the current project. |
-| `make ty-context-sync` or `npx --yes --package project-tiny-context-harness@latest ty-context sync` | Refreshes managed guidance, default Skills, Makefile include, tools and templates. It does not run migrations or generate project semantics; when migration work is pending it refuses to write and tells you to run `upgrade`. |
-| `make ty-context-upgrade` or `npx --yes --package project-tiny-context-harness@latest ty-context upgrade` | Default command after updating the npm package. Builds an upgrade plan, stops before writes when `blocked` items exist, otherwise applies `safe_pending` migrations, runs `sync` and `doctor`, and exits non-zero when manual follow-up or diagnostics remain. |
+| `make ty-context-sync` or `npx --yes --package project-tiny-context-harness@latest ty-context sync` | Refreshes managed guidance, default Skills, Makefile include, tools and templates. It does not run migrations or generate project semantics; it may block only direct asset-refresh safety issues such as invalid managed blocks or deprecated managed Skill overrides. |
+| `make ty-context-upgrade` or `npx --yes --package project-tiny-context-harness@latest ty-context upgrade` | Use for releases marked `upgrade-required` or `manual-required`. Builds an upgrade plan, stops before writes when `blocked` items exist, otherwise applies `safe_pending` migrations, runs `sync` and `doctor`, and exits non-zero when manual follow-up or diagnostics remain. |
 | `npx --yes --package project-tiny-context-harness@latest ty-context upgrade --check [--json]` | Checks the upgrade plan without writing files. Reports `safe_pending`, `manual_required` and `blocked`; exits non-zero when any work remains. |
 | `npx --yes --package project-tiny-context-harness@latest ty-context export-context --all [--check]` | Creates both default temporary exports under `tmp/ty-context/context-exports/**`. |
 | `npx --yes --package project-tiny-context-harness@latest ty-context export-context --full [--output tmp/ty-context/context-exports/name.md] [--check]` | Creates a temporary project Context summary Markdown artifact. |
@@ -354,7 +354,7 @@ Use `npx --no-install ty-context ...` only when you explicitly want the already 
 
 ## Updating Existing Projects
 
-After updating the package, run `ty-context upgrade`. Use `sync` only when release notes say the update is `sync-only`; sync does not run migrations.
+After updating the package, run `ty-context upgrade`. It is the default update entry because it checks local migration state, applies safe migrations when needed, refreshes managed assets and runs diagnostics. For releases marked `sync-only`, direct `sync` is an allowed shortcut only when you explicitly want managed-asset refresh without the upgrade diagnostics.
 
 ```sh
 npm install -D project-tiny-context-harness@latest
@@ -362,11 +362,17 @@ npx --yes --package project-tiny-context-harness@latest ty-context upgrade --che
 npx --yes --package project-tiny-context-harness@latest ty-context upgrade
 ```
 
+For `sync-only` releases where you explicitly want only managed-asset refresh, this shortcut is allowed:
+
+```sh
+npx --yes --package project-tiny-context-harness@latest ty-context sync
+```
+
 Release notes and release readiness use this update mode vocabulary:
 
 | Update mode | What to run | Meaning |
 |---|---|---|
-| `sync-only` | `ty-context sync` | The release changes only package-managed assets. No migrations are required. |
+| `sync-only` | Default: `ty-context upgrade`; shortcut: `ty-context sync` | The release changes only package-managed assets. No new migrations are expected. |
 | `upgrade-required` | `ty-context upgrade` | The release includes safe mechanical migrations and managed asset refresh. |
 | `manual-required` | `ty-context upgrade`, then manual follow-up | The release includes items that cannot be mechanically changed without user intent. |
 

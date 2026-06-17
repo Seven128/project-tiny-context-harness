@@ -454,13 +454,14 @@ The plan acceptance checklist compiler Skill exists because long-running work fa
 - It combines the plan, relevant Context and real repository surfaces into falsifiable acceptance items with explicit evidence and invalidation rules.
 - Its generated goal/target prompt includes a standard resource lifecycle line: Chinese prompts use `可多开agent，agent名额不够了就关掉不用的。`, while English prompts use an equivalent instruction to use multiple agents and close idle or unnecessary agents when slots run low.
 - It uses a confirmation gate when the plan would silently encode new durable product, architecture, API, state, security or verification assumptions.
+- It treats unresolved required blockers as non-completion: blocked-external or hard-blocked acceptance items keep their missing evidence and required user/external action, and if no executable core work remains except hard blockers, the future executor pauses for the user instead of marking the goal complete.
 - It deliberately performs only one acceptance-standard pass; it does not execute the plan, manage task state, run long validations, prove completion or revive stage gates.
 - Its business logic must remain generic. Domain-specific acceptance rules come from the current plan and project Context during invocation, or from project-local Skills.
 
 The Harness upgrade Skill exists because existing consumer projects need a short, repeatable procedure after package updates:
 
 - It triggers on explicit Tiny Context / Project Tiny Context Harness upgrade requests, including English requests such as `upgrade Tiny Context` and `use the Tiny Context upgrade skill to upgrade this project`; Chinese trigger examples are compatibility-only additions.
-- It treats `ty-context upgrade` as the default command after an npm package update, not standalone `sync`.
+- It treats `ty-context upgrade` as the default command after an npm package update and for explicit upgrade requests. `sync-only` release mode only means direct `sync` is an allowed managed-asset refresh shortcut, not the default upgrade path.
 - It tells agents to handle only migration-scoped `manual_required` / `blocked` follow-up and to use `context.toml`, role placement scan and existing project Context rather than guessing business semantics.
 - It is package-managed guidance for operating the Harness, not a project-local product/design/development customization surface.
 
@@ -491,11 +492,11 @@ The package-managed `.github/workflows/harness.yml` is a consumer project workfl
 
 `init` does not create business Product Surface Contract files, `.work_products/**`, lifecycle state, plan state, stage skills, stage templates or stage policies by default.
 
-`sync` refreshes managed assets only. It never generates project semantics and it does not run migrations. If an upgrade plan contains `safe_pending`, `manual_required` or `blocked` items, public `sync` refuses to write and tells the user to run `upgrade`; internal `upgrade` may bypass that guard only after it has planned and applied safe migrations.
+`sync` refreshes managed assets only. It never generates project semantics, does not run migrations and does not call the full migration registry as a freshness preflight. Public `sync` may refuse writes for direct asset-refresh safety blockers such as unsupported schema, invalid managed block markers or deprecated managed Skill override directories, but pending semantic or mechanical migration findings belong to `upgrade --check` / `upgrade`, diagnostics and release notes.
 
 ### Upgrade Model / Migration Model
 
-The public npm update path is now: after updating the package, run `ty-context upgrade`. `sync` is only the right direct command when release notes say the release update mode is `sync-only`.
+The public npm update path is: after updating the package, run `ty-context upgrade`. `sync-only` release mode means the release itself adds no new migration requirement and direct `sync` is allowed when the user explicitly wants only managed-asset refresh; it does not replace the default upgrade entry.
 
 The package also ships `context_harness_upgrade` as a managed Skill so agents can turn explicit requests like `upgrade Tiny Context` into the canonical upgrade sequence: inspect Context, run `upgrade --check` when useful, run `upgrade`, handle only scoped manual/blocked items, then run `doctor` and `validate-context`.
 
@@ -512,7 +513,7 @@ The migration model is a safe/manual/blocked migration model:
 - `manual_required`: the path is in migration scope, but the CLI cannot prove the right semantic role or user intent.
 - `blocked`: a safe target cannot be written because of a conflict, existing destination or other overwrite risk. Blocked items stop upgrade writes until the conflict is resolved.
 
-The migration registry shape is intentionally explicit. Each migration declares `id`, `introducedIn`, `scope`, `risk`, `detect`, `apply`, `verify` and `manualMessage`. `detect` must first narrow the scope; files outside that scope are not reported. `apply` is implemented only for safe migrations. Blocked scenarios must not write files.
+The migration registry shape is intentionally explicit. Each migration declares `id`, `introducedIn`, `scope`, `risk`, `detect`, `apply`, `verify` and `manualMessage`. `detect` must first narrow the scope; files outside that scope are not reported. `apply` is implemented only for safe migrations. Blocked scenarios must not write files. The registry is an `upgrade` mechanism, not a normal `sync` precondition; otherwise old compatibility logic grows into a permanent tax on every managed asset refresh.
 
 Initial registry entries cover:
 
@@ -534,7 +535,7 @@ Anti-goals:
 - Do not auto-rewrite project-local Skills, business verification paths, product facts or deployment facts.
 - Do not promise that an old project becomes best practice after one command.
 
-Release update mode is part of the release contract. Release readiness must report `sync-only`, `upgrade-required` or `manual-required`; if code, assets, docs or this spec change public migration semantics, the release cannot claim `sync-only`.
+Release update mode is part of the release contract and must be impact-based, not hardcoded to the most conservative path. Release readiness must report `sync-only`, `upgrade-required` or `manual-required`; if code, assets, docs or this spec change public migration semantics, the release cannot claim `sync-only`. Newly generated release packets default to `sync-only` only for asset/docs-only updates; releases that add safe migrations use `upgrade-required`, and releases with unavoidable user judgment use `manual-required`. The mode describes release risk; the default user update command remains `ty-context upgrade`.
 
 Product, UI/UX and development engineer Skill customization lives in separate project-local Skills:
 
@@ -616,6 +617,7 @@ Therefore the canonical product direction changed: preserve minimal durable cont
 - Harness should not claim product quality; it should point agents to verification/deployment repeat-execution paths.
 - Semantic migration must be explicit and reversible.
 - Managed asset sync must be narrow and predictable.
+- Upgrade logic must converge into versioned mechanical migrations and release-impact metadata, not accumulate as a permanent preflight inside ordinary `sync`.
 - Historical stage design is documentation-only in the current source tree; runnable defaults are Minimal Context.
 - Benchmark conclusions must distinguish high-confidence measured data from diagnostic or historical evidence.
 

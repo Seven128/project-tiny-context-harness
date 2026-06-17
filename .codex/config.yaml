@@ -17,6 +17,14 @@ modularity:
       category: legacy_migration
       reason: Existing end-to-end init/sync/doctor regression suite predates the modularity gate.
       future_split_boundary: Split init asset assertions, sync behavior and CLI validation smoke tests into focused files.
+    - path: packages/ty-context/src/lib/sync-engine.ts
+      category: legacy_migration
+      reason: Existing combined managed asset sync engine predates the modularity gate; this change only narrows the sync migration preflight.
+      future_split_boundary: Extract managed block merging, tree syncing and Skill override safety checks into focused modules.
+    - path: tests/ty-context/orientation-fast-path.test.mjs
+      category: legacy_migration
+      reason: Existing broad orientation regression suite predates the modularity gate.
+      future_split_boundary: Split package docs/update-mode assertions, Skill trigger assertions and launch readiness assertions into focused tests.
     - path: tools/consumer_lab_full_test.mjs
       category: legacy_migration
       reason: Existing consumer lab orchestration script predates the modularity gate.

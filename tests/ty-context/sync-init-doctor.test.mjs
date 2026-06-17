@@ -366,11 +366,8 @@ try {
   assert.equal(overrideSyncReport.changed.length, 0);
   assert.equal(overrideSyncReport.skipped.length, 0);
   assert.equal(overrideSyncReport.blocked.length, 1);
-  assert.match(overrideSyncReport.blocked[0], /upgrade required before sync/);
-  assert.match(overrideSyncReport.blocked[0], /manual-required/);
-  assert.match(overrideSyncReport.blocked[0], /deprecated-skill-overrides/);
+  assert.match(overrideSyncReport.blocked[0], /deprecated Skill overrides block sync/);
   assert.match(overrideSyncReport.blocked[0], /\.agent\/ty-context-managed\/override_skills/);
-  assert.match(overrideSyncReport.blocked[0], /Skill overrides are no longer supported/);
   assert.match(overrideSyncReport.blocked[0], /context_product_plan\.md/);
   assert.match(overrideSyncReport.blocked[0], /ty-context_dev_sprint\.md/);
   const blockedProductSkill = await readFile(path.join(root, ".agent/skills/context_product_plan/SKILL.md"), "utf8");
@@ -408,12 +405,10 @@ try {
   await mkdir(path.join(syncBlockRoot, "project_context/modules"), { recursive: true });
   await writeFile(path.join(syncBlockRoot, "project_context/modules/legacy.md"), "# Legacy Module\n", "utf8");
   const migrationNeededSync = await runSync(syncBlockRoot);
+  assert.equal(migrationNeededSync.blocked.length, 0);
   assert.equal(migrationNeededSync.changed.length, 0);
-  assert.equal(migrationNeededSync.skipped.length, 0);
-  assert.equal(migrationNeededSync.blocked.length, 1);
-  assert.match(migrationNeededSync.blocked[0], /upgrade required before sync/);
-  assert.match(migrationNeededSync.blocked[0], /upgrade-required/);
-  assert.match(migrationNeededSync.blocked[0], /legacy-modules-to-areas/);
+  assert.ok(migrationNeededSync.skipped.length > 0);
+  await stat(path.join(syncBlockRoot, "project_context/modules/legacy.md"));
   await assert.rejects(stat(path.join(syncBlockRoot, "project_context/areas/legacy.md")));
 
   const cliInit = spawnSync(process.execPath, [cliPath, "init"], { cwd: cliRoot, encoding: "utf8" });
@@ -434,11 +429,8 @@ try {
   assert.equal(cliSyncWithDeprecatedOverride.status, 1, `${cliSyncWithDeprecatedOverride.stdout}\n${cliSyncWithDeprecatedOverride.stderr}`);
   const cliSyncOutput = `${cliSyncWithDeprecatedOverride.stdout}\n${cliSyncWithDeprecatedOverride.stderr}`;
   assert.match(cliSyncOutput, /sync changed=0 skipped=0 blocked=1/);
-  assert.match(cliSyncOutput, /upgrade required before sync/);
-  assert.match(cliSyncOutput, /manual-required/);
-  assert.match(cliSyncOutput, /deprecated-skill-overrides/);
+  assert.match(cliSyncOutput, /deprecated Skill overrides block sync/);
   assert.match(cliSyncOutput, /\.codex\/ty-context-managed\/override_skills/);
-  assert.match(cliSyncOutput, /Skill overrides are no longer supported/);
 } finally {
   await rm(root, { recursive: true, force: true });
   await rm(configuredRoot, { recursive: true, force: true });

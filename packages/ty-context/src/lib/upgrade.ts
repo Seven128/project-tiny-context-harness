@@ -48,7 +48,7 @@ export async function runUpgradeReport(projectRoot: string): Promise<UpgradeRunR
     );
   }
 
-  const syncReport = await runSync(projectRoot, { allowPendingMigrations: true });
+  const syncReport = await runSync(projectRoot);
   lines.push(`sync changed=${syncReport.changed.length} skipped=${syncReport.skipped.length} blocked=${syncReport.blocked.length}`);
   for (const skipped of syncReport.skipped.filter((line) => line.includes("customized"))) {
     lines.push(`sync skipped: ${skipped}`);

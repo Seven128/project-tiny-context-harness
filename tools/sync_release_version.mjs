@@ -6,8 +6,8 @@ import { fileURLToPath } from "node:url";
 
 const defaultRepoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageName = "project-tiny-context-harness";
-const releaseUpdateMode = "manual-required";
 const releaseUpdateModes = ["sync-only", "upgrade-required", "manual-required"];
+const defaultReleaseUpdateMode = "sync-only";
 
 const args = parseArgs(process.argv.slice(2));
 
@@ -17,7 +17,16 @@ main().catch((error) => {
 });
 
 function parseArgs(argv) {
-  const parsed = { check: false, root: defaultRepoRoot, help: false };
+  const parsed = {
+    check: false,
+    root: defaultRepoRoot,
+    help: false,
+    updateMode: parseReleaseUpdateMode(
+      process.env.TY_CONTEXT_RELEASE_UPDATE_MODE || defaultReleaseUpdateMode,
+      "TY_CONTEXT_RELEASE_UPDATE_MODE"
+    ),
+    updateModeExplicit: Boolean(process.env.TY_CONTEXT_RELEASE_UPDATE_MODE)
+  };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--check") {
@@ -30,6 +39,16 @@ function parseArgs(argv) {
         throw new Error("--root requires a path");
       }
       parsed.root = path.resolve(value);
+      index += 1;
+      continue;
+    }
+    if (arg === "--update-mode") {
+      const value = argv[index + 1];
+      if (!value) {
+        throw new Error("--update-mode requires one of sync-only, upgrade-required or manual-required");
+      }
+      parsed.updateMode = parseReleaseUpdateMode(value, "--update-mode");
+      parsed.updateModeExplicit = true;
       index += 1;
       continue;
     }
@@ -50,10 +69,14 @@ Synchronizes release-version surfaces to packages/ty-context/package.json.
 Usage:
   node tools/sync_release_version.mjs
   node tools/sync_release_version.mjs --check
+  node tools/sync_release_version.mjs --update-mode upgrade-required
 
 Options:
-  --check       Report drift without writing files.
-  --root PATH   Repository root override for tests.
+  --check          Report drift without writing files.
+  --root PATH      Repository root override for tests.
+  --update-mode MODE
+                   Release update mode for a newly generated packet:
+                   sync-only, upgrade-required or manual-required.
 `);
 }
 
@@ -162,17 +185,26 @@ function replaceInFile(edits, relativePath, pattern, replacement) {
 function syncReleasePacket(edits, version) {
   const relativePath = `docs/launch/github-release-${version}.md`;
   const current = exists(relativePath) ? readText(relativePath) : "";
-  const next = current || renderReleasePacket(version);
+  if (current && args.updateModeExplicit) {
+    const currentMode = extractReleaseUpdateMode(relativePath, current);
+    if (currentMode !== args.updateMode) {
+      throw new Error(
+        `${relativePath}: existing release packet mode is ${currentMode}; update it intentionally before passing --update-mode ${args.updateMode}.`
+      );
+    }
+  }
+  const next = current || renderReleasePacket(version, args.updateMode);
   validateReleasePacket(relativePath, next, version);
   edits.push({ relativePath, next, changed: next !== current });
 }
 
 function validateReleasePacket(relativePath, content, version) {
+  const packetMode = extractReleaseUpdateMode(relativePath, content);
   for (const pattern of [
     new RegExp(`v${escapeRegExp(version)}`),
     new RegExp(`Project Tiny Context Harness ${escapeRegExp(version)}`),
     /Update Mode:/,
-    new RegExp(escapeRegExp(releaseUpdateMode)),
+    new RegExp(escapeRegExp(packetMode)),
     /sync-only/,
     /upgrade-required/,
     /manual-required/,
@@ -193,7 +225,7 @@ function validateReleasePacket(relativePath, content, version) {
   }
 }
 
-function renderReleasePacket(version) {
+function renderReleasePacket(version, releaseUpdateMode) {
   return `# GitHub Release Packet: ${version}
 
 Snapshot date: ${new Date().toISOString().slice(0, 10)}.
@@ -235,14 +267,7 @@ npx --yes --package project-tiny-context-harness@latest ty-context init
 make validate-context
 \`\`\`
 
-Update mode: \`${releaseUpdateMode}\`. After updating the package, run:
-
-\`\`\`sh
-npx --yes --package project-tiny-context-harness@latest ty-context upgrade --check
-npx --yes --package project-tiny-context-harness@latest ty-context upgrade
-\`\`\`
-
-Use \`sync\` only for releases explicitly marked \`sync-only\`; sync does not run migrations. Upgrade plans report \`safe_pending\`, \`manual_required\` and \`blocked\`.
+${renderUpdateInstructions(releaseUpdateMode)}
 
 ## What Changed
 
@@ -295,6 +320,34 @@ The npm Trusted Publishing workflow runs this automatically for real publish run
 `;
 }
 
+function renderUpdateInstructions(releaseUpdateMode) {
+  if (releaseUpdateMode === "sync-only") {
+    return `Update mode: \`sync-only\`. After updating the package, run:
+
+\`\`\`sh
+npx --yes --package project-tiny-context-harness@latest ty-context upgrade --check
+npx --yes --package project-tiny-context-harness@latest ty-context upgrade
+\`\`\`
+
+This release mode means no new release migration is expected. Direct \`sync\` is an allowed shortcut only when you explicitly want managed-asset refresh without upgrade diagnostics:
+
+\`\`\`sh
+npx --yes --package project-tiny-context-harness@latest ty-context sync
+\`\`\`
+
+Sync does not run migrations. Upgrade plans report \`safe_pending\`, \`manual_required\` and \`blocked\`.`;
+  }
+
+  return `Update mode: \`${releaseUpdateMode}\`. After updating the package, run:
+
+\`\`\`sh
+npx --yes --package project-tiny-context-harness@latest ty-context upgrade --check
+npx --yes --package project-tiny-context-harness@latest ty-context upgrade
+\`\`\`
+
+Use \`sync\` directly only for releases explicitly marked \`sync-only\`; sync does not run migrations. Upgrade plans report \`safe_pending\`, \`manual_required\` and \`blocked\`.`;
+}
+
 function readText(relativePath, root = args.root) {
   const absolutePath = path.join(root, relativePath);
   if (!existsSync(absolutePath)) {
@@ -315,4 +368,19 @@ function exists(relativePath) {
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function parseReleaseUpdateMode(value, label) {
+  if (!releaseUpdateModes.includes(value)) {
+    throw new Error(`${label} must be one of ${releaseUpdateModes.join(", ")}`);
+  }
+  return value;
+}
+
+function extractReleaseUpdateMode(relativePath, content) {
+  const match = content.match(/Update Mode:\s*`(sync-only|upgrade-required|manual-required)`/);
+  if (!match) {
+    throw new Error(`${relativePath}: Update Mode must be one of ${releaseUpdateModes.join(", ")}`);
+  }
+  return match[1];
 }

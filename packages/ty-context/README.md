@@ -115,7 +115,7 @@ npm ci
 npm run smoke:quickstart
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.2.56.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.2.57.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -228,11 +228,11 @@ Use `npx --no-install ty-context ...` only when you explicitly want the already 
 | Development engineer Skill | `<harnessRoot>/skills/context_development_engineer/SKILL.md` | Handles explicit development-engineering requests and writes durable engineering conclusions to `project_context/**`. |
 | Product Surface Contract Skill | `<harnessRoot>/skills/context_surface_contract/SKILL.md` | Handles explicit Product Surface Contract, Screen Contract, surface responsibility and main/drilldown ownership work; it compiles project-owned surface contracts into `project_context/**` without adding a new context role or gate. |
 | Full project context export Skill | `<harnessRoot>/skills/context_full_project_export/SKILL.md` | Handles explicit full-project or code-level export requests and uses `export-context --all`, `--full` or `--code` to create temporary artifacts under `tmp/ty-context/context-exports/**`. |
-| Harness upgrade Skill | `<harnessRoot>/skills/context_harness_upgrade/SKILL.md` | Handles explicit Tiny Context / Project Tiny Context Harness upgrade requests such as “upgrade Tiny Context” and “use the Tiny Context upgrade skill to upgrade this project”; it runs `upgrade` first, handles only migration-scoped `manual_required` / `blocked` follow-up, then runs diagnostics. |
+| Harness upgrade Skill | `<harnessRoot>/skills/context_harness_upgrade/SKILL.md` | Handles explicit Tiny Context / Project Tiny Context Harness upgrade requests such as “upgrade Tiny Context” and “use the Tiny Context upgrade skill to upgrade this project”; it runs the canonical `upgrade` path, handles only migration-scoped `manual_required` / `blocked` follow-up, then runs diagnostics. |
 | Plan acceptance checklist Skill | `<harnessRoot>/skills/plan_acceptance_checklist_compiler/SKILL.md` | Handles explicit requests to turn a referenced plan, RFC or implementation proposal into a falsifiable acceptance checklist and paste-ready goal/target-mode prompt under `tmp/ty-context/plan-acceptance/**`; it does not execute the plan or prove completion. |
 | Project-local Skills | `<harnessRoot>/skills/<role>/SKILL.md` | Optional local product/design/development Skills created by the project, such as `product_plan`, `uiux_design` or `development_engineer`. They supersede package-managed default Skills when more specific, are not overwritten by `sync`, and should keep front matter trigger keywords aligned with the project `AGENTS.md` role-trigger rule. |
-| Managed file sync | `make ty-context-sync` or `npx --yes --package project-tiny-context-harness@latest ty-context sync` | Refreshes package-managed guidance, default Skills, Makefile include, context templates, tools and workflow YAML. It does not run migrations or perform semantic Context generation; when migration work is pending it refuses to write and tells you to run `upgrade`. |
-| Upgrade | `make ty-context-upgrade` or `npx --yes --package project-tiny-context-harness@latest ty-context upgrade` | Default command after updating the npm package. Builds an upgrade plan, stops before writes when `blocked` items exist, otherwise applies `safe_pending` migrations, runs `sync` and `doctor`, and exits non-zero when manual follow-up or diagnostics remain. |
+| Managed file sync | `make ty-context-sync` or `npx --yes --package project-tiny-context-harness@latest ty-context sync` | Refreshes package-managed guidance, default Skills, Makefile include, context templates, tools and workflow YAML. It does not run migrations or perform semantic Context generation; it may block only direct asset-refresh safety issues such as invalid managed blocks or deprecated managed Skill overrides. |
+| Upgrade | `make ty-context-upgrade` or `npx --yes --package project-tiny-context-harness@latest ty-context upgrade` | Use for releases marked `upgrade-required` or `manual-required`. Builds an upgrade plan, stops before writes when `blocked` items exist, otherwise applies `safe_pending` migrations, runs `sync` and `doctor`, and exits non-zero when manual follow-up or diagnostics remain. |
 | Upgrade check | `npx --yes --package project-tiny-context-harness@latest ty-context upgrade --check [--json]` | Checks the upgrade plan without writing files. Reports `safe_pending`, `manual_required` and `blocked`; exits non-zero when any work remains. |
 | Combined project export | `npx --yes --package project-tiny-context-harness@latest ty-context export-context --all [--check]` | Creates both default temporary exports under `tmp/ty-context/context-exports/**`. |
 | Project Context export | `npx --yes --package project-tiny-context-harness@latest ty-context export-context --full [--output tmp/ty-context/context-exports/name.md] [--check]` | Creates a temporary Context summary artifact. It is not Context and must not be registered in `project_context/context.toml`. |
@@ -293,7 +293,7 @@ Omitting `policy` behaves the same as `scoped_waivers` for compatibility with ex
 
 Multilingual trigger phrases are compatibility details. Public README, npm and launch copy stay English-first, and public/package-managed surfaces must remain English-complete; literal non-English examples are documented only where they explain generated Skill matching and must not be the sole activation path.
 
-The Harness upgrade Skill exists so consumer agents have a short, repeatable upgrade procedure for existing projects. It treats `ty-context upgrade` as the default command after package updates, forbids standalone `sync` before upgrade, and limits manual handling to the migration scope reported by the CLI instead of guessing project semantics.
+The Harness upgrade Skill exists so consumer agents have a short, repeatable upgrade procedure for existing projects. It treats `upgrade` as the default after package updates and for explicit upgrade requests; `sync-only` only allows a direct managed-asset refresh shortcut when that is what the user asked for. Manual handling stays limited to the migration scope reported by the CLI instead of guessing project semantics.
 
 For complex task-contract work, agents may use `plan.md` or an equivalent temporary plan surface as scratch space for `Context Delta`, `Task Contract`, implementation steps and Conformance notes. It is execution cache only: durable facts must be extracted into `project_context/**` or `DESIGN.md`, and temporary plans are not Context, not registered in `context.toml` and not default project assets.
 
@@ -432,9 +432,9 @@ Do not customize the package-managed Surface Contract, Harness upgrade or plan a
 
 ## Sync And Upgrade Boundary
 
-`sync` is intentionally narrow. It refreshes managed files and never generates project semantics. `sync` does not run migrations; if it detects `safe_pending`, `manual_required` or `blocked` migration work, it refuses to write and points the user to `upgrade`.
+`sync` is intentionally narrow. It refreshes managed files and never generates project semantics. `sync` does not run migrations or call the full migration registry; it may refuse writes only for direct asset-refresh safety blockers such as unsupported schema, invalid managed blocks or deprecated managed Skill overrides.
 
-After updating the package, run `ty-context upgrade`. Use `sync` only when release notes say the update is `sync-only`.
+After updating the package, run `ty-context upgrade`. It is the default update entry because it checks local migration state, applies safe migrations when needed, refreshes managed assets and runs diagnostics. For releases marked `sync-only`, direct `sync` is an allowed shortcut only when you explicitly want managed-asset refresh without the upgrade diagnostics.
 
 `upgrade` first builds an upgrade plan. If `blocked` items exist, it prints the plan, runs diagnostics and exits non-zero before migrations or internal `sync`. Without blockers, it applies only `safe_pending` migrations, then runs `sync` and `doctor`. If `manual_required` follow-up or diagnostics remain, the command exits non-zero and prints follow-up. `upgrade --check` performs the same planning step without writing files; `upgrade --check --json` is intended for release checks and CI.
 
@@ -442,7 +442,7 @@ Release update modes:
 
 | Update mode | What to run | Meaning |
 |---|---|---|
-| `sync-only` | `ty-context sync` | The release changes only package-managed assets. No migrations are required. |
+| `sync-only` | Default: `ty-context upgrade`; shortcut: `ty-context sync` | The release changes only package-managed assets. No new migrations are expected. |
 | `upgrade-required` | `ty-context upgrade` | The release includes safe mechanical migrations and managed asset refresh. |
 | `manual-required` | `ty-context upgrade`, then manual follow-up | The release includes items that cannot be mechanically changed without user intent. |
 

@@ -7,7 +7,7 @@ TY_CONTEXT_MODULARITY_SCOPE = $(if $(TY_CONTEXT_MODULARITY_BASE),--base $(TY_CON
 help:
 	@echo "Minimal Context Harness commands"
 	@echo "  make ty-context-doctor         Diagnose Harness root, core package and schema version"
-	@echo "  make ty-context-sync           Refresh managed assets; refuses when upgrade migrations are pending"
+	@echo "  make ty-context-sync           Refresh managed assets; does not run migrations"
 	@echo "  make ty-context-upgrade        Run safe upgrade migrations, sync managed assets and doctor"
 	@echo "  make ty-context-check-modularity  Warn on oversized touched handwritten source files"
 	@echo "  make validate-context    Check whether project_context/** supports context recovery"

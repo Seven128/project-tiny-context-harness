@@ -213,6 +213,28 @@ Column rules:
 
 Each item must be evidence-bound and falsifiable. Split combined requirements into separate rows.
 
+## Hard Blocker Handling
+
+Treat any unresolved required blocker as non-completion. A checklist may describe blocked acceptance work, but blocked work is still not accepted until the required evidence exists.
+
+Use `blocked-external` only when the item is required for full completion but depends on unavailable user input, credentials, account/session access, manual approval, external environment state, provider availability, legal/compliance decision, or another dependency the future executor cannot satisfy locally.
+
+For every `blocked-external` item, state:
+
+- The exact missing evidence.
+- Why the future executor cannot produce it locally.
+- The required user, owner, external system, or approval action.
+- The fallback or degraded path, if the plan or Context allows one.
+- The acceptance impact if the blocker remains unresolved.
+
+Do not mark blocked work as `out-of-scope`, `conditional`, or `nice-to-have` merely because it is hard or currently unavailable. Do not treat partial local work, preparation, mocks, old evidence, or an unexercised fallback as completion for a blocked required item.
+
+The generated goal/target-mode prompt must tell the future executor:
+
+- If any executable `core` item remains, continue working it before asking the user to resolve blockers.
+- If the only remaining incomplete required items are hard blockers that cannot be satisfied locally, pause and wait for the user or external owner instead of marking the goal complete.
+- The handoff must list blocker cause, missing evidence, acceptance impact, and the exact user/external action needed to resume.
+
 ## Generic Acceptance Dimensions
 
 Include only dimensions relevant to the plan. Do not mechanically add irrelevant categories.
@@ -271,6 +293,7 @@ Use these exact labels:
 - `nice-to-have`: useful but not required; use sparingly.
 
 Do not mark an item out of scope only because it is difficult.
+Do not mark a `blocked-external` item complete until its required evidence exists.
 
 ## Conflict Handling
 
@@ -327,6 +350,7 @@ Every generated checklist must pass this self-test:
 - [ ] Every evidence item defines invalid evidence.
 - [ ] Code, API, UI, data, runtime, artifacts, and tests are separated when they prove different things.
 - [ ] External blockers are separated from local remaining work.
+- [ ] Hard blockers are treated as non-completion, with required user/external action and pause conditions.
 - [ ] Current implementation was not used to reduce the user's completion definition.
 - [ ] The checklist can be handed to another Codex session without hidden assumptions.
 ```
@@ -367,9 +391,9 @@ AC8 <UI/用户可见/API 投影一致性要求>
 AC9 <安全/隐私/脱敏/secret 要求>
 AC10 <测试/构建/集成/smoke/回归要求>
 AC11 <文档/Context 更新要求，仅在计划要求时执行>
-AC12 完成前审计：逐条对照实施计划；每个 core 项必须有当前证据；未跑验证必须明示；有可继续执行的 core 项不得标记完成；外部阻塞必须写明原因、影响和下一步。
+AC12 完成前审计：逐条对照实施计划；每个 core 项必须有当前证据；未跑验证必须明示；有可继续执行的 core 项不得标记完成；外部/强卡点必须写明原因、缺失证据、验收影响和下一步；若剩余未完成项只有无法本地解决的强卡点，暂停并等待用户/外部 owner，不能标记目标完成。
 
-禁止把以下内容当完成：只改代码、只更新计划、只跑部分测试、只生成旧/部分/不被当前契约接受的证据、只完成基础设施但未完成验收证据、API/UI/数据/测试之间仍矛盾。
+禁止把以下内容当完成：只改代码、只更新计划、只跑部分测试、只生成旧/部分/不被当前契约接受的证据、只完成基础设施但未完成验收证据、强卡点未解除、API/UI/数据/测试之间仍矛盾。
 ```
 
 Recommended compact English prompt shape:
@@ -390,9 +414,9 @@ AC8 <UI / user-visible / API projection consistency>
 AC9 <security / privacy / redaction / secret handling>
 AC10 <test / build / integration / smoke / regression requirements>
 AC11 <documentation / Context updates only when required by the plan>
-AC12 Final audit: compare every item against the plan; every core item needs current evidence; missing validation must be stated; any executable core item left open means the task is not complete; external blockers need cause, impact, and next action.
+AC12 Final audit: compare every item against the plan; every core item needs current evidence; missing validation must be stated; any executable core item left open means the task is not complete; external or hard blockers need cause, missing evidence, acceptance impact, and next action; if only locally unsatisfiable hard blockers remain, pause for the user or external owner instead of marking the goal complete.
 
-Do not count these as completion: code-only changes, plan-only updates, partial tests, stale or partial evidence, infrastructure without acceptance proof, or contradictions between API/UI/data/tests.
+Do not count these as completion: code-only changes, plan-only updates, partial tests, stale or partial evidence, infrastructure without acceptance proof, unresolved hard blockers, or contradictions between API/UI/data/tests.
 ```
 
 Before final response, check the prompt length. If it exceeds 4000 characters, compress it and check again.

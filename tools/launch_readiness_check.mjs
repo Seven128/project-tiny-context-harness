@@ -299,7 +299,7 @@ function localChecks() {
       contains(rootReadme, /After updating the package, run `ty-context upgrade`/) &&
       contains(packageReadme, /After updating the package, run `ty-context upgrade`/) &&
       contains(spec, /Release update mode is part of the release contract/) &&
-      contains(githubReleasePacket, /Update Mode: `manual-required`/) &&
+      contains(githubReleasePacket, /Update Mode: `(sync-only|upgrade-required|manual-required)`/) &&
       contains(githubReleasePacket, /ty-context upgrade --check/) &&
       contains(releaseScript, /Release update mode:/) &&
       contains(releaseScript, /readReleaseUpdateMode/),
@@ -415,7 +415,7 @@ function localChecks() {
       !hasCjk(packagedMakefile) &&
       !hasCjk(releaseScript) &&
       contains(managedMakefile, /Diagnose Harness root, core package and schema version/) &&
-      contains(managedMakefile, /Refresh managed assets; refuses when upgrade migrations are pending/) &&
+      contains(managedMakefile, /Refresh managed assets; does not run migrations/) &&
       contains(packagedMakefile, /Run safe upgrade migrations, sync managed assets and doctor/) &&
       contains(packagedMakefile, /Check whether project_context\/\*\* supports context recovery/) &&
       contains(releaseScript, /# Current Release Report/) &&
@@ -1258,7 +1258,7 @@ function localChecks() {
       contains(githubReleasePacket, new RegExp(`v${escapeRegex(packageJson.version)}`)) &&
       contains(githubReleasePacket, /Target:/) &&
       contains(githubReleasePacket, new RegExp(`Project Tiny Context Harness ${escapeRegex(packageJson.version)}`)) &&
-      contains(githubReleasePacket, /Update Mode: `manual-required`/) &&
+      contains(githubReleasePacket, /Update Mode: `(sync-only|upgrade-required|manual-required)`/) &&
       contains(githubReleasePacket, /sync-only/) &&
       contains(githubReleasePacket, /upgrade-required/) &&
       contains(githubReleasePacket, /manual-required/) &&
