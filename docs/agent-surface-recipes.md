@@ -7,7 +7,7 @@ Project Tiny Context Harness is intentionally tool-neutral. The durable recovery
 - `project_context/global.md`
 - `project_context/architecture.md`
 - `project_context/areas/**/*.md`
-- `make validate-context` or `sdlc-harness validate-context`
+- `make validate-context` or `ty-context validate-context`
 
 The configurable harness folder only decides where package-managed helper assets live, such as default Skills, templates, tools and `config.yaml`. It should not create a separate memory source per agent.
 
@@ -17,7 +17,7 @@ Default Codex-oriented setup:
 
 ```sh
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init --harness-folder .codex
+npx --yes --package project-tiny-context-harness@latest ty-context init --harness-folder .codex
 make validate-context
 ```
 
@@ -25,7 +25,7 @@ Claude Code-oriented helper assets:
 
 ```sh
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init --harness-folder .claude
+npx --yes --package project-tiny-context-harness@latest ty-context init --harness-folder .claude
 make validate-context
 ```
 
@@ -33,7 +33,7 @@ Cursor-oriented helper assets:
 
 ```sh
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init --harness-folder .cursor
+npx --yes --package project-tiny-context-harness@latest ty-context init --harness-folder .cursor
 make validate-context
 ```
 
@@ -41,7 +41,7 @@ Gemini CLI-oriented helper assets:
 
 ```sh
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init --harness-folder .gemini
+npx --yes --package project-tiny-context-harness@latest ty-context init --harness-folder .gemini
 make validate-context
 ```
 
@@ -49,15 +49,15 @@ Cline or Roo-oriented helper assets:
 
 ```sh
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init --harness-folder .cline
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init --harness-folder .roo
+npx --yes --package project-tiny-context-harness@latest ty-context init --harness-folder .cline
+npx --yes --package project-tiny-context-harness@latest ty-context init --harness-folder .roo
 make validate-context
 ```
 
 For an existing repository, add `--adopt`:
 
 ```sh
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init --adopt --harness-folder .codex
+npx --yes --package project-tiny-context-harness@latest ty-context init --adopt --harness-folder .codex
 ```
 
 ## OpenCode And Other Agents
@@ -66,7 +66,7 @@ For OpenCode or any agent surface that is not in the interactive menu, use a cus
 
 ```sh
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init --harness-folder .opencode
+npx --yes --package project-tiny-context-harness@latest ty-context init --harness-folder .opencode
 make validate-context
 ```
 
@@ -84,8 +84,8 @@ Use one source of durable truth:
 - Keep durable project facts in `project_context/**`.
 - Keep visual identity facts in `DESIGN.md` when relevant.
 - Keep tool-specific helper assets under one configured harness folder.
-- Run `sdlc-harness sync` after changing the configured harness folder.
-- Run `sdlc-harness doctor` if an agent seems to be reading the wrong helper folder.
+- Run `ty-context sync` after changing the configured harness folder.
+- Run `ty-context doctor` if an agent seems to be reading the wrong helper folder.
 
 Avoid this pattern:
 

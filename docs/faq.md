@@ -1,6 +1,6 @@
 # Frequently Asked Questions
 
-This FAQ is for people evaluating Project Tiny Context Harness from GitHub, npm, launch posts or curated lists. It keeps the public claim narrow: Minimal Context helps fresh coding-agent chats recover durable project facts. It does not prove product quality, replace tests or automate the SDLC.
+This FAQ is for people evaluating Project Tiny Context Harness from GitHub, npm, launch posts or curated lists. It keeps the public claim narrow: Minimal Context helps fresh coding-agent chats recover durable project facts. It does not prove product quality, replace tests or automate the Tiny Context.
 
 ## Is this just AGENTS.md?
 
@@ -30,9 +30,9 @@ Tool-specific rules are useful, but they are tied to one agent surface. Project 
 
 Support assets can live under `.codex`, `.claude`, `.cursor`, `.gemini`, `.opencode` or another harness folder, but the shared project memory stays portable.
 
-## How is this different from spec-first or full SDLC workflows?
+## How is this different from spec-first or full Tiny Context workflows?
 
-Spec-first kits and full SDLC workflows can be useful for high-risk work. Project Tiny Context Harness is a lighter default.
+Spec-first kits and full Tiny Context workflows can be useful for high-risk work. Project Tiny Context Harness is a lighter default.
 
 It does not require every task to produce PRDs, technical plans, implementation reports, review docs, test reports or release notes. The default is:
 
@@ -141,7 +141,7 @@ Yes. The normal path is npm:
 
 ```sh
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init
+npx --yes --package project-tiny-context-harness@latest ty-context init
 make validate-context
 ```
 

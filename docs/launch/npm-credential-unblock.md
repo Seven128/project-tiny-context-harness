@@ -31,7 +31,7 @@ Known historical pattern from the rename window:
 npm whoami
 -> steve1998
 
-npm access list collaborators agent-project-sdlc steve1998 --json
+npm access list collaborators agent-project-ty-context steve1998 --json
 -> read-write on the legacy package
 
 npm publish project-tiny-context-harness tarball
@@ -116,7 +116,7 @@ Run:
 npm run launch:npm-access
 npm run release:npm
 npm run launch:check
-node packages/sdlc-harness/dist/cli.js package check-source
+node packages/ty-context/dist/cli.js package check-source
 make validate-context
 git diff --check
 ```
@@ -162,7 +162,7 @@ After publish succeeds:
 
 ```sh
 npm run launch:strict-external
-npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@latest --clean
+npm run launch:demo -- --out-dir tmp/ty-context/launch-demo/latest --package-spec project-tiny-context-harness@latest --clean
 ```
 
 Only after these pass:
@@ -176,6 +176,6 @@ Only after these pass:
 
 - Do not publish broad launch copy if `npm-fetch` fails.
 - Do not commit `.npmrc`, tokens, OTP values or screenshots showing token values.
-- Do not infer that `agent-project-sdlc` read/write access means the renamed package can be created.
+- Do not infer that `agent-project-ty-context` read/write access means the renamed package can be created.
 - Do not create a GitHub Release for the renamed package until registry smoke passes.
 - Do not reuse a published version if a publish partially succeeds and a fix is needed; npm versions are immutable.

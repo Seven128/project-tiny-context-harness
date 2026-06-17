@@ -9,7 +9,7 @@ This packet prepares curated-list pull requests. It is intentionally narrower th
 - Submit only to lists where Project Tiny Context Harness fits the maintainer's stated scope.
 - Keep the listing factual and short.
 - Do not claim adoption, benchmark wins, awards or superiority over other tools.
-- Prefer "project memory / context recovery for coding agents" over "SDLC framework".
+- Prefer "project memory / context recovery for coding agents" over "Tiny Context framework".
 - Link to the GitHub repository, not npm, because list maintainers usually review source and README quality.
 - Prioritize targets by `fit x maintenance activity x audience scale`; a high-star list with stale PR handling is lower priority than an active, well-matched list.
 - Run `npm run launch:external-prs` before preparing PR branches; run `npm run launch:external-prs -- --live --clean` immediately before opening PRs to verify the prepared patches against current upstream repositories.
@@ -100,7 +100,7 @@ Target: [jamesmurdza/awesome-ai-devtools](https://github.com/jamesmurdza/awesome
 
 Status: opened as https://github.com/jamesmurdza/awesome-ai-devtools/pull/636.
 
-Why it fits now: the list has a matching `Agent Infrastructure / Configuration & Context Management` section, a larger AI developer-tool audience and recent upstream activity. The entry is framed as AI coding-agent context/configuration infrastructure, not a general-purpose SDLC framework.
+Why it fits now: the list has a matching `Agent Infrastructure / Configuration & Context Management` section, a larger AI developer-tool audience and recent upstream activity. The entry is framed as AI coding-agent context/configuration infrastructure, not a general-purpose Tiny Context framework.
 
 Suggested category: `Agent Infrastructure / Configuration & Context Management`.
 
@@ -192,7 +192,7 @@ PR body:
 ```text
 Adds Project Tiny Context Harness under Developer Productivity Tools.
 
-It is an open-source CLI for AI coding-agent context recovery: repo-local AGENTS.md, project_context/**, role Skills, and validate-context checks help fresh agent sessions recover project intent and validation paths without adding a full SDLC workflow.
+It is an open-source CLI for AI coding-agent context recovery: repo-local AGENTS.md, project_context/**, role Skills, and validate-context checks help fresh agent sessions recover project intent and validation paths without adding a full Tiny Context workflow.
 ```
 
 ## P1: Awesome OpenCode
@@ -211,7 +211,7 @@ Suggested entry:
 name: Project Tiny Context Harness
 repo: https://github.com/Seven128/project-tiny-context-harness
 tagline: Minimal project memory for coding agents
-description: Repo-native context recovery for OpenCode and other AI coding agents. Installs AGENTS.md, project_context/**, role Skills, and validate-context so fresh sessions can recover project intent, boundaries, and validation paths without SDLC phase ceremony.
+description: Repo-native context recovery for OpenCode and other AI coding agents. Installs AGENTS.md, project_context/**, role Skills, and validate-context so fresh sessions can recover project intent, boundaries, and validation paths without Tiny Context phase ceremony.
 ```
 
 PR title:
@@ -247,7 +247,7 @@ Patch packet: [external-prs/README.md](external-prs/README.md).
 Suggested entry:
 
 ```md
-- [Project Tiny Context Harness](https://github.com/Seven128/project-tiny-context-harness) — Minimal repo-native project memory for AI coding agents: `project_context/**`, `AGENTS.md` guidance, role Skills, and `validate-context` help fresh agent sessions recover project intent, boundaries, ownership, and validation paths without adding SDLC phase ceremony.
+- [Project Tiny Context Harness](https://github.com/Seven128/project-tiny-context-harness) — Minimal repo-native project memory for AI coding agents: `project_context/**`, `AGENTS.md` guidance, role Skills, and `validate-context` help fresh agent sessions recover project intent, boundaries, ownership, and validation paths without adding Tiny Context phase ceremony.
 ```
 
 PR title:
@@ -272,7 +272,7 @@ Suggested entry:
 name: Project Tiny Context Harness
 repo_url: https://github.com/Seven128/project-tiny-context-harness
 category: Context & Working-State Engineering
-summary_en: Minimal Context Harness package that installs repo-local project memory, AGENTS.md guidance, role Skills, and validation for fresh-agent recovery without SDLC phase ceremony.
+summary_en: Minimal Context Harness package that installs repo-local project memory, AGENTS.md guidance, role Skills, and validation for fresh-agent recovery without Tiny Context phase ceremony.
 ```
 
 PR title:
@@ -293,4 +293,4 @@ Add Project Tiny Context Harness to context engineering catalog
 8. Revisit `kyrolabs/awesome-agents` only after traction or accepted-list signal because its rules caution against brand-new projects without demonstrated traction.
 9. Submit `awesome-opencode` only if OpenCode-specific relevance becomes useful or maintainer activity improves.
 10. Wait for standalone Skill packaging before `awesome-agent-skills`.
-11. If a maintainer rejects the wording as too framework-like, revise toward "repo-native context recovery" and away from "SDLC".
+11. If a maintainer rejects the wording as too framework-like, revise toward "repo-native context recovery" and away from "Tiny Context".

@@ -39,7 +39,7 @@ Checks local launch-readiness surfaces and optionally compares public GitHub/npm
 metadata against local package metadata.
 
 Usage:
-  node tools/launch_readiness_check.mjs [--offline] [--json] [--output tmp/sdlc/launch-readiness.md]
+  node tools/launch_readiness_check.mjs [--offline] [--json] [--output tmp/ty-context/launch-readiness.md]
   node tools/launch_readiness_check.mjs --strict-external
 `);
 }
@@ -163,11 +163,11 @@ function requestJson(url) {
 function localChecks() {
   const checks = [];
   const rootPackage = readJson("package.json");
-  const packageJson = readJson("packages/sdlc-harness/package.json");
+  const packageJson = readJson("packages/ty-context/package.json");
   const devcontainerConfig = readJson(".devcontainer/devcontainer.json");
   const rootReadme = read("README.md");
-  const packageReadme = read("packages/sdlc-harness/README.md");
-  const packageGuide = read("packages/sdlc-harness/assets/README.md");
+  const packageReadme = read("packages/ty-context/README.md");
+  const packageGuide = read("packages/ty-context/assets/README.md");
   const spec = read("PROJECT_SPEC.md");
   const zhReadme = read("README.zh-CN.md");
   const codeOfConduct = read("CODE_OF_CONDUCT.md");
@@ -243,12 +243,12 @@ function localChecks() {
   const sourcePreviewReportTemplate = read(".github/ISSUE_TEMPLATE/source_preview_report.yml");
   const releaseScript = read("tools/release_npm.mjs");
   const githubReleasePublishScript = read("tools/github_release_publish.mjs");
-  const managedMakefile = read(".codex/pjsdlc_managed/make/sdlc-harness.mk");
-  const packagedMakefile = read("packages/sdlc-harness/assets/make/sdlc-harness.mk");
+  const managedMakefile = read(".codex/ty-context-managed/make/ty-context.mk");
+  const packagedMakefile = read("packages/ty-context/assets/make/ty-context.mk");
   const codespacesUrlPattern = /https:\/\/codespaces\.new\/Seven128\/project-tiny-context-harness/;
   const packageVersionPattern = escapeRegExp(packageJson.version);
   const sourcePreviewTarballPattern = new RegExp(
-    `tmp\\/sdlc\\/source-preview\\/package\\/project-tiny-context-harness-${packageVersionPattern}\\.tgz`
+    `tmp\\/ty-context\\/source-preview\\/package\\/project-tiny-context-harness-${packageVersionPattern}\\.tgz`
   );
 
   addCheck(checks, "root-package-name", rootPackage.name === "project-tiny-context-harness", "Root package name is project-tiny-context-harness.");
@@ -279,7 +279,7 @@ function localChecks() {
   ]) {
     addCheck(checks, `package-keyword-${keyword}`, packageJson.keywords?.includes(keyword), `npm package keyword includes ${keyword}.`);
   }
-  addCheck(checks, "package-license-file", hasFile("packages/sdlc-harness/LICENSE"), "Packaged npm workspace includes LICENSE.");
+  addCheck(checks, "package-license-file", hasFile("packages/ty-context/LICENSE"), "Packaged npm workspace includes LICENSE.");
 
   const updateModeDocs = [rootReadme, packageReadme, packageGuide, spec];
   addCheck(
@@ -296,11 +296,11 @@ function localChecks() {
         contains(content, /blocked/) &&
         contains(content, /sync.*does not run migrations|does not run migrations/s)
     ) &&
-      contains(rootReadme, /After updating the package, run `sdlc-harness upgrade`/) &&
-      contains(packageReadme, /After updating the package, run `sdlc-harness upgrade`/) &&
+      contains(rootReadme, /After updating the package, run `ty-context upgrade`/) &&
+      contains(packageReadme, /After updating the package, run `ty-context upgrade`/) &&
       contains(spec, /Release update mode is part of the release contract/) &&
       contains(githubReleasePacket, /Update Mode: `manual-required`/) &&
-      contains(githubReleasePacket, /sdlc-harness upgrade --check/) &&
+      contains(githubReleasePacket, /ty-context upgrade --check/) &&
       contains(releaseScript, /Release update mode:/) &&
       contains(releaseScript, /readReleaseUpdateMode/),
     "README, package README, package asset README, spec, release packet and release report generator expose sync-only / upgrade-required / manual-required update semantics."
@@ -327,7 +327,7 @@ function localChecks() {
         contains(content, /Not for:/) &&
         contains(content, /durable project memory behind `AGENTS\.md`/) &&
         contains(content, /multiple agents or frequent fresh chats/) &&
-        contains(content, /autonomous SDLC execution/) &&
+        contains(content, /autonomous Tiny Context execution/) &&
         contains(content, /codebase semantic indexing or external docs retrieval/),
       `${id} gives first-visitor fit and non-fit boundaries.`
     );
@@ -391,15 +391,15 @@ function localChecks() {
   addCheck(
     checks,
     "public-readme-renamed-surfaces",
-    !contains(rootReadme, /AI SDLC Harness|agent-project-sdlc|project-agent-sdlc|stage-based SDLC Harness/) &&
-      !contains(packageReadme, /AI SDLC Harness|agent-project-sdlc|project-agent-sdlc|stage-based SDLC Harness/),
+    !contains(rootReadme, /AI Tiny Context Harness|agent-project-ty-context|project-agent-ty-context|stage-based Tiny Context Harness/) &&
+      !contains(packageReadme, /AI Tiny Context Harness|agent-project-ty-context|project-agent-ty-context|stage-based Tiny Context Harness/),
     "Root README and package README use the Project Tiny Context Harness surface without old display, package or repository names."
   );
   addCheck(
     checks,
     "localized-readme",
     hasFile("README.zh-CN.md") &&
-      hasFile("packages/sdlc-harness/assets/README.zh-CN.md") &&
+      hasFile("packages/ty-context/assets/README.zh-CN.md") &&
       contains(rootReadme, /Translations: \[Chinese \(Simplified\)\]\(README\.zh-CN\.md\)/) &&
       contains(packageReadme, /Translations: \[Chinese \(Simplified\)\]\(https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/blob\/main\/README\.zh-CN\.md\)/) &&
       contains(zhReadme, /Project Tiny Context Harness 是给 AI coding agents 用的轻量项目记忆层/) &&
@@ -448,7 +448,7 @@ function localChecks() {
     "root-readme-install-path",
     contains(rootReadme, /Install:/) &&
       contains(rootReadme, /npm install -D project-tiny-context-harness@latest/) &&
-      contains(rootReadme, /npx --yes --package project-tiny-context-harness@latest sdlc-harness init/) &&
+      contains(rootReadme, /npx --yes --package project-tiny-context-harness@latest ty-context init/) &&
       !contains(firstLines(rootReadme, 120), /pending registry publication/) &&
       !contains(firstLines(rootReadme, 120), /Post-publish install path:/) &&
       !contains(firstLines(rootReadme, 120), /Try now before npm publish:/),
@@ -462,7 +462,7 @@ function localChecks() {
       contains(rootReadme, /npm run smoke:quickstart/) &&
       contains(rootReadme, /npm run preview:pack/) &&
       contains(rootReadme, sourcePreviewTarballPattern) &&
-      contains(rootReadme, /npx --no-install sdlc-harness init --adopt/) &&
+      contains(rootReadme, /npx --no-install ty-context init --adopt/) &&
       contains(rootReadme, /packs the local workspace, installs it into a disposable repo/) &&
       contains(rootReadme, /validates the generated Minimal Context files/) &&
       contains(rootReadme, /Use this path for package development, source-preview testing or private review/) &&
@@ -477,7 +477,7 @@ function localChecks() {
       contains(packageReadme, /npm run smoke:quickstart/) &&
       contains(packageReadme, /npm run preview:pack/) &&
       contains(packageReadme, sourcePreviewTarballPattern) &&
-      contains(packageReadme, /npx --no-install sdlc-harness init --adopt/) &&
+      contains(packageReadme, /npx --no-install ty-context init --adopt/) &&
       contains(packageReadme, /For normal installs, use `project-tiny-context-harness@latest` from npm/) &&
       contains(packageReadme, /source_preview_report\.yml/),
     "Package README gives a source-preview tarball path as a fallback for review and package development."
@@ -489,7 +489,7 @@ function localChecks() {
       hasFile("tools/source_preview_pack.mjs") &&
       contains(sourcePreviewScript, /Packs the local project-tiny-context-harness workspace into an installable tarball/) &&
       contains(sourcePreviewScript, /source-preview-report\.json/) &&
-      contains(sourcePreviewScript, /npx --no-install sdlc-harness init --adopt/) &&
+      contains(sourcePreviewScript, /npx --no-install ty-context init --adopt/) &&
       contains(existingRepoAdoption, /npm run preview:pack/) &&
       contains(existingRepoAdoption, /local packed tarball/) &&
       contains(privateReview, /npm run preview:pack/) &&
@@ -507,7 +507,7 @@ function localChecks() {
       contains(sourcePreviewReportTemplate, /Local checkout/) &&
       contains(sourcePreviewReportTemplate, /Generated tarball in a disposable repo/) &&
       contains(sourcePreviewReportTemplate, /npm run preview:pack/) &&
-      contains(sourcePreviewReportTemplate, /npx --no-install sdlc-harness init --adopt/) &&
+      contains(sourcePreviewReportTemplate, /npx --no-install ty-context init --adopt/) &&
       contains(sourcePreviewReportTemplate, /I removed secrets, customer details, private repository names, raw chat logs and private code/) &&
       contains(issueTemplateConfig, /source_preview_report\.yml/) &&
       contains(rootReadme, /source_preview_report\.yml/) &&
@@ -575,7 +575,7 @@ function localChecks() {
       hasFile("examples/minimal-context-sample/src/label-routing/suggest-labels.mjs") &&
       hasFile("examples/minimal-context-sample/tests/label-routing.test.mjs") &&
       browseableSamplePackage.scripts?.test === "node --test tests/*.test.mjs" &&
-      browseableSamplePackage.scripts?.["validate-context"] === "node ../../packages/sdlc-harness/dist/cli.js validate-context" &&
+      browseableSamplePackage.scripts?.["validate-context"] === "node ../../packages/ty-context/dist/cli.js validate-context" &&
       contains(browseableSampleReadme, /not a template requirement, benchmark result or product-quality proof/i) &&
       contains(browseableSampleAgents, /Scope: this file demonstrates what a consumer repository might give to coding agents/) &&
       contains(browseableSampleGlobal, /Do not apply labels to GitHub issues automatically/) &&
@@ -595,7 +595,7 @@ function localChecks() {
       contains(launchKit, /\.\.\/articles\/fresh-agent-project-memory\.md/) &&
       contains(primaryLaunch, /fresh-agent-project-memory\.md/) &&
       contains(technicalArticle, /Fresh Coding-Agent Sessions Need Project Memory, Not More Ceremony/) &&
-      contains(technicalArticle, /repo-native project memory for AI coding agents, not an autonomous SDLC system/) &&
+      contains(technicalArticle, /repo-native project memory for AI coding agents, not an autonomous Tiny Context system/) &&
       contains(technicalArticle, /Why Drop The Stage Ceremony/) &&
       contains(technicalArticle, /It is not a benchmark-proven productivity multiplier/) &&
       contains(technicalArticle, /Use npm for the normal install path/) &&
@@ -631,7 +631,7 @@ function localChecks() {
       contains(benchmarkingGuide, /reduced rediscovery/) &&
       contains(benchmarkingGuide, /recovery checkpoint/) &&
       contains(benchmarkingGuide, /same product quality bar/) &&
-      contains(benchmarkingGuide, /old stage-based SDLC results/) &&
+      contains(benchmarkingGuide, /old stage-based Tiny Context results/) &&
       contains(benchmarkingGuide, /break-even curve/) &&
       contains(benchmarkingGuide, /Old stage-based results prove the current Minimal Context package is faster/) &&
       contains(read("examples/delivery-benchmark/RUNBOOK.md"), /docs\/benchmarking\.md/),
@@ -720,7 +720,7 @@ function localChecks() {
     "private-review-log-template",
     hasFile("docs/launch/private-review-log-template.md") &&
       contains(launchKit, /Private review log template/) &&
-      contains(privateReviewLogTemplate, /Keep filled logs under `tmp\/sdlc\/private-review\/\*\*`/) &&
+      contains(privateReviewLogTemplate, /Keep filled logs under `tmp\/ty-context\/private-review\/\*\*`/) &&
       contains(privateReviewLogTemplate, /not in `project_context\/\*\*`/) &&
       contains(privateReviewLogTemplate, /Do not commit filled logs unless every reviewer explicitly approved/) &&
       contains(privateReviewLogTemplate, /Reviewer Tracker/) &&
@@ -787,7 +787,7 @@ function localChecks() {
       contains(roadmap, /Keep the npm package installable and aligned with README\/package README/) &&
       contains(roadmap, /public adoption stories/) &&
       contains(roadmap, /Re-run delivery benchmarks against the current Minimal Context design/) &&
-      contains(roadmap, /Full SDLC phase gates, lifecycle state or work-product trees/) &&
+      contains(roadmap, /Full Tiny Context phase gates, lifecycle state or work-product trees/) &&
       contains(roadmap, /validate-context` proves product quality/),
     "Public roadmap is linked from README/package README and keeps next steps bounded to Minimal Context without proof claims."
   );
@@ -867,7 +867,7 @@ function localChecks() {
       contains(launchProfile, /Minimal Context sample guide/) &&
       contains(launchProfile, /Browseable sample repository/) &&
       contains(launchProfile, /examples\/minimal-context-sample/) &&
-      contains(launchProfile, /Avoid using `sdlc` as the first tag/) &&
+      contains(launchProfile, /Avoid using `ty-context` as the first tag/) &&
       contains(launchProfile, /Use GitHub as the primary launch URL for public posts/) &&
       contains(launchProfile, /Use npm as the GitHub repository homepage now that the renamed package is published/) &&
       contains(launchProfile, /Normal install path/) &&
@@ -906,7 +906,7 @@ function localChecks() {
     "launch-claims-boundary",
     hasFile("docs/launch/claims-boundary.md") &&
       contains(launchKit, /Launch claims boundary/) &&
-      contains(launchKit, /no benchmark, adoption, award, test-replacement or SDLC-automation overclaim/) &&
+      contains(launchKit, /no benchmark, adoption, award, test-replacement or Tiny Context-automation overclaim/) &&
       contains(primaryLaunch, /claims-boundary\.md/) &&
       contains(responseTemplates, /claims-boundary\.md/) &&
       contains(outreachTargets, /claims-boundary\.md/) &&
@@ -1104,7 +1104,7 @@ function localChecks() {
       contains(launchKit, /Feedback triage runbook/) &&
       contains(primaryLaunch, /feedback-triage\.md/) &&
       contains(feedbackTriage, /Launch Feedback Triage/) &&
-      contains(feedbackTriage, /tmp\/sdlc\/launch-feedback/) &&
+      contains(feedbackTriage, /tmp\/ty-context\/launch-feedback/) &&
       contains(feedbackTriage, /First Hour/) &&
       contains(feedbackTriage, /Six-Hour Triage/) &&
       contains(feedbackTriage, /Patch Rules/) &&
@@ -1128,7 +1128,7 @@ function localChecks() {
       contains(npmPublishRunbook, /You may not perform that action with these credentials/) &&
       contains(npmPublishRunbook, /credential, account policy or token permission issue/) &&
       contains(npmPublishRunbook, /npm profile get name email tfa --json/) &&
-      contains(npmPublishRunbook, /npm access list collaborators agent-project-sdlc steve1998 --json/) &&
+      contains(npmPublishRunbook, /npm access list collaborators agent-project-ty-context steve1998 --json/) &&
       contains(npmPublishRunbook, /current token can maintain the legacy package but cannot create or manage the renamed package namespace/) &&
       contains(npmPublishRunbook, /granular access tokens must be created on npmjs\.com, not from the CLI/) &&
       contains(npmPublishRunbook, /npm run launch:strict-external/),
@@ -1219,7 +1219,7 @@ function localChecks() {
       contains(npmTrustedPublishWorkflow, /npm CLI 11\.5\.1 or later is required/) &&
       contains(npmTrustedPublishWorkflow, /npm test --workspace project-tiny-context-harness/) &&
       contains(npmTrustedPublishWorkflow, /npm run release:check-version/) &&
-      contains(npmTrustedPublishWorkflow, /node packages\/sdlc-harness\/dist\/cli\.js package check-source/) &&
+      contains(npmTrustedPublishWorkflow, /node packages\/ty-context\/dist\/cli\.js package check-source/) &&
       contains(npmTrustedPublishWorkflow, /make validate-context/) &&
       contains(npmTrustedPublishWorkflow, /npm pack --dry-run --workspace project-tiny-context-harness/) &&
       contains(npmTrustedPublishWorkflow, /NPM_CONFIG_PROVENANCE:\s*"true"/) &&
@@ -1265,7 +1265,7 @@ function localChecks() {
       contains(githubReleasePacket, /safe_pending/) &&
       contains(githubReleasePacket, /manual_required/) &&
       contains(githubReleasePacket, /blocked/) &&
-      contains(githubReleasePacket, /sdlc-harness upgrade --check/) &&
+      contains(githubReleasePacket, /ty-context upgrade --check/) &&
       contains(githubReleasePacket, /tools\/github_release_publish\.mjs/) &&
       contains(githubReleasePacket, /Dry runs do not create or edit GitHub releases/) &&
       contains(githubReleasePacket, /npm install -D project-tiny-context-harness@latest/) &&
@@ -1418,7 +1418,7 @@ function localChecks() {
       contains(awesomeAiDevtoolsPatch, /Codex, Claude Code, Cursor, Gemini CLI, OpenCode/) &&
       contains(aiBoostPatch, /harness-experimental/) &&
       contains(aiBoostPatch, /Seven128\/project-tiny-context-harness/) &&
-      contains(aiBoostPatch, /without adding SDLC phase ceremony/) &&
+      contains(aiBoostPatch, /without adding Tiny Context phase ceremony/) &&
       contains(picrewPatch, /Context & Working-State Engineering/) &&
       contains(picrewPatch, /Seven128\/project-tiny-context-harness/) &&
       contains(picrewPatch, /stars_snapshot: 0/),
@@ -1458,7 +1458,7 @@ function localChecks() {
       contains(metricsPacket, /Launch Metrics Snapshot/) &&
       contains(metricsPacket, /Do not treat stars, forks or downloads as product-quality proof/) &&
       contains(metricsScript, /project-tiny-context-harness/) &&
-      contains(metricsScript, /agent-project-sdlc/) &&
+      contains(metricsScript, /agent-project-ty-context/) &&
       contains(metricsScript, /missing npm download data does not fail the launch/) &&
       contains(hnSnapshotScript, /hacker-news\.firebaseio\.com/) &&
       contains(hnSnapshotScript, /distribution telemetry only/),
@@ -1472,7 +1472,7 @@ function localChecks() {
       contains(feedbackTriage, /npm run launch:feedback-note/) &&
       contains(launchKit, /npm run launch:feedback-note/) &&
       contains(primaryLaunch, /npm run launch:feedback-note/) &&
-      contains(feedbackNoteScript, /tmp\/sdlc\/launch-feedback/) &&
+      contains(feedbackNoteScript, /tmp\/ty-context\/launch-feedback/) &&
       contains(feedbackNoteScript, /npm run launch:hn-snapshot/) &&
       contains(feedbackNoteScript, /Do not store raw private logs/) &&
       contains(feedbackNoteScript, /adoption reports only for concrete recovery evidence/) &&
@@ -1653,7 +1653,7 @@ function localChecks() {
       contains(sourceWorkflow, /Prepare source workspace CLI/) &&
       contains(sourceWorkflow, /uses: actions\/checkout@v6/) &&
       contains(sourceWorkflow, /uses: actions\/setup-node@v6/) &&
-      contains(sourceWorkflow, /hashFiles\('packages\/sdlc-harness\/package\.json'\) != ''/) &&
+      contains(sourceWorkflow, /hashFiles\('packages\/ty-context\/package\.json'\) != ''/) &&
       contains(sourceWorkflow, /npm run build --workspace project-tiny-context-harness/) &&
       !contains(sourceWorkflow, /npm test --workspace project-tiny-context-harness|package check-source|npm publish/),
     "Consumer workflow runs the Harness gate, allows a source-workspace-only local CLI build, and excludes maintainer package checks."
@@ -1667,7 +1667,7 @@ function localChecks() {
       contains(maintainerWorkflow, /uses: actions\/checkout@v6/) &&
       contains(maintainerWorkflow, /uses: actions\/setup-node@v6/) &&
       contains(maintainerWorkflow, /Check package canonical source drift/) &&
-      contains(maintainerWorkflow, /node packages\/sdlc-harness\/dist\/cli\.js package check-source/) &&
+      contains(maintainerWorkflow, /node packages\/ty-context\/dist\/cli\.js package check-source/) &&
       contains(maintainerWorkflow, /Validate source Context/),
     "Maintainer package CI runs package tests, source drift from the source root, and Context validation."
   );
@@ -1710,7 +1710,7 @@ async function externalChecks(localPackageJson) {
       "developer-tools",
       "developer-productivity",
       "cli",
-      "sdlc",
+      "ty-context",
       "workflow"
     ];
     const githubTopics = Array.isArray(github.topics) ? github.topics : [];
@@ -1730,7 +1730,7 @@ async function externalChecks(localPackageJson) {
     const legacyRenameRelease =
       latestReleaseName === "Project Tiny Context Harness 0.2.39 - legacy npm package" &&
       /predates the npm package rename/i.test(latestReleaseBody) &&
-      /agent-project-sdlc version 0\.2\.39/i.test(latestReleaseBody) &&
+      /agent-project-ty-context version 0\.2\.39/i.test(latestReleaseBody) &&
       /project-tiny-context-harness latest/i.test(latestReleaseBody) &&
       /does not claim benchmark-proven delivery speedups/i.test(latestReleaseBody);
     const currentReleaseTitle = `Project Tiny Context Harness ${localPackageJson.version}`;
@@ -1781,7 +1781,7 @@ async function externalChecks(localPackageJson) {
     }
     const npmReadmeHasOldSurface = contains(
       npmReadme,
-      /AI SDLC Harness|agent-project-sdlc|project-agent-sdlc|stage-based SDLC Harness/
+      /AI Tiny Context Harness|agent-project-ty-context|project-agent-ty-context|stage-based Tiny Context Harness/
     );
     addCheck(
       checks,
@@ -1896,7 +1896,7 @@ if (options.help) {
   process.exit(0);
 }
 
-const localPackageJson = readJson("packages/sdlc-harness/package.json");
+const localPackageJson = readJson("packages/ty-context/package.json");
 const local = localChecks();
 let external = { checks: [] };
 if (!options.offline) {

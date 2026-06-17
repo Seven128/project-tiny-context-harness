@@ -4,16 +4,16 @@ This file is the restrained architecture context for the source repository. It i
 
 ## System Boundary
 
-- The repository owns the `project-tiny-context-harness` / `sdlc-harness` npm package, package-managed Minimal Context assets, source-sync checks, validators, release automation and delivery benchmark skeleton.
+- The repository owns the `project-tiny-context-harness` npm package and `ty-context` CLI, package-managed Minimal Context assets, source-sync checks, validators, release automation and delivery benchmark skeleton.
 - Consumer projects receive Minimal Context guidance, templates, Skills, Makefile include, validator tool and optional GitHub workflow assets.
 - Product quality remains outside Harness ownership and belongs to each project’s tests, CI, smoke checks, hidden probes or human acceptance.
 
 ## Component Map
 
-- CLI command layer: `packages/sdlc-harness/src/commands/**`.
-- Package behavior libraries: `packages/sdlc-harness/src/lib/**`.
-- Managed source assets: `.codex/pjsdlc_managed/**`.
-- Packaged canonical assets: `packages/sdlc-harness/assets/**`, generated from source mappings.
+- CLI command layer: `packages/ty-context/src/commands/**`.
+- Package behavior libraries: `packages/ty-context/src/lib/**`.
+- Managed source assets: `.codex/ty-context-managed/**`.
+- Packaged canonical assets: `packages/ty-context/assets/**`, generated from source mappings.
 - Source workspace Context: `project_context/**`.
 - Delivery benchmark skeleton: `examples/delivery-benchmark/**`.
 
@@ -23,9 +23,9 @@ This file is the restrained architecture context for the source repository. It i
 - `init` also creates `project_context/context.toml`, declaring the default `main` product/domain area and its default `verification` role context for ordinary projects.
 - CLI write commands check the configured schema major before writing; unsupported future schemas fail fast with the canonical package-qualified `npx` command hint.
 - `upgrade` migrates legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md`, creates missing `project_context/context.toml` by registering area Context files, and only rewrites legacy module paths in manifest/global references.
-- `sync` reads `packages/sdlc-harness/assets/**` and writes managed guidance, templates, tools and Skills into the configured harness root.
+- `sync` reads `packages/ty-context/assets/**` and writes managed guidance, templates, tools and Skills into the configured harness root.
 - Skill customization uses separate project-local Skills such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` and `<harnessRoot>/skills/development_engineer/SKILL.md`; `sync` overwrites package-managed default `context_*` Skills and leaves those separate local Skills untouched. Project-local Skill front matter `description` trigger keywords are expected to stay aligned with the default Skill trigger intent and the project `AGENTS.md` role-trigger rule.
-- `package sync-source` copies source workspace assets into `packages/sdlc-harness/assets/**`; `package check-source` verifies no drift.
+- `package sync-source` copies source workspace assets into `packages/ty-context/assets/**`; `package check-source` verifies no drift.
 - `validate-context` checks Context recoverability, validates graph metadata, treats non-area roles as semantic labels, and rejects fake verification-result claims.
 - `validate-code-modularity` checks touched handwritten source modularity separately from Context recoverability; `validate-harness` composes both gates.
 
@@ -46,8 +46,8 @@ This file is the restrained architecture context for the source repository. It i
 ## Verification Implications
 
 - `npm test --workspace project-tiny-context-harness`
-- `node packages/sdlc-harness/dist/cli.js package sync-source`
-- `node packages/sdlc-harness/dist/cli.js package check-source`
+- `node packages/ty-context/dist/cli.js package sync-source`
+- `node packages/ty-context/dist/cli.js package check-source`
 - `make validate-harness`
 - `git diff --check`
 

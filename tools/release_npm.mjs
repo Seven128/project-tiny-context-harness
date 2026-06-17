@@ -8,7 +8,7 @@ import path from "node:path";
 const projectRoot = process.cwd();
 const packageName = "project-tiny-context-harness";
 const workspaceName = "project-tiny-context-harness";
-const packageManifestPath = path.join(projectRoot, "packages", "sdlc-harness", "package.json");
+const packageManifestPath = path.join(projectRoot, "packages", "ty-context", "package.json");
 const releaseReportRelativePath = ".artifacts/releases/current-release-status.md";
 const releasePackDir = path.join(projectRoot, ".artifacts", "releases", "pack");
 
@@ -95,7 +95,7 @@ async function main() {
 
   if (args.publish) {
     await step(report, "package source sync", () =>
-      run("node", ["packages/sdlc-harness/dist/cli.js", "package", "sync-source"])
+      run("node", ["packages/ty-context/dist/cli.js", "package", "sync-source"])
     );
   }
 
@@ -105,13 +105,13 @@ async function main() {
   report.pack = pack;
 
   await step(report, "package source drift check", () =>
-    run("node", ["packages/sdlc-harness/dist/cli.js", "package", "check-source"])
+    run("node", ["packages/ty-context/dist/cli.js", "package", "check-source"])
   );
 
   if (args.fullGate) {
-    await step(report, "full test suite", () => run("node", ["--test", "tests/sdlc-harness/*.test.mjs"]));
+    await step(report, "full test suite", () => run("node", ["--test", "tests/ty-context/*.test.mjs"]));
     await step(report, "validate context", () =>
-      run("node", ["packages/sdlc-harness/dist/cli.js", "validate-context"])
+      run("node", ["packages/ty-context/dist/cli.js", "validate-context"])
     );
   }
 
@@ -351,7 +351,7 @@ async function packPackage({ publish }) {
 }
 
 async function installedConsumerSmoke(version) {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "sdlc-release-smoke-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "ty-context-release-smoke-"));
   await run("npm", ["init", "-y"], { cwd: tmp });
   await run("npm", ["install", "-D", `${packageName}@${version}`], { cwd: tmp });
   const installedVersion = (
@@ -363,8 +363,8 @@ async function installedConsumerSmoke(version) {
   if (installedVersion !== version) {
     throw new Error(`Installed package version ${installedVersion} did not match ${version}`);
   }
-  await run("npx", ["--no-install", "sdlc-harness", "init", "--harness-folder", ".codex"], { cwd: tmp });
-  const doctor = await run("npx", ["--no-install", "sdlc-harness", "doctor"], { cwd: tmp, capture: true });
+  await run("npx", ["--no-install", "ty-context", "init", "--harness-folder", ".codex"], { cwd: tmp });
+  const doctor = await run("npx", ["--no-install", "ty-context", "doctor"], { cwd: tmp, capture: true });
   if (!doctor.output.includes(`core package: ${packageName}@${version}`)) {
     throw new Error("Doctor output did not include the expected package version.");
   }
@@ -620,10 +620,10 @@ This report is a generated release artifact under \`.artifacts/**\`. Historical 
   - npm publish OTP: ${report.otpProvided ? "PROVIDED, not written to the report." : "NOT PROVIDED"}.
   - Release update mode: \`${releaseUpdateMode}\` from \`docs/launch/github-release-${version}.md\`.
   - \`node tools/sync_release_version.mjs${report.publish ? "" : " --check"}\`: ${stepStatus(report, versionSurfaceLabel)}.
-  - \`node packages/sdlc-harness/dist/cli.js package sync-source\`: ${packageSourceSyncStatus}.
-  - \`node packages/sdlc-harness/dist/cli.js package check-source\`: ${stepStatus(report, "package source drift check")}.
-  - \`node --test tests/sdlc-harness/*.test.mjs\`: ${fullGateStatus}.
-  - \`node packages/sdlc-harness/dist/cli.js validate-context\`: ${validateStatus}.
+  - \`node packages/ty-context/dist/cli.js package sync-source\`: ${packageSourceSyncStatus}.
+  - \`node packages/ty-context/dist/cli.js package check-source\`: ${stepStatus(report, "package source drift check")}.
+  - \`node --test tests/ty-context/*.test.mjs\`: ${fullGateStatus}.
+  - \`node packages/ty-context/dist/cli.js validate-context\`: ${validateStatus}.
   - \`${packCommand}\`: ${stepStatus(report, pack?.mode === "tarball" ? "npm pack tarball" : "npm pack dry run")}.
   - \`git diff --check\`: ${stepStatus(report, "final diff check")}.
   - \`${publishCommand}\`: ${publishEvidence}

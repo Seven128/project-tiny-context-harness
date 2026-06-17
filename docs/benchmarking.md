@@ -66,7 +66,7 @@ Weak evidence:
 - a run where Harness had more information than baseline,
 - a run where baseline failed quality but Harness passed,
 - a run where the operator intervened in one path but not the other,
-- old stage-based SDLC results.
+- old stage-based Tiny Context results.
 
 ## How To Interpret Outcomes
 

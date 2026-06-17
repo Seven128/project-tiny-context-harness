@@ -5,7 +5,7 @@ import path from "node:path";
 
 const REPO = "Seven128/project-tiny-context-harness";
 const RENAMED_PACKAGE = "project-tiny-context-harness";
-const LEGACY_PACKAGE = "agent-project-sdlc";
+const LEGACY_PACKAGE = "agent-project-ty-context";
 
 function parseArgs(argv) {
   const options = { json: false, output: null, offline: false };
@@ -40,7 +40,7 @@ The snapshot is informational; missing npm download data does not fail the launc
 Usage:
   node tools/launch_metrics_snapshot.mjs
   node tools/launch_metrics_snapshot.mjs --json
-  node tools/launch_metrics_snapshot.mjs --output tmp/sdlc/launch-metrics/baseline.md
+  node tools/launch_metrics_snapshot.mjs --output tmp/ty-context/launch-metrics/baseline.md
   node tools/launch_metrics_snapshot.mjs --offline --json
 `);
 }

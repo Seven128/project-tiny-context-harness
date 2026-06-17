@@ -34,7 +34,7 @@
 
 ## Test Entry Points
 
-- `node --test tests/sdlc-harness/delivery-benchmark.test.mjs`
+- `node --test tests/ty-context/delivery-benchmark.test.mjs`
 - `node --check examples/delivery-benchmark/runner/delivery_benchmark.mjs`
 - `node --check examples/delivery-benchmark/results/benchmark-data.js`
 

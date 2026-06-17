@@ -15,7 +15,7 @@ v0.2.48
 Target:
 
 ```text
-Use the commit that bumps `packages/sdlc-harness/package.json` to 0.2.48 and is published to npm.
+Use the commit that bumps `packages/ty-context/package.json` to 0.2.48 and is published to npm.
 ```
 
 Title:
@@ -31,7 +31,7 @@ Project Tiny Context Harness 0.2.48 is the current public release line under the
 
 ```sh
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init
+npx --yes --package project-tiny-context-harness@latest ty-context init
 make validate-context
 ```
 
@@ -41,7 +41,7 @@ make validate-context
 - Keeps the install path on the renamed package: `project-tiny-context-harness`.
 - Keeps the core positioning tight: minimal repo-native project memory for AI coding agents.
 - Keeps the Minimal Context boundary explicit: `AGENTS.md` is the startup router, `project_context/**` keeps durable recovery facts, and `validate-context` checks recoverability.
-- Keeps the old stage-based SDLC workflow out of the default package surface.
+- Keeps the old stage-based Tiny Context workflow out of the default package surface.
 
 ## Boundary
 

@@ -11,7 +11,7 @@ Current state: `project-tiny-context-harness@0.2.42` is published. Do not reuse 
 ## Historical First-Publish State
 
 - `npm whoami` returns an authenticated npm user.
-- `npm view agent-project-sdlc name version dist-tags --json` returns `agent-project-sdlc@0.2.39`.
+- `npm view agent-project-ty-context name version dist-tags --json` returns `agent-project-ty-context@0.2.39`.
 - `npm view project-tiny-context-harness name version dist-tags --json` returns 404.
 - `npm run launch:strict-external` should keep failing on `npm-fetch` until the renamed package is published.
 
@@ -84,7 +84,7 @@ If publish fails with auth or permission errors:
    ```sh
    npm profile get name email tfa --json
    npm access list packages steve1998 --json
-   npm access list collaborators agent-project-sdlc steve1998 --json
+   npm access list collaborators agent-project-ty-context steve1998 --json
    ```
 
    A useful diagnostic pattern is: `npm whoami` works, the legacy package reports `read-write`, but profile or package-list commands return E403. That means the current token can maintain the legacy package but cannot create or manage the renamed package namespace.
@@ -113,7 +113,7 @@ After the first publish and any postpublish patch, run:
 
 ```sh
 npm run launch:strict-external
-npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@latest --clean
+npm run launch:demo -- --out-dir tmp/ty-context/launch-demo/latest --package-spec project-tiny-context-harness@latest --clean
 npm view project-tiny-context-harness readme --json
 gh release view v<published-version>
 ```

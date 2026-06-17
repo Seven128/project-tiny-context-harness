@@ -13,11 +13,11 @@ Imagine a small issue-labeling service:
 - It must not auto-apply labels without review.
 - Most agent mistakes happen when a fresh chat forgets that boundary and edits the wrong workflow path.
 
-The project does not need a full SDLC process. It needs a small durable memory surface.
+The project does not need a full Tiny Context process. It needs a small durable memory surface.
 
 ## Files
 
-After `sdlc-harness init`, the important files are:
+After `ty-context init`, the important files are:
 
 ```text
 AGENTS.md

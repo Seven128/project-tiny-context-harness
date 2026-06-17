@@ -14,9 +14,9 @@ Public state after the repository rename, checked against public GitHub and npm 
 | GitHub stars / forks | 0 stars, 0 forks |
 | GitHub description / license | `Minimal project memory and validation harness for AI coding agents.`, MIT detected |
 | GitHub homepage | `https://www.npmjs.com/package/project-tiny-context-harness` |
-| GitHub topics | `agent-context`, `agent-memory`, `agents-md`, `ai-agents`, `ai-coding`, `claude-code`, `cli`, `codex`, `coding-agent`, `context-engineering`, `context-management`, `cursor`, `developer-productivity`, `developer-tools`, `gemini-cli`, `opencode`, `project-memory`, `sdlc`, `workflow` |
-| GitHub release | Latest release is `Project Tiny Context Harness 0.2.54` |
-| npm package | `project-tiny-context-harness@0.2.54` is published and installable through `@latest` |
+| GitHub topics | `agent-context`, `agent-memory`, `agents-md`, `ai-agents`, `ai-coding`, `claude-code`, `cli`, `codex`, `coding-agent`, `context-engineering`, `context-management`, `cursor`, `developer-productivity`, `developer-tools`, `gemini-cli`, `opencode`, `project-memory`, `ty-context`, `workflow` |
+| GitHub release | Latest release is `Project Tiny Context Harness 0.2.55` |
+| npm package | `project-tiny-context-harness@0.2.55` is published and installable through `@latest` |
 | npm public metadata | Live npm package metadata |
 | npm downloads | Renamed package download window is not available yet through the npm downloads API; legacy package last-week downloads remain useful only as historical distribution telemetry |
 | Launch readiness | Local `npm run launch:check` and strict external check pass; the first public Show HN post and first regular HN comment are live |
@@ -38,7 +38,7 @@ GitHub public repository snapshot:
 | [oraios/serena](https://github.com/oraios/serena) | 25,157 | MCP toolkit and semantic code agent IDE | Semantic retrieval/editing |
 | [SuperClaude-Org/SuperClaude_Framework](https://github.com/SuperClaude-Org/SuperClaude_Framework) | 23,235 | Claude Code commands, personas and methodology | Agent configuration framework |
 
-Interpretation: the visible AI coding/dev workflow market already has several 20k-170k star projects. Project Tiny Context Harness should not compete head-on as another agent, task manager, full SDLC method or retrieval engine.
+Interpretation: the visible AI coding/dev workflow market already has several 20k-170k star projects. Project Tiny Context Harness should not compete head-on as another agent, task manager, full Tiny Context method or retrieval engine.
 
 ## Wedge
 
@@ -70,7 +70,7 @@ Deprioritize:
 - Users looking for a complete autonomous coding agent.
 - Teams that want Jira/backlog ownership.
 - Users who expect external documentation retrieval.
-- Organizations that need a heavy compliance SDLC suite.
+- Organizations that need a heavy compliance Tiny Context suite.
 
 ## Feasibility
 
@@ -93,7 +93,7 @@ Say:
 
 Do not say:
 
-- Autonomous SDLC.
+- Autonomous Tiny Context.
 - Replaces tests, CI or review.
 - Faster delivery proven by benchmark.
 - Better than Spec Kit, BMAD, Task Master, Context7 or Serena.

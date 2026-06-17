@@ -27,7 +27,7 @@ const TOPICS = [
   "developer-tools",
   "developer-productivity",
   "cli",
-  "sdlc",
+  "ty-context",
   "workflow"
 ];
 

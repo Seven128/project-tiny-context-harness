@@ -22,7 +22,7 @@ Important current constraints:
 
 The renamed package exists on npm. Use local token publishing only as an emergency fallback.
 
-The current published package is `project-tiny-context-harness@0.2.54`. It is published through the GitHub Actions Trusted Publishing workflow after a successful dry run. A future real Trusted Publishing run must publish a new version after `packages/sdlc-harness/package.json` is bumped and the normal release checks pass. Do not run a real publish for an existing version again; npm versions are immutable.
+The current published package is `project-tiny-context-harness@0.2.55`. It is published through the GitHub Actions Trusted Publishing workflow after a successful dry run. A future real Trusted Publishing run must publish a new version after `packages/ty-context/package.json` is bumped and the normal release checks pass. Do not run a real publish for an existing version again; npm versions are immutable.
 
 Real publish runs also create or update the matching GitHub Release from `docs/launch/github-release-<version>.md` by running `node tools/github_release_publish.mjs --version <version> --target <github.sha>`. Dry runs do not create or edit GitHub releases.
 
@@ -67,7 +67,7 @@ It is manual-only:
 
 - `workflow_dispatch` prevents accidental publish on every push or tag.
 - `dry_run` defaults to `true`.
-- `expected_version` must match `packages/sdlc-harness/package.json`.
+- `expected_version` must match `packages/ty-context/package.json`.
 - Versioned release surfaces must be synchronized with `npm run release:sync-version`; the workflow verifies this with `npm run release:check-version`.
 - The job runs on `ubuntu-latest` with Node `24`.
 - The workflow installs the latest npm CLI and asserts npm CLI 11.5.1 or later.
@@ -109,7 +109,7 @@ Then verify:
 
 ```sh
 npm run launch:strict-external
-npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@latest --clean
+npm run launch:demo -- --out-dir tmp/ty-context/launch-demo/latest --package-spec project-tiny-context-harness@latest --clean
 npm view project-tiny-context-harness readme --json
 gh release view v<new-version>
 ```

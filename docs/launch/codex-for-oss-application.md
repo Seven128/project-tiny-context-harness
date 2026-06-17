@@ -27,7 +27,7 @@ Current weak points:
 Use these fields only after running a fresh metrics snapshot:
 
 ```sh
-npm run launch:metrics -- --output tmp/sdlc/launch-metrics/codex-for-oss-before.md
+npm run launch:metrics -- --output tmp/ty-context/launch-metrics/codex-for-oss-before.md
 ```
 
 Repository URL:
@@ -58,7 +58,7 @@ The application form limits several answers to 500 characters. Keep the text fac
 ### Why Does This Repository Qualify?
 
 ```text
-Project Tiny Context Harness is an active MIT developer tool for AI coding-agent maintainers. It installs repo-local Minimal Context, AGENTS.md guidance and validate-context checks so fresh Codex, Claude Code, Cursor and OpenCode sessions recover project intent, boundaries and validation paths. It is designed for maintainers who need durable repo memory without SDLC-stage ceremony.
+Project Tiny Context Harness is an active MIT developer tool for AI coding-agent maintainers. It installs repo-local Minimal Context, AGENTS.md guidance and validate-context checks so fresh Codex, Claude Code, Cursor and OpenCode sessions recover project intent, boundaries and validation paths. It is designed for maintainers who need durable repo memory without Tiny Context-stage ceremony.
 ```
 
 Character count: 384.
@@ -88,11 +88,11 @@ Before submitting:
 - [ ] Confirm the maintainer's GitHub profile visibility is public.
 - [ ] Confirm the repository visibility is public.
 - [ ] Confirm the ChatGPT account email and OpenAI organization ID.
-- [ ] Run `npm run launch:metrics -- --output tmp/sdlc/launch-metrics/codex-for-oss-before.md`.
+- [ ] Run `npm run launch:metrics -- --output tmp/ty-context/launch-metrics/codex-for-oss-before.md`.
 - [ ] Run `npm run launch:strict-external` and note any external blocker if it appears.
 - [ ] Update any metrics in the copy from current evidence only.
 - [ ] Do not claim official OpenAI integration, broad adoption, awards, benchmark wins or productivity multipliers.
-- [ ] Save the submitted form timestamp and non-private summary under `tmp/sdlc/recognition/**`, not in `project_context/**`.
+- [ ] Save the submitted form timestamp and non-private summary under `tmp/ty-context/recognition/**`, not in `project_context/**`.
 
 ## Claims Boundary
 

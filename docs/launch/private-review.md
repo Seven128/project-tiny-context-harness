@@ -25,7 +25,7 @@ Invite 5-10 people who already use coding agents on non-trivial repositories:
 
 Avoid generic AI-tool collectors for this pass. The useful signal is about project-memory recovery, not broad AI enthusiasm.
 
-For candidate scoring and a two-wave outreach plan, use [private-review-shortlist.md](private-review-shortlist.md). Keep filled shortlists under `tmp/sdlc/private-review/**`, not in the repository.
+For candidate scoring and a two-wave outreach plan, use [private-review-shortlist.md](private-review-shortlist.md). Keep filled shortlists under `tmp/ty-context/private-review/**`, not in the repository.
 
 ## Copy-Paste DM
 
@@ -64,12 +64,12 @@ npm run preview:pack
 If you want to try it in a disposable copy of your own repo:
 cd /path/to/your/test-repo
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init --adopt
+npx --yes --package project-tiny-context-harness@latest ty-context init --adopt
 make validate-context
 
 Or use the local source-preview tarball:
-npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.54.tgz
-npx --no-install sdlc-harness init --adopt
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.2.55.tgz
+npx --no-install ty-context init --adopt
 make validate-context
 
 The main question: does this minimal recovery surface solve a real "new agent chat lost the project context" problem, or is the missing context somewhere else?
@@ -99,7 +99,7 @@ npm run preview:pack
 
 If local setup is inconvenient, open <https://codespaces.new/Seven128/project-tiny-context-harness> and run `npm run smoke:quickstart` / `npm run preview:pack` there.
 
-Then either inspect the disposable smoke repo output, or install the generated `tmp/sdlc/source-preview/package/*.tgz` tarball into a disposable copy of one real repository and run `npx --no-install sdlc-harness init --adopt`.
+Then either inspect the disposable smoke repo output, or install the generated `tmp/ty-context/source-preview/package/*.tgz` tarball into a disposable copy of one real repository and run `npx --no-install ty-context init --adopt`.
 
 If the source preview path fails, ask reviewers to open a [Source preview report](https://github.com/Seven128/project-tiny-context-harness/issues/new?template=source_preview_report.yml) with the command, environment and shortest useful output.
 
@@ -110,7 +110,7 @@ Open `docs/examples/minimal-context-sample.md` and `docs/examples/fresh-agent-re
 Track private feedback with [private-review-log-template.md](private-review-log-template.md) in a temporary file, not in `project_context/**`:
 
 ```text
-tmp/sdlc/private-review/YYYY-MM-DD-review-notes.md
+tmp/ty-context/private-review/YYYY-MM-DD-review-notes.md
 ```
 
 Capture:
@@ -132,7 +132,7 @@ Within 24 hours of the private pass:
 - Patch README or FAQ for repeated confusion.
 - Turn repeated missing-fact requests into GitHub issues.
 - Move public-consent examples into an adoption report, launch reply or [adoption story](adoption-story-template.md).
-- Leave one-off private notes in `tmp/sdlc/private-review/**`.
+- Leave one-off private notes in `tmp/ty-context/private-review/**`.
 - Do not claim adoption, benchmark wins or productivity multipliers from private feedback.
 
 ## Success Signals
@@ -147,7 +147,7 @@ Weak signal:
 
 - Generic "looks cool" feedback.
 - Star without a trial or specific comment.
-- Requests to turn it into an autonomous agent, task manager or full SDLC suite.
+- Requests to turn it into an autonomous agent, task manager or full Tiny Context suite.
 
 ## Claims Boundary
 

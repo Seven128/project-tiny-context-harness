@@ -45,7 +45,7 @@ function parseArgs(argv) {
 function printHelp() {
   console.log(`sync_release_version.mjs
 
-Synchronizes release-version surfaces to packages/sdlc-harness/package.json.
+Synchronizes release-version surfaces to packages/ty-context/package.json.
 
 Usage:
   node tools/sync_release_version.mjs
@@ -68,8 +68,8 @@ async function main() {
 
   for (const relativePath of [
     "README.md",
-    "packages/sdlc-harness/README.md",
-    "packages/sdlc-harness/assets/README.md",
+    "packages/ty-context/README.md",
+    "packages/ty-context/assets/README.md",
     "docs/adopt-existing-repo.md",
     "docs/launch/private-review.md",
     "docs/launch/profile.md"
@@ -142,7 +142,7 @@ async function main() {
 }
 
 function readPackageVersion(repoRoot) {
-  const manifest = JSON.parse(readText("packages/sdlc-harness/package.json", repoRoot));
+  const manifest = JSON.parse(readText("packages/ty-context/package.json", repoRoot));
   if (!/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(manifest.version)) {
     throw new Error(`Invalid package version: ${manifest.version}`);
   }
@@ -176,7 +176,7 @@ function validateReleasePacket(relativePath, content, version) {
     /sync-only/,
     /upgrade-required/,
     /manual-required/,
-    /sdlc-harness upgrade --check/,
+    /ty-context upgrade --check/,
     /tools\/github_release_publish\.mjs/,
     /Dry runs do not create or edit GitHub releases/,
     /safe_pending/,
@@ -211,7 +211,7 @@ v${version}
 Target:
 
 \`\`\`text
-Use the commit that bumps \`packages/sdlc-harness/package.json\` to ${version} and is published to npm.
+Use the commit that bumps \`packages/ty-context/package.json\` to ${version} and is published to npm.
 \`\`\`
 
 Title:
@@ -231,15 +231,15 @@ Project Tiny Context Harness ${version} is the current public release line under
 
 \`\`\`sh
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init
+npx --yes --package project-tiny-context-harness@latest ty-context init
 make validate-context
 \`\`\`
 
 Update mode: \`${releaseUpdateMode}\`. After updating the package, run:
 
 \`\`\`sh
-npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade --check
-npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade
+npx --yes --package project-tiny-context-harness@latest ty-context upgrade --check
+npx --yes --package project-tiny-context-harness@latest ty-context upgrade
 \`\`\`
 
 Use \`sync\` only for releases explicitly marked \`sync-only\`; sync does not run migrations. Upgrade plans report \`safe_pending\`, \`manual_required\` and \`blocked\`.
@@ -248,10 +248,11 @@ Use \`sync\` only for releases explicitly marked \`sync-only\`; sync does not ru
 
 - Publishes \`${packageName}@${version}\` through npm Trusted Publishing.
 - Keeps the install path on the renamed package: \`${packageName}\`.
+- Adds a recoverable \`ty-context upgrade\` path for older \`sdlc-harness\` / \`pjsdlc_managed\` installations, with conflicts and overrides reported as manual follow-up instead of guessed.
 - Keeps the core positioning tight: minimal repo-native project memory for AI coding agents.
 - Keeps the Minimal Context boundary explicit: \`AGENTS.md\` is the startup router, \`project_context/**\` keeps durable recovery facts, and \`validate-context\` checks recoverability.
 - Makes package updates explicit through release update modes: ${releaseUpdateModes.map((mode) => `\`${mode}\``).join(", ")}.
-- Keeps the old stage-based SDLC workflow out of the default package surface.
+- Keeps the old stage-based Tiny Context workflow out of the default package surface.
 
 ## Boundary
 

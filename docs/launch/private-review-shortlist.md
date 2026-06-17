@@ -2,7 +2,7 @@
 
 Use this before sending the private review DM in [private-review.md](private-review.md). The goal is to pick reviewers who can evaluate the fresh-agent recovery problem from real experience, not people who will only give polite encouragement.
 
-Do not commit a filled shortlist with private names, companies, private repositories, email addresses, handles, DMs or raw feedback. Keep filled copies under `tmp/sdlc/private-review/**`.
+Do not commit a filled shortlist with private names, companies, private repositories, email addresses, handles, DMs or raw feedback. Keep filled copies under `tmp/ty-context/private-review/**`.
 
 ## Reviewer Mix
 
@@ -65,10 +65,10 @@ Do not ask for:
 
 ## Tracking
 
-Create a filled working file only under `tmp/sdlc/private-review/**`:
+Create a filled working file only under `tmp/ty-context/private-review/**`:
 
 ```text
-tmp/sdlc/private-review/YYYY-MM-DD-shortlist.md
+tmp/ty-context/private-review/YYYY-MM-DD-shortlist.md
 ```
 
 After replies arrive, summarize only repeatable themes in [private-review-log-template.md](private-review-log-template.md). Convert public examples only through [adoption-story-template.md](adoption-story-template.md) and only with explicit consent.

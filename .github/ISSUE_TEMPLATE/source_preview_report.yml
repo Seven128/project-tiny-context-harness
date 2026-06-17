@@ -29,7 +29,7 @@ body:
       placeholder: |
         npm run smoke:quickstart
         npm run preview:pack
-        npx --no-install sdlc-harness init --adopt
+        npx --no-install ty-context init --adopt
       render: sh
     validations:
       required: true

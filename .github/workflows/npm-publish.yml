@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       expected_version:
-        description: "Must match packages/sdlc-harness/package.json version."
+        description: "Must match packages/ty-context/package.json version."
         required: true
-        default: "0.2.54"
+        default: "0.2.55"
       dry_run:
         description: "Run all checks and pack without publishing."
         required: true
@@ -38,7 +38,7 @@ jobs:
       - name: Check package version
         shell: bash
         run: |
-          PACKAGE_VERSION="$(node -p "require('./packages/sdlc-harness/package.json').version")"
+          PACKAGE_VERSION="$(node -p "require('./packages/ty-context/package.json').version")"
           if [ "$PACKAGE_VERSION" != "${{ inputs.expected_version }}" ]; then
             echo "Expected ${{ inputs.expected_version }} but package is $PACKAGE_VERSION" >&2
             exit 1
@@ -54,7 +54,7 @@ jobs:
         run: npm run release:check-version
 
       - name: Check package canonical source drift
-        run: node packages/sdlc-harness/dist/cli.js package check-source
+        run: node packages/ty-context/dist/cli.js package check-source
 
       - name: Validate source Context
         run: make validate-context

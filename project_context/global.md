@@ -2,7 +2,7 @@
 
 ## Project Goal
 
-- Maintain `project-tiny-context-harness`, the npm package and `sdlc-harness` CLI behind the public Project Tiny Context Harness display name.
+- Maintain `project-tiny-context-harness`, the npm package and `ty-context` CLI behind the public Project Tiny Context Harness display name.
 - Current product direction is Minimal Context Harness: preserve the smallest durable facts needed for fresh-agent recovery, iteration, debug and requirement changes.
 
 ## Non-goals / Boundaries
@@ -15,13 +15,13 @@
 ## Background
 
 - This repository contains the Harness package source, npm package release/source-sync logic and delivery benchmark logic.
-- Earlier versions used a stage-based SDLC workflow with lifecycle state, plan tasks, stage skills, stage work-product trees and many validators.
+- Earlier versions used a stage-based Tiny Context workflow with lifecycle state, plan tasks, stage skills, stage work-product trees and many validators.
 - Benchmark pilots showed that full default ceremonies and frequent workflow gates create substantial time/token friction on ordinary and medium-complexity tasks.
 
 ## Design Rationale
 
-- The durable value with the clearest expected return is context recovery, not forcing a full SDLC document chain for every project.
-- The historical stage-based Harness externalized the whole SDLC through lifecycle state, plan tasks, PRD / tech plan / implementation / review / test / release artifacts and phase gates. Benchmark pilots showed those writes, transitions and gates are objective time/token cost; details are summarized in `PROJECT_SPEC.md`.
+- The durable value with the clearest expected return is context recovery, not forcing a full Tiny Context document chain for every project.
+- The historical stage-based Harness externalized the whole Tiny Context through lifecycle state, plan tasks, PRD / tech plan / implementation / review / test / release artifacts and phase gates. Benchmark pilots showed those writes, transitions and gates are objective time/token cost; details are summarized in `PROJECT_SPEC.md`.
 - Modern coding agents have internalized much of the ordinary single-task loop: compact requirement understanding, local design choice, code editing, test execution and simple repair. The default Harness should not duplicate that capability with broad ceremonies.
 - ADR-level rationale is downgraded into `project_context/global.md#Design Rationale` or area Context when it still affects future work.
 - Implementation facts should live in code, tests, comments and short area Context constraints when the code is not self-explanatory.
@@ -34,6 +34,8 @@
 - Context Priority Ladder is expected agent behavior: read Context first, run the page product-positioning check for Web/page/layout/module-boundary/information-placement tasks, classify durable-fact impact or use `Context Delta` inside task-contract scenarios, choose context-first or code-first, then perform Contract Conformance when applicable and Context drift check before handoff.
 - For Web page, frontend layout, UI/UX, product module boundary and information-placement tasks, the lightweight page product-positioning check runs before context-first classification and supplies the evidence for it; the check does not itself require a Context update unless it reveals durable page responsibility, information architecture, persistent-information boundary or ownership facts.
 - Broad product/UIUX principles remain as judgment philosophy, while reusable control-task questions for inputs, selection, search, configuration, scheduling, budgets/quotas/limits and feedback states live in the default Skills; project-specific answers belong in Context or project-local Skills, and per-change Context Conformance evidence belongs in handoff/final/PR text.
+- Long-running task execution may use a package-managed plan acceptance checklist compiler as a temporary pre-execution surface: it copies the referenced plan into `tmp/ty-context/plan-acceptance/**`, combines the plan with relevant Context to define falsifiable completion criteria and a paste-ready goal/target prompt, but does not execute the plan, own task state, prove acceptance, or create durable Context.
+- Product Surface Contract workflow is the Minimal Context path for turning broad page/UI/product positioning principles into concrete project-owned surface responsibilities. The package provides a business-agnostic `context_surface_contract` Skill and a compact `product-surface-contract.md` template; user-project facts live in `project_context/**` using existing roles such as `contract`, `area`, `subdomain`, `verification`, `decision-rationale` and `implementation-index`. The Harness must not add a new surface-specific context role, create business surface contracts during `init`/`upgrade`, or turn surface conformance into a validator gate.
 - AGENTS placement policy is part of the Minimal Context design: `AGENTS.md` is a startup router and hard-boundary surface. For package consumers, long design reasoning defaults to compact `project_context/**` facts unless a project already has a local spec/design convention; in this source workspace, `PROJECT_SPEC.md` is the Harness workflow design-spec surface. Role procedures belong in Skills, human usage docs in README, and machine checks in validators/tests only when they fit the product boundary.
 - Context updates for those changes should be as small as the fact allows, but not line-count limited: write enough durable context to guide implementation before code alignment. Ordinary bug fixes, local styling, drift repair, test fixes and exploratory spikes stay code-first unless they produce a durable fact. Automation may warn about context-first drift but must not become an edit-order gate.
 - The context-first clarification preserves the original plan-before-implementation principle while keeping Minimal Context slim: removing stage ceremony did not remove Context authority over durable product intent, engineering boundaries or contracts.
@@ -48,8 +50,8 @@
 ## Verification Entry Points
 
 - `npm test --workspace project-tiny-context-harness`
-- `node packages/sdlc-harness/dist/cli.js package sync-source`
-- `node packages/sdlc-harness/dist/cli.js package check-source`
+- `node packages/ty-context/dist/cli.js package sync-source`
+- `node packages/ty-context/dist/cli.js package check-source`
 - `make validate-harness`
 - `git diff --check`
 
@@ -58,7 +60,7 @@
 - vNext implementation is Minimal Context Harness.
 - `init` creates `project_context/context.toml` with one default `main` product/domain area at `project_context/areas/main.md` and a default verification role context at `project_context/areas/main/verification.md`; `upgrade` migrates legacy `project_context/areas/**/*.md` into `project_context/areas/**/*.md` and registers recoverable Context graph files in the manifest.
 - v4 `validate-context` requires `project_context/context.toml`; older config versions should run `upgrade` before relying on the v4 gate.
-- Ad hoc CLI docs and managed Makefile wrappers use the canonical package-qualified entry `npx --yes --package project-tiny-context-harness@latest sdlc-harness`; bare `npx sdlc-harness` is treated as ambiguous because it can resolve the legacy npm package name or a stale local binary.
+- Ad hoc CLI docs and managed Makefile wrappers use the canonical package-qualified entry `npx --yes --package project-tiny-context-harness@latest ty-context`; no legacy CLI alias is retained.
 - Current CLI commands guard unsupported future schema major versions before applying v4 assumptions; write commands fail before modifying files.
 - `validate-context` validates the Context graph structure, role names, paths and field shapes; non-area roles are semantic labels rather than writing-template gates.
 - `validate-code-modularity` enforces touched handwritten source line-count risk as a separate maintainability gate; `validate-harness` composes `validate-context` and `validate-code-modularity`.

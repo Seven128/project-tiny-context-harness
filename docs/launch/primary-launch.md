@@ -2,7 +2,7 @@
 
 Snapshot date: 2026-06-10.
 
-This is the copy-ready launch packet for the first public push after `project-tiny-context-harness@0.2.54` is published.
+This is the copy-ready launch packet for the first public push after `project-tiny-context-harness@0.2.55` is published.
 
 ## Launch Decision
 
@@ -19,16 +19,16 @@ Run these before posting:
 ```sh
 npm run launch:check
 npm run launch:strict-external
-npm run launch:metrics -- --output tmp/sdlc/launch-metrics/show-hn-before.md
-npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest --package-spec project-tiny-context-harness@latest --clean
+npm run launch:metrics -- --output tmp/ty-context/launch-metrics/show-hn-before.md
+npm run launch:demo -- --out-dir tmp/ty-context/launch-demo/latest --package-spec project-tiny-context-harness@latest --clean
 ```
 
 Confirm:
 
 - `npm run launch:strict-external` passes; if npm ever returns 404 again, use `docs/launch/npm-publish-runbook.md` before broad posting.
 - GitHub stars/forks and npm downloads baseline are recorded with `npm run launch:metrics`.
-- npm `project-tiny-context-harness@0.2.54` is published and installable.
-- The `v0.2.54` GitHub Release is published from [github-release-0.2.54.md](github-release-0.2.54.md); future npm Trusted Publishing real runs create or update this release automatically after publish.
+- npm `project-tiny-context-harness@0.2.55` is published and installable.
+- The `v0.2.55` GitHub Release is published from [github-release-0.2.55.md](github-release-0.2.55.md); future npm Trusted Publishing real runs create or update this release automatically after publish.
 - Issue #4 is pinned and open for adoption reports.
 - Issue #5 has the current demo packet and repo-hosted GIF URL.
 - README first screen still shows install, 60-second trial and non-goals.
@@ -75,14 +75,14 @@ Project Tiny Context Harness is a small npm package that adds a repo-native reco
 - project_context/** keeps durable facts: goal, non-goals, boundaries, ownership and validation paths
 - validate-context checks that the recovery surface exists and does not store fake "tests passed" notes
 
-The earlier version of this project tried a heavier SDLC-style workflow. I removed that. For most small and medium tasks, the phase ceremony was the cost. The current version is just the memory layer.
+The earlier version of this project tried a heavier Tiny Context-style workflow. I removed that. For most small and medium tasks, the phase ceremony was the cost. The current version is just the memory layer.
 
 It is not a task manager, spec generator, autonomous agent framework, or benchmark claim. It sits next to tests, CI, review and whatever agent you already use.
 
 Try it:
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init
-npx --no-install sdlc-harness validate-context
+npx --yes --package project-tiny-context-harness@latest ty-context init
+npx --no-install ty-context validate-context
 
 Demo packet/transcript:
 https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/launch/demo.md
@@ -143,7 +143,7 @@ Developer Tools, Artificial Intelligence, Open Source
 Description:
 
 ```text
-Project Tiny Context Harness helps coding agents recover project intent across new chats, handoffs and debugging turns. It installs compact project_context files, AGENTS.md guidance and a validate-context gate without adding a full SDLC ceremony.
+Project Tiny Context Harness helps coding agents recover project intent across new chats, handoffs and debugging turns. It installs compact project_context files, AGENTS.md guidance and a validate-context gate without adding a full Tiny Context ceremony.
 ```
 
 First comment:
@@ -178,7 +178,7 @@ Body:
 ```text
 I am working on Project Tiny Context Harness, an npm package for adding Minimal Context to a repo.
 
-The idea is simple: new agent chats often lose project-specific context. Instead of adding a full SDLC workflow, the package keeps the memory and drops the ceremony: a small project_context fact source, AGENTS.md startup guidance and a validate-context gate so a fresh agent can recover intent, boundaries and validation paths.
+The idea is simple: new agent chats often lose project-specific context. Instead of adding a full Tiny Context workflow, the package keeps the memory and drops the ceremony: a small project_context fact source, AGENTS.md startup guidance and a validate-context gate so a fresh agent can recover intent, boundaries and validation paths.
 
 It is meant to complement specs, tests, CI and code intelligence tools. It does not own task state or claim to replace review.
 
@@ -217,7 +217,7 @@ Within 1 hour:
 
 Within 6 hours:
 
-- Save HN story telemetry: `npm run launch:hn-snapshot -- --url <channel-url> --output tmp/sdlc/launch-metrics/show-hn-hn-6h.md`.
+- Save HN story telemetry: `npm run launch:hn-snapshot -- --url <channel-url> --output tmp/ty-context/launch-metrics/show-hn-hn-6h.md`.
 - Count comments by theme: unclear positioning, install friction, AGENTS.md overlap, benchmark ask, integration ask, examples ask.
 - Patch the README only for repeated or high-severity confusion.
 - Comment on issue #3 with launch URL, baseline metrics and major objections.
@@ -225,7 +225,7 @@ Within 6 hours:
 
 Within 24 hours:
 
-- Save the final first-day HN telemetry: `npm run launch:hn-snapshot -- --url <channel-url> --output tmp/sdlc/launch-metrics/show-hn-hn-24h.md`.
+- Save the final first-day HN telemetry: `npm run launch:hn-snapshot -- --url <channel-url> --output tmp/ty-context/launch-metrics/show-hn-hn-24h.md`.
 - Record stars, forks, npm downloads, issues and external comments.
 - Decide whether the next move is Product Hunt, a curated-list PR, or a docs/demo repair.
 - Convert real adoption examples into issue #4 reports, linked issue comments or consented adoption-story notes.
@@ -246,7 +246,7 @@ Allowed:
 
 Avoid:
 
-- "Automates the SDLC."
+- "Automates the Tiny Context."
 - "Replaces tests, CI, review, specs or project management."
 - "Benchmark-proven faster."
 - "Award-winning."
@@ -265,7 +265,7 @@ Open issues:
 Open external posts:
 ```
 
-Use `npm run launch:metrics -- --output tmp/sdlc/launch-metrics/<channel>-before.md` for the baseline and repeat it after 6 hours / 24 hours. For Show HN, also use `npm run launch:hn-snapshot -- --url <channel-url> --output tmp/sdlc/launch-metrics/<channel>-hn-24h.md`. Treat the output as distribution telemetry, not product-quality evidence.
+Use `npm run launch:metrics -- --output tmp/ty-context/launch-metrics/<channel>-before.md` for the baseline and repeat it after 6 hours / 24 hours. For Show HN, also use `npm run launch:hn-snapshot -- --url <channel-url> --output tmp/ty-context/launch-metrics/<channel>-hn-24h.md`. Treat the output as distribution telemetry, not product-quality evidence.
 
 Post after each channel:
 

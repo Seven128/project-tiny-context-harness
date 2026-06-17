@@ -10,14 +10,14 @@
   <text x="82" y="142" font-family="Consolas, 'SFMono-Regular', monospace" font-size="22" fill="#93c5fd">$ npm install --save-dev project-tiny-context-harness@latest</text>
   <text x="82" y="180" font-family="Consolas, 'SFMono-Regular', monospace" font-size="20" fill="#cbd5e1">added packages from npm registry</text>
 
-  <text x="82" y="236" font-family="Consolas, 'SFMono-Regular', monospace" font-size="22" fill="#93c5fd">$ npx --no-install sdlc-harness init</text>
+  <text x="82" y="236" font-family="Consolas, 'SFMono-Regular', monospace" font-size="22" fill="#93c5fd">$ npx --no-install ty-context init</text>
   <text x="82" y="274" font-family="Consolas, 'SFMono-Regular', monospace" font-size="20" fill="#a7f3d0">created AGENTS.md</text>
   <text x="82" y="310" font-family="Consolas, 'SFMono-Regular', monospace" font-size="20" fill="#a7f3d0">created project_context/context.toml</text>
   <text x="82" y="346" font-family="Consolas, 'SFMono-Regular', monospace" font-size="20" fill="#a7f3d0">created project_context/global.md</text>
   <text x="82" y="382" font-family="Consolas, 'SFMono-Regular', monospace" font-size="20" fill="#a7f3d0">created project_context/architecture.md</text>
   <text x="82" y="418" font-family="Consolas, 'SFMono-Regular', monospace" font-size="20" fill="#cbd5e1">sync changed=15 skipped=0 blocked=0</text>
 
-  <text x="82" y="474" font-family="Consolas, 'SFMono-Regular', monospace" font-size="22" fill="#93c5fd">$ npx --no-install sdlc-harness validate-context</text>
+  <text x="82" y="474" font-family="Consolas, 'SFMono-Regular', monospace" font-size="22" fill="#93c5fd">$ npx --no-install ty-context validate-context</text>
   <text x="82" y="512" font-family="Consolas, 'SFMono-Regular', monospace" font-size="20" fill="#cbd5e1">loaded project_context/context.toml with 1 area(s)</text>
   <text x="82" y="548" font-family="Consolas, 'SFMono-Regular', monospace" font-size="20" fill="#22c55e">Minimal Context validation passed</text>
 

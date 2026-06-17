@@ -25,7 +25,7 @@ It leaves product quality to the repository's own tests, CI, review and human ac
 |---|---|---|
 | `AGENTS.md` alone | Startup instructions and hard boundaries. | Harness keeps `AGENTS.md` short and puts durable project facts behind it in `project_context/**`. |
 | Spec-first kits | Feature specs, plans and implementation tasks. | Complementary. Keep final durable project facts in Context; do not require a spec chain for every task. |
-| Full SDLC / role workflows | Coordinated process, phase artifacts, reviews and approvals. | Lighter default. Use those processes when ceremony is warranted; Harness keeps ordinary repo memory small. |
+| Full Tiny Context / role workflows | Coordinated process, phase artifacts, reviews and approvals. | Lighter default. Use those processes when ceremony is warranted; Harness keeps ordinary repo memory small. |
 | Task planners | Backlog decomposition, task state and execution tracking. | Complementary. Harness does not own task state; it owns recovery facts fresh agents should know before work. |
 | Code intelligence / retrieval | Symbols, references, external docs and semantic lookup. | Complementary. Harness stores local project intent, boundaries and validation paths that should travel with the repo. |
 | IDE or agent memory | Tool-specific continuity inside one product. | Portable fallback. Harness files are plain repo assets that Codex, Claude Code, Cursor, Gemini CLI, OpenCode and humans can read. |
@@ -44,7 +44,7 @@ It leaves product quality to the repository's own tests, CI, review and human ac
 - You need a full autonomous coding agent runtime.
 - You need backlog ownership, task assignment, sprint planning or issue state.
 - You need semantic code search, symbol navigation or external documentation retrieval.
-- You need compliance-grade SDLC approvals and audit evidence.
+- You need compliance-grade Tiny Context approvals and audit evidence.
 - You need proof that a code change works; use tests, CI, review and human acceptance.
 
 ## Common Combinations
@@ -103,7 +103,7 @@ Do not evaluate Harness as:
 - a benchmark-proven productivity multiplier
 - a replacement for tests or review
 - a better coding agent
-- a full SDLC framework
+- a full Tiny Context framework
 - a semantic index
 
 Evaluate it as:

@@ -5,15 +5,15 @@ modularity:
   limit: 300
   policy: scoped_waivers
   waivers:
-    - path: packages/sdlc-harness/src/lib/validators.ts
+    - path: packages/ty-context/src/lib/validators.ts
       category: legacy_migration
       reason: Existing combined Context and gate validator module predates the modularity gate.
       future_split_boundary: Extract code modularity validation and Context manifest validation into separate validator modules.
-    - path: tests/sdlc-harness/validators.test.mjs
+    - path: tests/ty-context/validators.test.mjs
       category: legacy_migration
       reason: Existing combined validator regression suite predates the modularity gate.
       future_split_boundary: Split Context manifest validation, code modularity validation and composite gate tests into focused files.
-    - path: tests/sdlc-harness/sync-init-doctor.test.mjs
+    - path: tests/ty-context/sync-init-doctor.test.mjs
       category: legacy_migration
       reason: Existing end-to-end init/sync/doctor regression suite predates the modularity gate.
       future_split_boundary: Split init asset assertions, sync behavior and CLI validation smoke tests into focused files.
@@ -21,6 +21,34 @@ modularity:
       category: legacy_migration
       reason: Existing consumer lab orchestration script predates the modularity gate.
       future_split_boundary: Extract command profile definitions and report generation helpers from the orchestration flow.
+    - path: examples/delivery-benchmark/runner/delivery_benchmark.mjs
+      category: legacy_migration
+      reason: Rename-only surface migration touched the existing benchmark runner, which predates the modularity gate.
+      future_split_boundary: Split scenario loading, workspace preparation, command execution and report rendering into runner modules.
+    - path: tools/external_pr_packet_check.mjs
+      category: legacy_migration
+      reason: Rename-only surface migration touched the existing external packet checker, which predates the modularity gate.
+      future_split_boundary: Extract packet discovery, diff validation and report formatting into separate helpers.
+    - path: tools/launch_next_steps.mjs
+      category: legacy_migration
+      reason: Rename-only surface migration touched the existing launch next-step planner, which predates the modularity gate.
+      future_split_boundary: Split feedback ingestion, action ranking and Markdown rendering into focused modules.
+    - path: tools/launch_readiness_check.mjs
+      category: legacy_migration
+      reason: Rename-only surface migration touched the existing launch readiness checker, which predates the modularity gate.
+      future_split_boundary: Extract local surface checks, external metadata checks, version checks and report rendering into separate check modules.
+    - path: tools/launch_unblock_check.mjs
+      category: legacy_migration
+      reason: Rename-only surface migration touched the existing launch unblock checker, which predates the modularity gate.
+      future_split_boundary: Split npm, GitHub, docs and recommendation checks into focused modules.
+    - path: tools/release_npm.mjs
+      category: legacy_migration
+      reason: Rename-only surface migration touched the existing release orchestration script, which predates the modularity gate.
+      future_split_boundary: Extract preflight, pack, publish, smoke and release-report steps into separate modules.
+    - path: tools/sync_release_version.mjs
+      category: legacy_migration
+      reason: Rename-only surface migration touched the existing release version synchronizer, which predates the modularity gate.
+      future_split_boundary: Split version source discovery, surface updates and check-mode diff reporting into focused helpers.
 managed_files:
   - path: AGENTS.md
     strategy: merge-block
@@ -28,9 +56,9 @@ managed_files:
     strategy: merge-block
   - path: .codex/skills
     strategy: managed
-  - path: .codex/pjsdlc_managed/context_templates
+  - path: .codex/ty-context-managed/context_templates
     strategy: managed
-  - path: .codex/pjsdlc_managed/make/sdlc-harness.mk
+  - path: .codex/ty-context-managed/make/ty-context.mk
     strategy: managed
   - path: tools
     strategy: managed

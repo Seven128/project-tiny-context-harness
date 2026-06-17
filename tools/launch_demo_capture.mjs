@@ -47,7 +47,7 @@ Runs the public launch demo against a disposable repository and writes a trimmed
 terminal transcript for Show HN, Product Hunt and README/social copy.
 
 Usage:
-  node tools/launch_demo_capture.mjs [--out-dir tmp/sdlc/launch-demo/latest] [--clean]
+  node tools/launch_demo_capture.mjs [--out-dir tmp/ty-context/launch-demo/latest] [--clean]
   node tools/launch_demo_capture.mjs --package-spec project-tiny-context-harness@latest
 `);
 }
@@ -64,7 +64,7 @@ function commandSpec(command, args) {
 
 function makeDefaultOutDir() {
   const stamp = new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14);
-  return path.join(repoRoot, "tmp", "sdlc", "launch-demo", `${stamp}-${process.pid}`);
+  return path.join(repoRoot, "tmp", "ty-context", "launch-demo", `${stamp}-${process.pid}`);
 }
 
 function run(command, args, cwd) {
@@ -208,9 +208,9 @@ try {
     requirePass(run("git", ["init"], demoDir)),
     requirePass(run("npm", ["init", "-y"], demoDir)),
     requirePass(run("npm", ["install", "--save-dev", options.packageSpec], demoDir)),
-    requirePass(run("npx", ["--no-install", "sdlc-harness", "init"], demoDir)),
-    requirePass(run("npx", ["--no-install", "sdlc-harness", "validate-context"], demoDir)),
-    requirePass(run("npx", ["--no-install", "sdlc-harness", "doctor"], demoDir))
+    requirePass(run("npx", ["--no-install", "ty-context", "init"], demoDir)),
+    requirePass(run("npx", ["--no-install", "ty-context", "validate-context"], demoDir)),
+    requirePass(run("npx", ["--no-install", "ty-context", "doctor"], demoDir))
   ];
 
   for (const file of expectedFiles) {

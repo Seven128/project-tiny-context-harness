@@ -24,8 +24,8 @@ make validate-context
 If you change package-managed assets, also run:
 
 ```sh
-node packages/sdlc-harness/dist/cli.js package sync-source
-node packages/sdlc-harness/dist/cli.js package check-source
+node packages/ty-context/dist/cli.js package sync-source
+node packages/ty-context/dist/cli.js package check-source
 git diff --check
 ```
 

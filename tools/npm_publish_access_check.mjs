@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const packageJson = JSON.parse(readFileSync(path.join(repoRoot, "packages/sdlc-harness/package.json"), "utf8"));
+const packageJson = JSON.parse(readFileSync(path.join(repoRoot, "packages/ty-context/package.json"), "utf8"));
 const PACKAGE_NAME = packageJson.name;
 const PACKAGE_VERSION = packageJson.version;
 const DEFAULT_REGISTRY = "https://registry.npmjs.org/";

@@ -51,7 +51,7 @@ The snapshot is informational; score and comments are distribution telemetry onl
 
 Usage:
   node tools/launch_hn_snapshot.mjs --url https://news.ycombinator.com/item?id=48479619
-  node tools/launch_hn_snapshot.mjs --item-id 48479619 --output tmp/sdlc/launch-metrics/show-hn-hn-6h.md
+  node tools/launch_hn_snapshot.mjs --item-id 48479619 --output tmp/ty-context/launch-metrics/show-hn-hn-6h.md
   node tools/launch_hn_snapshot.mjs --item-id 48479619 --json
 `);
 }

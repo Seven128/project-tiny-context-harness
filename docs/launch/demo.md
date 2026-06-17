@@ -14,14 +14,14 @@ Current status:
 Run this from the repository root:
 
 ```sh
-npm run launch:demo -- --out-dir tmp/sdlc/launch-demo/latest
+npm run launch:demo -- --out-dir tmp/ty-context/launch-demo/latest
 ```
 
-The command creates a disposable demo repository, installs `project-tiny-context-harness@latest`, runs `sdlc-harness init`, validates the generated Context, runs `doctor`, and writes:
+The command creates a disposable demo repository, installs `project-tiny-context-harness@latest`, runs `ty-context init`, validates the generated Context, runs `doctor`, and writes:
 
-- `tmp/sdlc/launch-demo/latest/transcript.md`
-- `tmp/sdlc/launch-demo/latest/summary.json`
-- `tmp/sdlc/launch-demo/latest/project-tiny-context-harness-demo/`
+- `tmp/ty-context/launch-demo/latest/transcript.md`
+- `tmp/ty-context/launch-demo/latest/summary.json`
+- `tmp/ty-context/launch-demo/latest/project-tiny-context-harness-demo/`
 
 ## Recording Beats
 
@@ -31,9 +31,9 @@ Keep the recording under 90 seconds.
 |---|---|---|
 | Problem | Show an empty temp repo. | "Agents are strong in one thread. New chats often lose repo-specific intent." |
 | Install | `npm install --save-dev project-tiny-context-harness@latest` | "This installs minimal repo-native project memory, not a task manager." |
-| Init | `npx --no-install sdlc-harness init` | "It creates AGENTS.md and project_context files a fresh agent should read first." |
+| Init | `npx --no-install ty-context init` | "It creates AGENTS.md and project_context files a fresh agent should read first." |
 | Surface | Show `AGENTS.md` and `project_context/`. | "The durable facts are project goal, boundaries and validation paths." |
-| Gate | `npx --no-install sdlc-harness validate-context` | "This validates recovery facts. It does not replace tests or review." |
+| Gate | `npx --no-install ty-context validate-context` | "This validates recovery facts. It does not replace tests or review." |
 | Recovery | Show the prompt below. | "A good first answer summarizes intent before proposing code." |
 | Ask | Show README or pinned issue #4. | "Try it where agent handoffs currently drift, and tell me what facts are missing." |
 
@@ -50,7 +50,7 @@ The recording should show the agent answer before any code request. A usable ans
 - Project goal from `project_context/global.md`.
 - Non-goals / boundaries, especially that Harness does not replace tests, CI or review.
 - Architecture boundary from `project_context/architecture.md`.
-- Validation entry point: `npx --no-install sdlc-harness validate-context` or `make validate-context`.
+- Validation entry point: `npx --no-install ty-context validate-context` or `make validate-context`.
 - No unrelated web browsing or invention of benchmark claims.
 
 If the agent skips these facts, stop and improve the generated Context or README before posting the demo.
@@ -60,7 +60,7 @@ If the agent skips these facts, stop and improve the generated Context or README
 ```text
 $ npm install --save-dev project-tiny-context-harness@latest
 
-$ npx --no-install sdlc-harness init
+$ npx --no-install ty-context init
 created AGENTS.md
 created project_context/context.toml
 created project_context/global.md
@@ -70,7 +70,7 @@ created project_context/areas/main/verification.md
 sync changed=15 skipped=0 blocked=0
 init complete
 
-$ npx --no-install sdlc-harness validate-context
+$ npx --no-install ty-context validate-context
 loaded project_context/context.toml with 1 area(s) and 0 context node(s)
 Minimal Context validation passed
 ```

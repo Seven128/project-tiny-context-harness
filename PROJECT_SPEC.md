@@ -1,6 +1,6 @@
 # Project Tiny Context Harness Project Spec
 
-This document explains the stable product direction, design rationale and package behavior for Project Tiny Context Harness. The public display name is Project Tiny Context Harness; the npm package remains `project-tiny-context-harness` and the CLI remains `sdlc-harness`. User-facing commands live in [README.md](README.md). Historical stage-based workflow details are retained here only as a concise design summary.
+This document explains the stable product direction, design rationale and package behavior for Project Tiny Context Harness. The public display name is Project Tiny Context Harness; the npm package remains `project-tiny-context-harness` and the CLI remains `ty-context`. User-facing commands live in [README.md](README.md). Historical stage-based workflow details are retained here only as a concise design summary.
 
 ## Product Goal
 
@@ -49,7 +49,7 @@ Benchmark pilots changed the default product judgment:
 - The workflow’s fact-source writes, stage decisions, phase transitions and gates are real process cost.
 - That cost consumes time and tokens even when the final product quality is the same.
 - Modern coding agents have internalized much of the ordinary single-task loop: understanding a compact requirement, choosing a local design, editing code, running tests and repairing simple failures.
-- For ordinary and medium-complexity work, forcing a full SDLC document chain duplicates work the model can already do well.
+- For ordinary and medium-complexity work, forcing a full Tiny Context document chain duplicates work the model can already do well.
 
 The part that remains clearly valuable is not the ceremony itself. It is durable, compact context that survives a new conversation:
 
@@ -75,7 +75,7 @@ Therefore the current design keeps the product goal unchanged, but narrows the d
 - move implementation narration into code comments, tests and short module constraints;
 - make richer process artifacts and strict gates conditional, not default.
 
-In short: Harness no longer tries to externalize the whole SDLC by default. It maintains the minimum durable context needed for recovery and continuation. The design question is not which human software-engineering phase should own a document; it is what smallest recovery surface lets an agent understand and continue the whole delivery loop without re-creating phase artifacts that the model can already reason through internally.
+In short: Harness no longer tries to externalize the whole Tiny Context by default. It maintains the minimum durable context needed for recovery and continuation. The design question is not which human software-engineering phase should own a document; it is what smallest recovery surface lets an agent understand and continue the whole delivery loop without re-creating phase artifacts that the model can already reason through internally.
 
 ## Core Terms
 
@@ -88,7 +88,9 @@ The adopted approach uses a small vocabulary so the same mechanism is not descri
 - **Context Delta**: the current task's durable-fact decision point inside task-contract scenarios. `required` means Context is updated before implementation continues; `none` means implementation proceeds against existing Context.
 - **Task Contract**: a temporary task-local compilation of upstream principles and Context into implementation constraints. It guides the current task, but is not a source of truth. Engineering, RFC and implementation Task Contracts include `Modularity Check: none|required|exception` so oversized touched files force split-or-exception reasoning inside the existing contract.
 - **Module Design Capsule**: a compact area or role Context section for stable module principles, minimal design logic and durable rationale that should affect future implementation or verification choices.
+- **Product Surface Contract**: a project-owned Context contract for a user-facing surface where users make judgments, take actions and receive feedback. It records primary user question, main-surface ownership, drilldown ownership, long-task state and validation expectations using existing Context roles.
 - **Temporary plan surface**: `plan.md` or an equivalent scratchpad used only when complex work needs visible execution state. It serves the workflow contract and Context without replacing either.
+- **Plan acceptance checklist**: a temporary pre-execution artifact that turns a referenced plan plus relevant Context into falsifiable completion criteria and a paste-ready goal/target prompt. It is not task state, execution evidence, durable Context or a claim that the plan passed.
 - **Conformance**: a handoff self-check that compares implementation against the relevant Context and task contract. It produces delivery evidence, not durable Context by itself.
 - **Upgrade plan**: the machine-readable result of checking a project after a package update. It is scoped to known Harness-owned schema, config and path conventions; it is not a semantic interpretation of the user's project.
 - **Migration status**: the upgrade plan classifies scoped work as `safe_pending`, `manual_required` or `blocked`. Safe pending work can be applied mechanically; manual required work needs user or agent judgment; blocked work cannot be written without an overwrite/conflict risk.
@@ -112,10 +114,14 @@ The implementation design follows from how agents actually run. A coding agent d
 - `AGENTS.md` carries only the startup facts and hard boundaries that must be visible immediately.
 - `project_context/**` carries durable intent because future agents can recover it before reading all code.
 - Default Context authoring Skills expand product, UI/UX and engineering reasoning only when explicit role or strong artifact triggers make that extra frame useful.
+- The Surface Contract compiler turns broad product/page/UI principles into project-owned Context when a user explicitly asks for Product Surface Contract work or when surface ownership is unclear.
 - Task-contract compilation turns broad principles and applicable module design into task-local constraints before implementation, while `Context Delta` prevents a second durable-fact decision point.
 - Temporary plan surfaces can keep the contract visible during long work, but durable facts discovered there must be extracted back to Context.
+- The plan acceptance checklist compiler can help before long-running execution by externalizing the acceptance bar once, then leaving execution, evidence collection and completion claims to the future executor.
 - Contract Conformance and Context drift checks create a final self-check without storing one-off evidence as long-lived Context.
 - `validate-context`, tests and package source checks enforce only the boundaries that are appropriate for Minimal Context: recoverability, generated-asset consistency and absence of fake verification claims.
+
+One design premise is that the package layer must preserve Tiny Context's own responsibility boundary: it can provide workflow contracts, fact-source authority and broad reusable principles, but it cannot know each project's business-specific surface answers. Those broad principles are therefore not a silver bullet. Because the package often lacks the information needed to choose the single expected convergence path, relying on an agent's open-ended reasoning to derive that path is unreliable. Managed Skills and optional project-local Skills exist to give agents a clearer, more concrete thinking path while leaving the actual product facts in project Context.
 
 This mental model is intentionally lighter than the historical stage workflow. Its goal is to make the Harness easy to use and reason about: users do not need to follow a ceremony, but they can predict the behavior the Harness is trying to induce in agents.
 
@@ -203,7 +209,7 @@ Temporary exports are explicit exceptions for external-tool ingestion, not durab
 - `export-context --full` emits a one-off project Context summary named `full-project-context-<timestamp>.md` by default.
 - `export-context --code` emits a one-off single-file current implementation snapshot named `code-level-implementation.md` under a timestamped `code-level-implementation-*` directory by default.
 - `export-context --all` emits both default artifacts in one command using the same timestamp and does not accept `--output`.
-- Both modes must stay under `tmp/sdlc/context-exports/**`, must not be registered in `project_context/context.toml`, and must not revive implementation documents as tracked package defaults.
+- Both modes must stay under `tmp/ty-context/context-exports/**`, must not be registered in `project_context/context.toml`, and must not revive implementation documents as tracked package defaults.
 
 Area is the product/domain ownership boundary:
 
@@ -226,7 +232,7 @@ Authority is split by fact type:
 - If search results or current code shape conflict with Context-declared ownership or intent, agents should identify implementation drift, missing work or stale Context explicitly.
 - Agents should not infer the intended module boundary from code shape alone.
 
-This clarification preserves an original SDLC design principle that was easy to weaken during the Minimal Context redesign:
+This clarification preserves an original Tiny Context design principle that was easy to weaken during the Minimal Context redesign:
 
 - Removing stage ceremony does not mean implementation should silently decide product or technical intent.
 - Context is where durable intent, boundaries and contracts are named because those facts are expensive and unreliable to infer from code alone.
@@ -287,7 +293,7 @@ read Context / inspect code / understand request
 
 Applicable module design is a short gate inside task-contract compilation: list the source Context / Skill principles, state which current implementation or verification choices they control, name the preferred path and name fallback or degraded paths only with their entry conditions. Commands, probes and current implementation shape are execution evidence; they do not independently define the module target. `Context Delta` is the only formal durable-fact decision point inside contract-compilation scenarios. This avoids asking the agent to classify once, then classify again while compiling the task contract. The task contract is a temporary compiled artifact for the current task, not a new source of truth. If Conformance reveals an implementation miss, the code is fixed; if it reveals an incomplete task contract, the contract is revised; if it reveals a missing durable fact, the agent returns to `Context Delta` and updates Context before continuing.
 
-`Modularity Check` is a maintenance self-check inside engineering / RFC / implementation Task Contracts, not a second contract and not `validate-context`. Its values are `none` when there is no oversized touched-source risk or no new responsibility added to an over-limit file, `required` when decomposition is part of the task's acceptance criteria, and `exception` when an over-limit touched file is not split now and a narrow `<harnessRoot>/config.yaml` modularity waiver records file, category, reason and future split boundary. Newly generated configs default to `modularity.policy: strict_except_generated`; omitted policy remains compatible with old configs and is treated as `scoped_waivers`. `strict_except_generated` rejects waiver config and enforces the limit for touched/PR handwritten source except files already excluded as generated or non-source. The CLI provides facts with `sdlc-harness check-modularity`; `validate-code-modularity` and composite `validate-harness` enforce touched-source findings as a separate maintainability gate, while the agent still chooses `none|required|exception` through module-boundary and decomposition reasoning.
+`Modularity Check` is a maintenance self-check inside engineering / RFC / implementation Task Contracts, not a second contract and not `validate-context`. Its values are `none` when there is no oversized touched-source risk or no new responsibility added to an over-limit file, `required` when decomposition is part of the task's acceptance criteria, and `exception` when an over-limit touched file is not split now and a narrow `<harnessRoot>/config.yaml` modularity waiver records file, category, reason and future split boundary. Newly generated configs default to `modularity.policy: strict_except_generated`; omitted policy remains compatible with old configs and is treated as `scoped_waivers`. `strict_except_generated` rejects waiver config and enforces the limit for touched/PR handwritten source except files already excluded as generated or non-source. The CLI provides facts with `ty-context check-modularity`; `validate-code-modularity` and composite `validate-harness` enforce touched-source findings as a separate maintainability gate, while the agent still chooses `none|required|exception` through module-boundary and decomposition reasoning.
 
 For long tasks, multi-module work, multi-agent work or changes likely to require several verification loops, `plan.md` or an equivalent temporary plan surface can hold the current task contract, implementation steps and Conformance notes as an execution scratchpad. This use is an aid to the workflow contract, not the workflow contract itself. It helps keep `Context Delta`, `Task Contract` and Conformance visible while work is in flight, but it must not become a long-lived source of truth, a default project asset, a registered Context node, plan state, stage artifact or work-product tree. Durable facts discovered there must be extracted into `project_context/**` or `DESIGN.md`; otherwise the temporary plan is only execution cache.
 
@@ -352,15 +358,17 @@ Shared design rules:
 - For module design, API/Schema, state/runtime and verification-design work, require the development engineer Skill to compile `Applicable Module Design` before choosing implementation, claim, command, probe or fallback paths.
 - For engineering, RFC and implementation work, include `Modularity Check: none|required|exception` in the existing Task Contract; this catches oversized touched files without creating a new validator gate.
 - Allow `plan.md` or an equivalent temporary plan surface to assist complex task-contract work as scratch space only; it must serve Context and the workflow contract without becoming either one.
+- Allow a plan acceptance checklist compiler for long-running or handoff-heavy plans when the user provides a plan-like source and asks for acceptance criteria or a goal/target-mode prompt. It must copy the plan and checklist into `tmp/ty-context/plan-acceptance/**`, read relevant Context, stop for confirmation when durable assumptions are unclear, and avoid executing the plan or claiming completion.
 - Elevate lightweight page product-positioning checks into managed AGENTS guidance for Web page, layout and information-placement tasks, and treat the check as input to change classification while keeping the default product/UIUX Skill triggers narrow.
 - Keep broad product/UIUX principles as judgment philosophy, then put slightly more concrete reusable prompt questions in the default Skills. Going more specific than that becomes project or business logic and belongs in project Context or project-local Skills.
 - Treat high-risk UI categories such as input, selection, search, filters, configuration, scheduling/time, budgets/quotas/limits and feedback states as triggers for thinking, not as a library of fixed control prescriptions.
 - Read Context before making durable product, design or engineering judgments; treat `project_context/**` as intended ownership and boundary context, and code as current implementation evidence.
 - Keep outputs lightweight: use Context and `DESIGN.md` for durable facts, keep implementation details in code, tests and concise comments when they are self-explanatory there, and keep per-change Context Conformance evidence in handoff / final / PR text rather than Context.
 - Keep task contracts out of long-lived Context by default; only their durable `Context Delta` facts are extracted into `project_context/**` or `DESIGN.md`.
+- Keep plan acceptance checklists out of long-lived Context: they are temporary execution inputs and may define required evidence, but the evidence itself belongs to tests, CI, review, human acceptance or the future executor's handoff.
 - Keep module design capsules short enough for high-frequency reading: principles, design logic and rationale should be precise, stable and decision-shaping; history, current thresholds, commands and one-off evidence belong elsewhere or stay out of Context.
 - Treat verification/deployment role Context as reusable repeat-execution knowledge, not evidence reporting: record minimal setup/command-or-path/expected signal/warnings/dead ends, never raw logs, artifacts, release ledgers, secrets or pass/fail claims.
-- Prefer separate project-local Skills for consumer customization; package-managed default Skills should remain broadly useful, sync-overwritten and Minimal Context oriented. Project-local Skill front matter `description` trigger keywords should stay aligned with the matching default Skill and project `AGENTS.md` role-trigger rule so activation behavior and SDLC guidance do not diverge.
+- Prefer separate project-local Skills for consumer customization; package-managed default Skills should remain broadly useful, sync-overwritten and Minimal Context oriented. Project-local Skill front matter `description` trigger keywords should stay aligned with the matching default Skill and project `AGENTS.md` role-trigger rule so activation behavior and Tiny Context guidance do not diverge.
 - When a default Skill changes, update this design section and the relevant source workspace Context so future maintainers know the problem, tradeoff and intended failure mode being addressed.
 
 The product planning Skill exists to prevent product intent, user flows, business rules and acceptance signals from living only in a chat transcript or being inferred from current code shape:
@@ -387,6 +395,17 @@ That same page-positioning check is now a lightweight pre-implementation habit f
 - The Skill is not the only way the principle becomes active.
 - The check should not be interpreted as "all UI changes update Context".
 - The check only affects Context when it reveals durable product or information-architecture facts.
+
+The Product Surface Contract workflow exists because broad page-positioning principles are still too abstract when a project needs durable surface responsibility:
+
+- `context_surface_contract` is a package-managed compiler Skill, not a project-specific rule store.
+- It makes the intended reasoning path explicit instead of asking agents to infer one correct surface contract from generic product/UI principles.
+- Product Surfaces include Web, mobile, desktop, game UI/HUD/menu, CLI/TUI, extension and embedded/device interfaces.
+- The package uses existing Context roles: cross-surface facts use `contract`; area-owned screen facts use `area` or `subdomain`; repeatable checks use `verification`; rationale and code maps use `decision-rationale` and `implementation-index`.
+- No new roles such as `surface-contract`, `product-surface`, `web-contract`, `app-contract` or `game-surface` are introduced.
+- `product-surface-contract.md` is a compact managed template for optional project Context authoring; `init` and `upgrade` never create business surface facts.
+- Repo-local Skills may make a concrete Surface Contract task block mandatory for a project, but the package does not create a universal gate.
+- Code, screenshots, CLI output and tests are implementation evidence; the project Context owns intended surface responsibility.
 
 The control-task framing sits one level below broad principles and one level above business-specific rules:
 
@@ -423,15 +442,25 @@ The development engineer Skill exists to keep technical intent recoverable when 
 - When the user has explicitly allowed that capability and the tools exist, the Skill should encourage parallel decomposition while reusing existing agents first and closing completed, idle or no-longer-needed agents with `close_agent`.
 - This is a resource lifecycle constraint, not permission to bypass the user's explicit subagent trigger.
 - Its abstraction / decomposition scan is specifically meant to reduce AI failure modes such as over-abstracting for visual cleanliness, treating syntactic duplication as semantic sameness, splitting files without reducing coupling, or optimizing locally against the recorded architecture.
-- Its modularity check uses `sdlc-harness check-modularity` as a warning-only report command and `validate-code-modularity` / `validate-harness` as hard gates for touched handwritten source. Over-limit findings route through the same abstraction / decomposition scan: identify whether the change adds a responsibility, split by a real boundary when warranted, or require a narrow config waiver with a future split boundary when the project uses the default `scoped_waivers` policy. Projects using `strict_except_generated` must split or avoid touching over-limit handwritten source.
+- Its modularity check uses `ty-context check-modularity` as a warning-only report command and `validate-code-modularity` / `validate-harness` as hard gates for touched handwritten source. Over-limit findings route through the same abstraction / decomposition scan: identify whether the change adds a responsibility, split by a real boundary when warranted, or require a narrow config waiver with a future split boundary when the project uses the default `scoped_waivers` policy. Projects using `strict_except_generated` must split or avoid touching over-limit handwritten source.
 - The scan also treats cross-Context, cross-domain or cross-layer changes required for one object or capability as a boundary-review signal: agents should evaluate whether a product capability, module, service, facade or stable interface can shrink future change scope before introducing hand-maintained manifests that duplicate implementation surfaces.
 - The scan also treats repeated, deterministic, easy-to-miss or order-sensitive manual workflows as repo-local tool/script opportunities: scripts belong in the owning module's tool area with tests, while recoverable entry points, parameter constraints and applicability boundaries belong in verification/deployment Context rather than in provider-specific Skill text or one-off evidence notes.
 - It should default to stable, high-value, low-risk changes and leave speculative architecture for explicit user direction or stronger project evidence.
 
+The plan acceptance checklist compiler Skill exists because long-running work fails most often when the execution target is ambiguous, not when the agent lacks another phase document:
+
+- It triggers only when the user provides or references a plan, RFC, implementation proposal or milestone plan and asks for acceptance criteria, a completion definition or a goal/target-mode prompt.
+- It copies the source plan into `tmp/ty-context/plan-acceptance/**` and writes any full checklist there as temporary execution input, never into `project_context/**`.
+- It combines the plan, relevant Context and real repository surfaces into falsifiable acceptance items with explicit evidence and invalidation rules.
+- Its generated goal/target prompt includes a standard resource lifecycle line: Chinese prompts use `可多开agent，agent名额不够了就关掉不用的。`, while English prompts use an equivalent instruction to use multiple agents and close idle or unnecessary agents when slots run low.
+- It uses a confirmation gate when the plan would silently encode new durable product, architecture, API, state, security or verification assumptions.
+- It deliberately performs only one acceptance-standard pass; it does not execute the plan, manage task state, run long validations, prove completion or revive stage gates.
+- Its business logic must remain generic. Domain-specific acceptance rules come from the current plan and project Context during invocation, or from project-local Skills.
+
 The Harness upgrade Skill exists because existing consumer projects need a short, repeatable procedure after package updates:
 
 - It triggers on explicit Tiny Context / Project Tiny Context Harness upgrade requests, including English requests such as `upgrade Tiny Context` and `use the Tiny Context upgrade skill to upgrade this project`; Chinese trigger examples are compatibility-only additions.
-- It treats `sdlc-harness upgrade` as the default command after an npm package update, not standalone `sync`.
+- It treats `ty-context upgrade` as the default command after an npm package update, not standalone `sync`.
 - It tells agents to handle only migration-scoped `manual_required` / `blocked` follow-up and to use `context.toml`, role placement scan and existing project Context rather than guessing business semantics.
 - It is package-managed guidance for operating the Harness, not a project-local product/design/development customization surface.
 
@@ -449,22 +478,24 @@ The Harness upgrade Skill exists because existing consumer projects need a short
 - `<harnessRoot>/skills/context_product_plan/SKILL.md`
 - `<harnessRoot>/skills/context_uiux_design/SKILL.md`
 - `<harnessRoot>/skills/context_development_engineer/SKILL.md`
+- `<harnessRoot>/skills/context_surface_contract/SKILL.md`
 - `<harnessRoot>/skills/context_full_project_export/SKILL.md`
 - `<harnessRoot>/skills/context_harness_upgrade/SKILL.md`
-- `<harnessRoot>/pjsdlc_managed/context_templates/**`
-- `<harnessRoot>/pjsdlc_managed/make/sdlc-harness.mk`
+- `<harnessRoot>/skills/plan_acceptance_checklist_compiler/SKILL.md`
+- `<harnessRoot>/ty-context-managed/context_templates/**`
+- `<harnessRoot>/ty-context-managed/make/ty-context.mk`
 - `tools/**`
 - `.github/workflows/harness.yml` when absent or managed
 
-The package-managed `.github/workflows/harness.yml` is a consumer project workflow. It installs the Node runtime required by the Harness CLI and runs the selected `validate-context`, `validate-code-modularity` or composite `validate-harness` Make target. For pull requests it provides `SDLC_MODULARITY_BASE` so the modularity target audits PR/base changes instead of full historical debt. Maintainer-only checks for this source repository, such as `npm test --workspace project-tiny-context-harness` and package source-drift checks, must live in separate source-repository CI and must not be copied into consumer projects.
+The package-managed `.github/workflows/harness.yml` is a consumer project workflow. It installs the Node runtime required by the Harness CLI and runs the selected `validate-context`, `validate-code-modularity` or composite `validate-harness` Make target. For pull requests it provides `TY_CONTEXT_MODULARITY_BASE` so the modularity target audits PR/base changes instead of full historical debt. Maintainer-only checks for this source repository, such as `npm test --workspace project-tiny-context-harness` and package source-drift checks, must live in separate source-repository CI and must not be copied into consumer projects.
 
-`init` does not create `.work_products/**`, lifecycle state, plan state, stage skills, stage templates or stage policies by default.
+`init` does not create business Product Surface Contract files, `.work_products/**`, lifecycle state, plan state, stage skills, stage templates or stage policies by default.
 
 `sync` refreshes managed assets only. It never generates project semantics and it does not run migrations. If an upgrade plan contains `safe_pending`, `manual_required` or `blocked` items, public `sync` refuses to write and tells the user to run `upgrade`; internal `upgrade` may bypass that guard only after it has planned and applied safe migrations.
 
 ### Upgrade Model / Migration Model
 
-The public npm update path is now: after updating the package, run `sdlc-harness upgrade`. `sync` is only the right direct command when release notes say the release update mode is `sync-only`.
+The public npm update path is now: after updating the package, run `ty-context upgrade`. `sync` is only the right direct command when release notes say the release update mode is `sync-only`.
 
 The package also ships `context_harness_upgrade` as a managed Skill so agents can turn explicit requests like `upgrade Tiny Context` into the canonical upgrade sequence: inspect Context, run `upgrade --check` when useful, run `upgrade`, handle only scoped manual/blocked items, then run `doctor` and `validate-context`.
 
@@ -485,6 +516,7 @@ The migration registry shape is intentionally explicit. Each migration declares 
 
 Initial registry entries cover:
 
+- `legacy-sdlc-harness-rename`
 - `schema-v4-config-refresh`
 - `legacy-modules-to-areas`
 - `context-manifest-baseline`
@@ -492,7 +524,7 @@ Initial registry entries cover:
 - `design-md-baseline`
 - `deprecated-skill-overrides`
 
-The model covers Harness-owned surfaces such as config schema refresh, `project_context/modules/**` to `project_context/areas/**`, conservative manifest baseline creation, obvious `verification.md` / `deployment.md` role registration and generated design baseline creation. It does not infer arbitrary project semantics. For example, `project_context/areas/payment/api.md` without manifest role is `manual_required`, not automatically guessed as `contract`, `foundation`, `area` or `implementation-index`.
+The model covers Harness-owned surfaces such as old `sdlc-harness` / `pjsdlc_managed` rename compatibility, config schema refresh, `project_context/modules/**` to `project_context/areas/**`, conservative manifest baseline creation, obvious `verification.md` / `deployment.md` role registration and generated design baseline creation. The legacy rename migration may copy `package.json#sdlcHarness` to `package.json#tyContext`, copy `sdlc-harness.config.json` to `ty-context.config.json`, refresh `<harnessRoot>/config.yaml` managed paths from `pjsdlc_managed` / `sdlc-harness.mk` to `ty-context-managed` / `ty-context.mk`, and replace old managed markers in place through sync. It must report root conflicts, old override skills, unknown old managed content and target conflicts as `manual_required` or `blocked`; it must not delete unconfirmed user configuration, merge overrides, migrate `.work_products/**` or restore lifecycle state. It does not infer arbitrary project semantics. For example, `project_context/areas/payment/api.md` without manifest role is `manual_required`, not automatically guessed as `contract`, `foundation`, `area` or `implementation-index`.
 
 Anti-goals:
 
@@ -524,14 +556,14 @@ The customization behavior is:
 
 `check-modularity` audits selected handwritten source files for physical line-count risk. It is warning-only by default as a report command and supports `--fail-on-warning`; `validate-code-modularity` and composite `validate-harness` use that hard mode for touched/PR handwritten source. New generated config files set `modularity.policy: strict_except_generated` for strict enforcement that still auto-skips generated or non-source files; omitted policy remains `scoped_waivers` for compatibility. Valid `scoped_waivers` exceptions live in `<harnessRoot>/config.yaml` `modularity.waivers` with `path`, one of `generated`, `third_party_reference`, `legacy_migration`, `aggregate_styles` or `fixture_snapshot`, plus `reason` and `future_split_boundary`; `strict_except_generated` rejects any waiver config. It does not infer semantic module quality or replace the development engineer Skill's split-or-exception judgment.
 
-The canonical npm package is `project-tiny-context-harness`; `sdlc-harness` is the bin name:
+The canonical npm package is `project-tiny-context-harness`; `ty-context` is the bin name:
 
-- Public commands and managed Makefile wrappers prefer `npx --yes --package project-tiny-context-harness@latest sdlc-harness` for ad hoc use.
-- This avoids bare `npx sdlc-harness` resolving a legacy package name or stale local binary.
+- Public commands and managed Makefile wrappers prefer `npx --yes --package project-tiny-context-harness@latest ty-context` for ad hoc use.
+- This avoids bare `npx ty-context` resolving a legacy package name or stale local binary.
 - Current CLI commands guard unsupported future schema major versions before applying v4 assumptions.
 - Write commands fail before modifying files.
 
-## Historical Iteration: Stage-Based SDLC Harness
+## Historical Iteration: Stage-Based Tiny Context Harness
 
 The previous default attempted to encode a full stage-based software lifecycle:
 
@@ -572,7 +604,7 @@ Observed implication:
 
 - stages, gate checks and fact-source writes are objective workflow friction and cannot be erased entirely;
 - the clearest remaining value is faster context recovery for future iteration, debug and requirement changes;
-- the highest-leverage durable fact source is likely a small Project / Delivery Context, not a full SDLC document chain;
+- the highest-leverage durable fact source is likely a small Project / Delivery Context, not a full Tiny Context document chain;
 - full gates and rich process artifacts should be conditional, not default.
 
 Therefore the canonical product direction changed: preserve minimal durable context, leave product quality to project-specific validation, and use benchmark work to find the break-even curve where extra workflow structure pays back.
@@ -591,8 +623,8 @@ Therefore the canonical product direction changed: preserve minimal durable cont
 
 This source workspace contains three maintained areas:
 
-- Harness source and package assets: `packages/sdlc-harness/**`, `.codex/pjsdlc_managed/**`, `tools/**`.
-- Package release and source-sync logic: build/test/release scripts and `packages/sdlc-harness/source-mappings.yaml`.
+- Harness source and package assets: `packages/ty-context/**`, `.codex/ty-context-managed/**`, `tools/**`.
+- Package release and source-sync logic: build/test/release scripts and `packages/ty-context/source-mappings.yaml`.
 - Delivery benchmark: `examples/delivery-benchmark/**`, used to test whether the Harness product direction improves same-quality lifecycle delivery efficiency.
 
 ## Historical Material

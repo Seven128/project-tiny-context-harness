@@ -43,7 +43,7 @@ Not supported:
 - debugging private application code unrelated to the Harness,
 - replacing a user's project tests, CI, review or acceptance process,
 - benchmark speedup claims without fresh baseline and Minimal Context comparison evidence,
-- requests to restore the old stage-based SDLC workflow as the default product.
+- requests to restore the old stage-based Tiny Context workflow as the default product.
 
 ## Response Expectations
 

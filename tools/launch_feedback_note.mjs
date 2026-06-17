@@ -58,12 +58,12 @@ function printHelp() {
   console.log(`launch_feedback_note.mjs
 
 Creates a temporary post-launch feedback note for Project Tiny Context Harness.
-The note is for launch operations only and belongs under tmp/sdlc/launch-feedback.
+The note is for launch operations only and belongs under tmp/ty-context/launch-feedback.
 
 Usage:
   node tools/launch_feedback_note.mjs --channel show-hn --url https://news.ycombinator.com/item?id=...
   node tools/launch_feedback_note.mjs --channel product-hunt --posted-at 2026-06-10T12:00:00Z
-  node tools/launch_feedback_note.mjs --channel reddit --output tmp/sdlc/launch-feedback/reddit.md
+  node tools/launch_feedback_note.mjs --channel reddit --output tmp/ty-context/launch-feedback/reddit.md
 
 Options:
   --channel <name>    Launch channel name. Defaults to "channel".
@@ -92,7 +92,7 @@ function isShowHn({ slug, url }) {
 }
 
 function renderNote({ channel, slug, url, postedAt, generatedAt }) {
-  const metricsPrefix = `tmp/sdlc/launch-metrics/${slug}`;
+  const metricsPrefix = `tmp/ty-context/launch-metrics/${slug}`;
   const hnTelemetry = isShowHn({ slug, url })
     ? `
 Show HN story telemetry:
@@ -192,7 +192,7 @@ if (options.help) {
 const channel = options.channel || "channel";
 const slug = slugify(channel);
 const outputPath =
-  options.output || path.resolve("tmp", "sdlc", "launch-feedback", `${isoDateOnly(new Date())}-${slug}.md`);
+  options.output || path.resolve("tmp", "ty-context", "launch-feedback", `${isoDateOnly(new Date())}-${slug}.md`);
 
 if (existsSync(outputPath) && !options.force) {
   console.error(`Refusing to overwrite existing note: ${path.relative(process.cwd(), outputPath)}`);

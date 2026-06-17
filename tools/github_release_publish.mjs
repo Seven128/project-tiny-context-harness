@@ -7,8 +7,8 @@ import { fileURLToPath } from "node:url";
 
 const defaultRepoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageName = "project-tiny-context-harness";
-const ghCommand = commandOverrideFromEnv("SDLC_HARNESS_GH_COMMAND") ?? defaultToolCommand("gh");
-const gitCommand = commandOverrideFromEnv("SDLC_HARNESS_GIT_COMMAND") ?? defaultToolCommand("git");
+const ghCommand = commandOverrideFromEnv("TY_CONTEXT_GH_COMMAND") ?? defaultToolCommand("gh");
+const gitCommand = commandOverrideFromEnv("TY_CONTEXT_GIT_COMMAND") ?? defaultToolCommand("git");
 
 const args = parseArgs(process.argv.slice(2));
 
@@ -58,7 +58,7 @@ Usage:
   node tools/github_release_publish.mjs --dry-run
 
 Options:
-  --version x.y.z  Package version. Defaults to packages/sdlc-harness/package.json.
+  --version x.y.z  Package version. Defaults to packages/ty-context/package.json.
   --target sha     Commit or branch used when GitHub needs to create tag v<version>.
   --repo owner/name
                   Repository passed through to gh release commands.
@@ -103,7 +103,7 @@ async function main() {
 }
 
 async function readPackageVersion() {
-  const manifestPath = path.join(args.root, "packages", "sdlc-harness", "package.json");
+  const manifestPath = path.join(args.root, "packages", "ty-context", "package.json");
   const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8"));
   if (!/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(manifest.version)) {
     throw new Error(`Invalid package version: ${manifest.version}`);

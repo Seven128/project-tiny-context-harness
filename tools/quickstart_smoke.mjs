@@ -35,10 +35,10 @@ function printHelp() {
   console.log(`quickstart_smoke.mjs
 
 Packs the local project-tiny-context-harness workspace, installs it into a temporary demo
-repository, runs sdlc-harness init, then validates the generated Minimal Context.
+repository, runs ty-context init, then validates the generated Minimal Context.
 
 Usage:
-  node tools/quickstart_smoke.mjs [--out-dir tmp/sdlc/quickstart-smoke/demo] [--clean] [--pack-ignore-scripts]
+  node tools/quickstart_smoke.mjs [--out-dir tmp/ty-context/quickstart-smoke/demo] [--clean] [--pack-ignore-scripts]
 
 Options:
   --pack-ignore-scripts  Skip npm pack lifecycle scripts. Intended for package tests
@@ -103,7 +103,7 @@ function assertContains(filePath, pattern) {
 
 function makeDefaultOutDir() {
   const stamp = new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14);
-  return path.join(repoRoot, "tmp", "sdlc", "quickstart-smoke", `${stamp}-${process.pid}`);
+  return path.join(repoRoot, "tmp", "ty-context", "quickstart-smoke", `${stamp}-${process.pid}`);
 }
 
 const options = parseArgs(process.argv.slice(2));
@@ -134,8 +134,8 @@ try {
   run("git", ["init"], demoDir);
   run("npm", ["init", "-y"], demoDir);
   run("npm", ["install", "--save-dev", tarballPath], demoDir);
-  run("npx", ["--no-install", "sdlc-harness", "init"], demoDir);
-  run("npx", ["--no-install", "sdlc-harness", "validate-context"], demoDir);
+  run("npx", ["--no-install", "ty-context", "init"], demoDir);
+  run("npx", ["--no-install", "ty-context", "validate-context"], demoDir);
 
   const expectedFiles = [
     "AGENTS.md",

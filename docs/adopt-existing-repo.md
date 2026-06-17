@@ -1,6 +1,6 @@
 # Adopt An Existing Repository
 
-Use this guide when a repository already has code, tests, documentation, agent rules or team conventions. The goal is to add Minimal Context Harness without turning the project into a full SDLC process.
+Use this guide when a repository already has code, tests, documentation, agent rules or team conventions. The goal is to add Minimal Context Harness without turning the project into a full Tiny Context process.
 
 ## Before You Start
 
@@ -25,7 +25,7 @@ Normal npm path:
 
 ```sh
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init --adopt
+npx --yes --package project-tiny-context-harness@latest ty-context init --adopt
 make validate-context
 ```
 
@@ -58,8 +58,8 @@ For source-preview testing in an external repository, use the local packed tarba
 
 ```sh
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.54.tgz
-npx --no-install sdlc-harness init --adopt
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.2.55.tgz
+npx --no-install ty-context init --adopt
 make validate-context
 ```
 

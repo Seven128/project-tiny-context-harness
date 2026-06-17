@@ -12,7 +12,7 @@ Do not use this as evidence of adoption, benchmark wins or product quality. It i
 |---|---|
 | Product name | Project Tiny Context Harness |
 | npm package | `project-tiny-context-harness` |
-| CLI bin | `sdlc-harness` |
+| CLI bin | `ty-context` |
 | Repository | `https://github.com/Seven128/project-tiny-context-harness` |
 | License | MIT |
 | Category | Developer Tools / AI coding-agent infrastructure / Context engineering |
@@ -40,7 +40,7 @@ Project Tiny Context Harness helps fresh AI coding-agent sessions recover projec
 ### Product Hunt / Directory
 
 ```text
-Project Tiny Context Harness helps coding agents recover project intent across new chats, handoffs and debugging turns. It installs compact project_context files, AGENTS.md guidance and a validate-context gate without adding a full SDLC ceremony.
+Project Tiny Context Harness helps coding agents recover project intent across new chats, handoffs and debugging turns. It installs compact project_context files, AGENTS.md guidance and a validate-context gate without adding a full Tiny Context ceremony.
 ```
 
 ### Curated List
@@ -60,7 +60,7 @@ Project Tiny Context Harness is a small open-source tool for the boring failure 
 ```text
 Project Tiny Context Harness packages the Minimal Context Harness approach for repositories that use AI coding agents. It keeps durable project memory in plain repo files: project_context/** for project facts, AGENTS.md as the startup router, role Skills for explicit product/design/engineering requests and validate-context to check that the recovery surface exists without storing fake test-result claims.
 
-It is intentionally not an autonomous coding agent, task manager, spec generator, code-indexing system or full SDLC framework. The design keeps the part that helps fresh chats recover intent while dropping phase gates, task state and work-product trees by default. Product quality still belongs to the repository's tests, CI, review and human acceptance.
+It is intentionally not an autonomous coding agent, task manager, spec generator, code-indexing system or full Tiny Context framework. The design keeps the part that helps fresh chats recover intent while dropping phase gates, task state and work-product trees by default. Product quality still belongs to the repository's tests, CI, review and human acceptance.
 ```
 
 ## Category Fit
@@ -81,7 +81,7 @@ Weak categories:
 - Test automation
 - CI/CD
 - Knowledge-base search
-- Compliance SDLC
+- Compliance Tiny Context
 
 ## Tags
 
@@ -110,7 +110,7 @@ gemini-cli
 opencode
 ```
 
-Avoid using `sdlc` as the first tag on broad launch surfaces. It is acceptable as package history or search metadata, but the public wedge is Minimal Context and project memory.
+Avoid using `ty-context` as the first tag on broad launch surfaces. It is acceptable as package history or search metadata, but the public wedge is Minimal Context and project memory.
 
 ## URLs
 
@@ -157,7 +157,7 @@ Normal install path:
 
 ```sh
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init
+npx --yes --package project-tiny-context-harness@latest ty-context init
 make validate-context
 ```
 
@@ -185,8 +185,8 @@ npm ci
 npm run smoke:quickstart
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.54.tgz
-npx --no-install sdlc-harness init --adopt
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.2.55.tgz
+npx --no-install ty-context init --adopt
 make validate-context
 ```
 
@@ -195,7 +195,7 @@ make validate-context
 ```text
 I built Project Tiny Context Harness for the boring failure mode of AI coding: the model is capable, but fresh chats lose repo-specific intent.
 
-It keeps a small recovery surface in the repo: project_context/**, AGENTS.md, role Skills and validate-context. The product bet is "keep the memory, drop the ceremony": preserve durable project facts without forcing every task through SDLC phases, task state or work-product trees.
+It keeps a small recovery surface in the repo: project_context/**, AGENTS.md, role Skills and validate-context. The product bet is "keep the memory, drop the ceremony": preserve durable project facts without forcing every task through Tiny Context phases, task state or work-product trees.
 
 I am looking for feedback from people using coding agents on real repositories: what project facts should a fresh agent recover before it proposes code, and is this the smallest useful surface?
 ```
@@ -216,7 +216,7 @@ Avoid:
 - Validated by teams.
 - Used in production.
 - Award-winning.
-- Autonomous SDLC.
+- Autonomous Tiny Context.
 - Replaces tests, CI, review, issue trackers or project management.
 - Better than Codex, Claude Code, Cursor, OpenCode, Context7 or Spec Kit.
 - Asking for stars, upvotes or nominations.

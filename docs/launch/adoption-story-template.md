@@ -40,7 +40,7 @@ Quote approved:
 <exact approved quote or paraphrase>
 ```
 
-If consent is unclear, keep the story private under `tmp/sdlc/private-review/**`.
+If consent is unclear, keep the story private under `tmp/ty-context/private-review/**`.
 
 ## Story Shape
 

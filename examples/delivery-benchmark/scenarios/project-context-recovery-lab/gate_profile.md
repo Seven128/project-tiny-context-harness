@@ -33,8 +33,8 @@ during orientation.
 
 ## Out-of-Scope Gates
 
-- `node packages/sdlc-harness/dist/cli.js package sync-source`
-- `node packages/sdlc-harness/dist/cli.js package check-source`
+- `node packages/ty-context/dist/cli.js package sync-source`
+- `node packages/ty-context/dist/cli.js package check-source`
 - `npm test --workspace project-tiny-context-harness`
 - `make validate-harness` unless it is only being used as the `validate-context` alias for this run
 - consumer lab / installed-consumer validation

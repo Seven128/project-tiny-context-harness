@@ -15,7 +15,7 @@ v0.2.53
 Target:
 
 ```text
-Use the commit that bumps `packages/sdlc-harness/package.json` to 0.2.53 and is published to npm.
+Use the commit that bumps `packages/ty-context/package.json` to 0.2.53 and is published to npm.
 ```
 
 Title:
@@ -35,15 +35,15 @@ Project Tiny Context Harness 0.2.53 is the current public release line under the
 
 ```sh
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init
+npx --yes --package project-tiny-context-harness@latest ty-context init
 make validate-context
 ```
 
 Update mode: `manual-required`. After updating the package, run:
 
 ```sh
-npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade --check
-npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade
+npx --yes --package project-tiny-context-harness@latest ty-context upgrade --check
+npx --yes --package project-tiny-context-harness@latest ty-context upgrade
 ```
 
 Use `sync` only for releases explicitly marked `sync-only`; sync does not run migrations. Upgrade plans report `safe_pending`, `manual_required` and `blocked`.
@@ -51,14 +51,14 @@ Use `sync` only for releases explicitly marked `sync-only`; sync does not run mi
 ## What Changed
 
 - Publishes `project-tiny-context-harness@0.2.53` through npm Trusted Publishing.
-- Adds `sdlc-harness check-modularity` as a warning-only source-file line-count audit, with `--fail-on-warning` for projects that intentionally opt into CI enforcement.
+- Adds `ty-context check-modularity` as a warning-only source-file line-count audit, with `--fail-on-warning` for projects that intentionally opt into CI enforcement.
 - Adds `Modularity Check: none|required|exception` to engineering / RFC / implementation Task Contracts so oversized touched files force split-or-exception reasoning through the existing development engineer decomposition guidance.
 - Tightens upgrade safety: `blocked` migration items now stop writes before safe migrations or managed-asset sync, so conflicting targets cannot be partially migrated.
 - Keeps the install path on the renamed package: `project-tiny-context-harness`.
 - Keeps the core positioning tight: minimal repo-native project memory for AI coding agents.
 - Keeps the Minimal Context boundary explicit: `AGENTS.md` is the startup router, `project_context/**` keeps durable recovery facts, and `validate-context` checks recoverability.
 - Makes package updates explicit through release update modes: `sync-only`, `upgrade-required`, `manual-required`.
-- Keeps the old stage-based SDLC workflow out of the default package surface.
+- Keeps the old stage-based Tiny Context workflow out of the default package surface.
 
 ## Boundary
 

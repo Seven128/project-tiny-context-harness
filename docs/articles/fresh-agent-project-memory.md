@@ -10,7 +10,7 @@ A new session may have the same repository, the same tests and the same issue, b
 - which facts belong in a shared project memory rather than a chat transcript
 - when a task should stay code-first instead of becoming a planning exercise
 
-Project Tiny Context Harness is built for that smaller problem. It is repo-native project memory for AI coding agents, not an autonomous SDLC system.
+Project Tiny Context Harness is built for that smaller problem. It is repo-native project memory for AI coding agents, not an autonomous Tiny Context system.
 
 ## The Small Shape
 
@@ -71,7 +71,7 @@ Then the long-lived facts live in smaller files with clearer ownership.
 
 ## Why Drop The Stage Ceremony?
 
-Earlier versions of this project were closer to a full SDLC workflow: lifecycle phases, task state, stage-specific skills, work-product trees and frequent gates.
+Earlier versions of this project were closer to a full Tiny Context workflow: lifecycle phases, task state, stage-specific skills, work-product trees and frequent gates.
 
 That shape had a real cost. Ordinary and medium-sized coding tasks spent too much time moving through phases and checking artifacts. More importantly, modern coding agents already internalize much of the local loop: understand the request, inspect code, choose an implementation path, edit, test and repair.
 
@@ -119,7 +119,7 @@ Use npm for the normal install path:
 
 ```sh
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init
+npx --yes --package project-tiny-context-harness@latest ty-context init
 make validate-context
 ```
 

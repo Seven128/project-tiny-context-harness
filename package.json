@@ -30,9 +30,9 @@
     "release:check-version": "node tools/sync_release_version.mjs --check",
     "release:github": "node tools/github_release_publish.mjs",
     "release:npm": "node tools/release_npm.mjs",
-    "sdlc-harness": "node packages/sdlc-harness/dist/cli.js"
+    "ty-context": "node packages/ty-context/dist/cli.js"
   },
-  "sdlcHarness": {
+  "tyContext": {
     "harnessFolderName": ".codex"
   }
 }

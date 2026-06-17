@@ -44,7 +44,7 @@ Run the live upstream check immediately before opening curated-list PRs:
 npm run launch:external-prs -- --live --clean
 ```
 
-Default mode is read-only and does not access the network. Live mode clones upstream repositories under `tmp/sdlc/external-pr-packets/repos`, verifies each patch with `git apply --check`, applies it in the temporary clone and runs `git diff --check`. It does not fork repositories, push branches or open PRs.
+Default mode is read-only and does not access the network. Live mode clones upstream repositories under `tmp/ty-context/external-pr-packets/repos`, verifies each patch with `git apply --check`, applies it in the temporary clone and runs `git diff --check`. It does not fork repositories, push branches or open PRs.
 
 ## Recommended Opening Order
 
@@ -190,7 +190,7 @@ Entry added:
 name: Project Tiny Context Harness
 repo: https://github.com/Seven128/project-tiny-context-harness
 tagline: Minimal project memory for coding agents
-description: Repo-native context recovery for OpenCode and other AI coding agents. Installs AGENTS.md, project_context/**, role Skills, and validate-context so fresh sessions can recover project intent, boundaries, and validation paths without SDLC phase ceremony.
+description: Repo-native context recovery for OpenCode and other AI coding agents. Installs AGENTS.md, project_context/**, role Skills, and validate-context so fresh sessions can recover project intent, boundaries, and validation paths without Tiny Context phase ceremony.
 ```
 
 Commands:
@@ -326,7 +326,7 @@ PR body:
 ```text
 Adds Project Tiny Context Harness under Developer Productivity Tools.
 
-It is an open-source CLI for AI coding-agent context recovery: repo-local AGENTS.md, project_context/**, role Skills, and validate-context checks help fresh agent sessions recover project intent and validation paths without adding a full SDLC workflow.
+It is an open-source CLI for AI coding-agent context recovery: repo-local AGENTS.md, project_context/**, role Skills, and validate-context checks help fresh agent sessions recover project intent and validation paths without adding a full Tiny Context workflow.
 ```
 
 Entry added:
@@ -366,7 +366,7 @@ No benchmark, adoption, award, star-growth or productivity-speed claims are incl
 Entry added:
 
 ```md
-- [Project Tiny Context Harness](https://github.com/Seven128/project-tiny-context-harness) — Minimal repo-native project memory for AI coding agents: `project_context/**`, `AGENTS.md` guidance, role Skills, and `validate-context` help fresh agent sessions recover project intent, boundaries, ownership, and validation paths without adding SDLC phase ceremony. ![Stars](https://img.shields.io/github/stars/Seven128/project-tiny-context-harness?style=flat-square&label=★&color=yellow)
+- [Project Tiny Context Harness](https://github.com/Seven128/project-tiny-context-harness) — Minimal repo-native project memory for AI coding agents: `project_context/**`, `AGENTS.md` guidance, role Skills, and `validate-context` help fresh agent sessions recover project intent, boundaries, ownership, and validation paths without adding Tiny Context phase ceremony. ![Stars](https://img.shields.io/github/stars/Seven128/project-tiny-context-harness?style=flat-square&label=★&color=yellow)
 ```
 
 Commands:
@@ -417,8 +417,8 @@ Entry added:
 name: Project Tiny Context Harness
 repo_url: https://github.com/Seven128/project-tiny-context-harness
 category: Context & Working-State Engineering
-summary_en: Minimal Context Harness package that installs repo-local project memory, AGENTS.md guidance, role Skills, and validation for fresh-agent recovery without SDLC phase ceremony.
-summary_zh: Minimal Context Harness 包，用于安装仓库本地项目记忆、AGENTS.md 指引、角色 Skills 与验证入口，帮助新的编码代理会话恢复项目事实，而不引入 SDLC 阶段仪式。
+summary_en: Minimal Context Harness package that installs repo-local project memory, AGENTS.md guidance, role Skills, and validation for fresh-agent recovery without Tiny Context phase ceremony.
+summary_zh: Minimal Context Harness 包，用于安装仓库本地项目记忆、AGENTS.md 指引、角色 Skills 与验证入口，帮助新的编码代理会话恢复项目事实，而不引入 Tiny Context 阶段仪式。
 ```
 
 Commands:

@@ -4,7 +4,7 @@ You are building this product with Minimal Context Harness.
 
 Rules:
 
-- Start from the prepared fresh git repo in the current run directory. For warm benchmark runs, Harness is already initialized and committed before the observer starts; do not run `npx sdlc-harness init` inside the measured delivery window.
+- Start from the prepared fresh git repo in the current run directory. For warm benchmark runs, Harness is already initialized and committed before the observer starts; do not run `npx ty-context init` inside the measured delivery window.
 - If the prepared run is missing `project_context/global.md` or `project_context/architecture.md`, stop and report `BLOCKED`; do not create an alternate fallback context root in a formal run.
 - Maintain context quality in `project_context/**`. Harness does not replace product tests, smoke checks, hidden probes or human acceptance.
 - During `INITIAL_DELIVERY`, implement the requested product behavior and update only the minimum `project_context/global.md`, `project_context/architecture.md` and `project_context/areas/*.md` facts needed for a fresh agent to recover goal, boundaries, restrained architecture, code entry points, test entry points, current state and next safe action.

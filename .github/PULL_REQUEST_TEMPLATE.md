@@ -13,8 +13,8 @@
 ## Validation
 
 - [ ] `npm test --workspace project-tiny-context-harness`
-- [ ] `node packages/sdlc-harness/dist/cli.js package sync-source`
-- [ ] `node packages/sdlc-harness/dist/cli.js package check-source`
+- [ ] `node packages/ty-context/dist/cli.js package sync-source`
+- [ ] `node packages/ty-context/dist/cli.js package check-source`
 - [ ] `make validate-context`
 - [ ] `git diff --check`
 

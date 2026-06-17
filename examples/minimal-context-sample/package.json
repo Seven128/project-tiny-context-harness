@@ -4,9 +4,9 @@
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
-    "validate-context": "node ../../packages/sdlc-harness/dist/cli.js validate-context"
+    "validate-context": "node ../../packages/ty-context/dist/cli.js validate-context"
   },
-  "sdlcHarness": {
+  "tyContext": {
     "harnessFolderName": ".codex"
   }
 }

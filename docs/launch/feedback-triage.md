@@ -6,7 +6,7 @@ Use this runbook after Show HN, Product Hunt, Reddit, curated-list PRs, private 
 
 The goal is to turn attention into clearer product copy, useful issues and consented adoption evidence without overstating proof.
 
-Do not store raw private logs, secrets, customer details, private repository names or private code here. Filled notes belong under `tmp/sdlc/launch-feedback/**`.
+Do not store raw private logs, secrets, customer details, private repository names or private code here. Filled notes belong under `tmp/ty-context/launch-feedback/**`.
 
 ## Inputs
 
@@ -23,7 +23,7 @@ Before triage, collect:
 Use one temporary note per channel:
 
 ```text
-tmp/sdlc/launch-feedback/YYYY-MM-DD-<channel>.md
+tmp/ty-context/launch-feedback/YYYY-MM-DD-<channel>.md
 ```
 
 Create the note with:
@@ -57,7 +57,7 @@ Classify each substantive comment:
 | Comment type | Signal | Action |
 |---|---|---|
 | Install failure | Command does not work or npm package is unavailable. | Pause promotion, reproduce, fix docs or package, then reply with the correction. |
-| Positioning confusion | Reader thinks it is an autonomous agent, full SDLC framework or task manager. | Patch README/FAQ/profile before the next channel. |
+| Positioning confusion | Reader thinks it is an autonomous agent, full Tiny Context framework or task manager. | Patch README/FAQ/profile before the next channel. |
 | AGENTS.md overlap | Reader asks why this is not just `AGENTS.md`. | Link comparison/FAQ; patch only if multiple readers miss the router-plus-context model. |
 | Benchmark demand | Reader asks for speed or quality numbers. | State no-claim boundary; link benchmark rerun issue if useful. |
 | Real recovery problem | Reader names project facts their agents rediscover. | Ask for adoption report or consented story. |
@@ -117,7 +117,7 @@ If public:
 If private:
 
 - Track with `docs/launch/private-review-log-template.md`.
-- Keep notes under `tmp/sdlc/private-review/**`.
+- Keep notes under `tmp/ty-context/private-review/**`.
 - Do not quote or paraphrase publicly without consent.
 
 Allowed summary after real evidence exists:

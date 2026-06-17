@@ -44,7 +44,7 @@ Fair concern. The project started from a heavier stage-based workflow, and the c
 Modern coding agents already internalize much of the ordinary understand, design, implement, test and repair loop. The current package preserves the part that still helps across fresh sessions: compact project memory. It does not require phase gates, task state or work-product trees by default.
 ```
 
-Use when someone asks why the project still talks about SDLC, phases or ceremony.
+Use when someone asks why the project still talks about Tiny Context, phases or ceremony.
 
 Link: [FAQ: Why did you remove the old stage-based workflow?](../faq.md#why-did-you-remove-the-old-stage-based-workflow)
 
@@ -114,7 +114,7 @@ Yes, use it on a branch first.
 The normal path is:
 
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init --adopt
+npx --yes --package project-tiny-context-harness@latest ty-context init --adopt
 make validate-context
 
 The README also has a source-preview path that packs the local workspace into a disposable repo for private review or package development.

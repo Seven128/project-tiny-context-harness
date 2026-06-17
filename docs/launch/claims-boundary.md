@@ -27,7 +27,7 @@ These are safe for README, npm copy, Show HN, Product Hunt and curated-list PRs:
 - Keeps `AGENTS.md` as the startup router and `project_context/**` as the maintained fact source.
 - Provides `validate-context` as a recovery-surface check.
 - Complements tests, CI, review, issue tracking, specs and code-intelligence tools.
-- Avoids SDLC phase ceremony, task state and work-product trees by default.
+- Avoids Tiny Context phase ceremony, task state and work-product trees by default.
 - Works through plain repository files that Codex, Claude Code, Cursor, Gemini CLI, OpenCode and similar agents can read.
 - `project-tiny-context-harness@latest` is installable from npm.
 
@@ -56,8 +56,8 @@ Avoid these phrases unless they are explicitly framed as a thing the project doe
 - replaces tests
 - replaces CI
 - replaces review
-- automates the SDLC
-- autonomous SDLC framework
+- automates the Tiny Context
+- autonomous Tiny Context framework
 - used by teams
 - trusted by developers
 - award-winning
@@ -106,7 +106,7 @@ Use this instead of adoption claims:
 Early feedback is being collected through private review and adoption reports; public examples will be linked only with consent.
 ```
 
-Use this instead of SDLC automation claims:
+Use this instead of Tiny Context automation claims:
 
 ```text
 The project keeps durable context and intentionally avoids phase gates, task state and work-product trees by default.

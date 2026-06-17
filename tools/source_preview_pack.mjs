@@ -37,7 +37,7 @@ Packs the local project-tiny-context-harness workspace into an installable tarba
 for private review, source-preview testing or package development.
 
 Usage:
-  node tools/source_preview_pack.mjs [--out-dir tmp/sdlc/source-preview/package] [--clean] [--pack-ignore-scripts]
+  node tools/source_preview_pack.mjs [--out-dir tmp/ty-context/source-preview/package] [--clean] [--pack-ignore-scripts]
 
 Options:
   --clean                Remove the output directory before packing.
@@ -79,7 +79,7 @@ function run(command, args, cwd) {
 }
 
 function defaultOutDir() {
-  return path.join(repoRoot, "tmp", "sdlc", "source-preview", "package");
+  return path.join(repoRoot, "tmp", "ty-context", "source-preview", "package");
 }
 
 const options = parseArgs(process.argv.slice(2));
@@ -111,13 +111,13 @@ try {
   }
 
   const tarballPath = path.join(outDir, tarball);
-  const manifest = JSON.parse(readFileSync(path.join(repoRoot, "packages", "sdlc-harness", "package.json"), "utf8"));
+  const manifest = JSON.parse(readFileSync(path.join(repoRoot, "packages", "ty-context", "package.json"), "utf8"));
   const report = {
     status: "packed",
     package: `${manifest.name}@${manifest.version}`,
     tarballPath,
     installCommand: `npm install -D ${tarballPath}`,
-    initCommand: "npx --no-install sdlc-harness init --adopt",
+    initCommand: "npx --no-install ty-context init --adopt",
     validateCommand: "make validate-context"
   };
   writeFileSync(path.join(outDir, "source-preview-report.json"), `${JSON.stringify(report, null, 2)}\n`, "utf8");
@@ -129,7 +129,7 @@ try {
   console.log("");
   console.log("In a separate test repository:");
   console.log(`  npm install -D ${tarballPath}`);
-  console.log("  npx --no-install sdlc-harness init --adopt");
+  console.log("  npx --no-install ty-context init --adopt");
   console.log("  make validate-context");
   console.log("");
   console.log("Use this only for source-preview testing, private review or package development.");

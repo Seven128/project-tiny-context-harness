@@ -47,7 +47,7 @@ Use current repository evidence only. Recheck paths before submitting.
 
 | Area | Current evidence | Notes |
 |---|---|---|
-| FLOSS license | `LICENSE`, `package.json`, `packages/sdlc-harness/package.json` use MIT. | MIT is compatible with a public OSS badge self-assessment. |
+| FLOSS license | `LICENSE`, `package.json`, `packages/ty-context/package.json` use MIT. | MIT is compatible with a public OSS badge self-assessment. |
 | Project purpose | README first screen states Minimal project memory for AI coding agents. | Use README as the project website while no separate website exists. |
 | How to obtain | README npm install path and source preview fallback. | `project-tiny-context-harness@latest` is the normal install route. |
 | Contribution path | `CONTRIBUTING.md`, issue templates, PR template, starter issues. | Keep contribution requirements factual and lightweight. |
@@ -75,7 +75,7 @@ Do not mark these as met without maintainer review:
 1. Run a fresh metrics snapshot:
 
 ```sh
-npm run launch:metrics -- --output tmp/sdlc/launch-metrics/openssf-best-practices-before.md
+npm run launch:metrics -- --output tmp/ty-context/launch-metrics/openssf-best-practices-before.md
 ```
 
 2. Run readiness checks:
@@ -89,7 +89,7 @@ npm run launch:strict-external
 4. Add the project with the repository URL above.
 5. Choose OpenSSF Baseline first unless the maintainer intentionally wants the metal series first.
 6. Let the site run automated analysis, then review each automation-filled answer before accepting it.
-7. Keep any filled worksheet or private notes under `tmp/sdlc/recognition/**`, not `project_context/**`.
+7. Keep any filled worksheet or private notes under `tmp/ty-context/recognition/**`, not `project_context/**`.
 8. After a badge is earned, add only the official badge Markdown from the Best Practices site to README/package README and add a follow-up readiness gate.
 
 ## Claims Boundary

@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const packageJson = JSON.parse(readFileSync(path.join(repoRoot, "packages/sdlc-harness/package.json"), "utf8"));
+const packageJson = JSON.parse(readFileSync(path.join(repoRoot, "packages/ty-context/package.json"), "utf8"));
 
 const urls = {
   npmTrustedPublish:
@@ -45,7 +45,7 @@ function printHelp() {
 
 Prints the ordered maintainer actions for the public launch.
 This script is read-only: it does not publish to npm, create releases, post to HN or open PRs.
-In --live mode it also reads tmp/sdlc/launch-feedback notes to detect an existing Show HN URL.
+In --live mode it also reads tmp/ty-context/launch-feedback notes to detect an existing Show HN URL.
 
 Usage:
   node tools/launch_next_steps.mjs
@@ -81,7 +81,7 @@ function slashPath(filePath) {
 }
 
 export function findShowHnFeedbackNote({ root = repoRoot } = {}) {
-  const feedbackDir = path.join(root, "tmp", "sdlc", "launch-feedback");
+  const feedbackDir = path.join(root, "tmp", "ty-context", "launch-feedback");
   if (!existsSync(feedbackDir)) {
     return null;
   }
@@ -279,7 +279,7 @@ export function buildNextSteps({ packageVersion = packageJson.version } = {}) {
       source: "docs/launch/primary-launch.md",
       preflight: [
         "npm run launch:strict-external",
-        "npm run launch:metrics -- --output tmp/sdlc/launch-metrics/show-hn-before.md"
+        "npm run launch:metrics -- --output tmp/ty-context/launch-metrics/show-hn-before.md"
       ],
       stopIf: "final copy claims benchmark wins, adoption, awards, replacement of tests/CI/review, or asks for stars"
     },
@@ -288,7 +288,7 @@ export function buildNextSteps({ packageVersion = packageJson.version } = {}) {
       title: "Create the first-channel feedback note",
       owner: "maintainer",
       requiredBeforeBroadLaunch: false,
-      why: "Feedback and telemetry should stay in tmp/sdlc, not in project Context.",
+      why: "Feedback and telemetry should stay in tmp/ty-context, not in project Context.",
       command: "npm run launch:feedback-note -- --channel show-hn --url <show-hn-url>",
       source: "docs/launch/feedback-triage.md",
       stopIf: "there is no public channel URL yet"
@@ -320,10 +320,10 @@ export function buildNextSteps({ packageVersion = packageJson.version } = {}) {
       requiredBeforeBroadLaunch: false,
       why: "The useful next signal is whether HN readers or list maintainers report positioning, install, examples or category-fit problems.",
       commands: [
-        "npm run launch:hn-snapshot -- --url https://news.ycombinator.com/item?id=48479619 --output tmp/sdlc/launch-metrics/show-hn-hn-6h.md",
-        "npm run launch:metrics -- --output tmp/sdlc/launch-metrics/show-hn-6h.md"
+        "npm run launch:hn-snapshot -- --url https://news.ycombinator.com/item?id=48479619 --output tmp/ty-context/launch-metrics/show-hn-hn-6h.md",
+        "npm run launch:metrics -- --output tmp/ty-context/launch-metrics/show-hn-6h.md"
       ],
-      source: "tmp/sdlc/launch-feedback/2026-06-10-show-hn.md",
+      source: "tmp/ty-context/launch-feedback/2026-06-10-show-hn.md",
       stopIf: "feedback shows repeated positioning confusion; patch README/FAQ before any broader channel"
     }
   ];

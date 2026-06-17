@@ -2,7 +2,7 @@
 
 [[areas]]
 id = "harness-package"
-root = "packages/sdlc-harness"
+root = "packages/ty-context"
 context = "project_context/areas/harness-package.md"
 kind = "npm-package"
 default = true

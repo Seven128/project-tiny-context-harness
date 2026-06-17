@@ -5,7 +5,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-export const DEFAULT_LAB_DIR = "/Users/momoooo/Documents/sdlc-harness-consumer-lab";
+export const DEFAULT_LAB_DIR = "/Users/momoooo/Documents/ty-context-consumer-lab";
 
 const STATUS_ORDER = {
   PASS: 0,
@@ -100,13 +100,13 @@ export async function runConsumerLabFullTest(rawOptions) {
   };
   const startedAt = new Date().toISOString();
   const packageManifest = JSON.parse(
-    await readFile(path.join(options.sourceRoot, "packages", "sdlc-harness", "package.json"), "utf8")
+    await readFile(path.join(options.sourceRoot, "packages", "ty-context", "package.json"), "utf8")
   );
   const packageVersion = packageManifest.version;
   const checks = [];
   const artifactsDir = path.join(options.labDir, ".artifacts");
-  const localHarnessArgs = (...args) => ["--no-install", "sdlc-harness", ...args];
-  const localHarnessMake = "SDLC_HARNESS=npx --no-install sdlc-harness";
+  const localHarnessArgs = (...args) => ["--no-install", "ty-context", ...args];
+  const localHarnessMake = "TY_CONTEXT=npx --no-install ty-context";
 
   const add = (check) => {
     checks.push({
@@ -211,11 +211,11 @@ async function verifyManagedAssets(labDir, add) {
     "project_context/architecture.md",
     "project_context/areas/main.md",
     ".codex/config.yaml",
-    ".codex/pjsdlc_managed/context_templates/global.md",
-    ".codex/pjsdlc_managed/context_templates/context.toml",
-    ".codex/pjsdlc_managed/context_templates/architecture.md",
-    ".codex/pjsdlc_managed/context_templates/area.md",
-    ".codex/pjsdlc_managed/make/sdlc-harness.mk",
+    ".codex/ty-context-managed/context_templates/global.md",
+    ".codex/ty-context-managed/context_templates/context.toml",
+    ".codex/ty-context-managed/context_templates/architecture.md",
+    ".codex/ty-context-managed/context_templates/area.md",
+    ".codex/ty-context-managed/make/ty-context.mk",
     ".codex/skills/context_product_plan/SKILL.md",
     ".codex/skills/context_uiux_design/SKILL.md",
     ".codex/skills/context_development_engineer/SKILL.md",
@@ -226,9 +226,9 @@ async function verifyManagedAssets(labDir, add) {
     ".work_products/INDEX.md",
     ".codex/state/lifecycle.yaml",
     ".codex/state/plan.yaml",
-    ".codex/skills/pjsdlc_manager/SKILL.md",
-    ".codex/pjsdlc_managed/templates/PLAN_TEMPLATE.yaml",
-    ".codex/pjsdlc_managed/policies/phase_contracts.yaml"
+    ".codex/skills/ty-context_manager/SKILL.md",
+    ".codex/ty-context-managed/templates/PLAN_TEMPLATE.yaml",
+    ".codex/ty-context-managed/policies/phase_contracts.yaml"
   ];
   const missing = required.filter((relative) => !existsSync(path.join(labDir, relative)));
   const unexpected = forbidden.filter((relative) => existsSync(path.join(labDir, relative)));
@@ -247,9 +247,9 @@ async function verifyManagedAssets(labDir, add) {
     const config = await readFile(path.join(labDir, ".codex/config.yaml"), "utf8");
     const configReady =
       config.includes('schema_version: "4"') &&
-      config.includes(".codex/pjsdlc_managed/context_templates") &&
+      config.includes(".codex/ty-context-managed/context_templates") &&
       config.includes(".codex/skills") &&
-      !config.includes(".codex/pjsdlc_managed/templates");
+      !config.includes(".codex/ty-context-managed/templates");
     add({
       area: "Managed assets",
       evidence: "fresh init config is Minimal Context schema",
@@ -280,11 +280,11 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
   run("npm", ["init", "-y"], adoptDir);
   await writeFile(path.join(adoptDir, "README.md"), "# Existing Project\n", "utf8");
   run("npm", ["install", "-D", tarballPath], adoptDir);
-  const adopt = run("npx", ["--no-install", "sdlc-harness", "init", "--adopt", "--harness-folder", ".codex"], adoptDir);
+  const adopt = run("npx", ["--no-install", "ty-context", "init", "--adopt", "--harness-folder", ".codex"], adoptDir);
   add({
     area: "Adoption",
     evidence: "init --adopt existing project",
-    command: "npx --no-install sdlc-harness init --adopt --harness-folder .codex",
+    command: "npx --no-install ty-context init --adopt --harness-folder .codex",
     status:
       adopt.status === 0 &&
       existsSync(path.join(adoptDir, ".codex/config.yaml")) &&
@@ -293,11 +293,11 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
         : "FAIL",
     details: trimOutput(`${adopt.stdout}\n${adopt.stderr}`)
   });
-  const adoptValidator = run("npx", ["--no-install", "sdlc-harness", "validate-context"], adoptDir);
+  const adoptValidator = run("npx", ["--no-install", "ty-context", "validate-context"], adoptDir);
   add({
     area: "Adoption",
     evidence: "adopted project validates Minimal Context",
-    command: "npx --no-install sdlc-harness validate-context",
+    command: "npx --no-install ty-context validate-context",
     status: adoptValidator.status === 0 ? "PASS" : "FAIL",
     details: trimOutput(`${adoptValidator.stdout}\n${adoptValidator.stderr}`)
   });
@@ -305,15 +305,15 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
   const configuredDir = await mkdtemp(path.join(runsDir, "configured-root-"));
   await writeFile(
     path.join(configuredDir, "package.json"),
-    JSON.stringify({ name: "configured-root", version: "1.0.0", sdlcHarness: { harnessFolderName: ".workflow" } }, null, 2),
+    JSON.stringify({ name: "configured-root", version: "1.0.0", tyContext: { harnessFolderName: ".workflow" } }, null, 2),
     "utf8"
   );
   run("npm", ["install", "-D", tarballPath], configuredDir);
-  const configured = run("npx", ["--no-install", "sdlc-harness", "init", "--adopt"], configuredDir);
+  const configured = run("npx", ["--no-install", "ty-context", "init", "--adopt"], configuredDir);
   add({
     area: "Configurable root",
-    evidence: "package.json#sdlcHarness.harnessFolderName",
-    command: "npx --no-install sdlc-harness init --adopt",
+    evidence: "package.json#tyContext.harnessFolderName",
+    command: "npx --no-install ty-context init --adopt",
     status:
       configured.status === 0 &&
       existsSync(path.join(configuredDir, ".workflow/config.yaml")) &&
@@ -322,15 +322,15 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
         : "FAIL",
     details: trimOutput(`${configured.stdout}\n${configured.stderr}`)
   });
-  const configuredCliValidator = run("npx", ["--no-install", "sdlc-harness", "validate-context"], configuredDir);
+  const configuredCliValidator = run("npx", ["--no-install", "ty-context", "validate-context"], configuredDir);
   add({
     area: "Configurable root",
     evidence: "CLI context validator consumes configured .workflow root",
-    command: "npx --no-install sdlc-harness validate-context",
+    command: "npx --no-install ty-context validate-context",
     status: configuredCliValidator.status === 0 ? "PASS" : "FAIL",
     details: trimOutput(`${configuredCliValidator.stdout}\n${configuredCliValidator.stderr}`)
   });
-  const configuredMakeContext = run("make", ["SDLC_HARNESS=npx --no-install sdlc-harness", "validate-context"], configuredDir);
+  const configuredMakeContext = run("make", ["TY_CONTEXT=npx --no-install ty-context", "validate-context"], configuredDir);
   add({
     area: "Configurable root",
     evidence: "Makefile context gate consumes configured .workflow root",
@@ -338,7 +338,7 @@ async function verifyAdoptAndConfiguredRoots(labDir, tarballPath, add) {
     status: configuredMakeContext.status === 0 ? "PASS" : "FAIL",
     details: trimOutput(`${configuredMakeContext.stdout}\n${configuredMakeContext.stderr}`)
   });
-  const configuredMakeHarness = run("make", ["SDLC_HARNESS=npx --no-install sdlc-harness", "validate-harness"], configuredDir);
+  const configuredMakeHarness = run("make", ["TY_CONTEXT=npx --no-install ty-context", "validate-harness"], configuredDir);
   add({
     area: "Configurable root",
     evidence: "Makefile composite gate consumes configured .workflow root",

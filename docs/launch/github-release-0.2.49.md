@@ -15,7 +15,7 @@ v0.2.49
 Target:
 
 ```text
-Use the commit that bumps `packages/sdlc-harness/package.json` to 0.2.49 and is published to npm.
+Use the commit that bumps `packages/ty-context/package.json` to 0.2.49 and is published to npm.
 ```
 
 Title:
@@ -35,15 +35,15 @@ Project Tiny Context Harness 0.2.49 is the current public release line under the
 
 ```sh
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init
+npx --yes --package project-tiny-context-harness@latest ty-context init
 make validate-context
 ```
 
 Update mode: `manual-required`. After updating the package, run:
 
 ```sh
-npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade --check
-npx --yes --package project-tiny-context-harness@latest sdlc-harness upgrade
+npx --yes --package project-tiny-context-harness@latest ty-context upgrade --check
+npx --yes --package project-tiny-context-harness@latest ty-context upgrade
 ```
 
 Use `sync` only for releases explicitly marked `sync-only`; sync does not run migrations. Upgrade plans report `safe_pending`, `manual_required` and `blocked`.
@@ -55,7 +55,7 @@ Use `sync` only for releases explicitly marked `sync-only`; sync does not run mi
 - Keeps the core positioning tight: minimal repo-native project memory for AI coding agents.
 - Keeps the Minimal Context boundary explicit: `AGENTS.md` is the startup router, `project_context/**` keeps durable recovery facts, and `validate-context` checks recoverability.
 - Makes package updates explicit through release update modes: `sync-only`, `upgrade-required`, `manual-required`.
-- Keeps the old stage-based SDLC workflow out of the default package surface.
+- Keeps the old stage-based Tiny Context workflow out of the default package surface.
 
 ## Boundary
 

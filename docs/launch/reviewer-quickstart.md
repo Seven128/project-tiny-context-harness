@@ -12,7 +12,7 @@ Project Tiny Context Harness adds minimal repo-native project memory for AI codi
 - `project_context/**` keeps the durable facts a fresh agent should recover.
 - `validate-context` checks context recoverability and blocks false "tests passed" claims from becoming durable context.
 
-The core bet is: keep project memory, drop SDLC-stage ceremony.
+The core bet is: keep project memory, drop Tiny Context-stage ceremony.
 
 ## Fastest Review Path
 
@@ -59,8 +59,8 @@ Optional disposable-repo trial:
 
 ```sh
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/sdlc/source-preview/package/project-tiny-context-harness-0.2.42.tgz
-npx --no-install sdlc-harness init --adopt
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.2.42.tgz
+npx --no-install ty-context init --adopt
 make validate-context
 ```
 

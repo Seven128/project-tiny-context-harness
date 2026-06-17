@@ -46,7 +46,7 @@ ai-coding
 developer-tools
 developer-productivity
 cli
-sdlc
+ty-context
 workflow
 ```
 
@@ -107,5 +107,5 @@ npm run launch:strict-external
 
 - Do not point GitHub homepage to the npm package while npm returns 404.
 - Do not use the old package name as the homepage.
-- Do not add topics that imply autonomous SDLC, benchmark wins, production adoption or official integration.
+- Do not add topics that imply autonomous Tiny Context, benchmark wins, production adoption or official integration.
 - Do not keep a live npm homepage after unpublishing, failed first publish or package-name rollback.

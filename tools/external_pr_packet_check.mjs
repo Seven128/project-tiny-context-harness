@@ -40,9 +40,9 @@ const targets = [
 ];
 
 const forbiddenPatterns = [
-  { id: "old-display-name", pattern: /AI SDLC Harness/ },
-  { id: "old-npm-package", pattern: /agent-project-sdlc/ },
-  { id: "old-repository", pattern: /project-agent-sdlc/ },
+  { id: "old-display-name", pattern: /AI Tiny Context Harness/ },
+  { id: "old-npm-package", pattern: /agent-project-ty-context/ },
+  { id: "old-repository", pattern: /project-agent-ty-context/ },
   { id: "benchmark-overclaim", pattern: /benchmark-proven|proven (?:faster|speedup)|productivity multiplier|10x/i },
   { id: "adoption-overclaim", pattern: /used by teams|trusted by developers|award-winning/i }
 ];
@@ -91,13 +91,13 @@ git diff --check.
 Usage:
   node tools/external_pr_packet_check.mjs
   node tools/external_pr_packet_check.mjs --json
-  node tools/external_pr_packet_check.mjs --output tmp/sdlc/external-pr-packets/latest.md
+  node tools/external_pr_packet_check.mjs --output tmp/ty-context/external-pr-packets/latest.md
   node tools/external_pr_packet_check.mjs --live --clean
 `);
 }
 
 function defaultWorkDir() {
-  return path.join(repoRoot, "tmp", "sdlc", "external-pr-packets", "repos");
+  return path.join(repoRoot, "tmp", "ty-context", "external-pr-packets", "repos");
 }
 
 function read(relativePath) {

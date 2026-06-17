@@ -4,7 +4,7 @@ This is the maintainer launch kit for Project Tiny Context Harness. It is copy-r
 
 Do not claim benchmark wins yet. Current public positioning is based on product design and smoke evidence: the package installs a small, durable recovery surface and `validate-context` gate. Fresh Minimal Context benchmark runs are still required before publishing efficiency claims.
 
-For reusable external-submission fields, see [profile.md](profile.md). For GitHub About metadata setup, see [github-metadata.md](github-metadata.md). For strict external stop/go checks, see [prelaunch-external-blockers.md](prelaunch-external-blockers.md). For the long-form technical narrative, see [../articles/fresh-agent-project-memory.md](../articles/fresh-agent-project-memory.md). For adjacent-tool fit, see [../comparison.md](../comparison.md). For competitor and feasibility context, see [market-map.md](market-map.md). For current launch, award and curated-list execution targets, see [outreach-targets.md](outreach-targets.md). For launch claims boundaries, see [claims-boundary.md](claims-boundary.md). For Codex for Open Source application copy, see [codex-for-oss-application.md](codex-for-oss-application.md). For OpenSSF Best Practices / Baseline self-assessment prep, see [openssf-best-practices.md](openssf-best-practices.md). For small pre-launch feedback before broad promotion, send [reviewer-quickstart.md](reviewer-quickstart.md), then use [private-review.md](private-review.md), [private-review-shortlist.md](private-review-shortlist.md) and [private-review-log-template.md](private-review-log-template.md), then convert consented examples with [adoption-story-template.md](adoption-story-template.md). For copy-ready primary launch execution, see [primary-launch.md](primary-launch.md). For launch reply handling, see [response-templates.md](response-templates.md). For post-channel feedback triage, see [feedback-triage.md](feedback-triage.md). For metrics snapshots, see [metrics.md](metrics.md). For npm publication and future credential issues, see [npm-publish-runbook.md](npm-publish-runbook.md), [npm-credential-unblock.md](npm-credential-unblock.md) and [npm-trusted-publishing.md](npm-trusted-publishing.md). For the `0.2.54` GitHub Release fields, see [github-release-0.2.54.md](github-release-0.2.54.md). For curated-list PR copy, see [awesome-list-submissions.md](awesome-list-submissions.md), [external-prs/README.md](external-prs/README.md) and `npm run launch:external-prs`. For the recording packet, see [demo.md](demo.md).
+For reusable external-submission fields, see [profile.md](profile.md). For GitHub About metadata setup, see [github-metadata.md](github-metadata.md). For strict external stop/go checks, see [prelaunch-external-blockers.md](prelaunch-external-blockers.md). For the long-form technical narrative, see [../articles/fresh-agent-project-memory.md](../articles/fresh-agent-project-memory.md). For adjacent-tool fit, see [../comparison.md](../comparison.md). For competitor and feasibility context, see [market-map.md](market-map.md). For current launch, award and curated-list execution targets, see [outreach-targets.md](outreach-targets.md). For launch claims boundaries, see [claims-boundary.md](claims-boundary.md). For Codex for Open Source application copy, see [codex-for-oss-application.md](codex-for-oss-application.md). For OpenSSF Best Practices / Baseline self-assessment prep, see [openssf-best-practices.md](openssf-best-practices.md). For small pre-launch feedback before broad promotion, send [reviewer-quickstart.md](reviewer-quickstart.md), then use [private-review.md](private-review.md), [private-review-shortlist.md](private-review-shortlist.md) and [private-review-log-template.md](private-review-log-template.md), then convert consented examples with [adoption-story-template.md](adoption-story-template.md). For copy-ready primary launch execution, see [primary-launch.md](primary-launch.md). For launch reply handling, see [response-templates.md](response-templates.md). For post-channel feedback triage, see [feedback-triage.md](feedback-triage.md). For metrics snapshots, see [metrics.md](metrics.md). For npm publication and future credential issues, see [npm-publish-runbook.md](npm-publish-runbook.md), [npm-credential-unblock.md](npm-credential-unblock.md) and [npm-trusted-publishing.md](npm-trusted-publishing.md). For the `0.2.55` GitHub Release fields, see [github-release-0.2.55.md](github-release-0.2.55.md). For curated-list PR copy, see [awesome-list-submissions.md](awesome-list-submissions.md), [external-prs/README.md](external-prs/README.md) and `npm run launch:external-prs`. For the recording packet, see [demo.md](demo.md).
 
 Readiness boundary: `npm run launch:check` means the metadata, docs, launch packets and repo-hosted media are internally coherent. Run `npm run launch:next -- --live` for the ordered owner action board with current status hints, then run `npm run launch:strict-external` before broad public posting to check live GitHub/npm metadata. It does not mean Product Hunt, curated-list submissions or awards are ready. Those still require final account-specific submission review, first feedback or adoption evidence. After each channel post, create a temporary triage note with `npm run launch:feedback-note` so metrics, repeated objections, adoption evidence and the next-channel decision are captured without becoming project Context.
 
@@ -26,7 +26,7 @@ Keep the memory. Drop the ceremony.
 One-line description:
 
 ```text
-Minimal project memory for AI coding agents: keep the repo facts a fresh agent needs to recover intent, boundaries and validation paths without SDLC-stage ceremony.
+Minimal project memory for AI coding agents: keep the repo facts a fresh agent needs to recover intent, boundaries and validation paths without Tiny Context-stage ceremony.
 ```
 
 Short description:
@@ -38,7 +38,7 @@ Project Tiny Context Harness packages the Minimal Context Harness approach into 
 Not this:
 
 ```text
-Another autonomous SDLC framework, task manager, spec generator or benchmark-proven productivity multiplier.
+Another autonomous Tiny Context framework, task manager, spec generator or benchmark-proven productivity multiplier.
 ```
 
 ## Language Posture
@@ -89,7 +89,7 @@ ai-coding
 developer-tools
 developer-productivity
 cli
-sdlc
+ty-context
 workflow
 ```
 
@@ -125,8 +125,8 @@ Use this if agents keep losing project intent between chats. It adds a small pro
 - Before broad promotion, invite a small private review group with [reviewer-quickstart.md](reviewer-quickstart.md), [private-review.md](private-review.md) and [private-review-shortlist.md](private-review-shortlist.md) if more product clarity is needed.
 - Convert consented private feedback with [adoption-story-template.md](adoption-story-template.md) before quoting it in README, launch replies or future case-study docs.
 - Run `npm run launch:external-prs` before preparing curated-list PRs; run `npm run launch:external-prs -- --live --clean` just before opening them to check patches against current upstream repositories.
-- Run `npm run launch:metrics -- --output tmp/sdlc/launch-metrics/baseline.md` before the first public post.
-- After each public post or private-review batch, run `npm run launch:feedback-note -- --channel <channel> --url <channel-url>` and keep the note under `tmp/sdlc/launch-feedback/**`.
+- Run `npm run launch:metrics -- --output tmp/ty-context/launch-metrics/baseline.md` before the first public post.
+- After each public post or private-review batch, run `npm run launch:feedback-note -- --channel <channel> --url <channel-url>` and keep the note under `tmp/ty-context/launch-feedback/**`.
 - If applying to Codex for Open Source, use [codex-for-oss-application.md](codex-for-oss-application.md) after a fresh metrics snapshot and maintainer review.
 - Confirm the adoption handoff issue and starter issues are visible and labeled for discovery.
 - Record a short terminal demo from the 60-second trial.
@@ -143,7 +143,7 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 |---|---|---|
 | Launch profile sheet | Keep `docs/launch/profile.md` aligned with README, package metadata and launch copy. | External submissions reuse one English-first name, tagline, description, category, tag and claims-boundary source. |
 | Prelaunch external blockers | Run `npm run launch:unblock` and keep [prelaunch-external-blockers.md](prelaunch-external-blockers.md) aligned with current `npm-fetch` and `github-homepage` stop/go state. | Broad launch is held only if `npm run launch:strict-external` reports a required external blocker. |
-| Launch claims boundary | Review `docs/launch/claims-boundary.md` before posting or submitting public copy. | Final channel text stays inside evidence: no benchmark, adoption, award, test-replacement or SDLC-automation overclaim. |
+| Launch claims boundary | Review `docs/launch/claims-boundary.md` before posting or submitting public copy. | Final channel text stays inside evidence: no benchmark, adoption, award, test-replacement or Tiny Context-automation overclaim. |
 | External PR packet check | Run `npm run launch:external-prs`; before opening PRs, run `npm run launch:external-prs -- --live --clean`. | Curated-list patch packets still use the renamed project, avoid benchmark/adoption claims and apply cleanly to current upstream clones. |
 | GitHub metadata | Run `npm run launch:github-metadata` to dry-run description, npm homepage and topics; apply with `GITHUB_TOKEN` or `GH_TOKEN`, or use [github-metadata.md](github-metadata.md) manually. | Online `launch_readiness_check` no longer reports GitHub metadata TODOs. |
 | npm metadata | Run `npm run launch:npm-access`, then publish a new package version after PR merge. Use `npm-readme-renamed-surfaces` from the strict external check as a non-blocking signal for whether npm's live README still needs a new patch release. | npm page shows updated README, MIT license, homepage and description. |
@@ -165,7 +165,7 @@ Do not post everywhere at once. Use one primary launch to test whether strangers
 | Comparison guide | Keep `docs/comparison.md` linked from README and FAQ. | Launch replies can explain adjacent-tool fit without claiming superiority over agents, specs, task planners or retrieval tools. |
 | Response templates | Keep `docs/launch/response-templates.md` linked from this launch kit. | Maintainer replies stay narrow, factual and non-hype when HN/Reddit/Product Hunt comments ask predictable questions. |
 | Feedback triage runbook | Keep `docs/launch/feedback-triage.md` linked from this launch kit and primary launch packet. | Real comments become README/FAQ/profile patches, issues or consented adoption stories without turning distribution telemetry into product proof. |
-| Feedback note command | Run `npm run launch:feedback-note` after each channel post or private-review batch. | Channel notes stay in `tmp/sdlc/launch-feedback/**` and capture metrics commands, repeated themes, docs/package fixes, adoption evidence and next-channel decisions. |
+| Feedback note command | Run `npm run launch:feedback-note` after each channel post or private-review batch. | Channel notes stay in `tmp/ty-context/launch-feedback/**` and capture metrics commands, repeated themes, docs/package fixes, adoption evidence and next-channel decisions. |
 | Existing-repo adoption guide | Keep `docs/adopt-existing-repo.md` linked from README. | Visitors with real repositories can try `init --adopt` without duplicating project memory across tool-specific agent files. |
 | Private review packet | Use `docs/launch/private-review.md` for 5-10 high-signal reviewers before broad launch. | Feedback identifies concrete agent-memory drift, README confusion or missing recovery facts without asking for stars. |
 | Private review shortlist | Keep `docs/launch/private-review-shortlist.md` linked from the private review packet. | Reviewer selection prioritizes real coding-agent handoff pain instead of generic encouragement or star asks. |
@@ -255,12 +255,12 @@ Goal: show the problem, install path and generated recovery surface in under two
 
 ```sh
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init
+npx --yes --package project-tiny-context-harness@latest ty-context init
 make validate-context
 ```
 
 4. Open `AGENTS.md`, `project_context/global.md` and `project_context/architecture.md`.
-5. Say: "This is not a task manager or full SDLC workflow. It is a small memory surface any agent can read before changing the repo."
+5. Say: "This is not a task manager or full Tiny Context workflow. It is a small memory surface any agent can read before changing the repo."
 6. End with the ask: "Try it on a project where agent handoffs or new chats currently drift."
 
 ## Hacker News Draft
@@ -280,7 +280,7 @@ Minimal project memory for AI coding agents
 Description:
 
 ```text
-Project Tiny Context Harness helps coding agents recover project intent across new chats, handoffs and debugging turns. It installs compact project_context files, AGENTS.md guidance and a validate-context gate without adding a full SDLC ceremony.
+Project Tiny Context Harness helps coding agents recover project intent across new chats, handoffs and debugging turns. It installs compact project_context files, AGENTS.md guidance and a validate-context gate without adding a full Tiny Context ceremony.
 ```
 
 First comment:
@@ -304,7 +304,7 @@ Body:
 ```text
 I am working on Project Tiny Context Harness, an npm package for adding Minimal Context to a repo.
 
-The idea is simple: new agent chats often lose project-specific context. Instead of adding a full SDLC workflow, the package keeps the memory and drops the ceremony: a small project_context fact source, AGENTS.md startup guidance and a validate-context gate so a fresh agent can recover intent, boundaries and validation paths.
+The idea is simple: new agent chats often lose project-specific context. Instead of adding a full Tiny Context workflow, the package keeps the memory and drops the ceremony: a small project_context fact source, AGENTS.md startup guidance and a validate-context gate so a fresh agent can recover intent, boundaries and validation paths.
 
 It is meant to complement specs, tests, CI and code intelligence tools. It does not own task state or claim to replace review.
 
@@ -337,7 +337,7 @@ It does not install:
 The goal is small repo-native memory that any agent can read before changing code.
 
 npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest sdlc-harness init
+npx --yes --package project-tiny-context-harness@latest ty-context init
 ```
 
 ## Follow-Up Signals

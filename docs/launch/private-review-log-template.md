@@ -4,7 +4,7 @@ Snapshot date: 2026-06-10.
 
 Use this template for the 5-10 person private review pass before broad launch. The npm package is now published; source preview remains an optional fallback for reviewers who want to inspect a local package build or report setup friction.
 
-Keep filled logs under `tmp/sdlc/private-review/**`, not in `project_context/**`, because private review notes are launch evidence and feedback triage, not durable project context.
+Keep filled logs under `tmp/ty-context/private-review/**`, not in `project_context/**`, because private review notes are launch evidence and feedback triage, not durable project context.
 
 Do not commit filled logs unless every reviewer explicitly approved the exact public details.
 
@@ -74,7 +74,7 @@ Write this after the review pass. Count repeated themes before changing public c
 | Source preview friction | 0 | <weak/medium/strong> | <README/demo/npm/no action> |
 | Missing existing-repo adoption detail | 0 | <weak/medium/strong> | <docs/adopt-existing-repo.md/issue/no action> |
 | Wants benchmark proof | 0 | <weak/medium/strong> | <FAQ/benchmark issue/no claim> |
-| Wants task planning or full SDLC | 0 | <weak/medium/strong> | <comparison guide/no scope change> |
+| Wants task planning or full Tiny Context | 0 | <weak/medium/strong> | <comparison guide/no scope change> |
 
 ## Conversion Decisions
 
@@ -89,7 +89,7 @@ Only convert feedback into public material when the reviewer gave explicit conse
 - [ ] Patch README or FAQ for repeated confusion.
 - [ ] Open a GitHub issue for repeated missing recovery facts.
 - [ ] Convert explicitly consented examples with `docs/launch/adoption-story-template.md`.
-- [ ] Leave private-only notes under `tmp/sdlc/private-review/**`.
+- [ ] Leave private-only notes under `tmp/ty-context/private-review/**`.
 - [ ] Do not claim adoption, benchmark wins, productivity gains or production validation from this pass.
 
 ## Claims Boundary

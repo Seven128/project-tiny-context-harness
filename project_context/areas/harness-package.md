@@ -2,13 +2,14 @@
 
 ## Responsibility
 
-- Provide the `sdlc-harness` CLI, package-managed assets, validators, migrations and source-sync checks for user projects.
+- Provide the `ty-context` CLI, package-managed assets, validators, migrations and source-sync checks for user projects.
 
 ## User / System Contract
 
 - `init` installs Minimal Context Harness into the current repository without deleting user files, creates a default product/domain owner area, creates a default area-owned verification role Context, and creates a root `DESIGN.md` starter baseline for visual design-system facts when absent.
-- After a public npm package update, the default user path is `sdlc-harness upgrade`; direct `sync` is for releases explicitly marked `sync-only`.
+- After a public npm package update, the default user path is `ty-context upgrade`; direct `sync` is for releases explicitly marked `sync-only`.
 - `upgrade` creates an upgrade plan and treats `blocked` items as a write preflight failure: when blockers exist, it reports the plan and runs diagnostics without applying migrations or internal `sync`; otherwise it applies `safe_pending` migrations, refreshes managed assets through internal `sync`, runs diagnostics, and exits non-zero when `manual_required` follow-up or diagnostics remain.
+- `upgrade` includes `legacy-sdlc-harness-rename` for projects installed before the public rename: new `tyContext` / `ty-context.config.json` sources keep priority, old `sdlcHarness` / `sdlc-harness.config.json` can locate the old harness root when no new source exists, safe cases copy canonical config and update old `pjsdlc_managed` / `sdlc-harness.mk` paths, while root conflicts, old override skills, unknown old managed content and target conflicts are `manual_required` or `blocked`.
 - `sync` refreshes package-managed assets only. Public `sync` does not run migrations and refuses to write when an upgrade plan contains pending, manual or blocked migration work.
 - `upgrade` creates root `DESIGN.md` for existing Harness projects when missing, without overwriting an existing user-authored design file.
 - The generated `DESIGN.md` contains neutral starter tokens and design logic; user-authored `DESIGN.md` content takes precedence over the starter baseline.
@@ -16,6 +17,11 @@
 - Public package surfaces are English-complete: README/npm/release copy, CLI help/errors, generated AGENTS trigger examples, default Skill front matter descriptions and default artifact names must all provide an English path. Non-English trigger examples are additive compatibility only.
 - The package-managed `context_harness_upgrade` Skill triggers on English requests such as “upgrade Tiny Context / use the Tiny Context upgrade skill to upgrade this project” plus compatibility Chinese examples such as “用 Tiny Context upgrade skill 升级这个项目 / 升级 tiny context / 升级tiny context”, and tells agents to run the canonical `upgrade` path before any standalone `sync`.
 - `PROJECT_SPEC.md` owns the stable Harness mental model and core term vocabulary: Minimal Context Harness is a set of expected agent behavior constraints, not a document workflow. It explains fact-source authority, workflow contracts, artifact placement, soft constraints and how these are implemented through AGENTS, Context, Skills, temporary plan surfaces, handoff checks, validators and source-sync tests.
+- Tiny Context's package-managed layer can only provide workflow contracts, fact-source authority and broad reusable principles because project-specific business facts belong in the consumer project's Context. Broad principles are not treated as a silver bullet; managed Skills provide clearer thinking paths so agents do not have to rely on unconstrained divergent reasoning to discover the expected convergence path.
+- Product Surface Contract workflow converts broad product/page/UI principles into project-owned surface responsibilities for user-facing interfaces such as Web, mobile, desktop, game, CLI/TUI, extension and embedded surfaces. The package-managed layer supplies only a business-agnostic `context_surface_contract` Skill and compact `product-surface-contract.md` template; concrete surface facts belong in the consumer project's `project_context/**`.
+- User-side Product Surface Context generation is agent-mediated rather than CLI-inferred: `init` and `upgrade` install or refresh the Skill/template/routing guidance, but the first durable surface contract is created only when a user or agent explicitly runs audit/compile/apply and writes approved facts into `project_context/**`.
+- Product Surface Contracts must use existing Context roles. Cross-surface or cross-area contracts use `contract`; area-owned screen/surface facts use `area` or `subdomain`; repeatable validation paths use `verification`; rationale and code navigation use `decision-rationale` and `implementation-index`. The package must not add `surface-contract`, `product-surface`, `web-contract`, `app-contract` or `game-surface` roles.
+- `init` and `upgrade` must not infer or create business Product Surface Contract files. `sync` may refresh the package-managed Skill and template, while repo-local Skills may choose to make a project-specific Surface Contract task block mandatory.
 - The product planning Skill asks agents doing product surfaces to reason from product/page positioning: what problem it solves, what the user needs, what content/capabilities/feedback it should provide, what belongs on the surface, where it belongs and why it deserves persistent attention.
 - Managed AGENTS guidance requires a lightweight page product-positioning check for Web pages, frontend layout, UI/UX, product module boundaries and information-placement tasks even when product/UIUX Skills are not explicitly triggered; the check runs before context-first classification and supplies evidence for whether durable page responsibility, information architecture, persistent-information boundary or module ownership facts changed.
 - Managed AGENTS guidance uses input, selection, search, filters, forms/configuration, scheduling/time windows, budget/quota/limit fields and loading/empty/error states as high-risk UI triggers for the product/UIUX control-task framework; those categories are wakeup signals, not fixed widget prescriptions.
@@ -39,30 +45,30 @@
 - Managed guidance includes a soft role placement scan for `project_context/areas/**` authoring and migration so agents do not leave every deep Context file as an `area`: `area` / `domain` mean product ownership; `subdomain` means smaller owned product context; `contract`, `foundation`, `implementation-index`, `decision-rationale` and `archive` are read-purpose roles; `verification` and `deployment` are repeat-execution roles.
 - Managed guidance includes verification and deployment role Context: agents must not record one-off test logs, full command output, temporary JSON, CI artifacts, test reports, release ledgers, secrets, tokens, cookies, device ids or raw payloads in Context, but should record minimal critical repeat-execution paths when they have durable recovery value.
 - `verification` role Context owns repeatable test, smoke, CI, probe and validation execution paths. Those paths are execution instances, not independent definitions of capability, metric or acceptance targets; module design Context decides the claim before a command or probe is selected. `deployment` role Context owns repeatable deploy, runtime bootstrap, cloud initialization, service topology, health-check and rollback/degradation paths. Both roles keep only necessary preparation, shortest command/path, expected stage or signal, acceptable warnings and known dead ends.
-- Projects customize those Skills by creating separate project-local Skills such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` and `<harnessRoot>/skills/development_engineer/SKILL.md`; the `AGENTS.md` managed block, `<harnessRoot>/pjsdlc_managed/**` and package-managed default `context_*` Skills are generated Harness surfaces, so project-specific rules must not be written there because `sync` can overwrite them or create drift.
+- Projects customize those Skills by creating separate project-local Skills such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` and `<harnessRoot>/skills/development_engineer/SKILL.md`; the `AGENTS.md` managed block, `<harnessRoot>/ty-context-managed/**` and package-managed default `context_*` Skills are generated Harness surfaces, so project-specific rules must not be written there because `sync` can overwrite them or create drift.
 - Project-local Skill front matter `description` trigger keywords should stay aligned with the matching default Skill and the project `AGENTS.md` role-trigger rule; project-specific keyword additions or narrowing should update both surfaces together.
 - The default Skill trigger descriptions should stay narrow: explicit role names or strong artifact names, not generic mentions of product, design, development, code or requirements.
 - `PROJECT_SPEC.md` records the design rationale for the default product planning, UI/UX and development engineer Skills; changes to their triggers, workflow, output boundaries or default judgment rules should update that rationale and this Context when the long-term contract changes.
 - The development engineer Skill trigger list includes English triggers such as `software engineer`, `development plan`, `technical implementation plan` and `subagent`, plus compatibility Chinese triggers such as `实现`, `实现方案`, `实施计划` and `多开agent`, while its negative trigger rule still excludes routine coding, bug fixes, small refactors and package/release work.
 - When a user explicitly allows subagent use and the tools exist, the development engineer Skill should encourage parallel decomposition while reusing existing agents first and closing completed, idle or no-longer-needed agents with `close_agent`; this is a resource lifecycle constraint, not permission to bypass the user's explicit subagent trigger.
 - The development engineer Skill includes a lightweight abstraction / decomposition scan for new implementation, refactoring, repeated logic, module-boundary or impact-scope work; candidates are evaluated by evidence, boundary, benefit, risk and timing, split into local refactoring versus long-term boundary changes, and only stable high-value candidates should be implemented by default.
-- `sdlc-harness check-modularity` audits selected handwritten source files for physical line-count risk with `--touched`, `--file <path>`, `--base <ref>`, `--limit <n>` and optional `--fail-on-warning`; it is warning-only by default as a report command, honors valid config waivers, and feeds the development engineer Skill's split-or-exception judgment.
+- `ty-context check-modularity` audits selected handwritten source files for physical line-count risk with `--touched`, `--file <path>`, `--base <ref>`, `--limit <n>` and optional `--fail-on-warning`; it is warning-only by default as a report command, honors valid config waivers, and feeds the development engineer Skill's split-or-exception judgment.
 - `validate-code-modularity` is the hard touched-source modularity gate. It stays separate from `validate-context`; `validate-harness` composes Context recoverability and code modularity.
 - Modularity waivers live in `<harnessRoot>/config.yaml` under `modularity.waivers` and require `path`, narrow `category`, `reason` and `future_split_boundary`.
 - Newly generated `<harnessRoot>/config.yaml` files set `modularity.limit: 300` and `modularity.policy: strict_except_generated`; omitted policy remains `scoped_waivers` for compatibility with existing project configs.
 - `strict_except_generated` rejects any `modularity.waivers` config; projects using it must split or avoid touching over-limit handwritten source rather than relying on legacy waivers.
 - The development engineer Skill treats repeated, deterministic, easy-to-miss or order-sensitive manual workflows as repo-local tool/script opportunities; scripts belong in the owning module's tool area with tests, and recoverable entry points, parameter constraints and applicability boundaries belong in verification/deployment Context rather than provider-specific Skill text, artifact paths or one-off run results.
 - The product planning and development engineer Skills treat one object or capability requiring coordinated changes across multiple Context files, product domains or implementation layers as a boundary-review signal: product planning evaluates whether it should become an explicit capability, subdomain or area with a simple consumer contract, while development engineering evaluates whether a module, service, facade or stable interface should shrink future change scope before introducing hand-maintained manifests that duplicate implementation surfaces.
-- The public display name is Project Tiny Context Harness. The canonical npm package remains `project-tiny-context-harness`; `sdlc-harness` remains the bin name. Public docs and managed Makefile wrappers avoid bare `npx sdlc-harness` for ad hoc commands because npm can resolve the legacy `sdlc-harness` package name or a stale local install.
-- Public package positioning is "repo-native project memory for AI coding agents": README/npm surfaces should quickly explain the fresh-agent recovery problem, when to use the Harness, and how it differs from spec-first kits, task planners, external context/retrieval tools, IDE memory and full SDLC process tools. Public positioning must not claim benchmark wins until fresh Minimal Context benchmark evidence exists.
+- The public display name is Project Tiny Context Harness. The canonical npm package remains `project-tiny-context-harness`; `ty-context` remains the bin name. Public docs and managed Makefile wrappers avoid bare `npx ty-context` for ad hoc commands because npm can resolve the legacy `ty-context` package name or a stale local install.
+- Public package positioning is "repo-native project memory for AI coding agents": README/npm surfaces should quickly explain the fresh-agent recovery problem, when to use the Harness, and how it differs from spec-first kits, task planners, external context/retrieval tools, IDE memory and full Tiny Context process tools. Public positioning must not claim benchmark wins until fresh Minimal Context benchmark evidence exists.
 - Core public selling point: keep the memory, drop the ceremony. Public docs may explain that the former stage-based workflow taught a product lesson: modern coding agents already internalize much of the ordinary understand/design/implement/test loop, so the default value is not phase choreography or work-product validation; it is the smallest high-density repo context that preserves durable intent, boundaries and validation paths across fresh chats. Do not publish old stage benchmark numbers as a current Minimal Context performance claim without fresh reruns.
 - Maintainer launch materials live under `docs/launch/**`. They are copy-ready external communication assets, market snapshots, channel plans, demo storyboards, community handoff plans and adoption/star milestone triggers for GitHub, npm, launch sites and social channels; they are not package-managed consumer assets and must keep the same Minimal Context positioning and no-unproven-benchmark-claim boundary as README/npm surfaces. `tools/launch_readiness_check.mjs` is the maintainer prelaunch check: offline mode validates local launch surface and online mode also reports current GitHub/npm metadata drift without publishing or mutating external state.
-- `tools/sync_release_version.mjs` is the release-prep synchronization entry for versioned surfaces: it aligns source-preview tarball examples, the npm Trusted Publishing `expected_version` default, current launch/release references and the GitHub release packet to `packages/sdlc-harness/package.json`. Its `--check` mode is used by dry-run/CI/publish gates; the mutating mode belongs in release prep or publish flows before package source sync and pack.
+- `tools/sync_release_version.mjs` is the release-prep synchronization entry for versioned surfaces: it aligns source-preview tarball examples, the npm Trusted Publishing `expected_version` default, current launch/release references and the GitHub release packet to `packages/ty-context/package.json`. Its `--check` mode is used by dry-run/CI/publish gates; the mutating mode belongs in release prep or publish flows before package source sync and pack.
 - `tools/github_release_publish.mjs` is the post-npm-publish GitHub Release automation entry: it reads `docs/launch/github-release-<version>.md`, extracts the copy-ready release body, and uses GitHub CLI to create or update `v<version>` as the latest GitHub Release after registry publish succeeds. Dry-run mode reports the planned release without contacting GitHub.
 - The npm Trusted Publishing workflow creates or updates the matching GitHub Release after a real publish; dry-run workflow executions do not mutate GitHub releases.
-- Managed Makefile defaults `SDLC_HARNESS` to the source workspace CLI when `packages/sdlc-harness/dist/cli.js` exists, otherwise to `npx --yes --package project-tiny-context-harness@latest sdlc-harness`; generated projects can override `SDLC_HARNESS` when intentionally testing a pinned local package.
-- Managed Makefile exposes `sdlc-doctor`, `sdlc-sync` and `sdlc-upgrade` wrappers in addition to `validate-context`, `validate-code-modularity` and composite `validate-harness`.
-- The package-managed `.github/workflows/harness.yml` is consumer-facing: ordinary consumer projects install only the Node runtime needed by the Harness CLI and run the selected `validate-context` / `validate-code-modularity` / `validate-harness` Make target. Pull requests set `SDLC_MODULARITY_BASE` for PR/base modularity checks. This source workspace may conditionally build the local CLI when `packages/sdlc-harness/package.json` exists so main CI does not depend on an already-published npm package. Maintainer-only checks such as package tests and source-drift checks belong in this source repository's separate CI, not in the workflow copied into user projects.
+- Managed Makefile defaults `TY_CONTEXT` to the source workspace CLI when `packages/ty-context/dist/cli.js` exists, otherwise to `npx --yes --package project-tiny-context-harness@latest ty-context`; generated projects can override `TY_CONTEXT` when intentionally testing a pinned local package.
+- Managed Makefile exposes `ty-context-doctor`, `ty-context-sync` and `ty-context-upgrade` wrappers in addition to `validate-context`, `validate-code-modularity` and composite `validate-harness`.
+- The package-managed `.github/workflows/harness.yml` is consumer-facing: ordinary consumer projects install only the Node runtime needed by the Harness CLI and run the selected `validate-context` / `validate-code-modularity` / `validate-harness` Make target. Pull requests set `TY_CONTEXT_MODULARITY_BASE` for PR/base modularity checks. This source workspace may conditionally build the local CLI when `packages/ty-context/package.json` exists so main CI does not depend on an already-published npm package. Maintainer-only checks such as package tests and source-drift checks belong in this source repository's separate CI, not in the workflow copied into user projects.
 - `project_context/architecture.md` is a default Minimal Context fact source for restrained system boundary, component map and durable architecture constraints.
 - `project_context/context.toml` is created by `init` as the Schema v4 Context graph manifest; ordinary projects start with one default `main` product/domain area and `project_context/areas/main/verification.md` registered as a default verification role Context.
 - Schema v4 makes `project_context/context.toml` required for `validate-context`; `upgrade` migrates legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md` and registers area Context files in the manifest only when the migration is mechanically safe.
@@ -76,30 +82,31 @@
 - `upgrade` does not infer arbitrary project semantics, choose every Context role, repair project-local Skills, invent business verification paths, update product/deployment facts or turn old projects into best-practice state.
 - `init`, `sync`, `upgrade`, `doctor` and `validate-context` guard unsupported future schema major versions before applying v4 assumptions; write commands fail before modifying files.
 - `validate-context` checks Context completeness but does not prove product test execution.
-- `export-context --full` creates a one-off Markdown Context export for copying, external-tool ingestion or temporary discussion. It defaults to `tmp/sdlc/context-exports/full-project-context-<timestamp>.md`, refuses `project_context/**` and non-temporary output paths, and must never register the export as a Context graph node.
-- `export-context --code` creates a one-off Markdown current implementation snapshot with source file paths, metadata, heuristic summaries and redacted code blocks. It defaults to `tmp/sdlc/context-exports/code-level-implementation-<timestamp>/code-level-implementation.md`, uses one Markdown file only, refuses `project_context/**` and non-temporary output paths, and must never register the export as a Context graph node.
+- `export-context --full` creates a one-off Markdown Context export for copying, external-tool ingestion or temporary discussion. It defaults to `tmp/ty-context/context-exports/full-project-context-<timestamp>.md`, refuses `project_context/**` and non-temporary output paths, and must never register the export as a Context graph node.
+- `export-context --code` creates a one-off Markdown current implementation snapshot with source file paths, metadata, heuristic summaries and redacted code blocks. It defaults to `tmp/ty-context/context-exports/code-level-implementation-<timestamp>/code-level-implementation.md`, uses one Markdown file only, refuses `project_context/**` and non-temporary output paths, and must never register the export as a Context graph node.
 - `export-context --all` creates both default `--full` and `--code` artifacts in one command with the same timestamp. It does not accept `--output` because one custom Markdown path cannot unambiguously represent two artifacts.
 - The package-managed `context_full_project_export` Skill triggers on “导出尽可能详细的项目全量上下文 / 全量上下文导出 / full project context export / 代码级实现导出 / 当前项目代码实现” style requests and tells agents to prefer `export-context --all` when both context and code snapshots are useful, instead of hand-writing a tracked Context or implementation summary.
 - The package-managed `context_harness_upgrade` Skill is a consumer-agent operation guide for existing project upgrades: inspect Context and dirty state, run `upgrade --check` / `upgrade`, handle only migration-scoped `manual_required` or `blocked` items using `context.toml` and role placement scan, then run `doctor` and `validate-context`.
+- The package-managed `plan_acceptance_checklist_compiler` Skill triggers only when the user provides or references a plan-like source and asks for acceptance criteria, a completion definition, or a goal/target-mode prompt. It materializes the plan and full checklist under `tmp/ty-context/plan-acceptance/**`, reads relevant Context to define falsifiable acceptance items, uses a confirmation gate when durable assumptions are unclear, and outputs a paste-ready execution prompt whose second line authorizes multi-agent decomposition while requiring idle or unnecessary agents to be closed when slots run low. It does not execute the plan, modify product code, mark completion, or store evidence as Context.
 - `validate-context` rejects obvious export artifact names such as `full-project-context`, `project-overview`, `context-bundle`, `context-summary` or `context-export` when they appear in `project_context/context.toml`.
 
 ## Core Data / API / State
 
-- CLI command routing lives in `packages/sdlc-harness/src/commands/index.ts`.
-- Upgrade CLI option parsing for `upgrade`, `upgrade --check` and `upgrade --check --json` lives in `packages/sdlc-harness/src/commands/upgrade.ts`.
-- Modularity check CLI option parsing lives in `packages/sdlc-harness/src/commands/check-modularity.ts`; source file filtering, waiver validation and line-count audit logic live in `packages/sdlc-harness/src/lib/source-files.ts` and `packages/sdlc-harness/src/lib/modularity.ts`.
-- Full context export command behavior lives in `packages/sdlc-harness/src/commands/export-context.ts` and `packages/sdlc-harness/src/lib/context-export.ts`.
+- CLI command routing lives in `packages/ty-context/src/commands/index.ts`.
+- Upgrade CLI option parsing for `upgrade`, `upgrade --check` and `upgrade --check --json` lives in `packages/ty-context/src/commands/upgrade.ts`.
+- Modularity check CLI option parsing lives in `packages/ty-context/src/commands/check-modularity.ts`; source file filtering, waiver validation and line-count audit logic live in `packages/ty-context/src/lib/source-files.ts` and `packages/ty-context/src/lib/modularity.ts`.
+- Full context export command behavior lives in `packages/ty-context/src/commands/export-context.ts` and `packages/ty-context/src/lib/context-export.ts`.
 - Release version surface sync lives in `tools/sync_release_version.mjs`; release publishing orchestration lives in `tools/release_npm.mjs`; GitHub Release create/update automation lives in `tools/github_release_publish.mjs`.
-- Default managed file configuration lives in `packages/sdlc-harness/src/lib/config.ts`.
-- Shared package/schema constants live in `packages/sdlc-harness/src/lib/constants.ts`; unsupported schema handling lives in `packages/sdlc-harness/src/lib/schema-guard.ts`.
-- Init behavior lives in `packages/sdlc-harness/src/lib/init.ts`.
-- Sync behavior and the public pending-migration refusal live in `packages/sdlc-harness/src/lib/sync-engine.ts`.
-- Upgrade orchestration lives in `packages/sdlc-harness/src/lib/upgrade.ts`.
-- Default Skill assets, including Context authoring Skills, the full-project export Skill and the Harness upgrade Skill, live in `.codex/pjsdlc_managed/skills/**` and `packages/sdlc-harness/assets/skills/**`.
-- Default Context graph template lives in `.codex/pjsdlc_managed/context_templates/context.toml` and `packages/sdlc-harness/assets/context_templates/context.toml`.
-- Default verification/deployment Context templates live in `.codex/pjsdlc_managed/context_templates/verification.md`, `.codex/pjsdlc_managed/context_templates/deployment.md` and the matching package assets.
-- The migration registry, upgrade plan, release update mode calculation and safe migration application live in `packages/sdlc-harness/src/lib/migrations.ts`.
-- Validators live in `packages/sdlc-harness/src/lib/validators.ts`.
+- Default managed file configuration lives in `packages/ty-context/src/lib/config.ts`.
+- Shared package/schema constants live in `packages/ty-context/src/lib/constants.ts`; unsupported schema handling lives in `packages/ty-context/src/lib/schema-guard.ts`.
+- Init behavior lives in `packages/ty-context/src/lib/init.ts`.
+- Sync behavior and the public pending-migration refusal live in `packages/ty-context/src/lib/sync-engine.ts`.
+- Upgrade orchestration lives in `packages/ty-context/src/lib/upgrade.ts`.
+- Default Skill assets, including Context authoring Skills, the Surface Contract Skill, the full-project export Skill, the Harness upgrade Skill and the plan acceptance checklist compiler Skill, live in `.codex/ty-context-managed/skills/**` and `packages/ty-context/assets/skills/**`.
+- Default Context graph template lives in `.codex/ty-context-managed/context_templates/context.toml` and `packages/ty-context/assets/context_templates/context.toml`.
+- Default verification/deployment Context templates and optional product-surface contract template live in `.codex/ty-context-managed/context_templates/**` and the matching package assets.
+- The migration registry, upgrade plan, release update mode calculation and safe migration application live in `packages/ty-context/src/lib/migrations.ts`.
+- Validators live in `packages/ty-context/src/lib/validators.ts`.
 
 ## Key Constraints
 
@@ -112,6 +119,7 @@
 - Project-local product/design/development Skills may narrow guidance for a project but must keep durable conclusions in Minimal Context.
 - Control-task framing must stay business-agnostic: package-managed Skills may ask reusable questions, but project-specific control choices, ranges, defaults, copy and acceptance signals belong in project Context or project-local Skills.
 - Context graph roles must stay lightweight and optional except for the default verification Context created by `init`; do not make role-specific writing formats, monorepo-specific area names or boundary checks mandatory for ordinary projects.
+- Surface Contract workflow must stay prompt-level and project-owned: no new role, no default business contract generation, no edit-order gate, no validator gate and no package-managed business examples.
 - Role placement scan is soft authoring pressure, not a semantic migration gate; `upgrade` may create conservative `area` baselines, and later agents refine obvious `contract`, `foundation`, `subdomain`, `verification`, `deployment`, `implementation-index`, `decision-rationale` or `archive` roles explicitly in `context.toml`.
 - Migration detection must first limit scope to known Harness-owned surfaces. Files outside migration scope should not be reported, and scoped files that require semantic interpretation should be `manual_required`, not guessed.
 - Blocked migrations are write preflight failures; `upgrade` must not apply safe migrations or internal `sync` while a `blocked` item remains, and blocked items must never overwrite user content.
@@ -121,32 +129,34 @@
 - Task-contract compilation is prompt-level workflow contract guidance. It must stay short and temporary, must not become a PRD / tech-plan / handoff document chain, and must not become a validator or machine-enforced edit-order gate.
 - `Modularity Check` must remain a narrow Task Contract field for engineering/RFC/implementation maintenance risk; `check-modularity` may warn or run hard via `--fail-on-warning`, and `validate-code-modularity` / `validate-harness` enforce touched-source risk, but it must not become part of `validate-context` or claim to infer semantic module quality.
 - Temporary plan surfaces must serve the workflow contract and Context without replacing either; durable facts discovered there are extracted into Context / `DESIGN.md`, while ordinary plan details remain temporary execution cache.
+- Plan acceptance checklist compiler artifacts are temporary execution inputs under `tmp/ty-context/plan-acceptance/**`; they may define a future executor's acceptance bar but are not proof that the work passed and must not be registered in `project_context/context.toml`.
 - Verification and deployment role Context must stay authoring guidance and template text; do not add machine-level log, secret, release ledger or artifact scanning to `validate-context` without an explicit product-boundary change.
 - Do not reintroduce legacy migration commands or stage assets.
 - Package source changes that affect managed assets require `package sync-source` and `package check-source`.
 
 ## Code Entry Points
 
-- `packages/sdlc-harness/src/cli.ts`
-- `packages/sdlc-harness/src/commands/index.ts`
-- `packages/sdlc-harness/src/commands/export-context.ts`
-- `packages/sdlc-harness/src/lib/config.ts`
-- `packages/sdlc-harness/src/lib/context-export.ts`
-- `packages/sdlc-harness/src/lib/init.ts`
-- `packages/sdlc-harness/src/lib/sync-engine.ts`
-- `packages/sdlc-harness/src/lib/validators.ts`
+- `packages/ty-context/src/cli.ts`
+- `packages/ty-context/src/commands/index.ts`
+- `packages/ty-context/src/commands/export-context.ts`
+- `packages/ty-context/src/lib/config.ts`
+- `packages/ty-context/src/lib/context-export.ts`
+- `packages/ty-context/src/lib/init.ts`
+- `packages/ty-context/src/lib/sync-engine.ts`
+- `packages/ty-context/src/lib/validators.ts`
 
 ## Test Entry Points
 
 - `npm test --workspace project-tiny-context-harness`
 - `node tools/quickstart_smoke.mjs --clean`
 - `node tools/launch_readiness_check.mjs --offline`
-- `node --test tests/sdlc-harness/export-context.test.mjs`
-- `node --test tests/sdlc-harness/sync-init-doctor.test.mjs`
-- `node --test tests/sdlc-harness/package-source.test.mjs`
-- `node --test tests/sdlc-harness/validators.test.mjs`
-- `node --test tests/sdlc-harness/check-modularity.test.mjs`
-- `node --test tests/sdlc-harness/upgrade.test.mjs`
+- `node --test tests/ty-context/export-context.test.mjs`
+- `node --test tests/ty-context/sync-init-doctor.test.mjs`
+- `node --test tests/ty-context/package-source.test.mjs`
+- `node --test tests/ty-context/validators.test.mjs`
+- `node --test tests/ty-context/surface-contract-workflow.test.mjs`
+- `node --test tests/ty-context/check-modularity.test.mjs`
+- `node --test tests/ty-context/upgrade.test.mjs`
 
 ## Open Risks
 

@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const packageJson = JSON.parse(readFileSync(path.join(repoRoot, "packages/sdlc-harness/package.json"), "utf8"));
+const packageJson = JSON.parse(readFileSync(path.join(repoRoot, "packages/ty-context/package.json"), "utf8"));
 const npmTrustedPublishWorkflowUrl =
   "https://github.com/Seven128/project-tiny-context-harness/actions/workflows/npm-publish.yml";
 
@@ -42,7 +42,7 @@ This script is read-only: it does not publish to npm and does not update GitHub.
 Usage:
   node tools/launch_unblock_check.mjs
   node tools/launch_unblock_check.mjs --json
-  node tools/launch_unblock_check.mjs --output tmp/sdlc/launch-unblock.md
+  node tools/launch_unblock_check.mjs --output tmp/ty-context/launch-unblock.md
   node tools/launch_unblock_check.mjs --strict
 `);
 }

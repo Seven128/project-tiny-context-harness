@@ -37,7 +37,7 @@ Repo-native project memory for fresh-agent recovery.
 
 - Autonomous coding-agent runtime.
 - Task manager, backlog owner or issue tracker replacement.
-- Full SDLC phase gates, lifecycle state or work-product trees as the default workflow.
+- Full Tiny Context phase gates, lifecycle state or work-product trees as the default workflow.
 - Semantic code index, external documentation retriever or vector memory system.
 - Claims that `validate-context` proves product quality.
 

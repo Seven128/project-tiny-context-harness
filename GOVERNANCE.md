@@ -73,7 +73,7 @@ Do not create a renamed npm-package GitHub Release or broad launch post if regis
 
 The roadmap is public, but it is not a delivery promise. See [docs/roadmap.md](docs/roadmap.md).
 
-Feature scope can change from real adoption feedback, but growth pressure should not expand the project into a general SDLC platform, task manager, code index or autonomous agent runtime.
+Feature scope can change from real adoption feedback, but growth pressure should not expand the project into a general Tiny Context platform, task manager, code index or autonomous agent runtime.
 
 ## Future Governance
 

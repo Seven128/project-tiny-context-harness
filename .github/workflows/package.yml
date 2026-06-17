@@ -3,7 +3,7 @@ name: Package CI
 on:
   pull_request:
     paths:
-      - ".codex/pjsdlc_managed/**"
+      - ".codex/ty-context-managed/**"
       - ".devcontainer/**"
       - ".github/ISSUE_TEMPLATE/**"
       - ".github/PULL_REQUEST_TEMPLATE.md"
@@ -18,9 +18,9 @@ on:
       - "GOVERNANCE.md"
       - "LICENSE"
       - "SUPPORT.md"
-      - "packages/sdlc-harness/**"
+      - "packages/ty-context/**"
       - "project_context/**"
-      - "tests/sdlc-harness/**"
+      - "tests/ty-context/**"
       - "tools/**"
       - "package.json"
       - "package-lock.json"
@@ -31,7 +31,7 @@ on:
       - main
       - "codex/**"
     paths:
-      - ".codex/pjsdlc_managed/**"
+      - ".codex/ty-context-managed/**"
       - ".devcontainer/**"
       - ".github/ISSUE_TEMPLATE/**"
       - ".github/PULL_REQUEST_TEMPLATE.md"
@@ -46,9 +46,9 @@ on:
       - "GOVERNANCE.md"
       - "LICENSE"
       - "SUPPORT.md"
-      - "packages/sdlc-harness/**"
+      - "packages/ty-context/**"
       - "project_context/**"
-      - "tests/sdlc-harness/**"
+      - "tests/ty-context/**"
       - "tools/**"
       - "package.json"
       - "package-lock.json"
@@ -74,6 +74,6 @@ jobs:
       - name: Test package
         run: npm test --workspace project-tiny-context-harness
       - name: Check package canonical source drift
-        run: node packages/sdlc-harness/dist/cli.js package check-source
+        run: node packages/ty-context/dist/cli.js package check-source
       - name: Validate source Context
         run: make validate-context

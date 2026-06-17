@@ -1,0 +1,62 @@
+import path from "node:path";
+import { CANONICAL_CORE_PACKAGE, CURRENT_SCHEMA_VERSION } from "./constants.js";
+import type { HarnessConfig } from "./types.js";
+import { harnessConfigPath, harnessPath, harnessRoot } from "./harness-root.js";
+import { pathExists, readText, writeTextIfChanged } from "./fs.js";
+import { parseYaml, stringifyYaml } from "./yaml.js";
+
+export function defaultConfig(root: string): HarnessConfig {
+  return {
+    core: {
+      package: CANONICAL_CORE_PACKAGE,
+      schema_version: CURRENT_SCHEMA_VERSION
+    },
+    modularity: {
+      limit: 300,
+      policy: "strict_except_generated"
+    },
+    managed_files: [
+      { path: "AGENTS.md", strategy: "merge-block" },
+      { path: "Makefile", strategy: "merge-block" },
+      { path: harnessPath(root, "skills"), strategy: "managed" },
+      { path: harnessPath(root, "ty-context-managed", "context_templates"), strategy: "managed" },
+      { path: harnessPath(root, "ty-context-managed", "make", "ty-context.mk"), strategy: "managed" },
+      { path: "tools", strategy: "managed" },
+      { path: ".github/workflows/harness.yml", strategy: "create-if-missing" }
+    ],
+    never_overwrite: ["project_context/**", "DESIGN.md", "src/**", "tests/**"]
+  };
+}
+
+export async function readConfig(projectRoot: string): Promise<HarnessConfig> {
+  const root = await harnessRoot(projectRoot);
+  const configPath = path.join(projectRoot, await harnessConfigPath(projectRoot));
+  if (!(await pathExists(configPath))) {
+    return defaultConfig(root);
+  }
+  const parsed = parseYaml(await readText(configPath)) as Partial<HarnessConfig>;
+  return normalizeConfig(parsed, root);
+}
+
+export async function writeConfigIfMissing(projectRoot: string): Promise<boolean> {
+  const root = await harnessRoot(projectRoot);
+  const configPath = path.join(projectRoot, await harnessConfigPath(projectRoot));
+  if (await pathExists(configPath)) {
+    return false;
+  }
+  await writeTextIfChanged(configPath, stringifyYaml(defaultConfig(root)));
+  return true;
+}
+
+export function normalizeConfig(value: Partial<HarnessConfig>, root = ".agent"): HarnessConfig {
+  const fallback = defaultConfig(root);
+  return {
+    core: {
+      package: value.core?.package ?? fallback.core.package,
+      schema_version: value.core?.schema_version ?? fallback.core.schema_version
+    },
+    modularity: value.modularity,
+    managed_files: value.managed_files ?? fallback.managed_files,
+    never_overwrite: value.never_overwrite ?? fallback.never_overwrite
+  };
+}
