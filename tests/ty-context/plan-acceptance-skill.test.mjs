@@ -19,7 +19,7 @@ const [
   rootReadme,
   packageReadme,
   spec,
-  sourceContext,
+  workflowContract,
   sourceSkill,
   generatedSkill,
   packagedSkill
@@ -29,7 +29,7 @@ const [
   read("README.md"),
   read("packages/ty-context/README.md"),
   read("PROJECT_SPEC.md"),
-  read("project_context/areas/harness-package.md"),
+  read("project_context/areas/harness-package/contracts/workflow-contract.md"),
   read(".codex/ty-context-managed/skills/plan_acceptance_checklist_compiler/SKILL.md"),
   read(".codex/skills/plan_acceptance_checklist_compiler/SKILL.md"),
   read("packages/ty-context/assets/skills/plan_acceptance_checklist_compiler/SKILL.md")
@@ -42,9 +42,10 @@ for (const content of [sourceAgents, packageAgents]) {
   assert.match(content, /tmp\/ty-context\/plan-acceptance/);
 }
 
-for (const content of [rootReadme, packageReadme, spec, sourceContext]) {
+for (const content of [rootReadme, packageReadme, spec, workflowContract]) {
   assert.match(content, /plan acceptance checklist/i);
   assert.match(content, /tmp\/ty-context\/plan-acceptance/);
+  assert.match(content, /local audit/i);
   assert.match(content, /not (?:execute|a task planner|task state|proof|prove)/i);
 }
 
@@ -62,12 +63,31 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /为这份 md 生成目标模式验收文本/);
   assert.match(content, /Package-Managed Boundary/);
   assert.match(content, /tmp\/ty-context\/plan-acceptance/);
+  assert.match(content, /<plan-slug>-local-audit\.md/);
   assert.match(content, /Context confirmation gate/i);
   assert.match(content, /falsifiable acceptance items/);
   assert.match(content, /Hard Blocker Handling/);
   assert.match(content, /Treat any unresolved required blocker as non-completion/);
   assert.match(content, /if only locally unsatisfiable hard blockers remain, pause for the user or external owner instead of marking the goal complete/);
+  assert.match(content, /Minimal User Blocker Protocol/);
+  assert.match(content, /safe self-service discovery/);
+  assert.match(content, /cookies, full pages, HAR files/);
+  assert.match(content, /minimum value or action/);
+  assert.match(content, /Evidence Layer Separation/);
+  assert.match(content, /runtime configured/);
+  assert.match(content, /runtime exercised/);
+  assert.match(content, /artifact generated/);
+  assert.match(content, /artifact accepted by validator/);
+  assert.match(content, /API\/UI reflects accepted evidence/);
+  assert.match(content, /final gate\/check command passed/);
+  assert.match(content, /fallback was not configured or exercised/);
+  assert.match(content, /local audit is not Context/);
+  assert.match(content, /not a global task manager/);
+  assert.match(content, /not a replacement for project tests, CI, review, human acceptance, Task Contract or workflow-contract `plan\.md`/);
+  assert.match(content, /each acceptance item execution still follows it and the repository's Tiny Context workflow contract/);
   assert.match(content, /强卡点未解除/);
+  assert.match(content, /runtime 未配置\/未演练/);
+  assert.match(content, /artifact 未被 validator 接受/);
   assert.match(content, /Do not execute the plan/);
   assert.match(content, /Do not include concrete business-domain logic/);
   assert.match(content, /可多开agent，agent名额不够了就关掉不用的。/);

@@ -129,7 +129,10 @@ Recommended paths:
 ```text
 tmp/ty-context/plan-acceptance/<plan-slug>.md
 tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md
+tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md
 ```
+
+The local audit path is for the future goal/target-mode executor. This compiler may require the prompt to maintain it, but the file is a temporary recovery cache and not proof that any acceptance item passed.
 
 ## Step 2: Read Relevant Project Context
 
@@ -235,6 +238,28 @@ The generated goal/target-mode prompt must tell the future executor:
 - If the only remaining incomplete required items are hard blockers that cannot be satisfied locally, pause and wait for the user or external owner instead of marking the goal complete.
 - The handoff must list blocker cause, missing evidence, acceptance impact, and the exact user/external action needed to resume.
 
+## Minimal User Blocker Protocol
+
+The generated goal/target-mode prompt must make user questions minimal and action-oriented when the plan says to do as much locally as possible.
+
+Before asking the user, the future executor must complete safe self-service discovery that is available in the repository or current environment:
+
+- Read relevant project Context, code, docs, tests, runtime examples, local artifacts and official documentation when current external rules matter.
+- Use local CLIs, APIs, Browser/Chrome/Computer Use or other tools only when appropriate, safe and allowed by the current tool and security policy.
+- Do not bypass user approval, account boundaries or sensitive-operation rules.
+
+When user input is still required, the blocker request must be the smallest concrete action list, not a research assignment. It must include:
+
+- What was already tried.
+- What is still missing.
+- The exact page, menu, path, field, button, command input or setting when it can be identified.
+- The minimum value or action the user needs to provide.
+- Sensitive material the user should not send, such as cookies, full pages, HAR files, password-store data, raw payloads, unrelated account data, screenshots when a value-only request is enough, or secrets in chat when a safer runtime-only setup path exists.
+- Acceptance impact if the blocker remains unresolved.
+- Allowed fallback, deferred or narrowed-scope option, if the plan or Context permits one.
+
+Do not replace this with broad requests such as "provide the token", "send the AppSecret" or "give me the configuration credentials" when a narrower page, field, runtime setup step or delegated user action would satisfy the blocker.
+
 ## Generic Acceptance Dimensions
 
 Include only dimensions relevant to the plan. Do not mechanically add irrelevant categories.
@@ -265,14 +290,17 @@ For evidence-heavy or validation-heavy plans, keep these layers separate:
 
 ```text
 infrastructure implemented
+runtime configured
 runtime exercised
-evidence collected
-evidence accepted
-system surfaces reflect evidence
-final validation passed
+artifact generated
+artifact accepted by validator
+API/UI reflects accepted evidence
+final gate/check command passed
 ```
 
 Do not merge these layers unless the plan explicitly treats them as one.
+
+For runtime, provider, artifact or external-evidence acceptance, distinguish adapter or infrastructure implementation, formal artifact production, scope alignment, redaction, replayability, validator acceptance, registry/API/UI projection, full gate/check success and any explicitly narrowed or deferred scope. A fallback path must be exercised before it can prove full completion.
 
 Examples of generic false completion:
 
@@ -281,6 +309,8 @@ Examples of generic false completion:
 - Tests pass, but the required API/UI/runtime proof was not checked.
 - A partial sample ran, but the plan required full inventory coverage.
 - A document was updated, but the system state did not change.
+- A fallback exists in code, but the fallback was not configured or exercised.
+- Old, partial, smoke, dry-run or research evidence exists, but the current acceptance contract requires full current proof.
 
 ## Scope Labels
 
@@ -367,6 +397,10 @@ Hard requirements:
 - The second line must be a resource lifecycle instruction: `可多开agent，agent名额不够了就关掉不用的。` for Chinese prompts or `You may use multiple agents; if agent slots run low, close idle or unnecessary agents.` for English prompts.
 - The remaining content must be the acceptance checklist or a compact version of it.
 - The prompt must be self-contained enough for goal/target-mode execution.
+- The prompt must identify a local audit path, normally `tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md`, and require the future executor to read it before resuming, keep it current during execution, and use it only as target-mode acceptance progress state.
+- The prompt must require the local audit to record overall status (`complete`, `incomplete`, `blocked` or `narrowed-scope-complete`), each core AC status and current evidence, commands with result/time/failure reason, artifact or evidence paths, blockers and missing evidence, acceptance impact, explicit deferred or narrowed scope, and stale/partial/smoke/dry-run/research evidence that cannot prove full completion.
+- The prompt must say that local audit is not Context, not product-quality proof, not a global task manager, and not a replacement for project tests, CI, review, human acceptance, Task Contract or workflow-contract `plan.md`.
+- The prompt must say that when a Task Contract or workflow-contract `plan.md` exists, each acceptance item execution still follows it and the repository's Tiny Context workflow contract.
 - Do not include explanatory preface inside the prompt.
 - Do not include Markdown tables inside the prompt if they make it too long.
 - Prefer short numbered items over verbose prose.
@@ -378,6 +412,8 @@ Recommended compact Chinese prompt shape:
 ```text
 实施计划: tmp/ty-context/plan-acceptance/<plan-slug>.md
 可多开agent，agent名额不够了就关掉不用的。
+完整验收清单: tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md
+执行审计: tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md
 
 验收清单：
 AC1 <核心完成定义，包含验收证据>
@@ -391,9 +427,11 @@ AC8 <UI/用户可见/API 投影一致性要求>
 AC9 <安全/隐私/脱敏/secret 要求>
 AC10 <测试/构建/集成/smoke/回归要求>
 AC11 <文档/Context 更新要求，仅在计划要求时执行>
-AC12 完成前审计：逐条对照实施计划；每个 core 项必须有当前证据；未跑验证必须明示；有可继续执行的 core 项不得标记完成；外部/强卡点必须写明原因、缺失证据、验收影响和下一步；若剩余未完成项只有无法本地解决的强卡点，暂停并等待用户/外部 owner，不能标记目标完成。
+AC12 维护执行审计：恢复执行先读 audit；记录总体状态、每个 AC 当前证据、命令/结果/时间、artifact/evidence 路径、blocker、deferred/narrowed scope、不能证明 full completion 的旧/部分/smoke/dry-run/research 证据；audit 不是 Context、完成证明、全局任务管理器，也不替代 Task Contract 或流程契约 plan.md。
+AC13 最小用户卡点：问用户前先完成安全自助发现；需要用户介入时只给最小动作清单，写明已尝试、缺失项、具体页面/菜单/字段/按钮、最小值/动作、不要发送的敏感信息、验收影响、fallback/deferred。
+AC14 完成前审计：逐条对照实施计划和完整 checklist；每个 core 项必须有当前证据；未跑验证必须明示；有可继续执行的 core 项不得标记完成；外部/强卡点必须写明原因、缺失证据、验收影响和下一步；若剩余未完成项只有无法本地解决的强卡点，暂停并等待用户/外部 owner，不能标记目标完成。
 
-禁止把以下内容当完成：只改代码、只更新计划、只跑部分测试、只生成旧/部分/不被当前契约接受的证据、只完成基础设施但未完成验收证据、强卡点未解除、API/UI/数据/测试之间仍矛盾。
+禁止把以下内容当完成：只改代码、只更新计划、只跑部分测试、只生成旧/部分/不被当前契约接受的证据、只完成基础设施但未完成验收证据、runtime 未配置/未演练、artifact 未被 validator 接受、API/UI 未反映验收证据、fallback 未演练、强卡点未解除、API/UI/数据/测试之间仍矛盾。
 ```
 
 Recommended compact English prompt shape:
@@ -401,6 +439,8 @@ Recommended compact English prompt shape:
 ```text
 Plan: tmp/ty-context/plan-acceptance/<plan-slug>.md
 You may use multiple agents; if agent slots run low, close idle or unnecessary agents.
+Full checklist: tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md
+Local audit: tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md
 
 Acceptance checklist:
 AC1 <core completion definition with required evidence>
@@ -414,9 +454,11 @@ AC8 <UI / user-visible / API projection consistency>
 AC9 <security / privacy / redaction / secret handling>
 AC10 <test / build / integration / smoke / regression requirements>
 AC11 <documentation / Context updates only when required by the plan>
-AC12 Final audit: compare every item against the plan; every core item needs current evidence; missing validation must be stated; any executable core item left open means the task is not complete; external or hard blockers need cause, missing evidence, acceptance impact, and next action; if only locally unsatisfiable hard blockers remain, pause for the user or external owner instead of marking the goal complete.
+AC12 Maintain local audit: read it before resuming; record overall status, every AC's current evidence, commands/results/time, artifact/evidence paths, blockers, deferred/narrowed scope, and stale/partial/smoke/dry-run/research evidence that cannot prove full completion; audit is not Context, completion proof, a global task manager, or a replacement for Task Contract or workflow-contract plan.md.
+AC13 Minimal user blocker protocol: before asking the user, complete safe self-service discovery; when user action is needed, provide only the smallest action list with what was tried, missing item, exact page/menu/path/field/button, minimum value/action, sensitive material not to send, acceptance impact, and fallback/deferred option.
+AC14 Final audit: compare every item against the plan and full checklist; every core item needs current evidence; missing validation must be stated; any executable core item left open means the task is not complete; external or hard blockers need cause, missing evidence, acceptance impact, and next action; if only locally unsatisfiable hard blockers remain, pause for the user or external owner instead of marking the goal complete.
 
-Do not count these as completion: code-only changes, plan-only updates, partial tests, stale or partial evidence, infrastructure without acceptance proof, unresolved hard blockers, or contradictions between API/UI/data/tests.
+Do not count these as completion: code-only changes, plan-only updates, partial tests, stale or partial evidence, infrastructure without acceptance proof, runtime not configured/exercised, artifact not accepted by validator, API/UI not reflecting accepted evidence, unexercised fallback, unresolved hard blockers, or contradictions between API/UI/data/tests.
 ```
 
 Before final response, check the prompt length. If it exceeds 4000 characters, compress it and check again.

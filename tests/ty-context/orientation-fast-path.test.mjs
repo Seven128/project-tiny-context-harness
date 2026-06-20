@@ -28,7 +28,15 @@ const [
   marketMap,
   prTemplate,
   bugTemplate,
-  featureTemplate
+  featureTemplate,
+  contextManifest,
+  harnessArea,
+  contextModel,
+  workflowContract,
+  packageManagedSurfaces,
+  minimalContextRationale,
+  implementationIndex,
+  verificationContext
 ] = await Promise.all([
   read(".codex/ty-context-managed/agents/AGENTS_CORE.md"),
   read("README.md"),
@@ -51,7 +59,15 @@ const [
   read("docs/launch/market-map.md"),
   read(".github/PULL_REQUEST_TEMPLATE.md"),
   read(".github/ISSUE_TEMPLATE/bug_report.yml"),
-  read(".github/ISSUE_TEMPLATE/feature_request.yml")
+  read(".github/ISSUE_TEMPLATE/feature_request.yml"),
+  read("project_context/context.toml"),
+  read("project_context/areas/harness-package.md"),
+  read("project_context/areas/harness-package/foundation/context-model.md"),
+  read("project_context/areas/harness-package/contracts/workflow-contract.md"),
+  read("project_context/areas/harness-package/contracts/package-managed-surfaces.md"),
+  read("project_context/areas/harness-package/decision-rationale/minimal-context.md"),
+  read("project_context/areas/harness-package/implementation-index.md"),
+  read("project_context/areas/harness-package/verification.md")
 ]);
 const packageJson = JSON.parse(packageJsonRaw);
 
@@ -60,6 +76,46 @@ for (const content of [sourceAgents, rootReadme, packageReadme, spec, packageAge
   assert.match(content, /project_context\/global\.md/);
   assert.match(content, /project_context\/architecture\.md/);
 }
+
+assert.match(contextManifest, /project_context\/areas\/harness-package\/foundation\/context-model\.md[\s\S]*role = "foundation"[\s\S]*read_policy = "default"/);
+assert.match(contextManifest, /project_context\/areas\/harness-package\/contracts\/workflow-contract\.md[\s\S]*role = "contract"[\s\S]*read_policy = "default"/);
+assert.match(contextManifest, /project_context\/areas\/harness-package\/contracts\/package-managed-surfaces\.md[\s\S]*role = "contract"[\s\S]*read_policy = "default"/);
+assert.match(contextManifest, /project_context\/areas\/harness-package\/decision-rationale\/minimal-context\.md[\s\S]*role = "decision-rationale"[\s\S]*read_policy = "on-demand"/);
+assert.match(contextManifest, /project_context\/areas\/harness-package\/implementation-index\.md[\s\S]*role = "implementation-index"[\s\S]*read_policy = "on-demand"/);
+assert.match(contextManifest, /project_context\/areas\/harness-package\/verification\.md[\s\S]*role = "verification"[\s\S]*read_policy = "default"/);
+
+assert.match(harnessArea, /Role Context Map/);
+assert.match(harnessArea, /foundation\/context-model\.md/);
+assert.match(harnessArea, /contracts\/workflow-contract\.md/);
+assert.match(harnessArea, /contracts\/package-managed-surfaces\.md/);
+assert.match(harnessArea, /decision-rationale\/minimal-context\.md/);
+assert.match(harnessArea, /implementation-index\.md/);
+assert.match(harnessArea, /verification\.md/);
+
+assert.match(contextModel, /project_context\/\*\*`? is the intended fact source/);
+assert.match(contextModel, /Code is current implementation evidence/);
+assert.match(contextModel, /code.*must not silently redefine intended product, architecture or Context ownership/is);
+assert.match(contextModel, /role placement/i);
+
+assert.match(workflowContract, /Context Priority Ladder/);
+assert.match(workflowContract, /Context Delta: required/);
+assert.match(workflowContract, /Task Contract is task-local and temporary/);
+assert.match(workflowContract, /A target-mode local audit does not replace Task Contract or workflow-contract `plan\.md`/);
+assert.match(workflowContract, /not become a validator, phase gate, required document chain or machine-enforced edit-order gate/);
+
+assert.match(packageManagedSurfaces, /\.codex\/ty-context-managed\/\*\*/);
+assert.match(packageManagedSurfaces, /\.codex\/skills\/\*\*/);
+assert.match(packageManagedSurfaces, /packages\/ty-context\/assets\/\*\*/);
+assert.match(packageManagedSurfaces, /\.codex\/skills\/authoring\/\*\*/);
+assert.match(packageManagedSurfaces, /Do not put authoring-only Skills under `.codex\/skills\/authoring\/\*\*` into package assets/);
+assert.match(packageManagedSurfaces, /Source sync is not required for this repository's own `project_context\/\*\*`-only changes/);
+
+assert.match(minimalContextRationale, /Why Minimal Context/);
+assert.match(minimalContextRationale, /Why Not Restore The Old SDLC Default/);
+assert.match(implementationIndex, /packages\/ty-context\/src\/commands\/index\.ts/);
+assert.match(implementationIndex, /tests\/ty-context\/orientation-fast-path\.test\.mjs/);
+assert.match(verificationContext, /node packages\/ty-context\/dist\/cli\.js validate-context/);
+assert.match(verificationContext, /node --test tests\/ty-context\/orientation-fast-path\.test\.mjs/);
 
 for (const content of [sourceAgents, rootReadme, packageReadme, spec, packageAgents, packageGuide]) {
   assert.match(content, /project_context\/\*\*.*(?:authoritative|权威事实源)/s);

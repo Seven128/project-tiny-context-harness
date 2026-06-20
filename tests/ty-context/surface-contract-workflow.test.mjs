@@ -14,6 +14,8 @@ const [
   spec,
   globalContext,
   packageContext,
+  workflowContract,
+  packageManagedSurfaces,
   validators,
   sourceProductSkill,
   sourceUiuxSkill,
@@ -31,6 +33,8 @@ const [
   read("PROJECT_SPEC.md"),
   read("project_context/global.md"),
   read("project_context/areas/harness-package.md"),
+  read("project_context/areas/harness-package/contracts/workflow-contract.md"),
+  read("project_context/areas/harness-package/contracts/package-managed-surfaces.md"),
   read("packages/ty-context/src/lib/validators.ts"),
   read(".codex/ty-context-managed/skills/context_product_plan/SKILL.md"),
   read(".codex/ty-context-managed/skills/context_uiux_design/SKILL.md"),
@@ -92,13 +96,21 @@ for (const content of [sourceProductSkill, sourceUiuxSkill, sourceDevelopmentSki
   assert.match(content, /long-task state/i);
 }
 
-for (const content of [rootReadme, packageReadme, spec, globalContext, packageContext]) {
+for (const content of [rootReadme, packageReadme, spec, globalContext]) {
   assert.match(content, /Product Surface Contract/i);
   assert.match(content, /context_surface_contract/);
   assert.match(content, /product-surface-contract\.md/);
   assert.match(content, /contract.*role/i);
   assert.match(content, /no new|not add|must not add/i);
 }
+
+assert.match(packageContext, /Product Surface Contract workflow is prompt-level and project-owned/);
+assert.match(packageContext, /must not add a surface-specific Context role/);
+assert.match(workflowContract, /Product Surface Contract Boundary/);
+assert.match(workflowContract, /existing Context roles such as `contract`, `area`, `subdomain`, `verification`, `decision-rationale` and `implementation-index`/);
+assert.match(workflowContract, /Do not add surface-specific roles or validator gates/);
+assert.match(packageManagedSurfaces, /Product Surface Contract support/);
+assert.match(packageManagedSurfaces, /must not generate project-specific product facts, business Product Surface Contract files/);
 
 for (const role of ["surface-contract", "product-surface", "web-contract", "app-contract", "game-surface"]) {
   assert.doesNotMatch(validators, new RegExp(`["']${role}["']\\s*:`));

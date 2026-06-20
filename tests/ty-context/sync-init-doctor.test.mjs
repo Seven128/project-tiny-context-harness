@@ -322,6 +322,12 @@ try {
   assert.match(planAcceptanceSkill, /target-mode prompt/);
   assert.match(planAcceptanceSkill, /为这份方案生成验收清单/);
   assert.match(planAcceptanceSkill, /tmp\/ty-context\/plan-acceptance/);
+  assert.match(planAcceptanceSkill, /<plan-slug>-local-audit\.md/);
+  assert.match(planAcceptanceSkill, /Minimal User Blocker Protocol/);
+  assert.match(planAcceptanceSkill, /Evidence Layer Separation/);
+  assert.match(planAcceptanceSkill, /artifact accepted by validator/);
+  assert.match(planAcceptanceSkill, /not a global task manager/);
+  assert.match(planAcceptanceSkill, /workflow-contract `plan\.md`/);
   assert.match(planAcceptanceSkill, /Do not execute the plan/);
   assert.match(planAcceptanceSkill, /Do not include concrete business-domain logic/);
 

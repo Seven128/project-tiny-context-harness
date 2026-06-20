@@ -7,6 +7,42 @@ context = "project_context/areas/harness-package.md"
 kind = "npm-package"
 default = true
 
+[[context]]
+path = "project_context/areas/harness-package/foundation/context-model.md"
+role = "foundation"
+read_policy = "default"
+triggers = ["context model", "durable fact", "fact source", "role placement", "context priority"]
+
+[[context]]
+path = "project_context/areas/harness-package/contracts/workflow-contract.md"
+role = "contract"
+read_policy = "default"
+triggers = ["workflow contract", "context delta", "task contract", "plan.md", "local audit", "contract conformance"]
+
+[[context]]
+path = "project_context/areas/harness-package/contracts/package-managed-surfaces.md"
+role = "contract"
+read_policy = "default"
+triggers = ["managed assets", "package assets", "generated skills", "source sync", "authoring skill"]
+
+[[context]]
+path = "project_context/areas/harness-package/decision-rationale/minimal-context.md"
+role = "decision-rationale"
+read_policy = "on-demand"
+triggers = ["why minimal context", "legacy stage", "phase gate", "thick docs", "benchmark"]
+
+[[context]]
+path = "project_context/areas/harness-package/implementation-index.md"
+role = "implementation-index"
+read_policy = "on-demand"
+triggers = ["cli entry", "sync", "validator", "migration", "release tool", "test entry"]
+
+[[context]]
+path = "project_context/areas/harness-package/verification.md"
+role = "verification"
+read_policy = "default"
+triggers = ["test", "verify", "validation", "harness gate", "diff check"]
+
 [[areas]]
 id = "delivery-benchmark"
 root = "examples/delivery-benchmark"

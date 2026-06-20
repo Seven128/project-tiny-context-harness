@@ -78,6 +78,12 @@
 ## Context Index
 
 - [harness-package](areas/harness-package.md)
+  - [harness-package context model](areas/harness-package/foundation/context-model.md): read before changing Context types, durable fact placement, fact-source authority, role placement or Context/code/evidence priority.
+  - [harness-package workflow contract](areas/harness-package/contracts/workflow-contract.md): read before changing Context Priority Ladder, `Context Delta`, Task Contract, temporary plan surfaces, target-mode local audit or Contract Conformance rules.
+  - [harness-package package-managed surfaces](areas/harness-package/contracts/package-managed-surfaces.md): read before changing managed source, generated Skills, package assets, authoring-only Skills, README/package README boundaries or source sync behavior.
+  - [harness-package Minimal Context rationale](areas/harness-package/decision-rationale/minimal-context.md): read on demand when evaluating phase gates, thick docs, legacy stage workflow, validator-driven workflow or the reasons Minimal Context replaced the old SDLC default.
+  - [harness-package implementation index](areas/harness-package/implementation-index.md): read on demand when locating CLI, sync, validator, migration, asset, Skill, test or release-tool entry points.
+  - [harness-package verification](areas/harness-package/verification.md): read before choosing repeatable validation paths for Harness package or source-workspace Context changes.
 - [delivery-benchmark](areas/delivery-benchmark.md)
 
 ## Context Graph
