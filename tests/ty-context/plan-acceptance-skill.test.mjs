@@ -64,6 +64,12 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /Package-Managed Boundary/);
   assert.match(content, /tmp\/ty-context\/plan-acceptance/);
   assert.match(content, /<plan-slug>-local-audit\.md/);
+  assert.match(content, /3980 characters/);
+  assert.match(content, /preserve information density/);
+  assert.match(content, /do not drop required paths, core acceptance categories, blocker rules, evidence rules or false-completion traps merely to be short/);
+  assert.match(content, /compress by tightening wording and referring to the full checklist path while preserving required paths/);
+  assert.doesNotMatch(content, /4000 characters/);
+  assert.doesNotMatch(content, /do not aim for 4000 exactly/);
   assert.match(content, /Context confirmation gate/i);
   assert.match(content, /falsifiable acceptance items/);
   assert.match(content, /Hard Blocker Handling/);

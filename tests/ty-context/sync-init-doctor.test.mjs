@@ -323,6 +323,8 @@ try {
   assert.match(planAcceptanceSkill, /为这份方案生成验收清单/);
   assert.match(planAcceptanceSkill, /tmp\/ty-context\/plan-acceptance/);
   assert.match(planAcceptanceSkill, /<plan-slug>-local-audit\.md/);
+  assert.match(planAcceptanceSkill, /3980 characters/);
+  assert.doesNotMatch(planAcceptanceSkill, /4000 characters/);
   assert.match(planAcceptanceSkill, /Minimal User Blocker Protocol/);
   assert.match(planAcceptanceSkill, /Evidence Layer Separation/);
   assert.match(planAcceptanceSkill, /artifact accepted by validator/);

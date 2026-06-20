@@ -33,7 +33,7 @@ Every completed invocation must produce:
 
 Exception: if the Context confirmation gate below triggers, stop after materializing the plan and reading enough Context to explain the uncertainty. Ask the user for confirmation before producing the checklist or goal/target-mode prompt.
 
-The goal/target-mode prompt must be no longer than 4000 characters. Use the user's language when practical. For Chinese requests, use this shape:
+The goal/target-mode prompt must be no longer than 3980 characters, including line breaks. This conservative budget keeps the prompt below Codex's 4000-character practical paste boundary even when character counting differs slightly. Keep the prompt information-dense: preserve required paths, core acceptance criteria, evidence rules, blockers and false-completion traps while using compact wording. Use the user's language when practical. For Chinese requests, use this shape:
 
 ```text
 实施计划: tmp/ty-context/plan-acceptance/<plan>.md
@@ -391,7 +391,7 @@ After compiling the checklist, produce a paste-ready goal/target-mode prompt.
 
 Hard requirements:
 
-- The prompt must be no longer than 4000 characters including line breaks.
+- The prompt must be no longer than 3980 characters including line breaks. Treat 3980 as the effective hard budget and preserve information density; do not drop required paths, core acceptance categories, blocker rules, evidence rules or false-completion traps merely to be short.
 - The first line must identify the plan path.
 - Use `实施计划: <path>` for Chinese prompts and `Plan: <path>` for English prompts.
 - The second line must be a resource lifecycle instruction: `可多开agent，agent名额不够了就关掉不用的。` for Chinese prompts or `You may use multiple agents; if agent slots run low, close idle or unnecessary agents.` for English prompts.
@@ -404,7 +404,7 @@ Hard requirements:
 - Do not include explanatory preface inside the prompt.
 - Do not include Markdown tables inside the prompt if they make it too long.
 - Prefer short numbered items over verbose prose.
-- If the full checklist is too large, write the full checklist to `tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md`, then compress the goal/target-mode prompt while preserving all core acceptance categories.
+- If the full checklist is too large, write the full checklist to `tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md`, then compress the goal/target-mode prompt by increasing information density while preserving all core acceptance categories.
 - The compact prompt may reference the full checklist path, but it must still include the core completion criteria directly.
 
 Recommended compact Chinese prompt shape:
@@ -461,7 +461,7 @@ AC14 Final audit: compare every item against the plan and full checklist; every 
 Do not count these as completion: code-only changes, plan-only updates, partial tests, stale or partial evidence, infrastructure without acceptance proof, runtime not configured/exercised, artifact not accepted by validator, API/UI not reflecting accepted evidence, unexercised fallback, unresolved hard blockers, or contradictions between API/UI/data/tests.
 ```
 
-Before final response, check the prompt length. If it exceeds 4000 characters, compress it and check again.
+Before final response, check the prompt length. If it exceeds 3980 characters, compress by tightening wording and referring to the full checklist path while preserving required paths, core AC categories, blocker/evidence rules and false-completion traps; then check again.
 
 ## Final Response Requirements
 
