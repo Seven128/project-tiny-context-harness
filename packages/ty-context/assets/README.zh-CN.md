@@ -46,7 +46,7 @@ Fresh agent 先读这些文件，再开始改代码。
 
 所以当前默认方向是 Minimal Context Harness：只维护高密度、长期有效、能帮助恢复上下文的项目事实。
 
-对于长程任务，Harness 也提供一个轻量的计划验收清单 Skill：当用户明确给出或引用某份方案 / 计划 / RFC / implementation plan，并要求生成验收清单、完成定义或 goal/target 模式提示词时，它会把计划和验收清单临时放到 `tmp/ty-context/plan-acceptance/**`。这只是执行前的一次验收标准梳理，不执行计划、不证明完成，也不会把临时清单注册成 `project_context/**`。
+对于长程任务，Harness 也提供一个轻量的计划验收清单 Skill：当用户明确给出或引用某份方案 / 计划 / RFC / implementation plan，并要求生成验收清单、完成定义或 goal/target 模式提示词时，它会把计划和验收清单临时放到 `tmp/ty-context/plan-acceptance/**`。如果方案里已经有明确、具体的“验收清单”，Skill 会直接复用那份清单并单独写入完整验收清单文件，不再另行生成一份竞争清单。这只是执行前的一次验收标准梳理，不执行计划、不证明完成，也不会把临时清单注册成 `project_context/**`。
 
 ## 适合谁
 

@@ -61,6 +61,8 @@ The ladder is expected agent behavior. It must not become a validator, phase gat
 
 - The plan acceptance checklist compiler is a pre-execution acceptance-standard pass for a user-provided plan-like source.
 - It materializes temporary plan/checklist artifacts under `tmp/ty-context/plan-acceptance/**`, reads relevant Context and outputs a goal/target prompt.
+- If the source plan contains an explicit concrete acceptance checklist, the compiler reuses that plan-provided checklist verbatim as the full checklist instead of generating a new one.
+- The materialized plan and full checklist remain separate files even when the checklist originally appeared inside the plan.
 - The generated goal/target prompt uses a conservative 3850-character effective maximum, including line breaks, so it stays below Codex's 4000-character practical paste boundary after small counting differences.
 - The compiler guidance must preserve required plan/checklist/audit paths and all core acceptance categories while fitting the 3850-character budget. When over budget, it should increase information density through compact wording, merged phrasing and references to the full checklist, not drop required evidence, blocker or false-completion semantics merely to be short.
 - For target-mode execution, the full acceptance checklist is the authoritative acceptance standard. Compact prompt summaries provide direction, priority and recovery navigation only.

@@ -22,6 +22,7 @@ const [
   sourceAgents,
   packageAgents,
   rootReadme,
+  rootZhReadme,
   packageReadme,
   spec,
   workflowContract,
@@ -32,6 +33,7 @@ const [
   read(".codex/ty-context-managed/agents/AGENTS_CORE.md"),
   read("packages/ty-context/assets/agents/AGENTS_CORE.md"),
   read("README.md"),
+  read("README.zh-CN.md"),
   read("packages/ty-context/README.md"),
   read("PROJECT_SPEC.md"),
   read("project_context/areas/harness-package/contracts/workflow-contract.md"),
@@ -59,13 +61,22 @@ for (const content of [rootReadme, packageReadme]) {
   assert.match(content, /acceptance (?:authority|standard)/i);
   assert.match(content, /navigation/i);
   assert.match(content, /priority/i);
+  assert.match(content, /explicit concrete (?:checklist|acceptance checklist)/i);
+  assert.match(content, /verbatim/i);
 }
+
+assert.match(rootZhReadme, /明确、具体的“验收清单”/);
+assert.match(rootZhReadme, /直接复用那份清单/);
+assert.match(rootZhReadme, /单独写入完整验收清单文件/);
 
 assert.match(workflowContract, /3850-character effective maximum/);
 assert.doesNotMatch(workflowContract, staleWorkflowBudget);
 assert.match(workflowContract, /full acceptance checklist is the authoritative acceptance standard/);
 assert.match(workflowContract, /Compact prompt summaries provide direction, priority and recovery navigation only/);
 assert.match(workflowContract, /If they conflict, the full checklist wins/);
+assert.match(workflowContract, /explicit concrete acceptance checklist/);
+assert.match(workflowContract, /reuses that plan-provided checklist verbatim/);
+assert.match(workflowContract, /materialized plan and full checklist remain separate files/);
 assert.match(workflowContract, /Current-State Conformance/);
 assert.match(workflowContract, /prompt-level completion discipline/);
 assert.match(workflowContract, /not a CLI validator/);
@@ -100,6 +111,18 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /acceptance is judged against it/);
   assert.match(content, /every item must be checked before completion/);
   assert.match(content, /该文件是完整验收标准，验收以这个为准。完成前必须逐项检查，不满足则继续实现。/);
+  assert.match(content, /plan-provided checklist/);
+  assert.match(content, /Acceptance Checklist/);
+  assert.match(content, /验收清单/);
+  assert.match(content, /reuse that plan-provided checklist verbatim/);
+  assert.match(content, /Do not derive, strengthen, reorder, translate, normalize, merge, split, or add acceptance items/);
+  assert.match(content, /Do not prepend the generated `Acceptance Contract`/);
+  assert.match(content, /Skip Steps 5 and 6 for the full checklist file/);
+  assert.match(content, /If multiple explicit checklist sections exist, copy all of them/);
+  assert.match(content, /Keep the copied plan file and full checklist file separate/);
+  assert.match(content, /When no explicit concrete plan-provided checklist exists, continue with the generated-checklist flow below/);
+  assert.match(content, /too large for the 3850-character prompt budget/);
+  assert.match(content, /not by rewriting or adding criteria/);
   assert.match(content, /compact checklist summary for direction, priority and recovery navigation/);
   assert.match(content, /summary is direction\/priority\/recovery navigation, not the acceptance authority/);
   assert.match(content, /overlap with the full checklist is allowed/);

@@ -28,7 +28,7 @@ This Skill is generic. Do not embed business-specific rules, vendor-specific rul
 Every completed invocation must produce:
 
 1. A preserved copy of the plan under `tmp/ty-context/plan-acceptance/`. The copied plan is the implementation/source plan, not acceptance proof.
-2. A rigorous full acceptance checklist derived from the plan and relevant project Context. The full checklist is the complete acceptance standard.
+2. A rigorous full acceptance checklist under a separate `tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md` path. If the plan contains an explicit concrete acceptance checklist, reuse that plan-provided checklist verbatim; otherwise derive the checklist from the plan and relevant project Context. The full checklist is the complete acceptance standard.
 3. A goal/target-mode prompt the user can paste directly into Codex. The prompt may include a compact checklist summary for direction, priority and recovery navigation, but the full checklist owns the acceptance details.
 4. When a local audit path is referenced, it is temporary execution/progress state only, not Context and not proof by itself.
 
@@ -139,7 +139,27 @@ tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md
 
 The local audit path is for the future goal/target-mode executor. This compiler may require the prompt to maintain it, but the file is a temporary recovery cache and not proof that any acceptance item passed.
 
-## Step 2: Read Relevant Project Context
+## Step 2: Reuse Any Explicit Plan-Provided Checklist
+
+After materializing the plan, inspect it for an explicit concrete acceptance checklist before generating a new checklist.
+
+Plan-provided checklist reuse applies only when the plan contains a clearly labeled checklist or checklist table section, such as `Acceptance Checklist`, `Acceptance Criteria`, `验收清单`, `验收标准`, or equivalent heading, and that section contains concrete acceptance items rather than only saying that acceptance is needed.
+
+When a plan-provided checklist is found:
+
+- Copy the plan-provided acceptance checklist section into `tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md` as the full checklist.
+- Preserve the extracted checklist verbatim, including the original language, item wording, order, IDs, Markdown tables, checkboxes, evidence notes, and blocker notes.
+- Do not derive, strengthen, reorder, translate, normalize, merge, split, or add acceptance items.
+- Do not prepend the generated `Acceptance Contract`, checklist table, self-test, or false-completion traps to the full checklist file when reusing a plan-provided checklist.
+- If multiple explicit checklist sections exist, copy all of them into the full checklist file in source order.
+- Keep the copied plan file and full checklist file separate, even if the checklist already appears inside the plan.
+- Continue to read relevant Context only as needed to explain ambiguities, conflicts, the goal/target-mode prompt, and any required local-audit or false-completion guidance. Do not use Context to expand the reused checklist unless the user separately asks for an audit or rewrite.
+- If the plan-provided checklist is too large for the 3850-character prompt budget, keep it intact in the full checklist file and make the prompt reference that file as the acceptance authority; do not invent a compact replacement checklist with new criteria.
+- Skip Steps 5 and 6 for the full checklist file unless the user separately asks for a checklist audit or rewrite.
+
+When no explicit concrete plan-provided checklist exists, continue with the generated-checklist flow below.
+
+## Step 3: Read Relevant Project Context
 
 Read only the Context needed for the plan's impacted surfaces. Use Context to identify what the project says the system should mean.
 
@@ -155,7 +175,7 @@ Extract:
 - Known non-goals and forbidden dependencies.
 - Existing implementation entry points.
 
-## Step 3: Run The Context Confirmation Gate
+## Step 4: Run The Context Confirmation Gate
 
 After reading the plan and relevant Context, decide whether generating an acceptance checklist would require guessing or silently accepting many durable fact changes. If yes, stop and ask the user to confirm details before continuing.
 
@@ -176,11 +196,11 @@ When the gate triggers:
 - Include the materialized plan path if already written.
 - State the specific Context files or Context roles that made confirmation necessary.
 - Offer a concrete default only when it is safe and reversible; otherwise ask for an explicit decision.
-- Resume from Step 2 after the user answers.
+- Resume from Step 3 after the user answers.
 
 Do not trigger this gate merely because the plan is large. If the Context impact is clear, bounded, and the checklist can represent the durable Context updates as acceptance items without guessing, continue.
 
-## Step 4: Compile The Acceptance Contract
+## Step 5: Compile The Acceptance Contract
 
 Before the detailed checklist, write a compact contract:
 
@@ -201,9 +221,11 @@ Before the detailed checklist, write a compact contract:
 
 If the plan uses broad words such as `all`, `complete`, `maximum`, `maximized`, `accepted`, `formal`, `production`, `real`, `current`, or `verified`, convert them into explicit inventory and evidence requirements.
 
-## Step 5: Build The Full Acceptance Checklist
+## Step 6: Build The Full Acceptance Checklist
 
 Treat the checklist as the set of falsifiable acceptance items a future executor must satisfy. It is not a progress log.
+
+Use this generated-checklist step only when Step 2 did not find an explicit concrete plan-provided checklist. If Step 2 found one, the full checklist file is the verbatim extracted checklist and this step is skipped.
 
 Create a checklist table with these columns:
 
@@ -424,7 +446,7 @@ Every generated checklist must pass this self-test:
 
 ## Goal/Target-Mode Prompt Generation
 
-After compiling the checklist, produce a paste-ready goal/target-mode prompt.
+After reusing a plan-provided checklist or compiling a generated checklist, produce a paste-ready goal/target-mode prompt.
 
 Hard requirements:
 
@@ -444,6 +466,7 @@ Hard requirements:
 - Do not include Markdown tables inside the prompt if they make it too long.
 - Prefer short numbered items over verbose prose.
 - If the full checklist is too large, write the full checklist to `tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md`, then compress the goal/target-mode prompt by increasing information density while preserving all core acceptance categories.
+- If the full checklist came from a plan-provided checklist and is too large, keep the extracted checklist unchanged in the full checklist file and compress the prompt by referencing the full checklist path, not by rewriting or adding criteria.
 - The compact prompt may reference the full checklist path, but it must still include the core completion criteria directly and state that the summary is direction/priority/recovery navigation, not the acceptance authority.
 
 Recommended compact Chinese prompt shape:
@@ -510,6 +533,7 @@ For completed checklist runs, the final response must include:
 
 - `tmp/ty-context/plan-acceptance/` plan path.
 - Full checklist path if a full checklist file was written.
+- Whether the full checklist was reused from a plan-provided checklist or generated by this Skill.
 - The paste-ready goal/target-mode prompt in a code block.
 - Any unresolved ambiguity that affects checklist accuracy.
 
@@ -530,5 +554,7 @@ Do not use the checklist to mark the task complete.
 Do not hide missing source files, ambiguous plan scope, or external blockers.
 
 Do not rewrite the user's plan while copying it into `tmp/ty-context/plan-acceptance/`.
+
+Do not rewrite, strengthen, reorder, translate, normalize, or add items to a plan-provided checklist when the plan already includes an explicit concrete checklist.
 
 Do not use a short sample, stale artifact, old result, or current implementation convenience to reduce a plan that asked for full completion.
