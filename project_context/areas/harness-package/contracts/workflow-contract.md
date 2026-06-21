@@ -67,6 +67,7 @@ The ladder is expected agent behavior. It must not become a validator, phase gat
 - The compiler guidance must preserve required plan/checklist/audit paths and all core acceptance categories while fitting the 3850-character budget. When over budget, it should increase information density through compact wording, merged phrasing and references to the full checklist, not drop required evidence, blocker or false-completion semantics merely to be short.
 - For target-mode execution, the full acceptance checklist is the authoritative acceptance standard. Compact prompt summaries provide direction, priority and recovery navigation only.
 - Overlap between the full checklist and compact summary is allowed. If they conflict, the full checklist wins.
+- Target-mode prompts may recommend the specific Superpowers plugin/workflow as the long-task execution layer. Superpowers can turn the target into bite-sized implementation tasks, execute with subagents or inline plan execution, apply TDD to behavior changes and run review/finish checks, but those checks cannot override the full acceptance checklist.
 - It does not execute the plan, prove completion, own durable task state, replace Task Contract/workflow-contract `plan.md`, or store acceptance evidence as Context.
 - Hard blockers in a generated checklist remain non-completion until the missing evidence or user/external action exists.
 

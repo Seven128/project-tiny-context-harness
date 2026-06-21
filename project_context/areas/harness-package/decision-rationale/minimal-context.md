@@ -13,8 +13,9 @@ This rationale explains why the current product direction is Minimal Context Har
 - The original stage-based workflow tried to make requirements, design, architecture, implementation, review, testing, release and requirement changes explicit so later agents would recover faster.
 - Benchmark pilots showed that default fact-source writes, stage decisions, phase transitions and gates create real time and token cost even when final product quality is unchanged.
 - Modern coding agents already internalize much of the ordinary single-task loop: understand compact requirements, make local design choices, edit code, run focused checks and repair simple failures.
-- The durable value with the clearest return is fast recovery of project intent, non-goals, ownership, architecture constraints, integration direction and repeat-execution paths across fresh conversations.
-- Context therefore preserves the smallest stable fact set that code alone does not reliably communicate.
+- The durable value with the clearest return is fast recovery of project intent, non-goals, ownership, architecture constraints, integration direction, repeat-execution paths and the priority rules for reconciling Context, implementation and evidence across fresh conversations.
+- Context therefore preserves the smallest stable fact set and workflow priority contract that code alone does not reliably communicate.
+- A core failure case is the ABCD dependency chain: if A/B/C are upstream of downstream D, a D task may be locally completable by changing upstream A/B. Code and semantic retrieval can expose that path, but they cannot decide whether the project allows it. Minimal Context keeps the repo-owned intent layer that says whether the change belongs in D, C's contract or an upstream Context Delta.
 
 ## Why Not Restore The Old SDLC Default
 
@@ -26,8 +27,10 @@ This rationale explains why the current product direction is Minimal Context Har
 ## Current Design Choice
 
 - Keep `project_context/**` as the durable recovery surface.
+- Keep Context/code/evidence priority, read-order guidance, context-first classification and drift checks as core Minimal Context behavior.
 - Keep `AGENTS.md` as startup router and hard-boundary surface, not a full design manual.
 - Keep role Skills as prompt-level thinking frameworks that write only durable conclusions to Context.
+- Use the plan acceptance checklist compiler for long-running plan execution because Context priority and drift checks are intentionally soft constraints. Short tasks should usually use workflow contract plus Context layer directly. Long tasks should externalize the plan and acceptance target first: Web GPT or another external planning model can produce the plan, the checklist compiler turns that plan into a goal/target-mode prompt, Superpowers derives concrete implementation slices through `writing-plans`, `subagent-driven-development` when subagents are available, `executing-plans` otherwise, and `test-driven-development` for behavior changes, and each slice still follows the workflow contract plus Context layer. This exists because Context can preserve the expected facts in long tasks, but the Context-to-code step is where drift appears under soft constraints.
 - Keep temporary plans and target-mode audits as execution cache, never as long-lived fact sources.
 - Keep tests, CI, review, smoke checks, hidden probes and human acceptance responsible for product quality.
 

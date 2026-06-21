@@ -8,15 +8,15 @@
 
 Translations: [Chinese (Simplified)](https://github.com/Seven128/project-tiny-context-harness/blob/main/README.zh-CN.md)
 
-`project-tiny-context-harness` ships the `ty-context` CLI for Project Tiny Context Harness: repo-native project memory for AI coding agents.
+`project-tiny-context-harness` ships the `ty-context` CLI for Project Tiny Context Harness: repo-native project memory for AI coding agents and a repo-native context contract.
 
-The default is **Minimal Context Harness**. It maintains a compact `project_context/**` fact source, a short `AGENTS.md` startup router, role Skills and a `validate-context` gate so fresh agents can recover project intent, constraints, verification entry points and next safe actions quickly.
+The default is **Minimal Context Harness**. It maintains a compact `project_context/**` fact source, a short `AGENTS.md` startup router, role Skills, priority guidance for Context/code/evidence, and a `validate-context` gate so fresh agents can recover project intent, constraints, verification entry points and next safe actions quickly.
 
 It does not default to lifecycle phases, plan tasks, stage skills, stage documents or phase gates. Harness maintains context quality; your project tests, CI, review process and human acceptance remain responsible for product quality.
 
 Use it when coding agents repeatedly lose project intent across new chats, handoffs, RFC/debug turns or tool changes. The intended tradeoff is: keep durable intent and recovery paths; leave execution evidence to code, tests and review.
 
-Think of it as durable project memory behind `AGENTS.md`, not another agent, process framework or task manager.
+Think of it as durable project memory behind `AGENTS.md`, plus priority rules for Context/code/evidence, not another agent, process framework or task manager.
 
 Best for:
 
@@ -65,16 +65,40 @@ Coding agents can move quickly inside one thread and still drift when a new chat
 
 Minimal Context Harness creates a small, explicit recovery path: project goal, boundaries, architecture context, validation entry points and durable task conclusions. It is designed to sit beside specs, tests, issues, docs and code intelligence tools instead of replacing them.
 
+The concrete failure mode is not only missing file search. In an ABCD module chain where A/B/C are upstream of downstream D, a D feature can expose a missing capability. Without Context, an agent may change upstream A/B to make D pass because current code permits it. Minimal Context adds a repo-owned intent layer: it records whether downstream D may change upstream A/B, whether the gap belongs in C's contract, or whether the task needs a `Context Delta` before implementation continues. Code shows what is possible; it cannot decide whether that is allowed project intent.
+
 The core bet is: **keep the memory, drop the ceremony**. Earlier stage-based workflows pushed ordinary software work through explicit phase artifacts and gates. Modern coding agents already internalize much of the understand, design, implement, test and repair loop, so Project Tiny Context Harness keeps the high-density repo context that survives fresh chats without making every task follow Tiny Context-stage choreography.
+
+## Current Best Practice
+
+For short tasks, use the workflow contract and Context layer directly:
+
+```text
+workflow contract + project_context/** -> implementation -> verification -> drift check
+```
+
+For long-running tasks, externalize the target first:
+
+```text
+Web GPT or another external planning model produces a plan
+-> plan acceptance checklist Skill produces a goal/target-mode prompt
+-> Superpowers derives concrete implementation slices
+-> each slice follows the workflow contract + project_context/**
+```
+
+The recommended Superpowers layer is the specific [obra/Superpowers](https://github.com/obra/superpowers) plugin/workflow, not a generic planning substitute. Use `superpowers:writing-plans` when the target-mode prompt or source plan still needs bite-sized implementation tasks, then prefer `superpowers:subagent-driven-development` when subagents are available and `superpowers:executing-plans` otherwise. Behavior changes should use `superpowers:test-driven-development`.
+
+The reason is drift control. The workflow contract plus Context layer is intentionally a soft constraint. It works well for short tasks, and Context can still capture the expected facts for long tasks, but long execution makes the Context-to-code step drift as the context window grows, work is handed off, subagents split scope or validation loops multiply. A Web GPT plan, target-mode prompt, full acceptance checklist and Superpowers execution layer make the completion target recoverable without restoring a phase-gated workflow.
 
 ## Positioning
 
 | Adjacent tool type | Use it for | Harness stance |
 |---|---|---|
-| Spec-first kits | Turning feature ideas into structured specs and plans. | Complementary; Harness keeps durable project facts, not a required spec chain. |
+| Spec-first kits | Turning feature ideas into structured specs and plans. | Complementary; Harness keeps durable repo facts and module boundary intent beyond one feature spec. |
 | BMAD-style workflows and full Tiny Context processes | Coordinated role/process ceremonies on high-risk work. | Lighter default; no phase gates or work-product trees. |
+| Superpowers-style execution | Turning approved requirements into plans, subagent execution, TDD, review and finish discipline. | Complementary; use it to execute while Tiny Context owns durable repo intent and acceptance priority. |
 | Task Master-style planners | Backlog decomposition and task execution state. | Complementary; Harness does not own task state. |
-| Context7/Serena-style retrieval or code-intelligence tools | Pulling external docs, symbols or repository facts on demand. | Complementary; Harness stores local repo truth. |
+| Context7/Serena-style retrieval or code-intelligence tools | Pulling external docs, symbols or repository facts on demand. | Complementary; they do not answer whether downstream D may change upstream A/B. Harness stores that local repo truth. |
 | IDE or agent memory | Tool-specific continuity inside one product surface. | Portable fallback; plain files any agent can read. |
 
 ## Try It In 60 Seconds
@@ -115,7 +139,7 @@ npm ci
 npm run smoke:quickstart
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.2.62.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.2.63.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```

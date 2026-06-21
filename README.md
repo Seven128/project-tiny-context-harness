@@ -8,13 +8,13 @@
 
 Translations: [Chinese (Simplified)](README.zh-CN.md)
 
-Project Tiny Context Harness is repo-native project memory for AI coding agents.
+Project Tiny Context Harness is repo-native project memory for AI coding agents and a repo-native context contract.
 
-`project-tiny-context-harness` ships Project Tiny Context Harness through the `ty-context` CLI. It installs **Minimal Context Harness**: a compact `project_context/**` fact source, a short `AGENTS.md` startup router, role Skills and a `validate-context` gate so fresh agents can recover project intent, boundaries, verification entry points and next safe actions quickly.
+`project-tiny-context-harness` ships Project Tiny Context Harness through the `ty-context` CLI. It installs **Minimal Context Harness**: a compact `project_context/**` fact source, a short `AGENTS.md` startup router, role Skills, priority guidance for Context/code/evidence, and a `validate-context` gate so fresh agents can recover project intent, boundaries, verification entry points and next safe actions quickly.
 
 It is not another full Tiny Context ceremony. The Harness maintains context quality; project tests, reviews, CI and human acceptance still own product quality.
 
-Think of it as durable project memory behind `AGENTS.md`, not another agent, process framework or task manager.
+Think of it as durable project memory behind `AGENTS.md`, plus priority rules for Context/code/evidence, not another agent, process framework or task manager.
 
 Best for:
 
@@ -94,7 +94,7 @@ That smoke packs the local workspace, installs it into a disposable repo, runs `
 ```sh
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.2.62.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.2.63.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -109,16 +109,40 @@ Coding agents can move quickly inside one thread and still drift when a new chat
 
 Most repositories already have README files, specs, tests and issue history, but fresh agents need a small, explicit recovery path: what the project is trying to do, what it must not do, where architecture boundaries live, how to validate changes and what durable facts changed after the last task. Minimal Context Harness makes that recovery path a first-class repo surface without adding a full planning ceremony.
 
+The concrete failure mode is not only "the agent did not read enough files." In an ABCD module chain where A/B/C are upstream of downstream D, a D feature may reveal a missing capability. Without Context, the agent can satisfy D by changing upstream A/B because the current code makes that path available. What is missing is a repo-owned intent layer that says whether D may change upstream A/B, whether the gap belongs in C's contract, or whether the task must stop for a `Context Delta` before implementation continues. Current code can show what is possible; it cannot decide whether that is allowed project intent.
+
 The product lesson is: **keep the memory, drop the ceremony**. Earlier stage-based workflows externalized requirements, design, implementation, review, test and release into explicit phase artifacts. Modern coding agents already internalize much of that ordinary software loop. Project Tiny Context Harness keeps the useful part: the smallest high-density repo context that survives fresh chats without forcing every task through phase transitions, work-product validation or Tiny Context-stage context splits.
+
+## Current Best Practice
+
+For short tasks, use the workflow contract and Context layer directly:
+
+```text
+workflow contract + project_context/** -> implementation -> verification -> drift check
+```
+
+For long-running tasks, externalize the target first:
+
+```text
+Web GPT or another external planning model produces a plan
+-> plan acceptance checklist Skill produces a goal/target-mode prompt
+-> Superpowers derives concrete implementation slices
+-> each slice follows the workflow contract + project_context/**
+```
+
+The recommended Superpowers layer is the specific [obra/Superpowers](https://github.com/obra/superpowers) plugin/workflow, not a generic planning substitute. Use `superpowers:writing-plans` when the target-mode prompt or source plan still needs bite-sized implementation tasks, then prefer `superpowers:subagent-driven-development` when subagents are available and `superpowers:executing-plans` otherwise. Behavior changes should use `superpowers:test-driven-development`.
+
+The reason is drift control. The workflow contract plus Context layer is intentionally a soft constraint. It works well for short tasks, and Context can still capture the expected facts for long tasks, but long execution makes the Context-to-code step drift as the context window grows, work is handed off, subagents split scope or validation loops multiply. A Web GPT plan, target-mode prompt, full acceptance checklist and Superpowers execution layer make the completion target recoverable without restoring a phase-gated workflow.
 
 ## Positioning
 
 | Adjacent tool type | Use it for | Harness stance |
 |---|---|---|
-| Spec-first kits | Turning a feature idea into structured specs and implementation plans. | Complementary. Keep final durable project facts in `project_context/**`; do not require spec documents for every task. |
+| Spec-first kits | Turning a feature idea into structured specs and implementation plans. | Complementary. Specs can define a feature, but they do not automatically maintain repo-wide module boundary intent across every later task. |
 | BMAD-style workflows and full Tiny Context processes | Coordinated role/process ceremonies on high-risk work. | Lighter default. Preserve context quality without shipping phase gates or work-product trees. |
-| Task Master-style planners | Backlog decomposition and task execution state. | Complementary. Harness does not own task state; it owns durable project memory. |
-| Context7/Serena-style retrieval or code-intelligence tools | Pulling external docs, symbols or repository facts on demand. | Complementary. Harness keeps the local project truth that should travel with the repo. |
+| Superpowers-style execution | Turning approved requirements into plans, subagent execution, TDD, review and finish discipline. | Complementary. Use it to execute; keep Tiny Context as the durable repo intent and acceptance-priority layer. |
+| Task Master-style planners | Backlog decomposition and task execution state. | Complementary. Harness does not own task state; it owns durable project memory and module boundary facts. |
+| Context7/Serena-style retrieval or code-intelligence tools | Pulling external docs, symbols or repository facts on demand. | Complementary. They improve retrieval and editing, but do not answer whether downstream D may change upstream A/B; Harness keeps that local project truth in repo. |
 | IDE or agent memory | Tool-specific continuity inside one product surface. | Portable fallback. Harness files are plain repo assets that any agent can read. |
 
 ## Try It In 60 Seconds
@@ -275,6 +299,8 @@ For high-risk product, UI/UX and engineering tasks that affect durable architect
 Technical architecture support is a Minimal Context capability: use restrained `architecture.md`, area Module Design Capsules and existing `contract` / `decision-rationale` roles when durable architecture or rationale matters. Do not invent rationale; store stable reasons, rejected alternatives or tradeoffs only in the smallest durable Context surface when they will affect future implementation or verification choices.
 
 For long-running plans, RFCs or implementation proposals, the plan acceptance checklist compiler can turn a plan plus relevant Context into a falsifiable acceptance checklist and a paste-ready goal/target-mode prompt. If the plan already contains an explicit concrete acceptance checklist, the Skill copies that checklist verbatim into a separate full-checklist file instead of generating a competing checklist. This is one pre-execution acceptance pass, not a task planner or workflow engine: it stores temporary inputs under `tmp/ty-context/plan-acceptance/**`, asks for confirmation when durable assumptions are unclear, and leaves execution evidence to the future executor, tests, CI, review or human acceptance. The generated prompt may require a local audit under the same temporary directory so future sessions can recover acceptance progress; that audit is not Context, not a quality proof and not a replacement for the project's Tiny Context workflow contract. The full checklist is the acceptance authority, while any compact prompt summary exists for navigation, priority and recovery after context compaction.
+
+Important usage note: Minimal Context intentionally keeps Context read order, Context/code priority and drift checks as agent-level soft constraints rather than machine-enforced gates. That tradeoff works well for short tasks, but long tasks with large context windows, multiple handoffs or many verification loops are expected to drift unless the completion target is externalized. Use the plan acceptance checklist compiler before long-running execution when there is a plan-like source; treat the full checklist as the acceptance target, and treat the local audit only as temporary progress/recovery state.
 
 For Product Surface work, `context_surface_contract` turns broad product/page/UI principles into project-owned surface responsibilities. A Product Surface can be a Web page, mobile screen, desktop window, game UI/HUD/menu, CLI/TUI output, extension UI or embedded/device interface. Cross-surface contracts use the existing `contract` role; area-owned screen facts stay in `area` or `subdomain`; repeatable validation paths use `verification`. The Harness does not add a new surface-specific role, does not create business surface contracts during `init` or `upgrade`, and does not turn surface conformance into a validator gate. Projects that want mandatory task blocks should add a separate project-local Skill, while `product-surface-contract.md` is only a compact managed template for optional Context authoring.
 

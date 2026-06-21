@@ -56,6 +56,25 @@ for (const content of [rootReadme, packageReadme, spec, workflowContract]) {
   assert.match(content, /not (?:execute|a task planner|task state|proof|prove)/i);
 }
 
+for (const content of [rootReadme, packageReadme, spec]) {
+  assert.match(content, /Superpowers/);
+  assert.match(content, /https:\/\/github\.com\/obra\/superpowers/i);
+  assert.match(content, /writing-plans/);
+  assert.match(content, /subagent-driven-development/);
+  assert.match(content, /executing-plans/);
+  assert.match(content, /test-driven-development/);
+  assert.match(content, /workflow contract plus Context layer/);
+  assert.match(content, /Context-to-code step/i);
+  assert.doesNotMatch(content, /Superpowers or an equivalent execution-planning pass/i);
+  assert.doesNotMatch(content, /optional execution-planning pass/i);
+}
+
+for (const content of [rootZhReadme, spec]) {
+  assert.match(content, /长程任务/);
+  assert.match(content, /流程契约 \+ Context 层/);
+  assert.match(content, /Context-to-code|Context ——> code|Context 到代码/);
+}
+
 for (const content of [rootReadme, packageReadme]) {
   assert.match(content, /full checklist/i);
   assert.match(content, /acceptance (?:authority|standard)/i);
@@ -173,6 +192,16 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /not a global task manager/);
   assert.match(content, /not a replacement for project tests, CI, review, human acceptance, Task Contract or workflow-contract `plan\.md`/);
   assert.match(content, /each acceptance item execution still follows it and the repository's Tiny Context workflow contract/);
+  assert.match(content, /If Superpowers is not installed/);
+  assert.match(content, /official Superpowers installation path/);
+  assert.match(content, /installation is blocked/);
+  assert.match(content, /Use Superpowers for this task/);
+  assert.match(content, /superpowers:writing-plans/);
+  assert.match(content, /superpowers:subagent-driven-development/);
+  assert.match(content, /superpowers:executing-plans/);
+  assert.match(content, /superpowers:test-driven-development/);
+  assert.match(content, /review \/ finish cannot override the full checklist/);
+  assert.match(content, /update local audit after each execution round/);
   assert.match(content, /强卡点未解除/);
   assert.match(content, /runtime 未配置\/未演练/);
   assert.match(content, /artifact 未被 validator 接受/);

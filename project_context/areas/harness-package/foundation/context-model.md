@@ -12,6 +12,8 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 
 - Harness is the managed guidance, Context templates, default Skills, validators and source-sync checks that shape expected agent behavior; it is not a workflow engine.
 - Context is durable project fact stored in `project_context/**` or `DESIGN.md` so future agents can recover intent, ownership, boundaries and repeat-execution paths.
+- Minimal Context is the repo-native contract that combines those durable facts with read order, fact-source authority, context-first/code-first decision rules and drift checks. It is more than a memory folder and less than a workflow engine.
+- Repo-owned intent layer is the durable project fact surface that tells agents which product, architecture, ownership and dependency facts outrank current-code convenience. It is the layer that answers whether an apparently available implementation path is allowed project intent.
 - Durable facts are facts expected to guide later work, including product/domain ownership, surface responsibility, information architecture, API/schema semantics, state/runtime semantics, cross-domain boundaries and verification/deployment paths.
 - Workflow contract is prompt-level order of thought for handling Context, code, tests, temporary plans and one-off evidence in the right authority order. It is not a validator, phase gate or machine-enforced edit-order gate.
 - Task Contract is a temporary task-local compilation of relevant Context and principles into implementation constraints. It is not durable Context by default.

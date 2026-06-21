@@ -205,12 +205,30 @@ for (const content of [rootReadme, packageReadme, packageGuide]) {
   assert.match(content, /Positioning/);
   assert.match(content, /Spec-first kits/);
   assert.match(content, /BMAD-style workflows/);
+  assert.match(content, /Superpowers-style execution/i);
   assert.match(content, /Task Master-style planners/);
   assert.match(content, /Context7\/Serena-style/);
+  assert.match(content, /module boundary|module boundaries/i);
+  assert.match(content, /upstream A\/B/i);
+  assert.match(content, /downstream D/i);
+  assert.match(content, /repo-owned intent layer/i);
+  assert.match(content, /do not answer whether downstream D may change upstream A\/B/i);
   assert.match(content, /Portable fallback/);
   assert.match(content, /Try It In 60 Seconds/);
   assert.match(content, /project-tiny-context-harness-demo/);
 }
+
+assert.match(spec, /ABCD dependency chain/);
+assert.match(spec, /downstream D/i);
+assert.match(spec, /upstream A\/B/i);
+assert.match(spec, /repo-owned intent layer/i);
+assert.match(spec, /Context7 and Serena/i);
+assert.match(spec, /Spec Kit, BMAD, Superpowers and Task Master/i);
+assert.match(spec, /cannot decide whether that is allowed project intent/i);
+assert.match(minimalContextRationale, /ABCD dependency chain/);
+assert.match(minimalContextRationale, /repo-owned intent layer/i);
+assert.match(contextModel, /repo-owned intent layer/i);
+assert.match(contextModel, /current-code convenience/i);
 
 assert.match(contributing, /Minimal Context Harness/);
 assert.match(contributing, /Do not reintroduce lifecycle phases/);

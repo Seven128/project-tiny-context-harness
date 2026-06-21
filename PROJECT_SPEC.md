@@ -4,7 +4,9 @@ This document explains the stable product direction, design rationale and packag
 
 ## Product Goal
 
-Project Tiny Context Harness helps AI coding agents deliver requirements projects more efficiently by preserving the minimum durable context needed for recovery, iteration, debug and requirement changes.
+Project Tiny Context Harness helps AI coding agents deliver requirements projects more efficiently by preserving the minimum durable context and priority workflow needed for recovery, iteration, debug and requirement changes.
+
+The product is not just a place to store project memory. It is a repo-native context contract: compact durable facts plus explicit read order, fact-source authority, context-first/code-first decision rules and drift checks so agents keep Context, implementation and verification evidence aligned.
 
 Efficiency is not first-turn code generation speed. The target is same-quality delivery over a project lifecycle:
 
@@ -40,6 +42,29 @@ Default non-goals:
 
 Harness now maintains context quality, not project test quality. Product quality is proven by the project’s own tests, smoke checks, hidden probes, CI, review and human acceptance.
 
+## Current Best Practice
+
+Short-running tasks use the workflow contract plus Context layer directly:
+
+```text
+workflow contract + Context layer -> implementation -> verification -> drift check
+```
+
+Long-running tasks need an externalized acceptance target before implementation:
+
+```text
+Web GPT or external planning model produces a plan
+-> plan acceptance checklist Skill produces a goal/target-mode prompt
+-> Superpowers derives concrete implementation slices
+-> each slice follows the workflow contract + Context layer
+```
+
+Here Superpowers means the specific [obra/Superpowers](https://github.com/obra/superpowers) plugin/workflow. If the source plan or target-mode prompt is not executable enough, `superpowers:writing-plans` turns it into a bite-sized implementation plan; `superpowers:subagent-driven-development` is preferred when subagents are available; `superpowers:executing-plans` is the non-subagent fallback; `superpowers:test-driven-development` applies to behavior changes.
+
+The reason is practical rather than ceremonial. The workflow contract and Context layer are soft constraints. They work well for short tasks because the agent can keep Context, implementation and verification evidence aligned inside one manageable execution loop. In long-running tasks, Context can still capture the expected facts, but the Context-to-code step tends to drift as the context window grows, handoffs accumulate, subagents split work and verification loops multiply. The Web GPT plan, goal/target-mode prompt, full acceptance checklist and Superpowers execution layer externalize the completion target so later execution can recover, audit and continue without turning Minimal Context back into a phase-gated workflow.
+
+中文对照：短程任务直接用流程契约 + Context 层；长程任务先用 Web GPT 或外部规划模型产出方案，再用计划验收清单 Skill 生成目标模式文本，并用 Superpowers 落成执行切片。原因是 Context 到代码 这一步在长程任务中更容易漂移。
+
 ## Why Minimal Context / 为什么是最小上下文
 
 The stage-based Harness was built from a reasonable premise: if an agent explicitly writes requirements, design, architecture, implementation notes, review evidence, test reports, release notes and RFCs, then later agents should miss less and recover faster.
@@ -51,7 +76,7 @@ Benchmark pilots changed the default product judgment:
 - Modern coding agents have internalized much of the ordinary single-task loop: understanding a compact requirement, choosing a local design, editing code, running tests and repairing simple failures.
 - For ordinary and medium-complexity work, forcing a full Tiny Context document chain duplicates work the model can already do well.
 
-The part that remains clearly valuable is not the ceremony itself. It is durable, compact context that survives a new conversation:
+The part that remains clearly valuable is not the ceremony itself. It is durable, compact context and priority discipline that survive a new conversation:
 
 - project goal
 - non-goals
@@ -60,10 +85,14 @@ The part that remains clearly valuable is not the ceremony itself. It is durable
 - product/domain area responsibilities
 - code entry points
 - critical repeat-execution verification paths
+- Context/code/evidence authority
+- context-first versus code-first decision rules
 - current state
 - next safe action
 
 Those facts are hard to recover from code or comments alone and expensive to re-explain every time. Source code is the best record of current behavior, and focused comments can clarify local implementation intent, but they do not reliably preserve durable product intent, non-goals, ownership boundaries, architecture constraints, accepted verification paths, or the reason a current implementation shape should not automatically become project intent.
+
+The motivating failure mode is an ABCD dependency chain. If A/B/C are upstream of downstream D, a D feature can expose a missing capability. A coding agent can make the feature pass by editing upstream A/B when the current code makes that path available. That may be correct, or it may be boundary drift: perhaps D should adapt locally, perhaps C's contract should change, or perhaps the product really needs a durable upstream capability change. Code retrieval, semantic editing and test execution can expose the available path, but they cannot decide whether that is allowed project intent. Minimal Context therefore acts as a repo-owned intent layer: module ownership, dependency direction, allowed/forbidden upstream changes, Context/code/evidence priority and `Context Delta` handling are durable facts before they are implementation conveniences.
 
 Therefore the current design keeps the product goal unchanged, but narrows the default mechanism:
 
@@ -75,7 +104,7 @@ Therefore the current design keeps the product goal unchanged, but narrows the d
 - move implementation narration into code comments, tests and short module constraints;
 - make richer process artifacts and strict gates conditional, not default.
 
-In short: Harness no longer tries to externalize the whole Tiny Context by default. It maintains the minimum durable context needed for recovery and continuation. The design question is not which human software-engineering phase should own a document; it is what smallest recovery surface lets an agent understand and continue the whole delivery loop without re-creating phase artifacts that the model can already reason through internally.
+In short: Harness no longer tries to externalize the whole Tiny Context by default. It maintains the minimum durable context and priority workflow needed for recovery and continuation. The design question is not which human software-engineering phase should own a document; it is what smallest recovery surface and authority model lets an agent understand and continue the whole delivery loop without re-creating phase artifacts that the model can already reason through internally.
 
 ## Core Terms
 
@@ -120,11 +149,13 @@ The implementation design follows from how agents actually run. A coding agent d
 - The Surface Contract compiler turns broad product/page/UI principles into project-owned Context when a user explicitly asks for Product Surface Contract work or when surface ownership is unclear.
 - Task-contract compilation turns broad principles and applicable module design into task-local constraints before implementation, while `Context Delta` prevents a second durable-fact decision point.
 - Temporary plan surfaces can keep the workflow contract visible during complex per-turn or short-horizon work, lowering the chance that implementation drifts away from Context priority; durable facts discovered there must be extracted back to Context.
-- The plan acceptance checklist compiler can help before long-running execution by externalizing the acceptance bar once. When the plan already contains an explicit concrete checklist, the compiler reuses that checklist verbatim instead of generating a new one, while keeping the copied plan and checklist as separate temporary files. Its generated goal/target-mode prompt may require a local audit so a future executor can resume acceptance progress, but the full checklist remains the acceptance authority and any compact prompt summary is only navigation and priority guidance. Each concrete execution slice still follows the repository's Tiny Context workflow contract and any Task Contract or `plan.md` in force.
+- The plan acceptance checklist compiler can help before long-running execution by externalizing the acceptance bar once. A Web GPT or external planning pass can produce the source plan, the checklist compiler turns that plan into the goal/target-mode prompt, and Superpowers turns the target into concrete implementation slices through `writing-plans`, `subagent-driven-development` when subagents are available, `executing-plans` otherwise, and `test-driven-development` for behavior changes. When the plan already contains an explicit concrete checklist, the compiler reuses that checklist verbatim instead of generating a new one, while keeping the copied plan and checklist as separate temporary files. Its generated goal/target-mode prompt may require a local audit so a future executor can resume acceptance progress, but the full checklist remains the acceptance authority and any compact prompt summary is only navigation and priority guidance. Superpowers review and finish skills remain useful execution checks, but they cannot override the full checklist. Each concrete execution slice still follows the repository's Tiny Context workflow contract and any Task Contract or `plan.md` in force.
 - Contract Conformance and Context drift checks create a final self-check without storing one-off evidence as long-lived Context.
 - `validate-context`, tests and package source checks enforce only the boundaries that are appropriate for Minimal Context: recoverability, generated-asset consistency and absence of fake verification claims.
 
 One design premise is that the package layer must preserve Tiny Context's own responsibility boundary: it can provide workflow contracts, fact-source authority and broad reusable principles, but it cannot know each project's business-specific surface answers. Those broad principles are therefore not a silver bullet. Because the package often lacks the information needed to choose the single expected convergence path, relying on an agent's open-ended reasoning to derive that path is unreliable. Managed Skills and optional project-local Skills exist to give agents a clearer, more concrete thinking path while leaving the actual product facts in project Context.
+
+Adjacent high-star context and agent-workflow projects solve useful neighboring problems, but they do not remove the need for this repo-owned intent layer. Context7 and Serena improve external documentation retrieval, symbol-aware code navigation, editing and refactoring. Spec Kit, BMAD, Superpowers and Task Master improve specification, role workflow, execution discipline or task state. Those tools can show the agent more information or make execution more disciplined, but in the ABCD example they still do not answer whether downstream D may edit upstream A/B, whether C's contract is the right boundary, or whether the task requires `Context Delta: required`. Tiny Context should therefore stay complementary: use those tools for planning, retrieval and execution; use `project_context/**` for durable project intent, module boundary facts and Context/code/evidence priority.
 
 This mental model is intentionally lighter than the historical stage workflow. Its goal is to make the Harness easy to use and reason about: users do not need to follow a ceremony, but they can predict the behavior the Harness is trying to induce in agents.
 
@@ -454,7 +485,7 @@ The development engineer Skill exists to keep technical intent recoverable when 
 - The scan also treats repeated, deterministic, easy-to-miss or order-sensitive manual workflows as repo-local tool/script opportunities: scripts belong in the owning module's tool area with tests, while recoverable entry points, parameter constraints and applicability boundaries belong in verification/deployment Context rather than in provider-specific Skill text or one-off evidence notes.
 - It should default to stable, high-value, low-risk changes and leave speculative architecture for explicit user direction or stronger project evidence.
 
-The plan acceptance checklist compiler Skill exists because long-running work fails most often when the execution target is ambiguous, not when the agent lacks another phase document:
+The plan acceptance checklist compiler Skill exists because long-running work fails most often when the execution target is ambiguous, not when the agent lacks another phase document. Tiny Context deliberately keeps Context read order, Context/code priority and drift checks as prompt-level soft constraints rather than machine-enforced gates. That is usually enough for short tasks, but on long tasks with large context windows, execution drift is expected; the amount of drift grows with task length, complexity and handoff pressure. The goal/target-mode prompt and full acceptance checklist compensate for this specific weakness by externalizing one falsifiable completion target before execution while still avoiding a restored phase workflow:
 
 - It triggers only when the user provides or references a plan, RFC, implementation proposal or milestone plan and asks for acceptance criteria, a completion definition or a goal/target-mode prompt.
 - It copies the source plan into `tmp/ty-context/plan-acceptance/**` and writes any full checklist there as temporary execution input, never into `project_context/**`.
@@ -462,6 +493,7 @@ The plan acceptance checklist compiler Skill exists because long-running work fa
 - It combines the plan, relevant Context and real repository surfaces into falsifiable acceptance items with explicit evidence and invalidation rules.
 - Its full checklist is the complete acceptance standard for target-mode execution. Compact prompt summaries can repeat high-priority items for recovery, but they do not override checklist details.
 - Its generated goal/target prompt includes a standard resource lifecycle line: Chinese prompts use `可多开agent，agent名额不够了就关掉不用的。`, while English prompts use an equivalent instruction to use multiple agents and close idle or unnecessary agents when slots run low.
+- Its generated goal/target prompt names Superpowers as the recommended long-task execution layer: install it through the current platform's official Superpowers path when missing; record installation blockers in the local audit rather than treating them as completion; use `superpowers:writing-plans` if the plan is not bite-sized, `superpowers:subagent-driven-development` when subagents are available, `superpowers:executing-plans` otherwise, and `superpowers:test-driven-development` for behavior changes.
 - Its generated goal/target prompt may require a local audit under `tmp/ty-context/plan-acceptance/**` for long-running execution recovery. The audit records overall status, per-AC evidence, commands, artifacts, blockers and invalid evidence, but cannot prove completion by itself.
 - It keeps target-mode acceptance progress above per-turn execution: when an executor works any acceptance item, the executor still follows the project's Tiny Context workflow contract, including Context reads, `Context Delta` handling, Task Contracts and workflow-contract `plan.md` when applicable.
 - It uses a confirmation gate when the plan would silently encode new durable product, architecture, API, state, security or verification assumptions.

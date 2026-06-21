@@ -38,9 +38,17 @@ The goal/target-mode prompt must be no longer than 3850 characters, including li
 
 ```text
 实施计划: tmp/ty-context/plan-acceptance/<plan>.md（source/implementation plan，非验收证明）
-可多开agent，agent名额不够了就关掉不用的。
 完整验收清单: tmp/ty-context/plan-acceptance/<plan>-acceptance-checklist.md（该文件是完整验收标准，验收以这个为准。完成前必须逐项检查，不满足则继续实现。）
 执行审计: tmp/ty-context/plan-acceptance/<plan>-local-audit.md（临时 progress state，非 Context/proof）
+可多开agent，agent名额不够了就关掉不用的。
+如果 Superpowers 未安装，先按当前平台官方 Superpowers 安装路径安装；若安装被权限/网络/平台限制阻塞，写入执行审计，不得把阻塞当完成。
+如果 Superpowers 已安装，使用 Superpowers 执行本任务：
+- 先读完整验收清单，验收以它为准；compact prompt 只负责 direction/priority/recovery navigation
+- 若实施计划不够可执行，用 superpowers:writing-plans 转成 bite-sized implementation plan
+- 有 subagent 支持时优先用 superpowers:subagent-driven-development；否则用 superpowers:executing-plans
+- 行为变更使用 superpowers:test-driven-development；先写失败测试并观察失败，再写最小实现
+- review / finish 不能覆盖完整验收清单；完整验收清单不满足则继续实现
+- 每轮执行后更新 local audit，记录 AC 状态、当前证据、命令结果、blocker、deferred/narrowed scope、无效证据
 <验收清单>
 ```
 
@@ -48,9 +56,17 @@ For English requests, use this shape:
 
 ```text
 Plan: tmp/ty-context/plan-acceptance/<plan>.md (implementation/source plan, not acceptance proof)
-You may use multiple agents; if agent slots run low, close idle or unnecessary agents.
 Full checklist: tmp/ty-context/plan-acceptance/<plan>-acceptance-checklist.md (complete acceptance standard; acceptance is judged against it; every item must be checked before completion)
 Local audit: tmp/ty-context/plan-acceptance/<plan>-local-audit.md (temporary execution/progress state, not Context or proof)
+You may use multiple agents; if agent slots run low, close idle or unnecessary agents.
+If Superpowers is not installed, install it through the current platform's official Superpowers installation path first; if installation is blocked by permissions, network or platform limits, record it in local audit and do not treat the blocker as completion.
+If Superpowers is installed, Use Superpowers for this task:
+- Read the full checklist first; acceptance is judged against it, while the compact prompt only provides direction, priority and recovery navigation.
+- If the implementation plan is not executable enough, use superpowers:writing-plans to convert it into a bite-sized implementation plan.
+- Prefer superpowers:subagent-driven-development when subagents are available; otherwise use superpowers:executing-plans.
+- Use superpowers:test-driven-development for behavior changes; write a failing test, observe it fail, then write the minimal implementation.
+- review / finish cannot override the full checklist; if the full checklist is not satisfied, continue implementation.
+- update local audit after each execution round with AC status, current evidence, command results, blockers, deferred/narrowed scope and invalid evidence.
 <acceptance checklist>
 ```
 
@@ -453,12 +469,14 @@ Hard requirements:
 - The prompt must be no longer than 3850 characters including line breaks. Treat 3850 as the effective hard budget and preserve information density; do not drop required paths, core acceptance categories, blocker rules, evidence rules or false-completion traps merely to be short.
 - The first line must identify the plan path.
 - Use `实施计划: <path>` for Chinese prompts and `Plan: <path>` for English prompts. The line must say the plan is the implementation/source plan and not acceptance proof.
-- The second line must be a resource lifecycle instruction: `可多开agent，agent名额不够了就关掉不用的。` for Chinese prompts or `You may use multiple agents; if agent slots run low, close idle or unnecessary agents.` for English prompts.
+- The prompt must identify the full checklist path immediately after the plan path and say it is the complete acceptance standard. Chinese prompts must include this exact sentence: `该文件是完整验收标准，验收以这个为准。完成前必须逐项检查，不满足则继续实现。` English prompts must say the full checklist is the complete acceptance standard, acceptance is judged against it, and every item must be checked before completion.
+- The prompt must identify a local audit path, normally `tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md`, and require the future executor to read it before resuming, keep it current during execution, and use it only as target-mode acceptance progress state.
+- After the plan/checklist/audit paths, include a resource lifecycle instruction: `可多开agent，agent名额不够了就关掉不用的。` for Chinese prompts or `You may use multiple agents; if agent slots run low, close idle or unnecessary agents.` for English prompts.
+- The prompt must include a Superpowers execution block. If Superpowers is not installed, tell the executor to install it through the current platform's official Superpowers installation path; if installation is blocked by permissions, network or platform limits, record it in local audit and do not treat the blocker as completion. If Superpowers is installed, Use Superpowers for this task.
+- The Superpowers block must require: read the full checklist first and make it the acceptance authority; use `superpowers:writing-plans` when the plan is not executable enough; prefer `superpowers:subagent-driven-development` when subagents are available; otherwise use `superpowers:executing-plans`; use `superpowers:test-driven-development` for behavior changes; review / finish cannot override the full checklist; update local audit after each execution round.
 - The remaining content must be the acceptance checklist or a compact version of it.
 - The prompt must be self-contained enough for goal/target-mode execution.
-- The prompt must identify the full checklist path and say it is the complete acceptance standard. Chinese prompts must include this exact sentence: `该文件是完整验收标准，验收以这个为准。完成前必须逐项检查，不满足则继续实现。` English prompts must say the full checklist is the complete acceptance standard, acceptance is judged against it, and every item must be checked before completion.
 - If the prompt uses a compact checklist summary, say the full checklist owns details and acceptance authority; the compact summary owns direction, priority and recovery navigation; overlap is allowed; conflicts are resolved in favor of the full checklist.
-- The prompt must identify a local audit path, normally `tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md`, and require the future executor to read it before resuming, keep it current during execution, and use it only as target-mode acceptance progress state.
 - The prompt must require the local audit to record overall status (`complete`, `incomplete`, `blocked` or `narrowed-scope-complete`), each core AC status and current evidence, commands with result/time/failure reason, artifact or evidence paths, blockers and missing evidence, acceptance impact, explicit deferred or narrowed scope, and stale/partial/smoke/dry-run/research evidence that cannot prove full completion.
 - The prompt must say that local audit is not Context, not product-quality proof, not a global task manager, and not a replacement for project tests, CI, review, human acceptance, Task Contract or workflow-contract `plan.md`.
 - The prompt must say that when a Task Contract or workflow-contract `plan.md` exists, each acceptance item execution still follows it and the repository's Tiny Context workflow contract.
@@ -473,10 +491,19 @@ Recommended compact Chinese prompt shape:
 
 ```text
 实施计划: tmp/ty-context/plan-acceptance/<plan-slug>.md（source/implementation plan，非验收证明）
-可多开agent，agent名额不够了就关掉不用的。
 完整验收清单: tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md（该文件是完整验收标准，验收以这个为准。完成前必须逐项检查，不满足则继续实现。）
 执行审计: tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md（临时 progress state，非 Context/proof）
+可多开agent，agent名额不够了就关掉不用的。
 本摘要只负责 direction/priority/recovery navigation；允许与完整 checklist 重叠，冲突时以完整 checklist 为准。
+
+如果 Superpowers 未安装，先按当前平台官方 Superpowers 安装路径安装；若安装被权限/网络/平台限制阻塞，写入执行审计，不得把阻塞当完成。
+如果 Superpowers 已安装，使用 Superpowers 执行本任务：
+- 先读完整验收清单，验收以它为准
+- 若实施计划不够可执行，用 superpowers:writing-plans 转成 bite-sized implementation plan
+- 有 subagent 支持时优先用 superpowers:subagent-driven-development；否则用 superpowers:executing-plans
+- 行为变更用 superpowers:test-driven-development；先写失败测试并观察失败，再写最小实现
+- review / finish 不能覆盖完整验收清单；不满足则继续实现
+- 每轮执行后更新 local audit，记录 AC 状态、证据、命令结果、blocker、deferred/narrowed scope、无效证据
 
 验收清单：
 AC1 <核心完成定义，包含验收证据>
@@ -501,10 +528,19 @@ Recommended compact English prompt shape:
 
 ```text
 Plan: tmp/ty-context/plan-acceptance/<plan-slug>.md (implementation/source plan, not acceptance proof)
-You may use multiple agents; if agent slots run low, close idle or unnecessary agents.
 Full checklist: tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md (complete acceptance standard; acceptance is judged against it; every item must be checked before completion)
 Local audit: tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md (temporary progress state, not Context or proof)
+You may use multiple agents; if agent slots run low, close idle or unnecessary agents.
 This summary is only direction, priority and recovery navigation; overlap with the full checklist is allowed, and the full checklist wins conflicts.
+
+If Superpowers is not installed, install it through the current platform's official Superpowers installation path first; if installation is blocked by permissions, network or platform limits, record it in local audit and do not treat the blocker as completion.
+If Superpowers is installed, Use Superpowers for this task:
+- Read the full checklist first; acceptance is judged against it.
+- If the plan is not executable enough, use superpowers:writing-plans for a bite-sized implementation plan.
+- Prefer superpowers:subagent-driven-development when subagents are available; otherwise use superpowers:executing-plans.
+- Use superpowers:test-driven-development for behavior changes; write a failing test, observe failure, then implement minimally.
+- review / finish cannot override the full checklist; if unsatisfied, continue implementation.
+- update local audit after each execution round with AC status, evidence, command results, blockers, deferred/narrowed scope and invalid evidence.
 
 Acceptance checklist:
 AC1 <core completion definition with required evidence>
