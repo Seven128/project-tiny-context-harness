@@ -94,7 +94,7 @@ That smoke packs the local workspace, installs it into a disposable repo, runs `
 ```sh
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.2.59.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.2.60.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -270,7 +270,9 @@ The default Skills are Minimal Context helpers for explicit product-planning, UI
 
 Multilingual trigger phrases are compatibility details. Public README, npm and launch copy stay English-first, and public/package-managed surfaces must remain English-complete; literal non-English examples are documented only where they explain generated Skill matching and must not be the sole activation path.
 
-For product, UI/UX and engineering tasks that touch design intent, API/Schema, state/runtime behavior, architecture boundaries or verification design, the default Skills compile a short current-task contract before implementation. The contract starts with `Context Delta: none|required`; `required` preserves context-first behavior, while `none` means the task can proceed against existing Context. For engineering, RFC and implementation work, the existing Task Contract also includes `Modularity Check: none|required|exception` so oversized touched files trigger split-or-exception reasoning. For module design work, the development engineer Skill also compiles `Applicable Module Design`: the relevant principles, minimal design logic and durable rationale that control the current implementation or verification choice. The task contract and Contract Conformance are handoff evidence, not new PRD, tech-plan, validator or gate surfaces.
+For high-risk product, UI/UX and engineering tasks that affect durable architecture or module ownership, API/Schema/data contracts, state/runtime behavior, dependency direction, verification/deployment semantics or design-rationale tradeoffs, the default Skills compile a short current-task contract before implementation. The contract starts with `Context Delta: none|required`; `required` preserves context-first behavior, while `none` means the task can proceed against existing Context. It can name `Architecture Context Hit` and `Decision Rationale Hit: existing|required|none` so agents explicitly check the controlling Context and rationale state. When module design principles are relevant, the same contract still uses `Applicable Module Design` for the principles, design logic and rationale controlling the current choice. For engineering, RFC and implementation work, the existing Task Contract still includes `Modularity Check: none|required|exception` so oversized touched files trigger split-or-exception reasoning without becoming an architecture gate. Ordinary bug fixes, local styling, small refactors, package/release chores, test repairs and spikes are not forced into architecture/rationale ceremony unless they produce durable facts. The task contract and Contract Conformance are handoff evidence, not new PRD, tech-plan, ADR, implementation-document, validator or gate surfaces.
+
+Technical architecture support is a Minimal Context capability: use restrained `architecture.md`, area Module Design Capsules and existing `contract` / `decision-rationale` roles when durable architecture or rationale matters. Do not invent rationale; store stable reasons, rejected alternatives or tradeoffs only in the smallest durable Context surface when they will affect future implementation or verification choices.
 
 For long-running plans, RFCs or implementation proposals, the plan acceptance checklist compiler can turn a plan plus relevant Context into a falsifiable acceptance checklist and a paste-ready goal/target-mode prompt. This is one pre-execution acceptance pass, not a task planner or workflow engine: it stores temporary inputs under `tmp/ty-context/plan-acceptance/**`, asks for confirmation when durable assumptions are unclear, and leaves execution evidence to the future executor, tests, CI, review or human acceptance. The generated prompt may require a local audit under the same temporary directory so future sessions can recover acceptance progress; that audit is not Context, not a quality proof and not a replacement for the project's Tiny Context workflow contract.
 
@@ -402,7 +404,7 @@ Examples:
 - project goal
 - non-goals / boundaries
 - background
-- design rationale, including former ADR-level decisions that still matter
+- project-wide design rationale, including former ADR-level decisions, rejected alternatives and tradeoffs that still matter
 - architecture context link
 - product / delivery brief for durable product goals, users, flows and acceptance signals
 - UX / screen brief for durable screen, interaction, responsive and accessibility facts
@@ -416,7 +418,7 @@ Examples:
 - system boundary
 - component map
 - data / control flow
-- architecture-level design rationale
+- architecture-level design rationale, rejected alternatives and tradeoffs
 - constraints and tradeoffs
 - verification implications
 - open risks
@@ -434,7 +436,9 @@ Examples:
 - related role context pointers
 - open risks
 
-A module design capsule should stay small and decision-shaped: `Principles` are stable execution constraints, `Design Logic` is the minimum choose/reject/degrade/compose logic, and `Design Rationale` keeps only reasons that change later implementation or verification decisions. Current thresholds, commands and probe parameters belong in the relevant contract or verification Context as execution instances, not as permanent principles.
+A module design capsule should stay small and decision-shaped: `Principles` are stable execution constraints, `Design Logic` is the minimum choose/reject/degrade/compose logic, and `Design Rationale` keeps only reasons, rejected alternatives and tradeoffs that change later implementation or verification decisions. Current thresholds, commands and probe parameters belong in the relevant contract or verification Context as execution instances, not as permanent principles.
+
+Use the smallest durable rationale surface: project-wide tradeoffs in `global.md#Design Rationale`, architecture choices in `architecture.md#Design Rationale`, module reasons in an area Module Design Capsule, cross-domain interface rationale in `contract` role Context, larger cross-cutting reasons in `decision-rationale`, and visual identity or token rationale in `DESIGN.md`. Do not record implementation summaries, PR notes, command output, test-passed claims, screenshot review notes, debug history, agent reasoning or rationale inferred only from current code shape.
 
 Additional Markdown context files under `project_context/**` can declare `context_role` in front matter or receive a role from `context.toml`. Roles are semantic labels that help agents choose when and how to read context; `validate-context` checks graph structure, paths and field shapes rather than enforcing a writing template for each role:
 

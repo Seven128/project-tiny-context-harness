@@ -20,15 +20,15 @@ Project-specific engineering rules belong in a separate project-local Skill unde
 1. 先读取 `project_context/global.md`、`project_context/architecture.md` 和 `project_context/context.toml`，按 default area、triggers、read_when 选择相关 context。
 2. 先确认用户目标、约束、成功标准、影响产品域、现有验证 / 部署关键路径和风险；能从代码或 Context 发现的事实不要反复询问用户。
 3. `project_context/**` 决定“应该是什么”：模块职责、归属、架构边界、接口方向、契约语义和禁止依赖；代码决定“现在实现到了哪里”。代码不能静默重定义 Context。
-4. 第一处代码编辑前，若任务涉及系统设计、技术方案、架构边界、产品域职责、跨域依赖、API / Schema、模块设计原则、数据契约、状态机或运行语义、验证关键路径或部署关键路径，先编译当前任务契约；契约第一段用 `Context Delta: none|required` 完成唯一正式长期事实判断，再写本次 `Task Contract`。
-5. 普通 bug fix、局部样式、局部实现漂移修复、测试修复或探索性 spike 不更新 Context，可先改代码；一旦形成长期工程结论，继续对齐或交付前必须回写 Context。不要把 Context 机械补成代码改动摘要。
+4. 第一处代码编辑前，若任务影响 durable architecture boundary、module ownership、API / Schema / data contract、state / runtime semantics、dependency direction、verification / deployment semantics 或 durable rationale / tradeoff，先编译当前任务契约；契约第一段用 `Context Delta: none|required` 完成唯一正式长期事实判断，再写本次 `Task Contract`，并显式写 `Architecture Context Hit` 和 `Decision Rationale Hit: existing|required|none`。
+5. 普通 bug fix、局部样式、局部实现漂移修复、小重构、package/release 处理、测试修复或探索性 spike 不强制编译架构 / rationale 任务契约，也不更新 Context；一旦形成长期工程结论，继续对齐或交付前必须回写 Context。不要把 Context 机械补成代码改动摘要。
 6. 如果代码、搜索结果或相邻实现与 Context 冲突，显式标记为实现漂移、缺失工作或 Context 过期，不要用当前代码形态反推模块归属。
 7. 涉及已有 Context 的实现判断，先做轻量对齐：
    - Context expectation
    - Current code evidence
    - Gap
    - Proposed change
-8. 涉及模块原则、模块逻辑、设计原因、API / Schema、状态语义、验证设计或 capability / metric / acceptance claim 时，先做 Module Principle / Design Gate：列出命中的模块设计上下文来源，说明这些原则 / 逻辑控制本次哪些实现或验证选择，再选择实现路径、验证 claim、probe 参数或 fallback。命令、probe 和当前实现形态是执行实例，不能反推或覆盖模块设计目标。
+8. 涉及模块原则、模块逻辑、设计原因、API / Schema、状态语义、验证设计或 capability / metric / acceptance claim 时，先做 Module Principle / Design Gate：列出命中的模块设计上下文来源，说明这些原则 / 逻辑控制本次哪些实现或验证选择，再选择实现路径、验证 claim、probe 参数或 fallback。命令、probe、当前实现形态和被触碰文件大小是执行实例或维护风险，不能反推或覆盖模块设计目标。
 9. 涉及 Product Surface（Web 页面、移动/桌面屏幕、游戏 UI/HUD/菜单、CLI/TUI 输出、扩展或设备界面）、表单/配置、输入、选择、搜索、筛选、调度/时间、预算/配额/限流或状态反馈的实现方案时，检查当前代码是否只是暴露字段，还是满足了已有 Context、Surface Contract、页面职责和控件任务框架；实现收尾要能给出简短 Surface/Context Conformance 证据。
    - 若存在 Product Surface Contract，Task Contract 必须包含 Surface Contract Hit、main allows/forbids、drilldown ownership、long-task state requirement、implementation drift 和 verification。
    - 若缺失且本任务创建 durable surface responsibility，设置 `Context Delta: required`，先用 `context_surface_contract` 或项目 Context 写入具体 surface 职责，再继续实现。
@@ -68,6 +68,9 @@ Project-specific engineering rules belong in a separate project-local Skill unde
   - `none`：本次只是按既有 Context / 架构原则落地，不新增长期事实。
   - `required`：说明长期事实类型、应写入的 Context / role、需要沉淀的事实，以及明确不写入 Context 的一次性内容。
 - `Task Contract` 用短列表说明 capability、owner、upstream / downstream、allowed / forbidden dependency、input / output / state / persistence、failure / retry / timeout / degraded / recovery、observability、performance、security、non-goals 和 verification path。
+- 高风险工程任务只新增这两个显性 Task Contract 字段，不新增长模板或第二套 durable-fact gate：
+  - `Architecture Context Hit: <architecture.md | area/subdomain Context | contract Context | Module Design Capsule | none>`：命名控制本次技术判断的 Context。若命中 `none` 且本任务创建 durable architecture meaning，`Context Delta` 必须是 `required`。
+  - `Decision Rationale Hit: <existing | required | none>`：`existing` 表示现有 Context 已解释 durable reason；`required` 表示本任务创建或改变 durable rationale、rejected alternative、tradeoff 或 future-change constraint，必须走 `Context Delta: required`；`none` 表示没有稳定 rationale 或变化局部且自明。
 - 触及 Product Surface 时，`Task Contract` 同时说明 surface platform、primary user question、main allows/forbids、drilldown ownership、long-task state requirement、implementation drift 和 conformance verification。
 - 工程 / RFC / 实现类任务的 `Task Contract` 必须包含 `Modularity Check: none|required|exception`：
   - `none`：没有超限计划 / touched 手写源码文件，或本次没有向超限文件增加新职责。
@@ -79,14 +82,14 @@ Project-specific engineering rules belong in a separate project-local Skill unde
 - `plan.md` 中出现的长期工程事实必须提炼回 `project_context/**`；否则不要把临时计划当作事实源、交付产物或后续引用依据。
 - `Context Delta: required` 时先更新 `project_context/**`，再继续实现；`none` 时直接按 Task Contract 实现。
 - `Contract Conformance` 是交付前的软检查：实现偏差修实现，契约遗漏回 Task Contract，长期事实缺失回 `Context Delta` 并先更新 Context。
-- 不为普通代码修改、bug fix、小重构、package/release 处理、测试修复或探索性 spike 强制编译任务契约。
+- 不为普通代码修改、bug fix、小重构、package/release 处理、测试修复、探索性 spike 或仅因 touched file 过大强制编译架构 / rationale 任务契约；大文件只走 `Modularity Check` 的拆分 / exception 判断。
 
 ## 模块设计上下文写法
 
 - 模块设计上下文应是 Minimal Context，不是设计论文；只保留短、准、稳定、会影响后续实现或验证选择的内容。
-- `Principles` 写稳定执行约束；`Design Logic` 写模块如何判断、选择、降级或组合能力；`Design Rationale` 只写会改变后续判断的原因。
+- `Principles` 写稳定执行约束；`Design Logic` 写模块如何判断、选择、降级或组合能力；`Design Rationale` 只写会改变后续判断的原因、rejected alternative 或 tradeoff。
 - `Current Standard`、`Verification Paths`、阈值、命令和 probe 参数是当前执行实例，不是永久原则；规则变化时更新对应 Context，而不是让旧命令继续定义目标。
-- 一次性证据、历史过程、完整日志、临时 JSON、raw payload、测试报告和任务契约不进入高频模块原则段。
+- 不编造 rationale；仅由当前代码形态反推的理由、一次性证据、实现摘要、PR notes、命令输出、截图审查、debug 过程、agent reasoning、完整日志、临时 JSON、raw payload、测试报告和任务契约不进入高频模块原则段。
 
 ## 输出边界
 
@@ -98,11 +101,16 @@ Project-specific engineering rules belong in a separate project-local Skill unde
 ## 建议沉淀位置
 
 - `global.md#Design Rationale`：跨模块工程取舍。
+- `architecture.md#Design Rationale`：架构级选择、rejected alternatives 和 tradeoffs。
 - `global.md#Current State`：影响后续恢复的实现状态。
 - `areas/*.md#User / System Contract`：模块可见行为、API、CLI、UI 或数据契约。
+- `areas/*.md#Module Design Capsule`：模块级 principles、design logic 和会影响后续判断的 rationale。
 - `areas/*.md#Core Data / API / State`：关键数据结构、接口、状态流或规则。
 - `areas/*.md#Key Constraints`：性能、安全、兼容、集成或维护约束。
+- role=`contract` Context：跨域 API / schema / event / interface 语义及其 durable rationale。
+- role=`decision-rationale` Context：更大或跨切面的稳定设计原因。
 - `areas/*.md#Code Entry Points`：未来 agent 需要快速定位的代码入口。
 - `areas/*/verification.md` 或 role=`verification` Context：关键测试、smoke、CI、probe 或验证重复执行路径。
 - `areas/*/deployment.md` 或 role=`deployment` Context：关键部署、云端初始化、运行拓扑、健康检查或回滚重复执行路径。
+- `DESIGN.md`：视觉 identity、design token 和视觉 rationale。
 - `project_context/context.toml`：复杂项目的产品域 area/context_unit、role、触发词、按需读取策略和可选边界规则。

@@ -34,6 +34,7 @@ This file is the restrained architecture context for the source repository. It i
 - Minimal Context keeps only durable facts that improve recovery, iteration, debug and requirements changes.
 - Architecture deserves one small shared file because system boundaries and component relationships are cross-module facts that code alone can make slow to recover.
 - Context graph support is metadata-first: it improves read targeting and validation without turning Harness into a monorepo dependency analyzer or import/path scanner.
+- Prompt guidance, Context recoverability validation, source-sync drift checks and code modularity checks stay separate because each can only prove a different thing: expected agent behavior, recoverable Context shape, generated asset consistency or touched-source maintainability risk.
 - Legacy stage semantic migration support has been removed now that users have completed migration; Schema v4 upgrade migrations remain safe and narrow.
 
 ## Constraints And Tradeoffs

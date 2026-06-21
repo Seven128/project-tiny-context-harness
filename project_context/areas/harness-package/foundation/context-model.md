@@ -15,6 +15,7 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 - Durable facts are facts expected to guide later work, including product/domain ownership, surface responsibility, information architecture, API/schema semantics, state/runtime semantics, cross-domain boundaries and verification/deployment paths.
 - Workflow contract is prompt-level order of thought for handling Context, code, tests, temporary plans and one-off evidence in the right authority order. It is not a validator, phase gate or machine-enforced edit-order gate.
 - Task Contract is a temporary task-local compilation of relevant Context and principles into implementation constraints. It is not durable Context by default.
+- Architecture Context Hit and Decision Rationale Hit are task-local fields for high-risk Task Contracts. They name controlling Context and rationale state; they do not create architecture/rationale deltas, a second durable-fact gate, a Context role or a verification entry.
 - Temporary plan surfaces and target-mode local audits are execution cache. They may expose state for a running task, but they are not Context, product-quality proof or global task management.
 - Conformance is a handoff self-check against the relevant Context and task contract. It creates delivery evidence, not durable Context by itself.
 
@@ -46,9 +47,16 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 - `decision-rationale` Context owns stable reasons that still affect future choices.
 - `archive` Context owns non-default historical or external material.
 
+## Task Field Placement
+
+- `workflow-contract` records how task-local fields such as `Architecture Context Hit`, `Decision Rationale Hit`, `Context Delta` and `Modularity Check` are used during a task.
+- `decision-rationale` records stable reasons for adopting or rejecting mechanisms when those reasons still affect future implementation or verification choices.
+- The field names `Architecture Context Hit` and `Decision Rationale Hit` are not durable fact types and do not require entries in `project_context/context.toml`; use the existing owning Context role for the fact being recorded.
+
 ## Evidence Boundaries
 
 - Do not store one-off logs, command output, screenshots, CI artifacts, release ledgers, temporary JSON, raw payloads, secrets, tokens, cookies or test result claims in Context.
 - Do not copy full implementation summaries into Context when code, tests or comments are clearer.
+- Do not invent rationale. Stable rationale may record rejected alternatives or tradeoffs when they affect future choices, but not PR notes, debug history, agent reasoning or reasons inferred only from current code shape.
 - Do not register temporary exports, local audits, generated acceptance checklists or plan files in `project_context/context.toml`.
 - Use Context to shorten future recovery and guide decisions; use code/tests/runtime evidence to prove current behavior.

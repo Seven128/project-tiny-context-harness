@@ -107,7 +107,11 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
 - `global.md#UX / Screen Brief`：全局体验原则、主要屏幕、跨模块流程。
 - `areas/*.md#User / System Contract`：页面、组件、状态、交互和数据展示契约。
 - `areas/*.md#Key Constraints`：responsive、a11y、品牌/视觉边界、加载/空态/错误态约束。
+- role=`contract` Context：跨页面 / 跨域界面契约及其 durable rationale。
+- role=`decision-rationale` Context：更大或跨切面的稳定交互、信息架构或 surface ownership 取舍原因。
 - `areas/*/verification.md` 或 role=`verification` Context：UI smoke、截图验收、可访问性检查或项目自己的关键验证重复执行路径。
 - `areas/*/deployment.md` 或 role=`deployment` Context：前端部署、预览环境、运行拓扑或健康检查重复执行路径。
 - `project_context/context.toml`：复杂项目的产品域 area/context_unit、role、触发词、按需读取策略和可选边界规则。
-- `DESIGN.md`：视觉 identity、design tokens、组件视觉规则和 do/don't。
+- `DESIGN.md`：视觉 identity、design tokens、组件视觉规则、do/don't 和视觉 rationale。
+
+不要编造 rationale；仅由当前代码或截图形态反推的理由、实现摘要、PR notes、命令输出、测试通过声明、截图审查、debug 过程和 agent reasoning 不进入 Context 或 `DESIGN.md`。

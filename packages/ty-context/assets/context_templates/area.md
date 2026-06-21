@@ -17,7 +17,8 @@
 
 - Principles: stable execution constraints that should affect future module work.
 - Design Logic: the minimum logic for choosing, rejecting, degrading or composing module behavior.
-- Design Rationale: only durable reasons that change later implementation or verification decisions.
+- Design Rationale: only durable reasons, rejected alternatives and tradeoffs that change later implementation or verification decisions; leave it empty when no stable reason exists.
+- Do not invent rationale or store implementation summaries, PR notes, command output, test result claims, screenshot review notes, debug history, agent reasoning or reasons inferred only from current code shape.
 - Current standards, thresholds and commands belong in the relevant contract or verification Context, not as permanent principles.
 
 ## Key Constraints

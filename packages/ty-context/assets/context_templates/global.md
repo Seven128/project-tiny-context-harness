@@ -14,7 +14,9 @@
 
 ## Design Rationale
 
-- Record durable choices that are hard to infer from code or tests. Classify changes before implementation; if a change alters product ownership/plans, module responsibilities, information architecture, API/Schema, state/scheduler semantics, cross-area boundaries, verification role paths or deployment role paths, update Context before code with enough durable context to guide implementation.
+- Record only project-wide durable choices, rejected alternatives and tradeoffs that are hard to infer from code or tests and likely to affect future work. Leave this sparse when no stable reason exists.
+- Do not invent rationale or store implementation summaries, PR notes, command output, test result claims, screenshot review notes, debug history, agent reasoning or reasons inferred only from current code shape.
+- Classify changes before implementation; if a change alters product ownership/plans, module responsibilities, information architecture, API/Schema, state/scheduler semantics, cross-area boundaries, verification role paths or deployment role paths, update Context before code with enough durable context to guide implementation.
 
 ## Architecture Context
 

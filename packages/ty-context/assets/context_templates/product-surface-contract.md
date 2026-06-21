@@ -19,6 +19,7 @@ Write only project-specific facts that should guide future implementation. Do no
 - Main Surface Forbids:
 - Drilldown Ownership:
 - Long Task State Requirement:
+- Design Rationale:
 - Empty / Loading / Stale / Unavailable:
 - Security / Redaction:
 - Verification:
@@ -48,6 +49,7 @@ Update this Context when:
 - A surface responsibility changes.
 - Main/drilldown ownership changes.
 - A durable long-task state contract is introduced.
+- A durable main/drilldown/diagnostic ownership rationale, rejected alternative or tradeoff will guide future changes.
 - A repeated UI/product rule becomes reusable.
 - A platform-specific interaction rule becomes stable.
 
@@ -58,3 +60,4 @@ Do not update this Context for:
 - Temporary audit notes.
 - Test logs.
 - Local implementation summaries.
+- PR notes, command output, screenshot review notes, debug history, agent reasoning or rationale inferred only from current code shape.

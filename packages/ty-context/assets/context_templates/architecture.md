@@ -16,7 +16,9 @@ This is the restrained architecture context. Keep only facts that help a fresh a
 
 ## Design Rationale
 
-- Record architecture-level choices that still constrain future work; architecture boundary changes should be captured here before implementation alignment.
+- Record architecture-level choices, rejected alternatives and tradeoffs that still constrain future work; leave this empty when no stable architecture reason exists.
+- Do not invent rationale or store implementation summaries, PR notes, command output, test result claims, debug history, agent reasoning or reasons inferred only from current code shape.
+- Architecture boundary changes should be captured here before implementation alignment.
 
 ## Constraints And Tradeoffs
 

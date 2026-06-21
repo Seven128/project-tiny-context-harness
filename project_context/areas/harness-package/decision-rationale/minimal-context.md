@@ -31,6 +31,14 @@ This rationale explains why the current product direction is Minimal Context Har
 - Keep temporary plans and target-mode audits as execution cache, never as long-lived fact sources.
 - Keep tests, CI, review, smoke checks, hidden probes and human acceptance responsible for product quality.
 
+## Why Architecture And Rationale Support Stays Lightweight
+
+- Do not add `Architecture Delta` or `Rationale Delta`: separate delta fields would split durable-fact classification away from `Context Delta` and create a second gate with unclear ownership.
+- `Context Delta: none|required` remains the only long-term fact decision point. `Architecture Context Hit` routes the task to controlling Context, and `Decision Rationale Hit` states whether durable rationale is already covered, newly required or not applicable.
+- Record rationale only when it affects future implementation, verification or change decisions. Do not backfill reasons from current code shape alone, because code is implementation evidence, not proof of intended rationale.
+- Ordinary bug fixes, local styling, small refactors, package/release chores, test repairs and spikes do not require architecture/rationale ceremony unless they create or change durable facts.
+- Keep the architecture/rationale fields at prompt-level Task Contract scope. Validators can check recoverability, generated asset drift, fake verification claims and touched-source modularity, but they cannot prove whether a task needed new durable rationale or whether code edits happened in the right order.
+
 ## Historical Material Boundary
 
 `PROJECT_SPEC.md` keeps the complete design explanation and historical notes: why the stage workflow existed, how it worked, what benchmark work found and why the product converged to Minimal Context. This rationale Context keeps only the stable reasons that should affect future maintenance choices.

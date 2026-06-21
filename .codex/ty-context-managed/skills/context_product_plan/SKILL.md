@@ -81,9 +81,11 @@ Project-specific product planning rules belong in a separate project-local Skill
 ## 建议沉淀位置
 
 - `global.md#Product / Delivery Brief`：项目级产品目标、用户、核心流程和非目标。
-- `global.md#Design Rationale`：长期产品取舍。
+- `global.md#Design Rationale`：项目级长期产品取舍、rejected alternatives 和 tradeoffs；不要编造 rationale，也不要写实现摘要、PR notes、命令输出、测试通过声明、截图审查、debug 过程、agent reasoning 或仅由当前代码形态反推的理由。
 - `areas/*.md#User / System Contract`：产品域可见行为、API、CLI、UI 或数据契约。
 - `areas/*.md#Key Constraints`：业务规则、边界、风险和不易从代码看出的约束。
+- role=`contract` Context：跨域 API / schema / event / interface 语义及其 durable rationale。
+- role=`decision-rationale` Context：更大或跨切面的稳定产品设计原因。
 - `areas/*/verification.md` 或 role=`verification` Context：关键测试、smoke、CI、probe 或验证重复执行路径。
 - `areas/*/deployment.md` 或 role=`deployment` Context：关键部署、云端初始化、运行拓扑、健康检查或回滚重复执行路径。
 - `project_context/context.toml`：复杂项目的产品域 area/context_unit、role、触发词、按需读取策略和可选边界规则。

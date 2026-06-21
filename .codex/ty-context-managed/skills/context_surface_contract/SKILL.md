@@ -31,6 +31,8 @@ Use existing roles:
 
 Forbidden roles include `surface-contract`, `product-surface`, `web-contract`, `app-contract` and `game-surface`.
 
+Use `DESIGN.md` only for visual identity, visual tokens and visual rationale. Do not put surface responsibility, main/drilldown ownership or diagnostic placement into `DESIGN.md`.
+
 ## Mode Selection
 
 Use the narrowest mode that matches the request:
@@ -164,5 +166,6 @@ Final handoff should include concise `Surface Contract Conformance`: contract so
 - Do not create PRDs, UI/UX handoff docs, ADRs, stage artifacts, lifecycle state or phase gates.
 - Do not update Context for ordinary CSS tweaks, copy edits or one-off UI bug fixes unless durable surface responsibility changes.
 - Do not treat current backend fields, enums, JSON, screenshots or terminal output as product intent.
+- Do not invent rationale; rejected alternatives or tradeoffs belong in Context only when they are stable enough to affect future surface decisions.
 - Do not add a validator, edit-order gate or package-level mandatory Surface Contract gate.
 - Do not include business-domain examples in this package-managed Skill.
