@@ -34,8 +34,8 @@ export function help(): void {
   doctor               Diagnose project configuration and drift
   check-modularity --touched|--file <path>|--base <ref> [--limit 300] [--fail-on-warning]
                        Warn when selected handwritten source files exceed a line-count limit
-  export-context --full|--code|--all [--output <path>] [--check]
-                       Export a temporary Context summary or code implementation Markdown artifact
+  export-context --full|--code|--all|--source-pack|--code-index|--task-context
+                       Export temporary Context, code snapshot or bounded Source Pack artifacts
   validate <gate>      Run a Harness validation gate
   validate-context     Validate Minimal Context fact-source recoverability
   validate-code-modularity

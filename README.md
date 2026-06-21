@@ -94,7 +94,7 @@ That smoke packs the local workspace, installs it into a disposable repo, runs `
 ```sh
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.2.60.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.2.61.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -266,7 +266,7 @@ No. It checks that recovery facts exist and avoids fake test-result claims. Prod
 
 It should stay smaller than a full process. Ordinary bug fixes and local refactors do not update Context unless they produce durable product, architecture, API, state or validation facts.
 
-The default Skills are Minimal Context helpers for explicit product-planning, UI/UX-design, development-engineering, Product Surface Contract, full-project-export, Tiny Context upgrade and plan-acceptance-checklist requests. Product, screen-flow, surface responsibility and durable engineering conclusions go to `project_context/**`; visual identity and design tokens go to root `DESIGN.md`. Export artifacts are temporary files under `tmp/ty-context/context-exports/**`, not Context. Plan acceptance artifacts are temporary files under `tmp/ty-context/plan-acceptance/**`; they define completion criteria for a referenced plan but do not execute it or prove acceptance. The Harness upgrade Skill handles requests such as “upgrade Tiny Context” and “use the Tiny Context upgrade skill to upgrade this project” by following the release update mode, using `upgrade` for migration-bearing releases, and limiting manual cleanup to migration-scoped follow-up.
+The default Skills are Minimal Context helpers for explicit product-planning, UI/UX-design, development-engineering, Product Surface Contract, full-project-export, Tiny Context upgrade and plan-acceptance-checklist requests. Product, screen-flow, surface responsibility and durable engineering conclusions go to `project_context/**`; visual identity and design tokens go to root `DESIGN.md`. Export artifacts are temporary files under `tmp/ty-context/context-exports/**`, not Context. Plan acceptance artifacts are temporary files under `tmp/ty-context/plan-acceptance/**`; they define completion criteria for a referenced plan but do not execute it or prove acceptance. When a generated prompt references a full checklist, that checklist is the authoritative acceptance standard; the compact prompt summary is only navigation and priority guidance. The Harness upgrade Skill handles requests such as “upgrade Tiny Context” and “use the Tiny Context upgrade skill to upgrade this project” by following the release update mode, using `upgrade` for migration-bearing releases, and limiting manual cleanup to migration-scoped follow-up.
 
 Multilingual trigger phrases are compatibility details. Public README, npm and launch copy stay English-first, and public/package-managed surfaces must remain English-complete; literal non-English examples are documented only where they explain generated Skill matching and must not be the sole activation path.
 
@@ -274,7 +274,7 @@ For high-risk product, UI/UX and engineering tasks that affect durable architect
 
 Technical architecture support is a Minimal Context capability: use restrained `architecture.md`, area Module Design Capsules and existing `contract` / `decision-rationale` roles when durable architecture or rationale matters. Do not invent rationale; store stable reasons, rejected alternatives or tradeoffs only in the smallest durable Context surface when they will affect future implementation or verification choices.
 
-For long-running plans, RFCs or implementation proposals, the plan acceptance checklist compiler can turn a plan plus relevant Context into a falsifiable acceptance checklist and a paste-ready goal/target-mode prompt. This is one pre-execution acceptance pass, not a task planner or workflow engine: it stores temporary inputs under `tmp/ty-context/plan-acceptance/**`, asks for confirmation when durable assumptions are unclear, and leaves execution evidence to the future executor, tests, CI, review or human acceptance. The generated prompt may require a local audit under the same temporary directory so future sessions can recover acceptance progress; that audit is not Context, not a quality proof and not a replacement for the project's Tiny Context workflow contract.
+For long-running plans, RFCs or implementation proposals, the plan acceptance checklist compiler can turn a plan plus relevant Context into a falsifiable acceptance checklist and a paste-ready goal/target-mode prompt. This is one pre-execution acceptance pass, not a task planner or workflow engine: it stores temporary inputs under `tmp/ty-context/plan-acceptance/**`, asks for confirmation when durable assumptions are unclear, and leaves execution evidence to the future executor, tests, CI, review or human acceptance. The generated prompt may require a local audit under the same temporary directory so future sessions can recover acceptance progress; that audit is not Context, not a quality proof and not a replacement for the project's Tiny Context workflow contract. The full checklist is the acceptance authority, while any compact prompt summary exists for navigation, priority and recovery after context compaction.
 
 For Product Surface work, `context_surface_contract` turns broad product/page/UI principles into project-owned surface responsibilities. A Product Surface can be a Web page, mobile screen, desktop window, game UI/HUD/menu, CLI/TUI output, extension UI or embedded/device interface. Cross-surface contracts use the existing `contract` role; area-owned screen facts stay in `area` or `subdomain`; repeatable validation paths use `verification`. The Harness does not add a new surface-specific role, does not create business surface contracts during `init` or `upgrade`, and does not turn surface conformance into a validator gate. Projects that want mandatory task blocks should add a separate project-local Skill, while `product-surface-contract.md` is only a compact managed template for optional Context authoring.
 
@@ -343,6 +343,9 @@ Use `npx --no-install ty-context ...` only when you explicitly want the already 
 | `make ty-context-sync` or `npx --yes --package project-tiny-context-harness@latest ty-context sync` | Refreshes managed guidance, default Skills, Makefile include, tools and templates. It does not run migrations or generate project semantics; it may block only direct asset-refresh safety issues such as invalid managed blocks or deprecated managed Skill overrides. |
 | `make ty-context-upgrade` or `npx --yes --package project-tiny-context-harness@latest ty-context upgrade` | Use for releases marked `upgrade-required` or `manual-required`. Builds an upgrade plan, stops before writes when `blocked` items exist, otherwise applies `safe_pending` migrations, runs `sync` and `doctor`, and exits non-zero when manual follow-up or diagnostics remain. |
 | `npx --yes --package project-tiny-context-harness@latest ty-context upgrade --check [--json]` | Checks the upgrade plan without writing files. Reports `safe_pending`, `manual_required` and `blocked`; exits non-zero when any work remains. |
+| `npx --yes --package project-tiny-context-harness@latest ty-context export-context --source-pack [--check]` | Creates a bounded Source Pack under `tmp/ty-context/context-exports/<timestamp>/` and rewrites `latest/` with upload-ready Context, code index and optional bundles. |
+| `npx --yes --package project-tiny-context-harness@latest ty-context export-context --code-index [--check]` | Creates a temporary implementation navigation index and manifest without full source bodies. |
+| `npx --yes --package project-tiny-context-harness@latest ty-context export-context --task-context <name> [--profile <id>] [--check]` | Creates a bounded focused task handoff pack from profile or explicit include selectors. |
 | `npx --yes --package project-tiny-context-harness@latest ty-context export-context --all [--check]` | Creates both default temporary exports under `tmp/ty-context/context-exports/**`. |
 | `npx --yes --package project-tiny-context-harness@latest ty-context export-context --full [--output tmp/ty-context/context-exports/name.md] [--check]` | Creates a temporary project Context summary Markdown artifact. |
 | `npx --yes --package project-tiny-context-harness@latest ty-context export-context --code [--output tmp/ty-context/context-exports/name.md] [--check]` | Creates a temporary single-file code implementation Markdown artifact. |
@@ -465,6 +468,41 @@ Automatic migration moves legacy `project_context/modules/**/*.md` files into `p
 
 ## Temporary Project Exports
 
+Use `export-context --source-pack` as the default external LLM / Web GPT planning path:
+
+```sh
+npx --yes --package project-tiny-context-harness@latest ty-context export-context --source-pack
+npx --yes --package project-tiny-context-harness@latest ty-context export-context --source-pack --check
+```
+
+This writes a timestamped directory and rewrites `tmp/ty-context/context-exports/latest/` as ordinary files/directories for Windows compatibility. A standard Source Pack is capped at 5 files: `source-pack-manifest.json`, `full-project-context.md`, `code-index.md`, and at most `code-bundle-core.md` plus `code-bundle-extended.md`; small projects may omit bundle files. The manifest schema is `source-pack-v1`, uses repo-relative artifact paths and hashes, records warnings/omitted files, and recommends upload sets.
+
+Recommended upload sets:
+
+- Daily planning: `full-project-context.md`, `code-index.md`.
+- Cross-module review: daily planning files plus `code-bundle-core.md` and, if needed, `code-bundle-extended.md`.
+- Focused task handoff: `full-project-context.md`, `code-index.md`, `task-contexts/task-context-<name>.md`.
+- Full fallback: daily planning files plus legacy `code-level-implementation.md` from `--code`.
+
+Use `export-context --code-index` when implementation navigation is enough and full source bodies are not needed:
+
+```sh
+npx --yes --package project-tiny-context-harness@latest ty-context export-context --code-index
+```
+
+`code-index.md` includes export metadata, repository shape, Context mapping, entry/API/UI/CLI-worker/test/oversized indexes and a Source File Index with path, type, lines, characters, SHA256, deterministic summary, bundle and tags. It does not include complete source bodies.
+
+Use `export-context --task-context <name>` for focused handoff. Profiles live in `<harnessRoot>/config.yaml` under `source_packs`; they are export selectors only, not durable facts, and their `verification` entries are listed without being executed:
+
+```sh
+npx --yes --package project-tiny-context-harness@latest ty-context export-context --task-context apex-trend-map --profile apex-trend-map
+npx --yes --package project-tiny-context-harness@latest ty-context export-context --task-context demo --include-context project_context/areas/main.md --include-code 'src/demo/**'
+```
+
+Source Pack modes always keep secret redaction enabled. `--redaction-strict` exits non-zero if any secret/token/cookie/password/api_key/credential/bearer/authorization assignment required redaction. `--max-pack-files` defaults to 5 and cannot exceed 5 for Source Pack or task packs. `--prune <count>` keeps `latest/` and removes old timestamped export rounds beyond the requested retention count.
+
+Legacy exports remain for compatibility and full fallback.
+
 Use `export-context --all` when you want both one-off project exports for copying into an external tool or discussion:
 
 ```sh
@@ -494,7 +532,7 @@ npx --yes --package project-tiny-context-harness@latest ty-context export-contex
 
 The default code artifact path is `tmp/ty-context/context-exports/code-level-implementation-<timestamp>/code-level-implementation.md`. The file title is `# Code-Level Implementation Export`. It scans main source and engineering configuration files, adds each file path, type, line count, character count, SHA256, a heuristic one-sentence summary and a fenced redacted code block. It does not split output into multiple Markdown files.
 
-Both export modes exclude `.env*` except safe examples such as `.env.example`, secret/token/cookie-oriented files, raw captures, licensed payload dumps, `node_modules`, build output, caches, coverage, test reports, logs and existing export artifacts; obvious sensitive assignment values are redacted and reported as warnings.
+All export modes exclude `.env*` except safe examples such as `.env.example`, secret/token/cookie-oriented files, raw captures, licensed payload dumps, `node_modules`, build output, caches, coverage, test reports, logs and existing export artifacts; obvious sensitive assignment values are redacted and reported as warnings.
 
 Exports are not long-lived fact sources. The CLI refuses `project_context/**` and non-temporary output paths, and `validate-context` rejects obvious export artifact names such as `code-level-implementation`, `full-project-context`, legacy Chinese export names, `project-overview`, `context-bundle`, `context-summary` or `context-export` if someone tries to register them in `project_context/context.toml`.
 

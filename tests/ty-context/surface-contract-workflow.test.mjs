@@ -5,6 +5,9 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const read = (relativePath) => readFile(path.join(repoRoot, relativePath), "utf8");
+const forbiddenBusinessExamples = new RegExp(
+  ["My" + "Hub", "Intel" + "Hub", "Apex" + "Quant", "provider" + "-interface", "i" + "Find"].join("|")
+);
 
 const [
   sourceAgents,
@@ -65,7 +68,7 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /Forbidden writes/);
   assert.match(content, /role = "contract"/);
   assert.match(content, /repo-local Skill/i);
-  assert.doesNotMatch(content, /MyHub|IntelHub|ApexQuant|provider-interface|iFind/);
+  assert.doesNotMatch(content, forbiddenBusinessExamples);
   assert.doesNotMatch(
     content,
     /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|ty-context_manager|ty-context_dev_sprint|ty-context_reviewer|ty-context_tester/

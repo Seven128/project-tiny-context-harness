@@ -356,6 +356,9 @@ for (const content of [sourceAgents, packageAgents]) {
   assert.match(content, /development plan/);
   assert.match(content, /technical implementation plan/);
   assert.match(content, /full project context export/);
+  assert.match(content, /Source Pack export/);
+  assert.match(content, /code index export/);
+  assert.match(content, /task context export/);
   assert.match(content, /code-level implementation export/);
   assert.match(content, /upgrade Tiny Context/);
   assert.match(content, /context_harness_upgrade/);
@@ -439,7 +442,11 @@ assert.doesNotMatch(developmentSkill, /恢复\s*旧/);
 assert.doesNotMatch(developmentSkill, /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|ty-context_/);
 
 assert.match(exportSkill, /description:.*full project context export.*export full project context.*project context export.*code-level implementation export/s);
+assert.match(exportSkill, /description:.*Source Pack export.*code index export.*task context export/s);
 assert.match(exportSkill, /description:.*导出尽可能详细的项目全量上下文.*代码级实现导出/s);
+assert.match(exportSkill, /export-context --source-pack/);
+assert.match(exportSkill, /export-context --code-index/);
+assert.match(exportSkill, /export-context --task-context <name>/);
 assert.match(exportSkill, /full-project-context-<timestamp>\.md/);
 assert.match(exportSkill, /code-level-implementation-<timestamp>\/code-level-implementation\.md/);
 

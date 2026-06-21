@@ -14,6 +14,9 @@
 - `upgrade` owns safe migration orchestration. It applies only known safe migrations when no `blocked` item exists, refreshes managed assets through internal `sync`, runs diagnostics and leaves semantic or user-judgment follow-up as `manual_required`.
 - `validate-context` checks Context recoverability, graph metadata and fake verification-claim risks. It does not prove product behavior or replace project tests, smoke checks, CI, review or human acceptance.
 - `validate-code-modularity` is separate from `validate-context`; `validate-harness` composes Context recoverability and touched-source modularity.
+- `export-context` keeps legacy `--full`, `--code` and `--all` as temporary single-artifact fallback exports, while Source Pack modes (`--code-index`, `--source-pack`, `--code-bundles`, `--task-context`) produce deterministic temporary artifacts for external LLM upload under `tmp/ty-context/context-exports/**`.
+- Source Pack and task-context exports are script-first and bounded: standard packs and task packs must not exceed five output files, must label inferred path/context groupings as export routing only, must not run project verification commands, and must not register generated artifacts in `project_context/context.toml`.
+- Secret redaction and safety exclusions apply across export indexes, bundles, task context artifacts and manifests; package behavior must not expose an option that disables secret redaction.
 - Default Context authoring Skills write durable conclusions to `project_context/**` or `DESIGN.md`. They must stay Minimal Context oriented and must not recreate PRD / UX / tech-plan / review / test / release document chains.
 - Product Surface Contract workflow is prompt-level and project-owned. It uses existing Context roles such as `contract`, `area`, `subdomain`, `verification`, `decision-rationale` and `implementation-index`; the package must not add a surface-specific Context role or infer business surface contracts during `init`/`upgrade`.
 - Public package surfaces are English-complete. Non-English trigger examples are additive compatibility only.
@@ -35,6 +38,7 @@
 - Sync behavior and direct asset-refresh safety blockers live in `packages/ty-context/src/lib/sync-engine.ts`.
 - Upgrade orchestration and migration status handling live in `packages/ty-context/src/lib/upgrade.ts` and `packages/ty-context/src/lib/migrations.ts`.
 - Context graph helpers live in `packages/ty-context/src/lib/context-manifest.ts`; validator behavior lives in `packages/ty-context/src/lib/validators.ts`.
+- Context export and Source Pack generation live in `packages/ty-context/src/lib/context-export.ts`; CLI parsing for export modes lives in `packages/ty-context/src/commands/export-context.ts`.
 - Source mappings live in `packages/ty-context/source-mappings.yaml`.
 - Managed source assets live in `.codex/ty-context-managed/**`; packaged consumer assets live in `packages/ty-context/assets/**`.
 - Maintainer release/version automation lives in `tools/sync_release_version.mjs`, `tools/release_npm.mjs` and `tools/github_release_publish.mjs`.
@@ -46,6 +50,7 @@
 - Do not edit package-managed default Skills directly for project-specific rules; create separate project-local Skills when customization is needed.
 - Do not turn Context-first guidance, page product-positioning checks, role placement scans, Task Contracts or Product Surface Contracts into validators or edit-order gates.
 - Do not make Context graph roles mandatory writing templates for ordinary projects. Roles are semantic reading/authoring labels; graph boundary rules are metadata validation only.
+- Do not let temporary Source Pack profiles, inferred routing buckets, generated indexes or bundle summaries become durable product/architecture facts; profiles are export selectors only.
 - Do not let `sync` call the full migration registry or accumulate legacy compatibility checks as a permanent asset-refresh tax.
 - Do not claim Minimal Context benchmark wins without fresh, high-confidence Minimal Context comparison evidence.
 - Package source changes that affect managed assets require source sync and source-drift checks. Source-workspace `project_context/**`-only changes do not.

@@ -120,7 +120,7 @@ The implementation design follows from how agents actually run. A coding agent d
 - The Surface Contract compiler turns broad product/page/UI principles into project-owned Context when a user explicitly asks for Product Surface Contract work or when surface ownership is unclear.
 - Task-contract compilation turns broad principles and applicable module design into task-local constraints before implementation, while `Context Delta` prevents a second durable-fact decision point.
 - Temporary plan surfaces can keep the workflow contract visible during complex per-turn or short-horizon work, lowering the chance that implementation drifts away from Context priority; durable facts discovered there must be extracted back to Context.
-- The plan acceptance checklist compiler can help before long-running execution by externalizing the acceptance bar once. Its generated goal/target-mode prompt may require a local audit so a future executor can resume acceptance progress, but each concrete execution slice still follows the repository's Tiny Context workflow contract and any Task Contract or `plan.md` in force.
+- The plan acceptance checklist compiler can help before long-running execution by externalizing the acceptance bar once. Its generated goal/target-mode prompt may require a local audit so a future executor can resume acceptance progress, but the full checklist remains the acceptance authority and any compact prompt summary is only navigation and priority guidance. Each concrete execution slice still follows the repository's Tiny Context workflow contract and any Task Contract or `plan.md` in force.
 - Contract Conformance and Context drift checks create a final self-check without storing one-off evidence as long-lived Context.
 - `validate-context`, tests and package source checks enforce only the boundaries that are appropriate for Minimal Context: recoverability, generated-asset consistency and absence of fake verification claims.
 
@@ -212,7 +212,9 @@ Temporary exports are explicit exceptions for external-tool ingestion, not durab
 - `export-context --full` emits a one-off project Context summary named `full-project-context-<timestamp>.md` by default.
 - `export-context --code` emits a one-off single-file current implementation snapshot named `code-level-implementation.md` under a timestamped `code-level-implementation-*` directory by default.
 - `export-context --all` emits both default artifacts in one command using the same timestamp and does not accept `--output`.
-- Both modes must stay under `tmp/ty-context/context-exports/**`, must not be registered in `project_context/context.toml`, and must not revive implementation documents as tracked package defaults.
+- `export-context --code-index`, `--source-pack`, `--code-bundles` and `--task-context <name>` emit deterministic Source Pack artifacts under timestamped directories plus `latest/`; `--source-pack` and `--task-context` are capped at five output files.
+- Source Pack profiles in `<harnessRoot>/config.yaml` are export selectors only: they can choose repo-relative Context/code/exclude/verification entries, but they do not become durable facts and their verification commands are not executed by export.
+- All export modes must stay under `tmp/ty-context/context-exports/**`, must not be registered in `project_context/context.toml`, must keep secret redaction enabled, and must not revive implementation documents as tracked package defaults.
 
 Area is the product/domain ownership boundary:
 
@@ -457,6 +459,7 @@ The plan acceptance checklist compiler Skill exists because long-running work fa
 - It triggers only when the user provides or references a plan, RFC, implementation proposal or milestone plan and asks for acceptance criteria, a completion definition or a goal/target-mode prompt.
 - It copies the source plan into `tmp/ty-context/plan-acceptance/**` and writes any full checklist there as temporary execution input, never into `project_context/**`.
 - It combines the plan, relevant Context and real repository surfaces into falsifiable acceptance items with explicit evidence and invalidation rules.
+- Its full checklist is the complete acceptance standard for target-mode execution. Compact prompt summaries can repeat high-priority items for recovery, but they do not override checklist details.
 - Its generated goal/target prompt includes a standard resource lifecycle line: Chinese prompts use `可多开agent，agent名额不够了就关掉不用的。`, while English prompts use an equivalent instruction to use multiple agents and close idle or unnecessary agents when slots run low.
 - Its generated goal/target prompt may require a local audit under `tmp/ty-context/plan-acceptance/**` for long-running execution recovery. The audit records overall status, per-AC evidence, commands, artifacts, blockers and invalid evidence, but cannot prove completion by itself.
 - It keeps target-mode acceptance progress above per-turn execution: when an executor works any acceptance item, the executor still follows the project's Tiny Context workflow contract, including Context reads, `Context Delta` handling, Task Contracts and workflow-contract `plan.md` when applicable.

@@ -61,8 +61,10 @@ The ladder is expected agent behavior. It must not become a validator, phase gat
 
 - The plan acceptance checklist compiler is a pre-execution acceptance-standard pass for a user-provided plan-like source.
 - It materializes temporary plan/checklist artifacts under `tmp/ty-context/plan-acceptance/**`, reads relevant Context and outputs a goal/target prompt.
-- The generated goal/target prompt uses a conservative 3980-character effective maximum, including line breaks, so it stays below Codex's 4000-character practical paste boundary after small counting differences.
-- The compiler guidance must preserve required plan/checklist/audit paths and all core acceptance categories while fitting the 3980-character budget. When over budget, it should increase information density through compact wording, merged phrasing and references to the full checklist, not drop required evidence, blocker or false-completion semantics merely to be short.
+- The generated goal/target prompt uses a conservative 3850-character effective maximum, including line breaks, so it stays below Codex's 4000-character practical paste boundary after small counting differences.
+- The compiler guidance must preserve required plan/checklist/audit paths and all core acceptance categories while fitting the 3850-character budget. When over budget, it should increase information density through compact wording, merged phrasing and references to the full checklist, not drop required evidence, blocker or false-completion semantics merely to be short.
+- For target-mode execution, the full acceptance checklist is the authoritative acceptance standard. Compact prompt summaries provide direction, priority and recovery navigation only.
+- Overlap between the full checklist and compact summary is allowed. If they conflict, the full checklist wins.
 - It does not execute the plan, prove completion, own durable task state, replace Task Contract/workflow-contract `plan.md`, or store acceptance evidence as Context.
 - Hard blockers in a generated checklist remain non-completion until the missing evidence or user/external action exists.
 
@@ -73,6 +75,12 @@ The ladder is expected agent behavior. It must not become a validator, phase gat
 - Task Contract omissions return to the Task Contract while work is active.
 - Missing durable facts return to `Context Delta: required` and Context-first handling.
 - Conformance evidence belongs in handoff/final/PR text. Do not store one-off proof, screenshots, logs or test output in Context.
+
+## Current-State Conformance
+
+- Before claiming current product, API, UI, runtime, data, artifact or evidence-state completion, compare the claim against current evidence and the applicable acceptance contract.
+- Evidence ledger discipline is prompt-level completion discipline: missing current evidence means incomplete, stale evidence cannot prove current completion, and contradictions between implementation, API/UI/data/runtime artifacts and tests must be resolved or reported as blockers.
+- This discipline is not a CLI validator, not a `validate-context` product-state check, not product-quality proof, not a lifecycle phase, not a phase gate and not a stage artifact.
 
 ## Non-Goals
 

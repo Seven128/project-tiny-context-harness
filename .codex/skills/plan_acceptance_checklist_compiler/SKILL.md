@@ -21,31 +21,36 @@ The output answers:
 For this exact plan, what must be true before a future executor can honestly say the task is complete?
 ```
 
-This Skill is generic. Do not embed business-specific rules, provider-specific rules, product-domain assumptions, artifact schemas, API names, UI names, status names, or one-off project logic in this Skill. If the user's plan contains a specific domain, derive acceptance items from that plan and the project Context during the current invocation only.
+This Skill is generic. Do not embed business-specific rules, vendor-specific rules, product-domain assumptions, artifact schemas, concrete interface names, UI names, state names, or one-off project logic in this Skill. If the user's plan contains a specific domain, derive acceptance items from that plan and the project Context during the current invocation only.
 
 ## Required Outputs
 
 Every completed invocation must produce:
 
-1. A preserved copy of the plan under `tmp/ty-context/plan-acceptance/`.
-2. A rigorous acceptance checklist derived from the plan and relevant project Context.
-3. A goal/target-mode prompt the user can paste directly into Codex.
+1. A preserved copy of the plan under `tmp/ty-context/plan-acceptance/`. The copied plan is the implementation/source plan, not acceptance proof.
+2. A rigorous full acceptance checklist derived from the plan and relevant project Context. The full checklist is the complete acceptance standard.
+3. A goal/target-mode prompt the user can paste directly into Codex. The prompt may include a compact checklist summary for direction, priority and recovery navigation, but the full checklist owns the acceptance details.
+4. When a local audit path is referenced, it is temporary execution/progress state only, not Context and not proof by itself.
 
 Exception: if the Context confirmation gate below triggers, stop after materializing the plan and reading enough Context to explain the uncertainty. Ask the user for confirmation before producing the checklist or goal/target-mode prompt.
 
-The goal/target-mode prompt must be no longer than 3980 characters, including line breaks. This conservative budget keeps the prompt below Codex's 4000-character practical paste boundary even when character counting differs slightly. Keep the prompt information-dense: preserve required paths, core acceptance criteria, evidence rules, blockers and false-completion traps while using compact wording. Use the user's language when practical. For Chinese requests, use this shape:
+The goal/target-mode prompt must be no longer than 3850 characters, including line breaks. This conservative budget keeps the prompt below Codex's 4000-character practical paste boundary even when character counting differs slightly. Keep the prompt information-dense: preserve required paths, core acceptance criteria, evidence rules, blockers and false-completion traps while using compact wording. Use the user's language when practical. For Chinese requests, use this shape:
 
 ```text
-实施计划: tmp/ty-context/plan-acceptance/<plan>.md
+实施计划: tmp/ty-context/plan-acceptance/<plan>.md（source/implementation plan，非验收证明）
 可多开agent，agent名额不够了就关掉不用的。
+完整验收清单: tmp/ty-context/plan-acceptance/<plan>-acceptance-checklist.md（该文件是完整验收标准，验收以这个为准。完成前必须逐项检查，不满足则继续实现。）
+执行审计: tmp/ty-context/plan-acceptance/<plan>-local-audit.md（临时 progress state，非 Context/proof）
 <验收清单>
 ```
 
 For English requests, use this shape:
 
 ```text
-Plan: tmp/ty-context/plan-acceptance/<plan>.md
+Plan: tmp/ty-context/plan-acceptance/<plan>.md (implementation/source plan, not acceptance proof)
 You may use multiple agents; if agent slots run low, close idle or unnecessary agents.
+Full checklist: tmp/ty-context/plan-acceptance/<plan>-acceptance-checklist.md (complete acceptance standard; acceptance is judged against it; every item must be checked before completion)
+Local audit: tmp/ty-context/plan-acceptance/<plan>-local-audit.md (temporary execution/progress state, not Context or proof)
 <acceptance checklist>
 ```
 
@@ -122,7 +127,7 @@ Rules:
 - Preserve the plan content. Do not summarize, normalize, reorder, translate, or edit it while materializing it.
 - Use a stable readable filename derived from the plan title, source filename, or user topic. Use lowercase letters, digits, hyphens, and `.md`.
 - If the source plan cannot be found or read, stop and report the missing source. Do not invent a plan.
-- The materialized plan is temporary execution input. It is not durable Context and not proof that any acceptance item passed.
+- The materialized plan is temporary implementation/source input. It is not durable Context, not acceptance proof and not proof that any acceptance item passed.
 
 Recommended paths:
 
@@ -189,6 +194,9 @@ Before the detailed checklist, write a compact contract:
 - Explicit non-goals: <items>
 - External blockers: <accounts/session/credentials/network/cloud/manual approval/etc.>
 - Evidence standard: <accepted proof types>
+- Current-state claims: <which "current", "generated", "synced", "tested", "accepted" or runtime claims require current evidence>
+- Evidence ledger required: <whether the checklist or future executor must maintain current evidence by item>
+- Invalid completion evidence: <stale artifacts, code-only edits, partial tests, unexercised runtime, mismatched read paths or other evidence that cannot prove completion>
 ```
 
 If the plan uses broad words such as `all`, `complete`, `maximum`, `maximized`, `accepted`, `formal`, `production`, `real`, `current`, or `verified`, convert them into explicit inventory and evidence requirements.
@@ -215,6 +223,25 @@ Column rules:
 - `Fail / not accepted if`: concrete invalidation case.
 
 Each item must be evidence-bound and falsifiable. Split combined requirements into separate rows.
+
+For current-state or evidence-heavy plans, also require the future executor to maintain an Evidence Ledger table:
+
+```markdown
+| AC | Expected state | Current observed state | Current evidence | Evidence location / API / UI / command | Conclusion | Gap / blocker |
+|---|---|---|---|---|---|---|
+```
+
+Allowed `Conclusion` values:
+
+- `proven`
+- `unproven`
+- `stale-evidence`
+- `runtime-disconnected`
+- `implementation-drift`
+- `blocked`
+- `deferred-by-explicit-scope`
+
+Missing ledger evidence means incomplete, not complete. Do not let missing evidence, old evidence, partial evidence or evidence from a different read path satisfy a current-state claim.
 
 ## Hard Blocker Handling
 
@@ -258,7 +285,7 @@ When user input is still required, the blocker request must be the smallest conc
 - Acceptance impact if the blocker remains unresolved.
 - Allowed fallback, deferred or narrowed-scope option, if the plan or Context permits one.
 
-Do not replace this with broad requests such as "provide the token", "send the AppSecret" or "give me the configuration credentials" when a narrower page, field, runtime setup step or delegated user action would satisfy the blocker.
+Do not replace this with broad requests such as "provide the token", "send the secret value" or "give me the configuration credentials" when a narrower page, field, runtime setup step or delegated user action would satisfy the blocker.
 
 ## Generic Acceptance Dimensions
 
@@ -353,6 +380,16 @@ Template:
 - <surface A> passing does not prove <surface B> unless the checklist links them.
 ```
 
+For evidence-ledger plans, keep the traps generic and cover these cases when relevant:
+
+- Code-only changes without current execution or acceptance evidence.
+- UI/API shell behavior without the backing data, runtime or artifact evidence required by the checklist.
+- Stale artifacts or stale runtime evidence.
+- Evidence from a mismatched read path, service path, artifact path or runtime instance.
+- Unexercised runtime or unexercised fallback behavior.
+- Partial tests, smoke-only checks or dry runs when the plan requires broader current proof.
+- API/UI/data/test contradictions that remain unresolved.
+
 ## Suggested Execution Order
 
 Suggest an execution order that prioritizes the highest-risk proof first:
@@ -391,12 +428,14 @@ After compiling the checklist, produce a paste-ready goal/target-mode prompt.
 
 Hard requirements:
 
-- The prompt must be no longer than 3980 characters including line breaks. Treat 3980 as the effective hard budget and preserve information density; do not drop required paths, core acceptance categories, blocker rules, evidence rules or false-completion traps merely to be short.
+- The prompt must be no longer than 3850 characters including line breaks. Treat 3850 as the effective hard budget and preserve information density; do not drop required paths, core acceptance categories, blocker rules, evidence rules or false-completion traps merely to be short.
 - The first line must identify the plan path.
-- Use `实施计划: <path>` for Chinese prompts and `Plan: <path>` for English prompts.
+- Use `实施计划: <path>` for Chinese prompts and `Plan: <path>` for English prompts. The line must say the plan is the implementation/source plan and not acceptance proof.
 - The second line must be a resource lifecycle instruction: `可多开agent，agent名额不够了就关掉不用的。` for Chinese prompts or `You may use multiple agents; if agent slots run low, close idle or unnecessary agents.` for English prompts.
 - The remaining content must be the acceptance checklist or a compact version of it.
 - The prompt must be self-contained enough for goal/target-mode execution.
+- The prompt must identify the full checklist path and say it is the complete acceptance standard. Chinese prompts must include this exact sentence: `该文件是完整验收标准，验收以这个为准。完成前必须逐项检查，不满足则继续实现。` English prompts must say the full checklist is the complete acceptance standard, acceptance is judged against it, and every item must be checked before completion.
+- If the prompt uses a compact checklist summary, say the full checklist owns details and acceptance authority; the compact summary owns direction, priority and recovery navigation; overlap is allowed; conflicts are resolved in favor of the full checklist.
 - The prompt must identify a local audit path, normally `tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md`, and require the future executor to read it before resuming, keep it current during execution, and use it only as target-mode acceptance progress state.
 - The prompt must require the local audit to record overall status (`complete`, `incomplete`, `blocked` or `narrowed-scope-complete`), each core AC status and current evidence, commands with result/time/failure reason, artifact or evidence paths, blockers and missing evidence, acceptance impact, explicit deferred or narrowed scope, and stale/partial/smoke/dry-run/research evidence that cannot prove full completion.
 - The prompt must say that local audit is not Context, not product-quality proof, not a global task manager, and not a replacement for project tests, CI, review, human acceptance, Task Contract or workflow-contract `plan.md`.
@@ -405,15 +444,16 @@ Hard requirements:
 - Do not include Markdown tables inside the prompt if they make it too long.
 - Prefer short numbered items over verbose prose.
 - If the full checklist is too large, write the full checklist to `tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md`, then compress the goal/target-mode prompt by increasing information density while preserving all core acceptance categories.
-- The compact prompt may reference the full checklist path, but it must still include the core completion criteria directly.
+- The compact prompt may reference the full checklist path, but it must still include the core completion criteria directly and state that the summary is direction/priority/recovery navigation, not the acceptance authority.
 
 Recommended compact Chinese prompt shape:
 
 ```text
-实施计划: tmp/ty-context/plan-acceptance/<plan-slug>.md
+实施计划: tmp/ty-context/plan-acceptance/<plan-slug>.md（source/implementation plan，非验收证明）
 可多开agent，agent名额不够了就关掉不用的。
-完整验收清单: tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md
-执行审计: tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md
+完整验收清单: tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md（该文件是完整验收标准，验收以这个为准。完成前必须逐项检查，不满足则继续实现。）
+执行审计: tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md（临时 progress state，非 Context/proof）
+本摘要只负责 direction/priority/recovery navigation；允许与完整 checklist 重叠，冲突时以完整 checklist 为准。
 
 验收清单：
 AC1 <核心完成定义，包含验收证据>
@@ -437,10 +477,11 @@ AC14 完成前审计：逐条对照实施计划和完整 checklist；每个 core
 Recommended compact English prompt shape:
 
 ```text
-Plan: tmp/ty-context/plan-acceptance/<plan-slug>.md
+Plan: tmp/ty-context/plan-acceptance/<plan-slug>.md (implementation/source plan, not acceptance proof)
 You may use multiple agents; if agent slots run low, close idle or unnecessary agents.
-Full checklist: tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md
-Local audit: tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md
+Full checklist: tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md (complete acceptance standard; acceptance is judged against it; every item must be checked before completion)
+Local audit: tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md (temporary progress state, not Context or proof)
+This summary is only direction, priority and recovery navigation; overlap with the full checklist is allowed, and the full checklist wins conflicts.
 
 Acceptance checklist:
 AC1 <core completion definition with required evidence>
@@ -461,7 +502,7 @@ AC14 Final audit: compare every item against the plan and full checklist; every 
 Do not count these as completion: code-only changes, plan-only updates, partial tests, stale or partial evidence, infrastructure without acceptance proof, runtime not configured/exercised, artifact not accepted by validator, API/UI not reflecting accepted evidence, unexercised fallback, unresolved hard blockers, or contradictions between API/UI/data/tests.
 ```
 
-Before final response, check the prompt length. If it exceeds 3980 characters, compress by tightening wording and referring to the full checklist path while preserving required paths, core AC categories, blocker/evidence rules and false-completion traps; then check again.
+Before final response, check the prompt length. If it exceeds 3850 characters, compress by tightening wording and referring to the full checklist path while preserving required paths, core AC categories, blocker/evidence rules and false-completion traps; then check again.
 
 ## Final Response Requirements
 

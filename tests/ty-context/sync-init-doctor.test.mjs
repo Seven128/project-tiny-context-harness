@@ -14,6 +14,7 @@ const configuredRoot = await mkdtemp(path.join(tmpdir(), "ty-context-minimal-con
 const cliRoot = await mkdtemp(path.join(tmpdir(), "ty-context-minimal-cli-"));
 const syncBlockRoot = await mkdtemp(path.join(tmpdir(), "ty-context-minimal-sync-block-"));
 const cliPath = fileURLToPath(new URL("../../packages/ty-context/dist/cli.js", import.meta.url));
+const stalePromptBudget = new RegExp("3980 " + "characters");
 
 try {
   assert.equal(resolveAgentHarnessFolderName(""), ".codex");
@@ -139,6 +140,9 @@ try {
   assert.match(agents, /Impeccable/);
   assert.match(agents, /npx impeccable detect <target>/);
   assert.match(agents, /全量上下文导出/);
+  assert.match(agents, /export-context --source-pack/);
+  assert.match(agents, /export-context --code-index/);
+  assert.match(agents, /export-context --task-context <name>/);
   assert.match(agents, /export-context --all/);
   assert.match(agents, /export-context --full/);
   assert.match(agents, /export-context --code/);
@@ -291,7 +295,13 @@ try {
   const exportSkill = await readFile(path.join(root, ".agent/skills/context_full_project_export/SKILL.md"), "utf8");
   assert.match(exportSkill, /导出尽可能详细的项目全量上下文/);
   assert.match(exportSkill, /full project context export/);
+  assert.match(exportSkill, /Source Pack export/);
+  assert.match(exportSkill, /code index export/);
+  assert.match(exportSkill, /task context export/);
   assert.match(exportSkill, /code-level implementation export/);
+  assert.match(exportSkill, /export-context --source-pack/);
+  assert.match(exportSkill, /export-context --code-index/);
+  assert.match(exportSkill, /export-context --task-context <name>/);
   assert.match(exportSkill, /export-context --all/);
   assert.match(exportSkill, /export-context --full/);
   assert.match(exportSkill, /export-context --code/);
@@ -323,10 +333,20 @@ try {
   assert.match(planAcceptanceSkill, /为这份方案生成验收清单/);
   assert.match(planAcceptanceSkill, /tmp\/ty-context\/plan-acceptance/);
   assert.match(planAcceptanceSkill, /<plan-slug>-local-audit\.md/);
-  assert.match(planAcceptanceSkill, /3980 characters/);
+  assert.match(planAcceptanceSkill, /3850 characters/);
+  assert.doesNotMatch(planAcceptanceSkill, stalePromptBudget);
   assert.doesNotMatch(planAcceptanceSkill, /4000 characters/);
+  assert.match(planAcceptanceSkill, /complete acceptance standard/);
+  assert.match(planAcceptanceSkill, /acceptance is judged against it/);
+  assert.match(planAcceptanceSkill, /every item must be checked before completion/);
+  assert.match(planAcceptanceSkill, /该文件是完整验收标准，验收以这个为准。完成前必须逐项检查，不满足则继续实现。/);
+  assert.match(planAcceptanceSkill, /direction, priority and recovery navigation/);
+  assert.match(planAcceptanceSkill, /not Context or proof/);
   assert.match(planAcceptanceSkill, /Minimal User Blocker Protocol/);
   assert.match(planAcceptanceSkill, /Evidence Layer Separation/);
+  assert.match(planAcceptanceSkill, /Evidence Ledger/);
+  assert.match(planAcceptanceSkill, /Current-state claims/);
+  assert.match(planAcceptanceSkill, /Invalid completion evidence/);
   assert.match(planAcceptanceSkill, /artifact accepted by validator/);
   assert.match(planAcceptanceSkill, /not a global task manager/);
   assert.match(planAcceptanceSkill, /workflow-contract `plan\.md`/);

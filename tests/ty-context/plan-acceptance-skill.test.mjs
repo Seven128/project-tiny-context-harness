@@ -5,6 +5,11 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const read = (relativePath) => readFile(path.join(repoRoot, relativePath), "utf8");
+const forbiddenIncidentNames = new RegExp(
+  ["Intel" + "Hub", "i" + "Find", "We" + "Chat", "微" + "信", "App" + "Secret", "provider" + "-specific"].join("|")
+);
+const stalePromptBudget = new RegExp("3980 " + "characters");
+const staleWorkflowBudget = new RegExp("3980-" + "character|3980 " + "characters");
 const frontMatterDescription = (content) => {
   const match = content.match(/^---\s*\r?\n(?<frontMatter>[\s\S]*?)\r?\n---/);
   assert.ok(match?.groups?.frontMatter, "expected skill front matter");
@@ -49,6 +54,23 @@ for (const content of [rootReadme, packageReadme, spec, workflowContract]) {
   assert.match(content, /not (?:execute|a task planner|task state|proof|prove)/i);
 }
 
+for (const content of [rootReadme, packageReadme]) {
+  assert.match(content, /full checklist/i);
+  assert.match(content, /acceptance (?:authority|standard)/i);
+  assert.match(content, /navigation/i);
+  assert.match(content, /priority/i);
+}
+
+assert.match(workflowContract, /3850-character effective maximum/);
+assert.doesNotMatch(workflowContract, staleWorkflowBudget);
+assert.match(workflowContract, /full acceptance checklist is the authoritative acceptance standard/);
+assert.match(workflowContract, /Compact prompt summaries provide direction, priority and recovery navigation only/);
+assert.match(workflowContract, /If they conflict, the full checklist wins/);
+assert.match(workflowContract, /Current-State Conformance/);
+assert.match(workflowContract, /prompt-level completion discipline/);
+assert.match(workflowContract, /not a CLI validator/);
+assert.match(workflowContract, /not a `validate-context` product-state check/);
+
 for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   const description = frontMatterDescription(content);
   assert.ok(description.length <= 900, `expected description <= 900 chars, got ${description.length}`);
@@ -64,14 +86,43 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /Package-Managed Boundary/);
   assert.match(content, /tmp\/ty-context\/plan-acceptance/);
   assert.match(content, /<plan-slug>-local-audit\.md/);
-  assert.match(content, /3980 characters/);
+  assert.match(content, /3850 characters/);
+  assert.doesNotMatch(content, stalePromptBudget);
   assert.match(content, /preserve information density/);
   assert.match(content, /do not drop required paths, core acceptance categories, blocker rules, evidence rules or false-completion traps merely to be short/);
   assert.match(content, /compress by tightening wording and referring to the full checklist path while preserving required paths/);
+  assert.match(content, /4000-character practical paste boundary/);
   assert.doesNotMatch(content, /4000 characters/);
   assert.doesNotMatch(content, /do not aim for 4000 exactly/);
+  assert.match(content, /implementation\/source plan, not acceptance proof/);
+  assert.match(content, /source\/implementation plan，非验收证明/);
+  assert.match(content, /complete acceptance standard/);
+  assert.match(content, /acceptance is judged against it/);
+  assert.match(content, /every item must be checked before completion/);
+  assert.match(content, /该文件是完整验收标准，验收以这个为准。完成前必须逐项检查，不满足则继续实现。/);
+  assert.match(content, /compact checklist summary for direction, priority and recovery navigation/);
+  assert.match(content, /summary is direction\/priority\/recovery navigation, not the acceptance authority/);
+  assert.match(content, /overlap with the full checklist is allowed/);
+  assert.match(content, /full checklist wins conflicts/);
+  assert.match(content, /冲突时以完整 checklist 为准/);
   assert.match(content, /Context confirmation gate/i);
   assert.match(content, /falsifiable acceptance items/);
+  assert.match(content, /Current-state claims/);
+  assert.match(content, /Evidence ledger required/);
+  assert.match(content, /Invalid completion evidence/);
+  assert.match(content, /Evidence Ledger/);
+  assert.match(content, /Expected state/);
+  assert.match(content, /Current observed state/);
+  assert.match(content, /Current evidence/);
+  assert.match(content, /Evidence location \/ API \/ UI \/ command/);
+  assert.match(content, /proven/);
+  assert.match(content, /unproven/);
+  assert.match(content, /stale-evidence/);
+  assert.match(content, /runtime-disconnected/);
+  assert.match(content, /implementation-drift/);
+  assert.match(content, /blocked/);
+  assert.match(content, /deferred-by-explicit-scope/);
+  assert.match(content, /Missing ledger evidence means incomplete, not complete/);
   assert.match(content, /Hard Blocker Handling/);
   assert.match(content, /Treat any unresolved required blocker as non-completion/);
   assert.match(content, /if only locally unsatisfiable hard blockers remain, pause for the user or external owner instead of marking the goal complete/);
@@ -87,7 +138,15 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /API\/UI reflects accepted evidence/);
   assert.match(content, /final gate\/check command passed/);
   assert.match(content, /fallback was not configured or exercised/);
+  assert.match(content, /Code-only changes/);
+  assert.match(content, /UI\/API shell behavior/);
+  assert.match(content, /Stale artifacts or stale runtime evidence/);
+  assert.match(content, /mismatched read path/);
+  assert.match(content, /Unexercised runtime/);
+  assert.match(content, /Partial tests/);
+  assert.match(content, /API\/UI\/data\/test contradictions/);
   assert.match(content, /local audit is not Context/);
+  assert.match(content, /not proof by itself/);
   assert.match(content, /not a global task manager/);
   assert.match(content, /not a replacement for project tests, CI, review, human acceptance, Task Contract or workflow-contract `plan\.md`/);
   assert.match(content, /each acceptance item execution still follows it and the repository's Tiny Context workflow contract/);
@@ -96,6 +155,7 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /artifact 未被 validator 接受/);
   assert.match(content, /Do not execute the plan/);
   assert.match(content, /Do not include concrete business-domain logic/);
+  assert.doesNotMatch(content, forbiddenIncidentNames);
   assert.match(content, /可多开agent，agent名额不够了就关掉不用的。/);
   assert.match(content, /You may use multiple agents; if agent slots run low, close idle or unnecessary agents\./);
   assert.doesNotMatch(

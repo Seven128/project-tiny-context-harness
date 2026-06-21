@@ -1,13 +1,8 @@
+import { parseArgs, helpText } from "./export-context-args.js";
+import type { ExportContextArgs } from "./export-context-args.js";
 import { runExportContext } from "../lib/context-export.js";
-
-interface ExportContextArgs {
-  full: boolean;
-  code: boolean;
-  all: boolean;
-  check: boolean;
-  output?: string;
-  help: boolean;
-}
+import { runSourcePackExport } from "../lib/source-pack-export.js";
+import type { SourcePackReport } from "../lib/source-pack-types.js";
 
 export async function exportContext(args: string[]): Promise<void> {
   let parsed: ExportContextArgs;
@@ -19,7 +14,7 @@ export async function exportContext(args: string[]): Promise<void> {
     return;
   }
 
-  if (parsed.help || (!parsed.full && !parsed.code && !parsed.all)) {
+  if (parsed.help || (!parsed.full && !parsed.code && !parsed.all && !parsed.sourceMode)) {
     console.log(helpText());
     if (!parsed.help) {
       process.exitCode = 1;
@@ -28,32 +23,29 @@ export async function exportContext(args: string[]): Promise<void> {
   }
 
   try {
+    if (parsed.sourceMode) {
+      printSourcePackReport(
+        await runSourcePackExport(process.cwd(), {
+          mode: parsed.sourceMode,
+          check: parsed.check,
+          command: `ty-context export-context ${args.join(" ")}`.trim(),
+          profile: parsed.profile,
+          includeContext: parsed.includeContext,
+          includeCode: parsed.includeCode,
+          bundleStrategy: parsed.bundleStrategy,
+          maxPackFiles: parsed.maxPackFiles,
+          maxBundleCharacters: parsed.maxBundleCharacters,
+          redactionStrict: parsed.redactionStrict,
+          prune: parsed.prune,
+          taskName: parsed.taskName
+        }),
+        parsed.check
+      );
+      return;
+    }
+
     if (parsed.all) {
-      const now = new Date();
-      const fullReport = await runExportContext(process.cwd(), {
-        full: true,
-        check: parsed.check,
-        now
-      });
-      const codeReport = await runExportContext(process.cwd(), {
-        code: true,
-        check: parsed.check,
-        now
-      });
-      console.log(parsed.check ? "export-context check OK" : "export-context wrote artifacts");
-      console.log("mode: all");
-      console.log("outputs:");
-      console.log(`- full: ${fullReport.outputRelativePath}`);
-      console.log(`- code: ${codeReport.outputRelativePath}`);
-      console.log(`source context count: ${fullReport.sourceContextCount}`);
-      console.log(`source code count: ${codeReport.sourceCodeCount ?? codeReport.sourceFiles.length}`);
-      console.log(`total code lines: ${codeReport.totalLines ?? 0}`);
-      console.log(`total code characters: ${codeReport.totalCharacters ?? 0}`);
-      console.log("warnings:");
-      printWarnings([
-        ...fullReport.warnings.map((warning) => `full: ${warning}`),
-        ...codeReport.warnings.map((warning) => `code: ${warning}`)
-      ]);
+      await runLegacyAll(parsed.check);
       return;
     }
 
@@ -85,57 +77,43 @@ export async function exportContext(args: string[]): Promise<void> {
   }
 }
 
-function parseArgs(args: string[]): ExportContextArgs {
-  const parsed: ExportContextArgs = { full: false, code: false, all: false, check: false, help: false };
-  for (let index = 0; index < args.length; index += 1) {
-    const arg = args[index];
-    if (arg === "--full") {
-      parsed.full = true;
-      continue;
-    }
-    if (arg === "--code") {
-      parsed.code = true;
-      continue;
-    }
-    if (arg === "--all") {
-      parsed.all = true;
-      continue;
-    }
-    if (arg === "--check") {
-      parsed.check = true;
-      continue;
-    }
-    if (arg === "--help" || arg === "-h") {
-      parsed.help = true;
-      continue;
-    }
-    if (arg === "--output") {
-      const value = args[index + 1];
-      if (!value || value.startsWith("--")) {
-        throw new Error("export-context --output requires a path");
-      }
-      parsed.output = value;
-      index += 1;
-      continue;
-    }
-    if (arg.startsWith("--output=")) {
-      const value = arg.slice("--output=".length).trim();
-      if (!value) {
-        throw new Error("export-context --output requires a path");
-      }
-      parsed.output = value;
-      continue;
-    }
-    throw new Error(`unknown export-context argument: ${arg}`);
+async function runLegacyAll(check: boolean): Promise<void> {
+  const now = new Date();
+  const fullReport = await runExportContext(process.cwd(), { full: true, check, now });
+  const codeReport = await runExportContext(process.cwd(), { code: true, check, now });
+  console.log(check ? "export-context check OK" : "export-context wrote artifacts");
+  console.log("mode: all");
+  console.log("outputs:");
+  console.log(`- full: ${fullReport.outputRelativePath}`);
+  console.log(`- code: ${codeReport.outputRelativePath}`);
+  console.log(`source context count: ${fullReport.sourceContextCount}`);
+  console.log(`source code count: ${codeReport.sourceCodeCount ?? codeReport.sourceFiles.length}`);
+  console.log(`total code lines: ${codeReport.totalLines ?? 0}`);
+  console.log(`total code characters: ${codeReport.totalCharacters ?? 0}`);
+  console.log("warnings:");
+  printWarnings([
+    ...fullReport.warnings.map((warning) => `full: ${warning}`),
+    ...codeReport.warnings.map((warning) => `code: ${warning}`)
+  ]);
+}
+
+function printSourcePackReport(report: SourcePackReport, check: boolean): void {
+  console.log(check ? "export-context check OK" : "export-context wrote artifacts");
+  console.log(`mode: ${report.mode}`);
+  console.log(`output directory: ${report.outputRelativePath}`);
+  console.log(`source code count: ${report.sourceCodeCount}`);
+  console.log(`total lines: ${report.totalLines}`);
+  console.log(`total characters: ${report.totalCharacters}`);
+  console.log("artifacts:");
+  for (const artifact of report.artifacts) {
+    console.log(`- ${artifact.kind}: ${artifact.path} (${artifact.characters} chars, ${artifact.source_count} sources)`);
   }
-  const modeCount = Number(parsed.full) + Number(parsed.code) + Number(parsed.all);
-  if (modeCount > 1) {
-    throw new Error("export-context accepts exactly one of --full, --code or --all");
+  console.log("recommended upload sets:");
+  for (const [name, files] of Object.entries(report.recommendedUploadSets)) {
+    console.log(`- ${name}: ${files.join(", ")}`);
   }
-  if (parsed.all && parsed.output) {
-    throw new Error("export-context --all writes two default artifacts; --output is only supported with --full or --code");
-  }
-  return parsed;
+  console.log("warnings:");
+  printWarnings(report.warnings);
 }
 
 function printWarnings(warnings: string[]): void {
@@ -146,17 +124,4 @@ function printWarnings(warnings: string[]): void {
   for (const warning of warnings) {
     console.log(`- ${warning}`);
   }
-}
-
-function helpText(): string {
-  return `ty-context export-context:
-  export-context --full [--output tmp/ty-context/context-exports/<name>.md] [--check]
-  export-context --code [--output tmp/ty-context/context-exports/<name>.md] [--check]
-  export-context --all [--check]
-
-Creates temporary Markdown artifacts for copying or external-tool ingestion.
---full exports the project Context summary as a full-project-context artifact.
---code exports one current implementation snapshot as a code-level-implementation artifact.
---all exports both default artifacts in one command.
-The artifact must stay under tmp/ty-context/context-exports/** and must not be referenced from project_context/context.toml.`;
 }
