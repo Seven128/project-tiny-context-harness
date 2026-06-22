@@ -87,7 +87,7 @@ for (const expected of [
   "npm-trusted-publishing-packet",
   "codex-for-oss-application",
   "openssf-best-practices-packet",
-  "release-npm-first-publish-target",
+  "release-flow-split",
   "github-release-automation",
   "awesome-list-submissions",
   "external-pr-packet-check",

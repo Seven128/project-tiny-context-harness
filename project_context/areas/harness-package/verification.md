@@ -20,6 +20,9 @@ read_policy: default
   - Expected signal: no whitespace error output.
 - `npm test --workspace project-tiny-context-harness`
   - Use for broader package behavior changes or when focused tests do not cover the touched package surface.
+- `node --test tests/ty-context/release-flow-scripts.test.mjs tests/ty-context/sync-release-version.test.mjs tests/ty-context/launch-unblock-script.test.mjs tests/ty-context/launch-readiness-script.test.mjs tests/ty-context/npm-publish-access-script.test.mjs`
+  - Use after changing release preparation/publication automation, release packet generation or launch runbooks that print owner-facing release commands.
+  - Expected signal: release preparation remains the only mutating phase, publication stays publish-only and launch/readiness guidance matches the split flow.
 - `node packages/ty-context/dist/cli.js package sync-source`
   - Use only after changing package-managed source assets that should be copied into `packages/ty-context/assets/**`.
 - `node packages/ty-context/dist/cli.js package check-source`

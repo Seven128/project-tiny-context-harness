@@ -56,7 +56,9 @@ This index helps future agents find implementation surfaces quickly. It is navig
 ## Release And Maintainer Tools
 
 - Release version surface sync: `tools/sync_release_version.mjs`.
-- npm release orchestration: `tools/release_npm.mjs`.
+- Release preparation: `tools/release_prepare.mjs`.
+- Release publication: `tools/release_publish.mjs`.
+- Legacy npm release compatibility wrapper: `tools/release_npm.mjs`.
 - GitHub release publishing: `tools/github_release_publish.mjs`.
 - Launch readiness checks: `tools/launch_readiness_check.mjs`.
 - Quickstart smoke: `tools/quickstart_smoke.mjs`.

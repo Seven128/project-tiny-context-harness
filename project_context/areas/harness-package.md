@@ -41,7 +41,9 @@
 - Context export and Source Pack generation live in `packages/ty-context/src/lib/context-export.ts`; CLI parsing for export modes lives in `packages/ty-context/src/commands/export-context.ts`.
 - Source mappings live in `packages/ty-context/source-mappings.yaml`.
 - Managed source assets live in `.codex/ty-context-managed/**`; packaged consumer assets live in `packages/ty-context/assets/**`.
-- Maintainer release/version automation lives in `tools/sync_release_version.mjs`, `tools/release_npm.mjs` and `tools/github_release_publish.mjs`.
+- Maintainer release/version automation is split into preparation and publication. Release preparation owns version bumps, release-surface sync, package asset sync and local validation before commit; release publication owns only already-committed version publication, registry verification, tag/GitHub Release handling and optional registry smoke.
+- Trusted Publishing remains the preferred npm release path. Local npm publication is an explicit fallback that must not claim Trusted Publishing provenance and must require an explicit local-fallback confirmation.
+- Maintainer release/version automation lives in `tools/sync_release_version.mjs`, `tools/release_prepare.mjs`, `tools/release_publish.mjs`, compatibility wrapper `tools/release_npm.mjs` and `tools/github_release_publish.mjs`.
 
 ## Key Constraints
 

@@ -67,6 +67,19 @@ assert.equal(
   "first-publish-needed"
 );
 
+assert.match(
+  summarize(
+    report({
+      whoamiOk: true,
+      registryPackage: {
+        ok: false,
+        state: "missing"
+      }
+    })
+  ).nextAction,
+  /release:prepare .*release:publish -- --local-fallback --yes --registry-smoke/
+);
+
 assert.equal(
   summarize(
     report({

@@ -271,7 +271,7 @@ ${renderUpdateInstructions(releaseUpdateMode)}
 
 ## What Changed
 
-- Publishes \`${packageName}@${version}\` through npm Trusted Publishing.
+- Publishes \`${packageName}@${version}\` with the synchronized package assets and CLI build.
 - Keeps the install path on the renamed package: \`${packageName}\`.
 - Adds a recoverable \`ty-context upgrade\` path for older \`sdlc-harness\` / \`pjsdlc_managed\` installations, with conflicts and overrides reported as manual follow-up instead of guessed.
 - Keeps the core positioning tight: minimal repo-native project memory for AI coding agents.

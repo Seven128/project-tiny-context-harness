@@ -96,6 +96,8 @@ for (const relativePath of [
 const releasePacket = read("docs/launch/github-release-1.2.3.md");
 assert.match(releasePacket, /Project Tiny Context Harness 1\.2\.3/);
 assert.match(releasePacket, /Update Mode: `sync-only`/);
+assert.match(releasePacket, /Publishes `project-tiny-context-harness@1\.2\.3` with the synchronized package assets and CLI build/);
+assert.doesNotMatch(releasePacket, /Publishes `project-tiny-context-harness@1\.2\.3` through npm Trusted Publishing/);
 assert.match(releasePacket, /sync-only/);
 assert.match(releasePacket, /upgrade-required/);
 assert.match(releasePacket, /manual-required/);

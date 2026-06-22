@@ -242,6 +242,9 @@ function localChecks() {
   const contextGapTemplate = read(".github/ISSUE_TEMPLATE/context_gap.yml");
   const sourcePreviewReportTemplate = read(".github/ISSUE_TEMPLATE/source_preview_report.yml");
   const releaseScript = read("tools/release_npm.mjs");
+  const releasePrepareScript = read("tools/release_prepare.mjs");
+  const releasePublishScript = read("tools/release_publish.mjs");
+  const syncReleaseVersionScript = read("tools/sync_release_version.mjs");
   const githubReleasePublishScript = read("tools/github_release_publish.mjs");
   const managedMakefile = read(".codex/ty-context-managed/make/ty-context.mk");
   const packagedMakefile = read("packages/ty-context/assets/make/ty-context.mk");
@@ -301,8 +304,9 @@ function localChecks() {
       contains(spec, /Release update mode is part of the release contract/) &&
       contains(githubReleasePacket, /Update Mode: `(sync-only|upgrade-required|manual-required)`/) &&
       contains(githubReleasePacket, /ty-context upgrade --check/) &&
-      contains(releaseScript, /Release update mode:/) &&
-      contains(releaseScript, /readReleaseUpdateMode/),
+      contains(syncReleaseVersionScript, /Release update mode for/) &&
+      contains(syncReleaseVersionScript, /extractReleaseUpdateMode/) &&
+      contains(releasePublishScript, /readReleaseUpdateMode/),
     "README, package README, package asset README, spec, release packet and release report generator expose sync-only / upgrade-required / manual-required update semantics."
   );
 
@@ -414,17 +418,22 @@ function localChecks() {
       !hasCjk(managedMakefile) &&
       !hasCjk(packagedMakefile) &&
       !hasCjk(releaseScript) &&
+      !hasCjk(releasePrepareScript) &&
+      !hasCjk(releasePublishScript) &&
+      !hasCjk(syncReleaseVersionScript) &&
       contains(managedMakefile, /Diagnose Harness root, core package and schema version/) &&
       contains(managedMakefile, /Refresh managed assets; does not run migrations/) &&
       contains(packagedMakefile, /Run safe upgrade migrations, sync managed assets and doctor/) &&
       contains(packagedMakefile, /Check whether project_context\/\*\* supports context recovery/) &&
-      contains(releaseScript, /# Current Release Report/) &&
-      contains(releaseScript, /## 2\. Included Changes/) &&
-      contains(releaseScript, /Update mode:/) &&
-      contains(releaseScript, /SKIPPED, --full-gate not enabled/) &&
-      contains(releaseScript, /Rollback Plan/) &&
-      contains(releaseScript, /Consumer repository sync\/upgrade follows the release update mode and managed-file incremental rules/),
-    "Generated Makefile help and release reports stay English-first for npm/package users."
+      contains(syncReleaseVersionScript, /# GitHub Release Packet/) &&
+      contains(syncReleaseVersionScript, /## What Changed/) &&
+      contains(syncReleaseVersionScript, /Update Mode:/) &&
+      contains(syncReleaseVersionScript, /## Manual UI Fallback/) &&
+      contains(syncReleaseVersionScript, /Do not claim benchmark wins or adoption in the release/) &&
+      contains(releaseScript, /release:npm is now a compatibility entrypoint/) &&
+      contains(releasePrepareScript, /release_prepare\.mjs/) &&
+      contains(releasePublishScript, /release_publish\.mjs/),
+    "Generated Makefile help, release packets and release command guidance stay English-first for npm/package users."
   );
   addCheck(
     checks,
@@ -1196,13 +1205,19 @@ function localChecks() {
       contains(npmTrustedPublishing, /post-first-publish release path/) &&
       contains(npmTrustedPublishing, /package now exists on npm/) &&
       contains(npmTrustedPublishing, /must not define `NPM_TOKEN` or `NODE_AUTH_TOKEN`/) &&
-      contains(npmTrustedPublishing, /npm run release:sync-version/) &&
+      contains(npmTrustedPublishing, /npm run release:prepare/) &&
+      contains(npmTrustedPublishing, /--update-mode/) &&
+      contains(npmTrustedPublishing, /npm run release:publish -- --local-fallback --yes --registry-smoke/) &&
       contains(npmTrustedPublishing, /npm run release:check-version/) &&
       contains(npmTrustedPublishing, /tools\/github_release_publish\.mjs/) &&
       contains(npmTrustedPublishing, /expected_version: <new-version>/) &&
       contains(npmTrustedPublishing, /0\.2\.41` dry run and real publish/) &&
       rootPackage.scripts?.["release:sync-version"] === "node tools/sync_release_version.mjs" &&
       rootPackage.scripts?.["release:check-version"] === "node tools/sync_release_version.mjs --check" &&
+      rootPackage.scripts?.["release:prepare"] === "node tools/release_prepare.mjs" &&
+      rootPackage.scripts?.["release:publish"] === "node tools/release_publish.mjs" &&
+      hasFile("tools/release_prepare.mjs") &&
+      hasFile("tools/release_publish.mjs") &&
       contains(npmTrustedPublishWorkflow, /name: npm Trusted Publish/) &&
       contains(npmTrustedPublishWorkflow, /workflow_dispatch:/) &&
       contains(npmTrustedPublishWorkflow, /dry_run:/) &&
@@ -1241,9 +1256,9 @@ function localChecks() {
       contains(githubReleasePublishScript, /--dry-run/) &&
       contains(githubReleasePublishScript, /--target/) &&
       contains(githubReleasePublishScript, /--latest/) &&
-      contains(releaseScript, /github release publish/) &&
-      contains(releaseScript, /tools\/github_release_publish\.mjs/) &&
-      contains(releaseScript, /GitHub Release create\/update/) &&
+      contains(releasePublishScript, /publishGitHubRelease/) &&
+      contains(releasePublishScript, /tools\/github_release_publish\.mjs/) &&
+      contains(releasePublishScript, /GitHub Release skipped: gh not authenticated/) &&
       contains(npmPublishRunbook, /npm run release:github -- --version <published-version>/) &&
       contains(npmTrustedPublishing, /Dry runs do not create or edit GitHub releases/) &&
       contains(primaryLaunch, /future npm Trusted Publishing real runs create or update this release automatically/),
@@ -1315,14 +1330,32 @@ function localChecks() {
   );
   addCheck(
     checks,
-    "release-npm-first-publish-target",
-    contains(releaseScript, /registryPackageExists/) &&
-      contains(releaseScript, /publish && !versionSpecified && !registryPackageExists/) &&
-      contains(releaseScript, /return currentVersion/) &&
-      contains(releaseScript, /"--access", "public"/) &&
-      contains(releaseScript, /--otp/) &&
-      contains(releaseScript, /otpProvided/),
-    "release npm script keeps first renamed publish on the current workspace version and supports OTP without reporting the code."
+    "release-flow-split",
+    rootPackage.scripts?.["release:prepare"] === "node tools/release_prepare.mjs" &&
+      rootPackage.scripts?.["release:publish"] === "node tools/release_publish.mjs" &&
+      rootPackage.scripts?.["release:npm"] === "node tools/release_npm.mjs" &&
+      contains(releasePrepareScript, /updatePackageVersion/) &&
+      contains(releasePrepareScript, /"package", "sync-source"/) &&
+      contains(releasePrepareScript, /"package", "check-source"/) &&
+      contains(releasePrepareScript, /"release:check-version"/) &&
+      contains(releasePrepareScript, /"upgrade", "--check", "--json"/) &&
+      contains(releasePrepareScript, /"git", \["diff", "--check"\]/) &&
+      contains(releasePublishScript, /assertPublishPrerequisites/) &&
+      contains(releasePublishScript, /git", \["status", "--porcelain"\]/) &&
+      contains(releasePublishScript, /git", \["branch", "--show-current"\]/) &&
+      contains(releasePublishScript, /refs\/remotes\/origin\/main/) &&
+      contains(releasePublishScript, /registryHasVersion/) &&
+      contains(releasePublishScript, /readReleaseUpdateMode/) &&
+      contains(releasePublishScript, /localFallback && !args\.yes/) &&
+      contains(releasePublishScript, /publishTarball/) &&
+      contains(releasePublishScript, /ensureTag/) &&
+      contains(releasePublishScript, /publishGitHubRelease/) &&
+      !contains(releasePublishScript, /sync_release_version|sync-source|updatePackageVersion|resolveTargetVersion/) &&
+      contains(releaseScript, /compatibility entrypoint/) &&
+      contains(releaseScript, /no longer accepts --version, --publish or --full-gate/) &&
+      contains(releaseScript, /release:prepare/) &&
+      contains(releaseScript, /release:publish/),
+    "Release automation is split into a mutating prepare phase, a publish-only phase and a compatibility release:npm entrypoint."
   );
   addCheck(
     checks,
@@ -1836,7 +1869,7 @@ function summarize(checks, options) {
 
 function nextActionForFailedCheck(check) {
   if (check.id === "npm-fetch") {
-    return `Run \`npm run launch:npm-access\` to inspect npm auth and package state, then publish \`project-tiny-context-harness@${localPackageJson.version}\` with [docs/launch/npm-publish-runbook.md](docs/launch/npm-publish-runbook.md); if npm returns E403, use [docs/launch/npm-credential-unblock.md](docs/launch/npm-credential-unblock.md).`;
+    return `Run \`npm run launch:npm-access\` to inspect npm auth and package state, prepare the new version with \`npm run release:prepare -- --version ${localPackageJson.version} --update-mode sync-only\`, commit and push it, then publish with [docs/launch/npm-trusted-publishing.md](docs/launch/npm-trusted-publishing.md); if local fallback returns E403, use [docs/launch/npm-credential-unblock.md](docs/launch/npm-credential-unblock.md).`;
   }
   if (check.id === "github-homepage") {
     return "Run `npm run launch:github-metadata` to inspect the GitHub About drift; from a trusted shell with `GITHUB_TOKEN` or `GH_TOKEN`, run `npm run launch:github-metadata -- --apply`, or use [docs/launch/github-metadata.md](docs/launch/github-metadata.md) manually.";

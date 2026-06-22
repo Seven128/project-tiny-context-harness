@@ -28,10 +28,20 @@ Real publish runs also create or update the matching GitHub Release from `docs/l
 
 Because npm package README content is also tied to the immutable published version, local README copy changes will not appear on npm until a new version is published. Treat a stale `npm-readme-renamed-surfaces` info item from `npm run launch:strict-external` as a conversion cleanup task for the next patch release, not as permission to republish the existing version.
 
-For an emergency local fallback after a future version bump, use:
+Prepare a future release locally, then commit and push the versioned release surfaces before publishing:
 
 ```sh
-npm run release:npm -- --version <new-version> --publish --yes --full-gate --registry-smoke
+npm run release:prepare -- --version patch --update-mode sync-only
+git diff --stat
+git add -A
+git commit -m "Release <new-version>"
+git push origin main
+```
+
+For an emergency local fallback after that committed preparation, use:
+
+```sh
+npm run release:publish -- --local-fallback --yes --registry-smoke
 ```
 
 Use [npm-credential-unblock.md](npm-credential-unblock.md) if that fails with a 403 credentials error.
@@ -68,7 +78,7 @@ It is manual-only:
 - `workflow_dispatch` prevents accidental publish on every push or tag.
 - `dry_run` defaults to `true`.
 - `expected_version` must match `packages/ty-context/package.json`.
-- Versioned release surfaces must be synchronized with `npm run release:sync-version`; the workflow verifies this with `npm run release:check-version`.
+- Versioned release surfaces must be prepared before commit with `npm run release:prepare -- --version <patch|minor|major|x.y.z> --update-mode <sync-only|upgrade-required|manual-required>`; the workflow verifies this with `npm run release:check-version`.
 - The job runs on `ubuntu-latest` with Node `24`.
 - The workflow installs the latest npm CLI and asserts npm CLI 11.5.1 or later.
 - It runs package tests, package source drift check, `make validate-context` and `npm pack --dry-run --workspace project-tiny-context-harness`.

@@ -47,6 +47,8 @@ Interpretation:
 
 ## Choose One Publish Path
 
+All local fallback commands below assume the target version was already prepared with `npm run release:prepare -- --version <new-version> --update-mode <sync-only|upgrade-required|manual-required>`, committed, and pushed to `origin/main`. `release:publish` does not bump versions or rewrite release assets.
+
 ### Path A: Interactive Login With OTP
 
 Use this if you can log in interactively and respond to npm 2FA.
@@ -55,7 +57,7 @@ Use this if you can log in interactively and respond to npm 2FA.
 npm login
 npm whoami
 npm profile get name email tfa --json
-npm run release:npm -- --version <new-version> --publish --yes --full-gate --registry-smoke --otp <current-otp>
+npm run release:publish -- --local-fallback --yes --registry-smoke --otp <current-otp>
 ```
 
 Use a fresh OTP for each publish attempt. Do not store OTP values in notes.
@@ -82,7 +84,7 @@ Temporary local use on PowerShell:
 $env:NPM_TOKEN = "<token>"
 npm config set //registry.npmjs.org/:_authToken "$env:NPM_TOKEN" --location=user
 npm whoami
-npm run release:npm -- --version <new-version> --publish --yes --full-gate --registry-smoke
+npm run release:publish -- --local-fallback --yes --registry-smoke
 ```
 
 After publish succeeds, either keep the token only if needed for future releases or revoke it on npmjs.com and remove it from local config:
@@ -114,7 +116,7 @@ Run:
 
 ```sh
 npm run launch:npm-access
-npm run release:npm
+npm run release:publish
 npm run launch:check
 node packages/ty-context/dist/cli.js package check-source
 make validate-context
@@ -147,13 +149,13 @@ Expected current state:
 Run:
 
 ```sh
-npm run release:npm -- --version <new-version> --publish --yes --full-gate --registry-smoke
+npm run release:publish -- --local-fallback --yes --registry-smoke
 ```
 
 If using interactive OTP:
 
 ```sh
-npm run release:npm -- --version <new-version> --publish --yes --full-gate --registry-smoke --otp <current-otp>
+npm run release:publish -- --local-fallback --yes --registry-smoke --otp <current-otp>
 ```
 
 ## Post-Publish Gate
