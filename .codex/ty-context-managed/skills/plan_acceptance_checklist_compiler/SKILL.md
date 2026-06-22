@@ -39,6 +39,8 @@ The compiler may receive one source plan or a two-document upstream input packet
 
 These inputs are preserved source input, not proof. The compiler's job is to turn them into the full checklist and target prompt that Superpowers can execute against without losing acceptance authority.
 
+Two-document upstream input packet handling is strict mode. If the compiler cannot fully parse the required content from both documents, it must stop and ask the user to provide the missing required fields. Do not generate a checklist or goal/target-mode prompt from an incomplete two-document packet.
+
 Exception: if the Context confirmation gate below triggers, stop after materializing the plan and reading enough Context to explain the uncertainty. Ask the user for confirmation before producing the checklist or goal/target-mode prompt.
 
 The goal/target-mode prompt must be no longer than 3850 characters, including line breaks. This conservative budget keeps the prompt below Codex's 4000-character practical paste boundary even when character counting differs slightly. Keep the prompt information-dense: preserve required paths, core acceptance criteria, evidence rules, blockers and false-completion traps while using compact wording. Use the user's language when practical. For Chinese requests, use this shape:
@@ -152,6 +154,8 @@ Rules:
 - The development plan is execution direction, not proof. The acceptance-and-tests document is acceptance input, not proof.
 - In the full checklist's `Plan source` and per-row `Source` fields, preserve whether a requirement came from the development plan, the acceptance-and-tests document, user instruction, project Context, code contract or verification risk.
 - If the development plan is not bite-sized enough for direct execution, the generated prompt must require `superpowers:writing-plans` before implementation.
+- This two-document upstream input packet path is strict mode. The compiler must be able to parse the objective or original requirement source summary, implementation/source plan, acceptance items, required evidence, verification methods, fail conditions, required tests or explicit test scope, core paths or explicit non-UI/runtime scope, state-machine rules, invalid evidence rules, local audit expectations and blockers or explicit no-blocker statement.
+- If any required field cannot be fully parsed from the two documents, stop after preserving the inputs. Do not generate a checklist or goal/target-mode prompt. Tell the user which missing required fields must be added to `Development Plan / 开发方案` or `Acceptance and Tests / 验收清单和测试用例`.
 
 ## Step 1: Materialize The Plan Under `tmp/ty-context/plan-acceptance/`
 
@@ -185,7 +189,7 @@ After materializing the plan, inspect it for an explicit concrete acceptance che
 
 Plan-provided checklist reuse applies only when the plan contains a clearly labeled checklist or checklist table section, such as `Acceptance Checklist`, `Acceptance Criteria`, `验收清单`, `验收标准`, or equivalent heading, and that section contains concrete acceptance items rather than only saying that acceptance is needed.
 
-For a two-document upstream input packet, the `Acceptance and Tests / 验收清单和测试用例` document is the preferred acceptance source, but it is not automatically a frozen verbatim full checklist. Reuse it as the full checklist only if it already includes enough acceptance structure for target-mode execution: AC ID, scope, required evidence, verification method, fail condition, state-machine rules and invalid evidence rules. If any of those are missing, use the generated-checklist flow below and preserve the acceptance-and-tests document as source material; generated rows may fill missing evidence, mark gaps, or identify ambiguity without treating the incomplete upstream packet as proof.
+For a two-document upstream input packet, the `Acceptance and Tests / 验收清单和测试用例` document is the preferred acceptance source, but it is not automatically a frozen verbatim full checklist. Reuse it as the full checklist only if it already includes enough acceptance structure for target-mode execution: AC ID, scope, required evidence, verification method, fail condition, state-machine rules and invalid evidence rules. If any of those are missing, strict mode applies: stop, list the missing required fields, and ask the user to provide a complete acceptance-and-tests packet.
 
 When a plan-provided checklist is found:
 
@@ -202,7 +206,7 @@ When a plan-provided checklist is found:
 
 When no explicit concrete plan-provided checklist exists, continue with the generated-checklist flow below.
 
-When a two-document upstream input packet exists but the acceptance-and-tests document is incomplete, continue with the generated-checklist flow below even if it contains some checklist-like bullets. The generated checklist must map the incomplete source material into falsifiable AC rows instead of silently treating partial upstream acceptance text as complete.
+When a two-document upstream input packet exists but either document is incomplete, do not continue with the generated-checklist flow below. Strict mode means incomplete two-document input cannot be repaired by inference. Do not generate a checklist or goal/target-mode prompt; report the missing required fields and wait for the user to provide a complete packet.
 
 When a plan already includes explicit test requirements but not a full acceptance checklist:
 
