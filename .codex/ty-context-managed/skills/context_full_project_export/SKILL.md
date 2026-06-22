@@ -1,6 +1,6 @@
 ---
 name: context_full_project_export
-description: Use when the user explicitly asks to 导出尽可能详细的项目全量上下文, 全量上下文导出, 项目上下文全量导出, full project context export, export full project context, project context export, Source Pack export, source-pack export, code index export, task context export, 当前项目代码实现, 代码级实现导出, or code-level implementation export in a Minimal Context Harness project.
+description: Use when the user explicitly asks to 导出尽可能详细的项目全量上下文, 全量上下文导出, 项目上下文全量导出, 项目整体上下文, full project context export, export full project context, project context export, project overall context, Source Pack export, source-pack export, code index export, task context export, 当前项目代码实现, 代码级实现导出, or code-level implementation export in a Minimal Context Harness project.
 ---
 
 # Context Full Project Export
@@ -13,13 +13,13 @@ This Skill creates a temporary export artifact only. It does not author durable 
 
 ## Purpose
 
-When the user needs a full project context export or external LLM handoff, create temporary export artifacts that collect project Context, key agent guidance, architecture/module facts, code navigation and bounded source support for copying into an external tool or one-off discussion.
+When the user needs a full project context export, project overall context export or external LLM handoff, create temporary export artifacts that collect project Context, key agent guidance, architecture/module facts, code navigation and bounded source support for copying into an external tool or one-off discussion.
 
 When the user needs a code-level implementation export, create one temporary Markdown snapshot of current source and engineering configuration files for upload to Web GPT or another external model.
 
 ## Workflow
 
-1. Prefer the bounded Source Pack for external LLM / Web GPT planning. It writes at most 5 files plus a manifest under `tmp/ty-context/context-exports/<timestamp>/` and rewrites `latest/`:
+1. Prefer the bounded Source Pack for external LLM / Web GPT planning. It writes at most 5 files total under `tmp/ty-context/context-exports/latest/` and removes old timestamped export rounds:
    - `npx --yes --package project-tiny-context-harness@latest ty-context export-context --source-pack`
 2. Use `--code-index` when implementation navigation is enough and full source bodies are not needed:
    - `npx --yes --package project-tiny-context-harness@latest ty-context export-context --code-index`
@@ -47,7 +47,7 @@ When the user needs a code-level implementation export, create one temporary Mar
 ## Output Boundaries
 
 - Export artifacts must remain temporary export artifacts, not Context.
-- `--source-pack` defaults to `tmp/ty-context/context-exports/<timestamp>/` and `latest/`, with `source-pack-manifest.json`, `full-project-context.md`, `code-index.md` and optional `code-bundle-core.md` / `code-bundle-extended.md`.
+- `--source-pack` defaults to `tmp/ty-context/context-exports/latest/`, with `source-pack-manifest.json`, `full-project-context.md`, `code-index.md` and optional `code-bundle-core.md` / `code-bundle-extended.md`.
 - `--source-pack` and `--task-context` are capped at 5 output files. `--max-pack-files` cannot exceed 5.
 - `--code-index` creates a navigation index and manifest without complete source bodies.
 - `--task-context <name>` creates `task-contexts/task-context-<name>.md` plus optional support bundle; profile verification entries are listed, not executed.

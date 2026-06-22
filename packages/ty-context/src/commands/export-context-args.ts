@@ -76,7 +76,7 @@ export function helpText(): string {
   export-context --code [--output tmp/ty-context/context-exports/<name>.md] [--check]
   export-context --all [--check]
   export-context --code-index [--profile <id>] [--include-code <path-or-glob>] [--check]
-  export-context --source-pack [--profile <id>] [--bundle-strategy auto|area|topdir|config] [--max-pack-files 5] [--max-bundle-characters <n>] [--redaction-strict] [--prune <count>] [--check]
+  export-context --source-pack [--profile <id>] [--bundle-strategy auto|area|topdir|config] [--max-pack-files 5] [--max-bundle-characters <n>] [--redaction-strict] [--check]
   export-context --code-bundles [--profile <id>] [--include-code <path-or-glob>] [--max-pack-files 5] [--check]
   export-context --task-context <name> [--profile <id>] [--include-context <path-or-glob>] [--include-code <path-or-glob>] [--max-pack-files 5] [--redaction-strict] [--check]
 
@@ -84,7 +84,7 @@ Creates temporary Markdown artifacts for copying or external-tool ingestion.
 --full exports the project Context summary as a full-project-context artifact.
 --code exports one current implementation snapshot as a code-level-implementation artifact.
 --all exports both default artifacts in one command.
-Source Pack modes write timestamped directories plus latest/ under tmp/ty-context/context-exports/**.
+Source Pack modes write only tmp/ty-context/context-exports/latest/ and remove old timestamped rounds.
 --source-pack and --task-context are bounded to at most 5 files; --max-pack-files cannot exceed 5.
 Profiles are export selectors read from <harnessRoot>/config.yaml; verification entries are listed, not executed.
 Secret redaction is always enabled; --redaction-strict fails if redaction was required.
@@ -147,4 +147,3 @@ function hasSourcePackOnlyOptions(parsed: ExportContextArgs): boolean {
       parsed.prune !== undefined
   );
 }
-

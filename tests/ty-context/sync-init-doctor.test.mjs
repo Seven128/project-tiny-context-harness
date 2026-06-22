@@ -115,7 +115,8 @@ try {
   await stat(path.join(root, ".agent/skills/context_surface_contract/SKILL.md"));
   await stat(path.join(root, ".agent/skills/context_full_project_export/SKILL.md"));
   await stat(path.join(root, ".agent/skills/context_harness_upgrade/SKILL.md"));
-  await stat(path.join(root, ".agent/skills/plan_acceptance_checklist_compiler/SKILL.md"));
+  await stat(path.join(root, ".agent/skills/normal-long-task/SKILL.md"));
+  await stat(path.join(root, ".agent/skills/superpowers-long-task/SKILL.md"));
   await assert.rejects(stat(path.join(root, "project_context/areas/product-surface-contracts.md")));
   await assert.rejects(stat(path.join(root, ".work_products/INDEX.md")));
 
@@ -140,6 +141,8 @@ try {
   assert.match(agents, /Impeccable/);
   assert.match(agents, /npx impeccable detect <target>/);
   assert.match(agents, /全量上下文导出/);
+  assert.match(agents, /项目整体上下文/);
+  assert.match(agents, /project overall context/);
   assert.match(agents, /export-context --source-pack/);
   assert.match(agents, /export-context --code-index/);
   assert.match(agents, /export-context --task-context <name>/);
@@ -156,8 +159,10 @@ try {
   assert.match(agents, /full project context export/);
   assert.match(agents, /upgrade Tiny Context/);
   assert.match(agents, /context_harness_upgrade/);
-  assert.match(agents, /goal-mode prompt/);
-  assert.match(agents, /plan_acceptance_checklist_compiler/);
+  assert.match(agents, /\/normal-long-task/);
+  assert.match(agents, /\/superpowers-long-task/);
+  assert.doesNotMatch(agents, /plan_acceptance_checklist_compiler/);
+  assert.doesNotMatch(agents, /superpowers_target_prompt_compiler/);
   assert.match(agents, /tmp\/ty-context\/plan-acceptance/);
   assert.match(agents, /独立项目本地 Skill/);
   assert.match(agents, /uiux_design\/SKILL\.md/);
@@ -294,7 +299,9 @@ try {
   assert.match(surfaceTemplate, /read_policy = "on-demand"/);
   const exportSkill = await readFile(path.join(root, ".agent/skills/context_full_project_export/SKILL.md"), "utf8");
   assert.match(exportSkill, /导出尽可能详细的项目全量上下文/);
+  assert.match(exportSkill, /项目整体上下文/);
   assert.match(exportSkill, /full project context export/);
+  assert.match(exportSkill, /project overall context/);
   assert.match(exportSkill, /Source Pack export/);
   assert.match(exportSkill, /code index export/);
   assert.match(exportSkill, /task context export/);
@@ -323,35 +330,49 @@ try {
   assert.match(upgradeSkill, /project_context\/context\.toml/);
   assert.match(upgradeSkill, /make validate-context/);
   assert.match(upgradeSkill, /Context: no durable project facts changed/);
-  const planAcceptanceSkill = await readFile(
-    path.join(root, ".agent/skills/plan_acceptance_checklist_compiler/SKILL.md"),
+  const normalLongTaskSkill = await readFile(
+    path.join(root, ".agent/skills/normal-long-task/SKILL.md"),
     "utf8"
   );
-  assert.match(planAcceptanceSkill, /acceptance checklist for this plan/);
-  assert.match(planAcceptanceSkill, /goal-mode prompt/);
-  assert.match(planAcceptanceSkill, /target-mode prompt/);
-  assert.match(planAcceptanceSkill, /为这份方案生成验收清单/);
-  assert.match(planAcceptanceSkill, /tmp\/ty-context\/plan-acceptance/);
-  assert.match(planAcceptanceSkill, /<plan-slug>-local-audit\.md/);
-  assert.match(planAcceptanceSkill, /3850 characters/);
-  assert.doesNotMatch(planAcceptanceSkill, stalePromptBudget);
-  assert.doesNotMatch(planAcceptanceSkill, /4000 characters/);
-  assert.match(planAcceptanceSkill, /complete acceptance standard/);
-  assert.match(planAcceptanceSkill, /acceptance is judged against it/);
-  assert.match(planAcceptanceSkill, /every item must be checked before completion/);
-  assert.match(planAcceptanceSkill, /该文件是完整验收标准，验收以这个为准。完成前必须逐项检查，不满足则继续实现。/);
-  assert.match(planAcceptanceSkill, /direction, priority and recovery navigation/);
-  assert.match(planAcceptanceSkill, /not Context or proof/);
-  assert.match(planAcceptanceSkill, /Minimal User Blocker Protocol/);
-  assert.match(planAcceptanceSkill, /Evidence Layer Separation/);
-  assert.match(planAcceptanceSkill, /Evidence Ledger/);
-  assert.match(planAcceptanceSkill, /Current-state claims/);
-  assert.match(planAcceptanceSkill, /Invalid completion evidence/);
-  assert.match(planAcceptanceSkill, /artifact accepted by validator/);
-  assert.match(planAcceptanceSkill, /not a global task manager/);
-  assert.match(planAcceptanceSkill, /workflow-contract `plan\.md`/);
-  assert.match(planAcceptanceSkill, /Do not execute the plan/);
-  assert.match(planAcceptanceSkill, /Do not include concrete business-domain logic/);
+  assert.match(normalLongTaskSkill, /name: normal-long-task/);
+  assert.match(normalLongTaskSkill, /Use when directly invoked for ordinary long-running task acceptance planning\./);
+  assert.match(normalLongTaskSkill, /tmp\/ty-context\/plan-acceptance/);
+  assert.match(normalLongTaskSkill, /<plan-slug>-local-audit\.md/);
+  assert.match(normalLongTaskSkill, /3850 characters/);
+  assert.doesNotMatch(normalLongTaskSkill, stalePromptBudget);
+  assert.doesNotMatch(normalLongTaskSkill, /4000 characters/);
+  assert.match(normalLongTaskSkill, /complete acceptance standard/);
+  assert.match(normalLongTaskSkill, /acceptance is judged against it/);
+  assert.match(normalLongTaskSkill, /every item must be checked before completion/);
+  assert.match(normalLongTaskSkill, /该文件是完整验收标准，验收以这个为准。完成前必须逐项检查，不满足则继续实现。/);
+  assert.match(normalLongTaskSkill, /direction, priority and recovery navigation/);
+  assert.match(normalLongTaskSkill, /not Context or proof/);
+  assert.match(normalLongTaskSkill, /Minimal User Blocker Protocol/);
+  assert.match(normalLongTaskSkill, /Evidence Layer Separation/);
+  assert.match(normalLongTaskSkill, /Evidence Ledger/);
+  assert.match(normalLongTaskSkill, /Current-state claims/);
+  assert.match(normalLongTaskSkill, /Invalid completion evidence/);
+  assert.match(normalLongTaskSkill, /artifact accepted by validator/);
+  assert.match(normalLongTaskSkill, /not a global task manager/);
+  assert.match(normalLongTaskSkill, /workflow-contract `plan\.md`/);
+  assert.match(normalLongTaskSkill, /Do not execute the plan/);
+  assert.match(normalLongTaskSkill, /Do not include concrete business-domain logic/);
+  assert.doesNotMatch(normalLongTaskSkill, /Superpowers input packet|Superpowers 输入包|superpowers:writing-plans/);
+
+  const superpowersLongTaskSkill = await readFile(
+    path.join(root, ".agent/skills/superpowers-long-task/SKILL.md"),
+    "utf8"
+  );
+  assert.match(superpowersLongTaskSkill, /name: superpowers-long-task/);
+  assert.match(superpowersLongTaskSkill, /Use when directly invoked for Superpowers long-running task target prompt preparation\./);
+  assert.match(superpowersLongTaskSkill, /not a Superpowers official schema|不是 Superpowers 官方 schema/i);
+  assert.match(superpowersLongTaskSkill, /Superpowers input packet/);
+  assert.match(superpowersLongTaskSkill, /superpowers:writing-plans/);
+  assert.match(superpowersLongTaskSkill, /superpowers:subagent-driven-development/);
+  assert.match(superpowersLongTaskSkill, /superpowers:executing-plans/);
+  assert.match(superpowersLongTaskSkill, /superpowers:test-driven-development/);
+  assert.match(superpowersLongTaskSkill, /superpowers:verification-before-completion/);
+  assert.match(superpowersLongTaskSkill, /Do not generate the Superpowers target-mode prompt/);
 
   const managedProductSkillPath = path.join(root, ".agent/skills/context_product_plan/SKILL.md");
   const packagedProductSkill = await readFile(
@@ -420,7 +441,8 @@ try {
   await stat(path.join(configuredRoot, ".harness/skills/context_surface_contract/SKILL.md"));
   await stat(path.join(configuredRoot, ".harness/skills/context_full_project_export/SKILL.md"));
   await stat(path.join(configuredRoot, ".harness/skills/context_harness_upgrade/SKILL.md"));
-  await stat(path.join(configuredRoot, ".harness/skills/plan_acceptance_checklist_compiler/SKILL.md"));
+  await stat(path.join(configuredRoot, ".harness/skills/normal-long-task/SKILL.md"));
+  await stat(path.join(configuredRoot, ".harness/skills/superpowers-long-task/SKILL.md"));
   await assert.rejects(stat(path.join(configuredRoot, ".harness/ty-context-managed/override_skills")));
   await stat(path.join(configuredRoot, "project_context/global.md"));
   await stat(path.join(configuredRoot, "project_context/context.toml"));

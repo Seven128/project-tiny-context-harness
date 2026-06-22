@@ -34,29 +34,34 @@ test("code-index check reports planned artifacts without source bodies or writes
   }
 });
 
-test("source-pack writes bounded timestamp and latest artifacts with manifest schema", async () => {
+test("source-pack writes bounded latest artifacts with manifest schema", async () => {
   const root = await createSourcePackProject();
   try {
     await mkdir(path.join(root, "tmp", "ty-context", "context-exports", "latest"), { recursive: true });
     await writeFile(path.join(root, "tmp", "ty-context", "context-exports", "latest", "stale.md"), "old\n", "utf8");
+    await mkdir(path.join(root, "tmp", "ty-context", "context-exports", "20260601T080910Z"), { recursive: true });
+    await writeFile(path.join(root, "tmp", "ty-context", "context-exports", "20260601T080910Z", "old.md"), "old\n", "utf8");
     const report = await runSourcePackExport(root, {
       mode: "source-pack",
       now: new Date("2026-06-07T08:09:10.000Z"),
       command: "ty-context export-context --source-pack"
     });
     assert.equal(report.wrote, true);
+    assert.equal(report.outputRelativePath, "tmp/ty-context/context-exports/latest");
     assert.ok(report.artifacts.length <= 5);
     assert.ok((await listFiles(report.outputDirectory)).length <= 5);
-    assert.ok((await listFiles(path.join(root, "tmp", "ty-context", "context-exports", "latest"))).length <= 5);
     await assert.rejects(stat(path.join(root, "tmp", "ty-context", "context-exports", "latest", "stale.md")));
+    await assert.rejects(stat(path.join(root, "tmp", "ty-context", "context-exports", "20260601T080910Z")));
+    await assert.rejects(stat(path.join(root, "tmp", "ty-context", "context-exports", "20260607T080910Z")));
 
     const manifest = JSON.parse(await readFile(path.join(report.outputDirectory, "source-pack-manifest.json"), "utf8"));
     assert.equal(manifest.schema_version, "source-pack-v1");
     assert.equal(manifest.max_pack_files, 5);
     assert.equal(manifest.command, "ty-context export-context --source-pack");
-    assert.ok(manifest.recommended_upload_sets.daily_planning.includes("tmp/ty-context/context-exports/20260607T080910Z/code-index.md"));
+    assert.ok(manifest.recommended_upload_sets.daily_planning.includes("tmp/ty-context/context-exports/latest/code-index.md"));
     assert.ok(manifest.recommended_upload_sets.cross_module_review.length <= 4);
     assert.equal(manifest.artifacts.some((artifact) => path.isAbsolute(artifact.path)), false);
+    assert.equal(manifest.artifacts.every((artifact) => artifact.path.startsWith("tmp/ty-context/context-exports/latest/")), true);
     for (const artifact of manifest.artifacts) {
       const content = await readFile(path.join(root, ...artifact.path.split("/")), "utf8");
       assert.equal(artifact.sha256, createHash("sha256").update(content, "utf8").digest("hex"));
@@ -129,7 +134,7 @@ test("redaction strict fails before writing and profile paths cannot escape", as
   }
 });
 
-test("source-pack output is deterministic for fixed timestamp and prune keeps latest", async () => {
+test("source-pack output is deterministic for fixed timestamp and keeps only latest", async () => {
   const root = await createSourcePackProject();
   try {
     const first = await runSourcePackExport(root, { mode: "source-pack", now: new Date("2026-06-07T08:09:10.000Z") });
@@ -139,7 +144,7 @@ test("source-pack output is deterministic for fixed timestamp and prune keeps la
 
     await runSourcePackExport(root, { mode: "source-pack", now: new Date("2026-06-08T08:09:10.000Z"), prune: 1 });
     await assert.rejects(stat(path.join(root, "tmp", "ty-context", "context-exports", "20260607T080910Z")));
-    await stat(path.join(root, "tmp", "ty-context", "context-exports", "20260608T080910Z"));
+    await assert.rejects(stat(path.join(root, "tmp", "ty-context", "context-exports", "20260608T080910Z")));
     await stat(path.join(root, "tmp", "ty-context", "context-exports", "latest"));
   } finally {
     await rm(root, { recursive: true, force: true });

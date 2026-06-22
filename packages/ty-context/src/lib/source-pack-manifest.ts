@@ -59,11 +59,13 @@ export function artifactReport(artifact: PendingArtifact): SourcePackArtifactRep
   };
 }
 
-export async function writeArtifactSet(projectRoot: string, timestampDir: string, artifacts: PendingArtifact[]): Promise<void> {
-  const latestDir = path.join(projectRoot, "tmp", "ty-context", "context-exports", "latest");
-  await writeArtifacts(projectRoot, timestampDir, artifacts);
-  await fs.rm(latestDir, { recursive: true, force: true });
-  await writeArtifacts(projectRoot, latestDir, artifacts);
+export async function writeArtifactSet(projectRoot: string, outputDir: string, artifacts: PendingArtifact[]): Promise<void> {
+  const outputRelative = repoRelative(projectRoot, outputDir);
+  if (!outputRelative.startsWith("tmp/ty-context/context-exports/")) {
+    throw new Error("Source Pack output directory must stay under tmp/ty-context/context-exports/**");
+  }
+  await fs.rm(outputDir, { recursive: true, force: true });
+  await writeArtifacts(projectRoot, outputDir, artifacts);
 }
 
 export async function pruneTimestampedExports(projectRoot: string, keepCount: number): Promise<void> {

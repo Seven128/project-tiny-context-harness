@@ -9,7 +9,9 @@ const forbiddenIncidentNames = new RegExp(
   ["Intel" + "Hub", "i" + "Find", "We" + "Chat", "微" + "信", "App" + "Secret", "provider" + "-specific"].join("|")
 );
 const stalePromptBudget = new RegExp("3980 " + "characters");
-const staleWorkflowBudget = new RegExp("3980-" + "character|3980 " + "characters");
+const superpowersTerms = /Superpowers input packet|Superpowers 输入包|Superpowers execution binding|Superpowers 执行绑定|superpowers:writing-plans|superpowers:subagent-driven-development|superpowers:executing-plans|superpowers:test-driven-development|superpowers:verification-before-completion/i;
+const broadTriggerTerms = /acceptance checklist for this plan|target-mode prompt for this plan|completion definition|为这份方案生成验收清单|整理方案输出普通目标模式文本|目标模式文本/;
+
 const frontMatterDescription = (content) => {
   const match = content.match(/^---\s*\r?\n(?<frontMatter>[\s\S]*?)\r?\n---/);
   assert.ok(match?.groups?.frontMatter, "expected skill front matter");
@@ -37,226 +39,82 @@ const [
   read("packages/ty-context/README.md"),
   read("PROJECT_SPEC.md"),
   read("project_context/areas/harness-package/contracts/workflow-contract.md"),
-  read(".codex/ty-context-managed/skills/plan_acceptance_checklist_compiler/SKILL.md"),
-  read(".codex/skills/plan_acceptance_checklist_compiler/SKILL.md"),
-  read("packages/ty-context/assets/skills/plan_acceptance_checklist_compiler/SKILL.md")
+  read(".codex/ty-context-managed/skills/normal-long-task/SKILL.md"),
+  read(".codex/skills/normal-long-task/SKILL.md"),
+  read("packages/ty-context/assets/skills/normal-long-task/SKILL.md")
 ]);
 
 for (const content of [sourceAgents, packageAgents]) {
-  assert.match(content, /plan_acceptance_checklist_compiler/);
-  assert.match(content, /goal-mode prompt/);
-  assert.match(content, /target-mode prompt/);
+  assert.match(content, /\/normal-long-task/);
+  assert.match(content, /\/superpowers-long-task/);
   assert.match(content, /tmp\/ty-context\/plan-acceptance/);
+  assert.doesNotMatch(content, /plan_acceptance_checklist_compiler/);
+  assert.doesNotMatch(content, /superpowers_target_prompt_compiler/);
 }
 
-for (const content of [rootReadme, packageReadme, spec, workflowContract]) {
-  assert.match(content, /plan acceptance checklist/i);
+for (const content of [rootReadme, rootZhReadme, packageReadme, spec, workflowContract]) {
+  assert.match(content, /ordinary long-task Skill|普通长程任务 Skill|normal-long-task/i);
+  assert.match(content, /Superpowers long-task Skill|Superpowers 长程任务 Skill|superpowers-long-task/i);
   assert.match(content, /tmp\/ty-context\/plan-acceptance/);
   assert.match(content, /local audit/i);
-  assert.match(content, /not (?:execute|a task planner|task state|proof|prove)/i);
+  assert.match(content, /not (?:execute|a task planner|task state|proof|prove)|不执行计划|不证明完成/i);
+  assert.doesNotMatch(content, /superpowers_target_prompt_compiler/);
 }
 
-for (const content of [rootReadme, packageReadme, spec]) {
-  assert.match(content, /Superpowers/);
-  assert.match(content, /https:\/\/github\.com\/obra\/superpowers/i);
-  assert.match(content, /writing-plans/);
-  assert.match(content, /subagent-driven-development/);
-  assert.match(content, /executing-plans/);
-  assert.match(content, /test-driven-development/);
-  assert.match(content, /workflow contract plus Context layer/);
-  assert.match(content, /Context-to-code step/i);
-  assert.doesNotMatch(content, /Superpowers or an equivalent execution-planning pass/i);
-  assert.doesNotMatch(content, /optional execution-planning pass/i);
-}
-
-for (const content of [rootZhReadme, spec]) {
-  assert.match(content, /长程任务/);
-  assert.match(content, /流程契约 \+ Context 层/);
-  assert.match(content, /Context-to-code|Context ——> code|Context 到代码/);
-}
-
-for (const content of [rootReadme, packageReadme]) {
-  assert.match(content, /full checklist/i);
-  assert.match(content, /acceptance (?:authority|standard)/i);
-  assert.match(content, /navigation/i);
-  assert.match(content, /priority/i);
-  assert.match(content, /explicit concrete (?:checklist|acceptance checklist)/i);
-  assert.match(content, /verbatim/i);
-}
-
-assert.match(rootZhReadme, /明确、具体的“验收清单”/);
-assert.match(rootZhReadme, /直接复用那份清单/);
-assert.match(rootZhReadme, /单独写入完整验收清单文件/);
-
+assert.match(workflowContract, /Ordinary Long-Task Skill Boundary/);
+assert.match(workflowContract, /Superpowers Long-Task Skill Boundary/);
+assert.match(workflowContract, /generic target-mode prompt/i);
+assert.match(workflowContract, /Superpowers-specific target-mode prompt/i);
 assert.match(workflowContract, /3850-character effective maximum/);
-assert.doesNotMatch(workflowContract, staleWorkflowBudget);
-assert.match(workflowContract, /full acceptance checklist is the authoritative acceptance standard/);
-assert.match(workflowContract, /Compact prompt summaries provide direction, priority and recovery navigation only/);
-assert.match(workflowContract, /If they conflict, the full checklist wins/);
-assert.match(workflowContract, /explicit concrete acceptance checklist/);
-assert.match(workflowContract, /reuses that plan-provided checklist verbatim/);
-assert.match(workflowContract, /materialized plan and full checklist remain separate files/);
-assert.match(workflowContract, /Current-State Conformance/);
-assert.match(workflowContract, /prompt-level completion discipline/);
-assert.match(workflowContract, /not a CLI validator/);
-assert.match(workflowContract, /not a `validate-context` product-state check/);
-assert.match(workflowContract, /test requirements belong to acceptance evidence/i);
-assert.match(workflowContract, /not a fourth artifact/i);
-assert.match(workflowContract, /required test[\s\S]*command[\s\S]*result[\s\S]*failure reason/i);
-assert.match(workflowContract, /two-document upstream input packet/i);
-assert.match(workflowContract, /Development Plan \/ 开发方案/);
-assert.match(workflowContract, /Acceptance and Tests \/ 验收清单和测试用例/);
-assert.match(workflowContract, /Superpowers input boundary/i);
-assert.match(workflowContract, /strict mode/i);
-assert.match(workflowContract, /must stop/i);
-assert.match(workflowContract, /missing required fields/i);
-assert.match(workflowContract, /fresh browser\/API\/runtime\/data\/test contradiction/i);
-assert.match(workflowContract, /downgrades the affected AC and overall status/i);
+assert.doesNotMatch(workflowContract, /visible Superpowers input packet/i);
+assert.doesNotMatch(workflowContract, /Superpowers input boundary/i);
+assert.doesNotMatch(workflowContract, /Target-mode prompts may recommend the specific Superpowers/i);
+
+assert.match(spec, /ordinary long-task Skill/i);
+assert.match(spec, /Superpowers long-task Skill/i);
+assert.match(spec, /two-document upstream input packet/i);
+assert.match(spec, /acceptance execution contract/i);
 assert.match(spec, /test requirements belong to acceptance evidence/i);
 assert.match(spec, /not a fourth artifact/i);
-assert.match(spec, /required test[\s\S]*command[\s\S]*result[\s\S]*failure reason/i);
-assert.match(spec, /two-document upstream input packet/i);
-assert.match(spec, /execution discipline/i);
-assert.match(spec, /acceptance execution contract/i);
-
-for (const content of [rootReadme, packageReadme]) {
-  assert.match(content, /two-document upstream input/i);
-  assert.match(content, /Development Plan/i);
-  assert.match(content, /Acceptance and Tests/i);
-  assert.match(content, /Source Pack/i);
-  assert.match(content, /not durable Context/i);
-}
 
 assert.match(rootZhReadme, /两份产物/);
 assert.match(rootZhReadme, /《开发方案》/);
 assert.match(rootZhReadme, /《验收清单和测试用例》/);
+assert.match(rootZhReadme, /\/normal-long-task/);
+assert.match(rootZhReadme, /\/superpowers-long-task/);
+assert.match(rootZhReadme, /普通目标模式文本/);
+assert.match(rootZhReadme, /Superpowers 专用目标模式文本/);
 
 for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   const description = frontMatterDescription(content);
-  assert.ok(description.length <= 900, `expected description <= 900 chars, got ${description.length}`);
-  assert.match(description, /acceptance checklist for this plan/);
-  assert.match(description, /goal-mode prompt for this implementation plan/);
-  assert.match(description, /target-mode prompt for this plan/);
-  assert.match(description, /为这份方案生成验收清单/);
-  assert.match(description, /tmp\/ty-context\/plan-acceptance/);
-  assert.match(content, /long-task plan acceptance/);
-  assert.match(content, /audit this plan for acceptance criteria/);
-  assert.match(content, /长程任务方案验收/);
-  assert.match(content, /为这份 md 生成目标模式验收文本/);
+  assert.equal(content.match(/^name:\s*(.*)$/m)?.[1], "normal-long-task");
+  assert.equal(description, "Use when directly invoked for ordinary long-running task acceptance planning.");
+  assert.ok(description.length <= 120, `expected short direct-invocation description, got ${description.length}`);
+  assert.doesNotMatch(description, broadTriggerTerms);
+  assert.doesNotMatch(description, /Superpowers/i);
+
   assert.match(content, /Package-Managed Boundary/);
   assert.match(content, /tmp\/ty-context\/plan-acceptance/);
   assert.match(content, /<plan-slug>-local-audit\.md/);
   assert.match(content, /3850 characters/);
   assert.doesNotMatch(content, stalePromptBudget);
-  assert.match(content, /preserve information density/);
-  assert.match(content, /do not drop required paths, core acceptance categories, blocker rules, evidence rules or false-completion traps merely to be short/);
-  assert.match(content, /compress by tightening wording and referring to the full checklist path while preserving required paths/);
-  assert.match(content, /4000-character practical paste boundary/);
-  assert.doesNotMatch(content, /4000 characters/);
-  assert.doesNotMatch(content, /do not aim for 4000 exactly/);
   assert.match(content, /implementation\/source plan, not acceptance proof/);
   assert.match(content, /source\/implementation plan，非验收证明/);
   assert.match(content, /complete acceptance standard/);
   assert.match(content, /acceptance is judged against it/);
-  assert.match(content, /every item must be checked before completion/);
   assert.match(content, /该文件是完整验收标准，验收以这个为准。完成前必须逐项检查，不满足则继续实现。/);
   assert.match(content, /plan-provided checklist/);
-  assert.match(content, /Acceptance Checklist/);
-  assert.match(content, /验收清单/);
   assert.match(content, /reuse that plan-provided checklist verbatim/);
   assert.match(content, /Do not derive, strengthen, reorder, translate, normalize, merge, split, or add acceptance items/);
-  assert.match(content, /Do not prepend the generated `Acceptance Contract`/);
-  assert.match(content, /Skip Steps 5 and 6 for the full checklist file/);
-  assert.match(content, /If multiple explicit checklist sections exist, copy all of them/);
   assert.match(content, /Keep the copied plan file and full checklist file separate/);
-  assert.match(content, /When no explicit concrete plan-provided checklist exists, continue with the generated-checklist flow below/);
   assert.match(content, /Required automated tests/);
   assert.match(content, /必须新增或补强的自动化测试/);
-  assert.match(content, /test file path/i);
-  assert.match(content, /test name or behavior description/i);
   assert.match(content, /covered acceptance item/i);
   assert.match(content, /verification command/i);
   assert.match(content, /failure condition/i);
-  assert.match(content, /plan already includes explicit test requirements/i);
-  assert.match(content, /use those plan-provided test requirements/i);
-  assert.match(content, /do not replace them with generic AC10/i);
-  assert.match(content, /behavior-level test description/i);
-  assert.match(content, /do not invent exact test names/i);
   assert.match(content, /test requirements are acceptance evidence/i);
   assert.match(content, /No fourth artifact/i);
   assert.match(content, /Do not create `tmp\/ty-context\/plan-acceptance\/<plan-slug>-test-requirements\.md`/);
-  assert.match(content, /AC10 must reference the Required automated tests section/i);
-  assert.match(content, /not expand long test lists/i);
-  assert.match(content, /too large for the 3850-character prompt budget/);
-  assert.match(content, /not by rewriting or adding criteria/);
-  assert.match(content, /compact checklist summary for direction, priority and recovery navigation/);
-  assert.match(content, /summary is direction\/priority\/recovery navigation, not the acceptance authority/);
-  assert.match(content, /overlap with the full checklist is allowed/);
-  assert.match(content, /full checklist wins conflicts/);
-  assert.match(content, /冲突时以完整 checklist 为准/);
-  assert.match(content, /Context confirmation gate/i);
-  assert.match(content, /falsifiable acceptance items/);
-  assert.match(content, /Current-state claims/);
-  assert.match(content, /Evidence ledger required/);
-  assert.match(content, /Invalid completion evidence/);
-  assert.match(content, /Evidence Ledger/);
-  assert.match(content, /Expected state/);
-  assert.match(content, /Current observed state/);
-  assert.match(content, /Current evidence/);
-  assert.match(content, /Evidence location \/ API \/ UI \/ command/);
-  assert.match(content, /proven/);
-  assert.match(content, /unproven/);
-  assert.match(content, /stale-evidence/);
-  assert.match(content, /runtime-disconnected/);
-  assert.match(content, /implementation-drift/);
-  assert.match(content, /blocked/);
-  assert.match(content, /deferred-by-explicit-scope/);
-  assert.match(content, /Missing ledger evidence means incomplete, not complete/);
-  assert.match(content, /Hard Blocker Handling/);
-  assert.match(content, /Treat any unresolved required blocker as non-completion/);
-  assert.match(content, /if only locally unsatisfiable hard blockers remain, pause for the user or external owner instead of marking the goal complete/);
-  assert.match(content, /Minimal User Blocker Protocol/);
-  assert.match(content, /safe self-service discovery/);
-  assert.match(content, /cookies, full pages, HAR files/);
-  assert.match(content, /minimum value or action/);
-  assert.match(content, /Evidence Layer Separation/);
-  assert.match(content, /runtime configured/);
-  assert.match(content, /runtime exercised/);
-  assert.match(content, /artifact generated/);
-  assert.match(content, /artifact accepted by validator/);
-  assert.match(content, /API\/UI reflects accepted evidence/);
-  assert.match(content, /final gate\/check command passed/);
-  assert.match(content, /fallback was not configured or exercised/);
-  assert.match(content, /Code-only changes/);
-  assert.match(content, /UI\/API shell behavior/);
-  assert.match(content, /Stale artifacts or stale runtime evidence/);
-  assert.match(content, /mismatched read path/);
-  assert.match(content, /Unexercised runtime/);
-  assert.match(content, /Partial tests/);
-  assert.match(content, /API\/UI\/data\/test contradictions/);
-  assert.match(content, /local audit is not Context/);
-  assert.match(content, /not proof by itself/);
-  assert.match(content, /not a global task manager/);
-  assert.match(content, /not a replacement for project tests, CI, review, human acceptance, Task Contract or workflow-contract `plan\.md`/);
-  assert.match(content, /each acceptance item execution still follows it and the repository's Tiny Context workflow contract/);
-  assert.match(content, /If Superpowers is not installed/);
-  assert.match(content, /official Superpowers installation path/);
-  assert.match(content, /installation is blocked/);
-  assert.match(content, /Use Superpowers for this task/);
-  assert.match(content, /superpowers:writing-plans/);
-  assert.match(content, /superpowers:subagent-driven-development/);
-  assert.match(content, /superpowers:executing-plans/);
-  assert.match(content, /superpowers:test-driven-development/);
-  assert.match(content, /review \/ finish cannot override the full checklist/);
-  assert.match(content, /update local audit after each execution round/);
-  assert.match(content, /强卡点未解除/);
-  assert.match(content, /runtime 未配置\/未演练/);
-  assert.match(content, /artifact 未被 validator 接受/);
-  assert.match(content, /Do not execute the plan/);
-  assert.match(content, /Do not include concrete business-domain logic/);
-  assert.doesNotMatch(content, forbiddenIncidentNames);
-  assert.match(content, /可多开agent，agent名额不够了就关掉不用的。/);
-  assert.match(content, /You may use multiple agents; if agent slots run low, close idle or unnecessary agents\./);
   assert.match(content, /Upstream Input Packet/);
   assert.match(content, /two-document upstream input packet/i);
   assert.match(content, /Development Plan \/ 开发方案/);
@@ -265,20 +123,33 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /must stop/i);
   assert.match(content, /missing required fields/i);
   assert.match(content, /Do not generate a checklist or goal\/target-mode prompt/i);
-  assert.match(content, /cannot be fully parsed/i);
-  assert.match(content, /preserved source input/i);
-  assert.match(content, /mandatory inputs/i);
-  assert.match(content, /original requirement source/i);
-  assert.match(content, /required tests \/ core paths/i);
-  assert.match(content, /superpowers:verification-before-completion/);
+  assert.match(content, /Evidence Layer Separation/);
+  assert.match(content, /runtime configured/);
+  assert.match(content, /runtime exercised/);
+  assert.match(content, /artifact generated/);
+  assert.match(content, /artifact accepted by validator/);
+  assert.match(content, /API\/UI reflects accepted evidence/);
+  assert.match(content, /Current-state claims/);
+  assert.match(content, /Evidence Ledger/);
+  assert.match(content, /Invalid completion evidence/);
+  assert.match(content, /Missing ledger evidence means incomplete, not complete/);
+  assert.match(content, /Hard Blocker Handling/);
+  assert.match(content, /Minimal User Blocker Protocol/);
+  assert.match(content, /safe self-service discovery/);
+  assert.match(content, /local audit is not Context/);
+  assert.match(content, /not proof by itself/);
+  assert.match(content, /not a global task manager/);
+  assert.match(content, /not a replacement for project tests, CI, review, human acceptance, Task Contract or workflow-contract `plan\.md`/);
   assert.match(content, /unknown \/ not_run/);
-  assert.match(content, /invalidated/);
   assert.match(content, /invalidating evidence/);
   assert.match(content, /fresh browser \/ API \/ runtime \/ data \/ test contradiction/i);
   assert.match(content, /downgrade the affected AC and overall status/i);
   assert.match(content, /UI-facing acceptance/i);
   assert.match(content, /real page path/i);
   assert.match(content, /component \/ viewmodel \/ mock \/ unit test/i);
+  assert.match(content, /Generic Target-Mode Prompt Generation/);
+  assert.doesNotMatch(content, superpowersTerms);
+  assert.doesNotMatch(content, forbiddenIncidentNames);
   assert.doesNotMatch(
     content,
     /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|ty-context_manager|ty-context_dev_sprint|ty-context_reviewer|ty-context_tester/

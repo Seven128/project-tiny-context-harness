@@ -57,27 +57,35 @@ The ladder is expected agent behavior. It must not become a validator, phase gat
 - The workflow is agent-mediated and prompt-level. `init` and `upgrade` install or refresh generic Skill/template support, but they do not infer or create business surface contract files.
 - Surface contracts use existing Context roles such as `contract`, `area`, `subdomain`, `verification`, `decision-rationale` and `implementation-index`. Do not add surface-specific roles or validator gates.
 
-## Plan Acceptance Checklist Boundary
+## Ordinary Long-Task Skill Boundary
 
-- The plan acceptance checklist compiler is a pre-execution acceptance-standard pass for a user-provided plan-like source.
-- It materializes temporary plan/checklist artifacts under `tmp/ty-context/plan-acceptance/**`, reads relevant Context and outputs a goal/target prompt.
+- The ordinary long-task Skill (`/normal-long-task`) is a pre-execution acceptance-standard pass for a user-provided plan-like source.
+- It is recommended through explicit Skill invocation instead of broad automatic keyword routing.
+- It materializes temporary plan/checklist artifacts under `tmp/ty-context/plan-acceptance/**`, reads relevant Context and may output a generic target-mode prompt.
 - It supports a two-document upstream input packet when the user provides both `Development Plan / 开发方案` and `Acceptance and Tests / 验收清单和测试用例`. The first document is execution direction; the second is target-mode acceptance input. Both are preserved source input, not proof. This packet path is strict mode.
-- The compiler maps two-document input into Superpowers input boundary semantics: the development plan feeds plan execution and possible `writing-plans`, while the acceptance-and-tests packet feeds checklist authority, TDD gaps, required verification and completion gates.
-- In strict mode the compiler must stop when required fields cannot be fully parsed from both documents. Missing required fields must be reported to the user, and the compiler must not generate a checklist or goal/target-mode prompt from an incomplete two-document packet.
-- If the source plan contains an explicit concrete acceptance checklist, the compiler reuses that plan-provided checklist verbatim as the full checklist instead of generating a new one.
+- In strict mode the Skill must stop when required fields cannot be fully parsed from both documents. Missing required fields must be reported to the user, and the Skill must not generate a checklist or goal/target-mode prompt from an incomplete two-document packet.
+- If the source plan contains an explicit concrete acceptance checklist, the Skill reuses that plan-provided checklist verbatim as the full checklist instead of generating a new one.
 - For a two-document upstream input packet, the acceptance-and-tests document is reused as the full checklist only when it already contains AC ID, scope, required evidence, verification method, fail condition, state-machine rules and invalid evidence rules; otherwise strict mode requires stopping for missing required fields.
-- Test requirements belong to acceptance evidence, not a fourth artifact. The full checklist may contain a `Required automated tests / 必须新增或补强的自动化测试` section, but the compiler must not create a separate `<plan-slug>-test-requirements.md` file.
+- Test requirements belong to acceptance evidence, not a fourth artifact. The full checklist may contain a `Required automated tests / 必须新增或补强的自动化测试` section, but the Skill must not create a separate `<plan-slug>-test-requirements.md` file.
 - If the source plan contains explicit test requirements, those requirements are plan-provided acceptance evidence and should be preserved in the full checklist rather than replaced with generic AC10 wording or an unrelated test list.
 - The materialized plan and full checklist remain separate files even when the checklist originally appeared inside the plan.
 - The generated goal/target prompt uses a conservative 3850-character effective maximum, including line breaks, so it stays below Codex's 4000-character practical paste boundary after small counting differences.
-- The compiler guidance must preserve required plan/checklist/audit paths and all core acceptance categories while fitting the 3850-character budget. When over budget, it should increase information density through compact wording, merged phrasing and references to the full checklist, not drop required evidence, blocker or false-completion semantics merely to be short.
+- The Skill guidance must preserve required plan/checklist/audit paths and all core acceptance categories while fitting the 3850-character budget. When over budget, it should increase information density through compact wording, merged phrasing and references to the full checklist, not drop required evidence, blocker or false-completion semantics merely to be short.
 - For target-mode execution, the full acceptance checklist is the authoritative acceptance standard. Compact prompt summaries provide direction, priority and recovery navigation only.
 - Overlap between the full checklist and compact summary is allowed. If they conflict, the full checklist wins.
-- Target-mode prompts may recommend the specific Superpowers plugin/workflow as the long-task execution layer. Superpowers can turn the target into bite-sized implementation tasks, execute with subagents or inline plan execution, apply TDD to behavior changes and run review/finish checks, but those checks cannot override the full acceptance checklist.
-- Target-mode prompts must name the Superpowers input boundary: use `writing-plans` when the implementation/source plan is not bite-sized, use TDD for behavior gaps, and use `verification-before-completion` before completion claims against the full checklist and current evidence.
 - The local audit must record each required test's command, result and failure reason when test evidence is required, blocked or invalid.
 - It does not execute the plan, prove completion, own durable task state, replace Task Contract/workflow-contract `plan.md`, or store acceptance evidence as Context.
 - Hard blockers in a generated checklist remain non-completion until the missing evidence or user/external action exists.
+
+## Superpowers Long-Task Skill Boundary
+
+- The Superpowers long-task Skill (`/superpowers-long-task`) is a separate prompt-adapter Skill for a complete plan/checklist/audit packet. It produces a Superpowers-specific target-mode prompt and does not generate, repair or strengthen the checklist.
+- It is recommended through explicit Skill invocation after `/normal-long-task` has produced or verified the full checklist.
+- This is Tiny Context's adapter layer, not a Superpowers official schema / 不是 Superpowers 官方 schema. It maps the original requirement source, implementation/source plan, full checklist, local audit, relevant Context and required tests/core paths into the external workflow's input roles.
+- The Skill stops when the required packet cannot be parsed: original requirement/source summary, implementation/source plan, full checklist, required evidence, verification methods, fail conditions, required tests or explicit test scope, core paths or explicit non-UI/runtime scope, state-machine rules, invalid evidence rules, local audit expectations and blocker policy.
+- It must visibly output `Superpowers input packet` / `Superpowers 输入包` and `Superpowers execution binding` / `Superpowers 执行绑定`.
+- It binds official workflow names only after the full checklist exists: `superpowers:writing-plans` when the source plan is not bite-sized, `superpowers:subagent-driven-development` when subagents are available, `superpowers:executing-plans` otherwise, AC gap -> TDD via `superpowers:test-driven-development`, and `superpowers:verification-before-completion` before any completion claim.
+- The full checklist remains the acceptance authority. Review, finish or execution discipline cannot override incomplete or contradicted acceptance evidence.
 
 ## Contract Conformance
 

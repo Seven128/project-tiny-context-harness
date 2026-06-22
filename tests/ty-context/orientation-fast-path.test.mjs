@@ -461,7 +461,8 @@ assert.doesNotMatch(developmentSkill, /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPR
 
 assert.match(exportSkill, /description:.*full project context export.*export full project context.*project context export.*code-level implementation export/s);
 assert.match(exportSkill, /description:.*Source Pack export.*code index export.*task context export/s);
-assert.match(exportSkill, /description:.*导出尽可能详细的项目全量上下文.*代码级实现导出/s);
+assert.match(exportSkill, /description:.*project overall context.*code-level implementation export/s);
+assert.match(exportSkill, /description:.*导出尽可能详细的项目全量上下文.*项目整体上下文.*代码级实现导出/s);
 assert.match(exportSkill, /export-context --source-pack/);
 assert.match(exportSkill, /export-context --code-index/);
 assert.match(exportSkill, /export-context --task-context <name>/);

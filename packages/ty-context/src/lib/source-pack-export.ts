@@ -1,5 +1,5 @@
 import path from "node:path";
-import { artifactReport, buildManifest, pruneTimestampedExports, readPackageVersion, timestampForFile, writeArtifactSet } from "./source-pack-manifest.js";
+import { artifactReport, buildManifest, pruneTimestampedExports, readPackageVersion, writeArtifactSet } from "./source-pack-manifest.js";
 import type { PendingArtifact } from "./source-pack-manifest.js";
 import { mergePatterns, parseContextAreas, readSourcePackProfile, validatePatternList } from "./source-pack-config.js";
 import { collectCodeRecords, collectContextArtifacts, countRedactionWarnings, repoRelative } from "./source-pack-records.js";
@@ -20,8 +20,7 @@ export async function runSourcePackExport(projectRoot: string, options: SourcePa
   const maxPackFiles = options.maxPackFiles ?? DEFAULT_MAX_PACK_FILES;
   validateMaxPackFiles(options.mode, maxPackFiles);
   const now = options.now ?? new Date();
-  const timestamp = timestampForFile(now);
-  const timestampDir = path.join(projectRoot, ...DEFAULT_EXPORT_DIR.split("/"), timestamp);
+  const outputDir = path.join(projectRoot, ...DEFAULT_EXPORT_DIR.split("/"), "latest");
   const generatedAt = now.toISOString();
   const warnings: string[] = [];
   const areas = await parseContextAreas(projectRoot);
@@ -40,7 +39,7 @@ export async function runSourcePackExport(projectRoot: string, options: SourcePa
   const taskName = options.taskName ?? "";
   const command = options.command ?? commandFor(options);
   const toolVersion = await readPackageVersion();
-  const recommendedUploadSets = uploadSets(options.mode, timestamp, taskName);
+  const recommendedUploadSets = uploadSets(options.mode, taskName);
   const artifacts: PendingArtifact[] = [];
 
   if (options.mode === "code-index" || options.mode === "source-pack" || options.mode === "code-bundles" || options.mode === "task-context") {
@@ -59,13 +58,13 @@ export async function runSourcePackExport(projectRoot: string, options: SourcePa
 
   const omitted = omittedSummary(records);
   const nonManifestArtifacts = artifacts.slice();
-  const manifestPath = `${DEFAULT_EXPORT_DIR}/${timestamp}/source-pack-manifest.json`;
+  const manifestPath = `${DEFAULT_EXPORT_DIR}/latest/source-pack-manifest.json`;
   const manifest = await buildManifest({
     projectRoot,
     generatedAt,
     command,
     maxPackFiles,
-    artifacts: nonManifestArtifacts.map((artifact) => ({ ...artifact, relativePath: `${DEFAULT_EXPORT_DIR}/${timestamp}/${artifact.name}` })),
+    artifacts: nonManifestArtifacts.map((artifact) => ({ ...artifact, relativePath: `${DEFAULT_EXPORT_DIR}/latest/${artifact.name}` })),
     warnings,
     omitted,
     recommendedUploadSets
@@ -81,7 +80,7 @@ export async function runSourcePackExport(projectRoot: string, options: SourcePa
   });
   for (const artifact of artifacts) {
     if (!artifact.relativePath) {
-      artifact.relativePath = `${DEFAULT_EXPORT_DIR}/${timestamp}/${artifact.name}`;
+      artifact.relativePath = `${DEFAULT_EXPORT_DIR}/latest/${artifact.name}`;
     }
   }
   if (artifacts.length > maxPackFiles) {
@@ -92,15 +91,13 @@ export async function runSourcePackExport(projectRoot: string, options: SourcePa
     throw new Error(`export-context --redaction-strict found ${redactionCount} redaction warning(s)`);
   }
   if (!options.check) {
-    await writeArtifactSet(projectRoot, timestampDir, artifacts);
-    if (options.prune !== undefined) {
-      await pruneTimestampedExports(projectRoot, options.prune);
-    }
+    await writeArtifactSet(projectRoot, outputDir, artifacts);
+    await pruneTimestampedExports(projectRoot, 0);
   }
   return {
     mode: options.mode,
-    outputDirectory: timestampDir,
-    outputRelativePath: repoRelative(projectRoot, timestampDir),
+    outputDirectory: outputDir,
+    outputRelativePath: repoRelative(projectRoot, outputDir),
     artifacts: artifacts.map(artifactReport),
     sourceFiles: records.map((record) => record.relative),
     sourceCodeCount: records.length,
@@ -224,8 +221,8 @@ function meta(generatedAt: string, artifactName: string, command: string, toolVe
   return { generatedAt, outputPath: `tmp/ty-context/context-exports/latest/${artifactName}`, command, toolVersion };
 }
 
-function uploadSets(mode: string, timestamp: string, taskName: string): Record<string, string[]> {
-  const base = `${DEFAULT_EXPORT_DIR}/${timestamp}`;
+function uploadSets(mode: string, taskName: string): Record<string, string[]> {
+  const base = `${DEFAULT_EXPORT_DIR}/latest`;
   const sets: Record<string, string[]> = {
     daily_planning: [`${base}/full-project-context.md`, `${base}/code-index.md`],
     cross_module_review: [`${base}/full-project-context.md`, `${base}/code-index.md`, `${base}/code-bundle-core.md`, `${base}/code-bundle-extended.md`],

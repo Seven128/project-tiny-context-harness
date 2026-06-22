@@ -29,7 +29,7 @@ This contract defines which repository surfaces are package-managed, generated, 
 ## Generated Skill Boundary
 
 - Package-managed default Skills must remain business-agnostic and Minimal Context oriented.
-- Package-managed default Skills include Context authoring Skills, Product Surface Contract support, full-project export guidance, Harness upgrade guidance and the plan acceptance checklist compiler.
+- Package-managed default Skills include Context authoring Skills, Product Surface Contract support, full-project export guidance, Harness upgrade guidance, the ordinary long-task Skill (`normal-long-task`) and the Superpowers long-task Skill (`superpowers-long-task`).
 - Consumer customization belongs in separate project-local Skills such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` or `<harnessRoot>/skills/development_engineer/SKILL.md`.
 - Project-local Skill front matter trigger descriptions should stay aligned with the corresponding default Skill and project `AGENTS.md` trigger guidance.
 - Do not restore the old override-skill merge mechanism under managed folders.

@@ -37,7 +37,7 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - Managed source assets: `.codex/ty-context-managed/**`.
 - Package assets shipped to consumers: `packages/ty-context/assets/**`.
 - Source-to-package mapping: `packages/ty-context/source-mappings.yaml`.
-- Source workspace generated/default Skills: `.codex/skills/context_*`, `.codex/skills/context_full_project_export`, `.codex/skills/context_harness_upgrade`, `.codex/skills/plan_acceptance_checklist_compiler`.
+- Source workspace generated/default Skills: `.codex/skills/context_*`, `.codex/skills/context_full_project_export`, `.codex/skills/context_harness_upgrade`, `.codex/skills/normal-long-task`, `.codex/skills/superpowers-long-task`.
 - Source-workspace-only authoring Skill: `.codex/skills/authoring/harness_package_design/SKILL.md`.
 
 ## Tests
@@ -50,7 +50,8 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - Context export: `tests/ty-context/export-context.test.mjs`.
 - Surface Contract workflow: `tests/ty-context/surface-contract-workflow.test.mjs`.
 - Modularity checks: `tests/ty-context/check-modularity.test.mjs` and `tests/ty-context/modularity-guidance.test.mjs`.
-- Plan acceptance Skill behavior: `tests/ty-context/plan-acceptance-skill.test.mjs`.
+- Ordinary long-task Skill behavior: `tests/ty-context/plan-acceptance-skill.test.mjs`.
+- Superpowers long-task Skill behavior: `tests/ty-context/superpowers-target-prompt-skill.test.mjs`.
 
 ## Release And Maintainer Tools
 

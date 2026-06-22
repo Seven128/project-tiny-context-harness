@@ -13,7 +13,8 @@ try {
   await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/context_uiux_design"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/context_development_engineer"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/context_surface_contract"), { recursive: true });
-  await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/plan_acceptance_checklist_compiler"), { recursive: true });
+  await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/normal-long-task"), { recursive: true });
+  await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/superpowers-long-task"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/ty-context-managed/minimal_tools"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/ty-context-managed/make"), { recursive: true });
   await mkdir(path.join(fixture, ".github/workflows"), { recursive: true });
@@ -50,8 +51,13 @@ try {
     "utf8"
   );
   await writeFile(
-    path.join(fixture, ".agent/ty-context-managed/skills/plan_acceptance_checklist_compiler/SKILL.md"),
-    "---\nname: plan_acceptance_checklist_compiler\ndescription: acceptance checklist for this plan\n---\n\n# Plan Acceptance\n",
+    path.join(fixture, ".agent/ty-context-managed/skills/normal-long-task/SKILL.md"),
+    "---\nname: normal-long-task\ndescription: Use when directly invoked for ordinary long-running task acceptance planning.\n---\n\n# Normal Long Task\n",
+    "utf8"
+  );
+  await writeFile(
+    path.join(fixture, ".agent/ty-context-managed/skills/superpowers-long-task/SKILL.md"),
+    "---\nname: superpowers-long-task\ndescription: Use when directly invoked for Superpowers long-running task target prompt preparation.\n---\n\n# Superpowers Long Task\n",
     "utf8"
   );
   await writeFile(path.join(fixture, ".agent/ty-context-managed/minimal_tools/validate_context.py"), "print('ok')\n", "utf8");
@@ -127,11 +133,16 @@ try {
     "utf8"
   );
   assert.match(packagedSurfaceSkill, /Product Surface Contract/);
-  const packagedPlanAcceptanceSkill = await readFile(
-    path.join(fixture, "packages/ty-context/assets/skills/plan_acceptance_checklist_compiler/SKILL.md"),
+  const packagedNormalLongTaskSkill = await readFile(
+    path.join(fixture, "packages/ty-context/assets/skills/normal-long-task/SKILL.md"),
     "utf8"
   );
-  assert.match(packagedPlanAcceptanceSkill, /acceptance checklist for this plan/);
+  assert.match(packagedNormalLongTaskSkill, /name: normal-long-task/);
+  const packagedSuperpowersLongTaskSkill = await readFile(
+    path.join(fixture, "packages/ty-context/assets/skills/superpowers-long-task/SKILL.md"),
+    "utf8"
+  );
+  assert.match(packagedSuperpowersLongTaskSkill, /name: superpowers-long-task/);
   const packagedTool = await readFile(path.join(fixture, "packages/ty-context/assets/tools/validate_context.py"), "utf8");
   assert.match(packagedTool, /print\('ok'\)/);
 } finally {
