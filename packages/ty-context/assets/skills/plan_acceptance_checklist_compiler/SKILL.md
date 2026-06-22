@@ -27,10 +27,17 @@ This Skill is generic. Do not embed business-specific rules, vendor-specific rul
 
 Every completed invocation must produce:
 
-1. A preserved copy of the plan under `tmp/ty-context/plan-acceptance/`. The copied plan is the implementation/source plan, not acceptance proof.
+1. A preserved copy of the plan under `tmp/ty-context/plan-acceptance/`. The copied plan is the implementation/source plan, not acceptance proof. For a two-document upstream input packet, preserve both source inputs separately when both are provided.
 2. A rigorous full acceptance checklist under a separate `tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md` path. If the plan contains an explicit concrete acceptance checklist, reuse that plan-provided checklist verbatim; otherwise derive the checklist from the plan and relevant project Context. The full checklist is the complete acceptance standard and owns required automated test evidence.
 3. A goal/target-mode prompt the user can paste directly into Codex. The prompt may include a compact checklist summary for direction, priority and recovery navigation, but the full checklist owns the acceptance details.
 4. When a local audit path is referenced, it is temporary execution/progress state only, not Context and not proof by itself.
+
+The compiler may receive one source plan or a two-document upstream input packet:
+
+- `Development Plan / 开发方案`: objective, original requirement source summary, execution direction, module/API/UI/runtime/data flow, risk boundaries, Context Delta and whether execution must first be converted into bite-sized tasks.
+- `Acceptance and Tests / 验收清单和测试用例`: ACs, required evidence, tests, real product paths, core paths, evidence layers, invalid evidence, completion state machine, local audit rules and blockers.
+
+These inputs are preserved source input, not proof. The compiler's job is to turn them into the full checklist and target prompt that Superpowers can execute against without losing acceptance authority.
 
 Exception: if the Context confirmation gate below triggers, stop after materializing the plan and reading enough Context to explain the uncertainty. Ask the user for confirmation before producing the checklist or goal/target-mode prompt.
 
@@ -122,7 +129,7 @@ Do not trigger from standalone broad phrases such as `goal mode`, `target mode`,
 Build the checklist from these sources, in order:
 
 1. User's current instruction.
-2. The referenced or pasted plan.
+2. The referenced or pasted plan, including both documents when the user provides a two-document upstream input packet.
 3. Relevant durable project Context under `project_context/**`.
 4. Repository guidance such as `AGENTS.md`, `README.md`, `DESIGN.md`, and relevant local Skills.
 5. Current code and tests, only to identify real surfaces, commands, routes, schemas, artifacts, entry points, and likely verification paths.
@@ -130,9 +137,25 @@ Build the checklist from these sources, in order:
 
 If plan and Context conflict, preserve the conflict in the checklist. Do not silently choose the easier side.
 
+## Upstream Input Packet
+
+When the user provides two related documents, treat them as a two-document upstream input packet when their roles match these shapes:
+
+- `Development Plan / 开发方案`: execution direction for implementation. It can contain the original requirement source or a summary of the original plan so later implementation does not shrink the target.
+- `Acceptance and Tests / 验收清单和测试用例`: target-mode acceptance input packet. It can contain the acceptance matrix, test requirements, real product paths, evidence layers, invalid evidence rules, state-machine rules, local audit requirements and blockers.
+
+Rules:
+
+- Do not create a third upstream artifact. Preserve the source input documents and compile a separate full checklist.
+- If only one plan-like source is provided, keep the existing single-plan flow.
+- If both documents are provided, read both before deciding whether to reuse or generate the full checklist.
+- The development plan is execution direction, not proof. The acceptance-and-tests document is acceptance input, not proof.
+- In the full checklist's `Plan source` and per-row `Source` fields, preserve whether a requirement came from the development plan, the acceptance-and-tests document, user instruction, project Context, code contract or verification risk.
+- If the development plan is not bite-sized enough for direct execution, the generated prompt must require `superpowers:writing-plans` before implementation.
+
 ## Step 1: Materialize The Plan Under `tmp/ty-context/plan-acceptance/`
 
-Before writing the checklist, write the user-specified plan into the repository `tmp/ty-context/plan-acceptance/` directory.
+Before writing the checklist, write the user-specified source input into the repository `tmp/ty-context/plan-acceptance/` directory.
 
 Rules:
 
@@ -140,10 +163,11 @@ Rules:
 - If the user references a file outside `tmp/ty-context/plan-acceptance/`, copy its current content into `tmp/ty-context/plan-acceptance/<safe-plan-name>.md`.
 - If the user references a file already under `tmp/ty-context/plan-acceptance/`, use that path directly unless the user asks for a new copy.
 - If the user pasted the plan text, write the pasted plan exactly into `tmp/ty-context/plan-acceptance/<safe-plan-name>.md`.
+- If the user pasted or referenced a two-document upstream input packet, write `Development Plan / 开发方案` and `Acceptance and Tests / 验收清单和测试用例` as separate preserved source inputs under stable readable filenames.
 - Preserve the plan content. Do not summarize, normalize, reorder, translate, or edit it while materializing it.
 - Use a stable readable filename derived from the plan title, source filename, or user topic. Use lowercase letters, digits, hyphens, and `.md`.
 - If the source plan cannot be found or read, stop and report the missing source. Do not invent a plan.
-- The materialized plan is temporary implementation/source input. It is not durable Context, not acceptance proof and not proof that any acceptance item passed.
+- The materialized source input is temporary implementation/source input. It is not durable Context, not acceptance proof and not proof that any acceptance item passed.
 
 Recommended paths:
 
@@ -161,6 +185,8 @@ After materializing the plan, inspect it for an explicit concrete acceptance che
 
 Plan-provided checklist reuse applies only when the plan contains a clearly labeled checklist or checklist table section, such as `Acceptance Checklist`, `Acceptance Criteria`, `验收清单`, `验收标准`, or equivalent heading, and that section contains concrete acceptance items rather than only saying that acceptance is needed.
 
+For a two-document upstream input packet, the `Acceptance and Tests / 验收清单和测试用例` document is the preferred acceptance source, but it is not automatically a frozen verbatim full checklist. Reuse it as the full checklist only if it already includes enough acceptance structure for target-mode execution: AC ID, scope, required evidence, verification method, fail condition, state-machine rules and invalid evidence rules. If any of those are missing, use the generated-checklist flow below and preserve the acceptance-and-tests document as source material; generated rows may fill missing evidence, mark gaps, or identify ambiguity without treating the incomplete upstream packet as proof.
+
 When a plan-provided checklist is found:
 
 - Copy the plan-provided acceptance checklist section into `tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md` as the full checklist.
@@ -175,6 +201,8 @@ When a plan-provided checklist is found:
 - Skip Steps 5 and 6 for the full checklist file unless the user separately asks for a checklist audit or rewrite.
 
 When no explicit concrete plan-provided checklist exists, continue with the generated-checklist flow below.
+
+When a two-document upstream input packet exists but the acceptance-and-tests document is incomplete, continue with the generated-checklist flow below even if it contains some checklist-like bullets. The generated checklist must map the incomplete source material into falsifiable AC rows instead of silently treating partial upstream acceptance text as complete.
 
 When a plan already includes explicit test requirements but not a full acceptance checklist:
 
@@ -281,6 +309,8 @@ Allowed `Conclusion` values:
 
 - `proven`
 - `unproven`
+- `partial`
+- `invalidated`
 - `stale-evidence`
 - `runtime-disconnected`
 - `implementation-drift`
@@ -288,6 +318,8 @@ Allowed `Conclusion` values:
 - `deferred-by-explicit-scope`
 
 Missing ledger evidence means incomplete, not complete. Do not let missing evidence, old evidence, partial evidence or evidence from a different read path satisfy a current-state claim.
+
+All core AC status starts as `unknown / not_run` unless current required evidence has been inspected. Only fresh required evidence can support `complete`. Any fresh browser / API / runtime / data / test contradiction must immediately downgrade the affected AC and overall status, and the local audit must record the contradiction as invalidating evidence. Do not preserve a previous complete status after contradictory current evidence appears.
 
 ### Required Automated Tests / 必须新增或补强的自动化测试
 
@@ -311,6 +343,8 @@ Rules:
 - If no explicit test section exists, derive required tests from the plan's behavior changes, risk, Context contracts and real code/test surfaces.
 - If an exact test name cannot be inferred safely, write a behavior-level test description and do not invent exact test names.
 - Each required test row must identify the covered acceptance item(s), the verification command, and the failure condition that blocks acceptance.
+- For behavior changes, test requirements should identify expected RED/GREEN or pass/fail signal when that can be inferred safely.
+- When a test is auxiliary evidence only, state which acceptance layer it supports and what it cannot prove.
 - If no new or strengthened automated tests are required, state that explicitly with the reason and the acceptance items covered by existing verification.
 - The local audit must record each required test's command, result and failure reason when it is run or when it remains blocked.
 
@@ -373,6 +407,7 @@ Consider these generic dimensions:
 - Runtime state, configuration, session, credential, environment, or degraded behavior.
 - Artifact generation, schema, freshness, provenance, and acceptance.
 - UI or user-visible projection.
+- Real product path or core path, including page/user flow, API route/probe, runtime/worker/job/artifact path, and whether Browser/Chrome verification is required.
 - Async job, worker, scheduler, queue, or background process.
 - Security, privacy, redaction, secrets, and access control.
 - Observability, logs, diagnostics, and operator visibility.
@@ -393,6 +428,7 @@ runtime exercised
 artifact generated
 artifact accepted by validator
 API/UI reflects accepted evidence
+browser path verified
 final gate/check command passed
 ```
 
@@ -455,11 +491,14 @@ For evidence-ledger plans, keep the traps generic and cover these cases when rel
 
 - Code-only changes without current execution or acceptance evidence.
 - UI/API shell behavior without the backing data, runtime or artifact evidence required by the checklist.
+- UI-facing acceptance without the real page path and matching user-visible state.
 - Stale artifacts or stale runtime evidence.
 - Evidence from a mismatched read path, service path, artifact path or runtime instance.
 - Unexercised runtime or unexercised fallback behavior.
 - Partial tests, smoke-only checks or dry runs when the plan requires broader current proof.
 - API/UI/data/test contradictions that remain unresolved.
+
+For UI-facing acceptance, component / viewmodel / mock / unit test evidence is insufficient unless the real page path is opened and the user-visible state matches the acceptance item.
 
 ## Suggested Execution Order
 
@@ -505,12 +544,15 @@ Hard requirements:
 - The prompt must identify the full checklist path immediately after the plan path and say it is the complete acceptance standard. Chinese prompts must include this exact sentence: `该文件是完整验收标准，验收以这个为准。完成前必须逐项检查，不满足则继续实现。` English prompts must say the full checklist is the complete acceptance standard, acceptance is judged against it, and every item must be checked before completion.
 - The prompt must identify a local audit path, normally `tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md`, and require the future executor to read it before resuming, keep it current during execution, and use it only as target-mode acceptance progress state.
 - After the plan/checklist/audit paths, include a resource lifecycle instruction: `可多开agent，agent名额不够了就关掉不用的。` for Chinese prompts or `You may use multiple agents; if agent slots run low, close idle or unnecessary agents.` for English prompts.
+- The prompt must include mandatory inputs: original requirement source or original plan summary, implementation/source plan, full acceptance checklist, local audit, relevant Context, and required tests / core paths.
 - The prompt must include a Superpowers execution block. If Superpowers is not installed, tell the executor to install it through the current platform's official Superpowers installation path; if installation is blocked by permissions, network or platform limits, record it in local audit and do not treat the blocker as completion. If Superpowers is installed, Use Superpowers for this task.
-- The Superpowers block must require: read the full checklist first and make it the acceptance authority; use `superpowers:writing-plans` when the plan is not executable enough; prefer `superpowers:subagent-driven-development` when subagents are available; otherwise use `superpowers:executing-plans`; use `superpowers:test-driven-development` for behavior changes; review / finish cannot override the full checklist; update local audit after each execution round.
+- The Superpowers block must require: read the full checklist first and make it the acceptance authority; use `superpowers:writing-plans` when the plan is not executable enough; prefer `superpowers:subagent-driven-development` when subagents are available; otherwise use `superpowers:executing-plans`; use `superpowers:test-driven-development` for behavior changes; use `superpowers:verification-before-completion` before any completion claim; review / finish cannot override the full checklist; update local audit after each execution round.
 - The remaining content must be the acceptance checklist or a compact version of it.
 - The prompt must be self-contained enough for goal/target-mode execution.
 - If the prompt uses a compact checklist summary, say the full checklist owns details and acceptance authority; the compact summary owns direction, priority and recovery navigation; overlap is allowed; conflicts are resolved in favor of the full checklist.
 - The prompt must require the local audit to record overall status (`complete`, `incomplete`, `blocked` or `narrowed-scope-complete`), each core AC status and current evidence, commands with result/time/failure reason, artifact or evidence paths, blockers and missing evidence, acceptance impact, explicit deferred or narrowed scope, and stale/partial/smoke/dry-run/research evidence that cannot prove full completion.
+- The prompt must require local audit status to start from `unknown / not_run`; only fresh required evidence can mark an AC complete. If any fresh browser / API / runtime / data / test contradiction appears, downgrade the affected AC and overall status and record invalidating evidence.
+- The prompt must state that UI-facing acceptance requires a real page path and matching user-visible state; component / viewmodel / mock / unit test evidence is auxiliary unless the full checklist explicitly says otherwise.
 - The prompt must say that local audit is not Context, not product-quality proof, not a global task manager, and not a replacement for project tests, CI, review, human acceptance, Task Contract or workflow-contract `plan.md`.
 - The prompt must say that when a Task Contract or workflow-contract `plan.md` exists, each acceptance item execution still follows it and the repository's Tiny Context workflow contract.
 - Do not include explanatory preface inside the prompt.
@@ -529,6 +571,7 @@ Recommended compact Chinese prompt shape:
 执行审计: tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md（临时 progress state，非 Context/proof）
 可多开agent，agent名额不够了就关掉不用的。
 本摘要只负责 direction/priority/recovery navigation；允许与完整 checklist 重叠，冲突时以完整 checklist 为准。
+mandatory inputs：原始需求源/原始方案摘要、实施计划、完整验收清单、local audit、relevant Context、required tests / core paths。
 
 如果 Superpowers 未安装，先按当前平台官方 Superpowers 安装路径安装；若安装被权限/网络/平台限制阻塞，写入执行审计，不得把阻塞当完成。
 如果 Superpowers 已安装，使用 Superpowers 执行本任务：
@@ -536,6 +579,7 @@ Recommended compact Chinese prompt shape:
 - 若实施计划不够可执行，用 superpowers:writing-plans 转成 bite-sized implementation plan
 - 有 subagent 支持时优先用 superpowers:subagent-driven-development；否则用 superpowers:executing-plans
 - 行为变更用 superpowers:test-driven-development；先写失败测试并观察失败，再写最小实现
+- 完成声明前用 superpowers:verification-before-completion 按完整 checklist 和 fresh evidence 做 gate
 - review / finish 不能覆盖完整验收清单；不满足则继续实现
 - 每轮执行后更新 local audit，记录 AC 状态、证据、命令结果、blocker、deferred/narrowed scope、无效证据
 
@@ -554,6 +598,8 @@ AC11 <文档/Context 更新要求，仅在计划要求时执行>
 AC12 维护执行审计：恢复执行先读 audit；记录总体状态、每个 AC 当前证据、命令/结果/时间、每个 required test 的 command/result/failure reason、artifact/evidence 路径、blocker、deferred/narrowed scope、不能证明 full completion 的旧/部分/smoke/dry-run/research 证据；audit 不是 Context、完成证明、全局任务管理器，也不替代 Task Contract 或流程契约 plan.md。
 AC13 最小用户卡点：问用户前先完成安全自助发现；需要用户介入时只给最小动作清单，写明已尝试、缺失项、具体页面/菜单/字段/按钮、最小值/动作、不要发送的敏感信息、验收影响、fallback/deferred。
 AC14 完成前审计：逐条对照实施计划和完整 checklist；每个 core 项必须有当前证据；未跑验证必须明示；有可继续执行的 core 项不得标记完成；外部/强卡点必须写明原因、缺失证据、验收影响和下一步；若剩余未完成项只有无法本地解决的强卡点，暂停并等待用户/外部 owner，不能标记目标完成。
+AC15 状态机：core AC 初始 unknown / not_run；只有 fresh required evidence 才能 complete；任何 fresh browser / API / runtime / data / test contradiction 必须 downgrade the affected AC and overall status，并在 audit 记录 invalidating evidence。
+AC16 UI-facing acceptance：必须打开 real page path 且用户可见状态匹配；component / viewmodel / mock / unit test 只算辅助证据，除非完整 checklist 另有明确说明。
 
 禁止把以下内容当完成：只改代码、只更新计划、只跑部分测试、只生成旧/部分/不被当前契约接受的证据、只完成基础设施但未完成验收证据、runtime 未配置/未演练、artifact 未被 validator 接受、API/UI 未反映验收证据、fallback 未演练、强卡点未解除、API/UI/数据/测试之间仍矛盾。
 ```
@@ -566,6 +612,7 @@ Full checklist: tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.
 Local audit: tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md (temporary progress state, not Context or proof)
 You may use multiple agents; if agent slots run low, close idle or unnecessary agents.
 This summary is only direction, priority and recovery navigation; overlap with the full checklist is allowed, and the full checklist wins conflicts.
+Mandatory inputs: original requirement source or original plan summary, implementation/source plan, full checklist, local audit, relevant Context, and required tests / core paths.
 
 If Superpowers is not installed, install it through the current platform's official Superpowers installation path first; if installation is blocked by permissions, network or platform limits, record it in local audit and do not treat the blocker as completion.
 If Superpowers is installed, Use Superpowers for this task:
@@ -573,6 +620,7 @@ If Superpowers is installed, Use Superpowers for this task:
 - If the plan is not executable enough, use superpowers:writing-plans for a bite-sized implementation plan.
 - Prefer superpowers:subagent-driven-development when subagents are available; otherwise use superpowers:executing-plans.
 - Use superpowers:test-driven-development for behavior changes; write a failing test, observe failure, then implement minimally.
+- Use superpowers:verification-before-completion before any completion claim, checking the full checklist against fresh evidence.
 - review / finish cannot override the full checklist; if unsatisfied, continue implementation.
 - update local audit after each execution round with AC status, evidence, command results, blockers, deferred/narrowed scope and invalid evidence.
 
@@ -591,6 +639,8 @@ AC11 <documentation / Context updates only when required by the plan>
 AC12 Maintain local audit: read it before resuming; record overall status, every AC's current evidence, commands/results/time, each required test's command/result/failure reason, artifact/evidence paths, blockers, deferred/narrowed scope, and stale/partial/smoke/dry-run/research evidence that cannot prove full completion; audit is not Context, completion proof, a global task manager, or a replacement for Task Contract or workflow-contract plan.md.
 AC13 Minimal user blocker protocol: before asking the user, complete safe self-service discovery; when user action is needed, provide only the smallest action list with what was tried, missing item, exact page/menu/path/field/button, minimum value/action, sensitive material not to send, acceptance impact, and fallback/deferred option.
 AC14 Final audit: compare every item against the plan and full checklist; every core item needs current evidence; missing validation must be stated; any executable core item left open means the task is not complete; external or hard blockers need cause, missing evidence, acceptance impact, and next action; if only locally unsatisfiable hard blockers remain, pause for the user or external owner instead of marking the goal complete.
+AC15 State machine: core ACs start as unknown / not_run; only fresh required evidence can mark complete; any fresh browser / API / runtime / data / test contradiction must downgrade the affected AC and overall status and be recorded as invalidating evidence.
+AC16 UI-facing acceptance: open the real page path and confirm the user-visible state matches; component / viewmodel / mock / unit test evidence is auxiliary unless the full checklist explicitly says otherwise.
 
 Do not count these as completion: code-only changes, plan-only updates, partial tests, stale or partial evidence, infrastructure without acceptance proof, runtime not configured/exercised, artifact not accepted by validator, API/UI not reflecting accepted evidence, unexercised fallback, unresolved hard blockers, or contradictions between API/UI/data/tests.
 ```

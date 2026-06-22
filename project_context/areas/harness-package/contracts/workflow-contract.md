@@ -61,7 +61,10 @@ The ladder is expected agent behavior. It must not become a validator, phase gat
 
 - The plan acceptance checklist compiler is a pre-execution acceptance-standard pass for a user-provided plan-like source.
 - It materializes temporary plan/checklist artifacts under `tmp/ty-context/plan-acceptance/**`, reads relevant Context and outputs a goal/target prompt.
+- It supports a two-document upstream input packet when the user provides both `Development Plan / 开发方案` and `Acceptance and Tests / 验收清单和测试用例`. The first document is execution direction; the second is target-mode acceptance input. Both are preserved source input, not proof.
+- The compiler maps two-document input into Superpowers input boundary semantics: the development plan feeds plan execution and possible `writing-plans`, while the acceptance-and-tests packet feeds checklist authority, TDD gaps, required verification and completion gates.
 - If the source plan contains an explicit concrete acceptance checklist, the compiler reuses that plan-provided checklist verbatim as the full checklist instead of generating a new one.
+- For a two-document upstream input packet, the acceptance-and-tests document is reused as the full checklist only when it already contains AC ID, scope, required evidence, verification method, fail condition, state-machine rules and invalid evidence rules; otherwise it becomes source material for a generated checklist that fills or marks gaps.
 - Test requirements belong to acceptance evidence, not a fourth artifact. The full checklist may contain a `Required automated tests / 必须新增或补强的自动化测试` section, but the compiler must not create a separate `<plan-slug>-test-requirements.md` file.
 - If the source plan contains explicit test requirements, those requirements are plan-provided acceptance evidence and should be preserved in the full checklist rather than replaced with generic AC10 wording or an unrelated test list.
 - The materialized plan and full checklist remain separate files even when the checklist originally appeared inside the plan.
@@ -70,6 +73,7 @@ The ladder is expected agent behavior. It must not become a validator, phase gat
 - For target-mode execution, the full acceptance checklist is the authoritative acceptance standard. Compact prompt summaries provide direction, priority and recovery navigation only.
 - Overlap between the full checklist and compact summary is allowed. If they conflict, the full checklist wins.
 - Target-mode prompts may recommend the specific Superpowers plugin/workflow as the long-task execution layer. Superpowers can turn the target into bite-sized implementation tasks, execute with subagents or inline plan execution, apply TDD to behavior changes and run review/finish checks, but those checks cannot override the full acceptance checklist.
+- Target-mode prompts must name the Superpowers input boundary: use `writing-plans` when the implementation/source plan is not bite-sized, use TDD for behavior gaps, and use `verification-before-completion` before completion claims against the full checklist and current evidence.
 - The local audit must record each required test's command, result and failure reason when test evidence is required, blocked or invalid.
 - It does not execute the plan, prove completion, own durable task state, replace Task Contract/workflow-contract `plan.md`, or store acceptance evidence as Context.
 - Hard blockers in a generated checklist remain non-completion until the missing evidence or user/external action exists.
@@ -86,6 +90,8 @@ The ladder is expected agent behavior. It must not become a validator, phase gat
 
 - Before claiming current product, API, UI, runtime, data, artifact or evidence-state completion, compare the claim against current evidence and the applicable acceptance contract.
 - Evidence ledger discipline is prompt-level completion discipline: missing current evidence means incomplete, stale evidence cannot prove current completion, and contradictions between implementation, API/UI/data/runtime artifacts and tests must be resolved or reported as blockers.
+- Current-state ACs start as `unknown / not_run`; only fresh required evidence may prove completion. Any fresh browser/API/runtime/data/test contradiction downgrades the affected AC and overall status and must be recorded as invalidating evidence.
+- UI-facing acceptance requires real page path evidence with matching user-visible state unless the full checklist explicitly scopes the UI out; component, viewmodel, mock or unit evidence alone is auxiliary.
 - This discipline is not a CLI validator, not a `validate-context` product-state check, not product-quality proof, not a lifecycle phase, not a phase gate and not a stage artifact.
 
 ## Non-Goals

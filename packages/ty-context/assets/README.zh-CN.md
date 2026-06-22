@@ -50,7 +50,7 @@ Fresh agent 先读这些文件，再开始改代码。
 
 一个典型失败场景是 ABCD 模块链：A/B/C 是上游，D 是下游。现在做 D 的需求时发现能力缺口；如果没有 Context 和优先级约束，agent 很容易为了让 D 完成而去改上游 A/B，因为当前代码让这条路可行。但真正需要判断的是：D 是否有权改 A/B？缺口是不是属于 C 的契约？是否必须先声明 `Context Delta`，让项目意图变化被确认后再实现？代码能说明“现在怎么改得动”，不能说明“项目意图是否允许这样改”。Tiny Context 要补的就是这一层 repo 内长期事实和优先级契约。
 
-对于长程任务，Harness 也提供一个轻量的计划验收清单 Skill：当用户明确给出或引用某份方案 / 计划 / RFC / implementation plan，并要求生成验收清单、完成定义或 goal/target 模式提示词时，它会把计划和验收清单临时放到 `tmp/ty-context/plan-acceptance/**`。如果方案里已经有明确、具体的“验收清单”，Skill 会直接复用那份清单并单独写入完整验收清单文件，不再另行生成一份竞争清单。这只是执行前的一次验收标准梳理，不执行计划、不证明完成，也不会把临时清单注册成 `project_context/**`。
+对于长程任务，Harness 也提供一个轻量的计划验收清单 Skill：当用户明确给出或引用某份方案 / 计划 / RFC / implementation plan，并要求生成验收清单、完成定义或 goal/target 模式提示词时，它会把计划和验收清单临时放到 `tmp/ty-context/plan-acceptance/**`。如果外部规划模型参与，推荐仍然只给两份产物：`《开发方案》` 作为执行方向，`《验收清单和测试用例》` 作为 Codex target-mode acceptance input packet。第二份应包含 AC、required evidence、测试命令、真实产品路径 / core path、证据分层、无效证据、状态机、local audit 和 blocker。Source Pack 只是临时上传材料，不是 durable Context。如果方案里已经有明确、具体的“验收清单”，Skill 会直接复用那份清单并单独写入完整验收清单文件；如果第二份缺少 required evidence、verification method、fail condition、状态机或无效证据规则，Skill 会把它作为来源生成或补齐验收项，而不是把它当完成证明。这只是执行前的一次验收标准梳理，不执行计划、不证明完成，也不会把临时清单注册成 `project_context/**`。
 
 重要使用提示：Minimal Context 有意把 Context 读取顺序、Context / 代码优先级和漂移检查保持为 agent 级软约束，而不是机器强制 gate。这个取舍适合短任务，但长任务、大上下文、多次交接或多轮验证时预期会漂移。遇到这类任务且已有方案/计划来源时，应先用计划验收清单 Skill 外化一个可证伪完成目标；完整验收清单才是验收标准，local audit 只是临时进度/恢复状态。
 
@@ -65,13 +65,13 @@ Fresh agent 先读这些文件，再开始改代码。
 长程任务先外化目标，再进入实现：
 
 ```text
-Web GPT 或其他外部规划模型产出方案
+Web GPT 或其他外部规划模型产出两份产物：《开发方案》+《验收清单和测试用例》
 -> 计划验收清单 Skill 生成目标模式文本
 -> Superpowers 得出具体落地执行片段
 -> 每个执行片段都回到流程契约 + project_context/**
 ```
 
-这里的 Superpowers 指具体的 [obra/Superpowers](https://github.com/obra/superpowers) 插件/开源工作流，不是泛化的执行规划替代品。如果目标模式文本或原方案还不够可执行，用 `superpowers:writing-plans` 转成 bite-sized implementation plan；有 subagent 支持时优先用 `superpowers:subagent-driven-development`，否则用 `superpowers:executing-plans`；涉及行为变更时用 `superpowers:test-driven-development`。
+这里的 Superpowers 指具体的 [obra/Superpowers](https://github.com/obra/superpowers) 插件/开源工作流，不是泛化的执行规划替代品。如果目标模式文本或原方案还不够可执行，用 `superpowers:writing-plans` 转成 bite-sized implementation plan；有 subagent 支持时优先用 `superpowers:subagent-driven-development`，否则用 `superpowers:executing-plans`；涉及行为变更时用 `superpowers:test-driven-development`；完成声明前用 `superpowers:verification-before-completion` 对完整验收清单和 fresh evidence 做 gate。
 
 原因是漂移控制。流程契约 + Context 层是软约束，短任务里通常能让 agent 按预期执行；长程任务里，Context 仍然能记录符合预期的事实，但 Context 到代码 的实现步骤会随着上下文窗口变大、多次交接、subagent 拆分和多轮验证而漂移。Web GPT 方案、目标模式文本、完整验收清单和 Superpowers 执行层，把完成目标外化成可恢复、可审计的临时执行标准，同时不恢复阶段式 gate。
 

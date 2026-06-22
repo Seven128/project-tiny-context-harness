@@ -103,9 +103,30 @@ assert.match(workflowContract, /not a `validate-context` product-state check/);
 assert.match(workflowContract, /test requirements belong to acceptance evidence/i);
 assert.match(workflowContract, /not a fourth artifact/i);
 assert.match(workflowContract, /required test[\s\S]*command[\s\S]*result[\s\S]*failure reason/i);
+assert.match(workflowContract, /two-document upstream input packet/i);
+assert.match(workflowContract, /Development Plan \/ 开发方案/);
+assert.match(workflowContract, /Acceptance and Tests \/ 验收清单和测试用例/);
+assert.match(workflowContract, /Superpowers input boundary/i);
+assert.match(workflowContract, /fresh browser\/API\/runtime\/data\/test contradiction/i);
+assert.match(workflowContract, /downgrades the affected AC and overall status/i);
 assert.match(spec, /test requirements belong to acceptance evidence/i);
 assert.match(spec, /not a fourth artifact/i);
 assert.match(spec, /required test[\s\S]*command[\s\S]*result[\s\S]*failure reason/i);
+assert.match(spec, /two-document upstream input packet/i);
+assert.match(spec, /execution discipline/i);
+assert.match(spec, /acceptance execution contract/i);
+
+for (const content of [rootReadme, packageReadme]) {
+  assert.match(content, /two-document upstream input/i);
+  assert.match(content, /Development Plan/i);
+  assert.match(content, /Acceptance and Tests/i);
+  assert.match(content, /Source Pack/i);
+  assert.match(content, /not durable Context/i);
+}
+
+assert.match(rootZhReadme, /两份产物/);
+assert.match(rootZhReadme, /《开发方案》/);
+assert.match(rootZhReadme, /《验收清单和测试用例》/);
 
 for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   const description = frontMatterDescription(content);
@@ -233,6 +254,23 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.doesNotMatch(content, forbiddenIncidentNames);
   assert.match(content, /可多开agent，agent名额不够了就关掉不用的。/);
   assert.match(content, /You may use multiple agents; if agent slots run low, close idle or unnecessary agents\./);
+  assert.match(content, /Upstream Input Packet/);
+  assert.match(content, /two-document upstream input packet/i);
+  assert.match(content, /Development Plan \/ 开发方案/);
+  assert.match(content, /Acceptance and Tests \/ 验收清单和测试用例/);
+  assert.match(content, /preserved source input/i);
+  assert.match(content, /mandatory inputs/i);
+  assert.match(content, /original requirement source/i);
+  assert.match(content, /required tests \/ core paths/i);
+  assert.match(content, /superpowers:verification-before-completion/);
+  assert.match(content, /unknown \/ not_run/);
+  assert.match(content, /invalidated/);
+  assert.match(content, /invalidating evidence/);
+  assert.match(content, /fresh browser \/ API \/ runtime \/ data \/ test contradiction/i);
+  assert.match(content, /downgrade the affected AC and overall status/i);
+  assert.match(content, /UI-facing acceptance/i);
+  assert.match(content, /real page path/i);
+  assert.match(content, /component \/ viewmodel \/ mock \/ unit test/i);
   assert.doesNotMatch(
     content,
     /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|ty-context_manager|ty-context_dev_sprint|ty-context_reviewer|ty-context_tester/
