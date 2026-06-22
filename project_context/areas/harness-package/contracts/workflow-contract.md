@@ -62,12 +62,15 @@ The ladder is expected agent behavior. It must not become a validator, phase gat
 - The plan acceptance checklist compiler is a pre-execution acceptance-standard pass for a user-provided plan-like source.
 - It materializes temporary plan/checklist artifacts under `tmp/ty-context/plan-acceptance/**`, reads relevant Context and outputs a goal/target prompt.
 - If the source plan contains an explicit concrete acceptance checklist, the compiler reuses that plan-provided checklist verbatim as the full checklist instead of generating a new one.
+- Test requirements belong to acceptance evidence, not a fourth artifact. The full checklist may contain a `Required automated tests / 必须新增或补强的自动化测试` section, but the compiler must not create a separate `<plan-slug>-test-requirements.md` file.
+- If the source plan contains explicit test requirements, those requirements are plan-provided acceptance evidence and should be preserved in the full checklist rather than replaced with generic AC10 wording or an unrelated test list.
 - The materialized plan and full checklist remain separate files even when the checklist originally appeared inside the plan.
 - The generated goal/target prompt uses a conservative 3850-character effective maximum, including line breaks, so it stays below Codex's 4000-character practical paste boundary after small counting differences.
 - The compiler guidance must preserve required plan/checklist/audit paths and all core acceptance categories while fitting the 3850-character budget. When over budget, it should increase information density through compact wording, merged phrasing and references to the full checklist, not drop required evidence, blocker or false-completion semantics merely to be short.
 - For target-mode execution, the full acceptance checklist is the authoritative acceptance standard. Compact prompt summaries provide direction, priority and recovery navigation only.
 - Overlap between the full checklist and compact summary is allowed. If they conflict, the full checklist wins.
 - Target-mode prompts may recommend the specific Superpowers plugin/workflow as the long-task execution layer. Superpowers can turn the target into bite-sized implementation tasks, execute with subagents or inline plan execution, apply TDD to behavior changes and run review/finish checks, but those checks cannot override the full acceptance checklist.
+- The local audit must record each required test's command, result and failure reason when test evidence is required, blocked or invalid.
 - It does not execute the plan, prove completion, own durable task state, replace Task Contract/workflow-contract `plan.md`, or store acceptance evidence as Context.
 - Hard blockers in a generated checklist remain non-completion until the missing evidence or user/external action exists.
 

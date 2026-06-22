@@ -28,7 +28,7 @@ This Skill is generic. Do not embed business-specific rules, vendor-specific rul
 Every completed invocation must produce:
 
 1. A preserved copy of the plan under `tmp/ty-context/plan-acceptance/`. The copied plan is the implementation/source plan, not acceptance proof.
-2. A rigorous full acceptance checklist under a separate `tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md` path. If the plan contains an explicit concrete acceptance checklist, reuse that plan-provided checklist verbatim; otherwise derive the checklist from the plan and relevant project Context. The full checklist is the complete acceptance standard.
+2. A rigorous full acceptance checklist under a separate `tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md` path. If the plan contains an explicit concrete acceptance checklist, reuse that plan-provided checklist verbatim; otherwise derive the checklist from the plan and relevant project Context. The full checklist is the complete acceptance standard and owns required automated test evidence.
 3. A goal/target-mode prompt the user can paste directly into Codex. The prompt may include a compact checklist summary for direction, priority and recovery navigation, but the full checklist owns the acceptance details.
 4. When a local audit path is referenced, it is temporary execution/progress state only, not Context and not proof by itself.
 
@@ -157,7 +157,7 @@ The local audit path is for the future goal/target-mode executor. This compiler 
 
 ## Step 2: Reuse Any Explicit Plan-Provided Checklist
 
-After materializing the plan, inspect it for an explicit concrete acceptance checklist before generating a new checklist.
+After materializing the plan, inspect it for an explicit concrete acceptance checklist and any explicit test requirements before generating a new checklist.
 
 Plan-provided checklist reuse applies only when the plan contains a clearly labeled checklist or checklist table section, such as `Acceptance Checklist`, `Acceptance Criteria`, `验收清单`, `验收标准`, or equivalent heading, and that section contains concrete acceptance items rather than only saying that acceptance is needed.
 
@@ -168,12 +168,20 @@ When a plan-provided checklist is found:
 - Do not derive, strengthen, reorder, translate, normalize, merge, split, or add acceptance items.
 - Do not prepend the generated `Acceptance Contract`, checklist table, self-test, or false-completion traps to the full checklist file when reusing a plan-provided checklist.
 - If multiple explicit checklist sections exist, copy all of them into the full checklist file in source order.
+- If the plan also includes explicit test requirements, such as `Required tests`, `Automated tests`, `Test Plan`, `必须新增/补强的自动化测试`, `测试文件`, or equivalent concrete test sections, copy those test requirements verbatim into the full checklist file as plan-provided acceptance evidence. These test requirements are acceptance evidence, not generated additions.
 - Keep the copied plan file and full checklist file separate, even if the checklist already appears inside the plan.
 - Continue to read relevant Context only as needed to explain ambiguities, conflicts, the goal/target-mode prompt, and any required local-audit or false-completion guidance. Do not use Context to expand the reused checklist unless the user separately asks for an audit or rewrite.
 - If the plan-provided checklist is too large for the 3850-character prompt budget, keep it intact in the full checklist file and make the prompt reference that file as the acceptance authority; do not invent a compact replacement checklist with new criteria.
 - Skip Steps 5 and 6 for the full checklist file unless the user separately asks for a checklist audit or rewrite.
 
 When no explicit concrete plan-provided checklist exists, continue with the generated-checklist flow below.
+
+When a plan already includes explicit test requirements but not a full acceptance checklist:
+
+- Use those plan-provided test requirements as the source of truth for the generated checklist's `Required automated tests / 必须新增或补强的自动化测试` section.
+- Preserve concrete test file paths, test names, behavior descriptions, commands, and failure notes from the plan.
+- Do not replace them with generic AC10 wording, do not create an unrelated test system, and do not invent competing test lists.
+- If the plan's test requirements are broad but concrete enough to preserve, keep the original wording and add only the minimum acceptance mapping needed to show which AC each test supports.
 
 ## Step 3: Read Relevant Project Context
 
@@ -280,6 +288,31 @@ Allowed `Conclusion` values:
 - `deferred-by-explicit-scope`
 
 Missing ledger evidence means incomplete, not complete. Do not let missing evidence, old evidence, partial evidence or evidence from a different read path satisfy a current-state claim.
+
+### Required Automated Tests / 必须新增或补强的自动化测试
+
+Every generated full checklist must include a `Required automated tests / 必须新增或补强的自动化测试` section. Test requirements are acceptance evidence: a future executor cannot mark a relevant implementation item complete when required test evidence is missing.
+
+No fourth artifact: keep these requirements inside `<plan-slug>-acceptance-checklist.md`. Do not create `tmp/ty-context/plan-acceptance/<plan-slug>-test-requirements.md` or another standalone test requirements file.
+
+Use this table shape when tests are required:
+
+```markdown
+## Required automated tests / 必须新增或补强的自动化测试
+
+| Test file path | Test name or behavior description | Covered acceptance item(s) | Verification command | Failure condition | Source |
+|---|---|---|---|---|---|
+```
+
+Rules:
+
+- If the plan already includes explicit test requirements, use those plan-provided test requirements as the source of truth. Preserve the plan's test file path, test name or behavior description, verification command and failure condition when present.
+- Do not replace plan-provided test requirements with generic AC10, do not invent a separate test taxonomy, and do not add unrelated tests merely because a generic category exists.
+- If no explicit test section exists, derive required tests from the plan's behavior changes, risk, Context contracts and real code/test surfaces.
+- If an exact test name cannot be inferred safely, write a behavior-level test description and do not invent exact test names.
+- Each required test row must identify the covered acceptance item(s), the verification command, and the failure condition that blocks acceptance.
+- If no new or strengthened automated tests are required, state that explicitly with the reason and the acceptance items covered by existing verification.
+- The local audit must record each required test's command, result and failure reason when it is run or when it remains blocked.
 
 ## Hard Blocker Handling
 
@@ -486,6 +519,7 @@ Hard requirements:
 - If the full checklist is too large, write the full checklist to `tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md`, then compress the goal/target-mode prompt by increasing information density while preserving all core acceptance categories.
 - If the full checklist came from a plan-provided checklist and is too large, keep the extracted checklist unchanged in the full checklist file and compress the prompt by referencing the full checklist path, not by rewriting or adding criteria.
 - The compact prompt may reference the full checklist path, but it must still include the core completion criteria directly and state that the summary is direction/priority/recovery navigation, not the acceptance authority.
+- Compact prompts must not expand long test lists. AC10 must reference the Required automated tests section in the full checklist and state that behavior changes still use `superpowers:test-driven-development`.
 
 Recommended compact Chinese prompt shape:
 
@@ -515,9 +549,9 @@ AC6 <运行态/配置/外部依赖/阻塞分类要求>
 AC7 <artifact/evidence/schema/freshness/provenance 要求>
 AC8 <UI/用户可见/API 投影一致性要求>
 AC9 <安全/隐私/脱敏/secret 要求>
-AC10 <测试/构建/集成/smoke/回归要求>
+AC10 测试要求：按完整验收清单的 `Required automated tests / 必须新增或补强的自动化测试` section 执行；compact prompt 不展开长测试列表；行为变更仍用 superpowers:test-driven-development。
 AC11 <文档/Context 更新要求，仅在计划要求时执行>
-AC12 维护执行审计：恢复执行先读 audit；记录总体状态、每个 AC 当前证据、命令/结果/时间、artifact/evidence 路径、blocker、deferred/narrowed scope、不能证明 full completion 的旧/部分/smoke/dry-run/research 证据；audit 不是 Context、完成证明、全局任务管理器，也不替代 Task Contract 或流程契约 plan.md。
+AC12 维护执行审计：恢复执行先读 audit；记录总体状态、每个 AC 当前证据、命令/结果/时间、每个 required test 的 command/result/failure reason、artifact/evidence 路径、blocker、deferred/narrowed scope、不能证明 full completion 的旧/部分/smoke/dry-run/research 证据；audit 不是 Context、完成证明、全局任务管理器，也不替代 Task Contract 或流程契约 plan.md。
 AC13 最小用户卡点：问用户前先完成安全自助发现；需要用户介入时只给最小动作清单，写明已尝试、缺失项、具体页面/菜单/字段/按钮、最小值/动作、不要发送的敏感信息、验收影响、fallback/deferred。
 AC14 完成前审计：逐条对照实施计划和完整 checklist；每个 core 项必须有当前证据；未跑验证必须明示；有可继续执行的 core 项不得标记完成；外部/强卡点必须写明原因、缺失证据、验收影响和下一步；若剩余未完成项只有无法本地解决的强卡点，暂停并等待用户/外部 owner，不能标记目标完成。
 
@@ -552,9 +586,9 @@ AC6 <runtime / configuration / external dependency / blocker classification>
 AC7 <artifact / evidence / schema / freshness / provenance requirements>
 AC8 <UI / user-visible / API projection consistency>
 AC9 <security / privacy / redaction / secret handling>
-AC10 <test / build / integration / smoke / regression requirements>
+AC10 Test requirements: follow the full checklist's `Required automated tests / 必须新增或补强的自动化测试` section; the compact prompt must not expand long test lists; behavior changes still use superpowers:test-driven-development.
 AC11 <documentation / Context updates only when required by the plan>
-AC12 Maintain local audit: read it before resuming; record overall status, every AC's current evidence, commands/results/time, artifact/evidence paths, blockers, deferred/narrowed scope, and stale/partial/smoke/dry-run/research evidence that cannot prove full completion; audit is not Context, completion proof, a global task manager, or a replacement for Task Contract or workflow-contract plan.md.
+AC12 Maintain local audit: read it before resuming; record overall status, every AC's current evidence, commands/results/time, each required test's command/result/failure reason, artifact/evidence paths, blockers, deferred/narrowed scope, and stale/partial/smoke/dry-run/research evidence that cannot prove full completion; audit is not Context, completion proof, a global task manager, or a replacement for Task Contract or workflow-contract plan.md.
 AC13 Minimal user blocker protocol: before asking the user, complete safe self-service discovery; when user action is needed, provide only the smallest action list with what was tried, missing item, exact page/menu/path/field/button, minimum value/action, sensitive material not to send, acceptance impact, and fallback/deferred option.
 AC14 Final audit: compare every item against the plan and full checklist; every core item needs current evidence; missing validation must be stated; any executable core item left open means the task is not complete; external or hard blockers need cause, missing evidence, acceptance impact, and next action; if only locally unsatisfiable hard blockers remain, pause for the user or external owner instead of marking the goal complete.
 

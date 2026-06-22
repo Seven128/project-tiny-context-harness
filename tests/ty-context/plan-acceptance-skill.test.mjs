@@ -100,6 +100,12 @@ assert.match(workflowContract, /Current-State Conformance/);
 assert.match(workflowContract, /prompt-level completion discipline/);
 assert.match(workflowContract, /not a CLI validator/);
 assert.match(workflowContract, /not a `validate-context` product-state check/);
+assert.match(workflowContract, /test requirements belong to acceptance evidence/i);
+assert.match(workflowContract, /not a fourth artifact/i);
+assert.match(workflowContract, /required test[\s\S]*command[\s\S]*result[\s\S]*failure reason/i);
+assert.match(spec, /test requirements belong to acceptance evidence/i);
+assert.match(spec, /not a fourth artifact/i);
+assert.match(spec, /required test[\s\S]*command[\s\S]*result[\s\S]*failure reason/i);
 
 for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   const description = frontMatterDescription(content);
@@ -140,6 +146,23 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /If multiple explicit checklist sections exist, copy all of them/);
   assert.match(content, /Keep the copied plan file and full checklist file separate/);
   assert.match(content, /When no explicit concrete plan-provided checklist exists, continue with the generated-checklist flow below/);
+  assert.match(content, /Required automated tests/);
+  assert.match(content, /必须新增或补强的自动化测试/);
+  assert.match(content, /test file path/i);
+  assert.match(content, /test name or behavior description/i);
+  assert.match(content, /covered acceptance item/i);
+  assert.match(content, /verification command/i);
+  assert.match(content, /failure condition/i);
+  assert.match(content, /plan already includes explicit test requirements/i);
+  assert.match(content, /use those plan-provided test requirements/i);
+  assert.match(content, /do not replace them with generic AC10/i);
+  assert.match(content, /behavior-level test description/i);
+  assert.match(content, /do not invent exact test names/i);
+  assert.match(content, /test requirements are acceptance evidence/i);
+  assert.match(content, /No fourth artifact/i);
+  assert.match(content, /Do not create `tmp\/ty-context\/plan-acceptance\/<plan-slug>-test-requirements\.md`/);
+  assert.match(content, /AC10 must reference the Required automated tests section/i);
+  assert.match(content, /not expand long test lists/i);
   assert.match(content, /too large for the 3850-character prompt budget/);
   assert.match(content, /not by rewriting or adding criteria/);
   assert.match(content, /compact checklist summary for direction, priority and recovery navigation/);
