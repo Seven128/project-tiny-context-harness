@@ -136,3 +136,6 @@ for (const expected of [
 ]) {
   assert.match(scriptSource, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 }
+assert.match(scriptSource, /release:prepare -- --fast/);
+assert.match(scriptSource, /release:publish -- --local-fallback --yes/);
+assert.match(scriptSource, /registry-smoke/);

@@ -42,6 +42,8 @@
 - Source mappings live in `packages/ty-context/source-mappings.yaml`.
 - Managed source assets live in `.codex/ty-context-managed/**`; packaged consumer assets live in `packages/ty-context/assets/**`.
 - Maintainer release/version automation is split into preparation and publication. Release preparation owns version bumps, release-surface sync, package asset sync and local validation before commit; release publication owns only already-committed version publication, registry verification, tag/GitHub Release handling and optional registry smoke.
+- Release preparation has a full gate and a fast gate. The fast gate is for ordinary docs, managed Skill, package asset and release metadata patch releases; it still builds, syncs/checks package assets, checks release-version surfaces, runs `upgrade --check --json`, release-focused tests and `git diff --check`, but skips the complete workspace test suite. Upgrade/migration source changes must not use `sync-only` release mode.
+- Publishing to npm does not automatically migrate existing repositories. It publishes the current CLI code and package assets; users receive new upgrade behavior only when they run the newly published CLI through `ty-context upgrade`, `ty-context sync` or another `@latest` package invocation.
 - Trusted Publishing remains the preferred npm release path. Local npm publication is an explicit fallback that must not claim Trusted Publishing provenance and must require an explicit local-fallback confirmation.
 - Maintainer release/version automation lives in `tools/sync_release_version.mjs`, `tools/release_prepare.mjs`, `tools/release_publish.mjs`, compatibility wrapper `tools/release_npm.mjs` and `tools/github_release_publish.mjs`.
 

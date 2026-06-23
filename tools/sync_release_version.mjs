@@ -209,6 +209,8 @@ function validateReleasePacket(relativePath, content, version) {
     /upgrade-required/,
     /manual-required/,
     /ty-context upgrade --check/,
+    /Publishing a new npm version does not automatically migrate existing repositories/,
+    /Users receive new upgrade behavior only when they run the newly published CLI/,
     /tools\/github_release_publish\.mjs/,
     /Dry runs do not create or edit GitHub releases/,
     /safe_pending/,
@@ -335,7 +337,9 @@ This release mode means no new release migration is expected. Direct \`sync\` is
 npx --yes --package project-tiny-context-harness@latest ty-context sync
 \`\`\`
 
-Sync does not run migrations. Upgrade plans report \`safe_pending\`, \`manual_required\` and \`blocked\`.`;
+Sync does not run migrations. Upgrade plans report \`safe_pending\`, \`manual_required\` and \`blocked\`.
+
+Publishing a new npm version does not automatically migrate existing repositories. Users receive new upgrade behavior only when they run the newly published CLI through \`ty-context upgrade\`, \`ty-context sync\` or another \`@latest\` package invocation.`;
   }
 
   return `Update mode: \`${releaseUpdateMode}\`. After updating the package, run:
@@ -345,7 +349,9 @@ npx --yes --package project-tiny-context-harness@latest ty-context upgrade --che
 npx --yes --package project-tiny-context-harness@latest ty-context upgrade
 \`\`\`
 
-Use \`sync\` directly only for releases explicitly marked \`sync-only\`; sync does not run migrations. Upgrade plans report \`safe_pending\`, \`manual_required\` and \`blocked\`.`;
+Use \`sync\` directly only for releases explicitly marked \`sync-only\`; sync does not run migrations. Upgrade plans report \`safe_pending\`, \`manual_required\` and \`blocked\`.
+
+Publishing a new npm version does not automatically migrate existing repositories. Users receive new upgrade behavior only when they run the newly published CLI through \`ty-context upgrade\`, \`ty-context sync\` or another \`@latest\` package invocation.`;
 }
 
 function readText(relativePath, root = args.root) {

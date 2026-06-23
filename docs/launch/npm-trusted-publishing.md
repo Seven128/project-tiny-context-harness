@@ -31,18 +31,24 @@ Because npm package README content is also tied to the immutable published versi
 Prepare a future release locally, then commit and push the versioned release surfaces before publishing:
 
 ```sh
-npm run release:prepare -- --version patch --update-mode sync-only
+npm run release:prepare -- --fast --version patch --update-mode sync-only
 git diff --stat
 git add -A
 git commit -m "Release <new-version>"
 git push origin main
 ```
 
+Use the full gate without `--fast` when the release touches upgrade/migration logic, broad package behavior or anything that needs the complete workspace test suite.
+
 For an emergency local fallback after that committed preparation, use:
 
 ```sh
-npm run release:publish -- --local-fallback --yes --registry-smoke
+npm run release:publish -- --local-fallback --yes
 ```
+
+Add `--registry-smoke` only when you want the slower post-publish install smoke in addition to registry `latest` verification.
+
+Publishing a new npm version does not automatically migrate existing repositories. It publishes the current CLI code and package assets; users receive new upgrade behavior only when they run the newly published CLI through `ty-context upgrade`, `ty-context sync` or another `@latest` package invocation.
 
 Use [npm-credential-unblock.md](npm-credential-unblock.md) if that fails with a 403 credentials error.
 

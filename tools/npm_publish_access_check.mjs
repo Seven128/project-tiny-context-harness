@@ -119,7 +119,7 @@ export function summarize(report) {
     }
     return {
       status: "first-publish-needed",
-      nextAction: `Run npm run release:prepare -- --version ${PACKAGE_VERSION} --update-mode sync-only, commit and push the prepared release, then run npm run release:publish -- --local-fallback --yes --registry-smoke. If npm returns E403, use docs/launch/npm-credential-unblock.md.`
+      nextAction: `Run npm run release:prepare -- --version ${PACKAGE_VERSION} --update-mode sync-only, commit and push the prepared release, then run npm run release:publish -- --local-fallback --yes. Add --registry-smoke only when you want the slower post-publish install smoke. If npm returns E403, use docs/launch/npm-credential-unblock.md.`
     };
   }
   if (!report.registryPackage.ok) {

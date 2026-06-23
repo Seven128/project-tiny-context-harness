@@ -108,7 +108,7 @@ Use this if agents keep losing project intent between chats. It adds a small pro
 - Run `npm run launch:github-metadata` to inspect GitHub description, homepage and topics; apply it with `GITHUB_TOKEN` or `GH_TOKEN`, or set those values manually from this file.
 - Run `npm run launch:npm-access` to inspect npm login, registry reachability and package existence before future publishes.
 - Use [npm-publish-runbook.md](npm-publish-runbook.md) only for future publish retries or registry drift.
-- Publish a new npm version after `npm test --workspace project-tiny-context-harness`, `npm run smoke:quickstart`, `make validate-context` and package source check pass.
+- Publish an ordinary Skill/assets patch after `npm run release:prepare -- --fast --version patch --update-mode sync-only`, commit, push and `npm run release:publish -- --local-fallback --yes`; use the full prepare gate and optional `--registry-smoke` for upgrade/migration or high-confidence release checks.
 - After the first renamed npm publish succeeds, configure GitHub Actions Trusted Publishing with [npm-trusted-publishing.md](npm-trusted-publishing.md) so future publishes use OIDC instead of a long-lived publish token.
 - Confirm npm package page renders the updated package README and MIT license; if `npm run launch:strict-external` reports stale `npm-readme-renamed-surfaces` info, refresh it with the next patch version rather than republishing an immutable version.
 - Run `npm run smoke:quickstart` after publish against `project-tiny-context-harness@latest` or a clean test project.

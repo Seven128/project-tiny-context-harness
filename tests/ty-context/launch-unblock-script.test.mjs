@@ -16,7 +16,7 @@ function baseReport(npmStatus) {
         nextAction:
           npmStatus === "auth-needed"
             ? "Run npm login or configure a publish-capable npm token, then rerun npm run launch:npm-access."
-            : "Run npm run release:prepare -- --version 0.2.40 --update-mode sync-only, commit and push the prepared release, then run npm run release:publish -- --local-fallback --yes --registry-smoke."
+            : "Run npm run release:prepare -- --version 0.2.40 --update-mode sync-only, commit and push the prepared release, then run npm run release:publish -- --local-fallback --yes."
       }
     },
     github: { aligned: false },
@@ -48,7 +48,8 @@ assert.match(firstPublish, /Status: first-publish-needed/);
 assert.match(firstPublish, /npm run release:prepare -- --version 0\.2\.40 --update-mode sync-only/);
 assert.match(firstPublish, /git add -A/);
 assert.match(firstPublish, /git commit -m "Release 0\.2\.40"/);
-assert.match(firstPublish, /npm run release:publish -- --local-fallback --yes --registry-smoke/);
+assert.match(firstPublish, /npm run release:publish -- --local-fallback --yes/);
+assert.match(firstPublish, /Add `--registry-smoke` only when you want the slower post-publish install smoke/);
 assert.match(firstPublish, /If npm returns E403/);
 
 const ready = renderMarkdown({

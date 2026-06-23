@@ -103,6 +103,8 @@ assert.match(releasePacket, /upgrade-required/);
 assert.match(releasePacket, /manual-required/);
 assert.match(releasePacket, /ty-context sync/);
 assert.match(releasePacket, /ty-context upgrade --check/);
+assert.match(releasePacket, /Publishing a new npm version does not automatically migrate existing repositories/);
+assert.match(releasePacket, /Users receive new upgrade behavior only when they run the newly published CLI/);
 assert.match(releasePacket, /tools\/github_release_publish\.mjs/);
 assert.match(releasePacket, /Dry runs do not create or edit GitHub releases/);
 assert.match(releasePacket, /safe_pending/);

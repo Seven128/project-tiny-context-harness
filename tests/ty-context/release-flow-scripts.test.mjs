@@ -4,6 +4,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { parsePackJson } from "../../tools/release_publish_helpers.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const prepareScript = path.join(repoRoot, "tools/release_prepare.mjs");
@@ -11,9 +12,11 @@ const publishScript = path.join(repoRoot, "tools/release_publish.mjs");
 const legacyNpmScript = path.join(repoRoot, "tools/release_npm.mjs");
 
 const rootPackage = JSON.parse(readFileSync(path.join(repoRoot, "package.json"), "utf8"));
+const workspacePackage = JSON.parse(readFileSync(path.join(repoRoot, "packages/ty-context/package.json"), "utf8"));
 assert.equal(rootPackage.scripts["release:prepare"], "node tools/release_prepare.mjs");
 assert.equal(rootPackage.scripts["release:publish"], "node tools/release_publish.mjs");
 assert.equal(rootPackage.scripts["release:npm"], "node tools/release_npm.mjs");
+assert.equal(workspacePackage.scripts["test:built"], "node --test ../../tests/ty-context/*.test.mjs");
 
 const legacyNoArgs = runNode(legacyNpmScript, []);
 assert.equal(legacyNoArgs.status, 0, `${legacyNoArgs.stdout}\n${legacyNoArgs.stderr}`);
@@ -25,7 +28,13 @@ const legacyOldPublishArgs = runNode(legacyNpmScript, ["--version", "patch", "--
 assert.notEqual(legacyOldPublishArgs.status, 0);
 assert.match(`${legacyOldPublishArgs.stdout}\n${legacyOldPublishArgs.stderr}`, /no longer accepts --version, --publish or --full-gate/);
 
+assert.deepEqual(parsePackJson(`${JSON.stringify([{ filename: "pkg-1.0.0.tgz" }])}\n`), {
+  filename: "pkg-1.0.0.tgz"
+});
+
 const fixture = mkdtempSync(path.join(os.tmpdir(), "release-flow-scripts-"));
+const fastFixture = mkdtempSync(path.join(os.tmpdir(), "release-flow-fast-"));
+const guardFixture = mkdtempSync(path.join(os.tmpdir(), "release-flow-guard-"));
 
 try {
   seedReleaseFixture(fixture, "1.2.3");
@@ -36,6 +45,7 @@ try {
   });
   assert.equal(prepare.status, 0, `${prepare.stdout}\n${prepare.stderr}`);
   assert.match(prepare.stdout, /Prepared project-tiny-context-harness@1\.2\.4/);
+  assert.match(prepare.stdout, /Release preparation timings:/);
   assert.match(read("packages/ty-context/package.json"), /"version": "1\.2\.4"/);
   assert.match(read("package-lock.json"), /"version": "1\.2\.4"/);
   assert.match(read("docs/launch/github-release-1.2.4.md"), /Update Mode: `upgrade-required`/);
@@ -50,10 +60,58 @@ try {
       "node packages/ty-context/dist/cli.js package check-source",
       "npm run release:check-version",
       "node packages/ty-context/dist/cli.js upgrade --check --json",
-      "npm test --workspace project-tiny-context-harness",
+      "npm run test:built --workspace project-tiny-context-harness",
       "git diff --check"
     ]
   );
+  assert.ok(prepareCommands.every((entry) => entry.shell === false), "prepare commands should use shell-safe spawning");
+
+  seedReleaseFixture(fastFixture, "2.0.0");
+  const fastLog = path.join(fastFixture, "prepare-fast-commands.jsonl");
+  const fastPrepare = runNode(
+    prepareScript,
+    ["--root", fastFixture, "--fast", "--version", "patch", "--update-mode", "sync-only"],
+    {
+      TY_CONTEXT_RELEASE_COMMAND_LOG: fastLog,
+      TY_CONTEXT_RELEASE_CHANGED_FILES: [
+        ".codex/ty-context-managed/skills/normal-long-task/SKILL.md",
+        "packages/ty-context/assets/skills/normal-long-task/SKILL.md"
+      ].join("\n")
+    }
+  );
+  assert.equal(fastPrepare.status, 0, `${fastPrepare.stdout}\n${fastPrepare.stderr}`);
+  assert.match(fastPrepare.stdout, /Prepared project-tiny-context-harness@2\.0\.1/);
+  assert.match(fastPrepare.stdout, /fast gate/i);
+  const fastCommands = readJsonLines(fastLog).map((entry) => entry.argv.join(" "));
+  assert.deepEqual(fastCommands, [
+    "npm run build --workspace project-tiny-context-harness",
+    "node packages/ty-context/dist/cli.js package sync-source",
+    "node packages/ty-context/dist/cli.js package check-source",
+    "npm run release:check-version",
+    "node packages/ty-context/dist/cli.js upgrade --check --json",
+    [
+      "node --test",
+      "tests/ty-context/release-flow-scripts.test.mjs",
+      "tests/ty-context/sync-release-version.test.mjs",
+      "tests/ty-context/launch-unblock-script.test.mjs",
+      "tests/ty-context/launch-readiness-script.test.mjs",
+      "tests/ty-context/npm-publish-access-script.test.mjs"
+    ].join(" "),
+    "git diff --check"
+  ]);
+  assert.ok(!fastCommands.includes("npm run test:built --workspace project-tiny-context-harness"));
+
+  seedReleaseFixture(guardFixture, "3.0.0");
+  const guard = runNode(
+    prepareScript,
+    ["--root", guardFixture, "--fast", "--version", "patch", "--update-mode", "sync-only"],
+    {
+      TY_CONTEXT_RELEASE_COMMAND_LOG: path.join(guardFixture, "guard-commands.jsonl"),
+      TY_CONTEXT_RELEASE_CHANGED_FILES: "packages/ty-context/src/lib/upgrade.ts"
+    }
+  );
+  assert.notEqual(guard.status, 0);
+  assert.match(`${guard.stdout}\n${guard.stderr}`, /upgrade-related changes require --update-mode upgrade-required or manual-required/i);
 
   const publishNoFallback = runNode(publishScript, ["--root", fixture], {
     TY_CONTEXT_RELEASE_COMMAND_LOG: path.join(fixture, "publish-guidance.jsonl")
@@ -74,14 +132,28 @@ try {
   });
   assert.equal(publish.status, 0, `${publish.stdout}\n${publish.stderr}`);
   assert.match(publish.stdout, /Published project-tiny-context-harness@1\.2\.4/);
+  assert.match(publish.stdout, /Release publication timings:/);
   assert.match(publish.stdout, /GitHub Release skipped: gh not authenticated/);
 
-  const publishCommands = readJsonLines(publishLog).map((entry) => entry.argv.join(" "));
+  const publishEntries = readJsonLines(publishLog);
+  assert.ok(publishEntries.every((entry) => entry.shell === false), "publish commands should use shell-safe spawning");
+  const publishCommands = publishEntries.map((entry) => entry.argv.join(" "));
   assert.ok(publishCommands.includes("npm publish .artifacts/releases/pack/project-tiny-context-harness-1.2.4.tgz --access public"));
-  assert.ok(publishCommands.includes("git tag -a v1.2.4 -m Project-Tiny-Context-Harness-1.2.4"));
+  assert.ok(publishCommands.includes("git tag -a v1.2.4 -m Project Tiny Context Harness 1.2.4"));
   assert.ok(publishCommands.includes("git push origin v1.2.4"));
+  assert.ok(!publishCommands.some((command) => command.startsWith("npm install -D project-tiny-context-harness@1.2.4")));
+
+  const smokeLog = path.join(fixture, "publish-smoke-commands.jsonl");
+  const publishSmoke = runNode(publishScript, ["--root", fixture, "--local-fallback", "--yes", "--registry-smoke"], {
+    TY_CONTEXT_RELEASE_COMMAND_LOG: smokeLog
+  });
+  assert.equal(publishSmoke.status, 0, `${publishSmoke.stdout}\n${publishSmoke.stderr}`);
+  const smokeCommands = readJsonLines(smokeLog).map((entry) => entry.argv.join(" "));
+  assert.ok(smokeCommands.some((command) => command.startsWith("npm install -D project-tiny-context-harness@1.2.4")));
 } finally {
   rmSync(fixture, { recursive: true, force: true });
+  rmSync(fastFixture, { recursive: true, force: true });
+  rmSync(guardFixture, { recursive: true, force: true });
 }
 
 function runNode(script, args, extraEnv = {}) {

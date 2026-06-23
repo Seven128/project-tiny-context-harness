@@ -28,6 +28,12 @@ export function stubbedReleasePublishResult({ command, commandArgs, options = {}
     const output = JSON.stringify([{ filename: `${packageName}-${version}.tgz`, shasum: "abc", integrity: "sha512-test" }]);
     return result(output);
   }
+  if (invocation === "node -p require('./node_modules/project-tiny-context-harness/package.json').version") {
+    return result(`${readPackageVersionSync(root)}\n`);
+  }
+  if (invocation === "npx --no-install ty-context doctor") {
+    return result(`core package: ${packageName}@${readPackageVersionSync(root)}\n`);
+  }
   if (invocation.startsWith("git tag -l ")) {
     return result("");
   }

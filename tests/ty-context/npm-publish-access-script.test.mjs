@@ -77,7 +77,7 @@ assert.match(
       }
     })
   ).nextAction,
-  /release:prepare .*release:publish -- --local-fallback --yes --registry-smoke/
+  /release:prepare .*release:publish -- --local-fallback --yes\./
 );
 
 assert.equal(

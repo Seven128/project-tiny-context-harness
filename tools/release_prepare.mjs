@@ -1,16 +1,23 @@
 #!/usr/bin/env node
 
-import { spawn } from "node:child_process";
 import { appendFileSync, existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { commandLogEntry, runCommand } from "./release_publish_helpers.mjs";
 
 const defaultRepoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const syncReleaseVersionScript = path.join(defaultRepoRoot, "tools", "sync_release_version.mjs");
 const packageName = "project-tiny-context-harness";
 const workspaceName = "project-tiny-context-harness";
 const releaseUpdateModes = ["sync-only", "upgrade-required", "manual-required"];
+const releaseFocusedTests = [
+  "tests/ty-context/release-flow-scripts.test.mjs",
+  "tests/ty-context/sync-release-version.test.mjs",
+  "tests/ty-context/launch-unblock-script.test.mjs",
+  "tests/ty-context/launch-readiness-script.test.mjs",
+  "tests/ty-context/npm-publish-access-script.test.mjs"
+];
 
 const args = parseArgs(process.argv.slice(2));
 
@@ -24,6 +31,7 @@ function parseArgs(argv) {
     root: defaultRepoRoot,
     version: "patch",
     updateMode: "sync-only",
+    fast: false,
     help: false
   };
   for (let index = 0; index < argv.length; index += 1) {
@@ -34,6 +42,8 @@ function parseArgs(argv) {
       parsed.version = requireValue(argv, ++index, "--version");
     } else if (arg === "--update-mode") {
       parsed.updateMode = parseReleaseUpdateMode(requireValue(argv, ++index, "--update-mode"));
+    } else if (arg === "--fast") {
+      parsed.fast = true;
     } else if (arg === "--help" || arg === "-h") {
       parsed.help = true;
     } else {
@@ -51,6 +61,7 @@ then stops before commit/push/publish.
 
 Usage:
   node tools/release_prepare.mjs --version patch --update-mode sync-only
+  node tools/release_prepare.mjs --fast --version patch --update-mode sync-only
   node tools/release_prepare.mjs --version 1.2.3 --update-mode upgrade-required
 `);
 }
@@ -63,28 +74,45 @@ async function main() {
 
   const currentVersion = await readPackageVersion();
   const targetVersion = resolveTargetVersion(args.version, currentVersion);
+  await assertReleaseUpdateModeMatchesChanges();
 
   await updatePackageVersion(targetVersion);
-  await run("node", [syncReleaseVersionScript, "--root", args.root, "--update-mode", args.updateMode], {
-    cwd: defaultRepoRoot
-  });
+  const timings = [];
+  await timed(timings, "release version sync", () =>
+    run("node", [syncReleaseVersionScript, "--root", args.root, "--update-mode", args.updateMode], {
+      cwd: defaultRepoRoot
+    })
+  );
 
-  await run("npm", ["run", "build", "--workspace", workspaceName]);
-  await run("node", ["packages/ty-context/dist/cli.js", "package", "sync-source"]);
-  await run("node", ["packages/ty-context/dist/cli.js", "package", "check-source"]);
-  await run("npm", ["run", "release:check-version"]);
-  await run("node", ["packages/ty-context/dist/cli.js", "upgrade", "--check", "--json"], { capture: true });
-  await run("npm", ["test", "--workspace", workspaceName]);
-  await run("git", ["diff", "--check"]);
+  await timed(timings, "build", () => run("npm", ["run", "build", "--workspace", workspaceName]));
+  await timed(timings, "package sync-source", () =>
+    run("node", ["packages/ty-context/dist/cli.js", "package", "sync-source"])
+  );
+  await timed(timings, "package check-source", () =>
+    run("node", ["packages/ty-context/dist/cli.js", "package", "check-source"])
+  );
+  await timed(timings, "release version check", () => run("npm", ["run", "release:check-version"]));
+  await timed(timings, "upgrade check", () =>
+    run("node", ["packages/ty-context/dist/cli.js", "upgrade", "--check", "--json"], { capture: true })
+  );
+  if (args.fast) {
+    await timed(timings, "release focused tests", () => run("node", ["--test", ...releaseFocusedTests]));
+  } else {
+    await timed(timings, "workspace tests", () => run("npm", ["run", "test:built", "--workspace", workspaceName]));
+  }
+  await timed(timings, "diff check", () => run("git", ["diff", "--check"]));
 
   console.log("");
   console.log(`Prepared ${packageName}@${targetVersion}`);
+  console.log(`Release preparation gate: ${args.fast ? "fast gate" : "full gate"}`);
+  printTimings("Release preparation timings:", timings);
   console.log("Next commands:");
   console.log("  git diff --stat");
   console.log("  git add -A");
   console.log(`  git commit -m "Release ${targetVersion}"`);
   console.log("  git push origin main");
-  console.log("  npm run release:publish -- --local-fallback --yes --registry-smoke");
+  console.log("  npm run release:publish -- --local-fallback --yes");
+  console.log("  # Add --registry-smoke only when you want the slower post-publish install smoke.");
 }
 
 async function readPackageVersion() {
@@ -167,7 +195,7 @@ async function run(command, commandArgs, options = {}) {
     }
     appendFileSync(
       process.env.TY_CONTEXT_RELEASE_COMMAND_LOG,
-      `${JSON.stringify({ argv: [command, ...commandArgs] })}\n`
+      `${JSON.stringify(commandLogEntry(command, commandArgs))}\n`
     );
     return { code: 0, stdout: "", stderr: "", output: "" };
   }
@@ -176,31 +204,65 @@ async function run(command, commandArgs, options = {}) {
 }
 
 async function runReal(command, commandArgs, options = {}) {
-  const capture = options.capture ?? false;
-  return new Promise((resolve, reject) => {
-    const child = spawn(command, commandArgs, {
-      cwd: options.cwd ?? args.root,
-      shell: process.platform === "win32",
-      stdio: capture ? ["ignore", "pipe", "pipe"] : "inherit"
-    });
-    let stdout = "";
-    let stderr = "";
-    if (capture) {
-      child.stdout.on("data", (chunk) => {
-        stdout += chunk.toString();
-      });
-      child.stderr.on("data", (chunk) => {
-        stderr += chunk.toString();
-      });
-    }
-    child.on("error", reject);
-    child.on("close", (code) => {
-      const result = { code, stdout, stderr, output: `${stdout}${stderr}` };
-      if (code === 0) {
-        resolve(result);
-      } else {
-        reject(new Error(`${command} ${commandArgs.join(" ")} failed with exit code ${code}`));
-      }
-    });
+  return runCommand(command, commandArgs, { ...options, cwd: options.cwd ?? args.root });
+}
+
+async function timed(timings, label, action) {
+  const started = Date.now();
+  try {
+    return await action();
+  } finally {
+    timings.push({ label, ms: Date.now() - started });
+  }
+}
+
+function printTimings(title, timings) {
+  console.log(title);
+  for (const timing of timings) {
+    console.log(`  - ${timing.label}: ${timing.ms}ms`);
+  }
+}
+
+async function assertReleaseUpdateModeMatchesChanges() {
+  if (args.updateMode !== "sync-only") {
+    return;
+  }
+  const changedFiles = await releaseChangedFiles();
+  const upgradeFiles = changedFiles.filter(isUpgradeRelatedPath);
+  if (upgradeFiles.length > 0) {
+    throw new Error(
+      `upgrade-related changes require --update-mode upgrade-required or manual-required, not sync-only:\n${upgradeFiles
+        .map((file) => `- ${file}`)
+        .join("\n")}`
+    );
+  }
+}
+
+async function releaseChangedFiles() {
+  if (process.env.TY_CONTEXT_RELEASE_CHANGED_FILES) {
+    return process.env.TY_CONTEXT_RELEASE_CHANGED_FILES.split(/\r?\n/).map(normalizeSlash).filter(Boolean);
+  }
+  const result = await runReal("git", ["diff", "--name-only", "HEAD", "--"], {
+    capture: true,
+    allowFailure: true
   });
+  if (result.code !== 0) {
+    return [];
+  }
+  return result.stdout.split(/\r?\n/).map(normalizeSlash).filter(Boolean);
+}
+
+function isUpgradeRelatedPath(filePath) {
+  return [
+    /^packages\/ty-context\/src\/commands\/upgrade\.ts$/,
+    /^packages\/ty-context\/src\/lib\/upgrade\.ts$/,
+    /^packages\/ty-context\/src\/lib\/migrations\.ts$/,
+    /^packages\/ty-context\/src\/lib\/legacy-.*migration\.ts$/,
+    /^packages\/ty-context\/migrations\//,
+    /^packages\/ty-context\/src\/lib\/schema-guard\.ts$/
+  ].some((pattern) => pattern.test(filePath));
+}
+
+function normalizeSlash(value) {
+  return String(value).replace(/\\/g, "/").trim();
 }

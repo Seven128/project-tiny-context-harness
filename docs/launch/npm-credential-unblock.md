@@ -57,7 +57,7 @@ Use this if you can log in interactively and respond to npm 2FA.
 npm login
 npm whoami
 npm profile get name email tfa --json
-npm run release:publish -- --local-fallback --yes --registry-smoke --otp <current-otp>
+npm run release:publish -- --local-fallback --yes --otp <current-otp>
 ```
 
 Use a fresh OTP for each publish attempt. Do not store OTP values in notes.
@@ -84,7 +84,7 @@ Temporary local use on PowerShell:
 $env:NPM_TOKEN = "<token>"
 npm config set //registry.npmjs.org/:_authToken "$env:NPM_TOKEN" --location=user
 npm whoami
-npm run release:publish -- --local-fallback --yes --registry-smoke
+npm run release:publish -- --local-fallback --yes
 ```
 
 After publish succeeds, either keep the token only if needed for future releases or revoke it on npmjs.com and remove it from local config:
@@ -149,14 +149,16 @@ Expected current state:
 Run:
 
 ```sh
-npm run release:publish -- --local-fallback --yes --registry-smoke
+npm run release:publish -- --local-fallback --yes
 ```
 
 If using interactive OTP:
 
 ```sh
-npm run release:publish -- --local-fallback --yes --registry-smoke --otp <current-otp>
+npm run release:publish -- --local-fallback --yes --otp <current-otp>
 ```
+
+Add `--registry-smoke` only when you want the slower post-publish install smoke after the default registry `latest` verification.
 
 ## Post-Publish Gate
 

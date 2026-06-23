@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 
-import { spawn } from "node:child_process";
 import { appendFileSync, existsSync } from "node:fs";
 import { mkdir, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { delay, parseJsonFromOutput, parsePackJson, requireValue, singleLine } from "./release_publish_helpers.mjs";
+import { commandLogEntry, delay, parseJsonFromOutput, parsePackJson, requireValue, runCommand, singleLine } from "./release_publish_helpers.mjs";
 import { stubbedReleasePublishResult } from "./release_publish_test_stubs.mjs";
 
 const defaultRepoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -89,19 +88,21 @@ async function main() {
   }
 
   await run("npm", ["whoami"], { capture: true });
-  const pack = await packPackage();
-  await publishTarball(pack.tarballRelativePath);
-  await waitForLatest(version);
+  const timings = [];
+  const pack = await timed(timings, "pack", () => packPackage());
+  await timed(timings, "publish", () => publishTarball(pack.tarballRelativePath));
+  await timed(timings, "registry latest verification", () => waitForLatest(version));
   if (args.registrySmoke) {
-    await installedConsumerSmoke(version);
+    await timed(timings, "registry smoke", () => installedConsumerSmoke(version));
   }
-  await ensureTag(version);
-  const releaseResult = await publishGitHubRelease(version);
+  await timed(timings, "tag push", () => ensureTag(version));
+  const releaseResult = await timed(timings, "GitHub Release", () => publishGitHubRelease(version));
 
   console.log("");
   console.log(`Published ${packageName}@${version}`);
   console.log(`Registry latest verified as ${version}.`);
   console.log(releaseResult);
+  printTimings("Release publication timings:", timings);
 }
 
 async function assertPublishPrerequisites(version) {
@@ -222,7 +223,7 @@ async function ensureTag(version) {
   const tag = `v${version}`;
   const existing = (await run("git", ["tag", "-l", tag], { capture: true })).stdout.trim();
   if (!existing) {
-    await run("git", ["tag", "-a", tag, "-m", `Project-Tiny-Context-Harness-${version}`]);
+    await run("git", ["tag", "-a", tag, "-m", `Project Tiny Context Harness ${version}`]);
   } else {
     const head = (await run("git", ["rev-parse", "HEAD"], { capture: true })).stdout.trim();
     const tagHead = (await run("git", ["rev-list", "-n", "1", tag], { capture: true })).stdout.trim();
@@ -252,38 +253,26 @@ async function run(command, commandArgs, options = {}) {
   if (process.env.TY_CONTEXT_RELEASE_COMMAND_LOG) {
     appendFileSync(
       process.env.TY_CONTEXT_RELEASE_COMMAND_LOG,
-      `${JSON.stringify({ argv: [command, ...commandArgs] })}\n`
+      `${JSON.stringify(commandLogEntry(command, commandArgs))}\n`
     );
     return stubbedReleasePublishResult({ command, commandArgs, options, root: args.root, packageName });
   }
 
-  const cwd = options.cwd ?? args.root;
-  const capture = options.capture ?? false;
-  const allowFailure = options.allowFailure ?? false;
-  return new Promise((resolve, reject) => {
-    const child = spawn(command, commandArgs, {
-      cwd,
-      shell: process.platform === "win32",
-      stdio: capture ? ["ignore", "pipe", "pipe"] : "inherit"
-    });
-    let stdout = "";
-    let stderr = "";
-    if (capture) {
-      child.stdout.on("data", (chunk) => {
-        stdout += chunk.toString();
-      });
-      child.stderr.on("data", (chunk) => {
-        stderr += chunk.toString();
-      });
-    }
-    child.on("error", reject);
-    child.on("close", (code) => {
-      const result = { code, stdout, stderr, output: `${stdout}${stderr}` };
-      if (code === 0 || allowFailure) {
-        resolve(result);
-      } else {
-        reject(new Error(`${command} ${commandArgs.join(" ")} failed with exit code ${code}: ${result.output}`));
-      }
-    });
-  });
+  return runCommand(command, commandArgs, { ...options, cwd: options.cwd ?? args.root });
+}
+
+async function timed(timings, label, action) {
+  const started = Date.now();
+  try {
+    return await action();
+  } finally {
+    timings.push({ label, ms: Date.now() - started });
+  }
+}
+
+function printTimings(title, timings) {
+  console.log(title);
+  for (const timing of timings) {
+    console.log(`  - ${timing.label}: ${timing.ms}ms`);
+  }
 }

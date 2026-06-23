@@ -1207,7 +1207,9 @@ function localChecks() {
       contains(npmTrustedPublishing, /must not define `NPM_TOKEN` or `NODE_AUTH_TOKEN`/) &&
       contains(npmTrustedPublishing, /npm run release:prepare/) &&
       contains(npmTrustedPublishing, /--update-mode/) &&
-      contains(npmTrustedPublishing, /npm run release:publish -- --local-fallback --yes --registry-smoke/) &&
+      contains(npmTrustedPublishing, /npm run release:prepare -- --fast/) &&
+      contains(npmTrustedPublishing, /npm run release:publish -- --local-fallback --yes/) &&
+      contains(npmTrustedPublishing, /--registry-smoke/) &&
       contains(npmTrustedPublishing, /npm run release:check-version/) &&
       contains(npmTrustedPublishing, /tools\/github_release_publish\.mjs/) &&
       contains(npmTrustedPublishing, /expected_version: <new-version>/) &&
@@ -1336,6 +1338,8 @@ function localChecks() {
       rootPackage.scripts?.["release:npm"] === "node tools/release_npm.mjs" &&
       contains(releasePrepareScript, /updatePackageVersion/) &&
       contains(releasePrepareScript, /"package", "sync-source"/) &&
+      contains(releasePrepareScript, /--fast/) &&
+      contains(releasePrepareScript, /releaseFocusedTests/) &&
       contains(releasePrepareScript, /"package", "check-source"/) &&
       contains(releasePrepareScript, /"release:check-version"/) &&
       contains(releasePrepareScript, /"upgrade", "--check", "--json"/) &&
@@ -1869,7 +1873,7 @@ function summarize(checks, options) {
 
 function nextActionForFailedCheck(check) {
   if (check.id === "npm-fetch") {
-    return `Run \`npm run launch:npm-access\` to inspect npm auth and package state, prepare the new version with \`npm run release:prepare -- --version ${localPackageJson.version} --update-mode sync-only\`, commit and push it, then publish with [docs/launch/npm-trusted-publishing.md](docs/launch/npm-trusted-publishing.md); if local fallback returns E403, use [docs/launch/npm-credential-unblock.md](docs/launch/npm-credential-unblock.md).`;
+    return `Run \`npm run launch:npm-access\` to inspect npm auth and package state, prepare ordinary Skill/assets patch releases with \`npm run release:prepare -- --fast --version ${localPackageJson.version} --update-mode sync-only\`, commit and push it, then publish with [docs/launch/npm-trusted-publishing.md](docs/launch/npm-trusted-publishing.md); if local fallback returns E403, use [docs/launch/npm-credential-unblock.md](docs/launch/npm-credential-unblock.md).`;
   }
   if (check.id === "github-homepage") {
     return "Run `npm run launch:github-metadata` to inspect the GitHub About drift; from a trusted shell with `GITHUB_TOKEN` or `GH_TOKEN`, run `npm run launch:github-metadata -- --apply`, or use [docs/launch/github-metadata.md](docs/launch/github-metadata.md) manually.";

@@ -168,8 +168,10 @@ function appendNpmOwnerCommands(lines, report) {
     lines.push("git add -A");
     lines.push(`git commit -m "Release ${packageVersion}"`);
     lines.push("git push origin main");
-    lines.push("npm run release:publish -- --local-fallback --yes --registry-smoke");
+    lines.push("npm run release:publish -- --local-fallback --yes");
     lines.push("```");
+    lines.push("");
+    lines.push("Add `--registry-smoke` only when you want the slower post-publish install smoke.");
     lines.push("");
     lines.push("If token-based publishing is required, create a publish-capable granular token on npmjs.com and follow `docs/launch/npm-credential-unblock.md`. Do not store tokens, OTP values or `.npmrc` content in this repository.");
     lines.push("");
@@ -183,8 +185,10 @@ function appendNpmOwnerCommands(lines, report) {
     lines.push("git add -A");
     lines.push(`git commit -m "Release ${packageVersion}"`);
     lines.push("git push origin main");
-    lines.push("npm run release:publish -- --local-fallback --yes --registry-smoke");
+    lines.push("npm run release:publish -- --local-fallback --yes");
     lines.push("```");
+    lines.push("");
+    lines.push("Add `--registry-smoke` only when you want the slower post-publish install smoke.");
     lines.push("");
     lines.push("If npm returns E403, stop and use `docs/launch/npm-credential-unblock.md` before retrying.");
     lines.push("");
