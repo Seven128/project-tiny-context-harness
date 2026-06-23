@@ -3,6 +3,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { assertReleaseUpgradeImpactEvidence, renderUpgradeImpact } from "./release_upgrade_impact.mjs";
 
 const defaultRepoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageName = "project-tiny-context-harness";
@@ -204,6 +205,8 @@ function validateReleasePacket(relativePath, content, version) {
     new RegExp(`v${escapeRegExp(version)}`),
     new RegExp(`Project Tiny Context Harness ${escapeRegExp(version)}`),
     /Update Mode:/,
+    /## Upgrade Impact/,
+    /Upgrade Impact:/,
     new RegExp(escapeRegExp(packetMode)),
     /sync-only/,
     /upgrade-required/,
@@ -225,6 +228,8 @@ function validateReleasePacket(relativePath, content, version) {
       throw new Error(`${relativePath}: required release packet content missing: ${pattern}`);
     }
   }
+
+  assertReleaseUpgradeImpactEvidence(content, packetMode, relativePath);
 }
 
 function renderReleasePacket(version, releaseUpdateMode) {
@@ -257,6 +262,10 @@ Project Tiny Context Harness ${version}
 Update Mode: \`${releaseUpdateMode}\`
 
 Allowed modes: ${releaseUpdateModes.map((mode) => `\`${mode}\``).join(", ")}.
+
+## Upgrade Impact
+
+${renderUpgradeImpact(releaseUpdateMode)}
 
 ## Release Body
 

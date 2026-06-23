@@ -35,13 +35,19 @@ assert.deepEqual(parsePackJson(`${JSON.stringify([{ filename: "pkg-1.0.0.tgz" }]
 const fixture = mkdtempSync(path.join(os.tmpdir(), "release-flow-scripts-"));
 const fastFixture = mkdtempSync(path.join(os.tmpdir(), "release-flow-fast-"));
 const guardFixture = mkdtempSync(path.join(os.tmpdir(), "release-flow-guard-"));
+const missingEvidenceFixture = mkdtempSync(path.join(os.tmpdir(), "release-flow-missing-evidence-"));
+const fastUpgradeFixture = mkdtempSync(path.join(os.tmpdir(), "release-flow-fast-upgrade-"));
 
 try {
   seedReleaseFixture(fixture, "1.2.3");
 
   const prepareLog = path.join(fixture, "prepare-commands.jsonl");
   const prepare = runNode(prepareScript, ["--root", fixture, "--version", "patch", "--update-mode", "upgrade-required"], {
-    TY_CONTEXT_RELEASE_COMMAND_LOG: prepareLog
+    TY_CONTEXT_RELEASE_COMMAND_LOG: prepareLog,
+    TY_CONTEXT_RELEASE_CHANGED_FILES: [
+      "packages/ty-context/src/lib/migrations.ts",
+      "tests/ty-context/upgrade.test.mjs"
+    ].join("\n")
   });
   assert.equal(prepare.status, 0, `${prepare.stdout}\n${prepare.stderr}`);
   assert.match(prepare.stdout, /Prepared project-tiny-context-harness@1\.2\.4/);
@@ -49,6 +55,8 @@ try {
   assert.match(read("packages/ty-context/package.json"), /"version": "1\.2\.4"/);
   assert.match(read("package-lock.json"), /"version": "1\.2\.4"/);
   assert.match(read("docs/launch/github-release-1.2.4.md"), /Update Mode: `upgrade-required`/);
+  assert.match(read("docs/launch/github-release-1.2.4.md"), /Upgrade Impact: `safe migration included`/);
+  assert.match(read("docs/launch/github-release-1.2.4.md"), /upgrade\/migration implementation and upgrade test evidence/);
   assert.match(read("docs/launch/github-release-1.2.4.md"), /synchronized package assets and CLI build/);
 
   const prepareCommands = readJsonLines(prepareLog);
@@ -82,6 +90,7 @@ try {
   assert.equal(fastPrepare.status, 0, `${fastPrepare.stdout}\n${fastPrepare.stderr}`);
   assert.match(fastPrepare.stdout, /Prepared project-tiny-context-harness@2\.0\.1/);
   assert.match(fastPrepare.stdout, /fast gate/i);
+  assert.match(readFileSync(path.join(fastFixture, "docs/launch/github-release-2.0.1.md"), "utf8"), /Upgrade Impact: `none`/);
   const fastCommands = readJsonLines(fastLog).map((entry) => entry.argv.join(" "));
   assert.deepEqual(fastCommands, [
     "npm run build --workspace project-tiny-context-harness",
@@ -107,11 +116,40 @@ try {
     ["--root", guardFixture, "--fast", "--version", "patch", "--update-mode", "sync-only"],
     {
       TY_CONTEXT_RELEASE_COMMAND_LOG: path.join(guardFixture, "guard-commands.jsonl"),
-      TY_CONTEXT_RELEASE_CHANGED_FILES: "packages/ty-context/src/lib/upgrade.ts"
+      TY_CONTEXT_RELEASE_CHANGED_FILES: "packages/ty-context/src/lib/sync-engine.ts"
     }
   );
   assert.notEqual(guard.status, 0);
-  assert.match(`${guard.stdout}\n${guard.stderr}`, /upgrade-related changes require --update-mode upgrade-required or manual-required/i);
+  assert.match(`${guard.stdout}\n${guard.stderr}`, /upgrade-sensitive changes require --update-mode upgrade-required or manual-required/i);
+
+  seedReleaseFixture(missingEvidenceFixture, "3.1.0");
+  const missingEvidence = runNode(
+    prepareScript,
+    ["--root", missingEvidenceFixture, "--version", "patch", "--update-mode", "upgrade-required"],
+    {
+      TY_CONTEXT_RELEASE_COMMAND_LOG: path.join(missingEvidenceFixture, "missing-evidence-commands.jsonl"),
+      TY_CONTEXT_RELEASE_CHANGED_FILES: "packages/ty-context/src/lib/sync-engine.ts"
+    }
+  );
+  assert.notEqual(missingEvidence.status, 0);
+  assert.match(`${missingEvidence.stdout}\n${missingEvidence.stderr}`, /requires upgrade impact evidence/i);
+  assert.match(`${missingEvidence.stdout}\n${missingEvidence.stderr}`, /upgrade\/migration implementation evidence/i);
+  assert.match(`${missingEvidence.stdout}\n${missingEvidence.stderr}`, /upgrade test evidence/i);
+
+  seedReleaseFixture(fastUpgradeFixture, "3.2.0");
+  const fastUpgrade = runNode(
+    prepareScript,
+    ["--root", fastUpgradeFixture, "--fast", "--version", "patch", "--update-mode", "upgrade-required"],
+    {
+      TY_CONTEXT_RELEASE_COMMAND_LOG: path.join(fastUpgradeFixture, "fast-upgrade-commands.jsonl"),
+      TY_CONTEXT_RELEASE_CHANGED_FILES: [
+        "packages/ty-context/src/lib/migrations.ts",
+        "tests/ty-context/upgrade.test.mjs"
+      ].join("\n")
+    }
+  );
+  assert.notEqual(fastUpgrade.status, 0);
+  assert.match(`${fastUpgrade.stdout}\n${fastUpgrade.stderr}`, /Fast release preparation is only allowed with --update-mode sync-only/i);
 
   const publishNoFallback = runNode(publishScript, ["--root", fixture], {
     TY_CONTEXT_RELEASE_COMMAND_LOG: path.join(fixture, "publish-guidance.jsonl")
@@ -154,6 +192,8 @@ try {
   rmSync(fixture, { recursive: true, force: true });
   rmSync(fastFixture, { recursive: true, force: true });
   rmSync(guardFixture, { recursive: true, force: true });
+  rmSync(missingEvidenceFixture, { recursive: true, force: true });
+  rmSync(fastUpgradeFixture, { recursive: true, force: true });
 }
 
 function runNode(script, args, extraEnv = {}) {

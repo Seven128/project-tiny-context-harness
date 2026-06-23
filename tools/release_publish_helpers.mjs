@@ -1,18 +1,32 @@
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
+import path from "node:path";
 
 export function resolveExecutable(command) {
+  return resolveCommandInvocation(command, []).executable;
+}
+
+function resolveCommandInvocation(command, commandArgs) {
   if (command === "node") {
-    return process.execPath;
+    return { executable: process.execPath, args: commandArgs };
   }
   if (process.platform === "win32") {
     if (command === "npm") {
-      return "npm.cmd";
+      return resolveNodePackageCli("npm-cli.js", "npm.cmd", commandArgs);
     }
     if (command === "npx") {
-      return "npx.cmd";
+      return resolveNodePackageCli("npx-cli.js", "npx.cmd", commandArgs);
     }
   }
-  return command;
+  return { executable: command, args: commandArgs };
+}
+
+function resolveNodePackageCli(cliName, fallbackCommand, commandArgs) {
+  const cliPath = path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", cliName);
+  if (existsSync(cliPath)) {
+    return { executable: process.execPath, args: [cliPath, ...commandArgs] };
+  }
+  return { executable: fallbackCommand, args: commandArgs };
 }
 
 export function commandLogEntry(command, commandArgs) {
@@ -28,21 +42,28 @@ export async function runCommand(command, commandArgs, options = {}) {
   const capture = options.capture ?? false;
   const allowFailure = options.allowFailure ?? false;
   return new Promise((resolve, reject) => {
-    const child = spawn(resolveExecutable(command), commandArgs, {
+    const invocation = resolveCommandInvocation(command, commandArgs);
+    const child = spawn(invocation.executable, invocation.args, {
       cwd,
       shell: false,
-      stdio: capture ? ["ignore", "pipe", "pipe"] : "inherit"
+      stdio: ["ignore", "pipe", "pipe"]
     });
     let stdout = "";
     let stderr = "";
-    if (capture) {
-      child.stdout.on("data", (chunk) => {
-        stdout += chunk.toString();
-      });
-      child.stderr.on("data", (chunk) => {
-        stderr += chunk.toString();
-      });
-    }
+    child.stdout.on("data", (chunk) => {
+      const text = chunk.toString();
+      stdout += text;
+      if (!capture) {
+        process.stdout.write(text);
+      }
+    });
+    child.stderr.on("data", (chunk) => {
+      const text = chunk.toString();
+      stderr += text;
+      if (!capture) {
+        process.stderr.write(text);
+      }
+    });
     child.on("error", reject);
     child.on("close", (code) => {
       const result = { code, stdout, stderr, output: `${stdout}${stderr}` };

@@ -68,7 +68,7 @@ npx --yes --package project-tiny-context-harness@latest ty-context init --adopt
 make validate-context
 
 Or use the local source-preview tarball:
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.2.68.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.2.69.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 

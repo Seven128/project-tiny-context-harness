@@ -5,6 +5,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { commandLogEntry, runCommand } from "./release_publish_helpers.mjs";
+import { isUpgradeImplementationPath, isUpgradeSensitivePath, isUpgradeTestEvidencePath } from "./release_upgrade_impact.mjs";
 
 const defaultRepoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const syncReleaseVersionScript = path.join(defaultRepoRoot, "tools", "sync_release_version.mjs");
@@ -74,7 +75,8 @@ async function main() {
 
   const currentVersion = await readPackageVersion();
   const targetVersion = resolveTargetVersion(args.version, currentVersion);
-  await assertReleaseUpdateModeMatchesChanges();
+  const changedFiles = await releaseChangedFiles();
+  assertReleaseGateMatchesUpgradeImpact(changedFiles);
 
   await updatePackageVersion(targetVersion);
   const timings = [];
@@ -223,19 +225,53 @@ function printTimings(title, timings) {
   }
 }
 
-async function assertReleaseUpdateModeMatchesChanges() {
+function assertReleaseGateMatchesUpgradeImpact(changedFiles) {
+  if (args.fast && args.updateMode !== "sync-only") {
+    throw new Error(
+      "Fast release preparation is only allowed with --update-mode sync-only; use the full gate for upgrade-required or manual-required releases."
+    );
+  }
+
+  assertReleaseUpdateModeMatchesChanges(changedFiles);
+}
+
+function assertReleaseUpdateModeMatchesChanges(changedFiles) {
+  const upgradeSensitiveFiles = changedFiles.filter(isUpgradeSensitivePath);
   if (args.updateMode !== "sync-only") {
+    if (args.updateMode === "upgrade-required") {
+      assertUpgradeRequiredEvidence(changedFiles);
+    }
     return;
   }
-  const changedFiles = await releaseChangedFiles();
-  const upgradeFiles = changedFiles.filter(isUpgradeRelatedPath);
-  if (upgradeFiles.length > 0) {
+
+  if (upgradeSensitiveFiles.length > 0) {
     throw new Error(
-      `upgrade-related changes require --update-mode upgrade-required or manual-required, not sync-only:\n${upgradeFiles
+      `upgrade-sensitive changes require --update-mode upgrade-required or manual-required, not sync-only:\n${upgradeSensitiveFiles
         .map((file) => `- ${file}`)
         .join("\n")}`
     );
   }
+}
+
+function assertUpgradeRequiredEvidence(changedFiles) {
+  const implementationFiles = changedFiles.filter(isUpgradeImplementationPath);
+  const testFiles = changedFiles.filter(isUpgradeTestEvidencePath);
+  if (implementationFiles.length > 0 && testFiles.length > 0) {
+    return;
+  }
+
+  const missing = [];
+  if (implementationFiles.length === 0) {
+    missing.push("- upgrade/migration implementation evidence");
+  }
+  if (testFiles.length === 0) {
+    missing.push("- upgrade test evidence");
+  }
+  throw new Error(
+    `--update-mode upgrade-required requires upgrade impact evidence before release preparation can continue:\n${missing.join(
+      "\n"
+    )}\nExpected implementation evidence in upgrade/migration code and test evidence in tests/ty-context/upgrade*.test.mjs or tests/ty-context/legacy-upgrade*.test.mjs.`
+  );
 }
 
 async function releaseChangedFiles() {
@@ -250,17 +286,6 @@ async function releaseChangedFiles() {
     return [];
   }
   return result.stdout.split(/\r?\n/).map(normalizeSlash).filter(Boolean);
-}
-
-function isUpgradeRelatedPath(filePath) {
-  return [
-    /^packages\/ty-context\/src\/commands\/upgrade\.ts$/,
-    /^packages\/ty-context\/src\/lib\/upgrade\.ts$/,
-    /^packages\/ty-context\/src\/lib\/migrations\.ts$/,
-    /^packages\/ty-context\/src\/lib\/legacy-.*migration\.ts$/,
-    /^packages\/ty-context\/migrations\//,
-    /^packages\/ty-context\/src\/lib\/schema-guard\.ts$/
-  ].some((pattern) => pattern.test(filePath));
 }
 
 function normalizeSlash(value) {

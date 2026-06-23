@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { commandLogEntry, delay, parseJsonFromOutput, parsePackJson, requireValue, runCommand, singleLine } from "./release_publish_helpers.mjs";
 import { stubbedReleasePublishResult } from "./release_publish_test_stubs.mjs";
+import { assertReleaseUpgradeImpactEvidence } from "./release_upgrade_impact.mjs";
 
 const defaultRepoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageName = "project-tiny-context-harness";
@@ -143,7 +144,9 @@ async function readReleaseUpdateMode(version) {
   if (!match) {
     throw new Error(`Release update mode missing from ${path.relative(args.root, packetPath)}`);
   }
-  return match[1];
+  const releaseUpdateMode = match[1];
+  assertReleaseUpgradeImpactEvidence(packet, releaseUpdateMode, path.relative(args.root, packetPath));
+  return releaseUpdateMode;
 }
 
 async function registryHasVersion(version) {

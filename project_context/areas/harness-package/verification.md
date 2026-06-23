@@ -22,7 +22,7 @@ read_policy: default
   - Use for broader package behavior changes or when focused tests do not cover the touched package surface.
 - `node --test tests/ty-context/release-flow-scripts.test.mjs tests/ty-context/sync-release-version.test.mjs tests/ty-context/launch-unblock-script.test.mjs tests/ty-context/launch-readiness-script.test.mjs tests/ty-context/npm-publish-access-script.test.mjs`
   - Use after changing release preparation/publication automation, release packet generation or launch runbooks that print owner-facing release commands.
-  - Expected signal: release preparation remains the only mutating phase, publication stays publish-only and launch/readiness guidance matches the split flow.
+  - Expected signal: release preparation remains the only mutating phase, publication stays publish-only, upgrade impact evidence is present in release packets and launch/readiness guidance matches the split flow.
 - `npm run release:prepare -- --fast --version patch --update-mode sync-only`
   - Use for ordinary managed Skill, package asset, docs or release metadata patch preparation when no upgrade/migration code changed.
   - Expected signal: the fast gate runs build, package source sync/check, release-version check, `upgrade --check --json`, release-focused tests and `git diff --check`, then prints staged next commands without publishing.
