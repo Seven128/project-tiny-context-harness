@@ -26,6 +26,10 @@ The ladder is expected agent behavior. It must not become a validator, phase gat
 
 - `Context Delta: required` means the current task changes durable facts and the relevant `project_context/**` or `DESIGN.md` facts are updated before implementation continues.
 - `Context Delta: none` means implementation proceeds against existing Context.
+- For high-risk product/architecture or implementation-plan inputs, Task Contract may split the judgment into `Product Context Delta: none|required` and `Technical Context Delta: none|required`; either `required` makes the overall `Context Delta: required`.
+- `Product Context Delta` asks whether product capability, user flow, business state/rule, page/surface responsibility, main/drilldown ownership, information architecture, user-visible terminology, status meaning, operation boundary, product/domain ownership or acceptance semantics changed.
+- `Technical Context Delta` asks whether API/schema/event/data contract, module ownership, dependency direction, worker/runtime/state-machine semantics, data model, persistence, scheduling, failure/retry/recovery semantics, verification/deployment/bootstrap path or durable technical tradeoff changed.
+- The split is a thinking aid for source interpretation. It must not become a validator, phase gate, edit-order gate, new Context role or required document chain.
 - Task Contract is task-local and temporary. It should identify goal, boundary, owner, dependencies, state, failure/retry/recovery, security, non-goals, verification path and applicable module design.
 - High-risk product, design and engineering Task Contracts that affect durable architecture/module ownership, API/schema/data contracts, state/runtime semantics, dependency direction, verification/deployment semantics or durable tradeoff rationale also name `Architecture Context Hit` and `Decision Rationale Hit: existing|required|none`.
 - `Architecture Context Hit` is Context routing for the current decision. It names the architecture, area, contract, foundation, decision-rationale or verification/deployment Context that controls the task; it is not an architecture quality judgment.
@@ -49,6 +53,7 @@ The ladder is expected agent behavior. It must not become a validator, phase gat
 - A local audit records acceptance progress, current evidence, commands, blockers, missing evidence, deferred scope and invalid/stale evidence for one long-running objective.
 - A target-mode local audit does not replace Task Contract or workflow-contract `plan.md`.
 - A local audit is not Context, not product-quality proof, not a global task manager and not a substitute for tests, CI, review, human acceptance or the repository's Tiny Context workflow contract.
+- A local audit is process state only. For Superpowers long-task execution it must not mark final completion; plan conformance belongs in `plan-conformance-matrix.*`, and acceptance completion belongs in `final-acceptance-verdict.*`.
 - When target-mode execution works through an acceptance item, each concrete execution slice still follows current Context, `Context Delta`, Task Contract and any workflow-contract `plan.md` in force.
 
 ## Product Surface Contract Boundary
@@ -82,13 +87,18 @@ The ladder is expected agent behavior. It must not become a validator, phase gat
 
 ## Superpowers Long-Task Skill Boundary
 
-- The Superpowers long-task Skill (`/superpowers-long-task`) is a separate prompt-adapter Skill for a complete plan/checklist/audit packet. It produces a Superpowers-specific target-mode prompt and does not generate, repair or strengthen the checklist.
-- It is recommended through explicit Skill invocation after `/normal-long-task` has produced or verified the full checklist.
-- This is Tiny Context's adapter layer, not a Superpowers official schema / 不是 Superpowers 官方 schema. It maps the original requirement source, implementation/source plan, full checklist, local audit, relevant Context and required tests/core paths into the external workflow's input roles.
-- The Skill stops when the required packet cannot be parsed: original requirement/source summary, implementation/source plan, full checklist, required evidence, verification methods, fail conditions, required tests or explicit test scope, core paths or explicit non-UI/runtime scope, state-machine rules, invalid evidence rules, local audit expectations and blocker policy.
+- The Superpowers long-task Skill (`/superpowers-long-task`) is a separate prompt-adapter Skill for a recommended three-input packet: Product / Architecture Source, Technical Realization Plan and full Acceptance Checklist. It produces a Superpowers-specific target-mode prompt and does not generate, repair or strengthen the checklist.
+- It is recommended through explicit Skill invocation when the next step needs Superpowers execution. `/normal-long-task` remains useful for ordinary acceptance preparation, but Superpowers input does not require it when the product/architecture source, technical realization plan and acceptance checklist already exist.
+- Two-document compatibility is allowed only when the first document explicitly contains both Product / Architecture Source and Technical Realization Plan sections. If the user supplies only a product/architecture source plus checklist, the Skill stops for missing Technical Realization Plan instead of translating product intent into a technical plan.
+- This is Tiny Context's adapter layer, not a Superpowers official schema / 不是 Superpowers 官方 schema. It maps the product/architecture source, technical realization plan, full checklist, local audit, relevant Context and required tests/core paths into the external workflow's input roles.
+- The Skill stops when required three-input fields cannot be parsed: original requirement/source summary, durable product/architecture intent when applicable, traceable Technical Realization Plan items, expected surfaces when applicable, explicit non-completing shortcuts when applicable, full checklist, required evidence, verification methods, fail conditions, required tests or explicit test scope, core paths or explicit non-UI/runtime scope, state-machine rules, invalid evidence rules and blocker policy.
 - It must visibly output `Superpowers input packet` / `Superpowers 输入包` and `Superpowers execution binding` / `Superpowers 执行绑定`.
 - It binds official workflow names only after the full checklist exists: `superpowers:writing-plans` when the source plan is not bite-sized, `superpowers:subagent-driven-development` when subagents are available, `superpowers:executing-plans` otherwise, AC gap -> TDD via `superpowers:test-driven-development`, and `superpowers:verification-before-completion` before any completion claim.
-- The full checklist remains the acceptance authority. Review, finish or execution discipline cannot override incomplete or contradicted acceptance evidence.
+- Before implementation, the generated Superpowers prompt requires Product Context Delta and Technical Context Delta checks; if either is `required`, the executor updates the smallest owning `project_context/**` or `DESIGN.md` fact before code work continues.
+- The Technical Realization Plan controls Plan Conformance Gate through `plan-conformance-matrix.*`, an execution-time trace artifact initialized early and updated as work lands. Passing tests, sampled paths, local audit scope notes or subagent summaries cannot prove full plan conformance.
+- The Product / Architecture Source prevents scope shrinkage and constrains the Technical Realization Plan; local execution cannot silently narrow it.
+- The full checklist controls Acceptance Evidence Gate through `final-acceptance-verdict.*`, a final AC-by-AC verdict generated only after conformance and current evidence checks. Review, finish or execution discipline cannot override incomplete or contradicted acceptance evidence.
+- Overall done requires both gates: no blocking plan drift in the matrix and all required ACs complete in the final verdict.
 - The Superpowers target prompt also requires maximum safe autonomous progress within current platform, repository, tool and user-authorized permission boundaries, and locally unsatisfiable blockers must be reduced to a minimal user action list instead of vague pause requests.
 - The same inherited permission policy applies to the Superpowers target prompt: authorized `sudo` / `gsudo` / administrator elevation is self-service work, not a blocker, until it is unavailable, fails or needs user/system authorization.
 
