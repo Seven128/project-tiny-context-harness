@@ -161,7 +161,7 @@ async function packPackage() {
     ["pack", "--json", "--workspace", workspaceName, "--pack-destination", releasePackDir],
     { capture: true }
   );
-  const pack = parsePackJson(result.output);
+  const pack = parsePackJson(result.stdout);
   return {
     ...pack,
     tarballRelativePath: path.join(releasePackDir, pack.filename).replace(/\\/g, "/")
