@@ -222,7 +222,7 @@ async function ensureTag(version) {
   const tag = `v${version}`;
   const existing = (await run("git", ["tag", "-l", tag], { capture: true })).stdout.trim();
   if (!existing) {
-    await run("git", ["tag", "-a", tag, "-m", `Project Tiny Context Harness ${version}`]);
+    await run("git", ["tag", "-a", tag, "-m", `Project-Tiny-Context-Harness-${version}`]);
   } else {
     const head = (await run("git", ["rev-parse", "HEAD"], { capture: true })).stdout.trim();
     const tagHead = (await run("git", ["rev-list", "-n", "1", tag], { capture: true })).stdout.trim();

@@ -78,7 +78,7 @@ try {
 
   const publishCommands = readJsonLines(publishLog).map((entry) => entry.argv.join(" "));
   assert.ok(publishCommands.includes("npm publish .artifacts/releases/pack/project-tiny-context-harness-1.2.4.tgz --access public"));
-  assert.ok(publishCommands.includes("git tag -a v1.2.4 -m Project Tiny Context Harness 1.2.4"));
+  assert.ok(publishCommands.includes("git tag -a v1.2.4 -m Project-Tiny-Context-Harness-1.2.4"));
   assert.ok(publishCommands.includes("git push origin v1.2.4"));
 } finally {
   rmSync(fixture, { recursive: true, force: true });
