@@ -262,15 +262,26 @@ For every blocker, record:
 
 If only locally unsatisfiable hard blockers remain, pause for the user or external owner instead of marking the goal complete.
 
+## Autonomous Progress Protocol
+
+The generated target-mode prompt must require maximum safe autonomous progress within current platform, repository, tool and user-authorized permission boundaries. Do not ask the user for work the executor can safely discover, run, inspect or verify itself.
+
+The generated target-mode prompt must inherit current repository/global `AGENTS.md` or agent-instruction permission policy. Authorized `sudo` / `gsudo` / administrator elevation is not a user blocker; the executor must try it before pausing. Pause only if elevation is unavailable, fails, or requires user/system authorization.
+
+Pause only for locally unsatisfiable hard blockers such as missing accounts, credentials, production access, paid services, legal/security approval, user-only browser sessions or sensitive fields the executor cannot access safely.
+
 ## Minimal User Blocker Protocol
 
 Ask the user for help only after safe self-service discovery has been attempted. When asking, provide a minimal action list:
 
 - what was already tried.
 - the missing item.
+- exact page, system, command or owner to open/contact.
 - exact page/path/field/button/menu when known.
 - minimum value or action needed.
+- how to redact or avoid sending sensitive values.
 - sensitive information the user must not send, such as passwords, tokens, cookies, full pages, HAR files or secrets.
+- what the executor will do immediately after receiving the input.
 - acceptance impact.
 - fallback or deferred path if any.
 
@@ -434,6 +445,8 @@ Hard requirements:
 - If the prompt uses a compact checklist summary, say the full checklist owns details and acceptance authority; the compact summary owns direction, priority and recovery navigation; overlap with the full checklist is allowed; conflicts are resolved in favor of the full checklist.
 - The prompt must require local audit status to start from `unknown / not_run`; only fresh required evidence can mark an AC complete. If any fresh browser / API / runtime / data / test contradiction appears, downgrade the affected AC and overall status and record invalidating evidence.
 - The prompt must state that UI-facing acceptance requires a real page path and matching user-visible state; component / viewmodel / mock / unit test evidence is auxiliary unless the full checklist explicitly says otherwise.
+- The prompt must require maximum safe autonomous progress within current platform, repository, tool and user-authorized permission boundaries. Do not ask the user for work the executor can safely discover, run, inspect or verify itself. If pausing for a locally unsatisfiable hard blocker, provide the minimum user action list: exact page/system/command/owner, field or value location, redaction guidance, values not to send and what the executor will do next.
+- The prompt must inherit current repository/global `AGENTS.md` or agent-instruction permission policy. Authorized `sudo` / `gsudo` / administrator elevation is not a user blocker; the executor must try it before pausing. Pause only if elevation is unavailable, fails, or requires user/system authorization.
 - The prompt must preserve hard-blocker semantics: if only locally unsatisfiable hard blockers remain, pause for the user or external owner instead of marking the goal complete.
 - The prompt must say that local audit is not Context, not product-quality proof, not a global task manager, and not a replacement for project tests, CI, review, human acceptance, Task Contract or workflow-contract `plan.md`.
 - Do not include explanatory preface inside the prompt.

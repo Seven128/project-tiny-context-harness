@@ -107,6 +107,14 @@ Any fresh browser / API / runtime / data / test contradiction must downgrade the
 
 For UI-facing acceptance, the executor must open the real page path and confirm the user-visible state matches the AC. component / viewmodel / mock / unit test evidence is auxiliary unless the full checklist explicitly says otherwise.
 
+## Autonomous Progress Protocol
+
+The Superpowers target prompt must require maximum safe autonomous progress within current platform, repository, tool and user-authorized permission boundaries. Do not ask the user for work the executor can safely discover, run, inspect or verify itself.
+
+The Superpowers target prompt must inherit current repository/global `AGENTS.md` or agent-instruction permission policy. Authorized `sudo` / `gsudo` / administrator elevation is not a user blocker; the executor must try it before pausing. Pause only if elevation is unavailable, fails, or requires user/system authorization.
+
+Pause only for locally unsatisfiable hard blockers such as missing accounts, credentials, production access, paid services, legal/security approval, user-only browser sessions or sensitive fields the executor cannot access safely. When pausing, give the minimum user action list: exact page, system, command or owner to open/contact; exact field or value location; how to redact or avoid sending sensitive values; what the executor will do immediately after receiving the input.
+
 ## Official Superpowers Binding
 
 Bind the target prompt to the official Skill names and their documented roles:
@@ -142,6 +150,8 @@ The local audit is not Context, not proof, not a global task manager, and not a 
 - The prompt must identify plan path, full checklist path and local audit path at the top.
 - The prompt must state that the full checklist is the complete acceptance standard and wins conflicts.
 - The prompt must preserve hard-blocker semantics: if only locally unsatisfiable hard blockers remain, pause for the user or external owner instead of marking complete.
+- The prompt must require maximum safe autonomous progress within current platform, repository, tool and user-authorized permission boundaries and must include the minimum user action list for locally unsatisfiable hard blockers.
+- The prompt must inherit current repository/global `AGENTS.md` or agent-instruction permission policy. Authorized `sudo` / `gsudo` / administrator elevation is not a user blocker; the executor must try it before pausing. Pause only if elevation is unavailable, fails, or requires user/system authorization.
 - The prompt must include the resource lifecycle line: `可多开agent，agent名额不够了就关掉不用的。` or `You may use multiple agents; if agent slots run low, close idle or unnecessary agents.`
 - The prompt must fit 3850 characters including line breaks.
 - Do not include explanatory preface inside the generated prompt.
@@ -162,6 +172,9 @@ Superpowers 输入包：
 - relevant Context：执行前读取；冲突按完整 checklist 和 Context 规则处理
 - required tests / core paths：把每个 AC gap 绑定到测试、API/UI/runtime/browser 验证
 
+自主推进：在当前平台/仓库/工具/用户已授权权限内推进到所有 agent 能安全完成的事项；不把可自助发现/执行/验证的事交给用户。
+权限策略：遵循当前仓库/全局 AGENTS.md 或 agent instructions；已授权 sudo/gsudo/admin elevation 不视为用户阻塞，先尝试使用；只有提权不可用/失败/需用户系统授权时才记 blocker。
+强卡点：仅在本地无法解决的账号/凭证/真实环境/人工审批/敏感字段等阻塞时暂停；暂停时给最小用户执行清单（具体页面/系统、字段位置、脱敏/勿发值、拿到后下一步）。
 如果 Superpowers 未安装，先按当前平台 official Superpowers installation path 安装；若 installation is blocked by 权限/网络/平台限制，写入 audit，不得算完成。
 Superpowers 执行绑定：
 - 先读完整验收清单，验收以它为准
@@ -193,6 +206,8 @@ Superpowers input packet:
 - Relevant Context: read before execution; resolve conflicts through checklist + Context.
 - Required tests/core paths: map AC gaps to test/API/UI/runtime/browser evidence.
 
+Autonomous progress: within current platform/repo/tool/user-authorized permissions, do everything the agent can safely do; do not hand self-service discovery/execution/verification to the user. Hard blockers: pause only for locally unsatisfiable account/credential/real-env/human-approval/sensitive-field needs; give a minimal user action list (exact page/system, field location, redaction/do-not-send values, next agent step).
+Permission policy: follow current repo/global AGENTS.md or agent instructions; authorized sudo/gsudo/admin elevation is not a user blocker, try it before pausing; pause only if elevation is unavailable, fails, or needs user/system authorization.
 If Superpowers is missing, install it through the current platform's official Superpowers installation path; if installation is blocked by permissions/network/platform, record in audit and do not count as complete.
 Superpowers execution binding:
 - Read the full checklist first; acceptance is judged against it.

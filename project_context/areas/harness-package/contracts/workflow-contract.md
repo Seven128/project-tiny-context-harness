@@ -75,6 +75,9 @@ The ladder is expected agent behavior. It must not become a validator, phase gat
 - Overlap between the full checklist and compact summary is allowed. If they conflict, the full checklist wins.
 - The local audit must record each required test's command, result and failure reason when test evidence is required, blocked or invalid.
 - It does not execute the plan, prove completion, own durable task state, replace Task Contract/workflow-contract `plan.md`, or store acceptance evidence as Context.
+- Generated target prompts require maximum safe autonomous progress within current platform, repository, tool and user-authorized permission boundaries. Locally satisfiable discovery, execution, inspection and verification remain agent work, not user work.
+- Generated target prompts inherit the current repository/global agent-instruction permission policy. Authorized `sudo` / `gsudo` / administrator elevation is not a user blocker; executors try it before pausing and only report a blocker when elevation is unavailable, fails or requires user/system authorization.
+- When only locally unsatisfiable hard blockers remain, generated prompts require a minimal user action list with the exact page/system/command/owner, field or value location, redaction guidance, values not to send and the agent's next step after receiving input.
 - Hard blockers in a generated checklist remain non-completion until the missing evidence or user/external action exists.
 
 ## Superpowers Long-Task Skill Boundary
@@ -86,6 +89,8 @@ The ladder is expected agent behavior. It must not become a validator, phase gat
 - It must visibly output `Superpowers input packet` / `Superpowers 输入包` and `Superpowers execution binding` / `Superpowers 执行绑定`.
 - It binds official workflow names only after the full checklist exists: `superpowers:writing-plans` when the source plan is not bite-sized, `superpowers:subagent-driven-development` when subagents are available, `superpowers:executing-plans` otherwise, AC gap -> TDD via `superpowers:test-driven-development`, and `superpowers:verification-before-completion` before any completion claim.
 - The full checklist remains the acceptance authority. Review, finish or execution discipline cannot override incomplete or contradicted acceptance evidence.
+- The Superpowers target prompt also requires maximum safe autonomous progress within current platform, repository, tool and user-authorized permission boundaries, and locally unsatisfiable blockers must be reduced to a minimal user action list instead of vague pause requests.
+- The same inherited permission policy applies to the Superpowers target prompt: authorized `sudo` / `gsudo` / administrator elevation is self-service work, not a blocker, until it is unavailable, fails or needs user/system authorization.
 
 ## Contract Conformance
 

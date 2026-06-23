@@ -64,6 +64,10 @@ for (const content of [rootReadme, rootZhReadme, packageReadme, spec, workflowCo
   assert.match(content, /superpowers-long-task/);
   assert.match(content, /Superpowers long-task Skill|Superpowers 长程任务 Skill/i);
   assert.match(content, /not a Superpowers official schema|不是 Superpowers 官方 schema/i);
+  assert.match(workflowContract, /maximum safe autonomous progress/i);
+  assert.match(workflowContract, /same inherited permission policy applies to the Superpowers target prompt/i);
+  assert.match(workflowContract, /authorized `sudo` \/ `gsudo` \/ administrator elevation is self-service work/i);
+  assert.match(workflowContract, /minimal user action list/i);
   assert.doesNotMatch(content, /superpowers_target_prompt_compiler/);
 }
 
@@ -82,6 +86,17 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /missing required fields/i);
   assert.match(content, /stop/i);
   assert.match(content, /Do not generate the Superpowers target-mode prompt/i);
+  assert.match(content, /Autonomous Progress Protocol/);
+  assert.match(content, /current platform, repository, tool and user-authorized permission boundaries/);
+  assert.match(content, /Do not ask the user for work the executor can safely discover, run, inspect or verify itself/);
+  assert.match(content, /inherit current repository\/global `AGENTS\.md` or agent-instruction permission policy/);
+  assert.match(content, /Authorized `sudo` \/ `gsudo` \/ administrator elevation is not a user blocker/);
+  assert.match(content, /try it before pausing/);
+  assert.match(content, /Pause only for locally unsatisfiable hard blockers/i);
+  assert.match(content, /minimum user action list/);
+  assert.match(content, /exact page, system, command or owner/i);
+  assert.match(content, /how to redact or avoid sending sensitive values/i);
+  assert.match(content, /what the executor will do immediately after receiving the input/i);
 
   assert.match(content, /Original requirement source/i);
   assert.match(content, /implementation\/source plan/i);
@@ -133,6 +148,14 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /not a replacement for project tests, CI, review, human acceptance, Task Contract or workflow-contract `plan\.md`/i);
   assert.match(content, /可多开agent，agent名额不够了就关掉不用的。/);
   assert.match(content, /You may use multiple agents; if agent slots run low, close idle or unnecessary agents\./);
+  assert.match(content, /自主推进：在当前平台\/仓库\/工具\/用户已授权权限内推进到所有 agent 能安全完成的事项/);
+  assert.match(content, /权限策略：遵循当前仓库\/全局 AGENTS\.md 或 agent instructions/);
+  assert.match(content, /已授权 sudo\/gsudo\/admin elevation 不视为用户阻塞/);
+  assert.match(content, /强卡点：仅在本地无法解决的账号\/凭证\/真实环境\/人工审批\/敏感字段等阻塞时暂停/);
+  assert.match(content, /Autonomous progress: within current platform\/repo\/tool\/user-authorized permissions/i);
+  assert.match(content, /Permission policy: follow current repo\/global AGENTS\.md or agent instructions/i);
+  assert.match(content, /authorized sudo\/gsudo\/admin elevation is not a user blocker/i);
+  assert.match(content, /Hard blockers: pause only for locally unsatisfiable account\/credential\/real-env\/human-approval\/sensitive-field needs/i);
 
   for (const heading of ["Recommended compact Chinese prompt shape:", "Recommended compact English prompt shape:"]) {
     assert.ok(extractTextBlockAfter(content, heading).length <= 3850, `expected ${heading} to fit 3850-character target-mode budget`);
