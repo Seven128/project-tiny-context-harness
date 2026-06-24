@@ -21,6 +21,8 @@ export const commands: Record<string, CommandHandler> = {
   "validate-context": (args) => validate(["validate-context", ...args]),
   "validate-code-modularity": (args) => validate(["validate-code-modularity", ...args]),
   "validate-harness": (args) => validate(["validate-harness", ...args]),
+  "validate-plan-contract": (args) => validate(["validate-plan-contract", ...args]),
+  "validate-plan-acceptance": (args) => validate(["validate-plan-acceptance", ...args]),
   package: packageSource
 };
 
@@ -41,5 +43,9 @@ export function help(): void {
   validate-code-modularity
                        Enforce touched handwritten source file modularity
   validate-harness     Run validate-context and validate-code-modularity
+  validate-plan-contract <plan.md|dir>
+                       Validate workflow-contract plan surface consistency
+  validate-plan-acceptance <dir>
+                       Validate plan-conformance matrix and final verdict consistency
   package <subcommand> Maintain package canonical source`);
 }

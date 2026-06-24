@@ -575,7 +575,10 @@ test("old stage validators are not supported by Minimal Context Harness", async 
     const report = await runValidator(root, "validate-dev");
     assert.deepEqual(report.info, []);
     assert.match(report.errors.join("\n"), /unknown validator: validate-dev/);
-    assert.match(report.errors.join("\n"), /Minimal Context Harness supports validate-context, validate-code-modularity and validate-harness only/);
+    assert.match(
+      report.errors.join("\n"),
+      /Minimal Context Harness supports validate-context, validate-code-modularity, validate-harness, validate-plan-contract and validate-plan-acceptance only/
+    );
   } finally {
     await rm(root, { recursive: true, force: true });
   }

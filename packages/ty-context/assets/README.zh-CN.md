@@ -50,11 +50,13 @@ Fresh agent 先读这些文件，再开始改代码。
 
 一个典型失败场景是 ABCD 模块链：A/B/C 是上游，D 是下游。现在做 D 的需求时发现能力缺口；如果没有 Context 和优先级约束，agent 很容易为了让 D 完成而去改上游 A/B，因为当前代码让这条路可行。但真正需要判断的是：D 是否有权改 A/B？缺口是不是属于 C 的契约？是否必须先声明 `Context Delta`，让项目意图变化被确认后再实现？代码能说明“现在怎么改得动”，不能说明“项目意图是否允许这样改”。Tiny Context 要补的就是这一层 repo 内长期事实和优先级契约。
 
+Tiny Context 有两个核心层。Minimal Context 是长期事实源层：说明哪些项目事实写在 `project_context/**` 或 `DESIGN.md`。流程契约 / Workflow Contract 是 agent 行为层：规定先读 Context，让 foundation / contract / decision-rationale / architecture 等原则和契约类 Context 优先解释当前代码便利路径，再判断 `Context Delta`、编译 Task Contract、必要时用 `plan.md` 承载可见执行面、按契约实现，最后做 Contract Conformance 和 Context drift check。
+
 对于长程任务，Harness 提供两个显式调用的长程任务 Skill。普通长程任务用 `/normal-long-task`：它把方案和验收输入临时放到 `tmp/ty-context/plan-acceptance/**`，生成或复用完整验收清单，并可输出普通目标模式文本。如果外部规划模型参与，推荐仍然只给两份产物：`《开发方案》` 作为执行方向和 plan traceability source，`《验收清单和测试用例》` 作为 Codex target-mode acceptance input packet。第一份应包含可逐项追踪的 plan item、预期落点 surface、full scope 与 sampled/optional 边界；第二份应包含 AC、required evidence、测试命令、真实产品路径 / core path、证据分层、无效证据、状态机、local audit 和 blocker。Source Pack 只是临时上传材料，不是 durable Context。如果方案里已经有明确、具体的“验收清单”，`/normal-long-task` 会直接复用那份清单并单独写入完整验收清单文件；两份输入包走 strict mode，如果两份内容无法完整解析出 required fields，或第二份缺少 required evidence、verification method、fail condition、状态机、无效证据规则等必要字段，Skill 会停止并列出缺失项，不生成完整验收清单或目标模式文本。
 
 Superpowers 长程任务 Skill 用 `/superpowers-long-task`。如果下一步明确要 Superpowers 目标模式文本，推荐在三份输入都存在后调用：`Product / Architecture Source`（产品/架构原始意图源）、`Technical Realization Plan`（具体技术实现方案）和 `Acceptance Checklist`（验收清单）。它不要求先跑 `/normal-long-task`，但也不会把产品方案现场翻译成技术方案；如果只有产品/架构方案和验收清单，Skill 会停止并报告缺少 `Technical Realization Plan`。两份输入兼容只限第一份明确包含产品/架构源和技术实现方案两个章节。它显式输出 `Superpowers 输入包` 和执行绑定，让未来 executor 清楚哪些输入进入 Product Context Delta、Technical Context Delta、`superpowers:writing-plans`、subagent/inline execution、TDD、`superpowers:verification-before-completion`、local audit、`plan-conformance-matrix.*` 和 `final-acceptance-verdict.*`。这个 prompt 是 Tiny Context 的适配层，不是 Superpowers 官方 schema；它不生成技术方案或验收清单、不执行计划、不证明完成，也不会把临时清单、矩阵或 verdict 注册成 `project_context/**`。
 
-重要使用提示：Minimal Context 有意把 Context 读取顺序、Context / 代码优先级和漂移检查保持为 agent 级软约束，而不是机器强制 gate。这个取舍适合短任务，但长任务、大上下文、多次交接或多轮验证时预期会漂移。普通 checklist 准备需要 `/normal-long-task`；已有产品/架构原始意图源、具体技术实现方案和验收清单且需要 Superpowers 时，可直接用 `/superpowers-long-task`。`Product Context Delta` 判断产品逻辑、页面职责、信息架构和验收语义是否需要写入 Context；`Technical Context Delta` 判断 API/schema、模块边界、runtime/state、验证/部署路径和稳定技术取舍是否需要写入 Context。`plan-conformance-matrix.*` 是执行期“对图纸台账”，`final-acceptance-verdict.*` 是最后逐 AC 验收报告，local audit 只是临时进度/恢复状态，不能裁判完成。
+重要使用提示：Minimal Context 有意把 Context 读取顺序、Context / 代码优先级和漂移检查保持为 agent 级软约束，而不是机器强制 edit-order gate。这个取舍适合短任务，但长任务、大上下文、多次交接或多轮验证时预期会漂移。普通 checklist 准备需要 `/normal-long-task`；已有产品/架构原始意图源、具体技术实现方案和验收清单且需要 Superpowers 时，可直接用 `/superpowers-long-task`。`Product Context Delta` 判断产品逻辑、页面职责、信息架构和验收语义是否需要写入 Context；`Technical Context Delta` 判断 API/schema、模块边界、runtime/state、验证/部署路径和稳定技术取舍是否需要写入 Context。`plan-conformance-matrix.*` 是执行期“对图纸台账”，`final-acceptance-verdict.*` 是最后逐 AC 验收报告，local audit 只是临时进度/恢复状态，不能裁判完成。`validate-plan-contract` 和 `validate-plan-acceptance` 只检查临时 artifact 自洽、引用存在、弱证据 complete 行和已声明的 surface/architecture binding 一致性，不证明产品质量。
 
 ## 当前最佳实践
 
@@ -75,9 +77,13 @@ Web GPT 或其他外部规划模型产出长任务源输入
 -> 每个执行片段都回到流程契约 + project_context/**
 ```
 
-这里的 Superpowers 指具体的 [obra/Superpowers](https://github.com/obra/superpowers) 插件/开源工作流，不是泛化的执行规划替代品。如果目标模式文本或原方案还不够可执行，用 `superpowers:writing-plans` 转成 bite-sized implementation plan；有 subagent 支持时优先用 `superpowers:subagent-driven-development`，否则用 `superpowers:executing-plans`；涉及行为变更时用 `superpowers:test-driven-development`；完成声明前用 `superpowers:verification-before-completion` 同时检查 plan-conformance matrix 和 final acceptance verdict。
+这里的 Superpowers 指具体的 [obra/Superpowers](https://github.com/obra/superpowers) 插件/开源工作流，不是泛化的执行规划替代品。如果目标模式文本或原方案还不够可执行，用 `superpowers:writing-plans` 转成 bite-sized implementation plan；有 subagent 支持时优先用 `superpowers:subagent-driven-development`，否则用 `superpowers:executing-plans`；涉及行为变更时用 `superpowers:test-driven-development`；完成声明前用 `superpowers:verification-before-completion` 同时检查 plan-conformance matrix 和 final acceptance verdict，然后运行 `ty-context validate-plan-acceptance <dir>`。
 
 原因是漂移控制。流程契约 + Context 层是软约束，短任务里通常能让 agent 按预期执行；长程任务里，Context 仍然能记录符合预期的事实，但 Context 到代码 的实现步骤会随着上下文窗口变大、多次交接、subagent 拆分和多轮验证而漂移。产品/架构原始意图源、具体技术实现方案、验收清单、显式长程任务 Skill 调用、目标模式文本、plan-conformance matrix、final acceptance verdict 和可选 Superpowers 执行层，把“产品/技术 Context 有没有先对齐”“有没有按图纸实现”和“有没有按验收证据完成”都外化成可恢复、可审计的临时执行标准，同时不恢复阶段式 gate。
+
+对于高风险产品方案、架构方案、技术方案或验收方案输入，流程契约应先在 `plan.md` 或等价临时计划面里可见化，再进入实现。这个计划面把 Source-to-Context Coverage 和 Context-to-Implementation Binding 分开：前者把每条长期 source 约束映射到 existing Context hit、Context action、owning Context 和 coverage status；后者把 Context fact 映射到 implementation obligation、expected surfaces、implemented paths、forbidden shortcuts、verification path 和 binding status。Source coverage 仍有 `under_scoped` 或未处理的 `new_context_required` 时不能声称按方案完整实现；binding 仍有 `partial`、`missing`、`blocked`、`needs_user_decision` 或 `contradicted_by_current_state` 时不能声称按 Context 完整落地。
+
+small code task 不应该套完整 `plan.md` / trace 表。这里的 small 按语义风险判断，不按代码行数判断：现有 Context 已足够，且不改变 durable product、architecture、API/schema/data、runtime/state/recovery、verification/deployment、security/redaction 或 surface ownership 事实，才算 small。一个一行 schema 改动也可能不是 small；大范围机械样式清理反而可能仍是 small。
 
 ## 适合谁
 

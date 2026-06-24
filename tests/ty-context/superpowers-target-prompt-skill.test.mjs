@@ -130,6 +130,8 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /required tests \/ core paths/i);
   assert.match(content, /plan-conformance-matrix/i);
   assert.match(content, /final-acceptance-verdict/i);
+  assert.match(content, /validate-plan-acceptance/i);
+  assert.match(content, /failure prevents final complete|missing validate-plan-acceptance pass/i);
   assert.match(content, /Plan Conformance Gate/);
   assert.match(content, /Acceptance Evidence Gate/);
   assert.match(content, /sampled_only/);

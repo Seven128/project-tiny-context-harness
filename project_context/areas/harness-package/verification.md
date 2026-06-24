@@ -15,6 +15,12 @@ read_policy: default
 - `make validate-harness`
   - Composite local gate for Context recoverability and touched-source modularity.
   - Expected signal: Make exits successfully after running the configured Harness gates.
+- `node packages/ty-context/dist/cli.js validate-plan-contract <plan.md|dir>`
+  - Use after changing workflow-contract plan surface semantics, Source-to-Context Coverage, Context-to-Implementation Binding or plan-contract validator behavior.
+  - Expected signal: command exits with no errors, reports source/binding row counts and does not claim product quality.
+- `node packages/ty-context/dist/cli.js validate-plan-acceptance tmp/ty-context/plan-acceptance/<slug>`
+  - Use after changing long-task matrix/verdict artifact semantics or plan-acceptance validator behavior.
+  - Expected signal: command exits with no errors, reports matrix/verdict row counts and rejects contradictory complete claims.
 - `git diff --check`
   - Use before handoff to catch whitespace and conflict marker issues.
   - Expected signal: no whitespace error output.

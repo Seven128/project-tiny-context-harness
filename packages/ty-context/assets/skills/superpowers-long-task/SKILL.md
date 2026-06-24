@@ -104,6 +104,7 @@ The prompt must require the future executor to create or initialize `tmp/ty-cont
 Each behavior-affecting Technical Realization Plan item must have a trace entry with:
 
 - plan item id and plan requirement.
+- acceptance ids covered by the plan item when applicable.
 - expected surfaces.
 - implemented paths.
 - missing paths.
@@ -112,6 +113,8 @@ Each behavior-affecting Technical Realization Plan item must have a trace entry 
 - scope assessment.
 - status.
 - drift.
+- Context fact refs when Context Delta is required.
+- For Product Surface, IA or architecture-migration items: conformance type, owner surface, required user paths, forbidden primary surfaces, real page evidence, negative surface checks and default visibility requirement.
 
 Allowed plan-conformance statuses:
 
@@ -122,6 +125,7 @@ Allowed plan-conformance statuses:
 - `blocked`
 - `scope_changed_requires_user_approval`
 - `contradicted_by_current_state`
+- `out_of_scope_NA`
 
 Hard rules:
 
@@ -130,6 +134,7 @@ Hard rules:
 - A local audit cannot narrow plan scope or mark completion.
 - Scope correction requires explicit user approval or a revised product/architecture source, Technical Realization Plan and checklist.
 - Every behavior-affecting plan section must have an implementation trace entry.
+- Product Surface, IA or architecture-migration rows cannot be complete without owner surface, required user paths, real page evidence, negative surface checks for forbidden primary surfaces and Context fact refs when Context Delta is required.
 - Any `partial`, `sampled_only`, `not_implemented`, unresolved blocker, unapproved scope change or current contradiction prevents overall done.
 
 ## Acceptance Evidence Gate
@@ -139,6 +144,7 @@ The prompt must require the future executor to generate `tmp/ty-context/plan-acc
 Each AC verdict entry must include:
 
 - AC id or acceptance item.
+- related plan item ids when applicable.
 - status.
 - required evidence.
 - fresh evidence.
@@ -153,14 +159,18 @@ Allowed AC statuses:
 - `blocked`
 - `not_run`
 - `invalidated`
+- `out_of_scope_NA`
 
 Hard rules:
 
 - Final completion requires an AC-by-AC final acceptance verdict.
+- Before any completion claim, run `ty-context validate-plan-acceptance tmp/ty-context/plan-acceptance/<plan-slug>`; failure prevents final complete and must produce partial / blocker / missing-evidence output.
+- `validate-plan-acceptance` rejects contradictory matrix/verdict JSON, weak-proof complete rows, missing cross-references and declared surface/architecture binding gaps; it checks artifact consistency and references, not product quality.
 - Current API/UI/runtime/data/test contradictions override historical passing evidence.
 - local audit, subagent summaries, final result card text, passing test logs, stale artifacts, partial smoke, dry-run or sampled paths cannot prove completion by themselves.
 - Any current contradiction downgrades the affected AC and overall status.
 - Scope narrowing in audit does not modify acceptance unless the user approved a revised source/plan/checklist.
+- `out_of_scope_NA` requires explicit reason and source reference; arbitrary prose cannot waive missing evidence.
 
 ## Evidence Layer Separation
 
@@ -220,7 +230,7 @@ Bind the target prompt to the official Skill names and their documented roles:
 - Prefer `superpowers:subagent-driven-development` when subagents are available.
 - Use `superpowers:executing-plans` when executing a written plan without the same-session subagent workflow.
 - Plan or AC behavior gap -> TDD: each behavior gap uses `superpowers:test-driven-development` to write a failing test, observe failure, then implement minimally.
-- Before any completion claim, use `superpowers:verification-before-completion` against both `plan-conformance-matrix.*` and `final-acceptance-verdict.*` with fresh evidence.
+- Before any completion claim, use `superpowers:verification-before-completion` against both `plan-conformance-matrix.*` and `final-acceptance-verdict.*` with fresh evidence, then run `ty-context validate-plan-acceptance tmp/ty-context/plan-acceptance/<plan-slug>`.
 - review / finish cannot override the plan-conformance matrix or full checklist; if either gate is unsatisfied, continue implementation or report blockers.
 
 If Superpowers is missing, install it through the current platform's official Superpowers installation path. If installation is blocked by permissions, network or platform limits, record the blocker in local audit and do not count it as complete.
@@ -284,7 +294,7 @@ Superpowers 输入包：
 7. 每个实现 slice 后更新 matrix 和 audit。
 8. Candidate done 前跑 Plan Conformance Gate：测试通过不等于按图纸完成；sampled path 不等于 full implementation；每个行为 plan item 必须有 code/API/UI/runtime/test/evidence trace。
 9. 再跑 Acceptance Evidence Gate：按验收清单生成 final verdict；current API/UI/runtime/data/test contradiction 高于历史通过记录。
-10. 完成声明前用 superpowers:verification-before-completion 同时检查 matrix 和 verdict；两关不过就继续或报告 blocker。
+10. 完成声明前用 superpowers:verification-before-completion 检查 matrix/verdict，并运行 ty-context validate-plan-acceptance tmp/ty-context/plan-acceptance/<plan-slug>；失败就继续或报告 blocker。
 
 权限/卡点：在当前平台/仓库/工具/用户已授权权限内最大自主推进；已授权 sudo/gsudo/admin elevation 先尝试，不算用户阻塞。只有本地无法解决的账号/凭证/真实环境/人工审批/敏感字段等才暂停，并给最小用户执行清单（具体页面/系统、字段位置、脱敏/勿发值、拿到后下一步）。
 禁止完成于：local audit、subagent summary、final card、只改代码/计划、只跑部分测试、旧/部分/抽样证据、runtime 未演练、artifact 未被 validator accepted、API/UI 未 reflected、未批准 scope narrowing、任何 API/UI/data/runtime/test 矛盾。
@@ -318,10 +328,10 @@ Execution order:
 7. After each slice, update matrix and audit.
 8. Before candidate done, run Plan Conformance Gate: passing tests does not prove plan conformance; sampled path does not prove full implementation; every behavior plan item needs code/API/UI/runtime/test/evidence trace.
 9. Then run Acceptance Evidence Gate: generate final verdict from the checklist; current API/UI/runtime/data/test contradictions override old passing evidence.
-10. Before completion, use superpowers:verification-before-completion against both matrix and verdict; if either gate fails, continue or report blockers.
+10. Before completion, run superpowers:verification-before-completion on matrix/verdict and ty-context validate-plan-acceptance tmp/ty-context/plan-acceptance/<plan-slug>; if either fails, continue/report blockers.
 
 Autonomy/blockers: within current platform/repo/tool/user-authorized permissions, do all safe self-service discovery/execution/verification. Authorized sudo/gsudo/admin elevation is not a user blocker; try it first. Pause only for locally unsatisfiable account/credential/real-env/human-approval/sensitive-field needs; give exact page/system, field location, redaction/do-not-send values and next agent step.
-Never complete on: local audit, subagent summary, final card, code-only/plan-only work, partial tests, stale/partial/sampled evidence, unexercised runtime, artifact not accepted by validator, API/UI not reflected, unapproved scope narrowing or any API/UI/data/runtime/test contradiction.
+Never complete on: local audit, subagent summary, final card, code-only/plan-only work, partial tests, stale/partial/sampled evidence, unexercised runtime, artifact not accepted by validator, API/UI not reflected, missing validate-plan-acceptance pass, unapproved scope narrowing or any API/UI/data/runtime/test contradiction.
 ```
 
 Before final response, check the prompt length. If it exceeds 3850 characters, tighten wording while preserving paths, input roles, official Superpowers skill names, Product Context Delta, Technical Context Delta, plan-conformance matrix, final verdict, state machine, UI gate, blockers and invalid evidence.

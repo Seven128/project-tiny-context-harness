@@ -25,7 +25,7 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
    - 若缺失且本任务改变 durable surface responsibility，输出 `Surface Contract Delta: required`，把界面职责写入 `project_context/**`；视觉 token、颜色、字体、间距、圆角和视觉 rationale 仍写入 `DESIGN.md`。
 5. 涉及输入、选择、搜索、筛选、表单/配置、调度/时间窗口、预算/配额/限流或加载/空态/错误态等 UI 控件时，用“控件交互框架”检查控件语义、反馈状态、校验、错误预防、可供性和信息密度；这只是通用判断框架，不是固定控件处方。
 6. 界面职责、流程归属和长期交互契约以 `project_context/**` 为准；`DESIGN.md` 负责视觉 token 和视觉 rationale；代码、截图和搜索结果只说明当前实现状态。Context 决定“应该是什么”，代码和截图揭示“现在是什么”，代码不能静默重定义 Context。
-7. 设计判断或第一处实现编辑前，若任务涉及页面职责、流程边界、信息架构、交互契约、状态或调度语义、可访问性约束、设计验证关键路径或部署关键路径，先编译当前任务契约；契约第一段用 `Context Delta: none|required` 完成唯一正式长期事实判断，再写本次 `Task Contract`。
+7. 设计判断或第一处实现编辑前，若任务涉及页面职责、流程边界、信息架构、交互契约、状态或调度语义、可访问性约束、设计验证关键路径或部署关键路径，先编译当前任务契约；契约第一段用 `Context Delta: none|required` 完成唯一正式长期事实判断，再写本次 `Task Contract`。如果输入包含产品方案、架构方案、技术方案、界面方案或验收方案，先在 `plan.md` 或等价临时计划面做 Source-to-Context Coverage，确认方案中的 durable surface / IA / interaction / verification constraints 已被现有 Context 或 `DESIGN.md` 覆盖、需要更新、仅属 task-local、显式 out-of-scope、需要用户决策或仍 under-scoped。
 8. 普通 UI bug、局部样式或 CSS 修复、测试修复或探索性 spike 不更新 Context，可先改代码；一旦形成长期交互或视觉结论，继续对齐或交付前必须回写 Context 或 `DESIGN.md`。不要把 Context 机械补成代码改动摘要。
 9. 如果二者冲突，显式标记为实现漂移、缺失工作或 Context 过期。
 10. 如果涉及已有 UI，优先结合代码入口、运行截图或用户提供的参考图来描述差异。
@@ -48,11 +48,16 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
   - `required`：说明长期事实类型、应写入的 Context / role 或 `DESIGN.md` 位置、需要沉淀的事实，以及明确不写入 Context 的一次性内容。
 - `Task Contract` 用短列表说明页面 / 组件任务、用户判断、主信息和辅助信息归属、动作层级、输入语义、loading / empty / no results / stale / error / degraded / success 状态、布局稳定性、非目标和验收入口。
 - 触及 Product Surface 时，`Task Contract` 同时说明 surface platform、primary user question、main allows/forbids、drilldown ownership、long-task state requirement 和 verification；代码字段、枚举、JSON 或截图只是实现证据，不是产品职责来源。
-- 对长任务、多页面/组件、多 agent、容易发生 `Context Delta` 调头或多轮截图 / 手动验证的任务，可以用 `plan.md` 或等价临时计划面暂存 `Context Delta`、`Task Contract`、`Implementation Steps` 和 `Contract Conformance`；它只是临时执行缓存。
+- 对长任务、多页面/组件、多 agent、外部产品/架构/技术/界面/验收方案输入、容易发生 `Context Delta` 调头或多轮截图 / 手动验证的任务，使用 `plan.md` 或等价临时计划面暂存 `Source-to-Context Coverage`、`Context-to-Implementation Binding`、`Context Delta`、`Task Contract`、`Implementation Steps` 和 `Contract Conformance`；它只是临时执行缓存。
+- small code task 指现有 Context / `DESIGN.md` 已足够、且不改变 durable product / architecture / API-schema / runtime-state / verification-deployment / security-redaction / surface ownership 事实的局部实现任务；它按语义风险判断，不按代码行数判断，不应创建 `plan.md`、完整 trace tables、Source-to-Context Coverage 或 Context-to-Implementation Binding，除非它发现长期事实变化或扩展成高风险工作。
+- `Source-to-Context Coverage` 表使用字段：`Source item | Durable constraint | Type | Existing Context Hit | Context action | Owning Context | Coverage status`。这张表只回答 source 约束是否进入或命中 Context / `DESIGN.md`，不写实现路径。
+- `Coverage status` 取值：`covered`、`new_context_required`、`context_updated`、`task_local_only`、`out_of_scope_explicit`、`needs_user_decision`、`under_scoped`。存在 `under_scoped` 或未处理的 `new_context_required` / `needs_user_decision` 时，不能声称已按方案完整实现。
+- `Context-to-Implementation Binding` 表使用字段：`Context fact | Implementation obligation | Expected surfaces | Implemented paths | Forbidden shortcuts | Verification path | Binding status`。
+- `Binding status` 取值：`bound`、`partial`、`missing`、`blocked`、`out_of_scope_explicit`、`needs_user_decision`、`contradicted_by_current_state`。UI/surface 项不能只用 component / viewmodel / mock / unit evidence 冒充 `bound`。
 - `plan.md` 中出现的长期界面、交互或视觉事实必须提炼回 `project_context/**` 或 `DESIGN.md`；否则不要把临时计划当作事实源、交付产物或后续引用依据。
 - `Context Delta: required` 时先更新 `project_context/**` 或 `DESIGN.md`，再继续实现；`none` 时直接按 Task Contract 实现。
-- `Contract Conformance` 是交付前的软检查：实现偏差修实现，契约遗漏回 Task Contract，长期事实缺失回 `Context Delta` 并先更新 Context / `DESIGN.md`。
-- 不为普通 UI bug、局部 CSS 修复、小重构、测试修复或探索性 spike 强制编译任务契约。
+- `Contract Conformance` 是交付前的软检查：实现偏差修实现，契约遗漏回 Task Contract，长期事实缺失或 source coverage under-scoped 回 `Context Delta` 并先更新 Context / `DESIGN.md`。
+- 不为 small code task、普通 UI bug、局部 CSS 修复、小重构、测试修复或探索性 spike 强制编译任务契约。
 
 ## 信息呈现校准
 

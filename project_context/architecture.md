@@ -28,13 +28,14 @@ This file is the restrained architecture context for the source repository. It i
 - `package sync-source` copies source workspace assets into `packages/ty-context/assets/**`; `package check-source` verifies no drift.
 - `validate-context` checks Context recoverability, validates graph metadata, treats non-area roles as semantic labels, and rejects fake verification-result claims.
 - `validate-code-modularity` checks touched handwritten source modularity separately from Context recoverability; `validate-harness` composes both gates.
+- `validate-plan-contract` checks temporary `plan.md` workflow-contract surfaces for internal consistency, referenced path existence and declared Context-to-Implementation binding. `validate-plan-acceptance` checks long-task plan-conformance matrix and final-verdict artifacts for contradictory completion claims, dangling references, weak-proof complete rows and declared surface/architecture binding gaps. They remain separate from `validate-harness`.
 
 ## Design Rationale
 
 - Minimal Context keeps only durable facts that improve recovery, iteration, debug and requirements changes.
 - Architecture deserves one small shared file because system boundaries and component relationships are cross-module facts that code alone can make slow to recover.
 - Context graph support is metadata-first: it improves read targeting and validation without turning Harness into a monorepo dependency analyzer or import/path scanner.
-- Prompt guidance, Context recoverability validation, source-sync drift checks and code modularity checks stay separate because each can only prove a different thing: expected agent behavior, recoverable Context shape, generated asset consistency or touched-source maintainability risk.
+- Prompt guidance, Context recoverability validation, plan artifact consistency checks, source-sync drift checks and code modularity checks stay separate because each can only prove a different thing: expected agent behavior, recoverable Context shape, temporary artifact consistency, generated asset consistency or touched-source maintainability risk.
 - Legacy stage semantic migration support has been removed now that users have completed migration; Schema v4 upgrade migrations remain safe and narrow.
 
 ## Constraints And Tradeoffs

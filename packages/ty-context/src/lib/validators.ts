@@ -3,6 +3,8 @@ import { readConfig } from "./config.js";
 import { harnessPath, harnessRoot } from "./harness-root.js";
 import { listFiles, pathExists, readText } from "./fs.js";
 import { runModularityCheck } from "./modularity.js";
+import { validatePlanAcceptance } from "./plan-acceptance-validator.js";
+import { validatePlanContract } from "./plan-contract-validator.js";
 import { unsupportedSchemaMessage } from "./schema-guard.js";
 
 export interface ValidatorReport {
@@ -10,7 +12,7 @@ export interface ValidatorReport {
   errors: string[];
 }
 
-type Validator = (projectRoot: string) => Promise<ValidatorReport>;
+type Validator = (projectRoot: string, args?: string[]) => Promise<ValidatorReport>;
 type ContextRole =
   | "global"
   | "architecture"
@@ -46,7 +48,9 @@ interface ContextManifest {
 const VALIDATORS: Record<string, Validator> = {
   "validate-context": validateContext,
   "validate-code-modularity": validateCodeModularity,
-  "validate-harness": validateHarness
+  "validate-harness": validateHarness,
+  "validate-plan-contract": validatePlanContract,
+  "validate-plan-acceptance": validatePlanAcceptance
 };
 
 const GLOBAL_REQUIRED_SECTIONS = [
@@ -112,17 +116,17 @@ const FAKE_VERIFICATION_PATTERNS = [
   /\b部署(?:已)?成功\b/
 ];
 
-export async function runValidator(projectRoot: string, gate: string): Promise<ValidatorReport> {
+export async function runValidator(projectRoot: string, gate: string, args: string[] = []): Promise<ValidatorReport> {
   const validator = VALIDATORS[gate];
   if (!validator) {
     return {
       info: [],
       errors: [
-        `unknown validator: ${gate}. Minimal Context Harness supports validate-context, validate-code-modularity and validate-harness only.`
+        `unknown validator: ${gate}. Minimal Context Harness supports validate-context, validate-code-modularity, validate-harness, validate-plan-contract and validate-plan-acceptance only.`
       ]
     };
   }
-  return validator(projectRoot);
+  return validator(projectRoot, args);
 }
 
 async function validateHarness(projectRoot: string): Promise<ValidatorReport> {

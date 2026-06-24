@@ -72,6 +72,7 @@ Output:
 - `context.toml` candidate registration with `role = "contract"` when durable registration is needed.
 - `global.md#Context Index` candidate entry when a new Context file is added.
 - Verification candidate for repeatable surface checks.
+- Source-to-Context Coverage candidate when an external product, architecture, technical or acceptance source changes durable surface responsibility.
 - Repo-local Skill task-block candidate when the user wants project-specific enforcement.
 
 Do not assume business responsibilities from current code shape alone. Ask for confirmation if the candidate would silently choose between competing product or information-architecture meanings.
@@ -105,6 +106,8 @@ Use after implementation or during review.
 Output:
 
 - Surface Contract Conformance.
+- Source-to-Context Coverage status when a plan surface exists.
+- Context-to-Implementation Binding status when a plan surface exists.
 - Remaining Drift.
 - Missing Context.
 - Implementation Drift.
@@ -124,6 +127,7 @@ For each touched surface, answer only what is relevant:
 - Which long-running or mutating actions require task id, progress, retry, import, recovery or history?
 - Which empty, loading, stale, unavailable, fixture or fallback states matter?
 - What validation path can prove conformance?
+- If this came from an external plan/source, which source constraints are covered by existing Context, require new Context, are task-local only, are explicitly out of scope, need user decision or remain under-scoped?
 
 ## Repo-Local Task Block Candidate
 
@@ -145,6 +149,8 @@ For any task touching user-facing surfaces, information placement, forms, filter
 - Long Task State Requirement: `<run id, progress, retry, recovery, import, history, or none>`
 - Context Delta: `<none | required>`
 - Verification: `<view-model test / component test / browser smoke / CLI smoke / manual check>`
+- Source-to-Context Coverage: `<covered | new_context_required | context_updated | task_local_only | out_of_scope_explicit | needs_user_decision | under_scoped>`
+- Context-to-Implementation Binding: `<bound | partial | missing | blocked | out_of_scope_explicit | needs_user_decision | contradicted_by_current_state>`
 ```
 
 Do not add this task block to package-managed default Skills as a universal gate. Projects opt in through separate project-local Skills.
@@ -161,11 +167,13 @@ When implementation is also requested, align code with the Product Surface Contr
 
 Final handoff should include concise `Surface Contract Conformance`: contract source, implementation alignment, remaining drift and verification status.
 
+If a `plan.md` or equivalent temporary plan surface exists, conformance must also check its Source-to-Context Coverage and Context-to-Implementation Binding. Remaining `under_scoped` or unresolved `new_context_required` rows mean the implementation cannot be described as fully aligned to the source surface responsibilities. Non-bound surface implementation rows mean it cannot be described as fully aligned to Context; component, modal, viewmodel or unit evidence alone cannot prove main-surface ownership.
+
 ## Output Boundaries
 
 - Do not create PRDs, UI/UX handoff docs, ADRs, stage artifacts, lifecycle state or phase gates.
 - Do not update Context for ordinary CSS tweaks, copy edits or one-off UI bug fixes unless durable surface responsibility changes.
 - Do not treat current backend fields, enums, JSON, screenshots or terminal output as product intent.
 - Do not invent rationale; rejected alternatives or tradeoffs belong in Context only when they are stable enough to affect future surface decisions.
-- Do not add a validator, edit-order gate or package-level mandatory Surface Contract gate.
+- Do not add a surface-specific validator, edit-order gate or package-level mandatory Surface Contract gate. The generic plan-contract validator may check declared surface binding consistency when a temporary plan surface exists.
 - Do not include business-domain examples in this package-managed Skill.

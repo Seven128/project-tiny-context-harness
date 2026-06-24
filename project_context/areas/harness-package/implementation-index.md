@@ -28,7 +28,10 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - Upgrade orchestration: `packages/ty-context/src/lib/upgrade.ts`.
 - Migration registry and migration application: `packages/ty-context/src/lib/migrations.ts`.
 - Context manifest helpers: `packages/ty-context/src/lib/context-manifest.ts`.
-- Validators: `packages/ty-context/src/lib/validators.ts`.
+- Validator dispatch: `packages/ty-context/src/lib/validators.ts`.
+- Plan contract validator: `packages/ty-context/src/lib/plan-contract-validator.ts`.
+- Plan acceptance validator: `packages/ty-context/src/lib/plan-acceptance-validator.ts`.
+- Shared plan validator helpers: `packages/ty-context/src/lib/plan-validator-common.ts` and `packages/ty-context/src/lib/plan-acceptance-json.ts`.
 - Modularity/source-file checks: `packages/ty-context/src/lib/modularity.ts` and `packages/ty-context/src/lib/source-files.ts`.
 - Context export implementation: `packages/ty-context/src/lib/context-export.ts`.
 
@@ -44,6 +47,7 @@ This index helps future agents find implementation surfaces quickly. It is navig
 
 - Orientation/recovery surface: `tests/ty-context/orientation-fast-path.test.mjs`.
 - Validator behavior: `tests/ty-context/validators.test.mjs`.
+- Plan artifact validator behavior: `tests/ty-context/plan-validators.test.mjs`.
 - Init/sync/doctor behavior: `tests/ty-context/sync-init-doctor.test.mjs`.
 - Upgrade behavior: `tests/ty-context/upgrade.test.mjs` and `tests/ty-context/legacy-upgrade.test.mjs`.
 - Package source drift: `tests/ty-context/package-source.test.mjs`.

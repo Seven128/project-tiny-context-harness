@@ -38,7 +38,7 @@ This contract defines which repository surfaces are package-managed, generated, 
 ## Consumer Asset Boundary
 
 - `init`, `sync` and `upgrade` may install or refresh managed assets, but they must not generate project-specific product facts, business Product Surface Contract files, stage work-product trees, lifecycle state or phase gates.
-- The package-managed `.github/workflows/harness.yml` is consumer-facing and should run selected Harness gates only; maintainer-only package tests and source-drift checks stay in this source repository.
+- The package-managed `.github/workflows/harness.yml` is consumer-facing and should run selected Harness gates only; maintainer-only package tests and source-drift checks stay in this source repository. Plan artifact validators are explicit user commands for complex plan surfaces and long-task artifacts, not default consumer workflow gates.
 - Public package surfaces must be fully usable in English. Non-English trigger examples are compatibility additions only.
 
 ## Change Impact Rule

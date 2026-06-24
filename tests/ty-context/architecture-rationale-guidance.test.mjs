@@ -66,7 +66,8 @@ test("public docs and spec frame architecture support as Minimal Context, not a 
     assert.match(content, /Technical architecture support is a Minimal Context capability/);
     assert.match(content, /Architecture Context Hit/);
     assert.match(content, /Decision Rationale Hit: existing\|required\|none/);
-    assert.match(content, /not new PRD, tech-plan, ADR, implementation-document, validator or gate surfaces/);
+    assert.match(content, /not new PRD, tech-plan, ADR or implementation-document surfaces/);
+    assert.match(content, /does not prove product quality|still does not prove product quality|不证明产品质量/);
     assert.match(content, /Do not invent rationale/);
     assert.match(content, /smallest durable Context surface/);
     assert.doesNotMatch(content, /Architecture Delta|Rationale Delta/);

@@ -236,6 +236,11 @@ try {
   assert.match(productSkill, /Task Contract/);
   assert.match(productSkill, /Contract Conformance/);
   assert.match(productSkill, /plan\.md/);
+  assert.match(productSkill, /Source-to-Context Coverage/);
+  assert.match(productSkill, /Context-to-Implementation Binding/);
+  assert.match(productSkill, /small code task/);
+  assert.match(productSkill, /new_context_required/);
+  assert.match(productSkill, /under_scoped/);
   assert.match(productSkill, /临时执行缓存/);
   assert.match(productSkill, /Verification \/ Deployment Role Context/);
   assert.match(productSkill, /raw payload/);
@@ -252,6 +257,11 @@ try {
   assert.match(uiuxSkill, /Task Contract/);
   assert.match(uiuxSkill, /Contract Conformance/);
   assert.match(uiuxSkill, /plan\.md/);
+  assert.match(uiuxSkill, /Source-to-Context Coverage/);
+  assert.match(uiuxSkill, /Context-to-Implementation Binding/);
+  assert.match(uiuxSkill, /small code task/);
+  assert.match(uiuxSkill, /needs_user_decision/);
+  assert.match(uiuxSkill, /under_scoped/);
   assert.match(uiuxSkill, /临时执行缓存/);
   assert.match(uiuxSkill, /Impeccable review/);
   assert.match(uiuxSkill, /npx impeccable detect <target>/);
@@ -272,6 +282,11 @@ try {
   assert.match(developmentSkill, /Module Principle \/ Design Gate/);
   assert.match(developmentSkill, /Contract Conformance/);
   assert.match(developmentSkill, /plan\.md/);
+  assert.match(developmentSkill, /Source-to-Context Coverage/);
+  assert.match(developmentSkill, /Context-to-Implementation Binding/);
+  assert.match(developmentSkill, /small code task/);
+  assert.match(developmentSkill, /out_of_scope_explicit/);
+  assert.match(developmentSkill, /under_scoped/);
   assert.match(developmentSkill, /临时执行缓存/);
   assert.match(developmentSkill, /Verification \/ Deployment Role Context/);
   assert.match(developmentSkill, /重复执行路径/);
