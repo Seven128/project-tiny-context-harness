@@ -21,6 +21,8 @@ Consumes three existing upstream inputs and emits a paste-ready Superpowers targ
 
 Use this Skill only after all three inputs already exist or are pasted in full. Two-document compatibility is allowed only when the first document explicitly contains both Product / Architecture Source and Technical Realization Plan sections; otherwise stop for a missing Technical Realization Plan. Do not generate, derive, or infer the Technical Realization Plan. Do not generate, derive, rewrite, strengthen, or repair the full checklist in this Skill. If plan items or ACs are too vague to trace, stop and ask for the missing fields. If only generic conformance or verdict rules are missing, inject this Skill's default rules into the generated prompt.
 
+This Skill does not perform task-complexity routing. Direct invocation means the user or upstream process has already selected Superpowers long-task execution. Ordinary checklist preparation, non-Superpowers target prompts or incomplete upstream packets should be handled before this Skill, normally with `/normal-long-task` or a revised upstream packet.
+
 ## Direct Invocation
 
 Use this Skill through explicit invocation:
@@ -68,6 +70,17 @@ The input must fully expose these fields:
 
 If any of these are missing required fields, stop. Do not generate the Superpowers target-mode prompt. Report whether each missing field belongs in Product / Architecture Source, Technical Realization Plan, Acceptance Checklist, blocker section or Context reference. If the user supplied only a product/architecture source plus checklist, report missing Technical Realization Plan.
 
+When blocked by missing input, return a structured Missing Fields Report with:
+
+- `missing_section`.
+- `missing_required_fields`.
+- `why_blocking`.
+- `cannot_infer_policy`.
+- `required_next_input`.
+- `suggested_upstream_action`.
+
+The report must state that this Skill cannot infer the execution blueprint from Product / Architecture Source and cannot repair the checklist. It may recommend supplying the missing Technical Realization Plan or using `/normal-long-task` before Superpowers execution when the upstream packet is not ready.
+
 ## Source Roles
 
 - Product / Architecture Source prevents scope shrinkage and drives Product Context Delta / architecture-intent checks; it is not the code construction plan.
@@ -78,6 +91,14 @@ If any of these are missing required fields, stop. Do not generate the Superpowe
 - required tests / core paths bind plan and AC gaps to executable verification.
 
 Do not let a compact target prompt override the product/architecture source, technical realization plan or full checklist. The compact prompt is direction, priority and recovery navigation only. The technical realization plan controls plan conformance; the product/architecture source prevents scope shrinkage; the full checklist controls acceptance.
+
+## Authority Model
+
+- Product / Architecture Source owns intent, scope, non-goals, product/architecture boundaries and acceptance semantics.
+- Technical Realization Plan owns plan items, execution blueprint, owner/forbidden surfaces, implementation paths and plan-conformance expectations.
+- Acceptance Checklist owns ACs, completion semantics, required proof layers, invalid evidence rules and final acceptance state.
+- local audit, plan-conformance matrix, final acceptance verdict, validator output, optional proof index and auditor report are execution/evidence artifacts. They cannot narrow, rewrite or replace the upstream sources.
+- When sources conflict, stop or report the conflict instead of letting a downstream artifact silently change scope, plan or acceptance.
 
 ## Context Delta Assessment
 
@@ -97,6 +118,13 @@ Any required sub-delta makes overall Context Delta required. This is prompt-leve
 
 When overall `Context Delta: required`, the executor must update the smallest owning `project_context/**` or `DESIGN.md` fact before implementation continues. Use existing roles only: `area`, `subdomain`, `contract`, `foundation`, `verification`, `deployment`, `implementation-index` and `decision-rationale`. Do not write local audit, plan-conformance matrix, final acceptance verdict, temporary plan, sampled evidence, one-off logs, raw outputs, screenshots or PR notes into Context.
 
+For Superpowers execution, the generated prompt should use a parent/slice pattern:
+
+- Parent Context Delta: evaluate Product Context Delta, Technical Context Delta, overall Context Delta, owning Context files and whether required Context was updated before implementation.
+- Slice Context Delta: each implementation slice inherits the parent decision and only records whether it discovered a new durable fact.
+- If a slice discovers a new durable product or technical fact, it must identify the owning Context and update it before continuing.
+- Slice-level `none` cannot override a parent-level `required` decision.
+
 ## Plan Conformance Gate
 
 The prompt must require the future executor to create or initialize `tmp/ty-context/plan-acceptance/<plan-slug>-plan-conformance-matrix.md` and `.json` before substantial implementation, then update it after each meaningful implementation slice.
@@ -113,6 +141,8 @@ Each behavior-affecting Technical Realization Plan item must have a trace entry 
 - scope assessment.
 - status.
 - drift.
+- required proof layers, satisfied proof layers and missing required layers when the plan/checklist requires layered evidence.
+- substitute or sibling evidence use when any similar execution path, negative case, screenshot or artifact could be confused with the required evidence.
 - Context fact refs when Context Delta is required.
 - For Product Surface, IA or architecture-migration items: conformance type, owner surface, required user paths, forbidden primary surfaces, real page evidence, negative surface checks and default visibility requirement.
 
@@ -135,6 +165,7 @@ Hard rules:
 - Scope correction requires explicit user approval or a revised product/architecture source, Technical Realization Plan and checklist.
 - Every behavior-affecting plan section must have an implementation trace entry.
 - Product Surface, IA or architecture-migration rows cannot be complete without owner surface, required user paths, real page evidence, negative surface checks for forbidden primary surfaces and Context fact refs when Context Delta is required.
+- A complete row cannot have unresolved `missing_required_layers`, material or critical `drift_severity`, unapproved `sibling_substitution_used`, summary-only evidence or blocking auditor findings.
 - Any `partial`, `sampled_only`, `not_implemented`, unresolved blocker, unapproved scope change or current contradiction prevents overall done.
 
 ## Acceptance Evidence Gate
@@ -147,8 +178,13 @@ Each AC verdict entry must include:
 - related plan item ids when applicable.
 - status.
 - required evidence.
+- required proof chain when the checklist or plan requires multiple evidence layers.
 - fresh evidence.
 - missing evidence.
+- missing required layers.
+- drift severity.
+- sibling substitution used / approval source.
+- auditor status and findings when an auditor subagent was available.
 - contradictions.
 - decision.
 
@@ -171,6 +207,37 @@ Hard rules:
 - Any current contradiction downgrades the affected AC and overall status.
 - Scope narrowing in audit does not modify acceptance unless the user approved a revised source/plan/checklist.
 - `out_of_scope_NA` requires explicit reason and source reference; arbitrary prose cannot waive missing evidence.
+- Complete AC rows cannot have unresolved `missing_required_layers`, material or critical `drift_severity`, unapproved `sibling_substitution_used`, blocking `auditor_status` or only self-certifying evidence such as local audit, matrix/verdict text, subagent summary, final card or validator pass.
+
+## External Reviewer Evidence Gate
+
+The final verdict is not completion proof unless every complete AC can be independently reviewed from fresh command, API, UI, runtime, artifact, browser or test evidence. Evidence index, matrix rows, local audit, validator pass and summaries can point to evidence, but cannot replace evidence.
+
+For every AC whose checklist implies multiple required layers, the final verdict must record `required_proof_chain`, `fresh_evidence`, `missing_required_layers`, `drift_severity`, `sibling_substitution_used`, `auditor_status` and `auditor_findings` when applicable. These are generic evidence protocol fields; concrete business layers must come from the Acceptance Checklist, Product / Architecture Source, Technical Realization Plan or project-local Context/Skills.
+
+Evidence Ledger / proof index is optional execution indexing, not a fourth input, not durable Context and not required as a separate file. Complete plan-conformance rows and complete AC verdicts must still be evidence-traceable: cite fresh, reviewable evidence directly in the row or through an optional `evidence_id` that points to command, API, UI, runtime, artifact, browser or test evidence with enough freshness context for a reviewer to reconstruct the proof chain.
+
+## Drift-to-Status
+
+Any plan item or AC with unresolved missing required layers, material / critical drift or a current API / UI / runtime / data / test contradiction cannot be `complete`. It must be `partial`, `blocked`, `invalidated` or `out_of_scope_NA` with explicit source reference.
+
+## No Sibling Substitution
+
+The same execution path, negative case, screenshot or artifact class cannot substitute for the required one unless the checklist explicitly allows that substitution or marks the required layer `out_of_scope_NA`. Similar evidence is auxiliary only.
+
+## Independent Reviewer Gate
+
+When subagents are available, add a read-only auditor after executor self-evidence and `validate-plan-acceptance`. The auditor is a gap detector, not a proof source: it must not edit code, repair artifacts or treat local audit, subagent summary, matrix/verdict text, validator pass or final card as proof. It reconstructs each AC proof chain from source/plan/checklist, checks freshness and raw evidence, rejects sibling substitution and returns `auditor_status` plus findings. Any `partial`, `blocked` or `invalidated` auditor result downgrades the affected AC unless fresh evidence closes the gap.
+
+Final gate order is fixed:
+
+1. executor self-evidence.
+2. update plan-conformance matrix.
+3. update final-acceptance verdict.
+4. run `ty-context validate-plan-acceptance`.
+5. run read-only auditor gap review when subagents are available.
+6. if auditor findings change matrix, verdict or evidence, fix the gap and rerun `ty-context validate-plan-acceptance`.
+7. make a final completion claim only when self-evidence, validator consistency and auditor review have no blocking conflict.
 
 ## Evidence Layer Separation
 
@@ -252,13 +319,19 @@ The Superpowers target prompt must require the future executor to update local a
 
 The local audit is not Context, not proof, not a global task manager, and not a replacement for project tests, CI, review, human acceptance, Task Contract or workflow-contract `plan.md`. It must not contain `overall_status: done`, `status: done` or `final_gate: passed`; use `candidate_status: claims_done_but_unverified` when needed.
 
+The local audit is process recovery only. It must not contain completion judgment such as accepted, complete, done, final passed or product verified except as invalid evidence being rejected.
+
 ## Prompt Generation Rules
 
 - The prompt must visibly output `Superpowers 输入包` for Chinese prompts or `Superpowers input packet` for English prompts.
 - The prompt must visibly output `Superpowers 执行绑定` for Chinese prompts or `Superpowers execution binding` for English prompts.
 - The prompt must identify Product / Architecture Source, Technical Realization Plan, Acceptance Checklist, local audit, plan-conformance matrix and final verdict paths at the top.
 - The prompt must state that the Technical Realization Plan controls plan conformance, the Product / Architecture Source prevents scope shrinkage and the full checklist controls acceptance.
+- The prompt must state the Authority Model and that audit/matrix/verdict/validator/auditor artifacts cannot rewrite source, plan or checklist authority.
 - The prompt must require Product Context Delta and Technical Context Delta evaluation before implementation.
+- The prompt must use parent-level Context Delta plus slice-level new durable fact checks.
+- The prompt must state that Evidence Ledger / proof index is optional, but complete rows and ACs require evidence traceability to fresh evidence directly or through optional `evidence_id`.
+- The prompt must require the fixed final gate order and rerun `validate-plan-acceptance` if auditor-driven fixes change artifacts.
 - The prompt must preserve hard-blocker semantics: if only locally unsatisfiable hard blockers remain, pause for the user or external owner instead of marking complete.
 - The prompt must require maximum safe autonomous progress within current platform, repository, tool and user-authorized permission boundaries and must include the minimum user action list for locally unsatisfiable hard blockers.
 - The prompt must inherit current repository/global `AGENTS.md` or agent-instruction permission policy. Authorized `sudo` / `gsudo` / administrator elevation is not a user blocker; the executor must try it before pausing. Pause only if elevation is unavailable, fails, or requires user/system authorization.
@@ -283,55 +356,55 @@ Superpowers 输入包：
 - Acceptance Checklist：最高验收标准；每个 AC 都要进 final verdict
 - local audit：只记 progress/candidate status/evidence/blocker/invalidating evidence，不能裁判完成
 - Context/tests/core paths：执行前读取，把 plan/AC gap 绑定到测试、API/UI/runtime/browser 证据
+权威：source 管 scope，plan 管施工，checklist 管验收；audit/matrix/verdict/validator/auditor 不能改写它们。Proof index/evidence ledger 文件可选，但 complete 行必须能直接或经 evidence_id 追溯 fresh evidence。
 
 执行顺序：
 1. 读三份输入和 Context。先写 Task Contract：Product Context Delta none|required；Technical Context Delta none|required；任一 required -> Context Delta required。这不是 validator gate。
-2. Context Delta required 时，先最小更新 owning project_context/** 或 DESIGN.md；不要把 audit/matrix/verdict/日志/截图/sample evidence 写进 Context。
+2. 用 Parent Context Delta 统一判断；每个 slice 继承它，只记录 new durable fact yes/no。Context Delta required 时先最小更新 owning project_context/** 或 DESIGN.md；不要把 audit/matrix/verdict/日志/截图/sample evidence 写进 Context。
 3. 检查技术实现方案覆盖产品/架构源关键要求；若只有产品方案没有技术实现方案，停止报告 missing Technical Realization Plan，不现场生成。
 4. 初始化 plan-conformance matrix；计划不够 bite-sized 时用 superpowers:writing-plans。
 5. 有 subagent 支持时优先 superpowers:subagent-driven-development，否则 superpowers:executing-plans。
 6. Plan/AC behavior gap -> superpowers:test-driven-development：先写 failing test 并 observe failure，再最小实现。
 7. 每个实现 slice 后更新 matrix 和 audit。
 8. Candidate done 前跑 Plan Conformance Gate：测试通过不等于按图纸完成；sampled path 不等于 full implementation；每个行为 plan item 必须有 code/API/UI/runtime/test/evidence trace。
-9. 再跑 Acceptance Evidence Gate：按验收清单生成 final verdict；current API/UI/runtime/data/test contradiction 高于历史通过记录。
-10. 完成声明前用 superpowers:verification-before-completion 检查 matrix/verdict，并运行 ty-context validate-plan-acceptance tmp/ty-context/plan-acceptance/<plan-slug>；失败就继续或报告 blocker。
+9. 再跑 Acceptance Evidence Gate：按验收清单生成 final verdict；每 AC 写 required proof chain/fresh evidence/missing layers/drift/substitution。current contradiction 高于历史通过记录。
+10. Final gate 固定为 self-evidence -> matrix -> verdict -> validator -> read-only auditor；auditor summary 不是 proof。若审计后改 artifact/evidence，重跑 validator；完成前用 superpowers:verification-before-completion 检查 matrix/verdict，并运行 ty-context validate-plan-acceptance tmp/ty-context/plan-acceptance/<plan-slug>。
 
 权限/卡点：在当前平台/仓库/工具/用户已授权权限内最大自主推进；已授权 sudo/gsudo/admin elevation 先尝试，不算用户阻塞。只有本地无法解决的账号/凭证/真实环境/人工审批/敏感字段等才暂停，并给最小用户执行清单（具体页面/系统、字段位置、脱敏/勿发值、拿到后下一步）。
-禁止完成于：local audit、subagent summary、final card、只改代码/计划、只跑部分测试、旧/部分/抽样证据、runtime 未演练、artifact 未被 validator accepted、API/UI 未 reflected、未批准 scope narrowing、任何 API/UI/data/runtime/test 矛盾。
+禁止完成于：local audit、subagent summary、final card、只改代码/计划、只跑部分测试、旧/部分/抽样证据、缺 required layer、material drift、未批准 sibling substitution、runtime 未演练、artifact 未 accepted、API/UI 未 reflected、未批准 scope narrowing、任何 API/UI/data/runtime/test 矛盾。
 ```
 
 Recommended compact English prompt shape:
 
 ```text
-Product / Architecture Source: tmp/ty-context/plan-acceptance/<plan-slug>-product-architecture-source.md (original intent / scope guard, not construction plan)
-Technical Realization Plan: tmp/ty-context/plan-acceptance/<plan-slug>-technical-realization-plan.md (blueprint / plan-conformance source, not proof)
-Acceptance Checklist: tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md (acceptance authority; final verdict is judged against it)
-Local audit: tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md (process log, not proof; must not write done/final_gate passed)
-Plan matrix: tmp/ty-context/plan-acceptance/<plan-slug>-plan-conformance-matrix.md/json (create early, update during work)
-Final verdict: tmp/ty-context/plan-acceptance/<plan-slug>-final-acceptance-verdict.md/json (generate at final gate, AC by AC)
+Product / Architecture Source: tmp/ty-context/plan-acceptance/<plan-slug>-product-architecture-source.md (scope guard)
+Technical Realization Plan: tmp/ty-context/plan-acceptance/<plan-slug>-technical-realization-plan.md (blueprint)
+Acceptance Checklist: tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md (acceptance authority)
+Local audit: tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md (process log, not proof)
+Plan matrix: tmp/ty-context/plan-acceptance/<plan-slug>-plan-conformance-matrix.md/json (update during work)
+Final verdict: tmp/ty-context/plan-acceptance/<plan-slug>-final-acceptance-verdict.md/json (final AC gate)
 You may use multiple agents; if agent slots run low, close idle or unnecessary agents.
 This is not a Superpowers official schema / 不是 Superpowers 官方 schema.
 Superpowers input packet:
-- Product / Architecture Source: original intent; prevents scope shrinkage; not the construction plan.
-- Technical Realization Plan: execution blueprint; every behavior-affecting item needs a matrix trace.
-- Acceptance Checklist: acceptance authority; every AC needs a final verdict entry.
-- Local audit: progress/candidate status/evidence/blockers/invalidating evidence only; never final proof.
-- Context/tests/core paths: read before execution; map plan/AC gaps to test/API/UI/runtime/browser evidence.
+- Source guards scope; plan controls matrix; checklist controls verdict.
+- Local audit is only progress/candidate status/evidence/blockers/invalidating evidence.
+- Read Context/tests/core paths first; map gaps to test/API/UI/runtime/browser evidence.
+Authority: source owns scope, plan owns construction, checklist owns acceptance; audit/matrix/verdict/validator/auditor cannot rewrite them. Proof index file optional; complete rows need fresh evidence or evidence_id.
 
 Execution order:
-1. Read the three inputs and Context. Write Task Contract: Product Context Delta none|required; Technical Context Delta none|required; any required sub-delta makes overall Context Delta required. This is not a validator gate.
-2. If Context Delta required, minimally update the owning project_context/** or DESIGN.md; never store audit/matrix/verdict/logs/screenshots/sample evidence as Context.
-3. Check the Technical Realization Plan covers Product / Architecture Source requirements; if only a product plan exists, stop with missing Technical Realization Plan, do not generate it.
+1. Read inputs and Context. Write Task Contract: Product Context Delta none|required; Technical Context Delta none|required; any required -> Context Delta required. Not a validator gate.
+2. Use Parent Context Delta once; slices inherit it and record only new durable fact yes/no. If required, update owning project_context/** or DESIGN.md; never store audit/matrix/verdict/logs/screenshots/sample evidence as Context.
+3. Check Technical Realization Plan covers Product / Architecture Source; if only product plan exists, stop with missing Technical Realization Plan, do not generate it.
 4. Initialize plan-conformance matrix; use superpowers:writing-plans if the plan is not bite-sized.
 5. Prefer superpowers:subagent-driven-development with subagents; otherwise use superpowers:executing-plans.
 6. Plan/AC behavior gap -> superpowers:test-driven-development: write a failing test, observe failure, then implement minimally.
 7. After each slice, update matrix and audit.
-8. Before candidate done, run Plan Conformance Gate: passing tests does not prove plan conformance; sampled path does not prove full implementation; every behavior plan item needs code/API/UI/runtime/test/evidence trace.
-9. Then run Acceptance Evidence Gate: generate final verdict from the checklist; current API/UI/runtime/data/test contradictions override old passing evidence.
-10. Before completion, run superpowers:verification-before-completion on matrix/verdict and ty-context validate-plan-acceptance tmp/ty-context/plan-acceptance/<plan-slug>; if either fails, continue/report blockers.
+8. Plan Conformance Gate: tests do not prove conformance; sampled path is not full implementation; each behavior item needs code/API/UI/runtime/test/evidence trace.
+9. Acceptance Evidence Gate: verdict from checklist; each AC records proof chain, fresh evidence, missing layers, drift, substitution. Current contradictions override old passes.
+10. Final gate: self-evidence -> matrix -> verdict -> validator -> read-only auditor. Auditor summary is not proof. If audit changes artifact/evidence, rerun validator. Before completion run superpowers:verification-before-completion on matrix/verdict and ty-context validate-plan-acceptance tmp/ty-context/plan-acceptance/<plan-slug>.
 
 Autonomy/blockers: within current platform/repo/tool/user-authorized permissions, do all safe self-service discovery/execution/verification. Authorized sudo/gsudo/admin elevation is not a user blocker; try it first. Pause only for locally unsatisfiable account/credential/real-env/human-approval/sensitive-field needs; give exact page/system, field location, redaction/do-not-send values and next agent step.
-Never complete on: local audit, subagent summary, final card, code-only/plan-only work, partial tests, stale/partial/sampled evidence, unexercised runtime, artifact not accepted by validator, API/UI not reflected, missing validate-plan-acceptance pass, unapproved scope narrowing or any API/UI/data/runtime/test contradiction.
+Never complete on: local audit, subagent summary, final card, code/plan-only work, partial tests, stale/partial/sampled evidence, missing required layer, material drift, unapproved sibling substitution, unexercised runtime, artifact not accepted, API/UI not reflected, missing validate-plan-acceptance pass, unapproved scope narrowing or any API/UI/data/runtime/test contradiction.
 ```
 
 Before final response, check the prompt length. If it exceeds 3850 characters, tighten wording while preserving paths, input roles, official Superpowers skill names, Product Context Delta, Technical Context Delta, plan-conformance matrix, final verdict, state machine, UI gate, blockers and invalid evidence.
@@ -351,8 +424,13 @@ When successful, return:
 
 When blocked, return:
 
-- Missing required fields.
-- Which source should provide each missing field.
+- Missing Fields Report.
+- `missing_section`.
+- `missing_required_fields`.
+- `why_blocking`.
+- `cannot_infer_policy`.
+- `required_next_input`.
+- `suggested_upstream_action`.
 - A clear statement that no Superpowers target-mode prompt was generated.
 
 Do not claim any plan item or AC has passed unless the user explicitly asked for current completion audit and current evidence was inspected.

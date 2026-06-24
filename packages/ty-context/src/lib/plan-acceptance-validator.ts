@@ -1,4 +1,5 @@
 import { pathExists } from "./fs.js";
+import { assertExternalReviewerFields } from "./plan-acceptance-evidence.js";
 import {
   AC_STATUSES,
   MATRIX_STATUSES,
@@ -66,7 +67,7 @@ export async function validatePlanAcceptance(projectRoot: string, args: string[]
     `checked plan acceptance ${repoRelative(projectRoot, targetDir)} matrix_rows=${matrixRows.length} verdict_rows=${verdictRows.length}`
   );
   if (errors.length === 0) {
-    info.push("Plan acceptance validation passed");
+    info.push("Plan acceptance artifact consistency passed");
   }
   return { info, errors };
 }
@@ -117,6 +118,12 @@ async function validateMatrixRows(
       if (isBlankish(row.drift)) {
         errors.push(`${label} is complete but drift is empty`);
       }
+      assertExternalReviewerFields(
+        label,
+        row,
+        primitiveText([row.runtime_evidence, row.artifact_evidence, row.real_page_evidence, row.fresh_evidence]),
+        errors
+      );
       const weak = weakProofHit(primitiveText(row));
       if (weak) {
         errors.push(`${label} is complete but contains weak-proof language matching /${weak}/`);
@@ -192,6 +199,7 @@ async function validateVerdictRows(
     }
     if (status === "complete") {
       const text = primitiveText(row);
+      assertExternalReviewerFields(label, row, primitiveText(row.fresh_evidence), errors);
       const weak = weakProofHit(text);
       if (weak) {
         errors.push(`${label} is complete but contains weak-proof language matching /${weak}/`);
