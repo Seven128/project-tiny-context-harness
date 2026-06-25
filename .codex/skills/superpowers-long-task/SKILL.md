@@ -239,6 +239,20 @@ Final gate order is fixed:
 6. if auditor findings change matrix, verdict or evidence, fix the gap and rerun `ty-context validate-plan-acceptance`.
 7. make a final completion claim only when self-evidence, validator consistency and auditor review have no blocking conflict.
 
+## Goal And Acceptance Wording
+
+The Superpowers target prompt must keep three completion concepts separate:
+
+- `audit_task_complete`: the read-only audit, final-gate workflow or artifact-production task finished.
+- `acceptance_target_status`: the final verdict outcome for the checked plan or product target.
+- `product_goal_complete`: the checked plan or product target is accepted as complete.
+
+`product_goal_complete` may be true only when the final verdict overall status is `accepted` or `complete`, all required ACs are `complete` or explicit sourced `out_of_scope_NA`, `ty-context validate-plan-acceptance` passes, and any auditor has no blocking finding.
+
+When the generated prompt is used as an implementation or execution Goal mode objective, the active Codex goal is complete only when `product_goal_complete=true`. A non-accepted `acceptance_target_status` means continue implementation or report blockers / missing evidence; do not close the implementation goal as complete.
+
+A read-only audit / reporting Goal mode objective is different: when the explicit goal is only to produce an audit and verdict, `audit_task_complete` may complete that meta-goal even when `product_goal_complete=false`. In that case, if `acceptance_target_status` is `partial`, `blocked`, `invalidated`, `not_run`, `partial_not_accepted_as_complete_platform` or any other non-accepted status, the final response must say `Audit workflow completed; acceptance target not complete.` It should include complete / partial / blocked / not_run / invalidated counts when available. Do not write an unqualified `Goal achieved` and do not describe `update_goal(status="complete")` as user-target or product-goal completion in that case.
+
 ## Evidence Layer Separation
 
 Keep these layers separate in the prompt when relevant:
@@ -284,6 +298,8 @@ For UI-facing acceptance, the executor must open the real page path and confirm 
 ## Autonomous Progress Protocol
 
 The Superpowers target prompt must require maximum safe autonomous progress within current platform, repository, tool and user-authorized permission boundaries. Do not ask the user for work the executor can safely discover, run, inspect or verify itself.
+
+Before treating account, credential or app access as blocked, open the relevant app, browser page, CLI tool or system setting and try existing app sessions, browser cookies, CLI auth, OS credential helpers or other user-authorized local state. If the existing session is absent, expired, permission-denied or requires login/MFA/approval, then pause with the minimal user action list; do not ask the user to send passwords, tokens, cookies or full sensitive fields.
 
 The Superpowers target prompt must inherit current repository/global `AGENTS.md` or agent-instruction permission policy. Authorized `sudo` / `gsudo` / administrator elevation is not a user blocker; the executor must try it before pausing. Pause only if elevation is unavailable, fails, or requires user/system authorization.
 
@@ -332,8 +348,11 @@ The local audit is process recovery only. It must not contain completion judgmen
 - The prompt must use parent-level Context Delta plus slice-level new durable fact checks.
 - The prompt must state that Evidence Ledger / proof index is optional, but complete rows and ACs require evidence traceability to fresh evidence directly or through optional `evidence_id`.
 - The prompt must require the fixed final gate order and rerun `validate-plan-acceptance` if auditor-driven fixes change artifacts.
+- The prompt must state the Goal mode completion rule: implementation / execution goals complete only at `product_goal_complete=true`; read-only audit / reporting goals may end at `audit_task_complete` but must still report the acceptance target status.
+- The prompt must require the final response to say `Audit workflow completed; acceptance target not complete.` whenever the verdict is not accepted/complete, and must forbid unqualified `Goal achieved` or treating `update_goal(status="complete")` as product acceptance in that case.
 - The prompt must preserve hard-blocker semantics: if only locally unsatisfiable hard blockers remain, pause for the user or external owner instead of marking complete.
 - The prompt must require maximum safe autonomous progress within current platform, repository, tool and user-authorized permission boundaries and must include the minimum user action list for locally unsatisfiable hard blockers.
+- The prompt must say existing app sessions, browser cookies, CLI auth and OS credential helpers are self-service resources: open the relevant app/page/tool/settings first, use existing local auth if present, and pause only after access is actually absent, expired, permission-denied or requires login/MFA/approval.
 - The prompt must inherit current repository/global `AGENTS.md` or agent-instruction permission policy. Authorized `sudo` / `gsudo` / administrator elevation is not a user blocker; the executor must try it before pausing. Pause only if elevation is unavailable, fails, or requires user/system authorization.
 - The prompt must include the resource lifecycle line: `可多开agent，agent名额不够了就关掉不用的。` or `You may use multiple agents; if agent slots run low, close idle or unnecessary agents.`
 - The prompt must fit 3850 characters including line breaks.
@@ -357,6 +376,7 @@ Superpowers 输入包：
 - local audit：只记 progress/candidate status/evidence/blocker/invalidating evidence，不能裁判完成
 - Context/tests/core paths：执行前读取，把 plan/AC gap 绑定到测试、API/UI/runtime/browser 证据
 权威：source 管 scope，plan 管施工，checklist 管验收；audit/matrix/verdict/validator/auditor 不能改写它们。Proof index/evidence ledger 文件可选，但 complete 行必须能直接或经 evidence_id 追溯 fresh evidence。
+Goal mode：实现/执行目标只在 product_goal_complete=true 时完成；只读审计目标可在 audit_task_complete 时结束，但若 verdict 非 accepted/complete，必须写“Audit workflow completed; acceptance target not complete.”并列数量；不得写 Goal achieved 或把 update_goal complete 当用户目标完成。
 
 执行顺序：
 1. 读三份输入和 Context。先写 Task Contract：Product Context Delta none|required；Technical Context Delta none|required；任一 required -> Context Delta required。这不是 validator gate。
@@ -370,41 +390,41 @@ Superpowers 输入包：
 9. 再跑 Acceptance Evidence Gate：按验收清单生成 final verdict；每 AC 写 required proof chain/fresh evidence/missing layers/drift/substitution。current contradiction 高于历史通过记录。
 10. Final gate 固定为 self-evidence -> matrix -> verdict -> validator -> read-only auditor；auditor summary 不是 proof。若审计后改 artifact/evidence，重跑 validator；完成前用 superpowers:verification-before-completion 检查 matrix/verdict，并运行 ty-context validate-plan-acceptance tmp/ty-context/plan-acceptance/<plan-slug>。
 
-权限/卡点：在当前平台/仓库/工具/用户已授权权限内最大自主推进；已授权 sudo/gsudo/admin elevation 先尝试，不算用户阻塞。只有本地无法解决的账号/凭证/真实环境/人工审批/敏感字段等才暂停，并给最小用户执行清单（具体页面/系统、字段位置、脱敏/勿发值、拿到后下一步）。
+权限/卡点：在当前平台/仓库/工具/用户已授权权限内最大自主推进；先打开相关 app/浏览器页面/CLI/系统设置，复用已有登录态/授权会话/凭据链；已授权 sudo/gsudo/admin elevation 先尝试。只有实际未登录/会话失效/权限不足/需要 MFA 或人工审批、缺账号/真实环境/敏感字段时才暂停，并给最小用户执行清单（页面/系统、字段位置、脱敏/勿发值、拿到后下一步）。
 禁止完成于：local audit、subagent summary、final card、只改代码/计划、只跑部分测试、旧/部分/抽样证据、缺 required layer、material drift、未批准 sibling substitution、runtime 未演练、artifact 未 accepted、API/UI 未 reflected、未批准 scope narrowing、任何 API/UI/data/runtime/test 矛盾。
 ```
 
 Recommended compact English prompt shape:
 
 ```text
-Product / Architecture Source: tmp/ty-context/plan-acceptance/<plan-slug>-product-architecture-source.md (scope guard)
+Product / Architecture Source: tmp/ty-context/plan-acceptance/<plan-slug>-product-architecture-source.md (scope)
 Technical Realization Plan: tmp/ty-context/plan-acceptance/<plan-slug>-technical-realization-plan.md (blueprint)
-Acceptance Checklist: tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md (acceptance authority)
-Local audit: tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md (process log, not proof)
-Plan matrix: tmp/ty-context/plan-acceptance/<plan-slug>-plan-conformance-matrix.md/json (update during work)
-Final verdict: tmp/ty-context/plan-acceptance/<plan-slug>-final-acceptance-verdict.md/json (final AC gate)
+Acceptance Checklist: tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md (authority)
+Local audit: tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md (log, not proof)
+Plan matrix: tmp/ty-context/plan-acceptance/<plan-slug>-plan-conformance-matrix.md/json (work trace)
+Final verdict: tmp/ty-context/plan-acceptance/<plan-slug>-final-acceptance-verdict.md/json (AC gate)
 You may use multiple agents; if agent slots run low, close idle or unnecessary agents.
 This is not a Superpowers official schema / 不是 Superpowers 官方 schema.
 Superpowers input packet:
-- Source guards scope; plan controls matrix; checklist controls verdict.
-- Local audit is only progress/candidate status/evidence/blockers/invalidating evidence.
+- Source guards scope; plan controls matrix; checklist controls verdict; audit records progress only.
 - Read Context/tests/core paths first; map gaps to test/API/UI/runtime/browser evidence.
-Authority: source owns scope, plan owns construction, checklist owns acceptance; audit/matrix/verdict/validator/auditor cannot rewrite them. Proof index file optional; complete rows need fresh evidence or evidence_id.
+Authority: source/plan/checklist own scope/construction/acceptance; audit/matrix/verdict/validator/auditor cannot rewrite them. Proof index optional; complete rows need fresh evidence/evidence_id.
+Goal mode: implementation/execution goal complete only when product_goal_complete=true; read-only audit goal may end at audit_task_complete, but if verdict not accepted say "Audit workflow completed; acceptance target not complete." Include counts; no bare "Goal achieved" or update_goal complete as user target.
 
 Execution order:
-1. Read inputs and Context. Write Task Contract: Product Context Delta none|required; Technical Context Delta none|required; any required -> Context Delta required. Not a validator gate.
-2. Use Parent Context Delta once; slices inherit it and record only new durable fact yes/no. If required, update owning project_context/** or DESIGN.md; never store audit/matrix/verdict/logs/screenshots/sample evidence as Context.
-3. Check Technical Realization Plan covers Product / Architecture Source; if only product plan exists, stop with missing Technical Realization Plan, do not generate it.
+1. Read inputs and Context. Task Contract: Product Context Delta none|required; Technical Context Delta none|required; any required -> Context Delta required. Not a validator gate.
+2. Use Parent Context Delta once; slices inherit it and record new durable fact yes/no. If required, update owning project_context/** or DESIGN.md; never store audit/matrix/verdict/logs/screenshots/sample evidence as Context.
+3. Check Technical Realization Plan covers Product / Architecture Source; if only product plan exists, stop with missing Technical Realization Plan.
 4. Initialize plan-conformance matrix; use superpowers:writing-plans if the plan is not bite-sized.
 5. Prefer superpowers:subagent-driven-development with subagents; otherwise use superpowers:executing-plans.
 6. Plan/AC behavior gap -> superpowers:test-driven-development: write a failing test, observe failure, then implement minimally.
 7. After each slice, update matrix and audit.
 8. Plan Conformance Gate: tests do not prove conformance; sampled path is not full implementation; each behavior item needs code/API/UI/runtime/test/evidence trace.
-9. Acceptance Evidence Gate: verdict from checklist; each AC records proof chain, fresh evidence, missing layers, drift, substitution. Current contradictions override old passes.
-10. Final gate: self-evidence -> matrix -> verdict -> validator -> read-only auditor. Auditor summary is not proof. If audit changes artifact/evidence, rerun validator. Before completion run superpowers:verification-before-completion on matrix/verdict and ty-context validate-plan-acceptance tmp/ty-context/plan-acceptance/<plan-slug>.
+9. Acceptance Evidence Gate: checklist controls verdict; each AC records proof chain, fresh evidence, missing layers, drift, substitution. Current contradictions override old passes.
+10. Final gate: self-evidence -> matrix -> verdict -> validator -> read-only auditor. Auditor summary is not proof. Rerun validator after evidence changes; before completion run superpowers:verification-before-completion and ty-context validate-plan-acceptance tmp/ty-context/plan-acceptance/<plan-slug>.
 
-Autonomy/blockers: within current platform/repo/tool/user-authorized permissions, do all safe self-service discovery/execution/verification. Authorized sudo/gsudo/admin elevation is not a user blocker; try it first. Pause only for locally unsatisfiable account/credential/real-env/human-approval/sensitive-field needs; give exact page/system, field location, redaction/do-not-send values and next agent step.
-Never complete on: local audit, subagent summary, final card, code/plan-only work, partial tests, stale/partial/sampled evidence, missing required layer, material drift, unapproved sibling substitution, unexercised runtime, artifact not accepted, API/UI not reflected, missing validate-plan-acceptance pass, unapproved scope narrowing or any API/UI/data/runtime/test contradiction.
+Autonomy/blockers: self-serve under current permissions. Open app/browser/CLI/settings and reuse sessions/auth/helpers. Try authorized sudo/gsudo/admin. Pause only after missing login, expired session, denied permission, MFA/approval, unavailable env/account or sensitive field; give page/system, field, redaction/do-not-send values, next step.
+Never complete on: local audit, summary/final card, code/plan-only, partial tests, stale/partial/sampled evidence, missing layer, material drift, unapproved sibling substitution, unexercised runtime, artifact not accepted, API/UI not reflected, missing validator pass, unapproved scope narrowing or API/UI/data/runtime/test contradiction.
 ```
 
 Before final response, check the prompt length. If it exceeds 3850 characters, tighten wording while preserving paths, input roles, official Superpowers skill names, Product Context Delta, Technical Context Delta, plan-conformance matrix, final verdict, state machine, UI gate, blockers and invalid evidence.
@@ -420,6 +440,7 @@ When successful, return:
 - The plan-conformance matrix path.
 - The final acceptance verdict path.
 - Whether required input was complete.
+- The generated prompt's Goal mode completion rule for implementation / execution goals, and required final status wording for non-accepted read-only audit results: `Audit workflow completed; acceptance target not complete.`
 - The paste-ready Superpowers target-mode prompt in a code block.
 
 When blocked, return:

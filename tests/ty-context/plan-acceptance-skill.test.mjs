@@ -69,6 +69,7 @@ assert.match(workflowContract, /3850-character effective maximum/);
 assert.match(workflowContract, /maximum safe autonomous progress/i);
 assert.match(workflowContract, /Generated target prompts inherit the current repository\/global agent-instruction permission policy/);
 assert.match(workflowContract, /Authorized `sudo` \/ `gsudo` \/ administrator elevation is not a user blocker/);
+assert.match(workflowContract, /Existing local app sessions, browser cookies, CLI auth, OS credential helpers/i);
 assert.match(workflowContract, /minimal user action list/i);
 assert.doesNotMatch(workflowContract, /visible Superpowers input packet/i);
 assert.doesNotMatch(workflowContract, /Superpowers input boundary/i);
@@ -141,6 +142,9 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /Autonomous Progress Protocol/);
   assert.match(content, /current platform, repository, tool and user-authorized permission boundaries/);
   assert.match(content, /Do not ask the user for work the executor can safely discover, run, inspect or verify itself/);
+  assert.match(content, /open the relevant app, browser page, CLI tool or system setting/i);
+  assert.match(content, /existing app sessions, browser cookies, CLI auth, OS credential helpers/i);
+  assert.match(content, /If the existing session is absent, expired, permission-denied or requires login\/MFA\/approval/i);
   assert.match(content, /inherit current repository\/global `AGENTS\.md` or agent-instruction permission policy/);
   assert.match(content, /Authorized `sudo` \/ `gsudo` \/ administrator elevation is not a user blocker/);
   assert.match(content, /try it before pausing/);
@@ -162,6 +166,7 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /real page path/i);
   assert.match(content, /component \/ viewmodel \/ mock \/ unit test/i);
   assert.match(content, /Generic Target-Mode Prompt Generation/);
+  assert.match(content, /existing local sessions, browser state, CLI auth and OS credential helpers/i);
   assert.doesNotMatch(content, superpowersTerms);
   assert.doesNotMatch(content, forbiddenIncidentNames);
   assert.doesNotMatch(

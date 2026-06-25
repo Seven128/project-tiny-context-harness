@@ -70,9 +70,19 @@ for (const content of [rootReadme, rootZhReadme, packageReadme, spec, workflowCo
   assert.match(content, /plan-conformance-matrix|plan-conformance matrix|final-acceptance-verdict|final acceptance verdict/i);
   assert.match(content, /Product Context Delta/i);
   assert.match(content, /Technical Context Delta/i);
+  assert.match(content, /audit_task_complete/);
+  assert.match(content, /acceptance_target_status/);
+  assert.match(content, /product_goal_complete/);
+  assert.match(content, /product_goal_complete=true/);
+  assert.match(content, /implementation \/ execution goals?|实现\/执行目标|实现 \/ 执行 Goal mode/i);
+  assert.match(content, /read-only audit goals?|只读审计目标|read-only audit \/ reporting/i);
+  assert.match(content, /Audit workflow completed; acceptance target not complete\./);
+  assert.match(content, /Goal achieved/);
+  assert.match(content, /update_goal\(status="complete"\)/);
   assert.match(workflowContract, /maximum safe autonomous progress/i);
   assert.match(workflowContract, /same inherited permission policy applies to the Superpowers target prompt/i);
   assert.match(workflowContract, /authorized `sudo` \/ `gsudo` \/ administrator elevation is self-service work/i);
+  assert.match(workflowContract, /existing local app\/browser sessions and CLI\/system auth/i);
   assert.match(workflowContract, /minimal user action list/i);
   assert.doesNotMatch(content, /superpowers_target_prompt_compiler/);
 }
@@ -123,6 +133,9 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /Autonomous Progress Protocol/);
   assert.match(content, /current platform, repository, tool and user-authorized permission boundaries/);
   assert.match(content, /Do not ask the user for work the executor can safely discover, run, inspect or verify itself/);
+  assert.match(content, /open the relevant app, browser page, CLI tool or system setting/i);
+  assert.match(content, /existing app sessions, browser cookies, CLI auth, OS credential helpers/i);
+  assert.match(content, /If the existing session is absent, expired, permission-denied or requires login\/MFA\/approval/i);
   assert.match(content, /inherit current repository\/global `AGENTS\.md` or agent-instruction permission policy/);
   assert.match(content, /Authorized `sudo` \/ `gsudo` \/ administrator elevation is not a user blocker/);
   assert.match(content, /try it before pausing/);
@@ -161,6 +174,17 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /Final gate order is fixed/);
   assert.match(content, /executor self-evidence/);
   assert.match(content, /rerun `ty-context validate-plan-acceptance`/);
+  assert.match(content, /Goal And Acceptance Wording/);
+  assert.match(content, /audit_task_complete/);
+  assert.match(content, /acceptance_target_status/);
+  assert.match(content, /product_goal_complete/);
+  assert.match(content, /product_goal_complete=true/);
+  assert.match(content, /implementation (?:or|\/) execution Goal mode objective|implementation\/execution goal complete/i);
+  assert.match(content, /read-only audit \/ reporting Goal mode objective|read-only audit goal may end/i);
+  assert.match(content, /accepted` or `complete`/);
+  assert.match(content, /Audit workflow completed; acceptance target not complete\./);
+  assert.match(content, /Goal achieved/);
+  assert.match(content, /update_goal\(status="complete"\)/);
   assert.match(content, /No Sibling Substitution/);
   assert.match(content, /required proof chain/i);
   assert.match(content, /required_proof_chain/);
@@ -233,11 +257,13 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /可多开agent，agent名额不够了就关掉不用的。/);
   assert.match(content, /You may use multiple agents; if agent slots run low, close idle or unnecessary agents\./);
   assert.match(content, /权限\/卡点：在当前平台\/仓库\/工具\/用户已授权权限内最大自主推进/);
+  assert.match(content, /先打开相关 app\/浏览器页面\/CLI\/系统设置，复用已有登录态\/授权会话\/凭据链/);
   assert.match(content, /已授权 sudo\/gsudo\/admin elevation 先尝试/);
-  assert.match(content, /只有本地无法解决的账号\/凭证\/真实环境\/人工审批\/敏感字段等才暂停/);
-  assert.match(content, /Autonomy\/blockers: within current platform\/repo\/tool\/user-authorized permissions/i);
-  assert.match(content, /Authorized sudo\/gsudo\/admin elevation is not a user blocker/i);
-  assert.match(content, /Pause only for locally unsatisfiable account\/credential\/real-env\/human-approval\/sensitive-field needs/i);
+  assert.match(content, /只有实际未登录\/会话失效\/权限不足\/需要 MFA 或人工审批/);
+  assert.match(content, /Autonomy\/blockers: self-serve under current permissions/i);
+  assert.match(content, /Open app\/browser\/CLI\/settings and reuse sessions\/auth\/helpers/i);
+  assert.match(content, /Try authorized sudo\/gsudo\/admin/i);
+  assert.match(content, /Pause only after missing login, expired session, denied permission, MFA\/approval/i);
 
   for (const heading of ["Recommended compact Chinese prompt shape:", "Recommended compact English prompt shape:"]) {
     assert.ok(extractTextBlockAfter(content, heading).length <= 3850, `expected ${heading} to fit 3850-character target-mode budget`);
