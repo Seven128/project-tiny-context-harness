@@ -63,7 +63,10 @@ for (const content of [sourceAgents, packageAgents]) {
 for (const content of [rootReadme, rootZhReadme, packageReadme, spec, workflowContract]) {
   assert.match(content, /superpowers-long-task/);
   assert.match(content, /Superpowers long-task Skill|Superpowers 长程任务 Skill/i);
-  assert.match(content, /not a Superpowers official schema|不是 Superpowers 官方 schema/i);
+  assert.match(content, /adapter layer|适配层/i);
+  assert.match(content, /official Superpowers skills|官方 Superpowers skills/i);
+  assert.match(content, /upstream-owned schema|上游维护的 schema/i);
+  assert.match(content, /Superpowers-ready Markdown implementation plan|直接绑定 Superpowers 执行/i);
   assert.match(content, /Product \/ Architecture Source|产品\/架构原始意图源|产品\/架构方案/i);
   assert.match(content, /Technical Realization Plan|具体技术实现方案|技术实现方案/i);
   assert.match(content, /Acceptance Checklist|验收清单/i);
@@ -95,7 +98,9 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.doesNotMatch(description, broadTriggerTerms);
 
   assert.match(content, /Package-Managed Boundary/);
-  assert.match(content, /not a Superpowers official schema|不是 Superpowers 官方 schema/i);
+  assert.match(content, /aligned to the official Superpowers skills|对齐官方 Superpowers skills/i);
+  assert.match(content, /upstream-owned schema|上游维护的 schema/i);
+  assert.match(content, /Superpowers-ready Markdown implementation plan/i);
   assert.match(content, /three-input|three upstream inputs|three-document/i);
   assert.match(content, /Product \/ Architecture Source/i);
   assert.match(content, /Technical Realization Plan/i);
@@ -236,7 +241,8 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /Superpowers execution binding/);
   assert.match(content, /official Superpowers installation path/i);
   assert.match(content, /installation is blocked/i);
-  assert.match(content, /superpowers:writing-plans/);
+  assert.match(content, /satisfies the required input fields|required executable-plan input checks|输入校验阶段已确认可执行/i);
+  assert.doesNotMatch(content, /superpowers:writing-plans/);
   assert.match(content, /superpowers:subagent-driven-development/);
   assert.match(content, /superpowers:executing-plans/);
   assert.match(content, /superpowers:test-driven-development/);

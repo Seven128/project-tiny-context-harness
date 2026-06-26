@@ -380,9 +380,11 @@ try {
   );
   assert.match(superpowersLongTaskSkill, /name: superpowers-long-task/);
   assert.match(superpowersLongTaskSkill, /Use when directly invoked for Superpowers long-running task target prompt preparation\./);
-  assert.match(superpowersLongTaskSkill, /not a Superpowers official schema|不是 Superpowers 官方 schema/i);
+  assert.match(superpowersLongTaskSkill, /aligned to the official Superpowers skills/i);
+  assert.match(superpowersLongTaskSkill, /upstream-owned schema/i);
+  assert.match(superpowersLongTaskSkill, /Superpowers-ready Markdown implementation plan/i);
   assert.match(superpowersLongTaskSkill, /Superpowers input packet/);
-  assert.match(superpowersLongTaskSkill, /superpowers:writing-plans/);
+  assert.doesNotMatch(superpowersLongTaskSkill, /superpowers:writing-plans/);
   assert.match(superpowersLongTaskSkill, /superpowers:subagent-driven-development/);
   assert.match(superpowersLongTaskSkill, /superpowers:executing-plans/);
   assert.match(superpowersLongTaskSkill, /superpowers:test-driven-development/);
