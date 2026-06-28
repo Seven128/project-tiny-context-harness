@@ -72,10 +72,11 @@ for (const content of [rootReadme, rootZhReadme, packageReadme, spec, workflowCo
   assert.match(content, /Product \/ Architecture Source|产品\/架构原始意图源|产品\/架构方案/i);
   assert.match(content, /Technical Realization Plan|具体技术实现方案|技术实现方案/i);
   assert.match(content, /Acceptance Checklist|验收清单/i);
+  assert.match(content, /task-state\.json|canonical state|canonical task state|canonical state kernel|状态源/i);
+  assert.match(content, /events\.ndjson|append-only|追加/i);
+  assert.match(content, /derived\/|derived views|generated views|派生/i);
   assert.match(content, /plan-conformance-matrix|plan-conformance matrix|final-acceptance-verdict|final acceptance verdict/i);
-  assert.match(content, /evidence manifest|证据(?:清单|小票)|证据 manifest/i);
-  assert.match(content, /optional|可选/i);
-  assert.match(content, /not (?:a )?fourth input|不是第四(?:份)?输入/i);
+  assert.match(content, /task-state\.evidence|evidence records|canonical evidence|证据记录/i);
   assert.match(content, /must not redefine[\s\S]*fork[\s\S]*Superpowers execution mechanics|不能重新定义[\s\S]*Superpowers 执行机制|不能[\s\S]*分叉 Superpowers 执行机制/i);
   assert.match(content, /conflict[\s\S]*duplicate[\s\S]*override[\s\S]*Superpowers|冲突[\s\S]*重复[\s\S]*覆盖/i);
   assert.match(content, /Passing Superpowers review|通过 Superpowers review/i);
@@ -176,21 +177,25 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /local audit/i);
   assert.match(content, /relevant Context/i);
   assert.match(content, /required tests \/ core paths/i);
+  assert.match(content, /task-state\.json/);
+  assert.match(content, /events\.ndjson/);
+  assert.match(content, /derived\/plan-conformance-matrix/);
+  assert.match(content, /derived\/final-acceptance-verdict/);
   assert.match(content, /plan-conformance-matrix/i);
   assert.match(content, /final-acceptance-verdict/i);
   for (const pattern of [
-    /evidence-manifest\.md\/json/, /evidence_id/, /slice_id/, /slice_goal/, /missing_layer_classes/,
-    /touched_plan_item_ids/, /touched_ac_ids/, /explicitly_does_not_prove/, /closed_missing_layers/,
-    /remaining_missing_layers/, /cleanup_status/, /redaction_security_status/, /not a fourth input/i,
-    /not durable Context/i, /not proof/i, /not required by `validate-plan-acceptance`/i,
+    /slice-delta\.json/, /progress_value/, /evidence_id/, /slice_id/, /slice_goal/, /missing_layer_classes/,
+    /touched_plan_items/, /touched_acs/, /does_not_prove/, /closed_layers/,
+    /remaining_layers/, /cleanup_assertions/, /redaction/i,
+    /Do not manually edit derived|derived\/\*\* is generated only/i,
     /must not contain secrets, raw credentials, tokens, cookies or long raw payloads/i,
     /2-4 strongly related missing layers/i,
     /same AC[\s\S]*runtime scenario[\s\S]*proof environment[\s\S]*verification path/i,
     /Single-gap slices[\s\S]*(?:blockers|contradictions|metadata cleanup)/i, /functional gap/i,
     /proof gap/i, /stale wording\/artifact sync/i, /upstream blocker/i, /live DB\/runtime proof/i,
     /Browser\/UI proof/i, /security\/redaction proof/i, /all-provider\/all-runner coverage/i,
-    /update matrix and local audit from the manifest/i, /update verdict evidence\/missing-layer fields conservatively/i,
-    /do not mark ACs complete before the final gate/i, /stale\/overclaim scan/i,
+    /apply-slice-delta/i, /derive/i,
+    /do not mark ACs complete/i, /stale\/overclaim scan/i,
     /accepted[\s\S]*complete[\s\S]*final passed[\s\S]*product_goal_complete=true[\s\S]*scope narrowed[\s\S]*sibling substitution/i,
     /reuse DB\/API\/Browser environments/i, /unique proof prefixes/i, /cleanup count\/assertion/i,
     /fixed auditor checklist/i, /source\/plan\/checklist consistency/i, /closed gaps have fresh evidence/i,
@@ -201,14 +206,14 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /Plan Conformance Gate/);
   assert.match(content, /Acceptance Evidence Gate/);
   assert.match(content, /External Reviewer Evidence Gate/);
-  assert.match(content, /Evidence Ledger \/ proof index is optional execution indexing/i);
-  assert.match(content, /not a fourth input/i);
+  assert.match(content, /Evidence Ledger \/ proof index is a generated execution index/i);
   assert.match(content, /evidence-traceable/i);
-  assert.match(content, /evidence_id/i);
+  assert.match(content, /task-state\.evidence\[\]|evidence_id/i);
   assert.match(content, /Independent Reviewer Gate/);
   assert.match(content, /Final gate order is fixed/);
   assert.match(content, /executor self-evidence/);
-  assert.match(content, /rerun `ty-context validate-plan-acceptance`/);
+  assert.match(content, /validate-superpowers-state/);
+  assert.match(content, /rerun derive plus both validators|rerun `ty-context validate-plan-acceptance`/);
   assert.match(content, /Goal And Acceptance Wording/);
   assert.match(content, /audit_task_complete/);
   assert.match(content, /acceptance_target_status/);
@@ -216,7 +221,7 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /product_goal_complete=true/);
   assert.match(content, /implementation (?:or|\/) execution Goal mode objective|implementation\/execution goal complete/i);
   assert.match(content, /read-only audit \/ reporting Goal mode objective|read-only audit goal may end/i);
-  assert.match(content, /accepted` or `complete`/);
+  assert.match(content, /final-gate.*computes|computed/i);
   assert.match(content, /Audit workflow completed; acceptance target not complete\./);
   assert.match(content, /Goal achieved/);
   assert.match(content, /update_goal\(status="complete"\)/);
@@ -254,13 +259,13 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /write a failing test/i);
   assert.match(content, /observe failure/i);
   assert.match(content, /completion claim/i);
-  assert.match(content, /review \/ finish cannot override the plan-conformance matrix or full checklist/i);
+  assert.match(content, /review \/ finish cannot override the plan-conformance matrix or full checklist|review[\s\S]*cannot override Tiny Context gates/i);
   assert.match(content, /Superpowers review and verification remain useful execution checks/i);
   assert.match(content, /passing Superpowers review does not by itself prove plan conformance or checklist acceptance/i);
   assert.match(content, /technical realization plan controls plan conformance/i);
   assert.match(content, /product\/architecture source prevents scope shrinkage/i);
   assert.match(content, /full checklist controls acceptance/i);
-  assert.match(content, /local audit is not Context/i);
+  assert.match(content, /local audit is not Context|generated local audit/i);
   assert.match(content, /not proof/i);
   assert.match(content, /not a global task manager/i);
   assert.match(content, /not a replacement for project tests, CI, review, human acceptance, Task Contract or workflow-contract `plan\.md`/i);

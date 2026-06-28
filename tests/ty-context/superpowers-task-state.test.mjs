@@ -1,0 +1,172 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { readFile, rm, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { initializeSuperpowersTask, applySliceDelta } from "../../packages/ty-context/dist/lib/superpowers-task-state.js";
+import { compileSuperpowersTask } from "../../packages/ty-context/dist/lib/superpowers-task-compile.js";
+import { createPlanProject, writeSuperpowersSources } from "./plan-validator-fixtures.mjs";
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+
+test("superpowers state init and compile create canonical source-hashed graph", async () => {
+  const root = await createPlanProject();
+  try {
+    await writeSuperpowersSources(root);
+    const workdir = path.join(root, "tmp/ty-context/plan-acceptance/demo");
+
+    await initializeSuperpowersTask(workdir, { taskId: "SP-TEST-001", planSlug: "demo" });
+    await compileSuperpowersTask(workdir);
+
+    const state = JSON.parse(await readFile(path.join(workdir, "task-state.json"), "utf8"));
+    const schema = JSON.parse(await readFile(path.join(workdir, "task-state.schema.json"), "utf8"));
+    assert.equal(state.meta.schema_version, "superpowers-task-state-v1");
+    assert.equal(schema.properties.meta.properties.schema_version.const, "superpowers-task-state-v1");
+    assert.equal(state.meta.product_goal_complete, false);
+    assert.match(state.sources.product_architecture_source.sha256, /^[a-f0-9]{64}$/);
+    assert.ok(state.graph.plan_items["PI-001"]);
+    assert.ok(state.graph.acceptance_criteria["AC-001"]);
+    assert.ok(state.graph.proof_layers["AC-001.runtime"]);
+    assert.deepEqual(state.graph.edges, [{ from: "PI-001", to: "AC-001", type: "supports" }]);
+
+    const events = await readFile(path.join(workdir, "events.ndjson"), "utf8");
+    assert.match(events, /"event_type":"task_initialized"/);
+    assert.match(events, /"event_type":"graph_compiled"/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("apply-slice-delta records progress value, evidence and closes proof layers", async () => {
+  const root = await createPlanProject();
+  try {
+    await writeSuperpowersSources(root);
+    const workdir = path.join(root, "tmp/ty-context/plan-acceptance/demo");
+    await initializeSuperpowersTask(workdir, { taskId: "SP-TEST-001", planSlug: "demo" });
+    await compileSuperpowersTask(workdir);
+
+    const deltaPath = path.join(workdir, "slice-delta.json");
+    await writeFile(
+      deltaPath,
+      JSON.stringify(
+        {
+          slice_id: "S-001",
+          slice_goal: "Close runtime proof",
+          touched_plan_items: ["PI-001"],
+          touched_acs: ["AC-001"],
+          code_changes: ["src/runtime/kernel.ts"],
+          evidence_records: [
+            {
+              evidence_id: "EV-001",
+              slice_id: "S-001",
+              type: "runtime",
+              freshness: { created_at: "2026-06-29T00:00:00.000Z", valid_for: "current_worktree", stale_after: null },
+              command: "node --test tests/runtime.spec.ts",
+              artifact_paths: ["tmp/ty-context/plan-acceptance/demo/runtime.json"],
+              proves: ["AC-001.runtime"],
+              does_not_prove: ["AC-001.ui_browser"],
+              redaction: { checked: true, contains_secret: false },
+              reviewability: { external_reviewer_can_reproduce: true, reproduction_steps: "Run node --test tests/runtime.spec.ts." }
+            }
+          ],
+          closed_layers: ["AC-001.runtime"],
+          remaining_layers: ["AC-001.ui_browser"],
+          blockers: [],
+          cleanup_assertions: ["runtime fixture cleaned"],
+          progress_value: {
+            type: "closed_required_proof_layer",
+            closed_items: ["AC-001.runtime"],
+            why_it_reduces_rework: "Runtime proof is now mapped to a proof layer."
+          }
+        },
+        null,
+        2
+      ),
+      "utf8"
+    );
+
+    await applySliceDelta(workdir, deltaPath);
+
+    const state = JSON.parse(await readFile(path.join(workdir, "task-state.json"), "utf8"));
+    assert.equal(state.graph.proof_layers["AC-001.runtime"].status, "satisfied");
+    assert.deepEqual(state.graph.proof_layers["AC-001.runtime"].evidence_ids, ["EV-001"]);
+    assert.equal(state.evidence[0].evidence_id, "EV-001");
+    assert.equal(state.slices[0].progress_value.type, "closed_required_proof_layer");
+
+    const events = await readFile(path.join(workdir, "events.ndjson"), "utf8");
+    assert.match(events, /"event_type":"slice_delta_applied"/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("superpowers CLI namespace initializes, compiles and recommends next slices", async () => {
+  const root = await createPlanProject();
+  try {
+    await writeSuperpowersSources(root);
+    const cli = path.join(repoRoot, "packages/ty-context/dist/cli.js");
+    const workdir = "tmp/ty-context/plan-acceptance/demo";
+
+    const init = spawnSync(process.execPath, [cli, "superpowers", "init", workdir], { cwd: root, encoding: "utf8" });
+    assert.equal(init.status, 0, init.stderr);
+    assert.match(init.stdout, /task-state\.json/);
+
+    const compile = spawnSync(process.execPath, [cli, "superpowers", "compile", workdir], { cwd: root, encoding: "utf8" });
+    assert.equal(compile.status, 0, compile.stderr);
+    assert.match(compile.stdout, /compiled/);
+
+    const deltaPath = path.join(root, workdir, "slice-delta.json");
+    await writeFile(
+      deltaPath,
+      JSON.stringify(
+        {
+          slice_id: "S-CLI-001",
+          slice_goal: "Close CLI runtime proof",
+          touched_plan_items: ["PI-001"],
+          touched_acs: ["AC-001"],
+          code_changes: ["src/runtime/kernel.ts"],
+          evidence_records: [
+            {
+              evidence_id: "EV-CLI-001",
+              slice_id: "S-CLI-001",
+              type: "runtime",
+              freshness: { created_at: "2026-06-29T00:00:00.000Z", valid_for: "current_worktree", stale_after: null },
+              command: "node --test tests/runtime.spec.ts",
+              artifact_paths: ["tmp/ty-context/plan-acceptance/demo/runtime.json"],
+              proves: ["AC-001.runtime"],
+              does_not_prove: ["AC-001.ui_browser"],
+              redaction: { checked: true, contains_secret: false },
+              reviewability: { external_reviewer_can_reproduce: true, reproduction_steps: "Run node --test tests/runtime.spec.ts." }
+            }
+          ],
+          closed_layers: ["AC-001.runtime"],
+          remaining_layers: ["AC-001.ui_browser"],
+          blockers: [],
+          cleanup_assertions: ["runtime fixture cleaned"],
+          progress_value: {
+            type: "closed_required_proof_layer",
+            closed_items: ["AC-001.runtime"],
+            why_it_reduces_rework: "Runtime proof is now mapped to a proof layer."
+          }
+        },
+        null,
+        2
+      ),
+      "utf8"
+    );
+    const apply = spawnSync(process.execPath, [cli, "superpowers", "apply-slice-delta", workdir, deltaPath], { cwd: root, encoding: "utf8" });
+    assert.equal(apply.status, 0, apply.stderr);
+    assert.match(apply.stdout, /derived files=/);
+    await readFile(path.join(root, workdir, "derived", "plan-conformance-matrix.json"), "utf8");
+
+    const next = spawnSync(process.execPath, [cli, "superpowers", "next-slices", workdir, "--limit", "3"], {
+      cwd: root,
+      encoding: "utf8"
+    });
+    assert.equal(next.status, 0, next.stderr);
+    assert.match(next.stdout, /Next 3 high-value clusters|PI-001|AC-001/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

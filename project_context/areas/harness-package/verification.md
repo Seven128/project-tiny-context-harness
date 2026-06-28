@@ -21,6 +21,12 @@ read_policy: default
 - `node packages/ty-context/dist/cli.js validate-plan-acceptance tmp/ty-context/plan-acceptance/<slug>`
   - Use after changing long-task matrix/verdict artifact semantics or plan-acceptance validator behavior.
   - Expected signal: command exits with no errors, reports matrix/verdict row counts and rejects contradictory complete claims.
+- `node packages/ty-context/dist/cli.js validate-superpowers-state tmp/ty-context/plan-acceptance/<slug>`
+  - Use after changing Superpowers canonical task state, derived view generation, slice/epoch/final gates or state-backed plan-acceptance validation.
+  - Expected signal: command exits with no errors for a consistent state workdir and reports blocking source hash, evidence, proof-layer, derived-drift or completion-rule errors for inconsistent state.
+- `node --test tests/ty-context/superpowers-task-state.test.mjs tests/ty-context/superpowers-task-derive.test.mjs tests/ty-context/superpowers-task-validator.test.mjs tests/ty-context/superpowers-long-task-state-skill.test.mjs`
+  - Use after changing the Superpowers long-task state kernel or managed Skill state-kernel prompt rules.
+  - Expected signal: Node test runner exits with no failing subtests.
 - `git diff --check`
   - Use before handoff to catch whitespace and conflict marker issues.
   - Expected signal: no whitespace error output.

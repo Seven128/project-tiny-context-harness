@@ -1,0 +1,255 @@
+import path from "node:path";
+import { pathExists, readText } from "./fs.js";
+import { findSensitiveEvidence } from "./plan-acceptance-evidence.js";
+import { primitiveText, repoRelative, resolveInputDir } from "./plan-validator-common.js";
+import { derivedMatchesState } from "./superpowers-task-derive.js";
+import { loadSuperpowersState, sha256 } from "./superpowers-task-state.js";
+import { isRecord, type SuperpowersEvidenceRecord, type SuperpowersTaskState } from "./superpowers-task-state-schema.js";
+import type { ValidatorReport } from "./validators.js";
+
+export async function validateSuperpowersState(projectRoot: string, args: string[] = []): Promise<ValidatorReport> {
+  const info: string[] = [];
+  const warnings: string[] = [];
+  const hygiene: string[] = [];
+  const errors: string[] = [];
+  const targetDir = await resolveInputDir(projectRoot, args[0], "tmp/ty-context/plan-acceptance");
+  const statePath = path.join(targetDir, "task-state.json");
+  if (!(await pathExists(statePath))) {
+    return { info, warnings, hygiene, errors: [`superpowers task state is missing: ${repoRelative(projectRoot, statePath)}`] };
+  }
+  let state: SuperpowersTaskState;
+  try {
+    state = await loadSuperpowersState(targetDir);
+  } catch (error) {
+    return {
+      info,
+      warnings,
+      hygiene,
+      errors: [`${repoRelative(projectRoot, statePath)} is not valid JSON: ${error instanceof Error ? error.message : String(error)}`]
+    };
+  }
+
+  validateShape(state, errors);
+  if (!hasUsableShape(state)) {
+    info.push("checked superpowers task state with unusable or incomplete shape");
+    return { info, warnings, hygiene, errors };
+  }
+  await validateSourceHashes(targetDir, state, errors);
+  validateGraphReferences(state, errors);
+  validateEvidenceRecords(state, errors);
+  validateProofLayers(state, errors);
+  validateAuditor(state, errors);
+  validateFinalCompletion(state, errors);
+  errors.push(...(await derivedMatchesState(targetDir, state)));
+
+  info.push(
+    `checked superpowers task state ${repoRelative(projectRoot, targetDir)} plan_items=${Object.keys(state.graph?.plan_items ?? {}).length} acs=${Object.keys(state.graph?.acceptance_criteria ?? {}).length} evidence=${state.evidence?.length ?? 0}`
+  );
+  if (errors.length === 0) {
+    info.push("Superpowers task state validation passed");
+  }
+  return { info, warnings, hygiene, errors };
+}
+
+async function validateSourceHashes(workdir: string, state: SuperpowersTaskState, errors: string[]): Promise<void> {
+  for (const [key, source] of Object.entries(state.sources ?? {})) {
+    const file = path.join(workdir, source.path);
+    if (!(await pathExists(file))) {
+      errors.push(`source file is missing for ${key}: ${source.path}`);
+      continue;
+    }
+    const actual = sha256(await readText(file));
+    if (actual !== source.sha256) {
+      errors.push(`source hash mismatch for ${key}: expected ${source.sha256}, actual ${actual}; recompile graph before continuing`);
+    }
+  }
+}
+
+function validateShape(state: SuperpowersTaskState, errors: string[]): void {
+  if (state.meta?.schema_version !== "superpowers-task-state-v1") {
+    errors.push("task-state.json schema_version must be superpowers-task-state-v1");
+  }
+  for (const key of ["meta", "sources", "context", "graph", "slices", "evidence", "gates", "progress", "blockers", "final"]) {
+    if (!(key in (state as unknown as Record<string, unknown>))) {
+      errors.push(`task-state.json is missing section: ${key}`);
+    }
+  }
+}
+
+function hasUsableShape(state: SuperpowersTaskState): boolean {
+  const candidate = state as unknown as Record<string, unknown>;
+  return (
+    isRecord(candidate.meta) &&
+    isRecord(candidate.sources) &&
+    isRecord(candidate.context) &&
+    isRecord(candidate.graph) &&
+    isRecord(candidate.graph.plan_items) &&
+    isRecord(candidate.graph.acceptance_criteria) &&
+    isRecord(candidate.graph.proof_layers) &&
+    Array.isArray(candidate.slices) &&
+    Array.isArray(candidate.evidence) &&
+    isRecord(candidate.gates) &&
+    isRecord(candidate.progress) &&
+    Array.isArray(candidate.blockers) &&
+    isRecord(candidate.final)
+  );
+}
+
+function validateGraphReferences(state: SuperpowersTaskState, errors: string[]): void {
+  const planIds = new Set(Object.keys(state.graph?.plan_items ?? {}));
+  const acIds = new Set(Object.keys(state.graph?.acceptance_criteria ?? {}));
+  for (const [planId, item] of Object.entries(state.graph?.plan_items ?? {})) {
+    for (const acId of item.related_acs ?? []) {
+      if (!acIds.has(acId)) {
+        errors.push(`plan item ${planId} references unknown AC: ${acId}`);
+      }
+    }
+    for (const layerId of item.required_proof_layers ?? []) {
+      if (!state.graph.proof_layers[layerId]) {
+        errors.push(`plan item ${planId} references unknown proof layer: ${layerId}`);
+      }
+    }
+  }
+  for (const [acId, ac] of Object.entries(state.graph?.acceptance_criteria ?? {})) {
+    for (const planId of ac.related_plan_items ?? []) {
+      if (!planIds.has(planId)) {
+        errors.push(`AC ${acId} references unknown plan item: ${planId}`);
+      }
+    }
+    for (const layer of ac.required_proof_layers ?? []) {
+      const layerId = `${acId}.${layer}`;
+      if (!state.graph.proof_layers[layerId]) {
+        errors.push(`AC ${acId} references unknown proof layer: ${layerId}`);
+      }
+    }
+  }
+}
+
+function validateEvidenceRecords(state: SuperpowersTaskState, errors: string[]): void {
+  const ids = new Set<string>();
+  for (const [index, evidence] of (state.evidence ?? []).entries()) {
+    const label = `evidence ${evidence.evidence_id || index + 1}`;
+    if (!evidence.evidence_id) {
+      errors.push(`${label} is missing evidence_id`);
+    } else if (ids.has(evidence.evidence_id)) {
+      errors.push(`${label} duplicates evidence_id`);
+    }
+    ids.add(evidence.evidence_id);
+    if (!evidence.slice_id) {
+      errors.push(`${label} is missing slice_id`);
+    }
+    if ((evidence.proves ?? []).length === 0) {
+      errors.push(`${label} is missing proves`);
+    }
+    if ((evidence.does_not_prove ?? []).length === 0) {
+      errors.push(`${label} is missing does_not_prove`);
+    }
+    if (!evidence.freshness?.created_at || !evidence.freshness.valid_for) {
+      errors.push(`${label} is missing freshness`);
+    }
+    if (evidence.freshness?.stale_after && Date.parse(evidence.freshness.stale_after) < Date.now()) {
+      errors.push(`${label} is stale evidence: ${evidence.freshness.stale_after}`);
+    }
+    if (evidence.redaction?.checked !== true) {
+      errors.push(`${label} redaction.checked must be true`);
+    }
+    if (evidence.redaction?.contains_secret === true) {
+      errors.push(`${label} redaction contains_secret is true`);
+    }
+    if (evidence.reviewability?.external_reviewer_can_reproduce !== true || !evidence.reviewability.reproduction_steps) {
+      errors.push(`${label} is not reviewable by an external reviewer`);
+    }
+    const sensitive = findSensitiveEvidence(primitiveText(evidence));
+    if (sensitive) {
+      errors.push(`${label} contains raw secret/token/cookie material: ${sensitive}`);
+    }
+    if (evidence.sibling_substitution_used === true && !evidence.sibling_substitution_approval_source) {
+      errors.push(`${label} uses sibling substitution without approval`);
+    }
+    for (const proofLayer of evidence.proves ?? []) {
+      if (proofLayer.endsWith(".runtime") && /\b(mock|unit|viewmodel)\b/i.test(evidence.type)) {
+        errors.push(`${label} runtime proof cannot be mock/unit/viewmodel only`);
+      }
+      if (proofLayer.endsWith(".ui_browser") && !/\b(browser|ui_browser|screenshot)\b/i.test(evidence.type)) {
+        errors.push(`${label} UI proof must use browser owner surface evidence`);
+      }
+    }
+  }
+}
+
+function validateProofLayers(state: SuperpowersTaskState, errors: string[]): void {
+  const evidenceById = new Map((state.evidence ?? []).map((item) => [item.evidence_id, item]));
+  for (const [layerId, layer] of Object.entries(state.graph?.proof_layers ?? {})) {
+    if (layer.status === "satisfied" && layer.evidence_ids.length === 0) {
+      errors.push(`proof layer ${layerId} is satisfied but has no evidence_ids`);
+    }
+    for (const evidenceId of layer.evidence_ids ?? []) {
+      const evidence = evidenceById.get(evidenceId);
+      if (!evidence) {
+        errors.push(`proof layer ${layerId} references unknown evidence_id: ${evidenceId}`);
+        continue;
+      }
+      if (!evidence.proves.includes(layerId)) {
+        errors.push(`proof layer ${layerId} references ${evidenceId} but that evidence does not prove it`);
+      }
+    }
+  }
+}
+
+function validateAuditor(state: SuperpowersTaskState, errors: string[]): void {
+  const auditor = state.gates?.auditor;
+  if (!isRecord(auditor)) {
+    return;
+  }
+  const status = String(auditor.auditor_status ?? "").toLowerCase();
+  const findings = Array.isArray(auditor.findings) ? auditor.findings : [];
+  if (status === "blocking_gap" || findings.some((finding) => isRecord(finding) && String(finding.severity ?? "").toLowerCase() === "blocking")) {
+    errors.push(`auditor blocker remains: ${findings.map((finding) => (isRecord(finding) ? finding.id : "")).filter(Boolean).join(", ") || status}`);
+  }
+}
+
+function validateFinalCompletion(state: SuperpowersTaskState, errors: string[]): void {
+  const finalComplete = state.final?.product_goal_complete === true || state.meta?.product_goal_complete === true;
+  if (!finalComplete) {
+    return;
+  }
+  const planEntries = Object.entries(state.graph.plan_items);
+  const acEntries = Object.entries(state.graph.acceptance_criteria);
+  const layerEntries = Object.entries(state.graph.proof_layers);
+  if (planEntries.length === 0 || acEntries.length === 0 || layerEntries.length === 0) {
+    errors.push("product_goal_complete=true but task graph is empty or uncompiled");
+  }
+  const incompleteAcs = acEntries.filter(([, ac]) => ac.status !== "complete" && ac.status !== "out_of_scope_NA");
+  const incompletePlans = planEntries.filter(([, item]) => item.status !== "complete" && item.status !== "out_of_scope_NA");
+  const incompleteLayers = layerEntries.filter(([, layer]) => layer.required && layer.status !== "satisfied");
+  if (incompleteAcs.length > 0 || incompletePlans.length > 0 || incompleteLayers.length > 0) {
+    errors.push("product_goal_complete=true but required plan items, ACs or proof layers are incomplete");
+  }
+  if (state.context.product_context_delta === "required" || state.context.technical_context_delta === "required") {
+    const unresolvedCoverage = (state.context.source_to_context_coverage ?? []).filter((row) =>
+      /\b(new_context_required|needs_user_decision|under_scoped)\b/i.test(primitiveText(row))
+    );
+    if (unresolvedCoverage.length > 0) {
+      errors.push("product_goal_complete=true but Context Delta coverage is unresolved");
+    }
+  }
+}
+
+export function allCompletionConditionsSatisfied(state: SuperpowersTaskState): boolean {
+  const errors: string[] = [];
+  validateShape(state, errors);
+  if (!hasUsableShape(state)) {
+    return false;
+  }
+  validateGraphReferences(state, errors);
+  validateEvidenceRecords(state, errors);
+  validateProofLayers(state, errors);
+  validateAuditor(state, errors);
+  const planItems = Object.values(state.graph.plan_items);
+  const acceptanceCriteria = Object.values(state.graph.acceptance_criteria);
+  const proofLayers = Object.values(state.graph.proof_layers);
+  const allPlansComplete = planItems.every((item) => item.status === "complete" || item.status === "out_of_scope_NA");
+  const allAcsComplete = acceptanceCriteria.every((ac) => ac.status === "complete" || ac.status === "out_of_scope_NA");
+  const allLayersSatisfied = proofLayers.every((layer) => !layer.required || layer.status === "satisfied");
+  return errors.length === 0 && planItems.length > 0 && acceptanceCriteria.length > 0 && proofLayers.length > 0 && allPlansComplete && allAcsComplete && allLayersSatisfied;
+}

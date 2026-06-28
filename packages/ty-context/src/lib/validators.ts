@@ -5,6 +5,7 @@ import { listFiles, pathExists, readText } from "./fs.js";
 import { runModularityCheck } from "./modularity.js";
 import { validatePlanAcceptance } from "./plan-acceptance-validator.js";
 import { validatePlanContract } from "./plan-contract-validator.js";
+import { validateSuperpowersState } from "./superpowers-task-validator.js";
 import { unsupportedSchemaMessage } from "./schema-guard.js";
 
 export interface ValidatorReport {
@@ -52,7 +53,8 @@ const VALIDATORS: Record<string, Validator> = {
   "validate-code-modularity": validateCodeModularity,
   "validate-harness": validateHarness,
   "validate-plan-contract": validatePlanContract,
-  "validate-plan-acceptance": validatePlanAcceptance
+  "validate-plan-acceptance": validatePlanAcceptance,
+  "validate-superpowers-state": validateSuperpowersState
 };
 
 const GLOBAL_REQUIRED_SECTIONS = [
@@ -124,7 +126,7 @@ export async function runValidator(projectRoot: string, gate: string, args: stri
     return {
       info: [],
       errors: [
-        `unknown validator: ${gate}. Minimal Context Harness supports validate-context, validate-code-modularity, validate-harness, validate-plan-contract and validate-plan-acceptance only.`
+        `unknown validator: ${gate}. Minimal Context Harness supports validate-context, validate-code-modularity, validate-harness, validate-plan-contract, validate-plan-acceptance and validate-superpowers-state only.`
       ]
     };
   }

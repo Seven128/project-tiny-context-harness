@@ -44,7 +44,7 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
     /engineering implementation progress/i,
     /runtime\/proof progress/i,
     /workflow overhead/i,
-    /progress-ledger\.md\/json/i,
+    /derived\/progress-ledger\.md|progress-ledger\.md\/json/i,
     /artifact budget/i,
     /not_started/i,
     /implemented_no_proof/i,

@@ -17,6 +17,7 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - `check-modularity` command parsing: `packages/ty-context/src/commands/check-modularity.ts`.
 - Package source commands: `packages/ty-context/src/commands/package-source.ts`.
 - Validator command wrapper: `packages/ty-context/src/commands/validate.ts`.
+- Superpowers state command wrapper: `packages/ty-context/src/commands/superpowers.ts`.
 
 ## Core Libraries
 
@@ -32,6 +33,7 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - Plan contract validator: `packages/ty-context/src/lib/plan-contract-validator.ts`.
 - Plan acceptance validator: `packages/ty-context/src/lib/plan-acceptance-validator.ts`.
 - Shared plan validator helpers: `packages/ty-context/src/lib/plan-validator-common.ts` and `packages/ty-context/src/lib/plan-acceptance-json.ts`.
+- Superpowers task state kernel: `packages/ty-context/src/lib/superpowers-task-state.ts`, `packages/ty-context/src/lib/superpowers-task-state-schema.ts`, `packages/ty-context/src/lib/superpowers-task-compile.ts`, `packages/ty-context/src/lib/superpowers-task-derive.ts`, `packages/ty-context/src/lib/superpowers-task-events.ts`, `packages/ty-context/src/lib/superpowers-task-validator.ts`, `packages/ty-context/src/lib/superpowers-task-gates.ts` and `packages/ty-context/src/lib/superpowers-task-next-slices.ts`.
 - Modularity/source-file checks: `packages/ty-context/src/lib/modularity.ts` and `packages/ty-context/src/lib/source-files.ts`.
 - Context export implementation: `packages/ty-context/src/lib/context-export.ts`.
 
@@ -48,6 +50,7 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - Orientation/recovery surface: `tests/ty-context/orientation-fast-path.test.mjs`.
 - Validator behavior: `tests/ty-context/validators.test.mjs`.
 - Plan artifact validator behavior: `tests/ty-context/plan-validators.test.mjs`.
+- Superpowers state kernel behavior: `tests/ty-context/superpowers-task-state.test.mjs`, `tests/ty-context/superpowers-task-derive.test.mjs`, `tests/ty-context/superpowers-task-validator.test.mjs` and `tests/ty-context/superpowers-long-task-state-skill.test.mjs`.
 - Init/sync/doctor behavior: `tests/ty-context/sync-init-doctor.test.mjs`.
 - Upgrade behavior: `tests/ty-context/upgrade.test.mjs` and `tests/ty-context/legacy-upgrade.test.mjs`.
 - Package source drift: `tests/ty-context/package-source.test.mjs`.

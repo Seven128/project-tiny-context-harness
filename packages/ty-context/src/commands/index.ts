@@ -3,6 +3,7 @@ import { doctor } from "./doctor.js";
 import { exportContext } from "./export-context.js";
 import { init } from "./init.js";
 import { packageSource } from "./package-source.js";
+import { superpowers } from "./superpowers.js";
 import { sync } from "./sync.js";
 import { upgrade } from "./upgrade.js";
 import { validate } from "./validate.js";
@@ -23,6 +24,8 @@ export const commands: Record<string, CommandHandler> = {
   "validate-harness": (args) => validate(["validate-harness", ...args]),
   "validate-plan-contract": (args) => validate(["validate-plan-contract", ...args]),
   "validate-plan-acceptance": (args) => validate(["validate-plan-acceptance", ...args]),
+  "validate-superpowers-state": (args) => validate(["validate-superpowers-state", ...args]),
+  superpowers,
   package: packageSource
 };
 
@@ -47,5 +50,9 @@ export function help(): void {
                        Validate workflow-contract plan surface consistency
   validate-plan-acceptance <dir>
                        Validate plan-conformance matrix and final verdict consistency
+  validate-superpowers-state <dir>
+                       Validate canonical Superpowers task-state.json
+  superpowers <subcommand>
+                       Manage explicit Superpowers long-task state workdirs
   package <subcommand> Maintain package canonical source`);
 }
