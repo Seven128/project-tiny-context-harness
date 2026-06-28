@@ -75,6 +75,11 @@ Use `timer-start` / `timer-stop` only for operator-labeled phase or gate
 breakdowns. These are diagnostic unless the boundary is independently
 recoverable from saved evidence.
 
+The score report may also include workflow overhead ratio, artifact inventory /
+artifact count, gate true-product defect count versus hygiene issue count, and AC progress visibility.
+Treat them as diagnostic fields for overhead analysis, not as conclusion-grade
+efficiency or product-quality evidence.
+
 ## Quality And Recovery
 
 Product quality should come from scenario-owned tests, smoke checks or hidden

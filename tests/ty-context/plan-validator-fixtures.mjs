@@ -32,6 +32,16 @@ export async function writeAcceptance(root, matrix, verdict) {
   await writeFile(path.join(dir, "demo-final-acceptance-verdict.json"), JSON.stringify(verdict, null, 2), "utf8");
 }
 
+export async function writeEvidenceManifest(root, manifest) {
+  const dir = path.join(root, "tmp/ty-context/plan-acceptance/demo");
+  await writeFile(path.join(dir, "demo-evidence-manifest.json"), JSON.stringify(manifest, null, 2), "utf8");
+}
+
+export async function writeFinalVerdictMarkdown(root, content) {
+  const dir = path.join(root, "tmp/ty-context/plan-acceptance/demo");
+  await writeFile(path.join(dir, "demo-final-acceptance-verdict.md"), content, "utf8");
+}
+
 export function validPlan() {
   return `# Plan
 

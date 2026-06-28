@@ -9,6 +9,8 @@ import { unsupportedSchemaMessage } from "./schema-guard.js";
 
 export interface ValidatorReport {
   info: string[];
+  warnings?: string[];
+  hygiene?: string[];
   errors: string[];
 }
 
@@ -134,6 +136,8 @@ async function validateHarness(projectRoot: string): Promise<ValidatorReport> {
   const modularityReport = await validateCodeModularity(projectRoot);
   return {
     info: [...contextReport.info, ...modularityReport.info],
+    warnings: [...(contextReport.warnings ?? []), ...(modularityReport.warnings ?? [])],
+    hygiene: [...(contextReport.hygiene ?? []), ...(modularityReport.hygiene ?? [])],
     errors: [...contextReport.errors, ...modularityReport.errors]
   };
 }

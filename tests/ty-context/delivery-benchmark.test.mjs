@@ -6,6 +6,7 @@ import path from "node:path";
 import vm from "node:vm";
 import { fileURLToPath } from "node:url";
 import {
+  buildWorkflowDiagnostics,
   listScenarios,
   prepareRunDirectory,
   renderStagePrompt
@@ -40,6 +41,10 @@ test("benchmark docs keep skeleton protocol and remove old pilot conclusions", a
   for (const content of [readme, runbook, resultsReadme]) {
     assert.match(content, /Minimal Context/);
     assert.match(content, /reset/i);
+    assert.match(content, /workflow overhead ratio/i);
+    assert.match(content, /artifact count|artifact inventory/i);
+    assert.match(content, /true[- ]product|hygiene/i);
+    assert.match(content, /AC progress visibility|acceptance progress visibility/i);
     assert.doesNotMatch(content, /completed public run|formal result summary/i);
     assert.doesNotMatch(content, /\.work_products|validate-dev|validate-plan/);
   }
@@ -48,6 +53,9 @@ test("benchmark docs keep skeleton protocol and remove old pilot conclusions", a
   assert.match(runbook, /Do not require lifecycle phase state/);
   assert.match(resultsReadme, /no historical stage-workflow result/);
   assert.match(context, /Historical stage-based numbers are removed/);
+  assert.match(context, /workflow overhead ratio/i);
+  assert.match(context, /hygiene issue count/i);
+  assert.match(context, /AC progress visibility/i);
 });
 
 test("results directory contains only report shell and reset data", async () => {
@@ -93,6 +101,28 @@ test("runner still supports scenario listing, prepare, and staged prompts", asyn
   } finally {
     await rm(runRoot, { recursive: true, force: true });
   }
+});
+
+test("runner exposes workflow diagnostics without making them conclusion-grade", () => {
+  const diagnostics = buildWorkflowDiagnostics({
+    workflowOverheadRatio: 0.25,
+    workflowArtifactCount: 7,
+    totalArtifactCount: 20,
+    productDefectCount: 3,
+    hygieneIssueCount: 5,
+    acProgressVisibleCount: 4,
+    acProgressTotal: 6
+  });
+
+  assert.equal(diagnostics.workflow_overhead_ratio, 0.25);
+  assert.equal(diagnostics.workflow_artifact_count, 7);
+  assert.equal(diagnostics.total_artifact_count, 20);
+  assert.equal(diagnostics.workflow_artifact_ratio, 0.35);
+  assert.equal(diagnostics.gate_true_product_defect_count, 3);
+  assert.equal(diagnostics.gate_hygiene_issue_count, 5);
+  assert.equal(diagnostics.ac_progress_visibility.visible_count, 4);
+  assert.equal(diagnostics.ac_progress_visibility.total_count, 6);
+  assert.equal(diagnostics.conclusion_eligible, false);
 });
 
 async function loadBenchmarkData() {

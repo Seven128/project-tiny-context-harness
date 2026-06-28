@@ -5,6 +5,9 @@ import { appendFile, mkdir, readFile, readdir, rm, stat, writeFile } from "node:
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildWorkflowDiagnostics } from "./workflow_diagnostics.mjs";
+
+export { buildWorkflowDiagnostics };
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const BENCHMARK_ROOT = path.resolve(HERE, "..");
@@ -118,6 +121,20 @@ export function parseArgs(argv) {
       options.protocolStatus = requireProtocolStatus(requireValue(rest, ++index, arg));
     } else if (arg === "--workflow-control-minutes") {
       options.workflowControlMinutes = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
+    } else if (arg === "--workflow-overhead-ratio") {
+      options.workflowOverheadRatio = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
+    } else if (arg === "--workflow-artifact-count") {
+      options.workflowArtifactCount = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
+    } else if (arg === "--total-artifact-count") {
+      options.totalArtifactCount = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
+    } else if (arg === "--hygiene-issue-count") {
+      options.hygieneIssueCount = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
+    } else if (arg === "--product-defect-count") {
+      options.productDefectCount = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
+    } else if (arg === "--ac-progress-visible-count") {
+      options.acProgressVisibleCount = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
+    } else if (arg === "--ac-progress-total") {
+      options.acProgressTotal = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
     } else if (arg === "--total-delivery-minutes") {
       options.totalDeliveryMinutes = parseNonNegativeNumber(requireValue(rest, ++index, arg), arg);
     } else if (arg === "--initial-delivery-minutes") {
@@ -544,6 +561,17 @@ export async function scoreRun(options) {
   const staticSummary = summarizeSections(sections);
   const qualityAssessment = buildQualityAssessment(staticSummary, qualityProbe);
   const summary = qualityAssessment.primary_summary;
+  const outcome = calculateOutcome(costs, options);
+  const gateValue = buildGateValue(gateFindings, interventions, firstPassQualityProbe ?? qualityProbe);
+  const workflowDiagnostics = buildWorkflowDiagnostics({
+    workflowOverheadRatio: options.workflowOverheadRatio ?? outcome.workflow_overhead_ratio,
+    workflowArtifactCount: options.workflowArtifactCount ?? defaultWorkflowArtifactCount(artifactInventory),
+    totalArtifactCount: options.totalArtifactCount ?? artifactInventory.total.files,
+    productDefectCount: options.productDefectCount ?? gateValue.product_gate_defects_caught,
+    hygieneIssueCount: options.hygieneIssueCount ?? gateValue.workflow_gate_defects_caught,
+    acProgressVisibleCount: options.acProgressVisibleCount,
+    acProgressTotal: options.acProgressTotal
+  });
   const report = {
     scenario_id: scenario.id,
     mode,
@@ -554,10 +582,20 @@ export async function scoreRun(options) {
     workflow_cost: costs,
     lifecycle: buildLifecycleSummary(events, options, summary, recoveryScore),
     automation_burden: buildAutomationBurden(interventions, promptLedger),
-    gate_value: buildGateValue(gateFindings, interventions, firstPassQualityProbe ?? qualityProbe),
+    gate_value: gateValue,
     artifact_inventory: artifactInventory,
-    outcome: calculateOutcome(costs, options),
-    metric_confidence: buildMetricConfidence(costs, qualityProbe, recoveryScore, options, interventions, gateFindings, promptLedger),
+    workflow_diagnostics: workflowDiagnostics,
+    outcome,
+    metric_confidence: buildMetricConfidence(
+      costs,
+      qualityProbe,
+      recoveryScore,
+      options,
+      interventions,
+      gateFindings,
+      promptLedger,
+      workflowDiagnostics
+    ),
     sections
   };
   return report;
@@ -668,6 +706,7 @@ export function buildEvidenceCheck(baselineReport, harnessReport, options = {}) 
       context_recovery: compareDiagnosticMetric(baselineReport, harnessReport, "context_recovery"),
       gate_value: compareDiagnosticMetric(baselineReport, harnessReport, "gate_value"),
       human_intervention: compareDiagnosticMetric(baselineReport, harnessReport, "human_intervention"),
+      workflow_diagnostics: compareDiagnosticMetric(baselineReport, harnessReport, "workflow_diagnostics"),
       prompt_ledger: comparePromptLedger(baselineReport, harnessReport),
       artifact_inventory: compareArtifactInventory(baselineReport, harnessReport)
     }
@@ -723,6 +762,19 @@ export function renderMarkdownReport(report) {
   lines.push(`- vibe_handoff_delta_minutes: ${formatValue(report.outcome.vibe_handoff_delta_minutes)}`);
   lines.push(`- net_value_minutes: ${formatValue(report.outcome.net_value_minutes)}`);
   lines.push(`- comparison_confidence: ${report.outcome.comparison_confidence}`);
+  if (report.workflow_diagnostics) {
+    lines.push("", "## Workflow Diagnostics", "");
+    lines.push(`- conclusion_eligible: ${report.workflow_diagnostics.conclusion_eligible ? "yes" : "no"}`);
+    lines.push(`- workflow_overhead_ratio: ${formatValue(report.workflow_diagnostics.workflow_overhead_ratio)}`);
+    lines.push(`- workflow_artifact_count: ${formatValue(report.workflow_diagnostics.workflow_artifact_count)}`);
+    lines.push(`- total_artifact_count: ${formatValue(report.workflow_diagnostics.total_artifact_count)}`);
+    lines.push(`- workflow_artifact_ratio: ${formatValue(report.workflow_diagnostics.workflow_artifact_ratio)}`);
+    lines.push(`- gate_true_product_defect_count: ${formatValue(report.workflow_diagnostics.gate_true_product_defect_count)}`);
+    lines.push(`- gate_hygiene_issue_count: ${formatValue(report.workflow_diagnostics.gate_hygiene_issue_count)}`);
+    lines.push(`- ac_progress_visible_count: ${formatValue(report.workflow_diagnostics.ac_progress_visibility.visible_count)}`);
+    lines.push(`- ac_progress_total: ${formatValue(report.workflow_diagnostics.ac_progress_visibility.total_count)}`);
+    lines.push(`- ac_progress_visibility_ratio: ${formatValue(report.workflow_diagnostics.ac_progress_visibility.ratio)}`);
+  }
   if (report.quality_assessment) {
     lines.push("", "## Quality Assessment Confidence", "");
     lines.push(`- primary_source: ${report.quality_assessment.primary_source}`);
@@ -975,7 +1027,16 @@ function buildQualityAssessment(staticSummary, qualityProbe) {
   };
 }
 
-function buildMetricConfidence(costs, qualityProbe, recoveryScore, options, interventions = [], gateFindings = [], promptLedger = []) {
+function buildMetricConfidence(
+  costs,
+  qualityProbe,
+  recoveryScore,
+  options,
+  interventions = [],
+  gateFindings = [],
+  promptLedger = [],
+  workflowDiagnostics = null
+) {
   const elapsedLevel = confidenceForCostSource(costs.cost_data_source);
   const qualityLevel = qualityProbe?.available ? "high" : "low";
   const recoveryLevel = recoveryScore ? recoveryScore.confidence : options.contextRecoveryScore !== undefined ? "medium" : "unavailable";
@@ -1034,6 +1095,13 @@ function buildMetricConfidence(costs, qualityProbe, recoveryScore, options, inte
         promptLedger.length > 0
           ? "Runner recorded hashes and character counts for saved benchmark protocol prompts and recorded operator prompts."
           : "Prompt ledger is unavailable; prompt burden can only be inferred from intervention records."
+    },
+    workflow_diagnostics: {
+      level: workflowDiagnostics ? "diagnostic" : "unavailable",
+      data_source: workflowDiagnostics ? workflowDiagnostics.data_source : "unavailable",
+      conclusion_eligible: false,
+      explanation:
+        "Workflow overhead ratio, artifact counts, gate true-defect versus hygiene counts and AC progress visibility are diagnostic only."
     }
   };
 }
@@ -1164,6 +1232,11 @@ function buildGateValue(gateFindings, interventions, qualityProbe) {
     repair_loop_count: interventions.filter((intervention) => intervention.severity === "rework").length,
     findings: gateFindings
   };
+}
+
+function defaultWorkflowArtifactCount(artifactInventory) {
+  const categories = artifactInventory.categories ?? {};
+  return (categories.managed_runtime?.files ?? 0) + (categories.project_facts?.files ?? 0);
 }
 
 function confidenceForCostSource(costSource) {
@@ -2393,7 +2466,7 @@ Commands:
   timer-cancel --run-dir <dir>
   quality-probe --scenario <id> --run-dir <dir> [--stage initial|rfc|debug|final] [--out <json>]
   recovery-score --scenario <id> --run-dir <dir> --answer <file> [--out <json>]
-  score --scenario <id> --mode <baseline|harness> --run-dir <dir> [--run-type cold|warm|unknown] [--bootstrap-minutes <n>] [--initial-delivery-minutes <n>] [--recovery-orientation-minutes <n>] [--rfc-fix-minutes <n>] [--debug-fix-minutes <n>] [--context-recovery-score <n>] [--context-recovery-total <n>] [--wrong-path-count <n>] [--json-report <path>] [--markdown-report <path>]
+  score --scenario <id> --mode <baseline|harness> --run-dir <dir> [--run-type cold|warm|unknown] [--bootstrap-minutes <n>] [--initial-delivery-minutes <n>] [--recovery-orientation-minutes <n>] [--rfc-fix-minutes <n>] [--debug-fix-minutes <n>] [--context-recovery-score <n>] [--context-recovery-total <n>] [--wrong-path-count <n>] [--workflow-overhead-ratio <n>] [--workflow-artifact-count <n>] [--total-artifact-count <n>] [--product-defect-count <n>] [--hygiene-issue-count <n>] [--ac-progress-visible-count <n>] [--ac-progress-total <n>] [--json-report <path>] [--markdown-report <path>]
   evidence-check --baseline-report <json> --harness-report <json> --protocol-status formal|calibration|blocked|unreviewed [--out <json>]
 `);
 }

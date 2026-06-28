@@ -6,6 +6,12 @@ export async function validate(args: string[]): Promise<void> {
   for (const line of report.info) {
     console.log(line);
   }
+  for (const warning of report.warnings ?? []) {
+    console.error(`warning: ${warning}`);
+  }
+  for (const hygiene of report.hygiene ?? []) {
+    console.error(`hygiene: ${hygiene}`);
+  }
   for (const error of report.errors) {
     console.error(`error: ${error}`);
   }

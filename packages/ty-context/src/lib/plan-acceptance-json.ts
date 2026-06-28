@@ -124,9 +124,13 @@ export function assertSurfaceConformance(row: Record<string, unknown>, label: st
     errors.push(`${label} declares forbidden_primary_surfaces but negative_surface_checks is empty`);
   }
   const userPathText = primitiveText([row.required_user_paths, row.primary_user_paths]);
+  const evidenceText = primitiveText([row.real_page_evidence, row.user_path_evidence, row.fresh_evidence, row.runtime_evidence, row.artifact_evidence]);
   for (const forbiddenSurface of valuesAsArray(row.forbidden_primary_surfaces)) {
     if (userPathText.toLowerCase().includes(forbiddenSurface.toLowerCase())) {
       errors.push(`${label} routes a required/primary user path through forbidden surface: ${forbiddenSurface}`);
+    }
+    if (evidenceText.toLowerCase().includes(forbiddenSurface.toLowerCase())) {
+      errors.push(`${label} uses wrong owner surface evidence from forbidden surface: ${forbiddenSurface}`);
     }
   }
   if (row.default_visibility_required === true && !mentionsDefaultVisibility(primitiveText(row.real_page_evidence))) {

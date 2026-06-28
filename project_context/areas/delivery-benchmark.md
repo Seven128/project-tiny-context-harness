@@ -9,6 +9,7 @@
 - Benchmark runner prepares fixed baseline and Harness run directories.
 - Observer, timer, hidden quality probes, recovery scoring, intervention records and gate findings are measurement tools, not product quality shortcuts.
 - Public conclusions should use high-confidence metrics for core claims and keep medium/low-confidence metrics as diagnostics.
+- Workflow overhead ratio, artifact inventory / artifact count, gate true-product defect count versus hygiene issue count and AC progress visibility are diagnostic fields only; they explain process cost and evidence visibility but do not create new benchmark conclusions.
 - New Harness benchmark prompts should use Minimal Context, not the old stage workflow.
 
 ## Core Data / API / State
@@ -25,6 +26,7 @@
 - Do not leak recovery/RFC/debug probe answers into initial prompts.
 - Historical stage-based numbers are removed from public report data after Minimal Context becomes the default.
 - Benchmark projects should be high-signal but not hacked: they may target Harness design goals, but must keep the same quality bar and independent fresh runs.
+- Do not publish workflow diagnostic fields as formal efficiency results unless the paired run also satisfies the same-quality, fresh-run and observer-evidence rules.
 
 ## Code Entry Points
 

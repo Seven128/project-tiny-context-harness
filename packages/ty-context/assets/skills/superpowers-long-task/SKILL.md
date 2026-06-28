@@ -13,6 +13,8 @@ This is Tiny Context's adapter for feeding a recommended three-input long-task p
 
 ## Purpose
 
+The extra Tiny Context gates exist because Superpowers alone can still drift under long-running execution pressure. Superpowers strengthens execution discipline, but it does not by itself preserve source authority, prevent scope shrinkage, prove full conformance to the Technical Realization Plan, or enforce AC-by-AC evidence against the Acceptance Checklist.
+
 Consumes three existing upstream inputs and emits a paste-ready Superpowers target-mode prompt:
 
 - Product / Architecture Source: original intent source for scope, product logic, surface responsibility and durable architecture intent.
@@ -99,6 +101,7 @@ Do not let a compact target prompt override the product/architecture source, tec
 - Acceptance Checklist owns ACs, completion semantics, required proof layers, invalid evidence rules and final acceptance state.
 - local audit, plan-conformance matrix, final acceptance verdict, validator output, optional proof index and auditor report are execution/evidence artifacts. They cannot narrow, rewrite or replace the upstream sources.
 - When sources conflict, stop or report the conflict instead of letting a downstream artifact silently change scope, plan or acceptance.
+- Tiny Context additions may wrap Superpowers with authority, conformance and acceptance gates, but they must not redefine, duplicate or fork official Superpowers execution mechanics. If a future change would make a Tiny Context-added step conflict with, duplicate or override an official Superpowers responsibility, stop and surface the boundary conflict instead of silently merging the workflows.
 
 ## Context Delta Assessment
 
@@ -217,6 +220,54 @@ For every AC whose checklist implies multiple required layers, the final verdict
 
 Evidence Ledger / proof index is optional execution indexing, not a fourth input, not durable Context and not required as a separate file. Complete plan-conformance rows and complete AC verdicts must still be evidence-traceable: cite fresh, reviewable evidence directly in the row or through an optional `evidence_id` that points to command, API, UI, runtime, artifact, browser or test evidence with enough freshness context for a reviewer to reconstruct the proof chain.
 
+## Evidence Manifest And Slice Batching
+
+For non-trivial execution slices, the prompt should recommend a rolling optional evidence manifest at `tmp/ty-context/plan-acceptance/<plan-slug>-evidence-manifest.md/json`. The manifest is not a fourth input, not durable Context, not proof by itself and not required by `validate-plan-acceptance`; it is a slice-level source for synchronizing matrix, verdict and audit updates with less stale wording.
+
+Each manifest entry should include `evidence_id`, `slice_id`, `slice_goal`, `missing_layer_classes`, `touched_plan_item_ids`, `touched_ac_ids`, `commands`, `artifacts`, `runtime_or_browser_evidence`, `proves`, `explicitly_does_not_prove`, `closed_missing_layers`, `remaining_missing_layers`, `cleanup_status`, `redaction_security_status` and `freshness`.
+
+The manifest must not contain secrets, raw credentials, tokens, cookies or long raw payloads. Record redacted paths, command identities, evidence ids, counts and short summaries instead.
+
+Default slice sizing: group 2-4 strongly related missing layers that share the same AC, runtime scenario, proof environment or verification path. Single-gap slices are reserved for blockers, contradictions or tiny metadata cleanup. Before choosing a slice, classify missing layers as functional gap, proof gap, stale wording/artifact sync, upstream blocker, live DB/runtime proof, Browser/UI proof, security/redaction proof or all-provider/all-runner coverage.
+
+After each slice, update matrix and local audit from the manifest. Update verdict evidence/missing-layer fields conservatively, but do not mark ACs complete before the final gate. Reuse DB/API/Browser environments for related slices only with unique proof prefixes and a final cleanup count/assertion.
+
+Run a stale/overclaim scan over the evidence manifest, matrix, verdict and audit after synchronization. Remove leftover closed gaps and reject unsafe claims such as `accepted`, `complete`, `final passed`, `product_goal_complete=true`, unapproved `scope narrowed` or unapproved sibling substitution unless the checklist and final gate justify them.
+
+## Gate Cadence And Progress Accounting
+
+The generated prompt must use a tiered cadence instead of running the full final gate after every slice:
+
+- Slice Gate: after each implementation slice, sync the evidence manifest when used, matrix, local audit and conservative verdict evidence/missing-layer fields; run only targeted tests or probes needed for that slice; run stale/overclaim cleanup; do not run the full final gate after every slice.
+- Epoch Gate: after a cluster of related slices, such as a provider/browser/runtime/security epoch, batch shared DB/API/Browser/proof-environment cleanup and rerun the higher-value cross-slice tests, validators or smoke checks for that cluster.
+- Final Gate: after all required plan items and AC proof layers are ready, run the fixed final gate order, including `superpowers:verification-before-completion`, `ty-context validate-plan-acceptance`, read-only auditor when available, final stale/overclaim scan and completion wording.
+
+The generated prompt must require Progress Accounting after each Slice Gate, Epoch Gate and Final Gate. Track four metrics separately:
+
+- AC acceptance completion: AC rows that are `complete` or sourced `out_of_scope_NA` versus acceptance-required AC rows.
+- engineering implementation progress: plan-conformance rows with implemented paths/tests/evidence versus behavior-affecting plan rows.
+- runtime/proof progress: required proof layers by status, not just code landed.
+- workflow overhead: time, artifacts, gate loops, stale-sync cleanup and review burden spent on workflow rather than product proof.
+
+Use a lightweight progress ledger at `tmp/ty-context/plan-acceptance/<plan-slug>-progress-ledger.md/json` when the task spans multiple slices or agents. The progress ledger is not Context, not proof and not a fourth input; it records current counts, gate cadence, next high-value clusters and stale-state cleanup so the executor does not rerun the full final gate after every slice.
+
+Every non-trivial slice should declare an artifact budget: expected files/manifest rows/screenshots/log summaries to create or update, maximum raw-output retention, cleanup expectations and which artifacts are safe to sync into verdict rows. Excess artifact growth or repeated stale-sync cleanup triggers workflow overhead backpressure: batch the next proof-environment run, merge small stale-only slices, prune obsolete temporary notes and prefer the next proof that closes the most AC/proof-layer gaps.
+
+Proof-layer milestones should use only these statuses: `not_started`, `implemented_no_proof`, `proof_partial`, `proof_ready`, `complete`, `blocked` and `out_of_scope_NA`. Milestones are progress visibility, not acceptance by themselves. The prompt should ask for Next 3-5 high-value clusters after each epoch: choose clusters that close the most blocking AC/proof layers with the least new workflow overhead.
+
+When final-verdict Markdown includes generated active counts, wrap them exactly in:
+
+```text
+<!-- generated:active-counts:start -->
+complete_count: <n>
+partial_count: <n>
+acceptance_required_count: <n>
+missing_layer_count: <n>
+<!-- generated:active-counts:end -->
+```
+
+Active generated counts must be regenerated from the current verdict, not hand-maintained from stale prose.
+
 ## Drift-to-Status
 
 Any plan item or AC with unresolved missing required layers, material / critical drift or a current API / UI / runtime / data / test contradiction cannot be `complete`. It must be `partial`, `blocked`, `invalidated` or `out_of_scope_NA` with explicit source reference.
@@ -229,15 +280,18 @@ The same execution path, negative case, screenshot or artifact class cannot subs
 
 When subagents are available, add a read-only auditor after executor self-evidence and `validate-plan-acceptance`. The auditor is a gap detector, not a proof source: it must not edit code, repair artifacts or treat local audit, subagent summary, matrix/verdict text, validator pass or final card as proof. It reconstructs each AC proof chain from source/plan/checklist, checks freshness and raw evidence, rejects sibling substitution and returns `auditor_status` plus findings. Any `partial`, `blocked` or `invalidated` auditor result downgrades the affected AC unless fresh evidence closes the gap.
 
+Use a fixed auditor checklist: source/plan/checklist consistency, closed gaps have fresh evidence, active matrix/verdict wording removed closed missing layers, remaining blockers are preserved, live evidence is fresh and not dry-run/sample substitution, UI proof uses real owner surface evidence, no unapproved sibling substitution or scope narrowing, no overclaim and final status matches the proof chain.
+
 Final gate order is fixed:
 
-1. executor self-evidence.
-2. update plan-conformance matrix.
-3. update final-acceptance verdict.
+1. update evidence manifest when used.
+2. sync plan-conformance matrix, final-acceptance verdict and local audit.
+3. run `superpowers:verification-before-completion` against matrix and verdict.
 4. run `ty-context validate-plan-acceptance`.
 5. run read-only auditor gap review when subagents are available.
-6. if auditor findings change matrix, verdict or evidence, fix the gap and rerun `ty-context validate-plan-acceptance`.
-7. make a final completion claim only when self-evidence, validator consistency and auditor review have no blocking conflict.
+6. if auditor findings change artifacts or evidence, fix the gap and rerun `ty-context validate-plan-acceptance`.
+7. run a final lightweight stale/overclaim scan.
+8. make a final completion claim only when self-evidence, validator consistency and auditor review have no blocking conflict.
 
 ## Goal And Acceptance Wording
 
@@ -314,6 +368,7 @@ Bind the target prompt to the official Skill names and their documented roles:
 - Plan or AC behavior gap -> TDD: each behavior gap uses `superpowers:test-driven-development` to write a failing test, observe failure, then implement minimally.
 - Before any completion claim, use `superpowers:verification-before-completion` against both `plan-conformance-matrix.*` and `final-acceptance-verdict.*` with fresh evidence, then run `ty-context validate-plan-acceptance tmp/ty-context/plan-acceptance/<plan-slug>`.
 - review / finish cannot override the plan-conformance matrix or full checklist; if either gate is unsatisfied, continue implementation or report blockers.
+- Superpowers review and verification remain useful execution checks, but they cannot override Tiny Context gates: passing Superpowers review does not by itself prove plan conformance or checklist acceptance.
 
 If Superpowers is missing, install it through the current platform's official Superpowers installation path. If installation is blocked by permissions, network or platform limits, record the blocker in local audit and do not count it as complete.
 
@@ -341,12 +396,21 @@ The local audit is process recovery only. It must not contain completion judgmen
 - The prompt must visibly output `Superpowers 输入包` for Chinese prompts or `Superpowers input packet` for English prompts.
 - The prompt must visibly output `Superpowers 执行绑定` for Chinese prompts or `Superpowers execution binding` for English prompts.
 - The prompt must state that this is a Tiny Context adapter for Superpowers workflows, aligned to the official Superpowers skills, not an upstream-owned schema.
+- The prompt must state that Tiny Context gates wrap Superpowers for source authority, conformance and acceptance, but do not redefine or fork Superpowers execution mechanics.
 - The prompt must identify Product / Architecture Source, Technical Realization Plan, Acceptance Checklist, local audit, plan-conformance matrix and final verdict paths at the top.
 - The prompt must state that the Technical Realization Plan controls plan conformance, the Product / Architecture Source prevents scope shrinkage and the full checklist controls acceptance.
 - The prompt must state the Authority Model and that audit/matrix/verdict/validator/auditor artifacts cannot rewrite source, plan or checklist authority.
 - The prompt must require Product Context Delta and Technical Context Delta evaluation before implementation.
 - The prompt must use parent-level Context Delta plus slice-level new durable fact checks.
 - The prompt must state that Evidence Ledger / proof index is optional, but complete rows and ACs require evidence traceability to fresh evidence directly or through optional `evidence_id`.
+- The prompt must recommend optional `evidence-manifest.md/json` for non-trivial slices, while stating it is not a fourth input, not durable Context, not proof and not required by `validate-plan-acceptance`.
+- The prompt must forbid secrets, raw credentials, tokens, cookies and long raw payloads in evidence manifests.
+- The prompt must prefer 2-4 strongly related missing layers per slice, require missing-layer classification, manifest-driven matrix/audit synchronization, conservative verdict updates and no AC completion before the final gate.
+- The prompt must include Slice Gate, Epoch Gate and Final Gate cadence; it must say not to run the full final gate after every slice.
+- The prompt must include Progress Accounting for AC acceptance completion, engineering implementation progress, runtime/proof progress and workflow overhead.
+- The prompt must include the progress-ledger.md/json path, artifact budget, proof-layer milestone statuses, workflow overhead backpressure and Next 3-5 high-value clusters.
+- The prompt must mention provider/browser/runtime/security epoch batching and generated active-count markers for final-verdict Markdown.
+- The prompt must include stale/overclaim scan, related-runtime reuse with unique proof prefixes and cleanup count/assertion, and the fixed auditor checklist.
 - The prompt must require the fixed final gate order and rerun `validate-plan-acceptance` if auditor-driven fixes change artifacts.
 - The prompt must state the Goal mode completion rule: implementation / execution goals complete only at `product_goal_complete=true`; read-only audit / reporting goals may end at `audit_task_complete` but must still report the acceptance target status.
 - The prompt must require the final response to say `Audit workflow completed; acceptance target not complete.` whenever the verdict is not accepted/complete, and must forbid unqualified `Goal achieved` or treating `update_goal(status="complete")` as product acceptance in that case.
@@ -367,15 +431,17 @@ Recommended compact Chinese prompt shape:
 执行审计: tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md（过程日志，非 proof，不能写 done/final_gate passed）
 对图纸矩阵: tmp/ty-context/plan-acceptance/<plan-slug>-plan-conformance-matrix.md/json（先建，边做边更新）
 最终验收: tmp/ty-context/plan-acceptance/<plan-slug>-final-acceptance-verdict.md/json（最后逐 AC 生成）
+证据manifest: tmp/ty-context/plan-acceptance/<plan-slug>-evidence-manifest.md/json（可选slice小票，禁secret，非proof/第四输入/Context）
 可多开agent，agent名额不够了就关掉不用的。
 这是面向 Superpowers workflow 的 Tiny Context 适配输入包，对齐官方 Superpowers skills；不是上游维护的 schema。
+Tiny Context gates 只管 source authority/对图纸/验收，不重定义或分叉 Superpowers 执行机制。
 Superpowers 输入包：
 - Product/Architecture Source：原始产品/架构意图，防止 scope shrinkage，不是施工图
 - Technical Realization Plan：施工图；每个行为 plan item 都要进 matrix
 - Acceptance Checklist：最高验收标准；每个 AC 都要进 final verdict
 - local audit：只记 progress/candidate status/evidence/blocker/invalidating evidence，不能裁判完成
 - Context/tests/core paths：执行前读取，把 plan/AC gap 绑定到测试、API/UI/runtime/browser 证据
-权威：source 管 scope，plan 管施工，checklist 管验收；audit/matrix/verdict/validator/auditor 不能改写它们。Proof index/evidence ledger 文件可选，但 complete 行必须能直接或经 evidence_id 追溯 fresh evidence。
+权威：source 管 scope，plan 管施工，checklist 管验收；audit/matrix/verdict/validator/auditor 不能改写它们。Proof index/evidence ledger/manifest 可选，但 complete 行必须能直接或经 evidence_id 追溯 fresh evidence。
 Goal mode：实现/执行目标只在 product_goal_complete=true 时完成；只读审计目标可在 audit_task_complete 时结束，但若 verdict 非 accepted/complete，必须写“Audit workflow completed; acceptance target not complete.”并列数量；不得写 Goal achieved 或把 update_goal complete 当用户目标完成。
 
 执行顺序：
@@ -385,10 +451,10 @@ Goal mode：实现/执行目标只在 product_goal_complete=true 时完成；只
 4. 初始化 plan-conformance matrix；技术实现方案在本 Skill 输入校验阶段已确认可执行，直接绑定执行。
 5. 有 subagent 支持时优先 superpowers:subagent-driven-development，否则 superpowers:executing-plans。
 6. Plan/AC behavior gap -> superpowers:test-driven-development：先写 failing test 并 observe failure，再最小实现。
-7. 每个实现 slice 后更新 matrix 和 audit。
+7. 默认把同 AC/runtime/proof path 的 2-4 个 related missing layers 合成 slice；单 gap 只用于 blocker/contradiction/metadata cleanup。先分类 functional/proof/stale/upstream/live DB/Browser/security/all-runner gap；每 slice 更新可选 manifest，再同步 matrix/audit，verdict 只保守改 evidence/missing，不提前 complete。
 8. Candidate done 前跑 Plan Conformance Gate：测试通过不等于按图纸完成；sampled path 不等于 full implementation；每个行为 plan item 必须有 code/API/UI/runtime/test/evidence trace。
 9. 再跑 Acceptance Evidence Gate：按验收清单生成 final verdict；每 AC 写 required proof chain/fresh evidence/missing layers/drift/substitution。current contradiction 高于历史通过记录。
-10. Final gate 固定为 self-evidence -> matrix -> verdict -> validator -> read-only auditor；auditor summary 不是 proof。若审计后改 artifact/evidence，重跑 validator；完成前用 superpowers:verification-before-completion 检查 matrix/verdict，并运行 ty-context validate-plan-acceptance tmp/ty-context/plan-acceptance/<plan-slug>。
+10. Final gate 固定为 manifest -> matrix/verdict/audit sync -> verification-before-completion -> validator -> read-only auditor -> stale/overclaim scan；auditor summary 不是 proof。若审计后改 artifact/evidence，重跑 validator。
 
 权限/卡点：在当前平台/仓库/工具/用户已授权权限内最大自主推进；先打开相关 app/浏览器页面/CLI/系统设置，复用已有登录态/授权会话/凭据链；已授权 sudo/gsudo/admin elevation 先尝试。只有实际未登录/会话失效/权限不足/需要 MFA 或人工审批、缺账号/真实环境/敏感字段时才暂停，并给最小用户执行清单（页面/系统、字段位置、脱敏/勿发值、拿到后下一步）。
 禁止完成于：local audit、subagent summary、final card、只改代码/计划、只跑部分测试、旧/部分/抽样证据、缺 required layer、material drift、未批准 sibling substitution、runtime 未演练、artifact 未 accepted、API/UI 未 reflected、未批准 scope narrowing、任何 API/UI/data/runtime/test 矛盾。
@@ -397,19 +463,22 @@ Goal mode：实现/执行目标只在 product_goal_complete=true 时完成；只
 Recommended compact English prompt shape:
 
 ```text
-Product / Architecture Source: tmp/ty-context/plan-acceptance/<plan-slug>-product-architecture-source.md (scope)
-Technical Realization Plan: tmp/ty-context/plan-acceptance/<plan-slug>-technical-realization-plan.md (blueprint)
-Acceptance Checklist: tmp/ty-context/plan-acceptance/<plan-slug>-acceptance-checklist.md (authority)
-Local audit: tmp/ty-context/plan-acceptance/<plan-slug>-local-audit.md (log, not proof)
-Plan matrix: tmp/ty-context/plan-acceptance/<plan-slug>-plan-conformance-matrix.md/json (work trace)
-Final verdict: tmp/ty-context/plan-acceptance/<plan-slug>-final-acceptance-verdict.md/json (AC gate)
+Base path: tmp/ty-context/plan-acceptance/<plan-slug>
+Product / Architecture Source: <base>-product-architecture-source.md (scope)
+Technical Realization Plan: <base>-technical-realization-plan.md (blueprint)
+Acceptance Checklist: <base>-acceptance-checklist.md (authority)
+Local audit: <base>-local-audit.md (log, not proof)
+Plan matrix: <base>-plan-conformance-matrix.md/json (trace)
+Final verdict: <base>-final-acceptance-verdict.md/json (AC)
+Evidence manifest: <base>-evidence-manifest.md/json (optional note; no secrets; not proof/input/Context)
 You may use multiple agents; if agent slots run low, close idle or unnecessary agents.
-Tiny Context adapter for Superpowers workflows; aligned to official skills, not upstream-owned schema.
+Tiny Context adapter for Superpowers; aligned to official skills, not upstream schema.
+TC gates cover authority/conformance/acceptance, not Superpowers mechanics.
 Superpowers input packet:
 - Source guards scope; plan controls matrix; checklist controls verdict; audit records progress only.
 - Read Context/tests/core paths first; map gaps to test/API/UI/runtime/browser evidence.
-Authority: source/plan/checklist own scope/construction/acceptance; audit/matrix/verdict/validator/auditor cannot rewrite them. Proof index optional; complete rows need fresh evidence/evidence_id.
-Goal mode: implementation/execution goal complete only when product_goal_complete=true; read-only audit goal may end at audit_task_complete, but if verdict not accepted say "Audit workflow completed; acceptance target not complete." Include counts; no bare "Goal achieved" or update_goal complete as user target.
+Authority: source/plan/checklist own scope/construction/acceptance; audit/matrix/verdict/validator/auditor cannot rewrite. Proof index/manifest optional; complete rows need fresh evidence/evidence_id.
+Goal mode: implementation/execution complete only at product_goal_complete=true. Read-only audit may end at audit_task_complete; non-accepted verdict says "Audit workflow completed; acceptance target not complete."; no bare "Goal achieved" or update_goal complete as user target.
 
 Execution order:
 1. Read inputs and Context. Task Contract: Product Context Delta none|required; Technical Context Delta none|required; any required -> Context Delta required. Not a validator gate.
@@ -418,13 +487,13 @@ Execution order:
 4. Init plan matrix; TRP was already validated as executable input, so bind it directly.
 5. Prefer superpowers:subagent-driven-development with subagents; otherwise use superpowers:executing-plans.
 6. Plan/AC behavior gap -> superpowers:test-driven-development: write a failing test, observe failure, then implement minimally.
-7. After each slice, update matrix and audit.
+7. Batch slices: prefer 2-4 related missing layers sharing AC/runtime/proof path; single-gap only for blockers/contradictions/metadata cleanup. Classify gaps, write optional manifest, sync matrix/audit; update verdict conservatively, no AC complete before final gate.
 8. Plan Conformance Gate: tests do not prove conformance; sampled path is not full implementation; each behavior item needs code/API/UI/runtime/test/evidence trace.
 9. Acceptance Evidence Gate: checklist controls verdict; each AC records proof chain, fresh evidence, missing layers, drift, substitution. Current contradictions override old passes.
-10. Final gate: self-evidence -> matrix -> verdict -> validator -> read-only auditor. Auditor summary is not proof. Rerun validator after evidence changes; before completion run superpowers:verification-before-completion and ty-context validate-plan-acceptance tmp/ty-context/plan-acceptance/<plan-slug>.
+10. Final gate: manifest -> matrix/verdict/audit sync -> verification-before-completion -> validator -> auditor -> stale/overclaim scan. Auditor summary is not proof; rerun validator after changes.
 
-Autonomy/blockers: self-serve under current permissions. Open app/browser/CLI/settings and reuse sessions/auth/helpers. Try authorized sudo/gsudo/admin. Pause only after missing login, expired session, denied permission, MFA/approval, unavailable env/account or sensitive field; give page/system, field, redaction/do-not-send values, next step.
-Never complete on: local audit, summary/final card, code/plan-only, partial tests, stale/partial/sampled evidence, missing layer, material drift, unapproved sibling substitution, unexercised runtime, artifact not accepted, API/UI not reflected, missing validator pass, unapproved scope narrowing or API/UI/data/runtime/test contradiction.
+Autonomy/blockers: self-serve under current permissions. Open app/browser/CLI/settings and reuse sessions/auth/helpers. Try authorized sudo/gsudo/admin. Pause only after missing login/session expiry/denied permission/MFA/approval/missing env/account/field; give page/system, field, redaction, next step.
+Never complete on: local audit, summary/final card, code/plan-only, partial tests/evidence, stale/sampled evidence, missing layer, material drift, unapproved substitution/scope narrowing, unexercised runtime, artifact not accepted, API/UI not reflected, missing validator pass or current API/UI/data/runtime/test contradiction.
 ```
 
 Before final response, check the prompt length. If it exceeds 3850 characters, tighten wording while preserving paths, input roles, official Superpowers skill names, Product Context Delta, Technical Context Delta, plan-conformance matrix, final verdict, state machine, UI gate, blockers and invalid evidence.

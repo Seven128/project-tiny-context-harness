@@ -1,4 +1,5 @@
 import { pathExists } from "./fs.js";
+import { validateAcceptanceArtifactDiagnostics } from "./plan-acceptance-artifacts.js";
 import { assertExternalReviewerFields } from "./plan-acceptance-evidence.js";
 import {
   AC_STATUSES,
@@ -32,10 +33,12 @@ import type { ValidatorReport } from "./validators.js";
 
 export async function validatePlanAcceptance(projectRoot: string, args: string[] = []): Promise<ValidatorReport> {
   const info: string[] = [];
+  const warnings: string[] = [];
+  const hygiene: string[] = [];
   const errors: string[] = [];
   const targetDir = await resolveInputDir(projectRoot, args[0], "tmp/ty-context/plan-acceptance");
   if (!(await pathExists(targetDir))) {
-    return { info, errors: [`plan acceptance directory is missing: ${repoRelative(projectRoot, targetDir)}`] };
+    return { info, warnings, hygiene, errors: [`plan acceptance directory is missing: ${repoRelative(projectRoot, targetDir)}`] };
   }
 
   const matrixFile = await findJsonFile(targetDir, "plan-conformance-matrix");
@@ -47,13 +50,13 @@ export async function validatePlanAcceptance(projectRoot: string, args: string[]
     errors.push(`plan acceptance directory is missing *-final-acceptance-verdict.json`);
   }
   if (!matrixFile || !verdictFile) {
-    return { info, errors };
+    return { info, warnings, hygiene, errors };
   }
 
   const matrix = await readJson(matrixFile, errors);
   const verdict = await readJson(verdictFile, errors);
   if (matrix === undefined || verdict === undefined) {
-    return { info, errors };
+    return { info, warnings, hygiene, errors };
   }
 
   const matrixRows = findRows(matrix, ["plan_items", "items", "matrix", "entries", "plan_conformance"]);
@@ -62,6 +65,16 @@ export async function validatePlanAcceptance(projectRoot: string, args: string[]
   await validateVerdictRows(projectRoot, verdictRows, overallStatus(verdict), errors);
   validateCrossReferences(matrixRows, verdictRows, errors);
   validateContextFactReferences(matrix, verdict, matrixRows, verdictRows, errors);
+  await validateAcceptanceArtifactDiagnostics(
+    projectRoot,
+    targetDir,
+    matrixRows,
+    verdictRows,
+    overallStatus(verdict),
+    errors,
+    warnings,
+    hygiene
+  );
 
   info.push(
     `checked plan acceptance ${repoRelative(projectRoot, targetDir)} matrix_rows=${matrixRows.length} verdict_rows=${verdictRows.length}`
@@ -69,7 +82,7 @@ export async function validatePlanAcceptance(projectRoot: string, args: string[]
   if (errors.length === 0) {
     info.push("Plan acceptance artifact consistency passed");
   }
-  return { info, errors };
+  return { info, warnings, hygiene, errors };
 }
 
 async function validateMatrixRows(

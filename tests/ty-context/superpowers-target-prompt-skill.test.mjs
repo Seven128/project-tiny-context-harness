@@ -67,10 +67,18 @@ for (const content of [rootReadme, rootZhReadme, packageReadme, spec, workflowCo
   assert.match(content, /official Superpowers skills|官方 Superpowers skills/i);
   assert.match(content, /upstream-owned schema|上游维护的 schema/i);
   assert.match(content, /Superpowers-ready Markdown implementation plan|直接绑定 Superpowers 执行/i);
+  assert.match(content, /Superpowers alone can still drift|单靠 Superpowers[\s\S]*漂移/i);
+  assert.match(content, /source authority|上游 source authority|上游权威/i);
   assert.match(content, /Product \/ Architecture Source|产品\/架构原始意图源|产品\/架构方案/i);
   assert.match(content, /Technical Realization Plan|具体技术实现方案|技术实现方案/i);
   assert.match(content, /Acceptance Checklist|验收清单/i);
   assert.match(content, /plan-conformance-matrix|plan-conformance matrix|final-acceptance-verdict|final acceptance verdict/i);
+  assert.match(content, /evidence manifest|证据(?:清单|小票)|证据 manifest/i);
+  assert.match(content, /optional|可选/i);
+  assert.match(content, /not (?:a )?fourth input|不是第四(?:份)?输入/i);
+  assert.match(content, /must not redefine[\s\S]*fork[\s\S]*Superpowers execution mechanics|不能重新定义[\s\S]*Superpowers 执行机制|不能[\s\S]*分叉 Superpowers 执行机制/i);
+  assert.match(content, /conflict[\s\S]*duplicate[\s\S]*override[\s\S]*Superpowers|冲突[\s\S]*重复[\s\S]*覆盖/i);
+  assert.match(content, /Passing Superpowers review|通过 Superpowers review/i);
   assert.match(content, /Product Context Delta/i);
   assert.match(content, /Technical Context Delta/i);
   assert.match(content, /audit_task_complete/);
@@ -100,6 +108,10 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /Package-Managed Boundary/);
   assert.match(content, /aligned to the official Superpowers skills|对齐官方 Superpowers skills/i);
   assert.match(content, /upstream-owned schema|上游维护的 schema/i);
+  assert.match(content, /Superpowers alone can still drift/i);
+  assert.match(content, /does not by itself preserve source authority/i);
+  assert.match(content, /must not redefine, duplicate or fork official Superpowers execution mechanics/i);
+  assert.match(content, /boundary conflict/i);
   assert.match(content, /Superpowers-ready Markdown implementation plan/i);
   assert.match(content, /three-input|three upstream inputs|three-document/i);
   assert.match(content, /Product \/ Architecture Source/i);
@@ -166,6 +178,24 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /required tests \/ core paths/i);
   assert.match(content, /plan-conformance-matrix/i);
   assert.match(content, /final-acceptance-verdict/i);
+  for (const pattern of [
+    /evidence-manifest\.md\/json/, /evidence_id/, /slice_id/, /slice_goal/, /missing_layer_classes/,
+    /touched_plan_item_ids/, /touched_ac_ids/, /explicitly_does_not_prove/, /closed_missing_layers/,
+    /remaining_missing_layers/, /cleanup_status/, /redaction_security_status/, /not a fourth input/i,
+    /not durable Context/i, /not proof/i, /not required by `validate-plan-acceptance`/i,
+    /must not contain secrets, raw credentials, tokens, cookies or long raw payloads/i,
+    /2-4 strongly related missing layers/i,
+    /same AC[\s\S]*runtime scenario[\s\S]*proof environment[\s\S]*verification path/i,
+    /Single-gap slices[\s\S]*(?:blockers|contradictions|metadata cleanup)/i, /functional gap/i,
+    /proof gap/i, /stale wording\/artifact sync/i, /upstream blocker/i, /live DB\/runtime proof/i,
+    /Browser\/UI proof/i, /security\/redaction proof/i, /all-provider\/all-runner coverage/i,
+    /update matrix and local audit from the manifest/i, /update verdict evidence\/missing-layer fields conservatively/i,
+    /do not mark ACs complete before the final gate/i, /stale\/overclaim scan/i,
+    /accepted[\s\S]*complete[\s\S]*final passed[\s\S]*product_goal_complete=true[\s\S]*scope narrowed[\s\S]*sibling substitution/i,
+    /reuse DB\/API\/Browser environments/i, /unique proof prefixes/i, /cleanup count\/assertion/i,
+    /fixed auditor checklist/i, /source\/plan\/checklist consistency/i, /closed gaps have fresh evidence/i,
+    /UI proof uses real owner surface/i
+  ]) assert.match(content, pattern);
   assert.match(content, /validate-plan-acceptance/i);
   assert.match(content, /failure prevents final complete|missing validate-plan-acceptance pass/i);
   assert.match(content, /Plan Conformance Gate/);
@@ -190,55 +220,28 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /Audit workflow completed; acceptance target not complete\./);
   assert.match(content, /Goal achieved/);
   assert.match(content, /update_goal\(status="complete"\)/);
-  assert.match(content, /No Sibling Substitution/);
-  assert.match(content, /required proof chain/i);
-  assert.match(content, /required_proof_chain/);
-  assert.match(content, /missing_required_layers/);
-  assert.match(content, /drift_severity/);
-  assert.match(content, /sibling_substitution_used/);
-  assert.match(content, /auditor_status/);
-  assert.match(content, /read-only auditor/i);
-  assert.match(content, /gap detector|finds gaps|gap review/i);
-  assert.match(content, /reconstructs each AC proof chain/i);
-  assert.match(content, /sampled_only/);
-  assert.match(content, /not_implemented/);
-  assert.match(content, /scope_changed_requires_user_approval/);
-  assert.match(content, /contradicted_by_current_state/);
-  assert.match(content, /Passing tests does not imply plan conformance/);
-  assert.match(content, /sampled implementation path does not imply full plan implementation/);
-  assert.match(content, /local audit cannot narrow plan scope or mark completion/i);
-  assert.match(content, /process recovery only/i);
-  assert.match(content, /completion judgment/i);
-  assert.match(content, /same execution path, negative case, screenshot or artifact class/i);
-  assert.match(content, /Final completion requires an AC-by-AC final acceptance verdict/i);
-  assert.match(content, /Evidence Layer Separation/);
-  assert.match(content, /API\/schema reflected/);
-  assert.match(content, /worker\/runtime path reflected/);
-  assert.match(content, /UI\/page reflected/);
-  assert.match(content, /runtime configured/);
-  assert.match(content, /runtime exercised/);
-  assert.match(content, /artifact generated/);
-  assert.match(content, /artifact accepted by validator/);
-  assert.match(content, /API\/UI reflects accepted evidence/i);
-  assert.match(content, /Invalid Evidence Rules/);
-  assert.match(content, /viewmodel-only/i);
-  assert.match(content, /unit test/i);
-  assert.match(content, /artifact exists/i);
-  assert.match(content, /old result/i);
-  assert.match(content, /Completion State Machine/);
-  assert.match(content, /unknown \/ not_run/);
-  assert.match(content, /fresh required evidence/i);
-  assert.match(content, /fresh browser \/ API \/ runtime \/ data \/ test contradiction/i);
-  assert.match(content, /downgrade the affected plan item, AC and overall status/i);
-  assert.match(content, /invalidating evidence/i);
-  assert.match(content, /UI-Facing Gate/);
-  assert.match(content, /real page path/i);
-  assert.match(content, /component \/ viewmodel \/ mock \/ unit test/i);
+  for (const pattern of [
+    /No Sibling Substitution/, /required proof chain/i, /required_proof_chain/, /missing_required_layers/,
+    /drift_severity/, /sibling_substitution_used/, /auditor_status/, /read-only auditor/i,
+    /gap detector|finds gaps|gap review/i, /reconstructs each AC proof chain/i, /sampled_only/,
+    /not_implemented/, /scope_changed_requires_user_approval/, /contradicted_by_current_state/,
+    /Passing tests does not imply plan conformance/, /sampled implementation path does not imply full plan implementation/,
+    /local audit cannot narrow plan scope or mark completion/i, /process recovery only/i, /completion judgment/i,
+    /same execution path, negative case, screenshot or artifact class/i, /Final completion requires an AC-by-AC final acceptance verdict/i,
+    /Evidence Layer Separation/, /API\/schema reflected/, /worker\/runtime path reflected/, /UI\/page reflected/,
+    /runtime configured/, /runtime exercised/, /artifact generated/, /artifact accepted by validator/,
+    /API\/UI reflects accepted evidence/i, /Invalid Evidence Rules/, /viewmodel-only/i, /unit test/i,
+    /artifact exists/i, /old result/i, /Completion State Machine/, /unknown \/ not_run/, /fresh required evidence/i,
+    /fresh browser \/ API \/ runtime \/ data \/ test contradiction/i,
+    /downgrade the affected plan item, AC and overall status/i, /invalidating evidence/i, /UI-Facing Gate/,
+    /real page path/i, /component \/ viewmodel \/ mock \/ unit test/i
+  ]) assert.match(content, pattern);
 
   assert.match(content, /Superpowers 输入包/);
   assert.match(content, /Superpowers input packet/);
   assert.match(content, /Superpowers 执行绑定/);
   assert.match(content, /Superpowers execution binding/);
+  assert.match(content, /Tiny Context gates[\s\S]*do not redefine[\s\S]*fork Superpowers execution mechanics/i);
   assert.match(content, /official Superpowers installation path/i);
   assert.match(content, /installation is blocked/i);
   assert.match(content, /satisfies the required input fields|required executable-plan input checks|输入校验阶段已确认可执行/i);
@@ -252,6 +255,8 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /observe failure/i);
   assert.match(content, /completion claim/i);
   assert.match(content, /review \/ finish cannot override the plan-conformance matrix or full checklist/i);
+  assert.match(content, /Superpowers review and verification remain useful execution checks/i);
+  assert.match(content, /passing Superpowers review does not by itself prove plan conformance or checklist acceptance/i);
   assert.match(content, /technical realization plan controls plan conformance/i);
   assert.match(content, /product\/architecture source prevents scope shrinkage/i);
   assert.match(content, /full checklist controls acceptance/i);
@@ -269,7 +274,7 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /Autonomy\/blockers: self-serve under current permissions/i);
   assert.match(content, /Open app\/browser\/CLI\/settings and reuse sessions\/auth\/helpers/i);
   assert.match(content, /Try authorized sudo\/gsudo\/admin/i);
-  assert.match(content, /Pause only after missing login, expired session, denied permission, MFA\/approval/i);
+  assert.match(content, /Pause only after missing login(?:, expired session, denied permission, MFA\/approval|\/session expiry\/denied permission\/MFA\/approval)/i);
 
   for (const heading of ["Recommended compact Chinese prompt shape:", "Recommended compact English prompt shape:"]) {
     assert.ok(extractTextBlockAfter(content, heading).length <= 3850, `expected ${heading} to fit 3850-character target-mode budget`);

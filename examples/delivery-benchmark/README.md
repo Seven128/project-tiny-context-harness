@@ -28,6 +28,13 @@ It is not a first-patch speed race and not a proof that any workflow is always
 faster. Future reports should show where Minimal Context reaches break-even, and
 where it does not.
 
+## Diagnostic Metrics
+
+The runner can report workflow overhead ratio, artifact inventory / artifact
+count, gate true-product defect count versus hygiene issue count, and AC progress visibility.
+These diagnostics explain where Harness overhead comes from; they do not make a
+run publishable without the same quality bar and observer evidence.
+
 ## What Counts As Publishable
 
 A result can enter `results/benchmark-data.js` only when all of these are true:
