@@ -3,6 +3,7 @@ import { pathExists, readText } from "./fs.js";
 import { findSensitiveEvidence } from "./plan-acceptance-evidence.js";
 import { primitiveText, repoRelative, resolveInputDir } from "./plan-validator-common.js";
 import { derivedMatchesState } from "./superpowers-task-derive.js";
+import { fullPopulationRequired, validateDeliveryContract, validateScopeConflicts } from "./superpowers-task-delivery.js";
 import { loadSuperpowersState, sha256 } from "./superpowers-task-state.js";
 import { isRecord, type SuperpowersEvidenceRecord, type SuperpowersTaskState } from "./superpowers-task-state-schema.js";
 import type { ValidatorReport } from "./validators.js";
@@ -35,7 +36,9 @@ export async function validateSuperpowersState(projectRoot: string, args: string
     return { info, warnings, hygiene, errors };
   }
   await validateSourceHashes(targetDir, state, errors);
+  validateDeliveryContract(state, errors);
   validateGraphReferences(state, errors);
+  validateScopeConflicts(state, errors);
   validateEvidenceRecords(state, errors);
   validateProofLayers(state, errors);
   validateAuditor(state, errors);
@@ -69,7 +72,7 @@ function validateShape(state: SuperpowersTaskState, errors: string[]): void {
   if (state.meta?.schema_version !== "superpowers-task-state-v1") {
     errors.push("task-state.json schema_version must be superpowers-task-state-v1");
   }
-  for (const key of ["meta", "sources", "context", "graph", "slices", "evidence", "gates", "progress", "blockers", "final"]) {
+  for (const key of ["meta", "sources", "context", "delivery", "graph", "slices", "evidence", "gates", "progress", "blockers", "final"]) {
     if (!(key in (state as unknown as Record<string, unknown>))) {
       errors.push(`task-state.json is missing section: ${key}`);
     }
@@ -82,6 +85,7 @@ function hasUsableShape(state: SuperpowersTaskState): boolean {
     isRecord(candidate.meta) &&
     isRecord(candidate.sources) &&
     isRecord(candidate.context) &&
+    isRecord(candidate.delivery) &&
     isRecord(candidate.graph) &&
     isRecord(candidate.graph.plan_items) &&
     isRecord(candidate.graph.acceptance_criteria) &&
@@ -233,6 +237,18 @@ function validateFinalCompletion(state: SuperpowersTaskState, errors: string[]):
       errors.push("product_goal_complete=true but Context Delta coverage is unresolved");
     }
   }
+  if (fullPopulationRequired(state)) {
+    const sampleOnlyEvidence = state.evidence.filter((evidence) =>
+      evidence.does_not_prove.some((claim) => /\b(full[-_ ]?population|all[-_ ]?provider|all[-_ ]?interface|all[-_ ]?platform)\b/i.test(claim))
+    );
+    if (sampleOnlyEvidence.length > 0) {
+      errors.push(
+        `product_goal_complete=true but full-population completion relies on evidence that explicitly does not prove full population coverage: ${sampleOnlyEvidence
+          .map((evidence) => evidence.evidence_id)
+          .join(", ")}`
+      );
+    }
+  }
 }
 
 export function allCompletionConditionsSatisfied(state: SuperpowersTaskState): boolean {
@@ -241,6 +257,8 @@ export function allCompletionConditionsSatisfied(state: SuperpowersTaskState): b
   if (!hasUsableShape(state)) {
     return false;
   }
+  validateDeliveryContract(state, errors);
+  validateScopeConflicts(state, errors);
   validateGraphReferences(state, errors);
   validateEvidenceRecords(state, errors);
   validateProofLayers(state, errors);

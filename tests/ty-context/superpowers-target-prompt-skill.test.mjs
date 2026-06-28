@@ -2,14 +2,12 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const read = (relativePath) => readFile(path.join(repoRoot, relativePath), "utf8");
 const forbiddenIncidentNames = new RegExp(
   ["Intel" + "Hub", "i" + "Find", "We" + "Chat", "微" + "信", "App" + "Secret", "provider" + "-specific"].join("|")
 );
 const broadTriggerTerms = /Superpowers target-mode prompt|Superpowers goal-mode prompt|Superpowers 目标模式文本|target prompt that maximizes|目标模式文本/;
-
 const frontMatterDescription = (content) => {
   const match = content.match(/^---\s*\r?\n(?<frontMatter>[\s\S]*?)\r?\n---/);
   assert.ok(match?.groups?.frontMatter, "expected skill front matter");
@@ -17,7 +15,6 @@ const frontMatterDescription = (content) => {
   assert.ok(description?.groups?.description, "expected skill description");
   return description.groups.description.trim();
 };
-
 const extractTextBlockAfter = (content, heading) => {
   const headingIndex = content.indexOf(heading);
   assert.notEqual(headingIndex, -1, `expected heading ${heading}`);
@@ -28,7 +25,6 @@ const extractTextBlockAfter = (content, heading) => {
   assert.notEqual(fenceEnd, -1, `expected closing fence after ${heading}`);
   return content.slice(bodyStart, fenceEnd);
 };
-
 const [
   sourceAgents,
   packageAgents,
@@ -77,6 +73,10 @@ for (const content of [rootReadme, rootZhReadme, packageReadme, spec, workflowCo
   assert.match(content, /derived\/|derived views|generated views|派生/i);
   assert.match(content, /plan-conformance-matrix|plan-conformance matrix|final-acceptance-verdict|final acceptance verdict/i);
   assert.match(content, /task-state\.evidence|evidence records|canonical evidence|证据记录/i);
+  assert.match(content, /delivery_scope|delivery scope|capability-first delivery|capability-first/i);
+  assert.match(content, /full_population_required|full population|full-population|full population operation/i);
+  assert.match(content, /representative samples|representative sample|代表性样本|sample evidence/i);
+  assert.match(content, /scope_conflict_requires_decision/i);
   assert.match(content, /must not redefine[\s\S]*fork[\s\S]*Superpowers execution mechanics|不能重新定义[\s\S]*Superpowers 执行机制|不能[\s\S]*分叉 Superpowers 执行机制/i);
   assert.match(content, /conflict[\s\S]*duplicate[\s\S]*override[\s\S]*Superpowers|冲突[\s\S]*重复[\s\S]*覆盖/i);
   assert.match(content, /Passing Superpowers review|通过 Superpowers review/i);
@@ -168,6 +168,12 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /Product \/ Architecture Source owns intent, scope/i);
   assert.match(content, /Technical Realization Plan owns plan items/i);
   assert.match(content, /Acceptance Checklist owns ACs/i);
+  assert.match(content, /delivery_scope/i);
+  assert.match(content, /acceptance_scope/i);
+  assert.match(content, /full_population_required/i);
+  assert.match(content, /representative_samples/i);
+  assert.match(content, /scope_conflict_requires_decision/i);
+  assert.match(content, /sample provider\/interface\/page evidence cannot substitute|sample provider\/interface\/page as all-provider|sample.*all-provider/i);
   assert.match(content, /cannot narrow, rewrite or replace the upstream sources/i);
   assert.match(content, /Technical Realization Plan is the execution blueprint/i);
   assert.match(content, /Acceptance Checklist is the completion authority/i);

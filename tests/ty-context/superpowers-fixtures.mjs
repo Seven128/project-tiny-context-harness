@@ -1,0 +1,207 @@
+import { createHash } from "node:crypto";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+const productArchitectureSourceText = `# Product / Architecture Source
+
+Operations owns runtime recovery on the real owner surface.
+
+delivery_scope: system_capability_build
+full_population_required: false
+representative_samples_validate: recovery happy path sample
+representative_samples_do_not_validate: full population operation
+out_of_scope_backlog: historical record migration
+`;
+
+const technicalRealizationPlanText = `# Technical Realization Plan
+
+- PI-001: Implement runtime recovery on Operations.
+  - delivery_scope: system_capability_build
+  - capability_target: reusable runtime recovery capability
+  - representative_samples: recovery happy path sample
+  - full_population_boundary: not required for capability build
+  - non_required_population: historical record migration
+  - owner_surfaces: Operations
+  - implementation_paths: src/pages/OperationsPage.tsx, src/runtime/kernel.ts
+  - required_tests: tests/runtime.spec.ts
+  - related_acs: AC-001
+`;
+
+const acceptanceChecklistText = `# Acceptance Checklist
+
+- AC-001: Operations runtime recovery works on the owner surface.
+  - acceptance_scope: system_capability_build
+  - ac_validates: reusable runtime recovery capability
+  - ac_does_not_validate: full population operation
+  - sample_boundary: recovery happy path sample
+  - full_population_required: false
+  - related_plan_items: PI-001
+  - required_proof_layers: code, runtime, ui_browser, test
+`;
+
+export async function writeSuperpowersSources(root) {
+  const dir = path.join(root, "tmp/ty-context/plan-acceptance/demo");
+  await writeFile(path.join(dir, "product-architecture-source.md"), productArchitectureSourceText, "utf8");
+  await writeFile(path.join(dir, "technical-realization-plan.md"), technicalRealizationPlanText, "utf8");
+  await writeFile(path.join(dir, "acceptance-checklist.md"), acceptanceChecklistText, "utf8");
+}
+
+export async function writeTaskState(root, state = validTaskState()) {
+  const dir = path.join(root, "tmp/ty-context/plan-acceptance/demo");
+  await writeFile(path.join(dir, "task-state.json"), JSON.stringify(state, null, 2), "utf8");
+}
+
+export async function writeDerivedMatrix(root, matrix) {
+  const dir = path.join(root, "tmp/ty-context/plan-acceptance/demo/derived");
+  await mkdir(dir, { recursive: true });
+  await writeFile(path.join(dir, "plan-conformance-matrix.json"), JSON.stringify(matrix, null, 2), "utf8");
+}
+
+export async function writeDerivedVerdict(root, verdict) {
+  const dir = path.join(root, "tmp/ty-context/plan-acceptance/demo/derived");
+  await mkdir(dir, { recursive: true });
+  await writeFile(path.join(dir, "final-acceptance-verdict.json"), JSON.stringify(verdict, null, 2), "utf8");
+}
+
+export function validTaskState(overrides = {}) {
+  const sourceText = {
+    product_architecture_source: productArchitectureSourceText,
+    technical_realization_plan: technicalRealizationPlanText,
+    acceptance_checklist: acceptanceChecklistText
+  };
+  const state = {
+    meta: {
+      task_id: "SP-TEST-001",
+      plan_slug: "demo",
+      created_at: "2026-06-29T00:00:00.000Z",
+      updated_at: "2026-06-29T00:00:00.000Z",
+      schema_version: "superpowers-task-state-v1",
+      goal_type: "implementation",
+      product_goal_complete: false,
+      acceptance_target_status: "not_run",
+      audit_task_complete: false
+    },
+    sources: {
+      product_architecture_source: { path: "product-architecture-source.md", sha256: sha256(sourceText.product_architecture_source), authority: "intent_scope_boundaries" },
+      technical_realization_plan: { path: "technical-realization-plan.md", sha256: sha256(sourceText.technical_realization_plan), authority: "plan_items_execution_blueprint_conformance" },
+      acceptance_checklist: { path: "acceptance-checklist.md", sha256: sha256(sourceText.acceptance_checklist), authority: "acs_completion_semantics_proof_layers" }
+    },
+    context: {
+      product_context_delta: "none",
+      technical_context_delta: "none",
+      source_to_context_coverage: [],
+      context_to_implementation_binding: []
+    },
+    delivery: {
+      product_architecture_scope: {
+        delivery_scope: "system_capability_build",
+        full_population_required: false,
+        representative_samples_validate: ["recovery happy path sample"],
+        representative_samples_do_not_validate: ["full population operation"],
+        out_of_scope_backlog: ["historical record migration"]
+      },
+      scope_conflicts: []
+    },
+    graph: {
+      plan_items: {
+        "PI-001": {
+          requirement: "Implement runtime recovery on Operations.",
+          delivery_scope: "system_capability_build",
+          capability_target: "reusable runtime recovery capability",
+          representative_samples: ["recovery happy path sample"],
+          full_population_boundary: "not required for capability build",
+          non_required_population: ["historical record migration"],
+          owner_surfaces: ["Operations"],
+          forbidden_surfaces: ["Provider Admission"],
+          implementation_paths: ["src/pages/OperationsPage.tsx", "src/runtime/kernel.ts"],
+          required_tests: ["tests/runtime.spec.ts"],
+          status: "complete",
+          related_acs: ["AC-001"],
+          required_proof_layers: ["AC-001.code", "AC-001.runtime", "AC-001.ui_browser", "AC-001.test"]
+        }
+      },
+      acceptance_criteria: {
+        "AC-001": {
+          scope: "Operations runtime recovery works on the owner surface.",
+          acceptance_scope: "system_capability_build",
+          ac_validates: ["reusable runtime recovery capability"],
+          ac_does_not_validate: ["full population operation"],
+          sample_boundary: "recovery happy path sample",
+          full_population_required: false,
+          related_plan_items: ["PI-001"],
+          required_proof_layers: ["code", "runtime", "ui_browser", "test"],
+          status: "complete"
+        }
+      },
+      proof_layers: {
+        "AC-001.code": { required: true, status: "satisfied", evidence_ids: ["EV-001"] },
+        "AC-001.runtime": { required: true, status: "satisfied", evidence_ids: ["EV-001"] },
+        "AC-001.ui_browser": { required: true, status: "satisfied", evidence_ids: ["EV-002"] },
+        "AC-001.test": { required: true, status: "satisfied", evidence_ids: ["EV-003"] }
+      },
+      edges: [{ from: "PI-001", to: "AC-001", type: "supports" }]
+    },
+    slices: [
+      {
+        slice_id: "S-001",
+        slice_goal: "Close runtime and browser proof layers",
+        touched_plan_items: ["PI-001"],
+        touched_acs: ["AC-001"],
+        code_changes: ["src/pages/OperationsPage.tsx", "src/runtime/kernel.ts"],
+        evidence_records: ["EV-001", "EV-002", "EV-003"],
+        closed_layers: ["AC-001.code", "AC-001.runtime", "AC-001.ui_browser", "AC-001.test"],
+        remaining_layers: [],
+        blockers: [],
+        cleanup_assertions: ["test DB reset"],
+        progress_value: {
+          type: "closed_required_proof_layer",
+          closed_items: ["AC-001.code", "AC-001.runtime", "AC-001.ui_browser", "AC-001.test"],
+          why_it_reduces_rework: "All required proof layers now map to fresh evidence."
+        }
+      }
+    ],
+    evidence: [
+      evidenceRecord("EV-001", "runtime", ["AC-001.code", "AC-001.runtime"], ["AC-001.ui_browser"]),
+      evidenceRecord("EV-002", "browser", ["AC-001.ui_browser"], ["AC-001.security"]),
+      evidenceRecord("EV-003", "test", ["AC-001.test"], ["all-provider coverage"])
+    ],
+    gates: { validator: { status: "not_run" }, auditor: { auditor_status: "pass", findings: [] } },
+    progress: {
+      system_capability_progress: { status: "complete", plan_items: ["PI-001"] },
+      representative_sample_progress: { status: "complete", samples: ["recovery happy path sample"] },
+      real_object_coverage: { status: "sampled_only", covered_objects: ["recovery happy path sample"] },
+      full_population_operation_progress: { status: "not_in_scope" }
+    },
+    blockers: [],
+    final: {
+      product_goal_complete: false,
+      acceptance_target_status: "not_run",
+      audit_task_complete: false,
+      completion_basis: []
+    },
+    ...overrides
+  };
+  return state;
+}
+
+function evidenceRecord(evidenceId, type, proves, doesNotProve) {
+  return {
+    evidence_id: evidenceId,
+    slice_id: "S-001",
+    type,
+    freshness: { created_at: "2026-06-29T00:00:00.000Z", valid_for: "current_worktree", stale_after: null },
+    command: type === "browser" ? "browser screenshot route /operations" : "npm test --workspace project-tiny-context-harness",
+    artifact_paths: type === "browser" ? ["tmp/ty-context/plan-acceptance/demo/browser.png"] : ["tmp/ty-context/plan-acceptance/demo/runtime.json"],
+    proves,
+    does_not_prove: doesNotProve,
+    redaction: { checked: true, contains_secret: false },
+    reviewability: {
+      external_reviewer_can_reproduce: true,
+      reproduction_steps: type === "browser" ? "Open route /operations and inspect browser screenshot." : "Run the recorded command."
+    }
+  };
+}
+
+function sha256(value) {
+  return createHash("sha256").update(value).digest("hex");
+}

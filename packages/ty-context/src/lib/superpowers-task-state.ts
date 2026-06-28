@@ -65,6 +65,16 @@ export async function initializeSuperpowersTask(
       source_to_context_coverage: [],
       context_to_implementation_binding: []
     },
+    delivery: {
+      product_architecture_scope: {
+        delivery_scope: "",
+        full_population_required: null,
+        representative_samples_validate: [],
+        representative_samples_do_not_validate: [],
+        out_of_scope_backlog: []
+      },
+      scope_conflicts: []
+    },
     graph: {
       plan_items: {},
       acceptance_criteria: {},
@@ -74,7 +84,7 @@ export async function initializeSuperpowersTask(
     slices: [],
     evidence: [],
     gates: {},
-    progress: {},
+    progress: emptyProgressState(),
     blockers: [],
     final: {
       product_goal_complete: false,
@@ -176,6 +186,15 @@ export function recomputeStatuses(state: SuperpowersTaskState): void {
       item.status = "not_started";
     }
   }
+}
+
+export function emptyProgressState(): SuperpowersTaskState["progress"] {
+  return {
+    system_capability_progress: { status: "not_started" },
+    representative_sample_progress: { status: "not_started" },
+    real_object_coverage: { status: "unknown" },
+    full_population_operation_progress: { status: "not_in_scope" }
+  };
 }
 
 export async function sourceRecords(workdir: string): Promise<SuperpowersTaskState["sources"]> {

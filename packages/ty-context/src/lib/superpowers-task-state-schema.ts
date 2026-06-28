@@ -4,7 +4,7 @@ export const SUPERPOWERS_TASK_STATE_JSON_SCHEMA = {
   $id: "https://project-tiny-context-harness.local/superpowers-task-state.schema.json",
   title: "Superpowers Long-Task State",
   type: "object",
-  required: ["meta", "sources", "context", "graph", "slices", "evidence", "gates", "progress", "blockers", "final"],
+  required: ["meta", "sources", "context", "delivery", "graph", "slices", "evidence", "gates", "progress", "blockers", "final"],
   properties: {
     meta: {
       type: "object",
@@ -17,6 +17,7 @@ export const SUPERPOWERS_TASK_STATE_JSON_SCHEMA = {
     },
     sources: { type: "object" },
     context: { type: "object" },
+    delivery: { type: "object" },
     graph: { type: "object" },
     slices: { type: "array" },
     evidence: { type: "array" },
@@ -39,6 +40,21 @@ export type SuperpowersPlanItemStatus =
   | "contradicted_by_current_state"
   | "out_of_scope_NA";
 export type SuperpowersAcceptanceStatus = "not_run" | "complete" | "partial" | "blocked" | "invalidated" | "out_of_scope_NA";
+export type SuperpowersProductDeliveryScope =
+  | "system_capability_build"
+  | "representative_sample_validation"
+  | "full_population_operation"
+  | "mixed_scope_requires_boundary";
+export type SuperpowersPlanDeliveryScope =
+  | "system_capability_build"
+  | "representative_sample_validation"
+  | "full_population_operation"
+  | "out_of_scope_backlog";
+export type SuperpowersAcceptanceScope =
+  | "system_capability_build"
+  | "representative_sample_validation"
+  | "full_population_operation"
+  | "full_population_not_required";
 
 export interface SuperpowersTaskState {
   meta: {
@@ -59,6 +75,7 @@ export interface SuperpowersTaskState {
     source_to_context_coverage: Record<string, unknown>[];
     context_to_implementation_binding: Record<string, unknown>[];
   };
+  delivery: SuperpowersDeliveryState;
   graph: {
     plan_items: Record<string, SuperpowersPlanItem>;
     acceptance_criteria: Record<string, SuperpowersAcceptanceCriterion>;
@@ -68,7 +85,7 @@ export interface SuperpowersTaskState {
   slices: SuperpowersSliceRecord[];
   evidence: SuperpowersEvidenceRecord[];
   gates: Record<string, unknown>;
-  progress: Record<string, unknown>;
+  progress: SuperpowersProgressState;
   blockers: unknown[];
   final: {
     product_goal_complete: boolean;
@@ -84,8 +101,34 @@ export interface SuperpowersSourceRecord {
   authority: string;
 }
 
+export interface SuperpowersDeliveryState {
+  product_architecture_scope: SuperpowersProductArchitectureScope;
+  scope_conflicts: string[];
+}
+
+export interface SuperpowersProductArchitectureScope {
+  delivery_scope: SuperpowersProductDeliveryScope | "";
+  full_population_required: boolean | null;
+  representative_samples_validate: string[];
+  representative_samples_do_not_validate: string[];
+  out_of_scope_backlog: string[];
+}
+
+export interface SuperpowersProgressState {
+  system_capability_progress: Record<string, unknown>;
+  representative_sample_progress: Record<string, unknown>;
+  real_object_coverage: Record<string, unknown>;
+  full_population_operation_progress: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
 export interface SuperpowersPlanItem {
   requirement: string;
+  delivery_scope: SuperpowersPlanDeliveryScope | "";
+  capability_target: string;
+  representative_samples: string[];
+  full_population_boundary: string;
+  non_required_population: string[];
   owner_surfaces: string[];
   forbidden_surfaces: string[];
   implementation_paths: string[];
@@ -97,6 +140,11 @@ export interface SuperpowersPlanItem {
 
 export interface SuperpowersAcceptanceCriterion {
   scope: string;
+  acceptance_scope: SuperpowersAcceptanceScope | "";
+  ac_validates: string[];
+  ac_does_not_validate: string[];
+  sample_boundary: string;
+  full_population_required: boolean | null;
   related_plan_items: string[];
   required_proof_layers: string[];
   status: SuperpowersAcceptanceStatus;

@@ -29,6 +29,7 @@ Project-specific engineering rules belong in a separate project-local Skill unde
    - Gap
    - Proposed change
 8. 涉及模块原则、模块逻辑、设计原因、API / Schema、状态语义、验证设计或 capability / metric / acceptance claim 时，先做 Module Principle / Design Gate：列出命中的模块设计上下文来源，说明这些原则 / 逻辑控制本次哪些实现或验证选择，再选择实现路径、验证 claim、probe 参数或 fallback。命令、probe、当前实现形态和被触碰文件大小是执行实例或维护风险，不能反推或覆盖模块设计目标。
+   - 对外部产品/架构源、技术实现方案或验收清单中的 delivery / acceptance scope，必须显式区分 `system_capability_build`、`representative_sample_validation`、`full_population_operation`、`full_population_not_required` 和 out-of-scope backlog。不要把若干具体对象运行结果当作可复用系统能力完成，也不要把 framework-only 实现当作全量真实对象已完成；sample provider / interface / page 证据不能替代 all-provider / all-interface / all-platform / full-population 完成，除非 AC 明确批准该边界。
 9. 涉及 Product Surface（Web 页面、移动/桌面屏幕、游戏 UI/HUD/菜单、CLI/TUI 输出、扩展或设备界面）、表单/配置、输入、选择、搜索、筛选、调度/时间、预算/配额/限流或状态反馈的实现方案时，检查当前代码是否只是暴露字段，还是满足了已有 Context、Surface Contract、页面职责和控件任务框架；实现收尾要能给出简短 Surface/Context Conformance 证据。
    - 若存在 Product Surface Contract，Task Contract 必须包含 Surface Contract Hit、main allows/forbids、drilldown ownership、long-task state requirement、implementation drift 和 verification。
    - 若缺失且本任务创建 durable surface responsibility，设置 `Context Delta: required`，先用 `context_surface_contract` 或项目 Context 写入具体 surface 职责，再继续实现。
@@ -78,6 +79,7 @@ Project-specific engineering rules belong in a separate project-local Skill unde
   - `exception`：本次触碰超限文件但暂不拆；只有默认 `modularity.policy: scoped_waivers` 允许此路径，且必须已有或同步新增 `<harnessRoot>/config.yaml` `modularity.waivers` 记录文件、收窄分类、原因和后续拆分边界。若项目设置 `modularity.policy: strict_except_generated`，不得用 legacy waiver 绕过超限手写源码，交付说明只记录本次是否新增职责以及为什么没有拆。
 - `Applicable Module Design` 是高风险任务的前置字段：列出命中的 Context / Skill 来源、适用的 Principles、Design Logic 和 Design Rationale，以及它们控制的当前实现或验证选择。
 - `Principle Decision Gate` 要写明首选执行路径、fallback / degraded path 的进入条件，以及什么证据不能证明本次目标。涉及 capability、metric 或 acceptance claim 时，先声明要证明的 claim，再选择命令或 probe。
+- 若 Task Contract 或验收方案涉及 capability-first delivery boundary，必须记录 source/plan/AC 对 `delivery_scope`、`acceptance_scope`、`full_population_required`、representative sample boundary、non-required population / backlog 的一致性；发现 system capability build 与 full population operation 冲突时，按 `scope_conflict_requires_decision` 处理，不能靠实现方便路径或样本证据自行裁决。
 - 对长任务、多模块、多 agent、外部产品/架构/技术/实现/验收方案输入、容易发生 `Context Delta` 调头或多轮验证的任务，使用 `plan.md` 或等价临时计划面暂存 `Source-to-Context Coverage`、`Context-to-Implementation Binding`、`Context Delta`、`Task Contract`、`Implementation Steps` 和 `Contract Conformance`；它只是临时执行缓存。
 - small code task 指现有 Context 已足够、且不改变 durable product / architecture / API-schema / runtime-state / verification-deployment / security-redaction / surface ownership 事实的局部实现任务；它按语义风险判断，不按代码行数判断，不应创建 `plan.md`、完整 trace tables、Source-to-Context Coverage 或 Context-to-Implementation Binding，除非它发现长期事实变化或扩展成高风险工作。
 - `Source-to-Context Coverage` 表使用字段：`Source item | Durable constraint | Type | Existing Context Hit | Context action | Owning Context | Coverage status`。这张表只回答 source 约束是否进入或命中 Context，不写实现路径。

@@ -38,6 +38,70 @@ test("superpowers state init and compile create canonical source-hashed graph", 
   }
 });
 
+test("compile parses Product Source, plan item and AC delivery boundaries", async () => {
+  const root = await createPlanProject();
+  try {
+    await writeSuperpowersSources(root);
+    const workdir = path.join(root, "tmp/ty-context/plan-acceptance/demo");
+
+    await initializeSuperpowersTask(workdir, { taskId: "SP-TEST-DELIVERY", planSlug: "demo" });
+    await compileSuperpowersTask(workdir);
+
+    const state = JSON.parse(await readFile(path.join(workdir, "task-state.json"), "utf8"));
+    assert.equal(state.delivery.product_architecture_scope.delivery_scope, "system_capability_build");
+    assert.equal(state.delivery.product_architecture_scope.full_population_required, false);
+    assert.deepEqual(state.delivery.product_architecture_scope.representative_samples_validate, ["recovery happy path sample"]);
+    assert.deepEqual(state.delivery.product_architecture_scope.representative_samples_do_not_validate, ["full population operation"]);
+    assert.deepEqual(state.delivery.product_architecture_scope.out_of_scope_backlog, ["historical record migration"]);
+
+    assert.equal(state.graph.plan_items["PI-001"].delivery_scope, "system_capability_build");
+    assert.equal(state.graph.plan_items["PI-001"].capability_target, "reusable runtime recovery capability");
+    assert.deepEqual(state.graph.plan_items["PI-001"].representative_samples, ["recovery happy path sample"]);
+    assert.equal(state.graph.plan_items["PI-001"].full_population_boundary, "not required for capability build");
+    assert.deepEqual(state.graph.plan_items["PI-001"].non_required_population, ["historical record migration"]);
+
+    assert.equal(state.graph.acceptance_criteria["AC-001"].acceptance_scope, "system_capability_build");
+    assert.deepEqual(state.graph.acceptance_criteria["AC-001"].ac_validates, ["reusable runtime recovery capability"]);
+    assert.deepEqual(state.graph.acceptance_criteria["AC-001"].ac_does_not_validate, ["full population operation"]);
+    assert.equal(state.graph.acceptance_criteria["AC-001"].sample_boundary, "recovery happy path sample");
+    assert.equal(state.graph.acceptance_criteria["AC-001"].full_population_required, false);
+    assert.equal(state.progress.full_population_operation_progress.status, "not_in_scope");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("compile records scope conflicts when source, plan and AC disagree", async () => {
+  const root = await createPlanProject();
+  try {
+    await writeSuperpowersSources(root);
+    const workdir = path.join(root, "tmp/ty-context/plan-acceptance/demo");
+    await writeFile(
+      path.join(workdir, "acceptance-checklist.md"),
+      `# Acceptance Checklist
+
+- AC-001: Every real object is operated on.
+  - acceptance_scope: full_population_operation
+  - ac_validates: full population operation
+  - ac_does_not_validate: framework-only capability
+  - sample_boundary: no sample substitute
+  - full_population_required: true
+  - related_plan_items: PI-001
+  - required_proof_layers: code, runtime, test
+`,
+      "utf8"
+    );
+
+    await initializeSuperpowersTask(workdir, { taskId: "SP-TEST-CONFLICT", planSlug: "demo" });
+    await compileSuperpowersTask(workdir);
+
+    const state = JSON.parse(await readFile(path.join(workdir, "task-state.json"), "utf8"));
+    assert.match(state.delivery.scope_conflicts.join("\n"), /scope_conflict_requires_decision/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("apply-slice-delta records progress value, evidence and closes proof layers", async () => {
   const root = await createPlanProject();
   try {

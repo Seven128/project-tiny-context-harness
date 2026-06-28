@@ -43,6 +43,11 @@ export function deriveObjects(state: SuperpowersTaskState): {
       plan_requirement: item.requirement,
       acceptance_ids: relatedAcs,
       status: missingLayers.length === 0 && requiredLayers.length > 0 ? "complete" : evidenceIds.length > 0 ? "partial" : item.status,
+      delivery_scope: item.delivery_scope,
+      capability_target: item.capability_target,
+      representative_samples: item.representative_samples,
+      full_population_boundary: item.full_population_boundary,
+      non_required_population: item.non_required_population,
       conformance_type: item.owner_surfaces.length > 0 ? "product_surface" : "implementation",
       owner_surface: item.owner_surfaces[0] ?? "",
       forbidden_primary_surfaces: item.forbidden_surfaces,
@@ -73,6 +78,12 @@ export function deriveObjects(state: SuperpowersTaskState): {
       ac_id: acId,
       related_plan_item_ids: ac.related_plan_items,
       status,
+      acceptance_scope: ac.acceptance_scope,
+      ac_validates: ac.ac_validates,
+      ac_does_not_validate: ac.ac_does_not_validate,
+      sample_boundary: ac.sample_boundary,
+      full_population_required: ac.full_population_required,
+      full_population_status: ac.full_population_required === true || ac.acceptance_scope === "full_population_operation" ? status : "not_in_scope",
       required_evidence: requiredLayers,
       required_proof_chain: requiredLayers,
       fresh_evidence: evidenceText(state, evidenceIds),
@@ -89,6 +100,7 @@ export function deriveObjects(state: SuperpowersTaskState): {
   });
   const allComplete = verdictRows.length > 0 && verdictRows.every((row) => row.status === "complete");
   const progress = {
+    ...state.progress,
     complete_count: verdictRows.filter((row) => row.status === "complete").length,
     partial_count: verdictRows.filter((row) => row.status === "partial").length,
     acceptance_required_count: verdictRows.filter((row) => row.status !== "out_of_scope_NA").length,

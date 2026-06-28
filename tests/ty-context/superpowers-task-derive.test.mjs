@@ -24,9 +24,26 @@ test("derive-superpowers-artifacts writes generated matrix verdict progress evid
     const matrix = JSON.parse(await readFile(path.join(workdir, "derived/plan-conformance-matrix.json"), "utf8"));
     const verdict = JSON.parse(await readFile(path.join(workdir, "derived/final-acceptance-verdict.json"), "utf8"));
     assert.equal(matrix.items[0].status, "complete");
+    assert.equal(matrix.items[0].delivery_scope, "system_capability_build");
+    assert.equal(matrix.items[0].capability_target, "reusable runtime recovery capability");
+    assert.deepEqual(matrix.items[0].representative_samples, ["recovery happy path sample"]);
+    assert.equal(matrix.items[0].full_population_boundary, "not required for capability build");
+    assert.deepEqual(matrix.items[0].non_required_population, ["historical record migration"]);
     assert.deepEqual(matrix.items[0].required_proof_layers, ["AC-001.code", "AC-001.runtime", "AC-001.ui_browser", "AC-001.test"]);
     assert.equal(verdict.acceptance_items[0].status, "complete");
+    assert.equal(verdict.acceptance_items[0].acceptance_scope, "system_capability_build");
+    assert.deepEqual(verdict.acceptance_items[0].ac_validates, ["reusable runtime recovery capability"]);
+    assert.deepEqual(verdict.acceptance_items[0].ac_does_not_validate, ["full population operation"]);
+    assert.equal(verdict.acceptance_items[0].sample_boundary, "recovery happy path sample");
+    assert.equal(verdict.acceptance_items[0].full_population_required, false);
+    assert.equal(verdict.acceptance_items[0].full_population_status, "not_in_scope");
     assert.deepEqual(verdict.acceptance_items[0].missing_required_layers, []);
+
+    const progress = JSON.parse(await readFile(path.join(workdir, "derived/progress-ledger.json"), "utf8"));
+    assert.equal(progress.system_capability_progress.status, "complete");
+    assert.equal(progress.representative_sample_progress.status, "complete");
+    assert.equal(progress.real_object_coverage.status, "sampled_only");
+    assert.equal(progress.full_population_operation_progress.status, "not_in_scope");
 
     const evidenceIndex = await readFile(path.join(workdir, "derived/evidence-index.md"), "utf8");
     assert.match(evidenceIndex, /EV-001/);
