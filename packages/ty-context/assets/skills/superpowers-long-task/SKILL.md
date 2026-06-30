@@ -538,8 +538,8 @@ Tiny Context adapter for Superpowers; aligned to official skills, not upstream s
 Superpowers input packet:
 - Source guards scope; plan controls matrix; checklist controls verdict; task-state is execution state and derived views are generated only.
 - Read Context/tests first; map gaps to test/API/UI/runtime/browser evidence.
-Authority: source/plan/checklist own scope/construction/acceptance; state/derived/validator/auditor cannot rewrite. Complete rows need task-state.evidence[]/evidence_id. Goal mode: implementation/execution complete only when final-gate computes product_goal_complete=true. Read-only audit may end at audit_task_complete; non-accepted verdict says "Audit workflow completed; acceptance target not complete."; no bare "Goal achieved" or update_goal complete.
-Delivery scope: source/plan/AC fields distinguish capability, samples, full population and backlog; scope_conflict_requires_decision blocks. Samples/framework-only evidence cannot prove full population unless AC allows it.
+Authority: source/plan/checklist own scope/plan/acceptance; state/derived/validator/auditor cannot rewrite. Complete rows need task-state.evidence[]/evidence_id. Goal mode: implementation/execution complete only when final-gate computes product_goal_complete=true. Read-only audit may end at audit_task_complete; non-accepted verdict says "Audit workflow completed; acceptance target not complete."; no bare "Goal achieved" or update_goal complete.
+Delivery scope: source/plan/AC distinguish capability, samples, full population and backlog; scope_conflict_requires_decision blocks. Samples/framework-only evidence cannot prove full population unless AC allows.
 
 Execution order:
 1. Read inputs/Context. Task Contract: Product Context Delta none|required; Technical Context Delta none|required; any required -> Context Delta required. Not a validator gate.
@@ -553,8 +553,8 @@ Execution order:
 9. Acceptance Evidence Gate: checklist controls verdict; each AC records proof chain, fresh evidence, missing layers, drift and substitution. Current contradictions override old passes.
 10. Final gate: derive all -> verification-before-completion -> validate-superpowers-state -> validate-plan-acceptance -> auditor -> stale/overclaim scan -> superpowers final-gate. Auditor summary is not proof; rerun derive plus both validators after changes.
 
-Autonomy/blockers: self-serve under current permissions. Open app/browser/CLI/settings and reuse sessions/auth/helpers. Try authorized sudo/gsudo/admin. Pause only after missing login/session expiry/denied permission/MFA/approval; give page/system, field.
-Never complete on: audit/summary/final card, code/plan-only, partial/stale/sampled evidence, framework-only population proof, sample-as-full-population, missing layer, material drift, unapproved substitution/scope narrowing, unexercised runtime, unaccepted artifact, API/UI not reflected, missing validator pass or current API/UI/data/runtime/test contradiction.
+Autonomy/blockers: self-serve under current permissions. Open app/browser/CLI/settings and reuse sessions/auth/helpers. Try authorized sudo/gsudo/admin. Pause only after missing login/session expiry/denied permission/MFA/approval; give page/system/field.
+Never complete on: audit/summary/final card, code/plan-only, partial/stale/sampled evidence, framework-only population proof, sample-as-full, missing layer, material drift, unapproved substitution/scope narrowing, unexercised runtime, unaccepted artifact, API/UI not reflected, missing validator pass or current API/UI/data/runtime/test contradiction.
 ```
 
 Before final response, check the prompt length. If it exceeds 3850 characters, tighten wording while preserving paths, input roles, official Superpowers skill names, Product Context Delta, Technical Context Delta, plan-conformance matrix, final verdict, state machine, UI gate, blockers and invalid evidence.
