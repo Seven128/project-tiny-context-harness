@@ -80,14 +80,21 @@ test("compile records scope conflicts when source, plan and AC disagree", async 
       path.join(workdir, "acceptance-checklist.md"),
       `# Acceptance Checklist
 
-- AC-001: Every real object is operated on.
-  - acceptance_scope: full_population_operation
-  - ac_validates: full population operation
-  - ac_does_not_validate: framework-only capability
-  - sample_boundary: no sample substitute
-  - full_population_required: true
-  - related_plan_items: PI-001
-  - required_proof_layers: code, runtime, test
+## AC-001: Every real object is operated on.
+
+acceptance_scope: full_population_operation
+ac_validates:
+  - full population operation
+ac_does_not_validate:
+  - framework-only capability
+sample_boundary: no sample substitute
+full_population_required: true
+related_plan_items:
+  - PI-001
+required_proof_layers:
+  - code
+  - runtime
+  - test
 `,
       "utf8"
     );

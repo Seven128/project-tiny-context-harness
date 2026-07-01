@@ -73,6 +73,15 @@ The input must fully expose these fields:
 - UI-Facing Gate rules when any AC touches UI.
 - hard blockers or an explicit no-blocker statement.
 
+Strict input grammar:
+
+- Product / Architecture Source is a single document-level object. Its delivery fields must use fixed `key: value`, indented-list or `key: |` syntax.
+- Technical Realization Plan items are definitions only when written as Markdown headings such as `## PI-001: ...` or `### PI-001: ...`.
+- Acceptance Checklist items are definitions only when written as Markdown headings such as `## AC-001: ...` or `### AC-001: ...`.
+- PI/AC fields are read only from the heading section until the next same-or-higher heading, and must use fixed `key: value`, indented-list or `key: |` syntax.
+- Plain prose, mapping previews, tables, `related_acs`, `related_plan_items` and ordinary lists that mention `PI-001` or `AC-001` are references, not definitions.
+- Legacy list-style definitions such as `- PI-001: ...` or `- AC-001: ...` followed by delivery fields are invalid. Stop and report the source file/line instead of accepting or repairing them.
+
 If any of these are missing required fields, stop. Do not generate the Superpowers target-mode prompt. Report whether each missing field belongs in Product / Architecture Source, Technical Realization Plan, Acceptance Checklist, blocker section or Context reference. If the user supplied only a product/architecture source plus checklist, report missing Technical Realization Plan.
 
 When blocked by missing input, return a structured Missing Fields Report with:
@@ -461,6 +470,7 @@ The local audit is process recovery only. It must not contain completion judgmen
 - The prompt must identify the Superpowers workdir, Product / Architecture Source, Technical Realization Plan, Acceptance Checklist, `task-state.json`, `events.ndjson` and generated `derived/**` paths at the top.
 - The prompt must state that the Technical Realization Plan controls plan conformance, the Product / Architecture Source prevents scope shrinkage and the full checklist controls acceptance.
 - The prompt must state the capability-first delivery boundary: source/plan/AC fields distinguish system capability build, representative sample validation, full population operation and out-of-scope backlog; `scope_conflict_requires_decision` blocks completion; samples or framework-only evidence cannot prove full-population completion unless the AC explicitly allows it.
+- The prompt must state that compile has a strict input grammar: PI and AC definitions are heading sections only, while ordinary PI/AC mentions in prose, lists, tables, mapping previews or `related_*` fields are references.
 - The prompt must state the Authority Model and that state/derived views/validator/auditor artifacts cannot rewrite source, plan or checklist authority.
 - The prompt must require Product Context Delta and Technical Context Delta evaluation before implementation.
 - The prompt must use parent-level Context Delta plus slice-level new durable fact checks.

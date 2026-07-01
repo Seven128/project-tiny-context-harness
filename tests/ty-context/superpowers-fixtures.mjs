@@ -8,35 +8,56 @@ Operations owns runtime recovery on the real owner surface.
 
 delivery_scope: system_capability_build
 full_population_required: false
-representative_samples_validate: recovery happy path sample
-representative_samples_do_not_validate: full population operation
-out_of_scope_backlog: historical record migration
+representative_samples_validate:
+  - recovery happy path sample
+representative_samples_do_not_validate:
+  - full population operation
+out_of_scope_backlog:
+  - historical record migration
 `;
 
 const technicalRealizationPlanText = `# Technical Realization Plan
 
-- PI-001: Implement runtime recovery on Operations.
-  - delivery_scope: system_capability_build
-  - capability_target: reusable runtime recovery capability
-  - representative_samples: recovery happy path sample
-  - full_population_boundary: not required for capability build
-  - non_required_population: historical record migration
-  - owner_surfaces: Operations
-  - implementation_paths: src/pages/OperationsPage.tsx, src/runtime/kernel.ts
-  - required_tests: tests/runtime.spec.ts
-  - related_acs: AC-001
+## PI-001: Implement runtime recovery on Operations.
+
+delivery_scope: system_capability_build
+capability_target: reusable runtime recovery capability
+representative_samples:
+  - recovery happy path sample
+full_population_boundary: not required for capability build
+non_required_population:
+  - historical record migration
+owner_surfaces:
+  - Operations
+forbidden_surfaces:
+  - Provider Admission
+implementation_paths:
+  - src/pages/OperationsPage.tsx
+  - src/runtime/kernel.ts
+required_tests:
+  - tests/runtime.spec.ts
+related_acs:
+  - AC-001
 `;
 
 const acceptanceChecklistText = `# Acceptance Checklist
 
-- AC-001: Operations runtime recovery works on the owner surface.
-  - acceptance_scope: system_capability_build
-  - ac_validates: reusable runtime recovery capability
-  - ac_does_not_validate: full population operation
-  - sample_boundary: recovery happy path sample
-  - full_population_required: false
-  - related_plan_items: PI-001
-  - required_proof_layers: code, runtime, ui_browser, test
+## AC-001: Operations runtime recovery works on the owner surface.
+
+acceptance_scope: system_capability_build
+ac_validates:
+  - reusable runtime recovery capability
+ac_does_not_validate:
+  - full population operation
+sample_boundary: recovery happy path sample
+full_population_required: false
+related_plan_items:
+  - PI-001
+required_proof_layers:
+  - code
+  - runtime
+  - ui_browser
+  - test
 `;
 
 export async function writeSuperpowersSources(root) {
@@ -106,6 +127,9 @@ export function validTaskState(overrides = {}) {
       plan_items: {
         "PI-001": {
           requirement: "Implement runtime recovery on Operations.",
+          source_file: "technical-realization-plan.md",
+          source_start_line: 3,
+          source_end_line: 23,
           delivery_scope: "system_capability_build",
           capability_target: "reusable runtime recovery capability",
           representative_samples: ["recovery happy path sample"],
@@ -123,6 +147,9 @@ export function validTaskState(overrides = {}) {
       acceptance_criteria: {
         "AC-001": {
           scope: "Operations runtime recovery works on the owner surface.",
+          source_file: "acceptance-checklist.md",
+          source_start_line: 3,
+          source_end_line: 21,
           acceptance_scope: "system_capability_build",
           ac_validates: ["reusable runtime recovery capability"],
           ac_does_not_validate: ["full population operation"],

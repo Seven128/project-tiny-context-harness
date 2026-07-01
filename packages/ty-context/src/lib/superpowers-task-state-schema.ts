@@ -124,6 +124,9 @@ export interface SuperpowersProgressState {
 
 export interface SuperpowersPlanItem {
   requirement: string;
+  source_file: string;
+  source_start_line: number;
+  source_end_line: number;
   delivery_scope: SuperpowersPlanDeliveryScope | "";
   capability_target: string;
   representative_samples: string[];
@@ -140,6 +143,9 @@ export interface SuperpowersPlanItem {
 
 export interface SuperpowersAcceptanceCriterion {
   scope: string;
+  source_file: string;
+  source_start_line: number;
+  source_end_line: number;
   acceptance_scope: SuperpowersAcceptanceScope | "";
   ac_validates: string[];
   ac_does_not_validate: string[];
