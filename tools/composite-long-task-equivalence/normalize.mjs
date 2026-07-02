@@ -64,6 +64,8 @@ export function buildEquivalenceReport(input) {
 - Allowed diff count: ${input.allowedDiffCount}
 - Rejected diff count: ${input.rejectedDiffCount}
 
+${baselineSemanticsSection(input)}
+
 ## State Kernel Parity
 - task-state graph: ${input.checks.taskStateGraph}
 - evidence semantics: ${input.checks.evidenceSemantics}
@@ -86,6 +88,20 @@ export function buildEquivalenceReport(input) {
 ## Conclusion
 ${input.conclusion}
 `;
+}
+
+function baselineSemanticsSection(input) {
+  const fixedFullPopulationBaseline = /^df03307c6ee4a3740def6e32c1c6b958bf59acf7\b/i.test(input.baselineCommit ?? "");
+  if (fixedFullPopulationBaseline) {
+    return `## Baseline Semantics
+- Baseline type: fixed Superpowers Long-Task baseline.
+- Semantic correction: df03307c6ee4a3740def6e32c1c6b958bf59acf7 fixed a pre-existing semantic hole where sample-only evidence could incorrectly satisfy full_population final completion.
+- Equivalence meaning: Composite Long-Task Workflow is equivalent to this fixed baseline, not to the pre-fix buggy baseline.`;
+  }
+  return `## Baseline Semantics
+- Baseline type: comparison baseline.
+- Semantic correction: none declared by this report.
+- Equivalence meaning: this report compares current behavior to the specified baseline commit only. If that baseline includes semantic corrections, do not describe the result as pure verification or as equivalence to earlier pre-baseline behavior.`;
 }
 
 export function normalizeGates(gates) {

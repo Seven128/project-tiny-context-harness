@@ -183,9 +183,16 @@ function reportInput(options, baseline, current, comparison) {
     checks,
     conclusion:
       verdict === "equivalent"
-        ? "同一输入仍走同一状态机并得到同一完成判定。Codex fresh-session smoke 需要人工目标会话补充后才能把 smoke 从 not_run 改为 passed。"
+        ? equivalentConclusion(options.baselineSha)
         : "同一输入未能证明仍走同一状态机并得到同一完成判定；请查看 rejected-diff.json。"
   };
+}
+
+function equivalentConclusion(baselineSha) {
+  if (/^df03307c6ee4a3740def6e32c1c6b958bf59acf7\b/i.test(baselineSha ?? "")) {
+    return "同一输入仍走同一状态机并得到同一完成判定；该等价结论是相对 df03307 fixed Superpowers Long-Task baseline，不是相对 pre-fix buggy baseline。Codex fresh-session smoke 需要人工目标会话补充后才能把 smoke 从 not_run 改为 passed。";
+  }
+  return "同一输入仍走同一状态机并得到同一完成判定；该等价结论只针对指定 baseline commit。若 baseline 已包含语义修复，不要把结果描述为纯验证或对更早 buggy baseline 的等价。Codex fresh-session smoke 需要人工目标会话补充后才能把 smoke 从 not_run 改为 passed。";
 }
 
 function strictParseParity(side) {

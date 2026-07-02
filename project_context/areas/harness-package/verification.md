@@ -30,6 +30,7 @@ read_policy: default
 - `node tools/verify_composite_long_task_equivalence.mjs --baseline-sha <sha> --current-sha <sha> --run-id <id>`
   - Use after changing the Composite Long-Task Workflow command namespace, Superpowers compatibility alias, state kernel, strict source parser, delivery-scope semantics, derived views, gates or Goal/protocol runtime contract.
   - Expected signal: the generated equivalence report declares zero semantic and rejected diffs across the required happy-path, full-population, scope-conflict, strict-parse and multi-slice fixtures; one-off reports remain under `tmp/ty-context/composite-equivalence/**` and are not Context.
+  - Baseline wording rule: reports must identify whether the baseline is a pure pre-change baseline or a fixed semantic baseline. If a baseline commit includes a semantic correction, separate that correction from carrier/equivalence validation and do not describe the branch as pure verification or as equivalence to earlier buggy behavior.
 - `node --test tests/ty-context/composite-long-task-equivalence-golden.test.mjs tests/ty-context/composite-long-task-invariants.test.mjs tests/ty-context/composite-long-task-legacy-alias.test.mjs`
   - Use with the focused composite long-task tests when the equivalence runner, golden snapshots, core invariants or hidden legacy alias behavior changes.
   - Expected signal: Node test runner exits with no failing subtests and the golden fixture comparison reports no semantic drift.

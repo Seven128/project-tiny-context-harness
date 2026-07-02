@@ -173,8 +173,8 @@ test("normalizeGates classifies hand-set completion blockers", () => {
 test("buildEquivalenceReport renders the required conclusion template", () => {
   const report = buildEquivalenceReport({
     verdict: "equivalent",
-    baselineCommit: "BASE",
-    currentCommit: "CURRENT",
+    baselineCommit: "df03307c6ee4a3740def6e32c1c6b958bf59acf7",
+    currentCommit: "9a9e8e33428865bd5c5f87bd870857d454edd527",
     fixtureCount: 8,
     semanticDiffCount: 0,
     allowedDiffCount: 3,
@@ -202,5 +202,9 @@ test("buildEquivalenceReport renders the required conclusion template", () => {
   assert.match(report, /## State Kernel Parity/);
   assert.match(report, /## Negative Case Parity/);
   assert.match(report, /## Goal \/ Protocol Runtime/);
+  assert.match(report, /## Baseline Semantics/);
+  assert.match(report, /fixed Superpowers Long-Task baseline/i);
+  assert.match(report, /sample-only evidence could incorrectly satisfy full_population final completion/i);
+  assert.match(report, /not to the pre-fix buggy baseline/i);
   assert.match(report, /Codex fresh-session smoke: not_run/);
 });
