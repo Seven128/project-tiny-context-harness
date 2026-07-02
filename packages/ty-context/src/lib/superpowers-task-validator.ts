@@ -237,6 +237,10 @@ function validateFinalCompletion(state: SuperpowersTaskState, errors: string[]):
       errors.push("product_goal_complete=true but Context Delta coverage is unresolved");
     }
   }
+  validateFullPopulationEvidence(state, errors);
+}
+
+function validateFullPopulationEvidence(state: SuperpowersTaskState, errors: string[]): void {
   if (fullPopulationRequired(state)) {
     const sampleOnlyEvidence = state.evidence.filter((evidence) =>
       evidence.does_not_prove.some((claim) => /\b(full[-_ ]?population|all[-_ ]?provider|all[-_ ]?interface|all[-_ ]?platform)\b/i.test(claim))
@@ -251,11 +255,11 @@ function validateFinalCompletion(state: SuperpowersTaskState, errors: string[]):
   }
 }
 
-export function allCompletionConditionsSatisfied(state: SuperpowersTaskState): boolean {
+export function completionConditionErrors(state: SuperpowersTaskState): string[] {
   const errors: string[] = [];
   validateShape(state, errors);
   if (!hasUsableShape(state)) {
-    return false;
+    return errors;
   }
   validateDeliveryContract(state, errors);
   validateScopeConflicts(state, errors);
@@ -263,11 +267,22 @@ export function allCompletionConditionsSatisfied(state: SuperpowersTaskState): b
   validateEvidenceRecords(state, errors);
   validateProofLayers(state, errors);
   validateAuditor(state, errors);
+  validateFullPopulationEvidence(state, errors);
   const planItems = Object.values(state.graph.plan_items);
   const acceptanceCriteria = Object.values(state.graph.acceptance_criteria);
   const proofLayers = Object.values(state.graph.proof_layers);
   const allPlansComplete = planItems.every((item) => item.status === "complete" || item.status === "out_of_scope_NA");
   const allAcsComplete = acceptanceCriteria.every((ac) => ac.status === "complete" || ac.status === "out_of_scope_NA");
   const allLayersSatisfied = proofLayers.every((layer) => !layer.required || layer.status === "satisfied");
-  return errors.length === 0 && planItems.length > 0 && acceptanceCriteria.length > 0 && proofLayers.length > 0 && allPlansComplete && allAcsComplete && allLayersSatisfied;
+  if (planItems.length === 0 || acceptanceCriteria.length === 0 || proofLayers.length === 0) {
+    errors.push("completion conditions require a compiled task graph with plan items, ACs and proof layers");
+  }
+  if (!allPlansComplete || !allAcsComplete || !allLayersSatisfied) {
+    errors.push("completion conditions require all required plan items, ACs and proof layers to be complete");
+  }
+  return errors;
+}
+
+export function allCompletionConditionsSatisfied(state: SuperpowersTaskState): boolean {
+  return completionConditionErrors(state).length === 0;
 }

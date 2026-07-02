@@ -1,6 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { rm } from "node:fs/promises";
+import path from "node:path";
+import { deriveSuperpowersArtifacts } from "../../packages/ty-context/dist/lib/superpowers-task-derive.js";
+import { runFinalGate } from "../../packages/ty-context/dist/lib/superpowers-task-gates.js";
 import { validateSuperpowersState } from "../../packages/ty-context/dist/lib/superpowers-task-validator.js";
 import { createPlanProject, validTaskState, writeSuperpowersSources, writeTaskState } from "./plan-validator-fixtures.mjs";
 
@@ -113,6 +116,29 @@ test("validate-superpowers-state rejects final completion when full-population e
 
     const report = await validateSuperpowersState(root, ["tmp/ty-context/plan-acceptance/demo"]);
     assert.match(report.errors.join("\n"), /full[- ]population.*does not prove|sample/i);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("final-gate rejects full-population completion when evidence is sample-only", async () => {
+  const root = await createPlanProject();
+  try {
+    await writeSuperpowersSources(root);
+    const state = validTaskState();
+    state.delivery.product_architecture_scope.delivery_scope = "full_population_operation";
+    state.delivery.product_architecture_scope.full_population_required = true;
+    state.graph.plan_items["PI-001"].delivery_scope = "full_population_operation";
+    state.graph.acceptance_criteria["AC-001"].acceptance_scope = "full_population_operation";
+    state.graph.acceptance_criteria["AC-001"].full_population_required = true;
+    state.evidence[0].does_not_prove = ["full population operation", "all-interface completion"];
+    await writeTaskState(root, state);
+    const workdir = path.join(root, "tmp/ty-context/plan-acceptance/demo");
+    await deriveSuperpowersArtifacts(workdir);
+
+    const result = await runFinalGate(workdir);
+    assert.equal(result.product_goal_complete, false);
+    assert.match(result.errors.join("\n"), /full[- ]population.*does not prove|sample/i);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

@@ -1,7 +1,7 @@
 import { appendSuperpowersEvent } from "./superpowers-task-events.js";
 import { deriveSuperpowersArtifacts } from "./superpowers-task-derive.js";
 import { loadSuperpowersState, recomputeStatuses, saveSuperpowersState } from "./superpowers-task-state.js";
-import { allCompletionConditionsSatisfied, validateSuperpowersState } from "./superpowers-task-validator.js";
+import { completionConditionErrors, validateSuperpowersState } from "./superpowers-task-validator.js";
 
 export async function runSliceGate(workdir: string, sliceId: string): Promise<{ passed: boolean; messages: string[] }> {
   const state = await loadSuperpowersState(workdir);
@@ -33,7 +33,9 @@ export async function runFinalGate(workdir: string): Promise<{ product_goal_comp
   await deriveSuperpowersArtifacts(workdir);
   const report = await validateSuperpowersState(workdir, [workdir]);
   const latest = await loadSuperpowersState(workdir);
-  const complete = report.errors.length === 0 && allCompletionConditionsSatisfied(latest);
+  const completionErrors = completionConditionErrors(latest);
+  const errors = [...new Set([...report.errors, ...completionErrors])];
+  const complete = errors.length === 0;
   latest.final.product_goal_complete = complete;
   latest.meta.product_goal_complete = complete;
   latest.final.acceptance_target_status = complete ? "complete" : "partial";
@@ -41,10 +43,10 @@ export async function runFinalGate(workdir: string): Promise<{ product_goal_comp
   latest.final.audit_task_complete = true;
   latest.meta.audit_task_complete = true;
   latest.final.completion_basis = complete ? ["all_required_acs_complete", "validator_passed", "auditor_no_blocker"] : [];
-  latest.gates.validator = { status: report.errors.length === 0 ? "pass" : "blocked", errors: report.errors };
+  latest.gates.validator = { status: errors.length === 0 ? "pass" : "blocked", errors };
   await saveSuperpowersState(workdir, latest);
   await deriveSuperpowersArtifacts(workdir);
   await appendSuperpowersEvent(workdir, "final_gate", { product_goal_complete: complete });
-  return { product_goal_complete: complete, errors: report.errors };
+  return { product_goal_complete: complete, errors };
 }
 
