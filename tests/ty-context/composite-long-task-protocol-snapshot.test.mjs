@@ -9,6 +9,9 @@ import { compileSuperpowersTask } from "../../packages/ty-context/dist/lib/super
 import { createPlanProject, writeSuperpowersSources } from "./plan-validator-fixtures.mjs";
 
 test("render-goal freezes the package protocol into a hash-verifiable workdir snapshot", async () => {
+  const packageJson = JSON.parse(
+    await readFile(new URL("../../packages/ty-context/package.json", import.meta.url), "utf8")
+  );
   const root = await createPlanProject();
   try {
     await writeSuperpowersSources(root);
@@ -21,7 +24,7 @@ test("render-goal freezes the package protocol into a hash-verifiable workdir sn
     const [header, body] = snapshot.split("\n---\n");
 
     assert.match(header, /protocol_name: composite-long-task-workflow/);
-    assert.match(header, /protocol_version: 0\.2\.79/);
+    assert.match(header, new RegExp(`protocol_version: ${escapeRegex(packageJson.version)}`));
     assert.match(header, /protocol_sha256: [a-f0-9]{64}/);
     assert.match(header, /generated_at: \d{4}-\d{2}-\d{2}T/);
     assert.match(
