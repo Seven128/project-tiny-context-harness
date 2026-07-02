@@ -116,7 +116,7 @@ try {
   await stat(path.join(root, ".agent/skills/context_full_project_export/SKILL.md"));
   await stat(path.join(root, ".agent/skills/context_harness_upgrade/SKILL.md"));
   await stat(path.join(root, ".agent/skills/normal-long-task/SKILL.md"));
-  await stat(path.join(root, ".agent/skills/superpowers-long-task/SKILL.md"));
+  await stat(path.join(root, ".agent/skills/composite-long-task-workflow/SKILL.md"));
   await assert.rejects(stat(path.join(root, "project_context/areas/product-surface-contracts.md")));
   await assert.rejects(stat(path.join(root, ".work_products/INDEX.md")));
 
@@ -160,7 +160,7 @@ try {
   assert.match(agents, /upgrade Tiny Context/);
   assert.match(agents, /context_harness_upgrade/);
   assert.match(agents, /\/normal-long-task/);
-  assert.match(agents, /\/superpowers-long-task/);
+  assert.match(agents, /\/composite-long-task-workflow/);
   assert.doesNotMatch(agents, /plan_acceptance_checklist_compiler/);
   assert.doesNotMatch(agents, /superpowers_target_prompt_compiler/);
   assert.match(agents, /tmp\/ty-context\/plan-acceptance/);
@@ -374,22 +374,24 @@ try {
   assert.match(normalLongTaskSkill, /Do not include concrete business-domain logic/);
   assert.doesNotMatch(normalLongTaskSkill, /Superpowers input packet|Superpowers 输入包|superpowers:writing-plans/);
 
-  const superpowersLongTaskSkill = await readFile(
-    path.join(root, ".agent/skills/superpowers-long-task/SKILL.md"),
+  const compositeLongTaskSkill = await readFile(
+    path.join(root, ".agent/skills/composite-long-task-workflow/SKILL.md"),
     "utf8"
   );
-  assert.match(superpowersLongTaskSkill, /name: superpowers-long-task/);
-  assert.match(superpowersLongTaskSkill, /Use when directly invoked for Superpowers long-running task target prompt preparation\./);
-  assert.match(superpowersLongTaskSkill, /aligned to the official Superpowers skills/i);
-  assert.match(superpowersLongTaskSkill, /upstream-owned schema/i);
-  assert.match(superpowersLongTaskSkill, /Superpowers-ready Markdown implementation plan/i);
-  assert.match(superpowersLongTaskSkill, /Superpowers input packet/);
-  assert.doesNotMatch(superpowersLongTaskSkill, /superpowers:writing-plans/);
-  assert.match(superpowersLongTaskSkill, /superpowers:subagent-driven-development/);
-  assert.match(superpowersLongTaskSkill, /superpowers:executing-plans/);
-  assert.match(superpowersLongTaskSkill, /superpowers:test-driven-development/);
-  assert.match(superpowersLongTaskSkill, /superpowers:verification-before-completion/);
-  assert.match(superpowersLongTaskSkill, /Do not generate the Superpowers target-mode prompt/);
+  assert.match(compositeLongTaskSkill, /name: composite-long-task-workflow/);
+  assert.match(compositeLongTaskSkill, /Use when directly invoked for Superpowers-backed composite long-task workflow execution\./);
+  assert.match(compositeLongTaskSkill, /official Superpowers skills/i);
+  assert.match(compositeLongTaskSkill, /upstream-owned schema/i);
+  assert.match(compositeLongTaskSkill, /Superpowers-ready Markdown implementation plan/i);
+  assert.match(compositeLongTaskSkill, /workflow-protocol\.md/);
+  assert.match(compositeLongTaskSkill, /execution-binding\.md/);
+  assert.match(compositeLongTaskSkill, /goal-objective\.txt/);
+  assert.doesNotMatch(compositeLongTaskSkill, /superpowers:writing-plans/);
+  assert.match(compositeLongTaskSkill, /superpowers:subagent-driven-development/);
+  assert.match(compositeLongTaskSkill, /superpowers:executing-plans/);
+  assert.match(compositeLongTaskSkill, /superpowers:test-driven-development/);
+  assert.match(compositeLongTaskSkill, /superpowers:verification-before-completion/);
+  assert.match(compositeLongTaskSkill, /Do not execute the generated workflow/);
 
   const managedProductSkillPath = path.join(root, ".agent/skills/context_product_plan/SKILL.md");
   const packagedProductSkill = await readFile(
@@ -459,7 +461,7 @@ try {
   await stat(path.join(configuredRoot, ".harness/skills/context_full_project_export/SKILL.md"));
   await stat(path.join(configuredRoot, ".harness/skills/context_harness_upgrade/SKILL.md"));
   await stat(path.join(configuredRoot, ".harness/skills/normal-long-task/SKILL.md"));
-  await stat(path.join(configuredRoot, ".harness/skills/superpowers-long-task/SKILL.md"));
+  await stat(path.join(configuredRoot, ".harness/skills/composite-long-task-workflow/SKILL.md"));
   await assert.rejects(stat(path.join(configuredRoot, ".harness/ty-context-managed/override_skills")));
   await stat(path.join(configuredRoot, "project_context/global.md"));
   await stat(path.join(configuredRoot, "project_context/context.toml"));

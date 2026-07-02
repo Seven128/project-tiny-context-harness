@@ -28,6 +28,7 @@ const [
   packageReadme,
   spec,
   workflowContract,
+  implementationIndex,
   sourceSkill,
   generatedSkill,
   packagedSkill
@@ -39,6 +40,7 @@ const [
   read("packages/ty-context/README.md"),
   read("PROJECT_SPEC.md"),
   read("project_context/areas/harness-package/contracts/workflow-contract.md"),
+  read("project_context/areas/harness-package/implementation-index.md"),
   read(".codex/ty-context-managed/skills/normal-long-task/SKILL.md"),
   read(".codex/skills/normal-long-task/SKILL.md"),
   read("packages/ty-context/assets/skills/normal-long-task/SKILL.md")
@@ -46,7 +48,7 @@ const [
 
 for (const content of [sourceAgents, packageAgents]) {
   assert.match(content, /\/normal-long-task/);
-  assert.match(content, /\/superpowers-long-task/);
+  assert.match(content, /\/composite-long-task-workflow/);
   assert.match(content, /tmp\/ty-context\/plan-acceptance/);
   assert.doesNotMatch(content, /plan_acceptance_checklist_compiler/);
   assert.doesNotMatch(content, /superpowers_target_prompt_compiler/);
@@ -54,7 +56,7 @@ for (const content of [sourceAgents, packageAgents]) {
 
 for (const content of [rootReadme, rootZhReadme, packageReadme, spec, workflowContract]) {
   assert.match(content, /ordinary long-task Skill|普通长程任务 Skill|normal-long-task/i);
-  assert.match(content, /Superpowers long-task Skill|Superpowers 长程任务 Skill|superpowers-long-task/i);
+  assert.match(content, /Composite Long-Task Workflow Skill|Composite Long-Task Workflow|composite-long-task-workflow/i);
   assert.match(content, /tmp\/ty-context\/plan-acceptance/);
   assert.match(content, /local audit/i);
   assert.match(content, /not (?:execute|a task planner|task state|proof|prove)|不执行计划|不证明完成/i);
@@ -62,9 +64,9 @@ for (const content of [rootReadme, rootZhReadme, packageReadme, spec, workflowCo
 }
 
 assert.match(workflowContract, /Ordinary Long-Task Skill Boundary/);
-assert.match(workflowContract, /Superpowers Long-Task Skill Boundary/);
+assert.match(workflowContract, /Composite Long-Task Workflow Skill Boundary/);
 assert.match(workflowContract, /generic target-mode prompt/i);
-assert.match(workflowContract, /Superpowers-specific target-mode prompt/i);
+assert.match(workflowContract, /Superpowers-backed long-task execution/i);
 assert.match(workflowContract, /3850-character effective maximum/);
 assert.match(workflowContract, /maximum safe autonomous progress/i);
 assert.match(workflowContract, /Generated target prompts inherit the current repository\/global agent-instruction permission policy/);
@@ -75,8 +77,48 @@ assert.doesNotMatch(workflowContract, /visible Superpowers input packet/i);
 assert.doesNotMatch(workflowContract, /Superpowers input boundary/i);
 assert.doesNotMatch(workflowContract, /Target-mode prompts may recommend the specific Superpowers/i);
 
+for (const content of [rootReadme, packageReadme]) {
+  assert.match(content, /expected runtime effect is explicit fusion/i);
+  assert.match(content, /not the Tiny Context Workflow Contract itself/i);
+  assert.match(content, /thin Codex Goal objective instead of packing the full workflow into goal text/i);
+  assert.match(content, /do not register `workflow-protocol\.md` in `project_context\/context\.toml`/i);
+  assert.match(content, /let `derived\/\*\*` rewrite Product \/ Plan \/ Checklist/i);
+  assert.match(content, /Superpowers review as quality proof/i);
+  assert.match(content, /sample evidence as full-population proof/i);
+  assert.match(content, /Source-to-Context Coverage or Context-to-Implementation Binding has unresolved required gaps/i);
+  assert.match(content, /complete an implementation Goal before final-gate passes/i);
+}
+
+assert.match(rootZhReadme, /不是把完整 workflow 塞进 4000 字 Goal/);
+assert.match(rootZhReadme, /预期运行效果是显式融合/);
+assert.match(rootZhReadme, /不是 Tiny Context 流程契约本身/);
+assert.match(rootZhReadme, /不得把 `workflow-protocol\.md` 注册进 `project_context\/context\.toml`/);
+assert.match(rootZhReadme, /不得让 `derived\/\*\*` 反向改写 Product \/ Plan \/ Checklist/);
+assert.match(rootZhReadme, /不得把 local audit 或 Superpowers review 当质量证明/);
+assert.match(rootZhReadme, /不得把 sample evidence 当 full population proof/);
+assert.match(rootZhReadme, /Source-to-Context Coverage 或 Context-to-Implementation Binding 仍有 unresolved required gap/);
+assert.match(rootZhReadme, /final-gate 未通过前不得把实现 Goal 标成 complete/);
+
+assert.match(workflowContract, /Expected runtime effect is explicit fusion/i);
+assert.match(workflowContract, /not the Workflow Contract itself, not a business fact source/i);
+assert.match(workflowContract, /must not be registered in `project_context\/context\.toml`/);
+assert.match(workflowContract, /explicit hallucination guard/i);
+assert.match(workflowContract, /do not let `derived\/\*\*`, local audit, validator output or auditor reports rewrite Product \/ Plan \/ Checklist/i);
+assert.match(workflowContract, /do not claim full alignment while Source-to-Context Coverage or Context-to-Implementation Binding has unresolved required gaps/i);
+assert.match(workflowContract, /why the full workflow is not packed into a 4000-character Goal objective/i);
+assert.match(workflowContract, /per-task `workflow-protocol\.md` snapshot is runtime-only/i);
+assert.match(workflowContract, /maintenance placement guidance belongs in README, Context, implementation index and tests/i);
+assert.match(workflowContract, /must not enter the per-task protocol snapshot/i);
+
+assert.match(implementationIndex, /Expected Runtime Effect/);
+assert.match(implementationIndex, /预期实现效果/);
+assert.match(implementationIndex, /hallucination guard/);
+assert.match(implementationIndex, /thin Goal objective contract/);
+assert.match(implementationIndex, /maintenance placement/i);
+assert.match(implementationIndex, /runtime protocol/i);
+
 assert.match(spec, /ordinary long-task Skill/i);
-assert.match(spec, /Superpowers long-task Skill/i);
+assert.match(spec, /Composite Long-Task Workflow Skill/i);
 assert.match(spec, /two-document upstream input packet/i);
 assert.match(spec, /acceptance execution contract/i);
 assert.match(spec, /test requirements belong to acceptance evidence/i);
@@ -86,9 +128,9 @@ assert.match(rootZhReadme, /两份产物/);
 assert.match(rootZhReadme, /《开发方案》/);
 assert.match(rootZhReadme, /《验收清单和测试用例》/);
 assert.match(rootZhReadme, /\/normal-long-task/);
-assert.match(rootZhReadme, /\/superpowers-long-task/);
+assert.match(rootZhReadme, /\/composite-long-task-workflow/);
 assert.match(rootZhReadme, /普通目标模式文本/);
-assert.match(rootZhReadme, /Superpowers 专用目标模式文本/);
+assert.match(rootZhReadme, /Superpowers-backed 目标模式文本|Superpowers-backed execution/);
 
 for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   const description = frontMatterDescription(content);

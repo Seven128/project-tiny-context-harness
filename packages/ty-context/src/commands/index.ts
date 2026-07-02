@@ -1,4 +1,5 @@
 import { checkModularity } from "./check-modularity.js";
+import { compositeLongTask } from "./composite-long-task.js";
 import { doctor } from "./doctor.js";
 import { exportContext } from "./export-context.js";
 import { init } from "./init.js";
@@ -25,6 +26,7 @@ export const commands: Record<string, CommandHandler> = {
   "validate-plan-contract": (args) => validate(["validate-plan-contract", ...args]),
   "validate-plan-acceptance": (args) => validate(["validate-plan-acceptance", ...args]),
   "validate-superpowers-state": (args) => validate(["validate-superpowers-state", ...args]),
+  "composite-long-task": compositeLongTask,
   superpowers,
   package: packageSource
 };
@@ -51,8 +53,8 @@ export function help(): void {
   validate-plan-acceptance <dir>
                        Validate plan-conformance matrix and final verdict consistency
   validate-superpowers-state <dir>
-                       Validate canonical Superpowers task-state.json
-  superpowers <subcommand>
-                       Manage explicit Superpowers long-task state workdirs
+                       Validate canonical Superpowers-backed task-state.json
+  composite-long-task <subcommand>
+                       Manage explicit composite long-task workflow workdirs
   package <subcommand> Maintain package canonical source`);
 }

@@ -57,7 +57,7 @@ export function computeScopeConflicts(state: SuperpowersTaskState): string[] {
   const conflicts: string[] = [];
   const product = state.delivery?.product_architecture_scope;
   const productScope = product?.delivery_scope ?? "";
-  const productRequiresFullPopulation = productScope === "full_population_operation" || product?.full_population_required === true;
+  const productRequiresFullPopulation = productScope === "full_population_operation";
   const productIsCapabilityOnly =
     productScope === "system_capability_build" ||
     productScope === "representative_sample_validation" ||

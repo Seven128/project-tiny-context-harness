@@ -22,11 +22,17 @@ read_policy: default
   - Use after changing long-task matrix/verdict artifact semantics or plan-acceptance validator behavior.
   - Expected signal: command exits with no errors, reports matrix/verdict row counts and rejects contradictory complete claims.
 - `node packages/ty-context/dist/cli.js validate-superpowers-state tmp/ty-context/plan-acceptance/<slug>`
-  - Use after changing Superpowers canonical task state, derived view generation, slice/epoch/final gates or state-backed plan-acceptance validation.
+  - Use after changing Superpowers-backed composite canonical task state, derived view generation, slice/epoch/final gates, goal rendering or state-backed plan-acceptance validation.
   - Expected signal: command exits with no errors for a consistent state workdir and reports blocking source hash, evidence, proof-layer, derived-drift or completion-rule errors for inconsistent state.
-- `node --test tests/ty-context/superpowers-task-state.test.mjs tests/ty-context/superpowers-task-derive.test.mjs tests/ty-context/superpowers-task-validator.test.mjs tests/ty-context/superpowers-long-task-state-skill.test.mjs`
-  - Use after changing the Superpowers long-task state kernel or managed Skill state-kernel prompt rules.
+- `node --test tests/ty-context/composite-long-task-workflow-skill.test.mjs tests/ty-context/composite-long-task-goal-renderer.test.mjs tests/ty-context/composite-long-task-protocol-snapshot.test.mjs tests/ty-context/composite-long-task-execution-binding.test.mjs tests/ty-context/composite-long-task-state.test.mjs tests/ty-context/superpowers-task-derive.test.mjs tests/ty-context/superpowers-task-validator.test.mjs tests/ty-context/plan-acceptance-skill.test.mjs`
+  - Use after changing the composite long-task state kernel, protocol snapshot, execution binding, goal renderer, managed Skill state-kernel prompt rules, README/Context placement wording or runtime-vs-maintenance protocol boundary.
   - Expected signal: Node test runner exits with no failing subtests.
+- `node tools/verify_composite_long_task_equivalence.mjs --baseline-sha <sha> --current-sha <sha> --run-id <id>`
+  - Use after changing the Composite Long-Task Workflow command namespace, Superpowers compatibility alias, state kernel, strict source parser, delivery-scope semantics, derived views, gates or Goal/protocol runtime contract.
+  - Expected signal: the generated equivalence report declares zero semantic and rejected diffs across the required happy-path, full-population, scope-conflict, strict-parse and multi-slice fixtures; one-off reports remain under `tmp/ty-context/composite-equivalence/**` and are not Context.
+- `node --test tests/ty-context/composite-long-task-equivalence-golden.test.mjs tests/ty-context/composite-long-task-invariants.test.mjs tests/ty-context/composite-long-task-legacy-alias.test.mjs`
+  - Use with the focused composite long-task tests when the equivalence runner, golden snapshots, core invariants or hidden legacy alias behavior changes.
+  - Expected signal: Node test runner exits with no failing subtests and the golden fixture comparison reports no semantic drift.
 - `git diff --check`
   - Use before handoff to catch whitespace and conflict marker issues.
   - Expected signal: no whitespace error output.

@@ -23,7 +23,15 @@ const PRODUCT_FIELDS = new Set([
   "full_population_required",
   "representative_samples_validate",
   "representative_samples_do_not_validate",
-  "out_of_scope_backlog"
+  "out_of_scope_backlog",
+  "source_authority",
+  "product_goal",
+  "surface_ia_lock",
+  "decision_lock",
+  "context_delta",
+  "source_to_context_coverage",
+  "acceptance_semantics",
+  "impact"
 ]);
 const PLAN_FIELDS = new Set([
   "delivery_scope",
@@ -35,16 +43,50 @@ const PLAN_FIELDS = new Set([
   "forbidden_surfaces",
   "implementation_paths",
   "required_tests",
-  "related_acs"
+  "related_acs",
+  "requirement_ref",
+  "decision_id",
+  "proof_layer_ids",
+  "api_schema_changes",
+  "state_machine",
+  "data_flow",
+  "worker_runtime_behavior",
+  "ui_ia_changes",
+  "migration_plan",
+  "evidence_artifacts",
+  "explicit_no_test_scope",
+  "non_completing_shortcuts",
+  "substitution_policy",
+  "drift_severity",
+  "partial_conditions",
+  "blockers",
+  "context_fact_refs"
 ]);
 const ACCEPTANCE_FIELDS = new Set([
+  "checklist_source",
   "acceptance_scope",
   "ac_validates",
   "ac_does_not_validate",
   "sample_boundary",
   "full_population_required",
   "related_plan_items",
-  "required_proof_layers"
+  "required_proof_layers",
+  "ac_type",
+  "proof_chain",
+  "verification_method",
+  "fail_conditions",
+  "invalid_evidence",
+  "substitution_policy",
+  "missing_layer_downgrade",
+  "auditor_expectation",
+  "out_of_scope_na_approval_source",
+  "required_test_ids",
+  "explicit_no_test_scope",
+  "hard_blockers",
+  "validates_explanation",
+  "does_not_validate_explanation",
+  "final_evidence_expected",
+  "test_cases"
 ]);
 
 export function parseProductArchitectureScope(content: string, sourceFile: string): SuperpowersProductArchitectureScope {

@@ -1,92 +1,9 @@
-import path from "node:path";
-import { applySliceDelta, initializeSuperpowersTask } from "../lib/superpowers-task-state.js";
-import { compileSuperpowersTask } from "../lib/superpowers-task-compile.js";
-import { deriveSuperpowersArtifacts } from "../lib/superpowers-task-derive.js";
-import { runEpochGate, runFinalGate, runSliceGate } from "../lib/superpowers-task-gates.js";
-import { nextSuperpowersSlices } from "../lib/superpowers-task-next-slices.js";
+import { runCompositeLongTaskCommand } from "./composite-long-task.js";
 
 export async function superpowers(args: string[]): Promise<void> {
-  const subcommand = args[0] ?? "help";
-  const workdirArg = args[1];
-  if (!workdirArg || subcommand === "help") {
-    help();
-    return;
-  }
-  const workdir = path.resolve(process.cwd(), workdirArg);
-  if (subcommand === "init") {
-    await initializeSuperpowersTask(workdir, { planSlug: path.basename(workdir) });
-    console.log(`initialized superpowers task state at ${workdirArg}/task-state.json`);
-    return;
-  }
-  if (subcommand === "compile") {
-    const state = await compileSuperpowersTask(workdir);
-    console.log(`compiled superpowers task graph plan_items=${Object.keys(state.graph.plan_items).length} acs=${Object.keys(state.graph.acceptance_criteria).length}`);
-    return;
-  }
-  if (subcommand === "apply-slice-delta") {
-    const delta = args[2];
-    if (!delta) {
-      throw new Error("apply-slice-delta requires <slice-delta.json>");
-    }
-    await applySliceDelta(workdir, path.resolve(process.cwd(), delta));
-    const result = await deriveSuperpowersArtifacts(workdir);
-    console.log(`applied superpowers slice delta and derived files=${result.files.length}`);
-    return;
-  }
-  if (subcommand === "derive") {
-    const result = await deriveSuperpowersArtifacts(workdir);
-    console.log(`derived superpowers artifacts files=${result.files.length}`);
-    return;
-  }
-  if (subcommand === "slice-gate") {
-    const sliceId = optionValue(args, "--slice") ?? "";
-    const result = await runSliceGate(workdir, sliceId);
-    console.log(result.passed ? `slice gate passed ${sliceId}` : `slice gate blocked ${result.messages.join("; ")}`);
-    if (!result.passed) {
-      process.exitCode = 1;
-    }
-    return;
-  }
-  if (subcommand === "epoch-gate") {
-    const epochId = optionValue(args, "--epoch") ?? "";
-    const result = await runEpochGate(workdir, epochId);
-    console.log(result.passed ? `epoch gate passed ${epochId}` : `epoch gate blocked ${result.messages.join("; ")}`);
-    return;
-  }
-  if (subcommand === "final-gate") {
-    const result = await runFinalGate(workdir);
-    console.log(`final gate product_goal_complete=${result.product_goal_complete}`);
-    if (!result.product_goal_complete) {
-      process.exitCode = 1;
-      for (const error of result.errors) {
-        console.error(`error: ${error}`);
-      }
-    }
-    return;
-  }
-  if (subcommand === "next-slices") {
-    const limit = Number.parseInt(optionValue(args, "--limit") ?? "5", 10);
-    const slices = await nextSuperpowersSlices(workdir, Number.isFinite(limit) ? limit : 5);
-    console.log(`Next ${Math.min(Number.isFinite(limit) ? limit : 5, 5)} high-value clusters:`);
-    console.log(slices.join("\n"));
-    return;
-  }
-  help();
-}
-
-function help(): void {
-  console.log(`ty-context superpowers commands:
-  init <workdir>                         Initialize task-state.json and events.ndjson
-  compile <workdir>                      Compile sources into task graph
-  apply-slice-delta <workdir> <delta>    Apply structured slice delta, evidence and derived views
-  derive <workdir>                       Generate derived/** views
-  slice-gate <workdir> --slice <id>      Validate one slice has real progress
-  epoch-gate <workdir> --epoch <id>      Refresh shared epoch evidence views
-  final-gate <workdir>                   Compute product_goal_complete
-  next-slices <workdir> --limit 5        Recommend next proof clusters`);
-}
-
-function optionValue(args: string[], name: string): string | undefined {
-  const index = args.indexOf(name);
-  return index >= 0 ? args[index + 1] : undefined;
+  await runCompositeLongTaskCommand(args, {
+    commandName: "ty-context superpowers",
+    label: "superpowers task",
+    showHelp: false
+  });
 }

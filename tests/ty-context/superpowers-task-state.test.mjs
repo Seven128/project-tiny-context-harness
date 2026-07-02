@@ -172,18 +172,18 @@ test("apply-slice-delta records progress value, evidence and closes proof layers
   }
 });
 
-test("superpowers CLI namespace initializes, compiles and recommends next slices", async () => {
+test("composite long-task CLI namespace initializes, compiles and recommends next slices", async () => {
   const root = await createPlanProject();
   try {
     await writeSuperpowersSources(root);
     const cli = path.join(repoRoot, "packages/ty-context/dist/cli.js");
     const workdir = "tmp/ty-context/plan-acceptance/demo";
 
-    const init = spawnSync(process.execPath, [cli, "superpowers", "init", workdir], { cwd: root, encoding: "utf8" });
+    const init = spawnSync(process.execPath, [cli, "composite-long-task", "init", workdir], { cwd: root, encoding: "utf8" });
     assert.equal(init.status, 0, init.stderr);
     assert.match(init.stdout, /task-state\.json/);
 
-    const compile = spawnSync(process.execPath, [cli, "superpowers", "compile", workdir], { cwd: root, encoding: "utf8" });
+    const compile = spawnSync(process.execPath, [cli, "composite-long-task", "compile", workdir], { cwd: root, encoding: "utf8" });
     assert.equal(compile.status, 0, compile.stderr);
     assert.match(compile.stdout, /compiled/);
 
@@ -226,12 +226,12 @@ test("superpowers CLI namespace initializes, compiles and recommends next slices
       ),
       "utf8"
     );
-    const apply = spawnSync(process.execPath, [cli, "superpowers", "apply-slice-delta", workdir, deltaPath], { cwd: root, encoding: "utf8" });
+    const apply = spawnSync(process.execPath, [cli, "composite-long-task", "apply-slice-delta", workdir, deltaPath], { cwd: root, encoding: "utf8" });
     assert.equal(apply.status, 0, apply.stderr);
     assert.match(apply.stdout, /derived files=/);
     await readFile(path.join(root, workdir, "derived", "plan-conformance-matrix.json"), "utf8");
 
-    const next = spawnSync(process.execPath, [cli, "superpowers", "next-slices", workdir, "--limit", "3"], {
+    const next = spawnSync(process.execPath, [cli, "composite-long-task", "next-slices", workdir, "--limit", "3"], {
       cwd: root,
       encoding: "utf8"
     });

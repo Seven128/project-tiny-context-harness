@@ -234,7 +234,7 @@ related_acs: AC-001
   }
 });
 
-test("superpowers CLI compile fails for legacy list definitions", async () => {
+test("composite long-task CLI compile fails for legacy list definitions", async () => {
   const root = await createPlanProject();
   try {
     const workdir = path.join(root, "tmp/ty-context/plan-acceptance/demo");
@@ -250,10 +250,10 @@ test("superpowers CLI compile fails for legacy list definitions", async () => {
     });
 
     const cli = path.join(repoRoot, "packages/ty-context/dist/cli.js");
-    const init = spawnSync(process.execPath, [cli, "superpowers", "init", "tmp/ty-context/plan-acceptance/demo"], { cwd: root, encoding: "utf8" });
+    const init = spawnSync(process.execPath, [cli, "composite-long-task", "init", "tmp/ty-context/plan-acceptance/demo"], { cwd: root, encoding: "utf8" });
     assert.equal(init.status, 0, init.stderr);
 
-    const compile = spawnSync(process.execPath, [cli, "superpowers", "compile", "tmp/ty-context/plan-acceptance/demo"], { cwd: root, encoding: "utf8" });
+    const compile = spawnSync(process.execPath, [cli, "composite-long-task", "compile", "tmp/ty-context/plan-acceptance/demo"], { cwd: root, encoding: "utf8" });
     assert.notEqual(compile.status, 0);
     assert.match(compile.stderr, /PI-001 list-style definition is not allowed.*use "## PI-001: \.\.\."/i);
   } finally {

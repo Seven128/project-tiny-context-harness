@@ -19,7 +19,7 @@ Convert a given ordinary long-task source into a strict, project-context-aware a
 For this exact plan, what must be true before a future executor can honestly say the task is complete?
 ```
 
-This Skill defines the acceptance standard. It is not an execution framework. For a dedicated prompt that binds the finished checklist to the external Superpowers workflow, directly invoke `/superpowers-long-task` after this Skill has produced or verified the full checklist.
+This Skill defines the acceptance standard. It is not an execution framework. For the composite workflow that binds the finished checklist to Superpowers-backed execution, directly invoke `/composite-long-task-workflow` after this Skill has produced or verified the full checklist.
 
 ## Required Outputs
 
@@ -59,7 +59,7 @@ Use this Skill through explicit invocation:
 /normal-long-task
 ```
 
-Do not rely on broad automatic keyword routing. If the user needs the Superpowers-specific long-task adapter, use `/superpowers-long-task` after this Skill has produced or verified the full checklist.
+Do not rely on broad automatic keyword routing. If the user needs the Superpowers-backed composite long-task workflow, use `/composite-long-task-workflow` after this Skill has produced or verified the full checklist.
 
 ## Use Cases
 

@@ -14,7 +14,8 @@ try {
   await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/context_development_engineer"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/context_surface_contract"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/normal-long-task"), { recursive: true });
-  await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/superpowers-long-task"), { recursive: true });
+  await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/composite-long-task-workflow/references"), { recursive: true });
+  await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/composite-long-task-workflow/assets"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/ty-context-managed/minimal_tools"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/ty-context-managed/make"), { recursive: true });
   await mkdir(path.join(fixture, ".github/workflows"), { recursive: true });
@@ -56,8 +57,26 @@ try {
     "utf8"
   );
   await writeFile(
-    path.join(fixture, ".agent/ty-context-managed/skills/superpowers-long-task/SKILL.md"),
-    "---\nname: superpowers-long-task\ndescription: Use when directly invoked for Superpowers long-running task target prompt preparation.\n---\n\n# Superpowers Long Task\n",
+    path.join(fixture, ".agent/ty-context-managed/skills/composite-long-task-workflow/SKILL.md"),
+    "---\nname: composite-long-task-workflow\ndescription: Use when directly invoked for Superpowers-backed composite long-task workflow preparation.\n---\n\n# Composite Long-Task Workflow\n",
+    "utf8"
+  );
+  await writeFile(
+    path.join(
+      fixture,
+      ".agent/ty-context-managed/skills/composite-long-task-workflow/references/composite-long-task-workflow-protocol.md"
+    ),
+    "# Composite Long-Task Workflow Protocol\n",
+    "utf8"
+  );
+  await writeFile(
+    path.join(fixture, ".agent/ty-context-managed/skills/composite-long-task-workflow/assets/goal-objective.template.md"),
+    "# Goal Objective Template\n",
+    "utf8"
+  );
+  await writeFile(
+    path.join(fixture, ".agent/ty-context-managed/skills/composite-long-task-workflow/assets/execution-binding.template.md"),
+    "# Execution Binding Template\n",
     "utf8"
   );
   await writeFile(path.join(fixture, ".agent/ty-context-managed/minimal_tools/validate_context.py"), "print('ok')\n", "utf8");
@@ -138,11 +157,24 @@ try {
     "utf8"
   );
   assert.match(packagedNormalLongTaskSkill, /name: normal-long-task/);
-  const packagedSuperpowersLongTaskSkill = await readFile(
-    path.join(fixture, "packages/ty-context/assets/skills/superpowers-long-task/SKILL.md"),
+  const packagedCompositeLongTaskSkill = await readFile(
+    path.join(fixture, "packages/ty-context/assets/skills/composite-long-task-workflow/SKILL.md"),
     "utf8"
   );
-  assert.match(packagedSuperpowersLongTaskSkill, /name: superpowers-long-task/);
+  assert.match(packagedCompositeLongTaskSkill, /name: composite-long-task-workflow/);
+  const packagedCompositeProtocol = await readFile(
+    path.join(
+      fixture,
+      "packages/ty-context/assets/skills/composite-long-task-workflow/references/composite-long-task-workflow-protocol.md"
+    ),
+    "utf8"
+  );
+  assert.match(packagedCompositeProtocol, /Composite Long-Task Workflow Protocol/);
+  const packagedCompositeGoalTemplate = await readFile(
+    path.join(fixture, "packages/ty-context/assets/skills/composite-long-task-workflow/assets/goal-objective.template.md"),
+    "utf8"
+  );
+  assert.match(packagedCompositeGoalTemplate, /Goal Objective Template/);
   const packagedTool = await readFile(path.join(fixture, "packages/ty-context/assets/tools/validate_context.py"), "utf8");
   assert.match(packagedTool, /print\('ok'\)/);
 } finally {

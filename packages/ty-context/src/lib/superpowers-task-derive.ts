@@ -132,7 +132,7 @@ async function assertDerivedJson(workdir: string, basename: string, expected: un
   }
   const actual = JSON.parse(await readText(file));
   if (stableJson(actual) !== stableJson(expected)) {
-    errors.push(`derived/${basename}.json does not match task-state.json; rerun ty-context superpowers derive`);
+    errors.push(`derived/${basename}.json does not match task-state.json; rerun ty-context composite-long-task derive`);
   }
 }
 

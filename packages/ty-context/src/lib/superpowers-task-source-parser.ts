@@ -151,7 +151,7 @@ function parseFieldValue(
     let cursor = index + 1;
     for (; cursor < lines.length; cursor++) {
       const next = lines[cursor];
-      if (next.trim() && !/^\s/.test(next)) {
+      if (next.trim() && isTopLevelFieldOrHeading(next)) {
         break;
       }
       block.push(next.replace(/^\s{0,2}/, ""));
@@ -172,7 +172,7 @@ function parseFieldValue(
     if (!next.trim()) {
       continue;
     }
-    if (!/^\s/.test(next)) {
+    if (isTopLevelFieldOrHeading(next)) {
       break;
     }
     const listItem = /^\s*[-*+]\s+(.+?)\s*$/.exec(next);
@@ -183,6 +183,13 @@ function parseFieldValue(
     values.push(cleanValue(listItem[1]));
   }
   return { value: values, endIndex: cursor - 1 };
+}
+
+function isTopLevelFieldOrHeading(line: string): boolean {
+  if (/^(#{1,6})\s+/.test(line)) {
+    return true;
+  }
+  return /^([a-z][a-z0-9_]*)\s*:/.test(line);
 }
 
 function rejectListStyleDefinitions(
