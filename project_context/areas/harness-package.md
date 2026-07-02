@@ -22,6 +22,7 @@
 - Default Context authoring Skills write durable conclusions to `project_context/**` or `DESIGN.md`. They must stay Minimal Context oriented and must not recreate PRD / UX / tech-plan / review / test / release document chains.
 - Product Surface Contract workflow is prompt-level and project-owned. It uses existing Context roles such as `contract`, `area`, `subdomain`, `verification`, `decision-rationale` and `implementation-index`; the package must not add a surface-specific Context role or infer business surface contracts during `init`/`upgrade`.
 - Public package surfaces are English-complete. Non-English trigger examples are additive compatibility only.
+- The public package runtime floor is Node.js `>=24`; maintainer CI and npm publishing workflows use Node 24 as the supported execution line.
 - `PROJECT_SPEC.md` remains the full source-workspace design-spec and historical rationale surface. It is not a consumer default asset and should not be copied wholesale into Context.
 
 ## Role Context Map

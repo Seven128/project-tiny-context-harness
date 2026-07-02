@@ -1228,7 +1228,7 @@ function localChecks() {
       contains(npmTrustedPublishWorkflow, /id-token:\s*write/) &&
       contains(npmTrustedPublishWorkflow, /contents:\s*write/) &&
       contains(npmTrustedPublishWorkflow, /environment:\s*npm-publish/) &&
-      contains(npmTrustedPublishWorkflow, /uses: actions\/checkout@v6/) &&
+      contains(npmTrustedPublishWorkflow, /uses: actions\/checkout@v7/) &&
       contains(npmTrustedPublishWorkflow, /uses: actions\/setup-node@v6/) &&
       contains(npmTrustedPublishWorkflow, /node-version:\s*"24"/) &&
       contains(npmTrustedPublishWorkflow, /registry-url:\s*"https:\/\/registry\.npmjs\.org"/) &&
@@ -1614,11 +1614,12 @@ function localChecks() {
       contains(scorecardWorkflow, /workflow_dispatch:/) &&
       contains(scorecardWorkflow, /security-events: write/) &&
       contains(scorecardWorkflow, /id-token: write/) &&
-      contains(scorecardWorkflow, /uses: actions\/checkout@v6/) &&
+      contains(scorecardWorkflow, /uses: actions\/checkout@v7/) &&
       contains(scorecardWorkflow, /uses: ossf\/scorecard-action@v2\.4\.3/) &&
       contains(scorecardWorkflow, /results_format: sarif/) &&
       contains(scorecardWorkflow, /publish_results: true/) &&
-      contains(scorecardWorkflow, /uses: github\/codeql-action\/upload-sarif@v3/),
+      contains(scorecardWorkflow, /uses: actions\/upload-artifact@v7/) &&
+      contains(scorecardWorkflow, /uses: github\/codeql-action\/upload-sarif@v4/),
     "OpenSSF Scorecard workflow publishes SARIF results and public scorecard data with narrow permissions."
   );
   addCheck(checks, "issue-templates", hasFile(".github/ISSUE_TEMPLATE/bug_report.yml") && hasFile(".github/ISSUE_TEMPLATE/feature_request.yml"), "Bug and feature issue templates exist.");
@@ -1688,7 +1689,7 @@ function localChecks() {
     "consumer-workflow-boundary",
     contains(sourceWorkflow, /Run harness gate/) &&
       contains(sourceWorkflow, /Prepare source workspace CLI/) &&
-      contains(sourceWorkflow, /uses: actions\/checkout@v6/) &&
+      contains(sourceWorkflow, /uses: actions\/checkout@v7/) &&
       contains(sourceWorkflow, /uses: actions\/setup-node@v6/) &&
       contains(sourceWorkflow, /hashFiles\('packages\/ty-context\/package\.json'\) != ''/) &&
       contains(sourceWorkflow, /npm run build --workspace project-tiny-context-harness/) &&
@@ -1701,7 +1702,7 @@ function localChecks() {
     contains(maintainerWorkflow, /Test package/) &&
       contains(maintainerWorkflow, /\.github\/workflows\/npm-publish\.yml/) &&
       contains(maintainerWorkflow, /\.github\/workflows\/scorecard\.yml/) &&
-      contains(maintainerWorkflow, /uses: actions\/checkout@v6/) &&
+      contains(maintainerWorkflow, /uses: actions\/checkout@v7/) &&
       contains(maintainerWorkflow, /uses: actions\/setup-node@v6/) &&
       contains(maintainerWorkflow, /Check package canonical source drift/) &&
       contains(maintainerWorkflow, /node packages\/ty-context\/dist\/cli\.js package check-source/) &&
@@ -1711,10 +1712,10 @@ function localChecks() {
   addCheck(
     checks,
     "node-engine-ci-matrix",
-    packageJson.engines?.node === ">=20" &&
+    packageJson.engines?.node === ">=24" &&
       contains(maintainerWorkflow, /node-version:\s*\$\{\{\s*matrix\.node-version\s*\}\}/) &&
-      contains(maintainerWorkflow, /node-version:\s*\["20",\s*"24"\]/),
-    "Package CI covers the declared Node >=20 floor and current Node 24."
+      contains(maintainerWorkflow, /node-version:\s*\["24"\]/),
+    "Package CI covers the declared Node >=24 floor."
   );
 
   return checks;
