@@ -3,11 +3,13 @@ import { pathExists, readText } from "./fs.js";
 import { findSensitiveEvidence } from "./plan-acceptance-evidence.js";
 import { primitiveText, repoRelative, resolveInputDir } from "./plan-validator-common.js";
 import { derivedMatchesState } from "./superpowers-task-derive.js";
+import { validatePlanCompletionConformance } from "./superpowers-task-conformance.js";
 import { fullPopulationRequired, validateDeliveryContract, validateScopeConflicts } from "./superpowers-task-delivery.js";
 import { loadSuperpowersState, sha256 } from "./superpowers-task-state.js";
+import { validateCanonicalStatuses } from "./superpowers-task-status.js";
 import { isRecord, type SuperpowersEvidenceRecord, type SuperpowersTaskState } from "./superpowers-task-state-schema.js";
+import { evaluateProofLayerAssertions, isUiBrowserLayer } from "./superpowers-task-assertions.js";
 import type { ValidatorReport } from "./validators.js";
-
 export async function validateSuperpowersState(projectRoot: string, args: string[] = []): Promise<ValidatorReport> {
   const info: string[] = [];
   const warnings: string[] = [];
@@ -37,7 +39,9 @@ export async function validateSuperpowersState(projectRoot: string, args: string
   }
   await validateSourceHashes(targetDir, state, errors);
   validateDeliveryContract(state, errors);
+  validateCanonicalStatuses(state, errors);
   validateGraphReferences(state, errors);
+  validatePlanCompletionConformance(state, errors);
   validateScopeConflicts(state, errors);
   validateEvidenceRecords(state, errors);
   validateProofLayers(state, errors);
@@ -174,7 +178,7 @@ function validateEvidenceRecords(state: SuperpowersTaskState, errors: string[]):
       if (proofLayer.endsWith(".runtime") && /\b(mock|unit|viewmodel)\b/i.test(evidence.type)) {
         errors.push(`${label} runtime proof cannot be mock/unit/viewmodel only`);
       }
-      if (proofLayer.endsWith(".ui_browser") && !/\b(browser|ui_browser|screenshot)\b/i.test(evidence.type)) {
+      if (proofLayer.endsWith(".ui_browser") && !/(browser|ui_browser|screenshot|playwright)/i.test(evidence.type)) {
         errors.push(`${label} UI proof must use browser owner surface evidence`);
       }
     }
@@ -195,6 +199,13 @@ function validateProofLayers(state: SuperpowersTaskState, errors: string[]): voi
       }
       if (!evidence.proves.includes(layerId)) {
         errors.push(`proof layer ${layerId} references ${evidenceId} but that evidence does not prove it`);
+      }
+    }
+    if (layer.status === "satisfied") {
+      const evaluation = evaluateProofLayerAssertions(state, layerId);
+      errors.push(...evaluation.blocking_assertion_failures, ...evaluation.negative_evidence_findings);
+      if (isUiBrowserLayer(layerId) && evaluation.assertion_status !== "passed") {
+        errors.push(`proof layer ${layerId} ui_browser proof not machine-backed`);
       }
     }
   }
@@ -264,6 +275,7 @@ export function completionConditionErrors(state: SuperpowersTaskState): string[]
   validateDeliveryContract(state, errors);
   validateScopeConflicts(state, errors);
   validateGraphReferences(state, errors);
+  validatePlanCompletionConformance(state, errors);
   validateEvidenceRecords(state, errors);
   validateProofLayers(state, errors);
   validateAuditor(state, errors);

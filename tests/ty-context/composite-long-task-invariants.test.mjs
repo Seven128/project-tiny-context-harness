@@ -153,6 +153,7 @@ test("final-gate refuses sample-only evidence for full-population completion", a
     const updated = JSON.parse(await readFile(path.join(root, workdirArg, "task-state.json"), "utf8"));
     assert.equal(updated.final.product_goal_complete, false);
     assert.equal(updated.final.acceptance_target_status, "partial");
+    assert.match(updated.final.next_required_actions.join("\n"), /full[- ]population.*does not prove|sample/i);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -177,7 +178,8 @@ test("scope_conflict_requires_decision blocks final completion", async () => {
     const updated = JSON.parse(await readFile(path.join(workdir, "task-state.json"), "utf8"));
     assert.equal(updated.final.audit_task_complete, true);
     assert.equal(updated.final.product_goal_complete, false);
-    assert.equal(updated.final.acceptance_target_status, "partial");
+    assert.equal(updated.final.acceptance_target_status, "blocked");
+    assert.match(updated.final.next_required_actions.join("\n"), /scope_conflict_requires_decision/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -238,14 +240,26 @@ function partialSliceDelta() {
       {
         evidence_id: "EV-CLT-001",
         slice_id: "S-CLT-001",
-        type: "runtime",
+        type: "runtime_assertion",
         freshness: { created_at: "2026-06-29T00:00:00.000Z", valid_for: "current_worktree", stale_after: null },
         command: "node --test tests/runtime.spec.ts",
+        command_exit_code: 0,
         artifact_paths: ["tmp/ty-context/plan-acceptance/demo/runtime.json"],
         proves: ["AC-001.runtime"],
         does_not_prove: ["AC-001.ui_browser", "full_population_operation"],
         redaction: { checked: true, contains_secret: false },
-        reviewability: { external_reviewer_can_reproduce: true, reproduction_steps: "Run node --test tests/runtime.spec.ts." }
+        reviewability: { external_reviewer_can_reproduce: true, reproduction_steps: "Run node --test tests/runtime.spec.ts." },
+        assertion_result: {
+          schema_version: "assertion-result-v1",
+          status: "passed",
+          runner: "node:test",
+          exit_code: 0,
+          target_ac_ids: ["AC-001"],
+          target_proof_layers: ["AC-001.runtime"],
+          positive_assertions: [{ id: "runtime_job_completed", status: "passed", expected: "complete", actual: "complete" }],
+          negative_assertions: [{ id: "runtime_not_blocked", status: "passed", expected: "not blocked", actual: "not blocked" }],
+          artifacts: ["tmp/ty-context/plan-acceptance/demo/runtime.json"]
+        }
       }
     ],
     closed_layers: ["AC-001.runtime"],
@@ -253,7 +267,7 @@ function partialSliceDelta() {
     blockers: [],
     cleanup_assertions: ["runtime fixture cleaned"],
     progress_value: {
-      type: "closed_required_proof_layer",
+      type: "proof_gap_closed",
       closed_items: ["AC-001.runtime"],
       why_it_reduces_rework: "Runtime proof is now mapped to a proof layer."
     }

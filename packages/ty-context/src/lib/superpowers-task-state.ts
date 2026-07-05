@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { ensureDir, pathExists, readText, writeTextIfChanged } from "./fs.js";
 import { appendSuperpowersEvent } from "./superpowers-task-events.js";
+import { evaluateProofLayerAssertions, isMachineVerifiableLayer, normalizeAssertionResult, normalizeNegativeEvidenceScan } from "./superpowers-task-assertions.js";
 import {
   SUPERPOWERS_TASK_STATE_JSON_SCHEMA,
   SUPERPOWERS_TASK_STATE_SCHEMA_VERSION,
@@ -26,6 +27,7 @@ const SOURCE_FILES = {
     authority: "acs_completion_semantics_proof_layers"
   }
 } as const;
+const SLICE_PROGRESS_TYPES = new Set(["functional_gap_closed", "proof_gap_closed", "blocker_resolved", "invalid_evidence_removed"]);
 
 export interface InitializeSuperpowersTaskOptions {
   taskId?: string;
@@ -90,7 +92,8 @@ export async function initializeSuperpowersTask(
       product_goal_complete: false,
       acceptance_target_status: "not_run",
       audit_task_complete: false,
-      completion_basis: []
+      completion_basis: [],
+      next_required_actions: []
     }
   };
   await saveSuperpowersState(workdir, state);
@@ -118,6 +121,12 @@ export async function applySliceDelta(workdir: string, deltaFile: string): Promi
   if (!progressValue || !String(progressValue.type ?? "").trim() || asStringArray(progressValue.closed_items).length === 0) {
     throw new Error("slice_delta must include progress_value with type and closed_items");
   }
+  const progressType = String(progressValue.type);
+  if (!SLICE_PROGRESS_TYPES.has(progressType)) {
+    throw new Error(
+      `slice_delta progress_value.type must be one of ${[...SLICE_PROGRESS_TYPES].join(", ")}; got ${progressType || "(missing)"}`
+    );
+  }
   const evidenceRecords = readEvidenceRecords(delta.evidence_records);
   for (const evidence of evidenceRecords) {
     const existingIndex = state.evidence.findIndex((item) => item.evidence_id === evidence.evidence_id);
@@ -140,7 +149,7 @@ export async function applySliceDelta(workdir: string, deltaFile: string): Promi
     blockers: Array.isArray(delta.blockers) ? delta.blockers : [],
     cleanup_assertions: asStringArray(delta.cleanup_assertions),
     progress_value: {
-      type: String(progressValue.type),
+      type: progressType,
       closed_items: asStringArray(progressValue.closed_items),
       why_it_reduces_rework: String(progressValue.why_it_reduces_rework ?? "")
     }
@@ -169,7 +178,7 @@ export function recomputeStatuses(state: SuperpowersTaskState): void {
     const layerIds = ac.required_proof_layers.map((layer) => `${acId}.${layer}`);
     if (layerIds.length === 0) {
       ac.status = "not_run";
-    } else if (layerIds.every((layerId) => state.graph.proof_layers[layerId]?.status === "satisfied")) {
+    } else if (layerIds.every((layerId) => layerSatisfiedForCompletion(state, layerId))) {
       ac.status = "complete";
     } else if (layerIds.some((layerId) => state.graph.proof_layers[layerId]?.status === "satisfied")) {
       ac.status = "partial";
@@ -186,6 +195,13 @@ export function recomputeStatuses(state: SuperpowersTaskState): void {
       item.status = "not_started";
     }
   }
+}
+
+function layerSatisfiedForCompletion(state: SuperpowersTaskState, layerId: string): boolean {
+  if (state.graph.proof_layers[layerId]?.status !== "satisfied") {
+    return false;
+  }
+  return !isMachineVerifiableLayer(layerId) || evaluateProofLayerAssertions(state, layerId).assertion_status === "passed";
 }
 
 export function emptyProgressState(): SuperpowersTaskState["progress"] {
@@ -231,6 +247,7 @@ function readEvidenceRecords(value: unknown): SuperpowersEvidenceRecord[] {
         }
       : { created_at: "", valid_for: "", stale_after: null },
     command: item.command === undefined ? undefined : String(item.command),
+    command_exit_code: item.command_exit_code === undefined ? undefined : Number(item.command_exit_code),
     artifact_paths: asStringArray(item.artifact_paths),
     proves: asStringArray(item.proves),
     does_not_prove: asStringArray(item.does_not_prove),
@@ -243,6 +260,8 @@ function readEvidenceRecords(value: unknown): SuperpowersEvidenceRecord[] {
           reproduction_steps: String(item.reviewability.reproduction_steps ?? "")
         }
       : { external_reviewer_can_reproduce: false, reproduction_steps: "" },
+    assertion_result: normalizeAssertionResult(item.assertion_result),
+    negative_evidence_scan: normalizeNegativeEvidenceScan(item.negative_evidence_scan),
     sibling_substitution_used: item.sibling_substitution_used === true,
     sibling_substitution_approval_source:
       item.sibling_substitution_approval_source === undefined ? undefined : String(item.sibling_substitution_approval_source)

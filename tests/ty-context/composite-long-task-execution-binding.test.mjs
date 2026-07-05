@@ -39,6 +39,8 @@ test("execution-binding records task-local authorities, state paths, commands an
     assert.match(binding, /final_gate: ty-context composite-long-task final-gate <workdir>/);
     assert.match(binding, /product_goal_complete_source: final_gate/);
     assert.match(binding, /cannot_hand_set_product_goal_complete: true/);
+    assert.match(binding, /includes_ac_evidence_assertion_gate: true/);
+    assert.match(binding, /includes_negative_evidence_scan_gate: true/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

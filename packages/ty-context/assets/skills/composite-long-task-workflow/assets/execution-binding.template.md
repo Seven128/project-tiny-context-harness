@@ -29,3 +29,5 @@ required_commands:
 completion_gate:
   product_goal_complete_source: final_gate
   cannot_hand_set_product_goal_complete: true
+  includes_ac_evidence_assertion_gate: true
+  includes_negative_evidence_scan_gate: true

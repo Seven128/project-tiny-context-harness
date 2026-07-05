@@ -51,6 +51,7 @@ test("composite long-task workflow Skill is the public managed Skill surface", a
     assert.match(content, /not the Tiny Context Workflow Contract itself/i);
     assert.match(content, /not a business fact source/i);
     assert.match(content, /not a normal target-mode prompt generator/i);
+    assert.match(content, /assertion-backed acceptance evidence/i);
     assert.match(content, /Tiny Context-owned composite workflow adapter for Superpowers-backed long-task execution/i);
     assert.match(content, /official Superpowers skills/i);
     assert.match(content, /must not redefine, duplicate or fork official Superpowers execution mechanics/i);
@@ -66,6 +67,8 @@ test("composite long-task workflow Skill is the public managed Skill surface", a
     assert.match(content, /Do not let `derived\/\*\*`, local audit, matrix, verdict, validator output or auditor report rewrite Product \/ Architecture Source/);
     assert.match(content, /Do not treat Superpowers review as plan conformance or AC acceptance/);
     assert.match(content, /Do not treat sample evidence as full-population proof/);
+    assert.match(content, /Machine-verifiable proof layers require passed assertion reports/i);
+    assert.match(content, /Do not treat screenshots, final cards, validator passes, matrix\/verdict rows or prose as proof/i);
     assert.match(content, /Source-to-Context Coverage or Context-to-Implementation Binding has unresolved gaps/);
     assert.doesNotMatch(content, /name:\s*superpowers-long-task/);
     assert.doesNotMatch(content, /\/superpowers-long-task/);
@@ -81,6 +84,10 @@ test("composite long-task workflow Skill is the public managed Skill surface", a
   assert.match(protocol, /Completion State Machine/);
   assert.match(protocol, /Forbidden Shortcuts/);
   assert.match(protocol, /Blocker Protocol/);
+  assert.match(protocol, /assertion_result\.status=passed/);
+  assert.match(protocol, /Matrix and verdict views may summarize `assertion_status`/);
+  assert.match(protocol, /Negative Evidence Scan Gate/);
+  assert.match(protocol, /Invalid evidence for UI\/browser AC completion includes screenshot-only proof/);
   assert.match(protocol, /## 17\. Forbidden Wrong Fusion \/ 不允许的错误融合/);
   assert.doesNotMatch(protocol, /## 18\. Authoring Placement \/ 建议写入位置/);
   assert.doesNotMatch(protocol, /Authoring Placement/);
@@ -92,6 +99,10 @@ test("composite long-task workflow Skill is the public managed Skill surface", a
   assert.match(goalTemplate, /workflow-protocol\.md/);
   assert.match(goalTemplate, /execution-binding\.md/);
   assert.match(goalTemplate, /product_goal_complete/);
+  assert.match(goalTemplate, /assertion_result\.status=passed/);
+  assert.match(goalTemplate, /Negative Evidence Scan Gate/);
   assert.match(bindingTemplate, /# Composite Long-Task Execution Binding/);
   assert.match(bindingTemplate, /required_commands:/);
+  assert.match(bindingTemplate, /includes_ac_evidence_assertion_gate: true/);
+  assert.match(bindingTemplate, /includes_negative_evidence_scan_gate: true/);
 });

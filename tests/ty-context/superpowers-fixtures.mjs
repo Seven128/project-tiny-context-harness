@@ -181,16 +181,16 @@ export function validTaskState(overrides = {}) {
         blockers: [],
         cleanup_assertions: ["test DB reset"],
         progress_value: {
-          type: "closed_required_proof_layer",
+          type: "proof_gap_closed",
           closed_items: ["AC-001.code", "AC-001.runtime", "AC-001.ui_browser", "AC-001.test"],
           why_it_reduces_rework: "All required proof layers now map to fresh evidence."
         }
       }
     ],
     evidence: [
-      evidenceRecord("EV-001", "runtime", ["AC-001.code", "AC-001.runtime"], ["AC-001.ui_browser"]),
-      evidenceRecord("EV-002", "browser", ["AC-001.ui_browser"], ["AC-001.security"]),
-      evidenceRecord("EV-003", "test", ["AC-001.test"], ["all-provider coverage"])
+      evidenceRecord("EV-001", "runtime_assertion", ["AC-001.code", "AC-001.runtime"], ["AC-001.ui_browser"]),
+      evidenceRecord("EV-002", "playwright_assertion", ["AC-001.ui_browser"], ["AC-001.security"]),
+      evidenceRecord("EV-003", "test_assertion", ["AC-001.test"], ["all-provider coverage"])
     ],
     gates: { validator: { status: "not_run" }, auditor: { auditor_status: "pass", findings: [] } },
     progress: {
@@ -212,20 +212,83 @@ export function validTaskState(overrides = {}) {
 }
 
 function evidenceRecord(evidenceId, type, proves, doesNotProve) {
-  return {
+  const record = {
     evidence_id: evidenceId,
     slice_id: "S-001",
     type,
     freshness: { created_at: "2026-06-29T00:00:00.000Z", valid_for: "current_worktree", stale_after: null },
-    command: type === "browser" ? "browser screenshot route /operations" : "npm test --workspace project-tiny-context-harness",
-    artifact_paths: type === "browser" ? ["tmp/ty-context/plan-acceptance/demo/browser.png"] : ["tmp/ty-context/plan-acceptance/demo/runtime.json"],
+    command: type === "playwright_assertion" ? "npx playwright test tests/runtime.spec.ts --grep recovery" : "npm test --workspace project-tiny-context-harness",
+    command_exit_code: 0,
+    artifact_paths:
+      type === "playwright_assertion"
+        ? [
+            "tmp/ty-context/plan-acceptance/demo/browser.png",
+            "tmp/ty-context/plan-acceptance/demo/playwright-trace.zip",
+            "tmp/ty-context/plan-acceptance/demo/ui-assertion-report.json"
+          ]
+        : ["tmp/ty-context/plan-acceptance/demo/runtime.json"],
     proves,
     does_not_prove: doesNotProve,
     redaction: { checked: true, contains_secret: false },
     reviewability: {
       external_reviewer_can_reproduce: true,
-      reproduction_steps: type === "browser" ? "Open route /operations and inspect browser screenshot." : "Run the recorded command."
+      reproduction_steps: type === "playwright_assertion" ? "Run the recorded Playwright command and inspect the trace/report." : "Run the recorded command."
     }
+  };
+  const targetLayer = proves.find((item) => /\.(runtime|ui_browser|test)$/.test(item));
+  if (targetLayer) {
+    record.assertion_result = assertionResultFor(type, targetLayer);
+  }
+  if (type === "playwright_assertion") {
+    record.negative_evidence_scan = {
+      schema_version: "negative-evidence-scan-v1",
+      status: "passed",
+      target_ac_ids: ["AC-001"],
+      owner_surface: "Operations",
+      route: "/operations",
+      forbidden_findings: [
+        { id: "no-unverified", status: "not_found", forbidden_text: "未验证" }, { id: "no-unavailable", status: "not_found", forbidden_text: "不可用" },
+        { id: "no-temp-unavailable", status: "not_found", forbidden_text: "暂不可用" }, { id: "no-unchanged-page", status: "not_found", forbidden_text: "页面无明显变化" }
+      ],
+      required_findings: [{ id: "final_status_chinese", status: "passed", expected: "已完成", actual: "已完成" }],
+      artifacts: ["tmp/ty-context/plan-acceptance/demo/ui-assertion-report.json"]
+    };
+  }
+  return record;
+}
+
+function assertionResultFor(type, targetLayer) {
+  const base = {
+    schema_version: "assertion-result-v1",
+    status: "passed",
+    runner: type,
+    exit_code: 0,
+    target_ac_ids: ["AC-001"],
+    target_proof_layers: [targetLayer],
+    positive_assertions: [{ id: "required_behavior_observed", status: "passed", expected: "observed", actual: "observed" }],
+    negative_assertions: [{ id: "no-forbidden-final-state", status: "passed" }],
+    artifacts: ["tmp/ty-context/plan-acceptance/demo/runtime.json"]
+  };
+  if (type !== "playwright_assertion") {
+    return base;
+  }
+  return {
+    ...base,
+    runner: "playwright",
+    owner_surface: "Operations",
+    route: "/operations",
+    action: "start recovery and wait for run_id job-123 to complete",
+    positive_assertions: [
+      { id: "ui_owner_surface_loaded", status: "passed", expected: "Operations", actual: "Operations" },
+      { id: "run_id_present", status: "passed", expected: "job-123", actual: "job-123" },
+      { id: "polling_observed", status: "passed", expected: "complete", actual: "complete" },
+      { id: "final_status_chinese", status: "passed", expected: "已完成", actual: "已完成" }
+    ],
+    negative_assertions: [
+      { id: "no-unverified", status: "passed", forbidden_text: "未验证" }, { id: "no-unavailable", status: "passed", forbidden_text: "不可用" },
+      { id: "no-temp-unavailable", status: "passed", forbidden_text: "暂不可用" }, { id: "no-unchanged-page", status: "passed", forbidden_text: "页面无明显变化" }
+    ],
+    artifacts: ["tmp/ty-context/plan-acceptance/demo/browser.png", "tmp/ty-context/plan-acceptance/demo/playwright-trace.zip", "tmp/ty-context/plan-acceptance/demo/ui-assertion-report.json"]
   };
 }
 

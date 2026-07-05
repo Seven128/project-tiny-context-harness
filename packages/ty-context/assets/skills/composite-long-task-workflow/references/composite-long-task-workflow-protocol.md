@@ -35,11 +35,13 @@ Implementation advances through coherent slices. Each slice selects related PI /
 
 ## Evidence Protocol
 
-Evidence is canonical state, not prose. Every proof record enters `task-state.evidence[]` with evidence id, slice id, type, command or artifact paths, `proves`, `does_not_prove`, freshness, redaction and reviewability / reproduction data. Evidence must be fresh, reviewable and free of secrets, raw credentials, tokens, cookies and long raw payloads.
+Evidence is canonical state, not prose. Every proof record enters `task-state.evidence[]` with evidence id, slice id, type, command or artifact paths, command exit code when applicable, `proves`, `does_not_prove`, freshness, redaction, reviewability / reproduction data and, for machine-verifiable layers, an `assertion_result`. Evidence must be fresh, reviewable and free of secrets, raw credentials, tokens, cookies and long raw payloads.
+
+Machine-verifiable layers such as `ui_browser`, `api_schema`, `runtime`, `worker_runtime`, `data_artifact`, `integration`, `security_redaction`, `test`, `all_provider_all_runner` and `cleanup_stale_scan` are not complete from descriptions, screenshots, final cards, validator passes, matrix rows or verdict rows. They require `assertion_result.schema_version=assertion-result-v1`, `assertion_result.status=passed`, assertion exit code `0`, command exit code `0` when present, target AC/layer coverage, passed positive and negative assertions and reviewable artifacts. UI/browser layers also require owner surface, route/path, user action, browser/playwright/UI assertion evidence and a passed `negative_evidence_scan`.
 
 ## Derived Views
 
-`derived/**` contains generated reading views only: local audit, plan-conformance matrix, final acceptance verdict, progress ledger, evidence index, context alignment and final summary. These files help recovery and review, but never rewrite Product / Architecture Source, Technical Realization Plan, Acceptance Checklist or `task-state.json`.
+`derived/**` contains generated reading views only: local audit, plan-conformance matrix, final acceptance verdict, progress ledger, evidence index, context alignment and final summary. Matrix and verdict views may summarize `assertion_status`, blocking assertion failures and negative evidence findings, but they never replace assertion execution and never rewrite Product / Architecture Source, Technical Realization Plan, Acceptance Checklist or `task-state.json`.
 
 ## Gates
 
@@ -67,11 +69,11 @@ Final completion always runs in fixed order: derive all views, run `superpowers:
 
 ## Forbidden Shortcuts
 
-Tests alone do not prove plan conformance. Superpowers review does not prove AC acceptance. Sample evidence does not prove full population unless the AC allows it. Derived files, local audit, validator output and auditor reports cannot rewrite Product / Plan / Checklist. Local audit cannot mark product completion. Agents must not handwrite `product_goal_complete`.
+Tests alone do not prove plan conformance. Superpowers review does not prove AC acceptance. Sample evidence does not prove full population unless the AC allows it. Browser screenshots, final cards, validator passes, matrix/verdict rows and prose evidence are auxiliary only for machine-verifiable ACs unless a passed assertion report is bound to the target AC/layer. Derived files, local audit, validator output and auditor reports cannot rewrite Product / Plan / Checklist. Local audit cannot mark product completion. Agents must not handwrite `product_goal_complete`.
 
 ## Hallucination Guard
 
-The protocol must prevent false fusion: do not interpret the composite workflow as the Tiny Context Workflow Contract itself; do not register `workflow-protocol.md` in `project_context/context.toml`; do not treat it as a business fact source; do not use local audit, tests, Superpowers review, sampled evidence or final-gate failure as product completion; do not claim full alignment with unresolved Source-to-Context Coverage or Context-to-Implementation Binding gaps; and do not call a Codex implementation Goal complete before final-gate passes.
+The protocol must prevent false fusion: do not interpret the composite workflow as the Tiny Context Workflow Contract itself; do not register `workflow-protocol.md` in `project_context/context.toml`; do not treat it as a business fact source; do not use local audit, tests, Superpowers review, sampled evidence, screenshots, final cards, matrix/verdict rows, validator passes or final-gate failure as product completion; do not claim full alignment with unresolved Source-to-Context Coverage or Context-to-Implementation Binding gaps; and do not call a Codex implementation Goal complete before final-gate passes.
 
 ## Blocker Protocol
 
@@ -374,6 +376,8 @@ Slice gate checks:
 ```text
 - whether the slice closed a real PI/AC/proof-layer gap;
 - whether fresh reviewable evidence exists;
+- whether required machine-verifiable proof layers have passed assertion results;
+- whether negative evidence findings invalidate the layer or AC;
 - whether evidence entered task-state.evidence[];
 - whether closed_layers are actually proved;
 - whether remaining_layers were not falsely closed;
@@ -440,15 +444,20 @@ AC completion requires:
 1. Every required proof layer has fresh reviewable evidence.
 2. evidence.proves explicitly covers that layer.
 3. evidence.does_not_prove does not expose a scope substitution problem.
-4. No missing required layers.
-5. No material drift.
-6. No stale artifact.
-7. No raw secret/token/cookie/payload leak.
-8. No sibling surface / sample object / mock substitution for owner surface or full population.
-9. When full_population_required=true, sample evidence cannot replace full-population evidence.
+4. Machine-verifiable required layers have assertion_result.status=passed and exit code 0.
+5. Positive and negative assertions passed for the target AC/layer.
+6. Negative evidence scan has no forbidden owner-surface state.
+7. No missing required layers.
+8. No material drift.
+9. No stale artifact.
+10. No raw secret/token/cookie/payload leak.
+11. No sibling surface / sample object / mock substitution for owner surface or full population.
+12. When full_population_required=true, sample evidence cannot replace full-population evidence.
 ```
 
 This gate enables an external reviewer to follow the evidence chain. Auditor subagents may find gaps but are not proof sources.
+
+Invalid evidence for UI/browser AC completion includes screenshot-only proof, component screenshots, storybook pages, viewmodels, mocks, unit-only proof, API-only proof, diagnostic pages, final cards, matrix/verdict rows, validator passes and prose summaries. Forbidden final owner-surface states such as `未验证`, `不可用`, `暂不可用` or `页面无明显变化` invalidate the relevant AC/layer.
 
 ## 12. Phase Eleven: Delivery Scope And Full Population Stay Separate
 
@@ -469,6 +478,7 @@ Typical forbidden claims:
 - several objects succeeded does not mean automation capability complete;
 - sample provider succeeded does not mean all-provider complete;
 - UI screenshot exists does not mean owner surface primary path is closed;
+- final card, matrix, verdict or validator pass does not mean a machine-verifiable AC has assertion-backed evidence;
 - tests passed does not mean AC accepted;
 - local audit passed does not mean product_goal_complete.
 ```
@@ -492,7 +502,8 @@ Before final completion, the order is fixed:
 4. ty-context validate-plan-acceptance <workdir>
 5. read-only auditor / stale-overclaim scan when applicable
 6. if auditor findings changed state/evidence, derive and validate again
-7. ty-context composite-long-task final-gate <workdir>
+7. AC Evidence Assertion Gate and Negative Evidence Scan Gate
+8. ty-context composite-long-task final-gate <workdir>
 ```
 
 Legacy/internal compatibility may exist as:

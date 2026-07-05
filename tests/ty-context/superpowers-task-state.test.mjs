@@ -87,6 +87,7 @@ ac_validates:
   - full population operation
 ac_does_not_validate:
   - framework-only capability
+  - full population operation
 sample_boundary: no sample substitute
 full_population_required: true
 related_plan_items:
@@ -94,6 +95,7 @@ related_plan_items:
 required_proof_layers:
   - code
   - runtime
+  - ui_browser
   - test
 `,
       "utf8"
@@ -146,7 +148,7 @@ test("apply-slice-delta records progress value, evidence and closes proof layers
           blockers: [],
           cleanup_assertions: ["runtime fixture cleaned"],
           progress_value: {
-            type: "closed_required_proof_layer",
+            type: "proof_gap_closed",
             closed_items: ["AC-001.runtime"],
             why_it_reduces_rework: "Runtime proof is now mapped to a proof layer."
           }
@@ -163,10 +165,45 @@ test("apply-slice-delta records progress value, evidence and closes proof layers
     assert.equal(state.graph.proof_layers["AC-001.runtime"].status, "satisfied");
     assert.deepEqual(state.graph.proof_layers["AC-001.runtime"].evidence_ids, ["EV-001"]);
     assert.equal(state.evidence[0].evidence_id, "EV-001");
-    assert.equal(state.slices[0].progress_value.type, "closed_required_proof_layer");
+    assert.equal(state.slices[0].progress_value.type, "proof_gap_closed");
 
     const events = await readFile(path.join(workdir, "events.ndjson"), "utf8");
     assert.match(events, /"event_type":"slice_delta_applied"/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("apply-slice-delta rejects non-canonical progress value types", async () => {
+  const root = await createPlanProject();
+  try {
+    await writeSuperpowersSources(root);
+    const workdir = path.join(root, "tmp/ty-context/plan-acceptance/demo");
+    await initializeSuperpowersTask(workdir, { taskId: "SP-TEST-PROGRESS-TYPE", planSlug: "demo" });
+    await compileSuperpowersTask(workdir);
+
+    const deltaPath = path.join(workdir, "slice-delta-invalid-progress.json");
+    await writeFile(
+      deltaPath,
+      JSON.stringify(
+        {
+          slice_id: "S-BAD-PROGRESS",
+          progress_value: {
+            type: "closed_required_proof_layer",
+            closed_items: ["AC-001.runtime"],
+            why_it_reduces_rework: "Legacy progress type should be rejected."
+          }
+        },
+        null,
+        2
+      ),
+      "utf8"
+    );
+
+    await assert.rejects(
+      () => applySliceDelta(workdir, deltaPath),
+      /progress_value\.type must be one of functional_gap_closed, proof_gap_closed, blocker_resolved, invalid_evidence_removed/
+    );
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -216,7 +253,7 @@ test("composite long-task CLI namespace initializes, compiles and recommends nex
           blockers: [],
           cleanup_assertions: ["runtime fixture cleaned"],
           progress_value: {
-            type: "closed_required_proof_layer",
+            type: "proof_gap_closed",
             closed_items: ["AC-001.runtime"],
             why_it_reduces_rework: "Runtime proof is now mapped to a proof layer."
           }

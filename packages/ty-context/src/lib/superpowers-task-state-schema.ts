@@ -31,13 +31,11 @@ export const SUPERPOWERS_TASK_STATE_JSON_SCHEMA = {
 export type SuperpowersProofLayerStatus = "missing" | "satisfied" | "invalidated" | "blocked";
 export type SuperpowersPlanItemStatus =
   | "not_started"
+  | "in_progress"
   | "complete"
   | "partial"
-  | "sampled_only"
-  | "not_implemented"
   | "blocked"
-  | "scope_changed_requires_user_approval"
-  | "contradicted_by_current_state"
+  | "invalidated"
   | "out_of_scope_NA";
 export type SuperpowersAcceptanceStatus = "not_run" | "complete" | "partial" | "blocked" | "invalidated" | "out_of_scope_NA";
 export type SuperpowersProductDeliveryScope =
@@ -92,6 +90,7 @@ export interface SuperpowersTaskState {
     acceptance_target_status: string;
     audit_task_complete: boolean;
     completion_basis: string[];
+    next_required_actions?: string[];
   };
 }
 
@@ -136,6 +135,11 @@ export interface SuperpowersPlanItem {
   forbidden_surfaces: string[];
   implementation_paths: string[];
   required_tests: string[];
+  proof_layer_ids?: string[];
+  non_completing_shortcuts?: string[];
+  substitution_policy?: string[];
+  explicit_no_test_scope?: boolean;
+  context_fact_refs?: string[];
   status: SuperpowersPlanItemStatus;
   related_acs: string[];
   required_proof_layers: string[];
@@ -153,7 +157,22 @@ export interface SuperpowersAcceptanceCriterion {
   full_population_required: boolean | null;
   related_plan_items: string[];
   required_proof_layers: string[];
+  assertion_requirements?: AssertionRequirement[];
+  required_test_ids?: string[];
+  fail_conditions?: string[];
+  invalid_evidence?: string[];
+  final_evidence_expected?: string[];
+  explicit_no_test_scope?: boolean;
   status: SuperpowersAcceptanceStatus;
+}
+
+export interface AssertionRequirement {
+  proof_layer: string;
+  required: boolean;
+  machine_blocking: boolean;
+  required_test_ids: string[];
+  positive_assertions: string[];
+  negative_assertions: string[];
 }
 
 export interface SuperpowersProofLayer {
@@ -197,6 +216,7 @@ export interface SuperpowersEvidenceRecord {
     stale_after: string | null;
   };
   command?: string;
+  command_exit_code?: number;
   artifact_paths: string[];
   proves: string[];
   does_not_prove: string[];
@@ -208,8 +228,51 @@ export interface SuperpowersEvidenceRecord {
     external_reviewer_can_reproduce: boolean;
     reproduction_steps: string;
   };
+  assertion_result?: AssertionResult;
+  negative_evidence_scan?: NegativeEvidenceScan;
   sibling_substitution_used?: boolean;
   sibling_substitution_approval_source?: string;
+}
+
+export interface AssertionResult {
+  schema_version: "assertion-result-v1";
+  status: "passed" | "failed" | "blocked" | "stale";
+  runner: string;
+  exit_code: number;
+  target_ac_ids: string[];
+  target_proof_layers: string[];
+  owner_surface?: string;
+  route?: string;
+  action?: string;
+  positive_assertions: AssertionCheck[];
+  negative_assertions: AssertionCheck[];
+  artifacts?: string[];
+}
+
+export interface AssertionCheck {
+  id: string;
+  status: "passed" | "failed" | "blocked" | "stale";
+  actual?: string;
+  expected?: string;
+  forbidden_text?: string;
+}
+
+export interface NegativeEvidenceScan {
+  schema_version: "negative-evidence-scan-v1";
+  status: "passed" | "failed" | "blocked" | "stale";
+  target_ac_ids: string[];
+  owner_surface?: string;
+  route?: string;
+  forbidden_findings: NegativeFinding[];
+  required_findings: AssertionCheck[];
+  artifacts: string[];
+}
+
+export interface NegativeFinding {
+  id: string;
+  status: "found" | "not_found";
+  forbidden_text?: string;
+  actual?: string;
 }
 
 export function isRecord(value: unknown): value is Record<string, unknown> {

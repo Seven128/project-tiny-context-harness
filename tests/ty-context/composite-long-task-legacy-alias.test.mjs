@@ -158,7 +158,7 @@ function sliceDelta() {
     blockers: [],
     cleanup_assertions: ["alias fixture cleaned"],
     progress_value: {
-      type: "closed_required_proof_layer",
+      type: "proof_gap_closed",
       closed_items: ["AC-001.runtime"],
       why_it_reduces_rework: "Alias delegates to the same slice delta state kernel."
     }
