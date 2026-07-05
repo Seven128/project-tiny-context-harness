@@ -62,9 +62,9 @@ The runtime effect is one temporary Codex Goal workflow that combines:
 - Three upstream authorities: Product / Architecture Source, Technical Realization Plan and Acceptance Checklist.
 - Workflow entry artifacts: `workflow-protocol.md`, `execution-binding.md` and `goal-objective.txt`.
 - Official Superpowers execution layer: `superpowers:subagent-driven-development`, `superpowers:executing-plans`, `superpowers:test-driven-development` and `superpowers:verification-before-completion`.
-- State and audit kernel: `task-state.json`, `events.ndjson`, generated `derived/**`, `task-state.evidence[]`, and slice / epoch / final gates.
+- State and audit kernel: `task-state.json`, `events.ndjson`, generated `derived/**`, `task-state.evidence[]`, assertion results / negative evidence scans, and slice / epoch / final gates.
 
-This Skill is not the Tiny Context Workflow Contract itself, not a business fact source, not a normal target-mode prompt generator, and not a Superpowers fork. Superpowers manages efficient implementation execution; Tiny Context gates check source authority, plan conformance, acceptance evidence, state consistency and final completion.
+This Skill is not the Tiny Context Workflow Contract itself, not a business fact source, not a normal target-mode prompt generator, and not a Superpowers fork. Superpowers manages efficient implementation execution; Tiny Context gates check source authority, plan conformance, assertion-backed acceptance evidence, state consistency and final completion.
 
 ## Required Three-Input Packet
 
@@ -95,6 +95,7 @@ Strict input grammar:
 - `events.ndjson` is append-only.
 - `derived/**` is generated and must not be hand-edited as authority.
 - State, generated views, validator output and auditor reports cannot narrow, rewrite or replace the upstream sources.
+- Machine-verifiable proof layers require passed assertion reports and no negative evidence contradiction; derived matrix/verdict rows can summarize those results but cannot replace them.
 
 Capability-first delivery boundaries stay inside the same three inputs. Source, PI items and ACs must distinguish reusable system capability build, representative sample validation, full population operation and out-of-scope backlog. `scope_conflict_requires_decision` blocks completion.
 
@@ -162,12 +163,15 @@ Superpowers review and verification remain useful execution checks, but they can
 - `execution-binding.md` as task binding.
 - `product_goal_complete` only by final gate.
 - `audit_task_complete` not equal to product acceptance.
+- assertion-backed machine-verifiable proof layers and negative evidence scan.
 - forbidden shortcuts.
 - blocker protocol.
 
 ## Completion State
 
 Agents must not hand-set `product_goal_complete`. Implementation / execution goals complete only when final gate computes `product_goal_complete=true`.
+
+For UI/browser/API/runtime/worker/data/integration/security/test/all-provider/cleanup proof layers, do not mark ACs complete from screenshots, final cards, validator passes, matrix/verdict rows or prose evidence. Required machine-verifiable layers need passed `assertion_result`, zero command/assertion exit codes, target AC/layer coverage, passed positive and negative assertions and no failed/stale `negative_evidence_scan`.
 
 If `audit_task_complete` is true but `acceptance_target_status` is not complete, report:
 
@@ -194,6 +198,8 @@ Do not treat local audit as product-quality proof.
 Do not treat Superpowers review as plan conformance or AC acceptance.
 
 Do not treat sample evidence as full-population proof.
+
+Do not treat screenshots, final cards, validator passes, matrix/verdict rows or prose as proof for machine-verifiable layers without assertion-backed evidence.
 
 Do not continue claiming full implementation when `Context Delta: required` is unresolved.
 

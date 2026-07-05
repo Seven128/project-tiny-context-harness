@@ -1,4 +1,7 @@
+import { MACHINE_VERIFIABLE_PROOF_LAYERS, proofLayerName } from "./superpowers-task-assertions.js";
+import { compileReportSuffix, missingCategory, throwCompileErrors } from "./superpowers-task-compile-diagnostics.js";
 import {
+  type AssertionRequirement,
   type SuperpowersAcceptanceCriterion,
   type SuperpowersPlanItem,
   type SuperpowersProductArchitectureScope
@@ -122,6 +125,11 @@ export function parsePlanItems(content: string, sourceFile: string): Record<stri
       forbidden_surfaces: optionalArray(fields, "forbidden_surfaces"),
       implementation_paths: optionalArray(fields, "implementation_paths"),
       required_tests: optionalArray(fields, "required_tests"),
+      proof_layer_ids: optionalArray(fields, "proof_layer_ids").map(normalizeLayer),
+      non_completing_shortcuts: optionalArray(fields, "non_completing_shortcuts"),
+      substitution_policy: optionalArray(fields, "substitution_policy"),
+      explicit_no_test_scope: fieldBoolean(fields, "explicit_no_test_scope") === true,
+      context_fact_refs: optionalArray(fields, "context_fact_refs"),
       status: "not_started",
       related_acs: optionalArray(fields, "related_acs").map((item) => item.toUpperCase()),
       required_proof_layers: []
@@ -137,6 +145,7 @@ export function parseAcceptanceCriteria(content: string, sourceFile: string): Re
   for (const definition of parseHeadingDefinitions(content, { kind: "AC", sourceFile, allowedFields: ACCEPTANCE_FIELDS })) {
     const fields = definition.fields;
     const layers = optionalArray(fields, "required_proof_layers").map(normalizeLayer).filter(Boolean);
+    const requiredProofLayers = layers.length > 0 ? layers : DEFAULT_LAYERS;
     items[definition.id] = {
       scope: definition.title,
       source_file: definition.source_file,
@@ -148,7 +157,13 @@ export function parseAcceptanceCriteria(content: string, sourceFile: string): Re
       sample_boundary: requireText(errors, definition.id, "sample_boundary", fields, sourceFile, definition.source_start_line),
       full_population_required: requireBoolean(errors, definition.id, "full_population_required", fields, sourceFile, definition.source_start_line),
       related_plan_items: optionalArray(fields, "related_plan_items").map((item) => item.toUpperCase()),
-      required_proof_layers: layers.length > 0 ? layers : DEFAULT_LAYERS,
+      required_proof_layers: requiredProofLayers,
+      assertion_requirements: assertionRequirements(fields, requiredProofLayers),
+      required_test_ids: optionalArray(fields, "required_test_ids"),
+      fail_conditions: optionalArray(fields, "fail_conditions"),
+      invalid_evidence: optionalArray(fields, "invalid_evidence"),
+      final_evidence_expected: optionalArray(fields, "final_evidence_expected"),
+      explicit_no_test_scope: fieldBoolean(fields, "explicit_no_test_scope") === true,
       status: "not_run"
     };
   }
@@ -160,15 +175,44 @@ function normalizeLayer(value: string): string {
   return value.trim().toLowerCase().replace(/[- ]+/g, "_");
 }
 
+function assertionRequirements(fields: Record<string, ParsedField>, layers: string[]): AssertionRequirement[] {
+  const requiredTestIds = optionalArray(fields, "required_test_ids");
+  const positiveAssertions = unique([
+    ...fieldArray(fields, "ac_validates"),
+    ...requiredTestIds,
+    ...optionalArray(fields, "test_cases"),
+    ...optionalArray(fields, "verification_method"),
+    ...optionalArray(fields, "final_evidence_expected")
+  ]);
+  const negativeAssertions = unique([
+    ...fieldArray(fields, "ac_does_not_validate"),
+    ...optionalArray(fields, "fail_conditions"),
+    ...optionalArray(fields, "invalid_evidence")
+  ]);
+  return layers.map((layer) => {
+    const normalized = proofLayerName(normalizeLayer(layer));
+    return {
+      proof_layer: normalized,
+      required: true,
+      machine_blocking: MACHINE_VERIFIABLE_PROOF_LAYERS.has(normalized),
+      required_test_ids: requiredTestIds,
+      positive_assertions: positiveAssertions,
+      negative_assertions: negativeAssertions
+    };
+  });
+}
+
 function requireEnum(errors: string[], label: string, name: string, fields: Record<string, ParsedField>, allowed: Set<string>, sourceFile: string, fallbackLine: number): string {
   const value = fieldText(fields, name);
   const line = fieldLine(fields, name) ?? fallbackLine;
   if (!value) {
-    errors.push(`${label} missing ${name} at ${sourceFile}:${line}`);
+    errors.push(`${label} missing ${name} at ${sourceFile}:${line}${compileReportSuffix(missingCategory(label), sourceFile, line, name, "field is required", "add the required field and rerun compile")}`);
     return "";
   }
   if (!allowed.has(value)) {
-    errors.push(`${label} invalid ${name}: ${value} at ${sourceFile}:${line}; allowed: ${[...allowed].join(", ")}`);
+    errors.push(
+      `${label} invalid ${name}: ${value} at ${sourceFile}:${line}; allowed: ${[...allowed].join(", ")}${compileReportSuffix("blocking_unparseable_object", sourceFile, line, name, `value must be one of ${[...allowed].join(", ")}`, "fix the field value and rerun compile")}`
+    );
   }
   return value;
 }
@@ -177,7 +221,7 @@ function requireText(errors: string[], label: string, name: string, fields: Reco
   const value = fieldText(fields, name);
   const line = fieldLine(fields, name) ?? fallbackLine;
   if (!value) {
-    errors.push(`${label} missing ${name} at ${sourceFile}:${line}`);
+    errors.push(`${label} missing ${name} at ${sourceFile}:${line}${compileReportSuffix(missingCategory(label), sourceFile, line, name, "field is required", "add non-empty text and rerun compile")}`);
   }
   return value;
 }
@@ -185,7 +229,7 @@ function requireText(errors: string[], label: string, name: string, fields: Reco
 function requireArray(errors: string[], label: string, name: string, fields: Record<string, ParsedField>, sourceFile: string, fallbackLine: number): string[] {
   const line = fieldLine(fields, name) ?? fallbackLine;
   if (!fields[name]) {
-    errors.push(`${label} missing ${name} at ${sourceFile}:${line}`);
+    errors.push(`${label} missing ${name} at ${sourceFile}:${line}${compileReportSuffix(missingCategory(label), sourceFile, line, name, "field is required", "add the list field and rerun compile")}`);
     return [];
   }
   return fieldArray(fields, name);
@@ -194,12 +238,14 @@ function requireArray(errors: string[], label: string, name: string, fields: Rec
 function requireBoolean(errors: string[], label: string, name: string, fields: Record<string, ParsedField>, sourceFile: string, fallbackLine: number): boolean | null {
   const line = fieldLine(fields, name) ?? fallbackLine;
   if (!fields[name]) {
-    errors.push(`${label} missing ${name} at ${sourceFile}:${line}`);
+    errors.push(`${label} missing ${name} at ${sourceFile}:${line}${compileReportSuffix(missingCategory(label), sourceFile, line, name, "field is required", "add true or false and rerun compile")}`);
     return null;
   }
   const value = fieldBoolean(fields, name);
   if (value === null) {
-    errors.push(`${label} invalid ${name}: ${fieldText(fields, name)} at ${sourceFile}:${line}; must be true or false`);
+    errors.push(
+      `${label} invalid ${name}: ${fieldText(fields, name)} at ${sourceFile}:${line}; must be true or false${compileReportSuffix("blocking_unparseable_object", sourceFile, line, name, "value must be true or false", "fix the boolean and rerun compile")}`
+    );
   }
   return value;
 }
@@ -208,8 +254,6 @@ function optionalArray(fields: Record<string, ParsedField>, name: string): strin
   return fields[name] ? fieldArray(fields, name) : [];
 }
 
-function throwCompileErrors(errors: string[]): void {
-  if (errors.length > 0) {
-    throw new Error(`Superpowers source compile failed:\n- ${errors.join("\n- ")}`);
-  }
+function unique(values: string[]): string[] {
+  return [...new Set(values.filter(Boolean))];
 }

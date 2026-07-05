@@ -62,6 +62,7 @@ related_plan_items:
 required_proof_layers:
   - code
   - test
+  - ui_browser
 
 ## Reference Preview
 
@@ -86,10 +87,10 @@ required_proof_layers:
     assert.equal(ac.scope, "All real providers route correctly");
     assert.equal(ac.acceptance_scope, "full_population_operation");
     assert.equal(ac.full_population_required, true);
-    assert.deepEqual(ac.required_proof_layers, ["code", "test"]);
+    assert.deepEqual(ac.required_proof_layers, ["code", "test", "ui_browser"]);
     assert.equal(ac.source_file, "acceptance-checklist.md");
     assert.equal(ac.source_start_line, 3);
-    assert.ok(ac.source_end_line < 18);
+    assert.ok(ac.source_end_line < 20);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -179,7 +180,10 @@ required_proof_layers: code
     });
 
     await initializeSuperpowersTask(workdir, { taskId: "SP-STRICT-FIELDS", planSlug: "demo" });
-    await assert.rejects(() => compileSuperpowersTask(workdir), /full_population_required.*must be true or false|PI-001 missing delivery_scope|AC-001 invalid full_population_required/i);
+    await assert.rejects(
+      () => compileSuperpowersTask(workdir),
+      /blocking_unparseable_object|blocking_missing_plan|blocking_missing_checklist/
+    );
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -272,7 +276,7 @@ function strictProductSource() {
 }
 
 function strictTechnicalPlan() {
-  return "# Technical Realization Plan\n\n## PI-001: Build message routing API\n\ndelivery_scope: full_population_operation\ncapability_target: real routing API and worker\nrepresentative_samples:\nfull_population_boundary: all configured message providers\nnon_required_population:\nrelated_acs: AC-001\n";
+  return "# Technical Realization Plan\n\n## PI-001: Build message routing API\n\ndelivery_scope: full_population_operation\ncapability_target: real routing API and worker\nrepresentative_samples:\nfull_population_boundary: all configured message providers\nnon_required_population:\nimplementation_paths:\n  - src/runtime/kernel.ts\nrelated_acs: AC-001\n";
 }
 
 function strictAcceptanceChecklist() {

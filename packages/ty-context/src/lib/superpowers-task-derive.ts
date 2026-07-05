@@ -1,6 +1,7 @@
 import path from "node:path";
 import { ensureDir, pathExists, readText, writeTextIfChanged } from "./fs.js";
 import { stableJson, loadSuperpowersState } from "./superpowers-task-state.js";
+import { evaluateProofLayerAssertions, type AssertionStatus } from "./superpowers-task-assertions.js";
 import { type SuperpowersTaskState } from "./superpowers-task-state-schema.js";
 
 export interface DerivedSuperpowersArtifacts {
@@ -36,8 +37,10 @@ export function deriveObjects(state: SuperpowersTaskState): {
   const matrixRows = Object.entries(state.graph.plan_items).map(([planItemId, item]) => {
     const relatedAcs = item.related_acs;
     const requiredLayers = item.required_proof_layers;
-    const missingLayers = requiredLayers.filter((layerId) => state.graph.proof_layers[layerId]?.status !== "satisfied");
+    const assertionSummary = assertionSummaryForLayers(state, requiredLayers);
+    const missingLayers = requiredLayers.filter((layerId) => state.graph.proof_layers[layerId]?.status !== "satisfied" || evaluateProofLayerAssertions(state, layerId).assertion_status === "failed" || evaluateProofLayerAssertions(state, layerId).assertion_status === "missing" || evaluateProofLayerAssertions(state, layerId).assertion_status === "stale");
     const evidenceIds = evidenceForLayers(state, requiredLayers);
+    const invalidEvidence = invalidEvidenceSignals(assertionSummary);
     return {
       plan_item_id: planItemId,
       plan_requirement: item.requirement,
@@ -64,16 +67,24 @@ export function deriveObjects(state: SuperpowersTaskState): {
       required_proof_layers: requiredLayers,
       satisfied_proof_layers: requiredLayers.filter((layerId) => state.graph.proof_layers[layerId]?.status === "satisfied"),
       missing_required_layers: missingLayers,
+      assertion_status: assertionSummary.assertion_status,
+      blocking_assertion_failures: assertionSummary.blocking_assertion_failures,
+      negative_evidence_findings: assertionSummary.negative_evidence_findings,
+      invalid_evidence: invalidEvidence,
+      forbidden_shortcuts_hit: invalidEvidence.filter((item) => /forbidden shortcut|cannot satisfy/i.test(item)),
       evidence_ids: evidenceIds,
       scope_assessment: missingLayers.length === 0 ? "full" : "partial",
-      drift: missingLayers.length === 0 ? "no drift detected" : "missing required proof layers"
+      drift: missingLayers.length === 0 ? "no drift detected" : "missing required proof layers",
+      decision: missingLayers.length === 0 ? "accept" : "continue"
     };
   });
   const verdictRows = Object.entries(state.graph.acceptance_criteria).map(([acId, ac]) => {
     const requiredLayers = ac.required_proof_layers.map((layer) => `${acId}.${layer}`);
-    const missingLayers = requiredLayers.filter((layerId) => state.graph.proof_layers[layerId]?.status !== "satisfied");
+    const assertionSummary = assertionSummaryForLayers(state, requiredLayers);
+    const missingLayers = requiredLayers.filter((layerId) => state.graph.proof_layers[layerId]?.status !== "satisfied" || evaluateProofLayerAssertions(state, layerId).assertion_status === "failed" || evaluateProofLayerAssertions(state, layerId).assertion_status === "missing" || evaluateProofLayerAssertions(state, layerId).assertion_status === "stale");
     const evidenceIds = evidenceForLayers(state, requiredLayers);
     const status = missingLayers.length === 0 && requiredLayers.length > 0 ? "complete" : evidenceIds.length > 0 ? "partial" : ac.status;
+    const invalidCompletionSignals = invalidEvidenceSignals(assertionSummary);
     return {
       ac_id: acId,
       related_plan_item_ids: ac.related_plan_items,
@@ -89,6 +100,11 @@ export function deriveObjects(state: SuperpowersTaskState): {
       fresh_evidence: evidenceText(state, evidenceIds),
       missing_evidence: [],
       missing_required_layers: missingLayers,
+      assertion_status: assertionSummary.assertion_status,
+      blocking_assertion_failures: assertionSummary.blocking_assertion_failures,
+      negative_evidence_findings: assertionSummary.negative_evidence_findings,
+      invalid_completion_signals: invalidCompletionSignals,
+      required_next_evidence: requiredNextEvidence(missingLayers, assertionSummary),
       contradictions: [],
       context_fact_refs: [],
       evidence_ids: evidenceIds,
@@ -101,6 +117,16 @@ export function deriveObjects(state: SuperpowersTaskState): {
   const allComplete = verdictRows.length > 0 && verdictRows.every((row) => row.status === "complete");
   const progress = {
     ...state.progress,
+    acceptance_progress: {
+      status: allComplete ? "complete" : "partial",
+      complete_count: verdictRows.filter((row) => row.status === "complete").length,
+      required_count: verdictRows.filter((row) => row.status !== "out_of_scope_NA").length
+    },
+    engineering_implementation_progress: progressStatus(Object.values(state.graph.plan_items).map((item) => item.status)),
+    runtime_proof_progress: progressStatus(Object.values(state.graph.proof_layers).map((layer) => layer.status)),
+    proof_layer_milestones: Object.entries(state.graph.proof_layers).map(([layerId, layer]) => ({ layer_id: layerId, status: layer.status, evidence_ids: layer.evidence_ids })),
+    artifact_budget: { evidence_records: state.evidence.length, artifact_count: state.evidence.reduce((sum, item) => sum + item.artifact_paths.length, 0) },
+    workflow_overhead: { slices: state.slices.length, blockers: state.blockers.length },
     complete_count: verdictRows.filter((row) => row.status === "complete").length,
     partial_count: verdictRows.filter((row) => row.status === "partial").length,
     acceptance_required_count: verdictRows.filter((row) => row.status !== "out_of_scope_NA").length,
@@ -115,6 +141,21 @@ export function deriveObjects(state: SuperpowersTaskState): {
     verdict: { overall_status: allComplete ? "complete" : "partial", acceptance_items: verdictRows },
     progress
   };
+}
+
+function invalidEvidenceSignals(summary: { blocking_assertion_failures: string[]; negative_evidence_findings: string[] }): string[] {
+  return [...summary.blocking_assertion_failures, ...summary.negative_evidence_findings].filter((item) =>
+    /invalid evidence|forbidden shortcut|cannot satisfy|negative evidence|forbidden text/i.test(item)
+  );
+}
+
+function requiredNextEvidence(missingLayers: string[], summary: { blocking_assertion_failures: string[]; negative_evidence_findings: string[] }): string[] {
+  return [...missingLayers.map((layerId) => `fresh assertion-backed evidence for ${layerId}`), ...summary.blocking_assertion_failures, ...summary.negative_evidence_findings];
+}
+
+function progressStatus(statuses: string[]): Record<string, unknown> {
+  const complete = statuses.filter((status) => status === "complete" || status === "satisfied").length;
+  return { status: statuses.length > 0 && complete === statuses.length ? "complete" : complete > 0 ? "partial" : "not_started", complete, total: statuses.length };
 }
 
 export async function derivedMatchesState(workdir: string, state: SuperpowersTaskState): Promise<string[]> {
@@ -140,14 +181,40 @@ function evidenceForLayers(state: SuperpowersTaskState, layerIds: string[]): str
   return [...new Set(layerIds.flatMap((layerId) => state.graph.proof_layers[layerId]?.evidence_ids ?? []))];
 }
 
+function assertionSummaryForLayers(
+  state: SuperpowersTaskState,
+  layerIds: string[]
+): { assertion_status: AssertionStatus; blocking_assertion_failures: string[]; negative_evidence_findings: string[] } {
+  const evaluations = layerIds.map((layerId) => evaluateProofLayerAssertions(state, layerId));
+  const applicable = evaluations.filter((item) => item.assertion_status !== "not_applicable");
+  const blocking_assertion_failures = applicable.flatMap((item) => item.blocking_assertion_failures);
+  const negative_evidence_findings = applicable.flatMap((item) => item.negative_evidence_findings);
+  const statuses = applicable.map((item) => item.assertion_status);
+  const assertion_status: AssertionStatus =
+    applicable.length === 0
+      ? "not_applicable"
+      : statuses.includes("failed")
+        ? "failed"
+        : statuses.includes("stale")
+          ? "stale"
+          : statuses.includes("missing")
+            ? "missing"
+            : "passed";
+  return { assertion_status, blocking_assertion_failures, negative_evidence_findings };
+}
+
 function evidenceText(state: SuperpowersTaskState, evidenceIds: string[], type?: string): string[] {
   return evidenceIds
     .map((evidenceId) => state.evidence.find((item) => item.evidence_id === evidenceId))
-    .filter((item) => item && (!type || item.type === type || (type === "artifact" && item.artifact_paths.length > 0)))
+    .filter((item) => item && (!type || evidenceTypeMatches(item.type, type) || (type === "artifact" && item.artifact_paths.length > 0)))
     .map((item) => {
       const artifacts = item?.artifact_paths.join(", ");
       return `${item?.type} ${item?.command ?? ""} ${artifacts}`.trim();
     });
+}
+
+function evidenceTypeMatches(actual: string, expected: string): boolean {
+  return actual === expected || actual.includes(expected) || (expected === "browser" && /\b(playwright|ui_browser|browser)_assertion\b/.test(actual));
 }
 
 function auditorStatus(state: SuperpowersTaskState): string {

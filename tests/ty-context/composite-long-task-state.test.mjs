@@ -57,7 +57,7 @@ test("composite-long-task public namespace preserves state-kernel behavior", asy
           blockers: [],
           cleanup_assertions: ["runtime fixture cleaned"],
           progress_value: {
-            type: "closed_required_proof_layer",
+            type: "proof_gap_closed",
             closed_items: ["AC-001.runtime"],
             why_it_reduces_rework: "Runtime proof is now mapped to a proof layer."
           }

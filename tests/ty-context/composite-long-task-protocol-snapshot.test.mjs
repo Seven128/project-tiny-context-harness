@@ -3,12 +3,17 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFile, rm } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { renderCompositeLongTaskGoal } from "../../packages/ty-context/dist/lib/composite-long-task-renderer.js";
 import { initializeSuperpowersTask } from "../../packages/ty-context/dist/lib/superpowers-task-state.js";
 import { compileSuperpowersTask } from "../../packages/ty-context/dist/lib/superpowers-task-compile.js";
 import { createPlanProject, writeSuperpowersSources } from "./plan-validator-fixtures.mjs";
 
 test("render-goal freezes the package protocol into a hash-verifiable workdir snapshot", async () => {
+  const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+  const packageManifest = JSON.parse(
+    await readFile(path.join(repoRoot, "packages/ty-context/package.json"), "utf8")
+  );
   const root = await createPlanProject();
   try {
     await writeSuperpowersSources(root);
@@ -21,7 +26,7 @@ test("render-goal freezes the package protocol into a hash-verifiable workdir sn
     const [header, body] = snapshot.split("\n---\n");
 
     assert.match(header, /protocol_name: composite-long-task-workflow/);
-    assert.match(header, /protocol_version: 0\.2\.79/);
+    assert.match(header, new RegExp(`protocol_version: ${escapeRegex(packageManifest.version)}`));
     assert.match(header, /protocol_sha256: [a-f0-9]{64}/);
     assert.match(header, /generated_at: \d{4}-\d{2}-\d{2}T/);
     assert.match(
@@ -67,6 +72,13 @@ test("render-goal freezes the package protocol into a hash-verifiable workdir sn
     }
     assert.match(body, /Do not register workflow-protocol\.md in project_context\/context\.toml/);
     assert.match(body, /Do not let derived\/\*\* rewrite Product \/ Plan \/ Checklist/);
+    assert.match(body, /assertion_result\.schema_version=assertion-result-v1/);
+    assert.match(body, /assertion_result\.status=passed/);
+    assert.match(body, /passed `negative_evidence_scan`/);
+    assert.match(body, /Matrix and verdict views may summarize `assertion_status`/);
+    assert.match(body, /Invalid evidence for UI\/browser AC completion includes screenshot-only proof/);
+    assert.match(body, /AC Evidence Assertion Gate and Negative Evidence Scan Gate/);
+    assert.match(body, /final card, matrix, verdict or validator pass does not mean a machine-verifiable AC has assertion-backed evidence/);
     assert.match(body, /Do not call update_goal complete before final-gate passes/);
     assert.doesNotMatch(body, /## 18\. Authoring Placement \/ 建议写入位置/);
     assert.doesNotMatch(body, /Authoring Placement/);
