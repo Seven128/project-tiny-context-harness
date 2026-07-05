@@ -4,6 +4,7 @@ import {
   type SuperpowersEvidenceRecord,
   type SuperpowersTaskState
 } from "./superpowers-task-state-schema.js";
+import { MACHINE_VERIFIABLE_LAYER_NAMES, normalizeProofLayerId, normalizeProofLayerName } from "./superpowers-task-fields.js";
 export { normalizeAssertionResult, normalizeNegativeEvidenceScan } from "./superpowers-task-assertion-normalizers.js";
 
 export type AssertionStatus = "passed" | "failed" | "missing" | "stale" | "not_applicable";
@@ -14,18 +15,7 @@ export interface ProofLayerAssertionEvaluation {
   negative_evidence_findings: string[];
 }
 
-export const MACHINE_VERIFIABLE_PROOF_LAYERS = new Set([
-  "ui_browser",
-  "api_schema",
-  "runtime",
-  "worker_runtime",
-  "data_artifact",
-  "integration",
-  "security_redaction",
-  "test",
-  "all_provider_all_runner",
-  "cleanup_stale_scan"
-]);
+export const MACHINE_VERIFIABLE_PROOF_LAYERS = new Set(MACHINE_VERIFIABLE_LAYER_NAMES);
 export const UI_BROWSER_ASSERTION_TYPES = new Set(["browser_assertion", "playwright_assertion", "ui_browser_assertion"]);
 const DEFAULT_UI_FORBIDDEN_FINAL_STATES = ["未验证", "不可用", "暂不可用", "页面无明显变化"];
 const GENERIC_INVALID_EVIDENCE_TYPE_PATTERNS = [
@@ -49,7 +39,8 @@ const GENERIC_INVALID_EVIDENCE_TYPE_PATTERNS = [
 ];
 
 export function proofLayerName(layerId: string): string {
-  return layerId.includes(".") ? layerId.slice(layerId.lastIndexOf(".") + 1) : layerId;
+  const raw = layerId.includes(".") ? layerId.slice(layerId.lastIndexOf(".") + 1) : layerId;
+  return normalizeProofLayerName(raw);
 }
 
 export function proofLayerAcId(layerId: string): string {
@@ -165,7 +156,9 @@ export function evaluateAssertionEvidence(evidence: SuperpowersEvidenceRecord, l
   if (!assertion.target_ac_ids.includes(acId)) {
     failures.push(`${label} assertion target ACs ${assertion.target_ac_ids.join(", ") || "(none)"} do not include ${acId}`);
   }
-  if (!assertion.target_proof_layers.includes(layerId) && !assertion.target_proof_layers.includes(layerName)) {
+  const assertionTargetLayers = assertion.target_proof_layers.map(normalizeProofLayerId);
+  const normalizedLayerId = normalizeProofLayerId(layerId);
+  if (!assertionTargetLayers.includes(normalizedLayerId) && !assertionTargetLayers.includes(layerName)) {
     failures.push(`${label} assertion target_proof_layers ${assertion.target_proof_layers.join(", ") || "(none)"} do not include ${layerId} or ${layerName}`);
   }
   failures.push(...checkAssertions(`${label} positive assertion`, assertion.positive_assertions));
@@ -234,6 +227,13 @@ export function evaluateNegativeEvidence(evidence: SuperpowersEvidenceRecord, la
   if (!scan.target_ac_ids.includes(acId)) {
     findings.push(`${label} negative evidence scan target ACs ${scan.target_ac_ids.join(", ") || "(none)"} do not include ${acId}`);
   }
+  const targetLayers = (scan.target_proof_layers ?? []).map(normalizeProofLayerId);
+  const normalizedLayerId = normalizeProofLayerId(layerId);
+  if (targetLayers.length === 0) {
+    findings.push(`${label} negative evidence scan target proof layers are missing; expected ${normalizedLayerId}`);
+  } else if (!targetLayers.includes(normalizedLayerId) && !targetLayers.includes(proofLayerName(layerId))) {
+    findings.push(`${label} negative evidence scan target proof layers ${targetLayers.join(", ") || "(none)"} do not include ${normalizedLayerId}`);
+  }
   for (const finding of scan.forbidden_findings ?? []) {
     if (finding.status === "found") {
       findings.push(`${label} negative evidence found forbidden text ${finding.forbidden_text ?? finding.id}: ${finding.actual ?? ""}`.trim());
@@ -256,7 +256,7 @@ function invalidEvidenceReason(evidence: SuperpowersEvidenceRecord, layerName: s
   if (genericShortcut) {
     return `matches invalid completion evidence ${genericShortcut}`;
   }
-  if ((layerName === "runtime" || layerName === "worker_runtime" || layerName === "integration" || layerName === "ui_browser") && /\b(unit|mock|viewmodel)\b/i.test(evidence.type)) {
+  if ((layerName === "worker_runtime" || layerName === "integration" || layerName === "ui_browser") && /\b(unit|mock|viewmodel)\b/i.test(evidence.type)) {
     return "unit, mock or viewmodel evidence is auxiliary only for runtime, worker, integration and UI layers";
   }
   if (layerName === "ui_browser" && /\b(api|schema)\b/i.test(evidence.type)) {
@@ -265,7 +265,7 @@ function invalidEvidenceReason(evidence: SuperpowersEvidenceRecord, layerName: s
   if (layerName === "ui_browser" && /^screenshot$/i.test(evidence.type)) {
     return "screenshot-only evidence cannot satisfy UI Path AC";
   }
-  if ((layerName === "runtime" || layerName === "worker_runtime" || layerName === "data_artifact" || layerName === "security_redaction") && /\b(ui|browser|playwright|screenshot)\b/i.test(evidence.type)) {
+  if ((layerName === "worker_runtime" || layerName === "data_artifact" || layerName === "security_redaction") && /\b(ui|browser|playwright|screenshot)\b/i.test(evidence.type)) {
     return "UI-only evidence cannot satisfy runtime, data or security proof layers";
   }
   return undefined;

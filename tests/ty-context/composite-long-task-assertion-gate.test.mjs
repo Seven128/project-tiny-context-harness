@@ -164,6 +164,7 @@ test("derived matrix and verdict expose assertion status and negative evidence f
 
     const matrix = JSON.parse(await readFile(path.join(workdir, "derived/plan-conformance-matrix.json"), "utf8"));
     const verdict = JSON.parse(await readFile(path.join(workdir, "derived/final-acceptance-verdict.json"), "utf8"));
+    const evidenceIndex = JSON.parse(await readFile(path.join(workdir, "derived/evidence-index.json"), "utf8"));
     assert.equal(matrix.items[0].assertion_status, "failed");
     assert.match(matrix.items[0].blocking_assertion_failures.join("\n"), /ui_owner_surface_loaded|assertion_result.status=failed/i);
     assert.match(matrix.items[0].negative_evidence_findings.join("\n"), /不可用/);
@@ -171,6 +172,9 @@ test("derived matrix and verdict expose assertion status and negative evidence f
     assert.match(verdict.acceptance_items[0].blocking_assertion_failures.join("\n"), /ui_owner_surface_loaded|assertion_result.status=failed/i);
     assert.match(verdict.acceptance_items[0].negative_evidence_findings.join("\n"), /不可用/);
     assert.equal(verdict.acceptance_items[0].decision, "continue");
+    assert.equal(evidenceIndex.proof_layers["AC-001.ui_browser"].assertion_status, "failed");
+    assert.deepEqual(evidenceIndex.proof_layers["AC-001.ui_browser"].evidence_ids, ["EV-002"]);
+    assert.match(evidenceIndex.evidence["EV-002"].negative_evidence_scan.forbidden_findings[0].actual, /不可用/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -193,6 +197,15 @@ representative_samples_do_not_validate:
   - full population operation
 out_of_scope_backlog:
   - historical record migration
+scope_fit_decision: fit_for_three_inputs
+selected_scope_fit_slice: none
+owner_boundary: Product source owns Operations recovery fixture.
+primary_capability_path: Operations -> runtime recovery
+non_completing_outcomes:
+  - full population operation
+assertion_policy: machine layers require assertion reports
+source_authority: product source
+product_goal: runtime recovery fixture
 `,
       "utf8"
     );
@@ -209,6 +222,16 @@ representative_samples:
 full_population_boundary: not required for capability build
 non_required_population:
   - historical record migration
+owner_boundary: Operations and runtime kernel own recovery behavior
+primary_capability_path: Operations UI triggers runtime recovery
+trigger_contract: user starts recovery
+state_transition_contract: recovery transitions to complete
+observable_result_contract: UI and runtime artifact show completion
+assertion_support: browser and runtime command assertions target AC-001
+required_assertion_commands:
+  - node --test tests/runtime.spec.ts
+invalid_implementation_shortcuts:
+  - screenshot-only
 owner_surfaces:
   - Operations
 implementation_paths:
@@ -237,8 +260,19 @@ related_plan_items:
   - PI-001
 required_proof_layers:
   - ui_browser
-  - runtime
+  - worker_runtime
   - test
+assertion_command: node --test tests/runtime.spec.ts
+assertion_artifacts:
+  - tmp/ty-context/plan-acceptance/demo/runtime.json
+positive_assertions:
+  - ui_owner_surface_loaded
+negative_assertions:
+  - 页面无明显变化
+machine_blocking: true
+invalid_completion_signals:
+  - 页面无明显变化
+assertion_result_required: true
 required_test_ids:
   - tests/runtime.spec.ts::happy-path
 verification_method: browser assertion and runtime command assertion
@@ -262,7 +296,7 @@ test_cases:
       requirements.map((item) => [item.proof_layer, item.machine_blocking, item.required_test_ids]),
       [
         ["ui_browser", true, ["tests/runtime.spec.ts::happy-path"]],
-        ["runtime", true, ["tests/runtime.spec.ts::happy-path"]],
+        ["worker_runtime", true, ["tests/runtime.spec.ts::happy-path"]],
         ["test", true, ["tests/runtime.spec.ts::happy-path"]]
       ]
     );

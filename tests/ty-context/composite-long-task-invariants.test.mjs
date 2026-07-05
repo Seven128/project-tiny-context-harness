@@ -80,7 +80,7 @@ test("hand-set product_goal_complete is rejected when proof layers or Context st
     {
       name: "incomplete proof layers",
       mutate(state) {
-        state.graph.proof_layers["AC-001.runtime"].status = "missing";
+        state.graph.proof_layers["AC-001.worker_runtime"].status = "missing";
         state.graph.acceptance_criteria["AC-001"].status = "partial";
       },
       expected: /required plan items, ACs or proof layers are incomplete/i
@@ -190,8 +190,8 @@ test("audit_task_complete is not product_goal_complete", async () => {
   try {
     await writeSuperpowersSources(root);
     const state = validTaskState();
-    state.graph.proof_layers["AC-001.runtime"].status = "missing";
-    state.graph.proof_layers["AC-001.runtime"].evidence_ids = [];
+    state.graph.proof_layers["AC-001.worker_runtime"].status = "missing";
+    state.graph.proof_layers["AC-001.worker_runtime"].evidence_ids = [];
     await writeTaskState(root, state);
 
     const result = await runFinalGate(path.join(root, workdirArg));
@@ -245,7 +245,7 @@ function partialSliceDelta() {
         command: "node --test tests/runtime.spec.ts",
         command_exit_code: 0,
         artifact_paths: ["tmp/ty-context/plan-acceptance/demo/runtime.json"],
-        proves: ["AC-001.runtime"],
+        proves: ["AC-001.worker_runtime"],
         does_not_prove: ["AC-001.ui_browser", "full_population_operation"],
         redaction: { checked: true, contains_secret: false },
         reviewability: { external_reviewer_can_reproduce: true, reproduction_steps: "Run node --test tests/runtime.spec.ts." },
@@ -255,20 +255,20 @@ function partialSliceDelta() {
           runner: "node:test",
           exit_code: 0,
           target_ac_ids: ["AC-001"],
-          target_proof_layers: ["AC-001.runtime"],
+          target_proof_layers: ["AC-001.worker_runtime"],
           positive_assertions: [{ id: "runtime_job_completed", status: "passed", expected: "complete", actual: "complete" }],
           negative_assertions: [{ id: "runtime_not_blocked", status: "passed", expected: "not blocked", actual: "not blocked" }],
           artifacts: ["tmp/ty-context/plan-acceptance/demo/runtime.json"]
         }
       }
     ],
-    closed_layers: ["AC-001.runtime"],
+    closed_layers: ["AC-001.worker_runtime"],
     remaining_layers: ["AC-001.code", "AC-001.ui_browser", "AC-001.test"],
     blockers: [],
     cleanup_assertions: ["runtime fixture cleaned"],
     progress_value: {
       type: "proof_gap_closed",
-      closed_items: ["AC-001.runtime"],
+      closed_items: ["AC-001.worker_runtime"],
       why_it_reduces_rework: "Runtime proof is now mapped to a proof layer."
     }
   };

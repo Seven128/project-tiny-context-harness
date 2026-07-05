@@ -73,7 +73,7 @@ test("render-goal freezes the package protocol into a hash-verifiable workdir sn
     assert.match(body, /assertion_result\.schema_version=assertion-result-v1/);
     assert.match(body, /assertion_result\.status=passed/);
     assert.match(body, /passed `negative_evidence_scan`/);
-    assert.match(body, /Matrix and verdict views may summarize `assertion_status`/);
+    assert.match(body, /Matrix, verdict and evidence-index views may summarize `assertion_status`/);
     assert.match(body, /Invalid evidence for UI\/browser AC completion includes screenshot-only proof/);
     assert.match(body, /AC Evidence Assertion Gate and Negative Evidence Scan Gate/);
     assert.match(body, /final card, matrix, verdict or validator pass does not mean a machine-verifiable AC has assertion-backed evidence/);

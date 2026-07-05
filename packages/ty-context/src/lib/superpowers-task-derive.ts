@@ -19,6 +19,7 @@ export async function deriveSuperpowersArtifacts(workdir: string): Promise<Deriv
   await writeDerived(files, path.join(derivedDir, "plan-conformance-matrix.json"), stableJson(derived.matrix));
   await writeDerived(files, path.join(derivedDir, "final-acceptance-verdict.json"), stableJson(derived.verdict));
   await writeDerived(files, path.join(derivedDir, "progress-ledger.json"), stableJson(derived.progress));
+  await writeDerived(files, path.join(derivedDir, "evidence-index.json"), stableJson(deriveEvidenceIndex(state)));
   await writeDerived(files, path.join(derivedDir, "plan-conformance-matrix.md"), matrixMarkdown(derived.matrix));
   await writeDerived(files, path.join(derivedDir, "final-acceptance-verdict.md"), verdictMarkdown(derived.verdict));
   await writeDerived(files, path.join(derivedDir, "local-audit.md"), localAuditMarkdown(state));
@@ -51,6 +52,15 @@ export function deriveObjects(state: SuperpowersTaskState): {
       representative_samples: item.representative_samples,
       full_population_boundary: item.full_population_boundary,
       non_required_population: item.non_required_population,
+      owner_boundary: item.owner_boundary,
+      primary_capability_path: item.primary_capability_path,
+      trigger_contract: item.trigger_contract,
+      state_transition_contract: item.state_transition_contract,
+      observable_result_contract: item.observable_result_contract,
+      assertion_support: item.assertion_support,
+      required_assertion_commands: item.required_assertion_commands,
+      invalid_implementation_shortcuts: item.invalid_implementation_shortcuts,
+      blockers: item.blockers ?? [],
       conformance_type: item.owner_surfaces.length > 0 ? "product_surface" : "implementation",
       owner_surface: item.owner_surfaces[0] ?? "",
       forbidden_primary_surfaces: item.forbidden_surfaces,
@@ -95,6 +105,13 @@ export function deriveObjects(state: SuperpowersTaskState): {
       sample_boundary: ac.sample_boundary,
       full_population_required: ac.full_population_required,
       full_population_status: ac.full_population_required === true || ac.acceptance_scope === "full_population_operation" ? status : "not_in_scope",
+      assertion_command: ac.assertion_command ?? "",
+      assertion_artifacts: ac.assertion_artifacts ?? [],
+      positive_assertions: ac.positive_assertions ?? [],
+      negative_assertions: ac.negative_assertions ?? [],
+      machine_blocking: ac.machine_blocking ?? false,
+      invalid_completion_signals: ac.invalid_completion_signals ?? [],
+      assertion_result_required: ac.assertion_result_required ?? false,
       required_evidence: requiredLayers,
       required_proof_chain: requiredLayers,
       fresh_evidence: evidenceText(state, evidenceIds),
@@ -103,7 +120,7 @@ export function deriveObjects(state: SuperpowersTaskState): {
       assertion_status: assertionSummary.assertion_status,
       blocking_assertion_failures: assertionSummary.blocking_assertion_failures,
       negative_evidence_findings: assertionSummary.negative_evidence_findings,
-      invalid_completion_signals: invalidCompletionSignals,
+      invalid_evidence_findings: invalidCompletionSignals,
       required_next_evidence: requiredNextEvidence(missingLayers, assertionSummary),
       contradictions: [],
       context_fact_refs: [],
@@ -163,7 +180,49 @@ export async function derivedMatchesState(workdir: string, state: SuperpowersTas
   const expected = deriveObjects(state);
   await assertDerivedJson(workdir, "plan-conformance-matrix", expected.matrix, errors);
   await assertDerivedJson(workdir, "final-acceptance-verdict", expected.verdict, errors);
+  await assertDerivedJson(workdir, "evidence-index", deriveEvidenceIndex(state), errors);
   return errors;
+}
+
+export function deriveEvidenceIndex(state: SuperpowersTaskState): Record<string, unknown> {
+  const evidenceById = Object.fromEntries(
+    (state.evidence ?? []).map((evidence) => [
+      evidence.evidence_id,
+      {
+        evidence_id: evidence.evidence_id,
+        type: evidence.type,
+        command: evidence.command ?? "",
+        command_exit_code: evidence.command_exit_code,
+        artifact_paths: evidence.artifact_paths,
+        proves: evidence.proves,
+        does_not_prove: evidence.does_not_prove,
+        assertion_result: evidence.assertion_result ?? null,
+        negative_evidence_scan: evidence.negative_evidence_scan ?? null,
+        freshness: evidence.freshness,
+        reviewability: evidence.reviewability,
+        redaction: evidence.redaction
+      }
+    ])
+  );
+  const proofLayers = Object.fromEntries(
+    Object.entries(state.graph.proof_layers ?? {}).map(([layerId, layer]) => {
+      const evaluation = evaluateProofLayerAssertions(state, layerId);
+      return [
+        layerId,
+        {
+          layer_id: layerId,
+          status: layer.status,
+          required: layer.required,
+          evidence_ids: layer.evidence_ids,
+          assertion_status: evaluation.assertion_status,
+          blocking_assertion_failures: evaluation.blocking_assertion_failures,
+          negative_evidence_findings: evaluation.negative_evidence_findings,
+          evidence: layer.evidence_ids.map((evidenceId) => evidenceById[evidenceId]).filter(Boolean)
+        }
+      ];
+    })
+  );
+  return { proof_layers: proofLayers, evidence: evidenceById };
 }
 
 async function assertDerivedJson(workdir: string, basename: string, expected: unknown, errors: string[]): Promise<void> {
@@ -273,8 +332,15 @@ ${stableJson(progress)}
 }
 
 function evidenceMarkdown(state: SuperpowersTaskState): string {
+  const index = deriveEvidenceIndex(state);
+  const layers = Object.values(index.proof_layers as Record<string, Record<string, unknown>>);
   return [
     "# Evidence Index",
+    "",
+    ...layers.map((item) => {
+      const evidenceIds = (item.evidence_ids as string[] | undefined) ?? [];
+      return `- ${item.layer_id}: ${item.assertion_status}; evidence ${evidenceIds.join(", ") || "(none)"}`;
+    }),
     "",
     ...state.evidence.map((item) => `- ${item.evidence_id}: proves ${item.proves.join(", ")}; does_not_prove ${item.does_not_prove.join(", ")}`)
   ].join("\n");

@@ -63,12 +63,12 @@ test("normalizeTaskState keeps semantic state and removes volatile data", () => 
           scope: "Capability works",
           acceptance_scope: "system_capability_build",
           full_population_required: false,
-          required_proof_layers: ["code", "runtime"],
+          required_proof_layers: ["code", "worker_runtime"],
           related_plan_items: ["PI-001"]
         }
       },
       proof_layers: {
-        "AC-001.runtime": { required: true, status: "satisfied", evidence_ids: ["EV-001"] }
+        "AC-001.worker_runtime": { required: true, status: "satisfied", evidence_ids: ["EV-001"] }
       },
       edges: [{ from: "PI-001", to: "AC-001", type: "supports" }]
     },
@@ -76,11 +76,11 @@ test("normalizeTaskState keeps semantic state and removes volatile data", () => 
       {
         evidence_id: "EV-001",
         slice_id: "S-001",
-        type: "runtime",
+        type: "worker_runtime",
         freshness: { created_at: "2026-06-29T00:00:00.000Z" },
         command: "node --test tests/runtime.spec.ts",
         artifact_paths: ["C:/tmp/current/tmp/ty-context/plan-acceptance/demo/runtime.json"],
-        proves: ["AC-001.runtime"],
+        proves: ["AC-001.worker_runtime"],
         does_not_prove: ["full population operation"]
       }
     ],
@@ -101,7 +101,7 @@ test("normalizeTaskState keeps semantic state and removes volatile data", () => 
   assert.equal(normalized.meta.task_id, undefined);
   assert.equal(normalized.sources.acceptance_checklist.sha256, undefined);
   assert.equal(normalized.graph.plan_items["PI-001"].delivery_scope, "system_capability_build");
-  assert.deepEqual(normalized.evidence[0].proves, ["AC-001.runtime"]);
+  assert.deepEqual(normalized.evidence[0].proves, ["AC-001.worker_runtime"]);
   assert.deepEqual(normalized.evidence[0].does_not_prove, ["full population operation"]);
   assert.deepEqual(normalized.evidence[0].artifact_paths, ["<normalized-path>/runtime.json"]);
 });

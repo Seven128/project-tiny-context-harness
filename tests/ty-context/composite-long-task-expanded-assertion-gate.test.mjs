@@ -24,7 +24,7 @@ const EXPANDED_MACHINE_LAYERS = [
 test("assertion evaluators expose the public AC proof-layer assertion API", () => {
   const state = assertionBackedTaskState();
   const uiEvidence = state.evidence[1];
-  const expectedMachineLayers = ["ui_browser", "api_schema", "runtime", ...EXPANDED_MACHINE_LAYERS, "test"];
+  const expectedMachineLayers = ["ui_browser", "api_schema", ...EXPANDED_MACHINE_LAYERS, "test"];
 
   assert.deepEqual(expectedMachineLayers.filter((layer) => !MACHINE_VERIFIABLE_PROOF_LAYERS.has(layer)), []);
   assert.equal(evaluateProofLayer(state, "AC-001.ui_browser").assertion_status, "passed");
@@ -86,6 +86,21 @@ test("adversarial invalid state evidence shortcuts J-R cannot close machine proo
     } finally {
       await rm(root, { recursive: true, force: true });
     }
+  }
+});
+
+test("negative evidence scans must target the same proof layer as the assertion evidence", async () => {
+  const root = await createPlanProject();
+  try {
+    await writeSuperpowersSources(root);
+    const state = assertionBackedTaskState();
+    state.evidence[1].negative_evidence_scan.target_proof_layers = ["AC-999.ui_browser"];
+    await writeTaskState(root, state);
+
+    const report = await validateSuperpowersState(root, ["tmp/ty-context/plan-acceptance/demo"]);
+    assert.match(report.errors.join("\n"), /negative evidence scan target proof layers.*AC-001\.ui_browser/i);
+  } finally {
+    await rm(root, { recursive: true, force: true });
   }
 });
 

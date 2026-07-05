@@ -53,6 +53,7 @@ export type SuperpowersAcceptanceScope =
   | "representative_sample_validation"
   | "full_population_operation"
   | "full_population_not_required";
+export type SuperpowersScopeFitDecision = "fit_for_three_inputs" | "selected_from_split" | "blocked_for_decision" | "";
 
 export interface SuperpowersTaskState {
   meta: {
@@ -111,6 +112,20 @@ export interface SuperpowersProductArchitectureScope {
   representative_samples_validate: string[];
   representative_samples_do_not_validate: string[];
   out_of_scope_backlog: string[];
+  scope_fit_decision: SuperpowersScopeFitDecision;
+  selected_scope_fit_slice: string;
+  owner_boundary: string;
+  primary_capability_path: string;
+  non_completing_outcomes: string[];
+  assertion_policy: string;
+  source_authority: string;
+  product_goal: string;
+  surface_ia_lock?: string;
+  decision_lock?: string;
+  context_delta?: string;
+  source_to_context_coverage?: string;
+  acceptance_semantics?: string;
+  impact?: string;
 }
 
 export interface SuperpowersProgressState {
@@ -131,13 +146,33 @@ export interface SuperpowersPlanItem {
   representative_samples: string[];
   full_population_boundary: string;
   non_required_population: string[];
+  owner_boundary: string;
+  primary_capability_path: string;
+  trigger_contract: string;
+  state_transition_contract: string;
+  observable_result_contract: string;
+  assertion_support: string;
+  required_assertion_commands: string[];
+  invalid_implementation_shortcuts: string[];
   owner_surfaces: string[];
   forbidden_surfaces: string[];
   implementation_paths: string[];
   required_tests: string[];
   proof_layer_ids?: string[];
+  requirement_ref?: string;
+  decision_id?: string;
+  api_schema_changes?: string;
+  state_machine?: string;
+  data_flow?: string;
+  worker_runtime_behavior?: string;
+  ui_ia_changes?: string;
+  migration_plan?: string;
+  evidence_artifacts?: string[];
   non_completing_shortcuts?: string[];
   substitution_policy?: string[];
+  drift_severity?: string;
+  partial_conditions?: string[];
+  blockers?: string[];
   explicit_no_test_scope?: boolean;
   context_fact_refs?: string[];
   status: SuperpowersPlanItemStatus;
@@ -158,10 +193,28 @@ export interface SuperpowersAcceptanceCriterion {
   related_plan_items: string[];
   required_proof_layers: string[];
   assertion_requirements?: AssertionRequirement[];
+  assertion_command?: string;
+  assertion_artifacts?: string[];
+  positive_assertions?: string[];
+  negative_assertions?: string[];
+  machine_blocking?: boolean | null;
+  invalid_completion_signals?: string[];
+  assertion_result_required?: boolean | null;
+  ac_type?: string;
+  proof_chain?: string[];
   required_test_ids?: string[];
   fail_conditions?: string[];
   invalid_evidence?: string[];
+  substitution_policy?: string[];
+  missing_layer_downgrade?: string;
+  auditor_expectation?: string;
+  out_of_scope_na_approval_source?: string;
+  hard_blockers?: string[];
+  validates_explanation?: string;
+  does_not_validate_explanation?: string;
   final_evidence_expected?: string[];
+  verification_method?: string[];
+  test_cases?: string[];
   explicit_no_test_scope?: boolean;
   status: SuperpowersAcceptanceStatus;
 }
@@ -170,6 +223,10 @@ export interface AssertionRequirement {
   proof_layer: string;
   required: boolean;
   machine_blocking: boolean;
+  assertion_result_required?: boolean;
+  assertion_command?: string;
+  assertion_artifacts?: string[];
+  invalid_completion_signals?: string[];
   required_test_ids: string[];
   positive_assertions: string[];
   negative_assertions: string[];
@@ -261,6 +318,8 @@ export interface NegativeEvidenceScan {
   schema_version: "negative-evidence-scan-v1";
   status: "passed" | "failed" | "blocked" | "stale";
   target_ac_ids: string[];
+  target_proof_layers?: string[];
+  invalid_completion_signals_checked?: string[];
   owner_surface?: string;
   route?: string;
   forbidden_findings: NegativeFinding[];

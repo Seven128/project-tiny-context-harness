@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { ensureDir, pathExists, readText, writeTextIfChanged } from "./fs.js";
+import { normalizeProofLayerId } from "./superpowers-task-fields.js";
 import { appendSuperpowersEvent } from "./superpowers-task-events.js";
 import { evaluateProofLayerAssertions, isMachineVerifiableLayer, normalizeAssertionResult, normalizeNegativeEvidenceScan } from "./superpowers-task-assertions.js";
 import {
@@ -73,7 +74,15 @@ export async function initializeSuperpowersTask(
         full_population_required: null,
         representative_samples_validate: [],
         representative_samples_do_not_validate: [],
-        out_of_scope_backlog: []
+        out_of_scope_backlog: [],
+        scope_fit_decision: "",
+        selected_scope_fit_slice: "",
+        owner_boundary: "",
+        primary_capability_path: "",
+        non_completing_outcomes: [],
+        assertion_policy: "",
+        source_authority: "",
+        product_goal: ""
       },
       scope_conflicts: []
     },
@@ -144,8 +153,8 @@ export async function applySliceDelta(workdir: string, deltaFile: string): Promi
     missing_layer_classes: asStringArray(delta.missing_layer_classes),
     code_changes: asStringArray(delta.code_changes),
     evidence_records: evidenceRecords.map((item) => item.evidence_id),
-    closed_layers: asStringArray(delta.closed_layers),
-    remaining_layers: asStringArray(delta.remaining_layers),
+    closed_layers: asStringArray(delta.closed_layers).map(normalizeProofLayerId),
+    remaining_layers: asStringArray(delta.remaining_layers).map(normalizeProofLayerId),
     blockers: Array.isArray(delta.blockers) ? delta.blockers : [],
     cleanup_assertions: asStringArray(delta.cleanup_assertions),
     progress_value: {
@@ -249,8 +258,8 @@ function readEvidenceRecords(value: unknown): SuperpowersEvidenceRecord[] {
     command: item.command === undefined ? undefined : String(item.command),
     command_exit_code: item.command_exit_code === undefined ? undefined : Number(item.command_exit_code),
     artifact_paths: asStringArray(item.artifact_paths),
-    proves: asStringArray(item.proves),
-    does_not_prove: asStringArray(item.does_not_prove),
+    proves: asStringArray(item.proves).map(normalizeProofLayerId),
+    does_not_prove: asStringArray(item.does_not_prove).map((value) => (value.includes(".") ? normalizeProofLayerId(value) : value)),
     redaction: isRecord(item.redaction)
       ? { checked: item.redaction.checked === true, contains_secret: item.redaction.contains_secret === true }
       : { checked: false, contains_secret: false },

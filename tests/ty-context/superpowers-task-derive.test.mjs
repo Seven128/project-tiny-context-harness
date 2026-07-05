@@ -29,7 +29,7 @@ test("derive-superpowers-artifacts writes generated matrix verdict progress evid
     assert.deepEqual(matrix.items[0].representative_samples, ["recovery happy path sample"]);
     assert.equal(matrix.items[0].full_population_boundary, "not required for capability build");
     assert.deepEqual(matrix.items[0].non_required_population, ["historical record migration"]);
-    assert.deepEqual(matrix.items[0].required_proof_layers, ["AC-001.code", "AC-001.runtime", "AC-001.ui_browser", "AC-001.test"]);
+    assert.deepEqual(matrix.items[0].required_proof_layers, ["AC-001.code", "AC-001.worker_runtime", "AC-001.ui_browser", "AC-001.test"]);
     assert.deepEqual(matrix.items[0].invalid_evidence, []);
     assert.deepEqual(matrix.items[0].forbidden_shortcuts_hit, []);
     assert.equal(matrix.items[0].decision, "accept");
@@ -41,7 +41,7 @@ test("derive-superpowers-artifacts writes generated matrix verdict progress evid
     assert.equal(verdict.acceptance_items[0].full_population_required, false);
     assert.equal(verdict.acceptance_items[0].full_population_status, "not_in_scope");
     assert.deepEqual(verdict.acceptance_items[0].missing_required_layers, []);
-    assert.deepEqual(verdict.acceptance_items[0].invalid_completion_signals, []);
+    assert.deepEqual(verdict.acceptance_items[0].invalid_completion_signals, ["页面无明显变化"]);
     assert.deepEqual(verdict.acceptance_items[0].required_next_evidence, []);
 
     const progress = JSON.parse(await readFile(path.join(workdir, "derived/progress-ledger.json"), "utf8"));

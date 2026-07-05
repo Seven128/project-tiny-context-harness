@@ -85,7 +85,7 @@ test("composite long-task workflow Skill is the public managed Skill surface", a
   assert.match(protocol, /Forbidden Shortcuts/);
   assert.match(protocol, /Blocker Protocol/);
   assert.match(protocol, /assertion_result\.status=passed/);
-  assert.match(protocol, /Matrix and verdict views may summarize `assertion_status`/);
+  assert.match(protocol, /Matrix, verdict and evidence-index views may summarize `assertion_status`/);
   assert.match(protocol, /Negative Evidence Scan Gate/);
   assert.match(protocol, /Invalid evidence for UI\/browser AC completion includes screenshot-only proof/);
   assert.match(protocol, /## 17\. Forbidden Wrong Fusion \/ 不允许的错误融合/);

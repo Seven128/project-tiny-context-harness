@@ -72,7 +72,7 @@ test("validate-superpowers-state rejects source hash mismatch missing evidence s
     {
       name: "missing evidence",
       mutate(state) {
-        state.graph.proof_layers["AC-001.runtime"].evidence_ids = [];
+        state.graph.proof_layers["AC-001.worker_runtime"].evidence_ids = [];
       },
       expected: /satisfied but has no evidence_ids/
     },
@@ -164,7 +164,7 @@ test("validate-plan-acceptance does not fall back to legacy artifacts when state
   try {
     await writeSuperpowersSources(root);
     const state = validTaskState();
-    state.graph.proof_layers["AC-001.runtime"].evidence_ids = [];
+    state.graph.proof_layers["AC-001.worker_runtime"].evidence_ids = [];
     await writeTaskState(root, state);
     await writeAcceptance(root, validMatrix(), validVerdict());
 

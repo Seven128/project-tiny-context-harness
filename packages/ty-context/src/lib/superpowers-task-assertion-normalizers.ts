@@ -1,3 +1,4 @@
+import { normalizeProofLayerId } from "./superpowers-task-fields.js";
 import {
   isRecord,
   type AssertionCheck,
@@ -16,7 +17,7 @@ export function normalizeAssertionResult(value: unknown): AssertionResult | unde
     runner: String(value.runner ?? ""),
     exit_code: numberValue(value.exit_code),
     target_ac_ids: stringArray(value.target_ac_ids),
-    target_proof_layers: stringArray(value.target_proof_layers),
+    target_proof_layers: stringArray(value.target_proof_layers).map(normalizeProofLayerId),
     owner_surface: value.owner_surface === undefined ? undefined : String(value.owner_surface),
     route: value.route === undefined ? undefined : String(value.route),
     action: value.action === undefined ? undefined : String(value.action),
@@ -34,6 +35,8 @@ export function normalizeNegativeEvidenceScan(value: unknown): NegativeEvidenceS
     schema_version: String(value.schema_version ?? "") as NegativeEvidenceScan["schema_version"],
     status: String(value.status ?? "") as NegativeEvidenceScan["status"],
     target_ac_ids: stringArray(value.target_ac_ids),
+    target_proof_layers: stringArray(value.target_proof_layers).map(normalizeProofLayerId),
+    invalid_completion_signals_checked: stringArray(value.invalid_completion_signals_checked),
     owner_surface: value.owner_surface === undefined ? undefined : String(value.owner_surface),
     route: value.route === undefined ? undefined : String(value.route),
     forbidden_findings: findingArray(value.forbidden_findings),

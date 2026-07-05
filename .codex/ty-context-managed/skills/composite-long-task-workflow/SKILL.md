@@ -86,6 +86,8 @@ Strict input grammar:
 - Plain prose, lists, tables, mapping previews and `related_*` fields that mention PI/AC IDs are references, not definitions.
 - Legacy list-style definitions such as `- PI-001: ...` or `- AC-001: ...` followed by delivery fields are invalid.
 
+Strict V2 canonical fields are code-owned by `superpowers-task-fields.ts` and must be present in the three sources. Product Source includes Scope Fit fields such as `scope_fit_decision`, `selected_scope_fit_slice`, `owner_boundary`, `primary_capability_path`, `non_completing_outcomes` and `assertion_policy`. PI items include owner/trigger/state/observable/assertion fields such as `owner_boundary`, `primary_capability_path`, `trigger_contract`, `state_transition_contract`, `observable_result_contract`, `assertion_support`, `required_assertion_commands` and `invalid_implementation_shortcuts`. ACs include assertion-gate fields such as `assertion_command`, `assertion_artifacts`, `positive_assertions`, `negative_assertions`, `machine_blocking`, `invalid_completion_signals` and `assertion_result_required`. Unknown fields, duplicate fields, table fields and missing canonical fields fail compile; this Skill must not infer, repair or backfill them.
+
 ## Authority Model
 
 - Product / Architecture Source owns intent, scope and boundaries.
@@ -171,7 +173,7 @@ Superpowers review and verification remain useful execution checks, but they can
 
 Agents must not hand-set `product_goal_complete`. Implementation / execution goals complete only when final gate computes `product_goal_complete=true`.
 
-For UI/browser/API/runtime/worker/data/integration/security/test/all-provider/cleanup proof layers, do not mark ACs complete from screenshots, final cards, validator passes, matrix/verdict rows or prose evidence. Required machine-verifiable layers need passed `assertion_result`, zero command/assertion exit codes, target AC/layer coverage, passed positive and negative assertions and no failed/stale `negative_evidence_scan`.
+Canonical proof layers are `code`, `api_schema`, `worker_runtime`, `data_artifact`, `integration`, `ui_browser`, `security_redaction`, `all_provider_all_runner`, `cleanup_stale_scan` and `test`; legacy source aliases map `runtime -> worker_runtime`, `browser -> ui_browser`, `api -> api_schema`, `data -> data_artifact` and `security -> security_redaction`. `code` cannot complete a machine-backed AC by itself. For UI/browser/API/worker/data/integration/security/test/all-provider/cleanup proof layers, do not mark ACs complete from screenshots, final cards, validator passes, matrix/verdict rows or prose evidence. Required machine-verifiable layers need passed `assertion_result`, zero command/assertion exit codes, target AC/layer coverage, passed positive and negative assertions, reviewable artifacts and no failed/stale `negative_evidence_scan` with matching target proof layers and checked invalid completion signals.
 
 If `audit_task_complete` is true but `acceptance_target_status` is not complete, report:
 
