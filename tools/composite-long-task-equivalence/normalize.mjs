@@ -15,6 +15,7 @@ export const DERIVED_FILES = [
   "plan-conformance-matrix.json",
   "final-acceptance-verdict.json",
   "progress-ledger.json",
+  "evidence-index.json",
   "evidence-index.md",
   "context-alignment.md",
   "final-summary.md"

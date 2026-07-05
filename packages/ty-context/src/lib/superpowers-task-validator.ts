@@ -8,7 +8,7 @@ import { fullPopulationRequired, validateDeliveryContract, validateScopeConflict
 import { loadSuperpowersState, sha256 } from "./superpowers-task-state.js";
 import { validateCanonicalStatuses } from "./superpowers-task-status.js";
 import { isRecord, type SuperpowersEvidenceRecord, type SuperpowersTaskState } from "./superpowers-task-state-schema.js";
-import { evaluateProofLayerAssertions, isUiBrowserLayer } from "./superpowers-task-assertions.js";
+import { evaluateProofLayerAssertions, isUiBrowserLayer, proofLayerName } from "./superpowers-task-assertions.js";
 import type { ValidatorReport } from "./validators.js";
 export async function validateSuperpowersState(projectRoot: string, args: string[] = []): Promise<ValidatorReport> {
   const info: string[] = [];
@@ -24,12 +24,7 @@ export async function validateSuperpowersState(projectRoot: string, args: string
   try {
     state = await loadSuperpowersState(targetDir);
   } catch (error) {
-    return {
-      info,
-      warnings,
-      hygiene,
-      errors: [`${repoRelative(projectRoot, statePath)} is not valid JSON: ${error instanceof Error ? error.message : String(error)}`]
-    };
+    return { info, warnings, hygiene, errors: [`${repoRelative(projectRoot, statePath)} is not valid JSON: ${error instanceof Error ? error.message : String(error)}`] };
   }
 
   validateShape(state, errors);
@@ -175,10 +170,11 @@ function validateEvidenceRecords(state: SuperpowersTaskState, errors: string[]):
       errors.push(`${label} uses sibling substitution without approval`);
     }
     for (const proofLayer of evidence.proves ?? []) {
-      if (proofLayer.endsWith(".runtime") && /\b(mock|unit|viewmodel)\b/i.test(evidence.type)) {
-        errors.push(`${label} runtime proof cannot be mock/unit/viewmodel only`);
+      const layerName = proofLayerName(proofLayer);
+      if (layerName === "worker_runtime" && /\b(mock|unit|viewmodel)\b/i.test(evidence.type)) {
+        errors.push(`${label} worker_runtime proof cannot be mock/unit/viewmodel only`);
       }
-      if (proofLayer.endsWith(".ui_browser") && !/(browser|ui_browser|screenshot|playwright)/i.test(evidence.type)) {
+      if (layerName === "ui_browser" && !/(browser|ui_browser|screenshot|playwright)/i.test(evidence.type)) {
         errors.push(`${label} UI proof must use browser owner surface evidence`);
       }
     }

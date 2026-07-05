@@ -37,11 +37,13 @@ Implementation advances through coherent slices. Each slice selects related PI /
 
 Evidence is canonical state, not prose. Every proof record enters `task-state.evidence[]` with evidence id, slice id, type, command or artifact paths, command exit code when applicable, `proves`, `does_not_prove`, freshness, redaction, reviewability / reproduction data and, for machine-verifiable layers, an `assertion_result`. Evidence must be fresh, reviewable and free of secrets, raw credentials, tokens, cookies and long raw payloads.
 
-Machine-verifiable layers such as `ui_browser`, `api_schema`, `runtime`, `worker_runtime`, `data_artifact`, `integration`, `security_redaction`, `test`, `all_provider_all_runner` and `cleanup_stale_scan` are not complete from descriptions, screenshots, final cards, validator passes, matrix rows or verdict rows. They require `assertion_result.schema_version=assertion-result-v1`, `assertion_result.status=passed`, assertion exit code `0`, command exit code `0` when present, target AC/layer coverage, passed positive and negative assertions and reviewable artifacts. UI/browser layers also require owner surface, route/path, user action, browser/playwright/UI assertion evidence and a passed `negative_evidence_scan`.
+Canonical proof layers are `code`, `api_schema`, `worker_runtime`, `data_artifact`, `integration`, `ui_browser`, `security_redaction`, `all_provider_all_runner`, `cleanup_stale_scan` and `test`; legacy aliases map `runtime -> worker_runtime`, `browser -> ui_browser`, `api -> api_schema`, `data -> data_artifact` and `security -> security_redaction`. `code` cannot complete a machine-backed AC by itself. Machine-verifiable layers are not complete from descriptions, screenshots, final cards, validator passes, matrix rows or verdict rows. They require `assertion_result.schema_version=assertion-result-v1`, `assertion_result.status=passed`, assertion exit code `0`, command exit code `0` when present, target AC/layer coverage, passed positive and negative assertions and reviewable artifacts. UI/browser layers also require owner surface, route/path, user action, browser/playwright/UI assertion evidence and a passed `negative_evidence_scan` with matching target proof layers and checked invalid completion signals.
+
+Strict V2 source fields are canonical. Product Source must carry Scope Fit, owner, primary capability and assertion policy fields. PI items must carry owner boundary, primary capability path, trigger/state/observable contracts, assertion support, required assertion commands and invalid implementation shortcuts. ACs must carry assertion command, artifacts, positive/negative assertions, machine-blocking flag, invalid completion signals and assertion-result requirement. Unknown, duplicate, table or missing canonical fields block compile; the workflow must not generate, infer, rewrite or repair the Technical Realization Plan or Acceptance Checklist.
 
 ## Derived Views
 
-`derived/**` contains generated reading views only: local audit, plan-conformance matrix, final acceptance verdict, progress ledger, evidence index, context alignment and final summary. Matrix and verdict views may summarize `assertion_status`, blocking assertion failures and negative evidence findings, but they never replace assertion execution and never rewrite Product / Architecture Source, Technical Realization Plan, Acceptance Checklist or `task-state.json`.
+`derived/**` contains generated reading views only: local audit, plan-conformance matrix, final acceptance verdict, progress ledger, evidence index (`md` and `json`), context alignment and final summary. Matrix, verdict and evidence-index views may summarize `assertion_status`, blocking assertion failures and negative evidence findings, but they never replace assertion execution and never rewrite Product / Architecture Source, Technical Realization Plan, Acceptance Checklist or `task-state.json`.
 
 ## Gates
 
@@ -306,6 +308,8 @@ does_not_prove
 freshness
 redaction
 reviewability / reproduction_steps
+assertion_result for machine-verifiable layers
+negative_evidence_scan with target_proof_layers where invalid completion signals must be ruled out
 ```
 
 `proves` and `does_not_prove` are both required because evidence must say what it proves and what it does not prove. This prevents samples, passing tests, screenshots, mocks or local audit text from being reused as full acceptance.
@@ -331,6 +335,7 @@ derived/local-audit.md
 derived/plan-conformance-matrix.md
 derived/final-acceptance-verdict.md
 derived/progress-ledger.md
+derived/evidence-index.json
 derived/evidence-index.md
 derived/context-alignment.md
 derived/final-summary.md

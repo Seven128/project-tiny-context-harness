@@ -123,10 +123,8 @@ function parseFields(
     }
     const name = match[1];
     if (!allowedFields.has(name)) {
-      if (name.includes("_")) {
-        errors.push(compileError(`${sourceFile}:${lineNumber} unknown field ${name}`,
-          "blocking_unparseable_object", sourceFile, lineNumber, name, "unknown fields may hide required source semantics", "rename the field to a supported canonical key"));
-      }
+      errors.push(compileError(`${sourceFile}:${lineNumber} unknown field ${name}`,
+        "blocking_unparseable_object", sourceFile, lineNumber, name, "unknown fields may hide required source semantics", "rename the field to a supported canonical key"));
       continue;
     }
     if (fields[name]) {

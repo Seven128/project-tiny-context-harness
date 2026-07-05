@@ -53,21 +53,132 @@ async function writeSources(workdir, technicalPlan, acceptanceChecklist) {
 }
 
 function productSource() {
-  return "# Product / Architecture Source\n\ndelivery_scope: system_capability_build\nfull_population_required: false\nrepresentative_samples_validate:\nrepresentative_samples_do_not_validate:\nout_of_scope_backlog:\n";
+  return `# Product / Architecture Source
+
+delivery_scope: system_capability_build
+full_population_required: false
+representative_samples_validate:
+representative_samples_do_not_validate:
+out_of_scope_backlog:
+scope_fit_decision: fit_for_three_inputs
+selected_scope_fit_slice: none
+owner_boundary: Product source owns guard fixture scope.
+primary_capability_path: compile guard fixture
+non_completing_outcomes:
+  - prose-only completion
+assertion_policy: machine layers require assertion result
+source_authority: product source
+product_goal: guard fixture
+`;
 }
 
 function goodPlan() {
-  return "# Technical Realization Plan\n\n## PI-001: Build capability\n\ndelivery_scope: system_capability_build\ncapability_target: real capability\nrepresentative_samples:\nfull_population_boundary: not required\nnon_required_population:\nimplementation_paths:\n  - src/runtime/kernel.ts\nrelated_acs: AC-001\n";
+  return `# Technical Realization Plan
+
+## PI-001: Build capability
+
+delivery_scope: system_capability_build
+capability_target: real capability
+representative_samples:
+full_population_boundary: not required
+non_required_population:
+owner_boundary: runtime kernel owns guard fixture
+primary_capability_path: compile source into graph
+trigger_contract: compile reads source files
+state_transition_contract: source fields become state graph
+observable_result_contract: graph includes AC-001
+assertion_support: runtime assertion targets AC-001
+required_assertion_commands:
+  - node --test tests/runtime.spec.ts
+invalid_implementation_shortcuts:
+  - prose-only completion
+implementation_paths:
+  - src/runtime/kernel.ts
+related_acs: AC-001
+`;
 }
 
 function goodChecklist() {
-  return "# Acceptance Checklist\n\n## AC-001: Capability works\n\nacceptance_scope: system_capability_build\nac_validates: real capability\nac_does_not_validate: prose-only completion\nsample_boundary: none\nfull_population_required: false\nrelated_plan_items: PI-001\nrequired_proof_layers:\n  - runtime\n";
+  return `# Acceptance Checklist
+
+## AC-001: Capability works
+
+acceptance_scope: system_capability_build
+ac_validates: real capability
+ac_does_not_validate: prose-only completion
+sample_boundary: none
+full_population_required: false
+related_plan_items: PI-001
+required_proof_layers:
+  - worker_runtime
+assertion_command: node --test tests/runtime.spec.ts
+assertion_artifacts:
+  - tmp/ty-context/plan-acceptance/demo/runtime.json
+positive_assertions:
+  - real capability
+negative_assertions:
+  - prose-only completion
+machine_blocking: true
+invalid_completion_signals:
+  - prose-only completion
+assertion_result_required: true
+`;
 }
 
 function badPlan() {
-  return "# Technical Realization Plan\n\n## PI-001: Owner-surface work with bad AC reference\n\ndelivery_scope: system_capability_build\ncapability_target: real owner surface behavior\nrepresentative_samples:\nfull_population_boundary: not required\nnon_required_population:\nowner_surfaces:\n  - Operations\nrelated_acs:\n  - AC-999\n";
+  return `# Technical Realization Plan
+
+## PI-001: Owner-surface work with bad AC reference
+
+delivery_scope: system_capability_build
+capability_target: real owner surface behavior
+representative_samples:
+full_population_boundary: not required
+non_required_population:
+owner_boundary: Operations owns bad-reference fixture
+primary_capability_path: compile source into graph
+trigger_contract: compile reads source files
+state_transition_contract: source fields become state graph
+observable_result_contract: graph references AC-999
+assertion_support: UI assertion would target AC-999
+required_assertion_commands:
+  - node --test tests/runtime.spec.ts
+invalid_implementation_shortcuts:
+  - prose-only completion
+owner_surfaces:
+  - Operations
+implementation_paths:
+related_acs:
+  - AC-999
+`;
 }
 
 function badChecklist() {
-  return "# Acceptance Checklist\n\n## AC-001: Runtime behavior is observable.\n\nacceptance_scope: system_capability_build\nac_validates:\n  - runtime behavior\nac_does_not_validate:\n  - prose-only completion\nsample_boundary: none\nfull_population_required: false\nrelated_plan_items:\n  - PI-999\nrequired_proof_layers:\n  - widget_magic\n";
+  return `# Acceptance Checklist
+
+## AC-001: Runtime behavior is observable.
+
+acceptance_scope: system_capability_build
+ac_validates:
+  - runtime behavior
+ac_does_not_validate:
+  - prose-only completion
+sample_boundary: none
+full_population_required: false
+related_plan_items:
+  - PI-999
+required_proof_layers:
+  - widget_magic
+assertion_command: node --test tests/runtime.spec.ts
+assertion_artifacts:
+  - tmp/ty-context/plan-acceptance/demo/runtime.json
+positive_assertions:
+  - runtime behavior
+negative_assertions:
+  - prose-only completion
+machine_blocking: true
+invalid_completion_signals:
+  - prose-only completion
+assertion_result_required: true
+`;
 }

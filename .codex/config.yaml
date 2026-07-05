@@ -21,6 +21,30 @@ modularity:
       category: legacy_migration
       reason: Existing combined managed asset sync engine predates the modularity gate; this change only narrows the sync migration preflight.
       future_split_boundary: Extract managed block merging, tree syncing and Skill override safety checks into focused modules.
+    - path: packages/ty-context/src/lib/superpowers-task-derive.ts
+      category: legacy_migration
+      reason: Existing combined composite long-task derived-view generator predates the modularity gate; this change extends it with strict V2 evidence-index output without completing the renderer split.
+      future_split_boundary: Extract plan matrix, final verdict, evidence index and context-alignment renderers into focused derived-view modules.
+    - path: packages/ty-context/src/lib/superpowers-task-state-schema.ts
+      category: legacy_migration
+      reason: Existing combined composite long-task state schema file predates the modularity gate; this change extends the schema for strict V2 fields and assertions without completing the type split.
+      future_split_boundary: Split source/product scope, plan/AC graph, evidence/assertion and gate/final state interfaces into focused schema modules.
+    - path: tests/ty-context/composite-long-task-assertion-gate.test.mjs
+      category: legacy_migration
+      reason: Existing combined assertion gate regression suite predates the modularity gate; this change extends it for strict V2 evidence-index coverage.
+      future_split_boundary: Split happy-path assertion proof, adversarial weak-evidence cases and derived-view assertion rendering into separate test files.
+    - path: tests/ty-context/superpowers-fixtures.mjs
+      category: fixture_snapshot
+      reason: Existing shared composite long-task fixture module predates the modularity gate; this change updates the canonical fixture packet for strict V2 fields.
+      future_split_boundary: Split source text builders, canonical task-state builders and evidence/assertion builders into focused fixture modules.
+    - path: tests/ty-context/superpowers-task-compile-strict.test.mjs
+      category: legacy_migration
+      reason: Existing strict compiler regression suite predates the modularity gate; this change adds strict V2 canonical-field and adversarial input coverage.
+      future_split_boundary: Split strict happy-path compile, missing-field diagnostics, parser-shape rejection and real-failure regression cases into focused test files.
+    - path: tools/composite-long-task-equivalence/fixtures.mjs
+      category: fixture_snapshot
+      reason: Existing composite equivalence fixture bundle predates the modularity gate; this change updates fixture packets and evidence records for strict V2 assertions.
+      future_split_boundary: Split source packet fixtures, evidence delta fixtures and scenario-specific equivalence expectations into focused fixture modules.
     - path: tests/ty-context/orientation-fast-path.test.mjs
       category: legacy_migration
       reason: Existing broad orientation regression suite predates the modularity gate.

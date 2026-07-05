@@ -27,7 +27,7 @@ test("superpowers state init and compile create canonical source-hashed graph", 
     assert.match(state.sources.product_architecture_source.sha256, /^[a-f0-9]{64}$/);
     assert.ok(state.graph.plan_items["PI-001"]);
     assert.ok(state.graph.acceptance_criteria["AC-001"]);
-    assert.ok(state.graph.proof_layers["AC-001.runtime"]);
+    assert.ok(state.graph.proof_layers["AC-001.worker_runtime"]);
     assert.deepEqual(state.graph.edges, [{ from: "PI-001", to: "AC-001", type: "supports" }]);
 
     const events = await readFile(path.join(workdir, "events.ndjson"), "utf8");
@@ -94,9 +94,20 @@ related_plan_items:
   - PI-001
 required_proof_layers:
   - code
-  - runtime
+  - worker_runtime
   - ui_browser
   - test
+assertion_command: node --test tests/runtime.spec.ts
+assertion_artifacts:
+  - tmp/ty-context/plan-acceptance/demo/runtime.json
+positive_assertions:
+  - full population operation
+negative_assertions:
+  - framework-only capability
+machine_blocking: true
+invalid_completion_signals:
+  - framework-only capability
+assertion_result_required: true
 `,
       "utf8"
     );
@@ -137,19 +148,19 @@ test("apply-slice-delta records progress value, evidence and closes proof layers
               freshness: { created_at: "2026-06-29T00:00:00.000Z", valid_for: "current_worktree", stale_after: null },
               command: "node --test tests/runtime.spec.ts",
               artifact_paths: ["tmp/ty-context/plan-acceptance/demo/runtime.json"],
-              proves: ["AC-001.runtime"],
+              proves: ["AC-001.worker_runtime"],
               does_not_prove: ["AC-001.ui_browser"],
               redaction: { checked: true, contains_secret: false },
               reviewability: { external_reviewer_can_reproduce: true, reproduction_steps: "Run node --test tests/runtime.spec.ts." }
             }
           ],
-          closed_layers: ["AC-001.runtime"],
+          closed_layers: ["AC-001.worker_runtime"],
           remaining_layers: ["AC-001.ui_browser"],
           blockers: [],
           cleanup_assertions: ["runtime fixture cleaned"],
           progress_value: {
             type: "proof_gap_closed",
-            closed_items: ["AC-001.runtime"],
+            closed_items: ["AC-001.worker_runtime"],
             why_it_reduces_rework: "Runtime proof is now mapped to a proof layer."
           }
         },
@@ -162,8 +173,8 @@ test("apply-slice-delta records progress value, evidence and closes proof layers
     await applySliceDelta(workdir, deltaPath);
 
     const state = JSON.parse(await readFile(path.join(workdir, "task-state.json"), "utf8"));
-    assert.equal(state.graph.proof_layers["AC-001.runtime"].status, "satisfied");
-    assert.deepEqual(state.graph.proof_layers["AC-001.runtime"].evidence_ids, ["EV-001"]);
+    assert.equal(state.graph.proof_layers["AC-001.worker_runtime"].status, "satisfied");
+    assert.deepEqual(state.graph.proof_layers["AC-001.worker_runtime"].evidence_ids, ["EV-001"]);
     assert.equal(state.evidence[0].evidence_id, "EV-001");
     assert.equal(state.slices[0].progress_value.type, "proof_gap_closed");
 
@@ -190,7 +201,7 @@ test("apply-slice-delta rejects non-canonical progress value types", async () =>
           slice_id: "S-BAD-PROGRESS",
           progress_value: {
             type: "closed_required_proof_layer",
-            closed_items: ["AC-001.runtime"],
+            closed_items: ["AC-001.worker_runtime"],
             why_it_reduces_rework: "Legacy progress type should be rejected."
           }
         },
@@ -242,19 +253,19 @@ test("composite long-task CLI namespace initializes, compiles and recommends nex
               freshness: { created_at: "2026-06-29T00:00:00.000Z", valid_for: "current_worktree", stale_after: null },
               command: "node --test tests/runtime.spec.ts",
               artifact_paths: ["tmp/ty-context/plan-acceptance/demo/runtime.json"],
-              proves: ["AC-001.runtime"],
+              proves: ["AC-001.worker_runtime"],
               does_not_prove: ["AC-001.ui_browser"],
               redaction: { checked: true, contains_secret: false },
               reviewability: { external_reviewer_can_reproduce: true, reproduction_steps: "Run node --test tests/runtime.spec.ts." }
             }
           ],
-          closed_layers: ["AC-001.runtime"],
+          closed_layers: ["AC-001.worker_runtime"],
           remaining_layers: ["AC-001.ui_browser"],
           blockers: [],
           cleanup_assertions: ["runtime fixture cleaned"],
           progress_value: {
             type: "proof_gap_closed",
-            closed_items: ["AC-001.runtime"],
+            closed_items: ["AC-001.worker_runtime"],
             why_it_reduces_rework: "Runtime proof is now mapped to a proof layer."
           }
         },

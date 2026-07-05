@@ -14,6 +14,21 @@ representative_samples_do_not_validate:
   - full population operation
 out_of_scope_backlog:
   - historical record migration
+scope_fit_decision: fit_for_three_inputs
+selected_scope_fit_slice: none
+owner_boundary: Product source owns Operations runtime recovery scope.
+primary_capability_path: Operations -> runtime recovery -> assertion-backed completion
+non_completing_outcomes:
+  - full population operation
+assertion_policy: machine layers require assertion_result and negative_evidence_scan where owner-surface contradictions are possible
+source_authority: intent_scope_boundaries
+product_goal: Reusable runtime recovery capability on Operations
+surface_ia_lock: Operations remains owner surface
+decision_lock: capability build only
+context_delta: none
+source_to_context_coverage: covered
+acceptance_semantics: assertion-backed machine proof
+impact: source-workspace fixture
 `;
 
 const technicalRealizationPlanText = `# Technical Realization Plan
@@ -31,6 +46,16 @@ owner_surfaces:
   - Operations
 forbidden_surfaces:
   - Provider Admission
+owner_boundary: Operations page and runtime kernel own recovery execution.
+primary_capability_path: Operations UI triggers runtime kernel recovery and observes completion.
+trigger_contract: user starts recovery from Operations owner surface
+state_transition_contract: recovery request transitions from queued to complete
+observable_result_contract: Operations page and runtime artifact show the completed run id
+assertion_support: Playwright and runtime assertions target AC-001 worker_runtime ui_browser and test layers
+required_assertion_commands:
+  - node --test tests/runtime.spec.ts
+invalid_implementation_shortcuts:
+  - component screenshot only
 implementation_paths:
   - src/pages/OperationsPage.tsx
   - src/runtime/kernel.ts
@@ -55,9 +80,49 @@ related_plan_items:
   - PI-001
 required_proof_layers:
   - code
-  - runtime
+  - worker_runtime
   - ui_browser
   - test
+assertion_command: node --test tests/runtime.spec.ts
+assertion_artifacts:
+  - tmp/ty-context/plan-acceptance/demo/runtime.json
+  - tmp/ty-context/plan-acceptance/demo/ui-assertion-report.json
+positive_assertions:
+  - required_behavior_observed
+negative_assertions:
+  - no-forbidden-final-state
+machine_blocking: true
+invalid_completion_signals:
+  - 页面无明显变化
+assertion_result_required: true
+ac_type: machine_verifiable
+proof_chain:
+  - AC-001.worker_runtime
+  - AC-001.ui_browser
+  - AC-001.test
+verification_method:
+  - browser assertion
+  - runtime assertion
+fail_conditions:
+  - 页面无明显变化
+invalid_evidence:
+  - screenshot-only
+substitution_policy:
+  - no sibling substitution
+missing_layer_downgrade: partial
+auditor_expectation: verify owner surface and runtime assertions
+out_of_scope_na_approval_source: none
+required_test_ids:
+  - tests/runtime.spec.ts
+explicit_no_test_scope: false
+hard_blockers:
+  - missing assertion_result
+validates_explanation: validates reusable runtime recovery capability
+does_not_validate_explanation: does not validate full population operation
+final_evidence_expected:
+  - assertion report
+test_cases:
+  - happy path
 `;
 
 export async function writeSuperpowersSources(root) {
@@ -119,7 +184,21 @@ export function validTaskState(overrides = {}) {
         full_population_required: false,
         representative_samples_validate: ["recovery happy path sample"],
         representative_samples_do_not_validate: ["full population operation"],
-        out_of_scope_backlog: ["historical record migration"]
+        out_of_scope_backlog: ["historical record migration"],
+        scope_fit_decision: "fit_for_three_inputs",
+        selected_scope_fit_slice: "none",
+        owner_boundary: "Product source owns Operations runtime recovery scope.",
+        primary_capability_path: "Operations -> runtime recovery -> assertion-backed completion",
+        non_completing_outcomes: ["full population operation"],
+        assertion_policy: "machine layers require assertion_result and negative_evidence_scan where owner-surface contradictions are possible",
+        source_authority: "intent_scope_boundaries",
+        product_goal: "Reusable runtime recovery capability on Operations",
+        surface_ia_lock: "Operations remains owner surface",
+        decision_lock: "capability build only",
+        context_delta: "none",
+        source_to_context_coverage: "covered",
+        acceptance_semantics: "assertion-backed machine proof",
+        impact: "source-workspace fixture"
       },
       scope_conflicts: []
     },
@@ -135,13 +214,22 @@ export function validTaskState(overrides = {}) {
           representative_samples: ["recovery happy path sample"],
           full_population_boundary: "not required for capability build",
           non_required_population: ["historical record migration"],
+          owner_boundary: "Operations page and runtime kernel own recovery execution.",
+          primary_capability_path: "Operations UI triggers runtime kernel recovery and observes completion.",
+          trigger_contract: "user starts recovery from Operations owner surface",
+          state_transition_contract: "recovery request transitions from queued to complete",
+          observable_result_contract: "Operations page and runtime artifact show the completed run id",
+          assertion_support: "Playwright and runtime assertions target AC-001 worker_runtime ui_browser and test layers",
+          required_assertion_commands: ["node --test tests/runtime.spec.ts"],
+          invalid_implementation_shortcuts: ["component screenshot only"],
           owner_surfaces: ["Operations"],
           forbidden_surfaces: ["Provider Admission"],
           implementation_paths: ["src/pages/OperationsPage.tsx", "src/runtime/kernel.ts"],
           required_tests: ["tests/runtime.spec.ts"],
           status: "complete",
           related_acs: ["AC-001"],
-          required_proof_layers: ["AC-001.code", "AC-001.runtime", "AC-001.ui_browser", "AC-001.test"]
+          required_proof_layers: ["AC-001.code", "AC-001.worker_runtime", "AC-001.ui_browser", "AC-001.test"],
+          proof_layer_ids: ["AC-001.code", "AC-001.worker_runtime", "AC-001.ui_browser", "AC-001.test"]
         }
       },
       acceptance_criteria: {
@@ -156,13 +244,39 @@ export function validTaskState(overrides = {}) {
           sample_boundary: "recovery happy path sample",
           full_population_required: false,
           related_plan_items: ["PI-001"],
-          required_proof_layers: ["code", "runtime", "ui_browser", "test"],
+          required_proof_layers: ["code", "worker_runtime", "ui_browser", "test"],
+          assertion_command: "node --test tests/runtime.spec.ts",
+          assertion_artifacts: [
+            "tmp/ty-context/plan-acceptance/demo/runtime.json",
+            "tmp/ty-context/plan-acceptance/demo/ui-assertion-report.json"
+          ],
+          positive_assertions: ["required_behavior_observed"],
+          negative_assertions: ["no-forbidden-final-state"],
+          machine_blocking: true,
+          invalid_completion_signals: ["页面无明显变化"],
+          assertion_result_required: true,
+          ac_type: "machine_verifiable",
+          proof_chain: ["AC-001.worker_runtime", "AC-001.ui_browser", "AC-001.test"],
+          verification_method: ["browser assertion", "runtime assertion"],
+          fail_conditions: ["页面无明显变化"],
+          invalid_evidence: ["screenshot-only"],
+          substitution_policy: ["no sibling substitution"],
+          missing_layer_downgrade: "partial",
+          auditor_expectation: "verify owner surface and runtime assertions",
+          out_of_scope_na_approval_source: "none",
+          required_test_ids: ["tests/runtime.spec.ts"],
+          explicit_no_test_scope: false,
+          hard_blockers: ["missing assertion_result"],
+          validates_explanation: "validates reusable runtime recovery capability",
+          does_not_validate_explanation: "does not validate full population operation",
+          final_evidence_expected: ["assertion report"],
+          test_cases: ["happy path"],
           status: "complete"
         }
       },
       proof_layers: {
         "AC-001.code": { required: true, status: "satisfied", evidence_ids: ["EV-001"] },
-        "AC-001.runtime": { required: true, status: "satisfied", evidence_ids: ["EV-001"] },
+        "AC-001.worker_runtime": { required: true, status: "satisfied", evidence_ids: ["EV-001"] },
         "AC-001.ui_browser": { required: true, status: "satisfied", evidence_ids: ["EV-002"] },
         "AC-001.test": { required: true, status: "satisfied", evidence_ids: ["EV-003"] }
       },
@@ -176,19 +290,19 @@ export function validTaskState(overrides = {}) {
         touched_acs: ["AC-001"],
         code_changes: ["src/pages/OperationsPage.tsx", "src/runtime/kernel.ts"],
         evidence_records: ["EV-001", "EV-002", "EV-003"],
-        closed_layers: ["AC-001.code", "AC-001.runtime", "AC-001.ui_browser", "AC-001.test"],
+        closed_layers: ["AC-001.code", "AC-001.worker_runtime", "AC-001.ui_browser", "AC-001.test"],
         remaining_layers: [],
         blockers: [],
         cleanup_assertions: ["test DB reset"],
         progress_value: {
           type: "proof_gap_closed",
-          closed_items: ["AC-001.code", "AC-001.runtime", "AC-001.ui_browser", "AC-001.test"],
+            closed_items: ["AC-001.code", "AC-001.worker_runtime", "AC-001.ui_browser", "AC-001.test"],
           why_it_reduces_rework: "All required proof layers now map to fresh evidence."
         }
       }
     ],
     evidence: [
-      evidenceRecord("EV-001", "runtime_assertion", ["AC-001.code", "AC-001.runtime"], ["AC-001.ui_browser"]),
+      evidenceRecord("EV-001", "worker_runtime_assertion", ["AC-001.code", "AC-001.worker_runtime"], ["AC-001.ui_browser"]),
       evidenceRecord("EV-002", "playwright_assertion", ["AC-001.ui_browser"], ["AC-001.security"]),
       evidenceRecord("EV-003", "test_assertion", ["AC-001.test"], ["all-provider coverage"])
     ],
@@ -235,7 +349,7 @@ function evidenceRecord(evidenceId, type, proves, doesNotProve) {
       reproduction_steps: type === "playwright_assertion" ? "Run the recorded Playwright command and inspect the trace/report." : "Run the recorded command."
     }
   };
-  const targetLayer = proves.find((item) => /\.(runtime|ui_browser|test)$/.test(item));
+  const targetLayer = proves.find((item) => /\.(worker_runtime|ui_browser|test)$/.test(item));
   if (targetLayer) {
     record.assertion_result = assertionResultFor(type, targetLayer);
   }
@@ -244,6 +358,8 @@ function evidenceRecord(evidenceId, type, proves, doesNotProve) {
       schema_version: "negative-evidence-scan-v1",
       status: "passed",
       target_ac_ids: ["AC-001"],
+      target_proof_layers: ["AC-001.ui_browser"],
+      invalid_completion_signals_checked: ["页面无明显变化"],
       owner_surface: "Operations",
       route: "/operations",
       forbidden_findings: [

@@ -9,7 +9,7 @@ export function assertionBackedTaskState() {
       command_exit_code: 0,
       assertion_result: assertionResult({
         runner: "node-runtime",
-        target_proof_layers: ["AC-001.runtime"],
+        target_proof_layers: ["AC-001.worker_runtime"],
         positive_assertions: [
           { id: "job_created", status: "passed", expected: "job id", actual: "job-123" },
           { id: "durable_final_state", status: "passed", expected: "complete", actual: "complete" }
@@ -55,6 +55,8 @@ export function assertionBackedTaskState() {
         schema_version: "negative-evidence-scan-v1",
         status: "passed",
         target_ac_ids: ["AC-001"],
+        target_proof_layers: ["AC-001.ui_browser"],
+        invalid_completion_signals_checked: ["未验证", "不可用", "暂不可用", "页面无明显变化"],
         owner_surface: "Operations",
         route: "/operations",
         forbidden_findings: [

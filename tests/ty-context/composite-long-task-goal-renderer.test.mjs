@@ -29,7 +29,7 @@ test("render-goal creates a thin Codex Goal objective and does not mutate task s
     assert.match(goal, /^\/goal Execute the composite long-task workflow/m);
     assert.match(goal, /workflow-protocol\.md/);
     assert.match(goal, /execution-binding\.md/);
-    assert.match(goal, /Product \/ Architecture Source owns intent, scope and boundaries/);
+    assert.match(goal, /Product \/ Architecture Source owns intent, scope, Scope Fit, owner boundaries and assertion policy/);
     assert.match(goal, /task-state\.json is the only execution state source/);
     assert.match(goal, /events\.ndjson is append-only/);
     assert.match(goal, /derived\/\*\* is generated/);
