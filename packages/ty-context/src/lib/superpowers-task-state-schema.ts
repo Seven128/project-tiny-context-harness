@@ -4,7 +4,24 @@ export const SUPERPOWERS_TASK_STATE_JSON_SCHEMA = {
   $id: "https://project-tiny-context-harness.local/superpowers-task-state.schema.json",
   title: "Superpowers Long-Task State",
   type: "object",
-  required: ["meta", "sources", "context", "delivery", "graph", "slices", "evidence", "gates", "progress", "blockers", "final"],
+  required: [
+    "meta",
+    "sources",
+    "context",
+    "delivery",
+    "graph",
+    "attempts",
+    "current_attempt_id",
+    "required_command_specs",
+    "command_runs",
+    "negative_evidence_records",
+    "slices",
+    "evidence",
+    "gates",
+    "progress",
+    "blockers",
+    "final"
+  ],
   properties: {
     meta: {
       type: "object",
@@ -19,6 +36,11 @@ export const SUPERPOWERS_TASK_STATE_JSON_SCHEMA = {
     context: { type: "object" },
     delivery: { type: "object" },
     graph: { type: "object" },
+    attempts: { type: "array" },
+    current_attempt_id: { type: "string" },
+    required_command_specs: { type: "array" },
+    command_runs: { type: "array" },
+    negative_evidence_records: { type: "array" },
     slices: { type: "array" },
     evidence: { type: "array" },
     gates: { type: "object" },
@@ -37,7 +59,15 @@ export type SuperpowersPlanItemStatus =
   | "blocked"
   | "invalidated"
   | "out_of_scope_NA";
-export type SuperpowersAcceptanceStatus = "not_run" | "complete" | "partial" | "blocked" | "invalidated" | "out_of_scope_NA";
+export type SuperpowersAcceptanceStatus =
+  | "not_run"
+  | "complete"
+  | "partial"
+  | "blocked"
+  | "invalidated"
+  | "under_specified"
+  | "out_of_scope_NA";
+export type SuperpowersAttemptMode = "product_task" | "harness_task";
 export type SuperpowersProductDeliveryScope =
   | "system_capability_build"
   | "representative_sample_validation"
@@ -81,6 +111,11 @@ export interface SuperpowersTaskState {
     proof_layers: Record<string, SuperpowersProofLayer>;
     edges: SuperpowersGraphEdge[];
   };
+  attempts: ExecutionAttempt[];
+  current_attempt_id: string;
+  required_command_specs: RequiredCommandSpec[];
+  command_runs: CommandRunRecord[];
+  negative_evidence_records: NegativeEvidenceRecord[];
   slices: SuperpowersSliceRecord[];
   evidence: SuperpowersEvidenceRecord[];
   gates: Record<string, unknown>;
@@ -93,6 +128,64 @@ export interface SuperpowersTaskState {
     completion_basis: string[];
     next_required_actions?: string[];
   };
+}
+
+export interface ExecutionAttempt {
+  task_attempt_id: string;
+  source_bundle_hash: string;
+  product_source_hash: string;
+  technical_plan_hash: string;
+  acceptance_checklist_hash: string;
+  git_head: string;
+  git_status_short: string;
+  tracked_diff_hash: string;
+  relevant_untracked_hash: string;
+  untracked_relevant_hash?: string;
+  worktree_fingerprint: string;
+  started_at: string;
+  ended_at: string | null;
+  finalized_at?: string | null;
+  required_command_specs_hash: string;
+  mode: SuperpowersAttemptMode;
+  changed_files?: string[];
+}
+
+export interface RequiredCommandSpec {
+  command_spec_id: string;
+  ac_id: string;
+  proof_layers: string[];
+  command: string;
+  assertion_artifacts: string[];
+  required_test_ids: string[];
+  machine_blocking: boolean;
+  assertion_result_required: boolean;
+  positive_assertions: string[];
+  negative_assertions: string[];
+  invalid_completion_signals: string[];
+  final_evidence_expected: string[];
+}
+
+export interface CommandRunRecord {
+  command_run_id: string;
+  task_attempt_id: string;
+  command_spec_id: string;
+  ac_id: string;
+  proof_layer: string;
+  command_line: string;
+  exit_code: number;
+  started_at: string;
+  ended_at: string;
+  artifact_paths: string[];
+}
+
+export interface NegativeEvidenceRecord {
+  negative_evidence_id: string;
+  task_attempt_id: string;
+  target_ac_ids: string[];
+  target_proof_layers: string[];
+  artifact_path: string;
+  artifact_sha256?: string;
+  status: "passed" | "failed" | "blocked" | "stale";
 }
 
 export interface SuperpowersSourceRecord {
@@ -264,7 +357,24 @@ export interface SuperpowersSliceRecord {
 }
 
 export interface SuperpowersEvidenceRecord {
+  schema_version?: "evidence-record-v1" | "evidence-record-v2" | string;
   evidence_id: string;
+  task_attempt_id?: string;
+  source_bundle_hash?: string;
+  product_source_hash?: string;
+  technical_plan_hash?: string;
+  acceptance_checklist_hash?: string;
+  git_head?: string;
+  worktree_fingerprint?: string;
+  command_spec_id?: string;
+  command_run_id?: string;
+  command_line?: string;
+  artifact_path?: string;
+  artifact_sha256?: string;
+  artifact_mtime?: string;
+  target_ac_ids?: string[];
+  target_pi_ids?: string[];
+  target_proof_layers?: string[];
   slice_id: string;
   type: string;
   freshness: {
@@ -292,17 +402,21 @@ export interface SuperpowersEvidenceRecord {
 }
 
 export interface AssertionResult {
-  schema_version: "assertion-result-v1";
+  schema_version: "assertion-result-v1" | "assertion-result-v2";
   status: "passed" | "failed" | "blocked" | "stale";
   runner: string;
   exit_code: number;
   target_ac_ids: string[];
+  target_pi_ids?: string[];
   target_proof_layers: string[];
   owner_surface?: string;
   route?: string;
   action?: string;
   positive_assertions: AssertionCheck[];
   negative_assertions: AssertionCheck[];
+  invalid_completion_signals?: AssertionCheck[];
+  negative_evidence_scan?: NegativeEvidenceScan;
+  required_test_ids?: string[];
   artifacts?: string[];
 }
 

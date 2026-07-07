@@ -11,6 +11,7 @@ export function assertionBackedTaskState() {
         runner: "node-runtime",
         target_proof_layers: ["AC-001.worker_runtime"],
         positive_assertions: [
+          { id: "required_behavior_observed", status: "passed", expected: "observed", actual: "observed" },
           { id: "job_created", status: "passed", expected: "job id", actual: "job-123" },
           { id: "durable_final_state", status: "passed", expected: "complete", actual: "complete" }
         ],
@@ -34,12 +35,14 @@ export function assertionBackedTaskState() {
         route: "/operations",
         action: "start recovery and wait for run_id job-123 to complete",
         positive_assertions: [
+          { id: "required_behavior_observed", status: "passed", expected: "observed", actual: "observed" },
           { id: "ui_owner_surface_loaded", status: "passed", expected: "Operations", actual: "Operations" },
           { id: "run_id_present", status: "passed", expected: "job-123", actual: "job-123" },
           { id: "polling_observed", status: "passed", expected: "complete", actual: "complete" },
           { id: "final_status_chinese", status: "passed", expected: "已完成", actual: "已完成" }
         ],
         negative_assertions: [
+          { id: "no-forbidden-final-state", status: "passed" },
           { id: "no-unverified", status: "passed", forbidden_text: "未验证" },
           { id: "no-unavailable", status: "passed", forbidden_text: "不可用" },
           { id: "no-temp-unavailable", status: "passed", forbidden_text: "暂不可用" },
@@ -76,7 +79,10 @@ export function assertionBackedTaskState() {
       assertion_result: assertionResult({
         runner: "node:test",
         target_proof_layers: ["AC-001.test"],
-        positive_assertions: [{ id: "required_test_passed", status: "passed", expected: "0 failures", actual: "0 failures" }],
+        positive_assertions: [
+          { id: "required_behavior_observed", status: "passed", expected: "observed", actual: "observed" },
+          { id: "required_test_passed", status: "passed", expected: "0 failures", actual: "0 failures" }
+        ],
         artifacts: ["tmp/ty-context/plan-acceptance/demo/runtime.json"]
       })
     }
@@ -86,17 +92,20 @@ export function assertionBackedTaskState() {
 
 function assertionResult(overrides = {}) {
   return {
-    schema_version: "assertion-result-v1",
+    schema_version: "assertion-result-v2",
     status: "passed",
     runner: "test-runner",
     exit_code: 0,
     target_ac_ids: ["AC-001"],
+    target_pi_ids: ["PI-001"],
     target_proof_layers: [],
     owner_surface: undefined,
     route: undefined,
     action: undefined,
     positive_assertions: [],
     negative_assertions: [{ id: "no-forbidden-final-state", status: "passed" }],
+    invalid_completion_signals: [{ id: "no-unchanged-page", status: "passed", forbidden_text: "页面无明显变化" }],
+    required_test_ids: ["tests/runtime.spec.ts"],
     artifacts: [],
     ...overrides
   };

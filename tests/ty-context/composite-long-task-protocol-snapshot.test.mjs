@@ -70,7 +70,7 @@ test("render-goal freezes the package protocol into a hash-verifiable workdir sn
     }
     assert.match(body, /Do not register workflow-protocol\.md in project_context\/context\.toml/);
     assert.match(body, /Do not let derived\/\*\* rewrite Product \/ Plan \/ Checklist/);
-    assert.match(body, /assertion_result\.schema_version=assertion-result-v1/);
+    assert.match(body, /assertion_result\.schema_version=assertion-result-v2/);
     assert.match(body, /assertion_result\.status=passed/);
     assert.match(body, /passed `negative_evidence_scan`/);
     assert.match(body, /Matrix, verdict and evidence-index views may summarize `assertion_status`/);

@@ -4,7 +4,10 @@ import { findSensitiveEvidence } from "./plan-acceptance-evidence.js";
 import { primitiveText, repoRelative, resolveInputDir } from "./plan-validator-common.js";
 import { derivedMatchesState } from "./superpowers-task-derive.js";
 import { validatePlanCompletionConformance } from "./superpowers-task-conformance.js";
+import { scanSuperpowersContradictions } from "./superpowers-task-contradictions.js";
+import { evaluateTrustedEvidenceKernel } from "./superpowers-task-evidence-kernel.js";
 import { fullPopulationRequired, validateDeliveryContract, validateScopeConflicts } from "./superpowers-task-delivery.js";
+import { hasUsableShape, validateShape } from "./superpowers-task-state-shape.js";
 import { loadSuperpowersState, sha256 } from "./superpowers-task-state.js";
 import { validateCanonicalStatuses } from "./superpowers-task-status.js";
 import { isRecord, type SuperpowersEvidenceRecord, type SuperpowersTaskState } from "./superpowers-task-state-schema.js";
@@ -40,6 +43,8 @@ export async function validateSuperpowersState(projectRoot: string, args: string
   validateScopeConflicts(state, errors);
   validateEvidenceRecords(state, errors);
   validateProofLayers(state, errors);
+  errors.push(...(await evaluateTrustedEvidenceKernel(targetDir, state)).errors);
+  errors.push(...(await scanSuperpowersContradictions(targetDir, state)).errors);
   validateAuditor(state, errors);
   validateFinalCompletion(state, errors);
   errors.push(...(await derivedMatchesState(targetDir, state)));
@@ -65,37 +70,6 @@ async function validateSourceHashes(workdir: string, state: SuperpowersTaskState
       errors.push(`source hash mismatch for ${key}: expected ${source.sha256}, actual ${actual}; recompile graph before continuing`);
     }
   }
-}
-
-function validateShape(state: SuperpowersTaskState, errors: string[]): void {
-  if (state.meta?.schema_version !== "superpowers-task-state-v1") {
-    errors.push("task-state.json schema_version must be superpowers-task-state-v1");
-  }
-  for (const key of ["meta", "sources", "context", "delivery", "graph", "slices", "evidence", "gates", "progress", "blockers", "final"]) {
-    if (!(key in (state as unknown as Record<string, unknown>))) {
-      errors.push(`task-state.json is missing section: ${key}`);
-    }
-  }
-}
-
-function hasUsableShape(state: SuperpowersTaskState): boolean {
-  const candidate = state as unknown as Record<string, unknown>;
-  return (
-    isRecord(candidate.meta) &&
-    isRecord(candidate.sources) &&
-    isRecord(candidate.context) &&
-    isRecord(candidate.delivery) &&
-    isRecord(candidate.graph) &&
-    isRecord(candidate.graph.plan_items) &&
-    isRecord(candidate.graph.acceptance_criteria) &&
-    isRecord(candidate.graph.proof_layers) &&
-    Array.isArray(candidate.slices) &&
-    Array.isArray(candidate.evidence) &&
-    isRecord(candidate.gates) &&
-    isRecord(candidate.progress) &&
-    Array.isArray(candidate.blockers) &&
-    isRecord(candidate.final)
-  );
 }
 
 function validateGraphReferences(state: SuperpowersTaskState, errors: string[]): void {

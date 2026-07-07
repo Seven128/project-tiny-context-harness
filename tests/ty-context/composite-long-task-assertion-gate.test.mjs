@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { compileSuperpowersTask } from "../../packages/ty-context/dist/lib/superpowers-task-compile.js";
 import { deriveSuperpowersArtifacts } from "../../packages/ty-context/dist/lib/superpowers-task-derive.js";
@@ -144,6 +144,56 @@ test("adversarial weak evidence cases A-I block validation and final completion"
   }
 });
 
+test("SFC stale passed evidence and current owner-surface failures force final-gate false", async () => {
+  const root = await createPlanProject();
+  try {
+    await writeSuperpowersSources(root);
+    const state = assertionBackedTaskState();
+    state.command_runs.push({
+      command_run_id: "CR-current-failed-ui",
+      task_attempt_id: state.current_attempt_id,
+      command_spec_id: state.required_command_specs[0].command_spec_id,
+      ac_id: "AC-001",
+      proof_layer: "ui_browser",
+      command_line: "npx playwright test tests/runtime.spec.ts --grep recovery",
+      exit_code: 1,
+      started_at: "2026-07-02T00:00:00.000Z",
+      ended_at: "2026-07-02T00:01:00.000Z",
+      artifact_paths: ["test-results/.last-run.json"]
+    });
+    await writeTaskState(root, state);
+    const workdir = path.join(root, "tmp/ty-context/plan-acceptance/demo");
+    await deriveSuperpowersArtifacts(workdir);
+
+    await writeCurrentFailureArtifacts(workdir);
+    await writeFile(
+      path.join(workdir, "events.ndjson"),
+      `${JSON.stringify({ event_type: "final_gate", product_goal_complete: true, created_at: "2026-06-29T00:00:00.000Z" })}\n`,
+      "utf8"
+    );
+
+    const report = await validateSuperpowersState(root, [workdir]);
+    assert.match(
+      report.errors.join("\n"),
+      /current contradiction|command_run_failed|playwright_last_run_failed|owner_dom_forbidden_state|historical_complete_ignored/i
+    );
+
+    const acceptanceReport = await runValidator(root, "validate-plan-acceptance", [workdir]);
+    assert.match(acceptanceReport.errors.join("\n"), /current contradiction|command_run_failed|playwright_last_run_failed|owner_dom_forbidden_state/i);
+
+    const result = await runFinalGate(workdir);
+    assert.equal(result.product_goal_complete, false);
+    assert.match(result.errors.join("\n"), /workflow_gate_bug_prevented|command_run_failed|playwright_last_run_failed|owner_dom_forbidden_state/i);
+    const finalState = JSON.parse(await readFile(path.join(workdir, "task-state.json"), "utf8"));
+    assert.equal(finalState.final.product_goal_complete, false);
+    assert.equal(finalState.meta.product_goal_complete, false);
+    assert.match(finalState.final.acceptance_target_status, /invalidated|partial/);
+    assert.match(finalState.gates.final_gate.errors.join("\n"), /Historical stale completion event detected and ignored/i);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("derived matrix and verdict expose assertion status and negative evidence findings", async () => {
   const root = await createPlanProject();
   try {
@@ -179,6 +229,40 @@ test("derived matrix and verdict expose assertion status and negative evidence f
     await rm(root, { recursive: true, force: true });
   }
 });
+
+async function writeCurrentFailureArtifacts(workdir) {
+  const playwrightDir = path.join(workdir, "test-results");
+  await mkdir(playwrightDir, { recursive: true });
+  await writeFile(
+    path.join(playwrightDir, ".last-run.json"),
+    JSON.stringify(
+      {
+        status: "failed",
+        failedTests: ["tests/runtime.spec.ts::recovery"],
+        target_ac_ids: ["AC-001"],
+        target_proof_layers: ["AC-001.ui_browser"],
+        started_at: "2026-07-01T00:00:00.000Z",
+        ended_at: "2026-07-01T00:01:00.000Z"
+      },
+      null,
+      2
+    ),
+    "utf8"
+  );
+  await writeFile(
+    path.join(playwrightDir, "error-context.md"),
+    [
+      "# Error Context",
+      "",
+      "target_ac_ids: AC-001",
+      "target_proof_layers: AC-001.ui_browser",
+      "owner_surface: Operations",
+      "route: /operations",
+      "DOM text: 尚未运行自测 / 运行未记录"
+    ].join("\n"),
+    "utf8"
+  );
+}
 
 test("compile derives assertion requirements from checklist proof and test fields", async () => {
   const root = await createPlanProject();

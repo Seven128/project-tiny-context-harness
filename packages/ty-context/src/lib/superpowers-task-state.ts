@@ -3,11 +3,11 @@ import path from "node:path";
 import { ensureDir, pathExists, readText, writeTextIfChanged } from "./fs.js";
 import { normalizeProofLayerId } from "./superpowers-task-fields.js";
 import { appendSuperpowersEvent } from "./superpowers-task-events.js";
-import { evaluateProofLayerAssertions, isMachineVerifiableLayer, normalizeAssertionResult, normalizeNegativeEvidenceScan } from "./superpowers-task-assertions.js";
+import { evaluateProofLayerAssertions, isMachineVerifiableLayer } from "./superpowers-task-assertions.js";
+import { readEvidenceRecords } from "./superpowers-task-evidence-records.js";
 import {
   SUPERPOWERS_TASK_STATE_JSON_SCHEMA,
   SUPERPOWERS_TASK_STATE_SCHEMA_VERSION,
-  type SuperpowersEvidenceRecord,
   type SuperpowersSliceRecord,
   type SuperpowersTaskState,
   asStringArray,
@@ -92,6 +92,11 @@ export async function initializeSuperpowersTask(
       proof_layers: {},
       edges: []
     },
+    attempts: [],
+    current_attempt_id: "",
+    required_command_specs: [],
+    command_runs: [],
+    negative_evidence_records: [],
     slices: [],
     evidence: [],
     gates: {},
@@ -238,43 +243,6 @@ export function sha256(value: string): string {
 
 export function stableJson(value: unknown): string {
   return JSON.stringify(sortJson(value), null, 2);
-}
-
-function readEvidenceRecords(value: unknown): SuperpowersEvidenceRecord[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  return value.filter(isRecord).map((item) => ({
-    evidence_id: String(item.evidence_id ?? item.evidenceId ?? ""),
-    slice_id: String(item.slice_id ?? item.sliceId ?? ""),
-    type: String(item.type ?? ""),
-    freshness: isRecord(item.freshness)
-      ? {
-          created_at: String(item.freshness.created_at ?? ""),
-          valid_for: String(item.freshness.valid_for ?? ""),
-          stale_after: item.freshness.stale_after === null ? null : item.freshness.stale_after === undefined ? null : String(item.freshness.stale_after)
-        }
-      : { created_at: "", valid_for: "", stale_after: null },
-    command: item.command === undefined ? undefined : String(item.command),
-    command_exit_code: item.command_exit_code === undefined ? undefined : Number(item.command_exit_code),
-    artifact_paths: asStringArray(item.artifact_paths),
-    proves: asStringArray(item.proves).map(normalizeProofLayerId),
-    does_not_prove: asStringArray(item.does_not_prove).map((value) => (value.includes(".") ? normalizeProofLayerId(value) : value)),
-    redaction: isRecord(item.redaction)
-      ? { checked: item.redaction.checked === true, contains_secret: item.redaction.contains_secret === true }
-      : { checked: false, contains_secret: false },
-    reviewability: isRecord(item.reviewability)
-      ? {
-          external_reviewer_can_reproduce: item.reviewability.external_reviewer_can_reproduce === true,
-          reproduction_steps: String(item.reviewability.reproduction_steps ?? "")
-        }
-      : { external_reviewer_can_reproduce: false, reproduction_steps: "" },
-    assertion_result: normalizeAssertionResult(item.assertion_result),
-    negative_evidence_scan: normalizeNegativeEvidenceScan(item.negative_evidence_scan),
-    sibling_substitution_used: item.sibling_substitution_used === true,
-    sibling_substitution_approval_source:
-      item.sibling_substitution_approval_source === undefined ? undefined : String(item.sibling_substitution_approval_source)
-  }));
 }
 
 function sortJson(value: unknown): unknown {
