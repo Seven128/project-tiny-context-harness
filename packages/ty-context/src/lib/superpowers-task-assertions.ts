@@ -4,6 +4,7 @@ import {
   type SuperpowersEvidenceRecord,
   type SuperpowersTaskState
 } from "./superpowers-task-state-schema.js";
+import { evaluateCurrentAttemptEvidence } from "./superpowers-task-current-evidence.js";
 import { MACHINE_VERIFIABLE_LAYER_NAMES, normalizeProofLayerId, normalizeProofLayerName } from "./superpowers-task-fields.js";
 export { normalizeAssertionResult, normalizeNegativeEvidenceScan } from "./superpowers-task-assertion-normalizers.js";
 
@@ -90,6 +91,13 @@ export function evaluateProofLayerAssertions(state: SuperpowersTaskState, layerI
   if (!isMachineVerifiableLayer(layerId)) {
     return { assertion_status: "not_applicable", blocking_assertion_failures: [], negative_evidence_findings: [] };
   }
+  if (!state.current_attempt_id) {
+    return {
+      assertion_status: "missing",
+      blocking_assertion_failures: [`proof layer ${layerId} missing current attempt; current attempt is required for machine-backed completion`],
+      negative_evidence_findings: []
+    };
+  }
   const layer = state.graph.proof_layers[layerId];
   const evidenceById = new Map((state.evidence ?? []).map((item) => [item.evidence_id, item]));
   const evidenceRecords = (layer?.evidence_ids ?? []).map((id) => evidenceById.get(id)).filter((item): item is SuperpowersEvidenceRecord => Boolean(item));
@@ -104,6 +112,7 @@ export function evaluateProofLayerAssertions(state: SuperpowersTaskState, layerI
   const blocking: string[] = [];
   const negative: string[] = [];
   for (const evidence of evidenceRecords) {
+    blocking.push(...evaluateCurrentAttemptEvidence(state, evidence, layerId));
     blocking.push(...evaluateAssertionEvidence(evidence, layerId));
     negative.push(...evaluateNegativeEvidence(evidence, layerId));
   }
@@ -141,8 +150,8 @@ export function evaluateAssertionEvidence(evidence: SuperpowersEvidenceRecord, l
     failures.push(`${label} missing assertion result; ${layerName} proof not machine-backed`);
     return failures;
   }
-  if (assertion.schema_version !== "assertion-result-v1") {
-    failures.push(`${label} assertion_result.schema_version must be assertion-result-v1`);
+  if (assertion.schema_version !== "assertion-result-v1" && assertion.schema_version !== "assertion-result-v2") {
+    failures.push(`${label} assertion_result.schema_version must be assertion-result-v1 or assertion-result-v2`);
   }
   if (assertion.status !== "passed") {
     failures.push(`${label} assertion_result.status=${assertion.status}; expected passed`);
@@ -163,6 +172,11 @@ export function evaluateAssertionEvidence(evidence: SuperpowersEvidenceRecord, l
   }
   failures.push(...checkAssertions(`${label} positive assertion`, assertion.positive_assertions));
   failures.push(...checkAssertions(`${label} negative assertion`, assertion.negative_assertions));
+  failures.push(...checkAssertions(`${label} invalid completion signal`, assertion.invalid_completion_signals ?? []));
+  const missingRequiredTests = (assertion.required_test_ids ?? []).filter((testId) => !testId);
+  if (missingRequiredTests.length > 0) {
+    failures.push(`${label} assertion_result.required_test_ids contains empty test ids`);
+  }
   if ((assertion.artifacts?.length ?? 0) === 0 && evidence.artifact_paths.length === 0) {
     failures.push(`${label} assertion-backed evidence must include artifacts`);
   }
@@ -211,9 +225,9 @@ function checkAssertions(prefix: string, checks: AssertionCheck[]): string[] {
 }
 
 export function evaluateNegativeEvidence(evidence: SuperpowersEvidenceRecord, layerId: string): string[] {
-  const scan = evidence.negative_evidence_scan;
+  const scan = evidence.assertion_result?.negative_evidence_scan ?? evidence.negative_evidence_scan;
   if (!scan) {
-    return [];
+    return [`proof layer ${layerId} evidence ${evidence.evidence_id} missing negative_evidence_scan`];
   }
   const acId = proofLayerAcId(layerId);
   const label = `proof layer ${layerId} evidence ${evidence.evidence_id}`;

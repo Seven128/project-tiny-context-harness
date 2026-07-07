@@ -35,9 +35,11 @@ Implementation advances through coherent slices. Each slice selects related PI /
 
 ## Evidence Protocol
 
-Evidence is canonical state, not prose. Every proof record enters `task-state.evidence[]` with evidence id, slice id, type, command or artifact paths, command exit code when applicable, `proves`, `does_not_prove`, freshness, redaction, reviewability / reproduction data and, for machine-verifiable layers, an `assertion_result`. Evidence must be fresh, reviewable and free of secrets, raw credentials, tokens, cookies and long raw payloads.
+Evidence is canonical state, not prose. Every proof record enters `task-state.evidence[]` with evidence id, slice id, type, command or artifact paths, command exit code when applicable, `proves`, `does_not_prove`, freshness, redaction, reviewability / reproduction data and, for machine-verifiable layers, an `assertion_result`. Strict final completion uses EvidenceRecordV2 records bound to the current attempt, source bundle, product source hash, technical plan hash, acceptance checklist hash, git head, worktree fingerprint, command spec/run id, command line/exit code, artifact path/SHA/mtime, target AC ids, target PI ids, target proof layers, assertion status/exit code, positive assertions, negative assertions, invalid completion signals, negative evidence scan and required test ids. Evidence must be fresh, reviewable and free of secrets, raw credentials, tokens, cookies and long raw payloads.
 
-Canonical proof layers are `code`, `api_schema`, `worker_runtime`, `data_artifact`, `integration`, `ui_browser`, `security_redaction`, `all_provider_all_runner`, `cleanup_stale_scan` and `test`; legacy aliases map `runtime -> worker_runtime`, `browser -> ui_browser`, `api -> api_schema`, `data -> data_artifact` and `security -> security_redaction`. `code` cannot complete a machine-backed AC by itself. Machine-verifiable layers are not complete from descriptions, screenshots, final cards, validator passes, matrix rows or verdict rows. They require `assertion_result.schema_version=assertion-result-v1`, `assertion_result.status=passed`, assertion exit code `0`, command exit code `0` when present, target AC/layer coverage, passed positive and negative assertions and reviewable artifacts. UI/browser layers also require owner surface, route/path, user action, browser/playwright/UI assertion evidence and a passed `negative_evidence_scan` with matching target proof layers and checked invalid completion signals.
+Canonical proof layers are `code`, `api_schema`, `worker_runtime`, `data_artifact`, `integration`, `ui_browser`, `security_redaction`, `all_provider_all_runner`, `cleanup_stale_scan` and `test`; legacy aliases map `runtime -> worker_runtime`, `browser -> ui_browser`, `api -> api_schema`, `data -> data_artifact` and `security -> security_redaction`. `code` cannot complete a machine-backed AC by itself. Machine-verifiable layers are not complete from descriptions, screenshots, final cards, validator passes, matrix rows, verdict rows, evidence-index rows, final-summary text, historical `events.ndjson` complete events, auditor prose, summary-only AC proof or unregistered temporary JSON. They require current-attempt EvidenceRecordV2 plus `assertion_result.schema_version=assertion-result-v2`, `assertion_result.status=passed`, assertion exit code `0`, command exit code `0`, target AC/PI/layer coverage, passed positive and negative assertions, no invalid completion signal and reviewable artifacts. UI/browser layers also require owner surface, route/path, user action, browser/playwright/UI assertion evidence and a passed `negative_evidence_scan` with matching target proof layers and checked invalid completion signals.
+
+The Trusted Evidence Kernel marks a machine-blocking AC `under_specified` when it lacks an assertion command, assertion artifacts, positive assertions, negative assertions, invalid completion signals, required UI/browser proof, concrete assertion result production or any non-generated final evidence path. Under-specified ACs block related PIs and force `product_goal_complete=false`. AC-010 / final-gate summary proof only summarizes fresh current EvidenceRecordV2 proof for the other ACs; it cannot bootstrap missing, failed, stale or under-specified ACs and is invalidated with `final_gate_cannot_bootstrap_from_summary_only` when it tries.
 
 Strict V2 source fields are canonical. Product Source must carry Scope Fit, owner, primary capability and assertion policy fields. PI items must carry owner boundary, primary capability path, trigger/state/observable contracts, assertion support, required assertion commands and invalid implementation shortcuts. ACs must carry assertion command, artifacts, positive/negative assertions, machine-blocking flag, invalid completion signals and assertion-result requirement. Unknown, duplicate, table or missing canonical fields block compile; the workflow must not generate, infer, rewrite or repair the Technical Realization Plan or Acceptance Checklist.
 
@@ -63,7 +65,11 @@ Superpowers remains the execution layer: prefer `superpowers:subagent-driven-dev
 
 ## Final Gate Protocol
 
-Final completion always runs in fixed order: derive all views, run `superpowers:verification-before-completion`, validate canonical state, validate plan acceptance artifacts, run auditor and stale-overclaim checks when applicable, rederive/revalidate if fixes changed state or evidence, then let `ty-context composite-long-task final-gate <workdir>` compute `product_goal_complete`.
+Final completion always runs through the Trusted Evidence Kernel. Superpowers verification, validators, auditor checks and generated views are useful execution checks, but they are not proof authority. The AC Evidence Assertion Gate and Negative Evidence Scan Gate are enforced inside the kernel, not by trusting generated matrix or verdict text. The final gate itself runs in fixed order: load the three inputs, recompute source hashes, load task state, load current attempt, load command-run records, load registered EvidenceRecords, discard stale evidence, run contradiction scan, recompute every AC, recompute every PI, recompute `acceptance_target_status`, recompute `product_goal_complete`, regenerate `derived/**` and append an event.
+
+The final gate recomputes from current source hashes, current attempt, required command specs/runs, registered EvidenceRecordV2 records, contradiction scan, Harness Drift Lock and protected baseline state. It ignores stale passed artifacts, historical complete events, stale derived complete views, validator passes and AC summary-only proof as proof. Newer failed commands, Playwright `.last-run.json`, `test-results/**/error-context.md`, JUnit/JSON reporter failures, negative evidence artifacts, owner DOM forbidden states, task-state false/partial values and derived/state mismatch block completion for the affected AC/layer. If historical completion conflicts with current recompute, report `Historical stale completion event detected and ignored.` and `Current recomputed product_goal_complete=false.`
+
+Harness Drift Lock: `product_task` is blocked when the current attempt changed Playwright specs, tests, assertion generators, AC010 helpers, evidence writers, final-gate, validator, derive, task-state reducer, this workflow Skill/protocol or related Makefile/package test targets. The output must include `harness_drift_detected`, `acceptance_target_status=blocked`, `product_goal_complete=false` and `本轮修改了验收工具链或测试本身，不能用被修改后的验收证明同一轮产品完成。请拆成独立 harness_task。` A `harness_task` must include adversarial fixtures with expected final-gate outcomes for stale evidence, historical complete, derived contradiction, AC010 summary-only, target mismatch, API-only-for-UI, negative evidence after pass, source hash mismatch, dirty worktree mismatch, missing assertion_result, test weakening and one happy path; it never proves product completion. `protected-harness-baseline.json` blocks product-task changes to protected harness surfaces and requires a baseline reason plus fixtures for harness-task changes.
 
 ## Completion State Machine
 
@@ -498,17 +504,23 @@ Completion is blocked until the source conflict is resolved. Validators inspect 
 
 ## 13. Phase Twelve: Fixed Final Gate Order
 
-Before final completion, the order is fixed:
+Before final completion, the kernel order is fixed:
 
 ```text
-1. derive all views
-2. superpowers:verification-before-completion
-3. ty-context validate-superpowers-state <workdir>
-4. ty-context validate-plan-acceptance <workdir>
-5. read-only auditor / stale-overclaim scan when applicable
-6. if auditor findings changed state/evidence, derive and validate again
-7. AC Evidence Assertion Gate and Negative Evidence Scan Gate
-8. ty-context composite-long-task final-gate <workdir>
+1. load product-architecture-source.md, technical-realization-plan.md, acceptance-checklist.md
+2. recompute source hashes
+3. load task-state.json
+4. load current_attempt
+5. load command-run records
+6. load registered EvidenceRecordV2 records
+7. discard stale evidence
+8. contradiction scan
+9. recompute every AC
+10. recompute every PI
+11. recompute acceptance_target_status
+12. recompute product_goal_complete
+13. regenerate derived/**
+14. append event
 ```
 
 Legacy/internal compatibility may exist as:

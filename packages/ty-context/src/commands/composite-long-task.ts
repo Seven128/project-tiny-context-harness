@@ -1,10 +1,13 @@
 import path from "node:path";
 import { applySliceDelta, initializeSuperpowersTask } from "../lib/superpowers-task-state.js";
 import { compileSuperpowersTask } from "../lib/superpowers-task-compile.js";
+import { startAndSaveSuperpowersAttempt } from "../lib/superpowers-task-attempt.js";
+import { recordSuperpowersEvidence, runSuperpowersAssertion } from "../lib/superpowers-task-evidence.js";
 import { deriveSuperpowersArtifacts } from "../lib/superpowers-task-derive.js";
 import { runEpochGate, runFinalGate, runSliceGate } from "../lib/superpowers-task-gates.js";
 import { nextSuperpowersSlices } from "../lib/superpowers-task-next-slices.js";
 import { renderCompositeLongTaskGoal } from "../lib/composite-long-task-renderer.js";
+import type { SuperpowersAttemptMode } from "../lib/superpowers-task-state-schema.js";
 
 export async function compositeLongTask(args: string[]): Promise<void> {
   await runCompositeLongTaskCommand(args, {
@@ -31,8 +34,35 @@ export async function runCompositeLongTaskCommand(
     return;
   }
   if (subcommand === "compile") {
-    const state = await compileSuperpowersTask(workdir);
+    const state = await compileSuperpowersTask(workdir, { mode: attemptMode(args) });
     console.log(`compiled ${options.label} graph plan_items=${Object.keys(state.graph.plan_items).length} acs=${Object.keys(state.graph.acceptance_criteria).length}`);
+    return;
+  }
+  if (subcommand === "start-attempt") {
+    const attempt = await startAndSaveSuperpowersAttempt(workdir, attemptMode(args));
+    console.log(`started attempt ${attempt.task_attempt_id}`);
+    return;
+  }
+  if (subcommand === "run-assertion") {
+    const separator = args.indexOf("--");
+    const commandArgs = separator >= 0 ? args.slice(separator + 1) : [];
+    const run = await runSuperpowersAssertion(workdir, {
+      acId: optionValue(args, "--ac") ?? "",
+      proofLayer: optionValue(args, "--proof-layer") ?? "",
+      commandArgs
+    });
+    console.log(`recorded assertion command_run_id=${run.command_run_id} exit_code=${run.exit_code}`);
+    if (run.exit_code !== 0) {
+      process.exitCode = 1;
+    }
+    return;
+  }
+  if (subcommand === "record-evidence") {
+    const evidence = await recordSuperpowersEvidence(workdir, {
+      artifactPath: path.resolve(process.cwd(), optionValue(args, "--from") ?? ""),
+      commandRunId: optionValue(args, "--command-run-id") ?? ""
+    });
+    console.log(`registered evidence ${evidence.evidence_id}`);
     return;
   }
   if (subcommand === "apply-slice-delta") {
@@ -97,7 +127,14 @@ function help(commandName: string, showRenderGoal: boolean): void {
   const renderGoal = showRenderGoal ? "\n  render-goal <workdir>                  Render workflow-protocol.md, execution-binding.md and goal-objective.txt" : "";
   console.log(`${commandName} commands:
   init <workdir>                         Initialize task-state.json and events.ndjson
-  compile <workdir>                      Compile sources into task graph
+  compile <workdir> [--mode product_task|harness_task]
+                                         Compile sources into task graph
+  start-attempt <workdir> [--mode product_task|harness_task]
+                                         Start a fresh current attempt
+  run-assertion <workdir> --ac <id> --proof-layer <layer> -- <command>
+                                         Run and record an assertion command
+  record-evidence <workdir> --from <artifact> --command-run-id <id>
+                                         Register current-attempt EvidenceRecordV2
   apply-slice-delta <workdir> <delta>    Apply structured slice delta, evidence and derived views
   derive <workdir>                       Generate derived/** views
   slice-gate <workdir> --slice <id>      Validate one slice has real progress
@@ -109,4 +146,12 @@ function help(commandName: string, showRenderGoal: boolean): void {
 function optionValue(args: string[], name: string): string | undefined {
   const index = args.indexOf(name);
   return index >= 0 ? args[index + 1] : undefined;
+}
+
+function attemptMode(args: string[]): SuperpowersAttemptMode {
+  const value = optionValue(args, "--mode");
+  if (value === "harness_task") {
+    return "harness_task";
+  }
+  return "product_task";
 }

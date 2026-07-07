@@ -27,6 +27,7 @@ export async function createPlanProject() {
   await writeFile(path.join(root, "tests/runtime.spec.ts"), "export const test = true;\n", "utf8");
   await writeFile(path.join(root, "tmp/ty-context/plan-acceptance/demo/browser.png"), "fake", "utf8");
   await writeFile(path.join(root, "tmp/ty-context/plan-acceptance/demo/runtime.json"), "{}", "utf8");
+  await writeFile(path.join(root, "tmp/ty-context/plan-acceptance/demo/ui-assertion-report.json"), "{}", "utf8");
   return root;
 }
 export async function writePlan(root, content) {

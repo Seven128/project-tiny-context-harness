@@ -1,7 +1,17 @@
 import type { SuperpowersTaskState } from "./superpowers-task-state-schema.js";
 
 const CANONICAL_PLAN_STATUSES = new Set(["not_started", "in_progress", "partial", "blocked", "invalidated", "complete", "out_of_scope_NA"]);
-const CANONICAL_AC_STATUSES = new Set(["not_started", "not_run", "in_progress", "partial", "blocked", "invalidated", "complete", "out_of_scope_NA"]);
+const CANONICAL_AC_STATUSES = new Set([
+  "not_started",
+  "not_run",
+  "in_progress",
+  "partial",
+  "blocked",
+  "invalidated",
+  "under_specified",
+  "complete",
+  "out_of_scope_NA"
+]);
 
 export function validateCanonicalStatuses(state: SuperpowersTaskState, errors: string[]): void {
   for (const [planId, item] of Object.entries(state.graph?.plan_items ?? {})) {

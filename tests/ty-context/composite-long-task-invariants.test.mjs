@@ -38,7 +38,7 @@ test("composite long-task preserves source authority, task-state execution state
       "graph_compiled"
     ]);
 
-    const state = JSON.parse(await readFile(path.join(workdir, "task-state.json"), "utf8"));
+    let state = JSON.parse(await readFile(path.join(workdir, "task-state.json"), "utf8"));
     assert.deepEqual(Object.keys(state.sources).sort(), sourceFiles.map(([key]) => key).sort());
     for (const [key, filename, authority] of sourceFiles) {
       assert.equal(state.sources[key].path, filename);
@@ -47,22 +47,26 @@ test("composite long-task preserves source authority, task-state execution state
     }
     assert.deepEqual(await readSources(workdir), originalSources);
 
+    const assertionRun = runCli(root, "composite-long-task", "run-assertion", workdirArg, "--ac", "AC-001", "--proof-layer", "worker_runtime", "--", process.execPath, "-e", "process.exit(0)");
+    assert.equal(assertionRun.status, 0, assertionRun.stderr);
+    state = JSON.parse(await readFile(path.join(workdir, "task-state.json"), "utf8"));
+    const commandRun = state.command_runs.at(-1);
     const deltaPath = path.join(workdir, "slice-delta.json");
-    await writeFile(deltaPath, JSON.stringify(partialSliceDelta(), null, 2), "utf8");
+    await writeFile(deltaPath, JSON.stringify(partialSliceDelta(state, commandRun), null, 2), "utf8");
     const apply = runCli(root, "composite-long-task", "apply-slice-delta", workdirArg, path.relative(root, deltaPath));
     assert.equal(apply.status, 0, apply.stderr);
-    const afterApplyEvents = await assertEventsAppendOnly(workdir, afterCompileEvents, ["task_initialized", "graph_compiled", "slice_delta_applied"]);
+    const afterApplyEvents = await assertEventsAppendOnly(workdir, afterCompileEvents, ["task_initialized", "graph_compiled", "assertion_command_run", "slice_delta_applied"]);
     assert.deepEqual(await readSources(workdir), originalSources);
 
     const finalGate = runCli(root, "composite-long-task", "final-gate", workdirArg);
     assert.notEqual(finalGate.status, 0);
     assert.match(finalGate.stdout, /final gate product_goal_complete=false/);
-    await assertEventsAppendOnly(workdir, afterApplyEvents, ["task_initialized", "graph_compiled", "slice_delta_applied", "final_gate"]);
+    await assertEventsAppendOnly(workdir, afterApplyEvents, ["task_initialized", "graph_compiled", "assertion_command_run", "slice_delta_applied", "final_gate"]);
     assert.deepEqual(await readSources(workdir), originalSources);
 
     await writeAcceptance(root, { overall_status: "complete", items: [] }, { overall_status: "complete", acceptance_items: [] });
     const legacyReport = await runValidator(root, "validate-plan-acceptance", [workdirArg]);
-    assert.deepEqual(legacyReport.errors, []);
+    assert.match(legacyReport.errors.join("\n"), /missing current satisfied proof layer|missing current attempt command-run record|missing positive assertion/i);
     assert.match(legacyReport.info.join("\n"), /state-backed/i);
     const stateAfterLegacyArtifacts = JSON.parse(await readFile(path.join(workdir, "task-state.json"), "utf8"));
     assert.equal(stateAfterLegacyArtifacts.final.product_goal_complete, false);
@@ -229,7 +233,8 @@ async function assertEventsAppendOnly(workdir, previous, expectedTypes) {
   return current;
 }
 
-function partialSliceDelta() {
+function partialSliceDelta(state, commandRun) {
+  const attempt = state.attempts.find((item) => item.task_attempt_id === state.current_attempt_id);
   return {
     slice_id: "S-CLT-001",
     slice_goal: "Close runtime proof",
@@ -238,7 +243,18 @@ function partialSliceDelta() {
     code_changes: ["src/runtime/kernel.ts"],
     evidence_records: [
       {
+        schema_version: "evidence-record-v2",
         evidence_id: "EV-CLT-001",
+        task_attempt_id: state.current_attempt_id,
+        source_bundle_hash: attempt.source_bundle_hash,
+        git_head: attempt.git_head,
+        worktree_fingerprint: attempt.worktree_fingerprint,
+        command_spec_id: commandRun.command_spec_id,
+        command_run_id: commandRun.command_run_id,
+        command_line: commandRun.command_line,
+        artifact_path: "tmp/ty-context/plan-acceptance/demo/runtime.json",
+        artifact_sha256: sha256("{}"),
+        artifact_mtime: commandRun.ended_at,
         slice_id: "S-CLT-001",
         type: "runtime_assertion",
         freshness: { created_at: "2026-06-29T00:00:00.000Z", valid_for: "current_worktree", stale_after: null },
@@ -250,7 +266,7 @@ function partialSliceDelta() {
         redaction: { checked: true, contains_secret: false },
         reviewability: { external_reviewer_can_reproduce: true, reproduction_steps: "Run node --test tests/runtime.spec.ts." },
         assertion_result: {
-          schema_version: "assertion-result-v1",
+          schema_version: "assertion-result-v2",
           status: "passed",
           runner: "node:test",
           exit_code: 0,

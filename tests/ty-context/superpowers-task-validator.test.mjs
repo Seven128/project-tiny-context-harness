@@ -37,7 +37,7 @@ test("validate-superpowers-state accepts complete fresh evidence and final-gate 
     assert.equal(state.final.product_goal_complete, true);
     assert.equal(state.final.acceptance_target_status, "complete");
     assert.deepEqual(state.final.next_required_actions, []);
-    assert.ok(state.gates.final_gate.order.includes("validate_plan_acceptance"));
+    assert.ok(state.gates.final_gate.order.includes("recompute_product_goal_complete"));
   } finally {
     await rm(root, { recursive: true, force: true });
   }

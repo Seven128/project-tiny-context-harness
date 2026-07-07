@@ -9,7 +9,6 @@ import { compileSuperpowersTask } from "../../packages/ty-context/dist/lib/super
 import { createPlanProject, writeSuperpowersSources } from "./plan-validator-fixtures.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-
 test("superpowers state init and compile create canonical source-hashed graph", async () => {
   const root = await createPlanProject();
   try {
@@ -29,6 +28,17 @@ test("superpowers state init and compile create canonical source-hashed graph", 
     assert.ok(state.graph.acceptance_criteria["AC-001"]);
     assert.ok(state.graph.proof_layers["AC-001.worker_runtime"]);
     assert.deepEqual(state.graph.edges, [{ from: "PI-001", to: "AC-001", type: "supports" }]);
+    assert.match(state.current_attempt_id, /^ATT-/);
+    assert.equal(state.attempts.length, 1);
+    assert.equal(state.attempts[0].task_attempt_id, state.current_attempt_id);
+    assert.match(state.attempts[0].source_bundle_hash, /^[a-f0-9]{64}$/);
+    assert.match(state.attempts[0].worktree_fingerprint, /^[a-f0-9]{64}$/);
+    assert.ok(state.required_command_specs.length >= 1);
+    assert.match(state.required_command_specs[0].command_spec_id, /^[a-f0-9]{64}$/);
+    assert.equal(state.required_command_specs[0].ac_id, "AC-001");
+    assert.deepEqual(state.required_command_specs[0].proof_layers, ["code", "worker_runtime", "ui_browser", "test"]);
+    assert.deepEqual(state.command_runs, []);
+    assert.deepEqual(state.negative_evidence_records, []);
 
     const events = await readFile(path.join(workdir, "events.ndjson"), "utf8");
     assert.match(events, /"event_type":"task_initialized"/);
@@ -37,7 +47,6 @@ test("superpowers state init and compile create canonical source-hashed graph", 
     await rm(root, { recursive: true, force: true });
   }
 });
-
 test("compile parses Product Source, plan item and AC delivery boundaries", async () => {
   const root = await createPlanProject();
   try {
@@ -70,7 +79,6 @@ test("compile parses Product Source, plan item and AC delivery boundaries", asyn
     await rm(root, { recursive: true, force: true });
   }
 });
-
 test("compile records scope conflicts when source, plan and AC disagree", async () => {
   const root = await createPlanProject();
   try {

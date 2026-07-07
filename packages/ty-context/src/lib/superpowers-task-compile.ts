@@ -3,11 +3,14 @@ import { pathExists, readText } from "./fs.js";
 import { appendSuperpowersEvent } from "./superpowers-task-events.js";
 import { compileError, compileReportSuffix, throwCompileErrors } from "./superpowers-task-compile-diagnostics.js";
 import { validateCompiledSources } from "./superpowers-task-compile-guards.js";
+import { startSuperpowersAttempt } from "./superpowers-task-attempt.js";
+import { deriveRequiredCommandSpecs } from "./superpowers-task-command-specs.js";
 import { loadSuperpowersState, recomputeStatuses, saveSuperpowersState, refreshSourceHashes } from "./superpowers-task-state.js";
 import { type SuperpowersTaskState } from "./superpowers-task-state-schema.js";
+import type { SuperpowersAttemptMode } from "./superpowers-task-state-schema.js";
 import { DEFAULT_LAYERS, parseAcceptanceCriteria, parsePlanItems, parseProductArchitectureScope } from "./superpowers-task-source-compile.js";
 
-export async function compileSuperpowersTask(workdir: string) {
+export async function compileSuperpowersTask(workdir: string, options: { mode?: SuperpowersAttemptMode } = {}) {
   const state = await loadSuperpowersState(workdir);
   await refreshSourceHashes(workdir, state);
   await assertRequiredSourcesExist(workdir, state);
@@ -46,9 +49,13 @@ export async function compileSuperpowersTask(workdir: string) {
   state.graph.edges = Object.entries(planItems).flatMap(([planId, item]) =>
     item.related_acs.map((acId) => ({ from: planId, to: acId, type: "supports" }))
   );
+  state.required_command_specs = deriveRequiredCommandSpecs(state);
+  state.command_runs = [];
+  state.negative_evidence_records = [];
   state.delivery.scope_conflicts = computeScopeConflicts(state);
   state.progress = compileProgress(state);
   recomputeStatuses(state);
+  await startSuperpowersAttempt(workdir, state, options.mode ?? "product_task");
   await saveSuperpowersState(workdir, state);
   await appendSuperpowersEvent(workdir, "graph_compiled", {
     plan_items: Object.keys(planItems).length,

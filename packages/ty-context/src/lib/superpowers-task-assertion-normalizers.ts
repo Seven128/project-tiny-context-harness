@@ -17,12 +17,16 @@ export function normalizeAssertionResult(value: unknown): AssertionResult | unde
     runner: String(value.runner ?? ""),
     exit_code: numberValue(value.exit_code),
     target_ac_ids: stringArray(value.target_ac_ids),
+    target_pi_ids: stringArray(value.target_pi_ids),
     target_proof_layers: stringArray(value.target_proof_layers).map(normalizeProofLayerId),
     owner_surface: value.owner_surface === undefined ? undefined : String(value.owner_surface),
     route: value.route === undefined ? undefined : String(value.route),
     action: value.action === undefined ? undefined : String(value.action),
     positive_assertions: checkArray(value.positive_assertions),
     negative_assertions: checkArray(value.negative_assertions),
+    invalid_completion_signals: checkArray(value.invalid_completion_signals),
+    negative_evidence_scan: normalizeNegativeEvidenceScan(value.negative_evidence_scan),
+    required_test_ids: stringArray(value.required_test_ids),
     artifacts: stringArray(value.artifacts)
   };
 }
