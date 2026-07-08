@@ -1,0 +1,15 @@
+{
+  "fixture_id": "final_gate_false_final_summary_completed",
+  "category": "generated_output",
+  "description": "Stale final-summary completed wording cannot override final-gate=false.",
+  "runner_mode": "final_gate",
+  "cli_smoke": true,
+  "preexisting_forbidden_phrase": true,
+  "expected_final_gate_product_goal_complete": false,
+  "expected_acceptance_target_status": "partial",
+  "expected_completion_output_status": "reject",
+  "expected_exit_code": 1,
+  "expected_error_codes": [
+    "missing current satisfied proof layer"
+  ]
+}

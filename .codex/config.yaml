@@ -81,6 +81,22 @@ modularity:
       category: legacy_migration
       reason: Rename-only surface migration touched the existing release version synchronizer, which predates the modularity gate.
       future_split_boundary: Split version source discovery, surface updates and check-mode diff reporting into focused helpers.
+    - path: packages/ty-context/src/lib/superpowers-task-evidence-kernel.ts
+      category: legacy_migration
+      reason: HFC-001 trusted evidence kernel still aggregates recomputation, contradiction and final-status logic while HFC hardening is in flight.
+      future_split_boundary: Split kernel orchestration, AC/PI recomputation and final-status projection into separate modules after HFC-002 stabilizes.
+    - path: packages/ty-context/src/lib/superpowers-task-validator.ts
+      category: legacy_migration
+      reason: HFC-002 completion-output validation was added to an existing aggregate state validator to preserve the public validation entry point.
+      future_split_boundary: Move completion-output consistency and generated-surface scans into a dedicated validator module after the resolver contract is stable.
+    - path: tests/ty-context/composite-long-task-expanded-assertion-gate.test.mjs
+      category: legacy_migration
+      reason: Expanded adversarial assertion-gate regression cases are still grouped with the original HFC-001 suite.
+      future_split_boundary: Split proof-layer coverage cases from adversarial invalid-state cases into separate focused regression files.
+    - path: tests/ty-context/composite-long-task-invariants.test.mjs
+      category: legacy_migration
+      reason: Composite long-task invariant regressions still aggregate several completion and scope invariants across HFC-001 and HFC-002.
+      future_split_boundary: Split completion-output, full-population and scope-conflict invariants into dedicated focused test files.
 managed_files:
   - path: AGENTS.md
     strategy: merge-block

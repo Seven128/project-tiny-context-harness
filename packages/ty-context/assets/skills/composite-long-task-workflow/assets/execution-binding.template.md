@@ -31,7 +31,21 @@ required_commands:
 
 completion_gate:
   product_goal_complete_source: final_gate
+  completion_output_status_source: final_gate_completion_output_resolver
+  allowed_final_answers:
+    - accept
+    - reject
+    - blocked
+  final_answer_accept_requires_product_goal_complete_true: true
+  final_answer_accept_requires_completion_output_status_accept: true
+  final_gate_not_run_outputs_blocked: true
+  final_gate_false_outputs_reject_or_blocked: true
+  validator_pass_never_authorizes_accept: true
+  matrix_verdict_final_card_never_authorizes_accept: true
+  audit_task_complete_never_authorizes_accept: true
+  generated_output_mismatch_blocks_accept: true
   cannot_hand_set_product_goal_complete: true
+  cannot_hand_set_completion_output_status: true
   includes_ac_evidence_assertion_gate: true
   includes_negative_evidence_scan_gate: true
   current_attempt_only: true

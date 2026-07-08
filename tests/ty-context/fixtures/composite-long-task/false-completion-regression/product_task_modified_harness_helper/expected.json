@@ -1,0 +1,16 @@
+{
+  "fixture_id": "product_task_modified_harness_helper",
+  "category": "harness_drift",
+  "description": "A product_task modifying harness helpers is blocked from self-proof.",
+  "runner_mode": "final_gate",
+  "cli_smoke": false,
+  "preexisting_forbidden_phrase": false,
+  "expected_final_gate_product_goal_complete": false,
+  "expected_acceptance_target_status": "blocked",
+  "expected_completion_output_status": "blocked",
+  "expected_exit_code": 2,
+  "expected_error_codes": [
+    "harness_drift_detected",
+    "protected_baseline_changed"
+  ]
+}

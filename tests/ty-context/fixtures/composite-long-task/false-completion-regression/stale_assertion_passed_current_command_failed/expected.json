@@ -1,0 +1,16 @@
+{
+  "fixture_id": "stale_assertion_passed_current_command_failed",
+  "category": "command_run",
+  "description": "A newer failed command run invalidates older passed current-attempt evidence.",
+  "runner_mode": "final_gate",
+  "cli_smoke": true,
+  "preexisting_forbidden_phrase": false,
+  "expected_final_gate_product_goal_complete": false,
+  "expected_acceptance_target_status": "invalidated",
+  "expected_completion_output_status": "reject",
+  "expected_exit_code": 1,
+  "expected_error_codes": [
+    "newer failed command invalidates",
+    "command_run_failed"
+  ]
+}

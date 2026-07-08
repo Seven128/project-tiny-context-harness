@@ -1,0 +1,35 @@
+{
+  "historical_complete_current_false": {
+    "product_goal_complete": false
+  },
+  "stale_assertion_passed_current_command_failed": {
+    "product_goal_complete": false
+  },
+  "unregistered_assertion_json_passed": {
+    "product_goal_complete": false
+  },
+  "ac010_summary_only_without_required_ac": {
+    "product_goal_complete": false
+  },
+  "target_ac_mismatch": {
+    "product_goal_complete": false
+  },
+  "target_proof_layer_mismatch": {
+    "product_goal_complete": false
+  },
+  "source_hash_mismatch": {
+    "product_goal_complete": false
+  },
+  "dirty_worktree_mismatch": {
+    "product_goal_complete": false
+  },
+  "missing_assertion_result": {
+    "product_goal_complete": false
+  },
+  "invalid_current_attempt_id": {
+    "product_goal_complete": false
+  },
+  "happy_path_current_evidence_complete": {
+    "product_goal_complete": true
+  }
+}

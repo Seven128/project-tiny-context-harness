@@ -121,9 +121,11 @@ test("current-attempt completion rejects legacy or old-attempt machine evidence"
         git_head: "no-git",
         git_status_short: "no-git",
         tracked_diff_hash: "a".repeat(64),
+        relevant_untracked_hash: "ignored:no-git",
         untracked_relevant_hash: "ignored:no-git",
         worktree_fingerprint: "b".repeat(64),
         started_at: "2026-07-01T00:00:00.000Z",
+        ended_at: null,
         finalized_at: null,
         required_command_specs_hash: "c".repeat(64)
       }
@@ -201,6 +203,7 @@ function replaceAcLayers(state, layers) {
     command_line: `node --test tests/${layer}.test.mjs`,
     exit_code: 0,
     started_at: "2026-07-01T00:00:00.000Z",
+    completed_at: "2026-07-01T00:01:00.000Z",
     ended_at: "2026-07-01T00:01:00.000Z",
     artifact_paths: ["tmp/ty-context/plan-acceptance/demo/runtime.json"]
   }));
@@ -227,11 +230,16 @@ function machineLayerEvidence(state, layer, includeAssertion) {
     schema_version: "evidence-record-v2",
     evidence_id: `EV-${layer}`,
     task_attempt_id: state.current_attempt_id,
+    generated_at: "2026-07-01T00:01:00.000Z",
     source_bundle_hash: attempt.source_bundle_hash,
     product_source_hash: attempt.product_source_hash,
     technical_plan_hash: attempt.technical_plan_hash,
     acceptance_checklist_hash: attempt.acceptance_checklist_hash,
     git_head: attempt.git_head,
+    git_status_short: attempt.git_status_short,
+    tracked_diff_hash: attempt.tracked_diff_hash,
+    relevant_untracked_hash: attempt.relevant_untracked_hash,
+    covers_dirty_worktree: true,
     worktree_fingerprint: attempt.worktree_fingerprint,
     command_spec_id: commandSpec.command_spec_id,
     command_run_id: `CR-${layer}`,

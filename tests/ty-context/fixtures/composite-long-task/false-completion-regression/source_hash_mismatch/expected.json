@@ -1,0 +1,15 @@
+{
+  "fixture_id": "source_hash_mismatch",
+  "category": "source_hash",
+  "description": "Changed source files require recompile and cannot use stale evidence.",
+  "runner_mode": "final_gate",
+  "cli_smoke": false,
+  "preexisting_forbidden_phrase": false,
+  "expected_final_gate_product_goal_complete": false,
+  "expected_acceptance_target_status": "blocked",
+  "expected_completion_output_status": "blocked",
+  "expected_exit_code": 2,
+  "expected_error_codes": [
+    "source hash mismatch"
+  ]
+}

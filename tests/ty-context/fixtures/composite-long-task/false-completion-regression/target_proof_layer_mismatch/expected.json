@@ -1,0 +1,16 @@
+{
+  "fixture_id": "target_proof_layer_mismatch",
+  "category": "targeting",
+  "description": "Evidence targeting the wrong proof layer cannot satisfy ui_browser.",
+  "runner_mode": "final_gate",
+  "cli_smoke": false,
+  "preexisting_forbidden_phrase": false,
+  "expected_final_gate_product_goal_complete": false,
+  "expected_acceptance_target_status": "invalidated",
+  "expected_completion_output_status": "reject",
+  "expected_exit_code": 1,
+  "expected_error_codes": [
+    "target_proof_layers",
+    "AC-001.ui_browser"
+  ]
+}

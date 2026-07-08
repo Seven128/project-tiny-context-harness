@@ -1,0 +1,13 @@
+{
+  "fixture_id": "happy_path_current_evidence_complete",
+  "category": "happy_path",
+  "description": "Current assertion-backed evidence with negative scans still accepts.",
+  "runner_mode": "final_gate",
+  "cli_smoke": true,
+  "preexisting_forbidden_phrase": false,
+  "expected_final_gate_product_goal_complete": true,
+  "expected_acceptance_target_status": "complete",
+  "expected_completion_output_status": "accept",
+  "expected_exit_code": 0,
+  "expected_error_codes": []
+}

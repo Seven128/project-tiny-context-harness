@@ -1,0 +1,41 @@
+[
+  {
+    "command_run_id": "CR-worker_runtime",
+    "task_attempt_id": "ATT-TEST-001",
+    "command_spec_id": "e2750bb38a02d9b336e0194274c9535e93dc1e1cb3a87db2700e6efb48fd9222",
+    "ac_id": "AC-001",
+    "proof_layer": "worker_runtime",
+    "command_line": "npm test --workspace project-tiny-context-harness",
+    "exit_code": 0,
+    "started_at": "2026-07-01T00:00:00.000Z",
+    "completed_at": "2026-07-01T00:01:00.000Z",
+    "ended_at": "2026-07-01T00:01:00.000Z",
+    "artifact_paths": []
+  },
+  {
+    "command_run_id": "CR-ui_browser",
+    "task_attempt_id": "ATT-TEST-001",
+    "command_spec_id": "e2750bb38a02d9b336e0194274c9535e93dc1e1cb3a87db2700e6efb48fd9222",
+    "ac_id": "AC-001",
+    "proof_layer": "ui_browser",
+    "command_line": "npx playwright test tests/runtime.spec.ts --grep recovery",
+    "exit_code": 0,
+    "started_at": "2026-07-01T00:00:00.000Z",
+    "completed_at": "2026-07-01T00:01:00.000Z",
+    "ended_at": "2026-07-01T00:01:00.000Z",
+    "artifact_paths": []
+  },
+  {
+    "command_run_id": "CR-test",
+    "task_attempt_id": "ATT-TEST-001",
+    "command_spec_id": "e2750bb38a02d9b336e0194274c9535e93dc1e1cb3a87db2700e6efb48fd9222",
+    "ac_id": "AC-001",
+    "proof_layer": "test",
+    "command_line": "npm test --workspace project-tiny-context-harness",
+    "exit_code": 0,
+    "started_at": "2026-07-01T00:00:00.000Z",
+    "completed_at": "2026-07-01T00:01:00.000Z",
+    "ended_at": "2026-07-01T00:01:00.000Z",
+    "artifact_paths": []
+  }
+]

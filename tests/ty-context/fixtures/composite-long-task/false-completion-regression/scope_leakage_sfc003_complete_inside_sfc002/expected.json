@@ -1,0 +1,15 @@
+{
+  "fixture_id": "scope_leakage_sfc003_complete_inside_sfc002",
+  "category": "scope",
+  "description": "Scope leakage between slices blocks completion until the source boundary is clarified.",
+  "runner_mode": "final_gate",
+  "cli_smoke": false,
+  "preexisting_forbidden_phrase": false,
+  "expected_final_gate_product_goal_complete": false,
+  "expected_acceptance_target_status": "blocked",
+  "expected_completion_output_status": "blocked",
+  "expected_exit_code": 2,
+  "expected_error_codes": [
+    "scope_conflict_requires_decision"
+  ]
+}

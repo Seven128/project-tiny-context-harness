@@ -12,6 +12,11 @@ import { loadSuperpowersState, sha256 } from "./superpowers-task-state.js";
 import { validateCanonicalStatuses } from "./superpowers-task-status.js";
 import { isRecord, type SuperpowersEvidenceRecord, type SuperpowersTaskState } from "./superpowers-task-state-schema.js";
 import { evaluateProofLayerAssertions, isUiBrowserLayer, proofLayerName } from "./superpowers-task-assertions.js";
+import {
+  completionOutputContractFromState,
+  completionPhraseFindingMessages,
+  scanGeneratedCompletionOutputSurfaces
+} from "./superpowers-task-completion-output.js";
 import type { ValidatorReport } from "./validators.js";
 export async function validateSuperpowersState(projectRoot: string, args: string[] = []): Promise<ValidatorReport> {
   const info: string[] = [];
@@ -48,6 +53,7 @@ export async function validateSuperpowersState(projectRoot: string, args: string
   validateAuditor(state, errors);
   validateFinalCompletion(state, errors);
   errors.push(...(await derivedMatchesState(targetDir, state)));
+  await validateCompletionOutputConsistency(targetDir, state, errors);
 
   info.push(
     `checked superpowers task state ${repoRelative(projectRoot, targetDir)} plan_items=${Object.keys(state.graph?.plan_items ?? {}).length} acs=${Object.keys(state.graph?.acceptance_criteria ?? {}).length} evidence=${state.evidence?.length ?? 0}`
@@ -56,6 +62,51 @@ export async function validateSuperpowersState(projectRoot: string, args: string
     info.push("Superpowers task state validation passed");
   }
   return { info, warnings, hygiene, errors };
+}
+
+async function validateCompletionOutputConsistency(workdir: string, state: SuperpowersTaskState, errors: string[]): Promise<void> {
+  const contract = completionOutputContractFromState(state);
+  const finalRecord = state.final as SuperpowersTaskState["final"] & {
+    completion_output_status?: string;
+    final_answer_allowed?: boolean;
+    required_user_visible_status?: string;
+    exit_code?: number;
+  };
+  const gate = isRecord(state.gates?.final_gate) ? state.gates.final_gate : {};
+  const storedStatus = finalRecord.completion_output_status ?? (typeof gate.completion_output_status === "string" ? gate.completion_output_status : undefined);
+  if (storedStatus && storedStatus !== contract.completion_output_status) {
+    errors.push(`completion_output_status mismatch: expected ${contract.completion_output_status}, found ${storedStatus}`);
+  }
+  if (contract.completion_output_status === "accept" && state.final.product_goal_complete !== true) {
+    errors.push("completion_output_status=accept but product_goal_complete is not true");
+  }
+  if (finalRecord.final_answer_allowed !== undefined && finalRecord.final_answer_allowed !== contract.final_answer_allowed) {
+    errors.push(`final_answer_allowed mismatch: expected ${contract.final_answer_allowed}, found ${finalRecord.final_answer_allowed}`);
+  }
+  if (finalRecord.required_user_visible_status && finalRecord.required_user_visible_status !== contract.required_user_visible_status) {
+    errors.push(
+      `required_user_visible_status mismatch: expected ${contract.required_user_visible_status}, found ${finalRecord.required_user_visible_status}`
+    );
+  }
+  if (finalRecord.exit_code !== undefined && finalRecord.exit_code !== contract.exit_code) {
+    errors.push(`completion output exit_code mismatch: expected ${contract.exit_code}, found ${finalRecord.exit_code}`);
+  }
+  errors.push(...completionPhraseFindingMessages(await scanGeneratedCompletionOutputSurfaces(workdir, contract)));
+  await validateMarkdownCompletionStatus(workdir, contract.completion_output_status, errors);
+}
+
+async function validateMarkdownCompletionStatus(workdir: string, expectedStatus: string, errors: string[]): Promise<void> {
+  for (const relative of ["derived/final-summary.md", "derived/final-card.md", "derived/local-audit.md"]) {
+    const file = path.join(workdir, ...relative.split("/"));
+    if (!(await pathExists(file))) {
+      continue;
+    }
+    const text = await readText(file);
+    const match = /^completion_output_status:\s*(\S+)\s*$/im.exec(text);
+    if (match && match[1] !== expectedStatus) {
+      errors.push(`${relative} completion_output_status mismatch: expected ${expectedStatus}, found ${match[1]}`);
+    }
+  }
 }
 
 async function validateSourceHashes(workdir: string, state: SuperpowersTaskState, errors: string[]): Promise<void> {

@@ -1,15 +1,17 @@
-import { deriveRequiredCommandSpecs, requiredCommandSpecsHash } from "./superpowers-task-command-specs.js";
+import { deriveRequiredCommandSpecs } from "./superpowers-task-command-specs.js";
+import { validateCommandRunsForSpec, validateRequiredCommandCorrelation } from "./superpowers-task-command-run-correlation.js";
 import { evaluateAc010Bootstrap } from "./superpowers-task-ac010.js";
 import { evaluateCurrentAttemptArtifact } from "./superpowers-task-current-evidence.js";
 import { scanSuperpowersContradictions } from "./superpowers-task-contradictions.js";
 import { detectHarnessDrift } from "./superpowers-task-harness-drift.js";
 import { evaluateProtectedBaseline } from "./superpowers-task-protected-baseline.js";
+import { validateScopeConflicts } from "./superpowers-task-delivery.js";
 import { evaluateProofLayerAssertions, isMachineVerifiableLayer } from "./superpowers-task-assertions.js";
+import { scanUnregisteredAssertionEvidence, type IgnoredUnregisteredEvidence } from "./superpowers-task-unregistered-evidence.js";
 import { findUnderSpecifiedAcs } from "./superpowers-task-under-specified.js";
 import { loadSuperpowersState, sourceRecords } from "./superpowers-task-state.js";
 import {
   isRecord,
-  type CommandRunRecord,
   type ExecutionAttempt,
   type RequiredCommandSpec,
   type SuperpowersEvidenceRecord,
@@ -23,14 +25,45 @@ export interface TrustedEvidenceKernelResult {
   ac_statuses: Record<string, string>;
   pi_statuses: Record<string, string>;
   stale_evidence_ids: string[];
+  ignored_unregistered_evidence: IgnoredUnregisteredEvidence[];
+  invalidated_evidence_ids: string[];
+  kernel_order: string[];
+  ac_findings: Record<string, string[]>;
+  pi_findings: Record<string, string[]>;
   harness_task_final_verdict?: "passed" | "failed";
 }
+
+export const TRUSTED_EVIDENCE_KERNEL_ORDER = [
+  "load_three_inputs",
+  "recompute_source_hashes",
+  "load_task_state",
+  "resolve_current_attempt",
+  "load_required_command_specs",
+  "load_command_run_records",
+  "load_registered_evidence_records",
+  "discard_stale_evidence",
+  "scan_unregistered_assertion_json",
+  "scan_contradictions",
+  "run_ac010_bootstrap_prevention",
+  "run_under_specified_ac_checks",
+  "run_harness_drift_lock",
+  "run_protected_baseline_guard",
+  "validate_scope_conflicts",
+  "recompute_every_ac",
+  "recompute_every_pi",
+  "recompute_acceptance_target_status",
+  "recompute_product_goal_complete",
+  "regenerate_derived",
+  "append_final_gate_event"
+] as const;
 
 export async function evaluateTrustedEvidenceKernel(workdir: string, providedState?: SuperpowersTaskState): Promise<TrustedEvidenceKernelResult> {
   const state = providedState ?? (await loadSuperpowersState(workdir));
   const errors: string[] = [];
   const acStatuses: Record<string, string> = {};
+  const acFindings: Record<string, string[]> = {};
   const staleEvidenceIds = new Set<string>();
+  const invalidatedEvidenceIds = new Set<string>();
   const attempt = currentAttempt(state);
   const currentSources = await sourceRecords(workdir);
 
@@ -41,7 +74,9 @@ export async function evaluateTrustedEvidenceKernel(workdir: string, providedSta
   }
 
   const expectedSpecs = deriveRequiredCommandSpecs(state);
-  validateRequiredSpecs(state, attempt, expectedSpecs, errors);
+  const commandCorrelation = validateRequiredCommandCorrelation(state, attempt, expectedSpecs);
+  errors.push(...commandCorrelation.errors);
+  commandCorrelation.invalidated_evidence_ids.forEach((id) => invalidatedEvidenceIds.add(id));
 
   const underSpecified = new Map(findUnderSpecifiedAcs(state).map((item) => [item.ac_id, item.reasons]));
   for (const reasons of underSpecified.values()) {
@@ -54,12 +89,16 @@ export async function evaluateTrustedEvidenceKernel(workdir: string, providedSta
   errors.push(...drift.errors);
   const baseline = evaluateProtectedBaseline(state);
   errors.push(...baseline.errors);
+  validateScopeConflicts(state, errors);
+  const unregistered = await scanUnregisteredAssertionEvidence(workdir, state);
+  errors.push(...unregistered.errors);
 
   const evidenceById = new Map((state.evidence ?? []).map((evidence) => [evidence.evidence_id, evidence]));
   for (const [acId, ac] of Object.entries(state.graph?.acceptance_criteria ?? {})) {
     const acErrors: string[] = [];
     if (underSpecified.has(acId)) {
       acStatuses[acId] = "under_specified";
+      acFindings[acId] = underSpecified.get(acId) ?? [];
       continue;
     }
     const requiredLayers = ac.required_proof_layers ?? [];
@@ -88,6 +127,9 @@ export async function evaluateTrustedEvidenceKernel(workdir: string, providedSta
           }
           acErrors.push(...validateEvidenceAgainstSpec(state, evidence, spec, layerId));
           acErrors.push(...(await evaluateCurrentAttemptArtifact(workdir, evidence, layerId)));
+          if (invalidatedEvidenceIds.has(evidence.evidence_id)) {
+            acErrors.push(`${layerId} evidence ${evidence.evidence_id} invalidated by newer failed command`);
+          }
           if (isStaleEvidenceError(acErrors)) {
             staleEvidenceIds.add(evidence.evidence_id);
           }
@@ -96,6 +138,7 @@ export async function evaluateTrustedEvidenceKernel(workdir: string, providedSta
     }
     errors.push(...acErrors);
     acStatuses[acId] = statusForAcErrors(acErrors, requiredLayers.length);
+    acFindings[acId] = acErrors;
   }
 
   const ac010 = evaluateAc010Bootstrap(state, acStatuses);
@@ -105,6 +148,7 @@ export async function evaluateTrustedEvidenceKernel(workdir: string, providedSta
   errors.push(...ac010.errors);
 
   const piStatuses = recomputePlanStatuses(state, acStatuses);
+  const piFindings = planFindings(state, acStatuses, piStatuses);
   const allAcsComplete = Object.keys(state.graph?.acceptance_criteria ?? {}).length > 0 &&
     Object.values(acStatuses).every((status) => status === "complete" || status === "out_of_scope_NA");
   const allPisComplete = Object.keys(state.graph?.plan_items ?? {}).length > 0 &&
@@ -118,6 +162,11 @@ export async function evaluateTrustedEvidenceKernel(workdir: string, providedSta
     ac_statuses: acStatuses,
     pi_statuses: piStatuses,
     stale_evidence_ids: [...staleEvidenceIds],
+    ignored_unregistered_evidence: unregistered.ignored,
+    invalidated_evidence_ids: [...invalidatedEvidenceIds],
+    kernel_order: [...TRUSTED_EVIDENCE_KERNEL_ORDER],
+    ac_findings: acFindings,
+    pi_findings: piFindings,
     harness_task_final_verdict: drift.harness_task_final_verdict
   };
 }
@@ -148,24 +197,13 @@ export function applyTrustedEvidenceKernelResult(state: SuperpowersTaskState, re
   state.gates.final_gate = {
     status: result.product_goal_complete ? "pass" : result.acceptance_target_status,
     kernel: "trusted_evidence_kernel",
-    order: [
-      "load_three_inputs",
-      "recompute_source_hashes",
-      "load_task_state",
-      "load_current_attempt",
-      "load_command_run_records",
-      "load_registered_evidence_records",
-      "discard_stale_evidence",
-      "contradiction_scan",
-      "recompute_every_ac",
-      "recompute_every_pi",
-      "recompute_acceptance_target_status",
-      "recompute_product_goal_complete",
-      "regenerate_derived",
-      "append_event"
-    ],
+    order: result.kernel_order,
     errors: result.errors,
     stale_evidence_ids: result.stale_evidence_ids,
+    ignored_unregistered_evidence: result.ignored_unregistered_evidence,
+    invalidated_evidence_ids: result.invalidated_evidence_ids,
+    ac_findings: result.ac_findings,
+    pi_findings: result.pi_findings,
     harness_task_final_verdict: result.harness_task_final_verdict,
     next_required_actions: state.final.next_required_actions
   };
@@ -214,68 +252,6 @@ function validateAttemptAgainstSources(
       errors.push(`current attempt missing required field ${field}`);
     }
   }
-}
-
-function validateRequiredSpecs(
-  state: SuperpowersTaskState,
-  attempt: ExecutionAttempt | undefined,
-  expectedSpecs: RequiredCommandSpec[],
-  errors: string[]
-): void {
-  const expectedByAc = new Map(expectedSpecs.map((spec) => [spec.ac_id, spec]));
-  for (const [acId, ac] of Object.entries(state.graph?.acceptance_criteria ?? {})) {
-    if (ac.machine_blocking !== true && ac.assertion_result_required !== true) {
-      continue;
-    }
-    const expected = expectedByAc.get(acId);
-    const actual = (state.required_command_specs ?? []).find((spec) => spec.ac_id === acId);
-    if (!expected || !actual) {
-      errors.push(`${acId} missing required_command_spec`);
-      continue;
-    }
-    if (actual.command_spec_id !== expected.command_spec_id) {
-      errors.push(`${acId} command_spec_id mismatch; required command specs must be recompiled from Acceptance Checklist`);
-    }
-  }
-  if (attempt) {
-    const specsHash = requiredCommandSpecsHash(state.required_command_specs ?? []);
-    if (attempt.required_command_specs_hash !== specsHash) {
-      errors.push("required_command_specs_hash mismatch for current attempt");
-    }
-  }
-}
-
-function validateCommandRunsForSpec(state: SuperpowersTaskState, attempt: ExecutionAttempt | undefined, spec: RequiredCommandSpec): string[] {
-  const errors: string[] = [];
-  for (const proofLayer of spec.proof_layers.filter((layer) => isMachineVerifiableLayer(`${spec.ac_id}.${layer}`))) {
-    const run = (state.command_runs ?? []).find(
-      (item) =>
-        item.task_attempt_id === state.current_attempt_id &&
-        item.command_spec_id === spec.command_spec_id &&
-        item.ac_id === spec.ac_id &&
-        item.proof_layer === proofLayer
-    );
-    if (!run) {
-      errors.push(`${spec.ac_id}.${proofLayer} missing current attempt command-run record for command_spec_id ${spec.command_spec_id}`);
-      continue;
-    }
-    errors.push(...validateCommandRun(run, attempt));
-  }
-  return errors;
-}
-
-function validateCommandRun(run: CommandRunRecord, attempt: ExecutionAttempt | undefined): string[] {
-  const errors: string[] = [];
-  if (attempt && run.task_attempt_id !== attempt.task_attempt_id) {
-    errors.push(`${run.command_run_id} stale command run from ${run.task_attempt_id}; expected ${attempt.task_attempt_id}`);
-  }
-  if (run.exit_code !== 0) {
-    errors.push(`${run.command_run_id} command_exit_code=${run.exit_code}; expected 0`);
-  }
-  if (!run.command_line.trim()) {
-    errors.push(`${run.command_run_id} missing command_line`);
-  }
-  return errors;
 }
 
 function validateEvidenceAgainstSpec(
@@ -376,12 +352,24 @@ function recomputePlanStatuses(state: SuperpowersTaskState, acStatuses: Record<s
   return statuses;
 }
 
+function planFindings(state: SuperpowersTaskState, acStatuses: Record<string, string>, piStatuses: Record<string, string>): Record<string, string[]> {
+  const findings: Record<string, string[]> = {};
+  for (const [planId, item] of Object.entries(state.graph?.plan_items ?? {})) {
+    const related = item.related_acs ?? [];
+    findings[planId] = related
+      .filter((acId) => acStatuses[acId] && acStatuses[acId] !== "complete" && acStatuses[acId] !== "out_of_scope_NA")
+      .map((acId) => `${acId} status=${acStatuses[acId]}`)
+      .concat(piStatuses[planId] ? [`${planId} status=${piStatuses[planId]}`] : []);
+  }
+  return findings;
+}
+
 function statusForGlobalErrors(errors: string[], acStatuses: Record<string, string>): TrustedEvidenceKernelResult["acceptance_target_status"] {
   const text = errors.join("\n");
   if (Object.values(acStatuses).includes("under_specified") || /under_specified/i.test(text)) {
     return "under_specified";
   }
-  if (/harness_drift|protected_baseline|source hash mismatch|missing current attempt|required_command_specs_hash|harness_task_missing/i.test(text)) {
+  if (/harness_drift|protected_baseline|source hash mismatch|missing current attempt|required_command_specs_hash|harness_task_missing|scope_conflict_requires_decision/i.test(text)) {
     return "blocked";
   }
   if (/stale|failed|invalid|contradiction|negative evidence|forbidden|bootstrap/i.test(text)) {
@@ -391,7 +379,10 @@ function statusForGlobalErrors(errors: string[], acStatuses: Record<string, stri
 }
 
 function currentAttempt(state: SuperpowersTaskState): ExecutionAttempt | undefined {
-  return (state.attempts ?? []).find((item) => item.task_attempt_id === state.current_attempt_id) ?? (state.attempts ?? []).at(-1);
+  if (!state.current_attempt_id) {
+    return undefined;
+  }
+  return (state.attempts ?? []).find((item) => item.task_attempt_id === state.current_attempt_id);
 }
 
 function isStaleEvidenceError(errors: string[]): boolean {

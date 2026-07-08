@@ -1,0 +1,16 @@
+{
+  "fixture_id": "positive_assertion_missing_or_failed",
+  "category": "assertions",
+  "description": "Missing or failed positive assertions block completion.",
+  "runner_mode": "final_gate",
+  "cli_smoke": false,
+  "preexisting_forbidden_phrase": false,
+  "expected_final_gate_product_goal_complete": false,
+  "expected_acceptance_target_status": "partial",
+  "expected_completion_output_status": "reject",
+  "expected_exit_code": 1,
+  "expected_error_codes": [
+    "positive assertion",
+    "status=failed"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "fixture_id": "ac010_summary_only_without_required_ac",
+  "category": "summary_bootstrap",
+  "description": "AC-010 summary-only evidence cannot bootstrap incomplete required ACs.",
+  "runner_mode": "final_gate",
+  "cli_smoke": false,
+  "preexisting_forbidden_phrase": false,
+  "expected_final_gate_product_goal_complete": false,
+  "expected_acceptance_target_status": "under_specified",
+  "expected_completion_output_status": "blocked",
+  "expected_exit_code": 2,
+  "expected_error_codes": [
+    "final_gate_cannot_bootstrap_from_summary_only",
+    "AC-004"
+  ]
+}

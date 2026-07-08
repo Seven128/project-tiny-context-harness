@@ -3,6 +3,8 @@ import { ensureDir, pathExists, readText, writeTextIfChanged } from "./fs.js";
 import { stableJson, loadSuperpowersState } from "./superpowers-task-state.js";
 import { evaluateProofLayerAssertions, type AssertionStatus } from "./superpowers-task-assertions.js";
 import { type SuperpowersTaskState } from "./superpowers-task-state-schema.js";
+import { completionOutputContractFromState, type CompletionOutputContract } from "./superpowers-task-completion-output.js";
+import { renderFinalCard } from "./superpowers-task-final-card.js";
 
 export interface DerivedSuperpowersArtifacts {
   matrix: Record<string, unknown>;
@@ -13,6 +15,7 @@ export interface DerivedSuperpowersArtifacts {
 export async function deriveSuperpowersArtifacts(workdir: string): Promise<DerivedSuperpowersArtifacts> {
   const state = await loadSuperpowersState(workdir);
   const derived = deriveObjects(state);
+  const contract = completionOutputContractFromState(state);
   const derivedDir = path.join(workdir, "derived");
   await ensureDir(derivedDir);
   const files: string[] = [];
@@ -22,11 +25,12 @@ export async function deriveSuperpowersArtifacts(workdir: string): Promise<Deriv
   await writeDerived(files, path.join(derivedDir, "evidence-index.json"), stableJson(deriveEvidenceIndex(state)));
   await writeDerived(files, path.join(derivedDir, "plan-conformance-matrix.md"), matrixMarkdown(derived.matrix));
   await writeDerived(files, path.join(derivedDir, "final-acceptance-verdict.md"), verdictMarkdown(derived.verdict));
-  await writeDerived(files, path.join(derivedDir, "local-audit.md"), localAuditMarkdown(state));
+  await writeDerived(files, path.join(derivedDir, "local-audit.md"), localAuditMarkdown(state, contract));
   await writeDerived(files, path.join(derivedDir, "progress-ledger.md"), progressMarkdown(derived.progress));
   await writeDerived(files, path.join(derivedDir, "evidence-index.md"), evidenceMarkdown(state));
   await writeDerived(files, path.join(derivedDir, "context-alignment.md"), contextMarkdown(state));
-  await writeDerived(files, path.join(derivedDir, "final-summary.md"), finalSummaryMarkdown(state, derived.verdict));
+  await writeDerived(files, path.join(derivedDir, "final-summary.md"), finalSummaryMarkdown(state, derived.verdict, contract));
+  await writeDerived(files, path.join(derivedDir, "final-card.md"), renderFinalCard(contract, state));
   return { matrix: derived.matrix, verdict: derived.verdict, files };
 }
 
@@ -153,9 +157,28 @@ export function deriveObjects(state: SuperpowersTaskState): {
       .slice(0, 5)
       .map(([layerId]) => layerId)
   };
+  const contract = completionOutputContractFromState(state);
+  const completionMetadata = {
+    completion_output_status: contract.completion_output_status,
+    final_answer_allowed: contract.final_answer_allowed,
+    required_user_visible_status: contract.required_user_visible_status,
+    product_goal_complete: contract.product_goal_complete,
+    acceptance_target_status: contract.acceptance_target_status,
+    audit_task_complete: contract.audit_task_complete
+  };
   return {
-    matrix: { overall_status: allComplete ? "complete" : "partial", items: matrixRows },
-    verdict: { overall_status: allComplete ? "complete" : "partial", acceptance_items: verdictRows },
+    matrix: {
+      diagnostic_scope: "plan_conformance_rows_only",
+      overall_status: allComplete ? "complete" : "partial",
+      ...completionMetadata,
+      items: matrixRows
+    },
+    verdict: {
+      diagnostic_scope: "acceptance_evidence_rows_only",
+      overall_status: allComplete ? "complete" : "partial",
+      ...completionMetadata,
+      acceptance_items: verdictRows
+    },
     progress
   };
 }
@@ -327,12 +350,20 @@ ${rows.map((row) => `- ${row.ac_id}: ${row.status}`).join("\n")}
 `;
 }
 
-function localAuditMarkdown(state: SuperpowersTaskState): string {
+function localAuditMarkdown(state: SuperpowersTaskState, contract: CompletionOutputContract): string {
+  const auditLine =
+    contract.completion_output_status === "accept"
+      ? "Final-gate accepted the current attempt."
+      : "Audit workflow completed; acceptance target not complete.";
   return `# Local Audit
 
 audit_task_complete: ${state.final.audit_task_complete}
 acceptance_target_status: ${state.final.acceptance_target_status}
 product_goal_complete: ${state.final.product_goal_complete}
+completion_output_status: ${contract.completion_output_status}
+final_answer_allowed: ${contract.final_answer_allowed}
+
+${auditLine}
 `;
 }
 
@@ -368,10 +399,28 @@ Technical Context Delta: ${state.context.technical_context_delta}
 `;
 }
 
-function finalSummaryMarkdown(state: SuperpowersTaskState, verdict: Record<string, unknown>): string {
+function finalSummaryMarkdown(state: SuperpowersTaskState, verdict: Record<string, unknown>, contract: CompletionOutputContract): string {
+  const reasons = contract.completion_output_status === "blocked" ? contract.blocked_reasons : contract.rejection_reasons;
+  const reasonBlock = reasons.length > 0 ? reasons.map((reason) => `- ${reason}`).join("\n") : "- none";
+  const auditLine =
+    contract.completion_output_status === "accept"
+      ? "Final-gate accepted the current attempt."
+      : "Audit workflow completed; acceptance target not complete.";
   return `# Final Summary
 
-overall_status: ${verdict.overall_status}
-product_goal_complete: ${state.final.product_goal_complete}
+diagnostic_overall_status: ${verdict.overall_status}
+product_goal_complete: ${contract.product_goal_complete}
+acceptance_target_status: ${contract.acceptance_target_status}
+completion_output_status: ${contract.completion_output_status}
+final_answer_allowed: ${contract.final_answer_allowed}
+required_user_visible_status: ${contract.required_user_visible_status}
+exit_code: ${contract.exit_code}
+
+Final answer: ${contract.final_answer}
+
+${auditLine}
+
+Reasons:
+${reasonBlock}
 `;
 }

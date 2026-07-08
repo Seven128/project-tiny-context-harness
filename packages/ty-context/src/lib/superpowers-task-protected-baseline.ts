@@ -13,15 +13,31 @@ export const PROTECTED_BASELINE_PATHS = [
   ".codex/ty-context-managed/protected-harness-baseline.json",
   "packages/ty-context/source-mappings.yaml",
   "packages/ty-context/src/lib/superpowers-task-gates.ts",
+  "packages/ty-context/src/lib/superpowers-task-completion-output.ts",
+  "packages/ty-context/src/lib/superpowers-task-final-card.ts",
   "packages/ty-context/src/lib/superpowers-task-validator.ts",
   "packages/ty-context/src/lib/superpowers-task-derive.ts",
   "packages/ty-context/src/lib/superpowers-task-evidence.ts",
   "packages/ty-context/src/lib/superpowers-task-evidence-kernel.ts",
+  "packages/ty-context/src/lib/superpowers-task-current-evidence.ts",
+  "packages/ty-context/src/lib/superpowers-task-command-run-correlation.ts",
+  "packages/ty-context/src/lib/superpowers-task-unregistered-evidence.ts",
+  "packages/ty-context/src/lib/superpowers-task-ac010.ts",
+  "packages/ty-context/src/lib/superpowers-task-harness-drift.ts",
+  "packages/ty-context/src/lib/superpowers-task-protected-baseline.ts",
   "packages/ty-context/src/lib/superpowers-task-state-schema.ts",
   ".codex/ty-context-managed/skills/composite-long-task-workflow/SKILL.md",
   ".codex/ty-context-managed/skills/composite-long-task-workflow/references/composite-long-task-workflow-protocol.md",
+  ".codex/ty-context-managed/skills/composite-long-task-workflow/assets/goal-objective.template.md",
+  ".codex/ty-context-managed/skills/composite-long-task-workflow/assets/execution-binding.template.md",
   "packages/ty-context/assets/skills/composite-long-task-workflow/SKILL.md",
-  "packages/ty-context/assets/skills/composite-long-task-workflow/references/composite-long-task-workflow-protocol.md"
+  "packages/ty-context/assets/skills/composite-long-task-workflow/references/composite-long-task-workflow-protocol.md",
+  "packages/ty-context/assets/skills/composite-long-task-workflow/assets/goal-objective.template.md",
+  "packages/ty-context/assets/skills/composite-long-task-workflow/assets/execution-binding.template.md",
+  "tests/ty-context/composite-long-task-completion-output-gate.test.mjs",
+  "tests/ty-context/fixtures/composite-long-task/completion-output-gate/expected-outcomes.json",
+  "tests/ty-context/composite-long-task-false-completion-regression.test.mjs",
+  "tests/ty-context/fixtures/composite-long-task/false-completion-regression/manifest.json"
 ];
 
 export function evaluateProtectedBaseline(state: SuperpowersTaskState): ProtectedBaselineResult {
@@ -55,5 +71,8 @@ function protectedBaselineReason(state: SuperpowersTaskState): boolean {
 }
 
 function currentAttempt(state: SuperpowersTaskState): ExecutionAttempt | undefined {
-  return (state.attempts ?? []).find((item) => item.task_attempt_id === state.current_attempt_id) ?? (state.attempts ?? []).at(-1);
+  if (!state.current_attempt_id) {
+    return undefined;
+  }
+  return (state.attempts ?? []).find((item) => item.task_attempt_id === state.current_attempt_id);
 }

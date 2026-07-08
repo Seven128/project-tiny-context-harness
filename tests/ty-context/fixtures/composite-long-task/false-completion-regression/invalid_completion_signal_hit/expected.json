@@ -1,0 +1,16 @@
+{
+  "fixture_id": "invalid_completion_signal_hit",
+  "category": "assertions",
+  "description": "An invalid completion signal hit blocks completion.",
+  "runner_mode": "final_gate",
+  "cli_smoke": false,
+  "preexisting_forbidden_phrase": false,
+  "expected_final_gate_product_goal_complete": false,
+  "expected_acceptance_target_status": "partial",
+  "expected_completion_output_status": "reject",
+  "expected_exit_code": 1,
+  "expected_error_codes": [
+    "invalid completion signal",
+    "status=failed"
+  ]
+}

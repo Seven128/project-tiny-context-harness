@@ -158,6 +158,7 @@ test("SFC stale passed evidence and current owner-surface failures force final-g
       command_line: "npx playwright test tests/runtime.spec.ts --grep recovery",
       exit_code: 1,
       started_at: "2026-07-02T00:00:00.000Z",
+      completed_at: "2026-07-02T00:01:00.000Z",
       ended_at: "2026-07-02T00:01:00.000Z",
       artifact_paths: ["test-results/.last-run.json"]
     });

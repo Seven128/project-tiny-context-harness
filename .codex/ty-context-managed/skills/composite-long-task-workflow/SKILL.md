@@ -53,6 +53,7 @@ Tiny Context Workflow Contract
 -> generated derived/** views
 -> slice / epoch gates
 -> final-gate computes product_goal_complete
+-> completion-output resolver emits accept / reject / blocked
 ```
 
 The runtime effect is one temporary Codex Goal workflow that combines:
@@ -174,6 +175,7 @@ Superpowers review and verification remain useful execution checks, but they can
 - `workflow-protocol.md` as detailed workflow.
 - `execution-binding.md` as task binding.
 - `product_goal_complete` only by final gate.
+- `completion_output_status` only by final-gate completion-output resolver.
 - `audit_task_complete` not equal to product acceptance.
 - assertion-backed machine-verifiable proof layers and negative evidence scan.
 - forbidden shortcuts.
@@ -181,17 +183,17 @@ Superpowers review and verification remain useful execution checks, but they can
 
 ## Completion State
 
-Agents must not hand-set `product_goal_complete`. Implementation / execution goals complete only when final gate computes `product_goal_complete=true`.
+Agents must not hand-set `product_goal_complete` or `completion_output_status`. Implementation / execution goals may use an unqualified accept/completion answer only when final gate computes `product_goal_complete=true` and the completion-output resolver emits `completion_output_status=accept`.
 
-Final completion is current-attempt-only and owned by the Trusted Evidence Kernel. Legacy v1 evidence, old attempt evidence, stale passed assertion JSON, historical `events.ndjson` completion events, stale `derived/**` views, matrix/verdict/evidence-index/final-summary rows, validator passes, final cards, auditor prose and AC summary-only proof are audit material only. They cannot complete machine-blocking ACs. Current failed command runs, Playwright/JUnit/test-result artifacts, owner DOM forbidden states, source/worktree drift, task-state false/partial status or derived/state mismatch invalidate older positive proof for the same AC/layer.
+Final completion is current-attempt-only and owned by the Trusted Evidence Kernel shared by final gate, `validate-superpowers-state`, state-backed `validate-plan-acceptance` and derived completion views. Legacy v1 evidence, old attempt evidence, stale passed assertion JSON, historical `events.ndjson` completion events, stale `derived/**` views, matrix/verdict/evidence-index/final-summary rows, validator passes, final cards, auditor prose, AC summary-only proof, unregistered temporary JSON and hand-written status files are audit material only. They cannot complete machine-blocking ACs. Current failed command runs, Playwright/JUnit/test-result artifacts, owner DOM forbidden states, source/worktree drift, task-state false/partial status or derived/state mismatch invalidate older positive proof for the same AC/layer.
 
-The final gate recomputes in this order: load the three inputs, recompute source hashes, load task state, load current attempt, load command-run records, load registered EvidenceRecords, discard stale evidence, run contradiction scan, recompute every AC, recompute every PI, recompute `acceptance_target_status`, recompute `product_goal_complete`, regenerate `derived/**` and append an event.
+The final gate recomputes in this order: load the three inputs, recompute source hashes, load task state, resolve the current attempt, load required command specs, load command-run records, load registered EvidenceRecords, discard stale evidence, scan unregistered assertion JSON, run contradiction scan, run AC-010 bootstrap prevention, run under-specified AC checks, run Harness Drift Lock, run protected baseline guard, validate scope conflicts, recompute every AC, recompute every PI, recompute `acceptance_target_status`, recompute `product_goal_complete`, resolve `completion_output_status`, regenerate `derived/**` and append an event.
 
 Canonical proof layers are `code`, `api_schema`, `worker_runtime`, `data_artifact`, `integration`, `ui_browser`, `security_redaction`, `all_provider_all_runner`, `cleanup_stale_scan` and `test`; legacy source aliases map `runtime -> worker_runtime`, `browser -> ui_browser`, `api -> api_schema`, `data -> data_artifact` and `security -> security_redaction`. `code` cannot complete a machine-backed AC by itself. For UI/browser/API/worker/data/integration/security/test/all-provider/cleanup proof layers, do not mark ACs complete from screenshots, final cards, validator passes, matrix/verdict rows or prose evidence. Required machine-verifiable layers need passed `assertion_result`, zero command/assertion exit codes, target AC/PI/layer coverage, passed positive and negative assertions, no invalid completion signal, reviewable artifacts and passed `negative_evidence_scan` with matching target proof layers. Machine-blocking ACs with missing assertion command/artifacts/assertions/invalid signals, manual-only tests, generated-only final evidence, impossible assertion results or UI proof without browser/e2e/smoke/trace evidence are `under_specified`, block the related PI and force `product_goal_complete=false`.
 
 AC-010 / final-gate summary ACs can only summarize fresh EvidenceRecordV2 proof for the other ACs. If AC-010 passes while another required AC is missing, failed, stale or under-specified, invalidate AC-010 with `final_gate_cannot_bootstrap_from_summary_only`.
 
-Harness Drift Lock: `product_task` cannot complete if it changed Playwright specs, tests, assertion generators, AC010 helpers, evidence writers, final-gate, validator, derive, task-state reducer, this workflow Skill/protocol or related Makefile/package test targets. Report `harness_drift_detected`, `acceptance_target_status=blocked`, `product_goal_complete=false` and exactly: `本轮修改了验收工具链或测试本身，不能用被修改后的验收证明同一轮产品完成。请拆成独立 harness_task。` A `harness_task` must have adversarial fixtures with expected final-gate outcomes and a happy-path fixture; it proves harness behavior only and must not declare product completion. `protected-harness-baseline.json` protects final-gate, validator, derive, evidence registration, assertion schema, fixture expected outcomes, workflow protocol, Skill markdown and test runner scripts; product task baseline changes are blocked, harness task baseline changes require a reason and fixture verification.
+Harness Drift Lock: `product_task` cannot complete if it changed Playwright specs, tests, assertion generators, AC010 helpers, evidence writers, final-gate, validator, derive, task-state reducer, this workflow Skill/protocol or related Makefile/package test targets. Report `harness_drift_detected`, `acceptance_target_status=blocked`, `product_goal_complete=false` and exactly: `本轮修改了验收工具链或测试本身，不能用被修改后的验收证明同一轮产品完成。请拆成独立 harness_task。` A `harness_task` must have adversarial fixtures with expected final-gate outcomes and a happy-path fixture; it proves harness behavior only and must not declare product completion. HFC-003 is the durable false-completion regression suite: 35 committed mini workdirs plus one runner cover the Trusted Evidence Kernel, completion-output resolver, generated-output scanner, selected CLI smoke paths and one happy path. `protected-harness-baseline.json` protects final-gate, validator, derive, evidence registration, assertion schema, fixture expected outcomes, workflow protocol, Skill markdown and test runner scripts; product task baseline changes are blocked, harness task baseline changes require a reason and fixture verification.
 
 If `audit_task_complete` is true but `acceptance_target_status` is not complete, report:
 
@@ -200,6 +202,8 @@ Audit workflow completed; acceptance target not complete.
 ```
 
 Do not use unqualified `Goal achieved` or `update_goal(status="complete")` as product acceptance in that case.
+
+If final-gate has not run, the required final answer is `blocked`. If final-gate runs but `product_goal_complete=false` or `acceptance_target_status` is not accepted, the required final answer is `reject` or `blocked`. Validator pass, matrix/verdict row completion, final cards, local audit or stale generated text must never promote the final answer to `accept`.
 
 ## Forbidden Behaviors
 
@@ -227,7 +231,9 @@ Do not claim full alignment while Source-to-Context Coverage or Context-to-Imple
 
 Do not hand-write `product_goal_complete`.
 
-Do not call an implementation / execution Goal complete before final-gate computes `product_goal_complete=true`.
+Do not hand-write `completion_output_status`.
+
+Do not call an implementation / execution Goal complete before final-gate computes `product_goal_complete=true` and `completion_output_status=accept`.
 
 Do not generate, derive, or infer the Technical Realization Plan.
 

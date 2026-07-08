@@ -1,0 +1,12 @@
+{
+  "diagnostic_scope": "acceptance_evidence_rows_only",
+  "overall_status": "partial",
+  "completion_output_status": "blocked",
+  "acceptance_items": [
+    {
+      "ac_id": "AC-001",
+      "category": "under_specified",
+      "status": "partial"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "fixture_id": "owner_surfaces_missing_ui_browser",
+  "category": "ui_proof",
+  "description": "Owner-surface ACs cannot complete without ui_browser proof.",
+  "runner_mode": "final_gate",
+  "cli_smoke": false,
+  "preexisting_forbidden_phrase": false,
+  "expected_final_gate_product_goal_complete": false,
+  "expected_acceptance_target_status": "partial",
+  "expected_completion_output_status": "reject",
+  "expected_exit_code": 1,
+  "expected_error_codes": [
+    "AC-001.ui_browser missing current satisfied proof layer"
+  ]
+}

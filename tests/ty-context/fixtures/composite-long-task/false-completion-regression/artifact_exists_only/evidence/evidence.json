@@ -1,0 +1,517 @@
+[
+  {
+    "schema_version": "evidence-record-v2",
+    "evidence_id": "EV-001",
+    "task_attempt_id": "ATT-TEST-001",
+    "generated_at": "2026-07-01T00:01:00.000Z",
+    "source_bundle_hash": "3ad1cfa4094ae7b8233b57fbf728787e0cabe865183f0c41552bd475acd824e7",
+    "product_source_hash": "70b3f5f1a897e6066c58adfb501c76a1d24eaa21947e58b659ad08e5d045ae62",
+    "technical_plan_hash": "73d589f833c7e667579c9629210a6222abf500da077d9e1757df9aadfe1d2558",
+    "acceptance_checklist_hash": "4e8d45b2222ae00a7c19e33537910672c8d36aa0d855dfef426523c670eda6e7",
+    "git_head": "no-git",
+    "git_status_short": "no-git",
+    "tracked_diff_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "relevant_untracked_hash": "ignored:no-git",
+    "covers_dirty_worktree": true,
+    "worktree_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "command_spec_id": "e2750bb38a02d9b336e0194274c9535e93dc1e1cb3a87db2700e6efb48fd9222",
+    "command_run_id": "CR-worker_runtime",
+    "command_line": "npm test --workspace project-tiny-context-harness",
+    "artifact_path": "tmp/ty-context/plan-acceptance/demo/runtime.json",
+    "artifact_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "artifact_mtime": "2026-07-01T00:01:00.000Z",
+    "target_ac_ids": [
+      "AC-001"
+    ],
+    "target_pi_ids": [
+      "PI-001"
+    ],
+    "target_proof_layers": [
+      "AC-001.code",
+      "AC-001.worker_runtime"
+    ],
+    "slice_id": "S-001",
+    "type": "artifact-exists-only",
+    "freshness": {
+      "created_at": "2026-06-29T00:00:00.000Z",
+      "valid_for": "current_worktree",
+      "stale_after": null
+    },
+    "command": "test -f runtime.json",
+    "command_exit_code": 0,
+    "artifact_paths": [
+      "tmp/ty-context/plan-acceptance/demo/runtime.json"
+    ],
+    "proves": [
+      "AC-001.code",
+      "AC-001.worker_runtime"
+    ],
+    "does_not_prove": [
+      "AC-001.ui_browser"
+    ],
+    "redaction": {
+      "checked": true,
+      "contains_secret": false
+    },
+    "reviewability": {
+      "external_reviewer_can_reproduce": true,
+      "reproduction_steps": "Run the recorded command."
+    },
+    "assertion_result": {
+      "schema_version": "assertion-result-v2",
+      "status": "passed",
+      "runner": "node-runtime",
+      "exit_code": 0,
+      "target_ac_ids": [
+        "AC-001"
+      ],
+      "target_pi_ids": [
+        "PI-001"
+      ],
+      "target_proof_layers": [
+        "AC-001.worker_runtime"
+      ],
+      "positive_assertions": [
+        {
+          "id": "required_behavior_observed",
+          "status": "passed",
+          "expected": "observed",
+          "actual": "observed"
+        },
+        {
+          "id": "job_created",
+          "status": "passed",
+          "expected": "job id",
+          "actual": "job-123"
+        },
+        {
+          "id": "durable_final_state",
+          "status": "passed",
+          "expected": "complete",
+          "actual": "complete"
+        }
+      ],
+      "negative_assertions": [
+        {
+          "id": "no-forbidden-final-state",
+          "status": "passed"
+        }
+      ],
+      "invalid_completion_signals": [
+        {
+          "id": "no-unchanged-page",
+          "status": "passed",
+          "forbidden_text": "页面无明显变化"
+        }
+      ],
+      "required_test_ids": [
+        "tests/runtime.spec.ts"
+      ],
+      "artifacts": [
+        "tmp/ty-context/plan-acceptance/demo/runtime.json"
+      ]
+    },
+    "negative_evidence_scan": {
+      "schema_version": "negative-evidence-scan-v1",
+      "status": "passed",
+      "target_ac_ids": [
+        "AC-001"
+      ],
+      "target_proof_layers": [
+        "AC-001.worker_runtime"
+      ],
+      "invalid_completion_signals_checked": [
+        "页面无明显变化"
+      ],
+      "owner_surface": "Operations",
+      "route": "/operations",
+      "forbidden_findings": [
+        {
+          "id": "no-unverified",
+          "status": "not_found",
+          "forbidden_text": "未验证"
+        },
+        {
+          "id": "no-unavailable",
+          "status": "not_found",
+          "forbidden_text": "不可用"
+        },
+        {
+          "id": "no-temp-unavailable",
+          "status": "not_found",
+          "forbidden_text": "暂不可用"
+        },
+        {
+          "id": "no-unchanged-page",
+          "status": "not_found",
+          "forbidden_text": "页面无明显变化"
+        }
+      ],
+      "required_findings": [
+        {
+          "id": "final_status_chinese",
+          "status": "passed",
+          "expected": "已完成",
+          "actual": "已完成"
+        }
+      ],
+      "artifacts": [
+        "tmp/ty-context/plan-acceptance/demo/runtime.json"
+      ]
+    }
+  },
+  {
+    "schema_version": "evidence-record-v2",
+    "evidence_id": "EV-002",
+    "task_attempt_id": "ATT-TEST-001",
+    "generated_at": "2026-07-01T00:01:00.000Z",
+    "source_bundle_hash": "3ad1cfa4094ae7b8233b57fbf728787e0cabe865183f0c41552bd475acd824e7",
+    "product_source_hash": "70b3f5f1a897e6066c58adfb501c76a1d24eaa21947e58b659ad08e5d045ae62",
+    "technical_plan_hash": "73d589f833c7e667579c9629210a6222abf500da077d9e1757df9aadfe1d2558",
+    "acceptance_checklist_hash": "4e8d45b2222ae00a7c19e33537910672c8d36aa0d855dfef426523c670eda6e7",
+    "git_head": "no-git",
+    "git_status_short": "no-git",
+    "tracked_diff_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "relevant_untracked_hash": "ignored:no-git",
+    "covers_dirty_worktree": true,
+    "worktree_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "command_spec_id": "e2750bb38a02d9b336e0194274c9535e93dc1e1cb3a87db2700e6efb48fd9222",
+    "command_run_id": "CR-ui_browser",
+    "command_line": "npx playwright test tests/runtime.spec.ts --grep recovery",
+    "artifact_path": "tmp/ty-context/plan-acceptance/demo/ui-assertion-report.json",
+    "artifact_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "artifact_mtime": "2026-07-01T00:01:00.000Z",
+    "target_ac_ids": [
+      "AC-001"
+    ],
+    "target_pi_ids": [
+      "PI-001"
+    ],
+    "target_proof_layers": [
+      "AC-001.ui_browser"
+    ],
+    "slice_id": "S-001",
+    "type": "playwright_assertion",
+    "freshness": {
+      "created_at": "2026-06-29T00:00:00.000Z",
+      "valid_for": "current_worktree",
+      "stale_after": null
+    },
+    "command": "npx playwright test tests/runtime.spec.ts --grep recovery",
+    "command_exit_code": 0,
+    "artifact_paths": [
+      "tmp/ty-context/plan-acceptance/demo/browser.png",
+      "tmp/ty-context/plan-acceptance/demo/playwright-trace.zip",
+      "tmp/ty-context/plan-acceptance/demo/ui-assertion-report.json"
+    ],
+    "proves": [
+      "AC-001.ui_browser"
+    ],
+    "does_not_prove": [
+      "AC-001.security"
+    ],
+    "redaction": {
+      "checked": true,
+      "contains_secret": false
+    },
+    "reviewability": {
+      "external_reviewer_can_reproduce": true,
+      "reproduction_steps": "Run the recorded Playwright command and inspect the trace/report."
+    },
+    "assertion_result": {
+      "schema_version": "assertion-result-v2",
+      "status": "passed",
+      "runner": "playwright",
+      "exit_code": 0,
+      "target_ac_ids": [
+        "AC-001"
+      ],
+      "target_pi_ids": [
+        "PI-001"
+      ],
+      "target_proof_layers": [
+        "AC-001.ui_browser"
+      ],
+      "owner_surface": "Operations",
+      "route": "/operations",
+      "action": "start recovery and wait for run_id job-123 to complete",
+      "positive_assertions": [
+        {
+          "id": "required_behavior_observed",
+          "status": "passed",
+          "expected": "observed",
+          "actual": "observed"
+        },
+        {
+          "id": "ui_owner_surface_loaded",
+          "status": "passed",
+          "expected": "Operations",
+          "actual": "Operations"
+        },
+        {
+          "id": "run_id_present",
+          "status": "passed",
+          "expected": "job-123",
+          "actual": "job-123"
+        },
+        {
+          "id": "polling_observed",
+          "status": "passed",
+          "expected": "complete",
+          "actual": "complete"
+        },
+        {
+          "id": "final_status_chinese",
+          "status": "passed",
+          "expected": "已完成",
+          "actual": "已完成"
+        }
+      ],
+      "negative_assertions": [
+        {
+          "id": "no-forbidden-final-state",
+          "status": "passed"
+        },
+        {
+          "id": "no-unverified",
+          "status": "passed",
+          "forbidden_text": "未验证"
+        },
+        {
+          "id": "no-unavailable",
+          "status": "passed",
+          "forbidden_text": "不可用"
+        },
+        {
+          "id": "no-temp-unavailable",
+          "status": "passed",
+          "forbidden_text": "暂不可用"
+        },
+        {
+          "id": "no-unchanged-page",
+          "status": "passed",
+          "forbidden_text": "页面无明显变化"
+        }
+      ],
+      "invalid_completion_signals": [
+        {
+          "id": "no-unchanged-page",
+          "status": "passed",
+          "forbidden_text": "页面无明显变化"
+        }
+      ],
+      "required_test_ids": [
+        "tests/runtime.spec.ts"
+      ],
+      "artifacts": [
+        "tmp/ty-context/plan-acceptance/demo/browser.png",
+        "tmp/ty-context/plan-acceptance/demo/playwright-trace.zip",
+        "tmp/ty-context/plan-acceptance/demo/ui-assertion-report.json"
+      ]
+    },
+    "negative_evidence_scan": {
+      "schema_version": "negative-evidence-scan-v1",
+      "status": "passed",
+      "target_ac_ids": [
+        "AC-001"
+      ],
+      "target_proof_layers": [
+        "AC-001.ui_browser"
+      ],
+      "invalid_completion_signals_checked": [
+        "未验证",
+        "不可用",
+        "暂不可用",
+        "页面无明显变化"
+      ],
+      "owner_surface": "Operations",
+      "route": "/operations",
+      "forbidden_findings": [
+        {
+          "id": "no-unverified",
+          "status": "not_found",
+          "forbidden_text": "未验证"
+        },
+        {
+          "id": "no-unavailable",
+          "status": "not_found",
+          "forbidden_text": "不可用"
+        },
+        {
+          "id": "no-temp-unavailable",
+          "status": "not_found",
+          "forbidden_text": "暂不可用"
+        },
+        {
+          "id": "no-unchanged-page",
+          "status": "not_found",
+          "forbidden_text": "页面无明显变化"
+        }
+      ],
+      "required_findings": [
+        {
+          "id": "final_status_chinese",
+          "status": "passed",
+          "expected": "已完成",
+          "actual": "已完成"
+        }
+      ],
+      "artifacts": [
+        "tmp/ty-context/plan-acceptance/demo/ui-assertion-report.json"
+      ]
+    }
+  },
+  {
+    "schema_version": "evidence-record-v2",
+    "evidence_id": "EV-003",
+    "task_attempt_id": "ATT-TEST-001",
+    "generated_at": "2026-07-01T00:01:00.000Z",
+    "source_bundle_hash": "3ad1cfa4094ae7b8233b57fbf728787e0cabe865183f0c41552bd475acd824e7",
+    "product_source_hash": "70b3f5f1a897e6066c58adfb501c76a1d24eaa21947e58b659ad08e5d045ae62",
+    "technical_plan_hash": "73d589f833c7e667579c9629210a6222abf500da077d9e1757df9aadfe1d2558",
+    "acceptance_checklist_hash": "4e8d45b2222ae00a7c19e33537910672c8d36aa0d855dfef426523c670eda6e7",
+    "git_head": "no-git",
+    "git_status_short": "no-git",
+    "tracked_diff_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "relevant_untracked_hash": "ignored:no-git",
+    "covers_dirty_worktree": true,
+    "worktree_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "command_spec_id": "e2750bb38a02d9b336e0194274c9535e93dc1e1cb3a87db2700e6efb48fd9222",
+    "command_run_id": "CR-test",
+    "command_line": "npm test --workspace project-tiny-context-harness",
+    "artifact_path": "tmp/ty-context/plan-acceptance/demo/runtime.json",
+    "artifact_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "artifact_mtime": "2026-07-01T00:01:00.000Z",
+    "target_ac_ids": [
+      "AC-001"
+    ],
+    "target_pi_ids": [
+      "PI-001"
+    ],
+    "target_proof_layers": [
+      "AC-001.test"
+    ],
+    "slice_id": "S-001",
+    "type": "test_assertion",
+    "freshness": {
+      "created_at": "2026-06-29T00:00:00.000Z",
+      "valid_for": "current_worktree",
+      "stale_after": null
+    },
+    "command": "npm test --workspace project-tiny-context-harness",
+    "command_exit_code": 0,
+    "artifact_paths": [
+      "tmp/ty-context/plan-acceptance/demo/runtime.json"
+    ],
+    "proves": [
+      "AC-001.test"
+    ],
+    "does_not_prove": [
+      "all-provider coverage"
+    ],
+    "redaction": {
+      "checked": true,
+      "contains_secret": false
+    },
+    "reviewability": {
+      "external_reviewer_can_reproduce": true,
+      "reproduction_steps": "Run the recorded command."
+    },
+    "assertion_result": {
+      "schema_version": "assertion-result-v2",
+      "status": "passed",
+      "runner": "node:test",
+      "exit_code": 0,
+      "target_ac_ids": [
+        "AC-001"
+      ],
+      "target_pi_ids": [
+        "PI-001"
+      ],
+      "target_proof_layers": [
+        "AC-001.test"
+      ],
+      "positive_assertions": [
+        {
+          "id": "required_behavior_observed",
+          "status": "passed",
+          "expected": "observed",
+          "actual": "observed"
+        },
+        {
+          "id": "required_test_passed",
+          "status": "passed",
+          "expected": "0 failures",
+          "actual": "0 failures"
+        }
+      ],
+      "negative_assertions": [
+        {
+          "id": "no-forbidden-final-state",
+          "status": "passed"
+        }
+      ],
+      "invalid_completion_signals": [
+        {
+          "id": "no-unchanged-page",
+          "status": "passed",
+          "forbidden_text": "页面无明显变化"
+        }
+      ],
+      "required_test_ids": [
+        "tests/runtime.spec.ts"
+      ],
+      "artifacts": [
+        "tmp/ty-context/plan-acceptance/demo/runtime.json"
+      ]
+    },
+    "negative_evidence_scan": {
+      "schema_version": "negative-evidence-scan-v1",
+      "status": "passed",
+      "target_ac_ids": [
+        "AC-001"
+      ],
+      "target_proof_layers": [
+        "AC-001.test"
+      ],
+      "invalid_completion_signals_checked": [
+        "页面无明显变化"
+      ],
+      "owner_surface": "Operations",
+      "route": "/operations",
+      "forbidden_findings": [
+        {
+          "id": "no-unverified",
+          "status": "not_found",
+          "forbidden_text": "未验证"
+        },
+        {
+          "id": "no-unavailable",
+          "status": "not_found",
+          "forbidden_text": "不可用"
+        },
+        {
+          "id": "no-temp-unavailable",
+          "status": "not_found",
+          "forbidden_text": "暂不可用"
+        },
+        {
+          "id": "no-unchanged-page",
+          "status": "not_found",
+          "forbidden_text": "页面无明显变化"
+        }
+      ],
+      "required_findings": [
+        {
+          "id": "final_status_chinese",
+          "status": "passed",
+          "expected": "已完成",
+          "actual": "已完成"
+        }
+      ],
+      "artifacts": [
+        "tmp/ty-context/plan-acceptance/demo/runtime.json"
+      ]
+    }
+  }
+]

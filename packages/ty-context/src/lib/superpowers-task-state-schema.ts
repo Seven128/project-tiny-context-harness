@@ -84,6 +84,7 @@ export type SuperpowersAcceptanceScope =
   | "full_population_operation"
   | "full_population_not_required";
 export type SuperpowersScopeFitDecision = "fit_for_three_inputs" | "selected_from_split" | "blocked_for_decision" | "";
+export type CompletionOutputStatus = "accept" | "reject" | "blocked";
 
 export interface SuperpowersTaskState {
   meta: {
@@ -96,6 +97,7 @@ export interface SuperpowersTaskState {
     product_goal_complete: boolean;
     acceptance_target_status: string;
     audit_task_complete: boolean;
+    completion_output_status?: CompletionOutputStatus;
   };
   sources: Record<string, SuperpowersSourceRecord>;
   context: {
@@ -125,6 +127,15 @@ export interface SuperpowersTaskState {
     product_goal_complete: boolean;
     acceptance_target_status: string;
     audit_task_complete: boolean;
+    completion_output_status?: CompletionOutputStatus;
+    final_answer_allowed?: boolean;
+    required_user_visible_status?: "accepted" | "rejected" | "blocked";
+    final_answer?: CompletionOutputStatus;
+    exit_code?: 0 | 1 | 2;
+    blocked_reasons?: string[];
+    rejection_reasons?: string[];
+    generated_output_mismatch?: boolean;
+    false_completion_phrase_findings?: unknown[];
     completion_basis: string[];
     next_required_actions?: string[];
   };
@@ -174,6 +185,7 @@ export interface CommandRunRecord {
   command_line: string;
   exit_code: number;
   started_at: string;
+  completed_at?: string;
   ended_at: string;
   artifact_paths: string[];
 }
@@ -360,11 +372,16 @@ export interface SuperpowersEvidenceRecord {
   schema_version?: "evidence-record-v1" | "evidence-record-v2" | string;
   evidence_id: string;
   task_attempt_id?: string;
+  generated_at?: string;
   source_bundle_hash?: string;
   product_source_hash?: string;
   technical_plan_hash?: string;
   acceptance_checklist_hash?: string;
   git_head?: string;
+  git_status_short?: string;
+  tracked_diff_hash?: string;
+  relevant_untracked_hash?: string;
+  covers_dirty_worktree?: boolean;
   worktree_fingerprint?: string;
   command_spec_id?: string;
   command_run_id?: string;

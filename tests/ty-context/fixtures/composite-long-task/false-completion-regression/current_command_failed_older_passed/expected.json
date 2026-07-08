@@ -1,0 +1,16 @@
+{
+  "fixture_id": "current_command_failed_older_passed",
+  "category": "command_run",
+  "description": "Current failed command-run evidence cannot be covered by an older passed record.",
+  "runner_mode": "final_gate",
+  "cli_smoke": false,
+  "preexisting_forbidden_phrase": false,
+  "expected_final_gate_product_goal_complete": false,
+  "expected_acceptance_target_status": "invalidated",
+  "expected_completion_output_status": "reject",
+  "expected_exit_code": 1,
+  "expected_error_codes": [
+    "newer failed command invalidates",
+    "command_exit_code=1"
+  ]
+}

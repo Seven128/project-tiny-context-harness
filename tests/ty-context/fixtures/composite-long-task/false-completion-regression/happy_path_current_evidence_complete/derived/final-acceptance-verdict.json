@@ -1,0 +1,12 @@
+{
+  "diagnostic_scope": "acceptance_evidence_rows_only",
+  "overall_status": "complete",
+  "completion_output_status": "accept",
+  "acceptance_items": [
+    {
+      "ac_id": "AC-001",
+      "category": "happy_path",
+      "status": "complete"
+    }
+  ]
+}

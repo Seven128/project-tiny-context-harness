@@ -1,0 +1,16 @@
+{
+  "fixture_id": "under_specified_machine_blocking_ac",
+  "category": "under_specified",
+  "description": "Machine-blocking ACs without assertion contract cannot complete.",
+  "runner_mode": "final_gate",
+  "cli_smoke": false,
+  "preexisting_forbidden_phrase": false,
+  "expected_final_gate_product_goal_complete": false,
+  "expected_acceptance_target_status": "under_specified",
+  "expected_completion_output_status": "blocked",
+  "expected_exit_code": 2,
+  "expected_error_codes": [
+    "under_specified",
+    "assertion_command is required"
+  ]
+}

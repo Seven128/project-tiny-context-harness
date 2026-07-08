@@ -1,0 +1,52 @@
+{
+  "final_gate_false_final_summary_completed": {
+    "product_goal_complete": false,
+    "acceptance_target_status": "partial",
+    "completion_output_status": "reject"
+  },
+  "final_gate_false_final_card_completed": {
+    "product_goal_complete": false,
+    "acceptance_target_status": "partial",
+    "completion_output_status": "reject"
+  },
+  "final_gate_false_matrix_passed": {
+    "product_goal_complete": false,
+    "acceptance_target_status": "partial",
+    "completion_output_status": "reject"
+  },
+  "final_gate_not_run_summary_completed": {
+    "product_goal_complete": false,
+    "acceptance_target_status": "not_run",
+    "completion_output_status": "blocked"
+  },
+  "validator_pass_final_gate_false": {
+    "product_goal_complete": false,
+    "acceptance_target_status": "partial",
+    "completion_output_status": "reject"
+  },
+  "audit_task_complete_acceptance_partial": {
+    "product_goal_complete": false,
+    "acceptance_target_status": "partial",
+    "completion_output_status": "reject"
+  },
+  "goal_objective_allows_update_goal_complete_on_false": {
+    "product_goal_complete": false,
+    "acceptance_target_status": "partial",
+    "completion_output_status": "reject"
+  },
+  "execution_binding_completed_on_false": {
+    "product_goal_complete": false,
+    "acceptance_target_status": "partial",
+    "completion_output_status": "reject"
+  },
+  "false_completion_phrase_scan": {
+    "product_goal_complete": false,
+    "acceptance_target_status": "partial",
+    "completion_output_status": "reject"
+  },
+  "happy_path_final_gate_true_outputs_accept": {
+    "product_goal_complete": true,
+    "acceptance_target_status": "complete",
+    "completion_output_status": "accept"
+  }
+}

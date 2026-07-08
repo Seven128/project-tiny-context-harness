@@ -98,8 +98,20 @@ export async function runCompositeLongTaskCommand(
   if (subcommand === "final-gate") {
     const result = await runFinalGate(workdir);
     console.log(`final gate product_goal_complete=${result.product_goal_complete}`);
-    if (!result.product_goal_complete) {
-      process.exitCode = 1;
+    console.log(`acceptance_target_status=${result.acceptance_target_status}`);
+    console.log(`completion_output_status=${result.completion_output_status}`);
+    console.log(`final_answer_allowed=${result.final_answer_allowed}`);
+    console.log(`required_user_visible_status=${result.required_user_visible_status}`);
+    console.log(`exit_code=${result.exit_code}`);
+    console.log(`audit_task_complete=${result.audit_task_complete}`);
+    if (result.blocked_reasons.length > 0) {
+      console.log(`blocked_reasons=${result.blocked_reasons.join("; ")}`);
+    }
+    if (result.rejection_reasons.length > 0) {
+      console.log(`rejection_reasons=${result.rejection_reasons.join("; ")}`);
+    }
+    if (!result.final_answer_allowed) {
+      process.exitCode = result.exit_code;
       for (const error of result.errors) {
         console.error(`error: ${error}`);
       }
@@ -139,7 +151,7 @@ function help(commandName: string, showRenderGoal: boolean): void {
   derive <workdir>                       Generate derived/** views
   slice-gate <workdir> --slice <id>      Validate one slice has real progress
   epoch-gate <workdir> --epoch <id>      Refresh shared epoch evidence views
-  final-gate <workdir>                   Compute product_goal_complete
+  final-gate <workdir>                   Compute product_goal_complete and completion_output_status
   next-slices <workdir> --limit 5        Recommend next proof clusters${renderGoal}`);
 }
 

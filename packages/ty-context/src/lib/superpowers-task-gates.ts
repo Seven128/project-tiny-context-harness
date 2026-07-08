@@ -2,7 +2,15 @@ import { appendSuperpowersEvent } from "./superpowers-task-events.js";
 import { deriveSuperpowersArtifacts } from "./superpowers-task-derive.js";
 import { validatePlanAcceptance } from "./plan-acceptance-validator.js";
 import { loadSuperpowersState, saveSuperpowersState } from "./superpowers-task-state.js";
+import {
+  applyCompletionOutputContract,
+  completionPhraseFindingMessages,
+  resolveCompletionOutputStatus,
+  scanGeneratedCompletionOutputSurfaces,
+  type CompletionOutputContract
+} from "./superpowers-task-completion-output.js";
 import { applyTrustedEvidenceKernelResult, evaluateTrustedEvidenceKernel, type TrustedEvidenceKernelResult } from "./superpowers-task-evidence-kernel.js";
+import { isRecord } from "./superpowers-task-state-schema.js";
 import { validateSuperpowersState } from "./superpowers-task-validator.js";
 
 export async function runSliceGate(workdir: string, sliceId: string): Promise<{ passed: boolean; messages: string[] }> {
@@ -25,7 +33,7 @@ export async function runEpochGate(workdir: string, epochId: string): Promise<{ 
   return { passed: true, messages: ["epoch derived artifacts refreshed"] };
 }
 
-export async function runFinalGate(workdir: string): Promise<{ product_goal_complete: boolean; errors: string[] }> {
+export async function runFinalGate(workdir: string): Promise<CompletionOutputContract & { errors: string[] }> {
   const state = await loadSuperpowersState(workdir);
   const kernel = await evaluateTrustedEvidenceKernel(workdir, state);
   applyTrustedEvidenceKernelResult(state, kernel);
@@ -35,16 +43,20 @@ export async function runFinalGate(workdir: string): Promise<{ product_goal_comp
   const report = await validateSuperpowersState(workdir, [workdir]);
   const acceptanceReport = await validatePlanAcceptance(workdir, [workdir]);
   const latest = await loadSuperpowersState(workdir);
-  const errors = [...new Set([...kernel.errors, ...report.errors, ...acceptanceReport.errors])];
-  const complete = kernel.product_goal_complete && errors.length === 0;
+  let errors = [...new Set([...kernel.errors, ...report.errors, ...acceptanceReport.errors])];
+  let complete = kernel.product_goal_complete && errors.length === 0;
   const acceptanceStatus = complete ? "complete" : acceptanceStatusForErrors(errors, kernel);
   const nextRequiredActions = complete ? [] : nextActionsForErrors(errors);
-  latest.final.product_goal_complete = complete;
-  latest.meta.product_goal_complete = complete;
-  latest.final.acceptance_target_status = acceptanceStatus;
-  latest.meta.acceptance_target_status = latest.final.acceptance_target_status;
-  latest.final.audit_task_complete = true;
-  latest.meta.audit_task_complete = true;
+  let contract = resolveCompletionOutputStatus({
+    final_gate_ran: true,
+    product_goal_complete: complete,
+    acceptance_target_status: acceptanceStatus,
+    audit_task_complete: true,
+    validator_errors: report.errors,
+    acceptance_validator_errors: acceptanceReport.errors,
+    rejection_reasons: complete ? [] : nextRequiredActions
+  });
+  applyCompletionOutputContract(latest, contract);
   latest.final.completion_basis = complete
     ? ["trusted_evidence_kernel", "current_attempt_evidence", "negative_evidence_scan_passed", "harness_drift_lock_passed"]
     : [];
@@ -53,31 +65,65 @@ export async function runFinalGate(workdir: string): Promise<{ product_goal_comp
   latest.gates.final_gate = {
     status: complete ? "pass" : acceptanceStatus,
     kernel: "trusted_evidence_kernel",
-    order: [
-      "load_three_inputs",
-      "recompute_source_hashes",
-      "load_task_state",
-      "load_current_attempt",
-      "load_command_run_records",
-      "load_registered_evidence_records",
-      "discard_stale_evidence",
-      "contradiction_scan",
-      "recompute_every_ac",
-      "recompute_every_pi",
-      "recompute_acceptance_target_status",
-      "recompute_product_goal_complete",
-      "regenerate_derived",
-      "append_event"
-    ],
+    order: kernel.kernel_order,
     errors,
     stale_evidence_ids: kernel.stale_evidence_ids,
+    ignored_unregistered_evidence: kernel.ignored_unregistered_evidence,
+    invalidated_evidence_ids: kernel.invalidated_evidence_ids,
+    ac_findings: kernel.ac_findings,
+    pi_findings: kernel.pi_findings,
     harness_task_final_verdict: kernel.harness_task_final_verdict,
-    next_required_actions: nextRequiredActions
+    next_required_actions: nextRequiredActions,
+    completion_output_status: contract.completion_output_status,
+    final_answer_allowed: contract.final_answer_allowed,
+    required_user_visible_status: contract.required_user_visible_status,
+    exit_code: contract.exit_code,
+    blocked_reasons: contract.blocked_reasons,
+    rejection_reasons: contract.rejection_reasons,
+    generated_output_mismatch: contract.generated_output_mismatch
   };
   await saveSuperpowersState(workdir, latest);
   await deriveSuperpowersArtifacts(workdir);
-  await appendSuperpowersEvent(workdir, "final_gate", { product_goal_complete: complete });
-  return { product_goal_complete: complete, errors };
+  const outputFindings = await scanGeneratedCompletionOutputSurfaces(workdir, contract);
+  if (outputFindings.length > 0) {
+    errors = [...new Set([...errors, ...completionPhraseFindingMessages(outputFindings)])];
+    complete = false;
+    contract = resolveCompletionOutputStatus({
+      final_gate_ran: true,
+      product_goal_complete: false,
+      acceptance_target_status: acceptanceStatusForErrors(errors, kernel),
+      audit_task_complete: true,
+      validator_errors: errors,
+      generated_output_mismatch: true
+    });
+    const blockedLatest = await loadSuperpowersState(workdir);
+    applyCompletionOutputContract(blockedLatest, contract);
+    blockedLatest.final.completion_basis = [];
+    blockedLatest.final.next_required_actions = nextActionsForErrors(errors);
+    blockedLatest.gates.validator = { status: "blocked", errors };
+    blockedLatest.gates.final_gate = {
+      ...(isRecord(blockedLatest.gates.final_gate) ? blockedLatest.gates.final_gate : {}),
+      status: contract.completion_output_status,
+      errors,
+      next_required_actions: blockedLatest.final.next_required_actions,
+      completion_output_status: contract.completion_output_status,
+      final_answer_allowed: contract.final_answer_allowed,
+      required_user_visible_status: contract.required_user_visible_status,
+      exit_code: contract.exit_code,
+      blocked_reasons: contract.blocked_reasons,
+      rejection_reasons: contract.rejection_reasons,
+      generated_output_mismatch: contract.generated_output_mismatch,
+      false_completion_phrase_findings: outputFindings
+    };
+    blockedLatest.final.false_completion_phrase_findings = outputFindings;
+    await saveSuperpowersState(workdir, blockedLatest);
+    await deriveSuperpowersArtifacts(workdir);
+  }
+  await appendSuperpowersEvent(workdir, "final_gate", {
+    product_goal_complete: contract.product_goal_complete,
+    completion_output_status: contract.completion_output_status
+  });
+  return { ...contract, errors };
 }
 
 function acceptanceStatusForErrors(errors: string[], kernel?: TrustedEvidenceKernelResult): "partial" | "blocked" | "invalidated" | "under_specified" {
@@ -121,4 +167,3 @@ function nextActionsForErrors(errors: string[]): string[] {
     return error;
   });
 }
-

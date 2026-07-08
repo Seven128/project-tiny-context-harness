@@ -59,7 +59,8 @@ export async function initializeSuperpowersTask(
       goal_type: options.goalType ?? "implementation",
       product_goal_complete: false,
       acceptance_target_status: "not_run",
-      audit_task_complete: false
+      audit_task_complete: false,
+      completion_output_status: "blocked"
     },
     sources: await sourceRecords(workdir),
     context: {
@@ -106,6 +107,14 @@ export async function initializeSuperpowersTask(
       product_goal_complete: false,
       acceptance_target_status: "not_run",
       audit_task_complete: false,
+      completion_output_status: "blocked",
+      final_answer_allowed: false,
+      required_user_visible_status: "blocked",
+      final_answer: "blocked",
+      exit_code: 2,
+      blocked_reasons: ["final_gate_not_run"],
+      rejection_reasons: [],
+      generated_output_mismatch: false,
       completion_basis: [],
       next_required_actions: []
     }

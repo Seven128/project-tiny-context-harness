@@ -14,7 +14,8 @@ const HARNESS_PATH_PATTERNS = [
   /(^|\/)playwright\.config\./i,
   /(^|\/).*\.spec\.[cm]?[jt]sx?$/i,
   /(^|\/).*\.test\.[cm]?[jt]sx?$/i,
-  /superpowers-task-(assertions|evidence|evidence-kernel|current-evidence|command-specs|ac010|gates|validator|derive|state|state-schema|state-shape|under-specified|protected-baseline|harness-drift)\.ts$/i,
+  /(^|\/)tests\/ty-context\/fixtures\/composite-long-task\//i,
+  /superpowers-task-(assertions|evidence|evidence-kernel|current-evidence|command-specs|command-run-correlation|unregistered-evidence|completion-output|final-card|ac010|gates|validator|derive|state|state-schema|state-shape|under-specified|protected-baseline|harness-drift)\.ts$/i,
   /(^|\/)(\.codex\/ty-context-managed|packages\/ty-context\/assets)\/skills\/composite-long-task-workflow\//i,
   /composite-long-task-workflow-protocol\.md$/i,
   /(^|\/)Makefile$/i,
@@ -93,7 +94,10 @@ function harnessTaskFixtureVerdict(state: SuperpowersTaskState, changedFiles: st
 }
 
 function currentAttempt(state: SuperpowersTaskState): ExecutionAttempt | undefined {
-  return (state.attempts ?? []).find((item) => item.task_attempt_id === state.current_attempt_id) ?? (state.attempts ?? []).at(-1);
+  if (!state.current_attempt_id) {
+    return undefined;
+  }
+  return (state.attempts ?? []).find((item) => item.task_attempt_id === state.current_attempt_id);
 }
 
 function changedFilesFor(attempt: ExecutionAttempt | undefined): string[] {
