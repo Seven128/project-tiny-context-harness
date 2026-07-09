@@ -85,6 +85,36 @@ export type SuperpowersAcceptanceScope =
   | "full_population_not_required";
 export type SuperpowersScopeFitDecision = "fit_for_three_inputs" | "selected_from_split" | "blocked_for_decision" | "";
 export type CompletionOutputStatus = "accept" | "reject" | "blocked";
+export type FinalGateBlockerCategory =
+  | "none"
+  | "product_evidence_failed"
+  | "missing_current_evidence"
+  | "stale_or_contradictory_evidence"
+  | "generated_output_mismatch"
+  | "self_recoverable_generated_output_mismatch"
+  | "transient_state_bookkeeping"
+  | "environment_blocked"
+  | "contract_blocked"
+  | "harness_drift_blocked";
+
+export interface FinalGateCandidateStateRecord {
+  final_gate_ran: boolean;
+  product_goal_complete: boolean;
+  acceptance_target_status: string;
+  completion_output_status: CompletionOutputStatus;
+  generated_output_mismatch: boolean;
+  source: string;
+}
+
+export interface FinalGateBlockerTriageRecord {
+  category: FinalGateBlockerCategory;
+  self_recoverable: boolean;
+  recovery_attempted: boolean;
+  recovery_action: string;
+  next_action: string;
+  details: string[];
+  blocker_count: number;
+}
 
 export interface SuperpowersTaskState {
   meta: {
@@ -136,6 +166,8 @@ export interface SuperpowersTaskState {
     rejection_reasons?: string[];
     generated_output_mismatch?: boolean;
     false_completion_phrase_findings?: unknown[];
+    blocker_triage?: FinalGateBlockerTriageRecord;
+    candidate_state?: FinalGateCandidateStateRecord;
     completion_basis: string[];
     next_required_actions?: string[];
   };

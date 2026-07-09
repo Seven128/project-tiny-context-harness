@@ -41,6 +41,8 @@ test("render-goal creates a thin Codex Goal objective and does not mutate task s
     assert.match(goal, /no failed\/stale negative_evidence_scan/);
     assert.match(goal, /final-gate compute product_goal_complete=true/i);
     assert.match(goal, /AC Evidence Assertion Gate, Negative Evidence Scan Gate/);
+    assert.match(goal, /blocker_triage category\/next_action/);
+    assert.match(goal, /self-recoverable transient\/generated-output mismatch may recover once/);
     assert.match(goal, /audit_task_complete is true but acceptance_target_status is not complete/i);
     assert.match(goal, /Audit workflow completed; acceptance target not complete\./);
     assert.match(goal, /forbidden shortcuts/i);

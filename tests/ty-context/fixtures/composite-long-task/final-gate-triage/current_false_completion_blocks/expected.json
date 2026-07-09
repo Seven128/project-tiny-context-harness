@@ -1,0 +1,11 @@
+{
+  "fixture_id": "current_false_completion_blocks",
+  "expected_final_status": "blocked",
+  "expected_triage_category": "generated_output_mismatch",
+  "expected_recovery_attempted": false,
+  "expected_next_action_pattern": "remove or regenerate",
+  "covers": [
+    "current user-visible false completion wording blocks",
+    "non-regenerable agent final-answer surfaces are not self-recoverable"
+  ]
+}

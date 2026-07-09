@@ -1,0 +1,11 @@
+{
+  "fixture_id": "missing_current_evidence_not_self_recoverable",
+  "expected_final_status": "reject",
+  "expected_triage_category": "missing_current_evidence",
+  "expected_recovery_attempted": false,
+  "expected_next_action_pattern": "fresh current-attempt evidence",
+  "covers": [
+    "missing current proof stays an evidence blocker",
+    "evidence gaps are not auto-recoverable generated-output mismatches"
+  ]
+}

@@ -38,6 +38,10 @@ test("execution-binding records task-local authorities, state paths, commands an
     assert.match(binding, /acceptance_validator: ty-context validate-plan-acceptance <workdir>/);
     assert.match(binding, /final_gate: ty-context composite-long-task final-gate <workdir>/);
     assert.match(binding, /product_goal_complete_source: final_gate/);
+    assert.match(binding, /final_gate_uses_current_candidate_before_scanner: true/);
+    assert.match(binding, /blocker_triage_category_required_on_failure: true/);
+    assert.match(binding, /blocker_triage_next_action_required_on_failure: true/);
+    assert.match(binding, /self_recoverable_generated_output_mismatch_retries_once: true/);
     assert.match(binding, /cannot_hand_set_product_goal_complete: true/);
     assert.match(binding, /includes_ac_evidence_assertion_gate: true/);
     assert.match(binding, /includes_negative_evidence_scan_gate: true/);

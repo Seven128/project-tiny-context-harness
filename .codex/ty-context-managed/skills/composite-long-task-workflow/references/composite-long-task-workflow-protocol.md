@@ -18,7 +18,7 @@ Tiny Context Workflow Contract
 -> each slice updates canonical state and evidence
 -> derive local audit / matrix / verdict / progress / evidence views
 -> run gates
--> final-gate computes product_goal_complete
+-> final-gate computes product_goal_complete and blocker triage
 ```
 
 ## Workflow Identity
@@ -65,11 +65,11 @@ Superpowers remains the execution layer: prefer `superpowers:subagent-driven-dev
 
 ## Final Gate Protocol
 
-Final completion always runs through the Trusted Evidence Kernel, then through the completion-output resolver. Final gate, `validate-superpowers-state`, state-backed `validate-plan-acceptance` and derived completion views use the same kernel and resolver result. Superpowers verification, validators, auditor checks and generated views are useful execution checks, but they are not proof authority or completion-output authority. The AC Evidence Assertion Gate and Negative Evidence Scan Gate are enforced inside the kernel, not by trusting generated matrix or verdict text. The final gate itself runs in fixed order: load the three inputs, recompute source hashes, load task state, resolve the current attempt, load required command specs, load command-run records, load registered EvidenceRecords, discard stale evidence, scan unregistered assertion JSON, run contradiction scan, run AC-010 bootstrap prevention, run under-specified AC checks, run Harness Drift Lock, run protected baseline guard, validate scope conflicts, recompute every AC, recompute every PI, recompute `acceptance_target_status`, recompute `product_goal_complete`, resolve `completion_output_status`, regenerate `derived/**` and append an event.
+Final completion always runs through the Trusted Evidence Kernel, then through the completion-output resolver and blocker triage. Final gate, `validate-superpowers-state`, state-backed `validate-plan-acceptance` and derived completion views use the same kernel and resolver result. Superpowers verification, validators, auditor checks and generated views are useful execution checks, but they are not proof authority or completion-output authority. The AC Evidence Assertion Gate and Negative Evidence Scan Gate are enforced inside the kernel, not by trusting generated matrix or verdict text. The final gate itself runs in fixed order: load the three inputs, recompute source hashes, load task state, snapshot previous final/gates/meta transient bookkeeping as audit-only, resolve the current attempt, load required command specs, load command-run records, load registered EvidenceRecords, discard stale evidence, scan unregistered assertion JSON, run contradiction scan, run AC-010 bootstrap prevention, run under-specified AC checks, run Harness Drift Lock, run protected baseline guard, validate scope conflicts, recompute every AC, recompute every PI, recompute `acceptance_target_status`, recompute `product_goal_complete`, build the current candidate state, resolve candidate `completion_output_status`, regenerate current `derived/**`, scan generated output in the current candidate mode, classify blockers with `blocker_triage`, perform at most one self-recovery pass for transient bookkeeping or regenerable generated-output mismatch, write current final state and append an event.
 
-The final gate recomputes from current source hashes, current attempt, required command specs/runs, registered EvidenceRecordV2 records, contradiction scan, Harness Drift Lock and protected baseline state. It ignores stale passed artifacts, historical complete events, stale derived complete views, matrix/verdict/evidence-index/final-summary rows, validator passes, final cards, auditor prose, AC summary-only proof, unregistered temporary JSON and hand-written status files as proof. The completion-output resolver ignores those same surfaces as authority and emits only `accept`, `reject` or `blocked`. Newer failed commands, Playwright `.last-run.json`, `test-results/**/error-context.md`, JUnit/JSON reporter failures, negative evidence artifacts, owner DOM forbidden states, task-state false/partial values and derived/state mismatch block completion for the affected AC/layer. If historical completion conflicts with current recompute, report `Historical stale completion event detected and ignored.` and `Current recomputed product_goal_complete=false.`
+The final gate recomputes from current source hashes, current attempt, required command specs/runs, registered EvidenceRecordV2 records, contradiction scan, Harness Drift Lock and protected baseline state. It ignores stale passed artifacts, historical complete events, stale derived complete views, old final/gates/meta transient findings, matrix/verdict/evidence-index/final-summary rows, validator passes, final cards, auditor prose, AC summary-only proof, unregistered temporary JSON and hand-written status files as proof. The completion-output resolver ignores those same surfaces as authority and emits only `accept`, `reject` or `blocked`. Generated-output scanning is current-candidate-driven: old `completion_output_status=blocked` or old `generated_output_mismatch=true` cannot drag a current kernel accept back to blocked, but current user-visible false completion claims still block. Newer failed commands, Playwright `.last-run.json`, `test-results/**/error-context.md`, JUnit/JSON reporter failures, negative evidence artifacts, owner DOM forbidden states, task-state false/partial values and derived/state mismatch block completion for the affected AC/layer. If historical completion conflicts with current recompute, report `Historical stale completion event detected and ignored.` and `Current recomputed product_goal_complete=false.`
 
-Harness Drift Lock: `product_task` is blocked when the current attempt changed Playwright specs, tests, assertion generators, AC010 helpers, evidence writers, final-gate, validator, derive, task-state reducer, this workflow Skill/protocol or related Makefile/package test targets. The output must include `harness_drift_detected`, `acceptance_target_status=blocked`, `product_goal_complete=false` and `本轮修改了验收工具链或测试本身，不能用被修改后的验收证明同一轮产品完成。请拆成独立 harness_task。` A `harness_task` must include adversarial fixtures with expected final-gate outcomes for stale evidence, historical complete, derived contradiction, AC010 summary-only, target mismatch, API-only-for-UI, negative evidence after pass, source hash mismatch, dirty worktree mismatch, missing assertion_result, test weakening, scope leakage, missing UI/browser owner-surface proof, missing negative semantic proof and one happy path; it never proves product completion. HFC-003 is the durable false-completion regression suite: 35 committed mini workdirs plus one runner cover the Trusted Evidence Kernel, completion-output resolver, generated-output scanner, selected CLI smoke paths and one happy path. `protected-harness-baseline.json` blocks product-task changes to protected harness surfaces and requires a baseline reason plus fixtures for harness-task changes.
+Harness Drift Lock: `product_task` is blocked when the current attempt changed Playwright specs, tests, assertion generators, AC010 helpers, evidence writers, final-gate, validator, derive, task-state reducer, this workflow Skill/protocol or related Makefile/package test targets. The output must include `harness_drift_detected`, `acceptance_target_status=blocked`, `product_goal_complete=false` and `本轮修改了验收工具链或测试本身，不能用被修改后的验收证明同一轮产品完成。请拆成独立 harness_task。` A `harness_task` must include adversarial fixtures with expected final-gate outcomes for stale evidence, historical complete, derived contradiction, AC010 summary-only, target mismatch, API-only-for-UI, negative evidence after pass, source hash mismatch, dirty worktree mismatch, missing assertion_result, test weakening, scope leakage, missing UI/browser owner-surface proof, missing negative semantic proof and one happy path; it never proves product completion. HFC-003 is the durable false-completion regression suite; HFC-004 is the durable final-gate blocker-triage suite for old transient self-lock, candidate-driven scanner mode, blocker categories, next actions and one-pass self-recovery. `protected-harness-baseline.json` blocks product-task changes to protected harness surfaces and requires a baseline reason plus fixtures for harness-task changes.
 
 ## Completion State Machine
 
@@ -510,24 +510,28 @@ Before final completion, the kernel order is fixed:
 1. load product-architecture-source.md, technical-realization-plan.md, acceptance-checklist.md
 2. recompute source hashes
 3. load task-state.json
-4. resolve current_attempt
-5. load required command specs
-6. load command-run records
-7. load registered EvidenceRecordV2 records
-8. discard stale evidence
-9. scan unregistered assertion JSON
-10. contradiction scan
-11. run AC-010 bootstrap prevention
-12. run under-specified AC checks
-13. run Harness Drift Lock
-14. run protected baseline guard
-15. recompute every AC
-16. recompute every PI
-17. recompute acceptance_target_status
-18. recompute product_goal_complete
-19. resolve completion_output_status
-20. regenerate derived/**
-21. append event
+4. snapshot previous final/gates/meta transient bookkeeping as audit-only
+5. resolve current_attempt
+6. load required command specs
+7. load command-run records
+8. load registered EvidenceRecordV2 records
+9. discard stale evidence
+10. scan unregistered assertion JSON
+11. contradiction scan
+12. run AC-010 bootstrap prevention
+13. run under-specified AC checks
+14. run Harness Drift Lock
+15. run protected baseline guard
+16. recompute every AC
+17. recompute every PI
+18. recompute acceptance_target_status
+19. recompute product_goal_complete
+20. build current candidate state
+21. resolve candidate completion_output_status
+22. regenerate current derived/**
+23. scan generated output in current candidate mode
+24. classify blocker_triage and self-recover once when allowed
+25. append event
 ```
 
 Legacy/internal compatibility may exist as:
@@ -574,10 +578,13 @@ Rules:
 6. If completion_output_status is reject or blocked, do not say Goal achieved, completed, accepted or done.
 7. A read-only audit task may end, but must say:
    Audit workflow completed; acceptance target not complete.
-8. Implementation / execution Goal mode can call update_goal complete only when product_goal_complete=true and completion_output_status=accept.
+8. Failed final-gate output includes blocker_triage category and next action.
+9. Implementation / execution Goal mode can call update_goal complete only when product_goal_complete=true and completion_output_status=accept.
 ```
 
 This must stay visible in Skill and Goal objective because Codex Goal mode can otherwise confuse "audit workflow ended" with "product target accepted."
+
+When final-gate does not accept, output must include `blocker_triage.category`, `blocker_triage.next_action`, whether it was self-recoverable and whether recovery was attempted. Categories distinguish product evidence failure, missing current evidence, stale or contradictory evidence, generated-output mismatch, self-recoverable generated-output mismatch, transient state bookkeeping, environment blocked, contract blocked and harness drift blocked.
 
 ## 15. Blocker Strategy
 

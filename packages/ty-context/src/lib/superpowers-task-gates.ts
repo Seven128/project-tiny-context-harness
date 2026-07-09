@@ -6,11 +6,14 @@ import {
   applyCompletionOutputContract,
   completionPhraseFindingMessages,
   resolveCompletionOutputStatus,
-  scanGeneratedCompletionOutputSurfaces,
-  type CompletionOutputContract
+  scanGeneratedCompletionOutputSurfacesDetailed,
+  triageFinalGateBlockers,
+  type CompletionOutputContract,
+  type FinalGateBlockerTriage,
+  type FinalGateCandidateState
 } from "./superpowers-task-completion-output.js";
 import { applyTrustedEvidenceKernelResult, evaluateTrustedEvidenceKernel, type TrustedEvidenceKernelResult } from "./superpowers-task-evidence-kernel.js";
-import { isRecord } from "./superpowers-task-state-schema.js";
+import { isRecord, type SuperpowersTaskState } from "./superpowers-task-state-schema.js";
 import { validateSuperpowersState } from "./superpowers-task-validator.js";
 
 export async function runSliceGate(workdir: string, sliceId: string): Promise<{ passed: boolean; messages: string[] }> {
@@ -34,10 +37,32 @@ export async function runEpochGate(workdir: string, epochId: string): Promise<{ 
 }
 
 export async function runFinalGate(workdir: string): Promise<CompletionOutputContract & { errors: string[] }> {
+  return runFinalGateOnce(workdir, { recoveryAttempted: false, recoveryAction: "" });
+}
+
+async function runFinalGateOnce(
+  workdir: string,
+  options: { recoveryAttempted: boolean; recoveryAction: string }
+): Promise<CompletionOutputContract & { errors: string[] }> {
   const state = await loadSuperpowersState(workdir);
+  const previousTransientFindings = previousTransientBookkeepingFindings(state);
   const kernel = await evaluateTrustedEvidenceKernel(workdir, state);
   applyTrustedEvidenceKernelResult(state, kernel);
   state.gates.validator = { status: "not_run", kernel: "trusted_evidence_kernel" };
+  const candidateContract = resolveCompletionOutputStatus({
+    final_gate_ran: true,
+    product_goal_complete: kernel.product_goal_complete && kernel.errors.length === 0,
+    acceptance_target_status: kernel.product_goal_complete && kernel.errors.length === 0 ? "complete" : kernel.acceptance_target_status,
+    audit_task_complete: true,
+    validator_errors: kernel.errors,
+    rejection_reasons: kernel.product_goal_complete ? [] : kernel.errors.slice(0, 12)
+  });
+  const candidateState = candidateStateFromContract(candidateContract);
+  candidateContract.candidate_state = candidateState;
+  applyCompletionOutputContract(state, candidateContract);
+  state.final.completion_basis = candidateContract.product_goal_complete
+    ? ["trusted_evidence_kernel", "current_attempt_evidence", "negative_evidence_scan_passed", "harness_drift_lock_passed"]
+    : [];
   await saveSuperpowersState(workdir, state);
   await deriveSuperpowersArtifacts(workdir);
   const report = await validateSuperpowersState(workdir, [workdir]);
@@ -56,6 +81,7 @@ export async function runFinalGate(workdir: string): Promise<CompletionOutputCon
     acceptance_validator_errors: acceptanceReport.errors,
     rejection_reasons: complete ? [] : nextRequiredActions
   });
+  contract.candidate_state = candidateState;
   applyCompletionOutputContract(latest, contract);
   latest.final.completion_basis = complete
     ? ["trusted_evidence_kernel", "current_attempt_evidence", "negative_evidence_scan_passed", "harness_drift_lock_passed"]
@@ -80,14 +106,36 @@ export async function runFinalGate(workdir: string): Promise<CompletionOutputCon
     exit_code: contract.exit_code,
     blocked_reasons: contract.blocked_reasons,
     rejection_reasons: contract.rejection_reasons,
-    generated_output_mismatch: contract.generated_output_mismatch
+    generated_output_mismatch: contract.generated_output_mismatch,
+    candidate_state: candidateState,
+    previous_bookkeeping_snapshot: previousTransientFindings
   };
   await saveSuperpowersState(workdir, latest);
   await deriveSuperpowersArtifacts(workdir);
-  const outputFindings = await scanGeneratedCompletionOutputSurfaces(workdir, contract);
+  const outputFindings = await scanGeneratedCompletionOutputSurfacesDetailed(workdir, contract);
+  let triage = triageFinalGateBlockers({
+    errors,
+    output_findings: outputFindings,
+    previous_transient_findings: previousTransientFindings,
+    candidate_state: candidateState,
+    recovery_attempted: options.recoveryAttempted || previousTransientFindings.length > 0,
+    recovery_action: options.recoveryAction || (previousTransientFindings.length > 0 ? "cleared previous transient bookkeeping" : "")
+  });
+  if (outputFindings.length > 0 && triage.self_recoverable && !options.recoveryAttempted) {
+    await deriveSuperpowersArtifacts(workdir);
+    return runFinalGateOnce(workdir, { recoveryAttempted: true, recoveryAction: "regenerated_derived_outputs" });
+  }
   if (outputFindings.length > 0) {
     errors = [...new Set([...errors, ...completionPhraseFindingMessages(outputFindings)])];
     complete = false;
+    triage = triageFinalGateBlockers({
+      errors,
+      output_findings: outputFindings,
+      previous_transient_findings: previousTransientFindings,
+      candidate_state: candidateState,
+      recovery_attempted: options.recoveryAttempted,
+      recovery_action: options.recoveryAction
+    });
     contract = resolveCompletionOutputStatus({
       final_gate_ran: true,
       product_goal_complete: false,
@@ -96,6 +144,8 @@ export async function runFinalGate(workdir: string): Promise<CompletionOutputCon
       validator_errors: errors,
       generated_output_mismatch: true
     });
+    contract.candidate_state = candidateState;
+    contract.blocker_triage = triage;
     const blockedLatest = await loadSuperpowersState(workdir);
     applyCompletionOutputContract(blockedLatest, contract);
     blockedLatest.final.completion_basis = [];
@@ -113,17 +163,53 @@ export async function runFinalGate(workdir: string): Promise<CompletionOutputCon
       blocked_reasons: contract.blocked_reasons,
       rejection_reasons: contract.rejection_reasons,
       generated_output_mismatch: contract.generated_output_mismatch,
-      false_completion_phrase_findings: outputFindings
+      false_completion_phrase_findings: outputFindings,
+      candidate_state: candidateState,
+      blocker_triage: triage,
+      previous_bookkeeping_snapshot: previousTransientFindings
     };
     blockedLatest.final.false_completion_phrase_findings = outputFindings;
     await saveSuperpowersState(workdir, blockedLatest);
     await deriveSuperpowersArtifacts(workdir);
+  } else {
+    if (triage.category === "environment_blocked" || triage.category === "contract_blocked" || triage.category === "harness_drift_blocked") {
+      contract = resolveCompletionOutputStatus({
+        final_gate_ran: true,
+        product_goal_complete: false,
+        acceptance_target_status: "blocked",
+        audit_task_complete: true,
+        validator_errors: errors,
+        blocked_reasons: [triage.category],
+        rejection_reasons: []
+      });
+      contract.candidate_state = candidateState;
+    }
+    contract.blocker_triage = triage;
+    const triagedLatest = await loadSuperpowersState(workdir);
+    applyCompletionOutputContract(triagedLatest, contract);
+    triagedLatest.final.next_required_actions = contract.completion_output_status === "accept" ? [] : nextActionsForErrors(errors);
+    triagedLatest.gates.final_gate = {
+      ...(isRecord(triagedLatest.gates.final_gate) ? triagedLatest.gates.final_gate : {}),
+      completion_output_status: contract.completion_output_status,
+      final_answer_allowed: contract.final_answer_allowed,
+      required_user_visible_status: contract.required_user_visible_status,
+      exit_code: contract.exit_code,
+      blocked_reasons: contract.blocked_reasons,
+      rejection_reasons: contract.rejection_reasons,
+      generated_output_mismatch: contract.generated_output_mismatch,
+      candidate_state: candidateState,
+      blocker_triage: triage,
+      previous_bookkeeping_snapshot: previousTransientFindings
+    };
+    await saveSuperpowersState(workdir, triagedLatest);
+    await deriveSuperpowersArtifacts(workdir);
   }
   await appendSuperpowersEvent(workdir, "final_gate", {
     product_goal_complete: contract.product_goal_complete,
-    completion_output_status: contract.completion_output_status
+    completion_output_status: contract.completion_output_status,
+    blocker_triage: contract.blocker_triage
   });
-  return { ...contract, errors };
+  return { ...contract, blocker_triage: contract.blocker_triage ?? triage, errors };
 }
 
 function acceptanceStatusForErrors(errors: string[], kernel?: TrustedEvidenceKernelResult): "partial" | "blocked" | "invalidated" | "under_specified" {
@@ -166,4 +252,39 @@ function nextActionsForErrors(errors: string[]): string[] {
     }
     return error;
   });
+}
+
+function candidateStateFromContract(contract: CompletionOutputContract): FinalGateCandidateState {
+  return {
+    final_gate_ran: contract.final_gate_ran,
+    product_goal_complete: contract.product_goal_complete,
+    acceptance_target_status: contract.acceptance_target_status,
+    completion_output_status: contract.completion_output_status,
+    generated_output_mismatch: false,
+    source: "trusted_evidence_kernel"
+  };
+}
+
+function previousTransientBookkeepingFindings(state: SuperpowersTaskState): string[] {
+  const findings: string[] = [];
+  const finalRecord = state.final as SuperpowersTaskState["final"] & Record<string, unknown>;
+  const metaRecord = state.meta as SuperpowersTaskState["meta"] & Record<string, unknown>;
+  const gate = isRecord(state.gates?.final_gate) ? state.gates.final_gate : {};
+  collectTransient(findings, "final", finalRecord);
+  collectTransient(findings, "meta", metaRecord);
+  collectTransient(findings, "gates.final_gate", gate);
+  return [...new Set(findings)];
+}
+
+function collectTransient(findings: string[], label: string, record: Record<string, unknown>): void {
+  const status = typeof record.completion_output_status === "string" ? record.completion_output_status : "";
+  if (status === "blocked" || status === "reject") {
+    findings.push(`${label}.completion_output_status=${status}`);
+  }
+  if (record.generated_output_mismatch === true) {
+    findings.push(`${label}.generated_output_mismatch=true`);
+  }
+  if (Array.isArray(record.false_completion_phrase_findings) && record.false_completion_phrase_findings.length > 0) {
+    findings.push(`${label}.false_completion_phrase_findings=${record.false_completion_phrase_findings.length}`);
+  }
 }

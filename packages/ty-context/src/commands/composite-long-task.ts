@@ -104,6 +104,12 @@ export async function runCompositeLongTaskCommand(
     console.log(`required_user_visible_status=${result.required_user_visible_status}`);
     console.log(`exit_code=${result.exit_code}`);
     console.log(`audit_task_complete=${result.audit_task_complete}`);
+    if (result.blocker_triage) {
+      console.log(`blocker_triage_category=${result.blocker_triage.category}`);
+      console.log(`blocker_triage_self_recoverable=${result.blocker_triage.self_recoverable}`);
+      console.log(`blocker_triage_recovery_attempted=${result.blocker_triage.recovery_attempted}`);
+      console.log(`blocker_triage_next_action=${result.blocker_triage.next_action}`);
+    }
     if (result.blocked_reasons.length > 0) {
       console.log(`blocked_reasons=${result.blocked_reasons.join("; ")}`);
     }

@@ -402,6 +402,16 @@ Technical Context Delta: ${state.context.technical_context_delta}
 function finalSummaryMarkdown(state: SuperpowersTaskState, verdict: Record<string, unknown>, contract: CompletionOutputContract): string {
   const reasons = contract.completion_output_status === "blocked" ? contract.blocked_reasons : contract.rejection_reasons;
   const reasonBlock = reasons.length > 0 ? reasons.map((reason) => `- ${reason}`).join("\n") : "- none";
+  const triage = contract.blocker_triage;
+  const triageBlock = triage
+    ? `blocker_triage_category: ${triage.category}
+blocker_triage_self_recoverable: ${triage.self_recoverable}
+blocker_triage_recovery_attempted: ${triage.recovery_attempted}
+blocker_triage_next_action: ${triage.next_action}`
+    : `blocker_triage_category: none
+blocker_triage_self_recoverable: false
+blocker_triage_recovery_attempted: false
+blocker_triage_next_action: no blocker remains`;
   const auditLine =
     contract.completion_output_status === "accept"
       ? "Final-gate accepted the current attempt."
@@ -415,6 +425,7 @@ completion_output_status: ${contract.completion_output_status}
 final_answer_allowed: ${contract.final_answer_allowed}
 required_user_visible_status: ${contract.required_user_visible_status}
 exit_code: ${contract.exit_code}
+${triageBlock}
 
 Final answer: ${contract.final_answer}
 

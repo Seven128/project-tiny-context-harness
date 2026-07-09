@@ -112,6 +112,8 @@ try {
 
   const syncReport = await syncSource(fixture);
   assert.ok(syncReport.changed.length > 0);
+  const secondSyncReport = await syncSource(fixture);
+  assert.deepEqual(secondSyncReport.changed, []);
 
   const checkReport = await checkSource(fixture);
   assert.deepEqual(checkReport.drift, []);
@@ -177,6 +179,15 @@ try {
   assert.match(packagedCompositeGoalTemplate, /Goal Objective Template/);
   const packagedTool = await readFile(path.join(fixture, "packages/ty-context/assets/tools/validate_context.py"), "utf8");
   assert.match(packagedTool, /print\('ok'\)/);
+
+  await mkdir(path.join(fixture, "packages/ty-context/assets/skills/stale"), { recursive: true });
+  await writeFile(path.join(fixture, "packages/ty-context/assets/skills/stale/SKILL.md"), "# stale\n", "utf8");
+  const staleCheckReport = await checkSource(fixture);
+  assert.ok(staleCheckReport.drift.some((item) => item.includes("stale")));
+  const staleSyncReport = await syncSource(fixture);
+  assert.ok(staleSyncReport.changed.some((item) => item.includes("stale")));
+  const cleanAfterStaleRemoval = await syncSource(fixture);
+  assert.deepEqual(cleanAfterStaleRemoval.changed, []);
 } finally {
   await rm(fixture, { recursive: true, force: true });
 }

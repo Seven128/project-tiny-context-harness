@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { copyTree, ensureDir, listFiles, pathExists, readText, writeTextIfChanged } from "./fs.js";
+import { ensureDir, listFiles, pathExists, readText, writeTextIfChanged } from "./fs.js";
 import { AGENTS_BLOCK_MARKERS } from "./managed-file.js";
 import { SOURCE_MAPPINGS_PATH } from "./paths.js";
 import type { SourceMapping, SourceMappingsFile } from "./types.js";
@@ -71,13 +71,23 @@ async function applyMapping(projectRoot: string, mapping: SourceMapping): Promis
   if (typeof rendered === "string") {
     return (await writeTextIfChanged(target, rendered)) ? [mapping.target] : [];
   }
-  await fs.rm(target, { recursive: true, force: true });
   await ensureDir(target);
   const changed: string[] = [];
+  const expectedRelatives = new Set(rendered.map((item) => item.relative));
   for (const item of rendered) {
     const targetFile = path.join(target, item.relative);
     if (await writeTextIfChanged(targetFile, item.content)) {
       changed.push(`${mapping.target}/${item.relative}`);
+    }
+  }
+  for (const targetFile of await listFiles(target)) {
+    if (path.basename(targetFile) === ".gitkeep") {
+      continue;
+    }
+    const relative = path.relative(target, targetFile);
+    if (!expectedRelatives.has(relative)) {
+      await fs.rm(targetFile, { force: true });
+      changed.push(`${mapping.target}/${relative}`);
     }
   }
   return changed;

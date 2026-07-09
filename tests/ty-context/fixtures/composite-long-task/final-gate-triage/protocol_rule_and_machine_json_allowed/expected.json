@@ -1,0 +1,12 @@
+{
+  "fixture_id": "protocol_rule_and_machine_json_allowed",
+  "expected_final_status": "reject",
+  "expected_triage_category": "none",
+  "expected_recovery_attempted": false,
+  "expected_next_action_pattern": "no blocker remains",
+  "covers": [
+    "protocol rule text reserved words are allowed",
+    "machine-readable diagnostic JSON status fields are allowed",
+    "agent-authored final-answer completion claims remain blocking"
+  ]
+}

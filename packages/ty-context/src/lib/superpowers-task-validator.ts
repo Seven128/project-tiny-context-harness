@@ -53,7 +53,7 @@ export async function validateSuperpowersState(projectRoot: string, args: string
   validateAuditor(state, errors);
   validateFinalCompletion(state, errors);
   errors.push(...(await derivedMatchesState(targetDir, state)));
-  await validateCompletionOutputConsistency(targetDir, state, errors);
+  await validateCompletionOutputConsistency(targetDir, state, errors, info);
 
   info.push(
     `checked superpowers task state ${repoRelative(projectRoot, targetDir)} plan_items=${Object.keys(state.graph?.plan_items ?? {}).length} acs=${Object.keys(state.graph?.acceptance_criteria ?? {}).length} evidence=${state.evidence?.length ?? 0}`
@@ -64,7 +64,7 @@ export async function validateSuperpowersState(projectRoot: string, args: string
   return { info, warnings, hygiene, errors };
 }
 
-async function validateCompletionOutputConsistency(workdir: string, state: SuperpowersTaskState, errors: string[]): Promise<void> {
+async function validateCompletionOutputConsistency(workdir: string, state: SuperpowersTaskState, errors: string[], info: string[]): Promise<void> {
   const contract = completionOutputContractFromState(state);
   const finalRecord = state.final as SuperpowersTaskState["final"] & {
     completion_output_status?: string;
@@ -90,6 +90,9 @@ async function validateCompletionOutputConsistency(workdir: string, state: Super
   }
   if (finalRecord.exit_code !== undefined && finalRecord.exit_code !== contract.exit_code) {
     errors.push(`completion output exit_code mismatch: expected ${contract.exit_code}, found ${finalRecord.exit_code}`);
+  }
+  if (contract.blocker_triage) {
+    info.push(`blocker_triage category=${contract.blocker_triage.category} self_recoverable=${contract.blocker_triage.self_recoverable} next_action=${contract.blocker_triage.next_action}`);
   }
   errors.push(...completionPhraseFindingMessages(await scanGeneratedCompletionOutputSurfaces(workdir, contract)));
   await validateMarkdownCompletionStatus(workdir, contract.completion_output_status, errors);

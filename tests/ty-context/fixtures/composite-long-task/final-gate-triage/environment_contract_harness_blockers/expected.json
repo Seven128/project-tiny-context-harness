@@ -1,0 +1,12 @@
+{
+  "fixture_id": "environment_contract_harness_blockers",
+  "expected_final_status": "blocked",
+  "expected_triage_category": "environment_blocked|contract_blocked|harness_drift_blocked",
+  "expected_recovery_attempted": false,
+  "expected_next_action_pattern": "restore|clarify|split harness changes",
+  "covers": [
+    "environment blockers remain blocked",
+    "contract blockers remain blocked",
+    "harness drift blockers remain blocked"
+  ]
+}

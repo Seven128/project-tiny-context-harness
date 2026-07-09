@@ -76,6 +76,10 @@ test("render-goal freezes the package protocol into a hash-verifiable workdir sn
     assert.match(body, /Matrix, verdict and evidence-index views may summarize `assertion_status`/);
     assert.match(body, /Invalid evidence for UI\/browser AC completion includes screenshot-only proof/);
     assert.match(body, /AC Evidence Assertion Gate and Negative Evidence Scan Gate/);
+    assert.match(body, /snapshot previous final\/gates\/meta transient bookkeeping as audit-only/);
+    assert.match(body, /current-candidate-driven/);
+    assert.match(body, /blocker_triage\.category/);
+    assert.match(body, /self-recoverable generated-output mismatch/);
     assert.match(body, /final card, matrix, verdict or validator pass does not mean a machine-verifiable AC has assertion-backed evidence/);
     assert.match(body, /Do not call update_goal complete before final-gate passes/);
     assert.doesNotMatch(body, /## 18\. Authoring Placement \/ 建议写入位置/);

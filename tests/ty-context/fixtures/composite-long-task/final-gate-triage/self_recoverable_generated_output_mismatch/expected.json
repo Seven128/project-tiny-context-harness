@@ -1,0 +1,11 @@
+{
+  "fixture_id": "self_recoverable_generated_output_mismatch",
+  "expected_final_status": "accept",
+  "expected_triage_category": "self_recoverable_generated_output_mismatch",
+  "expected_recovery_attempted": true,
+  "expected_next_action_pattern": "regenerate derived generated-output surfaces",
+  "covers": [
+    "generated derived completion wording is classified as self-recoverable",
+    "final-gate may retry regeneration once for generated-output mismatch"
+  ]
+}

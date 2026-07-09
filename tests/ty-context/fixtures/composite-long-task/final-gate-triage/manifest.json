@@ -1,0 +1,62 @@
+{
+  "mode": "harness_task",
+  "suite": "HFC-004 final-gate blocker triage and self-recoverable blocked handling",
+  "required_fixture_ids": [
+    "kernel_accept_old_final_meta_generated_output_mismatch",
+    "protocol_rule_and_machine_json_allowed",
+    "current_false_completion_blocks",
+    "missing_current_evidence_not_self_recoverable",
+    "environment_contract_harness_blockers",
+    "self_recoverable_generated_output_mismatch"
+  ],
+  "fixtures": [
+    {
+      "id": "kernel_accept_old_final_meta_generated_output_mismatch",
+      "category": "transient_state_bookkeeping",
+      "expected_path": "kernel_accept_old_final_meta_generated_output_mismatch/expected.json",
+      "expected_final_status": "accept",
+      "expected_triage_category": "transient_state_bookkeeping",
+      "recovery_expected": true
+    },
+    {
+      "id": "protocol_rule_and_machine_json_allowed",
+      "category": "surface_classifier",
+      "expected_path": "protocol_rule_and_machine_json_allowed/expected.json",
+      "expected_final_status": "reject",
+      "expected_triage_category": "none",
+      "recovery_expected": false
+    },
+    {
+      "id": "current_false_completion_blocks",
+      "category": "generated_output_mismatch",
+      "expected_path": "current_false_completion_blocks/expected.json",
+      "expected_final_status": "blocked",
+      "expected_triage_category": "generated_output_mismatch",
+      "recovery_expected": false
+    },
+    {
+      "id": "missing_current_evidence_not_self_recoverable",
+      "category": "missing_current_evidence",
+      "expected_path": "missing_current_evidence_not_self_recoverable/expected.json",
+      "expected_final_status": "reject",
+      "expected_triage_category": "missing_current_evidence",
+      "recovery_expected": false
+    },
+    {
+      "id": "environment_contract_harness_blockers",
+      "category": "blocker_classifier",
+      "expected_path": "environment_contract_harness_blockers/expected.json",
+      "expected_final_status": "blocked",
+      "expected_triage_category": "environment_blocked|contract_blocked|harness_drift_blocked",
+      "recovery_expected": false
+    },
+    {
+      "id": "self_recoverable_generated_output_mismatch",
+      "category": "self_recoverable_generated_output_mismatch",
+      "expected_path": "self_recoverable_generated_output_mismatch/expected.json",
+      "expected_final_status": "accept",
+      "expected_triage_category": "self_recoverable_generated_output_mismatch",
+      "recovery_expected": true
+    }
+  ]
+}

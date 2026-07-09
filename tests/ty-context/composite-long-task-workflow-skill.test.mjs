@@ -60,6 +60,8 @@ test("composite long-task workflow Skill is the public managed Skill surface", a
     assert.match(content, /superpowers:test-driven-development/);
     assert.match(content, /superpowers:verification-before-completion/);
     assert.match(content, /product_goal_complete/);
+    assert.match(content, /blocker_triage/);
+    assert.match(content, /one-pass self-recovery/i);
     assert.match(content, /final-gate/);
     assert.match(content, /Do not generate, derive, or infer the Technical Realization Plan/i);
     assert.match(content, /Do not generate, derive, rewrite, strengthen, or repair the full checklist/i);
@@ -87,6 +89,9 @@ test("composite long-task workflow Skill is the public managed Skill surface", a
   assert.match(protocol, /assertion_result\.status=passed/);
   assert.match(protocol, /Matrix, verdict and evidence-index views may summarize `assertion_status`/);
   assert.match(protocol, /Negative Evidence Scan Gate/);
+  assert.match(protocol, /blocker_triage\.category/);
+  assert.match(protocol, /current-candidate-driven/);
+  assert.match(protocol, /one-pass self-recovery/);
   assert.match(protocol, /Invalid evidence for UI\/browser AC completion includes screenshot-only proof/);
   assert.match(protocol, /## 17\. Forbidden Wrong Fusion \/ 不允许的错误融合/);
   assert.doesNotMatch(protocol, /## 18\. Authoring Placement \/ 建议写入位置/);
@@ -100,9 +105,11 @@ test("composite long-task workflow Skill is the public managed Skill surface", a
   assert.match(goalTemplate, /execution-binding\.md/);
   assert.match(goalTemplate, /product_goal_complete/);
   assert.match(goalTemplate, /assertion_result\.status=passed/);
+  assert.match(goalTemplate, /blocker_triage category\/next_action/);
   assert.match(goalTemplate, /Negative Evidence Scan Gate/);
   assert.match(bindingTemplate, /# Composite Long-Task Execution Binding/);
   assert.match(bindingTemplate, /required_commands:/);
   assert.match(bindingTemplate, /includes_ac_evidence_assertion_gate: true/);
   assert.match(bindingTemplate, /includes_negative_evidence_scan_gate: true/);
+  assert.match(bindingTemplate, /blocker_triage_category_required_on_failure: true/);
 });

@@ -44,6 +44,11 @@ completion_gate:
   matrix_verdict_final_card_never_authorizes_accept: true
   audit_task_complete_never_authorizes_accept: true
   generated_output_mismatch_blocks_accept: true
+  final_gate_uses_current_candidate_before_scanner: true
+  old_transient_bookkeeping_is_audit_only: true
+  blocker_triage_category_required_on_failure: true
+  blocker_triage_next_action_required_on_failure: true
+  self_recoverable_generated_output_mismatch_retries_once: true
   cannot_hand_set_product_goal_complete: true
   cannot_hand_set_completion_output_status: true
   includes_ac_evidence_assertion_gate: true
