@@ -1,5 +1,9 @@
-import { MACHINE_VERIFIABLE_PROOF_LAYERS, proofLayerName } from "./superpowers-task-assertions.js";
-import { compileReportSuffix, missingCategory, throwCompileErrors } from "./superpowers-task-compile-diagnostics.js";
+import { MACHINE_VERIFIABLE_PROOF_LAYERS, proofLayerName } from "./superpowers-task-proof-layers.js";
+import {
+  compileDiagnostic,
+  throwCompileErrors,
+  type CompileDiagnosticRecord
+} from "./superpowers-task-compile-diagnostics.js";
 import {
   ACCEPTANCE_FIELDS,
   ACCEPTANCE_SCOPES,
@@ -19,7 +23,6 @@ import {
   type SuperpowersProductArchitectureScope
 } from "./superpowers-task-state-schema.js";
 import {
-  fieldArray,
   fieldBoolean,
   fieldLine,
   fieldText,
@@ -27,6 +30,14 @@ import {
   parseHeadingDefinitions,
   type ParsedField
 } from "./superpowers-task-source-parser.js";
+import {
+  optionalArray,
+  optionalText,
+  requireArray,
+  requireBoolean,
+  requireEnum,
+  requireText
+} from "./superpowers-task-source-field-values.js";
 
 export const DEFAULT_LAYERS = ["code", "test"];
 
@@ -36,12 +47,18 @@ const ACCEPTANCE_FIELD_SET = fieldSet(ACCEPTANCE_FIELDS);
 
 export function parseProductArchitectureScope(content: string, sourceFile: string): SuperpowersProductArchitectureScope {
   const fields = parseDocumentFields(content, sourceFile, PRODUCT_FIELD_SET);
-  const errors: string[] = [];
+  const errors: CompileDiagnosticRecord[] = [];
   const selectedScopeFitSlice = requireText(errors, "Product / Architecture Source", "selected_scope_fit_slice", fields, sourceFile, 1);
   if (selectedScopeFitSlice && !isSelectedScopeFitSlice(selectedScopeFitSlice)) {
-    errors.push(
-      `Product / Architecture Source invalid selected_scope_fit_slice: ${selectedScopeFitSlice} at ${sourceFile}:${fieldLine(fields, "selected_scope_fit_slice") ?? 1}; allowed: none or SFC-###${compileReportSuffix("blocking_unparseable_object", sourceFile, fieldLine(fields, "selected_scope_fit_slice") ?? 1, "selected_scope_fit_slice", "value must be none or an SFC-### id", "fix selected_scope_fit_slice and rerun compile")}`
-    );
+    errors.push(compileDiagnostic(
+      `Product / Architecture Source invalid selected_scope_fit_slice: ${selectedScopeFitSlice} at ${sourceFile}:${fieldLine(fields, "selected_scope_fit_slice") ?? 1}; allowed: none or SFC-###`,
+      "blocking_unparseable_object",
+      sourceFile,
+      fieldLine(fields, "selected_scope_fit_slice") ?? 1,
+      "selected_scope_fit_slice",
+      "value must be none or an SFC-### id",
+      "fix selected_scope_fit_slice and rerun compile"
+    ));
   }
   const scope = {
     delivery_scope: requireEnum(errors, "Product / Architecture Source", "delivery_scope", fields, PRODUCT_DELIVERY_SCOPES, sourceFile, 1) as SuperpowersProductArchitectureScope["delivery_scope"],
@@ -70,7 +87,7 @@ export function parseProductArchitectureScope(content: string, sourceFile: strin
 
 export function parsePlanItems(content: string, sourceFile: string): Record<string, SuperpowersPlanItem> {
   const items: Record<string, SuperpowersPlanItem> = {};
-  const errors: string[] = [];
+  const errors: CompileDiagnosticRecord[] = [];
   for (const definition of parseHeadingDefinitions(content, { kind: "PI", sourceFile, allowedFields: PLAN_FIELD_SET })) {
     const fields = definition.fields;
     items[definition.id] = {
@@ -123,7 +140,7 @@ export function parsePlanItems(content: string, sourceFile: string): Record<stri
 
 export function parseAcceptanceCriteria(content: string, sourceFile: string): Record<string, SuperpowersAcceptanceCriterion> {
   const items: Record<string, SuperpowersAcceptanceCriterion> = {};
-  const errors: string[] = [];
+  const errors: CompileDiagnosticRecord[] = [];
   for (const definition of parseHeadingDefinitions(content, { kind: "AC", sourceFile, allowedFields: ACCEPTANCE_FIELD_SET })) {
     const fields = definition.fields;
     const layers = requireArray(errors, definition.id, "required_proof_layers", fields, sourceFile, definition.source_start_line).map(normalizeLayer).filter(Boolean);
@@ -209,62 +226,6 @@ function assertionRequirements(fields: Record<string, ParsedField>, layers: stri
       negative_assertions: negativeAssertions
     };
   });
-}
-
-function requireEnum(errors: string[], label: string, name: string, fields: Record<string, ParsedField>, allowed: Set<string>, sourceFile: string, fallbackLine: number): string {
-  const value = fieldText(fields, name);
-  const line = fieldLine(fields, name) ?? fallbackLine;
-  if (!value) {
-    errors.push(`${label} missing ${name} at ${sourceFile}:${line}${compileReportSuffix(missingCategory(label), sourceFile, line, name, "field is required", "add the required field and rerun compile")}`);
-    return "";
-  }
-  if (!allowed.has(value)) {
-    errors.push(
-      `${label} invalid ${name}: ${value} at ${sourceFile}:${line}; allowed: ${[...allowed].join(", ")}${compileReportSuffix("blocking_unparseable_object", sourceFile, line, name, `value must be one of ${[...allowed].join(", ")}`, "fix the field value and rerun compile")}`
-    );
-  }
-  return value;
-}
-
-function requireText(errors: string[], label: string, name: string, fields: Record<string, ParsedField>, sourceFile: string, fallbackLine: number): string {
-  const value = fieldText(fields, name);
-  const line = fieldLine(fields, name) ?? fallbackLine;
-  if (!value) {
-    errors.push(`${label} missing ${name} at ${sourceFile}:${line}${compileReportSuffix(missingCategory(label), sourceFile, line, name, "field is required", "add non-empty text and rerun compile")}`);
-  }
-  return value;
-}
-
-function requireArray(errors: string[], label: string, name: string, fields: Record<string, ParsedField>, sourceFile: string, fallbackLine: number): string[] {
-  const line = fieldLine(fields, name) ?? fallbackLine;
-  if (!fields[name]) {
-    errors.push(`${label} missing ${name} at ${sourceFile}:${line}${compileReportSuffix(missingCategory(label), sourceFile, line, name, "field is required", "add the list field and rerun compile")}`);
-    return [];
-  }
-  return fieldArray(fields, name);
-}
-
-function requireBoolean(errors: string[], label: string, name: string, fields: Record<string, ParsedField>, sourceFile: string, fallbackLine: number): boolean | null {
-  const line = fieldLine(fields, name) ?? fallbackLine;
-  if (!fields[name]) {
-    errors.push(`${label} missing ${name} at ${sourceFile}:${line}${compileReportSuffix(missingCategory(label), sourceFile, line, name, "field is required", "add true or false and rerun compile")}`);
-    return null;
-  }
-  const value = fieldBoolean(fields, name);
-  if (value === null) {
-    errors.push(
-      `${label} invalid ${name}: ${fieldText(fields, name)} at ${sourceFile}:${line}; must be true or false${compileReportSuffix("blocking_unparseable_object", sourceFile, line, name, "value must be true or false", "fix the boolean and rerun compile")}`
-    );
-  }
-  return value;
-}
-
-function optionalArray(fields: Record<string, ParsedField>, name: string): string[] {
-  return fields[name] ? fieldArray(fields, name) : [];
-}
-
-function optionalText(fields: Record<string, ParsedField>, name: string): string {
-  return fields[name] ? fieldText(fields, name) : "";
 }
 
 function unique(values: string[]): string[] {

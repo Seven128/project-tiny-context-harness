@@ -1,10 +1,15 @@
-import { createHash } from "node:crypto";
 import path from "node:path";
+import {
+  COMPOSITE_INPUT_CONTRACT,
+  type CompositeInputDocumentId
+} from "./composite-input-contract.js";
 import { ensureDir, pathExists, readText, writeTextIfChanged } from "./fs.js";
 import { normalizeProofLayerId } from "./superpowers-task-fields.js";
 import { appendSuperpowersEvent } from "./superpowers-task-events.js";
 import { evaluateProofLayerAssertions, isMachineVerifiableLayer } from "./superpowers-task-assertions.js";
 import { readEvidenceRecords } from "./superpowers-task-evidence-records.js";
+import { sha256, stableJson } from "./stable-json.js";
+export { sha256, stableJson } from "./stable-json.js";
 import {
   SUPERPOWERS_TASK_STATE_JSON_SCHEMA,
   SUPERPOWERS_TASK_STATE_SCHEMA_VERSION,
@@ -14,20 +19,17 @@ import {
   isRecord
 } from "./superpowers-task-state-schema.js";
 
-const SOURCE_FILES = {
-  product_architecture_source: {
-    path: "product-architecture-source.md",
-    authority: "intent_scope_boundaries"
-  },
-  technical_realization_plan: {
-    path: "technical-realization-plan.md",
-    authority: "plan_items_execution_blueprint_conformance"
-  },
-  acceptance_checklist: {
-    path: "acceptance-checklist.md",
-    authority: "acs_completion_semantics_proof_layers"
-  }
-} as const;
+const SOURCE_AUTHORITIES: Record<CompositeInputDocumentId, string> = {
+  product_architecture_source: "intent_scope_boundaries",
+  technical_realization_plan: "plan_items_execution_blueprint_conformance",
+  acceptance_checklist: "acs_completion_semantics_proof_layers"
+};
+export const SOURCE_FILES = Object.freeze(Object.fromEntries(
+  COMPOSITE_INPUT_CONTRACT.documents.map((document) => [
+    document.id,
+    Object.freeze({ path: document.file, authority: SOURCE_AUTHORITIES[document.id] })
+  ])
+)) as Readonly<Record<CompositeInputDocumentId, Readonly<{ path: string; authority: string }>>>;
 const SLICE_PROGRESS_TYPES = new Set(["functional_gap_closed", "proof_gap_closed", "blocker_resolved", "invalid_evidence_removed"]);
 
 export interface InitializeSuperpowersTaskOptions {
@@ -244,24 +246,6 @@ export async function sourceRecords(workdir: string): Promise<SuperpowersTaskSta
     sources[key] = { path: source.path, sha256: sha256(content), authority: source.authority };
   }
   return sources;
-}
-
-export function sha256(value: string): string {
-  return createHash("sha256").update(value).digest("hex");
-}
-
-export function stableJson(value: unknown): string {
-  return JSON.stringify(sortJson(value), null, 2);
-}
-
-function sortJson(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map(sortJson);
-  }
-  if (!isRecord(value)) {
-    return value;
-  }
-  return Object.fromEntries(Object.keys(value).sort().map((key) => [key, sortJson(value[key])]));
 }
 
 function unique(values: string[]): string[] {

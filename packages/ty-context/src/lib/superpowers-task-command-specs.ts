@@ -1,9 +1,13 @@
-import { createHash } from "node:crypto";
-import { stableJson } from "./superpowers-task-state.js";
-import type { RequiredCommandSpec, SuperpowersTaskState } from "./superpowers-task-state-schema.js";
+import { sha256, stableJson } from "./stable-json.js";
+import type { RequiredCommandSpec, SuperpowersAcceptanceCriterion, SuperpowersTaskState } from "./superpowers-task-state-schema.js";
 
 export function deriveRequiredCommandSpecs(state: SuperpowersTaskState): RequiredCommandSpec[] {
-  return Object.entries(state.graph.acceptance_criteria).flatMap(([acId, ac]) => {
+  return deriveRequiredCommandSpecsFromAcceptanceCriteria(state.graph.acceptance_criteria);
+}
+export function deriveRequiredCommandSpecsFromAcceptanceCriteria(
+  acceptanceCriteria: Record<string, SuperpowersAcceptanceCriterion>
+): RequiredCommandSpec[] {
+  return Object.entries(acceptanceCriteria).flatMap(([acId, ac]) => {
     const proofLayers = [...new Set((ac.required_proof_layers ?? []).filter(Boolean))];
     if (proofLayers.length === 0) {
       return [];
@@ -56,8 +60,4 @@ function commandSpecId(spec: Omit<RequiredCommandSpec, "command_spec_id">): stri
       spec.final_evidence_expected.join(",")
     ].join("\n")
   );
-}
-
-function sha256(value: string): string {
-  return createHash("sha256").update(value).digest("hex");
 }

@@ -24,6 +24,12 @@ read_policy: default
 - `node packages/ty-context/dist/cli.js validate-superpowers-state tmp/ty-context/plan-acceptance/<slug>`
   - Use after changing Superpowers-backed composite canonical task state, derived view generation, slice/epoch/final gates, goal rendering or state-backed plan-acceptance validation.
   - Expected signal: command exits with no errors for a consistent state workdir and reports blocking source hash, evidence, assertion, negative-evidence, proof-layer, derived-drift or completion-rule errors for inconsistent state.
+- `node --test tests/ty-context/composite-campaign-*.test.mjs tests/ty-context/prepare-composite-long-task-skill.test.mjs`
+  - Use after changing campaign schemas/store/security/render/preflight/handoff/start/result behavior or the managed preparation Skill.
+  - Expected signal: Node exits with no failing subtests across path/redaction/atomic recovery, stateless preflight, Goal-free handoff, explicit binding, current-final-gate projection and protected baseline parity coverage.
+- `node packages/ty-context/dist/cli.js package sync-source` twice, then `node packages/ty-context/dist/cli.js package check-source`
+  - Use after changing canonical managed Skills, AGENTS guidance, protected baseline or public README sources.
+  - Expected signal: the first sync copies canonical assets, the second reports `changed=0`, and check-source reports no drift; a following workspace `sync` installs the generated Skill without creating or scanning campaigns.
 - `node --test tests/ty-context/composite-long-task-assertion-gate.test.mjs tests/ty-context/composite-long-task-workflow-skill.test.mjs tests/ty-context/composite-long-task-goal-renderer.test.mjs tests/ty-context/composite-long-task-protocol-snapshot.test.mjs tests/ty-context/composite-long-task-execution-binding.test.mjs tests/ty-context/composite-long-task-state.test.mjs tests/ty-context/superpowers-task-derive.test.mjs tests/ty-context/superpowers-task-validator.test.mjs tests/ty-context/plan-acceptance-skill.test.mjs`
   - Use after changing the composite long-task state kernel, protocol snapshot, execution binding, goal renderer, managed Skill state-kernel prompt rules, README/Context placement wording or runtime-vs-maintenance protocol boundary.
   - Expected signal: Node test runner exits with no failing subtests.

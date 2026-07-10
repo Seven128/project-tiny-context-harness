@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import path from "node:path";
+import { COMPOSITE_INPUT_CONTRACT } from "./composite-input-contract.js";
 import { CANONICAL_CORE_PACKAGE } from "./constants.js";
 import { pathExists, readText, writeTextIfChanged } from "./fs.js";
 import { packageAssetPath, packageRoot } from "./paths.js";
@@ -7,11 +8,7 @@ import { packageAssetPath, packageRoot } from "./paths.js";
 const SOURCE_ASSET =
   "packages/ty-context/assets/skills/composite-long-task-workflow/references/composite-long-task-workflow-protocol.md";
 
-const REQUIRED_SOURCE_FILES = [
-  "product-architecture-source.md",
-  "technical-realization-plan.md",
-  "acceptance-checklist.md"
-] as const;
+export const REQUIRED_SOURCE_FILES = Object.freeze(COMPOSITE_INPUT_CONTRACT.documents.map((document) => document.file));
 
 export interface CompositeLongTaskGoalRenderResult {
   workdir: string;
@@ -22,8 +19,12 @@ export interface CompositeLongTaskGoalRenderResult {
   goalObjectiveLength: number;
 }
 
-export async function renderCompositeLongTaskGoal(workdir: string): Promise<CompositeLongTaskGoalRenderResult> {
+export async function renderCompositeLongTaskGoal(
+  workdir: string,
+  options: { displayWorkdir?: string } = {}
+): Promise<CompositeLongTaskGoalRenderResult> {
   const resolvedWorkdir = path.resolve(workdir);
+  const displayWorkdir = path.resolve(options.displayWorkdir ?? resolvedWorkdir);
   await assertReadyWorkdir(resolvedWorkdir);
 
   const protocolBody = ensureTrailingNewline(
@@ -44,11 +45,11 @@ export async function renderCompositeLongTaskGoal(workdir: string): Promise<Comp
   const protocolPath = path.join(resolvedWorkdir, "workflow-protocol.md");
   await writeTextIfChanged(protocolPath, protocolSnapshot);
 
-  const executionBinding = await renderExecutionBinding(resolvedWorkdir, protocolSha256);
+  const executionBinding = await renderExecutionBinding(displayWorkdir, protocolSha256);
   const executionBindingPath = path.join(resolvedWorkdir, "execution-binding.md");
   await writeTextIfChanged(executionBindingPath, executionBinding);
 
-  const goalObjective = await renderGoalObjective(workdirForPrompt(resolvedWorkdir));
+  const goalObjective = await renderGoalObjective(workdirForPrompt(displayWorkdir));
   if (goalObjective.length > 3850) {
     throw new Error(`goal-objective.txt exceeds 3850 characters (${goalObjective.length})`);
   }

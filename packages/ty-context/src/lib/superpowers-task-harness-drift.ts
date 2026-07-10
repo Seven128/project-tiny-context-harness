@@ -15,8 +15,13 @@ const HARNESS_PATH_PATTERNS = [
   /(^|\/).*\.spec\.[cm]?[jt]sx?$/i,
   /(^|\/).*\.test\.[cm]?[jt]sx?$/i,
   /(^|\/)tests\/ty-context\/fixtures\/composite-long-task\//i,
+  /(^|\/)packages\/ty-context\/src\/commands\/composite-(long-task|campaign)\.ts$/i,
+  /(^|\/)packages\/ty-context\/src\/lib\/composite-(input-contract|source-preflight(?:-files)?|campaign-[^/]+)\.ts$/i,
+  /(^|\/)packages\/ty-context\/src\/lib\/superpowers-task-(compile(?:-[^/]+)?|fields|proof-layers|source-(compile|field-values|parser))\.ts$/i,
   /superpowers-task-(assertions|evidence|evidence-kernel|current-evidence|command-specs|command-run-correlation|unregistered-evidence|completion-output|final-card|ac010|gates|validator|derive|state|state-schema|state-shape|under-specified|protected-baseline|harness-drift)\.ts$/i,
   /(^|\/)(\.codex\/ty-context-managed|packages\/ty-context\/assets)\/skills\/composite-long-task-workflow\//i,
+  /(^|\/)(\.codex\/ty-context-managed|packages\/ty-context\/assets)\/skills\/prepare-composite-long-task\//i,
+  /(^|\/)\.[^/]+\/skills\/(composite-long-task-workflow|prepare-composite-long-task)\//i,
   /composite-long-task-workflow-protocol\.md$/i,
   /(^|\/)Makefile$/i,
   /(^|\/)package\.json$/i

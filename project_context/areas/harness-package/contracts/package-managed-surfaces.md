@@ -17,6 +17,7 @@ This contract defines which repository surfaces are package-managed, generated, 
 - `README.md`, `packages/ty-context/README.md`, npm/package metadata and launch/release docs are human-facing package surfaces. They must stay aligned with package behavior and the Minimal Context boundary.
 - `PROJECT_SPEC.md` is the full Harness workflow design-spec surface for this source workspace, not a consumer default asset.
 - `project_context/**` is the source workspace durable fact surface. It can describe this repository's own package boundaries without becoming consumer default content.
+- Composite campaign request, coordination, audit and packet-revision files are Git-trackable user-owned project data created only by explicit preparation. They are not package-managed assets, generated default plan state, Context graph nodes or execution/evidence storage.
 
 ## Source Sync Boundary
 
@@ -29,7 +30,7 @@ This contract defines which repository surfaces are package-managed, generated, 
 ## Generated Skill Boundary
 
 - Package-managed default Skills must remain business-agnostic and Minimal Context oriented.
-- Package-managed default Skills include Context authoring Skills, Product Surface Contract support, full-project export guidance, Harness upgrade guidance, the ordinary long-task Skill (`normal-long-task`) and the Composite Long-Task Workflow Skill (`composite-long-task-workflow`).
+- Package-managed default Skills include Context authoring Skills, Product Surface Contract support, full-project export guidance, Harness upgrade guidance, the ordinary long-task Skill (`normal-long-task`), the Composite Long-Task Preparation Skill (`prepare-composite-long-task`) and the strict Composite Long-Task Workflow Skill (`composite-long-task-workflow`).
 - Consumer customization belongs in separate project-local Skills such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` or `<harnessRoot>/skills/development_engineer/SKILL.md`.
 - Project-local Skill front matter trigger descriptions should stay aligned with the corresponding default Skill and project `AGENTS.md` trigger guidance.
 - Do not restore the old override-skill merge mechanism under managed folders.
@@ -38,6 +39,7 @@ This contract defines which repository surfaces are package-managed, generated, 
 ## Consumer Asset Boundary
 
 - `init`, `sync` and `upgrade` may install or refresh managed assets, but they must not generate project-specific product facts, business Product Surface Contract files, stage work-product trees, lifecycle state or phase gates.
+- `init`, `sync` and `upgrade` may install or refresh the preparation Skill/CLI capability, but they must never create, discover, scan, import, mutate or delete user-owned composite campaign data. Campaign schema migration is explicit and on demand only.
 - The package-managed `.github/workflows/harness.yml` is consumer-facing and should run selected Harness gates only; maintainer-only package tests and source-drift checks stay in this source repository. Plan artifact validators are explicit user commands for complex plan surfaces and long-task artifacts, not default consumer workflow gates.
 - Public package surfaces must be fully usable in English. Non-English trigger examples are compatibility additions only.
 

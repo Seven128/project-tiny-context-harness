@@ -1,4 +1,4 @@
-import { compileError, throwCompileErrors } from "./superpowers-task-compile-diagnostics.js";
+import { compileDiagnostic, throwCompileErrors, type CompileDiagnosticRecord } from "./superpowers-task-compile-diagnostics.js";
 
 export interface ParsedField {
   value: string | string[];
@@ -22,7 +22,7 @@ export interface DefinitionParseOptions {
 
 export function parseHeadingDefinitions(content: string, options: DefinitionParseOptions): ParsedDefinition[] {
   const lines = splitLines(content);
-  const errors: string[] = [];
+  const errors: CompileDiagnosticRecord[] = [];
   rejectListStyleDefinitions(lines, options, errors);
   const headings = findDefinitionHeadings(lines, options.kind);
   const seen = new Map<string, number>();
@@ -31,7 +31,7 @@ export function parseHeadingDefinitions(content: string, options: DefinitionPars
   for (const heading of headings) {
     const firstLine = seen.get(heading.id);
     if (firstLine !== undefined) {
-      errors.push(compileError(`${heading.id} duplicate definition at ${options.sourceFile}:${firstLine} and ${options.sourceFile}:${heading.line}`, "blocking_unparseable_object", options.sourceFile, heading.line, heading.id, "duplicate object ids make PI/AC graph references ambiguous", "keep exactly one heading definition for this id"));
+      errors.push(compileDiagnostic(`${heading.id} duplicate definition at ${options.sourceFile}:${firstLine} and ${options.sourceFile}:${heading.line}`, "blocking_unparseable_object", options.sourceFile, heading.line, heading.id, "duplicate object ids make PI/AC graph references ambiguous", "keep exactly one heading definition for this id"));
       continue;
     }
     seen.set(heading.id, heading.line);
@@ -48,14 +48,14 @@ export function parseHeadingDefinitions(content: string, options: DefinitionPars
   }
 
   if (definitions.length === 0) {
-    errors.push(compileError(`${options.sourceFile} must define ${options.kind} items with Markdown headings like "## ${options.kind}-001: ..."`, options.kind === "PI" ? "blocking_missing_plan" : "blocking_missing_checklist", options.sourceFile, 1, `${options.kind}_heading`, "the source cannot compile without at least one object heading", `add headings like ## ${options.kind}-001: ...`));
+    errors.push(compileDiagnostic(`${options.sourceFile} must define ${options.kind} items with Markdown headings like "## ${options.kind}-001: ..."`, options.kind === "PI" ? "blocking_missing_plan" : "blocking_missing_checklist", options.sourceFile, 1, `${options.kind}_heading`, "the source cannot compile without at least one object heading", `add headings like ## ${options.kind}-001: ...`));
   }
   throwCompileErrors(errors);
   return definitions;
 }
 
 export function parseDocumentFields(content: string, sourceFile: string, allowedFields: Set<string>): Record<string, ParsedField> {
-  const errors: string[] = [];
+  const errors: CompileDiagnosticRecord[] = [];
   const fields = parseFields(splitLines(content), sourceFile, 1, allowedFields, errors);
   throwCompileErrors(errors);
   return fields;
@@ -100,7 +100,7 @@ function parseFields(
   sourceFile: string,
   startLine: number,
   allowedFields: Set<string>,
-  errors: string[]
+  errors: CompileDiagnosticRecord[]
 ): Record<string, ParsedField> {
   const fields: Record<string, ParsedField> = {};
   for (let index = 0; index < lines.length; index++) {
@@ -108,12 +108,12 @@ function parseFields(
     const lineNumber = startLine + index;
     const heading = /^(#{1,6})\s+(.+?)\s*$/.exec(line);
     if (heading && allowedFields.has(heading[2].trim())) {
-      errors.push(compileError(`${sourceFile}:${lineNumber} field headings are not supported; use "${heading[2].trim()}: ..."`,
+      errors.push(compileDiagnostic(`${sourceFile}:${lineNumber} field headings are not supported; use "${heading[2].trim()}: ..."`,
         "blocking_unparseable_object", sourceFile, lineNumber, heading[2].trim(), "field heading syntax is ambiguous in compiled source", "use key: value fields"));
       continue;
     }
     if (/^\s*\|/.test(line) && containsKnownField(line, allowedFields)) {
-      errors.push(compileError(`${sourceFile}:${lineNumber} table fields are not supported; use key: value fields`,
+      errors.push(compileDiagnostic(`${sourceFile}:${lineNumber} table fields are not supported; use key: value fields`,
         "blocking_unparseable_object", sourceFile, lineNumber, "table_field", "table fields cannot be parsed into canonical state safely", "use key: value fields"));
       continue;
     }
@@ -123,12 +123,12 @@ function parseFields(
     }
     const name = match[1];
     if (!allowedFields.has(name)) {
-      errors.push(compileError(`${sourceFile}:${lineNumber} unknown field ${name}`,
+      errors.push(compileDiagnostic(`${sourceFile}:${lineNumber} unknown field ${name}`,
         "blocking_unparseable_object", sourceFile, lineNumber, name, "unknown fields may hide required source semantics", "rename the field to a supported canonical key"));
       continue;
     }
     if (fields[name]) {
-      errors.push(compileError(`${sourceFile}:${lineNumber} duplicate field ${name}`,
+      errors.push(compileDiagnostic(`${sourceFile}:${lineNumber} duplicate field ${name}`,
         "blocking_unparseable_object", sourceFile, lineNumber, name, "duplicate fields make canonical source values ambiguous", "keep one field value"));
       continue;
     }
@@ -145,7 +145,7 @@ function parseFieldValue(
   rest: string,
   sourceFile: string,
   lineNumber: number,
-  errors: string[]
+  errors: CompileDiagnosticRecord[]
 ): { value: string | string[]; endIndex: number } {
   const trimmed = rest.trim();
   if (trimmed === "|") {
@@ -159,7 +159,7 @@ function parseFieldValue(
       block.push(next.replace(/^\s{0,2}/, ""));
     }
     if (block.length === 0) {
-      errors.push(compileError(`${sourceFile}:${lineNumber} block field must include indented text`,
+      errors.push(compileDiagnostic(`${sourceFile}:${lineNumber} block field must include indented text`,
         "blocking_unparseable_object", sourceFile, lineNumber, "block_field", "empty block field cannot prove source intent", "add indented text or remove the field"));
     }
     return { value: block.join("\n").trim(), endIndex: cursor - 1 };
@@ -180,7 +180,7 @@ function parseFieldValue(
     }
     const listItem = /^\s*[-*+]\s+(.+?)\s*$/.exec(next);
     if (!listItem) {
-      errors.push(compileError(`${sourceFile}:${cursor + 1} field lists must use indented "- item" entries or key: | blocks`,
+      errors.push(compileDiagnostic(`${sourceFile}:${cursor + 1} field lists must use indented "- item" entries or key: | blocks`,
         "blocking_unparseable_object", sourceFile, cursor + 1, "list_field", "list syntax cannot be parsed into canonical arrays", "use indented '- item' entries or key: | blocks"));
       continue;
     }
@@ -199,7 +199,7 @@ function isTopLevelFieldOrHeading(line: string): boolean {
 function rejectListStyleDefinitions(
   lines: string[],
   options: DefinitionParseOptions,
-  errors: string[]
+  errors: CompileDiagnosticRecord[]
 ): void {
   const idPattern = options.kind === "PI" ? "PI" : "AC";
   const listPattern = new RegExp(`^\\s*[-*+]\\s+(${idPattern}-\\d{3,})\\b\\s*[:.-]?`, "i");
@@ -213,7 +213,7 @@ function rejectListStyleDefinitions(
       continue;
     }
     const id = match[1].toUpperCase();
-    errors.push(compileError(`${id} list-style definition is not allowed at ${options.sourceFile}:${index + 1}; use "## ${id}: ..."`,
+    errors.push(compileDiagnostic(`${id} list-style definition is not allowed at ${options.sourceFile}:${index + 1}; use "## ${id}: ..."`,
       "blocking_unparseable_object", options.sourceFile, index + 1, id, "list-style object definitions are not canonical PI/AC headings", `use "## ${id}: ..."`));
   }
 }

@@ -204,7 +204,17 @@ async function runFinalGateOnce(
     await saveSuperpowersState(workdir, triagedLatest);
     await deriveSuperpowersArtifacts(workdir);
   }
+  const finalState = await loadSuperpowersState(workdir);
+  const finalAttempt = finalState.attempts.find((attempt) => attempt.task_attempt_id === finalState.current_attempt_id);
   await appendSuperpowersEvent(workdir, "final_gate", {
+    ...(finalAttempt ? {
+      task_id: finalState.meta.task_id,
+      task_attempt_id: finalAttempt.task_attempt_id,
+      source_bundle_hash: finalAttempt.source_bundle_hash,
+      product_source_hash: finalAttempt.product_source_hash,
+      technical_plan_hash: finalAttempt.technical_plan_hash,
+      acceptance_checklist_hash: finalAttempt.acceptance_checklist_hash
+    } : {}),
     product_goal_complete: contract.product_goal_complete,
     completion_output_status: contract.completion_output_status,
     blocker_triage: contract.blocker_triage

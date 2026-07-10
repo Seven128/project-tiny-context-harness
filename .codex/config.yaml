@@ -97,6 +97,38 @@ modularity:
       category: legacy_migration
       reason: Composite long-task invariant regressions still aggregate several completion and scope invariants across HFC-001 and HFC-002.
       future_split_boundary: Split completion-output, full-population and scope-conflict invariants into dedicated focused test files.
+    - path: tests/ty-context/composite-campaign-atomic-hardening.test.mjs
+      category: fixture_snapshot
+      reason: Atomic crash and adversarial swap scenarios share one transaction-fixture lifecycle and are reviewed as a single hardening matrix.
+      future_split_boundary: Split create-marker, quarantine ownership and installed-packet swap scenarios into focused fixture runners.
+    - path: tests/ty-context/composite-campaign-path-safety.test.mjs
+      category: fixture_snapshot
+      reason: Portable path, Windows reserved-name and symlink/junction cases form one cross-platform safety matrix.
+      future_split_boundary: Split lexical component validation from filesystem identity and configured-root escape cases.
+    - path: tests/ty-context/composite-campaign-schema-campaign-cases.mjs
+      category: fixture_snapshot
+      reason: Campaign lifecycle schema cases share canonical campaign builders and historical-selection invariants.
+      future_split_boundary: Split selection history, binding lifecycle and recovery-marker schema cases into focused modules.
+    - path: tests/ty-context/composite-campaign-schema.test.mjs
+      category: fixture_snapshot
+      reason: Top-level V1 schema/codec parity cases intentionally exercise every public campaign schema in one matrix.
+      future_split_boundary: Split codec/domain invariants from public schema export and canonical normalization coverage.
+    - path: tests/ty-context/composite-campaign-security.test.mjs
+      category: fixture_snapshot
+      reason: Secret syntax, size limits, unsafe keys and adversarial byte forms share one redaction rejection matrix.
+      future_split_boundary: Split request sanitization, packet redaction and event/file size-boundary suites.
+    - path: tests/ty-context/composite-campaign-store-read.test.mjs
+      category: fixture_snapshot
+      reason: Committed-reader corruption cases require one shared byte-level store fixture and hash-chain matrix.
+      future_split_boundary: Split manifest/request/revision reads from event-chain and manual-drift rejection cases.
+    - path: tests/ty-context/composite-campaign-store.test.mjs
+      category: fixture_snapshot
+      reason: Store transaction happy paths and five-checkpoint crash recovery share one canonical campaign fixture matrix.
+      future_split_boundary: Split create/scope/packet transitions, optimistic concurrency and checkpoint recovery into focused suites.
+    - path: tests/ty-context/composite-source-preflight.test.mjs
+      category: fixture_snapshot
+      reason: Pure and filesystem preflight diagnostics share one canonical three-source input/error matrix.
+      future_split_boundary: Split pure compile diagnostics, filesystem safety and compatibility adapter cases into focused suites.
 managed_files:
   - path: AGENTS.md
     strategy: merge-block

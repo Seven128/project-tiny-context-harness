@@ -371,6 +371,12 @@ The expected Context Priority Ladder is: read Context first, run the product/pag
 
 Managed `AGENTS.md` guidance is intentionally a startup router, not a full manual. It should contain fact-source entry points, hard boundaries, key triggers and shortest validation commands; package consumers default long design reasoning to Context unless they already have a local spec/design convention. The source repository keeps stable Harness workflow rationale in `PROJECT_SPEC.md`. Role procedures belong in Skills and human usage guidance in README. The recommended 40-70 line range is a soft budget, not a validator gate.
 
+## Composite Campaign Preparation
+
+Invoke `/prepare-composite-long-task` when a raw requirement still needs Scope Fit, stable SFC decomposition, and strict three-input authoring. It creates an opt-in, user-owned campaign, authors only the current dependency-ready SFC as `CompositeAuthoringPacketV1`, renders the three Markdown authorities deterministically, runs stateless preflight, and stops at `handoff_ready` unless start is explicitly authorized. Handoff never creates a Goal; explicit start binds one successfully created Goal to one SFC, and `record-result` only mirrors the current hash- and attempt-verified final gate. Campaign authoring/provenance is Git-trackable, while attempts, evidence, and derived execution views remain under `tmp/**`. There is no legacy importer or aggregate campaign-completion state. Existing complete three-input bundles continue directly through `/composite-long-task-workflow`.
+
+The package-managed `ty-context composite-campaign` commands are `contract`, `create`, `apply-scope`, `apply-packet`, `render`, `preflight`, `next`, `handoff`, `start`, and `record-result`. `init`, `sync`, and `upgrade` install the capability but never create, scan, mutate, or delete user campaigns.
+
 ## Minimal Context Contract
 
 `project_context/global.md` should contain:

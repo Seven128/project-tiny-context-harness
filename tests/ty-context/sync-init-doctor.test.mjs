@@ -116,7 +116,9 @@ try {
   await stat(path.join(root, ".agent/skills/context_full_project_export/SKILL.md"));
   await stat(path.join(root, ".agent/skills/context_harness_upgrade/SKILL.md"));
   await stat(path.join(root, ".agent/skills/normal-long-task/SKILL.md"));
+  await stat(path.join(root, ".agent/skills/prepare-composite-long-task/SKILL.md"));
   await stat(path.join(root, ".agent/skills/composite-long-task-workflow/SKILL.md"));
+  await assert.rejects(stat(path.join(root, ".agent/composite-long-task/campaigns")));
   await assert.rejects(stat(path.join(root, "project_context/areas/product-surface-contracts.md")));
   await assert.rejects(stat(path.join(root, ".work_products/INDEX.md")));
 
@@ -160,6 +162,7 @@ try {
   assert.match(agents, /upgrade Tiny Context/);
   assert.match(agents, /context_harness_upgrade/);
   assert.match(agents, /\/normal-long-task/);
+  assert.match(agents, /\/prepare-composite-long-task/);
   assert.match(agents, /\/composite-long-task-workflow/);
   assert.doesNotMatch(agents, /plan_acceptance_checklist_compiler/);
   assert.doesNotMatch(agents, /superpowers_target_prompt_compiler/);

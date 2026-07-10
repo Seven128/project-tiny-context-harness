@@ -1,5 +1,6 @@
 import { checkModularity } from "./check-modularity.js";
 import { compositeLongTask } from "./composite-long-task.js";
+import { compositeCampaign } from "./composite-campaign.js";
 import { doctor } from "./doctor.js";
 import { exportContext } from "./export-context.js";
 import { init } from "./init.js";
@@ -27,6 +28,7 @@ export const commands: Record<string, CommandHandler> = {
   "validate-plan-acceptance": (args) => validate(["validate-plan-acceptance", ...args]),
   "validate-superpowers-state": (args) => validate(["validate-superpowers-state", ...args]),
   "composite-long-task": compositeLongTask,
+  "composite-campaign": compositeCampaign,
   superpowers,
   package: packageSource
 };
@@ -56,5 +58,7 @@ export function help(): void {
                        Validate canonical Superpowers-backed task-state.json
   composite-long-task <subcommand>
                        Manage explicit composite long-task workflow workdirs
+  composite-campaign <subcommand>
+                       Prepare, hand off, bind, and record composite SFC campaigns
   package <subcommand> Maintain package canonical source`);
 }

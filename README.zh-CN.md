@@ -84,6 +84,12 @@ Harness Drift Lock 把产品证明和验收工具链证明拆开。`product_task
 
 额外的 machine-proof 防线：不得把 screenshot-only、final card、validator pass、matrix/verdict 行、prose evidence、component/storybook/viewmodel/mock/unit/diagnostic page 或 API-only path 当成 UI/browser/runtime/integration/test AC 的完成证明。
 
+## 多组合长程任务准备
+
+只有原始需求、还需要 Scope Fit、稳定 SFC 拆分和严格三输入编写时，显式调用 `/prepare-composite-long-task`。它创建 opt-in、用户自有的 campaign，每次只为当前 dependency-ready SFC 编写 `CompositeAuthoringPacketV1`，由包代码确定性渲染三份 Markdown 并做无状态 preflight；没有显式启动授权时停在 `handoff_ready`。handoff 不创建 Goal；显式 `start` 只把一个成功创建的 Goal 绑定到一个 SFC；`record-result` 只镜像当前 attempt/hash 匹配的 final gate。campaign authoring/provenance 可 Git 跟踪，运行 attempt、证据和 derived views 仍留在 `tmp/**`。v1 不提供 legacy importer，也没有 campaign aggregate completion 状态。已有完整三输入仍直接走 `/composite-long-task-workflow`。
+
+包管理的 `ty-context composite-campaign` 命令包括 `contract`、`create`、`apply-scope`、`apply-packet`、`render`、`preflight`、`next`、`handoff`、`start` 和 `record-result`。`init`、`sync` 和 `upgrade` 只安装能力，不创建、扫描、修改或删除用户 campaign。
+
 ## 当前最佳实践
 
 短程任务直接使用流程契约和 Context 层：

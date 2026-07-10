@@ -419,19 +419,16 @@ async function verifyReleaseAndGithubStatic(sourceRoot, labDir, add) {
   });
   const releaseScript = path.join(sourceRoot, "tools/release_npm.mjs");
   const releaseScriptText = existsSync(releaseScript) ? await readFile(releaseScript, "utf8") : "";
+  const releaseAligned =
+    releaseScriptText.includes("tools/release_publish.mjs") &&
+    !releaseScriptText.includes(".work_products/08_release/CURRENT_RELEASE.md");
   add({
     area: "Release automation",
     evidence: "release automation static coverage",
-    status:
-      releaseScriptText.includes(".artifacts/releases/current-release-status.md") &&
-      !releaseScriptText.includes(".work_products/08_release/CURRENT_RELEASE.md")
-        ? "PASS"
-        : "FAIL",
-    details:
-      releaseScriptText.includes(".artifacts/releases/current-release-status.md") &&
-      !releaseScriptText.includes(".work_products/08_release/CURRENT_RELEASE.md")
-        ? "release automation writes a generated .artifacts report instead of legacy work products; npm publish is out of scope for consumer lab"
-        : "release automation report path is not Minimal Context aligned"
+    status: releaseAligned ? "PASS" : "FAIL",
+    details: releaseAligned
+      ? "release:npm delegates to current release:publish without legacy work products; npm publish is out of scope for consumer lab"
+      : "release automation entrypoint is not Minimal Context aligned"
   });
 }
 
@@ -613,7 +610,8 @@ function findTarballName(stdout) {
 }
 
 function run(command, args, cwd) {
-  const result = spawnSync(command, args, {
+  const invocation = resolveInvocation(command, args);
+  const result = spawnSync(invocation.command, invocation.args, {
     cwd,
     encoding: "utf8",
     env: { ...process.env, CI: "1" }
@@ -626,6 +624,12 @@ function run(command, args, cwd) {
     stdout: result.stdout ?? "",
     stderr: result.stderr ?? (result.error ? String(result.error) : "")
   };
+}
+
+export function resolveInvocation(command, args, platform = process.platform, nodePath = process.execPath) {
+  if (platform !== "win32" || !["npm", "npx"].includes(command)) return { command, args };
+  const cli = path.join(path.dirname(nodePath), "node_modules", "npm", "bin", `${command}-cli.js`);
+  return { command: nodePath, args: [cli, ...args] };
 }
 
 function renderCommand(command, args) {

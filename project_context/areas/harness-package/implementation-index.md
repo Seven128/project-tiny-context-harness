@@ -18,6 +18,7 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - Package source commands: `packages/ty-context/src/commands/package-source.ts`.
 - Validator command wrapper: `packages/ty-context/src/commands/validate.ts`.
 - Composite long-task state command wrapper: `packages/ty-context/src/commands/composite-long-task.ts`; hidden legacy alias wrapper: `packages/ty-context/src/commands/superpowers.ts`.
+- Composite campaign preparation command wrapper: `packages/ty-context/src/commands/composite-campaign.ts`.
 
 ## Core Libraries
 
@@ -35,6 +36,7 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - Shared plan validator helpers: `packages/ty-context/src/lib/plan-validator-common.ts` and `packages/ty-context/src/lib/plan-acceptance-json.ts`.
 - Superpowers-backed composite task state kernel: `packages/ty-context/src/lib/superpowers-task-state.ts`, `packages/ty-context/src/lib/superpowers-task-fields.ts`, `packages/ty-context/src/lib/superpowers-task-state-schema.ts`, `packages/ty-context/src/lib/superpowers-task-attempt.ts`, `packages/ty-context/src/lib/superpowers-task-command-specs.ts`, `packages/ty-context/src/lib/superpowers-task-evidence.ts`, `packages/ty-context/src/lib/superpowers-task-completion.ts`, `packages/ty-context/src/lib/superpowers-task-completion-output.ts`, `packages/ty-context/src/lib/superpowers-task-final-card.ts`, `packages/ty-context/src/lib/superpowers-task-contradictions.ts`, `packages/ty-context/src/lib/superpowers-task-compile.ts`, `packages/ty-context/src/lib/superpowers-task-source-compile.ts`, `packages/ty-context/src/lib/superpowers-task-compile-diagnostics.ts`, `packages/ty-context/src/lib/superpowers-task-compile-guards.ts`, `packages/ty-context/src/lib/superpowers-task-derive.ts`, `packages/ty-context/src/lib/superpowers-task-events.ts`, `packages/ty-context/src/lib/superpowers-task-validator.ts`, `packages/ty-context/src/lib/superpowers-task-conformance.ts`, `packages/ty-context/src/lib/superpowers-task-assertions.ts`, `packages/ty-context/src/lib/superpowers-task-assertion-normalizers.ts`, `packages/ty-context/src/lib/superpowers-task-status.ts`, `packages/ty-context/src/lib/superpowers-task-gates.ts`, `packages/ty-context/src/lib/superpowers-task-next-slices.ts` and `packages/ty-context/src/lib/composite-long-task-renderer.ts`.
 - Trusted Evidence Kernel and harness protection helpers: `packages/ty-context/src/lib/superpowers-task-evidence-kernel.ts` owns final completion recomputation; `superpowers-task-harness-drift.ts` owns product-vs-harness modification blocking; `superpowers-task-protected-baseline.ts` owns protected baseline category checks; `superpowers-task-under-specified.ts` owns machine AC specification blocking; and `superpowers-task-ac010.ts` owns final-gate/summary AC bootstrap prevention.
+- Composite campaign authoring core: `packages/ty-context/src/lib/composite-input-contract.ts` owns the rendered authority field contract; `composite-campaign-schema*.ts` and `composite-campaign-types.ts` own versioned campaign/packet schemas; `composite-campaign-renderer.ts` and `composite-campaign-preflight.ts` own deterministic projection and stateless validation; `composite-campaign-store*.ts` owns user campaign persistence; `composite-campaign-handoff.ts` owns Goal-free execution materialization; and `composite-campaign-result.ts` owns current-final-gate-only result projection.
 - Modularity/source-file checks: `packages/ty-context/src/lib/modularity.ts` and `packages/ty-context/src/lib/source-files.ts`.
 - Context export implementation: `packages/ty-context/src/lib/context-export.ts`.
 
@@ -43,7 +45,7 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - Managed source assets: `.codex/ty-context-managed/**`.
 - Package assets shipped to consumers: `packages/ty-context/assets/**`.
 - Source-to-package mapping: `packages/ty-context/source-mappings.yaml`.
-- Source workspace generated/default Skills: `.codex/skills/context_*`, `.codex/skills/context_full_project_export`, `.codex/skills/context_harness_upgrade`, `.codex/skills/normal-long-task`, `.codex/skills/composite-long-task-workflow`.
+- Source workspace generated/default Skills: `.codex/skills/context_*`, `.codex/skills/context_full_project_export`, `.codex/skills/context_harness_upgrade`, `.codex/skills/normal-long-task`, `.codex/skills/prepare-composite-long-task`, `.codex/skills/composite-long-task-workflow`.
 - Source-workspace-only authoring Skill: `.codex/skills/authoring/harness_package_design/SKILL.md`.
 
 ## Tests
@@ -60,6 +62,7 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - Modularity checks: `tests/ty-context/check-modularity.test.mjs` and `tests/ty-context/modularity-guidance.test.mjs`.
 - Ordinary long-task Skill behavior: `tests/ty-context/plan-acceptance-skill.test.mjs`.
 - Composite long-task workflow Skill and renderer behavior: `tests/ty-context/composite-long-task-workflow-skill.test.mjs`, `tests/ty-context/composite-long-task-goal-renderer.test.mjs`, `tests/ty-context/composite-long-task-protocol-snapshot.test.mjs` and `tests/ty-context/composite-long-task-execution-binding.test.mjs`. These tests own the package-managed Expected Runtime Effect / `预期实现效果` wording, explicit fusion order, hallucination guard, runtime protocol snapshot and thin Goal objective contract. Maintenance placement for README, Context and test surfaces belongs in this implementation index and related docs/tests, not in the per-task runtime protocol.
+- Composite campaign and preparation Skill behavior: `tests/ty-context/composite-campaign-*.test.mjs` and `tests/ty-context/prepare-composite-long-task-skill.test.mjs`; protected baseline parity lives in `tests/ty-context/composite-campaign-protected-baseline.test.mjs`.
 
 ## Release And Maintainer Tools
 

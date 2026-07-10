@@ -5,8 +5,22 @@ import {
   type SuperpowersTaskState
 } from "./superpowers-task-state-schema.js";
 import { evaluateCurrentAttemptEvidence } from "./superpowers-task-current-evidence.js";
-import { MACHINE_VERIFIABLE_LAYER_NAMES, normalizeProofLayerId, normalizeProofLayerName } from "./superpowers-task-fields.js";
+import {
+  MACHINE_VERIFIABLE_PROOF_LAYERS,
+  isMachineVerifiableLayer,
+  isUiBrowserLayer,
+  normalizeProofLayerId,
+  proofLayerAcId,
+  proofLayerName
+} from "./superpowers-task-proof-layers.js";
 export { normalizeAssertionResult, normalizeNegativeEvidenceScan } from "./superpowers-task-assertion-normalizers.js";
+export {
+  MACHINE_VERIFIABLE_PROOF_LAYERS,
+  isMachineVerifiableLayer,
+  isUiBrowserLayer,
+  proofLayerAcId,
+  proofLayerName
+};
 
 export type AssertionStatus = "passed" | "failed" | "missing" | "stale" | "not_applicable";
 
@@ -16,7 +30,6 @@ export interface ProofLayerAssertionEvaluation {
   negative_evidence_findings: string[];
 }
 
-export const MACHINE_VERIFIABLE_PROOF_LAYERS = new Set(MACHINE_VERIFIABLE_LAYER_NAMES);
 export const UI_BROWSER_ASSERTION_TYPES = new Set(["browser_assertion", "playwright_assertion", "ui_browser_assertion"]);
 const DEFAULT_UI_FORBIDDEN_FINAL_STATES = ["未验证", "不可用", "暂不可用", "页面无明显变化"];
 const GENERIC_INVALID_EVIDENCE_TYPE_PATTERNS = [
@@ -38,23 +51,6 @@ const GENERIC_INVALID_EVIDENCE_TYPE_PATTERNS = [
   /\bdom[-_ ]?snippet\b/i,
   /\bsample[-_ ]?for[-_ ]?full[-_ ]?population\b/i
 ];
-
-export function proofLayerName(layerId: string): string {
-  const raw = layerId.includes(".") ? layerId.slice(layerId.lastIndexOf(".") + 1) : layerId;
-  return normalizeProofLayerName(raw);
-}
-
-export function proofLayerAcId(layerId: string): string {
-  return layerId.includes(".") ? layerId.slice(0, layerId.lastIndexOf(".")) : "";
-}
-
-export function isMachineVerifiableLayer(layerId: string): boolean {
-  return MACHINE_VERIFIABLE_PROOF_LAYERS.has(proofLayerName(layerId));
-}
-
-export function isUiBrowserLayer(layerId: string): boolean {
-  return proofLayerName(layerId) === "ui_browser";
-}
 
 export function evaluateAcEvidence(state: SuperpowersTaskState, acId: string): ProofLayerAssertionEvaluation {
   const ac = state.graph.acceptance_criteria[acId];

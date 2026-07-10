@@ -14,6 +14,7 @@ try {
   await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/context_development_engineer"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/context_surface_contract"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/normal-long-task"), { recursive: true });
+  await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/prepare-composite-long-task/references"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/composite-long-task-workflow/references"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/composite-long-task-workflow/assets"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/ty-context-managed/minimal_tools"), { recursive: true });
@@ -59,6 +60,16 @@ try {
   await writeFile(
     path.join(fixture, ".agent/ty-context-managed/skills/composite-long-task-workflow/SKILL.md"),
     "---\nname: composite-long-task-workflow\ndescription: Use when directly invoked for Superpowers-backed composite long-task workflow preparation.\n---\n\n# Composite Long-Task Workflow\n",
+    "utf8"
+  );
+  await writeFile(
+    path.join(fixture, ".agent/ty-context-managed/skills/prepare-composite-long-task/SKILL.md"),
+    "---\nname: prepare-composite-long-task\ndescription: Use when directly invoked to prepare a composite campaign.\n---\n\n# Prepare Composite Long Task\n",
+    "utf8"
+  );
+  await writeFile(
+    path.join(fixture, ".agent/ty-context-managed/skills/prepare-composite-long-task/references/campaign-lifecycle.md"),
+    "# Campaign Lifecycle\n",
     "utf8"
   );
   await writeFile(
@@ -159,6 +170,11 @@ try {
     "utf8"
   );
   assert.match(packagedNormalLongTaskSkill, /name: normal-long-task/);
+  const packagedPrepareSkill = await readFile(
+    path.join(fixture, "packages/ty-context/assets/skills/prepare-composite-long-task/SKILL.md"),
+    "utf8"
+  );
+  assert.match(packagedPrepareSkill, /name: prepare-composite-long-task/);
   const packagedCompositeLongTaskSkill = await readFile(
     path.join(fixture, "packages/ty-context/assets/skills/composite-long-task-workflow/SKILL.md"),
     "utf8"
