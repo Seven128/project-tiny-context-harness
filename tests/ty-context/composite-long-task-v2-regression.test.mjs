@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { compileLongTaskContract } from "../../packages/ty-context/dist/lib/long-task-contract-compiler.js";
 import { runLongTaskFinalGate } from "../../packages/ty-context/dist/lib/long-task-final-gate.js";
-import { writeHappyContract } from "./long-task-v2-fixtures.mjs";
+import { writeHappyV3Contract } from "./long-task-v3-fixtures.mjs";
 
 const repoRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../..");
 const manifestPath=path.join(repoRoot,"tests/ty-context/fixtures/composite-long-task-v2/manifest.json");
@@ -35,7 +35,7 @@ const sourceExpectations={
   unregistered_evidence:["packages/ty-context/src/commands/composite-long-task.ts",/Unknown composite-long-task subcommand/],
   matrix_verdict_only:["packages/ty-context/src/lib/long-task-final-gate.ts",/runLongTaskFinalGate/],
   final_card_only:["packages/ty-context/src/lib/long-task-final-gate.ts",/final-result\.json/],
-  api_only_for_ui:["packages/ty-context/src/lib/long-task-contract-coverage.ts",/owner_surface_without_ui_browser/],
+  api_only_for_ui:["packages/ty-context/src/lib/long-task-contract-coverage.ts",/unrelated_browser_route/],
   screenshot_only:["packages/ty-context/src/lib/long-task-assertion-evaluator.ts",/oracle_protocol_invalid/],
   owner_surface_forbidden_state:["packages/ty-context/src/lib/long-task-contract-coverage.ts",/source_boundary_ids/],
   current_command_failed_over_older_passed:["packages/ty-context/src/lib/long-task-final-gate.ts",/failedSpecs/],
@@ -44,6 +44,6 @@ const sourceExpectations={
 };
 for(const [id,[file,pattern]] of Object.entries(sourceExpectations))test(id,async()=>assert.match(await readFile(path.join(repoRoot,...file.split("/")),"utf8"),pattern));
 
-test("verifier_changed_after_compile",async()=>{const root=await mkdtemp(path.join(os.tmpdir(),"ltw-verifier-id-"));const workdir=await writeHappyContract(root);const contract=await compileLongTaskContract(workdir,root);assert.match(contract.verifier_identity.cli_sha256,/^[a-f0-9]{64}$/);});
-test("oracle_authored_by_same_product_attempt",async()=>{const root=await mkdtemp(path.join(os.tmpdir(),"ltw-self-oracle-"));const workdir=await writeHappyContract(root,(d)=>{d.plan.plan_items[0].obligations[0].implementation_bindings.paths=["tests/**"];});await assert.rejects(()=>compileLongTaskContract(workdir,root),/oracle_authored_by_same_product_attempt/);});
-test("happy_path",async()=>{const root=await mkdtemp(path.join(os.tmpdir(),"ltw-regression-happy-"));const workdir=await writeHappyContract(root);await compileLongTaskContract(workdir,root);assert.equal((await runLongTaskFinalGate(workdir)).workflow_status,"accepted");});
+test("verifier_changed_after_compile",async()=>{const root=await mkdtemp(path.join(os.tmpdir(),"ltw-verifier-id-"));const workdir=await writeHappyV3Contract(root);const contract=await compileLongTaskContract(workdir,root);assert.match(contract.verifier_identity.cli_sha256,/^[a-f0-9]{64}$/);});
+test("oracle_authored_by_same_product_attempt",async()=>{const root=await mkdtemp(path.join(os.tmpdir(),"ltw-self-oracle-"));const workdir=await writeHappyV3Contract(root,(d)=>{d.plan.plan_items[0].obligations[0].implementation_bindings[0].kind="path_glob";d.plan.plan_items[0].obligations[0].implementation_bindings[0].target="tests/**";});await assert.rejects(()=>compileLongTaskContract(workdir,root),/oracle_authored_by_same_product_attempt/);});
+test("happy_path",async()=>{const root=await mkdtemp(path.join(os.tmpdir(),"ltw-regression-happy-"));const workdir=await writeHappyV3Contract(root);await compileLongTaskContract(workdir,root);assert.equal((await runLongTaskFinalGate(workdir)).workflow_status,"accepted");});

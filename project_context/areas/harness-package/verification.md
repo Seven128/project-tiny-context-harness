@@ -22,31 +22,34 @@ read_policy: default
   - Use after changing long-task matrix/verdict artifact semantics or plan-acceptance validator behavior.
   - Expected signal: command exits with no errors, reports matrix/verdict row counts and rejects contradictory complete claims.
 - `node --test tests/ty-context/composite-campaign-*.test.mjs tests/ty-context/prepare-composite-long-task-skill.test.mjs`
-  - Use after changing V2 campaign schemas/store/security/YAML render/preflight/handoff/start/result behavior or the managed preparation Skill.
-  - Expected signal: Node exits with no failing subtests across path/redaction/atomic recovery, V2 obligation/oracle preflight, Goal-free handoff, explicit binding and current-final-result projection.
+  - Use after changing V3 campaign/packet schemas, store security, deterministic V3 YAML render, graph/binding/proof/counterfactual preflight, handoff/start/result behavior or the managed preparation Skill.
+  - Expected signal: Node exits with no failing subtests across path/redaction/atomic recovery, V3 full-graph/oracle preflight, Goal-free handoff, explicit binding and current signed-final-result projection.
 - `node packages/ty-context/dist/cli.js package sync-source` twice, then `node packages/ty-context/dist/cli.js package check-source`
   - Use after changing canonical managed Skills, AGENTS guidance, protected baseline or public README sources.
   - Expected signal: the first sync copies canonical assets, the second reports `changed=0`, and check-source reports no drift; a following workspace `sync` installs the generated Skill without creating or scanning campaigns.
-- `node --test tests/ty-context/long-task-contract-*.test.mjs tests/ty-context/long-task-snapshot.test.mjs tests/ty-context/long-task-command-trust.test.mjs tests/ty-context/long-task-verifier.test.mjs tests/ty-context/long-task-artifact-trust.test.mjs`
-  - Use after changing V2 YAML parsing, obligation/negative coverage, Context/oracle/verifier freezing, content snapshots, exact command execution, artifact collection or assertion evaluation.
-  - Expected signal: all malformed/under-covered/self-proof fixtures remain non-passing and the canonical contract/verifier fixture passes.
-- `node --test tests/ty-context/long-task-impact.test.mjs tests/ty-context/long-task-status.test.mjs tests/ty-context/long-task-final-gate.test.mjs tests/ty-context/composite-long-task-cli-v2.test.mjs`
-  - Use after changing impact selection, findings, current status, final all-spec recomputation, public CLI or Goal recovery output.
-  - Expected signal: intermediate verify never authorizes acceptance, unmapped changes run all specs, only one complete final snapshot can produce `accepted`, and old commands are unknown.
-- `node --test tests/ty-context/composite-long-task-hook-install.test.mjs tests/ty-context/composite-long-task-hook-smoke.test.mjs tests/ty-context/composite-long-task-hook-v2.test.mjs tests/ty-context/long-task-stop-check.test.mjs`
-  - Use after changing managed Hook installation, trust heartbeat, active-task binding, SessionStart/PostCompact recovery, Stop enforcement or explicit-only Skill routing.
-  - Expected signal: needs-work continues, accepted unchanged exits, stale/false/blocked wording is rejected, unavailable/conflicting Hook blocks start and ordinary prompts remain no-op.
-- `node --test tests/ty-context/composite-long-task-v2-regression.test.mjs`
-  - Durable V2 release blocker for the complete fixture manifest under `tests/ty-context/fixtures/composite-long-task-v2/**`.
-  - Expected signal: every contract/command/artifact/snapshot/final/Hook/legacy-false-completion attack is non-accepted, every required fixture is present, and only `happy_path_accepted` reaches `accepted`.
-- Old assertion/state/derived/equivalence tests are removed. Their durable false-completion semantics belong only in the V2 attack manifest; do not restore an equivalence or compatibility gate.
+- `node --test tests/ty-context/long-task-contract-v3*.test.mjs tests/ty-context/long-task-observation-v2.test.mjs tests/ty-context/long-task-binding*.test.mjs tests/ty-context/long-task-counterfactual*.test.mjs`
+  - Use after changing V3 YAML/full graph coverage, actual-only observation operators/population, implementation bindings, proof projection or counterfactual sensitivity.
+  - Expected signal: every malformed/under-covered/unrelated/self-signed/constant-success fixture is rejected or `needs_work`, while the real implementation fixture passes and its declared counterfactual flips.
+- `node --test tests/ty-context/long-task-oracle-bundle*.test.mjs tests/ty-context/long-task-dependency*.test.mjs tests/ty-context/long-task-sandbox*.test.mjs tests/ty-context/long-task-artifact-trust.test.mjs`
+  - Use after changing Node bundle closure, exact command adapters, dependency/browser layers, Host secret/redaction, OS sandbox, snapshots or artifact collection.
+  - Expected signal: transitive/dynamic/native/unfrozen/escape/secret attacks fail and real npm/monorepo/Vitest/Jest/Playwright/build consumers run through sealed layers.
+- `node --test tests/ty-context/long-task-host*.test.mjs tests/ty-context/composite-long-task-managed-hook*.test.mjs tests/ty-context/long-task-environment-probe.test.mjs tests/ty-context/long-task-final-v3*.test.mjs`
+  - Use after changing workspace-external registry, attestations/journal/recovery, Managed requirements/Hook heartbeat, blocker probes, fixed final ordering, durable result or Stop semantics.
+  - Expected signal: recompile/rebind/pointer deletion/disabled or non-managed Hook/forged result/unprobed blocker attacks cannot accept; ordinary no-active Hook calls are no-op; Windows/Linux real managed smokes pass.
+- `node --test tests/ty-context/composite-long-task-v3-black-box.test.mjs`
+  - Durable Contract V3 release blocker for the structured manifest under `tests/ty-context/fixtures/composite-long-task-v3/**`.
+  - Expected signal: every manifest case constructs a temporary Git repository and executes the installed candidate CLI/Host/Hook; source-regex, case-name and file-existence security proof is rejected; only the real happy path reaches final and Stop-time `accepted`.
+- `node tools/external_long_task_audit.mjs --candidate-tarball <exact-audited-package.tgz>`
+  - Required for Harness self-development release candidates after the candidate tarball is packed once.
+  - Expected signal: the independently versioned/integrity-pinned external runner verifies the exact tarball on Windows/Linux and returns a signed all-cases/consumer pass; candidate-owned tests cannot substitute.
+- Old V2 assertion/state/derived/equivalence/source-regex tests are removed. Durable false-completion semantics belong only in the real V3 black-box matrix; do not restore an equivalence or compatibility gate.
 - `git diff --check`
   - Use before handoff to catch whitespace and conflict marker issues.
   - Expected signal: no whitespace error output.
 - `npm test --workspace project-tiny-context-harness`
   - Use for broader package behavior changes or when focused tests do not cover the touched package surface.
 - `node tools/consumer_lab_full_test.mjs --source-root <repo> --lab-dir <clean-dir> --reset-lab --keep-lab`
-  - Use for Composite V2 release candidates. The clean consumer must install the packed artifact, sync and smoke the repository Hook, observe verifier-owned `needs_work`, repair the fixture, reach a one-snapshot `accepted`, pass Stop-time full re-verification and return to ordinary Hook no-op after terminal cleanup.
+  - Use for Contract V3 release candidates. The clean consumer must install the exact packed artifact, use the separately installed Managed Host Gate, observe verifier-owned `needs_work`, repair the real fixture, reach one-snapshot/counterfactual `accepted`, pass Managed Stop-time full re-verification and return to ordinary Hook no-op after Host terminal cleanup.
 - `node --test tests/ty-context/release-flow-scripts.test.mjs tests/ty-context/sync-release-version.test.mjs tests/ty-context/launch-unblock-script.test.mjs tests/ty-context/launch-readiness-script.test.mjs tests/ty-context/npm-publish-access-script.test.mjs`
   - Use after changing release preparation/publication automation, release packet generation or launch runbooks that print owner-facing release commands.
   - Expected signal: release preparation remains the only mutating phase, publication stays publish-only, upgrade impact evidence is present in release packets and launch/readiness guidance matches the split flow.
@@ -62,5 +65,7 @@ read_policy: default
 ## Scope Notes
 
 - Context-only source-workspace topology changes normally require `validate-context`, the relevant focused test, `make validate-harness` and `git diff --check`.
+- Contract V3 release acceptance treats Windows and Linux managed Host/consumer/external-audit jobs as hard blockers. macOS remains a first-class compatibility job and must not be documented as strict when its required sandbox capability is unavailable.
+- Pack the candidate once and use that byte-identical tarball for local black-box, consumer and external audit evidence; a repack invalidates cross-gate identity.
 - Do not run `package sync-source` for source-workspace `project_context/**`-only changes unless package-managed assets were also touched.
 - Verification Context records repeatable paths and expected signals only. Do not add one-off logs, raw command output, temporary JSON, CI artifacts, release ledgers, secrets or result claims.

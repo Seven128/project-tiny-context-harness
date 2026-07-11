@@ -3,11 +3,11 @@
   "cases": {
     "product_requirement_without_pi": {
       "expected": "compile_rejected",
-      "covered_by": "tests/ty-context/long-task-contract-v2.test.mjs"
+      "covered_by": "tests/ty-context/long-task-contract-v3.test.mjs"
     },
     "pi_obligation_without_ac": {
       "expected": "compile_rejected",
-      "covered_by": "tests/ty-context/long-task-contract-v2.test.mjs"
+      "covered_by": "tests/ty-context/long-task-contract-v3.test.mjs"
     },
     "ac_without_obligation": {
       "expected": "compile_rejected",
@@ -15,11 +15,11 @@
     },
     "ac_without_verifier": {
       "expected": "compile_rejected",
-      "covered_by": "tests/ty-context/long-task-contract-v2.test.mjs"
+      "covered_by": "tests/ty-context/long-task-contract-v3.test.mjs"
     },
     "non_completing_outcome_without_negative_assertion": {
       "expected": "compile_rejected",
-      "covered_by": "tests/ty-context/long-task-contract-v2.test.mjs"
+      "covered_by": "tests/ty-context/long-task-contract-v3.test.mjs"
     },
     "boundary_without_executable_negative_assertion": {
       "expected": "compile_rejected",
@@ -31,11 +31,11 @@
     },
     "owner_surface_without_ui_browser": {
       "expected": "compile_rejected",
-      "covered_by": "tests/ty-context/long-task-contract-v2.test.mjs"
+      "covered_by": "tests/ty-context/long-task-contract-v3.test.mjs"
     },
     "manual_only_ac": {
       "expected": "compile_rejected",
-      "covered_by": "tests/ty-context/long-task-contract-v2.test.mjs"
+      "covered_by": "tests/ty-context/long-task-contract-v3.test.mjs"
     },
     "summary_only_ac": {
       "expected": "compile_rejected",
@@ -43,7 +43,7 @@
     },
     "sample_only_for_full_population": {
       "expected": "compile_rejected",
-      "covered_by": "tests/ty-context/long-task-contract-v2.test.mjs"
+      "covered_by": "tests/ty-context/long-task-contract-v3.test.mjs"
     },
     "yaml_duplicate_key": {
       "expected": "compile_rejected",

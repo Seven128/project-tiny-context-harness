@@ -1,7 +1,7 @@
-import type { CompiledContractV2 } from "./long-task-contract-schema.js";
+import type { CompiledContractV3 } from "./long-task-contract-schema.js";
 
 export interface ImpactDecision { mode: "affected" | "all"; verification_spec_ids: string[]; reason: string }
-export function decideLongTaskImpact(contract: CompiledContractV2, changedPaths: string[]): ImpactDecision {
+export function decideLongTaskImpact(contract: CompiledContractV3, changedPaths: string[]): ImpactDecision {
   const all = contract.verification_specs.map((spec) => spec.id).sort(); if (changedPaths.length === 0) return { mode: "all", verification_spec_ids: all, reason: "no trusted change basis" };
   const matched = contract.verification_specs.filter((spec) => changedPaths.some((changed) => spec.input_paths.some((glob) => matches(changed.replace(/\\/g, "/"), glob))));
   if (matched.length === 0) return { mode: "all", verification_spec_ids: all, reason: "unmapped change requires conservative full verification" };

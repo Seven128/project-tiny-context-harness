@@ -18,6 +18,8 @@ This contract defines which repository surfaces are package-managed, generated, 
 - `PROJECT_SPEC.md` is the full Harness workflow design-spec surface for this source workspace, not a consumer default asset.
 - `project_context/**` is the source workspace durable fact surface. It can describe this repository's own package boundaries without becoming consumer default content.
 - Composite campaign request, coordination, audit and packet-revision files are Git-trackable user-owned project data created only by explicit preparation. They are not package-managed assets, generated default plan state, Context graph nodes or execution/evidence storage.
+- Composite managed-Host assets (requirements template, managed Hook, signed Host Helper/worker manifests and OS installers) may be distributed from package-managed source, but the actual system `requirements.toml`, managed directory, service, Host State, keys and registry are admin-installed host surfaces outside repository `sync` ownership. Package `sync` must never claim that copying repo assets established the trust root.
+- The external audit repository/package and its GitHub App/check credentials are independently released trust surfaces. The main package may pin and invoke their immutable version/integrity but cannot vendor candidate-modifiable audit code as an equivalent required check.
 
 ## Source Sync Boundary
 
@@ -40,6 +42,7 @@ This contract defines which repository surfaces are package-managed, generated, 
 
 - `init`, `sync` and `upgrade` may install or refresh managed assets, but they must not generate project-specific product facts, business Product Surface Contract files, stage work-product trees, lifecycle state or phase gates.
 - `init`, `sync` and `upgrade` may install or refresh the preparation Skill/CLI capability, but they must never create, discover, scan, import, mutate or delete user-owned composite campaign data. Campaign schema migration is explicit and on demand only.
+- `init`, `sync` and `upgrade` do not create, replace or reset Host registry authority and do not silently install system managed policy. Strict Composite startup only diagnoses the separately installed signed Host Gate and fails closed when it is unavailable.
 - The package-managed `.github/workflows/harness.yml` is consumer-facing and should run selected Harness gates only; maintainer-only package tests and source-drift checks stay in this source repository. Plan artifact validators are explicit user commands for complex plan surfaces and long-task artifacts, not default consumer workflow gates.
 - Public package surfaces must be fully usable in English. Non-English trigger examples are compatibility additions only.
 

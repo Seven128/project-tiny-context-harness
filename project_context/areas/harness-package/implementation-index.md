@@ -17,7 +17,7 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - `check-modularity` command parsing: `packages/ty-context/src/commands/check-modularity.ts`.
 - Package source commands: `packages/ty-context/src/commands/package-source.ts`.
 - Validator command wrapper: `packages/ty-context/src/commands/validate.ts`.
-- Composite long-task V2 command wrapper: `packages/ty-context/src/commands/composite-long-task.ts`. There is no legacy command alias.
+- Composite long-task Contract V3 command wrapper: `packages/ty-context/src/commands/composite-long-task.ts`. There is no V2/legacy command alias.
 - Composite campaign preparation command wrapper: `packages/ty-context/src/commands/composite-campaign.ts`.
 
 ## Core Libraries
@@ -34,10 +34,12 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - Plan contract validator: `packages/ty-context/src/lib/plan-contract-validator.ts`.
 - Plan acceptance validator: `packages/ty-context/src/lib/plan-acceptance-validator.ts`.
 - Shared plan validator helpers: `packages/ty-context/src/lib/plan-validator-common.ts` and `packages/ty-context/src/lib/plan-acceptance-json.ts`.
-- Composite V2 contract core: `packages/ty-context/src/lib/long-task-contract-schema.ts`, `long-task-contract-parser.ts`, `long-task-contract-coverage.ts`, `long-task-contract-compiler.ts` and `long-task-path-policy.ts` own strict YAML parsing, complete graph coverage and source/Context/oracle/verifier freezing.
-- Composite V2 verifier core: `long-task-snapshot.ts`, `long-task-command-runner.ts`, `long-task-artifact-collector.ts`, `long-task-assertion-evaluator.ts`, `long-task-negative-evidence.ts`, `long-task-run-result.ts` and `long-task-verifier.ts` own isolated observation. `long-task-impact.ts`, `long-task-status.ts`, `long-task-goal.ts`, `long-task-final-gate.ts`, `long-task-external-blocker.ts`, `long-task-active-task.ts`, `long-task-hook-install.ts`, `long-task-hook-preflight.ts` and `long-task-stop-check.ts` own repair guidance and completion enforcement.
+- Contract V3 schema/graph core: `packages/ty-context/src/schemas/composite-v3/**`, `long-task-contract-types-v3.ts`, `long-task-contract-parser.ts`, `long-task-contract-coverage.ts`, `long-task-contract-compiler.ts` and `long-task-path-policy.ts` own strict V3 parsing, the full Requirement/PI/Obligation/Binding/AC/Proof/Spec/Counterfactual graph and Host-sealed identities.
+- Contract V3 observation/proof core: `long-task-observation-v2.ts`, `long-task-operator-evaluator.ts`, `long-task-population-evaluator.ts`, `long-task-binding-evaluator.ts`, `long-task-counterfactual-runner.ts`, `long-task-counterfactual-mutation.ts` and `long-task-entity-projector.ts` own actual-only evaluation and bottom-up result propagation.
+- Contract V3 execution core: `long-task-oracle-bundler.ts`, `long-task-oracle-bundle-policy.ts`, `long-task-oracle-runner.ts`, package-manager/dependency/browser/environment/redaction/sandbox modules, `long-task-snapshot.ts`, `long-task-command-runner.ts`, `long-task-artifact-collector.ts`, `long-task-negative-evidence.ts` and `long-task-verifier.ts` own sealed isolated execution.
+- Contract V3 trust/completion core: `long-task-host-protocol.ts`, `long-task-host-client.ts`, `long-task-environment-probe.ts`, `long-task-final-orchestrator.ts`, `long-task-final-steps.ts`, `long-task-result-projector.ts`, `long-task-durable-json.ts`, `long-task-status.ts`, `long-task-goal.ts`, `long-task-final-gate.ts`, `long-task-external-blocker.ts`, `long-task-hook-preflight.ts` and `long-task-stop-check.ts` own repair/status clients; `host/ty-context-host-helper/**` owns workspace-external registry, journal, attestations, caches, OS sandbox/secret adapters and Managed Hook enforcement.
 - The old state/evidence/slice/derived modules and `composite-long-task-renderer.ts` are absent and must not be restored.
-- Composite campaign authoring core: `composite-campaign-v2.ts` owns the no-compatibility V2 campaign/packet schema, immutable revision hashes, strict input loading, deterministic YAML projection, oracle-ready preflight, Goal-free handoff and fresh-final-result-only projection.
+- Composite campaign authoring core: `composite-campaign-v3.ts` owns the no-compatibility V3 campaign/packet schema, immutable revision hashes, strict input loading, deterministic V3 YAML projection, full-graph/oracle-ready preflight, Goal-free handoff and fresh signed-final-result-only projection.
 - Modularity/source-file checks: `packages/ty-context/src/lib/modularity.ts` and `packages/ty-context/src/lib/source-files.ts`.
 - Context export implementation: `packages/ty-context/src/lib/context-export.ts`.
 
@@ -54,7 +56,7 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - Orientation/recovery surface: `tests/ty-context/orientation-fast-path.test.mjs`.
 - Validator behavior: `tests/ty-context/validators.test.mjs`.
 - Plan artifact validator behavior: `tests/ty-context/plan-validators.test.mjs`.
-- Composite V2 behavior: `tests/ty-context/long-task-contract-*.test.mjs`, `long-task-snapshot.test.mjs`, `long-task-command-trust.test.mjs`, `long-task-verifier.test.mjs`, `long-task-artifact-trust.test.mjs`, `long-task-impact.test.mjs`, `long-task-status.test.mjs`, `long-task-final-gate.test.mjs`, `composite-long-task-cli-v2.test.mjs`, `composite-long-task-hook-install.test.mjs`, `composite-long-task-hook-smoke.test.mjs`, `composite-long-task-hook-v2.test.mjs` and `composite-long-task-v2-regression.test.mjs`.
+- Contract V3 behavior: `tests/ty-context/long-task-contract-v3*.test.mjs`, `long-task-observation-v2.test.mjs`, binding/counterfactual/oracle-bundle/dependency/sandbox/Host/probe/final V3 tests and `composite-long-task-v3-black-box.test.mjs` with real fixture repositories under `tests/ty-context/fixtures/composite-long-task-v3/**`.
 - Init/sync/doctor behavior: `tests/ty-context/sync-init-doctor.test.mjs`.
 - Upgrade behavior: `tests/ty-context/upgrade.test.mjs` and `tests/ty-context/legacy-upgrade.test.mjs`.
 - Package source drift: `tests/ty-context/package-source.test.mjs`.
@@ -62,8 +64,8 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - Surface Contract workflow: `tests/ty-context/surface-contract-workflow.test.mjs`.
 - Modularity checks: `tests/ty-context/check-modularity.test.mjs` and `tests/ty-context/modularity-guidance.test.mjs`.
 - Ordinary long-task Skill behavior: `tests/ty-context/plan-acceptance-skill.test.mjs`.
-- Composite long-task Skill/Goal behavior is covered by the V2 CLI/routing/Hook regression suites; there is no runtime protocol snapshot or execution-binding artifact.
-- Composite campaign and preparation Skill behavior remains in `tests/ty-context/composite-campaign-*.test.mjs` and `tests/ty-context/prepare-composite-long-task-skill.test.mjs`, updated for `CompositeAuthoringPacketV2`, YAML projection, oracle-ready handoff and current-final-result projection.
+- Composite long-task Skill/Goal behavior is covered by the V3 CLI/routing/Managed Hook black-box suites; there is no package-owned runtime protocol document, task-state or execution-binding artifact.
+- Composite campaign and preparation Skill behavior remains in `tests/ty-context/composite-campaign-*.test.mjs` and `tests/ty-context/prepare-composite-long-task-skill.test.mjs`, updated for `CompositeAuthoringPacketV3`, V3 YAML projection, full-graph/oracle-ready handoff and current signed-final-result projection.
 
 ## Release And Maintainer Tools
 

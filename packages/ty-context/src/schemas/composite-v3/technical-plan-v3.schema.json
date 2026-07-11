@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-tiny-context-harness.invalid/schemas/composite-v3/technical-plan-v3.schema.json",
+  "title": "Composite Long-Task Technical Plan V3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_items", "counterfactual_controls"],
+  "properties": {
+    "schema_version": { "const": "technical-plan-v3" },
+    "plan_items": { "type": "array", "minItems": 1, "maxItems": 2000, "uniqueItems": true, "items": { "$ref": "#/$defs/planItem" } },
+    "counterfactual_controls": { "type": "array", "minItems": 1, "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/counterfactualControl" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 3, "maxLength": 256, "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 8192 },
+    "token": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "idArray": { "type": "array", "minItems": 1, "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "safePath": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^(?![A-Za-z]:)(?!/)(?!\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$" },
+    "planItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "implementation_notes", "obligations"],
+      "properties": {
+        "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^PI-" }] },
+        "title": { "$ref": "#/$defs/text" },
+        "implementation_notes": { "type": "array", "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/text" } },
+        "obligations": { "type": "array", "minItems": 1, "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/obligation" } }
+      }
+    },
+    "obligation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "statement", "source_requirement_ids", "implementation_bindings", "forbidden_shortcuts", "related_ac_ids", "counterfactual_control_ids"],
+      "properties": {
+        "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^PI-[A-Z0-9-]+-OB-[A-Z0-9-]+$" }] },
+        "statement": { "$ref": "#/$defs/text" },
+        "source_requirement_ids": { "$ref": "#/$defs/idArray" },
+        "implementation_bindings": { "type": "array", "minItems": 1, "maxItems": 50000, "uniqueItems": true, "items": { "$ref": "#/$defs/binding" } },
+        "forbidden_shortcuts": { "type": "array", "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/forbiddenShortcut" } },
+        "related_ac_ids": { "$ref": "#/$defs/idArray" },
+        "counterfactual_control_ids": { "$ref": "#/$defs/idArray" }
+      }
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "target", "verification"],
+      "properties": {
+        "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^IB-" }] },
+        "kind": { "enum": ["path_glob", "file", "symbol", "schema", "route", "runtime_capability"] },
+        "target": { "$ref": "#/$defs/token" },
+        "verification": { "oneOf": [{ "$ref": "#/$defs/staticVerification" }, { "$ref": "#/$defs/oracleVerification" }] }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "enum": ["path_glob", "file"] } }, "required": ["kind"] }, "then": { "properties": { "target": { "$ref": "#/$defs/safePath" }, "verification": { "$ref": "#/$defs/staticVerification" } } } },
+        { "if": { "properties": { "kind": { "enum": ["symbol", "schema", "route", "runtime_capability"] } }, "required": ["kind"] }, "then": { "properties": { "verification": { "$ref": "#/$defs/oracleVerification" } } } },
+        { "if": { "properties": { "kind": { "const": "route" } }, "required": ["kind"] }, "then": { "properties": { "target": { "pattern": "^/(?!/)(?!.*[?#])[^?#]*$" } } } },
+        { "if": { "properties": { "kind": { "const": "runtime_capability" } }, "required": ["kind"] }, "then": { "properties": { "target": { "pattern": "^[a-z][a-z0-9.-]{1,127}$" } } } },
+        { "if": { "properties": { "kind": { "enum": ["symbol", "schema"] } }, "required": ["kind"] }, "then": { "properties": { "target": { "pattern": "^[^#]+#.+$" } } } }
+      ]
+    },
+    "staticVerification": { "type": "object", "additionalProperties": false, "required": ["mode"], "properties": { "mode": { "const": "harness_static" } } },
+    "oracleVerification": { "type": "object", "additionalProperties": false, "required": ["mode", "spec_id", "observation_id"], "properties": { "mode": { "const": "oracle_observation" }, "spec_id": { "$ref": "#/$defs/id" }, "observation_id": { "$ref": "#/$defs/token" } } },
+    "forbiddenShortcut": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "statement", "source_boundary_ids", "source_non_completing_ids"],
+      "properties": {
+        "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^FS-" }] },
+        "statement": { "$ref": "#/$defs/text" },
+        "source_boundary_ids": { "type": "array", "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+        "source_non_completing_ids": { "type": "array", "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } }
+      },
+      "anyOf": [{ "properties": { "source_boundary_ids": { "minItems": 1 } } }, { "properties": { "source_non_completing_ids": { "minItems": 1 } } }]
+    },
+    "counterfactualControl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "obligation_ids", "mutation", "expected_failed_assertion_ids"],
+      "properties": {
+        "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^CF-" }] },
+        "obligation_ids": { "type": "array", "minItems": 1, "maxItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+        "mutation": { "$ref": "#/$defs/mutation" },
+        "expected_failed_assertion_ids": { "$ref": "#/$defs/idArray" }
+      }
+    },
+    "mutation": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["type", "binding_ids"], "properties": { "type": { "const": "remove_binding_targets" }, "binding_ids": { "$ref": "#/$defs/idArray" } } },
+        { "type": "object", "additionalProperties": false, "required": ["type", "binding_id", "target_path", "fixture_id"], "properties": { "type": { "const": "replace_file_with_fixture" }, "binding_id": { "$ref": "#/$defs/id" }, "target_path": { "$ref": "#/$defs/safePath" }, "fixture_id": { "$ref": "#/$defs/id" } } },
+        { "type": "object", "additionalProperties": false, "required": ["type", "binding_id", "target_path", "fixture_id", "from_route", "to_route"], "properties": { "type": { "const": "rename_route_fixture" }, "binding_id": { "$ref": "#/$defs/id" }, "target_path": { "$ref": "#/$defs/safePath" }, "fixture_id": { "$ref": "#/$defs/id" }, "from_route": { "type": "string", "pattern": "^/" }, "to_route": { "type": "string", "pattern": "^/" } } },
+        { "type": "object", "additionalProperties": false, "required": ["type", "environment_ref", "fixture_id"], "properties": { "type": { "const": "override_environment_fixture" }, "environment_ref": { "$ref": "#/$defs/token" }, "fixture_id": { "$ref": "#/$defs/id" } } },
+        { "type": "object", "additionalProperties": false, "required": ["type", "binding_id", "target_path", "fixture_id"], "properties": { "type": { "const": "use_declared_counterexample_fixture" }, "binding_id": { "$ref": "#/$defs/id" }, "target_path": { "$ref": "#/$defs/safePath" }, "fixture_id": { "$ref": "#/$defs/id" } } }
+      ]
+    }
+  }
+}

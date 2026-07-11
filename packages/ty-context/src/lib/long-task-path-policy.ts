@@ -1,9 +1,17 @@
 import path from "node:path";
 
 export function assertSafeContractPath(value: string, label: string): string {
-  if (!value || value.includes("\0") || path.isAbsolute(value) || /^[A-Za-z]:/.test(value)) throw new Error(`${label} must be a safe repository-relative path`);
-  const normalized = value.replace(/\\/g, "/");
-  if (normalized.split("/").some((part) => part === "" || part === "." || part === "..")) throw new Error(`${label} contains an unsafe path segment`);
+  if (!value || value.includes("\0") || value.includes("\\") || path.isAbsolute(value) || /^[A-Za-z]:|^\/|^\\\\|^\\[?.]\\/.test(value) || /%(?:2f|5c)/i.test(value)) throw new Error(`${label} must be a safe repository-relative path using POSIX separators`);
+  const parts=value.split("/");
+  if(parts.some((part)=>part===""||part==="."||part===".."||part.endsWith(".")||part.endsWith(" ")||/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i.test(part)||part.includes(":")))throw new Error(`${label} contains an unsafe path segment`);
+  return value;
+}
+
+export function assertLongTaskAuthorPath(value:string,label:string):string{
+  const normalized=assertSafeContractPath(value,label);
+  const literalPrefix=normalized.replace(/[?*{[]/u,"\0").split("\0",1)[0].replace(/\/$/u,"");
+  const protectedPaths=[".git",".codex","tmp/ty-context/plan-acceptance","runs","compiled-contract.json","current-status.json","final-result.json"];
+  if(protectedPaths.some((entry)=>literalPrefix===entry||literalPrefix.startsWith(`${entry}/`)||entry.startsWith(`${literalPrefix}/`)))throw new Error(`protected_path_declared:${label}:${value}`);
   return normalized;
 }
 

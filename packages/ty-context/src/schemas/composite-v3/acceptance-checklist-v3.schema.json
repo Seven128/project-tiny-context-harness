@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-tiny-context-harness.invalid/schemas/composite-v3/acceptance-checklist-v3.schema.json",
+  "title": "Composite Long-Task Acceptance Checklist V3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "counterexample_fixtures", "proof_requirements", "acceptance_criteria", "verification_specs", "environment_probes"],
+  "properties": {
+    "schema_version": { "const": "acceptance-checklist-v3" },
+    "counterexample_fixtures": { "type": "array", "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/counterexampleFixture" } },
+    "proof_requirements": { "type": "array", "minItems": 1, "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/proofRequirement" } },
+    "acceptance_criteria": { "type": "array", "minItems": 1, "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/acceptanceCriterion" } },
+    "verification_specs": { "type": "array", "minItems": 1, "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/verificationSpec" } },
+    "environment_probes": { "type": "array", "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/environmentProbe" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 3, "maxLength": 256, "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 8192 },
+    "token": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "safePath": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^(?![A-Za-z]:)(?!/)(?!\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$" },
+    "idArray": { "type": "array", "minItems": 1, "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "optionalIdArray": { "type": "array", "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "tokenArray": { "type": "array", "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/token" } },
+    "textArray": { "type": "array", "minItems": 1, "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/text" } },
+    "proofSurface": { "enum": ["ui_browser", "runtime_behavior", "api_contract", "data_state", "security_boundary", "population_coverage", "implementation_structure"] },
+    "observationKind": { "enum": ["scalar", "implementation_structure", "browser_interaction", "runtime_behavior", "api_contract", "data_state", "security_boundary", "population_coverage"] },
+    "operator": { "enum": ["equals", "not_equals", "contains", "not_contains", "matches", "not_matches", "greater_than", "greater_or_equal", "less_than", "less_or_equal", "truthy", "falsy", "exists", "not_exists", "set_equals", "subset_of", "superset_of"] },
+    "counterexampleFixture": {
+      "type": "object", "additionalProperties": false, "required": ["id", "path", "purpose", "non_secret"],
+      "properties": { "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^FX-" }] }, "path": { "$ref": "#/$defs/safePath" }, "purpose": { "$ref": "#/$defs/text" }, "non_secret": { "type": "boolean" } }
+    },
+    "proofRequirement": {
+      "type": "object", "additionalProperties": false, "required": ["id", "proof_surface", "obligation_refs", "owner_surface_refs", "verification_spec_ids"],
+      "properties": {
+        "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^PRF-" }] },
+        "proof_surface": { "$ref": "#/$defs/proofSurface" },
+        "obligation_refs": { "$ref": "#/$defs/idArray" },
+        "owner_surface_refs": { "$ref": "#/$defs/optionalIdArray" },
+        "verification_spec_ids": { "$ref": "#/$defs/idArray" }
+      },
+      "allOf": [{ "if": { "properties": { "proof_surface": { "const": "ui_browser" } }, "required": ["proof_surface"] }, "then": { "properties": { "owner_surface_refs": { "minItems": 1 } } } }]
+    },
+    "acceptanceCriterion": {
+      "type": "object", "additionalProperties": false, "required": ["id", "title", "obligation_refs", "validates", "does_not_validate", "proof_requirement_refs", "verification_spec_ids"],
+      "properties": {
+        "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^AC-" }] },
+        "title": { "$ref": "#/$defs/text" },
+        "obligation_refs": { "$ref": "#/$defs/idArray" },
+        "validates": { "$ref": "#/$defs/textArray" },
+        "does_not_validate": { "$ref": "#/$defs/textArray" },
+        "proof_requirement_refs": { "$ref": "#/$defs/idArray" },
+        "verification_spec_ids": { "$ref": "#/$defs/idArray" }
+      }
+    },
+    "verificationSpec": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "runner_type", "proof_capabilities", "claims", "oracle", "cwd", "timeout_ms", "input_paths", "artifact_globs", "network_policy", "command_steps", "environment_refs", "environment_requirements", "positive_assertions", "negative_assertions"],
+      "properties": {
+        "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^VS-" }] },
+        "runner_type": { "const": "node_oracle" },
+        "proof_capabilities": { "type": "array", "minItems": 1, "maxItems": 7, "uniqueItems": true, "items": { "$ref": "#/$defs/proofSurface" } },
+        "claims": { "$ref": "#/$defs/claims" },
+        "oracle": { "type": "object", "additionalProperties": false, "required": ["entrypoint"], "properties": { "entrypoint": { "allOf": [{ "$ref": "#/$defs/safePath" }, { "pattern": "\\.(?:js|mjs|cjs|ts|mts|cts)$" }] } } },
+        "cwd": { "anyOf": [{ "const": "." }, { "$ref": "#/$defs/safePath" }] },
+        "timeout_ms": { "type": "integer", "minimum": 100, "maximum": 3600000 },
+        "input_paths": { "type": "array", "minItems": 1, "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/safePath" } },
+        "artifact_globs": { "type": "array", "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/safePath" } },
+        "network_policy": { "$ref": "#/$defs/networkPolicy" },
+        "command_steps": { "type": "array", "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/commandStep" } },
+        "environment_refs": { "$ref": "#/$defs/tokenArray" },
+        "environment_requirements": { "type": "array", "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/environmentRequirement" } },
+        "positive_assertions": { "type": "array", "maxItems": 100000, "uniqueItems": true, "items": { "$ref": "#/$defs/positiveAssertion" } },
+        "negative_assertions": { "type": "array", "maxItems": 100000, "uniqueItems": true, "items": { "$ref": "#/$defs/negativeAssertion" } },
+        "population_enumerator": { "$ref": "#/$defs/populationEnumerator" }
+      }
+    },
+    "claims": {
+      "type": "object", "additionalProperties": false, "required": ["requirement_ids", "plan_item_ids", "obligation_ids", "binding_ids", "ac_ids", "proof_requirement_ids"],
+      "properties": { "requirement_ids": { "$ref": "#/$defs/idArray" }, "plan_item_ids": { "$ref": "#/$defs/idArray" }, "obligation_ids": { "$ref": "#/$defs/idArray" }, "binding_ids": { "$ref": "#/$defs/idArray" }, "ac_ids": { "$ref": "#/$defs/idArray" }, "proof_requirement_ids": { "$ref": "#/$defs/idArray" } }
+    },
+    "networkPolicy": {
+      "type": "object", "additionalProperties": false, "required": ["mode", "allowed_hosts"],
+      "properties": { "mode": { "enum": ["none", "loopback", "declared_hosts"] }, "allowed_hosts": { "type": "array", "maxItems": 256, "uniqueItems": true, "items": { "type": "string", "minLength": 3, "maxLength": 256, "pattern": "^[A-Za-z0-9.-]+:[0-9]{1,5}$" } } },
+      "allOf": [
+        { "if": { "properties": { "mode": { "enum": ["none", "loopback"] } }, "required": ["mode"] }, "then": { "properties": { "allowed_hosts": { "maxItems": 0 } } } },
+        { "if": { "properties": { "mode": { "const": "declared_hosts" } }, "required": ["mode"] }, "then": { "properties": { "allowed_hosts": { "minItems": 1 } } } }
+      ]
+    },
+    "commandStep": {
+      "type": "object", "additionalProperties": false, "required": ["id", "tool", "target", "argv", "cwd", "timeout_ms", "environment_refs", "output_artifact_ids"],
+      "properties": {
+        "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^CMD-" }] },
+        "tool": { "enum": ["package_script", "project_binary", "node_script", "playwright_test"] },
+        "target": { "$ref": "#/$defs/token" },
+        "argv": { "type": "array", "maxItems": 256, "items": { "type": "string", "maxLength": 8192 } },
+        "cwd": { "anyOf": [{ "const": "." }, { "$ref": "#/$defs/safePath" }] },
+        "timeout_ms": { "type": "integer", "minimum": 100, "maximum": 3600000 },
+        "environment_refs": { "$ref": "#/$defs/tokenArray" },
+        "output_artifact_ids": { "$ref": "#/$defs/tokenArray" }
+      },
+      "allOf": [{ "if": { "properties": { "tool": { "enum": ["node_script", "playwright_test"] } }, "required": ["tool"] }, "then": { "properties": { "target": { "$ref": "#/$defs/safePath" } } } }, { "if": { "properties": { "tool": { "const": "project_binary" } }, "required": ["tool"] }, "then": { "properties": { "target": { "pattern": "^[A-Za-z0-9._-]+$" } } } }]
+    },
+    "environmentRequirement": {
+      "type": "object", "additionalProperties": false, "required": ["id", "reason_code", "probe_spec_id", "local_alternative_probe_ids", "minimal_user_action"],
+      "properties": {
+        "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^ER-" }] },
+        "reason_code": { "enum": ["mfa_required", "credential_unavailable", "permission_denied", "user_contract_decision_required", "external_approval_required", "platform_or_legal_restriction", "external_service_persistently_unavailable"] },
+        "probe_spec_id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^ENV-PROBE-" }] },
+        "local_alternative_probe_ids": { "$ref": "#/$defs/optionalIdArray" },
+        "minimal_user_action": { "$ref": "#/$defs/text" }
+      }
+    },
+    "assertionCore": {
+      "type": "object",
+      "required": ["id", "observation_id", "observation_kind", "operator"],
+      "properties": { "id": { "$ref": "#/$defs/id" }, "observation_id": { "$ref": "#/$defs/token" }, "observation_kind": { "$ref": "#/$defs/observationKind" }, "operator": { "$ref": "#/$defs/operator" }, "expected": {} },
+      "allOf": [
+        { "if": { "properties": { "operator": { "enum": ["truthy", "falsy", "exists", "not_exists"] } }, "required": ["operator"] }, "then": { "not": { "required": ["expected"] } }, "else": { "required": ["expected"] } },
+        { "if": { "properties": { "operator": { "enum": ["matches", "not_matches"] } }, "required": ["operator"] }, "then": { "properties": { "expected": { "type": "object", "additionalProperties": false, "required": ["pattern", "flags"], "properties": { "pattern": { "type": "string", "maxLength": 4096 }, "flags": { "enum": ["", "i", "m", "s", "im", "is", "ms", "ims"] } } } } } },
+        { "if": { "properties": { "operator": { "enum": ["greater_than", "greater_or_equal", "less_than", "less_or_equal"] } }, "required": ["operator"] }, "then": { "properties": { "expected": { "type": "number" } } } },
+        { "if": { "properties": { "operator": { "enum": ["set_equals", "subset_of", "superset_of"] } }, "required": ["operator"] }, "then": { "properties": { "expected": { "type": "array", "uniqueItems": true, "items": { "type": ["string", "number", "boolean", "null"] } } } } }
+      ]
+    },
+    "positiveAssertion": {
+      "allOf": [
+        { "$ref": "#/$defs/assertionCore" },
+        { "type": "object", "additionalProperties": false, "properties": { "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^PA-" }] }, "observation_id": { "$ref": "#/$defs/token" }, "observation_kind": { "$ref": "#/$defs/observationKind" }, "operator": { "$ref": "#/$defs/operator" }, "expected": {} } }
+      ]
+    },
+    "negativeAssertion": {
+      "allOf": [
+        { "$ref": "#/$defs/assertionCore" },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["source_boundary_ids", "source_non_completing_ids", "source_forbidden_shortcut_ids"],
+          "properties": { "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^NA-" }] }, "observation_id": { "$ref": "#/$defs/token" }, "observation_kind": { "$ref": "#/$defs/observationKind" }, "operator": { "$ref": "#/$defs/operator" }, "expected": {}, "source_boundary_ids": { "$ref": "#/$defs/optionalIdArray" }, "source_non_completing_ids": { "$ref": "#/$defs/optionalIdArray" }, "source_forbidden_shortcut_ids": { "$ref": "#/$defs/optionalIdArray" } },
+          "anyOf": [{ "properties": { "source_boundary_ids": { "minItems": 1 } } }, { "properties": { "source_non_completing_ids": { "minItems": 1 } } }, { "properties": { "source_forbidden_shortcut_ids": { "minItems": 1 } } }]
+        }
+      ]
+    },
+    "populationEnumerator": {
+      "type": "object", "additionalProperties": false, "required": ["observation_id", "exclusion_rule_ids", "required_coverage_percent"],
+      "properties": { "observation_id": { "$ref": "#/$defs/token" }, "exclusion_rule_ids": { "$ref": "#/$defs/optionalIdArray" }, "required_coverage_percent": { "const": 100 } }
+    },
+    "environmentProbe": {
+      "type": "object", "additionalProperties": false, "required": ["id", "kind", "adapter", "target", "timeout_ms", "expected", "artifact_globs", "environment_refs"],
+      "properties": {
+        "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^ENV-PROBE-" }] },
+        "kind": { "enum": ["host_capability", "secret_ref", "permission", "network_endpoint", "command_step"] },
+        "adapter": { "enum": ["cli_auth", "credential_store", "filesystem_permission", "tcp_endpoint", "http_endpoint", "frozen_command_step"] },
+        "target": { "$ref": "#/$defs/token" },
+        "timeout_ms": { "type": "integer", "minimum": 100, "maximum": 3600000 },
+        "expected": { "type": "object", "additionalProperties": false, "required": ["exit_codes", "error_codes"], "properties": { "exit_codes": { "type": "array", "maxItems": 256, "uniqueItems": true, "items": { "type": "integer", "minimum": -2147483648, "maximum": 2147483647 } }, "error_codes": { "$ref": "#/$defs/tokenArray" } } },
+        "artifact_globs": { "type": "array", "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/safePath" } },
+        "environment_refs": { "$ref": "#/$defs/tokenArray" }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "host_capability" } }, "required": ["kind"] }, "then": { "properties": { "adapter": { "const": "cli_auth" } } } },
+        { "if": { "properties": { "kind": { "const": "secret_ref" } }, "required": ["kind"] }, "then": { "properties": { "adapter": { "const": "credential_store" } } } },
+        { "if": { "properties": { "kind": { "const": "permission" } }, "required": ["kind"] }, "then": { "properties": { "adapter": { "const": "filesystem_permission" } } } },
+        { "if": { "properties": { "kind": { "const": "network_endpoint" } }, "required": ["kind"] }, "then": { "properties": { "adapter": { "enum": ["tcp_endpoint", "http_endpoint"] } } } },
+        { "if": { "properties": { "kind": { "const": "command_step" } }, "required": ["kind"] }, "then": { "properties": { "adapter": { "const": "frozen_command_step" } } } }
+      ]
+    }
+  }
+}

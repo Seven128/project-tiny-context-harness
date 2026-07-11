@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-tiny-context-harness.invalid/schemas/composite-v3/product-source-v3.schema.json",
+  "title": "Composite Long-Task Product Source V3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "product_goal", "delivery_scope", "full_population_required", "owner_surfaces", "requirements", "boundaries", "non_completing_outcomes", "population_exclusion_rules", "representative_samples_validate", "representative_samples_do_not_validate", "out_of_scope_backlog"],
+  "properties": {
+    "schema_version": { "const": "product-source-v3" },
+    "product_goal": { "$ref": "#/$defs/text" },
+    "delivery_scope": { "enum": ["system_capability_build", "representative_sample_validation", "full_population_operation"] },
+    "full_population_required": { "type": "boolean" },
+    "owner_surfaces": { "type": "array", "minItems": 1, "maxItems": 256, "uniqueItems": true, "items": { "$ref": "#/$defs/ownerSurface" } },
+    "requirements": { "type": "array", "minItems": 1, "maxItems": 2000, "uniqueItems": true, "items": { "$ref": "#/$defs/requirement" } },
+    "boundaries": { "type": "array", "maxItems": 256, "uniqueItems": true, "items": { "$ref": "#/$defs/boundary" } },
+    "non_completing_outcomes": { "type": "array", "maxItems": 256, "uniqueItems": true, "items": { "$ref": "#/$defs/nonCompletingOutcome" } },
+    "population_exclusion_rules": { "type": "array", "maxItems": 256, "uniqueItems": true, "items": { "$ref": "#/$defs/populationExclusionRule" } },
+    "representative_samples_validate": { "$ref": "#/$defs/textArray" },
+    "representative_samples_do_not_validate": { "$ref": "#/$defs/textArray" },
+    "out_of_scope_backlog": { "$ref": "#/$defs/textArray" }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 3, "maxLength": 256, "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 8192 },
+    "token": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "idArray": { "type": "array", "minItems": 1, "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "textArray": { "type": "array", "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/text" } },
+    "ownerSurface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "location", "primary_action", "expected_feedback"],
+      "properties": {
+        "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^OS-" }] },
+        "kind": { "enum": ["web", "cli", "api", "runtime", "data", "security"] },
+        "location": { "$ref": "#/$defs/token" },
+        "primary_action": { "$ref": "#/$defs/token" },
+        "expected_feedback": { "$ref": "#/$defs/token" }
+      },
+      "allOf": [{ "if": { "properties": { "kind": { "const": "web" } }, "required": ["kind"] }, "then": { "properties": { "location": { "pattern": "^/(?!/)(?!.*[?#])[^?#]*$" } } } }]
+    },
+    "requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "statement", "observable_outcome", "owner_boundary", "owner_surface_refs", "population_policy"],
+      "properties": {
+        "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^PR-" }] },
+        "statement": { "$ref": "#/$defs/text" },
+        "observable_outcome": { "$ref": "#/$defs/text" },
+        "owner_boundary": { "$ref": "#/$defs/token" },
+        "owner_surface_refs": { "$ref": "#/$defs/idArray" },
+        "context_refs": { "type": "array", "minItems": 1, "maxItems": 10000, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^project_context/(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+\\.(?:md|toml)$" } },
+        "task_local_reason": { "$ref": "#/$defs/text" },
+        "population_policy": { "enum": ["not_applicable", "representative_sample", "full_population"] }
+      },
+      "oneOf": [
+        { "required": ["context_refs"], "not": { "required": ["task_local_reason"] } },
+        { "required": ["task_local_reason"], "not": { "required": ["context_refs"] } }
+      ]
+    },
+    "boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "rule", "requirement_refs"],
+      "properties": { "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^PB-" }] }, "rule": { "$ref": "#/$defs/text" }, "requirement_refs": { "$ref": "#/$defs/idArray" } }
+    },
+    "nonCompletingOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "forbidden_outcome", "requirement_refs"],
+      "properties": { "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^NCO-" }] }, "forbidden_outcome": { "$ref": "#/$defs/text" }, "requirement_refs": { "$ref": "#/$defs/idArray" } }
+    },
+    "populationExclusionRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "rule", "requirement_refs"],
+      "properties": { "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^EXCLUSION-" }] }, "rule": { "$ref": "#/$defs/text" }, "requirement_refs": { "$ref": "#/$defs/idArray" } }
+    }
+  }
+}
