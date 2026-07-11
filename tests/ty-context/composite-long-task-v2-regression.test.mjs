@@ -21,7 +21,7 @@ const sourceExpectations={
   artifact_junction_escape_windows:["packages/ty-context/src/lib/long-task-artifact-collector.ts",/realpath/],
   tracked_content_changed_after_verify:["packages/ty-context/src/lib/long-task-verifier.ts",/worktree_changed_during_verify/],
   untracked_content_changed_same_filename:["packages/ty-context/src/lib/long-task-snapshot.ts",/readFile\(sourcePath\)/],
-  spec_a_mutates_spec_b:["packages/ty-context/src/lib/long-task-verifier.ts",/mkdtemp[\s\S]*cp\(source\.root, specRoot/],
+  spec_a_mutates_spec_b:["packages/ty-context/src/lib/long-task-verifier.ts",/mkdtemp[\s\S]*cp\(request\.source_root, specRoot/],
   worktree_changed_during_final:["packages/ty-context/src/lib/long-task-final-gate.ts",/workspace_changed_during_or_after_final/],
   worktree_changed_after_final_before_stop:["packages/ty-context/src/lib/long-task-stop-check.ts",/Workspace changed after final verification/],
   compiler_replaced_then_recompiled:[".codex/ty-context-managed/protected-harness-baseline.json",/contract_compiler/],
@@ -30,7 +30,7 @@ const sourceExpectations={
   needs_work_agent_says_accepted:["packages/ty-context/src/lib/long-task-stop-check.ts",/Final verification needs work/],
   repo_stop_hook_deleted_or_modified:["packages/ty-context/src/lib/long-task-hook-preflight.ts",/managed_hook_script_missing|hook_heartbeat_hash_mismatch/],
   ordinary_bug_no_workdir:[".codex/ty-context-managed/skills/composite-long-task-workflow/agents/openai.yaml",/allow_implicit_invocation:\s*false/],
-  historical_complete:["packages/ty-context/src/lib/long-task-final-gate.ts",/verifyLongTask\(workdir, contract\.verification_specs/],
+  historical_complete:["packages/ty-context/src/lib/long-task-final-gate.ts",/verifyLongTask\(workdir,contract\.verification_specs/],
   stale_evidence:["packages/ty-context/src/lib/long-task-final-gate.ts",/run\.spec_results/],
   unregistered_evidence:["packages/ty-context/src/commands/composite-long-task.ts",/Unknown composite-long-task subcommand/],
   matrix_verdict_only:["packages/ty-context/src/lib/long-task-final-gate.ts",/runLongTaskFinalGate/],
@@ -38,7 +38,7 @@ const sourceExpectations={
   api_only_for_ui:["packages/ty-context/src/lib/long-task-contract-coverage.ts",/unrelated_browser_route/],
   screenshot_only:["packages/ty-context/src/lib/long-task-assertion-evaluator.ts",/observation_protocol_invalid/],
   owner_surface_forbidden_state:["packages/ty-context/src/lib/long-task-contract-coverage.ts",/source_boundary_ids/],
-  current_command_failed_over_older_passed:["packages/ty-context/src/lib/long-task-final-gate.ts",/failedSpecs/],
+  current_command_failed_over_older_passed:["packages/ty-context/src/lib/long-task-final-gate.ts",/run\.spec_results\.every/],
   scope_leakage:["packages/ty-context/src/lib/long-task-contract-coverage.ts",/boundary_without_executable_negative_assertion/],
   harness_self_proof:["packages/ty-context/src/lib/long-task-contract-coverage.ts",/oracle_authored_by_same_product_attempt/]
 };

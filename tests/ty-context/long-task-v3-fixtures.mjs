@@ -22,7 +22,7 @@ export async function writeHappyV3Contract(root, mutate = () => {}) {
   await writeFile(path.join(root, "src", "value.txt"), "good\n", "utf8");
   await writeFile(
     path.join(root, "tests", "acceptance", "oracle.mjs"),
-    `import {readFile} from "node:fs/promises";\nconst value=(await readFile(new URL("../../src/value.txt",import.meta.url),"utf8")).trim();\nconsole.log(JSON.stringify({schema_version:"ty-context-observation-v2",observations:{works:{kind:"runtime_behavior",actual:{binding_id:"IB-002",capability:"value.read",value},artifact_refs:[]},forbidden:{kind:"scalar",actual:value,artifact_refs:[]}}}));\n`,
+    `import {readFile} from "node:fs/promises";\nconst value=await readFile(new URL("../../src/value.txt",import.meta.url),"utf8").then(v=>v.trim(),()=>null);\nconsole.log(JSON.stringify({schema_version:"ty-context-observation-v2",observations:{works:{kind:"runtime_behavior",actual:{binding_id:"IB-002",capability:"value.read",value},artifact_refs:[]},forbidden:{kind:"scalar",actual:value,artifact_refs:[]}}}));\n`,
     "utf8"
   );
   const data = happyV3Data();

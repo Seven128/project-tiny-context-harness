@@ -24,7 +24,10 @@ function observation(actual="good"){
 function has(result,code){return result.findings.some((finding)=>finding.category===code);}
 
 test("Observation V2 happy actual values are evaluated by the Harness",async()=>{
-  const result=await finalWithOracle("happy",observation());
+  const root=await mkdtemp(path.join(os.tmpdir(),"ltw-observation-v2-happy-"));
+  const workdir=await writeHappyV3Contract(root);
+  await compileLongTaskContract(workdir,root);
+  const result=await runLongTaskFinalGate(workdir);
   assert.equal(result.workflow_status,"accepted");
 });
 
