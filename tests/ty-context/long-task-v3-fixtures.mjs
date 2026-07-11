@@ -25,6 +25,7 @@ export async function writeHappyV3Contract(root, mutate = () => {}) {
     `import {readFile} from "node:fs/promises";\nimport path from "node:path";\nexport async function observe(input){const value=await readFile(path.join(input.snapshot_root,"src/value.txt"),"utf8").then(v=>v.trim(),()=>null);return {schema_version:"ty-context-observation-v2",observations:{works:{kind:"runtime_behavior",actual:{binding_id:"IB-002",capability:"value.read",value},artifact_refs:[]},forbidden:{kind:"scalar",actual:value,artifact_refs:[]}}};}\n`,
     "utf8"
   );
+  await writeFile(path.join(root, "tests", "acceptance", "command.mjs"), `process.stdout.write("command-ok\\n");\n`, "utf8");
   const data = happyV3Data();
   mutate(data);
   await Promise.all([
@@ -146,7 +147,7 @@ function makeSpec(suffix, refs) {
     input_paths: ["src/**"],
     artifact_globs: [],
     network_policy: { mode: "none", allowed_hosts: [] },
-    command_steps: [{ id: `CMD-${suffix}`, tool: "node_script", target: "tests/acceptance/oracle.mjs", argv: [], cwd: ".", timeout_ms: 10000, environment_refs: [], output_artifact_ids: [] }],
+    command_steps: [{ id: `CMD-${suffix}`, tool: "node_script", target: "tests/acceptance/command.mjs", argv: [], cwd: ".", timeout_ms: 10000, environment_refs: [], output_artifact_ids: [] }],
     environment_refs: [],
     positive_assertions: [{ id: `PA-${suffix}`, observation_id: "works", observation_kind: "runtime_behavior", operator: "equals", expected: runtimeExpected }],
     negative_assertions: [{ id: `NA-${suffix}`, observation_id: "forbidden", observation_kind: "scalar", operator: "not_equals", expected: "forbidden", source_boundary_ids: [refs.boundary], source_non_completing_ids: [refs.outcome], source_forbidden_shortcut_ids: [refs.shortcut] }],

@@ -8,6 +8,7 @@ import { resolveInside } from "./long-task-path-policy.js";
 import { COMPOSITE_V3_SCHEMA_SET_SHA256 } from "./long-task-contract-schema-registry.js";
 import type { CompiledContractGraphsV3, CompiledContractV3, FrozenVerificationSpecV3, LongTaskSourceBundleV3, VerificationClaimsV3, VerifierTrustInput } from "./long-task-contract-schema.js";
 import { assertOracleBundleClosureFresh, buildLongTaskOracleBundle } from "./long-task-oracle-bundler.js";
+import { compileDependencyPlan } from "./long-task-dependency-key.js";
 
 export async function compileLongTaskContract(workdir: string, repositoryRoot = process.cwd()): Promise<CompiledContractV3> {
   const root = path.resolve(repositoryRoot);
@@ -22,6 +23,7 @@ export async function compileLongTaskContract(workdir: string, repositoryRoot = 
   const contextHashes = Object.fromEntries(await Promise.all(contextFiles.map(async (file) => [relative(root, file), await hashFile(file)] as const)));
   await validateContextReferences(bundle, root, new Set(Object.keys(contextHashes)));
   const verifier_identity = await verifierIdentity(root);
+  const dependency_plan=await compileDependencyPlan(root,bundle.checklist.verification_specs);
   const verification_specs: FrozenVerificationSpecV3[] = [];
   const oracle_bundles: CompiledContractV3["oracle_bundles"] = [];
   for (const spec of bundle.checklist.verification_specs) {
@@ -69,6 +71,7 @@ export async function compileLongTaskContract(workdir: string, repositoryRoot = 
     proof_requirements: sortById(bundle.checklist.proof_requirements),
     verification_specs: sortById(verification_specs),
     oracle_bundles: [...oracle_bundles].sort((a,b)=>a.spec_id.localeCompare(b.spec_id)),
+    dependency_plan,
     counterfactual_controls: sortById(bundle.plan.counterfactual_controls),
     counterexample_fixtures: sortById(bundle.checklist.counterexample_fixtures),
     environment_probes: sortById(bundle.checklist.environment_probes),
@@ -98,6 +101,7 @@ export async function assertLongTaskContractFresh(contract: CompiledContractV3):
     if (await hashFile(spec.executable_path) !== spec.executable_sha256) throw new Error(`verifier_changed_after_compile:${spec.id}`);
   }
   await assertOracleBundleClosureFresh(contract);
+  const dependencyPlan=await compileDependencyPlan(contract.repository_root,contract.verification_specs);if(canonicalJson(dependencyPlan)!==canonicalJson(contract.dependency_plan))throw new Error("dependency_plan_changed_after_compile");
 }
 
 function compileGraphs(bundle: LongTaskSourceBundleV3): CompiledContractGraphsV3 {

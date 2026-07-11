@@ -116,6 +116,25 @@ export interface OracleBundleV3 {
   wrapper_sha256: string;
   policy_sha256: string;
 }
+export type DependencyManagerNameV3="pnpm"|"yarn"|"npm"|"bun";
+export interface DependencyManagerV3 { name:DependencyManagerNameV3; version:string; executable_path:string; executable_sha256:string; invocation_executable:string; invocation_prefix:string[]; install_argv:string[] }
+export interface DependencyInputIdentityV3 { path:string; sha256:string; size:number }
+export interface DependencyPlanV3 {
+  required:boolean;
+  key:string;
+  manager:DependencyManagerV3|null;
+  lockfile:DependencyInputIdentityV3|null;
+  package_manifests:DependencyInputIdentityV3[];
+  workspace_descriptors:DependencyInputIdentityV3[];
+  install_configs:DependencyInputIdentityV3[];
+  required_project_binaries:string[];
+  playwright_packages:Array<{name:string;version:string;integrity:string|null}>;
+  node:{version:string;executable:string;sha256:string};
+  corepack:{version:string;executable:string;sha256:string}|null;
+  platform:{platform:NodeJS.Platform;release:string;arch:string;libc_abi:string};
+  normalized_install_configuration:Record<string,string>;
+  sandbox_policy_sha256:string;
+}
 
 export interface CompiledContractGraphsV3 {
   requirements: Record<string, { plan_item_ids: string[]; obligation_ids: string[]; boundary_ids: string[]; non_completing_outcome_ids: string[]; population_exclusion_rule_ids: string[] }>;
@@ -145,6 +164,7 @@ export interface CompiledContractV3 {
   proof_requirements: ProofRequirementV3[];
   verification_specs: FrozenVerificationSpecV3[];
   oracle_bundles: OracleBundleV3[];
+  dependency_plan: DependencyPlanV3;
   counterfactual_controls: CounterfactualControlV3[];
   counterexample_fixtures: CounterexampleFixtureV3[];
   environment_probes: EnvironmentProbeV3[];

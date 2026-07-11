@@ -8,6 +8,7 @@ import type {
   ProofRequirementV3,
   VerificationSpecV3
 } from "./long-task-contract-schema.js";
+import { isReservedLongTaskEnvironmentRef } from "./long-task-environment.js";
 import { assertLongTaskAuthorPath, assertNoCaseCollisions, assertSafeContractPath } from "./long-task-path-policy.js";
 
 export function validateLongTaskCoverage(bundle: LongTaskSourceBundleV3): CoverageResult {
@@ -134,6 +135,7 @@ function validateSpec(spec: VerificationSpecV3, requirements:Map<string,{id:stri
   for (const id of spec.claims.ac_ids) if (!criteria.get(id)?.verification_spec_ids.includes(spec.id)) errors.push(`relation_mismatch:spec_ac:${spec.id}:${id}`);
   for (const id of spec.claims.proof_requirement_ids) if (!proofs.get(id)?.verification_spec_ids.includes(spec.id)) errors.push(`relation_mismatch:spec_proof:${spec.id}:${id}`);
   for(const step of spec.command_steps)for(const ref of step.environment_refs)if(!spec.environment_refs.includes(ref))errors.push(`undeclared_environment_ref:${spec.id}:${step.id}:${ref}`);
+  for(const ref of spec.environment_refs)if(isReservedLongTaskEnvironmentRef(ref))errors.push(`undeclared_environment_ref:reserved:${spec.id}:${ref}`);
   if (spec.population_enumerator && !spec.positive_assertions.some((assertion) => assertion.observation_id === spec.population_enumerator!.observation_id && assertion.observation_kind === "population_coverage")) errors.push(`population_contract_incomplete:${spec.id}:enumerator_assertion`);
   for (const assertion of [...spec.positive_assertions,...spec.negative_assertions]) if(!assertions.has(assertion.id))errors.push(`assertion_missing:${assertion.id}`);
 }

@@ -1,0 +1,8 @@
+{
+  "name": "@fixture/app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": { "@fixture/core": "1.0.0" },
+  "scripts": { "test": "node test.mjs" }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "ty-context-real-consumer-fixture",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "verify:npm": "node scripts/npm-dependency.mjs",
+    "verify:build": "node scripts/build.mjs"
+  },
+  "dependencies": {
+    "lodash-es": "4.18.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1",
+    "jest": "30.4.2",
+    "vitest": "4.1.10"
+  }
+}

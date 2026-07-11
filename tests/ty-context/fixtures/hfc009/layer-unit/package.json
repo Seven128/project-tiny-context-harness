@@ -1,0 +1,12 @@
+{
+  "name": "hfc009-layer-unit",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "npm@11.13.0",
+  "scripts": {
+    "verify": "node verify.mjs"
+  },
+  "dependencies": {
+    "lodash-es": "4.18.1"
+  }
+}
