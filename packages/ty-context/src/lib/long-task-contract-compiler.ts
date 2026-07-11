@@ -1,4 +1,4 @@
-import { mkdir, open, readFile, readdir, rename, stat } from "node:fs/promises";
+import { mkdir, open, readFile, readdir, realpath, rename, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { canonicalJson, sha256Hex } from "./composite-campaign-codec.js";
@@ -10,9 +10,9 @@ import type { CompiledContractGraphsV3, CompiledContractV3, FrozenVerificationSp
 import { assertOracleBundleClosureFresh, buildLongTaskOracleBundle } from "./long-task-oracle-bundler.js";
 import { compileDependencyPlan } from "./long-task-dependency-key.js";
 
-export async function compileLongTaskContract(workdir: string, repositoryRoot = process.cwd()): Promise<CompiledContractV3> {
-  const root = path.resolve(repositoryRoot);
-  const task = path.resolve(workdir);
+export async function compileLongTaskContract(workdir: string, repositoryRoot = process.cwd(), options: { write?: boolean } = {}): Promise<CompiledContractV3> {
+  const root = await realpath(path.resolve(repositoryRoot));
+  const task = await realpath(path.resolve(workdir));
   const bundle = await parseLongTaskSources(task);
   const coverage = validateLongTaskCoverage(bundle);
   if (!coverage.passed) throw new Error(`Long-task contract coverage failed:\n${coverage.errors.join("\n")}`);
@@ -79,8 +79,12 @@ export async function compileLongTaskContract(workdir: string, repositoryRoot = 
     verifier_identity
   };
   const contract: CompiledContractV3 = { ...unsigned, contract_sha256: sha256Hex(canonicalJson(unsigned)) };
-  await atomicJson(path.join(task, "compiled-contract.json"), contract);
+  if (options.write !== false) await writeCompiledLongTaskContract(task, contract);
   return contract;
+}
+
+export async function writeCompiledLongTaskContract(workdir: string, contract: CompiledContractV3): Promise<void> {
+  await atomicJson(path.join(workdir, "compiled-contract.json"), contract);
 }
 
 export async function readCompiledLongTaskContract(workdir: string): Promise<CompiledContractV3> {

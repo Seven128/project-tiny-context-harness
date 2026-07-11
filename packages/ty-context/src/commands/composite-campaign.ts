@@ -1,4 +1,5 @@
 import { applyPacketV3, applyScopeV3, bindCampaignGoalV3, compositeCampaignV3Contract, createCampaignV3, handoffCampaignV3, nextCampaignSliceV3, preflightCampaignV3, recordCampaignResultV3, renderCampaignV3 } from "../lib/composite-campaign-v3.js";
+import { assertLongTaskHostGate } from "../lib/long-task-hook-preflight.js";
 
 export async function compositeCampaign(args: string[]): Promise<void> { const command = args[0] ?? "help"; if (command === "help") { help(); return; } const options = parse(args.slice(1)); const root = process.cwd(); let result: unknown;
   if (command === "contract") result = compositeCampaignV3Contract();
@@ -9,7 +10,7 @@ export async function compositeCampaign(args: string[]): Promise<void> { const c
   else if (command === "preflight") result = await preflightCampaignV3(root, required(options, "--campaign"), required(options, "--slice"));
   else if (command === "next") result = await nextCampaignSliceV3(root, required(options, "--campaign"));
   else if (command === "handoff") result = await handoffCampaignV3(root, required(options, "--campaign"), required(options, "--slice"));
-  else if (command === "start") result = await bindCampaignGoalV3(root, required(options, "--campaign"), required(options, "--slice"), required(options, "--goal-id"));
+  else if (command === "start") { await assertLongTaskHostGate(root); result = await bindCampaignGoalV3(root, required(options, "--campaign"), required(options, "--slice"), required(options, "--goal-id")); }
   else if (command === "record-result") result = await recordCampaignResultV3(root, required(options, "--campaign"), required(options, "--slice"), required(options, "--workdir"));
   else throw new Error(`Unknown composite-campaign subcommand: ${command}`); console.log(JSON.stringify(result, null, options.has("--json") ? 0 : 2)); }
 function parse(args: string[]) { const result = new Map<string, string>(); for (let i=0;i<args.length;i++) { const key=args[i]; if (!key.startsWith("--")) throw new Error(`Unexpected argument: ${key}`); if (key === "--json") { result.set(key, "true"); continue; } const value=args[++i]; if (!value || value.startsWith("--")) throw new Error(`${key} requires a value`); if (result.has(key)) throw new Error(`Duplicate option: ${key}`); result.set(key,value); } return result; }

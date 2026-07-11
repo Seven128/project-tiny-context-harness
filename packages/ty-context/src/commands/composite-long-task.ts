@@ -1,18 +1,17 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { compileLongTaskContract } from "../lib/long-task-contract-compiler.js";
+import { compileAndSealLongTaskContract } from "../lib/long-task-host-client.js";
 import { runLongTaskFinalGate } from "../lib/long-task-final-gate.js";
 import { renderLongTaskGoal } from "../lib/long-task-goal.js";
 import { LONG_TASK_SOURCE_FILES } from "../lib/long-task-contract-schema.js";
 import { readLongTaskStatus, writeLongTaskStatus } from "../lib/long-task-status.js";
 import { verifyLongTask } from "../lib/long-task-verifier.js";
 import { assertLongTaskHostGate } from "../lib/long-task-hook-preflight.js";
-import { activateLongTask } from "../lib/long-task-active-task.js";
 
 export async function compositeLongTask(args: string[]): Promise<void> {
   const subcommand = args[0] ?? "help"; if (subcommand === "help") { help(); return; } const workdirArg = args[1]; if (!workdirArg) throw new Error(`${subcommand} requires <workdir>`); const workdir = path.resolve(process.cwd(), workdirArg);
   if (subcommand === "init") { await assertLongTaskHostGate(process.cwd()); await initialize(workdir); console.log(`initialized composite long-task Contract V3 at ${workdirArg}`); return; }
-  if (subcommand === "compile") { const host = await assertLongTaskHostGate(process.cwd()); const contract = await compileLongTaskContract(workdir); await activateLongTask(contract, host.bundle_sha256); console.log(`compiled contract=${contract.contract_sha256} requirements=${contract.requirements.length} plan_items=${contract.plan_items.length} obligations=${contract.obligations.length} bindings=${contract.bindings.length} acs=${contract.acceptance_criteria.length} proofs=${contract.proof_requirements.length} specs=${contract.verification_specs.length}`); return; }
+  if (subcommand === "compile") { await assertLongTaskHostGate(process.cwd()); const { contract, registry } = await compileAndSealLongTaskContract(workdir); console.log(`compiled contract=${contract.contract_sha256} registry=${registry.registry_id} requirements=${contract.requirements.length} plan_items=${contract.plan_items.length} obligations=${contract.obligations.length} bindings=${contract.bindings.length} acs=${contract.acceptance_criteria.length} proofs=${contract.proof_requirements.length} specs=${contract.verification_specs.length}`); return; }
   if (subcommand === "verify") { const spec = option(args, "--spec"); rejectUnknown(args.slice(2), spec ? ["--spec", spec] : []); const run = await verifyLongTask(workdir, spec ? [spec] : undefined); const status = await writeLongTaskStatus(workdir, run); console.log(JSON.stringify(status)); if (run.findings.length > 0) process.exitCode = 1; return; }
   if (subcommand === "status") { rejectUnknown(args.slice(2), []); console.log(JSON.stringify(await readLongTaskStatus(workdir), null, 2)); return; }
   if (subcommand === "final-gate") { rejectUnknown(args.slice(2), []); const result = await runLongTaskFinalGate(workdir); console.log(JSON.stringify(result)); if (result.workflow_status !== "accepted") process.exitCode = 1; return; }

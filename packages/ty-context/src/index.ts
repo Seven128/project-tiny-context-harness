@@ -1,5 +1,6 @@
 export { commands } from "./commands/index.js";
 export { compileLongTaskContract, readCompiledLongTaskContract, assertLongTaskContractFresh } from "./lib/long-task-contract-compiler.js";
+export { compileAndSealLongTaskContract, getActiveLongTask, readAuthoritativeLongTaskContract } from "./lib/long-task-host-client.js";
 export { parseLongTaskSources } from "./lib/long-task-contract-parser.js";
 export { validateLongTaskCoverage } from "./lib/long-task-contract-coverage.js";
 export { verifyLongTask } from "./lib/long-task-verifier.js";

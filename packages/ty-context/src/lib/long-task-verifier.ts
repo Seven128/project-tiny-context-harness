@@ -6,7 +6,7 @@ import { canonicalJson, sha256Hex } from "./composite-campaign-codec.js";
 import { collectFrozenArtifacts } from "./long-task-artifact-collector.js";
 import { evaluateFrozenAssertions } from "./long-task-assertion-evaluator.js";
 import { runFrozenCommand } from "./long-task-command-runner.js";
-import { assertLongTaskContractFresh, readCompiledLongTaskContract } from "./long-task-contract-compiler.js";
+import { assertLongTaskContractFresh } from "./long-task-contract-compiler.js";
 import { createLongTaskSnapshot, hashLongTaskWorkspace } from "./long-task-snapshot.js";
 import type { CompiledContractV3 } from "./long-task-contract-schema.js";
 import type { EnvironmentManifestV2, LongTaskFindingV2, SnapshotHandle, VerificationRunResultV2, VerificationSpecResultV2 } from "./long-task-run-result.js";
@@ -15,6 +15,7 @@ import { scanLongTaskNegativeEvidence } from "./long-task-negative-evidence.js";
 import { attachDependencyLayer } from "./long-task-dependency-layer.js";
 import { LONG_TASK_SANDBOX_POLICY_SHA256 } from "./long-task-sandbox-policy.js";
 import { prepareLongTaskExecutionResources, type LongTaskExecutionResourcesV3 } from "./long-task-execution-resources.js";
+import { readAuthoritativeLongTaskContract, startActiveLongTaskVerificationLease } from "./long-task-host-client.js";
 
 export interface VerifyLongTaskOptions {
   contract?: CompiledContractV3;
@@ -74,9 +75,10 @@ export async function executeFrozenVerificationSpecs(request: FrozenSpecExecutio
 }
 
 export async function verifyLongTask(workdir: string, specIds?: string[], options: VerifyLongTaskOptions = {}): Promise<VerificationRunResultV2> {
-  const contract = options.contract ?? await readCompiledLongTaskContract(workdir);
+  const contract = options.contract ?? (await readAuthoritativeLongTaskContract(workdir)).contract;
   await assertLongTaskContractFresh(contract);
   const runId = options.run_id ?? `RUN-${new Date().toISOString().replace(/[-:.TZ]/g, "")}-${process.pid}-${contract.contract_sha256.slice(0, 8)}`;
+  const hostLease = await startActiveLongTaskVerificationLease(contract, runId);
   const runRoot = path.join(workdir, "runs", runId);
   await mkdir(runRoot, { recursive: true });
   const source = options.snapshot ?? await createLongTaskSnapshot(contract.repository_root, contract, runId);
@@ -101,7 +103,10 @@ export async function verifyLongTask(workdir: string, specIds?: string[], option
     await writeFile(path.join(runRoot, "verification-result.json"), canonicalJson(result));
     return result;
   } finally {
-    if (ownsSource) await source.dispose();
+    let cleanupError: unknown;
+    if (ownsSource) try { await source.dispose(); } catch (error) { cleanupError = error; }
+    try { await hostLease.stop(); } catch (error) { cleanupError ??= error; }
+    if (cleanupError) throw cleanupError;
   }
 }
 

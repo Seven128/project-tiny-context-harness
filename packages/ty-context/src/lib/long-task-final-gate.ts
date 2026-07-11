@@ -1,5 +1,5 @@
 import path from "node:path";
-import { readCompiledLongTaskContract, assertLongTaskContractFresh } from "./long-task-contract-compiler.js";
+import { assertLongTaskContractFresh } from "./long-task-contract-compiler.js";
 import { createLongTaskSnapshot, hashLongTaskWorkspace } from "./long-task-snapshot.js";
 import { verifyLongTask } from "./long-task-verifier.js";
 import { evaluateLongTaskBindings } from "./long-task-binding-evaluator.js";
@@ -9,9 +9,10 @@ import { atomic } from "./long-task-status.js";
 import type { FinalResultV2, LongTaskEntityResultV3, LongTaskFindingV2 } from "./long-task-run-result.js";
 import { classifyExternalBlocker } from "./long-task-external-blocker.js";
 import { prepareLongTaskExecutionResources } from "./long-task-execution-resources.js";
+import { readAuthoritativeLongTaskContract } from "./long-task-host-client.js";
 
 export async function runLongTaskFinalGate(workdir:string):Promise<FinalResultV2>{
-  const contract=await readCompiledLongTaskContract(workdir);const invocationHash=await hashLongTaskWorkspace(contract.repository_root,contract);await assertLongTaskContractFresh(contract);
+  const contract=(await readAuthoritativeLongTaskContract(workdir)).contract;const invocationHash=await hashLongTaskWorkspace(contract.repository_root,contract);await assertLongTaskContractFresh(contract);
   const runId=`FINAL-${new Date().toISOString().replace(/[-:.TZ]/g,"")}-${process.pid}-${contract.contract_sha256.slice(0,8)}`;
   const snapshot=await createLongTaskSnapshot(contract.repository_root,contract,runId);const before=snapshot.manifest.snapshot_sha256;
   try{
