@@ -34,3 +34,10 @@ test("legacy author-controlled executable and oracle_paths fields are not in Acc
   for(const field of ["executable","argv","oracle_protocol","oracle_paths","implementation_test_paths","invalid_completion_signals"])assert.equal(field in spec,false,field);
   for(const field of ["oracle","network_policy","command_steps","positive_assertions","negative_assertions"])assert.equal(field in spec,true,field);
 });
+
+for(const [name,mutate,pattern] of [
+  ["truthy forbids expected",(data)=>{const assertion=data.checklist.verification_specs[0].positive_assertions[0];assertion.operator="truthy";assertion.expected=true;},/assertion_expected_forbidden/],
+  ["equals requires expected",(data)=>{delete data.checklist.verification_specs[0].positive_assertions[0].expected;},/assertion_expected_required/],
+  ["regex flags are a unique closed set",(data)=>{const assertion=data.checklist.verification_specs[0].positive_assertions[0];assertion.operator="matches";assertion.expected={pattern:"good",flags:"ii"};},/source_schema_invalid/],
+  ["set expected members are unique scalars",(data)=>{const assertion=data.checklist.verification_specs[0].positive_assertions[0];assertion.operator="set_equals";assertion.expected=["a","a"];},/source_schema_invalid/]
+])test(name,async()=>{const root=await mkdtemp(path.join(os.tmpdir(),"ltw-assertion-schema-"));const workdir=await writeHappyV3Contract(root,mutate);await assert.rejects(parseLongTaskSources(workdir),pattern);});

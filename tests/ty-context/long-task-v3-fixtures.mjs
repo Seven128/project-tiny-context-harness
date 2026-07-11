@@ -22,7 +22,7 @@ export async function writeHappyV3Contract(root, mutate = () => {}) {
   await writeFile(path.join(root, "src", "value.txt"), "good\n", "utf8");
   await writeFile(
     path.join(root, "tests", "acceptance", "oracle.mjs"),
-    `import {readFile} from "node:fs/promises";\nconst actual=(await readFile(new URL("../../src/value.txt",import.meta.url),"utf8")).trim();\nconsole.log(JSON.stringify({schema_version:"ty-context-observation-v1",checks:{works:{passed:actual==="good",actual},forbidden:{passed:actual!=="forbidden",actual}}}));\n`,
+    `import {readFile} from "node:fs/promises";\nconst value=(await readFile(new URL("../../src/value.txt",import.meta.url),"utf8")).trim();\nconsole.log(JSON.stringify({schema_version:"ty-context-observation-v2",observations:{works:{kind:"runtime_behavior",actual:{binding_id:"IB-002",capability:"value.read",value},artifact_refs:[]},forbidden:{kind:"scalar",actual:value,artifact_refs:[]}}}));\n`,
     "utf8"
   );
   const data = happyV3Data();
@@ -47,6 +47,14 @@ export function runCompositeCompile(root, task) {
     encoding: "utf8",
     env: { ...process.env, NO_COLOR: "1" }
   });
+}
+
+export function observationV2Envelope(value="good",bindingId="IB-002",capability="value.read"){
+  return {schema_version:"ty-context-observation-v2",observations:{works:{kind:"runtime_behavior",actual:{binding_id:bindingId,capability,value},artifact_refs:[]},forbidden:{kind:"scalar",actual:value,artifact_refs:[]}}};
+}
+
+export function observationV2OracleScript(value="good",bindingId="IB-002",capability="value.read",delayMs=0){
+  return `${delayMs?`await new Promise(resolve=>setTimeout(resolve,${delayMs}));`:""}console.log(${JSON.stringify(JSON.stringify(observationV2Envelope(value,bindingId,capability)))})\n`;
 }
 
 export function addSecondRequirementBranch(data) {
@@ -126,6 +134,7 @@ function happyV3Data() {
 }
 
 function makeSpec(suffix, refs) {
+  const runtimeExpected=suffix==="001"?{binding_id:"IB-002",capability:"value.read",value:"good"}:{binding_id:"IB-004",capability:"value.secondary",value:"good"};
   return {
     id: `VS-AC-${suffix}`,
     runner_type: "node_oracle",
@@ -139,7 +148,7 @@ function makeSpec(suffix, refs) {
     network_policy: { mode: "none", allowed_hosts: [] },
     command_steps: [{ id: `CMD-${suffix}`, tool: "node_script", target: "tests/acceptance/oracle.mjs", argv: [], cwd: ".", timeout_ms: 10000, environment_refs: [], output_artifact_ids: [] }],
     environment_refs: [],
-    positive_assertions: [{ id: `PA-${suffix}`, observation_id: "works", observation_kind: "runtime_behavior", operator: "equals", expected: "good" }],
+    positive_assertions: [{ id: `PA-${suffix}`, observation_id: "works", observation_kind: "runtime_behavior", operator: "equals", expected: runtimeExpected }],
     negative_assertions: [{ id: `NA-${suffix}`, observation_id: "forbidden", observation_kind: "scalar", operator: "not_equals", expected: "forbidden", source_boundary_ids: [refs.boundary], source_non_completing_ids: [refs.outcome], source_forbidden_shortcut_ids: [refs.shortcut] }],
     environment_requirements: []
   };

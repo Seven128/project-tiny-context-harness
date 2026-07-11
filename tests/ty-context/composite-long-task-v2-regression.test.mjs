@@ -36,7 +36,7 @@ const sourceExpectations={
   matrix_verdict_only:["packages/ty-context/src/lib/long-task-final-gate.ts",/runLongTaskFinalGate/],
   final_card_only:["packages/ty-context/src/lib/long-task-final-gate.ts",/final-result\.json/],
   api_only_for_ui:["packages/ty-context/src/lib/long-task-contract-coverage.ts",/unrelated_browser_route/],
-  screenshot_only:["packages/ty-context/src/lib/long-task-assertion-evaluator.ts",/oracle_protocol_invalid/],
+  screenshot_only:["packages/ty-context/src/lib/long-task-assertion-evaluator.ts",/observation_protocol_invalid/],
   owner_surface_forbidden_state:["packages/ty-context/src/lib/long-task-contract-coverage.ts",/source_boundary_ids/],
   current_command_failed_over_older_passed:["packages/ty-context/src/lib/long-task-final-gate.ts",/failedSpecs/],
   scope_leakage:["packages/ty-context/src/lib/long-task-contract-coverage.ts",/boundary_without_executable_negative_assertion/],

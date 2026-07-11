@@ -6,6 +6,11 @@ export function canonicalJson(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
+export function canonicalValueJson(value:unknown):string{
+  assertCanonicalValue(value,"$",new Set());
+  return JSON.stringify(sortCanonical(value));
+}
+
 export function canonicalYaml(value: unknown): string {
   assertCanonicalValue(value, "$", new Set());
   return oneTrailingNewline(YAML.stringify(value, {
@@ -168,6 +173,8 @@ function assertPlainArrayOwnProperties(value: unknown[], path: string): void {
 function oneTrailingNewline(value: string): string {
   return `${value.replace(/\r\n?/g, "\n").replace(/\n*$/, "")}\n`;
 }
+
+function sortCanonical(value:unknown):unknown{if(Array.isArray(value))return value.map(sortCanonical);if(value&&typeof value==="object")return Object.fromEntries(Object.keys(value).sort().map((key)=>[key,sortCanonical((value as Record<string,unknown>)[key])]));return value;}
 
 function assertTextInput(content: string, label: string): void {
   if (typeof content !== "string") throw new TypeError(`${label} input must be a string`);

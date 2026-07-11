@@ -1,4 +1,4 @@
-import { canonicalJson } from "./composite-campaign-codec.js";
+import { canonicalValueJson } from "./composite-campaign-codec.js";
 
 type Schema = Record<string, unknown>;
 
@@ -25,8 +25,8 @@ function validate(value: unknown, schema: Schema, root: Schema, path: string, er
   if (schema.not && passes(value,schema.not as Schema,root)) errors.push(`${path}:not`);
   if (schema.if && passes(value,schema.if as Schema,root)) { if(schema.then)validate(value,schema.then as Schema,root,path,errors); }
   else if (schema.else) validate(value,schema.else as Schema,root,path,errors);
-  if ("const" in schema && canonicalJson(value)!==canonicalJson(schema.const)) errors.push(`${path}:const`);
-  if (Array.isArray(schema.enum) && !schema.enum.some((item)=>canonicalJson(item)===canonicalJson(value))) errors.push(`${path}:enum`);
+  if ("const" in schema && canonicalValueJson(value)!==canonicalValueJson(schema.const)) errors.push(`${path}:const`);
+  if (Array.isArray(schema.enum) && !schema.enum.some((item)=>canonicalValueJson(item)===canonicalValueJson(value))) errors.push(`${path}:enum`);
   if (schema.type && !matchesType(value,schema.type)) { errors.push(`${path}:type`); return; }
   if (typeof value === "string") validateString(value,schema,path,errors);
   if (typeof value === "number") validateNumber(value,schema,path,errors);
@@ -49,7 +49,7 @@ function validateNumber(value:number,schema:Schema,path:string,errors:string[]):
 }
 function validateArray(value:unknown[],schema:Schema,root:Schema,path:string,errors:string[]):void{
   if(typeof schema.maxItems==="number"&&value.length>schema.maxItems)errors.push(`${path}:maxItems`);
-  if(schema.uniqueItems===true){const keys=value.map((item)=>canonicalJson(item));if(new Set(keys).size!==keys.length)errors.push(`${path}:uniqueItems`);}
+  if(schema.uniqueItems===true){const keys=value.map((item)=>canonicalValueJson(item));if(new Set(keys).size!==keys.length)errors.push(`${path}:uniqueItems`);}
   if(schema.items&&typeof schema.items==="object")value.forEach((item,index)=>validate(item,schema.items as Schema,root,`${path}/${index}`,errors));
 }
 function validateObject(value:Record<string,unknown>,schema:Schema,root:Schema,path:string,errors:string[]):void{
