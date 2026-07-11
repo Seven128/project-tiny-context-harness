@@ -2,14 +2,6 @@ import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-export {
-  validTaskState,
-  writeDerivedMatrix,
-  writeDerivedVerdict,
-  writeSuperpowersSources,
-  writeTaskState
-} from "./superpowers-fixtures.mjs";
-
 export async function createPlanProject() {
   const root = await mkdtemp(path.join(os.tmpdir(), "ty-context-plan-validator-"));
   for (const dir of [

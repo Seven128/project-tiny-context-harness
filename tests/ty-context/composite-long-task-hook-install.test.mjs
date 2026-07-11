@@ -1,0 +1,8 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { installLongTaskHooks } from "../../packages/ty-context/dist/lib/long-task-hook-install.js";
+
+test("sync preserves user hooks and installs exactly one managed handler idempotently",async()=>{const root=await mkdtemp(path.join(os.tmpdir(),"ltw-install-"));await mkdir(path.join(root,".codex"),{recursive:true});const user={hooks:{Stop:[{hooks:[{type:"command",command:"node user-hook.mjs",custom:"preserve"}]}]},customRoot:{keep:true}};await writeFile(path.join(root,".codex/hooks.json"),JSON.stringify(user));const first={changed:[],skipped:[],blocked:[]};await installLongTaskHooks(root,first);const once=await readFile(path.join(root,".codex/hooks.json"),"utf8");const parsed=JSON.parse(once);assert.deepEqual(parsed.customRoot,{keep:true});assert.equal(parsed.hooks.Stop[0].hooks[0].custom,"preserve");for(const event of ["SessionStart","PostCompact","Stop"]){assert.equal(JSON.stringify(parsed.hooks[event]).match(/long-task-hook\.mjs/g)?.length,2);const managed=parsed.hooks[event].find((group)=>group.hooks?.some((hook)=>hook.statusMessage==="Tiny Context composite completion gate")).hooks[0];assert.match(managed.command,/\$\(git rev-parse --show-toplevel\)/);assert.match(managed.commandWindows,/powershell[\s\S]*Join-Path/);assert.equal(managed.timeout,3600);}const second={changed:[],skipped:[],blocked:[]};await installLongTaskHooks(root,second);assert.equal(await readFile(path.join(root,".codex/hooks.json"),"utf8"),once);assert.equal(second.changed.length,0);});

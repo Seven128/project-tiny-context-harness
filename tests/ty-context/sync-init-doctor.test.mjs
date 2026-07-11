@@ -382,19 +382,16 @@ try {
     "utf8"
   );
   assert.match(compositeLongTaskSkill, /name: composite-long-task-workflow/);
-  assert.match(compositeLongTaskSkill, /Use when directly invoked for Superpowers-backed composite long-task workflow execution\./);
-  assert.match(compositeLongTaskSkill, /official Superpowers skills/i);
-  assert.match(compositeLongTaskSkill, /upstream-owned schema/i);
-  assert.match(compositeLongTaskSkill, /Superpowers-ready Markdown implementation plan/i);
-  assert.match(compositeLongTaskSkill, /workflow-protocol\.md/);
-  assert.match(compositeLongTaskSkill, /execution-binding\.md/);
+  assert.match(compositeLongTaskSkill, /Use only when explicitly invoked through \/composite-long-task-workflow/);
+  assert.doesNotMatch(compositeLongTaskSkill, /Superpowers/i);
+  assert.match(compositeLongTaskSkill, /product-architecture-source\.yaml/);
+  assert.match(compositeLongTaskSkill, /compiled-contract\.json/);
+  assert.match(compositeLongTaskSkill, /current-status\.json/);
+  assert.match(compositeLongTaskSkill, /final-result\.json/);
   assert.match(compositeLongTaskSkill, /goal-objective\.txt/);
-  assert.doesNotMatch(compositeLongTaskSkill, /superpowers:writing-plans/);
-  assert.match(compositeLongTaskSkill, /superpowers:subagent-driven-development/);
-  assert.match(compositeLongTaskSkill, /superpowers:executing-plans/);
-  assert.match(compositeLongTaskSkill, /superpowers:test-driven-development/);
-  assert.match(compositeLongTaskSkill, /superpowers:verification-before-completion/);
-  assert.match(compositeLongTaskSkill, /Do not execute the generated workflow/);
+  assert.match(compositeLongTaskSkill, /needs_work.*never a legal final reply/is);
+  assert.match(compositeLongTaskSkill, /Stop Hook/);
+  assert.doesNotMatch(compositeLongTaskSkill, /task-state\.json|events\.ndjson|workflow-protocol\.md|execution-binding\.md|superpowers:/i);
 
   const managedProductSkillPath = path.join(root, ".agent/skills/context_product_plan/SKILL.md");
   const packagedProductSkill = await readFile(

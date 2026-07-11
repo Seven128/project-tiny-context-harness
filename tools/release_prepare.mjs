@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { commandLogEntry, runCommand } from "./release_publish_helpers.mjs";
 import { isUpgradeImplementationPath, isUpgradeSensitivePath, isUpgradeTestEvidencePath } from "./release_upgrade_impact.mjs";
+import { prepareImmutableTarball } from "./release_artifact_prepare.mjs";
 
 const defaultRepoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const syncReleaseVersionScript = path.join(defaultRepoRoot, "tools", "sync_release_version.mjs");
@@ -102,6 +103,7 @@ async function main() {
   } else {
     await timed(timings, "workspace tests", () => run("npm", ["run", "test:built", "--workspace", workspaceName]));
   }
+  await timed(timings, "immutable release tarball", () => prepareImmutableTarball({root:args.root,version:targetVersion,packageName,workspaceName,run}));
   await timed(timings, "diff check", () => run("git", ["diff", "--check"]));
 
   console.log("");

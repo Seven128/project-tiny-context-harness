@@ -22,7 +22,7 @@ Important current constraints:
 
 The renamed package exists on npm. Use local token publishing only as an emergency fallback.
 
-The current published package is `project-tiny-context-harness@0.2.85`. Prefer the GitHub Actions Trusted Publishing workflow after a successful dry run; use the local fallback only when workflow dispatch is unavailable and the normal release checks pass. Do not run a real publish for an existing version again; npm versions are immutable.
+The current published package is `project-tiny-context-harness@0.3.0`. Prefer the GitHub Actions Trusted Publishing workflow after a successful dry run; use the local fallback only when workflow dispatch is unavailable and the normal release checks pass. Do not run a real publish for an existing version again; npm versions are immutable.
 
 Real publish runs also create or update the matching GitHub Release from `docs/launch/github-release-<version>.md` by running `node tools/github_release_publish.mjs --version <version> --target <github.sha>`. Dry runs do not create or edit GitHub releases.
 
@@ -89,7 +89,7 @@ It is manual-only:
 - Versioned release surfaces must be prepared before commit with `npm run release:prepare -- --version <patch|minor|major|x.y.z> --update-mode <sync-only|upgrade-required|manual-required>`; the workflow verifies this with `npm run release:check-version`.
 - The job runs on `ubuntu-latest` with Node `24`.
 - The workflow installs the latest npm CLI and asserts npm CLI 11.5.1 or later.
-- It runs package tests, package source drift check, `make validate-context` and `npm pack --dry-run --workspace project-tiny-context-harness`.
+- It runs package tests, package source drift check and `make validate-context`, rebuilds the prepared tarball, verifies it byte-for-byte against `docs/launch/release-artifact-<version>.json`, and publishes only that verified path.
 - The publish step runs only when `dry_run` is false.
 - The GitHub Release create/update step runs only after a real publish, uses the release packet body and marks `v<version>` as the latest release.
 - The workflow must not define `NPM_TOKEN` or `NODE_AUTH_TOKEN`; publish authentication should come from OIDC.
@@ -108,7 +108,7 @@ Expected result:
 - package tests pass,
 - source drift check passes,
 - Context validation passes,
-- `npm pack --dry-run --workspace project-tiny-context-harness` succeeds,
+- the rebuilt tarball matches the release-preparation SHA-256 attestation,
 - no npm publish occurs,
 - no GitHub Release is created or edited.
 

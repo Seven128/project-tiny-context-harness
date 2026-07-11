@@ -27,7 +27,7 @@ Use this structural shape; values remain semantic authoring decisions and the CL
 
 ```json
 {
-  "schema_version": "scope-fit-result-v1",
+  "schema_version": "scope-fit-result-v2",
   "request_sha256": "<request hash>",
   "decision": "fit_for_three_inputs",
   "rationale": ["<source-backed reason>"],

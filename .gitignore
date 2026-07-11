@@ -34,6 +34,8 @@ temp/
 artifacts/
 .artifacts/
 reports/
+.codex/ty-context-active-long-task.json
+.codex/ty-context-long-task-hook-heartbeat.json
 
 # Generated Harness compatibility views
 .agents/skills/

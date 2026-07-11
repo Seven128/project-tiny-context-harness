@@ -17,7 +17,7 @@ test("prepare Skill is concise, explicit, and delegates strict shape to the CLI 
   assert.match(skill, /\/prepare-composite-long-task/);
   assert.match(skill, /composite-campaign contract --json/);
   assert.match(skill, /current SFC only/i);
-  assert.match(skill, /Do not hand-write the three Markdown inputs/i);
+  assert.match(skill, /Do not hand-write the three YAML projections/i);
   assert.match(skill, /handoff.*does not create a Goal/is);
   assert.match(skill, /explicit.*start/is);
   assert.match(skill, /same Goal ID.*idempotent/is);
@@ -42,14 +42,14 @@ test("semantic references cover split decisions, repair stops, review, start, an
   assert.match(scope, /not_long_task/);
   assert.match(scope, /stable.*SFC-###/is);
   assert.match(scope, /multiple.*candidate.*ask/is);
-  assert.match(scope, /schema_version.*scope-fit-result-v1/is);
+  assert.match(scope, /schema_version.*scope-fit-result-v2/is);
   assert.match(scope, /explicit user answer.*decision ID.*rationale/is);
-  assert.match(authoring, /CompositeAuthoringPacketV1/);
+  assert.match(authoring, /CompositeAuthoringPacketV2/);
   assert.match(authoring, /non-completing/i);
   assert.match(authoring, /preflight/i);
   assert.match(authoring, /repair.*packet.*new revision/is);
   assert.match(authoring, /do not weaken.*acceptance/is);
-  assert.match(authoring, /schema_version.*composite-authoring-packet-v1/is);
+  assert.match(authoring, /schema_version.*composite-authoring-packet-v2/is);
   assert.match(lifecycle, /resume|review/i);
   assert.match(lifecycle, /handoff_ready/);
   assert.match(lifecycle, /create_goal/);
@@ -102,9 +102,9 @@ test("public documentation is English-complete and preserves the strict downstre
     assert.match(content, /## Composite Campaign Preparation/);
     assert.match(content, /\/prepare-composite-long-task/);
     assert.match(content, /composite-campaign/);
-    assert.match(content, /handoff never creates a Goal/i);
-    assert.match(content, /no legacy importer or aggregate campaign-completion state/i);
-    assert.match(content, /complete three-input bundles continue directly through `\/composite-long-task-workflow`/i);
+    assert.match(content, /handoff.*does not create a Goal|Handoff.*does not create a Goal/is);
+    assert.match(content, /no importer, alias or silent migration|There is no importer, alias or silent migration/i);
+    assert.match(content, /\/composite-long-task-workflow/);
   }
   const chinese = await readFile(path.join(root, "README.zh-CN.md"), "utf8");
   assert.match(chinese, /\/prepare-composite-long-task/);

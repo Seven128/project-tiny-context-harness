@@ -1,21 +1,41 @@
 {
-  "schema_version": "protected-harness-baseline-v1",
-  "purpose": "Protect composite-long-task final completion mechanics from product-task self-validation drift.",
-  "baseline_reason": "Trusted Evidence Kernel and Harness Drift Lock define the canonical completion proof surface.",
+  "schema_version": "protected-harness-baseline-v2",
+  "purpose": "Freeze the independent Composite Long-Task V2 compiler, verifier, oracle and Codex completion-gate trust surfaces against product-task self-proof.",
+  "baseline_reason": "The executor may change product implementation, but cannot replace the frozen completion definition, active verifier, final recomputation or Stop enforcement used for the same task.",
   "protected_categories": {
-    "final_gate_implementation": ["packages/ty-context/src/commands/composite-long-task.ts", "packages/ty-context/src/lib/superpowers-task-gates.ts", "packages/ty-context/src/lib/superpowers-task-evidence-kernel.ts", "packages/ty-context/src/lib/superpowers-task-command-run-correlation.ts", "packages/ty-context/src/lib/superpowers-task-unregistered-evidence.ts", "packages/ty-context/src/lib/superpowers-task-ac010.ts"],
-    "completion_output_implementation": ["packages/ty-context/src/lib/superpowers-task-completion-output.ts", "packages/ty-context/src/lib/superpowers-task-final-card.ts"],
-    "validator_implementation": ["packages/ty-context/src/lib/superpowers-task-validator.ts", "packages/ty-context/src/lib/plan-acceptance-validator.ts"],
-    "derive_implementation": ["packages/ty-context/src/lib/superpowers-task-derive.ts"],
-    "evidence_registration_implementation": ["packages/ty-context/src/lib/superpowers-task-evidence.ts", "packages/ty-context/src/lib/superpowers-task-current-evidence.ts"],
-    "harness_protection_implementation": ["packages/ty-context/src/lib/superpowers-task-harness-drift.ts", "packages/ty-context/src/lib/superpowers-task-protected-baseline.ts"],
-    "composite_campaign_authoring": ["packages/ty-context/src/commands/composite-campaign.ts", "packages/ty-context/src/lib/composite-input-contract.ts", "packages/ty-context/src/lib/composite-source-preflight.ts", "packages/ty-context/src/lib/composite-source-preflight-files.ts", "packages/ty-context/src/lib/superpowers-task-compile-core.ts", "packages/ty-context/src/lib/superpowers-task-compile-diagnostics.ts", "packages/ty-context/src/lib/superpowers-task-compile-guards.ts", "packages/ty-context/src/lib/superpowers-task-fields.ts", "packages/ty-context/src/lib/superpowers-task-source-compile.ts", "packages/ty-context/src/lib/superpowers-task-source-field-values.ts", "packages/ty-context/src/lib/superpowers-task-source-parser.ts", "packages/ty-context/src/lib/composite-campaign-types.ts", "packages/ty-context/src/lib/composite-campaign-schema.ts", "packages/ty-context/src/lib/composite-campaign-renderer.ts", "packages/ty-context/src/lib/composite-campaign-preflight.ts", "packages/ty-context/src/lib/composite-campaign-handoff.ts", "packages/ty-context/src/lib/composite-campaign-result.ts", "packages/ty-context/src/lib/composite-campaign-service.ts"],
-    "assertion_result_schema": ["packages/ty-context/src/lib/superpowers-task-state-schema.ts", "packages/ty-context/src/lib/superpowers-task-assertion-normalizers.ts"],
-    "fixture_expected_outcomes": ["tests/ty-context/superpowers-task-evidence-kernel.test.mjs", "tests/ty-context/composite-long-task-assertion-gate.test.mjs", "tests/ty-context/composite-long-task-expanded-assertion-gate.test.mjs", "tests/ty-context/composite-long-task-trusted-evidence-kernel.test.mjs", "tests/ty-context/composite-long-task-completion-output-gate.test.mjs", "tests/ty-context/fixtures/composite-long-task/completion-output-gate/expected-outcomes.json", "tests/ty-context/composite-long-task-false-completion-regression.test.mjs", "tests/ty-context/fixtures/composite-long-task/false-completion-regression/manifest.json", "tests/ty-context/composite-long-task-final-gate-triage.test.mjs", "tests/ty-context/fixtures/composite-long-task/final-gate-triage/manifest.json"],
-    "workflow_protocol": [".codex/ty-context-managed/skills/composite-long-task-workflow/references/composite-long-task-workflow-protocol.md", ".codex/ty-context-managed/skills/composite-long-task-workflow/assets/goal-objective.template.md", ".codex/ty-context-managed/skills/composite-long-task-workflow/assets/execution-binding.template.md"],
-    "skill_markdown": [".codex/ty-context-managed/skills/composite-long-task-workflow/SKILL.md", ".codex/ty-context-managed/skills/prepare-composite-long-task/SKILL.md", ".codex/ty-context-managed/skills/prepare-composite-long-task/references/scope-fit-and-selection.md", ".codex/ty-context-managed/skills/prepare-composite-long-task/references/packet-authoring.md", ".codex/ty-context-managed/skills/prepare-composite-long-task/references/campaign-lifecycle.md"],
-    "test_runner_scripts": ["packages/ty-context/package.json", "package.json", "Makefile"]
+    "contract_compiler": [
+      "packages/ty-context/src/lib/long-task-contract-schema.ts",
+      "packages/ty-context/src/lib/long-task-contract-parser.ts",
+      "packages/ty-context/src/lib/long-task-contract-coverage.ts",
+      "packages/ty-context/src/lib/long-task-contract-compiler.ts",
+      "packages/ty-context/src/lib/long-task-path-policy.ts"
+    ],
+    "active_verifier": [
+      "packages/ty-context/src/lib/long-task-snapshot.ts",
+      "packages/ty-context/src/lib/long-task-command-runner.ts",
+      "packages/ty-context/src/lib/long-task-artifact-collector.ts",
+      "packages/ty-context/src/lib/long-task-assertion-evaluator.ts",
+      "packages/ty-context/src/lib/long-task-negative-evidence.ts",
+      "packages/ty-context/src/lib/long-task-verifier.ts"
+    ],
+    "acceptance_and_completion_gate": [
+      "packages/ty-context/src/lib/long-task-final-gate.ts",
+      "packages/ty-context/src/lib/long-task-external-blocker.ts",
+      "packages/ty-context/src/lib/long-task-stop-check.ts",
+      "packages/ty-context/src/lib/long-task-active-task.ts",
+      "packages/ty-context/src/lib/long-task-hook-preflight.ts",
+      ".codex/ty-context-managed/hooks/long-task-hook.mjs"
+    ],
+    "contract_and_attack_fixtures": [
+      "tests/ty-context/fixtures/composite-long-task-v2/manifest.json",
+      "tests/ty-context/composite-long-task-v2-regression.test.mjs"
+    ],
+    "public_workflow_skill": [
+      ".codex/ty-context-managed/skills/composite-long-task-workflow/SKILL.md",
+      ".codex/ty-context-managed/skills/composite-long-task-workflow/agents/openai.yaml"
+    ],
+    "test_and_release_entrypoints": ["packages/ty-context/package.json", "package.json", "Makefile"]
   },
-  "product_task_rule": "Changing protected paths in product_task blocks product_goal_complete.",
-  "harness_task_rule": "Changing protected paths in harness_task requires a baseline reason, adversarial fixtures, a happy-path fixture and no product completion claim."
+  "product_task_rule": "A product implementation task that changes a frozen protected path or oracle invalidates its compiled contract and cannot use that attempt to prove acceptance.",
+  "harness_task_rule": "A harness rewrite must update the immutable baseline, attack fixtures and happy path, then pass external release-candidate bootstrap before acceptance."
 }

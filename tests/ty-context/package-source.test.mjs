@@ -59,7 +59,7 @@ try {
   );
   await writeFile(
     path.join(fixture, ".agent/ty-context-managed/skills/composite-long-task-workflow/SKILL.md"),
-    "---\nname: composite-long-task-workflow\ndescription: Use when directly invoked for Superpowers-backed composite long-task workflow preparation.\n---\n\n# Composite Long-Task Workflow\n",
+    "---\nname: composite-long-task-workflow\ndescription: Use only when explicitly invoked through /composite-long-task-workflow.\n---\n\n# Composite Long-Task Workflow\n",
     "utf8"
   );
   await writeFile(

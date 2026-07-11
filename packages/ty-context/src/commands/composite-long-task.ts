@@ -1,175 +1,28 @@
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { applySliceDelta, initializeSuperpowersTask } from "../lib/superpowers-task-state.js";
-import { compileSuperpowersTask } from "../lib/superpowers-task-compile.js";
-import { startAndSaveSuperpowersAttempt } from "../lib/superpowers-task-attempt.js";
-import { recordSuperpowersEvidence, runSuperpowersAssertion } from "../lib/superpowers-task-evidence.js";
-import { deriveSuperpowersArtifacts } from "../lib/superpowers-task-derive.js";
-import { runEpochGate, runFinalGate, runSliceGate } from "../lib/superpowers-task-gates.js";
-import { nextSuperpowersSlices } from "../lib/superpowers-task-next-slices.js";
-import { renderCompositeLongTaskGoal } from "../lib/composite-long-task-renderer.js";
-import type { SuperpowersAttemptMode } from "../lib/superpowers-task-state-schema.js";
+import { compileLongTaskContract } from "../lib/long-task-contract-compiler.js";
+import { runLongTaskFinalGate } from "../lib/long-task-final-gate.js";
+import { renderLongTaskGoal } from "../lib/long-task-goal.js";
+import { LONG_TASK_SOURCE_FILES } from "../lib/long-task-contract-schema.js";
+import { readLongTaskStatus, writeLongTaskStatus } from "../lib/long-task-status.js";
+import { verifyLongTask } from "../lib/long-task-verifier.js";
+import { assertLongTaskHostGate } from "../lib/long-task-hook-preflight.js";
+import { activateLongTask } from "../lib/long-task-active-task.js";
 
 export async function compositeLongTask(args: string[]): Promise<void> {
-  await runCompositeLongTaskCommand(args, {
-    commandName: "ty-context composite-long-task",
-    label: "composite long-task",
-    showHelp: true
-  });
+  const subcommand = args[0] ?? "help"; if (subcommand === "help") { help(); return; } const workdirArg = args[1]; if (!workdirArg) throw new Error(`${subcommand} requires <workdir>`); const workdir = path.resolve(process.cwd(), workdirArg);
+  if (subcommand === "init") { await assertLongTaskHostGate(process.cwd()); await initialize(workdir); console.log(`initialized composite long-task V2 at ${workdirArg}`); return; }
+  if (subcommand === "compile") { const host = await assertLongTaskHostGate(process.cwd()); const contract = await compileLongTaskContract(workdir); await activateLongTask(contract, host.bundle_sha256); console.log(`compiled contract=${contract.contract_sha256} requirements=${Object.keys(contract.requirement_graph).length} obligations=${Object.keys(contract.obligation_graph).length} acs=${Object.keys(contract.acceptance_graph).length}`); return; }
+  if (subcommand === "verify") { const spec = option(args, "--spec"); rejectUnknown(args.slice(2), spec ? ["--spec", spec] : []); const run = await verifyLongTask(workdir, spec ? [spec] : undefined); const status = await writeLongTaskStatus(workdir, run); console.log(JSON.stringify(status)); if (run.findings.length > 0) process.exitCode = 1; return; }
+  if (subcommand === "status") { rejectUnknown(args.slice(2), []); console.log(JSON.stringify(await readLongTaskStatus(workdir), null, 2)); return; }
+  if (subcommand === "final-gate") { rejectUnknown(args.slice(2), []); const result = await runLongTaskFinalGate(workdir); console.log(JSON.stringify(result)); if (result.workflow_status !== "accepted") process.exitCode = 1; return; }
+  if (subcommand === "render-goal") { rejectUnknown(args.slice(2), []); console.log(await renderLongTaskGoal(workdir)); return; }
+  if (subcommand === "stop-check") { const { stopCheckLongTask } = await import("../lib/long-task-stop-check.js"); const message = option(args, "--message") ?? ""; rejectUnknown(args.slice(2), message ? ["--message", message] : []); console.log(JSON.stringify(await stopCheckLongTask(workdir, message))); return; }
+  throw new Error(`Unknown composite-long-task subcommand: ${subcommand}`);
 }
 
-export async function runCompositeLongTaskCommand(
-  args: string[],
-  options: { commandName: string; label: string; showHelp: boolean }
-): Promise<void> {
-  const subcommand = args[0] ?? "help";
-  const workdirArg = args[1];
-  if (!workdirArg || subcommand === "help") {
-    help(options.commandName, options.showHelp);
-    return;
-  }
-  const workdir = path.resolve(process.cwd(), workdirArg);
-  if (subcommand === "init") {
-    await initializeSuperpowersTask(workdir, { planSlug: path.basename(workdir) });
-    console.log(`initialized ${options.label} state at ${workdirArg}/task-state.json`);
-    return;
-  }
-  if (subcommand === "compile") {
-    const state = await compileSuperpowersTask(workdir, { mode: attemptMode(args) });
-    console.log(`compiled ${options.label} graph plan_items=${Object.keys(state.graph.plan_items).length} acs=${Object.keys(state.graph.acceptance_criteria).length}`);
-    return;
-  }
-  if (subcommand === "start-attempt") {
-    const attempt = await startAndSaveSuperpowersAttempt(workdir, attemptMode(args));
-    console.log(`started attempt ${attempt.task_attempt_id}`);
-    return;
-  }
-  if (subcommand === "run-assertion") {
-    const separator = args.indexOf("--");
-    const commandArgs = separator >= 0 ? args.slice(separator + 1) : [];
-    const run = await runSuperpowersAssertion(workdir, {
-      acId: optionValue(args, "--ac") ?? "",
-      proofLayer: optionValue(args, "--proof-layer") ?? "",
-      commandArgs
-    });
-    console.log(`recorded assertion command_run_id=${run.command_run_id} exit_code=${run.exit_code}`);
-    if (run.exit_code !== 0) {
-      process.exitCode = 1;
-    }
-    return;
-  }
-  if (subcommand === "record-evidence") {
-    const evidence = await recordSuperpowersEvidence(workdir, {
-      artifactPath: path.resolve(process.cwd(), optionValue(args, "--from") ?? ""),
-      commandRunId: optionValue(args, "--command-run-id") ?? ""
-    });
-    console.log(`registered evidence ${evidence.evidence_id}`);
-    return;
-  }
-  if (subcommand === "apply-slice-delta") {
-    const delta = args[2];
-    if (!delta) {
-      throw new Error("apply-slice-delta requires <slice-delta.json>");
-    }
-    await applySliceDelta(workdir, path.resolve(process.cwd(), delta));
-    const result = await deriveSuperpowersArtifacts(workdir);
-    console.log(`applied ${options.label} slice delta and derived files=${result.files.length}`);
-    return;
-  }
-  if (subcommand === "derive") {
-    const result = await deriveSuperpowersArtifacts(workdir);
-    console.log(`derived ${options.label} artifacts files=${result.files.length}`);
-    return;
-  }
-  if (subcommand === "slice-gate") {
-    const sliceId = optionValue(args, "--slice") ?? "";
-    const result = await runSliceGate(workdir, sliceId);
-    console.log(result.passed ? `slice gate passed ${sliceId}` : `slice gate blocked ${result.messages.join("; ")}`);
-    if (!result.passed) {
-      process.exitCode = 1;
-    }
-    return;
-  }
-  if (subcommand === "epoch-gate") {
-    const epochId = optionValue(args, "--epoch") ?? "";
-    const result = await runEpochGate(workdir, epochId);
-    console.log(result.passed ? `epoch gate passed ${epochId}` : `epoch gate blocked ${result.messages.join("; ")}`);
-    return;
-  }
-  if (subcommand === "final-gate") {
-    const result = await runFinalGate(workdir);
-    console.log(`final gate product_goal_complete=${result.product_goal_complete}`);
-    console.log(`acceptance_target_status=${result.acceptance_target_status}`);
-    console.log(`completion_output_status=${result.completion_output_status}`);
-    console.log(`final_answer_allowed=${result.final_answer_allowed}`);
-    console.log(`required_user_visible_status=${result.required_user_visible_status}`);
-    console.log(`exit_code=${result.exit_code}`);
-    console.log(`audit_task_complete=${result.audit_task_complete}`);
-    if (result.blocker_triage) {
-      console.log(`blocker_triage_category=${result.blocker_triage.category}`);
-      console.log(`blocker_triage_self_recoverable=${result.blocker_triage.self_recoverable}`);
-      console.log(`blocker_triage_recovery_attempted=${result.blocker_triage.recovery_attempted}`);
-      console.log(`blocker_triage_next_action=${result.blocker_triage.next_action}`);
-    }
-    if (result.blocked_reasons.length > 0) {
-      console.log(`blocked_reasons=${result.blocked_reasons.join("; ")}`);
-    }
-    if (result.rejection_reasons.length > 0) {
-      console.log(`rejection_reasons=${result.rejection_reasons.join("; ")}`);
-    }
-    if (!result.final_answer_allowed) {
-      process.exitCode = result.exit_code;
-      for (const error of result.errors) {
-        console.error(`error: ${error}`);
-      }
-    }
-    return;
-  }
-  if (subcommand === "next-slices") {
-    const limit = Number.parseInt(optionValue(args, "--limit") ?? "5", 10);
-    const slices = await nextSuperpowersSlices(workdir, Number.isFinite(limit) ? limit : 5);
-    console.log(`Next ${Math.min(Number.isFinite(limit) ? limit : 5, 5)} high-value clusters:`);
-    console.log(slices.join("\n"));
-    return;
-  }
-  if (subcommand === "render-goal") {
-    const result = await renderCompositeLongTaskGoal(workdir);
-    console.log(
-      `rendered ${options.label} goal artifacts: ${path.basename(result.goalObjectivePath)} ${path.basename(result.protocolPath)} ${path.basename(result.executionBindingPath)} length=${result.goalObjectiveLength}`
-    );
-    return;
-  }
-  help(options.commandName, options.showHelp);
-}
-
-function help(commandName: string, showRenderGoal: boolean): void {
-  const renderGoal = showRenderGoal ? "\n  render-goal <workdir>                  Render workflow-protocol.md, execution-binding.md and goal-objective.txt" : "";
-  console.log(`${commandName} commands:
-  init <workdir>                         Initialize task-state.json and events.ndjson
-  compile <workdir> [--mode product_task|harness_task]
-                                         Compile sources into task graph
-  start-attempt <workdir> [--mode product_task|harness_task]
-                                         Start a fresh current attempt
-  run-assertion <workdir> --ac <id> --proof-layer <layer> -- <command>
-                                         Run and record an assertion command
-  record-evidence <workdir> --from <artifact> --command-run-id <id>
-                                         Register current-attempt EvidenceRecordV2
-  apply-slice-delta <workdir> <delta>    Apply structured slice delta, evidence and derived views
-  derive <workdir>                       Generate derived/** views
-  slice-gate <workdir> --slice <id>      Validate one slice has real progress
-  epoch-gate <workdir> --epoch <id>      Refresh shared epoch evidence views
-  final-gate <workdir>                   Compute product_goal_complete and completion_output_status
-  next-slices <workdir> --limit 5        Recommend next proof clusters${renderGoal}`);
-}
-
-function optionValue(args: string[], name: string): string | undefined {
-  const index = args.indexOf(name);
-  return index >= 0 ? args[index + 1] : undefined;
-}
-
-function attemptMode(args: string[]): SuperpowersAttemptMode {
-  const value = optionValue(args, "--mode");
-  if (value === "harness_task") {
-    return "harness_task";
-  }
-  return "product_task";
-}
+async function initialize(workdir: string): Promise<void> { await mkdir(workdir, { recursive: true }); for (const file of Object.values(LONG_TASK_SOURCE_FILES)) { const target = path.join(workdir, file); try { await writeFile(target, template(file), { flag: "wx" }); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error; } } }
+function template(file: string): string { if (file.startsWith("product")) return "schema_version: product-source-v2\nproduct_goal: TODO\ndelivery_scope: system_capability_build\nfull_population_required: false\nrequirements: []\nboundaries: []\nnon_completing_outcomes: []\nrepresentative_samples_validate: []\nrepresentative_samples_do_not_validate: []\nout_of_scope_backlog: []\n"; if (file.startsWith("technical")) return "schema_version: technical-plan-v2\nplan_items: []\n"; return "schema_version: acceptance-checklist-v2\nacceptance_criteria: []\n"; }
+function option(args: string[], key: string): string | undefined { const index = args.indexOf(key); return index >= 0 ? args[index + 1] : undefined; }
+function rejectUnknown(actual: string[], allowed: string[]): void { if (actual.join("\0") !== allowed.join("\0")) throw new Error(`Unknown or injected arguments: ${actual.join(" ")}`); }
+function help(): void { console.log(`ty-context composite-long-task commands:\n  init <workdir>\n  compile <workdir>\n  verify <workdir> [--spec <verification-spec-id>]\n  status <workdir>\n  final-gate <workdir>\n  stop-check <workdir> [--message <text>]\n  render-goal <workdir>`); }

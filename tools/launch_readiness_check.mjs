@@ -1238,9 +1238,10 @@ function localChecks() {
       contains(npmTrustedPublishWorkflow, /npm run release:check-version/) &&
       contains(npmTrustedPublishWorkflow, /node packages\/ty-context\/dist\/cli\.js package check-source/) &&
       contains(npmTrustedPublishWorkflow, /make validate-context/) &&
-      contains(npmTrustedPublishWorkflow, /npm pack --dry-run --workspace project-tiny-context-harness/) &&
+      contains(npmTrustedPublishWorkflow, /npm pack --json --workspace project-tiny-context-harness --pack-destination \.artifacts\/releases\/prepared/) &&
+      contains(npmTrustedPublishWorkflow, /verify_prepared_release_artifact\.mjs/) &&
       contains(npmTrustedPublishWorkflow, /NPM_CONFIG_PROVENANCE:\s*"true"/) &&
-      contains(npmTrustedPublishWorkflow, /npm publish --workspace project-tiny-context-harness --access public/) &&
+      contains(npmTrustedPublishWorkflow, /npm publish "\.artifacts\/releases\/prepared\/\$FILENAME" --access public/) &&
       contains(npmTrustedPublishWorkflow, /Create or update GitHub Release/) &&
       contains(npmTrustedPublishWorkflow, /GH_TOKEN:\s*\$\{\{ github\.token \}\}/) &&
       contains(npmTrustedPublishWorkflow, /node tools\/github_release_publish\.mjs --version "\$\{\{ inputs\.expected_version \}\}" --target "\$\{\{ github\.sha \}\}"/) &&

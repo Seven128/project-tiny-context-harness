@@ -69,6 +69,7 @@ try {
       "npm run release:check-version",
       "node packages/ty-context/dist/cli.js upgrade --check --json",
       "npm run test:built --workspace project-tiny-context-harness",
+      "npm pack --json --workspace project-tiny-context-harness --pack-destination .artifacts\\releases\\prepared",
       "git diff --check"
     ]
   );
@@ -106,6 +107,7 @@ try {
       "tests/ty-context/launch-readiness-script.test.mjs",
       "tests/ty-context/npm-publish-access-script.test.mjs"
     ].join(" "),
+    "npm pack --json --workspace project-tiny-context-harness --pack-destination .artifacts\\releases\\prepared",
     "git diff --check"
   ]);
   assert.ok(!fastCommands.includes("npm run test:built --workspace project-tiny-context-harness"));
@@ -176,7 +178,7 @@ try {
   const publishEntries = readJsonLines(publishLog);
   assert.ok(publishEntries.every((entry) => entry.shell === false), "publish commands should use shell-safe spawning");
   const publishCommands = publishEntries.map((entry) => entry.argv.join(" "));
-  assert.ok(publishCommands.includes("npm publish .artifacts/releases/pack/project-tiny-context-harness-1.2.4.tgz --access public"));
+  assert.ok(publishCommands.includes("npm publish .artifacts/releases/prepared/project-tiny-context-harness-1.2.4.tgz --access public"));
   assert.ok(publishCommands.includes("git tag -a v1.2.4 -m Project Tiny Context Harness 1.2.4"));
   assert.ok(publishCommands.includes("git push origin v1.2.4"));
   assert.ok(!publishCommands.some((command) => command.startsWith("npm install -D project-tiny-context-harness@1.2.4")));

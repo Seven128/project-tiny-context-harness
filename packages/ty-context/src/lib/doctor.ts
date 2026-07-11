@@ -1,5 +1,7 @@
 import { createRequire } from "node:module";
 import path from "node:path";
+import os from "node:os";
+import { readdir } from "node:fs/promises";
 import { readConfig } from "./config.js";
 import { harnessConfigPath, harnessRoot } from "./harness-root.js";
 import { pathExists } from "./fs.js";
@@ -48,6 +50,12 @@ export async function runDoctor(projectRoot: string): Promise<DoctorReport> {
     }
   }
 
+  for (const location of await findUserSuperpowersSkills()) {
+    report.warnings.push(`user-level using-superpowers Skill detected at ${location}. Composite V2 does not depend on it and doctor will not modify global configuration. To disable it explicitly for Codex, remove/disable that plugin or add a matching [[skills.config]] entry with enabled = false in ${path.join(os.homedir(), ".codex", "config.toml")}.`);
+  }
+
   report.info.push("doctor complete");
   return report;
 }
+
+async function findUserSuperpowersSkills(): Promise<string[]> { const home = os.homedir(); const direct = path.join(home, ".codex", "skills", "using-superpowers", "SKILL.md"); const result: string[] = []; if (await pathExists(direct)) result.push(direct); const cache = path.join(home, ".codex", "plugins", "cache"); try { for (const owner of await readdir(cache)) { const candidateRoot = path.join(cache, owner); for (const plugin of await readdir(candidateRoot)) { if (plugin !== "superpowers") continue; for (const version of await readdir(path.join(candidateRoot, plugin))) { const candidate = path.join(candidateRoot, plugin, version, "skills", "using-superpowers", "SKILL.md"); if (await pathExists(candidate)) result.push(candidate); } } } } catch {} return [...new Set(result)].sort(); }

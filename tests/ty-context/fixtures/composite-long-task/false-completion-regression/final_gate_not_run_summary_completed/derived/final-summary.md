@@ -1,3 +1,0 @@
-# Final Summary
-
-Implementation complete.

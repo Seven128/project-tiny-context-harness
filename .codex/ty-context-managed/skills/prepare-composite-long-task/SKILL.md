@@ -37,11 +37,11 @@ Never copy field inventories from this Skill into a competing schema. Never regi
 2. Otherwise preserve the user's requirement in an in-root UTF-8 file, create the explicit campaign with `composite-campaign create`, then apply Scope Fit and a stable SFC dependency graph using `composite-campaign apply-scope`.
 3. If a decision is required, ask one narrow question and stop mutation until answered.
 4. Use `composite-campaign next --campaign <path> --json`; author the current SFC only.
-5. Produce `CompositeAuthoringPacketV1`, then publish it with `composite-campaign apply-packet`.
-6. Run `render`, then `preflight --json`. Repair the packet through a new immutable revision; do not hand-edit rendered Markdown.
+5. Produce `CompositeAuthoringPacketV2`, then publish it with `composite-campaign apply-packet`.
+6. Run `render`, then `preflight --json`. Repair the packet through a new immutable revision; do not hand-edit rendered YAML.
 7. Review the rendered authorities and run `handoff`. Handoff does not create a Goal. Stop at `handoff_ready` unless the user explicitly authorized start or prepare-and-execute.
 
-Do not hand-write the three Markdown inputs. Package rendering is their only campaign projection path.
+Do not hand-write the three YAML projections. Package rendering from the V2 packet is their only campaign projection path.
 
 ## Start And Continuation
 

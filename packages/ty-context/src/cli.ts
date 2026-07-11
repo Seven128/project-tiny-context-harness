@@ -4,7 +4,8 @@ import { commands } from "./commands/index.js";
 const [command = "help", ...args] = process.argv.slice(2);
 
 async function main(): Promise<void> {
-  const handler = commands[command] ?? commands.help;
+  const handler = commands[command];
+  if (!handler) throw new Error(`Unknown command: ${command}`);
   await handler(args);
 }
 

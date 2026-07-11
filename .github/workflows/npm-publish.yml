@@ -6,7 +6,7 @@ on:
       expected_version:
         description: "Must match packages/ty-context/package.json version."
         required: true
-        default: "0.2.85"
+        default: "0.3.0"
       dry_run:
         description: "Run all checks and pack without publishing."
         required: true
@@ -59,14 +59,21 @@ jobs:
       - name: Validate source Context
         run: make validate-context
 
-      - name: Pack dry run
-        run: npm pack --dry-run --workspace project-tiny-context-harness
+      - name: Rebuild and verify immutable prepared artifact
+        shell: bash
+        run: |
+          mkdir -p .artifacts/releases/prepared
+          npm pack --json --workspace project-tiny-context-harness --pack-destination .artifacts/releases/prepared
+          FILENAME="$(node -p "require('./docs/launch/release-artifact-${{ inputs.expected_version }}.json').filename")"
+          node tools/verify_prepared_release_artifact.mjs --version "${{ inputs.expected_version }}" --tarball ".artifacts/releases/prepared/$FILENAME"
 
       - name: Publish package with npm trusted publishing
         if: ${{ !inputs.dry_run }}
         env:
           NPM_CONFIG_PROVENANCE: "true"
-        run: npm publish --workspace project-tiny-context-harness --access public
+        run: |
+          FILENAME="$(node -p "require('./docs/launch/release-artifact-${{ inputs.expected_version }}.json').filename")"
+          npm publish ".artifacts/releases/prepared/$FILENAME" --access public
 
       - name: Create or update GitHub Release
         if: ${{ !inputs.dry_run }}

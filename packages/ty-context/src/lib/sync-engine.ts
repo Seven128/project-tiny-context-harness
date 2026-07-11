@@ -24,6 +24,7 @@ import {
 import { packageAssetPath } from "./paths.js";
 import type { ManagedFile } from "./types.js";
 import { assertSupportedSchema } from "./schema-guard.js";
+import { installLongTaskHooks } from "./long-task-hook-install.js";
 
 export interface SyncReport {
   changed: string[];
@@ -53,6 +54,7 @@ export async function runSync(projectRoot: string): Promise<SyncReport> {
   for (const managedFile of config.managed_files) {
     await syncManagedFile(projectRoot, root, managedFile, report);
   }
+  await installLongTaskHooks(projectRoot, report);
 
   return report;
 }
@@ -323,6 +325,10 @@ async function syncSkillsTree(
     } else {
       report.skipped.push(destinationFile);
     }
+  }
+  const managedSkillNames = new Set(realFiles.map((file) => path.relative(source, file).split(path.sep)[0]).filter(Boolean));
+  for (const skillName of managedSkillNames) {
+    report.changed.push(...(await removeStaleManagedFiles(path.join(source, skillName), path.join(destination, skillName))));
   }
 }
 

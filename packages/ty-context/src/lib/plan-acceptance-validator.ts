@@ -30,7 +30,6 @@ import {
   valuesAsArray,
   weakProofHit
 } from "./plan-validator-common.js";
-import { validateSuperpowersState } from "./superpowers-task-validator.js";
 import type { ValidatorReport } from "./validators.js";
 
 export async function validatePlanAcceptance(projectRoot: string, args: string[] = []): Promise<ValidatorReport> {
@@ -41,20 +40,6 @@ export async function validatePlanAcceptance(projectRoot: string, args: string[]
   const targetDir = await resolveInputDir(projectRoot, args[0], "tmp/ty-context/plan-acceptance");
   if (!(await pathExists(targetDir))) {
     return { info, warnings, hygiene, errors: [`plan acceptance directory is missing: ${repoRelative(projectRoot, targetDir)}`] };
-  }
-
-  if (await pathExists(path.join(targetDir, "task-state.json"))) {
-    const stateReport = await validateSuperpowersState(projectRoot, [targetDir]);
-    return {
-      info: [
-        `checked state-backed plan acceptance ${repoRelative(projectRoot, targetDir)}`,
-        ...stateReport.info,
-        ...(stateReport.errors.length === 0 ? ["Plan acceptance state-backed artifact consistency passed"] : [])
-      ],
-      warnings: stateReport.warnings,
-      hygiene: stateReport.hygiene,
-      errors: stateReport.errors
-    };
   }
 
   const matrixFile = await findJsonFile(targetDir, "plan-conformance-matrix");

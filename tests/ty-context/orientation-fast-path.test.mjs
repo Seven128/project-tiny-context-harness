@@ -223,7 +223,6 @@ for (const content of [rootReadme, packageReadme, packageGuide]) {
   assert.match(content, /Positioning/);
   assert.match(content, /Spec-first kits/);
   assert.match(content, /BMAD-style workflows/);
-  assert.match(content, /Superpowers-style execution/i);
   assert.match(content, /Task Master-style planners/);
   assert.match(content, /Context7\/Serena-style/);
   assert.match(content, /module boundary|module boundaries/i);
