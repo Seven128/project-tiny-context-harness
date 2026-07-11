@@ -25,7 +25,7 @@ export async function runLongTaskFinalGate(workdir:string):Promise<FinalResultV2
     const accepted=findings.length===0&&everyEntityPassed;const externallyBlocked=blocker.externally_blocked&&findings.length===0&&!accepted;
     const result:FinalResultV2={
       schema_version:"long-task-final-result-v2",workflow_status:accepted?"accepted":externallyBlocked?"externally_blocked":"needs_work",contract_sha256:contract.contract_sha256,run_id:run.run_id,final_snapshot_sha256:run.snapshot.snapshot_sha256,
-      source_hashes:Object.fromEntries(Object.entries(contract.sources).map(([key,value])=>[key,value.sha256])),context_hashes:contract.context_snapshot.sha256,oracle_hashes:Object.assign({},...contract.verification_specs.map((spec)=>spec.oracle_sha256)),verifier_identity:contract.verifier_identity,
+      source_hashes:Object.fromEntries(Object.entries(contract.sources).map(([key,value])=>[key,value.sha256])),context_hashes:contract.context_snapshot.sha256,oracle_hashes:Object.fromEntries(contract.oracle_bundles.map((bundle)=>[bundle.spec_id,bundle.bundle_sha256])),verifier_identity:contract.verifier_identity,
       ...projection,spec_results:Object.fromEntries(run.spec_results.map((value)=>[value.spec_id,value.status])),workspace_hash_before:before,workspace_hash_after:after,findings,
       ...(externallyBlocked?{external_blocker:{minimal_user_action:blocker.minimal_user_action??"Complete the required external action"}}:{}),started_at:run.started_at,completed_at:new Date().toISOString(),atomic_write_complete:true
     };

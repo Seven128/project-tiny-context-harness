@@ -7,6 +7,7 @@ import { validateLongTaskCoverage } from "./long-task-contract-coverage.js";
 import { resolveInside } from "./long-task-path-policy.js";
 import { COMPOSITE_V3_SCHEMA_SET_SHA256 } from "./long-task-contract-schema-registry.js";
 import type { CompiledContractGraphsV3, CompiledContractV3, FrozenVerificationSpecV3, LongTaskSourceBundleV3, VerificationClaimsV3, VerifierTrustInput } from "./long-task-contract-schema.js";
+import { assertOracleBundleClosureFresh, buildLongTaskOracleBundle } from "./long-task-oracle-bundler.js";
 
 export async function compileLongTaskContract(workdir: string, repositoryRoot = process.cwd()): Promise<CompiledContractV3> {
   const root = path.resolve(repositoryRoot);
@@ -22,11 +23,13 @@ export async function compileLongTaskContract(workdir: string, repositoryRoot = 
   await validateContextReferences(bundle, root, new Set(Object.keys(contextHashes)));
   const verifier_identity = await verifierIdentity(root);
   const verification_specs: FrozenVerificationSpecV3[] = [];
+  const oracle_bundles: CompiledContractV3["oracle_bundles"] = [];
   for (const spec of bundle.checklist.verification_specs) {
     const executable_path = process.execPath;
-    const oracle_sha256: Record<string, string> = {};
-    const oraclePaths=[spec.oracle.entrypoint];
-    for (const oracle of oraclePaths) oracle_sha256[oracle] = await hashFile(resolveInside(root, oracle, `${spec.id}.oracle`));
+    const built=await buildLongTaskOracleBundle(root,spec);oracle_bundles.push(built.identity);
+    const repositoryDependencies=built.identity.input_dependencies.filter((item)=>item.source_kind==="repository");
+    const oracle_sha256: Record<string, string> = Object.fromEntries(repositoryDependencies.map((item)=>[item.path,item.sha256]));
+    const oraclePaths=repositoryDependencies.map((item)=>item.path).sort();
     verification_specs.push({
       ...spec,
       positive_assertions: spec.positive_assertions.map((assertion)=>({...assertion,oracle_check_id:assertion.observation_id})),
@@ -35,7 +38,7 @@ export async function compileLongTaskContract(workdir: string, repositoryRoot = 
       normalized_sha256: sha256Hex(canonicalJson(spec)),
       executable_path,
       executable_sha256: await hashFile(executable_path),
-      argv: [spec.oracle.entrypoint],
+      argv: [`bundle:${built.identity.bundle_store_key}`],
       oracle_paths: oraclePaths,
       oracle_sha256: sortRecord(oracle_sha256),
       implementation_test_paths: spec.command_steps.filter((step)=>step.tool==="node_script"||step.tool==="playwright_test").map((step)=>step.target),
@@ -65,6 +68,7 @@ export async function compileLongTaskContract(workdir: string, repositoryRoot = 
     acceptance_criteria: sortById(bundle.checklist.acceptance_criteria),
     proof_requirements: sortById(bundle.checklist.proof_requirements),
     verification_specs: sortById(verification_specs),
+    oracle_bundles: [...oracle_bundles].sort((a,b)=>a.spec_id.localeCompare(b.spec_id)),
     counterfactual_controls: sortById(bundle.plan.counterfactual_controls),
     counterexample_fixtures: sortById(bundle.checklist.counterexample_fixtures),
     environment_probes: sortById(bundle.checklist.environment_probes),
@@ -92,8 +96,8 @@ export async function assertLongTaskContractFresh(contract: CompiledContractV3):
   if (await hashFile(contract.verifier_identity.cli_path) !== contract.verifier_identity.cli_sha256 || await hashTree(path.join(contract.repository_root, ".codex/hooks")) !== contract.verifier_identity.hook_bundle_sha256) throw new Error("verifier_changed_after_compile:identity");
   for (const spec of contract.verification_specs) {
     if (await hashFile(spec.executable_path) !== spec.executable_sha256) throw new Error(`verifier_changed_after_compile:${spec.id}`);
-    for (const [file, hash] of Object.entries(spec.oracle_sha256)) if (await hashFile(path.join(contract.repository_root, file)) !== hash) throw new Error(`oracle_changed_after_compile:${file}`);
   }
+  await assertOracleBundleClosureFresh(contract);
 }
 
 function compileGraphs(bundle: LongTaskSourceBundleV3): CompiledContractGraphsV3 {

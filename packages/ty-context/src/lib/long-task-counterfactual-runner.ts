@@ -35,7 +35,7 @@ async function runControl(contract:CompiledContractV3,control:CounterfactualCont
     const owned=new Set(specs.flatMap((spec)=>[...spec.positive_assertions,...spec.negative_assertions].map((assertion)=>assertion.id)));
     if(control.expected_failed_assertion_ids.some((id)=>!owned.has(id)))return result(control,obligationId,mutation.mutation_effects,[],["counterfactual_wrong_binding_target"]);
     const runRoot=path.join(workdir,"runs",realRun.run_id,"counterfactuals",control.id);await mkdir(runRoot,{recursive:true});
-    const rerun=await executeFrozenVerificationSpecs({contract,source_root:counterRoot,workdir,run_root:runRoot,spec_ids:specs.map((spec)=>spec.id),environment_overrides:mutation.environment_overrides});const counterAssertions=Object.assign({},...rerun.map((spec)=>spec.assertion_results));
+    const rerun=await executeFrozenVerificationSpecs({contract,source_root:counterRoot,workdir,run_root:runRoot,spec_ids:specs.map((spec)=>spec.id),run_id:`${realRun.run_id}:${control.id}`,snapshot_sha256:realRun.snapshot.snapshot_sha256,environment_overrides:mutation.environment_overrides});const counterAssertions=Object.assign({},...rerun.map((spec)=>spec.assertion_results));
     const missing=control.expected_failed_assertion_ids.some((id)=>!Object.prototype.hasOwnProperty.call(counterAssertions,id));
     const flips=control.expected_failed_assertion_ids.map((id)=>({assertion_id:id,real:true,counterfactual:counterAssertions[id]===true})).sort((a,b)=>a.assertion_id.localeCompare(b.assertion_id));
     if(missing)return result(control,obligationId,mutation.mutation_effects,flips,["counterfactual_verifier_infrastructure_failed"]);

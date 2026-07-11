@@ -14,7 +14,7 @@ async function finalWithOracle(name,body,mutate=()=>{}){
     positive.expected={binding_id:"IB-002",capability:"value.read",value:"good"};
     mutate(data);
   });
-  await writeFile(path.join(root,"tests/acceptance/oracle.mjs"),`console.log(${JSON.stringify(JSON.stringify(body))})\n`);
+  await writeFile(path.join(root,"tests/acceptance/oracle.mjs"),`export async function observe(){return ${JSON.stringify(body)};}\n`);
   await compileLongTaskContract(workdir,root);
   return runLongTaskFinalGate(workdir);
 }
@@ -34,7 +34,7 @@ test("Observation V2 happy actual values are evaluated by the Harness",async()=>
 test("Observation V1 passed true with a wrong actual is rejected instead of self-signing completion",async()=>{
   const root=await mkdtemp(path.join(os.tmpdir(),"ltw-observation-v1-self-sign-"));
   const workdir=await writeHappyV3Contract(root);
-  await writeFile(path.join(root,"tests/acceptance/oracle.mjs"),`console.log(JSON.stringify({schema_version:"ty-context-observation-v1",checks:{works:{passed:true,actual:"wrong"},forbidden:{passed:true,actual:"forbidden"}}}))\n`);
+  await writeFile(path.join(root,"tests/acceptance/oracle.mjs"),`export async function observe(){return {schema_version:"ty-context-observation-v1",checks:{works:{passed:true,actual:"wrong"},forbidden:{passed:true,actual:"forbidden"}}};}\n`);
   await compileLongTaskContract(workdir,root);
   const result=await runLongTaskFinalGate(workdir);
   assert.equal(result.workflow_status,"needs_work");

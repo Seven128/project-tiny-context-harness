@@ -59,6 +59,7 @@
   },
   "dependencies": {
     "@google/design.md": "^0.3.0",
+    "esbuild": "0.28.1",
     "impeccable": "^3.1.0",
     "re2js": "2.8.6",
     "yaml": "^2.9.0"

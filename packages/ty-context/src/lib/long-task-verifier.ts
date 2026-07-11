@@ -25,6 +25,8 @@ export interface FrozenSpecExecutionRequest {
   workdir: string;
   run_root: string;
   spec_ids: string[];
+  run_id: string;
+  snapshot_sha256: string;
   environment_overrides?: Readonly<Record<string,string>>;
 }
 
@@ -40,7 +42,9 @@ export async function executeFrozenVerificationSpecs(request: FrozenSpecExecutio
     try {
       await cp(request.source_root, specRoot, { recursive: true });
       try {
-        const command = await runFrozenCommand(spec, specRoot, commandRoot, artifactRoot, request.environment_overrides);
+        const bundle=request.contract.oracle_bundles.find((item)=>item.spec_id===spec.id);if(!bundle)throw new Error(`oracle_bundle_missing:${spec.id}`);
+        const oracleInput={schema_version:"ty-context-oracle-input-v2",spec_id:spec.id,snapshot_root:specRoot,artifact_root:artifactRoot,command_steps:[],environment_refs_present:Object.keys(request.environment_overrides??{}).sort(),run_identity:{run_id:request.run_id,snapshot_sha256:request.snapshot_sha256,dependency_layer_key:"none",environment_manifest_sha256:"pending"}};
+        const command = await runFrozenCommand(spec,bundle,oracleInput,specRoot,commandRoot,artifactRoot,request.environment_overrides);
         const artifacts = await collectFrozenArtifacts(spec, artifactRoot, command.started_at);
         await writeFile(path.join(commandRoot, "command.json"), canonicalJson(command));
         await writeFile(path.join(commandRoot, "artifacts.json"), canonicalJson(artifacts));
@@ -75,7 +79,7 @@ export async function verifyLongTask(workdir: string, specIds?: string[], option
   try {
     const automatic = specIds ? undefined : decideLongTaskImpact(contract, await gitChangedPaths(contract.repository_root));
     const selectedIds = specIds ?? automatic!.verification_spec_ids;
-    const specResults = await executeFrozenVerificationSpecs({ contract, source_root: source.root, workdir, run_root: runRoot, spec_ids: selectedIds });
+    const specResults = await executeFrozenVerificationSpecs({ contract, source_root: source.root, workdir, run_root: runRoot, spec_ids: selectedIds,run_id:runId,snapshot_sha256:source.manifest.snapshot_sha256 });
     const findings = specResults.flatMap((result) => enrichFindings(contract, result.spec_id, result.findings));
     try { await assertLongTaskContractFresh(contract); }
     catch (error) { findings.push(integrityFinding(runId, workdir, error)); }

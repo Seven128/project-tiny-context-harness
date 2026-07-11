@@ -22,7 +22,7 @@ export async function writeHappyV3Contract(root, mutate = () => {}) {
   await writeFile(path.join(root, "src", "value.txt"), "good\n", "utf8");
   await writeFile(
     path.join(root, "tests", "acceptance", "oracle.mjs"),
-    `import {readFile} from "node:fs/promises";\nconst value=await readFile(new URL("../../src/value.txt",import.meta.url),"utf8").then(v=>v.trim(),()=>null);\nconsole.log(JSON.stringify({schema_version:"ty-context-observation-v2",observations:{works:{kind:"runtime_behavior",actual:{binding_id:"IB-002",capability:"value.read",value},artifact_refs:[]},forbidden:{kind:"scalar",actual:value,artifact_refs:[]}}}));\n`,
+    `import {readFile} from "node:fs/promises";\nimport path from "node:path";\nexport async function observe(input){const value=await readFile(path.join(input.snapshot_root,"src/value.txt"),"utf8").then(v=>v.trim(),()=>null);return {schema_version:"ty-context-observation-v2",observations:{works:{kind:"runtime_behavior",actual:{binding_id:"IB-002",capability:"value.read",value},artifact_refs:[]},forbidden:{kind:"scalar",actual:value,artifact_refs:[]}}};}\n`,
     "utf8"
   );
   const data = happyV3Data();
@@ -54,7 +54,7 @@ export function observationV2Envelope(value="good",bindingId="IB-002",capability
 }
 
 export function observationV2OracleScript(value="good",bindingId="IB-002",capability="value.read",delayMs=0){
-  return `${delayMs?`await new Promise(resolve=>setTimeout(resolve,${delayMs}));`:""}console.log(${JSON.stringify(JSON.stringify(observationV2Envelope(value,bindingId,capability)))})\n`;
+  return `export async function observe(){${delayMs?`await new Promise(resolve=>setTimeout(resolve,${delayMs}));`:""}return ${JSON.stringify(observationV2Envelope(value,bindingId,capability))};}\n`;
 }
 
 export function addSecondRequirementBranch(data) {
