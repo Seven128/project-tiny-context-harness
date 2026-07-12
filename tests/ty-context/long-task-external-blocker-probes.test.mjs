@@ -26,7 +26,7 @@ test("trusted_mfa_blocker is produced only from current primary and alternative 
     assert.deepEqual(attempts(result, "ENV-PROBE-PRIMARY"), [false]);
     assert.deepEqual(attempts(result, "ENV-PROBE-ALT"), [false]);
     for (const record of recordsFor(result, "ENV-PROBE-PRIMARY")) assert.deepEqual(record.descriptor, fixture.contract.environment_probes.find((probe) => probe.id === "ENV-PROBE-PRIMARY").descriptor);
-    for (const map of [result.requirement_results, result.plan_item_results, result.obligation_results, result.acceptance_results, result.proof_requirement_results]) assert.ok(Object.values(map).every((item) => item.status === "blocked"));
+    for (const map of [result.requirement_results, result.plan_item_results, result.obligation_results, result.acceptance_criterion_results, result.proof_requirement_results]) assert.ok(Object.values(map).every((item) => item.status === "blocked"));
     assert.ok(Object.values(result.binding_results).every((item) => item.status === "passed"));
     assert.ok(Object.values(result.counterfactual_results).every((item) => item.status === "passed"));
   });
@@ -79,7 +79,7 @@ test("wrong_blocker_reason is needs_work even when every probe really ran", { sk
     const result = await runLongTaskFinalGate(fixture.task, { contract: fixture.contract });
     assert.equal(result.workflow_status, "needs_work");
     assert.ok(result.findings.some((item) => item.category === "external_blocker_reason_mismatch"));
-    for (const map of [result.requirement_results, result.plan_item_results, result.obligation_results, result.acceptance_results, result.proof_requirement_results]) assert.ok(Object.values(map).every((item) => item.status === "failed"));
+    for (const map of [result.requirement_results, result.plan_item_results, result.obligation_results, result.acceptance_criterion_results, result.proof_requirement_results]) assert.ok(Object.values(map).every((item) => item.status === "failed"));
   });
 });
 
@@ -119,7 +119,7 @@ test("local_alternative_succeeds and converts the condition into an available pa
     const fixture = await environmentFixture("alternative-succeeds", "mfa_required", [httpProbe("ENV-PROBE-PRIMARY", `${url}/primary`), httpProbe("ENV-PROBE-ALT", `${url}/alternative`)], ["ENV-PROBE-ALT"]);
     const result = await runLongTaskFinalGate(fixture.task, { contract: fixture.contract });
     assert.equal(result.workflow_status, "accepted");
-    assert.equal(result.external_blocker, undefined);
+    assert.equal(result.external_blocker, null);
     assert.deepEqual(counts, { "/primary": 1, "/alternative": 1 });
     assert.deepEqual(attempts(result, "ENV-PROBE-ALT"), [true]);
   });

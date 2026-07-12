@@ -75,8 +75,10 @@ pub fn run(policy: &SandboxPolicy, command: &[String], bwrap: &Path) -> HostResu
     }
     args.extend(["--seccomp".into(), fd.to_string(), "--".into()]);
     args.extend(command.iter().cloned());
-    let status = Command::new(bwrap)
-        .args(args)
+    let mut process = Command::new(bwrap);
+    process.args(args);
+    crate::sandbox_io::isolate_oracle_diagnostics(&mut process, policy)?;
+    let status = process
         .status()
         .map_err(|error| HostError::io("bwrap", error));
     let _ = fs::remove_file(&seccomp_path);

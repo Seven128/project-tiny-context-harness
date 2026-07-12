@@ -216,7 +216,7 @@ export class LongTaskHostStorageV1 {
   }
 
   private async ensureLayout(): Promise<void> {
-    for (const directory of ["keys", "registry/contracts", "registry/active/records", "registry/active/by-repository", "registry/active/by-workdir", "registry/reservations/by-repository", "registry/reservations/by-workdir", "registry/tombstones", "journal", "journal/applied", "staging", "quarantine", "locks", "audit"]) await mkdir(this.inside(directory), { recursive: true });
+    for (const directory of ["keys", "registry/contracts", "registry/active/records", "registry/active/by-repository", "registry/active/by-workdir", "registry/reservations/by-repository", "registry/reservations/by-workdir", "registry/tombstones", "registry/results/commits", "registry/results/envelopes", "registry/results/traces", "registry/results/latest/by-workdir", "journal", "journal/applied", "staging", "quarantine", "locks", "audit"]) await mkdir(this.inside(directory), { recursive: true });
   }
 
   private async acquireLock(): Promise<() => Promise<void>> {

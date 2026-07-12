@@ -8,6 +8,7 @@ export interface HostSignatureV1 {
   record_sha256: string;
   signature: string;
 }
+export interface HostDetachedAttestationV3 { key_id:string;signature:string }
 
 export class LongTaskHostSignerV1 {
   constructor(private readonly stateRoot: string) {}
@@ -27,6 +28,10 @@ export class LongTaskHostSignerV1 {
     const publicKey = withKey.key_id === keys.keyId ? keys.publicKey : await this.retainedPublicKey(withKey.key_id);
     if (!verify(null, Buffer.from(record_sha256, "hex"), publicKey, Buffer.from(signature, "base64url"))) throw new Error("host_registry_integrity_failure:signature");
   }
+
+  async attest(payload:Buffer):Promise<HostDetachedAttestationV3>{const keys=await this.keys();return {key_id:keys.keyId,signature:sign(null,payload,keys.privateKey).toString("base64url")};}
+
+  async verifyAttestation(value:HostDetachedAttestationV3,payload:Buffer):Promise<void>{if(!value||typeof value.key_id!=="string"||typeof value.signature!=="string")throw new Error("final_result_signature_invalid:shape");const keys=await this.keys();let publicKey;try{publicKey=value.key_id===keys.keyId?keys.publicKey:await this.retainedPublicKey(value.key_id);}catch{throw new Error("final_result_signature_invalid:key");}let signature:Buffer;try{signature=Buffer.from(value.signature,"base64url");}catch{throw new Error("final_result_signature_invalid:encoding");}if(signature.length!==64||signature.toString("base64url")!==value.signature)throw new Error("final_result_signature_invalid:encoding");if(!verify(null,payload,publicKey,signature))throw new Error("final_result_signature_invalid");}
 
   private async retainedPublicKey(keyId: string): Promise<ReturnType<typeof createPublicKey>> {
     if (!/^[a-f0-9]{64}$/u.test(keyId)) throw new Error("host_registry_integrity_failure:key_id");

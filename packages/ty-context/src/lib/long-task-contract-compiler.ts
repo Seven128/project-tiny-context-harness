@@ -102,15 +102,23 @@ export async function readCompiledLongTaskContract(workdir: string): Promise<Com
 }
 
 export async function assertLongTaskContractFresh(contract: CompiledContractV3): Promise<void> {
+  await assertLongTaskSourceContextFresh(contract);
+  await assertOracleBundleClosureFresh(contract);
+  await assertLongTaskTrustedToolFresh(contract);
+}
+
+export async function assertLongTaskSourceContextFresh(contract:CompiledContractV3):Promise<void>{
   for (const item of Object.values(contract.sources)) if (await hashFile(path.join(contract.repository_root, item.path)) !== item.sha256) throw new Error(`source_changed_after_compile:${item.path}`);
   const currentContext = (await listFiles(path.join(contract.repository_root, "project_context"))).map((file) => relative(contract.repository_root, file));
   if (canonicalJson(currentContext) !== canonicalJson(contract.context_snapshot.files)) throw new Error("context_changed_after_compile:file_set");
   for (const [file, hash] of Object.entries(contract.context_snapshot.sha256)) if (await hashFile(path.join(contract.repository_root, file)) !== hash) throw new Error(`context_changed_after_compile:${file}`);
+}
+
+export async function assertLongTaskTrustedToolFresh(contract:CompiledContractV3):Promise<void>{
   if (await hashFile(contract.verifier_identity.cli_path) !== contract.verifier_identity.cli_sha256 || await hashTree(path.join(contract.repository_root, ".codex/hooks")) !== contract.verifier_identity.hook_bundle_sha256) throw new Error("verifier_changed_after_compile:identity");
   for (const spec of contract.verification_specs) {
     if (await hashFile(spec.executable_path) !== spec.executable_sha256) throw new Error(`verifier_changed_after_compile:${spec.id}`);
   }
-  await assertOracleBundleClosureFresh(contract);
   const dependencyPlan=await compileDependencyPlan(contract.repository_root,contract.verification_specs);if(canonicalJson(dependencyPlan)!==canonicalJson(contract.dependency_plan))throw new Error("dependency_plan_changed_after_compile");
 }
 

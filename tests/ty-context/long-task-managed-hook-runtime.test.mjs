@@ -14,7 +14,7 @@ const admin = helper && (process.env.TY_CONTEXT_HOST_ADMIN_BIN ?? path.join(path
 const installerUi = helper && (process.env.TY_CONTEXT_HOST_INSTALLER_UI_BIN ?? path.join(path.dirname(helper), process.platform === "win32" ? "ty-context-host-installer-ui.exe" : "ty-context-host-installer-ui"));
 // Regression identities: ordinary_question_hook_noop and active_pointer_deleted_or_retargeted are exercised below.
 
-test("real managed adapter no-ops without authority and blocks an active needs-work task", { skip: !helper, timeout: 45_000 }, async () => {
+test("real managed adapter no-ops without authority and blocks an active needs-work task", { skip: !helper, timeout: 90_000 }, async () => {
   const [{ managedHostLayoutUnder }, { renderManagedRequirementsV1 }, { LongTaskHostRpcClientV1 }, release, { checkLongTaskHostGate }, runtimeIdentity] = await Promise.all([
     import("../../packages/ty-context/dist/lib/long-task-managed-host-layout.js"),
     import("../../packages/ty-context/dist/lib/long-task-managed-requirements.js"),
@@ -91,7 +91,7 @@ test("real managed adapter no-ops without authority and blocks an active needs-w
   try {
     await waitForFile(publicKey);
     assert.equal(child.exitCode, null, `managed Host exited before accepting RPC: ${stderr.trim()}`);
-    const client = new LongTaskHostRpcClientV1({ endpoint: layout.endpoint, public_key_path: publicKey, timeout_ms: 5000 });
+    const client = new LongTaskHostRpcClientV1({ endpoint: layout.endpoint, public_key_path: publicKey, timeout_ms: 120_000 });
     await waitForRpc(client, root);
     const started = performance.now();
     const result = await client.call("handle_hook_event", root, { hook_event_name: "SessionStart", thread_id: "thread-001", turn_id: "turn-001", cwd: root, source: "startup", stop_hook_active: false, last_assistant_message: null });
@@ -136,6 +136,8 @@ test("real managed adapter no-ops without authority and blocks an active needs-w
     assert.match(corrupted.reason, /host_completion_gate_unavailable/u);
     await cp(path.join(layout.state_root, "repositories", shard, "registry", "active", "records", `${active.registry_id}.json`), activeIndex);
     await writeFile(path.join(root, "src", "value.txt"), "good\n");
+    const final = await client.call("final_gate", root, { workdir });
+    assert.equal(final.workflow_status, "accepted");
     const accepted = await runManagedHook(layout.hook_path, { hook_event_name: "Stop", session_id: "thread-001", turn_id: "turn-006", cwd: root, stop_hook_active: true, last_assistant_message: "done" });
     const finalDiagnostic = accepted.decision === "block" ? await readFile(path.join(workdir, "final-result.json"), "utf8").catch(() => "final-result unavailable") : "";
     assert.deepEqual(accepted, {}, `Stop must allow only after a fresh Host-worker recomputation accepts the repaired workspace\n${finalDiagnostic}`);

@@ -11,7 +11,7 @@ async function setup(name,mutate=()=>{}){const root=await mkdtemp(path.join(os.t
 async function final(x){await compileLongTaskContract(x.workdir,x.root);return runLongTaskFinalGate(x.workdir);}
 const has=(result,code)=>result.findings.some((finding)=>finding.category===code);
 
-test("real implementation and obligation-sensitive Oracle pass every entity",async()=>{const result=await final(await setup("happy"));assert.equal(result.workflow_status,"accepted");for(const family of ["binding_results","counterfactual_results","proof_requirement_results","acceptance_results","obligation_results","plan_item_results","requirement_results"])assert.ok(Object.values(result[family]).every((value)=>typeof value==="string"?value==="passed":value.status==="passed"),family);});
+test("real implementation and obligation-sensitive Oracle pass every entity",async()=>{const result=await final(await setup("happy"));assert.equal(result.workflow_status,"accepted");for(const family of ["binding_results","counterfactual_results","proof_requirement_results","acceptance_criterion_results","obligation_results","plan_item_results","requirement_results"])assert.ok(Object.values(result[family]).every((value)=>typeof value==="string"?value==="passed":value.status==="passed"),family);});
 
 test("implementation_missing_oracle_constant_success",async()=>{const x=await setup("missing");await rm(path.join(x.root,"src/value.txt"));await writeFile(path.join(x.root,"tests/acceptance/oracle.mjs"),observationV2OracleScript());const result=await final(x);assert.equal(result.workflow_status,"needs_work");assert.ok(has(result,"binding_target_missing"));});
 

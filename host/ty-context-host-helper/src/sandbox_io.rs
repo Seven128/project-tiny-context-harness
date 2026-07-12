@@ -1,4 +1,6 @@
 use crate::{HostError, HostResult, sandbox::SandboxPolicy};
+#[cfg(unix)]
+use std::process::{Command, Stdio};
 use std::{
     fs::{self, File, OpenOptions},
     io::{Read, Seek, SeekFrom, Write},
@@ -55,6 +57,27 @@ pub fn publish(outputs: &mut PreparedOutputs, require_protocol: bool) -> HostRes
             .write_all(&bytes)
             .map_err(|error| HostError::io("stderr", error))?;
     }
+    Ok(())
+}
+
+#[cfg(unix)]
+pub fn isolate_oracle_diagnostics(process: &mut Command, policy: &SandboxPolicy) -> HostResult<()> {
+    if policy.process_kind != "oracle" {
+        return Ok(());
+    }
+    let Some(path) = &policy.diagnostic_output else {
+        return Ok(());
+    };
+    let stdout = OpenOptions::new()
+        .append(true)
+        .open(path)
+        .map_err(|error| HostError::io(path, error))?;
+    let stderr = stdout
+        .try_clone()
+        .map_err(|error| HostError::io(path, error))?;
+    process
+        .stdout(Stdio::from(stdout))
+        .stderr(Stdio::from(stderr));
     Ok(())
 }
 

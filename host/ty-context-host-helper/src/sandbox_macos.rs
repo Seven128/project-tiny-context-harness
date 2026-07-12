@@ -49,6 +49,7 @@ pub fn run(policy: &SandboxPolicy, command: &[String], launcher: &Path) -> HostR
     if let Some(value) = crate::sandbox::command_node_options(policy) {
         process.env("NODE_OPTIONS", value);
     }
+    crate::sandbox_io::isolate_oracle_diagnostics(&mut process, policy)?;
     let status = process.status();
     let _ = fs::remove_file(&profile_path);
     let status = status.map_err(|error| HostError::io("sandbox-exec", error))?;
