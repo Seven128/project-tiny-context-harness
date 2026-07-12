@@ -6,6 +6,7 @@ const spec={positive_assertions:[{id:"PA-001",observation_id:"value",observation
 const json=(observations)=>JSON.stringify({schema_version:"ty-context-observation-v2",observations});
 
 test("strict actual-only scalar parses",()=>assert.equal(parseObservationV2(json({value:{kind:"scalar",actual:"good",artifact_refs:[]}}),spec,new Set()).observations.value.actual,"good"));
+test("missing protocol document is distinct from multiple documents",()=>assert.throws(()=>parseObservationV2("",spec,new Set()),/no document was found/));
 test("undeclared observations fail",()=>assert.throws(()=>parseObservationV2(json({other:{kind:"scalar",actual:1,artifact_refs:[]}}),spec,new Set()),/undeclared_observation/));
 test("recursive self-signing keys fail",()=>assert.throws(()=>parseObservationV2(json({value:{kind:"scalar",actual:{result:{completed:true}},artifact_refs:[]}}),spec,new Set()),/oracle_self_signed_result/));
 test("self-signed status value fails",()=>assert.throws(()=>parseObservationV2(json({value:{kind:"scalar",actual:{status:"ok"},artifact_refs:[]}}),spec,new Set()),/oracle_self_signed_result/));

@@ -69,7 +69,10 @@ export function sha256Hex(value: string | Uint8Array): string {
 }
 
 function assertSingleValidDocument(documents: Document.Parsed[], label: string): Document.Parsed {
-  if (documents.length !== 1) {
+  if (documents.length === 0) {
+    throw new Error(`${label} must contain exactly one document; no document was found`);
+  }
+  if (documents.length > 1) {
     throw new Error(`${label} must contain exactly one document; multiple documents are not allowed`);
   }
   const document = documents[0];

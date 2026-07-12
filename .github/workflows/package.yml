@@ -5,19 +5,11 @@ on:
     paths:
       - ".codex/ty-context-managed/**"
       - ".devcontainer/**"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/PULL_REQUEST_TEMPLATE.md"
-      - ".github/workflows/harness.yml"
-      - ".github/workflows/npm-publish.yml"
       - ".github/workflows/package.yml"
+      - ".github/workflows/npm-publish.yml"
       - ".github/workflows/scorecard.yml"
-      - "CODE_OF_CONDUCT.md"
-      - "CONTRIBUTING.md"
       - "docs/launch/**"
-      - "examples/minimal-context-sample/**"
-      - "GOVERNANCE.md"
-      - "LICENSE"
-      - "SUPPORT.md"
+      - "host/ty-context-host-helper/**"
       - "packages/ty-context/**"
       - "project_context/**"
       - "tests/ty-context/**"
@@ -26,6 +18,7 @@ on:
       - "package-lock.json"
       - "PROJECT_SPEC.md"
       - "README.md"
+      - "README.zh-CN.md"
   push:
     branches:
       - main
@@ -33,19 +26,11 @@ on:
     paths:
       - ".codex/ty-context-managed/**"
       - ".devcontainer/**"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/PULL_REQUEST_TEMPLATE.md"
-      - ".github/workflows/harness.yml"
-      - ".github/workflows/npm-publish.yml"
       - ".github/workflows/package.yml"
+      - ".github/workflows/npm-publish.yml"
       - ".github/workflows/scorecard.yml"
-      - "CODE_OF_CONDUCT.md"
-      - "CONTRIBUTING.md"
       - "docs/launch/**"
-      - "examples/minimal-context-sample/**"
-      - "GOVERNANCE.md"
-      - "LICENSE"
-      - "SUPPORT.md"
+      - "host/ty-context-host-helper/**"
       - "packages/ty-context/**"
       - "project_context/**"
       - "tests/ty-context/**"
@@ -54,26 +39,250 @@ on:
       - "package-lock.json"
       - "PROJECT_SPEC.md"
       - "README.md"
+      - "README.zh-CN.md"
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   package:
-    runs-on: ubuntu-latest
+    name: package-${{ matrix.platform }}-${{ matrix.arch }}
     strategy:
       fail-fast: false
       matrix:
-        node-version: ["24"]
+        include:
+          - os: windows-2025
+            platform: windows
+            arch: x64
+          - os: ubuntu-24.04
+            platform: linux
+            arch: x64
+          - os: macos-15
+            platform: macos
+            arch: arm64
+          - os: macos-15-intel
+            platform: macos
+            arch: x64
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
+          node-version: "24"
+          cache: npm
+      - name: Select Rust 1.97
+        shell: pwsh
+        run: |
+          rustup toolchain install 1.97.0 --profile minimal
+          rustup default 1.97.0
+          if ("${{ matrix.platform }}" -eq "windows") {
+            rustup target add x86_64-pc-windows-gnullvm --toolchain 1.97.0
+            "HOST_BUILD_TARGET=x86_64-pc-windows-gnullvm" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          }
+      - name: Install integrity-pinned LLVM-MinGW
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $url = "https://github.com/mstorsjo/llvm-mingw/releases/download/20260616/llvm-mingw-20260616-ucrt-x86_64.zip"
+          $expected = "b9b68a4d276e16fa25802aaba458e4638f64b3884c290aaccdc2d87083b6ca35"
+          $archive = Join-Path $env:RUNNER_TEMP "llvm-mingw-20260616-ucrt-x86_64.zip"
+          $destination = Join-Path $env:RUNNER_TEMP "llvm-mingw"
+          Invoke-WebRequest -Uri $url -OutFile $archive
+          $actual = (Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash.ToLowerInvariant()
+          if ($actual -ne $expected) { throw "LLVM-MinGW SHA-256 mismatch: $actual" }
+          Expand-Archive -LiteralPath $archive -DestinationPath $destination
+          $linker = Get-ChildItem -LiteralPath $destination -Recurse -Filter "x86_64-w64-mingw32-clang.exe" -File | Select-Object -ExpandProperty FullName -First 1
+          if (-not $linker) { throw "LLVM-MinGW linker was not found after extraction" }
+          "CARGO_TARGET_X86_64_PC_WINDOWS_GNULLVM_LINKER=$linker" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          (Split-Path -Parent $linker) | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
       - name: Install dependencies
         run: npm ci
-      - name: Test package
-        run: npm test --workspace project-tiny-context-harness
-      - name: Check package canonical source drift
-        run: node packages/ty-context/dist/cli.js package check-source
-      - name: Validate source Context
-        run: make validate-context
+      - name: Build package and Host release binaries
+        shell: pwsh
+        run: |
+          npm run build --workspace project-tiny-context-harness
+          npm run typecheck --workspace project-tiny-context-harness
+          $targetArgs = if ($env:HOST_BUILD_TARGET) { @("--target", $env:HOST_BUILD_TARGET) } else { @() }
+          cargo build --release --locked @targetArgs --manifest-path host/ty-context-host-helper/Cargo.toml
+          $suffix = if ("${{ runner.os }}" -eq "Windows") { ".exe" } else { "" }
+          $release = if ($env:HOST_BUILD_TARGET) { "host/ty-context-host-helper/target/$env:HOST_BUILD_TARGET/release" } else { "host/ty-context-host-helper/target/release" }
+          $helper = Join-Path $env:GITHUB_WORKSPACE "$release/ty-context-host-helper$suffix"
+          $admin = Join-Path $env:GITHUB_WORKSPACE "$release/ty-context-host-admin$suffix"
+          $installerUi = Join-Path $env:GITHUB_WORKSPACE "$release/ty-context-host-installer-ui$suffix"
+          foreach ($binary in @($helper, $admin, $installerUi)) {
+            if (-not (Test-Path -LiteralPath $binary -PathType Leaf)) { throw "Host release binary was not built: $binary" }
+          }
+          "TY_CONTEXT_HOST_HELPER_BIN=$helper" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "TY_CONTEXT_HOST_ADMIN_BIN=$admin" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "TY_CONTEXT_HOST_INSTALLER_UI_BIN=$installerUi" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Stage unsigned Host release binaries with hashes
+        shell: pwsh
+        run: |
+          $artifact = Join-Path $env:RUNNER_TEMP "host-binaries"
+          New-Item -ItemType Directory -Force $artifact | Out-Null
+          $binaries = @($env:TY_CONTEXT_HOST_HELPER_BIN, $env:TY_CONTEXT_HOST_ADMIN_BIN, $env:TY_CONTEXT_HOST_INSTALLER_UI_BIN)
+          $hashes = foreach ($binary in $binaries) {
+            Copy-Item -LiteralPath $binary -Destination $artifact
+            $name = Split-Path -Leaf $binary
+            $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $binary).Hash.ToLowerInvariant()
+            "$hash  $name"
+          }
+          [IO.File]::WriteAllLines((Join-Path $artifact "SHA256SUMS"), $hashes)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-host-binaries-${{ matrix.platform }}-${{ matrix.arch }}
+          path: ${{ runner.temp }}/host-binaries/*
+          if-no-files-found: error
+      - name: Test Rust Host Helper
+        shell: pwsh
+        run: |
+          $targetArgs = if ($env:HOST_BUILD_TARGET) { @("--target", $env:HOST_BUILD_TARGET) } else { @() }
+          cargo test --release --locked @targetArgs --manifest-path host/ty-context-host-helper/Cargo.toml
+      - name: Test complete package
+        if: matrix.platform != 'linux'
+        run: npm run test:built --workspace project-tiny-context-harness
+      - name: Test complete package with the privileged Linux Host
+        if: matrix.platform == 'linux'
+        shell: bash
+        run: |
+          node_bin=$(readlink -f "$(command -v node)")
+          node_root=$(cd "$(dirname "$node_bin")/.." && pwd)
+          docker run --rm --privileged \
+            --volume "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" \
+            --volume "$node_root:$node_root:ro" \
+            --workdir "$GITHUB_WORKSPACE" \
+            --env GITHUB_WORKSPACE \
+            --env "NODE_ROOT=$node_root" \
+            --env CI=1 \
+            --env GITHUB_ACTIONS=true \
+            --env HTTP_PROXY \
+            --env HTTPS_PROXY \
+            --env NO_PROXY \
+            --env TY_CONTEXT_HOST_HELPER_BIN \
+            --env TY_CONTEXT_HOST_ADMIN_BIN \
+            --env TY_CONTEXT_HOST_INSTALLER_UI_BIN \
+            ubuntu:24.04@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90 \
+            bash -euo pipefail -c '
+              export PATH="$NODE_ROOT/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+              apt-get update -qq
+              apt-get install -y -qq bubblewrap ca-certificates git
+              "$NODE_ROOT/bin/npx" --yes playwright@1.61.1 install-deps chromium
+              git config --global --add safe.directory "$GITHUB_WORKSPACE"
+              "$NODE_ROOT/bin/node" "$NODE_ROOT/lib/node_modules/npm/bin/npm-cli.js" run test:built --workspace project-tiny-context-harness
+            '
+      - name: Verify package source and Context
+        shell: pwsh
+        run: |
+          node packages/ty-context/dist/cli.js package check-source
+          node packages/ty-context/dist/cli.js validate-context
+      - name: Rust formatting
+        if: matrix.platform == 'linux'
+        run: cargo fmt --manifest-path host/ty-context-host-helper/Cargo.toml -- --check
+
+  macos-cross:
+    name: macos-cross-compatibility
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Select Rust 1.97 and both macOS targets
+        shell: bash
+        run: |
+          rustup toolchain install 1.97.0 --profile minimal --target x86_64-apple-darwin,aarch64-apple-darwin
+          rustup default 1.97.0
+          cargo check --locked --all-targets --target x86_64-apple-darwin --manifest-path host/ty-context-host-helper/Cargo.toml
+          cargo check --locked --all-targets --target aarch64-apple-darwin --manifest-path host/ty-context-host-helper/Cargo.toml
+
+  candidate:
+    name: immutable-ci-candidate
+    needs: package
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - name: Build and pack once
+        shell: bash
+        run: |
+          npm run build --workspace project-tiny-context-harness
+          mkdir -p "$RUNNER_TEMP/candidate"
+          npm pack --silent --ignore-scripts --workspace project-tiny-context-harness --pack-destination "$RUNNER_TEMP/candidate"
+          candidate=$(find "$RUNNER_TEMP/candidate" -maxdepth 1 -name '*.tgz' -type f -print -quit)
+          test -n "$candidate"
+          sha256sum "$candidate" | tee "$RUNNER_TEMP/candidate/candidate.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: project-tiny-context-harness-ci-candidate
+          path: ${{ runner.temp }}/candidate/*
+          if-no-files-found: error
+
+  composite-black-box:
+    name: composite-v3-black-box-60
+    needs: candidate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: project-tiny-context-harness-ci-candidate
+          path: ${{ runner.temp }}/candidate
+      - name: Download the pre-signed Linux Host release without any signing key
+        shell: bash
+        env:
+          HOST_RELEASE_URL: ${{ vars.HOST_RELEASE_LINUX_X64_URL }}
+          HOST_RELEASE_SHA256: ${{ vars.HOST_RELEASE_LINUX_X64_SHA256 }}
+        run: |
+          test -n "$HOST_RELEASE_URL"
+          [[ "$HOST_RELEASE_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          node -e 'const fs=require("node:fs");fetch(process.argv[1]).then(r=>{if(!r.ok)throw new Error(`host release download ${r.status}`);return r.arrayBuffer()}).then(b=>fs.writeFileSync(process.argv[2],Buffer.from(b)))' "$HOST_RELEASE_URL" "$RUNNER_TEMP/host-release-linux-x64.tgz"
+          actual=$(sha256sum "$RUNNER_TEMP/host-release-linux-x64.tgz" | cut -d ' ' -f1)
+          test "$actual" = "$HOST_RELEASE_SHA256"
+          echo "HOST_RELEASE_SHA256=$HOST_RELEASE_SHA256" >> "$GITHUB_ENV"
+      - name: Execute every structured black-box case against the one candidate
+        shell: bash
+        run: |
+          candidate=$(find "$RUNNER_TEMP/candidate" -maxdepth 1 -name '*.tgz' -type f -print -quit)
+          expected=$(cut -d ' ' -f1 "$RUNNER_TEMP/candidate/candidate.sha256")
+          actual=$(sha256sum "$candidate" | cut -d ' ' -f1)
+          test "$actual" = "$expected"
+          node_bin=$(readlink -f "$(command -v node)")
+          node_root=$(cd "$(dirname "$node_bin")/.." && pwd)
+          candidate_uid=$(id -u)
+          candidate_gid=$(id -g)
+          docker run --rm --privileged \
+            --volume "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" \
+            --volume "$RUNNER_TEMP:$RUNNER_TEMP" \
+            --volume "$node_root:$node_root:ro" \
+            --workdir "$GITHUB_WORKSPACE" \
+            --env GITHUB_WORKSPACE \
+            --env "NODE_ROOT=$node_root" \
+            --env "CANDIDATE_TARBALL=$candidate" \
+            --env "HOST_RELEASE_ARCHIVE=$RUNNER_TEMP/host-release-linux-x64.tgz" \
+            --env HOST_RELEASE_SHA256 \
+            --env "TY_CONTEXT_BLACK_BOX_CANDIDATE_UID=$candidate_uid" \
+            --env "TY_CONTEXT_BLACK_BOX_CANDIDATE_GID=$candidate_gid" \
+            --env CI=1 \
+            --env GITHUB_ACTIONS=true \
+            --env HTTP_PROXY \
+            --env HTTPS_PROXY \
+            --env NO_PROXY \
+            ubuntu:24.04@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90 \
+            bash -euo pipefail -c '
+              export PATH="$NODE_ROOT/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+              apt-get update -qq
+              apt-get install -y -qq bubblewrap ca-certificates git
+              "$NODE_ROOT/bin/npx" --yes playwright@1.61.1 install-deps chromium
+              git config --global --add safe.directory "$GITHUB_WORKSPACE"
+              "$NODE_ROOT/bin/node" tools/run_composite_v3_black_box.mjs \
+                --candidate-tarball "$CANDIDATE_TARBALL" \
+                --host-release "$HOST_RELEASE_ARCHIVE" \
+                --host-release-sha256 "$HOST_RELEASE_SHA256"
+            '

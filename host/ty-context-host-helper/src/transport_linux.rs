@@ -43,6 +43,8 @@ pub fn peer(stream: &std::os::unix::net::UnixStream) -> HostResult<PeerIdentity>
     }
     Ok(PeerIdentity {
         process_id,
+        user_id: Some(credential.uid),
+        group_id: Some(credential.gid),
         executable_path,
         command_line,
         ancestors: ancestors(process_id)?,

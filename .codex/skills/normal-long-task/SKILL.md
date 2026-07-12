@@ -59,7 +59,7 @@ Use this Skill through explicit invocation:
 /normal-long-task
 ```
 
-Do not rely on broad automatic keyword routing. If the user needs strict composite V2 execution, use `/composite-long-task-workflow` after the three YAML authorities are complete.
+Do not rely on broad automatic keyword routing. If the user needs strict Composite Contract V3 execution, use `/composite-long-task-workflow` after the three V3 YAML authorities are complete.
 
 ## Use Cases
 

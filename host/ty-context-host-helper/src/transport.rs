@@ -14,6 +14,8 @@ pub struct ProcessIdentity {
 #[derive(Clone, Debug)]
 pub struct PeerIdentity {
     pub process_id: u32,
+    pub user_id: Option<u32>,
+    pub group_id: Option<u32>,
     pub executable_path: PathBuf,
     pub command_line: Vec<String>,
     pub ancestors: Vec<ProcessIdentity>,

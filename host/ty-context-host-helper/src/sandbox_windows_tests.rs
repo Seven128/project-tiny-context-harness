@@ -1,5 +1,6 @@
 use crate::{
     sandbox::SandboxPolicy,
+    sandbox_windows,
     sandbox_windows_acl::{FileAclSnapshot, update_file_acl},
     sandbox_windows_desktop::{DesktopGuard, UserObjectAclSnapshot},
     sandbox_windows_handle::wide,
@@ -12,6 +13,65 @@ use windows_sys::Win32::{
     Storage::FileSystem::FILE_GENERIC_READ,
     System::StationsAndDesktops::GetProcessWindowStation,
 };
+
+#[test]
+fn appcontainer_reaches_granted_paths_without_mutating_system_ancestors() {
+    let root = std::env::temp_dir().join(format!(
+        "ty-context-appcontainer-paths-{}",
+        uuid::Uuid::new_v4().simple()
+    ));
+    let read = root.join("read");
+    let write = root.join("write");
+    fs::create_dir_all(&read).expect("read directory");
+    fs::create_dir_all(&write).expect("write directory");
+    let input = read.join("input.txt");
+    let output = write.join("output.txt");
+    fs::write(&input, b"sandbox-path-ok\r\n").expect("input");
+    let executable = std::path::PathBuf::from(std::env::var_os("SystemRoot").expect("SystemRoot"))
+        .join("System32")
+        .join("cmd.exe");
+    let policy = SandboxPolicy {
+        schema_version: "ty-context-host-sandbox-v1".into(),
+        process_kind: "command".into(),
+        isolation_group: None,
+        node_preload: None,
+        preserve_symlinks_main: false,
+        executable: executable.clone(),
+        cwd: read.clone(),
+        read_paths: vec![read],
+        write_paths: vec![write],
+        protocol_output: None,
+        diagnostic_output: None,
+        timeout_ms: 10_000,
+        network: "none".into(),
+        allow_child_process: false,
+        allow_worker: false,
+        allow_addons: false,
+        process_limit: 1,
+    };
+    let command = vec![
+        executable.to_string_lossy().into_owned(),
+        "/d".into(),
+        "/s".into(),
+        "/c".into(),
+        "type".into(),
+        input.to_string_lossy().into_owned(),
+        ">".into(),
+        output.to_string_lossy().into_owned(),
+    ];
+    if let Err(error) = sandbox_windows::run(&policy, &command) {
+        if error.to_string().contains("sandbox_wfp_filter:5") {
+            fs::remove_dir_all(root).expect("cleanup without elevation");
+            return;
+        }
+        panic!("AppContainer command: {error}");
+    }
+    assert_eq!(
+        fs::read_to_string(&output).expect("output"),
+        "sandbox-path-ok\r\n"
+    );
+    fs::remove_dir_all(root).expect("cleanup");
+}
 
 #[test]
 fn private_desktop_restores_the_existing_window_station_acl_exactly() {
@@ -50,6 +110,7 @@ fn granted_paths_restore_a_preexisting_logon_sid_ace_exactly() {
         process_kind: "command".into(),
         isolation_group: None,
         node_preload: None,
+        preserve_symlinks_main: false,
         executable,
         cwd: read.clone(),
         read_paths: vec![read],

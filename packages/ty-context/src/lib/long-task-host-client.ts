@@ -11,6 +11,8 @@ import { LongTaskHostRegistryServiceV1, type LongTaskHostActiveRegistryV1 } from
 import { canonicalValueJson, sha256Hex } from "./composite-campaign-codec.js";
 import { LongTaskHostRpcClientV1 } from "./long-task-host-rpc-client.js";
 import { managedHostLayout } from "./long-task-managed-host-layout.js";
+import { assertCurrentFinalMatchesRegistryV3, readCurrentLongTaskFinalResultFilesV3 } from "./long-task-current-final-result.js";
+import { longTaskGitArgs } from "./long-task-git.js";
 
 const exec = promisify(execFile);
 const defaultServices = new Map<string, LongTaskHostRegistryServiceV1>();
@@ -111,12 +113,13 @@ export interface HostFinalSummaryV1 { schema_version:"ty-context-host-final-resu
 export async function compileAndSealLongTaskContractViaHost(workdir:string,repositoryRoot?:string):Promise<{contract:CompiledContractV3;registry:LongTaskHostActiveRegistryV1;summary:HostCompileSummaryV1}>{const root=repositoryRoot?await realpath(path.resolve(repositoryRoot)):await gitRoot(workdir);const task=await realpath(path.resolve(workdir));const reservation=await managedRpc(10*60_000).call("reserve_authority",root,{workdir:task});const summary=await managedRpc(10*60_000).call("compile_and_seal",root,{workdir:task,reservation}) as HostCompileSummaryV1;const contract=await readCompiledLongTaskContract(task);const registry=await managedRpc(5000).call("get_active",root,{}) as LongTaskHostActiveRegistryV1;if(summary.schema_version!=="ty-context-host-compile-result-v1"||contract.contract_sha256!==summary.contract_sha256||registry.contract_sha256!==summary.contract_sha256||registry.registry_id!==summary.registry_id)throw new Error("host_registry_integrity_failure:compile_response");return {contract,registry,summary};}
 export async function verifyLongTaskViaHost(workdir:string,specIds?:string[]):Promise<HostVerifySummaryV1>{const task=await realpath(path.resolve(workdir));const root=await gitRoot(task);const result=await managedRpc(6*60*60_000).call("verify",root,{workdir:task,spec_ids:specIds??[]}) as HostVerifySummaryV1;if(result.schema_version!=="ty-context-host-verify-result-v1"||!result.contract_sha256||!result.run_id)return invalidHostResult();return result;}
 export async function finalGateLongTaskViaHost(workdir:string):Promise<HostFinalSummaryV1>{const task=await realpath(path.resolve(workdir));const root=await gitRoot(task);const result=await managedRpc(6*60*60_000).call("final_gate",root,{workdir:task}) as HostFinalSummaryV1;if(result.schema_version!=="ty-context-host-final-result-summary-v1"||!result.contract_sha256||!result.run_id||!samePath(path.resolve(result.final_result_path),path.join(task,"final-result.json")))return invalidHostResult();return result;}
+export async function readCurrentLongTaskFinalResultViaHost(workdir:string){const task=await realpath(path.resolve(workdir));const root=await gitRoot(task);const current=await readCurrentLongTaskFinalResultFilesV3(task);const registry=await managedRpc(5000).call("get_active",root,{}) as LongTaskHostActiveRegistryV1;return assertCurrentFinalMatchesRegistryV3(current,registry);}
 
 function managedRpc(timeout_ms:number):LongTaskHostRpcClientV1{const layout=managedHostLayout();return new LongTaskHostRpcClientV1({endpoint:layout.endpoint,public_key_path:layout.attestation_public_key_path,timeout_ms});}
 function invalidHostResult():never{throw new Error("host_rpc_response_invalid:worker_result");}
 
 async function gitRoot(workdir: string): Promise<string> {
-  const output = await exec("git", ["rev-parse", "--show-toplevel"], { cwd: workdir, windowsHide: true });
+  const output = await exec("git", longTaskGitArgs(workdir, ["rev-parse", "--show-toplevel"]), { cwd: workdir, windowsHide: true });
   return path.resolve(output.stdout.trim());
 }
 

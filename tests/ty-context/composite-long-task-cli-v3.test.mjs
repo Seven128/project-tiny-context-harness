@@ -4,6 +4,7 @@ import { compositeLongTask } from "../../packages/ty-context/dist/commands/compo
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+
 const repoRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../..");
 
 test("extra_argv_injected", async()=>{await assert.rejects(()=>compositeLongTask(["verify","task","--spec","VS-001","--","echo","forged"]),/Unknown or injected arguments/);});

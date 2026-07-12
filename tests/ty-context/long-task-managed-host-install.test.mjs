@@ -31,6 +31,17 @@ test("managed requirements pin managed-only hooks and every exact lifecycle comm
   assert.doesNotMatch(text, /\.codex[\\/]hooks|git rev-parse/);
 });
 
+test("signed Host release requirements stay target-canonical while installed policy uses the actual Node path", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "ltw-release-requirements-"));
+  const module = await api();
+  const layout = { ...module.managedHostLayoutUnder(root, "linux"), node_path: "/custom/node", unix_node_path: "/custom/node" };
+  const release = module.renderHostReleaseRequirementsV1(layout, { platform: "linux", arch: "x64" });
+  const installed = module.renderManagedRequirementsV1(layout);
+  assert.match(release, /\/usr\/bin\/node/u);
+  assert.doesNotMatch(release, /\/custom\/node/u);
+  assert.match(installed, /\/custom\/node/u);
+});
+
 test("Linux service socket group can connect and child sandboxes retain loopback families", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "ltw-managed-linux-unit-"));
   const module = await api();
@@ -98,7 +109,11 @@ test("release manifest is integrity-pinned and any managed asset mutation is rej
   await writeFile(path.join(root, "host-release-manifest.sig"), sign(null, Buffer.from(manifestText), pair.privateKey).toString("base64url"));
   const publicKey = pair.publicKey.export({ type: "spki", format: "pem" }).toString();
   await writeFile(path.join(root, "host-release-root-public.pem"), publicKey);
-  assert.equal((await module.verifyHostReleaseDirectoryV1(root, publicKey)).release_version, "0.4.0-rc.1");
+  const verified = await module.verifyHostReleaseDirectoryV1(root, publicKey);
+  assert.equal(verified.release_version, "0.4.0-rc.1");
+  assert.equal(verified.platform, process.platform === "win32" ? "windows" : process.platform === "darwin" ? "macos" : "linux");
+  assert.equal(verified.arch, process.arch);
+  await assert.rejects(() => module.verifyHostReleaseDirectoryV1(root, publicKey, { arch: process.arch === "x64" ? "arm64" : "x64" }), /host_release_manifest_invalid/u);
   const wrong = generateKeyPairSync("ed25519").publicKey.export({ type: "spki", format: "pem" }).toString();
   await assert.rejects(() => module.verifyHostReleaseDirectoryV1(root, wrong), /host_release_root_key_mismatch/);
   await writeFile(path.join(root, "long-task-hook.mjs"), "// mutated\n");

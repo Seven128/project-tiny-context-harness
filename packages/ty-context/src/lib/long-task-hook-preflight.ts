@@ -6,9 +6,9 @@ import { canonicalValueJson, parseStrictJson, sha256Hex } from "./composite-camp
 import { verifyHostReleaseDirectoryV1, type HostReleaseManifestV1 } from "./long-task-host-release.js";
 import { LongTaskHostRpcClientV1 } from "./long-task-host-rpc-client.js";
 import { managedHostLayout, type ManagedHostLayoutV1 } from "./long-task-managed-host-layout.js";
-import { inspectManagedRequirementsV1, renderManagedRequirementsV1 } from "./long-task-managed-requirements.js";
+import { inspectManagedRequirementsV1, renderHostReleaseRequirementsV1 } from "./long-task-managed-requirements.js";
 import { LONG_TASK_HOST_RELEASE_ROOT_PUBLIC_KEY_PEM } from "./long-task-host-release-root.js";
-import { createManagedHostRuntimeManifestV1, managedHostRuntimeManifestSha256V1 } from "./long-task-host-runtime-identity.js";
+import { createManagedHostRuntimeManifestV1, managedHostRuntimeContentSha256V1 } from "./long-task-host-runtime-identity.js";
 
 export interface HostGateCheck {
   status: "available" | "host_completion_gate_unavailable";
@@ -68,7 +68,7 @@ export async function checkLongTaskHostGate(repositoryRoot: string, options: Hos
   try {
     manifest = await verifyHostReleaseDirectoryV1(layout.managed_dir, rootPublicKey, { allow_runtime_files: true });
     manifestText = await readFile(layout.release_manifest_path, "utf8");
-    if (await readFile(path.join(layout.managed_dir, "requirements.toml"), "utf8") !== renderManagedRequirementsV1(layout)) findings.push("managed_requirements_invalid:release_payload");
+    if (await readFile(path.join(layout.managed_dir, "requirements.toml"), "utf8") !== renderHostReleaseRequirementsV1(layout, manifest)) findings.push("managed_requirements_invalid:release_payload");
   } catch (error) {
     findings.push(`managed_host_release_invalid:${code(error)}`);
   }
@@ -148,16 +148,16 @@ async function inspectServiceConfig(text: string, layout: ManagedHostLayoutV1, o
   const sandboxLauncher = requiredString(config.sandbox_launcher_path, "sandbox_launcher_path");
   const cli = fileURLToPath(new URL("../cli.js", import.meta.url));
   const cliWorker = fileURLToPath(new URL("./long-task-host-worker-runtime.js", import.meta.url));
-  const runtime = await createManagedHostRuntimeManifestV1(cli);
+  const runtime = await createManagedHostRuntimeManifestV1(cli);const configuredRuntime=config.cli_runtime_manifest as import("./long-task-host-runtime-identity.js").ManagedHostRuntimeManifestV1;
   const expected = {
     node: sha256Hex(await readFile(layout.node_path)), sandbox_launcher: sha256Hex(await readFile(sandboxLauncher)),
     admin: sha256Hex(await readFile(layout.admin_path)), installer_ui: sha256Hex(await readFile(layout.installer_ui_path)),
     codex_launcher: sha256Hex(await readFile(codexLauncher)),
     cli: sha256Hex(await readFile(cli)), cli_worker: sha256Hex(await readFile(cliWorker)),
-    cli_runtime: managedHostRuntimeManifestSha256V1(runtime), service_config: sha256Hex(text)
+    cli_runtime: requiredString(config.cli_runtime_manifest_sha256,"cli_runtime_manifest_sha256"), service_config: sha256Hex(text)
   };
   if (config.node_sha256 !== expected.node || config.sandbox_launcher_sha256 !== expected.sandbox_launcher || config.admin_sha256 !== expected.admin || config.installer_ui_sha256 !== expected.installer_ui || config.codex_launcher_sha256 !== expected.codex_launcher) findings.push("managed_host_runtime_identity_changed");
-  if (config.cli_path !== cli || config.cli_worker_path !== cliWorker || config.cli_sha256 !== expected.cli || config.cli_worker_sha256 !== expected.cli_worker || config.cli_runtime_manifest_sha256 !== expected.cli_runtime) findings.push("managed_host_cli_identity_changed");
+  if (config.cli_sha256 !== expected.cli || config.cli_worker_sha256 !== expected.cli_worker || !configuredRuntime || managedHostRuntimeContentSha256V1(configuredRuntime)!==managedHostRuntimeContentSha256V1(runtime)) findings.push("managed_host_cli_identity_changed");
   return expected;
 }
 

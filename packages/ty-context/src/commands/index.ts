@@ -3,6 +3,7 @@ import { compositeLongTask } from "./composite-long-task.js";
 import { compositeCampaign } from "./composite-campaign.js";
 import { doctor } from "./doctor.js";
 import { exportContext } from "./export-context.js";
+import { hostGate } from "./host-gate.js";
 import { init } from "./init.js";
 import { packageSource } from "./package-source.js";
 import { sync } from "./sync.js";
@@ -27,6 +28,7 @@ export const commands: Record<string, CommandHandler> = {
   "validate-plan-acceptance": (args) => validate(["validate-plan-acceptance", ...args]),
   "composite-long-task": compositeLongTask,
   "composite-campaign": compositeCampaign,
+  "host-gate": hostGate,
   package: packageSource
 };
 
@@ -55,5 +57,7 @@ export function help(): void {
                        Manage explicit composite long-task workflow workdirs
   composite-campaign <subcommand>
                        Prepare, hand off, bind, and record composite SFC campaigns
+  host-gate install|uninstall
+                       Install or remove the signed OS-managed completion gate (administrator only)
   package <subcommand> Maintain package canonical source`);
 }

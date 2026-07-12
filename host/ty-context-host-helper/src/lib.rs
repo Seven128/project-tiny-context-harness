@@ -22,6 +22,8 @@ mod sandbox_launcher;
 mod sandbox_linux;
 #[cfg(target_os = "macos")]
 mod sandbox_macos;
+#[cfg(test)]
+mod sandbox_node_options_tests;
 #[cfg(windows)]
 mod sandbox_windows;
 #[cfg(windows)]

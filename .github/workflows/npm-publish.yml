@@ -4,79 +4,124 @@ on:
   workflow_dispatch:
     inputs:
       expected_version:
-        description: "Must match packages/ty-context/package.json version."
+        description: Must match packages/ty-context/package.json and the prepared attestation.
         required: true
-        default: "0.3.0"
+        default: "0.4.0"
+      candidate_commit:
+        description: Exact main-repository commit that passed external-long-task-audit.
+        required: true
+        type: string
+      candidate_url:
+        description: Immutable URL of the already-audited candidate tarball.
+        required: true
+        type: string
+      candidate_sha256:
+        description: SHA-256 of the already-audited candidate tarball.
+        required: true
+        type: string
       dry_run:
-        description: "Run all checks and pack without publishing."
+        description: Verify the audited artifact without publishing it.
         required: true
         type: boolean
         default: true
 
 permissions:
+  checks: read
   contents: write
   id-token: write
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: npm-publish
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.candidate_commit }}
+          persist-credentials: false
 
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
-          registry-url: "https://registry.npmjs.org"
+          registry-url: https://registry.npmjs.org
 
-      - name: Ensure npm supports trusted publishing
+      - name: Validate immutable release inputs
+        shell: bash
+        env:
+          CANDIDATE_COMMIT: ${{ inputs.candidate_commit }}
+          CANDIDATE_SHA256: ${{ inputs.candidate_sha256 }}
         run: |
-          npm install -g npm@latest
-          npm --version
-          node -e "const v=require('child_process').execFileSync('npm',['--version'],{encoding:'utf8'}).trim().split('.').map(Number); if (v[0] < 11 || (v[0] === 11 && (v[1] < 5 || (v[1] === 5 && v[2] < 1)))) { throw new Error('npm CLI 11.5.1 or later is required for trusted publishing'); }"
+          [[ "$CANDIDATE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$CANDIDATE_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_COMMIT"
+          test "$(node -p "require('./packages/ty-context/package.json').version")" = "${{ inputs.expected_version }}"
 
-      - name: Check package version
+      - name: Require the independent App check for this exact commit
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_COMMIT: ${{ inputs.candidate_commit }}
+        run: |
+          gh api --paginate "repos/${{ github.repository }}/commits/$CANDIDATE_COMMIT/check-runs?per_page=100" > "$RUNNER_TEMP/check-runs.json"
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const rows = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + '/check-runs.json', 'utf8')).check_runs || [];
+          const exact = rows.filter((row) => row.name === 'external-long-task-audit' && row.conclusion === 'success' && row.head_sha === process.env.CANDIDATE_COMMIT && row.app?.slug === 'ty-context-external-audit');
+          if (exact.length !== 1) throw new Error('exact external-long-task-audit App check is missing or ambiguous');
+          NODE
+
+      - name: Download and verify the already-audited tarball
+        shell: bash
+        env:
+          CANDIDATE_URL: ${{ inputs.candidate_url }}
+          CANDIDATE_SHA256: ${{ inputs.candidate_sha256 }}
+        run: |
+          filename=$(node -p "require('./docs/launch/release-artifact-${{ inputs.expected_version }}.json').filename")
+          mkdir -p .artifacts/releases/prepared
+          CANDIDATE_FILE="$PWD/.artifacts/releases/prepared/$filename" node - <<'NODE'
+          const fs = require('node:fs');
+          (async () => {
+            const response = await fetch(process.env.CANDIDATE_URL);
+            if (!response.ok) throw new Error(`candidate download failed: ${response.status}`);
+            fs.writeFileSync(process.env.CANDIDATE_FILE, Buffer.from(await response.arrayBuffer()));
+          })().catch((error) => { console.error(error.message); process.exitCode = 1; });
+          NODE
+          actual=$(sha256sum ".artifacts/releases/prepared/$filename" | cut -d ' ' -f1)
+          test "$actual" = "$CANDIDATE_SHA256"
+          node tools/verify_prepared_release_artifact.mjs --version "${{ inputs.expected_version }}" --tarball ".artifacts/releases/prepared/$filename"
+
+      - name: Verify source/release metadata without repacking
         shell: bash
         run: |
-          PACKAGE_VERSION="$(node -p "require('./packages/ty-context/package.json').version")"
-          if [ "$PACKAGE_VERSION" != "${{ inputs.expected_version }}" ]; then
-            echo "Expected ${{ inputs.expected_version }} but package is $PACKAGE_VERSION" >&2
+          npm ci
+          npm run build --workspace project-tiny-context-harness
+          npm run typecheck --workspace project-tiny-context-harness
+          npm run release:check-version
+          node packages/ty-context/dist/cli.js package check-source
+          node packages/ty-context/dist/cli.js validate-context
+          if git status --short | grep .; then
+            echo "verification mutated the candidate checkout" >&2
             exit 1
           fi
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Test package
-        run: npm test --workspace project-tiny-context-harness
-
-      - name: Check release version surfaces
-        run: npm run release:check-version
-
-      - name: Check package canonical source drift
-        run: node packages/ty-context/dist/cli.js package check-source
-
-      - name: Validate source Context
-        run: make validate-context
-
-      - name: Rebuild and verify immutable prepared artifact
+      - name: Ensure npm supports trusted publishing
+        if: ${{ !inputs.dry_run }}
         shell: bash
         run: |
-          mkdir -p .artifacts/releases/prepared
-          npm pack --json --workspace project-tiny-context-harness --pack-destination .artifacts/releases/prepared
-          FILENAME="$(node -p "require('./docs/launch/release-artifact-${{ inputs.expected_version }}.json').filename")"
-          node tools/verify_prepared_release_artifact.mjs --version "${{ inputs.expected_version }}" --tarball ".artifacts/releases/prepared/$FILENAME"
+          npm install -g npm@latest
+          node -e "const v=require('child_process').execFileSync('npm',['--version'],{encoding:'utf8'}).trim().split('.').map(Number); if (v[0] < 11 || (v[0] === 11 && (v[1] < 5 || (v[1] === 5 && v[2] < 1)))) throw new Error('npm CLI 11.5.1 or later is required for trusted publishing');"
 
-      - name: Publish package with npm trusted publishing
+      - name: Publish the byte-identical package with npm trusted publishing
         if: ${{ !inputs.dry_run }}
         env:
           NPM_CONFIG_PROVENANCE: "true"
+        shell: bash
         run: |
-          FILENAME="$(node -p "require('./docs/launch/release-artifact-${{ inputs.expected_version }}.json').filename")"
-          npm publish ".artifacts/releases/prepared/$FILENAME" --access public
+          filename=$(node -p "require('./docs/launch/release-artifact-${{ inputs.expected_version }}.json').filename")
+          npm publish ".artifacts/releases/prepared/$filename" --access public
 
       - name: Create or update GitHub Release
         if: ${{ !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node tools/github_release_publish.mjs --version "${{ inputs.expected_version }}" --target "${{ github.sha }}"
+        run: node tools/github_release_publish.mjs --version "${{ inputs.expected_version }}" --target "${{ inputs.candidate_commit }}"

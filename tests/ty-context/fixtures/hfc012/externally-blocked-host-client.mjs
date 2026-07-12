@@ -21,3 +21,7 @@ export async function compileAndSealLongTaskContractViaHost() {
 export async function verifyLongTaskViaHost() {
   throw new Error("unexpected_verify");
 }
+
+export async function readCurrentLongTaskFinalResultViaHost() {
+  throw new Error("unexpected_current_final_result");
+}

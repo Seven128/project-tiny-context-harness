@@ -113,6 +113,15 @@ test("repository identity ignores HEAD changes but rejects a copied repository",
   assert.notEqual((await computeRepositoryIdentity(copied)).hash, before.hash);
 });
 
+test("Host Git calls scope safe.directory to the exact repository without persistent config", async () => {
+  const { longTaskGitArgs } = await import("../../packages/ty-context/dist/lib/long-task-git.js");
+  const root = path.resolve("fixture repository");
+  const expected = process.platform === "win32" ? root.replace(/\\/gu, "/") : root;
+  const args = longTaskGitArgs(root, ["rev-parse", "--git-common-dir"]);
+  assert.deepEqual(args, ["-c", `safe.directory=${expected}`, "rev-parse", "--git-common-dir"]);
+  assert.equal(args.includes("*"), false);
+});
+
 test("expired verification lease recovers to the immutable sealed record", async () => {
   let now = Date.parse("2026-07-11T00:00:00.000Z");
   const item = await serviceFixture("lease", { now: () => now });

@@ -127,6 +127,8 @@ fn peer(process_id: u32) -> HostResult<PeerIdentity> {
     let (executable_path, command_line) = process_details(process_id)?;
     Ok(PeerIdentity {
         process_id,
+        user_id: None,
+        group_id: None,
         executable_path,
         command_line,
         ancestors: ancestors(process_id)?,

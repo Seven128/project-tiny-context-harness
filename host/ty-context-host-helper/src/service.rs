@@ -84,15 +84,16 @@ impl Service {
                 .unwrap_or(Value::Null)),
             "record_managed_heartbeat" => self.record_heartbeat(request, peer),
             "reserve_authority" | "compile_and_seal" | "verify" | "final_gate" => {
-                self.run_worker(request)
+                self.run_worker(request, peer)
             }
             "handle_hook_event" => self.handle_hook(request, peer),
             _ => Err(HostError::Configuration("host_method_unsupported".into())),
         }
     }
 
-    pub(crate) fn run_worker(&self, request: &Request) -> HostResult<Value> {
-        worker::run(
+    pub(crate) fn run_worker(&self, request: &Request, peer: &PeerIdentity) -> HostResult<Value> {
+        let workdir = self.worker_workdir(request)?;
+        let outcome = worker::run(
             &self.config.node_path,
             &self.config.worker_path,
             &self.config_path,
@@ -100,7 +101,34 @@ impl Service {
             &request.method,
             &request.repository_hint,
             &request.params,
-        )
+        );
+        if let (Some(user_id), Some(group_id)) = (peer.user_id, peer.group_id) {
+            worker::restore_workdir_owner(&workdir, user_id, group_id)?;
+            worker::restore_repository_mirror_owner(
+                Path::new(&request.repository_hint),
+                user_id,
+                group_id,
+            )?;
+        }
+        outcome
+    }
+
+    fn worker_workdir(&self, request: &Request) -> HostResult<PathBuf> {
+        if let Some(workdir) = request.params.get("workdir").and_then(Value::as_str) {
+            return crate::identity::workdir(
+                Path::new(&request.repository_hint),
+                Path::new(workdir),
+            )
+            .map(|(identity, _)| PathBuf::from(identity.canonical_path));
+        }
+        let active = self
+            .registry
+            .active_for_repository(Path::new(&request.repository_hint))?
+            .ok_or_else(|| HostError::Configuration("host_registry_missing".into()))?;
+        active["workdir_identity"]["canonical_path"]
+            .as_str()
+            .map(PathBuf::from)
+            .ok_or_else(|| HostError::Integrity("host_registry_workdir_identity".into()))
     }
 
     fn response(

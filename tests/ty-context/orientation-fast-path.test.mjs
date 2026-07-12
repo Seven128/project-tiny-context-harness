@@ -276,7 +276,7 @@ assert.match(launchKit, /Star \/ Adoption Milestones/);
 assert.match(launchKit, /market-map\.md/);
 
 assert.match(marketMap, /Market Map/);
-assert.match(marketMap, /Snapshot date: 2026-06-10/);
+assert.match(marketMap, /Snapshot date: 2026-07-13/);
 assert.match(marketMap, /Current Public State/);
 assert.match(marketMap, /Competitive Snapshot/);
 assert.match(marketMap, /github\/spec-kit/);

@@ -31,6 +31,8 @@ pub struct SandboxPolicy {
     pub isolation_group: Option<String>,
     #[serde(default)]
     pub node_preload: Option<PathBuf>,
+    #[serde(default)]
+    pub preserve_symlinks_main: bool,
     pub executable: PathBuf,
     pub cwd: PathBuf,
     pub read_paths: Vec<PathBuf>,
@@ -174,17 +176,12 @@ fn validate_policy(policy: &SandboxPolicy, command: &[String]) -> HostResult<()>
     {
         return Err(HostError::Sandbox("command_policy_mismatch".into()));
     }
-    for path in std::iter::once(&policy.cwd)
-        .chain(policy.read_paths.iter())
-        .chain(policy.write_paths.iter())
-    {
-        if !path.is_absolute() || !path.exists() {
-            return Err(HostError::Sandbox("policy_path_invalid".into()));
-        }
-        let canonical = fs::canonicalize(path).map_err(|error| HostError::io(path, error))?;
-        if !crate::sandbox_io::same_path(path, &canonical) {
-            return Err(HostError::Sandbox("policy_path_noncanonical".into()));
-        }
+    validate_policy_path(&policy.cwd, "cwd")?;
+    for path in &policy.read_paths {
+        validate_policy_path(path, "read")?;
+    }
+    for path in &policy.write_paths {
+        validate_policy_path(path, "write")?;
     }
     if let Some(preload) = &policy.node_preload {
         let metadata =
@@ -220,6 +217,21 @@ fn validate_policy(policy: &SandboxPolicy, command: &[String]) -> HostResult<()>
     Ok(())
 }
 
+fn validate_policy_path(path: &Path, role: &str) -> HostResult<()> {
+    if !path.is_absolute() || !path.exists() {
+        return Err(HostError::Sandbox("policy_path_invalid".into()));
+    }
+    let canonical = fs::canonicalize(path).map_err(|error| HostError::io(path, error))?;
+    if !crate::sandbox_io::same_path(path, &canonical) {
+        return Err(HostError::Sandbox(format!(
+            "policy_path_noncanonical:{role}:{}:{}",
+            path.display(),
+            canonical.display()
+        )));
+    }
+    Ok(())
+}
+
 fn oracle_process_kind() -> String {
     "oracle".into()
 }
@@ -231,12 +243,19 @@ pub(crate) fn command_node_options(policy: &SandboxPolicy) -> Option<String> {
     if policy.process_kind != "command" {
         return None;
     }
-    let mut options = String::from("--permission --preserve-symlinks --preserve-symlinks-main");
+    let mut options = String::from("--permission --preserve-symlinks");
+    if policy.preserve_symlinks_main {
+        options.push_str(" --preserve-symlinks-main");
+    }
     for path in policy.read_paths.iter().chain(policy.write_paths.iter()) {
-        options.push_str(&format!(" --allow-fs-read={}", node_option_path(path)));
+        for variant in crate::sandbox_io::path_variants(path) {
+            options.push_str(&format!(" --allow-fs-read={}", node_option_path(&variant)));
+        }
     }
     for path in &policy.write_paths {
-        options.push_str(&format!(" --allow-fs-write={}", node_option_path(path)));
+        for variant in crate::sandbox_io::path_variants(path) {
+            options.push_str(&format!(" --allow-fs-write={}", node_option_path(&variant)));
+        }
     }
     if policy.allow_child_process {
         options.push_str(" --allow-child-process");

@@ -18,6 +18,7 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - Package source commands: `packages/ty-context/src/commands/package-source.ts`.
 - Validator command wrapper: `packages/ty-context/src/commands/validate.ts`.
 - Composite long-task Contract V3 command wrapper: `packages/ty-context/src/commands/composite-long-task.ts`. There is no V2/legacy command alias.
+- Signed Host Gate install/uninstall command wrapper: `packages/ty-context/src/commands/host-gate.ts`; safe official archive extraction lives in `packages/ty-context/src/lib/long-task-host-release-archive.ts`, while signed release verification, atomic OS installation and active-registry-protected removal remain in the existing Host release/installer libraries.
 - Composite campaign preparation command wrapper: `packages/ty-context/src/commands/composite-campaign.ts`.
 
 ## Core Libraries
@@ -36,10 +37,10 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - Shared plan validator helpers: `packages/ty-context/src/lib/plan-validator-common.ts` and `packages/ty-context/src/lib/plan-acceptance-json.ts`.
 - Contract V3 schema/graph core: `packages/ty-context/src/schemas/composite-v3/**`, `long-task-contract-types-v3.ts`, `long-task-contract-parser.ts`, `long-task-contract-coverage.ts`, `long-task-contract-compiler.ts` and `long-task-path-policy.ts` own strict V3 parsing, the full Requirement/PI/Obligation/Binding/AC/Proof/Spec/Counterfactual graph and Host-sealed identities.
 - Contract V3 observation/proof core: `long-task-observation-v2.ts`, `long-task-operator-evaluator.ts`, `long-task-population-evaluator.ts`, `long-task-binding-evaluator.ts`, `long-task-counterfactual-runner.ts`, `long-task-counterfactual-mutation.ts` and `long-task-entity-projector.ts` own actual-only evaluation and bottom-up result propagation.
-- Contract V3 execution core: `long-task-oracle-bundler.ts`, `long-task-oracle-bundle-policy.ts`, `long-task-oracle-runner.ts`, package-manager/dependency/browser/environment/redaction/sandbox modules, `long-task-snapshot.ts`, `long-task-command-runner.ts`, `long-task-artifact-collector.ts`, `long-task-negative-evidence.ts` and `long-task-verifier.ts` own sealed isolated execution.
-- Contract V3 trust/completion core: `long-task-host-protocol.ts`, `long-task-host-client.ts`, `long-task-environment-probe.ts`, `long-task-final-orchestrator.ts`, `long-task-final-steps.ts`, `long-task-result-projector.ts`, `long-task-durable-json.ts`, `long-task-status.ts`, `long-task-goal.ts`, `long-task-final-gate.ts`, `long-task-external-blocker.ts`, `long-task-hook-preflight.ts` and `long-task-stop-check.ts` own repair/status clients; `host/ty-context-host-helper/**` owns workspace-external registry, journal, attestations, caches, OS sandbox/secret adapters and Managed Hook enforcement.
+- Contract V3 execution core: `long-task-oracle-bundler.ts`, `long-task-oracle-bundle-policy.ts`, `long-task-oracle-runner.ts`, package-manager/dependency/browser/environment/redaction/sandbox modules, `long-task-playwright-supervisor.ts`, `long-task-snapshot.ts`, `long-task-command-runner.ts`, `long-task-artifact-collector.ts`, `long-task-negative-evidence.ts` and `long-task-verifier.ts` own sealed isolated execution, including one Host sandbox for the browser/CDP/Playwright worker group.
+- Contract V3 trust/completion core: `long-task-host-protocol.ts`, `long-task-host-client.ts`, `long-task-current-final-result.ts`, `long-task-environment-probe.ts`, `long-task-final-orchestrator.ts`, `long-task-final-steps.ts`, `long-task-result-projector.ts`, `long-task-durable-json.ts`, `long-task-status.ts`, `long-task-goal.ts`, `long-task-final-gate.ts`, `long-task-external-blocker.ts`, `long-task-hook-preflight.ts` and `long-task-stop-check.ts` own repair/status clients and current Host-commit-only result projection; `host/ty-context-host-helper/**` owns workspace-external registry, journal, attestations, caches, OS sandbox/secret adapters and Managed Hook enforcement.
 - The old state/evidence/slice/derived modules and `composite-long-task-renderer.ts` are absent and must not be restored.
-- Composite campaign authoring core: `composite-campaign-v3.ts` owns the no-compatibility V3 campaign/packet schema, immutable revision hashes, strict input loading, deterministic V3 YAML projection, full-graph/oracle-ready preflight, Goal-free handoff and fresh signed-final-result-only projection.
+- Composite campaign authoring core: `composite-campaign-v3.ts` owns no-compatibility Scope Fit V3/SFC and packet schemas, immutable revision hashes, stable acyclic SFC dependencies, strict input loading, deterministic V3 YAML projection, full-graph/oracle-ready preflight, Goal-free handoff and current Host-committed signed-final-result-only projection.
 - Modularity/source-file checks: `packages/ty-context/src/lib/modularity.ts` and `packages/ty-context/src/lib/source-files.ts`.
 - Context export implementation: `packages/ty-context/src/lib/context-export.ts`.
 
@@ -77,6 +78,9 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - Launch readiness checks: `tools/launch_readiness_check.mjs`.
 - Quickstart smoke: `tools/quickstart_smoke.mjs`.
 - Consumer lab: `tools/consumer_lab_full_test.mjs`.
+- Structured 60-case candidate runner: `tools/run_composite_v3_black_box.mjs`.
+- Independent audit pin/adapter: `tools/external-audit-lock.json` and `tools/external_long_task_audit.mjs`.
+- Signed platform Host release assembly: `tools/prepare_host_release_artifact.mjs`; its manifest binds release version, platform, architecture and every file hash before deterministic archive creation.
 
 ## Documentation Surfaces
 

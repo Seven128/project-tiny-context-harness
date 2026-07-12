@@ -10,6 +10,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../
 const prepareScript = path.join(repoRoot, "tools/release_prepare.mjs");
 const publishScript = path.join(repoRoot, "tools/release_publish.mjs");
 const legacyNpmScript = path.join(repoRoot, "tools/release_npm.mjs");
+const expectedPackCommand = `npm pack --json --workspace project-tiny-context-harness --pack-destination ${path.join(".artifacts", "releases", "prepared")}`;
 
 const rootPackage = JSON.parse(readFileSync(path.join(repoRoot, "package.json"), "utf8"));
 const workspacePackage = JSON.parse(readFileSync(path.join(repoRoot, "packages/ty-context/package.json"), "utf8"));
@@ -69,7 +70,7 @@ try {
       "npm run release:check-version",
       "node packages/ty-context/dist/cli.js upgrade --check --json",
       "npm run test:built --workspace project-tiny-context-harness",
-      "npm pack --json --workspace project-tiny-context-harness --pack-destination .artifacts\\releases\\prepared",
+      expectedPackCommand,
       "git diff --check"
     ]
   );
@@ -107,7 +108,7 @@ try {
       "tests/ty-context/launch-readiness-script.test.mjs",
       "tests/ty-context/npm-publish-access-script.test.mjs"
     ].join(" "),
-    "npm pack --json --workspace project-tiny-context-harness --pack-destination .artifacts\\releases\\prepared",
+    expectedPackCommand,
     "git diff --check"
   ]);
   assert.ok(!fastCommands.includes("npm run test:built --workspace project-tiny-context-harness"));

@@ -94,7 +94,7 @@ That smoke packs the local workspace, installs it into a disposable repo, runs `
 ```sh
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.3.0.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.4.0.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -125,17 +125,48 @@ workflow contract + project_context/** -> implementation -> verification -> drif
 
 For ordinary long-running acceptance planning, explicitly invoke `/normal-long-task`. For a raw requirement that still needs Scope Fit and strict authority authoring, explicitly invoke `/prepare-composite-long-task`.
 
-Invoke `/composite-long-task-workflow` only when the three V2 YAML authorities already exist:
+Invoke `/composite-long-task-workflow` only when the three Contract V3 YAML authorities already exist:
 
 - `product-architecture-source.yaml` owns requirements, scope, boundaries and non-completing outcomes.
 - `technical-realization-plan.yaml` owns atomic PI obligations, implementation bindings and forbidden shortcuts.
 - `acceptance-checklist.yaml` owns AC semantics and frozen executable verification specs.
 
-The strict executor has four drift-reducing steps: compile the immutable contract, iterate implementation against active verifier findings, run one fresh all-spec final gate, and let the trusted Codex Stop Hook decide whether the task may end. The agent chooses its own planning, subagent, TDD and review methods; they are not workflow state or completion evidence.
+The strict executor has four drift-reducing steps: seal the first immutable full graph in the workspace-external Host registry, iterate implementation against active verifier findings, run one fresh all-spec/counterfactual final gate, and let the managed-only Codex Stop Hook repeat that final verification before the task may end. The agent chooses its own planning, subagent, TDD and review methods; they are not workflow state or completion evidence.
 
-`verify` executes only the contract's frozen executable/argv/cwd, collects only verifier-owned fresh artifacts and writes `current-status.json`. `final-gate` rechecks source, Context, oracle, verifier and spec hashes, creates one isolated snapshot, runs all in-scope specs and writes `final-result.json`. Historical runs are never stitched together. Before allowing exit, the Stop Hook validates the mirrored active binding and repeats the full final verification. `needs_work` always returns to implementation; only freshly reproduced `accepted` or narrowly evidenced `externally_blocked` may end the workflow.
+`verify` executes affected frozen specs in sealed dependency/OS sandboxes and writes only verifier-owned `needs_work` findings. `final-gate` rechecks source, Context, bundled Oracle closure, commands, package manager, sandbox and managed Host identities; creates one isolated snapshot; runs every spec, trusted probe and obligation-specific counterfactual; projects Binding → Proof → AC → Obligation → PI → Requirement; and commits a signed `final-result.json`. Historical runs are never stitched together. Before allowing exit, the managed Stop Hook repeats the same full final orchestrator. `needs_work` always returns to implementation; only freshly reproduced `accepted` or narrowly evidenced `externally_blocked` may end the workflow.
 
-The workdir contains only the three YAML authorities, `compiled-contract.json`, `goal-objective.txt`, `current-status.json`, `final-result.json` and verifier-owned `runs/**`. The agent cannot submit commands, artifacts, evidence records, assertion results or AC/PI completion status. Ordinary questions are unaffected because the Hook is a no-op without an active binding, and the Skill policy disables implicit invocation.
+The workdir contains only the three YAML authorities, signed/thin UX mirrors, `goal-objective.txt` and verifier-owned `runs/**`; registry authority, keys, bundles and content-addressed layers remain outside the workspace. The agent cannot submit commands, observations, artifacts, blockers, assertion results or entity completion status. Ordinary questions are unaffected because the managed Hook is a complete no-op without active Host authority, and the Skill policy disables implicit invocation.
+
+### Install the signed Host Gate
+
+Composite execution is unavailable until an administrator installs the matching signed Host release. Download the archive for the current OS/architecture from the `0.4.0` release, verify its published SHA-256, and use the real absolute Codex executable path—not a PATH-selected shell shim.
+
+On Linux/macOS:
+
+```sh
+HOST_RELEASE=/absolute/path/to/project-tiny-context-host-gate-0.4.0-<target>.tgz
+EXPECTED_SHA256=<published-64-lowercase-hex>
+NODE="$(command -v node)"
+ACTUAL_SHA256="$("$NODE" -e 'const fs=require("node:fs"),c=require("node:crypto");process.stdout.write(c.createHash("sha256").update(fs.readFileSync(process.argv[1])).digest("hex"))' "$HOST_RELEASE")"
+test "$ACTUAL_SHA256" = "$EXPECTED_SHA256"
+CLI="$("$NODE" -p "require.resolve('project-tiny-context-harness/dist/cli.js')")"
+CODEX=/absolute/path/to/the/trusted/codex-executable
+sudo "$NODE" "$CLI" host-gate install --release "$HOST_RELEASE" --codex-launcher "$CODEX"
+```
+
+On Windows, open an Administrator PowerShell:
+
+```powershell
+$HostRelease = 'C:\absolute\path\project-tiny-context-host-gate-0.4.0-windows-x64.tgz'
+$ExpectedSha256 = '<published-64-lowercase-hex>'
+if ((Get-FileHash -Algorithm SHA256 -LiteralPath $HostRelease).Hash.ToLowerInvariant() -ne $ExpectedSha256) { throw 'Host release SHA-256 mismatch' }
+$Cli = node -p "require.resolve('project-tiny-context-harness/dist/cli.js')"
+$Node = (Get-Command node.exe).Source
+$Codex = 'C:\absolute\path\to\the\trusted\Codex.exe'
+& $Node $Cli host-gate install --release $HostRelease --codex-launcher $Codex
+```
+
+The installer independently verifies the pinned Ed25519 root, target manifest and every file before mutation, atomically installs managed policy/assets and starts the OS service. `host-gate uninstall` uses the same elevated CLI and refuses while a sealed registry is active. Registry close/recovery/key rotation are intentionally absent from the project CLI; they require the separately installed interactive `ty-context-host-admin` plus a one-time local-presence token from `ty-context-host-installer-ui`.
 
 ## Positioning
 
@@ -293,7 +324,7 @@ No. It checks that recovery facts exist and avoids fake test-result claims. Prod
 
 It should stay smaller than a full process. Ordinary bug fixes and local refactors do not update Context unless they produce durable product, architecture, API, state or validation facts.
 
-The Composite Long-Task Workflow Skill is invoked explicitly as `/composite-long-task-workflow`. It consumes the three strict V2 YAML authorities, compiles `compiled-contract.json`, drives repair from verifier-owned `current-status.json`, and permits completion only from a fresh accepted `final-result.json` plus an unchanged workspace checked by the Stop Hook. It is not an execution-method framework and does not create state for ordinary questions.
+The Composite Long-Task Workflow Skill is invoked explicitly as `/composite-long-task-workflow`. It consumes only the three strict Contract V3 YAML authorities, seals the complete graph in the workspace-external Host registry, drives repair from verifier-owned findings, and permits completion only after a fresh all-spec/counterfactual accepted result is committed and repeated by the managed-only Stop Hook. It is not an execution-method framework and creates no state for ordinary questions.
 
 Multilingual trigger phrases are compatibility details. Public README, npm and launch copy stay English-first, and public/package-managed surfaces must remain English-complete; literal non-English examples are documented only where they explain generated Skill matching and must not be the sole activation path.
 
@@ -303,9 +334,9 @@ Technical architecture support is a Minimal Context capability: use restrained `
 
 For long-running plans, RFCs or implementation proposals, invoke `/normal-long-task` to turn a plan plus relevant Context into a falsifiable acceptance checklist and an optional generic paste-ready goal/target-mode prompt. It also supports a two-document upstream input from Web GPT or another external planner: `Development Plan` for execution direction and `Acceptance and Tests` for target-mode acceptance input. If the plan already contains an explicit concrete acceptance checklist, the Skill copies that checklist verbatim into a separate full-checklist file instead of generating a competing checklist. The two-document packet path is strict mode: when required fields cannot be fully parsed from both documents, the Skill preserves the inputs, reports the missing fields, and stops without generating a checklist or goal/target-mode prompt. This is one pre-execution acceptance pass, not a task planner or workflow engine: it stores temporary inputs under `tmp/ty-context/plan-acceptance/**`, asks for confirmation when durable assumptions are unclear, and leaves execution evidence to the future executor, tests, CI, review or human acceptance. The generated prompt may require a local audit under the same temporary directory so future sessions can recover acceptance progress; that audit is not Context, not a quality proof and not a replacement for the project's Tiny Context workflow contract. The full checklist is the acceptance authority, while any compact prompt summary exists for navigation, priority and recovery after context compaction.
 
-When the three V2 YAML authorities are complete and strict execution is required, invoke `/composite-long-task-workflow`. The agent may implement freely, but only frozen verifier commands and verifier-owned observations participate in acceptance.
+When the three Contract V3 YAML authorities are complete and strict execution is required, invoke `/composite-long-task-workflow`. The agent may implement freely, but only frozen verifier commands and Harness-evaluated typed observations participate in acceptance.
 
-Important usage note: long implementation may drift. Composite V2 externalizes intent, atomic obligations, ACs, negative assertions and executable verifiers, then recomputes acceptance on one final snapshot. `needs_work` always continues; only trusted external blockers may stop without acceptance.
+Important usage note: long implementation may drift. Contract V3 externalizes intent, atomic obligations, observable bindings, proof/AC semantics, negative assertions and sensitivity counterfactuals, then recomputes acceptance on one final snapshot. `needs_work` always continues; only current trusted probes may establish an external blocker.
 
 Completion guard: agent prose, hand-written JSON, old runs, screenshots alone, test names, matrix/verdict/final cards, modified oracles and sample-only evidence cannot authorize acceptance.
 
@@ -364,9 +395,9 @@ The default `context_*` Skills and package-managed utility Skills are generated 
 
 ## Composite Campaign Preparation
 
-`/prepare-composite-long-task` and `ty-context composite-campaign` provide a clean-start V2 authoring plane. `CompositeAuthoringPacketV2` stores the three structured authorities and deterministically projects the YAML files. Preflight requires complete graph coverage and readable frozen oracle paths before handoff. Handoff copies only the YAML authorities into a fresh execution workdir and compiles them; it does not create a Goal, execution state or evidence. Explicit `start` binds an already-created Goal, and `record-result` mirrors only a complete current `final-result.json` identity.
+`/prepare-composite-long-task` and `ty-context composite-campaign` provide a clean-start V3 authoring plane. Scope Fit V3 uses stable `SFC-###` components through `sfcs`, `sfc_id`, `selected_sfc_id` and CLI `--sfc`; old slice fields/options are rejected. `CompositeAuthoringPacketV3` stores the three structured authorities and deterministically projects the Contract V3 YAML files. Preflight requires exhaustive graph/binding/proof/counterfactual coverage and a bundle-ready Oracle before handoff. Handoff copies and freezes only the YAML authorities in a fresh execution workdir; it does not create a Goal, activate Host authority, execute verification or create evidence. Explicit `start` binds an already-created Goal and seals first authority through the Host, while `record-result` only verifies and mirrors the current complete Host-committed signed `final-result.json` without rerunning final gate.
 
-V1 packets, Markdown authorities, old workdirs and historical runtime state are unsupported. There is no importer, alias or silent migration.
+V1/V2 packets and authorities, Observation V1, Markdown authorities, old workdirs and historical runtime state are unsupported. There is no importer, alias or silent migration.
 
 ## CLI Entry Safety
 
@@ -391,8 +422,8 @@ Use `npx --no-install ty-context ...` only when you explicitly want the already 
 | `npx --yes --package project-tiny-context-harness@latest ty-context check-modularity --touched [--limit 300] [--fail-on-warning]` | Reports selected handwritten source files over the physical line-count limit; `--file <path>` and `--base <ref>` select explicit files or branch changes, and config waivers are reported distinctly. |
 | `npx --yes --package project-tiny-context-harness@latest ty-context validate-context` | Checks minimum project recovery fields, Context graph metadata, declared paths/roles and fake test-execution claims. |
 | `npx --yes --package project-tiny-context-harness@latest ty-context validate-plan-contract <plan.md\|dir>` | Checks Source-to-Context Coverage and Context-to-Implementation Binding for structural consistency, referenced path existence and weak-proof complete/bound contradictions. |
-| `npx --yes --package project-tiny-context-harness@latest ty-context validate-plan-acceptance <dir>` | Checks legacy matrix/verdict artifacts when no state exists; when `task-state.json` exists, validates state-backed derived artifacts. It rejects contradictory complete claims, dangling evidence references, weak-proof complete rows, missing proof layers, material/critical drift, unapproved sibling substitution, blocking auditor findings, raw secrets/tokens/cookies, generated active-count drift, missing plan/AC cross-references and declared surface/architecture binding gaps. `errors` block; `warnings` / `hygiene` report cleanup. |
-| `npx --yes --package project-tiny-context-harness@latest ty-context composite-long-task <subcommand>` | Strict V2 commands: `init`, `compile`, `verify`, `status`, `final-gate`, `stop-check`, `render-goal`. |
+| `npx --yes --package project-tiny-context-harness@latest ty-context validate-plan-acceptance <dir>` | Checks the ordinary long-task matrix/verdict artifact surface only. It rejects contradictory complete claims, dangling evidence references, weak-proof complete rows, missing proof layers, material/critical drift, unapproved sibling substitution, blocking auditor findings, raw secrets/tokens/cookies, generated active-count drift, missing plan/AC cross-references and declared surface/architecture binding gaps. It is not Composite state or product proof; `errors` block while `warnings` / `hygiene` report cleanup. |
+| `npx --yes --package project-tiny-context-harness@latest ty-context composite-long-task <subcommand>` | Strict Contract V3 commands: `init`, `compile`, `verify`, `status`, `final-gate`, `stop-check`, `render-goal`. |
 | `npx --yes --package project-tiny-context-harness@latest ty-context composite-campaign <subcommand>` | Explicit `/prepare-composite-long-task` helper for contract, opt-in create, Scope Fit transitions, immutable packet revisions, deterministic render/preflight, read-only next, Goal-free handoff, explicit Goal binding, and current-final-gate result projection. |
 | `make validate-context` | Makefile wrapper for `validate-context`. |
 | `make validate-code-modularity` | Hard gate for touched handwritten source modularity; CI can set `TY_CONTEXT_MODULARITY_BASE=<ref>` to audit PR/base changes. |

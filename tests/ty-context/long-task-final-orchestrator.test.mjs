@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { appendFile, mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
+import { appendFile, mkdtemp, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { compileLongTaskContract } from "../../packages/ty-context/dist/lib/long-task-contract-compiler.js";
@@ -49,6 +49,7 @@ test("durable JSON keeps the prior destination on a pre-rename crash and atomica
   const root = await mkdtemp(path.join(os.tmpdir(), "ltw-durable-json-"));
   const file = path.join(root, "final-result.json");
   await writeDurableCanonicalJsonV3(file, { generation: 1 });
+  if (process.platform !== "win32") assert.equal((await stat(file)).mode & 0o777, 0o644);
   await assert.rejects(() => writeDurableCanonicalJsonV3(file, { generation: 2 }, { fault(point) { if (point === "after_file_sync") throw new Error("injected_crash"); } }), /injected_crash/u);
   assert.deepEqual((await readCanonicalJsonV3(file)).value, { generation: 1 });
   assert.ok((await readdir(root)).some((name) => name.endsWith(".tmp")));

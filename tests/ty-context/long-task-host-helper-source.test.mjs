@@ -9,8 +9,10 @@ const host = path.join(root, "host", "ty-context-host-helper");
 
 test("Rust Host helper pins its toolchain and stable responsibility modules", async () => {
   const toolchain = await readFile(path.join(root, "rust-toolchain.toml"), "utf8");
-  assert.match(toolchain, /channel\s*=\s*"stable-x86_64-pc-windows-gnullvm"/);
-  assert.match(await readFile(path.join(root, "rust-toolchain.lock"), "utf8"), /version=1\.97\.0[\s\S]*host=x86_64-pc-windows-gnullvm/);
+  assert.match(toolchain, /channel\s*=\s*"1\.97\.0"/);
+  assert.doesNotMatch(toolchain, /windows|linux|darwin/u);
+  const lock = await readFile(path.join(root, "rust-toolchain.lock"), "utf8");
+  for (const target of ["x86_64-pc-windows-gnullvm", "x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "aarch64-apple-darwin"]) assert.match(lock, new RegExp(target));
   assert.match(await readFile(path.join(root, ".cargo", "config.toml"), "utf8"), /crt-static/);
   const cargo = await readFile(path.join(host, "Cargo.toml"), "utf8");
   assert.match(cargo, /name\s*=\s*"ty-context-host-helper"/);

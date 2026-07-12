@@ -91,7 +91,8 @@ export interface FrozenEnvironmentProbeV3 extends EnvironmentProbeV3 { normalize
 export interface AcceptanceChecklistV3 { schema_version: "acceptance-checklist-v3"; counterexample_fixtures: CounterexampleFixtureV3[]; proof_requirements: ProofRequirementV3[]; acceptance_criteria: AcceptanceCriterionV3[]; verification_specs: VerificationSpecV3[]; environment_probes: EnvironmentProbeV3[] }
 export interface LongTaskSourceBundleV3 { product: ProductSourceV3; plan: TechnicalPlanV3; checklist: AcceptanceChecklistV3; source_paths: { product: string; plan: string; checklist: string } }
 
-export interface VerifierTrustInput { package_name: "project-tiny-context-harness"; package_version: string; cli_path: string; cli_sha256: string; hook_bundle_sha256: string; schema_set_sha256: string }
+export interface VerifierTrustInput { package_name: "project-tiny-context-harness"; package_version: string; cli_path: string; cli_sha256: string; schema_set_sha256: string }
+export interface FrozenCommandTargetIdentityV3 { command_step_id:string; tool:"node_script"|"playwright_test"; path:string; sha256:string; size:number }
 type FrozenPositiveAssertionV3 = PositiveAssertionV3 & { oracle_check_id: string; forbidden?: never; source_forbidden_shortcut_ids?: never };
 type FrozenNegativeAssertionV3 = NegativeAssertionV3 & { oracle_check_id: string; forbidden: unknown };
 type FrozenEnvironmentRequirementV3 = EnvironmentRequirementV3 & { required: true; local_alternatives: string[] };
@@ -106,6 +107,7 @@ export interface FrozenVerificationSpecV3 extends Omit<VerificationSpecV3, "posi
   argv: string[];
   oracle_paths: string[];
   oracle_sha256: Record<string, string>;
+  command_target_identities: FrozenCommandTargetIdentityV3[];
   implementation_test_paths: string[];
   invalid_completion_signals: string[];
   global_invariant: boolean;
@@ -126,7 +128,7 @@ export interface OracleBundleV3 {
   policy_sha256: string;
 }
 export type DependencyManagerNameV3="pnpm"|"yarn"|"npm"|"bun";
-export interface DependencyManagerV3 { name:DependencyManagerNameV3; version:string; executable_path:string; executable_sha256:string; invocation_executable:string; invocation_prefix:string[]; install_argv:string[] }
+export interface DependencyManagerV3 { name:DependencyManagerNameV3; version:string; executable_path:string; executable_sha256:string; runtime_root:string; runtime_sha256:string; invocation_executable:string; invocation_prefix:string[]; install_argv:string[] }
 export interface DependencyInputIdentityV3 { path:string; sha256:string; size:number }
 export interface DependencyPlanV3 {
   required:boolean;

@@ -1231,20 +1231,25 @@ function localChecks() {
       contains(npmTrustedPublishWorkflow, /uses: actions\/checkout@v7/) &&
       contains(npmTrustedPublishWorkflow, /uses: actions\/setup-node@v6/) &&
       contains(npmTrustedPublishWorkflow, /node-version:\s*"24"/) &&
-      contains(npmTrustedPublishWorkflow, /registry-url:\s*"https:\/\/registry\.npmjs\.org"/) &&
+      contains(npmTrustedPublishWorkflow, /registry-url:\s*"?https:\/\/registry\.npmjs\.org"?/) &&
       contains(npmTrustedPublishWorkflow, /npm install -g npm@latest/) &&
       contains(npmTrustedPublishWorkflow, /npm CLI 11\.5\.1 or later is required/) &&
-      contains(npmTrustedPublishWorkflow, /npm test --workspace project-tiny-context-harness/) &&
+      contains(npmTrustedPublishWorkflow, /candidate_commit:/) &&
+      contains(npmTrustedPublishWorkflow, /candidate_sha256:/) &&
+      contains(npmTrustedPublishWorkflow, /external-long-task-audit/) &&
+      contains(npmTrustedPublishWorkflow, /ty-context-external-audit/) &&
+      contains(npmTrustedPublishWorkflow, /npm run build --workspace project-tiny-context-harness/) &&
+      contains(npmTrustedPublishWorkflow, /npm run typecheck --workspace project-tiny-context-harness/) &&
       contains(npmTrustedPublishWorkflow, /npm run release:check-version/) &&
       contains(npmTrustedPublishWorkflow, /node packages\/ty-context\/dist\/cli\.js package check-source/) &&
-      contains(npmTrustedPublishWorkflow, /make validate-context/) &&
-      contains(npmTrustedPublishWorkflow, /npm pack --json --workspace project-tiny-context-harness --pack-destination \.artifacts\/releases\/prepared/) &&
+      contains(npmTrustedPublishWorkflow, /node packages\/ty-context\/dist\/cli\.js validate-context/) &&
+      !contains(npmTrustedPublishWorkflow, /npm pack/) &&
       contains(npmTrustedPublishWorkflow, /verify_prepared_release_artifact\.mjs/) &&
       contains(npmTrustedPublishWorkflow, /NPM_CONFIG_PROVENANCE:\s*"true"/) &&
-      contains(npmTrustedPublishWorkflow, /npm publish "\.artifacts\/releases\/prepared\/\$FILENAME" --access public/) &&
+      contains(npmTrustedPublishWorkflow, /npm publish "\.artifacts\/releases\/prepared\/\$filename" --access public/) &&
       contains(npmTrustedPublishWorkflow, /Create or update GitHub Release/) &&
       contains(npmTrustedPublishWorkflow, /GH_TOKEN:\s*\$\{\{ github\.token \}\}/) &&
-      contains(npmTrustedPublishWorkflow, /node tools\/github_release_publish\.mjs --version "\$\{\{ inputs\.expected_version \}\}" --target "\$\{\{ github\.sha \}\}"/) &&
+      contains(npmTrustedPublishWorkflow, /node tools\/github_release_publish\.mjs --version "\$\{\{ inputs\.expected_version \}\}" --target "\$\{\{ inputs\.candidate_commit \}\}"/) &&
       !contains(npmTrustedPublishWorkflow, /NPM_TOKEN|NODE_AUTH_TOKEN/),
     "npm trusted publishing packet documents post-first-publish OIDC setup and provides a manual dry-run-first workflow without long-lived npm publish tokens."
   );
@@ -1535,7 +1540,8 @@ function localChecks() {
       contains(marketMap, /Market Map/) &&
       contains(marketMap, /Competitive Snapshot/) &&
       contains(marketMap, /10-100 stars/) &&
-      contains(marketMap, new RegExp(`Latest release is \`Project Tiny Context Harness ${escapeRegex(packageJson.version)}\``)) &&
+      contains(marketMap, /0\.4\.0 remains an unpublished release candidate/) &&
+      contains(marketMap, /0\.4\.0 requires a separate publish action/) &&
       contains(marketMap, /first public Show HN post and first regular HN comment are live/) &&
       contains(marketMap, /fit x maintenance activity x audience scale/) &&
       contains(marketMap, /jamesmurdza\/awesome-ai-devtools\/pull\/636/) &&
@@ -1554,7 +1560,7 @@ function localChecks() {
       contains(outreachTargets, /OpenSSF Scorecard workflow/) &&
       contains(outreachTargets, /Minimal Context sample project/) &&
       contains(outreachTargets, /FAQ answers/) &&
-      contains(outreachTargets, new RegExp(`\`v${escapeRegex(packageJson.version)}\` is published on npm through Trusted Publishing`)) &&
+      contains(outreachTargets, /prepared 0\.4\.0 Contract V3 candidate is not launch-ready until its separate audited publication succeeds/) &&
       contains(outreachTargets, /first public post and first regular HN comment are live/) &&
       contains(outreachTargets, /https:\/\/news\.ycombinator\.com\/item\?id=48481205/) &&
       contains(outreachTargets, /Seven curated-list PRs are open/) &&
@@ -1700,22 +1706,24 @@ function localChecks() {
   addCheck(
     checks,
     "maintainer-workflow",
-    contains(maintainerWorkflow, /Test package/) &&
+    contains(maintainerWorkflow, /Test complete package/) &&
       contains(maintainerWorkflow, /\.github\/workflows\/npm-publish\.yml/) &&
       contains(maintainerWorkflow, /\.github\/workflows\/scorecard\.yml/) &&
       contains(maintainerWorkflow, /uses: actions\/checkout@v7/) &&
       contains(maintainerWorkflow, /uses: actions\/setup-node@v6/) &&
-      contains(maintainerWorkflow, /Check package canonical source drift/) &&
+      contains(maintainerWorkflow, /Verify package source and Context/) &&
       contains(maintainerWorkflow, /node packages\/ty-context\/dist\/cli\.js package check-source/) &&
-      contains(maintainerWorkflow, /Validate source Context/),
+      contains(maintainerWorkflow, /node packages\/ty-context\/dist\/cli\.js validate-context/),
     "Maintainer package CI runs package tests, source drift from the source root, and Context validation."
   );
   addCheck(
     checks,
     "node-engine-ci-matrix",
     packageJson.engines?.node === ">=24" &&
-      contains(maintainerWorkflow, /node-version:\s*\$\{\{\s*matrix\.node-version\s*\}\}/) &&
-      contains(maintainerWorkflow, /node-version:\s*\["24"\]/),
+      contains(maintainerWorkflow, /node-version:\s*"24"/) &&
+      contains(maintainerWorkflow, /windows-2025/) &&
+      contains(maintainerWorkflow, /ubuntu-24\.04/) &&
+      contains(maintainerWorkflow, /macos-15/),
     "Package CI covers the declared Node >=24 floor."
   );
 

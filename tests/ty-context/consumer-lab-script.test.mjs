@@ -9,11 +9,13 @@ import {
   summarizeChecks
 } from "../../tools/consumer_lab_full_test.mjs";
 
-test("consumer lab release check follows the current compatibility wrapper", async () => {
+test("consumer lab consumes one explicit candidate and signed external result without repacking or V2", async () => {
   const source = await import("node:fs/promises").then(({ readFile }) =>
     readFile(new URL("../../tools/consumer_lab_full_test.mjs", import.meta.url), "utf8"));
-  assert.match(source, /releaseScriptText\.includes\("tools\/release_publish\.mjs"\)/);
-  assert.doesNotMatch(source, /releaseScriptText\.includes\("\.artifacts\/releases\/current-release-status\.md"\)/);
+  assert.match(source, /--candidate-tarball/);
+  assert.match(source, /--external-result/);
+  assert.doesNotMatch(source, /npm", \["pack"/);
+  assert.doesNotMatch(source, /Composite V2|ty-context-observation-v1|product-source-v2/u);
 });
 
 test("consumer lab resolves Node package shims on Windows", () => {
@@ -37,9 +39,14 @@ test("consumer lab script parses safety and report options", () => {
     "--reset-lab",
     "--keep-lab",
     "--report-only",
-    "--commit-lab",
-    "--tag-prefix",
-    "evidence",
+    "--candidate-tarball",
+    "/tmp/candidate.tgz",
+    "--candidate-sha256",
+    "a".repeat(64),
+    "--host-release-sha256",
+    "b".repeat(64),
+    "--external-result",
+    "/tmp/audit.json",
     "--json-report",
     "/tmp/report.json",
     "--markdown-report",
@@ -51,17 +58,16 @@ test("consumer lab script parses safety and report options", () => {
   assert.equal(options.resetLab, true);
   assert.equal(options.keepLab, true);
   assert.equal(options.reportOnly, true);
-  assert.equal(options.commitLab, true);
-  assert.equal(options.tagPrefix, "evidence");
-  assert.equal(options.jsonReport, "/tmp/report.json");
-  assert.equal(options.markdownReport, "/tmp/report.md");
+  assert.equal(options.candidateTarball, path.resolve("/tmp/candidate.tgz"));
+  assert.equal(options.candidateSha256, "a".repeat(64));
+  assert.equal(options.externalResult, path.resolve("/tmp/audit.json"));
+  assert.equal(options.jsonReport, path.resolve("/tmp/report.json"));
+  assert.equal(options.markdownReport, path.resolve("/tmp/report.md"));
 });
 
-test("consumer lab script requires keep-lab when committing evidence", () => {
-  assert.throws(
-    () => parseArgs(["--commit-lab"]),
-    /--commit-lab requires --keep-lab/
-  );
+test("consumer lab rejects unknown options and malformed candidate hashes", () => {
+  assert.throws(() => parseArgs(["--commit-lab"]), /Unknown or incomplete option/);
+  assert.throws(() => parseArgs(["--candidate-sha256", "wrong"]), /64 lowercase hex/);
 });
 
 test("consumer lab script classifies missing managed tools as failure", () => {
@@ -99,12 +105,9 @@ test("consumer lab script summarizes and renders reports", () => {
     finishedAt: "finish",
     summary,
     checks,
-    recommendedRfc: {
-      title: "RFC: Close installed-consumer workflow coverage gaps",
-      impactAreas: ["tests"]
-    }
+    candidateSha256: "a".repeat(64)
   });
   assert.match(markdown, /Decision: FAIL/);
   assert.match(markdown, /validate-harness/);
-  assert.match(markdown, /Recommended RFC/);
+  assert.match(markdown, /Candidate SHA-256/);
 });

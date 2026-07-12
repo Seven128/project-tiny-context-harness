@@ -137,3 +137,66 @@ fn write_create(path: &Path, bytes: &[u8]) -> HostResult<()> {
         .map_err(|error| HostError::io(path, error))?;
     file.sync_all().map_err(|error| HostError::io(path, error))
 }
+
+#[cfg(unix)]
+pub fn restore_workdir_owner(root: &Path, user_id: u32, group_id: u32) -> HostResult<()> {
+    fn visit(path: &Path, user_id: u32, group_id: u32) -> HostResult<()> {
+        let metadata = fs::symlink_metadata(path).map_err(|error| HostError::io(path, error))?;
+        if metadata.is_dir() {
+            for entry in fs::read_dir(path).map_err(|error| HostError::io(path, error))? {
+                visit(
+                    &entry.map_err(|error| HostError::io(path, error))?.path(),
+                    user_id,
+                    group_id,
+                )?;
+            }
+        }
+        use std::os::unix::ffi::OsStrExt;
+        let raw = std::ffi::CString::new(path.as_os_str().as_bytes())
+            .map_err(|_| HostError::Configuration("workdir_owner_path_nul".into()))?;
+        if unsafe { libc::lchown(raw.as_ptr(), user_id, group_id) } != 0 {
+            return Err(HostError::io(path, std::io::Error::last_os_error()));
+        }
+        Ok(())
+    }
+    visit(root, user_id, group_id)
+}
+
+#[cfg(unix)]
+pub fn restore_repository_mirror_owner(root: &Path, user_id: u32, group_id: u32) -> HostResult<()> {
+    let directory = root.join(".codex");
+    for path in [
+        directory.join("ty-context-active-long-task.json"),
+        directory,
+    ] {
+        if fs::symlink_metadata(&path).is_ok() {
+            chown_one(&path, user_id, group_id)?;
+        }
+    }
+    Ok(())
+}
+
+#[cfg(unix)]
+fn chown_one(path: &Path, user_id: u32, group_id: u32) -> HostResult<()> {
+    use std::os::unix::ffi::OsStrExt;
+    let raw = std::ffi::CString::new(path.as_os_str().as_bytes())
+        .map_err(|_| HostError::Configuration("workdir_owner_path_nul".into()))?;
+    if unsafe { libc::lchown(raw.as_ptr(), user_id, group_id) } != 0 {
+        return Err(HostError::io(path, std::io::Error::last_os_error()));
+    }
+    Ok(())
+}
+
+#[cfg(windows)]
+pub fn restore_workdir_owner(_root: &Path, _user_id: u32, _group_id: u32) -> HostResult<()> {
+    Ok(())
+}
+
+#[cfg(windows)]
+pub fn restore_repository_mirror_owner(
+    _root: &Path,
+    _user_id: u32,
+    _group_id: u32,
+) -> HostResult<()> {
+    Ok(())
+}

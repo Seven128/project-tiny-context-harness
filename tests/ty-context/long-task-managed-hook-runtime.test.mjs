@@ -15,7 +15,7 @@ const installerUi = helper && (process.env.TY_CONTEXT_HOST_INSTALLER_UI_BIN ?? p
 // Regression identities: ordinary_question_hook_noop and active_pointer_deleted_or_retargeted are exercised below.
 
 test("real managed adapter no-ops without authority and blocks an active needs-work task", { skip: !helper, timeout: 90_000 }, async () => {
-  const [{ managedHostLayoutUnder }, { renderManagedRequirementsV1 }, { LongTaskHostRpcClientV1 }, release, { checkLongTaskHostGate }, runtimeIdentity] = await Promise.all([
+  const [{ managedHostLayoutUnder }, { renderHostReleaseRequirementsV1, renderManagedRequirementsV1 }, { LongTaskHostRpcClientV1 }, release, { checkLongTaskHostGate }, runtimeIdentity] = await Promise.all([
     import("../../packages/ty-context/dist/lib/long-task-managed-host-layout.js"),
     import("../../packages/ty-context/dist/lib/long-task-managed-requirements.js"),
     import("../../packages/ty-context/dist/lib/long-task-host-rpc-client.js"),
@@ -33,8 +33,12 @@ test("real managed adapter no-ops without authority and blocks an active needs-w
   await cp(installerUi, layout.installer_ui_path);
   await cp(path.join(repo, ".codex", "ty-context-managed", "managed-host-gate", "long-task-hook.mjs"), layout.hook_path);
   await cp(path.join(repo, ".codex", "ty-context-managed", "managed-host-gate", "ty-context-host-worker.mjs"), layout.worker_path);
-  const requirements = renderManagedRequirementsV1(layout);
-  await writeFile(path.join(layout.managed_dir, "requirements.toml"), requirements);
+  const releaseTarget = {
+    platform: process.platform === "win32" ? "windows" : process.platform === "darwin" ? "macos" : "linux",
+    arch: process.arch === "arm64" ? "arm64" : "x64"
+  };
+  const releaseRequirements = renderHostReleaseRequirementsV1(layout, releaseTarget);
+  await writeFile(path.join(layout.managed_dir, "requirements.toml"), releaseRequirements);
   const releaseKeys = generateKeyPairSync("ed25519");
   const rootPublicKey = releaseKeys.publicKey.export({ type: "spki", format: "pem" }).toString();
   await writeFile(layout.release_root_public_key_path, rootPublicKey);
@@ -43,6 +47,7 @@ test("real managed adapter no-ops without authority and blocks an active needs-w
   await writeFile(layout.release_manifest_path, releaseManifestText);
   await writeFile(layout.release_signature_path, sign(null, Buffer.from(releaseManifestText), releaseKeys.privateKey).toString("base64url"));
   await mkdir(path.dirname(layout.requirements_file), { recursive: true });
+  const requirements = renderManagedRequirementsV1(layout);
   await writeFile(layout.requirements_file, requirements);
   const publicKey = path.join(layout.managed_dir, "host-service-public.pem");
   const cliPath = path.join(repo, "packages", "ty-context", "dist", "cli.js");
@@ -89,7 +94,11 @@ test("real managed adapter no-ops without authority and blocks an active needs-w
   child.stderr.on("data", (chunk) => { stderr += chunk; });
   const exited = new Promise((resolve) => child.once("exit", resolve));
   try {
-    await waitForFile(publicKey);
+    try {
+      await waitForFile(publicKey);
+    } catch (error) {
+      throw new Error(`${error instanceof Error ? error.message : String(error)}; exit=${child.exitCode ?? "running"}; stderr=${stderr.trim()}`);
+    }
     assert.equal(child.exitCode, null, `managed Host exited before accepting RPC: ${stderr.trim()}`);
     const client = new LongTaskHostRpcClientV1({ endpoint: layout.endpoint, public_key_path: publicKey, timeout_ms: 120_000 });
     await waitForRpc(client, root);
@@ -153,7 +162,7 @@ test("real managed adapter no-ops without authority and blocks an active needs-w
 });
 
 async function waitForFile(file) {
-  for (let attempt = 0; attempt < 200; attempt += 1) {
+  for (let attempt = 0; attempt < 1200; attempt += 1) {
     try { await readFile(file); return; } catch {}
     await new Promise((resolve) => setTimeout(resolve, 25));
   }

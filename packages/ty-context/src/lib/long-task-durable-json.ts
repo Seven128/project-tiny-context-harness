@@ -4,11 +4,11 @@ import { randomBytes } from "node:crypto";
 import { canonicalJson, parseStrictJson, sha256Hex } from "./composite-campaign-codec.js";
 
 export interface DurableJsonWriteV3 { bytes:Buffer;sha256:string }
-export interface DurableJsonWriteOptionsV3 { fault?:(point:"after_file_sync"|"after_rename"|"after_parent_sync")=>void }
+export interface DurableJsonWriteOptionsV3 { fault?:(point:"after_file_sync"|"after_rename"|"after_parent_sync")=>void; mode?:0o600|0o644 }
 
 export async function writeDurableCanonicalJsonV3(file:string,value:unknown,options:DurableJsonWriteOptionsV3={}):Promise<DurableJsonWriteV3>{
   const bytes=Buffer.from(canonicalJson(value),"utf8");await mkdir(path.dirname(file),{recursive:true});const temporary=path.join(path.dirname(file),`.${path.basename(file)}.${process.pid}.${randomBytes(8).toString("hex")}.tmp`);const handle=await open(temporary,"wx",0o600);
-  try{await handle.writeFile(bytes);await handle.sync();}finally{await handle.close();}
+  try{await handle.writeFile(bytes);await handle.sync();await handle.chmod(options.mode??0o644);await handle.sync();}finally{await handle.close();}
   options.fault?.("after_file_sync");
   try{await rename(temporary,file);}catch(error){await rm(temporary,{force:true});throw error;}
   options.fault?.("after_rename");await syncDirectory(path.dirname(file));options.fault?.("after_parent_sync");const reread=await readFile(file);if(!reread.equals(bytes))throw new Error("final_result_hash_mismatch:durable_reread");return {bytes:reread,sha256:sha256Hex(reread)};

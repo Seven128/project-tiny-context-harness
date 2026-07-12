@@ -51,7 +51,7 @@ export async function runDoctor(projectRoot: string): Promise<DoctorReport> {
   }
 
   for (const location of await findUserSuperpowersSkills()) {
-    report.warnings.push(`user-level using-superpowers Skill detected at ${location}. Composite V2 does not depend on it and doctor will not modify global configuration. To disable it explicitly for Codex, remove/disable that plugin or add a matching [[skills.config]] entry with enabled = false in ${path.join(os.homedir(), ".codex", "config.toml")}.`);
+    report.warnings.push(`user-level using-superpowers Skill detected at ${location}. Composite Contract V3 does not depend on it and doctor will not modify global configuration. To disable it explicitly for Codex, remove/disable that plugin or add a matching [[skills.config]] entry with enabled = false in ${path.join(os.homedir(), ".codex", "config.toml")}.`);
   }
 
   report.info.push("doctor complete");

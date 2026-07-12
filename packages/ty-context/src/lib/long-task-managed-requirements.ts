@@ -49,6 +49,24 @@ ${MANAGED_END}
 `;
 }
 
+export function renderHostReleaseRequirementsV1(
+  layout: ManagedHostLayoutV1,
+  target: { platform: "windows" | "linux" | "macos"; arch: "x64" | "arm64" }
+): string {
+  const nodePath = target.platform === "windows"
+    ? "C:\\Program Files\\nodejs\\node.exe"
+    : target.platform === "linux"
+      ? "/usr/bin/node"
+      : target.arch === "arm64"
+        ? "/opt/homebrew/bin/node"
+        : "/usr/local/bin/node";
+  return renderManagedRequirementsV1({
+    ...layout,
+    node_path: nodePath,
+    unix_node_path: target.platform === "windows" ? "/usr/bin/node" : nodePath
+  });
+}
+
 export function mergeManagedRequirementsV1(existing: string, layout: ManagedHostLayoutV1): string {
   const block = renderManagedRequirementsV1(layout).trimEnd();
   const begin = existing.indexOf(MANAGED_BEGIN); const end = existing.indexOf(MANAGED_END);

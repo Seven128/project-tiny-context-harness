@@ -84,6 +84,8 @@ fn hash_identity<T: Serialize>(identity: &T) -> HostResult<String> {
 }
 fn git(root: &Path, args: &[&str]) -> HostResult<String> {
     let output = Command::new("git")
+        .arg("-c")
+        .arg(format!("safe.directory={}", display(root)))
         .args(args)
         .current_dir(root)
         .output()
@@ -216,5 +218,39 @@ mod tests {
     fn path_display_is_stable() {
         let current = fs::canonicalize(".").unwrap();
         assert_eq!(display(&current), display(&current));
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn root_uses_an_exact_safe_directory_for_a_user_owned_repository() {
+        if unsafe { libc::geteuid() } != 0 {
+            return;
+        }
+        let root = std::env::temp_dir().join(format!("tyc-safe-git-{}", uuid::Uuid::new_v4()));
+        fs::create_dir(&root).unwrap();
+        assert!(
+            Command::new("git")
+                .args(["init", "--quiet"])
+                .current_dir(&root)
+                .status()
+                .unwrap()
+                .success()
+        );
+        chown_tree(&root, 65_534, 65_534);
+        let result = repository(&root);
+        assert!(result.is_ok(), "{result:?}");
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[cfg(target_os = "linux")]
+    fn chown_tree(path: &Path, uid: u32, gid: u32) {
+        if path.is_dir() {
+            for entry in fs::read_dir(path).unwrap() {
+                chown_tree(&entry.unwrap().path(), uid, gid);
+            }
+        }
+        use std::os::unix::ffi::OsStrExt;
+        let raw = std::ffi::CString::new(path.as_os_str().as_bytes()).unwrap();
+        assert_eq!(unsafe { libc::chown(raw.as_ptr(), uid, gid) }, 0);
     }
 }

@@ -1,0 +1,31 @@
+{
+  "schema_version": "external-audit-lock-v1",
+  "package": "project-tiny-context-harness-audit",
+  "version": "0.1.0",
+  "tarball_url": "https://github.com/Seven128/project-tiny-context-harness-audit/releases/download/v0.1.0/project-tiny-context-harness-audit-0.1.0.tgz",
+  "tarball_sha256": "40c76370dc11318f9e1ad381292b2c78e7793416465eb89ff2c5e11c6aa28883",
+  "integrity": "sha512-4vv0OJPyRUE4eCE16Vi+w3uOcP5Pf9ncMeLXGqpIyQPEpvv08i9/qnsiZj5aYEqAC4Tid3+InRnvib01ktJB5A==",
+  "release_commit": "4e78f7af70bd0e53e68d936a602a940da2191bd4",
+  "signing_key_id": "a81fad9a2250d928ffa1685c4735a33ac5ce1027d4151a1f29bb1323518ddf1b",
+  "signing_public_key_spki_der_base64": "MCowBQYDK2VwAyEAPUK02QVpG/e1IlWcmYmD6q9EmK8Q3UH84SLmne8CCX4=",
+  "host_release_root_key_id": "59d4e01a5ca1c015556772b06a370f93ca2e2369e42b65c8d5e6bfa5f5bfc8e9",
+  "expected_outcomes_sha256": "7cf084974438087532bf68f4f1ecfcbe6ac24efefce86e5b42c6c288ae5c9458",
+  "attacks": [
+    {"id":"v2_source_rejected","expected_status":"compile_rejected","expected_code":"source_schema_unsupported"},
+    {"id":"constant_success_missing_implementation","expected_status":"needs_work","expected_code":"binding_target_missing"},
+    {"id":"oracle_self_signed_passed","expected_status":"needs_work","expected_code":"oracle_self_signed_result"},
+    {"id":"command_target_drift","expected_status":"needs_work","expected_code":"verifier_changed"},
+    {"id":"host_authority_survives_pointer_deletion","expected_status":"accepted","expected_code":"ok"},
+    {"id":"forged_final_result_rejected","expected_status":"blocked","expected_code":"final_result_hash_mismatch"},
+    {"id":"no_active_hook_noop","expected_status":"noop","expected_code":"ok"},
+    {"id":"happy_path","expected_status":"accepted","expected_code":"ok"}
+  ],
+  "consumers": [
+    {"id":"npm_dependency_import","expected_status":"accepted"},
+    {"id":"npm_workspaces","expected_status":"accepted"},
+    {"id":"vitest","expected_status":"accepted"},
+    {"id":"jest","expected_status":"accepted"},
+    {"id":"playwright","expected_status":"accepted"},
+    {"id":"built_artifact","expected_status":"accepted"}
+  ]
+}

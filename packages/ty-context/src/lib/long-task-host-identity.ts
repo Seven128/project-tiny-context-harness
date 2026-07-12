@@ -4,6 +4,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { canonicalValueJson, sha256Hex } from "./composite-campaign-codec.js";
 import type { CompiledContractV3 } from "./long-task-contract-schema.js";
+import { longTaskGitArgs } from "./long-task-git.js";
 
 const exec = promisify(execFile);
 
@@ -39,10 +40,10 @@ export async function computeRepositoryIdentity(repositoryRoot: string): Promise
   const canonical = await realpath(path.resolve(repositoryRoot));
   const rootInfo = await stat(canonical, { bigint: true });
   if (!rootInfo.isDirectory()) throw new Error("host_repository_identity_invalid:not_directory");
-  const commonRaw = (await exec("git", ["rev-parse", "--git-common-dir"], { cwd: canonical, windowsHide: true })).stdout.trim();
+  const commonRaw = (await exec("git", longTaskGitArgs(canonical, ["rev-parse", "--git-common-dir"]), { cwd: canonical, windowsHide: true })).stdout.trim();
   const common = await realpath(path.resolve(canonical, commonRaw));
   const commonInfo = await stat(common, { bigint: true });
-  const objectFormat = (await exec("git", ["rev-parse", "--show-object-format"], { cwd: canonical, windowsHide: true })).stdout.trim();
+  const objectFormat = (await exec("git", longTaskGitArgs(canonical, ["rev-parse", "--show-object-format"]), { cwd: canonical, windowsHide: true })).stdout.trim();
   const identity: RepositoryIdentityV1 = {
     canonical_path: canonical,
     volume_or_device: String(rootInfo.dev),

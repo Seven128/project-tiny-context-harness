@@ -23,13 +23,21 @@ export async function compileLongTaskContract(workdir: string, repositoryRoot = 
   const contextFiles = await listFiles(path.join(root, "project_context"));
   const contextHashes = Object.fromEntries(await Promise.all(contextFiles.map(async (file) => [relative(root, file), await hashFile(file)] as const)));
   await validateContextReferences(bundle, root, new Set(Object.keys(contextHashes)));
-  const verifier_identity = await verifierIdentity(root);
+  const verifier_identity = await verifierIdentity();
   const dependency_plan=await compileDependencyPlan(root,bundle.checklist.verification_specs);
   const environment_probes=await freezeLongTaskEnvironmentProbes(root,bundle);
   const verification_specs: FrozenVerificationSpecV3[] = [];
   const oracle_bundles: CompiledContractV3["oracle_bundles"] = [];
   for (const spec of bundle.checklist.verification_specs) {
     const probeOnly=probeOnlyCommandSteps(spec,bundle);
+    const commandTargetIdentities=await Promise.all(spec.command_steps
+      .filter((step)=>step.tool==="node_script"||step.tool==="playwright_test")
+      .map(async(step)=>{
+        const target=resolveInside(root,step.target,`${spec.id}.${step.id}.target`);
+        const info=await stat(target);
+        if(!info.isFile())throw new Error(`command_target_invalid:${spec.id}:${step.id}`);
+        return {command_step_id:step.id,tool:step.tool as "node_script"|"playwright_test",path:relative(root,target),sha256:await hashFile(target),size:info.size};
+      }));
     const executable_path = process.execPath;
     const built=await buildLongTaskOracleBundle(root,spec);oracle_bundles.push(built.identity);
     const repositoryDependencies=built.identity.input_dependencies.filter((item)=>item.source_kind==="repository");
@@ -47,6 +55,7 @@ export async function compileLongTaskContract(workdir: string, repositoryRoot = 
       argv: [`bundle:${built.identity.bundle_store_key}`],
       oracle_paths: oraclePaths,
       oracle_sha256: sortRecord(oracle_sha256),
+      command_target_identities: commandTargetIdentities.sort((a,b)=>a.command_step_id.localeCompare(b.command_step_id)),
       implementation_test_paths: spec.command_steps.filter((step)=>!probeOnly.includes(step.id)&&(step.tool==="node_script"||step.tool==="playwright_test")).map((step)=>step.target),
       invalid_completion_signals: [],
       global_invariant: spec.input_paths.includes("**") || spec.proof_capabilities.some((surface) => surface === "security_boundary" || surface === "population_coverage")
@@ -115,9 +124,18 @@ export async function assertLongTaskSourceContextFresh(contract:CompiledContract
 }
 
 export async function assertLongTaskTrustedToolFresh(contract:CompiledContractV3):Promise<void>{
-  if (await hashFile(contract.verifier_identity.cli_path) !== contract.verifier_identity.cli_sha256 || await hashTree(path.join(contract.repository_root, ".codex/hooks")) !== contract.verifier_identity.hook_bundle_sha256) throw new Error("verifier_changed_after_compile:identity");
+  if (await hashFile(contract.verifier_identity.cli_path) !== contract.verifier_identity.cli_sha256) throw new Error("verifier_changed_after_compile:identity");
   for (const spec of contract.verification_specs) {
     if (await hashFile(spec.executable_path) !== spec.executable_sha256) throw new Error(`verifier_changed_after_compile:${spec.id}`);
+    for(const target of spec.command_target_identities){
+      try{
+        const file=resolveInside(contract.repository_root,target.path,`${spec.id}.${target.command_step_id}.frozen_target`);
+        const info=await stat(file);
+        if(!info.isFile()||info.size!==target.size||await hashFile(file)!==target.sha256)throw new Error("identity");
+      }catch{
+        throw new Error(`verifier_changed_after_compile:${spec.id}:${target.command_step_id}`);
+      }
+    }
   }
   const dependencyPlan=await compileDependencyPlan(contract.repository_root,contract.verification_specs);if(canonicalJson(dependencyPlan)!==canonicalJson(contract.dependency_plan))throw new Error("dependency_plan_changed_after_compile");
 }
@@ -160,9 +178,8 @@ async function validateContextReferences(bundle: LongTaskSourceBundleV3, root: s
   }
 }
 
-async function verifierIdentity(root: string): Promise<VerifierTrustInput> { const packageFile=fileURLToPath(new URL("../../package.json",import.meta.url));const packageJson=JSON.parse(await readFile(packageFile,"utf8")) as {name:string;version:string};const cli=fileURLToPath(new URL("../cli.js",import.meta.url));return {package_name:"project-tiny-context-harness",package_version:packageJson.version,cli_path:cli,cli_sha256:await maybeHash(cli),hook_bundle_sha256:await hashTree(path.join(root,".codex/hooks")),schema_set_sha256:COMPOSITE_V3_SCHEMA_SET_SHA256}; }
+async function verifierIdentity(): Promise<VerifierTrustInput> { const packageFile=fileURLToPath(new URL("../../package.json",import.meta.url));const packageJson=JSON.parse(await readFile(packageFile,"utf8")) as {name:string;version:string};const cli=fileURLToPath(new URL("../cli.js",import.meta.url));return {package_name:"project-tiny-context-harness",package_version:packageJson.version,cli_path:cli,cli_sha256:await maybeHash(cli),schema_set_sha256:COMPOSITE_V3_SCHEMA_SET_SHA256}; }
 async function listFiles(root:string):Promise<string[]>{const result:string[]=[];async function visit(dir:string):Promise<void>{for(const entry of await readdir(dir,{withFileTypes:true})){const file=path.join(dir,entry.name);if(entry.isSymbolicLink())throw new Error(`Context symlink is not allowed: ${file}`);if(entry.isDirectory())await visit(file);else if(entry.isFile())result.push(file);}}try{await visit(root);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}return result.sort();}
-async function hashTree(root:string):Promise<string>{const files=await listFiles(root);const rows=await Promise.all(files.map(async(file)=>[relative(root,file),await hashFile(file)]));return sha256Hex(canonicalJson(rows));}
 async function hashFile(file:string):Promise<string>{const info=await stat(file);if(!info.isFile())throw new Error(`Expected regular file: ${file}`);return sha256Hex(await readFile(file));}
 async function maybeHash(file:string):Promise<string>{try{return await hashFile(file);}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return "unbuilt";throw error;}}
 async function atomicJson(file:string,value:unknown):Promise<void>{await mkdir(path.dirname(file),{recursive:true});const temporary=`${file}.tmp-${process.pid}-${Date.now()}`;const handle=await open(temporary,"wx");try{await handle.writeFile(canonicalJson(value),"utf8");await handle.sync();}finally{await handle.close();}await rename(temporary,file);}

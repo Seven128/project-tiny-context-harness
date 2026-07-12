@@ -8,7 +8,7 @@ use windows_sys::Win32::{
     Security::PSID,
     Storage::FileSystem::{
         DELETE, FILE_ATTRIBUTE_REPARSE_POINT, FILE_DELETE_CHILD, FILE_GENERIC_EXECUTE,
-        FILE_GENERIC_READ, FILE_GENERIC_WRITE, FILE_READ_ATTRIBUTES, FILE_TRAVERSE, SYNCHRONIZE,
+        FILE_GENERIC_READ, FILE_GENERIC_WRITE,
     },
 };
 
@@ -40,11 +40,6 @@ impl GrantedPaths {
             self.order.push(key);
         }
         Ok(())
-    }
-
-    fn grant_file(&mut self, path: &Path, sid: PSID, mask: u32, inherit: bool) -> HostResult<()> {
-        self.capture(path)?;
-        update_file_acl(path, sid, mask, true, inherit)
     }
 
     fn grant_tree(&mut self, path: &Path, sid: PSID, mask: u32) -> HostResult<()> {
@@ -125,27 +120,7 @@ pub(crate) fn grant_paths(
     for path in &allowed_roots {
         validate_reparse_tree(path, &allowed_roots)?;
     }
-    let mut ancestor_map = BTreeMap::<String, std::path::PathBuf>::new();
-    for path in &allowed_roots {
-        let mut current = path.parent();
-        while let Some(parent) = current {
-            let canonical =
-                fs::canonicalize(parent).map_err(|error| HostError::io(parent, error))?;
-            ancestor_map
-                .entry(canonical.to_string_lossy().to_lowercase())
-                .or_insert(canonical);
-            current = parent.parent();
-        }
-    }
     let mut granted = GrantedPaths::default();
-    for path in ancestor_map.values() {
-        granted.grant_file(
-            path,
-            sid,
-            FILE_TRAVERSE | FILE_READ_ATTRIBUTES | SYNCHRONIZE,
-            false,
-        )?;
-    }
     for (path, write) in paths.values() {
         let mask = FILE_GENERIC_READ
             | FILE_GENERIC_EXECUTE

@@ -17,6 +17,11 @@ unsafe extern "C" {
 
 pub fn peer(stream: &std::os::unix::net::UnixStream) -> HostResult<PeerIdentity> {
     use std::os::fd::AsRawFd;
+    let mut user_id = 0u32;
+    let mut group_id = 0u32;
+    if unsafe { libc::getpeereid(stream.as_raw_fd(), &mut user_id, &mut group_id) } != 0 {
+        return Err(HostError::Permission("peer_credentials".into()));
+    }
     let mut process_id = 0i32;
     let mut length = std::mem::size_of::<i32>() as libc::socklen_t;
     if unsafe {
@@ -36,6 +41,8 @@ pub fn peer(stream: &std::os::unix::net::UnixStream) -> HostResult<PeerIdentity>
     let command_line = command_line(process_id)?;
     Ok(PeerIdentity {
         process_id: process_id as u32,
+        user_id: Some(user_id),
+        group_id: Some(group_id),
         executable_path,
         command_line,
         ancestors: ancestors(process_id)?,

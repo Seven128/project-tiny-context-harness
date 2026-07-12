@@ -39,9 +39,14 @@ impl Service {
                 "cli_peer_identity",
             )
         };
-        if !same_path(Path::new(&peer.command_line[1]), expected_path)
-            || file_hash(expected_path)? != *expected_hash
-        {
+        let peer_entrypoint = Path::new(&peer.command_line[1]);
+        let configured_hash_matches = file_hash(expected_path)? == *expected_hash;
+        let peer_matches = if hook {
+            same_path(peer_entrypoint, expected_path)
+        } else {
+            file_hash(peer_entrypoint)? == *expected_hash
+        };
+        if !configured_hash_matches || !peer_matches {
             return Err(HostError::Permission(code.into()));
         }
         if hook {
@@ -116,7 +121,7 @@ impl Service {
         if event == "SessionStart" || event == "PostCompact" {
             return Ok(session_context(event, &active));
         }
-        self.run_worker(request)
+        self.run_worker(request, peer)
     }
 
     fn hook_origin_process_id(&self, peer: &PeerIdentity) -> u32 {

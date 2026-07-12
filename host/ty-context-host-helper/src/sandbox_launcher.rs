@@ -116,15 +116,14 @@ mod tests {
 
     #[test]
     fn rejects_a_launcher_reached_through_a_symlinked_parent() {
-        let canonical = ["/usr/bin/bwrap", "/bin/bwrap"]
-            .into_iter()
-            .map(PathBuf::from)
-            .find(|value| value.is_file())
-            .expect("bubblewrap is required by the Linux Host Gate");
         let root = std::env::temp_dir().join(format!("tyc-launcher-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir(&root).unwrap();
-        symlink(canonical.parent().unwrap(), root.join("bin")).unwrap();
-        let candidate = root.join("bin").join(canonical.file_name().unwrap());
+        let real = root.join("real");
+        std::fs::create_dir(&real).unwrap();
+        let canonical = real.join("bwrap");
+        std::fs::copy(std::env::current_exe().unwrap(), &canonical).unwrap();
+        symlink(&real, root.join("bin")).unwrap();
+        let candidate = root.join("bin").join("bwrap");
         let hash = hex::encode(Sha256::digest(std::fs::read(&canonical).unwrap()));
         let error = validate(candidate, hash).unwrap_err();
         assert!(matches!(error, HostError::Sandbox(code) if code == "launcher_path_noncanonical"));

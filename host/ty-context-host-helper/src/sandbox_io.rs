@@ -41,12 +41,8 @@ pub fn prepare(policy: &SandboxPolicy) -> HostResult<PreparedOutputs> {
     Ok(outputs)
 }
 
-pub fn publish(outputs: &mut PreparedOutputs, require_protocol: bool) -> HostResult<()> {
-    if let Some((path, file)) = &mut outputs.protocol {
-        let bytes = read_bounded(file, path, PROTOCOL_LIMIT)?;
-        if require_protocol && bytes.is_empty() {
-            return Err(HostError::Sandbox("oracle_protocol_missing".into()));
-        }
+pub fn publish(outputs: &mut PreparedOutputs, successful: bool) -> HostResult<()> {
+    if let Some(bytes) = protocol_bytes(outputs, successful)? {
         std::io::stdout()
             .write_all(&bytes)
             .map_err(|error| HostError::io("stdout", error))?;
@@ -58,6 +54,20 @@ pub fn publish(outputs: &mut PreparedOutputs, require_protocol: bool) -> HostRes
             .map_err(|error| HostError::io("stderr", error))?;
     }
     Ok(())
+}
+
+fn protocol_bytes(outputs: &mut PreparedOutputs, successful: bool) -> HostResult<Option<Vec<u8>>> {
+    if !successful {
+        return Ok(None);
+    }
+    let Some((path, file)) = &mut outputs.protocol else {
+        return Ok(None);
+    };
+    let bytes = read_bounded(file, path, PROTOCOL_LIMIT)?;
+    if bytes.is_empty() {
+        return Err(HostError::Sandbox("oracle_protocol_missing".into()));
+    }
+    Ok(Some(bytes))
 }
 
 #[cfg(unix)]
@@ -123,10 +133,36 @@ pub fn same_path(left: &Path, right: &Path) -> bool {
     {
         normalized_windows_path(left) == normalized_windows_path(right)
     }
-    #[cfg(not(windows))]
+    #[cfg(target_os = "macos")]
+    {
+        normalized_macos_path(left) == normalized_macos_path(right)
+    }
+    #[cfg(all(not(windows), not(target_os = "macos")))]
     {
         left == right
     }
+}
+
+pub fn path_variants(value: &Path) -> Vec<PathBuf> {
+    let mut variants = vec![value.to_path_buf()];
+    #[cfg(target_os = "macos")]
+    {
+        let value = value.to_string_lossy();
+        for root in ["/var", "/tmp", "/etc"] {
+            if value == root || value.starts_with(&format!("{root}/")) {
+                variants.push(PathBuf::from(format!("/private{value}")));
+                break;
+            }
+            let private_root = format!("/private{root}");
+            if value == private_root || value.starts_with(&format!("{private_root}/")) {
+                variants.push(PathBuf::from(value.trim_start_matches("/private")));
+                break;
+            }
+        }
+    }
+    variants.sort();
+    variants.dedup();
+    variants
 }
 
 fn create_output(path: &Path) -> HostResult<File> {
@@ -161,10 +197,97 @@ fn read_bounded(file: &mut File, path: &Path, limit: u64) -> HostResult<Vec<u8>>
 }
 #[cfg(windows)]
 fn normalized_windows_path(value: &Path) -> String {
-    value
+    windows_long_path(value)
+        .unwrap_or_else(|| value.to_path_buf())
         .to_string_lossy()
         .trim_start_matches(r"\\?\")
         .replace('/', "\\")
         .trim_end_matches('\\')
         .to_lowercase()
+}
+
+#[cfg(windows)]
+fn windows_long_path(value: &Path) -> Option<PathBuf> {
+    use std::{
+        ffi::OsString,
+        os::windows::ffi::{OsStrExt, OsStringExt},
+    };
+    use windows_sys::Win32::Storage::FileSystem::GetLongPathNameW;
+
+    let input = value
+        .as_os_str()
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect::<Vec<_>>();
+    let required = unsafe { GetLongPathNameW(input.as_ptr(), std::ptr::null_mut(), 0) };
+    if required == 0 {
+        return None;
+    }
+    let mut output = vec![0u16; required as usize + 1];
+    let written =
+        unsafe { GetLongPathNameW(input.as_ptr(), output.as_mut_ptr(), output.len() as u32) };
+    if written == 0 || written as usize >= output.len() {
+        return None;
+    }
+    Some(PathBuf::from(OsString::from_wide(
+        &output[..written as usize],
+    )))
+}
+
+#[cfg(target_os = "macos")]
+fn normalized_macos_path(value: &Path) -> String {
+    let value = value.to_string_lossy();
+    for system_root in ["/private/var", "/private/tmp", "/private/etc"] {
+        if value == system_root || value.starts_with(&format!("{system_root}/")) {
+            return value.trim_start_matches("/private").into();
+        }
+    }
+    value.into_owned()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn failed_sandbox_never_publishes_partial_oracle_protocol() {
+        let path = std::env::temp_dir().join(format!(
+            "ty-context-failed-protocol-{}",
+            uuid::Uuid::new_v4()
+        ));
+        let mut file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create_new(true)
+            .open(&path)
+            .unwrap();
+        file.write_all(br#"{"partial":true}"#).unwrap();
+        let mut outputs = PreparedOutputs {
+            protocol: Some((path.clone(), file)),
+            diagnostic: None,
+        };
+        assert!(protocol_bytes(&mut outputs, false).unwrap().is_none());
+        outputs.cleanup();
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_dos_temp_alias_matches_its_canonical_path() {
+        let temporary = std::env::temp_dir();
+        let canonical = fs::canonicalize(&temporary).unwrap();
+        assert!(same_path(&temporary, &canonical));
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn macos_private_system_aliases_are_equivalent_but_arbitrary_aliases_are_not() {
+        assert!(same_path(
+            Path::new("/var/folders/example"),
+            Path::new("/private/var/folders/example")
+        ));
+        assert!(!same_path(
+            Path::new("/tmp/project-alias"),
+            Path::new("/Users/example/project")
+        ));
+    }
 }

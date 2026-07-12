@@ -38,19 +38,19 @@ Fresh agent 先读这些文件，再开始改代码。
 
 ## 和传统 Tiny Context 流程的区别
 
-Minimal Context 继续负责长期事实和 Context 恢复；多组合长程任务 V2 只在用户显式调用时提供严格执行与完成门。它允许模型在实现中漂移，但不允许带漂移的交付通过。
+Minimal Context 继续负责长期事实和 Context 恢复；多组合长程任务 Contract V3 只在用户显式调用时提供严格执行与完成门。它允许模型在实现中漂移，但不允许带漂移的交付通过。
 
-工作流只有四个有明确防漂移价值的步骤：合同编译防止需求遗漏和不可验证合同；实现—验证循环尽早发现行为、范围和证据漂移；最终全量验证防止旧证据、局部证据和跨快照拼接；Codex Stop 完成门防止 final gate 未通过时在聊天中误报完成。模型怎样规划、拆分、使用 subagent、TDD 或 review 不属于工作流状态，也不能签发完成证明。
+工作流只有四个有明确防漂移价值的步骤：Managed Host 在 workspace 外封存第一份完整合同，防止遗漏或重绑；实现—验证循环尽早发现行为、范围和证据漂移；单一最终快照上的全量 spec、probe 与 counterfactual 重算防止旧证据、局部证据和跨快照拼接；managed-only Codex Stop 完成门重复同一 final orchestrator，防止聊天误报完成。模型怎样规划、拆分、使用 subagent、TDD 或 review 不属于工作流状态，也不能签发完成证明。
 
 ## 多组合长程任务准备
 
-只有原始需求、还需要 Scope Fit 和严格三输入编写时，显式调用 `/prepare-composite-long-task`，并通过 `ty-context composite-campaign` 管理干净的 V2 authoring campaign。`CompositeAuthoringPacketV2` 直接保存三份结构化 authority，并确定性投影：
+只有原始需求、还需要 Scope Fit 和严格三输入编写时，显式调用 `/prepare-composite-long-task`，并通过 `ty-context composite-campaign` 管理干净的 V3 authoring campaign。`CompositeAuthoringPacketV3` 直接保存三份结构化 authority，并确定性投影：
 
 - `product-architecture-source.yaml`
 - `technical-realization-plan.yaml`
 - `acceptance-checklist.yaml`
 
-preflight 必须通过完整覆盖和 oracle 可用性检查。handoff 只把三份 YAML 复制到干净 workdir 并编译，不创建 Goal、状态或 evidence；`start` 只绑定已经创建的 Goal；`record-result` 只镜像当前完整 `final-result.json`。V1 packet、Markdown authority、旧 workdir 和历史 runtime 不提供 importer、alias 或静默迁移。
+Scope Fit V3 只使用稳定 `SFC-###` 组件以及 `sfcs`、`sfc_id`、`selected_sfc_id`、CLI `--sfc`；旧 slice 字段/选项会被拒绝。preflight 必须通过完整 graph、binding、proof、counterfactual 覆盖和 Oracle bundle-ready 检查。handoff 只把三份 V3 YAML 复制并冻结到干净 workdir，不创建 Goal、不激活 Host 权威、不执行验证或创建 evidence；`start` 只绑定已经创建的 Goal，并通过 Host 封存第一份权威；`record-result` 只验证并镜像当前完整、已由 Host 提交的签名 `final-result.json`，绝不重跑 final gate。V1/V2 packet 与 authority、Observation V1、Markdown authority、旧 workdir 和历史 runtime 不提供 importer、alias 或静默迁移。
 
 ## 当前最佳实践
 
@@ -60,11 +60,21 @@ preflight 必须通过完整覆盖和 oracle 可用性检查。handoff 只把三
 流程契约 + project_context/** -> 实现 -> 验证 -> drift check
 ```
 
-普通长程验收规划显式调用 `/normal-long-task`；原始需求准备显式调用 `/prepare-composite-long-task`；只有三份 V2 YAML 已完整存在时才显式调用 `/composite-long-task-workflow`。
+普通长程验收规划显式调用 `/normal-long-task`；原始需求准备显式调用 `/prepare-composite-long-task`；只有三份 Contract V3 YAML 已完整存在时才显式调用 `/composite-long-task-workflow`。
 
-严格执行器先生成不可变 `compiled-contract.json`，然后由 agent 自由实现并根据主动 verifier 的 findings 循环修复。`verify` 只能执行合同冻结的 executable/argv/cwd，只采信 verifier 控制目录中新生成的 artifact，并生成 `current-status.json`。`final-gate` 在一个新隔离快照上运行全部 in-scope specs，重算所有 requirement、obligation 和 AC，生成 `final-result.json`；历史 run 不能拼接成完成。
+严格执行器让 Host 封存完整 Requirement → PI → Obligation → Binding → AC → Proof → Spec → Counterfactual 图，然后由 agent 自由实现并根据主动 verifier 的 findings 循环修复。`verify` 只执行受影响的冻结 spec；真实依赖和 Playwright 浏览器只来自只读内容寻址层。`final-gate` 在一个新隔离快照上运行全部 spec、可信 probe 与 obligation counterfactual，并由 Harness 自底向上重算所有实体，Host 再原子提交签名 `final-result.json`；历史 run 不能拼接成完成。
 
-`needs_work` 是内部循环状态，必须继续实现；只有 `accepted` 或有新鲜机器证据的 `externally_blocked` 可以结束。agent 不能提交自定义命令、artifact、evidence、assertion result 或 AC/PI complete。结束前 Stop Hook 会核对仓库内与 `.git` 中的 active binding，并重新执行一次完整 final gate；只有复验仍成立才放行并清理 binding。没有 active binding 时 Hook 完全 no-op，普通问答不受影响；Skill policy 禁止隐式调用。
+`needs_work` 是内部循环状态，必须继续实现；只有 `accepted` 或由当前可信 probe 建立的 `externally_blocked` 可以结束。agent 不能提交自定义命令、observation、artifact、blocker、assertion result 或实体完成状态。结束前 system managed Stop Hook 从 workspace 外 Host registry 读取权威合同并重复完整 final gate；repo/user/plugin Hook 永远不是 fallback。没有 active Host authority 时 Hook 完全 no-op，普通问答不受影响；Skill policy 禁止隐式调用。
+
+### 安装签名 Host Gate
+
+运行 Composite 前，管理员必须下载与当前 OS/架构匹配的 `0.4.0` Host release，并按 release packet 公布值核对 SHA-256。随后在管理员终端中解析当前安装包的绝对 CLI/Node 路径，提供真实 Codex 可执行文件的绝对路径（不能使用 PATH shim），执行：
+
+```text
+<absolute-node> <absolute-project-tiny-context-harness/dist/cli.js> host-gate install --release <absolute-host-release.tgz> --codex-launcher <absolute-codex-executable>
+```
+
+安装器在任何系统变更前验证固定 Ed25519 根、公钥、目标平台/架构、签名 manifest 和每个文件，再原子安装 managed policy/Hook/Helper 并启动系统服务。`host-gate uninstall` 必须同样在管理员终端执行，而且存在 active sealed registry 时会拒绝卸载。项目 CLI 不提供 registry close/reset/recovery/key-rotation；这些操作只允许使用独立安装的 `ty-context-host-admin`，并要求交互式 TTY、registry ID 两次确认，以及 `ty-context-host-installer-ui` 签发的一次性本机在场令牌。
 
 ## 适合谁
 
