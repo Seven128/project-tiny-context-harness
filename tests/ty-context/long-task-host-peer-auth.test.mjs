@@ -71,6 +71,7 @@ test("production Host authenticates the exact managed Hook process and rejects a
     assert.equal(afterManagedInvocation.heartbeat_fresh, true, "the exact pinned Codex launcher must establish a real managed heartbeat");
   } finally {
     if (service.exitCode === null) { service.kill(); await Promise.race([exited, new Promise((resolve) => setTimeout(resolve, 3000))]); }
+    await rm(layout.endpoint, { force: true });
     await rm(system, { recursive: true, force: true }); await rm(repository, { recursive: true, force: true });
   }
 });
@@ -78,7 +79,7 @@ test("production Host authenticates the exact managed Hook process and rejects a
 function runHook(script, input, launcher) { return new Promise((resolve, reject) => { const file = launcher?.[0] ?? process.execPath; const args = launcher ? [...launcher.slice(1), script] : [script]; const child = spawn(file, args, { stdio: ["pipe", "pipe", "pipe"], windowsHide: true }); const stdout = []; const stderr = []; child.stdout.on("data", (chunk) => stdout.push(chunk)); child.stderr.on("data", (chunk) => stderr.push(chunk)); child.once("error", reject); child.once("exit", (code) => { if (code !== 0) return reject(new Error(Buffer.concat(stderr).toString("utf8"))); try { resolve(JSON.parse(Buffer.concat(stdout).toString("utf8"))); } catch (error) { reject(error); } }); child.stdin.end(JSON.stringify(input)); }); }
 function run(file, args, cwd) { return new Promise((resolve, reject) => { const child = spawn(file, args, { cwd, stdio: "ignore", windowsHide: true }); child.once("error", reject); child.once("exit", (code) => code === 0 ? resolve() : reject(new Error(`exit ${code}`))); }); }
 function runJson(file, args, cwd) { return new Promise((resolve, reject) => { const child = spawn(file, args, { cwd, stdio: ["ignore", "pipe", "pipe"], windowsHide: true }); const stdout=[];const stderr=[];child.stdout.on("data",(chunk)=>stdout.push(chunk));child.stderr.on("data",(chunk)=>stderr.push(chunk));child.once("error",reject);child.once("exit",(code)=>{if(code!==0)return reject(new Error(Buffer.concat(stderr).toString("utf8")));try{resolve(JSON.parse(Buffer.concat(stdout).toString("utf8")));}catch(error){reject(error);}}); }); }
-async function waitForFile(file) { for (let i = 0; i < 200; i += 1) { try { await readFile(file); return; } catch {} await new Promise((resolve) => setTimeout(resolve, 25)); } throw new Error("Host did not become ready"); }
+async function waitForFile(file) { const deadline=Date.now()+30_000; while(Date.now()<deadline){try { await readFile(file); return; } catch {} await new Promise((resolve) => setTimeout(resolve, 25)); } throw new Error("Host did not become ready"); }
 function sha(value) { return createHash("sha256").update(value).digest("hex"); }
 function canonical(value) { return JSON.stringify(sort(value)); }
 function sort(value) { if (Array.isArray(value)) return value.map(sort); if (value && typeof value === "object") return Object.fromEntries(Object.keys(value).sort().map((key) => [key, sort(value[key])])); return value; }

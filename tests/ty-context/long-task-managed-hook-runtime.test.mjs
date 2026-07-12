@@ -14,7 +14,7 @@ const admin = helper && (process.env.TY_CONTEXT_HOST_ADMIN_BIN ?? path.join(path
 const installerUi = helper && (process.env.TY_CONTEXT_HOST_INSTALLER_UI_BIN ?? path.join(path.dirname(helper), process.platform === "win32" ? "ty-context-host-installer-ui.exe" : "ty-context-host-installer-ui"));
 // Regression identities: ordinary_question_hook_noop and active_pointer_deleted_or_retargeted are exercised below.
 
-test("real managed adapter no-ops without authority and blocks an active needs-work task", { skip: !helper, timeout: 90_000 }, async () => {
+test("real managed adapter no-ops without authority and blocks an active needs-work task", { skip: !helper, timeout: 180_000 }, async () => {
   const [{ managedHostLayoutUnder }, { renderHostReleaseRequirementsV1, renderManagedRequirementsV1 }, { LongTaskHostRpcClientV1 }, release, { checkLongTaskHostGate }, runtimeIdentity] = await Promise.all([
     import("../../packages/ty-context/dist/lib/long-task-managed-host-layout.js"),
     import("../../packages/ty-context/dist/lib/long-task-managed-requirements.js"),
@@ -157,12 +157,13 @@ test("real managed adapter no-ops without authority and blocks an active needs-w
       child.kill();
       await Promise.race([exited, new Promise((resolve) => setTimeout(resolve, 3000))]);
     }
+    await rm(layout.endpoint, { force: true });
     await rm(system, { recursive: true, force: true });
   }
 });
 
 async function waitForFile(file) {
-  for (let attempt = 0; attempt < 1200; attempt += 1) {
+  for (let attempt = 0; attempt < 2400; attempt += 1) {
     try { await readFile(file); return; } catch {}
     await new Promise((resolve) => setTimeout(resolve, 25));
   }

@@ -4,13 +4,16 @@ use std::{fs, path::Path, process::Command};
 pub fn run(policy: &SandboxPolicy, command: &[String], launcher: &Path) -> HostResult<()> {
     let profile_path =
         std::env::temp_dir().join(format!("ty-context-seatbelt-{}.sb", uuid::Uuid::new_v4()));
-    let profile = profile(policy);
+    let executable = fs::canonicalize(&policy.executable)
+        .map_err(|error| HostError::io(&policy.executable, error))?;
+    let profile = profile(policy, &executable);
     fs::write(&profile_path, profile).map_err(|error| HostError::io(&profile_path, error))?;
     let mut process = Command::new(launcher);
     process
         .arg("-f")
         .arg(&profile_path)
-        .args(command)
+        .arg(&executable)
+        .args(&command[1..])
         .current_dir(&policy.cwd);
     if let Some(value) = &policy.protocol_output {
         process.env("TY_CONTEXT_ORACLE_PROTOCOL_FILE", value);
@@ -35,7 +38,7 @@ pub fn run(policy: &SandboxPolicy, command: &[String], launcher: &Path) -> HostR
     }
 }
 
-fn profile(policy: &SandboxPolicy) -> String {
+fn profile(policy: &SandboxPolicy, executable: &Path) -> String {
     let mut profile = String::from(
         "(version 1)\n(deny default)\n(allow process-exec)\n(allow sysctl-read)\n(allow mach-lookup)\n",
     );
@@ -53,7 +56,7 @@ fn profile(policy: &SandboxPolicy) -> String {
             seatbelt(system)
         ));
     }
-    for executable in crate::sandbox_io::path_variants(&policy.executable) {
+    for executable in crate::sandbox_io::path_variants(executable) {
         profile.push_str(&format!(
             "(allow file-read* file-map-executable (literal {}))\n",
             seatbelt(&executable.to_string_lossy())
@@ -118,7 +121,8 @@ mod tests {
             allow_addons: false,
             process_limit: 1,
         };
-        let text = profile(&policy);
+        let executable = policy.executable.clone();
+        let text = profile(&policy, &executable);
         assert!(text.contains("file-map-executable (literal \"/sealed/node\")"));
         assert!(!text.contains("file-map-executable (subpath \"/sealed/read\")"));
     }
@@ -144,7 +148,8 @@ mod tests {
             allow_addons: false,
             process_limit: 1,
         };
-        let text = profile(&policy);
+        let executable = "/private/var/folders/example/read/node".into();
+        let text = profile(&policy, &executable);
         assert!(
             text.contains(
                 "file-map-executable (literal \"/private/var/folders/example/read/node\")"

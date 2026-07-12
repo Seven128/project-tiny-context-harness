@@ -1,4 +1,5 @@
 import path from "node:path";
+import os from "node:os";
 import { sha256Hex } from "./composite-campaign-codec.js";
 
 export interface ManagedHostLayoutV1 {
@@ -35,7 +36,8 @@ export function managedHostLayoutUnder(root: string, platform: NodeJS.Platform =
   if (platform === "win32") return layout(platform, path.join(base, "ProgramData", "OpenAI", "Codex", "requirements.toml"), path.join(base, "Program Files", "OpenAI", "Codex", "ManagedHooks", "ty-context"), path.join(base, "ProgramData", "OpenAI", "Codex", "ty-context-host"), `\\\\.\\pipe\\ty-context-host-gate-v1-test-${suffix}`, process.execPath);
   const managed = platform === "darwin" ? path.join(base, "Library", "Application Support", "OpenAI", "Codex", "ManagedHooks", "ty-context") : path.join(base, "opt", "openai", "codex", "managed-hooks", "ty-context");
   const state = platform === "darwin" ? path.join(base, "Library", "Application Support", "OpenAI", "Codex", "ty-context-host") : path.join(base, "var", "lib", "ty-context");
-  return layout(platform, path.join(base, "etc", "codex", "requirements.toml"), managed, state, path.join(base, "run", `ty-context-host-gate-${suffix}.sock`), process.execPath);
+  const endpoint = platform === "darwin" ? path.join(os.tmpdir(), `tyc-host-${suffix}.sock`) : path.join(base, "run", `ty-context-host-gate-${suffix}.sock`);
+  return layout(platform, path.join(base, "etc", "codex", "requirements.toml"), managed, state, endpoint, process.execPath);
 }
 
 function layout(platform: NodeJS.Platform, requirements: string, managed: string, state: string, endpoint: string, node: string): ManagedHostLayoutV1 {

@@ -1,10 +1,10 @@
-import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
+import { chmod, mkdir, readFile, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { FrozenVerificationSpecV3, CommandStepV3, DependencyPlanV3 } from "./long-task-contract-schema.js";
 import type { DependencyLayerHandleV3 } from "./long-task-dependency-layer.js";
 import { dependencyBinary, dependencyRuntimeAdapter } from "./long-task-dependency-layer.js";
-import { nodePermissionArgv as rawNodePermissionArgv, nodePermissionOptions as rawNodePermissionOptions, type NodePermissionProfileV3 } from "./long-task-sandbox-node.js";
+import { nodeModuleEntrypointArgv, nodePermissionArgv as rawNodePermissionArgv, nodePermissionOptions as rawNodePermissionOptions, type NodePermissionProfileV3 } from "./long-task-sandbox-node.js";
 import { canonicalJson, sha256Hex } from "./composite-campaign-codec.js";
 import { isSandboxAccessError } from "./long-task-sandbox-node.js";
 import { declaredLongTaskEnvironment } from "./long-task-environment.js";
@@ -17,12 +17,14 @@ export async function runLongTaskCommandSteps(spec:FrozenVerificationSpecV3,spec
   const results:CommandStepRunV3[]=[];
   for(const step of spec.command_steps){
     const descriptor=resolveStep(step,specRoot,plan,layer);
+    const managerBin=step.tool==="package_script"?await writePackageManagerShim(tempRoot,plan):null;
     const effectiveArgv=step.tool==="playwright_test"?[...descriptor.argv,"--output",path.join(artifactRoot,"playwright-output",step.id)]:descriptor.argv;
     for(const root of descriptor.adapter_write_roots)await mkdir(root,{recursive:true});
     const profile={read_paths:[specRoot,artifactRoot,tempRoot,...(layer?[layer.root]:[]),...(browserRoot?[browserRoot]:[]),...descriptor.identity_roots],write_paths:[artifactRoot,tempRoot,...descriptor.adapter_write_roots],allow_child_process:step.tool!=="node_script",allow_worker:step.tool==="project_binary"||step.tool==="playwright_test",allow_addons:step.tool!=="node_script"};
     const permission=nodePermissionArgv(profile);
-    const argv=descriptor.node?["--preserve-symlinks","--preserve-symlinks-main",...permission,descriptor.target,...effectiveArgv]:effectiveArgv;
-    const env=declaredLongTaskEnvironment({...baseEnvironment,NODE_OPTIONS:`--preserve-symlinks ${nodePermissionOptions(profile)}`},step.environment_refs,declaredEnvironment);
+    const argv=descriptor.node?["--preserve-symlinks","--preserve-symlinks-main",...permission,...nodeModuleEntrypointArgv(descriptor.target,effectiveArgv)]:effectiveArgv;
+    const commandEnvironment=managerBin?prependPath(baseEnvironment,managerBin):baseEnvironment;
+    const env=declaredLongTaskEnvironment({...commandEnvironment,NODE_OPTIONS:`--preserve-symlinks ${nodePermissionOptions(profile)}`},step.environment_refs,declaredEnvironment);
     const output=path.join(commandRoot,"steps",step.id);
     await mkdir(output,{recursive:true});
     const started_at=new Date().toISOString();
@@ -52,7 +54,7 @@ async function executePlaywright(executable:string,argv:string[],cwd:string,env:
   const config={schema_version:"long-task-playwright-supervisor-v1",timeout_ms:timeout,browser:{executable:browserExecutable,argv:browserArgs,cwd:path.dirname(browserExecutable),profile:browserProfile},bridge:{entry:bridge,core_bundle:coreBundle,root:bridgeRoot,ready,done},test:{executable,argv, cwd,worker_adapter:workerAdapter}};
   const configBytes=Buffer.from(canonicalJson(config));await writeFile(configPath,configBytes,{flag:"wx"});
   const supervisorProfile={read_paths:[...profile.read_paths,browserRoot,layer.root,supervisor,bridge,coreBundle,workerAdapter],write_paths:[...profile.write_paths,hostRoot],allow_child_process:true,allow_worker:true,allow_addons:true};
-  const supervisorArgv=["--preserve-symlinks","--preserve-symlinks-main",...nodePermissionArgv(supervisorProfile),supervisor,configPath];
+  const supervisorArgv=["--preserve-symlinks","--preserve-symlinks-main",...nodePermissionArgv(supervisorProfile),...nodeModuleEntrypointArgv(supervisor,[configPath])];
   return execute(process.execPath,supervisorArgv,path.dirname(supervisor),{...env,TY_CONTEXT_PLAYWRIGHT_SUPERVISOR_CONFIG_SHA256:sha256Hex(configBytes)},timeout,redactor,supervisorProfile,{...sandbox,control_root:hostRoot,network:"loopback",process_kind:"command",node_preload:dependencyRuntimeAdapter(layer),preserve_symlinks_main:true});
 }
 async function browserExecutablePath(browserRoot:string):Promise<string>{const manifest=JSON.parse(await readFile(path.join(path.dirname(browserRoot),"layer-manifest.json"),"utf8")) as {schema_version?:unknown;executables?:Array<{path?:unknown}>};if(manifest.schema_version!=="long-task-browser-layer-v3"||!Array.isArray(manifest.executables))throw new Error("playwright_browser_unsealed:manifest_invalid");const paths=manifest.executables.flatMap((item)=>typeof item.path==="string"?[item.path.replace(/\\/gu,"/")]:[]);const relative=paths.find((value)=>/(^|\/)chrome-headless-shell(?:\.exe)?$/iu.test(value))??paths.find((value)=>/(^|\/)chrome(?:\.exe)?$/iu.test(value));if(!relative||path.isAbsolute(relative)||relative.split("/").includes(".."))throw new Error("playwright_browser_unsealed:executable_missing");const executable=await realpath(path.join(browserRoot,...relative.split("/")));const root=normalized(browserRoot);const candidate=normalized(executable);if(candidate!==root&&!candidate.startsWith(`${root}${path.sep}`))throw new Error("playwright_browser_unsealed:executable_escape");return executable;}
@@ -63,3 +65,7 @@ function workspaceProbeFiles(root:string):string[]{const values=[];let current=p
 function nodePermissionArgv(profile:NodePermissionProfileV3):string[]{return rawNodePermissionArgv(commandPermissionProfile(profile));}
 function nodePermissionOptions(profile:NodePermissionProfileV3):string{return rawNodePermissionOptions(commandPermissionProfile(profile));}
 function commandPermissionProfile(profile:NodePermissionProfileV3):NodePermissionProfileV3{return {...profile,read_paths:[...profile.read_paths,...profile.write_paths]};}
+async function writePackageManagerShim(tempRoot:string,plan:DependencyPlanV3):Promise<string>{const manager=plan.manager;if(!manager)throw new Error("dependency_manager_unavailable:none");const root=path.join(tempRoot,"manager-bin");await mkdir(root,{recursive:true});if(process.platform==="win32"){const target=path.join(root,`${manager.name}.cmd`);const command=[manager.invocation_executable,...manager.invocation_prefix].map(cmdQuote).join(" ");await writeFile(target,`@echo off\r\n${command} %*\r\n`);return root;}const target=path.join(root,manager.name);const command=[manager.invocation_executable,...manager.invocation_prefix].map(shellQuote).join(" ");await writeFile(target,`#!/bin/sh\nexec ${command} "$@"\n`);await chmod(target,0o555);return root;}
+function prependPath(environment:NodeJS.ProcessEnv,directory:string):NodeJS.ProcessEnv{const current=environment.PATH??environment.Path??"";const value=current?`${directory}${path.delimiter}${current}`:directory;return {...environment,PATH:value,Path:value};}
+function shellQuote(value:string):string{return `'${value.replaceAll("'","'\"'\"'")}'`;}
+function cmdQuote(value:string):string{return `"${value.replaceAll("%","%%").replaceAll('"','""')}"`;}

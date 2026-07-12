@@ -5,6 +5,7 @@ import { access, copyFile, mkdir, mkdtemp, readFile, symlink, writeFile } from "
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
+import { nodeModuleEntrypointArgv } from "../../packages/ty-context/dist/lib/long-task-sandbox-node.js";
 
 const helper = process.env.TY_CONTEXT_HOST_HELPER_BIN;
 
@@ -70,7 +71,7 @@ process.stdout.write(JSON.stringify(result));
     assert.equal(await canConnect(lanAddress, lan.address().port), true, "control connection must prove the LAN listener is reachable outside the sandbox");
     const policyFile = path.join(root, "policy.json");
     await writeFile(policyFile, canonical({ schema_version: "ty-context-host-sandbox-v1", process_kind: "command", executable: sandboxNode, cwd: readable, read_paths: [readable], write_paths: [writable], timeout_ms: 15_000, network: "loopback", allow_child_process: false, process_limit: 1 }));
-    const result = await run(helper, ["sandbox", "--policy", policyFile, "--", sandboxNode, script, String(loopback.address().port), lanAddress, String(lan.address().port)]);
+    const result = await run(helper, ["sandbox", "--policy", policyFile, "--", sandboxNode, ...nodeModuleEntrypointArgv(script, [String(loopback.address().port), lanAddress, String(lan.address().port)])]);
     assert.equal(result.code, 0, result.stderr);
     assert.deepEqual(JSON.parse(result.stdout), { loopback: true, lan: false, external: false });
   } finally { loopback.close(); lan.close(); }
@@ -127,9 +128,9 @@ await writeFile(output,JSON.stringify({insideRead,outsideRead,outsideWrite,netwo
   const policy = { schema_version: "ty-context-host-sandbox-v1", executable: sandboxNode, cwd: readable, read_paths: [readable], write_paths: [writable], timeout_ms: 15_000, network: "none", allow_child_process: false };
   await writeFile(policyFile, canonical(policy));
   const argv = [
-    "sandbox", "--policy", policyFile, "--", sandboxNode, "--preserve-symlinks-main", "--permission",
+    "sandbox", "--policy", policyFile, "--", sandboxNode, "--preserve-symlinks", "--preserve-symlinks-main", "--permission",
     `--allow-fs-read=${readable}`, `--allow-fs-read=${outside}`, `--allow-fs-write=${writable}`, `--allow-fs-write=${outside}`,
-    script, path.join(readable, "input.txt"), path.join(outside, "secret.txt"), output, escaped, String(port)
+    ...nodeModuleEntrypointArgv(script, [path.join(readable, "input.txt"), path.join(outside, "secret.txt"), output, escaped, String(port)])
   ];
   try {
     const result = await run(helper, argv);
@@ -155,7 +156,7 @@ writeFileSync(process.env.TY_CONTEXT_ORACLE_DIAGNOSTIC_FILE,"oracle-diagnostic")
   const policyFile = path.join(root, "policy.json");
   const policy = { schema_version: "ty-context-host-sandbox-v1", executable: sandboxNode, cwd: readable, read_paths: [readable], write_paths: [writable], protocol_output: protocolOutput, diagnostic_output: diagnosticOutput, timeout_ms: 15_000, network: "none", allow_child_process: false };
   await writeFile(policyFile, canonical(policy));
-  const result = await run(helper, ["sandbox", "--policy", policyFile, "--", sandboxNode, "--preserve-symlinks-main", "--permission", `--allow-fs-read=${readable}`, `--allow-fs-write=${writable}`, script]);
+  const result = await run(helper, ["sandbox", "--policy", policyFile, "--", sandboxNode, "--preserve-symlinks", "--preserve-symlinks-main", "--permission", `--allow-fs-read=${readable}`, `--allow-fs-write=${writable}`, ...nodeModuleEntrypointArgv(script)]);
   assert.equal(result.code, 0, result.stderr);
   assert.deepEqual(JSON.parse(result.stdout), { schema_version: "ty-context-observation-v2", ok: true });
   assert.equal(result.stderr, "oracle-diagnostic");
@@ -188,7 +189,7 @@ process.stdout.write(JSON.stringify({insideWrite,outsideWrite,network,child}));
   const policy = { schema_version: "ty-context-host-sandbox-v1", process_kind: "command", executable: sandboxNode, cwd: readable, read_paths: [readable], write_paths: [writable], timeout_ms: 15_000, network: "none", allow_child_process: true, process_limit: 8 };
   await writeFile(policyFile, canonical(policy));
   try {
-    const result = await run(helper, ["sandbox", "--policy", policyFile, "--", sandboxNode, "--preserve-symlinks-main", script, allowed, escaped, String(server.address().port)]);
+    const result = await run(helper, ["sandbox", "--policy", policyFile, "--", sandboxNode, "--preserve-symlinks-main", ...nodeModuleEntrypointArgv(script, [allowed, escaped, String(server.address().port)])]);
     assert.equal(result.code, 0, result.stderr);
     assert.deepEqual(JSON.parse(result.stdout), { insideWrite: true, outsideWrite: false, network: false, child: true }, result.stderr);
     assert.equal(await readFile(allowed, "utf8"), "ok");

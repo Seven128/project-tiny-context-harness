@@ -55,6 +55,7 @@ test("macOS LaunchDaemon is root-owned, direct-exec, restartable, and uses fixed
   const root = await mkdtemp(path.join(os.tmpdir(), "ltw-managed-macos-daemon-"));
   const module = await api();
   const layout = module.managedHostLayoutUnder(root, "darwin");
+  assert.ok(Buffer.byteLength(layout.endpoint) < 104, `macOS test socket path is too long: ${layout.endpoint}`);
   const plist = module.renderMacLaunchDaemonV1(layout);
   assert.match(plist, /<key>Label<\/key><string>com\.openai\.codex\.ty-context-host-gate<\/string>/u);
   assert.match(plist, /<key>UserName<\/key><string>root<\/string>/u);
