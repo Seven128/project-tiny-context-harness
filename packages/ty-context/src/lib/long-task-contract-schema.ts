@@ -80,6 +80,14 @@ export interface ProofRequirementV3 { id: string; proof_surface: ProofSurface; o
 export interface AcceptanceCriterionV3 { id: string; title: string; obligation_refs: string[]; validates: string[]; does_not_validate: string[]; proof_requirement_refs: string[]; verification_spec_ids: string[] }
 export interface CounterexampleFixtureV3 { id: string; path: string; purpose: string; non_secret: boolean }
 export interface EnvironmentProbeV3 { id: string; kind: "host_capability" | "secret_ref" | "permission" | "network_endpoint" | "command_step"; adapter: "cli_auth" | "credential_store" | "filesystem_permission" | "tcp_endpoint" | "http_endpoint" | "frozen_command_step"; target: string; timeout_ms: number; expected: { exit_codes: number[]; error_codes: string[] }; artifact_globs: string[]; environment_refs: string[] }
+export type EnvironmentProbeDescriptorV3 =
+  | { adapter:"cli_auth"; executable_path:string; executable_sha256:string; argv:string[] }
+  | { adapter:"credential_store"; provider:"windows-credential-manager"|"macos-keychain"|"secret-service"; secret_ref:string }
+  | { adapter:"filesystem_permission"; access:"read"|"write"; path:string }
+  | { adapter:"tcp_endpoint"; host:string; port:number }
+  | { adapter:"http_endpoint"; url:string }
+  | { adapter:"frozen_command_step"; command_steps:Array<{spec_id:string;command_step_id:string;command_step_sha256:string}> };
+export interface FrozenEnvironmentProbeV3 extends EnvironmentProbeV3 { normalized_sha256:string; descriptor:EnvironmentProbeDescriptorV3 }
 export interface AcceptanceChecklistV3 { schema_version: "acceptance-checklist-v3"; counterexample_fixtures: CounterexampleFixtureV3[]; proof_requirements: ProofRequirementV3[]; acceptance_criteria: AcceptanceCriterionV3[]; verification_specs: VerificationSpecV3[]; environment_probes: EnvironmentProbeV3[] }
 export interface LongTaskSourceBundleV3 { product: ProductSourceV3; plan: TechnicalPlanV3; checklist: AcceptanceChecklistV3; source_paths: { product: string; plan: string; checklist: string } }
 
@@ -91,6 +99,7 @@ export interface FrozenVerificationSpecV3 extends Omit<VerificationSpecV3, "posi
   positive_assertions: FrozenPositiveAssertionV3[];
   negative_assertions: FrozenNegativeAssertionV3[];
   environment_requirements: FrozenEnvironmentRequirementV3[];
+  probe_only_command_step_ids: string[];
   normalized_sha256: string;
   executable_path: string;
   executable_sha256: string;
@@ -167,7 +176,7 @@ export interface CompiledContractV3 {
   dependency_plan: DependencyPlanV3;
   counterfactual_controls: CounterfactualControlV3[];
   counterexample_fixtures: CounterexampleFixtureV3[];
-  environment_probes: EnvironmentProbeV3[];
+  environment_probes: FrozenEnvironmentProbeV3[];
   graphs: CompiledContractGraphsV3;
   verifier_identity: VerifierTrustInput;
 }

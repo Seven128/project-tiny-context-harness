@@ -149,8 +149,8 @@
         "kind": { "enum": ["host_capability", "secret_ref", "permission", "network_endpoint", "command_step"] },
         "adapter": { "enum": ["cli_auth", "credential_store", "filesystem_permission", "tcp_endpoint", "http_endpoint", "frozen_command_step"] },
         "target": { "$ref": "#/$defs/token" },
-        "timeout_ms": { "type": "integer", "minimum": 100, "maximum": 3600000 },
-        "expected": { "type": "object", "additionalProperties": false, "required": ["exit_codes", "error_codes"], "properties": { "exit_codes": { "type": "array", "maxItems": 256, "uniqueItems": true, "items": { "type": "integer", "minimum": -2147483648, "maximum": 2147483647 } }, "error_codes": { "$ref": "#/$defs/tokenArray" } } },
+        "timeout_ms": { "type": "integer", "minimum": 1000, "maximum": 120000 },
+        "expected": { "type": "object", "additionalProperties": false, "required": ["exit_codes", "error_codes"], "properties": { "exit_codes": { "type": "array", "minItems": 1, "maxItems": 256, "uniqueItems": true, "items": { "type": "integer", "minimum": 0, "maximum": 255 } }, "error_codes": { "$ref": "#/$defs/tokenArray" } } },
         "artifact_globs": { "type": "array", "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/safePath" } },
         "environment_refs": { "$ref": "#/$defs/tokenArray" }
       },

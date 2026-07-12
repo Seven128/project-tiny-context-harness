@@ -12,6 +12,8 @@ import { prepareLongTaskExecutionResources } from "./long-task-execution-resourc
 import { readAuthoritativeLongTaskContract } from "./long-task-host-client.js";
 import type { LongTaskHostRegistryServiceV1 } from "./long-task-host-service.js";
 import type { OracleSandboxLaunchOptionsV3 } from "./long-task-oracle-runner.js";
+import { canonicalJson, sha256Hex } from "./composite-campaign-codec.js";
+import { runLongTaskEnvironmentProbes } from "./long-task-environment-probe.js";
 
 export interface LongTaskFinalGateOptionsV3 { contract?:Awaited<ReturnType<typeof readAuthoritativeLongTaskContract>>["contract"];host_service?:LongTaskHostRegistryServiceV1;oracle_sandbox?:OracleSandboxLaunchOptionsV3 }
 export async function runLongTaskFinalGate(workdir:string,options:LongTaskFinalGateOptionsV3={}):Promise<FinalResultV2>{
@@ -21,20 +23,21 @@ export async function runLongTaskFinalGate(workdir:string,options:LongTaskFinalG
   try{
     const resources=await prepareLongTaskExecutionResources(contract,snapshot.root,contract.verification_specs,runId,before);
     const run=await verifyLongTask(workdir,contract.verification_specs.map((spec)=>spec.id),{contract,snapshot,run_id:runId,resources,host_service:options.host_service,oracle_sandbox:options.oracle_sandbox});
+    const probes=await runLongTaskEnvironmentProbes({contract,source_root:snapshot.root,workdir,run_root:path.join(workdir,"runs",run.run_id),run_id:run.run_id,snapshot_sha256:run.snapshot.snapshot_sha256,environment_manifest_sha256:sha256Hex(canonicalJson(run.environment)),resources,oracle_sandbox:options.oracle_sandbox});
     const binding= evaluateLongTaskBindings(contract,snapshot.manifest,run,workdir);
     const counterfactual=await runLongTaskCounterfactuals(contract,snapshot.root,workdir,run,resources,options.oracle_sandbox);
-    const after=await hashLongTaskWorkspace(contract.repository_root,contract);const blocker=classifyExternalBlocker(run,contract);const findings:LongTaskFindingV2[]=[...run.findings,...blocker.findings,...binding.findings,...counterfactual.findings];
+    const after=await hashLongTaskWorkspace(contract.repository_root,contract);const blocker=classifyExternalBlocker(run,contract,probes,[...binding.findings,...counterfactual.findings]);const findings:LongTaskFindingV2[]=[...run.findings,...blocker.findings,...binding.findings,...counterfactual.findings];
     if(invocationHash!==before)findings.push(workspaceFinding(workdir,run.run_id,invocationHash,before));
     if((before!==after||after!==run.snapshot.snapshot_sha256)&&!findings.some((item)=>/worktree_changed|workspace_changed/u.test(item.category)))findings.push(workspaceFinding(workdir,run.run_id,run.snapshot.snapshot_sha256,after));
     const globalCodes=findings.filter((item)=>!item.requirement_id&&!item.obligation_id&&!item.ac_id&&!item.verification_spec_id).map((item)=>item.category);
-    const projection=projectLongTaskEntities(contract,run,binding.binding_results,counterfactual.counterfactual_results,globalCodes);
-    const everyEntityPassed=[projection.requirement_results,projection.plan_item_results,projection.obligation_results,projection.acceptance_results,projection.proof_requirement_results].every(allPassed)&&Object.values(projection.binding_results).every((item)=>item.status==="passed")&&Object.values(projection.counterfactual_results).every((item)=>item.status==="passed")&&run.spec_results.every((item)=>item.status==="passed");
-    const accepted=findings.length===0&&everyEntityPassed;const externallyBlocked=blocker.externally_blocked&&findings.length===0&&!accepted;
+    const projectedRun={...run,spec_results:run.spec_results.map((item)=>blocker.blocked_spec_ids.includes(item.spec_id)&&item.status==="passed"?{...item,status:"blocked" as const}:blocker.failed_spec_ids.includes(item.spec_id)&&item.status==="passed"?{...item,status:"failed" as const}:item)};const projection=projectLongTaskEntities(contract,projectedRun,binding.binding_results,counterfactual.counterfactual_results,globalCodes);
+    const everyEntityPassed=[projection.requirement_results,projection.plan_item_results,projection.obligation_results,projection.acceptance_results,projection.proof_requirement_results].every(allPassed)&&Object.values(projection.binding_results).every((item)=>item.status==="passed")&&Object.values(projection.counterfactual_results).every((item)=>item.status==="passed")&&projectedRun.spec_results.every((item)=>item.status==="passed");
+    const accepted=findings.length===0&&everyEntityPassed&&!blocker.externally_blocked;const externallyBlocked=blocker.externally_blocked&&findings.length===0&&!accepted;
     const result:FinalResultV2={
       schema_version:"long-task-final-result-v2",workflow_status:accepted?"accepted":externallyBlocked?"externally_blocked":"needs_work",contract_sha256:contract.contract_sha256,run_id:run.run_id,final_snapshot_sha256:run.snapshot.snapshot_sha256,
       source_hashes:Object.fromEntries(Object.entries(contract.sources).map(([key,value])=>[key,value.sha256])),context_hashes:contract.context_snapshot.sha256,oracle_hashes:Object.fromEntries(contract.oracle_bundles.map((bundle)=>[bundle.spec_id,bundle.bundle_sha256])),verifier_identity:contract.verifier_identity,
-      dependency_layer_keys:run.environment.dependency_layer_keys??[],browser_layer_keys:run.environment.browser_layer_keys??[],...projection,spec_results:Object.fromEntries(run.spec_results.map((value)=>[value.spec_id,value.status])),workspace_hash_before:before,workspace_hash_after:after,findings,
-      ...(externallyBlocked?{external_blocker:{minimal_user_action:blocker.minimal_user_action??"Complete the required external action"}}:{}),started_at:run.started_at,completed_at:new Date().toISOString(),atomic_write_complete:true
+      dependency_layer_keys:run.environment.dependency_layer_keys??[],browser_layer_keys:run.environment.browser_layer_keys??[],environment_probe_results:probes.results,...projection,spec_results:Object.fromEntries(projectedRun.spec_results.map((value)=>[value.spec_id,value.status])),workspace_hash_before:before,workspace_hash_after:after,findings,
+      ...(externallyBlocked?{external_blocker:{environment_requirement_ids:blocker.environment_requirement_ids,reason_codes:blocker.reason_codes,probe_result_ids:blocker.probe_result_ids,minimal_user_action:blocker.minimal_user_action??"Complete the required external action"}}:{}),started_at:run.started_at,completed_at:new Date().toISOString(),atomic_write_complete:true
     };
     await atomic(path.join(workdir,"final-result.json"),result);return result;
   }finally{await snapshot.dispose();}

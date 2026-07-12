@@ -29,8 +29,9 @@ export function validateLongTaskCoverage(bundle: LongTaskSourceBundleV3): Covera
   const specs = map(bundle.checklist.verification_specs, "verification_spec", errors);
   const fixtures = map(bundle.checklist.counterexample_fixtures, "counterexample_fixture", errors);
   const probes = map(bundle.checklist.environment_probes, "environment_probe", errors);
+  const environmentRequirements = map([...specs.values()].flatMap((spec) => spec.environment_requirements), "environment_requirement", errors);
   const assertions = map([...specs.values()].flatMap((spec) => [...spec.positive_assertions, ...spec.negative_assertions]), "assertion", errors);
-  validateGlobalIds([surfaces, requirements, boundaries, outcomes, exclusions, planItems, obligations, bindings, shortcuts, controls, criteria, proofs, specs, fixtures, probes, assertions], errors);
+  validateGlobalIds([surfaces, requirements, boundaries, outcomes, exclusions, planItems, obligations, bindings, shortcuts, controls, criteria, proofs, specs, fixtures, probes, environmentRequirements, assertions], errors);
 
   if (requirements.size === 0) errors.push("empty_product_requirements");
   if (surfaces.size === 0) errors.push("empty_owner_surfaces");
@@ -54,11 +55,45 @@ export function validateLongTaskCoverage(bundle: LongTaskSourceBundleV3): Covera
   for (const proof of proofs.values()) validateProof(proof, obligations, surfaces, specs, bindings, errors);
   for (const spec of specs.values()) validateSpec(spec, requirements, planItems, obligations, bindings, criteria, proofs, boundaries, outcomes, shortcuts, assertions, errors);
   for (const control of controls.values()) validateControl(control, obligations, bindings, fixtures, assertions, specs, errors);
+  validateEnvironmentProbes(specs,probes,errors);
   validateClaimCompleteness(planItems,bindings,criteria,proofs,specs,errors);
   validateNegativeCoverage(bundle, boundaries, outcomes, shortcuts, obligations, specs, errors);
   validatePaths(bundle, bindings, specs, errors);
   return { passed: errors.length === 0, errors: [...new Set(errors)].sort(), warnings };
 }
+
+function validateEnvironmentProbes(specs:Map<string,VerificationSpecV3>,probes:Map<string,LongTaskSourceBundleV3["checklist"]["environment_probes"][number]>,errors:string[]):void{
+  const referenced=new Set<string>();
+  const compatible:Record<string,string>={cli_auth:"host_capability",credential_store:"secret_ref",filesystem_permission:"permission",tcp_endpoint:"network_endpoint",http_endpoint:"network_endpoint",frozen_command_step:"command_step"};
+  for(const spec of specs.values())for(const requirement of spec.environment_requirements){
+    const ids=[requirement.probe_spec_id,...requirement.local_alternative_probe_ids];
+    if(new Set(requirement.local_alternative_probe_ids).size!==requirement.local_alternative_probe_ids.length||requirement.local_alternative_probe_ids.includes(requirement.probe_spec_id))errors.push(`environment_probe_alternatives_invalid:${requirement.id}`);
+    if(!requirement.minimal_user_action.trim()||requirement.minimal_user_action.length>1000||rawCredential(requirement.minimal_user_action))errors.push(`environment_minimal_user_action_invalid:${requirement.id}`);
+    let budget=requirement.reason_code==="external_service_persistently_unavailable"?20_000:0;
+    for(const id of ids){referenced.add(id);const probe=probes.get(id);if(!probe){errors.push(`environment_probe_unknown:${requirement.id}:${id}`);continue;}budget+=probe.timeout_ms*(id===requirement.probe_spec_id&&requirement.reason_code==="external_service_persistently_unavailable"?1:1);validateProbe(probe,spec,compatible,errors);}
+    if(requirement.reason_code==="external_service_persistently_unavailable"){const primary=probes.get(requirement.probe_spec_id);budget+=(primary?.timeout_ms??0)*2;}
+    if(budget>300_000)errors.push(`environment_probe_budget_exceeded:${requirement.id}`);
+  }
+  for(const probe of probes.values())if(!referenced.has(probe.id))errors.push(`environment_probe_unreferenced:${probe.id}`);
+}
+
+function validateProbe(probe:LongTaskSourceBundleV3["checklist"]["environment_probes"][number],spec:VerificationSpecV3,compatible:Record<string,string>,errors:string[]):void{
+  if(compatible[probe.adapter]!==probe.kind)errors.push(`environment_probe_adapter_kind_mismatch:${probe.id}`);
+  if(rawCredential(probe.target))errors.push(`environment_probe_target_invalid:${probe.id}`);
+  if(!Number.isInteger(probe.timeout_ms)||probe.timeout_ms<1000||probe.timeout_ms>120_000)errors.push(`environment_probe_timeout_invalid:${probe.id}`);
+  if(probe.expected.exit_codes.length===0||new Set(probe.expected.exit_codes).size!==probe.expected.exit_codes.length||probe.expected.exit_codes.some((value)=>!Number.isInteger(value)||value<0||value>255))errors.push(`environment_probe_exit_codes_invalid:${probe.id}`);
+  if(new Set(probe.expected.error_codes).size!==probe.expected.error_codes.length||probe.expected.error_codes.some((value)=>!/^[A-Za-z][A-Za-z0-9_.-]{0,127}$/u.test(value)))errors.push(`environment_probe_error_codes_invalid:${probe.id}`);
+  if(new Set(probe.environment_refs).size!==probe.environment_refs.length||probe.environment_refs.some((value)=>!/^[A-Z][A-Z0-9_]{0,127}$/u.test(value)||isReservedLongTaskEnvironmentRef(value)))errors.push(`environment_probe_environment_refs_invalid:${probe.id}`);
+  for(const glob of probe.artifact_globs)try{assertSafeContractPath(glob,`environment_probe_artifact:${probe.id}`);}catch{errors.push(`environment_probe_artifact_glob_invalid:${probe.id}`);}
+  if(probe.adapter==="cli_auth"&&probe.target!=="gh")errors.push(`environment_probe_target_invalid:${probe.id}`);
+  if(probe.adapter==="credential_store"&&(!/^[A-Z][A-Z0-9_]{0,127}$/u.test(probe.target)||!probe.environment_refs.includes(probe.target)))errors.push(`environment_probe_target_invalid:${probe.id}`);
+  if(probe.adapter==="filesystem_permission"&&!/^(?:read|write):.+/u.test(probe.target))errors.push(`environment_probe_target_invalid:${probe.id}`);
+  if(probe.adapter==="tcp_endpoint")try{const value=new URL(`tcp://${probe.target}`);if(!value.hostname||!value.port||value.username||value.password||!["","/"].includes(value.pathname))throw new Error();}catch{errors.push(`environment_probe_target_invalid:${probe.id}`);}
+  if(probe.adapter==="http_endpoint")try{const value=new URL(probe.target);if(!["http:","https:"].includes(value.protocol)||!value.hostname||value.username||value.password||value.hash)throw new Error();}catch{errors.push(`environment_probe_target_invalid:${probe.id}`);}
+  if(probe.adapter==="frozen_command_step"&&!spec.command_steps.some((step)=>step.id===probe.target))errors.push(`environment_probe_command_missing:${probe.id}:${spec.id}`);
+}
+
+function rawCredential(value:string):boolean{return /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|\b(?:api[_-]?key|access[_-]?token|secret|password)\s*[:=]\s*["']?[A-Za-z0-9_./+=-]{12,}/iu.test(value);}
 
 function validateRequirement(requirement: LongTaskSourceBundleV3["product"]["requirements"][number], bundle: LongTaskSourceBundleV3, surfaces: Map<string, LongTaskSourceBundleV3["product"]["owner_surfaces"][number]>, obligations: Map<string, LongTaskObligationV3>, criteria: Map<string, AcceptanceCriterionV3>, proofs: Map<string, ProofRequirementV3>, specs: Map<string, VerificationSpecV3>, errors: string[]): void {
   if (requirement.owner_surface_refs.length === 0) errors.push(`requirement_without_owner_surface:${requirement.id}`);

@@ -9,6 +9,7 @@ import { COMPOSITE_V3_SCHEMA_SET_SHA256 } from "./long-task-contract-schema-regi
 import type { CompiledContractGraphsV3, CompiledContractV3, FrozenVerificationSpecV3, LongTaskSourceBundleV3, VerificationClaimsV3, VerifierTrustInput } from "./long-task-contract-schema.js";
 import { assertOracleBundleClosureFresh, buildLongTaskOracleBundle } from "./long-task-oracle-bundler.js";
 import { compileDependencyPlan } from "./long-task-dependency-key.js";
+import { freezeLongTaskEnvironmentProbes } from "./long-task-environment-probe-descriptor.js";
 
 export async function compileLongTaskContract(workdir: string, repositoryRoot = process.cwd(), options: { write?: boolean } = {}): Promise<CompiledContractV3> {
   const root = await realpath(path.resolve(repositoryRoot));
@@ -24,9 +25,11 @@ export async function compileLongTaskContract(workdir: string, repositoryRoot = 
   await validateContextReferences(bundle, root, new Set(Object.keys(contextHashes)));
   const verifier_identity = await verifierIdentity(root);
   const dependency_plan=await compileDependencyPlan(root,bundle.checklist.verification_specs);
+  const environment_probes=await freezeLongTaskEnvironmentProbes(root,bundle);
   const verification_specs: FrozenVerificationSpecV3[] = [];
   const oracle_bundles: CompiledContractV3["oracle_bundles"] = [];
   for (const spec of bundle.checklist.verification_specs) {
+    const probeOnly=probeOnlyCommandSteps(spec,bundle);
     const executable_path = process.execPath;
     const built=await buildLongTaskOracleBundle(root,spec);oracle_bundles.push(built.identity);
     const repositoryDependencies=built.identity.input_dependencies.filter((item)=>item.source_kind==="repository");
@@ -37,13 +40,14 @@ export async function compileLongTaskContract(workdir: string, repositoryRoot = 
       positive_assertions: spec.positive_assertions.map((assertion)=>({...assertion,oracle_check_id:assertion.observation_id})),
       negative_assertions: spec.negative_assertions.map((assertion)=>({...assertion,oracle_check_id:assertion.observation_id,forbidden:assertion.expected})),
       environment_requirements: spec.environment_requirements.map((requirement)=>({...requirement,required:true as const,local_alternatives:[...requirement.local_alternative_probe_ids]})),
+      probe_only_command_step_ids:probeOnly,
       normalized_sha256: sha256Hex(canonicalJson(spec)),
       executable_path,
       executable_sha256: await hashFile(executable_path),
       argv: [`bundle:${built.identity.bundle_store_key}`],
       oracle_paths: oraclePaths,
       oracle_sha256: sortRecord(oracle_sha256),
-      implementation_test_paths: spec.command_steps.filter((step)=>step.tool==="node_script"||step.tool==="playwright_test").map((step)=>step.target),
+      implementation_test_paths: spec.command_steps.filter((step)=>!probeOnly.includes(step.id)&&(step.tool==="node_script"||step.tool==="playwright_test")).map((step)=>step.target),
       invalid_completion_signals: [],
       global_invariant: spec.input_paths.includes("**") || spec.proof_capabilities.some((surface) => surface === "security_boundary" || surface === "population_coverage")
     });
@@ -74,7 +78,7 @@ export async function compileLongTaskContract(workdir: string, repositoryRoot = 
     dependency_plan,
     counterfactual_controls: sortById(bundle.plan.counterfactual_controls),
     counterexample_fixtures: sortById(bundle.checklist.counterexample_fixtures),
-    environment_probes: sortById(bundle.checklist.environment_probes),
+    environment_probes,
     graphs,
     verifier_identity
   };
@@ -82,6 +86,8 @@ export async function compileLongTaskContract(workdir: string, repositoryRoot = 
   if (options.write !== false) await writeCompiledLongTaskContract(task, contract);
   return contract;
 }
+
+function probeOnlyCommandSteps(spec:LongTaskSourceBundleV3["checklist"]["verification_specs"][number],bundle:LongTaskSourceBundleV3):string[]{const probes=new Map(bundle.checklist.environment_probes.map((item)=>[item.id,item]));const ids=spec.environment_requirements.flatMap((requirement)=>[requirement.probe_spec_id,...requirement.local_alternative_probe_ids]).flatMap((id)=>{const probe=probes.get(id);return probe?.adapter==="frozen_command_step"?[probe.target]:[];});return [...new Set(ids)].sort();}
 
 export async function writeCompiledLongTaskContract(workdir: string, contract: CompiledContractV3): Promise<void> {
   await atomicJson(path.join(workdir, "compiled-contract.json"), contract);
