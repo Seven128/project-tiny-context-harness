@@ -50,8 +50,8 @@
   "scripts": {
     "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test:built": "node --test ../../tests/ty-context/*.test.mjs",
-    "test": "npm run build && node --test ../../tests/ty-context/*.test.mjs",
+    "test:built": "node --test --test-concurrency=1 ../../tests/ty-context/*.test.mjs",
+    "test": "npm run build && node --test --test-concurrency=1 ../../tests/ty-context/*.test.mjs",
     "prepack": "npm run build"
   },
   "engines": {
@@ -59,7 +59,6 @@
   },
   "dependencies": {
     "@google/design.md": "^0.3.0",
-    "esbuild": "0.28.1",
     "impeccable": "^3.1.0",
     "re2js": "2.8.6",
     "yaml": "^2.9.0"

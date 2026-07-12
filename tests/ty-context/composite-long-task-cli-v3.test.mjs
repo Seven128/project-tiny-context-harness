@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 const repoRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../..");
+// Contract V3 exposes only the narrow lightweight command surface below.
 
 test("extra_argv_injected", async()=>{await assert.rejects(()=>compositeLongTask(["verify","task","--spec","VS-001","--","echo","forged"]),/Unknown or injected arguments/);});
 test("wrong_command_same_spec", async()=>{await assert.rejects(()=>compositeLongTask(["verify","task","--spec","VS-001","node","evil.mjs"]),/Unknown or injected arguments/);});

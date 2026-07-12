@@ -43,7 +43,6 @@ export type CounterfactualMutationV3 =
   | { type: "remove_binding_targets"; binding_ids: string[] }
   | { type: "replace_file_with_fixture"; binding_id: string; target_path: string; fixture_id: string }
   | { type: "rename_route_fixture"; binding_id: string; target_path: string; fixture_id: string; from_route: string; to_route: string }
-  | { type: "override_environment_fixture"; environment_ref: string; fixture_id: string }
   | { type: "use_declared_counterexample_fixture"; binding_id: string; target_path: string; fixture_id: string };
 export interface CounterfactualControlV3 { id: string; obligation_ids: [string]; mutation: CounterfactualMutationV3; expected_failed_assertion_ids: string[] }
 export interface PlanItemV3 { id: string; title: string; obligations: LongTaskObligationV3[]; implementation_notes: string[] }
@@ -102,40 +101,6 @@ export interface FrozenVerificationSpecV3 extends Omit<VerificationSpecV3, "posi
   global_invariant: boolean;
 }
 
-export interface OracleInputDependencyV3 { logical_id: string; source_kind: "repository" | "npm"; package_name: string | null; package_version: string | null; path: string; sha256: string; size: number }
-export interface OracleBundlerIdentityV3 { package_version: "0.28.1"; package_integrity: string; js_entry_sha256: string; native_binary_sha256: string }
-export interface OracleBundleV3 {
-  spec_id: string;
-  entrypoint: string;
-  bundle_store_key: string;
-  bundle_sha256: string;
-  bundle_size: number;
-  metafile_sha256: string;
-  input_dependencies: OracleInputDependencyV3[];
-  bundler: OracleBundlerIdentityV3;
-  wrapper_sha256: string;
-  policy_sha256: string;
-}
-export type DependencyManagerNameV3="pnpm"|"yarn"|"npm"|"bun";
-export interface DependencyManagerV3 { name:DependencyManagerNameV3; version:string; executable_path:string; executable_sha256:string; invocation_executable:string; invocation_prefix:string[]; install_argv:string[] }
-export interface DependencyInputIdentityV3 { path:string; sha256:string; size:number }
-export interface DependencyPlanV3 {
-  required:boolean;
-  key:string;
-  manager:DependencyManagerV3|null;
-  lockfile:DependencyInputIdentityV3|null;
-  package_manifests:DependencyInputIdentityV3[];
-  workspace_descriptors:DependencyInputIdentityV3[];
-  install_configs:DependencyInputIdentityV3[];
-  required_project_binaries:string[];
-  playwright_packages:Array<{name:string;version:string;integrity:string|null}>;
-  node:{version:string;executable:string;sha256:string};
-  corepack:{version:string;executable:string;sha256:string}|null;
-  platform:{platform:NodeJS.Platform;release:string;arch:string;libc_abi:string};
-  normalized_install_configuration:Record<string,string>;
-  sandbox_policy_sha256:string;
-}
-
 export interface CompiledContractGraphsV3 {
   requirements: Record<string, { plan_item_ids: string[]; obligation_ids: string[]; boundary_ids: string[]; non_completing_outcome_ids: string[]; population_exclusion_rule_ids: string[] }>;
   plan_items: Record<string, { obligation_ids: string[] }>;
@@ -163,8 +128,6 @@ export interface CompiledContractV3 {
   acceptance_criteria: AcceptanceCriterionV3[];
   proof_requirements: ProofRequirementV3[];
   verification_specs: FrozenVerificationSpecV3[];
-  oracle_bundles: OracleBundleV3[];
-  dependency_plan: DependencyPlanV3;
   counterfactual_controls: CounterfactualControlV3[];
   counterexample_fixtures: CounterexampleFixtureV3[];
   environment_probes: EnvironmentProbeV3[];

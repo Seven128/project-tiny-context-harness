@@ -44,12 +44,12 @@ test("semantic references cover split decisions, repair stops, review, start, an
   assert.match(scope, /multiple.*candidate.*ask/is);
   assert.match(scope, /schema_version.*scope-fit-result-v2/is);
   assert.match(scope, /explicit user answer.*decision ID.*rationale/is);
-  assert.match(authoring, /CompositeAuthoringPacketV2/);
+  assert.match(authoring, /CompositeAuthoringPacketV3/);
   assert.match(authoring, /non-completing/i);
   assert.match(authoring, /preflight/i);
   assert.match(authoring, /repair.*packet.*new revision/is);
   assert.match(authoring, /do not weaken.*acceptance/is);
-  assert.match(authoring, /schema_version.*composite-authoring-packet-v2/is);
+  assert.match(authoring, /schema_version.*composite-authoring-packet-v3/is);
   assert.match(lifecycle, /resume|review/i);
   assert.match(lifecycle, /handoff_ready/);
   assert.match(lifecycle, /create_goal/);

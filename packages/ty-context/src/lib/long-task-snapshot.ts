@@ -7,7 +7,7 @@ import type { CompiledContractV3 } from "./long-task-contract-schema.js";
 import type { SnapshotFileV2, SnapshotHandle, SnapshotManifestV2 } from "./long-task-run-result.js";
 
 const EXCLUDED = new Set([".git", "node_modules", ".DS_Store"]);
-const VERIFIER_OWNED_RUNTIME = new Set([".codex/ty-context-long-task-hook-heartbeat.json", ".codex/ty-context-active-long-task.json"]);
+const VERIFIER_OWNED_RUNTIME = new Set([".codex/ty-context-active-long-task.json", ".codex/ty-context-final-result-receipt.json"]);
 
 export async function createLongTaskSnapshot(projectRoot: string, contract: CompiledContractV3, runId: string): Promise<SnapshotHandle> {
   const source = path.resolve(projectRoot); if (source !== path.resolve(contract.repository_root)) throw new Error("Snapshot repository identity mismatch");

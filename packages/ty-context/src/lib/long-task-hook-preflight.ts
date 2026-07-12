@@ -1,16 +1,75 @@
-import { readFile, stat } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { sha256Hex } from "./composite-campaign-codec.js";
 
-export interface HostGateCheck { status: "available" | "host_completion_gate_unavailable"; bundle_sha256: string; findings: string[] }
-export async function checkLongTaskHostGate(repositoryRoot: string): Promise<HostGateCheck> {
-  const root = path.resolve(repositoryRoot); const findings: string[] = []; const script = path.join(root, ".codex", "hooks", "long-task-hook.mjs"); const config = path.join(root, ".codex", "hooks.json"); let scriptHash = "missing"; let configHash = "missing";
-  try { scriptHash = sha256Hex(await readFile(script)); } catch { findings.push("managed_hook_script_missing"); }
-  try { const content = await readFile(config, "utf8"); configHash = sha256Hex(content); const value = JSON.parse(content) as { hooks?: Record<string, unknown[]> }; for (const event of ["SessionStart", "PostCompact", "Stop"]) if (!Array.isArray(value.hooks?.[event]) || !JSON.stringify(value.hooks[event]).includes("long-task-hook.mjs")) findings.push(`managed_hook_event_missing:${event}`); if (containsContinueFalse(value.hooks?.Stop)) findings.push("conflicting_stop_hook_continue_false"); } catch { findings.push("hooks_config_missing_or_invalid"); }
-  const bundleHash = sha256Hex(`${configHash}:${scriptHash}`);
-  try { const heartbeatPath = path.join(root, ".codex", "ty-context-long-task-hook-heartbeat.json"); const heartbeat = JSON.parse(await readFile(heartbeatPath, "utf8")) as { repository_root?: string; hook_sha256?: string; bundle_sha256?: string; verifier_cli_path?: string|null; verifier_cli_sha256?: string; verifier_drift_observed?: boolean; events?: Record<string,string> }; const info = await stat(heartbeatPath); if (path.resolve(heartbeat.repository_root ?? "") !== root) findings.push("hook_heartbeat_wrong_repository"); if (heartbeat.hook_sha256 !== scriptHash || heartbeat.bundle_sha256 !== bundleHash) findings.push("hook_heartbeat_hash_mismatch"); const verifierPath=await defaultVerifierPath(root); if (!verifierPath || path.resolve(heartbeat.verifier_cli_path ?? "")!==verifierPath || heartbeat.verifier_cli_sha256!==sha256Hex(await readFile(verifierPath)) || heartbeat.verifier_drift_observed) findings.push("trusted_verifier_cli_hash_mismatch"); const observed = heartbeat.events?.Stop; if (!observed || Date.now() - Math.max(Date.parse(observed), info.mtimeMs) > 24 * 60 * 60 * 1000) findings.push("stop_hook_smoke_not_observed_or_stale"); } catch { findings.push("hook_untrusted_or_smoke_not_observed"); }
-  return { status: findings.length === 0 ? "available" : "host_completion_gate_unavailable", bundle_sha256: bundleHash, findings };
+const POSIX_COMMAND = "node \"$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs\"";
+const WINDOWS_COMMAND = "powershell -NoProfile -Command \"$r=(git rev-parse --show-toplevel); node (Join-Path $r '.codex/hooks/long-task-hook.mjs')\"";
+
+export interface CompletionGateCheck {
+  status: "available" | "completion_gate_unavailable";
+  bundle_sha256: string;
+  findings: string[];
 }
-export async function assertLongTaskHostGate(repositoryRoot: string): Promise<HostGateCheck> { const result = await checkLongTaskHostGate(repositoryRoot); if (result.status !== "available") throw new Error(`host_completion_gate_unavailable:${result.findings.join(",")}`); return result; }
-function containsContinueFalse(value: unknown): boolean { if (Array.isArray(value)) return value.some(containsContinueFalse); if (value && typeof value === "object") return Object.entries(value as Record<string,unknown>).some(([key,item]) => (key === "continue" && item === false) || containsContinueFalse(item)); return false; }
-async function defaultVerifierPath(root: string): Promise<string | null> { for (const candidate of [path.join(root,"packages","ty-context","dist","cli.js"),path.join(root,"node_modules","project-tiny-context-harness","dist","cli.js")]) try { await stat(candidate); return path.resolve(candidate); } catch {} return null; }
+
+export async function checkLongTaskCompletionGate(repositoryRoot: string): Promise<CompletionGateCheck> {
+  const root = path.resolve(repositoryRoot);
+  const findings: string[] = [];
+  const script = path.join(root, ".codex", "hooks", "long-task-hook.mjs");
+  const config = path.join(root, ".codex", "hooks.json");
+  let scriptHash = "missing";
+  let configHash = "missing";
+  try {
+    scriptHash = sha256Hex(await readFile(script));
+    const supported = fileURLToPath(new URL("../../assets/hooks/long-task-hook.mjs", import.meta.url));
+    if (scriptHash !== sha256Hex(await readFile(supported))) findings.push("completion_hook_script_unmanaged");
+  }
+  catch { findings.push("completion_hook_script_missing"); }
+  try {
+    const content = await readFile(config, "utf8");
+    configHash = sha256Hex(content);
+    const value = JSON.parse(content) as { hooks?: Record<string, unknown[]> };
+    for (const event of ["SessionStart", "PostCompact", "Stop"]) {
+      if (!Array.isArray(value.hooks?.[event]) || !containsManagedHandler(value.hooks[event])) {
+        findings.push(`completion_hook_event_missing:${event}`);
+      }
+    }
+    if (containsContinueFalse(value.hooks?.Stop)) findings.push("conflicting_stop_hook_continue_false");
+  } catch {
+    findings.push("hooks_config_missing_or_invalid");
+  }
+  const bundle_sha256 = sha256Hex(`${configHash}:${scriptHash}`);
+  return {
+    status: findings.length === 0 ? "available" : "completion_gate_unavailable",
+    bundle_sha256,
+    findings
+  };
+}
+
+export async function assertLongTaskCompletionGate(repositoryRoot: string): Promise<CompletionGateCheck> {
+  const result = await checkLongTaskCompletionGate(repositoryRoot);
+  if (result.status !== "available") {
+    throw new Error(`completion_gate_unavailable:${result.findings.join(",")}`);
+  }
+  return result;
+}
+
+function containsContinueFalse(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(containsContinueFalse);
+  if (value && typeof value === "object") {
+    return Object.entries(value as Record<string, unknown>).some(
+      ([key, item]) => (key === "continue" && item === false) || containsContinueFalse(item)
+    );
+  }
+  return false;
+}
+
+function containsManagedHandler(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(containsManagedHandler);
+  if (value && typeof value === "object") {
+    const item = value as Record<string, unknown>;
+    if (item.type === "command" && item.command === POSIX_COMMAND && item.commandWindows === WINDOWS_COMMAND) return true;
+    return Object.values(item).some(containsManagedHandler);
+  }
+  return false;
+}

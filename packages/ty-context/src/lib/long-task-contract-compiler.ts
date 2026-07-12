@@ -1,4 +1,4 @@
-import { mkdir, open, readFile, readdir, realpath, rename, stat } from "node:fs/promises";
+import { mkdir, open, readFile, readdir, rename, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { canonicalJson, sha256Hex } from "./composite-campaign-codec.js";
@@ -7,12 +7,12 @@ import { validateLongTaskCoverage } from "./long-task-contract-coverage.js";
 import { resolveInside } from "./long-task-path-policy.js";
 import { COMPOSITE_V3_SCHEMA_SET_SHA256 } from "./long-task-contract-schema-registry.js";
 import type { CompiledContractGraphsV3, CompiledContractV3, FrozenVerificationSpecV3, LongTaskSourceBundleV3, VerificationClaimsV3, VerifierTrustInput } from "./long-task-contract-schema.js";
-import { assertOracleBundleClosureFresh, buildLongTaskOracleBundle } from "./long-task-oracle-bundler.js";
-import { compileDependencyPlan } from "./long-task-dependency-key.js";
+import { assertLongTaskCompilationAllowed, readActiveLongTaskBinding } from "./long-task-active-task.js";
+import { invalidateLongTaskFinalAuthority } from "./long-task-final-receipt.js";
 
 export async function compileLongTaskContract(workdir: string, repositoryRoot = process.cwd(), options: { write?: boolean } = {}): Promise<CompiledContractV3> {
-  const root = await realpath(path.resolve(repositoryRoot));
-  const task = await realpath(path.resolve(workdir));
+  const root = path.resolve(repositoryRoot);
+  const task = path.resolve(workdir);
   const bundle = await parseLongTaskSources(task);
   const coverage = validateLongTaskCoverage(bundle);
   if (!coverage.passed) throw new Error(`Long-task contract coverage failed:\n${coverage.errors.join("\n")}`);
@@ -23,15 +23,12 @@ export async function compileLongTaskContract(workdir: string, repositoryRoot = 
   const contextHashes = Object.fromEntries(await Promise.all(contextFiles.map(async (file) => [relative(root, file), await hashFile(file)] as const)));
   await validateContextReferences(bundle, root, new Set(Object.keys(contextHashes)));
   const verifier_identity = await verifierIdentity(root);
-  const dependency_plan=await compileDependencyPlan(root,bundle.checklist.verification_specs);
   const verification_specs: FrozenVerificationSpecV3[] = [];
-  const oracle_bundles: CompiledContractV3["oracle_bundles"] = [];
   for (const spec of bundle.checklist.verification_specs) {
     const executable_path = process.execPath;
-    const built=await buildLongTaskOracleBundle(root,spec);oracle_bundles.push(built.identity);
-    const repositoryDependencies=built.identity.input_dependencies.filter((item)=>item.source_kind==="repository");
-    const oracle_sha256: Record<string, string> = Object.fromEntries(repositoryDependencies.map((item)=>[item.path,item.sha256]));
-    const oraclePaths=repositoryDependencies.map((item)=>item.path).sort();
+    const oracle_sha256: Record<string, string> = {};
+    const oraclePaths=[spec.oracle.entrypoint];
+    for (const oracle of oraclePaths) oracle_sha256[oracle] = await hashFile(resolveInside(root, oracle, `${spec.id}.oracle`));
     verification_specs.push({
       ...spec,
       positive_assertions: spec.positive_assertions.map((assertion)=>({...assertion,oracle_check_id:assertion.observation_id})),
@@ -40,7 +37,7 @@ export async function compileLongTaskContract(workdir: string, repositoryRoot = 
       normalized_sha256: sha256Hex(canonicalJson(spec)),
       executable_path,
       executable_sha256: await hashFile(executable_path),
-      argv: [`bundle:${built.identity.bundle_store_key}`],
+      argv: [spec.oracle.entrypoint],
       oracle_paths: oraclePaths,
       oracle_sha256: sortRecord(oracle_sha256),
       implementation_test_paths: spec.command_steps.filter((step)=>step.tool==="node_script"||step.tool==="playwright_test").map((step)=>step.target),
@@ -70,8 +67,6 @@ export async function compileLongTaskContract(workdir: string, repositoryRoot = 
     acceptance_criteria: sortById(bundle.checklist.acceptance_criteria),
     proof_requirements: sortById(bundle.checklist.proof_requirements),
     verification_specs: sortById(verification_specs),
-    oracle_bundles: [...oracle_bundles].sort((a,b)=>a.spec_id.localeCompare(b.spec_id)),
-    dependency_plan,
     counterfactual_controls: sortById(bundle.plan.counterfactual_controls),
     counterexample_fixtures: sortById(bundle.checklist.counterexample_fixtures),
     environment_probes: sortById(bundle.checklist.environment_probes),
@@ -79,11 +74,15 @@ export async function compileLongTaskContract(workdir: string, repositoryRoot = 
     verifier_identity
   };
   const contract: CompiledContractV3 = { ...unsigned, contract_sha256: sha256Hex(canonicalJson(unsigned)) };
+  await assertLongTaskCompilationAllowed(contract);
   if (options.write !== false) await writeCompiledLongTaskContract(task, contract);
   return contract;
 }
 
 export async function writeCompiledLongTaskContract(workdir: string, contract: CompiledContractV3): Promise<void> {
+  if (path.resolve(workdir) !== contract.workdir) throw new Error("active_contract_changed:write_workdir");
+  await assertLongTaskCompilationAllowed(contract);
+  if (!await readActiveLongTaskBinding(contract.repository_root)) await invalidateLongTaskFinalAuthority(contract.repository_root, contract.workdir);
   await atomicJson(path.join(workdir, "compiled-contract.json"), contract);
 }
 
@@ -100,12 +99,11 @@ export async function assertLongTaskContractFresh(contract: CompiledContractV3):
   const currentContext = (await listFiles(path.join(contract.repository_root, "project_context"))).map((file) => relative(contract.repository_root, file));
   if (canonicalJson(currentContext) !== canonicalJson(contract.context_snapshot.files)) throw new Error("context_changed_after_compile:file_set");
   for (const [file, hash] of Object.entries(contract.context_snapshot.sha256)) if (await hashFile(path.join(contract.repository_root, file)) !== hash) throw new Error(`context_changed_after_compile:${file}`);
-  if (await hashFile(contract.verifier_identity.cli_path) !== contract.verifier_identity.cli_sha256 || await hashTree(path.join(contract.repository_root, ".codex/hooks")) !== contract.verifier_identity.hook_bundle_sha256) throw new Error("verifier_changed_after_compile:identity");
+  if (await hashFile(contract.verifier_identity.cli_path) !== contract.verifier_identity.cli_sha256 || await completionGateBundleHash(contract.repository_root) !== contract.verifier_identity.hook_bundle_sha256) throw new Error("verifier_changed_after_compile:identity");
   for (const spec of contract.verification_specs) {
     if (await hashFile(spec.executable_path) !== spec.executable_sha256) throw new Error(`verifier_changed_after_compile:${spec.id}`);
+    for (const [file, hash] of Object.entries(spec.oracle_sha256)) if (await hashFile(path.join(contract.repository_root, file)) !== hash) throw new Error(`oracle_changed_after_compile:${file}`);
   }
-  await assertOracleBundleClosureFresh(contract);
-  const dependencyPlan=await compileDependencyPlan(contract.repository_root,contract.verification_specs);if(canonicalJson(dependencyPlan)!==canonicalJson(contract.dependency_plan))throw new Error("dependency_plan_changed_after_compile");
 }
 
 function compileGraphs(bundle: LongTaskSourceBundleV3): CompiledContractGraphsV3 {
@@ -146,9 +144,9 @@ async function validateContextReferences(bundle: LongTaskSourceBundleV3, root: s
   }
 }
 
-async function verifierIdentity(root: string): Promise<VerifierTrustInput> { const packageFile=fileURLToPath(new URL("../../package.json",import.meta.url));const packageJson=JSON.parse(await readFile(packageFile,"utf8")) as {name:string;version:string};const cli=fileURLToPath(new URL("../cli.js",import.meta.url));return {package_name:"project-tiny-context-harness",package_version:packageJson.version,cli_path:cli,cli_sha256:await maybeHash(cli),hook_bundle_sha256:await hashTree(path.join(root,".codex/hooks")),schema_set_sha256:COMPOSITE_V3_SCHEMA_SET_SHA256}; }
+async function verifierIdentity(root: string): Promise<VerifierTrustInput> { const packageFile=fileURLToPath(new URL("../../package.json",import.meta.url));const packageJson=JSON.parse(await readFile(packageFile,"utf8")) as {name:string;version:string};const cli=fileURLToPath(new URL("../cli.js",import.meta.url));return {package_name:"project-tiny-context-harness",package_version:packageJson.version,cli_path:cli,cli_sha256:await maybeHash(cli),hook_bundle_sha256:await completionGateBundleHash(root),schema_set_sha256:COMPOSITE_V3_SCHEMA_SET_SHA256}; }
 async function listFiles(root:string):Promise<string[]>{const result:string[]=[];async function visit(dir:string):Promise<void>{for(const entry of await readdir(dir,{withFileTypes:true})){const file=path.join(dir,entry.name);if(entry.isSymbolicLink())throw new Error(`Context symlink is not allowed: ${file}`);if(entry.isDirectory())await visit(file);else if(entry.isFile())result.push(file);}}try{await visit(root);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}return result.sort();}
-async function hashTree(root:string):Promise<string>{const files=await listFiles(root);const rows=await Promise.all(files.map(async(file)=>[relative(root,file),await hashFile(file)]));return sha256Hex(canonicalJson(rows));}
+async function completionGateBundleHash(root:string):Promise<string>{const config=await hashFile(path.join(root,".codex","hooks.json"));const script=await hashFile(path.join(root,".codex","hooks","long-task-hook.mjs"));return sha256Hex(`${config}:${script}`);}
 async function hashFile(file:string):Promise<string>{const info=await stat(file);if(!info.isFile())throw new Error(`Expected regular file: ${file}`);return sha256Hex(await readFile(file));}
 async function maybeHash(file:string):Promise<string>{try{return await hashFile(file);}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return "unbuilt";throw error;}}
 async function atomicJson(file:string,value:unknown):Promise<void>{await mkdir(path.dirname(file),{recursive:true});const temporary=`${file}.tmp-${process.pid}-${Date.now()}`;const handle=await open(temporary,"wx");try{await handle.writeFile(canonicalJson(value),"utf8");await handle.sync();}finally{await handle.close();}await rename(temporary,file);}

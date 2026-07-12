@@ -19,7 +19,7 @@ Convert a given ordinary long-task source into a strict, project-context-aware a
 For this exact plan, what must be true before a future executor can honestly say the task is complete?
 ```
 
-This Skill defines the acceptance standard. It is not an execution framework. For strict Composite Long-Task Workflow V2 execution, directly invoke `/composite-long-task-workflow` only after the three YAML authorities are complete.
+This Skill defines the acceptance standard. It is not an execution framework. For strict Composite Long-Task Workflow V3 execution, directly invoke `/composite-long-task-workflow` only after the three YAML authorities are complete.
 
 ## Required Outputs
 

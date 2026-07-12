@@ -8,7 +8,6 @@ import type {
   ProofRequirementV3,
   VerificationSpecV3
 } from "./long-task-contract-schema.js";
-import { isReservedLongTaskEnvironmentRef } from "./long-task-environment.js";
 import { assertLongTaskAuthorPath, assertNoCaseCollisions, assertSafeContractPath } from "./long-task-path-policy.js";
 
 export function validateLongTaskCoverage(bundle: LongTaskSourceBundleV3): CoverageResult {
@@ -38,6 +37,7 @@ export function validateLongTaskCoverage(bundle: LongTaskSourceBundleV3): Covera
   if (criteria.size === 0) errors.push("empty_acceptance_criteria");
   if (proofs.size === 0) errors.push("empty_proof_requirements");
   if (specs.size === 0) errors.push("empty_verification_specs");
+  if (probes.size > 0) errors.push("prestable_unsupported_environment_probes");
   const fullPopulation=bundle.product.requirements.some((item)=>item.population_policy==="full_population");
   if(bundle.product.full_population_required!==fullPopulation||bundle.product.delivery_scope==="full_population_operation"&&!fullPopulation)errors.push("population_contract_incomplete:full_population_required");
   if(bundle.product.requirements.some((item)=>item.population_policy==="representative_sample")&&bundle.product.representative_samples_do_not_validate.length===0)errors.push("population_contract_incomplete:representative_sample_limits");
@@ -120,6 +120,7 @@ function validateProof(proof: ProofRequirementV3, obligations: Map<string, LongT
 }
 
 function validateSpec(spec: VerificationSpecV3, requirements:Map<string,{id:string}>, planItems: Map<string, LongTaskSourceBundleV3["plan"]["plan_items"][number]>, obligations: Map<string, LongTaskObligationV3>, bindings: Map<string, ImplementationBindingV3>, criteria: Map<string, AcceptanceCriterionV3>, proofs: Map<string, ProofRequirementV3>, boundaries: Map<string, { id: string }>, outcomes: Map<string, { id: string }>, shortcuts: Map<string, { id: string }>, assertions: Map<string, { id: string }>, errors: string[]): void {
+  validatePrestableExecutionSurface(spec, errors);
   for (const [family, ids, owner] of [["requirement",spec.claims.requirement_ids,requirements],["plan_item",spec.claims.plan_item_ids,planItems],["obligation",spec.claims.obligation_ids,obligations],["binding",spec.claims.binding_ids,bindings],["ac",spec.claims.ac_ids,criteria],["proof",spec.claims.proof_requirement_ids,proofs]] as const) { if (ids.length === 0) errors.push(`spec_claims_empty:${spec.id}:${family}`); for(const id of ids)if(!owner.has(id))errors.push(`spec_claims_unknown:${spec.id}:${family}:${id}`); }
   if (spec.proof_capabilities.length === 0) errors.push(`proof_surface_without_capability:${spec.id}`);
   if (!spec.oracle.entrypoint) errors.push(`ac_without_verifier:${spec.id}:oracle`);
@@ -135,16 +136,40 @@ function validateSpec(spec: VerificationSpecV3, requirements:Map<string,{id:stri
   for (const id of spec.claims.ac_ids) if (!criteria.get(id)?.verification_spec_ids.includes(spec.id)) errors.push(`relation_mismatch:spec_ac:${spec.id}:${id}`);
   for (const id of spec.claims.proof_requirement_ids) if (!proofs.get(id)?.verification_spec_ids.includes(spec.id)) errors.push(`relation_mismatch:spec_proof:${spec.id}:${id}`);
   for(const step of spec.command_steps)for(const ref of step.environment_refs)if(!spec.environment_refs.includes(ref))errors.push(`undeclared_environment_ref:${spec.id}:${step.id}:${ref}`);
-  for(const ref of spec.environment_refs)if(isReservedLongTaskEnvironmentRef(ref))errors.push(`undeclared_environment_ref:reserved:${spec.id}:${ref}`);
   if (spec.population_enumerator && !spec.positive_assertions.some((assertion) => assertion.observation_id === spec.population_enumerator!.observation_id && assertion.observation_kind === "population_coverage")) errors.push(`population_contract_incomplete:${spec.id}:enumerator_assertion`);
   for (const assertion of [...spec.positive_assertions,...spec.negative_assertions]) if(!assertions.has(assertion.id))errors.push(`assertion_missing:${assertion.id}`);
+}
+
+function validatePrestableExecutionSurface(spec: VerificationSpecV3, errors: string[]): void {
+  if (spec.network_policy.mode !== "none" || spec.network_policy.allowed_hosts.length > 0) {
+    errors.push(`prestable_unsupported_network_policy:${spec.id}`);
+  }
+  if (spec.environment_refs.length > 0 || spec.environment_requirements.length > 0) {
+    errors.push(`prestable_unsupported_environment:${spec.id}`);
+  }
+  if (spec.command_steps.length !== 1) {
+    errors.push(`prestable_unsupported_command_steps:${spec.id}:count`);
+    return;
+  }
+  const step = spec.command_steps[0];
+  if (
+    step.tool !== "node_script"
+    || step.target !== spec.oracle.entrypoint
+    || step.argv.length > 0
+    || step.cwd !== spec.cwd
+    || step.timeout_ms !== spec.timeout_ms
+    || step.environment_refs.length > 0
+    || step.output_artifact_ids.length > 0
+  ) {
+    errors.push(`prestable_unsupported_command_steps:${spec.id}:${step.id}`);
+  }
 }
 
 function validateControl(control: CounterfactualControlV3, obligations: Map<string, LongTaskObligationV3>, bindings: Map<string, ImplementationBindingV3>, fixtures: Map<string, { id: string }>, assertions: Map<string, { id: string }>, specs: Map<string, VerificationSpecV3>, errors: string[]): void {
   if (control.expected_failed_assertion_ids.length === 0) errors.push(`counterfactual_without_assertion:${control.id}`);
   for (const id of control.obligation_ids) if (!obligations.get(id)?.counterfactual_control_ids.includes(control.id)) errors.push(`relation_mismatch:counterfactual_obligation:${control.id}:${id}`);
   for (const id of control.expected_failed_assertion_ids) if (!assertions.has(id) || ![...specs.values()].some((spec) => spec.claims.obligation_ids.some((obligation) => control.obligation_ids.includes(obligation)) && [...spec.positive_assertions,...spec.negative_assertions].some((assertion) => assertion.id === id))) errors.push(`counterfactual_unknown_assertion:${control.id}:${id}`);
-  const mutation=control.mutation; const bindingIds="binding_ids" in mutation?mutation.binding_ids:"binding_id" in mutation?[mutation.binding_id]:[];const owner=obligations.get(control.obligation_ids[0]);for(const id of bindingIds)if(!bindings.has(id)||!owner?.implementation_bindings.some((binding)=>binding.id===id))errors.push(`counterfactual_wrong_binding_target:${control.id}:${id}`); if(mutation.type==="remove_binding_targets"&&bindingIds.some((id)=>!["file","path_glob"].includes(bindings.get(id)?.kind??"")))errors.push(`counterfactual_wrong_binding_target:${control.id}:non-static`);if("fixture_id" in mutation&&!fixtures.has(mutation.fixture_id))errors.push(`counterfactual_unknown_fixture:${control.id}:${mutation.fixture_id}`);if(mutation.type==="override_environment_fixture"&&[...specs.values()].filter((spec)=>spec.claims.obligation_ids.includes(control.obligation_ids[0])).some((spec)=>!spec.environment_refs.includes(mutation.environment_ref)))errors.push(`undeclared_environment_ref:${control.id}:${mutation.environment_ref}`);
+  const mutation=control.mutation; const bindingIds="binding_ids" in mutation?mutation.binding_ids:[mutation.binding_id];const owner=obligations.get(control.obligation_ids[0]);for(const id of bindingIds)if(!bindings.has(id)||!owner?.implementation_bindings.some((binding)=>binding.id===id))errors.push(`counterfactual_wrong_binding_target:${control.id}:${id}`); if(mutation.type==="remove_binding_targets"&&bindingIds.some((id)=>!["file","path_glob"].includes(bindings.get(id)?.kind??"")))errors.push(`counterfactual_wrong_binding_target:${control.id}:non-static`);if("fixture_id" in mutation&&!fixtures.has(mutation.fixture_id))errors.push(`counterfactual_unknown_fixture:${control.id}:${mutation.fixture_id}`);
 }
 
 function validateNegativeCoverage(bundle: LongTaskSourceBundleV3, boundaries: Map<string, LongTaskSourceBundleV3["product"]["boundaries"][number]>, outcomes: Map<string, LongTaskSourceBundleV3["product"]["non_completing_outcomes"][number]>, shortcuts: Map<string, LongTaskSourceBundleV3["plan"]["plan_items"][number]["obligations"][number]["forbidden_shortcuts"][number]>, obligations: Map<string, LongTaskObligationV3>, specs: Map<string, VerificationSpecV3>, errors: string[]): void {

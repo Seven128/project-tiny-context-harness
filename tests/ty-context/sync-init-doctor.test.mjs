@@ -383,13 +383,13 @@ try {
   );
   assert.match(compositeLongTaskSkill, /name: composite-long-task-workflow/);
   assert.match(compositeLongTaskSkill, /Use only when explicitly invoked through \/composite-long-task-workflow/);
-  assert.doesNotMatch(compositeLongTaskSkill, /Superpowers/i);
+  assert.match(compositeLongTaskSkill, /Do not restore Superpowers/);
   assert.match(compositeLongTaskSkill, /product-architecture-source\.yaml/);
   assert.match(compositeLongTaskSkill, /compiled-contract\.json/);
   assert.match(compositeLongTaskSkill, /current-status\.json/);
   assert.match(compositeLongTaskSkill, /final-result\.json/);
   assert.match(compositeLongTaskSkill, /goal-objective\.txt/);
-  assert.match(compositeLongTaskSkill, /needs_work.*never a legal final reply/is);
+  assert.match(compositeLongTaskSkill, /needs_work.*never a legal completion reply/is);
   assert.match(compositeLongTaskSkill, /Stop Hook/);
   assert.doesNotMatch(compositeLongTaskSkill, /task-state\.json|events\.ndjson|workflow-protocol\.md|execution-binding\.md|superpowers:/i);
 

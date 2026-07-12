@@ -16,7 +16,7 @@ const workspacePackage = JSON.parse(readFileSync(path.join(repoRoot, "packages/t
 assert.equal(rootPackage.scripts["release:prepare"], "node tools/release_prepare.mjs");
 assert.equal(rootPackage.scripts["release:publish"], "node tools/release_publish.mjs");
 assert.equal(rootPackage.scripts["release:npm"], "node tools/release_npm.mjs");
-assert.equal(workspacePackage.scripts["test:built"], "node --test ../../tests/ty-context/*.test.mjs");
+assert.equal(workspacePackage.scripts["test:built"], "node --test --test-concurrency=1 ../../tests/ty-context/*.test.mjs");
 
 const legacyNoArgs = runNode(legacyNpmScript, []);
 assert.equal(legacyNoArgs.status, 0, `${legacyNoArgs.stdout}\n${legacyNoArgs.stderr}`);

@@ -6,19 +6,14 @@ import type { CounterfactualMutationEffectV3 } from "./long-task-run-result.js";
 
 export interface AppliedCounterfactualMutationV3 {
   mutation_effects: CounterfactualMutationEffectV3[];
-  environment_overrides: Record<string,string>;
   finding_codes: string[];
 }
 
 export async function applyCounterfactualMutation(contract:CompiledContractV3,control:CounterfactualControlV3,root:string):Promise<AppliedCounterfactualMutationV3>{
-  const effects:CounterfactualMutationEffectV3[]=[];const environment:Record<string,string>={};const codes:string[]=[];const mutation=control.mutation;const obligation=contract.obligations.find((item)=>item.id===control.obligation_ids[0]);
+  const effects:CounterfactualMutationEffectV3[]=[];const codes:string[]=[];const mutation=control.mutation;const obligation=contract.obligations.find((item)=>item.id===control.obligation_ids[0]);
   if(!obligation)return failed("counterfactual_wrong_binding_target");
   if(mutation.type==="remove_binding_targets"){
     for(const id of mutation.binding_ids){const binding=ownedBinding(obligation.implementation_bindings,id);if(!binding||!(binding.kind==="file"||binding.kind==="path_glob")){codes.push("counterfactual_wrong_binding_target");continue;}for(const file of await matchingFiles(root,binding.target,binding.kind==="file")){const before=await fileHash(file.absolute);await rm(file.absolute);effects.push({path:file.relative,before_sha256:before,after:"deleted"});}}
-  }else if(mutation.type==="override_environment_fixture"){
-    const fixture=contract.counterexample_fixtures.find((item)=>item.id===mutation.fixture_id);const specs=contract.verification_specs.filter((spec)=>spec.claims.obligation_ids.includes(obligation.id));
-    if(!fixture||fixture.non_secret!==true||specs.some((spec)=>!spec.environment_refs.includes(mutation.environment_ref)))codes.push("counterfactual_wrong_binding_target");
-    else{const bytes=await readFile(inside(root,fixture.path));const value=bytes.toString("utf8");environment[mutation.environment_ref]=value;effects.push({path:`environment:${mutation.environment_ref}`,before_sha256:process.env[mutation.environment_ref]===undefined?null:sha256Hex(process.env[mutation.environment_ref]!),after_sha256:sha256Hex(bytes)});}
   }else{
     const binding=ownedBinding(obligation.implementation_bindings,mutation.binding_id);const fixture=contract.counterexample_fixtures.find((item)=>item.id===mutation.fixture_id);
     if(!binding||!fixture||!targetCovered(contract,binding,obligation.id,mutation.target_path)){codes.push("counterfactual_wrong_binding_target");}
@@ -30,8 +25,8 @@ export async function applyCounterfactualMutation(contract:CompiledContractV3,co
     }
   }
   if(effects.length===0&&!codes.includes("counterfactual_wrong_binding_target")&&!codes.includes("counterfactual_mutation_no_effect"))codes.push("counterfactual_mutation_no_effect");
-  return {mutation_effects:effects.sort((a,b)=>a.path.localeCompare(b.path)),environment_overrides:environment,finding_codes:[...new Set(codes)].sort()};
-  function failed(code:string):AppliedCounterfactualMutationV3{return {mutation_effects:[],environment_overrides:{},finding_codes:[code]};}
+  return {mutation_effects:effects.sort((a,b)=>a.path.localeCompare(b.path)),finding_codes:[...new Set(codes)].sort()};
+  function failed(code:string):AppliedCounterfactualMutationV3{return {mutation_effects:[],finding_codes:[code]};}
 }
 
 export async function hashCounterfactualTree(root:string):Promise<string>{const rows:Array<[string,string]>=[];async function visit(dir:string,relative=""):Promise<void>{for(const entry of (await readdir(dir,{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name))){const rel=relative?`${relative}/${entry.name}`:entry.name;const file=path.join(dir,entry.name);if(entry.isSymbolicLink())throw new Error(`counterfactual_copy_link_rejected:${rel}`);if(entry.isDirectory())await visit(file,rel);else if(entry.isFile())rows.push([rel,await fileHash(file)]);else throw new Error(`counterfactual_copy_special_file_rejected:${rel}`);}}await visit(root);return sha256Hex(canonicalJson(rows));}

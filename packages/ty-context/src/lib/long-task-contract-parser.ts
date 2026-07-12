@@ -122,8 +122,8 @@ function parseObligation(value: unknown, planItemId: string, index: number): voi
 
 function parseMutation(value: unknown): CounterfactualMutationV3 {
   const base = object(value, "counterfactual.mutation", ["type", "binding_ids", "binding_id", "target_path", "fixture_id", "from_route", "to_route", "environment_ref"], ["binding_ids", "binding_id", "target_path", "fixture_id", "from_route", "to_route", "environment_ref"]);
-  oneOf(base.type, ["remove_binding_targets", "replace_file_with_fixture", "rename_route_fixture", "override_environment_fixture", "use_declared_counterexample_fixture"], "counterfactual.mutation.type");
-  const required: Record<string, string[]> = { remove_binding_targets: ["binding_ids"], replace_file_with_fixture: ["binding_id", "target_path", "fixture_id"], rename_route_fixture: ["binding_id", "target_path", "fixture_id", "from_route", "to_route"], override_environment_fixture: ["environment_ref", "fixture_id"], use_declared_counterexample_fixture: ["binding_id", "target_path", "fixture_id"] };
+  oneOf(base.type, ["remove_binding_targets", "replace_file_with_fixture", "rename_route_fixture", "use_declared_counterexample_fixture"], "counterfactual.mutation.type");
+  const required: Record<string, string[]> = { remove_binding_targets: ["binding_ids"], replace_file_with_fixture: ["binding_id", "target_path", "fixture_id"], rename_route_fixture: ["binding_id", "target_path", "fixture_id", "from_route", "to_route"], use_declared_counterexample_fixture: ["binding_id", "target_path", "fixture_id"] };
   for (const key of required[String(base.type)]) key === "binding_ids" ? stringArray(base[key], key) : string(base[key], key);
   for (const key of Object.keys(base)) if (key !== "type" && !required[String(base.type)].includes(key)) throw new Error(`counterfactual_mutation_unknown_field:${key}`);
   return base as unknown as CounterfactualMutationV3;

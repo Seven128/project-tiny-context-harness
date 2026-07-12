@@ -23,39 +23,24 @@ read_policy: default
   - Expected signal: command exits with no errors, reports matrix/verdict row counts and rejects contradictory complete claims.
 - `node --test tests/ty-context/composite-campaign-*.test.mjs tests/ty-context/prepare-composite-long-task-skill.test.mjs`
   - Use after changing V3 campaign/packet schemas, store security, deterministic V3 YAML render, graph/binding/proof/counterfactual preflight, handoff/start/result behavior or the managed preparation Skill.
-  - Expected signal: Node exits with no failing subtests across path/redaction/atomic recovery, V3 full-graph/oracle preflight, Goal-free handoff, explicit binding and current signed-final-result projection.
+  - Expected signal: Node exits with no failing subtests across path/redaction/atomic recovery, V3 full-graph/oracle preflight, Goal-free handoff, explicit binding and current fresh-final-result projection.
 - `node packages/ty-context/dist/cli.js package sync-source` twice, then `node packages/ty-context/dist/cli.js package check-source`
-  - Use after changing canonical managed Skills, AGENTS guidance, protected baseline or public README sources.
+  - Use after changing canonical managed Skills, AGENTS guidance, project-level Hook assets or public README sources.
   - Expected signal: the first sync copies canonical assets, the second reports `changed=0`, and check-source reports no drift; a following workspace `sync` installs the generated Skill without creating or scanning campaigns.
-- `node --test tests/ty-context/long-task-contract-v3*.test.mjs tests/ty-context/long-task-observation-v2.test.mjs tests/ty-context/long-task-binding*.test.mjs tests/ty-context/long-task-counterfactual*.test.mjs`
-  - Use after changing V3 YAML/full graph coverage, actual-only observation operators/population, implementation bindings, proof projection or counterfactual sensitivity.
-  - Expected signal: every malformed/under-covered/unrelated/self-signed/constant-success fixture is rejected or `needs_work`, while the real implementation fixture passes and its declared counterfactual flips.
-- `node --test tests/ty-context/long-task-oracle-bundle*.test.mjs tests/ty-context/long-task-dependency*.test.mjs tests/ty-context/long-task-sandbox*.test.mjs tests/ty-context/long-task-artifact-trust.test.mjs`
-  - Use after changing Node bundle closure, exact command adapters, dependency/browser layers, Host secret/redaction, OS sandbox, snapshots or artifact collection.
-  - Expected signal: transitive/dynamic/native/unfrozen/escape/secret attacks fail and real npm/monorepo/Vitest/Jest/Playwright/build consumers run through sealed layers.
-- `node --test tests/ty-context/long-task-host*.test.mjs tests/ty-context/composite-long-task-managed-hook*.test.mjs tests/ty-context/long-task-environment-probe.test.mjs tests/ty-context/long-task-final-v3*.test.mjs`
-  - Use after changing workspace-external registry, attestations/journal/recovery, Managed requirements/Hook heartbeat, blocker probes, fixed final ordering, durable result or Stop semantics.
-  - Expected signal: recompile/rebind/pointer deletion/disabled or non-managed Hook/forged result/unprobed blocker attacks cannot accept; ordinary no-active Hook calls are no-op; Windows/Linux real managed smokes pass.
-- `node --test tests/ty-context/composite-long-task-v3-black-box.test.mjs`
-  - Durable Contract V3 release blocker for the structured manifest under `tests/ty-context/fixtures/composite-long-task-v3/**`.
-  - Expected signal: every manifest case constructs a temporary Git repository and executes the installed candidate CLI/Host/Hook; source-regex, case-name and file-existence security proof is rejected; only the real happy path reaches final and Stop-time `accepted`.
-- `node tools/external_long_task_audit.mjs --candidate-tarball <exact-audited-package.tgz>`
-  - Required for Harness self-development release candidates after the candidate tarball is packed once.
-  - Expected signal: the independently versioned/integrity-pinned external runner verifies the exact tarball on Windows/Linux and returns a signed all-cases/consumer pass; candidate-owned tests cannot substitute.
-- Old V2 assertion/state/derived/equivalence/source-regex tests are removed. Durable false-completion semantics belong only in the real V3 black-box matrix; do not restore an equivalence or compatibility gate.
+- `node --test tests/ty-context/composite-long-task-lightweight-black-box.test.mjs`
+  - This is the focused pre-stable Composite gate. Every case must create a temporary real project and invoke the built CLI plus `final-gate` or the project-level Stop Hook; source-regex, test-name and file-existence assertions do not count.
+  - Required cases: `happy_path_real_implementation` reaches `accepted` only with real product implementation; `missing_obligation` leaves one PI obligation unimplemented and reaches `needs_work`; `source_changed_after_compile` rejects Product, Plan or AC drift; `oracle_or_verifier_changed_after_compile` rejects changed verification authority; `stale_or_missing_final_result` makes Stop block before final-gate and after workspace drift; `drift_repair_end_to_end` detects an intentionally drifting first implementation, repairs it and then reaches `accepted`.
+  - Budget: the whole focused command must finish within 5 minutes and each individual test should finish within 2 minutes. Exceeding the budget requires simplifying or moving the test, not increasing timeouts.
+- `npm run build --workspace project-tiny-context-harness` and `npm run typecheck --workspace project-tiny-context-harness`
+  - Use after Composite CLI, contract, verifier, Hook or package surface changes.
+  - Expected signal: both commands exit successfully without requiring Rust, administrator permissions, containers or browsers.
+- Old V2 assertion/state/derived/equivalence/source-regex tests and the HFC-011 Host attack matrix are not default gates. Do not restore an equivalence gate, privileged Host test, external audit runner, consumer release matrix or cross-platform browser/sandbox matrix for the pre-stable workflow.
 - `git diff --check`
   - Use before handoff to catch whitespace and conflict marker issues.
   - Expected signal: no whitespace error output.
 - `npm test --workspace project-tiny-context-harness`
   - Use for broader package behavior changes or when focused tests do not cover the touched package surface.
-- `node tools/consumer_lab_full_test.mjs --source-root <repo> --lab-dir <clean-dir> --reset-lab --keep-lab`
-  - Use for Contract V3 release candidates. The clean consumer must install the exact packed artifact, use the separately installed Managed Host Gate, observe verifier-owned `needs_work`, repair the real fixture, reach one-snapshot/counterfactual `accepted`, pass Managed Stop-time full re-verification and return to ordinary Hook no-op after Host terminal cleanup.
-- `node --test tests/ty-context/release-flow-scripts.test.mjs tests/ty-context/sync-release-version.test.mjs tests/ty-context/launch-unblock-script.test.mjs tests/ty-context/launch-readiness-script.test.mjs tests/ty-context/npm-publish-access-script.test.mjs`
-  - Use after changing release preparation/publication automation, release packet generation or launch runbooks that print owner-facing release commands.
-  - Expected signal: release preparation remains the only mutating phase, publication stays publish-only, upgrade impact evidence is present in release packets and launch/readiness guidance matches the split flow.
-- `npm run release:prepare -- --fast --version patch --update-mode sync-only`
-  - Use for ordinary managed Skill, package asset, docs or release metadata patch preparation when no upgrade/migration code changed.
-  - Expected signal: the fast gate runs build, package source sync/check, release-version check, `upgrade --check --json`, release-focused tests, creates one immutable prepared tarball plus `docs/launch/release-artifact-<version>.json`, and runs `git diff --check` without publishing. Publication must verify and use the attested byte-identical tarball.
+  - Budget: the default complete Composite/package test path must finish within 15 minutes. No default test may install a cross-platform VM, container, browser matrix, privileged Helper or administrator environment. A budget overrun is a test-design failure to simplify, not a reason to raise the timeout.
 - `node packages/ty-context/dist/cli.js package sync-source`
   - Use only after changing package-managed source assets that should be copied into `packages/ty-context/assets/**`.
   - For release or pre-upgrade closeout, run it twice; the second run must report `changed=0` or an equivalent no-op signal.
@@ -65,7 +50,7 @@ read_policy: default
 ## Scope Notes
 
 - Context-only source-workspace topology changes normally require `validate-context`, the relevant focused test, `make validate-harness` and `git diff --check`.
-- Contract V3 release acceptance treats Windows and Linux managed Host/consumer/external-audit jobs as hard blockers. macOS remains a first-class compatibility job and must not be documented as strict when its required sandbox capability is unavailable.
-- Pack the candidate once and use that byte-identical tarball for local black-box, consumer and external audit evidence; a repack invalidates cross-gate identity.
+- Pre-stable Composite acceptance proves the lightweight functional loop on the smallest common environment. It does not prove hostile-Host resistance, administrator isolation, OS credential protection, kernel sandboxing, release consumer compatibility or all-platform operation.
+- Every default Composite test must name the concrete drift it prevents. Heavy Host security, compatibility and platform-release validation may be reconsidered only after the core workflow is stable and must live outside the default path.
 - Do not run `package sync-source` for source-workspace `project_context/**`-only changes unless package-managed assets were also touched.
 - Verification Context records repeatable paths and expected signals only. Do not add one-off logs, raw command output, temporary JSON, CI artifacts, release ledgers, secrets or result claims.

@@ -23,7 +23,7 @@ triggers = ["workflow contract", "context delta", "task contract", "plan.md", "l
 path = "project_context/areas/harness-package/contracts/package-managed-surfaces.md"
 role = "contract"
 read_policy = "default"
-triggers = ["managed assets", "package assets", "generated skills", "source sync", "authoring skill"]
+triggers = ["managed assets", "package assets", "generated skills", "source sync", "authoring skill", "project-level hook", "composite workflow"]
 
 [[context]]
 path = "project_context/areas/harness-package/decision-rationale/minimal-context.md"
@@ -35,13 +35,13 @@ triggers = ["why minimal context", "legacy stage", "phase gate", "thick docs", "
 path = "project_context/areas/harness-package/implementation-index.md"
 role = "implementation-index"
 read_policy = "on-demand"
-triggers = ["cli entry", "sync", "validator", "migration", "release tool", "test entry"]
+triggers = ["cli entry", "sync", "validator", "migration", "release tool", "test entry", "active contract", "final result", "stop hook"]
 
 [[context]]
 path = "project_context/areas/harness-package/verification.md"
 role = "verification"
 read_policy = "default"
-triggers = ["test", "verify", "validation", "harness gate", "diff check"]
+triggers = ["test", "verify", "validation", "harness gate", "diff check", "composite black box", "test budget", "final gate"]
 
 [[areas]]
 id = "delivery-benchmark"

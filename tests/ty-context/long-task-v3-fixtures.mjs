@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { execFile, spawnSync } from "node:child_process";
 import { copyFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -22,10 +21,9 @@ export async function writeHappyV3Contract(root, mutate = () => {}) {
   await writeFile(path.join(root, "src", "value.txt"), "good\n", "utf8");
   await writeFile(
     path.join(root, "tests", "acceptance", "oracle.mjs"),
-    `import {readFile} from "node:fs/promises";\nimport path from "node:path";\nexport async function observe(input){const value=await readFile(path.join(input.snapshot_root,"src/value.txt"),"utf8").then(v=>v.trim(),()=>null);return {schema_version:"ty-context-observation-v2",observations:{works:{kind:"runtime_behavior",actual:{binding_id:"IB-002",capability:"value.read",value},artifact_refs:[]},forbidden:{kind:"scalar",actual:value,artifact_refs:[]}}};}\n`,
+    `import {readFile} from "node:fs/promises";\nconst value=await readFile(new URL("../../src/value.txt",import.meta.url),"utf8").then(v=>v.trim(),()=>null);\nconsole.log(JSON.stringify({schema_version:"ty-context-observation-v2",observations:{works:{kind:"runtime_behavior",actual:{binding_id:"IB-002",capability:"value.read",value},artifact_refs:[]},forbidden:{kind:"scalar",actual:value,artifact_refs:[]}}}));\n`,
     "utf8"
   );
-  await writeFile(path.join(root, "tests", "acceptance", "command.mjs"), `process.stdout.write("command-ok\\n");\n`, "utf8");
   const data = happyV3Data();
   mutate(data);
   await Promise.all([
@@ -33,7 +31,7 @@ export async function writeHappyV3Contract(root, mutate = () => {}) {
     ["technical-realization-plan.yaml", data.plan],
     ["acceptance-checklist.yaml", data.checklist]
   ].map(([file, value]) => writeFile(path.join(task, file), YAML.stringify(value), "utf8")));
-  await installLegacyHostSmoke(root);
+  await installProjectCompletionGate(root);
   await exec("git", ["init"], { cwd: root });
   await exec("git", ["config", "user.email", "long-task-v3-fixture@example.invalid"], { cwd: root });
   await exec("git", ["config", "user.name", "Long Task V3 Fixture"], { cwd: root });
@@ -55,7 +53,7 @@ export function observationV2Envelope(value="good",bindingId="IB-002",capability
 }
 
 export function observationV2OracleScript(value="good",bindingId="IB-002",capability="value.read",delayMs=0){
-  return `export async function observe(){${delayMs?`await new Promise(resolve=>setTimeout(resolve,${delayMs}));`:""}return ${JSON.stringify(observationV2Envelope(value,bindingId,capability))};}\n`;
+  return `${delayMs?`await new Promise(resolve=>setTimeout(resolve,${delayMs}));`:""}console.log(${JSON.stringify(JSON.stringify(observationV2Envelope(value,bindingId,capability)))})\n`;
 }
 
 export function addSecondRequirementBranch(data) {
@@ -147,7 +145,7 @@ function makeSpec(suffix, refs) {
     input_paths: ["src/**"],
     artifact_globs: [],
     network_policy: { mode: "none", allowed_hosts: [] },
-    command_steps: [{ id: `CMD-${suffix}`, tool: "node_script", target: "tests/acceptance/command.mjs", argv: [], cwd: ".", timeout_ms: 10000, environment_refs: [], output_artifact_ids: [] }],
+    command_steps: [{ id: `CMD-${suffix}`, tool: "node_script", target: "tests/acceptance/oracle.mjs", argv: [], cwd: ".", timeout_ms: 10000, environment_refs: [], output_artifact_ids: [] }],
     environment_refs: [],
     positive_assertions: [{ id: `PA-${suffix}`, observation_id: "works", observation_kind: "runtime_behavior", operator: "equals", expected: runtimeExpected }],
     negative_assertions: [{ id: `NA-${suffix}`, observation_id: "forbidden", observation_kind: "scalar", operator: "not_equals", expected: "forbidden", source_boundary_ids: [refs.boundary], source_non_completing_ids: [refs.outcome], source_forbidden_shortcut_ids: [refs.shortcut] }],
@@ -155,23 +153,11 @@ function makeSpec(suffix, refs) {
   };
 }
 
-async function installLegacyHostSmoke(root) {
+async function installProjectCompletionGate(root) {
   const hooks = path.join(root, ".codex", "hooks");
-  const installedCli = path.join(root, "node_modules", "project-tiny-context-harness", "dist", "cli.js");
-  await Promise.all([mkdir(hooks, { recursive: true }), mkdir(path.dirname(installedCli), { recursive: true })]);
-  await copyFile(candidateCli, installedCli);
-  const script = "process.stdout.write('{}\\n');\n";
-  const config = `${JSON.stringify({ hooks: Object.fromEntries(["SessionStart", "PostCompact", "Stop"].map((event) => [event, [{ hooks: [{ type: "command", command: "node .codex/hooks/long-task-hook.mjs" }] }]])) }, null, 2)}\n`;
+  await mkdir(hooks, { recursive: true });
   const scriptFile = path.join(hooks, "long-task-hook.mjs");
   const configFile = path.join(root, ".codex", "hooks.json");
-  await writeFile(scriptFile, script, "utf8");
-  await writeFile(configFile, config, "utf8");
-  const scriptHash = hash(script);
-  const configHash = hash(config);
-  const bundleHash = hash(`${configHash}:${scriptHash}`);
-  await writeFile(path.join(root, ".codex", "ty-context-long-task-hook-heartbeat.json"), `${JSON.stringify({ repository_root: root, hook_sha256: scriptHash, bundle_sha256: bundleHash, verifier_cli_path: installedCli, verifier_cli_sha256: hash(await import("node:fs/promises").then(({ readFile }) => readFile(installedCli))), verifier_drift_observed: false, events: { Stop: new Date().toISOString() } }, null, 2)}\n`, "utf8");
-}
-
-function hash(value) {
-  return createHash("sha256").update(value).digest("hex");
+  await copyFile(path.join(repoRoot, ".codex", "hooks", "long-task-hook.mjs"), scriptFile);
+  await copyFile(path.join(repoRoot, ".codex", "hooks.json"), configFile);
 }

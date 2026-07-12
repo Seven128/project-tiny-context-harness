@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { observationV2OracleScript, writeHappyV3Contract } from "./long-task-v3-fixtures.mjs";
@@ -9,5 +9,5 @@ import { runLongTaskFinalGate } from "../../packages/ty-context/dist/lib/long-ta
 import { stopCheckLongTask } from "../../packages/ty-context/dist/lib/long-task-stop-check.js";
 // Regression identity: accepted_stop_hook_allows_exit.
 
-test("Stop blocks before final gate, allows accepted unchanged, then blocks drift",async()=>{ const root=await mkdtemp(path.join(os.tmpdir(),"ltw-stop-")); const workdir=await writeHappyV3Contract(root); await compileLongTaskContract(workdir,root); assert.equal((await stopCheckLongTask(workdir,"done")).decision,"block"); await runLongTaskFinalGate(workdir); assert.deepEqual(await stopCheckLongTask(workdir,"completed"),{}); await writeFile(path.join(root,"new-file.txt"),"drift"); assert.equal((await stopCheckLongTask(workdir,"completed")).decision,"block"); });
+test("Stop validates the accepted result without rerunning final, then blocks drift",async()=>{ const root=await mkdtemp(path.join(os.tmpdir(),"ltw-stop-")); const workdir=await writeHappyV3Contract(root); await compileLongTaskContract(workdir,root); assert.equal((await stopCheckLongTask(workdir,"done")).decision,"block"); await runLongTaskFinalGate(workdir); const finalBefore=await readFile(path.join(workdir,"final-result.json"),"utf8");const runsBefore=await readdir(path.join(workdir,"runs")); assert.deepEqual(await stopCheckLongTask(workdir,"completed"),{}); assert.equal(await readFile(path.join(workdir,"final-result.json"),"utf8"),finalBefore);assert.deepEqual(await readdir(path.join(workdir,"runs")),runsBefore); await writeFile(path.join(root,"new-file.txt"),"drift"); assert.equal((await stopCheckLongTask(workdir,"completed")).decision,"block"); });
 test("needs-work cannot be reported as accepted",async()=>{ const root=await mkdtemp(path.join(os.tmpdir(),"ltw-stop-needs-")); const workdir=await writeHappyV3Contract(root); await writeFile(path.join(root,"tests","acceptance","oracle.mjs"),observationV2OracleScript("wrong")); await compileLongTaskContract(workdir,root); await runLongTaskFinalGate(workdir); const result=await stopCheckLongTask(workdir,"accepted and completed"); assert.equal(result.decision,"block"); });

@@ -18,8 +18,7 @@ This contract defines which repository surfaces are package-managed, generated, 
 - `PROJECT_SPEC.md` is the full Harness workflow design-spec surface for this source workspace, not a consumer default asset.
 - `project_context/**` is the source workspace durable fact surface. It can describe this repository's own package boundaries without becoming consumer default content.
 - Composite campaign request, coordination, audit and packet-revision files are Git-trackable user-owned project data created only by explicit preparation. They are not package-managed assets, generated default plan state, Context graph nodes or execution/evidence storage.
-- Composite managed-Host assets (requirements template, managed Hook, signed Host Helper/worker manifests and OS installers) may be distributed from package-managed source, but the actual system `requirements.toml`, managed directory, service, Host State, keys and registry are admin-installed host surfaces outside repository `sync` ownership. Package `sync` must never claim that copying repo assets established the trust root.
-- The external audit repository/package and its GitHub App/check credentials are independently released trust surfaces. The main package may pin and invoke their immutable version/integrity but cannot vendor candidate-modifiable audit code as an equivalent required check.
+- Composite package assets may install or refresh the ordinary project-level Hook and explicit-only Composite Skills. They must not distribute or require a privileged Host Helper, OS service, administrator installer, Credential Manager integration, Host registry, external audit runner or platform release bundle.
 
 ## Source Sync Boundary
 
@@ -42,12 +41,13 @@ This contract defines which repository surfaces are package-managed, generated, 
 
 - `init`, `sync` and `upgrade` may install or refresh managed assets, but they must not generate project-specific product facts, business Product Surface Contract files, stage work-product trees, lifecycle state or phase gates.
 - `init`, `sync` and `upgrade` may install or refresh the preparation Skill/CLI capability, but they must never create, discover, scan, import, mutate or delete user-owned composite campaign data. Campaign schema migration is explicit and on demand only.
-- `init`, `sync` and `upgrade` do not create, replace or reset Host registry authority and do not silently install system managed policy. Strict Composite startup only diagnoses the separately installed signed Host Gate and fails closed when it is unavailable.
+- `init`, `sync` and `upgrade` may install or refresh the package-managed project-level Hook, but they do not create a lifecycle task-state store or activate a Composite task. The Hook is no-op until an explicit Composite start creates the narrow active binding.
 - The package-managed `.github/workflows/harness.yml` is consumer-facing and should run selected Harness gates only; maintainer-only package tests and source-drift checks stay in this source repository. Plan artifact validators are explicit user commands for complex plan surfaces and long-task artifacts, not default consumer workflow gates.
+- Default consumer or maintainer CI must not install privileged services, virtual machines, containers, browser matrices or administrator environments for the pre-stable Composite workflow. Host-security, compatibility and platform-release validation are deferred work outside the current formal package surface.
 - Public package surfaces must be fully usable in English. Non-English trigger examples are compatibility additions only.
 
 ## Change Impact Rule
 
-When changing public package behavior, managed guidance, default Skills, source sync, validators, release automation, package README or package assets, sweep the same semantic entry across source implementation, managed source, package assets, README/package README, source workspace Context, tests, release smoke and consumer lab as applicable.
+When changing public package behavior, managed guidance, default Skills, source sync, validators, release automation, package README or package assets, sweep the same semantic entry across source implementation, managed source, package assets, README/package README, source workspace Context, focused tests and ordinary release smoke as applicable. The pre-stable Composite path does not add a release consumer or platform matrix to this rule.
 
 For source-workspace Context topology changes that do not touch package-managed assets, keep the diff scoped to `project_context/**`, directly related tests and temporary acceptance artifacts.
