@@ -1,0 +1,68 @@
+[package]
+name = "ty-context-host-helper"
+version = "0.4.0-rc.1"
+edition = "2024"
+rust-version = "1.97"
+license = "MIT"
+publish = false
+
+[[bin]]
+name = "ty-context-host-helper"
+path = "src/main.rs"
+
+[[bin]]
+name = "ty-context-host-admin"
+path = "src/bin/ty-context-host-admin.rs"
+
+[[bin]]
+name = "ty-context-host-installer-ui"
+path = "src/bin/ty-context-host-installer-ui.rs"
+
+[dependencies]
+base64 = "=0.22.1"
+ed25519-dalek = { version = "=3.0.0", features = ["pem", "pkcs8"] }
+getrandom = "=0.4.1"
+hex = "=0.4.3"
+pkcs8 = { version = "=0.11.0", features = ["pem"] }
+serde = { version = "=1.0.228", features = ["derive"] }
+serde_json = "=1.0.150"
+sha2 = "=0.11.0"
+thiserror = "=2.0.18"
+uuid = { version = "=1.23.4", features = ["serde", "v4", "v7"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "=0.2.183"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "=0.61.2", features = [
+  "Win32_Foundation",
+  "Win32_Graphics_Gdi",
+  "Win32_NetworkManagement_WindowsFilteringPlatform",
+  "Win32_Security",
+  "Win32_Security_Authorization",
+  "Win32_Security_Isolation",
+  "Win32_Storage_FileSystem",
+  "Win32_System_IO",
+  "Win32_System_JobObjects",
+  "Win32_System_Pipes",
+  "Win32_System_Rpc",
+  "Win32_System_Services",
+  "Win32_System_StationsAndDesktops",
+  "Win32_System_SystemServices",
+  "Win32_System_Threading",
+  "Win32_System_Console",
+  "Win32_System_Com",
+  "Win32_System_Diagnostics_ToolHelp",
+  "Win32_System_WindowsProgramming",
+  "Wdk_System_Threading",
+  "Win32_UI_Shell"
+] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+panic = "abort"
+strip = "symbols"
+
+[profile.dev]
+panic = "abort"

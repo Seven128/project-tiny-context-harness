@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { compileLongTaskContract } from "../../packages/ty-context/dist/lib/long-task-contract-compiler.js";
-import { verifyLongTask } from "../../packages/ty-context/dist/lib/long-task-verifier.js";
+import { verifyLongTask } from "./long-task-test-runtime.mjs";
 import { LongTaskRedactorV3 } from "../../packages/ty-context/dist/lib/long-task-redaction.js";
 import { __deleteWindowsCredentialForTest, __writeWindowsCredentialForTest, repositorySecretId, resolveLongTaskSecrets, windowsCredentialTarget } from "../../packages/ty-context/dist/lib/long-task-secret-provider.js";
 import { writeHappyV3Contract } from "./long-task-v3-fixtures.mjs";

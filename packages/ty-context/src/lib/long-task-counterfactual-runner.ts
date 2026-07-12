@@ -6,23 +6,24 @@ import type { CounterfactualResultV3, LongTaskFindingV2, VerificationRunResultV2
 import { applyCounterfactualMutation, hashCounterfactualTree } from "./long-task-counterfactual-mutation.js";
 import { executeFrozenVerificationSpecs } from "./long-task-verifier.js";
 import type { LongTaskExecutionResourcesV3 } from "./long-task-execution-resources.js";
+import type { OracleSandboxLaunchOptionsV3 } from "./long-task-oracle-runner.js";
 
 export interface CounterfactualEvaluationV3 {
   counterfactual_results: Record<string,CounterfactualResultV3>;
   findings: LongTaskFindingV2[];
 }
 
-export async function runLongTaskCounterfactuals(contract:CompiledContractV3,snapshotRoot:string,workdir:string,realRun:VerificationRunResultV2,resources?:LongTaskExecutionResourcesV3):Promise<CounterfactualEvaluationV3>{
+export async function runLongTaskCounterfactuals(contract:CompiledContractV3,snapshotRoot:string,workdir:string,realRun:VerificationRunResultV2,resources?:LongTaskExecutionResourcesV3,oracleSandbox?:OracleSandboxLaunchOptionsV3):Promise<CounterfactualEvaluationV3>{
   const counterfactual_results:Record<string,CounterfactualResultV3>={};const findings:LongTaskFindingV2[]=[];const sourceHash=await hashCounterfactualTree(snapshotRoot);
   for(const control of contract.counterfactual_controls){
-    const result=await runControl(contract,control,snapshotRoot,sourceHash,workdir,realRun,resources);
+    const result=await runControl(contract,control,snapshotRoot,sourceHash,workdir,realRun,resources,oracleSandbox);
     counterfactual_results[control.id]=result;
     for(const code of result.finding_codes)findings.push(counterfactualFinding(code,result,realRun.run_id,workdir));
   }
   return {counterfactual_results,findings};
 }
 
-async function runControl(contract:CompiledContractV3,control:CounterfactualControlV3,snapshotRoot:string,sourceHash:string,workdir:string,realRun:VerificationRunResultV2,resources?:LongTaskExecutionResourcesV3):Promise<CounterfactualResultV3>{
+async function runControl(contract:CompiledContractV3,control:CounterfactualControlV3,snapshotRoot:string,sourceHash:string,workdir:string,realRun:VerificationRunResultV2,resources?:LongTaskExecutionResourcesV3,oracleSandbox?:OracleSandboxLaunchOptionsV3):Promise<CounterfactualResultV3>{
   const obligationId=control.obligation_ids[0];const realAssertions=assertionMap(realRun);const calibration=control.expected_failed_assertion_ids.every((id)=>realAssertions[id]===true);
   if(!calibration)return result(control,obligationId,[],control.expected_failed_assertion_ids.map((id)=>({assertion_id:id,real:realAssertions[id]===true,counterfactual:false})),["counterfactual_not_calibrated"]);
   const temporary=await mkdtemp(path.join(os.tmpdir(),`ty-context-counterfactual-${safe(control.id)}-`));const counterRoot=path.join(temporary,"snapshot");
@@ -36,7 +37,7 @@ async function runControl(contract:CompiledContractV3,control:CounterfactualCont
     const owned=new Set(specs.flatMap((spec)=>[...spec.positive_assertions,...spec.negative_assertions].map((assertion)=>assertion.id)));
     if(control.expected_failed_assertion_ids.some((id)=>!owned.has(id)))return result(control,obligationId,mutation.mutation_effects,[],["counterfactual_wrong_binding_target"]);
     const runRoot=path.join(workdir,"runs",realRun.run_id,"counterfactuals",control.id);await mkdir(runRoot,{recursive:true});
-    const rerun=await executeFrozenVerificationSpecs({contract,source_root:counterRoot,workdir,run_root:runRoot,spec_ids:specs.map((spec)=>spec.id),run_id:`${realRun.run_id}:${control.id}`,snapshot_sha256:realRun.snapshot.snapshot_sha256,environment_overrides:mutation.environment_overrides,resources});const counterAssertions=Object.assign({},...rerun.map((spec)=>spec.assertion_results));
+    const rerun=await executeFrozenVerificationSpecs({contract,source_root:counterRoot,workdir,run_root:runRoot,spec_ids:specs.map((spec)=>spec.id),run_id:`${realRun.run_id}:${control.id}`,snapshot_sha256:realRun.snapshot.snapshot_sha256,environment_overrides:mutation.environment_overrides,resources,oracle_sandbox:oracleSandbox});const counterAssertions=Object.assign({},...rerun.map((spec)=>spec.assertion_results));
     const missing=control.expected_failed_assertion_ids.some((id)=>!Object.prototype.hasOwnProperty.call(counterAssertions,id));
     const flips=control.expected_failed_assertion_ids.map((id)=>({assertion_id:id,real:true,counterfactual:counterAssertions[id]===true})).sort((a,b)=>a.assertion_id.localeCompare(b.assertion_id));
     if(missing)return result(control,obligationId,mutation.mutation_effects,flips,["counterfactual_verifier_infrastructure_failed"]);

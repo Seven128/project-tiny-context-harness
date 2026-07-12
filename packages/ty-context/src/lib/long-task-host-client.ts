@@ -9,6 +9,8 @@ import { writeLongTaskRegistryMirror } from "./long-task-active-task.js";
 import { authorityIdentities } from "./long-task-host-identity.js";
 import { LongTaskHostRegistryServiceV1, type LongTaskHostActiveRegistryV1 } from "./long-task-host-service.js";
 import { canonicalValueJson, sha256Hex } from "./composite-campaign-codec.js";
+import { LongTaskHostRpcClientV1 } from "./long-task-host-rpc-client.js";
+import { managedHostLayout } from "./long-task-managed-host-layout.js";
 
 const exec = promisify(execFile);
 const defaultServices = new Map<string, LongTaskHostRegistryServiceV1>();
@@ -18,14 +20,19 @@ export function longTaskHostStateRoot(): string {
 }
 
 export async function longTaskHostService(repositoryRoot: string): Promise<LongTaskHostRegistryServiceV1> {
+  return longTaskHostServiceAt(repositoryRoot, longTaskHostStateRoot());
+}
+
+export async function longTaskHostServiceAt(repositoryRoot: string, hostRoot: string): Promise<LongTaskHostRegistryServiceV1> {
   const canonical = await realpath(path.resolve(repositoryRoot));
   const serviceKey = process.platform === "win32" ? canonical.toLocaleLowerCase("en-US") : canonical;
-  const existing = defaultServices.get(serviceKey);
+  const canonicalHostRoot = path.resolve(hostRoot);
+  const mapKey = `${canonicalHostRoot}\0${serviceKey}`;
+  const existing = defaultServices.get(mapKey);
   if (existing) return existing;
-  const hostRoot = longTaskHostStateRoot();
   const shard = sha256Hex(serviceKey);
-  const service = new LongTaskHostRegistryServiceV1({ stateRoot: path.join(hostRoot, "repositories", shard), keyRoot: hostRoot });
-  defaultServices.set(serviceKey, service);
+  const service = new LongTaskHostRegistryServiceV1({ stateRoot: path.join(canonicalHostRoot, "repositories", shard), keyRoot: canonicalHostRoot });
+  defaultServices.set(mapKey, service);
   return service;
 }
 
@@ -96,6 +103,17 @@ export async function readAuthoritativeLongTaskContract(workdir: string): Promis
   if (contract.contract_sha256 !== registry.contract_sha256 || canonicalValueJson(authorityIdentities(contract)) !== canonicalValueJson(registry.authority_identities)) throw new Error("host_registry_integrity_failure:authority_binding");
   return { contract, registry };
 }
+
+export interface HostCompileSummaryV1 { schema_version:"ty-context-host-compile-result-v1";contract_sha256:string;registry_id:string;counts:{requirements:number;plan_items:number;obligations:number;bindings:number;acceptance_criteria:number;proof_requirements:number;verification_specs:number} }
+export interface HostVerifySummaryV1 { schema_version:"ty-context-host-verify-result-v1";contract_sha256:string;run_id:string;workflow_status:"needs_work"|"externally_blocked";findings_count:number;spec_results:Record<string,string> }
+export interface HostFinalSummaryV1 { schema_version:"ty-context-host-final-result-summary-v1";contract_sha256:string;run_id:string;workflow_status:"accepted"|"needs_work"|"externally_blocked";findings_count:number;final_result_path:string }
+
+export async function compileAndSealLongTaskContractViaHost(workdir:string,repositoryRoot?:string):Promise<{contract:CompiledContractV3;registry:LongTaskHostActiveRegistryV1;summary:HostCompileSummaryV1}>{const root=repositoryRoot?await realpath(path.resolve(repositoryRoot)):await gitRoot(workdir);const task=await realpath(path.resolve(workdir));const reservation=await managedRpc(10*60_000).call("reserve_authority",root,{workdir:task});const summary=await managedRpc(10*60_000).call("compile_and_seal",root,{workdir:task,reservation}) as HostCompileSummaryV1;const contract=await readCompiledLongTaskContract(task);const registry=await managedRpc(5000).call("get_active",root,{}) as LongTaskHostActiveRegistryV1;if(summary.schema_version!=="ty-context-host-compile-result-v1"||contract.contract_sha256!==summary.contract_sha256||registry.contract_sha256!==summary.contract_sha256||registry.registry_id!==summary.registry_id)throw new Error("host_registry_integrity_failure:compile_response");return {contract,registry,summary};}
+export async function verifyLongTaskViaHost(workdir:string,specIds?:string[]):Promise<HostVerifySummaryV1>{const task=await realpath(path.resolve(workdir));const root=await gitRoot(task);const result=await managedRpc(6*60*60_000).call("verify",root,{workdir:task,spec_ids:specIds??[]}) as HostVerifySummaryV1;if(result.schema_version!=="ty-context-host-verify-result-v1"||!result.contract_sha256||!result.run_id)return invalidHostResult();return result;}
+export async function finalGateLongTaskViaHost(workdir:string):Promise<HostFinalSummaryV1>{const task=await realpath(path.resolve(workdir));const root=await gitRoot(task);const result=await managedRpc(6*60*60_000).call("final_gate",root,{workdir:task}) as HostFinalSummaryV1;if(result.schema_version!=="ty-context-host-final-result-summary-v1"||!result.contract_sha256||!result.run_id||!samePath(path.resolve(result.final_result_path),path.join(task,"final-result.json")))return invalidHostResult();return result;}
+
+function managedRpc(timeout_ms:number):LongTaskHostRpcClientV1{const layout=managedHostLayout();return new LongTaskHostRpcClientV1({endpoint:layout.endpoint,public_key_path:layout.attestation_public_key_path,timeout_ms});}
+function invalidHostResult():never{throw new Error("host_rpc_response_invalid:worker_result");}
 
 async function gitRoot(workdir: string): Promise<string> {
   const output = await exec("git", ["rev-parse", "--show-toplevel"], { cwd: workdir, windowsHide: true });

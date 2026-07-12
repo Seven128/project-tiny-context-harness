@@ -23,8 +23,18 @@ export class LongTaskHostSignerV1 {
   async verify(value: object & HostSignatureV1): Promise<void> {
     const keys = await this.keys();
     const { signature, record_sha256, ...withKey } = value as HostSignatureV1 & Record<string, unknown>;
-    if (withKey.key_id !== keys.keyId || sha256Hex(canonicalValueJson(withKey)) !== record_sha256) throw new Error("host_registry_integrity_failure:record_hash");
-    if (!verify(null, Buffer.from(record_sha256, "hex"), keys.publicKey, Buffer.from(signature, "base64url"))) throw new Error("host_registry_integrity_failure:signature");
+    if (typeof withKey.key_id !== "string" || sha256Hex(canonicalValueJson(withKey)) !== record_sha256) throw new Error("host_registry_integrity_failure:record_hash");
+    const publicKey = withKey.key_id === keys.keyId ? keys.publicKey : await this.retainedPublicKey(withKey.key_id);
+    if (!verify(null, Buffer.from(record_sha256, "hex"), publicKey, Buffer.from(signature, "base64url"))) throw new Error("host_registry_integrity_failure:signature");
+  }
+
+  private async retainedPublicKey(keyId: string): Promise<ReturnType<typeof createPublicKey>> {
+    if (!/^[a-f0-9]{64}$/u.test(keyId)) throw new Error("host_registry_integrity_failure:key_id");
+    let key;
+    try { key = createPublicKey(await readFile(path.join(this.stateRoot, "keys", "trusted", `${keyId}.pem`))); }
+    catch { throw new Error("host_registry_integrity_failure:key_id"); }
+    if (sha256Hex(key.export({ type: "spki", format: "der" })) !== keyId) throw new Error("host_registry_integrity_failure:key_identity");
+    return key;
   }
 
   private async keys(): Promise<{ keyId: string; privateKey: ReturnType<typeof createPrivateKey>; publicKey: ReturnType<typeof createPublicKey> }> {

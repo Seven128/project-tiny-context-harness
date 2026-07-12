@@ -4,6 +4,7 @@ import { mkdtemp, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { addSecondRequirementBranch, runCompositeCompile, writeHappyV3Contract } from "./long-task-v3-fixtures.mjs";
+const managedHost = !!process.env.TY_CONTEXT_MANAGED_HOST_READY;
 
 async function run(name, mutate = () => {}) {
   const root = await mkdtemp(path.join(os.tmpdir(), `ltw-v3-${name}-`));
@@ -11,7 +12,7 @@ async function run(name, mutate = () => {}) {
   return { root, task, result: runCompositeCompile(root, task) };
 }
 
-test("happy Contract V3 compiles through the public CLI and preserves the full graph", async () => {
+test("happy Contract V3 compiles through the public CLI and preserves the full graph", { skip: !managedHost }, async () => {
   const { task, result } = await run("happy");
   assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
   const contract = JSON.parse(await readFile(path.join(task, "compiled-contract.json"), "utf8"));
@@ -32,7 +33,7 @@ for (const [name, mutate, diagnostic] of [
   ["proof_surface_without_capability", (d) => { d.checklist.verification_specs[0].proof_capabilities=[]; }, "proof_surface_without_capability"],
   ["binding_without_observer", (d) => { delete d.plan.plan_items[0].obligations[0].implementation_bindings[1].verification.observation_id; }, "binding_without_observer"]
 ]) {
-  test(name, async () => {
+  test(name, { skip: !managedHost }, async () => {
     const { result } = await run(name, mutate);
     assert.notEqual(result.status, 0, `${name} unexpectedly compiled`);
     assert.match(`${result.stdout}\n${result.stderr}`, new RegExp(diagnostic));

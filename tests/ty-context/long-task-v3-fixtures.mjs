@@ -1,6 +1,6 @@
-import { createHash } from "node:crypto";
 import { execFile, spawnSync } from "node:child_process";
-import { copyFile, mkdir, writeFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -33,7 +33,6 @@ export async function writeHappyV3Contract(root, mutate = () => {}) {
     ["technical-realization-plan.yaml", data.plan],
     ["acceptance-checklist.yaml", data.checklist]
   ].map(([file, value]) => writeFile(path.join(task, file), YAML.stringify(value), "utf8")));
-  await installLegacyHostSmoke(root);
   await exec("git", ["init"], { cwd: root });
   await exec("git", ["config", "user.email", "long-task-v3-fixture@example.invalid"], { cwd: root });
   await exec("git", ["config", "user.name", "Long Task V3 Fixture"], { cwd: root });
@@ -43,11 +42,31 @@ export async function writeHappyV3Contract(root, mutate = () => {}) {
 }
 
 export function runCompositeCompile(root, task) {
+  managedHeartbeat(root);
   return spawnSync(process.execPath, [candidateCli, "composite-long-task", "compile", task], {
     cwd: root,
     encoding: "utf8",
     env: { ...process.env, NO_COLOR: "1" }
   });
+}
+
+export function runCompositeVerify(root, task) {
+  managedHeartbeat(root);
+  return spawnSync(process.execPath, [candidateCli, "composite-long-task", "verify", task], { cwd: root, encoding: "utf8", env: { ...process.env, NO_COLOR: "1" } });
+}
+
+export function runManagedHookSync(root, event = "SessionStart") {
+  const readyFile = process.env.TY_CONTEXT_MANAGED_HOST_READY;
+  if (!readyFile) throw new Error("managed_test_host_not_ready");
+  const ready = JSON.parse(readFileSync(readyFile, "utf8"));
+  const input = JSON.stringify({ hook_event_name: event, session_id: `managed-test-${process.pid}`, turn_id: `${event}-${Date.now()}`, cwd: root, source: "startup", stop_hook_active: false, last_assistant_message: null });
+  const result = spawnSync(ready.codex_launcher, [ready.codex_script, process.execPath, ready.hook_path], { input, encoding: "utf8", env: process.env });
+  if (result.status !== 0) throw new Error(`managed_test_hook_failed:${result.stderr}`);
+  return JSON.parse(result.stdout);
+}
+
+function managedHeartbeat(root) {
+  if (process.env.TY_CONTEXT_MANAGED_HOST_READY) runManagedHookSync(root);
 }
 
 export function observationV2Envelope(value="good",bindingId="IB-002",capability="value.read"){
@@ -153,25 +172,4 @@ function makeSpec(suffix, refs) {
     negative_assertions: [{ id: `NA-${suffix}`, observation_id: "forbidden", observation_kind: "scalar", operator: "not_equals", expected: "forbidden", source_boundary_ids: [refs.boundary], source_non_completing_ids: [refs.outcome], source_forbidden_shortcut_ids: [refs.shortcut] }],
     environment_requirements: []
   };
-}
-
-async function installLegacyHostSmoke(root) {
-  const hooks = path.join(root, ".codex", "hooks");
-  const installedCli = path.join(root, "node_modules", "project-tiny-context-harness", "dist", "cli.js");
-  await Promise.all([mkdir(hooks, { recursive: true }), mkdir(path.dirname(installedCli), { recursive: true })]);
-  await copyFile(candidateCli, installedCli);
-  const script = "process.stdout.write('{}\\n');\n";
-  const config = `${JSON.stringify({ hooks: Object.fromEntries(["SessionStart", "PostCompact", "Stop"].map((event) => [event, [{ hooks: [{ type: "command", command: "node .codex/hooks/long-task-hook.mjs" }] }]])) }, null, 2)}\n`;
-  const scriptFile = path.join(hooks, "long-task-hook.mjs");
-  const configFile = path.join(root, ".codex", "hooks.json");
-  await writeFile(scriptFile, script, "utf8");
-  await writeFile(configFile, config, "utf8");
-  const scriptHash = hash(script);
-  const configHash = hash(config);
-  const bundleHash = hash(`${configHash}:${scriptHash}`);
-  await writeFile(path.join(root, ".codex", "ty-context-long-task-hook-heartbeat.json"), `${JSON.stringify({ repository_root: root, hook_sha256: scriptHash, bundle_sha256: bundleHash, verifier_cli_path: installedCli, verifier_cli_sha256: hash(await import("node:fs/promises").then(({ readFile }) => readFile(installedCli))), verifier_drift_observed: false, events: { Stop: new Date().toISOString() } }, null, 2)}\n`, "utf8");
-}
-
-function hash(value) {
-  return createHash("sha256").update(value).digest("hex");
 }

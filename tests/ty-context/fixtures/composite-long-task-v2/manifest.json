@@ -131,7 +131,7 @@
     },
     "active_pointer_deleted_or_retargeted": {
       "expected": "blocked",
-      "covered_by": "tests/ty-context/composite-long-task-hook-v2.test.mjs"
+      "covered_by": "tests/ty-context/long-task-managed-hook-runtime.test.mjs"
     },
     "conflicting_stop_hook_continue_false": {
       "expected": "blocked",
@@ -143,7 +143,7 @@
     },
     "ordinary_question_hook_noop": {
       "expected": "accepted",
-      "covered_by": "tests/ty-context/composite-long-task-hook-v2.test.mjs"
+      "covered_by": "tests/ty-context/long-task-managed-hook-runtime.test.mjs"
     },
     "negative_evidence_hit": {
       "expected": "needs_work",
@@ -211,7 +211,7 @@
     },
     "repo_stop_hook_deleted_or_modified": {
       "expected": "needs_work",
-      "covered_by": "tests/ty-context/composite-long-task-v2-regression.test.mjs"
+      "covered_by": "tests/ty-context/long-task-managed-host-install.test.mjs"
     },
     "ordinary_bug_no_workdir": {
       "expected": "needs_work",

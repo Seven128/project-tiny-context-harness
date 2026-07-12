@@ -10,16 +10,19 @@ import type { FinalResultV2, LongTaskEntityResultV3, LongTaskFindingV2 } from ".
 import { classifyExternalBlocker } from "./long-task-external-blocker.js";
 import { prepareLongTaskExecutionResources } from "./long-task-execution-resources.js";
 import { readAuthoritativeLongTaskContract } from "./long-task-host-client.js";
+import type { LongTaskHostRegistryServiceV1 } from "./long-task-host-service.js";
+import type { OracleSandboxLaunchOptionsV3 } from "./long-task-oracle-runner.js";
 
-export async function runLongTaskFinalGate(workdir:string):Promise<FinalResultV2>{
-  const contract=(await readAuthoritativeLongTaskContract(workdir)).contract;const invocationHash=await hashLongTaskWorkspace(contract.repository_root,contract);await assertLongTaskContractFresh(contract);
+export interface LongTaskFinalGateOptionsV3 { contract?:Awaited<ReturnType<typeof readAuthoritativeLongTaskContract>>["contract"];host_service?:LongTaskHostRegistryServiceV1;oracle_sandbox?:OracleSandboxLaunchOptionsV3 }
+export async function runLongTaskFinalGate(workdir:string,options:LongTaskFinalGateOptionsV3={}):Promise<FinalResultV2>{
+  const contract=options.contract??(await readAuthoritativeLongTaskContract(workdir)).contract;const invocationHash=await hashLongTaskWorkspace(contract.repository_root,contract);await assertLongTaskContractFresh(contract);
   const runId=`FINAL-${new Date().toISOString().replace(/[-:.TZ]/g,"")}-${process.pid}-${contract.contract_sha256.slice(0,8)}`;
   const snapshot=await createLongTaskSnapshot(contract.repository_root,contract,runId);const before=snapshot.manifest.snapshot_sha256;
   try{
     const resources=await prepareLongTaskExecutionResources(contract,snapshot.root,contract.verification_specs,runId,before);
-    const run=await verifyLongTask(workdir,contract.verification_specs.map((spec)=>spec.id),{contract,snapshot,run_id:runId,resources});
+    const run=await verifyLongTask(workdir,contract.verification_specs.map((spec)=>spec.id),{contract,snapshot,run_id:runId,resources,host_service:options.host_service,oracle_sandbox:options.oracle_sandbox});
     const binding= evaluateLongTaskBindings(contract,snapshot.manifest,run,workdir);
-    const counterfactual=await runLongTaskCounterfactuals(contract,snapshot.root,workdir,run,resources);
+    const counterfactual=await runLongTaskCounterfactuals(contract,snapshot.root,workdir,run,resources,options.oracle_sandbox);
     const after=await hashLongTaskWorkspace(contract.repository_root,contract);const blocker=classifyExternalBlocker(run,contract);const findings:LongTaskFindingV2[]=[...run.findings,...blocker.findings,...binding.findings,...counterfactual.findings];
     if(invocationHash!==before)findings.push(workspaceFinding(workdir,run.run_id,invocationHash,before));
     if((before!==after||after!==run.snapshot.snapshot_sha256)&&!findings.some((item)=>/worktree_changed|workspace_changed/u.test(item.category)))findings.push(workspaceFinding(workdir,run.run_id,run.snapshot.snapshot_sha256,after));

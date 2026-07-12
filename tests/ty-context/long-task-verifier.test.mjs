@@ -5,8 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { addSecondRequirementBranch, observationV2OracleScript, writeHappyV3Contract } from "./long-task-v3-fixtures.mjs";
 import { compileLongTaskContract } from "../../packages/ty-context/dist/lib/long-task-contract-compiler.js";
-import { verifyLongTask } from "../../packages/ty-context/dist/lib/long-task-verifier.js";
-import { runLongTaskFinalGate } from "../../packages/ty-context/dist/lib/long-task-final-gate.js";
+import { runLongTaskFinalGate, verifyLongTask } from "./long-task-test-runtime.mjs";
 
 test("active verifier executes only frozen argv and happy final uses one snapshot", async () => { const root = await mkdtemp(path.join(os.tmpdir(), "ltw-verify-")); const workdir = await writeHappyV3Contract(root); await compileLongTaskContract(workdir, root); const run = await verifyLongTask(workdir); assert.equal(run.findings.length, 0); assert.deepEqual(run.spec_results[0].assertion_results, { "PA-001": true, "NA-001": true }); const final = await runLongTaskFinalGate(workdir); assert.equal(final.workflow_status, "accepted"); assert.equal(final.workspace_hash_before, final.final_snapshot_sha256); });
 test("oracle drift invalidates the compiled contract", async () => { const root = await mkdtemp(path.join(os.tmpdir(), "ltw-drift-")); const workdir = await writeHappyV3Contract(root); await compileLongTaskContract(workdir, root); await writeFile(path.join(root, "tests", "acceptance", "oracle.mjs"), "export async function observe(){return {};}\n"); await assert.rejects(verifyLongTask(workdir), /oracle_dependency_changed_after_compile/); });

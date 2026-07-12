@@ -5,8 +5,7 @@ import { createHash } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import { compileLongTaskContract } from "../../packages/ty-context/dist/lib/long-task-contract-compiler.js";
-import { runLongTaskFinalGate } from "../../packages/ty-context/dist/lib/long-task-final-gate.js";
-import { verifyLongTask } from "../../packages/ty-context/dist/lib/long-task-verifier.js";
+import { runLongTaskFinalGate, verifyLongTask } from "./long-task-test-runtime.mjs";
 import { oracleBundleStorePath } from "../../packages/ty-context/dist/lib/long-task-oracle-bundle-store.js";
 import { writeHappyV3Contract } from "./long-task-v3-fixtures.mjs";
 

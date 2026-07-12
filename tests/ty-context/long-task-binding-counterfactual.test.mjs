@@ -4,7 +4,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { compileLongTaskContract } from "../../packages/ty-context/dist/lib/long-task-contract-compiler.js";
-import { runLongTaskFinalGate } from "../../packages/ty-context/dist/lib/long-task-final-gate.js";
+import { runLongTaskFinalGate } from "./long-task-test-runtime.mjs";
 import { observationV2OracleScript, writeHappyV3Contract } from "./long-task-v3-fixtures.mjs";
 
 async function setup(name,mutate=()=>{}){const root=await mkdtemp(path.join(os.tmpdir(),`ltw-binding-${name}-`));const workdir=await writeHappyV3Contract(root,mutate);return {root,workdir};}

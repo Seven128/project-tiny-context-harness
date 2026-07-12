@@ -16,12 +16,16 @@ import { attachDependencyLayer } from "./long-task-dependency-layer.js";
 import { LONG_TASK_SANDBOX_POLICY_SHA256 } from "./long-task-sandbox-policy.js";
 import { prepareLongTaskExecutionResources, type LongTaskExecutionResourcesV3 } from "./long-task-execution-resources.js";
 import { readAuthoritativeLongTaskContract, startActiveLongTaskVerificationLease } from "./long-task-host-client.js";
+import type { OracleSandboxLaunchOptionsV3 } from "./long-task-oracle-runner.js";
+import type { LongTaskHostRegistryServiceV1 } from "./long-task-host-service.js";
 
 export interface VerifyLongTaskOptions {
   contract?: CompiledContractV3;
   snapshot?: SnapshotHandle;
   run_id?: string;
   resources?:LongTaskExecutionResourcesV3;
+  oracle_sandbox?:OracleSandboxLaunchOptionsV3;
+  host_service?:LongTaskHostRegistryServiceV1;
 }
 
 export interface FrozenSpecExecutionRequest {
@@ -34,6 +38,7 @@ export interface FrozenSpecExecutionRequest {
   snapshot_sha256: string;
   resources?:LongTaskExecutionResourcesV3;
   environment_overrides?: Readonly<Record<string,string>>;
+  oracle_sandbox?:OracleSandboxLaunchOptionsV3;
 }
 
 export async function executeFrozenVerificationSpecs(request: FrozenSpecExecutionRequest): Promise<VerificationSpecResultV2[]> {
@@ -52,7 +57,7 @@ export async function executeFrozenVerificationSpecs(request: FrozenSpecExecutio
       try {
         const bundle=request.contract.oracle_bundles.find((item)=>item.spec_id===spec.id);if(!bundle)throw new Error(`oracle_bundle_missing:${spec.id}`);
         const oracleInput={schema_version:"ty-context-oracle-input-v2",spec_id:spec.id,snapshot_root:specRoot,artifact_root:artifactRoot,command_steps:[],environment_refs_present:Object.keys(request.environment_overrides??{}).sort(),run_identity:{run_id:request.run_id,snapshot_sha256:request.snapshot_sha256,dependency_layer_key:"none",environment_manifest_sha256:"pending"}};
-        const command = await runFrozenCommand(spec,bundle,oracleInput,specRoot,commandRoot,artifactRoot,request.environment_overrides??{},request.contract.dependency_plan,dependencyLayer,browserLayer?.payload_root??null,resources.secrets.values,resources.redactor);
+        const command = await runFrozenCommand(spec,bundle,oracleInput,specRoot,commandRoot,artifactRoot,request.environment_overrides??{},request.contract.dependency_plan,dependencyLayer,browserLayer?.payload_root??null,resources.secrets.values,resources.redactor,request.oracle_sandbox);
         const artifacts = await collectFrozenArtifacts(spec, artifactRoot, command.started_at);
         if(spec.command_steps.some((step)=>step.tool==="playwright_test")&&!artifacts.artifacts.some((item)=>{const value=item.path.toLocaleLowerCase("en-US");return value==="trace.zip"||value.endsWith("/trace.zip");}))throw new Error(`playwright_browser_unsealed:${spec.id}:trace_missing`);
         await writeFile(path.join(commandRoot, "command.json"), canonicalJson(command));
@@ -78,7 +83,7 @@ export async function verifyLongTask(workdir: string, specIds?: string[], option
   const contract = options.contract ?? (await readAuthoritativeLongTaskContract(workdir)).contract;
   await assertLongTaskContractFresh(contract);
   const runId = options.run_id ?? `RUN-${new Date().toISOString().replace(/[-:.TZ]/g, "")}-${process.pid}-${contract.contract_sha256.slice(0, 8)}`;
-  const hostLease = await startActiveLongTaskVerificationLease(contract, runId);
+  const hostLease = options.host_service?await serviceLease(options.host_service,contract,runId):await startActiveLongTaskVerificationLease(contract, runId);
   const runRoot = path.join(workdir, "runs", runId);
   await mkdir(runRoot, { recursive: true });
   const source = options.snapshot ?? await createLongTaskSnapshot(contract.repository_root, contract, runId);
@@ -91,7 +96,7 @@ export async function verifyLongTask(workdir: string, specIds?: string[], option
     const selectedSpecs=contract.verification_specs.filter((spec)=>selectedIds.includes(spec.id));
     const resources=options.resources??await prepareLongTaskExecutionResources(contract,source.root,selectedSpecs,runId,source.manifest.snapshot_sha256);
     const environment = await environmentManifest(source.root,resources.dependency_layer?.key??null,resources.browser_layer?.key??null,resources.secrets.refs);
-    const specResults = await executeFrozenVerificationSpecs({ contract, source_root: source.root, workdir, run_root: runRoot, spec_ids: selectedIds,run_id:runId,snapshot_sha256:source.manifest.snapshot_sha256,resources });
+    const specResults = await executeFrozenVerificationSpecs({ contract, source_root: source.root, workdir, run_root: runRoot, spec_ids: selectedIds,run_id:runId,snapshot_sha256:source.manifest.snapshot_sha256,resources,oracle_sandbox:options.oracle_sandbox });
     const findings = specResults.flatMap((result) => enrichFindings(contract, result.spec_id, result.findings));
     try { await assertLongTaskContractFresh(contract); }
     catch (error) { findings.push(integrityFinding(runId, workdir, error)); }
@@ -118,6 +123,7 @@ function integrityFinding(runId:string,workdir:string,error:unknown):LongTaskFin
 function workspaceChanged(runId:string,workdir:string,before:string,after:string):LongTaskFindingV2{return {category:"worktree_changed_during_verify",expected:before,actual:after,evidence_path:`runs/${runId}/snapshot-manifest.json`,next_action:"Stabilize the product workspace and rerun verification",reverify_command:`ty-context composite-long-task verify ${quote(workdir)}`};}
 function enrichFindings(contract:CompiledContractV3,specId:string,findings:LongTaskFindingV2[]):LongTaskFindingV2[]{const ac=contract.acceptance_criteria.find((criterion)=>criterion.verification_spec_ids.includes(specId));if(!ac)return findings;const bindings=ac.obligation_refs.flatMap((obligation_id)=>{const obligation=contract.obligations.find((item)=>item.id===obligation_id);const requirements=obligation?.source_requirement_ids??[];return requirements.length?requirements.map((requirement_id)=>({requirement_id,obligation_id,ac_id:ac.id})):[{obligation_id,ac_id:ac.id}];});return findings.flatMap((finding)=>bindings.map((binding)=>({...finding,...binding})));}
 async function gitChangedPaths(root:string):Promise<string[]>{return new Promise((resolve)=>{const child=spawn("git",["status","--porcelain=v1","-z","--untracked-files=all"],{cwd:root,shell:false,windowsHide:true});const chunks:Buffer[]=[];child.stdout.on("data",(chunk:Buffer)=>chunks.push(chunk));child.on("error",()=>resolve([]));child.on("close",(code)=>{if(code!==0){resolve([]);return;}resolve(Buffer.concat(chunks).toString("utf8").split("\0").filter(Boolean).map((field)=>field.slice(3).replace(/.* -> /,"").replace(/\\/g,"/")));});});}
-async function environmentManifest(snapshotRoot:string,dependencyKey:string|null,browserKey:string|null,secretRefs:NonNullable<EnvironmentManifestV2["secret_refs"]>):Promise<EnvironmentManifestV2>{return {node:process.version,platform:process.platform,arch:process.arch,release:os.release(),executable:process.execPath,executable_sha256:sha256Hex(await readFile(process.execPath)),cwd:snapshotRoot,environment_keys:["CI","ComSpec","HOME","LANG","LC_ALL","PATH","PATHEXT","Path","PLAYWRIGHT_BROWSERS_PATH","PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD","PLAYWRIGHT_SKIP_BROWSER_GC","SYSTEMROOT","TEMP","TMP","TY_CONTEXT_ARTIFACT_DIR","TY_CONTEXT_DEPENDENCY_LAYER_KEY","TY_CONTEXT_TEMP_DIR","USERPROFILE","VITEST_SKIP_INSTALL_CHECKS","WINDIR",...secretRefs.filter((item)=>item.present).map((item)=>item.name)].sort(),dependency_layer_keys:dependencyKey?[dependencyKey]:[],browser_layer_keys:browserKey?[browserKey]:[],sandbox_policy_sha256:LONG_TASK_SANDBOX_POLICY_SHA256,secret_refs:secretRefs};}
+async function environmentManifest(snapshotRoot:string,dependencyKey:string|null,browserKey:string|null,secretRefs:NonNullable<EnvironmentManifestV2["secret_refs"]>):Promise<EnvironmentManifestV2>{return {node:process.version,platform:process.platform,arch:process.arch,release:os.release(),executable:process.execPath,executable_sha256:sha256Hex(await readFile(process.execPath)),cwd:snapshotRoot,environment_keys:["CI","ComSpec","HOME","LANG","LC_ALL","LOCALAPPDATA","PATH","PATHEXT","Path","PLAYWRIGHT_BROWSERS_PATH","PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD","PLAYWRIGHT_SKIP_BROWSER_GC","SYSTEMROOT","TEMP","TMP","TY_CONTEXT_ARTIFACT_DIR","TY_CONTEXT_DEPENDENCY_LAYER_KEY","TY_CONTEXT_TEMP_DIR","USERPROFILE","VITEST_SKIP_INSTALL_CHECKS","WINDIR",...secretRefs.filter((item)=>item.present).map((item)=>item.name)].sort(),dependency_layer_keys:dependencyKey?[dependencyKey]:[],browser_layer_keys:browserKey?[browserKey]:[],sandbox_policy_sha256:LONG_TASK_SANDBOX_POLICY_SHA256,secret_refs:secretRefs};}
 function quote(value:string):string{return /\s/.test(value)?JSON.stringify(value):value;}
 function message(error:unknown):string{return error instanceof Error?error.message:String(error);}
+async function serviceLease(service:LongTaskHostRegistryServiceV1,contract:CompiledContractV3,runId:string):Promise<{stop:()=>Promise<void>}>{const active=await service.getActive(contract.repository_root);if(!active)return {stop:async()=>undefined};if(active.contract_sha256!==contract.contract_sha256)throw new Error("active_contract_revision_requires_user_authorization:verification");const verifying=await service.beginVerification(contract.repository_root,runId);const operation=verifying.verification_lease?.operation_id;if(!operation)return {stop:async()=>undefined};let renewal=Promise.resolve();let renewalError:unknown;const timer=setInterval(()=>{renewal=renewal.then(()=>service.renewVerification(contract.repository_root,operation)).then(()=>undefined).catch((error)=>{renewalError=error;});},60_000);timer.unref();return {stop:async()=>{clearInterval(timer);await renewal;await service.finishVerification(contract.repository_root,operation);if(renewalError)throw renewalError;}};}

@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { readFile, readdir } from "node:fs/promises";
+import { readFile, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { canonicalJson, sha256Hex } from "./composite-campaign-codec.js";
 import { authorityIdentities, computeRepositoryIdentity, computeWorkdirIdentity } from "./long-task-host-identity.js";
@@ -171,6 +171,8 @@ export class LongTaskHostRegistryServiceV1 {
       return this.replaceActiveUnlocked(active, { state: "sealed", updated_at: new Date(this.storage.now()).toISOString(), verification_lease: null }, "finish_verification");
     });
   }
+
+  async releaseTerminal(repositoryRoot:string,result:Record<string,unknown>,turnId:string):Promise<unknown>{if(!/^[A-Za-z0-9._:-]{1,256}$/u.test(turnId))throw new Error("host_terminal_turn_id_invalid");const repository=await computeRepositoryIdentity(repositoryRoot);const tombstone=await this.storage.withExclusive(async()=>{const active=await this.recoverActiveLeaseUnlocked(await this.readActiveUnlocked(repository.hash));if(!active)throw new Error("host_active_registry_missing");if(active.state!=="sealed"||active.verification_lease)throw new Error("host_registry_state_invalid:terminal");if(result.contract_sha256!==active.contract_sha256||!["accepted","externally_blocked"].includes(String(result.workflow_status)))throw new Error("host_terminal_result_invalid");const completedAt=new Date(this.storage.now()).toISOString();const signed=await this.storage.signer.sign({schema_version:"ty-context-host-terminal-tombstone-v1" as const,registry_id:active.registry_id,repository_identity_hash:active.repository_identity_hash,workdir_identity_hash:active.workdir_identity_hash,contract_sha256:active.contract_sha256,workflow_status:String(result.workflow_status),result_sha256:sha256Hex(canonicalJson(result)),stop_turn_id:turnId,completed_at:completedAt,retain_until:new Date(this.storage.now()+30*24*60*60_000).toISOString()});await this.storage.commitUnlocked("release_terminal",[{path:`registry/tombstones/${active.registry_id}.json`,content:canonicalJson(signed)},{path:`registry/active/records/${active.registry_id}.json`,content:null},{path:activeRepositoryPath(active.repository_identity_hash),content:null},{path:activeWorkdirPath(active.workdir_identity_hash),content:null}]);return signed;});await rm(path.join(repository.identity.canonical_path,".codex","ty-context-active-long-task.json"),{force:true}).catch(()=>undefined);return tombstone;}
 
   async abandonReservation(handle: AuthorityReservationHandleV1): Promise<void> {
     if (handle.kind !== "reservation" || !handle.reservation_id) return;

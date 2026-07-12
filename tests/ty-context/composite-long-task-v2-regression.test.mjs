@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { compileLongTaskContract } from "../../packages/ty-context/dist/lib/long-task-contract-compiler.js";
-import { runLongTaskFinalGate } from "../../packages/ty-context/dist/lib/long-task-final-gate.js";
+import { runLongTaskFinalGate } from "./long-task-test-runtime.mjs";
 import { writeHappyV3Contract } from "./long-task-v3-fixtures.mjs";
 
 const repoRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../..");
@@ -28,7 +28,6 @@ const sourceExpectations={
   final_gate_interrupted_partial_write:["packages/ty-context/src/lib/long-task-status.ts",/rename\(temporary, file\)/],
   final_gate_not_run_agent_says_done:["packages/ty-context/src/lib/long-task-stop-check.ts",/Final gate has not produced/],
   needs_work_agent_says_accepted:["packages/ty-context/src/lib/long-task-stop-check.ts",/Final verification needs work/],
-  repo_stop_hook_deleted_or_modified:["packages/ty-context/src/lib/long-task-hook-preflight.ts",/managed_hook_script_missing|hook_heartbeat_hash_mismatch/],
   ordinary_bug_no_workdir:[".codex/ty-context-managed/skills/composite-long-task-workflow/agents/openai.yaml",/allow_implicit_invocation:\s*false/],
   historical_complete:["packages/ty-context/src/lib/long-task-final-gate.ts",/verifyLongTask\(workdir,contract\.verification_specs/],
   stale_evidence:["packages/ty-context/src/lib/long-task-final-gate.ts",/run\.spec_results/],

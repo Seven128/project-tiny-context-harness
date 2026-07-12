@@ -4,8 +4,7 @@ import { mkdtemp, readFile, writeFile, mkdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { compileLongTaskContract } from "../../packages/ty-context/dist/lib/long-task-contract-compiler.js";
-import { runLongTaskFinalGate } from "../../packages/ty-context/dist/lib/long-task-final-gate.js";
-import { stopCheckLongTask } from "../../packages/ty-context/dist/lib/long-task-stop-check.js";
+import { runLongTaskFinalGate, stopCheckLongTask } from "./long-task-test-runtime.mjs";
 import { addSecondRequirementBranch, observationV2OracleScript, writeHappyV3Contract } from "./long-task-v3-fixtures.mjs";
 
 async function setup(mutate=()=>{},prepare=async()=>{}) { const root=await mkdtemp(path.join(os.tmpdir(),"ltw-final-")); const workdir=await writeHappyV3Contract(root,mutate); await prepare(root,workdir); const contract=await compileLongTaskContract(workdir,root); return {root,workdir,contract}; }
