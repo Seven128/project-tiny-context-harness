@@ -2,7 +2,7 @@
 
 Campaign V5 keeps one immutable `CompositeAuthoringPacketV3` revision chain and one persistent App Server thread per SFC. Contract V3 authority schemas and filenames are unchanged. Run `composite-campaign contract --json` before manual inspection; code owns the strict schema.
 
-For every SFC returned by `author_packets`, the adapter concurrently starts/resumes its persisted thread and runs a read-only Authoring Turn in the Integration worktree. A known controller model/effort is passed explicitly; an unknown profile is recorded and left unchanged, never guessed. No Goal exists, network/product writes are disabled, and `outputSchema` requires the complete Packet.
+For every SFC returned by `author_packets`, the adapter concurrently starts/resumes its persisted thread and runs a read-only Authoring Turn in the Integration worktree. A known controller model/effort is passed explicitly; an unknown profile is recorded and left unchanged, never guessed. No Goal exists, network/product writes are disabled, and the strict `CompositeAuthoringPacketV3` output schema is supplied through `outputSchema` and requires the complete Packet.
 
 The Packet must:
 

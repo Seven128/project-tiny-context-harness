@@ -4,7 +4,7 @@
 
 `composite-campaign run` launches local `codex app-server --listen stdio://`, initializes JSONL RPC, reads `model/list` and persists App Server version, catalog hash and controller profile. App Server is required; there is no manual/Fake fallback in real execution.
 
-Only a catalog-resolved `gpt-5.6-sol / xhigh|max`, or an explicit catalog upgrade-chain successor at `xhigh|max`, routes execution to `gpt-5.6-sol / medium`. Sol below the threshold, Terra/Luna/other models, unknown profiles and unavailable Sol-medium targets pass through unchanged with a persisted reason. Authoring always uses the known controller profile. Every later Turn explicitly repeats its persisted profile.
+Only a catalog-resolved `gpt-5.6-sol / xhigh|max`, or an explicit catalog upgrade-chain successor at `xhigh|max`, routes execution to `gpt-5.6-sol / medium`: in profile terms, Sol `xhigh|max` routes to Sol `medium`. Sol below the threshold, Terra/Luna/other models, unknown profiles and unavailable Sol-medium targets pass through unchanged with a persisted reason. Authoring always uses the known controller profile. Every later Turn explicitly repeats its persisted profile.
 
 ## Baseline, Threads, And Wave Launch
 
