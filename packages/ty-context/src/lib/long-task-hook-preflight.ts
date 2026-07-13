@@ -20,9 +20,11 @@ export async function checkLongTaskCompletionGate(repositoryRoot: string): Promi
   let scriptHash = "missing";
   let configHash = "missing";
   try {
-    scriptHash = sha256Hex(await readFile(script));
+    const scriptBytes = await readFile(script);
+    scriptHash = sha256Hex(scriptBytes);
     const supported = fileURLToPath(new URL("../../assets/hooks/long-task-hook.mjs", import.meta.url));
-    if (scriptHash !== sha256Hex(await readFile(supported))) findings.push("completion_hook_script_unmanaged");
+    const supportedBytes = await readFile(supported);
+    if (sha256Hex(normalizeManagedText(scriptBytes)) !== sha256Hex(normalizeManagedText(supportedBytes))) findings.push("completion_hook_script_unmanaged");
   }
   catch { findings.push("completion_hook_script_missing"); }
   try {
@@ -44,6 +46,10 @@ export async function checkLongTaskCompletionGate(repositoryRoot: string): Promi
     bundle_sha256,
     findings
   };
+}
+
+function normalizeManagedText(value: Uint8Array): Buffer {
+  return Buffer.from(Buffer.from(value).toString("utf8").replace(/\r\n?/gu, "\n"), "utf8");
 }
 
 export async function assertLongTaskCompletionGate(repositoryRoot: string): Promise<CompletionGateCheck> {

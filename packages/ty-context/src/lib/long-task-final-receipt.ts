@@ -1,9 +1,10 @@
-import { readFile, rm, stat } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { canonicalJson, sha256Hex } from "./composite-campaign-codec.js";
 import type { CompiledContractV3 } from "./long-task-contract-schema.js";
 import type { FinalResultV3 } from "./long-task-run-result.js";
 import { atomic } from "./long-task-status.js";
+import { ensureLongTaskRuntimeExcludes, resolveGitWorktreePath, resolveGitWorktreePaths, sameFilesystemPath } from "./git-worktree-paths.js";
 
 interface FinalResultReceiptV3 {
   schema_version: "long-task-final-result-receipt-v3";
@@ -19,6 +20,7 @@ interface FinalResultReceiptV3 {
 const RECEIPT = "ty-context-final-result-receipt.json";
 
 export async function writeLongTaskFinalAuthority(contract: CompiledContractV3, workdir: string, result: FinalResultV3): Promise<void> {
+  await ensureLongTaskRuntimeExcludes(contract.repository_root);
   const resultFile = path.join(workdir, "final-result.json");
   await atomic(resultFile, result);
   const resultSha256 = sha256Hex(await readFile(resultFile));
@@ -77,17 +79,11 @@ function isReceipt(value: unknown): value is FinalResultReceiptV3 {
 }
 
 async function receiptFiles(repositoryRoot: string): Promise<string[]> {
-  return [path.join(repositoryRoot, ".codex", RECEIPT), path.join(await gitDirectory(repositoryRoot), RECEIPT)];
-}
-
-async function gitDirectory(repositoryRoot: string): Promise<string> {
-  const marker = path.join(repositoryRoot, ".git");
-  const info = await stat(marker);
-  if (info.isDirectory()) return marker;
-  if (!info.isFile()) throw new Error("final_result_receipt_unavailable:git_marker");
-  const match = (await readFile(marker, "utf8")).trim().match(/^gitdir:\s*(.+)$/i);
-  if (!match) throw new Error("final_result_receipt_unavailable:gitdir");
-  return path.resolve(repositoryRoot, match[1]);
+  const worktree = await resolveGitWorktreePaths(repositoryRoot);
+  if (!sameFilesystemPath(worktree.worktree_root, repositoryRoot)) {
+    throw new Error("final_result_receipt_unavailable:repository_root");
+  }
+  return [path.join(worktree.worktree_root, ".codex", RECEIPT), await resolveGitWorktreePath(repositoryRoot, RECEIPT)];
 }
 
 function invalid(reason: string): never {

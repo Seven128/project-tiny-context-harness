@@ -1,62 +1,51 @@
-# Campaign Review, Handoff, Start, And Continuation
+# Campaign V4 Git, Goal, Integration, And Recovery Lifecycle
 
-## Resume And Review
+## Resume
 
-Resume from `campaign.yaml`, immutable revision files, and CLI projections; do not reconstruct state from chat memory. Run `next --campaign <path> --json` and inspect the selected/current SFC, authoring status, handoff status, result projection, dependencies, and unresolved decisions. Re-read current Context/code before semantic authoring or continuation.
+Resume from `campaign.yaml`, immutable source/coverage/graph/Packet/schedule revisions, receipts and CLI status. Do not reconstruct authority from chat memory. Run `status --json`, then `advance --json`; retry the returned idempotent action.
 
-If the current revision is ready, run preflight again before handoff. If it is stale or invalid, create a new packet revision. Never edit rendered projections or execution state to make a campaign appear ready.
+## Git Baseline
 
-## Handoff
+Before the first wave, the CLI verifies Git identity and unfinished operations, scans non-ignored changes for obvious raw credentials, creates the automatic checkpoint commit when needed, fetches, fast-forwards or rebases the target, freezes `base_commit`, and creates the Campaign Integration Branch/worktree. Ordinary text conflicts return a repair action; semantic contradictions alone require a decision.
 
-Run:
+All serial and parallel SFCs use worktrees. Same-wave worktrees must share exact `wave.base_commit`; later waves use the current integration head. Worktree startup verifies branch, HEAD, cleanliness, Campaign/SFC/Packet identity, three inputs, Hook and CLI identity.
 
-```text
-ty-context composite-campaign handoff --campaign <path> --slice <id>
-```
+## Launch A Wave
 
-Handoff freezes the current revision hashes, materializes a unique workdir, and reuses composite init, compile, and render-goal. It does not call `create_goal`, execute the plan, or prove completion. Report `handoff_ready`, the workdir, and `goal-objective.txt`. Without explicit start authorization, stop here.
+`advance.action=launch_wave` means every Goal manifest/objective/worktree and launch token is already persisted. Launch all returned workers before waiting. When one thread can hold only one unfinished Goal, use one native child agent/thread per SFC and let each bind its own Goal. Record every Goal ID with `bind-goal`; same ID/token is idempotent and a different ID conflicts.
 
-## Explicit Start
-
-For `start`, `启动`, or an already-authorized prepare-and-execute request:
-
-1. Read the complete generated `goal-objective.txt`.
-2. If no Goal is already bound, call Codex `create_goal` with that complete objective; do not compress it into a lossy summary.
-3. After successful Goal creation, or when retrying the already-bound Goal ID, bind it exactly once:
-
-```text
-ty-context composite-campaign start --campaign <path> --slice <id> --goal-id <id>
-```
-
-The same Goal ID is idempotent. If it is already bound, skip `create_goal` and retry `start` with the existing ID. A different ID conflicts. If Goal creation fails, do not call `start`. Goal execution owns implementation and must reread current Context/code, resolve Context Delta, follow the strict composite execution workflow, and reach its own final gate.
+Each worker must compile in its assigned worktree, implement only its allowed bindings, verify/repair, commit, confirm clean, then run final-gate. If final-gate needs work, repair and recommit before rerunning. After accepted it changes nothing. Workers never switch/merge branches, modify graph/other Packets/Integration Branch, delete worktrees or declare Campaign completion.
 
 ## Record Result
 
-After the bound execution workdir contains a current final-gate event, run:
+`record-result` validates the existing final result and receipts without rerunning final-gate. It binds campaign/SFC/wave/Goal, branch, wave base, head and commit range, contract, final result hash and clean worktree. A mismatch is recovery work or corruption; never edit state to make it pass.
+
+## Merge And Repair
+
+Accepted Slice branches merge only to the Integration Branch in stable SFC order. Pre-merge checks require base ancestry, exact receipt head, clean worktree, unchanged contract/source/oracle/verifier and unchanged commit range.
+
+On a Git conflict, capture a conflict manifest, abort the partial integration merge, create a repair branch/worktree/Goal, and give it all affected Packets, requirements, ACs and accepted receipts. Repair must preserve both contracts. A normal conflict never asks the user.
+
+Bind a repair Goal idempotently before waiting:
 
 ```text
-ty-context composite-campaign record-result --campaign <path> --slice <id> --workdir <path>
+ty-context composite-campaign bind-repair-goal --campaign <path> --repair-id <id> --goal-id <id> --launch-token <token>
 ```
 
-This mirrors only the current attempt's hash-matching `accept`, `blocked`, or `reject` result. It never runs the gate, upgrades a status, accepts validator-only evidence, or computes campaign completion. Report mismatches as blockers rather than editing campaign or task state.
+After a wave merges, Integration Gate reruns every wave SFC, any prior SFC affected through bindings/input paths/diff, global build/typecheck/smoke and cross-SFC contracts. Unknown impact means conservative revalidation. A regression creates an integration-repair Goal and keeps downstream dependencies blocked.
 
-For an orchestrated prepare-and-execute run, the order is: downstream final gate, `record-result`, then `update_goal(status="complete")` only when the strict Goal completion contract permits it; only after the Goal is no longer active may `next` continue. If the downstream executor already closed the Goal, a later prepare/resume invocation may record the persisted verified result before calling `next`. The strict executor owns Goal completion authority; this Skill owns only campaign result synchronization and continuation.
+## Campaign Final And Target
 
-## Continue Next
+After every SFC is `integration_verified`, Campaign Final Gate materializes and compiles all Packet revisions against one final Integration snapshot, reruns all specs/bindings/counterfactuals, validates global constraints and source coverage, and requires a clean Integration Branch. Historical Slice results cannot substitute.
 
-Only continue when no active Goal remains. Run:
+Before target integration, fetch and compare the target tip. A moved target is resynchronized and the Campaign gate reruns. Merge/push when allowed or open the automatic PR path. Auth/MFA/permission/approval and unavailable protected-branch automation are external blockers; never force push.
 
-```text
-ty-context composite-campaign next --campaign <path> --json
-```
+Cleanup only owned, merged, receipt-validated worktrees/branches/locks. Preserve source plan, coverage/graph, Packet/schedule revisions, receipts, final result and merge identities.
 
-`next` is read-only: a `recommended` candidate is not yet selected and cannot accept a packet. If exactly one dependency-ready candidate exists, create a new `ScopeFitResultV1` with the same stable graph and IDs, preserve prior rationale plus the continuation reason, set `decision: "split_required"`, set `selected_slice_id` to that candidate, clear `decision_required`, and run:
+## Recovery Rules
 
-```text
-ty-context composite-campaign apply-scope --campaign <path> --input <continued-scope.json>
-ty-context composite-campaign next --campaign <path> --json
-```
-
-Continue only when the second `next` reports that SFC as `selected`. If multiple same-priority candidates exist or a product decision remains, ask one user choice, then persist the chosen candidate through the same stable-graph `apply-scope` transition and confirm it with `next`; never author directly from `recommended` or `decision_required`. If none is ready, report the blocking dependencies/results.
-
-After selection is persisted, refresh current Context and code, then author that current SFC only. There is no aggregate campaign completion flag; describe observed per-SFC results and the next action without declaring the campaign product-complete.
+- Persist launch intent before Host Goal creation; bind the returned ID immediately.
+- Retry known Goal IDs and tokens; never duplicate an ambiguous launch.
+- Recompute ready frontier after each integration-verified wave.
+- Recompute conflicts and Packets when the integration base changes.
+- Do not mark `finished` unless CLI returns Campaign `accepted` and the target commit.

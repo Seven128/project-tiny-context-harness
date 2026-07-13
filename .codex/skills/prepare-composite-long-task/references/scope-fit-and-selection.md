@@ -1,60 +1,39 @@
-# Scope Fit And Stable SFC Selection
+# Scope Fit V3, Source Coverage, And Stable SFC Graph
 
 ## Purpose
 
-Decide whether the raw request belongs in the strict three-input workflow, then create the smallest stable SFC dependency graph that preserves the user's product outcome. This is semantic work: inspect current Context and code, state assumptions, and do not use implementation convenience to narrow the request.
+Preserve every delivery-significant item in the discussed plan, decide whether Composite execution fits, and author one complete stable dependency graph. Inspect current Context/code, state assumptions, and never narrow the source because an implementation shortcut is convenient.
 
-## Decisions
+## Source Coverage
 
-- `fit_for_three_inputs`: one bounded SFC can carry the request without hiding independent outcomes or unresolved ownership.
-- `split_required`: the request contains multiple independently executable or acceptance-distinct slices. Emit stable `SFC-###` IDs and dependency edges.
-- `blocked_for_decision`: a product, ownership, architecture, scope, or priority choice materially changes the graph or packet.
-- `not_long_task`: the request does not justify this composite workflow; recommend the appropriate smaller path without creating a campaign execution entry.
+The exact `source-plan.md` is immutable and hash-bound. Build `source-coverage.json` before Packet authoring. Every declared source item has one disposition:
 
-A selected child of `split_required` uses `selected_from_split` in its Product source. IDs are append-only and never renumbered when later facts add, supersede, or block slices.
+- one or more SFC IDs;
+- one global constraint with explicit applicable SFCs and later requirement/AC/spec bindings;
+- explicit out-of-scope with source-backed reason; or
+- a genuine decision requirement.
 
-## Slicing Rules
+Uncovered items and global constraints block Campaign final acceptance. The CLI proves coverage of declared source items; the authoring review remains responsible for not omitting meaningful plan items from the inventory.
 
-Each SFC must own one independently reviewable outcome, its boundary, dependencies, non-goals, non-completing outcomes, and acceptance direction. Split when outcomes can fail independently, require materially different owners/surfaces, or need separate Goal evidence. Do not split solely by file, layer, agent, or estimated duration.
+## Scope Fit Decisions
 
-Preserve explicit dependency edges. A candidate is dependency-ready only when all prerequisites have an accepted mirrored result. Select the unique highest-priority ready candidate automatically. If multiple same-priority candidates remain, ask the user to choose; do not use array order, filename order, or model preference as a tie-breaker.
+- `fit_for_three_inputs`: one bounded SFC carries the plan without hiding independent outcomes.
+- `split_required`: multiple independently executable or acceptance-distinct SFCs are required.
+- `blocked_for_decision`: product, ownership, architecture or scope meaning materially changes the graph.
+- `not_long_task`: the source does not justify Composite execution.
 
-Ask one narrow decision question when possible. Record only the chosen answer and its provenance; do not fabricate an answer from adjacent code.
+Stable `SFC-###` IDs and stable keys are append-only and never renumbered or reused. Split by independently reviewable outcomes, not merely file, layer, agent or duration.
 
-## JSON Shape
+## Complete Graph
 
-Use this structural shape; values remain semantic authoring decisions and the CLI validator is authoritative:
+Each SFC records objective, source refs, scope/non-goals, priority, real semantic `depends_on`, produced/consumed contracts, conflict domains and resource locks. Each global constraint records its applicable SFCs and acceptance bindings. Reject self/cyclic/dangling dependencies, duplicate stable keys, uncovered source refs and missing constraint targets.
 
-```json
-{
-  "schema_version": "scope-fit-result-v2",
-  "request_sha256": "<request hash>",
-  "decision": "fit_for_three_inputs",
-  "rationale": ["<source-backed reason>"],
-  "slices": [{
-    "slice_id": "SFC-001", "stable_key": "<never reused>", "title": "<title>",
-    "objective": "<independent outcome>", "depends_on": [], "priority": 1,
-    "scope_summary": ["<in scope>"], "out_of_scope": ["<not in scope>"],
-    "decisions_required": []
-  }],
-  "selected_slice_id": "SFC-001",
-  "decision_required": null
-}
-```
+`depends_on` is semantic, not a scheduling suggestion. A consumed contract requires its producer to precede the consumer. Lack of an edge is not proof of parallel safety.
 
-Allowed `decision` values are `fit_for_three_inputs`, `split_required`, `blocked_for_decision`, and `not_long_task`. `selected_slice_id` is either one real SFC ID or JSON `null`; it is never a union-expression string.
+Scope Fit may emit `parallel_candidate` or `serial_required` hints from owner surfaces, expected modules, contracts and locks. They are advisory. Final wave placement is computed only after Packet preflight from concrete bindings and resources.
 
-For `blocked_for_decision`, `selected_slice_id` is `null` and `decision_required` is `{ "decision_id": "...", "question": "...", "candidates": ["SFC-001", "SFC-002"] }`. After the user chooses, publish a new `apply-scope` input with the same stable graph/IDs, `decision: "split_required"`, the chosen `selected_slice_id`, cleared `decision_required`, and the explicit user answer plus decision ID in `rationale`; clear only the resolved slice decision. This is the persisted choice/provenance path.
+## Scheduling Semantics
 
-For `not_long_task`, use no slices, no selected slice, and no decision payload. Normally classify this before campaign creation; only persist it when the user explicitly wants an opt-in campaign record.
+Ready means every dependency is `integration_verified`. For the ready frontier, CLI builds pairwise conflict reasons and uses stable `priority`, `stable_key`, `slice_id` order to choose the largest conflict-free set up to the resource/concurrency cap. Unknown conflict defaults to serial. Equal priority never asks the user.
 
-## Apply And Review
-
-Write the versioned Scope Fit result and graph to an in-root JSON file, then run:
-
-```text
-ty-context composite-campaign apply-scope --campaign <path> --input <scope.json>
-ty-context composite-campaign next --campaign <path> --json
-```
-
-Review stable IDs, edges, statuses, selected candidate, and unresolved decisions before authoring. `next` is read-only. Never treat recommendation, selection, handoff, or a result projection as aggregate campaign completion.
+Publish the complete V3 graph and coverage with `apply-scope`, then review `status --json`. Do not author a Packet while its SFC is not in the returned ready frontier.

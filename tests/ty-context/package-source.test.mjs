@@ -19,11 +19,14 @@ try {
   await mkdir(path.join(fixture, ".agent/ty-context-managed/skills/composite-long-task-workflow/assets"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/ty-context-managed/minimal_tools"), { recursive: true });
   await mkdir(path.join(fixture, ".agent/ty-context-managed/make"), { recursive: true });
+  await mkdir(path.join(fixture, ".agent/ty-context-managed/hooks"), { recursive: true });
   await mkdir(path.join(fixture, ".github/workflows"), { recursive: true });
   await mkdir(path.join(fixture, "packages/ty-context"), { recursive: true });
 
   await writeFile(path.join(fixture, ".agent/ty-context-managed/agents/AGENTS_CORE.md"), "# Minimal Context Harness\n", "utf8");
   await writeFile(path.join(fixture, "README.md"), "# User Guide\n\nMinimal Context package guide.\n", "utf8");
+  await writeFile(path.join(fixture, "README.zh-CN.md"), "# 中文指南\n\nMinimal Context 中文包指南。\n", "utf8");
+  await writeFile(path.join(fixture, ".agent/ty-context-managed/hooks/long-task-hook.mjs"), "export default {};\n", "utf8");
   await writeFile(path.join(fixture, ".agent/ty-context-managed/context_templates/global.md"), "# Project / Delivery Context\n", "utf8");
   await writeFile(path.join(fixture, ".agent/ty-context-managed/context_templates/architecture.md"), "# Architecture Context\n", "utf8");
   await writeFile(path.join(fixture, ".agent/ty-context-managed/context_templates/area.md"), "# Area Context\n", "utf8");
@@ -102,6 +105,9 @@ try {
   - source: "README.md"
     target: "packages/ty-context/assets/README.md"
     mode: "copy-file"
+  - source: "README.zh-CN.md"
+    target: "packages/ty-context/assets/README.zh-CN.md"
+    mode: "copy-file"
   - source: ".agent/ty-context-managed/context_templates"
     target: "packages/ty-context/assets/context_templates"
     mode: "copy-tree"
@@ -113,6 +119,9 @@ try {
     mode: "copy-file"
   - source: ".agent/ty-context-managed/minimal_tools"
     target: "packages/ty-context/assets/tools"
+    mode: "copy-tree"
+  - source: ".agent/ty-context-managed/hooks"
+    target: "packages/ty-context/assets/hooks"
     mode: "copy-tree"
   - source: ".github/workflows/harness.yml"
     target: "packages/ty-context/assets/github/harness.yml"
@@ -133,6 +142,10 @@ try {
   assert.match(agentsCore, /Minimal Context Harness/);
   const packagedReadme = await readFile(path.join(fixture, "packages/ty-context/assets/README.md"), "utf8");
   assert.match(packagedReadme, /Minimal Context package guide/);
+  const packagedChineseReadme = await readFile(path.join(fixture, "packages/ty-context/assets/README.zh-CN.md"), "utf8");
+  assert.match(packagedChineseReadme, /中文包指南/);
+  const packagedHook = await readFile(path.join(fixture, "packages/ty-context/assets/hooks/long-task-hook.mjs"), "utf8");
+  assert.match(packagedHook, /export default/);
   const packagedGlobal = await readFile(path.join(fixture, "packages/ty-context/assets/context_templates/global.md"), "utf8");
   assert.match(packagedGlobal, /Project \/ Delivery Context/);
   const packagedArchitecture = await readFile(

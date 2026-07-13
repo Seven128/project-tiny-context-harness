@@ -89,7 +89,8 @@ It is manual-only:
 - Versioned release surfaces must be prepared before commit with `npm run release:prepare -- --version <patch|minor|major|x.y.z> --update-mode <sync-only|upgrade-required|manual-required>`; the workflow verifies this with `npm run release:check-version`.
 - The job runs on `ubuntu-latest` with Node `24`.
 - The workflow installs the latest npm CLI and asserts npm CLI 11.5.1 or later.
-- It runs package tests, package source drift check and `make validate-context`, rebuilds the prepared tarball, verifies it byte-for-byte against `docs/launch/release-artifact-<version>.json`, and publishes only that verified path.
+- It builds the package, runs the package source drift check and `make validate-context`, rebuilds the prepared tarball, verifies it byte-for-byte against `docs/launch/release-artifact-<version>.json`, and publishes only that verified path.
+- It does not run the Composite Campaign E2E/mechanism profile or the complete workspace suite. Those remain explicit maintainer commands and, when needed for a release, are run during local release preparation before the committed artifact reaches this publication-only workflow.
 - The publish step runs only when `dry_run` is false.
 - The GitHub Release create/update step runs only after a real publish, uses the release packet body and marks `v<version>` as the latest release.
 - The workflow must not define `NPM_TOKEN` or `NODE_AUTH_TOKEN`; publish authentication should come from OIDC.
@@ -105,7 +106,7 @@ dry_run: true
 
 Expected result:
 
-- package tests pass,
+- package build succeeds,
 - source drift check passes,
 - Context validation passes,
 - the rebuilt tarball matches the release-preparation SHA-256 attestation,

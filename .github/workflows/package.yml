@@ -71,8 +71,8 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Test package
-        run: npm test --workspace project-tiny-context-harness
+      - name: Build package
+        run: npm run build --workspace project-tiny-context-harness
       - name: Check package canonical source drift
         run: node packages/ty-context/dist/cli.js package check-source
       - name: Validate source Context

@@ -8,29 +8,30 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const source = path.join(root, ".codex/ty-context-managed/skills/prepare-composite-long-task");
 const read = (name) => readFile(path.join(source, name), "utf8");
 
-test("prepare Skill is concise, explicit, and delegates strict shape to the CLI contract", async () => {
+test("prepare Skill is concise, explicit, and routes the complete Campaign V4 loop", async () => {
   const skill = await read("SKILL.md");
   const description = skill.match(/^description:\s*(.*)$/m)?.[1];
   assert.match(skill, /^name: prepare-composite-long-task$/m);
-  assert.equal(description, "Use when directly invoked to prepare or resume a composite long-task campaign from a raw requirement.");
-  assert.ok(description.length <= 120);
+  assert.equal(description, "Use when directly invoked to prepare, execute, resume, or review a multi-SFC composite long-task campaign from a discussed plan.");
+  assert.ok(description.length <= 140);
   assert.match(skill, /\/prepare-composite-long-task/);
   assert.match(skill, /composite-campaign contract --json/);
-  assert.match(skill, /current SFC only/i);
-  assert.match(skill, /Do not hand-write the three YAML projections/i);
-  assert.match(skill, /handoff.*does not create a Goal/is);
-  assert.match(skill, /explicit.*start/is);
-  assert.match(skill, /same Goal ID.*idempotent/is);
-  assert.match(skill, /record-result.*current final gate/is);
-  assert.match(skill, /no legacy importer/i);
-  assert.match(skill, /no aggregate campaign completion/i);
+  assert.match(skill, /complete prepare-and-execute loop/i);
+  assert.match(skill, /source coverage.*full stable Scope Fit V3 DAG/is);
+  assert.match(skill, /author every returned ready-frontier SFC/is);
+  assert.match(skill, /Start the complete wave before waiting/i);
+  assert.match(skill, /bind-repair-goal/);
+  assert.match(skill, /record-result.*never runs final-gate/is);
+  assert.match(skill, /Campaign Final Gate.*one shared final snapshot/is);
+  assert.match(skill, /Target movement invalidates.*revalidation/is);
+  assert.match(skill, /Do not import legacy attachments/i);
   assert.match(skill, /references\/scope-fit-and-selection\.md/);
   assert.match(skill, /references\/packet-authoring\.md/);
   assert.match(skill, /references\/campaign-lifecycle\.md/);
   assert.ok(skill.split(/\r?\n/).length <= 180, "Skill should remain a routing workflow, not a copied prompt corpus");
 });
 
-test("semantic references cover split decisions, repair stops, review, start, and continuation", async () => {
+test("semantic references cover complete graph, positive-evidence waves, repair, and finalization", async () => {
   const [scope, authoring, lifecycle] = await Promise.all([
     read("references/scope-fit-and-selection.md"),
     read("references/packet-authoring.md"),
@@ -41,27 +42,24 @@ test("semantic references cover split decisions, repair stops, review, start, an
   assert.match(scope, /blocked_for_decision/);
   assert.match(scope, /not_long_task/);
   assert.match(scope, /stable.*SFC-###/is);
-  assert.match(scope, /multiple.*candidate.*ask/is);
-  assert.match(scope, /schema_version.*scope-fit-result-v2/is);
-  assert.match(scope, /explicit user answer.*decision ID.*rationale/is);
+  assert.match(scope, /Stable `SFC-###` IDs.*never renumbered/is);
+  assert.match(scope, /global constraint.*applicable SFCs/is);
+  assert.match(scope, /largest conflict-free set.*up to.*cap/is);
+  assert.match(scope, /Unknown conflict defaults to serial/i);
   assert.match(authoring, /CompositeAuthoringPacketV3/);
-  assert.match(authoring, /non-completing/i);
   assert.match(authoring, /preflight/i);
-  assert.match(authoring, /repair.*packet.*new revision/is);
-  assert.match(authoring, /do not weaken.*acceptance/is);
-  assert.match(authoring, /schema_version.*composite-authoring-packet-v3/is);
+  assert.match(authoring, /repair invalid authoring through a new Packet revision/is);
+  assert.match(authoring, /never hand-edit rendered YAML or weaken an oracle/i);
+  assert.match(authoring, /current Integration Branch Context\/code/i);
   assert.match(lifecycle, /resume|review/i);
-  assert.match(lifecycle, /handoff_ready/);
-  assert.match(lifecycle, /create_goal/);
-  assert.match(lifecycle, /start --campaign/);
+  assert.match(lifecycle, /Launch all returned workers before waiting/i);
+  assert.match(lifecycle, /bind-goal/);
+  assert.match(lifecycle, /bind-repair-goal/);
   assert.match(lifecycle, /record-result/);
-  assert.match(lifecycle, /next --campaign/);
-  assert.match(lifecycle, /refresh.*Context.*code/is);
-  assert.match(lifecycle, /`next` is read-only.*recommended.*not yet selected/is);
-  assert.match(lifecycle, /apply-scope[\s\S]*second `next` reports.*selected/is);
-  assert.match(lifecycle, /never author directly from `recommended` or `decision_required`/is);
-  assert.match(lifecycle, /final gate.*record-result.*update_goal/is);
-  assert.match(lifecycle, /already bound.*skip `create_goal`/is);
+  assert.match(lifecycle, /Integration Gate/);
+  assert.match(lifecycle, /Campaign Final Gate/);
+  assert.match(lifecycle, /moved target.*reruns/is);
+  assert.match(lifecycle, /never force push/i);
 });
 
 test("the managed Skill uses only one reference level and no copied attachment corpus", async () => {
@@ -99,10 +97,12 @@ test("canonical, packaged, and workspace Skill trees stay synchronized", async (
 test("public documentation is English-complete and preserves the strict downstream route", async () => {
   for (const relative of ["README.md", "packages/ty-context/README.md"]) {
     const content = await readFile(path.join(root, relative), "utf8");
-    assert.match(content, /## Composite Campaign Preparation/);
+    assert.match(content, /## Composite Campaign Orchestrator V4/);
     assert.match(content, /\/prepare-composite-long-task/);
     assert.match(content, /composite-campaign/);
-    assert.match(content, /handoff.*does not create a Goal|Handoff.*does not create a Goal/is);
+    assert.match(content, /worktree/i);
+    assert.match(content, /Integration (?:Branch|Gate)/i);
+    assert.match(content, /Campaign Final Gate/i);
     assert.match(content, /no importer, alias or silent migration|There is no importer, alias or silent migration/i);
     assert.match(content, /\/composite-long-task-workflow/);
   }

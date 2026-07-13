@@ -1,15 +1,15 @@
 ---
 name: prepare-composite-long-task
-description: Use when directly invoked to prepare or resume a composite long-task campaign from a raw requirement.
+description: Use when directly invoked to prepare, execute, resume, or review a multi-SFC composite long-task campaign from a discussed plan.
 ---
 
 # Prepare Composite Long Task
 
-中文显示名：多组合长程任务准备与续接 Skill
+中文显示名：多组合长程任务准备、并行执行与续接 Skill
 
 ## Boundary
 
-This package-managed Skill owns semantic preparation before strict composite execution. It turns a raw requirement into an opt-in, user-owned campaign and prepares exactly one dependency-ready SFC at a time. `/composite-long-task-workflow` remains the downstream execution adapter for an already-complete three-input bundle.
+This package-managed Skill is the Campaign Orchestrator V4 agent adapter. Explicit invocation authorizes the complete prepare-and-execute loop from one discussed plan through target-branch integration. It owns centralized semantic authoring, conservative scheduling and orchestration. `/composite-long-task-workflow` remains the one-Slice Contract V3 worker and never owns Campaign graph, scheduling, merge or completion.
 
 Invoke explicitly:
 
@@ -17,55 +17,76 @@ Invoke explicitly:
 /prepare-composite-long-task
 ```
 
-Do not use broad automatic routing. Do not import legacy attachments, partial bundles, or old tmp workdirs. There is no legacy importer and no aggregate campaign completion state.
+Do not use broad automatic routing. Do not import legacy attachments, partial bundles, V1/V2 campaigns or old tmp workdirs. Do not create a second serial execution mode. Every SFC, including a serial one, uses the same worktree/Goal/receipt/integration path.
 
 ## Bootstrap
 
-1. Read project Context and relevant code before making semantic decisions.
-2. Run `ty-context composite-campaign contract --json`; its descriptor is the current field, enum, filename, ordering, and contract-hash authority.
-3. Determine whether this is a new raw request, a campaign resume/review, an explicit start, or a result/continue request.
+1. Read project Context and relevant code before semantic decisions.
+2. Run `ty-context composite-campaign contract --json`; code owns the current schema, enum, filename, ordering, action and hash contract.
+3. Determine whether the request creates a Campaign from a discussed plan, resumes/reviews one, supplies Packet authoring, reports worker results, or repairs/finalizes integration.
 4. Load only the matching one-level references:
-   - scope or decomposition: `references/scope-fit-and-selection.md`
-   - current-SFC authoring or repair: `references/packet-authoring.md`
-   - review, handoff, start, result, or continuation: `references/campaign-lifecycle.md`
+   - source coverage, Scope Fit or graph: `references/scope-fit-and-selection.md`
+   - ready-frontier Packet authoring/repair: `references/packet-authoring.md`
+   - baseline, worktrees, Goals, receipts, integration, repair, finalization or recovery: `references/campaign-lifecycle.md`
 
-Never copy field inventories from this Skill into a competing schema. Never register campaign files in `project_context/context.toml`.
+Never copy a competing field inventory into this Skill. Never register campaign files in `project_context/context.toml`.
 
-## New Campaign Workflow
+## New Campaign
 
-1. Perform a preliminary Scope Fit from the request. If it is `not_long_task`, recommend the smaller path without creating a campaign unless the user explicitly asks to retain that decision.
-2. Otherwise preserve the user's requirement in an in-root UTF-8 file, create the explicit campaign with `composite-campaign create`, then apply Scope Fit and a stable SFC dependency graph using `composite-campaign apply-scope`.
-3. If a decision is required, ask one narrow question and stop mutation until answered.
-4. Use `composite-campaign next --campaign <path> --json`; author the current SFC only.
-5. Produce `CompositeAuthoringPacketV3`, then publish it with `composite-campaign apply-packet`.
-6. Run `render`, then `preflight --json`. Repair the packet through a new immutable revision; do not hand-edit rendered YAML.
-7. Review the rendered authorities and run `handoff`. Handoff does not create a Goal. Stop at `handoff_ready` unless the user explicitly authorized start or prepare-and-execute.
+1. Perform preliminary Scope Fit. If the source is not a composite long task, recommend the smaller path without creating a Campaign unless the user explicitly wants the decision preserved.
+2. Preserve the discussed plan in an in-root UTF-8 file and create the Campaign:
 
-Do not hand-write the three YAML projections. Package rendering from the V2 packet is their only campaign projection path.
+```text
+ty-context composite-campaign create --id <id> --plan-file <file> [--target-branch <branch>]
+```
 
-## Start And Continuation
+3. Author complete source coverage, global constraints and the full stable Scope Fit V3 DAG, then publish it with `apply-scope`. Do not select only one SFC or omit later work.
+4. A genuine unresolved product/scope/architecture choice is `decision_blocked`. Priority ties, file conflicts and execution order are scheduler inputs and never user decisions.
 
-- On explicit start with no bound Goal, read `goal-objective.txt`, call `create_goal` with the complete objective, and only after success run `start --campaign <path> --slice <id> --goal-id <id>`.
-- If the same Goal ID is already bound, skip `create_goal` and retry `start` with that Goal ID; this is idempotent. A different Goal ID is a conflict. Never create a second unfinished Goal for the SFC.
-- Goal execution must reread current Context/code and resolve Context Delta before implementation.
-- After execution has a current final gate, use `record-result`; it only mirrors the hash- and attempt-verified current final gate.
-- When no active Goal remains, run `next`, persist its unique recommendation or the user's tie choice through a stable-graph `apply-scope` transition, rerun `next` to confirm `selected`, refresh current Context/code, and author only that SFC.
+## Fixed Advance Loop
 
-Never infer completion from campaign state, validators, matrices, verdict prose, or Skill output. `record-result` does not run the final gate, and this Skill never computes campaign completion.
+Run `advance --json` and follow its machine action until `finished`:
+
+```text
+while action != finished:
+  perform exactly the returned action
+  persist returned identities before external work
+  call advance again
+```
+
+- `author_packets`: author every returned ready-frontier SFC against current Integration Context/code, publish immutable Packet revisions, then render and preflight all of them. Do not author stale downstream Packets early.
+- `launch_wave`: confirm every worktree/objective/launch token is already materialized. Start the complete wave before waiting. Use available native subagents/threads so each concurrent worker can bind its own Goal when the Host permits one unfinished Goal per thread. Bind every successful Goal ID with the matching launch token; never serialize independent work by waiting after the first launch.
+- `wait_goals`: collect only the listed Goal results. A worker must commit and become clean before final-gate, stop mutating after accepted, and never merge or change Campaign state. Call `record-result` only after the worker has a current receipt-bound accepted final result.
+- `repair_integration`: create or resume the returned repair worktree/Goal from the conflict or regression manifest, then bind its Goal ID with `bind-repair-goal` and the returned launch token. Preserve every affected Packet/requirement/AC and do not weaken either side.
+- `wait_external` or `decision_required`: stop only for the exact reported semantic or external blocker.
+- `finished`: report completion only when CLI status is `accepted` and includes the final target commit.
+
+## Goal Discipline
+
+- The CLI reserves the whole wave before external Goal creation. Goal launch tokens and bindings are idempotent; retry a known binding and never create a replacement Goal for the same reservation.
+- If the Host cannot recover whether a Goal was created before a crash, fail closed with the persisted launch token rather than duplicate work. Resume through the available Host Goal/thread lookup before relaunching.
+- Goal execution must reread Context/code, resolve Context Delta, stay inside allowed implementation bindings, commit before final-gate and leave a clean worktree.
+- `record-result` validates the existing final result, dual receipt, Goal ID, branch, base/head, commit range and clean state. It never runs final-gate and never upgrades prose or intermediate verification into acceptance.
+
+## Completion Authority
+
+Slice acceptance is not Campaign acceptance. Every merged wave must pass its Integration Gate. After all SFCs integrate, Campaign Final Gate recompiles and reruns every Slice contract, binding, counterfactual, global constraint and source-coverage rule on one shared final snapshot. Target movement invalidates the pre-merge result until synchronization and revalidation succeed.
+
+Never infer completion from status prose, historical Slice receipts, validators, matrices, Skill output or a fake Goal adapter. Campaign `accepted` is CLI-derived only after target integration.
 
 ## Stop Conditions
 
-Stop with a structured, actionable report when:
+Stop with one structured actionable report only when:
 
-- Scope Fit is `blocked_for_decision`, or multiple same-priority candidates require a user choice.
-- the request is `not_long_task` and should use a smaller workflow;
-- packet authoring would require inventing product intent, ownership, architecture, assertions, or acceptance semantics;
-- preflight remains invalid after evidence-based repair, or the rendered projection drifted;
-- start was not explicitly authorized;
-- Goal creation failed, another Goal is bound, or result identity/hashes do not match the current final gate.
+- source meaning requires a real product, scope or architecture decision;
+- Packet authoring would invent product intent, ownership, acceptance semantics or a verifier oracle;
+- a credential, MFA, permission or external approval is unavailable after attempting the authorized local path;
+- a protected branch has no automatic merge/PR path;
+- two SFC contracts are semantically contradictory rather than textually conflicted; or
+- persisted identities show corruption, immutable drift or an ambiguous unrecoverable Host Goal launch.
 
-Do not weaken non-completion conditions or acceptance semantics merely to pass preflight.
+Ordinary scheduling ties, Git conflicts, target movement, test failures, `needs_work`, Goal interruption and integration regressions are automatic repair/recovery work, not user blockers.
 
 ## Outputs
 
-Tracked campaign authoring/provenance remains under the configured campaign root. Runtime state, attempts, evidence, logs, and derived views remain under `tmp/ty-context/plan-acceptance/**`. Report the campaign path, selected SFC/revision, preflight state, handoff workdir, Goal binding if any, result projection if any, and the exact next action.
+Tracked user-owned Campaign source/orchestration/provenance remains under the configured Campaign root. Mutable contracts, verifier runs, raw logs, locks and validation workdirs remain under temporary execution storage. Report the Campaign path/status, current action, graph/wave/SFC identities, repair or external blocker when present, and the accepted target commit only after `finished`.
