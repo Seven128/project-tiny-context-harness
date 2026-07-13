@@ -54,6 +54,6 @@ export function help(): void {
   composite-long-task <subcommand>
                        Manage explicit composite long-task workflow workdirs
   composite-campaign <subcommand>
-                       Orchestrate Campaign V4 planning, SFC Goals, integration, repair, and target finalization
+                       Run Campaign V5 App Server threads, SFC Goals, integration, repair, and finalization
   package <subcommand> Maintain package canonical source`);
 }

@@ -43,6 +43,12 @@ test("shared_resource_lock_serial", () => {
   assert.deepEqual(codes(decision), ["resource_lock_overlap"]);
 });
 
+test("Scope Fit V4 cohesion, migration, generated artifact, package manifest, and environment evidence serialize",()=>{
+  const left=profile("SFC-001",{source_unit_cohesion_keys:["same-outcome"],migration_sequences:["db-v7"],generated_artifacts:["dist/schema.json"],package_manager_manifests:["package-lock.json"],environment_profiles:["integration"]});
+  const right=profile("SFC-002",{source_unit_cohesion_keys:["same-outcome"],migration_sequences:["db-v7"],generated_artifacts:["dist/**"],package_manager_manifests:["package-lock.json"],environment_profiles:["integration"]});
+  assert.deepEqual(codes(analyzeConflictV4(left,right)),["source_unit_cohesion_overlap","migration_sequence_overlap","generated_artifact_overlap","package_manager_manifest_overlap","environment_profile_overlap"]);
+});
+
 test("unknown_conflict_defaults_serial", () => {
   const unknown = profile("SFC-001", { positive_evidence_complete: false, unknown_reasons: ["implementation_targets_missing"] });
   const known = profile("SFC-002");

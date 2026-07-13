@@ -1,5 +1,6 @@
 import type { ScopeSliceV3 } from "./composite-campaign-schema-v4.js";
 import type { CompiledContractV3, ImplementationBindingV3, LongTaskSourceBundleV3 } from "./long-task-contract-schema.js";
+import type { ScopeSliceV4, SourceUnitV4 } from "./scope-fit-v4.js";
 
 export type ConflictReasonCodeV4 =
   | "explicit_dependency"
@@ -10,6 +11,11 @@ export type ConflictReasonCodeV4 =
   | "resource_lock_overlap"
   | "context_owner_overlap"
   | "conflict_domain_overlap"
+  | "source_unit_cohesion_overlap"
+  | "migration_sequence_overlap"
+  | "generated_artifact_overlap"
+  | "package_manager_manifest_overlap"
+  | "environment_profile_overlap"
   | "unknown_parallel_evidence";
 
 export interface ConflictReasonV4 { code: ConflictReasonCodeV4; evidence: string }
@@ -28,6 +34,11 @@ export interface ConflictProfileV4 {
   resource_locks: string[];
   context_refs: string[];
   conflict_domains: string[];
+  source_unit_cohesion_keys: string[];
+  migration_sequences: string[];
+  generated_artifacts: string[];
+  package_manager_manifests: string[];
+  environment_profiles: string[];
   positive_evidence_complete: boolean;
   unknown_reasons: string[];
 }
@@ -42,7 +53,7 @@ interface ConflictMaterialV4 {
   obligation_binding_counts: number[];
 }
 
-export function deriveConflictProfileV4(slice: ScopeSliceV3, bundle: LongTaskSourceBundleV3): ConflictProfileV4 {
+export function deriveConflictProfileV4(slice: ScopeSliceV3 | ScopeSliceV4, bundle: LongTaskSourceBundleV3, sourceUnits: SourceUnitV4[] = []): ConflictProfileV4 {
   const obligations = bundle.plan.plan_items.flatMap((item) => item.obligations);
   return profile(slice, {
     bindings: obligations.flatMap((obligation) => obligation.implementation_bindings),
@@ -52,7 +63,7 @@ export function deriveConflictProfileV4(slice: ScopeSliceV3, bundle: LongTaskSou
     command_paths: bundle.checklist.verification_specs.flatMap((spec) => spec.command_steps.filter((step) => step.tool === "node_script" || step.tool === "playwright_test").map((step) => step.target)),
     fixture_paths: bundle.checklist.counterexample_fixtures.map((fixture) => fixture.path),
     obligation_binding_counts: obligations.map((obligation) => obligation.implementation_bindings.length)
-  });
+  }, sourceUnits);
 }
 
 export function deriveCompiledConflictProfileV4(slice: ScopeSliceV3, contract: CompiledContractV3): ConflictProfileV4 {
@@ -64,7 +75,7 @@ export function deriveCompiledConflictProfileV4(slice: ScopeSliceV3, contract: C
     command_paths: contract.verification_specs.flatMap((spec) => spec.command_steps.filter((step) => step.tool === "node_script" || step.tool === "playwright_test").map((step) => step.target)),
     fixture_paths: contract.counterexample_fixtures.map((fixture) => fixture.path),
     obligation_binding_counts: contract.obligations.map((obligation) => obligation.implementation_bindings.length)
-  });
+  }, []);
 }
 
 export function analyzeConflictV4(left: ConflictProfileV4, right: ConflictProfileV4): ConflictDecisionV4 {
@@ -80,6 +91,11 @@ export function analyzeConflictV4(left: ConflictProfileV4, right: ConflictProfil
   for (const lock of intersections(left.resource_locks, right.resource_locks)) add(reasons, "resource_lock_overlap", lock);
   for (const ref of intersections(left.context_refs, right.context_refs)) add(reasons, "context_owner_overlap", ref);
   for (const domain of intersections(left.conflict_domains, right.conflict_domains)) add(reasons, "conflict_domain_overlap", domain);
+  for (const key of intersections(left.source_unit_cohesion_keys ?? [], right.source_unit_cohesion_keys ?? [])) add(reasons, "source_unit_cohesion_overlap", key);
+  for (const key of intersections(left.migration_sequences ?? [], right.migration_sequences ?? [])) add(reasons, "migration_sequence_overlap", key);
+  for (const key of pathOverlaps(left.generated_artifacts ?? [], right.generated_artifacts ?? [])) add(reasons, "generated_artifact_overlap", key);
+  for (const key of pathOverlaps(left.package_manager_manifests ?? [], right.package_manager_manifests ?? [])) add(reasons, "package_manager_manifest_overlap", key);
+  for (const key of intersections(left.environment_profiles ?? [], right.environment_profiles ?? [])) add(reasons, "environment_profile_overlap", key);
   if (!left.positive_evidence_complete) add(reasons, "unknown_parallel_evidence", `${left.slice_id}:${left.unknown_reasons.join("+")}`);
   if (!right.positive_evidence_complete) add(reasons, "unknown_parallel_evidence", `${right.slice_id}:${right.unknown_reasons.join("+")}`);
   reasons.sort(compareReason);
@@ -101,7 +117,7 @@ export function pathPatternsMayOverlapV4(leftValue: string, rightValue: string):
   return remainder.length > 0;
 }
 
-function profile(slice: ScopeSliceV3, material: ConflictMaterialV4): ConflictProfileV4 {
+function profile(slice: ScopeSliceV3 | ScopeSliceV4, material: ConflictMaterialV4, sourceUnits: SourceUnitV4[]): ConflictProfileV4 {
   const writePaths = material.bindings.filter((binding) => binding.kind === "file" || binding.kind === "path_glob").map((binding) => binding.target);
   const contractKeys = material.bindings.filter((binding) => binding.kind !== "file" && binding.kind !== "path_glob").map((binding) => `${binding.kind}:${binding.target}`);
   const unknown: string[] = [];
@@ -115,7 +131,12 @@ function profile(slice: ScopeSliceV3, material: ConflictMaterialV4): ConflictPro
     write_paths: sorted(writePaths.map(normalizePath)),
     read_paths: sorted([...material.input_paths, ...material.oracle_paths, ...material.command_paths, ...material.fixture_paths, ...material.context_refs].map(normalizePath)),
     contract_keys: sorted(contractKeys), resource_locks: sorted(slice.resource_locks), context_refs: sorted(material.context_refs.map(normalizePath)),
-    conflict_domains: sorted(slice.conflict_domains), positive_evidence_complete: unknown.length === 0, unknown_reasons: unknown.sort()
+    conflict_domains: sorted(slice.conflict_domains), source_unit_cohesion_keys: sorted(sourceUnits.map((unit) => unit.cohesion_key)),
+    migration_sequences: sorted("migration_sequences" in slice ? slice.migration_sequences ?? [] : []),
+    generated_artifacts: sorted(("generated_artifacts" in slice ? slice.generated_artifacts ?? [] : []).map(normalizePath)),
+    package_manager_manifests: sorted(("package_manager_manifests" in slice ? slice.package_manager_manifests ?? [] : []).map(normalizePath)),
+    environment_profiles: sorted("environment_profiles" in slice ? slice.environment_profiles ?? [] : []),
+    positive_evidence_complete: unknown.length === 0, unknown_reasons: unknown.sort()
   };
 }
 
@@ -128,4 +149,4 @@ function glob(segment:string):boolean{return /[*?{[]/u.test(segment);}
 function sorted(values:string[]):string[]{return [...new Set(values)].sort(asciiCompare);}
 function asciiCompare(left:string,right:string):number{return left<right?-1:left>right?1:0;}
 function invalid(reason:string):never{throw new Error(`composite_campaign_conflict_invalid:${reason}`);}
-const REASON_ORDER:ConflictReasonCodeV4[]=["explicit_dependency","contract_dependency","write_write_overlap","write_read_overlap","contract_key_overlap","resource_lock_overlap","context_owner_overlap","conflict_domain_overlap","unknown_parallel_evidence"];
+const REASON_ORDER:ConflictReasonCodeV4[]=["explicit_dependency","contract_dependency","write_write_overlap","write_read_overlap","contract_key_overlap","resource_lock_overlap","context_owner_overlap","conflict_domain_overlap","source_unit_cohesion_overlap","migration_sequence_overlap","generated_artifact_overlap","package_manager_manifest_overlap","environment_profile_overlap","unknown_parallel_evidence"];

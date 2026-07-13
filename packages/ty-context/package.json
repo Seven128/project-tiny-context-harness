@@ -52,7 +52,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:built": "node --test --test-concurrency=1 ../../tests/ty-context/*.test.mjs",
     "test": "npm run build && node --test --test-concurrency=1 ../../tests/ty-context/*.test.mjs",
-    "test:composite-workflow:built": "node --test --test-concurrency=1 ../../tests/ty-context/composite-campaign-graph-v4.test.mjs ../../tests/ty-context/composite-campaign-scheduler.test.mjs ../../tests/ty-context/composite-campaign-worktree.test.mjs ../../tests/ty-context/composite-campaign-v4-cli.test.mjs ../../tests/ty-context/composite-campaign-v4-black-box.test.mjs ../../tests/ty-context/prepare-composite-long-task-skill.test.mjs ../../tests/ty-context/workflow-test-entrypoints.test.mjs",
+    "test:composite-workflow:built": "node --test --test-concurrency=1 ../../tests/ty-context/composite-campaign-graph-v4.test.mjs ../../tests/ty-context/composite-campaign-scheduler.test.mjs ../../tests/ty-context/composite-campaign-worktree.test.mjs ../../tests/ty-context/composite-campaign-v4-cli.test.mjs ../../tests/ty-context/codex-model-router-v5.test.mjs ../../tests/ty-context/codex-app-server-client-v5.test.mjs ../../tests/ty-context/composite-campaign-state-v5.test.mjs ../../tests/ty-context/composite-campaign-source-units-v5.test.mjs ../../tests/ty-context/scope-fit-v4.test.mjs ../../tests/ty-context/composite-campaign-host-recovery-v5.test.mjs ../../tests/ty-context/composite-campaign-v5-app-server-black-box.test.mjs ../../tests/ty-context/prepare-composite-long-task-skill.test.mjs ../../tests/ty-context/workflow-test-entrypoints.test.mjs",
     "test:composite-workflow": "npm run build && npm run test:composite-workflow:built",
     "prepack": "npm run build"
   },

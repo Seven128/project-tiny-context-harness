@@ -1,5 +1,6 @@
 import { parseStrictJson } from "./composite-campaign-codec.js";
 import { assertScopeFitResultV3, type ScopeFitResultV3 } from "./composite-campaign-schema-v4.js";
+import { assertScopeFitResultV4, type ScopeFitResultV4 } from "./scope-fit-v4.js";
 
 export const SOURCE_COVERAGE_SCHEMA_V1 = "composite-source-coverage-v1" as const;
 export type SourceCoverageDispositionV1 = "slice" | "global_constraint" | "out_of_scope" | "decision_required";
@@ -60,7 +61,17 @@ export function assertSourceCoverageV1(value: unknown): SourceCoverageV1 {
 }
 
 export function validateSourceCoverageAgainstScopeV3(scopeValue: unknown, coverageValue: unknown): SourceCoverageAnalysisV1 {
-  const scope = assertScopeFitResultV3(scopeValue); const coverage = assertSourceCoverageV1(coverageValue);
+  return validateSourceCoverage(assertScopeFitResultV3(scopeValue), assertSourceCoverageV1(coverageValue));
+}
+
+export function validateSourceCoverageAgainstScopeV4(scopeValue: unknown, coverageValue: unknown): SourceCoverageAnalysisV1 {
+  const scope = assertScopeFitResultV4(scopeValue); const coverage = assertSourceCoverageV1(coverageValue);
+  const analysis = validateSourceCoverage(scope, coverage); const items = new Set(coverage.items.map((item) => item.source_item_id));
+  for (const unit of scope.source_units) for (const sourceRef of unit.source_refs) if (!items.has(sourceRef)) invalid(`source_unit_unknown_source_item:${unit.unit_id}:${sourceRef}`);
+  return analysis;
+}
+
+function validateSourceCoverage(scope: ScopeFitResultV3 | ScopeFitResultV4, coverage: SourceCoverageV1): SourceCoverageAnalysisV1 {
   if (coverage.source_plan_sha256 !== scope.request_sha256) invalid("source_plan_hash_mismatch");
   const slices = new Map(scope.slices.map((slice) => [slice.slice_id, slice]));
   const constraints = new Map(scope.global_constraints.map((constraint) => [constraint.constraint_id, constraint]));
@@ -99,8 +110,10 @@ export function validateSourceCoverageAgainstScopeV3(scopeValue: unknown, covera
 }
 
 export function assertGlobalConstraintPacketCoverageV1(scopeValue: unknown, coverageValue: unknown, indexesValue: CampaignPacketEntityIndexV1[]): void {
-  const scope = assertScopeFitResultV3(scopeValue); const coverage = assertSourceCoverageV1(coverageValue);
-  const analysis = validateSourceCoverageAgainstScopeV3(scope, coverage);
+  const raw = object(scopeValue, "scope");
+  const scope: ScopeFitResultV3 | ScopeFitResultV4 = raw.schema_version === "scope-fit-result-v4" ? assertScopeFitResultV4(scopeValue) : assertScopeFitResultV3(scopeValue);
+  const coverage = assertSourceCoverageV1(coverageValue);
+  const analysis = scope.schema_version === "scope-fit-result-v4" ? validateSourceCoverageAgainstScopeV4(scope, coverage) : validateSourceCoverageAgainstScopeV3(scope, coverage);
   if (analysis.pending_global_constraint_binding_pairs.length) invalid(`global_constraint_bindings_missing:${analysis.pending_global_constraint_binding_pairs.join(",")}`);
   const indexes = new Map<string, CampaignPacketEntityIndexV1>();
   for (const index of indexesValue) {

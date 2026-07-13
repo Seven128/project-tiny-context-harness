@@ -2,15 +2,18 @@ import { appendFile, lstat, mkdir, open, readFile, realpath, rename, rm, stat, w
 import path from "node:path";
 import { canonicalJson, canonicalValueJson, canonicalYaml, parseStrictJson, parseStrictYaml, sha256Hex } from "./composite-campaign-codec.js";
 import { deriveConflictProfileV4 } from "./composite-campaign-conflicts.js";
-import { validateScopeFitGraphV3 } from "./composite-campaign-graph.js";
+import { validateScopeFitGraphV3, validateScopeFitGraphV4 } from "./composite-campaign-graph.js";
 import { currentBranch, runGit } from "./composite-campaign-git-baseline.js";
 import { CAMPAIGN_SCHEMA_V4, assertCampaignV4, parseScopeFitResultV3, type CampaignSliceV4, type CampaignV4, type ScopeFitResultV3 } from "./composite-campaign-schema-v4.js";
-import { parseSourceCoverageV1, validateSourceCoverageAgainstScopeV3, type CampaignPacketEntityIndexV1, type SourceCoverageV1 } from "./composite-campaign-source-coverage.js";
+import { assertCampaignV5, CAMPAIGN_SCHEMA_V5, campaignHasGoalV5, emptyThreadStateV5, type CampaignV5 } from "./composite-campaign-schema-v5.js";
+import { parseSourceCoverageV1, validateSourceCoverageAgainstScopeV3, validateSourceCoverageAgainstScopeV4, type CampaignPacketEntityIndexV1, type SourceCoverageV1 } from "./composite-campaign-source-coverage.js";
+import { assertSourceUnitPacketBindingsV4, type SourceUnitPacketBindingV4 } from "./composite-campaign-source-units.js";
 import { portablePathSlug } from "./composite-campaign-worktree.js";
 import { parseLongTaskSources } from "./long-task-contract-parser.js";
 import { validateLongTaskCoverage } from "./long-task-contract-coverage.js";
 import { LONG_TASK_SOURCE_FILES, type AcceptanceChecklistV3, type LongTaskSourceBundleV3, type ProductSourceV3, type TechnicalPlanV3 } from "./long-task-contract-schema.js";
 import { resolveInside } from "./long-task-path-policy.js";
+import { parseScopeFitResultV4, type ScopeFitResultV4, type SourceUnitV4 } from "./scope-fit-v4.js";
 
 const PACKET_SCHEMA = "composite-authoring-packet-v3" as const;
 const MAX_TRACKED_FILE_BYTES = 1024 * 1024;
@@ -26,17 +29,20 @@ export interface CompositeAuthoringPacketV3 {
     technical_realization_plan: TechnicalPlanV3;
     acceptance_checklist: AcceptanceChecklistV3;
   };
+  source_unit_bindings?: SourceUnitPacketBindingV4[];
 }
 
 export function compositeCampaignV4Contract(): unknown {
   return {
-    schema_version: CAMPAIGN_SCHEMA_V4,
-    scope_schema: "scope-fit-result-v3",
+    schema_version: CAMPAIGN_SCHEMA_V5,
+    audit_schema: CAMPAIGN_SCHEMA_V4,
+    scope_schema: "scope-fit-result-v4",
+    goal_manifest_schema: "slice-goal-manifest-v2",
     packet_schema: PACKET_SCHEMA,
     source_coverage_schema: "composite-source-coverage-v1",
     authority_schemas: ["product-source-v3", "technical-plan-v3", "acceptance-checklist-v3"],
     projection_files: LONG_TASK_SOURCE_FILES,
-    commands: ["contract", "create", "apply-scope", "apply-packet", "render", "preflight", "advance", "bind-goal", "bind-repair-goal", "record-result", "status"],
+    commands: ["contract", "create", "apply-coverage", "apply-scope", "apply-packet", "render", "preflight", "advance", "bind-goal", "bind-repair-goal", "record-result", "status", "run", "app-server-check", "model-routing", "threads", "interrupt"],
     advance_actions: ["author_packets", "launch_wave", "wait_goals", "repair_integration", "decision_required", "wait_external", "finished"],
     compatibility: "none"
   };
@@ -85,17 +91,23 @@ export async function createCampaignV4(projectRoot: string, id: string, planFile
 }
 
 export async function applyCampaignScopeV4(projectRoot: string, campaignPath: string, scopeFile: string, coverageFile: string): Promise<CampaignV4> {
-  const scope = parseScopeFitResultV3((await readSafeFile(projectRoot, scopeFile, "scope-input")).text);
+  const scope = parseCurrentScope((await readSafeFile(projectRoot, scopeFile, "scope-input")).text);
   const coverage = parseSourceCoverageV1((await readSafeFile(projectRoot, coverageFile, "source-coverage-input")).text);
-  const graph = validateScopeFitGraphV3(scope);
-  validateSourceCoverageAgainstScopeV3(scope, coverage);
+  const graph = scope.schema_version === "scope-fit-result-v4" ? validateScopeFitGraphV4(scope) : validateScopeFitGraphV3(scope);
+  if (scope.schema_version === "scope-fit-result-v4") validateSourceCoverageAgainstScopeV4(scope, coverage); else validateSourceCoverageAgainstScopeV3(scope, coverage);
   return withCampaignMutation(projectRoot, campaignPath, "scope_applied", async (root, campaign) => {
+    const currentSchema = schemaOf(campaign);
+    if (currentSchema === CAMPAIGN_SCHEMA_V5 && scope.schema_version !== "scope-fit-result-v4") throw new Error("Campaign V5 requires scope-fit-result-v4");
+    if (currentSchema === CAMPAIGN_SCHEMA_V4 && scope.schema_version !== "scope-fit-result-v3") throw new Error("Campaign V4 audit data requires scope-fit-result-v3");
     if (scope.request_sha256 !== campaign.source_plan_sha256 || coverage.source_plan_sha256 !== campaign.source_plan_sha256) throw new Error("Campaign scope/source plan hash mismatch");
-    if (Object.keys(campaign.waves).length) throw new Error("Scope Fit graph is frozen after Campaign execution starts");
+    if (currentSchema === CAMPAIGN_SCHEMA_V5 ? campaignHasGoalV5(assertCampaignV5(campaign)) : Object.keys(campaign.waves).length > 0) throw new Error("Scope Fit graph is frozen after the first Campaign Goal is set");
     const prior = await optionalScope(root);
-    if (prior) validateScopeFitGraphV3(scope, prior);
+    if (prior) {
+      if (scope.schema_version !== prior.schema_version) throw new Error("Scope Fit schema cannot change within a Campaign");
+      if (scope.schema_version === "scope-fit-result-v4") validateScopeFitGraphV4(scope, prior as ScopeFitResultV4); else validateScopeFitGraphV3(scope, prior as ScopeFitResultV3);
+    }
     const slices: Record<string, CampaignSliceV4> = {};
-    for (const slice of scope.slices) slices[slice.slice_id] = campaign.slices[slice.slice_id] ?? emptyCampaignSlice();
+    for (const slice of scope.slices) slices[slice.slice_id] = campaign.slices[slice.slice_id] ?? emptyCampaignSlice(currentSchema === CAMPAIGN_SCHEMA_V5);
     campaign.graph = {
       graph_revision: campaign.graph.graph_revision + 1,
       graph_sha256: graph.graph_sha256,
@@ -168,13 +180,20 @@ export async function verifyCampaignPacketV4(projectRoot: string, campaignPath: 
   if (!coverage.passed) throw new Error(coverage.errors.join("\n"));
   for (const spec of bundle.checklist.verification_specs) await readFile(resolveInside(projectRoot, spec.oracle.entrypoint, `${spec.id}.oracle`));
   const index = packetEntityIndex(sliceId, bundle);
-  const { root } = await loadCampaignV4(projectRoot, campaignPath);
-  const scope = parseScopeFitResultV3(await readFile(path.join(root, "scope-fit.json"), "utf8"));
+  const { root, campaign } = await loadCampaignV4(projectRoot, campaignPath);
+  const scope = parseCurrentScope(await readFile(path.join(root, "scope-fit.json"), "utf8"));
   const sourceCoverage = parseSourceCoverageV1(await readFile(path.join(root, "source-coverage.json"), "utf8"));
   validateSliceGlobalBindings(sourceCoverage, index);
   const scopeSlice = scope.slices.find((slice) => slice.slice_id === sliceId);
-  if (!scopeSlice) throw new Error("Packet Slice is absent from Scope Fit V3");
-  const profile = deriveConflictProfileV4(scopeSlice, bundle);
+  if (!scopeSlice) throw new Error("Packet Slice is absent from Scope Fit");
+  let sourceUnits: SourceUnitV4[] = [];
+  if (scope.schema_version === "scope-fit-result-v4") {
+    const packet = await readPacket(rendered.revision_path, campaign, sliceId);
+    assertSourceUnitPacketBindingsV4(scope, sliceId, packet.source_unit_bindings, bundle);
+    const scopeSliceV4 = scope.slices.find((slice) => slice.slice_id === sliceId)!;
+    const selected = new Set(scopeSliceV4.source_unit_refs); sourceUnits = scope.source_units.filter((unit) => selected.has(unit.unit_id));
+  }
+  const profile = deriveConflictProfileV4(scopeSlice, bundle, sourceUnits);
   await atomic(path.join(rendered.revision_path, "packet-index.json"), canonicalJson(index));
   await atomic(path.join(rendered.revision_path, "conflict-profile.json"), canonicalJson(profile));
   return { coverage, revision_path: rendered.revision_path, packet_index: index, conflict_profile: profile };
@@ -188,7 +207,7 @@ export async function loadCampaignV4(projectRoot: string, supplied: string): Pro
   const [baseReal, rootReal] = await Promise.all([realpath(base), realpath(root)]);
   if (!inside(baseReal, rootReal) || rootReal === baseReal) throw new Error("Campaign realpath escapes the V4 campaign root");
   const text = await readBounded(path.join(rootReal, "campaign.yaml"), "campaign.yaml");
-  const campaign = assertCampaignV4(parseStrictYaml(text));
+  const parsed = parseStrictYaml(text); const campaign = (schemaOf(parsed) === CAMPAIGN_SCHEMA_V5 ? assertCampaignV5(parsed) : assertCampaignV4(parsed)) as unknown as CampaignV4;
   if (sha256Hex(await readBounded(path.join(rootReal, "source-plan.md"), "source-plan.md")) !== campaign.source_plan_sha256) throw new Error("Immutable source-plan.md hash mismatch");
   return { root: rootReal, campaign };
 }
@@ -210,17 +229,17 @@ async function withCampaignMutation(projectRoot: string, campaignPath: string, e
     if (current.generation !== loaded.campaign.generation) throw new Error("Campaign generation changed; retry the operation");
     const next = await mutate(loaded.root, current);
     next.generation = current.generation + 1;
-    assertCampaignV4(next);
+    assertCurrentCampaign(next);
     await atomic(path.join(loaded.root, "campaign.yaml"), canonicalYaml(next));
     await appendFile(path.join(loaded.root, "events.ndjson"), `${canonicalValueJson(event(eventType, next))}\n`, "utf8");
     return next;
   } finally { await handle.close(); await rm(lock, { force: true }); }
 }
 
-function emptyCampaignSlice(): CampaignSliceV4 { return { status: "planned", packet_revision: null, packet_sha256: null, wave_id: null, branch: null, worktree: null, goal_id: null, base_commit: null, head_commit: null, final_receipt_sha256: null, merge_commit: null }; }
+function emptyCampaignSlice(v5 = false): CampaignSliceV4 { const slice: CampaignSliceV4 = { status: "planned", packet_revision: null, packet_sha256: null, wave_id: null, branch: null, worktree: null, goal_id: null, base_commit: null, head_commit: null, final_receipt_sha256: null, merge_commit: null }; return v5 ? { ...slice, thread: emptyThreadStateV5() } as unknown as CampaignSliceV4 : slice; }
 function revisionRoot(root: string, sliceId: string, revision: number): string { return path.join(root, "slices", sliceId, "revisions", String(revision).padStart(4, "0")); }
 function currentRevisionRoot(root: string, campaign: CampaignV4, sliceId: string): string { const revision = campaign.slices[sliceId]?.packet_revision; if (!revision) throw new Error("Slice has no Packet revision"); return revisionRoot(root, sliceId, revision); }
-async function optionalScope(root: string): Promise<ScopeFitResultV3 | null> { try { return parseScopeFitResultV3(await readFile(path.join(root, "scope-fit.json"), "utf8")); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return null; throw error; } }
+async function optionalScope(root: string): Promise<ScopeFitResultV3 | ScopeFitResultV4 | null> { try { return parseCurrentScope(await readFile(path.join(root, "scope-fit.json"), "utf8")); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return null; throw error; } }
 
 async function readPacket(revisionPath: string, campaign: CampaignV4, sliceId: string): Promise<CompositeAuthoringPacketV3> {
   const packet = parseStrictJson(await readBounded(path.join(revisionPath, "authoring-packet.json"), "authoring-packet.json")) as CompositeAuthoringPacketV3;
@@ -252,6 +271,21 @@ function validateSliceGlobalBindings(coverage: SourceCoverageV1, index: Campaign
     for (const id of binding.acceptance_criterion_ids) if (!criteria.has(id)) throw new Error(`Global constraint binding references unknown AC: ${id}`);
     for (const id of binding.verification_spec_ids) if (!globals.has(id)) throw new Error(`Global constraint binding requires a global-invariant spec: ${id}`);
   }
+}
+
+function parseCurrentScope(content: string): ScopeFitResultV3 | ScopeFitResultV4 {
+  const schema = schemaOf(parseStrictJson(content));
+  if (schema === "scope-fit-result-v4") return parseScopeFitResultV4(content);
+  return parseScopeFitResultV3(content);
+}
+
+function schemaOf(value: unknown): string | undefined {
+  return value && typeof value === "object" && !Array.isArray(value) && typeof (value as Record<string, unknown>).schema_version === "string"
+    ? (value as Record<string, string>).schema_version : undefined;
+}
+
+function assertCurrentCampaign(value: unknown): CampaignV4 {
+  return (schemaOf(value) === CAMPAIGN_SCHEMA_V5 ? assertCampaignV5(value) : assertCampaignV4(value)) as unknown as CampaignV4;
 }
 
 async function readSafeFile(projectRoot: string, supplied: string, label: string): Promise<{ path: string; text: string }> {

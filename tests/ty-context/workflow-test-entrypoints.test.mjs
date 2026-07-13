@@ -16,7 +16,7 @@ test("Composite workflow self-tests have explicit local entrypoints only", () =>
   for (const workflow of [packageWorkflow, publishWorkflow, consumerWorkflow]) {
     assert.doesNotMatch(workflow, /npm (?:run )?test/);
     assert.doesNotMatch(workflow, /test:composite-workflow/);
-    assert.doesNotMatch(workflow, /composite-campaign-v4-black-box/);
+    assert.doesNotMatch(workflow, /composite-campaign-v5-app-server-black-box/);
   }
 
   assert.match(packageWorkflow, /Build package/);
@@ -32,7 +32,8 @@ test("Composite workflow self-tests have explicit local entrypoints only", () =>
 
   assert.match(packageJson.scripts.test, /tests\/ty-context\/\*\.test\.mjs/);
   assert.match(packageJson.scripts["test:built"], /tests\/ty-context\/\*\.test\.mjs/);
-  assert.match(packageJson.scripts["test:composite-workflow:built"], /composite-campaign-v4-black-box\.test\.mjs/);
+  assert.match(packageJson.scripts["test:composite-workflow:built"], /composite-campaign-v5-app-server-black-box\.test\.mjs/);
+  assert.match(packageJson.scripts["test:composite-workflow:built"], /codex-app-server-client-v5\.test\.mjs/);
   assert.match(packageJson.scripts["test:composite-workflow:built"], /workflow-test-entrypoints\.test\.mjs/);
   assert.equal(packageJson.scripts["test:composite-workflow"], "npm run build && npm run test:composite-workflow:built");
 });
