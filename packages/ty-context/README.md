@@ -353,7 +353,7 @@ Managed `AGENTS.md` guidance is intentionally a startup router, not a full manua
 
 Preflight derives write/read/contract/Context/resource plus cohesion/migration/generated-artifact/package-manifest/environment conflicts; unknown evidence is serial and deterministic waves cap at four. Accepted branches merge only to Integration. Wave Integration Gate and the one-snapshot Campaign Final Gate remain authoritative, with moved-target revalidation. One App Server reconnect resumes/reconciles persisted threads/Turns/Goals; ambiguity fails closed and a second outage becomes `wait_external`, never a manual fallback. Campaign V4 state is audit-only.
 
-The default suite uses a Fake JSONL App Server; the real one-SFC smoke is manual/non-CI. Mutable contracts, verifier runs, raw logs, locks and workdirs remain temporary, while Campaign source/graph/Packet/schedule/thread/receipt identities remain recoverable.
+The default suite uses a Fake JSONL App Server. A real one-SFC smoke is manual/non-CI: use `composite-campaign app-server-check --json` only for transport/catalog preflight, then run `composite-campaign run --campaign <prepared-one-sfc-campaign> --controller-model <actual-model> --controller-effort <actual-effort> --json` and confirm derived `status` is `accepted`. Preflight alone is not lifecycle proof. Mutable contracts, verifier runs, raw logs, locks and workdirs remain temporary, while Campaign source/graph/Packet/schedule/thread/receipt identities remain recoverable.
 
 ## Minimal Context Contract
 

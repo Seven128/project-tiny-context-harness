@@ -374,7 +374,7 @@ The default `context_*` Skills and package-managed utility Skills are generated 
 
 The scheduler derives write/read/contract/Context/resource plus Source Unit cohesion, migration, generated-artifact, package-manifest and environment-profile conflicts and selects a deterministic maximum conflict-free wave of at most four; unknown overlap is serial. Accepted branches merge only to Integration. Wave Integration Gate rechecks current/impacted SFCs, and Campaign Final Gate reruns every SFC/global constraint/source-coverage rule on one final snapshot before target synchronization/integration. App Server failure gets one persisted reconnect/resume/reconcile attempt, then `wait_external`; ambiguous thread/Turn launch fails closed and never falls back to manual Goals. V4 Campaigns remain inspectable audit data but cannot execute automatically.
 
-Default tests use a local Fake JSONL App Server and keep routing, adapter and Scope checks in seconds, the full fake Campaign below two minutes and the Composite suite below five minutes. A real one-SFC App Server smoke is manual and non-CI. Contract V3 Slice black boxes remain separate.
+Default tests use a local Fake JSONL App Server and keep routing, adapter and Scope checks in seconds, the full fake Campaign below two minutes and the Composite suite below five minutes. A real one-SFC App Server smoke is manual and non-CI: run `composite-campaign app-server-check --json` for transport/catalog preflight, then run `composite-campaign run --campaign <prepared-one-sfc-campaign> --controller-model <actual-model> --controller-effort <actual-effort> --json` and confirm derived `status` is `accepted`. The preflight alone is not lifecycle proof. Contract V3 Slice black boxes remain separate.
 
 ## CLI Entry Safety
 

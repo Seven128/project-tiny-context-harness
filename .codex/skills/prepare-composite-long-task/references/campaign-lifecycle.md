@@ -1,51 +1,29 @@
-# Campaign V4 Git, Goal, Integration, And Recovery Lifecycle
+# Campaign V5 App Server, Git, Goal, Integration, And Recovery Lifecycle
 
-## Resume
+## Host And Routing
 
-Resume from `campaign.yaml`, immutable source/coverage/graph/Packet/schedule revisions, receipts and CLI status. Do not reconstruct authority from chat memory. Run `status --json`, then `advance --json`; retry the returned idempotent action.
+`composite-campaign run` launches local `codex app-server --listen stdio://`, initializes JSONL RPC, reads `model/list` and persists App Server version, catalog hash and controller profile. App Server is required; there is no manual/Fake fallback in real execution.
 
-## Git Baseline
+Only a catalog-resolved `gpt-5.6-sol / xhigh|max`, or an explicit catalog upgrade-chain successor at `xhigh|max`, routes execution to `gpt-5.6-sol / medium`. Sol below the threshold, Terra/Luna/other models, unknown profiles and unavailable Sol-medium targets pass through unchanged with a persisted reason. Authoring always uses the known controller profile. Every later Turn explicitly repeats its persisted profile.
 
-Before the first wave, the CLI verifies Git identity and unfinished operations, scans non-ignored changes for obvious raw credentials, creates the automatic checkpoint commit when needed, fetches, fast-forwards or rebases the target, freezes `base_commit`, and creates the Campaign Integration Branch/worktree. Ordinary text conflicts return a repair action; semantic contradictions alone require a decision.
+## Baseline, Threads, And Wave Launch
 
-All serial and parallel SFCs use worktrees. Same-wave worktrees must share exact `wave.base_commit`; later waves use the current integration head. Worktree startup verifies branch, HEAD, cleanliness, Campaign/SFC/Packet identity, three inputs, Hook and CLI identity.
+Before execution, Git baseline logic validates identity/unfinished operations, protects against obvious raw credentials, checkpoints allowed dirty state, freezes `base_commit` and creates the Integration worktree. All serial/parallel SFCs use owned worktrees; a wave shares one base and later waves use the current Integration head.
 
-## Launch A Wave
+Each SFC has exactly one persistent App Server thread. Its read-only Authoring Turn occurs before Goal creation. After Packet preflight, the CLI materializes the Slice worktree, Contract V3 inputs and Goal Manifest V2, validates the generated objective is at most 4000 characters, resumes the same thread, sets its Goal, switches cwd to the Slice worktree and starts a `workspaceWrite` Turn with writable roots limited to that worktree. All initial wave Turns start before any is awaited.
 
-`advance.action=launch_wave` means every Goal manifest/objective/worktree and launch token is already persisted. Launch all returned workers before waiting. When one thread can hold only one unfinished Goal, use one native child agent/thread per SFC and let each bind its own Goal. Record every Goal ID with `bind-goal`; same ID/token is idempotent and a different ID conflicts.
+The worker compiles Contract V3, implements only allowed bindings, verifies/repairs, commits cleanly, then runs final-gate. `needs_work` findings start another explicit-profile Turn in the same thread. Interruption resumes the same Goal/thread/worktree. Only a current accepted result can produce the receipt; then the server/local Goal becomes complete.
 
-Each worker must compile in its assigned worktree, implement only its allowed bindings, verify/repair, commit, confirm clean, then run final-gate. If final-gate needs work, repair and recommit before rerunning. After accepted it changes nothing. Workers never switch/merge branches, modify graph/other Packets/Integration Branch, delete worktrees or declare Campaign completion.
+## Merge, Repair, And Final Authority
 
-## Record Result
+Accepted Slice branches merge to Integration in stable SFC order with base/head/receipt/contract integrity checks. Merge conflict, Integration Gate regression and Campaign Final Gate regression each use an independent execution-profile repair thread/worktree. Repair preserves all affected Packets/requirements/ACs, cannot alter Scope Fit or Packets, commits cleanly, and is applied only against the unchanged repair base.
 
-`record-result` validates the existing final result and receipts without rerunning final-gate. It binds campaign/SFC/wave/Goal, branch, wave base, head and commit range, contract, final result hash and clean worktree. A mismatch is recovery work or corruption; never edit state to make it pass.
+After each merge, Integration Gate reruns affected Slice and cross-SFC evidence. After every SFC becomes `integration_verified`, Campaign Final Gate materializes all current Packets on one Integration snapshot, validates source/global coverage and reruns all bindings/specs/counterfactuals. It is the sole Campaign completion authority. A moved target forces resynchronization and revalidation before final integration. Cleanup removes only owned validated worktrees/branches.
 
-## Merge And Repair
+## Recovery
 
-Accepted Slice branches merge only to the Integration Branch in stable SFC order. Pre-merge checks require base ancestry, exact receipt head, clean worktree, unchanged contract/source/oracle/verifier and unchanged commit range.
+Persist controller catalog/profile, thread IDs, routing, authoring/execution Turn IDs, Goal objective hash/status, launch token, phase and last failure. On App Server loss, reconnect once, `thread/resume`, `thread/read` and `thread/goal/get`, then reconcile known server/local identities. Recover an unpersisted correlated Turn only when exactly one candidate exists. Restore server Goal completion from accepted local state. Apply the same rules to repair threads.
 
-On a Git conflict, capture a conflict manifest, abort the partial integration merge, create a repair branch/worktree/Goal, and give it all affected Packets, requirements, ACs and accepted receipts. Repair must preserve both contracts. A normal conflict never asks the user.
+If a thread/start or Turn launch may have reached the server but cannot be uniquely correlated, fail closed as `ambiguous_host_thread_launch`/`ambiguous_host_turn_launch`; never create duplicate work. A second server failure or missing external authorization becomes `wait_external`. V4 campaigns remain status/audit data and cannot enter automatic V5 execution.
 
-Bind a repair Goal idempotently before waiting:
-
-```text
-ty-context composite-campaign bind-repair-goal --campaign <path> --repair-id <id> --goal-id <id> --launch-token <token>
-```
-
-After a wave merges, Integration Gate reruns every wave SFC, any prior SFC affected through bindings/input paths/diff, global build/typecheck/smoke and cross-SFC contracts. Unknown impact means conservative revalidation. A regression creates an integration-repair Goal and keeps downstream dependencies blocked.
-
-## Campaign Final And Target
-
-After every SFC is `integration_verified`, Campaign Final Gate materializes and compiles all Packet revisions against one final Integration snapshot, reruns all specs/bindings/counterfactuals, validates global constraints and source coverage, and requires a clean Integration Branch. Historical Slice results cannot substitute.
-
-Before target integration, fetch and compare the target tip. A moved target is resynchronized and the Campaign gate reruns. Merge/push when allowed or open the automatic PR path. Auth/MFA/permission/approval and unavailable protected-branch automation are external blockers; never force push.
-
-Cleanup only owned, merged, receipt-validated worktrees/branches/locks. Preserve source plan, coverage/graph, Packet/schedule revisions, receipts, final result and merge identities.
-
-## Recovery Rules
-
-- Persist launch intent before Host Goal creation; bind the returned ID immediately.
-- Retry known Goal IDs and tokens; never duplicate an ambiguous launch.
-- Recompute ready frontier after each integration-verified wave.
-- Recompute conflicts and Packets when the integration base changes.
-- Do not mark `finished` unless CLI returns Campaign `accepted` and the target commit.
+Use `app-server-check`, `model-routing`, `threads` and `interrupt` for diagnostics/control. The one real App Server smoke is manual and non-CI: one SFC authoring Turn -> Goal -> execution Turn -> accepted. Default tests use the local Fake JSONL server.
