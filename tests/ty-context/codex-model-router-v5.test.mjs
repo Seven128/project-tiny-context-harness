@@ -1,9 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { buildModelCatalog } from "../../packages/ty-context/dist/lib/codex-model-catalog.js";
-import { routeCodexModel } from "../../packages/ty-context/dist/lib/codex-model-router.js";
+import { EFFORT_ORDER, effortRank, routeCodexModel } from "../../packages/ty-context/dist/lib/codex-model-router.js";
 
 test("Campaign V5 model routing changes only proven Sol xhigh/max profiles",()=>{
+  assert.deepEqual(EFFORT_ORDER,["none","low","medium","high","xhigh","max"]);assert.deepEqual(EFFORT_ORDER.map(effortRank),[0,1,2,3,4,5]);
   const catalog=buildModelCatalog([model("gpt-5.6-sol",["low","medium","high","xhigh","max"]),model("gpt-5.6-terra",["medium","xhigh"]),model("gpt-5.6-luna",["medium","max"])]);
   assert.deepEqual(routeCodexModel({model:"gpt-5.6-sol",effort:"xhigh"},catalog).execution_profile,{model:"gpt-5.6-sol",effort:"medium"});
   assert.equal(routeCodexModel({model:"gpt-5.6-sol",effort:"max"},catalog).reason,"sol_max_to_medium");

@@ -47,7 +47,7 @@ export function markWorktreeReadyV5(state: CampaignThreadStateV5): CampaignThrea
 export function bindThreadGoalV5(state: CampaignThreadStateV5, objectiveSha256: string, launchToken: string): CampaignThreadStateV5 {
   if (state.goal.status !== "not_set") throw new Error("campaign_thread_goal_already_set");
   if (!/^[a-f0-9]{64}$/u.test(objectiveSha256)) throw new Error("campaign_thread_goal_hash_invalid");
-  const next = transitionThreadPhaseV5(state, "goal_active"); next.goal = { status: "active", objective_sha256: objectiveSha256 }; next.launch_token = nonempty(launchToken, "launch_token");
+  const staged=clone(state);staged.goal={status:"active",objective_sha256:objectiveSha256};const next = transitionThreadPhaseV5(staged, "goal_active"); next.launch_token = nonempty(launchToken, "launch_token");
   return assertThreadStateV5(next);
 }
 
@@ -64,7 +64,7 @@ export function completeThreadTurnV5(state: CampaignThreadStateV5, status: "comp
 }
 
 export function acceptThreadV5(state: CampaignThreadStateV5): CampaignThreadStateV5 {
-  const next = transitionThreadPhaseV5(state, "accepted"); next.goal.status = "complete"; next.active_turn_id = null; next.last_turn_status = "completed"; return assertThreadStateV5(next);
+  const staged=clone(state);staged.goal.status="complete";const next = transitionThreadPhaseV5(staged, "accepted"); next.active_turn_id = null; next.last_turn_status = "completed"; return assertThreadStateV5(next);
 }
 
 function clone(state: CampaignThreadStateV5): CampaignThreadStateV5 {

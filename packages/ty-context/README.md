@@ -79,7 +79,7 @@ For short tasks, use the workflow contract and Context layer directly:
 workflow contract + project_context/** -> implementation -> verification -> drift check
 ```
 
-For ordinary long-running acceptance planning, explicitly invoke `/normal-long-task`. For a discussed multi-SFC plan that should be prepared and executed end to end, explicitly invoke `/prepare-composite-long-task`; explicit invocation authorizes the complete Campaign V4 loop from immutable plan/source coverage through conservative worktree waves, integration repair, final-snapshot verification and target finalization.
+For ordinary long-running acceptance planning, explicitly invoke `/normal-long-task`. For a discussed multi-SFC plan that should be prepared and executed end to end, explicitly invoke `/prepare-composite-long-task`; explicit invocation authorizes the complete Campaign V5 loop from immutable plan/Source Unit coverage through App Server authoring/Goal threads, conservative worktree waves, integration repair, final-snapshot verification and target finalization.
 
 Invoke `/composite-long-task-workflow` only when the three Contract V3 YAML authorities already exist:
 
@@ -145,7 +145,7 @@ npm ci
 npm run smoke:quickstart
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.3.0.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.4.0.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -278,7 +278,7 @@ Use `npx --no-install ty-context ...` only when you explicitly want the already 
 | Plan contract validation | `npx --yes --package project-tiny-context-harness@latest ty-context validate-plan-contract <plan.md\|dir>` | Checks Source-to-Context Coverage and Context-to-Implementation Binding for structural consistency, referenced path existence and weak-proof complete/bound contradictions. |
 | Plan acceptance validation | `npx --yes --package project-tiny-context-harness@latest ty-context validate-plan-acceptance <dir>` | Checks legacy matrix/verdict artifacts when no state exists; when `task-state.json` exists, validates state-backed derived artifacts. It rejects contradictory complete claims, dangling evidence references, weak-proof complete rows, missing proof layers, missing/failed assertion-backed evidence for machine-verifiable layers, negative evidence contradictions, material/critical drift, unapproved sibling substitution, blocking auditor findings, raw secrets/tokens/cookies, generated active-count drift, missing plan/AC cross-references and declared surface/architecture binding gaps. `errors` block; `warnings` / `hygiene` report cleanup. |
 | Composite long-task Contract V3 executor | `npx --yes --package project-tiny-context-harness@latest ty-context composite-long-task <subcommand>` | Exposes only `init`, `compile`, `verify`, `status`, `final-gate`, `stop-check` and `render-goal`. |
-| Composite Campaign V4 orchestrator | `npx --yes --package project-tiny-context-harness@latest ty-context composite-campaign <subcommand>` | Exposes `contract`, `create --plan-file`, `apply-scope --coverage`, `apply-packet`, `render`, `preflight`, `advance`, Goal/repair binding, receipt-only result recording and derived status. |
+| Composite Campaign V5 orchestrator | `npx --yes --package project-tiny-context-harness@latest ty-context composite-campaign <subcommand>` | Exposes pure/audit Campaign commands plus automatic `run`, `app-server-check`, `model-routing`, `threads` and `interrupt`. `run` requires Codex App Server and drives one persistent thread per SFC from read-only Packet authoring through Goal execution, recovery, repair, integration and finalization. |
 | Diagnostics | `make ty-context-doctor` or `npx --yes --package project-tiny-context-harness@latest ty-context doctor` | Reports Harness root, package version, schema version and required Minimal Context paths. |
 | Package source checks | `ty-context package sync-source`, `ty-context package check-source` | Maintainer-only commands for keeping package canonical assets aligned with the source workspace. |
 
@@ -345,13 +345,15 @@ The expected Context Priority Ladder is: read Context first, run the product/pag
 
 Managed `AGENTS.md` guidance is intentionally a startup router, not a full manual. It should contain fact-source entry points, hard boundaries, key triggers and shortest validation commands; package consumers default long design reasoning to Context unless they already have a local spec/design convention. The source repository keeps stable Harness workflow rationale in `PROJECT_SPEC.md`. Role procedures belong in Skills and human usage guidance in README. The recommended 40-70 line range is a soft budget, not a validator gate.
 
-## Composite Campaign Orchestrator V4
+## Composite Campaign Orchestrator V5
 
-`/prepare-composite-long-task` and `ty-context composite-campaign` provide a clean-start V4 orchestration plane over the unchanged Contract V3 Slice worker. The campaign preserves immutable plan/source coverage and one complete stable Scope Fit V3 DAG. Ready-frontier `CompositeAuthoringPacketV3` revisions project/preflight the three V3 authorities; the CLI derives concrete write/read/contract/Context/resource conflicts and selects deterministic waves of at most four, defaulting unknown overlap to serial.
+`/prepare-composite-long-task` and `ty-context composite-campaign` provide a clean-start Campaign V5 plane over the unchanged Contract V3 Slice worker. The Campaign preserves immutable plan/source coverage and one Scope Fit V4 DAG whose Source Unit inventory is control/capability-level and whose SFCs are maximal coherent ranges inside independent acceptance outcomes. Only declared semantic or factually evidenced authoring-capacity boundaries may split; graph IDs are stable and the first Goal freezes scope.
 
-Every SFC uses an isolated worktree. `advance` reserves the whole wave before external Goal creation, then returns idempotent launch tokens. Workers commit and become clean before final-gate; `record-result` validates existing receipts and Git/Goal identities without rerunning final-gate. Accepted branches merge only to the Integration Branch. Merge conflicts and combined regressions create persisted repair worktree/Goal actions. Wave Integration Gate rechecks the current/impacted Slice set; Campaign Final Gate reruns every SFC/global constraint/source-coverage rule on one final snapshot and resynchronizes a moved target before merge/push.
+`run --campaign` starts local Codex App Server stdio JSONL and persists host/catalog/controller identity. Every ready SFC uses one thread for a controller-profile read-only structured Packet Turn, preflight, then Goal execution in its isolated worktree. Only catalog-proven Sol `xhigh|max` switches to Sol `medium`; all lower, unrelated, unknown or unavailable profiles pass through. Initial wave Turns start before waiting; `needs_work` and interruption reuse the same thread. Independent execution-profile repair threads handle merge and combined-gate regressions without changing Scope Fit or Packets.
 
-Tracked Campaign files retain source/graph/immutable Packet/schedule/recovery/result identities; mutable contracts, verifier runs, logs, locks and workdirs remain temporary. V1/V2/Markdown campaigns, old workdirs and historical runtime state are unsupported. There is no importer, alias or silent migration. Four real temporary-Git/Fake-Goal Campaign black boxes remain below five minutes, separate from the six Contract V3 Slice black boxes.
+Preflight derives write/read/contract/Context/resource plus cohesion/migration/generated-artifact/package-manifest/environment conflicts; unknown evidence is serial and deterministic waves cap at four. Accepted branches merge only to Integration. Wave Integration Gate and the one-snapshot Campaign Final Gate remain authoritative, with moved-target revalidation. One App Server reconnect resumes/reconciles persisted threads/Turns/Goals; ambiguity fails closed and a second outage becomes `wait_external`, never a manual fallback. Campaign V4 state is audit-only.
+
+The default suite uses a Fake JSONL App Server; the real one-SFC smoke is manual/non-CI. Mutable contracts, verifier runs, raw logs, locks and workdirs remain temporary, while Campaign source/graph/Packet/schedule/thread/receipt identities remain recoverable.
 
 ## Minimal Context Contract
 

@@ -8,7 +8,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const source = path.join(root, ".codex/ty-context-managed/skills/prepare-composite-long-task");
 const read = (name) => readFile(path.join(source, name), "utf8");
 
-test("prepare Skill is concise, explicit, and routes the complete Campaign V4 loop", async () => {
+test("prepare Skill is concise, explicit, and routes the complete Campaign V5 App Server loop", async () => {
   const skill = await read("SKILL.md");
   const description = skill.match(/^description:\s*(.*)$/m)?.[1];
   assert.match(skill, /^name: prepare-composite-long-task$/m);
@@ -17,10 +17,11 @@ test("prepare Skill is concise, explicit, and routes the complete Campaign V4 lo
   assert.match(skill, /\/prepare-composite-long-task/);
   assert.match(skill, /composite-campaign contract --json/);
   assert.match(skill, /complete prepare-and-execute loop/i);
-  assert.match(skill, /source coverage.*full stable Scope Fit V3 DAG/is);
-  assert.match(skill, /author every returned ready-frontier SFC/is);
-  assert.match(skill, /Start the complete wave before waiting/i);
-  assert.match(skill, /bind-repair-goal/);
+  assert.match(skill, /Source Unit.*Scope Fit V4 DAG/is);
+  assert.match(skill, /one persistent App Server thread per ready SFC/is);
+  assert.match(skill, /complete wave starts before waiting/i);
+  assert.match(skill, /repair_integration/);
+  assert.match(skill, /App Server unavailability never falls back/is);
   assert.match(skill, /record-result.*never runs final-gate/is);
   assert.match(skill, /Campaign Final Gate.*one shared final snapshot/is);
   assert.match(skill, /Target movement invalidates.*revalidation/is);
@@ -31,7 +32,7 @@ test("prepare Skill is concise, explicit, and routes the complete Campaign V4 lo
   assert.ok(skill.split(/\r?\n/).length <= 180, "Skill should remain a routing workflow, not a copied prompt corpus");
 });
 
-test("semantic references cover complete graph, positive-evidence waves, repair, and finalization", async () => {
+test("semantic references cover maximal Scope V4, App Server authoring, routing, recovery, repair, and finalization", async () => {
   const [scope, authoring, lifecycle] = await Promise.all([
     read("references/scope-fit-and-selection.md"),
     read("references/packet-authoring.md"),
@@ -41,25 +42,29 @@ test("semantic references cover complete graph, positive-evidence waves, repair,
   assert.match(scope, /split_required/);
   assert.match(scope, /blocked_for_decision/);
   assert.match(scope, /not_long_task/);
-  assert.match(scope, /stable.*SFC-###/is);
-  assert.match(scope, /Stable `SFC-###` IDs.*never renumbered/is);
+  assert.match(scope, /never renumber.*SFC-###/is);
+  assert.match(scope, /control\/capability-level/i);
+  assert.match(scope, /over_split_sfc/);
+  assert.match(scope, /authoring_capacity_exceeded/);
+  assert.match(scope, /first Slice Goal.*frozen/is);
   assert.match(scope, /global constraint.*applicable SFCs/is);
-  assert.match(scope, /largest conflict-free set.*up to.*cap/is);
-  assert.match(scope, /Unknown conflict defaults to serial/i);
+  assert.match(scope, /maximum conflict-free wave of at most four/i);
+  assert.match(scope, /Unknown evidence defaults to serial/i);
   assert.match(authoring, /CompositeAuthoringPacketV3/);
   assert.match(authoring, /preflight/i);
-  assert.match(authoring, /repair invalid authoring through a new Packet revision/is);
-  assert.match(authoring, /never hand-edit rendered YAML or weaken an oracle/i);
-  assert.match(authoring, /current Integration Branch Context\/code/i);
-  assert.match(lifecycle, /resume|review/i);
-  assert.match(lifecycle, /Launch all returned workers before waiting/i);
-  assert.match(lifecycle, /bind-goal/);
-  assert.match(lifecycle, /bind-repair-goal/);
-  assert.match(lifecycle, /record-result/);
+  assert.match(authoring, /strict `CompositeAuthoringPacketV3` output schema/i);
+  assert.match(authoring, /Source Unit.*Requirement.*PI Obligation.*AC.*Verification Spec/is);
+  assert.match(authoring, /at most two repair Turns/i);
+  assert.match(authoring, /same thread is retained/i);
+  assert.match(lifecycle, /codex app-server --listen stdio:\/\//i);
+  assert.match(lifecycle, /Sol `xhigh\|max`.*Sol `medium`/i);
+  assert.match(lifecycle, /same thread/i);
+  assert.match(lifecycle, /all initial wave Turns start before any is awaited/i);
   assert.match(lifecycle, /Integration Gate/);
   assert.match(lifecycle, /Campaign Final Gate/);
-  assert.match(lifecycle, /moved target.*reruns/is);
-  assert.match(lifecycle, /never force push/i);
+  assert.match(lifecycle, /moved target.*revalidation/is);
+  assert.match(lifecycle, /reconnect once/i);
+  assert.match(lifecycle, /ambiguous_host_thread_launch/);
 });
 
 test("the managed Skill uses only one reference level and no copied attachment corpus", async () => {
@@ -97,13 +102,14 @@ test("canonical, packaged, and workspace Skill trees stay synchronized", async (
 test("public documentation is English-complete and preserves the strict downstream route", async () => {
   for (const relative of ["README.md", "packages/ty-context/README.md"]) {
     const content = await readFile(path.join(root, relative), "utf8");
-    assert.match(content, /## Composite Campaign Orchestrator V4/);
+    assert.match(content, /## Composite Campaign Orchestrator V5/);
     assert.match(content, /\/prepare-composite-long-task/);
     assert.match(content, /composite-campaign/);
     assert.match(content, /worktree/i);
     assert.match(content, /Integration (?:Branch|Gate)/i);
     assert.match(content, /Campaign Final Gate/i);
-    assert.match(content, /no importer, alias or silent migration|There is no importer, alias or silent migration/i);
+    assert.match(content, /Campaign V4.*audit-only|V4 Campaigns remain inspectable audit data/is);
+    assert.match(content, /App Server/i);
     assert.match(content, /\/composite-long-task-workflow/);
   }
   const chinese = await readFile(path.join(root, "README.zh-CN.md"), "utf8");

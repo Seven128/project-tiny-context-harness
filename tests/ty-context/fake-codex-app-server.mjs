@@ -37,10 +37,11 @@ async function handle({id,method,params={}}){
   if(method==="thread/goal/get")return respond(id,{goal:state.goals[params.threadId]??null});
   if(method==="turn/start"){
     const thread=requiredThread(params.threadId);const turnId=`turn-${state.nextTurn++}`;const running=turn(turnId,"inProgress",[]);thread.turns.push(running);thread.status={type:"active",activeFlags:[]};thread.cwd=params.cwd??thread.cwd;persist();respond(id,{turn:running});notify("turn/started",{threadId:thread.id,turn:running});
-    const prompt=params.input?.find?.(item=>item.type==="text")?.text??"";const sliceId=/\bSFC-[0-9]{3,}\b/u.exec(prompt)?.[0];
+    const prompt=params.input?.find?.(item=>item.type==="text")?.text??"";const sliceId=/\bSFC-[0-9]{3,}\b/u.exec(prompt)?.[0];const repairId=/^Repair: (.+)$/mu.exec(prompt)?.[1]?.trim();
     let output;
     if(prompt.startsWith("Author CompositeAuthoringPacketV3")&&sliceId&&script.authorPackets?.[sliceId])output={status:"completed",outputText:script.authorPackets[sliceId]};
     else if(sliceId&&script.executionEffects?.[sliceId]){const effect=script.executionEffects[sliceId];const count=(state.executionCounts[sliceId]??0)+1;state.executionCounts[sliceId]=count;output=count>=(effect.afterAttempts??1)?{status:"completed",outputText:"execution complete",sideEffect:effect}:{status:"completed",outputText:"needs work"};}
+    else if(repairId&&script.repairEffects?.[repairId])output={status:"completed",outputText:"repair complete",sideEffect:script.repairEffects[repairId]};
     else output=(script.turns??[])[state.nextOutput++]??{status:"completed",outputText:"{}",delayMs:0};persist();
     setTimeout(()=>{let selected=output;try{if(output.sideEffect)runSideEffect(output.sideEffect,params,prompt,sliceId);}catch(error){selected={status:"failed",outputText:error instanceof Error?error.stack??error.message:String(error)};}const finished=turn(turnId,selected.status??"completed",selected.outputText===null?[]:[{type:"agentMessage",id:`item-${turnId}`,text:selected.outputText??"{}",phase:null,memoryCitation:null}]);const index=thread.turns.findIndex((item)=>item.id===turnId);thread.turns[index]=finished;thread.status={type:"idle"};persist();notify("turn/completed",{threadId:thread.id,turn:finished});},output.delayMs??0);return;
   }
@@ -61,7 +62,8 @@ function persist(){if(stateFile)writeFileSync(stateFile,JSON.stringify(state));}
 function log(value){if(process.env.FAKE_APP_SERVER_LOG_FILE)appendFileSync(process.env.FAKE_APP_SERVER_LOG_FILE,`${JSON.stringify(value)}\n`);}
 
 function runSideEffect(effect,params,prompt,sliceId){
-  if(effect.type!=="contract_v3")throw new Error(`unsupported side effect ${effect.type}`);const cwd=params.cwd;const workdir=/^Contract workdir: (.+)$/mu.exec(prompt)?.[1]?.trim();const campaign=/^Campaign: (.+)$/mu.exec(prompt)?.[1]?.trim();if(!cwd||!workdir||!campaign||!sliceId)throw new Error("execution prompt identities missing");
+  const cwd=params.cwd;if(effect.type==="git_repair"){if(!cwd)throw new Error("repair cwd missing");for(const file of effect.files??[]){const target=path.join(cwd,file.path);mkdirSync(path.dirname(target),{recursive:true});writeFileSync(target,file.content);}run("git",["add","-A"],cwd);run("git",["-c","commit.gpgSign=false","commit","-m","fix: repair Campaign integration"],cwd);return;}
+  if(effect.type!=="contract_v3")throw new Error(`unsupported side effect ${effect.type}`);const workdir=/^Contract workdir: (.+)$/mu.exec(prompt)?.[1]?.trim();const campaign=/^Campaign: (.+)$/mu.exec(prompt)?.[1]?.trim();if(!cwd||!workdir||!campaign||!sliceId)throw new Error("execution prompt identities missing");
   run(process.execPath,[process.env.FAKE_TY_CONTEXT_CLI,"composite-long-task","compile",workdir,"--campaign-id",campaign,"--slice-id",sliceId],cwd);
   for(const file of effect.files??[]){const target=path.join(cwd,file.path);mkdirSync(path.dirname(target),{recursive:true});writeFileSync(target,file.content);}
   run("git",["add","-A"],cwd);run("git",["-c","commit.gpgSign=false","commit","-m",`feat: implement ${sliceId}`],cwd);

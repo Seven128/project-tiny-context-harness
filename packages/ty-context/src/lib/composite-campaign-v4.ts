@@ -8,6 +8,7 @@ import { CAMPAIGN_SCHEMA_V4, assertCampaignV4, parseScopeFitResultV3, type Campa
 import { assertCampaignV5, CAMPAIGN_SCHEMA_V5, campaignHasGoalV5, emptyThreadStateV5, type CampaignV5 } from "./composite-campaign-schema-v5.js";
 import { parseSourceCoverageV1, validateSourceCoverageAgainstScopeV3, validateSourceCoverageAgainstScopeV4, type CampaignPacketEntityIndexV1, type SourceCoverageV1 } from "./composite-campaign-source-coverage.js";
 import { assertSourceUnitPacketBindingsV4, type SourceUnitPacketBindingV4 } from "./composite-campaign-source-units.js";
+import { COMPOSITE_V5_SCHEMAS, COMPOSITE_V5_SCHEMA_SET_SHA256 } from "./composite-campaign-schema-registry.js";
 import { portablePathSlug } from "./composite-campaign-worktree.js";
 import { parseLongTaskSources } from "./long-task-contract-parser.js";
 import { validateLongTaskCoverage } from "./long-task-contract-coverage.js";
@@ -40,6 +41,8 @@ export function compositeCampaignV4Contract(): unknown {
     goal_manifest_schema: "slice-goal-manifest-v2",
     packet_schema: PACKET_SCHEMA,
     source_coverage_schema: "composite-source-coverage-v1",
+    schema_set_sha256: COMPOSITE_V5_SCHEMA_SET_SHA256,
+    schemas: Object.fromEntries(Object.entries(COMPOSITE_V5_SCHEMAS).map(([name, schema]) => [name, { id: schema.$id, schema_version: name }])),
     authority_schemas: ["product-source-v3", "technical-plan-v3", "acceptance-checklist-v3"],
     projection_files: LONG_TASK_SOURCE_FILES,
     commands: ["contract", "create", "apply-coverage", "apply-scope", "apply-packet", "render", "preflight", "advance", "bind-goal", "bind-repair-goal", "record-result", "status", "run", "app-server-check", "model-routing", "threads", "interrupt"],

@@ -4,10 +4,12 @@ import { access, mkdtemp, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { createSliceGoalManifestV2, readSliceGoalManifest } from "../../packages/ty-context/dist/lib/composite-campaign-goal-manifest.js";
+import { COMPOSITE_V5_SCHEMAS, COMPOSITE_V5_SCHEMA_SET_SHA256 } from "../../packages/ty-context/dist/lib/composite-campaign-schema-registry.js";
 import { emptyThreadStateV5 } from "../../packages/ty-context/dist/lib/composite-campaign-schema-v5.js";
 import { acceptThreadV5, bindThreadGoalV5, bindThreadIdentityV5, bindThreadRoutingV5, markPacketValidationV5, markWorktreeReadyV5, recordAuthoringTurnV5, recordExecutionTurnV5 } from "../../packages/ty-context/dist/lib/composite-campaign-thread-state.js";
 
 test("Goal Manifest V2 persists thread/model/routing identity and a bounded objective",async()=>{
+  assert.deepEqual(Object.keys(COMPOSITE_V5_SCHEMAS).sort(),["composite-campaign-v5","scope-fit-result-v4","slice-goal-manifest-v2"]);assert.match(COMPOSITE_V5_SCHEMA_SET_SHA256,/^[a-f0-9]{64}$/);
   const root=await mkdtemp(path.join(os.tmpdir(),"goal-manifest-v2-"));const worktree=path.join(root,"worktree");const contract=path.join(worktree,"tmp","contract");const created=await createSliceGoalManifestV2(root,input(worktree,contract));const reread=await readSliceGoalManifest(created.manifest_path);assert.equal(reread.schema_version,"slice-goal-manifest-v2");assert.equal(reread.thread_id,"thr-001");assert.equal(reread.authoring_effort,"xhigh");assert.equal(reread.execution_effort,"medium");assert.equal(reread.routing_reason,"sol_xhigh_to_medium");assert.ok((await readFile(created.objective_path,"utf8")).length<=4000);
   const oversized=input(worktree,path.join(worktree,"tmp","x".repeat(3800)));await assert.rejects(()=>createSliceGoalManifestV2(path.join(root,"oversized"),oversized),/maximum_4000/);await assert.rejects(()=>access(path.join(root,"oversized","waves","WAVE-001","goals","SFC-001","goal-manifest.json")));
 });

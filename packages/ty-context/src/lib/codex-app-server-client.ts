@@ -1,4 +1,5 @@
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { readFile } from "node:fs/promises";
 import { createInterface } from "node:readline";
 import {
   asRecord, finalAgentText, normalizeThread, normalizeTurn, responseResult, textInput,
@@ -63,7 +64,7 @@ export class StdioCodexAppServerClient implements CodexAppServerClient {
   async initialize(): Promise<void> {
     if (this.initialized) return;
     this.startProcess();
-    this.initializeResult = responseResult(await this.request("initialize", { clientInfo: { name: "ty-context", title: "Project Tiny Context Harness", version: "0.4.0" }, capabilities: { experimentalApi: true, requestAttestation: false } }));
+    this.initializeResult = responseResult(await this.request("initialize", { clientInfo: { name: "ty-context", title: "Project Tiny Context Harness", version: await ownPackageVersion() }, capabilities: { experimentalApi: true, requestAttestation: false } }));
     this.notify("initialized");
     this.initialized = true;
   }
@@ -277,3 +278,4 @@ function defaultLaunch(options: CodexAppServerClientOptions): { command: string;
   return { command: "codex", args: ["app-server", "--listen", "stdio://"] };
 }
 function positiveInt(value:string,label:string):number{const parsed=Number(value);if(!Number.isInteger(parsed)||parsed<=0)throw new Error(`${label} must be a positive integer`);return parsed;}
+let cachedPackageVersion:string|undefined;async function ownPackageVersion():Promise<string>{if(cachedPackageVersion)return cachedPackageVersion;const value=JSON.parse(await readFile(new URL("../../package.json",import.meta.url),"utf8")) as {version?:unknown};if(typeof value.version!=="string"||!/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/u.test(value.version))throw new Error("app_server_client_package_version_invalid");cachedPackageVersion=value.version;return value.version;}
