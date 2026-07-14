@@ -52,7 +52,7 @@ export function globalContextTemplate(): string {
     "",
     "- [main](areas/main.md)",
     "- [main verification](areas/main/verification.md)",
-    ""
+    "",
   ].join("\n");
 }
 
@@ -89,7 +89,7 @@ export function architectureContextTemplate(): string {
     "## Open Risks",
     "",
     "- List unresolved architectural risks or unknowns.",
-    ""
+    "",
   ].join("\n");
 }
 
@@ -132,7 +132,7 @@ export function areaContextTemplate(areaName: string): string {
     "## Open Risks",
     "",
     "- List unresolved risks or blockers.",
-    ""
+    "",
   ].join("\n");
 }
 
@@ -170,7 +170,7 @@ export function verificationContextTemplate(areaName: string): string {
     "## Forbidden Content",
     "",
     "- Do not record one-off logs, full command output, temporary JSON, CI artifacts, test reports, secrets, tokens, cookies, device ids, raw payloads or pass/fail claims.",
-    ""
+    "",
   ].join("\n");
 }
 
@@ -211,6 +211,6 @@ export function deploymentContextTemplate(areaName: string): string {
     "## Forbidden Content",
     "",
     "- Do not record one-off logs, full command output, CI artifacts, release ledgers, secrets, tokens, cookies, device ids, raw payloads or claims that deployment already succeeded.",
-    ""
+    "",
   ].join("\n");
 }

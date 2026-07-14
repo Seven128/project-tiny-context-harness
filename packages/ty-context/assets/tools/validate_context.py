@@ -1,9 +1,20 @@
 #!/usr/bin/env python3
-from pathlib import Path
+"""Standalone Minimal Context validator installed with the portable profile."""
+
+from pathlib import Path, PureWindowsPath
+import json
 import re
+import subprocess
 import sys
 
-ROOT = Path.cwd()
+try:
+    import tomllib
+except ImportError:  # Python 3.10 compatibility; Node is already required by ty-context.
+    tomllib = None
+
+
+ROOT = Path.cwd().resolve()
+CONTEXT_ROOT = ROOT / "project_context"
 
 GLOBAL_CHECKS = [
     ("project goal", ["project goal", "项目目标", "目标"]),
@@ -38,13 +49,14 @@ VALID_ROLES = {
     "implementation-index",
     "decision-rationale",
 }
-
 ROLE_ALIASES = {
     "implementation_index": "implementation-index",
     "decision_rationale": "decision-rationale",
 }
-
 READ_POLICIES = {"default", "always", "optional", "on-demand", "never-default"}
+TOP_LEVEL_FIELDS = {"areas", "context"}
+AREA_FIELDS = {"id", "root", "context", "kind", "default", "forbidden_runtime_dependencies"}
+CONTEXT_FIELDS = {"path", "role", "read_when", "read_policy", "triggers", "default_children"}
 CONFIG_CANDIDATES = [
     ".agent/config.yaml",
     ".codex/config.yaml",
@@ -55,6 +67,16 @@ CONFIG_CANDIDATES = [
     ".roo/config.yaml",
     ".gemini/config.yaml",
 ]
+FAKE_VERIFICATION_PATTERNS = [
+    re.compile(r"\btests?\s+(?:pass(?:ed|es)?|green)\b", re.I),
+    re.compile(r"\bverified\b", re.I),
+    re.compile(r"\bdeployed\s+successfully\b", re.I),
+    re.compile(r"\bvalidation\s+passed\b", re.I),
+    re.compile(r"测试(?:已)?通过"),
+    re.compile(r"验证(?:已)?通过"),
+    re.compile(r"部署(?:已)?成功"),
+]
+PLACEHOLDER = re.compile(r"^(?:todo|tbd|placeholder|coming soon|待补充|占位|暂无)[.!。…\s-]*$", re.I)
 
 
 def has_any(text, terms):
@@ -65,6 +87,10 @@ def has_any(text, terms):
 def normalize_role(value):
     role = ROLE_ALIASES.get(value.strip().lower(), value.strip().lower())
     return role if role in VALID_ROLES else None
+
+
+def normalize_context_path(value):
+    return value.replace("\\", "/").removeprefix("./")
 
 
 def parse_front_matter(text):
@@ -81,130 +107,194 @@ def parse_front_matter(text):
     return result
 
 
-def strip_comment(line):
-    quote = None
-    for index, char in enumerate(line):
-        if char in {"'", "\""} and (index == 0 or line[index - 1] != "\\"):
-            quote = None if quote == char else quote or char
-        if char == "#" and quote is None:
-            return line[:index]
-    return line
-
-
-def parse_toml_value(raw):
-    value = raw.strip()
-    if value == "true":
-        return True
-    if value == "false":
-        return False
-    if (value.startswith("\"") and value.endswith("\"")) or (value.startswith("'") and value.endswith("'")):
-        return value[1:-1]
-    if value.startswith("[") and value.endswith("]"):
-        inner = value[1:-1].strip()
-        if not inner:
-            return []
-        items = []
-        for part in inner.split(","):
-            item = part.strip()
-            if not ((item.startswith("\"") and item.endswith("\"")) or (item.startswith("'") and item.endswith("'"))):
-                return None
-            items.append(item[1:-1])
-        return items
-    return None
+def table_lines(content, table):
+    return [
+        index
+        for index, line in enumerate(content.splitlines(), start=1)
+        if line.strip() == f"[[{table}]]"
+    ]
 
 
 def parse_manifest(path, errors):
-    manifest = {"areas": [], "context": []}
-    current = None
-    for line_number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-        line = strip_comment(raw).strip()
-        if not line:
-            continue
-        match = re.match(r"^\[\[(areas|context)\]\]$", line)
-        if match:
-            current = {"line": line_number}
-            manifest[match.group(1)].append(current)
-            continue
-        if current is None:
-            errors.append(f"project_context/context.toml line {line_number} must appear inside [[areas]] or [[context]]")
-            continue
-        assignment = re.match(r"^([A-Za-z0-9_-]+)\s*=\s*(.+)$", line)
-        if not assignment:
-            errors.append(f"project_context/context.toml line {line_number} is not a supported assignment")
-            continue
-        value = parse_toml_value(assignment.group(2))
-        if value is None:
-            errors.append(f"project_context/context.toml line {line_number} has an unsupported value")
-            continue
-        current[assignment.group(1)] = value
+    content = path.read_text(encoding="utf-8")
+    try:
+        parsed = parse_toml(content)
+    except (ValueError, RuntimeError) as error:
+        errors.append(f"project_context/context.toml is not valid TOML: {error}")
+        return {"areas": [], "context": []}
+    for key in parsed:
+        if key not in TOP_LEVEL_FIELDS:
+            errors.append(f"project_context/context.toml has unknown top-level field {key}")
+    manifest = {}
+    for table, allowed in (("areas", AREA_FIELDS), ("context", CONTEXT_FIELDS)):
+        entries = parsed.get(table, [])
+        if not isinstance(entries, list) or any(not isinstance(entry, dict) for entry in entries):
+            errors.append(f"project_context/context.toml field [[{table}]] must be an array of TOML tables")
+            entries = []
+        lines = table_lines(content, table)
+        manifest[table] = []
+        for index, raw in enumerate(entries):
+            entry = dict(raw)
+            entry["line"] = lines[index] if index < len(lines) else 1
+            for key in raw:
+                if key not in allowed:
+                    errors.append(f"project_context/context.toml line {entry['line']} has unknown field {key}")
+            manifest[table].append(entry)
     return manifest
 
 
-def normalize_context_path(value):
-    return value.replace("\\", "/").removeprefix("./")
+def parse_toml(content):
+    if tomllib is not None:
+        try:
+            return tomllib.loads(content)
+        except tomllib.TOMLDecodeError as error:
+            raise ValueError(str(error)) from error
+    script = "import('smol-toml').then(({parse})=>{let s='';process.stdin.setEncoding('utf8');process.stdin.on('data',c=>s+=c);process.stdin.on('end',()=>process.stdout.write(JSON.stringify(parse(s))))}).catch(e=>{console.error(e.message);process.exit(1)})"
+    result = subprocess.run(
+        ["node", "--input-type=module", "--eval", script],
+        input=content,
+        text=True,
+        capture_output=True,
+        cwd=ROOT,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"formal TOML parser unavailable: {result.stderr.strip()}")
+    return json.loads(result.stdout)
 
 
-def add_manifest_role(entry, role, roles, errors):
-    raw_path = entry.get("context") or entry.get("path")
-    if not isinstance(raw_path, str):
-        errors.append(f"project_context/context.toml line {entry['line']} must include a context/path string")
-        return
-    rel = normalize_context_path(raw_path)
-    if not rel.startswith("project_context/") or not rel.endswith(".md"):
-        errors.append(f"project_context/context.toml line {entry['line']} must reference a markdown file under project_context/")
-        return
-    existing = roles.get(rel)
-    if existing and existing != role:
-        errors.append(f"project_context/context.toml assigns conflicting roles to {rel}: {existing} and {role}")
-        return
-    roles[rel] = role
-    if not (ROOT / rel).exists():
-        errors.append(f"project_context/context.toml references missing context file: {rel}")
+def required_string(entry, key, errors):
+    value = entry.get(key)
+    if not isinstance(value, str) or not value.strip():
+        errors.append(f"project_context/context.toml line {entry['line']} must include non-empty string field {key}")
+        return None
+    return value
+
+
+def optional_string(entry, key, errors):
+    value = entry.get(key)
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value.strip():
+        errors.append(f"project_context/context.toml line {entry['line']} field {key} must be a non-empty string")
+        return None
+    return value
+
+
+def string_array(entry, key, errors):
+    value = entry.get(key, [])
+    if not isinstance(value, list) or any(not isinstance(item, str) or not item.strip() for item in value):
+        errors.append(f"project_context/context.toml line {entry['line']} {key} must be an array of non-empty strings")
+        return []
+    if len(value) != len(set(value)):
+        errors.append(f"project_context/context.toml line {entry['line']} {key} must not contain duplicates")
+    return value
+
+
+def is_relative_to(target, root):
+    try:
+        target.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def safe_manifest_path(raw, allowed_root, label, expected, errors):
+    normalized = raw.replace("\\", "/")
+    if Path(raw).is_absolute() or PureWindowsPath(raw).is_absolute() or ".." in normalized.split("/"):
+        errors.append(f"project_context/context.toml {label} path must be relative and must not contain '..': {raw}")
+        return None
+    target = ROOT.joinpath(*normalized.split("/"))
+    if not target.exists():
+        errors.append(f"project_context/context.toml references missing {expected}: {normalized}")
+        return None
+    resolved_root = allowed_root.resolve()
+    resolved_target = target.resolve()
+    if not is_relative_to(resolved_target, resolved_root):
+        errors.append(f"project_context/context.toml {label} resolves outside its allowed root: {raw}")
+        return None
+    if expected == "context file" and not resolved_target.is_file():
+        errors.append(f"project_context/context.toml {label} must reference a regular file: {raw}")
+        return None
+    if expected == "area root" and not resolved_target.is_dir():
+        errors.append(f"project_context/context.toml {label} must reference a directory: {raw}")
+        return None
+    return resolved_target
 
 
 def validate_manifest(errors):
-    manifest_path = ROOT / "project_context/context.toml"
+    manifest_path = CONTEXT_ROOT / "context.toml"
     roles = {}
+    policies = {}
     if not manifest_path.exists():
         if schema_requires_manifest():
             errors.append("missing project_context/context.toml; run ty-context upgrade to create the Schema v4 Context graph manifest")
-        return roles
+        return roles, policies
     manifest = parse_manifest(manifest_path, errors)
-    if not manifest["areas"]:
+    areas = manifest["areas"]
+    contexts = manifest["context"]
+    if not areas:
         errors.append("project_context/context.toml must declare at least one [[areas]] entry")
-    has_default_area = False
-    for area in manifest["areas"]:
-        for key in ["id", "root", "context"]:
-            if not isinstance(area.get(key), str):
-                errors.append(f"project_context/context.toml line {area['line']} must include string field {key}")
-        default_area = area.get("default")
-        if default_area is not None and not isinstance(default_area, bool):
+    defaults = [entry for entry in areas if entry.get("default") is True]
+    if areas and len(defaults) != 1:
+        errors.append(f"project_context/context.toml must mark exactly one [[areas]] entry with default = true; found {len(defaults)}")
+    area_ids = set()
+    registered_paths = set()
+
+    for area in areas:
+        area_id = required_string(area, "id", errors)
+        area_root = required_string(area, "root", errors)
+        context_path = required_string(area, "context", errors)
+        optional_string(area, "kind", errors)
+        if "default" in area and not isinstance(area["default"], bool):
             errors.append(f"project_context/context.toml line {area['line']} default must be a boolean")
-        has_default_area = has_default_area or default_area is True
-        deps = area.get("forbidden_runtime_dependencies")
-        if deps is not None and not is_string_array(deps):
-            errors.append(f"project_context/context.toml line {area['line']} forbidden_runtime_dependencies must be an array of strings")
-        add_manifest_role(area, "area", roles, errors)
-    if manifest["areas"] and not has_default_area:
-        errors.append("project_context/context.toml must mark one [[areas]] entry with default = true")
-    for context in manifest["context"]:
-        role = normalize_role(context.get("role", "")) if isinstance(context.get("role"), str) else None
-        if role is None:
-            errors.append(f"project_context/context.toml line {context['line']} has unsupported context role")
-            continue
-        read_policy = context.get("read_policy")
-        if read_policy is not None and read_policy not in READ_POLICIES:
-            errors.append(f"project_context/context.toml line {context['line']} has unsupported read_policy: {read_policy}")
-        for key in ["triggers", "default_children"]:
-            value = context.get(key)
-            if value is not None and not is_string_array(value):
-                errors.append(f"project_context/context.toml line {context['line']} {key} must be an array of strings")
-        add_manifest_role(context, role, roles, errors)
-    return roles
+        string_array(area, "forbidden_runtime_dependencies", errors)
+        if area_id:
+            if area_id in area_ids:
+                errors.append(f"project_context/context.toml has duplicate area id: {area_id}")
+            area_ids.add(area_id)
+        if area_root:
+            safe_manifest_path(area_root, ROOT, f"area {area_id or area['line']} root", "area root", errors)
+        if context_path:
+            register_context_path(context_path, "area", None, f"area {area_id or area['line']}", registered_paths, roles, policies, errors)
+
+    for entry in contexts:
+        context_path = required_string(entry, "path", errors)
+        raw_role = required_string(entry, "role", errors)
+        optional_string(entry, "read_when", errors)
+        read_policy = optional_string(entry, "read_policy", errors)
+        string_array(entry, "triggers", errors)
+        string_array(entry, "default_children", errors)
+        role = normalize_role(raw_role) if raw_role else None
+        if raw_role and role is None:
+            errors.append(f"project_context/context.toml line {entry['line']} has unsupported context role: {raw_role}")
+        if read_policy and read_policy not in READ_POLICIES:
+            errors.append(f"project_context/context.toml line {entry['line']} has unsupported read_policy: {read_policy}")
+        if context_path and role:
+            register_context_path(context_path, role, read_policy, f"context {context_path}", registered_paths, roles, policies, errors)
+
+    for entry in contexts:
+        for child in entry.get("default_children", []):
+            normalized = normalize_context_path(child)
+            if normalized not in registered_paths:
+                errors.append(f"project_context/context.toml line {entry['line']} default_children references unregistered Context path: {child}")
+    return roles, policies
 
 
-def is_string_array(value):
-    return isinstance(value, list) and all(isinstance(item, str) for item in value)
+def register_context_path(raw, role, read_policy, label, registered, roles, policies, errors):
+    normalized = normalize_context_path(raw)
+    if normalized in registered:
+        errors.append(f"project_context/context.toml has duplicate Context path: {normalized}")
+        return
+    registered.add(normalized)
+    if not normalized.startswith("project_context/") or not normalized.endswith(".md"):
+        errors.append(f"project_context/context.toml {label} must reference a markdown file under project_context/: {raw}")
+        return
+    if safe_manifest_path(raw, CONTEXT_ROOT, label, "context file", errors) is None:
+        return
+    roles[normalized] = role
+    if read_policy:
+        policies[normalized] = read_policy
 
 
 def schema_requires_manifest():
@@ -229,24 +319,90 @@ def validate_checks(rel, text, checks, errors):
             errors.append(f"{rel} must include {label}")
 
 
+def section_bodies(text):
+    headings = list(re.finditer(r"^(#{2,6})\s+(.+?)\s*$", text, re.M))
+    for index, match in enumerate(headings):
+        end = headings[index + 1].start() if index + 1 < len(headings) else len(text)
+        yield match.group(2), text[match.end():end].strip()
+
+
+def validate_no_fake_verification(rel, text, errors):
+    for heading, body in section_bodies(text):
+        if not re.search(r"verification|tests?|deployment|验证|测试|部署", heading, re.I):
+            continue
+        if any(pattern.search(body) for pattern in FAKE_VERIFICATION_PATTERNS):
+            errors.append(f"{rel} must list verification entry points, not claim tests were already executed")
+            return
+
+
+def validate_minimum_recoverability(rel, text, errors):
+    if not re.search(r"^#\s+\S.+$", text, re.M):
+        errors.append(f"{rel} must contain a non-empty level-one title")
+    body = re.sub(r"^---\s*\n[\s\S]*?\n---\s*\n?", "", text, count=1)
+    facts = []
+    for line in body.splitlines():
+        value = line.strip()
+        if not value or value.startswith(("#", "```", "<!--")):
+            continue
+        value = re.sub(r"^[-*+>]\s*", "", value).strip()
+        if len(value) >= 8 and not PLACEHOLDER.fullmatch(value):
+            facts.append(value)
+    if not facts:
+        errors.append(f"{rel} must contain at least one concrete fact paragraph and cannot be only TODO or placeholder text")
+
+
+def validate_role_recoverability(rel, text, role, errors):
+    if role == "verification" and not re.search(r"`[^`\r\n]+`|(?:npm|pnpm|yarn|make|node|python|pytest|cargo|go)\s+\S+|(?:^|\s)(?:\./|[\w.-]+/)[\w./-]+", text, re.I | re.M):
+        errors.append(f"{rel} verification Context must contain a command, repository path or repeatable entry point")
+    if role == "implementation-index":
+        candidates = [match.group(1) for match in re.finditer(r"`([^`]+)`", text) if ("/" in match.group(1) or "\\" in match.group(1)) and " " not in match.group(1)]
+        if not any(repository_path_exists(candidate) for candidate in candidates):
+            errors.append(f"{rel} implementation-index Context must contain at least one existing repository path")
+    if role == "contract" and not re.search(r"producer|consumer|input|output|schema|compatibility|constraint|must|shall|禁止|必须|输入|输出|兼容", text, re.I):
+        errors.append(f"{rel} contract Context must state at least one constraint or input/output semantic")
+    if role == "decision-rationale":
+        has_decision = re.search(r"^##\s+(?:(?:Decision|Current Design Choice|Design Choice)(?:\b|\s|$)|决定(?:\s|$)|当前设计选择(?:\s|$))", text, re.I | re.M)
+        has_reason = re.search(r"^##\s+(?:(?:Reason|Rationale|Why)(?:\b|\s|$)|原因(?:\s|$)|理由(?:\s|$)|为什么(?:\s|$))", text, re.I | re.M)
+        if not has_decision or not has_reason:
+            errors.append(f"{rel} decision-rationale Context must contain both a Decision and a Reason")
+
+
+def repository_path_exists(candidate):
+    clean = candidate.rstrip(".:,;").replace("\\", "/")
+    if Path(clean).is_absolute() or PureWindowsPath(clean).is_absolute() or ".." in clean.split("/"):
+        return False
+    target = ROOT.joinpath(*clean.split("/"))
+    return target.exists() and is_relative_to(target.resolve(), ROOT)
+
+
+def validate_context_file(rel, text, role, errors):
+    validate_no_fake_verification(rel, text, errors)
+    validate_minimum_recoverability(rel, text, errors)
+    if role:
+        validate_role_recoverability(rel, text, role, errors)
+
+
 def main():
     errors = []
-    global_path = ROOT / "project_context/global.md"
+    warnings = []
+    global_path = CONTEXT_ROOT / "global.md"
+    architecture_path = CONTEXT_ROOT / "architecture.md"
     if not global_path.exists():
         errors.append("missing project_context/global.md")
     else:
-        validate_checks("project_context/global.md", global_path.read_text(encoding="utf-8"), GLOBAL_CHECKS, errors)
-
-    architecture_path = ROOT / "project_context/architecture.md"
+        text = global_path.read_text(encoding="utf-8")
+        validate_checks("project_context/global.md", text, GLOBAL_CHECKS, errors)
+        validate_context_file("project_context/global.md", text, "global", errors)
     if not architecture_path.exists():
         errors.append("missing project_context/architecture.md")
     else:
-        validate_checks("project_context/architecture.md", architecture_path.read_text(encoding="utf-8"), ARCHITECTURE_CHECKS, errors)
+        text = architecture_path.read_text(encoding="utf-8")
+        validate_checks("project_context/architecture.md", text, ARCHITECTURE_CHECKS, errors)
+        validate_context_file("project_context/architecture.md", text, "architecture", errors)
 
-    manifest_roles = validate_manifest(errors)
-    context_root = ROOT / "project_context"
-    context_files = sorted(context_root.rglob("*.md")) if context_root.exists() else []
+    manifest_roles, manifest_policies = validate_manifest(errors)
     checked = 0
+    context_files = sorted(CONTEXT_ROOT.rglob("*.md")) if CONTEXT_ROOT.exists() else []
     for path in context_files:
         rel = path.relative_to(ROOT).as_posix()
         if rel in {"project_context/global.md", "project_context/architecture.md"}:
@@ -254,16 +410,26 @@ def main():
         text = path.read_text(encoding="utf-8")
         front_matter = parse_front_matter(text)
         declared_role = front_matter.get("context_role")
-        front_matter_role = normalize_role(declared_role) if declared_role else None
-        if declared_role and front_matter_role is None:
+        front_role = normalize_role(declared_role) if declared_role else None
+        if declared_role and front_role is None:
             errors.append(f"{rel} has unsupported context_role: {declared_role}")
-        read_policy = front_matter.get("read_policy")
-        if read_policy and read_policy not in READ_POLICIES:
-            errors.append(f"{rel} has unsupported read_policy: {read_policy}")
-        role = manifest_roles.get(rel) or front_matter_role
-        if role is not None and role not in {"global", "architecture"}:
-            checked += 1
+        front_policy = front_matter.get("read_policy")
+        if front_policy and front_policy not in READ_POLICIES:
+            errors.append(f"{rel} has unsupported read_policy: {front_policy}")
+        manifest_role = manifest_roles.get(rel)
+        manifest_policy = manifest_policies.get(rel)
+        if manifest_role and front_role and manifest_role != front_role:
+            errors.append(f"{rel} front matter context_role {front_role} does not match manifest role {manifest_role}")
+        if manifest_policy and front_policy and manifest_policy != front_policy:
+            errors.append(f"{rel} front matter read_policy {front_policy} does not match manifest read_policy {manifest_policy}")
+        if not manifest_role:
+            warnings.append(f"{rel} is an unregistered Context Markdown file; add it to project_context/context.toml or move it out of project_context/**")
+        role = manifest_role or front_role
+        validate_context_file(rel, text, role, errors)
+        checked += 1
 
+    for warning in warnings:
+        print(f"warning: {warning}", file=sys.stderr)
     if errors:
         for error in errors:
             print(f"error: {error}", file=sys.stderr)

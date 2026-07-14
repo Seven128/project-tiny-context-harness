@@ -6,229 +6,208 @@ read_policy: default
 
 ## Role
 
-This contract defines the prompt-level workflow expected when maintaining Project Tiny Context Harness. Read it before changing context-first rules, Task Contract behavior, temporary plan surfaces, target-mode local audits, Contract Conformance or the Context Priority Ladder.
+This contract defines the default prompt-level workflow and the explicit handoff to ordinary or Composite long-task Skills. Read it before changing Context Priority, `Context Delta`, task routing, ordinary long-task artifacts, Composite authority or Contract Conformance.
 
-Workflow Contract is a first-class Tiny Context concept alongside Minimal Context. Minimal Context defines the durable fact sources; Workflow Contract defines how agents read those sources, decide `Context Delta`, compile task-local constraints, update Context before implementation, and check conformance before handoff.
+Workflow Contract is a first-class Tiny Context capability alongside Minimal Context. It is deliberately lightweight: it controls authority and order of thought, not a mandatory plan file or workflow state machine.
 
-## Context Priority Ladder
+## Default Workflow
 
-For durable product, architecture, package-boundary, API/schema, state/runtime, verification-design or Context-topology work, expected agent order is:
+When no explicit long-task Skill or active Contract V3 binding applies, the fixed behavior is:
 
-1. Read `project_context/global.md`, `project_context/architecture.md`, `project_context/context.toml` and relevant area/role Context.
-2. For product surfaces or information-placement work, run the lightweight product/page positioning check before narrowing to code.
-3. For Context authoring or migration, run the role placement scan before choosing `area`, `contract`, `foundation`, `verification`, `implementation-index`, `decision-rationale` or another role.
-4. Compile applicable module design and constraints before selecting implementation or verification paths.
-5. Classify durable-fact impact, or use `Context Delta` inside Task Contract scenarios.
-6. For product, architecture, technical-realization or acceptance-plan inputs, compile Source-to-Context Coverage before implementation so every durable source constraint is either covered by existing Context, updated into Context, task-local only, explicitly out of scope or waiting on a user decision.
-7. Use context-first when durable facts change; use code-first only for small code tasks unless they produce a durable fact.
-8. For high-risk implementation work, compile Context-to-Implementation Binding before handoff so Context facts are tied to expected surfaces, implemented paths and verification paths.
-9. Before handoff, run Contract Conformance when applicable and a Context drift check.
+1. Read `project_context/global.md`, `project_context/architecture.md`, `project_context/context.toml` and the minimum role Context selected by graph triggers.
+2. For product-surface or information-placement work, perform the lightweight surface-positioning check before narrowing to code.
+3. For Context authoring or migration, perform role placement before choosing an area or role Context.
+4. Decide the single durable-fact outcome `Context Delta: none|required`.
+5. If required, update the owning Context before implementation.
+6. Use the agent/platform's internal planning to keep goal, boundaries, controlling Context, likely implementation surfaces and verification clear.
+7. Implement and run project-owned focused or broad verification in proportion to risk.
+8. Perform Contract Conformance and Context drift check.
+9. Hand off implementation, verification, Context status and blockers without creating a result document.
 
-The ladder is expected agent behavior. It must not become a phase gate, required document chain or machine-enforced edit-order gate. Plan validators may check temporary plan artifacts for internal consistency, evidence-reference existence and declared binding consistency, but they must not prove product quality or enforce code/context edit order.
+The default workflow has no required `plan.md`, Task Contract file, Source-to-Context table, Context-to-Implementation table, matrix, verdict, evidence ledger or implementation-summary document. An agent may create an arbitrary scratch file when useful, but it has no fixed name/schema, no authority and no completion effect.
 
-## Context Delta And Task Contract
+## Context Priority And Reading
 
-- `Context Delta: required` means the current task changes durable facts and the relevant `project_context/**` or `DESIGN.md` facts are updated before implementation continues.
-- `Context Delta: none` means implementation proceeds against existing Context.
-- For high-risk product/architecture or implementation-plan inputs, Task Contract may split the judgment into `Product Context Delta: none|required` and `Technical Context Delta: none|required`; either `required` makes the overall `Context Delta: required`.
-- `Product Context Delta` asks whether product capability, user flow, business state/rule, page/surface responsibility, main/drilldown ownership, information architecture, user-visible terminology, status meaning, operation boundary, product/domain ownership or acceptance semantics changed.
-- `Technical Context Delta` asks whether API/schema/event/data contract, module ownership, dependency direction, worker/runtime/state-machine semantics, data model, persistence, scheduling, failure/retry/recovery semantics, verification/deployment/bootstrap path or durable technical tradeoff changed.
-- The split is a thinking aid for source interpretation. It must not become a validator, phase gate, edit-order gate, new Context role or required document chain.
-- Task Contract is task-local and temporary. It should identify goal, boundary, owner, dependencies, state, failure/retry/recovery, security, non-goals, verification path and applicable module design.
-- High-risk product, design and engineering Task Contracts that affect durable architecture/module ownership, API/schema/data contracts, state/runtime semantics, dependency direction, verification/deployment semantics or durable tradeoff rationale also name `Architecture Context Hit` and `Decision Rationale Hit: existing|required|none`.
-- `Architecture Context Hit` is Context routing for the current decision. It names the architecture, area, contract, foundation, decision-rationale or verification/deployment Context that controls the task; it is not an architecture quality judgment.
-- `Decision Rationale Hit` is a rationale coverage state, not a requirement to write a reason every time: `existing` means current Context already explains the durable reason, `required` means the task creates or changes durable rationale and must use `Context Delta: required`, and `none` means no stable rationale is needed.
-- Missing durable architecture or rationale facts have only one workflow action: return to `Context Delta: required` and update the owning Context. Do not create Architecture Delta, Rationale Delta, a validator gate, an edit-order gate, a new Context role or a default rationale file.
-- For external product, architecture, technical implementation or acceptance-plan inputs, `Context Delta` also requires a coverage judgment: durable source constraints must be checked against existing Context before implementation. It is not enough to update a status note or evidence rule when the source also changes surface ownership, runtime responsibility, API/schema meaning, verification boundary or architecture direction.
-- Engineering, RFC and implementation Task Contracts include `Modularity Check: none|required|exception` so oversized touched files are handled inside the existing contract, not as a separate workflow type.
-- `Modularity Check` covers physical maintainability risk in touched handwritten source, including file size, split need or an explicit waiver. It does not replace ownership, dependency, API/schema, state/runtime or verification-design judgment.
-- A small code task is a local implementation task where existing Context is sufficient and the change does not alter durable product, architecture, API/schema/data, runtime/state/recovery, verification/deployment, security/redaction or surface-ownership facts. It is not measured by line count: a one-line schema change can be high risk, while a broad mechanical style cleanup can remain small.
-- Ordinary bug fixes, local styling, small refactors, package/release chores, test repairs and spikes stay code-first unless they produce durable facts; oversized touched files remain `Modularity Check` concerns, not architecture/rationale triggers.
-- Task Contract is not a source of truth and is not stored in `project_context/**` by default. Only durable facts discovered through it are extracted into Context.
+- Default reads are `global.md`, `architecture.md` and `context.toml`; area, contract, verification, decision-rationale and implementation-index Context are selected from graph triggers and dependencies.
+- Do not read the entire Context tree by default.
+- `project_context/**` controls durable intent; code controls current implementation state; project tests/CI/smoke/browser/human acceptance control quality evidence.
+- Existing `plan.md` files are retained as ordinary user files. The default workflow does not delete, migrate or treat them as authority.
+- Foundation, contract, decision-rationale, architecture, verification and deployment Context interpret current-code convenience before implementation choices are made.
 
-## Source-to-Context Coverage
+## Context Delta
 
-Source-to-Context Coverage is a task-local table used when a source packet or user request contains product, architecture, technical-plan or acceptance-plan constraints that may become durable facts. It only answers whether source constraints are covered by or written into Context; it does not describe implementation paths.
+`Context Delta: none|required` is the only durable-fact decision.
 
-Use this table in `plan.md` or an equivalent temporary plan surface before implementation for high-risk source inputs:
+`required` applies when work changes any durable product capability, surface/page responsibility, ownership, architecture boundary, API/schema/event/data meaning, state/recovery semantics, dependency direction, security boundary or repeatable verification/deployment path. Update enough owning Context to guide implementation, then implement.
 
-```text
-Source item | Durable constraint | Type | Existing Context Hit | Context action | Owning Context | Coverage status
-```
+`none` applies when existing Context is sufficient and work is a local bug fix, style change, local refactor, test repair or other engineering change that preserves durable semantics.
 
-Allowed coverage statuses:
+Do not add Product, Architecture, Rationale or Verification delta fields. Internal reasoning may distinguish those concerns, but the result converges to the one Context Delta.
 
-- `covered`
-- `new_context_required`
-- `context_updated`
-- `task_local_only`
-- `out_of_scope_explicit`
-- `needs_user_decision`
-- `under_scoped`
+For high-risk work the agent internally identifies the controlling `Architecture Context Hit`, whether durable rationale is existing/required/none, and `Modularity Check: none|required|exception`. These are reasoning aids, not required artifacts or validators.
 
-Rules:
+## External Source Inputs
 
-- Every durable product, architecture, surface, API/schema, runtime/state, verification/deployment or acceptance-semantics constraint in the source must appear in coverage.
-- `new_context_required` must become `context_updated`, `out_of_scope_explicit` or `needs_user_decision` before implementation claims full source alignment.
-- `under_scoped` means the Context update did not capture enough of the source constraint to guide implementation; it prevents claiming the plan or source was fully implemented.
-- Current code shape, existing files or convenient UI components cannot downgrade a source constraint into `task_local_only`.
-- If a source changes product surface ownership or information architecture, coverage must record the Product Surface Contract hit or the missing contract that requires Context update.
-- Source-to-Context Coverage must not include implementation paths or `Implementation constraint`; those belong in Context-to-Implementation Binding.
+For a product, architecture, technical or acceptance source, the agent must evaluate every material constraint before implementation:
 
-## Context-to-Implementation Binding
+- already covered by existing Context;
+- requires an owning Context update;
+- task-local only;
+- explicitly outside the requested scope; or
+- requires a genuine user decision.
 
-Context-to-Implementation Binding is a task-local table used after Context and Task Contract facts are known. It answers whether Context constraints have concrete implementation obligations, expected surfaces, implemented paths and verification paths.
+This Source-to-Context judgment is required, but no Markdown table or fixed file is required. Current code shape cannot downgrade a durable source constraint to task-local. Unresolved mutually exclusive product/scope/architecture meaning must be reported; locally resolvable implementation, ordering, Git, test and recovery choices remain agent work.
 
-Use this table in `plan.md` or an equivalent temporary plan surface for high-risk implementation work:
+Final Conformance asks whether controlling Context actually reached the correct modules, surfaces, APIs, state machines and verification paths, whether only a convenient local component was changed instead of the owning responsibility, and whether any forbidden shortcut was used. This replaces the former Context-to-Implementation Markdown table.
 
-```text
-Context fact | Implementation obligation | Expected surfaces | Implemented paths | Forbidden shortcuts | Verification path | Binding status
-```
+## Routing And Activation
 
-Allowed binding statuses:
+Routing order is:
 
-- `bound`
-- `partial`
-- `missing`
-- `blocked`
-- `out_of_scope_explicit`
-- `needs_user_decision`
-- `contradicted_by_current_state`
+1. An active Contract V3 binding in the current worktree resumes that strict Slice.
+2. Explicit `/prepare-composite-long-task` creates or resumes a multi-SFC Campaign.
+3. Explicit `/composite-long-task-workflow` executes an already complete three-input SFC.
+4. Explicit `/normal-long-task` prepares ordinary long-task acceptance artifacts and does not execute.
+5. Otherwise use the default Workflow Contract, even for a long task.
 
-Rules:
+Do not auto-detect task duration, file count or complexity; do not auto-trigger Composite, create Campaigns or add a routing state machine. Explicit invocation overrides default planning semantics.
 
-- `bound` requires implemented paths, expected surfaces and verification paths.
-- UI, page or product-surface binding requires real page, route, browser or screenshot evidence unless explicitly out of scope.
-- Runtime, worker, API or schema binding requires the matching implementation surface; test names or browser checked paths alone do not prove binding.
-- Forbidden shortcuts record evidence that cannot prove completion for that row. If implementation evidence uses a forbidden shortcut, the row cannot be `bound`.
-- `partial`, `missing`, `blocked`, `needs_user_decision` or `contradicted_by_current_state` prevents a full implementation-alignment claim.
-- Context-to-Implementation Binding is not product-quality proof. It checks that declared Context constraints are not silently dropped, narrowed or mapped only to convenient existing components.
+## Ordinary Long-Task Boundary
 
-## Plan Validator Boundary
+`/normal-long-task` only externalizes an acceptance target for a user-provided plan-like source:
 
-Tiny Context plan validators stay inside the Harness boundary:
+- preserve the original source;
+- produce one complete acceptance checklist, reusing an explicit source checklist when complete;
+- optionally produce a compact target-mode prompt;
+- create a Local Audit only when the user explicitly asks for recovery/progress persistence or target-mode recovery requires it.
 
-- Built-in consistency checks reject internally contradictory temporary artifacts, such as `complete` rows with missing evidence, contradictions, weak-proof language, unresolved Source-to-Context rows or missing implementation/verification bindings.
-- Built-in evidence-reference checks verify that cited Context, code, test, artifact, matrix and verdict paths exist and that declared plan/AC cross-references are not empty or dangling.
-- Built-in surface/architecture binding checks are structural only: they compare declared ownership, expected surfaces, implemented paths, forbidden shortcuts and evidence references. They do not judge whether the product, UX, runtime or business behavior is actually complete.
-- `validate-plan-acceptance` errors are blocking and exit-driving. Optional `warnings` and `hygiene` report stale non-complete prose, unsupported milestone labels, optional evidence-manifest cleanup and partial active-count drift without becoming product-quality proof.
-- Complete-claim proof gaps stay blocking: raw secrets/tokens/cookies, material drift, missing required layers, missing or failed machine-verifiable assertion reports, failed negative evidence scans, unapproved sibling substitution, wrong owner-surface proof, live-proof substitution, dangling `evidence_id` references and stale generated active-count blocks under a complete verdict remain errors.
-- Project-quality gates remain project-owned: tests, CI, smoke, real browser runs, hidden probes, production observation and human acceptance prove product behavior.
+A Local Audit records current progress, commands run, failure reasons and remaining blockers only. It is not Context, product proof, a second plan, a final verdict or a completion authority.
 
-## Temporary Plan Surface
+The Skill does not create a Plan Conformance Matrix, Final Acceptance Verdict, separate test-requirements file or second execution plan by default. Test requirements belong in the checklist. Ordinary long-task completion remains an evidence judgment using current agent evidence, project tests, CI and user acceptance; use Composite when strict machine completion authority is required.
 
-- `plan.md` or an equivalent temporary plan surface may hold `Context Delta`, Source-to-Context Coverage, Task Contract, Context-to-Implementation Binding, implementation steps and Conformance notes for long or multi-module work.
-- Use a temporary plan surface for high-risk product/architecture/technical/acceptance-plan inputs, product surface ownership changes, runtime/state/API/schema changes, multi-module work, multi-agent work or tasks likely to require several verification loops.
-- Small code tasks must not create `plan.md`, full trace tables, Source-to-Context Coverage or Context-to-Implementation Binding unless they discover durable Context changes, receive an external source packet or expand into high-risk/multi-surface work.
-- The plan surface serves the workflow contract and Context; it does not replace either.
-- Temporary plan surfaces must not become default project assets, plan state, stage artifacts, work-product trees or registered `context.toml` nodes.
-- Durable facts discovered while using a plan surface must be extracted into `project_context/**` or `DESIGN.md`; ordinary execution details stay temporary.
-- A plan surface must not claim source alignment while Source-to-Context Coverage still contains unresolved `new_context_required`, `needs_user_decision` or `under_scoped` rows.
-- A plan surface must not claim implementation alignment while Context-to-Implementation Binding still contains `partial`, `missing`, `blocked`, `needs_user_decision` or `contradicted_by_current_state` rows.
+## Composite Inheritance And Replacement
 
-## Target-Mode Local Audit
+When Composite is active, it inherits:
 
-- Target-mode local audit artifacts live under `tmp/ty-context/plan-acceptance/**` when a generated goal/target prompt asks for them.
-- A local audit records acceptance progress, current evidence, commands, blockers, missing evidence, deferred scope and invalid/stale evidence for one long-running objective.
-- A target-mode local audit does not replace Task Contract or workflow-contract `plan.md`.
-- A local audit is not Context, not product-quality proof, not a global task manager and not a substitute for tests, CI, review, human acceptance or the repository's Tiny Context workflow contract.
-- A local audit is ordinary-long-task process state only and must not mark final completion. Composite Contract V3 does not consume local audit, plan-conformance matrix or final-verdict files; it recomputes findings and final result directly from the active compiled contract and verifier runs.
-- When target-mode execution works through an acceptance item, each concrete execution slice still follows current Context, `Context Delta`, Task Contract and any workflow-contract `plan.md` in force.
+- Context Priority and graph-directed reading;
+- the one `Context Delta`;
+- context-first durable updates;
+- final Context drift check.
 
-## Product Surface Contract Boundary
+It replaces:
 
-- Product Surface Contract workflow turns broad page/UI/product positioning principles into project-owned Context for a user-facing surface.
-- The workflow is agent-mediated and prompt-level. `init` and `upgrade` install or refresh generic Skill/template support, but they do not infer or create business surface contract files.
-- Surface contracts use existing Context roles such as `contract`, `area`, `subdomain`, `verification`, `decision-rationale` and `implementation-index`. Do not add surface-specific Context roles or a surface-specific validator gate; the generic plan-contract validator may check declared surface binding consistency when a temporary plan surface exists.
+- agent task planning with Source Coverage, Scope Fit, SFC Packet and Goal;
+- an internal execution view of the three Contract V3 inputs;
+- informal implementation mapping with Contract V3 Implementation Bindings and Change Envelope;
+- execution status with Campaign, thread, Goal and receipt identities;
+- informal acceptance with AC, Proof, Spec and Counterfactual;
+- prose completion with Slice, Wave and Campaign gates.
 
-## Ordinary Long-Task Skill Boundary
+Composite must not create or consume a second `plan.md`, Task Contract, Context-to-Implementation Markdown table, Plan Conformance Matrix, Final Verdict, ordinary Local Audit or hand-written complete state.
 
-- The ordinary long-task Skill (`/normal-long-task`) is a pre-execution acceptance-standard pass for a user-provided plan-like source.
-- It is recommended through explicit Skill invocation instead of broad automatic keyword routing.
-- It materializes temporary plan/checklist artifacts under `tmp/ty-context/plan-acceptance/**`, reads relevant Context and may output a generic target-mode prompt.
-- It supports a two-document upstream input packet when the user provides both `Development Plan / 开发方案` and `Acceptance and Tests / 验收清单和测试用例`. The first document is execution direction; the second is target-mode acceptance input. Both are preserved source input, not proof. This packet path is strict mode.
-- In strict mode the Skill must stop when required fields cannot be fully parsed from both documents. Missing required fields must be reported to the user, and the Skill must not generate a checklist or goal/target-mode prompt from an incomplete two-document packet.
-- If the source plan contains an explicit concrete acceptance checklist, the Skill reuses that plan-provided checklist verbatim as the full checklist instead of generating a new one.
-- For a two-document upstream input packet, the acceptance-and-tests document is reused as the full checklist only when it already contains AC ID, scope, required evidence, verification method, fail condition, state-machine rules and invalid evidence rules; otherwise strict mode requires stopping for missing required fields.
-- Test requirements belong to acceptance evidence, not a fourth artifact. The full checklist may contain a `Required automated tests / 必须新增或补强的自动化测试` section, but the Skill must not create a separate `<plan-slug>-test-requirements.md` file.
-- If the source plan contains explicit test requirements, those requirements are plan-provided acceptance evidence and should be preserved in the full checklist rather than replaced with generic AC10 wording or an unrelated test list.
-- The materialized plan and full checklist remain separate files even when the checklist originally appeared inside the plan.
-- The generated goal/target prompt uses a conservative 3850-character effective maximum, including line breaks, so it stays below Codex's 4000-character practical paste boundary after small counting differences.
-- The Skill guidance must preserve required plan/checklist/audit paths and all core acceptance categories while fitting the 3850-character budget. When over budget, it should increase information density through compact wording, merged phrasing and references to the full checklist, not drop required evidence, blocker or false-completion semantics merely to be short.
-- For target-mode execution, the full acceptance checklist is the authoritative acceptance standard. Compact prompt summaries provide direction, priority and recovery navigation only.
-- Overlap between the full checklist and compact summary is allowed. If they conflict, the full checklist wins.
-- The local audit must record each required test's command, result and failure reason when test evidence is required, blocked or invalid.
-- It does not execute the plan, prove completion, own durable task state, replace Task Contract/workflow-contract `plan.md`, or store acceptance evidence as Context.
-- Generated target prompts require maximum safe autonomous progress within current platform, repository, tool and user-authorized permission boundaries. Locally satisfiable discovery, execution, inspection and verification remain agent work, not user work.
-- Existing local app sessions, browser cookies, CLI auth, OS credential helpers and user-authorized accounts are self-service resources. Generated prompts must tell executors to open the relevant app, page, CLI tool or system setting and try the existing session before asking the user; absent login, MFA, missing permission, failed elevation or external approval becomes a blocker only after attempted access shows it cannot be satisfied locally.
-- Generated target prompts inherit the current repository/global agent-instruction permission policy. Authorized `sudo` / `gsudo` / administrator elevation is not a user blocker; executors try it before pausing and only report a blocker when elevation is unavailable, fails or requires user/system authorization.
-- When only locally unsatisfiable hard blockers remain, generated prompts require a minimal user action list with the exact page/system/command/owner, field or value location, redaction guidance, values not to send and the agent's next step after receiving input.
-- Hard blockers in a generated checklist remain non-completion until the missing evidence or user/external action exists.
+## Campaign Context Alignment
 
-## Pre-stable Lightweight Verification Principle
+Before Scope Fit, the campaign aligns durable product/domain ownership, surface responsibility, architecture/API/schema/state/recovery semantics, cross-module dependencies and global verification constraints.
 
-- Before a stable release, prioritize proving the core compile → implementation → verification → completion loop instead of pre-building release-grade Host security, compatibility or platform matrices.
-- Default mechanism and end-to-end tests use the smallest common environment that can exercise the real CLI and `final-gate` path.
-- Heavy Host security, hostile-OS resistance, compatibility labs and cross-platform release validation are deferred until the core workflow is stable and are built as separate capabilities rather than default prerequisites.
-- Every default test names the concrete implementation drift or false-completion path it prevents.
-- When a default test exceeds its time budget, simplify it or move it out of the default path; increasing a timeout alone is not completion.
-- Do not introduce administrator privileges or complex infrastructure solely to defend against a hypothetical malicious Host before the product claims that threat model.
+Existing Campaign Source Coverage carries Context resolution directly:
 
-## Composite Long-Task Preparation Skill Boundary
+- `existing` and `updated` require one or more registered `context_refs`;
+- `updated` requires the referenced Context bytes to be current;
+- `task_local` requires a specific reason;
+- out-of-scope and decision-required remain Source dispositions;
+- Packet Requirement `context_refs` or `task_local_reason` must match Source Coverage.
 
-The explicit Composite Long-Task Preparation Skill (`/prepare-composite-long-task`) is the upstream Campaign V5 authoring and orchestration boundary for a discussed raw requirement. It is separate from `/composite-long-task-workflow`, which remains a one-Slice worker for an already-complete Contract V3 Product / Architecture Source, Technical Realization Plan and Acceptance Checklist.
+The campaign freezes a Context baseline containing graph topology and selected file hashes. The relevant set is `context.toml`, `global.md`, `architecture.md`, Source Coverage refs, Packet Requirement refs and graph-transitive dependencies.
 
-- Explicit invocation authorizes the complete prepare-and-execute loop. Preparation preserves immutable `source-plan.md` provenance and complete source coverage, performs Scope Fit V4, and keeps one stable, never-renumbered `SFC-###` dependency graph with global constraints, produced/consumed contracts, conflict domains and resource locks. Ordinary priority ties are scheduler inputs, not user decisions; only mutually exclusive product/scope/architecture semantics require a user choice.
-- Scope Fit V4 inventories every delivery-bearing control or capability as a typed Source Unit before assigning it to an SFC. Supported kinds are `ui_control`, `route`, `api_operation`, `state_transition`, `worker_action`, `data_schema`, `security_rule`, `cli_command`, `migration` and `integration_contract`; UI, API and runtime units carry their kind-specific interaction, contract or transition details. Every delivery item must map Source Unit -> SFC -> Product Requirement -> PI Obligation -> AC -> Verification Spec with no uncovered or multiply-owned unit.
-- One SFC is the largest authorable coherent scope that can be accepted as one independent outcome. Semantic completeness and interaction/runtime detail come first, maximal coherent scope second and parallelism last. Splitting is legal only for `independent_acceptance_outcome`, `semantic_dependency`, `different_owner_or_authority`, `separate_rollout_or_rollback`, `unresolved_product_decision` or evidenced `authoring_capacity_exceeded`; file/layer boundaries, subagent assignment, duration, possible parallelism or model preference are never split reasons. Equally cohesive units with one acceptance outcome and no real dependency, authority, rollout or capacity boundary must remain together, and the validator rejects `over_split_sfc`.
-- Capacity splitting is evidence-driven, not token-threshold-driven. Actual structured-output truncation, structured-generation failure, two unsuccessful repair turns, a proven output/file limit or demonstrably incomplete Source Unit mapping may justify a graph revision before any Goal exists. The revision narrows the affected stable SFC and appends new stable IDs without renumbering existing ones. Once any Goal is set, the graph is frozen permanently.
-- Authoring is centralized, just in time and hosted by Codex App Server. Every dependency-ready SFC starts one read-only Authoring Turn on one dedicated thread, using the actual controller model and reasoning effort, no Goal and the strict Packet output schema. Packet extraction, revision write, deterministic rendering and preflight are serialized campaign mutations even when Authoring Turns run concurrently. `CompositeAuthoringPacketV3` remains the only mutable authoring source, every accepted edit creates an immutable revision, and at most two same-thread repair turns may repair invalid structured output before a capacity decision or failure. Downstream packets are authored only after dependencies are integration-verified against current Context/code.
-- Routing uses only the actual controller/host model and effort plus the App Server `model/list` catalog. Exact `gpt-5.6-sol` at `xhigh` or `max`, and only a catalog-proven successor at those efforts, routes to available `gpt-5.6-sol` at `medium`; alias `gpt-5.6` canonicalizes to Sol. Lower efforts, unrelated models, unknown profiles and unavailable targets pass through unchanged with an explicit reason. Self-report, config/default inference, name resemblance, price or presumed model hierarchy are not routing evidence; `none < low < medium < high < xhigh < max`, and no effort other than `xhigh`/`max` triggers the downgrade.
-- Only a valid Packet plus deterministic preflight permits setting the thread Goal. The Goal objective is bounded to 4,000 characters and freezes campaign/SFC/wave/worktree/branch/base/packet/contract/integration identities, allowed bindings and forbidden campaign paths. Execution continues on that same thread with explicit routed model/effort, isolated worktree cwd and workspace-write sandbox; a Goal may implement, commit, verify and final-gate only its Slice and cannot change the graph, other packets, integration branch, worktree topology or Campaign result.
-- The CLI recomputes a conservative pairwise conflict matrix after packet preflight. SFCs may share a wave only with positive evidence of no semantic dependency, no overlapping implementation/verification paths or API/schema/route/runtime/Context contract, no shared Source Unit cohesion, migration sequence, generated artifact, package-manager manifest, environment profile or non-isolatable resource, and a common Integration Branch base. Unknown means serial. Stable priority, stable key and SFC ID ordering make the schedule deterministic.
-- Every serial or parallel SFC uses the same isolated-worktree path. A wave starts all independent Execution Turns before waiting, subject to an internal maximum of four and resource capacity. Completion notifications are reconciled with thread reads and Contract V3 receipts: `accepted` records the verified result; `needs_work` starts another explicit-profile turn on the same thread; interrupted turns resume; system transport failure permits one App Server restart/reinitialize/thread-resume attempt before `wait_external`. Repair uses a separate execution-profile thread and may repair integration state but may not rewrite scope or packets.
-- Slice execution rereads current Context/code and resolves Context Delta before implementation. The first compile fixes the active contract/workdir identity for that worktree. The Slice must commit and become clean before its final gate, must not mutate files after acceptance, and writes a receipt binding Goal, branch, base, head, contract, final result and clean state. `record-result` verifies the current existing final receipt and identities; it must not rerun final-gate or promote status, historical runs or prose.
-- Accepted Slice branches merge only into the Campaign Integration Branch in stable SFC order. Ordinary Git conflicts or combined regressions create repair manifests/worktrees/Goals and do not ask the user. Every merged wave passes an impact-aware Integration Gate. Once every SFC is integrated, Campaign Final Gate recompiles and reruns all SFCs, global constraints and source coverage on one shared final snapshot; historical Slice acceptance alone is insufficient.
-- Campaign `accepted` is derived only when the same-snapshot Campaign Final Gate passes, the Integration Branch is clean, target movement is resynchronized and revalidated, and target merge plus push succeeds. A protected-branch push failure first tries to publish the Integration Branch and open or reuse a PR; opening the PR is not acceptance, so the Campaign waits until the target contains it and final revalidation succeeds. Credentials/MFA/permissions/external approval, an unautomatable protected-branch rule or genuine semantic contradiction may produce an external/decision blocker; ordinary scheduling, Git conflicts, test failures and Goal interruption stay automatic repair/recovery work.
-- Tracked authority is immutable source plan -> complete Source Unit coverage/Scope Fit V4 graph -> campaign host/profile plus append-only audit -> recoverable per-SFC thread/turn/Goal state -> immutable packet revisions -> deterministic projections/schedules -> receipt identities/integration results -> current Campaign final result/target merge identity. Thread phases are `thread_pending`, `authoring`, `packet_validation`, `worktree_ready`, `goal_active`, `executing`, `accepted`, `failed` and `interrupted`. State persists thread/turn IDs, explicit profiles, Goal hash/status, routing decision and launch identity so restart can reconcile without duplicate turns. An ambiguous host/thread launch fails closed as `ambiguous_host_thread_launch`; the runner never silently falls back to manual or fake execution. V4 campaign state has an audit-only reader and cannot enter automatic `run` or `advance`. V2 sources/Observation V1, V1/V2/Markdown campaigns, partial bundles and old workdirs have no importer or compatibility path. `init`, `sync` and `upgrade` install/refresh capability only and never create or scan campaigns.
+Before a Goal starts, unchanged baseline means the Slice reads only its referenced Context and three inputs. Changed Context is reread and classified. A change affecting Scope, owner, architecture or acceptance invalidates the Packet and returns the SFC to Authoring; an unrelated change may continue. After the first successful compile, Context, three inputs, Oracle, verifier and workdir are frozen. A later required Context update invalidates the contract and requires Context update, Packet reauthoring and recompilation.
 
-## Composite Long-Task Workflow Skill Boundary
+Contract V3 defaults to `context_snapshot_mode: referenced`; `full` is explicit for security-sensitive or global migration work. The compiled identity freezes Context Graph topology plus selected file hashes so unrelated Context changes do not invalidate every SFC.
 
-- The explicit `/composite-long-task-workflow` is a lightweight false-completion-prevention executor, not a Superpowers adapter, security boundary or implementation-method prescription. It has one path only: compile the three inputs → freeze the contract and relevant identities → allow free implementation → `verify` → repair while `needs_work` → `final-gate` full recomputation → Stop freshness check → allow completion only for current `accepted`.
-- The guarantee is conditional on complete V3 inputs, sound observers and use of the normal CLI/Hook path: no declared Requirement, PI, Obligation, Binding, AC, Proof, Spec or Counterfactual may remain unrun or failed while the workflow emits `accepted`. The compiler cannot prove omitted product intent, so strict authoring/preflight remains mandatory.
-- The three strict V3 YAML inputs use `product-source-v3`, `technical-plan-v3` and `acceptance-checklist-v3`. Parsing rejects V2, Observation V1, ambiguous YAML constructs, unknown fields and incomplete graph coverage.
-- The immutable `compiled-contract.json` uses `compiled-long-task-contract-v3` and preserves the three-input hashes, registered Context hash, oracle/verifier identities, workdir identity and complete Requirement/PI/Obligation/Binding/AC/Proof/Spec/Counterfactual graph. Oracle V2 returns typed actual observations only; Harness-owned operators, population rules, binding projection and counterfactual checks compute results without trusting Oracle pass/status fields.
-- The pre-stable execution surface accepts exactly one Node Oracle step that matches the declared entrypoint, with network mode `none` and empty environment refs, requirements and probes. Browser/package/project commands, network access and environment-dependent contracts fail compile explicitly; none may remain as an ignored or half-enabled mode.
-- While an active task exists in one Git worktree, compiling the identical contract for the identical workdir is idempotent. A changed Product source, Plan, AC/acceptance input, registered Context, oracle/verifier identity, contract graph or workdir in that worktree is rejected with `active_contract_changed`; separate worktrees may hold different active SFC contracts concurrently. Once an accepted Stop clears that worktree's active binding, a later activation invalidates the preceding final result before writing the new binding, even when contract and workspace hashes happen to be identical.
-- `verify` accepts no Agent-supplied pass/result or entity status. It runs frozen in-scope verification and writes repair-oriented `needs_work` findings; it never produces acceptance.
-- `final-gate` reruns every in-scope AC against the current workspace, recomputes Obligation, PI and Requirement results bottom-up and binds the result to the current workspace hash. Historical pass records are not final evidence. Only a fully passing current recomputation produces `accepted`.
-- Compile must verify that all required events point through the exact package-managed Hook commands and that the installed Hook bytes match the packaged implementation; a similarly named or no-op script is not a completion gate.
-- The Stop Hook is no-op when no active task exists in the current worktree. With an active task it requires the final-result bytes to match identical verifier-written receipts in ordinary project and current worktree Git state, then blocks a missing result/receipt, `needs_work`, a non-accepted result or any workspace/final-result identity mismatch; it allows Slice completion only while the latest receipt-bound `accepted` result remains fresh.
-- Active contracts, result receipts and final results may use ordinary user-level, project-level storage. Current guarantees cover omitted obligations, changed compile inputs or observers, candidate rewriting of only the workdir result, stale/missing final results, post-final workspace drift and silent active-contract replacement. They do not cover a malicious same-user or administrator deliberately rewriting all ordinary receipt/state copies or deleting state or Hooks, Credential Manager/Registry attacks, system-level managed-Hook bypass, deletion of all host state or kernel/sandbox escape.
-- Rust Host Helpers, administrator privileges, Credential Manager, AppContainer, WFP, administrator Registry policy, complex ACLs, Host attack matrices, external audit runners, release-grade consumer matrices and default cross-platform infrastructure are outside the pre-stable workflow. They must not remain as half-enabled production paths, feature flags or current security claims; any future work starts as a separate post-stability decision.
-- The public composite CLI remains limited to `init`, `compile`, `verify`, `status`, `final-gate`, `stop-check` and `render-goal`; it contains no force/reset/cancel-active, arbitrary verifier, evidence registration, slice/epoch/task-state/derived/progress commands or compatibility alias.
-- Context Delta, source coverage, implementation binding and Conformance remain Tiny Context workflow behavior, not duplicate runtime gates. The workflow does not prescribe TDD, subagent review, slice cadence or multiple execution modes.
+## Scope Fit And Scheduling
+
+Scope Fit preserves the existing maximal-coherent rule:
+
+1. inventory every delivery-bearing control/capability Source Unit;
+2. group by independent acceptance outcome;
+3. merge shared owner/state/data chains;
+4. split only at a legal semantic, authority, rollout, decision or evidenced capacity boundary;
+5. verify every SFC can produce complete three inputs;
+6. reject over-splitting.
+
+File/layer boundaries, agent count, expected duration and parallelism are not split reasons. SFC IDs are stable and never renumbered. Capacity splitting requires observed generation/output failure. Goal creation freezes the graph; scheduling cannot revise SFC scope.
+
+The conflict analyzer and scheduler run after Scope Fit. Parallel placement requires positive independence evidence; unknown conflict is serial.
+
+## Slice Change Envelope
+
+Every Goal has a machine-enforced Change Envelope:
+
+- `file` and `path_glob` bindings generate allowed write paths;
+- `symbol`, `schema`, `route` and `runtime_capability` bindings also declare their carrier file paths;
+- lockfiles, generated files and other supporting paths are explicit;
+- campaign/Context authority paths remain forbidden to Slice Goals;
+- the receipt compares every `base..head` changed path and rejects undeclared changes;
+- repair uses the union of affected Slice envelopes and never receives unlimited write scope.
+
+A passing test suite cannot authorize an out-of-envelope change.
+
+## Campaign Transactions And Recovery
+
+Campaign mutations use an optimistic generation, lease lock and write-ahead transaction intent. The durable mutation order is: acquire lease; prepare and fsync staged artifacts; write intent with before/after hashes; atomically replace subordinate files; atomically replace campaign state; append a before/after-hash event; remove intent; release the lease.
+
+Locks record owner pid/host, operation id, start and lease expiry. A live owner rejects concurrent mutation. A stale owner enters deterministic recovery. An outstanding intent completes or rolls back from hashes; orphan revisions move to quarantine and are never trusted automatically. Recovery is idempotent and adds no model turn.
+
+## Git Ownership
+
+Campaign owns its worktrees and branches, not the user's primary worktree.
+
+- Dirty primary-worktree input is captured through a temporary index and `commit-tree` checkpoint ref under `refs/ty-context/checkpoints/<campaign>/<timestamp>`; it never stages, commits, clears or moves the user's index/worktree and still performs secret scanning.
+- Slice, integration, repair and target finalization use Campaign-owned worktrees.
+- Target resynchronization/replay or rebase, final revalidation, fast-forward/push or protected-branch PR handling never requires checking out or rebasing the primary worktree.
+- `preserve_primary_worktree` defaults to `true`; `auto_push` and protected-branch mode are explicit campaign policy.
+
+Explicit `/prepare-composite-long-task` continues to authorize full execution and target integration within these boundaries.
+
+## App Server Convergence And Routing
+
+Concurrent Authoring/Wave operations use settled-result reconciliation. If one operation fails, the host either lets already-running siblings finish and observes all final states before deciding the wave, or interrupts siblings and confirms termination. It must never exit while an unobserved turn can still mutate a worktree.
+
+Each SFC persists the observed turn id, running/completed/failed/interrupted/unknown status, observation time and whether reconciliation remains required.
+
+Model routing mechanism is separate from a versioned policy asset. The current policy keeps the existing semantics: exact `gpt-5.6-sol` xhigh/max, or a catalog-proven successor at those efforts, routes execution to available `gpt-5.6-sol / medium`; everything else passes through. Campaign freezes policy id/hash, catalog hash and routing decision.
+
+## Verification And Completion
+
+Slice execution is: compile; free implementation; project-focused tests; optional targeted `verify`; commit and clean; Slice Final Gate. `verify` is a repair tool, never a required ceremony or acceptance producer. Findings may drive targeted verify and repair, but every final attempt reruns the full Slice scope.
+
+The three gates remain distinct:
+
+- Slice Final Gate closes stale, partial and local Slice drift.
+- Wave Integration Gate closes regressions introduced by merging Slices.
+- Campaign Final Gate closes historical-result reuse by proving the whole campaign on one final snapshot.
+
+Wave impact combines actual merge diff, Implementation Binding targets, verification input paths, contract keys, Context refs and global constraints. Proven unaffected Specs may be skipped; uncertainty falls back to full; cross-SFC global constraints always run.
+
+Campaign Final Gate creates one shared Integration snapshot, compiles all Slice contracts against it, runs identical Specs once only when snapshot, normalized Spec, Oracle, executable, input paths, command definition and environment contract identities all match, projects results back to owning Slices and evaluates global constraints. This is same-snapshot execution deduplication, never reuse of historical evidence.
+
+Campaign `accepted` is derived only from current Slice/Wave/final gates, a clean Integration Branch, target resynchronization/revalidation and successful target integration. Prose, Goal status, old results, matrices, verdicts or App Server turn completion cannot promote acceptance.
 
 ## Contract Conformance
 
-- Contract Conformance compares implementation against relevant Context, Task Contract and durable boundaries before handoff.
-- Implementation misses are fixed in code.
-- Task Contract omissions return to the Task Contract while work is active.
-- Missing durable facts return to `Context Delta: required` and Context-first handling.
-- When a `plan.md` or equivalent plan surface exists, Contract Conformance must check Source-to-Context Coverage, Task Contract entries and Context-to-Implementation Binding before handoff. Remaining `under_scoped`, unresolved `new_context_required` or non-bound implementation rows mean the implementation cannot be described as fully aligned to the source and Context.
-- Conformance for product surface, information architecture, runtime governance or API/schema migration checks that implementation did not preserve current-code convenience against Context intent, such as moving only a component while leaving the owning surface or runtime responsibility unchanged.
-- Conformance evidence belongs in handoff/final/PR text. Do not store one-off proof, screenshots, logs or test output in Context.
+Before handoff:
 
-## Current-State Conformance
+- fix implementation misses in code;
+- update missing durable facts through `Context Delta: required`;
+- confirm every material source constraint is covered, task-local, explicitly out of scope or a reported decision blocker;
+- confirm controlling Context reached correct implementation and verification surfaces;
+- confirm no forbidden shortcut, duplicate workflow artifact or stale authority was used;
+- confirm implementation and Context have not drifted.
 
-- Before claiming current product, API, UI, runtime, data, artifact or evidence-state completion, compare the claim against current evidence and the applicable acceptance contract.
-- Evidence ledger discipline is prompt-level completion discipline: missing current evidence means incomplete, stale evidence cannot prove current completion, and contradictions between implementation, API/UI/data/runtime artifacts and tests must be resolved or reported as blockers.
-- Current-state ACs start as `unknown / not_run`; only fresh required evidence may prove completion. Any fresh browser/API/runtime/data/test contradiction downgrades the affected AC and overall status and must be recorded as invalidating evidence.
-- UI-facing acceptance requires real page path evidence with matching user-visible state unless the full checklist explicitly scopes the UI out; component, viewmodel, mock or unit evidence alone is auxiliary.
-- This discipline may be supported by `validate-plan-contract` or `validate-plan-acceptance` artifact consistency checks. It is still not a `validate-context` product-state check, not product-quality proof, not a lifecycle phase, not a phase gate and not a stage artifact.
+Handoff reports only implementation, verification, Context status and blockers. Conformance evidence stays in the handoff/PR, not Context.
 
 ## Non-Goals
 
-- Do not restore PRD/UX/tech-plan/review/test/release document chains as default workflow.
-- Do not restore lifecycle phases, phase gates, plan state, stage Skills or `.work_products/**`.
-- Do not make edit order a `validate-context` requirement. Automation may warn about possible context-first drift, but should not block only because of edit order.
+- Do not restore lifecycle phases, phase gates, plan state, fixed plan files, Task Ledgers, forced TDD/review/subagents, matrix/verdict/evidence-ledger completion or PRD/UX/tech-plan/review/test/release document chains.
+- Do not make Context-first order, Source-to-Context judgment, internal plans or Conformance into a validator gate.
+- Do not auto-trigger long-task workflows.
+- Do not remove any of the three Composite completion gates or let targeted verification issue acceptance.

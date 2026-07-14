@@ -1,10 +1,13 @@
 import path from "node:path";
-import { CONTEXT_MANIFEST_PATH, defaultContextManifestTemplate } from "./context-manifest.js";
+import {
+  CONTEXT_MANIFEST_PATH,
+  defaultContextManifestTemplate,
+} from "./context-manifest.js";
 import {
   architectureContextTemplate,
   areaContextTemplate,
   globalContextTemplate,
-  verificationContextTemplate
+  verificationContextTemplate,
 } from "./context-templates.js";
 import { writeConfigIfMissing } from "./config.js";
 import { createDesignMdIfMissing, DESIGN_MD_PATH } from "./design-md.js";
@@ -18,12 +21,17 @@ export interface InitOptions {
   force: boolean;
 }
 
-export async function runInit(projectRoot: string, options: InitOptions): Promise<string[]> {
+export async function runInit(
+  projectRoot: string,
+  options: InitOptions,
+): Promise<string[]> {
   const report: string[] = [];
   await assertSupportedSchema(projectRoot, "init");
   const existingEntries = await projectHasExistingFiles(projectRoot);
   if (existingEntries && !options.adopt && !options.force) {
-    report.push("Project is not empty; continuing with non-destructive init. Use --adopt to mark this as an existing project adoption.");
+    report.push(
+      "Project is not empty; continuing with non-destructive init. Use --adopt to mark this as an existing project adoption.",
+    );
   }
 
   const configPath = await harnessConfigPath(projectRoot);
@@ -37,12 +45,17 @@ export async function runInit(projectRoot: string, options: InitOptions): Promis
   await createDesignMd(projectRoot, report);
 
   const syncReport = await runSync(projectRoot);
-  report.push(`sync changed=${syncReport.changed.length} skipped=${syncReport.skipped.length} blocked=${syncReport.blocked.length}`);
+  report.push(
+    `sync changed=${syncReport.changed.length} skipped=${syncReport.skipped.length} blocked=${syncReport.blocked.length}`,
+  );
   report.push(options.adopt ? "adopt mode complete" : "init complete");
   return report;
 }
 
-async function createDesignMd(projectRoot: string, report: string[]): Promise<void> {
+async function createDesignMd(
+  projectRoot: string,
+  report: string[],
+): Promise<void> {
   if (await createDesignMdIfMissing(projectRoot)) {
     report.push(`created ${DESIGN_MD_PATH}`);
   }
@@ -58,7 +71,10 @@ async function projectHasExistingFiles(projectRoot: string): Promise<boolean> {
   return false;
 }
 
-async function createProjectContext(projectRoot: string, report: string[]): Promise<void> {
+async function createProjectContext(
+  projectRoot: string,
+  report: string[],
+): Promise<void> {
   const areasRoot = path.join(projectRoot, "project_context", "areas");
   await ensureDir(areasRoot);
   const files: Array<[string, string]> = [
@@ -66,7 +82,10 @@ async function createProjectContext(projectRoot: string, report: string[]): Prom
     ["project_context/global.md", globalContextTemplate()],
     ["project_context/architecture.md", architectureContextTemplate()],
     ["project_context/areas/main.md", areaContextTemplate("main")],
-    ["project_context/areas/main/verification.md", verificationContextTemplate("main")]
+    [
+      "project_context/areas/main/verification.md",
+      verificationContextTemplate("main"),
+    ],
   ];
   for (const [relative, content] of files) {
     const target = path.join(projectRoot, relative);

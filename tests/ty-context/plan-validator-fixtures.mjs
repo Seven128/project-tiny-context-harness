@@ -22,10 +22,6 @@ export async function createPlanProject() {
   await writeFile(path.join(root, "tmp/ty-context/plan-acceptance/demo/ui-assertion-report.json"), "{}", "utf8");
   return root;
 }
-export async function writePlan(root, content) {
-  await writeFile(path.join(root, "plan.md"), content, "utf8");
-}
-
 export async function writeAcceptance(root, matrix, verdict) {
   const dir = path.join(root, "tmp/ty-context/plan-acceptance/demo");
   await writeFile(path.join(dir, "demo-plan-conformance-matrix.json"), JSON.stringify(matrix, null, 2), "utf8");
@@ -40,23 +36,6 @@ export async function writeEvidenceManifest(root, manifest) {
 export async function writeFinalVerdictMarkdown(root, content) {
   const dir = path.join(root, "tmp/ty-context/plan-acceptance/demo");
   await writeFile(path.join(dir, "demo-final-acceptance-verdict.md"), content, "utf8");
-}
-
-export function validPlan() {
-  return `# Plan
-
-## Source-to-Context Coverage
-
-| Source item | Durable constraint | Type | Existing Context Hit | Context action | Owning Context | Coverage status |
-|---|---|---|---|---|---|---|
-| P-1 | Operations owns runtime recovery | surface | \`project_context/areas/main.md\` | none | \`project_context/areas/main.md\` | covered |
-
-## Context-to-Implementation Binding
-
-| Context fact | Implementation obligation | Expected surfaces | Implemented paths | Forbidden shortcuts | Verification path | Binding status |
-|---|---|---|---|---|---|---|
-| \`project_context/areas/main.md\` | Operations page exposes runtime recovery | ui page, runtime api | \`src/pages/OperationsPage.tsx\`, \`src/runtime/kernel.ts\` | component-only | \`tests/runtime.spec.ts\`, browser route /operations screenshot \`tmp/ty-context/plan-acceptance/demo/browser.png\` | bound |
-`;
 }
 
 export function validMatrix() {

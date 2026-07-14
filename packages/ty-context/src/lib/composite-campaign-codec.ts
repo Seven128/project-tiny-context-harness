@@ -1,26 +1,37 @@
 import { createHash } from "node:crypto";
-import YAML, { isAlias, isMap, isPair, isScalar, isSeq, visit, type Document, type Node } from "yaml";
+import YAML, {
+  isAlias,
+  isMap,
+  isPair,
+  isScalar,
+  isSeq,
+  visit,
+  type Document,
+  type Node,
+} from "yaml";
 
 export function canonicalJson(value: unknown): string {
   assertCanonicalValue(value, "$", new Set());
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
-export function canonicalValueJson(value:unknown):string{
-  assertCanonicalValue(value,"$",new Set());
+export function canonicalValueJson(value: unknown): string {
+  assertCanonicalValue(value, "$", new Set());
   return JSON.stringify(sortCanonical(value));
 }
 
 export function canonicalYaml(value: unknown): string {
   assertCanonicalValue(value, "$", new Set());
-  return oneTrailingNewline(YAML.stringify(value, {
-    aliasDuplicateObjects: false,
-    blockQuote: false,
-    directives: false,
-    doubleQuotedAsJSON: true,
-    lineWidth: 0,
-    sortMapEntries: false
-  }));
+  return oneTrailingNewline(
+    YAML.stringify(value, {
+      aliasDuplicateObjects: false,
+      blockQuote: false,
+      directives: false,
+      doubleQuotedAsJSON: true,
+      lineWidth: 0,
+      sortMapEntries: false,
+    }),
+  );
 }
 
 export function parseStrictJson(content: string): unknown {
@@ -29,7 +40,7 @@ export function parseStrictJson(content: string): unknown {
     schema: "json",
     strict: true,
     stringKeys: true,
-    uniqueKeys: true
+    uniqueKeys: true,
   });
   assertSingleValidDocument(duplicateCheck, "JSON");
   try {
@@ -49,10 +60,12 @@ export function parseStrictYaml(content: string): unknown {
     schema: "core",
     strict: true,
     stringKeys: true,
-    uniqueKeys: true
+    uniqueKeys: true,
   });
   const document = assertSingleValidDocument(documents, "YAML");
-  const hasTagDirective = Object.keys(document.directives.tags).some((handle) => handle !== "!!");
+  const hasTagDirective = Object.keys(document.directives.tags).some(
+    (handle) => handle !== "!!",
+  );
   if (document.directives.yaml.explicit || hasTagDirective) {
     throw new Error("YAML directives are not allowed");
   }
@@ -68,9 +81,14 @@ export function sha256Hex(value: string | Uint8Array): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
-function assertSingleValidDocument(documents: Document.Parsed[], label: string): Document.Parsed {
+function assertSingleValidDocument(
+  documents: Document.Parsed[],
+  label: string,
+): Document.Parsed {
   if (documents.length !== 1) {
-    throw new Error(`${label} must contain exactly one document; multiple documents are not allowed`);
+    throw new Error(
+      `${label} must contain exactly one document; multiple documents are not allowed`,
+    );
   }
   const document = documents[0];
   const issue = document.errors[0] ?? document.warnings[0];
@@ -102,22 +120,31 @@ function inspectYamlNodes(document: Document.Parsed): void {
   });
 }
 
-function assertCanonicalValue(value: unknown, path: string, ancestors: Set<object>): void {
-  if (value === null || typeof value === "string" || typeof value === "boolean") return;
+function assertCanonicalValue(
+  value: unknown,
+  path: string,
+  ancestors: Set<object>,
+): void {
+  if (value === null || typeof value === "string" || typeof value === "boolean")
+    return;
   if (typeof value === "number") {
-    if (!Number.isFinite(value)) throw new Error(`Canonical value at ${path} must be a finite number`);
+    if (!Number.isFinite(value))
+      throw new Error(`Canonical value at ${path} must be a finite number`);
     return;
   }
   if (!value || typeof value !== "object") {
     throw new Error(`Canonical value at ${path} is not JSON-compatible`);
   }
-  if (ancestors.has(value)) throw new Error(`Canonical value at ${path} contains a cycle`);
+  if (ancestors.has(value))
+    throw new Error(`Canonical value at ${path} contains a cycle`);
   ancestors.add(value);
   if (Array.isArray(value)) {
     assertPlainArrayOwnProperties(value, path);
     for (let index = 0; index < value.length; index += 1) {
       if (!Object.hasOwn(value, index)) {
-        throw new Error(`Canonical value at ${path}[${index}] contains a sparse array hole`);
+        throw new Error(
+          `Canonical value at ${path}[${index}] contains a sparse array hole`,
+        );
       }
       assertCanonicalValue(value[index], `${path}[${index}]`, ancestors);
     }
@@ -127,7 +154,11 @@ function assertCanonicalValue(value: unknown, path: string, ancestors: Set<objec
       throw new Error(`Canonical value at ${path} must be a plain object`);
     }
     for (const key of assertPlainObjectOwnProperties(value, path)) {
-      assertCanonicalValue((value as Record<string, unknown>)[key], `${path}.${key}`, ancestors);
+      assertCanonicalValue(
+        (value as Record<string, unknown>)[key],
+        `${path}.${key}`,
+        ancestors,
+      );
     }
   }
   ancestors.delete(value);
@@ -137,14 +168,20 @@ function assertPlainObjectOwnProperties(value: object, path: string): string[] {
   const keys: string[] = [];
   for (const key of Reflect.ownKeys(value)) {
     if (typeof key === "symbol") {
-      throw new Error(`Canonical value at ${path} contains a symbol own property`);
+      throw new Error(
+        `Canonical value at ${path} contains a symbol own property`,
+      );
     }
     const descriptor = Object.getOwnPropertyDescriptor(value, key)!;
     if (!descriptor.enumerable) {
-      throw new Error(`Canonical value at ${path}.${key} contains a non-enumerable own property`);
+      throw new Error(
+        `Canonical value at ${path}.${key} contains a non-enumerable own property`,
+      );
     }
     if (!("value" in descriptor)) {
-      throw new Error(`Canonical value at ${path}.${key} contains an accessor own property`);
+      throw new Error(
+        `Canonical value at ${path}.${key} contains an accessor own property`,
+      );
     }
     keys.push(key);
   }
@@ -155,17 +192,29 @@ function assertPlainArrayOwnProperties(value: unknown[], path: string): void {
   for (const key of Reflect.ownKeys(value)) {
     if (key === "length") continue;
     if (typeof key === "symbol") {
-      throw new Error(`Canonical array at ${path} contains a symbol own property`);
+      throw new Error(
+        `Canonical array at ${path} contains a symbol own property`,
+      );
     }
-    if (!/^(?:0|[1-9][0-9]*)$/.test(key) || Number(key) >= value.length || String(Number(key)) !== key) {
-      throw new Error(`Canonical array at ${path} contains an extra own property ${key}`);
+    if (
+      !/^(?:0|[1-9][0-9]*)$/.test(key) ||
+      Number(key) >= value.length ||
+      String(Number(key)) !== key
+    ) {
+      throw new Error(
+        `Canonical array at ${path} contains an extra own property ${key}`,
+      );
     }
     const descriptor = Object.getOwnPropertyDescriptor(value, key)!;
     if (!("value" in descriptor)) {
-      throw new Error(`Canonical array at ${path}[${key}] contains an accessor own property`);
+      throw new Error(
+        `Canonical array at ${path}[${key}] contains an accessor own property`,
+      );
     }
     if (!descriptor.enumerable) {
-      throw new Error(`Canonical array at ${path}[${key}] contains a non-enumerable own property`);
+      throw new Error(
+        `Canonical array at ${path}[${key}] contains a non-enumerable own property`,
+      );
     }
   }
 }
@@ -174,11 +223,25 @@ function oneTrailingNewline(value: string): string {
   return `${value.replace(/\r\n?/g, "\n").replace(/\n*$/, "")}\n`;
 }
 
-function sortCanonical(value:unknown):unknown{if(Array.isArray(value))return value.map(sortCanonical);if(value&&typeof value==="object")return Object.fromEntries(Object.keys(value).sort().map((key)=>[key,sortCanonical((value as Record<string,unknown>)[key])]));return value;}
+function sortCanonical(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sortCanonical);
+  if (value && typeof value === "object")
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [
+          key,
+          sortCanonical((value as Record<string, unknown>)[key]),
+        ]),
+    );
+  return value;
+}
 
 function assertTextInput(content: string, label: string): void {
-  if (typeof content !== "string") throw new TypeError(`${label} input must be a string`);
-  if (content.charCodeAt(0) === 0xfeff) throw new Error(`${label} byte-order marks are not allowed`);
+  if (typeof content !== "string")
+    throw new TypeError(`${label} input must be a string`);
+  if (content.charCodeAt(0) === 0xfeff)
+    throw new Error(`${label} byte-order marks are not allowed`);
 }
 
 function messageOf(error: unknown): string {

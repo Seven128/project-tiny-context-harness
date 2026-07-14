@@ -1,528 +1,149 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const read = (relativePath) => readFile(path.join(repoRoot, relativePath), "utf8");
+const root = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../..",
+);
+const read = (relative) => readFile(path.join(root, relative), "utf8");
 
-const [
-  sourceAgents,
-  rootReadme,
-  packageReadme,
-  spec,
-  packageAgents,
-  packageGuide,
-  sourceMappings,
-  authoringSkill,
-  productSkill,
-  uiuxSkill,
-  developmentSkill,
-  exportSkill,
-  harnessUpgradeSkill,
-  sourceWorkflow,
-  packageWorkflow,
-  packageJsonRaw,
-  contributing,
-  launchKit,
-  marketMap,
-  prTemplate,
-  bugTemplate,
-  featureTemplate,
-  contextManifest,
-  harnessArea,
-  contextModel,
-  workflowContract,
-  packageManagedSurfaces,
-  minimalContextRationale,
-  implementationIndex,
-  verificationContext
-] = await Promise.all([
-  read(".codex/ty-context-managed/agents/AGENTS_CORE.md"),
-  read("README.md"),
-  read("packages/ty-context/README.md"),
-  read("PROJECT_SPEC.md"),
-  read("packages/ty-context/assets/agents/AGENTS_CORE.md"),
-  read("packages/ty-context/assets/README.md"),
-  read("packages/ty-context/source-mappings.yaml"),
-  read(".codex/skills/authoring/harness_package_design/SKILL.md"),
-  read("packages/ty-context/assets/skills/context_product_plan/SKILL.md"),
-  read("packages/ty-context/assets/skills/context_uiux_design/SKILL.md"),
-  read("packages/ty-context/assets/skills/context_development_engineer/SKILL.md"),
-  read("packages/ty-context/assets/skills/context_full_project_export/SKILL.md"),
-  read("packages/ty-context/assets/skills/context_harness_upgrade/SKILL.md"),
-  read(".github/workflows/harness.yml"),
-  read("packages/ty-context/assets/github/harness.yml"),
-  read("packages/ty-context/package.json"),
-  read("CONTRIBUTING.md"),
-  read("docs/launch/README.md"),
-  read("docs/launch/market-map.md"),
-  read(".github/PULL_REQUEST_TEMPLATE.md"),
-  read(".github/ISSUE_TEMPLATE/bug_report.yml"),
-  read(".github/ISSUE_TEMPLATE/feature_request.yml"),
-  read("project_context/context.toml"),
-  read("project_context/areas/harness-package.md"),
-  read("project_context/areas/harness-package/foundation/context-model.md"),
-  read("project_context/areas/harness-package/contracts/workflow-contract.md"),
-  read("project_context/areas/harness-package/contracts/package-managed-surfaces.md"),
-  read("project_context/areas/harness-package/decision-rationale/minimal-context.md"),
-  read("project_context/areas/harness-package/implementation-index.md"),
-  read("project_context/areas/harness-package/verification.md")
-]);
-const packageJson = JSON.parse(packageJsonRaw);
+test("orientation Context exposes the current three-capability authority model", async () => {
+  const [global, architecture, manifest, area, model, workflow] =
+    await Promise.all([
+      read("project_context/global.md"),
+      read("project_context/architecture.md"),
+      read("project_context/context.toml"),
+      read("project_context/areas/harness-package.md"),
+      read("project_context/areas/harness-package/foundation/context-model.md"),
+      read(
+        "project_context/areas/harness-package/contracts/workflow-contract.md",
+      ),
+    ]);
 
-for (const content of [sourceAgents, rootReadme, packageReadme, spec, packageAgents, packageGuide]) {
-  assert.match(content, /Minimal Context Harness/);
-  assert.match(content, /project_context\/global\.md/);
-  assert.match(content, /project_context\/architecture\.md/);
-}
+  assert.match(global, /Minimal Context.*Workflow Contract.*Composite Long-Task/s);
+  assert.match(global, /Context Delta: none\|required/);
+  assert.match(global, /Campaign V5.*Scope Fit V4/s);
+  assert.match(architecture, /Contract V3/);
+  assert.match(architecture, /Change Envelopes/);
+  assert.match(architecture, /one shared snapshot/);
 
-assert.match(contextManifest, /project_context\/areas\/harness-package\/foundation\/context-model\.md[\s\S]*role = "foundation"[\s\S]*read_policy = "default"/);
-assert.match(contextManifest, /project_context\/areas\/harness-package\/contracts\/workflow-contract\.md[\s\S]*role = "contract"[\s\S]*read_policy = "default"/);
-assert.match(contextManifest, /project_context\/areas\/harness-package\/contracts\/package-managed-surfaces\.md[\s\S]*role = "contract"[\s\S]*read_policy = "default"/);
-assert.match(contextManifest, /project_context\/areas\/harness-package\/decision-rationale\/minimal-context\.md[\s\S]*role = "decision-rationale"[\s\S]*read_policy = "on-demand"/);
-assert.match(contextManifest, /project_context\/areas\/harness-package\/implementation-index\.md[\s\S]*role = "implementation-index"[\s\S]*read_policy = "on-demand"/);
-assert.match(contextManifest, /project_context\/areas\/harness-package\/verification\.md[\s\S]*role = "verification"[\s\S]*read_policy = "default"/);
+  assert.match(manifest, /id = "harness-package"/);
+  assert.match(manifest, /role = "foundation"/);
+  assert.match(manifest, /role = "contract"/);
+  assert.match(manifest, /role = "decision-rationale"/);
+  assert.match(manifest, /role = "implementation-index"/);
+  assert.match(manifest, /role = "verification"/);
+  assert.match(area, /Role Context Map/);
 
-assert.match(harnessArea, /Role Context Map/);
-assert.match(harnessArea, /foundation\/context-model\.md/);
-assert.match(harnessArea, /contracts\/workflow-contract\.md/);
-assert.match(harnessArea, /contracts\/package-managed-surfaces\.md/);
-assert.match(harnessArea, /decision-rationale\/minimal-context\.md/);
-assert.match(harnessArea, /implementation-index\.md/);
-assert.match(harnessArea, /verification\.md/);
+  assert.match(model, /`project_context\/\*\*` is authoritative/);
+  assert.match(model, /Code is current implementation evidence/);
+  assert.match(model, /Workflow Contract is prompt-level order of thought/);
+  assert.match(model, /Source-to-Context judgment.*not a Markdown table/s);
+  assert.match(model, /Context-to-Implementation alignment.*not a Markdown table/s);
 
-assert.match(contextModel, /project_context\/\*\*`? is the intended fact source/);
-assert.match(contextModel, /Code is current implementation evidence/);
-assert.match(contextModel, /code.*must not silently redefine intended product, architecture or Context ownership/is);
-assert.match(contextModel, /role placement/i);
-assert.match(contextModel, /Workflow Contract defines the agent behavior layer/);
-assert.match(contextModel, /Small code task means/);
-assert.match(contextModel, /not defined by lines changed/);
-assert.match(contextModel, /Source-to-Context Coverage/);
-assert.match(contextModel, /Context-to-Implementation Binding/);
+  assert.match(workflow, /agent\/platform's internal planning/);
+  assert.match(workflow, /no required `plan\.md`/);
+  assert.match(workflow, /Existing `plan\.md` files.*ordinary user files/);
+  assert.match(workflow, /Do not auto-trigger long-task workflows/);
+  assert.match(workflow, /\/normal-long-task/);
+  assert.match(workflow, /\/prepare-composite-long-task/);
+  assert.match(workflow, /\/composite-long-task-workflow/);
+  assert.match(workflow, /Contract Conformance/);
+  assert.doesNotMatch(workflow, /Plan Validator Boundary/);
+});
 
-assert.match(workflowContract, /Context Priority Ladder/);
-assert.match(workflowContract, /Context Delta: required/);
-assert.match(workflowContract, /Task Contract is task-local and temporary/);
-assert.match(workflowContract, /Workflow Contract is a first-class Tiny Context concept/);
-assert.match(workflowContract, /Source-to-Context Coverage/);
-assert.match(workflowContract, /Source item \| Durable constraint \| Type \| Existing Context Hit \| Context action \| Owning Context \| Coverage status/);
-assert.match(workflowContract, /Context fact \| Implementation obligation \| Expected surfaces \| Implemented paths \| Forbidden shortcuts \| Verification path \| Binding status/);
-assert.match(workflowContract, /Source-to-Context Coverage must not include implementation paths or `Implementation constraint`/);
-assert.match(workflowContract, /A small code task is a local implementation task/);
-assert.match(workflowContract, /Small code tasks must not create `plan\.md`/);
-assert.match(workflowContract, /under_scoped/);
-assert.match(workflowContract, /A target-mode local audit does not replace Task Contract or workflow-contract `plan\.md`/);
-assert.match(workflowContract, /must not become a phase gate, required document chain or machine-enforced edit-order gate/);
-assert.match(workflowContract, /Plan validators may check temporary plan artifacts/);
-assert.match(workflowContract, /Plan Validator Boundary/);
+test("managed guidance and package assets share current routing", async () => {
+  const [managed, packaged, workspace] = await Promise.all([
+    read(".codex/ty-context-managed/agents/AGENTS_CORE.md"),
+    read("packages/ty-context/assets/agents/AGENTS_CORE.md"),
+    read("AGENTS.md"),
+  ]);
+  assert.equal(packaged, managed);
+  for (const guidance of [managed, workspace]) {
+    assert.match(guidance, /Default Workflow Contract/);
+    assert.match(guidance, /agent\/platform's internal plan/);
+    assert.match(guidance, /never requires `plan\.md`/);
+    assert.match(guidance, /Context Delta: none\|required/);
+    assert.match(guidance, /Contract Conformance/);
+    assert.match(guidance, /Campaign V5.*Scope Fit V4/s);
+    assert.match(guidance, /composite-codex/);
+    assert.doesNotMatch(guidance, /Scope Fit V3|Campaign V4/);
+  }
+});
 
-assert.match(packageManagedSurfaces, /\.codex\/ty-context-managed\/\*\*/);
-assert.match(packageManagedSurfaces, /\.codex\/skills\/\*\*/);
-assert.match(packageManagedSurfaces, /packages\/ty-context\/assets\/\*\*/);
-assert.match(packageManagedSurfaces, /\.codex\/skills\/authoring\/\*\*/);
-assert.match(packageManagedSurfaces, /Do not put authoring-only Skills under `.codex\/skills\/authoring\/\*\*` into package assets/);
-assert.match(packageManagedSurfaces, /Source sync is not required for this repository's own `project_context\/\*\*`-only changes/);
+test("role Skills preserve Context-first semantics without fixed workflow artifacts", async () => {
+  const paths = [
+    "context_product_plan",
+    "context_uiux_design",
+    "context_development_engineer",
+  ];
+  for (const name of paths) {
+    const [managed, packaged] = await Promise.all([
+      read(`.codex/ty-context-managed/skills/${name}/SKILL.md`),
+      read(`packages/ty-context/assets/skills/${name}/SKILL.md`),
+    ]);
+    assert.equal(packaged, managed, `${name} package drift`);
+    assert.match(managed, /Context Delta: none\|required/);
+    assert.match(managed, /Agent 内部计划/);
+    assert.match(managed, /Contract Conformance/);
+    assert.match(managed, /不要求或验证固定 `plan\.md`/);
+    assert.match(managed, /外部来源.*内部分类/s);
+    assert.match(managed, /small code task/);
+    assert.doesNotMatch(managed, /new_context_required|under_scoped/);
+  }
 
-assert.match(minimalContextRationale, /Why Minimal Context/);
-assert.match(minimalContextRationale, /Why Not Restore The Old SDLC Default/);
-assert.match(implementationIndex, /packages\/ty-context\/src\/commands\/index\.ts/);
-assert.match(implementationIndex, /tests\/ty-context\/orientation-fast-path\.test\.mjs/);
-assert.match(verificationContext, /node packages\/ty-context\/dist\/cli\.js validate-context/);
-assert.match(verificationContext, /node --test tests\/ty-context\/orientation-fast-path\.test\.mjs/);
-
-for (const content of [sourceAgents, rootReadme, packageReadme, spec, packageAgents, packageGuide]) {
-  assert.match(content, /project_context\/\*\*.*(?:authoritative|权威事实源)/s);
-  assert.match(content, /(?:current implementation state|当前实现状态)/);
-  assert.match(content, /(?:implementation drift|实现漂移)/);
-  assert.match(content, /context-first/i);
-  assert.match(content, /context drift check/i);
-}
-
-for (const content of [sourceAgents, rootReadme, packageReadme, spec, packageAgents, packageGuide]) {
-  assert.match(content, /role placement scan/i);
-  assert.match(content, /area.*(?:product|产品域).*ownership|area 是产品域归属/s);
-  assert.match(content, /contract.*foundation.*verification.*deployment/s);
-  assert.match(content, /(?:prompt-level guidance|soft authoring scan|软约束).*not a (?:validator|migration) gate|软约束，不做 gate/s);
-}
-
-for (const content of [rootReadme, packageReadme, spec, packageGuide]) {
-  assert.match(content, /context -> implementation -> verification -> context drift check/);
-  assert.match(
-    content,
-    /implementation discovery -> context update if long-term fact changed -> implementation alignment -> verification/
+  const engineering = await read(
+    ".codex/ty-context-managed/skills/context_development_engineer/SKILL.md",
   );
-  assert.match(content, /guidance, not a new validator gate|guidance contract, not a new phase gate/);
-  assert.match(content, /Before the first code edit.*classify the change/s);
-  assert.match(content, /fixed timer/);
-  assert.match(content, /enough durable context to guide implementation/);
-  assert.match(content, /without a fixed line-count limit/);
-  assert.match(content, /Automation.*warn.*should not block|Automation can warn.*must not block/s);
-  assert.match(content, /Context: (?:updated|no durable fact change)/);
-}
-
-for (const content of [rootReadme, packageReadme, spec, packageGuide]) {
-  assert.match(content, /Context Delta: none\|required/);
-  assert.match(content, /Applicable Module Design/);
-  assert.match(content, /module design capsule/i);
-  assert.match(content, /Contract Conformance/);
-  assert.match(content, /plan\.md/);
-  assert.match(content, /temporary plan surface|execution scratchpad|execution cache/i);
-  assert.match(content, /not (?:Context|a new source of truth|registered in `?context\.toml`?)/i);
-  assert.doesNotMatch(content, /machine-enforced edit-order rule/i);
-}
-
-assert.match(spec, /workflow contract/i);
-assert.match(spec, /prompt-level.*(?:validator|phase gate|required document chain)/s);
-assert.match(spec, /plan\.md.*(?:scratchpad|scratch space|execution cache)/is);
-assert.match(spec, /plan state, stage artifact or work-product tree/);
-assert.match(spec, /## Core Terms/);
-assert.match(spec, /Durable fact/);
-assert.match(spec, /Context Delta.*durable-fact decision point/s);
-assert.match(spec, /Task Contract.*temporary task-local compilation/s);
-assert.match(spec, /Minimal Context.*durable fact layer/s);
-assert.match(spec, /Workflow contract.*agent behavior layer/s);
-assert.match(spec, /Source-to-Context Coverage.*task-local table/s);
-assert.match(spec, /Module Design Capsule.*stable module principles/s);
-assert.match(spec, /Temporary plan surface.*scratchpad/s);
-assert.match(spec, /## Harness Mental Model/);
-assert.match(spec, /expected agent behavior constraints, not a document workflow/);
-assert.match(spec, /Fact-source model/);
-assert.match(spec, /Authority model/);
-assert.match(spec, /Workflow-contract model/);
-assert.match(spec, /Artifact-placement model/);
-assert.match(spec, /Soft-constraint model/);
-assert.match(spec, /A coding agent does not execute a workflow engine/);
-
-for (const content of [sourceAgents, packageAgents]) {
-  assert.match(content, /长期事实/);
-  assert.match(content, /轻量变更分类/);
-  assert.match(content, /不按固定时长计时/);
-  assert.match(content, /必要且足以指导实现的长期结论/);
-  assert.match(content, /Context: 本次无长期事实变化/);
-  assert.match(content, /Context Delta: none\|required/);
-  assert.match(content, /Task Contract/);
-  assert.match(content, /模块设计上下文/);
-  assert.match(content, /fallback \/ degraded path/);
-  assert.match(content, /Contract Conformance/);
-  assert.match(content, /自动化最多提示 context-first 风险，不做阻断/);
-  assert.match(content, /不检查 context\/code 修改顺序/);
-}
-
-for (const content of [sourceAgents, rootReadme, packageReadme, packageAgents, packageGuide]) {
-  assert.match(content, /Harness (?:maintains context quality|只维护上下文质量)/i);
+  assert.match(engineering, /Architecture Context Hit/);
+  assert.match(engineering, /Decision Rationale Hit: existing\|required\|none/);
+  assert.match(engineering, /Modularity Check: none\|required\|exception/);
+  assert.match(engineering, /压成一行不能规避/);
   assert.match(
-    content,
-    /(?:does not replace product tests|project tests.*(?:own|remain responsible for) product quality|不替项目证明产品质量|不替代产品测试)/i
+    engineering,
+    /owner.*introduced_at.*reason.*tracking_issue.*expiry_condition/s,
   );
-}
+});
 
-for (const content of [rootReadme, packageReadme, packageGuide]) {
-  assert.match(content, /Why It Exists/);
-  assert.match(content, /Positioning/);
-  assert.match(content, /Spec-first kits/);
-  assert.match(content, /BMAD-style workflows/);
-  assert.match(content, /Task Master-style planners/);
-  assert.match(content, /Context7\/Serena-style/);
-  assert.match(content, /module boundary|module boundaries/i);
-  assert.match(content, /upstream A\/B/i);
-  assert.match(content, /downstream D/i);
-  assert.match(content, /repo-owned intent layer/i);
-  assert.match(content, /do not answer whether downstream D may change upstream A\/B/i);
-  assert.match(content, /Portable fallback/);
-  assert.match(content, /Try It In 60 Seconds/);
-  assert.match(content, /project-tiny-context-harness-demo/);
-}
+test("Product Surface Contract uses existing roles and internal Conformance", async () => {
+  const [skill, template] = await Promise.all([
+    read(".codex/ty-context-managed/skills/context_surface_contract/SKILL.md"),
+    read(
+      ".codex/ty-context-managed/context_templates/product-surface-contract.md",
+    ),
+  ]);
+  assert.match(skill, /Audit Mode/);
+  assert.match(skill, /Compile Mode/);
+  assert.match(skill, /Apply Mode/);
+  assert.match(skill, /Conformance Mode/);
+  assert.match(skill, /Do not add a new `context_role`/);
+  assert.match(skill, /Internal source classification/);
+  assert.match(skill, /Do not create a fixed `plan\.md`/);
+  assert.match(template, /Primary User Question/);
+  assert.match(template, /Main Surface Allows/);
+  assert.match(template, /Drilldown Ownership/);
+  assert.match(template, /role = "contract"/);
+});
 
-assert.match(spec, /ABCD dependency chain/);
-assert.match(spec, /downstream D/i);
-assert.match(spec, /upstream A\/B/i);
-assert.match(spec, /repo-owned intent layer/i);
-assert.match(spec, /Context7 and Serena/i);
-assert.match(spec, /Spec Kit, BMAD, Superpowers and Task Master/i);
-assert.match(spec, /cannot decide whether that is allowed project intent/i);
-assert.match(minimalContextRationale, /ABCD dependency chain/);
-assert.match(minimalContextRationale, /repo-owned intent layer/i);
-assert.match(contextModel, /repo-owned intent layer/i);
-assert.match(contextModel, /current-code convenience/i);
-
-assert.match(contributing, /Minimal Context Harness/);
-assert.match(contributing, /Do not reintroduce lifecycle phases/);
-assert.match(contributing, /Do not claim benchmark wins/);
-assert.match(contributing, /npm test --workspace project-tiny-context-harness/);
-assert.match(contributing, /Context: updated/);
-
-assert.match(launchKit, /Launch Kit/);
-assert.match(launchKit, /Minimal project memory for AI coding agents/);
-assert.match(launchKit, /Do not claim benchmark wins/);
-assert.match(launchKit, /Suggested topics/);
-assert.match(launchKit, /Show HN/);
-assert.match(launchKit, /Product Hunt Draft/);
-assert.match(launchKit, /Reddit Draft/);
-assert.match(launchKit, /Social Thread Draft/);
-assert.match(launchKit, /npm run smoke:quickstart/);
-assert.match(launchKit, /npm run launch:check/);
-assert.match(launchKit, /Award \/ Recognition Targets/);
-assert.match(launchKit, /Product Hunt Golden Kitty Awards/);
-assert.match(launchKit, /The Commits/);
-assert.match(launchKit, /JavaScript Open Source Awards/);
-assert.match(launchKit, /Verify current eligibility/);
-assert.match(launchKit, /Launch Operating Plan/);
-assert.match(launchKit, /Channel Matrix/);
-assert.match(launchKit, /Community Handoff Surface/);
-assert.match(launchKit, /Demo Storyboard/);
-assert.match(launchKit, /Star \/ Adoption Milestones/);
-assert.match(launchKit, /market-map\.md/);
-
-assert.match(marketMap, /Market Map/);
-assert.match(marketMap, /Snapshot date: 2026-06-10/);
-assert.match(marketMap, /Current Public State/);
-assert.match(marketMap, /Competitive Snapshot/);
-assert.match(marketMap, /github\/spec-kit/);
-assert.match(marketMap, /bmad-code-org\/BMAD-METHOD/);
-assert.match(marketMap, /upstash\/context7/);
-assert.match(marketMap, /Repo-native project memory for fresh-agent recovery/);
-assert.match(marketMap, /Do not say/);
-assert.match(marketMap, /Faster delivery proven by benchmark/);
-assert.match(marketMap, /10-100 stars/);
-
-assert.match(prTemplate, /Package behavior \/ CLI/);
-assert.match(prTemplate, /Managed assets \/ source sync/);
-assert.match(prTemplate, /make validate-context/);
-assert.match(prTemplate, /Context:/);
-assert.match(bugTemplate, /Reproduction steps/);
-assert.match(featureTemplate, /Minimal Context boundary check/);
-
-for (const content of [rootReadme, packageReadme, spec, packageGuide]) {
-  assert.doesNotMatch(content, /migrate-context/);
-  assert.match(content, /English-complete|fully usable in English/);
-  assert.doesNotMatch(content, /local-language export filenames/);
-  assert.match(content, /sync.*(?:refreshes managed|刷新 managed|只刷新)/i);
-  assert.match(content, /upgrade.*sync/s);
-  assert.match(content, /upgrade --check/);
-  assert.match(content, /sync-only/);
-  assert.match(content, /upgrade-required/);
-  assert.match(content, /manual-required/);
-  assert.match(content, /safe_pending/);
-  assert.match(content, /manual_required/);
-  assert.match(content, /blocked/);
-  assert.match(content, /sync.*does not run migrations|does not run migrations/s);
-  assert.match(content, /(?:product_plan|uiux_design|development_engineer)\/SKILL\.md/);
-  assert.match(content, /(?:front matter|frontmatter).*description.*trigger/i);
-  assert.match(content, /AGENTS\.md.*role-trigger|角色触发规则/);
-  assert.doesNotMatch(content, /sync\s+(?:appends|merges).*override/i);
-  assert.doesNotMatch(content, /override.*merged into/i);
-  assert.doesNotMatch(content, /init.*override_skills/i);
-}
-
-for (const content of [rootReadme, packageReadme, packageGuide]) {
-  assert.match(content, /After updating the package, run `ty-context upgrade`/);
-}
-
-assert.match(spec, /Release update mode is part of the release contract/);
-
-for (const content of [rootReadme, packageReadme, spec]) {
-  assert.match(content, /DESIGN\.md/);
-  assert.match(content, /@google\/design\.md/);
-}
-
-assert.match(spec, /Historical Iteration: Stage-Based Tiny Context Harness/);
-assert.match(spec, /Benchmark Findings And Convergence Reason/);
-assert.match(spec, /full document chains and frequent workflow gates add real time and token friction/i);
-
-assert.match(sourceMappings, /context_templates/);
-assert.match(sourceMappings, /minimal_tools/);
-assert.match(sourceMappings, /\.codex\/ty-context-managed\/skills/);
-assert.match(sourceMappings, /assets\/skills/);
-assert.doesNotMatch(sourceMappings, /\.codex\/skills/);
-
-for (const workflow of [sourceWorkflow, packageWorkflow]) {
-  assert.match(workflow, /Run harness gate/);
-  assert.match(workflow, /validate-context/);
-  assert.match(workflow, /Prepare source workspace CLI/);
-  assert.match(workflow, /hashFiles\('packages\/ty-context\/package\.json'\) != ''/);
-  assert.match(workflow, /npm run build --workspace project-tiny-context-harness/);
-  assert.doesNotMatch(workflow, /npm test --workspace project-tiny-context-harness/);
-  assert.doesNotMatch(workflow, /package check-source/);
-  assert.doesNotMatch(workflow, /npm publish/);
-}
-
-assert.equal(packageJson.license, "MIT");
-assert.equal(packageJson.homepage, "https://github.com/Seven128/project-tiny-context-harness#readme");
-assert.equal(packageJson.repository.url, "git+https://github.com/Seven128/project-tiny-context-harness.git");
-assert.equal(packageJson.repository.directory, "packages/ty-context");
-assert.equal(packageJson.bugs.url, "https://github.com/Seven128/project-tiny-context-harness/issues");
-assert.ok(packageJson.keywords.includes("ai-agents"));
-assert.ok(packageJson.keywords.includes("context-engineering"));
-assert.ok(packageJson.keywords.includes("developer-tools"));
-assert.ok(packageJson.keywords.includes("multi-agent"));
-assert.ok(packageJson.keywords.includes("claude-code"));
-assert.ok(packageJson.keywords.includes("developer-productivity"));
-
-assert.doesNotMatch(packageReadme, /Project initialization.*workflow skills/s);
-assert.doesNotMatch(packageReadme, /fresh lifecycle starts at/);
-
-assert.match(authoringSkill, /Minimal Context Harness/);
-assert.match(authoringSkill, /Open-source English-complete rule/);
-assert.match(authoringSkill, /default Skill front matter descriptions/);
-assert.match(authoringSkill, /Non-English trigger examples are additive compatibility only/);
-assert.doesNotMatch(authoringSkill, /Legacy migration support/);
-assert.doesNotMatch(authoringSkill, /migrate-context|context-migration/);
-assert.doesNotMatch(
-  authoringSkill,
-  /REQUIREMENT_GATHERING|UI_UX_DESIGNING|ARCHITECTING|SPRINTING|REVIEWING|TESTING|RELEASING|RFC_RECALIBRATION/
-);
-assert.doesNotMatch(authoringSkill, /plan\.yaml|lifecycle\.yaml|\.work_products\/|make work-products-overview/);
-assert.match(authoringSkill, /product_plan\/SKILL\.md/);
-assert.match(authoringSkill, /不得恢复 `<harnessRoot>\/ty-context-managed\/override_skills\/\*\.md` 合并机制/);
-assert.match(authoringSkill, /description.*触发关键词.*AGENTS\.md/s);
-assert.doesNotMatch(authoringSkill, /ty-context_manager|ty-context_dev_sprint|ty-context_reviewer|ty-context_tester/);
-
-for (const content of [sourceAgents, packageAgents]) {
-  assert.match(content, /product plan/);
-  assert.match(content, /product manager/);
-  assert.match(content, /product spec/);
-  assert.match(content, /UX designer/);
-  assert.match(content, /UI designer/);
-  assert.match(content, /visual polish/);
-  assert.match(content, /design system spec/);
-  assert.match(content, /software engineer/);
-  assert.match(content, /development plan/);
-  assert.match(content, /technical implementation plan/);
-  assert.match(content, /full project context export/);
-  assert.match(content, /Source Pack export/);
-  assert.match(content, /code index export/);
-  assert.match(content, /task context export/);
-  assert.match(content, /code-level implementation export/);
-  assert.match(content, /upgrade Tiny Context/);
-  assert.match(content, /context_harness_upgrade/);
-}
-
-assert.match(productSkill, /description:.*产品方案.*产品经理.*产品专家/s);
-assert.match(productSkill, /description:.*product plan.*product manager.*product expert.*product spec.*PM spec/s);
-assert.match(productSkill, /Package-Managed Boundary/);
-assert.match(productSkill, /skills\/product_plan\/SKILL\.md/);
-assert.match(productSkill, /front matter `description` trigger keywords aligned/);
-assert.match(productSkill, /generic mentions of 产品, product, or requirements/);
-assert.match(productSkill, /project_context\/\*\*/);
-assert.match(productSkill, /实现漂移/);
-assert.match(productSkill, /代码不能静默重定义 Context/);
-assert.match(productSkill, /不要把 Context 机械补成代码改动摘要/);
-assert.match(productSkill, /Context Delta/);
-assert.match(productSkill, /Task Contract/);
-assert.match(productSkill, /Contract Conformance/);
-assert.match(productSkill, /plan\.md/);
-assert.match(productSkill, /Source-to-Context Coverage/);
-assert.match(productSkill, /Context-to-Implementation Binding/);
-assert.match(productSkill, /small code task/);
-assert.match(productSkill, /new_context_required/);
-assert.match(productSkill, /under_scoped/);
-assert.match(productSkill, /临时执行缓存/);
-assert.match(productSkill, /不默认创建 `\.work_products\/\*\*`/);
-assert.doesNotMatch(productSkill, /恢复\s*旧/);
-assert.doesNotMatch(productSkill, /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|ty-context_/);
-
-assert.match(uiuxSkill, /description:.*设计稿.*UI\/UX 设计方案.*视觉专家/s);
-assert.match(uiuxSkill, /description:.*UX designer.*UI designer.*frontend redesign.*visual polish.*design system spec/s);
-assert.match(uiuxSkill, /Package-Managed Boundary/);
-assert.match(uiuxSkill, /skills\/uiux_design\/SKILL\.md/);
-assert.match(uiuxSkill, /front matter `description` trigger keywords aligned/);
-assert.match(uiuxSkill, /generic mentions of 设计, design, or user experience/);
-assert.match(uiuxSkill, /project_context\/\*\*/);
-assert.match(uiuxSkill, /实现漂移/);
-assert.match(uiuxSkill, /代码不能静默重定义 Context/);
-assert.match(uiuxSkill, /不要把 Context 机械补成代码改动摘要/);
-assert.match(uiuxSkill, /Context Delta/);
-assert.match(uiuxSkill, /Task Contract/);
-assert.match(uiuxSkill, /Contract Conformance/);
-assert.match(uiuxSkill, /plan\.md/);
-assert.match(uiuxSkill, /Source-to-Context Coverage/);
-assert.match(uiuxSkill, /Context-to-Implementation Binding/);
-assert.match(uiuxSkill, /small code task/);
-assert.match(uiuxSkill, /needs_user_decision/);
-assert.match(uiuxSkill, /under_scoped/);
-assert.match(uiuxSkill, /临时执行缓存/);
-assert.match(uiuxSkill, /@google\/design\.md/);
-assert.match(uiuxSkill, /DESIGN\.md/);
-assert.match(uiuxSkill, /npx @google\/design\.md lint DESIGN\.md/);
-assert.match(uiuxSkill, /export --format (?:css-tailwind|json-tailwind)/);
-assert.match(uiuxSkill, /Impeccable review/);
-assert.match(uiuxSkill, /重做设计/);
-assert.match(uiuxSkill, /frontend redesign/);
-assert.match(uiuxSkill, /npx impeccable detect <target>/);
-assert.match(uiuxSkill, /默认尝试运行/);
-assert.match(uiuxSkill, /不默认创建 `\.work_products\/\*\*`/);
-assert.doesNotMatch(uiuxSkill, /恢复\s*旧/);
-assert.doesNotMatch(uiuxSkill, /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|ty-context_/);
-
-assert.match(developmentSkill, /description:.*开发工程师.*开发方案.*实施计划.*技术专家/s);
-assert.match(
-  developmentSkill,
-  /description:.*software engineer.*senior engineer.*engineering expert.*development plan.*engineering plan.*technical implementation plan/s
-);
-assert.match(developmentSkill, /Package-Managed Boundary/);
-assert.match(developmentSkill, /skills\/development_engineer\/SKILL\.md/);
-assert.match(developmentSkill, /front matter `description` trigger keywords aligned/);
-assert.match(developmentSkill, /generic mentions of code, development, or engineering/);
-assert.doesNotMatch(developmentSkill, /multi_agent_v1/);
-assert.match(developmentSkill, /project_context\/architecture\.md/);
-assert.match(developmentSkill, /project_context\/\*\*/);
-assert.match(developmentSkill, /Context expectation/);
-assert.match(developmentSkill, /Current code evidence/);
-assert.match(developmentSkill, /实现漂移/);
-assert.match(developmentSkill, /代码不能静默重定义 Context/);
-assert.match(developmentSkill, /Context drift check/);
-assert.match(developmentSkill, /Context Delta/);
-assert.match(developmentSkill, /Task Contract/);
-assert.match(developmentSkill, /Applicable Module Design/);
-assert.match(developmentSkill, /Principle Decision Gate/);
-assert.match(developmentSkill, /Module Principle \/ Design Gate/);
-assert.match(developmentSkill, /模块设计上下文写法/);
-assert.match(developmentSkill, /Contract Conformance/);
-assert.match(developmentSkill, /plan\.md/);
-assert.match(developmentSkill, /Source-to-Context Coverage/);
-assert.match(developmentSkill, /Context-to-Implementation Binding/);
-assert.match(developmentSkill, /small code task/);
-assert.match(developmentSkill, /out_of_scope_explicit/);
-assert.match(developmentSkill, /under_scoped/);
-assert.match(developmentSkill, /临时执行缓存/);
-assert.match(developmentSkill, /不默认创建 `\.work_products\/\*\*`/);
-assert.doesNotMatch(developmentSkill, /恢复\s*旧/);
-assert.doesNotMatch(developmentSkill, /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|ty-context_/);
-
-assert.match(exportSkill, /description:.*full project context export.*export full project context.*project context export.*code-level implementation export/s);
-assert.match(exportSkill, /description:.*Source Pack export.*code index export.*task context export/s);
-assert.match(exportSkill, /description:.*project overall context.*code-level implementation export/s);
-assert.match(exportSkill, /description:.*导出尽可能详细的项目全量上下文.*项目整体上下文.*代码级实现导出/s);
-assert.match(exportSkill, /export-context --source-pack/);
-assert.match(exportSkill, /export-context --code-index/);
-assert.match(exportSkill, /export-context --task-context <name>/);
-assert.match(exportSkill, /full-project-context-<timestamp>\.md/);
-assert.match(exportSkill, /code-level-implementation-<timestamp>\/code-level-implementation\.md/);
-
-assert.match(harnessUpgradeSkill, /description:.*upgrade Tiny Context.*update Tiny Context.*use the Tiny Context upgrade skill to upgrade this project/s);
-assert.match(harnessUpgradeSkill, /description:.*用 Tiny Context upgrade skill 升级这个项目.*升级 tiny context/s);
-assert.match(harnessUpgradeSkill, /Package-Managed Boundary/);
-assert.match(harnessUpgradeSkill, /ty-context upgrade --check/);
-assert.match(harnessUpgradeSkill, /Do not run standalone `sync` before `upgrade`/);
-assert.match(harnessUpgradeSkill, /manual_required/);
-assert.match(harnessUpgradeSkill, /blocked/);
-assert.match(harnessUpgradeSkill, /role placement scan/);
-assert.match(harnessUpgradeSkill, /project_context\/context\.toml/);
-assert.match(harnessUpgradeSkill, /context\.toml.*real project areas/s);
-assert.match(harnessUpgradeSkill, /Do not restore legacy stage workflow/);
-assert.match(harnessUpgradeSkill, /Context: no durable project facts changed/);
-assert.doesNotMatch(
-  harnessUpgradeSkill,
-  /REQUIREMENT_GATHERING|UI_UX_DESIGNING|SPRINTING|ty-context_manager|ty-context_dev_sprint|ty-context_reviewer|ty-context_tester/
-);
-
-assert.match(sourceAgents, /Impeccable/);
-assert.match(sourceAgents, /重做设计/);
-assert.match(sourceAgents, /frontend redesign/);
-assert.match(sourceAgents, /npx impeccable detect <target>/);
-assert.match(packageAgents, /Impeccable/);
-assert.doesNotMatch(sourceAgents, /multi_agent_v1/);
-assert.doesNotMatch(packageAgents, /multi_agent_v1/);
-assert.doesNotMatch(packageReadme, /multi_agent_v1/);
+test("public documentation is English-complete for profiles and current workflow", async () => {
+  for (const document of [
+    await read("README.md"),
+    await read("packages/ty-context/README.md"),
+  ]) {
+    assert.match(document, /Why It Exists/);
+    assert.match(document, /Minimal Context.*Workflow Contract.*Composite Long-Task/s);
+    assert.match(document, /platform's internal plan/);
+    assert.match(document, /core-portable/);
+    assert.match(document, /workflow-default/);
+    assert.match(document, /enable composite-codex/);
+    assert.match(document, /Contract V3/);
+    assert.match(document, /Campaign V5/);
+    assert.match(document, /Scope Fit V4/);
+    assert.match(document, /validate-plan-contract` no longer exists/);
+    assert.match(document, /check-modularity/);
+    assert.match(document, /owner.*introduced_at.*tracking_issue.*expiry_condition/s);
+  }
+});

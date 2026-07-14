@@ -2,7 +2,9 @@ import path from "node:path";
 import { pathExists, readText, writeTextIfChanged } from "./fs.js";
 import { normalizeHarnessFolderName } from "./harness-root.js";
 
-export async function packageHarnessRoot(projectRoot: string): Promise<string | undefined> {
+export async function packageHarnessRoot(
+  projectRoot: string,
+): Promise<string | undefined> {
   const packagePath = path.join(projectRoot, "package.json");
   if (!(await pathExists(packagePath))) {
     return undefined;
@@ -13,21 +15,33 @@ export async function packageHarnessRoot(projectRoot: string): Promise<string | 
     return undefined;
   }
   const value = (config as Record<string, unknown>).harnessFolderName;
-  return typeof value === "string" && value.trim() ? normalizeHarnessFolderName(value) : undefined;
+  return typeof value === "string" && value.trim()
+    ? normalizeHarnessFolderName(value)
+    : undefined;
 }
 
-export async function writePackageHarnessRoot(projectRoot: string, folderName: string): Promise<boolean> {
+export async function writePackageHarnessRoot(
+  projectRoot: string,
+  folderName: string,
+): Promise<boolean> {
   const normalized = normalizeHarnessFolderName(folderName);
   const packagePath = path.join(projectRoot, "package.json");
-  const packageJson = (await pathExists(packagePath)) ? parsePackageJson(await readText(packagePath)) : {};
+  const packageJson = (await pathExists(packagePath))
+    ? parsePackageJson(await readText(packagePath))
+    : {};
   const existingConfig = packageJson.tyContext;
   const nextConfig =
-    existingConfig && typeof existingConfig === "object" && !Array.isArray(existingConfig)
-      ? { ...(existingConfig as Record<string, unknown>), harnessFolderName: normalized }
+    existingConfig &&
+    typeof existingConfig === "object" &&
+    !Array.isArray(existingConfig)
+      ? {
+          ...(existingConfig as Record<string, unknown>),
+          harnessFolderName: normalized,
+        }
       : { harnessFolderName: normalized };
   const next = {
     ...packageJson,
-    tyContext: nextConfig
+    tyContext: nextConfig,
   };
   return writeTextIfChanged(packagePath, `${JSON.stringify(next, null, 2)}\n`);
 }

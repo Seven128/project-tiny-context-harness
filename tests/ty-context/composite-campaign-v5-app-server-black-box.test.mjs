@@ -9,41 +9,420 @@ import { fileURLToPath } from "node:url";
 import YAML from "yaml";
 import { writeHappyV3Contract } from "./long-task-v3-fixtures.mjs";
 
-const repoRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../..");
-const cli=path.join(repoRoot,"packages","ty-context","dist","cli.js");
-const fake=path.join(repoRoot,"tests","ty-context","fake-codex-app-server.mjs");
+const repoRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../..",
+);
+const cli = path.join(repoRoot, "packages", "ty-context", "dist", "cli.js");
+const fake = path.join(
+  repoRoot,
+  "tests",
+  "ty-context",
+  "fake-codex-app-server.mjs",
+);
 
-test("Campaign V5 Fake App Server authors on dedicated threads, routes Sol execution, runs two worktrees, and reaches the sole final gate",{timeout:120_000},async()=>{
-  const root=await mkdtemp(path.join(os.tmpdir(),"campaign-v5-app-server-"));const task=await writeHappyV3Contract(root);
-  await writeFile(path.join(root,"project_context","a.md"),"A context\n");await writeFile(path.join(root,"project_context","b.md"),"B context\n");
-  await writeFile(path.join(root,"src","value-b.txt"),"safe\n");
-  await writeFile(path.join(root,"tests","acceptance","oracle.mjs"),combinedOracle("a"));await writeFile(path.join(root,"tests","acceptance","oracle-b.mjs"),combinedOracle("b"));
-  const plan="SRC-001: deliver outcome A\nSRC-002: deliver outcome B\n";await writeFile(path.join(root,"plan.md"),plan);const sourceHash=sha(plan);
-  const packetA=await packet(task,"campaign-v5-e2e","SFC-001","SRCU-001",value=>replaceDeep(value,[[/src\/\*\*/gu,"src/value.txt"]]));packetA.authorities.product_architecture_source.requirements[0].context_refs=["project_context/a.md"];
-  const packetB=await packet(task,"campaign-v5-e2e","SFC-002","SRCU-002",value=>replaceDeep(value,[[/src\/value\.txt/gu,"src/value-b.txt"],[/src\/\*\*/gu,"src/value-b.txt"],[/tests\/acceptance\/oracle\.mjs/gu,"tests/acceptance/oracle-b.mjs"],[/value\.read/gu,"value.read.b"]]));packetB.authorities.product_architecture_source.requirements[0].context_refs=["project_context/b.md"];
-  const scope={schema_version:"scope-fit-result-v4",request_sha256:sourceHash,decision:"split_required",campaign_goal:"deliver two independent outcomes",granularity_contract:{unit:"control_or_capability_unit",slice_policy:"maximal_coherent_authorable_scope",parallelism_must_not_force_split:true},source_units:[unit("SRCU-001","outcome-a","SRC-001"),unit("SRCU-002","outcome-b","SRC-002")],global_constraints:[],slices:[slice("SFC-001","a","SRC-001","SRCU-001"),slice("SFC-002","b","SRC-002","SRCU-002")],decision_required:null};
-  const coverage={schema_version:"composite-source-coverage-v1",source_plan_sha256:sourceHash,items:[coverageItem("SRC-001","SFC-001"),coverageItem("SRC-002","SFC-002")],global_constraint_bindings:[]};
-  await writeFile(path.join(root,"scope.json"),JSON.stringify(scope));await writeFile(path.join(root,"coverage.json"),JSON.stringify(coverage));
-  const created=run(root,["composite-campaign","create","--id","campaign-v5-e2e","--plan-file","plan.md","--json"]);const campaignPath=path.relative(root,created.campaign_path);
-  run(root,["composite-campaign","apply-scope","--campaign",campaignPath,"--input","scope.json","--coverage","coverage.json","--json"]);
-  const scriptFile=path.join(os.tmpdir(),`fake-app-script-${process.pid}-${Date.now()}.json`);const stateFile=`${scriptFile}.state`;const logFile=`${scriptFile}.log`;
-  await writeFile(scriptFile,JSON.stringify({authorPackets:{"SFC-001":JSON.stringify(packetA),"SFC-002":JSON.stringify(packetB)},executionEffects:{"SFC-001":{type:"contract_v3",afterAttempts:2,files:[{path:"src/value.txt",content:"good\n\n"}]},"SFC-002":{type:"contract_v3",files:[{path:"src/value-b.txt",content:"break-a\n"}]}},repairEffects:{"WAVE-001-integration_regression":{type:"git_repair",files:[{path:"src/value-b.txt",content:"compatible\n"}]}}}));
-  const result=run(root,["composite-campaign","run","--campaign",campaignPath,"--controller-model","gpt-5.6-sol","--controller-effort","xhigh","--json"],120_000,{TY_CONTEXT_APP_SERVER_COMMAND:process.execPath,TY_CONTEXT_APP_SERVER_ARGS_JSON:JSON.stringify([fake]),TY_CONTEXT_APP_SERVER_TURN_TIMEOUT_MS:"120000",FAKE_APP_SERVER_SCRIPT_FILE:scriptFile,FAKE_APP_SERVER_STATE_FILE:stateFile,FAKE_APP_SERVER_LOG_FILE:logFile,FAKE_TY_CONTEXT_CLI:cli});
-  assert.equal(result.status,"accepted");assert.equal((await readFile(path.join(root,"src","value.txt"),"utf8")).trim(),"good");assert.equal((await readFile(path.join(root,"src","value-b.txt"),"utf8")).trim(),"compatible");
-  const status=run(root,["composite-campaign","status","--campaign",campaignPath,"--json"]);assert.equal(status.derived_status,"accepted");
-  const log=(await readFile(logFile,"utf8")).trim().split(/\r?\n/u).map(JSON.parse);const starts=log.filter(row=>row.direction==="in"&&row.message.method==="turn/start");
-  const author=starts.filter(row=>row.message.params.sandboxPolicy.type==="readOnly");const execution=starts.filter(row=>row.message.params.sandboxPolicy.type==="workspaceWrite");assert.equal(author.length,2);assert.equal(execution.length,4);assert.ok(author.every(row=>row.message.params.model==="gpt-5.6-sol"&&row.message.params.effort==="xhigh"));assert.ok(execution.every(row=>row.message.params.model==="gpt-5.6-sol"&&row.message.params.effort==="medium"&&path.isAbsolute(row.message.params.cwd)));assert.equal(new Set(author.map(row=>row.message.params.threadId)).size,2);assert.equal(new Set(starts.map(row=>row.message.params.threadId)).size,3);
-  const threadForA=author.find(row=>row.message.params.input[0].text.includes("SFC-001")).message.params.threadId;assert.equal(execution.filter(row=>row.message.params.input[0].text.includes("SFC-001")).every(row=>row.message.params.threadId===threadForA),true);
-  const authorTurnIds=responseTurnIds(log,author);const firstGoal=log.findIndex(row=>row.direction==="in"&&row.message.method==="thread/goal/set"&&row.message.params.status==="active");const lastAuthorComplete=log.reduce((index,row,current)=>row.direction==="out"&&row.message.method==="turn/completed"&&authorTurnIds.has(row.message.params.turn.id)?current:index,-1);assert.ok(lastAuthorComplete>=0&&firstGoal>lastAuthorComplete);
-  const indexedExecution=log.map((row,index)=>({row,index})).filter(({row})=>row.direction==="in"&&row.message.method==="turn/start"&&row.message.params.sandboxPolicy.type==="workspaceWrite");const initialExecution=indexedExecution.slice(0,2);const initialThreads=new Set(initialExecution.map(({row})=>row.message.params.threadId));const firstExecutionWait=log.findIndex(({direction,message},index)=>index>Math.min(...initialExecution.map(({index:requestIndex})=>requestIndex))&&direction==="in"&&message.method==="thread/read"&&initialThreads.has(message.params.threadId));assert.ok(firstExecutionWait>=0&&Math.max(...initialExecution.map(({index})=>index))<firstExecutionWait);
-});
+test(
+  "Campaign V5 Fake App Server authors on dedicated threads, routes Sol execution, runs two worktrees, and reaches the sole final gate",
+  { timeout: 120_000 },
+  async () => {
+    const root = await mkdtemp(
+      path.join(os.tmpdir(), "campaign-v5-app-server-"),
+    );
+    const task = await writeHappyV3Contract(root);
+    await writeFile(path.join(root, "project_context", "a.md"), "A context\n");
+    await writeFile(path.join(root, "project_context", "b.md"), "B context\n");
+    await writeFile(path.join(root, "src", "value-b.txt"), "safe\n");
+    await writeFile(
+      path.join(root, "tests", "acceptance", "oracle.mjs"),
+      combinedOracle("a"),
+    );
+    await writeFile(
+      path.join(root, "tests", "acceptance", "oracle-b.mjs"),
+      combinedOracle("b"),
+    );
+    const plan = "SRC-001: deliver outcome A\nSRC-002: deliver outcome B\n";
+    await writeFile(path.join(root, "plan.md"), plan);
+    const branch = spawnSync("git", ["branch", "campaign-target"], { cwd: root, encoding: "utf8" });
+    assert.equal(branch.status, 0, branch.stderr);
+    const sourceHash = sha(plan);
+    const packetA = await packet(
+      task,
+      "campaign-v5-e2e",
+      "SFC-001",
+      "SRCU-001",
+      (value) => replaceDeep(value, [[/src\/\*\*/gu, "src/value.txt"]]),
+    );
+    packetA.authorities.product_architecture_source.requirements[0].context_refs =
+      ["project_context/a.md"];
+    const packetB = await packet(
+      task,
+      "campaign-v5-e2e",
+      "SFC-002",
+      "SRCU-002",
+      (value) =>
+        replaceDeep(value, [
+          [/src\/value\.txt/gu, "src/value-b.txt"],
+          [/src\/\*\*/gu, "src/value-b.txt"],
+          [/tests\/acceptance\/oracle\.mjs/gu, "tests/acceptance/oracle-b.mjs"],
+          [/value\.read/gu, "value.read.b"],
+        ]),
+    );
+    packetB.authorities.product_architecture_source.requirements[0].context_refs =
+      ["project_context/b.md"];
+    const scope = {
+      schema_version: "scope-fit-result-v4",
+      request_sha256: sourceHash,
+      decision: "split_required",
+      campaign_goal: "deliver two independent outcomes",
+      granularity_contract: {
+        unit: "control_or_capability_unit",
+        slice_policy: "maximal_coherent_authorable_scope",
+        parallelism_must_not_force_split: true,
+      },
+      source_units: [
+        unit("SRCU-001", "outcome-a", "SRC-001"),
+        unit("SRCU-002", "outcome-b", "SRC-002"),
+      ],
+      global_constraints: [],
+      slices: [
+        slice("SFC-001", "a", "SRC-001", "SRCU-001"),
+        slice("SFC-002", "b", "SRC-002", "SRCU-002"),
+      ],
+      decision_required: null,
+    };
+    const coverage = {
+      schema_version: "composite-source-coverage-v1",
+      source_plan_sha256: sourceHash,
+      items: [
+        coverageItem("SRC-001", "SFC-001"),
+        coverageItem("SRC-002", "SFC-002"),
+      ],
+      global_constraint_bindings: [],
+    };
+    await writeFile(path.join(root, "scope.json"), JSON.stringify(scope));
+    await writeFile(path.join(root, "coverage.json"), JSON.stringify(coverage));
+    const created = run(root, [
+      "composite-campaign",
+      "create",
+      "--id",
+      "campaign-v5-e2e",
+      "--plan-file",
+      "plan.md",
+      "--target-branch",
+      "campaign-target",
+      "--auto-push",
+      "true",
+      "--json",
+    ]);
+    const campaignPath = path.relative(root, created.campaign_path);
+    run(root, [
+      "composite-campaign",
+      "apply-scope",
+      "--campaign",
+      campaignPath,
+      "--input",
+      "scope.json",
+      "--coverage",
+      "coverage.json",
+      "--json",
+    ]);
+    const scriptFile = path.join(
+      os.tmpdir(),
+      `fake-app-script-${process.pid}-${Date.now()}.json`,
+    );
+    const stateFile = `${scriptFile}.state`;
+    const logFile = `${scriptFile}.log`;
+    await writeFile(
+      scriptFile,
+      JSON.stringify({
+        authorPackets: {
+          "SFC-001": JSON.stringify(packetA),
+          "SFC-002": JSON.stringify(packetB),
+        },
+        executionEffects: {
+          "SFC-001": {
+            type: "contract_v3",
+            afterAttempts: 2,
+            files: [{ path: "src/value.txt", content: "good\n\n" }],
+          },
+          "SFC-002": {
+            type: "contract_v3",
+            files: [{ path: "src/value-b.txt", content: "break-a\n" }],
+          },
+        },
+        repairEffects: {
+          "WAVE-001-integration_regression": {
+            type: "git_repair",
+            files: [{ path: "src/value-b.txt", content: "compatible\n" }],
+          },
+        },
+      }),
+    );
+    const result = run(
+      root,
+      [
+        "composite-campaign",
+        "run",
+        "--campaign",
+        campaignPath,
+        "--controller-model",
+        "gpt-5.6-sol",
+        "--controller-effort",
+        "xhigh",
+        "--json",
+      ],
+      120_000,
+      {
+        TY_CONTEXT_APP_SERVER_COMMAND: process.execPath,
+        TY_CONTEXT_APP_SERVER_ARGS_JSON: JSON.stringify([fake]),
+        TY_CONTEXT_APP_SERVER_TURN_TIMEOUT_MS: "120000",
+        FAKE_APP_SERVER_SCRIPT_FILE: scriptFile,
+        FAKE_APP_SERVER_STATE_FILE: stateFile,
+        FAKE_APP_SERVER_LOG_FILE: logFile,
+        FAKE_TY_CONTEXT_CLI: cli,
+      },
+    );
+    assert.equal(result.status, "accepted", JSON.stringify(result));
+    assert.equal(gitShow(root, "campaign-target:src/value.txt").trim(), "good");
+    assert.equal(gitShow(root, "campaign-target:src/value-b.txt").trim(), "compatible");
+    const status = run(root, [
+      "composite-campaign",
+      "status",
+      "--campaign",
+      campaignPath,
+      "--json",
+    ]);
+    assert.equal(status.derived_status, "accepted");
+    const log = (await readFile(logFile, "utf8"))
+      .trim()
+      .split(/\r?\n/u)
+      .map(JSON.parse);
+    const starts = log.filter(
+      (row) => row.direction === "in" && row.message.method === "turn/start",
+    );
+    const author = starts.filter(
+      (row) => row.message.params.sandboxPolicy.type === "readOnly",
+    );
+    const execution = starts.filter(
+      (row) => row.message.params.sandboxPolicy.type === "workspaceWrite",
+    );
+    assert.equal(author.length, 2);
+    assert.equal(execution.length, 4);
+    assert.ok(
+      author.every(
+        (row) =>
+          row.message.params.model === "gpt-5.6-sol" &&
+          row.message.params.effort === "xhigh",
+      ),
+    );
+    assert.ok(
+      execution.every(
+        (row) =>
+          row.message.params.model === "gpt-5.6-sol" &&
+          row.message.params.effort === "medium" &&
+          path.isAbsolute(row.message.params.cwd),
+      ),
+    );
+    assert.equal(
+      new Set(author.map((row) => row.message.params.threadId)).size,
+      2,
+    );
+    assert.equal(
+      new Set(starts.map((row) => row.message.params.threadId)).size,
+      3,
+    );
+    const threadForA = author.find((row) =>
+      row.message.params.input[0].text.includes("SFC-001"),
+    ).message.params.threadId;
+    assert.equal(
+      execution
+        .filter(
+          (row) =>
+            row.message.params.input[0].text.includes("SFC-001") &&
+            !row.message.params.input[0].text.startsWith(
+              "Campaign V5 repair Goal",
+            ),
+        )
+        .every((row) => row.message.params.threadId === threadForA),
+      true,
+    );
+    const authorTurnIds = responseTurnIds(log, author);
+    const firstGoal = log.findIndex(
+      (row) =>
+        row.direction === "in" &&
+        row.message.method === "thread/goal/set" &&
+        row.message.params.status === "active",
+    );
+    const lastAuthorComplete = log.reduce(
+      (index, row, current) =>
+        row.direction === "out" &&
+        row.message.method === "turn/completed" &&
+        authorTurnIds.has(row.message.params.turn.id)
+          ? current
+          : index,
+      -1,
+    );
+    assert.ok(lastAuthorComplete >= 0 && firstGoal > lastAuthorComplete);
+    const indexedExecution = log
+      .map((row, index) => ({ row, index }))
+      .filter(
+        ({ row }) =>
+          row.direction === "in" &&
+          row.message.method === "turn/start" &&
+          row.message.params.sandboxPolicy.type === "workspaceWrite",
+      );
+    const initialExecution = indexedExecution.slice(0, 2);
+    const initialThreads = new Set(
+      initialExecution.map(({ row }) => row.message.params.threadId),
+    );
+    const firstExecutionWait = log.findIndex(
+      ({ direction, message }, index) =>
+        index >
+          Math.min(
+            ...initialExecution.map(({ index: requestIndex }) => requestIndex),
+          ) &&
+        direction === "in" &&
+        message.method === "thread/read" &&
+        initialThreads.has(message.params.threadId),
+    );
+    assert.ok(
+      firstExecutionWait >= 0 &&
+        Math.max(...initialExecution.map(({ index }) => index)) <
+          firstExecutionWait,
+    );
+  },
+);
 
-async function packet(task,campaign_id,slice_id,source_unit_id,transform){const authorities=transform({product_architecture_source:YAML.parse(await readFile(path.join(task,"product-architecture-source.yaml"),"utf8")),technical_realization_plan:YAML.parse(await readFile(path.join(task,"technical-realization-plan.yaml"),"utf8")),acceptance_checklist:YAML.parse(await readFile(path.join(task,"acceptance-checklist.yaml"),"utf8"))});return{schema_version:"composite-authoring-packet-v3",campaign_id,slice_id,revision:1,previous_packet_sha256:null,authorities,source_unit_bindings:[{source_unit_id,requirement_ids:["PR-001"],obligation_ids:["PI-001-OB-001"],acceptance_criterion_ids:["AC-001"],verification_spec_ids:["VS-AC-001"]}]};}
-function replaceDeep(value,replacements){return JSON.parse(JSON.stringify(value),(_key,item)=>typeof item==="string"?replacements.reduce((current,[pattern,next])=>current.replace(pattern,next),item):item);}
-function unit(unit_id,acceptance_outcome,source){return{unit_id,kind:"cli_command",statement:acceptance_outcome,cohesion_key:acceptance_outcome,owner_boundary:acceptance_outcome,acceptance_outcome,source_refs:[source],details:{acceptance_evidence:"Contract V3 runtime assertion"}};}
-function slice(slice_id,key,source,unitId){return{slice_id,stable_key:`outcome-${key}`,title:`Outcome ${key}`,objective:`Deliver outcome ${key}`,depends_on:[],priority:1,source_refs:[source],source_unit_refs:[unitId],scope_summary:[`outcome ${key}`],out_of_scope:[],separation_reasons:["independent_acceptance_outcome"],produces_contracts:[],consumes_contracts:[],conflict_domains:[`outcome-${key}`],resource_locks:[],migration_sequences:[],generated_artifacts:[],package_manager_manifests:[],environment_profiles:[]};}
-function coverageItem(id,sliceId){return{source_item_id:id,statement:id,disposition:"slice",slice_refs:[sliceId],global_constraint_refs:[],rationale:"owned by one maximal SFC"};}
-function run(root,args,timeout=30_000,extraEnv={}){const result=spawnSync(process.execPath,[cli,...args],{cwd:root,encoding:"utf8",timeout,env:{...process.env,NO_COLOR:"1",...extraEnv}});assert.equal(result.status,0,`${result.stderr}\n${result.stdout}`);const text=result.stdout.trim().split(/\r?\n/u).at(-1);return JSON.parse(text);}
-function responseTurnIds(log,requests){const ids=new Set(requests.map(row=>row.message.id));return new Set(log.filter(row=>row.direction==="out"&&ids.has(row.message.id)&&row.message.result?.turn?.id).map(row=>row.message.result.turn.id));}
-function combinedOracle(mode){return `import {readFile} from "node:fs/promises";\nconst read=file=>readFile(new URL(file,import.meta.url),"utf8").then(value=>value.trim(),()=>null);\nconst own=await read(${JSON.stringify(mode==="a"?"../../src/value.txt":"../../src/value-b.txt")});\nconst peer=await read("../../src/value-b.txt");\nconst value=${mode==="a"?'own==="good"&&(peer==="safe"||peer==="compatible")?"good":"regressed"':'own==="break-a"||own==="compatible"?"good":"bad"'};\nconsole.log(JSON.stringify({schema_version:"ty-context-observation-v2",observations:{works:{kind:"runtime_behavior",actual:{binding_id:"IB-002",capability:${JSON.stringify(mode==="a"?"value.read":"value.read.b")},value},artifact_refs:[]},forbidden:{kind:"scalar",actual:value,artifact_refs:[]}}}));\n`;}
-function sha(value){return createHash("sha256").update(value).digest("hex");}
+async function packet(task, campaign_id, slice_id, source_unit_id, transform) {
+  const authorities = transform({
+    product_architecture_source: YAML.parse(
+      await readFile(
+        path.join(task, "product-architecture-source.yaml"),
+        "utf8",
+      ),
+    ),
+    technical_realization_plan: YAML.parse(
+      await readFile(
+        path.join(task, "technical-realization-plan.yaml"),
+        "utf8",
+      ),
+    ),
+    acceptance_checklist: YAML.parse(
+      await readFile(path.join(task, "acceptance-checklist.yaml"), "utf8"),
+    ),
+  });
+  return {
+    schema_version: "composite-authoring-packet-v3",
+    campaign_id,
+    slice_id,
+    revision: 1,
+    previous_packet_sha256: null,
+    authorities,
+    source_unit_bindings: [
+      {
+        source_unit_id,
+        requirement_ids: ["PR-001"],
+        obligation_ids: ["PI-001-OB-001"],
+        acceptance_criterion_ids: ["AC-001"],
+        verification_spec_ids: ["VS-AC-001"],
+      },
+    ],
+  };
+}
+function replaceDeep(value, replacements) {
+  return JSON.parse(JSON.stringify(value), (_key, item) =>
+    typeof item === "string"
+      ? replacements.reduce(
+          (current, [pattern, next]) => current.replace(pattern, next),
+          item,
+        )
+      : item,
+  );
+}
+function unit(unit_id, acceptance_outcome, source) {
+  return {
+    unit_id,
+    kind: "cli_command",
+    statement: acceptance_outcome,
+    cohesion_key: acceptance_outcome,
+    owner_boundary: acceptance_outcome,
+    acceptance_outcome,
+    source_refs: [source],
+    details: { acceptance_evidence: "Contract V3 runtime assertion" },
+  };
+}
+function slice(slice_id, key, source, unitId) {
+  return {
+    slice_id,
+    stable_key: `outcome-${key}`,
+    title: `Outcome ${key}`,
+    objective: `Deliver outcome ${key}`,
+    depends_on: [],
+    priority: 1,
+    source_refs: [source],
+    source_unit_refs: [unitId],
+    scope_summary: [`outcome ${key}`],
+    out_of_scope: [],
+    separation_reasons: ["independent_acceptance_outcome"],
+    produces_contracts: [],
+    consumes_contracts: [],
+    conflict_domains: [`outcome-${key}`],
+    resource_locks: [],
+    migration_sequences: [],
+    generated_artifacts: [],
+    package_manager_manifests: [],
+    environment_profiles: [],
+  };
+}
+function coverageItem(id, sliceId) {
+  const contextRef =
+    sliceId === "SFC-001" ? "project_context/a.md" : "project_context/b.md";
+  return {
+    source_item_id: id,
+    statement: id,
+    disposition: "slice",
+    slice_refs: [sliceId],
+    global_constraint_refs: [],
+    rationale: "owned by one maximal SFC",
+    context_resolution: {
+      status: "existing",
+      context_refs: [contextRef],
+      task_local_reason: null,
+    },
+  };
+}
+function run(root, args, timeout = 30_000, extraEnv = {}) {
+  const result = spawnSync(process.execPath, [cli, ...args], {
+    cwd: root,
+    encoding: "utf8",
+    timeout,
+    env: { ...process.env, NO_COLOR: "1", ...extraEnv },
+  });
+  assert.equal(result.status, 0, `${result.stderr}\n${result.stdout}`);
+  const text = result.stdout.trim().split(/\r?\n/u).at(-1);
+  return JSON.parse(text);
+}
+function responseTurnIds(log, requests) {
+  const ids = new Set(requests.map((row) => row.message.id));
+  return new Set(
+    log
+      .filter(
+        (row) =>
+          row.direction === "out" &&
+          ids.has(row.message.id) &&
+          row.message.result?.turn?.id,
+      )
+      .map((row) => row.message.result.turn.id),
+  );
+}
+function combinedOracle(mode) {
+  return `import {readFile} from "node:fs/promises";\nconst read=file=>readFile(new URL(file,import.meta.url),"utf8").then(value=>value.trim(),()=>null);\nconst own=await read(${JSON.stringify(mode === "a" ? "../../src/value.txt" : "../../src/value-b.txt")});\nconst peer=await read("../../src/value-b.txt");\nconst value=${mode === "a" ? 'own==="good"&&(peer==="safe"||peer==="compatible")?"good":"regressed"' : 'own==="break-a"||own==="compatible"?"good":"bad"'};\nconsole.log(JSON.stringify({schema_version:"ty-context-observation-v2",observations:{works:{kind:"runtime_behavior",actual:{binding_id:"IB-002",capability:${JSON.stringify(mode === "a" ? "value.read" : "value.read.b")},value},artifact_refs:[]},forbidden:{kind:"scalar",actual:value,artifact_refs:[]}}}));\n`;
+}
+function sha(value) {
+  return createHash("sha256").update(value).digest("hex");
+}
+function gitShow(root, ref) {
+  const result = spawnSync("git", ["show", ref], { cwd: root, encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+  return result.stdout;
+}

@@ -24,10 +24,16 @@ const EXCLUDED_DIR_NAMES = new Set([
   "temp",
   "test-reports",
   "test-results",
-  "tmp"
+  "tmp",
 ]);
 
-export const SAFE_EXAMPLE_FILE_NAMES = new Set([".env.example", ".env.sample", ".env.template", "example.env", "sample.env"]);
+export const SAFE_EXAMPLE_FILE_NAMES = new Set([
+  ".env.example",
+  ".env.sample",
+  ".env.template",
+  "example.env",
+  "sample.env",
+]);
 
 const EXCLUDED_FILE_PATTERNS = [
   /^\.env(?:\.|$)/i,
@@ -39,7 +45,7 @@ const EXCLUDED_FILE_PATTERNS = [
   /full-project-context-\d{8}T\d{6}Z\.md$/i,
   /当前项目context-\d{8}T\d{6}Z\.md$/i,
   /当前项目代码实现\.md$/i,
-  /(^|[-_.])(code-level-implementation|context-export|context-bundle)([-_.]|$)/i
+  /(^|[-_.])(code-level-implementation|context-export|context-bundle)([-_.]|$)/i,
 ];
 
 const CODE_FILE_EXTENSIONS = [
@@ -63,7 +69,7 @@ const CODE_FILE_EXTENSIONS = [
   ".tsx",
   ".vue",
   ".yaml",
-  ".yml"
+  ".yml",
 ];
 
 const CODE_FILE_BASE_NAMES = new Set([
@@ -76,7 +82,7 @@ const CODE_FILE_BASE_NAMES = new Set([
   "pyproject.toml",
   "requirements.txt",
   "setup.cfg",
-  "tsconfig.json"
+  "tsconfig.json",
 ]);
 
 const CONFIG_JSON_NAMES = new Set([
@@ -88,7 +94,7 @@ const CONFIG_JSON_NAMES = new Set([
   "jsconfig.json",
   "package.json",
   "tsconfig.json",
-  "vite.config.json"
+  "vite.config.json",
 ]);
 
 export function shouldIncludeCodeFile(relative: string): boolean {
@@ -119,7 +125,10 @@ export function shouldExcludeRelativePath(relative: string): boolean {
   const base = segments[segments.length - 1] ?? "";
   const lowerBase = base.toLowerCase();
   return EXCLUDED_FILE_PATTERNS.some((pattern) => {
-    if (SAFE_EXAMPLE_FILE_NAMES.has(lowerBase) && pattern.source.startsWith("^\\.env")) {
+    if (
+      SAFE_EXAMPLE_FILE_NAMES.has(lowerBase) &&
+      pattern.source.startsWith("^\\.env")
+    ) {
       return false;
     }
     return pattern.test(base) || pattern.test(normalized);

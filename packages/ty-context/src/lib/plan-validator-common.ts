@@ -27,12 +27,18 @@ const WEAK_PROOF_PATTERNS = [
   /\bpartial\b/i,
   /\bblocked\b/i,
   /\bunconfigured\b/i,
-  /\bnot visible by default\b/i
+  /\bnot visible by default\b/i,
 ];
 
-export async function resolveInputFile(projectRoot: string, value: string | undefined, defaultPath: string): Promise<string> {
+export async function resolveInputFile(
+  projectRoot: string,
+  value: string | undefined,
+  defaultPath: string,
+): Promise<string> {
   const raw = value ?? defaultPath;
-  const absolute = path.isAbsolute(raw) ? path.resolve(raw) : path.resolve(projectRoot, raw);
+  const absolute = path.isAbsolute(raw)
+    ? path.resolve(raw)
+    : path.resolve(projectRoot, raw);
   let candidate = absolute;
   try {
     const stat = await fs.stat(absolute);
@@ -47,7 +53,11 @@ export async function resolveInputFile(projectRoot: string, value: string | unde
   return candidate;
 }
 
-export async function resolveInputDir(projectRoot: string, value: string | undefined, defaultPath: string): Promise<string> {
+export async function resolveInputDir(
+  projectRoot: string,
+  value: string | undefined,
+  defaultPath: string,
+): Promise<string> {
   return path.isAbsolute(value ?? defaultPath)
     ? path.resolve(value ?? defaultPath)
     : path.resolve(projectRoot, value ?? defaultPath);
@@ -57,7 +67,12 @@ export function repoRelative(projectRoot: string, file: string): string {
   return path.relative(projectRoot, file).split(path.sep).join("/");
 }
 
-export async function readRequiredFile(projectRoot: string, file: string, label: string, errors: string[]): Promise<string | undefined> {
+export async function readRequiredFile(
+  projectRoot: string,
+  file: string,
+  label: string,
+  errors: string[],
+): Promise<string | undefined> {
   if (!isInside(projectRoot, file)) {
     errors.push(`${label} must stay inside the project root: ${file}`);
     return undefined;
@@ -74,7 +89,7 @@ export function parseRequiredTable(
   heading: string,
   expectedHeaders: string[],
   label: string,
-  errors: string[]
+  errors: string[],
 ): ParsedPlanTable | undefined {
   const section = sectionBody(content, heading);
   if (section === undefined) {
@@ -88,7 +103,11 @@ export function parseRequiredTable(
     }
     const headers = splitTableLine(lines[index]);
     const normalized = headers.map(normalizeHeader);
-    if (!expectedHeaders.every((header) => normalized.includes(normalizeHeader(header)))) {
+    if (
+      !expectedHeaders.every((header) =>
+        normalized.includes(normalizeHeader(header)),
+      )
+    ) {
       continue;
     }
     const rows: PlanTableRow[] = [];
@@ -109,16 +128,20 @@ export function parseRequiredTable(
         index: rows.length + 1,
         line: rowIndex + 1,
         cells,
-        text: Object.values(cells).join(" ")
+        text: Object.values(cells).join(" "),
       });
     }
-    const missing = expectedHeaders.filter((header) => !normalized.includes(normalizeHeader(header)));
+    const missing = expectedHeaders.filter(
+      (header) => !normalized.includes(normalizeHeader(header)),
+    );
     if (missing.length > 0) {
       errors.push(`${label} table is missing column(s): ${missing.join(", ")}`);
     }
     return { rows, headers: normalized };
   }
-  errors.push(`${label} section must include a markdown table with columns: ${expectedHeaders.join(" | ")}`);
+  errors.push(
+    `${label} section must include a markdown table with columns: ${expectedHeaders.join(" | ")}`,
+  );
   return undefined;
 }
 
@@ -134,7 +157,15 @@ export function isBlankish(value: unknown): boolean {
     return true;
   }
   const text = String(value).trim().toLowerCase();
-  return text === "" || text === "-" || text === "n/a" || text === "na" || text === "none" || text === "[]" || text === "not applicable";
+  return (
+    text === "" ||
+    text === "-" ||
+    text === "n/a" ||
+    text === "na" ||
+    text === "none" ||
+    text === "[]" ||
+    text === "not applicable"
+  );
 }
 
 export function weakProofHit(text: string): string | undefined {
@@ -145,12 +176,14 @@ export async function assertReferencedPathsExist(
   projectRoot: string,
   label: string,
   text: string,
-  errors: string[]
+  errors: string[],
 ): Promise<void> {
   for (const reference of extractPathReferences(text)) {
     const absolute = path.resolve(projectRoot, reference);
     if (!isInside(projectRoot, absolute)) {
-      errors.push(`${label} references a path outside the project root: ${reference}`);
+      errors.push(
+        `${label} references a path outside the project root: ${reference}`,
+      );
       continue;
     }
     if (!(await pathExists(absolute))) {
@@ -163,14 +196,20 @@ export function primitiveText(value: unknown): string {
   if (value === undefined || value === null) {
     return "";
   }
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
     return String(value);
   }
   if (Array.isArray(value)) {
     return value.map(primitiveText).join(" ");
   }
   if (typeof value === "object") {
-    return Object.values(value as Record<string, unknown>).map(primitiveText).join(" ");
+    return Object.values(value as Record<string, unknown>)
+      .map(primitiveText)
+      .join(" ");
   }
   return "";
 }
@@ -189,15 +228,21 @@ export function valuesAsArray(value: unknown): string[] {
 }
 
 export function hasRealPageEvidence(text: string): boolean {
-  return /\b(real[- ]page|browser|route|screen|screenshot|url|localhost|https?:\/\/|page)\b/i.test(text);
+  return /\b(real[- ]page|browser|route|screen|screenshot|url|localhost|https?:\/\/|page)\b/i.test(
+    text,
+  );
 }
 
 export function isUiFacing(text: string): boolean {
-  return /\b(ui|browser|page|screen|console|frontend|route|surface)\b/i.test(text);
+  return /\b(ui|browser|page|screen|console|frontend|route|surface)\b/i.test(
+    text,
+  );
 }
 
 export function isRuntimeFacing(text: string): boolean {
-  return /\b(runtime|worker|api|schema|endpoint|service|queue|daemon|runner)\b/i.test(text);
+  return /\b(runtime|worker|api|schema|endpoint|service|queue|daemon|runner)\b/i.test(
+    text,
+  );
 }
 
 function sectionBody(content: string, heading: string): string | undefined {
@@ -212,15 +257,27 @@ function sectionBody(content: string, heading: string): string | undefined {
 }
 
 function splitTableLine(line: string): string[] {
-  return line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((cellValue) => cellValue.trim());
+  return line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((cellValue) => cellValue.trim());
 }
 
 function isSeparatorLine(line: string): boolean {
-  return splitTableLine(line).every((value) => /^:?-{3,}:?$/.test(value.trim()));
+  return splitTableLine(line).every((value) =>
+    /^:?-{3,}:?$/.test(value.trim()),
+  );
 }
 
 function normalizeHeader(value: string): string {
-  return value.replace(/`/g, "").trim().toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
+  return value
+    .replace(/`/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ");
 }
 
 function extractPathReferences(text: string): string[] {
@@ -230,12 +287,20 @@ function extractPathReferences(text: string): string[] {
     if (!raw || raw.includes("*") || /^https?:\/\//i.test(raw)) {
       continue;
     }
-    references.add(raw.replace(/\\/g, "/").replace(/^\.\//, "").replace(/[),.;:]+$/, ""));
+    references.add(
+      raw
+        .replace(/\\/g, "/")
+        .replace(/^\.\//, "")
+        .replace(/[),.;:]+$/, ""),
+    );
   }
   return [...references];
 }
 
 function isInside(root: string, target: string): boolean {
   const relative = path.relative(root, target);
-  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+  return (
+    relative === "" ||
+    (!relative.startsWith("..") && !path.isAbsolute(relative))
+  );
 }

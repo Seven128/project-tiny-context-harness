@@ -32,9 +32,15 @@
     "release:prepare": "node tools/release_prepare.mjs",
     "release:publish": "node tools/release_publish.mjs",
     "release:npm": "node tools/release_npm.mjs",
+    "release:tarball-smoke": "node tools/release_tarball_smoke.mjs",
+    "format": "prettier --write \"packages/ty-context/src/**/*.ts\"",
+    "format:check": "prettier --check \"packages/ty-context/src/**/*.ts\"",
     "ty-context": "node packages/ty-context/dist/cli.js"
   },
   "tyContext": {
     "harnessFolderName": ".codex"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.5"
   }
 }

@@ -7,6 +7,7 @@
   "required": ["schema_version", "product_goal", "delivery_scope", "full_population_required", "owner_surfaces", "requirements", "boundaries", "non_completing_outcomes", "population_exclusion_rules", "representative_samples_validate", "representative_samples_do_not_validate", "out_of_scope_backlog"],
   "properties": {
     "schema_version": { "const": "product-source-v3" },
+    "context_snapshot_mode": { "enum": ["referenced", "full"] },
     "product_goal": { "$ref": "#/$defs/text" },
     "delivery_scope": { "enum": ["system_capability_build", "representative_sample_validation", "full_population_operation"] },
     "full_population_required": { "type": "boolean" },

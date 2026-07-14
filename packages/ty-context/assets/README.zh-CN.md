@@ -38,9 +38,9 @@ Fresh agent 先读这些文件，再开始改代码。
 
 ## 和传统 Tiny Context 流程的区别
 
-Minimal Context 继续负责长期事实和 Context 恢复；多组合长程任务 Contract V3 只在用户显式调用时提供轻量严格执行与完成门。它允许模型在实现中漂移，但不允许带已声明漂移的交付通过。
+Tiny Context 有三项能力：Minimal Context 负责长期事实和恢复；默认 Workflow Contract 负责最小 Context 读取、唯一 `Context Delta`、内部计划、实现、项目验证、Conformance 与 drift check；Composite Long-Task 只在用户显式启用 Codex profile 后提供严格多 SFC 执行与完成门。Composite 继承 Context 规则，但用 Contract V3 和 Campaign Gate 取代普通内部计划与完成计算。
 
-工作流只有四个有明确防漂移价值的步骤：合同编译防止需求遗漏和不可验证合同；实现—验证循环尽早发现行为、范围和证据漂移；最终全量验证防止旧证据、局部证据和跨快照拼接；Codex Stop 完成门防止 final gate 未通过时在聊天中误报完成。模型怎样规划、拆分、使用 subagent、TDD 或 review 不属于工作流状态，也不能签发完成证明。
+Composite 的三个强制安全步骤是合同编译、最终全量 Gate 和 Codex Stop 新鲜度检查。定向 `verify` 只是可选修复加速器，不能签发 Slice 或 Campaign 完成。模型怎样规划、拆分、使用 subagent、TDD 或 review 不属于工作流状态，也不能签发完成证明。
 
 ## 多组合长程任务 Campaign V5
 
@@ -58,15 +58,15 @@ accepted Slice 只合入 Integration Branch。普通 merge conflict 和组合回
 
 ## 当前最佳实践
 
-短程任务直接使用流程契约和 Context：
+普通任务直接使用流程契约和 Context：
 
 ```text
-流程契约 + project_context/** -> 实现 -> 验证 -> drift check
+最小 Context -> Context Delta -> 内部计划 -> 实现 -> 项目验证 -> Conformance + drift check
 ```
 
 普通长程验收规划显式调用 `/normal-long-task`；多 SFC 讨论方案的完整准备与执行显式调用 `/prepare-composite-long-task`；只有单个 Slice 的三份 Contract V3 YAML 已完整存在时才显式调用 `/composite-long-task-workflow`。
 
-轻量执行器只有一条路径：编译并把三输入、Context、完整图、oracle/verifier 与 workdir 的 hash/identity 冻结到 `compiled-contract.json`；agent 自由实现；根据 verifier-owned findings 循环修复；`final-gate` 对当前工作区重新运行全部 in-scope AC，自底向上重算 obligation、PI 与 Requirement，并生成绑定当前 workspace hash 的 `final-result.json` 及普通项目/Git 双 receipt。Stop 必须确认结果字节与两份 receipt 一致。历史 run 不能拼接成完成；active task 下只有相同合同与相同 workdir 的 compile 幂等，任何变化都以 `active_contract_changed` 拒绝；完成后重新激活会先使旧 final 失效。
+轻量执行器把三输入、完整图、oracle/verifier、workdir 与 Context snapshot 冻结到 `compiled-contract.json`。`context_snapshot_mode: referenced` 是默认值，只冻结 manifest topology 与被引用 Context 的 hash；`full` 需显式选择。agent 可按需运行定向 `verify` 修复，但只有 `final-gate` 可对当前工作区重新运行全部 in-scope AC、自底向上重算图并签发 workspace-bound 结果；Stop 再确认 receipt 与 identity 新鲜。历史 run 不能拼接成完成。
 
 稳定前执行器只接受一个精确的 Node Oracle 步骤，不允许网络，也不允许 environment refs、requirements 或 probes。浏览器、package/project 命令和依赖环境的合同会在编译时明确拒绝，不会被静默忽略或作为半启用模式保留。
 

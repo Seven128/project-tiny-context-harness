@@ -3,7 +3,9 @@ import { pathExists, writeTextIfChanged } from "./fs.js";
 
 export const DESIGN_MD_PATH = "DESIGN.md";
 
-export async function createDesignMdIfMissing(projectRoot: string): Promise<boolean> {
+export async function createDesignMdIfMissing(
+  projectRoot: string,
+): Promise<boolean> {
   const target = path.join(projectRoot, DESIGN_MD_PATH);
   if (await pathExists(target)) {
     return false;
@@ -130,6 +132,6 @@ function designMdTemplate(): string {
     "- When there is a scan target such as UI source, page files, build output or a local/remote URL, run `npx impeccable detect <target>` before finalizing design changes.",
     "- Treat Impeccable findings as design-review signals: fix issues that affect clarity, consistency, accessibility or trust, and note when there is no suitable scan target.",
     "- After design decisions stabilize, update this file with durable tokens, component rules and do/don't guidance so later UI work stays aligned.",
-    ""
+    "",
   ].join("\n");
 }

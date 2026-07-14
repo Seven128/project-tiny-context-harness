@@ -1235,12 +1235,14 @@ function localChecks() {
       contains(npmTrustedPublishWorkflow, /npm install -g npm@latest/) &&
       contains(npmTrustedPublishWorkflow, /npm CLI 11\.5\.1 or later is required/) &&
       contains(npmTrustedPublishWorkflow, /npm run build --workspace project-tiny-context-harness/) &&
-      !contains(npmTrustedPublishWorkflow, /npm (?:run )?test|test:composite-workflow|composite-campaign-v5-app-server-black-box/) &&
+      contains(npmTrustedPublishWorkflow, /Complete package tests/) &&
+      contains(npmTrustedPublishWorkflow, /run: npm test/) &&
       contains(npmTrustedPublishWorkflow, /npm run release:check-version/) &&
       contains(npmTrustedPublishWorkflow, /node packages\/ty-context\/dist\/cli\.js package check-source/) &&
       contains(npmTrustedPublishWorkflow, /make validate-context/) &&
       contains(npmTrustedPublishWorkflow, /npm pack --json --workspace project-tiny-context-harness --pack-destination \.artifacts\/releases\/prepared/) &&
       contains(npmTrustedPublishWorkflow, /verify_prepared_release_artifact\.mjs/) &&
+      contains(npmTrustedPublishWorkflow, /release_tarball_smoke\.mjs --tarball/) &&
       contains(npmTrustedPublishWorkflow, /NPM_CONFIG_PROVENANCE:\s*"true"/) &&
       contains(npmTrustedPublishWorkflow, /npm publish "\.artifacts\/releases\/prepared\/\$FILENAME" --access public/) &&
       contains(npmTrustedPublishWorkflow, /Create or update GitHub Release/) &&
@@ -1709,16 +1711,21 @@ function localChecks() {
       contains(maintainerWorkflow, /Check package canonical source drift/) &&
       contains(maintainerWorkflow, /node packages\/ty-context\/dist\/cli\.js package check-source/) &&
       contains(maintainerWorkflow, /Validate source Context/) &&
-      !contains(maintainerWorkflow, /npm (?:run )?test|test:composite-workflow|composite-campaign-v5-app-server-black-box/),
-    "Maintainer package CI builds the package and checks source drift plus Context without automatically running Composite workflow self-tests."
+      contains(maintainerWorkflow, /Typecheck package/) &&
+      contains(maintainerWorkflow, /test:workflow-default:built/) &&
+      contains(maintainerWorkflow, /test:contract-v3:built/) &&
+      contains(maintainerWorkflow, /test:campaign-blackbox:built/) &&
+      contains(maintainerWorkflow, /Complete package tests/) &&
+      contains(maintainerWorkflow, /test:composite-workflow:built/) &&
+      contains(maintainerWorkflow, /npm run smoke:quickstart/) &&
+      contains(maintainerWorkflow, /npm run preview:pack/),
+    "Maintainer package CI runs focused PR tests and the complete package, Composite, quickstart and pack-preview gates on main."
   );
   addCheck(
     checks,
     "node-engine-ci-matrix",
-    packageJson.engines?.node === ">=24" &&
-      contains(maintainerWorkflow, /node-version:\s*\$\{\{\s*matrix\.node-version\s*\}\}/) &&
-      contains(maintainerWorkflow, /node-version:\s*\["24"\]/),
-    "Package CI covers the declared Node >=24 floor."
+    packageJson.engines?.node === ">=24" && contains(maintainerWorkflow, /node-version:\s*"24"/),
+    "Package CI uses the declared Node >=24 floor."
   );
 
   return checks;

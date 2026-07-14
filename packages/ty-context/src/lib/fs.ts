@@ -18,7 +18,10 @@ export async function ensureDir(target: string): Promise<void> {
   await fs.mkdir(target, { recursive: true });
 }
 
-export async function writeTextIfChanged(target: string, content: string): Promise<boolean> {
+export async function writeTextIfChanged(
+  target: string,
+  content: string,
+): Promise<boolean> {
   if ((await pathExists(target)) && (await readText(target)) === content) {
     return false;
   }
@@ -47,7 +50,7 @@ export async function listFiles(root: string): Promise<string[]> {
 export async function copyTree(
   sourceRoot: string,
   destinationRoot: string,
-  options: { skipGitkeep?: boolean } = {}
+  options: { skipGitkeep?: boolean } = {},
 ): Promise<string[]> {
   const changed: string[] = [];
   for (const source of await listFiles(sourceRoot)) {
