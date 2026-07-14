@@ -81,23 +81,24 @@ jobs:
         shell: bash
         run: |
           mkdir -p .artifacts/releases/prepared
-          npm pack --json --workspace project-tiny-context-harness --pack-destination .artifacts/releases/prepared
-          FILENAME="$(node -p "require('./docs/launch/release-artifact-${{ inputs.expected_version }}.json').filename")"
-          node tools/verify_prepared_release_artifact.mjs --version "${{ inputs.expected_version }}" --tarball ".artifacts/releases/prepared/$FILENAME"
+          npm pack --json --workspace project-tiny-context-harness --pack-destination .artifacts/releases/prepared > .artifacts/releases/prepared/pack-result.json
+          node tools/workflow_release_artifact.mjs \
+            --version "${{ inputs.expected_version }}" \
+            --dry-run "${{ inputs.dry_run }}" \
+            --pack-json .artifacts/releases/prepared/pack-result.json \
+            --tarball-dir .artifacts/releases/prepared \
+            --result .artifacts/releases/prepared/workflow-release-artifact.json
+          FILENAME="$(node -p "require('./.artifacts/releases/prepared/workflow-release-artifact.json').filename")"
+          echo "FILENAME=$FILENAME" >> "$GITHUB_ENV"
 
       - name: Install and test the exact packed tarball
-        shell: bash
-        run: |
-          FILENAME="$(node -p "require('./docs/launch/release-artifact-${{ inputs.expected_version }}.json').filename")"
-          node tools/release_tarball_smoke.mjs --tarball ".artifacts/releases/prepared/$FILENAME"
+        run: node tools/release_tarball_smoke.mjs --tarball ".artifacts/releases/prepared/$FILENAME"
 
       - name: Publish package with npm trusted publishing
         if: ${{ !inputs.dry_run }}
         env:
           NPM_CONFIG_PROVENANCE: "true"
-        run: |
-          FILENAME="$(node -p "require('./docs/launch/release-artifact-${{ inputs.expected_version }}.json').filename")"
-          npm publish ".artifacts/releases/prepared/$FILENAME" --access public
+        run: npm publish ".artifacts/releases/prepared/$FILENAME" --access public
 
       - name: Create or update GitHub Release
         if: ${{ !inputs.dry_run }}

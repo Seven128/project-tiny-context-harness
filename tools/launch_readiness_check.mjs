@@ -1244,7 +1244,8 @@ function localChecks() {
       contains(npmTrustedPublishWorkflow, /make validate-harness/) &&
       contains(npmTrustedPublishWorkflow, /node tools\/quickstart_smoke\.mjs/) &&
       contains(npmTrustedPublishWorkflow, /npm pack --json --workspace project-tiny-context-harness --pack-destination \.artifacts\/releases\/prepared/) &&
-      contains(npmTrustedPublishWorkflow, /verify_prepared_release_artifact\.mjs/) &&
+      contains(npmTrustedPublishWorkflow, /workflow_release_artifact\.mjs/) &&
+      contains(npmTrustedPublishWorkflow, /--dry-run "\$\{\{ inputs\.dry_run \}\}"/) &&
       contains(npmTrustedPublishWorkflow, /release_tarball_smoke\.mjs --tarball/) &&
       contains(npmTrustedPublishWorkflow, /NPM_CONFIG_PROVENANCE:\s*"true"/) &&
       contains(npmTrustedPublishWorkflow, /npm publish "\.artifacts\/releases\/prepared\/\$FILENAME" --access public/) &&

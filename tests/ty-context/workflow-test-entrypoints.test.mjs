@@ -34,10 +34,12 @@ test("GitHub CI runs complete default and Composite suites with immutable releas
   assert.match(publishWorkflow, /release:check-version/);
   assert.match(publishWorkflow, /package check-source/);
   assert.match(publishWorkflow, /make validate-harness/);
-  assert.match(publishWorkflow, /verify_prepared_release_artifact/);
+  assert.match(publishWorkflow, /workflow_release_artifact\.mjs[\s\S]*--dry-run/);
+  assert.match(publishWorkflow, /workflow-release-artifact\.json/);
   assert.match(publishWorkflow, /release_tarball_smoke\.mjs --tarball/);
   assert.match(publishWorkflow, /npm publish "\.artifacts\/releases\/prepared\/\$FILENAME"/);
   assert.match(read("tools/release_artifact_prepare.mjs"), /ty-context-release-artifact-v2|RELEASE_ARTIFACT_SCHEMA_V2/);
+  assert.match(read("tools/workflow_release_artifact.mjs"), /dryRun[\s\S]*release-artifact-\$\{version\}\.json/);
   assert.match(read("tools/release_artifact_identity.mjs"), /lockfile_sha256/);
   assert.match(tarballSmoke, /writeHappyV3Inputs/);
   assert.doesNotMatch(tarballSmoke, /writeHappyV3Contract/);

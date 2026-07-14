@@ -91,8 +91,8 @@ It is manual-only:
 - Versioned release surfaces must be prepared before commit with `npm run release:prepare -- --version <patch|minor|major|x.y.z> --update-mode <sync-only|upgrade-required|manual-required>`; the workflow verifies this with `npm run release:check-version`.
 - The job runs on `ubuntu-latest` with Node `24`.
 - The workflow installs the explicitly pinned npm CLI version declared in the workflow (`12.0.1` at this snapshot); it never uses unbounded `npm@latest`.
-- It builds/typechecks the package, runs the complete package test suite (default and Composite), package source drift, `make validate-harness` and Quickstart Smoke, then packs exactly once and verifies it against `docs/launch/release-artifact-<version>.json`.
-- Release Artifact V2 binds the tarball SHA-256, Node version, npm version and `package-lock.json` SHA-256. Any environment or lockfile drift fails before smoke/publication.
+- It builds/typechecks the package, runs the complete package test suite (default and Composite), package source drift, `make validate-harness` and Quickstart Smoke, then packs exactly once. A dry run creates an ephemeral Release Artifact V2 identity for those exact bytes; a real publish must match the committed `docs/launch/release-artifact-<version>.json` authority.
+- Release Artifact V2 binds the tarball SHA-256, Node version, npm version and `package-lock.json` SHA-256. Any environment or lockfile drift fails before smoke/publication, and dry-run identity never authorizes a real publish.
 - It installs that exact packed tarball into an empty temporary repository and runs `ty-context init`, `doctor`, `validate-context` and a minimal Contract V3 final-gate black box before publishing only the tested tarball path.
 - The publish step runs only when `dry_run` is false.
 - The GitHub Release create/update step runs only after a real publish, uses the release packet body and marks `v<version>` as the latest release.
@@ -112,7 +112,7 @@ Expected result:
 - package build succeeds,
 - source drift check passes,
 - Context validation passes,
-- the single packed tarball matches the Release Artifact V2 byte/environment/lockfile attestation,
+- the single packed tarball is bound to an ephemeral Release Artifact V2 byte/environment/lockfile attestation and that exact path passes the install smoke,
 - no npm publish occurs,
 - no GitHub Release is created or edited.
 

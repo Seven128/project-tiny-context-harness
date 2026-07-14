@@ -60,7 +60,7 @@ read_policy: default
 - Package CI builds the package before any main-job command invokes `packages/ty-context/dist/cli.js`; a clean Linux checkout must not rely on locally generated `dist` output.
 - Main additionally runs Pack Preview.
 - Local default `npm test` excludes Composite self-tests; the complete profile also remains available through its explicit npm command.
-- Publish runs the complete default and Composite suites, packs once, records/verifies Release Artifact V2, installs that exact tarball in an empty repository and runs init/doctor/Context/minimal Contract V3 smoke before publishing the same path.
+- Publish runs the complete default and Composite suites, packs once, records/verifies Release Artifact V2, installs that exact tarball in an empty repository and runs init/doctor/Context/minimal Contract V3 smoke before publishing the same path. Dry runs may create only an ephemeral V2 identity for the just-packed bytes; a real publish still requires the matching committed versioned V2 authority.
 - Consumer Harness CI runs only portable project gates. It never runs this package repository's full Campaign self-tests.
 - Real App Server one-SFC smoke remains manual development evidence and is not a CI/publication gate.
 
