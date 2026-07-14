@@ -11,6 +11,45 @@ export interface CampaignMutationTransactionV1 {
   stagedArtifacts(): CampaignStagedArtifactV1[];
 }
 
+export interface CampaignMutationPlan<TCampaign> {
+  nextCampaign: TCampaign;
+  stagedWrites: Array<{
+    target: string;
+    contentPath: string;
+  }>;
+  eventType: string;
+}
+
+export function createCampaignMutationPlanV1<TCampaign>(
+  nextCampaign: TCampaign,
+  eventType: string,
+  transaction: CampaignMutationTransactionV1,
+): CampaignMutationPlan<TCampaign> {
+  if (!eventType.trim()) throw new Error("campaign_mutation_event_type_empty");
+  return {
+    nextCampaign,
+    stagedWrites: transaction.stagedArtifacts().map((artifact) => ({
+      target: artifact.target_path,
+      contentPath: artifact.staged_path,
+    })),
+    eventType,
+  };
+}
+
+export function artifactsForCampaignMutationPlanV1<TCampaign>(
+  plan: CampaignMutationPlan<TCampaign>,
+  transaction: CampaignMutationTransactionV1,
+): CampaignStagedArtifactV1[] {
+  const artifacts = transaction.stagedArtifacts();
+  const expected = artifacts.map((artifact) => ({
+    target: artifact.target_path,
+    contentPath: artifact.staged_path,
+  }));
+  if (JSON.stringify(plan.stagedWrites) !== JSON.stringify(expected))
+    throw new Error("campaign_mutation_plan_staged_writes_mismatch");
+  return artifacts;
+}
+
 export function createCampaignMutationTransactionV1(
   rootValue: string,
   lease: { operation_id: string },
@@ -63,7 +102,7 @@ function normalizeArtifactTarget(value: string): string {
     "campaign.yaml",
     "events.ndjson",
     ".campaign.lock",
-    "transaction-intent.json",
+    ".campaign-transaction.json",
   ]);
   if (
     !normalized ||

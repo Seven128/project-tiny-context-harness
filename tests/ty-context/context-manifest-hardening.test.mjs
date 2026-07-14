@@ -10,7 +10,7 @@ import {
   createContextProject,
 } from "./context-manifest-fixtures.mjs";
 
-test("formal Context TOML rejects malformed syntax and unknown fields", async () => {
+test("manifest_rejects_unknown_field", async () => {
   await withProject(
     { manifest: `${baseManifest()}\ninvalid = [\n` },
     async (root) => {
@@ -33,7 +33,7 @@ test("formal Context TOML rejects malformed syntax and unknown fields", async ()
   );
 });
 
-test("Context graph requires exactly one default Area", async () => {
+test("manifest_requires_exactly_one_default", async () => {
   await withProject(
     { manifest: baseManifest().replace("default = true", "default = false") },
     async (root) => {
@@ -46,7 +46,7 @@ test("Context graph requires exactly one default Area", async () => {
   );
 });
 
-test("Context graph rejects duplicate Area IDs and Context paths", async () => {
+test("manifest_rejects_duplicate_area_id", async () => {
   const manifest = `${baseManifest()}
 
 [[areas]]
@@ -78,7 +78,24 @@ role = "verification"
   );
 });
 
-test("Context graph rejects missing Area roots and default children", async () => {
+test("manifest_rejects_duplicate_context_path", async () => {
+  const manifest = `${baseManifest()}
+
+[[context]]
+path = "project_context/areas/main/verification.md"
+role = "verification"
+read_policy = "default"
+`;
+  await withProject({ manifest }, async (root) => {
+    const report = await validate(root);
+    assert.match(
+      report.errors.join("\n"),
+      /duplicate Context path: project_context\/areas\/main\/verification\.md/,
+    );
+  });
+});
+
+test("manifest_rejects_missing_default_child", async () => {
   const manifest = baseManifest()
     .replace('root = "."', 'root = "missing-area-root"')
     .replace(
@@ -96,7 +113,7 @@ test("Context graph rejects missing Area roots and default children", async () =
   });
 });
 
-test("Context Front Matter role and read policy must match the Manifest", async () => {
+test("manifest_rejects_frontmatter_role_mismatch", async () => {
   const verification = `---
 context_role: deployment
 read_policy: optional
@@ -147,7 +164,20 @@ test("unregistered Context Markdown is reported as a warning", async () => {
   );
 });
 
-test("Context graph rejects a symbolic-link escape from project_context", async () => {
+test("manifest_rejects_dotdot_escape", async () => {
+  const manifest = `${baseManifest()}
+
+[[context]]
+path = "project_context/../outside.md"
+role = "foundation"
+`;
+  await withProject({ manifest }, async (root) => {
+    const report = await validate(root);
+    assert.match(report.errors.join("\n"), /must not contain '\.\.'/);
+  });
+});
+
+test("manifest_rejects_symlink_escape", async () => {
   const outside = await mkdtemp(path.join(os.tmpdir(), "ty-context-outside-"));
   const outsideFile = path.join(outside, "outside.md");
   await writeFile(outsideFile, areaContext("outside"), "utf8");
@@ -179,7 +209,46 @@ role = "foundation"
   await rm(outside, { recursive: true, force: true });
 });
 
-test("Chinese fake verification claims are found in every verification-class section", async () => {
+test("context_rejects_placeholder_only_content", async () => {
+  const placeholder = `# Area Context: main
+
+## Responsibility
+
+- TODO
+`;
+  await withProject(
+    { extraFiles: { "project_context/areas/main.md": placeholder } },
+    async (root) => {
+      const report = await validate(root);
+      assert.match(report.errors.join("\n"), /concrete fact paragraph/);
+    },
+  );
+});
+
+test("cjk_fake_verification_claim_rejected", async () => {
+  const area = `# Area Context: main
+
+## Responsibility
+
+- Maintain durable package behavior facts.
+
+## 验证
+
+- 测试已通过。
+`;
+  await withProject(
+    { extraFiles: { "project_context/areas/main.md": area } },
+    async (root) => {
+      const report = await validate(root);
+      assert.match(
+        report.errors.join("\n"),
+        /must list verification entry points/,
+      );
+    },
+  );
+});
+
+test("fake_claim_in_second_verification_section_rejected", async () => {
   const area = `# Area Context: main
 
 ## Responsibility

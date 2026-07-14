@@ -52,6 +52,24 @@ export async function enableHarnessProfile(
   return { changed, config: await readConfig(projectRoot) };
 }
 
+export async function disableHarnessProfile(
+  projectRoot: string,
+  profile: string,
+): Promise<{ changed: boolean; config: HarnessConfig }> {
+  if (profile !== "composite-codex") {
+    throw new Error("only composite-codex can be explicitly disabled");
+  }
+  await writeConfigIfMissing(projectRoot);
+  const relative = await harnessConfigPath(projectRoot);
+  const file = path.join(projectRoot, relative);
+  const raw = parseYaml(await readText(file)) as Record<string, unknown>;
+  const existing = await readConfig(projectRoot);
+  const enabled = existing.profiles.enabled.filter((item) => item !== profile);
+  const next = { ...raw, profiles: { enabled } };
+  const changed = await writeTextIfChanged(file, stringifyYaml(next));
+  return { changed, config: await readConfig(projectRoot) };
+}
+
 export function enabledManagedSkillNames(config: HarnessConfig): Set<string> {
   const names = new Set([
     "context_development_engineer",

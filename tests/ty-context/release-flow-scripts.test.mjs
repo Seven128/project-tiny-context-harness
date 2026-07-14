@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
@@ -16,7 +17,8 @@ const workspacePackage = JSON.parse(readFileSync(path.join(repoRoot, "packages/t
 assert.equal(rootPackage.scripts["release:prepare"], "node tools/release_prepare.mjs");
 assert.equal(rootPackage.scripts["release:publish"], "node tools/release_publish.mjs");
 assert.equal(rootPackage.scripts["release:npm"], "node tools/release_npm.mjs");
-assert.equal(workspacePackage.scripts["test:built"], "node --test --test-concurrency=1 ../../tests/ty-context/*.test.mjs");
+assert.equal(workspacePackage.scripts["test:built"], "node ../../tests/ty-context/run-package-suite.mjs default");
+assert.equal(workspacePackage.scripts["test:composite-workflow:built"], "node ../../tests/ty-context/run-package-suite.mjs composite");
 
 const legacyNoArgs = runNode(legacyNpmScript, []);
 assert.equal(legacyNoArgs.status, 0, `${legacyNoArgs.stdout}\n${legacyNoArgs.stderr}`);
@@ -58,6 +60,14 @@ try {
   assert.match(read("docs/launch/github-release-1.2.4.md"), /Upgrade Impact: `safe migration included`/);
   assert.match(read("docs/launch/github-release-1.2.4.md"), /upgrade\/migration implementation and upgrade test evidence/);
   assert.match(read("docs/launch/github-release-1.2.4.md"), /synchronized package assets and CLI build/);
+  const attestation = JSON.parse(read("docs/launch/release-artifact-1.2.4.json"));
+  assert.equal(attestation.schema_version, "ty-context-release-artifact-v2");
+  assert.equal(attestation.node_version, process.version);
+  assert.match(attestation.npm_version, /^\d+\.\d+\.\d+/);
+  assert.equal(
+    attestation.lockfile_sha256,
+    createHash("sha256").update(readFileSync(path.join(fixture, "package-lock.json"))).digest("hex")
+  );
 
   const prepareCommands = readJsonLines(prepareLog);
   assert.deepEqual(
@@ -69,6 +79,7 @@ try {
       "npm run release:check-version",
       "node packages/ty-context/dist/cli.js upgrade --check --json",
       "npm run test:built --workspace project-tiny-context-harness",
+      "npm run test:composite-workflow:built --workspace project-tiny-context-harness",
       "npm pack --json --workspace project-tiny-context-harness --pack-destination .artifacts\\releases\\prepared",
       "git diff --check"
     ]
@@ -178,7 +189,32 @@ try {
   const publishEntries = readJsonLines(publishLog);
   assert.ok(publishEntries.every((entry) => entry.shell === false), "publish commands should use shell-safe spawning");
   const publishCommands = publishEntries.map((entry) => entry.argv.join(" "));
+  assert.ok(publishCommands.includes("npm test --workspace project-tiny-context-harness"));
+  assert.ok(
+    publishCommands.includes(
+      "npm run test:composite-workflow --workspace project-tiny-context-harness"
+    )
+  );
+  assert.ok(
+    publishCommands.includes(
+      "node tools/release_tarball_smoke.mjs --tarball .artifacts/releases/prepared/project-tiny-context-harness-1.2.4.tgz"
+    )
+  );
   assert.ok(publishCommands.includes("npm publish .artifacts/releases/prepared/project-tiny-context-harness-1.2.4.tgz --access public"));
+  assert.ok(
+    publishCommands.indexOf("npm test --workspace project-tiny-context-harness") <
+      publishCommands.indexOf(
+        "npm publish .artifacts/releases/prepared/project-tiny-context-harness-1.2.4.tgz --access public"
+      )
+  );
+  assert.ok(
+    publishCommands.indexOf(
+      "node tools/release_tarball_smoke.mjs --tarball .artifacts/releases/prepared/project-tiny-context-harness-1.2.4.tgz"
+    ) <
+      publishCommands.indexOf(
+        "npm publish .artifacts/releases/prepared/project-tiny-context-harness-1.2.4.tgz --access public"
+      )
+  );
   assert.ok(publishCommands.includes("git tag -a v1.2.4 -m Project Tiny Context Harness 1.2.4"));
   assert.ok(publishCommands.includes("git push origin v1.2.4"));
   assert.ok(!publishCommands.some((command) => command.startsWith("npm install -D project-tiny-context-harness@1.2.4")));

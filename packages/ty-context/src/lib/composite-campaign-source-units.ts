@@ -1,5 +1,5 @@
 import type { LongTaskSourceBundleV3 } from "./long-task-contract-schema.js";
-import type { SourceCoverageV1 } from "./composite-campaign-source-coverage.js";
+import type { SourceCoverageV2 } from "./composite-campaign-source-coverage.js";
 import type { ScopeFitResultV4 } from "./scope-fit-v4.js";
 
 export interface SourceUnitPacketBindingV4 {
@@ -126,10 +126,10 @@ export function assertSourceUnitPacketBindingsV4(
   return bindings;
 }
 
-export function assertPacketContextResolutionV1(
+export function assertPacketContextResolutionV2(
   scope: ScopeFitResultV4,
   sliceId: string,
-  coverage: SourceCoverageV1,
+  coverage: SourceCoverageV2,
   bindings: SourceUnitPacketBindingV4[],
   bundle: LongTaskSourceBundleV3,
 ): void {
@@ -145,6 +145,7 @@ export function assertPacketContextResolutionV1(
       requirement,
     ]),
   );
+  const boundRequirementIds = new Set<string>();
 
   for (const packetBinding of bindings) {
     const unit = units.get(packetBinding.source_unit_id);
@@ -155,6 +156,8 @@ export function assertPacketContextResolutionV1(
       if (item.disposition !== "slice" || !item.slice_refs.includes(sliceId)) {
         invalid(`context_source_item_not_owned:${sourceRef}:${sliceId}`);
       }
+      if (!item.context_resolution)
+        invalid(`context_resolution_missing:${sourceRef}`);
       return item.context_resolution;
     });
     const contextRefs = [
@@ -177,6 +180,7 @@ export function assertPacketContextResolutionV1(
     }
 
     for (const requirementId of packetBinding.requirement_ids) {
+      boundRequirementIds.add(requirementId);
       const requirement = requirements.get(requirementId);
       if (!requirement)
         invalid(
@@ -206,6 +210,9 @@ export function assertPacketContextResolutionV1(
       }
     }
   }
+  for (const requirement of bundle.product.requirements)
+    if (!boundRequirementIds.has(requirement.id))
+      invalid(`requirement_without_source_context:${requirement.id}`);
 }
 
 function binding(value: unknown, index: number): SourceUnitPacketBindingV4 {

@@ -15,10 +15,14 @@ import {
   sha256Hex,
 } from "./composite-campaign-codec.js";
 import { currentBranch, runGit } from "./composite-campaign-git-baseline.js";
-import { loadCampaignV4, mutateCampaignV4 } from "./composite-campaign-v4.js";
+import {
+  loadCampaignStoreV5,
+  mutateCampaignStoreV5,
+} from "./composite-runtime-v5/campaign-store.js";
 import {
   CAMPAIGN_SCHEMA_V5,
   assertCampaignV5,
+  campaignHasGoalV5,
   emptyExecutionHostV5,
   type CampaignPolicyV5,
   type CampaignThreadStateV5,
@@ -27,8 +31,11 @@ import {
 } from "./composite-campaign-schema-v5.js";
 import { portablePathSlug } from "./composite-campaign-worktree.js";
 import { resolveInside } from "./long-task-path-policy.js";
-import { parseSourceCoverageV1 } from "./composite-campaign-source-coverage.js";
-import { captureCampaignContextBaseline } from "./context-graph-snapshot.js";
+import { parseSourceCoverageV2 } from "./composite-campaign-source-coverage.js";
+import {
+  assertCampaignContextBaselineFresh,
+  captureCampaignContextBaseline,
+} from "./context-graph-snapshot.js";
 import {
   buildInitialCampaignEventV1,
   type CampaignMutationTransactionV1,
@@ -87,7 +94,7 @@ export async function createCampaignV5(
     campaign_status: "planning",
     context_baseline: contextBaseline,
     campaign_policy: {
-      auto_push: policy.auto_push ?? false,
+      auto_push: policy.auto_push ?? true,
       protected_branch_mode: "pull_request",
       preserve_primary_worktree: true,
     },
@@ -104,7 +111,7 @@ export async function createCampaignV5(
     await writeFile(
       path.join(staging, "source-coverage.json"),
       canonicalJson({
-        schema_version: "composite-source-coverage-draft-v1",
+        schema_version: "composite-source-coverage-draft-v2",
         source_plan_sha256: campaign.source_plan_sha256,
         status: "authoring_required",
         items: [],
@@ -134,19 +141,10 @@ export async function loadCampaignV5(
   projectRoot: string,
   campaignPath: string,
 ): Promise<{ root: string; campaign: CampaignV5 }> {
-  const loaded = await loadCampaignV4(projectRoot, campaignPath);
-  try {
-    return { root: loaded.root, campaign: assertCampaignV5(loaded.campaign) };
-  } catch (error) {
-    if (
-      (loaded.campaign as unknown as { schema_version?: string })
-        .schema_version === "composite-campaign-v4"
-    )
-      throw new Error(
-        "campaign_v4_audit_only:automatic execution requires composite-campaign-v5",
-      );
-    throw error;
-  }
+  const loaded = await loadCampaignStoreV5(projectRoot, campaignPath);
+  if (campaignHasGoalV5(loaded.campaign))
+    await assertFrozenCampaignContextFresh(projectRoot, loaded.campaign);
+  return loaded;
 }
 
 export async function mutateCampaignV5(
@@ -159,18 +157,35 @@ export async function mutateCampaignV5(
     transaction: CampaignMutationTransactionV1,
   ) => Promise<CampaignV5>,
 ): Promise<CampaignV5> {
-  const updated = await mutateCampaignV4(
+  const updated = await mutateCampaignStoreV5(
     projectRoot,
     campaignPath,
     eventType,
-    async (root, campaign, transaction) =>
-      mutate(
-        root,
-        assertCampaignV5(campaign),
-        transaction,
-      ) as unknown as typeof campaign,
+    async (root, campaign, transaction) => {
+      const current = assertCampaignV5(campaign);
+      if (campaignHasGoalV5(current))
+        await assertFrozenCampaignContextFresh(projectRoot, current);
+      return mutate(root, current, transaction);
+    },
   );
   return assertCampaignV5(updated);
+}
+
+async function assertFrozenCampaignContextFresh(
+  projectRoot: string,
+  campaign: CampaignV5,
+): Promise<void> {
+  try {
+    await assertCampaignContextBaselineFresh(
+      projectRoot,
+      campaign.context_baseline,
+      Object.keys(campaign.context_baseline.files),
+    );
+  } catch (error) {
+    throw new Error(
+      `context_changed_after_campaign_goal:${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 }
 
 export async function configureCampaignHostV5(
@@ -257,7 +272,7 @@ export async function applyCampaignCoverageV5(
     throw new Error(
       "source-coverage-input escapes the repository through a symlink",
     );
-  const coverage = parseSourceCoverageV1(await readFile(file, "utf8"));
+  const coverage = parseSourceCoverageV2(await readFile(file, "utf8"));
   return mutateCampaignV5(
     projectRoot,
     campaignPath,

@@ -10,15 +10,15 @@ Only a catalog-resolved `gpt-5.6-sol / xhigh|max`, or an explicit catalog upgrad
 
 Before execution, Git baseline logic validates identity/unfinished operations, protects against obvious raw credentials, checkpoints allowed dirty state, freezes `base_commit` and creates the Integration worktree. All serial/parallel SFCs use owned worktrees; a wave shares one base and later waves use the current Integration head.
 
-Each SFC has exactly one persistent App Server thread. Its read-only Authoring Turn occurs before Goal creation. After Packet preflight, the CLI materializes the Slice worktree, Contract V3 inputs and Goal Manifest V2, validates the generated objective is at most 4000 characters, resumes the same thread, sets its Goal, switches cwd to the Slice worktree and starts a `workspaceWrite` Turn with writable roots limited to that worktree. All initial wave Turns start before any is awaited.
+Each SFC has one persistent App Server thread. Its read-only Authoring Turn precedes Goal creation. After Packet preflight, the CLI materializes the worktree, Contract V3 and Envelope-bound Goal Manifest V3, validates the 4000-character objective limit, resumes the thread, sets its Goal and starts a worktree-limited `workspaceWrite` Turn. V2 is audit-only. All initial wave Turns start before any is awaited.
 
-The worker compiles Contract V3, implements only allowed bindings, verifies/repairs, commits cleanly, then runs final-gate. `needs_work` findings start another explicit-profile Turn in the same thread. Interruption resumes the same Goal/thread/worktree. Only a current accepted result can produce the receipt; then the server/local Goal becomes complete.
+The worker compiles Contract V3, implements allowed bindings, runs focused checks and optional targeted verify, commits cleanly, then runs mandatory full final-gate. `needs_work` uses machine findings in another Turn in the same thread; interruption resumes the same identity. Only a current accepted result produces Envelope-bound Receipt V2 and completes the Goal.
 
 ## Merge, Repair, And Final Authority
 
 Accepted Slice branches merge to Integration in stable SFC order with base/head/receipt/contract integrity checks. Merge conflict, Integration Gate regression and Campaign Final Gate regression each use an independent execution-profile repair thread/worktree. Repair preserves all affected Packets/requirements/ACs, cannot alter Scope Fit or Packets, commits cleanly, and is applied only against the unchanged repair base.
 
-After each merge, Integration Gate reruns affected Slice and cross-SFC evidence. After every SFC becomes `integration_verified`, Campaign Final Gate materializes all current Packets on one Integration snapshot, validates source/global coverage and reruns all bindings/specs/counterfactuals. It is the sole Campaign completion authority. A moved target forces resynchronization and revalidation before final integration. Cleanup removes only owned validated worktrees/branches.
+After each merge, non-accepting Wave Impact V2 runs Specs proven affected by the actual diff and frozen evidence, always including global-constraint Specs; uncertainty runs all candidates. After all SFCs are `integration_verified`, Campaign Final materializes current Packets on one Integration snapshot and reruns all bindings, Specs, counterfactuals and coverage. It alone completes Campaigns. A moved target forces synchronization and revalidation. Cleanup removes only owned validated worktrees/branches.
 
 ## Recovery
 

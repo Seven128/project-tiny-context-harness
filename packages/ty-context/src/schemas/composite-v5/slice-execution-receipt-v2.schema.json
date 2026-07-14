@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-tiny-context-harness.invalid/schemas/composite-v5/slice-execution-receipt-v2.schema.json",
+  "title": "Slice Execution Receipt V2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "campaign_id", "slice_id", "wave_id", "goal_id", "branch", "base_commit", "head_commit", "commit_oids", "changed_paths", "change_envelope_sha256", "undeclared_changed_paths", "contract_sha256", "final_result_sha256", "final_snapshot_sha256", "workflow_status", "worktree_clean", "recorded_at", "receipt_sha256"],
+  "properties": {
+    "schema_version": { "const": "slice-execution-receipt-v2" },
+    "campaign_id": { "$ref": "#/$defs/text" },
+    "slice_id": { "type": "string", "pattern": "^SFC-[0-9]{3,}$" },
+    "wave_id": { "type": "string", "pattern": "^WAVE-[0-9]{3,}$" },
+    "goal_id": { "$ref": "#/$defs/text" },
+    "branch": { "$ref": "#/$defs/text" },
+    "base_commit": { "$ref": "#/$defs/gitSha" },
+    "head_commit": { "$ref": "#/$defs/gitSha" },
+    "commit_oids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/gitSha" } },
+    "changed_paths": { "$ref": "#/$defs/stringSet" },
+    "change_envelope_sha256": { "$ref": "#/$defs/sha256" },
+    "undeclared_changed_paths": { "type": "array", "maxItems": 0 },
+    "contract_sha256": { "$ref": "#/$defs/sha256" },
+    "final_result_sha256": { "$ref": "#/$defs/sha256" },
+    "final_snapshot_sha256": { "$ref": "#/$defs/sha256" },
+    "workflow_status": { "const": "accepted" },
+    "worktree_clean": { "const": true },
+    "recorded_at": { "type": "string", "format": "date-time" },
+    "receipt_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1 },
+    "gitSha": { "type": "string", "pattern": "^[a-f0-9]{40,64}$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "stringSet": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+  }
+}

@@ -62,18 +62,18 @@ export async function createLongTaskSnapshot(
       }
       if (!entry.isFile())
         throw new Error(`snapshot_special_file_rejected:${rel}`);
-      const info = await stat(sourcePath);
-      const inode = `${info.dev}:${info.ino}`;
-      if (info.nlink > 1 || inodeSeen.has(inode))
+      const info = await stat(sourcePath, { bigint: true });
+      const inode = snapshotFileIdentity(info);
+      if (info.nlink > 1n || inodeSeen.has(inode))
         throw new Error(`snapshot_hardlink_rejected:${rel}`);
       inodeSeen.add(inode);
       const content = await readFile(sourcePath);
       await mkdir(path.dirname(targetPath), { recursive: true });
-      await writeFile(targetPath, content, { mode: info.mode });
+      await writeFile(targetPath, content, { mode: Number(info.mode) });
       files.push({
         path: rel,
         type: "file",
-        mode: info.mode,
+        mode: Number(info.mode),
         size: content.length,
         sha256: sha256Hex(content),
       });
@@ -113,6 +113,13 @@ export async function createLongTaskSnapshot(
     await rm(root, { recursive: true, force: true });
     throw error;
   }
+}
+
+export function snapshotFileIdentity(info: {
+  dev: bigint;
+  ino: bigint;
+}): string {
+  return `${info.dev}:${info.ino}`;
 }
 
 export async function hashLongTaskWorkspace(

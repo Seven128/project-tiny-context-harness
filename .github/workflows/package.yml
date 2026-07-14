@@ -73,10 +73,10 @@ jobs:
     if: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/main') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: "24"
           cache: "npm"
@@ -84,31 +84,29 @@ jobs:
         run: npm ci
       - name: Check TypeScript formatting
         run: npm run format:check
-      - name: Build package
-        run: npm run build --workspace project-tiny-context-harness
       - name: Typecheck package
         run: npm run typecheck --workspace project-tiny-context-harness
+      - name: Complete package tests
+        run: npm test --workspace project-tiny-context-harness
+      - name: Complete Composite tests
+        run: npm run test:composite-workflow --workspace project-tiny-context-harness
       - name: Check package canonical source drift
         run: node packages/ty-context/dist/cli.js package check-source
-      - name: Validate source Context
-        run: make validate-context
+      - name: Validate Context and touched-source modularity
+        run: make validate-harness
       - name: Validate changed-source modularity and waiver lifecycle
         run: node packages/ty-context/dist/cli.js check-modularity --base "origin/${{ github.base_ref }}" --fail-on-warning
-      - name: Default Workflow Contract tests
-        run: npm run test:workflow-default:built --workspace project-tiny-context-harness
-      - name: Contract V3 focused black-box
-        run: npm run test:contract-v3:built --workspace project-tiny-context-harness
-      - name: Campaign Fake App Server black-box
-        run: npm run test:campaign-blackbox:built --workspace project-tiny-context-harness
+      - name: Quickstart smoke
+        run: node tools/quickstart_smoke.mjs
 
   main:
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: "24"
           cache: "npm"
@@ -116,15 +114,19 @@ jobs:
         run: npm ci
       - name: Check TypeScript formatting
         run: npm run format:check
-      - name: Build package for source gates
-        run: npm run build --workspace project-tiny-context-harness
+      - name: Typecheck package
+        run: npm run typecheck --workspace project-tiny-context-harness
       - name: Validate modularity waiver lifecycle
         run: node packages/ty-context/dist/cli.js check-modularity --config-only --fail-on-warning
       - name: Complete package tests
-        run: npm test
+        run: npm test --workspace project-tiny-context-harness
       - name: Complete Composite tests
-        run: npm run test:composite-workflow:built --workspace project-tiny-context-harness
+        run: npm run test:composite-workflow --workspace project-tiny-context-harness
+      - name: Check package canonical source drift
+        run: node packages/ty-context/dist/cli.js package check-source
+      - name: Validate Context and touched-source modularity
+        run: make validate-harness
       - name: Quickstart smoke
-        run: npm run smoke:quickstart
+        run: node tools/quickstart_smoke.mjs
       - name: Pack preview
         run: npm run preview:pack

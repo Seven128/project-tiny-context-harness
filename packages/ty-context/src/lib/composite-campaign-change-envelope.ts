@@ -1,64 +1,56 @@
 import path from "node:path";
+import { canonicalJson, sha256Hex } from "./composite-campaign-codec.js";
 import type { LongTaskSourceBundleV3 } from "./long-task-contract-schema.js";
 
 export interface ChangeEnvelopeV1 {
   schema_version: "slice-change-envelope-v1";
   allowed_write_paths: string[];
   allowed_supporting_paths: string[];
+  allowed_contract_keys: string[];
   forbidden_paths: string[];
   undeclared_change_policy: "reject";
-  binding_carrier_paths: Record<string, string[]>;
+  envelope_sha256: string;
+}
+
+export interface ChangeEnvelopeSourcesV1 {
+  allowedSupportingPaths?: string[];
+  forbiddenPaths?: string[];
 }
 
 export const HARD_FORBIDDEN_CHANGE_PATHS = [
-  "project_context/**",
   ".codex/composite-long-task/**",
+  ".codex/ty-context-active-long-task.json",
+  ".codex/ty-context-final-result-receipt.json",
+  "project_context/**",
 ] as const;
 
 export function deriveChangeEnvelopeV1(
   bundle: LongTaskSourceBundleV3,
-  forbiddenPaths: string[] = [],
+  sources: ChangeEnvelopeSourcesV1 = {},
 ): ChangeEnvelopeV1 {
-  const allowed: string[] = [];
-  const carriers: Record<string, string[]> = {};
-  for (const binding of bundle.plan.plan_items
+  const bindings = bundle.plan.plan_items
     .flatMap((item) => item.obligations)
-    .flatMap((item) => item.implementation_bindings)) {
-    if (binding.kind === "file" || binding.kind === "path_glob") {
-      allowed.push(assertEnvelopePath(binding.target, `binding:${binding.id}`));
-      continue;
-    }
-    const bindingCarriers = stable(
-      (binding.carrier_paths ?? []).map((value) =>
-        assertEnvelopePath(value, `binding:${binding.id}:carrier`),
+    .flatMap((item) => item.implementation_bindings);
+  return createChangeEnvelopeV1({
+    allowed_write_paths: bindings
+      .filter(
+        (binding) => binding.kind === "file" || binding.kind === "path_glob",
+      )
+      .map((binding) =>
+        assertEnvelopePath(binding.target, `binding:${binding.id}`),
       ),
-    );
-    if (bindingCarriers.length === 0)
-      throw new Error(`change_envelope_carrier_required:${binding.id}`);
-    carriers[binding.id] = bindingCarriers;
-    allowed.push(...bindingCarriers);
-  }
-  return validateChangeEnvelopeV1({
-    schema_version: "slice-change-envelope-v1",
-    allowed_write_paths: stable(allowed),
-    allowed_supporting_paths: stable(
-      (bundle.plan.supporting_paths ?? []).map((value) =>
-        assertEnvelopePath(value, "supporting_path"),
-      ),
+    allowed_supporting_paths: (sources.allowedSupportingPaths ?? []).map(
+      (value) => assertEnvelopePath(value, "supporting_path"),
     ),
-    forbidden_paths: stable(
-      [
-        ...HARD_FORBIDDEN_CHANGE_PATHS,
-        ...(bundle.plan.forbidden_paths ?? []),
-        ...forbiddenPaths,
-      ].map((value) => assertEnvelopePath(value, "forbidden_path")),
-    ),
-    undeclared_change_policy: "reject",
-    binding_carrier_paths: Object.fromEntries(
-      Object.entries(carriers).sort(([left], [right]) =>
-        asciiCompare(left, right),
-      ),
-    ),
+    allowed_contract_keys: bindings
+      .filter(
+        (binding) => binding.kind !== "file" && binding.kind !== "path_glob",
+      )
+      .map((binding) => `${binding.kind}:${binding.target}`),
+    forbidden_paths: [
+      ...HARD_FORBIDDEN_CHANGE_PATHS,
+      ...(sources.forbiddenPaths ?? []),
+    ].map((value) => assertEnvelopePath(value, "forbidden_path")),
   });
 }
 
@@ -67,45 +59,45 @@ export function validateChangeEnvelopeV1(
 ): ChangeEnvelopeV1 {
   if (!value || value.schema_version !== "slice-change-envelope-v1")
     throw new Error("change_envelope_schema_invalid");
-  for (const key of [
+  const expected = [
+    "schema_version",
     "allowed_write_paths",
     "allowed_supporting_paths",
+    "allowed_contract_keys",
     "forbidden_paths",
-  ] as const) {
-    if (!Array.isArray(value[key]))
-      throw new Error(`change_envelope_${key}_invalid`);
-    value[key] = stable(
-      value[key].map((item) => assertEnvelopePath(item, key)),
-    );
-  }
-  if (value.undeclared_change_policy !== "reject")
+    "undeclared_change_policy",
+    "envelope_sha256",
+  ];
+  for (const key of expected)
+    if (!Object.hasOwn(value, key))
+      throw new Error(`change_envelope_field_missing:${key}`);
+  for (const key of Object.keys(value))
+    if (!expected.includes(key))
+      throw new Error(`change_envelope_field_unknown:${key}`);
+  const normalized = {
+    schema_version: "slice-change-envelope-v1" as const,
+    allowed_write_paths: pathSet(
+      value.allowed_write_paths,
+      "allowed_write_paths",
+    ),
+    allowed_supporting_paths: pathSet(
+      value.allowed_supporting_paths,
+      "allowed_supporting_paths",
+    ),
+    allowed_contract_keys: contractKeySet(value.allowed_contract_keys),
+    forbidden_paths: pathSet(value.forbidden_paths, "forbidden_paths"),
+    undeclared_change_policy: value.undeclared_change_policy,
+  };
+  if (normalized.undeclared_change_policy !== "reject")
     throw new Error("change_envelope_undeclared_change_policy_invalid");
-  if (
-    !value.binding_carrier_paths ||
-    typeof value.binding_carrier_paths !== "object" ||
-    Array.isArray(value.binding_carrier_paths)
-  ) {
-    throw new Error("change_envelope_binding_carrier_paths_invalid");
-  }
-  for (const [bindingId, carriers] of Object.entries(
-    value.binding_carrier_paths,
-  )) {
-    if (
-      !/^IB-[A-Z0-9][A-Z0-9-]*$/u.test(bindingId) ||
-      !Array.isArray(carriers) ||
-      carriers.length === 0
-    ) {
-      throw new Error(`change_envelope_binding_carrier_invalid:${bindingId}`);
-    }
-    value.binding_carrier_paths[bindingId] = stable(
-      carriers.map((item) => assertEnvelopePath(item, `carrier:${bindingId}`)),
-    );
-  }
+  for (const required of HARD_FORBIDDEN_CHANGE_PATHS)
+    if (!normalized.forbidden_paths.includes(required))
+      throw new Error(`change_envelope_hard_forbidden_missing:${required}`);
   const forbiddenOverlap = [
-    ...value.allowed_write_paths,
-    ...value.allowed_supporting_paths,
+    ...normalized.allowed_write_paths,
+    ...normalized.allowed_supporting_paths,
   ].filter((candidate) =>
-    value.forbidden_paths.some((forbidden) =>
+    normalized.forbidden_paths.some((forbidden) =>
       patternsMayOverlap(candidate, forbidden),
     ),
   );
@@ -113,38 +105,52 @@ export function validateChangeEnvelopeV1(
     throw new Error(
       `change_envelope_forbidden_overlap:${stable(forbiddenOverlap).join(",")}`,
     );
-  return value;
+  const envelopeSha256 = sha256Hex(canonicalJson(normalized));
+  if (value.envelope_sha256 !== envelopeSha256)
+    throw new Error("change_envelope_hash_mismatch");
+  return { ...normalized, envelope_sha256: envelopeSha256 };
 }
 
 export function unionChangeEnvelopesV1(
   envelopes: ChangeEnvelopeV1[],
-  repairExtras: string[] = [],
+  explicitConflictPaths: string[] = [],
 ): ChangeEnvelopeV1 {
   if (envelopes.length === 0)
     throw new Error("repair_envelope_requires_affected_slices");
-  const carriers: Record<string, string[]> = {};
-  for (const envelope of envelopes.map((item) =>
+  const checked = envelopes.map((item) =>
     validateChangeEnvelopeV1(structuredClone(item)),
-  )) {
-    for (const [bindingId, paths] of Object.entries(
-      envelope.binding_carrier_paths,
-    )) {
-      carriers[bindingId] = stable([...(carriers[bindingId] ?? []), ...paths]);
-    }
-  }
-  return validateChangeEnvelopeV1({
-    schema_version: "slice-change-envelope-v1",
-    allowed_write_paths: stable(
-      envelopes.flatMap((item) => item.allowed_write_paths),
+  );
+  return createChangeEnvelopeV1({
+    allowed_write_paths: checked.flatMap((item) => item.allowed_write_paths),
+    allowed_supporting_paths: [
+      ...checked.flatMap((item) => item.allowed_supporting_paths),
+      ...explicitConflictPaths.map((item) =>
+        assertEnvelopePath(item, "repair_conflict_path"),
+      ),
+    ],
+    allowed_contract_keys: checked.flatMap(
+      (item) => item.allowed_contract_keys,
     ),
-    allowed_supporting_paths: stable([
-      ...envelopes.flatMap((item) => item.allowed_supporting_paths),
-      ...repairExtras.map((item) => assertEnvelopePath(item, "repair_extra")),
-    ]),
-    forbidden_paths: stable(envelopes.flatMap((item) => item.forbidden_paths)),
-    undeclared_change_policy: "reject",
-    binding_carrier_paths: carriers,
+    forbidden_paths: checked.flatMap((item) => item.forbidden_paths),
   });
+}
+
+export function undeclaredChangedPathsV1(
+  changedPaths: string[],
+  envelope: ChangeEnvelopeV1,
+): string[] {
+  const checked = validateChangeEnvelopeV1(structuredClone(envelope));
+  const normalized = stable(
+    changedPaths.map((item) => assertEnvelopePath(item, "changed_path")),
+  );
+  const permitted = [
+    ...checked.allowed_write_paths,
+    ...checked.allowed_supporting_paths,
+  ];
+  return normalized.filter(
+    (candidate) =>
+      !permitted.some((pattern) => pathMatchesEnvelope(candidate, pattern)),
+  );
 }
 
 export function assertChangedPathsWithinEnvelopeV1(
@@ -164,16 +170,11 @@ export function assertChangedPathsWithinEnvelopeV1(
     throw new Error(
       `slice_receipt_forbidden_campaign_state_change:${forbidden.join(",")}`,
     );
-  const permitted = [
-    ...checked.allowed_write_paths,
-    ...checked.allowed_supporting_paths,
-  ];
-  const unbound = normalized.filter(
-    (candidate) =>
-      !permitted.some((pattern) => pathMatchesEnvelope(candidate, pattern)),
-  );
-  if (unbound.length)
-    throw new Error(`slice_receipt_unbound_changed_path:${unbound.join(",")}`);
+  const undeclared = undeclaredChangedPathsV1(normalized, checked);
+  if (undeclared.length)
+    throw new Error(
+      `slice_receipt_unbound_changed_path:${undeclared.join(",")}`,
+    );
 }
 
 export function pathMatchesEnvelope(
@@ -185,6 +186,54 @@ export function pathMatchesEnvelope(
   if (!hasGlob(pattern))
     return candidate === pattern || candidate.startsWith(`${pattern}/`);
   return globRegExp(pattern).test(candidate);
+}
+
+function createChangeEnvelopeV1(input: {
+  allowed_write_paths: string[];
+  allowed_supporting_paths: string[];
+  allowed_contract_keys: string[];
+  forbidden_paths: string[];
+}): ChangeEnvelopeV1 {
+  const identity = {
+    schema_version: "slice-change-envelope-v1" as const,
+    allowed_write_paths: pathSet(
+      input.allowed_write_paths,
+      "allowed_write_paths",
+    ),
+    allowed_supporting_paths: pathSet(
+      input.allowed_supporting_paths,
+      "allowed_supporting_paths",
+    ),
+    allowed_contract_keys: contractKeySet(input.allowed_contract_keys),
+    forbidden_paths: pathSet(input.forbidden_paths, "forbidden_paths"),
+    undeclared_change_policy: "reject" as const,
+  };
+  return validateChangeEnvelopeV1({
+    ...identity,
+    envelope_sha256: sha256Hex(canonicalJson(identity)),
+  });
+}
+
+function pathSet(values: unknown, label: string): string[] {
+  if (!Array.isArray(values))
+    throw new Error(`change_envelope_${label}_invalid`);
+  return stable(values.map((item) => assertEnvelopePath(item, label)));
+}
+
+function contractKeySet(values: unknown): string[] {
+  if (!Array.isArray(values))
+    throw new Error("change_envelope_allowed_contract_keys_invalid");
+  return stable(
+    values.map((item) => {
+      if (
+        typeof item !== "string" ||
+        !/^(?:symbol|schema|route|runtime_capability):\S+$/u.test(item) ||
+        /[\r\n\0]/u.test(item)
+      )
+        throw new Error(`change_envelope_contract_key_invalid:${String(item)}`);
+      return item;
+    }),
+  );
 }
 
 function globRegExp(pattern: string): RegExp {
@@ -219,7 +268,7 @@ function hasGlob(value: string): boolean {
   return /[*?\[]/u.test(value);
 }
 
-function assertEnvelopePath(value: string, label: string): string {
+function assertEnvelopePath(value: unknown, label: string): string {
   if (typeof value !== "string")
     throw new Error(`change_envelope_path_invalid:${label}`);
   const normalized = value
@@ -233,15 +282,15 @@ function assertEnvelopePath(value: string, label: string): string {
     /^[A-Za-z]:/u.test(normalized) ||
     normalized.split("/").includes("..") ||
     normalized.includes("\0")
-  ) {
+  )
     throw new Error(`change_envelope_path_invalid:${label}:${value}`);
-  }
   return normalized;
 }
 
 function stable(values: string[]): string[] {
   return [...new Set(values)].sort(asciiCompare);
 }
+
 function asciiCompare(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0;
 }

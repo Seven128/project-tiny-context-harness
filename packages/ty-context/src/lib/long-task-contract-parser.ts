@@ -184,21 +184,12 @@ function parseProductRules(
 }
 
 function parsePlan(value: unknown): TechnicalPlanV3 {
-  const root = object(
-    value,
-    "$plan",
-    [...PLAN_KEYS, "supporting_paths", "forbidden_paths"],
-    ["supporting_paths", "forbidden_paths"],
-  );
+  const root = object(value, "$plan", PLAN_KEYS);
   literal(
     root.schema_version,
     "technical-plan-v3",
     "source_schema_unsupported:plan",
   );
-  if (root.supporting_paths !== undefined)
-    stringArray(root.supporting_paths, "supporting_paths");
-  if (root.forbidden_paths !== undefined)
-    stringArray(root.forbidden_paths, "forbidden_paths");
   array(root.plan_items, "plan_items").forEach((value, piIndex) => {
     const pi = object(value, `plan_items[${piIndex}]`, [
       "id",
@@ -273,8 +264,7 @@ function parseObligation(
       const binding = object(
         value,
         `implementation_bindings[${bindingIndex}]`,
-        ["id", "kind", "target", "carrier_paths", "verification"],
-        ["carrier_paths"],
+        ["id", "kind", "target", "verification"],
       );
       stable(binding.id, /^IB-[A-Z0-9][A-Z0-9-]*$/, "binding.id");
       oneOf(
@@ -290,17 +280,6 @@ function parseObligation(
         "binding.kind",
       );
       string(binding.target, "binding.target");
-      const fileBinding =
-        binding.kind === "path_glob" || binding.kind === "file";
-      if (binding.carrier_paths !== undefined)
-        stringArray(binding.carrier_paths, "binding.carrier_paths");
-      if (
-        !fileBinding &&
-        (!Array.isArray(binding.carrier_paths) ||
-          binding.carrier_paths.length === 0)
-      ) {
-        throw new Error(`binding_carrier_paths_required:${String(binding.id)}`);
-      }
       const verification = object(
         binding.verification,
         "binding.verification",

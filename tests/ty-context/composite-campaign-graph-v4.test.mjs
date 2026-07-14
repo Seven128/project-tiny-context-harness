@@ -88,9 +88,9 @@ function sourceCoverage() {
   return {
     schema_version: "composite-source-coverage-v1", source_plan_sha256: SHA,
     items: [
-      { source_item_id: "SRC-001", statement: "Provider", disposition: "slice", slice_refs: ["SFC-001"], global_constraint_refs: [], rationale: "Provider outcome", context_resolution: { status: "task_local", context_refs: [], task_local_reason: "Fixture-only provider outcome." } },
-      { source_item_id: "SRC-002", statement: "UI", disposition: "slice", slice_refs: ["SFC-002"], global_constraint_refs: [], rationale: "UI outcome", context_resolution: { status: "task_local", context_refs: [], task_local_reason: "Fixture-only UI outcome." } },
-      { source_item_id: "SRC-003", statement: "Shared semantic", disposition: "global_constraint", slice_refs: [], global_constraint_refs: ["GC-001"], rationale: "Cross-slice rule", context_resolution: { status: "task_local", context_refs: [], task_local_reason: "Fixture-only shared rule." } },
+      { source_item_id: "SRC-001", statement: "Provider", disposition: "slice", slice_refs: ["SFC-001"], global_constraint_refs: [], rationale: "Provider outcome" },
+      { source_item_id: "SRC-002", statement: "UI", disposition: "slice", slice_refs: ["SFC-002"], global_constraint_refs: [], rationale: "UI outcome" },
+      { source_item_id: "SRC-003", statement: "Shared semantic", disposition: "global_constraint", slice_refs: [], global_constraint_refs: ["GC-001"], rationale: "Cross-slice rule" },
     ],
     global_constraint_bindings: [
       binding("SFC-001", "REQ-001", "AC-001", "VS-001"),

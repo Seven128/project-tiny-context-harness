@@ -551,23 +551,19 @@ function assertCampaignPolicy(value: unknown): void {
 }
 function assertContextBaseline(value: unknown): void {
   const row = record(value, "context_baseline");
-  exact(row, [
-    "context_graph_sha256",
-    "context_baseline_sha256",
-    "context_files",
-  ]);
-  nullableHash(row.context_graph_sha256, "context_graph_sha256");
-  nullableHash(row.context_baseline_sha256, "context_baseline_sha256");
-  if (!Array.isArray(row.context_files) || row.context_files.length < 3)
-    invalid("context_files_invalid");
-  const paths = new Set<string>();
-  for (const item of row.context_files as unknown[]) {
-    const file = record(item, "context_file");
-    exact(file, ["path", "sha256"]);
-    text(file.path, "context_file.path");
-    nullableHash(file.sha256, "context_file.sha256");
-    if (paths.has(file.path as string)) invalid("context_file_duplicate");
-    paths.add(file.path as string);
+  exact(row, ["graph_sha256", "files", "baseline_sha256"]);
+  hash(row.graph_sha256, "graph_sha256");
+  hash(row.baseline_sha256, "baseline_sha256");
+  const files = record(row.files, "context_baseline.files");
+  if (Object.keys(files).length < 3) invalid("context_files_invalid");
+  for (const [file, digest] of Object.entries(files)) {
+    if (
+      !/^project_context\/(?!.*(?:^|\/)\.\.(?:\/|$))[^\\]+\.(?:md|toml)$/u.test(
+        file,
+      )
+    )
+      invalid(`context_file_path_invalid:${file}`);
+    hash(digest, `context_file_sha256:${file}`);
   }
 }
 function modelProfile(value: unknown, label: string): void {
@@ -598,6 +594,10 @@ function nullableHash(value: unknown, label: string): void {
     value !== null &&
     (typeof value !== "string" || !/^[a-f0-9]{64}$/u.test(value))
   )
+    invalid(`${label}_invalid`);
+}
+function hash(value: unknown, label: string): void {
+  if (typeof value !== "string" || !/^[a-f0-9]{64}$/u.test(value))
     invalid(`${label}_invalid`);
 }
 function stringList(value: unknown, label: string): void {

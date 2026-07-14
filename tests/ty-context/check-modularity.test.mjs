@@ -63,6 +63,26 @@ test("check-modularity can opt into failing on warnings", async () => {
   }
 });
 
+test("check-modularity expands nested untracked directories into source files", async () => {
+  const root = await createGitFixture();
+  try {
+    const nested = path.join(root, "src", "new-runtime", "store.ts");
+    await mkdir(path.dirname(nested), { recursive: true });
+    await writeFile(nested, lines(["one", "two", "three"]), "utf8");
+    const result = runCli(root, [
+      "check-modularity",
+      "--touched",
+      "--limit",
+      "2",
+    ]);
+    assert.equal(result.status, 0, output(result));
+    assert.match(result.stdout, /audited=1 warning=1/);
+    assert.match(result.stdout, /src\/new-runtime\/store\.ts/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("check-modularity honors config waivers and reports them distinctly", async () => {
   const root = await createGitFixture();
   try {
@@ -96,7 +116,7 @@ modularity:
     assert.equal(result.status, 0, output(result));
     assert.match(
       result.stdout,
-      /check-modularity audited=1 warning=0 limit=2 waived=1/,
+      /check-modularity audited=2 warning=0 limit=2 waived=1/,
     );
     assert.match(result.stdout, /waived: src\/new-large\.ts 3 lines/);
     assert.match(
@@ -490,6 +510,7 @@ async function createGitFixture() {
     lines(["one", "two"]),
     "utf8",
   );
+  await writeHarnessConfig(root, "");
   run("git", ["init"], root);
   run("git", ["config", "user.name", "Codex"], root);
   run("git", ["config", "user.email", "codex@example.local"], root);

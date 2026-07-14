@@ -25,6 +25,7 @@ for (const [name, mutate, diagnostic] of [
   ["duplicate_plan_item", (d) => { d.plan.plan_items.push(structuredClone(d.plan.plan_items[0])); }, "duplicate_plan_item"],
   ["plan_item_without_obligation", (d) => { d.plan.plan_items[0].obligations = []; }, "plan_item_without_obligation"],
   ["obligation_without_binding", (d) => { d.plan.plan_items[0].obligations[0].implementation_bindings = []; }, "obligation_without_binding"],
+  ["obligation_requires_file_carrier_binding", (d) => { d.plan.plan_items[0].obligations[0].implementation_bindings = d.plan.plan_items[0].obligations[0].implementation_bindings.filter((binding) => binding.kind !== "file" && binding.kind !== "path_glob"); }, "obligation_requires_file_carrier_binding"],
   ["empty_validates", (d) => { d.checklist.acceptance_criteria[0].validates = []; }, "empty_validates"],
   ["empty_does_not_validate", (d) => { d.checklist.acceptance_criteria[0].does_not_validate = []; }, "empty_does_not_validate"],
   ["unrelated_negative_assertion", (d) => { addSecondRequirementBranch(d); const n=d.checklist.verification_specs[0].negative_assertions[0]; n.source_boundary_ids=["PB-002"];n.source_non_completing_ids=["NCO-002"];n.source_forbidden_shortcut_ids=["FS-002"]; }, "unrelated_negative_assertion"],

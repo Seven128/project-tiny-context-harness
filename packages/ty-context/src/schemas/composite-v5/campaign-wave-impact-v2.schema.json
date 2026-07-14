@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-tiny-context-harness.invalid/schemas/composite-v5/campaign-wave-impact-v2.schema.json",
+  "title": "Campaign Wave Impact V2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "mode",
+    "affected_slice_ids",
+    "affected_spec_ids",
+    "reason",
+    "reason_evidence"
+  ],
+  "properties": {
+    "schema_version": { "const": "campaign-wave-impact-v2" },
+    "mode": { "enum": ["targeted", "full"] },
+    "affected_slice_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/sliceId" }
+    },
+    "affected_spec_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^SFC-[0-9]{3,}:.+$" }
+    },
+    "reason": { "type": "string", "minLength": 1 },
+    "reason_evidence": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "sliceId": { "type": "string", "pattern": "^SFC-[0-9]{3,}$" }
+  }
+}

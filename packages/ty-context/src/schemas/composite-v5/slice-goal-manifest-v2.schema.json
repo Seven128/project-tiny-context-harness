@@ -1,32 +1,37 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://project-tiny-context-harness.invalid/schemas/composite-v5/slice-goal-manifest-v2.schema.json",
-  "title": "Slice Goal Manifest V2",
+  "title": "Slice Goal Manifest V2 (audit only)",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "campaign_id", "slice_id", "wave_id", "worktree", "branch", "base_commit", "packet_revision", "packet_sha256", "contract_workdir", "integration_branch", "allowed_implementation_bindings", "forbidden_campaign_state_paths", "change_envelope", "launch_token", "thread_id", "authoring_model", "authoring_effort", "execution_model", "execution_effort", "routing_reason", "routing_policy_id", "routing_switched", "routing_policy_sha256", "routing_catalog_sha256", "routing_decision_sha256", "manifest_sha256"],
+  "required": ["schema_version", "campaign_id", "slice_id", "wave_id", "worktree", "branch", "base_commit", "packet_revision", "packet_sha256", "contract_workdir", "integration_branch", "allowed_implementation_bindings", "forbidden_campaign_state_paths", "launch_token", "thread_id", "authoring_model", "authoring_effort", "execution_model", "execution_effort", "routing_reason", "manifest_sha256"],
   "properties": {
     "schema_version": { "const": "slice-goal-manifest-v2" },
-    "campaign_id": { "$ref": "#/$defs/text" }, "slice_id": { "type": "string", "pattern": "^SFC-[0-9]{3,}$" }, "wave_id": { "type": "string", "pattern": "^WAVE-[0-9]{3,}$" }, "worktree": { "$ref": "#/$defs/text" }, "branch": { "$ref": "#/$defs/text" }, "base_commit": { "type": "string", "pattern": "^[a-f0-9]{40,64}$" }, "packet_revision": { "type": "integer", "minimum": 1 }, "packet_sha256": { "$ref": "#/$defs/sha256" }, "contract_workdir": { "$ref": "#/$defs/text" }, "integration_branch": { "$ref": "#/$defs/text" },
-    "allowed_implementation_bindings": { "$ref": "#/$defs/stringSet" }, "forbidden_campaign_state_paths": { "$ref": "#/$defs/stringSet" }, "change_envelope": { "$ref": "#/$defs/changeEnvelope" }, "launch_token": { "$ref": "#/$defs/text" }, "thread_id": { "$ref": "#/$defs/text" }, "authoring_model": { "$ref": "#/$defs/text" }, "authoring_effort": { "$ref": "#/$defs/text" }, "execution_model": { "$ref": "#/$defs/text" }, "execution_effort": { "$ref": "#/$defs/text" },
-    "routing_reason": { "enum": ["sol_xhigh_to_medium", "sol_max_to_medium", "catalog_upgrade_to_sol_medium", "below_threshold_passthrough", "unknown_profile_passthrough", "target_unavailable_passthrough"] }, "routing_policy_id": { "$ref": "#/$defs/text" }, "routing_switched": { "type": "boolean" }, "routing_policy_sha256": { "$ref": "#/$defs/sha256" }, "routing_catalog_sha256": { "$ref": "#/$defs/sha256" }, "routing_decision_sha256": { "$ref": "#/$defs/sha256" }, "manifest_sha256": { "$ref": "#/$defs/sha256" }
+    "campaign_id": { "$ref": "#/$defs/text" },
+    "slice_id": { "type": "string", "pattern": "^SFC-[0-9]{3,}$" },
+    "wave_id": { "type": "string", "pattern": "^WAVE-[0-9]{3,}$" },
+    "worktree": { "$ref": "#/$defs/text" },
+    "branch": { "$ref": "#/$defs/text" },
+    "base_commit": { "type": "string", "pattern": "^[a-f0-9]{40,64}$" },
+    "packet_revision": { "type": "integer", "minimum": 1 },
+    "packet_sha256": { "$ref": "#/$defs/sha256" },
+    "contract_workdir": { "$ref": "#/$defs/text" },
+    "integration_branch": { "$ref": "#/$defs/text" },
+    "allowed_implementation_bindings": { "$ref": "#/$defs/stringSet" },
+    "forbidden_campaign_state_paths": { "$ref": "#/$defs/stringSet" },
+    "launch_token": { "$ref": "#/$defs/text" },
+    "thread_id": { "$ref": "#/$defs/text" },
+    "authoring_model": { "$ref": "#/$defs/text" },
+    "authoring_effort": { "$ref": "#/$defs/text" },
+    "execution_model": { "$ref": "#/$defs/text" },
+    "execution_effort": { "$ref": "#/$defs/text" },
+    "routing_reason": { "$ref": "#/$defs/routingReason" },
+    "manifest_sha256": { "$ref": "#/$defs/sha256" }
   },
   "$defs": {
     "text": { "type": "string", "minLength": 1 },
     "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
     "stringSet": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
-    "changeEnvelope": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["schema_version", "allowed_write_paths", "allowed_supporting_paths", "forbidden_paths", "undeclared_change_policy", "binding_carrier_paths"],
-      "properties": {
-        "schema_version": { "const": "slice-change-envelope-v1" },
-        "allowed_write_paths": { "$ref": "#/$defs/stringSet" },
-        "allowed_supporting_paths": { "$ref": "#/$defs/stringSet" },
-        "forbidden_paths": { "$ref": "#/$defs/stringSet" },
-        "undeclared_change_policy": { "const": "reject" },
-        "binding_carrier_paths": { "type": "object", "propertyNames": { "pattern": "^IB-[A-Z0-9][A-Z0-9-]*$" }, "additionalProperties": { "$ref": "#/$defs/stringSet" } }
-      }
-    }
+    "routingReason": { "enum": ["sol_xhigh_to_medium", "sol_max_to_medium", "catalog_upgrade_to_sol_medium", "below_threshold_passthrough", "unknown_profile_passthrough", "target_unavailable_passthrough"] }
   }
 }

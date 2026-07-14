@@ -4,6 +4,8 @@ import { mkdtemp, readFile, stat, writeFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { runInit } from "../../packages/ty-context/dist/lib/init.js";
 import { runValidator } from "../../packages/ty-context/dist/lib/validators.js";
 
@@ -12,6 +14,7 @@ const repo = path.resolve(
   "../..",
 );
 const read = (relative) => readFile(path.join(repo, relative), "utf8");
+const execFileAsync = promisify(execFile);
 const missing = (file) =>
   stat(file).then(
     () => false,
@@ -36,6 +39,15 @@ test("default_workflow_does_not_create_plan_artifacts", async () => {
       assert.equal(await missing(path.join(root, file)), true);
     }
   });
+});
+
+test("cli_help_has_no_plan_validator_commands", async () => {
+  const { stdout } = await execFileAsync(process.execPath, [
+    path.join(repo, "packages/ty-context/dist/cli.js"),
+    "help",
+  ]);
+  assert.doesNotMatch(stdout, /validate-plan-contract/);
+  assert.doesNotMatch(stdout, /validate-plan-acceptance/);
 });
 
 test("existing_plan_md_is_ignored_as_authority", async () => {

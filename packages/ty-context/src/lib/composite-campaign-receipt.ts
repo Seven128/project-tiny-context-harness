@@ -16,6 +16,8 @@ import type { FinalResultV3 } from "./long-task-run-result.js";
 import { hashLongTaskWorkspace } from "./long-task-snapshot.js";
 import {
   assertChangedPathsWithinEnvelopeV1,
+  undeclaredChangedPathsV1,
+  validateChangeEnvelopeV1,
   type ChangeEnvelopeV1,
 } from "./composite-campaign-change-envelope.js";
 
@@ -39,6 +41,15 @@ export interface SliceExecutionReceiptV1 {
   receipt_sha256: string;
 }
 
+export interface SliceExecutionReceiptV2 extends Omit<
+  SliceExecutionReceiptV1,
+  "schema_version"
+> {
+  schema_version: "slice-execution-receipt-v2";
+  change_envelope_sha256: string;
+  undeclared_changed_paths: [];
+}
+
 export interface RecordSliceReceiptInput {
   campaignRoot: string;
   campaignId: string;
@@ -55,7 +66,7 @@ export interface RecordSliceReceiptInput {
 
 export async function recordSliceExecutionReceipt(
   input: RecordSliceReceiptInput,
-): Promise<{ receipt: SliceExecutionReceiptV1; receipt_path: string }> {
+): Promise<{ receipt: SliceExecutionReceiptV2; receipt_path: string }> {
   const worktree = path.resolve(input.worktree);
   const contractWorkdir = path.resolve(input.contractWorkdir);
   const contract = await readCompiledLongTaskContract(contractWorkdir);
@@ -132,7 +143,18 @@ export async function recordSliceExecutionReceipt(
     throw new Error(
       `slice_receipt_forbidden_campaign_state_change:${forbiddenChanges.join(",")}`,
     );
-  assertChangedPathsWithinEnvelopeV1(changedPaths, input.changeEnvelope);
+  const envelope = validateChangeEnvelopeV1(
+    structuredClone(input.changeEnvelope),
+  );
+  const undeclaredChangedPaths = undeclaredChangedPathsV1(
+    changedPaths,
+    envelope,
+  );
+  assertChangedPathsWithinEnvelopeV1(changedPaths, envelope);
+  if (undeclaredChangedPaths.length)
+    throw new Error(
+      `slice_receipt_unbound_changed_path:${undeclaredChangedPaths.join(",")}`,
+    );
   const receiptPath = path.join(
     path.resolve(input.campaignRoot),
     "slices",
@@ -151,13 +173,14 @@ export async function recordSliceExecutionReceipt(
       existing.base_commit !== base ||
       existing.head_commit !== head ||
       existing.contract_sha256 !== contract.contract_sha256 ||
-      existing.final_result_sha256 !== sha256Hex(finalText)
+      existing.final_result_sha256 !== sha256Hex(finalText) ||
+      existing.change_envelope_sha256 !== envelope.envelope_sha256
     )
       throw new Error("slice_receipt_existing_identity_conflict");
     return { receipt: existing, receipt_path: receiptPath };
   }
   const identity = {
-    schema_version: "slice-execution-receipt-v1" as const,
+    schema_version: "slice-execution-receipt-v2" as const,
     campaign_id: input.campaignId,
     slice_id: input.sliceId,
     wave_id: input.waveId,
@@ -167,6 +190,8 @@ export async function recordSliceExecutionReceipt(
     head_commit: head,
     commit_oids: commitOids,
     changed_paths: changedPaths,
+    change_envelope_sha256: envelope.envelope_sha256,
+    undeclared_changed_paths: [] as [],
     contract_sha256: contract.contract_sha256,
     final_result_sha256: sha256Hex(finalText),
     final_snapshot_sha256: finalResult.final_snapshot_sha256,
@@ -174,7 +199,7 @@ export async function recordSliceExecutionReceipt(
     worktree_clean: true as const,
     recorded_at: new Date().toISOString(),
   };
-  const receipt: SliceExecutionReceiptV1 = {
+  const receipt: SliceExecutionReceiptV2 = {
     ...identity,
     receipt_sha256: sha256Hex(canonicalJson(identity)),
   };
@@ -184,27 +209,43 @@ export async function recordSliceExecutionReceipt(
 
 export async function readSliceExecutionReceipt(
   file: string,
-): Promise<SliceExecutionReceiptV1> {
-  const receipt = JSON.parse(
-    await readFile(file, "utf8"),
-  ) as SliceExecutionReceiptV1;
+): Promise<SliceExecutionReceiptV1 | SliceExecutionReceiptV2> {
+  const receipt = JSON.parse(await readFile(file, "utf8")) as
+    SliceExecutionReceiptV1 | SliceExecutionReceiptV2;
   if (
-    receipt.schema_version !== "slice-execution-receipt-v1" ||
+    (receipt.schema_version !== "slice-execution-receipt-v1" &&
+      receipt.schema_version !== "slice-execution-receipt-v2") ||
     receipt.workflow_status !== "accepted" ||
     receipt.worktree_clean !== true
   )
     throw new Error("slice_receipt_invalid");
+  if (
+    receipt.schema_version === "slice-execution-receipt-v2" &&
+    (!/^[a-f0-9]{64}$/u.test(receipt.change_envelope_sha256) ||
+      !Array.isArray(receipt.undeclared_changed_paths) ||
+      receipt.undeclared_changed_paths.length !== 0)
+  )
+    throw new Error("slice_receipt_v2_change_envelope_invalid");
   const { receipt_sha256, ...identity } = receipt;
   if (receipt_sha256 !== sha256Hex(canonicalJson(identity)))
     throw new Error("slice_receipt_hash_mismatch");
   return receipt;
 }
 
+export async function readSliceExecutionReceiptV2(
+  file: string,
+): Promise<SliceExecutionReceiptV2> {
+  const receipt = await readSliceExecutionReceipt(file);
+  if (receipt.schema_version !== "slice-execution-receipt-v2")
+    throw new Error("slice_execution_receipt_v2_required");
+  return receipt;
+}
+
 async function optionalReceipt(
   file: string,
-): Promise<SliceExecutionReceiptV1 | null> {
+): Promise<SliceExecutionReceiptV2 | null> {
   try {
-    return await readSliceExecutionReceipt(file);
+    return await readSliceExecutionReceiptV2(file);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
     throw error;
@@ -213,7 +254,7 @@ async function optionalReceipt(
 
 export async function assertSliceReceiptCurrent(
   worktree: string,
-  receipt: SliceExecutionReceiptV1,
+  receipt: SliceExecutionReceiptV1 | SliceExecutionReceiptV2,
   contractWorkdir?: string,
 ): Promise<void> {
   const root = path.resolve(worktree);

@@ -24,6 +24,34 @@ export interface WaveImpactDecisionV1 {
   evidence: string[];
 }
 
+export interface WaveVerificationSpecProfileV2 {
+  slice_id: string;
+  spec_id: string;
+  binding_paths: string[];
+  verification_paths: string[];
+  contract_keys: string[];
+  context_refs: string[];
+}
+
+export interface WaveImpactInputV2 {
+  wave_slice_ids: string[];
+  candidate_slice_ids: string[];
+  changed_paths: string[];
+  profiles: Record<string, ConflictProfileV4>;
+  envelopes: Record<string, ChangeEnvelopeV1>;
+  spec_profiles: Record<string, WaveVerificationSpecProfileV2[]>;
+  global_constraint_spec_ids: string[];
+}
+
+export interface WaveImpactDecisionV2 {
+  schema_version: "campaign-wave-impact-v2";
+  mode: "targeted" | "full";
+  affected_slice_ids: string[];
+  affected_spec_ids: string[];
+  reason: string;
+  reason_evidence: string[];
+}
+
 export function decideWaveImpactV1(
   input: WaveImpactInputV1,
 ): WaveImpactDecisionV1 {
@@ -114,6 +142,132 @@ export function decideWaveImpactV1(
   };
 }
 
+export function decideWaveImpactV2(
+  input: WaveImpactInputV2,
+): WaveImpactDecisionV2 {
+  const allSlices = stable([
+    ...input.wave_slice_ids,
+    ...input.candidate_slice_ids,
+  ]);
+  const allSpecs = allSpecIds(input, allSlices);
+  if (input.changed_paths.length === 0)
+    return fullV2(allSlices, allSpecs, "unknown_empty_merge_diff", []);
+  const incomplete = allSlices.filter(
+    (sliceId) =>
+      !input.profiles[sliceId] ||
+      !input.envelopes[sliceId] ||
+      !input.profiles[sliceId].positive_evidence_complete,
+  );
+  if (incomplete.length)
+    return fullV2(
+      allSlices,
+      allSpecs,
+      "unknown_incomplete_impact_evidence",
+      incomplete,
+    );
+
+  const wavePatterns = input.wave_slice_ids.flatMap((sliceId) => {
+    const envelope = input.envelopes[sliceId];
+    return [
+      ...envelope.allowed_write_paths,
+      ...envelope.allowed_supporting_paths,
+    ];
+  });
+  const unknownPaths = input.changed_paths.filter(
+    (changed) =>
+      !wavePatterns.some((pattern) => pathMatchesEnvelope(changed, pattern)),
+  );
+  if (unknownPaths.length)
+    return fullV2(
+      allSlices,
+      allSpecs,
+      "unknown_changed_path",
+      stable(unknownPaths),
+    );
+
+  const waveSpecProfiles = input.wave_slice_ids.flatMap(
+    (sliceId) => input.spec_profiles[sliceId],
+  );
+  const pathsWithoutSpecEvidence = input.changed_paths.filter(
+    (changed) =>
+      !waveSpecProfiles.some((spec) =>
+        [...spec.binding_paths, ...spec.verification_paths].some((pattern) =>
+          pathPatternsMayOverlapV4(changed, pattern),
+        ),
+      ),
+  );
+  if (pathsWithoutSpecEvidence.length)
+    return fullV2(
+      allSlices,
+      allSpecs,
+      "unknown_spec_impact",
+      stable(pathsWithoutSpecEvidence),
+    );
+
+  const waveContractKeys = new Set(
+    input.wave_slice_ids.flatMap(
+      (sliceId) => input.profiles[sliceId].contract_keys,
+    ),
+  );
+  const waveContextRefs = new Set(
+    input.wave_slice_ids.flatMap(
+      (sliceId) => input.profiles[sliceId].context_refs,
+    ),
+  );
+  const globalSpecs = new Set(input.global_constraint_spec_ids);
+  for (const specId of globalSpecs)
+    if (!allSpecs.includes(specId))
+      throw new Error(`wave_impact_global_spec_unknown:${specId}`);
+
+  const affectedSpecs = new Set<string>();
+  const evidence: string[] = [];
+  for (const sliceId of allSlices) {
+    for (const spec of input.spec_profiles[sliceId]) {
+      const ref = waveSpecId(spec.slice_id, spec.spec_id);
+      const pathHits = input.changed_paths.filter((changed) =>
+        [...spec.binding_paths, ...spec.verification_paths].some((pattern) =>
+          pathPatternsMayOverlapV4(changed, pattern),
+        ),
+      );
+      const contractHits = spec.contract_keys.filter((key) =>
+        waveContractKeys.has(key),
+      );
+      const contextHits = spec.context_refs.filter(
+        (refPath) =>
+          waveContextRefs.has(refPath) ||
+          input.changed_paths.some((changed) =>
+            pathPatternsMayOverlapV4(changed, refPath),
+          ),
+      );
+      if (
+        pathHits.length ||
+        contractHits.length ||
+        contextHits.length ||
+        globalSpecs.has(ref)
+      ) {
+        affectedSpecs.add(ref);
+        evidence.push(
+          ...pathHits.map((value) => `${ref}:path:${value}`),
+          ...contractHits.map((value) => `${ref}:contract:${value}`),
+          ...contextHits.map((value) => `${ref}:context:${value}`),
+        );
+        if (globalSpecs.has(ref)) evidence.push(`${ref}:global_constraint`);
+      }
+    }
+  }
+  if (!affectedSpecs.size)
+    return fullV2(allSlices, allSpecs, "unknown_no_affected_spec", []);
+  const affectedSpecIds = stable([...affectedSpecs]);
+  return {
+    schema_version: "campaign-wave-impact-v2",
+    mode: "targeted",
+    affected_slice_ids: slicesForSpecs(affectedSpecIds),
+    affected_spec_ids: affectedSpecIds,
+    reason: "actual_merge_diff_and_frozen_spec_identity",
+    reason_evidence: stable(evidence),
+  };
+}
+
 function full(
   sliceIds: string[],
   reason: string,
@@ -126,6 +280,55 @@ function full(
     reason,
     evidence: stable(evidence),
   };
+}
+
+function fullV2(
+  sliceIds: string[],
+  specIds: string[],
+  reason: string,
+  evidence: string[],
+): WaveImpactDecisionV2 {
+  return {
+    schema_version: "campaign-wave-impact-v2",
+    mode: "full",
+    affected_slice_ids: stable(sliceIds),
+    affected_spec_ids: stable(specIds),
+    reason,
+    reason_evidence: stable(evidence),
+  };
+}
+
+function allSpecIds(input: WaveImpactInputV2, sliceIds: string[]): string[] {
+  return stable(
+    sliceIds.flatMap((sliceId) => {
+      const specs = input.spec_profiles[sliceId];
+      if (!specs?.length)
+        throw new Error(`wave_impact_spec_profiles_missing:${sliceId}`);
+      return specs.map((spec) => {
+        if (spec.slice_id !== sliceId)
+          throw new Error(`wave_impact_spec_slice_mismatch:${sliceId}`);
+        return waveSpecId(sliceId, spec.spec_id);
+      });
+    }),
+  );
+}
+
+export function waveSpecId(sliceId: string, specId: string): string {
+  return `${sliceId}:${specId}`;
+}
+
+export function splitWaveSpecId(value: string): {
+  slice_id: string;
+  spec_id: string;
+} {
+  const split = value.indexOf(":");
+  if (split <= 0 || split === value.length - 1)
+    throw new Error(`wave_spec_id_invalid:${value}`);
+  return { slice_id: value.slice(0, split), spec_id: value.slice(split + 1) };
+}
+
+function slicesForSpecs(specIds: string[]): string[] {
+  return stable(specIds.map((value) => splitWaveSpecId(value).slice_id));
 }
 function stable(values: string[]): string[] {
   return [...new Set(values)].sort(ascii);

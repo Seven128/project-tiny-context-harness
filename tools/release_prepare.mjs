@@ -101,9 +101,22 @@ async function main() {
   if (args.fast) {
     await timed(timings, "release focused tests", () => run("node", ["--test", ...releaseFocusedTests]));
   } else {
-    await timed(timings, "workspace tests", () => run("npm", ["run", "test:built", "--workspace", workspaceName]));
+    await timed(timings, "complete package tests", () =>
+      run("npm", ["run", "test:built", "--workspace", workspaceName])
+    );
+    await timed(timings, "complete Composite tests", () =>
+      run("npm", ["run", "test:composite-workflow:built", "--workspace", workspaceName])
+    );
   }
-  await timed(timings, "immutable release tarball", () => prepareImmutableTarball({root:args.root,version:targetVersion,packageName,workspaceName,run}));
+  await timed(timings, "immutable release tarball", () =>
+    prepareImmutableTarball({
+      root: args.root,
+      version: targetVersion,
+      packageName,
+      workspaceName,
+      run
+    })
+  );
   await timed(timings, "diff check", () => run("git", ["diff", "--check"]));
 
   console.log("");

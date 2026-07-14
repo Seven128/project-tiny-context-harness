@@ -10,7 +10,7 @@ const root = path.resolve(
 );
 const read = (file) => readFile(path.join(root, file), "utf8");
 
-test("ordinary long-task remains preparation-only and separate from strict Composite", async () => {
+test("normal_long_task_default_outputs_source_and_checklist_only", async () => {
   const skills = await Promise.all(
     [
       ".codex/ty-context-managed/skills/normal-long-task/SKILL.md",
@@ -32,6 +32,15 @@ test("ordinary long-task remains preparation-only and separate from strict Compo
       /task-state\.json|validate-superpowers-state|superpowers:/i,
     );
   }
+});
+
+test("normal_long_task_has_no_matrix_or_final_verdict", async () => {
+  const skill = await read(
+    ".codex/ty-context-managed/skills/normal-long-task/SKILL.md",
+  );
+  assert.doesNotMatch(skill, /write.*Plan Conformance Matrix/is);
+  assert.doesNotMatch(skill, /write.*Final Acceptance Verdict/is);
+  assert.doesNotMatch(skill, /workflow-contract plan\.md/i);
 });
 
 test("public design surfaces keep Contract V3 as strict Slice completion authority", async () => {

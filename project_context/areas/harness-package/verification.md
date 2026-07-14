@@ -28,20 +28,23 @@ read_policy: default
   - Focused Contract V3 black box using temporary real projects and built CLI/Hook.
   - Expected signal: compile/free implementation/optional targeted repair/full final-gate/Stop freshness semantics hold; targeted verify never emits acceptance and full final gate cannot omit an in-scope AC.
 - `node --test tests/ty-context/composite-campaign-v5-app-server-black-box.test.mjs`
-  - Focused real-Git/Fake-App-Server Campaign path for PR CI.
+  - Focused real-Git/Fake-App-Server Campaign path for explicit maintainer diagnosis and part of the complete Composite CI suite.
   - Expected signal: Source Context resolution, maximal Scope Fit, Packet/preflight-before-Goal, versioned routing, settled sibling reconciliation, Change Envelope, Slice/Wave/shared-snapshot Campaign gates and owned-worktree target handling complete without real Codex services.
-- `npm run test:composite-workflow:built --workspace project-tiny-context-harness`
-  - Complete Composite mechanism profile for source-repository main/full local validation.
+- `npm run test:composite-workflow --workspace project-tiny-context-harness`
+  - Complete Composite mechanism profile for PR/main/publish CI and explicit local validation.
   - Expected signal: Source Coverage/Context baseline, referenced/full snapshot, transaction recovery/quarantine, non-invasive Git, App Server lifecycle, impact analysis and final Spec deduplication cases exit without failures.
 - `npm test --workspace project-tiny-context-harness`
   - Complete package suite for main/full local validation.
   - Budget: the full default package/Composite path stays within 15 minutes and does not call real Goals or require privileged/cross-platform infrastructure.
-- `npm run smoke:quickstart` and `npm run preview:pack`
+- `node tools/quickstart_smoke.mjs` and `npm run preview:pack`
   - Main/release-facing smoke for portable default installation and packaged contents.
   - Expected signal: non-Codex default init omits Codex Hooks/Composite assets; explicit enable installs them; pack preview contains profile assets and no drift.
 - `node tools/release_tarball_smoke.mjs --tarball <path>`
   - Publish gate against the exact packed artifact in an empty temporary repository.
   - Expected stages: install tarball, `ty-context init`, `doctor`, `validate-context`, explicit Composite enable and minimal Contract V3 black box.
+- `node tools/verify_prepared_release_artifact.mjs --version <version> --tarball <path>`
+  - Verifies Release Artifact V2 before smoke/publication.
+  - Expected identity: exact tarball SHA-256, current Node version, pinned npm version and current `package-lock.json` SHA-256 all match the preparation record.
 - `node packages/ty-context/dist/cli.js package sync-source` twice, then `node packages/ty-context/dist/cli.js package check-source`
   - Run after managed guidance, templates, profile metadata, default Skills, Hooks, workflows or public README sources change.
   - Expected signal: second sync is a no-op and check-source finds no source/package drift.
@@ -50,9 +53,10 @@ read_policy: default
 
 ## CI Ownership
 
-- Pull requests run build, typecheck, Context validation, package source drift, default Workflow tests, focused Contract V3 black box and Fake App Server Campaign black box.
-- Main runs the complete package and Composite suites, Quickstart Smoke and Pack Preview in addition to build/source/Context gates.
-- Publish builds and tests one immutable tarball, installs that exact tarball in an empty repository and runs init/doctor/Context/minimal Contract V3 smoke before publication.
+- Submitted branches, pull requests and main run typecheck, the complete default suite, complete Composite suite, source drift, `validate-harness` and Quickstart Smoke.
+- Main additionally runs Pack Preview.
+- Local default `npm test` excludes Composite self-tests; the complete profile also remains available through its explicit npm command.
+- Publish runs the complete default and Composite suites, packs once, records/verifies Release Artifact V2, installs that exact tarball in an empty repository and runs init/doctor/Context/minimal Contract V3 smoke before publishing the same path.
 - Consumer Harness CI runs only portable project gates. It never runs this package repository's full Campaign self-tests.
 - Real App Server one-SFC smoke remains manual development evidence and is not a CI/publication gate.
 

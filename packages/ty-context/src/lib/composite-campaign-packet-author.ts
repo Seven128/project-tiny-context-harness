@@ -24,10 +24,10 @@ import {
   transitionThreadPhaseV5,
 } from "./composite-campaign-thread-state.js";
 import {
-  applyCampaignPacketV4,
-  applyCampaignScopeV4,
-  preflightCampaignPacketV4,
-} from "./composite-campaign-v4.js";
+  applyCampaignPacketV5,
+  applyCampaignScopeV5,
+  preflightCampaignPacketV5,
+} from "./composite-runtime-v5/campaign-packet-store.js";
 import {
   loadCampaignV5,
   updateSliceThreadV5,
@@ -199,13 +199,13 @@ async function authorSlice(
       );
       try {
         await queue.run(async () => {
-          await applyCampaignPacketV4(
+          await applyCampaignPacketV5(
             input.projectRoot,
             input.campaignPath,
             sliceId,
             file.relative,
           );
-          await preflightCampaignPacketV4(
+          await preflightCampaignPacketV5(
             input.projectRoot,
             input.campaignPath,
             sliceId,
@@ -331,7 +331,7 @@ async function reviseScopeForCapacity(
       coverage_json: { type: "string", minLength: 2 },
     },
   };
-  const message = `The maximal Packet for ${sliceId} failed after the initial attempt and two repair turns with capacity evidence:\n${errors.map((item) => `- ${item}`).join("\n")}\nRead ${path.join(loaded.root, "scope-fit.json")} and ${path.join(loaded.root, "source-coverage.json")}. Return a revised full Scope Fit V4 and source coverage as JSON strings. Keep every existing SFC id and stable_key, narrow the affected SFC only as needed, append new never-renumbered SFC ids, preserve all Source Units, and use authoring_capacity_exceeded with factual evidence. Do not set a Goal or edit product code.`;
+  const message = `The maximal Packet for ${sliceId} failed after the initial attempt and two repair turns with capacity evidence:\n${errors.map((item) => `- ${item}`).join("\n")}\nRead ${path.join(loaded.root, "scope-fit.json")} and ${path.join(loaded.root, "source-coverage.json")}. Return a revised full Scope Fit V4 and Source Coverage V2 as JSON strings. Keep every existing SFC id and stable_key, narrow the affected SFC only as needed, append new never-renumbered SFC ids, preserve all Source Units and Context Resolution, and use authoring_capacity_exceeded with factual evidence. Do not set a Goal or edit product code.`;
   const turn = await input.client.startTurn({
     threadId: thread.id,
     input: message,
@@ -389,7 +389,7 @@ async function reviseScopeForCapacity(
   await writeFile(coverageFile, result.coverage_json, { flag: "wx" });
   try {
     await queue.run(() =>
-      applyCampaignScopeV4(
+      applyCampaignScopeV5(
         input.projectRoot,
         input.campaignPath,
         repositoryRelative(input.projectRoot, scopeFile),

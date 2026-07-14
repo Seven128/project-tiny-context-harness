@@ -304,6 +304,12 @@ function validateObligation(
     errors.push(`obligation_without_requirement:${obligation.id}`);
   if (obligation.implementation_bindings.length === 0)
     errors.push(`obligation_without_binding:${obligation.id}`);
+  else if (
+    !obligation.implementation_bindings.some(
+      (binding) => binding.kind === "file" || binding.kind === "path_glob",
+    )
+  )
+    errors.push(`obligation_requires_file_carrier_binding:${obligation.id}`);
   if (obligation.related_ac_ids.length === 0)
     errors.push(`obligation_without_ac:${obligation.id}`);
   if (obligation.counterfactual_control_ids.length === 0)

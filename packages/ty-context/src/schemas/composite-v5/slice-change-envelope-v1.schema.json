@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-tiny-context-harness.invalid/schemas/composite-v5/slice-change-envelope-v1.schema.json",
+  "title": "Slice Change Envelope V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "allowed_write_paths",
+    "allowed_supporting_paths",
+    "allowed_contract_keys",
+    "forbidden_paths",
+    "undeclared_change_policy",
+    "envelope_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": "slice-change-envelope-v1" },
+    "allowed_write_paths": { "$ref": "#/$defs/stringSet" },
+    "allowed_supporting_paths": { "$ref": "#/$defs/stringSet" },
+    "allowed_contract_keys": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^(symbol|schema|route|runtime_capability):\\S+$"
+      }
+    },
+    "forbidden_paths": {
+      "type": "array",
+      "minItems": 4,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "undeclared_change_policy": { "const": "reject" },
+    "envelope_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "stringSet": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

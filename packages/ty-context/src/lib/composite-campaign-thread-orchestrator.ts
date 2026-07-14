@@ -12,7 +12,7 @@ import {
   type CodexModelCatalog,
 } from "./codex-model-catalog.js";
 import { routeCodexModel, type ModelProfile } from "./codex-model-router.js";
-import { advanceCampaignV4 } from "./composite-campaign-orchestrator.js";
+import { advanceCampaignV5 } from "./composite-campaign-orchestrator.js";
 import { authorCampaignPacketsV5 } from "./composite-campaign-packet-author.js";
 import {
   launchCampaignWaveV5,
@@ -87,7 +87,7 @@ export async function runCampaignV5(
     );
     for (let step = 0; step < 10_000; step += 1) {
       try {
-        const action = await advanceCampaignV4(
+        const action = await advanceCampaignV5(
           options.projectRoot,
           options.campaignPath,
         );

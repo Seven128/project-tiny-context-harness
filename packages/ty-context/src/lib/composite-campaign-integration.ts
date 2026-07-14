@@ -10,7 +10,7 @@ import {
 } from "./composite-campaign-git-baseline.js";
 import {
   assertSliceReceiptCurrent,
-  type SliceExecutionReceiptV1,
+  type SliceExecutionReceiptV2,
 } from "./composite-campaign-receipt.js";
 import { readCampaignFinalResult } from "./composite-campaign-final-gate.js";
 import { atomic } from "./long-task-status.js";
@@ -20,7 +20,7 @@ import {
 } from "./composite-campaign-worktree.js";
 
 export interface WaveMergeSliceInput {
-  receipt: SliceExecutionReceiptV1;
+  receipt: SliceExecutionReceiptV2;
   worktree: string;
   contract_workdir: string;
 }
@@ -236,18 +236,24 @@ export async function finalizeCampaignTarget(options: {
     throw new Error("campaign_final_gate_not_ready");
   if ((await currentHead(integration)) !== finalResult.integration_head)
     throw new Error("campaign_integration_changed_after_final_gate");
-  if (
-    options.preservePrimaryWorktree !== undefined &&
-    options.preservePrimaryWorktree !== true
-  )
+  if (options.preservePrimaryWorktree !== true)
     throw new Error("campaign_policy_preserve_primary_worktree_required");
   if ((options.protectedBranchMode ?? "pull_request") !== "pull_request")
     throw new Error("campaign_policy_protected_branch_mode_invalid");
   try {
-    await fetchTargetUpstream(repository, options.targetBranch);
-    const upstream = await upstreamRef(repository, options.targetBranch);
+    const localTargetHead = await currentHead(repository, options.targetBranch);
+    const targetWorktree = await createTargetWorktree({
+      repositoryRoot: repository,
+      campaignId: options.campaignId,
+      baseCommit: localTargetHead,
+    });
+    await fetchTargetUpstream(targetWorktree.path, options.targetBranch);
+    const upstream = await upstreamRef(
+      targetWorktree.path,
+      options.targetBranch,
+    );
     const targetRef = upstream ?? options.targetBranch;
-    const targetHead = await currentHead(repository, targetRef);
+    const targetHead = await currentHead(targetWorktree.path, targetRef);
     const targetIsAncestor = await runGit(
       integration,
       ["merge-base", "--is-ancestor", targetHead, finalResult.integration_head],
@@ -262,11 +268,6 @@ export async function finalizeCampaignTarget(options: {
         reason: "target_moved",
       };
     }
-    const targetWorktree = await createTargetWorktree({
-      repositoryRoot: repository,
-      campaignId: options.campaignId,
-      baseCommit: targetHead,
-    });
     await runGit(
       targetWorktree.path,
       ["merge", "--ff-only", options.integrationBranch],
@@ -275,7 +276,7 @@ export async function finalizeCampaignTarget(options: {
     const targetCommit = await currentHead(targetWorktree.path);
     if (targetCommit !== finalResult.integration_head)
       throw new Error("campaign_target_fast_forward_identity_mismatch");
-    if (options.autoPush !== true)
+    if (options.autoPush === false)
       return {
         status: "external_approval_required",
         reason: "auto_push_disabled_explicit_policy_required",
@@ -283,14 +284,14 @@ export async function finalizeCampaignTarget(options: {
       };
     const remote = (
       await runGit(
-        repository,
+        targetWorktree.path,
         ["config", "--get", `branch.${options.targetBranch}.remote`],
         { throwOnError: false },
       )
     ).stdout.trim();
     if (upstream && remote && remote !== ".") {
       const pullRequest = await openAutomaticPullRequest(
-        repository,
+        targetWorktree.path,
         remote,
         options.targetBranch,
         options.integrationBranch,

@@ -1,6 +1,10 @@
 import { cp, mkdir, readFile, rm } from "node:fs/promises";
 import path from "node:path";
-import { canonicalJson, sha256Hex } from "./composite-campaign-codec.js";
+import {
+  canonicalJson,
+  parseStrictJson,
+  sha256Hex,
+} from "./composite-campaign-codec.js";
 import {
   currentHead,
   gitStatus,
@@ -16,16 +20,29 @@ import {
 } from "./long-task-contract-compiler.js";
 import { runLongTaskFinalGate } from "./long-task-final-gate.js";
 import { assertLongTaskCompletionGate } from "./long-task-hook-preflight.js";
-import type { FinalResultV3 } from "./long-task-run-result.js";
+import type {
+  FinalResultV3,
+  VerificationRunResultV2,
+} from "./long-task-run-result.js";
 import { LONG_TASK_SOURCE_FILES } from "./long-task-contract-schema.js";
 import { atomic } from "./long-task-status.js";
 import { createLongTaskSnapshot } from "./long-task-snapshot.js";
 import type { CompiledContractV3 } from "./long-task-contract-schema.js";
-import type { VerificationSpecResultCache } from "./long-task-verifier.js";
+import {
+  verifyLongTask,
+  type VerificationSpecResultCache,
+} from "./long-task-verifier.js";
+import { readSliceExecutionReceiptV2 } from "./composite-campaign-receipt.js";
+import { validateChangeEnvelopeV1 } from "./composite-campaign-change-envelope.js";
+import {
+  splitWaveSpecId,
+  type WaveImpactDecisionV2,
+} from "./composite-campaign-wave-impact.js";
 
 export interface CampaignFinalSliceInput {
   slice_id: string;
   packet_revision_path: string;
+  receipt_path: string;
 }
 
 export interface CampaignGlobalConstraintBindingV1 {
@@ -79,6 +96,31 @@ export interface WaveIntegrationResultV1 {
   integration_tree: string;
   final_snapshot_sha256: string | null;
   slice_results: CampaignFinalSliceResultV1[];
+  completed_at: string;
+  result_sha256: string;
+}
+
+export interface WaveIntegrationSliceResultV2 {
+  slice_id: string;
+  contract_sha256: string;
+  run_id: string;
+  final_snapshot_sha256: string;
+  verification_scope: "impact_repair";
+  spec_results: Record<string, "passed" | "failed" | "blocked">;
+  finding_categories: string[];
+}
+
+export interface WaveIntegrationResultV2 {
+  schema_version: "wave-integration-result-v2";
+  campaign_id: string;
+  wave_id: string;
+  workflow_status: "needs_work" | "integration_verified";
+  integration_head: string;
+  integration_tree: string;
+  final_snapshot_sha256: string;
+  impact_analysis_sha256: string;
+  affected_spec_ids: string[];
+  slice_results: WaveIntegrationSliceResultV2[];
   completed_at: string;
   result_sha256: string;
 }
@@ -146,7 +188,8 @@ export async function runWaveIntegrationGate(options: {
   waveId: string;
   integrationWorktree: string;
   slices: CampaignFinalSliceInput[];
-}): Promise<WaveIntegrationResultV1> {
+  impact: WaveImpactDecisionV2;
+}): Promise<WaveIntegrationResultV2> {
   const integration = path.resolve(options.integrationWorktree);
   if (!(await gitStatus(integration)).clean)
     throw new Error("wave_integration_gate_requires_clean_worktree");
@@ -154,14 +197,25 @@ export async function runWaveIntegrationGate(options: {
   const integrationTree = (
     await runGit(integration, ["rev-parse", `${integrationHead}^{tree}`])
   ).stdout.trim();
-  const set = await runSliceSet(
+  if (options.impact.schema_version !== "campaign-wave-impact-v2")
+    throw new Error("wave_integration_gate_requires_impact_v2");
+  const actualSlices = options.slices
+    .map((slice) => slice.slice_id)
+    .sort(asciiCompare);
+  const impactSlices = [...options.impact.affected_slice_ids].sort(
+    asciiCompare,
+  );
+  if (actualSlices.join("\n") !== impactSlices.join("\n"))
+    throw new Error("wave_integration_gate_slice_impact_mismatch");
+  const set = await runWaveSliceSet(
     integration,
     options.campaignId,
     `wave-${options.waveId}`,
     options.slices,
+    options.impact.affected_spec_ids,
   );
   const identity = {
-    schema_version: "wave-integration-result-v1" as const,
+    schema_version: "wave-integration-result-v2" as const,
     campaign_id: options.campaignId,
     wave_id: options.waveId,
     workflow_status: set.accepted
@@ -170,10 +224,12 @@ export async function runWaveIntegrationGate(options: {
     integration_head: integrationHead,
     integration_tree: integrationTree,
     final_snapshot_sha256: set.commonSnapshot,
+    impact_analysis_sha256: sha256Hex(canonicalJson(options.impact)),
+    affected_spec_ids: [...options.impact.affected_spec_ids].sort(asciiCompare),
     slice_results: set.sliceResults,
     completed_at: new Date().toISOString(),
   };
-  const result: WaveIntegrationResultV1 = {
+  const result: WaveIntegrationResultV2 = {
     ...identity,
     result_sha256: sha256Hex(canonicalJson(identity)),
   };
@@ -227,6 +283,125 @@ export async function readCampaignFinalResult(
   return value;
 }
 
+interface PreparedSliceV1 {
+  slice: CampaignFinalSliceInput;
+  workdir: string;
+  contract: CompiledContractV3;
+}
+
+async function runWaveSliceSet(
+  integration: string,
+  campaignId: string,
+  phase: string,
+  slices: CampaignFinalSliceInput[],
+  affectedSpecIds: string[],
+): Promise<{
+  accepted: boolean;
+  commonSnapshot: string;
+  sliceResults: WaveIntegrationSliceResultV2[];
+}> {
+  await assertCampaignFinalScopeV1(slices);
+  const gate = await assertLongTaskCompletionGate(integration);
+  await clearCampaignLongTaskBinding(integration, campaignId);
+  const prepared = await prepareSliceSet(
+    integration,
+    campaignId,
+    phase,
+    slices,
+  );
+  const selectedBySlice = new Map<string, string[]>();
+  if (new Set(affectedSpecIds).size !== affectedSpecIds.length)
+    throw new Error("wave_integration_gate_duplicate_spec_identity");
+  for (const value of affectedSpecIds) {
+    const selected = splitWaveSpecId(value);
+    if (!prepared.some((item) => item.slice.slice_id === selected.slice_id))
+      throw new Error(
+        `wave_integration_gate_unknown_slice:${selected.slice_id}`,
+      );
+    const current = selectedBySlice.get(selected.slice_id) ?? [];
+    current.push(selected.spec_id);
+    selectedBySlice.set(selected.slice_id, current);
+  }
+  for (const item of prepared) {
+    const selected = selectedBySlice.get(item.slice.slice_id) ?? [];
+    if (!selected.length)
+      throw new Error(
+        `wave_integration_gate_slice_without_spec:${item.slice.slice_id}`,
+      );
+    const known = new Set(
+      item.contract.verification_specs.map((spec) => spec.id),
+    );
+    for (const specId of selected)
+      if (!known.has(specId))
+        throw new Error(
+          `wave_integration_gate_unknown_spec:${item.slice.slice_id}:${specId}`,
+        );
+  }
+  const snapshot = await createLongTaskSnapshot(
+    integration,
+    prepared[0].contract,
+    `${campaignId}-${phase}`,
+  );
+  const specResultCache: VerificationSpecResultCache = new Map();
+  const sliceResults: WaveIntegrationSliceResultV2[] = [];
+  let accepted = true;
+  try {
+    for (const item of prepared) {
+      await activateLongTask(item.contract, gate.bundle_sha256, {
+        campaign_id: campaignId,
+        slice_id: item.slice.slice_id,
+      });
+      let run: VerificationRunResultV2;
+      try {
+        run = await verifyLongTask(
+          item.workdir,
+          selectedBySlice.get(item.slice.slice_id),
+          {
+            contract: item.contract,
+            snapshot,
+            run_id: `WAVE-${phase}-${item.slice.slice_id}-${Date.now()}`,
+            repairScope: "impact_repair",
+            specResultCache,
+          },
+        );
+      } finally {
+        await clearCampaignLongTaskBinding(integration, campaignId);
+      }
+      if (
+        run.verification_scope !== "impact_repair" ||
+        run.acceptance_authorized ||
+        run.snapshot.snapshot_sha256 !== snapshot.manifest.snapshot_sha256
+      )
+        throw new Error("wave_integration_gate_verification_identity_invalid");
+      if (
+        run.findings.length ||
+        run.spec_results.some((result) => result.status !== "passed")
+      )
+        accepted = false;
+      sliceResults.push({
+        slice_id: item.slice.slice_id,
+        contract_sha256: item.contract.contract_sha256,
+        run_id: run.run_id,
+        final_snapshot_sha256: run.snapshot.snapshot_sha256,
+        verification_scope: "impact_repair",
+        spec_results: Object.fromEntries(
+          run.spec_results.map((result) => [result.spec_id, result.status]),
+        ),
+        finding_categories: [
+          ...new Set(run.findings.map((item) => item.category)),
+        ].sort(asciiCompare),
+      });
+    }
+    return {
+      accepted,
+      commonSnapshot: snapshot.manifest.snapshot_sha256,
+      sliceResults,
+    };
+  } finally {
+    await snapshot.dispose();
+  }
+}
+
 async function runSliceSet(
   integration: string,
   campaignId: string,
@@ -238,41 +413,17 @@ async function runSliceSet(
   sliceResults: CampaignFinalSliceResultV1[];
   fullResults: Map<string, FinalResultV3>;
 }> {
+  await assertCampaignFinalScopeV1(slices);
   const gate = await assertLongTaskCompletionGate(integration);
   await clearCampaignLongTaskBinding(integration, campaignId);
   const sliceResults: CampaignFinalSliceResultV1[] = [];
   const fullResults = new Map<string, FinalResultV3>();
-  const prepared: Array<{
-    slice: CampaignFinalSliceInput;
-    workdir: string;
-    contract: CompiledContractV3;
-  }> = [];
-  for (const slice of [...slices].sort((left, right) =>
-    asciiCompare(left.slice_id, right.slice_id),
-  )) {
-    const workdir = path.join(
-      integration,
-      "tmp",
-      "ty-context",
-      "plan-acceptance",
-      campaignId,
-      phase,
-      slice.slice_id,
-    );
-    await rm(workdir, { recursive: true, force: true });
-    await mkdir(workdir, { recursive: true });
-    for (const file of Object.values(LONG_TASK_SOURCE_FILES))
-      await cp(
-        path.join(path.resolve(slice.packet_revision_path), file),
-        path.join(workdir, file),
-      );
-    const contract = await compileLongTaskContract(workdir, integration, {
-      write: false,
-    });
-    await writeCompiledLongTaskContract(workdir, contract);
-    prepared.push({ slice, workdir, contract });
-  }
-  if (!prepared.length) throw new Error("campaign_slice_set_empty");
+  const prepared = await prepareSliceSet(
+    integration,
+    campaignId,
+    phase,
+    slices,
+  );
   const snapshot = await createLongTaskSnapshot(
     integration,
     prepared[0].contract,
@@ -325,6 +476,75 @@ async function runSliceSet(
     };
   } finally {
     await snapshot.dispose();
+  }
+}
+
+async function prepareSliceSet(
+  integration: string,
+  campaignId: string,
+  phase: string,
+  slices: CampaignFinalSliceInput[],
+): Promise<PreparedSliceV1[]> {
+  const prepared: PreparedSliceV1[] = [];
+  for (const slice of [...slices].sort((left, right) =>
+    asciiCompare(left.slice_id, right.slice_id),
+  )) {
+    const workdir = path.join(
+      integration,
+      "tmp",
+      "ty-context",
+      "plan-acceptance",
+      campaignId,
+      phase,
+      slice.slice_id,
+    );
+    await rm(workdir, { recursive: true, force: true });
+    await mkdir(workdir, { recursive: true });
+    for (const file of Object.values(LONG_TASK_SOURCE_FILES))
+      await cp(
+        path.join(path.resolve(slice.packet_revision_path), file),
+        path.join(workdir, file),
+      );
+    const contract = await compileLongTaskContract(workdir, integration, {
+      write: false,
+    });
+    await writeCompiledLongTaskContract(workdir, contract);
+    prepared.push({ slice, workdir, contract });
+  }
+  if (!prepared.length) throw new Error("campaign_slice_set_empty");
+  return prepared;
+}
+
+export async function assertCampaignFinalScopeV1(
+  slices: CampaignFinalSliceInput[],
+): Promise<void> {
+  try {
+    for (const slice of slices) {
+      const receipt = await readSliceExecutionReceiptV2(
+        path.resolve(slice.receipt_path),
+      );
+      if (receipt.slice_id !== slice.slice_id)
+        throw new Error(`receipt_slice_mismatch:${slice.slice_id}`);
+      const envelope = validateChangeEnvelopeV1(
+        parseStrictJson(
+          await readFile(
+            path.join(
+              path.resolve(slice.packet_revision_path),
+              "change-envelope.json",
+            ),
+            "utf8",
+          ),
+        ) as ReturnType<typeof validateChangeEnvelopeV1>,
+      );
+      if (receipt.change_envelope_sha256 !== envelope.envelope_sha256)
+        throw new Error(`receipt_envelope_mismatch:${slice.slice_id}`);
+      if (receipt.undeclared_changed_paths.length)
+        throw new Error(`undeclared_changed_paths:${slice.slice_id}`);
+    }
+  } catch (error) {
+    throw new Error(
+      `campaign_final_rejects_scope_leakage:${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 

@@ -4,10 +4,10 @@ import { mkdtemp } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import {
-  assertPacketContextResolutionV1,
+  assertPacketContextResolutionV2,
   assertSourceUnitPacketBindingsV4,
 } from "../../packages/ty-context/dist/lib/composite-campaign-source-units.js";
-import { assertSourceCoverageV1 } from "../../packages/ty-context/dist/lib/composite-campaign-source-coverage.js";
+import { assertSourceCoverageV2 } from "../../packages/ty-context/dist/lib/composite-campaign-source-coverage.js";
 import { parseLongTaskSources } from "../../packages/ty-context/dist/lib/long-task-contract-parser.js";
 import { writeHappyV3Contract } from "./long-task-v3-fixtures.mjs";
 
@@ -43,8 +43,50 @@ test("campaign_source_coverage_requires_context_resolution", () => {
   const coverage = coverageWithContext();
   delete coverage.items[0].context_resolution;
   assert.throws(
-    () => assertSourceCoverageV1(coverage),
+    () => assertSourceCoverageV2(coverage),
     /missing_field:context_resolution/,
+  );
+});
+
+test("campaign_v5_requires_source_coverage_v2", () => {
+  const coverage = coverageWithContext();
+  coverage.schema_version = "composite-source-coverage-v1";
+  assert.throws(() => assertSourceCoverageV2(coverage), /schema_version/);
+});
+
+test("source_context_resolution_requires_valid_refs", () => {
+  const coverage = coverageWithContext();
+  coverage.items[0].context_resolution.context_refs = ["../outside.md"];
+  assert.throws(() => assertSourceCoverageV2(coverage), /context_ref_invalid/);
+});
+
+test("task_local_source_requires_task_local_reason", () => {
+  const coverage = coverageWithContext();
+  coverage.items[0].context_resolution = {
+    status: "task_local",
+    context_refs: [],
+    task_local_reason: null,
+  };
+  assert.throws(() => assertSourceCoverageV2(coverage), /task_local_reason/);
+});
+
+test("terminal_source_items_allow_only_null_context_resolution", () => {
+  const coverage = coverageWithContext();
+  coverage.items[0] = {
+    ...coverage.items[0],
+    disposition: "out_of_scope",
+    slice_refs: [],
+    context_resolution: null,
+  };
+  assert.doesNotThrow(() => assertSourceCoverageV2(coverage));
+  coverage.items[0].context_resolution = {
+    status: "task_local",
+    context_refs: [],
+    task_local_reason: "terminal",
+  };
+  assert.throws(
+    () => assertSourceCoverageV2(coverage),
+    /terminal_context_resolution_must_be_null/,
   );
 });
 
@@ -54,14 +96,14 @@ test("packet_context_refs_match_source_coverage", async () => {
   const bundle = await parseLongTaskSources(task);
   const scope = scopeWith(["SRCU-001"]);
   const rows = [binding("SRCU-001")];
-  const coverage = assertSourceCoverageV1(coverageWithContext());
+  const coverage = assertSourceCoverageV2(coverageWithContext());
   assert.doesNotThrow(() =>
-    assertPacketContextResolutionV1(scope, "SFC-001", coverage, rows, bundle),
+    assertPacketContextResolutionV2(scope, "SFC-001", coverage, rows, bundle),
   );
   bundle.product.requirements[0].context_refs = ["project_context/global.md"];
   assert.throws(
     () =>
-      assertPacketContextResolutionV1(scope, "SFC-001", coverage, rows, bundle),
+      assertPacketContextResolutionV2(scope, "SFC-001", coverage, rows, bundle),
     /requirement_context_refs_mismatch/,
   );
 });
@@ -121,7 +163,7 @@ function scopeWith(source_unit_refs) {
 }
 function coverageWithContext() {
   return {
-    schema_version: "composite-source-coverage-v1",
+    schema_version: "composite-source-coverage-v2",
     source_plan_sha256: "a".repeat(64),
     items: [
       {

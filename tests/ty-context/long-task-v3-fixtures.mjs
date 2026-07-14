@@ -179,7 +179,6 @@ export function addSecondRequirementBranch(data) {
             id: "IB-004",
             kind: "runtime_capability",
             target: "value.secondary",
-            carrier_paths: ["src/value.txt"],
             verification: {
               mode: "oracle_observation",
               spec_id: "VS-AC-002",
@@ -302,7 +301,6 @@ function happyV3Data() {
                   id: "IB-002",
                   kind: "runtime_capability",
                   target: "value.read",
-                  carrier_paths: ["src/value.txt"],
                   verification: {
                     mode: "oracle_observation",
                     spec_id: "VS-AC-001",

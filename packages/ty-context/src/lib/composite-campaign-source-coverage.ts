@@ -10,12 +10,15 @@ import {
 
 export const SOURCE_COVERAGE_SCHEMA_V1 =
   "composite-source-coverage-v1" as const;
+export const SOURCE_COVERAGE_SCHEMA_V2 =
+  "composite-source-coverage-v2" as const;
 export type SourceCoverageDispositionV1 =
   "slice" | "global_constraint" | "out_of_scope" | "decision_required";
-export type ContextResolutionStatusV1 = "existing" | "updated" | "task_local";
+export type SourceCoverageDispositionV2 = SourceCoverageDispositionV1;
+export type ContextResolutionStatusV2 = "existing" | "updated" | "task_local";
 
-export interface ContextResolutionV1 {
-  status: ContextResolutionStatusV1;
+export interface ContextResolutionV2 {
+  status: ContextResolutionStatusV2;
   context_refs: string[];
   task_local_reason: string | null;
 }
@@ -27,7 +30,10 @@ export interface SourceCoverageItemV1 {
   slice_refs: string[];
   global_constraint_refs: string[];
   rationale: string;
-  context_resolution: ContextResolutionV1;
+}
+
+export interface SourceCoverageItemV2 extends SourceCoverageItemV1 {
+  context_resolution: ContextResolutionV2 | null;
 }
 
 export interface GlobalConstraintPacketBindingV1 {
@@ -42,6 +48,13 @@ export interface SourceCoverageV1 {
   schema_version: typeof SOURCE_COVERAGE_SCHEMA_V1;
   source_plan_sha256: string;
   items: SourceCoverageItemV1[];
+  global_constraint_bindings: GlobalConstraintPacketBindingV1[];
+}
+
+export interface SourceCoverageV2 {
+  schema_version: typeof SOURCE_COVERAGE_SCHEMA_V2;
+  source_plan_sha256: string;
+  items: SourceCoverageItemV2[];
   global_constraint_bindings: GlobalConstraintPacketBindingV1[];
 }
 
@@ -60,6 +73,8 @@ export interface SourceCoverageAnalysisV1 {
   pending_global_constraint_binding_pairs: string[];
 }
 
+export type SourceCoverageAnalysisV2 = SourceCoverageAnalysisV1;
+
 export function parseSourceCoverageV1(content: string): SourceCoverageV1 {
   return assertSourceCoverageV1(parseStrictJson(content));
 }
@@ -77,7 +92,7 @@ export function assertSourceCoverageV1(value: unknown): SourceCoverageV1 {
   sha(root.source_plan_sha256, "source_plan_sha256");
   const items = list(root.items, "items");
   if (!items.length) invalid("items_empty");
-  items.forEach((item, index) => coverageItem(item, index));
+  items.forEach((item, index) => coverageItemV1(item, index));
   list(root.global_constraint_bindings, "global_constraint_bindings").forEach(
     (item, index) => constraintBinding(item, index),
   );
@@ -86,6 +101,34 @@ export function assertSourceCoverageV1(value: unknown): SourceCoverageV1 {
     "source_item_id",
   );
   return root as unknown as SourceCoverageV1;
+}
+
+export function parseSourceCoverageV2(content: string): SourceCoverageV2 {
+  return assertSourceCoverageV2(parseStrictJson(content));
+}
+
+export function assertSourceCoverageV2(value: unknown): SourceCoverageV2 {
+  const root = object(value, "source coverage");
+  exact(root, [
+    "schema_version",
+    "source_plan_sha256",
+    "items",
+    "global_constraint_bindings",
+  ]);
+  if (root.schema_version !== SOURCE_COVERAGE_SCHEMA_V2)
+    invalid("schema_version");
+  sha(root.source_plan_sha256, "source_plan_sha256");
+  const items = list(root.items, "items");
+  if (!items.length) invalid("items_empty");
+  items.forEach((item, index) => coverageItemV2(item, index));
+  list(root.global_constraint_bindings, "global_constraint_bindings").forEach(
+    (item, index) => constraintBinding(item, index),
+  );
+  unique(
+    (items as SourceCoverageItemV2[]).map((item) => item.source_item_id),
+    "source_item_id",
+  );
+  return root as unknown as SourceCoverageV2;
 }
 
 export function validateSourceCoverageAgainstScopeV3(
@@ -101,9 +144,9 @@ export function validateSourceCoverageAgainstScopeV3(
 export function validateSourceCoverageAgainstScopeV4(
   scopeValue: unknown,
   coverageValue: unknown,
-): SourceCoverageAnalysisV1 {
+): SourceCoverageAnalysisV2 {
   const scope = assertScopeFitResultV4(scopeValue);
-  const coverage = assertSourceCoverageV1(coverageValue);
+  const coverage = assertSourceCoverageV2(coverageValue);
   const analysis = validateSourceCoverage(scope, coverage);
   const items = new Set(coverage.items.map((item) => item.source_item_id));
   for (const unit of scope.source_units)
@@ -115,7 +158,7 @@ export function validateSourceCoverageAgainstScopeV4(
 
 function validateSourceCoverage(
   scope: ScopeFitResultV3 | ScopeFitResultV4,
-  coverage: SourceCoverageV1,
+  coverage: SourceCoverageV1 | SourceCoverageV2,
 ): SourceCoverageAnalysisV1 {
   if (coverage.source_plan_sha256 !== scope.request_sha256)
     invalid("source_plan_hash_mismatch");
@@ -213,16 +256,28 @@ export function assertGlobalConstraintPacketCoverageV1(
   coverageValue: unknown,
   indexesValue: CampaignPacketEntityIndexV1[],
 ): void {
-  const raw = object(scopeValue, "scope");
-  const scope: ScopeFitResultV3 | ScopeFitResultV4 =
-    raw.schema_version === "scope-fit-result-v4"
-      ? assertScopeFitResultV4(scopeValue)
-      : assertScopeFitResultV3(scopeValue);
+  const scope = assertScopeFitResultV3(scopeValue);
   const coverage = assertSourceCoverageV1(coverageValue);
-  const analysis =
-    scope.schema_version === "scope-fit-result-v4"
-      ? validateSourceCoverageAgainstScopeV4(scope, coverage)
-      : validateSourceCoverageAgainstScopeV3(scope, coverage);
+  const analysis = validateSourceCoverageAgainstScopeV3(scope, coverage);
+  assertPacketCoverageBindings(coverage, analysis, indexesValue);
+}
+
+export function assertGlobalConstraintPacketCoverageV2(
+  scopeValue: unknown,
+  coverageValue: unknown,
+  indexesValue: CampaignPacketEntityIndexV1[],
+): void {
+  const scope = assertScopeFitResultV4(scopeValue);
+  const coverage = assertSourceCoverageV2(coverageValue);
+  const analysis = validateSourceCoverageAgainstScopeV4(scope, coverage);
+  assertPacketCoverageBindings(coverage, analysis, indexesValue);
+}
+
+function assertPacketCoverageBindings(
+  coverage: SourceCoverageV1 | SourceCoverageV2,
+  analysis: SourceCoverageAnalysisV1,
+  indexesValue: CampaignPacketEntityIndexV1[],
+): void {
   if (analysis.pending_global_constraint_binding_pairs.length)
     invalid(
       `global_constraint_bindings_missing:${analysis.pending_global_constraint_binding_pairs.join(",")}`,
@@ -260,7 +315,20 @@ export function assertGlobalConstraintPacketCoverageV1(
   }
 }
 
-function coverageItem(value: unknown, index: number): void {
+function coverageItemV1(value: unknown, index: number): void {
+  const row = object(value, `items[${index}]`);
+  exact(row, [
+    "source_item_id",
+    "statement",
+    "disposition",
+    "slice_refs",
+    "global_constraint_refs",
+    "rationale",
+  ]);
+  coverageItemCommon(row, index);
+}
+
+function coverageItemV2(value: unknown, index: number): void {
   const row = object(value, `items[${index}]`);
   exact(row, [
     "source_item_id",
@@ -271,6 +339,21 @@ function coverageItem(value: unknown, index: number): void {
     "rationale",
     "context_resolution",
   ]);
+  coverageItemCommon(row, index);
+  if (
+    row.disposition === "out_of_scope" ||
+    row.disposition === "decision_required"
+  ) {
+    if (row.context_resolution !== null)
+      invalid(`terminal_context_resolution_must_be_null:${row.source_item_id}`);
+  } else {
+    if (row.context_resolution === null)
+      invalid(`context_resolution_required:${row.source_item_id}`);
+    contextResolution(row.context_resolution, index);
+  }
+}
+
+function coverageItemCommon(row: Record<string, unknown>, index: number): void {
   prefixed(row.source_item_id, "SRC", `items[${index}].source_item_id`);
   text(row.statement, `items[${index}].statement`);
   oneOf(
@@ -285,7 +368,6 @@ function coverageItem(value: unknown, index: number): void {
     `items[${index}].global_constraint_refs`,
   );
   text(row.rationale, `items[${index}].rationale`);
-  contextResolution(row.context_resolution, index);
   if (row.disposition === "slice" && (!slices.length || constraints.length))
     invalid(`slice_disposition_refs:${row.source_item_id}`);
   if (

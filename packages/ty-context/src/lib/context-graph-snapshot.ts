@@ -6,11 +6,6 @@ import {
   type ContextManifest,
 } from "./context-manifest-schema.js";
 
-export interface ContextFileHash {
-  path: string;
-  sha256: string;
-}
-
 export interface ContextGraphSnapshot {
   mode: "referenced" | "full";
   topology_sha256: string;
@@ -19,9 +14,9 @@ export interface ContextGraphSnapshot {
 }
 
 export interface CampaignContextBaseline {
-  context_graph_sha256: string;
-  context_baseline_sha256: string;
-  context_files: ContextFileHash[];
+  graph_sha256: string;
+  files: Record<string, string>;
+  baseline_sha256: string;
 }
 
 export async function captureContextGraphSnapshot(
@@ -83,14 +78,13 @@ export async function captureCampaignContextBaseline(
     contextRefs,
     "referenced",
   );
-  const contextFiles = snapshot.files.map((file) => ({
-    path: file,
-    sha256: snapshot.sha256[file],
-  }));
+  const files = sortRecord(snapshot.sha256);
   return {
-    context_graph_sha256: snapshot.topology_sha256,
-    context_baseline_sha256: sha256Hex(canonicalJson(contextFiles)),
-    context_files: contextFiles,
+    graph_sha256: snapshot.topology_sha256,
+    files,
+    baseline_sha256: sha256Hex(
+      canonicalJson({ graph_sha256: snapshot.topology_sha256, files }),
+    ),
   };
 }
 
@@ -103,16 +97,18 @@ export async function assertCampaignContextBaselineFresh(
     repositoryRoot,
     contextRefs,
   );
-  if (current.context_graph_sha256 !== expected.context_graph_sha256) {
+  if (current.graph_sha256 !== expected.graph_sha256) {
     throw new Error("campaign_context_changed:graph");
   }
-  if (current.context_baseline_sha256 !== expected.context_baseline_sha256) {
-    const previous = new Map(
-      expected.context_files.map((file) => [file.path, file.sha256]),
-    );
-    const changed = current.context_files
-      .filter((file) => previous.get(file.path) !== file.sha256)
-      .map((file) => file.path);
+  if (current.baseline_sha256 !== expected.baseline_sha256) {
+    const changed = [
+      ...new Set([
+        ...Object.keys(expected.files),
+        ...Object.keys(current.files),
+      ]),
+    ]
+      .filter((file) => expected.files[file] !== current.files[file])
+      .sort();
     throw new Error(
       `campaign_context_changed:files:${changed.join(",") || "set"}`,
     );

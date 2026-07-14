@@ -7,8 +7,8 @@ import type {
   TurnCompletion,
 } from "./codex-app-server-protocol.js";
 import { currentHead, gitStatus } from "./composite-campaign-git-baseline.js";
-import type { CampaignAdvanceActionV4 } from "./composite-campaign-orchestrator.js";
-import { bindCampaignRepairGoalV4 } from "./composite-campaign-orchestrator.js";
+import type { CampaignAdvanceActionV5 } from "./composite-campaign-orchestrator.js";
+import { bindCampaignRepairGoalV5 } from "./composite-campaign-orchestrator.js";
 import {
   acceptThreadV5,
   bindThreadGoalV5,
@@ -23,7 +23,7 @@ import { sha256Hex } from "./composite-campaign-codec.js";
 import type { ModelRoutingDecision } from "./codex-model-router.js";
 
 type RepairAction = Extract<
-  CampaignAdvanceActionV4,
+  CampaignAdvanceActionV5,
   { action: "repair_integration" }
 >;
 interface RepairState {
@@ -103,7 +103,7 @@ export async function runCampaignRepairV5(
   );
   const disk = JSON.parse(await readFile(stateFile, "utf8")) as RepairState;
   if (!disk.goal_id)
-    await bindCampaignRepairGoalV4(
+    await bindCampaignRepairGoalV5(
       input.projectRoot,
       input.campaignPath,
       action.repair_id,

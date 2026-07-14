@@ -10,11 +10,11 @@ import { sha256Hex } from "./composite-campaign-codec.js";
 import { CampaignMutationQueue } from "./composite-campaign-mutation-queue.js";
 import {
   readSliceGoalManifest,
-  renderSliceGoalObjectiveV2,
+  renderSliceGoalObjectiveV3,
 } from "./composite-campaign-goal-manifest.js";
 import {
-  bindCampaignGoalV4,
-  bindCampaignRepairGoalV4,
+  bindCampaignGoalV5,
+  bindCampaignRepairGoalV5,
 } from "./composite-campaign-orchestrator.js";
 import {
   bindThreadGoalV5,
@@ -76,7 +76,7 @@ export async function recoverCampaignHostV5(
         ),
       );
       if (
-        manifest.schema_version !== "slice-goal-manifest-v2" ||
+        manifest.schema_version !== "slice-goal-manifest-v3" ||
         manifest.thread_id !== server.id
       )
         throw new Error(`goal_manifest_recovery_mismatch:${sliceId}`);
@@ -84,7 +84,7 @@ export async function recoverCampaignHostV5(
         path.join(manifest.contract_workdir, "goal-objective.txt"),
         "utf8",
       );
-      if (objective !== renderSliceGoalObjectiveV2(manifest))
+      if (objective !== renderSliceGoalObjectiveV3(manifest))
         throw new Error(`goal_objective_manifest_mismatch:${sliceId}`);
       if (serverGoal && objective !== serverGoal.objective)
         throw new Error(`goal_objective_recovery_mismatch:${sliceId}`);
@@ -105,10 +105,10 @@ export async function recoverCampaignHostV5(
           "goal-manifest.json",
         ),
       );
-      if (manifest.schema_version !== "slice-goal-manifest-v2")
+      if (manifest.schema_version !== "slice-goal-manifest-v3")
         throw new Error(`goal_manifest_recovery_mismatch:${sliceId}`);
       await queue.run(() =>
-        bindCampaignGoalV4(
+        bindCampaignGoalV5(
           projectRoot,
           campaignPath,
           sliceId,
@@ -227,7 +227,7 @@ export async function recoverCampaignHostV5(
       if (typeof disk.launch_token !== "string")
         throw new Error(`repair_launch_token_missing:${repairId}`);
       await queue.run(() =>
-        bindCampaignRepairGoalV4(
+        bindCampaignRepairGoalV5(
           projectRoot,
           campaignPath,
           repairId,

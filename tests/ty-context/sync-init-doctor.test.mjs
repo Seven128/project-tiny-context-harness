@@ -16,7 +16,10 @@ import { resolveAgentHarnessFolderName } from "../../packages/ty-context/dist/co
 import { runDoctor } from "../../packages/ty-context/dist/lib/doctor.js";
 import { runInit } from "../../packages/ty-context/dist/lib/init.js";
 import { captureContextGraphSnapshot } from "../../packages/ty-context/dist/lib/context-graph-snapshot.js";
-import { enableHarnessProfile } from "../../packages/ty-context/dist/lib/profiles.js";
+import {
+  disableHarnessProfile,
+  enableHarnessProfile,
+} from "../../packages/ty-context/dist/lib/profiles.js";
 import { runSync } from "../../packages/ty-context/dist/lib/sync-engine.js";
 
 const cliPath = fileURLToPath(
@@ -34,7 +37,7 @@ test("agent harness folder aliases remain portable", () => {
   );
 });
 
-test("default init installs portable core and workflow without Composite state or hooks", async () => {
+test("non_codex_sync_does_not_install_codex_hooks", async () => {
   await withTemp("ty-context-default-", async (root) => {
     const report = await runInit(root, { adopt: false, force: false });
     assert.ok(
@@ -137,7 +140,7 @@ test("default init installs portable core and workflow without Composite state o
   });
 });
 
-test("explicit composite-codex enable installs Composite Skills and Codex hooks", async () => {
+test("composite_codex_enable_installs_hooks", async () => {
   await withTemp("ty-context-composite-", async (root) => {
     await runInit(root, { adopt: false, force: false });
     const enabled = await enableHarnessProfile(root, "composite-codex");
@@ -160,6 +163,61 @@ test("explicit composite-codex enable installs Composite Skills and Codex hooks"
     const second = await runSync(root);
     assert.deepEqual(second.blocked, []);
     assert.ok(second.skipped.length > 0);
+  });
+});
+
+test("composite_codex_disable_removes_only_owned_hooks", async () => {
+  await withTemp("ty-context-disable-composite-", async (root) => {
+    await runInit(root, { adopt: false, force: false });
+    await mkdir(path.join(root, ".codex"), { recursive: true });
+    await writeFile(
+      path.join(root, ".codex", "hooks.json"),
+      JSON.stringify({
+        hooks: {
+          Stop: [
+            {
+              hooks: [
+                { type: "command", command: "node user-hook.mjs", custom: true },
+              ],
+            },
+          ],
+        },
+        user_setting: "preserve",
+      }),
+    );
+    await enableHarnessProfile(root, "composite-codex");
+    await runSync(root);
+    const disabled = await disableHarnessProfile(root, "composite-codex");
+    assert.equal(disabled.changed, true);
+    assert.ok(!disabled.config.profiles.enabled.includes("composite-codex"));
+    const sync = await runSync(root);
+    assert.deepEqual(sync.blocked, []);
+    const hooks = JSON.parse(
+      await readFile(path.join(root, ".codex", "hooks.json"), "utf8"),
+    );
+    assert.equal(hooks.user_setting, "preserve");
+    assert.equal(hooks.hooks.Stop.length, 1);
+    assert.equal(hooks.hooks.Stop[0].hooks[0].custom, true);
+    assert.doesNotMatch(
+      JSON.stringify(hooks),
+      /Tiny Context composite completion gate/,
+    );
+    assert.equal(
+      await exists(path.join(root, ".codex", "hooks", "long-task-hook.mjs")),
+      false,
+    );
+    assert.equal(
+      await exists(
+        path.join(
+          root,
+          ".agent",
+          "skills",
+          "prepare-composite-long-task",
+          "SKILL.md",
+        ),
+      ),
+      false,
+    );
   });
 });
 

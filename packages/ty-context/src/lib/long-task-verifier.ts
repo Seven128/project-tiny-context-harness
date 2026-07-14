@@ -31,6 +31,7 @@ export interface VerifyLongTaskOptions {
   run_id?: string;
   acceptanceGate?: boolean;
   specResultCache?: VerificationSpecResultCache;
+  repairScope?: "targeted_repair" | "impact_repair";
 }
 
 export interface VerificationSpecResultCacheEntry {
@@ -140,6 +141,10 @@ export async function verifyLongTask(
   specIds?: string[],
   options: VerifyLongTaskOptions = {},
 ): Promise<VerificationRunResultV2> {
+  if (options.repairScope && (!specIds || options.acceptanceGate))
+    throw new Error(
+      "explicit_repair_scope_requires_non_accepting_spec_selection",
+    );
   const contract =
     options.contract ?? (await readCompiledLongTaskContract(workdir));
   await assertLongTaskContractFresh(contract);
@@ -194,11 +199,13 @@ export async function verifyLongTask(
       contract_sha256: contract.contract_sha256,
       verification_scope: options.acceptanceGate
         ? "full_acceptance"
-        : specIds
-          ? "targeted_repair"
-          : automatic?.mode === "affected"
-            ? "impact_repair"
-            : "full_repair",
+        : options.repairScope
+          ? options.repairScope
+          : specIds
+            ? "targeted_repair"
+            : automatic?.mode === "affected"
+              ? "impact_repair"
+              : "full_repair",
       acceptance_authorized: options.acceptanceGate === true,
       snapshot: source.manifest,
       environment,

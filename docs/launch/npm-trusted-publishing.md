@@ -48,6 +48,8 @@ For an emergency local fallback after that committed preparation, use:
 npm run release:publish -- --local-fallback --yes
 ```
 
+The fallback re-runs the complete default and Composite suites, verifies the prepared artifact identity, and runs the tarball smoke against those exact bytes before `npm publish`; it never repacks an untested artifact.
+
 Add `--registry-smoke` only when you want the slower post-publish install smoke in addition to registry `latest` verification.
 
 Publishing a new npm version does not automatically migrate existing repositories. It publishes the current CLI code and package assets; users receive new upgrade behavior only when they run the newly published CLI through `ty-context upgrade`, `ty-context sync` or another `@latest` package invocation.
@@ -88,8 +90,9 @@ It is manual-only:
 - `expected_version` must match `packages/ty-context/package.json`.
 - Versioned release surfaces must be prepared before commit with `npm run release:prepare -- --version <patch|minor|major|x.y.z> --update-mode <sync-only|upgrade-required|manual-required>`; the workflow verifies this with `npm run release:check-version`.
 - The job runs on `ubuntu-latest` with Node `24`.
-- The workflow installs the latest npm CLI and asserts npm CLI 11.5.1 or later.
-- It builds the package, runs the complete package test suite, package source drift check and `make validate-context`, rebuilds the prepared tarball, and verifies it byte-for-byte against `docs/launch/release-artifact-<version>.json`.
+- The workflow installs the explicitly pinned npm CLI version declared in the workflow (`12.0.1` at this snapshot); it never uses unbounded `npm@latest`.
+- It builds/typechecks the package, runs the complete package test suite (default and Composite), package source drift, `make validate-harness` and Quickstart Smoke, then packs exactly once and verifies it against `docs/launch/release-artifact-<version>.json`.
+- Release Artifact V2 binds the tarball SHA-256, Node version, npm version and `package-lock.json` SHA-256. Any environment or lockfile drift fails before smoke/publication.
 - It installs that exact packed tarball into an empty temporary repository and runs `ty-context init`, `doctor`, `validate-context` and a minimal Contract V3 final-gate black box before publishing only the tested tarball path.
 - The publish step runs only when `dry_run` is false.
 - The GitHub Release create/update step runs only after a real publish, uses the release packet body and marks `v<version>` as the latest release.
@@ -109,7 +112,7 @@ Expected result:
 - package build succeeds,
 - source drift check passes,
 - Context validation passes,
-- the rebuilt tarball matches the release-preparation SHA-256 attestation,
+- the single packed tarball matches the Release Artifact V2 byte/environment/lockfile attestation,
 - no npm publish occurs,
 - no GitHub Release is created or edited.
 

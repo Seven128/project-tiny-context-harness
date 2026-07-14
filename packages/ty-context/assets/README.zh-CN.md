@@ -38,13 +38,13 @@ Fresh agent 先读这些文件，再开始改代码。
 
 ## 和传统 Tiny Context 流程的区别
 
-Tiny Context 有三项能力：Minimal Context 负责长期事实和恢复；默认 Workflow Contract 负责最小 Context 读取、唯一 `Context Delta`、内部计划、实现、项目验证、Conformance 与 drift check；Composite Long-Task 只在用户显式启用 Codex profile 后提供严格多 SFC 执行与完成门。Composite 继承 Context 规则，但用 Contract V3 和 Campaign Gate 取代普通内部计划与完成计算。
+Tiny Context 有三项能力：Minimal Context 负责长期事实和恢复；默认 Workflow Contract 负责最小 Context 读取、唯一 `Context Delta`、内部计划、实现、项目验证、Conformance 与 drift check；Composite Long-Task 只在用户显式执行 `ty-context enable composite-codex` 后提供严格多 SFC 执行与完成门，`ty-context disable composite-codex` 只移除包拥有的 Composite Hook/表面并保留用户 Hook。Composite 继承 Context 规则，但用 Contract V3 和 Campaign Gate 取代普通内部计划与完成计算；模型策略缺失或无效时确定性安全透传，不猜测降级。
 
 Composite 的三个强制安全步骤是合同编译、最终全量 Gate 和 Codex Stop 新鲜度检查。定向 `verify` 只是可选修复加速器，不能签发 Slice 或 Campaign 完成。模型怎样规划、拆分、使用 subagent、TDD 或 review 不属于工作流状态，也不能签发完成证明。
 
 ## 多组合长程任务 Campaign V5
 
-已有讨论方案、需要多个 SFC 从准备一直自动执行到目标分支时，显式调用 `/prepare-composite-long-task`。该显式调用即授权完整 prepare-and-execute；`ty-context composite-campaign` 保存不可静默改写的 `source-plan.md` 和完整 source coverage，先建立控件/能力单元粒度的 Source Unit Inventory，再生成最大内聚的 Scope Fit V4 DAG。每个 Source Unit 必须完整映射到 SFC、Requirement、PI Obligation、AC 和 Verification Spec，并确定性投影三份 V3 YAML authority（Contract V3）：
+已有讨论方案、需要多个 SFC 从准备一直自动执行到目标分支时，显式调用 `/prepare-composite-long-task`。该显式调用即授权完整 prepare-and-execute；`ty-context composite-campaign` 保存不可静默改写的 `source-plan.md` 和完整 Source Coverage V2（含 Context Resolution 与 Context baseline），先建立控件/能力单元粒度的 Source Unit Inventory，再生成最大内聚的 Scope Fit V4 DAG。每个 Source Unit 必须完整映射到 SFC、Requirement、PI Obligation、AC 和 Verification Spec，并确定性投影三份 V3 YAML authority（Contract V3）：
 
 - `product-architecture-source.yaml`
 - `technical-realization-plan.yaml`
@@ -72,7 +72,7 @@ accepted Slice 只合入 Integration Branch。普通 merge conflict 和组合回
 
 `needs_work` 是内部循环状态，必须继续实现；`accepted` 是唯一成功终态。真正需要用户决定时按普通任务沟通并暂停，但不能视为 accepted。agent 不能提交 pass result、evidence、assertion result 或实体完成状态。compile 只接受 package-managed Hook 的精确字节与命令；项目级 Stop Hook 在没有 active task 时 no-op，存在 active task 时会阻止缺失、receipt 不匹配、非 accepted、needs_work 或 workspace identity 不匹配的 final result，只有最新 accepted 结果仍新鲜时才放行；Skill policy 禁止隐式调用。
 
-当前保证只覆盖正常 CLI/Hook 流程中的义务遗漏、编译后输入或 oracle/verifier 变化、旧/缺失 final result、final 后工作区变化和静默替换 active contract。它不是 Host 级安全边界，不承诺抵御同用户/管理员删除状态或 Hook、Credential Manager/Registry 攻击、系统级 Hook 绕过或内核/sandbox 逃逸。聚焦机制测试总计不超过 5 分钟，默认 Composite 套件不超过 15 分钟，单测原则上不超过 2 分钟；默认测试不安装 VM、容器、浏览器矩阵或管理员环境。六个真实 CLI/final-gate 黑盒为 `happy_path_real_implementation`、`missing_obligation`、`source_changed_after_compile`、`oracle_or_verifier_changed_after_compile`、`stale_or_missing_final_result`、`drift_repair_end_to_end`。
+当前保证只覆盖正常 CLI/Hook 流程中的义务遗漏、编译后输入或 oracle/verifier 变化、旧/缺失 final result、final 后工作区变化和静默替换 active contract。它不是 Host 级安全边界，不承诺抵御同用户/管理员删除状态或 Hook、Credential Manager/Registry 攻击、系统级 Hook 绕过或内核/sandbox 逃逸。聚焦机制测试总计不超过 5 分钟，Composite 套件不超过 15 分钟，单测原则上不超过 2 分钟；默认测试不安装 VM、容器、浏览器矩阵或管理员环境。本地普通 `npm test` 不包含 Composite 自测试；GitHub 分支/PR CI 运行聚焦 Contract/Campaign 检查，main CI 运行完整套件。维护者也可以显式执行 `npm run test:composite-workflow --workspace project-tiny-context-harness`。六个真实 CLI/final-gate 黑盒为 `happy_path_real_implementation`、`missing_obligation`、`source_changed_after_compile`、`oracle_or_verifier_changed_after_compile`、`stale_or_missing_final_result`、`drift_repair_end_to_end`。
 
 ## 适合谁
 

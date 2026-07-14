@@ -23,9 +23,9 @@ import {
   runGit,
 } from "./composite-campaign-git-baseline.js";
 import {
-  createSliceGoalManifestV2,
+  createSliceGoalManifestV3,
   readSliceGoalManifest,
-  type SliceGoalManifestV2,
+  type SliceGoalManifestV3,
 } from "./composite-campaign-goal-manifest.js";
 import {
   finalizeCampaignTarget,
@@ -33,26 +33,27 @@ import {
 } from "./composite-campaign-integration.js";
 import {
   recordSliceExecutionReceipt,
-  readSliceExecutionReceipt,
+  readSliceExecutionReceiptV2,
 } from "./composite-campaign-receipt.js";
 import { selectDeterministicWaveV4 } from "./composite-campaign-scheduler.js";
 import {
   type CampaignV4,
   type CampaignWaveV4,
 } from "./composite-campaign-schema-v4.js";
-import { assertCampaignV5 } from "./composite-campaign-schema-v5.js";
 import {
-  assertGlobalConstraintPacketCoverageV1,
-  parseSourceCoverageV1,
+  assertCampaignV5,
+  type CampaignV5,
+} from "./composite-campaign-schema-v5.js";
+import {
+  assertGlobalConstraintPacketCoverageV2,
+  parseSourceCoverageV2,
   validateSourceCoverageAgainstScopeV4,
-  type SourceCoverageV1,
+  type SourceCoverageV2,
 } from "./composite-campaign-source-coverage.js";
-import {
-  currentPacketRevisionPathV4,
-  loadCampaignV4,
-  mutateCampaignV4,
-  verifyCampaignPacketV4,
-} from "./composite-campaign-v4.js";
+import { verifyCampaignPacketV5 } from "./composite-runtime-v5/campaign-packet-store.js";
+import { currentPacketRevisionPathV5 } from "./composite-runtime-v5/campaign-store.js";
+import { loadCampaignAuditV4 } from "./composite-audit-v4/campaign-store.js";
+import { loadCampaignV5, mutateCampaignV5 } from "./composite-campaign-v5.js";
 import {
   computeReadyFrontierV4,
   validateScopeFitGraphV4,
@@ -84,13 +85,17 @@ import {
   type ChangeEnvelopeV1,
 } from "./composite-campaign-change-envelope.js";
 import {
-  decideWaveImpactV1,
-  type WaveImpactDecisionV1,
+  decideWaveImpactV2,
+  waveSpecId,
+  type WaveImpactDecisionV2,
+  type WaveVerificationSpecProfileV2,
 } from "./composite-campaign-wave-impact.js";
+import { assertCampaignContextBaselineFresh } from "./context-graph-snapshot.js";
+import { parseLongTaskSources } from "./long-task-contract-parser.js";
 
-export type CampaignAdvanceActionV4 =
+export type CampaignAdvanceActionV5 =
   | { action: "author_packets"; slice_ids: string[] }
-  | { action: "launch_wave"; wave_id: string; goals: GoalLaunchV4[] }
+  | { action: "launch_wave"; wave_id: string; goals: GoalLaunchV5[] }
   | { action: "wait_goals"; goal_ids: string[] }
   | {
       action: "repair_integration";
@@ -106,7 +111,7 @@ export type CampaignAdvanceActionV4 =
   | { action: "wait_external"; reason: string }
   | { action: "finished"; campaign_status: "accepted"; target_commit: string };
 
-export interface GoalLaunchV4 {
+export interface GoalLaunchV5 {
   slice_id: string;
   thread_id: string;
   worktree: string;
@@ -131,11 +136,13 @@ interface RepairStateV1 {
   applied: boolean;
 }
 
-export async function advanceCampaignV4(
+type CampaignRuntime = CampaignV4 | CampaignV5;
+
+export async function advanceCampaignV5(
   projectRoot: string,
   campaignPath: string,
-): Promise<CampaignAdvanceActionV4> {
-  let { root, campaign } = await loadCampaignV4(projectRoot, campaignPath);
+): Promise<CampaignAdvanceActionV5> {
+  let { root, campaign } = await loadCampaignV5(projectRoot, campaignPath);
   assertCampaignV5(campaign);
   const scope = await readScope(root);
   const coverage = await readCoverage(root);
@@ -160,7 +167,7 @@ export async function advanceCampaignV4(
       baseCommit: baseline.baseCommit,
       branchName: campaign.integration_branch,
     });
-    campaign = await mutateCampaignV4(
+    campaign = await mutateCampaignV5(
       projectRoot,
       root,
       "git_baseline_ready",
@@ -185,7 +192,7 @@ export async function advanceCampaignV4(
     integration.path,
   );
   if (repair?.action) return repair.action;
-  if (repair?.applied) ({ campaign } = await loadCampaignV4(projectRoot, root));
+  if (repair?.applied) ({ campaign } = await loadCampaignV5(projectRoot, root));
   const activeWave = activeWaveEntry(campaign);
   if (activeWave) {
     const [waveId, wave] = activeWave;
@@ -217,8 +224,8 @@ export async function advanceCampaignV4(
         wave,
       );
       if (merged.action) return merged.action;
-      ({ campaign } = await loadCampaignV4(projectRoot, root));
-      const affected = await affectedSlices(
+      ({ campaign } = await loadCampaignV5(projectRoot, root));
+      const impact = await analyzeWaveImpact(
         root,
         campaign,
         wave.slice_ids,
@@ -226,14 +233,16 @@ export async function advanceCampaignV4(
         scope,
         coverage,
       );
+      const affected = impact.affected_slice_ids;
       for (const sliceId of affected)
-        await verifyCampaignPacketV4(projectRoot, root, sliceId);
+        await verifyCampaignPacketV5(projectRoot, root, sliceId);
       const integrationResult = await runWaveIntegrationGate({
         campaignRoot: root,
         campaignId: campaign.campaign_id,
         waveId,
         integrationWorktree: integration.path,
         slices: affected.map((sliceId) => packetInput(root, campaign, sliceId)),
+        impact,
       });
       if (integrationResult.workflow_status !== "integration_verified")
         return prepareRepairAction(
@@ -246,7 +255,7 @@ export async function advanceCampaignV4(
           path.join(root, "waves", waveId, "integration-result.json"),
           null,
         );
-      await mutateCampaignV4(
+      await mutateCampaignV5(
         projectRoot,
         root,
         "wave_integration_verified",
@@ -261,10 +270,10 @@ export async function advanceCampaignV4(
           return value;
         },
       );
-      return advanceCampaignV4(projectRoot, root);
+      return advanceCampaignV5(projectRoot, root);
     }
   }
-  ({ campaign } = await loadCampaignV4(projectRoot, root));
+  ({ campaign } = await loadCampaignV5(projectRoot, root));
   const integrated = Object.entries(campaign.slices)
     .filter(([, slice]) => slice.status === "integration_verified")
     .map(([sliceId]) => sliceId);
@@ -295,14 +304,14 @@ export async function advanceCampaignV4(
   const stalePackets: string[] = [];
   for (const slice of frontier) {
     try {
-      await verifyCampaignPacketV4(projectRoot, root, slice.slice_id);
+      await verifyCampaignPacketV5(projectRoot, root, slice.slice_id);
     } catch (error) {
       if (!/campaign_context_changed:/u.test(errorText(error))) throw error;
       stalePackets.push(slice.slice_id);
     }
   }
   if (stalePackets.length > 0) {
-    await mutateCampaignV4(
+    await mutateCampaignV5(
       projectRoot,
       root,
       "packet_context_changed",
@@ -332,7 +341,7 @@ export async function advanceCampaignV4(
     throw new Error("Campaign scheduler produced an empty ready wave");
   const waveId = nextWaveId(campaign);
   const base = await currentHead(integration.path);
-  const launches: GoalLaunchV4[] = [];
+  const launches: GoalLaunchV5[] = [];
   for (const sliceId of schedule.slice_ids)
     launches.push(
       await materializeSliceLaunch(
@@ -348,7 +357,7 @@ export async function advanceCampaignV4(
   const scheduleHash = sha256Hex(
     canonicalJson({ wave_id: waveId, base_commit: base, schedule }),
   );
-  await mutateCampaignV4(
+  await mutateCampaignV5(
     projectRoot,
     root,
     "wave_scheduled",
@@ -362,7 +371,7 @@ export async function advanceCampaignV4(
       };
       for (const launch of launches) {
         const slice = value.slices[launch.slice_id];
-        const manifest = requireGoalManifestV2(
+        const manifest = requireGoalManifestV3(
           await readSliceGoalManifest(
             path.join(
               root,
@@ -391,14 +400,14 @@ export async function advanceCampaignV4(
   return { action: "launch_wave", wave_id: waveId, goals: launches };
 }
 
-export async function bindCampaignGoalV4(
+export async function bindCampaignGoalV5(
   projectRoot: string,
   campaignPath: string,
   sliceId: string,
   goalId: string,
   launchToken: string,
-): Promise<CampaignV4> {
-  return mutateCampaignV4(
+): Promise<CampaignV5> {
+  return mutateCampaignV5(
     projectRoot,
     campaignPath,
     "goal_bound",
@@ -406,7 +415,7 @@ export async function bindCampaignGoalV4(
       const slice = campaign.slices[sliceId];
       if (!slice?.wave_id)
         throw new Error("Slice has no scheduled Goal manifest");
-      const manifest = requireGoalManifestV2(
+      const manifest = requireGoalManifestV3(
         await readSliceGoalManifest(
           path.join(
             root,
@@ -423,6 +432,11 @@ export async function bindCampaignGoalV4(
       if (slice.goal_id && slice.goal_id !== goalId)
         throw new Error("Slice is already bound to a different Goal");
       const current = assertCampaignV5(campaign);
+      await assertCampaignContextBaselineFresh(
+        projectRoot,
+        current.context_baseline,
+        Object.keys(current.context_baseline.files),
+      );
       const thread = current.slices[sliceId].thread;
       if (
         thread.thread_id !== manifest.thread_id ||
@@ -449,7 +463,7 @@ export async function bindCampaignGoalV4(
   );
 }
 
-export async function bindCampaignRepairGoalV4(
+export async function bindCampaignRepairGoalV5(
   projectRoot: string,
   campaignPath: string,
   repairId: string,
@@ -458,7 +472,7 @@ export async function bindCampaignRepairGoalV4(
 ): Promise<RepairStateV1> {
   assertPortableId(repairId, "repair");
   assertPortableId(goalId, "goal");
-  const { root, campaign } = await loadCampaignV4(projectRoot, campaignPath);
+  const { root, campaign } = await loadCampaignV5(projectRoot, campaignPath);
   const file = path.join(root, "repairs", repairId, "repair-state.json");
   const state = assertRepairState(
     parseStrictJson(await readFile(file, "utf8")),
@@ -475,14 +489,14 @@ export async function bindCampaignRepairGoalV4(
   return state;
 }
 
-export async function recordCampaignResultV4(
+export async function recordCampaignResultV5(
   projectRoot: string,
   campaignPath: string,
   sliceId: string,
   goalId: string,
   workdir: string,
 ): Promise<unknown> {
-  const { root, campaign } = await loadCampaignV4(projectRoot, campaignPath);
+  const { root, campaign } = await loadCampaignV5(projectRoot, campaignPath);
   const slice = campaign.slices[sliceId];
   if (
     !slice?.wave_id ||
@@ -492,7 +506,7 @@ export async function recordCampaignResultV4(
     slice.goal_id !== goalId
   )
     throw new Error("Slice Goal/result identity mismatch");
-  const manifest = requireGoalManifestV2(
+  const manifest = requireGoalManifestV3(
     await readSliceGoalManifest(
       path.join(
         root,
@@ -518,7 +532,7 @@ export async function recordCampaignResultV4(
     changeEnvelope: manifest.change_envelope,
   });
   await clearAcceptedLongTaskBinding(slice.worktree, path.resolve(workdir));
-  await mutateCampaignV4(
+  await mutateCampaignV5(
     projectRoot,
     root,
     "slice_result_recorded",
@@ -535,11 +549,14 @@ export async function recordCampaignResultV4(
   return recorded;
 }
 
-export async function statusCampaignV4(
+export async function statusCampaignV5(
   projectRoot: string,
   campaignPath: string,
 ): Promise<unknown> {
-  const { root, campaign } = await loadCampaignV4(projectRoot, campaignPath);
+  const { root, campaign } = await loadCampaignForStatus(
+    projectRoot,
+    campaignPath,
+  );
   return {
     campaign,
     campaign_path: root,
@@ -548,14 +565,30 @@ export async function statusCampaignV4(
   };
 }
 
+async function loadCampaignForStatus(
+  projectRoot: string,
+  campaignPath: string,
+): Promise<{ root: string; campaign: CampaignRuntime }> {
+  try {
+    return await loadCampaignV5(projectRoot, campaignPath);
+  } catch (error) {
+    if (
+      !(error instanceof Error) ||
+      !error.message.includes("campaign_v4_audit_only")
+    )
+      throw error;
+    return loadCampaignAuditV4(projectRoot, campaignPath);
+  }
+}
+
 async function mergeAcceptedWave(
   projectRoot: string,
   root: string,
-  campaign: CampaignV4,
+  campaign: CampaignRuntime,
   integration: string,
   waveId: string,
   wave: CampaignWaveV4,
-): Promise<{ action?: CampaignAdvanceActionV4 }> {
+): Promise<{ action?: CampaignAdvanceActionV5 }> {
   const inputs = [];
   for (const sliceId of wave.slice_ids) {
     const slice = campaign.slices[sliceId];
@@ -567,7 +600,7 @@ async function mergeAcceptedWave(
       `${waveId}-${slice.head_commit!.slice(0, 12)}.json`,
     );
     inputs.push({
-      receipt: await readSliceExecutionReceipt(receiptPath),
+      receipt: await readSliceExecutionReceiptV2(receiptPath),
       worktree: slice.worktree!,
       contract_workdir: contractWorkdir(campaign, sliceId),
     });
@@ -592,7 +625,7 @@ async function mergeAcceptedWave(
         result.conflict_manifest.failed_slice_branch,
       ),
     };
-  await mutateCampaignV4(
+  await mutateCampaignV5(
     projectRoot,
     root,
     "wave_merged",
@@ -613,12 +646,12 @@ async function mergeAcceptedWave(
 async function materializeSliceLaunch(
   projectRoot: string,
   root: string,
-  campaign: CampaignV4,
+  campaign: CampaignRuntime,
   _integration: string,
   waveId: string,
   base: string,
   sliceId: string,
-): Promise<GoalLaunchV4> {
+): Promise<GoalLaunchV5> {
   const v5 = assertCampaignV5(campaign);
   const thread = v5.slices[sliceId]?.thread;
   if (
@@ -636,7 +669,7 @@ async function materializeSliceLaunch(
     sliceId,
     baseCommit: base,
   });
-  const revision = currentPacketRevisionPathV4(root, campaign, sliceId);
+  const revision = currentPacketRevisionPathV5(root, campaign, sliceId);
   const task = path.join(
     worktree.path,
     "tmp",
@@ -655,7 +688,7 @@ async function materializeSliceLaunch(
       await readFile(path.join(revision, "change-envelope.json"), "utf8"),
     ) as ChangeEnvelopeV1,
   );
-  const created = await createSliceGoalManifestV2(root, {
+  const created = await createSliceGoalManifestV3(root, {
     campaign_id: campaign.campaign_id,
     slice_id: sliceId,
     wave_id: waveId,
@@ -703,19 +736,19 @@ async function materializeSliceLaunch(
 async function finalizeCompletedGraph(
   projectRoot: string,
   root: string,
-  campaign: CampaignV4,
+  campaign: CampaignRuntime,
   scope: ScopeFitResultV4,
-  coverage: SourceCoverageV1,
+  coverage: SourceCoverageV2,
   integration: string,
-): Promise<CampaignAdvanceActionV4> {
+): Promise<CampaignAdvanceActionV5> {
   const analysis = validateSourceCoverageAgainstScopeV4(scope, coverage);
   const verified = await Promise.all(
     Object.keys(campaign.slices)
       .sort(asciiCompare)
-      .map((sliceId) => verifyCampaignPacketV4(projectRoot, root, sliceId)),
+      .map((sliceId) => verifyCampaignPacketV5(projectRoot, root, sliceId)),
   );
   const indexes = verified.map((result) => result.packet_index);
-  assertGlobalConstraintPacketCoverageV1(scope, coverage, indexes);
+  assertGlobalConstraintPacketCoverageV2(scope, coverage, indexes);
   const constraints = scope.global_constraints.map(
     (constraint): CampaignGlobalConstraintBindingV1 => {
       const rows = coverage.global_constraint_bindings.filter(
@@ -786,7 +819,7 @@ async function finalizeCompletedGraph(
   if (target.status === "external_approval_required")
     return { action: "wait_external", reason: target.reason };
   if (target.status === "revalidation_required") {
-    await mutateCampaignV4(
+    await mutateCampaignV5(
       projectRoot,
       root,
       "target_resync_requires_revalidation",
@@ -796,7 +829,7 @@ async function finalizeCompletedGraph(
         return value;
       },
     );
-    return advanceCampaignV4(projectRoot, root);
+    return advanceCampaignV5(projectRoot, root);
   }
   await markCampaignTargetAccepted(
     path.join(root, "campaign-final-result.json"),
@@ -807,7 +840,7 @@ async function finalizeCompletedGraph(
     campaignId: campaign.campaign_id,
     deleteBranches: true,
   });
-  await mutateCampaignV4(
+  await mutateCampaignV5(
     projectRoot,
     root,
     "campaign_accepted",
@@ -830,26 +863,37 @@ async function finalizeCompletedGraph(
 async function prepareRepairAction(
   projectRoot: string,
   root: string,
-  campaign: CampaignV4,
+  campaign: CampaignRuntime,
   integration: string,
   waveId: string,
   kind: RepairStateV1["kind"],
   manifest: string,
   replayBranch: string | null,
-): Promise<CampaignAdvanceActionV4> {
+): Promise<CampaignAdvanceActionV5> {
   const repairId = `${waveId}-${kind}`;
   const affectedSliceIds =
     waveId === "CAMPAIGN-FINAL"
       ? Object.keys(campaign.slices).sort(asciiCompare)
       : kind === "integration_regression"
-        ? await affectedSlices(root, campaign, campaign.waves[waveId].slice_ids)
+        ? (
+            await analyzeWaveImpact(
+              root,
+              campaign,
+              campaign.waves[waveId].slice_ids,
+            )
+          ).affected_slice_ids
         : [...campaign.waves[waveId].slice_ids].sort(asciiCompare);
   const envelopes = await Promise.all(
     affectedSliceIds.map((sliceId) =>
       readChangeEnvelope(root, campaign, sliceId),
     ),
   );
-  const changeEnvelope = unionChangeEnvelopesV1(envelopes);
+  const explicitConflictPaths =
+    kind === "merge_conflict" ? await mergeConflictPaths(manifest) : [];
+  const changeEnvelope = unionChangeEnvelopesV1(
+    envelopes,
+    explicitConflictPaths,
+  );
   const worktree = await createRepairWorktree({
     repositoryRoot: projectRoot,
     campaignId: campaign.campaign_id,
@@ -911,7 +955,7 @@ async function prepareRepairAction(
   };
   await atomic(path.join(path.dirname(objective), "repair-state.json"), state);
   if (campaign.waves[waveId])
-    await mutateCampaignV4(
+    await mutateCampaignV5(
       projectRoot,
       root,
       "repair_required",
@@ -936,9 +980,9 @@ async function prepareRepairAction(
 async function resumeRepairIfReady(
   projectRoot: string,
   root: string,
-  campaign: CampaignV4,
+  campaign: CampaignRuntime,
   integration: string,
-): Promise<{ action?: CampaignAdvanceActionV4; applied?: boolean } | null> {
+): Promise<{ action?: CampaignAdvanceActionV5; applied?: boolean } | null> {
   const candidates = [
     ...Object.entries(campaign.waves)
       .filter(([, wave]) => wave.status === "repair_required")
@@ -963,7 +1007,7 @@ async function resumeRepairIfReady(
     }
     if (state.applied) continue;
     await assertOwnedRepairWorktree(projectRoot, campaign.campaign_id, state);
-    const action: CampaignAdvanceActionV4 = {
+    const action: CampaignAdvanceActionV5 = {
       action: "repair_integration",
       wave_id: state.wave_id,
       repair_id: state.repair_id,
@@ -994,7 +1038,7 @@ async function resumeRepairIfReady(
     await runGit(integration, ["merge", "--ff-only", state.branch]);
     state.applied = true;
     await atomic(file, state);
-    await mutateCampaignV4(
+    await mutateCampaignV5(
       projectRoot,
       root,
       "repair_applied",
@@ -1010,14 +1054,14 @@ async function resumeRepairIfReady(
   return null;
 }
 
-async function affectedSlices(
+async function analyzeWaveImpact(
   root: string,
-  campaign: CampaignV4,
+  campaign: CampaignRuntime,
   waveSliceIds: string[],
   integration?: string,
   scope?: ScopeFitResultV4,
-  coverage?: SourceCoverageV1,
-): Promise<string[]> {
+  coverage?: SourceCoverageV2,
+): Promise<WaveImpactDecisionV2> {
   const waveEntry = Object.entries(campaign.waves).find(
     ([, wave]) =>
       wave.slice_ids.length === waveSliceIds.length &&
@@ -1032,17 +1076,30 @@ async function affectedSlices(
             path.join(root, "waves", waveId, "impact-analysis.json"),
             "utf8",
           ),
-        ) as unknown as WaveImpactDecisionV1;
-        return prior.affected_slice_ids;
+        ) as unknown as WaveImpactDecisionV2;
+        if (
+          prior.schema_version === "campaign-wave-impact-v2" &&
+          Array.isArray(prior.affected_slice_ids) &&
+          Array.isArray(prior.affected_spec_ids)
+        )
+          return prior;
       } catch {}
     }
-    return Object.entries(campaign.slices)
+    const affected = Object.entries(campaign.slices)
       .filter(
         ([id, slice]) =>
           waveSliceIds.includes(id) || slice.status === "integration_verified",
       )
       .map(([id]) => id)
       .sort(asciiCompare);
+    return {
+      schema_version: "campaign-wave-impact-v2",
+      mode: "full",
+      affected_slice_ids: affected,
+      affected_spec_ids: [],
+      reason: "unknown_missing_impact_inputs",
+      reason_evidence: [],
+    };
   }
   const candidateIds = Object.entries(campaign.slices)
     .filter(
@@ -1063,6 +1120,12 @@ async function affectedSlices(
       async (id) => [id, await readChangeEnvelope(root, campaign, id)] as const,
     ),
   );
+  const specProfileEntries = await Promise.all(
+    candidateIds.map(
+      async (id) =>
+        [id, await readWaveSpecProfiles(root, campaign, id)] as const,
+    ),
+  );
   const changed = splitLines(
     (
       await runGit(integration, [
@@ -1074,40 +1137,46 @@ async function affectedSlices(
       ])
     ).stdout,
   );
-  const boundConstraints = scope.global_constraints
-    .filter((constraint) =>
-      constraint.applies_to.every((sliceId) =>
-        coverage.global_constraint_bindings.some(
-          (binding) =>
-            binding.constraint_id === constraint.constraint_id &&
-            binding.slice_id === sliceId,
+  const declaredConstraints = new Set(
+    scope.global_constraints.map((constraint) => constraint.constraint_id),
+  );
+  const globalConstraintSpecIds = unique(
+    coverage.global_constraint_bindings
+      .filter(
+        (binding) =>
+          declaredConstraints.has(binding.constraint_id) &&
+          candidateIds.includes(binding.slice_id),
+      )
+      .flatMap((binding) =>
+        binding.verification_spec_ids.map((specId) =>
+          waveSpecId(binding.slice_id, specId),
         ),
       ),
-    )
-    .map((constraint) => constraint.applies_to);
-  const decision = decideWaveImpactV1({
+  );
+  const decision = decideWaveImpactV2({
     wave_slice_ids: waveSliceIds,
     candidate_slice_ids: candidateIds,
     changed_paths: changed,
     profiles: Object.fromEntries(profileEntries),
     envelopes: Object.fromEntries(envelopeEntries),
-    global_constraint_slice_sets: boundConstraints,
+    spec_profiles: Object.fromEntries(specProfileEntries),
+    global_constraint_spec_ids: globalConstraintSpecIds,
   });
   await atomic(
     path.join(root, "waves", waveEntry[0], "impact-analysis.json"),
     decision,
   );
-  return decision.affected_slice_ids;
+  return decision;
 }
 async function readProfile(
   root: string,
-  campaign: CampaignV4,
+  campaign: CampaignRuntime,
   sliceId: string,
 ): Promise<ConflictProfileV4> {
   return JSON.parse(
     await readFile(
       path.join(
-        currentPacketRevisionPathV4(root, campaign, sliceId),
+        currentPacketRevisionPathV5(root, campaign, sliceId),
         "conflict-profile.json",
       ),
       "utf8",
@@ -1116,14 +1185,14 @@ async function readProfile(
 }
 async function readChangeEnvelope(
   root: string,
-  campaign: CampaignV4,
+  campaign: CampaignRuntime,
   sliceId: string,
 ): Promise<ChangeEnvelopeV1> {
   return validateChangeEnvelopeV1(
     parseStrictJson(
       await readFile(
         path.join(
-          currentPacketRevisionPathV4(root, campaign, sliceId),
+          currentPacketRevisionPathV5(root, campaign, sliceId),
           "change-envelope.json",
         ),
         "utf8",
@@ -1133,15 +1202,117 @@ async function readChangeEnvelope(
 }
 function packetInput(
   root: string,
-  campaign: CampaignV4,
+  campaign: CampaignRuntime,
   sliceId: string,
 ): CampaignFinalSliceInput {
   return {
     slice_id: sliceId,
-    packet_revision_path: currentPacketRevisionPathV4(root, campaign, sliceId),
+    packet_revision_path: currentPacketRevisionPathV5(root, campaign, sliceId),
+    receipt_path: path.join(
+      root,
+      "slices",
+      sliceId,
+      "receipts",
+      `${campaign.slices[sliceId].wave_id}-${campaign.slices[sliceId].head_commit!.slice(0, 12)}.json`,
+    ),
   };
 }
-function contractWorkdir(campaign: CampaignV4, sliceId: string): string {
+
+async function readWaveSpecProfiles(
+  root: string,
+  campaign: CampaignRuntime,
+  sliceId: string,
+): Promise<WaveVerificationSpecProfileV2[]> {
+  const bundle = await parseLongTaskSources(
+    currentPacketRevisionPathV5(root, campaign, sliceId),
+  );
+  const bindings = new Map(
+    bundle.plan.plan_items.flatMap((item) =>
+      item.obligations.flatMap((obligation) =>
+        obligation.implementation_bindings.map(
+          (binding) => [binding.id, binding] as const,
+        ),
+      ),
+    ),
+  );
+  const requirements = new Map(
+    bundle.product.requirements.map(
+      (requirement) => [requirement.id, requirement] as const,
+    ),
+  );
+  const fixtures = new Map(
+    bundle.checklist.counterexample_fixtures.map(
+      (fixture) => [fixture.id, fixture] as const,
+    ),
+  );
+  return bundle.checklist.verification_specs.map((spec) => {
+    const claimedBindings = spec.claims.binding_ids.map((bindingId) => {
+      const binding = bindings.get(bindingId);
+      if (!binding)
+        throw new Error(
+          `wave_spec_binding_missing:${sliceId}:${spec.id}:${bindingId}`,
+        );
+      return binding;
+    });
+    const controls = bundle.plan.counterfactual_controls.filter((control) =>
+      control.obligation_ids.some((obligationId) =>
+        spec.claims.obligation_ids.includes(obligationId),
+      ),
+    );
+    const counterfactualPaths = controls.flatMap((control) => {
+      if (control.mutation.type === "remove_binding_targets") return [];
+      const fixture = fixtures.get(control.mutation.fixture_id);
+      if (!fixture)
+        throw new Error(
+          `wave_spec_fixture_missing:${sliceId}:${spec.id}:${control.mutation.fixture_id}`,
+        );
+      return [control.mutation.target_path, fixture.path];
+    });
+    return {
+      slice_id: sliceId,
+      spec_id: spec.id,
+      binding_paths: unique(
+        claimedBindings
+          .filter(
+            (binding) =>
+              binding.kind === "file" || binding.kind === "path_glob",
+          )
+          .map((binding) => normalizeImpactPath(binding.target)),
+      ),
+      verification_paths: unique(
+        [
+          ...spec.input_paths,
+          spec.oracle.entrypoint,
+          ...spec.command_steps.map((step) => step.target),
+          ...counterfactualPaths,
+        ].map(normalizeImpactPath),
+      ),
+      contract_keys: unique(
+        claimedBindings
+          .filter(
+            (binding) =>
+              binding.kind !== "file" && binding.kind !== "path_glob",
+          )
+          .map((binding) => `${binding.kind}:${binding.target}`),
+      ),
+      context_refs: unique(
+        spec.claims.requirement_ids.flatMap((requirementId) => {
+          const requirement = requirements.get(requirementId);
+          if (!requirement)
+            throw new Error(
+              `wave_spec_requirement_missing:${sliceId}:${spec.id}:${requirementId}`,
+            );
+          return (requirement.context_refs ?? []).map(normalizeImpactPath);
+        }),
+      ),
+    };
+  });
+}
+
+function normalizeImpactPath(value: string): string {
+  return value.replace(/\\/g, "/").replace(/^\.\//, "");
+}
+function contractWorkdir(campaign: CampaignRuntime, sliceId: string): string {
   const slice = campaign.slices[sliceId];
   return path.join(
     slice.worktree!,
@@ -1154,15 +1325,15 @@ function contractWorkdir(campaign: CampaignV4, sliceId: string): string {
 }
 async function launchAction(
   root: string,
-  campaign: CampaignV4,
+  campaign: CampaignRuntime,
   waveId: string,
   wave: CampaignWaveV4,
-): Promise<CampaignAdvanceActionV4 | null> {
-  const goals: GoalLaunchV4[] = [];
+): Promise<CampaignAdvanceActionV5 | null> {
+  const goals: GoalLaunchV5[] = [];
   for (const sliceId of wave.slice_ids) {
     const slice = campaign.slices[sliceId];
     if (slice.status !== "worktree_ready") continue;
-    const manifest = requireGoalManifestV2(
+    const manifest = requireGoalManifestV3(
       await readSliceGoalManifest(
         path.join(
           root,
@@ -1190,7 +1361,7 @@ async function launchAction(
     : null;
 }
 function activeWaveEntry(
-  campaign: CampaignV4,
+  campaign: CampaignRuntime,
 ): [string, CampaignWaveV4] | null {
   return (
     Object.entries(campaign.waves)
@@ -1198,7 +1369,7 @@ function activeWaveEntry(
       .find(([, wave]) => wave.status !== "integration_verified") ?? null
   );
 }
-function nextWaveId(campaign: CampaignV4): string {
+function nextWaveId(campaign: CampaignRuntime): string {
   return `WAVE-${String(Object.keys(campaign.waves).length + 1).padStart(3, "0")}`;
 }
 async function readScope(root: string): Promise<ScopeFitResultV4> {
@@ -1206,8 +1377,8 @@ async function readScope(root: string): Promise<ScopeFitResultV4> {
     await readFile(path.join(root, "scope-fit.json"), "utf8"),
   );
 }
-async function readCoverage(root: string): Promise<SourceCoverageV1> {
-  return parseSourceCoverageV1(
+async function readCoverage(root: string): Promise<SourceCoverageV2> {
+  return parseSourceCoverageV2(
     await readFile(path.join(root, "source-coverage.json"), "utf8"),
   );
 }
@@ -1220,7 +1391,7 @@ function splitLines(value: string): string[] {
     .map((line) => line.trim())
     .filter(Boolean);
 }
-function deriveCampaignStatus(campaign: CampaignV4): string {
+function deriveCampaignStatus(campaign: CampaignRuntime): string {
   if (campaign.campaign_status === "accepted") return "accepted";
   if (
     Object.values(campaign.slices).every(
@@ -1238,7 +1409,7 @@ function deriveCampaignStatus(campaign: CampaignV4): string {
 }
 async function previewNextAction(
   root: string,
-  campaign: CampaignV4,
+  campaign: CampaignRuntime,
 ): Promise<string> {
   if (campaign.campaign_status === "accepted") return "finished";
   if (activeWaveEntry(campaign)) return "advance";
@@ -1314,13 +1485,25 @@ function samePath(left: string, right: string): boolean {
       : path.resolve(value);
   return normalize(left) === normalize(right);
 }
-function requireGoalManifestV2(
+function requireGoalManifestV3(
   value: Awaited<ReturnType<typeof readSliceGoalManifest>>,
-): SliceGoalManifestV2 {
-  if (value.schema_version !== "slice-goal-manifest-v2")
+): SliceGoalManifestV3 {
+  if (value.schema_version !== "slice-goal-manifest-v3")
     throw new Error("campaign_v4_goal_manifest_audit_only");
   return value;
 }
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+async function mergeConflictPaths(file: string): Promise<string[]> {
+  const value = parseStrictJson(await readFile(path.resolve(file), "utf8")) as {
+    conflicted_paths?: unknown;
+  };
+  if (
+    !Array.isArray(value.conflicted_paths) ||
+    value.conflicted_paths.some((item) => typeof item !== "string")
+  )
+    throw new Error("campaign_merge_conflict_paths_invalid");
+  return [...new Set(value.conflicted_paths as string[])].sort(asciiCompare);
 }

@@ -51,6 +51,43 @@ test("context_change_after_compile_invalidates_contract", async () => {
     /context_changed_after_compile/,
   );
 });
+test("referenced_context_change_invalidates_contract", async () => {
+  const x = await compiled();
+  assert.equal(x.contract.context_snapshot_mode, "referenced");
+  assert.match(x.contract.context_graph_sha256, /^[a-f0-9]{64}$/);
+  await appendFile(
+    path.join(x.root, "project_context/global.md"),
+    "\n- referenced drift\n",
+  );
+  await assert.rejects(
+    () => assertLongTaskContractFresh(x.contract),
+    /context_changed_after_compile:project_context\/global\.md/,
+  );
+});
+test("unrelated_context_change_does_not_invalidate_referenced_mode", async () => {
+  const x = await compiled();
+  await appendFile(
+    path.join(x.root, "project_context/areas/main.md"),
+    "\n- unrelated implementation note\n",
+  );
+  await assert.doesNotReject(() => assertLongTaskContractFresh(x.contract));
+});
+test("full_context_mode_invalidates_on_any_context_change", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "ltw-full-context-"));
+  const workdir = await writeHappyV3Contract(root, (data) => {
+    data.product.context_snapshot_mode = "full";
+  });
+  const contract = await compileLongTaskContract(workdir, root);
+  assert.equal(contract.context_snapshot_mode, "full");
+  await appendFile(
+    path.join(root, "project_context/areas/main.md"),
+    "\n- full-mode drift\n",
+  );
+  await assert.rejects(
+    () => assertLongTaskContractFresh(contract),
+    /context_changed_after_compile:project_context\/areas\/main\.md/,
+  );
+});
 test("oracle_changed_after_compile", async () => {
   const x = await compiled();
   await appendFile(

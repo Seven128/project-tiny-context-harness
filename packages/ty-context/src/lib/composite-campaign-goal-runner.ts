@@ -13,13 +13,13 @@ import {
 import { CampaignMutationQueue } from "./composite-campaign-mutation-queue.js";
 import {
   readSliceGoalManifest,
-  renderSliceGoalObjectiveV2,
-  type SliceGoalManifestV2,
+  renderSliceGoalObjectiveV3,
+  type SliceGoalManifestV3,
 } from "./composite-campaign-goal-manifest.js";
 import {
-  bindCampaignGoalV4,
-  recordCampaignResultV4,
-  type CampaignAdvanceActionV4,
+  bindCampaignGoalV5,
+  recordCampaignResultV5,
+  type CampaignAdvanceActionV5,
 } from "./composite-campaign-orchestrator.js";
 import {
   completeThreadTurnV5,
@@ -37,7 +37,7 @@ export interface GoalRunnerInput {
 }
 
 type LaunchWaveAction = Extract<
-  CampaignAdvanceActionV4,
+  CampaignAdvanceActionV5,
   { action: "launch_wave" }
 >;
 
@@ -84,7 +84,7 @@ async function launchSlice(
   sliceId: string,
   queue: CampaignMutationQueue,
 ): Promise<string> {
-  let loaded = await loadCampaignV5(input.projectRoot, input.campaignPath);
+  let loaded = await loadCampaignQueued(input, queue);
   let slice = loaded.campaign.slices[sliceId];
   if (
     !slice ||
@@ -95,7 +95,7 @@ async function launchSlice(
     slice.packet_revision === null
   )
     throw new Error(`campaign_slice_not_launchable:${sliceId}`);
-  const manifest = requireV2(
+  const manifest = requireV3(
     await readSliceGoalManifest(
       path.join(
         loaded.root,
@@ -113,7 +113,7 @@ async function launchSlice(
   );
   if (objective.length > 4000)
     throw new Error("goal_objective_too_long:maximum_4000_characters");
-  if (objective !== renderSliceGoalObjectiveV2(manifest))
+  if (objective !== renderSliceGoalObjectiveV3(manifest))
     throw new Error("goal_objective_manifest_mismatch");
   if (manifest.thread_id !== slice.thread.thread_id)
     throw new Error("goal_manifest_thread_mismatch");
@@ -128,7 +128,7 @@ async function launchSlice(
       status: "active",
     });
   await queue.run(() =>
-    bindCampaignGoalV4(
+    bindCampaignGoalV5(
       input.projectRoot,
       input.campaignPath,
       sliceId,
@@ -136,7 +136,7 @@ async function launchSlice(
       manifest.launch_token,
     ),
   );
-  loaded = await loadCampaignV5(input.projectRoot, input.campaignPath);
+  loaded = await loadCampaignQueued(input, queue);
   slice = loaded.campaign.slices[sliceId];
   if (slice.thread.active_turn_id) return slice.thread.active_turn_id;
   return startExecutionTurn(input, sliceId, objective, queue);
@@ -148,7 +148,7 @@ async function runSliceUntilAccepted(
   queue: CampaignMutationQueue,
 ): Promise<void> {
   for (let attempt = 0; attempt < 50; attempt += 1) {
-    let loaded = await loadCampaignV5(input.projectRoot, input.campaignPath);
+    let loaded = await loadCampaignQueued(input, queue);
     let slice = loaded.campaign.slices[sliceId];
     if (slice.status === "accepted") return;
     const manifest = await manifestFor(loaded.root, sliceId, slice.wave_id);
@@ -194,13 +194,13 @@ async function runSliceUntilAccepted(
       throw new Error(
         `app_server_execution_turn_failed:${sliceId}:${completion.status}:${errorText(completion.turn.error)}`,
       );
-    loaded = await loadCampaignV5(input.projectRoot, input.campaignPath);
+    loaded = await loadCampaignQueued(input, queue);
     slice = loaded.campaign.slices[sliceId];
     const result = await readResult(manifest.contract_workdir);
     if (result.workflow_status === "accepted") {
       try {
         await queue.run(() =>
-          recordCampaignResultV4(
+          recordCampaignResultV5(
             input.projectRoot,
             input.campaignPath,
             sliceId,
@@ -251,8 +251,7 @@ async function startExecutionTurn(
   message: string,
   queue: CampaignMutationQueue,
 ): Promise<string> {
-  const campaign = (await loadCampaignV5(input.projectRoot, input.campaignPath))
-    .campaign;
+  const campaign = (await loadCampaignQueued(input, queue)).campaign;
   const slice = campaign.slices[sliceId];
   if (
     !slice?.thread.thread_id ||
@@ -310,9 +309,9 @@ async function manifestFor(
   root: string,
   sliceId: string,
   waveId: string | null,
-): Promise<SliceGoalManifestV2> {
+): Promise<SliceGoalManifestV3> {
   if (!waveId) throw new Error(`slice_wave_missing:${sliceId}`);
-  return requireV2(
+  return requireV3(
     await readSliceGoalManifest(
       path.join(root, "waves", waveId, "goals", sliceId, "goal-manifest.json"),
     ),
@@ -351,11 +350,11 @@ function continuationPrompt(
   const findings = canonicalValueJson(result.findings).slice(0, 20000);
   return `Contract V3 for ${sliceId} still reports needs_work. Continue this same Goal and thread in the existing worktree. Repair every machine finding, commit intended changes, leave the worktree clean, and rerun final-gate. Findings: ${findings}`;
 }
-function requireV2(
+function requireV3(
   value: Awaited<ReturnType<typeof readSliceGoalManifest>>,
-): SliceGoalManifestV2 {
-  if (value.schema_version !== "slice-goal-manifest-v2")
-    throw new Error("slice_goal_manifest_v2_required");
+): SliceGoalManifestV3 {
+  if (value.schema_version !== "slice-goal-manifest-v3")
+    throw new Error("slice_goal_manifest_v3_required");
   return value;
 }
 function finalText(turn: CodexTurn): string | null {
@@ -392,10 +391,19 @@ function fulfilledOrThrow<T>(
   const rejected = settled.filter(
     (item): item is PromiseRejectedResult => item.status === "rejected",
   );
-  if (rejected.length)
+  if (rejected.length) {
+    const reasons = rejected.map((item) => errorText(item.reason));
     throw new AggregateError(
       rejected.map((item) => item.reason),
-      message,
+      `${message}:${reasons.join(" | ")}`,
     );
+  }
   return settled.map((item) => (item as PromiseFulfilledResult<T>).value);
+}
+
+function loadCampaignQueued(
+  input: GoalRunnerInput,
+  queue: CampaignMutationQueue,
+): ReturnType<typeof loadCampaignV5> {
+  return queue.run(() => loadCampaignV5(input.projectRoot, input.campaignPath));
 }

@@ -1,17 +1,17 @@
 import {
-  advanceCampaignV4,
-  bindCampaignGoalV4,
-  bindCampaignRepairGoalV4,
-  recordCampaignResultV4,
-  statusCampaignV4,
+  advanceCampaignV5,
+  bindCampaignGoalV5,
+  bindCampaignRepairGoalV5,
+  recordCampaignResultV5,
+  statusCampaignV5,
 } from "../lib/composite-campaign-orchestrator.js";
 import {
-  applyCampaignPacketV4,
-  applyCampaignScopeV4,
-  compositeCampaignV4Contract,
-  preflightCampaignPacketV4,
-  renderCampaignPacketV4,
-} from "../lib/composite-campaign-v4.js";
+  applyCampaignPacketV5,
+  applyCampaignScopeV5,
+  preflightCampaignPacketV5,
+  renderCampaignPacketV5,
+} from "../lib/composite-runtime-v5/campaign-packet-store.js";
+import { compositeCampaignContractV5 } from "../lib/composite-campaign-contract.js";
 import {
   applyCampaignCoverageV5,
   createCampaignV5,
@@ -51,7 +51,7 @@ async function executeDefinitionCommand(
   value: Map<string, string>,
 ): Promise<OptionalCommandResult> {
   if (command === "contract")
-    return { handled: true, result: compositeCampaignV4Contract() };
+    return { handled: true, result: compositeCampaignContractV5() };
   if (command === "create")
     return {
       handled: true,
@@ -60,7 +60,7 @@ async function executeDefinitionCommand(
         required(value, "--id"),
         required(value, "--plan-file"),
         value.get("--target-branch"),
-        { auto_push: optionalBoolean(value, "--auto-push") ?? false },
+        { auto_push: optionalBoolean(value, "--auto-push") ?? true },
       ),
     };
   if (command === "apply-coverage")
@@ -82,7 +82,7 @@ async function executeDefinitionCommand(
       );
     return {
       handled: true,
-      result: await applyCampaignScopeV4(
+      result: await applyCampaignScopeV5(
         root,
         campaign,
         required(value, "--input"),
@@ -93,7 +93,7 @@ async function executeDefinitionCommand(
   if (command === "apply-packet")
     return {
       handled: true,
-      result: await applyCampaignPacketV4(
+      result: await applyCampaignPacketV5(
         root,
         required(value, "--campaign"),
         required(value, "--slice"),
@@ -103,7 +103,7 @@ async function executeDefinitionCommand(
   if (command === "render")
     return {
       handled: true,
-      result: await renderCampaignPacketV4(
+      result: await renderCampaignPacketV5(
         root,
         required(value, "--campaign"),
         required(value, "--slice"),
@@ -112,7 +112,7 @@ async function executeDefinitionCommand(
   if (command === "preflight")
     return {
       handled: true,
-      result: await preflightCampaignPacketV4(
+      result: await preflightCampaignPacketV5(
         root,
         required(value, "--campaign"),
         required(value, "--slice"),
@@ -127,9 +127,9 @@ async function executeRuntimeCommand(
   value: Map<string, string>,
 ): Promise<unknown> {
   if (command === "advance")
-    return advanceCampaignV4(root, required(value, "--campaign"));
+    return advanceCampaignV5(root, required(value, "--campaign"));
   if (command === "bind-goal")
-    return bindCampaignGoalV4(
+    return bindCampaignGoalV5(
       root,
       required(value, "--campaign"),
       required(value, "--slice"),
@@ -137,7 +137,7 @@ async function executeRuntimeCommand(
       required(value, "--launch-token"),
     );
   if (command === "bind-repair-goal")
-    return bindCampaignRepairGoalV4(
+    return bindCampaignRepairGoalV5(
       root,
       required(value, "--campaign"),
       required(value, "--repair-id"),
@@ -145,7 +145,7 @@ async function executeRuntimeCommand(
       required(value, "--launch-token"),
     );
   if (command === "record-result")
-    return recordCampaignResultV4(
+    return recordCampaignResultV5(
       root,
       required(value, "--campaign"),
       required(value, "--slice"),
@@ -153,7 +153,7 @@ async function executeRuntimeCommand(
       required(value, "--workdir"),
     );
   if (command === "status")
-    return statusCampaignV4(root, required(value, "--campaign"));
+    return statusCampaignV5(root, required(value, "--campaign"));
   if (command === "run")
     return runCampaignV5({
       projectRoot: root,

@@ -40,7 +40,7 @@ Never copy a competing field inventory into this Skill. Never register Campaign 
 ty-context composite-campaign create --id <id> --plan-file <file> [--target-branch <branch>]
 ```
 
-3. Inventory every delivery-significant Source Unit, author complete source coverage/global constraints and one full maximal-cohesion Scope Fit V4 DAG, then publish with `apply-scope --coverage`. Every source item must carry `context_resolution`: `existing`/`updated` with registered `context_refs`, or `task_local` with a reason; Packet Requirement Context fields must match. Do not select only one SFC, omit later work or split for parallelism.
+3. Inventory every delivery-significant Source Unit, author complete Source Coverage V2/global constraints and one full maximal-cohesion Scope Fit V4 DAG, then publish with `apply-scope --coverage`. Every non-terminal source item must carry `context_resolution`: `existing`/`updated` with registered `context_refs`, or `task_local` with a reason; terminal dispositions use `null`, and Packet Requirement Context fields must match. Do not select only one SFC, omit later work or split for parallelism.
 4. A genuine unresolved product/scope/architecture choice is `decision_blocked`. Priority ties, file conflicts and execution order are scheduler inputs and never user decisions.
 
 ## App Server Run Loop
@@ -65,16 +65,16 @@ App Server unavailability never falls back to manual or uncertain Goal creation.
 ## Goal And Recovery Discipline
 
 - Packet preflight must pass before `thread/goal/set`; authoring has no Goal and cannot modify product code.
-- A Goal objective is validated at 4000 characters or fewer before it is sent. Goal Manifest V2 binds thread, authoring/execution profiles, routing, Git, Packet, worktree and launch identity.
+- Validate Goal objectives at 4000 characters or fewer. Goal Manifest V3 binds thread, profiles, routing, Git, Packet, worktree, launch and hashed Change Envelope identities; V2 is audit-only.
 - Persist thread/Turn/Goal launch intent before external work. Resume/read known identities after a crash; never create a replacement when launch outcome is ambiguous.
 - One App Server reconnect is allowed. Reconcile known threads, Goals and Turns from server state; a second failure becomes `wait_external`.
 - Campaign freezes Context graph/baseline hashes. Before Goal start, unchanged baselines read only the SFC's referenced Context; relevant Scope/owner/architecture/acceptance changes reauthor the Packet. Compile freezes referenced Context by default or full Context explicitly.
-- Goal execution stays inside its machine Change Envelope. Every `base..head` path must be an allowed binding carrier or explicit supporting path; `project_context/**` and `.codex/composite-long-task/**` remain hard-forbidden after Goal creation even if a Packet tries to allow them, and repair gets only the union of affected Slice envelopes. It commits before full final-gate and leaves a clean worktree.
+- Goal execution stays inside its Change Envelope. Each Obligation has a file/path-glob carrier; non-file contract keys never widen scope. Every `base..head` path must be an allowed carrier/support path; Context and Campaign state stay hard-forbidden. Repair gets only affected-envelope unions plus explicit conflicts. Commit cleanly before full final-gate and Envelope-bound Receipt V2.
 - `record-result` validates an existing current result and dual receipt. It never runs final-gate or upgrades prose/intermediate checks into acceptance.
 
 ## Completion Authority
 
-`verify` is optional targeted repair tooling and never accepts. Slice acceptance is not Campaign acceptance. Wave impact combines merge diff, bindings, verification inputs, contract keys, Context refs and global constraints, with full fallback when independence is unproven. Campaign Final Gate compiles all Slices on one shared snapshot and deduplicates only fully identity-equal Specs on that snapshot. Target movement invalidates the result until synchronization and revalidation succeed.
+`verify` is optional and non-accepting. Slice Final runs every frozen Spec. Wave Impact V2 selects qualified Specs from actual merge diff and frozen path/contract/Context evidence; global-constraint Specs always run and uncertainty selects all. Campaign Final Gate runs all Slices on one shared snapshot and deduplicates only exact execution identities. Target movement invalidates the result until synchronization and revalidation.
 
 Never infer completion from status prose, historical receipts, validators, matrices, Skill output, App Server Goal status or Fake Server output. Campaign `accepted` is CLI-derived only after target integration.
 

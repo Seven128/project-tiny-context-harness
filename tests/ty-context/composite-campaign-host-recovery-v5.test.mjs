@@ -15,10 +15,17 @@ import { buildModelCatalog } from "../../packages/ty-context/dist/lib/codex-mode
 import { routeCodexModel } from "../../packages/ty-context/dist/lib/codex-model-router.js";
 import { recoverCampaignHostV5 } from "../../packages/ty-context/dist/lib/composite-campaign-host-recovery.js";
 import {
+  bindThreadGoalV5,
   bindThreadIdentityV5,
   bindThreadRoutingV5,
+  markPacketValidationV5,
+  markWorktreeReadyV5,
+  reconcileThreadTurnV5,
+  recordAuthoringTurnV5,
+  recordExecutionTurnV5,
 } from "../../packages/ty-context/dist/lib/composite-campaign-thread-state.js";
-import { applyCampaignScopeV4 } from "../../packages/ty-context/dist/lib/composite-campaign-v4.js";
+import { emptyThreadStateV5 } from "../../packages/ty-context/dist/lib/composite-campaign-schema-v5.js";
+import { applyCampaignScopeV5 } from "../../packages/ty-context/dist/lib/composite-runtime-v5/campaign-packet-store.js";
 import {
   createCampaignV5,
   loadCampaignV5,
@@ -50,6 +57,74 @@ test("App Server sibling Turns settle and reconcile before Host exit", async () 
   assert.match(sources[2], /settleOutstandingTurnsBeforeClose/u);
   assert.match(sources[2], /recoverCampaignHostV5/u);
   assert.match(sources[2], /app_server_unknown_mutation_on_shutdown/u);
+});
+
+test("one_authoring_failure_reconciles_siblings", async () => {
+  const source = await sourceFile("composite-campaign-packet-author.ts");
+  assert.match(source, /Promise\.allSettled/u);
+  assert.match(source, /campaign_packet_authoring_failed_after_all_slices_settled/u);
+  assert.match(source, /AggregateError/u);
+});
+
+test("one_launch_failure_reconciles_started_turns", async () => {
+  const [runner, host] = await Promise.all([
+    sourceFile("composite-campaign-goal-runner.ts"),
+    sourceFile("composite-campaign-thread-orchestrator.ts"),
+  ]);
+  assert.match(runner, /campaign_wave_launch_failed_after_all_goals_settled/u);
+  assert.match(runner, /Promise\.allSettled/u);
+  assert.match(runner, /loadCampaignQueued/u);
+  assert.match(host, /settleOutstandingTurnsBeforeClose/u);
+});
+
+test("one_execution_failure_waits_for_sibling_terminal_state", async () => {
+  const source = await sourceFile("composite-campaign-goal-runner.ts");
+  assert.match(source, /campaign_goal_wait_failed_after_all_goals_settled/u);
+  assert.match(source, /sliceIds\.map\(\(sliceId\) => runSliceUntilAccepted/u);
+});
+
+test("completed_sibling_is_not_restarted", async () => {
+  const [author, runner] = await Promise.all([
+    sourceFile("composite-campaign-packet-author.ts"),
+    sourceFile("composite-campaign-goal-runner.ts"),
+  ]);
+  assert.match(author, /slice\.status === "packet_ready"\) return "authored"/u);
+  assert.match(runner, /slice\.status === "accepted"\) return/u);
+});
+
+test("interrupted_sibling_resumes_same_goal", async () => {
+  const source = await sourceFile("composite-campaign-goal-runner.ts");
+  assert.match(source, /completion\.status === "interrupted"/u);
+  assert.match(source, /resumeThread\(manifest\.thread_id\)/u);
+  assert.match(source, /Resume the same Goal/u);
+});
+
+test("host_exit_leaves_no_unknown_running_turn", async () => {
+  const decision = routeCodexModel(
+    { model: "gpt-5.6-sol", effort: "xhigh" },
+    buildModelCatalog([
+      {
+        id: "gpt-5.6-sol",
+        model: "gpt-5.6-sol",
+        supportedReasoningEfforts: [
+          { reasoningEffort: "medium", description: "medium" },
+          { reasoningEffort: "xhigh", description: "xhigh" },
+        ],
+      },
+    ]),
+  );
+  let state = emptyThreadStateV5();
+  state = bindThreadIdentityV5(bindThreadRoutingV5(state, decision), "thr", "thr");
+  state = recordAuthoringTurnV5(state, "author");
+  state = markPacketValidationV5(state);
+  state = markWorktreeReadyV5(state);
+  state = bindThreadGoalV5(state, "a".repeat(64), "launch");
+  state = recordExecutionTurnV5(state, "execute");
+  state = reconcileThreadTurnV5(state, "execute", "system_error");
+  assert.equal(state.turn_observations.execute.status, "unknown");
+  assert.equal(state.turn_observations.execute.reconciliation_required, true);
+  const source = await sourceFile("composite-campaign-thread-orchestrator.ts");
+  assert.match(source, /app_server_unknown_mutation_on_shutdown/u);
 });
 
 test("app_server_restart_resumes_thread and reconciles a correlated unknown authoring Turn", async () => {
@@ -210,7 +285,7 @@ async function campaignFixture(name, withScope = true) {
       decision_required: null,
     };
     const coverage = {
-      schema_version: "composite-source-coverage-v1",
+      schema_version: "composite-source-coverage-v2",
       source_plan_sha256: hash,
       items: [
         {
@@ -231,7 +306,7 @@ async function campaignFixture(name, withScope = true) {
     };
     await writeFile(path.join(root, "scope.json"), JSON.stringify(scope));
     await writeFile(path.join(root, "coverage.json"), JSON.stringify(coverage));
-    await applyCampaignScopeV4(
+    await applyCampaignScopeV5(
       root,
       created.campaign_path,
       "scope.json",
@@ -279,4 +354,13 @@ class UnavailableClient {
     throw new AppServerUnavailableError("scripted");
   }
   async close() {}
+}
+
+function sourceFile(file) {
+  return readFile(
+    fileURLToPath(
+      new URL(`../../packages/ty-context/src/lib/${file}`, import.meta.url),
+    ),
+    "utf8",
+  );
 }

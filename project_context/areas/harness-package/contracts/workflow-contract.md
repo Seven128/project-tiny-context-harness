@@ -109,7 +109,7 @@ Composite must not create or consume a second `plan.md`, Task Contract, Context-
 
 Before Scope Fit, the campaign aligns durable product/domain ownership, surface responsibility, architecture/API/schema/state/recovery semantics, cross-module dependencies and global verification constraints.
 
-Existing Campaign Source Coverage carries Context resolution directly:
+Campaign Source Coverage V2 carries Context resolution directly; V1 remains V4-audit-only:
 
 - `existing` and `updated` require one or more registered `context_refs`;
 - `updated` requires the referenced Context bytes to be current;

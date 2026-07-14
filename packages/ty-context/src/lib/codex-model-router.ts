@@ -31,7 +31,8 @@ export type ModelRoutingReason =
   | "catalog_upgrade_to_sol_medium"
   | "below_threshold_passthrough"
   | "unknown_profile_passthrough"
-  | "target_unavailable_passthrough";
+  | "target_unavailable_passthrough"
+  | "policy_unavailable_passthrough";
 
 export interface ModelRoutingDecision {
   authoring_profile: ModelProfile;
@@ -47,13 +48,33 @@ export interface ModelRoutingDecision {
 export function routeCodexModel(
   controller: Partial<ModelProfile> | null | undefined,
   catalog: CodexModelCatalog,
+  policy = MODEL_ROUTING_POLICY,
+  policySha256 = MODEL_ROUTING_POLICY_SHA256,
 ): ModelRoutingDecision {
   const input = profileOrUnknown(controller);
+  const rule = policy.rules[0];
+  if (!rule)
+    return decide(
+      input,
+      input,
+      false,
+      "policy_unavailable_passthrough",
+      catalog,
+      policy,
+      policySha256,
+    );
   const canonical = canonicalCatalogModel(catalog, input.model);
   if (!canonical || !isKnownEffort(input.effort))
-    return decide(input, input, false, "unknown_profile_passthrough", catalog);
+    return decide(
+      input,
+      input,
+      false,
+      "unknown_profile_passthrough",
+      catalog,
+      policy,
+      policySha256,
+    );
   const authoring = { model: canonical, effort: input.effort };
-  const rule = MODEL_ROUTING_POLICY.rules[0];
   const eligibleEffort = rule.accepted_efforts.includes(input.effort);
   const exactSol = canonical === rule.controller_family;
   const successor =
@@ -66,6 +87,8 @@ export function routeCodexModel(
       false,
       "below_threshold_passthrough",
       catalog,
+      policy,
+      policySha256,
     );
   if (!catalogSupports(catalog, rule.execution.model, rule.execution.effort))
     return decide(
@@ -74,6 +97,8 @@ export function routeCodexModel(
       false,
       "target_unavailable_passthrough",
       catalog,
+      policy,
+      policySha256,
     );
   const execution = { ...rule.execution };
   return decide(
@@ -83,6 +108,8 @@ export function routeCodexModel(
       authoring.effort !== execution.effort,
     successor ? rule.successor_reason : rule.exact_reasons[input.effort],
     catalog,
+    policy,
+    policySha256,
   );
 }
 
@@ -109,14 +136,16 @@ function decide(
   switched: boolean,
   reason: ModelRoutingReason,
   catalog: CodexModelCatalog,
+  policy: typeof MODEL_ROUTING_POLICY,
+  policySha256: string,
 ): ModelRoutingDecision {
   const identity = {
     authoring_profile: authoring,
     execution_profile: execution,
     switched,
     reason,
-    policy_id: MODEL_ROUTING_POLICY.policy_id,
-    policy_sha256: MODEL_ROUTING_POLICY_SHA256,
+    policy_id: policy.policy_id,
+    policy_sha256: policySha256,
     catalog_sha256: catalog.sha256,
   };
   return {

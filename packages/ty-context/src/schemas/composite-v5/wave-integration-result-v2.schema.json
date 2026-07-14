@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-tiny-context-harness.invalid/schemas/composite-v5/wave-integration-result-v2.schema.json",
+  "title": "Wave Integration Result V2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "campaign_id",
+    "wave_id",
+    "workflow_status",
+    "integration_head",
+    "integration_tree",
+    "final_snapshot_sha256",
+    "impact_analysis_sha256",
+    "affected_spec_ids",
+    "slice_results",
+    "completed_at",
+    "result_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": "wave-integration-result-v2" },
+    "campaign_id": { "$ref": "#/$defs/text" },
+    "wave_id": { "type": "string", "pattern": "^WAVE-[0-9]{3,}$" },
+    "workflow_status": { "enum": ["needs_work", "integration_verified"] },
+    "integration_head": { "$ref": "#/$defs/gitSha" },
+    "integration_tree": { "$ref": "#/$defs/gitSha" },
+    "final_snapshot_sha256": { "$ref": "#/$defs/sha256" },
+    "impact_analysis_sha256": { "$ref": "#/$defs/sha256" },
+    "affected_spec_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^SFC-[0-9]{3,}:.+$" }
+    },
+    "slice_results": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/sliceResult" }
+    },
+    "completed_at": { "type": "string", "format": "date-time" },
+    "result_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1 },
+    "gitSha": { "type": "string", "pattern": "^[a-f0-9]{40,64}$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "sliceResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slice_id",
+        "contract_sha256",
+        "run_id",
+        "final_snapshot_sha256",
+        "verification_scope",
+        "spec_results",
+        "finding_categories"
+      ],
+      "properties": {
+        "slice_id": { "type": "string", "pattern": "^SFC-[0-9]{3,}$" },
+        "contract_sha256": { "$ref": "#/$defs/sha256" },
+        "run_id": { "$ref": "#/$defs/text" },
+        "final_snapshot_sha256": { "$ref": "#/$defs/sha256" },
+        "verification_scope": { "const": "impact_repair" },
+        "spec_results": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "enum": ["passed", "failed", "blocked"] }
+        },
+        "finding_categories": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

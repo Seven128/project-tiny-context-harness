@@ -91,7 +91,7 @@ test(
       decision_required: null,
     };
     const coverage = {
-      schema_version: "composite-source-coverage-v1",
+      schema_version: "composite-source-coverage-v2",
       source_plan_sha256: sourceHash,
       items: [
         coverageItem("SRC-001", "SFC-001"),
@@ -193,6 +193,39 @@ test(
       "--json",
     ]);
     assert.equal(status.derived_status, "accepted");
+    const impact = JSON.parse(
+      await readFile(
+        path.join(root, campaignPath, "waves", "WAVE-001", "impact-analysis.json"),
+        "utf8",
+      ),
+    );
+    const integrationResult = JSON.parse(
+      await readFile(
+        path.join(root, campaignPath, "waves", "WAVE-001", "integration-result.json"),
+        "utf8",
+      ),
+    );
+    assert.equal(impact.schema_version, "campaign-wave-impact-v2");
+    assert.equal(integrationResult.schema_version, "wave-integration-result-v2");
+    assert.deepEqual(
+      integrationResult.affected_spec_ids,
+      impact.affected_spec_ids,
+    );
+    assert.ok(
+      integrationResult.slice_results.every(
+        (sliceResult) => sliceResult.verification_scope === "impact_repair",
+      ),
+    );
+    assert.deepEqual(
+      integrationResult.slice_results
+        .flatMap((sliceResult) =>
+          Object.keys(sliceResult.spec_results).map(
+            (specId) => `${sliceResult.slice_id}:${specId}`,
+          ),
+        )
+        .sort(),
+      impact.affected_spec_ids,
+    );
     const log = (await readFile(logFile, "utf8"))
       .trim()
       .split(/\r?\n/u)

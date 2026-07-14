@@ -9,7 +9,10 @@ import {
   writeHappyV3Contract,
 } from "./long-task-v3-fixtures.mjs";
 import { compileLongTaskContract } from "../../packages/ty-context/dist/lib/long-task-contract-compiler.js";
-import { verifyLongTask } from "../../packages/ty-context/dist/lib/long-task-verifier.js";
+import {
+  verificationSpecExecutionIdentity,
+  verifyLongTask,
+} from "../../packages/ty-context/dist/lib/long-task-verifier.js";
 import { runLongTaskFinalGate } from "../../packages/ty-context/dist/lib/long-task-final-gate.js";
 import { createLongTaskSnapshot } from "../../packages/ty-context/dist/lib/long-task-snapshot.js";
 
@@ -102,7 +105,15 @@ test("one concrete finding is emitted for every obligation binding", async () =>
   );
 });
 
-test("targeted_verify_does_not_authorize_acceptance", async () => {
+test("verify_is_optional_before_first_final_gate", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "ltw-no-prefinal-verify-"));
+  const workdir = await writeHappyV3Contract(root);
+  await compileLongTaskContract(workdir, root);
+  const result = await runLongTaskFinalGate(workdir);
+  assert.equal(result.workflow_status, "accepted");
+});
+
+test("targeted_verify_does_not_accept", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "ltw-targeted-"));
   const workdir = await writeHappyV3Contract(root);
   await compileLongTaskContract(workdir, root);
@@ -111,7 +122,7 @@ test("targeted_verify_does_not_authorize_acceptance", async () => {
   assert.equal(run.acceptance_authorized, false);
 });
 
-test("final_gate_always_runs_full_slice_scope", async () => {
+test("final_gate_always_runs_all_slice_specs", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "ltw-full-scope-"));
   const workdir = await writeHappyV3Contract(root);
   const contract = await compileLongTaskContract(workdir, root);
@@ -127,7 +138,7 @@ test("final_gate_always_runs_full_slice_scope", async () => {
   assert.equal(run.spec_results.length, contract.verification_specs.length);
 });
 
-test("campaign_final_deduplicates_identical_specs_on_same_snapshot", async () => {
+test("Campaign Final shared-snapshot execution identity", async (t) => {
   const root = await mkdtemp(path.join(os.tmpdir(), "ltw-campaign-cache-"));
   const workdir = await writeHappyV3Contract(root);
   const counter = path.join(
@@ -162,8 +173,48 @@ test("campaign_final_deduplicates_identical_specs_on_same_snapshot", async () =>
     });
     assert.equal(first.spec_results[0].status, "passed");
     assert.equal(second.spec_results[0].status, "passed");
-    assert.equal(specResultCache.size, 1);
-    assert.equal(await readFile(counter, "utf8"), "x");
+    await t.test("campaign_final_uses_one_shared_snapshot", () => {
+      assert.equal(
+        first.snapshot.snapshot_sha256,
+        second.snapshot.snapshot_sha256,
+      );
+      assert.equal(first.snapshot.snapshot_sha256, snapshot.manifest.snapshot_sha256);
+    });
+    await t.test("identical_specs_execute_once_on_shared_snapshot", async () => {
+      assert.equal(specResultCache.size, 1);
+      assert.equal(await readFile(counter, "utf8"), "x");
+    });
+    await t.test("different_oracle_or_input_identity_does_not_dedupe", () => {
+      const original = contract.verification_specs[0];
+      const originalIdentity = verificationSpecExecutionIdentity(
+        original,
+        snapshot.manifest.snapshot_sha256,
+        first.environment,
+      );
+      const differentOracle = structuredClone(original);
+      differentOracle.oracle_sha256 = {
+        ...differentOracle.oracle_sha256,
+        "tests/acceptance/oracle.mjs": "f".repeat(64),
+      };
+      const differentInput = structuredClone(original);
+      differentInput.input_paths = [...differentInput.input_paths, "src/other/**"];
+      assert.notEqual(
+        verificationSpecExecutionIdentity(
+          differentOracle,
+          snapshot.manifest.snapshot_sha256,
+          first.environment,
+        ),
+        originalIdentity,
+      );
+      assert.notEqual(
+        verificationSpecExecutionIdentity(
+          differentInput,
+          snapshot.manifest.snapshot_sha256,
+          first.environment,
+        ),
+        originalIdentity,
+      );
+    });
   } finally {
     await snapshot.dispose();
   }

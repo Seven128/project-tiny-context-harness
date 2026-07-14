@@ -7,8 +7,6 @@
   "required": ["schema_version", "plan_items", "counterfactual_controls"],
   "properties": {
     "schema_version": { "const": "technical-plan-v3" },
-    "supporting_paths": { "$ref": "#/$defs/safePathArray" },
-    "forbidden_paths": { "$ref": "#/$defs/safePathArray" },
     "plan_items": { "type": "array", "minItems": 1, "maxItems": 2000, "uniqueItems": true, "items": { "$ref": "#/$defs/planItem" } },
     "counterfactual_controls": { "type": "array", "minItems": 1, "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/counterfactualControl" } }
   },
@@ -18,7 +16,6 @@
     "token": { "type": "string", "minLength": 1, "maxLength": 256 },
     "idArray": { "type": "array", "minItems": 1, "maxItems": 10000, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
     "safePath": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^(?![A-Za-z]:)(?!/)(?!\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$" },
-    "safePathArray": { "type": "array", "maxItems": 50000, "uniqueItems": true, "items": { "$ref": "#/$defs/safePath" } },
     "planItem": {
       "type": "object",
       "additionalProperties": false,
@@ -52,12 +49,11 @@
         "id": { "allOf": [{ "$ref": "#/$defs/id" }, { "pattern": "^IB-" }] },
         "kind": { "enum": ["path_glob", "file", "symbol", "schema", "route", "runtime_capability"] },
         "target": { "$ref": "#/$defs/token" },
-        "carrier_paths": { "$ref": "#/$defs/safePathArray" },
         "verification": { "oneOf": [{ "$ref": "#/$defs/staticVerification" }, { "$ref": "#/$defs/oracleVerification" }] }
       },
       "allOf": [
         { "if": { "properties": { "kind": { "enum": ["path_glob", "file"] } }, "required": ["kind"] }, "then": { "properties": { "target": { "$ref": "#/$defs/safePath" }, "verification": { "$ref": "#/$defs/staticVerification" } } } },
-        { "if": { "properties": { "kind": { "enum": ["symbol", "schema", "route", "runtime_capability"] } }, "required": ["kind"] }, "then": { "required": ["carrier_paths"], "properties": { "carrier_paths": { "minItems": 1 }, "verification": { "$ref": "#/$defs/oracleVerification" } } } },
+        { "if": { "properties": { "kind": { "enum": ["symbol", "schema", "route", "runtime_capability"] } }, "required": ["kind"] }, "then": { "properties": { "verification": { "$ref": "#/$defs/oracleVerification" } } } },
         { "if": { "properties": { "kind": { "const": "route" } }, "required": ["kind"] }, "then": { "properties": { "target": { "pattern": "^/(?!/)(?!.*[?#])[^?#]*$" } } } },
         { "if": { "properties": { "kind": { "const": "runtime_capability" } }, "required": ["kind"] }, "then": { "properties": { "target": { "pattern": "^[a-z][a-z0-9.-]{1,127}$" } } } },
         { "if": { "properties": { "kind": { "enum": ["symbol", "schema"] } }, "required": ["kind"] }, "then": { "properties": { "target": { "pattern": "^[^#]+#.+$" } } } }

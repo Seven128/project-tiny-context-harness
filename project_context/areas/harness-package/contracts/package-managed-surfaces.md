@@ -18,7 +18,7 @@ This contract defines which repository surfaces are package-managed, generated, 
 - `PROJECT_SPEC.md` is the full Harness workflow design-spec surface for this source workspace, not a consumer default asset.
 - `project_context/**` is the source workspace durable fact surface. It can describe this repository's own package boundaries without becoming consumer default content.
 - Composite Campaign V5 source-plan, Source Unit coverage, Scope Fit V4 graph, execution-host/thread coordination and audit, immutable packet/schedule revisions, Goal/branch/commit identities, Slice receipt hashes, integration results and verifier-derived final result are Git-trackable user-owned project data created only by explicit preparation. They are not package-managed assets, generated default lifecycle/plan state or Context graph nodes. Mutable compiled contracts, verifier runs, raw command output and active workdir state remain temporary rather than tracked campaign data. The local Fake App Server is a maintainer test asset, never a consumer runtime fallback.
-- Composite package assets are shipped but only `ty-context enable composite-codex` installs/refreshes Codex Hooks, Composite Skills and Campaign CLI surfaces. Non-Codex default installation must not write Codex-only Hooks. Composite assets must not require privileged Host infrastructure.
+- Composite package assets are shipped but only `ty-context enable composite-codex` installs/refreshes Codex Hooks, Composite Skills and Campaign CLI surfaces. `ty-context disable composite-codex` removes package-owned Hooks/handlers/skills without deleting user Hooks or portable/default capability. Non-Codex default installation must not write Codex-only Hooks. Composite assets must not require privileged Host infrastructure.
 
 ## Source Sync Boundary
 
@@ -40,7 +40,7 @@ This contract defines which repository surfaces are package-managed, generated, 
 ## Consumer Asset Boundary
 
 - `init`, `sync` and `upgrade` install/refresh only enabled profiles and must not generate project semantics, plan artifacts, lifecycle state or campaigns. Explicit `enable composite-codex` installs capability only; it does not activate a task or scan campaign data.
-- Consumer `.github/workflows/harness.yml` runs selected portable Harness gates only and never package Composite self-tests. Source-repository PR CI runs focused Workflow/Contract/Campaign black boxes, main runs full package/Composite plus quickstart/pack preview, and publication verifies the exact tarball in an empty repository. These maintainer gates are not copied into consumer workflows.
+- Consumer `.github/workflows/harness.yml` runs selected portable Harness gates only and never package Composite self-tests. Source-repository PR/main/publish gates run the complete default and Composite suites, while local default `npm test` excludes Composite self-tests. Publication packs once and verifies the exact tarball plus Release Artifact V2 environment/lockfile identity in an empty repository. These maintainer gates are not copied into consumer workflows.
 - Default consumer or maintainer CI must not install privileged services, virtual machines, containers, browser matrices or administrator environments for the pre-stable Composite workflow. Host-security, compatibility and platform-release validation are deferred work outside the current formal package surface.
 - Public package surfaces must be fully usable in English. Non-English trigger examples are compatibility additions only.
 

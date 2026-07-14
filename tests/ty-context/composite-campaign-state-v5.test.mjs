@@ -4,12 +4,14 @@ import { access, mkdtemp, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import {
+  canonicalJson,
   canonicalValueJson,
   sha256Hex,
 } from "../../packages/ty-context/dist/lib/composite-campaign-codec.js";
 import {
   createSliceGoalManifest,
   createSliceGoalManifestV2,
+  createSliceGoalManifestV3,
   readSliceGoalManifest,
   renderSliceGoalObjective,
 } from "../../packages/ty-context/dist/lib/composite-campaign-goal-manifest.js";
@@ -29,26 +31,38 @@ import {
   recordExecutionTurnV5,
 } from "../../packages/ty-context/dist/lib/composite-campaign-thread-state.js";
 
-test("Goal Manifest V2 persists thread/model/routing identity and a bounded objective", async () => {
+test("routing_policy_hash_is_persisted", async () => {
   assert.deepEqual(Object.keys(COMPOSITE_V5_SCHEMAS).sort(), [
+    "campaign-wave-impact-v2",
     "composite-campaign-v5",
+    "composite-source-coverage-v2",
     "scope-fit-result-v4",
-    "slice-goal-manifest-v2",
+    "slice-change-envelope-v1",
+    "slice-execution-receipt-v2",
+    "slice-goal-manifest-v3",
+    "wave-integration-result-v2",
   ]);
   assert.match(COMPOSITE_V5_SCHEMA_SET_SHA256, /^[a-f0-9]{64}$/);
-  const root = await mkdtemp(path.join(os.tmpdir(), "goal-manifest-v2-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "goal-manifest-v3-"));
   const worktree = path.join(root, "worktree");
   const contract = path.join(worktree, "tmp", "contract");
-  const created = await createSliceGoalManifestV2(
+  const created = await createSliceGoalManifestV3(
     root,
     input(worktree, contract),
   );
   const reread = await readSliceGoalManifest(created.manifest_path);
-  assert.equal(reread.schema_version, "slice-goal-manifest-v2");
+  assert.equal(reread.schema_version, "slice-goal-manifest-v3");
   assert.equal(reread.thread_id, "thr-001");
   assert.equal(reread.authoring_effort, "xhigh");
   assert.equal(reread.execution_effort, "medium");
   assert.equal(reread.routing_reason, "sol_xhigh_to_medium");
+  assert.equal(reread.routing_policy_id, "sol-xhigh-execution-medium");
+  assert.equal(reread.routing_policy_sha256, "1".repeat(64));
+  assert.equal(reread.routing_catalog_sha256, "2".repeat(64));
+  assert.equal(
+    reread.routing_decision_sha256,
+    routingDecision().decision_sha256,
+  );
   const objective = await readFile(created.objective_path, "utf8");
   assert.ok(objective.length <= 4000);
   assert.match(objective, /Read only the Context referenced by this Slice/);
@@ -59,7 +73,7 @@ test("Goal Manifest V2 persists thread/model/routing identity and a bounded obje
     path.join(worktree, "tmp", "x".repeat(3800)),
   );
   await assert.rejects(
-    () => createSliceGoalManifestV2(path.join(root, "oversized"), oversized),
+    () => createSliceGoalManifestV3(path.join(root, "oversized"), oversized),
     /maximum_4000/,
   );
   await assert.rejects(() =>
@@ -74,6 +88,13 @@ test("Goal Manifest V2 persists thread/model/routing identity and a bounded obje
         "goal-manifest.json",
       ),
     ),
+  );
+});
+
+test("Goal Manifest V2 is audit-only for new Campaign V5 execution", async () => {
+  await assert.rejects(
+    () => createSliceGoalManifestV2("unused", {}),
+    /V2 is audit-only/u,
   );
 });
 
@@ -121,14 +142,7 @@ function input(worktree, contract_workdir) {
     forbidden_campaign_state_paths: [
       ".codex/composite-long-task/campaigns/campaign",
     ],
-    change_envelope: {
-      schema_version: "slice-change-envelope-v1",
-      allowed_write_paths: ["src/**"],
-      allowed_supporting_paths: [],
-      forbidden_paths: [".codex/composite-long-task/campaigns/campaign"],
-      undeclared_change_policy: "reject",
-      binding_carrier_paths: {},
-    },
+    change_envelope: changeEnvelope(),
     thread_id: "thr-001",
     authoring_model: "gpt-5.6-sol",
     authoring_effort: "xhigh",
@@ -141,6 +155,23 @@ function input(worktree, contract_workdir) {
     routing_catalog_sha256: "2".repeat(64),
     routing_decision_sha256: routingDecision().decision_sha256,
   };
+}
+
+function changeEnvelope() {
+  const identity = {
+    schema_version: "slice-change-envelope-v1",
+    allowed_write_paths: ["src/**"],
+    allowed_supporting_paths: [],
+    allowed_contract_keys: [],
+    forbidden_paths: [
+      ".codex/composite-long-task/**",
+      ".codex/ty-context-active-long-task.json",
+      ".codex/ty-context-final-result-receipt.json",
+      "project_context/**",
+    ],
+    undeclared_change_policy: "reject",
+  };
+  return { ...identity, envelope_sha256: sha256Hex(canonicalJson(identity)) };
 }
 
 function routingDecision() {

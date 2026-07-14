@@ -54,6 +54,5 @@ Scope Fit preserves semantic completeness and the largest coherent independently
 - `make validate-context`: Context recoverability only.
 - `make validate-harness`: Context plus touched-source modularity.
 - `npx --yes --package project-tiny-context-harness@latest ty-context package check-source`: managed-source/package drift.
-- `npx --yes --package project-tiny-context-harness@latest ty-context validate-plan-acceptance <dir>`: optional legacy ordinary-long-task artifact consistency only; not default Workflow or product proof.
 
 Every handoff reports exactly one of `Context: updated ...` or `Context: no durable fact change`. Never claim tests, deployment or acceptance from Context alone.

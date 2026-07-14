@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { commandLogEntry, delay, parseJsonFromOutput, requireValue, runCommand, singleLine } from "./release_publish_helpers.mjs";
 import { stubbedReleasePublishResult } from "./release_publish_test_stubs.mjs";
 import { assertReleaseUpgradeImpactEvidence } from "./release_upgrade_impact.mjs";
+import { assertReleaseArtifactAttestation, assertReleaseEnvironmentIdentity } from "./release_artifact_identity.mjs";
 
 const defaultRepoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageName = "project-tiny-context-harness";
@@ -90,6 +91,15 @@ async function main() {
   await run("npm", ["whoami"], { capture: true });
   const timings = [];
   const pack = await timed(timings, "prepared artifact verification", () => readPreparedArtifact(version));
+  await timed(timings, "complete package tests", () =>
+    run("npm", ["test", "--workspace", packageName])
+  );
+  await timed(timings, "complete Composite tests", () =>
+    run("npm", ["run", "test:composite-workflow", "--workspace", packageName])
+  );
+  await timed(timings, "exact prepared tarball smoke", () =>
+    run("node", ["tools/release_tarball_smoke.mjs", "--tarball", pack.tarballRelativePath])
+  );
   await timed(timings, "publish", () => publishTarball(pack.tarballRelativePath));
   await timed(timings, "registry latest verification", () => waitForLatest(version));
   if (args.registrySmoke) {
@@ -156,7 +166,28 @@ async function registryHasVersion(version) {
   return result.code === 0;
 }
 
-async function readPreparedArtifact(version) { const attestationPath=path.join(args.root,"docs","launch",`release-artifact-${version}.json`); const attestation=JSON.parse(await readFile(attestationPath,"utf8")); if(attestation.schema_version!=="ty-context-release-artifact-v1"||attestation.package_name!==packageName||attestation.version!==version||!/^[-a-f0-9]{64}$/.test(attestation.sha256))throw new Error("Invalid immutable release artifact attestation"); const relative=path.join(".artifacts","releases","prepared",attestation.filename).replace(/\\/g,"/"); if(process.env.TY_CONTEXT_RELEASE_COMMAND_LOG)return {tarballRelativePath:relative,sha256:attestation.sha256}; const content=await readFile(path.join(args.root,relative)).catch(()=>{throw new Error(`Prepared tarball is missing; rerun release:prepare and publish the byte-identical ${attestation.filename}`);}); const actual=createHash("sha256").update(content).digest("hex"); if(actual!==attestation.sha256)throw new Error(`Prepared tarball hash mismatch: expected ${attestation.sha256}, got ${actual}`); return {tarballRelativePath:relative,sha256:actual}; }
+async function readPreparedArtifact(version) {
+  const attestationPath = path.join(args.root, "docs", "launch", `release-artifact-${version}.json`);
+  const attestation = JSON.parse(await readFile(attestationPath, "utf8"));
+  assertReleaseArtifactAttestation(attestation, { packageName, version });
+  await assertReleaseEnvironmentIdentity(attestation, args.root);
+  const relative = path
+    .join(".artifacts", "releases", "prepared", attestation.filename)
+    .replace(/\\/g, "/");
+  if (process.env.TY_CONTEXT_RELEASE_COMMAND_LOG) {
+    return { tarballRelativePath: relative, sha256: attestation.sha256 };
+  }
+  const content = await readFile(path.join(args.root, relative)).catch(() => {
+    throw new Error(
+      `Prepared tarball is missing; rerun release:prepare and publish the byte-identical ${attestation.filename}`
+    );
+  });
+  const actual = createHash("sha256").update(content).digest("hex");
+  if (actual !== attestation.sha256) {
+    throw new Error(`Prepared tarball hash mismatch: expected ${attestation.sha256}, got ${actual}`);
+  }
+  return { tarballRelativePath: relative, sha256: actual };
+}
 
 async function publishTarball(tarballRelativePath) {
   const commandArgs = ["publish", tarballRelativePath, "--access", "public"];

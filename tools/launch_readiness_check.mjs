@@ -1228,18 +1228,21 @@ function localChecks() {
       contains(npmTrustedPublishWorkflow, /id-token:\s*write/) &&
       contains(npmTrustedPublishWorkflow, /contents:\s*write/) &&
       contains(npmTrustedPublishWorkflow, /environment:\s*npm-publish/) &&
-      contains(npmTrustedPublishWorkflow, /uses: actions\/checkout@v7/) &&
-      contains(npmTrustedPublishWorkflow, /uses: actions\/setup-node@v6/) &&
+      contains(npmTrustedPublishWorkflow, /uses: actions\/checkout@[a-f0-9]{40}/) &&
+      contains(npmTrustedPublishWorkflow, /uses: actions\/setup-node@[a-f0-9]{40}/) &&
       contains(npmTrustedPublishWorkflow, /node-version:\s*"24"/) &&
       contains(npmTrustedPublishWorkflow, /registry-url:\s*"https:\/\/registry\.npmjs\.org"/) &&
-      contains(npmTrustedPublishWorkflow, /npm install -g npm@latest/) &&
-      contains(npmTrustedPublishWorkflow, /npm CLI 11\.5\.1 or later is required/) &&
+      contains(npmTrustedPublishWorkflow, /npm install -g npm@12\.0\.1/) &&
+      !contains(npmTrustedPublishWorkflow, /npm@latest/) &&
       contains(npmTrustedPublishWorkflow, /npm run build --workspace project-tiny-context-harness/) &&
       contains(npmTrustedPublishWorkflow, /Complete package tests/) &&
-      contains(npmTrustedPublishWorkflow, /run: npm test/) &&
+      contains(npmTrustedPublishWorkflow, /run: npm test --workspace project-tiny-context-harness/) &&
+      contains(npmTrustedPublishWorkflow, /Complete Composite tests/) &&
+      contains(npmTrustedPublishWorkflow, /run: npm run test:composite-workflow --workspace project-tiny-context-harness/) &&
       contains(npmTrustedPublishWorkflow, /npm run release:check-version/) &&
       contains(npmTrustedPublishWorkflow, /node packages\/ty-context\/dist\/cli\.js package check-source/) &&
-      contains(npmTrustedPublishWorkflow, /make validate-context/) &&
+      contains(npmTrustedPublishWorkflow, /make validate-harness/) &&
+      contains(npmTrustedPublishWorkflow, /node tools\/quickstart_smoke\.mjs/) &&
       contains(npmTrustedPublishWorkflow, /npm pack --json --workspace project-tiny-context-harness --pack-destination \.artifacts\/releases\/prepared/) &&
       contains(npmTrustedPublishWorkflow, /verify_prepared_release_artifact\.mjs/) &&
       contains(npmTrustedPublishWorkflow, /release_tarball_smoke\.mjs --tarball/) &&
@@ -1618,12 +1621,12 @@ function localChecks() {
       contains(scorecardWorkflow, /workflow_dispatch:/) &&
       contains(scorecardWorkflow, /security-events: write/) &&
       contains(scorecardWorkflow, /id-token: write/) &&
-      contains(scorecardWorkflow, /uses: actions\/checkout@v7/) &&
-      contains(scorecardWorkflow, /uses: ossf\/scorecard-action@v2\.4\.3/) &&
+      contains(scorecardWorkflow, /uses: actions\/checkout@[a-f0-9]{40}/) &&
+      contains(scorecardWorkflow, /uses: ossf\/scorecard-action@[a-f0-9]{40}/) &&
       contains(scorecardWorkflow, /results_format: sarif/) &&
       contains(scorecardWorkflow, /publish_results: true/) &&
-      contains(scorecardWorkflow, /uses: actions\/upload-artifact@v7/) &&
-      contains(scorecardWorkflow, /uses: github\/codeql-action\/upload-sarif@v4/),
+      contains(scorecardWorkflow, /uses: actions\/upload-artifact@[a-f0-9]{40}/) &&
+      contains(scorecardWorkflow, /uses: github\/codeql-action\/upload-sarif@[a-f0-9]{40}/),
     "OpenSSF Scorecard workflow publishes SARIF results and public scorecard data with narrow permissions."
   );
   addCheck(checks, "issue-templates", hasFile(".github/ISSUE_TEMPLATE/bug_report.yml") && hasFile(".github/ISSUE_TEMPLATE/feature_request.yml"), "Bug and feature issue templates exist.");
@@ -1693,8 +1696,8 @@ function localChecks() {
     "consumer-workflow-boundary",
     contains(sourceWorkflow, /Run harness gate/) &&
       contains(sourceWorkflow, /Prepare source workspace CLI/) &&
-      contains(sourceWorkflow, /uses: actions\/checkout@v7/) &&
-      contains(sourceWorkflow, /uses: actions\/setup-node@v6/) &&
+      contains(sourceWorkflow, /uses: actions\/checkout@[a-f0-9]{40}/) &&
+      contains(sourceWorkflow, /uses: actions\/setup-node@[a-f0-9]{40}/) &&
       contains(sourceWorkflow, /hashFiles\('packages\/ty-context\/package\.json'\) != ''/) &&
       contains(sourceWorkflow, /npm run build --workspace project-tiny-context-harness/) &&
       !contains(sourceWorkflow, /npm test --workspace project-tiny-context-harness|package check-source|npm publish/),
@@ -1703,23 +1706,22 @@ function localChecks() {
   addCheck(
     checks,
     "maintainer-workflow",
-    contains(maintainerWorkflow, /Build package/) &&
-      contains(maintainerWorkflow, /\.github\/workflows\/npm-publish\.yml/) &&
+    contains(maintainerWorkflow, /\.github\/workflows\/npm-publish\.yml/) &&
       contains(maintainerWorkflow, /\.github\/workflows\/scorecard\.yml/) &&
-      contains(maintainerWorkflow, /uses: actions\/checkout@v7/) &&
-      contains(maintainerWorkflow, /uses: actions\/setup-node@v6/) &&
+      contains(maintainerWorkflow, /uses: actions\/checkout@[a-f0-9]{40}/) &&
+      contains(maintainerWorkflow, /uses: actions\/setup-node@[a-f0-9]{40}/) &&
       contains(maintainerWorkflow, /Check package canonical source drift/) &&
       contains(maintainerWorkflow, /node packages\/ty-context\/dist\/cli\.js package check-source/) &&
-      contains(maintainerWorkflow, /Validate source Context/) &&
+      contains(maintainerWorkflow, /Validate Context and touched-source modularity/) &&
+      contains(maintainerWorkflow, /make validate-harness/) &&
       contains(maintainerWorkflow, /Typecheck package/) &&
-      contains(maintainerWorkflow, /test:workflow-default:built/) &&
-      contains(maintainerWorkflow, /test:contract-v3:built/) &&
-      contains(maintainerWorkflow, /test:campaign-blackbox:built/) &&
       contains(maintainerWorkflow, /Complete package tests/) &&
-      contains(maintainerWorkflow, /test:composite-workflow:built/) &&
-      contains(maintainerWorkflow, /npm run smoke:quickstart/) &&
+      contains(maintainerWorkflow, /npm test --workspace project-tiny-context-harness/) &&
+      contains(maintainerWorkflow, /Complete Composite tests/) &&
+      contains(maintainerWorkflow, /npm run test:composite-workflow --workspace project-tiny-context-harness/) &&
+      contains(maintainerWorkflow, /node tools\/quickstart_smoke\.mjs/) &&
       contains(maintainerWorkflow, /npm run preview:pack/),
-    "Maintainer package CI runs focused PR tests and the complete package, Composite, quickstart and pack-preview gates on main."
+    "Maintainer package CI runs the complete default and Composite suites on submitted branches, pull requests and main."
   );
   addCheck(
     checks,

@@ -22,18 +22,18 @@ jobs:
     runs-on: ubuntu-latest
     environment: npm-publish
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
 
       - name: Ensure npm supports trusted publishing
         run: |
-          npm install -g npm@latest
+          npm install -g npm@12.0.1
           npm --version
-          node -e "const v=require('child_process').execFileSync('npm',['--version'],{encoding:'utf8'}).trim().split('.').map(Number); if (v[0] < 11 || (v[0] === 11 && (v[1] < 5 || (v[1] === 5 && v[2] < 1)))) { throw new Error('npm CLI 11.5.1 or later is required for trusted publishing'); }"
+          node -e "const v=require('child_process').execFileSync('npm',['--version'],{encoding:'utf8'}).trim(); if (v !== '12.0.1') throw new Error('npm CLI 12.0.1 is required for this release workflow');"
 
       - name: Check package version
         shell: bash
@@ -53,11 +53,17 @@ jobs:
       - name: Build package
         run: npm run build --workspace project-tiny-context-harness
 
+      - name: Typecheck package
+        run: npm run typecheck --workspace project-tiny-context-harness
+
       - name: Validate modularity waiver lifecycle
         run: node packages/ty-context/dist/cli.js check-modularity --config-only --fail-on-warning
 
       - name: Complete package tests
-        run: npm test
+        run: npm test --workspace project-tiny-context-harness
+
+      - name: Complete Composite tests
+        run: npm run test:composite-workflow --workspace project-tiny-context-harness
 
       - name: Check release version surfaces
         run: npm run release:check-version
@@ -65,10 +71,13 @@ jobs:
       - name: Check package canonical source drift
         run: node packages/ty-context/dist/cli.js package check-source
 
-      - name: Validate source Context
-        run: make validate-context
+      - name: Validate Context and touched-source modularity
+        run: make validate-harness
 
-      - name: Rebuild and verify immutable prepared artifact
+      - name: Quickstart smoke
+        run: node tools/quickstart_smoke.mjs
+
+      - name: Pack once and verify immutable prepared artifact
         shell: bash
         run: |
           mkdir -p .artifacts/releases/prepared

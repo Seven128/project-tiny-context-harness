@@ -235,7 +235,7 @@ function settle(
       : status === "system_error"
         ? "unknown"
         : status,
-    false,
+    status === "system_error",
   );
 }
 function appendUnique(values: string[], value: string): void {

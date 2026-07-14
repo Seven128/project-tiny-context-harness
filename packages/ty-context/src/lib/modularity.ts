@@ -587,7 +587,14 @@ async function gitTouchedFiles(projectRoot: string): Promise<string[]> {
   try {
     result = await execFileAsync(
       "git",
-      ["-C", projectRoot, "status", "--porcelain", "-z"],
+      [
+        "-C",
+        projectRoot,
+        "status",
+        "--porcelain=v1",
+        "-z",
+        "--untracked-files=all",
+      ],
       {
         encoding: "utf8",
         maxBuffer: GIT_MAX_BUFFER,

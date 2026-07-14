@@ -4,6 +4,7 @@ import { compositeCampaign } from "./composite-campaign.js";
 import { doctor } from "./doctor.js";
 import { exportContext } from "./export-context.js";
 import { enable } from "./enable.js";
+import { disable } from "./disable.js";
 import { init } from "./init.js";
 import { packageSource } from "./package-source.js";
 import { sync } from "./sync.js";
@@ -17,6 +18,7 @@ export const commands: Record<string, CommandHandler> = {
   help,
   init,
   enable,
+  disable,
   sync,
   upgrade,
   doctor,
@@ -27,8 +29,6 @@ export const commands: Record<string, CommandHandler> = {
   "validate-code-modularity": (args) =>
     validate(["validate-code-modularity", ...args]),
   "validate-harness": (args) => validate(["validate-harness", ...args]),
-  "validate-plan-acceptance": (args) =>
-    validate(["validate-plan-acceptance", ...args]),
   "composite-long-task": (args) =>
     withCompositeCodexProfile(args, compositeLongTask),
   "composite-campaign": (args) =>
@@ -42,6 +42,8 @@ export function help(): void {
                        Initialize/adopt a project; without --harness-folder, choose target agent first
   enable composite-codex
                        Explicitly install Codex Hooks and Composite Long-Task Skills
+  disable composite-codex
+                       Remove package-owned Codex Hooks and disable Composite execution
   sync                 Refresh managed assets; does not run migrations
   upgrade [--check] [--json]
                        Run safe migrations, sync managed assets and doctor
@@ -55,8 +57,6 @@ export function help(): void {
   validate-code-modularity
                        Enforce touched handwritten source file modularity
   validate-harness     Run validate-context and validate-code-modularity
-  validate-plan-acceptance <dir>
-                       Validate legacy ordinary-long-task artifacts when explicitly requested
   composite-long-task <subcommand>
                        Manage explicit Contract V3 workdirs; requires composite-codex
   composite-campaign <subcommand>

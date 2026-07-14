@@ -507,14 +507,14 @@ test("protected_branch_uses_pr_policy", async (t) => {
   );
 });
 
-test("auto_push_requires_explicit_policy", async (t) => {
+test("auto_push_defaults_true_without_touching_checked_out_primary", async (t) => {
   const fixture = await readyFinalFixture(t, "auto-push");
   const result = await finalizeCampaignTarget({
     ...fixture.options,
     preservePrimaryWorktree: true,
   });
   assert.equal(result.status, "external_approval_required");
-  assert.equal(result.reason, "auto_push_disabled_explicit_policy_required");
+  assert.equal(result.reason, "local_target_checked_out_preserve_primary_worktree");
 });
 
 test("dirty_primary_worktree_is_not_committed", async (t) => {

@@ -115,7 +115,6 @@ export interface ImplementationBindingV3 {
   id: string;
   kind: BindingKind;
   target: string;
-  carrier_paths?: string[];
   verification: BindingVerificationV3;
 }
 export interface ForbiddenShortcutV3 {
@@ -169,8 +168,6 @@ export interface PlanItemV3 {
 }
 export interface TechnicalPlanV3 {
   schema_version: "technical-plan-v3";
-  supporting_paths?: string[];
-  forbidden_paths?: string[];
   plan_items: PlanItemV3[];
   counterfactual_controls: CounterfactualControlV3[];
 }
@@ -388,9 +385,9 @@ export interface CompiledContractV3 {
   repository_root: string;
   workdir: string;
   sources: Record<string, { path: string; sha256: string }>;
+  context_snapshot_mode: "referenced" | "full";
+  context_graph_sha256: string;
   context_snapshot: {
-    mode: "referenced" | "full";
-    topology_sha256: string;
     files: string[];
     sha256: Record<string, string>;
   };

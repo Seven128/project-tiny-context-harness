@@ -1,11 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createCampaignV4 } from "../../packages/ty-context/dist/lib/composite-campaign-v4.js";
+import { createCampaignV4 } from "../../packages/ty-context/dist/lib/composite-audit-v4/campaign-store.js";
 import { writeHappyV3Contract } from "./long-task-v3-fixtures.mjs";
 
 const repoRoot = path.resolve(
@@ -14,13 +14,53 @@ const repoRoot = path.resolve(
 );
 const cli = path.join(repoRoot, "packages", "ty-context", "dist", "cli.js");
 
-test("Campaign contract advertises V5 automation, Scope Fit V4, Goal Manifest V2, and V4 audit compatibility", async () => {
+test("V4 audit and V5 active runtime live in isolated source directories", async () => {
+  const runtime = await readFile(
+    path.join(
+      repoRoot,
+      "packages/ty-context/src/lib/composite-runtime-v5/campaign-packet-store.ts",
+    ),
+    "utf8",
+  );
+  const audit = await readFile(
+    path.join(
+      repoRoot,
+      "packages/ty-context/src/lib/composite-audit-v4/campaign-store.ts",
+    ),
+    "utf8",
+  );
+  const command = await readFile(
+    path.join(repoRoot, "packages/ty-context/src/commands/composite-campaign.ts"),
+    "utf8",
+  );
+  assert.doesNotMatch(
+    runtime,
+    /composite-campaign-schema-v4|ScopeFitResultV3|createCampaignV4/,
+  );
+  assert.doesNotMatch(audit, /composite-runtime-v5|CampaignV5/);
+  assert.match(command, /composite-runtime-v5\/campaign-packet-store/);
+  assert.doesNotMatch(command, /composite-audit-v4/);
+});
+
+test("Campaign contract advertises V5 automation, Scope Fit V4, Source Coverage V2, and V4 audit compatibility", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "campaign-v5-contract-"));
   const contract = run(root, ["composite-campaign", "contract", "--json"]);
   assert.equal(contract.schema_version, "composite-campaign-v5");
   assert.equal(contract.audit_schema, "composite-campaign-v4");
   assert.equal(contract.scope_schema, "scope-fit-result-v4");
-  assert.equal(contract.goal_manifest_schema, "slice-goal-manifest-v2");
+  assert.equal(contract.source_coverage_schema, "composite-source-coverage-v2");
+  assert.equal(contract.change_envelope_schema, "slice-change-envelope-v1");
+  assert.equal(contract.wave_impact_schema, "campaign-wave-impact-v2");
+  assert.equal(
+    contract.wave_integration_result_schema,
+    "wave-integration-result-v2",
+  );
+  for (const schema of [
+    "slice-change-envelope-v1",
+    "campaign-wave-impact-v2",
+    "wave-integration-result-v2",
+  ])
+    assert.equal(contract.schemas[schema].schema_version, schema);
   for (const command of [
     "run",
     "app-server-check",
@@ -86,11 +126,6 @@ test("new Campaigns are V5 and reject legacy Scope Fit without aliases", async (
         slice_refs: ["SFC-001"],
         global_constraint_refs: [],
         rationale: "legacy",
-        context_resolution: {
-          status: "task_local",
-          context_refs: [],
-          task_local_reason: "legacy rejection fixture",
-        },
       },
     ],
     global_constraint_bindings: [],

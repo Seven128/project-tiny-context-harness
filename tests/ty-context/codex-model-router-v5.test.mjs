@@ -9,9 +9,10 @@ import {
 import {
   MODEL_ROUTING_POLICY,
   MODEL_ROUTING_POLICY_SHA256,
+  loadCodexModelRoutingPolicyV1,
 } from "../../packages/ty-context/dist/lib/codex-model-routing-policy.js";
 
-test("Campaign V5 model routing changes only proven Sol xhigh/max profiles", () => {
+test("routing_policy_preserves_current_semantics", () => {
   assert.deepEqual(EFFORT_ORDER, [
     "none",
     "low",
@@ -102,6 +103,28 @@ test("alias, target availability, and explicit catalog successor are evidence bo
   );
   assert.equal(decision.reason, "target_unavailable_passthrough");
   assert.equal(decision.switched, false);
+});
+
+test("invalid_policy_falls_back_to_passthrough", () => {
+  const loaded = loadCodexModelRoutingPolicyV1(
+    "schema_version: model-routing-policy-v1\npolicy_id: broken\ndefault: guess\n",
+  );
+  assert.equal(loaded.status, "fallback");
+  assert.equal(loaded.policy.policy_id, "safe-passthrough-fallback");
+  const catalog = buildModelCatalog([
+    model("gpt-5.6-sol", ["medium", "xhigh"]),
+  ]);
+  const controller = { model: "gpt-5.6-sol", effort: "xhigh" };
+  const decision = routeCodexModel(
+    controller,
+    catalog,
+    loaded.policy,
+    loaded.sha256,
+  );
+  assert.deepEqual(decision.execution_profile, controller);
+  assert.equal(decision.switched, false);
+  assert.equal(decision.reason, "policy_unavailable_passthrough");
+  assert.equal(decision.policy_sha256, loaded.sha256);
 });
 
 function model(name, efforts, upgrade = null) {

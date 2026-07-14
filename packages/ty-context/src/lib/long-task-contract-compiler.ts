@@ -112,7 +112,12 @@ export async function compileLongTaskContract(
     repository_root: root,
     workdir: task,
     sources: sortRecord(sources),
-    context_snapshot: contextSnapshot,
+    context_snapshot_mode: contextSnapshot.mode,
+    context_graph_sha256: contextSnapshot.topology_sha256,
+    context_snapshot: {
+      files: contextSnapshot.files,
+      sha256: contextSnapshot.sha256,
+    },
     owner_surfaces: sortById(bundle.product.owner_surfaces),
     requirements: sortById(bundle.product.requirements),
     product_boundaries: sortById(bundle.product.boundaries),
@@ -193,9 +198,9 @@ export async function assertLongTaskContractFresh(
   const topologySha256 = await currentContextTopologySha256(
     contract.repository_root,
   );
-  if (topologySha256 !== contract.context_snapshot.topology_sha256)
+  if (topologySha256 !== contract.context_graph_sha256)
     throw new Error("context_changed_after_compile:topology");
-  if (contract.context_snapshot.mode === "full") {
+  if (contract.context_snapshot_mode === "full") {
     const currentContext = await listContextFiles(contract.repository_root);
     if (
       canonicalJson(currentContext) !==

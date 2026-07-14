@@ -31,15 +31,71 @@ export interface CodexModelRoutingPolicyV1 {
   default: "passthrough";
 }
 
+export interface LoadedCodexModelRoutingPolicyV1 {
+  policy: CodexModelRoutingPolicyV1;
+  sha256: string;
+  status: "loaded" | "fallback";
+  error: string | null;
+}
+
 const POLICY_FILE = fileURLToPath(
   new URL("../../assets/composite/model-routing-policy.yaml", import.meta.url),
 );
-export const MODEL_ROUTING_POLICY = validatePolicy(
-  parseStrictYaml(readFileSync(POLICY_FILE, "utf8")),
-);
-export const MODEL_ROUTING_POLICY_SHA256 = sha256Hex(
-  canonicalValueJson(MODEL_ROUTING_POLICY),
-);
+const SAFE_PASSTHROUGH_POLICY: CodexModelRoutingPolicyV1 = {
+  schema_version: "model-routing-policy-v1",
+  policy_id: "safe-passthrough-fallback",
+  catalog_limits: {
+    max_models: 256,
+    max_model_identifier_length: 256,
+    max_efforts_per_model: 16,
+  },
+  aliases: {},
+  rules: [],
+  default: "passthrough",
+};
+const loadedPolicy = loadPolicyFile(POLICY_FILE);
+export const MODEL_ROUTING_POLICY = loadedPolicy.policy;
+export const MODEL_ROUTING_POLICY_SHA256 = loadedPolicy.sha256;
+export const MODEL_ROUTING_POLICY_STATUS = loadedPolicy.status;
+export const MODEL_ROUTING_POLICY_ERROR = loadedPolicy.error;
+
+export function loadCodexModelRoutingPolicyV1(
+  source: string,
+): LoadedCodexModelRoutingPolicyV1 {
+  try {
+    return loaded(validatePolicy(parseStrictYaml(source)));
+  } catch (error) {
+    return fallback(error);
+  }
+}
+
+function loadPolicyFile(file: string): LoadedCodexModelRoutingPolicyV1 {
+  try {
+    return loadCodexModelRoutingPolicyV1(readFileSync(file, "utf8"));
+  } catch (error) {
+    return fallback(error);
+  }
+}
+
+function loaded(
+  policy: CodexModelRoutingPolicyV1,
+): LoadedCodexModelRoutingPolicyV1 {
+  return {
+    policy,
+    sha256: sha256Hex(canonicalValueJson(policy)),
+    status: "loaded",
+    error: null,
+  };
+}
+
+function fallback(error: unknown): LoadedCodexModelRoutingPolicyV1 {
+  return {
+    policy: SAFE_PASSTHROUGH_POLICY,
+    sha256: sha256Hex(canonicalValueJson(SAFE_PASSTHROUGH_POLICY)),
+    status: "fallback",
+    error: error instanceof Error ? error.message : String(error),
+  };
+}
 
 function validatePolicy(value: unknown): CodexModelRoutingPolicyV1 {
   const root = object(value, "policy", [

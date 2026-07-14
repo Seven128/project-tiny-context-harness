@@ -142,7 +142,7 @@ test("public documentation is English-complete for profiles and current workflow
     assert.match(document, /Contract V3/);
     assert.match(document, /Campaign V5/);
     assert.match(document, /Scope Fit V4/);
-    assert.match(document, /validate-plan-contract` no longer exists/);
+    assert.match(document, /Plan Validator commands no longer exist/);
     assert.match(document, /check-modularity/);
     assert.match(document, /owner.*introduced_at.*tracking_issue.*expiry_condition/s);
   }

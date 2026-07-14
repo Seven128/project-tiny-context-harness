@@ -16,7 +16,7 @@ import {
   transactionRelative,
 } from "./composite-campaign-transaction-io.js";
 
-const INTENT_FILE = "transaction-intent.json";
+const INTENT_FILE = ".campaign-transaction.json";
 
 export interface CampaignTransactionIntentV1 {
   schema_version: "campaign-transaction-intent-v1";
@@ -137,7 +137,7 @@ export async function archiveCompletedIntent(
       recovered_or_committed_at: new Date().toISOString(),
     }),
   );
-  await rm(path.join(transactions, INTENT_FILE), { force: true });
+  await rm(path.join(root, INTENT_FILE), { force: true });
   await rm(path.join(transactions, intent.operation_id), {
     recursive: true,
     force: true,
@@ -145,12 +145,24 @@ export async function archiveCompletedIntent(
   await syncDirectory(transactions);
 }
 
+export async function rollbackPreparedIntent(
+  root: string,
+  intent: CampaignTransactionIntentV1,
+): Promise<void> {
+  await rm(path.join(root, INTENT_FILE), { force: true });
+  await rm(path.join(root, ".transactions", intent.operation_id), {
+    recursive: true,
+    force: true,
+  });
+  await syncDirectory(root);
+}
+
 export async function quarantineAmbiguousTransaction(
   root: string,
   intent: CampaignTransactionIntentV1,
   reason: string,
 ): Promise<never> {
-  const source = path.join(root, ".transactions", INTENT_FILE);
+  const source = path.join(root, INTENT_FILE);
   const target = path.join(
     root,
     "quarantine",
