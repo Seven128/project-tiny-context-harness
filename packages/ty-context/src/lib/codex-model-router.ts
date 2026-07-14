@@ -25,14 +25,17 @@ export interface ModelProfile {
   effort: string;
 }
 
-export type ModelRoutingReason =
-  | "sol_xhigh_to_medium"
-  | "sol_max_to_medium"
-  | "catalog_upgrade_to_sol_medium"
-  | "below_threshold_passthrough"
-  | "unknown_profile_passthrough"
-  | "target_unavailable_passthrough"
-  | "policy_unavailable_passthrough";
+export const MODEL_ROUTING_REASONS = [
+  "sol_xhigh_to_medium",
+  "sol_max_to_medium",
+  "catalog_upgrade_to_sol_medium",
+  "below_threshold_passthrough",
+  "unknown_profile_passthrough",
+  "target_unavailable_passthrough",
+  "policy_unavailable_passthrough",
+] as const;
+
+export type ModelRoutingReason = (typeof MODEL_ROUTING_REASONS)[number];
 
 export interface ModelRoutingDecision {
   authoring_profile: ModelProfile;

@@ -16,6 +16,7 @@ import {
 import { cleanupAcceptedCampaignAssetsV5 } from "./composite-campaign-accepted-cleanup.js";
 import { loadCampaignStoreV5 } from "./composite-runtime-v5/campaign-store.js";
 import { loadCampaignV5, mutateCampaignV5 } from "./composite-campaign-v5.js";
+import { assertTargetFinalizationReceiptCurrent } from "./composite-campaign-target-freshness.js";
 
 export interface AcceptedCampaignAuthorityV1 {
   target_commit: string;
@@ -42,6 +43,7 @@ export async function commitCampaignAcceptanceV5(options: {
   receipt: CampaignTargetFinalizationReceiptV1;
 }): Promise<AcceptedCampaignAuthorityV1> {
   const receipt = assertTargetFinalizationReceipt(options.receipt);
+  await assertTargetFinalizationReceiptCurrent(options.projectRoot, receipt);
   await mutateCampaignV5(
     options.projectRoot,
     options.campaignPath,
@@ -239,6 +241,12 @@ function assertReceiptBasis(
   receipt: CampaignTargetFinalizationReceiptV1,
   revalidation: CampaignTargetRevalidationResultV1 | null,
 ): void {
+  if (
+    receipt.acceptance_basis !== "target_snapshot_revalidated" &&
+    (receipt.target_revalidation_result_sha256 !== null ||
+      revalidation !== null)
+  )
+    throw new Error("target_receipt_unexpected_revalidation");
   if (
     receipt.acceptance_basis === "exact_commit" &&
     (receipt.target_commit !== receipt.verified_integration_commit ||

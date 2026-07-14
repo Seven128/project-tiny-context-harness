@@ -164,7 +164,7 @@ export async function finalizeCampaignTarget(
         finalResult.integration_head,
       )
     )
-      return deliverBehindTarget(options, finalResult, authority, revalidation);
+      return deliverBehindTarget(options, finalResult, authority);
 
     if (
       await isAncestor(

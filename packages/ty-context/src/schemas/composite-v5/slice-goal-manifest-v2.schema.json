@@ -32,6 +32,6 @@
     "text": { "type": "string", "minLength": 1 },
     "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
     "stringSet": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
-    "routingReason": { "enum": ["sol_xhigh_to_medium", "sol_max_to_medium", "catalog_upgrade_to_sol_medium", "below_threshold_passthrough", "unknown_profile_passthrough", "target_unavailable_passthrough"] }
+    "routingReason": { "enum": ["sol_xhigh_to_medium", "sol_max_to_medium", "catalog_upgrade_to_sol_medium", "below_threshold_passthrough", "unknown_profile_passthrough", "target_unavailable_passthrough", "policy_unavailable_passthrough"] }
   }
 }

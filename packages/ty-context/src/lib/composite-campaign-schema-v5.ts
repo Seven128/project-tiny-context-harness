@@ -9,7 +9,11 @@ import {
   type CampaignSliceV4,
   type CampaignV4,
 } from "./composite-campaign-schema-v4.js";
-import type { ModelProfile, ModelRoutingReason } from "./codex-model-router.js";
+import {
+  MODEL_ROUTING_REASONS,
+  type ModelProfile,
+  type ModelRoutingReason,
+} from "./codex-model-router.js";
 import type { CampaignContextBaseline } from "./context-graph-snapshot.js";
 
 export const CAMPAIGN_SCHEMA_V5 = "composite-campaign-v5" as const;
@@ -289,18 +293,7 @@ function validateThreadRouting(
   if (row.execution_profile !== null)
     modelProfile(row.execution_profile, `${label}.execution_profile`);
   if (row.routing_reason !== null)
-    oneOf(
-      row.routing_reason,
-      [
-        "sol_xhigh_to_medium",
-        "sol_max_to_medium",
-        "catalog_upgrade_to_sol_medium",
-        "below_threshold_passthrough",
-        "unknown_profile_passthrough",
-        "target_unavailable_passthrough",
-      ],
-      `${label}.routing_reason`,
-    );
+    oneOf(row.routing_reason, MODEL_ROUTING_REASONS, `${label}.routing_reason`);
   if (row.routing_freeze !== null) {
     const freeze = record(row.routing_freeze, `${label}.routing_freeze`);
     exact(freeze, [
@@ -350,14 +343,7 @@ function validateFrozenRoutingDecision(
     invalid(`${label}:routing_decision_switched_invalid`);
   oneOf(
     decision.reason,
-    [
-      "sol_xhigh_to_medium",
-      "sol_max_to_medium",
-      "catalog_upgrade_to_sol_medium",
-      "below_threshold_passthrough",
-      "unknown_profile_passthrough",
-      "target_unavailable_passthrough",
-    ],
+    MODEL_ROUTING_REASONS,
     `${label}.routing_freeze.routing_decision.reason`,
   );
   if (

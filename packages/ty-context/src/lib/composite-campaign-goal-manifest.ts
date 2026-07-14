@@ -9,7 +9,10 @@ import {
   validateChangeEnvelopeV1,
   type ChangeEnvelopeV1,
 } from "./composite-campaign-change-envelope.js";
-import type { ModelRoutingReason } from "./codex-model-router.js";
+import {
+  MODEL_ROUTING_REASONS,
+  type ModelRoutingReason,
+} from "./codex-model-router.js";
 
 export interface SliceGoalManifestV1 {
   schema_version: "slice-goal-manifest-v1";
@@ -343,7 +346,7 @@ function validateV2Manifest(
   ] as const)
     if (typeof value[key] !== "string" || !value[key].trim())
       throw new Error(`Invalid Slice Goal manifest field: ${key}`);
-  if (!ROUTING_REASONS.includes(value.routing_reason))
+  if (!MODEL_ROUTING_REASONS.includes(value.routing_reason))
     throw new Error("Invalid Slice Goal manifest routing_reason");
 }
 
@@ -383,15 +386,6 @@ function validateV3Manifest(value: SliceGoalManifestV3): void {
   if (value.routing_decision_sha256 !== sha256Hex(canonicalValueJson(decision)))
     throw new Error("Invalid Slice Goal manifest routing decision hash");
 }
-
-const ROUTING_REASONS: ModelRoutingReason[] = [
-  "sol_xhigh_to_medium",
-  "sol_max_to_medium",
-  "catalog_upgrade_to_sol_medium",
-  "below_threshold_passthrough",
-  "unknown_profile_passthrough",
-  "target_unavailable_passthrough",
-];
 
 function stable(values: string[]): string[] {
   return [...new Set(values)].sort(asciiCompare);

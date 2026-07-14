@@ -51,7 +51,6 @@ export async function deliverBehindTarget(
   options: TargetFinalizationOptions,
   finalResult: CampaignFinalResultV1,
   authority: TargetAuthorityV1,
-  revalidation: CampaignTargetRevalidationResultV1 | null,
 ): Promise<TargetFinalizeResult> {
   if (options.autoPush === false)
     return {
@@ -77,7 +76,7 @@ export async function deliverBehindTarget(
           target_tree: delivery.target_tree,
         },
         "remote_fast_forward",
-        revalidation,
+        null,
         true,
       );
     if (delivery.status === "target_moved")
@@ -140,7 +139,7 @@ export async function deliverBehindTarget(
       target_tree: finalResult.integration_tree,
     },
     "local_ref_fast_forward",
-    revalidation,
+    null,
     false,
   );
 }

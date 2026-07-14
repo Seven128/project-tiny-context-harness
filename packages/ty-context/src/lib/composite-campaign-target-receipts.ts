@@ -104,6 +104,10 @@ export function buildTargetFinalizationReceipt(options: {
 }): CampaignTargetFinalizationReceiptV1 {
   if (options.finalResult.workflow_status !== "ready_to_merge")
     throw new Error("campaign_target_receipt_source_not_ready");
+  assertReceiptRevalidationInput(
+    options.acceptanceBasis,
+    options.targetRevalidation,
+  );
   const identity = {
     schema_version: "campaign-target-finalization-receipt-v1" as const,
     campaign_id: options.finalResult.campaign_id,
@@ -185,6 +189,12 @@ export function assertTargetFinalizationReceipt(
     !hash(receipt.receipt_sha256)
   )
     throw new Error("campaign_target_finalization_receipt_invalid");
+  if (
+    receipt.acceptance_basis === "target_snapshot_revalidated"
+      ? receipt.target_revalidation_result_sha256 === null
+      : receipt.target_revalidation_result_sha256 !== null
+  )
+    throw new Error("campaign_target_receipt_revalidation_basis_invalid");
   const { receipt_sha256, ...identity } = receipt;
   if (receipt_sha256 !== sha256Hex(canonicalJson(identity)))
     throw new Error("campaign_target_finalization_receipt_hash_mismatch");
@@ -258,4 +268,21 @@ function oid(value: unknown): value is string {
 }
 function hash(value: unknown): value is string {
   return typeof value === "string" && /^[a-f0-9]{64}$/u.test(value);
+}
+
+function assertReceiptRevalidationInput(
+  basis: CampaignTargetAcceptanceBasisV1,
+  revalidation: CampaignTargetRevalidationResultV1 | null,
+): void {
+  if (basis === "target_snapshot_revalidated") {
+    if (
+      !revalidation ||
+      assertTargetRevalidationResult(revalidation).workflow_status !==
+        "target_verified"
+    )
+      throw new Error("campaign_target_receipt_verified_revalidation_required");
+    return;
+  }
+  if (revalidation !== null)
+    throw new Error("campaign_target_receipt_unexpected_revalidation");
 }

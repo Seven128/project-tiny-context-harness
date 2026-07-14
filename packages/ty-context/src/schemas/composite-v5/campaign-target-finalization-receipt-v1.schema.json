@@ -4,6 +4,26 @@
   "title": "Campaign Target Finalization Receipt V1",
   "type": "object",
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "required": ["acceptance_basis"],
+        "properties": {
+          "acceptance_basis": { "const": "target_snapshot_revalidated" }
+        }
+      },
+      "then": {
+        "properties": {
+          "target_revalidation_result_sha256": { "$ref": "#/$defs/sha256" }
+        }
+      },
+      "else": {
+        "properties": {
+          "target_revalidation_result_sha256": { "type": "null" }
+        }
+      }
+    }
+  ],
   "required": ["schema_version", "campaign_id", "target_branch", "verified_integration_commit", "verified_integration_tree", "target_commit", "target_tree", "acceptance_basis", "source_campaign_final_result_sha256", "target_revalidation_result_sha256", "completed_at", "receipt_sha256"],
   "properties": {
     "schema_version": { "const": "campaign-target-finalization-receipt-v1" },

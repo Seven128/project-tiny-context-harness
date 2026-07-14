@@ -12,18 +12,29 @@ import {
 import { readCampaignFinalResult } from "../../packages/ty-context/dist/lib/composite-campaign-final-gate.js";
 import {
   advanceCampaignV5,
+  recoverStaleTargetReceiptV5,
   statusCampaignV5,
 } from "../../packages/ty-context/dist/lib/composite-campaign-orchestrator.js";
 import { runCampaignV5 } from "../../packages/ty-context/dist/lib/composite-campaign-thread-orchestrator.js";
 import { loadCampaignV5 } from "../../packages/ty-context/dist/lib/composite-campaign-v5.js";
 import { listCampaignWorktrees } from "../../packages/ty-context/dist/lib/composite-campaign-worktree.js";
-import { readTargetFinalizationReceipt } from "../../packages/ty-context/dist/lib/composite-campaign-target-receipts.js";
+import {
+  assertTargetFinalizationReceipt,
+  buildTargetFinalizationReceipt,
+  readTargetFinalizationReceipt,
+} from "../../packages/ty-context/dist/lib/composite-campaign-target-receipts.js";
 import { finalizeCampaignTarget } from "../../packages/ty-context/dist/lib/composite-campaign-target-finalization.js";
+import {
+  canonicalJson,
+  sha256Hex,
+} from "../../packages/ty-context/dist/lib/composite-campaign-codec.js";
+import { CampaignTargetReceiptStaleError } from "../../packages/ty-context/dist/lib/composite-campaign-target-freshness.js";
 import {
   addTargetCommit,
   fastForwardMain,
   git,
   readyAcceptedFixture,
+  snapshotEvaluation,
 } from "./helpers/composite-campaign-finalization-fixture.mjs";
 
 test("accepted_campaign_rerun_returns_finished", async (t) => {
@@ -141,6 +152,164 @@ test("acceptance_transaction_commits_campaign_result_receipt_and_event", async (
   assert.equal(finalResult.workflow_status, "accepted");
   assert.equal(receipt.receipt_sha256, loaded.campaign.finalization.target_receipt_sha256);
   assert.match(events, /"type":"campaign_accepted"/u);
+});
+
+test("stale_target_receipt_cannot_commit_acceptance", async (t) => {
+  const fixture = await readyAcceptedFixture(t, "stale-cannot-accept");
+  await addTargetCommit(fixture, "stale-before-acceptance.txt");
+  await assert.rejects(
+    () =>
+      commitCampaignAcceptanceV5({
+        projectRoot: fixture.root,
+        campaignPath: fixture.campaignRoot,
+        receipt: fixture.receipt,
+      }),
+    (error) => error instanceof CampaignTargetReceiptStaleError,
+  );
+  const loaded = await loadCampaignV5(fixture.root, fixture.campaignRoot);
+  assert.equal(loaded.campaign.campaign_status, "finalizing");
+  assert.equal(loaded.campaign.finalization, null);
+});
+
+test("stale_receipt_writes_no_acceptance_artifacts", async (t) => {
+  const fixture = await readyAcceptedFixture(t, "stale-no-artifacts");
+  const campaignFile = path.join(fixture.campaignRoot, "campaign.yaml");
+  const beforeCampaign = await readFile(campaignFile, "utf8");
+  await addTargetCommit(fixture, "stale-no-artifacts.txt");
+  await assert.rejects(() =>
+    commitCampaignAcceptanceV5({
+      projectRoot: fixture.root,
+      campaignPath: fixture.campaignRoot,
+      receipt: fixture.receipt,
+    }),
+  );
+  assert.equal(await readFile(campaignFile, "utf8"), beforeCampaign);
+  const finalResult = await readCampaignFinalResult(
+    path.join(fixture.campaignRoot, "campaign-final-result.json"),
+  );
+  assert.equal(finalResult.workflow_status, "ready_to_merge");
+  await assert.rejects(() =>
+    access(path.join(fixture.campaignRoot, "target-finalization-receipt.json")),
+  );
+  const events = await readFile(
+    path.join(fixture.campaignRoot, "events.ndjson"),
+    "utf8",
+  );
+  assert.doesNotMatch(events, /"type":"campaign_accepted"/u);
+  assert.equal(
+    (
+      await listCampaignWorktrees({
+        repositoryRoot: fixture.root,
+        campaignId: fixture.campaignId,
+      })
+    ).some((worktree) => worktree.branch === fixture.integrationBranch),
+    true,
+  );
+});
+
+test("stale_receipt_returns_to_target_finalization", async (t) => {
+  const fixture = await readyAcceptedFixture(t, "stale-retry");
+  const recovery = await recoverStaleTargetReceiptV5({
+    projectRoot: fixture.root,
+    campaignPath: fixture.campaignRoot,
+    staleCount: 1,
+  });
+  assert.deepEqual(recovery, { action: "retry_target_finalization" });
+  const loaded = await loadCampaignV5(fixture.root, fixture.campaignRoot);
+  assert.equal(loaded.campaign.campaign_status, "finalizing");
+  assert.equal(loaded.campaign.execution_host.status, "disconnected");
+  assert.match(
+    await readFile(path.join(fixture.campaignRoot, "events.ndjson"), "utf8"),
+    /"type":"target_changed_before_acceptance"/u,
+  );
+});
+
+test("second_target_change_returns_wait_external", async (t) => {
+  const fixture = await readyAcceptedFixture(t, "stale-bounded");
+  await recoverStaleTargetReceiptV5({
+    projectRoot: fixture.root,
+    campaignPath: fixture.campaignRoot,
+    staleCount: 1,
+  });
+  const recovery = await recoverStaleTargetReceiptV5({
+    projectRoot: fixture.root,
+    campaignPath: fixture.campaignRoot,
+    staleCount: 2,
+  });
+  assert.deepEqual(recovery, {
+    action: "wait_external",
+    reason: "target_unstable_during_acceptance",
+  });
+  const loaded = await loadCampaignV5(fixture.root, fixture.campaignRoot);
+  assert.equal(loaded.campaign.campaign_status, "finalizing");
+  assert.equal(loaded.campaign.execution_host.status, "disconnected");
+  assert.equal(loaded.campaign.execution_host.restart_count, 0);
+  const events = await readFile(
+    path.join(fixture.campaignRoot, "events.ndjson"),
+    "utf8",
+  );
+  assert.equal(
+    events.match(/"type":"target_changed_before_acceptance"/gu)?.length,
+    2,
+  );
+});
+
+test("non_revalidated_basis_rejects_non_null_revalidation_hash", async (t) => {
+  const fixture = await readyAcceptedFixture(t, "unexpected-revalidation");
+  assert.throws(
+    () =>
+      buildTargetFinalizationReceipt({
+        finalResult: fixture.finalResult.value,
+        targetBranch: "main",
+        targetCommit: fixture.receipt.target_commit,
+        targetTree: fixture.receipt.target_tree,
+        acceptanceBasis: "exact_commit",
+        targetRevalidation: {
+          workflow_status: "target_verified",
+        },
+      }),
+    /unexpected_revalidation/u,
+  );
+  const { receipt_sha256: _oldHash, ...identity } = {
+    ...fixture.receipt,
+    target_revalidation_result_sha256: "e".repeat(64),
+  };
+  assert.throws(
+    () =>
+      assertTargetFinalizationReceipt({
+        ...identity,
+        receipt_sha256: sha256Hex(canonicalJson(identity)),
+      }),
+    /revalidation_basis_invalid/u,
+  );
+});
+
+test("ff_accepted_authority_survives_removing_diagnostic_revalidation", async (t) => {
+  const fixture = await readyAcceptedFixture(t, "ff-diagnostic-removed", {
+    remote: true,
+  });
+  const finalized = await finalizeCampaignTarget({
+    ...fixture.options,
+    snapshotEvaluator: (worktree) => snapshotEvaluation(worktree, "needs_work"),
+  });
+  assert.equal(finalized.status, "accepted");
+  assert.equal(finalized.receipt.acceptance_basis, "remote_fast_forward");
+  assert.equal(finalized.receipt.target_revalidation_result_sha256, null);
+  await commitCampaignAcceptanceV5({
+    projectRoot: fixture.root,
+    campaignPath: fixture.campaignRoot,
+    receipt: finalized.receipt,
+  });
+  await rm(
+    path.join(fixture.campaignRoot, "target-revalidation-result.json"),
+    { force: true },
+  );
+  const loaded = await loadCampaignV5(fixture.root, fixture.campaignRoot);
+  const authority = await assertAcceptedCampaignAuthority(
+    loaded.root,
+    loaded.campaign,
+  );
+  assert.equal(authority.target_commit, finalized.target_commit);
 });
 
 test("integration_branch_not_deleted_before_acceptance_commit", async (t) => {

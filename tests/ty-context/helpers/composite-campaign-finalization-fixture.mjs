@@ -61,8 +61,8 @@ export async function readyTargetFixture(t, label, options = {}) {
   };
 }
 
-export async function readyAcceptedFixture(t, label) {
-  const fixture = await readyTargetFixture(t, label);
+export async function readyAcceptedFixture(t, label, options = {}) {
+  const fixture = await readyTargetFixture(t, label, options);
   await rm(fixture.finalResult.campaignRoot, { recursive: true, force: true });
   const created = await createCampaignV5(
     fixture.root,
@@ -96,6 +96,7 @@ export async function readyAcceptedFixture(t, label) {
       return campaign;
     },
   );
+  await fastForwardMain(fixture);
   const receipt = buildTargetFinalizationReceipt({
     finalResult: fixture.finalResult.value,
     targetBranch: "main",
@@ -148,6 +149,7 @@ export async function installProtectedHook(fixture) {
 }
 
 export async function advanceRemoteFromPeer(fixture, name = "remote-race.txt") {
+  await git(fixture.peer, "pull", "--ff-only");
   await writeFile(path.join(fixture.peer, name), `${name}\n`);
   await git(fixture.peer, "add", name);
   await git(fixture.peer, "commit", "-m", `peer ${name}`);

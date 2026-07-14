@@ -30,6 +30,7 @@ import {
 } from "./composite-campaign-goal-manifest.js";
 import { mergeWaveIntoIntegration } from "./composite-campaign-integration.js";
 import { finalizeCampaignTarget } from "./composite-campaign-target-finalization.js";
+import { CampaignTargetReceiptStaleError } from "./composite-campaign-target-freshness.js";
 import {
   assertAcceptedCampaignAuthority,
   commitCampaignAcceptanceV5,
@@ -146,10 +147,23 @@ interface RepairStateV1 {
 }
 
 type CampaignRuntime = CampaignV4 | CampaignV5;
+interface CampaignAdvanceRunV5 {
+  targetReceiptStaleCount: number;
+}
 
 export async function advanceCampaignV5(
   projectRoot: string,
   campaignPath: string,
+): Promise<CampaignAdvanceActionV5> {
+  return advanceCampaignV5Run(projectRoot, campaignPath, {
+    targetReceiptStaleCount: 0,
+  });
+}
+
+async function advanceCampaignV5Run(
+  projectRoot: string,
+  campaignPath: string,
+  run: CampaignAdvanceRunV5,
 ): Promise<CampaignAdvanceActionV5> {
   let { root, campaign } = await loadCampaignV5(projectRoot, campaignPath);
   assertCampaignV5(campaign);
@@ -291,7 +305,7 @@ export async function advanceCampaignV5(
           return value;
         },
       );
-      return advanceCampaignV5(projectRoot, root);
+      return advanceCampaignV5Run(projectRoot, root, run);
     }
   }
   ({ campaign } = await loadCampaignV5(projectRoot, root));
@@ -309,6 +323,7 @@ export async function advanceCampaignV5(
       scope,
       coverage,
       integration.path,
+      run,
     );
   const frontier = computeReadyFrontierV4(scope, integrated);
   const v5 = assertCampaignV5(campaign);
@@ -766,6 +781,7 @@ async function finalizeCompletedGraph(
   scope: ScopeFitResultV4,
   coverage: SourceCoverageV2,
   integration: string,
+  run: CampaignAdvanceRunV5,
 ): Promise<CampaignAdvanceActionV5> {
   const analysis = validateSourceCoverageAgainstScopeV4(scope, coverage);
   const verified = await Promise.all(
@@ -888,16 +904,28 @@ async function finalizeCompletedGraph(
         target.target_revalidation_result_path,
         null,
       );
-    return advanceCampaignV5(projectRoot, root);
+    return advanceCampaignV5Run(projectRoot, root, run);
   }
   injectCampaignFinalizationCrash(
     "after_target_delivery_before_acceptance_transaction",
   );
-  await commitCampaignAcceptanceV5({
-    projectRoot,
-    campaignPath: root,
-    receipt: target.receipt,
-  });
+  try {
+    await commitCampaignAcceptanceV5({
+      projectRoot,
+      campaignPath: root,
+      receipt: target.receipt,
+    });
+  } catch (error) {
+    if (!(error instanceof CampaignTargetReceiptStaleError)) throw error;
+    run.targetReceiptStaleCount += 1;
+    const recovery = await recoverStaleTargetReceiptV5({
+      projectRoot,
+      campaignPath: root,
+      staleCount: run.targetReceiptStaleCount,
+    });
+    if (recovery.action === "wait_external") return recovery;
+    return advanceCampaignV5Run(projectRoot, root, run);
+  }
   const authority = await continueAcceptedCleanupIfNeeded({
     projectRoot,
     campaignPath: root,
@@ -908,6 +936,35 @@ async function finalizeCompletedGraph(
     target_commit: authority.target_commit,
     cleanup_status: authority.cleanup_status,
   };
+}
+
+export async function recoverStaleTargetReceiptV5(options: {
+  projectRoot: string;
+  campaignPath: string;
+  staleCount: number;
+}): Promise<
+  | { action: "retry_target_finalization" }
+  | { action: "wait_external"; reason: "target_unstable_during_acceptance" }
+> {
+  if (!Number.isInteger(options.staleCount) || options.staleCount < 1)
+    throw new Error("campaign_target_receipt_stale_count_invalid");
+  await mutateCampaignV5(
+    options.projectRoot,
+    options.campaignPath,
+    "target_changed_before_acceptance",
+    async (_root, campaign) => {
+      if (campaign.campaign_status === "accepted" || campaign.finalization)
+        throw new Error("campaign_target_changed_after_acceptance");
+      campaign.campaign_status = "finalizing";
+      return campaign;
+    },
+  );
+  return options.staleCount === 1
+    ? { action: "retry_target_finalization" }
+    : {
+        action: "wait_external",
+        reason: "target_unstable_during_acceptance",
+      };
 }
 
 async function reusableCampaignFinalResult(
