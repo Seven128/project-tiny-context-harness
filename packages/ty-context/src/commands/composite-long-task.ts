@@ -27,7 +27,7 @@ export async function compositeLongTask(args: string[]): Promise<void> {
   if (subcommand === "init") {
     await assertLongTaskCompletionGate(process.cwd());
     await initialize(workdir);
-    console.log(`initialized composite long-task Contract V3 at ${workdirArg}`);
+    console.log(`initialized long-task workflow Contract V3 at ${workdirArg}`);
     return;
   }
   if (subcommand === "compile") {

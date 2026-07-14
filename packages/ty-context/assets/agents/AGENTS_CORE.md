@@ -6,7 +6,7 @@ Tiny Context has three capabilities:
 
 - Minimal Context: durable project facts in `project_context/**`.
 - Workflow Contract: the lightweight default behavior.
-- Composite Long-Task: explicit strict multi-SFC execution and machine completion authority.
+- Long-Task Workflow: explicit strict multi-SFC execution and machine completion authority.
 
 ## Default Workflow Contract
 

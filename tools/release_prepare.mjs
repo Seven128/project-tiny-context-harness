@@ -102,10 +102,7 @@ async function main() {
     await timed(timings, "release focused tests", () => run("node", ["--test", ...releaseFocusedTests]));
   } else {
     await timed(timings, "complete package tests", () =>
-      run("npm", ["run", "test:built", "--workspace", workspaceName])
-    );
-    await timed(timings, "complete Composite tests", () =>
-      run("npm", ["run", "test:composite-workflow:built", "--workspace", workspaceName])
+      run("npm", ["run", "test:default:built", "--workspace", workspaceName])
     );
   }
   await timed(timings, "immutable release tarball", () =>

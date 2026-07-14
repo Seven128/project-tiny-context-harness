@@ -48,7 +48,7 @@ For an emergency local fallback after that committed preparation, use:
 npm run release:publish -- --local-fallback --yes
 ```
 
-The fallback re-runs the complete default and Composite suites, verifies the prepared artifact identity, and runs the tarball smoke against those exact bytes before `npm publish`; it never repacks an untested artifact.
+The fallback re-runs only the complete default suite, verifies the prepared artifact identity, and runs portable-only tarball smoke against those exact bytes before `npm publish`; it never repacks an untested artifact or implicitly starts Long-Task Workflow tests. GitHub CI runs the complete workflow suite through `npm test`; maintainers can trigger it directly with `npm test` or the dedicated workflow command.
 
 Add `--registry-smoke` only when you want the slower post-publish install smoke in addition to registry `latest` verification.
 
@@ -91,7 +91,7 @@ It is manual-only:
 - Versioned release surfaces must be prepared before commit with `npm run release:prepare -- --version <patch|minor|major|x.y.z> --update-mode <sync-only|upgrade-required|manual-required>`; the workflow verifies this with `npm run release:check-version`.
 - The job runs on `ubuntu-latest` with Node `24`.
 - The workflow installs the explicitly pinned npm CLI version declared in the workflow (`12.0.1` at this snapshot); it never uses unbounded `npm@latest`.
-- It builds/typechecks the package, runs the complete package test suite (default and Composite), package source drift, `make validate-harness` and Quickstart Smoke, then packs exactly once. The verifier accepts the npm 11 array and npm 12 workspace-keyed JSON shapes while requiring exactly one packed artifact. A dry run creates an ephemeral Release Artifact V2 identity for those exact bytes; a real publish must match the committed `docs/launch/release-artifact-<version>.json` authority.
+- It builds/typechecks the package, runs the complete default and Long-Task Workflow test suites, package source drift, `make validate-harness` and Quickstart Smoke, then packs exactly once. The verifier accepts the npm 11 array and npm 12 workspace-keyed JSON shapes while requiring exactly one packed artifact. A dry run creates an ephemeral Release Artifact V2 identity for those exact bytes; a real publish must match the committed `docs/launch/release-artifact-<version>.json` authority.
 - Release Artifact V2 binds the tarball SHA-256, Node version, npm version and `package-lock.json` SHA-256. Any environment or lockfile drift fails before smoke/publication, and dry-run identity never authorizes a real publish.
 - It installs that exact packed tarball into an empty temporary repository and runs `ty-context init`, `doctor`, `validate-context` and a minimal Contract V3 final-gate black box before publishing only the tested tarball path.
 - The publish step runs only when `dry_run` is false.

@@ -23,7 +23,7 @@ test("orientation Context exposes the current three-capability authority model",
       ),
     ]);
 
-  assert.match(global, /Minimal Context.*Workflow Contract.*Composite Long-Task/s);
+  assert.match(global, /Minimal Context.*Workflow Contract.*Long-Task Workflow/s);
   assert.match(global, /Context Delta: none\|required/);
   assert.match(global, /Campaign V5.*Scope Fit V4/s);
   assert.match(architecture, /Contract V3/);
@@ -134,7 +134,7 @@ test("public documentation is English-complete for profiles and current workflow
     await read("packages/ty-context/README.md"),
   ]) {
     assert.match(document, /Why It Exists/);
-    assert.match(document, /Minimal Context.*Workflow Contract.*Composite Long-Task/s);
+    assert.match(document, /Minimal Context.*Workflow Contract.*Long-Task Workflow/s);
     assert.match(document, /platform's internal plan/);
     assert.match(document, /core-portable/);
     assert.match(document, /workflow-default/);

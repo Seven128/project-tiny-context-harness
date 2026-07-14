@@ -62,12 +62,12 @@ try {
   );
   await writeFile(
     path.join(fixture, ".agent/ty-context-managed/skills/composite-long-task-workflow/SKILL.md"),
-    "---\nname: composite-long-task-workflow\ndescription: Use only when explicitly invoked through /composite-long-task-workflow.\n---\n\n# Composite Long-Task Workflow\n",
+    "---\nname: composite-long-task-workflow\ndescription: Use only when explicitly invoked through /composite-long-task-workflow.\n---\n\n# Long-Task Workflow\n",
     "utf8"
   );
   await writeFile(
     path.join(fixture, ".agent/ty-context-managed/skills/prepare-composite-long-task/SKILL.md"),
-    "---\nname: prepare-composite-long-task\ndescription: Use when directly invoked to prepare a composite campaign.\n---\n\n# Prepare Composite Long Task\n",
+    "---\nname: prepare-composite-long-task\ndescription: Use when directly invoked to prepare a long-task workflow campaign.\n---\n\n# Prepare Long-Task Workflow\n",
     "utf8"
   );
   await writeFile(
@@ -80,7 +80,7 @@ try {
       fixture,
       ".agent/ty-context-managed/skills/composite-long-task-workflow/references/composite-long-task-workflow-protocol.md"
     ),
-    "# Composite Long-Task Workflow Protocol\n",
+    "# Long-Task Workflow Protocol\n",
     "utf8"
   );
   await writeFile(
@@ -200,7 +200,7 @@ try {
     ),
     "utf8"
   );
-  assert.match(packagedCompositeProtocol, /Composite Long-Task Workflow Protocol/);
+  assert.match(packagedCompositeProtocol, /Long-Task Workflow Protocol/);
   const packagedCompositeGoalTemplate = await readFile(
     path.join(fixture, "packages/ty-context/assets/skills/composite-long-task-workflow/assets/goal-objective.template.md"),
     "utf8"

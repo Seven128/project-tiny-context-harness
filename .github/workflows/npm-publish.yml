@@ -62,8 +62,6 @@ jobs:
       - name: Complete package tests
         run: npm test --workspace project-tiny-context-harness
 
-      - name: Complete Composite tests
-        run: npm run test:composite-workflow --workspace project-tiny-context-harness
 
       - name: Check release version surfaces
         run: npm run release:check-version

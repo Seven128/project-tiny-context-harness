@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://project-tiny-context-harness.invalid/schemas/composite-v3/product-source-v3.schema.json",
-  "title": "Composite Long-Task Product Source V3",
+  "title": "Long-Task Workflow Product Source V3",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "product_goal", "delivery_scope", "full_population_required", "owner_surfaces", "requirements", "boundaries", "non_completing_outcomes", "population_exclusion_rules", "representative_samples_validate", "representative_samples_do_not_validate", "out_of_scope_backlog"],

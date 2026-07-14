@@ -12,7 +12,7 @@ test("prepare Skill is concise, explicit, and routes the complete Campaign V5 Ap
   const skill = await read("SKILL.md");
   const description = skill.match(/^description:\s*(.*)$/m)?.[1];
   assert.match(skill, /^name: prepare-composite-long-task$/m);
-  assert.equal(description, "Use when directly invoked to prepare, execute, resume, or review a multi-SFC composite long-task campaign from a discussed plan.");
+  assert.equal(description, "Use when directly invoked to prepare, execute, resume, or review a multi-SFC long-task workflow campaign from a discussed plan.");
   assert.ok(description.length <= 140);
   assert.match(skill, /\/prepare-composite-long-task/);
   assert.match(skill, /composite-campaign contract --json/);
@@ -104,7 +104,7 @@ test("public documentation is English-complete and preserves the strict downstre
   for (const relative of ["README.md", "packages/ty-context/README.md"]) {
     const content = await readFile(path.join(root, relative), "utf8");
     documents.push(content);
-    assert.match(content, /## Composite Campaign Orchestrator V5/);
+    assert.match(content, /## Long-Task Workflow Campaign V5/);
     assert.match(content, /\/prepare-composite-long-task/);
     assert.match(content, /composite-campaign/);
     assert.match(content, /worktree/i);

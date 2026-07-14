@@ -17,7 +17,7 @@ Invoke only through:
 
 Do not trigger from task length, file count, broad plan/acceptance words or inferred complexity. Do not execute implementation, mutate durable Context, run side-effect validation or claim any item complete unless the user separately asks for a current evidence audit.
 
-For strict machine completion use explicit Composite only: `/prepare-composite-long-task` for a raw multi-SFC campaign or `/composite-long-task-workflow` for one already-complete three-input SFC.
+For strict machine completion use the explicit Long-Task Workflow only: `/prepare-composite-long-task` for a raw multi-SFC campaign or `/composite-long-task-workflow` for one already-complete three-input SFC.
 
 ## Outputs
 

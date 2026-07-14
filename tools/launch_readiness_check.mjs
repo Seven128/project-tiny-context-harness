@@ -1237,8 +1237,7 @@ function localChecks() {
       contains(npmTrustedPublishWorkflow, /npm run build --workspace project-tiny-context-harness/) &&
       contains(npmTrustedPublishWorkflow, /Complete package tests/) &&
       contains(npmTrustedPublishWorkflow, /run: npm test --workspace project-tiny-context-harness/) &&
-      contains(npmTrustedPublishWorkflow, /Complete Composite tests/) &&
-      contains(npmTrustedPublishWorkflow, /run: npm run test:composite-workflow --workspace project-tiny-context-harness/) &&
+      !contains(npmTrustedPublishWorkflow, /npm run test:long-task-workflow/) &&
       contains(npmTrustedPublishWorkflow, /npm run release:check-version/) &&
       contains(npmTrustedPublishWorkflow, /node packages\/ty-context\/dist\/cli\.js package check-source/) &&
       contains(npmTrustedPublishWorkflow, /make validate-harness/) &&
@@ -1718,11 +1717,10 @@ function localChecks() {
       contains(maintainerWorkflow, /Typecheck package/) &&
       contains(maintainerWorkflow, /Complete package tests/) &&
       contains(maintainerWorkflow, /npm test --workspace project-tiny-context-harness/) &&
-      contains(maintainerWorkflow, /Complete Composite tests/) &&
-      contains(maintainerWorkflow, /npm run test:composite-workflow --workspace project-tiny-context-harness/) &&
+      !contains(maintainerWorkflow, /npm run test:long-task-workflow/) &&
       contains(maintainerWorkflow, /node tools\/quickstart_smoke\.mjs/) &&
       contains(maintainerWorkflow, /npm run preview:pack/),
-    "Maintainer package CI runs the complete default and Composite suites on submitted branches, pull requests and main."
+    "Maintainer package CI runs the complete default and Long-Task Workflow suites on submitted branches, pull requests and main."
   );
   addCheck(
     checks,

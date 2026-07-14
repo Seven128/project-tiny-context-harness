@@ -6,7 +6,7 @@ read_policy: default
 
 ## Role
 
-This contract defines the default prompt-level workflow and the explicit handoff to ordinary or Composite long-task Skills. Read it before changing Context Priority, `Context Delta`, task routing, ordinary long-task artifacts, Composite authority or Contract Conformance.
+This contract defines the default prompt-level workflow and the explicit handoff to ordinary or Long-Task Workflow Skills. Read it before changing Context Priority, `Context Delta`, task routing, ordinary long-task artifacts, Long-Task Workflow authority or Contract Conformance.
 
 Workflow Contract is a first-class Tiny Context capability alongside Minimal Context. It is deliberately lightweight: it controls authority and order of thought, not a mandatory plan file or workflow state machine.
 
@@ -85,7 +85,7 @@ A Local Audit records current progress, commands run, failure reasons and remain
 
 The Skill does not create a Plan Conformance Matrix, Final Acceptance Verdict, separate test-requirements file or second execution plan by default. Test requirements belong in the checklist. Ordinary long-task completion remains an evidence judgment using current agent evidence, project tests, CI and user acceptance; use Composite when strict machine completion authority is required.
 
-## Composite Inheritance And Replacement
+## Long-Task Workflow Inheritance And Replacement
 
 When Composite is active, it inherits:
 

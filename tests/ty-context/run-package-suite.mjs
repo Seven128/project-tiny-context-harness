@@ -4,15 +4,15 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const suite = process.argv[2];
-if (suite !== "default" && suite !== "composite") {
-  throw new Error("Usage: run-package-suite.mjs <default|composite> [node-test options]");
+if (suite !== "default" && suite !== "long-task") {
+  throw new Error("Usage: run-package-suite.mjs <default|long-task> [node-test options]");
 }
 
 const testRoot = path.dirname(fileURLToPath(import.meta.url));
-const compositeTestName = /^(?:codex-|composite-|long-task-|managed-campaign-|prepare-composite-|scope-fit-)/u;
+const longTaskTestName = /^(?:codex-|composite-|long-task-|managed-campaign-|prepare-composite-|scope-fit-)/u;
 const files = (await readdir(testRoot))
   .filter((name) => name.endsWith(".test.mjs"))
-  .filter((name) => compositeTestName.test(name) === (suite === "composite"))
+  .filter((name) => longTaskTestName.test(name) === (suite === "long-task"))
   .sort()
   .map((name) => path.join(testRoot, name));
 

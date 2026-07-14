@@ -1,11 +1,11 @@
 ---
 name: prepare-composite-long-task
-description: Use when directly invoked to prepare, execute, resume, or review a multi-SFC composite long-task campaign from a discussed plan.
+description: Use when directly invoked to prepare, execute, resume, or review a multi-SFC long-task workflow campaign from a discussed plan.
 ---
 
-# Prepare Composite Long Task
+# Prepare Long-Task Workflow
 
-中文显示名：多组合长程任务准备、并行执行与续接 Skill
+中文显示名：长程任务工作流准备、并行执行与续接 Skill
 
 ## Boundary
 
@@ -33,7 +33,7 @@ Never copy a competing field inventory into this Skill. Never register Campaign 
 
 ## New Campaign
 
-1. Perform preliminary Scope Fit. If the source is not a composite long task, recommend the smaller path without creating a Campaign unless the user explicitly wants the decision preserved.
+1. Perform preliminary Scope Fit. If the source does not need the long-task workflow, recommend the smaller path without creating a Campaign unless the user explicitly wants the decision preserved.
 2. Preserve the discussed plan in an in-repository UTF-8 file and create the Campaign:
 
 ```text

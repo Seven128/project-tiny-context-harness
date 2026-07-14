@@ -17,7 +17,7 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - `check-modularity` command parsing: `packages/ty-context/src/commands/check-modularity.ts`.
 - Package source commands: `packages/ty-context/src/commands/package-source.ts`.
 - Validator command wrapper: `packages/ty-context/src/commands/validate.ts`.
-- Composite long-task Contract V3 command wrapper: `packages/ty-context/src/commands/composite-long-task.ts`. There is no V2/legacy command alias.
+- Long-Task Workflow Contract V3 command wrapper: `packages/ty-context/src/commands/composite-long-task.ts`. The `composite-long-task` command is a stable compatibility identifier; there is no V2/legacy command alias.
 - Composite campaign preparation command wrapper: `packages/ty-context/src/commands/composite-campaign.ts`.
 
 ## Core Libraries
@@ -67,7 +67,7 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - Surface Contract workflow: `tests/ty-context/surface-contract-workflow.test.mjs`.
 - Modularity checks: `tests/ty-context/check-modularity.test.mjs` and `tests/ty-context/modularity-guidance.test.mjs`.
 - Ordinary long-task Skill behavior: `tests/ty-context/normal-long-task-skill.test.mjs`.
-- Composite long-task Skill/Goal behavior is covered by explicit-invocation Skill tests and the lightweight CLI/project-Hook black-box suite; there is no lifecycle task-state, progress ledger or privileged Host protocol.
+- Long-Task Workflow Skill/Goal behavior is covered by explicit-invocation Skill tests and the lightweight CLI/project-Hook black-box suite; there is no lifecycle task-state, progress ledger or privileged Host protocol.
 - Composite Campaign V5 and preparation Skill behavior lives in `tests/ty-context/composite-campaign-*.test.mjs` and `tests/ty-context/prepare-composite-long-task-skill.test.mjs`: Scope Fit V4 Source Unit/maximal-scope rules, graph/source coverage, conservative scheduler, App Server protocol/catalog/routing, thread lifecycle/recovery, real Git worktrees/per-worktree bindings, immutable `CompositeAuthoringPacketV3` projection, Slice receipts, merge/repair, Integration/Campaign gates and target finalization. `composite-campaign-target-finalization.test.mjs` owns commit/tree/Target-Gate/delivery/PR regressions; `composite-campaign-accepted-authority.test.mjs` owns terminal reentry, atomic authority and cleanup/crash recovery; `composite-campaign-lease.test.mjs` owns live-owner, heartbeat and operation-id cases. Transaction-store and worktree suites retain recovery and primary-worktree isolation. `tests/ty-context/fake-codex-app-server.mjs` is the deterministic local JSONL protocol double, and the V5 black-box suite uses it with real temporary Git repositories. Real App Server smoke is development-only.
 
 ## Release And Maintainer Tools
@@ -77,7 +77,7 @@ This index helps future agents find implementation surfaces quickly. It is navig
 - Release publication: `tools/release_publish.mjs`.
 - Legacy npm release compatibility wrapper: `tools/release_npm.mjs`.
 - GitHub release publishing: `tools/github_release_publish.mjs`.
-- Composite workflow self-test entrypoints: `packages/ty-context/package.json` owns the default/Composite commands; `tests/ty-context/run-package-suite.mjs` partitions them by stable filename families; `tests/ty-context/workflow-test-entrypoints.test.mjs` requires both complete suites in PR/main/publish gates, pinned Action SHAs and prevents consumer Harness gates from acquiring package Campaign self-tests. `tools/release_artifact_identity.mjs` and the prepare/verify/publish tools bind Release Artifact V2 environment and byte identity around the exact tarball smoke.
+- Long-Task Workflow self-test entrypoints: `packages/ty-context/package.json` owns the default and explicit `test:long-task-workflow` commands; `tests/ty-context/run-package-suite.mjs` partitions them by stable filename families; `tests/ty-context/workflow-test-entrypoints.test.mjs` permits the complete workflow suite through direct `npm test`, its dedicated command or PR/main/publish CI, and prevents Hooks, local release scripts and consumer Harness gates from acquiring it, and requires pinned Action SHAs. `tools/release_artifact_identity.mjs` and the prepare/verify/publish tools bind Release Artifact V2 environment and byte identity around the exact tarball smoke.
 - Launch readiness checks: `tools/launch_readiness_check.mjs`.
 - Quickstart smoke: `tools/quickstart_smoke.mjs`.
 

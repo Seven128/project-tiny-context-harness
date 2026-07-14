@@ -6,12 +6,14 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
-test("GitHub CI runs complete default and Composite suites with immutable release evidence", () => {
+test("long-task workflow tests run only in GitHub CI or through their explicit command", () => {
   const packageWorkflow = read(".github/workflows/package.yml");
   const publishWorkflow = read(".github/workflows/npm-publish.yml");
   const consumerWorkflow = read(".github/workflows/harness.yml");
   const publishRunbook = read("docs/launch/npm-trusted-publishing.md");
   const tarballSmoke = read("tools/release_tarball_smoke.mjs");
+  const releasePrepare = read("tools/release_prepare.mjs");
+  const releasePublish = read("tools/release_publish.mjs");
   const packageJson = JSON.parse(read("packages/ty-context/package.json"));
 
   assert.match(packageWorkflow, /Typecheck package/);
@@ -22,7 +24,7 @@ test("GitHub CI runs complete default and Composite suites with immutable releas
   assert.match(packageWorkflow, /package check-source/);
   assert.match(packageWorkflow, /make validate-harness/);
   assert.match(packageWorkflow, /Complete package tests[\s\S]*run: npm test --workspace project-tiny-context-harness/);
-  assert.match(packageWorkflow, /Complete Composite tests\s+run: npm run test:composite-workflow --workspace project-tiny-context-harness/);
+  assert.doesNotMatch(packageWorkflow, /npm run test:long-task-workflow/);
   assert.match(packageWorkflow, /node tools\/quickstart_smoke\.mjs/);
   assert.match(packageWorkflow, /npm run preview:pack/);
 
@@ -30,7 +32,7 @@ test("GitHub CI runs complete default and Composite suites with immutable releas
   assert.match(publishWorkflow, /npm install -g npm@12\.0\.1/);
   assert.doesNotMatch(publishWorkflow, /npm@latest/);
   assert.match(publishWorkflow, /Complete package tests[\s\S]*run: npm test --workspace project-tiny-context-harness/);
-  assert.match(publishWorkflow, /Complete Composite tests\s+run: npm run test:composite-workflow --workspace project-tiny-context-harness/);
+  assert.doesNotMatch(publishWorkflow, /npm run test:long-task-workflow/);
   assert.match(publishWorkflow, /release:check-version/);
   assert.match(publishWorkflow, /package check-source/);
   assert.match(publishWorkflow, /make validate-harness/);
@@ -48,7 +50,7 @@ test("GitHub CI runs complete default and Composite suites with immutable releas
   assert.match(tarballSmoke, /"ty-context", "doctor"/);
   assert.match(tarballSmoke, /"ty-context", "validate-context"/);
   assert.match(tarballSmoke, /"composite-long-task",\s*"final-gate"/);
-  assert.match(publishRunbook, /complete package test suite/);
+  assert.match(publishRunbook, /complete default and Long-Task Workflow test suites/);
   assert.match(publishRunbook, /exact packed tarball/);
 
   for (const workflow of [packageWorkflow, publishWorkflow, consumerWorkflow, read(".github/workflows/scorecard.yml")]) {
@@ -58,21 +60,28 @@ test("GitHub CI runs complete default and Composite suites with immutable releas
   }
 
   assert.doesNotMatch(consumerWorkflow, /npm (?:run )?test/);
-  assert.doesNotMatch(consumerWorkflow, /test:composite-workflow/);
+  assert.doesNotMatch(consumerWorkflow, /test:(?:composite|long-task)-workflow/);
   assert.doesNotMatch(
     consumerWorkflow,
     /composite-campaign-v5-app-server-black-box/,
   );
 
-  assert.equal(packageJson.scripts["test:built"], "node ../../tests/ty-context/run-package-suite.mjs default");
+  assert.equal(packageJson.scripts["test:default:built"], "node ../../tests/ty-context/run-package-suite.mjs default");
+  assert.equal(packageJson.scripts["test:default"], "npm run build && npm run test:default:built");
+  assert.equal(packageJson.scripts["test:built"], "npm run test:default:built && npm run test:long-task-workflow:built");
   assert.equal(packageJson.scripts.test, "npm run build && npm run test:built");
-  assert.equal(packageJson.scripts["test:composite-workflow:built"], "node ../../tests/ty-context/run-package-suite.mjs composite");
-  assert.equal(packageJson.scripts["test:composite-workflow"], "npm run build && npm run test:composite-workflow:built");
+  assert.equal(packageJson.scripts["test:long-task-workflow:built"], "node ../../tests/ty-context/run-package-suite.mjs long-task");
+  assert.equal(packageJson.scripts["test:long-task-workflow"], "npm run build && npm run test:long-task-workflow:built");
+  assert.equal(packageJson.scripts["test:composite-workflow"], undefined);
 
   const suiteRunner = read("tests/ty-context/run-package-suite.mjs");
-  assert.match(suiteRunner, /compositeTestName/);
-  assert.match(suiteRunner, /\(suite === "composite"\)/);
+  assert.match(suiteRunner, /longTaskTestName/);
+  assert.match(suiteRunner, /\(suite === "long-task"\)/);
   assert.match(suiteRunner, /codex-\|composite-\|long-task-/);
+  assert.doesNotMatch(releasePrepare, /test:(?:composite|long-task)-workflow/);
+  assert.doesNotMatch(releasePublish, /test:(?:composite|long-task)-workflow/);
+  assert.match(releasePublish, /release_tarball_smoke\.mjs[\s\S]*--portable-only/);
+  assert.match(tarballSmoke, /if \(!portableOnly\)/);
 });
 
 function read(relativePath) {

@@ -41,7 +41,7 @@ export function help(): void {
   init [--adopt] [--harness-folder <path>]
                        Initialize/adopt a project; without --harness-folder, choose target agent first
   enable composite-codex
-                       Explicitly install Codex Hooks and Composite Long-Task Skills
+                       Explicitly install Codex Hooks and Long-Task Workflow Skills
   disable composite-codex
                        Remove package-owned Codex Hooks and disable Composite execution
   sync                 Refresh managed assets; does not run migrations

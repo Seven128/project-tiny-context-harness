@@ -16,7 +16,7 @@ export async function renderLongTaskGoal(workdir: string): Promise<string> {
     status = current.workflow_status ?? status;
     next = current.findings?.[0]?.next_action ?? next;
   } catch {}
-  const value = `Composite Long-Task Workflow Contract V3\n\nWorkdir: ${path.resolve(workdir)}\nContract: ${contract.contract_sha256}\nAuthorities: product-architecture-source.yaml, technical-realization-plan.yaml, acceptance-checklist.yaml\nOnly legal terminal state: accepted\nCurrent status: ${status}\nNext action: ${next}\nRule: needs_work is internal and must continue; only a fresh accepted final result permits completion.\n`;
+  const value = `Long-Task Workflow Contract V3\n\nWorkdir: ${path.resolve(workdir)}\nContract: ${contract.contract_sha256}\nAuthorities: product-architecture-source.yaml, technical-realization-plan.yaml, acceptance-checklist.yaml\nOnly legal terminal state: accepted\nCurrent status: ${status}\nNext action: ${next}\nRule: needs_work is internal and must continue; only a fresh accepted final result permits completion.\n`;
   await writeFile(path.join(workdir, "goal-objective.txt"), value);
   return value;
 }

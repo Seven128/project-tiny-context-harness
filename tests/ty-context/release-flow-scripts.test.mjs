@@ -18,8 +18,9 @@ const workspacePackage = JSON.parse(readFileSync(path.join(repoRoot, "packages/t
 assert.equal(rootPackage.scripts["release:prepare"], "node tools/release_prepare.mjs");
 assert.equal(rootPackage.scripts["release:publish"], "node tools/release_publish.mjs");
 assert.equal(rootPackage.scripts["release:npm"], "node tools/release_npm.mjs");
-assert.equal(workspacePackage.scripts["test:built"], "node ../../tests/ty-context/run-package-suite.mjs default");
-assert.equal(workspacePackage.scripts["test:composite-workflow:built"], "node ../../tests/ty-context/run-package-suite.mjs composite");
+assert.equal(workspacePackage.scripts["test:default:built"], "node ../../tests/ty-context/run-package-suite.mjs default");
+assert.equal(workspacePackage.scripts["test:built"], "npm run test:default:built && npm run test:long-task-workflow:built");
+assert.equal(workspacePackage.scripts["test:long-task-workflow:built"], "node ../../tests/ty-context/run-package-suite.mjs long-task");
 
 const legacyNoArgs = runNode(legacyNpmScript, []);
 assert.equal(legacyNoArgs.status, 0, `${legacyNoArgs.stdout}\n${legacyNoArgs.stderr}`);
@@ -92,8 +93,7 @@ try {
       "node packages/ty-context/dist/cli.js package check-source",
       "npm run release:check-version",
       "node packages/ty-context/dist/cli.js upgrade --check --json",
-      "npm run test:built --workspace project-tiny-context-harness",
-      "npm run test:composite-workflow:built --workspace project-tiny-context-harness",
+      "npm run test:default:built --workspace project-tiny-context-harness",
       `npm pack --json --workspace project-tiny-context-harness --pack-destination ${preparedReleaseDir}`,
       "git diff --check"
     ]
@@ -135,7 +135,7 @@ try {
     `npm pack --json --workspace project-tiny-context-harness --pack-destination ${preparedReleaseDir}`,
     "git diff --check"
   ]);
-  assert.ok(!fastCommands.includes("npm run test:built --workspace project-tiny-context-harness"));
+  assert.ok(!fastCommands.includes("npm run test:default:built --workspace project-tiny-context-harness"));
 
   seedReleaseFixture(guardFixture, "3.0.0");
   const guard = runNode(
@@ -203,27 +203,27 @@ try {
   const publishEntries = readJsonLines(publishLog);
   assert.ok(publishEntries.every((entry) => entry.shell === false), "publish commands should use shell-safe spawning");
   const publishCommands = publishEntries.map((entry) => entry.argv.join(" "));
-  assert.ok(publishCommands.includes("npm test --workspace project-tiny-context-harness"));
+  assert.ok(publishCommands.includes("npm run test:default --workspace project-tiny-context-harness"));
   assert.ok(
-    publishCommands.includes(
-      "npm run test:composite-workflow --workspace project-tiny-context-harness"
+    publishCommands.every(
+      (command) => !/test:(?:composite|long-task)-workflow/.test(command)
     )
   );
   assert.ok(
     publishCommands.includes(
-      "node tools/release_tarball_smoke.mjs --tarball .artifacts/releases/prepared/project-tiny-context-harness-1.2.4.tgz"
+      "node tools/release_tarball_smoke.mjs --tarball .artifacts/releases/prepared/project-tiny-context-harness-1.2.4.tgz --portable-only"
     )
   );
   assert.ok(publishCommands.includes("npm publish .artifacts/releases/prepared/project-tiny-context-harness-1.2.4.tgz --access public"));
   assert.ok(
-    publishCommands.indexOf("npm test --workspace project-tiny-context-harness") <
+      publishCommands.indexOf("npm run test:default --workspace project-tiny-context-harness") <
       publishCommands.indexOf(
         "npm publish .artifacts/releases/prepared/project-tiny-context-harness-1.2.4.tgz --access public"
       )
   );
   assert.ok(
     publishCommands.indexOf(
-      "node tools/release_tarball_smoke.mjs --tarball .artifacts/releases/prepared/project-tiny-context-harness-1.2.4.tgz"
+      "node tools/release_tarball_smoke.mjs --tarball .artifacts/releases/prepared/project-tiny-context-harness-1.2.4.tgz --portable-only"
     ) <
       publishCommands.indexOf(
         "npm publish .artifacts/releases/prepared/project-tiny-context-harness-1.2.4.tgz --access public"

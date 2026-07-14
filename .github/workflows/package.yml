@@ -88,8 +88,6 @@ jobs:
         run: npm run typecheck --workspace project-tiny-context-harness
       - name: Complete package tests
         run: npm test --workspace project-tiny-context-harness
-      - name: Complete Composite tests
-        run: npm run test:composite-workflow --workspace project-tiny-context-harness
       - name: Check package canonical source drift
         run: node packages/ty-context/dist/cli.js package check-source
       - name: Validate Context and touched-source modularity
@@ -122,8 +120,6 @@ jobs:
         run: node packages/ty-context/dist/cli.js check-modularity --config-only --fail-on-warning
       - name: Complete package tests
         run: npm test --workspace project-tiny-context-harness
-      - name: Complete Composite tests
-        run: npm run test:composite-workflow --workspace project-tiny-context-harness
       - name: Check package canonical source drift
         run: node packages/ty-context/dist/cli.js package check-source
       - name: Validate Context and touched-source modularity
