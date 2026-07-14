@@ -34,6 +34,19 @@ assert.match(`${legacyOldPublishArgs.stdout}\n${legacyOldPublishArgs.stderr}`, /
 assert.deepEqual(parsePackJson(`${JSON.stringify([{ filename: "pkg-1.0.0.tgz" }])}\n`), {
   filename: "pkg-1.0.0.tgz"
 });
+assert.deepEqual(
+  parsePackJson(
+    `${JSON.stringify({ "project-tiny-context-harness": { filename: "pkg-1.0.0.tgz" } })}\n`
+  ),
+  { filename: "pkg-1.0.0.tgz" }
+);
+assert.throws(
+  () =>
+    parsePackJson(
+      JSON.stringify({ first: { filename: "first.tgz" }, second: { filename: "second.tgz" } })
+    ),
+  /one npm pack result/u
+);
 
 const fixture = mkdtempSync(path.join(os.tmpdir(), "release-flow-scripts-"));
 const fastFixture = mkdtempSync(path.join(os.tmpdir(), "release-flow-fast-"));

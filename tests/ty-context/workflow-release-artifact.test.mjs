@@ -64,7 +64,11 @@ function createFixture() {
   mkdirSync(prepared, { recursive: true });
   writeFileSync(path.join(root, "package-lock.json"), '{"lockfileVersion":3}\n', "utf8");
   writeFileSync(tarball, "one immutable tarball", "utf8");
-  writeFileSync(packJson, `${JSON.stringify([{ filename }])}\n`, "utf8");
+  writeFileSync(
+    packJson,
+    `${JSON.stringify({ "project-tiny-context-harness": { filename } })}\n`,
+    "utf8"
+  );
   return {
     root,
     version,

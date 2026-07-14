@@ -78,11 +78,20 @@ export async function runCommand(command, commandArgs, options = {}) {
 
 export function parsePackJson(output) {
   const parsed = parseJsonFromOutput(output);
-  const pack = Array.isArray(parsed) ? parsed[0] : parsed;
-  if (!pack?.filename) {
-    throw new Error("Could not parse npm pack output.");
+  const candidates = Array.isArray(parsed)
+    ? parsed
+    : parsed?.filename
+      ? [parsed]
+      : parsed && typeof parsed === "object"
+        ? Object.values(parsed)
+        : [];
+  const packs = candidates.filter(
+    (candidate) => candidate && typeof candidate === "object" && candidate.filename
+  );
+  if (packs.length !== 1) {
+    throw new Error("Could not parse one npm pack result.");
   }
-  return pack;
+  return packs[0];
 }
 
 export function parseJsonFromOutput(output) {
