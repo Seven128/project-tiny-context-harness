@@ -31,6 +31,10 @@ import { createIntegrationWorktree } from "./composite-campaign-worktree.js";
 import type { ControllerProfileV5 } from "./composite-campaign-schema-v5.js";
 import { CampaignMutationQueue } from "./composite-campaign-mutation-queue.js";
 import { mutateCampaignV5 } from "./composite-campaign-v5.js";
+import {
+  continueAcceptedCleanupIfNeeded,
+  tryAcceptedCampaignAuthorityV5,
+} from "./composite-campaign-accepted-authority.js";
 
 export interface CampaignRunOptions {
   projectRoot: string;
@@ -42,13 +46,32 @@ export interface CampaignRunOptions {
 }
 
 export type CampaignRunResult =
-  | { status: "accepted"; target_commit: string }
+  | {
+      status: "accepted";
+      target_commit: string;
+      cleanup_status: "pending" | "complete";
+    }
   | { status: "decision_required"; decision: unknown }
   | { status: "wait_external"; reason: string };
 
 export async function runCampaignV5(
   options: CampaignRunOptions,
 ): Promise<CampaignRunResult> {
+  const terminal = await tryAcceptedCampaignAuthorityV5(
+    options.projectRoot,
+    options.campaignPath,
+  );
+  if (terminal) {
+    const authority = await continueAcceptedCleanupIfNeeded({
+      projectRoot: options.projectRoot,
+      campaignPath: options.campaignPath,
+    });
+    return {
+      status: "accepted",
+      target_commit: authority.target_commit,
+      cleanup_status: authority.cleanup_status,
+    };
+  }
   const factory =
     options.clientFactory ??
     (() => createCodexAppServerClientFromEnvironment(options.env));
@@ -92,7 +115,11 @@ export async function runCampaignV5(
           options.campaignPath,
         );
         if (action.action === "finished")
-          return { status: "accepted", target_commit: action.target_commit };
+          return {
+            status: "accepted",
+            target_commit: action.target_commit,
+            cleanup_status: action.cleanup_status,
+          };
         if (action.action === "decision_required")
           return { status: "decision_required", decision: action.decision };
         if (action.action === "wait_external")

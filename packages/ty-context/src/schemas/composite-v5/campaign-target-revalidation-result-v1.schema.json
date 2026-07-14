@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-tiny-context-harness.invalid/schemas/composite-v5/campaign-target-revalidation-result-v1.schema.json",
+  "title": "Campaign Target Revalidation Result V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "campaign_id", "target_branch", "target_commit", "target_tree", "source_campaign_final_result_sha256", "final_snapshot_sha256", "workflow_status", "slice_results", "global_constraint_results", "completed_at", "result_sha256"],
+  "properties": {
+    "schema_version": { "const": "campaign-target-revalidation-result-v1" },
+    "campaign_id": { "$ref": "#/$defs/text" },
+    "target_branch": { "$ref": "#/$defs/text" },
+    "target_commit": { "$ref": "#/$defs/oid" },
+    "target_tree": { "$ref": "#/$defs/oid" },
+    "source_campaign_final_result_sha256": { "$ref": "#/$defs/sha256" },
+    "final_snapshot_sha256": { "$ref": "#/$defs/sha256" },
+    "workflow_status": { "enum": ["target_verified", "needs_work"] },
+    "slice_results": { "type": "array", "items": { "$ref": "#/$defs/sliceResult" } },
+    "global_constraint_results": { "type": "array", "items": { "$ref": "#/$defs/constraintResult" } },
+    "completed_at": { "type": "string", "format": "date-time" },
+    "result_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1 },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "oid": { "type": "string", "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$" },
+    "sliceResult": { "type": "object", "additionalProperties": false, "required": ["slice_id", "contract_sha256", "final_result_sha256", "run_id", "final_snapshot_sha256", "workflow_status"], "properties": { "slice_id": { "$ref": "#/$defs/text" }, "contract_sha256": { "$ref": "#/$defs/sha256" }, "final_result_sha256": { "$ref": "#/$defs/sha256" }, "run_id": { "$ref": "#/$defs/text" }, "final_snapshot_sha256": { "$ref": "#/$defs/sha256" }, "workflow_status": { "enum": ["accepted", "needs_work"] } } },
+    "constraintResult": { "type": "object", "additionalProperties": false, "required": ["constraint_id", "status", "matched_slice_ids", "missing_refs"], "properties": { "constraint_id": { "$ref": "#/$defs/text" }, "status": { "enum": ["passed", "failed"] }, "matched_slice_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/text" } }, "missing_refs": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/text" } } } }
+  }
+}

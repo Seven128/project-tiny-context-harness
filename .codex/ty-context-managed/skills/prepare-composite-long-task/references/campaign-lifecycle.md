@@ -18,11 +18,13 @@ The worker compiles Contract V3, implements allowed bindings, runs focused check
 
 Accepted Slice branches merge to Integration in stable SFC order with base/head/receipt/contract integrity checks. Merge conflict, Integration Gate regression and Campaign Final Gate regression each use an independent execution-profile repair thread/worktree. Repair preserves all affected Packets/requirements/ACs, cannot alter Scope Fit or Packets, commits cleanly, and is applied only against the unchanged repair base.
 
-After each merge, non-accepting Wave Impact V2 runs Specs proven affected by the actual diff and frozen evidence, always including global-constraint Specs; uncertainty runs all candidates. After all SFCs are `integration_verified`, Campaign Final materializes current Packets on one Integration snapshot and reruns all bindings, Specs, counterfactuals and coverage. It alone completes Campaigns. A moved target forces synchronization and revalidation. Cleanup removes only owned validated worktrees/branches.
+After each merge, non-accepting Wave Impact V2 runs Specs proven affected by actual diff and frozen evidence, always including global constraints; uncertainty runs all candidates. After every SFC is `integration_verified`, Campaign Final reruns all current Packet bindings, Specs, counterfactuals and coverage on one Integration snapshot. Target finalization fetches authoritative upstream: exact verified commit/tree converges; every different tree gets the complete current Packet/Source Coverage/Slice/global-constraint snapshot gate. A moved Target that fails revalidation is safely non-force fast-forwarded, sent only to a matching OPEN base/head PR, or repaired; pushes are refetched. Accepted state, Final Result, hashed receipt and event commit atomically before idempotent owned cleanup. Accepted reruns validate frozen authority and finish before App Server, Gates, PRs or worktrees; cleanup failure never revokes acceptance.
 
 ## Recovery
 
 Persist controller catalog/profile, thread IDs, routing, authoring/execution Turn IDs, Goal objective hash/status, launch token, phase and last failure. On App Server loss, reconnect once, `thread/resume`, `thread/read` and `thread/goal/get`, then reconcile known server/local identities. Recover an unpersisted correlated Turn only when exactly one candidate exists. Restore server Goal completion from accepted local state. Apply the same rules to repair threads.
+
+Same-host live-PID leases survive expiry; heartbeat and operation-id checks guard each transaction replacement, and close removes only its lock.
 
 If a thread/start or Turn launch may have reached the server but cannot be uniquely correlated, fail closed as `ambiguous_host_thread_launch`/`ambiguous_host_turn_launch`; never create duplicate work. A second server failure or missing external authorization becomes `wait_external`. V4 campaigns remain status/audit data and cannot enter automatic V5 execution.
 

@@ -105,6 +105,14 @@ export interface CampaignPolicyV5 {
   preserve_primary_worktree: true;
 }
 
+export interface CampaignFinalizationV1 {
+  target_commit: string;
+  target_receipt_sha256: string;
+  accepted_at: string;
+  cleanup_status: "pending" | "complete";
+  cleanup_error_code: string | null;
+}
+
 export interface CampaignV5 extends Omit<
   CampaignV4,
   "schema_version" | "slices"
@@ -115,6 +123,7 @@ export interface CampaignV5 extends Omit<
   execution_host: CampaignExecutionHostV5;
   slices: Record<string, CampaignSliceV5>;
   repair_threads: Record<string, CampaignRepairThreadV5>;
+  finalization: CampaignFinalizationV1 | null;
 }
 
 export function parseCampaignV5(content: string): CampaignV5 {
@@ -122,7 +131,10 @@ export function parseCampaignV5(content: string): CampaignV5 {
 }
 
 export function assertCampaignV5(value: unknown): CampaignV5 {
-  const root = record(value, "campaign");
+  const parsed = record(value, "campaign");
+  const root = Object.hasOwn(parsed, "finalization")
+    ? parsed
+    : { ...parsed, finalization: null };
   if (root.schema_version !== CAMPAIGN_SCHEMA_V5)
     invalid(`expected_${CAMPAIGN_SCHEMA_V5}`);
   const expected = [
@@ -144,6 +156,7 @@ export function assertCampaignV5(value: unknown): CampaignV5 {
     "campaign_policy",
     "execution_host",
     "repair_threads",
+    "finalization",
   ];
   exact(root, expected);
   const slices = record(root.slices, "slices");
@@ -173,6 +186,7 @@ export function assertCampaignV5(value: unknown): CampaignV5 {
     campaign_policy: _policy,
     execution_host: _host,
     repair_threads: _repairs,
+    finalization: _finalization,
     ...base
   } = root;
   assertCampaignV4({
@@ -183,6 +197,7 @@ export function assertCampaignV5(value: unknown): CampaignV5 {
   assertContextBaseline(root.context_baseline);
   assertCampaignPolicy(root.campaign_policy);
   assertExecutionHost(root.execution_host);
+  assertCampaignFinalization(root.finalization);
   const repairs = record(root.repair_threads, "repair_threads");
   for (const [repairId, value] of Object.entries(repairs)) {
     const repair = record(value, `repair_threads.${repairId}`);
@@ -548,6 +563,41 @@ function assertCampaignPolicy(value: unknown): void {
     invalid("campaign_policy.protected_branch_mode");
   if (row.preserve_primary_worktree !== true)
     invalid("campaign_policy.preserve_primary_worktree");
+}
+function assertCampaignFinalization(value: unknown): void {
+  if (value === null) return;
+  const row = record(value, "finalization");
+  exact(row, [
+    "target_commit",
+    "target_receipt_sha256",
+    "accepted_at",
+    "cleanup_status",
+    "cleanup_error_code",
+  ]);
+  if (
+    typeof row.target_commit !== "string" ||
+    !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u.test(row.target_commit)
+  )
+    invalid("finalization.target_commit_invalid");
+  hash(row.target_receipt_sha256, "finalization.target_receipt_sha256");
+  if (
+    typeof row.accepted_at !== "string" ||
+    !Number.isFinite(Date.parse(row.accepted_at))
+  )
+    invalid("finalization.accepted_at_invalid");
+  oneOf(
+    row.cleanup_status,
+    ["pending", "complete"] as const,
+    "finalization.cleanup_status",
+  );
+  if (
+    row.cleanup_error_code !== null &&
+    (typeof row.cleanup_error_code !== "string" ||
+      !/^[a-z0-9_]{1,64}$/u.test(row.cleanup_error_code))
+  )
+    invalid("finalization.cleanup_error_code_invalid");
+  if (row.cleanup_status === "complete" && row.cleanup_error_code !== null)
+    invalid("finalization.complete_with_error");
 }
 function assertContextBaseline(value: unknown): void {
   const row = record(value, "context_baseline");

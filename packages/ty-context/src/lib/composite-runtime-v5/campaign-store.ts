@@ -131,7 +131,7 @@ async function withCampaignMutation(
     assertCampaignV5(next);
     await commitCampaignTransactionV1({
       root: loaded.root,
-      lease: handle.lease,
+      handle,
       operation: eventType,
       beforeCampaign,
       afterCampaign: canonicalYaml(next),

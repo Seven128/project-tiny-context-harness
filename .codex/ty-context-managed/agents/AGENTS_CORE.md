@@ -37,6 +37,8 @@ Routing precedence:
 
 Composite inherits Context Priority, `Context Delta`, durable Context updates and final Context drift check. It replaces ordinary planning, implementation mapping, execution state, acceptance and completion with Source Coverage/Scope Fit, Packet/Goal, Contract V3 bindings/Change Envelope, Campaign/thread/receipt state, Slice Final Gate, Wave Integration Gate and same-snapshot Campaign Final Gate. It must not create or consume a second plan, matrix, verdict, ordinary Local Audit or hand-written complete state.
 
+Campaign accepted authority is committed before idempotent owned-asset cleanup; rerunning an accepted Campaign returns finished.
+
 Scope Fit preserves semantic completeness and the largest coherent independently accepted SFC before considering parallelism. File/layer boundaries, agent count, duration and parallel opportunity are never split reasons. Goal creation freezes the graph.
 
 ## Durable Facts And Generated Surfaces

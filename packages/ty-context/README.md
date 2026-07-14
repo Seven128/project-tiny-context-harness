@@ -81,6 +81,8 @@ minimum Context -> Context Delta -> internal plan -> implementation -> project v
 
 For ordinary long-running acceptance planning, explicitly invoke `/normal-long-task`. For a discussed multi-SFC plan that should be prepared and executed end to end, explicitly invoke `/prepare-composite-long-task`; explicit invocation authorizes the complete Campaign V5 loop from immutable plan/Source Unit coverage through App Server authoring/Goal threads, conservative worktree waves, integration repair, final-snapshot verification and target finalization.
 
+Campaign target finalization fetches authoritative upstream state and accepts an exact verified commit/tree, or runs one complete Target Snapshot Gate for any different tree. Missing implementation uses only non-force fast-forward delivery or a matching open PR, with post-push fetch verification. The Campaign becomes `accepted` only when state, accepted Final Result, Target Finalization Receipt and event commit atomically. Accepted reruns validate frozen authority and finish before App Server, Gate, PR or worktree work; idempotent owned-asset cleanup follows and cannot revoke acceptance. Same-host live lease owners remain authoritative after nominal expiry, while heartbeat and operation-id checks guard every transaction replacement.
+
 Invoke `/composite-long-task-workflow` only when the three Contract V3 YAML authorities already exist:
 
 - `product-architecture-source.yaml` owns requirements, scope, boundaries and non-completing outcomes.

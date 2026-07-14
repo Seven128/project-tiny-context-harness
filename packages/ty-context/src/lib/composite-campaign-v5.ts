@@ -100,6 +100,7 @@ export async function createCampaignV5(
     },
     execution_host: emptyExecutionHostV5(),
     repair_threads: {},
+    finalization: null,
   };
   assertCampaignV5(campaign);
   const staging = `${campaignPath}.tmp-${process.pid}-${Date.now()}`;
@@ -142,7 +143,10 @@ export async function loadCampaignV5(
   campaignPath: string,
 ): Promise<{ root: string; campaign: CampaignV5 }> {
   const loaded = await loadCampaignStoreV5(projectRoot, campaignPath);
-  if (campaignHasGoalV5(loaded.campaign))
+  if (
+    loaded.campaign.campaign_status !== "accepted" &&
+    campaignHasGoalV5(loaded.campaign)
+  )
     await assertFrozenCampaignContextFresh(projectRoot, loaded.campaign);
   return loaded;
 }
@@ -163,7 +167,7 @@ export async function mutateCampaignV5(
     eventType,
     async (root, campaign, transaction) => {
       const current = assertCampaignV5(campaign);
-      if (campaignHasGoalV5(current))
+      if (current.campaign_status !== "accepted" && campaignHasGoalV5(current))
         await assertFrozenCampaignContextFresh(projectRoot, current);
       return mutate(root, current, transaction);
     },

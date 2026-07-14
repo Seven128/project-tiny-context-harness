@@ -221,7 +221,7 @@ async function interruptTransaction(fixture, crashAt, staged) {
       () =>
         commitCampaignTransactionV1({
           root: fixture.root,
-          lease: handle.lease,
+          handle,
           operation,
           beforeCampaign: fixture.beforeCampaign,
           afterCampaign,

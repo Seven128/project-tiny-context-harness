@@ -12,8 +12,9 @@ import {
 import {
   runCampaignFinalGate,
   runWaveIntegrationGate,
-  markCampaignTargetAccepted,
+  readCampaignFinalResult,
   type CampaignFinalSliceInput,
+  type CampaignFinalResultV1,
   type CampaignGlobalConstraintBindingV1,
 } from "./composite-campaign-final-gate.js";
 import {
@@ -27,10 +28,14 @@ import {
   readSliceGoalManifest,
   type SliceGoalManifestV3,
 } from "./composite-campaign-goal-manifest.js";
+import { mergeWaveIntoIntegration } from "./composite-campaign-integration.js";
+import { finalizeCampaignTarget } from "./composite-campaign-target-finalization.js";
 import {
-  finalizeCampaignTarget,
-  mergeWaveIntoIntegration,
-} from "./composite-campaign-integration.js";
+  assertAcceptedCampaignAuthority,
+  commitCampaignAcceptanceV5,
+  continueAcceptedCleanupIfNeeded,
+  injectCampaignFinalizationCrash,
+} from "./composite-campaign-accepted-authority.js";
 import {
   recordSliceExecutionReceipt,
   readSliceExecutionReceiptV2,
@@ -66,7 +71,6 @@ import {
 } from "./composite-campaign-worktree.js";
 import { LONG_TASK_SOURCE_FILES } from "./long-task-contract-schema.js";
 import { clearAcceptedLongTaskBinding } from "./long-task-active-task.js";
-import { removeAllCampaignWorktrees } from "./composite-campaign-worktree.js";
 import { atomic } from "./long-task-status.js";
 import {
   acceptThreadV5,
@@ -109,7 +113,12 @@ export type CampaignAdvanceActionV5 =
     }
   | { action: "decision_required"; decision: unknown }
   | { action: "wait_external"; reason: string }
-  | { action: "finished"; campaign_status: "accepted"; target_commit: string };
+  | {
+      action: "finished";
+      campaign_status: "accepted";
+      target_commit: string;
+      cleanup_status: "pending" | "complete";
+    };
 
 export interface GoalLaunchV5 {
   slice_id: string;
@@ -144,6 +153,18 @@ export async function advanceCampaignV5(
 ): Promise<CampaignAdvanceActionV5> {
   let { root, campaign } = await loadCampaignV5(projectRoot, campaignPath);
   assertCampaignV5(campaign);
+  if (campaign.campaign_status === "accepted") {
+    const authority = await continueAcceptedCleanupIfNeeded({
+      projectRoot,
+      campaignPath: root,
+    });
+    return {
+      action: "finished",
+      campaign_status: "accepted",
+      target_commit: authority.target_commit,
+      cleanup_status: authority.cleanup_status,
+    };
+  }
   const scope = await readScope(root);
   const coverage = await readCoverage(root);
   const graph = validateScopeFitGraphV4(scope);
@@ -557,6 +578,11 @@ export async function statusCampaignV5(
     projectRoot,
     campaignPath,
   );
+  if (
+    campaign.schema_version === "composite-campaign-v5" &&
+    campaign.campaign_status === "accepted"
+  )
+    await assertAcceptedCampaignAuthority(root, campaign);
   return {
     campaign,
     campaign_path: root,
@@ -767,20 +793,33 @@ async function finalizeCompletedGraph(
       };
     },
   );
-  const final = await runCampaignFinalGate({
-    campaignRoot: root,
-    campaignId: campaign.campaign_id,
-    integrationWorktree: integration,
-    integrationBranch: campaign.integration_branch,
-    sourcePlanSha256: campaign.source_plan_sha256,
-    sourceCoverageFile: path.join(root, "source-coverage.json"),
-    sourceCoverageComplete:
-      analysis.pending_global_constraint_binding_pairs.length === 0,
-    slices: Object.keys(campaign.slices).map((sliceId) =>
-      packetInput(root, campaign, sliceId),
-    ),
-    globalConstraints: constraints,
-  });
+  const sourceCoverageFile = path.join(root, "source-coverage.json");
+  const sourceCoverageComplete =
+    analysis.pending_global_constraint_binding_pairs.length === 0;
+  const slices = Object.keys(campaign.slices).map((sliceId) =>
+    packetInput(root, campaign, sliceId),
+  );
+  const finalResultFile = path.join(root, "campaign-final-result.json");
+  const reusable = await reusableCampaignFinalResult(
+    finalResultFile,
+    integration,
+    campaign,
+    sourceCoverageFile,
+    sourceCoverageComplete,
+  );
+  const final =
+    reusable ??
+    (await runCampaignFinalGate({
+      campaignRoot: root,
+      campaignId: campaign.campaign_id,
+      integrationWorktree: integration,
+      integrationBranch: campaign.integration_branch,
+      sourcePlanSha256: campaign.source_plan_sha256,
+      sourceCoverageFile,
+      sourceCoverageComplete,
+      slices,
+      globalConstraints: constraints,
+    }));
   if (final.workflow_status !== "ready_to_merge")
     return prepareRepairAction(
       projectRoot,
@@ -789,7 +828,7 @@ async function finalizeCompletedGraph(
       integration,
       "CAMPAIGN-FINAL",
       "campaign_final_regression",
-      path.join(root, "campaign-final-result.json"),
+      finalResultFile,
       null,
     );
   const policy = assertCampaignV5(campaign).campaign_policy;
@@ -800,10 +839,16 @@ async function finalizeCompletedGraph(
     integrationWorktree: integration,
     integrationBranch: campaign.integration_branch,
     targetBranch: campaign.target_branch,
-    campaignFinalResultFile: path.join(root, "campaign-final-result.json"),
+    campaignFinalResultFile: finalResultFile,
     autoPush: policy.auto_push,
     protectedBranchMode: policy.protected_branch_mode,
     preservePrimaryWorktree: policy.preserve_primary_worktree,
+    targetRevalidation: {
+      sourceCoverageFile,
+      sourceCoverageComplete,
+      slices,
+      globalConstraints: constraints,
+    },
   });
   if (target.status === "repair_required")
     return prepareRepairAction(
@@ -813,13 +858,13 @@ async function finalizeCompletedGraph(
       integration,
       "CAMPAIGN-FINAL",
       "campaign_final_regression",
-      path.join(root, "campaign-final-result.json"),
-      campaign.target_branch,
+      finalResultFile,
+      target.target_ref,
     );
   if (target.status === "external_approval_required")
     return { action: "wait_external", reason: target.reason };
   if (target.status === "revalidation_required") {
-    await mutateCampaignV5(
+    const updated = await mutateCampaignV5(
       projectRoot,
       root,
       "target_resync_requires_revalidation",
@@ -829,35 +874,72 @@ async function finalizeCompletedGraph(
         return value;
       },
     );
+    if (
+      target.reason === "target_contains_integration_but_invalid" &&
+      target.target_revalidation_result_path
+    )
+      return prepareRepairAction(
+        projectRoot,
+        root,
+        updated,
+        integration,
+        "CAMPAIGN-FINAL",
+        "campaign_final_regression",
+        target.target_revalidation_result_path,
+        null,
+      );
     return advanceCampaignV5(projectRoot, root);
   }
-  await markCampaignTargetAccepted(
-    path.join(root, "campaign-final-result.json"),
-    target.target_commit,
+  injectCampaignFinalizationCrash(
+    "after_target_delivery_before_acceptance_transaction",
   );
-  await removeAllCampaignWorktrees({
-    repositoryRoot: projectRoot,
-    campaignId: campaign.campaign_id,
-    deleteBranches: true,
-  });
-  await mutateCampaignV5(
+  await commitCampaignAcceptanceV5({
     projectRoot,
-    root,
-    "campaign_accepted",
-    async (_root, value) => {
-      value.campaign_status = "accepted";
-      value.integration_head = target.target_commit;
-      for (const slice of Object.values(value.slices)) {
-        slice.worktree = null;
-      }
-      return value;
-    },
-  );
+    campaignPath: root,
+    receipt: target.receipt,
+  });
+  const authority = await continueAcceptedCleanupIfNeeded({
+    projectRoot,
+    campaignPath: root,
+  });
   return {
     action: "finished",
     campaign_status: "accepted",
-    target_commit: target.target_commit,
+    target_commit: authority.target_commit,
+    cleanup_status: authority.cleanup_status,
   };
+}
+
+async function reusableCampaignFinalResult(
+  file: string,
+  integration: string,
+  campaign: CampaignRuntime,
+  sourceCoverageFile: string,
+  sourceCoverageComplete: boolean,
+): Promise<CampaignFinalResultV1 | null> {
+  let result: CampaignFinalResultV1;
+  try {
+    result = await readCampaignFinalResult(file);
+  } catch {
+    return null;
+  }
+  if (result.workflow_status !== "ready_to_merge") return null;
+  const head = await currentHead(integration);
+  const tree = (
+    await runGit(integration, ["rev-parse", `${head}^{tree}`])
+  ).stdout.trim();
+  const sourceCoverageSha256 = sha256Hex(
+    await readFile(path.resolve(sourceCoverageFile)),
+  );
+  return result.campaign_id === campaign.campaign_id &&
+    result.integration_branch === campaign.integration_branch &&
+    result.integration_head === head &&
+    result.integration_tree === tree &&
+    result.source_plan_sha256 === campaign.source_plan_sha256 &&
+    result.source_coverage_sha256 === sourceCoverageSha256 &&
+    result.source_coverage_complete === sourceCoverageComplete
+    ? result
+    : null;
 }
 
 async function prepareRepairAction(

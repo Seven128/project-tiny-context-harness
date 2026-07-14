@@ -33,6 +33,8 @@ import {
 
 test("routing_policy_hash_is_persisted", async () => {
   assert.deepEqual(Object.keys(COMPOSITE_V5_SCHEMAS).sort(), [
+    "campaign-target-finalization-receipt-v1",
+    "campaign-target-revalidation-result-v1",
     "campaign-wave-impact-v2",
     "composite-campaign-v5",
     "composite-source-coverage-v2",

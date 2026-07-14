@@ -38,13 +38,13 @@ modularity:
       reason: The pre-existing aggregate host recovery state machine already exceeded function and branch thresholds; deterministic V5 turn reconciliation extends that same compatibility surface while preserving crash semantics.
       tracking_issue: modularity-backlog
       expiry_condition: Extract Goal identity recovery, authoring-turn recovery and execution-turn reconciliation into separate pure transition modules.
-    - path: packages/ty-context/src/lib/composite-campaign-integration.ts
+    - path: packages/ty-context/src/lib/composite-campaign-final-gate.ts
       category: legacy_migration
       owner: harness-maintainers
       introduced_at: "2026-07-14"
-      reason: The pre-existing integration module already combined Git, persistence, validation, fetch and target-finalization responsibilities; non-intrusive target finalization currently preserves its public orchestration boundary.
+      reason: The pre-existing aggregate Campaign final gate already exceeded the modularity limit; this hotfix exposes its existing snapshot evaluator and removes the non-transactional acceptance write without expanding gate semantics.
       tracking_issue: modularity-backlog
-      expiry_condition: Extract remote synchronization and owned target-worktree finalization from integration snapshot and merge operations.
+      expiry_condition: Extract Slice result collection, global-constraint evaluation and final-result serialization into focused modules behind the snapshot evaluator.
     - path: packages/ty-context/src/lib/composite-campaign-orchestrator.ts
       category: legacy_migration
       owner: harness-maintainers

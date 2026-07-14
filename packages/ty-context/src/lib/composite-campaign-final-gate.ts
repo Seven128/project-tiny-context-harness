@@ -87,6 +87,26 @@ export interface CampaignFinalResultV1 {
   result_sha256: string;
 }
 
+export interface CampaignSnapshotGateOptions {
+  campaignId: string;
+  snapshotWorktree: string;
+  sourceCoverageFile: string;
+  sourceCoverageComplete: boolean;
+  slices: CampaignFinalSliceInput[];
+  globalConstraints: CampaignGlobalConstraintBindingV1[];
+  phase: string;
+}
+
+export interface CampaignSnapshotGateEvaluationV1 {
+  snapshot_head: string;
+  snapshot_tree: string;
+  source_coverage_sha256: string;
+  final_snapshot_sha256: string | null;
+  slice_results: CampaignFinalSliceResultV1[];
+  global_constraint_results: CampaignConstraintResultV1[];
+  workflow_status: "needs_work" | "verified";
+}
+
 export interface WaveIntegrationResultV1 {
   schema_version: "wave-integration-result-v1";
   campaign_id: string;
@@ -136,50 +156,62 @@ export async function runCampaignFinalGate(options: {
   slices: CampaignFinalSliceInput[];
   globalConstraints: CampaignGlobalConstraintBindingV1[];
 }): Promise<CampaignFinalResultV1> {
-  const integration = path.resolve(options.integrationWorktree);
-  if (!(await gitStatus(integration)).clean)
-    throw new Error("campaign_final_gate_requires_clean_integration_worktree");
-  const integrationHead = await currentHead(integration);
-  const integrationTree = (
-    await runGit(integration, ["rev-parse", `${integrationHead}^{tree}`])
+  const evaluated = await evaluateCampaignSnapshotGate({
+    campaignId: options.campaignId,
+    snapshotWorktree: options.integrationWorktree,
+    sourceCoverageFile: options.sourceCoverageFile,
+    sourceCoverageComplete: options.sourceCoverageComplete,
+    slices: options.slices,
+    globalConstraints: options.globalConstraints,
+    phase: "campaign-final",
+  });
+  return writeCampaignFinalResult(
+    options,
+    evaluated.snapshot_head,
+    evaluated.snapshot_tree,
+    evaluated.source_coverage_sha256,
+    evaluated.slice_results,
+    evaluated.global_constraint_results,
+    evaluated.final_snapshot_sha256,
+    evaluated.workflow_status === "verified" ? "ready_to_merge" : "needs_work",
+  );
+}
+
+export async function evaluateCampaignSnapshotGate(
+  options: CampaignSnapshotGateOptions,
+): Promise<CampaignSnapshotGateEvaluationV1> {
+  const snapshotWorktree = path.resolve(options.snapshotWorktree);
+  if (!(await gitStatus(snapshotWorktree)).clean)
+    throw new Error("campaign_snapshot_gate_requires_clean_worktree");
+  const snapshotHead = await currentHead(snapshotWorktree);
+  const snapshotTree = (
+    await runGit(snapshotWorktree, ["rev-parse", `${snapshotHead}^{tree}`])
   ).stdout.trim();
   const sourceCoverageSha256 = sha256Hex(
     await readFile(path.resolve(options.sourceCoverageFile)),
   );
   const set = await runSliceSet(
-    integration,
+    snapshotWorktree,
     options.campaignId,
-    "campaign-final",
+    options.phase,
     options.slices,
   );
-  if (!set.accepted)
-    return writeCampaignFinalResult(
-      options,
-      integrationHead,
-      integrationTree,
-      sourceCoverageSha256,
-      set.sliceResults,
-      [],
-      null,
-      "needs_work",
-    );
-  const constraintResults = evaluateGlobalConstraints(
-    options.globalConstraints,
-    set.fullResults,
-  );
-  const accepted =
+  const constraintResults = set.accepted
+    ? evaluateGlobalConstraints(options.globalConstraints, set.fullResults)
+    : [];
+  const verified =
+    set.accepted &&
     options.sourceCoverageComplete &&
     constraintResults.every((item) => item.status === "passed");
-  return writeCampaignFinalResult(
-    options,
-    integrationHead,
-    integrationTree,
-    sourceCoverageSha256,
-    set.sliceResults,
-    constraintResults,
-    set.commonSnapshot,
-    accepted ? "ready_to_merge" : "needs_work",
-  );
+  return {
+    snapshot_head: snapshotHead,
+    snapshot_tree: snapshotTree,
+    source_coverage_sha256: sourceCoverageSha256,
+    final_snapshot_sha256: set.commonSnapshot,
+    slice_results: set.sliceResults,
+    global_constraint_results: constraintResults,
+    workflow_status: verified ? "verified" : "needs_work",
+  };
 }
 
 export async function runWaveIntegrationGate(options: {
@@ -245,28 +277,22 @@ export async function runWaveIntegrationGate(options: {
   return result;
 }
 
-export async function markCampaignTargetAccepted(
-  file: string,
+export function buildAcceptedCampaignFinalResult(
+  current: CampaignFinalResultV1,
   targetCommit: string,
-): Promise<CampaignFinalResultV1> {
-  const current = await readCampaignFinalResult(file);
+): CampaignFinalResultV1 {
   if (current.workflow_status !== "ready_to_merge")
     throw new Error("campaign_final_result_not_ready_to_merge");
-  if (targetCommit !== current.integration_head)
-    throw new Error("campaign_target_commit_does_not_match_verified_snapshot");
   const { result_sha256: _oldHash, ...identity } = current;
   const nextIdentity = {
     ...identity,
     workflow_status: "accepted" as const,
     target_commit: targetCommit,
-    completed_at: new Date().toISOString(),
   };
-  const next: CampaignFinalResultV1 = {
+  return {
     ...nextIdentity,
     result_sha256: sha256Hex(canonicalJson(nextIdentity)),
   };
-  await atomic(file, next);
-  return next;
 }
 
 export async function readCampaignFinalResult(
@@ -418,6 +444,7 @@ async function runSliceSet(
   await clearCampaignLongTaskBinding(integration, campaignId);
   const sliceResults: CampaignFinalSliceResultV1[] = [];
   const fullResults = new Map<string, FinalResultV3>();
+  let accepted = true;
   const prepared = await prepareSliceSet(
     integration,
     campaignId,
@@ -458,18 +485,12 @@ async function runSliceSet(
         final_snapshot_sha256: result.final_snapshot_sha256,
         workflow_status: result.workflow_status,
       });
-      if (result.workflow_status !== "accepted")
-        return {
-          accepted: false,
-          commonSnapshot: snapshot.manifest.snapshot_sha256,
-          sliceResults,
-          fullResults,
-        };
+      if (result.workflow_status !== "accepted") accepted = false;
       if (snapshot.manifest.snapshot_sha256 !== result.final_snapshot_sha256)
         throw new Error("campaign_slice_set_snapshots_differ");
     }
     return {
-      accepted: true,
+      accepted,
       commonSnapshot: snapshot.manifest.snapshot_sha256,
       sliceResults,
       fullResults,

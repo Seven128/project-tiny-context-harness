@@ -54,7 +54,9 @@ Composite 的三个强制安全步骤是合同编译、最终全量 Gate 和 Cod
 
 preflight 必须通过 Requirement/PI/obligation/binding/AC/proof/spec/counterfactual、Source Unit 实体链和 oracle 可用性检查。CLI 再根据依赖、写入/读取路径、API/schema/route/runtime/Context contract、资源锁、单元内聚、迁移、生成物、包管理清单和环境 profile 计算确定性 wave；无法证明安全并行时自动串行。Scope Fit 不允许为了并行过度分片，且第一个 Goal 设置后永久冻结。每个 Slice 先 commit 且 clean，再 final-gate；`record-result` 只验证现有结果和 receipt，不重跑 final-gate。
 
-accepted Slice 只合入 Integration Branch。普通 merge conflict 和组合回归自动生成独立 execution-profile repair thread/worktree/Goal，且不能改 Scope Fit 或 Packet；每波通过 Integration Gate 后才解锁下游。全部 SFC integrated 后，Campaign Final Gate 在同一最终快照重跑所有 SFC、global constraints 和 source coverage；目标分支变化会自动同步并重验，成功 merge/push 后才推导 Campaign `accepted`。App Server 异常只自动重连一次并按持久化 Thread/Turn/Goal 恢复；无法唯一确认创建结果时 fail closed，第二次失败进入 `wait_external`，绝不静默回退人工 Goal。旧 Campaign V4 只可审计，不能自动执行。
+accepted Slice 只合入 Integration Branch。普通 merge conflict 和组合回归自动生成独立 execution-profile repair thread/worktree/Goal，且不能改 Scope Fit 或 Packet；每波通过 Integration Gate 后才解锁下游。全部 SFC integrated 后，Campaign Final Gate 在同一最终快照重跑所有 SFC、global constraints 和 source coverage。
+
+Target 最终化先获取权威上游：只有精确相同的已验证 commit 或 tree 才直接收敛；任何不同 tree 都必须在 Target 快照上完整重跑当前 Packet、Source Coverage、Slice contract 与 global constraint。确实缺实现时只允许非 force 的 fast-forward push/local ref 更新或匹配 base/head 的 OPEN PR；push 后必须重新 fetch 校验，已合并或关闭 PR 不会复用。Campaign `accepted` 与 accepted Final Result、Hash 校验的 Target Finalization Receipt、event 在同一事务提交；重跑先验证冻结权威并直接返回 finished，不连接 App Server、不重跑 Gate、不重建 worktree 或 PR。之后才幂等清理 Campaign 自有资产，清理失败可恢复且不撤销 accepted。同主机存活 PID 的 Lease 即使名义过期也不可抢占，heartbeat 与 operation-id 在每个事务替换前 fail closed。App Server 异常只自动重连一次并按持久化 Thread/Turn/Goal 恢复；无法唯一确认创建结果时 fail closed，第二次失败进入 `wait_external`，绝不静默回退人工 Goal。旧 Campaign V4 只可审计，不能自动执行。
 
 ## 当前最佳实践
 

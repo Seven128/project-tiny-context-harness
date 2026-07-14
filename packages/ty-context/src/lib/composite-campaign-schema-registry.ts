@@ -6,6 +6,8 @@ import goal from "../schemas/composite-v5/slice-goal-manifest-v3.schema.json" wi
 import receipt from "../schemas/composite-v5/slice-execution-receipt-v2.schema.json" with { type: "json" };
 import scope from "../schemas/composite-v5/scope-fit-result-v4.schema.json" with { type: "json" };
 import integration from "../schemas/composite-v5/wave-integration-result-v2.schema.json" with { type: "json" };
+import targetReceipt from "../schemas/composite-v5/campaign-target-finalization-receipt-v1.schema.json" with { type: "json" };
+import targetRevalidation from "../schemas/composite-v5/campaign-target-revalidation-result-v1.schema.json" with { type: "json" };
 import { canonicalJson, sha256Hex } from "./composite-campaign-codec.js";
 
 export const COMPOSITE_V5_SCHEMAS = {
@@ -17,6 +19,8 @@ export const COMPOSITE_V5_SCHEMAS = {
   "slice-change-envelope-v1": envelope,
   "campaign-wave-impact-v2": impact,
   "wave-integration-result-v2": integration,
+  "campaign-target-finalization-receipt-v1": targetReceipt,
+  "campaign-target-revalidation-result-v1": targetRevalidation,
 } as const;
 
 export const COMPOSITE_V5_SCHEMA_SET_SHA256 = sha256Hex(

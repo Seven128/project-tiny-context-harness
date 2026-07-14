@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-tiny-context-harness.invalid/schemas/composite-v5/campaign-target-finalization-receipt-v1.schema.json",
+  "title": "Campaign Target Finalization Receipt V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "campaign_id", "target_branch", "verified_integration_commit", "verified_integration_tree", "target_commit", "target_tree", "acceptance_basis", "source_campaign_final_result_sha256", "target_revalidation_result_sha256", "completed_at", "receipt_sha256"],
+  "properties": {
+    "schema_version": { "const": "campaign-target-finalization-receipt-v1" },
+    "campaign_id": { "$ref": "#/$defs/text" },
+    "target_branch": { "$ref": "#/$defs/text" },
+    "verified_integration_commit": { "$ref": "#/$defs/oid" },
+    "verified_integration_tree": { "$ref": "#/$defs/oid" },
+    "target_commit": { "$ref": "#/$defs/oid" },
+    "target_tree": { "$ref": "#/$defs/oid" },
+    "acceptance_basis": { "enum": ["exact_commit", "exact_tree", "target_snapshot_revalidated", "remote_fast_forward", "local_ref_fast_forward"] },
+    "source_campaign_final_result_sha256": { "$ref": "#/$defs/sha256" },
+    "target_revalidation_result_sha256": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/sha256" }] },
+    "completed_at": { "type": "string", "format": "date-time" },
+    "receipt_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1 },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "oid": { "type": "string", "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$" }
+  }
+}

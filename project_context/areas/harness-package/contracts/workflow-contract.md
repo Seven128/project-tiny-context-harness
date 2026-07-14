@@ -153,9 +153,9 @@ A passing test suite cannot authorize an out-of-envelope change.
 
 ## Campaign Transactions And Recovery
 
-Campaign mutations use an optimistic generation, lease lock and write-ahead transaction intent. The durable mutation order is: acquire lease; prepare and fsync staged artifacts; write intent with before/after hashes; atomically replace subordinate files; atomically replace campaign state; append a before/after-hash event; remove intent; release the lease.
+Campaign mutations use an optimistic generation, lease lock and write-ahead transaction intent. The durable mutation order is: acquire lease; prepare and fsync staged artifacts; assert/renew ownership; write intent with before/after hashes; assert/renew before each subordinate, campaign and event replacement; archive the completed intent; release only the same operation's lease.
 
-Locks record owner pid/host, operation id, start and lease expiry. A live owner rejects concurrent mutation. A stale owner enters deterministic recovery. An outstanding intent completes or rolls back from hashes; orphan revisions move to quarantine and are never trusted automatically. Recovery is idempotent and adds no model turn.
+Locks record owner pid/host, operation id, start and lease expiry. A same-host live PID is active regardless of nominal expiry; a dead same-host PID is recoverable. A remote owner is active until expiry and recoverable afterward. The current operation heartbeats at a bounded interval, fails closed if ownership changes or renewal fails, and `close()` never removes another owner's lock. An outstanding intent completes or rolls back from hashes; orphan revisions move to quarantine and are never trusted automatically. Recovery is idempotent and adds no model turn.
 
 ## Git Ownership
 
@@ -163,7 +163,7 @@ Campaign owns its worktrees and branches, not the user's primary worktree.
 
 - Dirty primary-worktree input is captured through a temporary index and `commit-tree` checkpoint ref under `refs/ty-context/checkpoints/<campaign>/<timestamp>`; it never stages, commits, clears or moves the user's index/worktree and still performs secret scanning.
 - Slice, integration, repair and target finalization use Campaign-owned worktrees.
-- Target resynchronization/replay or rebase, final revalidation, fast-forward/push or protected-branch PR handling never requires checking out or rebasing the primary worktree.
+- Target resynchronization/replay or rebase, full Target Snapshot revalidation, fast-forward/push or protected-branch PR handling never requires checking out or rebasing the primary worktree. Finalization resolves the fetched upstream when configured, otherwise the local Target ref; exact commit/tree identity converges before any checkout/PR decision, remote delivery is non-force fast-forward with post-fetch identity verification, and PR reuse is limited to a matching open base/head.
 - `preserve_primary_worktree` defaults to `true`; `auto_push` and protected-branch mode are explicit campaign policy.
 
 Explicit `/prepare-composite-long-task` continues to authorize full execution and target integration within these boundaries.
@@ -190,7 +190,7 @@ Wave impact combines actual merge diff, Implementation Binding targets, verifica
 
 Campaign Final Gate creates one shared Integration snapshot, compiles all Slice contracts against it, runs identical Specs once only when snapshot, normalized Spec, Oracle, executable, input paths, command definition and environment contract identities all match, projects results back to owning Slices and evaluates global constraints. This is same-snapshot execution deduplication, never reuse of historical evidence.
 
-Campaign `accepted` is derived only from current Slice/Wave/final gates, a clean Integration Branch, target resynchronization/revalidation and successful target integration. Prose, Goal status, old results, matrices, verdicts or App Server turn completion cannot promote acceptance.
+Campaign `accepted` is derived only from current Slice/Wave/final gates, a clean Integration Branch and an authoritative Target that either has the exact Campaign Final commit/tree, is authorized by a complete current Target Snapshot Gate, or is safely fast-forwarded to the Integration commit authorized by Campaign Final. The accepted state, accepted Final Result, Target Finalization Receipt and event commit in one Campaign transaction. Cleanup is a later idempotent owned-asset transaction; its failure cannot revoke acceptance. An accepted Campaign validates this frozen authority and returns finished before Scope Fit, worktree creation, App Server connection, PR handling or another Gate. Prose, Goal status, old results, matrices, verdicts or App Server turn completion cannot promote acceptance.
 
 ## Contract Conformance
 

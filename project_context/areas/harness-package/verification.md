@@ -30,6 +30,9 @@ read_policy: default
 - `node --test tests/ty-context/composite-campaign-v5-app-server-black-box.test.mjs`
   - Focused real-Git/Fake-App-Server Campaign path for explicit maintainer diagnosis and part of the complete Composite CI suite.
   - Expected signal: Source Context resolution, maximal Scope Fit, Packet/preflight-before-Goal, versioned routing, settled sibling reconciliation, Change Envelope, Slice/Wave/shared-snapshot Campaign gates and owned-worktree target handling complete without real Codex services.
+- `node --test --test-concurrency=1 tests/ty-context/composite-campaign-target-finalization.test.mjs tests/ty-context/composite-campaign-accepted-authority.test.mjs tests/ty-context/composite-campaign-lease.test.mjs tests/ty-context/composite-campaign-worktree.test.mjs tests/ty-context/composite-campaign-transaction-store.test.mjs tests/ty-context/composite-campaign-v5-app-server-black-box.test.mjs`
+  - Focused finalization/transaction regression path after Target, accepted-authority, cleanup or Lease changes.
+  - Expected signal: exact commit/tree and fully revalidated Target snapshots converge; safe remote/local fast-forward and matching-open-PR fallback preserve the primary worktree; accepted authority is atomic and terminal; all three crash points recover; cleanup is owned/idempotent; live-owner/heartbeat/operation-id Lease cases fail closed.
 - `npm run test:composite-workflow --workspace project-tiny-context-harness`
   - Complete Composite mechanism profile for PR/main/publish CI and explicit local validation.
   - Expected signal: Source Coverage/Context baseline, referenced/full snapshot, transaction recovery/quarantine, non-invasive Git, App Server lifecycle, impact analysis and final Spec deduplication cases exit without failures.
@@ -65,5 +68,6 @@ read_policy: default
 - Context and Harness validators prove recoverability, safe topology, generated-asset consistency or maintainability signals; they do not prove product behavior.
 - Slice Final, Wave Integration and Campaign Final gates remain separate acceptance boundaries.
 - Targeted verify is repair evidence only. Final acceptance always comes from full current-snapshot recomputation.
+- Exact verified commit/tree identity may reuse the already-current Campaign Final Result during Target convergence; any different Target tree requires a complete Target Snapshot Gate. Accepted authority is then frozen transactionally before optional cleanup and is not revoked by later Target movement.
 - Every default Composite test names the false-completion, scope-escape, recovery, Git-intrusion or duplicated-execution risk it closes.
 - Do not store one-off results, raw logs, artifacts, release ledgers or secrets in Verification Context.
