@@ -630,7 +630,13 @@ function run(command, args, cwd, input) {
 
 export function resolveInvocation(command, args, platform = process.platform, nodePath = process.execPath) {
   if (platform !== "win32" || !["npm", "npx"].includes(command)) return { command, args };
-  const cli = path.join(path.dirname(nodePath), "node_modules", "npm", "bin", `${command}-cli.js`);
+  const cli = path.win32.join(
+    path.win32.dirname(nodePath),
+    "node_modules",
+    "npm",
+    "bin",
+    `${command}-cli.js`
+  );
   return { command: nodePath, args: [cli, ...args] };
 }
 

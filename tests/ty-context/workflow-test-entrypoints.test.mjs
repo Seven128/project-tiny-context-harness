@@ -15,6 +15,10 @@ test("GitHub CI runs complete default and Composite suites with immutable releas
   const packageJson = JSON.parse(read("packages/ty-context/package.json"));
 
   assert.match(packageWorkflow, /Typecheck package/);
+  assert.match(
+    packageWorkflow,
+    /main:[\s\S]*Build package\s+run: npm run build --workspace project-tiny-context-harness[\s\S]*Validate modularity waiver lifecycle/,
+  );
   assert.match(packageWorkflow, /package check-source/);
   assert.match(packageWorkflow, /make validate-harness/);
   assert.match(packageWorkflow, /Complete package tests[\s\S]*run: npm test --workspace project-tiny-context-harness/);

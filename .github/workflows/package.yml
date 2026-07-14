@@ -116,6 +116,8 @@ jobs:
         run: npm run format:check
       - name: Typecheck package
         run: npm run typecheck --workspace project-tiny-context-harness
+      - name: Build package
+        run: npm run build --workspace project-tiny-context-harness
       - name: Validate modularity waiver lifecycle
         run: node packages/ty-context/dist/cli.js check-modularity --config-only --fail-on-warning
       - name: Complete package tests

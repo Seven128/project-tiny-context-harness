@@ -57,6 +57,7 @@ read_policy: default
 ## CI Ownership
 
 - Submitted branches, pull requests and main run typecheck, the complete default suite, complete Composite suite, source drift, `validate-harness` and Quickstart Smoke.
+- Package CI builds the package before any main-job command invokes `packages/ty-context/dist/cli.js`; a clean Linux checkout must not rely on locally generated `dist` output.
 - Main additionally runs Pack Preview.
 - Local default `npm test` excludes Composite self-tests; the complete profile also remains available through its explicit npm command.
 - Publish runs the complete default and Composite suites, packs once, records/verifies Release Artifact V2, installs that exact tarball in an empty repository and runs init/doctor/Context/minimal Contract V3 smoke before publishing the same path.
