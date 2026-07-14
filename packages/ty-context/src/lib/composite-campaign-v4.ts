@@ -1,55 +1,24 @@
 import { appendFile, lstat, mkdir, open, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { canonicalJson, canonicalValueJson, canonicalYaml, parseStrictJson, parseStrictYaml, sha256Hex } from "./composite-campaign-codec.js";
+import { COMPOSITE_AUTHORING_PACKET_SCHEMA as PACKET_SCHEMA, type CompositeAuthoringPacketV3 } from "./composite-campaign-contract.js";
 import { deriveConflictProfileV4 } from "./composite-campaign-conflicts.js";
 import { validateScopeFitGraphV3, validateScopeFitGraphV4 } from "./composite-campaign-graph.js";
 import { currentBranch, runGit } from "./composite-campaign-git-baseline.js";
 import { CAMPAIGN_SCHEMA_V4, assertCampaignV4, parseScopeFitResultV3, type CampaignSliceV4, type CampaignV4, type ScopeFitResultV3 } from "./composite-campaign-schema-v4.js";
 import { assertCampaignV5, CAMPAIGN_SCHEMA_V5, campaignHasGoalV5, emptyThreadStateV5, type CampaignV5 } from "./composite-campaign-schema-v5.js";
 import { parseSourceCoverageV1, validateSourceCoverageAgainstScopeV3, validateSourceCoverageAgainstScopeV4, type CampaignPacketEntityIndexV1, type SourceCoverageV1 } from "./composite-campaign-source-coverage.js";
-import { assertSourceUnitPacketBindingsV4, type SourceUnitPacketBindingV4 } from "./composite-campaign-source-units.js";
-import { COMPOSITE_V5_SCHEMAS, COMPOSITE_V5_SCHEMA_SET_SHA256 } from "./composite-campaign-schema-registry.js";
+import { assertSourceUnitPacketBindingsV4 } from "./composite-campaign-source-units.js";
 import { portablePathSlug } from "./composite-campaign-worktree.js";
 import { parseLongTaskSources } from "./long-task-contract-parser.js";
 import { validateLongTaskCoverage } from "./long-task-contract-coverage.js";
-import { LONG_TASK_SOURCE_FILES, type AcceptanceChecklistV3, type LongTaskSourceBundleV3, type ProductSourceV3, type TechnicalPlanV3 } from "./long-task-contract-schema.js";
+import { LONG_TASK_SOURCE_FILES, type LongTaskSourceBundleV3 } from "./long-task-contract-schema.js";
 import { resolveInside } from "./long-task-path-policy.js";
 import { parseScopeFitResultV4, type ScopeFitResultV4, type SourceUnitV4 } from "./scope-fit-v4.js";
 
-const PACKET_SCHEMA = "composite-authoring-packet-v3" as const;
 const MAX_TRACKED_FILE_BYTES = 1024 * 1024;
 
-export interface CompositeAuthoringPacketV3 {
-  schema_version: typeof PACKET_SCHEMA;
-  campaign_id: string;
-  slice_id: string;
-  revision: number;
-  previous_packet_sha256: string | null;
-  authorities: {
-    product_architecture_source: ProductSourceV3;
-    technical_realization_plan: TechnicalPlanV3;
-    acceptance_checklist: AcceptanceChecklistV3;
-  };
-  source_unit_bindings?: SourceUnitPacketBindingV4[];
-}
-
-export function compositeCampaignV4Contract(): unknown {
-  return {
-    schema_version: CAMPAIGN_SCHEMA_V5,
-    audit_schema: CAMPAIGN_SCHEMA_V4,
-    scope_schema: "scope-fit-result-v4",
-    goal_manifest_schema: "slice-goal-manifest-v2",
-    packet_schema: PACKET_SCHEMA,
-    source_coverage_schema: "composite-source-coverage-v1",
-    schema_set_sha256: COMPOSITE_V5_SCHEMA_SET_SHA256,
-    schemas: Object.fromEntries(Object.entries(COMPOSITE_V5_SCHEMAS).map(([name, schema]) => [name, { id: schema.$id, schema_version: name }])),
-    authority_schemas: ["product-source-v3", "technical-plan-v3", "acceptance-checklist-v3"],
-    projection_files: LONG_TASK_SOURCE_FILES,
-    commands: ["contract", "create", "apply-coverage", "apply-scope", "apply-packet", "render", "preflight", "advance", "bind-goal", "bind-repair-goal", "record-result", "status", "run", "app-server-check", "model-routing", "threads", "interrupt"],
-    advance_actions: ["author_packets", "launch_wave", "wait_goals", "repair_integration", "decision_required", "wait_external", "finished"],
-    compatibility: "none"
-  };
-}
+export { compositeCampaignV4Contract, type CompositeAuthoringPacketV3 } from "./composite-campaign-contract.js";
 
 export async function createCampaignV4(projectRoot: string, id: string, planFile: string, targetBranch?: string): Promise<{ campaign: CampaignV4; campaign_path: string }> {
   validatePortableId(id, "campaign");

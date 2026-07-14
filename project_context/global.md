@@ -11,6 +11,7 @@
 ## Non-goals / Boundaries
 
 - The package does not replace project tests, CI, review or human acceptance.
+- Source-workspace development defaults to direct work on `main`. Ordinary agent tasks do not create, switch to or retain feature/Codex branches or development worktrees unless the user explicitly requests isolation. Explicit Composite Campaign owned integration/Slice/repair branches and worktrees remain a narrow orchestration exception and must converge back into `main`.
 - New consumer projects should not default to lifecycle phases, stage task state, stage skills, stage work-product trees or phase gates.
 - `sync` refreshes managed assets and default Context authoring Skills; legacy stage semantic migration has been removed, while safe Schema v4 upgrade migrations remain.
 - Legacy stage assets are not shipped as a runnable default or compatibility layer.
@@ -24,6 +25,7 @@
 
 ## Design Rationale
 
+- Direct-on-`main` development is a source-workspace collaboration policy: it avoids accumulating short-lived Codex branches and keeps the user's active repository state immediately visible. It is not distributed as package behavior and does not remove the isolation required inside an explicitly invoked Composite Campaign.
 - The durable value with the clearest expected return is context recovery and priority discipline, not forcing a full Tiny Context document chain for every project.
 - The historical stage-based Harness externalized the whole Tiny Context through lifecycle state, plan tasks, PRD / tech plan / implementation / review / test / release artifacts and phase gates. Benchmark pilots showed those writes, transitions and gates are objective time/token cost; details are summarized in `PROJECT_SPEC.md`.
 - Modern coding agents have internalized much of the ordinary single-task loop: compact requirement understanding, local design choice, code editing, test execution and simple repair. The default Harness should not duplicate that capability with broad ceremonies.

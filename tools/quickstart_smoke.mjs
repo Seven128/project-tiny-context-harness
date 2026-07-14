@@ -133,7 +133,7 @@ try {
 
   run("git", ["init"], demoDir);
   run("npm", ["init", "-y"], demoDir);
-  run("npm", ["install", "--save-dev", tarballPath], demoDir);
+  run("npm", ["install", "--save-dev", "--ignore-scripts", "--no-audit", "--no-fund", "--prefer-offline", tarballPath], demoDir);
   run("npx", ["--no-install", "ty-context", "init"], demoDir);
   run("npx", ["--no-install", "ty-context", "validate-context"], demoDir);
 
