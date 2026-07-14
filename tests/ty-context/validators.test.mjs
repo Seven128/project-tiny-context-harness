@@ -27,8 +27,11 @@ modularity:
   waivers:
     - path: src/large.ts
       category: hurry
+      owner: test-maintainers
+      introduced_at: "2026-07-14"
       reason: "Invalid category should not affect validate-context."
-      future_split_boundary: "Split later."
+      tracking_issue: "TEST-001"
+      expiry_condition: "Remove after the validator split."
 `
   });
   try {
@@ -40,23 +43,25 @@ modularity:
   }
 });
 
-test("validate-code-modularity fails on over-limit touched handwritten source", async () => {
+test("validate-code-modularity reports formatter-only line expansion without failing the regression gate", async () => {
   const root = await createContextGitProject();
   try {
     const report = await runValidator(root, "validate-code-modularity");
-    assert.match(report.errors.join("\n"), /src\/large\.ts: 3 physical lines exceeds limit 2/);
-    assert.match(report.info.join("\n"), /code modularity audited=1 warning=1 waived=0 limit=2/);
+    assert.deepEqual(report.errors, []);
+    assert.match(report.info.join("\n"), /code modularity audited=1 warning=0 waived=0 limit=2/);
+    assert.match(report.info.join("\n"), /observed-risk: src\/large\.ts 3 lines/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
 });
 
-test("validate-harness fails when code modularity fails", async () => {
+test("validate-harness preserves line-risk reporting without treating formatting as structural regression", async () => {
   const root = await createContextGitProject();
   try {
     const report = await runValidator(root, "validate-harness");
     assert.match(report.info.join("\n"), /Minimal Context validation passed/);
-    assert.match(report.errors.join("\n"), /src\/large\.ts: 3 physical lines exceeds limit 2/);
+    assert.deepEqual(report.errors, []);
+    assert.match(report.info.join("\n"), /observed-risk: src\/large\.ts 3 lines/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -87,14 +92,17 @@ modularity:
   waivers:
     - path: src/large.ts
       category: legacy_migration
+      owner: test-maintainers
+      introduced_at: "2026-07-14"
       reason: "Existing legacy module exceeds the hard source size bound."
-      future_split_boundary: "Extract provider adapters and retry policy."
+      tracking_issue: "TEST-002"
+      expiry_condition: "Extract provider adapters and retry policy."
 `
   });
   try {
     const report = await runValidator(root, "validate-code-modularity");
     assert.deepEqual(report.errors, []);
-    assert.match(report.info.join("\n"), /waived: src\/large\.ts: 3 physical lines exceeds limit 2 but is waived as legacy_migration/);
+    assert.match(report.info.join("\n"), /observed-risk: src\/large\.ts 3 lines/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -109,14 +117,17 @@ modularity:
   waivers:
     - path: src/large.ts
       category: legacy_migration
+      owner: test-maintainers
+      introduced_at: "2026-07-14"
       reason: "Existing legacy module exceeds the hard source size bound."
-      future_split_boundary: "Extract provider adapters and retry policy."
+      tracking_issue: "TEST-003"
+      expiry_condition: "Extract provider adapters and retry policy."
 `
   });
   try {
     const report = await runValidator(root, "validate-code-modularity");
     assert.deepEqual(report.errors, []);
-    assert.match(report.info.join("\n"), /waived: src\/large\.ts: 3 physical lines exceeds limit 2 but is waived as legacy_migration/);
+    assert.match(report.info.join("\n"), /observed-risk: src\/large\.ts 3 lines/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -131,14 +142,17 @@ modularity:
   waivers:
     - path: src/large.ts
       category: legacy_migration
+      owner: test-maintainers
+      introduced_at: "2026-07-14"
       reason: "Existing legacy module exceeds the hard source size bound."
-      future_split_boundary: "Extract provider adapters and retry policy."
+      tracking_issue: "TEST-004"
+      expiry_condition: "Extract provider adapters and retry policy."
 `
   });
   try {
     const report = await runValidator(root, "validate-code-modularity");
     assert.match(report.errors.join("\n"), /modularity\.waivers is not allowed when modularity\.policy is strict_except_generated/);
-    assert.match(report.errors.join("\n"), /src\/large\.ts: 3 physical lines exceeds limit 2/);
+    assert.match(report.info.join("\n"), /observed-risk: src\/large\.ts 3 lines/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -207,8 +221,11 @@ modularity:
   waivers:
     - path: src/large.ts
       category: hurry
+      owner: test-maintainers
+      introduced_at: "2026-07-14"
       reason: "This should not pass."
-      future_split_boundary: "Split later."
+      tracking_issue: "TEST-005"
+      expiry_condition: "Split later."
 `,
     /category must be one of/
   ],
@@ -220,21 +237,73 @@ modularity:
   waivers:
     - path: src/large.ts
       category: legacy_migration
-      future_split_boundary: "Split later."
+      owner: test-maintainers
+      introduced_at: "2026-07-14"
+      tracking_issue: "TEST-006"
+      expiry_condition: "Split later."
 `,
     /reason must be a non-empty string/
   ],
   [
-    "missing future split boundary",
+    "missing expiry condition",
     `
 modularity:
   limit: 2
   waivers:
     - path: src/large.ts
       category: legacy_migration
+      owner: test-maintainers
+      introduced_at: "2026-07-14"
       reason: "This should not pass."
+      tracking_issue: "TEST-007"
 `,
-    /future_split_boundary must be a non-empty string/
+    /expiry_condition must be a non-empty string/
+  ],
+  [
+    "missing owner",
+    `
+modularity:
+  limit: 2
+  waivers:
+    - path: src/large.ts
+      category: legacy_migration
+      introduced_at: "2026-07-14"
+      reason: "This should not pass."
+      tracking_issue: "TEST-008"
+      expiry_condition: "Split later."
+`,
+    /owner must be a non-empty string/
+  ],
+  [
+    "invalid introduced date",
+    `
+modularity:
+  limit: 2
+  waivers:
+    - path: src/large.ts
+      category: legacy_migration
+      owner: test-maintainers
+      introduced_at: "soon"
+      reason: "This should not pass."
+      tracking_issue: "TEST-009"
+      expiry_condition: "Split later."
+`,
+    /introduced_at must be an ISO YYYY-MM-DD date/
+  ],
+  [
+    "missing tracking issue",
+    `
+modularity:
+  limit: 2
+  waivers:
+    - path: src/large.ts
+      category: legacy_migration
+      owner: test-maintainers
+      introduced_at: "2026-07-14"
+      reason: "This should not pass."
+      expiry_condition: "Split later."
+`,
+    /tracking_issue must be a non-empty string/
   ],
   [
     "outside-root path",
@@ -244,8 +313,11 @@ modularity:
   waivers:
     - path: ../outside.ts
       category: legacy_migration
+      owner: test-maintainers
+      introduced_at: "2026-07-14"
       reason: "This should not pass."
-      future_split_boundary: "Split later."
+      tracking_issue: "TEST-010"
+      expiry_condition: "Split later."
 `,
     /path must stay inside the project root/
   ]
@@ -577,7 +649,7 @@ test("old stage validators are not supported by Minimal Context Harness", async 
     assert.match(report.errors.join("\n"), /unknown validator: validate-dev/);
     assert.match(
       report.errors.join("\n"),
-      /Minimal Context Harness supports validate-context, validate-code-modularity, validate-harness, validate-plan-contract and validate-plan-acceptance only/
+      /Minimal Context Harness supports validate-context, validate-code-modularity, validate-harness and validate-plan-acceptance only/
     );
   } finally {
     await rm(root, { recursive: true, force: true });

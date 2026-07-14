@@ -1,5 +1,6 @@
 export type JsonPrimitive = string | number | boolean | null;
-export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
+export type JsonValue =
+  JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 
 export interface JsonRpcRequest {
   id: number;
@@ -49,7 +50,14 @@ export interface CodexThread {
 export interface CodexGoal {
   threadId: string;
   objective: string;
-  status: "active" | "paused" | "blocked" | "usageLimited" | "budgetLimited" | "complete" | string;
+  status:
+    | "active"
+    | "paused"
+    | "blocked"
+    | "usageLimited"
+    | "budgetLimited"
+    | "complete"
+    | string;
   tokenBudget: number | null;
   [key: string]: unknown;
 }
@@ -113,19 +121,27 @@ export interface CodexAppServerClient {
   close(): Promise<void>;
 }
 
-export function asRecord(value: unknown, label: string): Record<string, unknown> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`app_server_protocol_invalid:${label}`);
+export function asRecord(
+  value: unknown,
+  label: string,
+): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    throw new Error(`app_server_protocol_invalid:${label}`);
   return value as Record<string, unknown>;
 }
 
-export function responseResult(value: unknown, field?: string): Record<string, unknown> {
+export function responseResult(
+  value: unknown,
+  field?: string,
+): Record<string, unknown> {
   const root = asRecord(value, "response");
   return field ? asRecord(root[field], field) : root;
 }
 
 export function normalizeThread(value: unknown): CodexThread {
   const row = asRecord(value, "thread");
-  if (typeof row.id !== "string" || !row.id) throw new Error("app_server_protocol_invalid:thread.id");
+  if (typeof row.id !== "string" || !row.id)
+    throw new Error("app_server_protocol_invalid:thread.id");
   if (typeof row.sessionId !== "string") row.sessionId = row.id;
   if (!Array.isArray(row.turns)) row.turns = [];
   return row as unknown as CodexThread;
@@ -133,7 +149,8 @@ export function normalizeThread(value: unknown): CodexThread {
 
 export function normalizeTurn(value: unknown): CodexTurn {
   const row = asRecord(value, "turn");
-  if (typeof row.id !== "string" || !row.id || typeof row.status !== "string") throw new Error("app_server_protocol_invalid:turn");
+  if (typeof row.id !== "string" || !row.id || typeof row.status !== "string")
+    throw new Error("app_server_protocol_invalid:turn");
   if (!Array.isArray(row.items)) row.items = [];
   return row as unknown as CodexTurn;
 }
@@ -141,7 +158,8 @@ export function normalizeTurn(value: unknown): CodexTurn {
 export function finalAgentText(turn: CodexTurn): string | null {
   for (let index = turn.items.length - 1; index >= 0; index -= 1) {
     const item = turn.items[index];
-    if (item.type === "agentMessage" && typeof item.text === "string") return item.text;
+    if (item.type === "agentMessage" && typeof item.text === "string")
+      return item.text;
   }
   return null;
 }

@@ -20,8 +20,8 @@ Project-specific engineering rules belong in a separate project-local Skill unde
 1. 先读取 `project_context/global.md`、`project_context/architecture.md` 和 `project_context/context.toml`，按 default area、triggers、read_when 选择相关 context。
 2. 先确认用户目标、约束、成功标准、影响产品域、现有验证 / 部署关键路径和风险；能从代码或 Context 发现的事实不要反复询问用户。
 3. `project_context/**` 决定“应该是什么”：模块职责、归属、架构边界、接口方向、契约语义和禁止依赖；代码决定“现在实现到了哪里”。代码不能静默重定义 Context。
-4. 第一处代码编辑前，若任务影响 durable architecture boundary、module ownership、API / Schema / data contract、state / runtime semantics、dependency direction、verification / deployment semantics 或 durable rationale / tradeoff，先编译当前任务契约；契约第一段用 `Context Delta: none|required` 完成唯一正式长期事实判断，再写本次 `Task Contract`，并显式写 `Architecture Context Hit` 和 `Decision Rationale Hit: existing|required|none`。如果输入包含产品方案、架构方案、技术方案、实现方案或验收方案，先在 `plan.md` 或等价临时计划面做 Source-to-Context Coverage，确认方案中的 durable architecture / ownership / API / runtime / verification constraints 已被现有 Context 覆盖、需要更新、仅属 task-local、显式 out-of-scope、需要用户决策或仍 under-scoped。
-5. 普通 bug fix、局部样式、局部实现漂移修复、小重构、package/release 处理、测试修复或探索性 spike 不强制编译架构 / rationale 任务契约，也不更新 Context；一旦形成长期工程结论，继续对齐或交付前必须回写 Context。不要把 Context 机械补成代码改动摘要。
+4. 第一处代码编辑前，若任务影响 durable architecture boundary、module ownership、API / Schema / data contract、state / runtime semantics、dependency direction、verification / deployment semantics 或 durable rationale / tradeoff，先给出唯一长期事实判断 `Context Delta: none|required`，并在 agent 内部保持 `Architecture Context Hit` 与 `Decision Rationale Hit: existing|required|none` 清晰。若输入包含产品、架构、技术、实现或验收来源，逐项判断重要约束已被 Context 覆盖、需要先更新 Context、仅属 task-local、显式 out-of-scope 或需要真实用户决策；不要创建 `plan.md`、Task Contract 文件或 Markdown 映射表。
+5. 普通 bug fix、局部样式、局部实现漂移修复、小重构、package/release 处理、测试修复或探索性 spike 不强制创建架构 / rationale 流程 artifact，也不更新 Context；一旦形成长期工程结论，继续对齐或交付前必须回写 Context。不要把 Context 机械补成代码改动摘要。
 6. 如果代码、搜索结果或相邻实现与 Context 冲突，显式标记为实现漂移、缺失工作或 Context 过期，不要用当前代码形态反推模块归属。
 7. 涉及已有 Context 的实现判断，先做轻量对齐：
    - Context expectation
@@ -29,16 +29,16 @@ Project-specific engineering rules belong in a separate project-local Skill unde
    - Gap
    - Proposed change
 8. 涉及模块原则、模块逻辑、设计原因、API / Schema、状态语义、验证设计或 capability / metric / acceptance claim 时，先做 Module Principle / Design Gate：列出命中的模块设计上下文来源，说明这些原则 / 逻辑控制本次哪些实现或验证选择，再选择实现路径、验证 claim、probe 参数或 fallback。命令、probe、当前实现形态和被触碰文件大小是执行实例或维护风险，不能反推或覆盖模块设计目标。
-   - 对外部产品/架构源、技术实现方案或验收清单中的 delivery / acceptance scope，必须显式区分 `system_capability_build`、`representative_sample_validation`、`full_population_operation`、`full_population_not_required` 和 out-of-scope backlog。不要把若干具体对象运行结果当作可复用系统能力完成，也不要把 framework-only 实现当作全量真实对象已完成；sample provider / interface / page 证据不能替代 all-provider / all-interface / all-platform / full-population 完成，除非 AC 明确批准该边界。
+   - 对外部产品/架构源、技术实现方案或验收清单中的 delivery / acceptance scope，必须显式区分 `system_capability_build`、`representative_sample_validation`、`full_population_operation`、`full_population_not_required` 和 out-of-scope backlog。不要把若干具体对象运行结果当作可复用系统能力完成，也不要把 framework-only 实现当作全量真实对象已完成；sample provider / interface / page 证据不能替代 all-provider / all-interface / all-platform / full-population 完成，除非 AC 明确批准该边界。若来源要求全量而可交付范围只能支持样本或框架，标记 `scope_conflict_requires_decision`；用户或权威 AC 收窄范围前不得声称全量完成。
 9. 涉及 Product Surface（Web 页面、移动/桌面屏幕、游戏 UI/HUD/菜单、CLI/TUI 输出、扩展或设备界面）、表单/配置、输入、选择、搜索、筛选、调度/时间、预算/配额/限流或状态反馈的实现方案时，检查当前代码是否只是暴露字段，还是满足了已有 Context、Surface Contract、页面职责和控件任务框架；实现收尾要能给出简短 Surface/Context Conformance 证据。
-   - 若存在 Product Surface Contract，Task Contract 必须包含 Surface Contract Hit、main allows/forbids、drilldown ownership、long-task state requirement、implementation drift 和 verification。
+   - 若存在 Product Surface Contract，内部计划必须保持 Surface Contract Hit、main allows/forbids、drilldown ownership、long-task state requirement、implementation drift 和 verification 清晰。
    - 若缺失且本任务创建 durable surface responsibility，设置 `Context Delta: required`，先用 `context_surface_contract` 或项目 Context 写入具体 surface 职责，再继续实现。
 10. 实现时保持精准修改，优先遵循仓库现有框架、接口、测试和代码风格。
 11. 当用户明确要求 / 允许“多开agent”或使用 subagent，且当前会话存在可用 subagent 工具时，积极把可并行的探索、审查或实现拆分交给 subagent；使用前先复用已有相关 agent，没有合适 agent 或并行度不足时再新开。`wait_agent` 只表示取得结果，不释放资源；subagent 完成、空闲或不再需要时必须调用 `close_agent`，收尾前清理已完成 / 空闲 / 不再需要的 subagent，避免占满后续资源。
 12. 当任务涉及新实现、重构、重复逻辑、模块边界或影响面控制时，先做轻量 abstraction / decomposition scan：
-   - 工程 / RFC / 实现类 Task Contract 包含 `Modularity Check: none|required|exception`；可用 `ty-context check-modularity --file <path> --limit 300` 审计计划编辑文件，用 `make validate-code-modularity` 或 `ty-context check-modularity --touched --limit 300 --fail-on-warning` 做交付前硬审计。若项目本地 Skill 定义了不同 limit，使用项目本地值。
-   - 发现超限 touched file 后，不只记录行数；判断本次是否在该文件加入新职责，并回到本节拆分原则选择产品面、hook、model、adapter、component、service / facade 或 verification helper 等边界。避免只按行数机械拆分、但耦合和职责仍留在原处。
-   - 如果本次不拆，`Modularity Check` 取 `exception`，必须有 `<harnessRoot>/config.yaml` 的 `modularity.waivers` 记录（`path`、收窄 `category`、`reason`、`future_split_boundary`）；交付说明只能补充说明，不是机器豁免。若项目设置 `modularity.policy: strict_except_generated`，legacy waiver 不可用，超限手写源码必须拆分或停止触碰。已豁免历史债也不得继续塞新职责，除非本次任务就是拆分 / 迁移。
+   - 在内部记录 `Modularity Check: none|required|exception`；可用 `ty-context check-modularity --file <path> --limit 300` 审计计划编辑文件，用 `make validate-code-modularity` 或 `ty-context check-modularity --touched --limit 300 --fail-on-warning` 做交付前硬审计。若项目本地 Skill 定义不同 limit，使用项目本地值。
+   - 审计同时检查物理行数、单函数语句数、分支复杂度、导出数、状态转换数和模块职责；压成一行不能规避。发现风险后判断是否加入新职责，并选择产品面、hook、model、adapter、component、service / facade 或 verification helper 等边界。
+   - 如果本次不拆，`Modularity Check` 取 `exception`，必须有 `<harnessRoot>/config.yaml` 的 lifecycle-complete waiver：`path`、收窄 `category`、`owner`、`introduced_at`、`reason`、`tracking_issue`、`expiry_condition`。交付说明不是机器豁免；已豁免历史债不得继续塞新职责，除非本次任务就是拆分 / 迁移。
    - 查找相似实现、重复逻辑、紧耦合模块或影响面异常扩散点。
    - 当一个业务对象、能力或接口的变更需要跨多个 Context、产品域或实现层同步调整时，将该影响范围视为模块边界复核信号；优先评估是否应通过独立模块、服务、facade 或稳定接口收敛依赖，避免通过手工 manifest 长期复制实现暴露面。
    - 将候选项分为局部重构与长期边界变化，后者按既有 Context-first 规则处理。
@@ -52,7 +52,7 @@ Project-specific engineering rules belong in a separate project-local Skill unde
    - 跨域接口语义写入 `context_role: contract` 或 manifest role 为 `contract` 的 Context；关键重复验证路径写入 `verification`；关键部署、运行拓扑或云端初始化路径写入 `deployment`；代码入口索引用 `implementation-index`；底层理论源用 `foundation`；历史归档索引用 `archive`。
    - 新 context unit 可新增 `project_context/areas/<unit>.md`，并更新 `global.md#Context Index`；复杂项目同时更新 `project_context/context.toml`。
    - 如果 `upgrade` 自动把深层 `.md` 注册成 area，但语义上更像 foundation / contract / archive，后续应显式调整 manifest role；不要依赖自动迁移判断语义。
-15. 实现收尾时做 `Contract Conformance` 和 Context drift check：确认代码没有引入未沉淀的长期事实，且 Context 没有退化成普通实现摘要；若存在 `plan.md` / 等价临时计划面，必须反查 Source-to-Context Coverage、Context-to-Implementation Binding 和 Task Contract，确认没有未处理的 `under_scoped` / `new_context_required` / `needs_user_decision`，也没有 non-bound implementation rows。交付说明只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。Conformance 说明本次契约满足情况、未满足或延期项和验证入口；一次性证据、截图结果、测试日志、任务契约和实现摘要不写入 Context。
+15. 实现收尾时做 `Contract Conformance` 和 Context drift check：确认 controlling Context 到达正确模块、API、状态、surface 与验证路径，没有 forbidden shortcut、遗漏的重要 source constraint 或未沉淀的长期事实，且 Context 没退化成实现摘要。实现偏差修实现；长期事实缺失返回 `Context Delta: required`。交付只报告 `Context: 已更新 ...` 或 `Context: 本次无长期事实变化`；一次性证据、日志和实现摘要不写入 Context。
 16. Context 只能声明验证 / 部署关键路径或验收信号，不能伪造“测试已通过”或“部署已成功”。
 17. Verification / Deployment Role Context 只记录长期可复用的重复执行路径事实：特殊准备、最短命令或路径、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、release ledger、secret、token、cookie、device id 或 raw payload。
 
@@ -60,36 +60,18 @@ Project-specific engineering rules belong in a separate project-local Skill unde
 
 - UI 实现方案不只检查字段是否接上，还要检查控件是否支持用户任务、输入语义、反馈状态、错误恢复和已有页面/控件契约。
 - 当 current code evidence 显示后端字段、枚举或自由输入直接暴露给用户时，不默认把它当作产品意图；先对照 Context、产品/UIUX Skill 的控件任务框架和项目组件体系判断是否是实现漂移或缺失契约。
-- Contract Conformance 证据应短而具体：命中的已有 Context / 页面契约或 Task Contract、实现如何满足、未满足或延期项、验证入口或手动检查。它属于交付说明，不属于 `project_context/**`。
+- Contract Conformance 证据应短而具体：命中的已有 Context / 页面契约、实现如何满足、未满足或延期项、验证入口或手动检查。它属于交付说明，不属于 `project_context/**`。
 
-## 任务契约编译
+## 内部执行约束与 Conformance
 
-- 任务契约是当前工程任务的编译产物，不是事实源、tech plan、ADR、implementation doc 或长期 Context；默认留在方案、交付说明或 PR 文本中。
-- `Context Delta` 必须先出现，取值为 `none` 或 `required`：
-  - `none`：本次只是按既有 Context / 架构原则落地，不新增长期事实。
-  - `required`：说明长期事实类型、应写入的 Context / role、需要沉淀的事实，以及明确不写入 Context 的一次性内容。
-- `Task Contract` 用短列表说明 capability、owner、upstream / downstream、allowed / forbidden dependency、input / output / state / persistence、failure / retry / timeout / degraded / recovery、observability、performance、security、non-goals 和 verification path。
-- 高风险工程任务只新增这两个显性 Task Contract 字段，不新增长模板或第二套 durable-fact gate：
-  - `Architecture Context Hit: <architecture.md | area/subdomain Context | contract Context | Module Design Capsule | none>`：命名控制本次技术判断的 Context。若命中 `none` 且本任务创建 durable architecture meaning，`Context Delta` 必须是 `required`。
-  - `Decision Rationale Hit: <existing | required | none>`：`existing` 表示现有 Context 已解释 durable reason；`required` 表示本任务创建或改变 durable rationale、rejected alternative、tradeoff 或 future-change constraint，必须走 `Context Delta: required`；`none` 表示没有稳定 rationale 或变化局部且自明。
-- 触及 Product Surface 时，`Task Contract` 同时说明 surface platform、primary user question、main allows/forbids、drilldown ownership、long-task state requirement、implementation drift 和 conformance verification。
-- 工程 / RFC / 实现类任务的 `Task Contract` 必须包含 `Modularity Check: none|required|exception`：
-  - `none`：没有超限计划 / touched 手写源码文件，或本次没有向超限文件增加新职责。
-  - `required`：拆分是本次验收条件，应按 abstraction / decomposition scan 的职责边界完成。
-  - `exception`：本次触碰超限文件但暂不拆；只有默认 `modularity.policy: scoped_waivers` 允许此路径，且必须已有或同步新增 `<harnessRoot>/config.yaml` `modularity.waivers` 记录文件、收窄分类、原因和后续拆分边界。若项目设置 `modularity.policy: strict_except_generated`，不得用 legacy waiver 绕过超限手写源码，交付说明只记录本次是否新增职责以及为什么没有拆。
-- `Applicable Module Design` 是高风险任务的前置字段：列出命中的 Context / Skill 来源、适用的 Principles、Design Logic 和 Design Rationale，以及它们控制的当前实现或验证选择。
-- `Principle Decision Gate` 要写明首选执行路径、fallback / degraded path 的进入条件，以及什么证据不能证明本次目标。涉及 capability、metric 或 acceptance claim 时，先声明要证明的 claim，再选择命令或 probe。
-- 若 Task Contract 或验收方案涉及 capability-first delivery boundary，必须记录 source/plan/AC 对 `delivery_scope`、`acceptance_scope`、`full_population_required`、representative sample boundary、non-required population / backlog 的一致性；发现 system capability build 与 full population operation 冲突时，按 `scope_conflict_requires_decision` 处理，不能靠实现方便路径或样本证据自行裁决。
-- 对长任务、多模块、多 agent、外部产品/架构/技术/实现/验收方案输入、容易发生 `Context Delta` 调头或多轮验证的任务，使用 `plan.md` 或等价临时计划面暂存 `Source-to-Context Coverage`、`Context-to-Implementation Binding`、`Context Delta`、`Task Contract`、`Implementation Steps` 和 `Contract Conformance`；它只是临时执行缓存。
-- small code task 指现有 Context 已足够、且不改变 durable product / architecture / API-schema / runtime-state / verification-deployment / security-redaction / surface ownership 事实的局部实现任务；它按语义风险判断，不按代码行数判断，不应创建 `plan.md`、完整 trace tables、Source-to-Context Coverage 或 Context-to-Implementation Binding，除非它发现长期事实变化或扩展成高风险工作。
-- `Source-to-Context Coverage` 表使用字段：`Source item | Durable constraint | Type | Existing Context Hit | Context action | Owning Context | Coverage status`。这张表只回答 source 约束是否进入或命中 Context，不写实现路径。
-- `Coverage status` 取值：`covered`、`new_context_required`、`context_updated`、`task_local_only`、`out_of_scope_explicit`、`needs_user_decision`、`under_scoped`。存在 `under_scoped` 或未处理的 `new_context_required` / `needs_user_decision` 时，不能声称已按方案完整实现。
-- `Context-to-Implementation Binding` 表使用字段：`Context fact | Implementation obligation | Expected surfaces | Implemented paths | Forbidden shortcuts | Verification path | Binding status`。
-- `Binding status` 取值：`bound`、`partial`、`missing`、`blocked`、`out_of_scope_explicit`、`needs_user_decision`、`contradicted_by_current_state`。runtime/API/worker 项不能只用测试名或 browser checked path 冒充 `bound`。
-- `plan.md` 中出现的长期工程事实必须提炼回 `project_context/**`；否则不要把临时计划当作事实源、交付产物或后续引用依据。
-- `Context Delta: required` 时先更新 `project_context/**`，再继续实现；`none` 时直接按 Task Contract 实现。
-- `Contract Conformance` 是交付前的软检查：实现偏差修实现，契约遗漏回 Task Contract，长期事实缺失或 source coverage under-scoped 回 `Context Delta` 并先更新 Context。
-- 不为 small code task、普通代码修改、bug fix、小重构、package/release 处理、测试修复、探索性 spike 或仅因 touched file 过大强制编译架构 / rationale 任务契约；大文件只走 `Modularity Check` 的拆分 / exception 判断。
+- `Context Delta` 只能是 `none` 或 `required`。`required` 先更新 owning Context；`none` 按现有 Context 工作，不制造 Context 噪音。
+- Agent 内部计划应保持 capability、owner、依赖方向、input/output/state/persistence、failure/retry/timeout/degraded/recovery、observability、performance、security、non-goals 和 verification path 清晰。
+- 高风险任务在内部保持 `Architecture Context Hit`、`Decision Rationale Hit`、`Applicable Module Design`、首选路径与 fallback/degraded 条件清晰；触及 surface 时也保持 Surface Contract 信息清晰。
+- 外部来源的重要约束在内部分类为 Context 已覆盖、已更新、task-local、显式 out-of-scope 或需要用户决策，并核对 capability / sample / full-population 边界；存在未处理项时不能声称全量完成。
+- 默认流程不要求或验证固定 `plan.md`、Task Contract 文件、Source-to-Context 表、Context-to-Implementation 表、matrix、verdict 或 evidence ledger；可选 scratch 没有固定名称或权威。
+- `Modularity Check: none|required|exception` 是内部判断；`exception` 只能由 lifecycle-complete config waiver 授权。
+- `Contract Conformance` 直接检查 controlling Context 是否到达正确模块、API、状态机、surface 与验证路径并避开 forbidden shortcut。实现偏差修实现；缺少长期事实则返回 `Context Delta: required`。
+- small code task、普通修改、bug fix、小重构、package/release、测试修复或 spike 不创建额外流程 artifact。
 
 ## 模块设计上下文写法
 

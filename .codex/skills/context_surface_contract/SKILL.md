@@ -72,7 +72,7 @@ Output:
 - `context.toml` candidate registration with `role = "contract"` when durable registration is needed.
 - `global.md#Context Index` candidate entry when a new Context file is added.
 - Verification candidate for repeatable surface checks.
-- Source-to-Context Coverage candidate when an external product, architecture, technical or acceptance source changes durable surface responsibility.
+- Internal source classification when an external product, architecture, technical or acceptance source changes durable surface responsibility; do not create a Markdown coverage table.
 - Repo-local Skill task-block candidate when the user wants project-specific enforcement.
 
 Do not assume business responsibilities from current code shape alone. Ask for confirmation if the candidate would silently choose between competing product or information-architecture meanings.
@@ -106,8 +106,7 @@ Use after implementation or during review.
 Output:
 
 - Surface Contract Conformance.
-- Source-to-Context Coverage status when a plan surface exists.
-- Context-to-Implementation Binding status when a plan surface exists.
+- External-source constraint classification and implementation alignment status.
 - Remaining Drift.
 - Missing Context.
 - Implementation Drift.
@@ -149,8 +148,6 @@ For any task touching user-facing surfaces, information placement, forms, filter
 - Long Task State Requirement: `<run id, progress, retry, recovery, import, history, or none>`
 - Context Delta: `<none | required>`
 - Verification: `<view-model test / component test / browser smoke / CLI smoke / manual check>`
-- Source-to-Context Coverage: `<covered | new_context_required | context_updated | task_local_only | out_of_scope_explicit | needs_user_decision | under_scoped>`
-- Context-to-Implementation Binding: `<bound | partial | missing | blocked | out_of_scope_explicit | needs_user_decision | contradicted_by_current_state>`
 ```
 
 Do not add this task block to package-managed default Skills as a universal gate. Projects opt in through separate project-local Skills.
@@ -167,7 +164,7 @@ When implementation is also requested, align code with the Product Surface Contr
 
 Final handoff should include concise `Surface Contract Conformance`: contract source, implementation alignment, remaining drift and verification status.
 
-If a `plan.md` or equivalent temporary plan surface exists, conformance must also check its Source-to-Context Coverage and Context-to-Implementation Binding. Remaining `under_scoped` or unresolved `new_context_required` rows mean the implementation cannot be described as fully aligned to the source surface responsibilities. Non-bound surface implementation rows mean it cannot be described as fully aligned to Context; component, modal, viewmodel or unit evidence alone cannot prove main-surface ownership.
+Conformance must internally confirm that every important external-source constraint is covered by Context, updated into Context, task-local, explicitly out of scope or awaiting a genuine user decision, and that controlling surface facts reached the correct implementation. Unresolved constraints or non-aligned surface implementation mean the work cannot be described as fully aligned; component, modal, viewmodel or unit evidence alone cannot prove main-surface ownership. Do not create a fixed `plan.md`, Task Contract file or Markdown mapping tables for this check.
 
 ## Output Boundaries
 
@@ -175,5 +172,5 @@ If a `plan.md` or equivalent temporary plan surface exists, conformance must als
 - Do not update Context for ordinary CSS tweaks, copy edits or one-off UI bug fixes unless durable surface responsibility changes.
 - Do not treat current backend fields, enums, JSON, screenshots or terminal output as product intent.
 - Do not invent rationale; rejected alternatives or tradeoffs belong in Context only when they are stable enough to affect future surface decisions.
-- Do not add a surface-specific validator, edit-order gate or package-level mandatory Surface Contract gate. The generic plan-contract validator may check declared surface binding consistency when a temporary plan surface exists.
+- Do not add a surface-specific validator, edit-order gate, plan-contract validator or package-level mandatory Surface Contract gate.
 - Do not include business-domain examples in this package-managed Skill.

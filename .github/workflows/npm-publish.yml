@@ -47,8 +47,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check TypeScript formatting
+        run: npm run format:check
+
       - name: Build package
         run: npm run build --workspace project-tiny-context-harness
+
+      - name: Validate modularity waiver lifecycle
+        run: node packages/ty-context/dist/cli.js check-modularity --config-only --fail-on-warning
+
+      - name: Complete package tests
+        run: npm test
 
       - name: Check release version surfaces
         run: npm run release:check-version
@@ -66,6 +75,12 @@ jobs:
           npm pack --json --workspace project-tiny-context-harness --pack-destination .artifacts/releases/prepared
           FILENAME="$(node -p "require('./docs/launch/release-artifact-${{ inputs.expected_version }}.json').filename")"
           node tools/verify_prepared_release_artifact.mjs --version "${{ inputs.expected_version }}" --tarball ".artifacts/releases/prepared/$FILENAME"
+
+      - name: Install and test the exact packed tarball
+        shell: bash
+        run: |
+          FILENAME="$(node -p "require('./docs/launch/release-artifact-${{ inputs.expected_version }}.json').filename")"
+          node tools/release_tarball_smoke.mjs --tarball ".artifacts/releases/prepared/$FILENAME"
 
       - name: Publish package with npm trusted publishing
         if: ${{ !inputs.dry_run }}

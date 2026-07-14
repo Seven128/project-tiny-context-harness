@@ -17,7 +17,7 @@ triggers = ["context model", "durable fact", "fact source", "role placement", "c
 path = "project_context/areas/harness-package/contracts/workflow-contract.md"
 role = "contract"
 read_policy = "default"
-triggers = ["workflow contract", "context delta", "task contract", "plan.md", "local audit", "contract conformance"]
+triggers = ["workflow contract", "context delta", "internal plan", "plan.md", "local audit", "contract conformance"]
 
 [[context]]
 path = "project_context/areas/harness-package/contracts/package-managed-surfaces.md"

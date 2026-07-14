@@ -5,6 +5,7 @@ interface CheckModularityArgs {
   files: string[];
   limit: number;
   failOnWarning: boolean;
+  configOnly: boolean;
   help: boolean;
   base?: string;
 }
@@ -14,12 +15,20 @@ export async function checkModularity(args: string[]): Promise<void> {
   try {
     parsed = parseArgs(args);
   } catch (error) {
-    console.error(`error: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `error: ${error instanceof Error ? error.message : String(error)}`,
+    );
     process.exitCode = 1;
     return;
   }
 
-  if (parsed.help || (!parsed.touched && !parsed.base && parsed.files.length === 0)) {
+  if (
+    parsed.help ||
+    (!parsed.configOnly &&
+      !parsed.touched &&
+      !parsed.base &&
+      parsed.files.length === 0)
+  ) {
     console.log(helpText());
     if (!parsed.help) {
       process.exitCode = 1;
@@ -32,17 +41,26 @@ export async function checkModularity(args: string[]): Promise<void> {
       touched: parsed.touched,
       base: parsed.base,
       files: parsed.files,
-      limit: parsed.limit
+      limit: parsed.limit,
     });
     console.log(
-      `check-modularity audited=${report.files.length} warning=${report.warnings.length} limit=${report.limit} waived=${report.waivedWarnings.length}`
+      `check-modularity audited=${report.files.length} warning=${report.warnings.length} limit=${report.limit} waived=${report.waivedWarnings.length}`,
     );
     if (report.files.length === 0) {
       console.log("No handwritten source files matched the selected scope.");
     }
     for (const file of report.files) {
-      const prefix = file.overLimit && file.waived ? "waived" : file.overLimit ? "over-limit" : "ok";
-      console.log(`${prefix}: ${file.relativePath} ${file.lines} lines`);
+      const prefix =
+        file.regressed && file.waived
+          ? "waived"
+          : file.regressed
+            ? "over-limit"
+            : file.overLimit
+              ? "observed-risk"
+              : "ok";
+      console.log(
+        `${prefix}: ${file.relativePath} ${file.lines} lines statements=${file.metrics.maxFunctionStatements} branches=${file.metrics.maxBranchComplexity} exports=${file.metrics.exports} transitions=${file.metrics.stateTransitions} responsibilities=${file.metrics.responsibilities.join(",") || "none"}`,
+      );
     }
     for (const error of report.errors) {
       console.error(`error: ${error}`);
@@ -55,14 +73,19 @@ export async function checkModularity(args: string[]): Promise<void> {
     }
     if (report.warnings.length > 0) {
       console.warn(
-        "warning: over-limit touched files need a split or, when modularity.policy is scoped_waivers, a valid <harnessRoot>/config.yaml modularity waiver with file, reason and future split boundary."
+        "warning: modularity risks need a split or, when modularity.policy is scoped_waivers, a valid <harnessRoot>/config.yaml waiver with path, category, owner, introduced_at, reason, tracking_issue and expiry_condition.",
       );
     }
-    if (report.errors.length > 0 || (report.warnings.length > 0 && parsed.failOnWarning)) {
+    if (
+      report.errors.length > 0 ||
+      (report.warnings.length > 0 && parsed.failOnWarning)
+    ) {
       process.exitCode = 1;
     }
   } catch (error) {
-    console.error(`error: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `error: ${error instanceof Error ? error.message : String(error)}`,
+    );
     process.exitCode = 1;
   }
 }
@@ -73,7 +96,8 @@ function parseArgs(args: string[]): CheckModularityArgs {
     files: [],
     limit: 300,
     failOnWarning: false,
-    help: false
+    configOnly: false,
+    help: false,
   };
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
@@ -83,6 +107,10 @@ function parseArgs(args: string[]): CheckModularityArgs {
     }
     if (arg === "--fail-on-warning") {
       parsed.failOnWarning = true;
+      continue;
+    }
+    if (arg === "--config-only") {
+      parsed.configOnly = true;
       continue;
     }
     if (arg === "--help" || arg === "-h") {
@@ -143,7 +171,11 @@ function parseArgs(args: string[]): CheckModularityArgs {
 
 function parseLimit(value: string): number {
   const limit = Number.parseInt(value, 10);
-  if (!Number.isInteger(limit) || limit <= 0 || String(limit) !== value.trim()) {
+  if (
+    !Number.isInteger(limit) ||
+    limit <= 0 ||
+    String(limit) !== value.trim()
+  ) {
     throw new Error("check-modularity --limit requires a positive integer");
   }
   return limit;
@@ -154,9 +186,11 @@ function helpText(): string {
   check-modularity --touched [--limit 300] [--fail-on-warning]
   check-modularity --file <path> [--file <path> ...] [--limit 300] [--fail-on-warning]
   check-modularity --base <ref> [--limit 300] [--fail-on-warning]
+  check-modularity --config-only
 
-Audits selected handwritten source files for physical line-count risk.
+Audits physical lines, per-function statements and branch complexity, exports, state transitions and module responsibilities.
+For --touched and --base, existing findings are reported but only new or worsened non-line complexity is a warning; physical lines remain a risk signal and new files are audited in full.
 The default is warning-only; --fail-on-warning lets projects opt into CI enforcement.
 Generated configs default to modularity.policy: strict_except_generated; omitted policy is treated as scoped_waivers for compatibility.
-Over-limit files can be waived only through <harnessRoot>/config.yaml modularity.waivers when policy is scoped_waivers.`;
+Risks can be waived only through lifecycle-complete <harnessRoot>/config.yaml modularity.waivers when policy is scoped_waivers.`;
 }

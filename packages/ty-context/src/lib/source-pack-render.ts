@@ -1,6 +1,12 @@
-import type { ContextAreaMapping, ContextArtifact, SourcePackOmitted, SourcePackRecord } from "./source-pack-types.js";
+import type {
+  ContextAreaMapping,
+  ContextArtifact,
+  SourcePackOmitted,
+  SourcePackRecord,
+} from "./source-pack-types.js";
 
-export const SOURCE_PACK_EXPORT_HEADER = "Export artifact. Do not reference from project_context/context.toml.";
+export const SOURCE_PACK_EXPORT_HEADER =
+  "Export artifact. Do not reference from project_context/context.toml.";
 
 export interface RenderMeta {
   generatedAt: string;
@@ -9,7 +15,11 @@ export interface RenderMeta {
   toolVersion: string;
 }
 
-export function renderFullProjectContextArtifact(contexts: ContextArtifact[], warnings: string[], meta: RenderMeta): string {
+export function renderFullProjectContextArtifact(
+  contexts: ContextArtifact[],
+  warnings: string[],
+  meta: RenderMeta,
+): string {
   return [
     "# Full Project Context Export",
     "",
@@ -32,7 +42,7 @@ export function renderFullProjectContextArtifact(contexts: ContextArtifact[], wa
     "## Context Sources",
     "",
     ...contexts.map(renderContextArtifact),
-    ""
+    "",
   ].join("\n");
 }
 
@@ -40,10 +50,13 @@ export function renderCodeIndexArtifact(
   records: SourcePackRecord[],
   areas: ContextAreaMapping[],
   warnings: string[],
-  meta: RenderMeta
+  meta: RenderMeta,
 ): string {
   const totalLines = records.reduce((sum, record) => sum + record.lines, 0);
-  const totalCharacters = records.reduce((sum, record) => sum + record.characters, 0);
+  const totalCharacters = records.reduce(
+    (sum, record) => sum + record.characters,
+    0,
+  );
   return [
     "# Code Index Export",
     "",
@@ -68,36 +81,63 @@ export function renderCodeIndexArtifact(
     "## Context Area Mapping",
     "",
     "Inferred buckets below are export routing only; they are not durable architecture or product ownership facts.",
-    areas.length > 0 ? areas.map((area) => `- ${area.id}: root=${area.root}; context=${area.context}`).join("\n") : "- No Context area mappings found.",
+    areas.length > 0
+      ? areas
+          .map(
+            (area) =>
+              `- ${area.id}: root=${area.root}; context=${area.context}`,
+          )
+          .join("\n")
+      : "- No Context area mappings found.",
     "",
     "## Key Entry Points",
     "",
-    renderRecordList(records.filter((record) => record.tags.includes("entry")).slice(0, 30)),
+    renderRecordList(
+      records.filter((record) => record.tags.includes("entry")).slice(0, 30),
+    ),
     "",
     "## API / Route Index",
     "",
-    renderRecordList(records.filter((record) => record.tags.includes("api")).slice(0, 30), true),
+    renderRecordList(
+      records.filter((record) => record.tags.includes("api")).slice(0, 30),
+      true,
+    ),
     "",
     "## UI Surface Index",
     "",
-    renderRecordList(records.filter((record) => record.tags.includes("ui")).slice(0, 30)),
+    renderRecordList(
+      records.filter((record) => record.tags.includes("ui")).slice(0, 30),
+    ),
     "",
     "## CLI / Worker / Script Index",
     "",
-    renderRecordList(records.filter((record) => record.tags.includes("cli") || record.tags.includes("worker")).slice(0, 30)),
+    renderRecordList(
+      records
+        .filter(
+          (record) =>
+            record.tags.includes("cli") || record.tags.includes("worker"),
+        )
+        .slice(0, 30),
+    ),
     "",
     "## Test / Verification Index",
     "",
-    renderRecordList(records.filter((record) => record.tags.includes("test")).slice(0, 30)),
+    renderRecordList(
+      records.filter((record) => record.tags.includes("test")).slice(0, 30),
+    ),
     "",
     "## Oversized Files",
     "",
-    renderRecordList(records.filter((record) => record.tags.includes("oversized")).slice(0, 30)),
+    renderRecordList(
+      records
+        .filter((record) => record.tags.includes("oversized"))
+        .slice(0, 30),
+    ),
     "",
     "## Source File Index",
     "",
     renderSourceFileIndex(records),
-    ""
+    "",
   ].join("\n");
 }
 
@@ -108,7 +148,7 @@ export function renderBundleArtifact(
   omitted: SourcePackOmitted,
   warnings: string[],
   meta: RenderMeta,
-  policy: string
+  policy: string,
 ): string {
   return [
     `# ${title}`,
@@ -134,16 +174,21 @@ export function renderBundleArtifact(
     "",
     "## Related Context Paths",
     "",
-    contexts.length > 0 ? contexts.map((context) => `- ${context.relative} (${context.lines} lines)`).join("\n") : "- No related Context files selected.",
+    contexts.length > 0
+      ? contexts
+          .map((context) => `- ${context.relative} (${context.lines} lines)`)
+          .join("\n")
+      : "- No related Context files selected.",
     "",
     "## Source Files",
     "",
-    records.map(renderSourceRecord).join("\n\n") || "- No source files selected for this bundle.",
+    records.map(renderSourceRecord).join("\n\n") ||
+      "- No source files selected for this bundle.",
     "",
     "## Omitted Files Summary",
     "",
     renderOmittedSummary(omitted),
-    ""
+    "",
   ].join("\n");
 }
 
@@ -154,7 +199,7 @@ export function renderTaskContextArtifact(
   verification: string[],
   omitted: SourcePackOmitted,
   warnings: string[],
-  meta: RenderMeta
+  meta: RenderMeta,
 ): string {
   return [
     `# Task Context: ${taskName}`,
@@ -184,22 +229,32 @@ export function renderTaskContextArtifact(
     "",
     "## Selected Source Files",
     "",
-    records.map(renderSourceRecord).join("\n\n") || "- No selected source files matched the task filters.",
+    records.map(renderSourceRecord).join("\n\n") ||
+      "- No selected source files matched the task filters.",
     "",
     "## Verification Entry Points",
     "",
-    verification.length > 0 ? verification.map((entry) => `- ${entry}`).join("\n") : "- No profile verification entries selected.",
+    verification.length > 0
+      ? verification.map((entry) => `- ${entry}`).join("\n")
+      : "- No profile verification entries selected.",
     "",
     "## Omitted / Support Notes",
     "",
     renderOmittedSummary(omitted),
-    ""
+    "",
   ].join("\n");
 }
 
 function renderContextArtifact(context: ContextArtifact): string {
   const fence = fenceFor(context.content);
-  return [`### ${context.relative}`, "", `${fence}markdown`, context.content.trimEnd(), fence, ""].join("\n");
+  return [
+    `### ${context.relative}`,
+    "",
+    `${fence}markdown`,
+    context.content.trimEnd(),
+    fence,
+    "",
+  ].join("\n");
 }
 
 function renderSourceRecord(record: SourcePackRecord): string {
@@ -219,7 +274,7 @@ function renderSourceRecord(record: SourcePackRecord): string {
     "",
     `${fence}${record.language}`,
     record.content.trimEnd(),
-    fence
+    fence,
   ].join("\n");
 }
 
@@ -232,8 +287,8 @@ function renderSourceFileIndex(records: SourcePackRecord[]): string {
     "|---|---:|---:|---:|---|---|---|---|",
     ...records.map(
       (record) =>
-        `| ${escapeTableCell(record.relative)} | ${escapeTableCell(record.language)} | ${record.lines} | ${record.characters} | ${record.sha256.slice(0, 12)} | ${escapeTableCell(record.summary)} | ${record.bundle} | ${escapeTableCell(record.tags.join(", "))} |`
-    )
+        `| ${escapeTableCell(record.relative)} | ${escapeTableCell(record.language)} | ${record.lines} | ${record.characters} | ${record.sha256.slice(0, 12)} | ${escapeTableCell(record.summary)} | ${record.bundle} | ${escapeTableCell(record.tags.join(", "))} |`,
+    ),
   ].join("\n");
 }
 
@@ -243,30 +298,46 @@ function renderRepositoryShape(records: SourcePackRecord[]): string {
     const top = record.relative.split("/")[0] || ".";
     counts.set(top, (counts.get(top) ?? 0) + 1);
   }
-  return [...counts.entries()]
-    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
-    .map(([name, count]) => `- ${name}: ${count} source file(s)`)
-    .join("\n") || "- No source files matched.";
+  return (
+    [...counts.entries()]
+      .sort(
+        (left, right) => right[1] - left[1] || left[0].localeCompare(right[0]),
+      )
+      .map(([name, count]) => `- ${name}: ${count} source file(s)`)
+      .join("\n") || "- No source files matched."
+  );
 }
 
-function renderRecordList(records: SourcePackRecord[], includeRoutes = false): string {
+function renderRecordList(
+  records: SourcePackRecord[],
+  includeRoutes = false,
+): string {
   if (records.length === 0) {
     return "- None detected.";
   }
   return records
-    .map((record) => `- ${record.relative}: ${record.summary}${includeRoutes && record.routes.length > 0 ? ` Routes: ${record.routes.join(", ")}` : ""}`)
+    .map(
+      (record) =>
+        `- ${record.relative}: ${record.summary}${includeRoutes && record.routes.length > 0 ? ` Routes: ${record.routes.join(", ")}` : ""}`,
+    )
     .join("\n");
 }
 
 function renderWarningList(warnings: string[]): string[] {
-  return warnings.length > 0 ? warnings.map((warning) => `  - ${warning}`) : ["  - none"];
+  return warnings.length > 0
+    ? warnings.map((warning) => `  - ${warning}`)
+    : ["  - none"];
 }
 
 function renderOmittedSummary(omitted: SourcePackOmitted): string {
   const reasons = Object.entries(omitted.reason_counts)
     .sort((left, right) => left[0].localeCompare(right[0]))
     .map(([reason, count]) => `  - ${reason}: ${count}`);
-  return [`- omitted_source_file_count: ${omitted.source_file_count}`, "- reason_counts:", ...(reasons.length > 0 ? reasons : ["  - none: 0"])].join("\n");
+  return [
+    `- omitted_source_file_count: ${omitted.source_file_count}`,
+    "- reason_counts:",
+    ...(reasons.length > 0 ? reasons : ["  - none: 0"]),
+  ].join("\n");
 }
 
 function fenceFor(content: string): string {
@@ -278,4 +349,3 @@ function fenceFor(content: string): string {
 function escapeTableCell(value: string): string {
   return value.replace(/\r?\n/g, " ").replace(/\|/g, "\\|");
 }
-

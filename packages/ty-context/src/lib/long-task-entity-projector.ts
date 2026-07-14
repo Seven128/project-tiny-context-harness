@@ -1,41 +1,326 @@
-import type { CompiledContractV3, ProofRequirementV3 } from "./long-task-contract-schema.js";
-import type { BindingResultV3, CounterfactualResultV3, LongTaskEntityResultV3, VerificationRunResultV2 } from "./long-task-run-result.js";
+import type {
+  CompiledContractV3,
+  ProofRequirementV3,
+} from "./long-task-contract-schema.js";
+import type {
+  BindingResultV3,
+  CounterfactualResultV3,
+  LongTaskEntityResultV3,
+  VerificationRunResultV2,
+} from "./long-task-run-result.js";
 
 export interface LongTaskEntityProjectionV3 {
-  binding_results:Record<string,BindingResultV3>;
-  counterfactual_results:Record<string,CounterfactualResultV3>;
-  proof_requirement_results:Record<string,LongTaskEntityResultV3>;
-  acceptance_results:Record<string,LongTaskEntityResultV3>;
-  obligation_results:Record<string,LongTaskEntityResultV3>;
-  plan_item_results:Record<string,LongTaskEntityResultV3>;
-  requirement_results:Record<string,LongTaskEntityResultV3>;
+  binding_results: Record<string, BindingResultV3>;
+  counterfactual_results: Record<string, CounterfactualResultV3>;
+  proof_requirement_results: Record<string, LongTaskEntityResultV3>;
+  acceptance_results: Record<string, LongTaskEntityResultV3>;
+  obligation_results: Record<string, LongTaskEntityResultV3>;
+  plan_item_results: Record<string, LongTaskEntityResultV3>;
+  requirement_results: Record<string, LongTaskEntityResultV3>;
 }
 
-export function projectLongTaskEntities(contract:CompiledContractV3,run:VerificationRunResultV2,bindingInput:Record<string,BindingResultV3>,counterInput:Record<string,CounterfactualResultV3>,globalIntegrityCodes:string[]=[]):LongTaskEntityProjectionV3{
-  const specResults=new Map(run.spec_results.map((item)=>[item.spec_id,item]));
-  const binding_results=Object.fromEntries(Object.entries(bindingInput).map(([id,value])=>[id,globalIntegrityCodes.length?{...value,status:"failed" as const,finding_codes:codes(value.finding_codes,globalIntegrityCodes)}:value]));
-  const counterfactual_results=Object.fromEntries(Object.entries(counterInput).map(([id,value])=>[id,globalIntegrityCodes.length?{...value,status:"failed" as const,finding_codes:codes(value.finding_codes,globalIntegrityCodes)}:value]));
-  const proof_requirement_results:Record<string,LongTaskEntityResultV3>={};
-  for(const proof of contract.proof_requirements){
-    const bindingIds=proof.obligation_refs.flatMap((id)=>contract.graphs.obligations[id]?.binding_ids??[]);const specOkay=proof.verification_spec_ids.every((id)=>specResults.get(id)?.status==="passed");const bindingOkay=bindingIds.every((id)=>binding_results[id]?.status==="passed");const surfaceOkay=proofSurfacePassed(proof,contract,run,binding_results);
-    proof_requirement_results[proof.id]=entity(specOkay&&bindingOkay&&surfaceOkay,[...proof.verification_spec_ids,...bindingIds],[...proof.verification_spec_ids.map((id)=>`run:${run.run_id}:spec:${id}`),...bindingIds.flatMap((id)=>binding_results[id]?.evidence_refs??[])],codes(globalIntegrityCodes,!specOkay?["proof_spec_failed"]:[],!bindingOkay?["proof_binding_failed"]:[],!surfaceOkay?["proof_surface_unproven"]:[]));
+export function projectLongTaskEntities(
+  contract: CompiledContractV3,
+  run: VerificationRunResultV2,
+  bindingInput: Record<string, BindingResultV3>,
+  counterInput: Record<string, CounterfactualResultV3>,
+  globalIntegrityCodes: string[] = [],
+): LongTaskEntityProjectionV3 {
+  const specResults = new Map(
+    run.spec_results.map((item) => [item.spec_id, item]),
+  );
+  const binding_results = Object.fromEntries(
+    Object.entries(bindingInput).map(([id, value]) => [
+      id,
+      globalIntegrityCodes.length
+        ? {
+            ...value,
+            status: "failed" as const,
+            finding_codes: codes(value.finding_codes, globalIntegrityCodes),
+          }
+        : value,
+    ]),
+  );
+  const counterfactual_results = Object.fromEntries(
+    Object.entries(counterInput).map(([id, value]) => [
+      id,
+      globalIntegrityCodes.length
+        ? {
+            ...value,
+            status: "failed" as const,
+            finding_codes: codes(value.finding_codes, globalIntegrityCodes),
+          }
+        : value,
+    ]),
+  );
+  const proof_requirement_results: Record<string, LongTaskEntityResultV3> = {};
+  for (const proof of contract.proof_requirements) {
+    const bindingIds = proof.obligation_refs.flatMap(
+      (id) => contract.graphs.obligations[id]?.binding_ids ?? [],
+    );
+    const specOkay = proof.verification_spec_ids.every(
+      (id) => specResults.get(id)?.status === "passed",
+    );
+    const bindingOkay = bindingIds.every(
+      (id) => binding_results[id]?.status === "passed",
+    );
+    const surfaceOkay = proofSurfacePassed(
+      proof,
+      contract,
+      run,
+      binding_results,
+    );
+    proof_requirement_results[proof.id] = entity(
+      specOkay && bindingOkay && surfaceOkay,
+      [...proof.verification_spec_ids, ...bindingIds],
+      [
+        ...proof.verification_spec_ids.map(
+          (id) => `run:${run.run_id}:spec:${id}`,
+        ),
+        ...bindingIds.flatMap((id) => binding_results[id]?.evidence_refs ?? []),
+      ],
+      codes(
+        globalIntegrityCodes,
+        !specOkay ? ["proof_spec_failed"] : [],
+        !bindingOkay ? ["proof_binding_failed"] : [],
+        !surfaceOkay ? ["proof_surface_unproven"] : [],
+      ),
+    );
   }
-  const acceptance_results:Record<string,LongTaskEntityResultV3>={};
-  for(const criterion of contract.acceptance_criteria){const specs=criterion.verification_spec_ids.map((id)=>specResults.get(id));const assertionsOkay=specs.every((value)=>value&&Object.values(value.assertion_results).length>0&&Object.values(value.assertion_results).every(Boolean));const specsOkay=specs.every((value)=>value?.status==="passed");const proofsOkay=criterion.proof_requirement_refs.every((id)=>proof_requirement_results[id]?.status==="passed");acceptance_results[criterion.id]=entity(specsOkay&&proofsOkay&&assertionsOkay,[...criterion.verification_spec_ids,...criterion.proof_requirement_refs],criterion.verification_spec_ids.map((id)=>`run:${run.run_id}:spec:${id}`),codes(globalIntegrityCodes,!specsOkay?["acceptance_spec_failed"]:[],!proofsOkay?["acceptance_proof_failed"]:[],!assertionsOkay?["acceptance_assertion_failed"]:[]));}
-  const obligation_results:Record<string,LongTaskEntityResultV3>={};
-  for(const obligation of contract.obligations){const graph=contract.graphs.obligations[obligation.id];const bindingsOkay=graph.binding_ids.every((id)=>binding_results[id]?.status==="passed");const proofsOkay=graph.proof_requirement_ids.every((id)=>proof_requirement_results[id]?.status==="passed");const criteriaOkay=graph.ac_ids.every((id)=>acceptance_results[id]?.status==="passed");const controlsOkay=graph.counterfactual_control_ids.every((id)=>counterfactual_results[id]?.status==="passed");obligation_results[obligation.id]=entity(bindingsOkay&&proofsOkay&&criteriaOkay&&controlsOkay,[...graph.binding_ids,...graph.proof_requirement_ids,...graph.ac_ids,...graph.counterfactual_control_ids],[...graph.binding_ids.map((id)=>`binding:${id}`),...graph.counterfactual_control_ids.map((id)=>`counterfactual:${id}`)],codes(globalIntegrityCodes,!bindingsOkay?["obligation_binding_failed"]:[],!proofsOkay?["obligation_proof_failed"]:[],!criteriaOkay?["obligation_acceptance_failed"]:[],!controlsOkay?["obligation_counterfactual_failed"]:[]));}
-  const plan_item_results:Record<string,LongTaskEntityResultV3>={};for(const item of contract.plan_items){const okay=item.obligation_ids.every((id)=>obligation_results[id]?.status==="passed");plan_item_results[item.id]=entity(okay,item.obligation_ids,item.obligation_ids.map((id)=>`obligation:${id}`),codes(globalIntegrityCodes,!okay?["plan_item_obligation_failed"]:[]));}
-  const requirement_results:Record<string,LongTaskEntityResultV3>={};for(const requirement of contract.requirements){const graph=contract.graphs.requirements[requirement.id];const obligationsOkay=graph.obligation_ids.every((id)=>obligation_results[id]?.status==="passed");const rulesOkay=requirementRulesPassed(requirement.id,graph,contract,run);requirement_results[requirement.id]=entity(obligationsOkay&&rulesOkay,graph.obligation_ids,graph.obligation_ids.map((id)=>`obligation:${id}`),codes(globalIntegrityCodes,!obligationsOkay?["requirement_obligation_failed"]:[],!rulesOkay?["requirement_rule_failed"]:[]));}
-  return {binding_results,counterfactual_results,proof_requirement_results,acceptance_results,obligation_results,plan_item_results,requirement_results};
+  const acceptance_results: Record<string, LongTaskEntityResultV3> = {};
+  for (const criterion of contract.acceptance_criteria) {
+    const specs = criterion.verification_spec_ids.map((id) =>
+      specResults.get(id),
+    );
+    const assertionsOkay = specs.every(
+      (value) =>
+        value &&
+        Object.values(value.assertion_results).length > 0 &&
+        Object.values(value.assertion_results).every(Boolean),
+    );
+    const specsOkay = specs.every((value) => value?.status === "passed");
+    const proofsOkay = criterion.proof_requirement_refs.every(
+      (id) => proof_requirement_results[id]?.status === "passed",
+    );
+    acceptance_results[criterion.id] = entity(
+      specsOkay && proofsOkay && assertionsOkay,
+      [...criterion.verification_spec_ids, ...criterion.proof_requirement_refs],
+      criterion.verification_spec_ids.map(
+        (id) => `run:${run.run_id}:spec:${id}`,
+      ),
+      codes(
+        globalIntegrityCodes,
+        !specsOkay ? ["acceptance_spec_failed"] : [],
+        !proofsOkay ? ["acceptance_proof_failed"] : [],
+        !assertionsOkay ? ["acceptance_assertion_failed"] : [],
+      ),
+    );
+  }
+  const obligation_results: Record<string, LongTaskEntityResultV3> = {};
+  for (const obligation of contract.obligations) {
+    const graph = contract.graphs.obligations[obligation.id];
+    const bindingsOkay = graph.binding_ids.every(
+      (id) => binding_results[id]?.status === "passed",
+    );
+    const proofsOkay = graph.proof_requirement_ids.every(
+      (id) => proof_requirement_results[id]?.status === "passed",
+    );
+    const criteriaOkay = graph.ac_ids.every(
+      (id) => acceptance_results[id]?.status === "passed",
+    );
+    const controlsOkay = graph.counterfactual_control_ids.every(
+      (id) => counterfactual_results[id]?.status === "passed",
+    );
+    obligation_results[obligation.id] = entity(
+      bindingsOkay && proofsOkay && criteriaOkay && controlsOkay,
+      [
+        ...graph.binding_ids,
+        ...graph.proof_requirement_ids,
+        ...graph.ac_ids,
+        ...graph.counterfactual_control_ids,
+      ],
+      [
+        ...graph.binding_ids.map((id) => `binding:${id}`),
+        ...graph.counterfactual_control_ids.map((id) => `counterfactual:${id}`),
+      ],
+      codes(
+        globalIntegrityCodes,
+        !bindingsOkay ? ["obligation_binding_failed"] : [],
+        !proofsOkay ? ["obligation_proof_failed"] : [],
+        !criteriaOkay ? ["obligation_acceptance_failed"] : [],
+        !controlsOkay ? ["obligation_counterfactual_failed"] : [],
+      ),
+    );
+  }
+  const plan_item_results: Record<string, LongTaskEntityResultV3> = {};
+  for (const item of contract.plan_items) {
+    const okay = item.obligation_ids.every(
+      (id) => obligation_results[id]?.status === "passed",
+    );
+    plan_item_results[item.id] = entity(
+      okay,
+      item.obligation_ids,
+      item.obligation_ids.map((id) => `obligation:${id}`),
+      codes(globalIntegrityCodes, !okay ? ["plan_item_obligation_failed"] : []),
+    );
+  }
+  const requirement_results: Record<string, LongTaskEntityResultV3> = {};
+  for (const requirement of contract.requirements) {
+    const graph = contract.graphs.requirements[requirement.id];
+    const obligationsOkay = graph.obligation_ids.every(
+      (id) => obligation_results[id]?.status === "passed",
+    );
+    const rulesOkay = requirementRulesPassed(
+      requirement.id,
+      graph,
+      contract,
+      run,
+    );
+    requirement_results[requirement.id] = entity(
+      obligationsOkay && rulesOkay,
+      graph.obligation_ids,
+      graph.obligation_ids.map((id) => `obligation:${id}`),
+      codes(
+        globalIntegrityCodes,
+        !obligationsOkay ? ["requirement_obligation_failed"] : [],
+        !rulesOkay ? ["requirement_rule_failed"] : [],
+      ),
+    );
+  }
+  return {
+    binding_results,
+    counterfactual_results,
+    proof_requirement_results,
+    acceptance_results,
+    obligation_results,
+    plan_item_results,
+    requirement_results,
+  };
 }
 
-function proofSurfacePassed(proof:ProofRequirementV3,contract:CompiledContractV3,run:VerificationRunResultV2,bindings:Record<string,BindingResultV3>):boolean{
-  const expected:{[K in ProofRequirementV3["proof_surface"]]:string}={ui_browser:"browser_interaction",runtime_behavior:"runtime_behavior",api_contract:"api_contract",data_state:"data_state",security_boundary:"security_boundary",population_coverage:"population_coverage",implementation_structure:"implementation_structure"};
-  const typed=proof.verification_spec_ids.every((id)=>{const frozen=contract.verification_specs.find((item)=>item.id===id);const result=run.spec_results.find((item)=>item.spec_id===id);return !!frozen&&!!result&&frozen.positive_assertions.some((assertion)=>assertion.observation_kind===expected[proof.proof_surface]&&result.assertion_results[assertion.id]===true);});
-  const staticStructure=proof.proof_surface==="implementation_structure"&&proof.obligation_refs.flatMap((id)=>contract.graphs.obligations[id]?.binding_ids??[]).some((id)=>["file","path_glob"].includes(contract.bindings.find((item)=>item.id===id)?.kind??"")&&bindings[id]?.status==="passed");
-  if(!(typed||staticStructure))return false;if(proof.proof_surface!=="ui_browser")return true;
-  return proof.owner_surface_refs.every((surfaceId)=>{const surface=contract.owner_surfaces.find((item)=>item.id===surfaceId);return !!surface&&proof.obligation_refs.some((id)=>contract.obligations.find((item)=>item.id===id)?.implementation_bindings.some((binding)=>binding.kind==="route"&&binding.target===surface.location&&bindings[binding.id]?.status==="passed"));});
+function proofSurfacePassed(
+  proof: ProofRequirementV3,
+  contract: CompiledContractV3,
+  run: VerificationRunResultV2,
+  bindings: Record<string, BindingResultV3>,
+): boolean {
+  const expected: { [K in ProofRequirementV3["proof_surface"]]: string } = {
+    ui_browser: "browser_interaction",
+    runtime_behavior: "runtime_behavior",
+    api_contract: "api_contract",
+    data_state: "data_state",
+    security_boundary: "security_boundary",
+    population_coverage: "population_coverage",
+    implementation_structure: "implementation_structure",
+  };
+  const typed = proof.verification_spec_ids.every((id) => {
+    const frozen = contract.verification_specs.find((item) => item.id === id);
+    const result = run.spec_results.find((item) => item.spec_id === id);
+    return (
+      !!frozen &&
+      !!result &&
+      frozen.positive_assertions.some(
+        (assertion) =>
+          assertion.observation_kind === expected[proof.proof_surface] &&
+          result.assertion_results[assertion.id] === true,
+      )
+    );
+  });
+  const staticStructure =
+    proof.proof_surface === "implementation_structure" &&
+    proof.obligation_refs
+      .flatMap((id) => contract.graphs.obligations[id]?.binding_ids ?? [])
+      .some(
+        (id) =>
+          ["file", "path_glob"].includes(
+            contract.bindings.find((item) => item.id === id)?.kind ?? "",
+          ) && bindings[id]?.status === "passed",
+      );
+  if (!(typed || staticStructure)) return false;
+  if (proof.proof_surface !== "ui_browser") return true;
+  return proof.owner_surface_refs.every((surfaceId) => {
+    const surface = contract.owner_surfaces.find(
+      (item) => item.id === surfaceId,
+    );
+    return (
+      !!surface &&
+      proof.obligation_refs.some((id) =>
+        contract.obligations
+          .find((item) => item.id === id)
+          ?.implementation_bindings.some(
+            (binding) =>
+              binding.kind === "route" &&
+              binding.target === surface.location &&
+              bindings[binding.id]?.status === "passed",
+          ),
+      )
+    );
+  });
 }
-function requirementRulesPassed(requirementId:string,graph:CompiledContractV3["graphs"]["requirements"][string],contract:CompiledContractV3,run:VerificationRunResultV2):boolean{const specs=contract.verification_specs.filter((spec)=>spec.claims.requirement_ids.includes(requirementId));const executed=new Map(run.spec_results.map((item)=>[item.spec_id,item]));for(const id of graph.boundary_ids)if(!specs.some((spec)=>spec.negative_assertions.some((assertion)=>assertion.source_boundary_ids.includes(id)&&executed.get(spec.id)?.assertion_results[assertion.id]===true)))return false;for(const id of graph.non_completing_outcome_ids)if(!specs.some((spec)=>spec.negative_assertions.some((assertion)=>assertion.source_non_completing_ids.includes(id)&&executed.get(spec.id)?.assertion_results[assertion.id]===true)))return false;const requirement=contract.requirements.find((item)=>item.id===requirementId);if(requirement?.population_policy==="full_population"&&!specs.some((spec)=>{const result=executed.get(spec.id);return spec.population_enumerator&&result?.population_results[spec.population_enumerator.observation_id]?.status==="passed";}))return false;return true;}
-function entity(passed:boolean,upstream_ids:string[],evidence_refs:string[],finding_codes:string[]):LongTaskEntityResultV3{return {status:passed?"passed":"failed",upstream_ids:[...new Set(upstream_ids)].sort(),evidence_refs:[...new Set(evidence_refs)].sort(),finding_codes:codes(finding_codes)};}
-function codes(...values:string[][]):string[]{return [...new Set(values.flat())].sort();}
+function requirementRulesPassed(
+  requirementId: string,
+  graph: CompiledContractV3["graphs"]["requirements"][string],
+  contract: CompiledContractV3,
+  run: VerificationRunResultV2,
+): boolean {
+  const specs = contract.verification_specs.filter((spec) =>
+    spec.claims.requirement_ids.includes(requirementId),
+  );
+  const executed = new Map(
+    run.spec_results.map((item) => [item.spec_id, item]),
+  );
+  for (const id of graph.boundary_ids)
+    if (
+      !specs.some((spec) =>
+        spec.negative_assertions.some(
+          (assertion) =>
+            assertion.source_boundary_ids.includes(id) &&
+            executed.get(spec.id)?.assertion_results[assertion.id] === true,
+        ),
+      )
+    )
+      return false;
+  for (const id of graph.non_completing_outcome_ids)
+    if (
+      !specs.some((spec) =>
+        spec.negative_assertions.some(
+          (assertion) =>
+            assertion.source_non_completing_ids.includes(id) &&
+            executed.get(spec.id)?.assertion_results[assertion.id] === true,
+        ),
+      )
+    )
+      return false;
+  const requirement = contract.requirements.find(
+    (item) => item.id === requirementId,
+  );
+  if (
+    requirement?.population_policy === "full_population" &&
+    !specs.some((spec) => {
+      const result = executed.get(spec.id);
+      return (
+        spec.population_enumerator &&
+        result?.population_results[spec.population_enumerator.observation_id]
+          ?.status === "passed"
+      );
+    })
+  )
+    return false;
+  return true;
+}
+function entity(
+  passed: boolean,
+  upstream_ids: string[],
+  evidence_refs: string[],
+  finding_codes: string[],
+): LongTaskEntityResultV3 {
+  return {
+    status: passed ? "passed" : "failed",
+    upstream_ids: [...new Set(upstream_ids)].sort(),
+    evidence_refs: [...new Set(evidence_refs)].sort(),
+    finding_codes: codes(finding_codes),
+  };
+}
+function codes(...values: string[][]): string[] {
+  return [...new Set(values.flat())].sort();
+}

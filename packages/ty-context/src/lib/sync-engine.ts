@@ -7,7 +7,7 @@ import {
   listFiles,
   pathExists,
   readText,
-  writeTextIfChanged
+  writeTextIfChanged,
 } from "./fs.js";
 import {
   AGENTS_BLOCK_MARKERS,
@@ -19,12 +19,17 @@ import {
   MAKEFILE_BLOCK_START,
   MANAGED_BLOCK_END,
   MANAGED_BLOCK_START,
-  type ManagedBlockMarkers
+  type ManagedBlockMarkers,
 } from "./managed-file.js";
 import { packageAssetPath } from "./paths.js";
 import type { ManagedFile } from "./types.js";
 import { assertSupportedSchema } from "./schema-guard.js";
-import { installLongTaskHooks } from "./long-task-hook-install.js";
+import {
+  installLongTaskHooks,
+  uninstallLongTaskHooks,
+} from "./long-task-hook-install.js";
+import { enabledManagedSkillNames, isProfileEnabled } from "./profiles.js";
+import type { HarnessConfig } from "./types.js";
 
 export interface SyncReport {
   changed: string[];
@@ -36,7 +41,7 @@ export function emptySyncReport(): SyncReport {
   return {
     changed: [],
     skipped: [],
-    blocked: []
+    blocked: [],
   };
 }
 
@@ -52,14 +57,24 @@ export async function runSync(projectRoot: string): Promise<SyncReport> {
   }
 
   for (const managedFile of config.managed_files) {
-    await syncManagedFile(projectRoot, root, managedFile, report);
+    await syncManagedFile(projectRoot, root, managedFile, report, config);
   }
-  await installLongTaskHooks(projectRoot, report);
+  if (isProfileEnabled(config, "composite-codex")) {
+    await installLongTaskHooks(projectRoot, report);
+  } else {
+    await uninstallLongTaskHooks(projectRoot, report);
+  }
 
   return report;
 }
 
-async function syncManagedFile(projectRoot: string, root: string, managedFile: ManagedFile, report: SyncReport): Promise<void> {
+async function syncManagedFile(
+  projectRoot: string,
+  root: string,
+  managedFile: ManagedFile,
+  report: SyncReport,
+  config: HarnessConfig,
+): Promise<void> {
   const destination = path.join(projectRoot, managedFile.path);
   if (managedFile.path === "AGENTS.md") {
     await syncAgentsBlock(destination, root, report);
@@ -70,7 +85,12 @@ async function syncManagedFile(projectRoot: string, root: string, managedFile: M
     return;
   }
   if (isSkillsManagedPath(managedFile.path, root)) {
-    await syncSkillsTree(packageAssetPath("skills"), path.join(projectRoot, root, "skills"), report);
+    await syncSkillsTree(
+      packageAssetPath("skills"),
+      path.join(projectRoot, root, "skills"),
+      report,
+      enabledManagedSkillNames(config),
+    );
     return;
   }
   const managedPath = normalizeManagedPath(managedFile.path);
@@ -78,16 +98,28 @@ async function syncManagedFile(projectRoot: string, root: string, managedFile: M
     await syncTree(packageAssetPath("templates"), destination, report);
     return;
   }
-  if (managedPath === harnessPath(root, "ty-context-managed", "context_templates")) {
-    await syncTree(packageAssetPath("context_templates"), destination, report, { prune: true });
+  if (
+    managedPath === harnessPath(root, "ty-context-managed", "context_templates")
+  ) {
+    await syncTree(packageAssetPath("context_templates"), destination, report, {
+      prune: true,
+    });
     return;
   }
   if (managedPath === harnessPath(root, "ty-context-managed", "policies")) {
     await syncTree(packageAssetPath("policies"), destination, report);
     return;
   }
-  if (managedPath === harnessPath(root, "ty-context-managed", "make", "ty-context.mk")) {
-    await syncFile(packageAssetPath("make", "ty-context.mk"), destination, report, "skip-if-missing");
+  if (
+    managedPath ===
+    harnessPath(root, "ty-context-managed", "make", "ty-context.mk")
+  ) {
+    await syncFile(
+      packageAssetPath("make", "ty-context.mk"),
+      destination,
+      report,
+      "skip-if-missing",
+    );
     return;
   }
   if (managedFile.path === "tools") {
@@ -95,7 +127,12 @@ async function syncManagedFile(projectRoot: string, root: string, managedFile: M
     return;
   }
   if (managedFile.path === ".github/workflows/harness.yml") {
-    await syncGithubWorkflow(packageAssetPath("github", "harness.yml"), destination, managedFile.path, report);
+    await syncGithubWorkflow(
+      packageAssetPath("github", "harness.yml"),
+      destination,
+      managedFile.path,
+      report,
+    );
     return;
   }
   report.skipped.push(managedFile.path);
@@ -114,7 +151,11 @@ function normalizeManagedPath(managedPath: string): string {
   return managedPath.replace(/\\/g, "/");
 }
 
-async function syncAgentsBlock(destination: string, root: string, report: SyncReport): Promise<void> {
+async function syncAgentsBlock(
+  destination: string,
+  root: string,
+  report: SyncReport,
+): Promise<void> {
   const corePath = packageAssetPath("agents", "AGENTS_CORE.md");
   if (!(await pathExists(corePath))) {
     report.skipped.push("AGENTS.md");
@@ -122,14 +163,16 @@ async function syncAgentsBlock(destination: string, root: string, report: SyncRe
   }
   const core = renderAgentsCore(await readText(corePath), root);
   const block = `${MANAGED_BLOCK_START}\n${core.trim()}\n${MANAGED_BLOCK_END}`;
-  const existing = (await pathExists(destination)) ? await readText(destination) : "";
+  const existing = (await pathExists(destination))
+    ? await readText(destination)
+    : "";
   const next = mergeManagedBlock({
     existing,
     block,
     markers: AGENTS_BLOCK_MARKERS,
     pathLabel: "AGENTS.md",
     insert: "append",
-    report
+    report,
   });
   if (!next) {
     return;
@@ -145,15 +188,21 @@ function renderAgentsCore(content: string, root: string): string {
   return content.replaceAll(".agent", root).replaceAll(".codex", root);
 }
 
-async function syncMakefileInclude(destination: string, root: string, report: SyncReport): Promise<void> {
-  const existing = (await pathExists(destination)) ? await readText(destination) : "";
+async function syncMakefileInclude(
+  destination: string,
+  root: string,
+  report: SyncReport,
+): Promise<void> {
+  const existing = (await pathExists(destination))
+    ? await readText(destination)
+    : "";
   const resetDefaultGoal = shouldResetMakeDefaultGoal(existing);
   const includePath = `${root.replace(/\\/g, "/")}/ty-context-managed/make/ty-context.mk`;
   const blockLines = [
     MAKEFILE_BLOCK_START,
     "# Included before project targets so project recipes win on name conflicts.",
     `-include ${includePath}`,
-    MAKEFILE_BLOCK_END
+    MAKEFILE_BLOCK_END,
   ];
   if (resetDefaultGoal) {
     blockLines.splice(3, 0, ".DEFAULT_GOAL :=");
@@ -165,7 +214,7 @@ async function syncMakefileInclude(destination: string, root: string, report: Sy
     markers: MAKEFILE_BLOCK_MARKERS,
     pathLabel: "Makefile",
     insert: "prepend",
-    report
+    report,
   });
   if (!next) {
     return;
@@ -223,12 +272,24 @@ function mergeManagedBlock(options: {
 }
 
 type ManagedBlockSearchResult =
-  | { status: "found"; markers: ManagedBlockMarkers; startIndex: number; endIndex: number }
+  | {
+      status: "found";
+      markers: ManagedBlockMarkers;
+      startIndex: number;
+      endIndex: number;
+    }
   | { status: "missing" }
   | { status: "invalid"; reason: string };
 
-function findManagedBlock(existing: string, markersList: ManagedBlockMarkers[]): ManagedBlockSearchResult {
-  const matches: Array<{ markers: ManagedBlockMarkers; startIndex: number; endIndex: number }> = [];
+function findManagedBlock(
+  existing: string,
+  markersList: ManagedBlockMarkers[],
+): ManagedBlockSearchResult {
+  const matches: Array<{
+    markers: ManagedBlockMarkers;
+    startIndex: number;
+    endIndex: number;
+  }> = [];
 
   for (const markers of markersList) {
     const startIndex = existing.indexOf(markers.start);
@@ -252,16 +313,21 @@ function findManagedBlock(existing: string, markersList: ManagedBlockMarkers[]):
   }
 
   if (matches.length > 1) {
-    return { status: "invalid", reason: "conflicting managed block marker namespaces" };
+    return {
+      status: "invalid",
+      reason: "conflicting managed block marker namespaces",
+    };
   }
-  return matches[0] ? { status: "found", ...matches[0] } : { status: "missing" };
+  return matches[0]
+    ? { status: "found", ...matches[0] }
+    : { status: "missing" };
 }
 
 async function syncTree(
   source: string,
   destination: string,
   report: SyncReport,
-  options: { prune?: boolean } = {}
+  options: { prune?: boolean } = {},
 ): Promise<void> {
   if (!(await pathExists(source))) {
     report.skipped.push(path.basename(destination));
@@ -280,18 +346,24 @@ async function syncTree(
   report.changed.push(...changed);
 }
 
-async function removeStaleManagedFiles(source: string, destination: string): Promise<string[]> {
+async function removeStaleManagedFiles(
+  source: string,
+  destination: string,
+): Promise<string[]> {
   if (!(await pathExists(destination))) {
     return [];
   }
   const sourceFiles = new Set(
     (await listFiles(source))
       .filter((file) => !file.endsWith(".gitkeep"))
-      .map((file) => path.relative(source, file).split(path.sep).join("/"))
+      .map((file) => path.relative(source, file).split(path.sep).join("/")),
   );
   const removed: string[] = [];
   for (const destinationFile of await listFiles(destination)) {
-    const relative = path.relative(destination, destinationFile).split(path.sep).join("/");
+    const relative = path
+      .relative(destination, destinationFile)
+      .split(path.sep)
+      .join("/");
     if (sourceFiles.has(relative)) {
       continue;
     }
@@ -304,14 +376,24 @@ async function removeStaleManagedFiles(source: string, destination: string): Pro
 async function syncSkillsTree(
   source: string,
   destination: string,
-  report: SyncReport
+  report: SyncReport,
+  enabledSkillNames: ReadonlySet<string>,
 ): Promise<void> {
   if (!(await pathExists(source))) {
     report.skipped.push(path.basename(destination));
     return;
   }
   const files = await listFiles(source);
-  const realFiles = files.filter((file) => !file.endsWith(".gitkeep"));
+  const allManagedSkillNames = new Set(
+    files
+      .map((file) => path.relative(source, file).split(path.sep)[0])
+      .filter(Boolean),
+  );
+  const realFiles = files
+    .filter((file) => !file.endsWith(".gitkeep"))
+    .filter((file) =>
+      enabledSkillNames.has(path.relative(source, file).split(path.sep)[0]),
+    );
   if (realFiles.length === 0) {
     report.skipped.push(path.basename(destination));
     return;
@@ -326,13 +408,33 @@ async function syncSkillsTree(
       report.skipped.push(destinationFile);
     }
   }
-  const managedSkillNames = new Set(realFiles.map((file) => path.relative(source, file).split(path.sep)[0]).filter(Boolean));
+  const managedSkillNames = new Set(
+    realFiles
+      .map((file) => path.relative(source, file).split(path.sep)[0])
+      .filter(Boolean),
+  );
   for (const skillName of managedSkillNames) {
-    report.changed.push(...(await removeStaleManagedFiles(path.join(source, skillName), path.join(destination, skillName))));
+    report.changed.push(
+      ...(await removeStaleManagedFiles(
+        path.join(source, skillName),
+        path.join(destination, skillName),
+      )),
+    );
+  }
+  for (const skillName of allManagedSkillNames) {
+    if (enabledSkillNames.has(skillName)) continue;
+    const disabled = path.join(destination, skillName);
+    if (!(await pathExists(disabled))) continue;
+    await fs.rm(disabled, { recursive: true, force: true });
+    report.changed.push(disabled);
   }
 }
 
-async function blockDeprecatedSkillOverrides(projectRoot: string, root: string, report: SyncReport): Promise<void> {
+async function blockDeprecatedSkillOverrides(
+  projectRoot: string,
+  root: string,
+  report: SyncReport,
+): Promise<void> {
   for (const overrideRoot of skillOverrideRoots(projectRoot, root)) {
     if (!(await pathExists(overrideRoot.absolute))) {
       continue;
@@ -340,28 +442,49 @@ async function blockDeprecatedSkillOverrides(projectRoot: string, root: string, 
 
     const deprecatedFiles = (await listFiles(overrideRoot.absolute))
       .filter((file) => path.basename(file) !== ".gitkeep")
-      .map((file) => path.relative(overrideRoot.absolute, file).split(path.sep).join("/"))
+      .map((file) =>
+        path.relative(overrideRoot.absolute, file).split(path.sep).join("/"),
+      )
       .sort();
     if (deprecatedFiles.length === 0) {
       continue;
     }
 
     report.blocked.push(
-      `${overrideRoot.relative}: deprecated Skill overrides block sync because package-managed default Skills are overwritten during managed asset refresh. Move these rules into a separate project-local Skill such as ${root.replace(/\\/g, "/")}/skills/product_plan/SKILL.md, ${root.replace(/\\/g, "/")}/skills/uiux_design/SKILL.md or ${root.replace(/\\/g, "/")}/skills/development_engineer/SKILL.md. Deprecated files: ${deprecatedFiles.join(", ")}`
+      `${overrideRoot.relative}: deprecated Skill overrides block sync because package-managed default Skills are overwritten during managed asset refresh. Move these rules into a separate project-local Skill such as ${root.replace(/\\/g, "/")}/skills/product_plan/SKILL.md, ${root.replace(/\\/g, "/")}/skills/uiux_design/SKILL.md or ${root.replace(/\\/g, "/")}/skills/development_engineer/SKILL.md. Deprecated files: ${deprecatedFiles.join(", ")}`,
     );
   }
 }
 
-function skillOverrideRoots(projectRoot: string, root: string): Array<{ absolute: string; relative: string }> {
+function skillOverrideRoots(
+  projectRoot: string,
+  root: string,
+): Array<{ absolute: string; relative: string }> {
   return [
     {
-      absolute: path.join(projectRoot, root, "ty-context-managed", "override_skills"),
-      relative: path.join(root, "ty-context-managed", "override_skills").split(path.sep).join("/")
+      absolute: path.join(
+        projectRoot,
+        root,
+        "ty-context-managed",
+        "override_skills",
+      ),
+      relative: path
+        .join(root, "ty-context-managed", "override_skills")
+        .split(path.sep)
+        .join("/"),
     },
     {
-      absolute: path.join(projectRoot, root, "pjsdlc_managed", "override_skills"),
-      relative: path.join(root, "pjsdlc_managed", "override_skills").split(path.sep).join("/")
-    }
+      absolute: path.join(
+        projectRoot,
+        root,
+        "pjsdlc_managed",
+        "override_skills",
+      ),
+      relative: path
+        .join(root, "pjsdlc_managed", "override_skills")
+        .split(path.sep)
+        .join("/"),
+    },
   ];
 }
 
@@ -369,7 +492,7 @@ async function syncFile(
   source: string,
   destination: string,
   report: SyncReport,
-  missingMode: "block-if-missing" | "skip-if-missing"
+  missingMode: "block-if-missing" | "skip-if-missing",
 ): Promise<void> {
   if (!(await pathExists(source))) {
     if (missingMode === "block-if-missing") {
@@ -386,7 +509,12 @@ async function syncFile(
   }
 }
 
-async function syncGithubWorkflow(source: string, destination: string, relativePath: string, report: SyncReport): Promise<void> {
+async function syncGithubWorkflow(
+  source: string,
+  destination: string,
+  relativePath: string,
+  report: SyncReport,
+): Promise<void> {
   if (!(await pathExists(source))) {
     report.skipped.push(relativePath);
     return;
@@ -408,7 +536,11 @@ async function syncGithubWorkflow(source: string, destination: string, relativeP
     report.blocked.push(`${relativePath}: incomplete managed workflow markers`);
     return;
   }
-  if (markerState === "managed" || normalizeWorkflow(existing) === normalizeWorkflow(stripWorkflowMarkers(sourceContent))) {
+  if (
+    markerState === "managed" ||
+    normalizeWorkflow(existing) ===
+      normalizeWorkflow(stripWorkflowMarkers(sourceContent))
+  ) {
     if (await writeTextIfChanged(destination, sourceContent)) {
       report.changed.push(relativePath);
     } else {
@@ -419,7 +551,9 @@ async function syncGithubWorkflow(source: string, destination: string, relativeP
   report.skipped.push(`${relativePath}: customized`);
 }
 
-function workflowMarkerState(content: string): "managed" | "missing" | "invalid" {
+function workflowMarkerState(
+  content: string,
+): "managed" | "missing" | "invalid" {
   const found = findManagedBlock(content, GITHUB_WORKFLOW_BLOCK_MARKERS);
   if (found.status === "missing") {
     return "missing";
@@ -433,7 +567,11 @@ function workflowMarkerState(content: string): "managed" | "missing" | "invalid"
 function stripWorkflowMarkers(content: string): string {
   return content
     .split(/\r?\n/)
-    .filter((line) => line.trim() !== GITHUB_WORKFLOW_BLOCK_START && line.trim() !== GITHUB_WORKFLOW_BLOCK_END)
+    .filter(
+      (line) =>
+        line.trim() !== GITHUB_WORKFLOW_BLOCK_START &&
+        line.trim() !== GITHUB_WORKFLOW_BLOCK_END,
+    )
     .join("\n");
 }
 

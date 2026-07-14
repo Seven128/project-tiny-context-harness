@@ -16,16 +16,19 @@ test("managed guidance includes Modularity Check workflow contract hints", () =>
 
   for (const agents of [managedAgents, packagedAgents]) {
     assert.match(agents, /Modularity Check: none\|required\|exception/);
-    assert.match(agents, /工程 \/ RFC \/ 实现类 Task Contract/);
+    assert.match(agents, /internal plan|internal routing and maintenance questions/);
+    assert.doesNotMatch(agents, /requires? a Task Contract file/i);
   }
   for (const skill of [managedSkill, packagedSkill]) {
     assert.match(skill, /Modularity Check: none\|required\|exception/);
     assert.match(skill, /validate-code-modularity/);
-    assert.match(skill, /strict_except_generated/);
-    assert.match(skill, /scoped_waivers/);
-    assert.match(skill, /modularity\.waivers/);
+    assert.match(skill, /lifecycle-complete waiver/);
+    assert.match(skill, /<harnessRoot>\/config\.yaml/);
     assert.match(skill, /service \/ facade/);
     assert.match(skill, /verification helper/);
+    assert.match(skill, /单函数语句数/);
+    assert.match(skill, /压成一行不能规避/);
+    assert.match(skill, /owner.*introduced_at.*tracking_issue.*expiry_condition/s);
   }
   for (const makefile of [managedMake, packagedMake]) {
     assert.match(makefile, /ty-context-check-modularity/);
@@ -38,12 +41,13 @@ test("public docs describe Modularity Check hard gate and scoped waivers", () =>
   for (const doc of [read("README.md"), read("packages/ty-context/README.md")]) {
     assert.match(doc, /Modularity Check: none\|required\|exception/);
     assert.match(doc, /validate-code-modularity/);
-    assert.match(doc, /validate-context` remains pure Context recoverability/);
+    assert.match(doc, /enforce it separately from `validate-context`/);
     assert.match(doc, /Modularity Policy/);
     assert.match(doc, /Newly generated Harness configs default to `strict_except_generated`/);
     assert.match(doc, /strict_except_generated/);
     assert.match(doc, /scoped_waivers/);
     assert.match(doc, /modularity\.waivers/);
+    assert.match(doc, /owner.*introduced_at.*tracking_issue.*expiry_condition/s);
   }
 });
 

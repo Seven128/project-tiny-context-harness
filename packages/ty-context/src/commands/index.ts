@@ -3,17 +3,20 @@ import { compositeLongTask } from "./composite-long-task.js";
 import { compositeCampaign } from "./composite-campaign.js";
 import { doctor } from "./doctor.js";
 import { exportContext } from "./export-context.js";
+import { enable } from "./enable.js";
 import { init } from "./init.js";
 import { packageSource } from "./package-source.js";
 import { sync } from "./sync.js";
 import { upgrade } from "./upgrade.js";
 import { validate } from "./validate.js";
+import { assertHarnessProfileEnabled } from "../lib/profiles.js";
 
 export type CommandHandler = (args: string[]) => Promise<void> | void;
 
 export const commands: Record<string, CommandHandler> = {
   help,
   init,
+  enable,
   sync,
   upgrade,
   doctor,
@@ -21,19 +24,24 @@ export const commands: Record<string, CommandHandler> = {
   "export-context": exportContext,
   validate,
   "validate-context": (args) => validate(["validate-context", ...args]),
-  "validate-code-modularity": (args) => validate(["validate-code-modularity", ...args]),
+  "validate-code-modularity": (args) =>
+    validate(["validate-code-modularity", ...args]),
   "validate-harness": (args) => validate(["validate-harness", ...args]),
-  "validate-plan-contract": (args) => validate(["validate-plan-contract", ...args]),
-  "validate-plan-acceptance": (args) => validate(["validate-plan-acceptance", ...args]),
-  "composite-long-task": compositeLongTask,
-  "composite-campaign": compositeCampaign,
-  package: packageSource
+  "validate-plan-acceptance": (args) =>
+    validate(["validate-plan-acceptance", ...args]),
+  "composite-long-task": (args) =>
+    withCompositeCodexProfile(args, compositeLongTask),
+  "composite-campaign": (args) =>
+    withCompositeCodexProfile(args, compositeCampaign, ["contract"]),
+  package: packageSource,
 };
 
 export function help(): void {
   console.log(`ty-context commands:
   init [--adopt] [--harness-folder <path>]
                        Initialize/adopt a project; without --harness-folder, choose target agent first
+  enable composite-codex
+                       Explicitly install Codex Hooks and Composite Long-Task Skills
   sync                 Refresh managed assets; does not run migrations
   upgrade [--check] [--json]
                        Run safe migrations, sync managed assets and doctor
@@ -47,13 +55,22 @@ export function help(): void {
   validate-code-modularity
                        Enforce touched handwritten source file modularity
   validate-harness     Run validate-context and validate-code-modularity
-  validate-plan-contract <plan.md|dir>
-                       Validate workflow-contract plan surface consistency
   validate-plan-acceptance <dir>
-                       Validate plan-conformance matrix and final verdict consistency
+                       Validate legacy ordinary-long-task artifacts when explicitly requested
   composite-long-task <subcommand>
-                       Manage explicit composite long-task workflow workdirs
+                       Manage explicit Contract V3 workdirs; requires composite-codex
   composite-campaign <subcommand>
-                       Run Campaign V5 App Server threads, SFC Goals, integration, repair, and finalization
+                       Run Campaign V5 orchestration; mutations require composite-codex
   package <subcommand> Maintain package canonical source`);
+}
+
+async function withCompositeCodexProfile(
+  args: string[],
+  handler: CommandHandler,
+  discoverable: string[] = [],
+): Promise<void> {
+  const subcommand = args[0] ?? "help";
+  if (subcommand !== "help" && !discoverable.includes(subcommand))
+    await assertHarnessProfileEnabled(process.cwd(), "composite-codex");
+  await handler(args);
 }

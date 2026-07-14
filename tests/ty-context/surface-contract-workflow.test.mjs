@@ -50,12 +50,12 @@ const [
 ]);
 
 for (const content of [sourceAgents, packageAgents]) {
-  assert.match(content, /Product Surface work/);
+  assert.match(content, /product-surface/i);
   assert.match(content, /context_surface_contract/);
-  assert.match(content, /contract` role/);
+  assert.match(content, /contract owns interfaces/);
   assert.match(content, /Workflow Contract/);
-  assert.match(content, /Source-to-Context Coverage/);
-  assert.match(content, /Context-to-Implementation Binding/);
+  assert.match(content, /internally classify every material constraint/);
+  assert.match(content, /Conformance must confirm controlling Context reached/);
   assert.doesNotMatch(content, /surface-contract` role/);
 }
 
@@ -71,9 +71,9 @@ for (const content of [sourceSkill, generatedSkill, packagedSkill]) {
   assert.match(content, /Forbidden writes/);
   assert.match(content, /role = "contract"/);
   assert.match(content, /repo-local Skill/i);
-  assert.match(content, /Source-to-Context Coverage/);
-  assert.match(content, /Context-to-Implementation Binding/);
-  assert.match(content, /under_scoped/);
+  assert.match(content, /Internal source classification/);
+  assert.match(content, /implementation alignment status/);
+  assert.match(content, /Do not create a fixed `plan\.md`/);
   assert.doesNotMatch(content, forbiddenBusinessExamples);
   assert.doesNotMatch(
     content,
@@ -103,31 +103,31 @@ for (const content of [sourceProductSkill, sourceUiuxSkill, sourceDevelopmentSki
   assert.match(content, /context_surface_contract/);
   assert.match(content, /main allows\/forbids/);
   assert.match(content, /long-task state/i);
-  assert.match(content, /Source-to-Context Coverage/);
-  assert.match(content, /Context-to-Implementation Binding/);
-  assert.match(content, /new_context_required/);
+  assert.match(content, /外部来源.*内部分类/s);
+  assert.match(content, /Contract Conformance/);
+  assert.match(content, /Context Delta: required/);
 }
 
 for (const content of [rootReadme, packageReadme, spec, globalContext]) {
   assert.match(content, /Product Surface Contract/i);
   assert.match(content, /context_surface_contract/);
-  assert.match(content, /product-surface-contract\.md/);
   assert.match(content, /contract.*role/i);
-  assert.match(content, /Source-to-Context Coverage/);
-  assert.match(content, /Context-to-Implementation Binding/);
   assert.match(content, /no new|not add|must not add/i);
 }
+const publicSurfaceGuidance = [rootReadme, packageReadme, spec, globalContext].join("\n");
+assert.match(publicSurfaceGuidance, /product-surface-contract\.md/);
+assert.match(publicSurfaceGuidance, /Source-to-Context (?:judgment|table|表)/);
+assert.match(publicSurfaceGuidance, /(?:Context-to-Implementation|Contract Conformance)/);
 
 assert.match(packageContext, /Product Surface Contract workflow is prompt-level and project-owned/);
 assert.match(packageContext, /must not add a surface-specific Context role/);
-assert.match(workflowContract, /Product Surface Contract Boundary/);
-assert.match(workflowContract, /Source-to-Context Coverage/);
-assert.match(workflowContract, /Context-to-Implementation Binding/);
-assert.match(workflowContract, /Existing Context Hit/);
-assert.match(workflowContract, /existing Context roles such as `contract`, `area`, `subdomain`, `verification`, `decision-rationale` and `implementation-index`/);
-assert.match(workflowContract, /Do not add surface-specific roles or validator gates|Do not add surface-specific Context roles or a surface-specific validator gate/);
-assert.match(packageManagedSurfaces, /Product Surface Contract support/);
-assert.match(packageManagedSurfaces, /must not generate project-specific product facts, business Product Surface Contract files/);
+assert.match(workflowContract, /product-surface or information-placement work/);
+assert.match(workflowContract, /Source-to-Context judgment/);
+assert.match(workflowContract, /replaces the former Context-to-Implementation Markdown table/);
+assert.match(workflowContract, /surface\/page responsibility/);
+assert.match(workflowContract, /Do not add Product, Architecture, Rationale or Verification delta fields/);
+assert.match(packageManagedSurfaces, /Product Surface Contract/);
+assert.match(packageManagedSurfaces, /must not generate project semantics, plan artifacts, lifecycle state or campaigns/);
 
 for (const role of ["surface-contract", "product-surface", "web-contract", "app-contract", "game-surface"]) {
   assert.doesNotMatch(validators, new RegExp(`["']${role}["']\\s*:`));

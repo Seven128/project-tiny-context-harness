@@ -3,6 +3,9 @@ name: Package CI
 on:
   pull_request:
     paths:
+      - ".codex/config.yaml"
+      - ".codex/hooks.json"
+      - ".codex/skills/**"
       - ".codex/ty-context-managed/**"
       - ".devcontainer/**"
       - ".github/ISSUE_TEMPLATE/**"
@@ -18,6 +21,8 @@ on:
       - "GOVERNANCE.md"
       - "LICENSE"
       - "SUPPORT.md"
+      - "AGENTS.md"
+      - "Makefile"
       - "packages/ty-context/**"
       - "project_context/**"
       - "tests/ty-context/**"
@@ -26,11 +31,15 @@ on:
       - "package-lock.json"
       - "PROJECT_SPEC.md"
       - "README.md"
+      - "README.zh-CN.md"
   push:
     branches:
       - main
       - "codex/**"
     paths:
+      - ".codex/config.yaml"
+      - ".codex/hooks.json"
+      - ".codex/skills/**"
       - ".codex/ty-context-managed/**"
       - ".devcontainer/**"
       - ".github/ISSUE_TEMPLATE/**"
@@ -46,6 +55,8 @@ on:
       - "GOVERNANCE.md"
       - "LICENSE"
       - "SUPPORT.md"
+      - "AGENTS.md"
+      - "Makefile"
       - "packages/ty-context/**"
       - "project_context/**"
       - "tests/ty-context/**"
@@ -54,26 +65,66 @@ on:
       - "package-lock.json"
       - "PROJECT_SPEC.md"
       - "README.md"
+      - "README.zh-CN.md"
   workflow_dispatch:
 
 jobs:
-  package:
+  pull-request:
+    if: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/main') }}
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: ["24"]
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: "24"
           cache: "npm"
       - name: Install dependencies
         run: npm ci
+      - name: Check TypeScript formatting
+        run: npm run format:check
       - name: Build package
         run: npm run build --workspace project-tiny-context-harness
+      - name: Typecheck package
+        run: npm run typecheck --workspace project-tiny-context-harness
       - name: Check package canonical source drift
         run: node packages/ty-context/dist/cli.js package check-source
       - name: Validate source Context
         run: make validate-context
+      - name: Validate changed-source modularity and waiver lifecycle
+        run: node packages/ty-context/dist/cli.js check-modularity --base "origin/${{ github.base_ref }}" --fail-on-warning
+      - name: Default Workflow Contract tests
+        run: npm run test:workflow-default:built --workspace project-tiny-context-harness
+      - name: Contract V3 focused black-box
+        run: npm run test:contract-v3:built --workspace project-tiny-context-harness
+      - name: Campaign Fake App Server black-box
+        run: npm run test:campaign-blackbox:built --workspace project-tiny-context-harness
+
+  main:
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Check TypeScript formatting
+        run: npm run format:check
+      - name: Build package for source gates
+        run: npm run build --workspace project-tiny-context-harness
+      - name: Validate modularity waiver lifecycle
+        run: node packages/ty-context/dist/cli.js check-modularity --config-only --fail-on-warning
+      - name: Complete package tests
+        run: npm test
+      - name: Complete Composite tests
+        run: npm run test:composite-workflow:built --workspace project-tiny-context-harness
+      - name: Quickstart smoke
+        run: npm run smoke:quickstart
+      - name: Pack preview
+        run: npm run preview:pack

@@ -15,7 +15,11 @@ function sortJson(value: unknown): unknown {
   if (!isRecord(value)) {
     return value;
   }
-  return Object.fromEntries(Object.keys(value).sort().map((key) => [key, sortJson(value[key])]));
+  return Object.fromEntries(
+    Object.keys(value)
+      .sort()
+      .map((key) => [key, sortJson(value[key])]),
+  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

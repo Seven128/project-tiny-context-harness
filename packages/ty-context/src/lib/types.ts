@@ -3,10 +3,16 @@ export interface HarnessConfig {
     package: string;
     schema_version: string;
   };
+  profiles: {
+    enabled: HarnessProfile[];
+  };
   modularity?: HarnessModularityConfig;
   managed_files: ManagedFile[];
   never_overwrite: string[];
 }
+
+export type HarnessProfile =
+  "core-portable" | "workflow-default" | "composite-codex";
 
 export interface HarnessModularityConfig {
   limit?: number;
@@ -17,8 +23,11 @@ export interface HarnessModularityConfig {
 export interface ModularityWaiverConfig {
   path?: string;
   category?: string;
+  owner?: string;
+  introduced_at?: string;
   reason?: string;
-  future_split_boundary?: string;
+  tracking_issue?: string;
+  expiry_condition?: string;
 }
 
 export interface ManagedFile {

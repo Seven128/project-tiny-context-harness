@@ -1,134 +1,120 @@
 core:
   package: project-tiny-context-harness
   schema_version: "4"
+profiles:
+  enabled:
+    - core-portable
+    - workflow-default
+    - composite-codex
 modularity:
   limit: 300
   policy: scoped_waivers
   waivers:
     - path: packages/ty-context/src/lib/validators.ts
       category: legacy_migration
+      owner: harness-maintainers
+      introduced_at: "2026-07-13"
       reason: Existing combined Context and gate validator module predates the modularity gate.
-      future_split_boundary: Extract code modularity validation and Context manifest validation into separate validator modules.
+      tracking_issue: modularity-backlog
+      expiry_condition: Extract code modularity validation and Context manifest validation into separate validator modules.
     - path: tests/ty-context/validators.test.mjs
       category: legacy_migration
+      owner: harness-maintainers
+      introduced_at: "2026-07-13"
       reason: Existing combined validator regression suite predates the modularity gate.
-      future_split_boundary: Split Context manifest validation, code modularity validation and composite gate tests into focused files.
-    - path: tests/ty-context/sync-init-doctor.test.mjs
-      category: legacy_migration
-      reason: Existing end-to-end init/sync/doctor regression suite predates the modularity gate.
-      future_split_boundary: Split init asset assertions, sync behavior and CLI validation smoke tests into focused files.
+      tracking_issue: modularity-backlog
+      expiry_condition: Split Context manifest validation, code modularity validation and composite gate tests into focused files.
     - path: packages/ty-context/src/lib/sync-engine.ts
       category: legacy_migration
+      owner: harness-maintainers
+      introduced_at: "2026-07-13"
       reason: Existing combined managed asset sync engine predates the modularity gate; this change only narrows the sync migration preflight.
-      future_split_boundary: Extract managed block merging, tree syncing and Skill override safety checks into focused modules.
-    - path: packages/ty-context/src/lib/superpowers-task-derive.ts
+      tracking_issue: modularity-backlog
+      expiry_condition: Extract managed block merging, tree syncing and Skill override safety checks into focused modules.
+    - path: packages/ty-context/src/lib/composite-campaign-host-recovery.ts
       category: legacy_migration
-      reason: Existing combined composite long-task derived-view generator predates the modularity gate; this change extends it with strict V2 evidence-index output without completing the renderer split.
-      future_split_boundary: Extract plan matrix, final verdict, evidence index and context-alignment renderers into focused derived-view modules.
-    - path: packages/ty-context/src/lib/superpowers-task-state-schema.ts
+      owner: harness-maintainers
+      introduced_at: "2026-07-14"
+      reason: The pre-existing aggregate host recovery state machine already exceeded function and branch thresholds; deterministic V5 turn reconciliation extends that same compatibility surface while preserving crash semantics.
+      tracking_issue: modularity-backlog
+      expiry_condition: Extract Goal identity recovery, authoring-turn recovery and execution-turn reconciliation into separate pure transition modules.
+    - path: packages/ty-context/src/lib/composite-campaign-integration.ts
       category: legacy_migration
-      reason: Existing combined composite long-task state schema file predates the modularity gate; this change extends the schema for strict V2 fields and assertions without completing the type split.
-      future_split_boundary: Split source/product scope, plan/AC graph, evidence/assertion and gate/final state interfaces into focused schema modules.
-    - path: tests/ty-context/composite-long-task-assertion-gate.test.mjs
+      owner: harness-maintainers
+      introduced_at: "2026-07-14"
+      reason: The pre-existing integration module already combined Git, persistence, validation, fetch and target-finalization responsibilities; non-intrusive target finalization currently preserves its public orchestration boundary.
+      tracking_issue: modularity-backlog
+      expiry_condition: Extract remote synchronization and owned target-worktree finalization from integration snapshot and merge operations.
+    - path: packages/ty-context/src/lib/composite-campaign-orchestrator.ts
       category: legacy_migration
-      reason: Existing combined assertion gate regression suite predates the modularity gate; this change extends it for strict V2 evidence-index coverage.
-      future_split_boundary: Split happy-path assertion proof, adversarial weak-evidence cases and derived-view assertion rendering into separate test files.
-    - path: tests/ty-context/superpowers-fixtures.mjs
-      category: fixture_snapshot
-      reason: Existing shared composite long-task fixture module predates the modularity gate; this change updates the canonical fixture packet for strict V2 fields.
-      future_split_boundary: Split source text builders, canonical task-state builders and evidence/assertion builders into focused fixture modules.
-    - path: tests/ty-context/superpowers-task-compile-strict.test.mjs
+      owner: harness-maintainers
+      introduced_at: "2026-07-14"
+      reason: The pre-existing Campaign transition coordinator already exceeded statement, branch and state-transition thresholds; V5 gates and repair routing extend the same deterministic transition entry point.
+      tracking_issue: modularity-backlog
+      expiry_condition: Split authoring, wave integration, repair and finalization transitions behind a small campaign action reducer.
+    - path: packages/ty-context/src/lib/composite-campaign-thread-orchestrator.ts
       category: legacy_migration
-      reason: Existing strict compiler regression suite predates the modularity gate; this change adds strict V2 canonical-field and adversarial input coverage.
-      future_split_boundary: Split strict happy-path compile, missing-field diagnostics, parser-shape rejection and real-failure regression cases into focused test files.
+      owner: harness-maintainers
+      introduced_at: "2026-07-14"
+      reason: The pre-existing App Server run loop already exceeded the branch threshold; V5 reconnect and all-settled shutdown handling retain one host lifecycle boundary.
+      tracking_issue: modularity-backlog
+      expiry_condition: Extract action dispatch, reconnect policy and shutdown reconciliation into independent host lifecycle helpers.
     - path: tools/composite-long-task-equivalence/fixtures.mjs
       category: fixture_snapshot
+      owner: harness-maintainers
+      introduced_at: "2026-07-13"
       reason: Existing composite equivalence fixture bundle predates the modularity gate; this change updates fixture packets and evidence records for strict V2 assertions.
-      future_split_boundary: Split source packet fixtures, evidence delta fixtures and scenario-specific equivalence expectations into focused fixture modules.
-    - path: tests/ty-context/orientation-fast-path.test.mjs
-      category: legacy_migration
-      reason: Existing broad orientation regression suite predates the modularity gate.
-      future_split_boundary: Split package docs/update-mode assertions, Skill trigger assertions and launch readiness assertions into focused tests.
+      tracking_issue: modularity-backlog
+      expiry_condition: Split source packet fixtures, evidence delta fixtures and scenario-specific equivalence expectations into focused fixture modules.
     - path: tools/consumer_lab_full_test.mjs
       category: legacy_migration
+      owner: harness-maintainers
+      introduced_at: "2026-07-13"
       reason: Existing consumer lab orchestration script predates the modularity gate.
-      future_split_boundary: Extract command profile definitions and report generation helpers from the orchestration flow.
+      tracking_issue: modularity-backlog
+      expiry_condition: Extract command profile definitions and report generation helpers from the orchestration flow.
     - path: examples/delivery-benchmark/runner/delivery_benchmark.mjs
       category: legacy_migration
+      owner: harness-maintainers
+      introduced_at: "2026-07-13"
       reason: Rename-only surface migration touched the existing benchmark runner, which predates the modularity gate.
-      future_split_boundary: Split scenario loading, workspace preparation, command execution and report rendering into runner modules.
+      tracking_issue: modularity-backlog
+      expiry_condition: Split scenario loading, workspace preparation, command execution and report rendering into runner modules.
     - path: tools/external_pr_packet_check.mjs
       category: legacy_migration
+      owner: harness-maintainers
+      introduced_at: "2026-07-13"
       reason: Rename-only surface migration touched the existing external packet checker, which predates the modularity gate.
-      future_split_boundary: Extract packet discovery, diff validation and report formatting into separate helpers.
+      tracking_issue: modularity-backlog
+      expiry_condition: Extract packet discovery, diff validation and report formatting into separate helpers.
     - path: tools/launch_next_steps.mjs
       category: legacy_migration
+      owner: harness-maintainers
+      introduced_at: "2026-07-13"
       reason: Rename-only surface migration touched the existing launch next-step planner, which predates the modularity gate.
-      future_split_boundary: Split feedback ingestion, action ranking and Markdown rendering into focused modules.
+      tracking_issue: modularity-backlog
+      expiry_condition: Split feedback ingestion, action ranking and Markdown rendering into focused modules.
     - path: tools/launch_readiness_check.mjs
       category: legacy_migration
+      owner: harness-maintainers
+      introduced_at: "2026-07-13"
       reason: Rename-only surface migration touched the existing launch readiness checker, which predates the modularity gate.
-      future_split_boundary: Extract local surface checks, external metadata checks, version checks and report rendering into separate check modules.
+      tracking_issue: modularity-backlog
+      expiry_condition: Extract local surface checks, external metadata checks, version checks and report rendering into separate check modules.
     - path: tools/launch_unblock_check.mjs
       category: legacy_migration
+      owner: harness-maintainers
+      introduced_at: "2026-07-13"
       reason: Rename-only surface migration touched the existing launch unblock checker, which predates the modularity gate.
-      future_split_boundary: Split npm, GitHub, docs and recommendation checks into focused modules.
-    - path: tools/release_npm.mjs
-      category: legacy_migration
-      reason: Rename-only surface migration touched the existing release orchestration script, which predates the modularity gate.
-      future_split_boundary: Extract preflight, pack, publish, smoke and release-report steps into separate modules.
+      tracking_issue: modularity-backlog
+      expiry_condition: Split npm, GitHub, docs and recommendation checks into focused modules.
     - path: tools/sync_release_version.mjs
       category: legacy_migration
+      owner: harness-maintainers
+      introduced_at: "2026-07-13"
       reason: Rename-only surface migration touched the existing release version synchronizer, which predates the modularity gate.
-      future_split_boundary: Split version source discovery, surface updates and check-mode diff reporting into focused helpers.
-    - path: packages/ty-context/src/lib/superpowers-task-evidence-kernel.ts
-      category: legacy_migration
-      reason: HFC-001 trusted evidence kernel still aggregates recomputation, contradiction and final-status logic while HFC hardening is in flight.
-      future_split_boundary: Split kernel orchestration, AC/PI recomputation and final-status projection into separate modules after HFC-002 stabilizes.
-    - path: packages/ty-context/src/lib/superpowers-task-validator.ts
-      category: legacy_migration
-      reason: HFC-002 completion-output validation was added to an existing aggregate state validator to preserve the public validation entry point.
-      future_split_boundary: Move completion-output consistency and generated-surface scans into a dedicated validator module after the resolver contract is stable.
-    - path: tests/ty-context/composite-long-task-expanded-assertion-gate.test.mjs
-      category: legacy_migration
-      reason: Expanded adversarial assertion-gate regression cases are still grouped with the original HFC-001 suite.
-      future_split_boundary: Split proof-layer coverage cases from adversarial invalid-state cases into separate focused regression files.
-    - path: tests/ty-context/composite-long-task-invariants.test.mjs
-      category: legacy_migration
-      reason: Composite long-task invariant regressions still aggregate several completion and scope invariants across HFC-001 and HFC-002.
-      future_split_boundary: Split completion-output, full-population and scope-conflict invariants into dedicated focused test files.
-    - path: tests/ty-context/composite-campaign-atomic-hardening.test.mjs
-      category: fixture_snapshot
-      reason: Atomic crash and adversarial swap scenarios share one transaction-fixture lifecycle and are reviewed as a single hardening matrix.
-      future_split_boundary: Split create-marker, quarantine ownership and installed-packet swap scenarios into focused fixture runners.
-    - path: tests/ty-context/composite-campaign-path-safety.test.mjs
-      category: fixture_snapshot
-      reason: Portable path, Windows reserved-name and symlink/junction cases form one cross-platform safety matrix.
-      future_split_boundary: Split lexical component validation from filesystem identity and configured-root escape cases.
-    - path: tests/ty-context/composite-campaign-schema-campaign-cases.mjs
-      category: fixture_snapshot
-      reason: Campaign lifecycle schema cases share canonical campaign builders and historical-selection invariants.
-      future_split_boundary: Split selection history, binding lifecycle and recovery-marker schema cases into focused modules.
-    - path: tests/ty-context/composite-campaign-schema.test.mjs
-      category: fixture_snapshot
-      reason: Top-level V1 schema/codec parity cases intentionally exercise every public campaign schema in one matrix.
-      future_split_boundary: Split codec/domain invariants from public schema export and canonical normalization coverage.
-    - path: tests/ty-context/composite-campaign-security.test.mjs
-      category: fixture_snapshot
-      reason: Secret syntax, size limits, unsafe keys and adversarial byte forms share one redaction rejection matrix.
-      future_split_boundary: Split request sanitization, packet redaction and event/file size-boundary suites.
-    - path: tests/ty-context/composite-campaign-store-read.test.mjs
-      category: fixture_snapshot
-      reason: Committed-reader corruption cases require one shared byte-level store fixture and hash-chain matrix.
-      future_split_boundary: Split manifest/request/revision reads from event-chain and manual-drift rejection cases.
-    - path: tests/ty-context/composite-campaign-store.test.mjs
-      category: fixture_snapshot
-      reason: Store transaction happy paths and five-checkpoint crash recovery share one canonical campaign fixture matrix.
-      future_split_boundary: Split create/scope/packet transitions, optimistic concurrency and checkpoint recovery into focused suites.
-    - path: tests/ty-context/composite-source-preflight.test.mjs
-      category: fixture_snapshot
-      reason: Pure and filesystem preflight diagnostics share one canonical three-source input/error matrix.
-      future_split_boundary: Split pure compile diagnostics, filesystem safety and compatibility adapter cases into focused suites.
+      tracking_issue: modularity-backlog
+      expiry_condition: Split version source discovery, surface updates and check-mode diff reporting into focused helpers.
 managed_files:
   - path: AGENTS.md
     strategy: merge-block

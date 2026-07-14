@@ -1,4 +1,9 @@
-import { createUpgradePlan, formatUpgradePlan, hasUpgradePlanWork, updateModeForPlan } from "../lib/migrations.js";
+import {
+  createUpgradePlan,
+  formatUpgradePlan,
+  hasUpgradePlanWork,
+  updateModeForPlan,
+} from "../lib/migrations.js";
 import { runUpgradeReport } from "../lib/upgrade.js";
 
 export async function upgrade(args: string[] = []): Promise<void> {
@@ -11,7 +16,9 @@ export async function upgrade(args: string[] = []): Promise<void> {
   if (options.check) {
     const plan = await createUpgradePlan(process.cwd());
     if (options.json) {
-      console.log(JSON.stringify({ mode: updateModeForPlan(plan), ...plan }, null, 2));
+      console.log(
+        JSON.stringify({ mode: updateModeForPlan(plan), ...plan }, null, 2),
+      );
     } else {
       for (const line of formatUpgradePlan(plan)) {
         console.log(line);
@@ -39,7 +46,11 @@ export async function upgrade(args: string[] = []): Promise<void> {
   }
 }
 
-function parseArgs(args: string[]): { check: boolean; json: boolean; help: boolean } {
+function parseArgs(args: string[]): {
+  check: boolean;
+  json: boolean;
+  help: boolean;
+} {
   const options = { check: false, json: false, help: false };
   for (const arg of args) {
     if (arg === "--check") {

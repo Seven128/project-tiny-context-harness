@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
-test("architecture and rationale fields stay scoped to Task Contract guidance", () => {
+test("architecture and rationale checks stay inside internal planning guidance", () => {
   const sources = [
     read(".codex/ty-context-managed/agents/AGENTS_CORE.md"),
     read("packages/ty-context/assets/agents/AGENTS_CORE.md"),
@@ -31,8 +31,9 @@ test("architecture and rationale fields stay scoped to Task Contract guidance", 
   assert.match(developmentSkill, /verification \/ deployment semantics/);
   assert.match(developmentSkill, /durable rationale \/ tradeoff/);
   assert.match(developmentSkill, /普通 bug fix.*package\/release.*测试修复.*spike/s);
-  assert.match(developmentSkill, /大文件只走 `Modularity Check`/);
-  assert.match(developmentSkill, /不新增长模板或第二套 durable-fact gate/);
+  assert.match(developmentSkill, /压成一行不能规避/);
+  assert.match(developmentSkill, /lifecycle-complete waiver/);
+  assert.match(developmentSkill, /不要创建 `plan\.md`、Task Contract 文件或 Markdown 映射表/);
 });
 
 test("templates keep rationale durable, optional and evidence-free", () => {
@@ -66,7 +67,7 @@ test("public docs and spec frame architecture support as Minimal Context, not a 
     assert.match(content, /Technical architecture support is a Minimal Context capability/);
     assert.match(content, /Architecture Context Hit/);
     assert.match(content, /Decision Rationale Hit: existing\|required\|none/);
-    assert.match(content, /not new PRD, tech-plan, ADR or implementation-document surfaces/);
+    assert.match(content, /No Task Contract.*fixed `plan\.md`/s);
     assert.match(content, /does not prove product quality|still does not prove product quality|不证明产品质量/);
     assert.match(content, /Do not invent rationale/);
     assert.match(content, /smallest durable Context surface/);
@@ -74,11 +75,11 @@ test("public docs and spec frame architecture support as Minimal Context, not a 
   }
 
   const spec = read("PROJECT_SPEC.md");
-  assert.match(spec, /Architecture Context Hit.*Task Contract field/s);
-  assert.match(spec, /Decision Rationale Hit.*Task Contract field/s);
-  assert.match(spec, /not a durable fact, context role, validator or architecture gate/);
-  assert.match(spec, /not a rationale delta, durable fact gate or requirement to invent reasons/);
-  assert.match(spec, /Context Delta` is the only formal durable-fact decision point/);
+  assert.match(spec, /Architecture Context Hit.*internal high-risk routing question/s);
+  assert.match(spec, /Decision Rationale Hit.*internal `existing\|required\|none` coverage question/s);
+  assert.match(spec, /not a durable fact, role, validator or artifact/);
+  assert.match(spec, /never creates a rationale delta or required file/);
+  assert.match(spec, /Context Delta.*only durable-fact decision point/s);
 });
 
 function read(relativePath) {

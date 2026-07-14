@@ -31,13 +31,21 @@ export async function runDoctor(projectRoot: string): Promise<DoctorReport> {
   report.info.push(`harness root: ${root}`);
   report.info.push(`core package: ${config.core.package}@${packageVersion}`);
   report.info.push(`schema version: ${config.core.schema_version}`);
-  const unsupportedSchema = unsupportedSchemaMessage(config.core.schema_version, "doctor");
+  const unsupportedSchema = unsupportedSchemaMessage(
+    config.core.schema_version,
+    "doctor",
+  );
   if (unsupportedSchema) {
     report.errors.push(unsupportedSchema);
     return report;
   }
 
-  for (const required of ["project_context/context.toml", "project_context/global.md", "project_context/architecture.md", "project_context/areas"]) {
+  for (const required of [
+    "project_context/context.toml",
+    "project_context/global.md",
+    "project_context/architecture.md",
+    "project_context/areas",
+  ]) {
     if (!(await pathExists(path.join(projectRoot, required)))) {
       report.errors.push(`missing ${required}`);
     }
@@ -51,11 +59,45 @@ export async function runDoctor(projectRoot: string): Promise<DoctorReport> {
   }
 
   for (const location of await findUserSuperpowersSkills()) {
-    report.warnings.push(`user-level using-superpowers Skill detected at ${location}. Composite Contract V3 does not depend on it and doctor will not modify global configuration. To disable it explicitly for Codex, remove/disable that plugin or add a matching [[skills.config]] entry with enabled = false in ${path.join(os.homedir(), ".codex", "config.toml")}.`);
+    report.warnings.push(
+      `user-level using-superpowers Skill detected at ${location}. Composite Contract V3 does not depend on it and doctor will not modify global configuration. To disable it explicitly for Codex, remove/disable that plugin or add a matching [[skills.config]] entry with enabled = false in ${path.join(os.homedir(), ".codex", "config.toml")}.`,
+    );
   }
 
   report.info.push("doctor complete");
   return report;
 }
 
-async function findUserSuperpowersSkills(): Promise<string[]> { const home = os.homedir(); const direct = path.join(home, ".codex", "skills", "using-superpowers", "SKILL.md"); const result: string[] = []; if (await pathExists(direct)) result.push(direct); const cache = path.join(home, ".codex", "plugins", "cache"); try { for (const owner of await readdir(cache)) { const candidateRoot = path.join(cache, owner); for (const plugin of await readdir(candidateRoot)) { if (plugin !== "superpowers") continue; for (const version of await readdir(path.join(candidateRoot, plugin))) { const candidate = path.join(candidateRoot, plugin, version, "skills", "using-superpowers", "SKILL.md"); if (await pathExists(candidate)) result.push(candidate); } } } } catch {} return [...new Set(result)].sort(); }
+async function findUserSuperpowersSkills(): Promise<string[]> {
+  const home = os.homedir();
+  const direct = path.join(
+    home,
+    ".codex",
+    "skills",
+    "using-superpowers",
+    "SKILL.md",
+  );
+  const result: string[] = [];
+  if (await pathExists(direct)) result.push(direct);
+  const cache = path.join(home, ".codex", "plugins", "cache");
+  try {
+    for (const owner of await readdir(cache)) {
+      const candidateRoot = path.join(cache, owner);
+      for (const plugin of await readdir(candidateRoot)) {
+        if (plugin !== "superpowers") continue;
+        for (const version of await readdir(path.join(candidateRoot, plugin))) {
+          const candidate = path.join(
+            candidateRoot,
+            plugin,
+            version,
+            "skills",
+            "using-superpowers",
+            "SKILL.md",
+          );
+          if (await pathExists(candidate)) result.push(candidate);
+        }
+      }
+    }
+  } catch {}
+  return [...new Set(result)].sort();
+}

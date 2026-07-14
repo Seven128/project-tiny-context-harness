@@ -1,11 +1,36 @@
 export { commands } from "./commands/index.js";
-export { compileLongTaskContract, readCompiledLongTaskContract, assertLongTaskContractFresh } from "./lib/long-task-contract-compiler.js";
+export {
+  compileLongTaskContract,
+  readCompiledLongTaskContract,
+  assertLongTaskContractFresh,
+} from "./lib/long-task-contract-compiler.js";
 export { parseLongTaskSources } from "./lib/long-task-contract-parser.js";
 export { validateLongTaskCoverage } from "./lib/long-task-contract-coverage.js";
 export { verifyLongTask } from "./lib/long-task-verifier.js";
 export { runLongTaskFinalGate } from "./lib/long-task-final-gate.js";
 export { scanLongTaskNegativeEvidence } from "./lib/long-task-negative-evidence.js";
 export { stopCheckLongTask } from "./lib/long-task-stop-check.js";
-export type { HarnessConfig, ManagedFile, SourceMapping } from "./lib/types.js";
-export type { ProductSourceV3, TechnicalPlanV3, AcceptanceChecklistV3, VerificationSpecV3, CompiledContractV3, CoverageResult } from "./lib/long-task-contract-schema.js";
-export type { LongTaskWorkflowStatus, LongTaskFindingV2, VerificationRunResultV2, CurrentStatusV3, FinalResultV3, BindingResultV3, CounterfactualResultV3, LongTaskEntityResultV3 } from "./lib/long-task-run-result.js";
+export type {
+  HarnessConfig,
+  HarnessProfile,
+  ManagedFile,
+  SourceMapping,
+} from "./lib/types.js";
+export type {
+  ProductSourceV3,
+  TechnicalPlanV3,
+  AcceptanceChecklistV3,
+  VerificationSpecV3,
+  CompiledContractV3,
+  CoverageResult,
+} from "./lib/long-task-contract-schema.js";
+export type {
+  LongTaskWorkflowStatus,
+  LongTaskFindingV2,
+  VerificationRunResultV2,
+  CurrentStatusV3,
+  FinalResultV3,
+  BindingResultV3,
+  CounterfactualResultV3,
+  LongTaskEntityResultV3,
+} from "./lib/long-task-run-result.js";

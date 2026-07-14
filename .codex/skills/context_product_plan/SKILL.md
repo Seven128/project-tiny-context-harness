@@ -25,7 +25,7 @@ Project-specific product planning rules belong in a separate project-local Skill
 4. 涉及输入、选择、搜索、筛选、表单/配置、调度/时间窗口、预算/配额/限流或加载/空态/错误态等 UI 控件时，用“控件任务框架”重新理解用户任务和产品反馈；这只是通用判断框架，不是业务处方库。
 5. 当一个产品对象、能力或接口的增删改需要跨多个页面、模块、Context 或产品域同步调整时，将该影响范围视为产品边界复核信号；先判断它是否应沉淀为独立能力、subdomain 或 area，并明确对外契约、所有权和消费方边界，避免通过手工清单长期维护各消费面的重复映射。
 6. 产品意图、模块职责、边界和验收口径以 `project_context/**` 为准；代码和搜索结果只说明当前实现状态。Context 决定“应该是什么”，代码揭示“现在是什么”，代码不能静默重定义 Context。
-7. 输出产品判断或第一处实现编辑前，若任务涉及产品方案、页面/模块边界、信息架构、API / Schema、验收口径、跨域契约、状态或调度语义，先编译当前任务契约；契约第一段用 `Context Delta: none|required` 完成唯一正式长期事实判断，再写本次 `Task Contract`。如果输入包含产品方案、架构方案、技术方案或验收方案，先在 `plan.md` 或等价临时计划面做 Source-to-Context Coverage，确认方案中的 durable product / surface / IA / acceptance constraints 已被现有 Context 覆盖、需要更新、仅属 task-local、显式 out-of-scope、需要用户决策或仍 under-scoped。
+7. 输出产品判断或第一处实现编辑前，先给出唯一长期事实判断 `Context Delta: none|required`。若输入包含产品、架构、技术或验收来源，在 agent 内部逐项判断 delivery-significant constraint 已被 Context 覆盖、需要先更新 Context、仅属 task-local、显式 out-of-scope 或需要真实用户决策；不要创建 `plan.md`、Task Contract 文件或 Markdown 映射表。
 8. 普通 bug fix、局部样式、局部实现漂移、测试修复或探索性 spike 不更新 Context；如果过程中形成长期产品结论，应在继续对齐或交付前回写 Context。不要把 Context 机械补成代码改动摘要。
 9. 如果代码与 Context 冲突，显式标记为实现漂移、缺失工作或 Context 过期。
 10. 输出产品判断时保持短而具体，避免长篇 PRD 模板。
@@ -39,24 +39,14 @@ Project-specific product planning rules belong in a separate project-local Skill
 13. Verification / Deployment Role Context 只记录长期可复用的重复执行路径事实：特殊准备、最短命令或路径、预期阶段 / 信号、可接受 warning、已排除的重复探索点。不要记录一次性测试日志、完整输出、临时 JSON、CI artifact、测试报告、release ledger、secret、token、cookie、device id 或 raw payload。
 14. 收尾时做 `Contract Conformance` 和 Context drift check，只报告轻量状态：`Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。Conformance 说明本次契约满足情况、未满足或延期项和验证入口；一次性证据、测试日志、截图结果、任务契约和实现摘要不写入 Context。
 
-## 任务契约编译
+## 内部执行约束与 Conformance
 
-- 任务契约是当前任务的编译产物，不是事实源、PRD、ADR 或长期文档；默认留在方案、交付说明或 PR 文本中。
-- `Context Delta` 必须先出现，取值为 `none` 或 `required`：
-  - `none`：本次只是按既有 Context / 原则落地，不新增长期事实。
-  - `required`：说明长期事实类型、应写入的 Context / role、需要沉淀的事实，以及明确不写入 Context 的一次性内容。
-- `Task Contract` 用短列表说明本次产品实现必须满足的目标、用户任务、信息 / 动作 / 状态 / 反馈、边界、非目标和验收信号。
-- 触及 Product Surface 时，`Task Contract` 同时说明 surface platform、primary user question、main allows/forbids、drilldown ownership、long-task state requirement 和 verification；业务特定答案进入项目 Context 或项目本地 Skill，不写进 package-managed Skill。
-- 对长任务、多模块、多 agent、外部产品/架构/技术/验收方案输入、容易发生 `Context Delta` 调头或多轮验证的任务，使用 `plan.md` 或等价临时计划面暂存 `Source-to-Context Coverage`、`Context-to-Implementation Binding`、`Context Delta`、`Task Contract`、`Implementation Steps` 和 `Contract Conformance`；它只是临时执行缓存。
-- small code task 指现有 Context 已足够、且不改变 durable product / architecture / API-schema / runtime-state / verification-deployment / security-redaction / surface ownership 事实的局部实现任务；它按语义风险判断，不按代码行数判断，不应创建 `plan.md`、完整 trace tables、Source-to-Context Coverage 或 Context-to-Implementation Binding，除非它发现长期事实变化或扩展成高风险工作。
-- `Source-to-Context Coverage` 表使用字段：`Source item | Durable constraint | Type | Existing Context Hit | Context action | Owning Context | Coverage status`。这张表只回答 source 约束是否进入或命中 Context，不写实现路径。
-- `Coverage status` 取值：`covered`、`new_context_required`、`context_updated`、`task_local_only`、`out_of_scope_explicit`、`needs_user_decision`、`under_scoped`。存在 `under_scoped` 或未处理的 `new_context_required` / `needs_user_decision` 时，不能声称已按方案完整实现。
-- `Context-to-Implementation Binding` 表使用字段：`Context fact | Implementation obligation | Expected surfaces | Implemented paths | Forbidden shortcuts | Verification path | Binding status`。
-- `Binding status` 取值：`bound`、`partial`、`missing`、`blocked`、`out_of_scope_explicit`、`needs_user_decision`、`contradicted_by_current_state`。存在 non-bound 项时，不能声称已按 Context 完整落地。
-- `plan.md` 中出现的长期事实必须提炼回 `project_context/**`；否则不要把临时计划当作事实源、交付产物或后续引用依据。
-- `Context Delta: required` 时先更新 `project_context/**`，再继续实现；`none` 时直接按 Task Contract 实现。
-- `Contract Conformance` 是交付前的软检查：实现偏差修实现，契约遗漏回 Task Contract，长期事实缺失或 source coverage under-scoped 回 `Context Delta` 并先更新 Context。
-- 不为 small code task、普通 bug fix、局部样式、小重构、局部实现漂移、测试修复或探索性 spike 强制编译任务契约。
+- `Context Delta` 只能是 `none` 或 `required`。`required` 先把足以指导实现的长期事实写入 owning Context；`none` 直接按现有 Context 工作，不制造 Context 噪音。
+- Agent 内部计划应保持目标、用户任务、信息 / 动作 / 状态 / 反馈、边界、非目标、验收信号和验证入口清晰。触及 Product Surface 时，同时保持 surface platform、primary user question、main allows/forbids、drilldown ownership 和 long-task state requirement 清晰。
+- 外部来源的每项重要约束都在内部分类为 Context 已覆盖、Context 已更新、task-local、显式 out-of-scope 或需要用户决策；存在未处理项时不能声称全量完成。
+- 默认流程不要求或验证固定 `plan.md`、Task Contract 文件、Source-to-Context 表、Context-to-Implementation 表、matrix、verdict 或 evidence ledger；可选 scratch 没有固定名称或权威。
+- `Contract Conformance` 直接检查 controlling Context 是否到达正确产品域、surface、API、状态与验证路径并避开 forbidden shortcut。实现偏差修实现；缺少长期事实则返回 `Context Delta: required`，先更新 Context 再重新对齐。
+- small code task、普通 bug fix、局部样式、小重构、测试修复或探索性 spike 不创建额外流程 artifact。
 
 ## 产品体验校准
 

@@ -1,4 +1,5 @@
-export type SourcePackMode = "code-index" | "source-pack" | "code-bundles" | "task-context";
+export type SourcePackMode =
+  "code-index" | "source-pack" | "code-bundles" | "task-context";
 
 export interface SourcePackOptions {
   mode: SourcePackMode;
@@ -83,4 +84,3 @@ export interface ContextAreaMapping {
   root: string;
   context: string;
 }
-

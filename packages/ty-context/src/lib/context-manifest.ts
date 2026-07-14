@@ -14,29 +14,31 @@ export function defaultContextManifestTemplate(): string {
     "# every Markdown file as an [[areas]] product owner.",
     "",
     "[[areas]]",
-    "id = \"main\"",
-    "root = \".\"",
-    "context = \"project_context/areas/main.md\"",
-    "kind = \"app\"",
+    'id = "main"',
+    'root = "."',
+    'context = "project_context/areas/main.md"',
+    'kind = "app"',
     "default = true",
     "",
     "[[context]]",
-    "path = \"project_context/areas/main/verification.md\"",
-    "role = \"verification\"",
-    "read_policy = \"default\"",
-    "triggers = [\"test\", \"verify\", \"verification\", \"smoke\", \"ci\"]",
+    'path = "project_context/areas/main/verification.md"',
+    'role = "verification"',
+    'read_policy = "default"',
+    'triggers = ["test", "verify", "verification", "smoke", "ci"]',
     "",
     "# Example optional node:",
     "# [[context]]",
-    "# path = \"project_context/areas/main/deployment.md\"",
-    "# role = \"deployment\"",
-    "# read_policy = \"on-demand\"",
-    "# triggers = [\"deploy\", \"deployment\", \"runtime\", \"cloud\", \"docker\"]",
-    ""
+    '# path = "project_context/areas/main/deployment.md"',
+    '# role = "deployment"',
+    '# read_policy = "on-demand"',
+    '# triggers = ["deploy", "deployment", "runtime", "cloud", "docker"]',
+    "",
   ].join("\n");
 }
 
-export async function contextManifestFromExistingAreas(projectRoot: string): Promise<string> {
+export async function contextManifestFromExistingAreas(
+  projectRoot: string,
+): Promise<string> {
   const areasRoot = path.join(projectRoot, "project_context", "areas");
   const areas = (await listFiles(areasRoot))
     .filter((file) => file.endsWith(".md"))
@@ -52,14 +54,21 @@ export async function contextManifestFromExistingAreas(projectRoot: string): Pro
     "# Review deep or non-area context and move it to explicit [[context]] role entries",
     "# such as subdomain, contract, foundation, verification, deployment, archive,",
     "# implementation-index or decision-rationale when needed.",
-    ""
+    "",
   ];
 
   const areaEntries: Array<{ contextPath: string; id: string }> = [];
-  const contextEntries: Array<{ path: string; role: "verification" | "deployment"; triggers: string[] }> = [];
+  const contextEntries: Array<{
+    path: string;
+    role: "verification" | "deployment";
+    triggers: string[];
+  }> = [];
 
   for (const areaPath of areas) {
-    const relativeToAreas = path.relative(areasRoot, areaPath).split(path.sep).join("/");
+    const relativeToAreas = path
+      .relative(areasRoot, areaPath)
+      .split(path.sep)
+      .join("/");
     const contextPath = `project_context/areas/${relativeToAreas}`;
     const id = contextUnitId(relativeToAreas);
     const role = inferredRoleContext(relativeToAreas);
@@ -70,24 +79,26 @@ export async function contextManifestFromExistingAreas(projectRoot: string): Pro
         triggers:
           role === "verification"
             ? ["test", "verify", "verification", "smoke", "ci"]
-            : ["deploy", "deployment", "runtime", "cloud", "docker"]
+            : ["deploy", "deployment", "runtime", "cloud", "docker"],
       });
     } else {
       areaEntries.push({ contextPath, id });
     }
   }
 
-  const defaultId = areaEntries.some((entry) => entry.id === "main") ? "main" : areaEntries[0]?.id;
+  const defaultId = areaEntries.some((entry) => entry.id === "main")
+    ? "main"
+    : areaEntries[0]?.id;
 
   for (const { contextPath, id } of areaEntries) {
     lines.push(
       "[[areas]]",
       `id = "${id}"`,
-      "root = \".\"",
+      'root = "."',
       `context = "${contextPath}"`,
       `kind = "${id === "main" ? "app" : "context-unit"}"`,
       id === defaultId ? "default = true" : "default = false",
-      ""
+      "",
     );
   }
 
@@ -96,18 +107,25 @@ export async function contextManifestFromExistingAreas(projectRoot: string): Pro
       "[[context]]",
       `path = "${context.path}"`,
       `role = "${context.role}"`,
-      context.role === "verification" ? "read_policy = \"default\"" : "read_policy = \"on-demand\"",
+      context.role === "verification"
+        ? 'read_policy = "default"'
+        : 'read_policy = "on-demand"',
       `triggers = [${context.triggers.map((trigger) => `"${trigger}"`).join(", ")}]`,
-      ""
+      "",
     );
   }
 
   return lines.join("\n");
 }
 
-function inferredRoleContext(relativeToAreas: string): "verification" | "deployment" | undefined {
+function inferredRoleContext(
+  relativeToAreas: string,
+): "verification" | "deployment" | undefined {
   const normalized = relativeToAreas.toLowerCase();
-  if (normalized.endsWith("/verification.md") || normalized === "verification.md") {
+  if (
+    normalized.endsWith("/verification.md") ||
+    normalized === "verification.md"
+  ) {
     return "verification";
   }
   if (normalized.endsWith("/deployment.md") || normalized === "deployment.md") {
@@ -120,7 +138,8 @@ function contextUnitId(relativeToAreas: string): string {
   const withoutExtension = relativeToAreas.replace(/\.md$/i, "");
   const parts = withoutExtension.split("/");
   const last = parts.at(-1)?.toLowerCase();
-  const semanticParts = last === "readme" || last === "index" ? parts.slice(0, -1) : parts;
+  const semanticParts =
+    last === "readme" || last === "index" ? parts.slice(0, -1) : parts;
   const raw = (semanticParts.length > 0 ? semanticParts : ["main"]).join("-");
   const slug = raw
     .replace(/([a-z0-9])([A-Z])/g, "$1-$2")

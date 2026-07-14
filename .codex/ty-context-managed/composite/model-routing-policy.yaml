@@ -1,0 +1,23 @@
+schema_version: model-routing-policy-v1
+policy_id: sol-xhigh-execution-medium
+catalog_limits:
+  max_models: 256
+  max_model_identifier_length: 128
+  max_efforts_per_model: 16
+aliases:
+  gpt-5.6: gpt-5.6-sol
+rules:
+  - controller_family: gpt-5.6-sol
+    minimum_effort: xhigh
+    accepted_efforts:
+      - xhigh
+      - max
+    successor_allowed: true
+    execution:
+      model: gpt-5.6-sol
+      effort: medium
+    exact_reasons:
+      xhigh: sol_xhigh_to_medium
+      max: sol_max_to_medium
+    successor_reason: catalog_upgrade_to_sol_medium
+default: passthrough

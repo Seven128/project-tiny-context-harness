@@ -1,6 +1,14 @@
 import path from "node:path";
-import type { Migration, MigrationReport, UpgradePlanItem, UpgradePlanItemStatus } from "./migrations.js";
-import { LEGACY_HARNESS_JSON_CONFIG_PATH, readHarnessRootConfigCandidates } from "./harness-root.js";
+import type {
+  Migration,
+  MigrationReport,
+  UpgradePlanItem,
+  UpgradePlanItemStatus,
+} from "./migrations.js";
+import {
+  LEGACY_HARNESS_JSON_CONFIG_PATH,
+  readHarnessRootConfigCandidates,
+} from "./harness-root.js";
 import { pathExists, readText, writeTextIfChanged } from "./fs.js";
 import { detectLegacyManagedDirectory } from "./legacy-managed-scan.js";
 import { HARNESS_JSON_CONFIG_PATH } from "./paths.js";
@@ -15,31 +23,43 @@ const CURRENT_MAKEFILE = "ty-context.mk";
 export const legacySdlcHarnessMigration: Migration = {
   id: "legacy-sdlc-harness-rename",
   introducedIn: "0.2.54",
-  description: "Rename legacy sdlc-harness configuration and pjsdlc_managed package-managed paths.",
-  scope: "package.json, sdlc-harness.config.json, <harnessRoot>/config.yaml, old managed markers and pjsdlc_managed/**",
+  description:
+    "Rename legacy sdlc-harness configuration and pjsdlc_managed package-managed paths.",
+  scope:
+    "package.json, sdlc-harness.config.json, <harnessRoot>/config.yaml, old managed markers and pjsdlc_managed/**",
   risk: "safe",
-  manualMessage: "Resolve legacy sdlc-harness conflicts or move old override rules into standalone project-local Skills.",
+  manualMessage:
+    "Resolve legacy sdlc-harness conflicts or move old override rules into standalone project-local Skills.",
   detect: detectLegacySdlcHarness,
   apply: migrateLegacySdlcHarness,
-  verify: async () => undefined
+  verify: async () => undefined,
 };
 
-async function detectLegacySdlcHarness(projectRoot: string, root: string, migration: string): Promise<UpgradePlanItem[]> {
+async function detectLegacySdlcHarness(
+  projectRoot: string,
+  root: string,
+  migration: string,
+): Promise<UpgradePlanItem[]> {
   const items: UpgradePlanItem[] = [];
   const candidates = await readHarnessRootConfigCandidates(projectRoot);
   const currentCandidates = candidates.filter((candidate) => !candidate.legacy);
   const legacyCandidates = candidates.filter((candidate) => candidate.legacy);
   const currentRoot = currentCandidates[0]?.harnessFolderName;
-  const distinctLegacyRoots = Array.from(new Set(legacyCandidates.map((candidate) => candidate.harnessFolderName)));
+  const distinctLegacyRoots = Array.from(
+    new Set(legacyCandidates.map((candidate) => candidate.harnessFolderName)),
+  );
 
-  if (currentRoot && distinctLegacyRoots.some((legacyRoot) => legacyRoot !== currentRoot)) {
+  if (
+    currentRoot &&
+    distinctLegacyRoots.some((legacyRoot) => legacyRoot !== currentRoot)
+  ) {
     items.push(
       item(
         migration,
         "blocked",
         rootConflictPath(currentCandidates, legacyCandidates),
-        "Current ty-context and legacy sdlc-harness root configuration disagree; choose the harness root manually before upgrade."
-      )
+        "Current ty-context and legacy sdlc-harness root configuration disagree; choose the harness root manually before upgrade.",
+      ),
     );
   } else if (!currentRoot && distinctLegacyRoots.length > 1) {
     items.push(
@@ -47,32 +67,48 @@ async function detectLegacySdlcHarness(projectRoot: string, root: string, migrat
         migration,
         "blocked",
         rootConflictPath(currentCandidates, legacyCandidates),
-        "Legacy sdlc-harness root sources disagree; choose one harness root manually before upgrade."
-      )
+        "Legacy sdlc-harness root sources disagree; choose one harness root manually before upgrade.",
+      ),
     );
   }
 
-  items.push(...(await detectLegacyManagedDirectory(projectRoot, root, legacySdlcHarnessMigration)));
+  items.push(
+    ...(await detectLegacyManagedDirectory(
+      projectRoot,
+      root,
+      legacySdlcHarnessMigration,
+    )),
+  );
 
   if (items.some((entry) => entry.status === "blocked")) {
     return items;
   }
 
-  if (await needsLegacySafeMigration(projectRoot, root, legacyCandidates.length > 0)) {
+  if (
+    await needsLegacySafeMigration(
+      projectRoot,
+      root,
+      legacyCandidates.length > 0,
+    )
+  ) {
     items.unshift(
       item(
         migration,
         "safe_pending",
         "legacy sdlc-harness surfaces",
-        "Legacy sdlc-harness naming can be copied to ty-context configuration and refreshed by sync."
-      )
+        "Legacy sdlc-harness naming can be copied to ty-context configuration and refreshed by sync.",
+      ),
     );
   }
 
   return items;
 }
 
-async function migrateLegacySdlcHarness(projectRoot: string, root: string, report: MigrationReport): Promise<void> {
+async function migrateLegacySdlcHarness(
+  projectRoot: string,
+  root: string,
+  report: MigrationReport,
+): Promise<void> {
   await migratePackageJsonConfig(projectRoot, report);
   await migrateJsonConfig(projectRoot, report);
   await migrateConfigYamlPaths(projectRoot, root, report);
@@ -81,9 +117,12 @@ async function migrateLegacySdlcHarness(projectRoot: string, root: string, repor
 async function needsLegacySafeMigration(
   projectRoot: string,
   root: string,
-  hasLegacyRootConfig: boolean
+  hasLegacyRootConfig: boolean,
 ): Promise<boolean> {
-  if (hasLegacyRootConfig && (await legacyPackageConfigNeedsCopy(projectRoot))) {
+  if (
+    hasLegacyRootConfig &&
+    (await legacyPackageConfigNeedsCopy(projectRoot))
+  ) {
     return true;
   }
   if (await legacyJsonConfigNeedsCopy(projectRoot)) {
@@ -98,22 +137,35 @@ async function needsLegacySafeMigration(
   return false;
 }
 
-async function legacyPackageConfigNeedsCopy(projectRoot: string): Promise<boolean> {
+async function legacyPackageConfigNeedsCopy(
+  projectRoot: string,
+): Promise<boolean> {
   const packagePath = path.join(projectRoot, "package.json");
   if (!(await pathExists(packagePath))) {
     return false;
   }
-  const packageJson = parseJsonRecord(await readText(packagePath), "package.json");
-  return isJsonRecord(packageJson.sdlcHarness) && !isJsonRecord(packageJson.tyContext);
+  const packageJson = parseJsonRecord(
+    await readText(packagePath),
+    "package.json",
+  );
+  return (
+    isJsonRecord(packageJson.sdlcHarness) &&
+    !isJsonRecord(packageJson.tyContext)
+  );
 }
 
-async function legacyJsonConfigNeedsCopy(projectRoot: string): Promise<boolean> {
+async function legacyJsonConfigNeedsCopy(
+  projectRoot: string,
+): Promise<boolean> {
   const legacyPath = path.join(projectRoot, LEGACY_HARNESS_JSON_CONFIG_PATH);
   const currentPath = path.join(projectRoot, HARNESS_JSON_CONFIG_PATH);
   return (await pathExists(legacyPath)) && !(await pathExists(currentPath));
 }
 
-async function configYamlHasLegacyManagedPaths(projectRoot: string, root: string): Promise<boolean> {
+async function configYamlHasLegacyManagedPaths(
+  projectRoot: string,
+  root: string,
+): Promise<boolean> {
   const configPath = path.join(projectRoot, root, "config.yaml");
   if (!(await pathExists(configPath))) {
     return false;
@@ -122,7 +174,11 @@ async function configYamlHasLegacyManagedPaths(projectRoot: string, root: string
 }
 
 async function hasLegacyManagedMarkers(projectRoot: string): Promise<boolean> {
-  for (const relative of ["AGENTS.md", "Makefile", ".github/workflows/harness.yml"]) {
+  for (const relative of [
+    "AGENTS.md",
+    "Makefile",
+    ".github/workflows/harness.yml",
+  ]) {
     const target = path.join(projectRoot, ...relative.split("/"));
     if ((await pathExists(target)) && hasLegacyMarker(await readText(target))) {
       return true;
@@ -131,28 +187,45 @@ async function hasLegacyManagedMarkers(projectRoot: string): Promise<boolean> {
   return false;
 }
 
-async function migratePackageJsonConfig(projectRoot: string, report: MigrationReport): Promise<void> {
+async function migratePackageJsonConfig(
+  projectRoot: string,
+  report: MigrationReport,
+): Promise<void> {
   const packagePath = path.join(projectRoot, "package.json");
   if (!(await pathExists(packagePath))) {
     report.skipped.push("package.json#sdlcHarness");
     return;
   }
 
-  const packageJson = parseJsonRecord(await readText(packagePath), "package.json");
-  if (!isJsonRecord(packageJson.sdlcHarness) || isJsonRecord(packageJson.tyContext)) {
+  const packageJson = parseJsonRecord(
+    await readText(packagePath),
+    "package.json",
+  );
+  if (
+    !isJsonRecord(packageJson.sdlcHarness) ||
+    isJsonRecord(packageJson.tyContext)
+  ) {
     report.skipped.push("package.json#sdlcHarness");
     return;
   }
 
   packageJson.tyContext = { ...packageJson.sdlcHarness };
-  if (await writeTextIfChanged(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`)) {
+  if (
+    await writeTextIfChanged(
+      packagePath,
+      `${JSON.stringify(packageJson, null, 2)}\n`,
+    )
+  ) {
     report.changed.push("package.json#tyContext");
   } else {
     report.skipped.push("package.json#tyContext");
   }
 }
 
-async function migrateJsonConfig(projectRoot: string, report: MigrationReport): Promise<void> {
+async function migrateJsonConfig(
+  projectRoot: string,
+  report: MigrationReport,
+): Promise<void> {
   const legacyPath = path.join(projectRoot, LEGACY_HARNESS_JSON_CONFIG_PATH);
   const currentPath = path.join(projectRoot, HARNESS_JSON_CONFIG_PATH);
   if (!(await pathExists(legacyPath))) {
@@ -171,7 +244,11 @@ async function migrateJsonConfig(projectRoot: string, report: MigrationReport): 
   }
 }
 
-async function migrateConfigYamlPaths(projectRoot: string, root: string, report: MigrationReport): Promise<void> {
+async function migrateConfigYamlPaths(
+  projectRoot: string,
+  root: string,
+  report: MigrationReport,
+): Promise<void> {
   const relative = `${root}/config.yaml`;
   const configPath = path.join(projectRoot, root, "config.yaml");
   if (!(await pathExists(configPath))) {
@@ -193,11 +270,15 @@ async function migrateConfigYamlPaths(projectRoot: string, root: string, report:
 }
 
 function rewriteLegacyManagedPaths(content: string): string {
-  return content.replaceAll(LEGACY_MANAGED_ROOT, CURRENT_MANAGED_ROOT).replaceAll(LEGACY_MAKEFILE, CURRENT_MAKEFILE);
+  return content
+    .replaceAll(LEGACY_MANAGED_ROOT, CURRENT_MANAGED_ROOT)
+    .replaceAll(LEGACY_MAKEFILE, CURRENT_MAKEFILE);
 }
 
 function hasLegacyManagedPath(content: string): boolean {
-  return content.includes(LEGACY_MANAGED_ROOT) || content.includes(LEGACY_MAKEFILE);
+  return (
+    content.includes(LEGACY_MANAGED_ROOT) || content.includes(LEGACY_MAKEFILE)
+  );
 }
 
 function hasLegacyMarker(content: string): boolean {
@@ -206,13 +287,13 @@ function hasLegacyMarker(content: string): boolean {
     "<!-- sdlc-harness:begin -->",
     "# pjsdlc:sdlc-harness:make:begin",
     "# sdlc-harness:make:begin",
-    "# pjsdlc:sdlc-harness:github-workflow:begin"
+    "# pjsdlc:sdlc-harness:github-workflow:begin",
   ].some((marker) => content.includes(marker));
 }
 
 function rootConflictPath(
   currentCandidates: Array<{ source: string; harnessFolderName: string }>,
-  legacyCandidates: Array<{ source: string; harnessFolderName: string }>
+  legacyCandidates: Array<{ source: string; harnessFolderName: string }>,
 ): string {
   return [...currentCandidates, ...legacyCandidates]
     .map((candidate) => `${candidate.source}=${candidate.harnessFolderName}`)
@@ -223,7 +304,7 @@ function item(
   migrationId: string,
   status: UpgradePlanItemStatus,
   pathLabel: string,
-  message: string
+  message: string,
 ): UpgradePlanItem {
   return {
     id: legacySdlcHarnessMigration.id,
@@ -232,7 +313,7 @@ function item(
     scope: legacySdlcHarnessMigration.scope,
     status,
     path: pathLabel,
-    message
+    message,
   };
 }
 

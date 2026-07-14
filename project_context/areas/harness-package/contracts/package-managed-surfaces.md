@@ -10,15 +10,15 @@ This contract defines which repository surfaces are package-managed, generated, 
 
 ## Surface Ownership
 
-- `.codex/ty-context-managed/**` is the source workspace's managed-source surface for default guidance, Context templates, tools and package-managed Skill sources.
-- `packages/ty-context/assets/**` is the packaged canonical asset surface copied from managed source mappings and shipped to consumer projects.
+- `.codex/ty-context-managed/**` is the source workspace's managed-source surface for portable/default guidance, Context templates, tools, profile metadata and package-managed Skill sources.
+- `packages/ty-context/assets/**` is the packaged canonical asset surface. Installation selects profiles: `core-portable` and `workflow-default` are default; `composite-codex` is explicit.
 - `.codex/skills/**` contains Skills available in this source workspace. Package-managed default `context_*`, full-project export, Harness upgrade and plan acceptance Skills are generated/sync-overwritten surfaces; project-specific rules must not be edited directly into them.
 - `.codex/skills/authoring/**` is source-workspace-only authoring guidance. Do not put authoring-only Skills under `.codex/skills/authoring/**` into package assets.
 - `README.md`, `packages/ty-context/README.md`, npm/package metadata and launch/release docs are human-facing package surfaces. They must stay aligned with package behavior and the Minimal Context boundary.
 - `PROJECT_SPEC.md` is the full Harness workflow design-spec surface for this source workspace, not a consumer default asset.
 - `project_context/**` is the source workspace durable fact surface. It can describe this repository's own package boundaries without becoming consumer default content.
 - Composite Campaign V5 source-plan, Source Unit coverage, Scope Fit V4 graph, execution-host/thread coordination and audit, immutable packet/schedule revisions, Goal/branch/commit identities, Slice receipt hashes, integration results and verifier-derived final result are Git-trackable user-owned project data created only by explicit preparation. They are not package-managed assets, generated default lifecycle/plan state or Context graph nodes. Mutable compiled contracts, verifier runs, raw command output and active workdir state remain temporary rather than tracked campaign data. The local Fake App Server is a maintainer test asset, never a consumer runtime fallback.
-- Composite package assets may install or refresh the ordinary project-level Hook and explicit-only Composite Skills. They must not distribute or require a privileged Host Helper, OS service, administrator installer, Credential Manager integration, Host registry, external audit runner or platform release bundle.
+- Composite package assets are shipped but only `ty-context enable composite-codex` installs/refreshes Codex Hooks, Composite Skills and Campaign CLI surfaces. Non-Codex default installation must not write Codex-only Hooks. Composite assets must not require privileged Host infrastructure.
 
 ## Source Sync Boundary
 
@@ -31,19 +31,16 @@ This contract defines which repository surfaces are package-managed, generated, 
 ## Generated Skill Boundary
 
 - Package-managed default Skills must remain business-agnostic and Minimal Context oriented.
-- Package-managed default Skills include Context authoring Skills, Product Surface Contract support, full-project export guidance, Harness upgrade guidance, the ordinary long-task Skill (`normal-long-task`), the Composite Campaign V5 preparation/orchestration Skill (`prepare-composite-long-task`) and the strict one-Slice Contract V3 worker Skill (`composite-long-task-workflow`).
+- Package-managed default portable Skills include Context authoring, Product Surface Contract, full-project export, Harness upgrade and ordinary long-task guidance. `prepare-composite-long-task` and `composite-long-task-workflow` belong to the explicit `composite-codex` profile.
 - Consumer customization belongs in separate project-local Skills such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` or `<harnessRoot>/skills/development_engineer/SKILL.md`.
 - Project-local Skill front matter trigger descriptions should stay aligned with the corresponding default Skill and project `AGENTS.md` trigger guidance.
 - Do not restore the old override-skill merge mechanism under managed folders.
-- Default Skills can provide workflow contracts, reusable thinking paths and temporary artifact rules, but concrete business facts and project-specific surface responsibilities belong in the consumer project's `project_context/**`.
+- Default Skills can provide workflow contracts and reusable thinking paths, but concrete business facts belong in the consumer project's Context. The default Workflow Contract does not require a fixed plan, mapping table, matrix or verdict artifact.
 
 ## Consumer Asset Boundary
 
-- `init`, `sync` and `upgrade` may install or refresh managed assets, but they must not generate project-specific product facts, business Product Surface Contract files, stage work-product trees, lifecycle state or phase gates.
-- `init`, `sync` and `upgrade` may install or refresh the preparation Skill/CLI capability, but they must never create, discover, scan, import, mutate or delete user-owned composite campaign data. Campaign schema migration is explicit and on demand only.
-- `init`, `sync` and `upgrade` may install or refresh the package-managed project-level Hook, but they do not create a lifecycle task-state store or activate a Composite task. The Hook is no-op until an explicit Composite start creates the narrow active binding.
-- The package-managed `.github/workflows/harness.yml` is consumer-facing and should run selected Harness gates only; maintainer-only package tests and source-drift checks stay in this source repository. Plan artifact validators are explicit user commands for complex plan surfaces and long-task artifacts, not default consumer workflow gates.
-- Source-repository Package CI and trusted publication do not run the Composite Campaign self-test profile. That profile stays available only through explicit maintainer commands and must never be copied into consumer `harness.yml`; automated paths retain their narrower non-test integrity checks.
+- `init`, `sync` and `upgrade` install/refresh only enabled profiles and must not generate project semantics, plan artifacts, lifecycle state or campaigns. Explicit `enable composite-codex` installs capability only; it does not activate a task or scan campaign data.
+- Consumer `.github/workflows/harness.yml` runs selected portable Harness gates only and never package Composite self-tests. Source-repository PR CI runs focused Workflow/Contract/Campaign black boxes, main runs full package/Composite plus quickstart/pack preview, and publication verifies the exact tarball in an empty repository. These maintainer gates are not copied into consumer workflows.
 - Default consumer or maintainer CI must not install privileged services, virtual machines, containers, browser matrices or administrator environments for the pre-stable Composite workflow. Host-security, compatibility and platform-release validation are deferred work outside the current formal package surface.
 - Public package surfaces must be fully usable in English. Non-English trigger examples are compatibility additions only.
 

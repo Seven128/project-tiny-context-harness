@@ -34,6 +34,11 @@ export function compositeCampaignV4Contract(): unknown {
     projection_files: LONG_TASK_SOURCE_FILES,
     commands: ["contract", "create", "apply-coverage", "apply-scope", "apply-packet", "render", "preflight", "advance", "bind-goal", "bind-repair-goal", "record-result", "status", "run", "app-server-check", "model-routing", "threads", "interrupt"],
     advance_actions: ["author_packets", "launch_wave", "wait_goals", "repair_integration", "decision_required", "wait_external", "finished"],
+    campaign_policy: {
+      auto_push: "explicit_boolean_default_false",
+      protected_branch_mode: "pull_request",
+      preserve_primary_worktree: true,
+    },
     compatibility: "none"
   };
 }

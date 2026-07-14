@@ -5,62 +5,9 @@ import { runValidator } from "../../packages/ty-context/dist/lib/validators.js";
 import {
   createPlanProject,
   validMatrix,
-  validPlan,
   validVerdict,
-  writeAcceptance,
-  writePlan
+  writeAcceptance
 } from "./plan-validator-fixtures.mjs";
-test("validate-plan-contract accepts split source and implementation binding tables", async () => {
-  const root = await createPlanProject();
-  try {
-    await writePlan(root, validPlan());
-    const report = await runValidator(root, "validate-plan-contract", ["plan.md"]);
-    assert.deepEqual(report.errors, []);
-    assert.match(report.info.join("\n"), /Plan contract validation passed/);
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
-});
-test("validate-plan-contract rejects old mixed Source-to-Context table and unresolved coverage", async () => {
-  const root = await createPlanProject();
-  try {
-    await writePlan(
-      root,
-      validPlan().replace(
-        "Source item | Durable constraint | Type | Existing Context Hit | Context action | Owning Context | Coverage status",
-        "Source item | Durable constraint | Type | Existing Context Hit | Context action | Owning Context | Implementation constraint | Coverage status"
-      ).replace("| P-1 | Operations owns runtime recovery | surface | `project_context/areas/main.md` | none | `project_context/areas/main.md` | covered |", "| P-1 | Operations owns runtime recovery | surface |  | update missing |  | missing implementation binding | new_context_required |")
-    );
-    const report = await runValidator(root, "validate-plan-contract", ["plan.md"]);
-    assert.match(report.errors.join("\n"), /must not include Implementation constraint/);
-    assert.match(report.errors.join("\n"), /new_context_required/);
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
-});
-test("validate-plan-contract rejects non-bound or weak implementation binding", async () => {
-  const root = await createPlanProject();
-  try {
-    await writePlan(
-      root,
-      validPlan().replace("| B-1 |", "| B-1 checked path |").replace("| bound |", "| partial |")
-    );
-    const report = await runValidator(root, "validate-plan-contract", ["plan.md"]);
-    assert.match(report.errors.join("\n"), /partial/);
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
-});
-test("validate-plan-contract rejects referenced paths that do not exist", async () => {
-  const root = await createPlanProject();
-  try {
-    await writePlan(root, validPlan().replace("src/pages/OperationsPage.tsx", "src/pages/MissingPage.tsx"));
-    const report = await runValidator(root, "validate-plan-contract", ["plan.md"]);
-    assert.match(report.errors.join("\n"), /references missing path: src\/pages\/MissingPage\.tsx/);
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
-});
 test("validate-plan-acceptance accepts consistent matrix and verdict artifacts", async () => {
   const root = await createPlanProject();
   try {
