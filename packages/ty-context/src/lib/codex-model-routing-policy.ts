@@ -5,7 +5,7 @@ import {
   parseStrictYaml,
   sha256Hex,
 } from "./composite-campaign-codec.js";
-import type { ModelRoutingReason } from "./codex-model-router.js";
+import type { ModelRoutingReason } from "./codex-model-profile.js";
 
 export interface CodexModelRoutingPolicyV1 {
   schema_version: "model-routing-policy-v1";

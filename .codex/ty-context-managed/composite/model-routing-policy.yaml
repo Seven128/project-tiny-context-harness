@@ -12,6 +12,7 @@ rules:
     accepted_efforts:
       - xhigh
       - max
+      - ultra
     successor_allowed: true
     execution:
       model: gpt-5.6-sol
@@ -19,5 +20,6 @@ rules:
     exact_reasons:
       xhigh: sol_xhigh_to_medium
       max: sol_max_to_medium
+      ultra: sol_ultra_to_medium
     successor_reason: catalog_upgrade_to_sol_medium
 default: passthrough

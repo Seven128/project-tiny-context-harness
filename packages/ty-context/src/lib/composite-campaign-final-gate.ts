@@ -32,7 +32,7 @@ import {
   verifyLongTask,
   type VerificationSpecResultCache,
 } from "./long-task-verifier.js";
-import { readSliceExecutionReceiptV2 } from "./composite-campaign-receipt.js";
+import { readCurrentSliceExecutionReceipt } from "./composite-campaign-receipt.js";
 import { validateChangeEnvelopeV1 } from "./composite-campaign-change-envelope.js";
 import {
   splitWaveSpecId,
@@ -541,7 +541,7 @@ export async function assertCampaignFinalScopeV1(
 ): Promise<void> {
   try {
     for (const slice of slices) {
-      const receipt = await readSliceExecutionReceiptV2(
+      const receipt = await readCurrentSliceExecutionReceipt(
         path.resolve(slice.receipt_path),
       );
       if (receipt.slice_id !== slice.slice_id)

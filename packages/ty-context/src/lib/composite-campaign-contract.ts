@@ -1,33 +1,16 @@
+import { COMPOSITE_AUTHORING_PACKET_SCHEMA } from "./composite-authoring-packet-v3.js";
 import { CAMPAIGN_SCHEMA_V4 } from "./composite-campaign-schema-v4.js";
 import { CAMPAIGN_SCHEMA_V5 } from "./composite-campaign-schema-v5.js";
 import {
   COMPOSITE_V5_SCHEMAS,
   COMPOSITE_V5_SCHEMA_SET_SHA256,
 } from "./composite-campaign-schema-registry.js";
-import type { SourceUnitPacketBindingV4 } from "./composite-campaign-source-units.js";
-import {
-  LONG_TASK_SOURCE_FILES,
-  type AcceptanceChecklistV3,
-  type ProductSourceV3,
-  type TechnicalPlanV3,
-} from "./long-task-contract-schema.js";
+import { LONG_TASK_SOURCE_FILES } from "./long-task-contract-schema.js";
 
-export const COMPOSITE_AUTHORING_PACKET_SCHEMA =
-  "composite-authoring-packet-v3" as const;
-
-export interface CompositeAuthoringPacketV3 {
-  schema_version: typeof COMPOSITE_AUTHORING_PACKET_SCHEMA;
-  campaign_id: string;
-  slice_id: string;
-  revision: number;
-  previous_packet_sha256: string | null;
-  authorities: {
-    product_architecture_source: ProductSourceV3;
-    technical_realization_plan: TechnicalPlanV3;
-    acceptance_checklist: AcceptanceChecklistV3;
-  };
-  source_unit_bindings?: SourceUnitPacketBindingV4[];
-}
+export {
+  COMPOSITE_AUTHORING_PACKET_SCHEMA,
+  type CompositeAuthoringPacketV3,
+} from "./composite-authoring-packet-v3.js";
 
 export function compositeCampaignContractV5(): unknown {
   return {

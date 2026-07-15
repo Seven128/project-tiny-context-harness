@@ -42,7 +42,7 @@ Tiny Context 有三项能力：Minimal Context 负责长期事实和恢复；默
 
 长程任务工作流的三个强制安全步骤是合同编译、最终全量 Gate 和 Codex Stop 新鲜度检查。定向 `verify` 只是可选修复加速器，不能签发 Slice 或 Campaign 完成。模型怎样规划、拆分、使用 subagent、TDD 或 review 不属于工作流状态，也不能签发完成证明。
 
-## 长程任务工作流 Campaign V5
+## 长程任务工作流 Campaign V6
 
 已有讨论方案、需要多个 SFC 从准备一直自动执行到目标分支时，显式调用 `/prepare-composite-long-task`。该显式调用即授权完整 prepare-and-execute；`ty-context composite-campaign` 保存不可静默改写的 `source-plan.md` 和完整 Source Coverage V2（含 Context Resolution 与 Context baseline），先建立控件/能力单元粒度的 Source Unit Inventory，再生成最大内聚的 Scope Fit V4 DAG。每个 Source Unit 必须完整映射到 SFC、Requirement、PI Obligation、AC 和 Verification Spec，并确定性投影三份 V3 YAML authority（Contract V3）：
 
@@ -50,13 +50,15 @@ Tiny Context 有三项能力：Minimal Context 负责长期事实和恢复；默
 - `technical-realization-plan.yaml`
 - `acceptance-checklist.yaml`
 
-`run --campaign` 启动本地 Codex App Server。每个 SFC 只使用一个可恢复 thread：先用 Controller 的已知 model/effort 在 Integration worktree 运行只读结构化 Authoring Turn；Packet preflight 通过后，才在同一 thread 设置 Goal、切换到 Slice worktree 和 `workspaceWrite` Execution Turn。只有目录可证明的 Sol `xhigh|max` 降为 Sol `medium`；低于阈值、其他模型、未知 profile 或目标不可用都原样保持。同一 wave 的初始 Turn 全部启动后才等待，`needs_work` 和中断继续使用同一 thread。真实 App Server smoke 仅手工运行：`app-server-check --json` 只验证传输和模型目录；完整证明必须对准备好的单 SFC Campaign 执行 `run`，再由 `status` 推导 `accepted`，预检本身不算生命周期证据。
+`run --campaign` 是一个前台 Campaign Scheduler，正式 Worker Engine 为 `codex-exec-v1`；它不启动 AppServer，也不持久化 Thread、Goal 或 Turn。Packet Authoring 使用 Controller profile 的一次性只读 Worker；Packet、三份 Contract V3 与 Change Envelope 是交给独立 `workspace-write` Execution/Repair Worker 的权威边界。每个 Worker 都是有界直接子进程，主 CLI 等待全部子进程并在返回前完成终止/收敛。Worker 的 exit code 和文本永远不是 accepted 权威。
 
-preflight 必须通过 Requirement/PI/obligation/binding/AC/proof/spec/counterfactual、Source Unit 实体链和 oracle 可用性检查。CLI 再根据依赖、写入/读取路径、API/schema/route/runtime/Context contract、资源锁、单元内聚、迁移、生成物、包管理清单和环境 profile 计算确定性 wave；无法证明安全并行时自动串行。Scope Fit 不允许为了并行过度分片，且第一个 Goal 设置后永久冻结。每个 Slice 先 commit 且 clean，再 final-gate；`record-result` 只验证现有结果和 receipt，不重跑 final-gate。
+精确 `gpt-5.6-sol` 的 `xhigh|max|ultra` 执行与修复路由到 Sol `medium`；high 及以下、非 Sol、未知或非法策略原样透传。若 Codex CLI 明确报告目标 profile 不可用，只允许一次 Controller profile 透传重试。Packet Authoring 最多初始加 2 次修复，SFC 每个 run generation 最多初始加 3 次修复，且始终复用同一路径。
 
-accepted Slice 只合入 Integration Branch。普通 merge conflict 和组合回归自动生成独立 execution-profile repair thread/worktree/Goal，且不能改 Scope Fit 或 Packet；每波通过 Integration Gate 后才解锁下游。全部 SFC integrated 后，Campaign Final Gate 在同一最终快照重跑所有 SFC、global constraints 和 source coverage。
+preflight 必须通过 Requirement/PI/obligation/binding/AC/proof/spec/counterfactual、Source Unit 实体链和 oracle 可用性检查。CLI 再根据依赖、写入/读取路径、API/schema/route/runtime/Context contract、资源锁、单元内聚、迁移、生成物、包管理清单和环境 profile 计算确定性 wave；无法证明安全并行时自动串行。首个 Execution Worker 启动后 Scope Fit 永久冻结。Worker 退出后 Scheduler 独立检查 worktree、base/head、clean commit、Change Envelope、当前 final result、Slice Final Gate 与 Receipt V3。
 
-Target 最终化先获取权威上游：只有精确相同的已验证 commit 或 tree 才直接收敛；任何不同 tree 都必须在 Target 快照上完整重跑当前 Packet、Source Coverage、Slice contract 与 global constraint。确实缺实现时只允许非 force 的 fast-forward push/local ref 更新或匹配 base/head 的 OPEN PR；push 后必须重新 fetch 校验，已合并或关闭 PR 不会复用。Campaign `accepted` 与 accepted Final Result、Hash 校验的 Target Finalization Receipt、event 在同一事务提交；重跑先验证冻结权威并直接返回 finished，不连接 App Server、不重跑 Gate、不重建 worktree 或 PR。之后才幂等清理 Campaign 自有资产，清理失败可恢复且不撤销 accepted。同主机存活 PID 的 Lease 即使名义过期也不可抢占，heartbeat 与 operation-id 在每个事务替换前 fail closed。App Server 异常只自动重连一次并按持久化 Thread/Turn/Goal 恢复；无法唯一确认创建结果时 fail closed，第二次失败进入 `wait_external`，绝不静默回退人工 Goal。旧 Campaign V4 只可审计，不能自动执行。
+同一 Wave 的 SFC 从共同 Integration head 创建固定路径的 detached worktree，accepted commit 按 SHA 合入唯一 Integration Branch。整个 Campaign 最多拥有 1 个 Integration worktree、4 个当前 Wave SFC worktree 和 1 个可复用 detached Repair worktree；SFC/Repair 不创建分支，retry 不创建新路径。普通 merge conflict 和组合回归使用同一个串行 Repair Worker，且不能改 Scope Fit 或 Packet。每波通过 Integration Gate 后才解锁下游，全部 SFC integrated 后 Campaign Final Gate 在同一最终快照重跑所有 SFC、global constraints 和 source coverage。
+
+Target 最终化保留权威上游、精确 commit/tree、不同 tree 全量 Target Snapshot Gate、非 force 交付和匹配 OPEN PR 规则。Campaign `accepted` 只由当前 Contract V3 Gate、Receipt、Integration/Campaign Final Gate 与 Target Finalization 共同产生，并与 Final Result、Receipt、event 原子提交。重跑先验证冻结权威并直接返回 finished，不启动 Worker、不重跑 Gate、不重建 worktree 或 PR；之后幂等清理，失败不撤销 accepted。简单 lock 只绑定 PID 与 process-start identity，不存在 lease、heartbeat 或会话恢复；崩溃/interrupt 从 durable stage 和固定 worktree 继续。V5 accepted 可读审计，V5 unfinished 返回 `campaign_v5_execution_retired_recreate_required`，不迁移也不回退 AppServer。
 
 ## 当前最佳实践
 

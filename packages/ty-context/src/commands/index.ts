@@ -60,7 +60,7 @@ export function help(): void {
   composite-long-task <subcommand>
                        Manage explicit Contract V3 workdirs; requires composite-codex
   composite-campaign <subcommand>
-                       Run Campaign V5 orchestration; mutations require composite-codex
+                       Run foreground Campaign V6 codex-exec orchestration; mutations require composite-codex
   package <subcommand> Maintain package canonical source`);
 }
 

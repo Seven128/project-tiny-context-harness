@@ -5,7 +5,7 @@
 ## 本仓库 Authoring 例外
 
 - 本仓库维护 `project-tiny-context-harness` package、Minimal Context managed assets、source sync、validator 和 delivery benchmark。
-- 本仓库普通开发一律直接在 `main` 分支进行；除非用户明确要求，不创建、切换或保留 feature/Codex 开发分支或普通开发 worktree。显式 `/prepare-composite-long-task` Campaign 内部的 owned integration/Slice/repair branches 与 worktrees 仅作为临时编排资产，最终结果仍必须收敛回 `main`。
+- 本仓库普通开发一律直接在 `main` 分支进行；除非用户明确要求，不创建、切换或保留 feature/Codex 开发分支或普通开发 worktree。显式 `/prepare-composite-long-task` Campaign 内部最多保留一个 Integration branch/worktree，并使用有界 detached SFC/repair worktree；这些仅作为临时编排资产，最终结果仍必须收敛回 `main`。
 - 修改 `packages/ty-context/**`、`.codex/ty-context-managed/**`、`tools/**` 或 `examples/delivery-benchmark/**` 时，先读 `project_context/**`，并使用 `.codex/skills/authoring/harness_package_design/SKILL.md`。
 - 旧阶段式工作流只作为历史设计摘要保留在 `PROJECT_SPEC.md`；不要把 stage artifacts 恢复成默认 package 能力。
 - Karpathy 编码准则是本仓库 agent 的底层行为原则：先思考并暴露假设，优先简洁，精准修改，目标驱动验证；不要把长原则常驻在 AGENTS 启动路径。
@@ -43,16 +43,16 @@ Do not auto-detect task duration, file count or complexity and do not auto-creat
 Routing precedence:
 
 1. Active Contract V3 binding in the current worktree: resume it.
-2. Explicit `/prepare-composite-long-task`: create/resume/execute a Campaign V5 with maximal-coherent Scope Fit V4.
+2. Explicit `/prepare-composite-long-task`: create/resume/execute a Campaign V6 with maximal-coherent Scope Fit V4.
 3. Explicit `/composite-long-task-workflow`: execute one already-complete Contract V3 three-input SFC.
 4. Explicit `/normal-long-task`: preserve source, generate one full acceptance checklist and optional target prompt; do not execute. Local Audit is opt-in.
 5. Otherwise remain on the default Workflow Contract, even when work is long.
 
-Composite inherits Context Priority, `Context Delta`, durable Context updates and final Context drift check. It replaces ordinary planning, implementation mapping, execution state, acceptance and completion with Source Coverage/Scope Fit, Packet/Goal, Contract V3 bindings/Change Envelope, Campaign/thread/receipt state, Slice Final Gate, Wave Integration Gate and same-snapshot Campaign Final Gate. It must not create or consume a second plan, matrix, verdict, ordinary Local Audit or hand-written complete state.
+Composite inherits Context Priority, `Context Delta`, durable Context updates and final Context drift check. It replaces ordinary planning, implementation mapping, execution state, acceptance and completion with Source Coverage/Scope Fit, Packet, Contract V3 bindings/Change Envelope, Campaign/worker/receipt state, Slice Final Gate, Wave Integration Gate and same-snapshot Campaign Final Gate. One foreground scheduler uses bounded ephemeral `codex exec` workers; worker exit is never acceptance authority. It must not create or consume a second plan, matrix, verdict, ordinary Local Audit or hand-written complete state.
 
 Campaign accepted authority is committed before idempotent owned-asset cleanup; rerunning an accepted Campaign returns finished.
 
-Scope Fit preserves semantic completeness and the largest coherent independently accepted SFC before considering parallelism. File/layer boundaries, agent count, duration and parallel opportunity are never split reasons. Goal creation freezes the graph.
+Scope Fit preserves semantic completeness and the largest coherent independently accepted SFC before considering parallelism. File/layer boundaries, agent count, duration and parallel opportunity are never split reasons. Starting the first SFC execution worker freezes the graph.
 
 ## Durable Facts And Generated Surfaces
 

@@ -50,6 +50,28 @@ export interface SliceExecutionReceiptV2 extends Omit<
   undeclared_changed_paths: [];
 }
 
+export interface SliceExecutionReceiptV3 {
+  schema_version: "slice-execution-receipt-v3";
+  campaign_id: string;
+  slice_id: string;
+  wave_id: string;
+  worktree_kind: "detached";
+  base_commit: string;
+  head_commit: string;
+  commit_oids: string[];
+  changed_paths: string[];
+  packet_sha256: string;
+  contract_sha256: string;
+  change_envelope_sha256: string;
+  undeclared_changed_paths: [];
+  final_result_sha256: string;
+  final_snapshot_sha256: string;
+  workflow_status: "accepted";
+  worktree_clean: true;
+  recorded_at: string;
+  receipt_sha256: string;
+}
+
 export interface RecordSliceReceiptInput {
   campaignRoot: string;
   campaignId: string;
@@ -60,6 +82,19 @@ export interface RecordSliceReceiptInput {
   contractWorkdir: string;
   branch: string;
   baseCommit: string;
+  forbiddenChangedPaths: string[];
+  changeEnvelope: ChangeEnvelopeV1;
+}
+
+export interface RecordSliceReceiptV3Input {
+  campaignRoot: string;
+  campaignId: string;
+  sliceId: string;
+  waveId: string;
+  worktree: string;
+  contractWorkdir: string;
+  baseCommit: string;
+  packetSha256: string;
   forbiddenChangedPaths: string[];
   changeEnvelope: ChangeEnvelopeV1;
 }
@@ -207,25 +242,178 @@ export async function recordSliceExecutionReceipt(
   return { receipt, receipt_path: receiptPath };
 }
 
+export async function recordSliceExecutionReceiptV3(
+  input: RecordSliceReceiptV3Input,
+): Promise<{ receipt: SliceExecutionReceiptV3; receipt_path: string }> {
+  if (!/^[a-f0-9]{64}$/u.test(input.packetSha256))
+    throw new Error("slice_receipt_packet_hash_invalid");
+  const worktree = path.resolve(input.worktree);
+  const contractWorkdir = path.resolve(input.contractWorkdir);
+  const contract = await readCompiledLongTaskContract(contractWorkdir);
+  if (
+    !samePath(contract.repository_root, worktree) ||
+    !samePath(contract.workdir, contractWorkdir)
+  )
+    throw new Error("slice_receipt_contract_worktree_mismatch");
+  await assertLongTaskContractFresh(contract);
+  const finalPath = path.join(contractWorkdir, "final-result.json");
+  const finalText = await readFile(finalPath, "utf8");
+  const finalResult = JSON.parse(finalText) as FinalResultV3;
+  await assertLongTaskFinalAuthority(contract, finalText, finalResult);
+  if (
+    finalResult.schema_version !== "long-task-final-result-v3" ||
+    finalResult.workflow_status !== "accepted" ||
+    finalResult.atomic_write_complete !== true
+  )
+    throw new Error("slice_receipt_final_result_not_accepted");
+  if (finalResult.contract_sha256 !== contract.contract_sha256)
+    throw new Error("slice_receipt_contract_hash_mismatch");
+  const currentSnapshot = await hashLongTaskWorkspace(worktree, contract);
+  if (
+    currentSnapshot !== finalResult.final_snapshot_sha256 ||
+    currentSnapshot !== finalResult.workspace_hash_after
+  )
+    throw new Error("slice_receipt_workspace_changed_after_final_gate");
+  await assertDetachedWorktree(worktree);
+  const head = await currentHead(worktree);
+  const base = await currentHead(worktree, input.baseCommit);
+  const descendant = await runGit(
+    worktree,
+    ["merge-base", "--is-ancestor", base, head],
+    { throwOnError: false },
+  );
+  if (descendant.exitCode !== 0)
+    throw new Error("slice_receipt_head_not_descendant_of_wave_base");
+  const status = await gitStatus(worktree);
+  const meaningfulDirty = status.entries.filter(
+    (entry) => !isVerifierRuntimePath(worktree, contractWorkdir, entry.path),
+  );
+  if (meaningfulDirty.length)
+    throw new Error(
+      `slice_receipt_worktree_not_clean:${meaningfulDirty
+        .map((entry) => entry.path)
+        .sort(asciiCompare)
+        .join(",")}`,
+    );
+  const commitOids = splitLines(
+    (await runGit(worktree, ["rev-list", "--reverse", `${base}..${head}`]))
+      .stdout,
+  );
+  if (!commitOids.length)
+    throw new Error("slice_receipt_requires_committed_implementation");
+  const changedPaths = splitLines(
+    (
+      await runGit(worktree, [
+        "diff",
+        "--name-only",
+        "--no-renames",
+        base,
+        head,
+      ])
+    ).stdout,
+  ).sort(asciiCompare);
+  const forbidden = input.forbiddenChangedPaths.map(normalizeRepositoryPath);
+  const forbiddenChanges = changedPaths.filter((candidate) =>
+    forbidden.some(
+      (prefix) => candidate === prefix || candidate.startsWith(`${prefix}/`),
+    ),
+  );
+  if (forbiddenChanges.length)
+    throw new Error(
+      `slice_receipt_forbidden_campaign_state_change:${forbiddenChanges.join(",")}`,
+    );
+  const envelope = validateChangeEnvelopeV1(
+    structuredClone(input.changeEnvelope),
+  );
+  const undeclaredChangedPaths = undeclaredChangedPathsV1(
+    changedPaths,
+    envelope,
+  );
+  assertChangedPathsWithinEnvelopeV1(changedPaths, envelope);
+  if (undeclaredChangedPaths.length)
+    throw new Error(
+      `slice_receipt_unbound_changed_path:${undeclaredChangedPaths.join(",")}`,
+    );
+  const receiptPath = path.join(
+    path.resolve(input.campaignRoot),
+    "slices",
+    input.sliceId,
+    "receipts",
+    `${input.waveId}-${head.slice(0, 12)}.json`,
+  );
+  const existing = await optionalReceiptV3(receiptPath);
+  if (existing) {
+    if (
+      existing.campaign_id !== input.campaignId ||
+      existing.slice_id !== input.sliceId ||
+      existing.wave_id !== input.waveId ||
+      existing.base_commit !== base ||
+      existing.head_commit !== head ||
+      existing.packet_sha256 !== input.packetSha256 ||
+      existing.contract_sha256 !== contract.contract_sha256 ||
+      existing.final_result_sha256 !== sha256Hex(finalText) ||
+      existing.change_envelope_sha256 !== envelope.envelope_sha256
+    )
+      throw new Error("slice_receipt_existing_identity_conflict");
+    return { receipt: existing, receipt_path: receiptPath };
+  }
+  const identity = {
+    schema_version: "slice-execution-receipt-v3" as const,
+    campaign_id: input.campaignId,
+    slice_id: input.sliceId,
+    wave_id: input.waveId,
+    worktree_kind: "detached" as const,
+    base_commit: base,
+    head_commit: head,
+    commit_oids: commitOids,
+    changed_paths: changedPaths,
+    packet_sha256: input.packetSha256,
+    contract_sha256: contract.contract_sha256,
+    change_envelope_sha256: envelope.envelope_sha256,
+    undeclared_changed_paths: [] as [],
+    final_result_sha256: sha256Hex(finalText),
+    final_snapshot_sha256: finalResult.final_snapshot_sha256,
+    workflow_status: "accepted" as const,
+    worktree_clean: true as const,
+    recorded_at: new Date().toISOString(),
+  };
+  const receipt: SliceExecutionReceiptV3 = {
+    ...identity,
+    receipt_sha256: sha256Hex(canonicalJson(identity)),
+  };
+  await writeImmutableOrSame(receiptPath, receipt);
+  return { receipt, receipt_path: receiptPath };
+}
+
 export async function readSliceExecutionReceipt(
   file: string,
-): Promise<SliceExecutionReceiptV1 | SliceExecutionReceiptV2> {
+): Promise<
+  SliceExecutionReceiptV1 | SliceExecutionReceiptV2 | SliceExecutionReceiptV3
+> {
   const receipt = JSON.parse(await readFile(file, "utf8")) as
-    SliceExecutionReceiptV1 | SliceExecutionReceiptV2;
+    SliceExecutionReceiptV1 | SliceExecutionReceiptV2 | SliceExecutionReceiptV3;
   if (
     (receipt.schema_version !== "slice-execution-receipt-v1" &&
-      receipt.schema_version !== "slice-execution-receipt-v2") ||
+      receipt.schema_version !== "slice-execution-receipt-v2" &&
+      receipt.schema_version !== "slice-execution-receipt-v3") ||
     receipt.workflow_status !== "accepted" ||
     receipt.worktree_clean !== true
   )
     throw new Error("slice_receipt_invalid");
   if (
-    receipt.schema_version === "slice-execution-receipt-v2" &&
+    (receipt.schema_version === "slice-execution-receipt-v2" ||
+      receipt.schema_version === "slice-execution-receipt-v3") &&
     (!/^[a-f0-9]{64}$/u.test(receipt.change_envelope_sha256) ||
       !Array.isArray(receipt.undeclared_changed_paths) ||
       receipt.undeclared_changed_paths.length !== 0)
   )
-    throw new Error("slice_receipt_v2_change_envelope_invalid");
+    throw new Error("slice_receipt_change_envelope_invalid");
+  if (
+    receipt.schema_version === "slice-execution-receipt-v3" &&
+    (receipt.worktree_kind !== "detached" ||
+      !/^[a-f0-9]{64}$/u.test(receipt.packet_sha256))
+  )
+    throw new Error("slice_receipt_v3_identity_invalid");
   const { receipt_sha256, ...identity } = receipt;
   if (receipt_sha256 !== sha256Hex(canonicalJson(identity)))
     throw new Error("slice_receipt_hash_mismatch");
@@ -241,6 +429,27 @@ export async function readSliceExecutionReceiptV2(
   return receipt;
 }
 
+export async function readSliceExecutionReceiptV3(
+  file: string,
+): Promise<SliceExecutionReceiptV3> {
+  const receipt = await readSliceExecutionReceipt(file);
+  if (receipt.schema_version !== "slice-execution-receipt-v3")
+    throw new Error("slice_execution_receipt_v3_required");
+  return receipt;
+}
+
+export async function readCurrentSliceExecutionReceipt(
+  file: string,
+): Promise<SliceExecutionReceiptV2 | SliceExecutionReceiptV3> {
+  const receipt = await readSliceExecutionReceipt(file);
+  if (
+    receipt.schema_version !== "slice-execution-receipt-v2" &&
+    receipt.schema_version !== "slice-execution-receipt-v3"
+  )
+    throw new Error("current_slice_execution_receipt_required");
+  return receipt;
+}
+
 async function optionalReceipt(
   file: string,
 ): Promise<SliceExecutionReceiptV2 | null> {
@@ -252,13 +461,27 @@ async function optionalReceipt(
   }
 }
 
+async function optionalReceiptV3(
+  file: string,
+): Promise<SliceExecutionReceiptV3 | null> {
+  try {
+    return await readSliceExecutionReceiptV3(file);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
+}
+
 export async function assertSliceReceiptCurrent(
   worktree: string,
-  receipt: SliceExecutionReceiptV1 | SliceExecutionReceiptV2,
+  receipt:
+    SliceExecutionReceiptV1 | SliceExecutionReceiptV2 | SliceExecutionReceiptV3,
   contractWorkdir?: string,
 ): Promise<void> {
   const root = path.resolve(worktree);
-  if ((await currentBranch(root)) !== receipt.branch)
+  if (receipt.schema_version === "slice-execution-receipt-v3")
+    await assertDetachedWorktree(root);
+  else if ((await currentBranch(root)) !== receipt.branch)
     throw new Error("slice_receipt_branch_changed");
   if ((await currentHead(root)) !== receipt.head_commit)
     throw new Error("slice_receipt_head_changed");
@@ -339,6 +562,14 @@ function isVerifierRuntimePath(
     normalized === relativeWorkdir ||
     normalized.startsWith(`${relativeWorkdir}/`)
   );
+}
+
+async function assertDetachedWorktree(root: string): Promise<void> {
+  const symbolic = await runGit(root, ["symbolic-ref", "--quiet", "HEAD"], {
+    throwOnError: false,
+  });
+  if (symbolic.exitCode === 0)
+    throw new Error("slice_receipt_requires_detached_worktree");
 }
 
 function splitLines(value: string): string[] {

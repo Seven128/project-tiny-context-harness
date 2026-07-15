@@ -9,6 +9,7 @@ import {
 import {
   assertSliceReceiptCurrent,
   type SliceExecutionReceiptV2,
+  type SliceExecutionReceiptV3,
 } from "./composite-campaign-receipt.js";
 import { atomic } from "./long-task-status.js";
 
@@ -18,7 +19,7 @@ export {
 } from "./composite-campaign-target-finalization.js";
 
 export interface WaveMergeSliceInput {
-  receipt: SliceExecutionReceiptV2;
+  receipt: SliceExecutionReceiptV2 | SliceExecutionReceiptV3;
   worktree: string;
   contract_workdir: string;
 }
@@ -84,11 +85,15 @@ export async function mergeWaveIntoIntegration(options: {
       receipt,
       slice.contract_workdir,
     );
+    const mergeTarget =
+      receipt.schema_version === "slice-execution-receipt-v3"
+        ? receipt.head_commit
+        : receipt.branch;
     const branchHead = (
       await runGit(integration, [
         "rev-parse",
         "--verify",
-        `${receipt.branch}^{commit}`,
+        `${mergeTarget}^{commit}`,
       ])
     ).stdout.trim();
     if (branchHead !== receipt.head_commit)
@@ -116,7 +121,7 @@ export async function mergeWaveIntoIntegration(options: {
         "--no-edit",
         "-m",
         message,
-        receipt.branch,
+        mergeTarget,
       ],
       { timeoutMs: 120_000, throwOnError: false },
     );
@@ -132,7 +137,7 @@ export async function mergeWaveIntoIntegration(options: {
         wave_id: options.waveId,
         integration_head: before,
         failed_slice_id: receipt.slice_id,
-        failed_slice_branch: receipt.branch,
+        failed_slice_branch: mergeTarget,
         accepted_receipt_sha256: receipt.receipt_sha256,
         conflicted_paths: conflicts,
         involved_slice_ids: ordered

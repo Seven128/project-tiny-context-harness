@@ -9,7 +9,7 @@ description: Use when directly invoked to prepare, execute, resume, or review a 
 
 ## Boundary
 
-This package-managed Skill is the Campaign V5 agent entrypoint. Explicit invocation authorizes the complete prepare-and-execute loop from one discussed plan through target-branch integration. It inherits Workflow Contract Context Priority, the one Context Delta, durable Context updates and final Context drift check; it replaces ordinary planning, implementation mapping, execution state and completion. It never creates or consumes `plan.md`, a second Task Contract, Markdown binding tables, a matrix, verdict or ordinary Local Audit. `/composite-long-task-workflow` remains the one-SFC Contract V3 worker.
+This package-managed Skill is the Campaign V6 agent entrypoint. Explicit invocation authorizes the complete prepare-and-execute loop from one discussed plan through target-branch integration. It inherits Workflow Contract Context Priority, the one Context Delta, durable Context updates and final Context drift check; it replaces ordinary planning, implementation mapping, execution state and completion. It never creates or consumes `plan.md`, a second Task Contract, Markdown binding tables, a matrix, verdict or ordinary Local Audit. `/composite-long-task-workflow` remains the one-SFC Contract V3 worker.
 
 Invoke explicitly:
 
@@ -17,7 +17,7 @@ Invoke explicitly:
 /prepare-composite-long-task
 ```
 
-Do not use broad automatic routing. Do not import legacy attachments, partial bundles, old tmp workdirs or superseded state. Prior Campaign state is audit-only and must not be automatically executed or silently migrated. Every SFC, including a serial one, uses the same App Server thread, worktree, Contract V3 receipt and integration path.
+Do not use broad automatic routing. Do not import legacy attachments, partial bundles, old tmp workdirs or superseded state. Accepted Campaign V5 state is audit-only; unfinished V5 state must be recreated as V6 and is never migrated or executed. Every SFC, including a serial one, uses the same Packet-to-Contract V3 authority path, detached worktree, Receipt V3 and Integration path.
 
 ## Bootstrap
 
@@ -27,7 +27,7 @@ Do not use broad automatic routing. Do not import legacy attachments, partial bu
 4. Load only the matching one-level references:
    - Source Unit inventory, source coverage, Scope Fit or graph: `references/scope-fit-and-selection.md`
    - ready-frontier Packet authoring/repair: `references/packet-authoring.md`
-   - App Server, model routing, worktrees, Goals, receipts, integration, repair, finalization or recovery: `references/campaign-lifecycle.md`
+   - Codex Exec routing, worktrees, receipts, integration, repair, finalization or recovery: `references/campaign-lifecycle.md`
 
 Never copy a competing field inventory into this Skill. Never register Campaign files in `project_context/context.toml`.
 
@@ -43,47 +43,52 @@ ty-context composite-campaign create --id <id> --plan-file <file> [--target-bran
 3. Inventory every delivery-significant Source Unit, author complete Source Coverage V2/global constraints and one full maximal-cohesion Scope Fit V4 DAG, then publish with `apply-scope --coverage`. Every non-terminal source item must carry `context_resolution`: `existing`/`updated` with registered `context_refs`, or `task_local` with a reason; terminal dispositions use `null`, and Packet Requirement Context fields must match. Do not select only one SFC, omit later work or split for parallelism.
 4. A genuine unresolved product/scope/architecture choice is `decision_blocked`. Priority ties, file conflicts and execution order are scheduler inputs and never user decisions.
 
-## App Server Run Loop
+## Foreground Codex Exec Run Loop
 
 Start or resume deterministic execution with:
 
 ```text
-ty-context composite-campaign run --campaign <path> [--controller-model <id> --controller-effort <effort>] [--controller-thread-id <id>]
+ty-context composite-campaign run --campaign <path> [--controller-model <id> --controller-effort <effort>]
 ```
 
-The Host must supply the actual controller model/effort or start the run from a controller that can do so. Unknown profiles remain unchanged and are never guessed. Routing is evaluated by the versioned installed policy; Campaign freezes policy id/hash, catalog hash and decision. The runner automatically handles `author_packets`, `launch_wave`, `wait_goals`, `repair_integration` and finalization. Do not recreate a manual adapter or second execution mode.
+One foreground scheduler owns the complete run and directly waits for every bounded ephemeral `codex exec` child. It never daemonizes, starts AppServer, creates persistent Threads/Goals/Turns or leaves workers running after exit. The Host supplies the actual controller profile when known; unknown or unsupported profiles pass through unchanged. Routing is frozen from the installed policy. Exact `gpt-5.6-sol` `xhigh`, `max` and `ultra` execution routes to `gpt-5.6-sol / medium`; high-and-below, non-Sol, unknown and invalid-policy cases pass through. If the routed target is explicitly unavailable, the scheduler permits one recorded controller-profile passthrough retry.
 
-- `author_packets`: one persistent App Server thread per ready SFC; a read-only Turn uses the controller profile and strict Packet output schema. Campaign writes and preflight are serialized.
-- `launch_wave`: only preflight-ready Packets receive a Goal. The same SFC thread switches cwd to its Slice worktree and starts an explicit execution-profile `workspaceWrite` Turn. The complete wave starts before waiting.
-- `wait_goals`: sibling Turns are observed to settled terminal states before the Host decides or exits. `needs_work` and interruption continue with explicit-profile Turns in the same thread. A current accepted Contract V3 result is receipt-bound before the Goal completes.
-- `repair_integration`: merge, Integration Gate and Campaign Final Gate regressions use a separate execution-profile repair thread that cannot rewrite Scope Fit or Packets.
-- `wait_external` or `decision_required`: stop only for the exact reported external or semantic blocker.
+- `author_packets`: bounded read-only authoring workers use the controller profile and strict Packet output schema. Each retry is a new ephemeral process; Campaign writes, `apply-packet` and preflight remain scheduler-owned and serialized.
+- `launch_wave`: only preflight-ready Packets receive fixed detached SFC worktrees. The scheduler starts the complete conflict-free wave, up to four workers, before waiting. Execution workers use the routed profile and `workspace-write`.
+- `verify_slices`: after every worker exits, the scheduler independently checks Git identity, clean state, Change Envelope, current Contract V3 final result and Receipt V3. Exit code or text never establishes acceptance. `needs_work` reuses the same worktree for at most three bounded repair attempts after the initial attempt.
+- `repair_integration`: merge conflicts and Integration/Campaign Final Gate regressions use one serial, reusable detached repair worktree and the routed profile. Repair cannot rewrite Scope Fit or Packets.
+- `wait_external`, `decision_required` or attempt exhaustion: stop only for the exact persisted external, semantic or bounded-convergence blocker.
 - `finished`: report completion only when CLI status is `accepted` and includes the final target commit.
 
-App Server unavailability never falls back to manual or uncertain Goal creation. Use `app-server-check`, `model-routing`, `threads` and `interrupt` for bounded diagnostics/control.
+Use `exec-check`, `model-routing`, `workers`, `interrupt` and `cleanup` for bounded diagnostics/control. `run --dry-run` reports the ready wave, fixed worktrees, routed profiles, redacted argv and budget without invoking Codex or creating Git resources.
 
-## Goal And Recovery Discipline
+## Packet, Execution, And Recovery Discipline
 
-- Packet preflight must pass before `thread/goal/set`; authoring has no Goal and cannot modify product code.
-- Validate Goal objectives at 4000 characters or fewer. Goal Manifest V3 binds thread, profiles, routing, Git, Packet, worktree, launch and hashed Change Envelope identities; V2 is audit-only.
-- Persist thread/Turn/Goal launch intent before external work. Resume/read known identities after a crash; never create a replacement when launch outcome is ambiguous.
-- One App Server reconnect is allowed. Reconcile known threads, Goals and Turns from server state; a second failure becomes `wait_external`.
-- Campaign freezes Context graph/baseline hashes. Before Goal start, unchanged baselines read only the SFC's referenced Context; relevant Scope/owner/architecture/acceptance changes reauthor the Packet. Compile freezes referenced Context by default or full Context explicitly.
-- Goal execution stays inside its Change Envelope. Each Obligation has a file/path-glob carrier; non-file contract keys never widen scope. Every `base..head` path must be an allowed carrier/support path; Context and Campaign state stay hard-forbidden. Repair gets only affected-envelope unions plus explicit conflicts. Commit cleanly before full final-gate and Envelope-bound Receipt V2.
+- Packet preflight must pass before an execution worktree or worker is started. Authoring is read-only and cannot modify product code.
+- The immutable authority handoff is Source Unit -> Packet -> three Contract V3 inputs -> Change Envelope -> detached worktree -> current final result -> Receipt. Conversation continuity is never required for correctness.
+- Campaign freezes Context graph/baseline hashes. Before execution starts, unchanged baselines read only the SFC's referenced Context; relevant Scope/owner/architecture/acceptance changes reauthor the Packet. Compile freezes referenced Context by default or full Context explicitly.
+- Execution stays inside its Change Envelope. Every `base..head` path must be an allowed carrier/support path; Context and Campaign state are hard-forbidden. Repair receives only affected-envelope unions. Workers commit cleanly before the scheduler runs the full final gate and binds Receipt V3.
+- Persist worktree and worker spawn/exit intent around external effects. Recovery reconciles stale locks, missing child PIDs, fixed worktree paths, Git heads, current final results and Receipts. It resumes from a durable stage with a new bounded worker attempt; it never reconstructs a physical session.
 - `record-result` validates an existing current result and dual receipt. It never runs final-gate or upgrades prose/intermediate checks into acceptance.
+
+## Resource And Interrupt Discipline
+
+One active Campaign owns at most one Integration worktree, four current-wave detached SFC worktrees and one detached repair worktree. It creates only `tyctx/campaign/<id>/integration`; SFC and repair branches do not exist. Fixed paths under `tmp/ty-context/composite-worktrees/<campaign-id>/` are reused across attempts. Accepted SFC worktrees are removed immediately after durable integration; accepted cleanup is idempotent and cannot revoke acceptance.
+
+SIGINT, SIGTERM or `interrupt` stops dispatch, gracefully terminates known child processes, force-terminates only their known process trees after a bounded wait, records interrupted state and retains bounded worktrees for durable-stage recovery. Never kill global Codex, Node or shell processes.
 
 ## Completion Authority
 
 `verify` is optional and non-accepting. Slice Final runs every frozen Spec. Wave Impact V2 selects qualified Specs from actual merge diff and frozen path/contract/Context evidence; global-constraint Specs always run and uncertainty selects all. Campaign Final Gate runs all Slices on one shared snapshot and deduplicates only exact execution identities. Target movement invalidates the result until synchronization and revalidation.
 
-Never infer completion from status prose, historical receipts, validators, matrices, Skill output, App Server Goal status or Fake Server output. Campaign `accepted` is CLI-derived only after target integration.
+Never infer completion from status prose, historical receipts, validators, matrices, Skill output, worker exit code or worker text. Campaign `accepted` is CLI-derived only from current Contract V3 Gate results, Receipt authority, Integration/Campaign Final Gates and target integration.
 
 ## Stop Conditions
 
-Stop with one structured actionable report only when source meaning requires a real product/scope/architecture decision; Packet authoring would invent intent or an oracle; required external credentials/MFA/permission/approval are unavailable; a protected branch has no automatic merge/PR path; contracts are semantically contradictory; App Server remains unavailable after one reconnect; or persisted identities show immutable drift or an ambiguous thread/Turn launch.
+Stop with one structured actionable report only when source meaning requires a real product/scope/architecture decision; Packet authoring would invent intent or an oracle; required external credentials/MFA/permission/approval are unavailable; a protected branch has no automatic merge/PR path; contracts are semantically contradictory; bounded authoring/execution/repair attempts cannot converge; frozen Git/authority drift cannot be safely reconciled; or the user interrupts.
 
-Scheduling ties, Git conflicts, target movement, test failures, `needs_work`, interruption, stale locks, recoverable transaction intents and integration regressions are automatic repair/recovery work, not user blockers.
+Scheduling ties, ordinary Git conflicts, target movement, test failures, `needs_work`, stale locks, interrupted workers and Integration regressions remain automatic bounded repair/recovery work, not user decisions.
 
 ## Outputs
 
-Tracked user-owned Campaign source/orchestration/provenance remains under the configured Campaign root. Multi-file writes use lease locks, transaction intents, atomic replacement, before/after-hash events and orphan quarantine. Dirty input uses a temporary-index hidden checkpoint; Slice/integration/repair/target worktrees never stage, commit, checkout or rebase the user's primary worktree, and `preserve_primary_worktree` defaults true. Mutable runs/raw logs remain temporary. Report Campaign path/status, current action, graph/wave/SFC/thread identities, repair or blocker, and accepted target commit only after `finished`.
+Tracked user-owned Campaign source/orchestration/provenance remains under the configured Campaign root. One simple live-process lock, atomic writes, append-only events and durable external-effect intents protect scheduler state; there is no controller lease or heartbeat. Dirty input uses a temporary-index hidden checkpoint; managed worktrees never stage, commit, checkout or rebase the user's primary worktree, and `preserve_primary_worktree` defaults true. Mutable runs and bounded raw logs remain temporary. Report Campaign path/status, current action, graph/wave/SFC/worker identities, repair or blocker, and accepted target commit only after `finished`.

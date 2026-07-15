@@ -27,18 +27,15 @@ read_policy: default
 - `node --test tests/ty-context/composite-long-task-lightweight-black-box.test.mjs`
   - Focused Contract V3 black box using temporary real projects and built CLI/Hook.
   - Expected signal: compile/free implementation/optional targeted repair/full final-gate/Stop freshness semantics hold; targeted verify never emits acceptance and full final gate cannot omit an in-scope AC.
-- `node --test tests/ty-context/composite-campaign-v5-app-server-black-box.test.mjs`
-  - Focused real-Git/Fake-App-Server Campaign path for explicit maintainer diagnosis and part of the complete Long-Task Workflow CI suite.
-  - Expected signal: Source Context resolution, maximal Scope Fit, Packet/preflight-before-Goal, versioned routing, settled sibling reconciliation, Change Envelope, Slice/Wave/shared-snapshot Campaign gates and owned-worktree target handling complete without real Codex services.
-- `node --test --test-concurrency=1 tests/ty-context/composite-campaign-target-finalization.test.mjs tests/ty-context/composite-campaign-accepted-authority.test.mjs tests/ty-context/composite-campaign-lease.test.mjs tests/ty-context/composite-campaign-worktree.test.mjs tests/ty-context/composite-campaign-transaction-store.test.mjs tests/ty-context/composite-campaign-v5-app-server-black-box.test.mjs`
-  - Focused finalization/transaction regression path after Target, accepted-authority, cleanup or Lease changes.
-  - Expected signal: exact commit/tree and fully revalidated Target snapshots converge; safe remote/local fast-forward and matching-open-PR fallback preserve the primary worktree; failed diagnostic revalidation is excluded from fast-forward authority; accepted commit re-resolves the authoritative Target commit/tree and rejects a stale Receipt without acceptance artifacts; one retry is bounded before `wait_external`; accepted authority is atomic and terminal; all three crash points recover; cleanup is owned/idempotent; live-owner/heartbeat/operation-id Lease cases fail closed.
+- `node --test --test-concurrency=1 tests/ty-context/codex-exec-client-v1.smoke.test.mjs tests/ty-context/composite-campaign-worktree-budget-v6.smoke.test.mjs tests/ty-context/composite-campaign-exec-routing-v6.test.mjs tests/ty-context/composite-campaign-cli-v6-dry-run.test.mjs`
+  - Focused Campaign V6 infrastructure path using an ordinary fake child executable and temporary real Git repositories; it never starts AppServer or a real Codex Campaign.
+  - Expected signal: safe argv/stdin/JSONL/limits/timeout/targeted termination, one Integration plus detached SFC/repair worktree budget and reuse, commit-SHA merge/removal, xhigh/max/ultra routing with passthrough cases, and non-mutating CLI dry-run all pass.
 - `npm run test:long-task-workflow --workspace project-tiny-context-harness`
   - Complete Long-Task Workflow mechanism profile. It runs only when explicitly invoked locally or by package PR/main/publish GitHub CI.
-  - Expected signal: Source Coverage/Context baseline, referenced/full snapshot, transaction recovery/quarantine, non-invasive Git, App Server lifecycle, impact analysis and final Spec deduplication cases exit without failures.
+  - Expected signal: Source Coverage/Context baseline, referenced/full snapshot, durable-stage recovery, non-invasive Git, bounded Exec lifecycle, impact analysis and final Spec deduplication cases exit without failures.
 - `npm test --workspace project-tiny-context-harness`
   - Complete package suite for main/full local validation.
-  - Budget: the full default package/Long-Task Workflow path stays within 15 minutes and does not call real Goals or require privileged/cross-platform infrastructure.
+  - Budget: the full default package/Long-Task Workflow path stays within 15 minutes and does not call real Codex Campaign workers or require privileged/cross-platform infrastructure.
 - `node tools/quickstart_smoke.mjs` and `npm run preview:pack`
   - Main/release-facing smoke for portable default installation and packaged contents.
   - Expected signal: non-Codex default init omits Codex Hooks/Long-Task Workflow assets; explicit enable installs them; pack preview contains profile assets and no drift.
@@ -62,7 +59,7 @@ read_policy: default
 - Direct `npm test` and the dedicated workflow npm command run Long-Task Workflow self-tests. Release preparation, local fallback publication, Hooks and consumer Harness gates use default-only paths; local fallback tarball smoke uses `--portable-only`.
 - Trusted Publish CI runs the complete default and Long-Task Workflow suites, packs once, records/verifies Release Artifact V2, installs that exact tarball in an empty repository and runs init/doctor/Context/minimal Contract V3 smoke before publishing the same path. The single-artifact parser accepts npm 11's array result and npm 12's workspace-keyed result but rejects zero or multiple packed artifacts. Dry runs may create only an ephemeral V2 identity for the just-packed bytes; a real publish still requires the matching committed versioned V2 authority.
 - Consumer Harness CI runs only portable project gates. It never runs this package repository's full Campaign self-tests.
-- Real App Server one-SFC smoke remains manual development evidence and is not a CI/publication gate.
+- Real Codex Campaign execution remains explicit manual development evidence and is not a CI/publication gate.
 
 ## Scope Notes
 

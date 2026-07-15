@@ -75,6 +75,7 @@ export interface TargetFinalizationOptions {
     targetWorktree: string,
   ) => Promise<CampaignSnapshotGateEvaluationV1>;
   pullRequestOpener?: typeof openAutomaticPullRequest;
+  targetWorktreePreparer?: (baseCommit: string) => Promise<{ path: string }>;
 }
 
 export async function finalizeCampaignTarget(
@@ -135,11 +136,13 @@ export async function finalizeCampaignTarget(
         false,
       );
 
-    const targetWorktree = await prepareTargetWorktree({
-      repositoryRoot: repository,
-      campaignId: options.campaignId,
-      baseCommit: authority.target_commit,
-    });
+    const targetWorktree = options.targetWorktreePreparer
+      ? await options.targetWorktreePreparer(authority.target_commit)
+      : await prepareTargetWorktree({
+          repositoryRoot: repository,
+          campaignId: options.campaignId,
+          baseCommit: authority.target_commit,
+        });
     const revalidation = await revalidateTarget(
       options,
       targetWorktree.path,

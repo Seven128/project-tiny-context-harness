@@ -96,10 +96,10 @@ When Composite is active, it inherits:
 
 It replaces:
 
-- agent task planning with Source Coverage, Scope Fit, SFC Packet and Goal;
+- agent task planning with Source Coverage, Scope Fit, SFC Packet and bounded execution attempts;
 - an internal execution view of the three Contract V3 inputs;
 - informal implementation mapping with Contract V3 Implementation Bindings and Change Envelope;
-- execution status with Campaign, thread, Goal and receipt identities;
+- execution status with Campaign, worker observation, worktree and Receipt identities;
 - informal acceptance with AC, Proof, Spec and Counterfactual;
 - prose completion with Slice, Wave and Campaign gates.
 
@@ -119,7 +119,7 @@ Campaign Source Coverage V2 carries Context resolution directly; V1 remains V4-a
 
 The campaign freezes a Context baseline containing graph topology and selected file hashes. The relevant set is `context.toml`, `global.md`, `architecture.md`, Source Coverage refs, Packet Requirement refs and graph-transitive dependencies.
 
-Before a Goal starts, unchanged baseline means the Slice reads only its referenced Context and three inputs. Changed Context is reread and classified. A change affecting Scope, owner, architecture or acceptance invalidates the Packet and returns the SFC to Authoring; an unrelated change may continue. After the first successful compile, Context, three inputs, Oracle, verifier and workdir are frozen. A later required Context update invalidates the contract and requires Context update, Packet reauthoring and recompilation.
+Before the first execution worker starts, unchanged baseline means the Slice reads only its referenced Context and three inputs. Changed Context is reread and classified. A change affecting Scope, owner, architecture or acceptance invalidates the Packet and returns the SFC to Authoring; an unrelated change may continue. After the first successful compile, Context, three inputs, Oracle, verifier and workdir are frozen. A later required Context update invalidates the contract and requires Context update, Packet reauthoring and recompilation.
 
 Contract V3 defaults to `context_snapshot_mode: referenced`; `full` is explicit for security-sensitive or global migration work. The compiled identity freezes Context Graph topology plus selected file hashes so unrelated Context changes do not invalidate every SFC.
 
@@ -134,18 +134,18 @@ Scope Fit preserves the existing maximal-coherent rule:
 5. verify every SFC can produce complete three inputs;
 6. reject over-splitting.
 
-File/layer boundaries, agent count, expected duration and parallelism are not split reasons. SFC IDs are stable and never renumbered. Capacity splitting requires observed generation/output failure. Goal creation freezes the graph; scheduling cannot revise SFC scope.
+File/layer boundaries, agent count, expected duration and parallelism are not split reasons. SFC IDs are stable and never renumbered. Capacity splitting requires observed generation/output failure. Starting the first execution worker freezes the graph; scheduling cannot revise SFC scope.
 
 The conflict analyzer and scheduler run after Scope Fit. Parallel placement requires positive independence evidence; unknown conflict is serial.
 
 ## Slice Change Envelope
 
-Every Goal has a machine-enforced Change Envelope:
+Every executable SFC has a machine-enforced Change Envelope:
 
 - `file` and `path_glob` bindings generate allowed write paths;
 - `symbol`, `schema`, `route` and `runtime_capability` bindings also declare their carrier file paths;
 - lockfiles, generated files and other supporting paths are explicit;
-- campaign/Context authority paths remain forbidden to Slice Goals;
+- campaign/Context authority paths remain forbidden to SFC execution and repair workers;
 - the receipt compares every `base..head` changed path and rejects undeclared changes;
 - repair uses the union of affected Slice envelopes and never receives unlimited write scope.
 
@@ -153,28 +153,30 @@ A passing test suite cannot authorize an out-of-envelope change.
 
 ## Campaign Transactions And Recovery
 
-Campaign mutations use an optimistic generation, lease lock and write-ahead transaction intent. The durable mutation order is: acquire lease; prepare and fsync staged artifacts; assert/renew ownership; write intent with before/after hashes; assert/renew before each subordinate, campaign and event replacement; archive the completed intent; release only the same operation's lease.
+One foreground scheduler may mutate a Campaign. Its `campaign-lock-v1` records PID, process-start identity, operation id and start time. A live matching owner rejects another run; a missing or identity-mismatched process makes the lock stale. There is no distributed lease, heartbeat, persistent host or controller takeover.
 
-Locks record owner pid/host, operation id, start and lease expiry. A same-host live PID is active regardless of nominal expiry; a dead same-host PID is recoverable. A remote owner is active until expiry and recoverable afterward. The current operation heartbeats at a bounded interval, fails closed if ownership changes or renewal fails, and `close()` never removes another owner's lock. An outstanding intent completes or rolls back from hashes; orphan revisions move to quarantine and are never trusted automatically. Recovery is idempotent and adds no model turn.
+Campaign mutations retain optimistic generations, atomic write-and-rename and append-only events. Worktree create/remove, worker spawn/exit, Integration update, target delivery and accepted transaction persist bounded intent/result state around their external effects. Restart reconciliation uses fixed worktree paths, Git heads, final results and Receipts. A recorded running child whose process no longer exists becomes interrupted; an already accepted Slice advances mechanically, otherwise a fresh bounded attempt resumes the durable stage in the same worktree. Recovery never resumes a physical session.
 
 ## Git Ownership
 
-Campaign owns its worktrees and branches, not the user's primary worktree.
+Campaign owns its managed worktrees and one Integration branch, not the user's primary worktree.
 
 - Dirty primary-worktree input is captured through a temporary index and `commit-tree` checkpoint ref under `refs/ty-context/checkpoints/<campaign>/<timestamp>`; it never stages, commits, clears or moves the user's index/worktree and still performs secret scanning.
-- Slice, integration, repair and target finalization use Campaign-owned worktrees.
+- Integration uses the sole `tyctx/campaign/<id>/integration` branch. Current-wave SFC and repair worktrees are detached, use fixed managed paths and create no branches. The hard active budget is one Integration plus at most four SFC plus one repair worktree; SFC attempts reuse their path and the Campaign has one reusable repair path.
 - Target resynchronization/replay or rebase, full Target Snapshot revalidation, fast-forward/push or protected-branch PR handling never requires checking out or rebasing the primary worktree. Finalization resolves the fetched upstream when configured, otherwise the local Target ref; exact commit/tree identity converges before any checkout/PR decision, remote delivery is non-force fast-forward with post-fetch identity verification, and PR reuse is limited to a matching open base/head.
 - `preserve_primary_worktree` defaults to `true`; `auto_push` and protected-branch mode are explicit campaign policy.
 
 Explicit `/prepare-composite-long-task` continues to authorize full execution and target integration within these boundaries.
 
-## App Server Convergence And Routing
+## Foreground Codex Exec Convergence And Routing
 
-Concurrent Authoring/Wave operations use settled-result reconciliation. If one operation fails, the host either lets already-running siblings finish and observes all final states before deciding the wave, or interrupts siblings and confirms termination. It must never exit while an unobserved turn can still mutate a worktree.
+Campaign V6 uses execution engine `codex-exec-v1`. A Pure Planner computes ready frontier, conflicts, Wave and next mechanical stage without Git/process/write effects. One foreground scheduler starts direct bounded ephemeral `codex exec` children for Packet authoring, SFC execution and Integration repair, awaits every sibling and owns all state, Git, Gate and acceptance decisions. It never daemonizes, starts AppServer or leaves a child running after exit.
 
-Each SFC persists the observed turn id, running/completed/failed/interrupted/unknown status, observation time and whether reconciliation remains required.
+Workers use safe argv arrays, stdin prompts, explicit cwd/profile/sandbox, bounded JSONL/stdout/stderr, timeouts and targeted child-tree termination. Authoring is read-only with the controller profile; execution/repair is workspace-write with the routed profile. Packet plus three Contract V3 inputs and Change Envelope is the authority handoff. PID, exit code and output text are observations only and cannot produce acceptance.
 
-Model routing mechanism is separate from a versioned policy asset. The current policy keeps the existing semantics: exact `gpt-5.6-sol` xhigh/max, or a catalog-proven successor at those efforts, routes execution to available `gpt-5.6-sol / medium`; everything else passes through. Campaign freezes policy id/hash, catalog hash and routing decision.
+The YAML policy routes exact `gpt-5.6-sol` `xhigh`, `max` and `ultra` to `gpt-5.6-sol / medium`. High-and-below, non-Sol, unknown, missing/invalid policy and unavailable target pass through. A target that Codex CLI explicitly reports unavailable permits exactly one recorded controller-profile passthrough retry; other failures do not guess. Campaign freezes engine id/CLI version, policy id/hash, profiles, command-template version, parallelism and sandbox policy.
+
+Authoring allows one initial plus two fresh repair attempts. SFC execution allows one initial plus three fresh repair attempts per run generation in the same detached worktree. Integration repair is serial in one reusable detached worktree. SIGINT/SIGTERM/`interrupt` stops dispatch and terminates only known child process trees before the foreground scheduler returns. Recovery starts from durable stage, never a physical Thread/Goal/Turn.
 
 ## Verification And Completion
 
@@ -190,7 +192,9 @@ Wave impact combines actual merge diff, Implementation Binding targets, verifica
 
 Campaign Final Gate creates one shared Integration snapshot, compiles all Slice contracts against it, runs identical Specs once only when snapshot, normalized Spec, Oracle, executable, input paths, command definition and environment contract identities all match, projects results back to owning Slices and evaluates global constraints. This is same-snapshot execution deduplication, never reuse of historical evidence.
 
-Campaign `accepted` is derived only from current Slice/Wave/final gates, a clean Integration Branch and an authoritative Target that either has the exact Campaign Final commit/tree, is authorized by a complete current Target Snapshot Gate, or is safely fast-forwarded to the Integration commit authorized by Campaign Final. Only the Target Snapshot basis binds its passing revalidation result; exact commit/tree and remote/local fast-forward Receipts must not bind diagnostic revalidation. Immediately before the accepted transaction, Target authority is resolved again and both commit and tree must still match the Receipt. A stale Receipt records `target_changed_before_acceptance`, remains `finalizing` and re-enters Target Finalization once; a second change in the same run returns `wait_external` with `target_unstable_during_acceptance`. The accepted state, accepted Final Result, Target Finalization Receipt and event commit in one Campaign transaction. Cleanup is a later idempotent owned-asset transaction; its failure cannot revoke acceptance. An accepted Campaign validates this frozen authority and returns finished before Scope Fit, worktree creation, App Server connection, PR handling or another Gate. Prose, Goal status, old results, matrices, verdicts or App Server turn completion cannot promote acceptance.
+Campaign `accepted` is derived only from current Slice/Wave/final gates, validated Receipt authority, a clean Integration Branch and an authoritative Target that either has the exact Campaign Final commit/tree, is authorized by a complete current Target Snapshot Gate, or is safely fast-forwarded to the Integration commit authorized by Campaign Final. Only the Target Snapshot basis binds its passing revalidation result; exact commit/tree and remote/local fast-forward Receipts must not bind diagnostic revalidation. Immediately before the accepted transaction, Target authority is resolved again and both commit and tree must still match the Receipt. A stale Receipt records `target_changed_before_acceptance`, remains `finalizing` and re-enters Target Finalization once; a second change in the same run returns `wait_external` with `target_unstable_during_acceptance`. The accepted state, accepted Final Result, Target Finalization Receipt and event commit in one Campaign transaction. Cleanup is later and idempotent; its failure cannot revoke acceptance. An accepted Campaign validates frozen authority and returns finished before Scope Fit, worker/worktree creation, PR handling or another Gate. Prose, old results, matrices, verdicts, worker exit code or worker output cannot promote acceptance.
+
+Campaign V6 is the only executable Campaign schema. Accepted V5 remains readable for audit; unfinished V5 returns `campaign_v5_execution_retired_recreate_required` and is never migrated or routed to an AppServer fallback.
 
 ## Contract Conformance
 

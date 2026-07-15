@@ -37,9 +37,9 @@ File/layer/subagent differences, possible parallelism, duration estimates and mo
 
 ## Capacity And Stable Evolution
 
-Do not predict a small token threshold. First attempt the maximal Packet, then at most two same-thread repair Turns. Capacity splitting is allowed only for observed truncation, structured-output failure, repeated scope-related undefined fields, actual package file limits or inability to preserve complete Source Unit mapping. The revised graph must cite matching evidence, keep existing Source Units immutable, keep/never renumber existing `SFC-###` IDs and stable keys, append new IDs, split only the affected range and preserve complete coverage.
+Do not predict a small token threshold. First attempt the maximal Packet, then at most two fresh ephemeral authoring repair attempts. Capacity splitting is allowed only for observed truncation, structured-output failure, repeated scope-related undefined fields, actual package file limits or inability to preserve complete Source Unit mapping. The revised graph must cite matching evidence, keep existing Source Units immutable, keep/never renumber existing `SFC-###` IDs and stable keys, append new IDs, split only the affected range and preserve complete coverage.
 
-Graph revisions are allowed only before the first Slice Goal. Once any Goal exists, Scope Fit is permanently frozen.
+Graph revisions are allowed only before the first SFC execution worker. Once execution starts, Scope Fit is permanently frozen.
 
 ## Graph And Scheduling
 

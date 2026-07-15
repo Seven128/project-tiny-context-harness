@@ -1,8 +1,8 @@
-# App Server Ready-Frontier Packet Authoring V3
+# Ready-Frontier Packet Authoring V3
 
-Campaign V5 keeps one immutable `CompositeAuthoringPacketV3` revision chain and one persistent App Server thread per SFC. Contract V3 authority schemas and filenames are unchanged. Run `composite-campaign contract --json` before manual inspection; code owns the strict schema.
+Campaign V6 keeps one immutable `CompositeAuthoringPacketV3` revision chain per SFC. Contract V3 authority schemas and filenames are unchanged. Run `composite-campaign contract --json` before manual inspection; code owns the strict schema.
 
-For every SFC returned by `author_packets`, the adapter concurrently starts/resumes its persisted thread and runs a read-only Authoring Turn in the Integration worktree. A known controller model/effort is passed explicitly; an unknown profile is recorded and left unchanged, never guessed. No Goal exists, network/product writes are disabled, and the strict `CompositeAuthoringPacketV3` output schema is supplied through `outputSchema` and requires the complete Packet.
+For every SFC in the ready frontier, the foreground scheduler launches a bounded, read-only, ephemeral `codex exec` authoring worker in the Integration worktree. It passes the known controller model/effort explicitly, disables subagents, supplies the strict Packet output schema and receives the last structured message through a bounded file. No product write or execution state exists. The Packet, not a conversation or process identity, is the handoff to the later execution worker.
 
 The Packet must:
 
@@ -12,6 +12,6 @@ The Packet must:
 4. Preserve negative assertions, forbidden shortcuts, owner-surface proof, population policy, proof capabilities and counterfactual controls.
 5. Use revision 1 with `previous_packet_sha256: null`; later revisions bind the preceding immutable hash.
 
-Turn computation is concurrent, but Campaign writes are serialized: structured parse, `apply-packet`, render and preflight complete as one ordered commit per SFC. Invalid output receives at most two repair Turns in the same thread. Only factual capacity failure may revise Scope Fit before any Goal; the revised graph/coverage remains subject to all V4 stability and maximality checks.
+Worker computation may be concurrent up to the Campaign authoring limit, but Campaign mutation is serialized: the scheduler parses structured output, validates the Packet schema, applies the immutable revision, renders the three Contract V3 inputs and runs preflight as one ordered action per SFC. Invalid output gets at most two repair attempts after the initial attempt; every attempt is a fresh ephemeral worker whose prompt includes the prior structured/schema/preflight findings. Worker exit code or self-reported success cannot bypass schema validation or preflight.
 
-Packet preflight validates Contract V3 coverage, oracle paths, Source Unit entity chains, source/global bindings and the concrete conflict profile. Passing preflight proves authoring/scheduling readiness only. It creates no Goal, run, Slice result or Campaign acceptance. The same thread is retained for the later Goal Execution Turn.
+Only factual capacity failure may revise Scope Fit before any execution worker starts. The revised graph/coverage remains subject to all V4 stability and maximality checks. Packet preflight proves authoring/scheduling readiness only; it creates no worktree, final result, Receipt or Campaign acceptance.

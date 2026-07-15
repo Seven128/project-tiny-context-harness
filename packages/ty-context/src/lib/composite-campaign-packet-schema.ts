@@ -1,5 +1,8 @@
 import { COMPOSITE_V3_SCHEMAS } from "./long-task-contract-schema-registry.js";
-import type { JsonValue } from "./codex-app-server-protocol.js";
+
+type JsonPrimitive = string | number | boolean | null;
+export type PacketJsonValue =
+  JsonPrimitive | PacketJsonValue[] | { [key: string]: PacketJsonValue };
 
 export interface PacketSchemaIdentity {
   campaignId: string;
@@ -11,7 +14,7 @@ export interface PacketSchemaIdentity {
 
 export function compositeAuthoringPacketOutputSchemaV3(
   input: PacketSchemaIdentity,
-): JsonValue {
+): PacketJsonValue {
   const product = namespace(
     COMPOSITE_V3_SCHEMAS["product-source-v3"] as unknown as Record<
       string,
@@ -100,13 +103,16 @@ export function compositeAuthoringPacketOutputSchemaV3(
       },
     },
     $defs: { ...product.defs, ...technical.defs, ...acceptance.defs },
-  } as JsonValue;
+  } as PacketJsonValue;
 }
 
 function namespace(
   source: Record<string, unknown>,
   prefix: string,
-): { schema: JsonValue; defs: Record<string, JsonValue> } {
+): {
+  schema: PacketJsonValue;
+  defs: Record<string, PacketJsonValue>;
+} {
   const definitions =
     source.$defs && typeof source.$defs === "object"
       ? (source.$defs as Record<string, unknown>)
@@ -125,7 +131,7 @@ function namespace(
   return { schema: rewrite(root, prefix), defs };
 }
 
-function rewrite(value: unknown, prefix: string): JsonValue {
+function rewrite(value: unknown, prefix: string): PacketJsonValue {
   if (
     value === null ||
     typeof value === "string" ||

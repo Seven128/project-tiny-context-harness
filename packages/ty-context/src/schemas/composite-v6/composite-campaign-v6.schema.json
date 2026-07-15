@@ -1,0 +1,315 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-tiny-context-harness.invalid/schemas/composite-v6/composite-campaign-v6.schema.json",
+  "title": "Composite Long-Task Campaign V6",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "campaign_id",
+    "source_plan_sha256",
+    "source_kind",
+    "created_at",
+    "target_branch",
+    "base_commit",
+    "integration_ref",
+    "integration_head",
+    "graph",
+    "slices",
+    "waves",
+    "context_baseline",
+    "campaign_policy",
+    "execution_engine",
+    "active_wave",
+    "repair",
+    "finalization",
+    "generation",
+    "run_generation",
+    "campaign_status",
+    "block_reason"
+  ],
+  "properties": {
+    "schema_version": { "const": "composite-campaign-v6" },
+    "campaign_id": { "$ref": "#/$defs/id" },
+    "source_plan_sha256": { "$ref": "#/$defs/hash" },
+    "source_kind": { "const": "discussed_plan" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "target_branch": { "type": "string", "minLength": 1 },
+    "base_commit": { "$ref": "#/$defs/nullableOid" },
+    "integration_ref": { "type": "string", "minLength": 1 },
+    "integration_head": { "$ref": "#/$defs/nullableOid" },
+    "graph": { "$ref": "#/$defs/graph" },
+    "slices": {
+      "type": "object",
+      "propertyNames": { "pattern": "^SFC-[0-9]{3,}$" },
+      "additionalProperties": { "$ref": "#/$defs/slice" }
+    },
+    "waves": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/wave" }
+    },
+    "context_baseline": { "$ref": "#/$defs/contextBaseline" },
+    "campaign_policy": { "$ref": "#/$defs/policy" },
+    "execution_engine": { "$ref": "#/$defs/executionEngine" },
+    "active_wave": { "type": ["string", "null"] },
+    "repair": { "$ref": "#/$defs/repair" },
+    "finalization": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/finalization" }]
+    },
+    "generation": { "type": "integer", "minimum": 1 },
+    "run_generation": { "type": "integer", "minimum": 0 },
+    "campaign_status": {
+      "enum": [
+        "planning",
+        "authoring",
+        "executing",
+        "integrating",
+        "finalizing",
+        "accepted",
+        "blocked",
+        "decision_blocked",
+        "externally_blocked",
+        "interrupted"
+      ]
+    },
+    "block_reason": { "type": ["string", "null"] }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "nullableHash": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/hash" }]
+    },
+    "oid": { "type": "string", "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$" },
+    "nullableOid": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/oid" }]
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "effort"],
+      "properties": {
+        "model": { "type": "string", "minLength": 1 },
+        "effort": { "type": "string", "minLength": 1 }
+      }
+    },
+    "workerRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "kind",
+        "attempt",
+        "run_generation",
+        "pid",
+        "started_at",
+        "completed_at",
+        "profile",
+        "cwd",
+        "prompt_sha256",
+        "status",
+        "exit_code"
+      ],
+      "properties": {
+        "run_id": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["authoring", "execution", "repair"] },
+        "attempt": { "type": "integer", "minimum": 1 },
+        "run_generation": { "type": "integer", "minimum": 1 },
+        "pid": { "type": ["integer", "null"], "minimum": 1 },
+        "started_at": { "type": "string", "format": "date-time" },
+        "completed_at": { "type": ["string", "null"], "format": "date-time" },
+        "profile": { "$ref": "#/$defs/profile" },
+        "cwd": { "type": "string", "minLength": 1 },
+        "prompt_sha256": { "$ref": "#/$defs/hash" },
+        "status": { "enum": ["starting", "running", "exited", "interrupted"] },
+        "exit_code": { "type": ["integer", "null"] }
+      }
+    },
+    "slice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "packet_revision",
+        "packet_sha256",
+        "wave_id",
+        "base_commit",
+        "head_commit",
+        "attempt_count",
+        "worktree_path",
+        "current_worker_run",
+        "final_receipt_sha256",
+        "merge_commit",
+        "integration_result_sha256",
+        "last_error_code"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "planned",
+            "packet_pending",
+            "packet_ready",
+            "scheduled",
+            "worker_running",
+            "needs_work",
+            "needs_attention",
+            "accepted",
+            "merged",
+            "integration_verified",
+            "decision_blocked",
+            "externally_blocked",
+            "interrupted"
+          ]
+        },
+        "packet_revision": { "type": ["integer", "null"], "minimum": 1 },
+        "packet_sha256": { "$ref": "#/$defs/nullableHash" },
+        "wave_id": { "type": ["string", "null"] },
+        "base_commit": { "$ref": "#/$defs/nullableOid" },
+        "head_commit": { "$ref": "#/$defs/nullableOid" },
+        "attempt_count": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["authoring", "execution"],
+          "properties": {
+            "authoring": { "type": "integer", "minimum": 0 },
+            "execution": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "worktree_path": { "type": ["string", "null"] },
+        "current_worker_run": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/workerRun" }]
+        },
+        "final_receipt_sha256": { "$ref": "#/$defs/nullableHash" },
+        "merge_commit": { "$ref": "#/$defs/nullableOid" },
+        "integration_result_sha256": { "$ref": "#/$defs/nullableHash" },
+        "last_error_code": { "type": ["string", "null"] }
+      }
+    },
+    "wave": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["base_commit", "slice_ids", "status", "schedule_sha256", "integration_result_sha256"],
+      "properties": {
+        "base_commit": { "$ref": "#/$defs/oid" },
+        "slice_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } },
+        "status": { "enum": ["scheduled", "running", "accepted", "merged", "integration_verified", "repair_required", "blocked", "interrupted"] },
+        "schedule_sha256": { "$ref": "#/$defs/hash" },
+        "integration_result_sha256": { "$ref": "#/$defs/nullableHash" }
+      }
+    },
+    "graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["graph_revision", "graph_sha256", "slices"],
+      "properties": {
+        "graph_revision": { "type": "integer", "minimum": 0 },
+        "graph_sha256": { "$ref": "#/$defs/hash" },
+        "slices": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["stable_key", "depends_on", "priority"],
+            "properties": {
+              "stable_key": { "type": "string", "minLength": 1 },
+              "depends_on": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+              "priority": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "contextBaseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["graph_sha256", "files", "baseline_sha256"],
+      "properties": {
+        "graph_sha256": { "$ref": "#/$defs/hash" },
+        "files": { "type": "object", "minProperties": 3, "additionalProperties": { "$ref": "#/$defs/hash" } },
+        "baseline_sha256": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["auto_push", "protected_branch_mode", "preserve_primary_worktree", "max_authoring_attempts_per_slice", "max_execution_attempts_per_run", "max_repair_attempts_per_run", "worker_timeout_ms", "worker_termination_grace_ms"],
+      "properties": {
+        "auto_push": { "type": "boolean" },
+        "protected_branch_mode": { "const": "pull_request" },
+        "preserve_primary_worktree": { "const": true },
+        "max_authoring_attempts_per_slice": { "const": 3 },
+        "max_execution_attempts_per_run": { "const": 4 },
+        "max_repair_attempts_per_run": { "const": 4 },
+        "worker_timeout_ms": { "type": "integer", "minimum": 1000, "maximum": 86400000 },
+        "worker_termination_grace_ms": { "type": "integer", "minimum": 100, "maximum": 60000 }
+      }
+    },
+    "executionEngine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["execution_engine_id", "frozen", "codex_cli_version", "model_routing_policy_id", "model_routing_policy_sha256", "routing_decision_sha256", "routing_reason", "fallback_reason", "authoring_profile", "execution_profile", "worker_command_template_version", "max_parallelism", "process_sandbox_policy"],
+      "properties": {
+        "execution_engine_id": { "const": "codex-exec-v1" },
+        "frozen": { "type": "boolean" },
+        "codex_cli_version": { "type": ["string", "null"] },
+        "model_routing_policy_id": { "type": "string", "minLength": 1 },
+        "model_routing_policy_sha256": { "$ref": "#/$defs/hash" },
+        "routing_decision_sha256": { "$ref": "#/$defs/nullableHash" },
+        "routing_reason": { "type": ["string", "null"] },
+        "fallback_reason": { "enum": [null, "target_unavailable_passthrough"] },
+        "authoring_profile": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/profile" }] },
+        "execution_profile": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/profile" }] },
+        "worker_command_template_version": { "const": "codex-exec-worker-command-v1" },
+        "max_parallelism": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["authoring", "sfc"],
+          "properties": {
+            "authoring": { "type": "integer", "minimum": 1, "maximum": 4 },
+            "sfc": { "type": "integer", "minimum": 1, "maximum": 4 }
+          }
+        },
+        "process_sandbox_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["authoring", "execution", "repair"],
+          "properties": {
+            "authoring": { "const": "read-only" },
+            "execution": { "const": "workspace-write" },
+            "repair": { "const": "workspace-write" }
+          }
+        }
+      }
+    },
+    "repair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "kind", "attempt_count", "worktree_path", "base_commit", "head_commit", "affected_slice_ids", "manifest_path", "manifest_sha256", "current_worker_run", "last_error_code"],
+      "properties": {
+        "status": { "enum": ["idle", "running", "needs_work", "blocked", "interrupted"] },
+        "kind": { "enum": [null, "merge_conflict", "integration_regression", "campaign_final_regression"] },
+        "attempt_count": { "type": "integer", "minimum": 0 },
+        "worktree_path": { "type": "string", "minLength": 1 },
+        "base_commit": { "$ref": "#/$defs/nullableOid" },
+        "head_commit": { "$ref": "#/$defs/nullableOid" },
+        "affected_slice_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+        "manifest_path": { "type": ["string", "null"] },
+        "manifest_sha256": { "$ref": "#/$defs/nullableHash" },
+        "current_worker_run": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/workerRun" }] },
+        "last_error_code": { "type": ["string", "null"] }
+      }
+    },
+    "finalization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_commit", "target_receipt_sha256", "accepted_at", "cleanup_status", "cleanup_error_code"],
+      "properties": {
+        "target_commit": { "$ref": "#/$defs/oid" },
+        "target_receipt_sha256": { "$ref": "#/$defs/hash" },
+        "accepted_at": { "type": "string", "format": "date-time" },
+        "cleanup_status": { "enum": ["pending", "complete"] },
+        "cleanup_error_code": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

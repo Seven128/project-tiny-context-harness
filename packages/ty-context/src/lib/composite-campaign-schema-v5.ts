@@ -13,7 +13,7 @@ import {
   MODEL_ROUTING_REASONS,
   type ModelProfile,
   type ModelRoutingReason,
-} from "./codex-model-router.js";
+} from "./codex-model-profile.js";
 import type { CampaignContextBaseline } from "./context-graph-snapshot.js";
 
 export const CAMPAIGN_SCHEMA_V5 = "composite-campaign-v5" as const;
