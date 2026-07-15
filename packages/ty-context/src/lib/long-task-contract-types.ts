@@ -14,6 +14,33 @@ export interface LongTaskRiskFacts {
   weak_observability: boolean;
 }
 
+export interface RiskEvidenceV1 {
+  fact: keyof LongTaskRiskFacts;
+  source_claim_refs: string[];
+  context_refs: string[];
+  affected_paths: string[];
+  rationale: string;
+}
+
+export type SourceClaimDispositionV1 =
+  | { type: "contract"; refs: string[] }
+  | { type: "global_constraint"; refs: string[] }
+  | { type: "out_of_scope"; reason: string }
+  | { type: "decision_required"; reason: string };
+
+export interface SourceClaimV1 {
+  key: string;
+  source_ref: string;
+  statement: string;
+  disposition: SourceClaimDispositionV1;
+}
+
+export interface ExternalConfirmationV1 {
+  key: string;
+  description: string;
+  owner: string;
+}
+
 export type ProofSurface =
   | "ui_browser"
   | "runtime_behavior"
@@ -63,13 +90,18 @@ export interface DeliveryRunnerV1 {
   cwd: string;
   timeout_ms: number;
   network_policy: NetworkPolicyV1;
+  effect: "read_only" | "test_sandbox";
+  retry_policy: "none" | "transient_once";
+  idempotent: boolean;
 }
 
 export interface DeliveryCheckV1 {
   key: string;
   proof_surface: ProofSurface;
   runner: DeliveryRunnerV1;
+  verification_sources: string[];
   input_paths: string[];
+  expected_output_paths: string[];
   artifact_globs: string[];
   positive_assertions: DeliveryAssertionV1[];
   negative_assertions: DeliveryAssertionV1[];
@@ -93,6 +125,7 @@ export interface DeliveryBindingV1 {
     "path_glob" | "file" | "symbol" | "schema" | "route" | "runtime_capability";
   target: string;
   carrier_paths: string[];
+  existence: "existing" | "planned";
 }
 
 export interface RollbackRecoveryV1 {
@@ -157,9 +190,11 @@ export interface DeliveryContractV1 {
     context_refs: string[];
     context_snapshot_mode: "referenced" | "full";
   };
+  source_claims: SourceClaimV1[];
   risk: {
     requested_level: RequestedRiskLevel;
     facts: LongTaskRiskFacts;
+    evidence: RiskEvidenceV1[];
   };
   global: {
     product: { non_goals: string[]; owner_boundaries: string[] };
@@ -168,7 +203,10 @@ export interface DeliveryContractV1 {
       forbidden_paths: string[];
       forbidden_shortcuts: string[];
     };
-    acceptance: { checks: DeliveryCheckV1[] };
+    acceptance: {
+      checks: DeliveryCheckV1[];
+      external_confirmations: ExternalConfirmationV1[];
+    };
   };
   outcomes: DeliveryOutcomeV1[];
 }

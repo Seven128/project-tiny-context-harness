@@ -43,11 +43,14 @@ export async function checkLongTaskCompletionGate(
     configHash = sha256Hex(content);
     const value = JSON.parse(content) as { hooks?: Record<string, unknown[]> };
     for (const event of ["SessionStart", "PostCompact", "Stop"]) {
-      if (
-        !Array.isArray(value.hooks?.[event]) ||
-        !containsManagedHandler(value.hooks[event])
-      ) {
+      const handlers = managedHandlers(value.hooks?.[event]);
+      if (handlers.length !== 1) {
         findings.push(`completion_hook_event_missing:${event}`);
+      } else {
+        const timeout = handlers[0].timeout;
+        const maximum = event === "Stop" ? 15 : 10;
+        if (typeof timeout !== "number" || timeout > maximum)
+          findings.push(`completion_hook_timeout_invalid:${event}`);
       }
     }
     if (containsContinueFalse(value.hooks?.Stop))
@@ -91,8 +94,8 @@ function containsContinueFalse(value: unknown): boolean {
   return false;
 }
 
-function containsManagedHandler(value: unknown): boolean {
-  if (Array.isArray(value)) return value.some(containsManagedHandler);
+function managedHandlers(value: unknown): Record<string, unknown>[] {
+  if (Array.isArray(value)) return value.flatMap(managedHandlers);
   if (value && typeof value === "object") {
     const item = value as Record<string, unknown>;
     if (
@@ -100,8 +103,8 @@ function containsManagedHandler(value: unknown): boolean {
       item.command === POSIX_COMMAND &&
       item.commandWindows === WINDOWS_COMMAND
     )
-      return true;
-    return Object.values(item).some(containsManagedHandler);
+      return [item];
+    return Object.values(item).flatMap(managedHandlers);
   }
-  return false;
+  return [];
 }

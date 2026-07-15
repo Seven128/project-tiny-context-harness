@@ -25,8 +25,14 @@ export async function executeCheckRunner(
   snapshotRoot: string,
 ): Promise<RunnerEvidenceV1> {
   const started = Date.now();
+  const retryAllowed =
+    check.runner.retry_policy === "transient_once" &&
+    check.runner.idempotent &&
+    (check.runner.effect === "read_only" ||
+      check.runner.effect === "test_sandbox");
   let attempt = 0;
-  while (attempt < 2) {
+  const maximumAttempts = retryAllowed ? 2 : 1;
+  while (attempt < maximumAttempts) {
     attempt += 1;
     try {
       const result = await runOnce(check.runner, snapshotRoot);
@@ -50,7 +56,7 @@ export async function executeCheckRunner(
         duration_ms: Date.now() - started,
       };
     } catch (error) {
-      if (attempt < 2 && isTransient(error)) continue;
+      if (attempt < maximumAttempts && isTransient(error)) continue;
       return {
         status: "blocked_external",
         exit_code: -1,

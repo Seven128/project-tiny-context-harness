@@ -4,17 +4,29 @@ import { captureContextGraphSnapshot } from "./context-graph-snapshot.js";
 import type { CompiledDeliveryContractV1 } from "./long-task-delivery-types.js";
 import { canonicalValueJson, sha256Hex } from "./strict-codec.js";
 import { captureVerifierIdentity } from "./long-task-verifier-identity.js";
+import { parseDeliveryContractBundle } from "./long-task-delivery-parser.js";
 
 export async function deliveryCompileFreshness(
   compiled: CompiledDeliveryContractV1,
 ): Promise<string[]> {
   const findings: string[] = [];
-  await compareFile(
-    path.join(compiled.repository_root, compiled.contract_file),
-    compiled.contract_sha256,
-    `contract_changed_after_compile:${compiled.contract_file}`,
-    findings,
-  );
+  try {
+    const currentContract = await parseDeliveryContractBundle(compiled.workdir);
+    if (
+      sha256Hex(canonicalValueJson(currentContract.contract)) !==
+      compiled.contract_sha256
+    )
+      findings.push(`contract_changed_after_compile:${compiled.contract_file}`);
+  } catch {
+    findings.push(`contract_changed_after_compile:${compiled.contract_file}`);
+  }
+  for (const [file, hash] of Object.entries(compiled.contract_files))
+    await compareFile(
+      path.join(compiled.repository_root, file),
+      hash,
+      `contract_changed_after_compile:${file}`,
+      findings,
+    );
   for (const [file, hash] of Object.entries(compiled.source_hashes))
     await compareFile(
       path.join(compiled.repository_root, file),

@@ -26,7 +26,7 @@ test("orientation Context exposes Single-Goal Rolling Delivery authority", async
   assert.match(global, /Minimal Context.*Workflow Contract.*Long-Task Workflow/s);
   assert.match(global, /Context Delta: none\|required/);
   assert.match(global, /Single-Goal Rolling Delivery/);
-  assert.match(global, /one `delivery-contract\.yaml`/);
+  assert.match(global, /Contract\/Contract Bundle or Delivery Set authority/);
   assert.match(architecture, /Product, Technical Boundary and Acceptance/);
   assert.match(architecture, /same-snapshot Final Gate/);
   assert.match(architecture, /targeted verifier/);
@@ -71,7 +71,8 @@ test("managed guidance and package assets share current routing", async () => {
     assert.match(guidance, /Contract Conformance/);
     assert.match(guidance, /Single-Goal Long-Task Workflow/);
     assert.match(guidance, /ty-context enable long-task/);
-    assert.match(guidance, /Final Gate creates one current snapshot/);
+    assert.match(guidance, /Final Gate requires a clean candidate commit.*one current snapshot/s);
+    assert.match(guidance, /Child Gate produces only `contract_gate_passed`/);
     assert.doesNotMatch(guidance, /multi-SFC execution|foreground scheduler/);
   }
 });

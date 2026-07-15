@@ -32,6 +32,30 @@ export interface CompiledCheckV1 extends Omit<DeliveryCheckV1, "runner"> {
   internal_id: string;
   outcome_key: string | null;
   runner: FrozenRunnerV1;
+  verification_source_hashes: Record<string, string>;
+}
+
+export interface AuthorityHashesV1 {
+  source_authority_hash: string;
+  product_authority_hash: string;
+  acceptance_authority_hash: string;
+  risk_authority_hash: string;
+  technical_authority_hash: string;
+}
+
+export interface InitialTaskBaseV1 {
+  git_commit: string;
+  git_tree: string;
+  workspace_manifest: WorkspaceManifestV1;
+}
+
+export interface DeliverySetChildBindingV1 {
+  set_workdir: string;
+  set_identity: string;
+  contract_key: string;
+  dependency_contract_identities: Record<string, string>;
+  dependency_receipt_identities: Record<string, string>;
+  dependency_interface_identities: Record<string, string>;
 }
 
 export interface VerifierIdentityV1 {
@@ -61,6 +85,7 @@ export interface CompiledDeliveryContractV1 {
   workdir: string;
   contract_file: string;
   contract_sha256: string;
+  contract_files: Record<string, string>;
   source_hashes: Record<string, string>;
   context_snapshot: {
     mode: "referenced" | "full";
@@ -72,10 +97,16 @@ export interface CompiledDeliveryContractV1 {
   effective_risk: EffectiveRiskLevel;
   risk_reasons: string[];
   baseline_workspace: WorkspaceManifestV1;
+  initial_task_base: InitialTaskBaseV1;
+  authority_hashes: AuthorityHashesV1;
+  delivery_set: DeliverySetChildBindingV1 | null;
   task: DeliveryContractV1["task"];
   risk: DeliveryContractV1["risk"];
   global: Omit<DeliveryContractV1["global"], "acceptance"> & {
-    acceptance: { checks: CompiledCheckV1[] };
+    acceptance: {
+      checks: CompiledCheckV1[];
+      external_confirmations: DeliveryContractV1["global"]["acceptance"]["external_confirmations"];
+    };
   };
   outcomes: CompiledOutcomeV1[];
 }
@@ -103,13 +134,33 @@ export interface CheckExecutionResultV1 {
   duration_ms: number;
 }
 
-export interface VerificationCacheV1 {
-  schema_version: "long-task-verification-cache-v1";
+export interface ProgressRecordV1 {
+  schema_version: "long-task-progress-record-v1";
+  compiled_identity: string;
+  outcome_authority_hash: string;
+  check_identity: string;
+  check_internal_id: string;
+  outcome_key: string | null;
+  check_key: string;
+  runner_verifier_identity: string;
+  relevant_context_identity: string;
+  resolved_input_path_hashes: Record<string, string>;
+  binding_carrier_path_hashes: Record<string, string>;
+  dependency_interface_identities: Record<string, string>;
+  result: "passed" | "failed" | "blocked_external";
+  check_result: CheckExecutionResultV1;
+  findings: LongTaskFindingV1[];
+  completed_at: string;
+}
+
+export interface TargetedVerificationResultV1 {
+  schema_version: "long-task-targeted-progress-v1";
   compiled_identity: string;
   snapshot_sha256: string;
   acceptance_authorized: false;
   selected_outcome: string | null;
   selected_check: string | null;
+  updated_progress_records: string[];
   check_results: CheckExecutionResultV1[];
   findings: LongTaskFindingV1[];
   completed_at: string;
@@ -117,18 +168,24 @@ export interface VerificationCacheV1 {
 
 export type OutcomeStatusV1 =
   | "unverified"
-  | "passing_current_snapshot"
-  | "failing_current_snapshot"
-  | "stale"
+  | "progress_passing"
+  | "progress_failing"
+  | "progress_stale"
   | "blocked_external";
 
 export interface FinalReceiptV1 {
   schema_version: "long-task-final-receipt-v1";
   receipt_sha256: string;
-  workflow_status: "accepted" | "needs_work" | "blocked_external";
+  workflow_status:
+    | "machine_accepted"
+    | "machine_accepted_external_pending"
+    | "needs_work"
+    | "blocked_external";
   compiled_identity: string;
   contract_sha256: string;
   snapshot_sha256: string;
+  git_head: string;
+  git_tree: string;
   source_hashes: Record<string, string>;
   context_hashes: Record<string, string>;
   verifier_identity: VerifierIdentityV1;

@@ -50,7 +50,7 @@ The compiler requires strict when any declared fact is true:
 - permission boundary change;
 - irreversible external effect;
 - full-population operation;
-- multi-repository change;
+- multi-repository change is rejected as unsupported in V1;
 - critical user path with weak end-to-end observability.
 
 Users may raise risk to strict. A requested `standard` level below the computed floor fails with `risk_level_below_required`. Skill or executor logic can never lower risk.
@@ -62,7 +62,7 @@ The active flow is:
 ```text
 request or external implementation source
 -> minimum relevant Context
--> one Canonical Delivery Contract
+-> one Contract/Contract Bundle or one Delivery Set authority
 -> one coverage review
 -> pure static compile/preflight
 -> current native Goal executes in current workspace
@@ -83,7 +83,7 @@ Core execution has no internal parallel mutation. Users may explicitly use platf
 
 ## 5. Canonical Delivery Contract V1
 
-The sole authoring file is `delivery-contract.yaml`, schema `long-task-delivery-v1`. Optional `source.md` is immutable provenance in meaning, but never execution or acceptance authority.
+The root authoring authority is `delivery-contract.yaml`, schema `long-task-delivery-v1`. It may contain inline Outcomes or `outcome_files` fragments that own Outcome content only; both forms compile to one logical Contract. Original `source_paths` remain provenance and direct Source Claims retain coverage into Outcomes or Set Children.
 
 The Contract keeps three logical authorities in one file:
 
@@ -144,9 +144,21 @@ There is no Requirement/PI/Obligation/Binding/AC/Proof/Spec authoring namespace 
 
 Product or Acceptance meaning may not be silently weakened by execution. Technical support paths and local constraints may be revised when real implementation discoveries do not change product or acceptance meaning; every revision requires recompile and invalidates old results.
 
-If one complete Product + Acceptance Contract exceeds reliable authoring capacity, the workflow returns `contract_capacity_exceeded`. It does not auto-split into SFCs or repeatedly launch authoring attempts. Multiple top-level Contracts are suggested only for genuinely independent acceptance, release or rollback boundaries—not parallelism or model preference.
+If one atomic Product + Acceptance Contract exceeds a single file, use a Contract Bundle. Multiple Child Contracts are allowed only inside a Delivery Set after a semantic Boundary Check confirms independent observable results, executable Acceptance and a real release/rollback/owner/risk/product boundary without splitting an atomic loop. Capacity, parallelism and model preference are never semantic separation boundaries.
 
-## 6. Static Compiler And Preflight
+## 6. Composition, Authority And Finalization
+
+Contract Boundary Check returns only `single_contract`, `single_contract_bundle`, `delivery_set`, `decision_required` or `capacity_blocked`. It is a semantic authoring judgment, creates no execution state and never claims the compiler proved product independence.
+
+`long-task-delivery-set-v1` owns one Set goal/source coverage, global Product/Technical boundaries, integration Checks, external confirmations and an acyclic map of Child Contracts. Each Child declares an observable result, one permitted separation reason and evidence. The active binding remains `mode: delivery_set`; Child Gate receipts are dependency checkpoints only. Status/resume project ready, blocked, passed, stale and remaining Children and start no execution. V1 rejects multi-repository delivery.
+
+The first formal Contract or Set compile freezes `initial_task_base` with commit, tree and workspace manifest. Recompile retains that base. Once implementation changes, targeted progress or a Child Gate exists, protected source/Product/Acceptance/risk/Set-boundary changes create a pending hash-bound Authority Revision and cannot activate without explicit approval. Technical-only amendments require a reason and stale affected progress.
+
+Targeted verification persists independent per-Check Progress Records scoped to protected authority, check/runner/verifier identity, relevant Context, input paths, binding carriers and dependency interfaces. They accumulate across runs and never authorize completion.
+
+Top-level Final Gate requires a clean candidate commit after all required Context updates. Standalone Final Gate reruns its complete Contract on one snapshot. Delivery Set Final Gate reruns all Child and integration Checks on one shared snapshot and ignores historical Child passes. Receipts bind HEAD, tree, workspace, Contract/Set, source, Context and verifier identities. A later content commit stales the receipt; remote push/PR operations that do not change local commit/tree do not. `machine_accepted_external_pending` explicitly separates declared external/human/deploy confirmation from machine Contract acceptance.
+
+## 7. Static Compiler And Preflight
 
 Compile is deterministic, static and model-free. It:
 
@@ -166,7 +178,7 @@ Compile never implements code, invokes a model, creates a process/worktree/branc
 
 If actual changes escape declared expected/support paths or touch an undeclared Context owner/boundary, verify/final returns `scope_or_risk_escalation_required`. The same current Goal updates the Contract and recompiles.
 
-## 7. Evidence Kernel
+## 8. Evidence Kernel
 
 The Evidence Kernel retains only low-level capabilities that directly close false-completion paths:
 
@@ -190,7 +202,7 @@ Task -> Outcome -> Check -> Observation/Assertion
 
 Agent/worker prose, hand-written state and command exit code alone cannot create accepted authority. Missing, weakened or unexecutable proof fails closed.
 
-## 8. Verification And Recovery Semantics
+## 9. Verification And Recovery Semantics
 
 ### Targeted Verify
 
@@ -201,9 +213,9 @@ Agent/worker prose, hand-written state and command exit code alone cannot create
 `status` is machine JSON and reports each Outcome as:
 
 - `unverified`;
-- `passing_current_snapshot`;
-- `failing_current_snapshot`;
-- `stale`;
+- `progress_passing`;
+- `progress_failing`;
+- `progress_stale`;
 - `blocked_external`.
 
 It is not completion authority.
@@ -226,21 +238,22 @@ The Stop Hook is a no-op without an active task. With an active task, it blocks 
 
 `close` requires that fresh Receipt, clears only the matching active binding and preserves Contract/final Receipt. `abandon` is explicit non-success teardown: it clears matching temporary state, preserves `source.md` and `delivery-contract.yaml`, and never touches a user branch/worktree/commit/remote.
 
-## 9. Retry And Decision Boundaries
+## 10. Retry And Decision Boundaries
 
 - Static Contract errors block implementation and are fixed in the same current Goal before product code work.
 - Local test/Check failures are repaired in the same Goal with no new Agent or model session.
-- A transient verification-command/external-service failure gets at most one mechanical retry; a second failure becomes `blocked_external`.
+- Retry defaults to none. A transient verification command gets one mechanical retry only when it explicitly declares `transient_once`, idempotency and a read-only/test-sandbox effect; timeout alone does not establish safety.
 - Product, acceptance or architecture semantic conflicts pause for user/main-conversation decision and are not disguised as implementation failures.
 - If the current Goal truly ends, a new session uses `resume` for semantic recovery. Harness does not simulate the old Turn or invent a Campaign identity.
 
-## 10. CLI Contract
+## 11. CLI Contract
 
 The active public surface is:
 
 ```text
 ty-context long-task init <workdir>
 ty-context long-task compile <workdir>
+ty-context long-task approve-authority-revision <workdir> --revision <sha>
 ty-context long-task verify <workdir> [--outcome <key>] [--check <key>]
 ty-context long-task status <workdir>
 ty-context long-task resume <workdir>
@@ -248,15 +261,17 @@ ty-context long-task final-gate <workdir>
 ty-context long-task stop-check <workdir> [--message <text>]
 ty-context long-task close <workdir>
 ty-context long-task abandon <workdir>
+ty-context delivery-set init|compile|status|resume|final-gate|stop-check|close|abandon <setdir>
+ty-context delivery-set approve-authority-revision <setdir> --revision <sha>
 ```
 
 No Long-Task CLI command may start Codex/AppServer/agents, create/delete worktrees or branches, merge, push, open PRs, retry model calls or manage process trees. Only a Contract-declared project verification command may create a child process.
 
 `composite-campaign` and `composite-long-task` are lightweight retirement tombstones only. They report `retired`, do not execute historical state and direct users to `ty-context long-task`.
 
-## 11. Skills And Distribution Profiles
+## 12. Skills And Distribution Profiles
 
-`/long-task-workflow` is the only active long-task Skill. It can create/review one Delivery Contract from user/external source, compile it, continuously implement rolling Frontiers in the current native Goal, resume a workdir, run Final Gate and report results.
+`/long-task-workflow` is the only active long-task Skill. It performs Boundary Check, creates/reviews one Contract/Bundle or Set from user/external source, compiles it, continuously implements rolling Frontiers in the current native Goal, resumes semantic state, runs the matching Final Gate and reports results.
 
 `/normal-long-task` is a retirement pointer and creates no checklist, prompt or Local Audit.
 
@@ -270,7 +285,7 @@ Profiles are:
 
 Upgrade safely changes package-owned `composite-codex` profile selection to `long-task`, removes package-owned retired assets and leaves user-authored historical campaign/source/Contract files untouched. It never imports an unfinished campaign or automatically executes it.
 
-## 12. Managed And Packaged Surfaces
+## 13. Managed And Packaged Surfaces
 
 - `.codex/ty-context-managed/**` is managed source.
 - `packages/ty-context/assets/**` is package canonical output.

@@ -40,7 +40,7 @@ try {
     );
     if (
       result.schema_version !== "long-task-final-receipt-v1" ||
-      result.workflow_status !== "accepted"
+      result.workflow_status !== "machine_accepted"
     ) {
       throw new Error(
         `minimal Delivery Contract smoke was not accepted: ${JSON.stringify(result)}`,

@@ -3,7 +3,7 @@ import type {
   CompiledCheckV1,
   CompiledDeliveryContractV1,
   LongTaskFindingV1,
-  VerificationCacheV1,
+  TargetedVerificationResultV1,
   WorkspaceManifestV1,
 } from "./long-task-delivery-types.js";
 import { deliveryCompileFreshness } from "./long-task-freshness.js";
@@ -19,8 +19,11 @@ import { findScopeEscapes } from "./long-task-paths.js";
 import {
   assertMatchingActiveBinding,
   readCompiledDeliveryContract,
-  writeVerificationCache,
+  writeProgressRecord,
 } from "./long-task-state.js";
+import { createProgressRecord } from "./long-task-progress.js";
+import { deliverySetWorkspaceExclusions } from "./long-task-delivery-set-state.js";
+import { matchesRepoPattern } from "./long-task-paths.js";
 import {
   changedWorkspacePaths,
   createWorkspaceSnapshot,
@@ -36,30 +39,44 @@ export interface DeliveryRunV1 {
 export async function verifyDeliveryContract(
   workdir: string,
   selection: { outcome?: string; check?: string } = {},
-): Promise<VerificationCacheV1> {
+): Promise<TargetedVerificationResultV1> {
   const compiled = await readCompiledDeliveryContract(workdir);
   await assertMatchingActiveBinding(compiled);
   const selected = selectChecks(compiled, selection);
+  const exclusions = await deliverySetWorkspaceExclusions(compiled);
   const snapshot = await createWorkspaceSnapshot(
     compiled.repository_root,
     compiled.workdir,
     `verify-${compiled.task.id}`,
+    exclusions,
   );
   try {
     const run = await runDeliveryChecks(compiled, snapshot, selected, true);
-    const cache: VerificationCacheV1 = {
-      schema_version: "long-task-verification-cache-v1",
+    const records = run.check_results.map((result) => {
+      const check = selected.find(
+        (item) => item.internal_id === result.internal_id,
+      );
+      if (!check)
+        throw new Error(`compiled_check_not_found:${result.internal_id}`);
+      return createProgressRecord(compiled, snapshot.manifest, check, result);
+    });
+    await Promise.all(
+      records.map((record) => writeProgressRecord(workdir, record)),
+    );
+    return {
+      schema_version: "long-task-targeted-progress-v1",
       compiled_identity: compiled.compiled_identity,
       snapshot_sha256: snapshot.manifest.snapshot_sha256,
       acceptance_authorized: false,
       selected_outcome: selection.outcome ?? null,
       selected_check: selection.check ?? null,
+      updated_progress_records: records.map(
+        (record) => record.check_internal_id,
+      ),
       check_results: run.check_results,
       findings: run.findings,
       completed_at: new Date().toISOString(),
     };
-    await writeVerificationCache(workdir, cache);
-    return cache;
   } finally {
     await snapshot.dispose();
   }
@@ -70,8 +87,16 @@ export async function runDeliveryChecks(
   snapshot: WorkspaceSnapshotV1,
   checks: CompiledCheckV1[],
   includeCounterfactuals: boolean,
+  finalGate = false,
+  scopeOverride?: { allowed: string[]; forbidden: string[] },
 ): Promise<DeliveryRunV1> {
-  const findings = await preRunFindings(compiled, snapshot.manifest);
+  const findings = await preRunFindings(
+    compiled,
+    snapshot.manifest,
+    scopeOverride,
+  );
+  if (finalGate)
+    findings.push(...finalPathFindings(compiled, snapshot.manifest));
   if (findings.length)
     return { snapshot: snapshot.manifest, check_results: [], findings };
 
@@ -122,6 +147,43 @@ export async function runDeliveryChecks(
   return { snapshot: snapshot.manifest, check_results: checkResults, findings };
 }
 
+function finalPathFindings(
+  compiled: CompiledDeliveryContractV1,
+  manifest: WorkspaceManifestV1,
+): LongTaskFindingV1[] {
+  const findings: LongTaskFindingV1[] = [];
+  for (const check of allCompiledChecks(compiled))
+    for (const pattern of check.expected_output_paths)
+      if (
+        !manifest.files.some((file) => matchesRepoPattern(file.path, pattern))
+      )
+        findings.push({
+          code: "expected_output_path_missing",
+          outcome_key: check.outcome_key,
+          check_key: check.key,
+          message: `Expected output path did not exist: ${pattern}`,
+          expected: pattern,
+          next_action: "Create the declared output and rerun verification.",
+        });
+  for (const outcome of compiled.outcomes)
+    for (const binding of outcome.technical.bindings)
+      if (
+        binding.existence === "planned" &&
+        !binding.carrier_paths.every((pattern) =>
+          manifest.files.some((file) => matchesRepoPattern(file.path, pattern)),
+        )
+      )
+        findings.push({
+          code: "planned_binding_missing",
+          outcome_key: outcome.key,
+          check_key: null,
+          message: `Planned binding is missing: ${binding.target}`,
+          expected: binding.carrier_paths,
+          next_action: "Implement the declared binding and rerun verification.",
+        });
+  return findings;
+}
+
 export function allCompiledChecks(
   compiled: CompiledDeliveryContractV1,
 ): CompiledCheckV1[] {
@@ -154,6 +216,7 @@ function selectChecks(
 async function preRunFindings(
   compiled: CompiledDeliveryContractV1,
   current: WorkspaceManifestV1,
+  scopeOverride?: { allowed: string[]; forbidden: string[] },
 ): Promise<LongTaskFindingV1[]> {
   const stale = await deliveryCompileFreshness(compiled);
   if (stale.length)
@@ -165,12 +228,25 @@ async function preRunFindings(
       next_action:
         "Run ty-context long-task compile after reviewing the Contract change.",
     }));
-  const changed = changedWorkspacePaths(compiled.baseline_workspace, current);
-  const allowed = compiled.outcomes.flatMap((outcome) => [
-    ...outcome.technical.expected_change_paths,
-    ...outcome.technical.allowed_support_paths,
+  const protectedAuthorityFiles = new Set([
+    ...Object.keys(compiled.contract_files),
+    ...Object.keys(compiled.source_hashes),
+    ...Object.keys(compiled.context_snapshot.sha256),
+    ...allCompiledChecks(compiled).flatMap((check) =>
+      Object.keys(check.runner.frozen_files),
+    ),
   ]);
-  const forbidden = [
+  const changed = changedWorkspacePaths(
+    compiled.initial_task_base.workspace_manifest,
+    current,
+  ).filter((file) => !protectedAuthorityFiles.has(file));
+  const allowed =
+    scopeOverride?.allowed ??
+    compiled.outcomes.flatMap((outcome) => [
+      ...outcome.technical.expected_change_paths,
+      ...outcome.technical.allowed_support_paths,
+    ]);
+  const forbidden = scopeOverride?.forbidden ?? [
     ...compiled.global.technical.forbidden_paths,
     ...compiled.outcomes.flatMap(
       (outcome) => outcome.technical.forbidden_paths,

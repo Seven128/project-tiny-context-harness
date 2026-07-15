@@ -15,6 +15,8 @@ export function classifyLongTaskRisk(
   contract: DeliveryContractV1,
 ): RiskDecisionV1 {
   const facts = contract.risk.facts;
+  if (facts.multi_repository_change)
+    throw new Error("multi_repository_delivery_not_supported_v1");
   const reasons = [
     [facts.public_api_or_schema_change, "public_api_or_schema_change"],
     [facts.persistent_data_change, "persistent_data_change"],
@@ -47,6 +49,27 @@ export function validateRiskProof(
   decision: RiskDecisionV1,
 ): void {
   const errors: string[] = [];
+  const riskEvidence = contract.risk.evidence ?? [];
+  const evidenceFacts = new Set(riskEvidence.map((item) => item.fact));
+  for (const [fact, value] of Object.entries(contract.risk.facts))
+    if (value && !evidenceFacts.has(fact as keyof typeof contract.risk.facts))
+      errors.push(`risk_evidence_required:${fact}`);
+  const claimKeys = new Set(
+    (contract.source_claims ?? []).map((claim) => claim.key),
+  );
+  const contextRefs = new Set(contract.task.context_refs);
+  for (const evidence of riskEvidence) {
+    for (const claim of evidence.source_claim_refs)
+      if (!claimKeys.has(claim))
+        errors.push(
+          `risk_evidence_source_claim_unknown:${evidence.fact}:${claim}`,
+        );
+    for (const reference of evidence.context_refs)
+      if (!contextRefs.has(reference))
+        errors.push(
+          `risk_evidence_context_ref_unknown:${evidence.fact}:${reference}`,
+        );
+  }
   if (!contract.outcomes.length) errors.push("outcome_required");
   for (const check of contract.global.acceptance.checks)
     validateCheck(check, "global", errors);

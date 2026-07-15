@@ -4,7 +4,12 @@ import { packageAssetPath } from "./paths.js";
 import { pathExists } from "./fs.js";
 import type { SyncReport } from "./sync-engine.js";
 
-const MANAGED_STATUS = "Tiny Context long-task completion gate";
+const MANAGED_STATUS = "Tiny Context long-task authority gate";
+const LEGACY_MANAGED_STATUSES = new Set([
+  "Tiny Context long-task completion gate",
+  "Tiny Context composite completion gate",
+  MANAGED_STATUS,
+]);
 const COMMAND =
   'node "$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs"';
 const WINDOWS =
@@ -54,7 +59,7 @@ export async function installLongTaskHooks(
           type: "command",
           command: COMMAND,
           commandWindows: WINDOWS,
-          timeout: 3600,
+          timeout: event === "Stop" ? 15 : 10,
           statusMessage: MANAGED_STATUS,
         },
       ],
@@ -129,7 +134,14 @@ function object(value: unknown): Record<string, unknown> {
 function containsManaged(group: Record<string, unknown>): boolean {
   return (
     Array.isArray(group.hooks) &&
-    group.hooks.some((hook) => object(hook).statusMessage === MANAGED_STATUS)
+    group.hooks.some((hook) => {
+      const row = object(hook);
+      return (
+        LEGACY_MANAGED_STATUSES.has(String(row.statusMessage ?? "")) ||
+        row.command === COMMAND ||
+        row.commandWindows === WINDOWS
+      );
+    })
   );
 }
 async function writeIfChanged(file: string, content: string): Promise<boolean> {

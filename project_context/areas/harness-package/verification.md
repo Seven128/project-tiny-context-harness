@@ -11,6 +11,7 @@ read_policy: default
 - `npm run build --workspace project-tiny-context-harness`: compiled package and CLI.
 - `npm run test:delivery-contract --workspace project-tiny-context-harness`: strict parser, generated ids, Context/source/path/runner/proof preflight, risk floor and scope escalation tests. Small-fixture compile target is under two seconds.
 - `npm run test:long-task-workflow --workspace project-tiny-context-harness`: targeted verify/status/resume/final/Stop/profile/consumer workflow tests. Focused loop target is under five minutes; complete workflow suite under fifteen minutes.
+- Long-task tests explicitly cover Contract Bundle normalization, Boundary decisions, Source Claims, Authority Lock/immutable baseline, scoped Progress Records, verifier-source/retry safety, clean candidate Final Gates, Child-vs-Set authority, Set integration reruns, external-pending semantics and Hook deduplication.
 
 ## Full Gates
 

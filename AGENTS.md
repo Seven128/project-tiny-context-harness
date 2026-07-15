@@ -43,16 +43,17 @@ Do not infer long-task mode from duration, complexity, file count or agent prefe
 Routing precedence:
 
 1. If `.codex/ty-context-active-long-task.json` exists in the current repository, resume its workdir with `ty-context long-task resume <workdir>` in the current native Goal.
-2. If the user explicitly invokes `/long-task-workflow`, prepare or resume one `long-task-delivery-v1` Delivery Contract and execute it in the current native Goal.
+2. If the user explicitly invokes `/long-task-workflow`, run the semantic Contract Boundary Check, then prepare or resume one `long-task-delivery-v1` Contract/Contract Bundle or one `long-task-delivery-set-v1` composition in the current native Goal.
 3. `/normal-long-task` is a retirement pointer only and routes to `/long-task-workflow`; it creates no checklist, target prompt or second authority.
 4. Otherwise remain on the default Workflow Contract, even when work is long.
 
-The long-task workflow uses exactly one native Goal, one selected repository/worktree and one `delivery-contract.yaml`. The Contract holds Product Authority, Technical Boundary Authority and Acceptance Authority. Outcomes are acceptance units, not worker, branch, worktree or model-session units. File-level implementation detail remains a rolling internal Frontier in the current Goal.
+The long-task workflow uses exactly one native Goal and one selected repository/workspace. A large atomic delivery remains one logical Contract and may split only Outcome fragments under one root `delivery-contract.yaml`. Genuinely independent release/rollback/owner/risk/product boundaries may form one Delivery Set with multiple Child Contracts, but the Set remains the sole top-level completion authority. Outcomes and Children are acceptance/dependency units, not workers, branches, worktrees or model-session units.
 
 The supported CLI is:
 
 - `ty-context long-task init <workdir>`
 - `ty-context long-task compile <workdir>`
+- `ty-context long-task approve-authority-revision <workdir> --revision <sha>`
 - `ty-context long-task verify <workdir> [--outcome <key>] [--check <key>]`
 - `ty-context long-task status <workdir>`
 - `ty-context long-task resume <workdir>`
@@ -60,10 +61,12 @@ The supported CLI is:
 - `ty-context long-task stop-check <workdir> [--message <text>]`
 - `ty-context long-task close <workdir>`
 - `ty-context long-task abandon <workdir>`
+- `ty-context delivery-set init|compile|status|resume|final-gate|stop-check|close|abandon <setdir>`
+- `ty-context delivery-set approve-authority-revision <setdir> --revision <sha>`
 
-Compile freezes Contract, source, relevant Context, verifier, Oracle/runner definitions and repository/workdir identity. Targeted verify is diagnostic and never grants acceptance. Final Gate creates one current snapshot, reruns every declared Check on that snapshot, may deduplicate only identical execution identities inside that gate, and accepts only when all required current evidence passes. Stop allows completion only while the accepted receipt remains fresh against workspace, Contract, source, Context, runner, verifier and Hook identity. `close` requires fresh acceptance; `abandon` clears package state but preserves authored source and Contract files.
+Compile freezes source coverage, protected authority hashes, an immutable initial base, relevant Context and complete verifier/runner sources. Targeted verify accumulates scoped per-Check progress and never grants acceptance. Child Gate produces only `contract_gate_passed`. A standalone or Delivery Set Final Gate requires a clean candidate commit, creates one current snapshot, reruns all required checks on it and binds HEAD/tree/workspace/authority identities. Stop trusts only the matching fresh top-level Receipt. External confirmations remain explicit and machine acceptance never implies CI/deploy/human acceptance.
 
-Risk routing is deterministic. L0 stays on the default workflow. L1 uses standard long-task delivery. Public API/schema, persistent data, migration, security/permission boundaries, irreversible effects, full-population operations, multi-repository change, or a critical path with weak observability impose an L2 strict floor. Strict proof obligations are compiler-enforced; explicit `standard` below the floor fails.
+Risk routing is deterministic. L0 stays on the default workflow. L1 uses standard long-task delivery. Public API/schema, persistent data, migration, security/permission boundaries, irreversible effects, full-population operations, or a critical path with weak observability impose an L2 strict floor. Declared and configured changed-path risk surfaces are checked; true facts require evidence. Multi-repository delivery is rejected in V1.
 
 Tiny Context does not create or restore platform Goals, invoke models, spawn sub-agents, call an App Server, create branches/worktrees, merge, push, open PRs or manage process trees. Only Contract-declared project verification runners may execute product checks. Retired `composite-campaign` and `composite-long-task` commands are non-executing tombstones.
 

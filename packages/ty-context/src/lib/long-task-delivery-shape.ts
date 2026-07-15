@@ -4,6 +4,7 @@ import type {
   DeliveryControlV1,
   PopulationRequirementV1,
   RollbackRecoveryV1,
+  SourceClaimV1,
 } from "./long-task-delivery-types.js";
 
 export type Shape = Record<string, unknown>;
@@ -107,11 +108,12 @@ export function parseBindings(
   label: string,
 ): DeliveryBindingV1[] {
   return array(value, label).map((item, index) => {
-    const row = object(item, `${label}[${index}]`, [
-      "kind",
-      "target",
-      "carrier_paths",
-    ]);
+    const row = object(
+      item,
+      `${label}[${index}]`,
+      ["kind", "target", "carrier_paths"],
+      ["existence"],
+    );
     return {
       kind: literal(
         row.kind,
@@ -130,6 +132,63 @@ export function parseBindings(
         row.carrier_paths,
         `${label}[${index}].carrier_paths`,
       ),
+      existence: Object.hasOwn(row, "existence")
+        ? literal(
+            row.existence,
+            ["existing", "planned"] as const,
+            `${label}[${index}].existence`,
+          )
+        : "existing",
+    };
+  });
+}
+
+export function parseSourceClaims(
+  value: unknown,
+  label: string,
+): SourceClaimV1[] {
+  return array(value, label).map((item, index) => {
+    const itemLabel = `${label}[${index}]`;
+    const row = object(item, itemLabel, [
+      "key",
+      "source_ref",
+      "statement",
+      "disposition",
+    ]);
+    const disposition = object(
+      row.disposition,
+      `${itemLabel}.disposition`,
+      ["type"],
+      ["refs", "reason"],
+    );
+    const type = literal(
+      disposition.type,
+      [
+        "contract",
+        "global_constraint",
+        "out_of_scope",
+        "decision_required",
+      ] as const,
+      `${itemLabel}.disposition.type`,
+    );
+    const parsedDisposition =
+      type === "contract" || type === "global_constraint"
+        ? {
+            type,
+            refs: strings(disposition.refs, `${itemLabel}.disposition.refs`),
+          }
+        : {
+            type,
+            reason: string(
+              disposition.reason,
+              `${itemLabel}.disposition.reason`,
+            ),
+          };
+    return {
+      key: key(row.key, `${itemLabel}.key`),
+      source_ref: string(row.source_ref, `${itemLabel}.source_ref`),
+      statement: string(row.statement, `${itemLabel}.statement`),
+      disposition: parsedDisposition,
     };
   });
 }

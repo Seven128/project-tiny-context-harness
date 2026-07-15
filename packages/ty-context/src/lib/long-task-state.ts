@@ -1,4 +1,12 @@
-import { mkdir, open, readFile, rename, rm, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  open,
+  readFile,
+  readdir,
+  rename,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import path from "node:path";
 import {
   canonicalJson,
@@ -8,13 +16,16 @@ import {
 import type {
   CompiledDeliveryContractV1,
   FinalReceiptV1,
-  VerificationCacheV1,
+  ProgressRecordV1,
+  AuthorityHashesV1,
 } from "./long-task-delivery-types.js";
 import { gitPath } from "./long-task-workspace.js";
 
 const RUNTIME_FOLDER = ".ty-context";
 const COMPILED_FILE = "compiled-contract.json";
-const VERIFY_FILE = "verification-cache.json";
+const PROGRESS_FOLDER = "progress";
+const AUTHORITY_PENDING_FILE = "authority-revision-pending.json";
+const AUTHORITY_APPROVED_FILE = "authority-revision-approved.json";
 const FINAL_FILE = "final-receipt.json";
 const ACTIVE_FILE = ".codex/ty-context-active-long-task.json";
 const MIRROR_FILE = ".codex/ty-context-final-result-receipt.json";
@@ -27,6 +38,33 @@ export interface ActiveLongTaskBindingV1 {
   compiled_identity: string;
   verifier_identity: CompiledDeliveryContractV1["verifier_identity"];
   activated_at: string;
+  mode: "contract";
+}
+
+export interface ActiveDeliverySetBindingV1 {
+  schema_version: "active-long-task-binding-v1";
+  mode: "delivery_set";
+  repository_root: string;
+  set_workdir: string;
+  compiled_set_identity: string;
+  registered_child_contracts: Record<string, string>;
+  verifier_identity: CompiledDeliveryContractV1["verifier_identity"];
+  activated_at: string;
+}
+
+export type ActiveAuthorityBindingV1 =
+  ActiveLongTaskBindingV1 | ActiveDeliverySetBindingV1;
+
+export interface PendingAuthorityRevisionV1 {
+  schema_version: "long-task-authority-revision-pending-v1";
+  previous_hashes: AuthorityHashesV1;
+  next_hashes: AuthorityHashesV1;
+  changed_authority_sections: string[];
+  reason: string;
+  new_risk_floor: "standard" | "strict";
+  affected_outcomes_or_contracts: string[];
+  revision_identity: string;
+  created_at: string;
 }
 
 export function runtimePath(workdir: string, file = ""): string {
@@ -59,6 +97,20 @@ export async function activateDeliveryContract(
   compiled: CompiledDeliveryContractV1,
 ): Promise<ActiveLongTaskBindingV1> {
   const existing = await readActiveLongTaskBinding(compiled.repository_root);
+  if (existing?.mode === "delivery_set") {
+    const expected =
+      existing.registered_child_contracts[
+        compiled.delivery_set?.contract_key ?? ""
+      ];
+    if (
+      !compiled.delivery_set ||
+      compiled.delivery_set.set_identity !== existing.compiled_set_identity ||
+      path.resolve(expected ?? "") !== compiled.workdir
+    )
+      throw new Error("delivery_set_child_not_registered");
+    await ensureRuntimeExcludes(compiled.repository_root, compiled.workdir);
+    return existing as unknown as ActiveLongTaskBindingV1;
+  }
   if (
     existing &&
     (existing.workdir !== compiled.workdir ||
@@ -75,6 +127,7 @@ export async function activateDeliveryContract(
     compiled_identity: compiled.compiled_identity,
     verifier_identity: compiled.verifier_identity,
     activated_at: existing?.activated_at ?? new Date().toISOString(),
+    mode: "contract",
   };
   await ensureRuntimeExcludes(compiled.repository_root, compiled.workdir);
   await atomicJson(activePath(compiled.repository_root), binding);
@@ -83,10 +136,22 @@ export async function activateDeliveryContract(
 
 export async function readActiveLongTaskBinding(
   repositoryRoot: string,
-): Promise<ActiveLongTaskBindingV1 | null> {
+): Promise<ActiveAuthorityBindingV1 | null> {
   const value = await readOptionalJson(activePath(repositoryRoot));
   if (value === null) return null;
-  const row = value as Partial<ActiveLongTaskBindingV1>;
+  const row = value as Record<string, unknown>;
+  if (row.mode === "delivery_set") {
+    if (
+      row.schema_version !== "active-long-task-binding-v1" ||
+      typeof row.repository_root !== "string" ||
+      typeof row.set_workdir !== "string" ||
+      typeof row.compiled_set_identity !== "string" ||
+      !row.registered_child_contracts ||
+      !row.verifier_identity
+    )
+      throw new Error("active_binding_invalid");
+    return row as unknown as ActiveDeliverySetBindingV1;
+  }
   if (
     row.schema_version !== "active-long-task-binding-v1" ||
     typeof row.repository_root !== "string" ||
@@ -96,7 +161,7 @@ export async function readActiveLongTaskBinding(
     !row.verifier_identity
   )
     throw new Error("active_binding_invalid");
-  return row as ActiveLongTaskBindingV1;
+  return { ...(row as unknown as ActiveLongTaskBindingV1), mode: "contract" };
 }
 
 export async function assertMatchingActiveBinding(
@@ -104,6 +169,16 @@ export async function assertMatchingActiveBinding(
 ): Promise<ActiveLongTaskBindingV1> {
   const active = await readActiveLongTaskBinding(compiled.repository_root);
   if (!active) throw new Error("active_task_missing");
+  if (active.mode === "delivery_set") {
+    if (
+      !compiled.delivery_set ||
+      compiled.delivery_set.set_identity !== active.compiled_set_identity ||
+      active.registered_child_contracts[compiled.delivery_set.contract_key] !==
+        compiled.workdir
+    )
+      throw new Error("active_task_identity_mismatch");
+    return active as unknown as ActiveLongTaskBindingV1;
+  }
   if (
     active.workdir !== compiled.workdir ||
     active.compiled_identity !== compiled.compiled_identity
@@ -112,19 +187,97 @@ export async function assertMatchingActiveBinding(
   return active;
 }
 
-export async function writeVerificationCache(
-  workdir: string,
-  cache: VerificationCacheV1,
+export async function activateDeliverySetBinding(
+  binding: ActiveDeliverySetBindingV1,
 ): Promise<void> {
-  await atomicJson(runtimePath(workdir, VERIFY_FILE), cache);
+  const existing = await readActiveLongTaskBinding(binding.repository_root);
+  if (
+    existing &&
+    (existing.mode !== "delivery_set" ||
+      existing.set_workdir !== binding.set_workdir)
+  )
+    throw new Error(
+      `active_task_exists:${existing.mode === "delivery_set" ? existing.set_workdir : existing.workdir}`,
+    );
+  await atomicJson(activePath(binding.repository_root), binding);
 }
 
-export async function readVerificationCache(
+export async function writeProgressRecord(
   workdir: string,
-): Promise<VerificationCacheV1 | null> {
+  record: ProgressRecordV1,
+): Promise<void> {
+  await atomicJson(
+    runtimePath(
+      workdir,
+      path.join(PROGRESS_FOLDER, `${record.check_internal_id}.json`),
+    ),
+    record,
+  );
+}
+
+export async function readProgressRecords(
+  workdir: string,
+): Promise<Record<string, ProgressRecordV1>> {
+  const folder = runtimePath(workdir, PROGRESS_FOLDER);
+  const names = await readdir(folder).catch((error: NodeJS.ErrnoException) => {
+    if (error.code === "ENOENT") return [];
+    throw error;
+  });
+  const rows: Record<string, ProgressRecordV1> = {};
+  for (const name of names.filter((name) => name.endsWith(".json")).sort()) {
+    const value = (await readJson(path.join(folder, name))) as ProgressRecordV1;
+    if (value.schema_version !== "long-task-progress-record-v1")
+      throw new Error(`progress_record_invalid:${name}`);
+    rows[value.check_internal_id] = value;
+  }
+  return rows;
+}
+
+export async function writePendingAuthorityRevision(
+  workdir: string,
+  pending: PendingAuthorityRevisionV1,
+): Promise<void> {
+  await atomicJson(runtimePath(workdir, AUTHORITY_PENDING_FILE), pending);
+  await rm(runtimePath(workdir, AUTHORITY_APPROVED_FILE), { force: true });
+}
+
+export async function readPendingAuthorityRevision(
+  workdir: string,
+): Promise<PendingAuthorityRevisionV1 | null> {
   return (await readOptionalJson(
-    runtimePath(workdir, VERIFY_FILE),
-  )) as VerificationCacheV1 | null;
+    runtimePath(workdir, AUTHORITY_PENDING_FILE),
+  )) as PendingAuthorityRevisionV1 | null;
+}
+
+export async function approvePendingAuthorityRevision(
+  workdir: string,
+  revision: string,
+): Promise<void> {
+  const pending = await readPendingAuthorityRevision(workdir);
+  if (!pending || pending.revision_identity !== revision)
+    throw new Error("authority_revision_not_found_or_mismatched");
+  await atomicJson(runtimePath(workdir, AUTHORITY_APPROVED_FILE), {
+    schema_version: "long-task-authority-revision-approved-v1",
+    revision_identity: revision,
+    approved_at: new Date().toISOString(),
+  });
+}
+
+export async function authorityRevisionApproved(
+  workdir: string,
+  revision: string,
+): Promise<boolean> {
+  const value = (await readOptionalJson(
+    runtimePath(workdir, AUTHORITY_APPROVED_FILE),
+  )) as { revision_identity?: unknown } | null;
+  return value?.revision_identity === revision;
+}
+
+export async function clearAuthorityRevision(workdir: string): Promise<void> {
+  await Promise.all([
+    rm(runtimePath(workdir, AUTHORITY_PENDING_FILE), { force: true }),
+    rm(runtimePath(workdir, AUTHORITY_APPROVED_FILE), { force: true }),
+  ]);
 }
 
 export async function writeFinalReceipt(
@@ -172,7 +325,9 @@ export async function clearActiveBinding(
 ): Promise<boolean> {
   const active = await readActiveLongTaskBinding(repositoryRoot);
   if (!active) return false;
-  if (active.workdir !== path.resolve(workdir))
+  const activeWorkdir =
+    active.mode === "delivery_set" ? active.set_workdir : active.workdir;
+  if (activeWorkdir !== path.resolve(workdir))
     throw new Error("active_task_identity_mismatch");
   await rm(activePath(repositoryRoot), { force: true });
   return true;
@@ -182,10 +337,17 @@ export async function abandonLongTaskState(
   repositoryRoot: string,
   workdir: string,
 ): Promise<void> {
-  await clearActiveBinding(repositoryRoot, workdir);
+  const active = await readActiveLongTaskBinding(repositoryRoot);
+  const resolved = path.resolve(workdir);
+  const ownsTopAuthority =
+    (active?.mode === "contract" && active.workdir === resolved) ||
+    (active?.mode === "delivery_set" && active.set_workdir === resolved);
+  if (ownsTopAuthority) await clearActiveBinding(repositoryRoot, resolved);
   await Promise.all([
     rm(runtimePath(workdir), { recursive: true, force: true }),
-    rm(mirrorPath(repositoryRoot), { force: true }),
+    ...(ownsTopAuthority
+      ? [rm(mirrorPath(repositoryRoot), { force: true })]
+      : []),
   ]);
 }
 
@@ -204,7 +366,6 @@ async function invalidateFinalAuthority(
   workdir: string,
 ): Promise<void> {
   await Promise.all([
-    rm(runtimePath(workdir, VERIFY_FILE), { force: true }),
     rm(runtimePath(workdir, FINAL_FILE), { force: true }),
     rm(mirrorPath(repositoryRoot), { force: true }),
   ]);

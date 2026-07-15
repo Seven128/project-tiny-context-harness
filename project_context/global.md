@@ -3,9 +3,12 @@
 ## Project Goal
 
 - Maintain `project-tiny-context-harness`, the npm package and `ty-context` CLI behind the public Project Tiny Context Harness name.
-- Keep the default product small: Minimal Context preserves durable project facts; Workflow Contract defines the lightweight default agent loop; the explicitly enabled Long-Task Workflow adds one canonical delivery contract and verifier-owned completion authority for work that needs recovery across long sessions.
-- The Long-Task Workflow is Single-Goal Rolling Delivery: one `delivery-contract.yaml`, one platform-native continuing Goal, the current user-selected workspace, a rolling implementation frontier and one Evidence Kernel whose verification strength rises with declared risk.
+- Keep the default product small: Minimal Context preserves durable project facts; Workflow Contract defines the lightweight default agent loop; the explicitly enabled Long-Task Workflow adds one top-level Contract/Bundle/Set authority and verifier-owned completion for work that needs recovery across long sessions.
+- The Long-Task Workflow is Single-Goal Rolling Delivery: one platform-native continuing Goal and selected workspace with one top-level Contract/Contract Bundle or Delivery Set authority, a rolling implementation frontier and one Evidence Kernel whose verification strength rises with declared/configured risk.
 - A Delivery Contract preserves product outcomes, non-goals, stable technical boundaries, acceptance checks and relevant Context. It does not freeze file-by-file implementation steps.
+- A large atomic delivery may use `outcome_files` as one logical Contract Bundle. Multiple Child Contracts require a semantic Boundary Check and one Delivery Set; the Set owns source coverage, global boundaries, integration Acceptance and the only top-level completion Receipt.
+- Original source requirements remain directly covered by Source Claims for L2, Bundle and Set work. First compile freezes an immutable task base; protected authority revisions after execution require explicit hash-bound approval.
+- Targeted verify persists scoped per-Check progress only. Child Gates are dependency checkpoints. Top-level Final Gates require a clean candidate commit and bind Git HEAD/tree, workspace, source, Context, authority and complete verifier identity.
 
 ## Non-goals / Boundaries
 
@@ -19,7 +22,7 @@
 ## Background
 
 - Fresh coding-agent sessions need a small repo-owned recovery path for product intent, architecture boundaries and repeatable verification instead of rediscovering them from code.
-- The package previously included a multi-worker Campaign runtime. Version 0.5.0 replaces that active architecture with one native Goal, one selected workspace, one Delivery Contract and verifier-owned current-snapshot evidence.
+- The package previously included a multi-worker Campaign runtime. Version 0.5.0 replaces that active architecture with one native Goal, one selected workspace, one top-level Contract/Bundle/Set authority and verifier-owned current-snapshot evidence.
 - Historical names remain only where safe migration, non-executing tombstones or explicit design history require them.
 
 ## Design Rationale
@@ -32,10 +35,10 @@
 ## Workflow Direction
 
 - L0 local, reversible work stays on the default Workflow Contract and creates no Delivery Contract.
-- L1 standard long work uses one Delivery Contract, one native Goal, one workspace, targeted repair verification, a same-snapshot Final Gate and Stop freshness.
-- L2 strict work is selected deterministically from declared risk facts or an explicit user upgrade. Public API/schema, persistent data, migrations, security/permission boundaries, irreversible external effects, full-population operations, multiple repositories, or a weakly observable critical user path require strict proof obligations.
+- L1 standard long work uses one Contract/Bundle or Set authority, one native Goal, one workspace, scoped repair progress, a same-snapshot Final Gate and Stop freshness.
+- L2 strict work is selected deterministically from declared/configured/actual risk facts or an explicit user upgrade. Public API/schema, persistent data, migrations, security/permission boundaries, irreversible external effects, full-population operations or a weakly observable critical user path require strict proof obligations. Multi-repository delivery is rejected in V1.
 - `requested_level: standard` below the computed risk floor fails compile. Execution cannot downgrade risk.
-- `delivery-contract.yaml` is the only execution and acceptance authority. Optional `source.md` is provenance only. Git history records Contract revisions; there is no Packet revision chain, Source Unit inventory, SFC graph, Wave or second plan.
+- One root `delivery-contract.yaml` (with optional Outcome fragments) or `delivery-set.yaml` is execution and acceptance authority. Declared original sources remain provenance and Source Claims preserve direct coverage; there is no Packet revision chain, Source Unit inventory, SFC graph, Wave or second plan.
 - Compile is pure static preflight. It validates strict YAML/schema, unique nested keys, Context/source/path/runner/proof identities, risk floor, UI proof, strict obligations and executable acceptance before product implementation begins.
 - Every compile creates an immutable compiled identity. Editing Contract, referenced Context, source, runner/oracle, verifier or workspace identity invalidates prior derived results and requires recompilation.
 - Targeted `verify` exists only for repair findings and can never accept a task. `final-gate` reruns every Outcome and global Check on one current snapshot and alone may create an accepted Receipt.

@@ -18,7 +18,6 @@ for (const fact of [
   "public_api_or_schema_change",
   "full_population_operation",
   "irreversible_external_effect",
-  "multi_repository_change",
 ]) {
   test(`${fact} deterministically triggers strict`, () => {
     const contract = deliveryContract();
@@ -28,6 +27,15 @@ for (const fact of [
     assert.ok(decision.reasons.includes(fact));
   });
 }
+
+test("multi_repository_change is explicitly unsupported in V1", () => {
+  const contract = deliveryContract();
+  contract.risk.facts.multi_repository_change = true;
+  assert.throws(
+    () => classifyLongTaskRisk(contract),
+    /multi_repository_delivery_not_supported_v1/,
+  );
+});
 
 test("critical user path triggers strict only with weak observability", () => {
   const contract = deliveryContract();

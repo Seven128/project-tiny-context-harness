@@ -157,7 +157,10 @@ test("long_task_enable_installs_only_current Skill and Hooks", async () => {
       await stat(path.join(root, file));
     }
     const hooks = await readFile(path.join(root, ".codex/hooks.json"), "utf8");
-    assert.match(hooks, /Tiny Context long-task completion gate/);
+    assert.match(hooks, /Tiny Context long-task authority gate/);
+    assert.equal((hooks.match(/"SessionStart"/g) ?? []).length, 1);
+    assert.equal((hooks.match(/"PostCompact"/g) ?? []).length, 1);
+    assert.equal((hooks.match(/"Stop"/g) ?? []).length, 1);
 
     const second = await runSync(root);
     assert.deepEqual(second.blocked, []);

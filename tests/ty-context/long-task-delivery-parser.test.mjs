@@ -12,7 +12,7 @@ test("parses one canonical Delivery Contract without cross-entity ids", () => {
   assert.equal(JSON.stringify(parsed).includes("ac_id"), false);
 });
 
-test("rejects duplicate Outcome and Check keys", () => {
+test("rejects duplicate Outcome keys while allowing Outcome-local Check keys", () => {
   const duplicateOutcome = deliveryContract({ twoOutcomes: true });
   duplicateOutcome.outcomes[1].key = "first";
   assert.throws(
@@ -21,10 +21,13 @@ test("rejects duplicate Outcome and Check keys", () => {
   );
   const duplicateCheck = deliveryContract({ twoOutcomes: true });
   duplicateCheck.outcomes[1].acceptance.checks[0].key = "first-check";
-  assert.throws(
-    () => parseDeliveryContractText(YAML.stringify(duplicateCheck)),
-    /check_key_duplicate/,
+  assert.doesNotThrow(() =>
+    parseDeliveryContractText(YAML.stringify(duplicateCheck)),
   );
+  duplicateCheck.outcomes[1].acceptance.checks.push({
+    ...structuredClone(duplicateCheck.outcomes[1].acceptance.checks[0]),
+  });
+  assert.throws(() => parseDeliveryContractText(YAML.stringify(duplicateCheck)), /check_key_duplicate/);
 });
 
 test("rejects unsupported runners, unknown keys and YAML aliases", () => {

@@ -6,7 +6,14 @@ export {
 export {
   DELIVERY_CONTRACT_FILE,
   parseDeliveryContract,
+  parseDeliveryContractBundle,
 } from "./lib/long-task-delivery-parser.js";
+export {
+  DELIVERY_SET_FILE,
+  parseDeliverySet,
+} from "./lib/long-task-delivery-set-parser.js";
+export { compileDeliverySet } from "./lib/long-task-delivery-set-compiler.js";
+export { evaluateContractBoundary } from "./lib/long-task-boundary-check.js";
 export {
   classifyLongTaskRisk,
   validateRiskProof,
@@ -43,5 +50,18 @@ export type {
   ProofSurface,
   RequestedRiskLevel,
   RunnerType,
-  VerificationCacheV1,
+  ProgressRecordV1,
+  SourceClaimV1,
+  RiskEvidenceV1,
+  TargetedVerificationResultV1,
 } from "./lib/long-task-delivery-types.js";
+export type {
+  BoundaryCheckDecisionV1,
+  BoundaryCheckInputV1,
+  ChildContractGateReceiptV1,
+  CompiledDeliverySetV1,
+  CompileDeliverySetOptionsV1,
+  DeliverySetReceiptV1,
+  DeliverySetStatusV1,
+  DeliverySetV1,
+} from "./lib/long-task-delivery-set-types.js";

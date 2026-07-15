@@ -3,112 +3,113 @@ import type {
   FinalReceiptV1,
   LongTaskFindingV1,
   OutcomeStatusV1,
-  VerificationCacheV1,
+  ProgressRecordV1,
+  WorkspaceManifestV1,
 } from "./long-task-delivery-types.js";
+import { progressRecordFresh } from "./long-task-progress.js";
 
 interface StatusProjectionInput {
   compiled: CompiledDeliveryContractV1;
-  snapshotSha256: string;
+  manifest: WorkspaceManifestV1;
   stale: string[];
-  cache: VerificationCacheV1 | null;
+  progress: Record<string, ProgressRecordV1>;
   receipt: FinalReceiptV1 | null;
   receiptError: string | null;
 }
 
 export function projectDeliveryStatus(input: StatusProjectionInput): {
-  finalResult: "none" | "accepted_fresh" | "accepted_stale" | "needs_work";
+  finalResult:
+    | "none"
+    | "machine_accepted_fresh"
+    | "machine_accepted_external_pending_fresh"
+    | "accepted_stale"
+    | "needs_work";
   outcomes: Record<string, OutcomeStatusV1>;
   readyOutcomes: string[];
+  needsReverify: string[];
+  progressPassing: string[];
+  progressFailing: string[];
   findings: LongTaskFindingV1[];
 } {
   const finalFresh = isFinalFresh(input);
-  const cacheFresh = isCacheFresh(input);
-  const outcomes = projectOutcomes(input, finalFresh, cacheFresh);
+  const outcomes = projectOutcomes(input, finalFresh);
   return {
     finalResult: projectFinalResult(input, finalFresh),
     outcomes,
     readyOutcomes: readyOutcomes(input.compiled, outcomes),
-    findings: projectFindings(input, cacheFresh),
+    needsReverify: Object.entries(outcomes)
+      .filter(([, status]) =>
+        ["unverified", "progress_stale", "progress_failing"].includes(status),
+      )
+      .map(([key]) => key),
+    progressPassing: Object.entries(outcomes)
+      .filter(([, status]) => status === "progress_passing")
+      .map(([key]) => key),
+    progressFailing: Object.entries(outcomes)
+      .filter(([, status]) => status === "progress_failing")
+      .map(([key]) => key),
+    findings: projectFindings(input),
   };
 }
 
 function isFinalFresh(input: StatusProjectionInput): boolean {
-  const { receipt, compiled, snapshotSha256, stale, receiptError } = input;
+  const { receipt, compiled, manifest, stale, receiptError } = input;
   return Boolean(
     receipt &&
-    receipt.workflow_status === "accepted" &&
+    (receipt.workflow_status === "machine_accepted" ||
+      receipt.workflow_status === "machine_accepted_external_pending") &&
     receipt.compiled_identity === compiled.compiled_identity &&
-    receipt.snapshot_sha256 === snapshotSha256 &&
+    receipt.snapshot_sha256 === manifest.snapshot_sha256 &&
+    receipt.git_head === manifest.git_head &&
     stale.length === 0 &&
     !receiptError,
-  );
-}
-
-function isCacheFresh(input: StatusProjectionInput): boolean {
-  const { cache, compiled, snapshotSha256, stale } = input;
-  return Boolean(
-    cache &&
-    cache.compiled_identity === compiled.compiled_identity &&
-    cache.snapshot_sha256 === snapshotSha256 &&
-    stale.length === 0,
   );
 }
 
 function projectOutcomes(
   input: StatusProjectionInput,
   finalFresh: boolean,
-  cacheFresh: boolean,
 ): Record<string, OutcomeStatusV1> {
   const outcomes: Record<string, OutcomeStatusV1> = {};
   for (const outcome of input.compiled.outcomes) {
     if (finalFresh) {
-      outcomes[outcome.key] = "passing_current_snapshot";
+      outcomes[outcome.key] = "progress_passing";
       continue;
     }
-    if (
-      (input.receipt || input.cache) &&
-      (!cacheFresh || input.stale.length || input.receiptError)
-    ) {
-      outcomes[outcome.key] = "stale";
-      continue;
-    }
-    const owned =
-      input.cache?.check_results.filter(
-        (check) => check.outcome_key === outcome.key,
-      ) ?? [];
-    outcomes[outcome.key] = outcomeStatus(
-      owned,
-      outcome.acceptance.checks.length,
-    );
+    const states = outcome.acceptance.checks.map((check) => {
+      const record = input.progress[check.internal_id];
+      if (!record) return "unverified" as const;
+      if (
+        input.stale.length ||
+        !progressRecordFresh(record, input.compiled, input.manifest, check)
+      )
+        return "progress_stale" as const;
+      return record.result === "passed"
+        ? ("progress_passing" as const)
+        : record.result === "failed"
+          ? ("progress_failing" as const)
+          : ("blocked_external" as const);
+    });
+    outcomes[outcome.key] = states.includes("progress_failing")
+      ? "progress_failing"
+      : states.includes("blocked_external")
+        ? "blocked_external"
+        : states.includes("progress_stale")
+          ? "progress_stale"
+          : states.length > 0 &&
+              states.every((state) => state === "progress_passing")
+            ? "progress_passing"
+            : "unverified";
   }
   return outcomes;
 }
 
-function outcomeStatus(
-  checks: VerificationCacheV1["check_results"],
-  expectedCount: number,
-): OutcomeStatusV1 {
-  if (checks.some((check) => check.status === "failed"))
-    return "failing_current_snapshot";
-  if (checks.some((check) => check.status === "blocked_external"))
-    return "blocked_external";
-  if (
-    checks.length === expectedCount &&
-    checks.every((check) => check.status === "passed")
-  )
-    return "passing_current_snapshot";
-  return "unverified";
-}
-
-function projectFindings(
-  input: StatusProjectionInput,
-  cacheFresh: boolean,
-): LongTaskFindingV1[] {
+function projectFindings(input: StatusProjectionInput): LongTaskFindingV1[] {
   const findings: LongTaskFindingV1[] = input.stale.map((code) => ({
     code,
     outcome_key: null,
     check_key: null,
-    message: "A compiled identity input changed.",
+    message: "A compiled authority input changed.",
     next_action: "Review the change and recompile the Delivery Contract.",
   }));
   if (input.receiptError)
@@ -120,7 +121,17 @@ function projectFindings(
       next_action:
         "Run the complete Final Gate; handwritten state is not accepted.",
     });
-  if (cacheFresh && input.cache) findings.push(...input.cache.findings);
+  for (const record of Object.values(input.progress))
+    if (
+      input.compiled.outcomes.some((outcome) =>
+        outcome.acceptance.checks.some(
+          (check) =>
+            check.internal_id === record.check_internal_id &&
+            progressRecordFresh(record, input.compiled, input.manifest, check),
+        ),
+      )
+    )
+      findings.push(...record.findings);
   return findings;
 }
 
@@ -131,9 +142,9 @@ function readyOutcomes(
   return compiled.outcomes
     .filter(
       (outcome) =>
-        outcomes[outcome.key] !== "passing_current_snapshot" &&
+        outcomes[outcome.key] !== "progress_passing" &&
         outcome.depends_on.every(
-          (dependency) => outcomes[dependency] === "passing_current_snapshot",
+          (dependency) => outcomes[dependency] === "progress_passing",
         ),
     )
     .map((outcome) => outcome.key);
@@ -142,9 +153,18 @@ function readyOutcomes(
 function projectFinalResult(
   input: StatusProjectionInput,
   finalFresh: boolean,
-): "none" | "accepted_fresh" | "accepted_stale" | "needs_work" {
-  if (finalFresh) return "accepted_fresh";
+):
+  | "none"
+  | "machine_accepted_fresh"
+  | "machine_accepted_external_pending_fresh"
+  | "accepted_stale"
+  | "needs_work" {
+  if (finalFresh)
+    return input.receipt?.workflow_status ===
+      "machine_accepted_external_pending"
+      ? "machine_accepted_external_pending_fresh"
+      : "machine_accepted_fresh";
   if (input.receipt) return "accepted_stale";
-  if (input.cache) return "needs_work";
+  if (Object.keys(input.progress).length) return "needs_work";
   return "none";
 }

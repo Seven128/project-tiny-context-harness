@@ -7,6 +7,7 @@ import test from "node:test";
 import { promisify } from "node:util";
 import {
   createDeliveryFixture,
+  commitCandidate,
   pathExists,
   runCli,
   runCliFailure,
@@ -41,16 +42,17 @@ test("long-task never invokes model/Git orchestration surfaces and runs only dec
       TY_CONTEXT_FORBIDDEN_PROCESS_LOG: forbiddenLog,
       GIT_TRACE: gitTrace,
     };
-    const before = await gitShape(fixture.root);
     await runCli(fixture.root, ["enable", "long-task"], { env });
     await runCli(fixture.root, ["long-task", "compile", fixture.workdir], { env });
     const first = await runCli(fixture.root, [
       "long-task", "verify", fixture.workdir, "--outcome", "first",
     ], { env });
     assert.deepEqual(first.check_results.map((item) => item.attempts), [1]);
+    await commitCandidate(fixture.root);
+    const before = await gitShape(fixture.root);
     const failed = await runCliFailure(fixture.root, [
       "long-task", "final-gate", fixture.workdir,
-    ], { env });
+    ], { env, skipCandidateCommit: true });
     assert.equal(failed.workflow_status, "needs_work");
     assert.deepEqual(
       failed.check_results.map((item) => item.check_key).sort(),
@@ -94,7 +96,7 @@ test("package_script runner executes in the immutable snapshot with project depe
     const accepted = await runCli(fixture.root, [
       "long-task", "final-gate", fixture.workdir,
     ]);
-    assert.equal(accepted.workflow_status, "accepted");
+    assert.equal(accepted.workflow_status, "machine_accepted");
     assert.equal(accepted.check_results[0].attempts, 1);
   } finally {
     await rm(fixture.root, { recursive: true, force: true });

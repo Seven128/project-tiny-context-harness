@@ -4,13 +4,19 @@
   "title": "Canonical Delivery Contract V1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "task", "risk", "global", "outcomes"],
+  "required": ["schema_version", "task", "risk", "global"],
+  "oneOf": [
+    { "required": ["outcomes"], "not": { "required": ["outcome_files"] } },
+    { "required": ["outcome_files"], "not": { "required": ["outcomes"] } }
+  ],
   "properties": {
     "schema_version": { "const": "long-task-delivery-v1" },
     "task": { "$ref": "#/$defs/task" },
     "risk": { "$ref": "#/$defs/risk" },
     "global": { "$ref": "#/$defs/global" },
-    "outcomes": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/outcome" } }
+    "source_claims": { "type": "array", "items": { "$ref": "#/$defs/sourceClaim" } },
+    "outcomes": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/outcome" } },
+    "outcome_files": { "$ref": "#/$defs/strings" }
   },
   "$defs": {
     "key": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
@@ -55,6 +61,20 @@
             "multi_repository_change": { "type": "boolean" },
             "weak_observability": { "type": "boolean" }
           }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["fact", "source_claim_refs", "context_refs", "affected_paths", "rationale"],
+            "properties": {
+              "fact": { "enum": ["public_api_or_schema_change", "persistent_data_change", "data_migration", "security_boundary_change", "permission_boundary_change", "irreversible_external_effect", "critical_user_path", "full_population_operation", "multi_repository_change", "weak_observability"] },
+              "source_claim_refs": { "$ref": "#/$defs/strings" },
+              "context_refs": { "$ref": "#/$defs/strings" },
+              "affected_paths": { "$ref": "#/$defs/strings" },
+              "rationale": { "$ref": "#/$defs/nonEmpty" }
+            }
+          }
         }
       }
     },
@@ -79,7 +99,10 @@
         },
         "acceptance": {
           "type": "object", "additionalProperties": false, "required": ["checks"],
-          "properties": { "checks": { "type": "array", "items": { "$ref": "#/$defs/check" } } }
+          "properties": {
+            "checks": { "type": "array", "items": { "$ref": "#/$defs/check" } },
+            "external_confirmations": { "type": "array", "items": { "$ref": "#/$defs/externalConfirmation" } }
+          }
         }
       }
     },
@@ -135,7 +158,8 @@
       "type": "object", "additionalProperties": false, "required": ["kind", "target", "carrier_paths"],
       "properties": {
         "kind": { "enum": ["path_glob", "file", "symbol", "schema", "route", "runtime_capability"] },
-        "target": { "$ref": "#/$defs/nonEmpty" }, "carrier_paths": { "$ref": "#/$defs/strings" }
+        "target": { "$ref": "#/$defs/nonEmpty" }, "carrier_paths": { "$ref": "#/$defs/strings" },
+        "existence": { "enum": ["existing", "planned"] }
       }
     },
     "rollback": {
@@ -162,7 +186,10 @@
         "key": { "$ref": "#/$defs/key" },
         "proof_surface": { "enum": ["ui_browser", "runtime_behavior", "api_contract", "data_state", "security_boundary", "population_coverage", "implementation_structure"] },
         "runner": { "$ref": "#/$defs/runner" },
-        "input_paths": { "$ref": "#/$defs/strings" }, "artifact_globs": { "$ref": "#/$defs/strings" },
+        "verification_sources": { "$ref": "#/$defs/strings" },
+        "input_paths": { "$ref": "#/$defs/strings" },
+        "expected_output_paths": { "$ref": "#/$defs/strings" },
+        "artifact_globs": { "$ref": "#/$defs/strings" },
         "positive_assertions": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/assertion" } },
         "negative_assertions": { "type": "array", "items": { "$ref": "#/$defs/assertion" } },
         "environment_requirements": { "$ref": "#/$defs/strings" }
@@ -176,7 +203,10 @@
         "target": { "$ref": "#/$defs/nonEmpty" }, "argv": { "$ref": "#/$defs/strings" },
         "cwd": { "$ref": "#/$defs/nonEmpty" },
         "timeout_ms": { "type": "integer", "minimum": 100, "maximum": 3600000 },
-        "network_policy": { "$ref": "#/$defs/network" }
+        "network_policy": { "$ref": "#/$defs/network" },
+        "effect": { "enum": ["read_only", "test_sandbox"] },
+        "retry_policy": { "enum": ["none", "transient_once"] },
+        "idempotent": { "type": "boolean" }
       }
     },
     "network": {
@@ -198,6 +228,26 @@
         "check_key": { "$ref": "#/$defs/key" }, "observation": { "$ref": "#/$defs/nonEmpty" },
         "required_coverage_percent": { "const": 100 }, "exclusion_rules": { "$ref": "#/$defs/strings" }
       }
+    },
+    "sourceClaim": {
+      "type": "object", "additionalProperties": false,
+      "required": ["key", "source_ref", "statement", "disposition"],
+      "properties": {
+        "key": { "$ref": "#/$defs/key" },
+        "source_ref": { "$ref": "#/$defs/nonEmpty" },
+        "statement": { "$ref": "#/$defs/nonEmpty" },
+        "disposition": {
+          "oneOf": [
+            { "type": "object", "additionalProperties": false, "required": ["type", "refs"], "properties": { "type": { "enum": ["contract", "global_constraint"] }, "refs": { "$ref": "#/$defs/strings" } } },
+            { "type": "object", "additionalProperties": false, "required": ["type", "reason"], "properties": { "type": { "enum": ["out_of_scope", "decision_required"] }, "reason": { "$ref": "#/$defs/nonEmpty" } } }
+          ]
+        }
+      }
+    },
+    "externalConfirmation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["key", "description", "owner"],
+      "properties": { "key": { "$ref": "#/$defs/key" }, "description": { "$ref": "#/$defs/nonEmpty" }, "owner": { "$ref": "#/$defs/nonEmpty" } }
     },
     "counterfactual": {
       "type": "object", "additionalProperties": false, "required": ["check_key", "mutation", "expect"],

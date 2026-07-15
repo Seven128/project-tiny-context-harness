@@ -9,9 +9,10 @@ import {
   readActiveLongTaskBinding,
   readCompiledDeliveryContract,
   readFinalReceipt,
-  readVerificationCache,
+  readProgressRecords,
 } from "./long-task-state.js";
 import { projectDeliveryStatus } from "./long-task-status-projection.js";
+import { deliverySetWorkspaceExclusions } from "./long-task-delivery-set-state.js";
 import {
   captureWorkspaceManifest,
   currentGitState,
@@ -24,9 +25,18 @@ export interface DeliveryStatusV1 {
   compiled_identity: string;
   effective_risk: "standard" | "strict";
   workspace_snapshot_sha256: string;
-  final_result: "none" | "accepted_fresh" | "accepted_stale" | "needs_work";
+  final_result:
+    | "none"
+    | "machine_accepted_fresh"
+    | "machine_accepted_external_pending_fresh"
+    | "accepted_stale"
+    | "needs_work";
   outcomes: Record<string, OutcomeStatusV1>;
   ready_outcomes: string[];
+  ready_for_implementation: string[];
+  needs_reverify: string[];
+  progress_passing: string[];
+  progress_failing: string[];
   findings: LongTaskFindingV1[];
 }
 
@@ -34,12 +44,15 @@ export async function readDeliveryStatus(
   workdir: string,
 ): Promise<DeliveryStatusV1> {
   const compiled = await readCompiledDeliveryContract(workdir);
+  const exclusions = await deliverySetWorkspaceExclusions(compiled);
   const current = await captureWorkspaceManifest(
     compiled.repository_root,
     compiled.workdir,
+    undefined,
+    exclusions,
   );
   const stale = await deliveryCompileFreshness(compiled);
-  const cache = await readVerificationCache(workdir);
+  const progress = await readProgressRecords(workdir);
   let receipt = null;
   let receiptError: string | null = null;
   try {
@@ -52,9 +65,9 @@ export async function readDeliveryStatus(
   }
   const projection = projectDeliveryStatus({
     compiled,
-    snapshotSha256: current.snapshot_sha256,
+    manifest: current,
     stale,
-    cache,
+    progress,
     receipt,
     receiptError,
   });
@@ -67,6 +80,10 @@ export async function readDeliveryStatus(
     final_result: projection.finalResult,
     outcomes: projection.outcomes,
     ready_outcomes: projection.readyOutcomes,
+    ready_for_implementation: projection.readyOutcomes,
+    needs_reverify: projection.needsReverify,
+    progress_passing: projection.progressPassing,
+    progress_failing: projection.progressFailing,
     findings: projection.findings,
   };
 }
@@ -93,6 +110,10 @@ export async function resumeDeliveryTask(
     final_result: status.final_result,
     outcomes: status.outcomes,
     ready_outcomes: status.ready_outcomes,
+    ready_for_implementation: status.ready_for_implementation,
+    needs_reverify: status.needs_reverify,
+    progress_passing: status.progress_passing,
+    progress_failing: status.progress_failing,
     recent_findings: status.findings,
     next_safe_action: nextAction(status),
   };
@@ -105,12 +126,17 @@ export async function stopCheckDeliveryTask(
   const root = await repositoryRoot(process.cwd());
   const active = await readActiveLongTaskBinding(root);
   if (!active) return { continue: true, reason: "no_active_task" };
+  if (active.mode === "delivery_set")
+    return { continue: false, reason: "delivery_set_requires_set_stop_check" };
   if (active.workdir !== path.resolve(workdirInput))
     return { continue: false, reason: "active_task_workdir_mismatch" };
   try {
     const status = await readDeliveryStatus(active.workdir);
-    if (status.final_result === "accepted_fresh")
-      return { continue: true, reason: "accepted_fresh" };
+    if (
+      status.final_result === "machine_accepted_fresh" ||
+      status.final_result === "machine_accepted_external_pending_fresh"
+    )
+      return { continue: true, reason: status.final_result };
     return {
       continue: false,
       reason: `long_task_${status.final_result}`,
@@ -131,13 +157,19 @@ export async function stopCheckDeliveryTask(
 export async function closeDeliveryTask(workdir: string): Promise<void> {
   const compiled = await readCompiledDeliveryContract(workdir);
   const status = await readDeliveryStatus(workdir);
-  if (status.final_result !== "accepted_fresh")
+  if (
+    status.final_result !== "machine_accepted_fresh" &&
+    status.final_result !== "machine_accepted_external_pending_fresh"
+  )
     throw new Error(`close_requires_fresh_accepted:${status.final_result}`);
   await clearActiveBinding(compiled.repository_root, compiled.workdir);
 }
 
 function nextAction(status: DeliveryStatusV1): string {
-  if (status.final_result === "accepted_fresh")
+  if (
+    status.final_result === "machine_accepted_fresh" ||
+    status.final_result === "machine_accepted_external_pending_fresh"
+  )
     return "Run ty-context long-task close when external delivery handoff is ready.";
   if (status.findings.length) return status.findings.at(-1)!.next_action;
   if (status.ready_outcomes.length)

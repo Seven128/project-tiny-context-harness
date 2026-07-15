@@ -11,7 +11,7 @@ Navigation for current implementation surfaces. Behavior is defined by owning co
 ## CLI And Profiles
 
 - CLI entry/routing: `packages/ty-context/src/cli.ts`, `packages/ty-context/src/commands/index.ts`.
-- Long-Task command: `packages/ty-context/src/commands/long-task.ts`.
+- Long-Task Contract command: `packages/ty-context/src/commands/long-task.ts`; Delivery Set command: `commands/delivery-set.ts`.
 - Retired command tombstones: `commands/composite-long-task.ts`, `commands/composite-campaign.ts`.
 - Profile enable/disable and selection: `commands/enable.ts`, `commands/disable.ts`, `lib/profiles.ts`, `lib/types.ts`, config parser and migrations.
 
@@ -20,6 +20,7 @@ Navigation for current implementation surfaces. Behavior is defined by owning co
 - Normative JSON Schema: `packages/ty-context/src/schemas/long-task-delivery-v1/**`.
 - Contract/runtime types and public barrel: `long-task-contract-types.ts`, `long-task-runtime-types.ts`, `long-task-delivery-types.ts`.
 - Strict YAML and shape parsing: `strict-codec.ts`, `long-task-delivery-shape.ts`, `long-task-check-shape.ts`, `long-task-delivery-parser.ts`, `long-task-delivery-validation.ts`.
+- Composition and protected authority: `long-task-boundary-check.ts`, `long-task-delivery-set-*`, `long-task-authority.ts`, `long-task-progress.ts`, `long-task-risk-surfaces.ts` and both schema folders.
 - Static compile, generated ids, runner identity and risk proof: `long-task-delivery-compiler.ts`, `long-task-runner-freeze.ts`, `long-task-risk.ts`, `long-task-paths.ts`, `long-task-verifier-identity.ts`.
 - Context graph snapshot/path containment/stable JSON utilities are shared package primitives and must not depend on retired runtime.
 
@@ -27,8 +28,8 @@ Navigation for current implementation surfaces. Behavior is defined by owning co
 
 - Workspace snapshot and declared command execution: `long-task-workspace.ts`, `long-task-check-runner.ts`.
 - Observation/assertion, artifacts, population/binding/counterfactual and derived evidence: `long-task-assertions-v1.ts`, `long-task-evidence-v1.ts`.
-- Active binding and persisted verifier-owned state: `long-task-state.ts`.
-- Targeted verification, status/resume projection, Final Gate, Receipt and freshness: `long-task-verifier-v1.ts`, `long-task-status-v1.ts`, `long-task-status-projection.ts`, `long-task-final-v1.ts`, `long-task-freshness.ts`.
+- Exclusive Contract/Set active binding, Authority Revision and persisted verifier-owned state: `long-task-state.ts`, `long-task-delivery-set-state.ts`.
+- Scoped targeted progress, status/resume projection, Child/standalone/Set Final Gates, Receipts and freshness: `long-task-verifier-v1.ts`, `long-task-progress.ts`, `long-task-status-*`, `long-task-final-v1.ts`, `long-task-delivery-set-final.ts`, `long-task-freshness.ts`.
 - Hook installation/preflight: `long-task-hook-install.ts`, `long-task-hook-preflight.ts` and the package-managed `long-task-hook.mjs`.
 - No active module may import Campaign, SFC, Packet, Codex/AppServer, model routing, process identity/tree or Git worktree orchestration.
 

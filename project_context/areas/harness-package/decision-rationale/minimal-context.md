@@ -6,7 +6,7 @@ read_policy: on-demand
 
 ## Decision
 
-- Keep Minimal Context as the durable project-memory layer and replace the active multi-worker long-task architecture with Single-Goal Rolling Delivery: one native Goal, one selected workspace, one Delivery Contract and verifier-owned same-snapshot completion.
+- Keep Minimal Context as the durable project-memory layer and replace the active multi-worker long-task architecture with Single-Goal Rolling Delivery: one native Goal, one selected workspace, one top-level Contract/Bundle/Set authority and verifier-owned same-snapshot completion.
 
 ## Reason
 
@@ -51,6 +51,12 @@ read_policy: on-demand
 ## Stable Anti-Goals
 
 - Do not restore stages, thick plan/result documents, Source/SFC/Packet/Wave/Campaign state, agent/process/Git orchestration or model routing as default or long-task runtime.
+
+## Why Bundle And Delivery Set Are Distinct
+
+- Physical authoring capacity does not create a product boundary, so a large atomic task uses Outcome fragments under one logical Contract.
+- Multiple Contracts are legitimate only when each has independently observable executable Acceptance and a real release/rollback/owner/risk/product boundary; one Delivery Set then preserves source coverage, dependency interfaces and final integration authority.
+- Authority Lock, immutable initial base and scoped progress close execution-side weakening, baseline washing and last-result-wins paths without introducing a scheduler or lifecycle.
 - Do not make Context-first order/internal planning a validator gate.
 - Do not let command exit, model prose, handwritten status, targeted passes or historical runs create accepted authority.
 - Do not claim hostile-host security, complete requirement discovery, platform Goal observation or token/model-call accounting.

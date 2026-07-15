@@ -4,14 +4,14 @@
 
 - Provide the `ty-context` CLI, Minimal Context/default Workflow assets, validators, migrations, source-sync checks and the explicit Single-Goal Long-Task Workflow.
 - Preserve repo-native project intent and repeatable verification without reintroducing lifecycle documents or agent/process/Git orchestration.
-- Own the Canonical Delivery Contract V1 and Evidence Kernel that prevent false completion for declared Outcomes on a current workspace snapshot.
+- Own Contract/Bundle V1, Delivery Set V1 and the Evidence Kernel that prevent false completion for declared Outcomes/Children on one current workspace snapshot.
 
 ## User / System Contract
 
 - Product Surface Contract workflow is prompt-level and project-owned; package-managed Skills may guide `context_surface_contract`, but the Harness must not add a surface-specific Context role.
 - `init` installs `core-portable` plus `workflow-default`; `ty-context enable long-task` explicitly installs the Long-Task Workflow Skill, Stop Hook and templates. `disable long-task` removes only package-owned long-task assets.
 - `sync` refreshes enabled package-managed assets only. `upgrade` applies safe deterministic migrations, including `composite-codex` profile selection to `long-task`, before sync/doctor. Neither command creates or activates a task.
-- `ty-context long-task init|compile|verify|status|resume|final-gate|stop-check|close|abandon` is the sole active long-task CLI.
+- `ty-context long-task ...` owns Contract/Bundle authority and `ty-context delivery-set ...` owns Set map/freshness/final authority; neither schedules Agents, Goals, branches or worktrees.
 - `delivery-contract.yaml` is the only authoring and acceptance authority. Optional `source.md` is provenance. Model-authored ids stop at task/Outcome/Check keys; compilation generates deterministic internal ids.
 - The current platform Goal owns rolling implementation choices. Harness neither creates nor recovers physical Goals and never starts agents, Codex/AppServer, branches/worktrees, merge/push/PR flows or model retries.
 - Compile is static and fail-closed. Every Outcome needs executable falsifiable proof; UI needs browser proof; requested risk cannot fall below the deterministic minimum; strict risk adds compiler-enforced proof/recovery obligations.

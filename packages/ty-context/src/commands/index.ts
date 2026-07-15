@@ -2,6 +2,7 @@ import { checkModularity } from "./check-modularity.js";
 import { compositeLongTask } from "./composite-long-task.js";
 import { compositeCampaign } from "./composite-campaign.js";
 import { longTask } from "./long-task.js";
+import { deliverySet } from "./delivery-set.js";
 import { doctor } from "./doctor.js";
 import { exportContext } from "./export-context.js";
 import { enable } from "./enable.js";
@@ -31,6 +32,7 @@ export const commands: Record<string, CommandHandler> = {
     validate(["validate-code-modularity", ...args]),
   "validate-harness": (args) => validate(["validate-harness", ...args]),
   "long-task": (args) => withLongTaskProfile(args, longTask),
+  "delivery-set": (args) => withLongTaskProfile(args, deliverySet),
   "composite-long-task": compositeLongTask,
   "composite-campaign": compositeCampaign,
   package: packageSource,
@@ -57,6 +59,8 @@ export function help(): void {
   validate-harness     Run validate-context and validate-code-modularity
   long-task <subcommand>
                        Manage one Canonical Delivery Contract in the current workspace
+  delivery-set <subcommand>
+                       Compose independently deliverable Contracts under one final authority
   composite-long-task Retired command; use ty-context long-task
   composite-campaign  Retired command; use ty-context long-task
   package <subcommand> Maintain package canonical source`);

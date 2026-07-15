@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { rm, writeFile } from "node:fs/promises";
+import { readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import {
@@ -48,7 +48,7 @@ test("strict security proof combines negative assertions, counterfactuals and ar
     const accepted = await runCli(fixture.root, [
       "long-task", "final-gate", fixture.workdir,
     ]);
-    assert.equal(accepted.workflow_status, "accepted");
+    assert.equal(accepted.workflow_status, "machine_accepted");
     assert.deepEqual(
       accepted.check_results[0].observations.artifacts.paths,
       ["artifacts/proof.json"],
@@ -86,7 +86,7 @@ test("full-population proof fails closed when current coverage is incomplete", a
     await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
     assert.equal(
       (await runCli(fixture.root, ["long-task", "final-gate", fixture.workdir])).workflow_status,
-      "accepted",
+      "machine_accepted",
     );
 
     await writeFile(
@@ -96,6 +96,26 @@ const state = JSON.parse(await readFile(new URL("../src/state.json", import.meta
 console.log(JSON.stringify({schema_version:"long-task-check-result-v1",observations:{result:state.first,population:{eligible:1,observed:0,excluded:0}}}));
 `,
     );
+    await assert.rejects(
+      () => runCli(fixture.root, ["long-task", "compile", fixture.workdir]),
+      /authority_change_requires_user_decision/,
+    );
+    const pending = JSON.parse(
+      await readFile(
+        path.join(
+          fixture.workdir,
+          ".ty-context/authority-revision-pending.json",
+        ),
+        "utf8",
+      ),
+    );
+    await runCli(fixture.root, [
+      "long-task",
+      "approve-authority-revision",
+      fixture.workdir,
+      "--revision",
+      pending.revision_identity,
+    ]);
     await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
     const failed = await runCliFailure(fixture.root, [
       "long-task", "final-gate", fixture.workdir,

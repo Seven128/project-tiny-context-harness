@@ -7,19 +7,8 @@
             "type": "command",
             "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs\"",
             "commandWindows": "powershell -NoProfile -Command \"$r=(git rev-parse --show-toplevel); node (Join-Path $r '.codex/hooks/long-task-hook.mjs')\"",
-            "timeout": 3600,
-            "statusMessage": "Tiny Context composite completion gate"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs\"",
-            "commandWindows": "powershell -NoProfile -Command \"$r=(git rev-parse --show-toplevel); node (Join-Path $r '.codex/hooks/long-task-hook.mjs')\"",
-            "timeout": 3600,
-            "statusMessage": "Tiny Context long-task completion gate"
+            "timeout": 10,
+            "statusMessage": "Tiny Context long-task authority gate"
           }
         ]
       }
@@ -31,19 +20,8 @@
             "type": "command",
             "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs\"",
             "commandWindows": "powershell -NoProfile -Command \"$r=(git rev-parse --show-toplevel); node (Join-Path $r '.codex/hooks/long-task-hook.mjs')\"",
-            "timeout": 3600,
-            "statusMessage": "Tiny Context composite completion gate"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs\"",
-            "commandWindows": "powershell -NoProfile -Command \"$r=(git rev-parse --show-toplevel); node (Join-Path $r '.codex/hooks/long-task-hook.mjs')\"",
-            "timeout": 3600,
-            "statusMessage": "Tiny Context long-task completion gate"
+            "timeout": 10,
+            "statusMessage": "Tiny Context long-task authority gate"
           }
         ]
       }
@@ -55,19 +33,8 @@
             "type": "command",
             "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs\"",
             "commandWindows": "powershell -NoProfile -Command \"$r=(git rev-parse --show-toplevel); node (Join-Path $r '.codex/hooks/long-task-hook.mjs')\"",
-            "timeout": 3600,
-            "statusMessage": "Tiny Context composite completion gate"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs\"",
-            "commandWindows": "powershell -NoProfile -Command \"$r=(git rev-parse --show-toplevel); node (Join-Path $r '.codex/hooks/long-task-hook.mjs')\"",
-            "timeout": 3600,
-            "statusMessage": "Tiny Context long-task completion gate"
+            "timeout": 15,
+            "statusMessage": "Tiny Context long-task authority gate"
           }
         ]
       }

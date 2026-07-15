@@ -51,7 +51,9 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
   );
   assert.match(active, /delivery-contract\.yaml/);
   assert.match(active, /current native Goal/i);
-  assert.match(active, /Targeted verify never means complete/i);
+  assert.match(active, /Targeted verify and Child Gate are progress only/i);
+  assert.match(active, /Contract Bundle/);
+  assert.match(active, /Delivery Set/);
   assert.match(active, /Final Gate/i);
   const normal = await read(
     ".codex/ty-context-managed/skills/normal-long-task/SKILL.md",

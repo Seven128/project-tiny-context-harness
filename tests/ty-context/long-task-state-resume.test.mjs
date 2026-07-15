@@ -44,7 +44,7 @@ test("status distinguishes unverified, passing, failing, blocked and stale while
     const passing = await runCli(fixture.root, [
       "long-task", "status", fixture.workdir,
     ]);
-    assert.equal(passing.outcomes.first, "passing_current_snapshot");
+    assert.equal(passing.outcomes.first, "progress_passing");
 
     await writeFile(
       path.join(fixture.root, "src/state.json"),
@@ -53,18 +53,32 @@ test("status distinguishes unverified, passing, failing, blocked and stale while
     const stale = await runCli(fixture.root, [
       "long-task", "status", fixture.workdir,
     ]);
-    assert.equal(stale.outcomes.first, "stale");
+    assert.equal(stale.outcomes.first, "progress_stale");
     await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
     await runCliFailure(fixture.root, ["long-task", "verify", fixture.workdir]);
     const failing = await runCli(fixture.root, [
       "long-task", "status", fixture.workdir,
     ]);
-    assert.equal(failing.outcomes.first, "failing_current_snapshot");
+    assert.equal(failing.outcomes.first, "progress_failing");
 
     await writeFile(
       path.join(fixture.root, "tests/oracle.mjs"),
       'console.log(JSON.stringify({schema_version:"long-task-check-result-v1",blocked_external:"fixture unavailable"}));\n',
     );
+    await assert.rejects(
+      () => runCli(fixture.root, ["long-task", "compile", fixture.workdir]),
+      /authority_change_requires_user_decision/,
+    );
+    const pending = JSON.parse(
+      await readFile(
+        path.join(fixture.workdir, ".ty-context/authority-revision-pending.json"),
+        "utf8",
+      ),
+    );
+    await runCli(fixture.root, [
+      "long-task", "approve-authority-revision", fixture.workdir,
+      "--revision", pending.revision_identity,
+    ]);
     await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
     await runCliFailure(fixture.root, ["long-task", "verify", fixture.workdir]);
     const blocked = await runCli(fixture.root, [
@@ -142,7 +156,7 @@ console.log(JSON.stringify({schema_version:"long-task-check-result-v1",observati
     const accepted = await runCli(fixture.root, [
       "long-task", "final-gate", fixture.workdir,
     ]);
-    assert.equal(accepted.workflow_status, "accepted");
+    assert.equal(accepted.workflow_status, "machine_accepted");
     assert.equal(accepted.check_results.length, 2);
     assert.equal(
       new Set(accepted.check_results.map((item) => item.execution_identity)).size,

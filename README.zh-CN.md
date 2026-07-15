@@ -84,7 +84,7 @@ Context: no durable fact change
 
 - 一个平台原生、持续的 Goal；
 - 一个用户选定的仓库/worktree；
-- 一份权威 `delivery-contract.yaml`；
+- 一个顶层权威：Contract/Contract Bundle 或 Delivery Set；
 - Outcome 依赖只表示验收就绪关系，不表示 Worker 调度；
 - 当前 Goal 内部滚动展开实现 Frontier；
 - targeted verify 只用于修复，永远不能 accepted；
@@ -98,6 +98,7 @@ Context: no durable fact change
 ```text
 ty-context long-task init <workdir>
 ty-context long-task compile <workdir>
+ty-context long-task approve-authority-revision <workdir> --revision <sha>
 ty-context long-task verify <workdir> [--outcome <key>] [--check <key>]
 ty-context long-task status <workdir>
 ty-context long-task resume <workdir>
@@ -105,14 +106,16 @@ ty-context long-task final-gate <workdir>
 ty-context long-task stop-check <workdir> [--message <text>]
 ty-context long-task close <workdir>
 ty-context long-task abandon <workdir>
+ty-context delivery-set init|compile|status|resume|final-gate|stop-check|close|abandon <setdir>
+ty-context delivery-set approve-authority-revision <setdir> --revision <sha>
 ```
 
 - `init` 只创建 Contract 模板。
-- `compile` 严格解析、计算风险最低级别、生成内部 Outcome/Check ID、验证 Context/source/path/runner/proof，并冻结 Contract、Context、Oracle、Verifier、workspace 和 repository identity。
-- `verify` 运行指定修复检查并写当前快照缓存；缓存没有最终接受权。
-- `status` 输出 `unverified`、`passing_current_snapshot`、`failing_current_snapshot`、`stale` 或 `blocked_external`。
+- `compile` 严格解析，保留首次不可重置 baseline，综合声明/配置/实际路径计算风险，并冻结 protected authority 与完整 verifier source。
+- `verify` 按 Check 累积 scoped Progress Record；任何 Progress 都没有最终接受权。
+- `status` 输出 `unverified`、`progress_passing`、`progress_failing`、`progress_stale` 或 `blocked_external`。
 - `resume` 完全只读，输出 task/contract identity、风险、相关 Context、Git 状态、ready Outcome、findings 和 next safe action。
-- `final-gate` 在一个不可变当前快照上重跑所有全局与 Outcome Check，只允许在本次 Gate 内对完全相同 execution identity 去重。
+- 顶层 `final-gate` 要求 clean candidate commit，并在一个快照上重跑全部 Check。Child Gate 只能产生 `contract_gate_passed`；Set Gate 重跑全部 Child 和 integration Check，且只有它能产生 `delivery_set_accepted`。
 - `stop-check` 仅在 accepted Receipt 与当前 workspace、Contract、source、相关 Context、runner/oracle、verifier 和 Hook 完全一致时放行。
 - `close` 只允许 fresh accepted，并保留 Contract 和最终 Receipt。
 - `abandon` 是显式非成功清理，保留 `source.md` 与 `delivery-contract.yaml`，且不触碰用户 Git 状态。
@@ -132,11 +135,21 @@ Contract 顶层包含：
 
 Runner 支持 `package_script`、`project_binary`、`node_oracle`、`playwright_test`。Proof surface 支持 `ui_browser`、`runtime_behavior`、`api_contract`、`data_state`、`security_boundary`、`population_coverage`、`implementation_structure`。
 
+### Contract Bundle、Source Claim 与 Delivery Set
+
+大型但原子的交付仍是一个逻辑 Contract：根文件可以用排序后的 `outcome_files` 替代 inline `outcomes`，fragment 只含 Outcome，整个 Bundle 只有一个 binding、baseline、Final Gate 和 Receipt。文件数、token、前后端层、并行或 Agent 偏好都不是拆成多个 Contract 的理由。
+
+L2、Bundle 与 Set 必须保留原始 `source_paths` 和直接 `source_claims`。每条 claim 只能归属 Outcome/Child、全局约束、带来源理由的 out-of-scope，或阻断执行的 decision-required。Compiler 只验证已声明 claim 的覆盖，不声称能发现未声明要求。
+
+只有每个 Child 都有独立可观察结果、可执行 Acceptance 和真实 release/rollback/owner/risk/product-capability 边界，且不割裂原子用户闭环时才使用 `long-task-delivery-set-v1`。Set 只拥有顶层范围、source coverage、依赖投影、integration Acceptance 和唯一顶层 Receipt；它不调度 Child/Agent/Goal，也不创建 branch/worktree。V1 明确拒绝多仓库交付。
+
+执行开始后，source/Product/Acceptance/risk/Set boundary 变化会生成 hash-bound pending Authority Revision；未按精确 revision 得到用户批准前不会激活。技术 path/support/binding 扩展或 proof 加强必须提供 amendment reason，沿用首次 baseline，并使受影响 progress stale。
+
 ## 确定性风险分级
 
 - **L0**：局部、可逆、可直接测试的任务走默认工作流。
 - **L1 standard**：多个可观察 Outcome 或需要跨会话恢复，且有可靠可执行验证。
-- **L2 strict**：公共 API/schema、持久数据、迁移、安全/权限边界、不可逆外部影响、全量 population、多仓库，或可观察性弱的关键主路径。
+- **L2 strict**：公共 API/schema、持久数据、迁移、安全/权限边界、不可逆外部影响、全量 population，或可观察性弱的关键主路径。V1 不支持多仓库交付。
 
 用户可以主动升级为 strict。显式 `standard` 低于计算出的最低级别会以 `risk_level_below_required` 失败。Strict 所需 negative、counterfactual、population、security、environment、rollback/recovery proof 由 Compiler 按风险强制。实际 changed path 越界时返回 `scope_or_risk_escalation_required`，由同一个 Goal 修订并重新 compile。
 
@@ -144,7 +157,7 @@ Runner 支持 `package_script`、`project_binary`、`node_oracle`、`playwright_
 
 最终接受来自当前可执行证据，不来自 Agent 文本。exit code、手写 status、历史 targeted pass、缺失或弱化的 proof 都不能产生 accepted。Contract、source、相关 Context、Oracle/runner、Verifier 或 workspace 改变后旧结果立即 stale。
 
-Final Gate 只能运行 Contract 声明的验证命令。Harness 不产生模型调用，也不做模型 retry。验证命令发生暂时性 spawn/timeout 时最多进行一次机械重试，再失败即为 `blocked_external`。
+Final Gate 只能运行 Contract 声明的验证命令，禁止真实部署、支付、迁移执行或不可逆生产副作用。Retry 默认关闭，仅当 `transient_once`、幂等且 effect 为 read-only/test-sandbox 时允许一次；环境变量形式的 network policy 不是 OS 沙箱。顶层 Receipt 绑定 clean HEAD/tree、workspace、source、Context、authority 与完整 verifier identity。Machine accepted 只表示当前快照满足声明的机器检查，不等于 CI/部署/人工确认；存在 external confirmation 时状态为 `machine_accepted_external_pending`。
 
 ## 兼容与迁移
 

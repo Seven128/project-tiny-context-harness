@@ -11,10 +11,12 @@ import {
 import {
   abandonLongTaskState,
   activateDeliveryContract,
-  readCompiledDeliveryContract,
+  approvePendingAuthorityRevision,
+  clearAuthorityRevision,
   writeCompiledDeliveryContract,
 } from "../lib/long-task-state.js";
 import { verifyDeliveryContract } from "../lib/long-task-verifier-v1.js";
+import { repositoryRoot } from "../lib/long-task-workspace.js";
 
 export async function longTask(args: string[]): Promise<void> {
   const subcommand = args[0] ?? "help";
@@ -30,29 +32,13 @@ export async function longTask(args: string[]): Promise<void> {
     return;
   }
   if (subcommand === "compile") {
-    rejectUnknown(args.slice(2), []);
-    const compiled = await compileDeliveryContract(workdir, process.cwd());
-    await writeCompiledDeliveryContract(compiled);
-    await activateDeliveryContract(compiled);
-    console.log(
-      JSON.stringify({
-        status: "compiled",
-        task_id: compiled.task.id,
-        compiled_identity: compiled.compiled_identity,
-        effective_risk: compiled.effective_risk,
-        outcomes: compiled.outcomes.map((outcome) => outcome.key),
-      }),
-    );
-    return;
+    return compile(workdir, args.slice(2));
+  }
+  if (subcommand === "approve-authority-revision") {
+    return approveRevision(workdir, args.slice(2));
   }
   if (subcommand === "verify") {
-    const outcome = option(args.slice(2), "--outcome");
-    const check = option(args.slice(2), "--check");
-    rejectOptions(args.slice(2), ["--outcome", "--check"]);
-    const result = await verifyDeliveryContract(workdir, { outcome, check });
-    console.log(JSON.stringify(result));
-    if (result.findings.length) process.exitCode = 1;
-    return;
+    return verify(workdir, args.slice(2));
   }
   if (subcommand === "status") {
     rejectUnknown(args.slice(2), []);
@@ -65,11 +51,7 @@ export async function longTask(args: string[]): Promise<void> {
     return;
   }
   if (subcommand === "final-gate") {
-    rejectUnknown(args.slice(2), []);
-    const result = await runDeliveryFinalGate(workdir);
-    console.log(JSON.stringify(result));
-    if (result.workflow_status !== "accepted") process.exitCode = 1;
-    return;
+    return finalGate(workdir, args.slice(2));
   }
   if (subcommand === "stop-check") {
     const message = option(args.slice(2), "--message") ?? "";
@@ -87,12 +69,63 @@ export async function longTask(args: string[]): Promise<void> {
   }
   if (subcommand === "abandon") {
     rejectUnknown(args.slice(2), []);
-    const compiled = await readCompiledDeliveryContract(workdir);
-    await abandonLongTaskState(compiled.repository_root, workdir);
+    const root = await repositoryRoot(process.cwd());
+    await abandonLongTaskState(root, workdir);
     console.log(JSON.stringify({ status: "abandoned", workdir }));
     return;
   }
   throw new Error(`Unknown long-task subcommand: ${subcommand}`);
+}
+
+async function compile(workdir: string, args: string[]): Promise<void> {
+  const amendmentReason = option(args, "--amendment-reason");
+  rejectOptions(args, ["--amendment-reason"]);
+  const compiled = await compileDeliveryContract(workdir, process.cwd(), {
+    amendment_reason: amendmentReason,
+  });
+  await writeCompiledDeliveryContract(compiled);
+  await activateDeliveryContract(compiled);
+  await clearAuthorityRevision(workdir);
+  console.log(
+    JSON.stringify({
+      status: "compiled",
+      task_id: compiled.task.id,
+      compiled_identity: compiled.compiled_identity,
+      effective_risk: compiled.effective_risk,
+      outcomes: compiled.outcomes.map((outcome) => outcome.key),
+    }),
+  );
+}
+
+async function approveRevision(workdir: string, args: string[]): Promise<void> {
+  const revision = option(args, "--revision");
+  rejectOptions(args, ["--revision"]);
+  if (!revision) throw new Error("--revision requires a value");
+  await approvePendingAuthorityRevision(workdir, revision);
+  console.log(
+    JSON.stringify({ status: "authority_revision_approved", revision }),
+  );
+}
+
+async function verify(workdir: string, args: string[]): Promise<void> {
+  const outcome = option(args, "--outcome");
+  const check = option(args, "--check");
+  rejectOptions(args, ["--outcome", "--check"]);
+  const result = await verifyDeliveryContract(workdir, { outcome, check });
+  console.log(JSON.stringify(result));
+  if (result.findings.length) process.exitCode = 1;
+}
+
+async function finalGate(workdir: string, args: string[]): Promise<void> {
+  rejectUnknown(args, []);
+  const result = await runDeliveryFinalGate(workdir);
+  console.log(JSON.stringify(result));
+  if (
+    result.workflow_status !== "machine_accepted" &&
+    result.workflow_status !== "machine_accepted_external_pending" &&
+    result.workflow_status !== "contract_gate_passed"
+  )
+    process.exitCode = 1;
 }
 
 async function initialize(workdir: string): Promise<void> {
@@ -133,7 +166,8 @@ function rejectUnknown(actual: string[], allowed: string[]): void {
 function help(): void {
   console.log(`ty-context long-task commands:
   init <workdir>
-  compile <workdir>
+  compile <workdir> [--amendment-reason <reason>]
+  approve-authority-revision <workdir> --revision <sha>
   verify <workdir> [--outcome <key>] [--check <key>]
   status <workdir>
   resume <workdir>
@@ -152,6 +186,7 @@ task:
   source_paths: []
   context_refs: []
   context_snapshot_mode: referenced
+source_claims: []
 risk:
   requested_level: auto
   facts:
@@ -165,6 +200,7 @@ risk:
     full_population_operation: false
     multi_repository_change: false
     weak_observability: false
+  evidence: []
 global:
   product:
     non_goals: []
@@ -175,6 +211,7 @@ global:
     forbidden_shortcuts: []
   acceptance:
     checks: []
+    external_confirmations: []
 outcomes:
   - key: replace-outcome
     title: Replace outcome
@@ -208,7 +245,13 @@ outcomes:
             network_policy:
               mode: none
               allowed_hosts: []
+            effect: read_only
+            retry_policy: none
+            idempotent: false
+          verification_sources:
+            - tests/replace-oracle.mjs
           input_paths: ["src/**"]
+          expected_output_paths: []
           artifact_globs: []
           positive_assertions:
             - observation: result

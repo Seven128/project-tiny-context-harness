@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import {
   createDeliveryFixture,
+  commitCandidate,
   readState,
   writeContract,
 } from "./long-task-delivery-fixtures.mjs";
@@ -52,7 +53,7 @@ test("real CLI two-Outcome rolling delivery rejects partial/history and enforces
     const accepted = await run(fixture.root, [
       "long-task", "final-gate", fixture.workdir,
     ]);
-    assert.equal(accepted.workflow_status, "accepted");
+    assert.equal(accepted.workflow_status, "machine_accepted");
     assert.equal(accepted.check_results.length, 2);
     assert.equal(new Set(accepted.check_results.map((result) => result.outcome_key)).size, 2);
 
@@ -72,7 +73,7 @@ test("real CLI two-Outcome rolling delivery rejects partial/history and enforces
     const acceptedAgain = await run(fixture.root, [
       "long-task", "final-gate", fixture.workdir,
     ]);
-    assert.equal(acceptedAgain.workflow_status, "accepted");
+    assert.equal(acceptedAgain.workflow_status, "machine_accepted");
     await run(fixture.root, ["long-task", "close", fixture.workdir]);
     assert.equal(await exists(path.join(fixture.root, ".codex", "ty-context-active-long-task.json")), false);
     assert.equal(await exists(path.join(fixture.workdir, "delivery-contract.yaml")), true);
@@ -95,7 +96,7 @@ test("referenced Context ignores unrelated Context but invalidates selected Cont
     await run(fixture.root, ["long-task", "final-gate", fixture.workdir]);
     await writeFile(path.join(fixture.root, "project_context", "unrelated.md"), "# unrelated\n");
     const unrelated = await run(fixture.root, ["long-task", "status", fixture.workdir]);
-    assert.equal(unrelated.final_result, "accepted_fresh");
+    assert.equal(unrelated.final_result, "machine_accepted_fresh");
     await writeFile(path.join(fixture.root, "project_context", "areas", "main.md"), "# changed\n");
     const contextStale = await run(fixture.root, ["long-task", "status", fixture.workdir]);
     assert.equal(contextStale.final_result, "accepted_stale");
@@ -128,6 +129,8 @@ test("scope escape returns escalation and abandon preserves authored Contract", 
 });
 
 async function run(cwd, args) {
+  if (args[0] === "long-task" && args[1] === "final-gate")
+    await commitCandidate(cwd);
   const result = await exec(process.execPath, [cli, ...args], { cwd, windowsHide: true });
   return parse(result.stdout);
 }

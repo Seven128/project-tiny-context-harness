@@ -16,6 +16,7 @@ export async function createDeliveryFixture(options = {}) {
   await mkdir(path.join(root, "tests"), { recursive: true });
   await mkdir(path.join(root, "project_context", "areas"), { recursive: true });
   await writeFile(path.join(root, "src", "state.json"), `${JSON.stringify({ first: true, second: false })}\n`);
+  await writeFile(path.join(root, "source.md"), "# Fixture source\n\nThe first outcome must be observable.\n");
   await writeFile(
     path.join(root, "tests", "oracle.mjs"),
     `import { readFile } from "node:fs/promises";
@@ -61,8 +62,13 @@ export function deliveryContract(options = {}) {
       cwd: ".",
       timeout_ms: 30000,
       network_policy: { mode: "none", allowed_hosts: [] },
+      effect: "read_only",
+      retry_policy: "none",
+      idempotent: false,
     },
+    verification_sources: ["tests/oracle.mjs"],
     input_paths: ["src/**"],
+    expected_output_paths: [],
     artifact_globs: [],
     positive_assertions: [
       { observation: "result", operator: "equals", expected: true },
@@ -84,10 +90,10 @@ export function deliveryContract(options = {}) {
     technical: {
       obligations: [`Implement ${key}`],
       expected_change_paths: ["src/**"],
-      allowed_support_paths: ["tests/**"],
+      allowed_support_paths: [],
       forbidden_paths: ["secrets/**"],
       bindings: [
-        { kind: "file", target: "state", carrier_paths: ["src/state.json"] },
+        { kind: "file", target: "state", carrier_paths: ["src/state.json"], existence: "existing" },
       ],
       forbidden_shortcuts: [],
       rollback_and_recovery: null,
@@ -106,10 +112,18 @@ export function deliveryContract(options = {}) {
       id: "fixture-task",
       title: "Fixture task",
       goal: "Prove the declared fixture outcomes.",
-      source_paths: [],
+      source_paths: ["source.md"],
       context_refs: ["project_context/areas/main.md"],
       context_snapshot_mode: "referenced",
     },
+    source_claims: [
+      {
+        key: "first-observable",
+        source_ref: "source.md#fixture-source",
+        statement: "The first outcome must be observable.",
+        disposition: { type: "contract", refs: ["first"] },
+      },
+    ],
     risk: {
       requested_level: "auto",
       facts: {
@@ -124,11 +138,12 @@ export function deliveryContract(options = {}) {
         multi_repository_change: false,
         weak_observability: false,
       },
+      evidence: [],
     },
     global: {
       product: { non_goals: [], owner_boundaries: ["fixture"] },
       technical: { constraints: [], forbidden_paths: ["secrets/**"], forbidden_shortcuts: [] },
-      acceptance: { checks: [] },
+      acceptance: { checks: [], external_confirmations: [] },
     },
     outcomes: options.twoOutcomes
       ? [outcome("first", "first"), outcome("second", "second", ["first"])]
@@ -137,6 +152,16 @@ export function deliveryContract(options = {}) {
 }
 
 export async function writeContract(workdir, contract) {
+  contract.risk.evidence ??= [];
+  for (const [fact, value] of Object.entries(contract.risk.facts))
+    if (value && !contract.risk.evidence.some((item) => item.fact === fact))
+      contract.risk.evidence.push({
+        fact,
+        source_claim_refs: ["first-observable"],
+        context_refs: ["project_context/areas/main.md"],
+        affected_paths: ["src/**"],
+        rationale: `Fixture declares ${fact}.`,
+      });
   await writeFile(path.join(workdir, "delivery-contract.yaml"), YAML.stringify(contract, { lineWidth: 0 }));
 }
 
@@ -145,12 +170,28 @@ export async function readState(root) {
 }
 
 export async function runCli(cwd, args, options = {}) {
+  const { skipCandidateCommit = false, ...execOptions } = options;
+  if (
+    !skipCandidateCommit &&
+    args[0] === "long-task" &&
+    args[1] === "final-gate"
+  ) {
+    await commitCandidate(cwd);
+  }
   const result = await exec(process.execPath, [cli, ...args], {
     cwd,
     windowsHide: true,
-    ...options,
+    ...execOptions,
   });
   return parseCliJson(result.stdout);
+}
+
+export async function commitCandidate(cwd) {
+  await exec("git", ["add", "-A"], { cwd, windowsHide: true });
+  await exec("git", ["commit", "--allow-empty", "-m", "candidate"], {
+    cwd,
+    windowsHide: true,
+  });
 }
 
 export async function runCliFailure(cwd, args, options = {}) {

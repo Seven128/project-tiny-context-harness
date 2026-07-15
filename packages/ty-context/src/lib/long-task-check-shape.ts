@@ -17,16 +17,21 @@ import {
 } from "./long-task-delivery-shape.js";
 
 export function parseCheck(value: unknown, label: string): DeliveryCheckV1 {
-  const row = object(value, label, [
-    "key",
-    "proof_surface",
-    "runner",
-    "input_paths",
-    "artifact_globs",
-    "positive_assertions",
-    "negative_assertions",
-    "environment_requirements",
-  ]);
+  const row = object(
+    value,
+    label,
+    [
+      "key",
+      "proof_surface",
+      "runner",
+      "input_paths",
+      "artifact_globs",
+      "positive_assertions",
+      "negative_assertions",
+      "environment_requirements",
+    ],
+    ["verification_sources", "expected_output_paths"],
+  );
   return {
     key: key(row.key, `${label}.key`),
     proof_surface: literal(
@@ -43,7 +48,13 @@ export function parseCheck(value: unknown, label: string): DeliveryCheckV1 {
       `${label}.proof_surface`,
     ),
     runner: parseRunner(row.runner, `${label}.runner`),
+    verification_sources: Object.hasOwn(row, "verification_sources")
+      ? strings(row.verification_sources, `${label}.verification_sources`)
+      : [],
     input_paths: strings(row.input_paths, `${label}.input_paths`),
+    expected_output_paths: Object.hasOwn(row, "expected_output_paths")
+      ? strings(row.expected_output_paths, `${label}.expected_output_paths`)
+      : [],
     artifact_globs: strings(row.artifact_globs, `${label}.artifact_globs`),
     positive_assertions: parseAssertions(
       row.positive_assertions,
@@ -61,14 +72,12 @@ export function parseCheck(value: unknown, label: string): DeliveryCheckV1 {
 }
 
 function parseRunner(value: unknown, label: string): DeliveryRunnerV1 {
-  const row = object(value, label, [
-    "type",
-    "target",
-    "argv",
-    "cwd",
-    "timeout_ms",
-    "network_policy",
-  ]);
+  const row = object(
+    value,
+    label,
+    ["type", "target", "argv", "cwd", "timeout_ms", "network_policy"],
+    ["effect", "retry_policy", "idempotent"],
+  );
   const network = object(row.network_policy, `${label}.network_policy`, [
     "mode",
     "allowed_hosts",
@@ -115,6 +124,27 @@ function parseRunner(value: unknown, label: string): DeliveryRunnerV1 {
     cwd: string(row.cwd, `${label}.cwd`),
     timeout_ms: Number(timeout),
     network_policy: { mode, allowed_hosts: allowedHosts },
+    effect: Object.hasOwn(row, "effect")
+      ? literal(
+          row.effect,
+          ["read_only", "test_sandbox"] as const,
+          `${label}.effect`,
+        )
+      : "read_only",
+    retry_policy: Object.hasOwn(row, "retry_policy")
+      ? literal(
+          row.retry_policy,
+          ["none", "transient_once"] as const,
+          `${label}.retry_policy`,
+        )
+      : "none",
+    idempotent: Object.hasOwn(row, "idempotent")
+      ? (() => {
+          if (typeof row.idempotent !== "boolean")
+            fail(`${label}.idempotent`, "must be a boolean");
+          return row.idempotent;
+        })()
+      : false,
   };
 }
 

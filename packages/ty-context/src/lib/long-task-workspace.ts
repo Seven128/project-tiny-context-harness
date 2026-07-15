@@ -39,6 +39,7 @@ export async function captureWorkspaceManifest(
   rootInput: string,
   workdirInput: string,
   copyRoot?: string,
+  additionalExcludedWorkdirs: string[] = [],
 ): Promise<WorkspaceManifestV1> {
   const root = path.resolve(rootInput);
   const workdir = path.resolve(workdirInput);
@@ -46,6 +47,9 @@ export async function captureWorkspaceManifest(
   if (!workdirRelative)
     throw new Error("long_task_workdir_must_not_be_repository_root");
   const files: WorkspaceFileV1[] = [];
+  const protectedWorkdirs = [workdir, ...additionalExcludedWorkdirs]
+    .map((item) => repoRelative(root, path.resolve(item)))
+    .filter(Boolean);
   const seen = new Set<string>();
 
   async function visit(directory: string, relative = ""): Promise<void> {
@@ -55,8 +59,10 @@ export async function captureWorkspaceManifest(
       if (!relative && ROOT_EXCLUDES.has(entry.name)) continue;
       const rel = relative ? `${relative}/${entry.name}` : entry.name;
       if (
-        rel === workdirRelative ||
-        rel.startsWith(`${workdirRelative}/`) ||
+        protectedWorkdirs.some(
+          (protectedPath) =>
+            rel === protectedPath || rel.startsWith(`${protectedPath}/`),
+        ) ||
         rel.startsWith("project_context/") ||
         rel.startsWith("tmp/ty-context/long-task-runs/") ||
         RUNTIME_EXCLUDES.has(rel)
@@ -105,13 +111,22 @@ export async function createWorkspaceSnapshot(
   root: string,
   workdir: string,
   label: string,
+  additionalExcludedWorkdirs: string[] = [],
 ): Promise<WorkspaceSnapshotV1> {
   const temporary = await mkdtemp(
     path.join(os.tmpdir(), `ty-context-${safe(label)}-`),
   );
   try {
-    const manifest = await captureWorkspaceManifest(root, workdir, temporary);
-    await linkDependencyTrees(root, temporary, workdir);
+    const manifest = await captureWorkspaceManifest(
+      root,
+      workdir,
+      temporary,
+      additionalExcludedWorkdirs,
+    );
+    await linkDependencyTrees(root, temporary, [
+      workdir,
+      ...additionalExcludedWorkdirs,
+    ]);
     return {
       root: temporary,
       manifest,
@@ -138,13 +153,23 @@ export function changedWorkspacePaths(
 
 export async function currentGitState(root: string): Promise<{
   head: string;
+  tree: string;
   dirty: string[];
 }> {
-  const [head, raw] = await Promise.all([
+  const [head, tree, raw] = await Promise.all([
     gitOutput(root, ["rev-parse", "HEAD"]),
+    gitOutput(root, ["rev-parse", "HEAD^{tree}"]),
     gitOutput(root, ["status", "--short", "--untracked-files=all"]),
   ]);
-  return { head, dirty: raw ? raw.split(/\r?\n/u).filter(Boolean) : [] };
+  return {
+    head,
+    tree,
+    dirty: raw ? raw.split(/\r?\n/u).filter(Boolean) : [],
+  };
+}
+
+export async function currentGitTree(root: string): Promise<string> {
+  return gitOutput(root, ["rev-parse", "HEAD^{tree}"]);
 }
 
 export async function gitPath(root: string, pathSpec: string): Promise<string> {
@@ -211,13 +236,21 @@ async function gitOutput(root: string, argv: string[]): Promise<string> {
 async function linkDependencyTrees(
   sourceRoot: string,
   snapshotRoot: string,
-  workdir: string,
+  workdirs: string[],
 ): Promise<void> {
-  const protectedWorkdir = repoRelative(sourceRoot, workdir);
+  const protectedWorkdirs = workdirs.map((workdir) =>
+    repoRelative(sourceRoot, workdir),
+  );
   async function visit(directory: string, relative = ""): Promise<void> {
     for (const entry of await readdir(directory, { withFileTypes: true })) {
       const next = relative ? `${relative}/${entry.name}` : entry.name;
-      if (next === protectedWorkdir || next.startsWith(`${protectedWorkdir}/`))
+      if (
+        protectedWorkdirs.some(
+          (protectedWorkdir) =>
+            next === protectedWorkdir ||
+            next.startsWith(`${protectedWorkdir}/`),
+        )
+      )
         continue;
       if (entry.name === ".git") continue;
       const source = path.join(directory, entry.name);

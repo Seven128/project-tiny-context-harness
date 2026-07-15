@@ -10,6 +10,7 @@ const pointer = path.join(root, ".codex", "ty-context-active-long-task.json");
 const active = await optionalJson(pointer);
 if (!active) output({});
 await validateBinding(active, root);
+const authority = authorityView(active);
 
 if (input.hook_event_name === "SessionStart" || input.hook_event_name === "PostCompact") {
   output({
@@ -17,10 +18,9 @@ if (input.hook_event_name === "SessionStart" || input.hook_event_name === "PostC
       hookEventName: input.hook_event_name,
       additionalContext: [
         "Active Single-Goal Long-Task Workflow",
-        `Workdir: ${active.workdir}`,
-        `Task: ${active.task_id}`,
-        `Compiled identity: ${active.compiled_identity}`,
-        `Resume: ty-context long-task resume ${JSON.stringify(active.workdir)}`,
+        authority.workdirLabel,
+        authority.identityLabel,
+        authority.resumeLabel,
       ].join("\n"),
     },
   });
@@ -30,7 +30,14 @@ if (input.hook_event_name !== "Stop") output({});
 const cli = path.join(active.verifier_identity.package_root, "dist", "cli.js");
 const run = spawnSync(
   process.execPath,
-  [cli, "long-task", "stop-check", active.workdir, "--message", input.last_assistant_message || ""],
+  [
+    cli,
+    authority.command,
+    "stop-check",
+    authority.workdir,
+    "--message",
+    input.last_assistant_message || "",
+  ],
   { cwd: root, encoding: "utf8", windowsHide: true, maxBuffer: 1024 * 1024, timeout: 10000 },
 );
 if (!run.stdout?.trim())
@@ -44,26 +51,34 @@ try {
 }
 
 async function validateBinding(active, root) {
-  if (
-    active.schema_version !== "active-long-task-binding-v1" ||
-    !samePath(active.repository_root || "", root) ||
-    typeof active.workdir !== "string" ||
-    typeof active.task_id !== "string" ||
-    typeof active.compiled_identity !== "string" ||
-    !active.verifier_identity?.package_root ||
-    !active.verifier_identity?.bundle_sha256 ||
-    !active.verifier_identity?.bundle_files
-  ) failClosed("Invalid long-task active binding.");
-  const workdir = await realpath(active.workdir).catch(() => null);
-  if (!workdir || !samePath(workdir, active.workdir) || !inside(root, workdir))
+  const view = authorityView(active);
+  const commonValid =
+    active.schema_version === "active-long-task-binding-v1" &&
+    samePath(active.repository_root || "", root) &&
+    active.verifier_identity?.package_root &&
+    active.verifier_identity?.bundle_sha256 &&
+    active.verifier_identity?.bundle_files;
+  if (!commonValid || !view.valid) failClosed("Invalid long-task active binding.");
+  const authorityWorkdir = view.workdir;
+  const workdir = await realpath(authorityWorkdir).catch(() => null);
+  if (!workdir || !samePath(workdir, authorityWorkdir) || !inside(root, workdir))
     failClosed("Long-task workdir is missing, retargeted or outside the repository.");
-  const compiled = await optionalJson(path.join(workdir, ".ty-context", "compiled-contract.json"));
+  const compiled = await optionalJson(
+    path.join(
+      workdir,
+      ".ty-context",
+      view.compiledFile,
+    ),
+  );
   if (
     !compiled ||
-    compiled.compiled_identity !== active.compiled_identity ||
+    compiled?.[view.compiledIdentityField] !== view.compiledIdentity ||
     !samePath(compiled.repository_root || "", root) ||
-    !samePath(compiled.workdir || "", workdir)
-  ) failClosed("Compiled Delivery Contract does not match the active binding.");
+    !samePath(
+      compiled?.[view.compiledWorkdirField] || "",
+      workdir,
+    )
+  ) failClosed("Compiled delivery authority does not match the active binding.");
   const files = {};
   for (const [relative, expected] of Object.entries(active.verifier_identity.bundle_files)) {
     const file = path.join(active.verifier_identity.package_root, "dist", ...relative.split("/"));
@@ -74,6 +89,40 @@ async function validateBinding(active, root) {
   }
   if (hash(canonical(files)) !== active.verifier_identity.bundle_sha256)
     failClosed("Long-task verifier bundle identity changed after activation.");
+}
+
+function authorityView(active) {
+  if (active.mode === "delivery_set")
+    return {
+      valid:
+        typeof active.set_workdir === "string" &&
+        typeof active.compiled_set_identity === "string" &&
+        Boolean(active.registered_child_contracts),
+      command: "delivery-set",
+      workdir: active.set_workdir,
+      compiledIdentity: active.compiled_set_identity,
+      compiledIdentityField: "compiled_set_identity",
+      compiledWorkdirField: "set_workdir",
+      compiledFile: "compiled-delivery-set.json",
+      workdirLabel: `Set workdir: ${active.set_workdir}`,
+      identityLabel: `Delivery Set identity: ${active.compiled_set_identity}`,
+      resumeLabel: `Resume: ty-context delivery-set resume ${JSON.stringify(active.set_workdir)}`,
+    };
+  return {
+    valid:
+      typeof active.workdir === "string" &&
+      typeof active.task_id === "string" &&
+      typeof active.compiled_identity === "string",
+    command: "long-task",
+    workdir: active.workdir,
+    compiledIdentity: active.compiled_identity,
+    compiledIdentityField: "compiled_identity",
+    compiledWorkdirField: "workdir",
+    compiledFile: "compiled-contract.json",
+    workdirLabel: `Workdir: ${active.workdir}`,
+    identityLabel: `Task: ${active.task_id}`,
+    resumeLabel: `Compiled identity: ${active.compiled_identity}\nResume: ty-context long-task resume ${JSON.stringify(active.workdir)}`,
+  };
 }
 
 function failClosed(reason) {
