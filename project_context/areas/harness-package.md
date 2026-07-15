@@ -2,100 +2,55 @@
 
 ## Responsibility
 
-- Provide the `ty-context` CLI, portable Minimal Context assets, the default Workflow Contract, validators, migrations, source-sync checks, explicit Composite-Codex capability and maintainer automation for user projects.
-- Keep Project Tiny Context Harness focused on repo-native project memory for AI coding agents: durable Context recovery, package-managed guidance and repeatable validation paths, without restoring the old stage workflow.
-- Provide an explicitly invoked, pre-stable Composite Campaign V6 workflow that preserves one discussed plan as a complete maximal-coherent Scope Fit V4 SFC graph, uses one foreground scheduler plus bounded ephemeral Codex Exec workers to author Packets and execute/repair preflight-bound Slices, conservatively schedules detached worktrees, integrates them, and prevents false completion through Slice, Wave and same-snapshot Campaign gates. Contract V3 remains the single-Slice execution kernel.
-- Own this source workspace's package behavior facts while delegating full design rationale to `PROJECT_SPEC.md` and high-frequency role facts to the role Context files listed below.
+- Provide the `ty-context` CLI, Minimal Context/default Workflow assets, validators, migrations, source-sync checks and the explicit Single-Goal Long-Task Workflow.
+- Preserve repo-native project intent and repeatable verification without reintroducing lifecycle documents or agent/process/Git orchestration.
+- Own the Canonical Delivery Contract V1 and Evidence Kernel that prevent false completion for declared Outcomes on a current workspace snapshot.
 
 ## User / System Contract
 
-- `init` installs `core-portable` plus `workflow-default` without deleting user files. It creates the formal Context graph and portable managed assets. Codex Hooks, Composite Skills and Campaign CLI surfaces are installed only by explicit `ty-context enable composite-codex`; `ty-context disable composite-codex` removes only package-owned Composite assets and preserves user Hooks. Non-Codex consumers do not receive them by default.
-- `sync` refreshes package-managed assets only. It must not generate project semantics, run the full migration registry, infer business Context, repair project-local Skills or perform whole-project rewriting.
-- After a public npm package update, the default user path is `ty-context upgrade`. `sync-only` release mode allows direct `sync` only when the user explicitly wants managed-asset refresh without upgrade diagnostics.
-- `upgrade` owns safe migration orchestration. It applies only known safe migrations when no `blocked` item exists, refreshes managed assets through internal `sync`, runs diagnostics and leaves semantic or user-judgment follow-up as `manual_required`.
-- `validate-context` formally parses TOML, rejects unknown fields and unsafe/duplicate topology, validates manifest/front-matter parity and minimum recoverability, warns on unregistered Context and scans all verification-class sections for fake result claims. It does not prove product behavior.
-- `validate-code-modularity` reports line count, function statements, branches, exports, state transitions and responsibility risk, with lifecycle-complete waivers; `validate-harness` composes it with Context recoverability.
-- Both fixed Plan Validator CLIs and their Markdown-table parsers are removed. Default Workflow uses internal planning; ordinary long-task artifacts do not require matrix/verdict consistency; Composite Contract V3 owns strict integrity and acceptance through its compiler and gates.
-- `ty-context composite-long-task ...` is the strict Slice executor enabled by `composite-codex`. It freezes three-input, Context topology/selected-file (or explicit full), Oracle/verifier and workdir identities. `verify` is optional targeted repair tooling and never accepts; `final-gate` reruns the full Slice scope and alone derives Slice `accepted`.
-- Composite Slice execution state is ordinary user/project state. `compiled-contract.json`, current status and `final-result.json` live in the explicit workdir; a narrow active binding in the current Git worktree identifies that worktree's active contract. Compile is idempotent only for the same active contract and workdir. A different contract or workdir in the same worktree must fail with `active_contract_changed`; separate worktrees may compile independent SFCs concurrently. A new activation after completion invalidates that worktree's old final result before reuse.
-- The project-level Stop Hook is a complete no-op without an active task in the current worktree. Compile accepts only the package-managed Hook bytes and exact managed event commands, not a similarly named no-op script. With an active task, Stop requires the workdir final result to match verifier-written project/worktree-Git receipt records, then blocks when the result is missing or malformed, belongs to another contract, reports `needs_work`, or is stale because the current worktree hash differs. It permits Slice completion only when the latest receipt-bound result is `accepted` and still fresh. The receipts are ordinary project state, not privileged Host authority; the Hook does not require administrator rights, a Rust Helper, Credential Manager, an OS service or a workspace-external registry.
-- `/prepare-composite-long-task` is the explicit upstream path for multi-SFC execution. It preserves immutable source provenance; carries Context resolution in Source Coverage V2 and freezes a graph/file-hash Context baseline; records maximal Scope Fit V4; authors immutable V3 packets; derives Change Envelopes; and renders/preflights strict V3 authorities without a second plan, matrix, verdict or Local Audit.
-- The Campaign V6 Pure Planner computes deterministic waves only after Packet preflight. Scope Fit decides SFC count without parallelism as a split reason; the conflict analyzer requires positive independence evidence and unknown means serial. The foreground scheduler creates all fixed detached SFC worktrees from one Wave base, starts up to four independent workers before waiting, observes all children as settled, validates Receipt V3, integrates accepted commit SHAs in stable order and uses one serial repair worktree for conflicts/regressions.
-- Authoring workers are independent read-only `codex exec` processes using the controller profile; Packet plus three Contract V3 inputs and Change Envelope is the authoritative handoff to independent workspace-write execution/repair workers. Exact Sol `xhigh|max|ultra` routes execution to Sol `medium`; other/unknown/invalid cases pass through and explicit target unavailability permits one controller retry. Worker exit code and text are never acceptance authority.
-- Slice final results remain Contract V3 execution authority and cannot be promoted by campaign prose. A Wave Integration Gate revalidates the current wave plus impacted prior ACs and global smoke. A Campaign Final Gate recompiles and reruns all SFC contracts, global constraints and source coverage on one final Integration Branch snapshot. Finalization fetches the authoritative Target and first checks exact commit/tree identity; a different Target tree receives one complete Target Snapshot Gate over every current Packet, Source Coverage item, Slice contract and global constraint. Only a missing implementation proceeds to safe non-force delivery, matching-open-PR fallback or Integration repair.
-- Campaign `accepted` is a stable V6 terminal state committed transactionally with `campaign.yaml`, the accepted Campaign Final Result, hash-validated Target Finalization Receipt and event. Reruns validate authority and finish without workers, Gates, PR or worktree recreation. Cleanup follows, is idempotent and records pending/complete independently; failure never downgrades accepted. Accepted V5 remains readable/auditable; unfinished V5 returns `campaign_v5_execution_retired_recreate_required`.
-- Campaign worktree inspection and budget assertion are read-only. A single canonical V6 expected set covers Integration, active/incomplete Slice and repair paths; only explicit ownership-checked reconcile, accepted cleanup or `composite-campaign abandon` may remove managed worktrees. Missing non-final Slice worktrees resume from a validated committed head/Receipt, and physical Integration HEAD is reconciled back to persisted authority rather than silently adopted.
-- Slice/Wave transitions are centralized and monotonic. Packet-ready or repairable Slices may be scheduled; accepted/merged/integration-verified Slices never return to execution. Recovery restores exactly one incomplete Wave or fails closed on ambiguity. Every authoring/execution/repair dispatch boundary checks abort/interrupt, terminal status, lock identity and run generation.
-- Worker observations bind PID to cross-platform process-start identity. Reconcile and interrupt treat a worker as live/terminable only when both match; PID reuse or unverifiable legacy PID state is never killed. Exec termination targets only the recorded worker process tree and reports bounded cleanup diagnostics without creating acceptance authority.
-- `ty-context composite-campaign abandon --campaign <path>` is the explicit local teardown path for a non-accepted Campaign with no live matching scheduler or worker. It makes the Campaign terminal `abandoned`, clears runtime pointers, removes only package-owned local worktrees/Integration branch/runtime files, preserves tracked source/Packet/Receipt/Gate/event state and never changes remote refs. Ordinary cleanup on another nonterminal Campaign performs inspection/orphan reconciliation only and returns `campaign_cleanup_requires_abandon`.
-- Campaign source/coverage/graph, Context baseline, immutable Packet/schedule revisions, execution-engine/routing policy identity, bounded worker observations, worktree/commit identities, Receipt hashes, integration results and final derived result are Git-trackable orchestration/provenance. One simple live-process lock, generations, atomic writes, append-only events and bounded external-effect intents provide durable-stage recovery; there is no lease/heartbeat or Host takeover. Compiled contracts, mutable verifier runs and raw output remain temporary.
-- Campaign behavior resolves real paths (or parent real paths), rejects absolute/`..`/symlink escapes, Windows reserved names, secrets, oversized data, immutable-revision changes and stale generations before mutation. Slice receipts reject every changed path outside their Change Envelope; repair uses only affected-envelope union.
-- Campaign baseline/finalization preserve the primary worktree by default. Dirty input uses a temporary-index `commit-tree` checkpoint ref without staging/committing/rebasing the user's worktree; target synchronization and final validation happen in a dedicated target worktree.
-- `export-context` keeps legacy `--full`, `--code` and `--all` as temporary single-artifact fallback exports, while Source Pack modes (`--code-index`, `--source-pack`, `--code-bundles`, `--task-context`) produce deterministic temporary artifacts for external LLM upload under `tmp/ty-context/context-exports/**`.
-- Source Pack and task-context exports are script-first and bounded: standard packs and task packs must not exceed five output files, must label inferred path/context groupings as export routing only, must not run project verification commands, must not register generated artifacts in `project_context/context.toml`, and must keep only the current `tmp/ty-context/context-exports/latest/` export round by default.
-- Secret redaction and safety exclusions apply across export indexes, bundles, task context artifacts and manifests; package behavior must not expose an option that disables secret redaction.
-- Default Context authoring Skills write durable conclusions to `project_context/**` or `DESIGN.md`. They must stay Minimal Context oriented and must not recreate PRD / UX / tech-plan / review / test / release document chains.
-- Product Surface Contract workflow is prompt-level and project-owned. It uses existing Context roles such as `contract`, `area`, `subdomain`, `verification`, `decision-rationale` and `implementation-index`; the package must not add a surface-specific Context role or infer business surface contracts during `init`/`upgrade`.
-- Public package surfaces are English-complete. Non-English trigger examples are additive compatibility only.
-- The public package runtime floor is Node.js `>=24`; maintainer CI and npm publishing workflows use Node 24 as the supported execution line.
-- `PROJECT_SPEC.md` remains the full source-workspace design-spec and historical rationale surface. It is not a consumer default asset and should not be copied wholesale into Context.
-
-## Role Context Map
-
-- [Context Model](harness-package/foundation/context-model.md): foundation Context for Context types, durable facts, fact-source authority, role placement and Context/code/evidence priority.
-- [Workflow Contract](harness-package/contracts/workflow-contract.md): contract Context for Context Priority, `Context Delta`, internal planning, explicit long-task routing, Composite handoff and Contract Conformance boundaries.
-- [Package-Managed Surface Contract](harness-package/contracts/package-managed-surfaces.md): contract Context for `.codex/ty-context-managed/**`, `.codex/skills/**`, `packages/ty-context/assets/**`, `.codex/skills/authoring/**`, README surfaces and source sync boundaries.
-- [Minimal Context Rationale](harness-package/decision-rationale/minimal-context.md): on-demand rationale for why Minimal Context replaced the old stage workflow and why phase gates, thick docs and validator-driven workflow are not restored by default.
-- [Implementation Index](harness-package/implementation-index.md): on-demand code/test/tool navigation for CLI, sync, validators, migrations, assets, Skills, tests and release tools.
-- [Verification](harness-package/verification.md): default-read repeatable verification paths for this source workspace.
+- Product Surface Contract workflow is prompt-level and project-owned; package-managed Skills may guide `context_surface_contract`, but the Harness must not add a surface-specific Context role.
+- `init` installs `core-portable` plus `workflow-default`; `ty-context enable long-task` explicitly installs the Long-Task Workflow Skill, Stop Hook and templates. `disable long-task` removes only package-owned long-task assets.
+- `sync` refreshes enabled package-managed assets only. `upgrade` applies safe deterministic migrations, including `composite-codex` profile selection to `long-task`, before sync/doctor. Neither command creates or activates a task.
+- `ty-context long-task init|compile|verify|status|resume|final-gate|stop-check|close|abandon` is the sole active long-task CLI.
+- `delivery-contract.yaml` is the only authoring and acceptance authority. Optional `source.md` is provenance. Model-authored ids stop at task/Outcome/Check keys; compilation generates deterministic internal ids.
+- The current platform Goal owns rolling implementation choices. Harness neither creates nor recovers physical Goals and never starts agents, Codex/AppServer, branches/worktrees, merge/push/PR flows or model retries.
+- Compile is static and fail-closed. Every Outcome needs executable falsifiable proof; UI needs browser proof; requested risk cannot fall below the deterministic minimum; strict risk adds compiler-enforced proof/recovery obligations.
+- Targeted verify writes repair-only current-snapshot status and never accepts. Final Gate reruns the entire Contract on one snapshot and is the sole accepted-Receipt producer.
+- Status is derived, not authority. Resume is read-only. Stop/close require exact fresh accepted identity. Abandon is explicit non-success cleanup that preserves authored source/Contract and leaves Git/remotes untouched.
+- Historical `composite-campaign` and `composite-long-task` names are tombstones only. Historical files are preserved as ordinary files but are never imported, migrated into active state or executed.
+- `/normal-long-task` is a retirement pointer; `/long-task-workflow` is the only active long-task Skill.
+- Public package surfaces are fully usable in English; Chinese documentation is an aligned translation.
+- Runtime floor remains Node.js `>=24`.
 
 ## Core Data / API / State
 
-- CLI command routing lives in `packages/ty-context/src/commands/index.ts`.
-- Init behavior lives in `packages/ty-context/src/lib/init.ts`.
-- Sync behavior and direct asset-refresh safety blockers live in `packages/ty-context/src/lib/sync-engine.ts`.
-- Upgrade orchestration and migration status handling live in `packages/ty-context/src/lib/upgrade.ts` and `packages/ty-context/src/lib/migrations.ts`.
-- Context graph helpers live in `context-manifest.ts`; validator dispatch and formal Context schema/recoverability checks live in focused validator modules. Fixed Plan Validators are absent. Composite Contract V3 remains split across strict schema/compiler, referenced/full Context snapshot, verifier-owned evaluation, execution, freshness, full final recomputation and Stop enforcement.
-- Context export and Source Pack generation live in `packages/ty-context/src/lib/context-export.ts`; CLI parsing for export modes lives in `packages/ty-context/src/commands/export-context.ts`.
-- Source mappings live in `packages/ty-context/source-mappings.yaml`.
-- Composite Campaign V6's durable data contract is immutable discussed-plan provenance and complete Source Coverage -> maximal-coherent Scope Fit V4 graph -> immutable `CompositeAuthoringPacketV3` revisions -> deterministic V3 projections/Change Envelopes -> deterministic waves -> bounded worker observations and detached base/head/Receipt V3 identities -> Integration Gate -> same-snapshot Campaign Final Gate -> target merge identity. Contract V3 final results retain Slice authority; process exit never does. Accepted V5 has an isolated audit reader and unfinished V5 cannot execute or migrate.
-- Managed source assets live in `.codex/ty-context-managed/**`; packaged consumer assets live in `packages/ty-context/assets/**`.
-- Maintainer release/version automation is split into preparation and publication. Release preparation owns version bumps, release-surface sync, package asset sync and local validation before commit; release publication owns only already-committed version publication, registry verification, tag/GitHub Release handling and optional registry smoke.
-- Focused local V6 tests use an ordinary fake child executable for argv/stdin/JSONL/timeout/identity-safe tree termination, temporary real Git repositories for expected/reconcile/recovery/Integration-authority/abandon behavior, pure routing cases and CLI dry-run. Package PR/main CI and Trusted Publish CI continue to own complete default/Long-Task suites; the V6 scheduler does not require a real Campaign smoke for this infrastructure boundary.
-- Release preparation has a full gate and a fast gate. The fast gate is for ordinary docs, managed Skill, package asset and release metadata patch releases; it still builds, syncs/checks package assets, checks release-version surfaces, runs `upgrade --check --json`, release-focused tests and `git diff --check`, but skips the complete workspace test suite. Fast preparation is only valid for `sync-only`.
-- Release preparation owns upgrade impact review before npm publication. `sync-only` must fail on upgrade-sensitive implementation, config, schema, sync/init, source-mapping or structural managed-asset changes; `upgrade-required` must have upgrade/migration implementation and upgrade test evidence; `manual-required` must produce release-packet text for the user action that remains outside automatic upgrade.
-- Publishing to npm does not automatically migrate existing repositories. It publishes the current CLI code and package assets; users receive new upgrade behavior only when they run the newly published CLI through `ty-context upgrade`, `ty-context sync` or another `@latest` package invocation.
-- Trusted Publishing remains the preferred npm release path. Local npm publication is an explicit fallback that must not claim Trusted Publishing provenance and must require an explicit local-fallback confirmation.
-- Maintainer release/version automation lives in `tools/sync_release_version.mjs`, `tools/release_prepare.mjs`, `tools/release_publish.mjs`, compatibility wrapper `tools/release_npm.mjs` and `tools/github_release_publish.mjs`.
+- Command routing: `packages/ty-context/src/commands/index.ts`; long-task command: `commands/long-task.ts`.
+- Profile selection: `lib/profiles.ts`, `commands/enable.ts`, `commands/disable.ts`, config and migrations.
+- Schema/types/parser/compiler/risk/preflight: `src/schemas/long-task-delivery-v1/**` and focused `lib/long-task-delivery-*` modules.
+- Evidence Kernel: focused long-task snapshot, command, assertion, population, binding/counterfactual, verifier, active binding, final gate/receipt/status/resume/Stop modules.
+- Managed source/assets/mappings: `.codex/ty-context-managed/**`, `packages/ty-context/assets/**`, `packages/ty-context/source-mappings.yaml`.
+- Release/version automation: `tools/sync_release_version.mjs`, release prepare/publish tools and exact-tarball smoke.
 
 ## Key Constraints
 
-- Do not restore lifecycle phases, plan state, stage Skills, phase gates, `.work_products/**` or thick default document chains.
-- Do not put authoring-only Skills under `.codex/skills/authoring/**` into package assets.
-- Do not edit package-managed default Skills directly for project-specific rules; create separate project-local Skills when customization is needed.
-- Do not turn Context-first guidance, surface checks, role placement, internal task reasoning or Product Surface Contracts into files, edit-order gates or plan validators.
-- Do not make Context graph roles mandatory writing templates for ordinary projects. Roles are semantic reading/authoring labels; graph boundary rules are metadata validation only.
-- Do not let temporary Source Pack profiles, inferred routing buckets, generated indexes or bundle summaries become durable product/architecture facts; profiles are export selectors only.
-- Do not let composite compiled contracts, mutable current status, raw run manifests, command output or artifacts become durable Context, default `init`/`upgrade` project state or `context.toml` entries.
-- Do not treat tracked Campaign data as default lifecycle state or scan/import it from `init`, `sync` or `upgrade`. V5 is audit-only. Campaign completion must be derived from current Slice/Wave/final verification, Receipt authority and target integration; historical results, worker exit or prose cannot promote completion.
-- Do not add a legacy attachment, partial-bundle or old-workdir importer. Existing complete three-input bundles continue through the strict composite workflow.
-- Do not accept V2 sources, Observation V1, Oracle-authored completion status, historical final results, source-regex proof or silent active-contract replacement in Contract V3.
-- Pre-stable verification does not claim resistance to an administrator or malicious OS-level agent, registry/credential-store attacks, system Hook bypass, deletion of all host state or kernel sandbox escape. Do not introduce administrator permissions, Rust Host Helpers, Credential Manager, AppContainer, WFP, complex ACLs, external audit runners or default cross-platform release matrices into this path.
-- Keep one Slice execution authority flow only: Authoring Exec -> Packet/preflight -> detached execution Exec -> compile/free implementation/project tests -> optional targeted repair -> commit/clean -> full Slice final gate -> Receipt V3. Campaign adds bounded worktrees plus Wave/Campaign gates, never a second plan/matrix/verdict or prescribed subagent mode.
-- Do not let `sync` call the full migration registry or accumulate legacy compatibility checks as a permanent asset-refresh tax.
-- Do not claim Minimal Context benchmark wins without fresh, high-confidence Minimal Context comparison evidence.
-- Package source changes that affect managed assets require source sync and source-drift checks. Source-workspace `project_context/**`-only changes do not.
+- No Source Unit, Scope Fit, SFC, Packet, Wave, Integration Branch, campaign receipt/finalizer, worker engine, AppServer, model routing or worktree scheduler in active runtime.
+- No cross-file Product/Technical/Acceptance projections and no handwritten Requirement/PI/Obligation/Binding/AC/Proof/Spec id graph.
+- No fixed file-level execution plan in Technical authority; paths/boundaries/obligations are stable constraints, while implementation order is rolling Goal state.
+- No target verify acceptance, historical proof splicing, prose/exit-code acceptance or silent risk/scope downgrade.
+- No package operation may delete user-authored historical campaign/source/contract data.
+- Managed-asset changes require build, source sync twice/idempotence, check-source and consumer/package verification.
 
-## Code Entry Points
+## Role Context Map
 
-- See [Implementation Index](harness-package/implementation-index.md) for detailed code, test, asset and tool entry points.
-
-## Test Entry Points
-
-- See [Verification](harness-package/verification.md) for repeatable validation paths and when to run package source sync/check.
+- [Context Model](harness-package/foundation/context-model.md)
+- [Workflow Contract](harness-package/contracts/workflow-contract.md)
+- [Package-Managed Surface Contract](harness-package/contracts/package-managed-surfaces.md)
+- [Minimal Context Rationale](harness-package/decision-rationale/minimal-context.md)
+- [Implementation Index](harness-package/implementation-index.md)
+- [Verification](harness-package/verification.md)
 
 ## Open Risks
 
-- Context files can become too broad if they duplicate `PROJECT_SPEC.md`, release history or implementation narration.
-- Package assets can drift if managed source mappings change without source sync/check.
-- Public package messaging can drift if README, package README, npm/release copy and Context are not updated together for behavior changes.
+- A structurally complete Contract cannot prove undeclared requirements were never omitted.
+- Ordinary same-user project state and Hooks are drift protection, not a hostile-host security boundary.
+- Public messaging and generated assets can drift unless source/package/docs/tests are changed and verified together.

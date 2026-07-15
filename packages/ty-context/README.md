@@ -3,32 +3,26 @@
 [![npm version](https://img.shields.io/npm/v/project-tiny-context-harness.svg)](https://www.npmjs.com/package/project-tiny-context-harness)
 [![Package CI](https://github.com/Seven128/project-tiny-context-harness/actions/workflows/package.yml/badge.svg)](https://github.com/Seven128/project-tiny-context-harness/actions/workflows/package.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/Seven128/project-tiny-context-harness/badge)](https://securityscorecards.dev/viewer/?uri=github.com/Seven128/project-tiny-context-harness)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/Seven128/project-tiny-context-harness/blob/main/LICENSE)
 [![Open in GitHub Codespaces](https://img.shields.io/badge/open%20in-Codespaces-181717?logo=github)](https://codespaces.new/Seven128/project-tiny-context-harness)
 
 Translations: [Chinese (Simplified)](https://github.com/Seven128/project-tiny-context-harness/blob/main/README.zh-CN.md)
 
-`project-tiny-context-harness` ships the `ty-context` CLI for Project Tiny Context Harness: repo-native project memory for AI coding agents and a repo-native context contract.
+Project Tiny Context Harness is repo-native project memory for AI coding agents, plus a narrow delivery harness for trustworthy long-task completion. The product principle is: keep the memory, drop the ceremony. It adds durable project memory behind `AGENTS.md` without becoming an agent scheduler or Git orchestrator.
 
-The default is **Minimal Context Harness**. It maintains a compact `project_context/**` fact source, a short `AGENTS.md` startup router, role Skills, priority guidance for Context/code/evidence, and a `validate-context` gate so fresh agents can recover project intent, constraints, verification entry points and next safe actions quickly.
-
-It does not default to lifecycle phases, plan tasks, stage skills, stage documents or phase gates. Harness maintains context quality; your project tests, CI, review process and human acceptance remain responsible for product quality.
-
-Use it when coding agents repeatedly lose project intent across new chats, handoffs, RFC/debug turns or tool changes. The intended tradeoff is: keep durable intent and recovery paths; leave execution evidence to code, tests and review.
-
-Think of it as durable project memory behind `AGENTS.md`, plus priority rules for Context/code/evidence, not another agent, process framework or task manager.
+Public launch surfaces are English-first; localized documents are secondary entry points.
 
 Best for:
 
-- repos where coding agents keep rediscovering project intent
-- teams using multiple agents or frequent fresh chats
-- maintainers who want durable context without a full planning ceremony
+- repositories where coding agents repeatedly rediscover project intent;
+- teams using multiple agents or frequent fresh chats;
+- maintainers who want durable Context and explicit long-task evidence.
 
 Not for:
 
-- replacing tests, review, CI or issue trackers
-- autonomous Tiny Context execution
-- codebase semantic indexing or external docs retrieval
+- replacing project tests, review, CI or human acceptance;
+- autonomous Tiny Context execution;
+- codebase semantic indexing or external docs retrieval.
 
 Concrete shift:
 
@@ -43,8 +37,8 @@ What gets added:
 flowchart LR
   A["Fresh agent session"] --> B["AGENTS.md startup router"]
   B --> C["project_context/** durable facts"]
-  C --> D["Goal, non-goals, architecture boundaries, validation paths"]
-  D --> E["Code proposal starts with repo intent loaded"]
+  C --> D["Goal, boundaries, validation paths"]
+  D --> E["Implementation and delivery work"]
   F["Tests / CI / review"] --> G["Product quality evidence"]
   C -. "does not own" .-> G
 ```
@@ -53,61 +47,54 @@ flowchart LR
 
 The demo shows the core loop: initialize `AGENTS.md` and `project_context/**`, run `validate-context`, then ask a fresh agent to recover intent before proposing code. Use the npm install path below, or inspect the no-install previews first.
 
+Install:
+
+```sh
+npm install -D project-tiny-context-harness@latest
+npx --yes --package project-tiny-context-harness@latest ty-context init
+```
+
 No-install preview:
 
 - Read the [fresh-agent recovery walkthrough](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/examples/fresh-agent-recovery.md).
 - Inspect the [Minimal Context sample guide](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/examples/minimal-context-sample.md).
-- Browse a tiny generated sample repository at [examples/minimal-context-sample/](https://github.com/Seven128/project-tiny-context-harness/tree/main/examples/minimal-context-sample).
+- Browse the tiny generated repository at [examples/minimal-context-sample/](https://github.com/Seven128/project-tiny-context-harness/tree/main/examples/minimal-context-sample).
 
 ## Why It Exists
 
-Coding agents can move quickly inside one thread and still drift when a new chat, model, tool, reviewer or debugging session loses the project-specific facts that were never encoded anywhere stable.
+`project_context/**` preserves small durable facts across sessions. The default workflow reads only graph-relevant Context and uses the platform's internal plan. For explicit long work, `long-task-delivery-v1` adds one Delivery Contract, targeted repair verification, a same-snapshot Final Gate and Stop freshness.
 
-Minimal Context Harness creates a small, explicit recovery path: project goal, boundaries, architecture context, validation entry points and durable task conclusions. It is designed to sit beside specs, tests, issues, docs and code intelligence tools instead of replacing them.
+Minimal Context preserves durable facts, the Workflow Contract governs ordinary work, and the Long-Task Workflow adds explicit machine completion authority.
 
-The concrete failure mode is not only missing file search. In an ABCD module chain where A/B/C are upstream of downstream D, a D feature can expose a missing capability. Without Context, an agent may change upstream A/B to make D pass because current code permits it. Minimal Context adds a repo-owned intent layer: it records whether downstream D may change upstream A/B, whether the gap belongs in C's contract, or whether the task needs a `Context Delta` before implementation continues. Code shows what is possible; it cannot decide whether that is allowed project intent.
+Tiny Context does not invoke models, create agents, branches or worktrees, merge, push, create PRs, deploy, or replace project tests and human acceptance.
 
-Tiny Context has three capabilities. Minimal Context owns durable facts in `project_context/**` or `DESIGN.md`. The default Workflow Contract reads only relevant Context, decides one `Context Delta`, updates durable facts when required, uses the platform's internal plan, implements, runs project-owned verification and finishes with Contract Conformance plus a Context drift check. Long-Task Workflow is an explicit Codex profile that inherits Context rules but replaces ordinary planning and completion calculation with Contract V3 and Campaign gates. Existing `composite-*` commands, Skill paths and schema ids remain stable compatibility identifiers, not the product display name.
+## Install And Initialize
 
-The core bet is: **keep the memory, drop the ceremony**. Earlier stage-based workflows pushed ordinary software work through explicit phase artifacts and gates. Modern coding agents already internalize much of the understand, design, implement, test and repair loop, so Project Tiny Context Harness keeps the high-density repo context that survives fresh chats without making every task follow Tiny Context-stage choreography.
+```powershell
+npx --yes project-tiny-context-harness ty-context init
+# Existing repository:
+npx --yes project-tiny-context-harness ty-context init --adopt
 
-## Current Best Practice
-
-For ordinary tasks, use the workflow contract and Context layer directly:
-
-```text
-minimum Context -> Context Delta -> internal plan -> implementation -> project verification -> Conformance + drift check
+npx --yes project-tiny-context-harness ty-context validate-context
+npx --yes project-tiny-context-harness ty-context doctor
 ```
 
-For ordinary long-running acceptance planning, explicitly invoke `/normal-long-task`. For a discussed multi-SFC plan that should be prepared and executed end to end, explicitly invoke `/prepare-composite-long-task`; explicit invocation authorizes the complete Campaign V6 loop from immutable plan/Source Unit coverage through bounded ephemeral Codex Exec authoring/execution workers, conservative detached-worktree waves, integration repair, final-snapshot verification and target finalization.
+Default profiles are `core-portable` and `workflow-default`. Explicitly enable long-task support:
 
-Campaign target finalization fetches authoritative upstream state and accepts an exact verified commit/tree, or runs one complete Target Snapshot Gate for any different tree. Missing implementation uses only non-force fast-forward delivery or a matching open PR, with post-push fetch verification. The Campaign becomes `accepted` only when state, accepted Final Result, Target Finalization Receipt and event commit atomically. Accepted reruns validate frozen authority and finish before workers, Gates, PR or worktree recreation; idempotent owned-asset cleanup follows and cannot revoke acceptance. A simple process-identity lock and durable-stage reconcile replace leases, heartbeats and physical-session recovery.
+```powershell
+ty-context enable long-task
+```
 
-Invoke `/composite-long-task-workflow` only when the three Contract V3 YAML authorities already exist:
-
-- `product-architecture-source.yaml` owns requirements, scope, boundaries and non-completing outcomes.
-- `technical-realization-plan.yaml` owns atomic PI obligations, implementation bindings and forbidden shortcuts.
-- `acceptance-checklist.yaml` owns AC semantics and frozen executable verification specs.
-
-The lightweight executor compiles and hashes the three inputs, complete Requirement/PI/Obligation/Binding/AC/Proof/Spec/Counterfactual graph, oracle/verifier identities and a Context snapshot. `context_snapshot_mode: referenced` is the default and freezes manifest topology plus selected Context hashes; `full` is explicit. The agent implements freely, may use targeted `verify` as a repair accelerator, then must pass a fresh all-AC final gate and Stop freshness check. Targeted verification never accepts a Slice.
-
-When invoked, `verify` executes frozen definitions and writes verifier-owned repair findings. `final-gate` rechecks source, selected Context and oracle/verifier hashes, runs every in-scope AC against the current workspace, recomputes the graph bottom-up and writes workspace-bound results plus matching receipts. Historical runs are never stitched together; `accepted` is the only successful terminal result.
-
-The workdir contains the three YAML authorities, compiled identity, verifier-owned status/results and `runs/**`; it has no duplicate Context artifact, plan matrix or verdict. The agent cannot submit pass results or completion status. Ordinary questions are unaffected because the Hook is a no-op without an active task and the Long-Task Workflow is explicit-only. An identical compile is idempotent; changed frozen identities fail with `active_contract_changed`.
-
-The pre-stable executor accepts one exact Node Oracle step, no network and no environment refs, requirements or probes. Browser/package/project commands and environment-dependent contracts fail compilation explicitly instead of becoming ignored promises.
-
-This pre-stable guarantee prevents declared requirement/obligation omissions, changed compile authorities, stale final results and post-final workspace drift in the normal CLI/Hook flow. It is not a hostile-Host boundary: it does not resist deliberate same-user/admin state or Hook deletion, Credential Manager/Registry attacks, system-level Hook bypass or kernel/sandbox escape. Focused tests must finish within 5 minutes, the Long-Task Workflow suite within 15 minutes and one test normally within 2 minutes; default tests do not install VMs, containers, browser matrices or administrator environments. Direct `npm test` and `npm run test:long-task-workflow --workspace project-tiny-context-harness` invocations run Long-Task Workflow self-tests; GitHub package PR/main/publish CI runs them through `npm test`. Release preparation, local fallback publication, Hooks and consumer Harness gates use default-only paths and do not trigger the workflow suite. The six real CLI/final-gate black boxes are `happy_path_real_implementation`, `missing_obligation`, `source_changed_after_compile`, `oracle_or_verifier_changed_after_compile`, `stale_or_missing_final_result` and `drift_repair_end_to_end`.
+This installs the `/long-task-workflow` Skill and completion Hook. Disable only those package-owned surfaces with `ty-context disable long-task`.
 
 ## Positioning
 
 | Adjacent tool type | Use it for | Harness stance |
 |---|---|---|
-| Spec-first kits | Turning feature ideas into structured specs and plans. | Complementary; Harness keeps durable repo facts and module boundary intent beyond one feature spec. |
-| BMAD-style workflows and full Tiny Context processes | Coordinated role/process ceremonies on high-risk work. | Lighter default; no phase gates or work-product trees. |
-| Task Master-style planners | Backlog decomposition and task execution state. | Complementary; Harness does not own task state. |
-| Context7/Serena-style retrieval or code-intelligence tools | Pulling external docs, symbols or repository facts on demand. | Complementary; they do not answer whether downstream D may change upstream A/B. Harness stores that local repo truth. |
-| IDE or agent memory | Tool-specific continuity inside one product surface. | Portable fallback; plain files any agent can read. |
+| Spec-first kits | Turning a feature idea into structured specs and plans. | Complementary; Harness keeps durable repo facts beyond one feature spec. |
+| BMAD-style workflows and full Tiny Context processes | Role/process ceremony for selected work. | Lighter default; ordinary work stays Context-first. |
+| Task Master-style planners | Backlog decomposition and task state. | Complementary; Harness does not own backlog state. |
+| Context7/Serena-style retrieval | External docs, symbols or repository retrieval. | Complementary; Harness owns local intended boundaries. |
 
 ## Try It In 60 Seconds
 
@@ -120,41 +107,6 @@ npm install -D project-tiny-context-harness@latest
 npx --yes --package project-tiny-context-harness@latest ty-context init
 make validate-context
 ```
-
-Then open `AGENTS.md`, `project_context/global.md` and `project_context/architecture.md`. Those files are the small recovery surface a fresh agent should read before changing the project.
-
-Source checkout preview:
-
-Browser preview:
-
-```text
-Open https://codespaces.new/Seven128/project-tiny-context-harness
-```
-
-When the Codespace finishes `npm ci`, run:
-
-```sh
-npm run smoke:quickstart
-npm run preview:pack
-```
-
-Local preview:
-
-```sh
-git clone https://github.com/Seven128/project-tiny-context-harness.git
-cd project-tiny-context-harness
-npm ci
-npm run smoke:quickstart
-npm run preview:pack
-cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.4.0.tgz
-npx --no-install ty-context init --adopt
-make validate-context
-```
-
-Use this tarball path only for source-preview testing, private review or package development. For normal installs, use `project-tiny-context-harness@latest` from npm.
-
-If the source preview path fails, open a [Source preview report](https://github.com/Seven128/project-tiny-context-harness/issues/new?template=source_preview_report.yml) with the command, environment and shortest useful output.
 
 Expected result:
 
@@ -174,414 +126,130 @@ Fresh-agent test prompt:
 Read AGENTS.md and project_context/** first. Summarize the project goal, non-goals, architecture boundaries, validation entry points and next safe action before proposing code changes.
 ```
 
-If the agent can answer that without rediscovering the repo from scratch, the Harness is doing its job.
+### Source checkout preview:
 
-A useful first answer should recover the project goal, non-goals, architecture boundaries, validation entry points and next safe action. It should not invent benchmark results or claim tests passed.
-
-Feedback from real repositories is especially useful right now. If you try the Harness, open an [adoption report](https://github.com/Seven128/project-tiny-context-harness/issues/new?template=adoption_report.yml) with what your agent was forgetting, what Minimal Context made easier and what recovery facts were still missing.
-
-Early feedback and starter issues:
-
-- If the README, sample repo or generated Context leaves a fresh-agent recovery fact unclear, open a [Context recovery gap](https://github.com/Seven128/project-tiny-context-harness/issues/new?template=context_gap.yml).
-- Share what worked or failed in the pinned [adoption reports issue](https://github.com/Seven128/project-tiny-context-harness/issues/4).
-- Pick a starter issue: [demo](https://github.com/Seven128/project-tiny-context-harness/issues/5), [sample walkthrough](https://github.com/Seven128/project-tiny-context-harness/issues/6), [benchmark rerun](https://github.com/Seven128/project-tiny-context-harness/issues/7) or [launch FAQ](https://github.com/Seven128/project-tiny-context-harness/issues/8).
-- Keep claims narrow: recovery evidence is useful; benchmark speedup claims need fresh Minimal Context benchmark runs.
-
-For current priorities and non-goals, see the [roadmap](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/roadmap.md).
-
-For benchmark boundaries, read [Benchmarking And Evidence](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/benchmarking.md).
-
-For contribution, support, security, conduct and governance, see [CONTRIBUTING.md](https://github.com/Seven128/project-tiny-context-harness/blob/main/CONTRIBUTING.md), [SUPPORT.md](https://github.com/Seven128/project-tiny-context-harness/blob/main/SUPPORT.md), [SECURITY.md](https://github.com/Seven128/project-tiny-context-harness/blob/main/SECURITY.md), [CODE_OF_CONDUCT.md](https://github.com/Seven128/project-tiny-context-harness/blob/main/CODE_OF_CONDUCT.md) and [GOVERNANCE.md](https://github.com/Seven128/project-tiny-context-harness/blob/main/GOVERNANCE.md).
-
-For concrete examples, read the [fresh-agent recovery walkthrough](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/examples/fresh-agent-recovery.md), the [Minimal Context sample guide](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/examples/minimal-context-sample.md) and the [browseable sample repository](https://github.com/Seven128/project-tiny-context-harness/tree/main/examples/minimal-context-sample).
-
-For the longer technical argument, read [Fresh coding-agent sessions need project memory, not more ceremony](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/articles/fresh-agent-project-memory.md).
-
-For adjacent-tool fit, read the [comparison guide](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/comparison.md).
-
-For existing repositories, read the [adoption guide](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/adopt-existing-repo.md). For Codex, Claude Code, Cursor, Gemini CLI, OpenCode and other tool-specific setup notes, see [agent surface recipes](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/agent-surface-recipes.md).
-
-For common launch and adoption questions, see the [FAQ](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/faq.md).
-
-## Install
+Open <https://codespaces.new/Seven128/project-tiny-context-harness>, or run locally:
 
 ```sh
-npm install -D project-tiny-context-harness@latest
-npx --yes --package project-tiny-context-harness@latest ty-context init
-```
-
-For existing projects:
-
-```sh
-npx --yes --package project-tiny-context-harness@latest ty-context init --adopt
-```
-
-Distribution uses `core-portable`, `workflow-default` and explicit `composite-codex` profiles. Default Codex `init` installs the portable core and ordinary workflow; `ty-context enable composite-codex` installs Codex Hooks, Long-Task Workflow Skills and CLI support, while `ty-context disable composite-codex` removes only package-owned Long-Task Workflow Hooks and surfaces. Non-Codex hosts do not receive Long-Task Workflow surfaces unless explicitly enabled. Plan Validator commands no longer exist; existing plan, matrix or verdict files remain ordinary user files. `init` never creates Campaign data, lifecycle/plan state, business surface contracts or stage work-product trees.
-
-## FAQ
-
-**Why not just write a better README?**
-
-README is for humans and broad orientation. Minimal Context is a smaller machine-readable recovery path for fresh agents: durable intent, non-goals, boundaries, validation commands and context drift notes.
-
-**Is this only for Codex?**
-
-No. The generated files are plain repository assets. Codex, Claude Code, Cursor, Gemini CLI, Cline, Roo or a human reviewer can read the same facts.
-
-The support assets can live in a tool-specific harness folder such as `.codex`, `.claude`, `.cursor`, `.cline`, `.roo`, `.gemini` or a custom folder; the durable recovery contract stays in root `AGENTS.md` and `project_context/**`. See [agent surface recipes](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/agent-surface-recipes.md).
-
-**Is this an English-only or Chinese-only tool?**
-
-Neither. Public docs, npm copy, launch posts, CLI help/errors, generated Skill activation and default artifact names must be fully usable in English. Generated Skills may include multilingual trigger examples, but those examples are additive compatibility; every supported non-English trigger needs an equivalent narrow English trigger.
-
-**Does `validate-context` prove the project works?**
-
-No. It checks that recovery facts exist and avoids fake test-result claims. Product quality still belongs to tests, CI, review and human acceptance.
-
-**Will this create documentation burden?**
-
-It should stay smaller than a full process. Ordinary bug fixes and local refactors do not update Context unless they produce durable product, architecture, API, state or validation facts.
-
-## CLI Entry Safety
-
-The canonical npm package is `project-tiny-context-harness`; `ty-context` is the bin name. Prefer package-qualified `npx` commands for ad hoc use because bare `npx ty-context` can resolve an older package name or a stale local install. After `init`, the managed Makefile wrapper uses the canonical latest CLI by default and can be overridden with `TY_CONTEXT=...` when a project intentionally pins a local package.
-
-Use `npx --no-install ty-context ...` only when you explicitly want the already installed local package, such as release smoke tests against a packed tarball.
-
-## Capabilities
-
-| Capability | Entry Point | Description |
-|---|---|---|
-| Project initialization | `npx --yes --package project-tiny-context-harness@latest ty-context init` | Creates `project_context/context.toml`, `project_context/global.md`, `project_context/architecture.md`, `project_context/areas/main.md`, `project_context/areas/main/verification.md`, `AGENTS.md`, minimal managed assets and a Makefile include. |
-| Existing project adoption | `npx --yes --package project-tiny-context-harness@latest ty-context init --adopt` | Adds Minimal Context Harness non-destructively to an existing repository. |
-| Long-Task Workflow Codex profile | `npx --yes --package project-tiny-context-harness@latest ty-context enable composite-codex` | Explicitly installs Codex Hooks and Long-Task Workflow Skills/CLI surfaces. |
-| Disable Long-Task Workflow Codex profile | `npx --yes --package project-tiny-context-harness@latest ty-context disable composite-codex` | Removes only package-owned Long-Task Workflow Hooks and surfaces while preserving user Hooks. |
-| Configurable Harness root | `--harness-folder`, `package.json#tyContext.harnessFolderName`, `ty-context.config.json` | Supports Codex `.codex`, Claude `.claude`, Cursor `.cursor`, Cline `.cline`, Roo `.roo`, Gemini `.gemini` or a custom folder. |
-| Product planning Skill | `<harnessRoot>/skills/context_product_plan/SKILL.md` | Handles explicit product-planning requests and writes durable product conclusions to `project_context/**`. |
-| UI/UX design Skill | `<harnessRoot>/skills/context_uiux_design/SKILL.md` | Handles explicit UI/UX design requests, writes screen/interaction conclusions to `project_context/**`, updates root `DESIGN.md` visual tokens with Google `@google/design.md`, and includes compact visual-quality calibration for product/page positioning, user needs, information density, brand/product UI and common AI-design anti-patterns. |
-| Development engineer Skill | `<harnessRoot>/skills/context_development_engineer/SKILL.md` | Handles explicit development-engineering requests and writes durable engineering conclusions to `project_context/**`. |
-| Product Surface Contract Skill | `<harnessRoot>/skills/context_surface_contract/SKILL.md` | Handles explicit Product Surface Contract, Screen Contract, surface responsibility and main/drilldown ownership work; it compiles project-owned surface contracts into `project_context/**` without adding a new context role or gate. |
-| Full project context export Skill | `<harnessRoot>/skills/context_full_project_export/SKILL.md` | Handles explicit full-project, project-overall, Source Pack or code-level export requests and uses `export-context --source-pack`, `--code-index`, `--task-context`, `--all`, `--full` or `--code` to create temporary artifacts under `tmp/ty-context/context-exports/**`. |
-| Harness upgrade Skill | `<harnessRoot>/skills/context_harness_upgrade/SKILL.md` | Handles explicit Tiny Context / Project Tiny Context Harness upgrade requests such as “upgrade Tiny Context” and “use the Tiny Context upgrade skill to upgrade this project”; it runs the canonical `upgrade` path, handles only migration-scoped `manual_required` / `blocked` follow-up, then runs diagnostics. |
-| Ordinary long-task Skill | `<harnessRoot>/skills/normal-long-task/SKILL.md` | Invoke as `/normal-long-task` to turn a referenced plan, RFC, implementation proposal or two-document upstream input into a falsifiable acceptance checklist and optional generic paste-ready goal/target-mode prompt under `tmp/ty-context/plan-acceptance/**`; if the plan already contains an explicit concrete checklist, the Skill reuses it verbatim in the separate full-checklist file; compact summaries are only navigation/priority, but the Skill does not execute the plan or prove completion. |
-| Long-Task Workflow Skill | `<harnessRoot>/skills/composite-long-task-workflow/SKILL.md` | Explicit-only Contract V3 executor for the three YAML authorities, verifier-owned repair, fresh final-gate recomputation and project-level Stop freshness enforcement. |
-| Project-local Skills | `<harnessRoot>/skills/<role>/SKILL.md` | Optional local product/design/development Skills created by the project, such as `product_plan`, `uiux_design` or `development_engineer`. They supersede package-managed default Skills when more specific, are not overwritten by `sync`, and should keep front matter trigger keywords aligned with the project `AGENTS.md` role-trigger rule. |
-| Managed file sync | `make ty-context-sync` or `npx --yes --package project-tiny-context-harness@latest ty-context sync` | Refreshes package-managed guidance, default Skills, Makefile include, context templates, tools and workflow YAML. It does not run migrations or perform semantic Context generation; it may block only direct asset-refresh safety issues such as invalid managed blocks or deprecated managed Skill overrides. |
-| Upgrade | `make ty-context-upgrade` or `npx --yes --package project-tiny-context-harness@latest ty-context upgrade` | Use for releases marked `upgrade-required` or `manual-required`. Builds an upgrade plan, stops before writes when `blocked` items exist, otherwise applies `safe_pending` migrations, runs `sync` and `doctor`, and exits non-zero when manual follow-up or diagnostics remain. |
-| Upgrade check | `npx --yes --package project-tiny-context-harness@latest ty-context upgrade --check [--json]` | Checks the upgrade plan without writing files. Reports `safe_pending`, `manual_required` and `blocked`; exits non-zero when any work remains. |
-| Source Pack export | `npx --yes --package project-tiny-context-harness@latest ty-context export-context --source-pack [--check]` | Creates a bounded Source Pack under `tmp/ty-context/context-exports/latest/` with upload-ready Context, code index and optional bundles, removing old timestamped rounds. |
-| Code index export | `npx --yes --package project-tiny-context-harness@latest ty-context export-context --code-index [--check]` | Creates a temporary implementation navigation index and manifest without complete source bodies. |
-| Task context export | `npx --yes --package project-tiny-context-harness@latest ty-context export-context --task-context <name> [--profile <id>] [--check]` | Creates a bounded focused task handoff pack from profile or explicit include selectors. |
-| Combined project export | `npx --yes --package project-tiny-context-harness@latest ty-context export-context --all [--check]` | Creates both default temporary exports under `tmp/ty-context/context-exports/**`. |
-| Project Context export | `npx --yes --package project-tiny-context-harness@latest ty-context export-context --full [--output tmp/ty-context/context-exports/name.md] [--check]` | Creates a temporary Context summary artifact. It is not Context and must not be registered in `project_context/context.toml`. |
-| Code implementation export | `npx --yes --package project-tiny-context-harness@latest ty-context export-context --code [--output tmp/ty-context/context-exports/name.md] [--check]` | Creates a temporary single-file code implementation artifact. It is not Context and must not be registered in `project_context/context.toml`. |
-| Modularity check | `npx --yes --package project-tiny-context-harness@latest ty-context check-modularity --touched [--limit 300] [--fail-on-warning]` | Reports size, function statements, branch complexity, exports, state transitions and responsibility concentration for selected handwritten source; scoped waivers are validated. |
-| Code modularity validation | `make validate-code-modularity` | Hard gate for touched handwritten source modularity; CI can set `TY_CONTEXT_MODULARITY_BASE=<ref>` to audit PR/base changes. |
-| Harness validation | `make validate-harness` | Combined gate for `validate-context` and `validate-code-modularity`. |
-| Context validation | `npx --yes --package project-tiny-context-harness@latest ty-context validate-context`, `make validate-context` | Checks required project recovery fields, Context graph metadata, declared paths/roles and fake test-execution claims. |
-| Long-Task Workflow Contract V3 executor | `npx --yes --package project-tiny-context-harness@latest ty-context composite-long-task <subcommand>` | Exposes only `init`, `compile`, `verify`, `status`, `final-gate`, `stop-check` and `render-goal`; the command name is a compatibility identifier. |
-| Long-Task Workflow Campaign V6 orchestrator | `npx --yes --package project-tiny-context-harness@latest ty-context composite-campaign <subcommand>` | `run` is one foreground `codex-exec-v1` scheduler. Retains create/coverage/scope/Packet/preflight/status/interrupt/model-routing; adds exec-check/workers, non-destructive cleanup, explicit terminal abandon and dry-run. Accepted V5 is audit-only; unfinished V5 cannot execute. |
-| Diagnostics | `make ty-context-doctor` or `npx --yes --package project-tiny-context-harness@latest ty-context doctor` | Reports Harness root, package version, schema version and required Minimal Context paths. |
-| Package source checks | `ty-context package sync-source`, `ty-context package check-source` | Maintainer-only commands for keeping package canonical assets aligned with the source workspace. |
-
-For high-risk product, UI/UX and engineering tasks, the default Skills require one `Context Delta: none|required`, applicable architecture/rationale checks and module-design reasoning. `Architecture Context Hit`, `Decision Rationale Hit: existing|required|none` and `Modularity Check: none|required|exception` remain internal routing and maintenance questions, not artifacts or extra deltas. External source constraints are classified internally as covered, Context update, task-local, explicit out of scope or genuine user decision. No Task Contract, Source-to-Context table, Context-to-Implementation table or fixed `plan.md` is required. Contract Conformance checks that controlling Context reached the correct modules and verification paths.
-
-Technical architecture support is a Minimal Context capability: use restrained `architecture.md`, area Module Design Capsules and existing `contract` / `decision-rationale` roles when durable architecture or rationale matters. Do not invent rationale; store stable reasons, rejected alternatives or tradeoffs only in the smallest durable Context surface when they will affect future implementation or verification choices. This architecture Context does not prove product quality.
-
-For long-running plans, explicitly invoke `/normal-long-task`. It copies the source, produces exactly one complete falsifiable checklist and may produce one compact target prompt. Existing concrete checklists are reused. Source-provided test requirements remain checklist items; the Skill invents no extra test mandate or document. Local Audit is opt-in recovery state only. It creates no matrix, verdict, evidence ledger or second plan and cannot execute or prove completion.
-
-When the three Contract V3 YAML authorities are complete and strict execution is required, invoke `/composite-long-task-workflow`. The agent may implement freely, but only frozen verification definitions and verifier-owned observations participate in acceptance.
-
-For Product Surface work, `context_surface_contract` turns broad product/page/UI principles into project-owned surface responsibilities. Cross-surface contracts use the existing `contract` role; area-owned screen facts stay in `area` or `subdomain`; repeatable validation paths use `verification`. The Harness does not add a surface-specific role or create business surface contracts during `init` or `upgrade`.
-
-To create Product Surface Context in a user project, use the Skill through an agent because the package cannot safely infer business-specific screen duties from code alone. For a new project, `init` installs the Skill, template and routing guidance; as the project grows, ask the agent to run Product Surface Audit / Compile when a durable surface appears or when a product/UI/engineering task changes main/drilldown ownership. For an existing project, first run `ty-context upgrade`; then ask the agent to backfill the current surface responsibilities, review the proposed contract, and only then apply it to `project_context/**`:
-
-```text
-Use context_surface_contract in Audit + Compile mode for this repo. Inspect current user-facing routes, screens, panels, CLI/TUI outputs and relevant Context. Propose Product Surface Contract Context using existing roles only. Do not edit product code.
-```
-
-After review, apply the approved contract:
-
-```text
-Apply the approved Product Surface Contract to project_context/**, update project_context/context.toml if a new contract file is needed, keep roles to contract/area/subdomain/verification, and run make validate-context.
-```
-
-`ty-context check-modularity` audits selected handwritten source using size, function statement count, branch complexity, exports, state transitions and responsibility concentration. It is warning-only as a report command; `validate-code-modularity` and `validate-harness` enforce it separately from `validate-context`. A scoped waiver must include `path`, `category`, `owner`, `introduced_at`, `reason`, `tracking_issue` and `expiry_condition`; unjustified or expired waivers fail CI.
-
-### Modularity Policy
-
-Newly generated Harness configs default to `strict_except_generated`, which enforces the touched/PR handwritten source limit without legacy waivers:
-
-```yaml
-modularity:
-  limit: 300
-  policy: strict_except_generated
-```
-
-Generated and non-source files are still auto-skipped when they match existing lock/build/dist/path exclusions or generated-file headers such as `@generated` / `Code generated ... DO NOT EDIT`. `strict_except_generated` does not allow `modularity.waivers`; any configured waiver fails the modularity gate.
-
-Use `scoped_waivers` when a small number of legacy exceptions must be explicit and time-bounded:
-
-```yaml
-modularity:
-  limit: 300
-  policy: scoped_waivers
-  waivers:
-    - path: src/legacy/big-file.ts
-      category: legacy_migration
-      owner: platform-team
-      introduced_at: 2026-07-13
-      reason: "Existing legacy module exceeds the hard source size bound."
-      tracking_issue: "https://example.invalid/issues/123"
-      expiry_condition: "Remove after provider adapters and retry policy are extracted."
-```
-
-Omitting `policy` behaves the same as `scoped_waivers` for compatibility with existing projects. Allowed waiver categories are `generated`, `third_party_reference`, `legacy_migration`, `aggregate_styles` and `fixture_snapshot`.
-
-Multilingual trigger phrases are compatibility details. Public README, npm and launch copy stay English-first, and public/package-managed surfaces must remain English-complete; literal non-English examples are documented only where they explain generated Skill matching and must not be the sole activation path.
-
-The Harness upgrade Skill exists so consumer agents have a short, repeatable upgrade procedure for existing projects. It treats `upgrade` as the default after package updates and for explicit upgrade requests; `sync-only` only allows a direct managed-asset refresh shortcut when that is what the user asked for. Manual handling stays limited to the migration scope reported by the CLI instead of guessing project semantics.
-
-Agents may use an optional scratch file for unusually long work, but Tiny Context assigns it no fixed name or schema. It is never Context, workflow authority, validator input or completion proof. Existing `plan.md` files remain ordinary user files and are neither created, registered, validated, deleted nor migrated.
-
-For Product Surface work, frontend layout, UI/UX, product module boundaries or decisions about where information belongs, agents should run a lightweight product/page positioning check before deciding whether the change is context-first. The check asks what judgment the user needs to make on the surface, what information/actions/feedback the product must provide, what should not be persistent, what belongs on the main surface versus drilldown, operations, diagnostics, evidence or detail, and whether layout and information density match the surface task. If ownership is unclear, inspect the relevant surfaces and Context first, and use `context_surface_contract` for a focused audit. The check is input to change classification: it does not by itself require a Context update, new role, new document chain or validator gate.
-
-The expected Context Priority Ladder is: read minimum relevant Context, run product/page positioning when applicable, decide one `Context Delta`, update Context first when required, use the internal plan, implement, run project-owned verification, then perform Contract Conformance and a Context drift check. This is prompt-level guidance, not an edit-order validator.
-
-Managed `AGENTS.md` guidance is intentionally a startup router, not a full manual. It should contain fact-source entry points, hard boundaries, key triggers and shortest validation commands; package consumers default long design reasoning to Context unless they already have a local spec/design convention. The source repository keeps stable Harness workflow rationale in `PROJECT_SPEC.md`. Role procedures belong in Skills and human usage guidance in README. The recommended 40-70 line range is a soft budget, not a validator gate.
-
-## Long-Task Workflow Campaign V6
-
-After explicit `ty-context enable composite-codex`, `/prepare-composite-long-task` and `ty-context composite-campaign` provide a clean-start Campaign V6 plane over Contract V3. Source Coverage V2 embeds Context resolution and Scope Fit V4 creates maximal coherent SFCs without splitting for parallelism, files, layers, agents or duration. Starting the first execution worker freezes scope and the Context baseline. Accepted V5 remains audit-only; unfinished V5 returns `campaign_v5_execution_retired_recreate_required`.
-
-One foreground scheduler uses `codex-exec-v1`; AppServer and persistent Thread/Goal/Turn state are not part of V6. Ready-frontier authoring uses ephemeral read-only workers with the controller profile. Packet plus three Contract V3 inputs and Change Envelope is the authoritative handoff to independent ephemeral workspace-write SFC/repair workers. The YAML policy canonicalizes aliases before family matching and enforces `minimum_effort` plus accepted efforts; exact Sol `xhigh|max|ultra`, including alias `gpt-5.6`, routes to Sol `medium`. High-and-below, non-Sol, unknown and invalid-policy cases pass through, and explicit target unavailability permits one controller-profile retry.
-
-Preflight derives dependency/write/verification/binding/contract/Context/resource plus migration/generated/package/environment conflicts; unknown evidence is serial. Fixed managed paths enforce one Integration worktree/branch, at most four detached current-wave SFC worktrees and one reusable detached repair worktree. One canonical expected set governs all surfaces; budget assertion is pure, while explicit reconcile/cleanup/abandon alone removes identity-checked package-owned resources. Retry restores its persisted committed head, accepted state cannot be rescheduled, the sole incomplete Wave is recoverable, and persisted Integration HEAD is authoritative. PID plus process-start identity governs Worker ownership and tree termination, so PID reuse cannot kill unrelated processes.
-
-Targeted `verify` is optional and non-accepting. Slice Final runs every frozen Slice Spec; Wave Impact V2 runs only qualified Specs proven affected by the actual merge diff and frozen evidence, always includes global-constraint Specs and falls back to all candidates when uncertain; shared-snapshot Campaign Final reruns every Slice. Final specs deduplicate only when snapshot, normalized spec, oracle, executable, input paths, command and environment are identical; moved targets are revalidated. Campaign V4 state is audit-only.
-
-`composite-campaign exec-check --json` verifies Codex executable/version, required exec flags, Git repository and CLI-managed authentication path without starting a model or exposing credentials. `run --dry-run` reports ready Wave, fixed worktrees, profiles, redacted argv and budget without invoking Codex or mutating Git. `workers` and status expose identity ownership, interrupt state, missing/orphan worktrees and persisted/actual Integration heads. Ordinary cleanup cannot destroy a nonterminal Campaign; explicit `abandon` creates a terminal non-runnable state, removes only that Campaign's local worktrees/Integration branch/runtime logs, preserves its audit, and never changes remote refs or user resources. One lightweight timing summary per run generation is diagnostic only. Worker exit/text, summaries, exec-check and dry-run are never acceptance proof; only current Gate/Receipt/target authority is.
-
-## Minimal Context Contract
-
-`project_context/global.md` should contain:
-
-- project goal
-- non-goals / boundaries
-- background
-- project-wide design rationale, including rejected alternatives and tradeoffs that still matter
-- architecture context link
-- product / delivery brief
-- UX / screen brief
-- short verification context pointers
-- current state
-- next safe action
-- context index
-
-`project_context/architecture.md` should contain restrained architecture facts:
-
-- system boundary
-- component map
-- data / control flow
-- architecture-level design rationale, rejected alternatives and tradeoffs
-- constraints and tradeoffs
-- verification implications
-- open risks
-
-`project_context/context.toml` is the Schema v4 Context graph manifest. `init` creates a default `main` product/domain area for ordinary projects and registers `project_context/areas/main/verification.md` as its default `verification` role Context. `upgrade` creates a conservative baseline manifest for existing projects by registering current `project_context/areas/**/*.md` files as areas, except obvious `verification.md` and `deployment.md` role files. Larger projects can add `[[areas]]` and `[[context]]` entries with role, trigger/read policy, default children and monorepo boundary metadata such as `forbidden_runtime_dependencies`.
-
-`project_context/areas/<unit>.md` should contain product/domain ownership context by default. Complex projects can freely nest context nodes under `areas/`, such as `areas/<area>/README.md`, `areas/<area>/contracts/*.md`, `areas/<area>/foundation/*.md`, `areas/<area>/verification.md`, `areas/<area>/deployment.md` or other durable context files:
-
-- responsibility
-- user / system contract
-- core data / API / state
-- module design capsule when stable principles, design logic or rationale should affect future work
-- key constraints
-- code entry points
-- related role context pointers
-- open risks
-
-A module design capsule should stay small and decision-shaped: `Principles` are stable execution constraints, `Design Logic` is the minimum choose/reject/degrade/compose logic, and `Design Rationale` keeps only reasons, rejected alternatives and tradeoffs that change later implementation or verification decisions. Current thresholds, commands and probe parameters belong in the relevant contract or verification Context as execution instances, not as permanent principles.
-
-Use the smallest durable rationale surface: project-wide tradeoffs in `global.md#Design Rationale`, architecture choices in `architecture.md#Design Rationale`, module reasons in an area Module Design Capsule, cross-domain interface rationale in `contract` role Context, larger cross-cutting reasons in `decision-rationale`, and visual identity or token rationale in `DESIGN.md`. Do not record implementation summaries, PR notes, command output, test-passed claims, screenshot review notes, debug history, agent reasoning or rationale inferred only from current code shape.
-
-Other context files under `project_context/**` can declare `context_role` in front matter or receive a role from `context.toml`. Roles are semantic labels for agent reading and authoring behavior; `validate-context` checks graph structure, paths and field shapes instead of enforcing a writing template for every role. Supported roles are `global`, `architecture`, `area`, `domain`, `subdomain`, `contract`, `foundation`, `verification`, `deployment`, `archive`, `implementation-index` and `decision-rationale`.
-
-Product Surface Contracts use these existing roles. Use `contract` for cross-surface or cross-area files such as `project_context/areas/product-surface-contracts.md`; use `area` or `subdomain` for owned screen contracts inside one domain; use `verification` for repeatable UI/app/CLI surface checks. Do not add roles such as `surface-contract`, `product-surface`, `web-contract`, `app-contract` or `game-surface`.
-
-`init` gives new projects the Product Surface Contract capability, not a pre-filled business contract. The first durable contract is created when a user or agent explicitly audits/compiles a surface responsibility and writes the approved facts into `project_context/**`. Existing projects receive the same Skill and template after `upgrade`, but `upgrade` intentionally does not inspect current screens or guess their responsibilities; treat Product Surface Context backfill as an explicit follow-up task.
-
-When authoring, migrating or cleaning up `project_context/areas/**`, run a soft role placement scan before registering every Markdown file as an `[[areas]]` entry. Keep `area` / `domain` for product ownership, use `subdomain` only for a smaller owned product context, move interface semantics into `contract`, stable theory or vocabulary into `foundation`, repeatable test/deploy execution paths into `verification` / `deployment`, code maps into `implementation-index`, design reasons into `decision-rationale`, and non-default historical or external material into `archive`. This is prompt-level guidance, not a validator gate.
-
-Automatic migration moves legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md`, creates a usable graph baseline and does not infer deep semantic roles. If an existing deep area file is really a foundation, contract, archive or implementation index, a later agent should update `context.toml` explicitly. Boundary rules are metadata only; Harness does not scan source imports or build a runtime dependency graph.
-
-## Temporary Project Exports
-
-`export-context --source-pack` is the recommended external LLM / Web GPT planning path:
-
-```sh
-npx --yes --package project-tiny-context-harness@latest ty-context export-context --source-pack
-npx --yes --package project-tiny-context-harness@latest ty-context export-context --source-pack --check
-```
-
-It writes `tmp/ty-context/context-exports/latest/` as ordinary files/directories and removes old timestamped export rounds. A standard Source Pack is capped at 5 files: `source-pack-manifest.json`, `full-project-context.md`, `code-index.md`, and at most `code-bundle-core.md` plus `code-bundle-extended.md`; small projects may omit bundles. The `source-pack-v1` manifest uses repo-relative artifact paths and hashes, aggregates warnings and omitted files, and recommends upload sets for daily planning, cross-module review and full fallback.
-
-`export-context --code-index` creates the navigation index and manifest without complete source bodies:
-
-```sh
-npx --yes --package project-tiny-context-harness@latest ty-context export-context --code-index
-```
-
-`code-index.md` includes export metadata, repository shape, Context area mapping, entry/API/UI/CLI-worker/test/oversized indexes and a Source File Index with path, type, lines, characters, SHA256, deterministic summary, bundle and tags.
-
-`export-context --task-context <name>` creates a focused handoff pack, also capped at 5 files:
-
-```sh
-npx --yes --package project-tiny-context-harness@latest ty-context export-context --task-context apex-trend-map --profile apex-trend-map
-npx --yes --package project-tiny-context-harness@latest ty-context export-context --task-context demo --include-context project_context/areas/main.md --include-code 'src/demo/**'
-```
-
-Profiles live in `<harnessRoot>/config.yaml` under `source_packs`; they are export selectors only, not durable facts, and their `verification` entries are listed without being executed. Source Pack modes keep secret redaction enabled across indexes, bundles, task contexts and manifests. `--redaction-strict` exits non-zero if redaction was required, `--max-pack-files` defaults to 5 and cannot exceed 5, and `--prune <count>` is accepted for older scripts while latest-only retention is applied by default.
-
-Legacy exports remain for compatibility and full fallback.
-
-`export-context --all` creates both temporary Markdown artifacts for copying into an external tool, archiving an ad hoc discussion or handing context to a one-off collaborator:
-
-```sh
-npx --yes --package project-tiny-context-harness@latest ty-context export-context --all
-npx --yes --package project-tiny-context-harness@latest ty-context export-context --all --check
-```
-
-This generates both default artifacts with the same timestamp: `tmp/ty-context/context-exports/full-project-context-<timestamp>.md` and `tmp/ty-context/context-exports/code-level-implementation-<timestamp>/code-level-implementation.md`. `--all` does not accept `--output`; use `--full` or `--code` for custom single-artifact paths.
-
-`export-context --full` creates only the temporary Markdown Context bundle:
-
-```sh
-npx --yes --package project-tiny-context-harness@latest ty-context export-context --full
-npx --yes --package project-tiny-context-harness@latest ty-context export-context --full --output tmp/ty-context/context-exports/my-export.md
-npx --yes --package project-tiny-context-harness@latest ty-context export-context --full --check
-```
-
-The default output is `tmp/ty-context/context-exports/full-project-context-<timestamp>.md`. The file title is `# Full Project Context Export`. `--check` reports the planned output path, source count, source file list and warnings without writing a file. The artifact header always says `Export artifact. Do not reference from project_context/context.toml.`
-
-The exporter includes Context files, key README / AGENTS / DESIGN documents, managed Skill guidance, Makefile verification-entry summaries, a directory tree summary and Context code-entry indexes. It excludes `.env*`, secret/token/cookie-oriented files, raw captures, licensed payload dumps, `node_modules`, build output, caches, coverage, test reports and existing export artifacts; obvious sensitive assignment values are redacted and reported as warnings.
-
-`export-context --code` creates one temporary Markdown file for handing the current implementation state to an external model:
-
-```sh
-npx --yes --package project-tiny-context-harness@latest ty-context export-context --code
-npx --yes --package project-tiny-context-harness@latest ty-context export-context --code --output tmp/ty-context/context-exports/my-code-export.md
-npx --yes --package project-tiny-context-harness@latest ty-context export-context --code --check
-```
-
-The default output is `tmp/ty-context/context-exports/code-level-implementation-<timestamp>/code-level-implementation.md`. The file title is `# Code-Level Implementation Export`. It scans main source and engineering configuration files, adds each file path, type, line count, character count, SHA256, a heuristic one-sentence summary and a fenced redacted code block. It does not split output into multiple Markdown files.
-
-All export modes refuse `project_context/**` and non-temporary output paths. `validate-context` also rejects obvious export artifact names such as `code-level-implementation`, `full-project-context`, legacy Chinese export names, `project-overview`, `context-bundle`, `context-summary` or `context-export` if they are registered in `project_context/context.toml`.
-
-The Context should be dense, durable and short. Former ADR content belongs in `Design Rationale` when it still affects future changes. Implementation details that are obvious from code should stay in code and tests; only non-obvious constraints belong in Context.
-
-Verification and deployment role Context are allowed only when a test, smoke, CI, deployment, bootstrap or runtime path has durable recovery value. Record minimal preparation, the shortest command/path, expected stage or signal, acceptable warnings and dead ends already ruled out. Verification paths are reusable execution instances, not independent definitions of capability, metric or acceptance targets; first use the owning module's design Context to decide what claim should be proven, then choose the command or probe. Do not record one-off logs, full output, temporary JSON, CI artifacts, release ledgers, reports, secrets, tokens, cookies, device ids or raw payloads. Put execution details in the owning area's `verification` or `deployment` role Context; use project-level references only for truly cross-domain paths.
-
-`project_context/**` is authoritative for intended responsibility, ownership, product intent, architecture boundaries, integration direction, allowed or forbidden dependencies and verification/deployment entry paths. Source code is authoritative for current implementation state. If code shape, keyword search results or nearby implementations disagree with Context, agents should call out implementation drift, missing work or stale Context instead of overriding Context-declared ownership or intent.
-
-Before the first code edit, agents should classify the change instead of relying on a fixed timer. Long-term fact changes include product ownership or plans, module responsibilities, information architecture, API / Schema, state-machine or scheduler semantics, cross-area boundaries and verification/deployment entry paths. If a task hits one of these categories, Context-first is the default path and the first update should be the relevant `project_context/**` entry with enough durable context to guide implementation, without a fixed line-count limit:
-
-```text
-context -> implementation -> verification -> context drift check
-```
-
-Code-first is a controlled exception for ordinary bug fixes, local styling changes, local implementation-drift repairs, test fixes and exploratory spikes; those should not update Context unless they produce a durable fact. Once code discovery produces one, the agent should update Context before final alignment or handoff:
-
-```text
-implementation discovery -> context update if long-term fact changed -> implementation alignment -> verification
-```
-
-This ordering is guidance, not a new validator gate. `validate-context` checks recoverability and fake verification claims; it does not infer whether Context or code was edited first. Automation may warn about possible context-first drift, but should not block work. Handoffs should report only a lightweight status such as `Context: updated ...` or `Context: no durable fact change`.
-
-The product planning, UI/UX and development engineer Skills are Context authoring helpers. They may shape product plans, screen flows, design handoff, implementation plans or technical decisions, but they do not create a default PRD/UIUX/tech-plan document chain. Their descriptions intentionally avoid broad generic single-word triggers such as product, design or development in any language. For visual systems, `init` creates root `DESIGN.md` as the durable source for colors, typography, spacing, shapes and component tokens; `upgrade` creates it for existing Harness projects when missing. The generated file starts as a neutral starter baseline with visual tokens, background/color logic, typography, spacing, component states and do/don't guidance; user-authored design rules take precedence once present. Validate it with `npx @google/design.md lint DESIGN.md`. The product/design Skills keep compact calibration for product/page positioning, user needs, information density, content/action placement, true empty/error/loading states, layout stability, register choice, design-system continuity and common AI-design anti-patterns.
-
-Harness installs Impeccable as a default package dependency. For design drafts, redesigns, visual polish, frontend redesign/styling or existing-UI review work, agents should run Impeccable by default when there is a scan target such as UI source, page files, build output or a local/remote URL:
-
-```bash
-npx impeccable detect src/
-```
-
-Impeccable is a default design-review step when a scan target exists, but it is not a `validate-context` gate. If there is no suitable target or the command cannot run, the agent should say why and continue. Its findings are design-review signals, not a replacement for screenshots, project tests or human review.
-
-Project-specific Skill rules can be added as separate project-local Skills. Do not edit package-managed `context_*` Skills directly; `sync` overwrites them:
-
-```sh
-mkdir -p <harnessRoot>/skills/uiux_design
-$EDITOR <harnessRoot>/skills/uiux_design/SKILL.md
-```
-
-When a project-local Skill and a package-managed default Skill both apply, agents should use the more specific project-local Skill first. The local Skill should keep durable conclusions in `project_context/**` and `DESIGN.md`. Its front matter `description` should stay aligned with the matching default `context_*` Skill and the project `AGENTS.md` role-trigger rule; update both the local Skill and agent guidance when adding or narrowing product/design/development trigger terms. `sync` does not merge Skill overrides and does not overwrite separate project-local Skills. Existing `<harnessRoot>/ty-context-managed/override_skills/*.md` files should be migrated into standalone project-local Skills before running `sync`.
-
-Do not customize the package-managed Surface Contract, Harness upgrade, `/normal-long-task` or `/composite-long-task-workflow` Skills directly. Project-specific surface responsibilities, upgrade facts and acceptance semantics belong in `project_context/**`; recurring project-local procedures belong in separate project-local Skills.
-
-## Sync And Upgrade Boundary
-
-`sync` is intentionally narrow. It refreshes managed files and never generates project semantics. `sync` does not run migrations or call the full migration registry; it may refuse writes only for direct asset-refresh safety blockers such as unsupported schema, invalid managed blocks or deprecated managed Skill overrides.
-
-After updating the package, run `ty-context upgrade`. It is the default update entry because it checks local migration state, applies safe migrations when needed, refreshes managed assets and runs diagnostics. For releases marked `sync-only`, direct `sync` is an allowed shortcut only when you explicitly want managed-asset refresh without the upgrade diagnostics.
-
-`upgrade` first builds an upgrade plan. If `blocked` items exist, it prints the plan, runs diagnostics and exits non-zero before migrations or internal `sync`. Without blockers, it applies only `safe_pending` migrations, then runs `sync` and `doctor`. If `manual_required` follow-up or diagnostics remain, the command exits non-zero and prints follow-up. `upgrade --check` performs the same planning step without writing files; `upgrade --check --json` is intended for release checks and CI.
-
-Release update modes:
-
-| Update mode | What to run | Meaning |
-|---|---|---|
-| `sync-only` | Default: `ty-context upgrade`; shortcut: `ty-context sync` | The release changes only package-managed assets. No new migrations are expected. |
-| `upgrade-required` | `ty-context upgrade` | The release includes safe mechanical migrations and managed asset refresh. |
-| `manual-required` | `ty-context upgrade`, then manual follow-up | The release includes items that cannot be mechanically changed without user intent. |
-
-Migration statuses:
-
-| Status | Meaning |
-|---|---|
-| `safe_pending` | A known Harness schema, config or path convention can be migrated mechanically. |
-| `manual_required` | The path is in migration scope, but the Harness cannot prove the right semantic role or user intent. |
-| `blocked` | A target conflict or overwrite risk prevents a safe write. Blocked items stop upgrade writes until resolved. |
-
-Examples:
-
-- `project_context/modules/main.md` -> `project_context/areas/main.md` is safe when the target does not already exist.
-- Missing `project_context/context.toml` can receive a conservative baseline manifest.
-- `project_context/areas/main/verification.md` can be registered as `verification` by path convention.
-- `project_context/areas/payment/api.md` without a manifest role is `manual_required`; the Harness does not guess whether it is an area, contract, foundation or implementation index.
-- If the target already exists, the migration is `blocked`; `upgrade` stops before migrations or `sync`, and no file is overwritten.
-- Projects installed before the rename from `sdlc-harness` may contain `package.json#sdlcHarness`, `sdlc-harness.config.json`, `<harnessRoot>/pjsdlc_managed/**`, `sdlc-harness.mk` or `pjsdlc:sdlc-harness` managed markers. `upgrade --check --json` reports these under `legacy-sdlc-harness-rename`; safe cases copy canonical `tyContext` / `ty-context.config.json` and refresh managed paths, while root conflicts, old override skills, unknown old managed content and target conflicts are `manual_required` or `blocked`.
-
-The former migration command has been removed because existing users have completed that migration path.
-
-## Common Commands
-
-```sh
-npx --yes --package project-tiny-context-harness@latest ty-context init
-npx --yes --package project-tiny-context-harness@latest ty-context init --adopt
-npx --yes --package project-tiny-context-harness@latest ty-context export-context --all
-npx --yes --package project-tiny-context-harness@latest ty-context export-context --full
-npx --yes --package project-tiny-context-harness@latest ty-context export-context --code
-make ty-context-check-modularity
-npx --yes --package project-tiny-context-harness@latest ty-context check-modularity --touched
-make ty-context-sync
-make ty-context-upgrade
-npx --yes --package project-tiny-context-harness@latest ty-context upgrade --check
-npx --yes --package project-tiny-context-harness@latest ty-context upgrade --check --json
-npx --yes --package project-tiny-context-harness@latest ty-context validate-context
-npx --yes --package project-tiny-context-harness@latest ty-context enable composite-codex
-npx --yes --package project-tiny-context-harness@latest ty-context disable composite-codex
-npx --yes --package project-tiny-context-harness@latest ty-context doctor
-make ty-context-doctor
+git clone https://github.com/Seven128/project-tiny-context-harness.git
+cd project-tiny-context-harness
+npm ci
+npm run smoke:quickstart
+npm run preview:pack
+cd /path/to/your/test-repo
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.5.0.tgz
+npx --no-install ty-context init --adopt
 make validate-context
-make validate-code-modularity
+```
+
+Use this tarball path for source-preview testing, private review or package development. For normal installs, use `project-tiny-context-harness@latest` from npm. If it fails, open a [Source preview report](https://github.com/Seven128/project-tiny-context-harness/issues/new?template=source_preview_report.yml).
+
+## Minimal Context And Default Workflow
+
+The default read path is `project_context/global.md`, `project_context/architecture.md`, `project_context/context.toml`, then minimum graph-relevant role Context. Ordinary tasks decide `Context Delta: none|required`, update durable facts before code when required, implement, verify, perform Contract Conformance and check Context drift.
+
+The default workflow has no required plan artifact, matrix, verdict, evidence ledger or second plan. Duration, file count and complexity never auto-enable long-task state.
+
+Plan Validator commands no longer exist; existing plan, matrix or verdict files remain ordinary user files.
+
+### Architecture And Modularity Guidance
+
+Technical architecture support is a Minimal Context capability. For high-risk work, `Architecture Context Hit`, `Decision Rationale Hit: existing|required|none` and `Modularity Check: none|required|exception` are internal routing questions inside the platform's internal plan. No Task Contract or fixed `plan.md` is required. Do not invent rationale: store stable reasons, rejected alternatives or tradeoffs only in the smallest durable Context surface, and remember that architecture Context does not prove product quality.
+
+`ty-context check-modularity` audits selected handwritten source. `validate-code-modularity` and `validate-harness` enforce it separately from `validate-context`.
+
+#### Modularity Policy
+
+Newly generated Harness configs default to `strict_except_generated`. Generated/build files remain excluded; `strict_except_generated` rejects configured `modularity.waivers`. Projects with bounded legacy exceptions may opt into `scoped_waivers`, whose entries require `path`, `category`, `owner`, `introduced_at`, `reason`, `tracking_issue` and `expiry_condition`.
+
+### Product Surface Contract
+
+`context_surface_contract` compiles durable screen/page/CLI responsibility using the existing `contract`, area/subdomain and verification roles; `product-surface-contract.md` is the package template. Product Surface Contract authoring uses Source-to-Context judgment and Contract Conformance; it must not add a new product-surface Context role or claim product-quality proof.
+
+## Single-Goal Rolling Delivery
+
+The explicit Long-Task Workflow uses one platform-native Goal, one user-selected repository/worktree and one authoritative `delivery-contract.yaml`. Outcome dependencies express acceptance readiness; the current Goal keeps file-level implementation detail in a rolling internal Frontier.
+
+```text
+ty-context long-task init <workdir>
+ty-context long-task compile <workdir>
+ty-context long-task verify <workdir> [--outcome <key>] [--check <key>]
+ty-context long-task status <workdir>
+ty-context long-task resume <workdir>
+ty-context long-task final-gate <workdir>
+ty-context long-task stop-check <workdir> [--message <text>]
+ty-context long-task close <workdir>
+ty-context long-task abandon <workdir>
+```
+
+Compile strictly validates schema, keys, dependencies, Context/source/paths/runners/proof and the deterministic risk floor before implementation. It freezes Contract, source, selected Context, runner/oracle, verifier, repository/workdir and baseline workspace identity.
+
+Targeted verify is diagnostic and can never accept. Final Gate reruns every global and Outcome Check on one current snapshot; identical execution identities may be deduplicated only inside that Gate. Stop permits completion only while the accepted Receipt remains fresh against workspace, Contract, source, Context, runner/oracle, verifier and Hook identity. `resume` is read-only, `close` requires fresh acceptance, and `abandon` preserves authored source/Contract files and never touches Git.
+
+Supported runners: `package_script`, `project_binary`, `node_oracle`, `playwright_test`.
+
+Supported proof surfaces: `ui_browser`, `runtime_behavior`, `api_contract`, `data_state`, `security_boundary`, `population_coverage`, `implementation_structure`.
+
+## Risk And Evidence
+
+L0 local work stays on the default workflow. L1 standard long work uses the Delivery Contract. L2 strict is the minimum for public API/schema, persistent data, migration, security/permission boundaries, irreversible effects, full-population operations, multiple repositories, or a critical path with weak observability.
+
+Users may raise risk to strict. Explicit `standard` below the computed floor fails. Strict negative, counterfactual, population, security, environment and rollback/recovery proof is compiler-enforced as applicable. Scope escape returns `scope_or_risk_escalation_required` for revision and recompilation in the same Goal.
+
+Agent prose, a command exit code, handwritten state, historical targeted passes and missing/weak proof cannot create accepted. Final Gate runs only Contract-declared project verification commands. Tiny Context makes no model calls and no model retries.
+
+## Upgrade And Compatibility
+
+```powershell
+ty-context upgrade
+ty-context sync
+```
+
+Version 0.5.0 safely migrates the retired `composite-codex` profile selection to `long-task`, removes package-owned retired assets and preserves user historical files without importing or executing them. The retired `composite-campaign` and `composite-long-task` names are non-executing command tombstones. `/normal-long-task` is a retirement pointer to `/long-task-workflow` and creates no competing artifacts.
+
+After updating the package, run `ty-context upgrade`. Use `ty-context upgrade --check` first when you need a read-only plan.
+
+Release metadata declares one update mode: `sync-only`, `upgrade-required` or `manual-required`. Upgrade plans report steps as `safe_pending`, `manual_required` or `blocked`. A `sync-only` release may use `sync`; `sync` does not run migrations. An `upgrade-required` release must run upgrade, while `manual-required` includes an explicit operator step.
+
+## Verification
+
+```powershell
+npm run format:check
+npm run typecheck --workspace project-tiny-context-harness
+npm run build --workspace project-tiny-context-harness
+npm run test:delivery-contract --workspace project-tiny-context-harness
+npm run test:long-task-workflow --workspace project-tiny-context-harness
+npm test
+npm run smoke:quickstart
+npm run preview:pack
+npm run launch:check
+node packages/ty-context/dist/cli.js package check-source
 make validate-harness
 ```
 
-`make validate-harness` runs `validate-context` and the hard touched-source modularity gate.
+The modularity gate is `ty-context check-modularity`. Scoped waivers require `owner`, `introduced_at`, `reason`, `tracking_issue` and `expiry_condition`.
 
-## Current Boundary
+The synchronized local preview tarball is named `project-tiny-context-harness-0.5.0.tgz`.
 
-The former stage-based workflow is no longer shipped as a runnable default, compatibility layer or migration command.
+## Community And Further Reading
 
-The package direction is now smaller: keep the minimum durable facts that help agents recover context and continue safely.
+Feedback from real repositories is especially useful. Open an [adoption report](https://github.com/Seven128/project-tiny-context-harness/issues/new?template=adoption_report.yml) with the recovery problem and what remained unclear.
+
+Early feedback and starter issues:
+
+- Report a [Context recovery gap](https://github.com/Seven128/project-tiny-context-harness/issues/new?template=context_gap.yml) through `context_gap.yml`.
+- Share results in the pinned [adoption reports issue](https://github.com/Seven128/project-tiny-context-harness/issues/4).
+- Pick a starter issue: [demo](https://github.com/Seven128/project-tiny-context-harness/issues/5), [sample walkthrough](https://github.com/Seven128/project-tiny-context-harness/issues/6), [benchmark rerun](https://github.com/Seven128/project-tiny-context-harness/issues/7) or [launch FAQ](https://github.com/Seven128/project-tiny-context-harness/issues/8).
+- Keep claims narrow: recovery evidence is useful; benchmark speedup claims need fresh Minimal Context benchmark runs.
+
+Read the [roadmap](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/roadmap.md), [Benchmarking And Evidence](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/benchmarking.md), [comparison guide](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/comparison.md), [adoption guide](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/adopt-existing-repo.md), [agent surface recipes](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/agent-surface-recipes.md) and [FAQ](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/faq.md).
+
+For concrete examples, see the [fresh-agent recovery walkthrough](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/examples/fresh-agent-recovery.md), [Minimal Context sample guide](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/examples/minimal-context-sample.md) and [browseable sample repository](https://github.com/Seven128/project-tiny-context-harness/tree/main/examples/minimal-context-sample). The longer argument is [Fresh coding-agent sessions need project memory, not more ceremony](https://github.com/Seven128/project-tiny-context-harness/blob/main/docs/articles/fresh-agent-project-memory.md).
+
+## Honest Limits
+
+Tiny Context does not create or restore a platform Goal, prove that every requirement was declared, provide core parallel mutation, observe platform tokens/model calls, or own Git/PR/CI/deployment/human product confirmation. Runner network policy is not an OS sandbox, and deliberate same-user/admin tampering or system Hook bypass is outside its security boundary.
+
+## License
+
+MIT

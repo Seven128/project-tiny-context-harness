@@ -4,7 +4,7 @@ import { packageAssetPath } from "./paths.js";
 import { pathExists } from "./fs.js";
 import type { SyncReport } from "./sync-engine.js";
 
-const MANAGED_STATUS = "Tiny Context composite completion gate";
+const MANAGED_STATUS = "Tiny Context long-task completion gate";
 const COMMAND =
   'node "$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs"';
 const WINDOWS =

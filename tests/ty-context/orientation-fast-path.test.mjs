@@ -10,7 +10,7 @@ const root = path.resolve(
 );
 const read = (relative) => readFile(path.join(root, relative), "utf8");
 
-test("orientation Context exposes the current three-capability authority model", async () => {
+test("orientation Context exposes Single-Goal Rolling Delivery authority", async () => {
   const [global, architecture, manifest, area, model, workflow] =
     await Promise.all([
       read("project_context/global.md"),
@@ -25,10 +25,11 @@ test("orientation Context exposes the current three-capability authority model",
 
   assert.match(global, /Minimal Context.*Workflow Contract.*Long-Task Workflow/s);
   assert.match(global, /Context Delta: none\|required/);
-  assert.match(global, /Campaign V5.*Scope Fit V4/s);
-  assert.match(architecture, /Contract V3/);
-  assert.match(architecture, /Change Envelopes/);
-  assert.match(architecture, /one shared snapshot/);
+  assert.match(global, /Single-Goal Rolling Delivery/);
+  assert.match(global, /one `delivery-contract\.yaml`/);
+  assert.match(architecture, /Product, Technical Boundary and Acceptance/);
+  assert.match(architecture, /same-snapshot Final Gate/);
+  assert.match(architecture, /targeted verifier/);
 
   assert.match(manifest, /id = "harness-package"/);
   assert.match(manifest, /role = "foundation"/);
@@ -44,13 +45,13 @@ test("orientation Context exposes the current three-capability authority model",
   assert.match(model, /Source-to-Context judgment.*not a Markdown table/s);
   assert.match(model, /Context-to-Implementation alignment.*not a Markdown table/s);
 
-  assert.match(workflow, /agent\/platform's internal planning/);
+  assert.match(workflow, /platform-internal planning/);
   assert.match(workflow, /no required `plan\.md`/);
   assert.match(workflow, /Existing `plan\.md` files.*ordinary user files/);
-  assert.match(workflow, /Do not auto-trigger long-task workflows/);
+  assert.match(workflow, /Do not auto-detect or auto-activate long-task state/);
   assert.match(workflow, /\/normal-long-task/);
-  assert.match(workflow, /\/prepare-composite-long-task/);
-  assert.match(workflow, /\/composite-long-task-workflow/);
+  assert.match(workflow, /\/long-task-workflow/);
+  assert.match(workflow, /Targeted verify.*never accepted authority/s);
   assert.match(workflow, /Contract Conformance/);
   assert.doesNotMatch(workflow, /Plan Validator Boundary/);
 });
@@ -64,13 +65,14 @@ test("managed guidance and package assets share current routing", async () => {
   assert.equal(packaged, managed);
   for (const guidance of [managed, workspace]) {
     assert.match(guidance, /Default Workflow Contract/);
-    assert.match(guidance, /agent\/platform's internal plan/);
-    assert.match(guidance, /never requires `plan\.md`/);
+    assert.match(guidance, /agent\/platform internal plan/);
+    assert.match(guidance, /never requires a plan artifact/);
     assert.match(guidance, /Context Delta: none\|required/);
     assert.match(guidance, /Contract Conformance/);
-    assert.match(guidance, /Campaign V5.*Scope Fit V4/s);
-    assert.match(guidance, /composite-codex/);
-    assert.doesNotMatch(guidance, /Scope Fit V3|Campaign V4/);
+    assert.match(guidance, /Single-Goal Long-Task Workflow/);
+    assert.match(guidance, /ty-context enable long-task/);
+    assert.match(guidance, /Final Gate creates one current snapshot/);
+    assert.doesNotMatch(guidance, /multi-SFC execution|foreground scheduler/);
   }
 });
 
@@ -138,10 +140,10 @@ test("public documentation is English-complete for profiles and current workflow
     assert.match(document, /platform's internal plan/);
     assert.match(document, /core-portable/);
     assert.match(document, /workflow-default/);
-    assert.match(document, /enable composite-codex/);
-    assert.match(document, /Contract V3/);
-    assert.match(document, /Campaign V5/);
-    assert.match(document, /Scope Fit V4/);
+    assert.match(document, /enable long-task/);
+    assert.match(document, /long-task-delivery-v1/);
+    assert.match(document, /Single-Goal Rolling Delivery/);
+    assert.match(document, /Final Gate/);
     assert.match(document, /Plan Validator commands no longer exist/);
     assert.match(document, /check-modularity/);
     assert.match(document, /owner.*introduced_at.*tracking_issue.*expiry_condition/s);

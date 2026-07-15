@@ -4,48 +4,47 @@ read_policy: default
 ---
 # Package-Managed Surface Contract
 
+Product Surface Contract guidance is package-managed workflow support only. It must not generate project semantics, plan artifacts, lifecycle state or campaigns; business surface responsibility remains project-owned Context using existing roles.
+
 ## Role
 
-This contract defines which repository surfaces are package-managed, generated, source-only or human-facing. Read it before changing managed assets, default Skills, package assets, source mappings, README surfaces, release automation or source sync behavior.
+This contract defines source-only, managed, packaged and human-facing surfaces for the Harness.
 
 ## Surface Ownership
 
-- `.codex/ty-context-managed/**` is the source workspace's managed-source surface for portable/default guidance, Context templates, tools, profile metadata and package-managed Skill sources.
-- `packages/ty-context/assets/**` is the packaged canonical asset surface. Installation selects profiles: `core-portable` and `workflow-default` are default; `composite-codex` is explicit.
-- `.codex/skills/**` contains Skills available in this source workspace. Package-managed default `context_*`, full-project export, Harness upgrade and plan acceptance Skills are generated/sync-overwritten surfaces; project-specific rules must not be edited directly into them.
-- `.codex/skills/authoring/**` is source-workspace-only authoring guidance. Do not put authoring-only Skills under `.codex/skills/authoring/**` into package assets.
-- `README.md`, `packages/ty-context/README.md`, npm/package metadata and launch/release docs are human-facing package surfaces. They must stay aligned with package behavior and the Minimal Context boundary.
-- `PROJECT_SPEC.md` is the full Harness workflow design-spec surface for this source workspace, not a consumer default asset.
-- `project_context/**` is the source workspace durable fact surface. It can describe this repository's own package boundaries without becoming consumer default content.
-- Composite Campaign V6 source-plan, Source Coverage V2, Scope Fit V4 graph, immutable Packet/schedule revisions, codex-exec policy and bounded worker/worktree/commit identities, Slice Receipt hashes, Integration results and verifier-derived final result are Git-trackable user-owned project data created only by explicit preparation. They are not package-managed assets, generated default lifecycle/plan state or Context graph nodes. Mutable compiled contracts, verifier runs, raw command output and active workdir state remain temporary rather than tracked campaign data. Accepted V5 data is audit-only; retired AppServer/Thread/Goal runtime tests are legacy/audit assets and never consumer runtime coverage or fallback.
-- Composite package assets are shipped but only `ty-context enable composite-codex` installs/refreshes Codex Hooks, Composite Skills and Campaign CLI surfaces. `ty-context disable composite-codex` removes package-owned Hooks/handlers/skills without deleting user Hooks or portable/default capability. Non-Codex default installation must not write Codex-only Hooks. Composite assets must not require privileged Host infrastructure.
+- `.codex/ty-context-managed/**` is source-workspace managed source for portable/default guidance, Context templates, profile metadata, package-managed Skills, the Long-Task Stop Hook and templates.
+- `packages/ty-context/assets/**` is packaged canonical output produced by source mappings.
+- `.codex/skills/**` exposes generated/default Skills in this source workspace. The active long-task Skill is `.codex/skills/long-task-workflow/**`; `normal-long-task` is a retirement pointer. Package-managed defaults are overwritten by sync.
+- `.codex/skills/authoring/**` is source-workspace-only and never packaged.
+- `README.md`, `README.zh-CN.md`, `packages/ty-context/README.md`, npm metadata and release docs are human-facing public surfaces and must match behavior.
+- `PROJECT_SPEC.md` is the full source-workspace workflow design specification, not a consumer asset.
+- `project_context/**` is source-workspace durable fact authority and is not copied wholesale to consumers.
+
+## Profile And Consumer Boundary
+
+- `core-portable` plus `workflow-default` are installed by default.
+- `long-task` is explicit. Enabling it installs only the Long-Task Workflow Skill, Stop Hook and required templates; disabling it removes only package-owned long-task surfaces and preserves user Hooks/files.
+- Upgrade safely maps package-owned `composite-codex` profile selection to `long-task` and removes retired package-owned assets. It never deletes or executes user-authored historical campaigns, sources or contracts.
+- Retired command names are CLI tombstones in code, not packaged runtime profiles. They import no Campaign/SFC/worker/AppServer/worktree modules.
+- `init`, `sync` and `upgrade` never create, discover, import, activate or abandon a Delivery Contract.
+- Consumer CI receives portable project gates only. Maintainer package CI owns Delivery Contract/Long-Task Workflow self-tests, exact-tarball smoke and source drift.
 
 ## Source Sync Boundary
 
-- `node packages/ty-context/dist/cli.js package sync-source` copies mapped source workspace assets into `packages/ty-context/assets/**`.
-- `node packages/ty-context/dist/cli.js package check-source` checks mapped source/package drift.
-- Source sync is required after changing package-managed guidance, templates, tools, default Skills, Makefile include, consumer workflow assets or source mappings.
-- Source sync is not required for this repository's own `project_context/**`-only changes unless package-managed assets were also touched.
-- Public `sync` refreshes package-managed assets only. It must not run semantic migrations, infer business Context, repair project-local Skills or perform whole-project rewriting.
+- `node packages/ty-context/dist/cli.js package sync-source` copies mapped managed source to package assets.
+- `package check-source` verifies exact mapping parity.
+- Run build, sync twice, check-source and relevant consumer/package tests after changing managed guidance, Skills, Hooks, templates, profile metadata or source mappings.
+- Public `sync` refreshes enabled package-managed assets only; semantic migration belongs to `upgrade`.
 
 ## Generated Skill Boundary
 
-- Package-managed default Skills must remain business-agnostic and Minimal Context oriented.
-- Package-managed default portable Skills include Context authoring, Product Surface Contract, full-project export, Harness upgrade and ordinary long-task guidance. `prepare-composite-long-task` and `composite-long-task-workflow` belong to the explicit `composite-codex` profile.
-- Consumer customization belongs in separate project-local Skills such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` or `<harnessRoot>/skills/development_engineer/SKILL.md`.
-- Project-local Skill front matter trigger descriptions should stay aligned with the corresponding default Skill and project `AGENTS.md` trigger guidance.
-- Do not restore the old override-skill merge mechanism under managed folders.
-- Default Skills can provide workflow contracts and reusable thinking paths, but concrete business facts belong in the consumer project's Context. The default Workflow Contract does not require a fixed plan, mapping table, matrix or verdict artifact.
-
-## Consumer Asset Boundary
-
-- `init`, `sync` and `upgrade` install/refresh only enabled profiles and must not generate project semantics, plan artifacts, lifecycle state or campaigns. Explicit `enable composite-codex` installs capability only; it does not activate a task or scan campaign data.
-- Consumer `.github/workflows/harness.yml` runs selected portable Harness gates only and never package Long-Task Workflow self-tests. Source-repository PR/main/Trusted Publish CI runs the complete default and Long-Task Workflow suites through `npm test`. Direct `npm test` and `test:long-task-workflow` invoke the workflow suite locally; release preparation, local fallback publication, Hooks and consumer Harness gates use default-only paths. Trusted publication packs once and verifies the exact tarball plus Release Artifact V2 environment/lockfile identity in an empty repository. These maintainer gates are not copied into consumer workflows.
-- Default consumer or maintainer CI must not install privileged services, virtual machines, containers, browser matrices or administrator environments for the pre-stable Composite workflow. Host-security, compatibility and platform-release validation are deferred work outside the current formal package surface.
-- Public package surfaces must be fully usable in English. Non-English trigger examples are compatibility additions only.
+- Package-managed Skills are business-agnostic. Project facts belong in the consumer Context or separate project-local Skills.
+- `/long-task-workflow` may prepare one Contract, perform one coverage review, compile, execute a rolling Frontier in the current native Goal, resume semantic state and run Final Gate. It cannot create Goal/agent/process/Git orchestration.
+- `/normal-long-task` only reports retirement and points to `/long-task-workflow`; it creates no checklist, target prompt or Local Audit.
+- No package-managed Skill may restore Source Unit/SFC/Packet/Wave/Campaign artifacts or a second authority.
 
 ## Change Impact Rule
 
-When changing public package behavior, managed guidance, default Skills, source sync, validators, release automation, package README or package assets, sweep the same semantic entry across source implementation, managed source, package assets, README/package README, source workspace Context, focused tests and ordinary release smoke as applicable. The pre-stable Composite path does not add a release consumer or platform matrix to this rule.
+Public behavior changes require a same-semantics sweep across implementation, schema, managed source, package assets, Context, PROJECT_SPEC, English/Chinese README, package README, tests, source sync, quickstart/tarball and release/version surfaces as applicable.
 
-For source-workspace Context topology changes that do not touch package-managed assets, keep the diff scoped to `project_context/**`, directly related tests and temporary acceptance artifacts.
+Public package surfaces must be English-complete. Chinese text is additive aligned documentation, never the sole activation path or explanation.

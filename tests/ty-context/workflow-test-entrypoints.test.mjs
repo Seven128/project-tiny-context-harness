@@ -43,13 +43,14 @@ test("long-task workflow tests run only in GitHub CI or through their explicit c
   assert.match(read("tools/release_artifact_prepare.mjs"), /ty-context-release-artifact-v2|RELEASE_ARTIFACT_SCHEMA_V2/);
   assert.match(read("tools/workflow_release_artifact.mjs"), /dryRun[\s\S]*release-artifact-\$\{version\}\.json/);
   assert.match(read("tools/release_artifact_identity.mjs"), /lockfile_sha256/);
-  assert.match(tarballSmoke, /writeHappyV3Inputs/);
-  assert.doesNotMatch(tarballSmoke, /writeHappyV3Contract/);
+  assert.match(tarballSmoke, /writeDeliveryInputs/);
+  assert.match(tarballSmoke, /long-task-delivery-v1/);
   assert.match(tarballSmoke, /npm", \["install", "--save-dev", tarball\]/);
   assert.match(tarballSmoke, /"ty-context",\s*"init"/);
   assert.match(tarballSmoke, /"ty-context", "doctor"/);
   assert.match(tarballSmoke, /"ty-context", "validate-context"/);
-  assert.match(tarballSmoke, /"composite-long-task",\s*"final-gate"/);
+  assert.match(tarballSmoke, /"long-task", "final-gate"/);
+  assert.match(tarballSmoke, /tarball contains retired runtime asset/);
   assert.match(publishRunbook, /complete default and Long-Task Workflow test suites/);
   assert.match(publishRunbook, /exact packed tarball/);
 
@@ -77,7 +78,7 @@ test("long-task workflow tests run only in GitHub CI or through their explicit c
   const suiteRunner = read("tests/ty-context/run-package-suite.mjs");
   assert.match(suiteRunner, /longTaskTestName/);
   assert.match(suiteRunner, /\(suite === "long-task"\)/);
-  assert.match(suiteRunner, /codex-\|composite-\|long-task-/);
+  assert.match(suiteRunner, /\^long-task-/);
   assert.doesNotMatch(releasePrepare, /test:(?:composite|long-task)-workflow/);
   assert.doesNotMatch(releasePublish, /test:(?:composite|long-task)-workflow/);
   assert.match(releasePublish, /release_tarball_smoke\.mjs[\s\S]*--portable-only/);

@@ -87,13 +87,13 @@ test("non_codex_sync_does_not_install_codex_hooks", async () => {
       config,
       /profiles:[\s\S]*core-portable[\s\S]*workflow-default/,
     );
-    assert.doesNotMatch(config, /composite-codex/);
+    assert.doesNotMatch(config, /long-task/);
     assert.match(config, /policy: strict_except_generated/);
 
     const agents = await readFile(path.join(root, "AGENTS.md"), "utf8");
     assert.match(agents, /Minimal Context Harness Protocol/);
-    assert.match(agents, /agent\/platform's internal plan/);
-    assert.match(agents, /never requires `plan\.md`/);
+    assert.match(agents, /agent\/platform internal plan/);
+    assert.match(agents, /never requires a plan artifact/);
     assert.match(
       agents,
       /Otherwise remain on the default Workflow Contract, even when work is long/,
@@ -140,25 +140,24 @@ test("non_codex_sync_does_not_install_codex_hooks", async () => {
   });
 });
 
-test("composite_codex_enable_installs_hooks", async () => {
-  await withTemp("ty-context-composite-", async (root) => {
+test("long_task_enable_installs_only_current Skill and Hooks", async () => {
+  await withTemp("ty-context-long-task-", async (root) => {
     await runInit(root, { adopt: false, force: false });
-    const enabled = await enableHarnessProfile(root, "composite-codex");
+    const enabled = await enableHarnessProfile(root, "long-task");
     assert.equal(enabled.changed, true);
-    assert.ok(enabled.config.profiles.enabled.includes("composite-codex"));
+    assert.ok(enabled.config.profiles.enabled.includes("long-task"));
 
     const sync = await runSync(root);
     assert.deepEqual(sync.blocked, []);
     for (const file of [
-      ".agent/skills/prepare-composite-long-task/SKILL.md",
-      ".agent/skills/composite-long-task-workflow/SKILL.md",
+      ".agent/skills/long-task-workflow/SKILL.md",
       ".codex/hooks.json",
       ".codex/hooks/long-task-hook.mjs",
     ]) {
       await stat(path.join(root, file));
     }
     const hooks = await readFile(path.join(root, ".codex/hooks.json"), "utf8");
-    assert.match(hooks, /Tiny Context composite completion gate/);
+    assert.match(hooks, /Tiny Context long-task completion gate/);
 
     const second = await runSync(root);
     assert.deepEqual(second.blocked, []);
@@ -166,8 +165,8 @@ test("composite_codex_enable_installs_hooks", async () => {
   });
 });
 
-test("composite_codex_disable_removes_only_owned_hooks", async () => {
-  await withTemp("ty-context-disable-composite-", async (root) => {
+test("long_task_disable_removes_only_owned hooks and Skill", async () => {
+  await withTemp("ty-context-disable-long-task-", async (root) => {
     await runInit(root, { adopt: false, force: false });
     await mkdir(path.join(root, ".codex"), { recursive: true });
     await writeFile(
@@ -185,11 +184,11 @@ test("composite_codex_disable_removes_only_owned_hooks", async () => {
         user_setting: "preserve",
       }),
     );
-    await enableHarnessProfile(root, "composite-codex");
+    await enableHarnessProfile(root, "long-task");
     await runSync(root);
-    const disabled = await disableHarnessProfile(root, "composite-codex");
+    const disabled = await disableHarnessProfile(root, "long-task");
     assert.equal(disabled.changed, true);
-    assert.ok(!disabled.config.profiles.enabled.includes("composite-codex"));
+    assert.ok(!disabled.config.profiles.enabled.includes("long-task"));
     const sync = await runSync(root);
     assert.deepEqual(sync.blocked, []);
     const hooks = JSON.parse(
@@ -200,7 +199,7 @@ test("composite_codex_disable_removes_only_owned_hooks", async () => {
     assert.equal(hooks.hooks.Stop[0].hooks[0].custom, true);
     assert.doesNotMatch(
       JSON.stringify(hooks),
-      /Tiny Context composite completion gate/,
+      /Tiny Context long-task completion gate/,
     );
     assert.equal(
       await exists(path.join(root, ".codex", "hooks", "long-task-hook.mjs")),
@@ -212,7 +211,7 @@ test("composite_codex_disable_removes_only_owned_hooks", async () => {
           root,
           ".agent",
           "skills",
-          "prepare-composite-long-task",
+          "long-task-workflow",
           "SKILL.md",
         ),
       ),
@@ -299,7 +298,7 @@ test("configured non-Codex harness root remains portable by default", async () =
   });
 });
 
-test("CLI init validates portable defaults and explicit enable activates Composite", async () => {
+test("CLI init keeps portable defaults and explicit enable activates long-task", async () => {
   await withTemp("ty-context-cli-", async (root) => {
     const init = spawnSync(process.execPath, [cliPath, "init"], {
       cwd: root,
@@ -308,15 +307,15 @@ test("CLI init validates portable defaults and explicit enable activates Composi
     assert.equal(init.status, 0, `${init.stdout}\n${init.stderr}`);
     assert.equal(await exists(path.join(root, ".codex/hooks.json")), false);
 
-    const compositeBeforeEnable = spawnSync(
+    const longTaskBeforeEnable = spawnSync(
       process.execPath,
-      [cliPath, "composite-long-task", "compile", "task"],
+      [cliPath, "long-task", "status", "task"],
       { cwd: root, encoding: "utf8" },
     );
-    assert.notEqual(compositeBeforeEnable.status, 0);
+    assert.notEqual(longTaskBeforeEnable.status, 0);
     assert.match(
-      compositeBeforeEnable.stderr,
-      /profile composite-codex is not enabled/,
+      longTaskBeforeEnable.stderr,
+      /profile long-task is not enabled/,
     );
 
     for (const command of [
@@ -333,25 +332,25 @@ test("CLI init validates portable defaults and explicit enable activates Composi
 
     const enable = spawnSync(
       process.execPath,
-      [cliPath, "enable", "composite-codex"],
+      [cliPath, "enable", "long-task"],
       { cwd: root, encoding: "utf8" },
     );
     assert.equal(enable.status, 0, `${enable.stdout}\n${enable.stderr}`);
-    assert.match(enable.stdout, /enabled profile composite-codex/);
+    assert.match(enable.stdout, /enabled profile long-task/);
     await stat(path.join(root, ".codex/hooks.json"));
     await stat(
-      path.join(root, ".codex/skills/composite-long-task-workflow/SKILL.md"),
+      path.join(root, ".codex/skills/long-task-workflow/SKILL.md"),
     );
 
-    const compositeAfterEnable = spawnSync(
+    const longTaskAfterEnable = spawnSync(
       process.execPath,
-      [cliPath, "composite-long-task", "status", "missing-task"],
+      [cliPath, "long-task", "status", "missing-task"],
       { cwd: root, encoding: "utf8" },
     );
-    assert.notEqual(compositeAfterEnable.status, 0);
+    assert.notEqual(longTaskAfterEnable.status, 0);
     assert.doesNotMatch(
-      compositeAfterEnable.stderr,
-      /profile composite-codex is not enabled/,
+      longTaskAfterEnable.stderr,
+      /profile long-task is not enabled/,
     );
   });
 });

@@ -1,6 +1,7 @@
 import { checkModularity } from "./check-modularity.js";
 import { compositeLongTask } from "./composite-long-task.js";
 import { compositeCampaign } from "./composite-campaign.js";
+import { longTask } from "./long-task.js";
 import { doctor } from "./doctor.js";
 import { exportContext } from "./export-context.js";
 import { enable } from "./enable.js";
@@ -29,10 +30,9 @@ export const commands: Record<string, CommandHandler> = {
   "validate-code-modularity": (args) =>
     validate(["validate-code-modularity", ...args]),
   "validate-harness": (args) => validate(["validate-harness", ...args]),
-  "composite-long-task": (args) =>
-    withCompositeCodexProfile(args, compositeLongTask),
-  "composite-campaign": (args) =>
-    withCompositeCodexProfile(args, compositeCampaign, ["contract"]),
+  "long-task": (args) => withLongTaskProfile(args, longTask),
+  "composite-long-task": compositeLongTask,
+  "composite-campaign": compositeCampaign,
   package: packageSource,
 };
 
@@ -40,10 +40,8 @@ export function help(): void {
   console.log(`ty-context commands:
   init [--adopt] [--harness-folder <path>]
                        Initialize/adopt a project; without --harness-folder, choose target agent first
-  enable composite-codex
-                       Explicitly install Codex Hooks and Long-Task Workflow Skills
-  disable composite-codex
-                       Remove package-owned Codex Hooks and disable Composite execution
+  enable long-task     Install the Long-Task Workflow Skill, Stop Hook and templates
+  disable long-task    Remove only package-owned Long-Task Workflow assets
   sync                 Refresh managed assets; does not run migrations
   upgrade [--check] [--json]
                        Run safe migrations, sync managed assets and doctor
@@ -57,20 +55,19 @@ export function help(): void {
   validate-code-modularity
                        Enforce touched handwritten source file modularity
   validate-harness     Run validate-context and validate-code-modularity
-  composite-long-task <subcommand>
-                       Manage explicit Contract V3 workdirs; requires composite-codex
-  composite-campaign <subcommand>
-                       Run foreground Campaign V6 codex-exec orchestration; mutations require composite-codex
+  long-task <subcommand>
+                       Manage one Canonical Delivery Contract in the current workspace
+  composite-long-task Retired command; use ty-context long-task
+  composite-campaign  Retired command; use ty-context long-task
   package <subcommand> Maintain package canonical source`);
 }
 
-async function withCompositeCodexProfile(
+async function withLongTaskProfile(
   args: string[],
   handler: CommandHandler,
-  discoverable: string[] = [],
 ): Promise<void> {
   const subcommand = args[0] ?? "help";
-  if (subcommand !== "help" && !discoverable.includes(subcommand))
-    await assertHarnessProfileEnabled(process.cwd(), "composite-codex");
+  if (subcommand !== "help")
+    await assertHarnessProfileEnabled(process.cwd(), "long-task");
   await handler(args);
 }

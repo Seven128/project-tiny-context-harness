@@ -14,17 +14,17 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 - Context is durable project fact stored in `project_context/**` or `DESIGN.md` so future agents can recover intent, ownership, boundaries and repeat-execution paths.
 - Minimal Context is the durable fact layer: the smallest repo-owned facts needed to recover project intent, ownership, boundaries and repeat-execution paths.
 - Workflow Contract is the default agent behavior layer: read the minimum relevant Context, decide one `Context Delta: none|required`, update durable facts first when required, use the agent's internal planning, implement, run project-owned verification, then perform Contract Conformance and Context drift check.
-- Tiny Context has three cooperating capabilities: Minimal Context owns durable facts; Workflow Contract owns the lightweight default behavior; explicitly enabled Long-Task Workflow owns strict multi-Slice orchestration and machine completion authority.
+- Tiny Context has three cooperating capabilities: Minimal Context owns durable facts; Workflow Contract owns the lightweight default behavior; explicitly enabled Long-Task Workflow owns one Canonical Delivery Contract and verifier-derived current-snapshot completion authority for a platform-native Goal.
 - Repo-owned intent layer is the durable project fact surface that tells agents which product, architecture, ownership and dependency facts outrank current-code convenience.
 - Durable facts include product/domain ownership, surface responsibility, information architecture, API/schema semantics, state/runtime/recovery semantics, cross-domain boundaries, security boundaries and repeatable verification/deployment paths.
 - Workflow Contract is prompt-level order of thought, not a validator, phase gate, artifact schema, edit-order gate or long-task detector.
 - Internal plan means the agent's current reasoning about goal, boundaries, controlling Context, implementation surfaces and verification. It has no mandatory file, name or schema.
 - Small code task means a local implementation task where existing Context is sufficient and the change does not alter durable product, architecture, API/schema/data, runtime/state/recovery, verification/deployment, security/redaction or surface-ownership facts. It is not defined by lines changed.
 - Architecture Context Hit and Decision Rationale Hit are internal routing questions for high-risk work; they do not create additional deltas, Context roles, files or validators.
-- Source-to-Context judgment is the internal classification of each external product, architecture, technical or acceptance constraint as covered, requiring a Context update, task-local, explicitly out of scope or requiring a user decision. It is required thinking for source packets, not a Markdown table.
+- Source-to-Context judgment is the internal classification of each external product, architecture, technical or acceptance constraint as covered, requiring a Context update, task-local, explicitly out of scope or requiring a user decision. It is required thinking, not a Markdown table.
 - Context-to-Implementation alignment is checked during Conformance by asking whether controlling Context actually reached the correct modules, surfaces, APIs, state machines and verification paths and whether forbidden shortcuts were avoided. It is not a Markdown table.
-- Scratch files are optional, user/agent-owned temporary memory. They have no fixed name or schema, are not Context or completion proof, are not registered in `context.toml`, and never become Workflow or Composite authority.
-- Ordinary long-task source/checklists and optional local audits are explicit temporary artifacts. Composite campaign source/provenance and strict Contract V3 artifacts are separate explicit authorities; neither is a default Workflow Contract plan surface.
+- Scratch files are optional, user/agent-owned temporary memory. They have no fixed name or schema, are not Context or completion proof, are not registered in `context.toml`, and never become Workflow or Long-Task authority.
+- `delivery-contract.yaml` is the sole explicit long-task intent/acceptance authority; optional `source.md` is provenance and compiled/status/run data is verifier-owned temporary state. None is default Workflow plan state or Context.
 - Conformance is a handoff self-check against relevant Context and current task constraints. It creates delivery evidence, not durable Context by itself.
 
 ## Fact-Source Authority
@@ -36,7 +36,7 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 - Tests, smoke checks, CI, review, hidden probes and human acceptance prove product quality. Context can identify repeatable verification paths, but neither Context nor Harness validators claim that behavior passed.
 - `PROJECT_SPEC.md` owns the full Harness design explanation and historical rationale in this source workspace. Role Context keeps only high-frequency durable facts.
 - Agent internal plans are current execution state only. Existing `plan.md`, matrices, verdicts or other user files have no implicit authority.
-- Explicit Composite authority is: immutable source coverage and Scope Fit graph for campaign scope; the three Contract V3 inputs for one SFC; Slice Final Gate for Slice completion; Wave Integration Gate for merged-wave completion; Campaign Final Gate plus target revalidation for Campaign completion.
+- Explicit Long-Task authority is: one compiled Delivery Contract for declared scope; targeted verify for repair-only findings; one same-snapshot Final Gate for machine acceptance; and a fresh identity-bound Receipt for Stop/close.
 
 ## Priority When Sources Disagree
 
@@ -65,6 +65,6 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 - Do not store one-off logs, command output, screenshots, CI artifacts, release ledgers, temporary JSON, raw payloads, secrets, tokens, cookies or result claims in Context.
 - Do not copy full implementation summaries into Context when code, tests or comments are clearer.
 - Do not invent rationale from current code shape.
-- Do not register scratch files, exported source packs, ordinary long-task sources/checklists/audits, Composite contracts, campaign execution state or other temporary artifacts in `project_context/context.toml`.
+- Do not register scratch files, exported source packs, Delivery Contracts, optional source provenance, compiled long-task state or verification runs in `project_context/context.toml`.
 - Do not require or validate a fixed `plan.md`, Source-to-Context table, Context-to-Implementation table, matrix, verdict or evidence ledger for the default workflow.
 - Use Context to shorten future recovery and guide decisions; use code/tests/runtime evidence to prove current behavior.

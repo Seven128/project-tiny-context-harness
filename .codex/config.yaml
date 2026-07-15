@@ -5,7 +5,7 @@ profiles:
   enabled:
     - core-portable
     - workflow-default
-    - composite-codex
+    - long-task
 modularity:
   limit: 300
   policy: scoped_waivers
@@ -31,34 +31,6 @@ modularity:
       reason: Existing combined managed asset sync engine predates the modularity gate; this change only narrows the sync migration preflight.
       tracking_issue: modularity-backlog
       expiry_condition: Extract managed block merging, tree syncing and Skill override safety checks into focused modules.
-    - path: packages/ty-context/src/lib/composite-campaign-host-recovery.ts
-      category: legacy_migration
-      owner: harness-maintainers
-      introduced_at: "2026-07-14"
-      reason: The pre-existing aggregate host recovery state machine already exceeded function and branch thresholds; deterministic V5 turn reconciliation extends that same compatibility surface while preserving crash semantics.
-      tracking_issue: modularity-backlog
-      expiry_condition: Extract Goal identity recovery, authoring-turn recovery and execution-turn reconciliation into separate pure transition modules.
-    - path: packages/ty-context/src/lib/composite-campaign-final-gate.ts
-      category: legacy_migration
-      owner: harness-maintainers
-      introduced_at: "2026-07-14"
-      reason: The pre-existing aggregate Campaign final gate already exceeded the modularity limit; this hotfix exposes its existing snapshot evaluator and removes the non-transactional acceptance write without expanding gate semantics.
-      tracking_issue: modularity-backlog
-      expiry_condition: Extract Slice result collection, global-constraint evaluation and final-result serialization into focused modules behind the snapshot evaluator.
-    - path: packages/ty-context/src/lib/composite-campaign-orchestrator.ts
-      category: legacy_migration
-      owner: harness-maintainers
-      introduced_at: "2026-07-14"
-      reason: The pre-existing Campaign transition coordinator already exceeded statement, branch and state-transition thresholds; V5 gates and repair routing extend the same deterministic transition entry point.
-      tracking_issue: modularity-backlog
-      expiry_condition: Split authoring, wave integration, repair and finalization transitions behind a small campaign action reducer.
-    - path: packages/ty-context/src/lib/composite-campaign-thread-orchestrator.ts
-      category: legacy_migration
-      owner: harness-maintainers
-      introduced_at: "2026-07-14"
-      reason: The pre-existing App Server run loop already exceeded the branch threshold; V5 reconnect and all-settled shutdown handling retain one host lifecycle boundary.
-      tracking_issue: modularity-backlog
-      expiry_condition: Extract action dispatch, reconnect policy and shutdown reconciliation into independent host lifecycle helpers.
     - path: tools/consumer_lab_full_test.mjs
       category: legacy_migration
       owner: harness-maintainers

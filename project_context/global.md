@@ -2,122 +2,97 @@
 
 ## Project Goal
 
-- Maintain `project-tiny-context-harness`, the npm package and `ty-context` CLI behind the public Project Tiny Context Harness display name.
-- Current product direction is Minimal Context Harness: preserve the smallest durable facts and workflow contract needed for fresh-agent recovery, iteration, debug and requirement changes.
-- Design purpose: Tiny Context has three cooperating capabilities. Minimal Context defines durable fact authority; Workflow Contract defines the lightweight default behavior for graph-directed reads, one `Context Delta`, internal planning, implementation and Conformance; explicitly enabled Long-Task Workflow defines strict multi-SFC orchestration and machine completion authority. Existing `composite-*` command, Skill, runtime and schema identifiers remain compatibility ids rather than the product display name. Together they keep project intent, implementation and verification aligned without a fixed plan artifact or stage workflow.
-- Design problem: when downstream work exposes a missing upstream capability, current code can show a convenient edit path but cannot decide whether changing upstream modules is allowed project intent. The Harness preserves that repo-owned intent layer in `project_context/**`.
-- Current best practice: tasks of any length remain on the Workflow Contract unless a long-task Skill is explicitly invoked or the worktree already has an active Contract V3 binding. The default path reads minimum relevant Context, decides one `Context Delta`, uses the agent's internal plan and finishes with project verification plus Conformance/drift check; it does not require `plan.md`, mapping tables or result artifacts. `/normal-long-task` only preserves source, creates one acceptance checklist and an optional compact prompt; Local Audit is opt-in. Explicit `/prepare-composite-long-task` authorizes the complete Campaign V6 loop, while `/composite-long-task-workflow` executes one already-complete three-input SFC. Composite inherits Context authority but replaces ordinary planning, implementation mapping, execution state and completion judgment.
+- Maintain `project-tiny-context-harness`, the npm package and `ty-context` CLI behind the public Project Tiny Context Harness name.
+- Keep the default product small: Minimal Context preserves durable project facts; Workflow Contract defines the lightweight default agent loop; the explicitly enabled Long-Task Workflow adds one canonical delivery contract and verifier-owned completion authority for work that needs recovery across long sessions.
+- The Long-Task Workflow is Single-Goal Rolling Delivery: one `delivery-contract.yaml`, one platform-native continuing Goal, the current user-selected workspace, a rolling implementation frontier and one Evidence Kernel whose verification strength rises with declared risk.
+- A Delivery Contract preserves product outcomes, non-goals, stable technical boundaries, acceptance checks and relevant Context. It does not freeze file-by-file implementation steps.
 
 ## Non-goals / Boundaries
 
-- The package does not replace project tests, CI, review or human acceptance.
-- Source-workspace development defaults to direct work on `main`. Ordinary agent tasks do not create, switch to or retain feature/Codex branches or development worktrees unless the user explicitly requests isolation. An explicit Composite Campaign may own one Integration branch/worktree plus bounded detached SFC/repair worktrees as a narrow orchestration exception and must converge back into the target branch.
-- New consumer projects should not default to lifecycle phases, stage task state, stage skills, stage work-product trees or phase gates.
-- `sync` refreshes managed assets and default Context authoring Skills; legacy stage semantic migration has been removed, while safe Schema v4 upgrade migrations remain.
-- Legacy stage assets are not shipped as a runnable default or compatibility layer.
-- Tracked Composite Campaign V6 data is an explicit source/orchestration/provenance exception, never default lifecycle plan state. It may retain source/coverage/graph, immutable Packet/schedule revisions, `codex-exec-v1` command-policy identity, bounded worker observations, profiles, worktree/commit identities, receipt hashes, integration results and verifier-derived final results; raw JSONL, full stderr and raw evidence stay temporary. `init`, `sync` and `upgrade` do not create or scan campaigns. Accepted V5 campaigns remain audit-only; unfinished V5 execution fails with `campaign_v5_execution_retired_recreate_required` and is not migrated. There is no AppServer fallback or dual formal runtime.
-- Existing user `plan.md`, matrices and verdict files are preserved as ordinary files but have no default Workflow or Composite authority. No automatic deletion or migration is performed.
+- Harness does not create, simulate, reconnect or persist a platform Goal or physical Turn. The current Codex session is the execution Goal; a new session recovers semantic state through `ty-context long-task resume`.
+- Harness does not schedule agents, launch Codex/AppServer workers, route models, manage process trees, create branches/worktrees, merge, push, open pull requests or perform deployment. Only Contract-declared project verification commands may create child processes.
+- A long task uses the current workspace or the one worktree already chosen by the user. Task length never creates another worktree, and core execution has no internal parallel mutation.
+- Outcome is the acceptance-result unit. It is not a Goal, worker, branch, worktree or fixed implementation slice. The current Goal selects one or more dependency-ready Outcomes as a temporary rolling Frontier; that Frontier is internal working state, not a persisted scheduling DAG.
+- Harness does not prove that the user declared every real requirement. It rejects internally incomplete or unverifiable Contracts but cannot manufacture semantic completeness from entity chains.
+- Product tests, CI, review, Git/PR delivery, deployment and human product confirmation remain external authorities.
 
 ## Background
 
-- This repository contains the Harness package source, npm package release/source-sync logic and delivery benchmark logic.
-- Earlier versions used a stage-based Tiny Context workflow with lifecycle state, plan tasks, stage skills, stage work-product trees and many validators.
-- Benchmark pilots showed that full default ceremonies and frequent workflow gates create substantial time/token friction on ordinary and medium-complexity tasks.
+- Fresh coding-agent sessions need a small repo-owned recovery path for product intent, architecture boundaries and repeatable verification instead of rediscovering them from code.
+- The package previously included a multi-worker Campaign runtime. Version 0.5.0 replaces that active architecture with one native Goal, one selected workspace, one Delivery Contract and verifier-owned current-snapshot evidence.
+- Historical names remain only where safe migration, non-executing tombstones or explicit design history require them.
 
 ## Design Rationale
 
-- Direct-on-`main` development is a source-workspace collaboration policy: it avoids accumulating short-lived Codex branches and keeps the user's active repository state immediately visible. It is not distributed as package behavior and does not remove the isolation required inside an explicitly invoked Composite Campaign.
-- The durable value with the clearest expected return is context recovery and priority discipline, not forcing a full Tiny Context document chain for every project.
-- The historical stage-based Harness externalized the whole Tiny Context through lifecycle state, plan tasks, PRD / tech plan / implementation / review / test / release artifacts and phase gates. Benchmark pilots showed those writes, transitions and gates are objective time/token cost; details are summarized in `PROJECT_SPEC.md`.
-- Modern coding agents have internalized much of the ordinary single-task loop: compact requirement understanding, local design choice, code editing, test execution and simple repair. The default Harness should not duplicate that capability with broad ceremonies.
-- Composite Campaign V6 uses two deliberately separate planes: Git-trackable, user-owned campaign data preserves source authority plus deterministic durable-stage orchestration/recovery identities, including bounded worker observations and model-routing decisions, while active compiled contracts, mutable verifier runs, raw model/JSONL output, raw command output and workdir state remain temporary execution data. Packet/Contract/Envelope/Receipt authority replaces conversational continuity. This narrow explicit exception does not restore a default lifecycle plan store.
-- Scope Fit and execution scheduling remain separate authorities. Scope Fit V4 first preserves complete control/capability-unit semantics and chooses the maximal coherent authorable SFCs inside independent acceptance outcomes; the conflict analyzer then determines which already-valid SFCs are independent; the scheduler only chooses the current wave. File layout, technical layer, agent count, parallel opportunity, estimated duration or model preference cannot create an SFC boundary.
-- Codex Exec model routing is exact-profile and policy based. Authoring workers use the actual controller profile when available; unknown profiles are never guessed. Exact `gpt-5.6-sol` at `xhigh`, `max` or `ultra` routes execution/repair to `gpt-5.6-sol / medium`; high-and-below, unrelated, unknown, invalid-policy or unavailable-target profiles pass through unchanged. A routed target that the CLI explicitly rejects as unavailable permits one recorded controller-profile passthrough retry.
-- The three rendered YAML inputs remain separate authorities because product/architecture intent, atomic implementation obligations and acceptance/oracle semantics must not overwrite one another. The V3 structured authoring packet is their editable source before handoff; rendered inputs become frozen compiler inputs.
-- No legacy campaign, V2 source/Observation V1, Markdown input, partial-bundle, task-state or old-workdir importer is provided. Ambiguous historical authority and permanent compatibility paths weaken the no-false-completion boundary; users regenerate Contract V3 inputs and verify a fresh snapshot.
-- ADR-level rationale is downgraded into `project_context/global.md#Design Rationale` or area Context when it still affects future work.
-- Implementation facts should live in code, tests, comments and short area Context constraints when the code is not self-explanatory.
-- Product/UIUX/development engineer Skill customization uses separate project-local Skills such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` and `<harnessRoot>/skills/development_engineer/SKILL.md`; `sync` overwrites package-managed default `context_*` Skills and leaves separate local Skills untouched. Project-local Skill front matter `description` trigger keywords should stay aligned with the matching default Skill and the project `AGENTS.md` role-trigger rule.
-- Architecture Context is intentionally restrained: it records durable boundaries, component relationships and constraints, not implementation narration.
-- Schema v4 makes the lightweight Context graph the default: `project_context/context.toml` declares product/domain-owned areas, role-based context files, read triggers and monorepo boundary metadata while ordinary projects keep one default `main` area.
-- `project_context/**` is authoritative for intended ownership, responsibility, architecture boundaries, integration direction, allowed/forbidden dependencies and verification/deployment entry paths; code is authoritative for current implementation state. Gaps between them should be treated as implementation drift, missing work or stale Context that must be called out.
-- Context-first is the default workflow habit for changes to durable product or technical facts; before the first code edit, agents classify whether the task changes product ownership/plans, module responsibilities, information architecture, API/Schema, state or scheduler semantics, cross-domain boundaries or verification/deployment entry paths.
-- `PROJECT_SPEC.md` owns the stable Harness mental model and core term vocabulary: Minimal Context Harness is a set of expected agent behavior constraints, not a document workflow.
-- Context Priority Ladder is expected agent behavior: read Context first, let foundation / contract / decision-rationale / architecture / verification / deployment Context interpret current-code convenience, run the page product-positioning check for Web/page/layout/module-boundary/information-placement tasks, classify durable-fact impact or use `Context Delta` inside task-contract scenarios, choose context-first or code-first, then perform Contract Conformance when applicable and Context drift check before handoff.
-- For Web page, frontend layout, UI/UX, product module boundary and information-placement tasks, the lightweight page product-positioning check runs before context-first classification and supplies the evidence for it; the check does not itself require a Context update unless it reveals durable page responsibility, information architecture, persistent-information boundary or ownership facts.
-- Broad product/UIUX principles remain as judgment philosophy, while reusable control-task questions for inputs, selection, search, configuration, scheduling, budgets/quotas/limits and feedback states live in the default Skills; project-specific answers belong in Context or project-local Skills, and per-change Context Conformance evidence belongs in handoff/final/PR text.
-- Long-running composite execution exists because Context and prompt discipline are soft constraints: they can guide implementation but cannot prevent a model from reporting completion after unnoticed drift. Composite therefore moves completion authority out of prose. Its Slice path is compile, free implementation, project-focused tests, optional targeted repair verification, commit/clean, full final recomputation and Stop freshness enforcement; every default step and test must close a named false-completion path.
-- Long-Task Workflow acceptance is verifier-owned. The compiler freezes the complete Requirement/PI/Obligation/Binding/AC/Proof/Spec/Counterfactual graph, referenced Context topology/file hashes by default (or full Context explicitly), three-input hashes and oracle/verifier identities. Oracle V2 supplies typed actual observations only. `verify` produces repair findings but never acceptance. `final-gate` reruns every in-scope AC and is the only Slice producer of `accepted`; Wave and Campaign gates prove merged and same-snapshot composition separately.
-- Campaign Source Coverage V2 carries Context resolution and baseline hashes directly; V1 is historical audit data. Packet freshness reauthors on Scope/owner/architecture/acceptance changes before the first execution worker, post-execution Context changes fail closed, and Contract V3 defaults to referenced snapshots so unrelated Context content edits do not invalidate every SFC.
-- Slice Change Envelopes reject every undeclared `base..head` path, including another SFC's code; supporting/generated/lockfile paths are explicit and repair gets only the union of affected envelopes.
-- Campaign state uses one simple live-process lock with process-start identity, optimistic generations, atomic replacement, append-only events and bounded intents around worktree, worker, Integration, delivery and acceptance effects. There is no lease, heartbeat, controller host or distributed takeover.
-- Campaign owns fixed managed worktrees at `tmp/ty-context/composite-worktrees/<campaign-id>/`: one Integration, at most four current-wave detached SFC worktrees and one reusable detached repair worktree. Only the Integration branch is visible. Dirty primary-worktree baselines use a temporary index plus hidden checkpoint ref without staging, committing, rebasing, clearing or checking out the user's primary worktree; preservation defaults on.
-- Campaign worktree ownership is derived from one canonical V6 expected-set calculator. Inspection and budget assertion are side-effect free; only explicit reconcile, accepted cleanup or user-requested abandon may remove package-owned worktrees. Recovery recreates a missing Slice worktree from its validated committed head/Receipt when available, while Integration recovery treats the persisted Integration head as authority and rolls back bounded unpersisted mechanical Git effects instead of adopting arbitrary Git state.
-- One foreground scheduler starts bounded sibling `codex exec` workers and observes every child as settled before integration or exit. Model routing uses a versioned policy asset whose id/hash and decision are frozen by the Campaign rather than hard-coded orchestration branches.
-- Slice/Wave execution state is monotonic: accepted or merged Slices are never rescheduled, a unique incomplete Wave can restore `active_wave`, and ambiguous multiple incomplete Waves fail closed. Interrupt checks gate every dispatch boundary, and worker ownership requires both PID and process-start identity before reconcile, cleanup or targeted process-tree termination may treat a process as Campaign-owned.
-- Wave impact combines merge diff and contract/Context/verification bindings with full fallback on uncertainty. Campaign Final Gate uses one shared snapshot and deduplicates only Specs with identical snapshot, normalized Spec, Oracle, executable, inputs, command and environment identities.
-- The lightweight workflow prevents declared Requirement/PI/Obligation/AC omissions, changed compile inputs or observers, stale final results, post-final workspace drift and silent contract replacement from passing through the normal CLI/Hook flow. It is not a hostile-host security boundary: it does not claim resistance to a malicious same-user or administrator deleting state or Hooks, OS credential/Registry attacks, system-level Hook bypass or kernel/sandbox escape.
-- Capability-first delivery scope remains part of the three inputs without adding a fourth authority. Product requirements and verification specs declare whether they prove system capability, representative samples or full-population operation. Full population requires a frozen enumerator and coverage report; sample evidence never substitutes. Scope disagreements or unmapped changes become compile/findings failures rather than agent decisions.
-- Composite input parsing is intentionally strict Contract V3 YAML rather than permissive Markdown. Stable IDs and exhaustive bidirectional graph edges prevent references or prose from becoming accidental definitions. Duplicate/unknown fields, YAML aliases/merges/tags/multi-document input, unobservable bindings, manual/summary-only ACs, missing executable predicates, missing counterfactuals and missing independent oracle provenance fail compilation.
-- Contract V3 replacement is deliberately non-transitional: no V2 source/Observation V1 reader, `ty-context superpowers`, hidden alias, old task-state reader, legacy Markdown compatibility, evidence importer, dual-write or old campaign/workdir migration. This keeps the normal path small and prevents compatibility code from weakening current acceptance semantics.
-- Before a stable release, Harness self-development validates the Composite core with small real CLI/final-gate black boxes in one common environment. Host-hardening, hostile-OS security, broad compatibility and cross-platform release matrices are deferred work, not current acceptance claims.
-- Product Surface Contract workflow is the Minimal Context path for turning broad page/UI/product positioning principles into concrete project-owned surface responsibilities. The package provides a business-agnostic `context_surface_contract` Skill and compact template; user-project facts live in existing Context roles. The Harness must not add a surface-specific role, infer business contracts during `init`/`upgrade` or require a fixed plan/binding artifact.
-- AGENTS placement policy is part of the Minimal Context design: `AGENTS.md` is a startup router and hard-boundary surface. For package consumers, long design reasoning defaults to compact `project_context/**` facts unless a project already has a local spec/design convention; in this source workspace, `PROJECT_SPEC.md` is the Harness workflow design-spec surface. Role procedures belong in Skills, human usage docs in README, and machine checks in validators/tests only when they fit the product boundary.
-- Architecture/rationale support stays inside agent reasoning as lightweight routing: `Architecture Context Hit` and `Decision Rationale Hit` help high-risk tasks find controlling facts, while `Context Delta: none|required` remains the only durable-fact decision. They require no Task Contract file, table or validator.
-- Context updates should be as small as the fact allows but sufficient to guide implementation. For external product, architecture, technical or acceptance sources, the agent internally classifies every durable constraint as covered, Context update required, task-local, explicitly out of scope or needing user decision. Conformance then checks Context-to-implementation alignment without a fixed Markdown table. Automation must not turn this reasoning into an edit-order gate.
-- The context-first clarification preserves the original plan-before-implementation principle while keeping Minimal Context slim: removing stage ceremony did not remove Context authority over durable product intent, engineering boundaries or contracts.
-- Area Context is the product/domain ownership boundary. Role context files are read-purpose slices owned by an area or, only when truly cross-domain, by the project root.
-- Managed guidance now includes a soft role placement scan for `project_context/areas/**` authoring and migration: use `area` / `domain` for product ownership, `subdomain` for smaller owned product context, `contract` for API/schema/event/interface semantics, `foundation` for stable concepts or vocabulary, `verification` / `deployment` for repeat-execution paths, `implementation-index` for code navigation, `decision-rationale` for stable design reasons and `archive` for non-default historical or external material.
-- Verification and deployment role Context are Minimal Context surfaces for critical repeat-execution paths: they record only durable preparation, shortest command/path, expected stage or signal, acceptable warnings and known dead ends that reduce future retest, CI, deploy, runtime bootstrap or environment-initialization rediscovery. They must not keep one-off logs, raw outputs, temporary JSON, CI artifacts, release ledgers, reports or secrets.
+- Keep durable project memory and completion authority, but leave mutable implementation sequencing inside the current agent/platform Goal.
+- Use one nested Contract and compiler-generated Outcome/Check identities to avoid cross-file semantic duplication.
+- Increase proof obligations deterministically with risk instead of imposing strict ceremony on every task.
+- Do not invent rationale or store implementation summaries, command output or test-result claims in Context.
+
+## Workflow Direction
+
+- L0 local, reversible work stays on the default Workflow Contract and creates no Delivery Contract.
+- L1 standard long work uses one Delivery Contract, one native Goal, one workspace, targeted repair verification, a same-snapshot Final Gate and Stop freshness.
+- L2 strict work is selected deterministically from declared risk facts or an explicit user upgrade. Public API/schema, persistent data, migrations, security/permission boundaries, irreversible external effects, full-population operations, multiple repositories, or a weakly observable critical user path require strict proof obligations.
+- `requested_level: standard` below the computed risk floor fails compile. Execution cannot downgrade risk.
+- `delivery-contract.yaml` is the only execution and acceptance authority. Optional `source.md` is provenance only. Git history records Contract revisions; there is no Packet revision chain, Source Unit inventory, SFC graph, Wave or second plan.
+- Compile is pure static preflight. It validates strict YAML/schema, unique nested keys, Context/source/path/runner/proof identities, risk floor, UI proof, strict obligations and executable acceptance before product implementation begins.
+- Every compile creates an immutable compiled identity. Editing Contract, referenced Context, source, runner/oracle, verifier or workspace identity invalidates prior derived results and requires recompilation.
+- Targeted `verify` exists only for repair findings and can never accept a task. `final-gate` reruns every Outcome and global Check on one current snapshot and alone may create an accepted Receipt.
+- Stop permits completion only when the newest accepted Receipt is fresh for the exact workspace, Contract, source, selected Context, runner/oracle and verifier identities. `close` requires that fresh acceptance; `abandon` is explicit non-success teardown and preserves `source.md` and `delivery-contract.yaml`.
+
+## Durable-Fact And Authority Rules
+
+- `project_context/**` is authoritative for intended product ownership, architecture, interface, state/recovery and repeat-execution facts; code is authoritative for current implementation; project verification is authoritative for behavior.
+- Product Surface Contract work uses `context_surface_contract` with the existing `contract`, area/subdomain and verification roles; it must not add a new product-surface Context role.
+- The default Workflow reads minimum graph-relevant Context, decides exactly one `Context Delta: none|required`, uses platform-internal planning, implements, verifies, performs Contract Conformance and checks Context drift.
+- Long-Task Workflow inherits Context priority, one `Context Delta`, context-first durable updates and final drift checking. It replaces informal long-task intent and completion with the Delivery Contract and Evidence Kernel, not with task scheduling state.
+- `PROJECT_SPEC.md` owns the stable Harness mental model and design rationale. AGENTS is a startup router/hard-boundary surface, Skills own role procedures, README owns human usage and tests own machine proof.
+
+## Current State
+
+- v0.5.0 defines `long-task-delivery-v1`, the `ty-context long-task` CLI and the explicit `long-task` profile.
+- `ty-context enable long-task` installs the Long-Task Workflow Skill, Stop Hook and required templates. Non-Codex/default consumers do not receive those assets unless enabled.
+- Upgrade safely converts the package-owned `composite-codex` profile selection to `long-task` and removes only package-owned retired assets. Existing user campaign/source/contract files remain ordinary historical files and are never executed, imported or deleted.
+- `composite-campaign` and `composite-long-task` may remain only as lightweight command tombstones that return `retired` and direct users to `ty-context long-task`; they import no retired runtime.
+- `/normal-long-task` is a retirement pointer to `/long-task-workflow`; it no longer creates a checklist, target prompt, Local Audit or a competing authority.
 
 ## Architecture Context
 
-- See `project_context/architecture.md` for the minimal architecture context.
+- See `project_context/architecture.md`.
 
 ## Verification Entry Points
 
-- `npm test --workspace project-tiny-context-harness`
+- `npm run format:check`
+- `npm run typecheck --workspace project-tiny-context-harness`
+- `npm run build --workspace project-tiny-context-harness`
+- `npm run test:delivery-contract --workspace project-tiny-context-harness`
+- `npm run test:long-task-workflow --workspace project-tiny-context-harness`
+- `npm test`
+- `npm run smoke:quickstart`
+- `npm run preview:pack`
+- `npm run launch:check`
 - `node packages/ty-context/dist/cli.js package sync-source`
 - `node packages/ty-context/dist/cli.js package check-source`
 - `make validate-harness`
 - `git diff --check`
 
-## Current State
-
-- vNext implementation is Minimal Context Harness.
-- `init` creates `project_context/context.toml` with one default `main` product/domain area at `project_context/areas/main.md` and a default verification role context at `project_context/areas/main/verification.md`; `upgrade` migrates legacy `project_context/areas/**/*.md` into `project_context/areas/**/*.md` and registers recoverable Context graph files in the manifest.
-- v4 `validate-context` requires `project_context/context.toml`; older config versions should run `upgrade` before relying on the v4 gate.
-- Ad hoc CLI docs and managed Makefile wrappers use the canonical package-qualified entry `npx --yes --package project-tiny-context-harness@latest ty-context`; no legacy CLI alias is retained.
-- Current CLI commands guard unsupported future schema major versions before applying v4 assumptions; write commands fail before modifying files.
-- `validate-context` validates the Context graph structure, role names, paths and field shapes; non-area roles are semantic labels rather than writing-template gates.
-- `validate-code-modularity` reports line count plus function statements, branch complexity, exports, state transitions and module-responsibility risk; structured waivers require owner/date/reason/tracking/expiry. `validate-harness` composes Context recoverability and modularity. Both fixed Plan Validators are removed; ordinary long-task artifacts and Composite authority do not depend on plan matrices or verdict files.
-- Composite Campaign V6 foreground orchestration over the unchanged Contract V3 Slice kernel is the current source direction. `codex-exec-v1` is the formal worker engine; Campaign V6 and Scope Fit V4 are the only automatic multi-SFC schemas, accepted V5 is audit-only and unfinished V5 cannot execute. Independent ephemeral read-only authoring workers hand off through immutable Packets to routed ephemeral workspace-write execution workers; repair uses the same bounded exec engine. Packet preflight must pass before execution, every independent wave worker starts before waiting, and worker exit never creates acceptance. Unknown conflicts are serial; SFC and repair worktrees are detached under a hard six-worktree budget; final acceptance still requires current Slice receipts, Wave Integration Gate, same-snapshot Campaign Final Gate and target integration. V2 source schema, Observation V1, Oracle-signed pass fields, source-regex acceptance proof and the old Markdown/state/evidence/slice/derived runtime remain absent.
-- Campaign V6 also has an explicit local-only `abandon` terminal path. Ordinary `cleanup` is non-destructive for active nonterminal Campaigns and reports that abandon is required; abandon requires no identity-matched live scheduler/worker, removes only the Campaign's package-owned worktrees, local Integration branch and runtime data, preserves tracked source/Packet/Receipt/Gate/event audit data, never changes remote refs, and makes future `run` fail closed.
-- Managed guidance and default Context templates distinguish verification/deployment path facts from test reports and release ledgers: area files own product/domain facts, `verification` role files own repeatable validation paths, and optional `deployment` role files own repeatable deploy/runtime/bootstrap paths.
-- Managed guidance documents the canonical default loop `minimum relevant Context -> Context Delta -> optional Context update -> agent internal plan -> implementation -> project verification -> Conformance/drift`, plus explicit routing to ordinary or Long-Task Workflow Skills. It does not require fixed plan, mapping, matrix or verdict artifacts.
-- Context Schema v4 uses a formal TOML parser, exactly one default area, unique area ids and Context paths, validated default children/roots/front-matter parity, warnings for unregistered Context, unknown-field rejection, realpath containment and lightweight role recoverability checks.
-- Package capability is split into portable core, default Workflow Contract and explicit `composite-codex`; non-Codex consumers do not receive Codex Hooks or Composite CLI/Skills until `ty-context enable composite-codex`, and `disable composite-codex` removes only package-owned Composite surfaces.
-- Direct `npm test` and `test:long-task-workflow` invocations run the complete Long-Task Workflow self-test suite. Package PR/main CI and Trusted Publish CI run it through `npm test` plus typecheck, source drift, `validate-harness` and Quickstart Smoke. Release preparation, local fallback publication, Hooks and consumer Harness gates use default-only paths. Trusted Publish packs once and verifies that same tarball in an empty repository through init, doctor, Context validation and a minimal Contract V3 black box; Release Artifact V2 records tarball, Node, pinned npm and lockfile identities before publication.
-- Old stage-based assets, state files and work-product trees are removed from the current source tree.
-- Historical stage design is summarized in `PROJECT_SPEC.md`; legacy stage semantic migration support has been removed after user migrations completed.
-- Delivery benchmark prompts should evaluate Minimal Context behavior for new Harness runs; old stage-based public result data has been removed.
-
 ## Next Safe Action
 
-- When changing public package behavior, update CLI/source assets, README, package README, PROJECT_SPEC, Context, tests and package source sync together.
-- Run focused tests first, then package source sync/check and context validation before handoff.
+- Keep public behavior aligned across implementation, managed source, package assets, Context, PROJECT_SPEC, English/Chinese README, focused tests, release smoke and tarball contents.
+- Run focused Delivery Contract tests before the full workflow/package/release gates.
 
 ## Context Index
 
 - [harness-package](areas/harness-package.md)
-  - [harness-package context model](areas/harness-package/foundation/context-model.md): read before changing Context types, durable fact placement, fact-source authority, role placement or Context/code/evidence priority.
-- [harness-package workflow contract](areas/harness-package/contracts/workflow-contract.md): read before changing Context Priority, `Context Delta`, default internal planning, explicit long-task routing, Composite handoff or Contract Conformance rules.
-  - [harness-package package-managed surfaces](areas/harness-package/contracts/package-managed-surfaces.md): read before changing managed source, generated Skills, package assets, authoring-only Skills, README/package README boundaries or source sync behavior.
-  - [harness-package Minimal Context rationale](areas/harness-package/decision-rationale/minimal-context.md): read on demand when evaluating phase gates, thick docs, legacy stage workflow, validator-driven workflow or the reasons Minimal Context replaced the old SDLC default.
-  - [harness-package implementation index](areas/harness-package/implementation-index.md): read on demand when locating CLI, sync, validator, migration, asset, Skill, test or release-tool entry points.
-  - [harness-package verification](areas/harness-package/verification.md): read before choosing repeatable validation paths for Harness package or source-workspace Context changes.
+  - [context model](areas/harness-package/foundation/context-model.md)
+  - [workflow contract](areas/harness-package/contracts/workflow-contract.md)
+  - [package-managed surfaces](areas/harness-package/contracts/package-managed-surfaces.md)
+  - [Minimal Context rationale](areas/harness-package/decision-rationale/minimal-context.md)
+  - [implementation index](areas/harness-package/implementation-index.md)
+  - [verification](areas/harness-package/verification.md)
 - [delivery-benchmark](areas/delivery-benchmark.md)
 
 ## Context Graph
 
-- See `project_context/context.toml` for area/context_unit roles, read policy and boundary metadata.
+- See `project_context/context.toml` for registered area/role Context and graph metadata.

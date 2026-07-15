@@ -4,7 +4,7 @@ import { runSync } from "../lib/sync-engine.js";
 export async function enable(args: string[]): Promise<void> {
   const profile = args[0];
   if (!profile || args.length !== 1)
-    throw new Error("usage: ty-context enable composite-codex");
+    throw new Error("usage: ty-context enable long-task");
   const root = process.cwd();
   const result = await enableHarnessProfile(root, profile);
   const sync = await runSync(root);

@@ -8,7 +8,7 @@ import { parseYaml, stringifyYaml } from "./yaml.js";
 export const HARNESS_PROFILES: readonly HarnessProfile[] = [
   "core-portable",
   "workflow-default",
-  "composite-codex",
+  "long-task",
 ];
 
 export function isProfileEnabled(
@@ -56,8 +56,8 @@ export async function disableHarnessProfile(
   projectRoot: string,
   profile: string,
 ): Promise<{ changed: boolean; config: HarnessConfig }> {
-  if (profile !== "composite-codex") {
-    throw new Error("only composite-codex can be explicitly disabled");
+  if (profile !== "long-task") {
+    throw new Error("only long-task can be explicitly disabled");
   }
   await writeConfigIfMissing(projectRoot);
   const relative = await harnessConfigPath(projectRoot);
@@ -81,9 +81,6 @@ export function enabledManagedSkillNames(config: HarnessConfig): Set<string> {
   ]);
   if (isProfileEnabled(config, "workflow-default"))
     names.add("normal-long-task");
-  if (isProfileEnabled(config, "composite-codex")) {
-    names.add("prepare-composite-long-task");
-    names.add("composite-long-task-workflow");
-  }
+  if (isProfileEnabled(config, "long-task")) names.add("long-task-workflow");
   return names;
 }

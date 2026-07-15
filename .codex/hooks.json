@@ -11,6 +11,17 @@
             "statusMessage": "Tiny Context composite completion gate"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs\"",
+            "commandWindows": "powershell -NoProfile -Command \"$r=(git rev-parse --show-toplevel); node (Join-Path $r '.codex/hooks/long-task-hook.mjs')\"",
+            "timeout": 3600,
+            "statusMessage": "Tiny Context long-task completion gate"
+          }
+        ]
       }
     ],
     "PostCompact": [
@@ -24,6 +35,17 @@
             "statusMessage": "Tiny Context composite completion gate"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs\"",
+            "commandWindows": "powershell -NoProfile -Command \"$r=(git rev-parse --show-toplevel); node (Join-Path $r '.codex/hooks/long-task-hook.mjs')\"",
+            "timeout": 3600,
+            "statusMessage": "Tiny Context long-task completion gate"
+          }
+        ]
       }
     ],
     "Stop": [
@@ -35,6 +57,17 @@
             "commandWindows": "powershell -NoProfile -Command \"$r=(git rev-parse --show-toplevel); node (Join-Path $r '.codex/hooks/long-task-hook.mjs')\"",
             "timeout": 3600,
             "statusMessage": "Tiny Context composite completion gate"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs\"",
+            "commandWindows": "powershell -NoProfile -Command \"$r=(git rev-parse --show-toplevel); node (Join-Path $r '.codex/hooks/long-task-hook.mjs')\"",
+            "timeout": 3600,
+            "statusMessage": "Tiny Context long-task completion gate"
           }
         ]
       }

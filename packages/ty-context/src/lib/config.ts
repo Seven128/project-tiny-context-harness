@@ -90,7 +90,7 @@ export function normalizeConfig(
 const VALID_PROFILES = new Set<HarnessProfile>([
   "core-portable",
   "workflow-default",
-  "composite-codex",
+  "long-task",
 ]);
 
 function normalizeProfiles(

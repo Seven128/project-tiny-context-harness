@@ -59,7 +59,7 @@ export async function runSync(projectRoot: string): Promise<SyncReport> {
   for (const managedFile of config.managed_files) {
     await syncManagedFile(projectRoot, root, managedFile, report, config);
   }
-  if (isProfileEnabled(config, "composite-codex")) {
+  if (isProfileEnabled(config, "long-task")) {
     await installLongTaskHooks(projectRoot, report);
   } else {
     await uninstallLongTaskHooks(projectRoot, report);

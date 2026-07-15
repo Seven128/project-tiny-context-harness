@@ -22,7 +22,7 @@ import {
 } from "./fs.js";
 import { harnessConfigPath, harnessRoot } from "./harness-root.js";
 import { legacySdlcHarnessMigration } from "./legacy-sdlc-migration.js";
-import { stringifyYaml } from "./yaml.js";
+import { parseYaml, stringifyYaml } from "./yaml.js";
 
 export type UpgradePlanItemStatus =
   "safe_pending" | "manual_required" | "blocked";
@@ -79,6 +79,20 @@ async function verifyNoop(): Promise<void> {
 
 export const migrations: Migration[] = [
   legacySdlcHarnessMigration,
+  {
+    id: "composite-codex-to-long-task",
+    introducedIn: "0.5.0",
+    description:
+      "Replace the retired composite-codex profile with the Single-Goal long-task profile without importing historical Campaign state.",
+    scope:
+      "<harnessRoot>/config.yaml and package-owned retired Long-Task assets",
+    risk: "safe",
+    manualMessage:
+      "Historical Campaign/source/Contract files remain ordinary user files and are intentionally not imported or executed.",
+    detect: detectCompositeCodexProfile,
+    apply: migrateCompositeCodexProfile,
+    verify: verifyCompositeCodexProfile,
+  },
   {
     id: "schema-v4-config-refresh",
     introducedIn: "0.2.0",
@@ -544,6 +558,78 @@ async function detectDesignMdBaseline(
           "DESIGN.md is missing and can be created with the package baseline.",
         ),
       ];
+}
+
+async function detectCompositeCodexProfile(
+  projectRoot: string,
+  _root: string,
+  migration: string,
+): Promise<UpgradePlanItem[]> {
+  const relative = await harnessConfigPath(projectRoot);
+  const file = path.join(projectRoot, relative);
+  if (!(await pathExists(file))) return [];
+  const raw = parseYaml(await readText(file)) as {
+    profiles?: { enabled?: unknown[] };
+  };
+  return raw.profiles?.enabled?.includes("composite-codex")
+    ? [
+        item(
+          migration,
+          "safe_pending",
+          relative,
+          "The retired composite-codex profile can be safely replaced with long-task; historical user files will be preserved.",
+        ),
+      ]
+    : [];
+}
+
+async function migrateCompositeCodexProfile(
+  projectRoot: string,
+  root: string,
+  report: MigrationReport,
+): Promise<void> {
+  const relative = await harnessConfigPath(projectRoot);
+  const file = path.join(projectRoot, relative);
+  const raw = parseYaml(await readText(file)) as Record<string, unknown>;
+  const profiles =
+    raw.profiles && typeof raw.profiles === "object"
+      ? (raw.profiles as { enabled?: unknown[] })
+      : {};
+  const enabled = Array.isArray(profiles.enabled) ? profiles.enabled : [];
+  profiles.enabled = [
+    ...new Set(
+      enabled.map((profile) =>
+        profile === "composite-codex" ? "long-task" : profile,
+      ),
+    ),
+  ];
+  raw.profiles = profiles;
+  if (await writeTextIfChanged(file, stringifyYaml(raw)))
+    report.changed.push(relative);
+  else report.skipped.push(relative);
+  for (const retired of [
+    path.join(projectRoot, root, "skills", "prepare-composite-long-task"),
+    path.join(projectRoot, root, "skills", "composite-long-task-workflow"),
+    path.join(projectRoot, root, "ty-context-managed", "composite"),
+  ]) {
+    if (!(await pathExists(retired))) continue;
+    await fs.rm(retired, { recursive: true, force: true });
+    report.changed.push(
+      path.relative(projectRoot, retired).split(path.sep).join("/"),
+    );
+  }
+}
+
+async function verifyCompositeCodexProfile(projectRoot: string): Promise<void> {
+  const relative = await harnessConfigPath(projectRoot);
+  const raw = parseYaml(await readText(path.join(projectRoot, relative))) as {
+    profiles?: { enabled?: unknown[] };
+  };
+  const enabled = raw.profiles?.enabled ?? [];
+  if (enabled.includes("composite-codex") || !enabled.includes("long-task"))
+    throw new Error(
+      "composite-codex-to-long-task migration verification failed",
+    );
 }
 
 async function migrateDesignMd(

@@ -1,15 +1,28 @@
 export { commands } from "./commands/index.js";
 export {
-  compileLongTaskContract,
-  readCompiledLongTaskContract,
-  assertLongTaskContractFresh,
-} from "./lib/long-task-contract-compiler.js";
-export { parseLongTaskSources } from "./lib/long-task-contract-parser.js";
-export { validateLongTaskCoverage } from "./lib/long-task-contract-coverage.js";
-export { verifyLongTask } from "./lib/long-task-verifier.js";
-export { runLongTaskFinalGate } from "./lib/long-task-final-gate.js";
-export { scanLongTaskNegativeEvidence } from "./lib/long-task-negative-evidence.js";
-export { stopCheckLongTask } from "./lib/long-task-stop-check.js";
+  compileDeliveryContract,
+  type CompileDeliveryOptionsV1,
+} from "./lib/long-task-delivery-compiler.js";
+export {
+  DELIVERY_CONTRACT_FILE,
+  parseDeliveryContract,
+} from "./lib/long-task-delivery-parser.js";
+export {
+  classifyLongTaskRisk,
+  validateRiskProof,
+} from "./lib/long-task-risk.js";
+export { verifyDeliveryContract } from "./lib/long-task-verifier-v1.js";
+export { runDeliveryFinalGate } from "./lib/long-task-final-v1.js";
+export {
+  closeDeliveryTask,
+  readDeliveryStatus,
+  resumeDeliveryTask,
+  stopCheckDeliveryTask,
+} from "./lib/long-task-status-v1.js";
+export {
+  readCompiledDeliveryContract,
+  readFinalReceipt,
+} from "./lib/long-task-state.js";
 export type {
   HarnessConfig,
   HarnessProfile,
@@ -17,20 +30,18 @@ export type {
   SourceMapping,
 } from "./lib/types.js";
 export type {
-  ProductSourceV3,
-  TechnicalPlanV3,
-  AcceptanceChecklistV3,
-  VerificationSpecV3,
-  CompiledContractV3,
-  CoverageResult,
-} from "./lib/long-task-contract-schema.js";
-export type {
-  LongTaskWorkflowStatus,
-  LongTaskFindingV2,
-  VerificationRunResultV2,
-  CurrentStatusV3,
-  FinalResultV3,
-  BindingResultV3,
-  CounterfactualResultV3,
-  LongTaskEntityResultV3,
-} from "./lib/long-task-run-result.js";
+  CheckExecutionResultV1,
+  CompiledDeliveryContractV1,
+  DeliveryAssertionV1,
+  DeliveryCheckV1,
+  DeliveryContractV1,
+  DeliveryOutcomeV1,
+  EffectiveRiskLevel,
+  FinalReceiptV1,
+  LongTaskFindingV1,
+  LongTaskRiskFacts,
+  ProofSurface,
+  RequestedRiskLevel,
+  RunnerType,
+  VerificationCacheV1,
+} from "./lib/long-task-delivery-types.js";

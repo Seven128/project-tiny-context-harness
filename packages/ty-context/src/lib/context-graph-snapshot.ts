@@ -1,6 +1,6 @@
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
-import { canonicalJson, sha256Hex } from "./composite-campaign-codec.js";
+import { canonicalJson, sha256Hex } from "./strict-codec.js";
 import {
   parseContextManifest,
   type ContextManifest,

@@ -3,8 +3,8 @@ import { runSync } from "../lib/sync-engine.js";
 
 export async function disable(args: string[]): Promise<void> {
   const profile = args[0];
-  if (profile !== "composite-codex" || args.length !== 1) {
-    throw new Error("usage: ty-context disable composite-codex");
+  if (profile !== "long-task" || args.length !== 1) {
+    throw new Error("usage: ty-context disable long-task");
   }
   const root = process.cwd();
   const result = await disableHarnessProfile(root, profile);

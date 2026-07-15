@@ -9,15 +9,9 @@ if (suite !== "default" && suite !== "long-task") {
 }
 
 const testRoot = path.dirname(fileURLToPath(import.meta.url));
-const longTaskTestName = /^(?:codex-|composite-|long-task-|managed-campaign-|model-routing-|prepare-composite-|scope-fit-)/u;
-const retiredRuntimeTests = new Set([
-  "codex-app-server-client-v5.test.mjs",
-  "composite-campaign-host-recovery-v5.test.mjs",
-  "composite-campaign-v5-app-server-black-box.test.mjs",
-]);
+const longTaskTestName = /^long-task-/u;
 const files = (await readdir(testRoot))
   .filter((name) => name.endsWith(".test.mjs"))
-  .filter((name) => !retiredRuntimeTests.has(name))
   .filter((name) => longTaskTestName.test(name) === (suite === "long-task"))
   .sort()
   .map((name) => path.join(testRoot, name));

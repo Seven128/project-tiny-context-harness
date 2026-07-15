@@ -11,8 +11,7 @@ export interface HarnessConfig {
   never_overwrite: string[];
 }
 
-export type HarnessProfile =
-  "core-portable" | "workflow-default" | "composite-codex";
+export type HarnessProfile = "core-portable" | "workflow-default" | "long-task";
 
 export interface HarnessModularityConfig {
   limit?: number;

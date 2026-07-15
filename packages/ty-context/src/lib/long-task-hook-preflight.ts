@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { sha256Hex } from "./composite-campaign-codec.js";
+import { sha256Hex } from "./strict-codec.js";
 
 const POSIX_COMMAND =
   'node "$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs"';

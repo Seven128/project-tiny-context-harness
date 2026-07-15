@@ -1,91 +1,80 @@
 # Architecture Context
 
-This file is the restrained architecture context for the source repository. It is not a full architecture document; keep only durable structure that helps a fresh agent recover system shape quickly.
+This is the restrained architecture map for the Harness source repository. It records durable component and authority boundaries, not implementation narration.
 
 ## System Boundary
 
-- The repository owns the `project-tiny-context-harness` npm package and `ty-context` CLI, package-managed Minimal Context assets, source-sync checks, validators, release automation and delivery benchmark skeleton.
-- Consumer projects receive portable Minimal Context guidance, templates, Context authoring Skills, validator tool and optional GitHub workflow assets. Codex-specific Hooks, Composite Skills and Campaign CLI surfaces are an explicit `composite-codex` profile, not a non-Codex default.
-- Product quality remains outside Harness ownership and belongs to each project’s tests, CI, smoke checks, hidden probes or human acceptance.
+- The repository owns the `project-tiny-context-harness` npm package, `ty-context` CLI, Minimal Context assets, validators, source sync, explicit Long-Task Workflow capability, release automation and delivery benchmark skeleton.
+- Consumer projects receive portable Minimal Context/default Workflow assets. Codex Stop Hook and Long-Task Workflow Skill are selected by the explicit `long-task` profile.
+- Harness may run only verification commands declared in a compiled Delivery Contract. Platform Goal/Turn lifecycle, agents, model routing, branches/worktrees, integration, PRs, CI, deployment and human acceptance remain outside the runtime.
 
 ## Component Map
 
-- CLI command layer: `packages/ty-context/src/commands/**`.
-- Package behavior libraries: `packages/ty-context/src/lib/**`.
-- Managed source assets: `.codex/ty-context-managed/**`.
-- Packaged canonical assets: `packages/ty-context/assets/**`, generated from source mappings.
-- Source workspace Context: `project_context/**`.
-- Composite Campaign V6 orchestration plane: an explicitly invoked, Git-trackable, user-owned campaign containing immutable source provenance, complete Source Coverage V2 with Context resolution, maximal-coherent Scope Fit V4 DAG/global constraints, graph/file-hash Context baseline, immutable V3 Packet revisions, Change Envelopes, deterministic schedules, versioned model-routing policy identity, bounded worker observations, Receipt V3 and verifier-derived integration/final results. It is explicit project data, not a package-managed asset or default plan-state surface. Accepted V5 is audit-only; unfinished V5 cannot enter execution.
-- `codex-exec-v1` worker engine: `codex-exec-client.ts` owns safe argv construction, direct spawn, stdin prompts, bounded JSONL/stdout/stderr, timeout and targeted child-tree termination. Authoring, execution and repair attempts are independent ephemeral processes; AppServer protocol, persistent Thread/Goal/Turn and host reconnect are outside the V6 import graph.
-- Composite execution plane: the Pure Planner computes ready frontier, conflicts, Wave and next mechanical stage without side effects; one foreground scheduler owns state/Git/process sequencing; bounded workers perform only authoring, SFC implementation or repair. Packet plus three Contract V3 inputs and Change Envelope are the authoring/execution handoff. Compiled identity binds three inputs, selected/full Context, Oracle/verifier, exact Hook, workdir and V3 graph. Receipt V3 binds detached base/head commits, changed paths and Packet/Contract/Envelope/final-result hashes. Worker exit cannot issue acceptance.
-- Campaign state store: `campaign-lock-v1` records PID, process-start identity, operation id and start time. Live matching ownership rejects concurrent runs; missing/mismatched identity is stale. Optimistic generations, atomic replacement, append-only events and intents around external effects provide durable-stage recovery without lease renewal, heartbeat, controller host or distributed takeover.
-- Git ownership layer: dirty primary-worktree baselines use a temporary index and hidden checkpoint ref. Each Campaign owns one Integration branch/worktree, at most four current-wave detached SFC worktrees and one reusable detached repair worktree under fixed managed paths. One canonical expected-set calculator feeds bootstrap, reconcile, Wave, repair, status, dry-run and cleanup; inspection/budget checks never delete, and explicit ownership-checked reconciliation is the only orphan-removal path. Missing Slice worktrees resume from a validated committed head/Receipt, while persisted Integration head is authority over physical Git HEAD. The primary worktree/index/branch history are not staged, committed, checked out or rebased by Campaign operations.
-- Verification layering: optional targeted verify is non-accepting; Slice Final runs every frozen Slice Spec; Wave Impact V2 selects qualified affected Specs from the actual merge diff plus binding/verification/contract/Context/global-constraint evidence and falls back to all when uncertain; Campaign Final runs every Slice on one shared snapshot and reuses results only for complete execution-identity equality.
-- Delivery benchmark skeleton: `examples/delivery-benchmark/**`.
+- CLI routing: `packages/ty-context/src/commands/index.ts`; Long-Task commands: `packages/ty-context/src/commands/long-task.ts`; retired names are isolated tombstones.
+- Delivery Contract schema and companion types: `packages/ty-context/src/schemas/long-task-delivery-v1/**` and focused `long-task-delivery-*` libraries.
+- Static compiler: strict YAML parsing, generated `OUT.<outcome-key>` / `CHECK.<outcome-key>.<check-key>` identities, dependency validation, deterministic risk floor, Context/source/runner/path/proof preflight and compiled identity.
+- Evidence Kernel: explicit command runner, workspace snapshot, observation/assertion/population/binding/counterfactual evaluators, outcome/check projection, targeted verifier, same-snapshot Final Gate, final Receipt and freshness evaluation.
+- Recovery state: the user-authored `delivery-contract.yaml` and optional `source.md` live in the chosen workdir; compiled/derived state is verifier-owned temporary data; a narrow active binding identifies the one active task for the current Git worktree.
+- Stop adapter: the package-managed Hook delegates to `ty-context long-task stop-check`; it is a no-op without an active binding and fail-closed when an active result is missing, stale, failing or identity-mismatched.
+- Capability/profile selection: `packages/ty-context/src/lib/profiles.ts`, `commands/enable.ts`, `commands/disable.ts`, config parsing and upgrade migration.
+- Managed source: `.codex/ty-context-managed/**`; packaged assets: `packages/ty-context/assets/**`; mapping authority: `packages/ty-context/source-mappings.yaml`.
+- Source-workspace durable facts: `project_context/**`; full stable workflow design: `PROJECT_SPEC.md`.
 
 ## Data / Control Flow
 
-- `init` creates `project_context/global.md`, `project_context/architecture.md`, `project_context/areas/main.md`, `project_context/areas/main/verification.md`, then runs `sync`.
-- `init` also creates `project_context/context.toml`, declaring the default `main` product/domain area and its default `verification` role context for ordinary projects.
-- CLI write commands check the configured schema major before writing; unsupported future schemas fail fast with the canonical package-qualified `npx` command hint.
-- `upgrade` migrates legacy `project_context/modules/**/*.md` files into `project_context/areas/**/*.md`, creates missing `project_context/context.toml` by registering area Context files, and only rewrites legacy module paths in manifest/global references.
-- `sync` reads `packages/ty-context/assets/**` and writes managed guidance, templates, tools and Skills into the configured harness root.
-- Skill customization uses separate project-local Skills such as `<harnessRoot>/skills/product_plan/SKILL.md`, `<harnessRoot>/skills/uiux_design/SKILL.md` and `<harnessRoot>/skills/development_engineer/SKILL.md`; `sync` overwrites package-managed default `context_*` Skills and leaves those separate local Skills untouched. Project-local Skill front matter `description` trigger keywords are expected to stay aligned with the default Skill trigger intent and the project `AGENTS.md` role-trigger rule.
-- `package sync-source` copies source workspace assets into `packages/ty-context/assets/**`; `package check-source` verifies no drift.
-- `validate-context` uses a formal TOML parser and schema allowlists; it enforces exactly one default area, unique ids/paths, roots/default children, manifest/front-matter parity, safe realpath containment and lightweight recoverability while warning about unregistered Context and rejecting fake verification claims in every verification-class section.
-- `validate-code-modularity` reports line count, per-function statements, branch complexity, export count, state transitions and responsibility risk; structured waivers have owner/date/reason/tracking/expiry. `validate-harness` composes Context and modularity gates.
-- Both fixed Plan Validator surfaces are absent. Default Workflow Contract uses internal planning; ordinary long-task source/checklist/audit artifacts and Composite contracts have their own explicit meanings and do not use a plan matrix or verdict as completion proof.
-- `ty-context composite-long-task ...` remains the strict temporary Slice executor. `compile` freezes active identity; `verify` is optional targeted repair tooling and can only emit `needs_work`; `final-gate` always reruns the full Slice scope and alone emits Slice `accepted`; `stop-check` enforces freshness.
-- Composite runtime is separated into focused components: V3 machine schemas/parser/graph compiler; actual-only Observation V2/operator/population evaluators; binding/proof/entity projectors; obligation-sensitive counterfactual runner; oracle/verifier identity checks; active-contract storage; verifier; bottom-up final gate; workspace freshness; Stop adapter. These components use ordinary project/user permissions and do not require a Rust Helper, OS sandbox, administrator registry, Credential Manager or external audit runner.
-- `/prepare-composite-long-task` is the explicit upstream Campaign V6 capability, not an extension or replacement of the strict Slice executor. Explicit invocation authorizes the complete prepare-and-execute loop: preserve discussed plan and complete source coverage, publish maximal Scope Fit V4, author immutable Packets through read-only Exec workers, require preflight, compute conservative waves, start the bounded detached Wave before waiting, verify every Slice independently, integrate/repair accepted commits and continue until target finalization or a genuine blocker.
-- Preparation and execution remain separate authorities inside one orchestrated loop. Immutable source provenance outranks coordination/audit history; the graph is authoritative; `authoring-packet.json` is the only editable authoring source for an SFC revision; rendered V3 YAML is its deterministic projection. Downstream Packets are authored only after dependencies are integration-verified. Each execution worker receives one frozen Packet/Contract/Envelope handoff and cannot modify graph, other Packets, Context, Integration or Campaign completion state.
-- Authoring workers use the controller profile with `read-only`; SFC and repair workers use the routed profile with `workspace-write`. Exact Sol `xhigh|max|ultra` routes to Sol `medium`; high-and-below/non-Sol/unknown/invalid policy passes through, and explicit target unavailability permits one controller-profile retry. Every retry is a new ephemeral process. Changing user defaults cannot alter the frozen Campaign profiles.
-- Scope Fit V4 chooses SFC count before concurrency is considered. It groups Source Units by independent acceptance outcome, merges related owner/state/data chains, stops only for declared semantic/authority/rollback/decision/capacity boundaries, and rejects obvious same-cohesion over-splitting. A capacity split is legal only after observed truncation, invalid structured output, two fresh authoring repair attempts, actual package file-size overflow or inability to preserve complete unit mapping. The graph may revise before the first execution worker; execution freezes it permanently.
-- Campaign scheduling requires positive independence evidence. Dependency/produced-consumed-contract edges, overlapping implementation or verification paths, shared API/schema/route/runtime/state-machine keys, shared durable Context ownership, Source Unit cohesion, migration sequence, generated artifact, package-manager manifest, environment profile or non-isolatable resource locks force different waves; unknown conflicts default to serial. Stable priority/stable-key/SFC ordering makes scheduler choices deterministic and never turns ordinary ties into user decisions.
-- Recovery is durable-stage-first. The Campaign persists run generation, bounded worker observations including process-start identity, profiles/routing, fixed worktree path, base/head, current final-result and Receipt hashes. PID plus matching start identity is required for live-worker ownership; PID reuse is stale observation and is never killed. A unified dispatch guard checks abort/interrupt/terminal state, lock identity and run generation before and after every worker attempt and before Integration/Gates/finalization. Git/worktree/final-result/Receipt state determines whether to bind/integrate or launch a fresh bounded attempt in the same worktree. Accepted/merged state cannot regress, a unique incomplete Wave restores `active_wave`, and ambiguous recovery fails closed. No physical session is resumed.
-- One accepted Slice is not Campaign completion. Wave impact combines actual merge diff, binding targets, verification inputs, contract keys, Context refs and global constraints; unknown impact falls back to full and global constraints always run. Campaign Final Gate compiles every Slice against one shared Integration snapshot and deduplicates only fully identity-equal Specs on that snapshot before projecting results back. Finalization then resolves the fetched authoritative target, accepts exact commit/tree identity without another Gate, or fully revalidates the current Target snapshot before any acceptance; target delivery races resynchronize rather than guessing success.
-- Integration, detached SFC, reusable detached repair and target worktrees are independent from a frozen base. Ordinary Git conflicts and combined regressions create bounded repair attempts whose envelope is the union of affected Slices. An unprotected remote first receives a non-force fast-forward delivery; only a stable protected/permission rejection may open or reuse a matching open PR. Campaign `accepted` is one transaction across campaign state, accepted final result, target-finalization receipt and event. Owned-asset cleanup is later, idempotent and cannot revoke acceptance.
-- `abandoned` is a distinct terminal V6 state for explicit local teardown of a non-accepted Campaign. It removes only identity-checked package-owned worktrees, the local Campaign Integration branch and temporary runtime files; it preserves tracked Campaign provenance/audit data, never deletes remote refs, and prevents future execution. Ordinary cleanup does not acquire this destructive meaning.
-- Campaign writes fail before mutation on unsupported schema majors, unsafe or escaping paths, redaction violations, immutable revision changes, oversize content or optimistic-concurrency conflicts. `init`, `sync` and `upgrade` install or refresh package capability only; they never create, discover, migrate or scan user campaigns.
-- Default package installation is layered as `core-portable` plus `workflow-default`. `ty-context enable composite-codex` explicitly installs Codex Hooks, Composite Skills and Campaign surfaces; `ty-context disable composite-codex` removes only package-owned Composite Hooks/surfaces and preserves user Hooks. Other agent environments do not receive Codex-only assets by default. CLI operations that create, compile, inspect or run Composite state fail closed until `composite-codex` is enabled; help and the read-only Campaign contract remain discoverable.
+1. `long-task init <workdir>` creates only a `delivery-contract.yaml` template.
+2. `compile` strictly parses the one Contract, computes the risk floor, validates dependencies/Context/source/paths/runners/proof, freezes repository/workdir/source/Contract/selected-Context/verifier/oracle/command identities and activates the worktree binding. It does not invoke a model or modify product code.
+3. The current native Goal reads Contract and relevant Context, selects dependency-ready Outcomes as its internal Frontier, implements in the current workspace and runs project-focused tests.
+4. `verify --outcome/--check` runs the selected checks on a current snapshot and stores repair-only derived status. It cannot emit accepted.
+5. `status` projects each Outcome as `unverified`, `passing_current_snapshot`, `failing_current_snapshot`, `stale` or `blocked_external`. `resume` is a read-only semantic recovery summary with Git/dirty state, findings, ready Outcomes and next safe action.
+6. `final-gate` creates one current snapshot, reruns every global and Outcome Check, deduplicates only fully identical execution identities inside that Gate, evaluates bottom-up and writes an accepted Receipt only when every required result passes.
+7. Workspace, Contract, relevant Context, source, command/oracle or verifier drift makes the result stale immediately. `stop-check` enforces that freshness; `close` clears only a matching fresh binding; `abandon` removes temporary task state without touching Git or authored source/Contract.
+
+## Contract Shape And Risk
+
+- The Contract has `task`, `risk`, `global` and `outcomes`. Product, Technical Boundary and Acceptance remain separate logical authorities inside the one file.
+- Model-authored public identifiers are only task, Outcome and Check keys. Compiler-generated internal identifiers remove the former cross-file reference namespace.
+- Outcome dependencies form the acceptance readiness relation only; they do not prescribe implementation slices or parallel scheduling.
+- Standard proof requires executable falsifiable checks. UI surfaces/controls require `ui_browser` proof. Strict risk triggers compiler-enforced negative, counterfactual, population, security, environment and rollback/recovery obligations as applicable.
+- Actual changed paths outside declared expected/support paths, or a newly touched undeclared Context owner/boundary, return `scope_or_risk_escalation_required`; the current Goal revises and recompiles the Contract.
+
+## Safety And Storage Boundaries
+
+- Contract parsing rejects unknown keys, duplicate keys, YAML aliases/merges/tags and multiple documents.
+- Paths are repository-relative, realpath-contained and protected from absolute/`..`/symlink escape. Commands use argv arrays with no shell and bounded output/time.
+- Worker/Agent prose, handwritten status, command exit alone and historical targeted passes cannot create accepted authority.
+- Final acceptance binds the same snapshot plus Contract, source, selected Context, runner/oracle, verifier, workdir and repository identity. History is not spliced into current proof.
+- Runtime state is ordinary same-user project state, not a hostile-host security boundary. The product does not claim resistance to deliberate same-user/admin deletion, system Hook bypass or kernel compromise.
+
+## Distribution And Migration
+
+- Default profiles remain `core-portable` and `workflow-default`; `long-task` is explicit.
+- `sync` refreshes enabled managed assets only. `upgrade` owns the deterministic safe migration from package-owned `composite-codex` selection/assets to `long-task`.
+- Migration never imports or executes an unfinished historical campaign and never deletes user-authored campaign/source/contract files.
+- Package tarballs contain the Delivery Contract schema, Long-Task Skill/Hook/templates and Evidence Kernel, but no Campaign/AppServer/Codex-worker/SFC/Packet/Wave/worktree scheduler runtime.
 
 ## Design Rationale
 
-- Minimal Context keeps only durable facts that improve recovery, iteration, debug and requirements changes.
-- Architecture deserves one small shared file because system boundaries and component relationships are cross-module facts that code alone can make slow to recover.
-- Context graph support is metadata-first: it improves read targeting and validation without turning Harness into a monorepo dependency analyzer or import/path scanner.
-- Prompt guidance, Context recoverability, Composite gates, source-sync drift and modularity checks stay separate because each proves a different thing. The default agent plan stays internal because a fixed scratch artifact cannot prove behavior and creates synchronization cost.
-- Legacy stage semantic migration support has been removed now that users have completed migration; Schema v4 upgrade migrations remain safe and narrow.
-- Keeping tracked authoring/provenance separate from temporary execution preserves durable source authority without restoring lifecycle state. Keeping the three rendered inputs preserves the intent/obligation/acceptance authority split while Contract V3 replaces V2 and the old state/evidence runtime completely. Before stable release, ordinary user/project state plus hash and freshness checks are the deliberate boundary: they prevent workflow drift without claiming to be a Host trust root.
-- A single worktree-based execution topology keeps serial and parallel SFCs on the same Git, Receipt, merge and recovery path. Positive-evidence scheduling is deliberately conservative because an unnecessary serial wave costs time, while an unsafe parallel wave can invalidate contracts or source coverage. Slice, Wave and Campaign gates remain separate because each proves a different snapshot boundary and historical Slice acceptance cannot prove the merged state.
-- Machine-only safety belongs in process/storage/path/Git/reconciliation layers rather than model ceremony: direct-child ownership, targeted termination, hard worktree budgets, Change Envelopes, Context snapshots, same-snapshot Spec deduplication, transactional accepted authority and accepted-first cleanup close concrete risks without persistent sessions.
-- A clean-start campaign model is safer than importing historical attachments, partial bundles or old workdirs whose authority and schema cannot be proven; complete legacy three-input bundles already have a compatible strict execution route.
+- Keep platform Goal/session lifecycle and Git orchestration outside Harness because duplicating them creates recovery state without improving acceptance evidence.
+- Preserve only an Evidence Kernel that closes concrete false-completion paths: strict preflight, executable assertions, current-snapshot Final Gate and exact freshness.
+- Use one workspace snapshot and one Contract authority so stale or historically spliced evidence cannot silently pass.
 
 ## Constraints And Tradeoffs
 
-- Do not restore lifecycle phases, plan state, stage Skills, work-product trees or phase gates as default package behavior.
-- Do not let `sync` perform semantic project rewriting; it refreshes managed assets only.
-- Do not let `init`, `sync` or `upgrade` create, scan, import, mutate or delete user-owned composite campaigns.
-- Do not retain a V2 source/Observation V1 reader, Superpowers namespace, hidden compatibility alias, Markdown parser, task-state/evidence reader, dual runtime or old-workdir importer for composite Contract V3.
-- Do not accept Oracle-signed status or let a post-compile change to the three inputs, selected Context topology/files, oracle/verifier identity or workdir reuse an old contract or final result.
-- Do not describe project/user-level active state or the Stop Hook as protection against intentional same-user deletion, administrator/Registry/Credential Manager attacks, system-level Hook bypass or kernel/sandbox escape.
-- Do not make Rust Host Helpers, administrator installation, AppContainer/WFP/complex ACL policy, external audit runners, real-consumer release labs or cross-platform release matrices prerequisites for the pre-stable Composite core.
-- Do not store raw command logs, Oracle payloads, mutable verifier evidence or active compiled-contract workdirs in tracked campaigns. V6 may retain bounded worker/worktree/commit observations, immutable receipt hashes, schedule revisions and verifier-derived integration/final results needed for recovery, but worker status cannot override a current Slice, Wave or Campaign gate.
-- Do not store raw Codex JSONL, full stderr, model output, credentials or approval payloads in tracked Campaign state. PID, exit code and bounded process metadata are observations only and cannot substitute for Packet preflight or verifier-owned results.
-- Do not infer process ownership from PID alone, adopt an arbitrary physical Integration HEAD into Campaign authority, reschedule accepted/merged Slices, or let budget/status inspection remove worktrees. Ambiguous worktree, process, Wave or Git identity fails closed.
-- Keep product/design/development Skill customization project-local through separate Skills, not package-managed default Skill edits or override merging.
-- Keep `architecture.md` concise; implementation details belong in code, tests, owner area Context, or verification/deployment role Context only when not obvious and useful for future repeat execution.
+- Do not restore stages, fixed plan files, Source Unit inventories, SFC graphs, Packets, Waves, integration branches, worker attempts, model routing or a second completion authority.
+- Do not auto-trigger Long-Task Workflow from duration/file count/complexity.
+- Do not let targeted verify accept, reuse historical results in Final Gate, or allow Skill prose to weaken compiler-enforced proof.
+- Do not let `init`, `sync` or `upgrade` activate tasks or infer project semantics.
+- Keep `architecture.md` concise; detailed schema and operational usage belong in code/tests/README/PROJECT_SPEC.
 
 ## Verification Implications
 
-- `npm test` and `npm test --workspace project-tiny-context-harness` remain explicit maintainer full-suite gates.
-- Package PR/main CI and Trusted Publish CI run typecheck, the complete default suite, the complete Long-Task Workflow suite, source drift, `validate-harness` and Quickstart Smoke; main additionally runs Pack Preview. Direct `npm test` and `test:long-task-workflow` invocations include Long-Task Workflow self-tests. Release preparation, local fallback publication, Hooks and consumer Harness gates use default-only paths. Trusted Publish packs once and tests that exact tarball in an empty repository through init, doctor, Context validation and a minimal Contract V3 black box. Release Artifact V2 binds tarball SHA-256, Node, pinned npm and lockfile SHA-256 before the same path is published. Consumer Harness gates still do not run package Campaign self-tests.
-- `node packages/ty-context/dist/cli.js package sync-source`
-- `node packages/ty-context/dist/cli.js package check-source`
-- `make validate-harness`
-- `git diff --check`
+- Focused schema/compiler/risk tests prove preflight and deterministic routing.
+- Real temporary-Git black boxes prove the one-workspace verify/final/stale/close loop and platform non-orchestration boundary.
+- Source sync/check, consumer quickstart, exact tarball inspection and full package gates prove distributed-surface alignment.
 
 ## Open Risks
 
-- Context files can become too broad if architecture notes duplicate code or release history.
-- Package assets can drift if source mappings are changed without sync/check.
+- Contract structure cannot prove that an author declared every real product requirement.
+- Package-managed Hooks and state protect against accidental drift, not deliberate same-user/admin or system-level tampering.
+- Snapshotting and complete Final Gates trade runtime cost for trustworthy current evidence; performance budgets keep that cost bounded.
