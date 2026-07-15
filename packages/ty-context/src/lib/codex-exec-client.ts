@@ -8,6 +8,16 @@ import {
 } from "node:child_process";
 import { runGit } from "./composite-campaign-git-baseline.js";
 import type { ModelProfile } from "./codex-model-profile.js";
+import { getProcessStartIdentity, isProcessAlive } from "./process-identity.js";
+import {
+  captureKnownProcessTreeV1,
+  cleanupKnownProcessDescendantsV1,
+  terminateKnownProcessTree,
+  type ProcessTreeCleanupV1,
+  type RecordedProcessIdentityV1,
+} from "./process-tree.js";
+
+export { terminateKnownProcessTree } from "./process-tree.js";
 
 const DEFAULT_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 const DEFAULT_GRACE_MS = 5_000;
@@ -36,7 +46,10 @@ export interface CodexExecInvocation {
   maxStderrBytes?: number;
   stderrFile?: string;
   signal?: AbortSignal;
-  onSpawn?: (pid: number) => void | Promise<void>;
+  onSpawn?: (
+    pid: number,
+    processStartIdentity: string | null,
+  ) => void | Promise<void>;
 }
 
 export interface CodexExecJsonEvent {
@@ -46,6 +59,7 @@ export interface CodexExecJsonEvent {
 export interface CodexExecResult {
   run_id: string;
   pid: number;
+  process_start_identity: string | null;
   argv: string[];
   cwd: string;
   events: CodexExecJsonEvent[];
@@ -59,6 +73,8 @@ export interface CodexExecResult {
   stderr: string;
   started_at: string;
   completed_at: string;
+  remaining_known_descendant_pids: number[];
+  process_tree_cleanup_status: ProcessTreeCleanupV1["process_tree_cleanup_status"];
 }
 
 export interface CodexExecCheckResult {
@@ -169,6 +185,22 @@ export async function runCodexExec(
   });
   const pid = child.pid;
   if (!pid) throw new Error("codex_exec_spawn_missing_pid");
+  const processStartIdentity = await getProcessStartIdentity(pid);
+  const knownProcessTree: RecordedProcessIdentityV1[] = [
+    { pid, process_start_identity: processStartIdentity },
+  ];
+  let tracking = false;
+  const trackProcessTree = async () => {
+    if (tracking || !isProcessAlive(pid)) return;
+    tracking = true;
+    try {
+      knownProcessTree.push(...(await captureKnownProcessTreeV1(pid)));
+    } finally {
+      tracking = false;
+    }
+  };
+  await trackProcessTree();
+  const processTreeTimer = setInterval(() => void trackProcessTree(), 1_000);
 
   const events: CodexExecJsonEvent[] = [];
   const stderrChunks: Buffer[] = [];
@@ -181,6 +213,10 @@ export async function runCodexExec(
   let timedOut = false;
   let interrupted = false;
   let terminationStarted = false;
+  let terminationCleanup: ProcessTreeCleanupV1 = {
+    remaining_known_descendant_pids: [],
+    process_tree_cleanup_status: "clean",
+  };
 
   const requestTermination = async (
     reason: "timeout" | "interrupt" | "output",
@@ -189,12 +225,19 @@ export async function runCodexExec(
     terminationStarted = true;
     timedOut = reason === "timeout";
     interrupted = reason === "interrupt";
-    await terminateChild(child, pid, gracefulMs);
+    terminationCleanup = await terminateChild(
+      child,
+      pid,
+      processStartIdentity,
+      gracefulMs,
+      knownProcessTree,
+    );
   };
 
   const timer = setTimeout(() => void requestTermination("timeout"), timeoutMs);
   const abort = () => void requestTermination("interrupt");
   invocation.signal?.addEventListener("abort", abort, { once: true });
+  if (invocation.signal?.aborted) abort();
 
   const completion = new Promise<{
     code: number | null;
@@ -240,16 +283,23 @@ export async function runCodexExec(
 
   let closed: { code: number | null; signal: NodeJS.Signals | null };
   try {
-    await invocation.onSpawn?.(pid);
+    await invocation.onSpawn?.(pid, processStartIdentity);
     child.stdin.end(invocation.prompt, "utf8");
     closed = await completion;
   } catch (error) {
     child.stdin.destroy();
-    await terminateChild(child, pid, gracefulMs);
+    terminationCleanup = await terminateChild(
+      child,
+      pid,
+      processStartIdentity,
+      gracefulMs,
+      knownProcessTree,
+    );
     await completion.catch(() => undefined);
     throw error;
   } finally {
     clearTimeout(timer);
+    if (processTreeTimer) clearInterval(processTreeTimer);
     invocation.signal?.removeEventListener("abort", abort);
   }
   if (stdoutRemainder.trim() && !stdoutLimited) {
@@ -263,6 +313,18 @@ export async function runCodexExec(
     }
   }
   const stderr = Buffer.concat(stderrChunks).toString("utf8");
+  const descendantCleanup = await cleanupKnownProcessDescendantsV1(
+    pid,
+    knownProcessTree,
+  );
+  const processTreeCleanup =
+    descendantCleanup.process_tree_cleanup_status ===
+      "warning_unverified_remaining" ||
+    descendantCleanup.remaining_known_descendant_pids.length
+      ? descendantCleanup
+      : terminationStarted
+        ? terminationCleanup
+        : descendantCleanup;
   if (invocation.stderrFile) {
     const target = path.resolve(invocation.stderrFile);
     await mkdir(path.dirname(target), { recursive: true });
@@ -271,6 +333,7 @@ export async function runCodexExec(
   return {
     run_id: runId,
     pid,
+    process_start_identity: processStartIdentity,
     argv: redactedCodexExecArgv(invocation.args),
     cwd,
     events,
@@ -284,6 +347,9 @@ export async function runCodexExec(
     stderr,
     started_at: startedAt,
     completed_at: new Date().toISOString(),
+    remaining_known_descendant_pids:
+      processTreeCleanup.remaining_known_descendant_pids,
+    process_tree_cleanup_status: processTreeCleanup.process_tree_cleanup_status,
   };
 }
 
@@ -355,43 +421,38 @@ export async function checkCodexExecV1(options: {
   };
 }
 
-export async function terminateKnownProcessTree(
-  pid: number,
-  force: boolean,
-): Promise<void> {
-  if (!Number.isInteger(pid) || pid <= 0) throw new Error("worker_pid_invalid");
-  if (process.platform === "win32") {
-    const args = ["/PID", String(pid), "/T"];
-    if (force) args.push("/F");
-    await runProbe("taskkill", args, process.cwd(), 15_000);
-    return;
-  }
-  const descendants = await unixDescendants(pid);
-  const signal: NodeJS.Signals = force ? "SIGKILL" : "SIGTERM";
-  for (const candidate of [...descendants.reverse(), pid]) {
-    try {
-      process.kill(candidate, signal);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
-    }
-  }
-}
-
 async function terminateChild(
   child: ChildProcessWithoutNullStreams,
   pid: number,
+  processStartIdentity: string | null,
   gracefulMs: number,
-): Promise<void> {
-  if (child.exitCode !== null || child.signalCode !== null) return;
+  knownProcessTree: RecordedProcessIdentityV1[],
+): Promise<ProcessTreeCleanupV1> {
+  if (child.exitCode !== null || child.signalCode !== null)
+    return cleanupKnownProcessDescendantsV1(pid, knownProcessTree);
+  let cleanup: ProcessTreeCleanupV1 = {
+    remaining_known_descendant_pids: [],
+    process_tree_cleanup_status: "clean",
+  };
   try {
-    if (process.platform === "win32") child.kill("SIGTERM");
-    else await terminateKnownProcessTree(pid, false);
+    cleanup = await terminateKnownProcessTree(
+      pid,
+      processStartIdentity,
+      false,
+      knownProcessTree,
+    );
   } catch {}
   await waitForExit(child, gracefulMs);
-  if (child.exitCode !== null || child.signalCode !== null) return;
+  if (child.exitCode !== null || child.signalCode !== null) return cleanup;
   try {
-    await terminateKnownProcessTree(pid, true);
+    cleanup = await terminateKnownProcessTree(
+      pid,
+      processStartIdentity,
+      true,
+      knownProcessTree,
+    );
   } catch {}
+  return cleanup;
 }
 
 async function waitForExit(
@@ -406,28 +467,6 @@ async function waitForExit(
       resolve();
     });
   });
-}
-
-async function unixDescendants(parent: number): Promise<number[]> {
-  const probe = await runProbe("ps", ["-eo", "pid=,ppid="], process.cwd());
-  if (!probe.ok) return [];
-  const children = new Map<number, number[]>();
-  for (const line of probe.stdout.split(/\r?\n/u)) {
-    const match = /^\s*(\d+)\s+(\d+)\s*$/u.exec(line);
-    if (!match) continue;
-    const pid = Number(match[1]);
-    const ppid = Number(match[2]);
-    children.set(ppid, [...(children.get(ppid) ?? []), pid]);
-  }
-  const found: number[] = [];
-  const visit = (pid: number) => {
-    for (const child of children.get(pid) ?? []) {
-      found.push(child);
-      visit(child);
-    }
-  };
-  visit(parent);
-  return found;
 }
 
 async function runProbe(
@@ -481,7 +520,7 @@ async function runProbe(
     child.once("close", (code) => finish(code));
     child.stdin.end();
     timer = setTimeout(() => {
-      if (child.pid) void terminateKnownProcessTree(child.pid, true);
+      child.kill("SIGKILL");
       finish(null);
     }, timeoutMs);
   });

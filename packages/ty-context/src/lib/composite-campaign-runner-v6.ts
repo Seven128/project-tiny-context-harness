@@ -15,6 +15,11 @@ import { finalizeCampaignV6 } from "./composite-campaign-finalizer-v6.js";
 import { readConflictProfile } from "./composite-campaign-gates-v6.js";
 import { CampaignMutationQueue } from "./composite-campaign-mutation-queue.js";
 import { planCampaignNextActionV6 } from "./composite-campaign-planner-v6.js";
+import {
+  isExecutableSliceStatusV6,
+  transitionSliceStatusV6,
+  transitionWaveStatusV6,
+} from "./composite-campaign-state-transition-v6.js";
 import { reconcileCampaignV6 } from "./composite-campaign-reconcile-v6.js";
 import {
   assertCampaignNotInterruptedV6,
@@ -36,6 +41,12 @@ import {
   runWaveV6,
   scheduleWaveV6,
 } from "./composite-campaign-wave-runner-v6.js";
+import {
+  CampaignRunMetricsV6,
+  writeCampaignRunSummaryV6,
+} from "./composite-campaign-run-metrics-v6.js";
+import { managedCampaignWorktreePathsV1 } from "./composite-campaign-worktree-budget.js";
+import { listRepositoryWorktrees } from "./composite-campaign-worktree.js";
 
 export { dryRunCampaignV6 };
 export type {
@@ -51,26 +62,54 @@ export async function runCampaignV6(
     options.projectRoot,
     options.campaignPath,
   );
+  if (initial.campaign.campaign_status === "abandoned")
+    throw new Error("campaign_abandoned_run_forbidden");
   const lock = await acquireCampaignLockV6(initial.root, "run_v6");
   const abort = new AbortController();
   const forwardAbort = () => abort.abort();
   options.signal?.addEventListener("abort", forwardAbort, { once: true });
   process.once("SIGINT", forwardAbort);
   process.once("SIGTERM", forwardAbort);
+  let metrics: CampaignRunMetricsV6 | null = null;
   try {
     if (initial.campaign.campaign_status === "accepted")
       return resumeAcceptedCampaign(options, lock);
-    await rm(path.join(initial.root, ".interrupt-request.json"), {
-      force: true,
-    });
+    if (await clearStaleInterruptRequestV6(initial.root, lock))
+      throw new CampaignWorkerInterruptedError("campaign_interrupt_requested");
     await startRunGeneration(options, lock);
-    await reconcileCampaignV6({
+    const started = await loadCampaignStoreV6(
+      options.projectRoot,
+      options.campaignPath,
+    );
+    metrics = new CampaignRunMetricsV6(
+      started.campaign.campaign_id,
+      started.campaign.run_generation,
+    );
+    const reconciled = await reconcileCampaignV6({
       projectRoot: options.projectRoot,
       campaignPath: options.campaignPath,
       lock,
     });
+    const recoveryBlockers = [
+      ...reconciled.worker_process_blockers,
+      ...reconciled.managed_worktree_budget.active_worker_worktrees.map(
+        (worktreePath) => `campaign_worker_still_active:${worktreePath}`,
+      ),
+    ];
+    if (recoveryBlockers.length > 0)
+      throw new Error(
+        `campaign_worker_recovery_blocked:${recoveryBlockers.join(",")}`,
+      );
     await freezeOrValidateExecutionEngineV6(options, lock);
+    const integrationPath = managedCampaignWorktreePathsV1(
+      options.projectRoot,
+      started.campaign.campaign_id,
+    ).integration;
+    const integrationExisted = (
+      await listRepositoryWorktrees(options.projectRoot)
+    ).some((worktree) => samePath(worktree.path, integrationPath));
     const integration = await ensureIntegrationWorktreeV6(options, lock);
+    if (!integrationExisted) metrics.increment("worktree_create_count");
     const current = await loadCampaignStoreV6(
       options.projectRoot,
       options.campaignPath,
@@ -85,6 +124,8 @@ export async function runCampaignV6(
       signal: abort.signal,
       codexExecutable: options.codexExecutable,
       repairAttemptBaseline: current.campaign.repair.attempt_count,
+      runGeneration: current.campaign.run_generation,
+      metrics,
     };
     return await foregroundLoop(runtime);
   } catch (error) {
@@ -100,7 +141,29 @@ export async function runCampaignV6(
     options.signal?.removeEventListener("abort", forwardAbort);
     process.removeListener("SIGINT", forwardAbort);
     process.removeListener("SIGTERM", forwardAbort);
+    if (metrics)
+      await writeCampaignRunSummaryV6(initial.root, metrics).catch(
+        () => undefined,
+      );
     await lock.close();
+  }
+}
+
+async function clearStaleInterruptRequestV6(
+  campaignRoot: string,
+  lock: CampaignLockHandleV6,
+): Promise<boolean> {
+  const requestPath = path.join(campaignRoot, ".interrupt-request.json");
+  try {
+    const value = JSON.parse(await readFile(requestPath, "utf8")) as {
+      scheduler_operation_id?: unknown;
+    };
+    if (value.scheduler_operation_id === lock.lock.operation_id) return true;
+    await rm(requestPath, { force: true });
+    return false;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return false;
+    return true;
   }
 }
 
@@ -138,7 +201,11 @@ async function foregroundLoop(
     )
       action = await planReadyWave(loaded.root, loaded.campaign, scope);
     if (action.action === "author_packets") {
-      const authored = await authorCampaignPacketsV6(runtime, action.slice_ids);
+      const authored = runtime.metrics
+        ? await runtime.metrics.measure("packet_authoring_wall_ms", () =>
+            authorCampaignPacketsV6(runtime, action.slice_ids),
+          )
+        : await authorCampaignPacketsV6(runtime, action.slice_ids);
       if (
         !authored.scope_revised &&
         authored.authored_slice_ids.length !== action.slice_ids.length
@@ -148,14 +215,19 @@ async function foregroundLoop(
     }
     if (action.action === "launch_wave") {
       const waveId = await scheduleWaveV6(runtime, action.schedule.slice_ids);
-      await runWaveV6(runtime, waveId);
+      await measuredWave(runtime, waveId);
       continue;
     }
     if (action.action === "resume_wave") {
-      await runWaveV6(runtime, action.wave_id);
+      await measuredWave(runtime, action.wave_id);
       continue;
     }
-    if (action.action === "finalize") return finalizeCampaignV6(runtime);
+    if (action.action === "finalize")
+      return runtime.metrics
+        ? runtime.metrics.measure("finalization_wall_ms", () =>
+            finalizeCampaignV6(runtime),
+          )
+        : finalizeCampaignV6(runtime);
     if (
       action.action === "decision_required" ||
       action.action === "wait_external" ||
@@ -165,6 +237,17 @@ async function foregroundLoop(
     throw new Error(`campaign_v6_inconsistent_state:${action.reason}`);
   }
   throw new Error("campaign_v6_mechanical_step_limit_exceeded");
+}
+
+async function measuredWave(
+  runtime: CampaignWorkerRuntimeV6,
+  waveId: string,
+): Promise<void> {
+  if (runtime.metrics)
+    await runtime.metrics.measure("wave_execution_wall_ms", () =>
+      runWaveV6(runtime, waveId),
+    );
+  else await runWaveV6(runtime, waveId);
 }
 
 async function planReadyWave(
@@ -182,7 +265,7 @@ async function planReadyWave(
       (slice) =>
         !integrated.has(slice.slice_id) &&
         slice.depends_on.every((dependency) => integrated.has(dependency)) &&
-        ["packet_ready", "interrupted", "needs_work", "accepted"].includes(
+        isExecutableSliceStatusV6(
           campaign.slices[slice.slice_id]?.status ?? "planned",
         ),
     )
@@ -259,10 +342,14 @@ async function markCampaignInterrupted(
     async (_root, campaign) => {
       campaign.campaign_status = "interrupted";
       campaign.block_reason = boundedCampaignErrorV6(error);
-      if (campaign.active_wave)
-        campaign.waves[campaign.active_wave].status = "interrupted";
+      if (campaign.active_wave) {
+        const wave = campaign.waves[campaign.active_wave];
+        if (["scheduled", "running", "blocked"].includes(wave.status))
+          wave.status = transitionWaveStatusV6(wave.status, "interrupted");
+      }
       for (const slice of Object.values(campaign.slices))
-        if (slice.status === "worker_running") slice.status = "interrupted";
+        if (slice.status === "worker_running")
+          transitionSliceStatusV6(slice, "interrupted");
       if (campaign.repair.status === "running")
         campaign.repair.status = "interrupted";
       return campaign;
@@ -295,4 +382,12 @@ async function markCampaignBlocked(
       lock,
     );
   } catch {}
+}
+
+function samePath(left: string, right: string): boolean {
+  const normalize = (value: string) => {
+    const resolved = path.resolve(value);
+    return process.platform === "win32" ? resolved.toLowerCase() : resolved;
+  };
+  return normalize(left) === normalize(right);
 }

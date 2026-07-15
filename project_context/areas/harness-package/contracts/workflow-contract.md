@@ -157,6 +157,12 @@ One foreground scheduler may mutate a Campaign. Its `campaign-lock-v1` records P
 
 Campaign mutations retain optimistic generations, atomic write-and-rename and append-only events. Worktree create/remove, worker spawn/exit, Integration update, target delivery and accepted transaction persist bounded intent/result state around their external effects. Restart reconciliation uses fixed worktree paths, Git heads, final results and Receipts. A recorded running child whose process no longer exists becomes interrupted; an already accepted Slice advances mechanically, otherwise a fresh bounded attempt resumes the durable stage in the same worktree. Recovery never resumes a physical session.
 
+Worktree inspection and budget assertion are side-effect free. One canonical V6 expected-set calculator is authoritative across bootstrap, reconcile, Wave, repair, status, dry-run and cleanup. Explicit reconcile may delete only a package-owned orphan that is absent from the canonical/state references, has no identity-matched active worker and is detached or on the Campaign Integration branch. Missing Slice worktrees resume from a validated committed head/Receipt when present. The persisted Integration head is authoritative: bounded unpersisted mechanical effects roll back for idempotent replay, a physical head behind persisted state is restored, and unrelated history or dirty state fails closed rather than being adopted.
+
+Slice transitions are monotonic and centralized. Only packet-ready or repairable states enter a new execution schedule; accepted and merged Slices remain in their original Wave for mechanical Integration/Gate recovery and can never return to worker execution. Reconcile restores one uniquely identifiable incomplete Wave and rejects multiple incomplete Waves. Every worker attempt and every Integration/Gate/finalization dispatch boundary uses one guard covering abort/interrupt request, Campaign terminal state, scheduler lock identity and run generation.
+
+Worker ownership requires both PID and process-start identity. Identity mismatch is stale observation, not termination authority; legacy running observations without an identity are never killed by PID alone. Interrupt and exec cleanup target only identity-confirmed recorded process trees. `abandoned` is an explicit non-accepted terminal state entered by `composite-campaign abandon`; it preserves tracked audit authority while removing only package-owned local worktrees, the local Integration branch and temporary runtime. Ordinary cleanup remains non-destructive for other nonterminal Campaigns.
+
 ## Git Ownership
 
 Campaign owns its managed worktrees and one Integration branch, not the user's primary worktree.
@@ -176,7 +182,7 @@ Workers use safe argv arrays, stdin prompts, explicit cwd/profile/sandbox, bound
 
 The YAML policy routes exact `gpt-5.6-sol` `xhigh`, `max` and `ultra` to `gpt-5.6-sol / medium`. High-and-below, non-Sol, unknown, missing/invalid policy and unavailable target pass through. A target that Codex CLI explicitly reports unavailable permits exactly one recorded controller-profile passthrough retry; other failures do not guess. Campaign freezes engine id/CLI version, policy id/hash, profiles, command-template version, parallelism and sandbox policy.
 
-Authoring allows one initial plus two fresh repair attempts. SFC execution allows one initial plus three fresh repair attempts per run generation in the same detached worktree. Integration repair is serial in one reusable detached worktree. SIGINT/SIGTERM/`interrupt` stops dispatch and terminates only known child process trees before the foreground scheduler returns. Recovery starts from durable stage, never a physical Thread/Goal/Turn.
+Authoring allows one initial plus two fresh repair attempts. SFC execution allows one initial plus three fresh repair attempts per run generation in the same detached worktree. Integration repair is serial in one reusable detached worktree. SIGINT/SIGTERM/`interrupt` stops dispatch before any next attempt and terminates only identity-matched known child process trees before the foreground scheduler returns. Recovery starts from durable stage, never a physical Thread/Goal/Turn.
 
 ## Verification And Completion
 

@@ -8,11 +8,14 @@ import {
   currentHead,
   prepareGitBaseline,
 } from "./composite-campaign-git-baseline.js";
+import { reconcileIntegrationHeadAuthorityV6 } from "./composite-campaign-integration-head-v6.js";
 import type { RunCampaignV6Options } from "./composite-campaign-runner-types-v6.js";
 import {
   createManagedIntegrationWorktreeV1,
   managedCampaignWorktreePathsV1,
+  reconcileManagedCampaignWorktreesV1,
 } from "./composite-campaign-worktree-budget.js";
+import { deriveExpectedManagedWorktreesV6 } from "./composite-campaign-worktree-expectation-v6.js";
 import { mutateCampaignV6 } from "./composite-campaign-v6.js";
 import {
   loadCampaignStoreV6,
@@ -111,24 +114,37 @@ export async function ensureIntegrationWorktreeV6(
     options.projectRoot,
     loaded.campaign.campaign_id,
   );
+  const expected = deriveExpectedManagedWorktreesV6({
+    repositoryRoot: options.projectRoot,
+    campaign: loaded.campaign,
+  });
+  await reconcileManagedCampaignWorktreesV1({
+    repositoryRoot: options.projectRoot,
+    campaignId: loaded.campaign.campaign_id,
+    expectedWorktrees: expected.all,
+  });
   await createManagedIntegrationWorktreeV1({
     repositoryRoot: options.projectRoot,
     campaignId: loaded.campaign.campaign_id,
     baseCommit: loaded.campaign.base_commit!,
     integrationRef: loaded.campaign.integration_ref,
-    expectedWorktrees: [paths.integration],
+    expectedWorktrees: expected.all,
   });
-  const head = await currentHead(paths.integration);
-  if (loaded.campaign.integration_head !== head)
+  const authority = await reconcileIntegrationHeadAuthorityV6({
+    repositoryRoot: options.projectRoot,
+    integrationWorktree: paths.integration,
+    campaign: loaded.campaign,
+  });
+  if (authority.event)
     await mutateCampaignV6(
       options.projectRoot,
       options.campaignPath,
-      "integration_worktree_ready",
-      async (_root, campaign) => {
-        campaign.integration_head = head;
-        return campaign;
-      },
+      authority.event,
+      async (_root, campaign) => campaign,
       lock,
     );
+  const head = await currentHead(paths.integration);
+  if (loaded.campaign.integration_head !== head)
+    throw new Error("campaign_integration_head_drift_during_bootstrap");
   return paths.integration;
 }

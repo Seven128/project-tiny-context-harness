@@ -5,6 +5,7 @@ import {
 } from "./composite-campaign-scheduler.js";
 import type { ConflictProfileV4 } from "./composite-campaign-conflicts.js";
 import type { CampaignV6 } from "./composite-campaign-schema-v6.js";
+import { isExecutableSliceStatusV6 } from "./composite-campaign-state-transition-v6.js";
 import type { ScopeFitResultV4 } from "./scope-fit-v4.js";
 
 export type CampaignPlannerActionV6 =
@@ -23,12 +24,31 @@ export function planCampaignNextActionV6(options: {
   readyConflictProfiles?: Record<string, ConflictProfileV4>;
 }): CampaignPlannerActionV6 {
   const { campaign, scope } = options;
+  const incompleteWaves = Object.entries(campaign.waves)
+    .filter(([, wave]) => wave.status !== "integration_verified")
+    .map(([waveId]) => waveId)
+    .sort(asciiCompare);
+  if (incompleteWaves.length > 1)
+    return {
+      action: "inconsistent_state",
+      reason: "multiple_incomplete_waves",
+    };
   if (campaign.active_wave) {
     const wave = campaign.waves[campaign.active_wave];
     if (!wave)
       return { action: "inconsistent_state", reason: "active_wave_missing" };
+    if (
+      incompleteWaves.length !== 1 ||
+      incompleteWaves[0] !== campaign.active_wave
+    )
+      return {
+        action: "inconsistent_state",
+        reason: "active_wave_not_unique_incomplete_wave",
+      };
     return { action: "resume_wave", wave_id: campaign.active_wave };
   }
+  if (incompleteWaves.length === 1)
+    return { action: "resume_wave", wave_id: incompleteWaves[0] };
   if (campaign.campaign_status === "decision_blocked")
     return {
       action: "decision_required",
@@ -56,6 +76,15 @@ export function planCampaignNextActionV6(options: {
     return Object.keys(campaign.slices).length
       ? { action: "finalize" }
       : { action: "inconsistent_state", reason: "campaign_scope_empty" };
+  if (
+    Object.values(campaign.slices).some((slice) =>
+      ["accepted", "merged"].includes(slice.status),
+    )
+  )
+    return {
+      action: "inconsistent_state",
+      reason: "accepted_or_merged_slice_missing_incomplete_wave",
+    };
   const frontier = computeReadyFrontierV4(scope, integrated);
   if (!frontier.length)
     return {
@@ -77,7 +106,7 @@ export function planCampaignNextActionV6(options: {
   if (missingPackets.length)
     return { action: "author_packets", slice_ids: missingPackets };
   const executable = frontier.filter((item) =>
-    ["packet_ready", "interrupted", "needs_work", "accepted"].includes(
+    isExecutableSliceStatusV6(
       campaign.slices[item.slice_id]?.status ?? "planned",
     ),
   );
@@ -105,4 +134,8 @@ export function planCampaignNextActionV6(options: {
       max_concurrency: campaign.execution_engine.max_parallelism.sfc,
     }),
   };
+}
+
+function asciiCompare(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0;
 }

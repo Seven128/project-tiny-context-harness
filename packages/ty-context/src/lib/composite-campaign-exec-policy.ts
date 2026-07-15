@@ -5,6 +5,7 @@ import {
   type CodexModelRoutingPolicyV1,
 } from "./codex-model-routing-policy.js";
 import {
+  effortRank,
   isKnownEffort,
   type ModelProfile,
   type ModelRoutingReason,
@@ -51,8 +52,13 @@ export function routeCodexExecProfileV1(
       policy,
       policySha256,
     );
+  const canonicalControllerModel = canonicalModel(
+    authoring.model,
+    policy.aliases,
+  );
   if (
-    authoring.model !== rule.controller_family ||
+    canonicalControllerModel !== rule.controller_family ||
+    effortRank(authoring.effort) < effortRank(rule.minimum_effort) ||
     !rule.accepted_efforts.includes(authoring.effort)
   )
     return decision(
@@ -78,6 +84,19 @@ export function routeCodexExecProfileV1(
     policy,
     policySha256,
   );
+}
+
+function canonicalModel(
+  model: string,
+  aliases: Readonly<Record<string, string>>,
+): string {
+  let current = model;
+  const visited = new Set<string>();
+  while (Object.hasOwn(aliases, current) && !visited.has(current)) {
+    visited.add(current);
+    current = aliases[current];
+  }
+  return current;
 }
 
 export function isCodexTargetUnavailable(output: string): boolean {

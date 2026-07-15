@@ -28,6 +28,7 @@ import {
   preflightCampaignPacketV6,
   renderCampaignPacketV6,
 } from "../lib/composite-runtime-v6/campaign-packet-store.js";
+import { abandonCampaignV6 } from "../lib/composite-campaign-abandon-v6.js";
 
 const RETIRED_RUNTIME_COMMANDS = new Set([
   "advance",
@@ -140,6 +141,7 @@ async function execute(
   }
   if (command === "workers") return listCampaignWorkersV6(root, campaignPath);
   if (command === "interrupt") return interruptCampaignV6(root, campaignPath);
+  if (command === "abandon") return abandonCampaignV6(root, campaignPath);
   if (command === "cleanup") return cleanupCampaignV6(root, campaignPath);
   throw new Error(`Unknown composite-campaign subcommand: ${command}`);
 }
@@ -158,7 +160,9 @@ function allowedOptions(command: string): string[] {
     return [...common, "--campaign", "--slice", "--input"];
   if (command === "render" || command === "preflight")
     return [...common, "--campaign", "--slice"];
-  if (["status", "workers", "interrupt", "cleanup"].includes(command))
+  if (
+    ["status", "workers", "interrupt", "abandon", "cleanup"].includes(command)
+  )
     return [...common, "--campaign"];
   if (command === "run")
     return [
@@ -229,7 +233,7 @@ function help(): void {
   apply-scope --campaign <path> --input <scope-v4.json> [--coverage <source-coverage.json>]
   apply-packet --campaign <path> --slice <id> --input <packet-v3.json>
   render|preflight --campaign <path> --slice <id>
-  status|workers|interrupt|cleanup --campaign <path>
+  status|workers|interrupt|abandon|cleanup --campaign <path>
   run --campaign <path> [--controller-model <id> --controller-effort <effort>] [--dry-run]
   exec-check [--json]
   model-routing [--controller-model <id> --controller-effort <effort>] [--json]

@@ -14,6 +14,7 @@ import {
 } from "./composite-campaign-target-receipts.js";
 import { assertTargetFinalizationReceiptCurrent } from "./composite-campaign-target-freshness.js";
 import { cleanupManagedCampaignWorktreesV1 } from "./composite-campaign-worktree-budget.js";
+import { deriveExpectedManagedWorktreesV6 } from "./composite-campaign-worktree-expectation-v6.js";
 import {
   loadCampaignStoreV6,
   type CampaignLockHandleV6,
@@ -155,6 +156,10 @@ export async function continueAcceptedCleanupV6(options: {
   );
   let cleanupError: string | null = null;
   try {
+    deriveExpectedManagedWorktreesV6({
+      repositoryRoot: options.projectRoot,
+      campaign: loaded.campaign,
+    });
     await cleanupManagedCampaignWorktreesV1({
       repositoryRoot: options.projectRoot,
       campaignId: loaded.campaign.campaign_id,

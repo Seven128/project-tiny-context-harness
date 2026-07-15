@@ -8,12 +8,14 @@ import { routeCodexExecProfileV1 } from "./composite-campaign-exec-policy.js";
 import { readConflictProfile } from "./composite-campaign-gates-v6.js";
 import { planCampaignNextActionV6 } from "./composite-campaign-planner-v6.js";
 import type { CampaignV6 } from "./composite-campaign-schema-v6.js";
+import { isExecutableSliceStatusV6 } from "./composite-campaign-state-transition-v6.js";
 import {
-  inspectManagedWorktreeBudgetV1,
+  inspectManagedWorktreeStateV1,
   managedCampaignWorktreePathsV1,
   managedSliceWorktreePathV1,
   repositoryRelativeWorktreePathV1,
 } from "./composite-campaign-worktree-budget.js";
+import { deriveExpectedManagedWorktreesV6 } from "./composite-campaign-worktree-expectation-v6.js";
 import { loadCampaignStoreV6 } from "./composite-runtime-v6/campaign-store.js";
 import { parseCurrentScopeV6 } from "./composite-runtime-v6/campaign-packet-io.js";
 import type { ModelProfile } from "./codex-model-profile.js";
@@ -29,6 +31,8 @@ export async function dryRunCampaignV6(options: {
     options.campaignPath,
   );
   const campaign = loaded.campaign;
+  if (campaign.campaign_status === "abandoned")
+    throw new Error("campaign_abandoned_run_forbidden");
   const profiles = resolveDryRunProfiles(campaign, options.controllerProfile);
   const scope = parseCurrentScopeV6(
     await readFile(path.join(loaded.root, "scope-fit.json"), "utf8"),
@@ -62,11 +66,15 @@ export async function dryRunCampaignV6(options: {
       ),
     ]),
   );
-  const budget = await inspectManagedWorktreeBudgetV1({
+  const canonicalExpected = deriveExpectedManagedWorktreesV6({
+    repositoryRoot: options.projectRoot,
+    campaign,
+  });
+  const budget = await inspectManagedWorktreeStateV1({
     repositoryRoot: options.projectRoot,
     campaignId: campaign.campaign_id,
     expectedWorktrees: [
-      paths.integration,
+      ...canonicalExpected.all,
       ...readyWave.map((sliceId) =>
         managedSliceWorktreePathV1(
           options.projectRoot,
@@ -154,7 +162,9 @@ async function dryRunReadyWave(
     (slice) =>
       !integrated.has(slice.slice_id) &&
       slice.depends_on.every((dependency) => integrated.has(dependency)) &&
-      campaign.slices[slice.slice_id]?.status === "packet_ready",
+      isExecutableSliceStatusV6(
+        campaign.slices[slice.slice_id]?.status ?? "planned",
+      ),
   );
   const profiles = await Promise.all(
     candidates.map(

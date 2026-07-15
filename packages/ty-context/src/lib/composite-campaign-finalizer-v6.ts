@@ -16,6 +16,7 @@ import {
 } from "./composite-campaign-runner-types-v6.js";
 import { finalizeCampaignTarget } from "./composite-campaign-target-finalization.js";
 import {
+  inspectManagedWorktreeStateV1,
   managedCampaignWorktreePathsV1,
   resetManagedRepairWorktreeV1,
 } from "./composite-campaign-worktree-budget.js";
@@ -45,21 +46,27 @@ export async function finalizeCampaignV6(
       runtime.projectRoot,
       runtime.campaignPath,
     );
+    await assertCampaignNotInterruptedV6(runtime);
     const authority = await loadCampaignGateAuthorityV6(
       loaded.root,
       loaded.campaign,
     );
-    const gate = await runCampaignFinalGate({
-      campaignRoot: loaded.root,
-      campaignId: loaded.campaign.campaign_id,
-      integrationWorktree: runtime.integrationWorktree,
-      integrationBranch: loaded.campaign.integration_ref,
-      sourcePlanSha256: loaded.campaign.source_plan_sha256,
-      sourceCoverageFile: path.join(loaded.root, "source-coverage.json"),
-      sourceCoverageComplete: authority.source_coverage_complete,
-      slices: authority.slice_inputs,
-      globalConstraints: authority.global_constraints,
-    });
+    const runGate = () =>
+      runCampaignFinalGate({
+        campaignRoot: loaded.root,
+        campaignId: loaded.campaign.campaign_id,
+        integrationWorktree: runtime.integrationWorktree,
+        integrationBranch: loaded.campaign.integration_ref,
+        sourcePlanSha256: loaded.campaign.source_plan_sha256,
+        sourceCoverageFile: path.join(loaded.root, "source-coverage.json"),
+        sourceCoverageComplete: authority.source_coverage_complete,
+        slices: authority.slice_inputs,
+        globalConstraints: authority.global_constraints,
+      });
+    const gate = runtime.metrics
+      ? await runtime.metrics.measure("gate_wall_ms", runGate)
+      : await runGate();
+    await assertCampaignNotInterruptedV6(runtime);
     if (gate.workflow_status === "needs_work") {
       await runRepairWithinBudgetV6(runtime, {
         kind: "campaign_final_regression",
@@ -79,6 +86,7 @@ async function finalizeTargetV6(
   loaded: Awaited<ReturnType<typeof loadCampaignStoreV6>>,
   authority: Awaited<ReturnType<typeof loadCampaignGateAuthorityV6>>,
 ): Promise<RunCampaignResultV6 | null> {
+  await assertCampaignNotInterruptedV6(runtime);
   const campaign = loaded.campaign;
   const paths = managedCampaignWorktreePathsV1(
     runtime.projectRoot,
@@ -105,6 +113,7 @@ async function finalizeTargetV6(
       globalConstraints: authority.global_constraints,
     },
     targetWorktreePreparer: async (baseCommit) => {
+      await assertCampaignNotInterruptedV6(runtime);
       assertNoActiveSliceWorkers(campaign);
       const worktree = await resetManagedRepairWorktreeV1({
         repositoryRoot: runtime.projectRoot,
@@ -112,6 +121,8 @@ async function finalizeTargetV6(
         baseCommit,
         expectedWorktrees: [paths.integration, paths.repair],
       });
+      if (!worktree.resumed)
+        runtime.metrics?.increment("worktree_create_count");
       return { path: worktree.path };
     },
   });
@@ -122,11 +133,18 @@ async function finalizeTargetV6(
       lock: runtime.lock,
       receipt: finalized.receipt,
     });
+    const cleanupCount = (
+      await inspectManagedWorktreeStateV1({
+        repositoryRoot: runtime.projectRoot,
+        campaignId: campaign.campaign_id,
+      })
+    ).actual_managed_worktrees.length;
     const accepted = await continueAcceptedCleanupV6({
       projectRoot: runtime.projectRoot,
       campaignPath: runtime.campaignPath,
       lock: runtime.lock,
     });
+    runtime.metrics?.increment("worktree_remove_count", cleanupCount);
     const current = await loadCampaignStoreV6(
       runtime.projectRoot,
       runtime.campaignPath,

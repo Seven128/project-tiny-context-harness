@@ -5,7 +5,12 @@ import {
   parseStrictYaml,
   sha256Hex,
 } from "./composite-campaign-codec.js";
-import type { ModelRoutingReason } from "./codex-model-profile.js";
+import {
+  effortRank,
+  isKnownEffort,
+  MODEL_ROUTING_REASONS,
+  type ModelRoutingReason,
+} from "./codex-model-profile.js";
 
 export interface CodexModelRoutingPolicyV1 {
   schema_version: "model-routing-policy-v1";
@@ -132,6 +137,7 @@ function validatePolicy(value: unknown): CodexModelRoutingPolicyV1 {
     text(alias, "alias");
     text(target, "alias_target");
   }
+  assertAliasGraph(aliases as Record<string, string>);
   if (!Array.isArray(root.rules) || root.rules.length !== 1) invalid("rules");
   for (const value of root.rules) {
     const rule = object(value, "rule", [
@@ -143,33 +149,68 @@ function validatePolicy(value: unknown): CodexModelRoutingPolicyV1 {
       "exact_reasons",
       "successor_reason",
     ]);
-    for (const key of [
-      "controller_family",
-      "minimum_effort",
-      "successor_reason",
-    ] as const)
+    for (const key of ["controller_family", "minimum_effort"] as const)
       text(rule[key], key);
+    if (
+      typeof rule.minimum_effort !== "string" ||
+      !isKnownEffort(rule.minimum_effort)
+    )
+      invalid("minimum_effort");
+    if (
+      typeof rule.successor_reason !== "string" ||
+      !MODEL_ROUTING_REASONS.includes(
+        rule.successor_reason as ModelRoutingReason,
+      )
+    )
+      invalid("successor_reason");
     if (rule.successor_allowed !== true) invalid("successor_allowed");
     if (
       !Array.isArray(rule.accepted_efforts) ||
       rule.accepted_efforts.length === 0 ||
-      rule.accepted_efforts.some((item) => typeof item !== "string") ||
+      rule.accepted_efforts.some(
+        (item) =>
+          typeof item !== "string" ||
+          !isKnownEffort(item) ||
+          effortRank(item) < effortRank(rule.minimum_effort as string),
+      ) ||
       new Set(rule.accepted_efforts).size !== rule.accepted_efforts.length ||
       !rule.accepted_efforts.includes(rule.minimum_effort)
     )
       invalid("accepted_efforts");
     const execution = object(rule.execution, "execution", ["model", "effort"]);
     text(execution.model, "execution.model");
-    text(execution.effort, "execution.effort");
+    if (
+      typeof execution.effort !== "string" ||
+      !isKnownEffort(execution.effort)
+    )
+      invalid("execution.effort");
     const reasons = object(
       rule.exact_reasons,
       "exact_reasons",
       rule.accepted_efforts as string[],
     );
-    for (const effort of rule.accepted_efforts as string[])
-      text(reasons[effort], `reason:${effort}`);
+    for (const effort of rule.accepted_efforts as string[]) {
+      const reason = reasons[effort];
+      if (
+        typeof reason !== "string" ||
+        !MODEL_ROUTING_REASONS.includes(reason as ModelRoutingReason)
+      )
+        invalid(`reason:${effort}`);
+    }
   }
   return root as unknown as CodexModelRoutingPolicyV1;
+}
+
+function assertAliasGraph(aliases: Record<string, string>): void {
+  for (const alias of Object.keys(aliases)) {
+    const visited = new Set<string>();
+    let current = alias;
+    while (Object.hasOwn(aliases, current)) {
+      if (visited.has(current)) invalid(`alias_cycle:${alias}`);
+      visited.add(current);
+      current = aliases[current];
+    }
+  }
 }
 
 function object(

@@ -20,8 +20,8 @@ import {
   managedCampaignWorktreePathsV1,
   removeManagedWorktreeV1,
   resetManagedRepairWorktreeV1,
-  resolveManagedWorktreePathV1,
 } from "./composite-campaign-worktree-budget.js";
+import { deriveExpectedManagedWorktreesV6 } from "./composite-campaign-worktree-expectation-v6.js";
 import {
   runRepairExecWorkerV6,
   CampaignWorkerInterruptedError,
@@ -35,6 +35,7 @@ import type {
 import { currentPacketRevisionPathV6 } from "./composite-runtime-v6/campaign-packet-io.js";
 import { loadCampaignStoreV6 } from "./composite-runtime-v6/campaign-store.js";
 import { mutateCampaignV6 } from "./composite-campaign-v6.js";
+import { assertCampaignDispatchAllowedV6 } from "./composite-campaign-dispatch-v6.js";
 
 export interface SerializedRepairRequestV6 {
   kind: Exclude<CampaignRepairV6["kind"], null>;
@@ -75,21 +76,17 @@ export async function runSerializedRepairV6(
     runtime.projectRoot,
     loaded.campaign.campaign_id,
   );
+  const canonicalExpected = deriveExpectedManagedWorktreesV6({
+    repositoryRoot: runtime.projectRoot,
+    campaign: loaded.campaign,
+  });
   const repair = await resetManagedRepairWorktreeV1({
     repositoryRoot: runtime.projectRoot,
     campaignId: loaded.campaign.campaign_id,
     baseCommit: integrationHead,
-    expectedWorktrees: [
-      paths.integration,
-      ...Object.values(loaded.campaign.slices)
-        .map((slice) => slice.worktree_path)
-        .filter((value): value is string => Boolean(value))
-        .map((value) =>
-          resolveManagedWorktreePathV1(runtime.projectRoot, value),
-        ),
-      paths.repair,
-    ],
+    expectedWorktrees: [...canonicalExpected.all, paths.repair],
   });
+  if (!repair.resumed) runtime.metrics?.increment("worktree_create_count");
   const envelopes = await loadAffectedEnvelopes(
     loaded.root,
     loaded.campaign,
@@ -174,7 +171,7 @@ export async function runSerializedRepairV6(
   if (!Number.isInteger(limit) || limit < 1)
     throw new Error("repair_attempt_limit_exceeded");
   for (let attempt = 1; attempt <= limit; attempt += 1) {
-    if (runtime.signal?.aborted) throw new CampaignWorkerInterruptedError();
+    await assertRepairDispatch(runtime);
     const prompt = repairPrompt({
       campaign: frozen,
       request,
@@ -192,6 +189,7 @@ export async function runSerializedRepairV6(
       prompt,
     });
     if (result.interrupted) throw new CampaignWorkerInterruptedError();
+    await assertRepairDispatch(runtime);
     if (
       !fallbackUsed &&
       (profile.model !== authoring.model ||
@@ -214,6 +212,7 @@ export async function runSerializedRepairV6(
         },
         runtime.lock,
       );
+      await assertRepairDispatch(runtime);
       continue;
     }
     try {
@@ -288,6 +287,7 @@ export async function runSerializedRepairV6(
         campaignId: frozen.campaign_id,
         worktreePath: repair.path,
       });
+      runtime.metrics?.increment("worktree_remove_count");
       await mutateCampaignV6(
         runtime.projectRoot,
         runtime.campaignPath,
@@ -435,4 +435,17 @@ function errorText(error: unknown): string {
 }
 function bounded(value: string): string {
   return value.replace(/[\r\n]+/gu, " ").slice(0, 500) || "repair_needs_work";
+}
+
+async function assertRepairDispatch(
+  runtime: CampaignWorkerRuntimeV6,
+): Promise<void> {
+  await assertCampaignDispatchAllowedV6({
+    projectRoot: runtime.projectRoot,
+    campaignPath: runtime.campaignPath,
+    campaignRoot: runtime.campaignRoot,
+    lock: runtime.lock,
+    expectedRunGeneration: runtime.runGeneration,
+    signal: runtime.signal,
+  });
 }

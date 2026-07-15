@@ -25,7 +25,10 @@ export interface ManagedWorktreeBudgetStatusV1 {
   managed_worktree_budget: typeof MANAGED_WORKTREE_BUDGET_V1;
   expected_worktrees: string[];
   actual_managed_worktrees: string[];
+  missing_expected_worktrees: string[];
   orphan_managed_worktrees: string[];
+  active_worker_worktrees: string[];
+  ownership_errors: string[];
 }
 
 export interface ManagedWorktreeV1 {
@@ -97,12 +100,11 @@ export function resolveManagedWorktreePathV1(
   return candidate;
 }
 
-export async function inspectManagedWorktreeBudgetV1(options: {
+export async function inspectManagedWorktreeStateV1(options: {
   repositoryRoot: string;
   campaignId: string;
   expectedWorktrees?: string[];
   activeWorkerPaths?: string[];
-  reconcileOrphans?: boolean;
 }): Promise<ManagedWorktreeBudgetStatusV1> {
   const repository = path.resolve(options.repositoryRoot);
   const paths = managedCampaignWorktreePathsV1(repository, options.campaignId);
@@ -114,24 +116,16 @@ export async function inspectManagedWorktreeBudgetV1(options: {
     paths.root,
     options.activeWorkerPaths ?? [],
   );
-  let actual = (await listRepositoryWorktrees(repository)).filter((item) =>
+  const actual = (await listRepositoryWorktrees(repository)).filter((item) =>
     strictlyInside(paths.root, item.path),
   );
-  let orphan = actual.filter((item) => !expected.has(normalizePath(item.path)));
-  if (options.reconcileOrphans) {
-    for (const item of orphan) {
-      if (active.has(normalizePath(item.path))) continue;
-      assertPackageOwnedRecord(paths, item, options.campaignId);
-      await runGit(repository, ["worktree", "remove", "--force", item.path], {
-        timeoutMs: 120_000,
-      });
-    }
-    await runGit(repository, ["worktree", "prune", "--expire", "now"]);
-    actual = (await listRepositoryWorktrees(repository)).filter((item) =>
-      strictlyInside(paths.root, item.path),
-    );
-    orphan = actual.filter((item) => !expected.has(normalizePath(item.path)));
-  }
+  const actualSet = new Set(actual.map((item) => normalizePath(item.path)));
+  const orphan = actual.filter(
+    (item) => !expected.has(normalizePath(item.path)),
+  );
+  const ownershipErrors = actual.flatMap((item) =>
+    packageOwnedRecordErrors(paths, item, options.campaignId),
+  );
   return {
     managed_worktree_budget: MANAGED_WORKTREE_BUDGET_V1,
     expected_worktrees: [...expected]
@@ -140,10 +134,28 @@ export async function inspectManagedWorktreeBudgetV1(options: {
     actual_managed_worktrees: actual
       .map((item) => repositoryRelativeWorktreePathV1(repository, item.path))
       .sort(asciiCompare),
+    missing_expected_worktrees: [...expected]
+      .filter((item) => !actualSet.has(item))
+      .map((item) => repositoryRelativeWorktreePathV1(repository, item))
+      .sort(asciiCompare),
     orphan_managed_worktrees: orphan
       .map((item) => repositoryRelativeWorktreePathV1(repository, item.path))
       .sort(asciiCompare),
+    active_worker_worktrees: [...active]
+      .filter((item) => actualSet.has(item))
+      .map((item) => repositoryRelativeWorktreePathV1(repository, item))
+      .sort(asciiCompare),
+    ownership_errors: [...new Set(ownershipErrors)].sort(asciiCompare),
   };
+}
+
+export async function inspectManagedWorktreeBudgetV1(options: {
+  repositoryRoot: string;
+  campaignId: string;
+  expectedWorktrees?: string[];
+  activeWorkerPaths?: string[];
+}): Promise<ManagedWorktreeBudgetStatusV1> {
+  return inspectManagedWorktreeStateV1(options);
 }
 
 export async function assertManagedWorktreeBudgetV1(options: {
@@ -163,9 +175,18 @@ export async function assertManagedWorktreeBudgetV1(options: {
     options.repositoryRoot,
     options.campaignId,
   );
-  for (const item of expected)
-    if (!strictlyInside(paths.root, item))
+  let integrationCount = 0;
+  let repairCount = 0;
+  for (const item of expected) {
+    if (samePath(item, paths.integration)) integrationCount += 1;
+    else if (samePath(item, paths.repair)) repairCount += 1;
+    else if (!strictlyInside(paths.sfcRoot, item))
       throw new Error("managed_worktree_expected_path_not_owned");
+  }
+  if (integrationCount > MANAGED_WORKTREE_BUDGET_V1.integration_worktrees)
+    throw new Error("managed_worktree_integration_budget_exceeded");
+  if (repairCount > MANAGED_WORKTREE_BUDGET_V1.repair_worktrees)
+    throw new Error("managed_worktree_repair_budget_exceeded");
   const sfcCount = [...expected].filter((item) =>
     strictlyInside(paths.sfcRoot, item),
   ).length;
@@ -173,18 +194,77 @@ export async function assertManagedWorktreeBudgetV1(options: {
     throw new Error("managed_worktree_sfc_budget_exceeded");
   if (expected.size > MANAGED_WORKTREE_BUDGET_V1.max_total_worktrees)
     throw new Error("managed_worktree_total_budget_exceeded");
-  const status = await inspectManagedWorktreeBudgetV1({
-    ...options,
+  const status = await inspectManagedWorktreeStateV1({
+    repositoryRoot: options.repositoryRoot,
+    campaignId: options.campaignId,
     expectedWorktrees: [...expected],
-    reconcileOrphans: true,
+    activeWorkerPaths: options.activeWorkerPaths,
   });
+  if (status.ownership_errors.length)
+    throw new Error(
+      `managed_worktree_ownership_error:${status.ownership_errors[0]}`,
+    );
+  const records = (
+    await listRepositoryWorktrees(options.repositoryRoot)
+  ).filter((item) => strictlyInside(paths.root, item.path));
+  const requested = options.requestedWorktree
+    ? path.resolve(options.requestedWorktree)
+    : null;
+  const requestedMissing =
+    requested && !records.some((item) => samePath(item.path, requested))
+      ? 1
+      : 0;
+  const actualSfc = records.filter((item) =>
+    strictlyInside(paths.sfcRoot, item.path),
+  ).length;
   if (
-    status.actual_managed_worktrees.length >
-      MANAGED_WORKTREE_BUDGET_V1.max_total_worktrees ||
-    status.orphan_managed_worktrees.length
+    actualSfc +
+      (requestedMissing && requested && strictlyInside(paths.sfcRoot, requested)
+        ? 1
+        : 0) >
+    MANAGED_WORKTREE_BUDGET_V1.max_sfc_worktrees
   )
-    throw new Error("managed_worktree_budget_reconcile_failed");
+    throw new Error("managed_worktree_sfc_budget_exceeded");
+  if (
+    records.length + requestedMissing >
+    MANAGED_WORKTREE_BUDGET_V1.max_total_worktrees
+  )
+    throw new Error("managed_worktree_total_budget_exceeded");
   return status;
+}
+
+export async function reconcileManagedCampaignWorktreesV1(options: {
+  repositoryRoot: string;
+  campaignId: string;
+  expectedWorktrees: string[];
+  activeWorkerPaths?: string[];
+  protectedWorkerPaths?: string[];
+}): Promise<ManagedWorktreeBudgetStatusV1> {
+  const repository = path.resolve(options.repositoryRoot);
+  const paths = managedCampaignWorktreePathsV1(repository, options.campaignId);
+  const protectedPaths = normalizedOwnedSet(paths.root, [
+    ...(options.activeWorkerPaths ?? []),
+    ...(options.protectedWorkerPaths ?? []),
+  ]);
+  const before = await inspectManagedWorktreeStateV1(options);
+  if (before.ownership_errors.length)
+    throw new Error(
+      `managed_worktree_ownership_error:${before.ownership_errors[0]}`,
+    );
+  const expected = normalizedOwnedSet(paths.root, options.expectedWorktrees);
+  const records = await listRepositoryWorktrees(repository);
+  for (const record of records.filter((item) =>
+    strictlyInside(paths.root, item.path),
+  )) {
+    const key = normalizePath(record.path);
+    if (expected.has(key) || protectedPaths.has(key)) continue;
+    assertPackageOwnedRecord(paths, record, options.campaignId);
+    await runGit(repository, ["worktree", "remove", "--force", record.path], {
+      timeoutMs: 120_000,
+    });
+  }
+  await runGit(repository, ["worktree", "prune", "--expire", "now"]);
+  return inspectManagedWorktreeStateV1(options);
 }
 
 export async function createManagedIntegrationWorktreeV1(options: {
@@ -265,7 +345,8 @@ export async function createManagedSliceWorktreeV1(options: {
   repositoryRoot: string;
   campaignId: string;
   sliceId: string;
-  baseCommit: string;
+  frozenBaseCommit: string;
+  checkoutCommit: string;
   expectedWorktrees: string[];
   activeWorkerPaths?: string[];
 }): Promise<ManagedWorktreeV1> {
@@ -313,7 +394,13 @@ export async function resetManagedRepairWorktreeV1(options: {
       true,
     );
   } else {
-    created = await createDetached({ ...options, target, kind: "repair" });
+    created = await createDetached({
+      ...options,
+      frozenBaseCommit: options.baseCommit,
+      checkoutCommit: options.baseCommit,
+      target,
+      kind: "repair",
+    });
   }
   await runGit(target, ["reset", "--hard", base]);
   await runGit(target, ["clean", "-fdx"]);
@@ -403,7 +490,8 @@ export async function cleanupManagedCampaignWorktreesV1(options: {
 async function createDetached(options: {
   repositoryRoot: string;
   campaignId: string;
-  baseCommit: string;
+  frozenBaseCommit: string;
+  checkoutCommit: string;
   target: string;
   kind: "sfc" | "repair";
   expectedWorktrees: string[];
@@ -415,13 +503,17 @@ async function createDetached(options: {
     expectedWorktrees: options.expectedWorktrees,
     requestedWorktree: options.target,
   });
-  const base = await currentHead(repository, options.baseCommit);
+  const base = await currentHead(repository, options.frozenBaseCommit);
+  const checkout = await currentHead(repository, options.checkoutCommit);
+  await assertDescendant(repository, base, checkout);
   const records = await listRepositoryWorktrees(repository);
   const byPath = records.find((item) => samePath(item.path, options.target));
   if (byPath) {
     if (!byPath.detached || byPath.branch !== null)
       throw new Error("managed_detached_resume_identity_mismatch");
     await assertDescendant(repository, base, byPath.headCommit);
+    if (byPath.headCommit !== checkout)
+      throw new Error("managed_detached_resume_head_mismatch");
     return managed(
       repository,
       options.kind,
@@ -436,13 +528,14 @@ async function createDetached(options: {
   await mkdir(path.dirname(options.target), { recursive: true });
   await runGit(
     repository,
-    ["worktree", "add", "--detach", options.target, base],
+    ["worktree", "add", "--detach", options.target, checkout],
     {
       timeoutMs: 120_000,
     },
   );
   const head = await currentHead(options.target);
-  if (head !== base) throw new Error("managed_detached_exact_base_mismatch");
+  if (head !== checkout)
+    throw new Error("managed_detached_exact_checkout_mismatch");
   return managed(
     repository,
     options.kind,
@@ -492,6 +585,32 @@ function assertPackageOwnedRecord(
   const integrationRef = `tyctx/campaign/${portablePathSlug(campaignId)}/integration`;
   if (record.branch !== null && record.branch !== integrationRef)
     throw new Error("managed_worktree_record_branch_not_owned");
+}
+
+function packageOwnedRecordErrors(
+  paths: ManagedWorktreePathsV1,
+  record: ListedCampaignWorktree,
+  campaignId: string,
+): string[] {
+  const errors: string[] = [];
+  if (!strictlyInside(paths.root, record.path))
+    errors.push("managed_worktree_record_not_owned");
+  const allowedPath =
+    samePath(record.path, paths.integration) ||
+    samePath(record.path, paths.repair) ||
+    strictlyInside(paths.sfcRoot, record.path);
+  if (!allowedPath) errors.push("managed_worktree_record_path_unknown");
+  const integrationRef = `tyctx/campaign/${portablePathSlug(campaignId)}/integration`;
+  if (samePath(record.path, paths.integration)) {
+    if (record.detached || record.branch !== integrationRef)
+      errors.push("managed_integration_worktree_identity_mismatch");
+  } else if (!record.detached || record.branch !== null) {
+    errors.push("managed_detached_worktree_identity_mismatch");
+  }
+  return errors.map(
+    (error) =>
+      `${error}:${repositoryRelativeWorktreePathV1(path.dirname(path.dirname(path.dirname(path.dirname(paths.root)))), record.path)}`,
+  );
 }
 
 async function assertDescendant(

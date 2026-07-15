@@ -9,7 +9,6 @@ import {
   rm,
   stat,
 } from "node:fs/promises";
-import { spawn } from "node:child_process";
 import path from "node:path";
 import {
   canonicalJson,
@@ -22,6 +21,11 @@ import {
   assertCampaignV6,
   type CampaignV6,
 } from "../composite-campaign-schema-v6.js";
+import {
+  getProcessStartIdentity,
+  isProcessAlive,
+  matchesRecordedProcessIdentity,
+} from "../process-identity.js";
 
 const MAX_CAMPAIGN_FILE_BYTES = 1024 * 1024;
 const LOCK_FILE = ".campaign.lock";
@@ -110,8 +114,10 @@ export async function acquireCampaignLockV6(
       schema_version: "campaign-lock-v1",
       pid: process.pid,
       process_start_identity:
-        (await processStartIdentityV6(process.pid)) ??
-        `fallback:${process.pid}:${Math.floor(Date.now() - process.uptime() * 1000)}`,
+        (await getProcessStartIdentity(process.pid)) ??
+        (() => {
+          throw new Error("campaign_lock_process_identity_unavailable");
+        })(),
       operation_id: randomUUID(),
       started_at: new Date().toISOString(),
     };
@@ -141,20 +147,13 @@ export async function optionalCampaignLockV6(
 }
 
 export function campaignLockOwnerAliveV6(lock: CampaignLockV6): boolean {
-  try {
-    process.kill(lock.pid, 0);
-    return true;
-  } catch (error) {
-    return (error as NodeJS.ErrnoException).code === "EPERM";
-  }
+  return isProcessAlive(lock.pid);
 }
 
 export async function campaignLockOwnerMatchesV6(
   lock: CampaignLockV6,
 ): Promise<boolean> {
-  if (!campaignLockOwnerAliveV6(lock)) return false;
-  const identity = await processStartIdentityV6(lock.pid);
-  return identity === null ? true : identity === lock.process_start_identity;
+  return matchesRecordedProcessIdentity(lock.pid, lock.process_start_identity);
 }
 
 export async function mutateCampaignStoreV6(
@@ -413,78 +412,4 @@ function samePath(left: string, right: string): boolean {
     return process.platform === "win32" ? resolved.toLowerCase() : resolved;
   };
   return normalize(left) === normalize(right);
-}
-
-async function processStartIdentityV6(pid: number): Promise<string | null> {
-  if (process.platform === "linux") {
-    try {
-      const value = await readFile(`/proc/${pid}/stat`, "utf8");
-      const end = value.lastIndexOf(")");
-      const fields = value
-        .slice(end + 2)
-        .trim()
-        .split(/\s+/u);
-      const startTicks = fields[19];
-      return startTicks ? `linux:${startTicks}` : null;
-    } catch {
-      return null;
-    }
-  }
-  if (process.platform === "win32")
-    return probeProcessIdentity(
-      "powershell.exe",
-      [
-        "-NoLogo",
-        "-NoProfile",
-        "-NonInteractive",
-        "-Command",
-        "$p=Get-Process -Id ([int]$args[0]) -ErrorAction Stop; $p.StartTime.ToUniversalTime().Ticks",
-        String(pid),
-      ],
-      "windows",
-    );
-  return probeProcessIdentity(
-    "ps",
-    ["-o", "lstart=", "-p", String(pid)],
-    process.platform,
-  );
-}
-
-async function probeProcessIdentity(
-  executable: string,
-  args: string[],
-  prefix: string,
-): Promise<string | null> {
-  return new Promise((resolve) => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const child = spawn(executable, args, {
-      shell: false,
-      windowsHide: true,
-      stdio: ["ignore", "pipe", "ignore"],
-    });
-    const chunks: Buffer[] = [];
-    let bytes = 0;
-    let settled = false;
-    const finish = (value: string | null) => {
-      if (settled) return;
-      settled = true;
-      if (timer) clearTimeout(timer);
-      resolve(value);
-    };
-    child.stdout.on("data", (chunk: Buffer) => {
-      if (bytes >= 4096) return;
-      const kept = chunk.subarray(0, 4096 - bytes);
-      chunks.push(Buffer.from(kept));
-      bytes += kept.length;
-    });
-    child.once("error", () => finish(null));
-    child.once("close", (code) => {
-      const value = Buffer.concat(chunks).toString("utf8").trim();
-      finish(code === 0 && value ? `${prefix}:${value}` : null);
-    });
-    timer = setTimeout(() => {
-      child.kill("SIGKILL");
-      finish(null);
-    }, 5_000);
-  });
 }

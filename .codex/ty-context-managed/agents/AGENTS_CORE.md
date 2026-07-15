@@ -37,6 +37,8 @@ Routing precedence:
 
 Composite inherits Context Priority, `Context Delta`, durable Context updates and final Context drift check. It replaces ordinary planning, implementation mapping, execution state, acceptance and completion with Source Coverage/Scope Fit, Packet, Contract V3 bindings/Change Envelope, Campaign/worker/receipt state, Slice Final Gate, Wave Integration Gate and same-snapshot Campaign Final Gate. One foreground scheduler uses bounded ephemeral `codex exec` workers; worker exit is never acceptance authority. It must not create or consume a second plan, matrix, verdict, ordinary Local Audit or hand-written complete state.
 
+Campaign V6 worktree budget checks are read-only; only explicit reconcile/cleanup/abandon may remove identity-checked package-owned worktrees. Worker ownership requires PID plus process-start identity, persisted Integration HEAD is recovery authority, and `abandoned` is a terminal local-cleanup state that cannot run or recreate resources.
+
 Campaign accepted authority is committed before idempotent owned-asset cleanup; rerunning an accepted Campaign returns finished.
 
 Scope Fit preserves semantic completeness and the largest coherent independently accepted SFC before considering parallelism. File/layer boundaries, agent count, duration and parallel opportunity are never split reasons. Starting the first SFC execution worker freezes the graph.

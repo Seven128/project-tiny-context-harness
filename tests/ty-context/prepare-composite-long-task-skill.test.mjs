@@ -8,7 +8,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const source = path.join(root, ".codex/ty-context-managed/skills/prepare-composite-long-task");
 const read = (name) => readFile(path.join(source, name), "utf8");
 
-test("prepare Skill is concise, explicit, and routes the complete Campaign V5 App Server loop", async () => {
+test("prepare Skill is concise, explicit, and routes the complete Campaign V6 Codex Exec loop", async () => {
   const skill = await read("SKILL.md");
   const description = skill.match(/^description:\s*(.*)$/m)?.[1];
   assert.match(skill, /^name: prepare-composite-long-task$/m);
@@ -18,11 +18,14 @@ test("prepare Skill is concise, explicit, and routes the complete Campaign V5 Ap
   assert.match(skill, /composite-campaign contract --json/);
   assert.match(skill, /complete prepare-and-execute loop/i);
   assert.match(skill, /Source Unit.*Scope Fit V4 DAG/is);
-  assert.match(skill, /one persistent App Server thread per ready SFC/is);
-  assert.match(skill, /complete wave starts before waiting/i);
+  assert.match(skill, /one foreground scheduler.*bounded ephemeral `codex exec`/is);
+  assert.match(skill, /starts the complete conflict-free wave.*before waiting/is);
   assert.match(skill, /repair_integration/);
-  assert.match(skill, /App Server unavailability never falls back/is);
-  assert.match(skill, /record-result.*never runs final-gate/is);
+  assert.match(skill, /Exit code or text never establishes acceptance/is);
+  assert.match(skill, /aliases are canonicalized.*minimum_effort/is);
+  assert.match(skill, /Budget inspection is pure/is);
+  assert.match(skill, /PID plus process-start identity/is);
+  assert.match(skill, /`abandoned` Campaign is terminal/is);
   assert.match(skill, /Campaign Final Gate.*one shared (?:final )?snapshot/is);
   assert.match(skill, /Target movement invalidates.*revalidation/is);
   assert.match(skill, /Do not import legacy attachments/i);
@@ -32,7 +35,7 @@ test("prepare Skill is concise, explicit, and routes the complete Campaign V5 Ap
   assert.ok(skill.split(/\r?\n/).length <= 180, "Skill should remain a routing workflow, not a copied prompt corpus");
 });
 
-test("semantic references cover maximal Scope V4, App Server authoring, routing, recovery, repair, and finalization", async () => {
+test("semantic references cover maximal Scope V4, ephemeral authoring, routing, recovery, repair, and finalization", async () => {
   const [scope, authoring, lifecycle] = await Promise.all([
     read("references/scope-fit-and-selection.md"),
     read("references/packet-authoring.md"),
@@ -46,25 +49,28 @@ test("semantic references cover maximal Scope V4, App Server authoring, routing,
   assert.match(scope, /control\/capability-level/i);
   assert.match(scope, /over_split_sfc/);
   assert.match(scope, /authoring_capacity_exceeded/);
-  assert.match(scope, /first Slice Goal.*frozen/is);
+  assert.match(scope, /Once execution starts, Scope Fit is permanently frozen/is);
   assert.match(scope, /global constraint.*applicable SFCs/is);
   assert.match(scope, /maximum conflict-free wave of at most four/i);
   assert.match(scope, /Unknown evidence defaults to serial/i);
   assert.match(authoring, /CompositeAuthoringPacketV3/);
   assert.match(authoring, /preflight/i);
-  assert.match(authoring, /strict `CompositeAuthoringPacketV3` output schema/i);
+  assert.match(authoring, /strict Packet output schema/i);
   assert.match(authoring, /Source Unit.*Requirement.*PI Obligation.*AC.*Verification Spec/is);
-  assert.match(authoring, /at most two repair Turns/i);
-  assert.match(authoring, /same thread is retained/i);
-  assert.match(lifecycle, /codex app-server --listen stdio:\/\//i);
-  assert.match(lifecycle, /Sol `xhigh\|max`.*Sol `medium`/i);
-  assert.match(lifecycle, /same thread/i);
-  assert.match(lifecycle, /all initial wave Turns start before any is awaited/i);
+  assert.match(authoring, /at most two repair attempts/i);
+  assert.match(authoring, /fresh ephemeral worker/i);
+  assert.match(lifecycle, /execution engine `codex-exec-v1`/i);
+  assert.match(lifecycle, /xhigh\|max\|ultra.*medium/i);
+  assert.match(lifecycle, /PID.*(?:process-)?start[- ]identity/is);
+  assert.match(lifecycle, /canonical state-derived expected set/i);
+  assert.match(lifecycle, /persisted Integration HEAD/i);
+  assert.match(lifecycle, /accepted.*cannot return to execution/i);
+  assert.match(lifecycle, /explicit `?abandon`?/i);
   assert.match(lifecycle, /Integration Gate/);
   assert.match(lifecycle, /Campaign Final Gate/);
-  assert.match(lifecycle, /moved target.*revalidation/is);
-  assert.match(lifecycle, /reconnect once/i);
-  assert.match(lifecycle, /ambiguous_host_thread_launch/);
+  assert.match(lifecycle, /Target finalization.*revalidation/is);
+  assert.match(lifecycle, /more than one incomplete Wave fails closed/i);
+  assert.doesNotMatch(lifecycle, /codex app-server --listen stdio:\/\//i);
 });
 
 test("the managed Skill uses only one reference level and no copied attachment corpus", async () => {
@@ -81,7 +87,7 @@ test("the managed Skill uses only one reference level and no copied attachment c
     .join("\n")
     .split(/\s+/)
     .filter(Boolean).length;
-  assert.ok(totalWords <= 2600, `expected concise semantic guidance, got ${totalWords} words`);
+  assert.ok(totalWords <= 3600, `expected concise semantic guidance, got ${totalWords} words`);
 });
 
 test("canonical, packaged, and workspace Skill trees stay synchronized", async () => {
@@ -104,19 +110,22 @@ test("public documentation is English-complete and preserves the strict downstre
   for (const relative of ["README.md", "packages/ty-context/README.md"]) {
     const content = await readFile(path.join(root, relative), "utf8");
     documents.push(content);
-    assert.match(content, /## Long-Task Workflow Campaign V5/);
+    assert.match(content, /## Long-Task Workflow Campaign V6/);
     assert.match(content, /\/prepare-composite-long-task/);
     assert.match(content, /composite-campaign/);
     assert.match(content, /worktree/i);
     assert.match(content, /integration/i);
-    assert.match(content, /App Server/i);
+    assert.match(content, /codex-exec-v1/i);
+    assert.match(content, /abandon/i);
+    assert.match(content, /process-start[- ]identity/i);
     assert.match(content, /\/composite-long-task-workflow/);
   }
   const combined = documents.join("\n");
   assert.match(combined, /Campaign Final Gate/i);
-  assert.match(combined, /Campaign V4.*audit-only|V4 Campaigns remain inspectable audit data/is);
+  assert.match(combined, /Campaign V5.*audit-only|Accepted V5 remains audit-only/is);
   const chinese = await readFile(path.join(root, "README.zh-CN.md"), "utf8");
   assert.match(chinese, /\/prepare-composite-long-task/);
   assert.match(chinese, /composite-campaign/);
+  assert.match(chinese, /abandon/);
   assert.match(chinese, /\/composite-long-task-workflow/);
 });

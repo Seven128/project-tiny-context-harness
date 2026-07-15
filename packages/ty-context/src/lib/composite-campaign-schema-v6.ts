@@ -36,6 +36,7 @@ export const CAMPAIGN_STATUSES_V6 = [
   "integrating",
   "finalizing",
   "accepted",
+  "abandoned",
   "blocked",
   "decision_blocked",
   "externally_blocked",
@@ -61,6 +62,7 @@ export interface CampaignWorkerRunV6 {
   attempt: number;
   run_generation: number;
   pid: number | null;
+  process_start_identity: string | null;
   started_at: string;
   completed_at: string | null;
   profile: ModelProfile;
@@ -309,12 +311,15 @@ function validateSlice(value: unknown, label: string): void {
 
 function validateWorkerRun(value: unknown, label: string): void {
   const row = object(value, label);
+  if (!Object.hasOwn(row, "process_start_identity"))
+    row.process_start_identity = null;
   exact(row, [
     "run_id",
     "kind",
     "attempt",
     "run_generation",
     "pid",
+    "process_start_identity",
     "started_at",
     "completed_at",
     "profile",
@@ -328,6 +333,7 @@ function validateWorkerRun(value: unknown, label: string): void {
   positiveInteger(row.attempt, `${label}.attempt`);
   positiveInteger(row.run_generation, `${label}.run_generation`);
   if (row.pid !== null) positiveInteger(row.pid, `${label}.pid`);
+  nullableText(row.process_start_identity, `${label}.process_start_identity`);
   timestamp(row.started_at, `${label}.started_at`);
   if (row.completed_at !== null)
     timestamp(row.completed_at, `${label}.completed_at`);

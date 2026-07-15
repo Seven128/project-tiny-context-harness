@@ -14,6 +14,7 @@ import type { ChangeEnvelopeV1 } from "../composite-campaign-change-envelope.js"
 import type { CampaignPacketEntityIndexV1 } from "../composite-campaign-source-coverage.js";
 import type { CampaignLockHandleV6 } from "./campaign-store.js";
 import { mutateCampaignStoreV6 } from "./campaign-store.js";
+import { transitionSliceStatusV6 } from "../composite-campaign-state-transition-v6.js";
 import {
   optionalScopeV6,
   packetAuthorityFilesV6,
@@ -164,7 +165,7 @@ export async function applyCampaignPacketV6(
         });
       slice.packet_revision = packet.revision;
       slice.packet_sha256 = packetSha256;
-      slice.status = "packet_pending";
+      transitionSliceStatusV6(slice, "packet_pending");
       slice.last_error_code = null;
       return value;
     },
@@ -214,7 +215,7 @@ export async function preflightCampaignPacketV6(
           canonicalJson(value),
           { immutable: true },
         );
-      slice.status = "packet_ready";
+      transitionSliceStatusV6(slice, "packet_ready");
       slice.last_error_code = null;
       campaign.context_baseline = verified.context_baseline;
       campaign.campaign_status = "authoring";

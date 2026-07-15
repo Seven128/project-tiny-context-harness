@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { parseStrictJson, sha256Hex } from "./composite-campaign-codec.js";
-import { currentHead, runGit } from "./composite-campaign-git-baseline.js";
+import { reconcileIntegrationHeadAuthorityV6 } from "./composite-campaign-integration-head-v6.js";
 import {
   recordSliceExecutionReceiptV3,
   readSliceExecutionReceiptV3,
@@ -12,26 +12,38 @@ import {
   type ChangeEnvelopeV1,
 } from "./composite-campaign-change-envelope.js";
 import {
-  inspectManagedWorktreeBudgetV1,
+  inspectManagedWorktreeStateV1,
   managedCampaignWorktreePathsV1,
+  reconcileManagedCampaignWorktreesV1,
   resolveManagedWorktreePathV1,
 } from "./composite-campaign-worktree-budget.js";
+import { deriveExpectedManagedWorktreesV6 } from "./composite-campaign-worktree-expectation-v6.js";
 import { listRepositoryWorktrees } from "./composite-campaign-worktree.js";
 import type { CampaignV6 } from "./composite-campaign-schema-v6.js";
+import {
+  bindAcceptedSliceFromReceiptV6,
+  reconcileActiveWaveIdentityV6,
+  transitionSliceStatusV6,
+} from "./composite-campaign-state-transition-v6.js";
 import {
   loadCampaignStoreV6,
   type CampaignLockHandleV6,
 } from "./composite-runtime-v6/campaign-store.js";
 import { currentPacketRevisionPathV6 } from "./composite-runtime-v6/campaign-packet-io.js";
 import { mutateCampaignV6 } from "./composite-campaign-v6.js";
+import {
+  inspectWorkerProcessV6,
+  type WorkerProcessObservationV6,
+} from "./composite-campaign-worker-process-v6.js";
 
 export interface CampaignReconcileResultV6 {
   schema_version: "composite-campaign-reconcile-v6";
   interrupted_worker_run_ids: string[];
+  worker_process_blockers: string[];
   rebound_receipt_slice_ids: string[];
   integration_head: string | null;
   managed_worktree_budget: Awaited<
-    ReturnType<typeof inspectManagedWorktreeBudgetV1>
+    ReturnType<typeof inspectManagedWorktreeStateV1>
   >;
 }
 
@@ -40,18 +52,42 @@ export async function reconcileCampaignV6(options: {
   campaignPath: string;
   lock: CampaignLockHandleV6;
 }): Promise<CampaignReconcileResultV6> {
-  const loaded = await loadCampaignStoreV6(
+  let loaded = await loadCampaignStoreV6(
     options.projectRoot,
     options.campaignPath,
   );
+  let expected = deriveExpectedManagedWorktreesV6({
+    repositoryRoot: options.projectRoot,
+    campaign: loaded.campaign,
+  });
+  if (expected.stale_slice_path_ids.length) {
+    const stale = new Set(expected.stale_slice_path_ids);
+    await mutateCampaignV6(
+      options.projectRoot,
+      options.campaignPath,
+      "integration_verified_worktree_paths_cleared",
+      async (_root, campaign) => {
+        for (const sliceId of stale)
+          campaign.slices[sliceId].worktree_path = null;
+        return campaign;
+      },
+      options.lock,
+    );
+    loaded = await loadCampaignStoreV6(
+      options.projectRoot,
+      options.campaignPath,
+    );
+    expected = deriveExpectedManagedWorktreesV6({
+      repositoryRoot: options.projectRoot,
+      campaign: loaded.campaign,
+    });
+  }
   const paths = managedCampaignWorktreePathsV1(
     options.projectRoot,
     loaded.campaign.campaign_id,
   );
-  const repositoryWorktrees = await listRepositoryWorktrees(
-    options.projectRoot,
-  );
-  const integrationRecord = repositoryWorktrees.find((item) =>
+  let repositoryWorktrees = await listRepositoryWorktrees(options.projectRoot);
+  let integrationRecord = repositoryWorktrees.find((item) =>
     samePath(item.path, paths.integration),
   );
   if (
@@ -61,38 +97,54 @@ export async function reconcileCampaignV6(options: {
   )
     throw new Error("campaign_v6_integration_worktree_identity_drift");
 
+  const observations = new Map<string, WorkerProcessObservationV6>();
   const activeWorkerPaths: string[] = [];
+  const protectedWorkerPaths: string[] = [];
   for (const slice of Object.values(loaded.campaign.slices)) {
     const run = slice.current_worker_run;
-    if (run?.status === "running" && run.pid && processAlive(run.pid))
-      activeWorkerPaths.push(run.cwd);
+    if (run && ["starting", "running"].includes(run.status)) {
+      const observed = await inspectWorkerProcessV6(run);
+      observations.set(run.run_id, observed);
+      if (observed.state === "identity_match") activeWorkerPaths.push(run.cwd);
+      if (observed.state === "identity_unavailable")
+        protectedWorkerPaths.push(run.cwd);
+    }
   }
   const repairRun = loaded.campaign.repair.current_worker_run;
-  if (
-    repairRun?.status === "running" &&
-    repairRun.pid &&
-    processAlive(repairRun.pid)
-  )
-    activeWorkerPaths.push(repairRun.cwd);
-  const expected = [
-    ...(integrationRecord ? [paths.integration] : []),
-    ...Object.values(loaded.campaign.slices)
-      .map((slice) => slice.worktree_path)
-      .filter((value): value is string => Boolean(value))
-      .map((value) => resolveManagedWorktreePathV1(options.projectRoot, value)),
-    ...((loaded.campaign.repair.status !== "idle" ||
-      loaded.campaign.campaign_status === "finalizing") &&
-    repositoryWorktrees.some((item) => samePath(item.path, paths.repair))
-      ? [paths.repair]
-      : []),
-  ];
-  const budget = await inspectManagedWorktreeBudgetV1({
+  if (repairRun && ["starting", "running"].includes(repairRun.status)) {
+    const observed = await inspectWorkerProcessV6(repairRun);
+    observations.set(repairRun.run_id, observed);
+    if (observed.state === "identity_match")
+      activeWorkerPaths.push(repairRun.cwd);
+    if (observed.state === "identity_unavailable")
+      protectedWorkerPaths.push(repairRun.cwd);
+  }
+  const budget = await reconcileManagedCampaignWorktreesV1({
     repositoryRoot: options.projectRoot,
     campaignId: loaded.campaign.campaign_id,
-    expectedWorktrees: expected,
+    expectedWorktrees: expected.all,
     activeWorkerPaths,
-    reconcileOrphans: true,
+    protectedWorkerPaths,
   });
+  repositoryWorktrees = await listRepositoryWorktrees(options.projectRoot);
+  integrationRecord = repositoryWorktrees.find((item) =>
+    samePath(item.path, paths.integration),
+  );
+  const integrationAuthority = integrationRecord
+    ? await reconcileIntegrationHeadAuthorityV6({
+        repositoryRoot: options.projectRoot,
+        integrationWorktree: paths.integration,
+        campaign: loaded.campaign,
+      })
+    : null;
+  if (integrationAuthority?.event)
+    await mutateCampaignV6(
+      options.projectRoot,
+      options.campaignPath,
+      integrationAuthority.event,
+      async (_root, campaign) => campaign,
+      options.lock,
+    );
 
   const receiptBindings = new Map<string, SliceExecutionReceiptV3>();
   for (const sliceId of Object.keys(loaded.campaign.slices)) {
@@ -120,43 +172,50 @@ export async function reconcileCampaignV6(options: {
 
   const interrupted: string[] = [];
   const rebound: string[] = [];
-  const integrationHead = integrationRecord
-    ? await currentHead(paths.integration)
+  const workerProcessBlockers = [...observations.entries()]
+    .filter(([, observed]) =>
+      ["identity_match", "identity_unavailable"].includes(observed.state),
+    )
+    .map(([runId, observed]) =>
+      observed.state === "identity_match"
+        ? `worker_process_still_active:${runId}`
+        : `worker_process_identity_unverified:${runId}`,
+    )
+    .sort(ascii);
+  const hasIdentityMismatch = [...observations.values()].some(
+    (observed) => observed.state === "identity_mismatch",
+  );
+  const integrationHead = integrationAuthority
+    ? integrationAuthority.actual_head_after
     : loaded.campaign.integration_head;
   await mutateCampaignV6(
     options.projectRoot,
     options.campaignPath,
-    "campaign_reconciled",
+    hasIdentityMismatch
+      ? "worker_pid_reused_or_identity_mismatch"
+      : "campaign_reconciled",
     async (_root, campaign) => {
-      if (integrationRecord) {
-        if (campaign.base_commit) {
-          const descendant = await runGit(
-            options.projectRoot,
-            [
-              "merge-base",
-              "--is-ancestor",
-              campaign.base_commit,
-              integrationHead!,
-            ],
-            { throwOnError: false },
-          );
-          if (descendant.exitCode !== 0)
-            throw new Error("campaign_v6_integration_not_descendant_of_base");
-        }
-        campaign.integration_head = integrationHead;
-      }
+      reconcileActiveWaveIdentityV6(campaign);
+      if (integrationRecord && campaign.integration_head !== integrationHead)
+        throw new Error("campaign_v6_integration_persisted_head_mismatch");
       for (const [sliceId, slice] of Object.entries(campaign.slices)) {
         const run = slice.current_worker_run;
         if (
           run &&
           (run.status === "starting" || run.status === "running") &&
-          (!run.pid || !processAlive(run.pid))
+          ["not_started", "not_alive", "identity_mismatch"].includes(
+            observations.get(run.run_id)?.state ?? "not_started",
+          )
         ) {
           run.status = "interrupted";
           run.completed_at = new Date().toISOString();
           run.exit_code = null;
-          slice.status = "interrupted";
-          slice.last_error_code = "worker_process_absent_reconciled";
+          if (run.kind === "execution")
+            transitionSliceStatusV6(slice, "interrupted");
+          slice.last_error_code =
+            observations.get(run.run_id)?.state === "identity_mismatch"
+              ? "worker_pid_reused_or_identity_mismatch"
+              : "worker_process_absent_reconciled";
           interrupted.push(run.run_id);
         }
         const receipt = receiptBindings.get(sliceId);
@@ -167,8 +226,7 @@ export async function reconcileCampaignV6(options: {
             (slice.wave_id && receipt.wave_id !== slice.wave_id)
           )
             throw new Error(`campaign_v6_receipt_identity_drift:${sliceId}`);
-          if (!["merged", "integration_verified"].includes(slice.status))
-            slice.status = "accepted";
+          bindAcceptedSliceFromReceiptV6(slice);
           slice.base_commit = receipt.base_commit;
           slice.head_commit = receipt.head_commit;
           slice.final_receipt_sha256 = receipt.receipt_sha256;
@@ -181,13 +239,18 @@ export async function reconcileCampaignV6(options: {
         currentRepair &&
         (currentRepair.status === "starting" ||
           currentRepair.status === "running") &&
-        (!currentRepair.pid || !processAlive(currentRepair.pid))
+        ["not_started", "not_alive", "identity_mismatch"].includes(
+          observations.get(currentRepair.run_id)?.state ?? "not_started",
+        )
       ) {
         currentRepair.status = "interrupted";
         currentRepair.completed_at = new Date().toISOString();
         currentRepair.exit_code = null;
         campaign.repair.status = "interrupted";
-        campaign.repair.last_error_code = "worker_process_absent_reconciled";
+        campaign.repair.last_error_code =
+          observations.get(currentRepair.run_id)?.state === "identity_mismatch"
+            ? "worker_pid_reused_or_identity_mismatch"
+            : "worker_process_absent_reconciled";
         interrupted.push(currentRepair.run_id);
       }
       return campaign;
@@ -197,6 +260,7 @@ export async function reconcileCampaignV6(options: {
   return {
     schema_version: "composite-campaign-reconcile-v6",
     interrupted_worker_run_ids: interrupted.sort(ascii),
+    worker_process_blockers: workerProcessBlockers,
     rebound_receipt_slice_ids: [...new Set(rebound)].sort(ascii),
     integration_head: integrationHead,
     managed_worktree_budget: budget,
@@ -280,14 +344,6 @@ async function findCurrentReceipt(
   return null;
 }
 
-function processAlive(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    return (error as NodeJS.ErrnoException).code === "EPERM";
-  }
-}
 function samePath(left: string, right: string): boolean {
   const normalize = (value: string) => {
     const resolved = path.resolve(value);

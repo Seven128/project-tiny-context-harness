@@ -46,14 +46,16 @@ test("managed V6 worktrees are fixed, detached, bounded, merged by SHA, and full
       repositoryRoot: root,
       campaignId,
       sliceId: "SFC-001",
-      baseCommit: base,
+      frozenBaseCommit: base,
+      checkoutCommit: base,
       expectedWorktrees: expected,
     });
     const right = await createManagedSliceWorktreeV1({
       repositoryRoot: root,
       campaignId,
       sliceId: "SFC-002",
-      baseCommit: base,
+      frozenBaseCommit: base,
+      checkoutCommit: base,
       expectedWorktrees: expected,
     });
     assert.equal(left.detached, true);

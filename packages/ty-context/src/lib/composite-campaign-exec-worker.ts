@@ -18,6 +18,7 @@ import {
   type CampaignV6,
   type CampaignWorkerRunV6,
 } from "./composite-campaign-schema-v6.js";
+import { transitionSliceStatusV6 } from "./composite-campaign-state-transition-v6.js";
 import { CampaignMutationQueue } from "./composite-campaign-mutation-queue.js";
 import {
   currentHead,
@@ -51,13 +52,12 @@ import { LONG_TASK_SOURCE_FILES } from "./long-task-contract-schema.js";
 import { clearAcceptedLongTaskBinding } from "./long-task-active-task.js";
 import type { ModelProfile } from "./codex-model-profile.js";
 import type { ScopeFitResultV4 } from "./scope-fit-v4.js";
-
-export class CampaignWorkerInterruptedError extends Error {
-  constructor() {
-    super("campaign_worker_interrupted");
-    this.name = "CampaignWorkerInterruptedError";
-  }
-}
+import {
+  assertCampaignDispatchAllowedV6,
+  CampaignWorkerInterruptedError,
+} from "./composite-campaign-dispatch-v6.js";
+import type { CampaignRunMetricsV6 } from "./composite-campaign-run-metrics-v6.js";
+export { CampaignWorkerInterruptedError } from "./composite-campaign-dispatch-v6.js";
 
 export interface CampaignWorkerRuntimeV6 {
   projectRoot: string;
@@ -69,6 +69,8 @@ export interface CampaignWorkerRuntimeV6 {
   signal?: AbortSignal;
   codexExecutable?: string;
   repairAttemptBaseline?: number;
+  runGeneration: number;
+  metrics?: CampaignRunMetricsV6;
 }
 
 export interface PacketAuthoringResultV6 {
@@ -80,6 +82,7 @@ export async function authorCampaignPacketsV6(
   runtime: CampaignWorkerRuntimeV6,
   sliceIds: string[],
 ): Promise<PacketAuthoringResultV6> {
+  await assertWorkerDispatch(runtime);
   const campaign = (
     await loadCampaignStoreV6(runtime.projectRoot, runtime.campaignPath)
   ).campaign;
@@ -174,7 +177,7 @@ export async function executeCampaignSliceV6(options: {
   let findings: unknown[] = [];
   const limit = campaign.campaign_policy.max_execution_attempts_per_run;
   for (let runAttempt = 1; runAttempt <= limit; runAttempt += 1) {
-    assertNotAborted(options.runtime.signal);
+    await assertWorkerDispatch(options.runtime);
     const current = (
       await loadCampaignStoreV6(
         options.runtime.projectRoot,
@@ -249,7 +252,7 @@ export async function executeCampaignSliceV6(options: {
             "slice_receipt_bound",
             async (_root, value) => {
               const target = value.slices[options.sliceId];
-              target.status = "accepted";
+              transitionSliceStatusV6(target, "accepted");
               target.head_commit = recorded.receipt.head_commit;
               target.final_receipt_sha256 = recorded.receipt.receipt_sha256;
               target.last_error_code = null;
@@ -279,11 +282,13 @@ export async function executeCampaignSliceV6(options: {
         async (_root, value) => {
           value.execution_engine.fallback_reason =
             "target_unavailable_passthrough";
-          value.slices[options.sliceId].last_error_code =
-            "target_unavailable_passthrough";
+          const target = value.slices[options.sliceId];
+          transitionSliceStatusV6(target, "needs_work");
+          target.last_error_code = "target_unavailable_passthrough";
           return value;
         },
       );
+      await assertWorkerDispatch(options.runtime);
       continue;
     }
     await queuedMutation(
@@ -291,7 +296,10 @@ export async function executeCampaignSliceV6(options: {
       "slice_needs_work",
       async (_root, value) => {
         const target = value.slices[options.sliceId];
-        target.status = "needs_work";
+        transitionSliceStatusV6(
+          target,
+          runAttempt === limit ? "needs_attention" : "needs_work",
+        );
         target.head_commit = head;
         target.last_error_code = boundedError(findings);
         return value;
@@ -302,7 +310,6 @@ export async function executeCampaignSliceV6(options: {
     options.runtime,
     "slice_worker_attempt_limit_exceeded",
     async (_root, value) => {
-      value.slices[options.sliceId].status = "needs_attention";
       value.slices[options.sliceId].last_error_code =
         "worker_attempt_limit_exceeded";
       value.campaign_status = "blocked";
@@ -343,7 +350,7 @@ async function authorPacketForSlice(
   const limit =
     loaded.campaign.campaign_policy.max_authoring_attempts_per_slice;
   for (let runAttempt = 1; runAttempt <= limit; runAttempt += 1) {
-    assertNotAborted(runtime.signal);
+    await assertWorkerDispatch(runtime);
     const current = await loadCampaignStoreV6(
       runtime.projectRoot,
       runtime.campaignPath,
@@ -433,7 +440,7 @@ async function authorPacketForSlice(
         "packet_authoring_repair_required",
         async (_root, campaign) => {
           const target = campaign.slices[sliceId];
-          target.status = "packet_pending";
+          transitionSliceStatusV6(target, "packet_pending");
           target.last_error_code = boundedCode(message);
           campaign.campaign_status = "authoring";
           return campaign;
@@ -448,6 +455,7 @@ async function authorPacketForSlice(
     }
   }
   if (capacityEligible(errors)) {
+    await assertWorkerDispatch(runtime);
     const revised = await reviseScopeForCapacityV6(
       runtime,
       sliceId,
@@ -460,7 +468,7 @@ async function authorPacketForSlice(
     runtime,
     "packet_authoring_attempt_limit_exceeded",
     async (_root, campaign) => {
-      campaign.slices[sliceId].status = "needs_attention";
+      transitionSliceStatusV6(campaign.slices[sliceId], "packet_pending");
       campaign.slices[sliceId].last_error_code =
         "packet_authoring_attempt_limit_exceeded";
       campaign.campaign_status = "blocked";
@@ -516,6 +524,7 @@ async function reviseScopeForCapacityV6(
       "\n",
     )}\nRead ${path.join(loaded.root, "scope-fit.json")} and ${path.join(loaded.root, "source-coverage.json")}. Return a revised complete Scope Fit V4 and Source Coverage V2 as JSON strings. Keep existing SFC ids and stable_key values, narrow only the affected SFC as required, append new never-renumbered SFC ids, preserve every Source Unit and Context Resolution, and use authoring_capacity_exceeded with factual evidence. Do not edit product code, Context, Packets, or Campaign state. Do not start subagents or invoke any Long-Task Workflow command.`;
   try {
+    await assertWorkerDispatch(runtime);
     const result = await runTrackedWorker({
       runtime,
       sliceId,
@@ -575,6 +584,7 @@ async function runTrackedWorker(options: {
   outputSchemaFile?: string;
   outputLastMessageFile?: string;
 }): Promise<CodexExecResult> {
+  await assertWorkerDispatch(options.runtime);
   const runId = randomUUID();
   const loaded = await loadCampaignStoreV6(
     options.runtime.projectRoot,
@@ -593,6 +603,7 @@ async function runTrackedWorker(options: {
     attempt,
     run_generation: campaign.run_generation,
     pid: null,
+    process_start_identity: null,
     started_at: new Date().toISOString(),
     completed_at: null,
     profile: options.profile,
@@ -615,8 +626,17 @@ async function runTrackedWorker(options: {
           options.kind === "authoring" ? "authoring" : "execution"
         ] += 1;
         slice.current_worker_run = run;
-        slice.status =
-          options.kind === "authoring" ? "packet_pending" : "worker_running";
+        if (options.kind === "authoring")
+          transitionSliceStatusV6(slice, "packet_pending");
+        else {
+          if (
+            slice.status === "needs_work" ||
+            slice.status === "needs_attention" ||
+            slice.status === "interrupted"
+          )
+            transitionSliceStatusV6(slice, "scheduled");
+          transitionSliceStatusV6(slice, "worker_running");
+        }
       }
       return value;
     },
@@ -638,40 +658,54 @@ async function runTrackedWorker(options: {
   );
   let result: CodexExecResult;
   try {
-    result = await runCodexExec({
-      runId,
-      executable: options.runtime.codexExecutable,
-      args: argv,
-      cwd: options.cwd,
-      prompt: options.prompt,
-      timeoutMs: campaign.campaign_policy.worker_timeout_ms,
-      gracefulTerminationMs:
-        campaign.campaign_policy.worker_termination_grace_ms,
-      stderrFile,
-      signal: options.runtime.signal,
-      onSpawn: async (pid) => {
-        await queuedMutation(
-          options.runtime,
-          `${options.kind}_worker_running`,
-          async (_root, value) => {
-            const current =
-              options.kind === "repair"
-                ? value.repair.current_worker_run
-                : value.slices[options.sliceId!].current_worker_run;
-            if (!current || current.run_id !== runId)
-              throw new Error("campaign_worker_run_identity_changed");
-            current.pid = pid;
-            current.status = "running";
-            return value;
-          },
-        );
-      },
-    });
+    await assertWorkerDispatch(options.runtime);
+    options.runtime.metrics?.increment("worker_attempt_count");
+    const invoke = () =>
+      runCodexExec({
+        runId,
+        executable: options.runtime.codexExecutable,
+        args: argv,
+        cwd: options.cwd,
+        prompt: options.prompt,
+        timeoutMs: campaign.campaign_policy.worker_timeout_ms,
+        gracefulTerminationMs:
+          campaign.campaign_policy.worker_termination_grace_ms,
+        stderrFile,
+        signal: options.runtime.signal,
+        onSpawn: async (pid, processStartIdentity) => {
+          await queuedMutation(
+            options.runtime,
+            `${options.kind}_worker_running`,
+            async (_root, value) => {
+              const current =
+                options.kind === "repair"
+                  ? value.repair.current_worker_run
+                  : value.slices[options.sliceId!].current_worker_run;
+              if (!current || current.run_id !== runId)
+                throw new Error("campaign_worker_run_identity_changed");
+              current.pid = pid;
+              current.process_start_identity = processStartIdentity;
+              current.status = "running";
+              return value;
+            },
+          );
+          await assertWorkerDispatch(options.runtime);
+        },
+      });
+    result = options.runtime.metrics
+      ? await options.runtime.metrics.measure("worker_wait_wall_ms", invoke)
+      : await invoke();
   } catch (error) {
-    await finishTrackedRun(options, runId, null, false);
+    await finishTrackedRun(
+      options,
+      runId,
+      null,
+      error instanceof CampaignWorkerInterruptedError,
+    );
     throw error;
   }
   await finishTrackedRun(options, runId, result.exit_code, result.interrupted);
+  await assertWorkerDispatch(options.runtime);
   return result;
 }
 
@@ -700,7 +734,11 @@ async function finishTrackedRun(
       current.completed_at = new Date().toISOString();
       if (interrupted) {
         if (options.kind === "repair") value.repair.status = "interrupted";
-        else value.slices[options.sliceId!].status = "interrupted";
+        else
+          transitionSliceStatusV6(
+            value.slices[options.sliceId!],
+            "interrupted",
+          );
       }
       return value;
     },
@@ -941,8 +979,17 @@ function requireProfile(
     throw new Error(`${label}_required`);
   return profile;
 }
-function assertNotAborted(signal?: AbortSignal): void {
-  if (signal?.aborted) throw new CampaignWorkerInterruptedError();
+async function assertWorkerDispatch(
+  runtime: CampaignWorkerRuntimeV6,
+): Promise<void> {
+  await assertCampaignDispatchAllowedV6({
+    projectRoot: runtime.projectRoot,
+    campaignPath: runtime.campaignPath,
+    campaignRoot: runtime.campaignRoot,
+    lock: runtime.lock,
+    expectedRunGeneration: runtime.runGeneration,
+    signal: runtime.signal,
+  });
 }
 function repositoryRelative(root: string, file: string): string {
   return path

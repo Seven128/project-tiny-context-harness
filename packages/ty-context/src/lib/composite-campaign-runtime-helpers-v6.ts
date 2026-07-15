@@ -1,9 +1,6 @@
-import { readFile } from "node:fs/promises";
 import path from "node:path";
-import {
-  CampaignWorkerInterruptedError,
-  type CampaignWorkerRuntimeV6,
-} from "./composite-campaign-exec-worker.js";
+import type { CampaignWorkerRuntimeV6 } from "./composite-campaign-exec-worker.js";
+import { assertCampaignDispatchAllowedV6 } from "./composite-campaign-dispatch-v6.js";
 import { campaignFinalInputV6 } from "./composite-campaign-gates-v6.js";
 import {
   readSliceExecutionReceiptV3,
@@ -77,26 +74,27 @@ export async function runRepairWithinBudgetV6(
     );
     throw new Error("repair_attempt_limit_exceeded");
   }
-  return runSerializedRepairV6(runtime, {
-    ...request,
-    maxAttempts: remaining,
-  });
+  const repair = () =>
+    runSerializedRepairV6(runtime, {
+      ...request,
+      maxAttempts: remaining,
+    });
+  return runtime.metrics
+    ? runtime.metrics.measure("repair_wall_ms", repair)
+    : repair();
 }
 
 export async function assertCampaignNotInterruptedV6(
   runtime: CampaignWorkerRuntimeV6,
 ): Promise<void> {
-  if (runtime.signal?.aborted) throw new CampaignWorkerInterruptedError();
-  try {
-    await readFile(
-      path.join(runtime.campaignRoot, ".interrupt-request.json"),
-      "utf8",
-    );
-    throw new CampaignWorkerInterruptedError();
-  } catch (error) {
-    if (error instanceof CampaignWorkerInterruptedError) throw error;
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-  }
+  await assertCampaignDispatchAllowedV6({
+    projectRoot: runtime.projectRoot,
+    campaignPath: runtime.campaignPath,
+    campaignRoot: runtime.campaignRoot,
+    lock: runtime.lock,
+    expectedRunGeneration: runtime.runGeneration,
+    signal: runtime.signal,
+  });
 }
 
 export function stableIdsV6(values: string[]): string[] {

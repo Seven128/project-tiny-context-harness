@@ -42,6 +42,7 @@ export function compositeCampaignContractV6(): unknown {
       "status",
       "run",
       "interrupt",
+      "abandon",
       "model-routing",
       "exec-check",
       "workers",

@@ -6,6 +6,11 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { createCampaignV6 } from "../../packages/ty-context/dist/lib/composite-campaign-v6.js";
+import {
+  CampaignRunMetricsV6,
+  readLatestCampaignRunSummaryV6,
+  writeCampaignRunSummaryV6,
+} from "../../packages/ty-context/dist/lib/composite-campaign-run-metrics-v6.js";
 import { applyCampaignScopeV6 } from "../../packages/ty-context/dist/lib/composite-runtime-v6/campaign-packet-store.js";
 import { runGit } from "../../packages/ty-context/dist/lib/composite-campaign-git-baseline.js";
 import { listRepositoryWorktrees } from "../../packages/ty-context/dist/lib/composite-campaign-worktree.js";
@@ -39,6 +44,15 @@ test("CLI run --dry-run projects V6 work, routes ultra, and never invokes Codex"
     await writeFile(path.join(root, "coverage.json"), JSON.stringify(coverage), "utf8");
     await applyCampaignScopeV6(root, created.campaign_path, "scope.json", "coverage.json");
     const cli = path.resolve("packages/ty-context/dist/cli.js");
+    const contractProcess = spawnSync(
+      process.execPath,
+      [cli, "composite-campaign", "contract", "--json"],
+      { cwd: root, encoding: "utf8" },
+    );
+    assert.equal(contractProcess.status, 0, contractProcess.stderr);
+    const contract = JSON.parse(contractProcess.stdout);
+    assert.equal(contract.execution_engine, "codex-exec-v1");
+    assert.ok(contract.commands.includes("abandon"));
     const executed = spawnSync(
       process.execPath,
       [
@@ -80,6 +94,43 @@ test("CLI run --dry-run projects V6 work, routes ultra, and never invokes Codex"
     );
   } finally {
     await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("run metrics persist one lightweight mechanical timing summary per generation", async () => {
+  const campaignRoot = await mkdtemp(
+    path.join(os.tmpdir(), "campaign-run-summary-v6-"),
+  );
+  try {
+    const metrics = new CampaignRunMetricsV6("metrics", 7);
+    await metrics.measure("worker_wait_wall_ms", async () => undefined);
+    await metrics.measure("gate_wall_ms", async () => undefined);
+    metrics.increment("worktree_create_count", 2);
+    metrics.increment("worktree_remove_count");
+    metrics.increment("worker_attempt_count", 3);
+    const written = await writeCampaignRunSummaryV6(campaignRoot, metrics);
+    assert.equal(
+      written.mechanical_scheduler_wall_ms,
+      Math.max(
+        0,
+        written.run_wall_ms -
+          written.worker_wait_wall_ms -
+          written.gate_wall_ms,
+      ),
+    );
+    assert.equal(written.worktree_create_count, 2);
+    assert.equal(written.worktree_remove_count, 1);
+    assert.equal(written.worker_attempt_count, 3);
+    assert.deepEqual(
+      await readLatestCampaignRunSummaryV6(campaignRoot),
+      written,
+    );
+    await assert.rejects(
+      () => writeCampaignRunSummaryV6(campaignRoot, metrics),
+      /EEXIST/u,
+    );
+  } finally {
+    await rm(campaignRoot, { recursive: true, force: true });
   }
 });
 
