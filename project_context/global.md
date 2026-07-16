@@ -28,6 +28,8 @@
 ## Design Rationale
 
 - Keep durable project memory and completion authority, but leave mutable implementation sequencing inside the current agent/platform Goal.
+- For sufficiently explicit and observable declared scope, eliminate authoritative false completion: rolling implementation may drift, but the workflow must detect and block observable divergence, direct repair and accept only a current-snapshot result aligned with the Contract and relevant Context.
+- Retain a workflow mechanism only while its distinct drift-prevention benefit justifies its authoring, runtime, state and recovery cost; stop before diminishing returns turn the Harness back into an orchestration plane.
 - Use one nested Contract and compiler-generated Outcome/Check identities to avoid cross-file semantic duplication.
 - Increase proof obligations deterministically with risk instead of imposing strict ceremony on every task.
 - Do not invent rationale or store implementation summaries, command output or test-result claims in Context.

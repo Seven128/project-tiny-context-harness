@@ -12,7 +12,11 @@ The Long-Task Workflow V2 product equation is:
 
 > one authoritative Contract + one continuing platform-native Goal + one selected workspace + rolling technical implementation + one trustworthy Evidence Kernel + risk-proportional proof
 
-The product stops adding workflow mechanism when the marginal reduction in delivery drift no longer justifies the orchestration, state and recovery cost.
+Its controlling objective is to eliminate false completion inside the declared authority. When the source and Contract are sufficiently detailed and unambiguous, and every material plan item or acceptance criterion is represented by an observable Claim and falsifiable Check, no unfinished declared item may become authoritative completion. Agent prose, a checked box, command exit alone or historical evidence never overrides that rule.
+
+The workflow cannot guarantee that model-driven implementation never drifts while work is in progress; that depends on implementation capability. It instead makes observable drift detectable, blocks acceptance and Stop, identifies the responsible Outcome/Claim/Check or boundary, and directs repair until the Live Final Gate proves a final current-snapshot artifact with no remaining drift relative to the declared Contract and relevant Context.
+
+Every added workflow mechanism must buy concrete drift-prevention value. The product keeps Claim Coverage, authority/freshness binding, scope/risk escalation, actionable findings and current-snapshot recomputation because they close distinct false-completion paths, and stops adding orchestration, state or ceremony before diminishing marginal drift reduction no longer justifies authoring, runtime and recovery cost.
 
 ## 2. Authority Model
 

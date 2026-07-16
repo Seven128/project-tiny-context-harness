@@ -68,6 +68,13 @@ Capacity never creates semantic Children. Bundle fragments remain one authority;
 - The Contract records complete observable ends, stable obligations/boundaries/path envelopes/forbidden shortcuts/recovery requirements and falsifiable checks. It does not record a complete file-level procedure.
 - Compiler-generated Outcome/Check/Claim ids replace handwritten cross-entity references. Contract edits are normal Git history; there is no Packet chain or second plan.
 
+## False-Completion And Drift-Control Objective
+
+- When the source and Contract are sufficiently detailed and unambiguous, every material plan item or acceptance criterion must resolve to observable Claims and falsifiable Checks. Authoritative completion is impossible while any such declared item remains unimplemented, even if agent prose or a local checklist says otherwise.
+- The Harness does not promise drift-free intermediate model behavior. Rolling implementation may diverge; compile, scope/risk escalation, targeted findings, Final Gate and Stop must detect observable drift, block acceptance, identify the owning Outcome/Claim/Check or boundary and direct repair.
+- Machine acceptance means the final current-snapshot artifact has no remaining observable drift relative to the declared Contract and relevant Context. It does not extend to omitted or non-falsifiable requirements, hostile-host tampering or external CI/deployment/human confirmation.
+- Add a workflow mechanism only when it closes a distinct false-completion path or materially improves drift detection, blocking or repair direction. Stop layering mechanisms before their marginal drift-prevention benefit is outweighed by authoring, runtime, state and recovery cost.
+
 ## Compile, Verification And Completion
 
 - Compile performs only static work: strict V2 schema/key validation, Global and Outcome Claim generation/coverage, shared-AST owner/binding/path containment and overlap checks, Source/Context/Product/Global material projection, resolved-runner/verification-input freeze, per-Outcome risk proof and complete identity freeze. Unsupported repository-pattern syntax is rejected and missing/type-incomparable Observations cannot prove Claims.
