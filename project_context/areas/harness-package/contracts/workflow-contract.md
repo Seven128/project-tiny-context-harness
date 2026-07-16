@@ -70,7 +70,7 @@ Capacity never creates semantic Children. Bundle fragments remain one authority;
 
 ## Compile, Verification And Completion
 
-- Compile performs only static work: strict V2 schema/key validation, Claim generation/coverage, owner/binding/path checks, resolved-runner/verification-input freeze, per-Outcome risk proof and complete identity freeze.
+- Compile performs only static work: strict V2 schema/key validation, Global and Outcome Claim generation/coverage, conservative owner/binding/path containment, Source/Context/Product/Global material projection, resolved-runner/verification-input freeze, per-Outcome risk proof and complete identity freeze.
 - Static Contract errors block product implementation. Product/acceptance/architecture semantic conflicts return to the user; local code/check failures stay in the same Goal; retry defaults to none and one transient retry requires explicit idempotent read-only/test-sandbox policy.
 - Targeted verify may run one Check, one Outcome or all requested repair checks. It writes derived current-snapshot status but never accepted authority.
 - Final Gate creates one current snapshot and reruns all global and Outcome Checks. Only fully equal execution identities may be deduplicated inside that Gate; historical results are never reused.
@@ -82,7 +82,7 @@ Capacity never creates semantic Children. Bundle fragments remain one authority;
 - The Contract declares Outcome expected change paths, allowed support paths, forbidden paths and relevant Context owners/boundaries.
 - Actual changes outside the combined allowed envelope or a newly touched undeclared boundary return `scope_or_risk_escalation_required`.
 - The same current Goal revises the Contract and recompiles. Harness never responds by starting a worker/new Goal.
-- Product Outcome, non-completing result or Acceptance semantic changes are scope changes and may not be silently weakened. Additional implementation/support paths or local technical constraints may be added when product and acceptance meaning remains intact.
+- Any Source/Context/Product/Global semantic material change after execution is a user-reviewed Authority Revision. Product Claim additions/removals/rewrites and unproved pattern containment are scope changes. Only mechanical proof additions and proven path/binding tightening may revise automatically.
 
 ## Contract Conformance
 

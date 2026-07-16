@@ -11,6 +11,14 @@ const LEGACY_MANAGED_STATUSES = new Set([
   "Tiny Context long-task completion gate",
   "Tiny Context composite completion gate",
 ]);
+const LEGACY_REPO_LOCAL_COMMANDS = new Set([
+  'node "$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs"',
+  "powershell -NoProfile -Command \"$r=(git rev-parse --show-toplevel); node (Join-Path $r '.codex/hooks/long-task-hook.mjs')\"",
+  "node .codex/hooks/long-task-hook.mjs",
+  'node ".codex/hooks/long-task-hook.mjs"',
+  "node .codex\\hooks\\long-task-hook.mjs",
+  'node ".codex\\hooks\\long-task-hook.mjs"',
+]);
 
 export async function installLongTaskHooks(
   projectRoot: string,
@@ -50,10 +58,10 @@ export async function installLongTaskHooks(
   root.hooks = hooks;
   for (const event of ["SessionStart", "PostCompact", "Stop"]) {
     const groups = Array.isArray(hooks[event])
-      ? (hooks[event] as Array<Record<string, unknown>>)
+      ? hooks[event]
       : [];
-    const retained = groups.filter((group) => !containsManaged(group));
-    retained.push({
+    const cleaned = removeManagedHookEntries(groups, command);
+    cleaned.groups.push({
       hooks: [
         {
           type: "command",
@@ -64,7 +72,7 @@ export async function installLongTaskHooks(
         },
       ],
     });
-    hooks[event] = retained;
+    hooks[event] = cleaned.groups;
   }
   if (await writeIfChanged(config, `${JSON.stringify(root, null, 2)}\n`))
     report.changed.push(".codex/hooks.json");
@@ -75,6 +83,10 @@ export async function uninstallLongTaskHooks(
   projectRoot: string,
   report: SyncReport,
 ): Promise<void> {
+  const packageRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const command = packageOwnedCommand(
+    path.join(packageRoot, "dist", "long-task-hook.js"),
+  );
   const legacyScript = path.join(
     projectRoot,
     ".codex",
@@ -101,11 +113,10 @@ export async function uninstallLongTaskHooks(
   let changed = false;
   for (const event of ["SessionStart", "PostCompact", "Stop"]) {
     if (!Array.isArray(hooks[event])) continue;
-    const previous = hooks[event] as Array<Record<string, unknown>>;
-    const retained = previous.filter((group) => !containsManaged(group));
-    if (retained.length === previous.length) continue;
+    const cleaned = removeManagedHookEntries(hooks[event], command);
+    if (cleaned.removed === 0) continue;
     changed = true;
-    if (retained.length) hooks[event] = retained;
+    if (cleaned.groups.length) hooks[event] = cleaned.groups;
     else delete hooks[event];
   }
   if (!changed) return;
@@ -120,29 +131,66 @@ export function packageOwnedCommand(entry: string): string {
   return `node "${path.resolve(entry).replace(/"/gu, '\\"')}"`;
 }
 
+export function removeManagedHookEntries(
+  groups: unknown,
+  currentPackageCommand = "",
+): { groups: unknown[]; removed: number } {
+  if (!Array.isArray(groups)) return { groups: [], removed: 0 };
+  const retained: unknown[] = [];
+  let removed = 0;
+  for (const groupValue of groups) {
+    if (!isObject(groupValue) || !Array.isArray(groupValue.hooks)) {
+      retained.push(groupValue);
+      continue;
+    }
+    const hooks = groupValue.hooks.filter((entry) => {
+      if (!isManagedHookEntry(entry, currentPackageCommand)) return true;
+      removed += 1;
+      return false;
+    });
+    if (hooks.length > 0) {
+      retained.push({ ...groupValue, hooks });
+      continue;
+    }
+    if (Object.keys(groupValue).some((key) => key !== "hooks"))
+      retained.push({ ...groupValue, hooks });
+  }
+  return { groups: retained, removed };
+}
+
+export function isManagedHookEntry(
+  entry: unknown,
+  currentPackageCommand = "",
+): boolean {
+  const row = object(entry);
+  if (row.type !== "command") return false;
+  const commands = [row.command, row.commandWindows]
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim());
+  if (
+    currentPackageCommand &&
+    commands.some((command) => command === currentPackageCommand)
+  )
+    return true;
+  const repoLocal = commands.some((command) =>
+    LEGACY_REPO_LOCAL_COMMANDS.has(command),
+  );
+  if (repoLocal) return true;
+  const status = String(row.statusMessage ?? "");
+  return (
+    LEGACY_MANAGED_STATUSES.has(status) &&
+    commands.some((command) => LEGACY_REPO_LOCAL_COMMANDS.has(command))
+  );
+}
+
 function object(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
 }
 
-function containsManaged(group: Record<string, unknown>): boolean {
-  return (
-    Array.isArray(group.hooks) &&
-    group.hooks.some((hook) => {
-      const row = object(hook);
-      const command = `${String(row.command ?? "")} ${String(
-        row.commandWindows ?? "",
-      )}`;
-      return (
-        LEGACY_MANAGED_STATUSES.has(String(row.statusMessage ?? "")) ||
-        command.includes(".codex/hooks/long-task-hook.mjs") ||
-        command.includes("composite") ||
-        command.includes("dist/long-task-hook.js") ||
-        command.includes("dist\\long-task-hook.js")
-      );
-    })
-  );
+function isObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
 
 async function writeIfChanged(file: string, content: string): Promise<boolean> {

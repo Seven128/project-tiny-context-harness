@@ -7,6 +7,7 @@ import type {
   DeliveryRunnerV2,
   SourceClaimV2,
 } from "./long-task-delivery-types.js";
+import { proveRepositoryPatternSubset } from "./long-task-paths.js";
 import { canonicalValueJson } from "./strict-codec.js";
 
 export function checkIndex(
@@ -205,7 +206,11 @@ export function expandedPatterns(
   return after
     .filter(
       (candidate) =>
-        !before.some((existing) => patternWithin(candidate, existing)),
+        !before.some(
+          (existing) =>
+            proveRepositoryPatternSubset(candidate, existing).status ===
+            "proven_subset",
+        ),
     )
     .map((candidate) => `${label}:${candidate}`);
 }
@@ -262,19 +267,4 @@ function declaredRunner(check: CompiledCheckV2): DeliveryRunnerV2 {
     retry_policy: runner.retry_policy,
     idempotent: runner.idempotent,
   };
-}
-
-function patternWithin(candidate: string, owner: string): boolean {
-  const prefix = (value: string): string =>
-    value
-      .replace(/\\/gu, "/")
-      .split(/[?*{[]/u, 1)[0]
-      .replace(/\/$/u, "");
-  const child = prefix(candidate);
-  const parent = prefix(owner);
-  return Boolean(
-    child &&
-    parent &&
-    (child === parent || child.startsWith(`${parent}/`) || owner === "**"),
-  );
 }

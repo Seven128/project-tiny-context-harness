@@ -23,7 +23,7 @@ This contract defines source-only, managed, packaged and human-facing surfaces f
 ## Profile And Consumer Boundary
 
 - `core-portable` plus `workflow-default` are installed by default.
-- `long-task` is explicit. Enabling it installs only the Long-Task Workflow Skill, Stop Hook and required templates; disabling it removes only package-owned long-task surfaces and preserves user Hooks/files.
+- `long-task` is explicit. Enabling it installs only the Long-Task Workflow Skill, Stop Hook and required templates. Enable, disable and upgrade filter exact managed Hook entries inside each group, preserve user entries and group metadata, and never classify a Hook solely from a `composite` substring.
 - Upgrade safely removes the V1 repo-local Hook, reports unfinished V1 active state as manual, and never imports historical progress/Receipts as V2 authority.
 - Retired command names are CLI tombstones in code, not packaged runtime profiles. They import no Campaign/SFC/worker/AppServer/worktree modules.
 - `init`, `sync` and `upgrade` never create, discover, import, activate or abandon a Delivery Contract.

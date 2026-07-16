@@ -9,6 +9,7 @@ import {
   assertRepositoryPattern,
   matchesRepoPattern,
   patternsOverlap,
+  proveRepositoryPatternSubset,
 } from "./long-task-paths.js";
 import { assertProtectedRepositoryFile } from "./long-task-protected-files.js";
 import { sha256Hex } from "./strict-codec.js";
@@ -93,7 +94,13 @@ export function validateTechnicalPaths(
           throw new Error(
             `binding_carrier_path_not_found:${outcome.key}:${carrier}`,
           );
-        if (!allowed.some((pattern) => patternsOverlap(pattern, carrier)))
+        if (
+          !allowed.some(
+            (pattern) =>
+              proveRepositoryPatternSubset(carrier, pattern).status ===
+              "proven_subset",
+          )
+        )
           throw new Error(
             `binding_carrier_outside_change_paths:${outcome.key}:${carrier}`,
           );

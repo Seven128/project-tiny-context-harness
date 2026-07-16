@@ -186,11 +186,11 @@ ty-context long-task close <workdir>
 ty-context long-task abandon <workdir>
 ```
 
-Compile generates Product/Control/Non-completing/Technical Claims, rejects uncovered Claims, requires Source Claims to bind declared real Source files, validates owner/binding/path authority and per-Outcome risk, then freezes resolved runners, verification inputs, verifier sources and an immutable initial baseline.
+Compile generates Global plus Outcome Product/Control/Non-completing/Technical Claims, rejects uncovered Claims, requires Source Claims to bind declared real Source files, validates owner/binding/path authority and per-Outcome risk, then freezes Source hashes, Context topology/files, canonical Product/Global semantics, resolved runners, verification inputs, verifier sources and an immutable initial baseline. Global non-goals and forbidden shortcuts require negative Global Check proof; Global constraints accept either polarity. Global forbidden paths remain static boundaries rather than Assertion Claims.
 
 Targeted verify accumulates scoped per-Check Progress Records and can never accept. Final Gate, Stop and close recompile source authority, require the Git common-dir record/config marker to match, require a clean candidate commit and rerun every Check on one Git-tree snapshot. Status, Receipts and compiled cache are audit/recovery data only. Successful Stop/close clears the binding atomically.
 
-A large atomic task uses one logical Contract Bundle with Outcome-only `outcome_files`. Independent top-level boundaries run as separate Contracts; `delivery-set` is a fixed non-executing tombstone. Protected source/runner/input/scope/proof reductions require exact hash-bound revision approval; additions and mechanically tighter scope may revise automatically. The executing Agent cannot self-approve and risk downgrade is rejected.
+A large atomic task uses one logical Contract Bundle with Outcome-only `outcome_files`. Independent top-level boundaries run as separate Contracts; `delivery-set` is a fixed non-executing tombstone. Contract authority, Source hashes/file sets, Context topology/files/hashes and canonical Product/Global semantics all participate in revision detection. After execution starts, semantic changes, Product Claim changes, runner/input replacement, proof weakening, scope expansion or unproved Glob inclusion require an exact material-bound user approval. Only mechanical proof additions and proven scope tightening revise automatically. The executing Agent cannot self-approve and risk downgrade is rejected.
 
 Supported runners: `package_script`, `project_binary`, `node_oracle`, `playwright_test`.
 
@@ -211,7 +211,7 @@ ty-context upgrade
 ty-context sync
 ```
 
-Version 0.6.0 retires V1 and the repo-local Hook. Upgrade removes the old Hook, reports unfinished V1 active state as `manual_required`, never imports V1 progress/Receipts into V2, and keeps Delivery Set/composite commands as non-executing tombstones.
+Version 0.6.0 retires V1 and the repo-local Hook. Enable, disable and upgrade remove only exact Tiny Context managed Hook entries, preserve user entries in the same group and never delete user commands merely because they contain `composite`. Upgrade reports unfinished V1 active state as `manual_required`, never imports V1 progress/Receipts into V2, and keeps Delivery Set/composite commands as non-executing tombstones.
 
 After updating the package, run `ty-context upgrade`. Use `ty-context upgrade --check` first when you need a read-only plan.
 

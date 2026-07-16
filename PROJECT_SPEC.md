@@ -139,9 +139,11 @@ CHECK.<outcome-key>.<check-key>
 CHECK.GLOBAL.<check-key>
 ```
 
-Authors use stable local keys for controls, obligations, bindings and Assertions. The compiler creates canonical Outcome-qualified Claim ids and rejects unknown, cross-Outcome or uncovered references.
+Authors use stable local keys for controls, obligations, bindings and Assertions. The compiler creates canonical Outcome-qualified Claim ids plus `GLOBAL.non_goal.<key>`, `GLOBAL.constraint.<key>` and `GLOBAL.forbidden_shortcut.<key>`. Global Claims are covered only by Global Checks; Outcome and Global Assertions cannot cross scope. Global non-goals and forbidden shortcuts require negative proof, while Global constraints accept either polarity. Global forbidden paths remain static changed-path authority and do not become Assertion Claims.
 
-Product or Acceptance meaning may not be silently weakened by execution. After execution starts, removing or changing Source Claims, expanding owner/change/support/binding paths, removing forbidden paths, changing runners or existing verification inputs, or weakening artifacts, environment requirements, bindings, obligations, counterfactuals, population or rollback/recovery creates a hash-bound pending Authority Revision. Adding proof or mechanically tightening scope may revise automatically. Every revision invalidates old progress and Receipts.
+Compile derives canonical, key-sorted Product and Global semantic projections and combines them with Source hashes and the selected Context topology/file set/file hashes as Authority Revision materials. Any Contract authority or material change requires `--revise`; Source or Context cannot be silently refrozen by ordinary compile.
+
+After execution starts, Source/Context/Product/Global semantic changes, Product Claim additions/removals/rewrites, expanding owner/change/support/binding paths, removing forbidden paths, changing runners or existing verification inputs, or weakening artifacts, environment requirements, bindings, obligations, counterfactuals, population or rollback/recovery creates a pending revision whose identity binds previous/next authority hashes, actual materials, diff, risk floor and affected Outcomes. Only mechanical proof additions and machine-proven scope tightening may revise automatically. Risk downgrade is rejected and every revision invalidates old progress and Receipts.
 
 If one atomic Product + Acceptance Contract exceeds a single file, use a Contract Bundle. Independent release/rollback/owner/risk/product boundaries run as separate top-level Contracts. Capacity, parallelism and model preference are never semantic separation boundaries.
 
@@ -165,13 +167,15 @@ Compile is deterministic, static and model-free. It:
 - validates registered Context refs and requires every Source Claim to bind a declared real Source file, with optional `file#anchor` location;
 - validates repository-contained safe paths, owner/binding semantics, resolved command targets, explicit verification inputs, package scripts, project binaries, Oracle/Playwright targets and structured environment probes;
 - rejects symlink and detectable hardlink authority/proof files, including the Contract, fragments, Source, Context, runner targets, verification inputs, frozen package/config files, Counterfactual fixtures and package-owned verifier files;
-- compiles and requires coverage for result, control, non-completing, obligation and forbidden-shortcut Claims;
+- compiles and requires coverage for Global non-goal/constraint/forbidden-shortcut Claims plus Outcome result, control, non-completing, obligation and forbidden-shortcut Claims;
 - requires executable falsifiable proof for every Outcome;
 - requires `ui_browser` proof when a UI owner surface or controls exist;
 - computes effective risk and rejects a requested level below the floor;
 - enforces risk-trigger-specific negative, counterfactual, population, security, environment and rollback/recovery proof;
 - freezes source, Contract, selected Context topology/files, verifier, runner/oracle/command, workdir and repository identity;
 - activates the one long-task binding for the current worktree.
+
+All pattern-language inclusion decisions use one conservative repository subset prover. It proves only equality, exact-file matching and explicitly supported simple subtree/segment/extension relations. `not_subset` and `unknown` both fail closed for owner/binding validation and count as expansion in Authority Revision; identical literal prefixes never prove containment.
 
 Compile never implements code, invokes a model, creates a process/worktree/branch or runs project verification.
 
@@ -277,7 +281,7 @@ Profiles are:
 - `workflow-default`;
 - explicit `long-task`.
 
-`ty-context enable long-task` installs only the Long-Task Skill, Stop Hook and required templates. `disable long-task` removes only package-owned assets and preserves user Hooks/files.
+`ty-context enable long-task` installs only the Long-Task Skill, Stop Hook and required templates. Enable, disable and upgrade share one entry-level cleanup function that recognizes only current package-owned and exact historical Tiny Context Hook signatures. User entries in the same group, user-only groups and commands merely containing `composite` are preserved.
 
 Upgrade safely changes package-owned `composite-codex` profile selection to `long-task`, removes package-owned retired assets and leaves user-authored historical campaign/source/Contract files untouched. It never imports an unfinished campaign or automatically executes it.
 

@@ -2,29 +2,93 @@ import type {
   ClaimCoverageSummaryV2,
   ClaimProofV2,
   DeliveryContractV2,
+  GlobalClaimV2,
   ProductClaimV2,
 } from "./long-task-delivery-types.js";
 import {
   assertAllClaimsCovered,
+  assertAllGlobalClaimsCovered,
   generateClaims,
+  generateGlobalClaims,
+  validateGlobalProofPolarity,
   validateProofSurface,
 } from "./long-task-claim-definitions.js";
 import { fail } from "./long-task-delivery-shape.js";
 
 export interface CompiledClaimsV2 {
+  by_global: GlobalClaimV2[];
   by_outcome: Record<string, ProductClaimV2[]>;
   summary: ClaimCoverageSummaryV2;
 }
 
 export function compileProductClaimCoverage(
   contract: DeliveryContractV2,
+  options: { allow_uncovered?: boolean } = {},
 ): CompiledClaimsV2 {
+  const byGlobal = generateGlobalClaims(contract.global);
   const byOutcome = Object.fromEntries(
     contract.outcomes.map((outcome) => [outcome.key, generateClaims(outcome)]),
   );
+  const globalClaimMap = new Map(
+    byGlobal.map((claim) => [claim.local_key, claim]),
+  );
+  const outcomeClaimIds = new Set(
+    Object.values(byOutcome)
+      .flat()
+      .map((claim) => claim.id),
+  );
+  const globalProofs = new Map<string, ClaimProofV2[]>();
+  const addGlobalProof = (
+    claimKey: string,
+    proof: ClaimProofV2,
+  ): void => {
+    const claim = globalClaimMap.get(claimKey);
+    if (!claim) {
+      if (outcomeClaimIds.has(claimKey))
+        fail("global_assertion_claim_cross_scope", claimKey);
+      fail("global_assertion_claim_unknown", claimKey);
+    }
+    validateGlobalProofPolarity(claim, proof);
+    const rows = globalProofs.get(claimKey) ?? [];
+    rows.push(proof);
+    globalProofs.set(claimKey, rows);
+  };
+  for (const check of contract.global.acceptance.checks) {
+    const assertionKeys = new Set<string>();
+    for (const [polarity, assertions] of [
+      ["positive", check.positive_assertions],
+      ["negative", check.negative_assertions],
+    ] as const)
+      for (const assertion of assertions) {
+        if (assertionKeys.has(assertion.key))
+          fail(
+            "assertion_key_duplicate",
+            `GLOBAL:${check.key}:${assertion.key}`,
+          );
+        assertionKeys.add(assertion.key);
+        for (const claimKey of assertion.claims)
+          addGlobalProof(claimKey, {
+            check_key: check.key,
+            assertion_key: assertion.key,
+            polarity,
+            proof_surface: check.proof_surface,
+          });
+      }
+  }
+
+  const globalRows: ClaimCoverageSummaryV2["claims_by_global"] = {};
+  const uncoveredGlobal: string[] = [];
+  for (const claim of byGlobal) {
+    const proofs = globalProofs.get(claim.local_key) ?? [];
+    const covered = proofs.length > 0;
+    globalRows[claim.local_key] = { covered, proofs };
+    if (!covered) uncoveredGlobal.push(claim.id);
+  }
+
   const outcomeKeys = new Set(contract.outcomes.map((outcome) => outcome.key));
+  const globalLocalKeys = new Set(byGlobal.map((claim) => claim.local_key));
   const summaryRows: ClaimCoverageSummaryV2["claims_by_outcome"] = {};
-  const uncovered: string[] = [];
+  const uncoveredOutcome: string[] = [];
 
   for (const outcome of contract.outcomes) {
     const claims = byOutcome[outcome.key];
@@ -33,6 +97,8 @@ export function compileProductClaimCoverage(
     const addProof = (claimKey: string, proof: ClaimProofV2): void => {
       const claim = claimMap.get(claimKey);
       if (!claim) {
+        if (globalLocalKeys.has(claimKey))
+          fail("assertion_claim_cross_scope", `${outcome.key}:${claimKey}`);
         const first = claimKey.split(".")[0];
         if (outcomeKeys.has(first) && first !== outcome.key)
           fail("assertion_claim_cross_outcome", `${outcome.key}:${claimKey}`);
@@ -127,23 +193,51 @@ export function compileProductClaimCoverage(
       const claimProofs = proofs.get(claim.local_key) ?? [];
       const covered = claimProofs.length > 0;
       rows[claim.local_key] = { covered, proofs: claimProofs };
-      if (!covered) uncovered.push(claim.id);
+      if (!covered) uncoveredOutcome.push(claim.id);
     }
     summaryRows[outcome.key] = rows;
   }
 
-  assertAllClaimsCovered(uncovered);
-  const total = Object.values(byOutcome).reduce(
-    (sum, claims) => sum + claims.length,
-    0,
-  );
-  return {
+  const uncovered = [...uncoveredGlobal, ...uncoveredOutcome].sort();
+  const total =
+    byGlobal.length +
+    Object.values(byOutcome).reduce(
+      (sum, claims) => sum + claims.length,
+      0,
+    );
+  const compiled = {
+    by_global: byGlobal,
     by_outcome: byOutcome,
     summary: {
       claims_total: total,
       claims_covered: total - uncovered.length,
-      uncovered_claims: uncovered.sort(),
+      uncovered_claims: uncovered,
+      claims_by_global: globalRows,
       claims_by_outcome: summaryRows,
     },
   };
+  if (!options.allow_uncovered) assertCompiledClaimsCovered(compiled);
+  return compiled;
+}
+
+export function assertCompiledClaimsCovered(
+  compiled: CompiledClaimsV2,
+): void {
+  const uncoveredGlobal = compiled.by_global
+    .filter(
+      (claim) =>
+        !compiled.summary.claims_by_global[claim.local_key]?.covered,
+    )
+    .map((claim) => claim.id);
+  const uncoveredOutcome = Object.values(compiled.by_outcome)
+    .flat()
+    .filter(
+      (claim) =>
+        !compiled.summary.claims_by_outcome[claim.outcome_key]?.[
+          claim.local_key
+        ]?.covered,
+    )
+    .map((claim) => claim.id);
+  assertAllGlobalClaimsCovered(uncoveredGlobal);
+  assertAllClaimsCovered(uncoveredOutcome);
 }

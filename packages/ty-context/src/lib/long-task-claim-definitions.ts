@@ -1,6 +1,8 @@
 import type {
   ClaimProofV2,
+  DeliveryContractV2,
   DeliveryOutcomeV2,
+  GlobalClaimV2,
   ProductClaimV2,
   ProofSurface,
 } from "./long-task-delivery-types.js";
@@ -50,6 +52,45 @@ export function generateClaims(outcome: DeliveryOutcomeV2): ProductClaimV2[] {
   return claims;
 }
 
+export function generateGlobalClaims(
+  global: DeliveryContractV2["global"],
+): GlobalClaimV2[] {
+  return [
+    ...global.product.non_goals.map((item) =>
+      globalClaim(
+        `non_goal.${item.key}`,
+        "global_non_goal",
+        "negative",
+      ),
+    ),
+    ...global.technical.constraints.map((item) =>
+      globalClaim(
+        `constraint.${item.key}`,
+        "global_constraint",
+        "any",
+      ),
+    ),
+    ...global.technical.forbidden_shortcuts.map((item) =>
+      globalClaim(
+        `forbidden_shortcut.${item.key}`,
+        "global_forbidden_shortcut",
+        "negative",
+      ),
+    ),
+  ].sort((left, right) => left.id.localeCompare(right.id));
+}
+
+export function validateGlobalProofPolarity(
+  claim: GlobalClaimV2,
+  proof: ClaimProofV2,
+): void {
+  if (claim.required_polarity === "negative" && proof.polarity !== "negative")
+    fail(
+      "global_negative_claim_proof_required",
+      `${claim.local_key}:${proof.check_key}`,
+    );
+}
+
 export function validateProofSurface(
   claim: ProductClaimV2,
   proof: ClaimProofV2,
@@ -82,6 +123,11 @@ export function assertAllClaimsCovered(uncovered: string[]): void {
     fail("product_claim_uncovered", uncovered.sort().join(","));
 }
 
+export function assertAllGlobalClaimsCovered(uncovered: string[]): void {
+  if (uncovered.length)
+    fail("global_claim_uncovered", uncovered.sort().join(","));
+}
+
 function claim(
   outcomeKey: string,
   localKey: string,
@@ -94,5 +140,18 @@ function claim(
     local_key: localKey,
     kind,
     required_proof_surfaces: requiredProofSurfaces,
+  };
+}
+
+function globalClaim(
+  localKey: string,
+  kind: GlobalClaimV2["kind"],
+  requiredPolarity: GlobalClaimV2["required_polarity"],
+): GlobalClaimV2 {
+  return {
+    id: `GLOBAL.${localKey}`,
+    local_key: localKey,
+    kind,
+    required_polarity: requiredPolarity,
   };
 }

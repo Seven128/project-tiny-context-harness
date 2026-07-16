@@ -44,7 +44,7 @@ Supported CLI:
 - `ty-context long-task stop-check <workdir> [--message <text>]`
 - `ty-context long-task close|abandon <workdir>`
 
-Contract V2 compiles Product/Control/Non-completing/Technical Claims and rejects uncovered Claims. It freezes source coverage, owner/path/binding authority, an immutable initial base, relevant Context, resolved runners and explicit verification inputs. Targeted verify accumulates scoped per-Check progress and never grants acceptance.
+Contract V2 compiles Global plus Product/Control/Non-completing/Technical Claims and rejects uncovered Claims. It freezes Source hashes, Context topology/files, canonical Product/Global semantic projections, owner/path/binding authority, an immutable initial base, resolved runners and explicit verification inputs. After execution begins, semantic material changes require exact user-approved Authority Revision; only mechanical proof additions and proven scope tightening revise automatically, and the executing Agent never approves its own pending revision. Pattern containment is fail-closed. Targeted verify accumulates scoped per-Check progress and never grants acceptance.
 
 Status, progress, receipts and compiled cache are audit/recovery surfaces only. Final Gate, Stop and close recompile the source Contract, require the common-dir record/config marker to agree, require a clean candidate commit, create a Git-tree snapshot, and rerun every required Check. Successful Stop or close atomically clears the active binding. External confirmations remain explicit; machine acceptance never implies CI, deployment or human acceptance.
 

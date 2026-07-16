@@ -15,10 +15,12 @@ import {
   sha256Hex,
 } from "./strict-codec.js";
 import type {
+  AuthorityMaterialHashesV2,
   AuthorityHashesV2,
   CompiledDeliveryContractV2,
   FinalReceiptV2,
   InitialTaskBaseV2,
+  NextAuthorityMaterialsV2,
   ProgressRecordV2,
   VerifierIdentityV2,
 } from "./long-task-delivery-types.js";
@@ -55,6 +57,10 @@ export interface PendingAuthorityRevisionV2 {
   schema_version: "long-task-authority-revision-pending-v2";
   previous_hashes: AuthorityHashesV2;
   next_hashes: AuthorityHashesV2;
+  previous_materials: NextAuthorityMaterialsV2;
+  next_materials: NextAuthorityMaterialsV2;
+  previous_material_hashes: AuthorityMaterialHashesV2;
+  next_material_hashes: AuthorityMaterialHashesV2;
   changed_authority_sections: string[];
   revision_diff: Record<string, unknown> & { reduction_reasons: string[] };
   new_risk_floor: "standard" | "strict";

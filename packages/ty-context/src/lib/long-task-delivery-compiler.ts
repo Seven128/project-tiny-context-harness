@@ -25,6 +25,11 @@ import {
   computeAuthorityHashes,
 } from "./long-task-authority.js";
 import {
+  authorityMaterialsChanged,
+  compiledAuthorityMaterials,
+  computeAuthorityMaterials,
+} from "./long-task-authority-materials.js";
+import {
   assertRiskNotDowngraded,
   enforceAuthorityRevision,
 } from "./long-task-authority-revision-enforcement.js";
@@ -86,6 +91,11 @@ export async function compileDeliveryContract(
     repository,
     contract.task.context_refs,
     contract.task.context_snapshot_mode,
+  );
+  const authorityMaterials = computeAuthorityMaterials(
+    contract,
+    sourceHashes,
+    context,
   );
   const previous = options.live_gate
     ? null
@@ -165,15 +175,22 @@ export async function compileDeliveryContract(
       authorityHashes,
     );
     const contractChanged = previous.contract_sha256 !== contractHash;
-    if ((changes.length || contractChanged) && !options.revise)
+    const materialsChanged = authorityMaterialsChanged(
+      compiledAuthorityMaterials(previous),
+      authorityMaterials,
+    );
+    const authorityChanged =
+      changes.length > 0 || contractChanged || materialsChanged;
+    if (authorityChanged && !options.revise)
       throw new Error("authority_revision_requires_revise_flag");
-    if (options.revise && (changes.length || contractChanged)) {
+    if (options.revise && authorityChanged) {
       assertRiskNotDowngraded(previous, risk.effective_level, risk.reasons);
       authorityRevision = previous.authority_revision + 1;
       await enforceAuthorityRevision(
         previous,
         contract,
         authorityHashes,
+        authorityMaterials,
         globalChecks,
         outcomes,
         current,
@@ -208,6 +225,7 @@ export async function compileDeliveryContract(
     baseline_workspace: initialTaskBase.workspace_manifest,
     initial_task_base: initialTaskBase,
     authority_hashes: authorityHashes,
+    authority_materials: authorityMaterials,
     authority_revision: authorityRevision,
     claim_coverage: claims.summary,
     task: contract.task,

@@ -235,7 +235,7 @@ ty-context long-task abandon <workdir>
 ```
 
 - `init` creates only a Contract template.
-- `compile` generates Product/Control/Non-completing/Technical Claims, rejects uncovered Claims, preserves an immutable first baseline, calculates per-Outcome risk, freezes owner/binding authority plus resolved runners and verification inputs, and activates a common-dir binding paired with a Git-config marker.
+- `compile` generates Global plus Outcome Product/Control/Non-completing/Technical Claims, rejects uncovered Claims, preserves an immutable first baseline, calculates per-Outcome risk, freezes Source hashes, Context topology/files, canonical Product/Global semantics, owner/binding authority, resolved runners and verification inputs, and activates a common-dir binding paired with a Git-config marker.
 - `verify` writes scoped per-Check Progress Records. Records accumulate across Outcome/Check runs and can never create accepted authority.
 - `status` reports each Outcome as `unverified`, `progress_passing`, `progress_failing`, `progress_stale` or `blocked_external`.
 - `resume` is read-only and reports task identity, risk, relevant Context, Git state, ready Outcomes, findings and the next safe action.
@@ -302,6 +302,8 @@ outcomes:
 
 Authors provide task, Outcome, control and Check keys. The compiler generates `OUT.<outcome-key>` and `CHECK.<outcome-key>.<check-key>` identities. It rejects unknown/duplicate keys, YAML aliases/tags/merges, dependency cycles, unsafe paths, missing Context/source/runner files, missing package scripts, unverifiable Outcomes, and UI Outcomes without browser proof.
 
+Global non-goals, constraints and forbidden shortcuts generate `GLOBAL.non_goal.<key>`, `GLOBAL.constraint.<key>` and `GLOBAL.forbidden_shortcut.<key>`. They must be covered by Global Check Assertions using local refs. Non-goals and forbidden shortcuts require negative proof; constraints accept either polarity. Outcome and Global Checks cannot cross Claim scope. Global forbidden paths do not generate Claims because the changed-path boundary enforces them statically.
+
 Supported runners are `package_script`, `project_binary`, `node_oracle` and `playwright_test`. Supported proof surfaces are `ui_browser`, `runtime_behavior`, `api_contract`, `data_state`, `security_boundary`, `population_coverage` and `implementation_structure`.
 
 ### Contract Bundle And Source Claims
@@ -312,7 +314,9 @@ V2 authoring preserves original `source_paths` and direct `source_claims`, each 
 
 Delivery Set orchestration is retired. Genuinely independent release/rollback/owner/risk/product boundaries run as separate top-level Contracts. `ty-context delivery-set ...` returns a fixed non-executing tombstone.
 
-After execution begins, protected source/Product/Acceptance/risk changes require `--revise`; source/runner/input/scope/proof reductions require approval of the exact hash-bound revision, while proof additions and mechanically tighter scope may revise automatically. Risk downgrade is rejected, the executing Agent cannot self-approve, the immutable initial baseline is retained and affected progress becomes stale.
+Every Contract-authority, Source hash/file-set, Context topology/file-set/hash, Product semantic projection or Global semantic projection change requires `--revise`; ordinary compile cannot silently refreeze changed Source or Context. After execution begins, Source/Context/Product/Global semantic changes, Product Claim additions/removals/rewrites, runner or existing-input changes, proof weakening and scope expansion require approval of an exact revision identity bound to the previous and next materials. Only mechanical proof additions and machine-proven scope tightening revise automatically. Risk downgrade is rejected, the executing Agent cannot self-approve, the immutable initial baseline is retained and affected progress becomes stale.
+
+Repository pattern inclusion uses one conservative subset prover. Equality, exact-file matching, supported subtree, single-segment and extension relations can be proven; complex or otherwise unproved relations fail closed. In particular, changing `src/safe/*.ts` to `src/safe/**` is widening even though the literal prefix is unchanged.
 
 ### Deterministic Risk
 
@@ -330,7 +334,7 @@ Final Gate may run only Contract-declared verification commands and never produc
 
 ## Compatibility And Migration
 
-Version 0.6.0 retires the V1 schema/runtime and repo-local Hook. Upgrade safely removes the old Hook, reports unfinished V1 active state as `manual_required`, and never imports V1 progress or Receipts into V2 authority. Delivery Set, `composite-campaign` and `composite-long-task` commands are non-executing tombstones.
+Version 0.6.0 retires the V1 schema/runtime and repo-local Hook. Enable, disable and upgrade remove only exact Tiny Context managed Hook entries, preserve user entries in the same group and never delete a command merely because it contains `composite`. Upgrade reports unfinished V1 active state as `manual_required` and never imports V1 progress or Receipts into V2 authority. Delivery Set, `composite-campaign` and `composite-long-task` commands are non-executing tombstones.
 
 `/normal-long-task` is also a retirement pointer to `/long-task-workflow`; it creates no checklist, prompt, audit, matrix, verdict or second authority.
 

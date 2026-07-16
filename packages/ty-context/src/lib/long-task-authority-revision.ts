@@ -4,11 +4,17 @@ import type {
   CompiledDeliveryContractV2,
   CompiledOutcomeV2,
   DeliveryContractV2,
+  NextAuthorityMaterialsV2,
 } from "./long-task-delivery-types.js";
 import {
   acceptanceSemanticsChanged,
   isMonotonicAcceptanceStrengthening,
 } from "./long-task-authority.js";
+import {
+  authorityMaterialRevisionDiff,
+  changedProductClaimSemantics,
+  sourceClaimAdditions,
+} from "./long-task-authority-material-diff.js";
 import { compileProductClaimCoverage } from "./long-task-claims.js";
 import {
   addedValues,
@@ -27,45 +33,21 @@ import {
   same,
   sourceClaimReductions,
 } from "./long-task-authority-revision-details.js";
+import type { AuthorityRevisionDiffV2 } from "./long-task-authority-revision-types.js";
 
-export interface AuthorityRevisionDiffV2 {
-  product_claims_added: string[];
-  product_claims_removed: string[];
-  checks_added: string[];
-  checks_removed: string[];
-  negative_assertions_removed: string[];
-  proof_surfaces_changed: string[];
-  source_claims_removed_or_changed: string[];
-  source_paths_removed_or_replaced: string[];
-  owner_paths_expanded: string[];
-  owner_context_refs_removed: string[];
-  expected_change_paths_expanded: string[];
-  allowed_paths_expanded: string[];
-  forbidden_paths_removed: string[];
-  runner_definitions_changed: string[];
-  verification_inputs_removed_or_replaced: string[];
-  artifacts_removed: string[];
-  environment_requirements_removed: string[];
-  bindings_removed_or_expanded: string[];
-  obligations_removed_or_weakened: string[];
-  rollback_or_recovery_weakened: string[];
-  counterfactuals_removed: string[];
-  population_weakened: string[];
-  source_claims_changed: boolean;
-  risk_changed: boolean;
-  owner_or_path_boundary_changed: boolean;
-  runner_or_verification_inputs_changed: boolean;
-  technical_obligations_changed: boolean;
-  reduction_reasons: string[];
-}
-
+export type { AuthorityRevisionDiffV2 } from "./long-task-authority-revision-types.js";
 export function authorityRevisionDiff(
   previous: CompiledDeliveryContractV2,
   next: DeliveryContractV2,
   nextHashes: AuthorityHashesV2,
+  nextMaterials: NextAuthorityMaterialsV2,
   nextGlobalChecks: CompiledCheckV2[],
   nextOutcomes: CompiledOutcomeV2[],
 ): AuthorityRevisionDiffV2 {
+  const materialDiff = authorityMaterialRevisionDiff(
+    previous,
+    nextMaterials,
+  );
   const nextClaims = compileProductClaimCoverage(next).by_outcome;
   const beforeClaimIds = new Set(
     previous.outcomes.flatMap((outcome) =>
@@ -83,6 +65,8 @@ export function authorityRevisionDiff(
   );
   const afterChecks = checkIndex(nextGlobalChecks, nextOutcomes);
   const productClaimsRemoved = removedValues(beforeClaimIds, afterClaimIds);
+  const productClaimsAdded = addedValues(beforeClaimIds, afterClaimIds);
+  const productClaimsChanged = changedProductClaimSemantics(previous, next);
   const checksRemoved = removedValues(
     new Set(beforeChecks.keys()),
     new Set(afterChecks.keys()),
@@ -126,6 +110,10 @@ export function authorityRevisionDiff(
   }
 
   const sourceClaimsRemovedOrChanged = sourceClaimReductions(
+    previous.source_claims,
+    next.source_claims,
+  );
+  const sourceClaimsAdded = sourceClaimAdditions(
     previous.source_claims,
     next.source_claims,
   );
@@ -203,7 +191,10 @@ export function authorityRevisionDiff(
   const acceptanceChanged = acceptanceSemanticsChanged(previous, next);
   const monotonic = isMonotonicAcceptanceStrengthening(previous, next);
   const reductionReasons = [
+    ...(productClaimsAdded.length ? ["product_claim_added"] : []),
     ...(productClaimsRemoved.length ? ["product_claim_removed"] : []),
+    ...(productClaimsChanged.length ? ["product_claim_changed"] : []),
+    ...materialDiff.reduction_reasons,
     ...(checksRemoved.length ? ["check_removed"] : []),
     ...(negativeAssertionsRemoved.length
       ? ["negative_assertion_removed"]
@@ -212,6 +203,7 @@ export function authorityRevisionDiff(
     ...(sourceClaimsRemovedOrChanged.length
       ? ["source_claim_removed_or_changed"]
       : []),
+    ...(sourceClaimsAdded.length ? ["source_claim_added"] : []),
     ...(sourcePathsRemovedOrReplaced.length
       ? ["source_path_removed_or_replaced"]
       : []),
@@ -247,8 +239,11 @@ export function authorityRevisionDiff(
     ...(acceptanceChanged && !monotonic ? ["acceptance_not_monotonic"] : []),
   ];
   return {
-    product_claims_added: addedValues(beforeClaimIds, afterClaimIds),
+    product_claims_added: productClaimsAdded,
     product_claims_removed: productClaimsRemoved,
+    product_claims_changed: productClaimsChanged,
+    product_semantics_changed: materialDiff.product_semantics_changed,
+    global_semantics_changed: materialDiff.global_semantics_changed,
     checks_added: addedValues(
       new Set(beforeChecks.keys()),
       new Set(afterChecks.keys()),
@@ -256,8 +251,18 @@ export function authorityRevisionDiff(
     checks_removed: checksRemoved,
     negative_assertions_removed: negativeAssertionsRemoved,
     proof_surfaces_changed: proofSurfacesChanged,
+    source_claims_added: sourceClaimsAdded,
     source_claims_removed_or_changed: sourceClaimsRemovedOrChanged,
     source_paths_removed_or_replaced: sourcePathsRemovedOrReplaced,
+    source_files_added: materialDiff.source_files_added,
+    source_files_removed: materialDiff.source_files_removed,
+    source_files_changed: materialDiff.source_files_changed,
+    context_snapshot_mode_changed:
+      materialDiff.context_snapshot_mode_changed,
+    context_topology_changed: materialDiff.context_topology_changed,
+    context_files_added: materialDiff.context_files_added,
+    context_files_removed: materialDiff.context_files_removed,
+    context_files_changed: materialDiff.context_files_changed,
     owner_paths_expanded: ownerPathsExpanded,
     owner_context_refs_removed: ownerContextRefsRemoved,
     expected_change_paths_expanded: expectedChangePathsExpanded,

@@ -122,10 +122,23 @@ async function explain(workdir: string): Promise<void> {
   const parsed = await parseDeliveryContractBundle(workdir);
   const coverage = compileProductClaimCoverage(parsed.contract);
   const risk = classifyLongTaskRisk(parsed.contract);
-  const claims = Object.entries(coverage.summary.claims_by_outcome).flatMap(
+  const globalClaims = Object.entries(
+    coverage.summary.claims_by_global,
+  ).map(([claimKey, value]) => ({
+    claim: `GLOBAL.${claimKey}`,
+    covered: value.covered,
+    checks: value.proofs.map((proof) => proof.check_key),
+    assertions: value.proofs.map((proof) => proof.assertion_key),
+    polarity: value.proofs.map((proof) => proof.polarity),
+    proof_surfaces: value.proofs.map((proof) => proof.proof_surface),
+    strict_risk_obligations: [],
+  }));
+  const outcomeClaims = Object.entries(
+    coverage.summary.claims_by_outcome,
+  ).flatMap(
     ([outcomeKey, rows]) =>
       Object.entries(rows).map(([claimKey, value]) => ({
-        claim: `${outcomeKey}.${claimKey}`,
+        claim: `OUTCOME.${outcomeKey}.${claimKey}`,
         covered: value.covered,
         checks: value.proofs.map((proof) => proof.check_key),
         assertions: value.proofs.map((proof) => proof.assertion_key),
@@ -134,6 +147,7 @@ async function explain(workdir: string): Promise<void> {
         strict_risk_obligations: risk.reasons_by_outcome[outcomeKey],
       })),
   );
+  const claims = [...globalClaims, ...outcomeClaims];
   console.log(
     JSON.stringify(
       {

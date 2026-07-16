@@ -23,7 +23,7 @@ This is the restrained architecture map for the Harness source repository. It re
 ## Data / Control Flow
 
 1. `long-task init <workdir>` creates only a `delivery-contract.yaml` template.
-2. `compile` strictly parses the one Contract, computes the risk floor, validates dependencies/Context/source/paths/runners/proof, freezes repository/workdir/source/Contract/selected-Context/verifier/oracle/command identities and activates the worktree binding. It does not invoke a model or modify product code.
+2. `compile` strictly parses the one Contract, computes Global and Outcome Claim Coverage plus the risk floor, validates dependencies/Context/source/paths/runners/proof, derives canonical Product/Global semantic projections, freezes repository/workdir/source/Contract/selected-Context/verifier/oracle/command identities and activates the worktree binding. It does not invoke a model or modify product code.
 3. The current native Goal reads Contract and relevant Context, selects dependency-ready Outcomes as its internal Frontier, implements in the current workspace and runs project-focused tests.
 4. `verify --outcome/--check` runs the selected checks on a current snapshot and stores repair-only derived status. It cannot emit accepted.
 5. Contract `status` projects `unverified|progress_passing|progress_failing|progress_stale|blocked_external`; resume is read-only and starts no execution.
@@ -41,7 +41,7 @@ This is the restrained architecture map for the Harness source repository. It re
 ## Safety And Storage Boundaries
 
 - Contract parsing rejects unknown keys, duplicate keys, YAML aliases/merges/tags and multiple documents.
-- Paths are repository-relative and realpath-contained. Protected Contract, fragment, Source, Context, runner, verification-input, Counterfactual-fixture and package-verifier files reject symlinks and detectable hardlinks; the snapshot-owned read-only `node_modules` junction is the sole explicit exception.
+- Paths are repository-relative and realpath-contained. Pattern-language inclusion uses one conservative subset prover and treats unproved relationships as outside the boundary. Protected Contract, fragment, Source, Context, runner, verification-input, Counterfactual-fixture and package-verifier files reject symlinks and detectable hardlinks; the snapshot-owned read-only `node_modules` junction is the sole explicit exception.
 - Commands use argv arrays with no shell, bounded output/time and a minimal environment whitelist. Only env vars explicitly declared by the current Check are additionally passed.
 - Worker/Agent prose, handwritten status, command exit alone and historical targeted passes cannot create accepted authority.
 - Final acceptance binds the same snapshot plus Contract, source, selected Context, runner/oracle, verifier, workdir and repository identity. History is not spliced into current proof.
@@ -51,7 +51,7 @@ This is the restrained architecture map for the Harness source repository. It re
 ## Distribution And Migration
 
 - Default profiles remain `core-portable` and `workflow-default`; `long-task` is explicit.
-- `sync` refreshes enabled managed assets only. `upgrade` owns the deterministic safe migration from package-owned `composite-codex` selection/assets to `long-task`.
+- `sync` refreshes enabled managed assets only. Long-task enable/disable/upgrade share exact entry-level Hook cleanup and preserve same-group user entries. `upgrade` owns the deterministic safe migration from package-owned `composite-codex` selection/assets to `long-task`.
 - Migration never imports or executes an unfinished historical campaign and never deletes user-authored campaign/source/contract files.
 - Package tarballs contain the Delivery Contract schema, Long-Task Skill/Hook/templates and Evidence Kernel, but no Campaign/AppServer/Codex-worker/SFC/Packet/Wave/worktree scheduler runtime.
 

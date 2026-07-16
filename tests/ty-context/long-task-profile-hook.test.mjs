@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import YAML from "yaml";
+import { removeManagedHookEntries } from "../../packages/ty-context/dist/lib/long-task-hook-install.js";
 import { activeRecordPath } from "../../packages/ty-context/dist/lib/long-task-state.js";
 import {
   createUpgradePlan,
@@ -16,6 +17,11 @@ import {
   pathExists,
   runCli,
 } from "./long-task-delivery-fixtures.mjs";
+import {
+  assertDisabledHookEvents,
+  assertEnabledHookEvents,
+  mixedHookConfig,
+} from "./long-task-profile-hook-fixture.mjs";
 import { assertLongTaskStaticConsistency } from "./long-task-static-consistency.mjs";
 
 const packageHook = fileURLToPath(
@@ -30,6 +36,7 @@ test("source workspace version, Hook and manual-only documentation stay consiste
 test("enable/disable owns one package-owned Hook per event and preserves user Hooks", async () => {
   const fixture = await createDeliveryFixture();
   try {
+    const hookFixture = mixedHookConfig(packageHook);
     await mkdir(path.join(fixture.root, ".codex/hooks"), { recursive: true });
     await writeFile(
       path.join(fixture.root, ".codex/hooks/long-task-hook.mjs"),
@@ -37,38 +44,7 @@ test("enable/disable owns one package-owned Hook per event and preserves user Ho
     );
     await writeFile(
       path.join(fixture.root, ".codex/hooks.json"),
-      `${JSON.stringify(
-        {
-          hooks: Object.fromEntries(
-            ["SessionStart", "PostCompact", "Stop"].map((event) => [
-              event,
-              [
-                {
-                  hooks: [
-                    {
-                      type: "command",
-                      command: "node .codex/hooks/long-task-hook.mjs",
-                    },
-                    {
-                      type: "command",
-                      commandWindows:
-                        "node .codex\\hooks\\long-task-hook.mjs",
-                    },
-                    { type: "command", command: "node composite-hook.mjs" },
-                  ],
-                },
-                {
-                  hooks: [
-                    { type: "command", command: "node user-hook.mjs", user: true },
-                  ],
-                },
-              ],
-            ]),
-          ),
-        },
-        null,
-        2,
-      )}\n`,
+      `${JSON.stringify(hookFixture.config, null, 2)}\n`,
     );
     await runCli(fixture.root, ["enable", "long-task"]);
     assert.equal(
@@ -93,23 +69,7 @@ test("enable/disable owns one package-owned Hook per event and preserves user Ho
 
     const hooksFile = path.join(fixture.root, ".codex/hooks.json");
     const hooks = JSON.parse(await readFile(hooksFile, "utf8"));
-    for (const event of ["SessionStart", "PostCompact", "Stop"]) {
-      const all = hooks.hooks[event].flatMap((group) => group.hooks);
-      const managed = all.filter((hook) =>
-        String(hook.command ?? hook.commandWindows).includes(
-          "dist\\long-task-hook.js",
-        ) ||
-        String(hook.command ?? hook.commandWindows).includes(
-          "dist/long-task-hook.js",
-        ),
-      );
-      assert.equal(managed.length, 1);
-      assert.match(managed[0].command, /dist[\\/]long-task-hook\.js/u);
-      assert.equal(managed[0].commandWindows, managed[0].command);
-      assert.doesNotMatch(managed[0].command, /\.codex[\\/]hooks/u);
-      assert.equal(managed[0].timeout, event === "Stop" ? 3600 : 10);
-      assert.equal(all.filter((hook) => hook.user).length, 1);
-    }
+    assertEnabledHookEvents(hooks, hookFixture.userOnlyGroup);
     await writeFile(hooksFile, `${JSON.stringify(hooks, null, 2)}\n`);
     await mkdir(path.join(fixture.root, ".codex/skills/user-local"), {
       recursive: true,
@@ -133,21 +93,36 @@ test("enable/disable owns one package-owned Hook per event and preserves user Ho
       true,
     );
     const retained = JSON.parse(await readFile(hooksFile, "utf8"));
-    assert.equal(
-      retained.hooks.Stop
-        .flatMap((group) => group.hooks)
-        .some((hook) => hook.user),
-      true,
-    );
-    assert.equal(
-      retained.hooks.Stop.flatMap((group) => group.hooks).some((hook) =>
-        String(hook.command).includes("long-task-hook"),
-      ),
-      false,
-    );
+    assertDisabledHookEvents(retained, hookFixture.userOnlyGroup);
+    assert.equal(await pathExists(hooksFile), true);
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }
+});
+
+test("entry cleanup drops only empty managed-only groups and preserves configured groups", () => {
+  const managed = {
+    type: "command",
+    command: "node .codex/hooks/long-task-hook.mjs",
+  };
+  const userOnly = {
+    matcher: "user",
+    hooks: [{ type: "command", command: "node user-hook.mjs" }],
+  };
+  const cleaned = removeManagedHookEntries([
+    { hooks: [managed] },
+    { matcher: "configured", metadata: { keep: true }, hooks: [managed] },
+    userOnly,
+  ]);
+  assert.equal(cleaned.removed, 2);
+  assert.deepEqual(cleaned.groups, [
+    {
+      matcher: "configured",
+      metadata: { keep: true },
+      hooks: [],
+    },
+    userOnly,
+  ]);
 });
 
 test("package-owned Hook resumes from common-dir and Stop runs the Live Gate", async () => {
@@ -204,6 +179,22 @@ test("upgrade still preserves historical Campaign files", async () => {
     const configFile = path.join(fixture.root, ".codex/config.yaml");
     const raw = await readFile(configFile, "utf8");
     await writeFile(configFile, raw.replace(/- long-task/u, "- composite-codex"));
+    const hooksFile = path.join(fixture.root, ".codex/hooks.json");
+    const hooks = JSON.parse(await readFile(hooksFile, "utf8"));
+    hooks.hooks.Stop[0].hooks.push(
+      {
+        type: "command",
+        command:
+          'node "$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs"',
+        statusMessage: "Tiny Context composite completion gate",
+      },
+      {
+        type: "command",
+        command: "node user-composite-hook.mjs",
+        user: true,
+      },
+    );
+    await writeFile(hooksFile, `${JSON.stringify(hooks, null, 2)}\n`);
     const historical = path.join(fixture.root, "history/campaign-v6.json");
     await mkdir(path.dirname(historical), { recursive: true });
     await writeFile(historical, '{"user":"history"}\n');
@@ -211,6 +202,21 @@ test("upgrade still preserves historical Campaign files", async () => {
     const migrated = YAML.parse(await readFile(configFile, "utf8"));
     assert.ok(migrated.profiles.enabled.includes("long-task"));
     assert.equal(await pathExists(historical), true);
+    const upgradedHooks = JSON.parse(await readFile(hooksFile, "utf8"));
+    const stopEntries = upgradedHooks.hooks.Stop.flatMap(
+      (group) => group.hooks,
+    );
+    assert.equal(
+      stopEntries.filter((entry) =>
+        String(entry.command ?? "").includes("dist"),
+      ).length,
+      1,
+    );
+    assert.ok(
+      stopEntries.some(
+        (entry) => entry.command === "node user-composite-hook.mjs",
+      ),
+    );
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }

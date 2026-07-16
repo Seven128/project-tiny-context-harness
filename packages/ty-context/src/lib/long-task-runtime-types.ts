@@ -67,6 +67,16 @@ export interface ProductClaimV2 {
   required_proof_surfaces: ProofSurface[];
 }
 
+export interface GlobalClaimV2 {
+  id: string;
+  local_key: string;
+  kind:
+    | "global_non_goal"
+    | "global_constraint"
+    | "global_forbidden_shortcut";
+  required_polarity: "any" | "negative";
+}
+
 export interface ClaimProofV2 {
   check_key: string;
   assertion_key: string | null;
@@ -78,6 +88,10 @@ export interface ClaimCoverageSummaryV2 {
   claims_total: number;
   claims_covered: number;
   uncovered_claims: string[];
+  claims_by_global: Record<
+    string,
+    { covered: boolean; proofs: ClaimProofV2[] }
+  >;
   claims_by_outcome: Record<
     string,
     Record<string, { covered: boolean; proofs: ClaimProofV2[] }>
@@ -90,6 +104,58 @@ export interface AuthorityHashesV2 {
   acceptance_authority_hash: string;
   risk_authority_hash: string;
   technical_authority_hash: string;
+}
+
+export interface ProductSemanticProjectionV2 {
+  task_goal: string;
+  global_non_goals: Array<{ key: string; statement: string }>;
+  outcomes: Array<{
+    key: string;
+    title: string;
+    observable_result: string;
+    owner: {
+      label: string;
+      owner_surfaces: string[];
+    };
+    controls: Array<{
+      key: string;
+      location: string;
+      trigger: string;
+      input: string;
+      loading_state: string;
+      empty_state: string;
+      success_state: string;
+      failure_state: string;
+      feedback: string;
+    }>;
+    non_completing_outcomes: Array<{ key: string; statement: string }>;
+  }>;
+}
+
+export interface GlobalSemanticProjectionV2 {
+  constraints: Array<{ key: string; statement: string }>;
+  forbidden_shortcuts: Array<{ key: string; statement: string }>;
+}
+
+export interface ContextAuthoritySnapshotV2 {
+  mode: "referenced" | "full";
+  topology_sha256: string;
+  files: string[];
+  sha256: Record<string, string>;
+}
+
+export interface NextAuthorityMaterialsV2 {
+  source_hashes: Record<string, string>;
+  context_snapshot: ContextAuthoritySnapshotV2;
+  product_semantics: ProductSemanticProjectionV2;
+  global_semantics: GlobalSemanticProjectionV2;
+}
+
+export interface AuthorityMaterialHashesV2 {
+  source_hashes_sha256: string;
+  context_snapshot_sha256: string;
+  product_semantics_sha256: string;
+  global_semantics_sha256: string;
 }
 
 export interface InitialTaskBaseV2 {
@@ -141,6 +207,7 @@ export interface CompiledDeliveryContractV2 {
   baseline_workspace: WorkspaceManifestV2;
   initial_task_base: InitialTaskBaseV2;
   authority_hashes: AuthorityHashesV2;
+  authority_materials: NextAuthorityMaterialsV2;
   authority_revision: number;
   claim_coverage: ClaimCoverageSummaryV2;
   task: DeliveryContractV2["task"];

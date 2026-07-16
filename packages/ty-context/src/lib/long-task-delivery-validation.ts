@@ -1,6 +1,10 @@
 import type { DeliveryContractV2 } from "./long-task-delivery-types.js";
-import { compileProductClaimCoverage } from "./long-task-claims.js";
+import {
+  assertCompiledClaimsCovered,
+  compileProductClaimCoverage,
+} from "./long-task-claims.js";
 import { fail } from "./long-task-delivery-shape.js";
+import { proveRepositoryPatternSubset } from "./long-task-paths.js";
 
 export function validateDeliveryContractStructure(
   contract: DeliveryContractV2,
@@ -8,8 +12,11 @@ export function validateDeliveryContractStructure(
   validateUniqueKeys(contract);
   validateDependencies(contract);
   validateOwnerAndBindings(contract);
-  const claims = compileProductClaimCoverage(contract);
+  const claims = compileProductClaimCoverage(contract, {
+    allow_uncovered: true,
+  });
   validateSourceClaims(contract, claims);
+  assertCompiledClaimsCovered(claims);
 }
 
 function validateUniqueKeys(contract: DeliveryContractV2): void {
@@ -97,16 +104,17 @@ function validateSourceClaims(
       .flat()
       .map((claim) => claim.id),
   );
-  const globals = new Set<string>([
-    ...contract.global.product.non_goals.map((item) => `non_goal.${item.key}`),
-    ...contract.global.technical.constraints.map(
-      (item) => `constraint.${item.key}`,
-    ),
+  const globalClaims = new Map(
+    compiledClaims.by_global.map((claim) => [claim.local_key, claim]),
+  );
+  const coveredGlobalClaims = new Set(
+    Object.entries(compiledClaims.summary.claims_by_global)
+      .filter(([, value]) => value.covered)
+      .map(([key]) => key),
+  );
+  const forbiddenPaths = new Set<string>([
     ...contract.global.technical.forbidden_paths.map(
       (item) => `forbidden_path.${item.key}`,
-    ),
-    ...contract.global.technical.forbidden_shortcuts.map(
-      (item) => `forbidden_shortcut.${item.key}`,
     ),
   ]);
   for (const claim of contract.source_claims) {
@@ -127,8 +135,19 @@ function validateSourceClaims(
           fail("source_claim_product_ref_unknown", `${claim.key}:${reference}`);
     if (claim.disposition.type === "global_constraint")
       for (const reference of claim.disposition.refs)
-        if (!globals.has(reference))
+        if (reference.startsWith("forbidden_path.")) {
+          if (!forbiddenPaths.has(reference))
+            fail(
+              "source_claim_global_ref_unknown",
+              `${claim.key}:${reference}`,
+            );
+        } else if (!globalClaims.has(reference))
           fail("source_claim_global_ref_unknown", `${claim.key}:${reference}`);
+        else if (!coveredGlobalClaims.has(reference))
+          fail(
+            "source_claim_global_ref_uncovered",
+            `${claim.key}:${reference}`,
+          );
   }
 }
 
@@ -146,7 +165,7 @@ function validateOwnerAndBindings(contract: DeliveryContractV2): void {
     ])
       if (
         !outcome.product.owner.path_globs.some((owner) =>
-          patternWithin(candidate, owner),
+          isProvenSubset(candidate, owner),
         )
       )
         fail("path_outside_owner_boundary", `${outcome.key}:${candidate}`);
@@ -157,7 +176,7 @@ function validateOwnerAndBindings(contract: DeliveryContractV2): void {
       for (const carrier of binding.carrier_paths)
         if (
           !outcome.product.owner.path_globs.some((owner) =>
-            patternWithin(carrier, owner),
+            isProvenSubset(carrier, owner),
           )
         )
           fail(
@@ -186,18 +205,10 @@ function validateOwnerAndBindings(contract: DeliveryContractV2): void {
   }
 }
 
-function patternWithin(candidate: string, owner: string): boolean {
-  const prefix = (value: string): string =>
-    value
-      .replace(/\\/gu, "/")
-      .split(/[?*{[]/u, 1)[0]
-      .replace(/\/$/u, "");
-  const child = prefix(candidate);
-  const parent = prefix(owner);
-  return Boolean(
-    child &&
-    parent &&
-    (child === parent || child.startsWith(`${parent}/`) || owner === "**"),
+function isProvenSubset(candidate: string, owner: string): boolean {
+  return (
+    proveRepositoryPatternSubset(candidate, owner).status ===
+    "proven_subset"
   );
 }
 

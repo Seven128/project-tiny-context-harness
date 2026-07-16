@@ -9,6 +9,7 @@ import type {
 import {
   assertRepositoryPattern,
   matchesRepoPattern,
+  patternsOverlap,
 } from "./long-task-paths.js";
 import { assertProtectedRepositoryFile } from "./long-task-protected-files.js";
 import {
@@ -45,7 +46,7 @@ export async function freezeDeliveryCheck(
       !baseline.files.some((file) =>
         matchesRepoPattern(file.path, normalized),
       ) &&
-      !expectedOutputs.some((output) => patternsMayOverlap(output, normalized))
+      !expectedOutputs.some((output) => patternsOverlap(output, normalized))
     )
       throw new Error(`input_path_not_found:${check.key}:${pattern}`);
   }
@@ -269,19 +270,6 @@ async function freezeVerificationInputs(
     );
   }
   return sortRecord(result);
-}
-
-function patternsMayOverlap(left: string, right: string): boolean {
-  const prefix = (value: string): string =>
-    value
-      .replace(/\\/gu, "/")
-      .split(/[?*{[]/u, 1)[0]
-      .replace(/\/$/u, "");
-  const a = prefix(left);
-  const b = prefix(right);
-  return Boolean(
-    a && b && (a === b || a.startsWith(`${b}/`) || b.startsWith(`${a}/`)),
-  );
 }
 
 function sortRecord<T>(value: Record<string, T>): Record<string, T> {

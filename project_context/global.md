@@ -7,7 +7,7 @@
 - The Long-Task Workflow is Single-Goal Rolling Delivery V2: one platform-native continuing Goal and selected workspace with one Contract/Contract Bundle authority, compiled Product Claim Coverage, a rolling implementation frontier and one Live Evidence Kernel whose verification strength rises per risk Outcome.
 - A Delivery Contract preserves product outcomes, non-goals, stable technical boundaries, acceptance checks and relevant Context. It does not freeze file-by-file implementation steps.
 - A large atomic delivery may use `outcome_files` as one logical Contract Bundle. Independent release/rollback/owner/risk/product boundaries run as separate top-level Contracts; Delivery Set orchestration is retired.
-- Original source requirements remain directly covered by Source Claims for L2, Bundle and Set work. First compile freezes an immutable task base; protected authority revisions after execution require explicit hash-bound approval.
+- Original source requirements remain directly covered by Source Claims for strict and Bundle work. First compile freezes an immutable task base. Source hashes/file sets, selected Context topology/files/hashes and canonical Product/Global semantic projections are revision materials; after execution, semantic changes require exact material-bound user approval.
 - Targeted verify persists scoped per-Check progress only. Final Gate, Stop and close require a clean candidate commit, recompile source authority and bind Git HEAD/tree, workspace, source, Context, authority and complete verifier identity.
 
 ## Non-goals / Boundaries
@@ -39,8 +39,8 @@
 - L2 strict work is selected deterministically per Outcome. Public API/schema, persistent data, migrations, security/permission boundaries, irreversible external effects, full-population operations or a weakly observable critical user path require strict proof on the affected Outcome. Risk downgrade and multi-repository delivery are rejected.
 - `requested_level: standard` below the computed risk floor fails compile. Execution cannot downgrade risk.
 - One root V2 `delivery-contract.yaml` (with optional Outcome fragments) is authoring authority. Declared original sources remain provenance and Source Claims preserve direct coverage to generated Claims; there is no Packet revision chain, Source Unit inventory, SFC graph, Wave, Delivery Set or second plan.
-- Compile is pure static preflight. It validates strict YAML/schema, unique nested keys, Context/source/path/runner/proof identities, risk floor, UI proof, strict obligations and executable acceptance before product implementation begins.
-- Every compile creates an immutable compiled identity. Editing Contract, referenced Context, source, runner/oracle, verifier or workspace identity invalidates prior derived results and requires recompilation.
+- Compile is pure static preflight. It validates strict YAML/schema, Global and Outcome Claim Coverage, conservative owner/binding pattern containment, Context/source/path/runner/proof identities, risk floor, UI proof, strict obligations and executable acceptance before product implementation begins.
+- Every compile creates an immutable compiled identity. Contract authority, Source, referenced Context, canonical Product/Global semantics, runner/oracle, verifier or workspace drift invalidates prior derived results and requires recompilation; ordinary compile cannot silently adopt changed Source or Context.
 - Targeted `verify` exists only for repair findings and can never accept a task. `final-gate`, Stop and close rerun every Outcome/global Check on one current snapshot; stored Receipts are audit-only.
 - Assertions fail closed when an Observation is missing except for `not_exists`; Counterfactual proof is valid only when the designated Assertions are the complete finding set.
 - Runners receive a minimal environment whitelist plus only Check-declared env vars. Protected Contract/Source/Context/verifier/proof inputs reject symlinks and detectable hardlinks, and Source Claims require real declared Source files.
@@ -57,7 +57,7 @@
 ## Current State
 
 - v0.6.0 defines `long-task-delivery-v2` as the only active schema, the package-owned Hook, V1 retirement migration and retired Delivery Set tombstone.
-- `ty-context enable long-task` installs the Long-Task Workflow Skill, Stop Hook and required templates. Non-Codex/default consumers do not receive those assets unless enabled.
+- `ty-context enable long-task` installs the Long-Task Workflow Skill, Stop Hook and required templates. Hook lifecycle operations remove only exact managed entries and preserve user entries even when they share a group. Non-Codex/default consumers do not receive those assets unless enabled.
 - Upgrade safely converts the package-owned `composite-codex` profile selection to `long-task` and removes only package-owned retired assets. Existing user campaign/source/contract files remain ordinary historical files and are never executed, imported or deleted.
 - `composite-campaign` and `composite-long-task` may remain only as lightweight command tombstones that return `retired` and direct users to `ty-context long-task`; they import no retired runtime.
 - `/normal-long-task` is a retirement pointer to `/long-task-workflow`; it no longer creates a checklist, target prompt, Local Audit or a competing authority.

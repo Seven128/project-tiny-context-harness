@@ -2,6 +2,10 @@ import { stat } from "node:fs/promises";
 import path from "node:path";
 import { changedAuthoritySections } from "./long-task-authority.js";
 import {
+  authorityMaterialHashes,
+  compiledAuthorityMaterials,
+} from "./long-task-authority-materials.js";
+import {
   authorityRevisionDiff,
   type AuthorityRevisionDiffV2,
 } from "./long-task-authority-revision.js";
@@ -10,6 +14,7 @@ import type {
   CompiledDeliveryContractV2,
   CompiledOutcomeV2,
   DeliveryContractV2,
+  NextAuthorityMaterialsV2,
   WorkspaceManifestV2,
 } from "./long-task-delivery-types.js";
 import {
@@ -37,6 +42,7 @@ export async function enforceAuthorityRevision(
   previous: CompiledDeliveryContractV2,
   nextContract: DeliveryContractV2,
   nextHashes: AuthorityHashesV2,
+  nextMaterials: NextAuthorityMaterialsV2,
   nextGlobalChecks: CompiledDeliveryContractV2["global"]["acceptance"]["checks"],
   nextOutcomes: CompiledOutcomeV2[],
   current: WorkspaceManifestV2,
@@ -52,17 +58,16 @@ export async function enforceAuthorityRevision(
     )?.isFile(),
   );
   const executionStarted =
-    changedWorkspacePaths(
-      previous.initial_task_base.workspace_manifest,
-      current,
-    ).length > 0 ||
+    hasImplementationChanges(previous, nextMaterials, current) ||
     Object.keys(progress).length > 0 ||
     gateExists;
   if (!executionStarted) return;
+  const previousMaterials = compiledAuthorityMaterials(previous);
   const diff = authorityRevisionDiff(
     previous,
     nextContract,
     nextHashes,
+    nextMaterials,
     nextGlobalChecks,
     nextOutcomes,
   );
@@ -70,6 +75,10 @@ export async function enforceAuthorityRevision(
   const unsignedRevision = {
     previous_hashes: previous.authority_hashes,
     next_hashes: nextHashes,
+    previous_materials: previousMaterials,
+    next_materials: nextMaterials,
+    previous_material_hashes: authorityMaterialHashes(previousMaterials),
+    next_material_hashes: authorityMaterialHashes(nextMaterials),
     changed_authority_sections: changedAuthoritySections(
       previous.authority_hashes,
       nextHashes,
@@ -93,4 +102,32 @@ export async function enforceAuthorityRevision(
       `authority_change_requires_user_decision:${revisionIdentity}`,
     );
   }
+}
+
+function hasImplementationChanges(
+  previous: CompiledDeliveryContractV2,
+  nextMaterials: NextAuthorityMaterialsV2,
+  current: WorkspaceManifestV2,
+): boolean {
+  const previousMaterials = compiledAuthorityMaterials(previous);
+  const authorityFiles = new Set([
+    previous.contract_file,
+    ...Object.keys(previous.contract_files),
+    ...Object.keys(previousMaterials.source_hashes),
+    ...Object.keys(nextMaterials.source_hashes),
+    ...previousMaterials.context_snapshot.files,
+    ...nextMaterials.context_snapshot.files,
+  ]);
+  const workdirRelative = path
+    .relative(previous.repository_root, previous.workdir)
+    .replace(/\\/gu, "/");
+  return changedWorkspacePaths(
+    previous.initial_task_base.workspace_manifest,
+    current,
+  ).some(
+    (file) =>
+      !authorityFiles.has(file) &&
+      file !== workdirRelative &&
+      !file.startsWith(`${workdirRelative}/`),
+  );
 }

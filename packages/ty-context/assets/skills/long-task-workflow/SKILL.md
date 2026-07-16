@@ -24,6 +24,8 @@ Author complete observable Outcomes, control states, non-completing outcomes, ow
 
 Every Check declares a resolved runner, `verification_inputs`, input/output paths, per-Check artifacts, Assertions with Claim refs, structured environment probes and any entity-population or Counterfactual proof. Verification inputs include entrypoints, helpers, fixtures/config, package scripts and lockfiles and cannot overlap implementation carriers.
 
+Global non-goals, constraints and forbidden shortcuts are machine-authoritative Claims and require Global Check Assertions using `non_goal.<key>`, `constraint.<key>` or `forbidden_shortcut.<key>`. Non-goals and forbidden shortcuts require negative Assertions. Global forbidden paths remain static changed-path boundaries rather than Assertion Claims. A Source Claim may cite a Global declaration only when that Global Claim is covered.
+
 Run:
 
 ```text
@@ -31,7 +33,9 @@ ty-context long-task compile <workdir>
 ty-context long-task compile <workdir> --revise
 ```
 
-Compile rejects uncovered result/control/non-completing/obligation/forbidden-shortcut Claims and requires Source Claims to bind real declared Source files. The first compile freezes an immutable initial base. Protected authority changes require `--revise`; reductions require exact revision approval, while risk downgrade is rejected. The executing Agent must never approve its own pending revision.
+Compile rejects uncovered Global and Outcome result/control/non-completing/obligation/forbidden-shortcut Claims and requires Source Claims to bind real declared Source files. The first compile freezes an immutable initial base. Any later Contract authority, Source content/file-set, Context topology/file-set/content, Product semantic projection or Global semantic projection change requires `--revise`.
+
+After execution begins, Source/Context/Product/Global semantic changes, Product Claim additions/removals/rewrites, runner/input replacement, proof weakening, scope expansion and any unprovable Glob containment create an exact material-bound pending revision for the user. Only mechanical proof additions and proven scope tightening revise automatically; risk downgrade is rejected. The executing Agent must never run `approve-authority-revision` for its own pending revision or otherwise approve it.
 
 ## Rolling Execution
 
