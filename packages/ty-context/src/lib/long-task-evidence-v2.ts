@@ -1,10 +1,7 @@
 import { copyFile, cp, mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import {
-  evaluateDeliveryAssertion,
-  evaluatePopulation,
-} from "./long-task-assertions-v2.js";
+import { evaluatePopulation } from "./long-task-assertions-v2.js";
 import { collectCheckArtifacts } from "./long-task-artifacts.js";
 import { executeCheckRunner } from "./long-task-check-runner.js";
 import type {
@@ -15,6 +12,12 @@ import type {
   LongTaskFindingV2,
   RawCommandExecutionV2,
 } from "./long-task-delivery-types.js";
+import {
+  assertionFinding,
+  checkFinding,
+  classifyCheckStatus,
+  evaluateAssertionResults,
+} from "./long-task-evidence-findings.js";
 import { resolveInsideRepository } from "./long-task-workspace.js";
 
 export async function evaluateCheckEvidence(
@@ -24,27 +27,12 @@ export async function evaluateCheckEvidence(
   outcome?: CompiledOutcomeV2,
 ): Promise<CheckExecutionResultV2> {
   const artifacts = await collectCheckArtifacts(check, snapshotRoot);
-  const assertions = [
-    ...check.positive_assertions.map((assertion) => ({
-      assertion,
-      polarity: "positive" as const,
-    })),
-    ...check.negative_assertions.map((assertion) => ({
-      assertion,
-      polarity: "negative" as const,
-    })),
-  ];
-  const assertionResults = assertions.map(({ assertion, polarity }) => ({
-    key: assertion.key,
-    polarity,
-    passed: evaluateDeliveryAssertion(assertion, raw.observations),
-    claims: assertion.claims,
-  }));
+  const assertionResults = evaluateAssertionResults(check, raw.observations);
   const executionCompleted = raw.execution_status === "completed";
   const findings: LongTaskFindingV2[] = [];
   if (!executionCompleted)
     findings.push(
-      finding(
+      checkFinding(
         check,
         raw.execution_status,
         raw.error ?? raw.execution_status,
@@ -55,7 +43,7 @@ export async function evaluateCheckEvidence(
     );
   if (executionCompleted && raw.exit_code !== 0)
     findings.push(
-      finding(
+      checkFinding(
         check,
         "test_failed",
         `command exited ${raw.exit_code}`,
@@ -67,7 +55,7 @@ export async function evaluateCheckEvidence(
     raw.observations["playwright.zero_or_all_skipped"] === true
   )
     findings.push(
-      finding(
+      checkFinding(
         check,
         "test_failed",
         "Playwright executed zero tests or skipped every test.",
@@ -77,9 +65,9 @@ export async function evaluateCheckEvidence(
   if (executionCompleted) {
     for (const error of artifacts.errors)
       findings.push(
-        finding(
+        checkFinding(
           check,
-          "invalid_evidence",
+          "artifact_missing",
           error,
           "Produce the artifact declared for this Check and rerun it.",
         ),
@@ -87,12 +75,7 @@ export async function evaluateCheckEvidence(
     for (const result of assertionResults)
       if (!result.passed)
         findings.push(
-          finding(
-            check,
-            "assertion_failed",
-            `assertion ${result.key} failed`,
-            "Fix the observable behavior or the Contract assertion, then rerun this Check.",
-          ),
+          assertionFinding(check, result, raw.observations, outcome),
         );
   }
 
@@ -103,7 +86,7 @@ export async function evaluateCheckEvidence(
     populationPassed = result.passed;
     if (!result.passed)
       findings.push({
-        ...finding(
+        ...checkFinding(
           check,
           "population_coverage_failed",
           result.reason ?? "full population coverage was not proven",
@@ -114,7 +97,7 @@ export async function evaluateCheckEvidence(
       });
   }
 
-  const status = classifyStatus(raw, findings);
+  const status = classifyCheckStatus(raw, findings);
   const claimProofs: ClaimProofV2[] = assertionResults
     .filter((result) => executionCompleted && result.passed)
     .flatMap((result) =>
@@ -202,11 +185,13 @@ export async function evaluateOutcomeCounterfactuals(
       const onlyExpectedAssertionFailures =
         result.status === "assertion_failed" &&
         result.findings.length === expected.length &&
-        result.findings.every(
-          (finding) =>
-            finding.code === "assertion_failed" &&
-            expected.some((key) => finding.message === `assertion ${key} failed`),
-        );
+        result.findings.filter((finding) => finding.assertion_key).length ===
+          expected.length &&
+        result.findings
+          .filter((finding) => finding.assertion_key)
+          .every((finding) =>
+            expected.some((key) => finding.assertion_key === key),
+          );
       const valid =
         raw.execution_status === "completed" &&
         raw.exit_code === 0 &&
@@ -235,42 +220,4 @@ export async function evaluateOutcomeCounterfactuals(
     }
   }
   return findings;
-}
-
-function classifyStatus(
-  raw: RawCommandExecutionV2,
-  findings: LongTaskFindingV2[],
-): CheckExecutionResultV2["status"] {
-  if (raw.execution_status !== "completed") return raw.execution_status;
-  if (
-    raw.exit_code !== 0 ||
-    findings.some((item) => item.code === "test_failed")
-  )
-    return "test_failed";
-  if (findings.some((item) => item.code === "invalid_evidence"))
-    return "invalid_evidence";
-  if (
-    findings.some(
-      (item) =>
-        item.code === "assertion_failed" ||
-        item.code === "population_coverage_failed",
-    )
-  )
-    return "assertion_failed";
-  return "passed";
-}
-
-function finding(
-  check: CompiledCheckV2,
-  code: string,
-  message: string,
-  nextAction: string,
-): LongTaskFindingV2 {
-  return {
-    code,
-    outcome_key: check.outcome_key,
-    check_key: check.key,
-    message,
-    next_action: nextAction,
-  };
 }

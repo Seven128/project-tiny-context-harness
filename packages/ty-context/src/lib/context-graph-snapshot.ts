@@ -161,9 +161,7 @@ async function readContextManifest(root: string): Promise<ContextManifest> {
     path.join(root, "project_context", "context.toml"),
     "context_manifest",
   );
-  const parsed = parseContextManifest(
-    await readFile(manifestFile, "utf8"),
-  );
+  const parsed = parseContextManifest(await readFile(manifestFile, "utf8"));
   if (!parsed.manifest || parsed.errors.length > 0) {
     throw new Error(`context_manifest_invalid:${parsed.errors.join("|")}`);
   }

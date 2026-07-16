@@ -85,15 +85,11 @@ export async function runDeliveryFinalGate(
       });
     let activeAuthorityChanged = false;
     try {
-      const currentActive = (
-        await loadActiveLongTaskAuthority(repository)
-      ).authority;
+      const currentActive = (await loadActiveLongTaskAuthority(repository))
+        .authority;
       activeAuthorityChanged =
         !currentActive ||
-        !activeAuthorityIdentityMatches(
-          currentActive,
-          acceptedAuthority,
-        );
+        !activeAuthorityIdentityMatches(currentActive, acceptedAuthority);
     } catch {
       activeAuthorityChanged = true;
     }
@@ -102,8 +98,7 @@ export async function runDeliveryFinalGate(
         code: "active_authority_changed_during_final_gate",
         outcome_key: null,
         check_key: null,
-        message:
-          "Active Authority changed while Live Final Gate was running.",
+        message: "Active Authority changed while Live Final Gate was running.",
         next_action:
           "Review the new Authority Revision and rerun the complete Live Final Gate.",
       });
@@ -117,8 +112,7 @@ export async function runDeliveryFinalGate(
     );
     const globalHardFailure = globalChecks.some(
       (check) =>
-        check.status !== "passed" &&
-        check.status !== "blocked_external",
+        check.status !== "passed" && check.status !== "blocked_external",
     );
     const globalBlocked = globalChecks.some(
       (check) => check.status === "blocked_external",

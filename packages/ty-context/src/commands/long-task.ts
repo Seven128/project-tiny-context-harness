@@ -1,10 +1,6 @@
-import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { compileProductClaimCoverage } from "../lib/long-task-claims.js";
 import { compileDeliveryContract } from "../lib/long-task-delivery-compiler.js";
-import { parseDeliveryContractBundle } from "../lib/long-task-delivery-parser.js";
 import { runDeliveryFinalGate } from "../lib/long-task-final-v2.js";
-import { classifyLongTaskRisk } from "../lib/long-task-risk.js";
 import {
   closeDeliveryTask,
   doctorDeliveryTask,
@@ -25,6 +21,11 @@ import {
 } from "../lib/long-task-state.js";
 import { verifyDeliveryContract } from "../lib/long-task-verifier-v2.js";
 import { repositoryRoot } from "../lib/long-task-workspace.js";
+import {
+  initializeLongTask,
+  preflightLongTask,
+} from "./long-task-authoring.js";
+import { explainLongTask } from "./long-task-explain.js";
 
 export async function longTask(args: string[]): Promise<void> {
   const subcommand = args[0] ?? "help";
@@ -35,16 +36,20 @@ export async function longTask(args: string[]): Promise<void> {
 
   if (subcommand === "init") {
     rejectUnknown(args.slice(2), []);
-    await initialize(workdir);
+    await initializeLongTask(workdir);
     console.log(JSON.stringify({ status: "initialized", workdir }));
     return;
+  }
+  if (subcommand === "preflight") {
+    rejectUnknown(args.slice(2), []);
+    return preflightLongTask(workdir);
   }
   if (subcommand === "compile") return compile(workdir, args.slice(2));
   if (subcommand === "approve-authority-revision")
     return approveRevision(workdir, args.slice(2));
   if (subcommand === "explain") {
     rejectUnknown(args.slice(2), []);
-    return explain(workdir);
+    return explainLongTask(workdir);
   }
   if (subcommand === "verify") return verify(workdir, args.slice(2));
   if (subcommand === "status") {
@@ -81,10 +86,11 @@ export async function longTask(args: string[]): Promise<void> {
     const forceCorruptState =
       args.length === 3 && args[2] === "--force-corrupt-state";
     if (args.length > 2 && !forceCorruptState)
-      throw new Error(`Unknown or injected arguments: ${args.slice(2).join(" ")}`);
+      throw new Error(
+        `Unknown or injected arguments: ${args.slice(2).join(" ")}`,
+      );
     const root = await repositoryRoot(process.cwd());
-    if (forceCorruptState)
-      await forceClearCorruptActiveState(root, workdir);
+    if (forceCorruptState) await forceClearCorruptActiveState(root, workdir);
     else await abandonLongTaskState(root, workdir);
     console.log(
       JSON.stringify({
@@ -107,10 +113,7 @@ async function compile(workdir: string, args: string[]): Promise<void> {
     migrate_legacy: true,
   });
   const previous = loaded.authority?.authority_snapshot ?? null;
-  if (
-    loaded.authority &&
-    loaded.authority.workdir !== path.resolve(workdir)
-  )
+  if (loaded.authority && loaded.authority.workdir !== path.resolve(workdir))
     throw new Error(`active_task_exists:${loaded.authority.workdir}`);
   const compiled = await compileDeliveryContract(workdir, process.cwd(), {
     revise,
@@ -139,10 +142,7 @@ async function compile(workdir: string, args: string[]): Promise<void> {
     if (!authorityCommitted) await stagedCache.discard();
     throw error;
   }
-  if (
-    !previous ||
-    previous.compiled_identity !== compiled.compiled_identity
-  ) {
+  if (!previous || previous.compiled_identity !== compiled.compiled_identity) {
     await invalidateDerivedProgress(workdir);
     await clearFinalReceipt(compiled.repository_root, workdir);
   }
@@ -174,49 +174,6 @@ async function approveRevision(workdir: string, args: string[]): Promise<void> {
   );
 }
 
-async function explain(workdir: string): Promise<void> {
-  const parsed = await parseDeliveryContractBundle(workdir);
-  const coverage = compileProductClaimCoverage(parsed.contract);
-  const risk = classifyLongTaskRisk(parsed.contract);
-  const globalClaims = Object.entries(
-    coverage.summary.claims_by_global,
-  ).map(([claimKey, value]) => ({
-    claim: `GLOBAL.${claimKey}`,
-    covered: value.covered,
-    checks: value.proofs.map((proof) => proof.check_key),
-    assertions: value.proofs.map((proof) => proof.assertion_key),
-    polarity: value.proofs.map((proof) => proof.polarity),
-    proof_surfaces: value.proofs.map((proof) => proof.proof_surface),
-    strict_risk_obligations: [],
-  }));
-  const outcomeClaims = Object.entries(
-    coverage.summary.claims_by_outcome,
-  ).flatMap(
-    ([outcomeKey, rows]) =>
-      Object.entries(rows).map(([claimKey, value]) => ({
-        claim: `OUTCOME.${outcomeKey}.${claimKey}`,
-        covered: value.covered,
-        checks: value.proofs.map((proof) => proof.check_key),
-        assertions: value.proofs.map((proof) => proof.assertion_key),
-        polarity: value.proofs.map((proof) => proof.polarity),
-        proof_surfaces: value.proofs.map((proof) => proof.proof_surface),
-        strict_risk_obligations: risk.reasons_by_outcome[outcomeKey],
-      })),
-  );
-  const claims = [...globalClaims, ...outcomeClaims];
-  console.log(
-    JSON.stringify(
-      {
-        schema_version: "long-task-explain-v2",
-        claims,
-        coverage: coverage.summary,
-      },
-      null,
-      2,
-    ),
-  );
-}
-
 async function verify(workdir: string, args: string[]): Promise<void> {
   const outcome = option(args, "--outcome");
   const check = option(args, "--check");
@@ -235,17 +192,6 @@ async function finalGate(workdir: string, args: string[]): Promise<void> {
     result.workflow_status !== "machine_accepted_external_pending"
   )
     process.exitCode = 1;
-}
-
-async function initialize(workdir: string): Promise<void> {
-  await mkdir(workdir, { recursive: true });
-  try {
-    await writeFile(path.join(workdir, "delivery-contract.yaml"), template(), {
-      flag: "wx",
-    });
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
-  }
 }
 
 function option(args: string[], name: string): string | undefined {
@@ -274,6 +220,7 @@ function rejectUnknown(actual: string[], allowed: string[]): void {
 function help(): void {
   console.log(`ty-context long-task commands:
   init <workdir>
+  preflight <workdir>
   compile <workdir>
   compile <workdir> --revise
   approve-authority-revision <workdir> --revision <sha>
@@ -286,96 +233,4 @@ function help(): void {
   stop-check <workdir> [--message <text>]
   close <workdir>
   abandon <workdir> [--force-corrupt-state]`);
-}
-
-function template(): string {
-  return `schema_version: long-task-delivery-v2
-task:
-  id: replace-me
-  title: Replace me
-  goal: Describe the complete observable delivery goal.
-  source_paths: []
-  context_refs: []
-  context_snapshot_mode: referenced
-source_claims: []
-risk:
-  requested_level: auto
-  facts:
-    public_api_or_schema_change: []
-    persistent_data_change: []
-    data_migration: []
-    security_boundary_change: []
-    permission_boundary_change: []
-    irreversible_external_effect: []
-    critical_user_path: []
-    full_population_operation: []
-    multi_repository_change: []
-    weak_observability: []
-global:
-  product:
-    non_goals: []
-  technical:
-    constraints: []
-    forbidden_paths: []
-    forbidden_shortcuts: []
-  acceptance:
-    checks: []
-    external_confirmations: []
-outcomes:
-  - key: replace-outcome
-    title: Replace outcome
-    depends_on: []
-    product:
-      observable_result: Describe what a user or system can observe.
-      owner:
-        label: replace-owner
-        context_refs: []
-        path_globs: ["src/**", "tests/**"]
-      owner_surfaces: []
-      controls: []
-      non_completing_outcomes: []
-    technical:
-      obligations:
-        - key: replace-runtime
-          statement: Implement the declared runtime behavior.
-          required_proof_surfaces: [runtime_behavior]
-      expected_change_paths: ["src/**"]
-      allowed_support_paths: []
-      forbidden_paths: []
-      forbidden_shortcuts: []
-      bindings:
-        - key: replace-runtime
-          kind: verified
-          target: replace runtime capability
-          carrier_paths: ["src/**"]
-          verification_check_key: replace-check
-      rollback_and_recovery: null
-    acceptance:
-      checks:
-        - key: replace-check
-          proof_surface: runtime_behavior
-          runner:
-            type: node_oracle
-            target: tests/replace-oracle.mjs
-            argv: []
-            cwd: .
-            timeout_ms: 30000
-            effect: read_only
-            retry_policy: none
-            idempotent: true
-          verification_inputs: ["tests/replace-oracle.mjs"]
-          input_paths: ["src/**"]
-          expected_output_paths: []
-          artifact_globs: []
-          positive_assertions:
-            - key: replace-success
-              claims: [result, obligation.replace-runtime]
-              observation: result
-              operator: equals
-              expected: true
-          negative_assertions: []
-          environment_requirements: []
-      population: null
-      counterfactual_controls: []
-`;
 }

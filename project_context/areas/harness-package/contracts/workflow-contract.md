@@ -39,7 +39,7 @@ The default path requires no `plan.md`, Task Contract, mapping table, matrix, ve
 Routing order is:
 
 1. A valid common-dir active record plus matching worktree Git-config marker resumes through `/long-task-workflow` and `ty-context long-task resume`.
-2. Explicit `/long-task-workflow` performs one semantic Boundary Check, then creates, compiles, executes or resumes one V2 Contract/Bundle authority in the current native Goal.
+2. Explicit `/long-task-workflow` creates, preflights, compiles, executes or resumes exactly one complete V2 Contract authority for the selected delivery in the current native Goal.
 3. Explicit `/normal-long-task` returns a retirement pointer to `/long-task-workflow`; it creates no artifacts.
 4. Otherwise remain on the default Workflow Contract, regardless of apparent duration or file count.
 
@@ -48,7 +48,7 @@ Do not auto-detect or auto-activate long-task state.
 ## Entry Risk Levels
 
 - L0 local: reversible, Context-complete, no durable API/schema/data/security/recovery/product change, directly testable and no cross-session recovery need. Use default Workflow only.
-- L1 standard: multiple observable Outcomes or recovery need, no L2 trigger, reliable executable verification. Use one Contract/Bundle authority, native Goal/workspace, scoped progress and Live Final Gate.
+- L1 standard: multiple observable Outcomes or recovery need, no L2 trigger, reliable executable verification. Use one complete Contract authority, native Goal/workspace, scoped progress and Live Final Gate.
 - L2 strict: public API/schema, persistent data, migration, security/permission boundary, irreversible external effect, full population, or critical-path work with weak end-to-end observability. Compiler raises the floor and enforces proof on each affected Outcome; multi-repository delivery is rejected.
 
 An explicit user request may raise risk to strict. Neither Skill nor execution may lower the compiler floor.
@@ -57,37 +57,39 @@ An explicit user request may raise risk to strict. Neither Skill nor execution m
 
 The workflow is:
 
-`request/source -> Source Claims -> relevant Context -> V2 Contract/Bundle -> Claim Coverage/static compile -> native Goal rolling Frontier -> scoped targeted progress -> clean candidate commit -> source-recompiled Live Final Gate -> external Git/CI/deploy/human confirmation -> Context drift check`
+`request/source -> relevant Context -> one complete Compact V2 Contract -> Source/REQ/CTRL/OBL/AC coverage -> read-only Authoring Preflight -> formal Compile/Authority Lock -> native Goal rolling Frontier -> scoped targeted progress -> clean candidate commit -> source-recompiled Live Final Gate -> external Git/CI/deploy/human confirmation -> Context drift check`
 
-Capacity never creates semantic Children. Bundle fragments remain one authority; independent top-level boundaries run as separate Contracts and Delivery Set stays retired. Protected authority reductions require explicit revision approval, risk downgrade is rejected, and the immutable first baseline remains. Machine acceptance is limited to declared Claims/Checks and does not imply external confirmation.
+Capacity, file length, implementation layers, module count, parallelism and Agent preference never create a Contract or Outcome boundary. Existing `outcome_files` remain only a physical compatibility form of the same Contract; new authoring uses inline Outcomes. Delivery Set and top-level splitting within one selected delivery stay retired. Protected authority reductions require explicit revision approval, risk downgrade is rejected, and the immutable first baseline remains. Machine acceptance is limited to declared Claims/Checks and does not imply external confirmation.
 
 - Harness does not create or simulate the native Goal. The current session is the Goal; a new session recovers semantic state, not the prior physical Turn.
 - The user-selected workspace is the execution surface. No internal parallel mutation, extra worktree, branch, agent or worker is created.
-- Outcome is an acceptance unit. Dependencies determine readiness only. The current Goal chooses a temporary Frontier and rolls out file/function/test details only for that Frontier.
+- Outcome is an independently decidable and target-verifiable acceptance unit. Dependencies determine readiness only. It is never an output-length/file/module/frontend/backend fragment. The current Goal chooses a temporary Frontier and rolls out file/function/test details only for that Frontier.
 - `delivery-contract.yaml` contains Product, Technical Boundary and Acceptance logical authority in one strict file. `source.md` may preserve provenance but has no execution authority.
-- The Contract records complete observable ends, stable obligations/boundaries/path envelopes/forbidden shortcuts/recovery requirements and falsifiable checks. It does not record a complete file-level procedure.
-- Compiler-generated Outcome/Check/Claim ids replace handwritten cross-entity references. Contract edits are normal Git history; there is no Packet chain or second plan.
+- A WebGPT-style research or product proposal remains ordinary Source input and does not need to arrive as strict Contract YAML.
+- The Contract records complete observable ends, atomic Requirements, applicable control states and placement, stable obligations/boundaries/path envelopes/forbidden shortcuts/recovery requirements and named falsifiable AC Assertions. It does not record a complete file-level procedure.
+- Compiler-generated Outcome/Check/Claim ids replace handwritten cross-entity references. Source AC references use stable `<outcome>.<check>.<assertion>` ids. Contract edits are normal Git history; there is no Packet chain or second plan.
 
 ## False-Completion And Drift-Control Objective
 
-- When the source and Contract are sufficiently detailed and unambiguous, every material plan item or acceptance criterion must resolve to observable Claims and falsifiable Checks. Authoritative completion is impossible while any such declared item remains unimplemented, even if agent prose or a local checklist says otherwise.
+- When the source and Contract are sufficiently detailed and unambiguous, every atomic requirement, control state, technical obligation and acceptance criterion must resolve to observable Claims or named falsifiable Assertions. A specific Source item cannot collapse into the broad Outcome Result. Authoritative completion is impossible while any such declared item remains unimplemented, even if agent prose or a local checklist says otherwise.
 - The Harness does not promise drift-free intermediate model behavior. Rolling implementation may diverge; compile, scope/risk escalation, targeted findings, Final Gate and Stop must detect observable drift, block acceptance, identify the owning Outcome/Claim/Check or boundary and direct repair.
 - Machine acceptance means the final current-snapshot artifact has no remaining observable drift relative to the declared Contract and relevant Context. It does not extend to omitted or non-falsifiable requirements, hostile-host tampering or external CI/deployment/human confirmation.
 - Add a workflow mechanism only when it closes a distinct false-completion path or materially improves drift detection, blocking or repair direction. Stop layering mechanisms before their marginal drift-prevention benefit is outweighed by authoring, runtime, state and recovery cost.
 
 ## Compile, Verification And Completion
 
-- Compile performs only static work: strict V2 schema/key validation, Global and Outcome Claim generation/coverage, shared-AST owner/binding/path containment and overlap checks, Source/Context/Product/Global material projection, resolved-runner/verification-input freeze, per-Outcome risk proof and complete identity freeze. Unsupported repository-pattern syntax is rejected and missing/type-incomparable Observations cannot prove Claims.
+- Authoring Preflight performs only read-only static work: Compact normalization, strict V2 schema/key validation, Source/Anchor/Claim/Assertion coverage, Global and Outcome Claim generation/coverage, shared-AST owner/binding/path containment and overlap checks, resolved runner/verification-input/proof validation, per-Outcome risk diagnostics and complete aggregated findings. It creates no authority, lock, marker, cache, progress, Receipt or pending revision and runs no project Check.
+- Formal Compile repeats authoritative static validation, freezes Source/Context/Product/Acceptance/Global materials plus runner/verification-input/verifier identity and creates Authority Lock on first success. Unsupported repository-pattern syntax is rejected; duplicate Observation paths in a Check are rejected; missing/type-incomparable Observations cannot prove Claims.
 - Static Contract errors block product implementation. Product/acceptance/architecture semantic conflicts return to the user; local code/check failures stay in the same Goal; retry defaults to none and one transient retry requires explicit idempotent read-only/test-sandbox policy.
-- Targeted verify may run one Check, one Outcome or all requested repair checks. It rechecks active task/revision/compiled/worktree identity before writing derived current-snapshot status and never creates accepted authority.
-- Final Gate creates one current snapshot and reruns all global and Outcome Checks, then rechecks active identity before acceptance. Raw execution identity binds frozen runner identity plus canonical Environment Requirements; only equal raw identities may deduplicate commands, while artifact and Assertion evidence remains per Check. Historical results are never reused.
+- Targeted verify may run one Check, one Outcome or all requested repair checks. It rechecks active task/revision/compiled/worktree identity before writing derived current-snapshot status and is never accepted authority.
+- Final Gate creates one current snapshot and reruns all global and Outcome Checks, then rechecks active identity before acceptance. Raw execution identity binds frozen runner identity plus canonical Environment Requirements; only equal raw identities may deduplicate commands, while AC-level observations, artifact and Assertion evidence remains per Check. Historical results are never reused.
 - Bottom-up Task acceptance requires at least one executable Check per Outcome plus every strict/global obligation. Human, CI, deployment and product confirmations exist only in `external_confirmations`, never contribute machine proof, and yield `machine_accepted_external_pending` after all machine Checks pass.
 - Contract/source/relevant Context/runner/oracle/verifier/workspace changes stale audit results. Stop and close always run the Live Final Gate and never trust prior Receipts/cache; success clears the matching common-dir record/config marker.
 
 ## Scope And Risk Escalation
 
 - The Contract declares Outcome expected change paths, allowed support paths, forbidden paths and relevant Context owners/boundaries.
-- Actual changes outside the combined allowed envelope or a newly touched undeclared boundary return `scope_or_risk_escalation_required`.
+- Actual changes outside the combined allowed envelope or a newly touched undeclared boundary return a `scope_escape` Finding.
 - The same current Goal revises the Contract and recompiles. Harness never responds by starting a worker/new Goal.
 - The first successful compile is Authority Lock. Any later Source/Context/Product/Global semantic or verifier-content change is a user-reviewed Authority Revision, independent of whether verify ran or progress/Receipt/cache exists. Product Claim additions/removals/rewrites, runner/input replacement, reduced `input_paths`, weakened `expected_output_paths` and unproved pattern containment are authority reductions. Only mechanical proof additions, pure verifier relocation and proven path/binding/input/output tightening may revise automatically. Stop/close clear only through accepted-identity CAS.
 
@@ -104,6 +106,7 @@ Before handoff:
 
 ## Non-Goals
 
-- No lifecycle phases, fixed plans, Source Unit tables, Source Coverage records, SFC/Packet/Change Envelope/Wave/Campaign state, agent/worker retry state, integration branches, worktree orchestration, matrices/verdicts or hand-written completion state.
+- No lifecycle phases, fixed plans, separate Authoring Skill/product, Source Unit tables, persisted Source Coverage records, SFC/Packet/Change Envelope/Wave/Campaign state, agent/worker retry state, integration branches, worktree orchestration, matrices/verdicts or hand-written completion state.
+- No multiple top-level Contracts for one selected delivery, capacity-based Outcome fragmentation, execution registry, proof recipe, runner inheritance, Preflight Receipt or second Coverage authority.
 - No validator-enforced edit order or claim that schema proves users declared everything.
 - No targeted verification acceptance and no Historical Result aggregation.

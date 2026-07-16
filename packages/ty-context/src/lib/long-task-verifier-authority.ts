@@ -59,8 +59,7 @@ export function verifierIdentityMatches(
 ): boolean {
   const diff = verifierAuthorityDiff(previous, next);
   return (
-    !diff.verifier_content_changed &&
-    !diff.verifier_runtime_locator_changed
+    !diff.verifier_content_changed && !diff.verifier_runtime_locator_changed
   );
 }
 
@@ -75,8 +74,7 @@ function changedVerifierFiles(
   const changed = [...files].filter(
     (file) => previous.bundle_files[file] !== next.bundle_files[file],
   );
-  if (previous.schema_sha256 !== next.schema_sha256)
-    changed.push("<schema>");
+  if (previous.schema_sha256 !== next.schema_sha256) changed.push("<schema>");
   if (previous.hook_sha256 !== next.hook_sha256) changed.push("<hook>");
   if (previous.package_name !== next.package_name)
     changed.push("<package-name>");

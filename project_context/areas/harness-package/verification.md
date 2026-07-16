@@ -9,10 +9,10 @@ read_policy: default
 - `npm run format:check`: TypeScript formatting.
 - `npm run typecheck --workspace project-tiny-context-harness`: type safety after schema/state/CLI/profile changes.
 - `npm run build --workspace project-tiny-context-harness`: compiled package and CLI.
-- `npm run test:delivery-contract --workspace project-tiny-context-harness`: strict parser, generated ids, Context/source/path/runner/proof preflight, risk floor and scope escalation tests. Small-fixture compile target is under two seconds.
-- `npm run test:long-task-workflow --workspace project-tiny-context-harness`: targeted verify/status/resume/final/Stop/profile/consumer workflow tests. Focused loop target is under five minutes; complete workflow suite under fifteen minutes.
+- `npm run test:delivery-contract --workspace project-tiny-context-harness`: Compact/expanded canonical equivalence, strict parser, Source anchors and Source-to-Claim/Assertion mapping, Requirement/control-placement Claims, Observation uniqueness, generated ids, Context/path/runner/proof preflight, risk floor and scope escalation tests. Small-fixture Preflight and Compile targets are each under two seconds.
+- `npm run test:long-task-workflow --workspace project-tiny-context-harness`: read-only Preflight state-diff tests, AC-level Playwright evidence, precise Finding, targeted verify/status/resume/explain/final/Stop/profile/consumer workflow tests. Focused loop target is under five minutes; complete workflow suite under fifteen minutes.
 - `npm run test:long-task-performance --workspace project-tiny-context-harness`: independent 10k tracked/100 untracked Git matrix with status/resume/compile/Snapshot/Stop budgets.
-- Long-task tests explicitly cover first-compile Authority Lock, Source/Context/Product/Global/verifier revision identity, compile-time authority/execution field-policy completeness, canonical path-bearing fields and internal-dot bypass resistance, Environment-bound Raw Execution identity, `input_paths`/`expected_output_paths` reductions, scoped progress plus Verify/Final authority races, unified lock/CAS clear, corrupt-state force abandon, Global blocked projection, Active Authority V3/V2 migration, Counterfactual/Population/minimal-Environment V2, runner freeze and relocated-package/content-verifier migration.
+- Long-task tests explicitly cover first-compile Authority Lock, Preflight non-mutation/no-lock/no-runner behavior, Compact/expanded identical Contract and authority identities, Source/Context/Product/Acceptance/Global/verifier revision identity, compile-time authority/execution field-policy completeness, canonical path-bearing fields and internal-dot bypass resistance, Environment-bound Raw Execution identity, `input_paths`/`expected_output_paths` reductions, scoped progress plus Verify/Final authority races, unified lock/CAS clear, corrupt-state force abandon, Global blocked projection, Active Authority V3/V2 migration, Counterfactual/Population/minimal-Environment V2, runner freeze and relocated-package/content-verifier migration.
 
 ## Full Gates
 
@@ -38,9 +38,9 @@ A real temporary Git repository must prove:
 
 ## Required Coverage
 
-- Schema/preflight: V2 only, V1 retirement, generated Product/Control/Non-completing/Obligation/Shortcut Claims, unknown/cross-Outcome refs, owner/binding boundaries, duplicate keys and UI browser proof.
+- Schema/preflight: V2 only, V1 retirement, Compact defaults, generated Result/Requirement/Control-field/Non-completing/Obligation/Shortcut Claims, Source Acceptance/external-confirmation refs and real anchors, Source Result overcompression rejection, unknown/cross-Outcome refs, owner/binding boundaries, duplicate keys/Observations and UI placement proof.
 - Risk: standard baseline; security/permission/migration/persistent/public-schema/full-population triggers; explicit strict upgrade; below-floor rejection; trigger-specific strict proof; actual path/boundary escalation.
-- Verification: two-Outcome success/failure, targeted non-acceptance, raw-command/per-Check evidence split, artifacts, zero/all-skipped Playwright rejection, structured environment probes, exact Counterfactual failure and entity Population proof.
+- Verification: two-Outcome success/failure, targeted non-acceptance, raw-command/per-Check evidence split, AC-level Playwright pass/missing/duplicate/skipped/flaky/failure handling, artifacts, structured environment probes, exact Counterfactual failure and entity Population proof.
 - Recovery/authority: audit-only status/Receipt/cache, source-recompiled Stop/close, malformed/mismatched active state fail-closed, atomic binding clear, read-only resume and no process/branch/worktree mutation.
 - Platform boundary: fake executable observation proves no Codex/AppServer/agent/worktree/branch/merge/push/PR/model retry and Final Gate invokes only declared checks.
 - Distribution: enable/disable, safe profile migration, historical-file preservation, no retired runtime in new consumer/tarball, source mappings, English/Chinese/package README alignment, version parity and Windows paths.
@@ -49,4 +49,5 @@ A real temporary Git repository must prove:
 
 - Tests/Context validators prove only their named property. They do not prove product completeness.
 - Targeted verify is repair evidence only. Acceptance comes only from the currently executing source-recompiled Live Final Gate; no stored result is reusable authority.
+- Preflight proves only static authoring readiness and is intentionally non-authoritative; a successful Preflight creates no reusable receipt or completion evidence.
 - Store no one-off logs, reports, raw evidence, secrets or release ledgers in Context.

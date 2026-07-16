@@ -207,7 +207,7 @@ Use `/long-task-workflow` only when explicitly requested or when the current wor
 
 - one platform-native continuing Goal;
 - one user-selected repository/worktree;
-- one top-level authority: one Contract or logical Contract Bundle;
+- one complete selected delivery, one Contract and one Final Gate;
 - Outcome dependencies as acceptance readiness, not worker scheduling;
 - a rolling internal implementation Frontier;
 - targeted repair checks that never accept;
@@ -220,6 +220,7 @@ The platform owns physical Goal/session lifecycle. A later session runs `resume`
 
 ```text
 ty-context long-task init <workdir>
+ty-context long-task preflight <workdir>
 ty-context long-task compile <workdir>
 ty-context long-task compile <workdir> --revise
 ty-context long-task approve-authority-revision <workdir> --revision <sha>
@@ -234,8 +235,9 @@ ty-context long-task close <workdir>
 ty-context long-task abandon <workdir> [--force-corrupt-state]
 ```
 
-- `init` creates only a Contract template.
-- `compile` generates Global plus Outcome Product/Control/Non-completing/Technical Claims, rejects uncovered Claims, preserves an immutable first baseline and makes the first successful compile the Authority Lock. Every later revision compares against active authority regardless of progress, Receipt/cache deletion or implementation restoration. It freezes Source/Context/Product/Global/verifier materials, owner/binding authority, resolved runners and verification inputs in the complete common-dir Active Authority V3 snapshot.
+- `init` creates one Compact inline-Outcome Contract template.
+- `preflight` applies Compact defaults and reports all discoverable Source/REQ/CTRL/OBL/AC, Context, risk, path/binding, runner/input and proof diagnostics. It is read-only: no Authority Lock, marker, cache, progress, Receipt, pending revision, state lock or project Check.
+- `compile` generates Global plus Outcome Result/Requirement/Control-field/Non-completing/Technical Claims, rejects uncovered Claims, preserves an immutable first baseline and makes the first successful formal Compile the Authority Lock. Every later revision compares against active authority regardless of progress, Receipt/cache deletion or implementation restoration. It freezes Source/Context/Product/Acceptance/Global/verifier materials, owner/binding authority, resolved runners and verification inputs in the complete common-dir Active Authority V3 snapshot.
 - `verify` writes scoped per-Check Progress Records only after rechecking active task/revision/compiled/worktree identity. A concurrent revision returns `active_authority_changed_during_verify` and writes no stale progress.
 - `status` reports each Outcome as `unverified`, `progress_passing`, `progress_failing`, `progress_stale` or `blocked_external`. It reads the common-dir authority snapshot and reports a missing or mismatched workdir cache as a repairable diagnostic.
 - `resume` is read-only and reports task identity, risk, relevant Context, Git state, ready Outcomes, findings and the next safe action from the common-dir authority snapshot.
@@ -245,7 +247,7 @@ ty-context long-task abandon <workdir> [--force-corrupt-state]
 
 ### Delivery Contract
 
-`long-task-delivery-v2` keeps Product Authority, Technical Boundary Authority and Acceptance Authority as logical sections of one file. The compiler derives machine Claims for observable results, control states, non-completing outcomes, technical obligations and forbidden shortcuts:
+`long-task-delivery-v2` keeps Product Authority, Technical Boundary Authority and Acceptance Authority as logical sections of one file. Compact YAML omits only deterministic defaults; the normalized Contract and all hashes are identical to the expanded form. The compiler derives machine Claims for observable results, atomic Requirements, control fields including location, non-completing outcomes, technical obligations and forbidden shortcuts:
 
 ```yaml
 schema_version: long-task-delivery-v2
@@ -253,51 +255,54 @@ task:
   id: example-task
   title: Example task
   goal: Complete observable delivery goal
-  source_paths: []
-  context_refs: []
-  context_snapshot_mode: referenced
+  source_paths: [plans/example.md]
+  context_refs: [project_context/areas/main.md]
+source_claims:
+  - key: observable-requirement
+    source_ref: plans/example.md#observable-requirement
+    statement: The outcome is observable.
+    disposition:
+      type: claim
+      refs: [observable-outcome.requirement.observable]
 risk:
-  requested_level: auto
-  facts:
-    public_api_or_schema_change: []
-    persistent_data_change: []
-    data_migration: []
-    security_boundary_change: []
-    permission_boundary_change: []
-    irreversible_external_effect: []
-    critical_user_path: []
-    full_population_operation: []
-    multi_repository_change: []
-    weak_observability: []
-global:
-  product: { non_goals: [] }
-  technical: { constraints: [], forbidden_paths: [], forbidden_shortcuts: [] }
-  acceptance: { checks: [] }
+  facts: {}
+global: {}
 outcomes:
   - key: observable-outcome
     title: Observable outcome
-    depends_on: []
     product:
       observable_result: What a user or system can observe
       owner:
         label: Owning product or module boundary
         context_refs: [project_context/areas/main.md]
-        path_globs: [src/**]
-      owner_surfaces: []
-      controls: []
-      non_completing_outcomes: []
+        path_globs: ["src/**", "tests/**"]
+      requirements:
+        - key: observable
+          statement: The outcome is observable.
+          required_proof_surfaces: [runtime_behavior]
     technical:
-      obligations: []
       expected_change_paths: ["src/**"]
-      allowed_support_paths: ["tests/**"]
-      forbidden_paths: []
-      bindings: []
-      forbidden_shortcuts: []
-      rollback_and_recovery: null
+      obligations:
+        - key: runtime
+          statement: Implement the runtime behavior.
+          required_proof_surfaces: [runtime_behavior]
     acceptance:
-      checks: []
-      population: null
-      counterfactual_controls: []
+      checks:
+        - key: runtime
+          proof_surface: runtime_behavior
+          runner:
+            type: node_oracle
+            target: tests/runtime.mjs
+            effect: read_only
+          verification_inputs: [tests/runtime.mjs]
+          input_paths: ["src/**"]
+          positive_assertions:
+            - key: observable-ac
+              criterion: The declared requirement is observable.
+              claims: [result, requirement.observable, obligation.runtime]
+              observation: result
+              operator: equals
+              expected: true
 ```
 
 Authors provide task, Outcome, control and Check keys. The compiler generates `OUT.<outcome-key>` and `CHECK.<outcome-key>.<check-key>` identities. It rejects unknown/duplicate keys, YAML aliases/tags/merges, dependency cycles, unsafe paths, missing Context/source/runner files, missing package scripts, unverifiable Outcomes, and UI Outcomes without browser proof.
@@ -306,13 +311,13 @@ Global non-goals, constraints and forbidden shortcuts generate `GLOBAL.non_goal.
 
 Supported runners are `package_script`, `project_binary`, `node_oracle` and `playwright_test`. Supported proof surfaces are `ui_browser`, `runtime_behavior`, `api_contract`, `data_state`, `security_boundary`, `population_coverage` and `implementation_structure`.
 
-### Contract Bundle And Source Claims
+### One Contract And Source Claims
 
-A large atomic delivery remains one logical Contract. The root may replace inline `outcomes` with sorted `outcome_files`; fragments contain Outcome content only and share one binding, baseline, Final Gate and Receipt. File size, token count, implementation layers, parallelism or agent preference never justify multiple Contracts.
+Every complete delivery selected by the user remains one Contract and one Final Gate, even when Outcomes are weakly related. Outcome boundaries exist only for independently decidable, target-verifiable results and never for output length, YAML/file size, frontend/backend layers, module count, parallelism or Agent capacity. New authoring uses inline Outcomes. Existing `outcome_files` remains parser compatibility for physical file organization only and creates no semantic, state or completion boundary.
 
-V2 authoring preserves original `source_paths` and direct `source_claims`, each disposed to generated Claim refs, a global constraint, a source-backed out-of-scope item or a decision-required blocker. Every Source Claim must bind a declared real Source file; `file#anchor` locations are allowed. Compiler coverage validates declared claims without claiming it discovered omitted requirements.
+V2 authoring preserves original `source_paths` and direct `source_claims`, each disposed to generated Product/Technical Claims, a named `<outcome>.<check>.<assertion>` Acceptance ref, a Global Claim, an external confirmation, a source-backed out-of-scope item or a decision-required blocker. Every Source Claim binds a declared real Source file, and `file#anchor` must resolve to a real heading/anchor. A WebGPT-style research or product proposal is ordinary Source input and does not need to be rewritten as strict Contract YAML first. A specific Source item cannot map only to `<outcome>.result`; non-empty `source_paths` require Source Claims. Compiler coverage validates declared claims without claiming it discovered omitted requirements.
 
-Delivery Set orchestration is retired. Genuinely independent release/rollback/owner/risk/product boundaries run as separate top-level Contracts. `ty-context delivery-set ...` returns a fixed non-executing tombstone.
+Delivery Set orchestration and top-level Contract splitting within one selected delivery are retired. `ty-context delivery-set ...` returns a fixed non-executing tombstone.
 
 Every Contract-authority, Source hash/file-set, Context topology/file-set/hash, Product/Global semantic or verifier-content change requires `--revise`; ordinary compile cannot silently refreeze it. After Authority Lock, reductions and Product Claim additions require approval of an exact revision identity bound to previous/next materials and verifier projections. Pure verifier package root/version relocation auto-revises, while bundle/schema/hook byte changes require user approval. Every Contract and Check execution field has a compile-time policy classification. Only mechanical proof additions, pure verifier relocation and machine-proven scope/input/output tightening revise automatically.
 
@@ -324,11 +329,11 @@ Every path-bearing field uses one canonical grammar before hashing and matching.
 - **L1 standard**: multiple observable Outcomes or cross-session recovery, with reliable executable checks.
 - **L2 strict**: public API/schema, persistent data, migration, security/permission boundary, irreversible external effect, full-population operation, or a critical path with weak observability. Proof is bound to the affected Outcome; multi-repository delivery is unsupported.
 
-An explicit user request can raise the level to strict. Explicit `standard` below the computed floor fails with `risk_level_below_required`. Strict negative, counterfactual, population, security, environment and rollback/recovery obligations are compiler-enforced as applicable. Changed paths outside the declared envelope return `scope_or_risk_escalation_required` and require the same Goal to revise and recompile the Contract.
+An explicit user request can raise the level to strict. Explicit `standard` below the computed floor fails with `risk_level_below_required`. Strict negative, counterfactual, population, security, environment and rollback/recovery obligations are compiler-enforced as applicable. Changed paths outside the declared envelope return a `scope_escape` Finding and require the same Goal to review risk/ownership, revise and recompile the Contract.
 
 ### Evidence And Authority
 
-Final acceptance is computed from executable current evidence, not agent prose. Raw Execution reuse is keyed by frozen runner identity plus canonical declared Environment Requirements, never actual env values; artifacts and Assertions remain per Check. Global hard failure yields `needs_work`; otherwise any Global or Outcome environment block yields `blocked_external`. Contract, source, relevant Context, Oracle/runner, verifier or workspace drift invalidates previous results.
+Final acceptance is computed from executable current evidence, not agent prose. One Check may contain many named AC Assertions, but one Observation path belongs to one Assertion. Fine-grained Requirement/control Claims cannot use `playwright.passed`; Playwright `[ac-key]` cases expose independent `playwright.case.<key>.passed`/`.skipped` observations and fail closed on missing, duplicate, skipped, flaky/unexpected or invalid cases. Raw Execution reuse is keyed by frozen runner identity plus canonical declared Environment Requirements, never actual env values; AC observations, artifacts and Assertions remain per Check. Findings carry Source, Claim, AC/criterion, Observation, expected/actual and owner paths into Explain/Status/Resume. Global hard failure yields `needs_work`; otherwise any Global or Outcome environment block yields `blocked_external`. Contract, source, relevant Context, Oracle/runner, verifier or workspace drift invalidates previous results.
 
 The workdir `.ty-context/compiled-contract.json` is only a rebuildable cache projection. Previous authority, the immutable initial base, risk floor and Final Gate identity come only from the common-dir snapshot. Commit, migration, clear and abandon share one active-state lock; Final/Verify recheck identity and Stop/close use accepted-identity CAS. Legacy V2 migrates only from a fully matching cache; corrupt continuity is recovered explicitly with `abandon --force-corrupt-state`.
 
@@ -337,6 +342,8 @@ Final Gate may run only Contract-declared verification commands and never produc
 ## Compatibility And Migration
 
 Version 0.6.0 retires the V1 schema/runtime and repo-local Hook. Enable, disable and upgrade remove only exact Tiny Context managed Hook entries. Relocated package-owned absolute commands are recognized only when the known managed status and a known `node_modules`, pnpm or workspace-package layout both match; no-status and similar-name user Hooks remain. A command is never deleted merely because it contains `composite`. Upgrade reports unfinished V1 active state as `manual_required` and never imports V1 progress or Receipts into V2 authority. Delivery Set, `composite-campaign` and `composite-long-task` commands are non-executing tombstones.
+
+This authoring refinement stays on `long-task-delivery-v2`: expanded V2 Contracts and existing `outcome_files` continue to parse, so no V3 or Contract migration is introduced. New Authoring Preflight requires readable Assertion `criterion` text before formal Compile, while direct Compile remains compatible with older V2 Assertions that omit it.
 
 `/normal-long-task` is also a retirement pointer to `/long-task-workflow`; it creates no checklist, prompt, audit, matrix, verdict or second authority.
 

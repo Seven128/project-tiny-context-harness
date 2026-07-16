@@ -187,7 +187,7 @@ function addProof(contract, key) {
   contract.outcomes[0].acceptance.checks[0].positive_assertions.push({
     key,
     claims: ["result"],
-    observation: "result",
+    observation: "result_copy",
     operator: "truthy",
   });
 }
@@ -225,7 +225,7 @@ while (!existsSync(${JSON.stringify(signal.release)})) {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20);
 }
 const state = JSON.parse(readFileSync(new URL("../src/state.json", import.meta.url), "utf8"));
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state.first}}));
+console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state.first,result_copy:state.first}}));
 `,
   );
   await commitCandidate(fixture.root);

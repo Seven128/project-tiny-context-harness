@@ -9,27 +9,53 @@ export interface AssertionComparison {
   passed: boolean;
 }
 
+export interface DeliveryAssertionEvaluation {
+  passed: boolean;
+  status:
+    | "passed"
+    | "observation_missing"
+    | "observation_type_mismatch"
+    | "assertion_value_mismatch";
+  expected?: unknown;
+  actual?: unknown;
+}
+
 export function evaluateDeliveryAssertion(
   assertion: DeliveryAssertionV2,
   observations: Record<string, unknown>,
 ): boolean {
+  return evaluateDeliveryAssertionDetailed(assertion, observations).passed;
+}
+
+export function evaluateDeliveryAssertionDetailed(
+  assertion: DeliveryAssertionV2,
+  observations: Record<string, unknown>,
+): DeliveryAssertionEvaluation {
   const { found, value } = observationValue(
     observations,
     assertion.observation,
   );
-  if (!found) return false;
-  if (assertion.operator === "exists") return true;
+  if (!found)
+    return {
+      passed: false,
+      status: "observation_missing",
+      expected: assertion.expected,
+    };
+  if (assertion.operator === "exists")
+    return { passed: true, status: "passed", actual: value };
   const expected = assertion.expected;
   let comparison: AssertionComparison;
   switch (assertion.operator) {
     case "truthy":
-      return Boolean(value);
+      return result(Boolean(value), true, value);
     case "falsy":
-      return !value;
+      return result(!value, false, value);
     case "equals":
-      return canonicalValueJson(value) === canonicalValueJson(expected);
+      comparison = comparableEquals(value, expected, false);
+      break;
     case "not_equals":
-      return canonicalValueJson(value) !== canonicalValueJson(expected);
+      comparison = comparableEquals(value, expected, true);
+      break;
     case "contains":
       comparison = contains(value, expected);
       break;
@@ -80,7 +106,14 @@ export function evaluateDeliveryAssertion(
       );
       break;
   }
-  return comparison.comparable && comparison.passed;
+  if (!comparison.comparable)
+    return {
+      passed: false,
+      status: "observation_type_mismatch",
+      expected,
+      actual: value,
+    };
+  return result(comparison.passed, expected, value);
 }
 
 export function evaluatePopulation(
@@ -182,10 +215,7 @@ function failure(actual: unknown, reason: string) {
   return { passed: false, actual, reason };
 }
 
-function contains(
-  value: unknown,
-  expected: unknown,
-): AssertionComparison {
+function contains(value: unknown, expected: unknown): AssertionComparison {
   if (typeof value === "string" && typeof expected === "string")
     return { comparable: true, passed: value.includes(expected) };
   if (Array.isArray(value))
@@ -198,10 +228,18 @@ function contains(
   return { comparable: false, passed: false };
 }
 
-function matches(
+function comparableEquals(
   value: unknown,
   expected: unknown,
+  negate: boolean,
 ): AssertionComparison {
+  if (valueKind(value) !== valueKind(expected))
+    return { comparable: false, passed: false };
+  const equal = canonicalValueJson(value) === canonicalValueJson(expected);
+  return { comparable: true, passed: negate ? !equal : equal };
+}
+
+function matches(value: unknown, expected: unknown): AssertionComparison {
   if (typeof value !== "string" || typeof expected !== "string")
     return { comparable: false, passed: false };
   try {
@@ -243,4 +281,23 @@ function sets(
       new Set(right.map(canonicalValueJson)),
     ),
   };
+}
+
+function result(
+  passed: boolean,
+  expected: unknown,
+  actual: unknown,
+): DeliveryAssertionEvaluation {
+  return {
+    passed,
+    status: passed ? "passed" : "assertion_value_mismatch",
+    expected,
+    actual,
+  };
+}
+
+function valueKind(value: unknown): string {
+  if (value === null) return "null";
+  if (Array.isArray(value)) return "array";
+  return typeof value;
 }

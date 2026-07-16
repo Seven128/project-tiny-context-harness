@@ -9,6 +9,7 @@ import type {
 } from "./long-task-delivery-types.js";
 import { deliveryCompileFreshness } from "./long-task-freshness.js";
 import { assertVerifierAuthorityCurrent } from "./long-task-freshness.js";
+import { enrichCheckResultFindings } from "./long-task-finding-context.js";
 import { executeCheckRunner } from "./long-task-check-runner.js";
 import {
   evaluateCheckEvidence,
@@ -71,12 +72,9 @@ export async function verifyDeliveryContract(
     });
     let authorityChanged = false;
     try {
-      const current = (
-        await loadActiveLongTaskAuthority(repository)
-      ).authority;
+      const current = (await loadActiveLongTaskAuthority(repository)).authority;
       authorityChanged =
-        !current ||
-        !activeAuthorityIdentityMatches(current, expectedAuthority);
+        !current || !activeAuthorityIdentityMatches(current, expectedAuthority);
     } catch {
       authorityChanged = true;
     }
@@ -154,7 +152,10 @@ export async function runDeliveryChecks(
       ? compiled.outcomes.find((item) => item.key === check.outcome_key)
       : undefined;
     checkResults.push(
-      await evaluateCheckEvidence(check, raw, snapshot.root, outcome),
+      enrichCheckResultFindings(
+        compiled,
+        await evaluateCheckEvidence(check, raw, snapshot.root, outcome),
+      ),
     );
   }
   findings.push(...checkResults.flatMap((result) => result.findings));
@@ -220,7 +221,7 @@ function finalPathFindings(
         )
       )
         findings.push({
-          code: "planned_binding_missing",
+          code: "binding_missing",
           outcome_key: outcome.key,
           check_key: null,
           message: `Planned binding is missing: ${binding.target}`,
@@ -299,7 +300,7 @@ async function preRunFindings(
   return escaped.length
     ? [
         {
-          code: "scope_or_risk_escalation_required",
+          code: "scope_escape",
           outcome_key: null,
           check_key: null,
           message: `Changed paths are outside the Contract boundary: ${escaped.join(",")}`,

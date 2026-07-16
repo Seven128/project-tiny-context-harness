@@ -31,9 +31,7 @@ export function changedRunnerFields(
 ): string[] {
   const beforeRunner = declaredRunner(before);
   const afterRunner = declaredRunner(after);
-  const changed = (
-    Object.keys(beforeRunner) as Array<keyof DeliveryRunnerV2>
-  )
+  const changed = (Object.keys(beforeRunner) as Array<keyof DeliveryRunnerV2>)
     .filter((field) => !same(beforeRunner[field], afterRunner[field]))
     .map((field) => `${identity}:${field}`);
   if (before.runner.resolved_target !== after.runner.resolved_target)
@@ -206,7 +204,10 @@ export function rollbackReductions(
   const next = after.technical.rollback_and_recovery;
   if (!previous) return [];
   if (!next) return [`${after.key}:removed`];
-  if (previous.rollback !== next.rollback || previous.recovery !== next.recovery)
+  if (
+    previous.rollback !== next.rollback ||
+    previous.recovery !== next.recovery
+  )
     return [`${after.key}:statement_changed`];
   const nextChecks = new Set(next.verification_check_keys);
   return previous.verification_check_keys.some((key) => !nextChecks.has(key))
@@ -278,10 +279,7 @@ export function removedValues(
   return [...before].filter((value) => !after.has(value)).sort();
 }
 
-export function addedValues(
-  before: Set<string>,
-  after: Set<string>,
-): string[] {
+export function addedValues(before: Set<string>, after: Set<string>): string[] {
   return [...after].filter((value) => !before.has(value)).sort();
 }
 

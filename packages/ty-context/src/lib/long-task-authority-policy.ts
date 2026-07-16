@@ -1,5 +1,6 @@
 import type {
   CounterfactualControlV2,
+  DeliveryAssertionV2,
   DeliveryBindingV2,
   DeliveryCheckV2,
   DeliveryContractV2,
@@ -30,6 +31,7 @@ type GlobalProductV2 = DeliveryContractV2["global"]["product"];
 type GlobalTechnicalV2 = DeliveryContractV2["global"]["technical"];
 type GlobalAcceptanceV2 = DeliveryContractV2["global"]["acceptance"];
 type OutcomeProductV2 = DeliveryOutcomeV2["product"];
+type DeliveryRequirementV2 = OutcomeProductV2["requirements"][number];
 type OutcomeTechnicalV2 = DeliveryOutcomeV2["technical"];
 type OutcomeAcceptanceV2 = DeliveryOutcomeV2["acceptance"];
 
@@ -81,10 +83,17 @@ export const OUTCOME_AUTHORITY_POLICY = {
 export const OUTCOME_PRODUCT_AUTHORITY_POLICY = {
   observable_result: "semantic_user_review",
   owner: "semantic_user_review",
+  requirements: "semantic_user_review",
   owner_surfaces: "semantic_user_review",
   controls: "semantic_user_review",
   non_completing_outcomes: "semantic_user_review",
 } satisfies Record<keyof OutcomeProductV2, AuthorityFieldPolicy>;
+
+export const REQUIREMENT_AUTHORITY_POLICY = {
+  key: "identity",
+  statement: "semantic_user_review",
+  required_proof_surfaces: "proof_additive",
+} satisfies Record<keyof DeliveryRequirementV2, AuthorityFieldPolicy>;
 
 export const OWNER_AUTHORITY_POLICY = {
   label: "identity",
@@ -154,6 +163,15 @@ export const CHECK_AUTHORITY_POLICY = {
   environment_requirements: "proof_additive",
 } satisfies Record<keyof DeliveryCheckV2, AuthorityFieldPolicy>;
 
+export const ASSERTION_AUTHORITY_POLICY = {
+  key: "identity",
+  criterion: "semantic_user_review",
+  claims: "proof_additive",
+  observation: "proof_additive",
+  operator: "proof_additive",
+  expected: "proof_additive",
+} satisfies Record<keyof DeliveryAssertionV2, AuthorityFieldPolicy>;
+
 export const RUNNER_AUTHORITY_POLICY = {
   type: "runner_authority",
   target: "runner_authority",
@@ -189,6 +207,7 @@ export const AUTHORITY_FIELD_POLICY_REGISTRIES = {
   global_acceptance: GLOBAL_ACCEPTANCE_AUTHORITY_POLICY,
   outcome: OUTCOME_AUTHORITY_POLICY,
   outcome_product: OUTCOME_PRODUCT_AUTHORITY_POLICY,
+  requirement: REQUIREMENT_AUTHORITY_POLICY,
   owner: OWNER_AUTHORITY_POLICY,
   control: CONTROL_AUTHORITY_POLICY,
   outcome_technical: OUTCOME_TECHNICAL_AUTHORITY_POLICY,
@@ -197,6 +216,7 @@ export const AUTHORITY_FIELD_POLICY_REGISTRIES = {
   rollback: ROLLBACK_AUTHORITY_POLICY,
   outcome_acceptance: OUTCOME_ACCEPTANCE_AUTHORITY_POLICY,
   check: CHECK_AUTHORITY_POLICY,
+  assertion: ASSERTION_AUTHORITY_POLICY,
   runner: RUNNER_AUTHORITY_POLICY,
   population: POPULATION_AUTHORITY_POLICY,
   counterfactual: COUNTERFACTUAL_AUTHORITY_POLICY,

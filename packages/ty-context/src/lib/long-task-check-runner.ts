@@ -52,20 +52,13 @@ export async function executeCheckRunner(
   for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
     try {
       const raw = await runOnce(check, snapshotRoot);
-      const secrets = declaredEnvironmentValues(
-        check.environment_requirements,
-      );
+      const secrets = declaredEnvironmentValues(check.environment_requirements);
       const decoded = outputContainsDeclaredEnvironmentValue(raw, secrets)
         ? invalidEvidence(
             raw.exit_code,
             "check_evidence_contains_declared_environment_value",
           )
-        : decodeCheckEvidence(
-            check,
-            raw.exit_code,
-            raw.stdout,
-            raw.stderr,
-          );
+        : decodeCheckEvidence(check, raw.exit_code, raw.stdout, raw.stderr);
       return {
         raw_execution_identity: check.raw_execution_identity,
         execution_identity: check.raw_execution_identity,

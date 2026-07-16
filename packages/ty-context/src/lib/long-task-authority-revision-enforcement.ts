@@ -67,8 +67,7 @@ export async function enforceAuthorityRevision(
       previous.authority_hashes,
       nextHashes,
     ),
-    revision_diff: diff as AuthorityRevisionDiffV2 &
-      Record<string, unknown>,
+    revision_diff: diff as AuthorityRevisionDiffV2 & Record<string, unknown>,
     new_risk_floor: riskFloor,
     affected_outcomes_or_contracts: nextContract.outcomes.map(
       (outcome) => outcome.key,

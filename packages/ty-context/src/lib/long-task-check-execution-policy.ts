@@ -34,9 +34,9 @@ export function rawExecutionInputProjection(
   check: CompiledCheckWithoutRawIdentity,
 ): Record<string, unknown> {
   const projection: Record<string, unknown> = {};
-  for (const field of Object.keys(
-    CHECK_EXECUTION_INPUT_POLICY,
-  ) as Array<keyof DeliveryCheckV2>) {
+  for (const field of Object.keys(CHECK_EXECUTION_INPUT_POLICY) as Array<
+    keyof DeliveryCheckV2
+  >) {
     const policy = CHECK_EXECUTION_INPUT_POLICY[field];
     if (policy === "raw_execution") {
       if (field === "runner")
@@ -44,15 +44,12 @@ export function rawExecutionInputProjection(
       else if (field === "environment_requirements")
         projection[field] = [...check.environment_requirements].sort(
           (left, right) =>
-            canonicalValueJson(left).localeCompare(
-              canonicalValueJson(right),
-            ),
+            canonicalValueJson(left).localeCompare(canonicalValueJson(right)),
         );
       else projection[field] = check[field];
     } else if (policy === "raw_execution_via_runner_freeze")
       projection[field] = {
-        frozen_via_runner_execution_identity:
-          check.runner.execution_identity,
+        frozen_via_runner_execution_identity: check.runner.execution_identity,
       };
   }
   return projection;

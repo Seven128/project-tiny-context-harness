@@ -170,7 +170,11 @@ function configureChecks(fixture, requirements) {
       positive_assertions: [
         {
           key: `raw-result-${index}`,
-          claims: ["result", "obligation.implement-first"],
+          claims: [
+            "result",
+            "requirement.observe-first",
+            "obligation.implement-first",
+          ],
           observation: "result",
           operator: "equals",
           expected: true,

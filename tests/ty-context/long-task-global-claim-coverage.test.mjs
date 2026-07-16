@@ -72,7 +72,7 @@ test("negative Global non-goal/shortcut proof and positive constraint proof comp
   );
   const parsed = parse(contract);
   const coverage = compileProductClaimCoverage(parsed);
-  assert.equal(coverage.summary.claims_total, 5);
+  assert.equal(coverage.summary.claims_total, 6);
   assert.equal(
     coverage.summary.claims_by_global["non_goal.no-legacy"].covered,
     true,

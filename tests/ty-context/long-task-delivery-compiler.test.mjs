@@ -33,7 +33,7 @@ test("compiles V2 generated Claim/Outcome/Check ids and frozen runner targets un
     );
     assert.match(compiled.compiled_identity, /^[a-f0-9]{64}$/u);
     assert.equal(compiled.claim_coverage.uncovered_claims.length, 0);
-    assert.equal(compiled.claim_coverage.claims_total, 4);
+    assert.equal(compiled.claim_coverage.claims_total, 6);
     const check = compiled.outcomes[0].acceptance.checks[0];
     assert.equal(check.runner.resolved_cwd, "");
     assert.equal(check.runner.resolved_target, "tests/oracle.mjs");
@@ -44,21 +44,19 @@ test("compiles V2 generated Claim/Outcome/Check ids and frozen runner targets un
   }
 });
 
-test("Strict Contracts and Contract Bundles require real Source authority", async () => {
-  const strictFixture = await createDeliveryFixture();
+test("declared Source paths require Source Claims while outcome_files remains physical compatibility", async () => {
+  const sourceFixture = await createDeliveryFixture();
   try {
-    strictFixture.contract.risk.requested_level = "strict";
-    strictFixture.contract.task.source_paths = [];
-    strictFixture.contract.source_claims = [];
-    await writeContract(strictFixture.workdir, strictFixture.contract);
+    sourceFixture.contract.source_claims = [];
+    await writeContract(sourceFixture.workdir, sourceFixture.contract);
     await assert.rejects(
-      compileDeliveryContract(strictFixture.workdir, strictFixture.root, {
+      compileDeliveryContract(sourceFixture.workdir, sourceFixture.root, {
         require_completion_gate: false,
       }),
-      /source_claims_required_for_strict_or_bundle/u,
+      /source_claims_required_for_source_paths/u,
     );
   } finally {
-    await rm(strictFixture.root, { recursive: true, force: true });
+    await rm(sourceFixture.root, { recursive: true, force: true });
   }
 
   const bundleFixture = await createDeliveryFixture();
@@ -67,8 +65,6 @@ test("Strict Contracts and Contract Bundles require real Source authority", asyn
     const [outcome] = bundle.outcomes;
     delete bundle.outcomes;
     bundle.outcome_files = ["outcomes/first.yaml"];
-    bundle.task.source_paths = [];
-    bundle.source_claims = [];
     await mkdir(path.join(bundleFixture.workdir, "outcomes"), {
       recursive: true,
     });
@@ -77,12 +73,15 @@ test("Strict Contracts and Contract Bundles require real Source authority", asyn
       YAML.stringify(outcome),
     );
     await writeContract(bundleFixture.workdir, bundle);
-    await assert.rejects(
-      compileDeliveryContract(bundleFixture.workdir, bundleFixture.root, {
+    const compiled = await compileDeliveryContract(
+      bundleFixture.workdir,
+      bundleFixture.root,
+      {
         require_completion_gate: false,
-      }),
-      /source_claims_required_for_strict_or_bundle/u,
+      },
     );
+    assert.equal(compiled.outcomes.length, 1);
+    assert.equal(Object.keys(compiled.contract_files).length, 1);
   } finally {
     await rm(bundleFixture.root, { recursive: true, force: true });
   }
@@ -165,7 +164,7 @@ test("counterfactual mutation must stay on carriers and cannot delete verificati
     check.negative_assertions.push({
       key: "result-not-false",
       claims: ["result"],
-      observation: "result",
+      observation: "result_not_false",
       operator: "not_equals",
       expected: false,
     });

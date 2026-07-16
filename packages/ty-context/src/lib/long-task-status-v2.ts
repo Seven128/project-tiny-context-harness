@@ -160,8 +160,7 @@ export async function doctorDeliveryTask(
       status: finding,
       healthy: false,
       findings: [finding],
-      next_action:
-        `ty-context long-task abandon ${path.resolve(workdirInput)} --force-corrupt-state`,
+      next_action: `ty-context long-task abandon ${path.resolve(workdirInput)} --force-corrupt-state`,
     };
   }
   const active = loaded.authority;
@@ -216,8 +215,7 @@ export async function doctorDeliveryTask(
     findings,
     ...(findings.includes("active_authority_lock_present")
       ? {
-          next_action:
-            `ty-context long-task abandon ${path.resolve(workdirInput)} --force-corrupt-state`,
+          next_action: `ty-context long-task abandon ${path.resolve(workdirInput)} --force-corrupt-state`,
         }
       : {}),
   };
@@ -336,8 +334,7 @@ function message(error: unknown): string {
 
 function cacheDiagnostic(
   code:
-    | "compiled_cache_missing_repairable"
-    | "compiled_cache_mismatched_ignored",
+    "compiled_cache_missing_repairable" | "compiled_cache_mismatched_ignored",
 ): LongTaskFindingV2 {
   return {
     code,

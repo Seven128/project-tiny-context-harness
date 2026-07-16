@@ -57,9 +57,7 @@ export async function installLongTaskHooks(
   const hooks = object(root.hooks);
   root.hooks = hooks;
   for (const event of ["SessionStart", "PostCompact", "Stop"]) {
-    const groups = Array.isArray(hooks[event])
-      ? hooks[event]
-      : [];
+    const groups = Array.isArray(hooks[event]) ? hooks[event] : [];
     const cleaned = removeManagedHookEntries(groups, command);
     cleaned.groups.push({
       hooks: [
@@ -175,8 +173,7 @@ export function isManagedHookEntry(
   if (!LEGACY_MANAGED_STATUSES.has(status)) return false;
   return commands.some(
     (command) =>
-      (Boolean(currentPackageCommand) &&
-        command === currentPackageCommand) ||
+      (Boolean(currentPackageCommand) && command === currentPackageCommand) ||
       isHistoricalPackageOwnedCommand(command),
   );
 }
@@ -195,8 +192,7 @@ function isHistoricalPackageOwnedCommand(command: string): boolean {
   return (
     /\/node_modules\/project-tiny-context-harness\/dist\/long-task-hook\.js$/u.test(
       normalized,
-    ) ||
-    /\/packages\/ty-context\/dist\/long-task-hook\.js$/u.test(normalized)
+    ) || /\/packages\/ty-context\/dist\/long-task-hook\.js$/u.test(normalized)
   );
 }
 

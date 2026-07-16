@@ -39,7 +39,7 @@ This contract defines source-only, managed, packaged and human-facing surfaces f
 ## Generated Skill Boundary
 
 - Package-managed Skills are business-agnostic. Project facts belong in the consumer Context or separate project-local Skills.
-- `/long-task-workflow` may run Boundary Check, prepare one V2 Contract/Bundle, review source/Claim coverage, compile/approve revisions, execute a rolling Frontier in the current native Goal and run the Live Final Gate. It cannot create Goal/agent/process/Git orchestration.
+- `/long-task-workflow` preserves an ordinary request/proposal as Source, authors one complete Compact V2 Contract with Source/REQ/CTRL/OBL/AC coverage, runs read-only Preflight, compiles/approves revisions, executes a rolling Frontier in the current native Goal and runs the Live Final Gate. Existing `outcome_files` are physical compatibility only. It cannot create a second plan/Authoring product, split the selected delivery into top-level Contracts or create Goal/agent/process/Git orchestration.
 - `/normal-long-task` only reports retirement and points to `/long-task-workflow`; it creates no checklist, target prompt or Local Audit.
 - No package-managed Skill may restore Source Unit/SFC/Packet/Wave/Campaign artifacts or a second authority.
 

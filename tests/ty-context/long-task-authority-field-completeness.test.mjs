@@ -17,6 +17,7 @@ test("every Delivery Contract authority structure has a complete field policy re
     outcome,
     outcome_product: outcome.product,
     owner: outcome.product.owner,
+    requirement: outcome.product.requirements[0],
     control: {
       key: "control",
       location: "main",
@@ -42,6 +43,7 @@ test("every Delivery Contract authority structure has a complete field policy re
     },
     outcome_acceptance: outcome.acceptance,
     check,
+    assertion: check.positive_assertions[0],
     runner: check.runner,
     population: {
       check_key: check.key,

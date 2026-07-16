@@ -33,6 +33,7 @@ console.log(JSON.stringify({
   execution_status: "completed",
   observations: {
     result: state[key],
+    result_copy: state[key],
     negative: false,
     population: {
       eligible_ids: [key],
@@ -110,7 +111,12 @@ export function deliveryContract(options = {}) {
     positive_assertions: [
       {
         key: `${outcomeKey}-result`,
-        claims: ["result", `obligation.implement-${outcomeKey}`],
+        criterion: `${outcomeKey} is observable and implemented.`,
+        claims: [
+          "result",
+          `requirement.observe-${outcomeKey}`,
+          `obligation.implement-${outcomeKey}`,
+        ],
         observation: "result",
         operator: "equals",
         expected: true,
@@ -130,6 +136,13 @@ export function deliveryContract(options = {}) {
         context_refs: ["project_context/areas/main.md"],
         path_globs: ["src/**"],
       },
+      requirements: [
+        {
+          key: `observe-${key}`,
+          statement: `${key} must be observable.`,
+          required_proof_surfaces: ["runtime_behavior"],
+        },
+      ],
       owner_surfaces: [],
       controls: [],
       non_completing_outcomes: [],
@@ -178,7 +191,10 @@ export function deliveryContract(options = {}) {
         key: "first-observable",
         source_ref: "source.md#fixture-source",
         statement: "The first outcome must be observable.",
-        disposition: { type: "claim", refs: ["first.result"] },
+        disposition: {
+          type: "claim",
+          refs: ["first.requirement.observe-first"],
+        },
       },
     ],
     risk: {

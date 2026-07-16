@@ -2,6 +2,7 @@ import type {
   CompiledCheckV2,
   RawCommandExecutionV2,
 } from "./long-task-delivery-types.js";
+import { extractPlaywrightEvidence } from "./long-task-playwright-evidence.js";
 
 export function decodeCheckEvidence(
   check: CompiledCheckV2,
@@ -13,7 +14,7 @@ export function decodeCheckEvidence(
   "execution_status" | "exit_code" | "observations" | "error"
 > {
   if (check.runner.type === "playwright_test")
-    return decodePlaywright(exitCode, stdout, stderr);
+    return decodePlaywright(check, exitCode, stdout, stderr);
   const lines = stdout
     .toString("utf8")
     .split(/\r?\n/u)
@@ -40,10 +41,7 @@ export function decodeCheckEvidence(
       typeof payload.observations !== "object" ||
       Array.isArray(payload.observations)
     )
-      return invalidEvidence(
-        exitCode,
-        "check_evidence_observations_invalid",
-      );
+      return invalidEvidence(exitCode, "check_evidence_observations_invalid");
     return {
       execution_status: "completed",
       exit_code: exitCode,
@@ -74,6 +72,7 @@ export function invalidEvidence(
 }
 
 function decodePlaywright(
+  check: CompiledCheckV2,
   exitCode: number,
   stdout: Buffer,
   stderr: Buffer,
@@ -86,31 +85,12 @@ function decodePlaywright(
       string,
       unknown
     >;
-    const stats =
-      report.stats && typeof report.stats === "object"
-        ? (report.stats as Record<string, unknown>)
-        : null;
-    if (!stats)
-      return invalidEvidence(exitCode, "playwright_report_invalid:stats");
-    const expected = integer(stats.expected);
-    const unexpected = integer(stats.unexpected);
-    const skipped = integer(stats.skipped);
-    const flaky = integer(stats.flaky);
-    if ([expected, unexpected, skipped, flaky].some((value) => value === null))
-      return invalidEvidence(exitCode, "playwright_report_invalid:counts");
-    const total = expected! + unexpected! + skipped! + flaky!;
+    const extracted = extractPlaywrightEvidence(check, report, exitCode);
+    if (extracted.error) return invalidEvidence(exitCode, extracted.error);
     return {
       execution_status: "completed",
       exit_code: exitCode,
-      observations: {
-        "playwright.passed": exitCode === 0,
-        "playwright.expected": expected,
-        "playwright.unexpected": unexpected,
-        "playwright.skipped": skipped,
-        "playwright.flaky": flaky,
-        "playwright.total": total,
-        "playwright.zero_or_all_skipped": total === 0 || skipped === total,
-      },
+      observations: extracted.observations,
       error: null,
     };
   } catch (error) {
@@ -132,10 +112,6 @@ function decodePlaywright(
       `playwright_report_invalid:${message(error)}`,
     );
   }
-}
-
-function integer(value: unknown): number | null {
-  return Number.isInteger(value) && Number(value) >= 0 ? Number(value) : null;
 }
 
 function message(error: unknown): string {

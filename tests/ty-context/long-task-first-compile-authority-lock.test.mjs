@@ -87,7 +87,7 @@ test("proof additions and proven scope tightening revise automatically", async (
     fixture.contract.outcomes[0].acceptance.checks[0].positive_assertions.push({
       key: "additional-proof",
       claims: ["result"],
-      observation: "result",
+      observation: "result_copy",
       operator: "truthy",
     });
     await writeContract(fixture.workdir, fixture.contract);

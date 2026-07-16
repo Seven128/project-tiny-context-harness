@@ -13,10 +13,7 @@ import {
   matchesRepoPattern,
 } from "./long-task-paths.js";
 import { assertProtectedRepositoryFile } from "./long-task-protected-files.js";
-import {
-  nearestRunnerFile,
-  npmCliPath,
-} from "./long-task-runner-files.js";
+import { nearestRunnerFile, npmCliPath } from "./long-task-runner-files.js";
 import { canonicalValueJson, sha256Hex } from "./strict-codec.js";
 import {
   repoRelative,
@@ -236,9 +233,7 @@ async function freezeVerificationInputs(
         path.join(repository, ...file.path.split("/")),
         `${check.key}.verification_input`,
       );
-      result[file.path] = sha256Hex(
-        await readFile(protectedFile),
-      );
+      result[file.path] = sha256Hex(await readFile(protectedFile));
     }
   }
   const automatic = new Set<string>([repoRelative(repository, target)]);
@@ -274,9 +269,7 @@ async function freezeVerificationInputs(
       path.join(repository, ...relative.split("/")),
       `${check.key}.automatic_verification_input`,
     );
-    result[relative] = sha256Hex(
-      await readFile(protectedFile),
-    );
+    result[relative] = sha256Hex(await readFile(protectedFile));
   }
   return sortRecord(result);
 }

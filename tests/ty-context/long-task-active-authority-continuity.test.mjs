@@ -104,7 +104,7 @@ test("strict risk downgrade remains rejected after cache deletion", async () => 
     check.negative_assertions.push({
       key: "negative-floor",
       claims: ["result"],
-      observation: "result",
+      observation: "result_copy",
       operator: "not_equals",
       expected: false,
     });
@@ -266,7 +266,7 @@ test("CAS and authority commit failure preserve old authority and progress", asy
     fixture.contract.outcomes[0].acceptance.checks[0].positive_assertions.push({
       key: "additional-proof",
       claims: ["result"],
-      observation: "result",
+      observation: "result_copy",
       operator: "equals",
       expected: true,
     });

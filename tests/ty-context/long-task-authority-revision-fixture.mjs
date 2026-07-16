@@ -129,6 +129,7 @@ export const authorityReductionScenarios = [
     reason: "source_claim_removed_or_changed",
     mutate(contract) {
       contract.source_claims = [];
+      contract.task.source_paths = [];
     },
   },
   {
@@ -146,7 +147,7 @@ export const authorityReductionScenarios = [
     mutate(contract) {
       contract.outcomes[0].technical.obligations = [];
       contract.outcomes[0].acceptance.checks[0].positive_assertions[0].claims =
-        ["result"];
+        ["result", "requirement.observe-first"];
       contract.outcomes[0].acceptance.counterfactual_controls = [];
     },
   },

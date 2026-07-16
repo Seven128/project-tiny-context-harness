@@ -38,10 +38,7 @@ export function compileProductClaimCoverage(
       .map((claim) => claim.id),
   );
   const globalProofs = new Map<string, ClaimProofV2[]>();
-  const addGlobalProof = (
-    claimKey: string,
-    proof: ClaimProofV2,
-  ): void => {
+  const addGlobalProof = (claimKey: string, proof: ClaimProofV2): void => {
     const claim = globalClaimMap.get(claimKey);
     if (!claim) {
       if (outcomeClaimIds.has(claimKey))
@@ -94,7 +91,11 @@ export function compileProductClaimCoverage(
     const claims = byOutcome[outcome.key];
     const claimMap = new Map(claims.map((claim) => [claim.local_key, claim]));
     const proofs = new Map<string, ClaimProofV2[]>();
-    const addProof = (claimKey: string, proof: ClaimProofV2): void => {
+    const addProof = (
+      claimKey: string,
+      proof: ClaimProofV2,
+      observation?: string,
+    ): void => {
       const claim = claimMap.get(claimKey);
       if (!claim) {
         if (globalLocalKeys.has(claimKey))
@@ -104,6 +105,14 @@ export function compileProductClaimCoverage(
           fail("assertion_claim_cross_outcome", `${outcome.key}:${claimKey}`);
         fail("assertion_claim_unknown", `${outcome.key}:${claimKey}`);
       }
+      if (
+        observation === "playwright.passed" &&
+        (claim.kind === "requirement" || claim.kind === "control")
+      )
+        fail(
+          "fine_grained_claim_requires_ac_observation",
+          `${outcome.key}:${claim.local_key}`,
+        );
       validateProofSurface(claim, proof, outcome.key);
       const rows = proofs.get(claimKey) ?? [];
       rows.push(proof);
@@ -124,12 +133,16 @@ export function compileProductClaimCoverage(
             );
           assertionKeys.add(assertion.key);
           for (const claimKey of assertion.claims)
-            addProof(claimKey, {
-              check_key: check.key,
-              assertion_key: assertion.key,
-              polarity,
-              proof_surface: check.proof_surface,
-            });
+            addProof(
+              claimKey,
+              {
+                check_key: check.key,
+                assertion_key: assertion.key,
+                polarity,
+                proof_surface: check.proof_surface,
+              },
+              assertion.observation,
+            );
         }
       }
     }
@@ -201,10 +214,7 @@ export function compileProductClaimCoverage(
   const uncovered = [...uncoveredGlobal, ...uncoveredOutcome].sort();
   const total =
     byGlobal.length +
-    Object.values(byOutcome).reduce(
-      (sum, claims) => sum + claims.length,
-      0,
-    );
+    Object.values(byOutcome).reduce((sum, claims) => sum + claims.length, 0);
   const compiled = {
     by_global: byGlobal,
     by_outcome: byOutcome,
@@ -220,13 +230,10 @@ export function compileProductClaimCoverage(
   return compiled;
 }
 
-export function assertCompiledClaimsCovered(
-  compiled: CompiledClaimsV2,
-): void {
+export function assertCompiledClaimsCovered(compiled: CompiledClaimsV2): void {
   const uncoveredGlobal = compiled.by_global
     .filter(
-      (claim) =>
-        !compiled.summary.claims_by_global[claim.local_key]?.covered,
+      (claim) => !compiled.summary.claims_by_global[claim.local_key]?.covered,
     )
     .map((claim) => claim.id);
   const uncoveredOutcome = Object.values(compiled.by_outcome)

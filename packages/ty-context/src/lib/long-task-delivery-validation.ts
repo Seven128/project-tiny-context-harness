@@ -5,6 +5,7 @@ import {
 } from "./long-task-claims.js";
 import { fail } from "./long-task-delivery-shape.js";
 import { proveRepositoryPatternSubset } from "./long-task-paths.js";
+import { validateSourceClaimMappings } from "./long-task-source-claim-validation.js";
 
 export function validateDeliveryContractStructure(
   contract: DeliveryContractV2,
@@ -15,8 +16,26 @@ export function validateDeliveryContractStructure(
   const claims = compileProductClaimCoverage(contract, {
     allow_uncovered: true,
   });
-  validateSourceClaims(contract, claims);
+  validateSourceClaimMappings(contract, claims);
   assertCompiledClaimsCovered(claims);
+}
+
+export function deliveryContractStructureDiagnostics(
+  contract: DeliveryContractV2,
+): string[] {
+  const diagnostics: string[] = [];
+  capture(diagnostics, () => validateUniqueKeys(contract));
+  capture(diagnostics, () => validateDependencies(contract));
+  capture(diagnostics, () => validateOwnerAndBindings(contract));
+  let claims: ReturnType<typeof compileProductClaimCoverage> | null = null;
+  capture(diagnostics, () => {
+    claims = compileProductClaimCoverage(contract, { allow_uncovered: true });
+  });
+  if (claims) {
+    capture(diagnostics, () => validateSourceClaimMappings(contract, claims!));
+    capture(diagnostics, () => assertCompiledClaimsCovered(claims!));
+  }
+  return [...new Set(diagnostics)];
 }
 
 function validateUniqueKeys(contract: DeliveryContractV2): void {
@@ -49,6 +68,10 @@ function validateUniqueKeys(contract: DeliveryContractV2): void {
     unique(
       outcome.acceptance.checks.map((check) => check.key),
       `check_key_duplicate:${outcome.key}`,
+    );
+    unique(
+      outcome.product.requirements.map((item) => item.key),
+      `requirement_key_duplicate:${outcome.key}`,
     );
     unique(
       outcome.product.controls.map((control) => control.key),
@@ -85,70 +108,21 @@ function validateUniqueKeys(contract: DeliveryContractV2): void {
         ),
         `assertion_key_duplicate:${outcome.key}:${check.key}`,
       );
+      unique(
+        [...check.positive_assertions, ...check.negative_assertions].map(
+          (assertion) => assertion.observation,
+        ),
+        `assertion_observation_duplicate:${outcome.key}:${check.key}`,
+      );
     }
   }
-}
-
-function validateSourceClaims(
-  contract: DeliveryContractV2,
-  compiledClaims: ReturnType<typeof compileProductClaimCoverage>,
-): void {
-  if (contract.source_claims.length > 0 && contract.task.source_paths.length === 0)
-    fail(
-      "source_paths_required_for_source_claims",
-      "source_claims require at least one source file",
+  for (const check of contract.global.acceptance.checks)
+    unique(
+      [...check.positive_assertions, ...check.negative_assertions].map(
+        (assertion) => assertion.observation,
+      ),
+      `assertion_observation_duplicate:GLOBAL:${check.key}`,
     );
-  const sources = new Set(contract.task.source_paths);
-  const productClaims = new Set(
-    Object.values(compiledClaims.by_outcome)
-      .flat()
-      .map((claim) => claim.id),
-  );
-  const globalClaims = new Map(
-    compiledClaims.by_global.map((claim) => [claim.local_key, claim]),
-  );
-  const coveredGlobalClaims = new Set(
-    Object.entries(compiledClaims.summary.claims_by_global)
-      .filter(([, value]) => value.covered)
-      .map(([key]) => key),
-  );
-  const forbiddenPaths = new Set<string>([
-    ...contract.global.technical.forbidden_paths.map(
-      (item) => `forbidden_path.${item.key}`,
-    ),
-  ]);
-  for (const claim of contract.source_claims) {
-    const [sourceFile, anchor, ...extra] = claim.source_ref.split("#");
-    if (!sourceFile || extra.length > 0 || (anchor !== undefined && !anchor))
-      fail("source_claim_ref_invalid", `${claim.key}:${claim.source_ref}`);
-    if (!sources.has(sourceFile))
-      fail("source_claim_ref_unknown", `${claim.key}:${claim.source_ref}`);
-    if (
-      (claim.disposition.type === "claim" ||
-        claim.disposition.type === "global_constraint") &&
-      !claim.disposition.refs.length
-    )
-      fail("source_claim_disposition_refs_empty", claim.key);
-    if (claim.disposition.type === "claim")
-      for (const reference of claim.disposition.refs)
-        if (!productClaims.has(reference))
-          fail("source_claim_product_ref_unknown", `${claim.key}:${reference}`);
-    if (claim.disposition.type === "global_constraint")
-      for (const reference of claim.disposition.refs)
-        if (reference.startsWith("forbidden_path.")) {
-          if (!forbiddenPaths.has(reference))
-            fail(
-              "source_claim_global_ref_unknown",
-              `${claim.key}:${reference}`,
-            );
-        } else if (!globalClaims.has(reference))
-          fail("source_claim_global_ref_unknown", `${claim.key}:${reference}`);
-        else if (!coveredGlobalClaims.has(reference))
-          fail(
-            "source_claim_global_ref_uncovered",
-            `${claim.key}:${reference}`,
-          );
-  }
 }
 
 function validateOwnerAndBindings(contract: DeliveryContractV2): void {
@@ -207,8 +181,7 @@ function validateOwnerAndBindings(contract: DeliveryContractV2): void {
 
 function isProvenSubset(candidate: string, owner: string): boolean {
   return (
-    proveRepositoryPatternSubset(candidate, owner).status ===
-    "proven_subset"
+    proveRepositoryPatternSubset(candidate, owner).status === "proven_subset"
   );
 }
 
@@ -217,6 +190,14 @@ function unique(values: string[], code: string): void {
   for (const value of values) {
     if (seen.has(value)) fail(code, value);
     seen.add(value);
+  }
+}
+
+function capture(diagnostics: string[], action: () => void): void {
+  try {
+    action();
+  } catch (error) {
+    diagnostics.push(error instanceof Error ? error.message : String(error));
   }
 }
 

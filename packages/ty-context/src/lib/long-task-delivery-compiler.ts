@@ -36,6 +36,7 @@ import {
 import { validateActualRiskSurfaces } from "./long-task-risk-surfaces.js";
 import { captureVerifierIdentity } from "./long-task-verifier-identity.js";
 import { verifierAuthorityDiff } from "./long-task-verifier-authority.js";
+import { validateSourceAnchors } from "./long-task-source-validation.js";
 import {
   captureWorkspaceManifest,
   changedWorkspacePaths,
@@ -66,13 +67,9 @@ export async function compileDeliveryContract(
   const contractFile = path.join(workdir, DELIVERY_CONTRACT_FILE);
   const parsed = await parseDeliveryContractBundle(workdir, repository);
   const contract = parsed.contract;
+  await validateSourceAnchors(repository, contract.source_claims);
   const claims = compileProductClaimCoverage(contract);
   const risk = classifyLongTaskRisk(contract);
-  if (
-    (risk.effective_level === "strict" || parsed.outcome_files.length > 0) &&
-    !contract.source_claims.length
-  )
-    throw new Error("source_claims_required_for_strict_or_bundle");
   validateRiskProof(contract, risk);
   const decisionClaims = contract.source_claims.filter(
     (claim) => claim.disposition.type === "decision_required",

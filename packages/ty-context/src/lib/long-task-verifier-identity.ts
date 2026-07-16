@@ -27,9 +27,10 @@ export async function captureVerifierIdentity(
     path.join(packageRoot, "package.json"),
     "package_owned_verifier_package",
   );
-  const packageJson = JSON.parse(
-    await readFile(packageFile, "utf8"),
-  ) as { name: string; version: string };
+  const packageJson = JSON.parse(await readFile(packageFile, "utf8")) as {
+    name: string;
+    version: string;
+  };
   const files = await verifierBundleFiles(packageRoot);
   const hook = requireHook
     ? await checkLongTaskCompletionGate(repositoryRoot, packageRoot)

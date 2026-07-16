@@ -81,10 +81,7 @@ export interface ActiveAuthorityLoadResultV3 {
 }
 
 export type ActiveAuthorityLockOperation =
-  | "commit"
-  | "clear"
-  | "abandon"
-  | "migrate";
+  "commit" | "clear" | "abandon" | "migrate";
 
 export interface ActiveAuthorityIdentityExpectation {
   task_id: string;
@@ -93,8 +90,7 @@ export interface ActiveAuthorityIdentityExpectation {
   worktree_identity?: string;
 }
 
-export interface ClearActiveBindingCasOptions
-  extends ActiveAuthorityIdentityExpectation {
+export interface ClearActiveBindingCasOptions extends ActiveAuthorityIdentityExpectation {
   repository_root: string;
   workdir: string;
 }
@@ -184,10 +180,7 @@ async function withActiveAuthorityLockInternal<T>(
   try {
     lock = await open(lockFile, "wx");
   } catch (error) {
-    if (
-      (error as NodeJS.ErrnoException).code === "EEXIST" &&
-      breakStaleLock
-    ) {
+    if ((error as NodeJS.ErrnoException).code === "EEXIST" && breakStaleLock) {
       await rm(lockFile, { force: true });
       try {
         lock = await open(lockFile, "wx");
@@ -276,10 +269,7 @@ export async function loadActiveLongTaskAuthority(
     return loaded;
   return withActiveAuthorityLock(root, "migrate", async () => {
     const current = await loadActiveLongTaskAuthorityUnlocked(root);
-    if (
-      current.source !== "legacy_active_authority_v2" ||
-      !current.authority
-    )
+    if (current.source !== "legacy_active_authority_v2" || !current.authority)
       return current;
     await persistActiveAuthorityCasUnlocked(
       root,
@@ -432,8 +422,7 @@ export async function assertMatchingActiveBinding(
     active.task_id !== compiled.task.id ||
     active.active_authority_identity !== compiled.compiled_identity ||
     active.authority_revision !== compiled.authority_revision ||
-    active.worktree_identity !==
-      worktreeIdentity(compiled.repository_root) ||
+    active.worktree_identity !== worktreeIdentity(compiled.repository_root) ||
     !sameValue(active.verifier_identity, compiled.verifier_identity)
   )
     throw new Error("active_task_identity_mismatch");
@@ -588,9 +577,7 @@ function activeAuthorityFromCompiled(
     verifier_identity: authoritySnapshot.verifier_identity,
     activated_at: activatedAt,
     authority_snapshot: authoritySnapshot,
-    authority_snapshot_sha256: sha256Hex(
-      canonicalValueJson(authoritySnapshot),
-    ),
+    authority_snapshot_sha256: sha256Hex(canonicalValueJson(authoritySnapshot)),
   };
 }
 
@@ -1025,10 +1012,7 @@ async function atomicText(file: string, content: string): Promise<void> {
   await rename(temporary, file);
 }
 
-async function stageAtomicText(
-  file: string,
-  content: string,
-): Promise<string> {
+async function stageAtomicText(file: string, content: string): Promise<string> {
   await mkdir(path.dirname(file), { recursive: true });
   const temporary = `${file}.tmp-${process.pid}-${Date.now()}`;
   const handle = await open(temporary, "wx");

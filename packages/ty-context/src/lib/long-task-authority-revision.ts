@@ -49,10 +49,7 @@ export function authorityRevisionDiff(
   nextOutcomes: CompiledOutcomeV2[],
   nextVerifier: VerifierIdentityV2,
 ): AuthorityRevisionDiffV2 {
-  const materialDiff = authorityMaterialRevisionDiff(
-    previous,
-    nextMaterials,
-  );
+  const materialDiff = authorityMaterialRevisionDiff(previous, nextMaterials);
   const nextClaims = compileProductClaimCoverage(next).by_outcome;
   const beforeClaimIds = new Set(
     previous.outcomes.flatMap((outcome) =>
@@ -213,9 +210,7 @@ export function authorityRevisionDiff(
     ...(productClaimsChanged.length ? ["product_claim_changed"] : []),
     ...materialDiff.reduction_reasons,
     ...(checksRemoved.length ? ["check_removed"] : []),
-    ...(negativeAssertionsRemoved.length
-      ? ["negative_assertion_removed"]
-      : []),
+    ...(negativeAssertionsRemoved.length ? ["negative_assertion_removed"] : []),
     ...(proofSurfacesChanged.length ? ["proof_surface_changed"] : []),
     ...(sourceClaimsRemovedOrChanged.length
       ? ["source_claim_removed_or_changed"]
@@ -231,9 +226,7 @@ export function authorityRevisionDiff(
       : []),
     ...(allowedPathsExpanded.length ? ["allowed_path_expanded"] : []),
     ...(forbiddenPathsRemoved.length ? ["forbidden_path_removed"] : []),
-    ...(runnerDefinitionsChanged.length
-      ? ["runner_definition_changed"]
-      : []),
+    ...(runnerDefinitionsChanged.length ? ["runner_definition_changed"] : []),
     ...(verificationInputsRemovedOrReplaced.length
       ? ["verification_input_removed_or_replaced"]
       : []),
@@ -283,8 +276,7 @@ export function authorityRevisionDiff(
     source_files_added: materialDiff.source_files_added,
     source_files_removed: materialDiff.source_files_removed,
     source_files_changed: materialDiff.source_files_changed,
-    context_snapshot_mode_changed:
-      materialDiff.context_snapshot_mode_changed,
+    context_snapshot_mode_changed: materialDiff.context_snapshot_mode_changed,
     context_topology_changed: materialDiff.context_topology_changed,
     context_files_added: materialDiff.context_files_added,
     context_files_removed: materialDiff.context_files_removed,

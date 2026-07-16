@@ -62,7 +62,7 @@ No-install preview:
 
 ## Why It Exists
 
-`project_context/**` preserves small durable facts across sessions. The default workflow reads only graph-relevant Context and uses the platform's internal plan. For explicit long work, `long-task-delivery-v2` adds one Contract/Bundle authority, compiled Claim Coverage, scoped progress and a source-recompiled Live Final Gate.
+`project_context/**` preserves small durable facts across sessions. The default workflow reads only graph-relevant Context and uses the platform's internal plan. For explicit long work, `long-task-delivery-v2` adds one complete Contract authority, compiled Source/REQ/CTRL/OBL/AC coverage, scoped progress and a source-recompiled Live Final Gate.
 
 Minimal Context preserves durable facts, the Workflow Contract governs ordinary work, and the Long-Task Workflow adds explicit machine completion authority.
 
@@ -168,10 +168,11 @@ Newly generated Harness configs default to `strict_except_generated`. Generated/
 
 ## Single-Goal Rolling Delivery
 
-The explicit Long-Task Workflow uses one platform-native Goal, one user-selected repository/workspace and one `long-task-delivery-v2` Contract or logical Contract Bundle. Outcome dependencies express acceptance readiness; Delivery Set orchestration is retired.
+The explicit Long-Task Workflow uses one platform-native Goal, one user-selected repository/workspace, one complete `long-task-delivery-v2` Contract and one Final Gate. Outcomes are independently decidable acceptance units; Delivery Set orchestration and top-level Contract splitting inside one selected delivery are retired.
 
 ```text
 ty-context long-task init <workdir>
+ty-context long-task preflight <workdir>
 ty-context long-task compile <workdir>
 ty-context long-task compile <workdir> --revise
 ty-context long-task approve-authority-revision <workdir> --revision <sha>
@@ -186,11 +187,11 @@ ty-context long-task close <workdir>
 ty-context long-task abandon <workdir> [--force-corrupt-state]
 ```
 
-Compile generates Global plus Outcome Product/Control/Non-completing/Technical Claims, rejects uncovered Claims and makes the first successful compile the Authority Lock. Every later change compares with active authority regardless of progress, Receipt/cache deletion or implementation restoration. Source/Context/Product/Global/verifier content, resolved runners and verification inputs are frozen in the common-dir Active Authority V3 record.
+Compact authoring omits only deterministic defaults and normalizes identically to the expanded form. `preflight` is a read-only aggregated Source/REQ/CTRL/OBL/AC and repository check that creates no authority, state, Receipt or runner execution. Compile generates Global plus Outcome Result/Requirement/Control-field/Non-completing/Technical Claims, rejects uncovered Claims and makes the first successful formal Compile the Authority Lock. Every later change compares with active authority regardless of progress, Receipt/cache deletion or implementation restoration. Source/Context/Product/Acceptance/Global/verifier content, resolved runners and verification inputs are frozen in the common-dir Active Authority V3 record.
 
 Targeted verify rechecks active task/revision/compiled/worktree identity before writing scoped Progress. Final Gate repeats that identity check after all Checks; Stop/close clear only the accepted identity through CAS. Commit, migration, clear and abandon share one active-state lock. `abandon --force-corrupt-state` is reserved for corrupt continuity or stale lock cleanup and preserves Contract, Source, Context and Git content.
 
-A large atomic task uses one logical Contract Bundle with Outcome-only `outcome_files`. After Authority Lock, semantic/Product Claim/verifier-content changes and proof weakening require exact user approval. Pure package root/version relocation auto-revises; bundle/schema/hook byte changes do not. Contract and Check execution field policies prevent new fields from bypassing authority or raw-execution identity. Every path-bearing field uses one canonical grammar: Windows separators and one leading `./` normalize, while internal `.`/`..`, controls, absolute/drive/UNC paths and unsupported glob syntax fail closed.
+New authoring uses inline Outcomes. Existing `outcome_files` remains physical compatibility only and creates no semantic or completion boundary. Source items map to atomic Product/Technical Claims, named Acceptance Assertions, Global Claims, external confirmations or explicit dispositions; real anchors are validated and Outcome Result overcompression is rejected. A WebGPT-style research or product proposal is ordinary Source input and does not need to be rewritten as strict Contract YAML first. After Authority Lock, semantic/Product Claim/Acceptance/verifier-content changes and proof weakening require exact user approval. Pure package root/version relocation auto-revises; schema/hook byte changes do not. Contract and Check execution field policies prevent new fields from bypassing authority or raw-execution identity. Every path-bearing field uses one canonical grammar: Windows separators and one leading `./` normalize, while internal `.`/`..`, controls, absolute/drive/UNC paths and unsupported glob syntax fail closed.
 
 Supported runners: `package_script`, `project_binary`, `node_oracle`, `playwright_test`.
 
@@ -200,9 +201,9 @@ Supported proof surfaces: `ui_browser`, `runtime_behavior`, `api_contract`, `dat
 
 L0 local work stays on the default workflow. L1 standard long work uses the Delivery Contract. L2 strict is the minimum for public API/schema, persistent data, migration, security/permission boundaries, irreversible effects, full-population operations, or a critical path with weak observability. Strict proof binds to the affected Outcome; multi-repository delivery is rejected.
 
-Users may raise risk to strict. Explicit `standard` below the computed floor fails. Strict negative, counterfactual, population, security, environment and rollback/recovery proof is compiler-enforced as applicable. Scope escape returns `scope_or_risk_escalation_required` for revision and recompilation in the same Goal.
+Users may raise risk to strict. Explicit `standard` below the computed floor fails. Strict negative, counterfactual, population, security, environment and rollback/recovery proof is compiler-enforced as applicable. Scope escape returns a `scope_escape` Finding for revision and recompilation in the same Goal.
 
-Agent prose, a command exit code, handwritten state, historical targeted passes and missing/weak proof cannot create accepted. Raw Execution identity binds frozen runner identity plus canonical declared Environment Requirements without env values; artifact and Assertion evidence remains per Check. Global hard failure yields `needs_work`; otherwise any Global/Outcome environment block yields `blocked_external`. Counterfactual, Population, protected-input and external-confirmation boundaries remain unchanged.
+Agent prose, a command exit code, handwritten state, historical targeted passes and missing/weak proof cannot create accepted. Each Check may host many named AC Assertions, but an Observation path is unique within that Check. Fine-grained Requirement/control Claims require AC-level observations; Playwright `[ac-key]` cases produce independent pass/skip evidence and fail closed on missing, duplicate, skipped, flaky/unexpected or invalid cases. Raw Execution identity binds frozen runner identity plus canonical declared Environment Requirements without env values; AC, artifact and Assertion evidence remains per Check. Findings retain Source, Claim, AC/criterion, Observation, expected/actual and owner paths through Explain/Status/Resume. Global hard failure yields `needs_work`; otherwise any Global/Outcome environment block yields `blocked_external`. Counterfactual, Population, protected-input and external-confirmation boundaries remain unchanged.
 
 ## Upgrade And Compatibility
 
@@ -212,6 +213,8 @@ ty-context sync
 ```
 
 Version 0.6.0 retires V1 and the repo-local Hook. Legacy Active V2 authority migrates only from a fully matching cache. Invalid JSON, marker/record mismatch, missing legacy cache or stale lock is never guessed from damaged record paths; doctor reports the explicit contained cleanup command `ty-context long-task abandon <workdir> --force-corrupt-state`.
+
+The authoring refinement remains `long-task-delivery-v2`: expanded V2 Contracts and existing `outcome_files` remain compatible, with no V3 migration. Authoring Preflight requires readable Assertion `criterion` text before formal Compile; direct Compile still accepts older V2 Assertions that omit it.
 
 After updating the package, run `ty-context upgrade`. Use `ty-context upgrade --check` first when you need a read-only plan.
 

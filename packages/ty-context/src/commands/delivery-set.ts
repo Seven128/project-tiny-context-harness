@@ -2,7 +2,7 @@ const TOMBSTONE = {
   status: "retired",
   reason: "Delivery Set orchestration is outside the minimal Single-Goal core.",
   replacement:
-    "Use one Contract Bundle, or run truly independent top-level Delivery Contracts separately.",
+    "Use one complete Delivery Contract with semantic Outcomes and one Final Gate.",
 } as const;
 
 export function deliverySet(_args: string[]): void {

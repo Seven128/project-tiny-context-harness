@@ -41,14 +41,15 @@ For external product, architecture, technical or acceptance sources, internally 
 Do not infer long-task mode from duration, complexity, file count or agent preference.
 
 1. If the Git common-dir active record and matching worktree Git-config marker exist, resume its workdir with `ty-context long-task resume <workdir>` in the current native Goal.
-2. If the user explicitly invokes `/long-task-workflow`, perform the semantic Contract Boundary Check, then prepare or resume one `long-task-delivery-v2` Contract or logical Contract Bundle in the current native Goal.
+2. If the user explicitly invokes `/long-task-workflow`, prepare or resume exactly one complete `long-task-delivery-v2` Contract for the selected delivery in the current native Goal.
 3. `/normal-long-task` is a retirement pointer only. Otherwise remain on the default Workflow Contract, even when work is long.
 
-The workflow uses exactly one native Goal and one selected repository/workspace. A large atomic delivery remains one logical Contract and may split only Outcome fragments under one root `delivery-contract.yaml`. Genuinely independent top-level deliveries run as separate Contracts; `delivery-set` is a fixed retired tombstone. Outcomes are acceptance/dependency units, not workers, branches, worktrees or model sessions.
+The workflow uses exactly one native Goal, one selected repository/workspace, one Contract and one Final Gate for the selected delivery. New authoring keeps inline Outcomes in the root `delivery-contract.yaml`; existing `outcome_files` remain only a physical compatibility form and create no semantic or completion boundary. Outcomes are independently decidable acceptance/dependency units, not output-length fragments, workers, branches, worktrees or model sessions.
 
 Supported CLI:
 
 - `ty-context long-task init <workdir>`
+- `ty-context long-task preflight <workdir>`
 - `ty-context long-task compile <workdir> [--revise]`
 - `ty-context long-task approve-authority-revision <workdir> --revision <sha>`
 - `ty-context long-task explain <workdir>`
@@ -58,9 +59,11 @@ Supported CLI:
 - `ty-context long-task close <workdir>`
 - `ty-context long-task abandon <workdir> [--force-corrupt-state]`
 
-Contract V2 compiles Global plus Product/Control/Non-completing/Technical Claims and rejects uncovered Claims. The first successful compile is Authority Lock; later Source/Context/Product/Global/verifier-content or proof-reduction changes compare against active authority regardless of progress, Receipt/cache deletion or restored code. Pure verifier relocation and proven proof/scope tightening auto-revise; content weakening needs exact user approval. Every path-bearing field uses one canonical grammar, and Check execution fields have a compile-time raw/per-Check/progress/final classification. Targeted verify rechecks active identity before progress writes.
+Contract V2 normalizes Compact defaults, compiles Global plus Result/Requirement/Control-field/Non-completing/Technical Claims and rejects uncovered Claims. Source items may map directly to named Acceptance Assertions and external confirmations; atomic Source items cannot collapse into an Outcome Result. `preflight` is read-only and creates no authority or audit state. The first successful formal Compile is Authority Lock; later Source/Context/Product/Global/Acceptance/verifier-content or proof-reduction changes compare against active authority regardless of progress, Receipt/cache deletion or restored code. Pure verifier relocation and proven proof/scope tightening auto-revise; content weakening needs exact user approval. Every path-bearing field uses one canonical grammar, and Check execution fields have a compile-time raw/per-Check/progress/final classification. Targeted verify rechecks active identity before progress writes.
 
 Status, progress, Receipts and compiled cache are audit/recovery surfaces only. Commit, migration, clear and abandon share one active-state lock. Final Gate rechecks task/revision/compiled/worktree identity after all Checks; Stop/close use accepted-identity CAS and cannot clear a newer revision. Corrupt continuity is cleaned only by explicit `abandon --force-corrupt-state`. External confirmations remain explicit; machine acceptance never implies CI, deployment or human acceptance.
+
+Final Gate, Stop and close recompile the source Contract before evaluating the current Authority and snapshot.
 
 Risk routing is per Outcome. Public API/schema, persistent data, migration, security/permission boundaries, irreversible effects, full-population operations, or a critical path with weak observability impose strict proof on the affected Outcome. Risk downgrades are rejected. Multi-repository delivery is unsupported.
 

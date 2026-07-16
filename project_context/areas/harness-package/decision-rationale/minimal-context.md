@@ -6,7 +6,7 @@ read_policy: on-demand
 
 ## Decision
 
-- Keep Minimal Context as the durable project-memory layer and use Single-Goal Rolling Delivery V2: one native Goal, one selected workspace, one Contract/Bundle authority, compiled Claim Coverage and verifier-owned Live Final Gate completion.
+- Keep Minimal Context as the durable project-memory layer and use Single-Goal Rolling Delivery V2: one native Goal, one selected workspace, one complete Contract authority, compiled Source/REQ/CTRL/OBL/AC coverage and verifier-owned Live Final Gate completion.
 
 ## Reason
 
@@ -55,7 +55,7 @@ read_policy: on-demand
 ## Why Bundle Remains And Delivery Set Is Retired
 
 - Physical authoring capacity does not create a product boundary, so a large atomic task uses Outcome fragments under one logical Contract.
-- Multiple Contracts are legitimate only when each has independently observable executable Acceptance and a real release/rollback/owner/risk/product boundary. They run as separate top-level Contracts because a Set runtime reintroduced a second completion authority without improving single-Goal evidence.
+- A user-selected delivery is never split into top-level Contracts. Independently decidable results are Outcomes under the same Contract and one Final Gate; a later independent user delivery starts its own separate invocation rather than a Delivery Set or in-task split.
 - Authority Lock, immutable initial base and scoped progress close execution-side weakening, baseline washing and last-result-wins paths without introducing a scheduler or lifecycle.
 - Do not make Context-first order/internal planning a validator gate.
 - Do not let command exit, model prose, handwritten status, targeted passes or historical runs create accepted authority.

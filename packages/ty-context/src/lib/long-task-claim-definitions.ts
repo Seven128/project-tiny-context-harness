@@ -10,8 +10,18 @@ import { fail } from "./long-task-delivery-shape.js";
 
 export function generateClaims(outcome: DeliveryOutcomeV2): ProductClaimV2[] {
   const claims: ProductClaimV2[] = [claim(outcome.key, "result", "result")];
+  for (const requirement of outcome.product.requirements)
+    claims.push(
+      claim(
+        outcome.key,
+        `requirement.${requirement.key}`,
+        "requirement",
+        requirement.required_proof_surfaces,
+      ),
+    );
   for (const control of outcome.product.controls) {
     const fields: Array<[string, string]> = [
+      ["location", control.location],
       ["trigger", control.trigger],
       ["input", control.input],
       ["loading", control.loading_state],
@@ -57,18 +67,10 @@ export function generateGlobalClaims(
 ): GlobalClaimV2[] {
   return [
     ...global.product.non_goals.map((item) =>
-      globalClaim(
-        `non_goal.${item.key}`,
-        "global_non_goal",
-        "negative",
-      ),
+      globalClaim(`non_goal.${item.key}`, "global_non_goal", "negative"),
     ),
     ...global.technical.constraints.map((item) =>
-      globalClaim(
-        `constraint.${item.key}`,
-        "global_constraint",
-        "any",
-      ),
+      globalClaim(`constraint.${item.key}`, "global_constraint", "any"),
     ),
     ...global.technical.forbidden_shortcuts.map((item) =>
       globalClaim(
@@ -108,12 +110,12 @@ export function validateProofSurface(
       `${outcomeKey}:${claim.local_key}`,
     );
   if (
-    claim.kind === "obligation" &&
+    (claim.kind === "requirement" || claim.kind === "obligation") &&
     claim.required_proof_surfaces.length > 0 &&
     !claim.required_proof_surfaces.includes(proof.proof_surface)
   )
     fail(
-      "obligation_proof_surface_mismatch",
+      `${claim.kind}_proof_surface_mismatch`,
       `${outcomeKey}:${claim.local_key}:${proof.proof_surface}`,
     );
 }

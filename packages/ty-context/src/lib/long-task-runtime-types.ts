@@ -61,6 +61,7 @@ export interface ProductClaimV2 {
   local_key: string;
   kind:
     | "result"
+    | "requirement"
     | "control"
     | "non_completing"
     | "obligation"
@@ -71,10 +72,7 @@ export interface ProductClaimV2 {
 export interface GlobalClaimV2 {
   id: string;
   local_key: string;
-  kind:
-    | "global_non_goal"
-    | "global_constraint"
-    | "global_forbidden_shortcut";
+  kind: "global_non_goal" | "global_constraint" | "global_forbidden_shortcut";
   required_polarity: "any" | "negative";
 }
 
@@ -118,6 +116,11 @@ export interface ProductSemanticProjectionV2 {
       label: string;
       owner_surfaces: string[];
     };
+    requirements: Array<{
+      key: string;
+      statement: string;
+      required_proof_surfaces: ProofSurface[];
+    }>;
     controls: Array<{
       key: string;
       location: string;
@@ -179,8 +182,7 @@ export interface VerifierRuntimeLocator {
 }
 
 export interface VerifierIdentityV2
-  extends VerifierContentAuthority,
-    VerifierRuntimeLocator {
+  extends VerifierContentAuthority, VerifierRuntimeLocator {
   package_name: "project-tiny-context-harness";
 }
 
@@ -236,6 +238,12 @@ export interface LongTaskFindingV2 {
   code: string;
   outcome_key: string | null;
   check_key: string | null;
+  source_claim_keys?: string[];
+  claim_keys?: string[];
+  assertion_key?: string;
+  criterion?: string;
+  observation?: string;
+  owner_paths?: string[];
   message: string;
   expected?: unknown;
   actual?: unknown;
@@ -252,9 +260,18 @@ export type CheckExecutionStatusV2 =
 
 export interface AssertionResultV2 {
   key: string;
+  criterion?: string;
   polarity: "positive" | "negative";
   passed: boolean;
   claims: string[];
+  observation: string;
+  status:
+    | "passed"
+    | "observation_missing"
+    | "observation_type_mismatch"
+    | "assertion_value_mismatch";
+  expected?: unknown;
+  actual?: unknown;
 }
 
 export interface RawCommandExecutionV2 {

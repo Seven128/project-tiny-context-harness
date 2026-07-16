@@ -23,18 +23,19 @@ import {
 } from "./long-task-delivery-shape.js";
 
 export function parseCheck(value: unknown, label: string): DeliveryCheckV2 {
-  const row = object(value, label, [
-    "key",
-    "proof_surface",
-    "runner",
-    "verification_inputs",
-    "input_paths",
-    "expected_output_paths",
-    "artifact_globs",
-    "positive_assertions",
-    "negative_assertions",
-    "environment_requirements",
-  ]);
+  const row = object(
+    value,
+    label,
+    ["key", "proof_surface", "runner", "verification_inputs"],
+    [
+      "input_paths",
+      "expected_output_paths",
+      "artifact_globs",
+      "positive_assertions",
+      "negative_assertions",
+      "environment_requirements",
+    ],
+  );
   return {
     key: key(row.key, `${label}.key`),
     proof_surface: literal(
@@ -47,45 +48,46 @@ export function parseCheck(value: unknown, label: string): DeliveryCheckV2 {
       row.verification_inputs,
       `${label}.verification_inputs`,
     ),
-    input_paths: repositoryPatterns(row.input_paths, `${label}.input_paths`),
-    expected_output_paths: repositoryPatterns(
-      row.expected_output_paths,
-      `${label}.expected_output_paths`,
-    ),
-    artifact_globs: repositoryPatterns(
-      row.artifact_globs,
-      `${label}.artifact_globs`,
-    ),
-    positive_assertions: parseAssertions(
-      row.positive_assertions,
-      `${label}.positive_assertions`,
-    ),
-    negative_assertions: parseAssertions(
-      row.negative_assertions,
-      `${label}.negative_assertions`,
-    ),
-    environment_requirements: parseEnvironmentRequirements(
-      row.environment_requirements,
-      `${label}.environment_requirements`,
-    ),
+    input_paths: Object.hasOwn(row, "input_paths")
+      ? repositoryPatterns(row.input_paths, `${label}.input_paths`)
+      : [],
+    expected_output_paths: Object.hasOwn(row, "expected_output_paths")
+      ? repositoryPatterns(
+          row.expected_output_paths,
+          `${label}.expected_output_paths`,
+        )
+      : [],
+    artifact_globs: Object.hasOwn(row, "artifact_globs")
+      ? repositoryPatterns(row.artifact_globs, `${label}.artifact_globs`)
+      : [],
+    positive_assertions: Object.hasOwn(row, "positive_assertions")
+      ? parseAssertions(row.positive_assertions, `${label}.positive_assertions`)
+      : [],
+    negative_assertions: Object.hasOwn(row, "negative_assertions")
+      ? parseAssertions(row.negative_assertions, `${label}.negative_assertions`)
+      : [],
+    environment_requirements: Object.hasOwn(row, "environment_requirements")
+      ? parseEnvironmentRequirements(
+          row.environment_requirements,
+          `${label}.environment_requirements`,
+        )
+      : [],
   };
 }
 
 function parseRunner(value: unknown, label: string): DeliveryRunnerV2 {
-  const row = object(value, label, [
-    "type",
-    "target",
-    "argv",
-    "cwd",
-    "timeout_ms",
-    "effect",
-    "retry_policy",
-    "idempotent",
-  ]);
-  const timeout = Number(row.timeout_ms);
+  const row = object(
+    value,
+    label,
+    ["type", "target", "effect"],
+    ["argv", "cwd", "timeout_ms", "retry_policy", "idempotent"],
+  );
+  const timeout = Object.hasOwn(row, "timeout_ms")
+    ? Number(row.timeout_ms)
+    : 30_000;
   if (!Number.isInteger(timeout) || timeout < 100 || timeout > 3_600_000)
     fail(`${label}.timeout_ms`, "must be an integer from 100 to 3600000");
-  if (typeof row.idempotent !== "boolean")
+  if (Object.hasOwn(row, "idempotent") && typeof row.idempotent !== "boolean")
     fail(`${label}.idempotent`, "must be a boolean");
   const type = literal(
     row.type,
@@ -103,20 +105,26 @@ function parseRunner(value: unknown, label: string): DeliveryRunnerV2 {
       type === "package_script"
         ? string(row.target, `${label}.target`)
         : repositoryFile(row.target, `${label}.target`),
-    argv: strings(row.argv, `${label}.argv`),
-    cwd: repositoryCwd(row.cwd, `${label}.cwd`),
+    argv: Object.hasOwn(row, "argv") ? strings(row.argv, `${label}.argv`) : [],
+    cwd: Object.hasOwn(row, "cwd")
+      ? repositoryCwd(row.cwd, `${label}.cwd`)
+      : ".",
     timeout_ms: timeout,
     effect: literal(
       row.effect,
       ["read_only", "test_sandbox"] as const,
       `${label}.effect`,
     ),
-    retry_policy: literal(
-      row.retry_policy,
-      ["none", "transient_once"] as const,
-      `${label}.retry_policy`,
-    ),
-    idempotent: row.idempotent,
+    retry_policy: Object.hasOwn(row, "retry_policy")
+      ? literal(
+          row.retry_policy,
+          ["none", "transient_once"] as const,
+          `${label}.retry_policy`,
+        )
+      : "none",
+    idempotent: Object.hasOwn(row, "idempotent")
+      ? (row.idempotent as boolean)
+      : false,
   };
 }
 
@@ -127,7 +135,7 @@ function parseAssertions(value: unknown, label: string): DeliveryAssertionV2[] {
       item,
       itemLabel,
       ["key", "claims", "observation", "operator"],
-      ["expected"],
+      ["criterion", "expected"],
     );
     const operator = literal(
       row.operator,
@@ -160,6 +168,9 @@ function parseAssertions(value: unknown, label: string): DeliveryAssertionV2[] {
       validateAssertionExpected(operator, row.expected, itemLabel);
     const base = {
       key: key(row.key, `${itemLabel}.key`),
+      ...(Object.hasOwn(row, "criterion")
+        ? { criterion: string(row.criterion, `${itemLabel}.criterion`) }
+        : {}),
       claims: strings(row.claims, `${itemLabel}.claims`),
       observation: string(row.observation, `${itemLabel}.observation`),
       operator,
@@ -194,12 +205,9 @@ function validateAssertionExpected(
     }
   }
   if (
-    [
-      "greater_than",
-      "greater_or_equal",
-      "less_than",
-      "less_or_equal",
-    ].includes(operator) &&
+    ["greater_than", "greater_or_equal", "less_than", "less_or_equal"].includes(
+      operator,
+    ) &&
     (typeof expected !== "number" || !Number.isFinite(expected))
   )
     fail(label, "assertion_expected_finite_number_required");

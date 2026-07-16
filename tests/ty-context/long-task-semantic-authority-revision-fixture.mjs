@@ -34,7 +34,9 @@ export function prepareSemanticAuthority(contract) {
     positive_assertions: [
       {
         key: "submit-states",
+        criterion: "The submit control is placed correctly and reports terminal states.",
         claims: [
+          "control.submit.location",
           "control.submit.success",
           "control.submit.failure",
         ],

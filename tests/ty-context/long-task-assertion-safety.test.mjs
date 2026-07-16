@@ -218,7 +218,7 @@ test("missing Observation produces assertion_failed without Claim proof", async 
   assert.deepEqual(result.claim_proofs, []);
   assert.deepEqual(
     result.findings.map((finding) => finding.code),
-    ["assertion_failed"],
+    ["observation_missing"],
   );
 });
 
@@ -227,7 +227,11 @@ function contractWithAssertion(operator) {
   contract.outcomes[0].acceptance.checks[0].positive_assertions = [
     {
       key: "assertion",
-      claims: ["result", "obligation.implement-first"],
+      claims: [
+        "result",
+        "requirement.observe-first",
+        "obligation.implement-first",
+      ],
       observation: "result",
       operator,
       ...(binaryOperators.includes(operator)

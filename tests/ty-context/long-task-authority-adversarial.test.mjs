@@ -126,10 +126,19 @@ test("Live authority ignores forged receipts and compiled cache, then clears bin
       fixture.workdir,
     ]);
     assert.equal(mismatch.reason, "long_task_state_invalid");
-    await exec("git", ["config", "--local", marker, active.task_id], {
-      cwd: fixture.root,
-      windowsHide: true,
-    });
+    await exec(
+      "git",
+      [
+        "config",
+        "--local",
+        marker,
+        `${active.task_id}|${active.authority_revision}|${active.active_authority_identity}`,
+      ],
+      {
+        cwd: fixture.root,
+        windowsHide: true,
+      },
+    );
 
     const state = await readState(fixture.root);
     state.second = true;

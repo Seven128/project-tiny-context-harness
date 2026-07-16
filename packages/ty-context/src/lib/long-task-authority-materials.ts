@@ -35,10 +35,13 @@ export function compiledAuthorityMaterials(
       authority_materials?: NextAuthorityMaterialsV2;
     }
   ).authority_materials;
-  return stored ?? computeAuthorityMaterials(
-    compiled,
-    compiled.source_hashes,
-    compiled.context_snapshot,
+  return (
+    stored ??
+    computeAuthorityMaterials(
+      compiled,
+      compiled.source_hashes,
+      compiled.context_snapshot,
+    )
   );
 }
 
@@ -66,33 +69,38 @@ export function projectProductSemantics(
   return {
     task_goal: contract.task.goal,
     global_non_goals: keyedStatements(contract.global.product.non_goals),
-    outcomes: [...contract.outcomes]
-      .sort(keyOrder)
-      .map((outcome) => ({
-        key: outcome.key,
-        title: outcome.title,
-        observable_result: outcome.product.observable_result,
-        owner: {
-          label: outcome.product.owner.label,
-          owner_surfaces: [...outcome.product.owner_surfaces].sort(),
-        },
-        controls: [...outcome.product.controls]
-          .sort(keyOrder)
-          .map((control) => ({
-            key: control.key,
-            location: control.location,
-            trigger: control.trigger,
-            input: control.input,
-            loading_state: control.loading_state,
-            empty_state: control.empty_state,
-            success_state: control.success_state,
-            failure_state: control.failure_state,
-            feedback: control.feedback,
-          })),
-        non_completing_outcomes: keyedStatements(
-          outcome.product.non_completing_outcomes,
-        ),
+    outcomes: [...contract.outcomes].sort(keyOrder).map((outcome) => ({
+      key: outcome.key,
+      title: outcome.title,
+      observable_result: outcome.product.observable_result,
+      owner: {
+        label: outcome.product.owner.label,
+        owner_surfaces: [...outcome.product.owner_surfaces].sort(),
+      },
+      requirements: [...outcome.product.requirements]
+        .sort(keyOrder)
+        .map((requirement) => ({
+          key: requirement.key,
+          statement: requirement.statement,
+          required_proof_surfaces: [
+            ...requirement.required_proof_surfaces,
+          ].sort(),
+        })),
+      controls: [...outcome.product.controls].sort(keyOrder).map((control) => ({
+        key: control.key,
+        location: control.location,
+        trigger: control.trigger,
+        input: control.input,
+        loading_state: control.loading_state,
+        empty_state: control.empty_state,
+        success_state: control.success_state,
+        failure_state: control.failure_state,
+        feedback: control.feedback,
       })),
+      non_completing_outcomes: keyedStatements(
+        outcome.product.non_completing_outcomes,
+      ),
+    })),
   };
 }
 
@@ -115,18 +123,13 @@ function keyedStatements<T extends { key: string; statement: string }>(
     .map(({ key, statement }) => ({ key, statement }));
 }
 
-function keyOrder(
-  left: { key: string },
-  right: { key: string },
-): number {
+function keyOrder(left: { key: string }, right: { key: string }): number {
   return left.key.localeCompare(right.key);
 }
 
 function sortRecord<T>(value: Record<string, T>): Record<string, T> {
   return Object.fromEntries(
-    Object.entries(value).sort(([left], [right]) =>
-      left.localeCompare(right),
-    ),
+    Object.entries(value).sort(([left], [right]) => left.localeCompare(right)),
   );
 }
 

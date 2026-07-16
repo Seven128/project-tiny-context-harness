@@ -12,9 +12,10 @@ This is the restrained architecture map for the Harness source repository. It re
 
 - CLI routing: `packages/ty-context/src/commands/index.ts`; V2 Contract commands: `commands/long-task.ts`; Delivery Set/composite names are isolated retired tombstones.
 - The sole active schema lives under `packages/ty-context/src/schemas/long-task-delivery-v2/**`; Claim, authority/progress/boundary, runner/evidence and Live Gate modules remain focused and separate.
-- Static compiler: strict YAML parsing, generated `OUT.<outcome-key>` / `CHECK.<outcome-key>.<check-key>` identities, dependency validation, deterministic risk floor, Context/source/runner/path/proof preflight and compiled identity.
-- Evidence Kernel V2: explicit command runner, Git-aware snapshot, Assertion/Population/Counterfactual evaluators, per-Check evidence projection, targeted verifier and source-recompiled same-snapshot Live Final Gate.
-- Recovery state: the user-authored `delivery-contract.yaml` and optional `source.md` live in the chosen workdir; progress/Receipt and the workdir compiled file are audit/cache projections only. The Git common-dir Active Authority V3 record contains the complete compiled snapshot and immutable first base, while the matching worktree config marker binds task, revision and compiled identity.
+- Authoring parser/preflight: strict YAML parsing plus Compact deterministic defaults, real Source-anchor and Source-to-Claim/Assertion coverage, generated `OUT.<outcome-key>` / `CHECK.<outcome-key>.<check-key>` identities, dependency/risk/Context/runner/path/proof diagnostics and no state mutation.
+- Static compiler: canonical normalized Contract/authority/compiled identity, first-class Requirement and control-field Claims, Acceptance mapping, field-policy completeness and first-success Authority Lock.
+- Evidence Kernel V2: explicit command runner, Git-aware snapshot, AC-level Playwright observations, detailed Assertion/Population/Counterfactual evaluators, per-Check evidence projection, precise findings, targeted verifier and source-recompiled same-snapshot Live Final Gate.
+- Recovery state: the user-authored `delivery-contract.yaml` and optional `source.md` live in the chosen workdir; existing `outcome_files` are physical compatibility only. Progress/Receipt and the workdir compiled file are audit/cache projections only. The Git common-dir Active Authority V3 record contains the complete compiled snapshot and immutable first base, while the matching worktree config marker binds task, revision and compiled identity.
 - Stop adapter is a no-op without a binding and otherwise runs the Live Final Gate fail-closed; it never trusts a stored Receipt or compiled cache.
 - Capability/profile selection: `packages/ty-context/src/lib/profiles.ts`, `commands/enable.ts`, `commands/disable.ts`, config parsing and upgrade migration.
 - Managed source: `.codex/ty-context-managed/**`; packaged assets: `packages/ty-context/assets/**`; mapping authority: `packages/ty-context/source-mappings.yaml`.
@@ -22,21 +23,23 @@ This is the restrained architecture map for the Harness source repository. It re
 
 ## Data / Control Flow
 
-1. `long-task init <workdir>` creates only a `delivery-contract.yaml` template.
-2. `compile` strictly parses the one Contract, computes Global and Outcome Claim Coverage plus the risk floor, validates dependencies/Context/source/paths/runners/proof, derives canonical Product/Global semantic projections, freezes repository/workdir/source/Contract/selected-Context/verifier/oracle/command identities and activates the worktree binding. It does not invoke a model or modify product code.
-3. The current native Goal reads Contract and relevant Context, selects dependency-ready Outcomes as its internal Frontier, implements in the current workspace and runs project-focused tests.
-4. `verify --outcome/--check` runs the selected checks on a current snapshot and stores repair-only derived status only after re-reading the active task/revision/compiled/worktree identity; a concurrent revision returns `active_authority_changed_during_verify` and writes no progress.
-5. Contract `status` projects `unverified|progress_passing|progress_failing|progress_stale|blocked_external`; resume is read-only and starts no execution.
-6. `final-gate`, Stop and close recompile source authority, validate the common-dir record/config marker, create one Git-tree snapshot, rerun every global/Outcome Check, deduplicate only identical raw execution inside that Gate, then re-read active identity before writing the audit-only result. Stop/close use accepted-identity CAS clear and cannot remove a newer revision.
-7. Workspace, Contract, relevant Context, source, command/oracle or verifier drift stales audit results. Stop/close execute the current Live Gate and clear the binding only on success; `abandon` removes temporary task state without touching Git or authored source/Contract.
+1. `long-task init <workdir>` creates one Compact inline-Outcome `delivery-contract.yaml` template.
+2. The Skill continuously authors the same complete Contract from ordinary prose Source and relevant Context; Outcome boundaries are semantic and never capacity/file/layer/Agent boundaries.
+3. `preflight` parses and normalizes the Contract, aggregates Source/Claim/Assertion/risk/repository diagnostics and leaves Active Authority, marker, cache, progress, Receipt, pending revision, Git state and project runners untouched.
+4. `compile` strictly compiles the normalized Contract, computes Source plus Global and Outcome Result/Requirement/control-field/non-completing/obligation/shortcut Claim Coverage and risk floor, derives canonical Product/Acceptance/Global projections, freezes repository/workdir/source/Contract/selected-Context/verifier/oracle/command identities and activates the worktree binding. It does not invoke a model or modify product code.
+5. The current native Goal reads Contract and relevant Context, selects dependency-ready Outcomes as its internal Frontier, implements in the current workspace and runs project-focused tests.
+6. `verify --outcome/--check` runs the selected checks on a current snapshot and stores repair-only derived status only after re-reading the active task/revision/compiled/worktree identity; a concurrent revision returns `active_authority_changed_during_verify` and writes no progress.
+7. Contract `status` projects `unverified|progress_passing|progress_failing|progress_stale|blocked_external`; resume is read-only and starts no execution.
+8. `final-gate`, Stop and close recompile source authority, validate the common-dir record/config marker, create one Git-tree snapshot, rerun every global/Outcome Check, deduplicate only identical raw execution inside that Gate, then re-read active identity before writing the audit-only result. Stop/close use accepted-identity CAS clear and cannot remove a newer revision.
+9. Workspace, Contract, relevant Context, source, command/oracle or verifier drift stales audit results. Stop/close execute the current Live Gate and clear the binding only on success; `abandon` removes temporary task state without touching Git or authored source/Contract.
 
 ## Contract Shape And Risk
 
-- The Contract has `task`, `risk`, `global` and `outcomes`. Product, Technical Boundary and Acceptance remain separate logical authorities inside the one file.
+- The Contract has `task`, `source_claims`, `risk`, `global` and `outcomes`. Product, Technical Boundary and Acceptance remain separate logical authorities inside the one file.
 - Model-authored public identifiers are only task, Outcome and Check keys. Compiler-generated internal identifiers remove the former cross-file reference namespace.
-- Outcome dependencies form the acceptance readiness relation only; they do not prescribe implementation slices or parallel scheduling.
-- Standard proof requires executable falsifiable checks. UI surfaces/controls require `ui_browser` proof. Strict risk triggers compiler-enforced negative, counterfactual, population, security, environment and rollback/recovery obligations as applicable.
-- Actual changed paths outside declared expected/support paths, or a newly touched undeclared Context owner/boundary, return `scope_or_risk_escalation_required`; the current Goal revises and recompiles the Contract.
+- Outcome dependencies form the acceptance readiness relation only; they do not prescribe implementation slices or parallel scheduling. Requirements are atomic Product Claims; control location is a `ui_browser` Claim; named Assertions preserve Source AC identity.
+- Standard proof requires executable falsifiable checks. UI surfaces/controls and placement require `ui_browser` proof. Distinct Assertions in one Check cannot share an Observation. Strict risk triggers compiler-enforced negative, counterfactual, population, security, environment and rollback/recovery obligations as applicable.
+- Actual changed paths outside declared expected/support paths, or a newly touched undeclared Context owner/boundary, return a `scope_escape` Finding; the current Goal reviews risk/ownership, revises and recompiles the Contract.
 
 ## Safety And Storage Boundaries
 
@@ -44,7 +47,7 @@ This is the restrained architecture map for the Harness source repository. It re
 - Paths are repository-relative and realpath-contained. Exact paths and patterns share one canonical segment grammar before Contract hashing: Windows separators and one leading `./` normalize to `/`; internal `.`/`..`, NUL/CR/LF/Tab, empty segments, absolute/drive/UNC paths and unsupported wildcard syntax are rejected. Matching, subset and overlap/disjoint use the same restricted AST. Protected Contract, fragment, Source, Context, runner, verification-input, Counterfactual-fixture and package-verifier files reject symlinks and detectable hardlinks; the snapshot-owned read-only `node_modules` junction is the sole explicit exception.
 - Commands use argv arrays with no shell, bounded output/time and a minimal environment whitelist. Only env vars explicitly declared by the current Check are additionally passed.
 - Worker/Agent prose, handwritten status, command exit alone and historical targeted passes cannot create accepted authority.
-- Raw command reuse binds frozen runner identity plus canonical declared Environment Requirements, never actual env values. Artifacts and Assertions remain per-Check evidence even when a Raw Execution is shared.
+- Raw command reuse binds frozen runner identity plus canonical declared Environment Requirements, never actual env values. AC-level observations, artifacts and Assertions remain per-Check evidence even when a Raw Execution is shared.
 - Final acceptance binds the same snapshot plus Contract, source, selected Context, runner/oracle, verifier content/runtime locator, workdir and repository identity. History is not spliced into current proof.
 - Runtime state is ordinary same-user project state, not a hostile-host security boundary. The product does not claim resistance to deliberate same-user/admin deletion, system Hook bypass or kernel compromise.
 - Local mode trusts the installed package-owned verifier and Git metadata; external platforms remain responsible for network isolation.
@@ -65,7 +68,8 @@ This is the restrained architecture map for the Harness source repository. It re
 
 ## Constraints And Tradeoffs
 
-- Do not restore stages, fixed plan files, Source Unit inventories, SFC graphs, Packets, Waves, integration branches, worker attempts, model routing or a second completion authority.
+- Do not restore stages, fixed plan files, Source Unit inventories, SFC graphs, Packets, Waves, integration branches, worker attempts, model routing, top-level Contract splitting or a second completion authority.
+- Do not introduce a separate Contract Authoring Skill, Authoring receipt/state, Coverage authority, execution registry, runner/proof recipe, YAML alias or capacity-based Outcome fragmentation.
 - Do not auto-trigger Long-Task Workflow from duration/file count/complexity.
 - Do not let targeted verify accept, reuse historical results in Final Gate, or allow Skill prose to weaken compiler-enforced proof.
 - Do not let `init`, `sync` or `upgrade` activate tasks or infer project semantics.
@@ -73,7 +77,7 @@ This is the restrained architecture map for the Harness source repository. It re
 
 ## Verification Implications
 
-- Focused schema/compiler/risk tests prove preflight and deterministic routing.
+- Focused schema/parser/compiler/risk tests prove Compact equivalence, Source/REQ/CTRL/OBL/AC coverage, read-only Preflight and deterministic routing.
 - Real temporary-Git black boxes prove the one-workspace verify/final/stale/close loop and platform non-orchestration boundary.
 - Source sync/check, consumer quickstart, exact tarball inspection and full package gates prove distributed-surface alignment.
 

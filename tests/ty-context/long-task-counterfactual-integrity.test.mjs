@@ -56,8 +56,8 @@ test("Counterfactual accepts only the exact designated Assertion failure", async
     );
     assert.equal(findings.length, 1);
     assert.deepEqual(findings[0].actual.finding_codes.sort(), [
-      "assertion_failed",
-      "invalid_evidence",
+      "artifact_missing",
+      "assertion_value_mismatch",
     ]);
 
     const populationFailure = structuredClone(compiled.outcomes[0]);
@@ -77,7 +77,7 @@ test("Counterfactual accepts only the exact designated Assertion failure", async
     );
     assert.equal(findings.length, 1);
     assert.deepEqual(findings[0].actual.finding_codes.sort(), [
-      "assertion_failed",
+      "assertion_value_mismatch",
       "population_coverage_failed",
     ]);
 

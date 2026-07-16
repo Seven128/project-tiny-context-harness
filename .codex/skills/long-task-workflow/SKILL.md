@@ -1,6 +1,6 @@
 ---
 name: long-task-workflow
-description: Prepare, execute, resume, verify, or close one Single-Goal Delivery Contract or logical Contract Bundle in the current native Goal and workspace. Use only when explicitly invoked or a valid common-dir active authority binding exists.
+description: Author, preflight, execute, resume, verify, or close one complete Single-Goal Delivery Contract in the current native Goal and workspace. Use only when explicitly invoked or a valid common-dir active authority binding exists.
 ---
 
 # Single-Goal Long-Task Workflow
@@ -9,31 +9,60 @@ description: Prepare, execute, resume, verify, or close one Single-Goal Delivery
 
 Use one current native Goal, one repository and one workspace. Never create a scheduler, model worker, agent runtime, App Server, branch, worktree, merge, push, PR, deployment, Campaign/SFC/Packet/Wave chain, matrix, verdict or second plan. Never activate from task size alone.
 
-`long-task-delivery-v2` is the only active Contract schema. Its root authoring file is `delivery-contract.yaml`. One large atomic delivery may use sorted Outcome fragments under one root Contract Bundle. Independent top-level deliveries run separately. `delivery-set` is retired and non-executing.
+`long-task-delivery-v2` is the only active Contract schema. Its root authoring file is `delivery-contract.yaml`. One user-selected delivery always uses one complete Contract and one Final Gate. New authoring uses inline Outcomes; existing `outcome_files` remain only a physical compatibility form and create no additional semantic, state or completion authority. `delivery-set` is retired and non-executing.
 
 ## Entry
 
-1. Read minimum controlling Context and decide `Context Delta: none|required`.
+1. Read the user request or external initial proposal plus minimum controlling Context and decide `Context Delta: none|required`.
 2. If a valid active binding exists, run `ty-context long-task resume <workdir>`.
-3. Otherwise perform one semantic Contract Boundary Check: `single_contract`, `single_contract_bundle`, `separate_top_level_contracts`, `decision_required` or `capacity_blocked`.
-4. Preserve original requirements in declared `source_paths`; every `source_claim` must be a generated Claim reference, global constraint, source-backed out-of-scope item, or decision-required blocker.
+3. Otherwise author one complete Delivery Contract for the whole selected delivery. Do not create a second plan, Authoring Skill product, matrix or top-level Contract split.
+4. Preserve original requirements in declared `source_paths` and enumerate every material Source item in `source_claims`. A WebGPT-style research or product proposal remains ordinary Source input and does not need to arrive as strict Contract YAML.
 
-## Authoring And Compile
+## Contract Authoring
 
-Author complete observable Outcomes, control states, non-completing outcomes, owner Context/path boundaries, technical obligations with required proof surfaces, supported file/path-glob/verified bindings, recovery, per-Outcome risk and executable Checks.
+Continue reading the repository, Source and relevant Context and revise the same Draft until it is complete. Initial prose does not need to be Contract-shaped or control-level detailed, and the Contract does not need to be authored in one model response.
 
-Every Check declares a resolved runner, `verification_inputs`, input/output paths, per-Check artifacts, Assertions with Claim refs, structured environment probes and any entity-population or Counterfactual proof. Verification inputs include entrypoints, helpers, fixtures/config, package scripts and lockfiles and cannot overlap implementation carriers.
+Identify Outcomes only when their observable results can be independently judged, target-verified and dependency-ordered. Never split an Outcome or Contract because of model output limits, YAML/file length, frontend/backend layers, module/file count, desired parallelism or Agent capacity.
+
+For every Outcome author:
+
+- one complete `observable_result`;
+- atomic `requirements` with required proof surfaces;
+- controls and every actually applicable location/trigger/input/loading/empty/success/failure/feedback state;
+- non-completing outcomes;
+- owner Context, surfaces and path boundaries;
+- stable technical obligations, expected/support/forbidden paths, bindings, forbidden shortcuts and recovery;
+- per-Outcome risk facts;
+- executable Checks and named AC Assertions.
+
+Every Check declares a proof surface, resolved runner target and effect, `verification_inputs`, implementation input/output paths when applicable, per-Check artifacts, Assertions with Claim refs, structured environment probes and any entity-population or Counterfactual proof. Verification inputs include entrypoints, helpers, fixtures/config, package scripts and lockfiles and cannot overlap implementation carriers.
+
+Compact V2 may omit only deterministic defaults: empty optional arrays/nulls, `context_snapshot_mode: referenced`, `requested_level: auto`, runner `argv: []`, `cwd: .`, `timeout_ms: 30000`, `retry_policy: none`, `idempotent: false`, and empty output/artifact/assertion/environment lists. Goal, Source/Source Claims, Context, observable results, owners/paths, REQ, applicable CTRL states, OBL, proof surfaces, runner targets/effects, verification inputs, Assertions, risk, forbidden shortcuts and external confirmations remain explicit.
 
 Global non-goals, constraints and forbidden shortcuts are machine-authoritative Claims and require Global Check Assertions using `non_goal.<key>`, `constraint.<key>` or `forbidden_shortcut.<key>`. Non-goals and forbidden shortcuts require negative Assertions. Global forbidden paths remain static changed-path boundaries rather than Assertion Claims. A Source Claim may cite a Global declaration only when that Global Claim is covered.
 
-Run:
+Map every Source item to one or more real Product/Technical Claims, named Acceptance Assertions, Global Claims, external confirmations, source-backed out-of-scope dispositions or decision-required blockers. A specific Source item must not map only to `<outcome>.result`. Acceptance references use `<outcome>.<check>.<assertion>`. Declared `file#anchor` values must exist, and non-empty `source_paths` require non-empty `source_claims`.
+
+Assertions carry readable `criterion` text. Within one Check, one Observation path belongs to exactly one Assertion; combine related Claims in that Assertion instead of duplicating a broad boolean. Fine-grained Requirements and controls use AC-level observations. Playwright AC tests use stable `[ac-key]` identifiers and `playwright.case.<ac-key>.passed`/`.skipped`; `playwright.passed` may cover only a broad Outcome result.
+
+## Authoring Preflight And Compile
+
+Run the read-only Authoring check:
+
+```text
+ty-context long-task preflight <workdir>
+```
+
+Resolve every `error` and `decision_required` diagnostic and review warnings. Preflight must be `status: ready` before the first formal Compile. Preflight creates no Active Authority, initial base, worktree marker, cache, progress, Receipt or pending revision, runs no project Check and persists no success record.
+
+Only after Preflight is ready run:
 
 ```text
 ty-context long-task compile <workdir>
 ty-context long-task compile <workdir> --revise
 ```
 
-Compile rejects uncovered Global and Outcome result/control/non-completing/obligation/forbidden-shortcut Claims and requires Source Claims to bind real declared Source files. The first successful compile is Authority Lock and freezes an immutable initial base. Every later revision compares against active authority; progress, Receipt/cache deletion or implementation restoration cannot reopen a weakening window. The complete compiled authority snapshot lives in Git common-dir and is bound to the worktree marker by task id, authority revision and compiled identity.
+Compile rejects uncovered Global and Outcome result/Requirement/control-field/non-completing/obligation/forbidden-shortcut Claims and invalid Source/Acceptance/external-confirmation mappings. The first successful formal Compile is Authority Lock and freezes an immutable initial base. Compile neither auto-runs Preflight nor reads/writes a Preflight Receipt. Every later revision compares against active authority; progress, Receipt/cache deletion or implementation restoration cannot reopen a weakening window. The complete compiled authority snapshot lives in Git common-dir and is bound to the worktree marker by task id, authority revision and compiled identity.
 
 After Authority Lock, Source/Context/Product/Global semantic changes, Product Claim additions/removals/rewrites, verifier-content changes, runner/verification-input replacement, reduced `input_paths`, weakened `expected_output_paths`, other proof weakening, scope expansion and unprovable containment create an exact material-bound pending revision. Pure verifier package root/version relocation auto-revises; content bytes require user approval. Every path-bearing field uses one canonical grammar; internal `.`/`..`, controls, absolute/drive/UNC paths and unsupported syntax fail closed. The executing Agent must never approve its own pending revision.
 
@@ -46,6 +75,8 @@ Runner retry defaults to none. One retry is allowed only for `transient_once`, i
 Counterfactual V2 may mutate only declared carriers, never runner/verification inputs, and succeeds only when execution completes with exit zero and exactly the designated Assertions fail. Population V2 proves exact eligible = observed + valid exclusions by entity id.
 
 Assertions require an explicit Observation. A missing or type-incomparable Observation never proves a Claim; negative proof must use an explicit value such as `equals: false`, and implicit absence operators are unsupported.
+
+Use precise findings to repair the owning Source item, Claim, AC/criterion, Observation and owner paths. Distinguish missing Observation, type mismatch, value mismatch, missing/skipped/duplicate AC cases, missing artifacts, scope escape and missing bindings. Never include actual environment values or secrets in findings.
 
 ## Live Final Authority
 

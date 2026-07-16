@@ -78,12 +78,8 @@ export function authorityMaterialRevisionDiff(
     context_files_removed: contextFilesRemoved,
     context_files_changed: contextFilesChanged,
     reduction_reasons: [
-      ...(productSemanticsChanged.length
-        ? ["product_semantics_changed"]
-        : []),
-      ...(globalSemanticsChanged.length
-        ? ["global_semantics_changed"]
-        : []),
+      ...(productSemanticsChanged.length ? ["product_semantics_changed"] : []),
+      ...(globalSemanticsChanged.length ? ["global_semantics_changed"] : []),
       ...(sourceFilesAdded.length ||
       sourceFilesRemoved.length ||
       sourceFilesChanged.length
@@ -133,8 +129,14 @@ function productClaimSemantics(
   const result = new Map<string, unknown>();
   for (const outcome of contract.outcomes) {
     result.set(`${outcome.key}.result`, outcome.product.observable_result);
+    for (const item of outcome.product.requirements)
+      result.set(`${outcome.key}.requirement.${item.key}`, {
+        statement: item.statement,
+        required_proof_surfaces: [...item.required_proof_surfaces].sort(),
+      });
     for (const control of outcome.product.controls)
       for (const [field, value] of [
+        ["location", control.location],
         ["trigger", control.trigger],
         ["input", control.input],
         ["loading", control.loading_state],
@@ -144,15 +146,9 @@ function productClaimSemantics(
         ["feedback", control.feedback],
       ] as const)
         if (value.trim())
-          result.set(
-            `${outcome.key}.control.${control.key}.${field}`,
-            value,
-          );
+          result.set(`${outcome.key}.control.${control.key}.${field}`, value);
     for (const item of outcome.product.non_completing_outcomes)
-      result.set(
-        `${outcome.key}.non_completing.${item.key}`,
-        item.statement,
-      );
+      result.set(`${outcome.key}.non_completing.${item.key}`, item.statement);
     for (const item of outcome.technical.obligations)
       result.set(`${outcome.key}.obligation.${item.key}`, item.statement);
     for (const item of outcome.technical.forbidden_shortcuts)
@@ -177,10 +173,17 @@ function flattenProductSemantics(
     fields.set(`${prefix}.title`, outcome.title);
     fields.set(`${prefix}.observable_result`, outcome.observable_result);
     fields.set(`${prefix}.owner.label`, outcome.owner.label);
-    fields.set(
-      `${prefix}.owner.owner_surfaces`,
-      outcome.owner.owner_surfaces,
-    );
+    fields.set(`${prefix}.owner.owner_surfaces`, outcome.owner.owner_surfaces);
+    for (const requirement of outcome.requirements) {
+      fields.set(
+        `${prefix}.requirements.${requirement.key}`,
+        requirement.statement,
+      );
+      fields.set(
+        `${prefix}.requirements.${requirement.key}.required_proof_surfaces`,
+        requirement.required_proof_surfaces,
+      );
+    }
     for (const control of outcome.controls)
       for (const field of [
         "location",
@@ -197,10 +200,7 @@ function flattenProductSemantics(
           control[field],
         );
     for (const item of outcome.non_completing_outcomes)
-      fields.set(
-        `${prefix}.non_completing.${item.key}`,
-        item.statement,
-      );
+      fields.set(`${prefix}.non_completing.${item.key}`, item.statement);
   }
   return fields;
 }
@@ -210,10 +210,7 @@ function flattenGlobalSemantics(
 ): Map<string, unknown> {
   const fields = new Map<string, unknown>();
   for (const item of projection.constraints)
-    fields.set(
-      `global.technical.constraints.${item.key}`,
-      item.statement,
-    );
+    fields.set(`global.technical.constraints.${item.key}`, item.statement);
   for (const item of projection.forbidden_shortcuts)
     fields.set(
       `global.technical.forbidden_shortcuts.${item.key}`,

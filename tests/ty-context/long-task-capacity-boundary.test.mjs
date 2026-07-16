@@ -11,7 +11,7 @@ import {
   runCli,
 } from "./long-task-delivery-fixtures.mjs";
 
-test("Contract Bundle normalizes fragment order and remains one authority", async () => {
+test("outcome_files physical compatibility normalizes fragment order under one authority", async () => {
   const fixture = await createDeliveryFixture({ twoOutcomes: true });
   try {
     const contract = deliveryContract({ twoOutcomes: true });
@@ -63,7 +63,7 @@ test("Contract Bundle normalizes fragment order and remains one authority", asyn
   }
 });
 
-test("Contract Bundle rejects duplicate Outcomes and fragment-owned root authority", async () => {
+test("outcome_files compatibility rejects duplicate Outcomes and fragment-owned root authority", async () => {
   const fixture = await createDeliveryFixture();
   try {
     const contract = deliveryContract();
@@ -94,7 +94,7 @@ test("Contract Bundle rejects duplicate Outcomes and fragment-owned root authori
   }
 });
 
-test("Boundary Check separates semantic delivery boundaries from capacity", () => {
+test("Boundary Check keeps one Contract regardless of capacity or split preference", () => {
   const candidate = {
     observable_result: "independently observable",
     executable_acceptance: true,
@@ -109,7 +109,7 @@ test("Boundary Check separates semantic delivery boundaries from capacity", () =
       split_motivations: ["token_count", "parallelism"],
       candidates: [candidate],
     }),
-    "single_contract_bundle",
+    "single_contract",
   );
   assert.equal(
     evaluateContractBoundary({
@@ -119,7 +119,7 @@ test("Boundary Check separates semantic delivery boundaries from capacity", () =
       split_motivations: ["product_boundaries"],
       candidates: [candidate, { ...candidate, separation_reason: "different_risk_or_approval_boundary" }],
     }),
-    "separate_top_level_contracts",
+    "single_contract",
   );
   assert.equal(
     evaluateContractBoundary({
@@ -147,8 +147,18 @@ test("Boundary Check separates semantic delivery boundaries from capacity", () =
       capacity_requires_fragments: true,
       capacity_available: false,
       split_motivations: [],
+      candidates: [candidate],
+    }),
+    "single_contract",
+  );
+  assert.equal(
+    evaluateContractBoundary({
+      atomic_user_loop: false,
+      capacity_requires_fragments: false,
+      capacity_available: true,
+      split_motivations: [],
       candidates: [],
     }),
-    "capacity_blocked",
+    "decision_required",
   );
 });

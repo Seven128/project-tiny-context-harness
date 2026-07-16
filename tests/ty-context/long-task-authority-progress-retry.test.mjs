@@ -116,7 +116,7 @@ test("Authority Revision rejects a risk downgrade instead of approving it", asyn
     check.negative_assertions.push({
       key: "negative-floor",
       claims: ["result"],
-      observation: "result",
+      observation: "result_copy",
       operator: "not_equals",
       expected: false,
     });

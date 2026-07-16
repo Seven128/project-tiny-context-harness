@@ -139,6 +139,20 @@ test("Source, Context, Product, Global, and Product Claim changes require exact 
         },
       },
       {
+        address: "outcomes.first.requirements.observe-first",
+        mutate(contract) {
+          contract.outcomes[0].product.requirements[0].statement =
+            "A rewritten atomic product requirement.";
+        },
+      },
+      {
+        address: "outcomes.first.controls.submit.location",
+        mutate(contract) {
+          contract.outcomes[0].product.controls[0].location =
+            "a different surface";
+        },
+      },
+      {
         address: "outcomes.first.controls.submit.success_state",
         mutate(contract) {
           contract.outcomes[0].product.controls[0].success_state =
@@ -190,7 +204,7 @@ test("Source, Context, Product, Global, and Product Claim changes require exact 
     addedClaim.outcomes[0].acceptance.checks[0].positive_assertions.push({
       key: "new-product-scope-proof",
       claims: ["obligation.new-product-scope"],
-      observation: "result",
+      observation: "result_copy",
       operator: "equals",
       expected: true,
     });
@@ -219,7 +233,7 @@ test("mechanical proof additions and path tightening remain automatic revisions"
     fixture.contract.outcomes[0].acceptance.checks[0].positive_assertions.push({
       key: "additional-proof",
       claims: ["result"],
-      observation: "result",
+      observation: "result_copy",
       operator: "truthy",
     });
     await writeContract(fixture.workdir, fixture.contract);

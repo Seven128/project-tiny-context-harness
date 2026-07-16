@@ -26,7 +26,7 @@ test("orientation Context exposes Single-Goal Rolling Delivery authority", async
   assert.match(global, /Minimal Context.*Workflow Contract.*Long-Task Workflow/s);
   assert.match(global, /Context Delta: none\|required/);
   assert.match(global, /Single-Goal Rolling Delivery/);
-  assert.match(global, /Contract\/Contract Bundle authority/);
+  assert.match(global, /one complete Contract authority/);
   assert.match(architecture, /Product, Technical Boundary and Acceptance/);
   assert.match(architecture, /same-snapshot Live Final Gate/);
   assert.match(architecture, /targeted verifier/);

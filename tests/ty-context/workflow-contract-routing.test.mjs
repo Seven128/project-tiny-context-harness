@@ -53,7 +53,8 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
   assert.match(active, /delivery-contract\.yaml/);
   assert.match(active, /current native Goal/i);
   assert.match(active, /Progress.*repair evidence only.*never acceptance authority/is);
-  assert.match(active, /Contract Bundle/);
+  assert.match(active, /one complete Contract/);
+  assert.match(active, /preflight/);
   assert.match(active, /delivery-set.*retired and non-executing/is);
   assert.match(active, /Final Gate/i);
   const normal = await read(

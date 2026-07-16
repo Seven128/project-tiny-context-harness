@@ -16,6 +16,9 @@ test("strict security proof combines per-Check artifacts, negative Assertions an
     const check = outcome.acceptance.checks[0];
     fixture.contract.risk.facts.security_boundary_change = ["first"];
     check.proof_surface = "security_boundary";
+    outcome.product.requirements[0].required_proof_surfaces = [
+      "security_boundary",
+    ];
     outcome.technical.obligations[0].required_proof_surfaces = [
       "security_boundary",
     ];
@@ -80,6 +83,9 @@ test("Population V2 proves entity coverage and fails on an omitted eligible id",
     const check = outcome.acceptance.checks[0];
     fixture.contract.risk.facts.full_population_operation = ["first"];
     check.proof_surface = "population_coverage";
+    outcome.product.requirements[0].required_proof_surfaces = [
+      "population_coverage",
+    ];
     outcome.technical.obligations[0].required_proof_surfaces = [
       "population_coverage",
     ];
@@ -90,8 +96,11 @@ test("Population V2 proves entity coverage and fails on an omitted eligible id",
       operator: "equals",
       expected: true,
     });
+    const populationCheck = structuredClone(check);
+    populationCheck.key = "population-check";
+    outcome.acceptance.checks.push(populationCheck);
     outcome.acceptance.population = {
-      check_key: check.key,
+      check_key: populationCheck.key,
       claims: ["result"],
       observations: {
         eligible_ids: "population.eligible_ids",

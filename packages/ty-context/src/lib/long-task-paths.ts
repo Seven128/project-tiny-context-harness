@@ -25,9 +25,7 @@ export type RepositoryPatternSegmentAst =
     };
 
 export type RepositoryPatternTokenAst =
-  | { kind: "literal"; value: string }
-  | { kind: "star" }
-  | { kind: "question" };
+  { kind: "literal"; value: string } | { kind: "star" } | { kind: "question" };
 
 export function parseRepositoryPattern(
   value: string,
@@ -35,12 +33,9 @@ export function parseRepositoryPattern(
 ): RepositoryPatternAst {
   const normalized = canonicalRepositoryPath(value, label, "pattern");
   if (/[\[\]{}()]/u.test(normalized))
-    throw new Error(
-      `unsupported_repository_pattern_syntax:${label}:${value}`,
-    );
+    throw new Error(`unsupported_repository_pattern_syntax:${label}:${value}`);
   const segments = normalized.split("/").map((segment) => {
-    if (segment === "**")
-      return { kind: "recursive", raw: "**" } as const;
+    if (segment === "**") return { kind: "recursive", raw: "**" } as const;
     if (segment.includes("**"))
       throw new Error(
         `unsupported_repository_pattern_syntax:${label}:${value}`,
@@ -119,8 +114,7 @@ export function matchesRepoPattern(
     else if (segment.kind === "recursive")
       result =
         match(patternIndex + 1, fileIndex) ||
-        (fileIndex < fileSegments.length &&
-          match(patternIndex, fileIndex + 1));
+        (fileIndex < fileSegments.length && match(patternIndex, fileIndex + 1));
     else
       result =
         fileIndex < fileSegments.length &&
@@ -283,10 +277,7 @@ export function classifyRepositoryPatternOverlap(
         unknown: state.unknown,
       });
     if (!leftSegment || !rightSegment) continue;
-    if (
-      leftSegment.kind === "recursive" &&
-      rightSegment.kind === "recursive"
-    )
+    if (leftSegment.kind === "recursive" && rightSegment.kind === "recursive")
       continue;
     if (leftSegment.kind === "recursive") {
       queue.push({
@@ -328,8 +319,7 @@ export function repositoryPatternsMayOverlap(
   right: string,
 ): boolean {
   return (
-    classifyRepositoryPatternOverlap(left, right).status !==
-    "proven_disjoint"
+    classifyRepositoryPatternOverlap(left, right).status !== "proven_disjoint"
   );
 }
 
@@ -345,10 +335,7 @@ export function findScopeEscapes(
   );
 }
 
-type SegmentAst = Extract<
-  RepositoryPatternSegmentAst,
-  { kind: "segment" }
->;
+type SegmentAst = Extract<RepositoryPatternSegmentAst, { kind: "segment" }>;
 
 type SegmentRelation =
   | { status: "proven_subset" }
@@ -376,10 +363,7 @@ function segmentSubset(
   return { status: "unknown" };
 }
 
-function segmentOverlap(
-  left: SegmentAst,
-  right: SegmentAst,
-): PatternOverlap {
+function segmentOverlap(left: SegmentAst, right: SegmentAst): PatternOverlap {
   if (left.raw === right.raw)
     return { status: "proven_overlap", reason: "segments_are_equal" };
   if (isLiteralSegment(left))
@@ -398,8 +382,7 @@ function segmentOverlap(
   const leftSuffix = simpleSuffix(left);
   const rightSuffix = simpleSuffix(right);
   if (leftSuffix !== null && rightSuffix !== null)
-    return leftSuffix.endsWith(rightSuffix) ||
-      rightSuffix.endsWith(leftSuffix)
+    return leftSuffix.endsWith(rightSuffix) || rightSuffix.endsWith(leftSuffix)
       ? {
           status: "proven_overlap",
           reason: "suffix_languages_have_a_common_value",
@@ -458,15 +441,13 @@ function segmentExpression(pattern: SegmentAst): RegExp {
 
 function isExactPattern(pattern: RepositoryPatternAst): boolean {
   return pattern.segments.every(
-    (segment) =>
-      segment.kind === "segment" && isLiteralSegment(segment),
+    (segment) => segment.kind === "segment" && isLiteralSegment(segment),
   );
 }
 
 function isGlobalRecursive(pattern: RepositoryPatternAst): boolean {
   return (
-    pattern.segments.length === 1 &&
-    pattern.segments[0].kind === "recursive"
+    pattern.segments.length === 1 && pattern.segments[0].kind === "recursive"
   );
 }
 
@@ -497,9 +478,7 @@ function isLiteralSegment(segment: SegmentAst): boolean {
 }
 
 function isUniversalSegment(segment: SegmentAst): boolean {
-  return (
-    segment.tokens.length === 1 && segment.tokens[0].kind === "star"
-  );
+  return segment.tokens.length === 1 && segment.tokens[0].kind === "star";
 }
 
 function simpleSuffix(segment: SegmentAst): string | null {
@@ -532,9 +511,7 @@ function canonicalRepositoryPath(
     throw new Error(`unsafe_path:${label}:control_character`);
   const slashed = value.replace(/\\/gu, "/");
   if (kind === "cwd" && slashed === ".") return ".";
-  const normalized = slashed.startsWith("./")
-    ? slashed.slice(2)
-    : slashed;
+  const normalized = slashed.startsWith("./") ? slashed.slice(2) : slashed;
   if (
     !normalized ||
     path.posix.isAbsolute(normalized) ||
@@ -549,8 +526,7 @@ function canonicalRepositoryPath(
     throw new Error(
       `non_canonical_repository_path_dot_segment:${label}:${value}`,
     );
-  if (segments.includes(".."))
-    throw new Error(`unsafe_path:${label}:${value}`);
+  if (segments.includes("..")) throw new Error(`unsafe_path:${label}:${value}`);
   if (kind !== "pattern" && /[*?\[\]{}()]/u.test(normalized))
     throw new Error(`unsupported_repository_path_syntax:${label}:${value}`);
   return normalized;

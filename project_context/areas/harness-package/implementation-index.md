@@ -19,17 +19,17 @@ Navigation for current implementation surfaces. Behavior is defined by owning co
 
 - Normative JSON Schema: `packages/ty-context/src/schemas/long-task-delivery-v2/**`; V1 parses only to the retirement error.
 - Contract/runtime types and public barrel: `long-task-contract-types.ts`, `long-task-runtime-types.ts`, `long-task-delivery-types.ts`.
-- Strict YAML and shape parsing: `strict-codec.ts`, `long-task-delivery-shape.ts`, `long-task-check-shape.ts`, `long-task-delivery-parser.ts`, `long-task-outcome-parser.ts`, `long-task-delivery-validation.ts`.
+- Strict YAML, Compact defaults and shape parsing: `strict-codec.ts`, `long-task-delivery-shape.ts`, `long-task-check-shape.ts`, `long-task-delivery-parser.ts`, `long-task-outcome-parser.ts`, `long-task-delivery-validation.ts`.
 - Composition and protected authority: `long-task-boundary-check.ts`, `long-task-authority.ts`, `long-task-authority-revision*.ts`, `long-task-protected-files.ts`, `long-task-progress.ts` and `long-task-risk-surfaces.ts`; canonical Source/Context/Product/Global revision materials live in the authority modules.
-- Static compile, Global/Outcome Claim Coverage, authority/execution field-policy completeness, canonical repository grammar/subset/overlap, runner/raw execution identity and risk proof: `long-task-delivery-compiler.ts`, `long-task-delivery-preflight.ts`, `long-task-authority-policy.ts`, `long-task-check-execution-policy.ts`, `long-task-authority-transition-policy.ts`, `long-task-claims.ts`, `long-task-claim-definitions.ts`, `long-task-runner-freeze.ts`, `long-task-runner-files.ts`, `long-task-risk.ts`, `long-task-risk-types.ts`, `long-task-paths.ts`, `long-task-verifier-identity.ts`, `long-task-verifier-authority.ts`.
+- Read-only Authoring Preflight, static compile, Source/Global/Outcome Claim and Assertion coverage, authority/execution field-policy completeness, canonical repository grammar/subset/overlap, runner/raw execution identity and risk proof: `long-task-authoring-preflight.ts`, `long-task-delivery-compiler.ts`, `long-task-delivery-preflight.ts`, `long-task-authority-policy.ts`, `long-task-check-execution-policy.ts`, `long-task-authority-transition-policy.ts`, `long-task-claims.ts`, `long-task-claim-definitions.ts`, `long-task-runner-freeze.ts`, `long-task-runner-files.ts`, `long-task-risk.ts`, `long-task-risk-types.ts`, `long-task-paths.ts`, `long-task-verifier-identity.ts`, `long-task-verifier-authority.ts`.
 - Context graph snapshot/path containment/stable JSON utilities are shared package primitives and must not depend on retired runtime.
 
 ## Evidence Kernel
 
 - Workspace snapshot and declared command execution: `long-task-workspace.ts`, `long-task-check-runner.ts`, `long-task-runner-environment.ts`, `long-task-check-evidence-decoder.ts`.
-- Observation/assertion, per-Check artifacts, Population V2 and exact Counterfactual evaluation: `long-task-assertions-v2.ts`, `long-task-artifacts.ts`, `long-task-evidence-v2.ts`.
+- AC-level Playwright observation decoding, detailed assertion evaluation, per-Check artifacts, Population V2 and exact Counterfactual evaluation: `long-task-check-evidence-decoder.ts`, `long-task-assertions-v2.ts`, `long-task-artifacts.ts`, `long-task-evidence-v2.ts`.
 - Common-dir Active Authority V3 snapshot, legacy V2 continuity migration, task/revision/identity marker, CAS commit, compiled-cache projection, Authority Revision and audit state: `long-task-state.ts`.
-- Scoped progress, status/resume/doctor, targeted verification and Live Final Gate: `long-task-verifier-v2.ts`, `long-task-progress.ts`, `long-task-status-v2.ts`, `long-task-final-v2.ts`, `long-task-freshness.ts`.
+- Scoped progress, precise Source/Claim/AC findings, status/resume/explain/doctor, targeted verification and Live Final Gate: `long-task-verifier-v2.ts`, `long-task-progress.ts`, `long-task-status-v2.ts`, `long-task-final-v2.ts`, `long-task-freshness.ts`.
 - Package-owned Hook entry/install/preflight and exact entry-level cleanup: `src/long-task-hook.ts`, `long-task-hook-install.ts`, `long-task-hook-preflight.ts`.
 - No active module may import Campaign, SFC, Packet, Codex/AppServer, model routing, process identity/tree or Git worktree orchestration.
 
@@ -44,7 +44,7 @@ Navigation for current implementation surfaces. Behavior is defined by owning co
 
 ## Tests
 
-- Delivery Contract parser/compiler/risk/preflight: `tests/ty-context/long-task-delivery-*.test.mjs`.
+- Delivery Contract Compact/parser/compiler/risk/preflight/Source-AC coverage: `tests/ty-context/long-task-delivery-*.test.mjs` plus focused authoring/Requirement/Observation tests.
 - Semantic authority, field completeness, conservative pattern containment/overlap and Global Claim coverage: `long-task-semantic-authority-revision.test.mjs`, `long-task-authority-field-completeness.test.mjs`, `long-task-pattern-containment.test.mjs`, `long-task-pattern-overlap.test.mjs`, `long-task-global-claim-coverage.test.mjs`.
 - CLI/Evidence Kernel/Stop real temporary-Git black box: `tests/ty-context/long-task-workflow-*.test.mjs`.
 - Profile/init/sync/upgrade/package assets: existing focused profile/package/upgrade tests updated for `long-task`.

@@ -5,7 +5,9 @@ import type {
 
 export type SourceClaimDispositionV2 =
   | { type: "claim"; refs: string[] }
+  | { type: "acceptance"; refs: string[] }
   | { type: "global_constraint"; refs: string[] }
+  | { type: "external_confirmation"; refs: string[] }
   | { type: "out_of_scope"; reason: string }
   | { type: "decision_required"; reason: string };
 
@@ -44,10 +46,7 @@ export type ProofSurface =
 export type RunnerType =
   "package_script" | "project_binary" | "node_oracle" | "playwright_test";
 
-export type PresenceOrUnaryAssertionOperator =
-  | "exists"
-  | "truthy"
-  | "falsy";
+export type PresenceOrUnaryAssertionOperator = "exists" | "truthy" | "falsy";
 
 export type BinaryAssertionOperator =
   | "equals"
@@ -65,11 +64,11 @@ export type BinaryAssertionOperator =
   | "superset_of";
 
 export type AssertionOperator =
-  | PresenceOrUnaryAssertionOperator
-  | BinaryAssertionOperator;
+  PresenceOrUnaryAssertionOperator | BinaryAssertionOperator;
 
 interface DeliveryAssertionBaseV2 {
   key: string;
+  criterion?: string;
   claims: string[];
   observation: string;
 }
@@ -131,6 +130,10 @@ export interface DeliveryControlV2 {
   feedback: string;
 }
 
+interface DeliveryRequirementV2 extends KeyedStatementV2 {
+  required_proof_surfaces: ProofSurface[];
+}
+
 export interface DeliveryOwnerV2 {
   label: string;
   context_refs: string[];
@@ -186,6 +189,7 @@ export interface DeliveryOutcomeV2 {
   product: {
     observable_result: string;
     owner: DeliveryOwnerV2;
+    requirements: DeliveryRequirementV2[];
     owner_surfaces: string[];
     controls: DeliveryControlV2[];
     non_completing_outcomes: KeyedStatementV2[];

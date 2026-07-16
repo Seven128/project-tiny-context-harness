@@ -180,7 +180,7 @@ try {
   fixture.contract.outcomes[0].acceptance.checks[0].positive_assertions.push({
     key: "race-proof",
     claims: ["result"],
-    observation: "result",
+    observation: "result_copy",
     operator: "truthy",
   });
   await writeContract(fixture.workdir, fixture.contract);
@@ -303,7 +303,7 @@ if (started && release) {
   }
 }
 const state = JSON.parse(readFileSync(new URL("../src/state.json", import.meta.url), "utf8"));
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state.first}}));
+console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state.first,result_copy:state.first}}));
 `,
   );
 }

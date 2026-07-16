@@ -60,7 +60,7 @@ export function help(): void {
   long-task <subcommand>
                        Manage one Canonical Delivery Contract in the current workspace
   delivery-set <subcommand>
-                       Retired; use one Contract Bundle or separate top-level Contracts
+                       Retired; use one complete Contract with semantic Outcomes
   composite-long-task Retired command; use ty-context long-task
   composite-campaign  Retired command; use ty-context long-task
   package <subcommand> Maintain package canonical source`);

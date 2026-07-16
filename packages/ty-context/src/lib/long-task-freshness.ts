@@ -102,10 +102,7 @@ export async function assertVerifierAuthorityCurrent(
     throw new Error("verifier_authority_migration_required");
   }
   const diff = verifierAuthorityDiff(expected, current);
-  if (
-    diff.verifier_content_changed ||
-    diff.verifier_runtime_locator_changed
-  )
+  if (diff.verifier_content_changed || diff.verifier_runtime_locator_changed)
     throw new Error("verifier_authority_migration_required");
 }
 
