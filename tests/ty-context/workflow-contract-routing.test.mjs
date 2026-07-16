@@ -36,6 +36,7 @@ test("CLI and managed guidance route only explicit or active work to long-task",
     "help",
   ]);
   assert.match(stdout, /long-task <subcommand>/);
+  assert.match(stdout, /Install Source Plan\/Long-Task Skills/);
   assert.doesNotMatch(stdout, /validate-plan-contract|validate-plan-acceptance/);
   const guidance = await read(".codex/ty-context-managed/agents/AGENTS_CORE.md");
   assert.match(guidance, /Do not infer long-task mode from duration, complexity, file count/);
@@ -47,9 +48,13 @@ test("CLI and managed guidance route only explicit or active work to long-task",
 });
 
 test("long-task Skill is the only active long-task workflow and normal-long-task is a tombstone", async () => {
-  const active = await read(
-    ".codex/ty-context-managed/skills/long-task-workflow/SKILL.md",
-  );
+  const [active, generated, packaged] = await Promise.all([
+    read(".codex/ty-context-managed/skills/long-task-workflow/SKILL.md"),
+    read(".codex/skills/long-task-workflow/SKILL.md"),
+    read("packages/ty-context/assets/skills/long-task-workflow/SKILL.md"),
+  ]);
+  assert.equal(generated, active, "source-workspace long-task Skill drift");
+  assert.equal(packaged, active, "package long-task Skill drift");
   assert.match(active, /delivery-contract\.yaml/);
   assert.match(active, /current native Goal/i);
   assert.match(active, /Progress.*repair evidence only.*never acceptance authority/is);
@@ -57,6 +62,18 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
   assert.match(active, /preflight/);
   assert.match(active, /delivery-set.*retired and non-executing/is);
   assert.match(active, /Final Gate/i);
+  assert.match(active, /ordinary prose plan or optional Source Plan/is);
+  assert.match(active, /does not need to.*match the recommended Source Plan structure/is);
+  assert.match(active, /stable semantic keys and Markdown anchors/is);
+  assert.match(
+    active,
+    /requirements conflict.*critical semantics are missing.*multiple materially different product designs.*user must choose.*no falsifiable acceptance standard/is,
+  );
+  assert.match(active, /meaning-preserving structural decomposition/is);
+  assert.match(active, /repository binding.*real repository and Context evidence/is);
+  assert.match(active, /new business rule.*`decision_required`/is);
+  assert.match(active, /second Contract plan/);
+  assert.doesNotMatch(active, /Do not create a second plan, Authoring Skill product/);
   const normal = await read(
     ".codex/ty-context-managed/skills/normal-long-task/SKILL.md",
   );
@@ -82,6 +99,31 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
     ),
     true,
   );
+});
+
+test("optional Source Plan authoring does not create a second Contract authority", async () => {
+  const [sourcePlan, workflowContext] = await Promise.all([
+    read(".codex/ty-context-managed/skills/source-plan-authoring/SKILL.md"),
+    read("project_context/areas/harness-package/contracts/workflow-contract.md"),
+  ]);
+  assert.match(sourcePlan, /Do not generate Delivery Contract YAML/);
+  assert.match(sourcePlan, /Do not update `project_context\/\*\*`/);
+  assert.match(sourcePlan, /Do not create:[\s\S]*Source Plan Schema/);
+  assert.doesNotMatch(sourcePlan, /ty-context long-task (?:init|preflight|compile)/);
+  assert.match(
+    workflowContext,
+    /ordinary prose plan or optional Source Plan remains ordinary Source input/is,
+  );
+  assert.match(
+    workflowContext,
+    /requirements conflict.*critical meaning is missing.*materially different product designs.*requires user choice.*falsifiable acceptance cannot be formed/is,
+  );
+  assert.match(
+    workflowContext,
+    /No lifecycle phases, fixed Contract plans, separate Contract-Authoring Skill/is,
+  );
+  assert.match(workflowContext, /one complete Compact V2 Contract/);
+  assert.match(workflowContext, /one current snapshot/);
 });
 
 test("retired command names are lightweight non-executing tombstones", async () => {

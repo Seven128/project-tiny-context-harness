@@ -65,7 +65,10 @@ Capacity, file length, implementation layers, module count, parallelism and Agen
 - The user-selected workspace is the execution surface. No internal parallel mutation, extra worktree, branch, agent or worker is created.
 - Outcome is an independently decidable and target-verifiable acceptance unit. Dependencies determine readiness only. It is never an output-length/file/module/frontend/backend fragment. The current Goal chooses a temporary Frontier and rolls out file/function/test details only for that Frontier.
 - `delivery-contract.yaml` contains Product, Technical Boundary and Acceptance logical authority in one strict file. `source.md` may preserve provenance but has no execution authority.
-- A WebGPT-style research or product proposal remains ordinary Source input and does not need to arrive as strict Contract YAML.
+- A WebGPT-style research proposal, ordinary prose plan or optional Source Plan remains ordinary Source input and does not need to arrive as strict Contract YAML or follow the recommended Source Plan structure.
+- When Source already provides stable semantic keys and Markdown anchors, Contract authoring preserves their meaning and reuses them where practical for Source Claims, Requirements, Controls, Obligations and Assertions.
+- Missing recommended headings, keys, anchors or type labels never blocks authoring by itself. Semantic authoring returns for a real decision only when requirements conflict, critical meaning is missing, materially different product designs remain, a product rule requires user choice or falsifiable acceptance cannot be formed.
+- Contract expansion distinguishes three cases: meaning-preserving structural decomposition may continue; repository/Context binding may continue when supported by real evidence; a new business rule, default, recovery behavior, permission, platform scope or other product semantic becomes `decision_required` instead of being silently added.
 - The Contract records complete observable ends, atomic Requirements, applicable control states and placement, stable obligations/boundaries/path envelopes/forbidden shortcuts/recovery requirements and named falsifiable AC Assertions. It does not record a complete file-level procedure.
 - Compiler-generated Outcome/Check/Claim ids replace handwritten cross-entity references. Source AC references use stable `<outcome>.<check>.<assertion>` ids. Contract edits are normal Git history; there is no Packet chain or second plan.
 
@@ -106,7 +109,7 @@ Before handoff:
 
 ## Non-Goals
 
-- No lifecycle phases, fixed plans, separate Authoring Skill/product, Source Unit tables, persisted Source Coverage records, SFC/Packet/Change Envelope/Wave/Campaign state, agent/worker retry state, integration branches, worktree orchestration, matrices/verdicts or hand-written completion state.
+- No lifecycle phases, fixed Contract plans, separate Contract-Authoring Skill, intermediate Contract-authoring product, Source Unit tables, persisted Source Coverage records, SFC/Packet/Change Envelope/Wave/Campaign state, agent/worker retry state, integration branches, worktree orchestration, matrices/verdicts or hand-written completion state.
 - No multiple top-level Contracts for one selected delivery, capacity-based Outcome fragmentation, execution registry, proof recipe, runner inheritance, Preflight Receipt or second Coverage authority.
 - No validator-enforced edit order or claim that schema proves users declared everything.
 - No targeted verification acceptance and no Historical Result aggregation.

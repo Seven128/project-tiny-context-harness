@@ -8,6 +8,8 @@ Project Tiny Context Harness is repo-native memory and delivery-drift protection
 2. **Workflow Contract** defines the lightweight default loop: graph-directed Context reads, one `Context Delta`, platform-internal planning, implementation, project verification, Contract Conformance and Context drift checking.
 3. **Long-Task Workflow** turns an ordinary user request or external implementation proposal into one complete Canonical Delivery Contract, then adds verifier-owned current-snapshot acceptance for work that needs pause/compaction/new-session recovery or multiple observable outcomes.
 
+The optional `source-plan-authoring` Skill is an upstream Source-quality helper, not a fourth authority layer. It turns discussions, research and initial plans into one self-contained Markdown Source Plan with stable semantic keys, traceable derivations, explicit unresolved decisions and observable acceptance scenarios. It does not update Context, bind a repository, create Contract/runtime state or claim completion.
+
 The Long-Task Workflow V2 product equation is:
 
 > one complete delivery = one authoritative Contract + one continuing platform-native Goal + one selected workspace + rolling technical implementation + one trustworthy Evidence Kernel + one Final Gate
@@ -64,7 +66,8 @@ Users may raise risk to strict. A requested `standard` level below the computed 
 The active flow is:
 
 ```text
-request or external implementation source
+request, discussion, research or external implementation source
+-> optional self-contained Source Plan
 -> minimum relevant Context
 -> one complete Delivery Contract
 -> Source -> REQ/CTRL/OBL/AC coverage review
@@ -88,7 +91,9 @@ Core execution has no internal parallel mutation. Users may explicitly use platf
 
 ## 5. Canonical Delivery Contract V2
 
-The root authoring authority is `delivery-contract.yaml`, schema `long-task-delivery-v2`. New authoring uses inline Outcomes in one file. Existing `outcome_files` parsing remains compatible only as a physical storage choice; fragments create no additional semantic boundary, state or completion authority. Every complete delivery selected by the user stays in one Contract and one Final Gate even when its Outcomes are weakly related. Original `source_paths` remain provenance, and direct Source Claims resolve to generated Product/Technical Claims, named Acceptance Assertions, Global Claims, external confirmations, source-backed out-of-scope items or decision blockers. A WebGPT-style research or product proposal is ordinary Source input and does not need to arrive as strict Contract YAML.
+The root authoring authority is `delivery-contract.yaml`, schema `long-task-delivery-v2`. New authoring uses inline Outcomes in one file. Existing `outcome_files` parsing remains compatible only as a physical storage choice; fragments create no additional semantic boundary, state or completion authority. Every complete delivery selected by the user stays in one Contract and one Final Gate even when its Outcomes are weakly related. Original `source_paths` remain provenance, and direct Source Claims resolve to generated Product/Technical Claims, named Acceptance Assertions, Global Claims, external confirmations, source-backed out-of-scope items or decision blockers. A WebGPT-style research proposal, ordinary prose plan or optional Source Plan is ordinary Source input and does not need to arrive as strict Contract YAML or match a recommended template.
+
+When Source contains stable semantic keys and Markdown anchors, Contract authoring preserves their meaning and reuses them where practical. Meaning-preserving structural decomposition and evidence-backed repository binding may add control states, Assertions, owners, paths, runners and proof. A new business rule, default, threshold, recovery behavior, permission, platform/data scope or other product semantic is a real `decision_required` blocker rather than an implicit Contract expansion.
 
 The Contract keeps three logical authorities in one file:
 
@@ -290,7 +295,13 @@ No Long-Task CLI command may start Codex/AppServer/agents, create/delete worktre
 
 ## 12. Skills And Distribution Profiles
 
-`/long-task-workflow` is the only active long-task Skill. It preserves the user/external proposal as Source, authors one complete Compact V2 Contract, enumerates Source Claims and semantic Outcomes with REQ/CTRL/OBL/AC, runs read-only Authoring Preflight, formally compiles only when Preflight is ready, continuously implements rolling Frontiers in the current native Goal, resumes semantic state, runs the Live Final Gate and reports results. It creates no second plan, Authoring Skill product, matrix or top-level Contract split.
+`/source-plan-authoring` is an explicit-trigger upstream Skill for users who ask for an initial plan, source plan or an audit/refinement of such a plan for later implementation or Contract authoring. It produces one self-contained Markdown document. Direct requirements retain their qualifiers; necessary derivations cite their source and must not change product meaning; unsupported new product semantics become `DEC`/`decision_required`. Outcomes split only by independently decidable results, stable lowercase-kebab keys and explicit anchors reduce later Source mapping drift, and `OBL` remains mandatory while `HINT` is advisory.
+
+The Skill is intentionally model-guidance only. It creates no Source Plan Schema, CLI, Preflight, Compile, Receipt, Coverage Cache, Authority, state file, dedicated Validator, mandatory format gate, Context update, repository binding, Delivery Contract, implementation or completion result. Its recommended structure improves declared Source quality but cannot prove that the user stated every real requirement. This anti-goal preserves the Harness rule that a mechanism is added only when its distinct drift-prevention value justifies its authoring/runtime/recovery cost.
+
+`context_product_plan` keeps its existing responsibility: make product judgments inside a Tiny Context project, classify durable product facts and update the owning `project_context/**` surfaces. It is not a required stage before or after Source Plan authoring.
+
+`/long-task-workflow` remains the only active long-task execution Skill. It preserves the user/external proposal or optional Source Plan as Source, authors one complete Compact V2 Contract, enumerates Source Claims and semantic Outcomes with REQ/CTRL/OBL/AC, runs read-only Authoring Preflight, formally compiles only when Preflight is ready, continuously implements rolling Frontiers in the current native Goal, resumes semantic state, runs the Live Final Gate and reports results. It creates no second Contract plan, intermediate Contract-authoring product, matrix or top-level Contract split.
 
 `/normal-long-task` is a retirement pointer and creates no checklist, prompt or Local Audit.
 
@@ -300,7 +311,7 @@ Profiles are:
 - `workflow-default`;
 - explicit `long-task`.
 
-`ty-context enable long-task` installs only the Long-Task Skill, Stop Hook and required templates. Enable, disable and upgrade share one entry-level cleanup function. Current or relocated package-owned absolute commands are recognized only with a known Tiny Context managed status, an exact `node "<absolute>/dist/long-task-hook.js"` shape and a known `node_modules`, pnpm or workspace-package layout; exact retired repo-local commands remain migratable. User entries in the same group, no-status lookalikes, user-only groups and commands merely containing `composite` are preserved.
+`ty-context enable long-task` installs the Source Plan Authoring Skill, Long-Task Workflow Skill, Stop Hook and required templates. Disabling the profile removes both package-owned Skills and the package-owned Hook while preserving user Skills and Hooks. Enable, disable and upgrade share one entry-level Hook cleanup function. Current or relocated package-owned absolute commands are recognized only with a known Tiny Context managed status, an exact `node "<absolute>/dist/long-task-hook.js"` shape and a known `node_modules`, pnpm or workspace-package layout; exact retired repo-local commands remain migratable. User entries in the same group, no-status lookalikes, user-only groups and commands merely containing `composite` are preserved.
 
 Upgrade safely changes package-owned `composite-codex` profile selection to `long-task`, removes package-owned retired assets and leaves user-authored historical campaign/source/Contract files untouched. It never imports an unfinished campaign or automatically executes it.
 
@@ -309,6 +320,7 @@ Upgrade safely changes package-owned `composite-codex` profile selection to `lon
 - `.codex/ty-context-managed/**` is managed source.
 - `packages/ty-context/assets/**` is package canonical output.
 - `packages/ty-context/source-mappings.yaml` defines source-to-package mapping.
+- `.codex/ty-context-managed/skills/source-plan-authoring/SKILL.md` is canonical Source Plan Skill source; sync generates the source-workspace and package copies through the existing managed skills tree mapping.
 - `.codex/skills/authoring/**` remains source-workspace-only.
 - README, Chinese README, package README, Context, AGENTS managed block, Skills, tests, release scripts and package assets must describe the same current workflow.
 - Public surfaces are English-complete; Chinese is an aligned translation.

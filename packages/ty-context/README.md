@@ -85,7 +85,7 @@ Default profiles are `core-portable` and `workflow-default`. Explicitly enable l
 ty-context enable long-task
 ```
 
-This installs the `/long-task-workflow` Skill and completion Hook. Disable only those package-owned surfaces with `ty-context disable long-task`.
+This installs `/source-plan-authoring`, `/long-task-workflow` and the completion Hook. Disable only those package-owned surfaces with `ty-context disable long-task`.
 
 ## Positioning
 
@@ -166,9 +166,17 @@ Newly generated Harness configs default to `strict_except_generated`. Generated/
 
 `context_surface_contract` compiles durable screen/page/CLI responsibility using the existing `contract`, area/subdomain and verification roles; `product-surface-contract.md` is the package template. Product Surface Contract authoring uses Source-to-Context judgment and Contract Conformance; it must not add a new product-surface Context role or claim product-quality proof.
 
+### Optional Source Plan Authoring
+
+Use `/source-plan-authoring` only for an explicitly requested initial plan, Source Plan, source draft, or an audit/refinement of such a plan for later implementation or Contract authoring. It produces one self-contained Markdown document with preserved direct requirements, traceable necessary derivations, `DEC`/`decision_required` product choices, semantic Outcome boundaries, stable keys/anchors, distinct `OBL`/`HINT` items and observable acceptance scenarios.
+
+It does not update Context, bind a repository, generate Delivery Contract YAML, execute implementation, create workflow state or claim completion. The structure is optional; ordinary prose remains valid Long-Task Source.
+
 ## Single-Goal Rolling Delivery
 
 The explicit Long-Task Workflow uses one platform-native Goal, one user-selected repository/workspace, one complete `long-task-delivery-v2` Contract and one Final Gate. Outcomes are independently decidable acceptance units; Delivery Set orchestration and top-level Contract splitting inside one selected delivery are retired.
+
+Contract authoring preserves stable Source keys/anchors where practical. Meaning-preserving structural decomposition and evidence-backed repository binding may continue, while new product semantics require `decision_required`. Missing recommended Source Plan structure alone never blocks authoring.
 
 ```text
 ty-context long-task init <workdir>
@@ -214,7 +222,7 @@ ty-context sync
 
 Version 0.6.0 retires V1 and the repo-local Hook. Legacy Active V2 authority migrates only from a fully matching cache. Invalid JSON, marker/record mismatch, missing legacy cache or stale lock is never guessed from damaged record paths; doctor reports the explicit contained cleanup command `ty-context long-task abandon <workdir> --force-corrupt-state`.
 
-The authoring refinement remains `long-task-delivery-v2`: expanded V2 Contracts and existing `outcome_files` remain compatible, with no V3 migration. Authoring Preflight requires readable Assertion `criterion` text before formal Compile; direct Compile still accepts older V2 Assertions that omit it.
+The authoring refinement remains `long-task-delivery-v2`: expanded V2 Contracts and existing `outcome_files` remain compatible, with no V3 migration. Optional Source Plan authoring adds no Schema, CLI, Preflight, Compile, Validator, Receipt, Authority or state. Contract Authoring Preflight requires readable Assertion `criterion` text before formal Compile; direct Compile still accepts older V2 Assertions that omit it.
 
 After updating the package, run `ty-context upgrade`. Use `ty-context upgrade --check` first when you need a read-only plan.
 
@@ -226,6 +234,7 @@ Release metadata declares one update mode: `sync-only`, `upgrade-required` or `m
 npm run format:check
 npm run typecheck --workspace project-tiny-context-harness
 npm run build --workspace project-tiny-context-harness
+node --test --test-concurrency=1 tests/ty-context/source-plan-authoring-skill.test.mjs tests/ty-context/sync-init-doctor.test.mjs tests/ty-context/workflow-contract-routing.test.mjs
 npm run test:delivery-contract --workspace project-tiny-context-harness
 npm run test:long-task-workflow --workspace project-tiny-context-harness
 npm run test:long-task-performance --workspace project-tiny-context-harness

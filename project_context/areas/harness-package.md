@@ -9,7 +9,7 @@
 ## User / System Contract
 
 - Product Surface Contract workflow is prompt-level and project-owned; package-managed Skills may guide `context_surface_contract`, but the Harness must not add a surface-specific Context role.
-- `init` installs `core-portable` plus `workflow-default`; `ty-context enable long-task` explicitly installs the Long-Task Workflow Skill, Stop Hook and templates. `disable long-task` removes only package-owned long-task assets.
+- `init` installs `core-portable` plus `workflow-default`; `ty-context enable long-task` explicitly installs the optional Source Plan Authoring Skill, Long-Task Workflow Skill, Stop Hook and templates. `disable long-task` removes only package-owned long-task assets.
 - `sync` refreshes enabled package-managed assets only. `upgrade` applies safe deterministic migrations, including `composite-codex` profile selection to `long-task`, before sync/doctor. Neither command creates or activates a task.
 - `ty-context long-task ...` owns the only active one-Contract path. `delivery-set` is a fixed retired tombstone; neither path schedules Agents, Goals, branches or worktrees.
 - `delivery-contract.yaml` is the only authoring authority. Optional `source.md` is provenance. New authoring uses inline Outcomes; existing `outcome_files` are physical compatibility only. Compilation generates Global Claims plus Outcome-qualified Result/Requirement/control-field/non-completing/obligation/shortcut Claims, maps Source AC to named Assertions and rejects uncovered, overcompressed or cross-scope references.
@@ -21,6 +21,7 @@
 - Historical `composite-campaign` and `composite-long-task` names are tombstones only. Historical files are preserved as ordinary files but are never imported, migrated into active state or executed.
 - `/normal-long-task` is a retirement pointer; `/long-task-workflow` is the only active long-task Skill.
 - Public package surfaces are fully usable in English; Chinese documentation is an aligned translation.
+- `source-plan-authoring` is an explicit-trigger, non-authoritative upstream helper. It creates one self-contained Markdown Source Plan, preserves direct requirements, marks necessary derivations and unresolved product decisions, and does not update Context, bind repository paths, create a Delivery Contract or run implementation.
 - Runtime floor remains Node.js `>=24`.
 
 ## Core Data / API / State
@@ -30,15 +31,17 @@
 - Schema/types/parser/compiler/risk/preflight: `src/schemas/long-task-delivery-v2/**` and focused `lib/long-task-delivery-*`, `long-task-claims.ts` and `long-task-risk.ts` modules.
 - Evidence Kernel: focused long-task snapshot, command, assertion, population, binding/counterfactual, verifier, active binding, final gate/receipt/status/resume/Stop modules. Verifier authority separates content hashes from runtime package version/root; explicit revise auto-migrates pure relocation, while byte changes require user approval. Corrupt authority cleanup is available only through `abandon --force-corrupt-state`.
 - Managed source/assets/mappings: `.codex/ty-context-managed/**`, `packages/ty-context/assets/**`, `packages/ty-context/source-mappings.yaml`.
+- Profile-managed Skills: `source-plan-authoring` for optional high-fidelity ordinary Source and `long-task-workflow` for the one-Contract execution authority.
 - Release/version automation: `tools/sync_release_version.mjs`, release prepare/publish tools and exact-tarball smoke.
 
 ## Key Constraints
 
 - No Source Unit, Scope Fit, SFC, Packet, Wave, Integration Branch, campaign receipt/finalizer, worker engine, AppServer, model routing or worktree scheduler in active runtime.
-- No cross-file Product/Technical/Acceptance projections and no duplicate plan/Authoring product. Stable local REQ/CTRL/OBL/AC keys are allowed only inside the one Contract and compile to canonical Claims/Assertion references.
+- No cross-file Product/Technical/Acceptance projections and no duplicate Contract plan/Contract-authoring product. An optional Source Plan remains ordinary provenance; stable Source keys and anchors may be preserved into the one Contract.
 - No fixed file-level execution plan in Technical authority; paths/boundaries/obligations are stable constraints, while implementation order is rolling Goal state.
 - No target verify acceptance, historical proof splicing, prose/exit-code acceptance, duplicated broad Observation proof or silent risk/scope downgrade.
-- No top-level Contract split for one selected delivery, capacity-based Outcome fragmentation, separate Authoring Skill, Preflight Receipt, Coverage authority, execution registry, proof recipe or runner inheritance.
+- No top-level Contract split for one selected delivery, capacity-based Outcome fragmentation, separate Contract-Authoring Skill, Preflight Receipt, Coverage authority, execution registry, proof recipe or runner inheritance.
+- No Source Plan Schema, CLI, Preflight, Compile, Receipt, Coverage Cache, Authority, state file, dedicated Validator or mandatory-format gate.
 - No package operation may delete user-authored historical campaign/source/contract data.
 - Managed-asset changes require build, source sync twice/idempotence, check-source and consumer/package verification.
 

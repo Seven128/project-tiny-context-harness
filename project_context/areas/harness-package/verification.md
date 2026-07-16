@@ -11,6 +11,7 @@ read_policy: default
 - `npm run build --workspace project-tiny-context-harness`: compiled package and CLI.
 - `npm run test:delivery-contract --workspace project-tiny-context-harness`: Compact/expanded canonical equivalence, strict parser, Source anchors and Source-to-Claim/Assertion mapping, Requirement/control-placement Claims, Observation uniqueness, generated ids, Context/path/runner/proof preflight, risk floor and scope escalation tests. Small-fixture Preflight and Compile targets are each under two seconds.
 - `npm run test:long-task-workflow --workspace project-tiny-context-harness`: read-only Preflight state-diff tests, AC-level Playwright evidence, precise Finding, targeted verify/status/resume/explain/final/Stop/profile/consumer workflow tests. Focused loop target is under five minutes; complete workflow suite under fifteen minutes.
+- `node --test --test-concurrency=1 tests/ty-context/source-plan-authoring-skill.test.mjs tests/ty-context/sync-init-doctor.test.mjs tests/ty-context/workflow-contract-routing.test.mjs`: explicit Source Plan trigger/content/parity, long-task profile install/remove and one-Contract boundary coverage.
 - `npm run test:long-task-performance --workspace project-tiny-context-harness`: independent 10k tracked/100 untracked Git matrix with status/resume/compile/Snapshot/Stop budgets.
 - Long-task tests explicitly cover first-compile Authority Lock, Preflight non-mutation/no-lock/no-runner behavior, Compact/expanded identical Contract and authority identities, Source/Context/Product/Acceptance/Global/verifier revision identity, compile-time authority/execution field-policy completeness, canonical path-bearing fields and internal-dot bypass resistance, Environment-bound Raw Execution identity, `input_paths`/`expected_output_paths` reductions, scoped progress plus Verify/Final authority races, unified lock/CAS clear, corrupt-state force abandon, Global blocked projection, Active Authority V3/V2 migration, Counterfactual/Population/minimal-Environment V2, runner freeze and relocated-package/content-verifier migration.
 
@@ -44,6 +45,7 @@ A real temporary Git repository must prove:
 - Recovery/authority: audit-only status/Receipt/cache, source-recompiled Stop/close, malformed/mismatched active state fail-closed, atomic binding clear, read-only resume and no process/branch/worktree mutation.
 - Platform boundary: fake executable observation proves no Codex/AppServer/agent/worktree/branch/merge/push/PR/model retry and Final Gate invokes only declared checks.
 - Distribution: enable/disable, safe profile migration, historical-file preservation, no retired runtime in new consumer/tarball, source mappings, English/Chinese/package README alignment, version parity and Windows paths.
+- Source Plan authoring: direct/derived/decision-required boundaries, stable semantic keys/anchors, semantic Outcome splitting, OBL/HINT separation, non-authoritative Markdown output, no platform-specific instructions and no Source Plan runtime/validator/authority mechanism.
 
 ## Evidence Rules
 

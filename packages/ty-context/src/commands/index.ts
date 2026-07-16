@@ -42,8 +42,8 @@ export function help(): void {
   console.log(`ty-context commands:
   init [--adopt] [--harness-folder <path>]
                        Initialize/adopt a project; without --harness-folder, choose target agent first
-  enable long-task     Install the Long-Task Workflow Skill, Stop Hook and templates
-  disable long-task    Remove only package-owned Long-Task Workflow assets
+  enable long-task     Install Source Plan/Long-Task Skills, Stop Hook and templates
+  disable long-task    Remove only package-owned long-task profile assets
   sync                 Refresh managed assets; does not run migrations
   upgrade [--check] [--json]
                        Run safe migrations, sync managed assets and doctor

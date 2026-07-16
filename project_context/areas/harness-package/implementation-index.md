@@ -38,6 +38,7 @@ Navigation for current implementation surfaces. Behavior is defined by owning co
 - Managed source: `.codex/ty-context-managed/**`.
 - Packaged assets: `packages/ty-context/assets/**`.
 - Source mappings: `packages/ty-context/source-mappings.yaml`.
+- Optional Source Plan Skill: `.codex/skills/source-plan-authoring/SKILL.md` and managed/package copies.
 - Active Long-Task Skill: `.codex/skills/long-task-workflow/SKILL.md` and managed/package copies.
 - Retirement pointer: `.codex/skills/normal-long-task/SKILL.md` and managed/package copies.
 - Source-workspace authoring Skill: `.codex/skills/authoring/harness_package_design/SKILL.md`.
@@ -48,6 +49,7 @@ Navigation for current implementation surfaces. Behavior is defined by owning co
 - Semantic authority, field completeness, conservative pattern containment/overlap and Global Claim coverage: `long-task-semantic-authority-revision.test.mjs`, `long-task-authority-field-completeness.test.mjs`, `long-task-pattern-containment.test.mjs`, `long-task-pattern-overlap.test.mjs`, `long-task-global-claim-coverage.test.mjs`.
 - CLI/Evidence Kernel/Stop real temporary-Git black box: `tests/ty-context/long-task-workflow-*.test.mjs`.
 - Profile/init/sync/upgrade/package assets: existing focused profile/package/upgrade tests updated for `long-task`.
+- Source Plan Skill contract and parity: `tests/ty-context/source-plan-authoring-skill.test.mjs`.
 - Adversarial suites: `long-task-active-authority-continuity.test.mjs`, `long-task-authority-adversarial.test.mjs`, `long-task-assertion-safety.test.mjs`, `long-task-schema-parser-parity.test.mjs`, `long-task-counterfactual-integrity.test.mjs`, `long-task-runner-freeze-v2.test.mjs`, population/environment and Hook relocation tests.
 - Suite partitioning: `tests/ty-context/run-package-suite.mjs`; package scripts expose `test:delivery-contract`, `test:long-task-workflow` and independent `test:long-task-performance`.
 - Consumer/package smoke: `tools/quickstart_smoke.mjs`, `tools/release_tarball_smoke.mjs`, `npm run preview:pack`.

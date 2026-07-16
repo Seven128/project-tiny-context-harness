@@ -81,6 +81,9 @@ export function enabledManagedSkillNames(config: HarnessConfig): Set<string> {
   ]);
   if (isProfileEnabled(config, "workflow-default"))
     names.add("normal-long-task");
-  if (isProfileEnabled(config, "long-task")) names.add("long-task-workflow");
+  if (isProfileEnabled(config, "long-task")) {
+    names.add("long-task-workflow");
+    names.add("source-plan-authoring");
+  }
   return names;
 }

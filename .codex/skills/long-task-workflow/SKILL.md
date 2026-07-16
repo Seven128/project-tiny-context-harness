@@ -7,7 +7,7 @@ description: Author, preflight, execute, resume, verify, or close one complete S
 
 ## Boundaries
 
-Use one current native Goal, one repository and one workspace. Never create a scheduler, model worker, agent runtime, App Server, branch, worktree, merge, push, PR, deployment, Campaign/SFC/Packet/Wave chain, matrix, verdict or second plan. Never activate from task size alone.
+Use one current native Goal, one repository and one workspace. Never create a scheduler, model worker, agent runtime, App Server, branch, worktree, merge, push, PR, deployment, Campaign/SFC/Packet/Wave chain, matrix, verdict or second Contract plan. Never activate from task size alone.
 
 `long-task-delivery-v2` is the only active Contract schema. Its root authoring file is `delivery-contract.yaml`. One user-selected delivery always uses one complete Contract and one Final Gate. New authoring uses inline Outcomes; existing `outcome_files` remain only a physical compatibility form and create no additional semantic, state or completion authority. `delivery-set` is retired and non-executing.
 
@@ -15,14 +15,23 @@ Use one current native Goal, one repository and one workspace. Never create a sc
 
 1. Read the user request or external initial proposal plus minimum controlling Context and decide `Context Delta: none|required`.
 2. If a valid active binding exists, run `ty-context long-task resume <workdir>`.
-3. Otherwise author one complete Delivery Contract for the whole selected delivery. Do not create a second plan, Authoring Skill product, matrix or top-level Contract split.
-4. Preserve original requirements in declared `source_paths` and enumerate every material Source item in `source_claims`. A WebGPT-style research or product proposal remains ordinary Source input and does not need to arrive as strict Contract YAML.
+3. Otherwise author one complete Delivery Contract for the whole selected delivery. Do not create a second Contract plan, intermediate Contract-authoring product, matrix or top-level Contract split inside this workflow.
+4. Preserve original requirements in declared `source_paths` and enumerate every material Source item in `source_claims`. A WebGPT-style research proposal, ordinary prose plan or optional Source Plan remains ordinary Source input and does not need to arrive as strict Contract YAML or match the recommended Source Plan structure.
+5. When Source provides stable semantic keys and Markdown anchors, preserve their meaning and reuse them where practical in Source Claim, Requirement, Control, Obligation and Assertion keys and `source_ref` values. Do not replace them with meaningless sequence numbers.
 
 ## Contract Authoring
 
 Continue reading the repository, Source and relevant Context and revise the same Draft until it is complete. Initial prose does not need to be Contract-shaped or control-level detailed, and the Contract does not need to be authored in one model response.
 
+Missing recommended Source Plan headings, keys, anchors or type labels never blocks authoring by itself. Return for a real decision when requirements conflict, critical semantics are missing, multiple materially different product designs remain, the user must choose a product rule or no falsifiable acceptance standard can be formed.
+
 Identify Outcomes only when their observable results can be independently judged, target-verified and dependency-ordered. Never split an Outcome or Contract because of model output limits, YAML/file length, frontend/backend layers, module/file count, desired parallelism or Agent capacity.
+
+Classify Contract expansion:
+
+- meaning-preserving structural decomposition may expand one Requirement into applicable control states and multiple falsifiable AC Assertions;
+- repository binding may add owners, Context refs, paths, existing bindings, runners and proof only when supported by real repository and Context evidence;
+- a new business rule, default, threshold, recovery behavior, permission, platform/data scope or other product semantic is `decision_required` and must not be silently added.
 
 For every Outcome author:
 

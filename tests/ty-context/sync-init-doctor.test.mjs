@@ -68,6 +68,7 @@ test("non_codex_sync_does_not_install_codex_hooks", async () => {
       "plan.md",
       ".agent/state/plan.yaml",
       ".agent/state/lifecycle.yaml",
+      ".agent/skills/source-plan-authoring/SKILL.md",
       ".agent/skills/prepare-composite-long-task/SKILL.md",
       ".agent/skills/composite-long-task-workflow/SKILL.md",
       ".agent/composite-long-task/campaigns",
@@ -140,7 +141,7 @@ test("non_codex_sync_does_not_install_codex_hooks", async () => {
   });
 });
 
-test("long_task_enable_installs_only_current Skill and Hooks", async () => {
+test("long_task_enable_installs_source_plan_and_workflow_Skills_with_Hooks", async () => {
   await withTemp("ty-context-long-task-", async (root) => {
     await runInit(root, { adopt: false, force: false });
     const enabled = await enableHarnessProfile(root, "long-task");
@@ -150,6 +151,7 @@ test("long_task_enable_installs_only_current Skill and Hooks", async () => {
     const sync = await runSync(root);
     assert.deepEqual(sync.blocked, []);
     for (const file of [
+      ".agent/skills/source-plan-authoring/SKILL.md",
       ".agent/skills/long-task-workflow/SKILL.md",
       ".codex/hooks.json",
     ]) {
@@ -176,7 +178,7 @@ test("long_task_enable_installs_only_current Skill and Hooks", async () => {
   });
 });
 
-test("long_task_disable_removes_only_owned hooks and Skill", async () => {
+test("long_task_disable_removes_only_owned_hooks_and_Skills", async () => {
   await withTemp("ty-context-disable-long-task-", async (root) => {
     await runInit(root, { adopt: false, force: false });
     await mkdir(path.join(root, ".codex"), { recursive: true });
@@ -223,6 +225,18 @@ test("long_task_disable_removes_only_owned hooks and Skill", async () => {
           ".agent",
           "skills",
           "long-task-workflow",
+          "SKILL.md",
+        ),
+      ),
+      false,
+    );
+    assert.equal(
+      await exists(
+        path.join(
+          root,
+          ".agent",
+          "skills",
+          "source-plan-authoring",
           "SKILL.md",
         ),
       ),
@@ -351,6 +365,9 @@ test("CLI init keeps portable defaults and explicit enable activates long-task",
     await stat(path.join(root, ".codex/hooks.json"));
     await stat(
       path.join(root, ".codex/skills/long-task-workflow/SKILL.md"),
+    );
+    await stat(
+      path.join(root, ".codex/skills/source-plan-authoring/SKILL.md"),
     );
 
     const longTaskAfterEnable = spawnSync(

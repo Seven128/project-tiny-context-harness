@@ -193,6 +193,7 @@ async function assertTarballContents(directory) {
     "dist/lib/long-task-claims.js",
     "dist/long-task-hook.js",
     "dist/lib/migrations.js",
+    "assets/skills/source-plan-authoring/SKILL.md",
     "assets/skills/long-task-workflow/SKILL.md",
   ]) {
     if (!files.includes(required)) throw new Error(`tarball missing required asset: ${required}`);

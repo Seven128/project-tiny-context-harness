@@ -77,13 +77,15 @@ It does not launch models, spawn agents, create branches or worktrees, merge, pu
 2. **Workflow Contract** — Context-first default engineering behavior using the platform's internal plan; no required plan artifact.
 3. **Long-Task Workflow** — explicit Single-Goal Rolling Delivery with `long-task-delivery-v2`, compiled Claim Coverage and a verifier-owned Live Final Gate.
 
+The opt-in long-task profile also provides `/source-plan-authoring`, an upstream Source-quality helper rather than another authority layer.
+
 Default profiles are `core-portable` and `workflow-default`. Enable the opt-in profile with:
 
 ```powershell
 ty-context enable long-task
 ```
 
-This installs the `/long-task-workflow` Skill and completion Hook. It does not install an agent runtime, model worker, scheduler, or Git orchestration assets.
+This installs `/source-plan-authoring`, `/long-task-workflow` and the completion Hook. It does not install an agent runtime, model worker, scheduler, or Git orchestration assets.
 
 ## Try It In 60 Seconds
 
@@ -201,6 +203,22 @@ Newly generated Harness configs default to `strict_except_generated`. Generated/
 
 `context_surface_contract` compiles durable screen/page/CLI responsibility using the existing `contract`, area/subdomain and verification roles; `product-surface-contract.md` is the package template. Product Surface Contract authoring uses Source-to-Context judgment and Contract Conformance; it must not add a new product-surface Context role or claim product-quality proof.
 
+### Optional Source Plan Authoring
+
+Use `/source-plan-authoring` only when explicitly asking for an initial plan, Source Plan, source draft, or an audit/refinement of such a plan for later implementation or Contract authoring.
+
+It outputs one self-contained Markdown Source Plan that:
+
+- preserves direct requirements and their qualifiers;
+- marks necessary derivations and cites what they derive from;
+- turns unsupported product choices into `DEC`/`decision_required`;
+- splits Outcomes only by independently decidable observable results;
+- uses stable semantic keys and explicit anchors for important Source items;
+- separates mandatory `OBL` obligations from advisory `HINT` suggestions;
+- writes observable acceptance scenarios without hiding new requirements in AC text.
+
+It does not update project Context, bind real repository owners/paths/runners, generate Delivery Contract YAML, run implementation, create workflow state or claim completion. Its structure is an authoring fast path, not a required input protocol; ordinary prose plans remain valid Long-Task Source.
+
 ## Single-Goal Rolling Delivery
 
 Use `/long-task-workflow` only when explicitly requested or when the current worktree already has an active long task. It uses:
@@ -213,6 +231,8 @@ Use `/long-task-workflow` only when explicitly requested or when the current wor
 - targeted repair checks that never accept;
 - a complete Final Gate on one current snapshot;
 - a Stop Hook that rejects stale completion.
+
+Long-Task Contract authoring preserves stable Source keys and anchors where practical. Meaning-preserving structural decomposition and evidence-backed repository binding may continue; new business rules, defaults, recovery behavior, permissions or scope become `decision_required` instead of being silently added. Missing Source Plan headings, keys, anchors or type labels never block authoring by themselves.
 
 The platform owns physical Goal/session lifecycle. A later session runs `resume` to reconstruct semantic state; Tiny Context does not recreate the prior physical Turn.
 
@@ -343,7 +363,7 @@ Final Gate may run only Contract-declared verification commands and never produc
 
 Version 0.6.0 retires the V1 schema/runtime and repo-local Hook. Enable, disable and upgrade remove only exact Tiny Context managed Hook entries. Relocated package-owned absolute commands are recognized only when the known managed status and a known `node_modules`, pnpm or workspace-package layout both match; no-status and similar-name user Hooks remain. A command is never deleted merely because it contains `composite`. Upgrade reports unfinished V1 active state as `manual_required` and never imports V1 progress or Receipts into V2 authority. Delivery Set, `composite-campaign` and `composite-long-task` commands are non-executing tombstones.
 
-This authoring refinement stays on `long-task-delivery-v2`: expanded V2 Contracts and existing `outcome_files` continue to parse, so no V3 or Contract migration is introduced. New Authoring Preflight requires readable Assertion `criterion` text before formal Compile, while direct Compile remains compatible with older V2 Assertions that omit it.
+This authoring refinement stays on `long-task-delivery-v2`: expanded V2 Contracts and existing `outcome_files` continue to parse, so no V3 or Contract migration is introduced. Optional Source Plan authoring adds no Schema, CLI, Preflight, Compile, Validator, Receipt, Authority or state. New Contract Authoring Preflight requires readable Assertion `criterion` text before formal Compile, while direct Compile remains compatible with older V2 Assertions that omit it.
 
 `/normal-long-task` is also a retirement pointer to `/long-task-workflow`; it creates no checklist, prompt, audit, matrix, verdict or second authority.
 
@@ -360,6 +380,7 @@ npm install
 npm run format:check
 npm run typecheck --workspace project-tiny-context-harness
 npm run build --workspace project-tiny-context-harness
+node --test --test-concurrency=1 tests/ty-context/source-plan-authoring-skill.test.mjs tests/ty-context/sync-init-doctor.test.mjs tests/ty-context/workflow-contract-routing.test.mjs
 npm run test:delivery-contract --workspace project-tiny-context-harness
 npm run test:long-task-workflow --workspace project-tiny-context-harness
 npm run test:long-task-performance --workspace project-tiny-context-harness
