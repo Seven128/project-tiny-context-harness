@@ -1,9 +1,8 @@
 import type {
   AssertionOperator,
-  DeliveryAssertionV1,
-  DeliveryCheckV1,
-  DeliveryRunnerV1,
-  ProofSurface,
+  DeliveryAssertionV2,
+  DeliveryCheckV2,
+  DeliveryRunnerV2,
   RunnerType,
 } from "./long-task-delivery-types.js";
 import {
@@ -12,49 +11,42 @@ import {
   key,
   literal,
   object,
+  parseEnvironmentRequirements,
+  PROOF_SURFACES,
   string,
   strings,
 } from "./long-task-delivery-shape.js";
 
-export function parseCheck(value: unknown, label: string): DeliveryCheckV1 {
-  const row = object(
-    value,
-    label,
-    [
-      "key",
-      "proof_surface",
-      "runner",
-      "input_paths",
-      "artifact_globs",
-      "positive_assertions",
-      "negative_assertions",
-      "environment_requirements",
-    ],
-    ["verification_sources", "expected_output_paths"],
-  );
+export function parseCheck(value: unknown, label: string): DeliveryCheckV2 {
+  const row = object(value, label, [
+    "key",
+    "proof_surface",
+    "runner",
+    "verification_inputs",
+    "input_paths",
+    "expected_output_paths",
+    "artifact_globs",
+    "positive_assertions",
+    "negative_assertions",
+    "environment_requirements",
+  ]);
   return {
     key: key(row.key, `${label}.key`),
     proof_surface: literal(
       row.proof_surface,
-      [
-        "ui_browser",
-        "runtime_behavior",
-        "api_contract",
-        "data_state",
-        "security_boundary",
-        "population_coverage",
-        "implementation_structure",
-      ] as const satisfies readonly ProofSurface[],
+      PROOF_SURFACES,
       `${label}.proof_surface`,
     ),
     runner: parseRunner(row.runner, `${label}.runner`),
-    verification_sources: Object.hasOwn(row, "verification_sources")
-      ? strings(row.verification_sources, `${label}.verification_sources`)
-      : [],
+    verification_inputs: strings(
+      row.verification_inputs,
+      `${label}.verification_inputs`,
+    ),
     input_paths: strings(row.input_paths, `${label}.input_paths`),
-    expected_output_paths: Object.hasOwn(row, "expected_output_paths")
-      ? strings(row.expected_output_paths, `${label}.expected_output_paths`)
-      : [],
+    expected_output_paths: strings(
+      row.expected_output_paths,
+      `${label}.expected_output_paths`,
+    ),
     artifact_globs: strings(row.artifact_globs, `${label}.artifact_globs`),
     positive_assertions: parseAssertions(
       row.positive_assertions,
@@ -64,50 +56,29 @@ export function parseCheck(value: unknown, label: string): DeliveryCheckV1 {
       row.negative_assertions,
       `${label}.negative_assertions`,
     ),
-    environment_requirements: strings(
+    environment_requirements: parseEnvironmentRequirements(
       row.environment_requirements,
       `${label}.environment_requirements`,
     ),
   };
 }
 
-function parseRunner(value: unknown, label: string): DeliveryRunnerV1 {
-  const row = object(
-    value,
-    label,
-    ["type", "target", "argv", "cwd", "timeout_ms", "network_policy"],
-    ["effect", "retry_policy", "idempotent"],
-  );
-  const network = object(row.network_policy, `${label}.network_policy`, [
-    "mode",
-    "allowed_hosts",
+function parseRunner(value: unknown, label: string): DeliveryRunnerV2 {
+  const row = object(value, label, [
+    "type",
+    "target",
+    "argv",
+    "cwd",
+    "timeout_ms",
+    "effect",
+    "retry_policy",
+    "idempotent",
   ]);
-  const timeout = row.timeout_ms;
-  if (
-    !Number.isInteger(timeout) ||
-    Number(timeout) < 100 ||
-    Number(timeout) > 3_600_000
-  )
+  const timeout = Number(row.timeout_ms);
+  if (!Number.isInteger(timeout) || timeout < 100 || timeout > 3_600_000)
     fail(`${label}.timeout_ms`, "must be an integer from 100 to 3600000");
-  const mode = literal(
-    network.mode,
-    ["none", "loopback", "declared_hosts"] as const,
-    `${label}.network_policy.mode`,
-  );
-  const allowedHosts = strings(
-    network.allowed_hosts,
-    `${label}.network_policy.allowed_hosts`,
-  );
-  if (mode !== "declared_hosts" && allowedHosts.length)
-    fail(
-      `${label}.network_policy.allowed_hosts`,
-      "must be empty for this mode",
-    );
-  if (mode === "declared_hosts" && !allowedHosts.length)
-    fail(
-      `${label}.network_policy.allowed_hosts`,
-      "must declare at least one host for this mode",
-    );
+  if (typeof row.idempotent !== "boolean")
+    fail(`${label}.idempotent`, "must be a boolean");
   return {
     type: literal(
       row.type,
@@ -122,42 +93,34 @@ function parseRunner(value: unknown, label: string): DeliveryRunnerV1 {
     target: string(row.target, `${label}.target`),
     argv: strings(row.argv, `${label}.argv`),
     cwd: string(row.cwd, `${label}.cwd`),
-    timeout_ms: Number(timeout),
-    network_policy: { mode, allowed_hosts: allowedHosts },
-    effect: Object.hasOwn(row, "effect")
-      ? literal(
-          row.effect,
-          ["read_only", "test_sandbox"] as const,
-          `${label}.effect`,
-        )
-      : "read_only",
-    retry_policy: Object.hasOwn(row, "retry_policy")
-      ? literal(
-          row.retry_policy,
-          ["none", "transient_once"] as const,
-          `${label}.retry_policy`,
-        )
-      : "none",
-    idempotent: Object.hasOwn(row, "idempotent")
-      ? (() => {
-          if (typeof row.idempotent !== "boolean")
-            fail(`${label}.idempotent`, "must be a boolean");
-          return row.idempotent;
-        })()
-      : false,
+    timeout_ms: timeout,
+    effect: literal(
+      row.effect,
+      ["read_only", "test_sandbox"] as const,
+      `${label}.effect`,
+    ),
+    retry_policy: literal(
+      row.retry_policy,
+      ["none", "transient_once"] as const,
+      `${label}.retry_policy`,
+    ),
+    idempotent: row.idempotent,
   };
 }
 
-function parseAssertions(value: unknown, label: string): DeliveryAssertionV1[] {
+function parseAssertions(value: unknown, label: string): DeliveryAssertionV2[] {
   return array(value, label).map((item, index) => {
+    const itemLabel = `${label}[${index}]`;
     const row = object(
       item,
-      `${label}[${index}]`,
-      ["observation", "operator"],
+      itemLabel,
+      ["key", "claims", "observation", "operator"],
       ["expected"],
     );
     return {
-      observation: string(row.observation, `${label}[${index}].observation`),
+      key: key(row.key, `${itemLabel}.key`),
+      claims: strings(row.claims, `${itemLabel}.claims`),
+      observation: string(row.observation, `${itemLabel}.observation`),
       operator: literal(
         row.operator,
         [
@@ -179,7 +142,7 @@ function parseAssertions(value: unknown, label: string): DeliveryAssertionV1[] {
           "subset_of",
           "superset_of",
         ] as const satisfies readonly AssertionOperator[],
-        `${label}[${index}].operator`,
+        `${itemLabel}.operator`,
       ),
       ...(Object.hasOwn(row, "expected") ? { expected: row.expected } : {}),
     };

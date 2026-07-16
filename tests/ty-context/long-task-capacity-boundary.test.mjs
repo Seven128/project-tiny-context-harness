@@ -21,11 +21,11 @@ test("Contract Bundle normalizes fragment order and remains one authority", asyn
     await mkdir(path.join(fixture.workdir, "outcomes"), { recursive: true });
     await writeFile(
       path.join(fixture.workdir, "outcomes/first.yaml"),
-      YAML.stringify({ schema_version: "long-task-outcomes-v1", outcomes: [first] }),
+      YAML.stringify({ schema_version: "long-task-outcomes-v2", outcomes: [first] }),
     );
     await writeFile(
       path.join(fixture.workdir, "outcomes/second.yaml"),
-      YAML.stringify({ schema_version: "long-task-outcomes-v1", outcomes: [second] }),
+      YAML.stringify({ schema_version: "long-task-outcomes-v2", outcomes: [second] }),
     );
     await writeFile(
       path.join(fixture.workdir, "delivery-contract.yaml"),
@@ -51,13 +51,13 @@ test("Contract Bundle normalizes fragment order and remains one authority", asyn
     second.title = "changed fragment authority";
     await writeFile(
       path.join(fixture.workdir, "outcomes/second.yaml"),
-      YAML.stringify({ schema_version: "long-task-outcomes-v1", outcomes: [second] }),
+      YAML.stringify({ schema_version: "long-task-outcomes-v2", outcomes: [second] }),
     );
     const status = await runCli(fixture.root, [
       "long-task", "status", fixture.workdir,
     ]);
     assert.ok(status.findings.some((item) => item.code.includes("contract_changed")));
-    assert.equal(status.final_result, "none");
+    assert.equal(status.final_result, "no_final_gate");
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }
@@ -119,7 +119,7 @@ test("Boundary Check separates semantic delivery boundaries from capacity", () =
       split_motivations: ["product_boundaries"],
       candidates: [candidate, { ...candidate, separation_reason: "different_risk_or_approval_boundary" }],
     }),
-    "delivery_set",
+    "separate_top_level_contracts",
   );
   assert.equal(
     evaluateContractBoundary({

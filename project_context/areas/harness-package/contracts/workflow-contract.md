@@ -38,8 +38,8 @@ The default path requires no `plan.md`, Task Contract, mapping table, matrix, ve
 
 Routing order is:
 
-1. An active Long-Task binding in the current worktree resumes through `/long-task-workflow` and `ty-context long-task resume`.
-2. Explicit `/long-task-workflow` performs one semantic Boundary Check, then creates, compiles, executes or resumes one Contract/Bundle or Delivery Set authority in the current native Goal.
+1. A valid common-dir active record plus matching worktree Git-config marker resumes through `/long-task-workflow` and `ty-context long-task resume`.
+2. Explicit `/long-task-workflow` performs one semantic Boundary Check, then creates, compiles, executes or resumes one V2 Contract/Bundle authority in the current native Goal.
 3. Explicit `/normal-long-task` returns a retirement pointer to `/long-task-workflow`; it creates no artifacts.
 4. Otherwise remain on the default Workflow Contract, regardless of apparent duration or file count.
 
@@ -48,8 +48,8 @@ Do not auto-detect or auto-activate long-task state.
 ## Entry Risk Levels
 
 - L0 local: reversible, Context-complete, no durable API/schema/data/security/recovery/product change, directly testable and no cross-session recovery need. Use default Workflow only.
-- L1 standard: multiple observable Outcomes/Children or recovery need, no L2 trigger, reliable executable verification. Use one Contract/Bundle/Set authority, native Goal/workspace, scoped progress, Final Gate and Stop freshness.
-- L2 strict: public API/schema, persistent data, migration, security/permission boundary, irreversible external effect, full population, or critical-path work with weak end-to-end observability. Compiler raises the floor and enforces applicable proof; V1 rejects multi-repository delivery.
+- L1 standard: multiple observable Outcomes or recovery need, no L2 trigger, reliable executable verification. Use one Contract/Bundle authority, native Goal/workspace, scoped progress and Live Final Gate.
+- L2 strict: public API/schema, persistent data, migration, security/permission boundary, irreversible external effect, full population, or critical-path work with weak end-to-end observability. Compiler raises the floor and enforces proof on each affected Outcome; multi-repository delivery is rejected.
 
 An explicit user request may raise risk to strict. Neither Skill nor execution may lower the compiler floor.
 
@@ -57,26 +57,25 @@ An explicit user request may raise risk to strict. Neither Skill nor execution m
 
 The workflow is:
 
-`request/source -> Source Claims -> relevant Context -> Contract/Bundle or Delivery Set -> static compile/Authority Lock -> native Goal rolling Frontier -> scoped targeted progress/Child Gates -> clean candidate commit -> same-snapshot top-level Final Gate -> Stop freshness -> external Git/CI/deploy/human confirmation -> Context drift check`
+`request/source -> Source Claims -> relevant Context -> V2 Contract/Bundle -> Claim Coverage/static compile -> native Goal rolling Frontier -> scoped targeted progress -> clean candidate commit -> source-recompiled Live Final Gate -> external Git/CI/deploy/human confirmation -> Context drift check`
 
-Capacity never creates semantic Children. Bundle fragments remain one authority. A Delivery Set requires observable/executable/independently bounded Children and retains one top-level scope and Receipt. Protected authority changes after execution require explicit revision approval; technical amendments retain the immutable first baseline. Machine acceptance is limited to declared Checks and does not imply external confirmation.
+Capacity never creates semantic Children. Bundle fragments remain one authority; independent top-level boundaries run as separate Contracts and Delivery Set stays retired. Protected authority reductions require explicit revision approval, risk downgrade is rejected, and the immutable first baseline remains. Machine acceptance is limited to declared Claims/Checks and does not imply external confirmation.
 
 - Harness does not create or simulate the native Goal. The current session is the Goal; a new session recovers semantic state, not the prior physical Turn.
 - The user-selected workspace is the execution surface. No internal parallel mutation, extra worktree, branch, agent or worker is created.
 - Outcome is an acceptance unit. Dependencies determine readiness only. The current Goal chooses a temporary Frontier and rolls out file/function/test details only for that Frontier.
 - `delivery-contract.yaml` contains Product, Technical Boundary and Acceptance logical authority in one strict file. `source.md` may preserve provenance but has no execution authority.
 - The Contract records complete observable ends, stable obligations/boundaries/path envelopes/forbidden shortcuts/recovery requirements and falsifiable checks. It does not record a complete file-level procedure.
-- Compiler-generated Outcome/Check ids replace handwritten cross-entity references. Contract edits are normal Git history; there is no Packet chain or second plan.
+- Compiler-generated Outcome/Check/Claim ids replace handwritten cross-entity references. Contract edits are normal Git history; there is no Packet chain or second plan.
 
 ## Compile, Verification And Completion
 
-- Compile performs only static work: strict schema/key validation, dependency/id generation, Context/source/path/runner/proof checks, deterministic risk classification and complete identity freeze. It never implements code or invokes a model.
+- Compile performs only static work: strict V2 schema/key validation, Claim generation/coverage, owner/binding/path checks, resolved-runner/verification-input freeze, per-Outcome risk proof and complete identity freeze.
 - Static Contract errors block product implementation. Product/acceptance/architecture semantic conflicts return to the user; local code/check failures stay in the same Goal; retry defaults to none and one transient retry requires explicit idempotent read-only/test-sandbox policy.
 - Targeted verify may run one Check, one Outcome or all requested repair checks. It writes derived current-snapshot status but never accepted authority.
 - Final Gate creates one current snapshot and reruns all global and Outcome Checks. Only fully equal execution identities may be deduplicated inside that Gate; historical results are never reused.
 - Bottom-up Task acceptance requires every Outcome/Check and strict/global obligation. Manual-only outcomes remain external/manual acceptance required and cannot be machine accepted.
-- Contract/source/relevant Context/runner/oracle/verifier/workspace changes invalidate prior results. Stop permits completion only for an exact fresh accepted Receipt.
-- `close` clears only a matching fresh accepted binding and retains Contract/final Receipt. `abandon` clears matching temporary state without deleting authored Contract/source or touching Git/remotes.
+- Contract/source/relevant Context/runner/oracle/verifier/workspace changes stale audit results. Stop and close always run the Live Final Gate and never trust prior Receipts/cache; success clears the matching common-dir record/config marker.
 
 ## Scope And Risk Escalation
 

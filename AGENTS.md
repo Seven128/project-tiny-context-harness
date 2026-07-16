@@ -13,13 +13,13 @@
 <!-- ty-context:managed:begin -->
 # Minimal Context Harness Protocol
 
-This project uses Tiny Context. The Harness maintains durable Context and workflow authority; project tests, CI, browser/runtime evidence and human acceptance prove product quality.
+This project uses Tiny Context. The Harness maintains durable Context and workflow authority; project tests, CI, runtime evidence and human acceptance prove product quality.
 
 Tiny Context has three capabilities:
 
 - Minimal Context: durable project facts in `project_context/**`.
 - Workflow Contract: lightweight default engineering behavior.
-- Single-Goal Long-Task Workflow: explicit rolling delivery with machine completion authority.
+- Single-Goal Long-Task Workflow: explicit rolling delivery with a live machine-completion gate.
 
 ## Default Workflow Contract
 
@@ -40,51 +40,46 @@ For external product, architecture, technical or acceptance sources, internally 
 
 Do not infer long-task mode from duration, complexity, file count or agent preference.
 
-Routing precedence:
+1. If the Git common-dir active record and matching worktree Git-config marker exist, resume its workdir with `ty-context long-task resume <workdir>` in the current native Goal.
+2. If the user explicitly invokes `/long-task-workflow`, perform the semantic Contract Boundary Check, then prepare or resume one `long-task-delivery-v2` Contract or logical Contract Bundle in the current native Goal.
+3. `/normal-long-task` is a retirement pointer only. Otherwise remain on the default Workflow Contract, even when work is long.
 
-1. If `.codex/ty-context-active-long-task.json` exists in the current repository, resume its workdir with `ty-context long-task resume <workdir>` in the current native Goal.
-2. If the user explicitly invokes `/long-task-workflow`, run the semantic Contract Boundary Check, then prepare or resume one `long-task-delivery-v1` Contract/Contract Bundle or one `long-task-delivery-set-v1` composition in the current native Goal.
-3. `/normal-long-task` is a retirement pointer only and routes to `/long-task-workflow`; it creates no checklist, target prompt or second authority.
-4. Otherwise remain on the default Workflow Contract, even when work is long.
+The workflow uses exactly one native Goal and one selected repository/workspace. A large atomic delivery remains one logical Contract and may split only Outcome fragments under one root `delivery-contract.yaml`. Genuinely independent top-level deliveries run as separate Contracts; `delivery-set` is a fixed retired tombstone. Outcomes are acceptance/dependency units, not workers, branches, worktrees or model sessions.
 
-The long-task workflow uses exactly one native Goal and one selected repository/workspace. A large atomic delivery remains one logical Contract and may split only Outcome fragments under one root `delivery-contract.yaml`. Genuinely independent release/rollback/owner/risk/product boundaries may form one Delivery Set with multiple Child Contracts, but the Set remains the sole top-level completion authority. Outcomes and Children are acceptance/dependency units, not workers, branches, worktrees or model-session units.
-
-The supported CLI is:
+Supported CLI:
 
 - `ty-context long-task init <workdir>`
-- `ty-context long-task compile <workdir>`
+- `ty-context long-task compile <workdir> [--revise]`
 - `ty-context long-task approve-authority-revision <workdir> --revision <sha>`
+- `ty-context long-task explain <workdir>`
 - `ty-context long-task verify <workdir> [--outcome <key>] [--check <key>]`
-- `ty-context long-task status <workdir>`
-- `ty-context long-task resume <workdir>`
-- `ty-context long-task final-gate <workdir>`
+- `ty-context long-task status|resume|doctor|final-gate <workdir>`
 - `ty-context long-task stop-check <workdir> [--message <text>]`
-- `ty-context long-task close <workdir>`
-- `ty-context long-task abandon <workdir>`
-- `ty-context delivery-set init|compile|status|resume|final-gate|stop-check|close|abandon <setdir>`
-- `ty-context delivery-set approve-authority-revision <setdir> --revision <sha>`
+- `ty-context long-task close|abandon <workdir>`
 
-Compile freezes source coverage, protected authority hashes, an immutable initial base, relevant Context and complete verifier/runner sources. Targeted verify accumulates scoped per-Check progress and never grants acceptance. Child Gate produces only `contract_gate_passed`. A standalone or Delivery Set Final Gate requires a clean candidate commit, creates one current snapshot, reruns all required checks on it and binds HEAD/tree/workspace/authority identities. Stop trusts only the matching fresh top-level Receipt. External confirmations remain explicit and machine acceptance never implies CI/deploy/human acceptance.
+Contract V2 compiles Product/Control/Non-completing/Technical Claims and rejects uncovered Claims. It freezes source coverage, owner/path/binding authority, an immutable initial base, relevant Context, resolved runners and explicit verification inputs. Targeted verify accumulates scoped per-Check progress and never grants acceptance.
 
-Risk routing is deterministic. L0 stays on the default workflow. L1 uses standard long-task delivery. Public API/schema, persistent data, migration, security/permission boundaries, irreversible effects, full-population operations, or a critical path with weak observability impose an L2 strict floor. Declared and configured changed-path risk surfaces are checked; true facts require evidence. Multi-repository delivery is rejected in V1.
+Status, progress, receipts and compiled cache are audit/recovery surfaces only. Final Gate, Stop and close recompile the source Contract, require the common-dir record/config marker to agree, require a clean candidate commit, create a Git-tree snapshot, and rerun every required Check. Successful Stop or close atomically clears the active binding. External confirmations remain explicit; machine acceptance never implies CI, deployment or human acceptance.
 
-Tiny Context does not create or restore platform Goals, invoke models, spawn sub-agents, call an App Server, create branches/worktrees, merge, push, open PRs or manage process trees. Only Contract-declared project verification runners may execute product checks. Retired `composite-campaign` and `composite-long-task` commands are non-executing tombstones.
+Risk routing is per Outcome. Public API/schema, persistent data, migration, security/permission boundaries, irreversible effects, full-population operations, or a critical path with weak observability impose strict proof on the affected Outcome. Risk downgrades are rejected. Multi-repository delivery is unsupported.
+
+Tiny Context does not create or restore platform Goals, invoke models, spawn agents, call an App Server, create branches/worktrees, merge, push, open PRs or manage process trees. Only Contract-declared project verification runners may execute product checks. Network isolation is the responsibility of the external platform.
 
 ## Durable Facts And Generated Surfaces
 
 - Context is intended ownership/boundary/contract truth; code is current implementation truth. Treat disagreement as drift, missing work or stale Context.
-- Long-term facts only go in `project_context/**` or `DESIGN.md` for durable visual-system facts. Do not store logs, raw evidence, secrets, runtime state or acceptance receipts there.
-- Role-specific product/UIUX/development/surface work uses the matching `context_*` Skill when explicitly requested.
-- Full-project/source-pack/code-index exports stay under `tmp/ty-context/context-exports/**` and never enter Context.
+- Long-term facts only go in `project_context/**` or `DESIGN.md`. Do not store logs, raw evidence, secrets, runtime state or receipts there.
+- Full-project/source-pack exports stay under `tmp/ty-context/context-exports/**` and never enter Context.
 - Explicit Tiny Context upgrades use `context_harness_upgrade` and run `upgrade` before standalone `sync`.
-- Managed `AGENTS.md` blocks, `<harnessRoot>/ty-context-managed/**` and package-managed Skills are generated and sync-overwritten. Project-specific rules belong in separate project-local Skills.
-- `init`, `sync` and `upgrade` install or refresh enabled capabilities only. They never import or execute historical long-task/Campaign files.
-- Non-Codex defaults install portable core/workflow only; `ty-context enable long-task` explicitly installs the Long-Task Workflow Skill and completion Hook.
+- Managed `AGENTS.md` blocks, `<harnessRoot>/ty-context-managed/**` and package-managed Skills are generated and sync-overwritten.
+- Non-Codex defaults install portable core/workflow only; `ty-context enable long-task` explicitly installs the Long-Task Workflow Skill and package-owned completion Hook.
+- `init`, `sync` and `upgrade` never import or execute historical V1/Campaign state. Version 0.6.0 reports unfinished V1 authority as a manual migration and installs only the package-owned V2 Hook.
 
 ## Verification
 
 - `make validate-context`: Context recoverability only.
 - `make validate-harness`: Context plus touched-source modularity.
+- `npm run test:long-task-performance --workspace project-tiny-context-harness`: independent large-repository budgets.
 - `npx --yes --package project-tiny-context-harness@latest ty-context package check-source`: managed-source/package drift.
 
 Every handoff reports exactly one of `Context: updated ...` or `Context: no durable fact change`. Never claim tests, deployment or acceptance from Context alone.

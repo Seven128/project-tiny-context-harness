@@ -62,7 +62,7 @@ No-install preview:
 
 ## Why It Exists
 
-`project_context/**` preserves small durable facts across sessions. The default workflow reads only graph-relevant Context and uses the platform's internal plan. For explicit long work, `long-task-delivery-v1` and optional `long-task-delivery-set-v1` add one top-level Contract/Bundle/Set authority, scoped progress, a same-snapshot Final Gate and Stop freshness.
+`project_context/**` preserves small durable facts across sessions. The default workflow reads only graph-relevant Context and uses the platform's internal plan. For explicit long work, `long-task-delivery-v2` adds one Contract/Bundle authority, compiled Claim Coverage, scoped progress and a source-recompiled Live Final Gate.
 
 Minimal Context preserves durable facts, the Workflow Contract governs ordinary work, and the Long-Task Workflow adds explicit machine completion authority.
 
@@ -137,7 +137,7 @@ npm ci
 npm run smoke:quickstart
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.5.0.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.6.0.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -168,28 +168,29 @@ Newly generated Harness configs default to `strict_except_generated`. Generated/
 
 ## Single-Goal Rolling Delivery
 
-The explicit Long-Task Workflow uses one platform-native Goal, one user-selected repository/workspace and one top-level Contract/Contract Bundle or Delivery Set authority. Outcome/Child dependencies express acceptance readiness; the current Goal keeps file-level implementation detail in a rolling internal Frontier.
+The explicit Long-Task Workflow uses one platform-native Goal, one user-selected repository/workspace and one `long-task-delivery-v2` Contract or logical Contract Bundle. Outcome dependencies express acceptance readiness; Delivery Set orchestration is retired.
 
 ```text
 ty-context long-task init <workdir>
 ty-context long-task compile <workdir>
+ty-context long-task compile <workdir> --revise
 ty-context long-task approve-authority-revision <workdir> --revision <sha>
+ty-context long-task explain <workdir>
 ty-context long-task verify <workdir> [--outcome <key>] [--check <key>]
 ty-context long-task status <workdir>
 ty-context long-task resume <workdir>
+ty-context long-task doctor <workdir>
 ty-context long-task final-gate <workdir>
 ty-context long-task stop-check <workdir> [--message <text>]
 ty-context long-task close <workdir>
 ty-context long-task abandon <workdir>
-ty-context delivery-set init|compile|status|resume|final-gate|stop-check|close|abandon <setdir>
-ty-context delivery-set approve-authority-revision <setdir> --revision <sha>
 ```
 
-Compile strictly validates schema, source coverage, keys, dependencies, Context/paths/runners/proof and declared/configured/changed-path risk before implementation. It freezes protected authority, complete verifier sources and an immutable initial baseline.
+Compile generates Product/Control/Non-completing/Technical Claims, rejects uncovered Claims, validates source coverage, owner/binding/path authority and per-Outcome risk, then freezes resolved runners, verification inputs, verifier sources and an immutable initial baseline.
 
-Targeted verify accumulates scoped per-Check Progress Records and can never accept. A Child Gate produces only `contract_gate_passed`. Top-level Final Gate requires a clean candidate commit and reruns every required Check on one current snapshot; a Set Gate reruns all Child and integration Checks and alone produces `delivery_set_accepted`. Stop permits completion only while the matching top-level Receipt remains fresh. `resume` is read-only, `close` requires fresh acceptance, and draft `abandon` is idempotent and preserves authored source/Contract/Set files and Git.
+Targeted verify accumulates scoped per-Check Progress Records and can never accept. Final Gate, Stop and close recompile source authority, require the Git common-dir record/config marker to match, require a clean candidate commit and rerun every Check on one Git-tree snapshot. Status, Receipts and compiled cache are audit/recovery data only. Successful Stop/close clears the binding atomically.
 
-A large atomic task uses one logical Contract Bundle with Outcome-only `outcome_files`. A Delivery Set is reserved for independently observable, executable and release/rollback/owner/risk/product-bounded Children; it owns source coverage, integration Checks and top-level completion but never schedules Children or creates Goals/agents/branches/worktrees. Protected authority changes after execution require explicit hash-bound revision approval; technical amendments retain the first baseline and stale affected progress.
+A large atomic task uses one logical Contract Bundle with Outcome-only `outcome_files`. Independent top-level boundaries run as separate Contracts; `delivery-set` is a fixed non-executing tombstone. Protected authority reductions require exact hash-bound revision approval; risk downgrade is rejected.
 
 Supported runners: `package_script`, `project_binary`, `node_oracle`, `playwright_test`.
 
@@ -197,11 +198,11 @@ Supported proof surfaces: `ui_browser`, `runtime_behavior`, `api_contract`, `dat
 
 ## Risk And Evidence
 
-L0 local work stays on the default workflow. L1 standard long work uses the Delivery Contract. L2 strict is the minimum for public API/schema, persistent data, migration, security/permission boundaries, irreversible effects, full-population operations, or a critical path with weak observability. Multi-repository delivery is rejected in V1.
+L0 local work stays on the default workflow. L1 standard long work uses the Delivery Contract. L2 strict is the minimum for public API/schema, persistent data, migration, security/permission boundaries, irreversible effects, full-population operations, or a critical path with weak observability. Strict proof binds to the affected Outcome; multi-repository delivery is rejected.
 
 Users may raise risk to strict. Explicit `standard` below the computed floor fails. Strict negative, counterfactual, population, security, environment and rollback/recovery proof is compiler-enforced as applicable. Scope escape returns `scope_or_risk_escalation_required` for revision and recompilation in the same Goal.
 
-Agent prose, a command exit code, handwritten state, historical targeted/Child passes and missing/weak proof cannot create accepted. Final Gate runs only Contract-declared project verification commands and never production mutation. Verification retry defaults to none and is allowed once only for explicitly idempotent read-only/test-sandbox transient runners; network environment hints are not an OS sandbox. A Receipt binds clean HEAD/tree, workspace, source, Context, authority and verifier identity. Machine acceptance does not imply CI/deployment/human confirmation; declared external confirmations remain pending.
+Agent prose, a command exit code, handwritten state, historical targeted passes and missing/weak proof cannot create accepted. Counterfactual V2 accepts only exact designated Assertion failures; Population V2 proves entity sets; structured environment probes block before runner start. Network isolation remains external. Receipts are audit-only and machine acceptance does not imply CI/deployment/human confirmation.
 
 ## Upgrade And Compatibility
 
@@ -210,7 +211,7 @@ ty-context upgrade
 ty-context sync
 ```
 
-Version 0.5.0 safely migrates the retired `composite-codex` profile selection to `long-task`, removes package-owned retired assets and preserves user historical files without importing or executing them. The retired `composite-campaign` and `composite-long-task` names are non-executing command tombstones. `/normal-long-task` is a retirement pointer to `/long-task-workflow` and creates no competing artifacts.
+Version 0.6.0 retires V1 and the repo-local Hook. Upgrade removes the old Hook, reports unfinished V1 active state as `manual_required`, never imports V1 progress/Receipts into V2, and keeps Delivery Set/composite commands as non-executing tombstones.
 
 After updating the package, run `ty-context upgrade`. Use `ty-context upgrade --check` first when you need a read-only plan.
 
@@ -224,6 +225,7 @@ npm run typecheck --workspace project-tiny-context-harness
 npm run build --workspace project-tiny-context-harness
 npm run test:delivery-contract --workspace project-tiny-context-harness
 npm run test:long-task-workflow --workspace project-tiny-context-harness
+npm run test:long-task-performance --workspace project-tiny-context-harness
 npm test
 npm run smoke:quickstart
 npm run preview:pack
@@ -234,7 +236,7 @@ make validate-harness
 
 The modularity gate is `ty-context check-modularity`. Scoped waivers require `owner`, `introduced_at`, `reason`, `tracking_issue` and `expiry_condition`.
 
-The synchronized local preview tarball is named `project-tiny-context-harness-0.5.0.tgz`.
+The synchronized local preview tarball is named `project-tiny-context-harness-0.6.0.tgz`.
 
 ## Community And Further Reading
 
@@ -253,7 +255,7 @@ For concrete examples, see the [fresh-agent recovery walkthrough](https://github
 
 ## Honest Limits
 
-Tiny Context does not create or restore a platform Goal, prove that every requirement was declared, provide core parallel mutation, observe platform tokens/model calls, or own Git/PR/CI/deployment/human product confirmation. Runner network policy is not an OS sandbox, and deliberate same-user/admin tampering or system Hook bypass is outside its security boundary.
+Tiny Context does not create or restore a platform Goal, prove that every requirement was declared, provide core parallel mutation, observe platform tokens/model calls, or own Git/PR/CI/deployment/human product confirmation. The installed package verifier and Git metadata are trusted; external platforms own network isolation, and deliberate same-user/admin tampering remains outside the local threat model.
 
 ## License
 

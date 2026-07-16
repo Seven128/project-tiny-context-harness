@@ -152,12 +152,20 @@ test("long_task_enable_installs_only_current Skill and Hooks", async () => {
     for (const file of [
       ".agent/skills/long-task-workflow/SKILL.md",
       ".codex/hooks.json",
-      ".codex/hooks/long-task-hook.mjs",
     ]) {
       await stat(path.join(root, file));
     }
+    assert.equal(
+      await exists(path.join(root, ".codex/hooks/long-task-hook.mjs")),
+      false,
+    );
     const hooks = await readFile(path.join(root, ".codex/hooks.json"), "utf8");
-    assert.match(hooks, /Tiny Context long-task authority gate/);
+    assert.match(hooks, /Tiny Context long-task live authority gate/);
+    const parsedHooks = JSON.parse(hooks);
+    assert.match(
+      parsedHooks.hooks.Stop[0].hooks[0].command,
+      /dist[\\/]long-task-hook\.js/,
+    );
     assert.equal((hooks.match(/"SessionStart"/g) ?? []).length, 1);
     assert.equal((hooks.match(/"PostCompact"/g) ?? []).length, 1);
     assert.equal((hooks.match(/"Stop"/g) ?? []).length, 1);

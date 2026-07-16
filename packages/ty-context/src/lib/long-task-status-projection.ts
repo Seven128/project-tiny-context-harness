@@ -1,40 +1,41 @@
 import type {
-  CompiledDeliveryContractV1,
-  FinalReceiptV1,
-  LongTaskFindingV1,
-  OutcomeStatusV1,
-  ProgressRecordV1,
-  WorkspaceManifestV1,
+  CompiledDeliveryContractV2,
+  FinalReceiptV2,
+  LongTaskFindingV2,
+  OutcomeStatusV2,
+  ProgressRecordV2,
+  WorkspaceManifestV2,
 } from "./long-task-delivery-types.js";
 import { progressRecordFresh } from "./long-task-progress.js";
 
-interface StatusProjectionInput {
-  compiled: CompiledDeliveryContractV1;
-  manifest: WorkspaceManifestV1;
+interface StatusProjectionInputV2 {
+  compiled: CompiledDeliveryContractV2;
+  manifest: WorkspaceManifestV2;
   stale: string[];
-  progress: Record<string, ProgressRecordV1>;
-  receipt: FinalReceiptV1 | null;
+  progress: Record<string, ProgressRecordV2>;
+  receipt: FinalReceiptV2 | null;
   receiptError: string | null;
 }
 
-export function projectDeliveryStatus(input: StatusProjectionInput): {
-  finalResult:
-    | "none"
-    | "machine_accepted_fresh"
-    | "machine_accepted_external_pending_fresh"
-    | "accepted_stale"
-    | "needs_work";
-  outcomes: Record<string, OutcomeStatusV1>;
+export type AuditGateStatusV2 =
+  | "no_final_gate"
+  | "last_gate_passed"
+  | "last_gate_failed"
+  | "last_gate_blocked"
+  | "last_gate_inputs_stale";
+
+export function projectDeliveryStatus(input: StatusProjectionInputV2): {
+  finalResult: AuditGateStatusV2;
+  outcomes: Record<string, OutcomeStatusV2>;
   readyOutcomes: string[];
   needsReverify: string[];
   progressPassing: string[];
   progressFailing: string[];
-  findings: LongTaskFindingV1[];
+  findings: LongTaskFindingV2[];
 } {
-  const finalFresh = isFinalFresh(input);
-  const outcomes = projectOutcomes(input, finalFresh);
+  const outcomes = projectOutcomes(input);
   return {
-    finalResult: projectFinalResult(input, finalFresh),
+    finalResult: projectFinalResult(input),
     outcomes,
     readyOutcomes: readyOutcomes(input.compiled, outcomes),
     needsReverify: Object.entries(outcomes)
@@ -52,30 +53,11 @@ export function projectDeliveryStatus(input: StatusProjectionInput): {
   };
 }
 
-function isFinalFresh(input: StatusProjectionInput): boolean {
-  const { receipt, compiled, manifest, stale, receiptError } = input;
-  return Boolean(
-    receipt &&
-    (receipt.workflow_status === "machine_accepted" ||
-      receipt.workflow_status === "machine_accepted_external_pending") &&
-    receipt.compiled_identity === compiled.compiled_identity &&
-    receipt.snapshot_sha256 === manifest.snapshot_sha256 &&
-    receipt.git_head === manifest.git_head &&
-    stale.length === 0 &&
-    !receiptError,
-  );
-}
-
 function projectOutcomes(
-  input: StatusProjectionInput,
-  finalFresh: boolean,
-): Record<string, OutcomeStatusV1> {
-  const outcomes: Record<string, OutcomeStatusV1> = {};
+  input: StatusProjectionInputV2,
+): Record<string, OutcomeStatusV2> {
+  const outcomes: Record<string, OutcomeStatusV2> = {};
   for (const outcome of input.compiled.outcomes) {
-    if (finalFresh) {
-      outcomes[outcome.key] = "progress_passing";
-      continue;
-    }
     const states = outcome.acceptance.checks.map((check) => {
       const record = input.progress[check.internal_id];
       if (!record) return "unverified" as const;
@@ -84,11 +66,10 @@ function projectOutcomes(
         !progressRecordFresh(record, input.compiled, input.manifest, check)
       )
         return "progress_stale" as const;
-      return record.result === "passed"
-        ? ("progress_passing" as const)
-        : record.result === "failed"
-          ? ("progress_failing" as const)
-          : ("blocked_external" as const);
+      if (record.result === "passed") return "progress_passing" as const;
+      if (record.result === "blocked_external")
+        return "blocked_external" as const;
+      return "progress_failing" as const;
     });
     outcomes[outcome.key] = states.includes("progress_failing")
       ? "progress_failing"
@@ -104,8 +85,8 @@ function projectOutcomes(
   return outcomes;
 }
 
-function projectFindings(input: StatusProjectionInput): LongTaskFindingV1[] {
-  const findings: LongTaskFindingV1[] = input.stale.map((code) => ({
+function projectFindings(input: StatusProjectionInputV2): LongTaskFindingV2[] {
+  const findings: LongTaskFindingV2[] = input.stale.map((code) => ({
     code,
     outcome_key: null,
     check_key: null,
@@ -117,9 +98,9 @@ function projectFindings(input: StatusProjectionInput): LongTaskFindingV1[] {
       code: input.receiptError,
       outcome_key: null,
       check_key: null,
-      message: "Final authority is missing or mismatched.",
-      next_action:
-        "Run the complete Final Gate; handwritten state is not accepted.",
+      message:
+        "The last audit Receipt is invalid; it has no acceptance authority.",
+      next_action: "Run a new Live Final Gate.",
     });
   for (const record of Object.values(input.progress))
     if (
@@ -136,8 +117,8 @@ function projectFindings(input: StatusProjectionInput): LongTaskFindingV1[] {
 }
 
 function readyOutcomes(
-  compiled: CompiledDeliveryContractV1,
-  outcomes: Record<string, OutcomeStatusV1>,
+  compiled: CompiledDeliveryContractV2,
+  outcomes: Record<string, OutcomeStatusV2>,
 ): string[] {
   return compiled.outcomes
     .filter(
@@ -150,21 +131,18 @@ function readyOutcomes(
     .map((outcome) => outcome.key);
 }
 
-function projectFinalResult(
-  input: StatusProjectionInput,
-  finalFresh: boolean,
-):
-  | "none"
-  | "machine_accepted_fresh"
-  | "machine_accepted_external_pending_fresh"
-  | "accepted_stale"
-  | "needs_work" {
-  if (finalFresh)
-    return input.receipt?.workflow_status ===
-      "machine_accepted_external_pending"
-      ? "machine_accepted_external_pending_fresh"
-      : "machine_accepted_fresh";
-  if (input.receipt) return "accepted_stale";
-  if (Object.keys(input.progress).length) return "needs_work";
-  return "none";
+function projectFinalResult(input: StatusProjectionInputV2): AuditGateStatusV2 {
+  if (!input.receipt) return "no_final_gate";
+  if (
+    input.receiptError ||
+    input.stale.length ||
+    input.receipt.compiled_identity !== input.compiled.compiled_identity ||
+    input.receipt.snapshot_sha256 !== input.manifest.snapshot_sha256 ||
+    input.receipt.git_head !== input.manifest.git_head
+  )
+    return "last_gate_inputs_stale";
+  if (input.receipt.workflow_status === "blocked_external")
+    return "last_gate_blocked";
+  if (input.receipt.workflow_status === "needs_work") return "last_gate_failed";
+  return "last_gate_passed";
 }

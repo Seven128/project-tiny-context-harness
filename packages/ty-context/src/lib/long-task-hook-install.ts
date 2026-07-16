@@ -1,38 +1,38 @@
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { packageAssetPath } from "./paths.js";
+import { fileURLToPath } from "node:url";
 import { pathExists } from "./fs.js";
 import type { SyncReport } from "./sync-engine.js";
 
-const MANAGED_STATUS = "Tiny Context long-task authority gate";
+const MANAGED_STATUS = "Tiny Context long-task live authority gate";
 const LEGACY_MANAGED_STATUSES = new Set([
+  "Tiny Context long-task live authority gate",
+  "Tiny Context long-task authority gate",
   "Tiny Context long-task completion gate",
   "Tiny Context composite completion gate",
-  MANAGED_STATUS,
 ]);
-const COMMAND =
-  'node "$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs"';
-const WINDOWS =
-  "powershell -NoProfile -Command \"$r=(git rev-parse --show-toplevel); node (Join-Path $r '.codex/hooks/long-task-hook.mjs')\"";
+
 export async function installLongTaskHooks(
   projectRoot: string,
   report: SyncReport,
 ): Promise<void> {
-  const source = packageAssetPath("hooks", "long-task-hook.mjs");
-  if (!(await pathExists(source))) {
-    report.skipped.push(".codex/hooks/long-task-hook.mjs");
+  const packageRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entry = path.join(packageRoot, "dist", "long-task-hook.js");
+  if (!(await pathExists(entry))) {
+    report.blocked.push("package-owned dist/long-task-hook.js is missing");
     return;
   }
-  const script = path.join(
+  const legacyScript = path.join(
     projectRoot,
     ".codex",
     "hooks",
     "long-task-hook.mjs",
   );
-  await mkdir(path.dirname(script), { recursive: true });
-  if (await writeIfChanged(script, await readFile(source, "utf8")))
+  if (await pathExists(legacyScript)) {
+    await rm(legacyScript, { force: true });
     report.changed.push(".codex/hooks/long-task-hook.mjs");
-  else report.skipped.push(".codex/hooks/long-task-hook.mjs");
+  }
+  const command = packageOwnedCommand(entry);
   const config = path.join(projectRoot, ".codex", "hooks.json");
   let root: Record<string, unknown> = {};
   if (await pathExists(config)) {
@@ -57,9 +57,9 @@ export async function installLongTaskHooks(
       hooks: [
         {
           type: "command",
-          command: COMMAND,
-          commandWindows: WINDOWS,
-          timeout: event === "Stop" ? 15 : 10,
+          command,
+          commandWindows: command,
+          timeout: event === "Stop" ? 3600 : 10,
           statusMessage: MANAGED_STATUS,
         },
       ],
@@ -75,25 +75,16 @@ export async function uninstallLongTaskHooks(
   projectRoot: string,
   report: SyncReport,
 ): Promise<void> {
-  const script = path.join(
+  const legacyScript = path.join(
     projectRoot,
     ".codex",
     "hooks",
     "long-task-hook.mjs",
   );
-  const supported = packageAssetPath("hooks", "long-task-hook.mjs");
-  if (await pathExists(script)) {
-    if (
-      (await pathExists(supported)) &&
-      (await readFile(script, "utf8")) === (await readFile(supported, "utf8"))
-    ) {
-      await rm(script, { force: true });
-      report.changed.push(".codex/hooks/long-task-hook.mjs");
-    } else {
-      report.skipped.push(".codex/hooks/long-task-hook.mjs: customized");
-    }
+  if (await pathExists(legacyScript)) {
+    await rm(legacyScript, { force: true });
+    report.changed.push(".codex/hooks/long-task-hook.mjs");
   }
-
   const config = path.join(projectRoot, ".codex", "hooks.json");
   if (!(await pathExists(config))) return;
   let root: Record<string, unknown>;
@@ -119,35 +110,46 @@ export async function uninstallLongTaskHooks(
   }
   if (!changed) return;
   root.hooks = hooks;
-  if (Object.keys(hooks).length === 0 && Object.keys(root).length === 1) {
+  if (Object.keys(hooks).length === 0 && Object.keys(root).length === 1)
     await rm(config, { force: true });
-  } else {
-    await writeIfChanged(config, `${JSON.stringify(root, null, 2)}\n`);
-  }
+  else await writeIfChanged(config, `${JSON.stringify(root, null, 2)}\n`);
   report.changed.push(".codex/hooks.json");
 }
+
+export function packageOwnedCommand(entry: string): string {
+  return `node "${path.resolve(entry).replace(/"/gu, '\\"')}"`;
+}
+
 function object(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
 }
+
 function containsManaged(group: Record<string, unknown>): boolean {
   return (
     Array.isArray(group.hooks) &&
     group.hooks.some((hook) => {
       const row = object(hook);
+      const command = `${String(row.command ?? "")} ${String(
+        row.commandWindows ?? "",
+      )}`;
       return (
         LEGACY_MANAGED_STATUSES.has(String(row.statusMessage ?? "")) ||
-        row.command === COMMAND ||
-        row.commandWindows === WINDOWS
+        command.includes(".codex/hooks/long-task-hook.mjs") ||
+        command.includes("composite") ||
+        command.includes("dist/long-task-hook.js") ||
+        command.includes("dist\\long-task-hook.js")
       );
     })
   );
 }
+
 async function writeIfChanged(file: string, content: string): Promise<boolean> {
   try {
     if ((await readFile(file, "utf8")) === content) return false;
   } catch {}
+  await mkdir(path.dirname(file), { recursive: true });
   const temp = `${file}.tmp-${process.pid}-${Date.now()}`;
   await writeFile(temp, content, { flag: "wx" });
   await rename(temp, file);

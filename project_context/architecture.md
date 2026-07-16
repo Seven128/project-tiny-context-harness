@@ -6,16 +6,16 @@ This is the restrained architecture map for the Harness source repository. It re
 
 - The repository owns the `project-tiny-context-harness` npm package, `ty-context` CLI, Minimal Context assets, validators, source sync, explicit Long-Task Workflow capability, release automation and delivery benchmark skeleton.
 - Consumer projects receive portable Minimal Context/default Workflow assets. Codex Stop Hook and Long-Task Workflow Skill are selected by the explicit `long-task` profile.
-- Harness may run only safe verification commands declared in a compiled Delivery Contract/Set. Platform Goal/Turn lifecycle, agents, model routing, branches/worktrees, Git integration, PRs, CI, deployment and human acceptance remain outside the runtime.
+- Harness may run only safe verification commands declared in a compiled V2 Delivery Contract. Platform Goal/Turn lifecycle, agents, model routing, branches/worktrees, Git integration, PRs, CI, deployment and human acceptance remain outside the runtime.
 
 ## Component Map
 
-- CLI routing: `packages/ty-context/src/commands/index.ts`; Contract commands: `commands/long-task.ts`; Delivery Set commands: `commands/delivery-set.ts`; retired names are isolated tombstones.
-- Contract/Bundle and Delivery Set schemas/types live under `packages/ty-context/src/schemas/long-task-delivery-v1/**`, `long-task-delivery-set-v1/**` and focused `long-task-*` libraries. Authority/progress/boundary modules remain separate from execution.
+- CLI routing: `packages/ty-context/src/commands/index.ts`; V2 Contract commands: `commands/long-task.ts`; Delivery Set/composite names are isolated retired tombstones.
+- The sole active schema lives under `packages/ty-context/src/schemas/long-task-delivery-v2/**`; Claim, authority/progress/boundary, runner/evidence and Live Gate modules remain focused and separate.
 - Static compiler: strict YAML parsing, generated `OUT.<outcome-key>` / `CHECK.<outcome-key>.<check-key>` identities, dependency validation, deterministic risk floor, Context/source/runner/path/proof preflight and compiled identity.
-- Evidence Kernel: explicit command runner, workspace snapshot, observation/assertion/population/binding/counterfactual evaluators, outcome/check projection, targeted verifier, same-snapshot Final Gate, final Receipt and freshness evaluation.
-- Recovery state: the user-authored `delivery-contract.yaml` and optional `source.md` live in the chosen workdir; compiled/derived state is verifier-owned temporary data; a narrow active binding identifies the one active task for the current Git worktree.
-- Stop adapter dispatches an exclusive `contract|delivery_set` active binding to the matching stop-check; it is a no-op without a binding and fail-closed until a fresh matching top-level Receipt exists.
+- Evidence Kernel V2: explicit command runner, Git-aware snapshot, Assertion/Population/Counterfactual evaluators, per-Check evidence projection, targeted verifier and source-recompiled same-snapshot Live Final Gate.
+- Recovery state: the user-authored `delivery-contract.yaml` and optional `source.md` live in the chosen workdir; compiled/progress/Receipt state is audit-only; the Git common-dir record and matching worktree config marker identify the active task.
+- Stop adapter is a no-op without a binding and otherwise runs the Live Final Gate fail-closed; it never trusts a stored Receipt or compiled cache.
 - Capability/profile selection: `packages/ty-context/src/lib/profiles.ts`, `commands/enable.ts`, `commands/disable.ts`, config parsing and upgrade migration.
 - Managed source: `.codex/ty-context-managed/**`; packaged assets: `packages/ty-context/assets/**`; mapping authority: `packages/ty-context/source-mappings.yaml`.
 - Source-workspace durable facts: `project_context/**`; full stable workflow design: `PROJECT_SPEC.md`.
@@ -26,9 +26,9 @@ This is the restrained architecture map for the Harness source repository. It re
 2. `compile` strictly parses the one Contract, computes the risk floor, validates dependencies/Context/source/paths/runners/proof, freezes repository/workdir/source/Contract/selected-Context/verifier/oracle/command identities and activates the worktree binding. It does not invoke a model or modify product code.
 3. The current native Goal reads Contract and relevant Context, selects dependency-ready Outcomes as its internal Frontier, implements in the current workspace and runs project-focused tests.
 4. `verify --outcome/--check` runs the selected checks on a current snapshot and stores repair-only derived status. It cannot emit accepted.
-5. Contract `status` projects `unverified|progress_passing|progress_failing|progress_stale|blocked_external`; Set status projects ready/blocked/passed/stale/remaining Children. Both resume surfaces are read-only and start no execution.
-6. `final-gate` creates one current snapshot, reruns every global and Outcome Check, deduplicates only fully identical execution identities inside that Gate, evaluates bottom-up and writes an accepted Receipt only when every required result passes.
-7. Workspace, Contract, relevant Context, source, command/oracle or verifier drift makes the result stale immediately. `stop-check` enforces that freshness; `close` clears only a matching fresh binding; `abandon` removes temporary task state without touching Git or authored source/Contract.
+5. Contract `status` projects `unverified|progress_passing|progress_failing|progress_stale|blocked_external`; resume is read-only and starts no execution.
+6. `final-gate`, Stop and close recompile source authority, validate the common-dir record/config marker, create one Git-tree snapshot, rerun every global/Outcome Check, deduplicate only identical raw execution inside that Gate and write an audit-only Receipt.
+7. Workspace, Contract, relevant Context, source, command/oracle or verifier drift stales audit results. Stop/close execute the current Live Gate and clear the binding only on success; `abandon` removes temporary task state without touching Git or authored source/Contract.
 
 ## Contract Shape And Risk
 

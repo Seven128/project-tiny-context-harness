@@ -5,7 +5,6 @@ import { parseCheck } from "./long-task-check-shape.js";
 import { validateDeliveryContractStructure } from "./long-task-delivery-validation.js";
 import {
   array,
-  boolean,
   key,
   literal,
   nullable,
@@ -13,6 +12,10 @@ import {
   parseBindings,
   parseControls,
   parseCounterfactuals,
+  parseKeyedPaths,
+  parseKeyedStatements,
+  parseObligations,
+  parseOwner,
   parsePopulation,
   parseRollback,
   parseSourceClaims,
@@ -20,37 +23,45 @@ import {
   strings,
 } from "./long-task-delivery-shape.js";
 import type {
-  DeliveryContractV1,
-  DeliveryOutcomeV1,
+  DeliveryContractV2,
+  DeliveryOutcomeV2,
   LongTaskRiskFacts,
+  RiskFactName,
 } from "./long-task-delivery-types.js";
 
 export const DELIVERY_CONTRACT_FILE = "delivery-contract.yaml";
+const RISK_FACTS = [
+  "public_api_or_schema_change",
+  "persistent_data_change",
+  "data_migration",
+  "security_boundary_change",
+  "permission_boundary_change",
+  "irreversible_external_effect",
+  "critical_user_path",
+  "full_population_operation",
+  "multi_repository_change",
+  "weak_observability",
+] as const satisfies readonly RiskFactName[];
 
-export interface ParsedDeliveryContractV1 {
-  contract: DeliveryContractV1;
+export interface ParsedDeliveryContractV2 {
+  contract: DeliveryContractV2;
   contract_files: Record<string, string>;
   outcome_files: string[];
 }
 
 export async function parseDeliveryContract(
   workdir: string,
-): Promise<DeliveryContractV1> {
+): Promise<DeliveryContractV2> {
   return (await parseDeliveryContractBundle(workdir)).contract;
 }
 
 export async function parseDeliveryContractBundle(
   workdirInput: string,
-): Promise<ParsedDeliveryContractV1> {
+): Promise<ParsedDeliveryContractV2> {
   const workdir = path.resolve(workdirInput);
   const file = path.join(workdir, DELIVERY_CONTRACT_FILE);
   const raw = await readFile(file, "utf8");
-  const root = object(
-    parseStrictYaml(raw),
-    "$",
-    ["schema_version", "task", "risk", "global"],
-    ["source_claims", "outcomes", "outcome_files"],
-  );
+  const root = parseRoot(raw, true);
   const hasInline = Object.hasOwn(root, "outcomes");
   const hasFiles = Object.hasOwn(root, "outcome_files");
   if (hasInline === hasFiles)
@@ -58,7 +69,7 @@ export async function parseDeliveryContractBundle(
       "delivery_contract_invalid:$:exactly one of outcomes or outcome_files is required",
     );
   const files: Record<string, string> = {};
-  let outcomes: DeliveryOutcomeV1[];
+  let outcomes: DeliveryOutcomeV2[];
   let outcomeFiles: string[] = [];
   if (hasInline) {
     outcomes = array(root.outcomes, "outcomes").map((item, index) =>
@@ -94,13 +105,8 @@ export async function parseDeliveryContractBundle(
   };
 }
 
-export function parseDeliveryContractText(raw: string): DeliveryContractV1 {
-  const root = object(
-    parseStrictYaml(raw),
-    "$",
-    ["schema_version", "task", "risk", "global", "outcomes"],
-    ["source_claims"],
-  );
+export function parseDeliveryContractText(raw: string): DeliveryContractV2 {
+  const root = parseRoot(raw, false);
   const contract = parseContractRoot(
     root,
     array(root.outcomes, "outcomes").map((item, index) =>
@@ -111,17 +117,37 @@ export function parseDeliveryContractText(raw: string): DeliveryContractV1 {
   return contract;
 }
 
+function parseRoot(raw: string, bundle: boolean): Record<string, unknown> {
+  const decoded = parseStrictYaml(raw);
+  if (
+    decoded &&
+    typeof decoded === "object" &&
+    !Array.isArray(decoded) &&
+    (decoded as Record<string, unknown>).schema_version ===
+      "long-task-delivery-v1"
+  )
+    throw new Error("long_task_delivery_v1_retired_use_v2");
+  return object(
+    decoded,
+    "$",
+    ["schema_version", "task", "risk", "global"],
+    bundle
+      ? ["source_claims", "outcomes", "outcome_files"]
+      : ["source_claims", "outcomes"],
+  );
+}
+
 function parseContractRoot(
   root: Record<string, unknown>,
-  outcomes: DeliveryOutcomeV1[],
-): DeliveryContractV1 {
+  outcomes: DeliveryOutcomeV2[],
+): DeliveryContractV2 {
   literal(
     root.schema_version,
-    ["long-task-delivery-v1"] as const,
+    ["long-task-delivery-v2"] as const,
     "schema_version",
   );
-  const contract: DeliveryContractV1 = {
-    schema_version: "long-task-delivery-v1",
+  return {
+    schema_version: "long-task-delivery-v2",
     task: parseTask(root.task),
     source_claims: Object.hasOwn(root, "source_claims")
       ? parseSourceClaims(root.source_claims, "source_claims")
@@ -130,10 +156,9 @@ function parseContractRoot(
     global: parseGlobal(root.global),
     outcomes,
   };
-  return contract;
 }
 
-function parseTask(value: unknown): DeliveryContractV1["task"] {
+function parseTask(value: unknown): DeliveryContractV2["task"] {
   const row = object(value, "task", [
     "id",
     "title",
@@ -156,49 +181,9 @@ function parseTask(value: unknown): DeliveryContractV1["task"] {
   };
 }
 
-function parseRisk(value: unknown): DeliveryContractV1["risk"] {
-  const row = object(value, "risk", ["requested_level", "facts"], ["evidence"]);
-  const facts = object(row.facts, "risk.facts", [
-    "public_api_or_schema_change",
-    "persistent_data_change",
-    "data_migration",
-    "security_boundary_change",
-    "permission_boundary_change",
-    "irreversible_external_effect",
-    "critical_user_path",
-    "full_population_operation",
-    "multi_repository_change",
-    "weak_observability",
-  ]);
-  const evidence = Object.hasOwn(row, "evidence")
-    ? array(row.evidence, "risk.evidence").map((item, index) => {
-        const label = `risk.evidence[${index}]`;
-        const entry = object(item, label, [
-          "fact",
-          "source_claim_refs",
-          "context_refs",
-          "affected_paths",
-          "rationale",
-        ]);
-        return {
-          fact: literal(
-            entry.fact,
-            Object.keys(facts) as (keyof LongTaskRiskFacts)[],
-            `${label}.fact`,
-          ),
-          source_claim_refs: strings(
-            entry.source_claim_refs,
-            `${label}.source_claim_refs`,
-          ),
-          context_refs: strings(entry.context_refs, `${label}.context_refs`),
-          affected_paths: strings(
-            entry.affected_paths,
-            `${label}.affected_paths`,
-          ),
-          rationale: string(entry.rationale, `${label}.rationale`),
-        };
-      })
-    : [];
+function parseRisk(value: unknown): DeliveryContractV2["risk"] {
+  const row = object(value, "risk", ["requested_level", "facts"]);
+  const facts = object(row.facts, "risk.facts", [...RISK_FACTS]);
   return {
     requested_level: literal(
       row.requested_level,
@@ -206,21 +191,19 @@ function parseRisk(value: unknown): DeliveryContractV1["risk"] {
       "risk.requested_level",
     ),
     facts: Object.fromEntries(
-      Object.keys(facts).map((name) => [
+      RISK_FACTS.map((name) => [
         name,
-        boolean(facts[name], `risk.facts.${name}`),
+        strings(facts[name], `risk.facts.${name}`).map((item, index) =>
+          key(item, `risk.facts.${name}[${index}]`),
+        ),
       ]),
-    ) as unknown as LongTaskRiskFacts,
-    evidence,
+    ) as LongTaskRiskFacts,
   };
 }
 
-function parseGlobal(value: unknown): DeliveryContractV1["global"] {
+function parseGlobal(value: unknown): DeliveryContractV2["global"] {
   const row = object(value, "global", ["product", "technical", "acceptance"]);
-  const product = object(row.product, "global.product", [
-    "non_goals",
-    "owner_boundaries",
-  ]);
+  const product = object(row.product, "global.product", ["non_goals"]);
   const technical = object(row.technical, "global.technical", [
     "constraints",
     "forbidden_paths",
@@ -234,22 +217,21 @@ function parseGlobal(value: unknown): DeliveryContractV1["global"] {
   );
   return {
     product: {
-      non_goals: strings(product.non_goals, "global.product.non_goals"),
-      owner_boundaries: strings(
-        product.owner_boundaries,
-        "global.product.owner_boundaries",
+      non_goals: parseKeyedStatements(
+        product.non_goals,
+        "global.product.non_goals",
       ),
     },
     technical: {
-      constraints: strings(
+      constraints: parseKeyedStatements(
         technical.constraints,
         "global.technical.constraints",
       ),
-      forbidden_paths: strings(
+      forbidden_paths: parseKeyedPaths(
         technical.forbidden_paths,
         "global.technical.forbidden_paths",
       ),
-      forbidden_shortcuts: strings(
+      forbidden_shortcuts: parseKeyedStatements(
         technical.forbidden_shortcuts,
         "global.technical.forbidden_shortcuts",
       ),
@@ -279,7 +261,7 @@ function parseGlobal(value: unknown): DeliveryContractV1["global"] {
   };
 }
 
-function parseOutcome(value: unknown, label: string): DeliveryOutcomeV1 {
+function parseOutcome(value: unknown, label: string): DeliveryOutcomeV2 {
   const row = object(value, label, [
     "key",
     "title",
@@ -290,7 +272,7 @@ function parseOutcome(value: unknown, label: string): DeliveryOutcomeV1 {
   ]);
   const product = object(row.product, `${label}.product`, [
     "observable_result",
-    "owner_boundary",
+    "owner",
     "owner_surfaces",
     "controls",
     "non_completing_outcomes",
@@ -300,13 +282,11 @@ function parseOutcome(value: unknown, label: string): DeliveryOutcomeV1 {
     "expected_change_paths",
     "allowed_support_paths",
     "forbidden_paths",
-    "bindings",
     "forbidden_shortcuts",
+    "bindings",
     "rollback_and_recovery",
   ]);
   const acceptance = object(row.acceptance, `${label}.acceptance`, [
-    "validates",
-    "does_not_validate",
     "checks",
     "population",
     "counterfactual_controls",
@@ -322,22 +302,19 @@ function parseOutcome(value: unknown, label: string): DeliveryOutcomeV1 {
         product.observable_result,
         `${label}.product.observable_result`,
       ),
-      owner_boundary: string(
-        product.owner_boundary,
-        `${label}.product.owner_boundary`,
-      ),
+      owner: parseOwner(product.owner, `${label}.product.owner`),
       owner_surfaces: strings(
         product.owner_surfaces,
         `${label}.product.owner_surfaces`,
       ),
       controls: parseControls(product.controls, `${label}.product.controls`),
-      non_completing_outcomes: strings(
+      non_completing_outcomes: parseKeyedStatements(
         product.non_completing_outcomes,
         `${label}.product.non_completing_outcomes`,
       ),
     },
     technical: {
-      obligations: strings(
+      obligations: parseObligations(
         technical.obligations,
         `${label}.technical.obligations`,
       ),
@@ -353,24 +330,19 @@ function parseOutcome(value: unknown, label: string): DeliveryOutcomeV1 {
         technical.forbidden_paths,
         `${label}.technical.forbidden_paths`,
       ),
+      forbidden_shortcuts: parseKeyedStatements(
+        technical.forbidden_shortcuts,
+        `${label}.technical.forbidden_shortcuts`,
+      ),
       bindings: parseBindings(
         technical.bindings,
         `${label}.technical.bindings`,
-      ),
-      forbidden_shortcuts: strings(
-        technical.forbidden_shortcuts,
-        `${label}.technical.forbidden_shortcuts`,
       ),
       rollback_and_recovery: nullable(technical.rollback_and_recovery, (item) =>
         parseRollback(item, `${label}.technical.rollback_and_recovery`),
       ),
     },
     acceptance: {
-      validates: strings(acceptance.validates, `${label}.acceptance.validates`),
-      does_not_validate: strings(
-        acceptance.does_not_validate,
-        `${label}.acceptance.does_not_validate`,
-      ),
       checks: array(acceptance.checks, `${label}.acceptance.checks`).map(
         (item, index) =>
           parseCheck(item, `${label}.acceptance.checks[${index}]`),
@@ -389,7 +361,7 @@ function parseOutcome(value: unknown, label: string): DeliveryOutcomeV1 {
 function parseOutcomeFragment(
   raw: string,
   relative: string,
-): DeliveryOutcomeV1[] {
+): DeliveryOutcomeV2[] {
   const value = parseStrictYaml(raw);
   if (Array.isArray(value))
     return value.map((item, index) =>
@@ -422,7 +394,7 @@ function parseOutcomeFragment(
     if (Object.hasOwn(row, "schema_version"))
       literal(
         row.schema_version,
-        ["long-task-outcomes-v1"] as const,
+        ["long-task-outcomes-v2"] as const,
         `${relative}.schema_version`,
       );
     return array(row.outcomes, `${relative}.outcomes`).map((item, index) =>

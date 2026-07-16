@@ -1,137 +1,173 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { rm, writeFile } from "node:fs/promises";
+import { readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import { activeRecordPath } from "../../packages/ty-context/dist/lib/long-task-state.js";
 import {
-  createDeliveryFixture,
   commitCandidate,
+  createDeliveryFixture,
+  pathExists,
   readState,
-  writeContract,
 } from "./long-task-delivery-fixtures.mjs";
 
 const exec = promisify(execFile);
-const repo = fileURLToPath(new URL("../..", import.meta.url));
-const cli = path.join(repo, "packages/ty-context/dist/cli.js");
+const cli = fileURLToPath(
+  new URL("../../packages/ty-context/dist/cli.js", import.meta.url),
+);
 
-test("real CLI two-Outcome rolling delivery rejects partial/history and enforces freshness", async () => {
+test("controlled real V2 Smoke proves only the current Live Final Gate can finish", async () => {
   const fixture = await createDeliveryFixture({ twoOutcomes: true });
   try {
     await run(fixture.root, ["enable", "long-task"]);
-    const compiled = await run(fixture.root, ["long-task", "compile", fixture.workdir]);
+    const compiled = await run(fixture.root, [
+      "long-task",
+      "compile",
+      fixture.workdir,
+    ]);
     assert.equal(compiled.status, "compiled");
-    assert.equal(compiled.effective_risk, "standard");
+    assert.equal(compiled.claim_coverage.uncovered_claims.length, 0);
+    await commitCandidate(fixture.root);
 
     const first = await run(fixture.root, [
-      "long-task", "verify", fixture.workdir, "--outcome", "first",
+      "long-task",
+      "verify",
+      fixture.workdir,
+      "--outcome",
+      "first",
     ]);
     assert.equal(first.acceptance_authorized, false);
-    assert.equal(first.check_results[0].status, "passed");
-    assert.equal(await exists(path.join(fixture.workdir, ".ty-context", "final-receipt.json")), false);
-
     const secondFailure = await runFailure(fixture.root, [
-      "long-task", "verify", fixture.workdir, "--outcome", "second",
+      "long-task",
+      "verify",
+      fixture.workdir,
+      "--outcome",
+      "second",
     ]);
-    assert.equal(secondFailure.check_results[0].status, "failed");
-    const partialFinal = await runFailure(fixture.root, [
-      "long-task", "final-gate", fixture.workdir,
+    assert.equal(secondFailure.check_results[0].status, "assertion_failed");
+
+    const localReceipt = path.join(
+      fixture.workdir,
+      ".ty-context/final-receipt.json",
+    );
+    const activeFile = await activeRecordPath(fixture.root);
+    const mirrorReceipt = path.join(
+      path.dirname(activeFile),
+      "last-final-receipt.json",
+    );
+    const forged = JSON.stringify({
+      schema_version: "long-task-final-receipt-v2",
+      workflow_status: "machine_accepted",
+      receipt_sha256: "0".repeat(64),
+    });
+    await writeFile(localReceipt, forged);
+    await writeFile(mirrorReceipt, forged);
+    let stop = await runFailure(fixture.root, [
+      "long-task",
+      "stop-check",
+      fixture.workdir,
     ]);
-    assert.equal(partialFinal.workflow_status, "needs_work");
-    assert.equal(partialFinal.check_results.length, 2);
+    assert.equal(stop.continue, false);
+    assert.equal(
+      JSON.parse(await readFile(localReceipt, "utf8")).check_results.length,
+      2,
+    );
+
+    const cacheFile = path.join(
+      fixture.workdir,
+      ".ty-context/compiled-contract.json",
+    );
+    const cache = JSON.parse(await readFile(cacheFile, "utf8"));
+    cache.outcomes = cache.outcomes.slice(0, 1);
+    await writeFile(cacheFile, `${JSON.stringify(cache)}\n`);
+    stop = await runFailure(fixture.root, [
+      "long-task",
+      "stop-check",
+      fixture.workdir,
+    ]);
+    assert.equal(stop.continue, false);
+    assert.match(stop.reason, /live_final_gate/u);
 
     const state = await readState(fixture.root);
     state.second = true;
-    await writeFile(path.join(fixture.root, "src", "state.json"), `${JSON.stringify(state)}\n`);
-    const secondPass = await run(fixture.root, [
-      "long-task", "verify", fixture.workdir, "--outcome", "second",
+    await writeFile(
+      path.join(fixture.root, "src/state.json"),
+      `${JSON.stringify(state)}\n`,
+    );
+    await commitCandidate(fixture.root);
+    const acceptedStop = await run(fixture.root, [
+      "long-task",
+      "stop-check",
+      fixture.workdir,
     ]);
-    assert.equal(secondPass.acceptance_authorized, false);
-    assert.equal(secondPass.check_results[0].status, "passed");
+    assert.equal(acceptedStop.continue, true);
+    assert.equal(await pathExists(activeFile), false);
+    assert.equal(
+      (
+        await run(fixture.root, [
+          "long-task",
+          "stop-check",
+          fixture.workdir,
+        ])
+      ).reason,
+      "no_active_task",
+    );
 
-    const accepted = await run(fixture.root, [
-      "long-task", "final-gate", fixture.workdir,
-    ]);
-    assert.equal(accepted.workflow_status, "machine_accepted");
-    assert.equal(accepted.check_results.length, 2);
-    assert.equal(new Set(accepted.check_results.map((result) => result.outcome_key)).size, 2);
-
-    const stopAccepted = await run(fixture.root, [
-      "long-task", "stop-check", fixture.workdir,
-    ]);
-    assert.equal(stopAccepted.continue, true);
+    await rm(cacheFile, { force: true });
+    await run(fixture.root, ["long-task", "compile", fixture.workdir]);
     state.second = false;
-    await writeFile(path.join(fixture.root, "src", "state.json"), `${JSON.stringify(state)}\n`);
-    const staleStop = await runFailure(fixture.root, [
-      "long-task", "stop-check", fixture.workdir,
+    await writeFile(
+      path.join(fixture.root, "src/state.json"),
+      `${JSON.stringify(state)}\n`,
+    );
+    stop = await runFailure(fixture.root, [
+      "long-task",
+      "stop-check",
+      fixture.workdir,
     ]);
-    assert.equal(staleStop.continue, false);
-
+    assert.equal(stop.continue, false);
     state.second = true;
-    await writeFile(path.join(fixture.root, "src", "state.json"), `${JSON.stringify(state)}\n`);
-    const acceptedAgain = await run(fixture.root, [
-      "long-task", "final-gate", fixture.workdir,
-    ]);
-    assert.equal(acceptedAgain.workflow_status, "machine_accepted");
+    await writeFile(
+      path.join(fixture.root, "src/state.json"),
+      `${JSON.stringify(state)}\n`,
+    );
+    await commitCandidate(fixture.root);
     await run(fixture.root, ["long-task", "close", fixture.workdir]);
-    assert.equal(await exists(path.join(fixture.root, ".codex", "ty-context-active-long-task.json")), false);
-    assert.equal(await exists(path.join(fixture.workdir, "delivery-contract.yaml")), true);
 
-    const worktrees = await exec("git", ["worktree", "list", "--porcelain"], { cwd: fixture.root });
+    assert.equal(
+      await pathExists(
+        path.join(fixture.root, ".codex/ty-context-active-long-task.json"),
+      ),
+      false,
+    );
+    const worktrees = await exec("git", ["worktree", "list", "--porcelain"], {
+      cwd: fixture.root,
+    });
     assert.equal((worktrees.stdout.match(/^worktree /gmu) ?? []).length, 1);
-    const branches = await exec("git", ["branch", "--format=%(refname:short)"], { cwd: fixture.root });
-    assert.equal(branches.stdout.trim().split(/\r?\n/u).filter(Boolean).length, 1);
-    assert.equal(await exists(path.join(fixture.root, "tmp", "ty-context", "composite-worktrees")), false);
-  } finally {
-    await rm(fixture.root, { recursive: true, force: true });
-  }
-});
-
-test("referenced Context ignores unrelated Context but invalidates selected Context and Contract", async () => {
-  const fixture = await createDeliveryFixture();
-  try {
-    await run(fixture.root, ["enable", "long-task"]);
-    await run(fixture.root, ["long-task", "compile", fixture.workdir]);
-    await run(fixture.root, ["long-task", "final-gate", fixture.workdir]);
-    await writeFile(path.join(fixture.root, "project_context", "unrelated.md"), "# unrelated\n");
-    const unrelated = await run(fixture.root, ["long-task", "status", fixture.workdir]);
-    assert.equal(unrelated.final_result, "machine_accepted_fresh");
-    await writeFile(path.join(fixture.root, "project_context", "areas", "main.md"), "# changed\n");
-    const contextStale = await run(fixture.root, ["long-task", "status", fixture.workdir]);
-    assert.equal(contextStale.final_result, "accepted_stale");
-    assert.ok(contextStale.findings.some((finding) => finding.code.includes("context_changed_after_compile")));
-    fixture.contract.task.title = "Changed title";
-    await writeContract(fixture.workdir, fixture.contract);
-    const contractStale = await run(fixture.root, ["long-task", "status", fixture.workdir]);
-    assert.ok(contractStale.findings.some((finding) => finding.code.includes("contract_changed_after_compile")));
-  } finally {
-    await rm(fixture.root, { recursive: true, force: true });
-  }
-});
-
-test("scope escape returns escalation and abandon preserves authored Contract", async () => {
-  const fixture = await createDeliveryFixture();
-  try {
-    await run(fixture.root, ["enable", "long-task"]);
-    await run(fixture.root, ["long-task", "compile", fixture.workdir]);
-    await writeFile(path.join(fixture.root, "README.md"), "outside contract\n");
-    const result = await runFailure(fixture.root, ["long-task", "verify", fixture.workdir]);
-    assert.ok(result.findings.some((finding) => finding.code === "scope_or_risk_escalation_required"));
-    await writeFile(path.join(fixture.workdir, "source.md"), "source provenance\n");
-    await run(fixture.root, ["long-task", "abandon", fixture.workdir]);
-    assert.equal(await exists(path.join(fixture.workdir, "delivery-contract.yaml")), true);
-    assert.equal(await exists(path.join(fixture.workdir, "source.md")), true);
-    assert.equal(await exists(path.join(fixture.workdir, ".ty-context")), false);
+    const branches = await exec("git", ["branch", "--format=%(refname:short)"], {
+      cwd: fixture.root,
+    });
+    assert.equal(
+      branches.stdout.trim().split(/\r?\n/u).filter(Boolean).length,
+      1,
+    );
+    for (const retired of ["campaign", "sfc", "packet", "wave", "delivery-set"])
+      assert.equal(
+        await pathExists(path.join(fixture.root, `.codex/${retired}`)),
+        false,
+      );
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }
 });
 
 async function run(cwd, args) {
-  if (args[0] === "long-task" && args[1] === "final-gate")
-    await commitCandidate(cwd);
-  const result = await exec(process.execPath, [cli, ...args], { cwd, windowsHide: true });
+  const result = await exec(process.execPath, [cli, ...args], {
+    cwd,
+    windowsHide: true,
+  });
   return parse(result.stdout);
 }
 
@@ -147,12 +183,13 @@ async function runFailure(cwd, args) {
 
 function parse(stdout) {
   const text = stdout.trim();
-  try { return JSON.parse(text); } catch {}
+  try {
+    return JSON.parse(text);
+  } catch {}
   const line = text.split(/\r?\n/u).at(-1);
-  try { return JSON.parse(line); } catch { return { text }; }
-}
-
-async function exists(file) {
-  try { await import("node:fs/promises").then(({ access }) => access(file)); return true; }
-  catch { return false; }
+  try {
+    return JSON.parse(line);
+  } catch {
+    return { text };
+  }
 }

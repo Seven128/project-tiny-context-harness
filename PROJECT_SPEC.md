@@ -8,7 +8,7 @@ Project Tiny Context Harness is repo-native memory and delivery-drift protection
 2. **Workflow Contract** defines the lightweight default loop: graph-directed Context reads, one `Context Delta`, platform-internal planning, implementation, project verification, Contract Conformance and Context drift checking.
 3. **Long-Task Workflow** adds one Canonical Delivery Contract and verifier-owned current-snapshot acceptance for work that needs pause/compaction/new-session recovery or multiple observable outcomes.
 
-The Long-Task Workflow V1 product equation is:
+The Long-Task Workflow V2 product equation is:
 
 > one authoritative Contract + one continuing platform-native Goal + one selected workspace + rolling technical implementation + one trustworthy Evidence Kernel + risk-proportional proof
 
@@ -50,7 +50,7 @@ The compiler requires strict when any declared fact is true:
 - permission boundary change;
 - irreversible external effect;
 - full-population operation;
-- multi-repository change is rejected as unsupported in V1;
+- multi-repository change is rejected as unsupported;
 - critical user path with weak end-to-end observability.
 
 Users may raise risk to strict. A requested `standard` level below the computed floor fails with `risk_level_below_required`. Skill or executor logic can never lower risk.
@@ -62,7 +62,7 @@ The active flow is:
 ```text
 request or external implementation source
 -> minimum relevant Context
--> one Contract/Contract Bundle or one Delivery Set authority
+-> one Contract or logical Contract Bundle authority
 -> one coverage review
 -> pure static compile/preflight
 -> current native Goal executes in current workspace
@@ -81,9 +81,9 @@ The Frontier is not persisted as a scheduler graph. Full file/function/component
 
 Core execution has no internal parallel mutation. Users may explicitly use platform-native parallel or Git facilities, but those facilities are external and do not change Harness completion authority.
 
-## 5. Canonical Delivery Contract V1
+## 5. Canonical Delivery Contract V2
 
-The root authoring authority is `delivery-contract.yaml`, schema `long-task-delivery-v1`. It may contain inline Outcomes or `outcome_files` fragments that own Outcome content only; both forms compile to one logical Contract. Original `source_paths` remain provenance and direct Source Claims retain coverage into Outcomes or Set Children.
+The root authoring authority is `delivery-contract.yaml`, schema `long-task-delivery-v2`. It may contain inline Outcomes or `outcome_files` fragments that own Outcome content only; both forms compile to one logical Contract. Original `source_paths` remain provenance and direct Source Claims resolve to generated Claims, global constraints, source-backed out-of-scope items or decision blockers.
 
 The Contract keeps three logical authorities in one file:
 
@@ -94,7 +94,7 @@ The Contract keeps three logical authorities in one file:
 The required top-level shape is:
 
 ```yaml
-schema_version: long-task-delivery-v1
+schema_version: long-task-delivery-v2
 task:
   id: stable-task-key
   title: Human title
@@ -105,20 +105,19 @@ task:
 risk:
   requested_level: auto
   facts:
-    public_api_or_schema_change: false
-    persistent_data_change: false
-    data_migration: false
-    security_boundary_change: false
-    permission_boundary_change: false
-    irreversible_external_effect: false
-    critical_user_path: false
-    full_population_operation: false
-    multi_repository_change: false
-    weak_observability: false
+    public_api_or_schema_change: []
+    persistent_data_change: []
+    data_migration: []
+    security_boundary_change: []
+    permission_boundary_change: []
+    irreversible_external_effect: []
+    critical_user_path: []
+    full_population_operation: []
+    multi_repository_change: []
+    weak_observability: []
 global:
   product:
     non_goals: []
-    owner_boundaries: []
   technical:
     constraints: []
     forbidden_paths: []
@@ -140,23 +139,21 @@ CHECK.<outcome-key>.<check-key>
 CHECK.GLOBAL.<check-key>
 ```
 
-There is no Requirement/PI/Obligation/Binding/AC/Proof/Spec authoring namespace and no cross-file semantic duplication.
+Authors use stable local keys for controls, obligations, bindings and Assertions. The compiler creates canonical Outcome-qualified Claim ids and rejects unknown, cross-Outcome or uncovered references.
 
 Product or Acceptance meaning may not be silently weakened by execution. Technical support paths and local constraints may be revised when real implementation discoveries do not change product or acceptance meaning; every revision requires recompile and invalidates old results.
 
-If one atomic Product + Acceptance Contract exceeds a single file, use a Contract Bundle. Multiple Child Contracts are allowed only inside a Delivery Set after a semantic Boundary Check confirms independent observable results, executable Acceptance and a real release/rollback/owner/risk/product boundary without splitting an atomic loop. Capacity, parallelism and model preference are never semantic separation boundaries.
+If one atomic Product + Acceptance Contract exceeds a single file, use a Contract Bundle. Independent release/rollback/owner/risk/product boundaries run as separate top-level Contracts. Capacity, parallelism and model preference are never semantic separation boundaries.
 
 ## 6. Composition, Authority And Finalization
 
-Contract Boundary Check returns only `single_contract`, `single_contract_bundle`, `delivery_set`, `decision_required` or `capacity_blocked`. It is a semantic authoring judgment, creates no execution state and never claims the compiler proved product independence.
+Contract Boundary Check returns only `single_contract`, `single_contract_bundle`, `separate_top_level_contracts`, `decision_required` or `capacity_blocked`. It is a semantic authoring judgment and creates no execution state. `delivery-set` is a fixed non-executing retirement tombstone.
 
-`long-task-delivery-set-v1` owns one Set goal/source coverage, global Product/Technical boundaries, integration Checks, external confirmations and an acyclic map of Child Contracts. Each Child declares an observable result, one permitted separation reason and evidence. The active binding remains `mode: delivery_set`; Child Gate receipts are dependency checkpoints only. Status/resume project ready, blocked, passed, stale and remaining Children and start no execution. V1 rejects multi-repository delivery.
-
-The first formal Contract or Set compile freezes `initial_task_base` with commit, tree and workspace manifest. Recompile retains that base. Once implementation changes, targeted progress or a Child Gate exists, protected source/Product/Acceptance/risk/Set-boundary changes create a pending hash-bound Authority Revision and cannot activate without explicit approval. Technical-only amendments require a reason and stale affected progress.
+The first formal Contract compile freezes `initial_task_base` with commit, tree and workspace manifest. Recompile retains that base. Protected source/Product/Acceptance/risk changes require `--revise`; reductions create a pending hash-bound Authority Revision, while risk downgrade is rejected.
 
 Targeted verification persists independent per-Check Progress Records scoped to protected authority, check/runner/verifier identity, relevant Context, input paths, binding carriers and dependency interfaces. They accumulate across runs and never authorize completion.
 
-Top-level Final Gate requires a clean candidate commit after all required Context updates. Standalone Final Gate reruns its complete Contract on one snapshot. Delivery Set Final Gate reruns all Child and integration Checks on one shared snapshot and ignores historical Child passes. Receipts bind HEAD, tree, workspace, Contract/Set, source, Context and verifier identities. A later content commit stales the receipt; remote push/PR operations that do not change local commit/tree do not. `machine_accepted_external_pending` explicitly separates declared external/human/deploy confirmation from machine Contract acceptance.
+Live Final Gate requires a clean candidate commit after all required Context updates. It recompiles the source Contract, validates the common-dir active record against the worktree Git-config marker, creates one Git-tree snapshot and reruns the complete Contract without historical proof reuse. Receipts bind HEAD, tree, workspace, Contract, source, Context and verifier identities but are audit-only and never reusable acceptance authority.
 
 ## 7. Static Compiler And Preflight
 
@@ -166,7 +163,8 @@ Compile is deterministic, static and model-free. It:
 - validates Contract schema and unique Outcome/Check keys;
 - generates internal ids and validates Outcome dependencies/cycles;
 - validates registered Context refs and source paths;
-- validates repository-contained safe paths, command definitions, package scripts, project binaries, Oracle/Playwright targets and timeouts/network policy;
+- validates repository-contained safe paths, owner/binding semantics, resolved command targets, explicit verification inputs, package scripts, project binaries, Oracle/Playwright targets and structured environment probes;
+- compiles and requires coverage for result, control, non-completing, obligation and forbidden-shortcut Claims;
 - requires executable falsifiable proof for every Outcome;
 - requires `ui_browser` proof when a UI owner surface or controls exist;
 - computes effective risk and rejects a requested level below the floor;
@@ -189,9 +187,9 @@ The Evidence Kernel retains only low-level capabilities that directly close fals
 - population coverage evaluation;
 - counterfactual controls where strict risk requires them;
 - selected Context/source/runner/oracle/verifier hashes;
-- active-task binding;
+- Git common-dir active record plus matching worktree Git-config marker;
 - outcome/check projection and derived status;
-- Final Gate, accepted Receipt and freshness;
+- source-recompiled Live Final Gate and audit-only Receipt;
 - Stop Hook preflight and decision.
 
 The compiled internal graph is deliberately small:
@@ -232,11 +230,7 @@ Bottom-up acceptance succeeds only when all required Checks, Outcomes, global co
 
 ### Freshness And Stop
 
-The accepted Receipt binds workspace snapshot, repository/workdir, Contract, source, selected Context, runner/oracle/command and verifier identity. Any bound change makes the result stale immediately.
-
-The Stop Hook is a no-op without an active task. With an active task, it blocks uncompiled, needs-work, stale, failing or workspace-mismatched state and permits only an exact fresh accepted Receipt.
-
-`close` requires that fresh Receipt, clears only the matching active binding and preserves Contract/final Receipt. `abandon` is explicit non-success teardown: it clears matching temporary state, preserves `source.md` and `delivery-contract.yaml`, and never touches a user branch/worktree/commit/remote.
+Receipts and status describe the last audit only. The Stop Hook is a no-op without an active task; otherwise Stop and close run the Live Final Gate themselves. Success atomically clears the common-dir record and Git-config marker. `abandon` is explicit non-success teardown and never touches user Git content.
 
 ## 10. Retry And Decision Boundaries
 
@@ -253,16 +247,17 @@ The active public surface is:
 ```text
 ty-context long-task init <workdir>
 ty-context long-task compile <workdir>
+ty-context long-task compile <workdir> --revise
 ty-context long-task approve-authority-revision <workdir> --revision <sha>
+ty-context long-task explain <workdir>
 ty-context long-task verify <workdir> [--outcome <key>] [--check <key>]
 ty-context long-task status <workdir>
 ty-context long-task resume <workdir>
+ty-context long-task doctor <workdir>
 ty-context long-task final-gate <workdir>
 ty-context long-task stop-check <workdir> [--message <text>]
 ty-context long-task close <workdir>
 ty-context long-task abandon <workdir>
-ty-context delivery-set init|compile|status|resume|final-gate|stop-check|close|abandon <setdir>
-ty-context delivery-set approve-authority-revision <setdir> --revision <sha>
 ```
 
 No Long-Task CLI command may start Codex/AppServer/agents, create/delete worktrees or branches, merge, push, open PRs, retry model calls or manage process trees. Only a Contract-declared project verification command may create a child process.
@@ -271,7 +266,7 @@ No Long-Task CLI command may start Codex/AppServer/agents, create/delete worktre
 
 ## 12. Skills And Distribution Profiles
 
-`/long-task-workflow` is the only active long-task Skill. It performs Boundary Check, creates/reviews one Contract/Bundle or Set from user/external source, compiles it, continuously implements rolling Frontiers in the current native Goal, resumes semantic state, runs the matching Final Gate and reports results.
+`/long-task-workflow` is the only active long-task Skill. It performs Boundary Check, creates/reviews one V2 Contract/Bundle from user/external source, compiles Claim Coverage, continuously implements rolling Frontiers in the current native Goal, resumes semantic state, runs the Live Final Gate and reports results.
 
 `/normal-long-task` is a retirement pointer and creates no checklist, prompt or Local Audit.
 

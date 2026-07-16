@@ -39,7 +39,7 @@ try {
       await readFile(path.join(workdir, ".ty-context", "final-receipt.json"), "utf8"),
     );
     if (
-      result.schema_version !== "long-task-final-receipt-v1" ||
+      result.schema_version !== "long-task-final-receipt-v2" ||
       result.workflow_status !== "machine_accepted"
     ) {
       throw new Error(
@@ -51,7 +51,7 @@ try {
   console.log(
     portableOnly
       ? `Tarball smoke passed: ${path.basename(tarball)}; portable init, doctor, validate-context and contents accepted.`
-      : `Tarball smoke passed: ${path.basename(tarball)}; portable checks plus long-task-delivery-v1 compile and Final Gate accepted.`,
+      : `Tarball smoke passed: ${path.basename(tarball)}; portable checks plus long-task-delivery-v2 compile and Live Final Gate accepted.`,
   );
   await rm(root, { recursive: true, force: true });
 } catch (error) {
@@ -70,12 +70,12 @@ async function writeDeliveryInputs(root) {
     path.join(root, "tests/oracle.mjs"),
     `import { readFile } from "node:fs/promises";
 const state = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8"));
-console.log(JSON.stringify({schema_version:"long-task-check-result-v1",observations:{ready:state.ready}}));
+console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{ready:state.ready}}));
 `,
   );
   await writeFile(
     path.join(workdir, "delivery-contract.yaml"),
-    `schema_version: long-task-delivery-v1
+    `schema_version: long-task-delivery-v2
 task:
   id: tarball-smoke
   title: Tarball smoke
@@ -86,44 +86,50 @@ task:
 risk:
   requested_level: auto
   facts:
-    public_api_or_schema_change: false
-    persistent_data_change: false
-    data_migration: false
-    security_boundary_change: false
-    permission_boundary_change: false
-    irreversible_external_effect: false
-    critical_user_path: false
-    full_population_operation: false
-    multi_repository_change: false
-    weak_observability: false
+    public_api_or_schema_change: []
+    persistent_data_change: []
+    data_migration: []
+    security_boundary_change: []
+    permission_boundary_change: []
+    irreversible_external_effect: []
+    critical_user_path: []
+    full_population_operation: []
+    multi_repository_change: []
+    weak_observability: []
 global:
-  product: { non_goals: [], owner_boundaries: [fixture] }
+  product: { non_goals: [] }
   technical: { constraints: [], forbidden_paths: [], forbidden_shortcuts: [] }
-  acceptance: { checks: [] }
+  acceptance: { checks: [], external_confirmations: [] }
 outcomes:
   - key: installed
     title: Installed workflow runs
     depends_on: []
     product:
       observable_result: Installed CLI verifies current behavior.
-      owner_boundary: fixture
+      owner:
+        label: fixture
+        context_refs: [project_context/areas/main.md]
+        path_globs: [src/**]
       owner_surfaces: []
       controls: []
       non_completing_outcomes: []
     technical:
-      obligations: [Use the packaged verifier.]
+      obligations:
+        - key: packaged-verifier
+          statement: Use the packaged verifier.
+          required_proof_surfaces: [runtime_behavior]
       expected_change_paths: [src/**]
-      allowed_support_paths: [tests/**]
+      allowed_support_paths: []
       forbidden_paths: []
       bindings:
-        - kind: file
-          target: state
+        - key: state
+          kind: file
+          target: src/state.json
           carrier_paths: [src/state.json]
+          existence: existing
       forbidden_shortcuts: []
       rollback_and_recovery: null
     acceptance:
-      validates: [Current installed behavior is ready.]
-      does_not_validate: []
       checks:
         - key: installed-check
           proof_surface: runtime_behavior
@@ -133,11 +139,17 @@ outcomes:
             argv: []
             cwd: .
             timeout_ms: 30000
-            network_policy: { mode: none, allowed_hosts: [] }
+            effect: read_only
+            retry_policy: none
+            idempotent: true
+          verification_inputs: [tests/oracle.mjs]
           input_paths: [src/**]
+          expected_output_paths: []
           artifact_globs: []
           positive_assertions:
-            - observation: ready
+            - key: installed-ready
+              claims: [result, obligation.packaged-verifier]
+              observation: ready
               operator: equals
               expected: true
           negative_assertions: []
@@ -167,17 +179,27 @@ async function assertTarballContents(directory) {
     /^dist\/schemas\/composite-/u,
     /^assets\/composite\//u,
     /^assets\/skills\/(?:prepare-composite-long-task|composite-long-task-workflow)\//u,
+    /^dist\/lib\/long-task-delivery-set-/u,
+    /^dist\/schemas\/long-task-delivery-set-/u,
+    /^dist\/schemas\/long-task-delivery-v1\//u,
+    /^assets\/hooks\/long-task-hook\.mjs$/u,
   ]) {
     const found = files.find((file) => forbidden.test(file));
     if (found) throw new Error(`tarball contains retired runtime asset: ${found}`);
   }
   for (const required of [
-    "dist/schemas/long-task-delivery-v1/long-task-delivery-v1.schema.json",
+    "dist/schemas/long-task-delivery-v2/long-task-delivery-v2.schema.json",
+    "dist/lib/long-task-delivery-compiler.js",
+    "dist/lib/long-task-claims.js",
+    "dist/long-task-hook.js",
+    "dist/lib/migrations.js",
     "assets/skills/long-task-workflow/SKILL.md",
-    "assets/hooks/long-task-hook.mjs",
   ]) {
     if (!files.includes(required)) throw new Error(`tarball missing required asset: ${required}`);
   }
+  const migrations = await readFile(path.join(directory, "dist/lib/migrations.js"), "utf8");
+  if (!migrations.includes("long-task-v1-retirement"))
+    throw new Error("tarball missing V1 retirement migration");
 }
 
 function parseArgs(args) {

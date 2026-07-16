@@ -44,7 +44,8 @@ test("long-task workflow tests run only in GitHub CI or through their explicit c
   assert.match(read("tools/workflow_release_artifact.mjs"), /dryRun[\s\S]*release-artifact-\$\{version\}\.json/);
   assert.match(read("tools/release_artifact_identity.mjs"), /lockfile_sha256/);
   assert.match(tarballSmoke, /writeDeliveryInputs/);
-  assert.match(tarballSmoke, /long-task-delivery-v1/);
+  assert.match(tarballSmoke, /long-task-delivery-v2/);
+  assert.match(tarballSmoke, /long-task-v1-retirement/);
   assert.match(tarballSmoke, /npm", \["install", "--save-dev", tarball\]/);
   assert.match(tarballSmoke, /"ty-context",\s*"init"/);
   assert.match(tarballSmoke, /"ty-context", "doctor"/);
@@ -73,6 +74,7 @@ test("long-task workflow tests run only in GitHub CI or through their explicit c
   assert.equal(packageJson.scripts.test, "npm run build && npm run test:built");
   assert.equal(packageJson.scripts["test:long-task-workflow:built"], "node ../../tests/ty-context/run-package-suite.mjs long-task");
   assert.equal(packageJson.scripts["test:long-task-workflow"], "npm run build && npm run test:long-task-workflow:built");
+  assert.equal(packageJson.scripts["test:long-task-performance"], "npm run build && node ../../tests/ty-context/long-task-performance.mjs");
   assert.equal(packageJson.scripts["test:composite-workflow"], undefined);
 
   const suiteRunner = read("tests/ty-context/run-package-suite.mjs");

@@ -1,0 +1,163 @@
+import assert from "node:assert/strict";
+import net from "node:net";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import test from "node:test";
+import { evaluatePopulation } from "../../packages/ty-context/dist/lib/long-task-assertions-v2.js";
+import { executeCheckRunner } from "../../packages/ty-context/dist/lib/long-task-check-runner.js";
+
+const population = {
+  check_key: "population",
+  claims: ["result"],
+  observations: {
+    eligible_ids: "population.eligible_ids",
+    observed_ids: "population.observed_ids",
+    excluded_items: "population.excluded_items",
+  },
+  exclusion_rules: [
+    { key: "disabled", statement: "Disabled entities may be excluded." },
+  ],
+};
+
+test("Population V2 validates exact entity sets", () => {
+  const valid = {
+    population: {
+      eligible_ids: ["a", "b", "c"],
+      observed_ids: ["a", "b"],
+      excluded_items: [{ id: "c", rule: "disabled" }],
+    },
+  };
+  assert.equal(evaluatePopulation(population, valid).passed, true);
+  for (const [name, mutate, reason] of [
+    [
+      "observed outside eligible",
+      (value) => value.population.observed_ids.push("x"),
+      "observed_not_eligible_subset",
+    ],
+    [
+      "excluded outside eligible",
+      (value) => value.population.excluded_items.push({ id: "x", rule: "disabled" }),
+      "excluded_not_eligible_subset",
+    ],
+    [
+      "overlap",
+      (value) => value.population.excluded_items.push({ id: "a", rule: "disabled" }),
+      "observed_excluded_overlap",
+    ],
+    [
+      "unknown exclusion",
+      (value) => (value.population.excluded_items[0].rule = "unknown"),
+      "exclusion_rule_unknown",
+    ],
+    [
+      "omitted entity",
+      (value) => (value.population.excluded_items = []),
+      "eligible_population_incomplete",
+    ],
+    [
+      "duplicate id",
+      (value) => value.population.eligible_ids.push("a"),
+      "eligible_ids_invalid",
+    ],
+  ]) {
+    const value = structuredClone(valid);
+    mutate(value);
+    assert.match(
+      evaluatePopulation(population, value).reason,
+      new RegExp(reason),
+      name,
+    );
+  }
+});
+
+test("Environment probes block before runner start and support executable/file/env/loopback", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "ty-context-env-"));
+  const marker = path.join(root, "runner-started.txt");
+  const fixture = path.join(root, "fixture.txt");
+  await writeFile(fixture, "fixture\n");
+  const server = net.createServer();
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const port = server.address().port;
+  const base = check(root, marker);
+  try {
+    const success = await executeCheckRunner(
+      {
+        ...base,
+        environment_requirements: [
+          { key: "node", kind: "executable", target: "node" },
+          { key: "fixture", kind: "file", target: "fixture.txt" },
+          {
+            key: "service",
+            kind: "loopback_tcp",
+            host: "127.0.0.1",
+            port,
+            timeout_ms: 1000,
+          },
+        ],
+      },
+      root,
+    );
+    assert.equal(success.execution_status, "completed");
+
+    for (const requirement of [
+      { key: "exe", kind: "executable", target: "definitely-missing-executable" },
+      { key: "env", kind: "env_var", target: "DEFINITELY_MISSING_ENV" },
+      { key: "file", kind: "file", target: "missing.txt" },
+      {
+        key: "tcp",
+        kind: "loopback_tcp",
+        host: "127.0.0.1",
+        port: 1,
+        timeout_ms: 50,
+      },
+    ]) {
+      await rm(marker, { force: true });
+      const result = await executeCheckRunner(
+        { ...base, environment_requirements: [requirement] },
+        root,
+      );
+      assert.equal(result.execution_status, "blocked_external");
+      assert.equal(result.attempts, 0);
+      await assert.rejects(() => import("node:fs/promises").then(({ access }) => access(marker)));
+    }
+  } finally {
+    server.close();
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+function check(root, marker) {
+  const script = `require('node:fs').writeFileSync(${JSON.stringify(marker)}, 'started'); console.log(JSON.stringify({schema_version:'long-task-check-result-v2',execution_status:'completed',observations:{result:true}}));`;
+  return {
+    internal_id: "CHECK.env.probe",
+    outcome_key: "env",
+    key: "probe",
+    proof_surface: "runtime_behavior",
+    runner: {
+      type: "node_oracle",
+      target: "probe.mjs",
+      argv: [],
+      cwd: ".",
+      timeout_ms: 5000,
+      effect: "read_only",
+      retry_policy: "none",
+      idempotent: true,
+      executable: process.execPath,
+      executable_argv_prefix: ["-e", script],
+      resolved_cwd: "",
+      resolved_target: "probe.mjs",
+      definition_sha256: "probe",
+      frozen_files: {},
+      package_script: null,
+      execution_identity: `probe-${root}`,
+    },
+    verification_input_hashes: {},
+    input_paths: [],
+    expected_output_paths: [],
+    artifact_globs: [],
+    positive_assertions: [],
+    negative_assertions: [],
+    environment_requirements: [],
+  };
+}

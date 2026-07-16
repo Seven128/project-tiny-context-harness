@@ -15,20 +15,55 @@ export async function createDeliveryFixture(options = {}) {
   await mkdir(path.join(root, "src"), { recursive: true });
   await mkdir(path.join(root, "tests"), { recursive: true });
   await mkdir(path.join(root, "project_context", "areas"), { recursive: true });
-  await writeFile(path.join(root, "src", "state.json"), `${JSON.stringify({ first: true, second: false })}\n`);
-  await writeFile(path.join(root, "source.md"), "# Fixture source\n\nThe first outcome must be observable.\n");
+  await writeFile(
+    path.join(root, "src", "state.json"),
+    `${JSON.stringify({ first: true, second: false })}\n`,
+  );
+  await writeFile(
+    path.join(root, "source.md"),
+    "# Fixture source\n\nThe first outcome must be observable.\n",
+  );
   await writeFile(
     path.join(root, "tests", "oracle.mjs"),
     `import { readFile } from "node:fs/promises";
 const state = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8"));
 const key = process.argv[2] || "first";
-console.log(JSON.stringify({ schema_version: "long-task-check-result-v1", observations: { result: state[key], population: { eligible: 1, observed: state[key] ? 1 : 0, excluded: 0 } } }));
+console.log(JSON.stringify({
+  schema_version: "long-task-check-result-v2",
+  execution_status: "completed",
+  observations: {
+    result: state[key],
+    population: {
+      eligible_ids: [key],
+      observed_ids: state[key] ? [key] : [],
+      excluded_items: []
+    }
+  }
+}));
 `,
   );
-  await writeFile(path.join(root, "package.json"), `${JSON.stringify({ name: "fixture", private: true, tyContext: { harnessFolderName: ".codex" }, scripts: { oracle: "node tests/oracle.mjs first" } }, null, 2)}\n`);
+  await writeFile(
+    path.join(root, "package.json"),
+    `${JSON.stringify(
+      {
+        name: "fixture",
+        private: true,
+        tyContext: { harnessFolderName: ".codex" },
+        scripts: { oracle: "node tests/oracle.mjs first" },
+      },
+      null,
+      2,
+    )}\n`,
+  );
   await writeFile(path.join(root, "project_context", "global.md"), "# Global\n");
-  await writeFile(path.join(root, "project_context", "architecture.md"), "# Architecture\n");
-  await writeFile(path.join(root, "project_context", "areas", "main.md"), "# Main\n");
+  await writeFile(
+    path.join(root, "project_context", "architecture.md"),
+    "# Architecture\n",
+  );
+  await writeFile(
+    path.join(root, "project_context", "areas", "main.md"),
+    "# Main\n",
+  );
   await writeFile(
     path.join(root, "project_context", "context.toml"),
     `[[areas]]
@@ -40,7 +75,9 @@ default = true
 `,
   );
   await exec("git", ["init"], { cwd: root });
-  await exec("git", ["config", "user.email", "fixture@example.test"], { cwd: root });
+  await exec("git", ["config", "user.email", "fixture@example.test"], {
+    cwd: root,
+  });
   await exec("git", ["config", "user.name", "Fixture"], { cwd: root });
   await exec("git", ["add", "."], { cwd: root });
   await exec("git", ["commit", "-m", "fixture"], { cwd: root });
@@ -52,7 +89,7 @@ default = true
 }
 
 export function deliveryContract(options = {}) {
-  const checks = (key, argument) => ({
+  const check = (key, argument, outcomeKey) => ({
     key,
     proof_surface: "runtime_behavior",
     runner: {
@@ -61,17 +98,22 @@ export function deliveryContract(options = {}) {
       argv: [argument],
       cwd: ".",
       timeout_ms: 30000,
-      network_policy: { mode: "none", allowed_hosts: [] },
       effect: "read_only",
       retry_policy: "none",
-      idempotent: false,
+      idempotent: true,
     },
-    verification_sources: ["tests/oracle.mjs"],
+    verification_inputs: ["tests/oracle.mjs"],
     input_paths: ["src/**"],
     expected_output_paths: [],
     artifact_globs: [],
     positive_assertions: [
-      { observation: "result", operator: "equals", expected: true },
+      {
+        key: `${outcomeKey}-result`,
+        claims: ["result", `obligation.implement-${outcomeKey}`],
+        observation: "result",
+        operator: "equals",
+        expected: true,
+      },
     ],
     negative_assertions: [],
     environment_requirements: [],
@@ -82,32 +124,46 @@ export function deliveryContract(options = {}) {
     depends_on: dependsOn,
     product: {
       observable_result: `${key} becomes observable`,
-      owner_boundary: "fixture",
+      owner: {
+        label: "fixture",
+        context_refs: ["project_context/areas/main.md"],
+        path_globs: ["src/**"],
+      },
       owner_surfaces: [],
       controls: [],
       non_completing_outcomes: [],
     },
     technical: {
-      obligations: [`Implement ${key}`],
+      obligations: [
+        {
+          key: `implement-${key}`,
+          statement: `Implement ${key}`,
+          required_proof_surfaces: ["runtime_behavior"],
+        },
+      ],
       expected_change_paths: ["src/**"],
       allowed_support_paths: [],
       forbidden_paths: ["secrets/**"],
-      bindings: [
-        { kind: "file", target: "state", carrier_paths: ["src/state.json"], existence: "existing" },
-      ],
       forbidden_shortcuts: [],
+      bindings: [
+        {
+          key: `state-${key}`,
+          kind: "file",
+          target: "src/state.json",
+          carrier_paths: ["src/state.json"],
+          existence: "existing",
+        },
+      ],
       rollback_and_recovery: null,
     },
     acceptance: {
-      validates: [`${key} is true`],
-      does_not_validate: [],
-      checks: [checks(`${key}-check`, argument)],
+      checks: [check(`${key}-check`, argument, key)],
       population: null,
       counterfactual_controls: [],
     },
   });
   return {
-    schema_version: "long-task-delivery-v1",
+    schema_version: "long-task-delivery-v2",
     task: {
       id: "fixture-task",
       title: "Fixture task",
@@ -121,28 +177,31 @@ export function deliveryContract(options = {}) {
         key: "first-observable",
         source_ref: "source.md#fixture-source",
         statement: "The first outcome must be observable.",
-        disposition: { type: "contract", refs: ["first"] },
+        disposition: { type: "claim", refs: ["first.result"] },
       },
     ],
     risk: {
       requested_level: "auto",
       facts: {
-        public_api_or_schema_change: false,
-        persistent_data_change: false,
-        data_migration: false,
-        security_boundary_change: false,
-        permission_boundary_change: false,
-        irreversible_external_effect: false,
-        critical_user_path: false,
-        full_population_operation: false,
-        multi_repository_change: false,
-        weak_observability: false,
+        public_api_or_schema_change: [],
+        persistent_data_change: [],
+        data_migration: [],
+        security_boundary_change: [],
+        permission_boundary_change: [],
+        irreversible_external_effect: [],
+        critical_user_path: [],
+        full_population_operation: [],
+        multi_repository_change: [],
+        weak_observability: [],
       },
-      evidence: [],
     },
     global: {
-      product: { non_goals: [], owner_boundaries: ["fixture"] },
-      technical: { constraints: [], forbidden_paths: ["secrets/**"], forbidden_shortcuts: [] },
+      product: { non_goals: [] },
+      technical: {
+        constraints: [],
+        forbidden_paths: [{ key: "no-secrets", path: "secrets/**" }],
+        forbidden_shortcuts: [],
+      },
       acceptance: { checks: [], external_confirmations: [] },
     },
     outcomes: options.twoOutcomes
@@ -152,17 +211,10 @@ export function deliveryContract(options = {}) {
 }
 
 export async function writeContract(workdir, contract) {
-  contract.risk.evidence ??= [];
-  for (const [fact, value] of Object.entries(contract.risk.facts))
-    if (value && !contract.risk.evidence.some((item) => item.fact === fact))
-      contract.risk.evidence.push({
-        fact,
-        source_claim_refs: ["first-observable"],
-        context_refs: ["project_context/areas/main.md"],
-        affected_paths: ["src/**"],
-        rationale: `Fixture declares ${fact}.`,
-      });
-  await writeFile(path.join(workdir, "delivery-contract.yaml"), YAML.stringify(contract, { lineWidth: 0 }));
+  await writeFile(
+    path.join(workdir, "delivery-contract.yaml"),
+    YAML.stringify(contract, { lineWidth: 0 }),
+  );
 }
 
 export async function readState(root) {
@@ -171,13 +223,8 @@ export async function readState(root) {
 
 export async function runCli(cwd, args, options = {}) {
   const { skipCandidateCommit = false, ...execOptions } = options;
-  if (
-    !skipCandidateCommit &&
-    args[0] === "long-task" &&
-    args[1] === "final-gate"
-  ) {
+  if (!skipCandidateCommit && args[0] === "long-task" && args[1] === "final-gate")
     await commitCandidate(cwd);
-  }
   const result = await exec(process.execPath, [cli, ...args], {
     cwd,
     windowsHide: true,

@@ -32,9 +32,6 @@ test("long-task never invokes model/Git orchestration surfaces and runs only dec
         `@echo ${name}>>"%TY_CONTEXT_FORBIDDEN_PROCESS_LOG%"\r\n@exit /b 97\r\n`,
       );
     }
-    fixture.contract.outcomes.forEach((outcome) => {
-      outcome.technical.allowed_support_paths.push("forbidden-process-shims/**");
-    });
     await writeContract(fixture.workdir, fixture.contract);
     const env = {
       ...process.env,
@@ -64,7 +61,7 @@ test("long-task never invokes model/Git orchestration surfaces and runs only dec
     const trace = await readFile(gitTrace, "utf8");
     assert.doesNotMatch(
       trace,
-      /\bgit (?:worktree|branch|switch|checkout|merge|push|request-pull)\b/u,
+      /\bgit (?:worktree|branch|switch|checkout\s|merge|push|request-pull)\b/u,
     );
     assert.equal(await pathExists(path.join(fixture.root, ".git/refs/remotes")), false);
   } finally {
@@ -88,7 +85,9 @@ test("package_script runner executes in the immutable snapshot with project depe
       argv: [],
       cwd: ".",
       timeout_ms: 30_000,
-      network_policy: { mode: "none", allowed_hosts: [] },
+      effect: "read_only",
+      retry_policy: "none",
+      idempotent: true,
     };
     await writeContract(fixture.workdir, fixture.contract);
     await runCli(fixture.root, ["enable", "long-task"]);

@@ -4,30 +4,47 @@ import YAML from "yaml";
 import { parseDeliveryContractText } from "../../packages/ty-context/dist/lib/long-task-delivery-parser.js";
 import { deliveryContract } from "./long-task-delivery-fixtures.mjs";
 
-test("parses one canonical Delivery Contract without cross-entity ids", () => {
-  const parsed = parseDeliveryContractText(YAML.stringify(deliveryContract({ twoOutcomes: true })));
-  assert.deepEqual(parsed.outcomes.map((outcome) => outcome.key), ["first", "second"]);
-  assert.equal(JSON.stringify(parsed).includes("requirement_id"), false);
-  assert.equal(JSON.stringify(parsed).includes("obligation_id"), false);
-  assert.equal(JSON.stringify(parsed).includes("ac_id"), false);
+test("parses the only active V2 Contract without entity-chain ids", () => {
+  const parsed = parseDeliveryContractText(
+    YAML.stringify(deliveryContract({ twoOutcomes: true })),
+  );
+  assert.equal(parsed.schema_version, "long-task-delivery-v2");
+  assert.deepEqual(
+    parsed.outcomes.map((outcome) => outcome.key),
+    ["first", "second"],
+  );
+  for (const retired of ["requirement_id", "plan_item", "ac_id", "proof_id"])
+    assert.equal(JSON.stringify(parsed).includes(retired), false);
 });
 
-test("rejects duplicate Outcome keys while allowing Outcome-local Check keys", () => {
+test("V1 is retired instead of entering a second Evidence Kernel", () => {
+  const contract = deliveryContract();
+  contract.schema_version = "long-task-delivery-v1";
+  assert.throws(
+    () => parseDeliveryContractText(YAML.stringify(contract)),
+    /long_task_delivery_v1_retired_use_v2/,
+  );
+});
+
+test("rejects duplicate Outcome/Check/Assertion keys while Check keys remain Outcome-local", () => {
   const duplicateOutcome = deliveryContract({ twoOutcomes: true });
   duplicateOutcome.outcomes[1].key = "first";
   assert.throws(
     () => parseDeliveryContractText(YAML.stringify(duplicateOutcome)),
     /outcome_key_duplicate/,
   );
-  const duplicateCheck = deliveryContract({ twoOutcomes: true });
-  duplicateCheck.outcomes[1].acceptance.checks[0].key = "first-check";
+  const localChecks = deliveryContract({ twoOutcomes: true });
+  localChecks.outcomes[1].acceptance.checks[0].key = "first-check";
   assert.doesNotThrow(() =>
-    parseDeliveryContractText(YAML.stringify(duplicateCheck)),
+    parseDeliveryContractText(YAML.stringify(localChecks)),
   );
-  duplicateCheck.outcomes[1].acceptance.checks.push({
-    ...structuredClone(duplicateCheck.outcomes[1].acceptance.checks[0]),
-  });
-  assert.throws(() => parseDeliveryContractText(YAML.stringify(duplicateCheck)), /check_key_duplicate/);
+  const duplicateAssertion = deliveryContract();
+  const check = duplicateAssertion.outcomes[0].acceptance.checks[0];
+  check.negative_assertions.push(structuredClone(check.positive_assertions[0]));
+  assert.throws(
+    () => parseDeliveryContractText(YAML.stringify(duplicateAssertion)),
+    /assertion_key_duplicate/,
+  );
 });
 
 test("rejects unsupported runners, unknown keys and YAML aliases", () => {
@@ -38,21 +55,26 @@ test("rejects unsupported runners, unknown keys and YAML aliases", () => {
     /runner.type:must be one of/,
   );
   const unknown = YAML.stringify(deliveryContract()).replace(
-    "schema_version: long-task-delivery-v1",
-    "schema_version: long-task-delivery-v1\nunknown: true",
+    "schema_version: long-task-delivery-v2",
+    "schema_version: long-task-delivery-v2\nunknown: true",
   );
   assert.throws(() => parseDeliveryContractText(unknown), /unknown keys/);
   assert.throws(
-    () => parseDeliveryContractText("schema_version: &x long-task-delivery-v1\ntask: *x\n"),
+    () =>
+      parseDeliveryContractText(
+        "schema_version: &x long-task-delivery-v2\ntask: *x\n",
+      ),
     /aliases|anchors/,
   );
 });
 
-test("rejects missing executable proof and cyclic dependencies", () => {
+test("uncovered Claims and cyclic dependencies fail closed", () => {
   const noCheck = deliveryContract();
   noCheck.outcomes[0].acceptance.checks = [];
-  const parsed = parseDeliveryContractText(YAML.stringify(noCheck));
-  assert.equal(parsed.outcomes[0].acceptance.checks.length, 0);
+  assert.throws(
+    () => parseDeliveryContractText(YAML.stringify(noCheck)),
+    /product_claim_uncovered/,
+  );
   const cyclic = deliveryContract({ twoOutcomes: true });
   cyclic.outcomes[0].depends_on = ["second"];
   assert.throws(

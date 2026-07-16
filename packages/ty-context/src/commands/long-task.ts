@@ -1,21 +1,26 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { compileProductClaimCoverage } from "../lib/long-task-claims.js";
 import { compileDeliveryContract } from "../lib/long-task-delivery-compiler.js";
-import { runDeliveryFinalGate } from "../lib/long-task-final-v1.js";
+import { parseDeliveryContractBundle } from "../lib/long-task-delivery-parser.js";
+import { runDeliveryFinalGate } from "../lib/long-task-final-v2.js";
+import { classifyLongTaskRisk } from "../lib/long-task-risk.js";
 import {
   closeDeliveryTask,
+  doctorDeliveryTask,
   readDeliveryStatus,
   resumeDeliveryTask,
   stopCheckDeliveryTask,
-} from "../lib/long-task-status-v1.js";
+} from "../lib/long-task-status-v2.js";
 import {
   abandonLongTaskState,
   activateDeliveryContract,
   approvePendingAuthorityRevision,
   clearAuthorityRevision,
+  invalidateDerivedProgress,
   writeCompiledDeliveryContract,
 } from "../lib/long-task-state.js";
-import { verifyDeliveryContract } from "../lib/long-task-verifier-v1.js";
+import { verifyDeliveryContract } from "../lib/long-task-verifier-v2.js";
 import { repositoryRoot } from "../lib/long-task-workspace.js";
 
 export async function longTask(args: string[]): Promise<void> {
@@ -31,15 +36,14 @@ export async function longTask(args: string[]): Promise<void> {
     console.log(JSON.stringify({ status: "initialized", workdir }));
     return;
   }
-  if (subcommand === "compile") {
-    return compile(workdir, args.slice(2));
-  }
-  if (subcommand === "approve-authority-revision") {
+  if (subcommand === "compile") return compile(workdir, args.slice(2));
+  if (subcommand === "approve-authority-revision")
     return approveRevision(workdir, args.slice(2));
+  if (subcommand === "explain") {
+    rejectUnknown(args.slice(2), []);
+    return explain(workdir);
   }
-  if (subcommand === "verify") {
-    return verify(workdir, args.slice(2));
-  }
+  if (subcommand === "verify") return verify(workdir, args.slice(2));
   if (subcommand === "status") {
     rejectUnknown(args.slice(2), []);
     console.log(JSON.stringify(await readDeliveryStatus(workdir), null, 2));
@@ -50,9 +54,12 @@ export async function longTask(args: string[]): Promise<void> {
     console.log(JSON.stringify(await resumeDeliveryTask(workdir), null, 2));
     return;
   }
-  if (subcommand === "final-gate") {
-    return finalGate(workdir, args.slice(2));
+  if (subcommand === "doctor") {
+    rejectUnknown(args.slice(2), []);
+    console.log(JSON.stringify(await doctorDeliveryTask(workdir), null, 2));
+    return;
   }
+  if (subcommand === "final-gate") return finalGate(workdir, args.slice(2));
   if (subcommand === "stop-check") {
     const message = option(args.slice(2), "--message") ?? "";
     rejectOptions(args.slice(2), ["--message"]);
@@ -78,11 +85,13 @@ export async function longTask(args: string[]): Promise<void> {
 }
 
 async function compile(workdir: string, args: string[]): Promise<void> {
-  const amendmentReason = option(args, "--amendment-reason");
-  rejectOptions(args, ["--amendment-reason"]);
+  const revise = args.length === 1 && args[0] === "--revise";
+  if (args.length && !revise)
+    throw new Error(`Unknown or injected arguments: ${args.join(" ")}`);
   const compiled = await compileDeliveryContract(workdir, process.cwd(), {
-    amendment_reason: amendmentReason,
+    revise,
   });
+  if (revise) await invalidateDerivedProgress(workdir);
   await writeCompiledDeliveryContract(compiled);
   await activateDeliveryContract(compiled);
   await clearAuthorityRevision(workdir);
@@ -91,8 +100,10 @@ async function compile(workdir: string, args: string[]): Promise<void> {
       status: "compiled",
       task_id: compiled.task.id,
       compiled_identity: compiled.compiled_identity,
+      authority_revision: compiled.authority_revision,
       effective_risk: compiled.effective_risk,
       outcomes: compiled.outcomes.map((outcome) => outcome.key),
+      claim_coverage: compiled.claim_coverage,
     }),
   );
 }
@@ -104,6 +115,35 @@ async function approveRevision(workdir: string, args: string[]): Promise<void> {
   await approvePendingAuthorityRevision(workdir, revision);
   console.log(
     JSON.stringify({ status: "authority_revision_approved", revision }),
+  );
+}
+
+async function explain(workdir: string): Promise<void> {
+  const parsed = await parseDeliveryContractBundle(workdir);
+  const coverage = compileProductClaimCoverage(parsed.contract);
+  const risk = classifyLongTaskRisk(parsed.contract);
+  const claims = Object.entries(coverage.summary.claims_by_outcome).flatMap(
+    ([outcomeKey, rows]) =>
+      Object.entries(rows).map(([claimKey, value]) => ({
+        claim: `${outcomeKey}.${claimKey}`,
+        covered: value.covered,
+        checks: value.proofs.map((proof) => proof.check_key),
+        assertions: value.proofs.map((proof) => proof.assertion_key),
+        polarity: value.proofs.map((proof) => proof.polarity),
+        proof_surfaces: value.proofs.map((proof) => proof.proof_surface),
+        strict_risk_obligations: risk.reasons_by_outcome[outcomeKey],
+      })),
+  );
+  console.log(
+    JSON.stringify(
+      {
+        schema_version: "long-task-explain-v2",
+        claims,
+        coverage: coverage.summary,
+      },
+      null,
+      2,
+    ),
   );
 }
 
@@ -122,8 +162,7 @@ async function finalGate(workdir: string, args: string[]): Promise<void> {
   console.log(JSON.stringify(result));
   if (
     result.workflow_status !== "machine_accepted" &&
-    result.workflow_status !== "machine_accepted_external_pending" &&
-    result.workflow_status !== "contract_gate_passed"
+    result.workflow_status !== "machine_accepted_external_pending"
   )
     process.exitCode = 1;
 }
@@ -152,10 +191,9 @@ function option(args: string[], name: string): string | undefined {
 }
 
 function rejectOptions(args: string[], allowed: string[]): void {
-  for (let index = 0; index < args.length; index += 2) {
+  for (let index = 0; index < args.length; index += 2)
     if (!allowed.includes(args[index]) || !args[index + 1])
       throw new Error(`Unknown or injected arguments: ${args.join(" ")}`);
-  }
 }
 
 function rejectUnknown(actual: string[], allowed: string[]): void {
@@ -166,11 +204,14 @@ function rejectUnknown(actual: string[], allowed: string[]): void {
 function help(): void {
   console.log(`ty-context long-task commands:
   init <workdir>
-  compile <workdir> [--amendment-reason <reason>]
+  compile <workdir>
+  compile <workdir> --revise
   approve-authority-revision <workdir> --revision <sha>
+  explain <workdir>
   verify <workdir> [--outcome <key>] [--check <key>]
   status <workdir>
   resume <workdir>
+  doctor <workdir>
   final-gate <workdir>
   stop-check <workdir> [--message <text>]
   close <workdir>
@@ -178,7 +219,7 @@ function help(): void {
 }
 
 function template(): string {
-  return `schema_version: long-task-delivery-v1
+  return `schema_version: long-task-delivery-v2
 task:
   id: replace-me
   title: Replace me
@@ -190,21 +231,19 @@ source_claims: []
 risk:
   requested_level: auto
   facts:
-    public_api_or_schema_change: false
-    persistent_data_change: false
-    data_migration: false
-    security_boundary_change: false
-    permission_boundary_change: false
-    irreversible_external_effect: false
-    critical_user_path: false
-    full_population_operation: false
-    multi_repository_change: false
-    weak_observability: false
-  evidence: []
+    public_api_or_schema_change: []
+    persistent_data_change: []
+    data_migration: []
+    security_boundary_change: []
+    permission_boundary_change: []
+    irreversible_external_effect: []
+    critical_user_path: []
+    full_population_operation: []
+    multi_repository_change: []
+    weak_observability: []
 global:
   product:
     non_goals: []
-    owner_boundaries: []
   technical:
     constraints: []
     forbidden_paths: []
@@ -218,21 +257,30 @@ outcomes:
     depends_on: []
     product:
       observable_result: Describe what a user or system can observe.
-      owner_boundary: Describe the owning product or module boundary.
+      owner:
+        label: replace-owner
+        context_refs: []
+        path_globs: ["src/**", "tests/**"]
       owner_surfaces: []
       controls: []
       non_completing_outcomes: []
     technical:
-      obligations: []
+      obligations:
+        - key: replace-runtime
+          statement: Implement the declared runtime behavior.
+          required_proof_surfaces: [runtime_behavior]
       expected_change_paths: ["src/**"]
-      allowed_support_paths: ["tests/**"]
+      allowed_support_paths: []
       forbidden_paths: []
-      bindings: []
       forbidden_shortcuts: []
+      bindings:
+        - key: replace-runtime
+          kind: verified
+          target: replace runtime capability
+          carrier_paths: ["src/**"]
+          verification_check_key: replace-check
       rollback_and_recovery: null
     acceptance:
-      validates: ["Replace with the falsifiable result proved by the Check."]
-      does_not_validate: []
       checks:
         - key: replace-check
           proof_surface: runtime_behavior
@@ -242,19 +290,17 @@ outcomes:
             argv: []
             cwd: .
             timeout_ms: 30000
-            network_policy:
-              mode: none
-              allowed_hosts: []
             effect: read_only
             retry_policy: none
-            idempotent: false
-          verification_sources:
-            - tests/replace-oracle.mjs
+            idempotent: true
+          verification_inputs: ["tests/replace-oracle.mjs"]
           input_paths: ["src/**"]
           expected_output_paths: []
           artifact_globs: []
           positive_assertions:
-            - observation: result
+            - key: replace-success
+              claims: [result, obligation.replace-runtime]
+              observation: result
               operator: equals
               expected: true
           negative_assertions: []

@@ -1,70 +1,60 @@
 ---
 name: long-task-workflow
-description: Prepare, execute, resume, verify, or close a Single-Goal Delivery Contract, logical Contract Bundle, or Delivery Set in the current platform-native Goal and workspace. Use only when explicitly invoked or an active ty-context long-task authority exists.
+description: Prepare, execute, resume, verify, or close one Single-Goal Delivery Contract or logical Contract Bundle in the current native Goal and workspace. Use only when explicitly invoked or a valid common-dir V2 binding exists.
 ---
 
 # Single-Goal Long-Task Workflow
 
-## Purpose And Hard Boundaries
+## Boundaries
 
-Use the current native Goal and user-selected repository for long delivery without creating a scheduler, model worker, agent runtime or Git topology. Harness owns static authority compilation, rolling machine progress, same-snapshot Final Gate and Stop freshness. Git hosting, CI, deployment and human confirmation remain external.
+Use one current native Goal, one repository and one workspace. Never create a scheduler, model worker, agent runtime, App Server, branch, worktree, merge, push, PR, deployment, Campaign/SFC/Packet/Wave chain, matrix, verdict or second plan. Never activate from task size alone.
 
-- Never create or simulate a Goal, Turn, Agent, AppServer/model worker, branch, worktree, merge, push, PR, deployment or automatic Child execution.
-- Never activate from duration, file count, token count, parallelism or complexity. Explicit invocation or an active binding is required.
-- Do not create Campaign/SFC/Packet/Wave/Source-Unit chains, matrices, verdicts or a second plan.
-- Targeted verify and Child Gate are progress only. Only a fresh standalone Final Receipt or Delivery Set Receipt is top-level machine completion authority.
-- Never weaken Product, Acceptance, risk, source coverage or a Set boundary to make implementation pass.
+`long-task-delivery-v2` is the only active Contract schema. Its root authoring file is `delivery-contract.yaml`. One large atomic delivery may use sorted Outcome fragments under one root Contract Bundle. Independent top-level deliveries run separately. `delivery-set` is retired and non-executing.
 
-## Entry And Boundary Check
+## Entry
 
 1. Read minimum controlling Context and decide `Context Delta: none|required`.
-2. If `.codex/ty-context-active-long-task.json` exists, inspect its `mode` and run the matching `long-task resume` or `delivery-set resume` command.
-3. Otherwise perform one semantic Contract Boundary Check before authoring. Its result is exactly `single_contract`, `single_contract_bundle`, `delivery_set`, `decision_required` or `capacity_blocked`.
-4. Use a Delivery Set only when every candidate has an independently observable result, executable Acceptance, a real release/rollback/owner/risk/product-capability boundary, preserves atomic user loops and participates in an acyclic dependency graph. File count, tokens, layers, parallelism, agents or duration are not separation reasons.
-5. Keep one logical Contract Bundle for a large atomic delivery. `delivery-contract.yaml` remains the root authority and may use sorted `outcome_files`; fragments own only Outcome content.
+2. If a valid active binding exists, run `ty-context long-task resume <workdir>`.
+3. Otherwise perform one semantic Contract Boundary Check: `single_contract`, `single_contract_bundle`, `separate_top_level_contracts`, `decision_required` or `capacity_blocked`.
+4. Preserve original requirements in declared `source_paths`; every `source_claim` must be a generated Claim reference, global constraint, source-backed out-of-scope item, or decision-required blocker.
 
-## Source Coverage And Authoring
+## Authoring And Compile
 
-Preserve original user/external requirements in `source.md` or declared `source_paths`. For L2, Contract Bundle and Delivery Set work, declare direct `source_claims` with exactly one disposition: Contract/Outcome, global constraint, source-backed out of scope, or decision required. A decision-required claim blocks affected execution. For simple L1, conduct the same source-to-Contract Coverage Review even when claims are not enumerated.
+Author complete observable Outcomes, control states, non-completing outcomes, owner Context/path boundaries, technical obligations with required proof surfaces, supported file/path-glob/verified bindings, recovery, per-Outcome risk and executable Checks.
 
-Author complete Product outcomes, non-goals/owner boundaries, stable technical/path/binding/recovery constraints, risk facts with evidence, and executable machine Acceptance. Every Check declares its runner, `verification_sources`, `input_paths`, planned `expected_output_paths`, artifacts, assertions, environment, safe effect/retry/idempotency and any population/counterfactual proof. Verification sources must include entrypoints, helpers, fixtures/config and package-script selection and must not overlap implementation paths.
+Every Check declares a resolved runner, `verification_inputs`, input/output paths, per-Check artifacts, Assertions with Claim refs, structured environment probes and any entity-population or Counterfactual proof. Verification inputs include entrypoints, helpers, fixtures/config, package scripts and lockfiles and cannot overlap implementation carriers.
 
-For a Set, author `delivery-set.yaml`, its source coverage, global boundaries/integration checks/external confirmations, and Child entries with observable results, separation reasons, evidence and dependencies. Child task ids/workdirs must match the Set. V1 rejects multi-repository delivery.
-
-## Compile And Authority Revisions
-
-Compile before product implementation:
+Run:
 
 ```text
 ty-context long-task compile <workdir>
-ty-context delivery-set compile <setdir>
+ty-context long-task compile <workdir> --revise
 ```
 
-The first compile freezes one immutable initial task base. Recompile never replaces it. After implementation, targeted verify or Child Gate starts execution, protected source/Product/Acceptance/risk/Set-boundary changes produce a hash-bound pending revision and do not activate. Obtain an explicit user decision, then run the matching `approve-authority-revision ... --revision <sha>`. Technical path/support/binding or proof-strengthening amendments require `--amendment-reason`, recompute risk and stale affected progress; never disguise authority reduction as a technical amendment.
+Compile rejects uncovered result/control/non-completing/obligation/forbidden-shortcut Claims. The first compile freezes an immutable initial base. Protected authority changes require `--revise`; reductions require exact revision approval, while risk downgrade is rejected.
 
 ## Rolling Execution
 
-For a standalone Contract or Bundle, select dependency-ready Outcomes, implement in the current workspace, run focused project tests, then run targeted `verify --outcome/--check`. Progress is stored per Check and scoped to authority, runner/verifier, relevant Context, implementation inputs, binding carriers and dependency interfaces. It never produces accepted.
+Implement dependency-ready Outcomes in the current workspace and run targeted `verify --outcome/--check`. Progress is scoped by Outcome authority, resolved runner, verification inputs, relevant Context and implementation inputs. It is repair evidence only and never acceptance authority.
 
-For a Delivery Set, use `delivery-set status|resume` only to project ready/blocked/passed/stale/remaining Contracts. Compile a downstream Child only after upstream Child Gate receipts are fresh. A Child `final-gate` may produce only `contract_gate_passed`; it does not clear the Set binding or permit Stop. The Harness never starts the next Child.
+Runner retry defaults to none. One retry is allowed only for `transient_once`, idempotent, read-only/test-sandbox work. Structured environment requirements may probe executable, env var, file or loopback TCP availability; a failed probe blocks before runner start. The Harness does not provide network isolation.
 
-Runner retry defaults to none. One mechanical retry is allowed only for `transient_once` + `idempotent: true` + `read_only|test_sandbox`. A timeout alone does not prove retry safety. Final Gate never performs deployment, payment, migration execution or irreversible production mutation. Network-policy environment hints are not an OS sandbox.
+Counterfactual V2 may mutate only declared carriers, never runner/verification inputs, and succeeds only when execution completes with exit zero and exactly the designated Assertions fail. Population V2 proves exact eligible = observed + valid exclusions by entity id.
 
-## Finalization Order
+## Live Final Authority
 
-Complete required durable Context updates, product code, verifier review and tests first; then create a clean candidate commit; then run Final Gate:
+Complete Context, product code and project tests, then create a clean candidate commit. Run:
 
 ```text
 ty-context long-task final-gate <workdir>
-ty-context delivery-set final-gate <setdir>
 ```
 
-A standalone Final Gate reruns all Contract checks on one snapshot. A Set Final Gate creates one snapshot and reruns every Child check plus Set integration checks; it never reuses historical Child passes. The Receipt binds HEAD, Git tree, workspace, source, Context, Contract/Set and verifier identities. Later content changes or commits stale it; push/PR operations that preserve local commit/tree do not.
+Final Gate recompiles source authority, validates the Git common-dir record against the worktree Git-config marker, creates a Git-tree snapshot with dirty overlay only for targeted verification, and reruns every required Check on one snapshot. Equal raw executions may deduplicate only inside that Gate; artifact and Assertion evidence remains per Check.
 
-Machine acceptance means only that the bound snapshot satisfies declared machine checks. With declared human/deploy confirmations it is `machine_accepted_external_pending`; list them in handoff and never claim CI, deployment or human acceptance. Stop may finish the coding Goal, while the active binding can remain until explicit close.
+Receipts, status, progress and compiled cache are audit/recovery data with `reusable_for_acceptance: false`. Stop and close run the same Live Final Gate rather than trusting prior files. Successful Stop/close atomically clears the active binding. `abandon` is explicit non-success cleanup and never changes user Git content.
 
-Use `close` only for a matching fresh top-level Receipt. `close` and draft `abandon` are idempotent; abandon preserves source, Contract/Bundle/Set files and user Git content.
+Machine acceptance means only that declared machine checks passed on the bound snapshot. Report pending external confirmations and never claim Git hosting, CI, deployment, network isolation, payment/migration execution or human product acceptance.
 
 ## Handoff
 
-Report implementation, effective risk, source coverage, rolling/Child/Set results, Final Receipt freshness, external confirmations, Context status and blockers. Never claim the Harness created/restored a Goal, discovered undeclared source claims, provided network isolation, or completed Git/CI/deployment/human confirmation.
+Report implementation, effective per-Outcome risk, Claim Coverage, Live Gate result, external confirmations, Context status and blockers. State the local threat-model limits honestly: the installed package verifier and Git metadata are trusted, and undeclared requirements cannot be discovered by the Harness.

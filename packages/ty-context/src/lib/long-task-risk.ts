@@ -1,38 +1,65 @@
 import type {
-  DeliveryCheckV1,
-  DeliveryContractV1,
-  DeliveryOutcomeV1,
+  DeliveryCheckV2,
+  DeliveryContractV2,
+  DeliveryOutcomeV2,
   EffectiveRiskLevel,
+  RiskFactName,
 } from "./long-task-delivery-types.js";
 
-export interface RiskDecisionV1 {
+export interface RiskDecisionV2 {
   effective_level: EffectiveRiskLevel;
   minimum_level: EffectiveRiskLevel;
   reasons: string[];
+  reasons_by_outcome: Record<string, RiskFactName[]>;
 }
 
+const STRICT_FACTS = new Set<RiskFactName>([
+  "public_api_or_schema_change",
+  "persistent_data_change",
+  "data_migration",
+  "security_boundary_change",
+  "permission_boundary_change",
+  "irreversible_external_effect",
+  "full_population_operation",
+  "multi_repository_change",
+]);
+
 export function classifyLongTaskRisk(
-  contract: DeliveryContractV1,
-): RiskDecisionV1 {
-  const facts = contract.risk.facts;
-  if (facts.multi_repository_change)
-    throw new Error("multi_repository_delivery_not_supported_v1");
-  const reasons = [
-    [facts.public_api_or_schema_change, "public_api_or_schema_change"],
-    [facts.persistent_data_change, "persistent_data_change"],
-    [facts.data_migration, "data_migration"],
-    [facts.security_boundary_change, "security_boundary_change"],
-    [facts.permission_boundary_change, "permission_boundary_change"],
-    [facts.irreversible_external_effect, "irreversible_external_effect"],
-    [facts.full_population_operation, "full_population_operation"],
-    [facts.multi_repository_change, "multi_repository_change"],
-    [
-      facts.critical_user_path && facts.weak_observability,
-      "critical_user_path_with_weak_observability",
-    ],
-  ]
-    .filter(([hit]) => hit)
-    .map(([, reason]) => String(reason));
+  contract: DeliveryContractV2,
+): RiskDecisionV2 {
+  const outcomeKeys = new Set(contract.outcomes.map((outcome) => outcome.key));
+  const reasonsByOutcome = Object.fromEntries(
+    contract.outcomes.map((outcome) => [outcome.key, [] as RiskFactName[]]),
+  );
+  for (const [fact, outcomes] of Object.entries(contract.risk.facts) as Array<
+    [RiskFactName, string[]]
+  >) {
+    for (const outcome of outcomes) {
+      if (!outcomeKeys.has(outcome))
+        throw new Error(`risk_outcome_unknown:${fact}:${outcome}`);
+      reasonsByOutcome[outcome].push(fact);
+    }
+  }
+  if (contract.risk.facts.multi_repository_change.length)
+    throw new Error("multi_repository_delivery_not_supported_v2");
+  const reasons = Object.entries(reasonsByOutcome)
+    .flatMap(([outcome, facts]) =>
+      facts
+        .filter((fact) => STRICT_FACTS.has(fact))
+        .map((fact) => `${fact}:${outcome}`),
+    )
+    .concat(
+      contract.outcomes
+        .filter(
+          (outcome) =>
+            contract.risk.facts.critical_user_path.includes(outcome.key) &&
+            contract.risk.facts.weak_observability.includes(outcome.key),
+        )
+        .map(
+          (outcome) =>
+            `critical_user_path_with_weak_observability:${outcome.key}`,
+        ),
+    );
   const minimum: EffectiveRiskLevel = reasons.length ? "strict" : "standard";
   if (contract.risk.requested_level === "standard" && minimum === "strict")
     throw new Error(`risk_level_below_required:${reasons.join(",")}`);
@@ -41,54 +68,33 @@ export function classifyLongTaskRisk(
     effective_level:
       contract.risk.requested_level === "strict" ? "strict" : minimum,
     reasons,
+    reasons_by_outcome: reasonsByOutcome,
   };
 }
 
 export function validateRiskProof(
-  contract: DeliveryContractV1,
-  decision: RiskDecisionV1,
+  contract: DeliveryContractV2,
+  decision: RiskDecisionV2,
 ): void {
   const errors: string[] = [];
-  const riskEvidence = contract.risk.evidence ?? [];
-  const evidenceFacts = new Set(riskEvidence.map((item) => item.fact));
-  for (const [fact, value] of Object.entries(contract.risk.facts))
-    if (value && !evidenceFacts.has(fact as keyof typeof contract.risk.facts))
-      errors.push(`risk_evidence_required:${fact}`);
-  const claimKeys = new Set(
-    (contract.source_claims ?? []).map((claim) => claim.key),
-  );
-  const contextRefs = new Set(contract.task.context_refs);
-  for (const evidence of riskEvidence) {
-    for (const claim of evidence.source_claim_refs)
-      if (!claimKeys.has(claim))
-        errors.push(
-          `risk_evidence_source_claim_unknown:${evidence.fact}:${claim}`,
-        );
-    for (const reference of evidence.context_refs)
-      if (!contextRefs.has(reference))
-        errors.push(
-          `risk_evidence_context_ref_unknown:${evidence.fact}:${reference}`,
-        );
-  }
   if (!contract.outcomes.length) errors.push("outcome_required");
   for (const check of contract.global.acceptance.checks)
     validateCheck(check, "global", errors);
   for (const outcome of contract.outcomes) validateOutcome(outcome, errors);
-  if (decision.effective_level === "strict") validateStrict(contract, errors);
+  if (decision.effective_level === "strict")
+    validateStrict(contract, decision, errors);
   if (errors.length)
     throw new Error(
       `delivery_contract_preflight_failed:\n${errors.join("\n")}`,
     );
 }
 
-function validateOutcome(outcome: DeliveryOutcomeV1, errors: string[]): void {
+function validateOutcome(outcome: DeliveryOutcomeV2, errors: string[]): void {
   const checks = new Map(
     outcome.acceptance.checks.map((check) => [check.key, check]),
   );
   if (!checks.size)
     errors.push(`outcome_without_executable_check:${outcome.key}`);
-  if (!outcome.acceptance.validates.length)
-    errors.push(`outcome_validates_empty:${outcome.key}`);
   if (!outcome.technical.expected_change_paths.length)
     errors.push(`expected_change_paths_empty:${outcome.key}`);
   for (const check of checks.values())
@@ -107,111 +113,124 @@ function validateOutcome(outcome: DeliveryOutcomeV1, errors: string[]): void {
       (control) => control.check_key,
     ),
     ...(outcome.technical.rollback_and_recovery?.verification_check_keys ?? []),
+    ...outcome.technical.bindings.flatMap((binding) =>
+      binding.verification_check_key ? [binding.verification_check_key] : [],
+    ),
   ];
   for (const checkKey of referenced)
     if (!checks.has(checkKey))
       errors.push(`outcome_check_reference_unknown:${outcome.key}:${checkKey}`);
 }
 
-function validateStrict(contract: DeliveryContractV1, errors: string[]): void {
-  const allChecks = [
-    ...contract.global.acceptance.checks,
-    ...contract.outcomes.flatMap((outcome) => outcome.acceptance.checks),
-  ];
-  const negative = allChecks.some((check) => check.negative_assertions.length);
-  const counterfactual = contract.outcomes.some(
-    (outcome) => outcome.acceptance.counterfactual_controls.length,
-  );
-  if (!negative) errors.push("strict_negative_assertion_required");
-  if (!counterfactual) errors.push("strict_counterfactual_control_required");
-  validateStrictSurfaces(contract, allChecks, errors);
-  validateStrictPopulation(contract, allChecks, errors);
-  validateStrictRecovery(contract, errors);
-  validateStrictForbiddenShortcuts(contract, negative, counterfactual, errors);
-}
-
-function validateStrictSurfaces(
-  contract: DeliveryContractV1,
-  allChecks: DeliveryCheckV1[],
+function validateStrict(
+  contract: DeliveryContractV2,
+  decision: RiskDecisionV2,
   errors: string[],
 ): void {
-  const facts = contract.risk.facts;
-  const any = (surface: DeliveryCheckV1["proof_surface"]) =>
-    allChecks.some((check) => check.proof_surface === surface);
-
-  if (
-    (facts.security_boundary_change || facts.permission_boundary_change) &&
-    !any("security_boundary")
-  )
-    errors.push("strict_security_boundary_proof_required");
-  if (facts.public_api_or_schema_change && !any("api_contract"))
-    errors.push("strict_api_contract_proof_required");
-  if (
-    (facts.persistent_data_change || facts.data_migration) &&
-    !any("data_state")
-  )
-    errors.push("strict_data_state_proof_required");
-  if (
-    facts.critical_user_path &&
-    facts.weak_observability &&
-    !allChecks.some(
-      (check) =>
-        check.proof_surface === "ui_browser" ||
-        check.proof_surface === "runtime_behavior",
+  const explicitStrictWithoutFacts =
+    contract.risk.requested_level === "strict" && decision.reasons.length === 0;
+  for (const outcome of contract.outcomes) {
+    const facts = new Set(decision.reasons_by_outcome[outcome.key]);
+    const checks = outcome.acceptance.checks;
+    const hasNegative = checks.some(
+      (check) => check.negative_assertions.length > 0,
+    );
+    const hasCounterfactual =
+      outcome.acceptance.counterfactual_controls.length > 0;
+    if (explicitStrictWithoutFacts) {
+      if (!hasNegative)
+        errors.push(`strict_negative_assertion_required:${outcome.key}`);
+      if (!hasCounterfactual)
+        errors.push(`strict_counterfactual_control_required:${outcome.key}`);
+    }
+    if (
+      facts.has("security_boundary_change") ||
+      facts.has("permission_boundary_change")
     )
-  )
-    errors.push("strict_critical_path_observable_proof_required");
+      requireStrictProof(
+        outcome,
+        "security_boundary",
+        hasNegative,
+        hasCounterfactual,
+        errors,
+      );
+    if (facts.has("public_api_or_schema_change"))
+      requireStrictProof(
+        outcome,
+        "api_contract",
+        hasNegative,
+        hasCounterfactual,
+        errors,
+      );
+    if (facts.has("persistent_data_change") || facts.has("data_migration")) {
+      requireStrictProof(
+        outcome,
+        "data_state",
+        hasNegative,
+        hasCounterfactual,
+        errors,
+      );
+      if (!outcome.technical.rollback_and_recovery)
+        errors.push(`strict_rollback_and_recovery_required:${outcome.key}`);
+    }
+    if (
+      facts.has("irreversible_external_effect") &&
+      !outcome.technical.rollback_and_recovery
+    )
+      errors.push(`strict_rollback_and_recovery_required:${outcome.key}`);
+    if (facts.has("full_population_operation")) {
+      if (
+        !checks.some((check) => check.proof_surface === "population_coverage")
+      )
+        errors.push(`strict_population_coverage_proof_required:${outcome.key}`);
+      if (!outcome.acceptance.population)
+        errors.push(`strict_population_declaration_required:${outcome.key}`);
+    }
+    if (
+      facts.has("critical_user_path") &&
+      facts.has("weak_observability") &&
+      !checks.some(
+        (check) =>
+          check.proof_surface === "ui_browser" ||
+          check.proof_surface === "runtime_behavior",
+      )
+    )
+      errors.push(
+        `strict_critical_path_observable_proof_required:${outcome.key}`,
+      );
+  }
 }
 
-function validateStrictPopulation(
-  contract: DeliveryContractV1,
-  allChecks: DeliveryCheckV1[],
+function requireStrictProof(
+  outcome: DeliveryOutcomeV2,
+  surface: DeliveryCheckV2["proof_surface"],
+  hasNegative: boolean,
+  hasCounterfactual: boolean,
   errors: string[],
 ): void {
-  if (!contract.risk.facts.full_population_operation) return;
-  if (!allChecks.some((check) => check.proof_surface === "population_coverage"))
-    errors.push("strict_population_coverage_proof_required");
   if (
-    contract.outcomes.some((outcome) => outcome.acceptance.population === null)
+    !outcome.acceptance.checks.some((check) => check.proof_surface === surface)
   )
-    errors.push("strict_population_declaration_required");
-}
-
-function validateStrictRecovery(
-  contract: DeliveryContractV1,
-  errors: string[],
-): void {
-  const facts = contract.risk.facts;
-  const required =
-    facts.persistent_data_change ||
-    facts.data_migration ||
-    facts.irreversible_external_effect ||
-    facts.multi_repository_change;
-  const complete = contract.outcomes.every(
-    (outcome) => outcome.technical.rollback_and_recovery !== null,
-  );
-  if (required && !complete)
-    errors.push("strict_rollback_and_recovery_required");
-}
-
-function validateStrictForbiddenShortcuts(
-  contract: DeliveryContractV1,
-  negative: boolean,
-  counterfactual: boolean,
-  errors: string[],
-): void {
-  if (
-    contract.global.technical.forbidden_shortcuts.length &&
-    (!negative || !counterfactual)
-  )
-    errors.push("strict_forbidden_shortcut_proof_required");
+    errors.push(`strict_${surface}_proof_required:${outcome.key}`);
+  if (!hasNegative)
+    errors.push(`strict_negative_assertion_required:${outcome.key}`);
+  if (!hasCounterfactual)
+    errors.push(`strict_counterfactual_control_required:${outcome.key}`);
 }
 
 function validateCheck(
-  check: DeliveryCheckV1,
+  check: DeliveryCheckV2,
   owner: string,
   errors: string[],
 ): void {
   if (!check.positive_assertions.length)
     errors.push(`check_without_positive_assertion:${owner}:${check.key}`);
+  if (!check.verification_inputs.length)
+    errors.push(`verification_inputs_empty:${owner}:${check.key}`);
+  if (
+    check.runner.retry_policy === "transient_once" &&
+    (!check.runner.idempotent ||
+      !["read_only", "test_sandbox"].includes(check.runner.effect))
+  )
+    errors.push(`unsafe_retry_policy:${owner}:${check.key}`);
 }

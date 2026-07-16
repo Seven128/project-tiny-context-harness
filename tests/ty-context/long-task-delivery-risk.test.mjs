@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { classifyLongTaskRisk, validateRiskProof } from "../../packages/ty-context/dist/lib/long-task-risk.js";
+import {
+  classifyLongTaskRisk,
+  validateRiskProof,
+} from "../../packages/ty-context/dist/lib/long-task-risk.js";
 import { deliveryContract } from "./long-task-delivery-fixtures.mjs";
 
-test("ordinary multi-Outcome Contract is standard and explicit strict raises it", () => {
+test("ordinary Contract is standard and explicit strict raises it", () => {
   const standard = deliveryContract({ twoOutcomes: true });
   assert.equal(classifyLongTaskRisk(standard).effective_level, "standard");
   standard.risk.requested_level = "strict";
@@ -19,58 +22,86 @@ for (const fact of [
   "full_population_operation",
   "irreversible_external_effect",
 ]) {
-  test(`${fact} deterministically triggers strict`, () => {
+  test(`${fact} binds strict risk to its Outcome`, () => {
     const contract = deliveryContract();
-    contract.risk.facts[fact] = true;
+    contract.risk.facts[fact] = ["first"];
     const decision = classifyLongTaskRisk(contract);
     assert.equal(decision.effective_level, "strict");
-    assert.ok(decision.reasons.includes(fact));
+    assert.ok(decision.reasons.includes(`${fact}:first`));
+    assert.ok(decision.reasons_by_outcome.first.includes(fact));
   });
 }
 
-test("multi_repository_change is explicitly unsupported in V1", () => {
-  const contract = deliveryContract();
-  contract.risk.facts.multi_repository_change = true;
+test("unknown risk Outcome and multi-repository delivery fail closed", () => {
+  const unknown = deliveryContract();
+  unknown.risk.facts.security_boundary_change = ["missing"];
+  assert.throws(() => classifyLongTaskRisk(unknown), /risk_outcome_unknown/);
+  const multi = deliveryContract();
+  multi.risk.facts.multi_repository_change = ["first"];
   assert.throws(
-    () => classifyLongTaskRisk(contract),
-    /multi_repository_delivery_not_supported_v1/,
+    () => classifyLongTaskRisk(multi),
+    /multi_repository_delivery_not_supported_v2/,
   );
 });
 
-test("critical user path triggers strict only with weak observability", () => {
-  const contract = deliveryContract();
-  contract.risk.facts.critical_user_path = true;
+test("critical user path triggers strict only on the same weakly observable Outcome", () => {
+  const contract = deliveryContract({ twoOutcomes: true });
+  contract.risk.facts.critical_user_path = ["first"];
+  contract.risk.facts.weak_observability = ["second"];
   assert.equal(classifyLongTaskRisk(contract).effective_level, "standard");
-  contract.risk.facts.weak_observability = true;
+  contract.risk.facts.weak_observability = ["first"];
   const decision = classifyLongTaskRisk(contract);
   assert.equal(decision.effective_level, "strict");
-  assert.ok(decision.reasons.includes("critical_user_path_with_weak_observability"));
+  assert.ok(
+    decision.reasons.includes(
+      "critical_user_path_with_weak_observability:first",
+    ),
+  );
 });
 
 test("requested standard below the deterministic floor fails", () => {
   const contract = deliveryContract();
   contract.risk.requested_level = "standard";
-  contract.risk.facts.security_boundary_change = true;
-  assert.throws(() => classifyLongTaskRisk(contract), /risk_level_below_required/);
+  contract.risk.facts.security_boundary_change = ["first"];
+  assert.throws(
+    () => classifyLongTaskRisk(contract),
+    /risk_level_below_required/,
+  );
 });
 
-test("strict trigger-specific proof is compiler-enforced", () => {
-  const contract = deliveryContract();
-  contract.risk.facts.security_boundary_change = true;
+test("strict security proof is required on the affected Outcome, not elsewhere", () => {
+  const contract = deliveryContract({ twoOutcomes: true });
+  contract.risk.facts.security_boundary_change = ["second"];
+  const firstCheck = contract.outcomes[0].acceptance.checks[0];
+  firstCheck.proof_surface = "security_boundary";
+  firstCheck.negative_assertions.push({
+    key: "first-negative",
+    claims: ["result"],
+    observation: "result",
+    operator: "not_equals",
+    expected: false,
+  });
+  contract.outcomes[0].acceptance.counterfactual_controls.push({
+    key: "first-counterfactual",
+    claims: ["obligation.implement-first"],
+    check_key: firstCheck.key,
+    mutation: { type: "remove_paths", paths: ["src/state.json"] },
+    expected_assertion_failures: ["first-result"],
+  });
   const decision = classifyLongTaskRisk(contract);
   assert.throws(() => validateRiskProof(contract, decision), (error) => {
-    assert.match(error.message, /strict_security_boundary_proof_required/);
-    assert.match(error.message, /strict_negative_assertion_required/);
-    assert.match(error.message, /strict_counterfactual_control_required/);
+    assert.match(error.message, /strict_security_boundary_proof_required:second/);
+    assert.match(error.message, /strict_negative_assertion_required:second/);
+    assert.match(error.message, /strict_counterfactual_control_required:second/);
     return true;
   });
 });
 
-test("user-requested strict also requires falsifiable negative and counterfactual proof", () => {
-  const contract = deliveryContract();
+test("user-requested strict requires falsifiable proof on every Outcome", () => {
+  const contract = deliveryContract({ twoOutcomes: true });
   contract.risk.requested_level = "strict";
   assert.throws(
     () => validateRiskProof(contract, classifyLongTaskRisk(contract)),
-    /strict_negative_assertion_required[\s\S]*strict_counterfactual_control_required/,
+    /strict_negative_assertion_required:first[\s\S]*strict_counterfactual_control_required:second/,
   );
 });

@@ -6,7 +6,7 @@ read_policy: on-demand
 
 ## Decision
 
-- Keep Minimal Context as the durable project-memory layer and replace the active multi-worker long-task architecture with Single-Goal Rolling Delivery: one native Goal, one selected workspace, one top-level Contract/Bundle/Set authority and verifier-owned same-snapshot completion.
+- Keep Minimal Context as the durable project-memory layer and use Single-Goal Rolling Delivery V2: one native Goal, one selected workspace, one Contract/Bundle authority, compiled Claim Coverage and verifier-owned Live Final Gate completion.
 
 ## Reason
 
@@ -40,7 +40,7 @@ read_policy: on-demand
 
 - Targeted verify is fast feedback for the current Frontier, so it may cache current-snapshot status but cannot authorize completion.
 - Final Gate reruns every required global/Outcome Check on one fresh snapshot. Equal execution identity can deduplicate work inside that Gate, while history is never reused.
-- Stop freshness closes post-gate drift by binding accepted authority to Contract, source, selected Context, runner/oracle, verifier, repository/workdir and workspace snapshot identities.
+- Stop and close close post-gate drift by recompiling source authority and executing the Live Final Gate; stored Receipts are audit-only.
 
 ## Retired Architecture Rationale
 
@@ -52,10 +52,10 @@ read_policy: on-demand
 
 - Do not restore stages, thick plan/result documents, Source/SFC/Packet/Wave/Campaign state, agent/process/Git orchestration or model routing as default or long-task runtime.
 
-## Why Bundle And Delivery Set Are Distinct
+## Why Bundle Remains And Delivery Set Is Retired
 
 - Physical authoring capacity does not create a product boundary, so a large atomic task uses Outcome fragments under one logical Contract.
-- Multiple Contracts are legitimate only when each has independently observable executable Acceptance and a real release/rollback/owner/risk/product boundary; one Delivery Set then preserves source coverage, dependency interfaces and final integration authority.
+- Multiple Contracts are legitimate only when each has independently observable executable Acceptance and a real release/rollback/owner/risk/product boundary. They run as separate top-level Contracts because a Set runtime reintroduced a second completion authority without improving single-Goal evidence.
 - Authority Lock, immutable initial base and scoped progress close execution-side weakening, baseline washing and last-result-wins paths without introducing a scheduler or lifecycle.
 - Do not make Context-first order/internal planning a validator gate.
 - Do not let command exit, model prose, handwritten status, targeted passes or historical runs create accepted authority.

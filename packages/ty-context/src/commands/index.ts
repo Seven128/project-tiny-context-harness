@@ -32,7 +32,7 @@ export const commands: Record<string, CommandHandler> = {
     validate(["validate-code-modularity", ...args]),
   "validate-harness": (args) => validate(["validate-harness", ...args]),
   "long-task": (args) => withLongTaskProfile(args, longTask),
-  "delivery-set": (args) => withLongTaskProfile(args, deliverySet),
+  "delivery-set": deliverySet,
   "composite-long-task": compositeLongTask,
   "composite-campaign": compositeCampaign,
   package: packageSource,
@@ -60,7 +60,7 @@ export function help(): void {
   long-task <subcommand>
                        Manage one Canonical Delivery Contract in the current workspace
   delivery-set <subcommand>
-                       Compose independently deliverable Contracts under one final authority
+                       Retired; use one Contract Bundle or separate top-level Contracts
   composite-long-task Retired command; use ty-context long-task
   composite-campaign  Retired command; use ty-context long-task
   package <subcommand> Maintain package canonical source`);

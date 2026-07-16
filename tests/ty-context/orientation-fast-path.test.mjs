@@ -26,9 +26,9 @@ test("orientation Context exposes Single-Goal Rolling Delivery authority", async
   assert.match(global, /Minimal Context.*Workflow Contract.*Long-Task Workflow/s);
   assert.match(global, /Context Delta: none\|required/);
   assert.match(global, /Single-Goal Rolling Delivery/);
-  assert.match(global, /Contract\/Contract Bundle or Delivery Set authority/);
+  assert.match(global, /Contract\/Contract Bundle authority/);
   assert.match(architecture, /Product, Technical Boundary and Acceptance/);
-  assert.match(architecture, /same-snapshot Final Gate/);
+  assert.match(architecture, /same-snapshot Live Final Gate/);
   assert.match(architecture, /targeted verifier/);
 
   assert.match(manifest, /id = "harness-package"/);
@@ -71,8 +71,8 @@ test("managed guidance and package assets share current routing", async () => {
     assert.match(guidance, /Contract Conformance/);
     assert.match(guidance, /Single-Goal Long-Task Workflow/);
     assert.match(guidance, /ty-context enable long-task/);
-    assert.match(guidance, /Final Gate requires a clean candidate commit.*one current snapshot/s);
-    assert.match(guidance, /Child Gate produces only `contract_gate_passed`/);
+    assert.match(guidance, /Final Gate, Stop and close recompile the source Contract/);
+    assert.match(guidance, /receipts and compiled cache are audit\/recovery surfaces only/i);
     assert.doesNotMatch(guidance, /multi-SFC execution|foreground scheduler/);
   }
 });
@@ -142,7 +142,8 @@ test("public documentation is English-complete for profiles and current workflow
     assert.match(document, /core-portable/);
     assert.match(document, /workflow-default/);
     assert.match(document, /enable long-task/);
-    assert.match(document, /long-task-delivery-v1/);
+    assert.match(document, /long-task-delivery-v2/);
+    assert.match(document, /Claim Coverage|Claim/);
     assert.match(document, /Single-Goal Rolling Delivery/);
     assert.match(document, /Final Gate/);
     assert.match(document, /Plan Validator commands no longer exist/);

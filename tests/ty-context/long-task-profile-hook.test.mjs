@@ -3,38 +3,111 @@ import { spawn } from "node:child_process";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import YAML from "yaml";
+import { activeRecordPath } from "../../packages/ty-context/dist/lib/long-task-state.js";
 import {
+  createUpgradePlan,
+  runMigrations,
+} from "../../packages/ty-context/dist/lib/migrations.js";
+import {
+  commitCandidate,
   createDeliveryFixture,
   pathExists,
   runCli,
 } from "./long-task-delivery-fixtures.mjs";
 
-test("enable/disable long-task owns only its Skill and Hook surfaces", async () => {
+const packageHook = fileURLToPath(
+  new URL("../../packages/ty-context/dist/long-task-hook.js", import.meta.url),
+);
+
+test("enable/disable owns one package-owned Hook per event and preserves user Hooks", async () => {
   const fixture = await createDeliveryFixture();
   try {
+    await mkdir(path.join(fixture.root, ".codex/hooks"), { recursive: true });
+    await writeFile(
+      path.join(fixture.root, ".codex/hooks/long-task-hook.mjs"),
+      "// retired repo-local hook\n",
+    );
+    await writeFile(
+      path.join(fixture.root, ".codex/hooks.json"),
+      `${JSON.stringify(
+        {
+          hooks: Object.fromEntries(
+            ["SessionStart", "PostCompact", "Stop"].map((event) => [
+              event,
+              [
+                {
+                  hooks: [
+                    {
+                      type: "command",
+                      command: "node .codex/hooks/long-task-hook.mjs",
+                    },
+                    {
+                      type: "command",
+                      commandWindows:
+                        "node .codex\\hooks\\long-task-hook.mjs",
+                    },
+                    { type: "command", command: "node composite-hook.mjs" },
+                  ],
+                },
+                {
+                  hooks: [
+                    { type: "command", command: "node user-hook.mjs", user: true },
+                  ],
+                },
+              ],
+            ]),
+          ),
+        },
+        null,
+        2,
+      )}\n`,
+    );
     await runCli(fixture.root, ["enable", "long-task"]);
     assert.equal(
-      await pathExists(path.join(fixture.root, ".codex/skills/long-task-workflow/SKILL.md")),
+      await pathExists(
+        path.join(
+          fixture.root,
+          ".codex/skills/long-task-workflow/SKILL.md",
+        ),
+      ),
       true,
     );
     assert.equal(
-      await pathExists(path.join(fixture.root, ".codex/hooks/long-task-hook.mjs")),
-      true,
+      await pathExists(
+        path.join(fixture.root, ".codex/hooks/long-task-hook.mjs"),
+      ),
+      false,
     );
     const config = YAML.parse(
       await readFile(path.join(fixture.root, ".codex/config.yaml"), "utf8"),
     );
     assert.ok(config.profiles.enabled.includes("long-task"));
-    assert.ok(!config.profiles.enabled.includes("composite-codex"));
 
     const hooksFile = path.join(fixture.root, ".codex/hooks.json");
     const hooks = JSON.parse(await readFile(hooksFile, "utf8"));
-    hooks.hooks.Stop.unshift({
-      hooks: [{ type: "command", command: "node user-hook.mjs", user: true }],
-    });
+    for (const event of ["SessionStart", "PostCompact", "Stop"]) {
+      const all = hooks.hooks[event].flatMap((group) => group.hooks);
+      const managed = all.filter((hook) =>
+        String(hook.command ?? hook.commandWindows).includes(
+          "dist\\long-task-hook.js",
+        ) ||
+        String(hook.command ?? hook.commandWindows).includes(
+          "dist/long-task-hook.js",
+        ),
+      );
+      assert.equal(managed.length, 1);
+      assert.match(managed[0].command, /dist[\\/]long-task-hook\.js/u);
+      assert.equal(managed[0].commandWindows, managed[0].command);
+      assert.doesNotMatch(managed[0].command, /\.codex[\\/]hooks/u);
+      assert.equal(managed[0].timeout, event === "Stop" ? 3600 : 10);
+      assert.equal(all.filter((hook) => hook.user).length, 1);
+    }
     await writeFile(hooksFile, `${JSON.stringify(hooks, null, 2)}\n`);
-    await mkdir(path.join(fixture.root, ".codex/skills/user-local"), { recursive: true });
+    await mkdir(path.join(fixture.root, ".codex/skills/user-local"), {
+      recursive: true,
+    });
     await writeFile(
       path.join(fixture.root, ".codex/skills/user-local/SKILL.md"),
       "# User local\n",
@@ -42,110 +115,143 @@ test("enable/disable long-task owns only its Skill and Hook surfaces", async () 
 
     await runCli(fixture.root, ["disable", "long-task"]);
     assert.equal(
-      await pathExists(path.join(fixture.root, ".codex/skills/long-task-workflow")),
+      await pathExists(
+        path.join(fixture.root, ".codex/skills/long-task-workflow"),
+      ),
       false,
     );
     assert.equal(
-      await pathExists(path.join(fixture.root, ".codex/hooks/long-task-hook.mjs")),
-      false,
-    );
-    assert.equal(
-      await pathExists(path.join(fixture.root, ".codex/skills/user-local/SKILL.md")),
+      await pathExists(
+        path.join(fixture.root, ".codex/skills/user-local/SKILL.md"),
+      ),
       true,
     );
     const retained = JSON.parse(await readFile(hooksFile, "utf8"));
-    assert.equal(retained.hooks.Stop[0].hooks[0].user, true);
+    assert.equal(
+      retained.hooks.Stop
+        .flatMap((group) => group.hooks)
+        .some((hook) => hook.user),
+      true,
+    );
+    assert.equal(
+      retained.hooks.Stop.flatMap((group) => group.hooks).some((hook) =>
+        String(hook.command).includes("long-task-hook"),
+      ),
+      false,
+    );
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }
 });
 
-test("Hook is a no-op without an active task, restores context, and blocks Stop until fresh accepted", async () => {
+test("package-owned Hook resumes from common-dir and Stop runs the Live Gate", async () => {
   const fixture = await createDeliveryFixture();
   try {
     await runCli(fixture.root, ["enable", "long-task"]);
-    const hook = path.join(fixture.root, ".codex/hooks/long-task-hook.mjs");
-    assert.deepEqual(await invokeHook(hook, fixture.root, "Stop"), {});
+    assert.deepEqual(await invokeHook(fixture.root, "Stop"), {});
 
     await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
-    const session = await invokeHook(hook, fixture.root, "SessionStart");
-    assert.match(session.hookSpecificOutput.additionalContext, /Active Single-Goal Long-Task Workflow/);
+    const record = await activeRecordPath(fixture.root);
+    assert.equal(await pathExists(record), true);
+    assert.match(record.replace(/\\/gu, "/"), /\.git\/ty-context\/long-task\/worktrees\//u);
+    const session = await invokeHook(fixture.root, "SessionStart");
+    assert.match(
+      session.hookSpecificOutput.additionalContext,
+      /Active Single-Goal Long-Task Workflow V2/,
+    );
     assert.match(session.hookSpecificOutput.additionalContext, /long-task resume/);
-    const blocked = await invokeHook(hook, fixture.root, "Stop");
+    const blocked = await invokeHook(fixture.root, "Stop");
     assert.equal(blocked.decision, "block");
 
-    await runCli(fixture.root, ["long-task", "final-gate", fixture.workdir]);
-    assert.deepEqual(await invokeHook(hook, fixture.root, "Stop"), {});
-
-    const activeFile = path.join(
-      fixture.root,
-      ".codex/ty-context-active-long-task.json",
-    );
-    const active = JSON.parse(await readFile(activeFile, "utf8"));
-    active.verifier_identity.bundle_sha256 = "0".repeat(64);
-    await writeFile(activeFile, `${JSON.stringify(active)}\n`);
-    const tampered = await invokeHook(hook, fixture.root, "Stop");
-    assert.equal(tampered.decision, "block");
-    assert.match(tampered.reason, /verifier bundle identity changed/i);
+    await commitCandidate(fixture.root);
+    assert.deepEqual(await invokeHook(fixture.root, "Stop"), {});
+    assert.equal(await pathExists(record), false);
+    assert.deepEqual(await invokeHook(fixture.root, "Stop"), {});
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }
 });
 
-test("upgrade migrates composite-codex safely without importing or deleting historical Campaign files", async () => {
+test("active record cannot redirect or weaken the current package verifier", async () => {
+  const fixture = await createDeliveryFixture();
+  try {
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    await commitCandidate(fixture.root);
+    const recordFile = await activeRecordPath(fixture.root);
+    const active = JSON.parse(await readFile(recordFile, "utf8"));
+    active.verifier_identity.package_root = fixture.root;
+    active.verifier_identity.bundle_sha256 = "0".repeat(64);
+    await writeFile(recordFile, `${JSON.stringify(active)}\n`);
+    const tampered = await invokeHook(fixture.root, "Stop");
+    assert.equal(tampered.decision, "block");
+    assert.match(tampered.reason, /identity|verifier|authority/iu);
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("upgrade still preserves historical Campaign files", async () => {
   const fixture = await createDeliveryFixture();
   try {
     await runCli(fixture.root, ["enable", "long-task"]);
     const configFile = path.join(fixture.root, ".codex/config.yaml");
     const raw = await readFile(configFile, "utf8");
     await writeFile(configFile, raw.replace(/- long-task/u, "- composite-codex"));
-    for (const relative of [
-      ".codex/skills/prepare-composite-long-task",
-      ".codex/skills/composite-long-task-workflow",
-      ".codex/ty-context-managed/composite",
-    ]) {
-      await mkdir(path.join(fixture.root, relative), { recursive: true });
-      await writeFile(path.join(fixture.root, relative, "package-owned.txt"), "old\n");
-    }
     const historical = path.join(fixture.root, "history/campaign-v6.json");
     await mkdir(path.dirname(historical), { recursive: true });
     await writeFile(historical, '{"user":"history"}\n');
-
-    const check = await runCli(fixture.root, ["upgrade", "--check", "--json"])
-      .catch((error) => JSON.parse(error.stdout));
-    assert.ok(
-      check.safe_pending.some((item) => item.id === "composite-codex-to-long-task"),
-    );
     await runCli(fixture.root, ["upgrade", "--json"]);
     const migrated = YAML.parse(await readFile(configFile, "utf8"));
     assert.ok(migrated.profiles.enabled.includes("long-task"));
-    assert.ok(!migrated.profiles.enabled.includes("composite-codex"));
     assert.equal(await pathExists(historical), true);
-    assert.equal(
-      await pathExists(path.join(fixture.root, ".codex/skills/prepare-composite-long-task")),
-      false,
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("V1 retirement migration removes the repo-local Hook and reports active V1 state", async () => {
+  const fixture = await createDeliveryFixture();
+  try {
+    await runCli(fixture.root, ["enable", "long-task"]);
+    const hook = path.join(fixture.root, ".codex/hooks/long-task-hook.mjs");
+    const projection = path.join(
+      fixture.root,
+      ".codex/ty-context-active-long-task.json",
     );
-    assert.equal(
-      await pathExists(path.join(fixture.root, ".codex/skills/composite-long-task-workflow")),
-      false,
+    await mkdir(path.dirname(hook), { recursive: true });
+    await writeFile(hook, "// V1 hook\n");
+    await writeFile(projection, '{"schema_version":"active-long-task-v1"}\n');
+    const plan = await createUpgradePlan(fixture.root);
+    assert.ok(
+      plan.safe_pending.some((item) => item.id === "long-task-v1-retirement"),
     );
-    assert.equal(
-      await pathExists(path.join(fixture.root, ".codex/skills/long-task-workflow/SKILL.md")),
-      true,
+    assert.ok(
+      plan.manual_required.some(
+        (item) => item.id === "long-task-v1-retirement",
+      ),
+    );
+    const report = await runMigrations(fixture.root, plan);
+    assert.equal(await pathExists(hook), false);
+    assert.equal(await pathExists(projection), true);
+    assert.ok(
+      report.manualRequired.some(
+        (item) => item.id === "long-task-v1-retirement",
+      ),
     );
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }
 });
 
-async function invokeHook(hook, cwd, hookEventName) {
+async function invokeHook(cwd, hookEventName) {
   const input = JSON.stringify({
-      cwd,
-      hook_event_name: hookEventName,
-      last_assistant_message: "attempt completion",
+    cwd,
+    hook_event_name: hookEventName,
+    last_assistant_message: "attempt completion",
   });
   const stdout = await new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [hook], {
+    const child = spawn(process.execPath, [packageHook], {
       cwd,
       windowsHide: true,
       stdio: ["pipe", "pipe", "pipe"],

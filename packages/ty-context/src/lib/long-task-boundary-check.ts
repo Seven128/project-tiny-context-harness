@@ -1,7 +1,24 @@
-import type {
-  BoundaryCheckDecisionV1,
-  BoundaryCheckInputV1,
-} from "./long-task-delivery-set-types.js";
+export type BoundaryCheckDecisionV2 =
+  | "single_contract"
+  | "single_contract_bundle"
+  | "separate_top_level_contracts"
+  | "decision_required"
+  | "capacity_blocked";
+
+export interface BoundaryCandidateV2 {
+  observable_result: string;
+  executable_acceptance: boolean;
+  separation_reason: string;
+  preserves_atomic_loop: boolean;
+}
+
+export interface BoundaryCheckInputV2 {
+  atomic_user_loop: boolean;
+  capacity_requires_fragments: boolean;
+  capacity_available: boolean;
+  split_motivations: string[];
+  candidates: BoundaryCandidateV2[];
+}
 
 const INVALID_SPLIT_MOTIVATIONS = new Set([
   "file_count",
@@ -10,11 +27,12 @@ const INVALID_SPLIT_MOTIVATIONS = new Set([
   "different_agents",
   "duration",
   "frontend_backend_layers",
+  "model_preference",
 ]);
 
 export function evaluateContractBoundary(
-  input: BoundaryCheckInputV1,
-): BoundaryCheckDecisionV1 {
+  input: BoundaryCheckInputV2,
+): BoundaryCheckDecisionV2 {
   if (!input.capacity_available) return "capacity_blocked";
   if (
     input.atomic_user_loop ||
@@ -38,9 +56,9 @@ export function evaluateContractBoundary(
       (candidate) =>
         !candidate.observable_result.trim() ||
         !candidate.executable_acceptance ||
-        !candidate.separation_reason,
+        !candidate.separation_reason.trim(),
     )
   )
     return "decision_required";
-  return "delivery_set";
+  return "separate_top_level_contracts";
 }

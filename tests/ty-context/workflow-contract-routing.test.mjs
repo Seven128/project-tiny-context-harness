@@ -39,7 +39,8 @@ test("CLI and managed guidance route only explicit or active work to long-task",
   assert.doesNotMatch(stdout, /validate-plan-contract|validate-plan-acceptance/);
   const guidance = await read(".codex/ty-context-managed/agents/AGENTS_CORE.md");
   assert.match(guidance, /Do not infer long-task mode from duration, complexity, file count/);
-  assert.match(guidance, /active-long-task\.json/);
+  assert.match(guidance, /Git common-dir active record/);
+  assert.match(guidance, /Git-config marker/);
   assert.match(guidance, /current native Goal/);
   assert.match(guidance, /Context Delta: none\|required/);
   assert.match(guidance, /Local fixes preserving durable semantics are `none`/);
@@ -51,9 +52,9 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
   );
   assert.match(active, /delivery-contract\.yaml/);
   assert.match(active, /current native Goal/i);
-  assert.match(active, /Targeted verify and Child Gate are progress only/i);
+  assert.match(active, /Progress.*repair evidence only.*never acceptance authority/is);
   assert.match(active, /Contract Bundle/);
-  assert.match(active, /Delivery Set/);
+  assert.match(active, /delivery-set.*retired and non-executing/is);
   assert.match(active, /Final Gate/i);
   const normal = await read(
     ".codex/ty-context-managed/skills/normal-long-task/SKILL.md",

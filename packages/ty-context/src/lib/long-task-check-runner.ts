@@ -1,132 +1,96 @@
 import { spawn } from "node:child_process";
-import { readFile, readdir } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
+import net from "node:net";
 import path from "node:path";
 import type {
-  CompiledCheckV1,
-  FrozenRunnerV1,
+  CompiledCheckV2,
+  EnvironmentRequirementV2,
+  FrozenRunnerV2,
+  RawCommandExecutionV2,
 } from "./long-task-delivery-types.js";
 import { resolveInsideRepository } from "./long-task-workspace.js";
-import { matchesRepoPattern } from "./long-task-paths.js";
 import { sha256Hex } from "./strict-codec.js";
 
 const OUTPUT_LIMIT = 2 * 1024 * 1024;
 
-export interface RunnerEvidenceV1 {
-  status: "completed" | "blocked_external";
-  exit_code: number;
-  observations: Record<string, unknown>;
-  attempts: number;
-  duration_ms: number;
-  error: string | null;
-}
-
 export async function executeCheckRunner(
-  check: CompiledCheckV1,
+  check: CompiledCheckV2,
   snapshotRoot: string,
-): Promise<RunnerEvidenceV1> {
+): Promise<RawCommandExecutionV2> {
   const started = Date.now();
+  const unavailable = await probeEnvironment(
+    check.environment_requirements,
+    snapshotRoot,
+  );
+  if (unavailable)
+    return {
+      execution_identity: check.runner.execution_identity,
+      execution_status: "blocked_external",
+      exit_code: -1,
+      observations: {},
+      stdout_sha256: sha256Hex(""),
+      stderr_sha256: sha256Hex(""),
+      attempts: 0,
+      duration_ms: Date.now() - started,
+      error: unavailable,
+    };
   const retryAllowed =
     check.runner.retry_policy === "transient_once" &&
     check.runner.idempotent &&
     (check.runner.effect === "read_only" ||
       check.runner.effect === "test_sandbox");
-  let attempt = 0;
   const maximumAttempts = retryAllowed ? 2 : 1;
-  while (attempt < maximumAttempts) {
-    attempt += 1;
+  for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
     try {
-      const result = await runOnce(check.runner, snapshotRoot);
-      const decoded = decodeEvidence(check, result.exit_code, result.stdout);
-      const artifacts = await collectArtifacts(check, snapshotRoot);
+      const raw = await runOnce(check.runner, snapshotRoot);
+      const decoded = decodeEvidence(
+        check,
+        raw.exit_code,
+        raw.stdout,
+        raw.stderr,
+      );
       return {
+        execution_identity: check.runner.execution_identity,
         ...decoded,
-        observations: {
-          ...decoded.observations,
-          artifacts: {
-            paths: artifacts.files.map((item) => item.path),
-            sha256: Object.fromEntries(
-              artifacts.files.map((item) => [item.path, item.sha256]),
-            ),
-          },
-        },
-        error:
-          [decoded.error, ...artifacts.errors].filter(Boolean).join(";") ||
-          null,
+        stdout_sha256: sha256Hex(raw.stdout),
+        stderr_sha256: sha256Hex(raw.stderr),
         attempts: attempt,
         duration_ms: Date.now() - started,
       };
     } catch (error) {
-      if (attempt < maximumAttempts && isTransient(error)) continue;
+      const reason = message(error);
+      if (attempt < maximumAttempts) continue;
       return {
-        status: "blocked_external",
+        execution_identity: check.runner.execution_identity,
+        execution_status: "infrastructure_error",
         exit_code: -1,
         observations: {},
+        stdout_sha256: sha256Hex(""),
+        stderr_sha256: sha256Hex(reason),
         attempts: attempt,
         duration_ms: Date.now() - started,
-        error: message(error),
+        error: reason,
       };
     }
   }
   throw new Error("unreachable");
 }
 
-async function collectArtifacts(
-  check: CompiledCheckV1,
-  snapshotRoot: string,
-): Promise<{
-  files: Array<{ path: string; sha256: string }>;
-  errors: string[];
-}> {
-  if (!check.artifact_globs.length) return { files: [], errors: [] };
-  const candidates: string[] = [];
-  async function visit(directory: string, relative = ""): Promise<void> {
-    for (const entry of await readdir(directory, { withFileTypes: true })) {
-      if (!relative && (entry.name === ".git" || entry.name === "node_modules"))
-        continue;
-      const next = relative ? `${relative}/${entry.name}` : entry.name;
-      if (entry.isSymbolicLink()) continue;
-      if (entry.isDirectory())
-        await visit(path.join(directory, entry.name), next);
-      else if (entry.isFile()) candidates.push(next);
-    }
-  }
-  await visit(snapshotRoot);
-  const selected = [
-    ...new Set(
-      check.artifact_globs.flatMap((pattern) =>
-        candidates.filter((candidate) =>
-          matchesRepoPattern(candidate, pattern),
-        ),
-      ),
-    ),
-  ].sort();
-  const files = await Promise.all(
-    selected.map(async (relative) => ({
-      path: relative,
-      sha256: sha256Hex(
-        await readFile(path.join(snapshotRoot, ...relative.split("/"))),
-      ),
-    })),
-  );
-  const errors = check.artifact_globs
-    .filter(
-      (pattern) => !selected.some((file) => matchesRepoPattern(file, pattern)),
-    )
-    .map((pattern) => `artifact_glob_empty:${pattern}`);
-  return { files, errors };
-}
-
 async function runOnce(
-  runner: FrozenRunnerV1,
+  runner: FrozenRunnerV2,
   snapshotRoot: string,
 ): Promise<{ exit_code: number; stdout: Buffer; stderr: Buffer }> {
-  const cwd = resolveInsideRepository(snapshotRoot, runner.cwd, "runner.cwd");
+  const cwd = resolveInsideRepository(
+    snapshotRoot,
+    runner.resolved_cwd || ".",
+    "runner.resolved_cwd",
+  );
   const executable =
     runner.type === "project_binary"
       ? resolveInsideRepository(
           snapshotRoot,
-          runner.executable,
-          "runner.executable",
+          runner.resolved_target,
+          "runner.resolved_target",
         )
       : runner.executable;
   const argv = [...runner.executable_argv_prefix, ...runner.argv];
@@ -135,7 +99,7 @@ async function runOnce(
       cwd,
       shell: false,
       windowsHide: true,
-      env: runnerEnvironment(runner),
+      env: runnerEnvironment(),
     });
     const stdout: Buffer[] = [];
     const stderr: Buffer[] = [];
@@ -182,38 +146,16 @@ async function runOnce(
 }
 
 function decodeEvidence(
-  check: CompiledCheckV1,
+  check: CompiledCheckV2,
   exitCode: number,
   stdout: Buffer,
-): Omit<RunnerEvidenceV1, "attempts" | "duration_ms"> {
-  if (check.runner.type === "playwright_test") {
-    try {
-      const report = JSON.parse(stdout.toString("utf8")) as Record<
-        string,
-        unknown
-      >;
-      const stats =
-        report.stats && typeof report.stats === "object"
-          ? (report.stats as Record<string, unknown>)
-          : {};
-      return {
-        status: "completed",
-        exit_code: exitCode,
-        observations: {
-          "playwright.passed": exitCode === 0,
-          "playwright.unexpected": stats.unexpected ?? null,
-          "playwright.expected": stats.expected ?? null,
-          "playwright.skipped": stats.skipped ?? null,
-        },
-        error: null,
-      };
-    } catch (error) {
-      return completedError(
-        exitCode,
-        `playwright_report_invalid:${message(error)}`,
-      );
-    }
-  }
+  stderr: Buffer,
+): Pick<
+  RawCommandExecutionV2,
+  "execution_status" | "exit_code" | "observations" | "error"
+> {
+  if (check.runner.type === "playwright_test")
+    return decodePlaywright(exitCode, stdout, stderr);
   const lines = stdout
     .toString("utf8")
     .split(/\r?\n/u)
@@ -221,77 +163,206 @@ function decodeEvidence(
     .filter(Boolean);
   try {
     const payload = JSON.parse(lines.at(-1) ?? "") as Record<string, unknown>;
-    if (payload.schema_version !== "long-task-check-result-v1")
-      return completedError(exitCode, "check_evidence_schema_invalid");
-    if (payload.blocked_external !== undefined)
+    if (payload.schema_version !== "long-task-check-result-v2")
+      return invalid(exitCode, "check_evidence_schema_invalid");
+    if (payload.execution_status === "blocked_external")
       return {
-        status: "blocked_external",
+        execution_status: "blocked_external",
         exit_code: exitCode,
         observations: {},
-        error: `blocked_external:${String(payload.blocked_external)}`,
+        error: `blocked_external:${String(payload.reason ?? "unspecified")}`,
       };
+    if (payload.execution_status !== "completed")
+      return invalid(exitCode, "check_evidence_execution_status_invalid");
     if (
       !payload.observations ||
       typeof payload.observations !== "object" ||
       Array.isArray(payload.observations)
     )
-      return completedError(exitCode, "check_evidence_observations_invalid");
+      return invalid(exitCode, "check_evidence_observations_invalid");
     return {
-      status: "completed",
+      execution_status: "completed",
       exit_code: exitCode,
       observations: payload.observations as Record<string, unknown>,
       error: null,
     };
   } catch (error) {
-    return completedError(
-      exitCode,
-      `check_evidence_json_invalid:${message(error)}`,
-    );
+    return invalid(exitCode, `check_evidence_json_invalid:${message(error)}`);
   }
 }
 
-function completedError(
+function decodePlaywright(
+  exitCode: number,
+  stdout: Buffer,
+  stderr: Buffer,
+): Pick<
+  RawCommandExecutionV2,
+  "execution_status" | "exit_code" | "observations" | "error"
+> {
+  try {
+    const report = JSON.parse(stdout.toString("utf8")) as Record<
+      string,
+      unknown
+    >;
+    const stats =
+      report.stats && typeof report.stats === "object"
+        ? (report.stats as Record<string, unknown>)
+        : null;
+    if (!stats) return invalid(exitCode, "playwright_report_invalid:stats");
+    const expected = integer(stats.expected);
+    const unexpected = integer(stats.unexpected);
+    const skipped = integer(stats.skipped);
+    const flaky = integer(stats.flaky);
+    if ([expected, unexpected, skipped, flaky].some((value) => value === null))
+      return invalid(exitCode, "playwright_report_invalid:counts");
+    const total = expected! + unexpected! + skipped! + flaky!;
+    return {
+      execution_status: "completed",
+      exit_code: exitCode,
+      observations: {
+        "playwright.passed": exitCode === 0,
+        "playwright.expected": expected,
+        "playwright.unexpected": unexpected,
+        "playwright.skipped": skipped,
+        "playwright.flaky": flaky,
+        "playwright.total": total,
+        "playwright.zero_or_all_skipped": total === 0 || skipped === total,
+      },
+      error: null,
+    };
+  } catch (error) {
+    const combined = `${stdout.toString("utf8")}\n${stderr.toString("utf8")}`;
+    if (
+      exitCode !== 0 &&
+      /Cannot find module|command not found|not recognized|Executable doesn't exist|browserType\.launch/iu.test(
+        combined,
+      )
+    )
+      return {
+        execution_status: "infrastructure_error",
+        exit_code: exitCode,
+        observations: {},
+        error: `playwright_startup_failed:${message(error)}`,
+      };
+    return invalid(exitCode, `playwright_report_invalid:${message(error)}`);
+  }
+}
+
+function invalid(
   exitCode: number,
   error: string,
-): Omit<RunnerEvidenceV1, "attempts" | "duration_ms"> {
-  return { status: "completed", exit_code: exitCode, observations: {}, error };
+): Pick<
+  RawCommandExecutionV2,
+  "execution_status" | "exit_code" | "observations" | "error"
+> {
+  return {
+    execution_status: "invalid_evidence",
+    exit_code: exitCode,
+    observations: {},
+    error,
+  };
 }
 
-function runnerEnvironment(runner: FrozenRunnerV1): NodeJS.ProcessEnv {
-  const result: NodeJS.ProcessEnv = {};
-  for (const key of [
-    "PATH",
-    "Path",
-    "PATHEXT",
-    "SYSTEMROOT",
-    "WINDIR",
-    "HOME",
-    "USERPROFILE",
-    "TMP",
-    "TEMP",
-    "CI",
-    "LANG",
-    "LC_ALL",
-  ])
-    if (process.env[key] !== undefined) result[key] = process.env[key];
-  result.TY_CONTEXT_CHECK_PROTOCOL = "long-task-check-result-v1";
-  result.TY_CONTEXT_NETWORK_POLICY = runner.network_policy.mode;
-  result.TY_CONTEXT_ALLOWED_HOSTS =
-    runner.network_policy.allowed_hosts.join(",");
-  if (runner.network_policy.mode === "none") {
-    result.HTTP_PROXY = "";
-    result.HTTPS_PROXY = "";
-    result.ALL_PROXY = "";
-    result.NO_PROXY = "*";
+async function probeEnvironment(
+  requirements: EnvironmentRequirementV2[],
+  snapshotRoot: string,
+): Promise<string | null> {
+  for (const requirement of requirements) {
+    let available = false;
+    if (requirement.kind === "executable")
+      available = await executableExists(requirement.target);
+    else if (requirement.kind === "env_var")
+      available = Boolean(process.env[requirement.target]);
+    else if (requirement.kind === "file")
+      available = Boolean(
+        (
+          await statSafe(
+            resolveInsideRepository(
+              snapshotRoot,
+              requirement.target,
+              `environment.${requirement.key}`,
+            ),
+          )
+        )?.isFile(),
+      );
+    else if (requirement.kind === "directory")
+      available = Boolean(
+        (
+          await statSafe(
+            resolveInsideRepository(
+              snapshotRoot,
+              requirement.target,
+              `environment.${requirement.key}`,
+            ),
+          )
+        )?.isDirectory(),
+      );
+    else if ("host" in requirement)
+      available = await loopbackAvailable(
+        requirement.host,
+        requirement.port,
+        requirement.timeout_ms,
+      );
+    if (!available)
+      return `environment_requirement_unavailable:${requirement.key}`;
   }
-  return result;
+  return null;
 }
 
-function isTransient(error: unknown): boolean {
-  const text = message(error);
-  return (
-    text.includes("command_spawn_error") || text.includes("command_timeout")
-  );
+async function executableExists(target: string): Promise<boolean> {
+  if (path.isAbsolute(target))
+    return access(target)
+      .then(() => true)
+      .catch(() => false);
+  const names =
+    process.platform === "win32"
+      ? (process.env.PATHEXT ?? ".EXE;.CMD;.BAT;.COM")
+          .split(";")
+          .flatMap((extension) => [target, `${target}${extension}`])
+      : [target];
+  for (const folder of (process.env.PATH ?? "").split(path.delimiter))
+    for (const name of names)
+      if (
+        await access(path.join(folder, name))
+          .then(() => true)
+          .catch(() => false)
+      )
+        return true;
+  return false;
+}
+
+async function loopbackAvailable(
+  host: string,
+  port: number,
+  timeoutMs: number,
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = net.createConnection({ host, port });
+    const finish = (value: boolean): void => {
+      socket.destroy();
+      resolve(value);
+    };
+    socket.setTimeout(timeoutMs, () => finish(false));
+    socket.once("connect", () => finish(true));
+    socket.once("error", () => finish(false));
+  });
+}
+
+function runnerEnvironment(): NodeJS.ProcessEnv {
+  return {
+    ...process.env,
+    TY_CONTEXT_CHECK_PROTOCOL: "long-task-check-result-v2",
+  };
+}
+
+async function statSafe(file: string) {
+  return import("node:fs/promises")
+    .then(({ stat }) => stat(file))
+    .catch(() => null);
+}
+
+function integer(value: unknown): number | null {
+  return Number.isInteger(value) && Number(value) >= 0 ? Number(value) : null;
 }
 
 function message(error: unknown): string {

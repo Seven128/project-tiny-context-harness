@@ -1,25 +1,25 @@
 import type {
-  CheckExecutionResultV1,
-  CompiledCheckV1,
-  CompiledDeliveryContractV1,
-  ProgressRecordV1,
-  WorkspaceManifestV1,
+  CheckExecutionResultV2,
+  CompiledCheckV2,
+  CompiledDeliveryContractV2,
+  ProgressRecordV2,
+  WorkspaceManifestV2,
 } from "./long-task-delivery-types.js";
 import { outcomeAuthorityHash } from "./long-task-authority.js";
 import { matchesRepoPattern } from "./long-task-paths.js";
 import { canonicalValueJson, sha256Hex } from "./strict-codec.js";
 
 export function createProgressRecord(
-  compiled: CompiledDeliveryContractV1,
-  manifest: WorkspaceManifestV1,
-  check: CompiledCheckV1,
-  result: CheckExecutionResultV1,
-): ProgressRecordV1 {
+  compiled: CompiledDeliveryContractV2,
+  manifest: WorkspaceManifestV2,
+  check: CompiledCheckV2,
+  result: CheckExecutionResultV2,
+): ProgressRecordV2 {
   const outcome = check.outcome_key
     ? compiled.outcomes.find((item) => item.key === check.outcome_key)
     : null;
   return {
-    schema_version: "long-task-progress-record-v1",
+    schema_version: "long-task-progress-record-v2",
     compiled_identity: compiled.compiled_identity,
     outcome_authority_hash: progressAuthorityHash(compiled, outcome ?? null),
     check_identity: checkIdentity(check),
@@ -50,10 +50,10 @@ export function createProgressRecord(
 }
 
 export function progressRecordFresh(
-  record: ProgressRecordV1,
-  compiled: CompiledDeliveryContractV1,
-  manifest: WorkspaceManifestV1,
-  check: CompiledCheckV1,
+  record: ProgressRecordV2,
+  compiled: CompiledDeliveryContractV2,
+  manifest: WorkspaceManifestV2,
+  check: CompiledCheckV2,
 ): boolean {
   const outcome = check.outcome_key
     ? compiled.outcomes.find((item) => item.key === check.outcome_key)
@@ -96,8 +96,8 @@ export function progressRecordFresh(
 }
 
 function progressAuthorityHash(
-  compiled: CompiledDeliveryContractV1,
-  outcome: CompiledDeliveryContractV1["outcomes"][number] | null,
+  compiled: CompiledDeliveryContractV2,
+  outcome: CompiledDeliveryContractV2["outcomes"][number] | null,
 ): string {
   return sha256Hex(
     canonicalValueJson({
@@ -110,13 +110,13 @@ function progressAuthorityHash(
   );
 }
 
-export function checkIdentity(check: CompiledCheckV1): string {
+export function checkIdentity(check: CompiledCheckV2): string {
   return sha256Hex(
     canonicalValueJson({
       internal_id: check.internal_id,
       proof_surface: check.proof_surface,
       runner: check.runner.execution_identity,
-      verification_source_hashes: check.verification_source_hashes,
+      verification_input_hashes: check.verification_input_hashes,
       input_paths: check.input_paths,
       expected_output_paths: check.expected_output_paths,
       artifact_globs: check.artifact_globs,
@@ -128,8 +128,8 @@ export function checkIdentity(check: CompiledCheckV1): string {
 }
 
 function runnerVerifierIdentity(
-  compiled: CompiledDeliveryContractV1,
-  check: CompiledCheckV1,
+  compiled: CompiledDeliveryContractV2,
+  check: CompiledCheckV2,
 ): string {
   return sha256Hex(
     canonicalValueJson({
@@ -139,7 +139,7 @@ function runnerVerifierIdentity(
   );
 }
 
-function contextIdentity(compiled: CompiledDeliveryContractV1): string {
+function contextIdentity(compiled: CompiledDeliveryContractV2): string {
   return sha256Hex(
     canonicalValueJson({
       topology: compiled.context_snapshot.topology_sha256,
@@ -149,13 +149,11 @@ function contextIdentity(compiled: CompiledDeliveryContractV1): string {
 }
 
 function dependencyInterfaceIdentities(
-  compiled: CompiledDeliveryContractV1,
-  manifest: WorkspaceManifestV1,
+  compiled: CompiledDeliveryContractV2,
+  manifest: WorkspaceManifestV2,
   dependencies: string[],
 ): Record<string, string> {
-  const result: Record<string, string> = {
-    ...(compiled.delivery_set?.dependency_interface_identities ?? {}),
-  };
+  const result: Record<string, string> = {};
   for (const key of dependencies) {
     const dependency = compiled.outcomes.find((outcome) => outcome.key === key);
     if (!dependency) continue;
@@ -177,7 +175,7 @@ function dependencyInterfaceIdentities(
 }
 
 function hashPatterns(
-  manifest: WorkspaceManifestV1,
+  manifest: WorkspaceManifestV2,
   patterns: string[],
 ): Record<string, string> {
   const result: Record<string, string> = {};

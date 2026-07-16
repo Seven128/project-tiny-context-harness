@@ -1,41 +1,32 @@
-export type RequestedRiskLevel = "auto" | "standard" | "strict";
-export type EffectiveRiskLevel = "standard" | "strict";
+import type {
+  LongTaskRiskFacts,
+  RequestedRiskLevel,
+} from "./long-task-risk-types.js";
 
-export interface LongTaskRiskFacts {
-  public_api_or_schema_change: boolean;
-  persistent_data_change: boolean;
-  data_migration: boolean;
-  security_boundary_change: boolean;
-  permission_boundary_change: boolean;
-  irreversible_external_effect: boolean;
-  critical_user_path: boolean;
-  full_population_operation: boolean;
-  multi_repository_change: boolean;
-  weak_observability: boolean;
-}
-
-export interface RiskEvidenceV1 {
-  fact: keyof LongTaskRiskFacts;
-  source_claim_refs: string[];
-  context_refs: string[];
-  affected_paths: string[];
-  rationale: string;
-}
-
-export type SourceClaimDispositionV1 =
-  | { type: "contract"; refs: string[] }
+export type SourceClaimDispositionV2 =
+  | { type: "claim"; refs: string[] }
   | { type: "global_constraint"; refs: string[] }
   | { type: "out_of_scope"; reason: string }
   | { type: "decision_required"; reason: string };
 
-export interface SourceClaimV1 {
+export interface SourceClaimV2 {
   key: string;
   source_ref: string;
   statement: string;
-  disposition: SourceClaimDispositionV1;
+  disposition: SourceClaimDispositionV2;
 }
 
-export interface ExternalConfirmationV1 {
+export interface KeyedStatementV2 {
+  key: string;
+  statement: string;
+}
+
+export interface KeyedPathV2 {
+  key: string;
+  path: string;
+}
+
+export interface ExternalConfirmationV2 {
   key: string;
   description: string;
   owner: string;
@@ -72,43 +63,50 @@ export type AssertionOperator =
   | "subset_of"
   | "superset_of";
 
-export interface DeliveryAssertionV1 {
+export interface DeliveryAssertionV2 {
+  key: string;
+  claims: string[];
   observation: string;
   operator: AssertionOperator;
   expected?: unknown;
 }
 
-export interface NetworkPolicyV1 {
-  mode: "none" | "loopback" | "declared_hosts";
-  allowed_hosts: string[];
-}
-
-export interface DeliveryRunnerV1 {
+export interface DeliveryRunnerV2 {
   type: RunnerType;
   target: string;
   argv: string[];
   cwd: string;
   timeout_ms: number;
-  network_policy: NetworkPolicyV1;
   effect: "read_only" | "test_sandbox";
   retry_policy: "none" | "transient_once";
   idempotent: boolean;
 }
 
-export interface DeliveryCheckV1 {
+export type EnvironmentRequirementV2 =
+  | { key: string; kind: "executable" | "env_var"; target: string }
+  | { key: string; kind: "file" | "directory"; target: string }
+  | {
+      key: string;
+      kind: "loopback_tcp";
+      host: "127.0.0.1" | "::1" | "localhost";
+      port: number;
+      timeout_ms: number;
+    };
+
+export interface DeliveryCheckV2 {
   key: string;
   proof_surface: ProofSurface;
-  runner: DeliveryRunnerV1;
-  verification_sources: string[];
+  runner: DeliveryRunnerV2;
+  verification_inputs: string[];
   input_paths: string[];
   expected_output_paths: string[];
   artifact_globs: string[];
-  positive_assertions: DeliveryAssertionV1[];
-  negative_assertions: DeliveryAssertionV1[];
-  environment_requirements: string[];
+  positive_assertions: DeliveryAssertionV2[];
+  negative_assertions: DeliveryAssertionV2[];
+  environment_requirements: EnvironmentRequirementV2[];
 }
 
-export interface DeliveryControlV1 {
+export interface DeliveryControlV2 {
   key: string;
   location: string;
   trigger: string;
@@ -120,68 +118,83 @@ export interface DeliveryControlV1 {
   feedback: string;
 }
 
-export interface DeliveryBindingV1 {
-  kind:
-    "path_glob" | "file" | "symbol" | "schema" | "route" | "runtime_capability";
+export interface DeliveryOwnerV2 {
+  label: string;
+  context_refs: string[];
+  path_globs: string[];
+}
+
+export interface DeliveryObligationV2 extends KeyedStatementV2 {
+  required_proof_surfaces: ProofSurface[];
+}
+
+export interface DeliveryBindingV2 {
+  key: string;
+  kind: "path_glob" | "file" | "verified";
   target: string;
   carrier_paths: string[];
   existence: "existing" | "planned";
+  verification_check_key?: string;
 }
 
-export interface RollbackRecoveryV1 {
+export interface RollbackRecoveryV2 {
   rollback: string;
   recovery: string;
   verification_check_keys: string[];
 }
 
-export type CounterfactualMutationV1 =
+export type CounterfactualMutationV2 =
   | { type: "remove_paths"; paths: string[] }
   | { type: "replace_file"; path: string; fixture_path: string };
 
-export interface CounterfactualControlV1 {
+export interface CounterfactualControlV2 {
+  key: string;
+  claims: string[];
   check_key: string;
-  mutation: CounterfactualMutationV1;
-  expect: "check_fails";
+  mutation: CounterfactualMutationV2;
+  expected_assertion_failures: string[];
 }
 
-export interface PopulationRequirementV1 {
+export interface PopulationRequirementV2 {
   check_key: string;
-  observation: string;
-  required_coverage_percent: 100;
-  exclusion_rules: string[];
+  claims: string[];
+  observations: {
+    eligible_ids: string;
+    observed_ids: string;
+    excluded_items: string;
+  };
+  exclusion_rules: KeyedStatementV2[];
 }
 
-export interface DeliveryOutcomeV1 {
+export interface DeliveryOutcomeV2 {
   key: string;
   title: string;
   depends_on: string[];
   product: {
     observable_result: string;
-    owner_boundary: string;
+    owner: DeliveryOwnerV2;
     owner_surfaces: string[];
-    controls: DeliveryControlV1[];
-    non_completing_outcomes: string[];
+    controls: DeliveryControlV2[];
+    non_completing_outcomes: KeyedStatementV2[];
   };
   technical: {
-    obligations: string[];
+    obligations: DeliveryObligationV2[];
     expected_change_paths: string[];
     allowed_support_paths: string[];
     forbidden_paths: string[];
-    bindings: DeliveryBindingV1[];
-    forbidden_shortcuts: string[];
-    rollback_and_recovery: RollbackRecoveryV1 | null;
+    bindings: DeliveryBindingV2[];
+    forbidden_shortcuts: KeyedStatementV2[];
+    rollback_and_recovery: RollbackRecoveryV2 | null;
   };
   acceptance: {
-    validates: string[];
-    does_not_validate: string[];
-    checks: DeliveryCheckV1[];
-    population: PopulationRequirementV1 | null;
-    counterfactual_controls: CounterfactualControlV1[];
+    checks: DeliveryCheckV2[];
+    population: PopulationRequirementV2 | null;
+    counterfactual_controls: CounterfactualControlV2[];
   };
 }
 
-export interface DeliveryContractV1 {
-  schema_version: "long-task-delivery-v1";
+export interface DeliveryContractV2 {
+  schema_version: "long-task-delivery-v2";
   task: {
     id: string;
     title: string;
@@ -190,23 +203,22 @@ export interface DeliveryContractV1 {
     context_refs: string[];
     context_snapshot_mode: "referenced" | "full";
   };
-  source_claims: SourceClaimV1[];
+  source_claims: SourceClaimV2[];
   risk: {
     requested_level: RequestedRiskLevel;
     facts: LongTaskRiskFacts;
-    evidence: RiskEvidenceV1[];
   };
   global: {
-    product: { non_goals: string[]; owner_boundaries: string[] };
+    product: { non_goals: KeyedStatementV2[] };
     technical: {
-      constraints: string[];
-      forbidden_paths: string[];
-      forbidden_shortcuts: string[];
+      constraints: KeyedStatementV2[];
+      forbidden_paths: KeyedPathV2[];
+      forbidden_shortcuts: KeyedStatementV2[];
     };
     acceptance: {
-      checks: DeliveryCheckV1[];
-      external_confirmations: ExternalConfirmationV1[];
+      checks: DeliveryCheckV2[];
+      external_confirmations: ExternalConfirmationV2[];
     };
   };
-  outcomes: DeliveryOutcomeV1[];
+  outcomes: DeliveryOutcomeV2[];
 }

@@ -1,14 +1,14 @@
 import type {
-  AuthorityHashesV1,
-  CompiledDeliveryContractV1,
-  DeliveryContractV1,
-  DeliveryOutcomeV1,
+  AuthorityHashesV2,
+  CompiledDeliveryContractV2,
+  DeliveryContractV2,
+  DeliveryOutcomeV2,
 } from "./long-task-delivery-types.js";
 import { canonicalValueJson, sha256Hex } from "./strict-codec.js";
 
 export function computeAuthorityHashes(
-  contract: DeliveryContractV1,
-): AuthorityHashesV1 {
+  contract: DeliveryContractV2,
+): AuthorityHashesV2 {
   return {
     source_authority_hash: hash({
       source_paths: contract.task.source_paths,
@@ -27,8 +27,6 @@ export function computeAuthorityHashes(
       global_checks: contract.global.acceptance.checks.map(acceptanceCheck),
       outcomes: contract.outcomes.map((outcome) => ({
         key: outcome.key,
-        validates: outcome.acceptance.validates,
-        does_not_validate: outcome.acceptance.does_not_validate,
         checks: outcome.acceptance.checks.map(acceptanceCheck),
         population: outcome.acceptance.population,
         counterfactual_controls: outcome.acceptance.counterfactual_controls,
@@ -47,12 +45,10 @@ export function computeAuthorityHashes(
   };
 }
 
-export function outcomeAuthorityHash(outcome: DeliveryOutcomeV1): string {
+export function outcomeAuthorityHash(outcome: DeliveryOutcomeV2): string {
   return hash({
     product: outcome.product,
     acceptance: {
-      validates: outcome.acceptance.validates,
-      does_not_validate: outcome.acceptance.does_not_validate,
       checks: outcome.acceptance.checks.map(acceptanceCheck),
       population: outcome.acceptance.population,
       counterfactual_controls: outcome.acceptance.counterfactual_controls,
@@ -61,17 +57,17 @@ export function outcomeAuthorityHash(outcome: DeliveryOutcomeV1): string {
 }
 
 export function changedAuthoritySections(
-  previous: AuthorityHashesV1,
-  next: AuthorityHashesV1,
+  previous: AuthorityHashesV2,
+  next: AuthorityHashesV2,
 ): string[] {
-  return (Object.keys(previous) as (keyof AuthorityHashesV1)[])
+  return (Object.keys(previous) as (keyof AuthorityHashesV2)[])
     .filter((key) => previous[key] !== next[key])
     .map((key) => key.replace(/_authority_hash$/u, ""));
 }
 
 export function protectedAuthorityChanged(
-  previous: CompiledDeliveryContractV1,
-  next: AuthorityHashesV1,
+  previous: CompiledDeliveryContractV2,
+  next: AuthorityHashesV2,
 ): string[] {
   return changedAuthoritySections(previous.authority_hashes, next).filter(
     (section) => section !== "technical",
@@ -79,15 +75,15 @@ export function protectedAuthorityChanged(
 }
 
 export function acceptanceSemanticsChanged(
-  previous: CompiledDeliveryContractV1,
-  next: DeliveryContractV1,
+  previous: CompiledDeliveryContractV2,
+  next: DeliveryContractV2,
 ): boolean {
   return !same(acceptanceSemantics(previous), acceptanceSemantics(next));
 }
 
 export function isMonotonicAcceptanceStrengthening(
-  previous: CompiledDeliveryContractV1,
-  next: DeliveryContractV1,
+  previous: CompiledDeliveryContractV2,
+  next: DeliveryContractV2,
 ): boolean {
   if (!acceptanceSemanticsChanged(previous, next)) return false;
   if (
@@ -109,14 +105,6 @@ export function isMonotonicAcceptanceStrengthening(
     const nextOutcome = nextOutcomes.get(previousOutcome.key);
     if (!nextOutcome) return false;
     if (
-      !subset(
-        previousOutcome.acceptance.validates,
-        nextOutcome.acceptance.validates,
-      ) ||
-      !subset(
-        previousOutcome.acceptance.does_not_validate,
-        nextOutcome.acceptance.does_not_validate,
-      ) ||
       !checksStrengthened(
         previousOutcome.acceptance.checks,
         nextOutcome.acceptance.checks,
@@ -136,7 +124,7 @@ export function isMonotonicAcceptanceStrengthening(
 }
 
 function acceptanceCheck(
-  check: DeliveryContractV1["global"]["acceptance"]["checks"][number],
+  check: DeliveryContractV2["global"]["acceptance"]["checks"][number],
 ): unknown {
   return {
     key: check.key,
@@ -147,12 +135,12 @@ function acceptanceCheck(
 }
 
 function technicalCheck(
-  check: DeliveryContractV1["global"]["acceptance"]["checks"][number],
+  check: DeliveryContractV2["global"]["acceptance"]["checks"][number],
 ): unknown {
   return {
     key: check.key,
     runner: check.runner,
-    verification_sources: check.verification_sources,
+    verification_inputs: check.verification_inputs,
     input_paths: check.input_paths,
     expected_output_paths: check.expected_output_paths,
     artifact_globs: check.artifact_globs,
@@ -161,15 +149,13 @@ function technicalCheck(
 }
 
 function acceptanceSemantics(
-  contract: Pick<DeliveryContractV1, "outcomes" | "global">,
+  contract: Pick<DeliveryContractV2, "outcomes" | "global">,
 ): unknown {
   return {
     external_confirmations: contract.global.acceptance.external_confirmations,
     global_checks: contract.global.acceptance.checks.map(acceptanceCheck),
     outcomes: contract.outcomes.map((outcome) => ({
       key: outcome.key,
-      validates: outcome.acceptance.validates,
-      does_not_validate: outcome.acceptance.does_not_validate,
       checks: outcome.acceptance.checks.map(acceptanceCheck),
       population: outcome.acceptance.population,
       counterfactual_controls: outcome.acceptance.counterfactual_controls,
@@ -178,8 +164,8 @@ function acceptanceSemantics(
 }
 
 function checksStrengthened(
-  previous: DeliveryContractV1["global"]["acceptance"]["checks"],
-  next: DeliveryContractV1["global"]["acceptance"]["checks"],
+  previous: DeliveryContractV2["global"]["acceptance"]["checks"],
+  next: DeliveryContractV2["global"]["acceptance"]["checks"],
 ): boolean {
   const nextChecks = new Map(next.map((check) => [check.key, check]));
   for (const previousCheck of previous) {

@@ -1,54 +1,48 @@
 import type {
-  CheckExecutionResultV1,
-  CompiledCheckV1,
-  CompiledDeliveryContractV1,
-  LongTaskFindingV1,
-  TargetedVerificationResultV1,
-  WorkspaceManifestV1,
+  CheckExecutionResultV2,
+  CompiledCheckV2,
+  CompiledDeliveryContractV2,
+  LongTaskFindingV2,
+  RawCommandExecutionV2,
+  TargetedVerificationResultV2,
+  WorkspaceManifestV2,
 } from "./long-task-delivery-types.js";
 import { deliveryCompileFreshness } from "./long-task-freshness.js";
-import {
-  executeCheckRunner,
-  type RunnerEvidenceV1,
-} from "./long-task-check-runner.js";
+import { executeCheckRunner } from "./long-task-check-runner.js";
 import {
   evaluateCheckEvidence,
   evaluateOutcomeCounterfactuals,
-} from "./long-task-evidence-v1.js";
-import { findScopeEscapes } from "./long-task-paths.js";
+} from "./long-task-evidence-v2.js";
+import { findScopeEscapes, matchesRepoPattern } from "./long-task-paths.js";
 import {
   assertMatchingActiveBinding,
   readCompiledDeliveryContract,
   writeProgressRecord,
 } from "./long-task-state.js";
 import { createProgressRecord } from "./long-task-progress.js";
-import { deliverySetWorkspaceExclusions } from "./long-task-delivery-set-state.js";
-import { matchesRepoPattern } from "./long-task-paths.js";
 import {
   changedWorkspacePaths,
   createWorkspaceSnapshot,
-  type WorkspaceSnapshotV1,
+  type WorkspaceSnapshotV2,
 } from "./long-task-workspace.js";
 
-export interface DeliveryRunV1 {
-  snapshot: WorkspaceManifestV1;
-  check_results: CheckExecutionResultV1[];
-  findings: LongTaskFindingV1[];
+export interface DeliveryRunV2 {
+  snapshot: WorkspaceManifestV2;
+  check_results: CheckExecutionResultV2[];
+  findings: LongTaskFindingV2[];
 }
 
 export async function verifyDeliveryContract(
   workdir: string,
   selection: { outcome?: string; check?: string } = {},
-): Promise<TargetedVerificationResultV1> {
+): Promise<TargetedVerificationResultV2> {
   const compiled = await readCompiledDeliveryContract(workdir);
   await assertMatchingActiveBinding(compiled);
   const selected = selectChecks(compiled, selection);
-  const exclusions = await deliverySetWorkspaceExclusions(compiled);
   const snapshot = await createWorkspaceSnapshot(
     compiled.repository_root,
     compiled.workdir,
     `verify-${compiled.task.id}`,
-    exclusions,
   );
   try {
     const run = await runDeliveryChecks(compiled, snapshot, selected, true);
@@ -64,7 +58,7 @@ export async function verifyDeliveryContract(
       records.map((record) => writeProgressRecord(workdir, record)),
     );
     return {
-      schema_version: "long-task-targeted-progress-v1",
+      schema_version: "long-task-targeted-progress-v2",
       compiled_identity: compiled.compiled_identity,
       snapshot_sha256: snapshot.manifest.snapshot_sha256,
       acceptance_authorized: false,
@@ -83,35 +77,32 @@ export async function verifyDeliveryContract(
 }
 
 export async function runDeliveryChecks(
-  compiled: CompiledDeliveryContractV1,
-  snapshot: WorkspaceSnapshotV1,
-  checks: CompiledCheckV1[],
+  compiled: CompiledDeliveryContractV2,
+  snapshot: WorkspaceSnapshotV2,
+  checks: CompiledCheckV2[],
   includeCounterfactuals: boolean,
   finalGate = false,
-  scopeOverride?: { allowed: string[]; forbidden: string[] },
-): Promise<DeliveryRunV1> {
-  const findings = await preRunFindings(
-    compiled,
-    snapshot.manifest,
-    scopeOverride,
-  );
+): Promise<DeliveryRunV2> {
+  const findings = await preRunFindings(compiled, snapshot.manifest);
   if (finalGate)
     findings.push(...finalPathFindings(compiled, snapshot.manifest));
   if (findings.length)
     return { snapshot: snapshot.manifest, check_results: [], findings };
 
-  const evidence = new Map<string, RunnerEvidenceV1>();
-  const checkResults: CheckExecutionResultV1[] = [];
+  const rawExecutions = new Map<string, RawCommandExecutionV2>();
+  const checkResults: CheckExecutionResultV2[] = [];
   for (const check of checks) {
-    let value = evidence.get(check.runner.execution_identity);
-    if (!value) {
-      value = await executeCheckRunner(check, snapshot.root);
-      evidence.set(check.runner.execution_identity, value);
+    let raw = rawExecutions.get(check.runner.execution_identity);
+    if (!raw) {
+      raw = await executeCheckRunner(check, snapshot.root);
+      rawExecutions.set(check.runner.execution_identity, raw);
     }
     const outcome = check.outcome_key
       ? compiled.outcomes.find((item) => item.key === check.outcome_key)
       : undefined;
-    checkResults.push(evaluateCheckEvidence(check, value, outcome));
+    checkResults.push(
+      await evaluateCheckEvidence(check, raw, snapshot.root, outcome),
+    );
   }
   findings.push(...checkResults.flatMap((result) => result.findings));
 
@@ -129,18 +120,20 @@ export async function runDeliveryChecks(
           .filter((check) => check.outcome_key === outcome.key)
           .map((check) => check.key),
       );
-      const relevant = {
-        ...outcome,
-        acceptance: {
-          ...outcome.acceptance,
-          counterfactual_controls:
-            outcome.acceptance.counterfactual_controls.filter((control) =>
-              selectedKeys.has(control.check_key),
-            ),
-        },
-      };
       findings.push(
-        ...(await evaluateOutcomeCounterfactuals(relevant, snapshot.root)),
+        ...(await evaluateOutcomeCounterfactuals(
+          {
+            ...outcome,
+            acceptance: {
+              ...outcome.acceptance,
+              counterfactual_controls:
+                outcome.acceptance.counterfactual_controls.filter((control) =>
+                  selectedKeys.has(control.check_key),
+                ),
+            },
+          },
+          snapshot.root,
+        )),
       );
     }
   }
@@ -148,10 +141,10 @@ export async function runDeliveryChecks(
 }
 
 function finalPathFindings(
-  compiled: CompiledDeliveryContractV1,
-  manifest: WorkspaceManifestV1,
-): LongTaskFindingV1[] {
-  const findings: LongTaskFindingV1[] = [];
+  compiled: CompiledDeliveryContractV2,
+  manifest: WorkspaceManifestV2,
+): LongTaskFindingV2[] {
+  const findings: LongTaskFindingV2[] = [];
   for (const check of allCompiledChecks(compiled))
     for (const pattern of check.expected_output_paths)
       if (
@@ -185,8 +178,8 @@ function finalPathFindings(
 }
 
 export function allCompiledChecks(
-  compiled: CompiledDeliveryContractV1,
-): CompiledCheckV1[] {
+  compiled: CompiledDeliveryContractV2,
+): CompiledCheckV2[] {
   return [
     ...compiled.global.acceptance.checks,
     ...compiled.outcomes.flatMap((outcome) => outcome.acceptance.checks),
@@ -194,9 +187,9 @@ export function allCompiledChecks(
 }
 
 function selectChecks(
-  compiled: CompiledDeliveryContractV1,
+  compiled: CompiledDeliveryContractV2,
   selection: { outcome?: string; check?: string },
-): CompiledCheckV1[] {
+): CompiledCheckV2[] {
   const checks = allCompiledChecks(compiled);
   if (
     selection.outcome &&
@@ -214,10 +207,9 @@ function selectChecks(
 }
 
 async function preRunFindings(
-  compiled: CompiledDeliveryContractV1,
-  current: WorkspaceManifestV1,
-  scopeOverride?: { allowed: string[]; forbidden: string[] },
-): Promise<LongTaskFindingV1[]> {
+  compiled: CompiledDeliveryContractV2,
+  current: WorkspaceManifestV2,
+): Promise<LongTaskFindingV2[]> {
   const stale = await deliveryCompileFreshness(compiled);
   if (stale.length)
     return stale.map((code) => ({
@@ -226,28 +218,26 @@ async function preRunFindings(
       check_key: null,
       message: "A compiled Contract input changed.",
       next_action:
-        "Run ty-context long-task compile after reviewing the Contract change.",
+        "Run ty-context long-task compile --revise after reviewing the Contract change.",
     }));
   const protectedAuthorityFiles = new Set([
     ...Object.keys(compiled.contract_files),
     ...Object.keys(compiled.source_hashes),
     ...Object.keys(compiled.context_snapshot.sha256),
     ...allCompiledChecks(compiled).flatMap((check) =>
-      Object.keys(check.runner.frozen_files),
+      Object.keys(check.verification_input_hashes),
     ),
   ]);
   const changed = changedWorkspacePaths(
     compiled.initial_task_base.workspace_manifest,
     current,
   ).filter((file) => !protectedAuthorityFiles.has(file));
-  const allowed =
-    scopeOverride?.allowed ??
-    compiled.outcomes.flatMap((outcome) => [
-      ...outcome.technical.expected_change_paths,
-      ...outcome.technical.allowed_support_paths,
-    ]);
-  const forbidden = scopeOverride?.forbidden ?? [
-    ...compiled.global.technical.forbidden_paths,
+  const allowed = compiled.outcomes.flatMap((outcome) => [
+    ...outcome.technical.expected_change_paths,
+    ...outcome.technical.allowed_support_paths,
+  ]);
+  const forbidden = [
+    ...compiled.global.technical.forbidden_paths.map((entry) => entry.path),
     ...compiled.outcomes.flatMap(
       (outcome) => outcome.technical.forbidden_paths,
     ),
@@ -262,7 +252,7 @@ async function preRunFindings(
           message: `Changed paths are outside the Contract boundary: ${escaped.join(",")}`,
           actual: escaped,
           next_action:
-            "Review risk/ownership, update declared change paths and recompile in the same Goal.",
+            "Review risk/ownership, revise declared change paths and recompile in the same Goal.",
         },
       ]
     : [];

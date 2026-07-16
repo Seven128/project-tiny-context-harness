@@ -1,6 +1,6 @@
 {
   "name": "project-tiny-context-harness",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Minimal project memory and validation harness for AI coding agents.",
   "license": "MIT",
   "author": "Seven128",
@@ -55,10 +55,11 @@
     "test:built": "npm run test:default:built && npm run test:long-task-workflow:built",
     "test": "npm run build && npm run test:built",
     "test:workflow-default:built": "node --test --test-concurrency=1 ../../tests/ty-context/workflow-contract-routing.test.mjs",
-    "test:delivery-contract:built": "node --test --test-concurrency=1 ../../tests/ty-context/long-task-delivery-parser.test.mjs ../../tests/ty-context/long-task-delivery-compiler.test.mjs ../../tests/ty-context/long-task-delivery-risk.test.mjs",
+    "test:delivery-contract:built": "node --test --test-concurrency=1 ../../tests/ty-context/long-task-delivery-parser.test.mjs ../../tests/ty-context/long-task-delivery-compiler.test.mjs ../../tests/ty-context/long-task-delivery-risk.test.mjs ../../tests/ty-context/long-task-claim-coverage.test.mjs",
     "test:delivery-contract": "npm run build && npm run test:delivery-contract:built",
     "test:long-task-workflow:built": "node ../../tests/ty-context/run-package-suite.mjs long-task",
     "test:long-task-workflow": "npm run build && npm run test:long-task-workflow:built",
+    "test:long-task-performance": "npm run build && node ../../tests/ty-context/long-task-performance.mjs",
     "prepack": "npm run build"
   },
   "engines": {

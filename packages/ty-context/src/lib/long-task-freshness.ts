@@ -1,13 +1,13 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { captureContextGraphSnapshot } from "./context-graph-snapshot.js";
-import type { CompiledDeliveryContractV1 } from "./long-task-delivery-types.js";
+import type { CompiledDeliveryContractV2 } from "./long-task-delivery-types.js";
 import { canonicalValueJson, sha256Hex } from "./strict-codec.js";
 import { captureVerifierIdentity } from "./long-task-verifier-identity.js";
 import { parseDeliveryContractBundle } from "./long-task-delivery-parser.js";
 
 export async function deliveryCompileFreshness(
-  compiled: CompiledDeliveryContractV1,
+  compiled: CompiledDeliveryContractV2,
 ): Promise<string[]> {
   const findings: string[] = [];
   try {

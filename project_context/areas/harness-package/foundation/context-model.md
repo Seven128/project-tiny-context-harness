@@ -24,7 +24,7 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 - Source-to-Context judgment is the internal classification of each external product, architecture, technical or acceptance constraint as covered, requiring a Context update, task-local, explicitly out of scope or requiring a user decision. It is required thinking, not a Markdown table.
 - Context-to-Implementation alignment is checked during Conformance by asking whether controlling Context actually reached the correct modules, surfaces, APIs, state machines and verification paths and whether forbidden shortcuts were avoided. It is not a Markdown table.
 - Scratch files are optional, user/agent-owned temporary memory. They have no fixed name or schema, are not Context or completion proof, are not registered in `context.toml`, and never become Workflow or Long-Task authority.
-- One root `delivery-contract.yaml` (optionally with Outcome fragments) or one `delivery-set.yaml` is explicit long-task intent/acceptance authority. Original sources are provenance; compiled authority locks, per-Check progress, Child/Set receipts and status are verifier-owned temporary state, never Context.
+- One root V2 `delivery-contract.yaml` (optionally with Outcome fragments) is explicit long-task authoring authority. Original sources are provenance; compiled cache, per-Check progress, receipts and status are verifier-owned temporary audit/recovery state, never Context or acceptance authority.
 - Conformance is a handoff self-check against relevant Context and current task constraints. It creates delivery evidence, not durable Context by itself.
 
 ## Fact-Source Authority
@@ -36,7 +36,7 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 - Tests, smoke checks, CI, review, hidden probes and human acceptance prove product quality. Context can identify repeatable verification paths, but neither Context nor Harness validators claim that behavior passed.
 - `PROJECT_SPEC.md` owns the full Harness design explanation and historical rationale in this source workspace. Role Context keeps only high-frequency durable facts.
 - Agent internal plans are current execution state only. Existing `plan.md`, matrices, verdicts or other user files have no implicit authority.
-- Explicit Long-Task authority is: one compiled Contract/Bundle or Set scope; immutable initial base and protected authority hashes; targeted per-Check progress and Child Gates for repair/dependency only; one same-snapshot top-level Final Gate; and a fresh Git/tree/workspace/authority-bound Receipt for Stop/close.
+- Explicit Long-Task authority is: one source V2 Contract/Bundle; generated Claim Coverage; immutable initial base and protected authority hashes; targeted per-Check repair progress; a common-dir record plus Git-config marker; and a source-recompiled same-snapshot Live Final Gate run by final-gate, Stop or close.
 
 ## Priority When Sources Disagree
 

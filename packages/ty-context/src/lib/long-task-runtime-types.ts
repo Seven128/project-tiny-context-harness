@@ -1,41 +1,90 @@
 import type {
-  DeliveryCheckV1,
-  DeliveryContractV1,
-  DeliveryOutcomeV1,
-  DeliveryRunnerV1,
-  EffectiveRiskLevel,
+  DeliveryCheckV2,
+  DeliveryContractV2,
+  DeliveryOutcomeV2,
+  DeliveryRunnerV2,
+  ProofSurface,
 } from "./long-task-contract-types.js";
+import type {
+  EffectiveRiskLevel,
+  RiskFactName,
+} from "./long-task-risk-types.js";
 
-export interface WorkspaceFileV1 {
+export interface WorkspaceFileV2 {
   path: string;
   mode: number;
   size: number;
   sha256: string;
 }
 
-export interface WorkspaceManifestV1 {
+export interface WorkspaceFingerprintV2 {
+  head: string;
+  head_tree: string;
+  index_tree: string;
+  staged_diff_sha256: string;
+  unstaged_diff_sha256: string;
+  untracked_sha256: string;
+  status_sha256: string;
+  identity: string;
+}
+
+export interface WorkspaceManifestV2 {
   repository_root: string;
   git_head: string;
-  files: WorkspaceFileV1[];
+  files: WorkspaceFileV2[];
+  fingerprint: WorkspaceFingerprintV2;
   snapshot_sha256: string;
 }
 
-export interface FrozenRunnerV1 extends DeliveryRunnerV1 {
+export interface FrozenRunnerV2 extends DeliveryRunnerV2 {
   executable: string;
   executable_argv_prefix: string[];
+  resolved_cwd: string;
+  resolved_target: string;
   definition_sha256: string;
   frozen_files: Record<string, string>;
+  package_script: string | null;
   execution_identity: string;
 }
 
-export interface CompiledCheckV1 extends Omit<DeliveryCheckV1, "runner"> {
+export interface CompiledCheckV2 extends Omit<DeliveryCheckV2, "runner"> {
   internal_id: string;
   outcome_key: string | null;
-  runner: FrozenRunnerV1;
-  verification_source_hashes: Record<string, string>;
+  runner: FrozenRunnerV2;
+  verification_input_hashes: Record<string, string>;
 }
 
-export interface AuthorityHashesV1 {
+export interface ProductClaimV2 {
+  id: string;
+  outcome_key: string;
+  local_key: string;
+  kind:
+    | "result"
+    | "control"
+    | "non_completing"
+    | "obligation"
+    | "forbidden_shortcut";
+  required_proof_surfaces: ProofSurface[];
+}
+
+export interface ClaimProofV2 {
+  check_key: string;
+  assertion_key: string | null;
+  polarity: "positive" | "negative" | "population" | "counterfactual";
+  proof_surface: ProofSurface;
+}
+
+export interface ClaimCoverageSummaryV2 {
+  claims_total: number;
+  claims_covered: number;
+  uncovered_claims: string[];
+  claims_by_outcome: Record<
+    string,
+    Record<string, { covered: boolean; proofs: ClaimProofV2[] }>
+  >;
+}
+
+export interface AuthorityHashesV2 {
   source_authority_hash: string;
   product_authority_hash: string;
   acceptance_authority_hash: string;
@@ -43,22 +92,13 @@ export interface AuthorityHashesV1 {
   technical_authority_hash: string;
 }
 
-export interface InitialTaskBaseV1 {
+export interface InitialTaskBaseV2 {
   git_commit: string;
   git_tree: string;
-  workspace_manifest: WorkspaceManifestV1;
+  workspace_manifest: WorkspaceManifestV2;
 }
 
-export interface DeliverySetChildBindingV1 {
-  set_workdir: string;
-  set_identity: string;
-  contract_key: string;
-  dependency_contract_identities: Record<string, string>;
-  dependency_receipt_identities: Record<string, string>;
-  dependency_interface_identities: Record<string, string>;
-}
-
-export interface VerifierIdentityV1 {
+export interface VerifierIdentityV2 {
   package_name: "project-tiny-context-harness";
   package_version: string;
   package_root: string;
@@ -68,18 +108,20 @@ export interface VerifierIdentityV1 {
   hook_sha256: string;
 }
 
-export interface CompiledOutcomeV1 extends Omit<
-  DeliveryOutcomeV1,
+export interface CompiledOutcomeV2 extends Omit<
+  DeliveryOutcomeV2,
   "acceptance"
 > {
   internal_id: string;
-  acceptance: Omit<DeliveryOutcomeV1["acceptance"], "checks"> & {
-    checks: CompiledCheckV1[];
+  generated_claims: ProductClaimV2[];
+  risk_reasons: RiskFactName[];
+  acceptance: Omit<DeliveryOutcomeV2["acceptance"], "checks"> & {
+    checks: CompiledCheckV2[];
   };
 }
 
-export interface CompiledDeliveryContractV1 {
-  schema_version: "compiled-long-task-delivery-v1";
+export interface CompiledDeliveryContractV2 {
+  schema_version: "compiled-long-task-delivery-v2";
   compiled_identity: string;
   repository_root: string;
   workdir: string;
@@ -93,25 +135,27 @@ export interface CompiledDeliveryContractV1 {
     files: string[];
     sha256: Record<string, string>;
   };
-  verifier_identity: VerifierIdentityV1;
+  verifier_identity: VerifierIdentityV2;
   effective_risk: EffectiveRiskLevel;
   risk_reasons: string[];
-  baseline_workspace: WorkspaceManifestV1;
-  initial_task_base: InitialTaskBaseV1;
-  authority_hashes: AuthorityHashesV1;
-  delivery_set: DeliverySetChildBindingV1 | null;
-  task: DeliveryContractV1["task"];
-  risk: DeliveryContractV1["risk"];
-  global: Omit<DeliveryContractV1["global"], "acceptance"> & {
+  baseline_workspace: WorkspaceManifestV2;
+  initial_task_base: InitialTaskBaseV2;
+  authority_hashes: AuthorityHashesV2;
+  authority_revision: number;
+  claim_coverage: ClaimCoverageSummaryV2;
+  task: DeliveryContractV2["task"];
+  risk: DeliveryContractV2["risk"];
+  source_claims: DeliveryContractV2["source_claims"];
+  global: Omit<DeliveryContractV2["global"], "acceptance"> & {
     acceptance: {
-      checks: CompiledCheckV1[];
-      external_confirmations: DeliveryContractV1["global"]["acceptance"]["external_confirmations"];
+      checks: CompiledCheckV2[];
+      external_confirmations: DeliveryContractV2["global"]["acceptance"]["external_confirmations"];
     };
   };
-  outcomes: CompiledOutcomeV1[];
+  outcomes: CompiledOutcomeV2[];
 }
 
-export interface LongTaskFindingV1 {
+export interface LongTaskFindingV2 {
   code: string;
   outcome_key: string | null;
   check_key: string | null;
@@ -121,21 +165,54 @@ export interface LongTaskFindingV1 {
   next_action: string;
 }
 
-export interface CheckExecutionResultV1 {
+export type CheckExecutionStatusV2 =
+  | "passed"
+  | "assertion_failed"
+  | "test_failed"
+  | "blocked_external"
+  | "infrastructure_error"
+  | "invalid_evidence";
+
+export interface AssertionResultV2 {
+  key: string;
+  polarity: "positive" | "negative";
+  passed: boolean;
+  claims: string[];
+}
+
+export interface RawCommandExecutionV2 {
+  execution_identity: string;
+  execution_status:
+    | "completed"
+    | "blocked_external"
+    | "infrastructure_error"
+    | "invalid_evidence";
+  exit_code: number;
+  observations: Record<string, unknown>;
+  stdout_sha256: string;
+  stderr_sha256: string;
+  attempts: number;
+  duration_ms: number;
+  error: string | null;
+}
+
+export interface CheckExecutionResultV2 {
   internal_id: string;
   outcome_key: string | null;
   check_key: string;
-  status: "passed" | "failed" | "blocked_external";
+  status: CheckExecutionStatusV2;
   execution_identity: string;
-  assertion_results: boolean[];
+  assertion_results: AssertionResultV2[];
   observations: Record<string, unknown>;
-  findings: LongTaskFindingV1[];
+  artifact_hashes: Record<string, string>;
+  claim_proofs: ClaimProofV2[];
+  findings: LongTaskFindingV2[];
   attempts: number;
   duration_ms: number;
 }
 
-export interface ProgressRecordV1 {
-  schema_version: "long-task-progress-record-v1";
+export interface ProgressRecordV2 {
+  schema_version: "long-task-progress-record-v2";
   compiled_identity: string;
   outcome_authority_hash: string;
   check_identity: string;
@@ -147,35 +224,37 @@ export interface ProgressRecordV1 {
   resolved_input_path_hashes: Record<string, string>;
   binding_carrier_path_hashes: Record<string, string>;
   dependency_interface_identities: Record<string, string>;
-  result: "passed" | "failed" | "blocked_external";
-  check_result: CheckExecutionResultV1;
-  findings: LongTaskFindingV1[];
+  result: CheckExecutionStatusV2;
+  check_result: CheckExecutionResultV2;
+  findings: LongTaskFindingV2[];
   completed_at: string;
 }
 
-export interface TargetedVerificationResultV1 {
-  schema_version: "long-task-targeted-progress-v1";
+export interface TargetedVerificationResultV2 {
+  schema_version: "long-task-targeted-progress-v2";
   compiled_identity: string;
   snapshot_sha256: string;
   acceptance_authorized: false;
   selected_outcome: string | null;
   selected_check: string | null;
   updated_progress_records: string[];
-  check_results: CheckExecutionResultV1[];
-  findings: LongTaskFindingV1[];
+  check_results: CheckExecutionResultV2[];
+  findings: LongTaskFindingV2[];
   completed_at: string;
 }
 
-export type OutcomeStatusV1 =
+export type OutcomeStatusV2 =
   | "unverified"
   | "progress_passing"
   | "progress_failing"
   | "progress_stale"
   | "blocked_external";
 
-export interface FinalReceiptV1 {
-  schema_version: "long-task-final-receipt-v1";
+export interface FinalReceiptV2 {
+  schema_version: "long-task-final-receipt-v2";
   receipt_sha256: string;
+  authority_scope: "audit_only";
+  reusable_for_acceptance: false;
   workflow_status:
     | "machine_accepted"
     | "machine_accepted_external_pending"
@@ -188,10 +267,18 @@ export interface FinalReceiptV1 {
   git_tree: string;
   source_hashes: Record<string, string>;
   context_hashes: Record<string, string>;
-  verifier_identity: VerifierIdentityV1;
-  check_results: CheckExecutionResultV1[];
+  verifier_identity: VerifierIdentityV2;
+  check_results: CheckExecutionResultV2[];
   outcome_results: Record<string, "passed" | "failed" | "blocked_external">;
-  findings: LongTaskFindingV1[];
+  external_confirmations: DeliveryContractV2["global"]["acceptance"]["external_confirmations"];
+  findings: LongTaskFindingV2[];
+  snapshot_preparation_ms: number;
   started_at: string;
   completed_at: string;
 }
+
+export type StrictRiskObligationV2 = {
+  outcome_key: string;
+  risk_fact: RiskFactName;
+  obligations: string[];
+};

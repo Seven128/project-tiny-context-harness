@@ -80,6 +80,20 @@ async function verifyNoop(): Promise<void> {
 export const migrations: Migration[] = [
   legacySdlcHarnessMigration,
   {
+    id: "long-task-v1-retirement",
+    introducedIn: "0.6.0",
+    description:
+      "Retire the V1 acceptance runtime and repo-local Hook before enabling the sole V2 authority path.",
+    scope:
+      "<harnessRoot>/hooks/long-task-hook.mjs and legacy active-long-task projection",
+    risk: "safe",
+    manualMessage:
+      "An unfinished V1 Contract cannot be silently upgraded because Claim Coverage, owner boundaries, verification inputs and Counterfactual V2 require explicit product authority.",
+    detect: detectLongTaskV1Retirement,
+    apply: migrateLongTaskV1Retirement,
+    verify: verifyLongTaskV1Retirement,
+  },
+  {
     id: "composite-codex-to-long-task",
     introducedIn: "0.5.0",
     description:
@@ -170,6 +184,65 @@ export const migrations: Migration[] = [
     verify: verifyNoop,
   },
 ];
+
+async function detectLongTaskV1Retirement(
+  projectRoot: string,
+  root: string,
+  migration: string,
+): Promise<UpgradePlanItem[]> {
+  const items: UpgradePlanItem[] = [];
+  const hook = path.join(projectRoot, root, "hooks", "long-task-hook.mjs");
+  if (await pathExists(hook))
+    items.push(
+      item(
+        migration,
+        "safe_pending",
+        path.relative(projectRoot, hook).split(path.sep).join("/"),
+        "The V1 repo-local Hook can be removed; V2 invokes the package-owned verifier entry directly.",
+      ),
+    );
+  const projection = path.join(
+    projectRoot,
+    root,
+    "ty-context-active-long-task.json",
+  );
+  if (await pathExists(projection))
+    items.push(
+      item(
+        migration,
+        "manual_required",
+        path.relative(projectRoot, projection).split(path.sep).join("/"),
+        "Retire or explicitly rewrite the unfinished V1 task as a V2 Contract; upgrade will not import historical acceptance state.",
+      ),
+    );
+  return items;
+}
+
+async function migrateLongTaskV1Retirement(
+  projectRoot: string,
+  root: string,
+  report: MigrationReport,
+): Promise<void> {
+  const hook = path.join(projectRoot, root, "hooks", "long-task-hook.mjs");
+  if (await pathExists(hook)) {
+    await fs.rm(hook, { force: true });
+    report.changed.push(
+      path.relative(projectRoot, hook).split(path.sep).join("/"),
+    );
+  } else report.skipped.push("long-task-v1-retirement:repo-local-hook");
+}
+
+async function verifyLongTaskV1Retirement(
+  projectRoot: string,
+  root: string,
+): Promise<void> {
+  if (
+    await pathExists(
+      path.join(projectRoot, root, "hooks", "long-task-hook.mjs"),
+    )
+  )
+    throw new Error("long-task-v1-retirement migration verification failed");
+}
 
 export async function createUpgradePlan(
   projectRoot: string,

@@ -1,27 +1,23 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type {
-  DeliveryContractV1,
-  LongTaskRiskFacts,
+  DeliveryContractV2,
+  RiskFactName,
 } from "./long-task-delivery-types.js";
 import { matchesRepoPattern } from "./long-task-paths.js";
 import { parseStrictYaml } from "./strict-codec.js";
 
 interface RiskSurfaceV1 {
-  risk: keyof LongTaskRiskFacts | "classification_required";
+  risk: RiskFactName | "classification_required";
   paths: string[];
 }
 
 export async function validateActualRiskSurfaces(
   repository: string,
   changedPaths: string[],
-  contract: DeliveryContractV1,
+  contract: DeliveryContractV2,
 ): Promise<void> {
-  const inferred = new Set<keyof LongTaskRiskFacts>();
-  for (const outcome of contract.outcomes)
-    for (const binding of outcome.technical.bindings)
-      if (binding.kind === "schema" || binding.kind === "route")
-        inferred.add("public_api_or_schema_change");
+  const inferred = new Set<RiskFactName>();
   const surfaces = await readRiskSurfaces(repository);
   for (const surface of surfaces)
     if (
@@ -34,7 +30,7 @@ export async function validateActualRiskSurfaces(
       inferred.add(surface.risk);
     }
   for (const fact of inferred)
-    if (!contract.risk.facts[fact])
+    if (contract.risk.facts[fact].length === 0)
       throw new Error(`risk_fact_underdeclared:${fact}`);
 }
 

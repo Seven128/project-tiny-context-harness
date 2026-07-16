@@ -1,0 +1,144 @@
+import assert from "node:assert/strict";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import path from "node:path";
+import test from "node:test";
+import { executeCheckRunner } from "../../packages/ty-context/dist/lib/long-task-check-runner.js";
+import { evaluateCheckEvidence } from "../../packages/ty-context/dist/lib/long-task-evidence-v2.js";
+import { deliveryCompileFreshness } from "../../packages/ty-context/dist/lib/long-task-freshness.js";
+import {
+  createDeliveryFixture,
+  runCli,
+  writeContract,
+} from "./long-task-delivery-fixtures.mjs";
+
+test("runner target resolves from a subdirectory and executes that frozen target", async () => {
+  const fixture = await createDeliveryFixture();
+  try {
+    await mkdir(path.join(fixture.root, "tools/sub"), { recursive: true });
+    await writeFile(
+      path.join(fixture.root, "tools/sub/oracle.mjs"),
+      'console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:true}}));\n',
+    );
+    const check = fixture.contract.outcomes[0].acceptance.checks[0];
+    check.runner.cwd = "tools/sub";
+    check.runner.target = "oracle.mjs";
+    check.verification_inputs = ["tools/sub/oracle.mjs"];
+    await writeContract(fixture.workdir, fixture.contract);
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    const compiled = await compiledContract(fixture.workdir);
+    const frozen = compiled.outcomes[0].acceptance.checks[0];
+    assert.equal(frozen.runner.resolved_cwd, "tools/sub");
+    assert.equal(frozen.runner.resolved_target, "tools/sub/oracle.mjs");
+    const raw = await executeCheckRunner(frozen, fixture.root);
+    assert.equal(raw.execution_status, "completed");
+    assert.equal(raw.observations.result, true);
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("helper, fixture, Playwright config, package script and lockfile are frozen", async () => {
+  const fixture = await createDeliveryFixture();
+  try {
+    await writeFile(path.join(fixture.root, "tests/helper.mjs"), "export {};\n");
+    await writeFile(path.join(fixture.root, "tests/fixture.json"), "{}\n");
+    await writeFile(path.join(fixture.root, "tests/ui.spec.mjs"), "// spec\n");
+    await writeFile(
+      path.join(fixture.root, "playwright.config.mjs"),
+      "export default {};\n",
+    );
+    await writeFile(path.join(fixture.root, "package-lock.json"), "{}\n");
+    const check = fixture.contract.outcomes[0].acceptance.checks[0];
+    check.runner.type = "playwright_test";
+    check.runner.target = "tests/ui.spec.mjs";
+    check.verification_inputs = ["tests/helper.mjs", "tests/fixture.json"];
+    await writeContract(fixture.workdir, fixture.contract);
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    const compiled = await compiledContract(fixture.workdir);
+    const frozen = compiled.outcomes[0].acceptance.checks[0];
+    for (const file of [
+      "tests/helper.mjs",
+      "tests/fixture.json",
+      "tests/ui.spec.mjs",
+      "playwright.config.mjs",
+      "package.json",
+      "package-lock.json",
+    ])
+      assert.ok(frozen.runner.frozen_files[file], file);
+
+    for (const file of [
+      "tests/helper.mjs",
+      "tests/fixture.json",
+      "playwright.config.mjs",
+      "package-lock.json",
+    ]) {
+      const original = await readFile(path.join(fixture.root, file), "utf8");
+      await writeFile(path.join(fixture.root, file), `${original}// changed\n`);
+      assert.ok(
+        (await deliveryCompileFreshness(compiled)).some((finding) =>
+          finding.endsWith(`:${file}`),
+        ),
+        file,
+      );
+      await writeFile(path.join(fixture.root, file), original);
+    }
+
+    const packageJson = JSON.parse(
+      await readFile(path.join(fixture.root, "package.json"), "utf8"),
+    );
+    packageJson.scripts.oracle = "node tests/oracle.mjs second";
+    await writeFile(
+      path.join(fixture.root, "package.json"),
+      `${JSON.stringify(packageJson, null, 2)}\n`,
+    );
+    assert.ok(
+      (await deliveryCompileFreshness(compiled)).some((finding) =>
+        finding.endsWith(":package.json"),
+      ),
+    );
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("zero-test and all-skipped Playwright reports cannot pass", async () => {
+  const fixture = await createDeliveryFixture();
+  try {
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    const compiled = await compiledContract(fixture.workdir);
+    const base = compiled.outcomes[0].acceptance.checks[0];
+    for (const stats of [
+      { expected: 0, unexpected: 0, skipped: 0, flaky: 0 },
+      { expected: 0, unexpected: 0, skipped: 1, flaky: 0 },
+    ]) {
+      const check = structuredClone(base);
+      check.runner.type = "playwright_test";
+      check.runner.executable = process.execPath;
+      check.runner.executable_argv_prefix = [
+        "-e",
+        `process.stdout.write(${JSON.stringify(JSON.stringify({ stats }))})`,
+      ];
+      check.runner.argv = [];
+      const raw = await executeCheckRunner(check, fixture.root);
+      const evidence = await evaluateCheckEvidence(
+        check,
+        raw,
+        fixture.root,
+        compiled.outcomes[0],
+      );
+      assert.equal(evidence.status, "test_failed");
+      assert.equal(raw.observations["playwright.zero_or_all_skipped"], true);
+    }
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+async function compiledContract(workdir) {
+  return JSON.parse(
+    await readFile(path.join(workdir, ".ty-context/compiled-contract.json"), "utf8"),
+  );
+}

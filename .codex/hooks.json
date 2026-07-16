@@ -5,10 +5,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs\"",
-            "commandWindows": "powershell -NoProfile -Command \"$r=(git rev-parse --show-toplevel); node (Join-Path $r '.codex/hooks/long-task-hook.mjs')\"",
+            "command": "node \"C:\\Dev\\project-tiny-context-harness\\packages\\ty-context\\dist\\long-task-hook.js\"",
+            "commandWindows": "node \"C:\\Dev\\project-tiny-context-harness\\packages\\ty-context\\dist\\long-task-hook.js\"",
             "timeout": 10,
-            "statusMessage": "Tiny Context long-task authority gate"
+            "statusMessage": "Tiny Context long-task live authority gate"
           }
         ]
       }
@@ -18,10 +18,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs\"",
-            "commandWindows": "powershell -NoProfile -Command \"$r=(git rev-parse --show-toplevel); node (Join-Path $r '.codex/hooks/long-task-hook.mjs')\"",
+            "command": "node \"C:\\Dev\\project-tiny-context-harness\\packages\\ty-context\\dist\\long-task-hook.js\"",
+            "commandWindows": "node \"C:\\Dev\\project-tiny-context-harness\\packages\\ty-context\\dist\\long-task-hook.js\"",
             "timeout": 10,
-            "statusMessage": "Tiny Context long-task authority gate"
+            "statusMessage": "Tiny Context long-task live authority gate"
           }
         ]
       }
@@ -31,10 +31,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/long-task-hook.mjs\"",
-            "commandWindows": "powershell -NoProfile -Command \"$r=(git rev-parse --show-toplevel); node (Join-Path $r '.codex/hooks/long-task-hook.mjs')\"",
-            "timeout": 15,
-            "statusMessage": "Tiny Context long-task authority gate"
+            "command": "node \"C:\\Dev\\project-tiny-context-harness\\packages\\ty-context\\dist\\long-task-hook.js\"",
+            "commandWindows": "node \"C:\\Dev\\project-tiny-context-harness\\packages\\ty-context\\dist\\long-task-hook.js\"",
+            "timeout": 3600,
+            "statusMessage": "Tiny Context long-task live authority gate"
           }
         ]
       }

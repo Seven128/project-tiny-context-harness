@@ -1,0 +1,290 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Seven128/project-tiny-context-harness/schemas/long-task-delivery-v2.schema.json",
+  "title": "Single-Goal Delivery Contract V2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "task", "risk", "global"],
+  "properties": {
+    "schema_version": { "const": "long-task-delivery-v2" },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "goal", "source_paths", "context_refs", "context_snapshot_mode"],
+      "properties": {
+        "id": { "$ref": "#/$defs/key" },
+        "title": { "$ref": "#/$defs/nonEmpty" },
+        "goal": { "$ref": "#/$defs/nonEmpty" },
+        "source_paths": { "$ref": "#/$defs/nonEmptyStrings" },
+        "context_refs": { "$ref": "#/$defs/nonEmptyStrings" },
+        "context_snapshot_mode": { "enum": ["referenced", "full"] }
+      }
+    },
+    "source_claims": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/sourceClaim" },
+      "default": []
+    },
+    "risk": { "$ref": "#/$defs/risk" },
+    "global": { "$ref": "#/$defs/global" },
+    "outcomes": { "type": "array", "items": { "$ref": "#/$defs/outcome" }, "minItems": 1 },
+    "outcome_files": { "$ref": "#/$defs/nonEmptyStrings" }
+  },
+  "oneOf": [
+    { "required": ["outcomes"], "not": { "required": ["outcome_files"] } },
+    { "required": ["outcome_files"], "not": { "required": ["outcomes"] } }
+  ],
+  "$defs": {
+    "key": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "nonEmpty": { "type": "string", "minLength": 1 },
+    "nonEmptyStrings": { "type": "array", "items": { "$ref": "#/$defs/nonEmpty" } },
+    "keyedStatement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "statement"],
+      "properties": { "key": { "$ref": "#/$defs/key" }, "statement": { "$ref": "#/$defs/nonEmpty" } }
+    },
+    "keyedPath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "path"],
+      "properties": { "key": { "$ref": "#/$defs/key" }, "path": { "$ref": "#/$defs/nonEmpty" } }
+    },
+    "sourceClaim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "source_ref", "statement", "disposition"],
+      "properties": {
+        "key": { "$ref": "#/$defs/key" },
+        "source_ref": { "$ref": "#/$defs/nonEmpty" },
+        "statement": { "$ref": "#/$defs/nonEmpty" },
+        "disposition": {
+          "oneOf": [
+            { "type": "object", "additionalProperties": false, "required": ["type", "refs"], "properties": { "type": { "enum": ["claim", "global_constraint"] }, "refs": { "$ref": "#/$defs/nonEmptyStrings" } } },
+            { "type": "object", "additionalProperties": false, "required": ["type", "reason"], "properties": { "type": { "enum": ["out_of_scope", "decision_required"] }, "reason": { "$ref": "#/$defs/nonEmpty" } } }
+          ]
+        }
+      }
+    },
+    "risk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requested_level", "facts"],
+      "properties": {
+        "requested_level": { "enum": ["auto", "standard", "strict"] },
+        "facts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["public_api_or_schema_change", "persistent_data_change", "data_migration", "security_boundary_change", "permission_boundary_change", "irreversible_external_effect", "critical_user_path", "full_population_operation", "multi_repository_change", "weak_observability"],
+          "properties": {
+            "public_api_or_schema_change": { "$ref": "#/$defs/keys" },
+            "persistent_data_change": { "$ref": "#/$defs/keys" },
+            "data_migration": { "$ref": "#/$defs/keys" },
+            "security_boundary_change": { "$ref": "#/$defs/keys" },
+            "permission_boundary_change": { "$ref": "#/$defs/keys" },
+            "irreversible_external_effect": { "$ref": "#/$defs/keys" },
+            "critical_user_path": { "$ref": "#/$defs/keys" },
+            "full_population_operation": { "$ref": "#/$defs/keys" },
+            "multi_repository_change": { "$ref": "#/$defs/keys" },
+            "weak_observability": { "$ref": "#/$defs/keys" }
+          }
+        }
+      }
+    },
+    "keys": { "type": "array", "items": { "$ref": "#/$defs/key" }, "uniqueItems": true },
+    "global": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["product", "technical", "acceptance"],
+      "properties": {
+        "product": { "type": "object", "additionalProperties": false, "required": ["non_goals"], "properties": { "non_goals": { "type": "array", "items": { "$ref": "#/$defs/keyedStatement" } } } },
+        "technical": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["constraints", "forbidden_paths", "forbidden_shortcuts"],
+          "properties": {
+            "constraints": { "type": "array", "items": { "$ref": "#/$defs/keyedStatement" } },
+            "forbidden_paths": { "type": "array", "items": { "$ref": "#/$defs/keyedPath" } },
+            "forbidden_shortcuts": { "type": "array", "items": { "$ref": "#/$defs/keyedStatement" } }
+          }
+        },
+        "acceptance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["checks"],
+          "properties": {
+            "checks": { "type": "array", "items": { "$ref": "#/$defs/check" } },
+            "external_confirmations": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["key", "description", "owner"], "properties": { "key": { "$ref": "#/$defs/key" }, "description": { "$ref": "#/$defs/nonEmpty" }, "owner": { "$ref": "#/$defs/nonEmpty" } } } }
+          }
+        }
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "title", "depends_on", "product", "technical", "acceptance"],
+      "properties": {
+        "key": { "$ref": "#/$defs/key" },
+        "title": { "$ref": "#/$defs/nonEmpty" },
+        "depends_on": { "$ref": "#/$defs/keys" },
+        "product": { "$ref": "#/$defs/product" },
+        "technical": { "$ref": "#/$defs/technical" },
+        "acceptance": { "$ref": "#/$defs/acceptance" }
+      }
+    },
+    "product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observable_result", "owner", "owner_surfaces", "controls", "non_completing_outcomes"],
+      "properties": {
+        "observable_result": { "$ref": "#/$defs/nonEmpty" },
+        "owner": { "type": "object", "additionalProperties": false, "required": ["label", "context_refs", "path_globs"], "properties": { "label": { "$ref": "#/$defs/nonEmpty" }, "context_refs": { "$ref": "#/$defs/nonEmptyStrings" }, "path_globs": { "$ref": "#/$defs/nonEmptyStrings" } } },
+        "owner_surfaces": { "$ref": "#/$defs/nonEmptyStrings" },
+        "controls": { "type": "array", "items": { "$ref": "#/$defs/control" } },
+        "non_completing_outcomes": { "type": "array", "items": { "$ref": "#/$defs/keyedStatement" } }
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "location", "trigger", "input", "loading_state", "empty_state", "success_state", "failure_state", "feedback"],
+      "properties": { "key": { "$ref": "#/$defs/key" }, "location": { "$ref": "#/$defs/nonEmpty" }, "trigger": { "type": "string" }, "input": { "type": "string" }, "loading_state": { "type": "string" }, "empty_state": { "type": "string" }, "success_state": { "type": "string" }, "failure_state": { "type": "string" }, "feedback": { "type": "string" } }
+    },
+    "technical": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["obligations", "expected_change_paths", "allowed_support_paths", "forbidden_paths", "forbidden_shortcuts", "bindings", "rollback_and_recovery"],
+      "properties": {
+        "obligations": { "type": "array", "items": { "$ref": "#/$defs/obligation" } },
+        "expected_change_paths": { "$ref": "#/$defs/nonEmptyStrings" },
+        "allowed_support_paths": { "$ref": "#/$defs/nonEmptyStrings" },
+        "forbidden_paths": { "$ref": "#/$defs/nonEmptyStrings" },
+        "forbidden_shortcuts": { "type": "array", "items": { "$ref": "#/$defs/keyedStatement" } },
+        "bindings": { "type": "array", "items": { "$ref": "#/$defs/binding" } },
+        "rollback_and_recovery": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/rollback" }] }
+      }
+    },
+    "obligation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "statement", "required_proof_surfaces"],
+      "properties": { "key": { "$ref": "#/$defs/key" }, "statement": { "$ref": "#/$defs/nonEmpty" }, "required_proof_surfaces": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/proofSurface" } } }
+    },
+    "proofSurface": { "enum": ["ui_browser", "runtime_behavior", "api_contract", "data_state", "security_boundary", "population_coverage", "implementation_structure"] },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "kind", "target", "carrier_paths"],
+      "properties": { "key": { "$ref": "#/$defs/key" }, "kind": { "enum": ["file", "path_glob", "verified"] }, "target": { "$ref": "#/$defs/nonEmpty" }, "carrier_paths": { "$ref": "#/$defs/nonEmptyStrings" }, "existence": { "enum": ["existing", "planned"] }, "verification_check_key": { "$ref": "#/$defs/key" } }
+    },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rollback", "recovery", "verification_check_keys"],
+      "properties": { "rollback": { "$ref": "#/$defs/nonEmpty" }, "recovery": { "$ref": "#/$defs/nonEmpty" }, "verification_check_keys": { "$ref": "#/$defs/keys" } }
+    },
+    "acceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checks", "population", "counterfactual_controls"],
+      "properties": {
+        "checks": { "type": "array", "items": { "$ref": "#/$defs/check" } },
+        "population": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/population" }] },
+        "counterfactual_controls": { "type": "array", "items": { "$ref": "#/$defs/counterfactual" } }
+      }
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "proof_surface", "runner", "verification_inputs", "input_paths", "expected_output_paths", "artifact_globs", "positive_assertions", "negative_assertions", "environment_requirements"],
+      "properties": {
+        "key": { "$ref": "#/$defs/key" },
+        "proof_surface": { "$ref": "#/$defs/proofSurface" },
+        "runner": { "$ref": "#/$defs/runner" },
+        "verification_inputs": { "$ref": "#/$defs/nonEmptyStrings" },
+        "input_paths": { "$ref": "#/$defs/nonEmptyStrings" },
+        "expected_output_paths": { "$ref": "#/$defs/nonEmptyStrings" },
+        "artifact_globs": { "$ref": "#/$defs/nonEmptyStrings" },
+        "positive_assertions": { "type": "array", "items": { "$ref": "#/$defs/assertion" }, "minItems": 1 },
+        "negative_assertions": { "type": "array", "items": { "$ref": "#/$defs/assertion" } },
+        "environment_requirements": { "type": "array", "items": { "$ref": "#/$defs/environment" } }
+      }
+    },
+    "runner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "target", "argv", "cwd", "timeout_ms", "effect", "retry_policy", "idempotent"],
+      "properties": {
+        "type": { "enum": ["package_script", "project_binary", "node_oracle", "playwright_test"] },
+        "target": { "$ref": "#/$defs/nonEmpty" },
+        "argv": { "$ref": "#/$defs/nonEmptyStrings" },
+        "cwd": { "$ref": "#/$defs/nonEmpty" },
+        "timeout_ms": { "type": "integer", "minimum": 100, "maximum": 3600000 },
+        "effect": { "enum": ["read_only", "test_sandbox"] },
+        "retry_policy": { "enum": ["none", "transient_once"] },
+        "idempotent": { "type": "boolean" }
+      }
+    },
+    "assertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "claims", "observation", "operator"],
+      "properties": {
+        "key": { "$ref": "#/$defs/key" },
+        "claims": { "$ref": "#/$defs/nonEmptyStrings" },
+        "observation": { "$ref": "#/$defs/nonEmpty" },
+        "operator": { "enum": ["equals", "not_equals", "contains", "not_contains", "matches", "not_matches", "greater_than", "greater_or_equal", "less_than", "less_or_equal", "truthy", "falsy", "exists", "not_exists", "set_equals", "subset_of", "superset_of"] },
+        "expected": true
+      }
+    },
+    "environment": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["key", "kind", "target"],
+          "properties": { "key": { "$ref": "#/$defs/key" }, "kind": { "enum": ["executable", "file", "directory", "env_var"] }, "target": { "$ref": "#/$defs/nonEmpty" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["key", "kind", "host", "port", "timeout_ms"],
+          "properties": { "key": { "$ref": "#/$defs/key" }, "kind": { "const": "loopback_tcp" }, "host": { "enum": ["127.0.0.1", "::1", "localhost"] }, "port": { "type": "integer", "minimum": 1, "maximum": 65535 }, "timeout_ms": { "type": "integer", "minimum": 10, "maximum": 60000 } }
+        }
+      ]
+    },
+    "population": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["check_key", "claims", "observations", "exclusion_rules"],
+      "properties": {
+        "check_key": { "$ref": "#/$defs/key" },
+        "claims": { "$ref": "#/$defs/nonEmptyStrings" },
+        "observations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["eligible_ids", "observed_ids", "excluded_items"],
+          "properties": { "eligible_ids": { "$ref": "#/$defs/nonEmpty" }, "observed_ids": { "$ref": "#/$defs/nonEmpty" }, "excluded_items": { "$ref": "#/$defs/nonEmpty" } }
+        },
+        "exclusion_rules": { "type": "array", "items": { "$ref": "#/$defs/keyedStatement" } }
+      }
+    },
+    "counterfactual": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "claims", "check_key", "mutation", "expected_assertion_failures"],
+      "properties": {
+        "key": { "$ref": "#/$defs/key" },
+        "claims": { "$ref": "#/$defs/nonEmptyStrings" },
+        "check_key": { "$ref": "#/$defs/key" },
+        "expected_assertion_failures": { "$ref": "#/$defs/keys" },
+        "mutation": {
+          "oneOf": [
+            { "type": "object", "additionalProperties": false, "required": ["type", "paths"], "properties": { "type": { "const": "remove_paths" }, "paths": { "$ref": "#/$defs/nonEmptyStrings" } } },
+            { "type": "object", "additionalProperties": false, "required": ["type", "path", "fixture_path"], "properties": { "type": { "const": "replace_file" }, "path": { "$ref": "#/$defs/nonEmpty" }, "fixture_path": { "$ref": "#/$defs/nonEmpty" } } }
+          ]
+        }
+      }
+    }
+  }
+}
