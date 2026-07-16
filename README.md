@@ -231,17 +231,17 @@ ty-context long-task doctor <workdir>
 ty-context long-task final-gate <workdir>
 ty-context long-task stop-check <workdir> [--message <text>]
 ty-context long-task close <workdir>
-ty-context long-task abandon <workdir>
+ty-context long-task abandon <workdir> [--force-corrupt-state]
 ```
 
 - `init` creates only a Contract template.
-- `compile` generates Global plus Outcome Product/Control/Non-completing/Technical Claims, rejects uncovered Claims, preserves an immutable first baseline, calculates per-Outcome risk, freezes Source hashes, Context topology/files, canonical Product/Global semantics, owner/binding authority, resolved runners and verification inputs, and commits a complete Active Authority V3 snapshot in Git common-dir. The worktree marker binds task id, authority revision and compiled identity.
-- `verify` writes scoped per-Check Progress Records. Records accumulate across Outcome/Check runs and can never create accepted authority.
+- `compile` generates Global plus Outcome Product/Control/Non-completing/Technical Claims, rejects uncovered Claims, preserves an immutable first baseline and makes the first successful compile the Authority Lock. Every later revision compares against active authority regardless of progress, Receipt/cache deletion or implementation restoration. It freezes Source/Context/Product/Global/verifier materials, owner/binding authority, resolved runners and verification inputs in the complete common-dir Active Authority V3 snapshot.
+- `verify` writes scoped per-Check Progress Records only after rechecking active task/revision/compiled/worktree identity. A concurrent revision returns `active_authority_changed_during_verify` and writes no stale progress.
 - `status` reports each Outcome as `unverified`, `progress_passing`, `progress_failing`, `progress_stale` or `blocked_external`. It reads the common-dir authority snapshot and reports a missing or mismatched workdir cache as a repairable diagnostic.
 - `resume` is read-only and reports task identity, risk, relevant Context, Git state, ready Outcomes, findings and the next safe action from the common-dir authority snapshot.
-- `final-gate` requires a clean candidate commit, recompiles source authority and reruns every required Check on one Git-tree snapshot.
-- `stop-check` and `close` run that Live Final Gate themselves. They never trust status, progress, a Receipt or compiled cache for acceptance; success atomically clears the active binding.
-- `abandon` is explicit non-success cleanup; it preserves `source.md` and `delivery-contract.yaml` and never touches user Git state.
+- `final-gate` requires a clean candidate commit, recompiles source authority, reruns every required Check on one Git-tree snapshot and rechecks active identity before acceptance.
+- `stop-check` and `close` run that Live Final Gate themselves. They never trust status, progress, a Receipt or compiled cache for acceptance; success clears only the accepted identity through CAS.
+- `abandon` is explicit non-success cleanup. `--force-corrupt-state` is reserved for invalid/mismatched/legacy-unrecoverable state or a stale active lock and removes only deterministic local active state plus `<workdir>/.ty-context/**`; Contract, Source, Context and Git content are preserved.
 
 ### Delivery Contract
 
@@ -314,9 +314,9 @@ V2 authoring preserves original `source_paths` and direct `source_claims`, each 
 
 Delivery Set orchestration is retired. Genuinely independent release/rollback/owner/risk/product boundaries run as separate top-level Contracts. `ty-context delivery-set ...` returns a fixed non-executing tombstone.
 
-Every Contract-authority, Source hash/file-set, Context topology/file-set/hash, Product semantic projection or Global semantic projection change requires `--revise`; ordinary compile cannot silently refreeze changed Source or Context. After execution begins, Source/Context/Product/Global semantic changes, Product Claim additions/removals/rewrites, runner or verification-input replacement, reduced `input_paths`, weakened `expected_output_paths`, other proof weakening and scope expansion require approval of an exact revision identity bound to the previous and next materials. Every Contract authority field has a compile-time policy classification so new fields cannot silently bypass revision handling. Only mechanical proof additions and machine-proven scope/input/output tightening revise automatically. Risk downgrade is rejected, the executing Agent cannot self-approve, the immutable initial baseline is retained and affected progress becomes stale.
+Every Contract-authority, Source hash/file-set, Context topology/file-set/hash, Product/Global semantic or verifier-content change requires `--revise`; ordinary compile cannot silently refreeze it. After Authority Lock, reductions and Product Claim additions require approval of an exact revision identity bound to previous/next materials and verifier projections. Pure verifier package root/version relocation auto-revises, while bundle/schema/hook byte changes require user approval. Every Contract and Check execution field has a compile-time policy classification. Only mechanical proof additions, pure verifier relocation and machine-proven scope/input/output tightening revise automatically.
 
-Repository pattern matching, subset and overlap/disjoint use one AST and one restricted language: literal segments, `*`, `?`, full-segment `**` and simple extension patterns. Brackets, braces, extglob and non-segment `**` are rejected. Only proven disjointness separates protected paths; unknown relations fail closed. In particular, `**` overlaps verification inputs, `src/*.ts` is disjoint from `src/*.js`, and changing `src/safe/*.ts` to `src/safe/**` is widening even though the literal prefix is unchanged.
+Every path-bearing field uses one canonical grammar before hashing and matching. Windows separators and one leading `./` normalize to `/`; runner `cwd` alone may be `.`. Internal `.`/`..`, controls, empty segments, absolute/drive/UNC paths, brackets, braces, parentheses/extglob and non-segment `**` are rejected. Pattern matching, subset and overlap/disjoint use the same AST, and unknown relations fail closed.
 
 ### Deterministic Risk
 
@@ -328,9 +328,9 @@ An explicit user request can raise the level to strict. Explicit `standard` belo
 
 ### Evidence And Authority
 
-Final acceptance is computed from executable current evidence, not agent prose. A command exit code, handwritten status, historical targeted pass or missing/weak proof cannot produce accepted. Every Assertion requires an explicit Observation; missing or type-incomparable values fail, implicit absence operators are unsupported, and negative proof uses an explicit value such as `equals: false`. Contract, source, relevant Context, Oracle/runner, verifier or workspace drift invalidates previous results.
+Final acceptance is computed from executable current evidence, not agent prose. Raw Execution reuse is keyed by frozen runner identity plus canonical declared Environment Requirements, never actual env values; artifacts and Assertions remain per Check. Global hard failure yields `needs_work`; otherwise any Global or Outcome environment block yields `blocked_external`. Contract, source, relevant Context, Oracle/runner, verifier or workspace drift invalidates previous results.
 
-The workdir `.ty-context/compiled-contract.json` is only a rebuildable cache projection. Previous authority, the immutable initial base, risk floor and Final Gate identity come only from the common-dir snapshot. Authority updates use compare-and-swap and publish the cache afterward; deleting or forging the cache cannot reset authority. Legacy `active-long-task-binding-v2` state migrates only when its cache fully matches every bound identity, otherwise doctor reports `active_authority_continuity_unrecoverable`.
+The workdir `.ty-context/compiled-contract.json` is only a rebuildable cache projection. Previous authority, the immutable initial base, risk floor and Final Gate identity come only from the common-dir snapshot. Commit, migration, clear and abandon share one active-state lock; Final/Verify recheck identity and Stop/close use accepted-identity CAS. Legacy V2 migrates only from a fully matching cache; corrupt continuity is recovered explicitly with `abandon --force-corrupt-state`.
 
 Final Gate may run only Contract-declared verification commands and never production mutation/deployment/payment/migration execution. Retry defaults to none and is allowed once only for `transient_once` + idempotent + read-only/test-sandbox runners. Runners receive a minimal system environment whitelist plus only explicitly declared `env_var` requirements; undeclared secrets are not inherited. Protected authority/proof inputs reject symlinks and detectable hardlinks. Network isolation remains external. Counterfactual V2 accepts only exact designated Assertion failures with no artifact, population or other finding, and Population V2 proves exact entity coverage. Receipts are audit-only (`reusable_for_acceptance: false`). Every Outcome has an executable Check; human, CI, deployment and product confirmation live only in `external_confirmations`. A machine pass with pending confirmations reports `machine_accepted_external_pending`.
 

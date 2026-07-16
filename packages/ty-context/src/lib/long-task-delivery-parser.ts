@@ -17,6 +17,7 @@ import {
   parseKeyedPaths,
   parseKeyedStatements,
   parseSourceClaims,
+  repositoryFiles,
   string,
   strings,
 } from "./long-task-delivery-shape.js";
@@ -191,8 +192,8 @@ function parseTask(value: unknown): DeliveryContractV2["task"] {
     id: key(row.id, "task.id"),
     title: string(row.title, "task.title"),
     goal: string(row.goal, "task.goal"),
-    source_paths: strings(row.source_paths, "task.source_paths"),
-    context_refs: strings(row.context_refs, "task.context_refs"),
+    source_paths: repositoryFiles(row.source_paths, "task.source_paths"),
+    context_refs: repositoryFiles(row.context_refs, "task.context_refs"),
     context_snapshot_mode: literal(
       row.context_snapshot_mode,
       ["referenced", "full"] as const,

@@ -31,6 +31,7 @@ import {
   gitConfigUnset,
   gitPath,
 } from "./long-task-workspace.js";
+import { verifierAuthorityDiff } from "./long-task-verifier-authority.js";
 
 const RUNTIME_FOLDER = ".ty-context";
 const COMPILED_FILE = "compiled-contract.json";
@@ -79,6 +80,25 @@ export interface ActiveAuthorityLoadResultV3 {
   migrated: boolean;
 }
 
+export type ActiveAuthorityLockOperation =
+  | "commit"
+  | "clear"
+  | "abandon"
+  | "migrate";
+
+export interface ActiveAuthorityIdentityExpectation {
+  task_id: string;
+  authority_revision: number;
+  compiled_identity: string;
+  worktree_identity?: string;
+}
+
+export interface ClearActiveBindingCasOptions
+  extends ActiveAuthorityIdentityExpectation {
+  repository_root: string;
+  workdir: string;
+}
+
 export interface StagedCompiledDeliveryContractV2 {
   publish(): Promise<void>;
   discard(): Promise<void>;
@@ -121,6 +141,84 @@ export async function activeRecordPath(
     identity,
     "active.json",
   );
+}
+
+export async function activeAuthorityLockPath(
+  repositoryRoot: string,
+): Promise<string> {
+  return `${await activeRecordPath(repositoryRoot)}.lock`;
+}
+
+export async function activeAuthorityLockExists(
+  repositoryRoot: string,
+): Promise<boolean> {
+  return access(await activeAuthorityLockPath(repositoryRoot))
+    .then(() => true)
+    .catch(() => false);
+}
+
+export async function withActiveAuthorityLock<T>(
+  repositoryRoot: string,
+  operation: ActiveAuthorityLockOperation,
+  action: () => Promise<T>,
+): Promise<T> {
+  return withActiveAuthorityLockInternal(
+    repositoryRoot,
+    operation,
+    action,
+    false,
+  );
+}
+
+async function withActiveAuthorityLockInternal<T>(
+  repositoryRoot: string,
+  operation: ActiveAuthorityLockOperation,
+  action: () => Promise<T>,
+  breakStaleLock: boolean,
+): Promise<T> {
+  const root = path.resolve(repositoryRoot);
+  const activeFile = await activeRecordPath(root);
+  await mkdir(path.dirname(activeFile), { recursive: true });
+  const lockFile = await activeAuthorityLockPath(root);
+  let lock;
+  try {
+    lock = await open(lockFile, "wx");
+  } catch (error) {
+    if (
+      (error as NodeJS.ErrnoException).code === "EEXIST" &&
+      breakStaleLock
+    ) {
+      await rm(lockFile, { force: true });
+      try {
+        lock = await open(lockFile, "wx");
+      } catch (retryError) {
+        if ((retryError as NodeJS.ErrnoException).code === "EEXIST")
+          throw new Error(
+            "active_authority_compare_and_swap_failed:lock_unavailable",
+          );
+        throw retryError;
+      }
+    } else if ((error as NodeJS.ErrnoException).code === "EEXIST")
+      throw new Error(
+        "active_authority_compare_and_swap_failed:lock_unavailable",
+      );
+    else throw error;
+  }
+  try {
+    await lock.writeFile(
+      canonicalJson({
+        pid: process.pid,
+        operation,
+        created_at: new Date().toISOString(),
+      }),
+      "utf8",
+    );
+    await lock.sync();
+    return await action();
+  } finally {
+    await lock.close();
+    await rm(lockFile, { force: true });
+  }
 }
 
 export async function writeCompiledDeliveryContract(
@@ -169,6 +267,36 @@ export async function loadActiveLongTaskAuthority(
   options: { migrate_legacy?: boolean } = {},
 ): Promise<ActiveAuthorityLoadResultV3> {
   const root = path.resolve(repositoryRoot);
+  const loaded = await loadActiveLongTaskAuthorityUnlocked(root);
+  if (
+    loaded.source !== "legacy_active_authority_v2" ||
+    !options.migrate_legacy ||
+    !loaded.authority
+  )
+    return loaded;
+  return withActiveAuthorityLock(root, "migrate", async () => {
+    const current = await loadActiveLongTaskAuthorityUnlocked(root);
+    if (
+      current.source !== "legacy_active_authority_v2" ||
+      !current.authority
+    )
+      return current;
+    await persistActiveAuthorityCasUnlocked(
+      root,
+      current.authority,
+      current.authority.active_authority_identity,
+    );
+    return {
+      authority: current.authority,
+      source: "legacy_active_authority_v2",
+      migrated: true,
+    };
+  });
+}
+
+async function loadActiveLongTaskAuthorityUnlocked(
+  root: string,
+): Promise<ActiveAuthorityLoadResultV3> {
   const identity = worktreeIdentity(root);
   const [marker, raw] = await Promise.all([
     gitConfigGet(root, markerKey(identity)),
@@ -197,21 +325,10 @@ export async function loadActiveLongTaskAuthority(
     legacy.authority_snapshot,
     legacy.binding.activated_at,
   );
-  if (!options.migrate_legacy)
-    return {
-      authority,
-      source: "legacy_active_authority_v2",
-      migrated: false,
-    };
-  await persistActiveAuthorityCas(
-    root,
-    authority,
-    legacy.binding.active_authority_identity,
-  );
   return {
     authority,
     source: "legacy_active_authority_v2",
-    migrated: true,
+    migrated: false,
   };
 }
 
@@ -256,23 +373,38 @@ export async function commitActiveAuthority(options: {
   expected_previous_identity: string | null;
 }): Promise<ActiveLongTaskAuthorityV3> {
   const root = path.resolve(options.candidate.repository_root);
-  const current = await loadActiveLongTaskAuthority(root);
-  assertAuthorityCasCandidate(
-    current.authority,
-    options.candidate,
-    options.expected_previous_identity,
-  );
-  await ensureRuntimeExcludes(root, options.candidate.workdir);
-  const authority = activeAuthorityFromCompiled(
-    options.candidate,
-    current.authority?.activated_at ?? new Date().toISOString(),
-  );
-  await persistActiveAuthorityCas(
-    root,
-    authority,
-    options.expected_previous_identity,
-  );
-  return authority;
+  const initial = await loadActiveLongTaskAuthorityUnlocked(root);
+  const verifierDiff = initial.authority
+    ? verifierAuthorityDiff(
+        initial.authority.verifier_identity,
+        options.candidate.verifier_identity,
+      )
+    : null;
+  const operation: ActiveAuthorityLockOperation =
+    initial.authority &&
+    (verifierDiff?.verifier_content_changed ||
+      verifierDiff?.verifier_runtime_locator_changed)
+      ? "migrate"
+      : "commit";
+  return withActiveAuthorityLock(root, operation, async () => {
+    const current = await loadActiveLongTaskAuthorityUnlocked(root);
+    assertAuthorityCasCandidate(
+      current.authority,
+      options.candidate,
+      options.expected_previous_identity,
+    );
+    await ensureRuntimeExcludes(root, options.candidate.workdir);
+    const authority = activeAuthorityFromCompiled(
+      options.candidate,
+      current.authority?.activated_at ?? new Date().toISOString(),
+    );
+    await persistActiveAuthorityCasUnlocked(
+      root,
+      authority,
+      options.expected_previous_identity,
+    );
+    return authority;
+  });
 }
 
 export async function activateDeliveryContract(
@@ -300,10 +432,9 @@ export async function assertMatchingActiveBinding(
     active.task_id !== compiled.task.id ||
     active.active_authority_identity !== compiled.compiled_identity ||
     active.authority_revision !== compiled.authority_revision ||
-    active.verifier_identity.bundle_sha256 !==
-      compiled.verifier_identity.bundle_sha256 ||
-    active.verifier_identity.schema_sha256 !==
-      compiled.verifier_identity.schema_sha256
+    active.worktree_identity !==
+      worktreeIdentity(compiled.repository_root) ||
+    !sameValue(active.verifier_identity, compiled.verifier_identity)
   )
     throw new Error("active_task_identity_mismatch");
   return active;
@@ -492,56 +623,40 @@ function assertAuthorityCasCandidate(
     throw new Error("active_authority_revision_invalid:expected_increment");
 }
 
-async function persistActiveAuthorityCas(
+async function persistActiveAuthorityCasUnlocked(
   root: string,
   authority: ActiveLongTaskAuthorityV3,
   expectedPreviousIdentity: string | null,
 ): Promise<void> {
   const activeFile = await activeRecordPath(root);
   await mkdir(path.dirname(activeFile), { recursive: true });
-  const lockFile = `${activeFile}.lock`;
-  let lock;
+  const current = await loadActiveLongTaskAuthorityUnlocked(root);
+  assertAuthorityCasCandidate(
+    current.authority,
+    authority.authority_snapshot,
+    expectedPreviousIdentity,
+  );
+  const identity = worktreeIdentity(root);
+  const key = markerKey(identity);
+  const [oldRecord, oldMarker] = await Promise.all([
+    readOptionalText(activeFile),
+    gitConfigGet(root, key),
+  ]);
   try {
-    lock = await open(lockFile, "wx");
+    await atomicJson(activeFile, authority);
+    await gitConfigSet(root, key, markerValue(authority));
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "EEXIST")
-      throw new Error(
-        "active_authority_compare_and_swap_failed:lock_unavailable",
-      );
-    throw error;
-  }
-  try {
-    const current = await loadActiveLongTaskAuthority(root);
-    assertAuthorityCasCandidate(
-      current.authority,
-      authority.authority_snapshot,
-      expectedPreviousIdentity,
-    );
-    const identity = worktreeIdentity(root);
-    const key = markerKey(identity);
-    const [oldRecord, oldMarker] = await Promise.all([
-      readOptionalText(activeFile),
-      gitConfigGet(root, key),
-    ]);
     try {
-      await atomicJson(activeFile, authority);
-      await gitConfigSet(root, key, markerValue(authority));
-    } catch (error) {
-      try {
-        if (oldRecord === null) await rm(activeFile, { force: true });
-        else await atomicText(activeFile, oldRecord);
-        if (oldMarker === null) await gitConfigUnset(root, key);
-        else await gitConfigSet(root, key, oldMarker);
-      } catch (rollbackError) {
-        throw new Error(
-          `active_authority_commit_rollback_failed:${message(rollbackError)}`,
-        );
-      }
-      throw new Error(`active_authority_commit_failed:${message(error)}`);
+      if (oldRecord === null) await rm(activeFile, { force: true });
+      else await atomicText(activeFile, oldRecord);
+      if (oldMarker === null) await gitConfigUnset(root, key);
+      else await gitConfigSet(root, key, oldMarker);
+    } catch (rollbackError) {
+      throw new Error(
+        `active_authority_commit_rollback_failed:${message(rollbackError)}`,
+      );
     }
-  } finally {
-    await lock.close();
-    await rm(lockFile, { force: true });
+    throw new Error(`active_authority_commit_failed:${message(error)}`);
   }
 }
 
@@ -688,23 +803,59 @@ export async function readFinalReceipt(
   return receipt;
 }
 
-export async function clearActiveBinding(
-  repositoryRoot: string,
-  workdir: string,
+export function activeAuthorityIdentityMatches(
+  authority: ActiveLongTaskAuthorityV3,
+  expected: ActiveAuthorityIdentityExpectation,
+): boolean {
+  return (
+    authority.task_id === expected.task_id &&
+    authority.authority_revision === expected.authority_revision &&
+    authority.active_authority_identity === expected.compiled_identity &&
+    authority.worktree_identity ===
+      (expected.worktree_identity ?? authority.worktree_identity)
+  );
+}
+
+export async function clearActiveBindingCas(
+  options: ClearActiveBindingCasOptions,
 ): Promise<boolean> {
-  const active = await readActiveLongTaskBinding(repositoryRoot);
-  if (!active) return false;
-  if (active.workdir !== path.resolve(workdir))
-    throw new Error("active_task_identity_mismatch");
-  const activeFile = await activeRecordPath(repositoryRoot);
-  const clearing = `${activeFile}.clearing-${process.pid}-${Date.now()}`;
-  await rename(activeFile, clearing);
+  const root = path.resolve(options.repository_root);
+  return withActiveAuthorityLock(root, "clear", async () =>
+    clearActiveBindingCasUnlocked(root, options),
+  );
+}
+
+async function clearActiveBindingCasUnlocked(
+  root: string,
+  options: ClearActiveBindingCasOptions,
+): Promise<boolean> {
+  const loaded = await loadActiveLongTaskAuthorityUnlocked(root);
+  const active = loaded.authority;
+  if (
+    !active ||
+    normalizePath(active.workdir) !== normalizePath(options.workdir) ||
+    !activeAuthorityIdentityMatches(active, options)
+  )
+    throw new Error("active_authority_clear_compare_and_swap_failed");
+  const activeFile = await activeRecordPath(root);
+  const key = markerKey(worktreeIdentity(root));
+  const [oldRecord, oldMarker] = await Promise.all([
+    readOptionalText(activeFile),
+    gitConfigGet(root, key),
+  ]);
   try {
-    await gitConfigUnset(repositoryRoot, markerKey(active.worktree_identity));
-    await rm(clearing, { force: true });
+    await rm(activeFile, { force: true });
+    await gitConfigUnset(root, key);
   } catch (error) {
-    await rename(clearing, activeFile).catch(() => undefined);
-    throw error;
+    try {
+      if (oldRecord !== null) await atomicText(activeFile, oldRecord);
+      if (oldMarker !== null) await gitConfigSet(root, key, oldMarker);
+    } catch (rollbackError) {
+      throw new Error(
+        `active_authority_clear_rollback_failed:${message(rollbackError)}`,
+      );
+    }
+    throw new Error(`active_authority_clear_failed:${message(error)}`);
   }
   return true;
 }
@@ -713,11 +864,73 @@ export async function abandonLongTaskState(
   repositoryRoot: string,
   workdir: string,
 ): Promise<void> {
-  const active = await readActiveLongTaskBinding(repositoryRoot);
-  const resolved = path.resolve(workdir);
-  if (active?.workdir === resolved)
-    await clearActiveBinding(repositoryRoot, resolved);
-  await rm(runtimePath(workdir), { recursive: true, force: true });
+  const root = path.resolve(repositoryRoot);
+  const resolved = assertContainedWorkdir(root, workdir);
+  await withActiveAuthorityLock(root, "abandon", async () => {
+    const loaded = await loadActiveLongTaskAuthorityUnlocked(root);
+    const active = loaded.authority;
+    if (!active) throw new Error("active_task_missing");
+    if (normalizePath(active.workdir) !== normalizePath(resolved))
+      throw new Error("active_task_workdir_mismatch");
+    await clearActiveBindingCasUnlocked(root, {
+      repository_root: root,
+      workdir: resolved,
+      task_id: active.task_id,
+      authority_revision: active.authority_revision,
+      compiled_identity: active.active_authority_identity,
+      worktree_identity: active.worktree_identity,
+    });
+    await rm(runtimePath(resolved), { recursive: true, force: true });
+  });
+}
+
+export async function forceClearCorruptActiveState(
+  repositoryRoot: string,
+  workdir: string,
+): Promise<void> {
+  const root = path.resolve(repositoryRoot);
+  const resolved = assertContainedWorkdir(root, workdir);
+  const lockPresent = await activeAuthorityLockExists(root);
+  let corruptState = lockPresent;
+  if (!corruptState)
+    try {
+      await loadActiveLongTaskAuthorityUnlocked(root);
+      corruptState = false;
+    } catch {
+      corruptState = true;
+    }
+  if (!corruptState)
+    throw new Error("force_corrupt_state_requires_corrupt_active_state");
+  await withActiveAuthorityLockInternal(
+    root,
+    "abandon",
+    async () => {
+      const activeFile = await activeRecordPath(root);
+      const key = markerKey(worktreeIdentity(root));
+      const [oldRecord, oldMarker] = await Promise.all([
+        readOptionalText(activeFile),
+        gitConfigGet(root, key),
+      ]);
+      try {
+        await rm(activeFile, { force: true });
+        await gitConfigUnset(root, key);
+      } catch (error) {
+        try {
+          if (oldRecord !== null) await atomicText(activeFile, oldRecord);
+          if (oldMarker !== null) await gitConfigSet(root, key, oldMarker);
+        } catch (rollbackError) {
+          throw new Error(
+            `active_authority_force_clear_rollback_failed:${message(rollbackError)}`,
+          );
+        }
+        throw new Error(
+          `active_authority_force_clear_failed:${message(error)}`,
+        );
+      }
+      await rm(runtimePath(resolved), { recursive: true, force: true });
+    },
+    true,
+  );
 }
 
 export async function clearFinalReceipt(
@@ -762,6 +975,23 @@ function markerKey(identity: string): string {
 function normalizePath(value: string): string {
   const normalized = path.resolve(value).replace(/\\/gu, "/");
   return process.platform === "win32" ? normalized.toLowerCase() : normalized;
+}
+
+function assertContainedWorkdir(
+  repositoryRoot: string,
+  workdir: string,
+): string {
+  const root = path.resolve(repositoryRoot);
+  const resolved = path.resolve(workdir);
+  const relative = path.relative(root, resolved);
+  if (
+    !relative ||
+    relative === ".." ||
+    relative.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relative)
+  )
+    throw new Error("long_task_workdir_outside_repository");
+  return resolved;
 }
 
 async function readJson(file: string): Promise<unknown> {

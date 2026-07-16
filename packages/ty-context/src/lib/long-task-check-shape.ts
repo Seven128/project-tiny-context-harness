@@ -15,6 +15,9 @@ import {
   object,
   parseEnvironmentRequirements,
   PROOF_SURFACES,
+  repositoryCwd,
+  repositoryFile,
+  repositoryPatterns,
   string,
   strings,
 } from "./long-task-delivery-shape.js";
@@ -40,16 +43,19 @@ export function parseCheck(value: unknown, label: string): DeliveryCheckV2 {
       `${label}.proof_surface`,
     ),
     runner: parseRunner(row.runner, `${label}.runner`),
-    verification_inputs: strings(
+    verification_inputs: repositoryPatterns(
       row.verification_inputs,
       `${label}.verification_inputs`,
     ),
-    input_paths: strings(row.input_paths, `${label}.input_paths`),
-    expected_output_paths: strings(
+    input_paths: repositoryPatterns(row.input_paths, `${label}.input_paths`),
+    expected_output_paths: repositoryPatterns(
       row.expected_output_paths,
       `${label}.expected_output_paths`,
     ),
-    artifact_globs: strings(row.artifact_globs, `${label}.artifact_globs`),
+    artifact_globs: repositoryPatterns(
+      row.artifact_globs,
+      `${label}.artifact_globs`,
+    ),
     positive_assertions: parseAssertions(
       row.positive_assertions,
       `${label}.positive_assertions`,
@@ -81,20 +87,24 @@ function parseRunner(value: unknown, label: string): DeliveryRunnerV2 {
     fail(`${label}.timeout_ms`, "must be an integer from 100 to 3600000");
   if (typeof row.idempotent !== "boolean")
     fail(`${label}.idempotent`, "must be a boolean");
+  const type = literal(
+    row.type,
+    [
+      "package_script",
+      "project_binary",
+      "node_oracle",
+      "playwright_test",
+    ] as const satisfies readonly RunnerType[],
+    `${label}.type`,
+  );
   return {
-    type: literal(
-      row.type,
-      [
-        "package_script",
-        "project_binary",
-        "node_oracle",
-        "playwright_test",
-      ] as const satisfies readonly RunnerType[],
-      `${label}.type`,
-    ),
-    target: string(row.target, `${label}.target`),
+    type,
+    target:
+      type === "package_script"
+        ? string(row.target, `${label}.target`)
+        : repositoryFile(row.target, `${label}.target`),
     argv: strings(row.argv, `${label}.argv`),
-    cwd: string(row.cwd, `${label}.cwd`),
+    cwd: repositoryCwd(row.cwd, `${label}.cwd`),
     timeout_ms: timeout,
     effect: literal(
       row.effect,

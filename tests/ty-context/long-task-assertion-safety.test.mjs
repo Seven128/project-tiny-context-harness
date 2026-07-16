@@ -179,6 +179,7 @@ test("missing Observation produces assertion_failed without Claim proof", async 
       definition_sha256: "missing",
       frozen_files: {},
       package_script: null,
+      raw_execution_identity: "missing",
       execution_identity: "missing",
     },
     verification_input_hashes: {},
@@ -200,6 +201,7 @@ test("missing Observation produces assertion_failed without Claim proof", async 
   const result = await evaluateCheckEvidence(
     check,
     {
+      raw_execution_identity: "missing",
       execution_identity: "missing",
       execution_status: "completed",
       exit_code: 0,

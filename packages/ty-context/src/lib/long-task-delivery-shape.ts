@@ -12,6 +12,11 @@ import type {
   RollbackRecoveryV2,
   SourceClaimV2,
 } from "./long-task-delivery-types.js";
+import {
+  normalizeRepositoryCwd,
+  normalizeRepositoryFile,
+  parseRepositoryPattern,
+} from "./long-task-paths.js";
 
 export type Shape = Record<string, unknown>;
 
@@ -52,6 +57,42 @@ export function strings(value: unknown, label: string): string[] {
   return array(value, label).map((item, index) =>
     string(item, `${label}[${index}]`),
   );
+}
+
+export function repositoryFile(value: unknown, label: string): string {
+  return normalizeRepositoryFile(string(value, label), label);
+}
+
+export function repositoryFiles(value: unknown, label: string): string[] {
+  return array(value, label).map((item, index) =>
+    repositoryFile(item, `${label}[${index}]`),
+  );
+}
+
+export function repositoryPattern(value: unknown, label: string): string {
+  return parseRepositoryPattern(string(value, label), label).normalized;
+}
+
+export function repositoryPatterns(
+  value: unknown,
+  label: string,
+): string[] {
+  return array(value, label).map((item, index) =>
+    repositoryPattern(item, `${label}[${index}]`),
+  );
+}
+
+export function repositoryCwd(value: unknown, label: string): string {
+  return normalizeRepositoryCwd(string(value, label), label);
+}
+
+export function repositorySourceRef(value: unknown, label: string): string {
+  const sourceRef = string(value, label);
+  const [file, anchor, ...extra] = sourceRef.split("#");
+  if (!file || extra.length || (anchor !== undefined && !anchor))
+    fail(label, "source_claim_ref_invalid");
+  const normalized = normalizeRepositoryFile(file, `${label}.file`);
+  return anchor === undefined ? normalized : `${normalized}#${anchor}`;
 }
 
 export function literal<T extends string>(
@@ -98,7 +139,7 @@ export function parseKeyedPaths(value: unknown, label: string): KeyedPathV2[] {
     const row = object(item, itemLabel, ["key", "path"]);
     return {
       key: key(row.key, `${itemLabel}.key`),
-      path: string(row.path, `${itemLabel}.path`),
+      path: repositoryPattern(row.path, `${itemLabel}.path`),
     };
   });
 }
@@ -138,8 +179,8 @@ export function parseOwner(value: unknown, label: string): DeliveryOwnerV2 {
   const row = object(value, label, ["label", "context_refs", "path_globs"]);
   return {
     label: string(row.label, `${label}.label`),
-    context_refs: strings(row.context_refs, `${label}.context_refs`),
-    path_globs: strings(row.path_globs, `${label}.path_globs`),
+    context_refs: repositoryFiles(row.context_refs, `${label}.context_refs`),
+    path_globs: repositoryPatterns(row.path_globs, `${label}.path_globs`),
   };
 }
 
@@ -198,11 +239,20 @@ export function parseBindings(
         `${itemLabel}.verification_check_key`,
         "is only allowed for verified",
       );
+    const target =
+      kindValue === "file"
+        ? repositoryFile(row.target, `${itemLabel}.target`)
+        : kindValue === "path_glob"
+          ? repositoryPattern(row.target, `${itemLabel}.target`)
+          : string(row.target, `${itemLabel}.target`);
     return {
       key: key(row.key, `${itemLabel}.key`),
       kind: kindValue,
-      target: string(row.target, `${itemLabel}.target`),
-      carrier_paths: strings(row.carrier_paths, `${itemLabel}.carrier_paths`),
+      target,
+      carrier_paths: repositoryPatterns(
+        row.carrier_paths,
+        `${itemLabel}.carrier_paths`,
+      ),
       existence: Object.hasOwn(row, "existence")
         ? literal(
             row.existence,
@@ -247,7 +297,10 @@ export function parseSourceClaims(
     );
     return {
       key: key(row.key, `${itemLabel}.key`),
-      source_ref: string(row.source_ref, `${itemLabel}.source_ref`),
+      source_ref: repositorySourceRef(
+        row.source_ref,
+        `${itemLabel}.source_ref`,
+      ),
       statement: string(row.statement, `${itemLabel}.statement`),
       disposition:
         type === "claim" || type === "global_constraint"
@@ -317,12 +370,18 @@ export function parseCounterfactuals(
         type === "remove_paths"
           ? {
               type,
-              paths: strings(mutation.paths, `${itemLabel}.mutation.paths`),
+              paths: repositoryFiles(
+                mutation.paths,
+                `${itemLabel}.mutation.paths`,
+              ),
             }
           : {
               type,
-              path: string(mutation.path, `${itemLabel}.mutation.path`),
-              fixture_path: string(
+              path: repositoryFile(
+                mutation.path,
+                `${itemLabel}.mutation.path`,
+              ),
+              fixture_path: repositoryFile(
                 mutation.fixture_path,
                 `${itemLabel}.mutation.fixture_path`,
               ),
@@ -401,7 +460,10 @@ export function parseEnvironmentRequirements(
       return {
         key: requirementKey,
         kind: kindValue,
-        target: string(base.target, `${itemLabel}.target`),
+        target:
+          kindValue === "file" || kindValue === "directory"
+            ? repositoryFile(base.target, `${itemLabel}.target`)
+            : string(base.target, `${itemLabel}.target`),
       } as EnvironmentRequirementV2;
     const host = literal(
       base.host,

@@ -7,8 +7,9 @@ import type {
 import { runDeliveryFinalGate } from "./long-task-final-v2.js";
 import { deliveryCompileFreshness } from "./long-task-freshness.js";
 import {
+  activeAuthorityLockExists,
   type ActiveLongTaskAuthorityV3,
-  clearActiveBinding,
+  clearActiveBindingCas,
   inspectCompiledCache,
   loadActiveLongTaskAuthority,
   readActiveLongTaskBinding,
@@ -159,9 +160,8 @@ export async function doctorDeliveryTask(
       status: finding,
       healthy: false,
       findings: [finding],
-      ...(finding === "active_authority_continuity_unrecoverable"
-        ? { next_action: "manual_restore_or_abandon_required" }
-        : {}),
+      next_action:
+        `ty-context long-task abandon ${path.resolve(workdirInput)} --force-corrupt-state`,
     };
   }
   const active = loaded.authority;
@@ -174,6 +174,8 @@ export async function doctorDeliveryTask(
       : "active_authority_valid",
     await inspectCompiledCache(active),
   ];
+  if (await activeAuthorityLockExists(root))
+    findings.push("active_authority_lock_present");
   let currentAuthorityIdentity: string | null = null;
   try {
     const compiled = await compileDeliveryContract(active.workdir, root, {
@@ -193,6 +195,7 @@ export async function doctorDeliveryTask(
     status: findings[0],
     healthy: !findings.some(
       (finding) =>
+        finding === "active_authority_lock_present" ||
         finding === "active_authority_source_mismatch" ||
         finding.startsWith("active_authority_source_invalid:"),
     ),
@@ -211,6 +214,12 @@ export async function doctorDeliveryTask(
       finding.startsWith("compiled_cache_"),
     ),
     findings,
+    ...(findings.includes("active_authority_lock_present")
+      ? {
+          next_action:
+            `ty-context long-task abandon ${path.resolve(workdirInput)} --force-corrupt-state`,
+        }
+      : {}),
   };
 }
 
@@ -238,7 +247,27 @@ export async function stopCheckDeliveryTask(
       result.workflow_status === "machine_accepted" ||
       result.workflow_status === "machine_accepted_external_pending"
     ) {
-      await clearActiveBinding(root, active.workdir);
+      try {
+        await clearActiveBindingCas({
+          repository_root: root,
+          workdir: active.workdir,
+          task_id: active.task_id,
+          authority_revision: active.authority_revision,
+          compiled_identity: active.active_authority_identity,
+          worktree_identity: active.worktree_identity,
+        });
+      } catch (error) {
+        if (
+          message(error).includes(
+            "active_authority_clear_compare_and_swap_failed",
+          )
+        )
+          return {
+            continue: false,
+            reason: "active_authority_changed_after_final_gate",
+          };
+        throw error;
+      }
       return {
         continue: true,
         reason: result.workflow_status,
@@ -260,6 +289,11 @@ export async function stopCheckDeliveryTask(
         "Repair the failing Check and rerun Stop.",
     };
   } catch (error) {
+    if (message(error).includes("verifier_authority_migration_required"))
+      return {
+        continue: false,
+        reason: "verifier_authority_migration_required",
+      };
     return {
       continue: false,
       reason: "live_final_gate_error",
@@ -279,7 +313,14 @@ export async function closeDeliveryTask(workdir: string): Promise<void> {
     result.workflow_status !== "machine_accepted_external_pending"
   )
     throw new Error(`close_live_final_gate_failed:${result.workflow_status}`);
-  await clearActiveBinding(root, active.workdir);
+  await clearActiveBindingCas({
+    repository_root: root,
+    workdir: active.workdir,
+    task_id: active.task_id,
+    authority_revision: active.authority_revision,
+    compiled_identity: active.active_authority_identity,
+    worktree_identity: active.worktree_identity,
+  });
 }
 
 function nextAction(status: DeliveryStatusV2): string {

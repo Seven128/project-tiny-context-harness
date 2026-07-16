@@ -48,7 +48,7 @@ export async function captureVerifierIdentity(
         outcomes: OUTCOMES_SCHEMA,
       }),
     ),
-    hook_sha256: hook?.bundle_sha256 ?? "not-required",
+    hook_sha256: hook?.hook_sha256 ?? "not-required",
   };
 }
 

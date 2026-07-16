@@ -1,9 +1,13 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { captureContextGraphSnapshot } from "./context-graph-snapshot.js";
-import type { CompiledDeliveryContractV2 } from "./long-task-delivery-types.js";
+import type {
+  CompiledDeliveryContractV2,
+  VerifierIdentityV2,
+} from "./long-task-delivery-types.js";
 import { canonicalValueJson, sha256Hex } from "./strict-codec.js";
 import { captureVerifierIdentity } from "./long-task-verifier-identity.js";
+import { verifierAuthorityDiff } from "./long-task-verifier-authority.js";
 import { parseDeliveryContractBundle } from "./long-task-delivery-parser.js";
 
 export async function deliveryCompileFreshness(
@@ -58,14 +62,14 @@ export async function deliveryCompileFreshness(
       compiled.repository_root,
       compiled.verifier_identity.hook_sha256 !== "not-required",
     );
-    if (
-      currentVerifier.bundle_sha256 !==
-        compiled.verifier_identity.bundle_sha256 ||
-      currentVerifier.schema_sha256 !== compiled.verifier_identity.schema_sha256
-    )
+    const verifierDiff = verifierAuthorityDiff(
+      compiled.verifier_identity,
+      currentVerifier,
+    );
+    if (verifierDiff.verifier_content_changed)
       findings.push("verifier_changed_after_compile:bundle");
-    if (currentVerifier.hook_sha256 !== compiled.verifier_identity.hook_sha256)
-      findings.push("verifier_changed_after_compile:hook");
+    if (verifierDiff.verifier_runtime_locator_changed)
+      findings.push("verifier_changed_after_compile:runtime_locator");
   } catch {
     findings.push("verifier_changed_after_compile:bundle");
   }
@@ -82,6 +86,27 @@ export async function deliveryCompileFreshness(
         findings,
       );
   return [...new Set(findings)].sort();
+}
+
+export async function assertVerifierAuthorityCurrent(
+  repositoryRoot: string,
+  expected: VerifierIdentityV2,
+): Promise<void> {
+  let current: VerifierIdentityV2;
+  try {
+    current = await captureVerifierIdentity(
+      repositoryRoot,
+      expected.hook_sha256 !== "not-required",
+    );
+  } catch {
+    throw new Error("verifier_authority_migration_required");
+  }
+  const diff = verifierAuthorityDiff(expected, current);
+  if (
+    diff.verifier_content_changed ||
+    diff.verifier_runtime_locator_changed
+  )
+    throw new Error("verifier_authority_migration_required");
 }
 
 async function compareFile(

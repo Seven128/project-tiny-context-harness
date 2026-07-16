@@ -25,9 +25,9 @@ This is the restrained architecture map for the Harness source repository. It re
 1. `long-task init <workdir>` creates only a `delivery-contract.yaml` template.
 2. `compile` strictly parses the one Contract, computes Global and Outcome Claim Coverage plus the risk floor, validates dependencies/Context/source/paths/runners/proof, derives canonical Product/Global semantic projections, freezes repository/workdir/source/Contract/selected-Context/verifier/oracle/command identities and activates the worktree binding. It does not invoke a model or modify product code.
 3. The current native Goal reads Contract and relevant Context, selects dependency-ready Outcomes as its internal Frontier, implements in the current workspace and runs project-focused tests.
-4. `verify --outcome/--check` runs the selected checks on a current snapshot and stores repair-only derived status. It cannot emit accepted.
+4. `verify --outcome/--check` runs the selected checks on a current snapshot and stores repair-only derived status only after re-reading the active task/revision/compiled/worktree identity; a concurrent revision returns `active_authority_changed_during_verify` and writes no progress.
 5. Contract `status` projects `unverified|progress_passing|progress_failing|progress_stale|blocked_external`; resume is read-only and starts no execution.
-6. `final-gate`, Stop and close recompile source authority, validate the common-dir record/config marker, create one Git-tree snapshot, rerun every global/Outcome Check, deduplicate only identical raw execution inside that Gate and write an audit-only Receipt.
+6. `final-gate`, Stop and close recompile source authority, validate the common-dir record/config marker, create one Git-tree snapshot, rerun every global/Outcome Check, deduplicate only identical raw execution inside that Gate, then re-read active identity before writing the audit-only result. Stop/close use accepted-identity CAS clear and cannot remove a newer revision.
 7. Workspace, Contract, relevant Context, source, command/oracle or verifier drift stales audit results. Stop/close execute the current Live Gate and clear the binding only on success; `abandon` removes temporary task state without touching Git or authored source/Contract.
 
 ## Contract Shape And Risk
@@ -41,12 +41,14 @@ This is the restrained architecture map for the Harness source repository. It re
 ## Safety And Storage Boundaries
 
 - Contract parsing rejects unknown keys, duplicate keys, YAML aliases/merges/tags and multiple documents.
-- Paths are repository-relative and realpath-contained. Matching, subset and overlap/disjoint use one restricted repository-pattern AST; unsupported bracket/brace/extglob/non-segment-`**` syntax is rejected, and unproved subset/disjoint relationships fail closed. Protected Contract, fragment, Source, Context, runner, verification-input, Counterfactual-fixture and package-verifier files reject symlinks and detectable hardlinks; the snapshot-owned read-only `node_modules` junction is the sole explicit exception.
+- Paths are repository-relative and realpath-contained. Exact paths and patterns share one canonical segment grammar before Contract hashing: Windows separators and one leading `./` normalize to `/`; internal `.`/`..`, NUL/CR/LF/Tab, empty segments, absolute/drive/UNC paths and unsupported wildcard syntax are rejected. Matching, subset and overlap/disjoint use the same restricted AST. Protected Contract, fragment, Source, Context, runner, verification-input, Counterfactual-fixture and package-verifier files reject symlinks and detectable hardlinks; the snapshot-owned read-only `node_modules` junction is the sole explicit exception.
 - Commands use argv arrays with no shell, bounded output/time and a minimal environment whitelist. Only env vars explicitly declared by the current Check are additionally passed.
 - Worker/Agent prose, handwritten status, command exit alone and historical targeted passes cannot create accepted authority.
-- Final acceptance binds the same snapshot plus Contract, source, selected Context, runner/oracle, verifier, workdir and repository identity. History is not spliced into current proof.
+- Raw command reuse binds frozen runner identity plus canonical declared Environment Requirements, never actual env values. Artifacts and Assertions remain per-Check evidence even when a Raw Execution is shared.
+- Final acceptance binds the same snapshot plus Contract, source, selected Context, runner/oracle, verifier content/runtime locator, workdir and repository identity. History is not spliced into current proof.
 - Runtime state is ordinary same-user project state, not a hostile-host security boundary. The product does not claim resistance to deliberate same-user/admin deletion, system Hook bypass or kernel compromise.
 - Local mode trusts the installed package-owned verifier and Git metadata; external platforms remain responsible for network isolation.
+- `abandon --force-corrupt-state` is the only stale-lock/invalid-record/marker-mismatch continuity cleanup. It derives record, marker and lock paths from the current repository/worktree, requires a repository-contained supplied workdir and removes only active state plus that workdir's `.ty-context/**`.
 
 ## Distribution And Migration
 

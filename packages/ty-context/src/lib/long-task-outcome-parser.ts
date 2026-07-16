@@ -1,5 +1,6 @@
 import path from "node:path";
 import { parseCheck } from "./long-task-check-shape.js";
+import { normalizeRepositoryFile } from "./long-task-paths.js";
 import type { DeliveryOutcomeV2 } from "./long-task-delivery-types.js";
 import {
   array,
@@ -15,6 +16,7 @@ import {
   parseOwner,
   parsePopulation,
   parseRollback,
+  repositoryPatterns,
   string,
   strings,
 } from "./long-task-delivery-shape.js";
@@ -80,15 +82,15 @@ export function parseOutcome(
         technical.obligations,
         `${label}.technical.obligations`,
       ),
-      expected_change_paths: strings(
+      expected_change_paths: repositoryPatterns(
         technical.expected_change_paths,
         `${label}.technical.expected_change_paths`,
       ),
-      allowed_support_paths: strings(
+      allowed_support_paths: repositoryPatterns(
         technical.allowed_support_paths,
         `${label}.technical.allowed_support_paths`,
       ),
-      forbidden_paths: strings(
+      forbidden_paths: repositoryPatterns(
         technical.forbidden_paths,
         `${label}.technical.forbidden_paths`,
       ),
@@ -167,13 +169,11 @@ export function parseOutcomeFragment(
 }
 
 export function safeFragmentPath(value: string, index: number): string {
-  const normalized = value.replace(/\\/gu, "/").replace(/^\.\//u, "");
-  if (
-    !normalized ||
-    path.posix.isAbsolute(normalized) ||
-    normalized.split("/").includes("..") ||
-    !normalized.endsWith(".yaml")
-  )
+  const normalized = normalizeRepositoryFile(
+    value,
+    `outcome_files[${index}]`,
+  );
+  if (!normalized.endsWith(".yaml"))
     throw new Error(`unsafe_path:outcome_files[${index}]:${value}`);
   return normalized;
 }

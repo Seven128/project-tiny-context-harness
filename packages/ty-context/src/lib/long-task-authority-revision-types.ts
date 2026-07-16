@@ -1,3 +1,5 @@
+import type { VerifierIdentityV2 } from "./long-task-runtime-types.js";
+
 export interface AuthorityRevisionDiffV2 {
   product_claims_added: string[];
   product_claims_removed: string[];
@@ -35,6 +37,11 @@ export interface AuthorityRevisionDiffV2 {
   rollback_or_recovery_weakened: string[];
   counterfactuals_removed: string[];
   population_weakened: string[];
+  verifier_content_changed: boolean;
+  verifier_runtime_locator_changed: boolean;
+  verifier_files_changed: string[];
+  previous_verifier: VerifierIdentityV2;
+  next_verifier: VerifierIdentityV2;
   source_claims_changed: boolean;
   risk_changed: boolean;
   owner_or_path_boundary_changed: boolean;

@@ -1,0 +1,274 @@
+import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
+import { access, mkdir, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
+import {
+  clearActiveBindingCas,
+  loadActiveLongTaskAuthority,
+  readProgressRecords,
+} from "../../packages/ty-context/dist/lib/long-task-state.js";
+import {
+  commitCandidate,
+  createDeliveryFixture,
+  parseCliJson,
+  runCli,
+  runCliFailure,
+  writeContract,
+} from "./long-task-delivery-fixtures.mjs";
+
+const exec = promisify(execFile);
+const repository = fileURLToPath(new URL("../..", import.meta.url));
+const cli = path.join(repository, "packages/ty-context/dist/cli.js");
+
+test("Final Gate rejects an Authority Revision that lands during execution", async () => {
+  const fixture = await createDeliveryFixture();
+  const signal = raceSignal("final");
+  try {
+    await installSlowOracle(fixture, signal);
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    const authorityA = (
+      await loadActiveLongTaskAuthority(fixture.root)
+    ).authority;
+    await commitCandidate(fixture.root);
+
+    const finalProcess = runCliProcess(fixture.root, [
+      "long-task",
+      "final-gate",
+      fixture.workdir,
+    ]);
+    await waitForFile(signal.started);
+    addProof(fixture.contract, "revision-b-proof");
+    await writeContract(fixture.workdir, fixture.contract);
+    const revisionB = await runCli(fixture.root, [
+      "long-task",
+      "compile",
+      fixture.workdir,
+      "--revise",
+    ]);
+    assert.equal(revisionB.authority_revision, 2);
+    await writeFile(signal.release, "release\n");
+
+    const final = await finalProcess;
+    assert.notEqual(final.exitCode, 0);
+    const receipt = parseCliJson(final.stdout);
+    assert.equal(receipt.workflow_status, "needs_work");
+    assert.ok(
+      receipt.findings.some(
+        (finding) =>
+          finding.code === "active_authority_changed_during_final_gate",
+      ),
+    );
+    const activeB = (
+      await loadActiveLongTaskAuthority(fixture.root)
+    ).authority;
+    assert.equal(activeB.authority_revision, 2);
+    await assert.rejects(
+      () =>
+        clearActiveBindingCas({
+          repository_root: fixture.root,
+          workdir: fixture.workdir,
+          task_id: authorityA.task_id,
+          authority_revision: authorityA.authority_revision,
+          compiled_identity: authorityA.active_authority_identity,
+          worktree_identity: authorityA.worktree_identity,
+        }),
+      /active_authority_clear_compare_and_swap_failed/u,
+    );
+    assert.equal(
+      (await loadActiveLongTaskAuthority(fixture.root)).authority
+        .active_authority_identity,
+      activeB.active_authority_identity,
+    );
+  } finally {
+    await rm(signal.folder, { recursive: true, force: true });
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("targeted verify writes no progress for an Authority that became stale", async () => {
+  const fixture = await createDeliveryFixture();
+  const signal = raceSignal("verify");
+  try {
+    await installSlowOracle(fixture, signal);
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    const verifyProcess = runCliProcess(fixture.root, [
+      "long-task",
+      "verify",
+      fixture.workdir,
+    ]);
+    await waitForFile(signal.started);
+    addProof(fixture.contract, "verify-revision-b-proof");
+    await writeContract(fixture.workdir, fixture.contract);
+    await runCli(fixture.root, [
+      "long-task",
+      "compile",
+      fixture.workdir,
+      "--revise",
+    ]);
+    await writeFile(signal.release, "release\n");
+
+    const verified = await verifyProcess;
+    assert.notEqual(verified.exitCode, 0);
+    const result = parseCliJson(verified.stdout);
+    assert.deepEqual(result.updated_progress_records, []);
+    assert.ok(
+      result.findings.some(
+        (finding) =>
+          finding.code === "active_authority_changed_during_verify",
+      ),
+    );
+    assert.deepEqual(await readProgressRecords(fixture.workdir), {});
+  } finally {
+    await rm(signal.folder, { recursive: true, force: true });
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("Stop and close rerun current Authority instead of clearing from an old Receipt", async () => {
+  const fixture = await createDeliveryFixture();
+  try {
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    const acceptedA = await runCli(fixture.root, [
+      "long-task",
+      "final-gate",
+      fixture.workdir,
+    ]);
+    assert.equal(acceptedA.workflow_status, "machine_accepted");
+
+    addBlockedProof(fixture.contract);
+    await writeContract(fixture.workdir, fixture.contract);
+    const revisionB = await runCli(fixture.root, [
+      "long-task",
+      "compile",
+      fixture.workdir,
+      "--revise",
+    ]);
+    await commitCandidate(fixture.root);
+
+    const stop = await runCliFailure(fixture.root, [
+      "long-task",
+      "stop-check",
+      fixture.workdir,
+    ]);
+    assert.equal(stop.continue, false);
+    assert.equal(stop.reason, "live_final_gate_blocked_external");
+    assert.equal(
+      (await loadActiveLongTaskAuthority(fixture.root)).authority
+        .active_authority_identity,
+      revisionB.compiled_identity,
+    );
+    await assert.rejects(
+      () =>
+        runCli(fixture.root, [
+          "long-task",
+          "close",
+          fixture.workdir,
+        ]),
+      /close_live_final_gate_failed:blocked_external/u,
+    );
+    assert.equal(
+      (await loadActiveLongTaskAuthority(fixture.root)).authority
+        .active_authority_identity,
+      revisionB.compiled_identity,
+    );
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+function addProof(contract, key) {
+  contract.outcomes[0].acceptance.checks[0].positive_assertions.push({
+    key,
+    claims: ["result"],
+    observation: "result",
+    operator: "truthy",
+  });
+}
+
+function addBlockedProof(contract) {
+  const base = contract.outcomes[0].acceptance.checks[0];
+  contract.outcomes[0].acceptance.checks.push({
+    ...structuredClone(base),
+    key: "blocked-proof",
+    positive_assertions: [
+      {
+        key: "blocked-proof-result",
+        claims: ["result"],
+        observation: "result",
+        operator: "truthy",
+      },
+    ],
+    environment_requirements: [
+      {
+        key: "missing-env",
+        kind: "env_var",
+        target: "TY_CONTEXT_MISSING_RACE_ENV",
+      },
+    ],
+  });
+}
+
+async function installSlowOracle(fixture, signal) {
+  await mkdir(signal.folder, { recursive: true });
+  await writeFile(
+    path.join(fixture.root, "tests", "oracle.mjs"),
+    `import { appendFileSync, existsSync, readFileSync } from "node:fs";
+appendFileSync(${JSON.stringify(signal.started)}, "started\\n");
+while (!existsSync(${JSON.stringify(signal.release)})) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20);
+}
+const state = JSON.parse(readFileSync(new URL("../src/state.json", import.meta.url), "utf8"));
+console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state.first}}));
+`,
+  );
+  await commitCandidate(fixture.root);
+}
+
+function raceSignal(name) {
+  const folder = path.join(
+    os.tmpdir(),
+    `ty-context-${name}-race-${process.pid}-${Date.now()}`,
+  );
+  return {
+    folder,
+    started: path.join(folder, "started.txt"),
+    release: path.join(folder, "release.txt"),
+  };
+}
+
+async function waitForFile(file) {
+  const deadline = Date.now() + 15_000;
+  while (Date.now() < deadline) {
+    if (
+      await access(file)
+        .then(() => true)
+        .catch(() => false)
+    )
+      return;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  throw new Error(`race signal timeout: ${file}`);
+}
+
+async function runCliProcess(cwd, args) {
+  try {
+    const result = await exec(process.execPath, [cli, ...args], {
+      cwd,
+      windowsHide: true,
+    });
+    return { exitCode: 0, stdout: result.stdout, stderr: result.stderr };
+  } catch (error) {
+    return {
+      exitCode: error.code ?? 1,
+      stdout: error.stdout ?? "",
+      stderr: error.stderr ?? "",
+    };
+  }
+}

@@ -35,6 +35,7 @@ import {
 } from "./long-task-authority-revision-enforcement.js";
 import { validateActualRiskSurfaces } from "./long-task-risk-surfaces.js";
 import { captureVerifierIdentity } from "./long-task-verifier-identity.js";
+import { verifierAuthorityDiff } from "./long-task-verifier-authority.js";
 import {
   captureWorkspaceManifest,
   changedWorkspacePaths,
@@ -163,6 +164,7 @@ export async function compileDeliveryContract(
         resolved_target: check.runner.resolved_target,
         package_script: check.runner.package_script,
         verification_inputs: check.verification_input_hashes,
+        raw_execution_identity: check.raw_execution_identity,
       })),
     }),
   );
@@ -179,8 +181,16 @@ export async function compileDeliveryContract(
       compiledAuthorityMaterials(previous),
       authorityMaterials,
     );
+    const verifierChanged = verifierAuthorityDiff(
+      previous.verifier_identity,
+      verifier,
+    );
     const authorityChanged =
-      changes.length > 0 || contractChanged || materialsChanged;
+      changes.length > 0 ||
+      contractChanged ||
+      materialsChanged ||
+      verifierChanged.verifier_content_changed ||
+      verifierChanged.verifier_runtime_locator_changed;
     if (authorityChanged && !options.revise)
       throw new Error("authority_revision_requires_revise_flag");
     if (options.revise && authorityChanged) {
@@ -193,7 +203,7 @@ export async function compileDeliveryContract(
         authorityMaterials,
         globalChecks,
         outcomes,
-        current,
+        verifier,
         workdir,
         risk.minimum_level,
       );

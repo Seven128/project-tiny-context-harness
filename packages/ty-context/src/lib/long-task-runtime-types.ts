@@ -52,6 +52,7 @@ export interface CompiledCheckV2 extends Omit<DeliveryCheckV2, "runner"> {
   outcome_key: string | null;
   runner: FrozenRunnerV2;
   verification_input_hashes: Record<string, string>;
+  raw_execution_identity: string;
 }
 
 export interface ProductClaimV2 {
@@ -164,14 +165,23 @@ export interface InitialTaskBaseV2 {
   workspace_manifest: WorkspaceManifestV2;
 }
 
-export interface VerifierIdentityV2 {
-  package_name: "project-tiny-context-harness";
-  package_version: string;
-  package_root: string;
+export interface VerifierContentAuthority {
+  package_name: string;
   bundle_sha256: string;
-  bundle_files: Record<string, string>;
   schema_sha256: string;
   hook_sha256: string;
+  bundle_files: Record<string, string>;
+}
+
+export interface VerifierRuntimeLocator {
+  package_version: string;
+  package_root: string;
+}
+
+export interface VerifierIdentityV2
+  extends VerifierContentAuthority,
+    VerifierRuntimeLocator {
+  package_name: "project-tiny-context-harness";
 }
 
 export interface CompiledOutcomeV2 extends Omit<
@@ -248,6 +258,7 @@ export interface AssertionResultV2 {
 }
 
 export interface RawCommandExecutionV2 {
+  raw_execution_identity: string;
   execution_identity: string;
   execution_status:
     | "completed"

@@ -5,6 +5,7 @@ import type {
   CompiledOutcomeV2,
   DeliveryContractV2,
   NextAuthorityMaterialsV2,
+  VerifierIdentityV2,
 } from "./long-task-delivery-types.js";
 import {
   acceptanceSemanticsChanged,
@@ -36,6 +37,7 @@ import {
   sourceClaimReductions,
 } from "./long-task-authority-revision-details.js";
 import type { AuthorityRevisionDiffV2 } from "./long-task-authority-revision-types.js";
+import { verifierAuthorityDiff } from "./long-task-verifier-authority.js";
 
 export type { AuthorityRevisionDiffV2 } from "./long-task-authority-revision-types.js";
 export function authorityRevisionDiff(
@@ -45,6 +47,7 @@ export function authorityRevisionDiff(
   nextMaterials: NextAuthorityMaterialsV2,
   nextGlobalChecks: CompiledCheckV2[],
   nextOutcomes: CompiledOutcomeV2[],
+  nextVerifier: VerifierIdentityV2,
 ): AuthorityRevisionDiffV2 {
   const materialDiff = authorityMaterialRevisionDiff(
     previous,
@@ -142,6 +145,10 @@ export function authorityRevisionDiff(
   const rollbackOrRecoveryWeakened: string[] = [];
   const counterfactualsRemoved: string[] = [];
   const populationWeakened: string[] = [];
+  const verifierDiff = verifierAuthorityDiff(
+    previous.verifier_identity,
+    nextVerifier,
+  );
   const previousOutcomes = new Map(
     previous.outcomes.map((outcome) => [outcome.key, outcome]),
   );
@@ -251,6 +258,9 @@ export function authorityRevisionDiff(
       : []),
     ...(counterfactualsRemoved.length ? ["counterfactual_removed"] : []),
     ...(populationWeakened.length ? ["population_weakened"] : []),
+    ...(verifierDiff.verifier_content_changed
+      ? ["verifier_content_changed"]
+      : []),
     ...(riskChanged ? ["risk_changed_requires_review"] : []),
     ...(acceptanceChanged && !monotonic ? ["acceptance_not_monotonic"] : []),
   ];
@@ -297,6 +307,7 @@ export function authorityRevisionDiff(
     rollback_or_recovery_weakened: rollbackOrRecoveryWeakened,
     counterfactuals_removed: counterfactualsRemoved,
     population_weakened: populationWeakened,
+    ...verifierDiff,
     source_claims_changed:
       previous.authority_hashes.source_authority_hash !==
       nextHashes.source_authority_hash,

@@ -6,6 +6,7 @@ import type {
   FrozenRunnerV2,
   WorkspaceManifestV2,
 } from "./long-task-delivery-types.js";
+import { computeRawExecutionIdentity } from "./long-task-check-execution-policy.js";
 import {
   assertRepositoryPattern,
   classifyRepositoryPatternOverlap,
@@ -76,7 +77,7 @@ export async function freezeDeliveryCheck(
     cwd,
     target,
   );
-  return {
+  const compiled = {
     ...check,
     internal_id: `${prefix}.${check.key}`,
     outcome_key: outcomeKey,
@@ -88,6 +89,10 @@ export async function freezeDeliveryCheck(
       verificationInputHashes,
     ),
     verification_input_hashes: verificationInputHashes,
+  };
+  return {
+    ...compiled,
+    raw_execution_identity: computeRawExecutionIdentity(compiled),
   };
 }
 

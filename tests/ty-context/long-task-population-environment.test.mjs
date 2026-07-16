@@ -200,6 +200,7 @@ function check(root, marker) {
     outcome_key: "env",
     key: "probe",
     proof_surface: "runtime_behavior",
+    raw_execution_identity: `raw-probe-${root}`,
     runner: {
       type: "node_oracle",
       target: "probe.mjs",

@@ -18,6 +18,7 @@ import {
   clearFinalReceipt,
   clearAuthorityRevision,
   commitActiveAuthority,
+  forceClearCorruptActiveState,
   invalidateDerivedProgress,
   loadActiveLongTaskAuthority,
   stageCompiledDeliveryContract,
@@ -77,10 +78,21 @@ export async function longTask(args: string[]): Promise<void> {
     return;
   }
   if (subcommand === "abandon") {
-    rejectUnknown(args.slice(2), []);
+    const forceCorruptState =
+      args.length === 3 && args[2] === "--force-corrupt-state";
+    if (args.length > 2 && !forceCorruptState)
+      throw new Error(`Unknown or injected arguments: ${args.slice(2).join(" ")}`);
     const root = await repositoryRoot(process.cwd());
-    await abandonLongTaskState(root, workdir);
-    console.log(JSON.stringify({ status: "abandoned", workdir }));
+    if (forceCorruptState)
+      await forceClearCorruptActiveState(root, workdir);
+    else await abandonLongTaskState(root, workdir);
+    console.log(
+      JSON.stringify({
+        status: "abandoned",
+        workdir,
+        force_corrupt_state: forceCorruptState,
+      }),
+    );
     return;
   }
   throw new Error(`Unknown long-task subcommand: ${subcommand}`);
@@ -273,7 +285,7 @@ function help(): void {
   final-gate <workdir>
   stop-check <workdir> [--message <text>]
   close <workdir>
-  abandon <workdir>`);
+  abandon <workdir> [--force-corrupt-state]`);
 }
 
 function template(): string {

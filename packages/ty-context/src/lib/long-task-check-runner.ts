@@ -32,7 +32,8 @@ export async function executeCheckRunner(
   );
   if (unavailable)
     return {
-      execution_identity: check.runner.execution_identity,
+      raw_execution_identity: check.raw_execution_identity,
+      execution_identity: check.raw_execution_identity,
       execution_status: "blocked_external",
       exit_code: -1,
       observations: {},
@@ -66,7 +67,8 @@ export async function executeCheckRunner(
             raw.stderr,
           );
       return {
-        execution_identity: check.runner.execution_identity,
+        raw_execution_identity: check.raw_execution_identity,
+        execution_identity: check.raw_execution_identity,
         ...decoded,
         stdout_sha256: sha256Hex(raw.stdout),
         stderr_sha256: sha256Hex(raw.stderr),
@@ -77,7 +79,8 @@ export async function executeCheckRunner(
       const reason = message(error);
       if (attempt < maximumAttempts) continue;
       return {
-        execution_identity: check.runner.execution_identity,
+        raw_execution_identity: check.raw_execution_identity,
+        execution_identity: check.raw_execution_identity,
         execution_status: "infrastructure_error",
         exit_code: -1,
         observations: {},

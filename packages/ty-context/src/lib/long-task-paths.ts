@@ -33,15 +33,7 @@ export function parseRepositoryPattern(
   value: string,
   label = "repository_pattern",
 ): RepositoryPatternAst {
-  const normalized = value.replace(/\\/gu, "/").replace(/^\.\//u, "");
-  if (
-    !normalized ||
-    path.posix.isAbsolute(normalized) ||
-    /^[A-Za-z]:\//u.test(normalized) ||
-    normalized.split("/").includes("..") ||
-    normalized.split("/").some((segment) => !segment)
-  )
-    throw new Error(`unsafe_path:${label}:${value}`);
+  const normalized = canonicalRepositoryPath(value, label, "pattern");
   if (/[\[\]{}()]/u.test(normalized))
     throw new Error(
       `unsupported_repository_pattern_syntax:${label}:${value}`,
@@ -73,6 +65,20 @@ export function parseRepositoryPattern(
     return { kind: "segment", raw: segment, tokens } as const;
   });
   return { normalized, segments };
+}
+
+export function normalizeRepositoryFile(
+  value: string,
+  label = "repository_file",
+): string {
+  return canonicalRepositoryPath(value, label, "file");
+}
+
+export function normalizeRepositoryCwd(
+  value: string,
+  label = "runner.cwd",
+): string {
+  return canonicalRepositoryPath(value, label, "cwd");
 }
 
 export function assertRepositoryPattern(
@@ -517,16 +523,36 @@ function fixedWidthTokens(segment: SegmentAst): Array<string | null> | null {
   );
 }
 
-function normalizeRepositoryFile(value: string): string {
-  const normalized = value.replace(/\\/gu, "/").replace(/^\.\//u, "");
+function canonicalRepositoryPath(
+  value: string,
+  label: string,
+  kind: "pattern" | "file" | "cwd",
+): string {
+  if (/[\0\r\n\t]/u.test(value))
+    throw new Error(`unsafe_path:${label}:control_character`);
+  const slashed = value.replace(/\\/gu, "/");
+  if (kind === "cwd" && slashed === ".") return ".";
+  const normalized = slashed.startsWith("./")
+    ? slashed.slice(2)
+    : slashed;
   if (
     !normalized ||
     path.posix.isAbsolute(normalized) ||
-    /^[A-Za-z]:\//u.test(normalized) ||
-    normalized.split("/").includes("..") ||
-    normalized.split("/").some((segment) => !segment)
+    normalized.startsWith("//") ||
+    /^[A-Za-z]:/u.test(normalized)
   )
-    throw new Error(`unsafe_path:repository_file:${value}`);
+    throw new Error(`unsafe_path:${label}:${value}`);
+  const segments = normalized.split("/");
+  if (segments.some((segment) => !segment))
+    throw new Error(`unsafe_path:${label}:${value}`);
+  if (segments.includes("."))
+    throw new Error(
+      `non_canonical_repository_path_dot_segment:${label}:${value}`,
+    );
+  if (segments.includes(".."))
+    throw new Error(`unsafe_path:${label}:${value}`);
+  if (kind !== "pattern" && /[*?\[\]{}()]/u.test(normalized))
+    throw new Error(`unsupported_repository_path_syntax:${label}:${value}`);
   return normalized;
 }
 

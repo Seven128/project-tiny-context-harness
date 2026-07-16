@@ -108,17 +108,17 @@ ty-context long-task doctor <workdir>
 ty-context long-task final-gate <workdir>
 ty-context long-task stop-check <workdir> [--message <text>]
 ty-context long-task close <workdir>
-ty-context long-task abandon <workdir>
+ty-context long-task abandon <workdir> [--force-corrupt-state]
 ```
 
 - `init` 只创建 Contract 模板。
-- `compile` 生成 Global 与 Outcome Product/Control/Non-completing/Technical Claim，拒绝未覆盖 Claim，保留首次不可重置 baseline，按 Outcome 计算风险，并冻结 Source hash、Context topology/file、canonical Product/Global 语义、owner/binding、resolved runner 与 verification inputs；完整 Active Authority V3 snapshot 位于 Git common-dir，Git config marker 同时绑定 task id、authority revision 与 compiled identity。
-- `verify` 按 Check 累积 scoped Progress Record；任何 Progress 都没有最终接受权。
+- `compile` 生成 Global 与 Outcome Claim，拒绝未覆盖 Claim，并让第一次成功 compile 立即成为 Authority Lock。此后所有 revision 都与 active authority 比较，删除 progress/Receipt/cache 或恢复代码不能重新开放弱化窗口。
+- `verify` 只在重查 active task/revision/compiled/worktree identity 后写 scoped Progress；并发 revision 返回 `active_authority_changed_during_verify`。
 - `status` 输出 `unverified`、`progress_passing`、`progress_failing`、`progress_stale` 或 `blocked_external`；它从 common-dir authority snapshot 读取，并把 workdir cache 缺失或不一致报告为可修复诊断。
 - `resume` 完全只读，从 common-dir authority snapshot 输出 task/contract identity、风险、相关 Context、Git 状态、ready Outcome、findings 和 next safe action。
-- `final-gate` 要求 clean candidate commit，从源 Contract 重编译，并在一个 Git-tree Snapshot 上重跑全部 Check。
-- `stop-check` 与 `close` 自己运行 Live Final Gate，不信任 status、progress、Receipt 或 compiled cache；成功后原子清除 active binding。
-- `abandon` 是显式非成功清理，保留 `source.md` 与 `delivery-contract.yaml`，且不触碰用户 Git 状态。
+- `final-gate` 在完整 Check 后再次验证 active identity；并发 revision 返回 `active_authority_changed_during_final_gate`，不能产生 accepted。
+- `stop-check` 与 `close` 自己运行 Live Final Gate，并只用 accepted identity 做 CAS clear。
+- `abandon --force-corrupt-state` 仅用于损坏/mismatch/legacy-unrecoverable 状态或遗留锁，只删除确定性 active state 与 `<workdir>/.ty-context/**`。
 
 ### Delivery Contract
 
@@ -145,9 +145,9 @@ V2 必须保留原始 `source_paths` 和直接 `source_claims`。每条 Source C
 
 Delivery Set 主动编排已退休。真正独立的 release/rollback/owner/risk/product 边界应分别运行顶层 Contract；`ty-context delivery-set ...` 只返回固定、不可执行的 tombstone。
 
-Contract authority、Source hash/file set、Context topology/file set/hash、Product semantic projection 或 Global semantic projection 的任何变化都必须使用 `--revise`；普通 compile 不能静默重新冻结变化后的 Source 或 Context。执行开始后，Source/Context/Product/Global 语义变化、Product Claim 增删改、runner 或 verification input 替换、`input_paths` 覆盖缩小、`expected_output_paths` 要求放宽、其他 proof 削弱与 scope 扩张，都必须批准绑定 previous/next 实际材料的精确 revision identity。所有 Contract authority 字段都有编译期 policy 分类，新增字段不能静默绕过 revision。只有机械 proof 增强与机器证明的 scope/input/output 收紧可自动 revise。Risk downgrade 直接拒绝，执行 Agent 不得自行批准，首次 baseline 始终保留，受影响 progress 与 Receipt 失效。
+第一次成功 compile 后，Source/Context/Product/Global 语义、Product Claim 与 Verifier Content 的变化都进入精确 Authority Revision；是否运行过 verify 不再影响审批边界。纯 package root/version relocation 可自动 system revision，bundle/schema/hook 字节变化必须用户批准。Contract 与 Check execution 字段都有编译期 policy 分类。
 
-Repository pattern 的 matching、subset 与 overlap/disjoint 共享同一个 AST 和受限语法：literal segment、`*`、`?`、完整 segment 的 `**` 与简单扩展名 pattern。`[]`、`{}`、extglob 和非完整 segment 的 `**` 在 compile 阶段拒绝。只有 `proven_disjoint` 才能分离受保护路径，unknown 一律 fail closed。`**` 会与 verification input 重叠，`src/*.ts` 与 `src/*.js` 可证明 disjoint，而 `src/safe/*.ts` 改为 `src/safe/**` 即使静态前缀相同也属于 widening。
+所有 path-bearing 字段在 hash/matcher 前使用同一个 canonical grammar：Windows 分隔符与单个 leading `./` 规范为 `/`，只有 runner `cwd` 可单独为 `.`；内部 `.`/`..`、控制字符、空 segment、绝对/drive/UNC 路径以及不支持的 glob 语法全部拒绝。
 
 ## 确定性风险分级
 
@@ -159,9 +159,9 @@ Repository pattern 的 matching、subset 与 overlap/disjoint 共享同一个 AS
 
 ## Evidence 与完成权威
 
-最终接受来自当前可执行证据，不来自 Agent 文本。exit code、手写 status、历史 targeted pass、缺失或弱化的 proof 都不能产生 accepted。每个 Assertion 都必须读取显式 Observation；缺失或类型不可比较时失败，不支持隐式 absence operator，negative proof 应使用 `equals: false` 等显式值。Contract、source、相关 Context、Oracle/runner、Verifier 或 workspace 改变后旧结果立即 stale。
+最终接受来自当前可执行证据，不来自 Agent 文本。Raw Execution identity 绑定 frozen runner 与 canonical Environment Requirements，不包含 env 实际值；即使共享 raw command，artifact 与 Assertion 仍逐 Check 计算。Global hard failure 优先为 `needs_work`，否则 Global/Outcome 环境阻塞投影为 `blocked_external`。
 
-Workdir 下的 `.ty-context/compiled-contract.json` 只是可重建 cache projection。Previous authority、首次 immutable base、risk floor 与 Final Gate identity 只来自 common-dir snapshot。Authority 更新使用 compare-and-swap，并在成功后发布 cache；删除或伪造 cache 不能重置权威。Legacy `active-long-task-binding-v2` 只有在 cache 与所有绑定 identity 完全一致时才安全迁移，否则 doctor 报告 `active_authority_continuity_unrecoverable`。
+Workdir cache 不能定义 previous authority。Commit、migration、clear 与 abandon 共用唯一 active-state lock；Final/Verify 结束前重查 identity，Stop/close 使用 accepted-identity CAS。Legacy V2 只能从完全匹配 cache 迁移；损坏 continuity 由 doctor 指向显式 `abandon --force-corrupt-state`。
 
 Final Gate 只能运行 Contract 声明的验证命令，禁止真实部署、支付、迁移执行或不可逆生产副作用。Retry 默认关闭，仅当 `transient_once`、幂等且 effect 为 read-only/test-sandbox 时允许一次。Runner 默认只获得最小系统环境白名单，额外 env var 必须由当前 Check 精确声明，未声明 secret 不会继承；受保护 authority/proof 文件拒绝 symlink 与可检测 hardlink。网络隔离由外部平台负责。Counterfactual V2 只有在指定 Assertion 精确失败且不存在 artifact、population 或其他 finding 时才有效，Population V2 证明实体全集覆盖。每个 Outcome 必须有 executable Check；人工、CI、部署和产品确认只进入 `external_confirmations`，机器通过但仍待确认时状态为 `machine_accepted_external_pending`。Receipt 仅供审计，不能复用为接受权威。
 

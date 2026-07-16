@@ -12,7 +12,7 @@ import {
   prepareSemanticAuthority,
 } from "./long-task-semantic-authority-revision-fixture.mjs";
 
-test("Source authority can be revised before verify but never silently refrozen", async () => {
+test("Source authority is locked by first compile even before verify", async () => {
   const fixture = await createDeliveryFixture();
   try {
     await runCli(fixture.root, ["enable", "long-task"]);
@@ -25,13 +25,16 @@ test("Source authority can be revised before verify but never silently refrozen"
       () => runCli(fixture.root, ["long-task", "compile", fixture.workdir]),
       /authority_revision_requires_revise_flag/u,
     );
-    const revised = await runCli(fixture.root, [
-      "long-task",
-      "compile",
-      fixture.workdir,
-      "--revise",
-    ]);
-    assert.equal(revised.authority_revision, 2);
+    await assert.rejects(
+      () =>
+        runCli(fixture.root, [
+          "long-task",
+          "compile",
+          fixture.workdir,
+          "--revise",
+        ]),
+      /authority_change_requires_user_decision/u,
+    );
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }

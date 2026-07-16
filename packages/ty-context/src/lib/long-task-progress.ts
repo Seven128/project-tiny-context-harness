@@ -116,6 +116,7 @@ export function checkIdentity(check: CompiledCheckV2): string {
       internal_id: check.internal_id,
       proof_surface: check.proof_surface,
       runner: check.runner.execution_identity,
+      raw_execution: check.raw_execution_identity,
       verification_input_hashes: check.verification_input_hashes,
       input_paths: check.input_paths,
       expected_output_paths: check.expected_output_paths,
@@ -133,7 +134,7 @@ function runnerVerifierIdentity(
 ): string {
   return sha256Hex(
     canonicalValueJson({
-      runner: check.runner.execution_identity,
+      runner: check.raw_execution_identity,
       verifier: compiled.verifier_identity.bundle_sha256,
     }),
   );

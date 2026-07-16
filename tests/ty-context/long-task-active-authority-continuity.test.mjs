@@ -231,7 +231,10 @@ test("legacy V2 active state migrates only from a matching cache and otherwise f
       doctor.status,
       "active_authority_continuity_unrecoverable",
     );
-    assert.equal(doctor.next_action, "manual_restore_or_abandon_required");
+    assert.equal(
+      doctor.next_action,
+      `ty-context long-task abandon ${fixture.workdir} --force-corrupt-state`,
+    );
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }

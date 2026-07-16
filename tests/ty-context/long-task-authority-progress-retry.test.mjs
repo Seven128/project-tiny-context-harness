@@ -396,6 +396,7 @@ test("runner retries only an explicitly safe infrastructure failure", async () =
       resolved_cwd: "",
       resolved_target: "tests/timeout.mjs",
       definition_sha256: "x",
+      raw_execution_identity: "x",
       execution_identity: "x",
       frozen_files: {},
       package_script: null,

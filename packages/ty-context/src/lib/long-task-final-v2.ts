@@ -5,10 +5,12 @@ import type {
   LongTaskFindingV2,
 } from "./long-task-delivery-types.js";
 import {
+  activeAuthorityIdentityMatches,
   assertMatchingActiveBinding,
   loadActiveLongTaskAuthority,
   writeFinalReceipt,
 } from "./long-task-state.js";
+import { assertVerifierAuthorityCurrent } from "./long-task-freshness.js";
 import {
   allCompiledChecks,
   runDeliveryChecks,
@@ -31,6 +33,13 @@ export async function runDeliveryFinalGate(
   if (!active) throw new Error("active_task_missing");
   if (active.workdir !== (await resolved(workdirInput)))
     throw new Error("active_task_workdir_mismatch");
+  await assertVerifierAuthorityCurrent(repository, active.verifier_identity);
+  const acceptedAuthority = {
+    task_id: active.task_id,
+    authority_revision: active.authority_revision,
+    compiled_identity: active.active_authority_identity,
+    worktree_identity: active.worktree_identity,
+  };
   const candidate = await currentGitState(repository);
   if (candidate.dirty.length)
     throw new Error(
@@ -74,21 +83,54 @@ export async function runDeliveryFinalGate(
         next_action:
           "Stop concurrent mutation and rerun the complete Live Final Gate.",
       });
+    let activeAuthorityChanged = false;
+    try {
+      const currentActive = (
+        await loadActiveLongTaskAuthority(repository)
+      ).authority;
+      activeAuthorityChanged =
+        !currentActive ||
+        !activeAuthorityIdentityMatches(
+          currentActive,
+          acceptedAuthority,
+        );
+    } catch {
+      activeAuthorityChanged = true;
+    }
+    if (activeAuthorityChanged)
+      run.findings.push({
+        code: "active_authority_changed_during_final_gate",
+        outcome_key: null,
+        check_key: null,
+        message:
+          "Active Authority changed while Live Final Gate was running.",
+        next_action:
+          "Review the new Authority Revision and rerun the complete Live Final Gate.",
+      });
     const outcomeResults = projectOutcomes(
       compiled.outcomes.map((outcome) => outcome.key),
       run.check_results,
       run.findings,
     );
-    const globalFailure = run.check_results.some(
-      (check) => check.outcome_key === null && check.status !== "passed",
+    const globalChecks = run.check_results.filter(
+      (check) => check.outcome_key === null,
+    );
+    const globalHardFailure = globalChecks.some(
+      (check) =>
+        check.status !== "passed" &&
+        check.status !== "blocked_external",
+    );
+    const globalBlocked = globalChecks.some(
+      (check) => check.status === "blocked_external",
     );
     const failed =
-      globalFailure ||
+      globalHardFailure ||
       Object.values(outcomeResults).includes("failed") ||
       run.findings.some((finding) => finding.code !== "blocked_external");
     const blocked =
+      globalBlocked ||
       Object.values(outcomeResults).includes("blocked_external") ||
-      run.check_results.some((check) => check.status === "blocked_external");
+      run.findings.some((finding) => finding.code === "blocked_external");
     const workflowStatus: FinalReceiptV2["workflow_status"] = failed
       ? "needs_work"
       : blocked

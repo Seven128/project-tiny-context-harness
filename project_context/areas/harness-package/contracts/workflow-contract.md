@@ -79,8 +79,8 @@ Capacity never creates semantic Children. Bundle fragments remain one authority;
 
 - Compile performs only static work: strict V2 schema/key validation, Global and Outcome Claim generation/coverage, shared-AST owner/binding/path containment and overlap checks, Source/Context/Product/Global material projection, resolved-runner/verification-input freeze, per-Outcome risk proof and complete identity freeze. Unsupported repository-pattern syntax is rejected and missing/type-incomparable Observations cannot prove Claims.
 - Static Contract errors block product implementation. Product/acceptance/architecture semantic conflicts return to the user; local code/check failures stay in the same Goal; retry defaults to none and one transient retry requires explicit idempotent read-only/test-sandbox policy.
-- Targeted verify may run one Check, one Outcome or all requested repair checks. It writes derived current-snapshot status but never accepted authority.
-- Final Gate creates one current snapshot and reruns all global and Outcome Checks. Only fully equal execution identities may be deduplicated inside that Gate; historical results are never reused.
+- Targeted verify may run one Check, one Outcome or all requested repair checks. It rechecks active task/revision/compiled/worktree identity before writing derived current-snapshot status and never creates accepted authority.
+- Final Gate creates one current snapshot and reruns all global and Outcome Checks, then rechecks active identity before acceptance. Raw execution identity binds frozen runner identity plus canonical Environment Requirements; only equal raw identities may deduplicate commands, while artifact and Assertion evidence remains per Check. Historical results are never reused.
 - Bottom-up Task acceptance requires at least one executable Check per Outcome plus every strict/global obligation. Human, CI, deployment and product confirmations exist only in `external_confirmations`, never contribute machine proof, and yield `machine_accepted_external_pending` after all machine Checks pass.
 - Contract/source/relevant Context/runner/oracle/verifier/workspace changes stale audit results. Stop and close always run the Live Final Gate and never trust prior Receipts/cache; success clears the matching common-dir record/config marker.
 
@@ -89,7 +89,7 @@ Capacity never creates semantic Children. Bundle fragments remain one authority;
 - The Contract declares Outcome expected change paths, allowed support paths, forbidden paths and relevant Context owners/boundaries.
 - Actual changes outside the combined allowed envelope or a newly touched undeclared boundary return `scope_or_risk_escalation_required`.
 - The same current Goal revises the Contract and recompiles. Harness never responds by starting a worker/new Goal.
-- Any Source/Context/Product/Global semantic material change after execution is a user-reviewed Authority Revision. Product Claim additions/removals/rewrites, runner/input replacement, reduced `input_paths`, weakened `expected_output_paths` and unproved pattern containment are authority reductions. Only mechanical proof additions and proven path/binding/input/output tightening may revise automatically.
+- The first successful compile is Authority Lock. Any later Source/Context/Product/Global semantic or verifier-content change is a user-reviewed Authority Revision, independent of whether verify ran or progress/Receipt/cache exists. Product Claim additions/removals/rewrites, runner/input replacement, reduced `input_paths`, weakened `expected_output_paths` and unproved pattern containment are authority reductions. Only mechanical proof additions, pure verifier relocation and proven path/binding/input/output tightening may revise automatically. Stop/close clear only through accepted-identity CAS.
 
 ## Contract Conformance
 

@@ -8,6 +8,7 @@ import type {
   WorkspaceManifestV2,
 } from "./long-task-delivery-types.js";
 import { deliveryCompileFreshness } from "./long-task-freshness.js";
+import { assertVerifierAuthorityCurrent } from "./long-task-freshness.js";
 import { executeCheckRunner } from "./long-task-check-runner.js";
 import {
   evaluateCheckEvidence,
@@ -15,7 +16,8 @@ import {
 } from "./long-task-evidence-v2.js";
 import { findScopeEscapes, matchesRepoPattern } from "./long-task-paths.js";
 import {
-  loadActiveCompiledAuthority,
+  activeAuthorityIdentityMatches,
+  loadActiveLongTaskAuthority,
   writeProgressRecord,
 } from "./long-task-state.js";
 import { createProgressRecord } from "./long-task-progress.js";
@@ -37,10 +39,20 @@ export async function verifyDeliveryContract(
   selection: { outcome?: string; check?: string } = {},
 ): Promise<TargetedVerificationResultV2> {
   const repository = await repositoryRoot(process.cwd());
-  const compiled = await loadActiveCompiledAuthority(repository, workdir, {
-    migrate_legacy: true,
-  });
-  if (!compiled) throw new Error("active_task_missing");
+  const active = (
+    await loadActiveLongTaskAuthority(repository, { migrate_legacy: true })
+  ).authority;
+  if (!active) throw new Error("active_task_missing");
+  if (active.workdir !== (await resolved(workdir)))
+    throw new Error("active_task_workdir_mismatch");
+  await assertVerifierAuthorityCurrent(repository, active.verifier_identity);
+  const compiled = active.authority_snapshot;
+  const expectedAuthority = {
+    task_id: active.task_id,
+    authority_revision: active.authority_revision,
+    compiled_identity: active.active_authority_identity,
+    worktree_identity: active.worktree_identity,
+  };
   const selected = selectChecks(compiled, selection);
   const snapshot = await createWorkspaceSnapshot(
     compiled.repository_root,
@@ -57,6 +69,40 @@ export async function verifyDeliveryContract(
         throw new Error(`compiled_check_not_found:${result.internal_id}`);
       return createProgressRecord(compiled, snapshot.manifest, check, result);
     });
+    let authorityChanged = false;
+    try {
+      const current = (
+        await loadActiveLongTaskAuthority(repository)
+      ).authority;
+      authorityChanged =
+        !current ||
+        !activeAuthorityIdentityMatches(current, expectedAuthority);
+    } catch {
+      authorityChanged = true;
+    }
+    if (authorityChanged) {
+      run.findings.push({
+        code: "active_authority_changed_during_verify",
+        outcome_key: null,
+        check_key: null,
+        message:
+          "Active Authority changed while targeted verification was running.",
+        next_action:
+          "Discard the stale progress and rerun verification against the active Authority Revision.",
+      });
+      return {
+        schema_version: "long-task-targeted-progress-v2",
+        compiled_identity: compiled.compiled_identity,
+        snapshot_sha256: snapshot.manifest.snapshot_sha256,
+        acceptance_authorized: false,
+        selected_outcome: selection.outcome ?? null,
+        selected_check: selection.check ?? null,
+        updated_progress_records: [],
+        check_results: run.check_results,
+        findings: run.findings,
+        completed_at: new Date().toISOString(),
+      };
+    }
     await Promise.all(
       records.map((record) => writeProgressRecord(workdir, record)),
     );
@@ -79,6 +125,10 @@ export async function verifyDeliveryContract(
   }
 }
 
+async function resolved(workdir: string): Promise<string> {
+  return (await import("node:path")).default.resolve(workdir);
+}
+
 export async function runDeliveryChecks(
   compiled: CompiledDeliveryContractV2,
   snapshot: WorkspaceSnapshotV2,
@@ -95,10 +145,10 @@ export async function runDeliveryChecks(
   const rawExecutions = new Map<string, RawCommandExecutionV2>();
   const checkResults: CheckExecutionResultV2[] = [];
   for (const check of checks) {
-    let raw = rawExecutions.get(check.runner.execution_identity);
+    let raw = rawExecutions.get(check.raw_execution_identity);
     if (!raw) {
       raw = await executeCheckRunner(check, snapshot.root);
-      rawExecutions.set(check.runner.execution_identity, raw);
+      rawExecutions.set(check.raw_execution_identity, raw);
     }
     const outcome = check.outcome_key
       ? compiled.outcomes.find((item) => item.key === check.outcome_key)

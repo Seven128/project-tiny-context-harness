@@ -40,8 +40,9 @@ export async function evaluateCheckEvidence(
     passed: evaluateDeliveryAssertion(assertion, raw.observations),
     claims: assertion.claims,
   }));
+  const executionCompleted = raw.execution_status === "completed";
   const findings: LongTaskFindingV2[] = [];
-  if (raw.execution_status !== "completed")
+  if (!executionCompleted)
     findings.push(
       finding(
         check,
@@ -52,7 +53,7 @@ export async function evaluateCheckEvidence(
           : "Repair the declared runner or evidence protocol and rerun this Check.",
       ),
     );
-  if (raw.execution_status === "completed" && raw.exit_code !== 0)
+  if (executionCompleted && raw.exit_code !== 0)
     findings.push(
       finding(
         check,
@@ -61,7 +62,10 @@ export async function evaluateCheckEvidence(
         "Fix the implementation or declared verification command, then rerun this Check.",
       ),
     );
-  if (raw.observations["playwright.zero_or_all_skipped"] === true)
+  if (
+    executionCompleted &&
+    raw.observations["playwright.zero_or_all_skipped"] === true
+  )
     findings.push(
       finding(
         check,
@@ -70,29 +74,31 @@ export async function evaluateCheckEvidence(
         "Make the declared Playwright target execute at least one non-skipped test.",
       ),
     );
-  for (const error of artifacts.errors)
-    findings.push(
-      finding(
-        check,
-        "invalid_evidence",
-        error,
-        "Produce the artifact declared for this Check and rerun it.",
-      ),
-    );
-  for (const result of assertionResults)
-    if (!result.passed)
+  if (executionCompleted) {
+    for (const error of artifacts.errors)
       findings.push(
         finding(
           check,
-          "assertion_failed",
-          `assertion ${result.key} failed`,
-          "Fix the observable behavior or the Contract assertion, then rerun this Check.",
+          "invalid_evidence",
+          error,
+          "Produce the artifact declared for this Check and rerun it.",
         ),
       );
+    for (const result of assertionResults)
+      if (!result.passed)
+        findings.push(
+          finding(
+            check,
+            "assertion_failed",
+            `assertion ${result.key} failed`,
+            "Fix the observable behavior or the Contract assertion, then rerun this Check.",
+          ),
+        );
+  }
 
   const population = outcome?.acceptance.population;
   let populationPassed = true;
-  if (population?.check_key === check.key) {
+  if (executionCompleted && population?.check_key === check.key) {
     const result = evaluatePopulation(population, raw.observations);
     populationPassed = result.passed;
     if (!result.passed)
@@ -110,7 +116,7 @@ export async function evaluateCheckEvidence(
 
   const status = classifyStatus(raw, findings);
   const claimProofs: ClaimProofV2[] = assertionResults
-    .filter((result) => result.passed)
+    .filter((result) => executionCompleted && result.passed)
     .flatMap((result) =>
       result.claims.map((claim) => ({
         check_key: check.key,
@@ -133,7 +139,7 @@ export async function evaluateCheckEvidence(
     outcome_key: check.outcome_key,
     check_key: check.key,
     status,
-    execution_identity: check.runner.execution_identity,
+    execution_identity: raw.raw_execution_identity,
     assertion_results: assertionResults,
     observations: raw.observations,
     artifact_hashes: artifacts.hashes,

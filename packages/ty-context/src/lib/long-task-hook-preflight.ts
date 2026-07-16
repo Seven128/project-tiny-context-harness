@@ -7,6 +7,7 @@ import { sha256Hex } from "./strict-codec.js";
 export interface CompletionGateCheck {
   status: "available" | "completion_gate_unavailable";
   bundle_sha256: string;
+  hook_sha256: string;
   findings: string[];
 }
 
@@ -70,6 +71,7 @@ export async function checkLongTaskCompletionGate(
   return {
     status: findings.length ? "completion_gate_unavailable" : "available",
     bundle_sha256,
+    hook_sha256: hookHash,
     findings,
   };
 }

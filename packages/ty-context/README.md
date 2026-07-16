@@ -183,14 +183,14 @@ ty-context long-task doctor <workdir>
 ty-context long-task final-gate <workdir>
 ty-context long-task stop-check <workdir> [--message <text>]
 ty-context long-task close <workdir>
-ty-context long-task abandon <workdir>
+ty-context long-task abandon <workdir> [--force-corrupt-state]
 ```
 
-Compile generates Global plus Outcome Product/Control/Non-completing/Technical Claims, rejects uncovered Claims, requires Source Claims to bind declared real Source files, validates owner/binding/path authority and per-Outcome risk, then freezes Source hashes, Context topology/files, canonical Product/Global semantics, resolved runners, verification inputs, verifier sources and an immutable initial baseline. It commits the complete compiled authority to a Git common-dir Active Authority V3 record whose marker binds task, revision and compiled identity. Global non-goals and forbidden shortcuts require negative Global Check proof; Global constraints accept either polarity. Global forbidden paths remain static boundaries rather than Assertion Claims.
+Compile generates Global plus Outcome Product/Control/Non-completing/Technical Claims, rejects uncovered Claims and makes the first successful compile the Authority Lock. Every later change compares with active authority regardless of progress, Receipt/cache deletion or implementation restoration. Source/Context/Product/Global/verifier content, resolved runners and verification inputs are frozen in the common-dir Active Authority V3 record.
 
-Targeted verify accumulates scoped per-Check Progress Records and can never accept. Final Gate, Stop and close recompile source authority, require the complete Git common-dir snapshot/config marker to match, require a clean candidate commit and rerun every Check on one Git-tree snapshot. Status, Receipts and the workdir compiled cache are audit/recovery projections only; status/resume/verify continue from the common-dir snapshot if that cache is missing or forged. Successful Stop/close clears the binding atomically.
+Targeted verify rechecks active task/revision/compiled/worktree identity before writing scoped Progress. Final Gate repeats that identity check after all Checks; Stop/close clear only the accepted identity through CAS. Commit, migration, clear and abandon share one active-state lock. `abandon --force-corrupt-state` is reserved for corrupt continuity or stale lock cleanup and preserves Contract, Source, Context and Git content.
 
-A large atomic task uses one logical Contract Bundle with Outcome-only `outcome_files`. Independent top-level boundaries run as separate Contracts; `delivery-set` is a fixed non-executing tombstone. Contract authority, Source hashes/file sets, Context topology/files/hashes and canonical Product/Global semantics all participate in revision detection. After execution starts, semantic changes, Product Claim changes, runner/verification-input replacement, reduced `input_paths`, weakened `expected_output_paths`, other proof weakening, scope expansion or unproved pattern containment require an exact material-bound user approval. Compile-time field policies prevent new Contract fields from silently bypassing revision handling. Matching, subset and overlap share one restricted repository-pattern AST; unsupported syntax is rejected and unknown relations fail closed. Only mechanical proof additions and proven scope/input/output tightening revise automatically. The executing Agent cannot self-approve and risk downgrade is rejected.
+A large atomic task uses one logical Contract Bundle with Outcome-only `outcome_files`. After Authority Lock, semantic/Product Claim/verifier-content changes and proof weakening require exact user approval. Pure package root/version relocation auto-revises; bundle/schema/hook byte changes do not. Contract and Check execution field policies prevent new fields from bypassing authority or raw-execution identity. Every path-bearing field uses one canonical grammar: Windows separators and one leading `./` normalize, while internal `.`/`..`, controls, absolute/drive/UNC paths and unsupported glob syntax fail closed.
 
 Supported runners: `package_script`, `project_binary`, `node_oracle`, `playwright_test`.
 
@@ -202,7 +202,7 @@ L0 local work stays on the default workflow. L1 standard long work uses the Deli
 
 Users may raise risk to strict. Explicit `standard` below the computed floor fails. Strict negative, counterfactual, population, security, environment and rollback/recovery proof is compiler-enforced as applicable. Scope escape returns `scope_or_risk_escalation_required` for revision and recompilation in the same Goal.
 
-Agent prose, a command exit code, handwritten state, historical targeted passes and missing/weak proof cannot create accepted. Missing or type-incomparable Observations fail Assertions; implicit absence operators are unsupported and negative proof requires an explicit Observation/value such as `equals: false`. Counterfactual V2 accepts only exact designated Assertion failures with no artifact, population or other finding; Population V2 proves entity sets. Runners receive a minimal system environment whitelist plus explicitly declared env vars only, and protected authority/proof files reject symlinks and detectable hardlinks. Network isolation remains external. Every Outcome has an executable Check; CI, deployment, human and product confirmations live only in `external_confirmations`, producing `machine_accepted_external_pending` after machine proof passes. Receipts remain audit-only.
+Agent prose, a command exit code, handwritten state, historical targeted passes and missing/weak proof cannot create accepted. Raw Execution identity binds frozen runner identity plus canonical declared Environment Requirements without env values; artifact and Assertion evidence remains per Check. Global hard failure yields `needs_work`; otherwise any Global/Outcome environment block yields `blocked_external`. Counterfactual, Population, protected-input and external-confirmation boundaries remain unchanged.
 
 ## Upgrade And Compatibility
 
@@ -211,7 +211,7 @@ ty-context upgrade
 ty-context sync
 ```
 
-Version 0.6.0 retires V1 and the repo-local Hook. Enable, disable and upgrade remove only exact Tiny Context managed Hook entries. Relocated package-owned absolute commands require a known managed status and a known `node_modules`, pnpm or workspace-package layout; no-status and similar-name user entries remain, and commands are never removed merely because they contain `composite`. Legacy Active V2 authority migrates only from a fully matching cache; otherwise doctor requires manual restore or abandon. Upgrade reports unfinished V1 active state as `manual_required`, never imports V1 progress/Receipts into V2, and keeps Delivery Set/composite commands as non-executing tombstones.
+Version 0.6.0 retires V1 and the repo-local Hook. Legacy Active V2 authority migrates only from a fully matching cache. Invalid JSON, marker/record mismatch, missing legacy cache or stale lock is never guessed from damaged record paths; doctor reports the explicit contained cleanup command `ty-context long-task abandon <workdir> --force-corrupt-state`.
 
 After updating the package, run `ty-context upgrade`. Use `ty-context upgrade --check` first when you need a read-only plan.
 
