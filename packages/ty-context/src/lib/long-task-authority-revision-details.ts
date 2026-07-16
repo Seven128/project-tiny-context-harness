@@ -109,9 +109,11 @@ export function sourceClaimReductions(
     }
     if (
       (claim.disposition.type === "claim" ||
-        claim.disposition.type === "global_constraint") &&
+        claim.disposition.type === "global_constraint" ||
+        claim.disposition.type === "risk_fact") &&
       (candidate.disposition.type === "claim" ||
-        candidate.disposition.type === "global_constraint")
+        candidate.disposition.type === "global_constraint" ||
+        candidate.disposition.type === "risk_fact")
     ) {
       const nextRefs = new Set(candidate.disposition.refs);
       if (claim.disposition.refs.some((reference) => !nextRefs.has(reference)))

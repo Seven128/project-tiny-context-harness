@@ -100,6 +100,7 @@ try {
     evaluateDeliveryAssertion(
       {
         key: "missing-negative",
+        criterion: "The negative proof remains explicit.",
         claims: ["result"],
         observation: "missing",
         operator: "equals",

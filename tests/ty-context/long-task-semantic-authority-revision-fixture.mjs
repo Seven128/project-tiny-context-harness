@@ -22,6 +22,7 @@ export function prepareSemanticAuthority(contract) {
   });
   outcome.acceptance.checks[0].negative_assertions.push({
     key: "exit-zero-is-insufficient",
+    criterion: "Exit zero alone remains insufficient.",
     claims: ["non_completing.exit-zero-only"],
     observation: "negative",
     operator: "equals",
@@ -31,6 +32,11 @@ export function prepareSemanticAuthority(contract) {
     ...structuredClone(outcome.acceptance.checks[0]),
     key: "submit-ui",
     proof_surface: "ui_browser",
+    runner: {
+      ...structuredClone(outcome.acceptance.checks[0].runner),
+      type: "playwright_test",
+      target: "tests/oracle.mjs",
+    },
     positive_assertions: [
       {
         key: "submit-states",
@@ -40,7 +46,7 @@ export function prepareSemanticAuthority(contract) {
           "control.submit.success",
           "control.submit.failure",
         ],
-        observation: "result",
+        observation: "playwright.case.submit-states.passed",
         operator: "equals",
         expected: true,
       },
@@ -57,8 +63,9 @@ export function prepareSemanticAuthority(contract) {
     positive_assertions: [
       {
         key: "stable-runtime-proof",
+        criterion: "The declared runtime remains stable.",
         claims: ["constraint.stable-runtime"],
-        observation: "result",
+        observation: "result_copy",
         operator: "equals",
         expected: true,
       },

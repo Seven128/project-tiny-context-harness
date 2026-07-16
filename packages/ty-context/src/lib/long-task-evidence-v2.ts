@@ -94,23 +94,30 @@ export async function evaluateCheckEvidence(
         ),
         expected: { coverage_percent: 100 },
         actual: result.actual,
+        claim_keys: population.claims,
       });
   }
 
   const status = classifyCheckStatus(raw, findings);
-  const claimProofs: ClaimProofV2[] = assertionResults
-    .filter((result) => executionCompleted && result.passed)
-    .flatMap((result) =>
-      result.claims.map((claim) => ({
-        check_key: check.key,
-        assertion_key: result.key,
-        polarity: result.polarity,
-        proof_surface: check.proof_surface,
-      })),
-    );
-  if (population && population.check_key === check.key && populationPassed)
+  const claimProofs: ClaimProofV2[] =
+    status === "passed"
+      ? assertionResults.flatMap((result) =>
+          result.claims.map((claim) => ({
+            check_key: check.key,
+            assertion_key: result.key,
+            polarity: result.polarity,
+            proof_surface: check.proof_surface,
+          })),
+        )
+      : [];
+  if (
+    status === "passed" &&
+    population &&
+    population.check_key === check.key &&
+    populationPassed
+  )
     claimProofs.push(
-      ...population.claims.map((claim) => ({
+      ...population.claims.map(() => ({
         check_key: check.key,
         assertion_key: null,
         polarity: "population" as const,
@@ -122,6 +129,7 @@ export async function evaluateCheckEvidence(
     outcome_key: check.outcome_key,
     check_key: check.key,
     status,
+    evidence_adapter: check.evidence_adapter,
     execution_identity: raw.raw_execution_identity,
     assertion_results: assertionResults,
     observations: raw.observations,
@@ -182,27 +190,16 @@ export async function evaluateOutcomeCounterfactuals(
         .map((assertion) => assertion.key)
         .sort();
       const expected = [...control.expected_assertion_failures].sort();
-      const onlyExpectedAssertionFailures =
-        result.status === "assertion_failed" &&
-        result.findings.length === expected.length &&
-        result.findings.filter((finding) => finding.assertion_key).length ===
-          expected.length &&
-        result.findings
-          .filter((finding) => finding.assertion_key)
-          .every((finding) =>
-            expected.some((key) => finding.assertion_key === key),
-          );
       const valid =
         raw.execution_status === "completed" &&
         raw.exit_code === 0 &&
-        onlyExpectedAssertionFailures &&
-        failedAssertions.length === expected.length &&
-        failedAssertions.every((item, index) => item === expected[index]);
+        isValidCounterfactualCheckResult(result, expected);
       if (!valid)
         findings.push({
           code: "counterfactual_integrity_failed",
           outcome_key: outcome.key,
           check_key: check.key,
+          claim_keys: control.claims,
           message: `Counterfactual ${control.key} did not fail exactly the designated Assertions.`,
           expected,
           actual: {
@@ -220,4 +217,34 @@ export async function evaluateOutcomeCounterfactuals(
     }
   }
   return findings;
+}
+
+export function isValidCounterfactualCheckResult(
+  result: CheckExecutionResultV2,
+  expectedAssertionFailures: string[],
+): boolean {
+  const expected = [...expectedAssertionFailures].sort();
+  const failedAssertions = result.assertion_results
+    .filter((assertion) => !assertion.passed)
+    .map((assertion) => assertion.key)
+    .sort();
+  return (
+    result.status === "assertion_failed" &&
+    result.findings.length === expected.length &&
+    result.findings.filter((finding) => finding.assertion_key).length ===
+      expected.length &&
+    result.findings
+      .filter((finding) => finding.assertion_key)
+      .every((finding) =>
+        expected.some((key) => finding.assertion_key === key),
+      ) &&
+    result.findings.every(
+      (finding) => finding.code === "assertion_value_mismatch",
+    ) &&
+    result.assertion_results
+      .filter((assertion) => !assertion.passed)
+      .every((assertion) => assertion.status === "assertion_value_mismatch") &&
+    failedAssertions.length === expected.length &&
+    failedAssertions.every((item, index) => item === expected[index])
+  );
 }

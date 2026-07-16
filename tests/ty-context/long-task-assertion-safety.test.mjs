@@ -222,22 +222,90 @@ test("missing Observation produces assertion_failed without Claim proof", async 
   );
 });
 
+test("a Check emits Claim Proof only when its complete status is passed", async () => {
+  const base = compiledCheck();
+  const passingRaw = rawExecution(base, {
+    result: true,
+    population: {
+      eligible_ids: ["first"],
+      observed_ids: [],
+      excluded_items: [],
+    },
+  });
+
+  const exitFailure = await evaluateCheckEvidence(
+    base,
+    { ...passingRaw, exit_code: 1 },
+    path.resolve("."),
+  );
+  assert.equal(exitFailure.status, "test_failed");
+  assert.deepEqual(exitFailure.claim_proofs, []);
+
+  const artifactCheck = {
+    ...structuredClone(base),
+    artifact_globs: ["artifacts/definitely-missing.json"],
+  };
+  const artifactFailure = await evaluateCheckEvidence(
+    artifactCheck,
+    passingRaw,
+    path.resolve("."),
+  );
+  assert.equal(artifactFailure.status, "invalid_evidence");
+  assert.deepEqual(artifactFailure.claim_proofs, []);
+
+  const assertionCheck = structuredClone(base);
+  assertionCheck.positive_assertions[0].expected = false;
+  const assertionFailure = await evaluateCheckEvidence(
+    assertionCheck,
+    passingRaw,
+    path.resolve("."),
+  );
+  assert.equal(assertionFailure.status, "assertion_failed");
+  assert.deepEqual(assertionFailure.claim_proofs, []);
+
+  const populationOutcome = {
+    key: "safety",
+    product: { owner: { path_globs: ["src/**"] } },
+    acceptance: {
+      population: {
+        check_key: base.key,
+        claims: ["result"],
+        observations: {
+          eligible_ids: "population.eligible_ids",
+          observed_ids: "population.observed_ids",
+          excluded_items: "population.excluded_items",
+        },
+        exclusion_rules: [],
+      },
+    },
+  };
+  const populationFailure = await evaluateCheckEvidence(
+    base,
+    passingRaw,
+    path.resolve("."),
+    populationOutcome,
+  );
+  assert.equal(populationFailure.status, "assertion_failed");
+  assert.deepEqual(populationFailure.claim_proofs, []);
+});
+
 function contractWithAssertion(operator) {
   const contract = deliveryContract();
+  const coverage = structuredClone(
+    contract.outcomes[0].acceptance.checks[0].positive_assertions[0],
+  );
   contract.outcomes[0].acceptance.checks[0].positive_assertions = [
     {
       key: "assertion",
-      claims: [
-        "result",
-        "requirement.observe-first",
-        "obligation.implement-first",
-      ],
-      observation: "result",
+      criterion: "Auxiliary operator parsing remains well-defined.",
+      claims: [],
+      observation: "auxiliary",
       operator,
       ...(binaryOperators.includes(operator)
         ? { expected: expected(operator) }
         : {}),
     },
+    coverage,
   ];
   return contract;
 }
@@ -279,4 +347,65 @@ async function deliverySchema() {
       "utf8",
     ),
   );
+}
+
+function compiledCheck() {
+  return {
+    internal_id: "CHECK.safety.complete",
+    outcome_key: "safety",
+    key: "complete",
+    proof_surface: "runtime_behavior",
+    evidence_adapter: "structured_json_v2",
+    runner: {
+      type: "node_oracle",
+      target: "tests/oracle.mjs",
+      argv: [],
+      cwd: ".",
+      timeout_ms: 1000,
+      effect: "read_only",
+      retry_policy: "none",
+      idempotent: true,
+      executable: process.execPath,
+      executable_argv_prefix: [],
+      resolved_cwd: "",
+      resolved_target: "tests/oracle.mjs",
+      definition_sha256: "complete",
+      frozen_files: {},
+      package_script: null,
+      execution_identity: "complete",
+    },
+    verification_inputs: ["tests/oracle.mjs"],
+    verification_input_hashes: {},
+    raw_execution_identity: "complete",
+    input_paths: [],
+    expected_output_paths: [],
+    artifact_globs: [],
+    positive_assertions: [
+      {
+        key: "result",
+        criterion: "The complete Check result is true.",
+        claims: ["result"],
+        observation: "result",
+        operator: "equals",
+        expected: true,
+      },
+    ],
+    negative_assertions: [],
+    environment_requirements: [],
+  };
+}
+
+function rawExecution(check, observations) {
+  return {
+    raw_execution_identity: check.raw_execution_identity,
+    execution_identity: check.raw_execution_identity,
+    execution_status: "completed",
+    exit_code: 0,
+    observations,
+    stdout_sha256: "stdout",
+    stderr_sha256: "stderr",
+    attempts: 1,
+    duration_ms: 1,
+    error: null,
+  };
 }

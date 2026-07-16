@@ -70,6 +70,12 @@ test("Authoring Preflight aggregates independent diagnostics", async () => {
     outcome.product.owner.context_refs = [
       "project_context/areas/missing.md",
     ];
+    outcome.product.requirements.push(
+      structuredClone(outcome.product.requirements[0]),
+    );
+    outcome.technical.bindings.push(
+      structuredClone(outcome.technical.bindings[0]),
+    );
     fixture.contract.source_claims[0].source_ref =
       "source.md#missing-anchor";
     await writeContract(fixture.workdir, fixture.contract);
@@ -83,6 +89,8 @@ test("Authoring Preflight aggregates independent diagnostics", async () => {
     const codes = new Set(result.diagnostics.map((item) => item.code));
     for (const code of [
       "owner_context_ref_unknown",
+      "requirement_key_duplicate",
+      "binding_key_duplicate",
       "product_claim_uncovered",
       "assertion_criterion_required",
       "source_claim_anchor_not_found",
@@ -124,6 +132,73 @@ test("Authoring Preflight previews an active revision without pending state", as
       false,
     );
     assert.deepEqual(await stateSnapshot(fixture), before);
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("Authoring Preflight Revision Preview reports declared Acceptance changes", async () => {
+  const fixture = await createDeliveryFixture();
+  try {
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    fixture.contract.outcomes[0].acceptance.checks[0].positive_assertions[0].criterion =
+      "A revised declared Acceptance criterion.";
+    await writeContract(fixture.workdir, fixture.contract);
+    const result = await preflightDeliveryContract(
+      fixture.workdir,
+      fixture.root,
+    );
+    assert.equal(result.status, "ready");
+    assert.ok(
+      result.revision_preview.declared_authority_sections_changed.includes(
+        "acceptance",
+      ),
+    );
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("Authoring Preflight Revision Preview reports Source and Context materials separately", async () => {
+  const fixture = await createDeliveryFixture();
+  try {
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    const sourceStatement = "The revised first outcome remains observable.";
+    await writeFile(
+      path.join(fixture.root, "source.md"),
+      `# Fixture source
+
+<!-- ty-source-item:start key=first-observable kind=requirement -->
+${sourceStatement}
+<!-- ty-source-item:end -->
+`,
+    );
+    fixture.contract.source_claims[0].statement = sourceStatement;
+    await writeContract(fixture.workdir, fixture.contract);
+    let result = await preflightDeliveryContract(
+      fixture.workdir,
+      fixture.root,
+    );
+    assert.equal(result.status, "ready");
+    assert.ok(
+      result.revision_preview.declared_authority_sections_changed.includes(
+        "source",
+      ),
+    );
+
+    await writeFile(
+      path.join(fixture.root, "project_context", "areas", "main.md"),
+      "# Main\n\nRevised durable Context.\n",
+    );
+    result = await preflightDeliveryContract(fixture.workdir, fixture.root);
+    assert.equal(result.status, "ready");
+    assert.ok(
+      result.revision_preview.declared_authority_sections_changed.includes(
+        "context",
+      ),
+    );
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }

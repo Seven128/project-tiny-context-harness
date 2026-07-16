@@ -115,6 +115,7 @@ export function checkIdentity(check: CompiledCheckV2): string {
     canonicalValueJson({
       internal_id: check.internal_id,
       proof_surface: check.proof_surface,
+      evidence_adapter: check.evidence_adapter,
       runner: check.runner.execution_identity,
       raw_execution: check.raw_execution_identity,
       verification_input_hashes: check.verification_input_hashes,

@@ -2,14 +2,34 @@ import assert from "node:assert/strict";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
+import { computeAuthorityHashes } from "../../packages/ty-context/dist/lib/long-task-authority.js";
 import { executeCheckRunner } from "../../packages/ty-context/dist/lib/long-task-check-runner.js";
 import { evaluateCheckEvidence } from "../../packages/ty-context/dist/lib/long-task-evidence-v2.js";
 import { deliveryCompileFreshness } from "../../packages/ty-context/dist/lib/long-task-freshness.js";
 import {
   createDeliveryFixture,
+  deliveryContract,
   runCli,
   writeContract,
 } from "./long-task-delivery-fixtures.mjs";
+
+test("Evidence Adapter identity participates in Acceptance Authority", () => {
+  const structured = deliveryContract();
+  const sameAdapter = structuredClone(structured);
+  sameAdapter.outcomes[0].acceptance.checks[0].runner.type =
+    "project_binary";
+  const playwright = structuredClone(structured);
+  playwright.outcomes[0].acceptance.checks[0].runner.type =
+    "playwright_test";
+  assert.equal(
+    computeAuthorityHashes(structured).acceptance_authority_hash,
+    computeAuthorityHashes(sameAdapter).acceptance_authority_hash,
+  );
+  assert.notEqual(
+    computeAuthorityHashes(structured).acceptance_authority_hash,
+    computeAuthorityHashes(playwright).acceptance_authority_hash,
+  );
+});
 
 test("runner target resolves from a subdirectory and executes that frozen target", async () => {
   const fixture = await createDeliveryFixture();
@@ -52,6 +72,13 @@ test("helper, fixture, Playwright config, package script and lockfile are frozen
     const check = fixture.contract.outcomes[0].acceptance.checks[0];
     check.runner.type = "playwright_test";
     check.runner.target = "tests/ui.spec.mjs";
+    check.proof_surface = "ui_browser";
+    check.positive_assertions[0].observation =
+      "playwright.case.first-result.passed";
+    fixture.contract.outcomes[0].product.requirements[0].required_proof_surfaces =
+      ["ui_browser"];
+    fixture.contract.outcomes[0].technical.obligations[0].required_proof_surfaces =
+      ["ui_browser"];
     check.verification_inputs = ["tests/helper.mjs", "tests/fixture.json"];
     await writeContract(fixture.workdir, fixture.contract);
     await runCli(fixture.root, ["enable", "long-task"]);

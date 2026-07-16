@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { rm } from "node:fs/promises";
+import { rm, writeFile } from "node:fs/promises";
+import path from "node:path";
 import test from "node:test";
 import YAML from "yaml";
 import { compileDeliveryContract } from "../../packages/ty-context/dist/lib/long-task-delivery-compiler.js";
@@ -62,12 +63,14 @@ test("Control location is an independent ui_browser Claim", () => {
   const uiCheck = structuredClone(covered.outcomes[0].acceptance.checks[0]);
   uiCheck.key = "submit-ui";
   uiCheck.proof_surface = "ui_browser";
+  uiCheck.runner.type = "playwright_test";
+  uiCheck.runner.target = "tests/ui.spec.ts";
   uiCheck.positive_assertions = [
     {
       key: "submit-location",
       criterion: "Submit is in the settings footer.",
       claims: ["control.submit.location", "control.submit.trigger"],
-      observation: "submit-location",
+      observation: "playwright.case.submit-location.passed",
       operator: "equals",
       expected: true,
     },
@@ -159,7 +162,7 @@ test("one Check cannot duplicate an Observation or use playwright.passed for fin
     "playwright.passed";
   assert.throws(
     () => parse(broad),
-    /fine_grained_claim_requires_ac_observation:first:requirement\.observe-first/u,
+    /playwright_claim_assertion_invalid:first:first-check:first-result/u,
   );
 });
 
@@ -178,12 +181,21 @@ test("Compile validates real Source anchors and blocks decisions", async () => {
     fixture.contract.source_claims[0] = {
       key: "first-observable",
       source_ref: "source.md#fixture-source",
-      statement: "The first outcome needs a decision.",
+      statement: "The first outcome must be observable.",
       disposition: {
         type: "decision_required",
         reason: "Choose the final product behavior.",
       },
     };
+    await writeFile(
+      path.join(fixture.root, "source.md"),
+      `# Fixture source
+
+<!-- ty-source-item:start key=first-observable kind=decision -->
+The first outcome must be observable.
+<!-- ty-source-item:end -->
+`,
+    );
     await writeContract(fixture.workdir, fixture.contract);
     await assert.rejects(
       compileDeliveryContract(fixture.workdir, fixture.root, {

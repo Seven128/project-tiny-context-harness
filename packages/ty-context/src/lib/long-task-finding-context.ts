@@ -16,7 +16,7 @@ export function enrichCheckResultFindings(
   };
 }
 
-function enrichFinding(
+export function enrichFinding(
   compiled: CompiledDeliveryContractV2,
   finding: LongTaskFindingV2,
 ): LongTaskFindingV2 {
@@ -57,6 +57,11 @@ function sourceClaimsForFinding(
       if (
         source.disposition.type === "claim" &&
         source.disposition.refs.some((reference) => productRefs.has(reference))
+      )
+        return true;
+      if (
+        source.disposition.type === "outcome_result" &&
+        productRefs.has(source.disposition.ref)
       )
         return true;
       return (

@@ -34,6 +34,7 @@ export function rawExecutionInputProjection(
   check: CompiledCheckWithoutRawIdentity,
 ): Record<string, unknown> {
   const projection: Record<string, unknown> = {};
+  projection.evidence_adapter = check.evidence_adapter;
   for (const field of Object.keys(CHECK_EXECUTION_INPUT_POLICY) as Array<
     keyof DeliveryCheckV2
   >) {

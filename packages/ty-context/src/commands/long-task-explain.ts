@@ -3,9 +3,18 @@ import { sourceCoverage } from "../lib/long-task-authoring-preflight-diagnostics
 import { parseDeliveryContractBundle } from "../lib/long-task-delivery-parser.js";
 import { explainSourceLinks } from "../lib/long-task-explain-source-links.js";
 import { classifyLongTaskRisk } from "../lib/long-task-risk.js";
+import { compileSourceInventory } from "../lib/long-task-source-inventory.js";
+import { validateSourceContinuity } from "../lib/long-task-source-continuity.js";
+import { repositoryRoot } from "../lib/long-task-workspace.js";
 
 export async function explainLongTask(workdir: string): Promise<void> {
   const parsed = await parseDeliveryContractBundle(workdir);
+  const repository = await repositoryRoot(process.cwd());
+  const sourceInventory = await compileSourceInventory(
+    repository,
+    parsed.contract.task.source_paths,
+  );
+  validateSourceContinuity(parsed.contract, sourceInventory);
   const coverage = compileProductClaimCoverage(parsed.contract);
   const risk = classifyLongTaskRisk(parsed.contract);
   const globalClaims = Object.entries(coverage.summary.claims_by_global).map(
@@ -39,13 +48,22 @@ export async function explainLongTask(workdir: string): Promise<void> {
         claims: [...globalClaims, ...outcomeClaims],
         coverage: coverage.summary,
         source_coverage: sourceCoverage(parsed.contract),
-        source_items: parsed.contract.source_claims.map((source) => ({
-          key: source.key,
-          source_ref: source.source_ref,
-          statement: source.statement,
-          disposition: source.disposition,
-          links: explainSourceLinks(parsed.contract, coverage.summary, source),
-        })),
+        source_items: sourceInventory.map((item) => {
+          const source = parsed.contract.source_claims.find(
+            (claim) => claim.key === item.key,
+          )!;
+          return {
+            ...item,
+            source_ref: source.source_ref,
+            statement: source.statement,
+            disposition: source.disposition,
+            links: explainSourceLinks(
+              parsed.contract,
+              coverage.summary,
+              source,
+            ),
+          };
+        }),
       },
       null,
       2,

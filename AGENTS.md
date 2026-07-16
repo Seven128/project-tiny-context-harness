@@ -59,7 +59,11 @@ Supported CLI:
 - `ty-context long-task close <workdir>`
 - `ty-context long-task abandon <workdir> [--force-corrupt-state]`
 
-Contract V2 normalizes Compact defaults, compiles Global plus Result/Requirement/Control-field/Non-completing/Technical Claims and rejects uncovered Claims. Source items may map directly to named Acceptance Assertions and external confirmations; atomic Source items cannot collapse into an Outcome Result. `preflight` is read-only and creates no authority or audit state. The first successful formal Compile is Authority Lock; later Source/Context/Product/Global/Acceptance/verifier-content or proof-reduction changes compare against active authority regardless of progress, Receipt/cache deletion or restored code. Pure verifier relocation and proven proof/scope tightening auto-revise; content weakening needs exact user approval. Every path-bearing field uses one canonical grammar, and Check execution fields have a compile-time raw/per-Check/progress/final classification. Targeted verify rechecks active identity before progress writes.
+Contract V2 requires real Source files containing non-rendering, uniquely keyed Material Source Item markers. Marker keys and `source_claim` keys are set-equal, statements remain text-exact after whitespace normalization, and each typed disposition preserves Requirement/Acceptance/Result/Risk/Non-goal/External/Decision meaning; `out_of_scope` is never a resolved state. Every Outcome has a non-Result atomic Claim, Source AC maps to one criterion-identical non-Result Assertion, and all required proof surfaces must be covered.
+
+Preflight is read-only and Compile uses the same activation-safety kernel, so skipping Preflight bypasses no rule. Evidence adapters derive from runner kind: only Playwright proves `ui_browser`; other runners use structured evidence. Claim-bearing Playwright evidence is only `playwright.case.<ac>.passed equals true`, missing/skipped/flaky/unexpected cases fail closed, and one claim-bearing Observation cannot be reused across Checks sharing a Raw Execution. Counterfactuals bind a declared implementation carrier and accept only designated value mismatches. Claim proofs exist only for a fully passed Check.
+
+The first successful formal Compile is Authority Lock; later Source/Context/Product/Global/Acceptance/verifier-content or proof-reduction changes compare against active authority regardless of progress, Receipt/cache deletion or restored code. Pure verifier relocation and proven proof/scope tightening auto-revise; content weakening needs exact user approval. Every path-bearing field uses one canonical grammar, and Check execution fields have a compile-time raw/per-Check/progress/final classification. Targeted verify rechecks active identity before progress writes.
 
 Status, progress, Receipts and compiled cache are audit/recovery surfaces only. Commit, migration, clear and abandon share one active-state lock. Final Gate rechecks task/revision/compiled/worktree identity after all Checks; Stop/close use accepted-identity CAS and cannot clear a newer revision. Corrupt continuity is cleaned only by explicit `abandon --force-corrupt-state`. External confirmations remain explicit; machine acceptance never implies CI, deployment or human acceptance.
 
@@ -77,7 +81,7 @@ Tiny Context does not create or restore platform Goals, invoke models, spawn age
 - Explicit Tiny Context upgrades use `context_harness_upgrade` and run `upgrade` before standalone `sync`.
 - Managed `AGENTS.md` blocks, `<harnessRoot>/ty-context-managed/**` and package-managed Skills are generated and sync-overwritten.
 - Non-Codex defaults install portable core/workflow only; `ty-context enable long-task` explicitly installs the Long-Task Workflow Skill and package-owned completion Hook.
-- `init`, `sync` and `upgrade` never import or execute historical V1/Campaign state. Version 0.6.0 reports unfinished V1 authority as a manual migration and installs only the package-owned V2 Hook.
+- `init`, `sync` and `upgrade` never import or execute historical V1/Campaign state or development-period V2 Active Authority/Progress/Receipts. Version 0.6.0 reports unfinished old authority as `manual_required` and installs only the package-owned V2 Hook.
 
 ## Verification
 

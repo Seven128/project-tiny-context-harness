@@ -1,6 +1,7 @@
 import type {
   AuthorityMaterialHashesV2,
   CompiledDeliveryContractV2,
+  CompiledSourceItemV2,
   ContextAuthoritySnapshotV2,
   DeliveryContractV2,
   GlobalSemanticProjectionV2,
@@ -12,10 +13,14 @@ import { canonicalValueJson, sha256Hex } from "./strict-codec.js";
 export function computeAuthorityMaterials(
   contract: Pick<DeliveryContractV2, "task" | "global" | "outcomes">,
   sourceHashes: Record<string, string>,
+  sourceItems: CompiledSourceItemV2[],
   contextSnapshot: ContextAuthoritySnapshotV2,
 ): NextAuthorityMaterialsV2 {
   return {
     source_hashes: sortRecord(sourceHashes),
+    source_items: [...sourceItems].sort((left, right) =>
+      left.key.localeCompare(right.key),
+    ),
     context_snapshot: {
       mode: contextSnapshot.mode,
       topology_sha256: contextSnapshot.topology_sha256,
@@ -40,6 +45,7 @@ export function compiledAuthorityMaterials(
     computeAuthorityMaterials(
       compiled,
       compiled.source_hashes,
+      compiled.source_items,
       compiled.context_snapshot,
     )
   );

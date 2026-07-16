@@ -115,6 +115,7 @@ test("Authority Revision rejects a risk downgrade instead of approving it", asyn
     const check = outcome.acceptance.checks[0];
     check.negative_assertions.push({
       key: "negative-floor",
+      criterion: "The strict negative floor remains satisfied.",
       claims: ["result"],
       observation: "result_copy",
       operator: "not_equals",
@@ -122,6 +123,7 @@ test("Authority Revision rejects a risk downgrade instead of approving it", asyn
     });
     outcome.acceptance.counterfactual_controls.push({
       key: "remove-state",
+      binding_key: "state-first",
       claims: ["obligation.implement-first"],
       check_key: check.key,
       mutation: { type: "remove_paths", paths: ["src/state.json"] },
@@ -167,6 +169,7 @@ test("input and expected-output authority reductions cover Global and Outcome Ch
     globalCheck.positive_assertions[0].claims = [
       "constraint.stable-runtime",
     ];
+    globalCheck.positive_assertions[0].observation = "result_copy";
     fixture.contract.global.acceptance.checks.push(globalCheck);
     await writeContract(fixture.workdir, fixture.contract);
     await runCli(fixture.root, ["enable", "long-task"]);

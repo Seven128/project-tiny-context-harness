@@ -40,6 +40,7 @@ test("negative-only Global Check and zero positive Assertions have Schema/Parser
   check.negative_assertions = [
     {
       key: "legacy-absent",
+      criterion: "The retired legacy behavior remains absent.",
       claims: ["non_goal.no-legacy"],
       observation: "negative",
       operator: "equals",
@@ -119,6 +120,36 @@ test("Assertion operator and expected rules stay aligned across Schema and Parse
   assert.equal(
     schema.$defs.assertion.allOf[2].then.properties.expected.format,
     "regex",
+  );
+});
+
+test("Source authority cardinality and retired dispositions stay aligned across Schema and Parser", async () => {
+  const schema = await deliverySchema();
+  assert.equal(
+    schema.properties.task.properties.source_paths.minItems,
+    1,
+  );
+  assert.equal(schema.properties.source_claims.minItems, 1);
+  assert.equal(
+    Object.hasOwn(schema.properties.source_claims, "default"),
+    false,
+  );
+  const acceptance = schema.$defs.sourceClaim.properties.disposition.oneOf.find(
+    (candidate) => candidate.properties.type.const === "acceptance",
+  );
+  assert.equal(acceptance.properties.refs.minItems, 1);
+  assert.equal(acceptance.properties.refs.maxItems, 1);
+  assert.equal(JSON.stringify(schema).includes("out_of_scope"), false);
+
+  const multipleAcceptanceRefs = deliveryContract();
+  multipleAcceptanceRefs.source_claims[0].disposition = {
+    type: "acceptance",
+    refs: ["first.first-check.first-result", "first.first-check.other"],
+  };
+  assert.throws(
+    () =>
+      parseDeliveryContractText(YAML.stringify(multipleAcceptanceRefs)),
+    /source_claim_acceptance_ref_count/u,
   );
 });
 

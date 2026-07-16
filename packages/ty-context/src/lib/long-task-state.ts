@@ -41,19 +41,6 @@ const AUTHORITY_APPROVED_FILE = "authority-revision-approved.json";
 const FINAL_FILE = "final-receipt.json";
 const CONTRACT_FILE = "delivery-contract.yaml";
 
-export interface ActiveLongTaskBindingV2 {
-  schema_version: "active-long-task-binding-v2";
-  task_id: string;
-  repository_root: string;
-  worktree_identity: string;
-  workdir: string;
-  initial_task_base: InitialTaskBaseV2;
-  active_authority_identity: string;
-  verifier_identity: VerifierIdentityV2;
-  activated_at: string;
-  authority_revision: number;
-}
-
 export interface ActiveLongTaskAuthorityV3 {
   schema_version: "active-long-task-authority-v3";
   task_id: string;
@@ -76,7 +63,7 @@ export type CompiledCacheStatusV3 =
 
 export interface ActiveAuthorityLoadResultV3 {
   authority: ActiveLongTaskAuthorityV3 | null;
-  source: "none" | "active_authority_v3" | "legacy_active_authority_v2";
+  source: "none" | "active_authority_v3";
   migrated: boolean;
 }
 
@@ -257,31 +244,9 @@ export async function readCompiledDeliveryContract(
 
 export async function loadActiveLongTaskAuthority(
   repositoryRoot: string,
-  options: { migrate_legacy?: boolean } = {},
+  _options: { migrate_legacy?: boolean } = {},
 ): Promise<ActiveAuthorityLoadResultV3> {
-  const root = path.resolve(repositoryRoot);
-  const loaded = await loadActiveLongTaskAuthorityUnlocked(root);
-  if (
-    loaded.source !== "legacy_active_authority_v2" ||
-    !options.migrate_legacy ||
-    !loaded.authority
-  )
-    return loaded;
-  return withActiveAuthorityLock(root, "migrate", async () => {
-    const current = await loadActiveLongTaskAuthorityUnlocked(root);
-    if (current.source !== "legacy_active_authority_v2" || !current.authority)
-      return current;
-    await persistActiveAuthorityCasUnlocked(
-      root,
-      current.authority,
-      current.authority.active_authority_identity,
-    );
-    return {
-      authority: current.authority,
-      source: "legacy_active_authority_v2",
-      migrated: true,
-    };
-  });
+  return loadActiveLongTaskAuthorityUnlocked(path.resolve(repositoryRoot));
 }
 
 async function loadActiveLongTaskAuthorityUnlocked(
@@ -303,23 +268,9 @@ async function loadActiveLongTaskAuthorityUnlocked(
       source: "active_authority_v3",
       migrated: false,
     };
-  if (row.schema_version !== "active-long-task-binding-v2")
-    throw new Error("active_authority_invalid:schema_version");
-  const legacy = await validateLegacyActiveBindingV2(
-    root,
-    identity,
-    marker,
-    row,
-  );
-  const authority = activeAuthorityFromCompiled(
-    legacy.authority_snapshot,
-    legacy.binding.activated_at,
-  );
-  return {
-    authority,
-    source: "legacy_active_authority_v2",
-    migrated: false,
-  };
+  if (row.schema_version === "active-long-task-binding-v2")
+    throw new Error("legacy_v2_active_authority_manual_required");
+  throw new Error("active_authority_invalid:schema_version");
 }
 
 export async function loadActiveCompiledAuthority(
@@ -480,56 +431,6 @@ async function validateActiveAuthorityV3(
     throw new Error("active_authority_invalid:snapshot_binding");
   await assertActiveWorkdir(authority.workdir);
   return authority;
-}
-
-async function validateLegacyActiveBindingV2(
-  root: string,
-  identity: string,
-  marker: string,
-  row: Record<string, unknown>,
-): Promise<{
-  binding: ActiveLongTaskBindingV2;
-  authority_snapshot: CompiledDeliveryContractV2;
-}> {
-  if (
-    typeof row.task_id !== "string" ||
-    typeof row.repository_root !== "string" ||
-    typeof row.worktree_identity !== "string" ||
-    typeof row.workdir !== "string" ||
-    typeof row.active_authority_identity !== "string" ||
-    typeof row.authority_revision !== "number" ||
-    !Number.isInteger(row.authority_revision) ||
-    row.authority_revision < 1 ||
-    typeof row.activated_at !== "string" ||
-    !row.initial_task_base ||
-    !row.verifier_identity
-  )
-    throw new Error("active_authority_invalid:legacy_shape");
-  const binding = row as unknown as ActiveLongTaskBindingV2;
-  if (marker !== binding.task_id) throw new Error("marker_record_mismatch");
-  if (binding.worktree_identity !== identity)
-    throw new Error("active_authority_invalid:legacy_worktree_identity");
-  if (normalizePath(binding.repository_root) !== normalizePath(root))
-    throw new Error("active_authority_invalid:legacy_repository_identity");
-  await assertActiveWorkdir(binding.workdir);
-  let compiled: CompiledDeliveryContractV2;
-  try {
-    compiled = await readCompiledDeliveryContract(binding.workdir);
-  } catch {
-    throw new Error("active_authority_continuity_unrecoverable");
-  }
-  if (
-    binding.task_id !== compiled.task.id ||
-    normalizePath(binding.repository_root) !==
-      normalizePath(compiled.repository_root) ||
-    normalizePath(binding.workdir) !== normalizePath(compiled.workdir) ||
-    binding.active_authority_identity !== compiled.compiled_identity ||
-    binding.authority_revision !== compiled.authority_revision ||
-    !sameValue(binding.initial_task_base, compiled.initial_task_base) ||
-    !sameValue(binding.verifier_identity, compiled.verifier_identity)
-  )
-    throw new Error("active_authority_continuity_unrecoverable");
-  return { binding, authority_snapshot: compiled };
 }
 
 function validateCompiledDeliveryContract(

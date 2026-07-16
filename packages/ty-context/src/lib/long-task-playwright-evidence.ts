@@ -29,22 +29,31 @@ export function extractPlaywrightEvidence(
     "playwright.zero_or_all_skipped": total === 0 || skipped === total,
   };
 
-  const cases = collectCases(report);
-  const duplicate = duplicateCaseId(cases.map((item) => item.id));
-  if (duplicate) return invalid(`playwright_ac_id_duplicate:${duplicate}`);
+  const instances = collectCases(report);
+  const duplicate = duplicateCaseInstance(instances);
+  if (duplicate)
+    return invalid(
+      `playwright_ac_id_duplicate:${duplicate.id}:${duplicate.project_id}`,
+    );
+  const cases = aggregateCases(instances);
   for (const item of cases) {
     const prefix = `playwright.case.${item.id}`;
-    observations[`${prefix}.executed`] = !item.skipped;
+    observations[`${prefix}.executed`] = item.executed;
     observations[`${prefix}.passed`] = item.passed;
     observations[`${prefix}.skipped`] = item.skipped;
+    observations[`${prefix}.flaky`] = item.flaky;
+    observations[`${prefix}.unexpected`] = item.unexpected;
     observations[`${prefix}.status`] = item.status;
+    observations[`${prefix}.project_ids`] = item.project_ids;
+    observations[`${prefix}.executed_instances`] = item.executed_instances;
+    observations[`${prefix}.failed_instances`] = item.failed_instances;
+    observations[`${prefix}.skipped_instances`] = item.skipped_instances;
+    observations[`${prefix}.flaky_instances`] = item.flaky_instances;
   }
   for (const id of declaredCaseIds(check)) {
     const prefix = `playwright.case.${id}`;
     if (!Object.hasOwn(observations, `${prefix}.status`)) {
       observations[`${prefix}.executed`] = false;
-      observations[`${prefix}.passed`] = false;
-      observations[`${prefix}.skipped`] = false;
       observations[`${prefix}.status`] = "missing";
     }
   }
@@ -52,20 +61,41 @@ export function extractPlaywrightEvidence(
   return { observations, error: null };
 }
 
-interface PlaywrightCase {
+interface PlaywrightCaseInstance {
   id: string;
+  project_id: string;
+  executed: boolean;
   passed: boolean;
   skipped: boolean;
+  flaky: boolean;
+  unexpected: boolean;
   status: string;
 }
 
-function collectCases(report: Record<string, unknown>): PlaywrightCase[] {
-  const cases: PlaywrightCase[] = [];
+interface PlaywrightCase {
+  id: string;
+  executed: boolean;
+  passed: boolean;
+  skipped: boolean;
+  flaky: boolean;
+  unexpected: boolean;
+  status: string;
+  project_ids: string[];
+  executed_instances: number;
+  failed_instances: number;
+  skipped_instances: number;
+  flaky_instances: number;
+}
+
+function collectCases(
+  report: Record<string, unknown>,
+): PlaywrightCaseInstance[] {
+  const cases: PlaywrightCaseInstance[] = [];
   visitSuites(report.suites, cases);
   return cases;
 }
 
-function visitSuites(value: unknown, cases: PlaywrightCase[]): void {
+function visitSuites(value: unknown, cases: PlaywrightCaseInstance[]): void {
   if (!Array.isArray(value)) return;
   for (const suiteValue of value) {
     const suite = record(suiteValue);
@@ -93,8 +123,14 @@ function visitSuites(value: unknown, cases: PlaywrightCase[]): void {
 function playwrightCase(
   id: string,
   test: Record<string, unknown>,
-): PlaywrightCase {
+): PlaywrightCaseInstance {
   const status = typeof test.status === "string" ? test.status : "invalid";
+  const projectId =
+    typeof test.projectId === "string"
+      ? test.projectId
+      : typeof test.projectName === "string"
+        ? test.projectName
+        : "default";
   const results = Array.isArray(test.results)
     ? test.results.map(record).filter(Boolean)
     : [];
@@ -105,12 +141,26 @@ function playwrightCase(
     status === "skipped" ||
     (resultStatuses.length > 0 &&
       resultStatuses.every((value) => value === "skipped"));
+  const executed = !skipped && resultStatuses.length > 0;
+  const flaky = status === "flaky";
+  const unexpected = status === "unexpected";
   const passed =
-    !skipped &&
+    executed &&
+    !flaky &&
+    !unexpected &&
     status === "expected" &&
     resultStatuses.length > 0 &&
     resultStatuses.at(-1) === "passed";
-  return { id, passed, skipped, status };
+  return {
+    id,
+    project_id: projectId,
+    executed,
+    passed,
+    skipped,
+    flaky,
+    unexpected,
+    status,
+  };
 }
 
 function declaredCaseIds(check: CompiledCheckV2): Set<string> {
@@ -128,13 +178,66 @@ function declaredCaseIds(check: CompiledCheckV2): Set<string> {
   return result;
 }
 
-function duplicateCaseId(values: string[]): string | null {
+function duplicateCaseInstance(
+  values: PlaywrightCaseInstance[],
+): PlaywrightCaseInstance | null {
   const seen = new Set<string>();
   for (const value of values) {
-    if (seen.has(value)) return value;
-    seen.add(value);
+    const identity = `${value.id}\0${value.project_id}`;
+    if (seen.has(identity)) return value;
+    seen.add(identity);
   }
   return null;
+}
+
+function aggregateCases(instances: PlaywrightCaseInstance[]): PlaywrightCase[] {
+  const grouped = new Map<string, PlaywrightCaseInstance[]>();
+  for (const instance of instances) {
+    const rows = grouped.get(instance.id) ?? [];
+    rows.push(instance);
+    grouped.set(instance.id, rows);
+  }
+  return [...grouped.entries()]
+    .map(([id, rows]) => {
+      const executedInstances = rows.filter((item) => item.executed).length;
+      const skippedInstances = rows.filter((item) => item.skipped).length;
+      const flakyInstances = rows.filter((item) => item.flaky).length;
+      const unexpectedInstances = rows.filter((item) => item.unexpected).length;
+      const failedInstances = rows.filter(
+        (item) => !item.passed && !item.skipped,
+      ).length;
+      const executed = rows.length > 0 && rows.every((item) => item.executed);
+      const passed =
+        executed &&
+        skippedInstances === 0 &&
+        flakyInstances === 0 &&
+        unexpectedInstances === 0 &&
+        rows.every((item) => item.passed);
+      const status = passed
+        ? "passed"
+        : skippedInstances
+          ? "skipped"
+          : flakyInstances
+            ? "flaky"
+            : unexpectedInstances
+              ? "unexpected"
+              : "failed";
+      return {
+        id,
+        executed,
+        passed,
+        skipped: skippedInstances > 0,
+        flaky: flakyInstances > 0,
+        unexpected: unexpectedInstances > 0,
+        status,
+        project_ids: rows.map((item) => item.project_id).sort(),
+        executed_instances: executedInstances,
+        failed_instances: failedInstances,
+        skipped_instances: skippedInstances,
+        flaky_instances: flakyInstances,
+      };
+    })
+    .sort((left, right) => left.id.localeCompare(right.id));
 }
 
 function record(value: unknown): Record<string, unknown> | null {

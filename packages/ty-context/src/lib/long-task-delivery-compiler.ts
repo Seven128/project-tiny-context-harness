@@ -1,24 +1,13 @@
 import path from "node:path";
-import { captureContextGraphSnapshot } from "./context-graph-snapshot.js";
+import { validateContractForActivation } from "./long-task-activation-validation.js";
 import {
   DELIVERY_CONTRACT_FILE,
   parseDeliveryContractBundle,
 } from "./long-task-delivery-parser.js";
 import type {
   CompiledDeliveryContractV2,
-  CompiledOutcomeV2,
-  DeliveryContractV2,
   InitialTaskBaseV2,
 } from "./long-task-delivery-types.js";
-import { compileProductClaimCoverage } from "./long-task-claims.js";
-import { freezeDeliveryCheck } from "./long-task-runner-freeze.js";
-import { classifyLongTaskRisk, validateRiskProof } from "./long-task-risk.js";
-import {
-  hashDeclaredFiles,
-  validateCounterfactualPaths,
-  validateTechnicalPaths,
-  validateVerificationInputSeparation,
-} from "./long-task-delivery-preflight.js";
 import { canonicalValueJson, sha256Hex } from "./strict-codec.js";
 import {
   changedAuthoritySections,
@@ -36,9 +25,7 @@ import {
 import { validateActualRiskSurfaces } from "./long-task-risk-surfaces.js";
 import { captureVerifierIdentity } from "./long-task-verifier-identity.js";
 import { verifierAuthorityDiff } from "./long-task-verifier-authority.js";
-import { validateSourceAnchors } from "./long-task-source-validation.js";
 import {
-  captureWorkspaceManifest,
   changedWorkspacePaths,
   currentGitTree,
   repoRelative,
@@ -65,40 +52,35 @@ export async function compileDeliveryContract(
   if (!workdirRelative)
     throw new Error("long_task_workdir_must_not_be_repository_root");
   const contractFile = path.join(workdir, DELIVERY_CONTRACT_FILE);
-  const parsed = await parseDeliveryContractBundle(workdir, repository);
+  const parsed = await parseDeliveryContractBundle(workdir, repository, {
+    validate_structure: false,
+  });
   const contract = parsed.contract;
-  await validateSourceAnchors(repository, contract.source_claims);
-  const claims = compileProductClaimCoverage(contract);
-  const risk = classifyLongTaskRisk(contract);
-  validateRiskProof(contract, risk);
-  const decisionClaims = contract.source_claims.filter(
-    (claim) => claim.disposition.type === "decision_required",
-  );
-  if (decisionClaims.length)
-    throw new Error(
-      `source_claim_decision_required:${decisionClaims.map((claim) => claim.key).join(",")}`,
-    );
+  const validation = await validateContractForActivation({
+    contract,
+    repository,
+    workdir,
+    mode: "fail_fast",
+  });
+  const claims = validation.claims!;
+  const risk = validation.risk!;
+  const sourceHashes = validation.source_hashes!;
+  const sourceItems = validation.source_items!;
+  const context = validation.context_snapshot!;
+  const current = validation.workspace!;
+  const globalChecks = validation.global_checks;
+  const outcomes = validation.outcomes;
 
   const contractHash = sha256Hex(canonicalValueJson(contract));
-  const sourceHashes = await hashDeclaredFiles(
-    repository,
-    contract.task.source_paths,
-    "source",
-  );
-  const context = await captureContextGraphSnapshot(
-    repository,
-    contract.task.context_refs,
-    contract.task.context_snapshot_mode,
-  );
   const authorityMaterials = computeAuthorityMaterials(
     contract,
     sourceHashes,
+    sourceItems,
     context,
   );
   const previous = options.live_gate
     ? null
     : (options.previous_authority ?? null);
-  const current = await captureWorkspaceManifest(repository, workdir);
   const initialTaskBase = options.initial_task_base ??
     previous?.initial_task_base ?? {
       git_commit: current.git_head,
@@ -110,44 +92,15 @@ export async function compileDeliveryContract(
     changedWorkspacePaths(initialTaskBase.workspace_manifest, current),
     contract,
   );
-  validateTechnicalPaths(contract, repository, workdirRelative, current);
 
   const verifier = await captureVerifierIdentity(
     repository,
     options.require_completion_gate !== false,
   );
-  const globalChecks = await Promise.all(
-    contract.global.acceptance.checks.map((check) =>
-      freezeDeliveryCheck(check, null, repository, current),
-    ),
-  );
-  const outcomes: CompiledOutcomeV2[] = await Promise.all(
-    contract.outcomes.map(async (outcome) => ({
-      ...outcome,
-      internal_id: `OUT.${outcome.key}`,
-      generated_claims: claims.by_outcome[outcome.key],
-      risk_reasons: risk.reasons_by_outcome[outcome.key],
-      acceptance: {
-        ...outcome.acceptance,
-        checks: await Promise.all(
-          outcome.acceptance.checks.map((check) =>
-            freezeDeliveryCheck(check, outcome.key, repository, current),
-          ),
-        ),
-      },
-    })),
-  );
   const allChecks = [
     ...globalChecks,
     ...outcomes.flatMap((outcome) => outcome.acceptance.checks),
   ];
-  validateVerificationInputSeparation(contract, allChecks, workdirRelative);
-  await validateCounterfactualPaths(
-    contract,
-    outcomes,
-    repository,
-    workdirRelative,
-  );
 
   const authorityHashes = computeAuthorityHashes(contract);
   authorityHashes.acceptance_authority_hash = sha256Hex(
@@ -162,6 +115,7 @@ export async function compileDeliveryContract(
         package_script: check.runner.package_script,
         verification_inputs: check.verification_input_hashes,
         raw_execution_identity: check.raw_execution_identity,
+        evidence_adapter: check.evidence_adapter,
       })),
     }),
   );
@@ -220,6 +174,7 @@ export async function compileDeliveryContract(
       ]),
     ),
     source_hashes: sourceHashes,
+    source_items: sourceItems,
     context_snapshot: {
       mode: context.mode,
       topology_sha256: context.topology_sha256,

@@ -19,6 +19,7 @@ import {
   repoRelative,
   resolveInsideRepository,
 } from "./long-task-workspace.js";
+import { evidenceAdapterForRunner } from "./long-task-evidence-adapter-policy.js";
 
 export async function freezeDeliveryCheck(
   check: DeliveryCheckV2,
@@ -78,6 +79,7 @@ export async function freezeDeliveryCheck(
     ...check,
     internal_id: `${prefix}.${check.key}`,
     outcome_key: outcomeKey,
+    evidence_adapter: evidenceAdapterForRunner(check.runner.type),
     runner: await freezeRunner(
       check,
       repository,

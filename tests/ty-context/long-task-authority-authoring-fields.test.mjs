@@ -1,4 +1,5 @@
-import { rm } from "node:fs/promises";
+import { rm, writeFile } from "node:fs/promises";
+import path from "node:path";
 import test from "node:test";
 import {
   createDeliveryFixture,
@@ -23,6 +24,9 @@ test("Requirement, criterion, Source-AC mapping and AC removal remain review aut
       type: "acceptance",
       refs: ["first.first-check.first-result"],
     };
+    removedRequirement.outcomes[0].acceptance.checks[0].positive_assertions[0].criterion =
+      "The first outcome must be observable.";
+    await writeSource(fixture.root, "acceptance");
     await writeContract(fixture.workdir, removedRequirement);
     await expectDecision(fixture, {
       field: "product_claims_removed",
@@ -31,6 +35,7 @@ test("Requirement, criterion, Source-AC mapping and AC removal remain review aut
     });
 
     const changedCriterion = structuredClone(baseline);
+    await writeSource(fixture.root, "requirement");
     changedCriterion.outcomes[0].acceptance.checks[0].positive_assertions[0].criterion =
       "A changed readable acceptance criterion.";
     await writeContract(fixture.workdir, changedCriterion);
@@ -43,6 +48,9 @@ test("Requirement, criterion, Source-AC mapping and AC removal remain review aut
       type: "acceptance",
       refs: ["first.first-check.first-result"],
     };
+    changedSourceAcceptance.outcomes[0].acceptance.checks[0].positive_assertions[0].criterion =
+      "The first outcome must be observable.";
+    await writeSource(fixture.root, "acceptance");
     await writeContract(fixture.workdir, changedSourceAcceptance);
     await expectDecision(fixture, {
       reason: "source_claim_removed_or_changed",
@@ -54,12 +62,14 @@ test("Requirement, criterion, Source-AC mapping and AC removal remain review aut
         ...replacedAcceptance.outcomes[0].acceptance.checks[0]
           .positive_assertions[0],
         key: "replacement-result",
+        criterion: "The first outcome must be observable.",
       },
     ];
     replacedAcceptance.source_claims[0].disposition = {
       type: "acceptance",
       refs: ["first.first-check.replacement-result"],
     };
+    await writeSource(fixture.root, "acceptance");
     await writeContract(fixture.workdir, replacedAcceptance);
     await expectDecision(fixture, {
       reason: "acceptance_not_monotonic",
@@ -68,3 +78,15 @@ test("Requirement, criterion, Source-AC mapping and AC removal remain review aut
     await rm(fixture.root, { recursive: true, force: true });
   }
 });
+
+async function writeSource(root, kind) {
+  await writeFile(
+    path.join(root, "source.md"),
+    `# Fixture source
+
+<!-- ty-source-item:start key=first-observable kind=${kind} -->
+The first outcome must be observable.
+<!-- ty-source-item:end -->
+`,
+  );
+}

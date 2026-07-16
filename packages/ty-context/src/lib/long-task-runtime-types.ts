@@ -6,35 +6,18 @@ import type {
   ProofSurface,
 } from "./long-task-contract-types.js";
 import type {
+  AuthorityHashesV2,
+  InitialTaskBaseV2,
+  NextAuthorityMaterialsV2,
+  VerifierIdentityV2,
+} from "./long-task-authority-types.js";
+import type { EvidenceAdapter } from "./long-task-evidence-adapter-types.js";
+import type {
   EffectiveRiskLevel,
   RiskFactName,
 } from "./long-task-risk-types.js";
-
-export interface WorkspaceFileV2 {
-  path: string;
-  mode: number;
-  size: number;
-  sha256: string;
-}
-
-export interface WorkspaceFingerprintV2 {
-  head: string;
-  head_tree: string;
-  index_tree: string;
-  staged_diff_sha256: string;
-  unstaged_diff_sha256: string;
-  untracked_sha256: string;
-  status_sha256: string;
-  identity: string;
-}
-
-export interface WorkspaceManifestV2 {
-  repository_root: string;
-  git_head: string;
-  files: WorkspaceFileV2[];
-  fingerprint: WorkspaceFingerprintV2;
-  snapshot_sha256: string;
-}
+import type { CompiledSourceItemV2 } from "./long-task-source-authority-types.js";
+import type { WorkspaceManifestV2 } from "./long-task-workspace-runtime-types.js";
 
 export interface FrozenRunnerV2 extends DeliveryRunnerV2 {
   executable: string;
@@ -51,6 +34,7 @@ export interface CompiledCheckV2 extends Omit<DeliveryCheckV2, "runner"> {
   internal_id: string;
   outcome_key: string | null;
   runner: FrozenRunnerV2;
+  evidence_adapter: EvidenceAdapter;
   verification_input_hashes: Record<string, string>;
   raw_execution_identity: string;
 }
@@ -93,97 +77,17 @@ export interface ClaimCoverageSummaryV2 {
   >;
   claims_by_outcome: Record<
     string,
-    Record<string, { covered: boolean; proofs: ClaimProofV2[] }>
+    Record<
+      string,
+      {
+        required_surfaces: ProofSurface[];
+        covered_surfaces: ProofSurface[];
+        missing_surfaces: ProofSurface[];
+        covered: boolean;
+        proofs: ClaimProofV2[];
+      }
+    >
   >;
-}
-
-export interface AuthorityHashesV2 {
-  source_authority_hash: string;
-  product_authority_hash: string;
-  acceptance_authority_hash: string;
-  risk_authority_hash: string;
-  technical_authority_hash: string;
-}
-
-export interface ProductSemanticProjectionV2 {
-  task_goal: string;
-  global_non_goals: Array<{ key: string; statement: string }>;
-  outcomes: Array<{
-    key: string;
-    title: string;
-    observable_result: string;
-    owner: {
-      label: string;
-      owner_surfaces: string[];
-    };
-    requirements: Array<{
-      key: string;
-      statement: string;
-      required_proof_surfaces: ProofSurface[];
-    }>;
-    controls: Array<{
-      key: string;
-      location: string;
-      trigger: string;
-      input: string;
-      loading_state: string;
-      empty_state: string;
-      success_state: string;
-      failure_state: string;
-      feedback: string;
-    }>;
-    non_completing_outcomes: Array<{ key: string; statement: string }>;
-  }>;
-}
-
-export interface GlobalSemanticProjectionV2 {
-  constraints: Array<{ key: string; statement: string }>;
-  forbidden_shortcuts: Array<{ key: string; statement: string }>;
-}
-
-export interface ContextAuthoritySnapshotV2 {
-  mode: "referenced" | "full";
-  topology_sha256: string;
-  files: string[];
-  sha256: Record<string, string>;
-}
-
-export interface NextAuthorityMaterialsV2 {
-  source_hashes: Record<string, string>;
-  context_snapshot: ContextAuthoritySnapshotV2;
-  product_semantics: ProductSemanticProjectionV2;
-  global_semantics: GlobalSemanticProjectionV2;
-}
-
-export interface AuthorityMaterialHashesV2 {
-  source_hashes_sha256: string;
-  context_snapshot_sha256: string;
-  product_semantics_sha256: string;
-  global_semantics_sha256: string;
-}
-
-export interface InitialTaskBaseV2 {
-  git_commit: string;
-  git_tree: string;
-  workspace_manifest: WorkspaceManifestV2;
-}
-
-export interface VerifierContentAuthority {
-  package_name: string;
-  bundle_sha256: string;
-  schema_sha256: string;
-  hook_sha256: string;
-  bundle_files: Record<string, string>;
-}
-
-export interface VerifierRuntimeLocator {
-  package_version: string;
-  package_root: string;
-}
-
-export interface VerifierIdentityV2
-  extends VerifierContentAuthority, VerifierRuntimeLocator {
-  package_name: "project-tiny-context-harness";
 }
 
 export interface CompiledOutcomeV2 extends Omit<
@@ -207,6 +111,7 @@ export interface CompiledDeliveryContractV2 {
   contract_sha256: string;
   contract_files: Record<string, string>;
   source_hashes: Record<string, string>;
+  source_items: CompiledSourceItemV2[];
   context_snapshot: {
     mode: "referenced" | "full";
     topology_sha256: string;
@@ -296,6 +201,7 @@ export interface CheckExecutionResultV2 {
   outcome_key: string | null;
   check_key: string;
   status: CheckExecutionStatusV2;
+  evidence_adapter: EvidenceAdapter;
   execution_identity: string;
   assertion_results: AssertionResultV2[];
   observations: Record<string, unknown>;

@@ -53,7 +53,7 @@ test("declared Source paths require Source Claims while outcome_files remains ph
       compileDeliveryContract(sourceFixture.workdir, sourceFixture.root, {
         require_completion_gate: false,
       }),
-      /source_claims_required_for_source_paths/u,
+      /source_authority_required/u,
     );
   } finally {
     await rm(sourceFixture.root, { recursive: true, force: true });
@@ -163,6 +163,7 @@ test("counterfactual mutation must stay on carriers and cannot delete verificati
     fixture.contract.risk.requested_level = "strict";
     check.negative_assertions.push({
       key: "result-not-false",
+      criterion: "The result remains comparable in the negative scenario.",
       claims: ["result"],
       observation: "result_not_false",
       operator: "not_equals",
@@ -170,6 +171,7 @@ test("counterfactual mutation must stay on carriers and cannot delete verificati
     });
     outcome.acceptance.counterfactual_controls.push({
       key: "missing-carrier",
+      binding_key: "state-first",
       claims: ["obligation.implement-first"],
       check_key: check.key,
       mutation: { type: "remove_paths", paths: ["src/missing.json"] },
@@ -180,7 +182,7 @@ test("counterfactual mutation must stay on carriers and cannot delete verificati
       compileDeliveryContract(fixture.workdir, fixture.root, {
         require_completion_gate: false,
       }),
-      /counterfactual_path_not_found:first:src\/missing\.json/,
+      /counterfactual_path_outside_binding:first:missing-carrier:src\/missing\.json/,
     );
     outcome.acceptance.counterfactual_controls[0].mutation.paths = [
       "tests/oracle.mjs",

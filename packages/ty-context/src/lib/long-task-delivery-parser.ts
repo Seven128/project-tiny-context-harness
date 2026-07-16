@@ -134,10 +134,8 @@ function parseRoot(raw: string, bundle: boolean): Record<string, unknown> {
   return object(
     decoded,
     "$",
-    ["schema_version", "task", "risk", "global"],
-    bundle
-      ? ["source_claims", "outcomes", "outcome_files"]
-      : ["source_claims", "outcomes"],
+    ["schema_version", "task", "source_claims", "risk", "global"],
+    bundle ? ["outcomes", "outcome_files"] : ["outcomes"],
   );
 }
 
@@ -153,9 +151,7 @@ function parseContractRoot(
   return {
     schema_version: "long-task-delivery-v2",
     task: parseTask(root.task),
-    source_claims: Object.hasOwn(root, "source_claims")
-      ? parseSourceClaims(root.source_claims, "source_claims")
-      : [],
+    source_claims: parseSourceClaims(root.source_claims, "source_claims"),
     risk: parseRisk(root.risk),
     global: parseGlobal(root.global),
     outcomes,

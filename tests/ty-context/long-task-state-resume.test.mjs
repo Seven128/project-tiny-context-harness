@@ -185,6 +185,7 @@ console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution
     original.artifact_globs = ["artifacts/a.json"];
     original.positive_assertions.push({
       key: "single-invocation",
+      criterion: "The shared Raw Execution is invoked exactly once.",
       claims: ["result"],
       observation: "invocation_count",
       operator: "equals",
@@ -193,6 +194,9 @@ console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution
     const second = structuredClone(original);
     second.key = "same-execution-check";
     second.artifact_globs = ["artifacts/b.json"];
+    second.positive_assertions = second.positive_assertions.map(
+      (assertion) => ({ ...assertion, claims: [] }),
+    );
     fixture.contract.outcomes[0].acceptance.checks.push(second);
     await writeContract(fixture.workdir, fixture.contract);
     await runCli(fixture.root, ["enable", "long-task"]);

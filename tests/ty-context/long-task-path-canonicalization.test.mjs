@@ -285,7 +285,8 @@ function pathCases() {
         (contract.outcomes[0].acceptance.counterfactual_controls = [
           {
             key: "remove-state",
-            claims: ["result"],
+            binding_key: "state-first",
+            claims: ["obligation.implement-first"],
             check_key: "first-check",
             mutation: { type: "remove_paths", paths: [value] },
             expected_assertion_failures: ["first-result"],
@@ -301,7 +302,8 @@ function pathCases() {
         (contract.outcomes[0].acceptance.counterfactual_controls = [
           {
             key: "replace-state",
-            claims: ["result"],
+            binding_key: "state-first",
+            claims: ["obligation.implement-first"],
             check_key: "first-check",
             mutation: {
               type: "replace_file",

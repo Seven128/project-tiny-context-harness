@@ -1,4 +1,5 @@
 import { readFile, stat } from "node:fs/promises";
+import { validateCounterfactualBindingClaims } from "./long-task-counterfactual-claim-policy.js";
 import type {
   CompiledDeliveryContractV2,
   CompiledOutcomeV2,
@@ -156,12 +157,15 @@ export async function validateCounterfactualPaths(
         check.runner.resolved_target,
       ]),
     );
-    const mutationEnvelope = [
-      ...outcome.technical.expected_change_paths,
-      ...outcome.technical.bindings.flatMap((binding) => binding.carrier_paths),
-      ...outcome.acceptance.checks.flatMap((check) => check.input_paths),
-    ];
     for (const control of outcome.acceptance.counterfactual_controls) {
+      const binding = outcome.technical.bindings.find(
+        (item) => item.key === control.binding_key,
+      );
+      if (!binding)
+        throw new Error(
+          `counterfactual_binding_unknown:${outcome.key}:${control.key}:${control.binding_key}`,
+        );
+      validateCounterfactualBindingClaims(outcome, control, binding);
       const mutated =
         control.mutation.type === "remove_paths"
           ? control.mutation.paths
@@ -188,12 +192,14 @@ export async function validateCounterfactualPaths(
             `counterfactual_verification_input_protected:${outcome.key}:${relative}`,
           );
         if (
-          !mutationEnvelope.some((pattern) =>
-            matchesRepoPattern(normalized, pattern),
+          !binding.carrier_paths.some(
+            (pattern) =>
+              proveRepositoryPatternSubset(normalized, pattern).status ===
+              "proven_subset",
           )
         )
           throw new Error(
-            `counterfactual_path_outside_carrier:${outcome.key}:${relative}`,
+            `counterfactual_path_outside_binding:${outcome.key}:${control.key}:${relative}`,
           );
         if (!(await stat(target).catch(() => null)))
           throw new Error(

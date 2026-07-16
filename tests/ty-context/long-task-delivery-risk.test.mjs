@@ -76,6 +76,7 @@ test("strict security proof is required on the affected Outcome, not elsewhere",
   firstCheck.proof_surface = "security_boundary";
   firstCheck.negative_assertions.push({
     key: "first-negative",
+    criterion: "The strict negative proof remains explicit.",
     claims: ["result"],
     observation: "result",
     operator: "not_equals",
@@ -83,6 +84,7 @@ test("strict security proof is required on the affected Outcome, not elsewhere",
   });
   contract.outcomes[0].acceptance.counterfactual_controls.push({
     key: "first-counterfactual",
+    binding_key: "state-first",
     claims: ["obligation.implement-first"],
     check_key: firstCheck.key,
     mutation: { type: "remove_paths", paths: ["src/state.json"] },

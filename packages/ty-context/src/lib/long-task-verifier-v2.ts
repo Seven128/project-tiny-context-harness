@@ -9,7 +9,10 @@ import type {
 } from "./long-task-delivery-types.js";
 import { deliveryCompileFreshness } from "./long-task-freshness.js";
 import { assertVerifierAuthorityCurrent } from "./long-task-freshness.js";
-import { enrichCheckResultFindings } from "./long-task-finding-context.js";
+import {
+  enrichCheckResultFindings,
+  enrichFinding,
+} from "./long-task-finding-context.js";
 import { executeCheckRunner } from "./long-task-check-runner.js";
 import {
   evaluateCheckEvidence,
@@ -138,7 +141,11 @@ export async function runDeliveryChecks(
   if (finalGate)
     findings.push(...finalPathFindings(compiled, snapshot.manifest));
   if (findings.length)
-    return { snapshot: snapshot.manifest, check_results: [], findings };
+    return {
+      snapshot: snapshot.manifest,
+      check_results: [],
+      findings: findings.map((finding) => enrichFinding(compiled, finding)),
+    };
 
   const rawExecutions = new Map<string, RawCommandExecutionV2>();
   const checkResults: CheckExecutionResultV2[] = [];
@@ -191,7 +198,11 @@ export async function runDeliveryChecks(
       );
     }
   }
-  return { snapshot: snapshot.manifest, check_results: checkResults, findings };
+  return {
+    snapshot: snapshot.manifest,
+    check_results: checkResults,
+    findings: findings.map((finding) => enrichFinding(compiled, finding)),
+  };
 }
 
 function finalPathFindings(
@@ -224,6 +235,11 @@ function finalPathFindings(
           code: "binding_missing",
           outcome_key: outcome.key,
           check_key: null,
+          claim_keys: outcome.generated_claims.some(
+            (claim) => claim.local_key === `obligation.${binding.key}`,
+          )
+            ? [`obligation.${binding.key}`]
+            : [],
           message: `Planned binding is missing: ${binding.target}`,
           expected: binding.carrier_paths,
           next_action: "Implement the declared binding and rerun verification.",

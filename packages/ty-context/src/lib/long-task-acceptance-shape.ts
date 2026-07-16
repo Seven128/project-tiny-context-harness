@@ -24,6 +24,7 @@ export function parseCounterfactuals(
     const itemLabel = `${label}[${index}]`;
     const row = object(item, itemLabel, [
       "key",
+      "binding_key",
       "claims",
       "check_key",
       "mutation",
@@ -42,6 +43,7 @@ export function parseCounterfactuals(
     );
     return {
       key: key(row.key, `${itemLabel}.key`),
+      binding_key: key(row.binding_key, `${itemLabel}.binding_key`),
       claims: strings(row.claims, `${itemLabel}.claims`),
       check_key: key(row.check_key, `${itemLabel}.check_key`),
       mutation:

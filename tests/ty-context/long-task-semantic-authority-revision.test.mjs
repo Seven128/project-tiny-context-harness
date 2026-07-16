@@ -5,6 +5,7 @@ import test from "node:test";
 import {
   createDeliveryFixture,
   runCli,
+  runCliFailure,
   writeContract,
 } from "./long-task-delivery-fixtures.mjs";
 import {
@@ -19,8 +20,15 @@ test("Source authority is locked by first compile even before verify", async () 
     await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
     await writeFile(
       path.join(fixture.root, "source.md"),
-      "# Fixture source\n\nRevised before execution.\n",
+      `# Fixture source
+
+<!-- ty-source-item:start key=first-observable kind=requirement -->
+Revised before execution.
+<!-- ty-source-item:end -->
+`,
     );
+    fixture.contract.source_claims[0].statement = "Revised before execution.";
+    await writeContract(fixture.workdir, fixture.contract);
     await assert.rejects(
       () => runCli(fixture.root, ["long-task", "compile", fixture.workdir]),
       /authority_revision_requires_revise_flag/u,
@@ -47,7 +55,11 @@ test("Source, Context, Product, Global, and Product Claim changes require exact 
     await writeContract(fixture.workdir, fixture.contract);
     await runCli(fixture.root, ["enable", "long-task"]);
     await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
-    await runCli(fixture.root, ["long-task", "verify", fixture.workdir]);
+    await runCliFailure(fixture.root, [
+      "long-task",
+      "verify",
+      fixture.workdir,
+    ]);
     const sourceFile = path.join(fixture.root, "source.md");
     const contextFile = path.join(
       fixture.root,
@@ -146,6 +158,18 @@ test("Source, Context, Product, Global, and Product Claim changes require exact 
         },
       },
       {
+        address:
+          "outcomes.first.requirements.observe-first.required_proof_surfaces",
+        mutate(contract) {
+          contract.outcomes[0].product.requirements[0].required_proof_surfaces =
+            ["data_state"];
+          contract.outcomes[0].technical.obligations[0].required_proof_surfaces =
+            ["data_state"];
+          contract.outcomes[0].acceptance.checks[0].proof_surface =
+            "data_state";
+        },
+      },
+      {
         address: "outcomes.first.controls.submit.location",
         mutate(contract) {
           contract.outcomes[0].product.controls[0].location =
@@ -203,8 +227,9 @@ test("Source, Context, Product, Global, and Product Claim changes require exact 
     });
     addedClaim.outcomes[0].acceptance.checks[0].positive_assertions.push({
       key: "new-product-scope-proof",
+      criterion: "The newly declared product scope is implemented.",
       claims: ["obligation.new-product-scope"],
-      observation: "result_copy",
+      observation: "new_product_scope",
       operator: "equals",
       expected: true,
     });
@@ -232,9 +257,11 @@ test("mechanical proof additions and path tightening remain automatic revisions"
 
     fixture.contract.outcomes[0].acceptance.checks[0].positive_assertions.push({
       key: "additional-proof",
+      criterion: "The additional proof remains true.",
       claims: ["result"],
       observation: "result_copy",
-      operator: "truthy",
+      operator: "equals",
+      expected: true,
     });
     await writeContract(fixture.workdir, fixture.contract);
     let result = await runCli(fixture.root, [

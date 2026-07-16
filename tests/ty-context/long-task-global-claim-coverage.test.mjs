@@ -231,8 +231,9 @@ function makeGlobalCheck(
     ? [
         {
           key: "global-positive",
+          criterion: "The declared Global positive Claim is satisfied.",
           claims: positive,
-          observation: "result",
+          observation: "result_copy",
           operator: "equals",
           expected,
         },
@@ -242,6 +243,7 @@ function makeGlobalCheck(
     ? [
         {
           key: "global-negative",
+          criterion: "The declared Global negative Claim is satisfied.",
           claims: negative,
           observation: "negative",
           operator: "equals",

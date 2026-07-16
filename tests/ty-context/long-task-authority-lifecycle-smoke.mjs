@@ -179,9 +179,11 @@ try {
   await waitForFile(started);
   fixture.contract.outcomes[0].acceptance.checks[0].positive_assertions.push({
     key: "race-proof",
+    criterion: "The authority race proof remains observable.",
     claims: ["result"],
     observation: "result_copy",
-    operator: "truthy",
+    operator: "equals",
+    expected: true,
   });
   await writeContract(fixture.workdir, fixture.contract);
   const revisionB = await runCli(fixture.root, [
@@ -270,9 +272,11 @@ function addEnvironmentCheck(contract) {
     positive_assertions: [
       {
         key: "environment-result",
+        criterion: "The environment-gated result remains observable.",
         claims: ["result"],
         observation: "result",
-        operator: "truthy",
+        operator: "equals",
+        expected: true,
       },
     ],
     environment_requirements: [

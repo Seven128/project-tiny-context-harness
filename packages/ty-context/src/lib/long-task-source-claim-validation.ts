@@ -1,12 +1,14 @@
 import type { DeliveryContractV2 } from "./long-task-delivery-types.js";
 import type { compileProductClaimCoverage } from "./long-task-claims.js";
 import { fail } from "./long-task-delivery-shape.js";
+import type { RiskFactName } from "./long-task-risk-types.js";
 
 export function validateSourceClaimMappings(
   contract: DeliveryContractV2,
   compiledClaims: ReturnType<typeof compileProductClaimCoverage>,
+  report?: ValidationReporter,
 ): void {
-  validateSourcePresence(contract);
+  validateSourcePresence(contract, report);
   const sources = new Set(contract.task.source_paths);
   const productClaims = new Set(
     Object.values(compiledClaims.by_outcome)
@@ -26,39 +28,79 @@ export function validateSourceClaimMappings(
       (item) => `forbidden_path.${item.key}`,
     ),
   );
-  const acceptanceRefs = new Set(
+  const acceptanceRefs = new Map<
+    string,
+    DeliveryContractV2["outcomes"][number]["acceptance"]["checks"][number]["positive_assertions"][number]
+  >(
     contract.outcomes.flatMap((outcome) =>
       outcome.acceptance.checks.flatMap((check) =>
         [...check.positive_assertions, ...check.negative_assertions].map(
-          (assertion) => `${outcome.key}.${check.key}.${assertion.key}`,
+          (assertion) =>
+            [
+              `${outcome.key}.${check.key}.${assertion.key}`,
+              assertion,
+            ] as const,
         ),
       ),
     ),
+  );
+  const outcomeResults = new Set(
+    contract.outcomes.map((outcome) => `${outcome.key}.result`),
   );
   const externalConfirmations = new Set(
     contract.global.acceptance.external_confirmations.map((item) => item.key),
   );
   for (const claim of contract.source_claims) {
-    validateSourceReference(claim.key, claim.source_ref, sources);
+    validateSourceReference(claim.key, claim.source_ref, sources, report);
     const disposition = claim.disposition;
     if ("refs" in disposition && !disposition.refs.length)
-      fail("source_claim_disposition_refs_empty", claim.key);
+      issue(report, "source_claim_disposition_refs_empty", claim.key);
     if (disposition.type === "claim")
       for (const reference of disposition.refs) {
         if (reference.endsWith(".result"))
-          fail(
+          issue(
+            report,
             "source_claim_result_overcompression",
             `${claim.key}:${reference}`,
           );
         if (!productClaims.has(reference))
-          fail("source_claim_product_ref_unknown", `${claim.key}:${reference}`);
+          issue(
+            report,
+            "source_claim_product_ref_unknown",
+            `${claim.key}:${reference}`,
+          );
       }
-    if (disposition.type === "acceptance")
+    if (disposition.type === "acceptance") {
+      if (disposition.refs.length !== 1)
+        issue(report, "source_claim_acceptance_ref_count", claim.key);
       validateRefs(
         claim.key,
         disposition.refs,
-        acceptanceRefs,
+        new Set(acceptanceRefs.keys()),
         "source_claim_acceptance_ref_unknown",
+        report,
+      );
+      const reference = disposition.refs[0];
+      const assertion = acceptanceRefs.get(reference);
+      if (
+        assertion &&
+        (!assertion.claims.length ||
+          assertion.claims.every((item) => item === "result"))
+      )
+        issue(
+          report,
+          "source_claim_acceptance_result_only",
+          `${claim.key}:${reference}`,
+        );
+    }
+    if (
+      disposition.type === "outcome_result" &&
+      !outcomeResults.has(disposition.ref)
+    )
+      issue(
+        report,
+        "source_claim_outcome_result_ref_unknown",
+        `${claim.key}:${disposition.ref}`,
       );
     if (disposition.type === "external_confirmation")
       validateRefs(
@@ -66,6 +108,7 @@ export function validateSourceClaimMappings(
         disposition.refs,
         externalConfirmations,
         "source_claim_external_confirmation_ref_unknown",
+        report,
       );
     if (disposition.type === "global_constraint")
       validateGlobalRefs(
@@ -74,33 +117,60 @@ export function validateSourceClaimMappings(
         forbiddenPaths,
         globalClaims,
         coveredGlobalClaims,
+        report,
       );
+    if (disposition.type === "risk_fact")
+      validateRiskRefs(contract, claim.key, disposition.refs, report);
   }
 }
 
-function validateSourcePresence(contract: DeliveryContractV2): void {
-  if (contract.source_claims.length && !contract.task.source_paths.length)
-    fail(
-      "source_paths_required_for_source_claims",
-      "source_claims require at least one source file",
+function validateSourcePresence(
+  contract: DeliveryContractV2,
+  report?: ValidationReporter,
+): void {
+  if (!contract.task.source_paths.length || !contract.source_claims.length)
+    issue(
+      report,
+      "source_authority_required",
+      "source_paths and source_claims must be non-empty",
     );
-  if (contract.task.source_paths.length && !contract.source_claims.length)
-    fail(
-      "source_claims_required_for_source_paths",
-      contract.task.source_paths.join(","),
-    );
+}
+
+function validateRiskRefs(
+  contract: DeliveryContractV2,
+  claimKey: string,
+  refs: string[],
+  report?: ValidationReporter,
+): void {
+  for (const reference of refs) {
+    const separator = reference.indexOf(":");
+    const fact = reference.slice(0, separator) as RiskFactName;
+    const outcome = reference.slice(separator + 1);
+    if (
+      separator <= 0 ||
+      !outcome ||
+      !Object.hasOwn(contract.risk.facts, fact) ||
+      !contract.risk.facts[fact].includes(outcome)
+    )
+      issue(
+        report,
+        "source_claim_risk_fact_ref_unknown",
+        `${claimKey}:${reference}`,
+      );
+  }
 }
 
 function validateSourceReference(
   key: string,
   sourceRef: string,
   sources: Set<string>,
+  report?: ValidationReporter,
 ): void {
   const [sourceFile, anchor, ...extra] = sourceRef.split("#");
   if (!sourceFile || extra.length || (anchor !== undefined && !anchor))
-    fail("source_claim_ref_invalid", `${key}:${sourceRef}`);
+    issue(report, "source_claim_ref_invalid", `${key}:${sourceRef}`);
   if (!sources.has(sourceFile))
-    fail("source_claim_ref_unknown", `${key}:${sourceRef}`);
+    issue(report, "source_claim_ref_unknown", `${key}:${sourceRef}`);
 }
 
 function validateRefs(
@@ -108,9 +178,10 @@ function validateRefs(
   refs: string[],
   known: Set<string>,
   code: string,
+  report?: ValidationReporter,
 ): void {
   for (const reference of refs)
-    if (!known.has(reference)) fail(code, `${claimKey}:${reference}`);
+    if (!known.has(reference)) issue(report, code, `${claimKey}:${reference}`);
 }
 
 function validateGlobalRefs(
@@ -119,13 +190,37 @@ function validateGlobalRefs(
   forbiddenPaths: Set<string>,
   globalClaims: Map<string, unknown>,
   coveredGlobalClaims: Set<string>,
+  report?: ValidationReporter,
 ): void {
   for (const reference of refs)
     if (reference.startsWith("forbidden_path.")) {
       if (!forbiddenPaths.has(reference))
-        fail("source_claim_global_ref_unknown", `${claimKey}:${reference}`);
+        issue(
+          report,
+          "source_claim_global_ref_unknown",
+          `${claimKey}:${reference}`,
+        );
     } else if (!globalClaims.has(reference))
-      fail("source_claim_global_ref_unknown", `${claimKey}:${reference}`);
+      issue(
+        report,
+        "source_claim_global_ref_unknown",
+        `${claimKey}:${reference}`,
+      );
     else if (!coveredGlobalClaims.has(reference))
-      fail("source_claim_global_ref_uncovered", `${claimKey}:${reference}`);
+      issue(
+        report,
+        "source_claim_global_ref_uncovered",
+        `${claimKey}:${reference}`,
+      );
+}
+
+type ValidationReporter = (message: string) => void;
+
+function issue(
+  report: ValidationReporter | undefined,
+  code: string,
+  detail: string,
+): void {
+  if (!report) fail(code, detail);
+  report(`delivery_contract_invalid:${code}:${detail}`);
 }

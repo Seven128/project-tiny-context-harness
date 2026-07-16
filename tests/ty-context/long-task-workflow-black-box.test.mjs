@@ -5,13 +5,18 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { activeRecordPath } from "../../packages/ty-context/dist/lib/long-task-state.js";
+import {
+  activeRecordPath,
+  readProgressRecords,
+} from "../../packages/ty-context/dist/lib/long-task-state.js";
 import {
   commitCandidate,
   createDeliveryFixture,
   pathExists,
   readState,
+  writeContract,
 } from "./long-task-delivery-fixtures.mjs";
+import { expectDecision } from "./long-task-semantic-authority-revision-fixture.mjs";
 
 const exec = promisify(execFile);
 const cli = fileURLToPath(
@@ -21,7 +26,36 @@ const cli = fileURLToPath(
 test("controlled real V2 Smoke proves only the current Live Final Gate can finish", async () => {
   const fixture = await createDeliveryFixture({ twoOutcomes: true });
   try {
+    await writeFile(
+      path.join(fixture.root, "source.md"),
+      `# Fixture source
+
+<!-- ty-source-item:start key=first-observable kind=requirement -->
+The first outcome must be observable.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=second-acceptance kind=acceptance -->
+second is observable and implemented.
+<!-- ty-source-item:end -->
+`,
+    );
+    fixture.contract.source_claims.push({
+      key: "second-acceptance",
+      source_ref: "source.md#fixture-source",
+      statement: "second is observable and implemented.",
+      disposition: {
+        type: "acceptance",
+        refs: ["second.second-check.second-result"],
+      },
+    });
+    await writeContract(fixture.workdir, fixture.contract);
     await run(fixture.root, ["enable", "long-task"]);
+    const preflight = await run(fixture.root, [
+      "long-task",
+      "preflight",
+      fixture.workdir,
+    ]);
+    assert.equal(preflight.status, "ready");
     const compiled = await run(fixture.root, [
       "long-task",
       "compile",
@@ -47,6 +81,14 @@ test("controlled real V2 Smoke proves only the current Live Final Gate can finis
       "second",
     ]);
     assert.equal(secondFailure.check_results[0].status, "assertion_failed");
+    assert.ok(
+      secondFailure.check_results[0].findings.some(
+        (finding) =>
+          finding.source_claim_keys?.includes("second-acceptance") &&
+          finding.assertion_key === "second-result" &&
+          finding.observation === "result",
+      ),
+    );
 
     const localReceipt = path.join(
       fixture.workdir,
@@ -97,6 +139,63 @@ test("controlled real V2 Smoke proves only the current Live Final Gate can finis
       `${JSON.stringify(state)}\n`,
     );
     await commitCandidate(fixture.root);
+    const accepted = await run(fixture.root, [
+      "long-task",
+      "final-gate",
+      fixture.workdir,
+    ]);
+    assert.equal(accepted.workflow_status, "machine_accepted");
+
+    const revisedAcceptance =
+      "The second outcome remains observable and implemented.";
+    await writeFile(
+      path.join(fixture.root, "source.md"),
+      `# Fixture source
+
+<!-- ty-source-item:start key=first-observable kind=requirement -->
+The first outcome must be observable.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=second-acceptance kind=acceptance -->
+${revisedAcceptance}
+<!-- ty-source-item:end -->
+`,
+    );
+    fixture.contract.source_claims[1].statement = revisedAcceptance;
+    fixture.contract.outcomes[1].acceptance.checks[0].positive_assertions[0].criterion =
+      revisedAcceptance;
+    await writeContract(fixture.workdir, fixture.contract);
+    await assert.rejects(
+      () =>
+        run(fixture.root, [
+          "long-task",
+          "compile",
+          fixture.workdir,
+        ]),
+      /authority_revision_requires_revise_flag/u,
+    );
+    const pending = await expectDecision(fixture, {
+      field: "source_files_changed",
+      includes: "source.md",
+      reason: "source_file_content_changed",
+    });
+    await run(fixture.root, [
+      "long-task",
+      "approve-authority-revision",
+      fixture.workdir,
+      "--revision",
+      pending.revision_identity,
+    ]);
+    await run(fixture.root, [
+      "long-task",
+      "compile",
+      fixture.workdir,
+      "--revise",
+    ]);
+    assert.deepEqual(await readProgressRecords(fixture.workdir), {});
+    assert.equal(await pathExists(localReceipt), false);
+    await commitCandidate(fixture.root);
+
     const acceptedStop = await run(fixture.root, [
       "long-task",
       "stop-check",

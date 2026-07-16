@@ -81,12 +81,41 @@ export function validateRiskProof(
   for (const check of contract.global.acceptance.checks)
     validateCheck(check, "global", errors);
   for (const outcome of contract.outcomes) validateOutcome(outcome, errors);
+  validateWeakEvidenceSensitivity(contract, errors);
   if (decision.effective_level === "strict")
     validateStrict(contract, decision, errors);
   if (errors.length)
     throw new Error(
       `delivery_contract_preflight_failed:\n${errors.join("\n")}`,
     );
+}
+
+function validateWeakEvidenceSensitivity(
+  contract: DeliveryContractV2,
+  errors: string[],
+): void {
+  for (const outcome of contract.outcomes) {
+    const hasCounterfactual =
+      outcome.acceptance.counterfactual_controls.length > 0;
+    const explicitlyWeak = contract.risk.facts.weak_observability.includes(
+      outcome.key,
+    );
+    const customStructuredResultWithoutAlternative =
+      !outcome.acceptance.population &&
+      outcome.acceptance.checks.some(
+        (check) =>
+          check.runner.type !== "playwright_test" &&
+          check.artifact_globs.length === 0 &&
+          [...check.positive_assertions, ...check.negative_assertions].some(
+            (assertion) => assertion.claims.includes("result"),
+          ),
+      );
+    if (
+      !hasCounterfactual &&
+      (explicitlyWeak || customStructuredResultWithoutAlternative)
+    )
+      errors.push(`weak_evidence_sensitivity_required:${outcome.key}`);
+  }
 }
 
 function validateOutcome(outcome: DeliveryOutcomeV2, errors: string[]): void {

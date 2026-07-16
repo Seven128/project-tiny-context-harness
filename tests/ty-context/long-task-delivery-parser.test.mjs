@@ -88,7 +88,7 @@ test("Source Claims require declared Source files and valid file#anchor locators
   missingSources.task.source_paths = [];
   assert.throws(
     () => parseDeliveryContractText(YAML.stringify(missingSources)),
-    /source_paths_required_for_source_claims/u,
+    /source_authority_required/u,
   );
 
   const emptyAnchor = deliveryContract();

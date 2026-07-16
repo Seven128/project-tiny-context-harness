@@ -4,7 +4,7 @@
   "title": "Single-Goal Delivery Contract V2",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "task", "risk", "global"],
+  "required": ["schema_version", "task", "source_claims", "risk", "global"],
   "properties": {
     "schema_version": { "const": "long-task-delivery-v2" },
     "task": {
@@ -15,15 +15,15 @@
         "id": { "$ref": "#/$defs/key" },
         "title": { "$ref": "#/$defs/nonEmpty" },
         "goal": { "$ref": "#/$defs/nonEmpty" },
-        "source_paths": { "$ref": "#/$defs/nonEmptyStrings" },
+        "source_paths": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/nonEmpty" } },
         "context_refs": { "$ref": "#/$defs/nonEmptyStrings" },
         "context_snapshot_mode": { "enum": ["referenced", "full"], "default": "referenced" }
       }
     },
     "source_claims": {
       "type": "array",
-      "items": { "$ref": "#/$defs/sourceClaim" },
-      "default": []
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/sourceClaim" }
     },
     "risk": { "$ref": "#/$defs/risk" },
     "global": { "$ref": "#/$defs/global" },
@@ -33,21 +33,6 @@
   "oneOf": [
     { "required": ["outcomes"], "not": { "required": ["outcome_files"] } },
     { "required": ["outcome_files"], "not": { "required": ["outcomes"] } }
-  ],
-  "allOf": [
-    {
-      "if": {
-        "required": ["source_claims"],
-        "properties": { "source_claims": { "minItems": 1 } }
-      },
-      "then": {
-        "properties": {
-          "task": {
-            "properties": { "source_paths": { "minItems": 1 } }
-          }
-        }
-      }
-    }
   ],
   "$defs": {
     "key": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
@@ -75,8 +60,10 @@
         "statement": { "$ref": "#/$defs/nonEmpty" },
         "disposition": {
           "oneOf": [
-            { "type": "object", "additionalProperties": false, "required": ["type", "refs"], "properties": { "type": { "enum": ["claim", "acceptance", "global_constraint", "external_confirmation"] }, "refs": { "$ref": "#/$defs/nonEmptyStrings" } } },
-            { "type": "object", "additionalProperties": false, "required": ["type", "reason"], "properties": { "type": { "enum": ["out_of_scope", "decision_required"] }, "reason": { "$ref": "#/$defs/nonEmpty" } } }
+            { "type": "object", "additionalProperties": false, "required": ["type", "refs"], "properties": { "type": { "enum": ["claim", "global_constraint", "risk_fact", "external_confirmation"] }, "refs": { "$ref": "#/$defs/nonEmptyStrings" } } },
+            { "type": "object", "additionalProperties": false, "required": ["type", "refs"], "properties": { "type": { "const": "acceptance" }, "refs": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "$ref": "#/$defs/nonEmpty" } } } },
+            { "type": "object", "additionalProperties": false, "required": ["type", "ref"], "properties": { "type": { "const": "outcome_result" }, "ref": { "$ref": "#/$defs/nonEmpty" } } },
+            { "type": "object", "additionalProperties": false, "required": ["type", "reason"], "properties": { "type": { "const": "decision_required" }, "reason": { "$ref": "#/$defs/nonEmpty" } } }
           ]
         }
       }
@@ -315,9 +302,10 @@
     "counterfactual": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["key", "claims", "check_key", "mutation", "expected_assertion_failures"],
+      "required": ["key", "binding_key", "claims", "check_key", "mutation", "expected_assertion_failures"],
       "properties": {
         "key": { "$ref": "#/$defs/key" },
+        "binding_key": { "$ref": "#/$defs/key" },
         "claims": { "$ref": "#/$defs/nonEmptyStrings" },
         "check_key": { "$ref": "#/$defs/key" },
         "expected_assertion_failures": { "$ref": "#/$defs/keys" },

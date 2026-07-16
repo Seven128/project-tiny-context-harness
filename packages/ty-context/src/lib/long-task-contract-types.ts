@@ -5,10 +5,11 @@ import type {
 
 export type SourceClaimDispositionV2 =
   | { type: "claim"; refs: string[] }
-  | { type: "acceptance"; refs: string[] }
+  | { type: "acceptance"; refs: [string] }
+  | { type: "outcome_result"; ref: string }
   | { type: "global_constraint"; refs: string[] }
+  | { type: "risk_fact"; refs: string[] }
   | { type: "external_confirmation"; refs: string[] }
-  | { type: "out_of_scope"; reason: string }
   | { type: "decision_required"; reason: string };
 
 export interface SourceClaimV2 {
@@ -165,6 +166,7 @@ export type CounterfactualMutationV2 =
 
 export interface CounterfactualControlV2 {
   key: string;
+  binding_key: string;
   claims: string[];
   check_key: string;
   mutation: CounterfactualMutationV2;

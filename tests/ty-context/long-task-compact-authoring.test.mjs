@@ -80,10 +80,18 @@ function expandedContract() {
     check.positive_assertions[0].claims.filter(
       (claim) => !claim.startsWith("requirement."),
     );
-  contract.source_claims[0].disposition = {
-    type: "acceptance",
-    refs: ["first.first-check.first-result"],
-  };
+  contract.source_claims[0].disposition.refs = [
+    "first.obligation.implement-first",
+  ];
+  check.proof_surface = "ui_browser";
+  check.runner.type = "playwright_test";
+  check.runner.target = "tests/oracle.mjs";
+  check.positive_assertions[0].observation =
+    "playwright.case.first-result.passed";
+  contract.outcomes[0].technical.obligations[0].required_proof_surfaces = [
+    "ui_browser",
+  ];
+  check.artifact_globs = [];
   check.runner.argv = [];
   check.runner.idempotent = false;
   check.input_paths = [];

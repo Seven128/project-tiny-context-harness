@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { evaluateOutcomeCounterfactuals } from "../../packages/ty-context/dist/lib/long-task-evidence-v2.js";
+import {
+  evaluateOutcomeCounterfactuals,
+  isValidCounterfactualCheckResult,
+} from "../../packages/ty-context/dist/lib/long-task-evidence-v2.js";
 import {
   createDeliveryFixture,
   runCli,
@@ -17,6 +20,7 @@ test("Counterfactual accepts only the exact designated Assertion failure", async
     check.runner.timeout_ms = 120;
     check.positive_assertions.push({
       key: "other-stays-true",
+      criterion: "The unrelated observation remains true.",
       claims: ["result"],
       observation: "other",
       operator: "equals",
@@ -25,6 +29,7 @@ test("Counterfactual accepts only the exact designated Assertion failure", async
     outcome.acceptance.counterfactual_controls = [
       {
         key: "remove-state",
+        binding_key: "state-first",
         claims: ["obligation.implement-first"],
         check_key: check.key,
         mutation: { type: "remove_paths", paths: ["src/state.json"] },
@@ -81,7 +86,14 @@ test("Counterfactual accepts only the exact designated Assertion failure", async
       "population_coverage_failed",
     ]);
 
-    for (const mode of ["timeout", "blocked", "invalid", "extra-failure"]) {
+    for (const mode of [
+      "timeout",
+      "blocked",
+      "invalid",
+      "observation-missing",
+      "observation-type",
+      "extra-failure",
+    ]) {
       await writeOracle(fixture.root, mode);
       findings = await evaluateOutcomeCounterfactuals(
         compiled.outcomes[0],
@@ -109,6 +121,7 @@ test("Counterfactual cannot delete the runner or a declared helper", async () =>
       outcome.acceptance.counterfactual_controls = [
         {
           key: "delete-verifier-input",
+          binding_key: "state-first",
           claims: ["obligation.implement-first"],
           check_key: check.key,
           mutation: { type: "remove_paths", paths: [target] },
@@ -131,6 +144,73 @@ test("Counterfactual cannot delete the runner or a declared helper", async () =>
   }
 });
 
+test("Counterfactual Claims must belong to the designated sensitive Assertion", async () => {
+  const fixture = await createDeliveryFixture();
+  try {
+    const outcome = fixture.contract.outcomes[0];
+    outcome.technical.obligations.push({
+      key: "unrelated",
+      statement: "Preserve an unrelated obligation.",
+      required_proof_surfaces: ["runtime_behavior"],
+    });
+    outcome.acceptance.checks[0].positive_assertions.push({
+      key: "unrelated-proof",
+      criterion: "The unrelated obligation remains observable.",
+      claims: ["obligation.unrelated"],
+      observation: "other",
+      operator: "equals",
+      expected: true,
+    });
+    outcome.acceptance.counterfactual_controls = [
+      {
+        key: "unrelated-claim",
+        binding_key: "state-first",
+        claims: ["obligation.unrelated"],
+        check_key: "first-check",
+        mutation: { type: "remove_paths", paths: ["src/state.json"] },
+        expected_assertion_failures: ["first-result"],
+      },
+    ];
+    await writeContract(fixture.workdir, fixture.contract);
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await assert.rejects(
+      runCli(fixture.root, ["long-task", "compile", fixture.workdir]),
+      /counterfactual_binding_claim_unrelated:first:unrelated-claim/u,
+    );
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("Counterfactual rejects AC not-executed and skipped failures", () => {
+  for (const code of [
+    "acceptance_case_not_executed",
+    "acceptance_case_skipped",
+  ]) {
+    const result = {
+      status: "assertion_failed",
+      assertion_results: [
+        {
+          key: "ac-sensitive",
+          passed: false,
+          status: code,
+        },
+      ],
+      findings: [
+        {
+          code,
+          assertion_key: "ac-sensitive",
+        },
+      ],
+    };
+    assert.equal(
+      isValidCounterfactualCheckResult(result, ["ac-sensitive"]),
+      false,
+      code,
+    );
+  }
+});
+
 async function writeOracle(root, mode) {
   const missing =
     mode === "timeout"
@@ -141,13 +221,19 @@ async function writeOracle(root, mode) {
           ? 'console.log("not-json"); process.exit(0);'
           : "";
   const other = mode === "extra-failure" ? "false" : "true";
+  const resultObservation =
+    mode === "observation-missing"
+      ? ""
+      : mode === "observation-type"
+        ? 'result:"not-a-boolean",'
+        : "result,";
   await writeFile(
     path.join(root, "tests/oracle.mjs"),
     `import { readFile } from "node:fs/promises";
 let result = false;
 try { result = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8")).first; }
 catch { ${missing} }
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result,other:${other},population:{eligible_ids:["first"],observed_ids:result?["first"]:[],excluded_items:[]}}}));
+console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{${resultObservation}other:${other},population:{eligible_ids:["first"],observed_ids:result?["first"]:[],excluded_items:[]}}}));
 `,
   );
 }

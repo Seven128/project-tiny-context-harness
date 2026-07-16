@@ -57,7 +57,8 @@ test("every Delivery Contract authority structure has a complete field policy re
     },
     counterfactual: {
       key: "counterfactual",
-      claims: ["result"],
+      binding_key: "state-first",
+      claims: ["obligation.implement-first"],
       check_key: check.key,
       mutation: { type: "remove_paths", paths: ["src/state.json"] },
       expected_assertion_failures: ["first-result"],

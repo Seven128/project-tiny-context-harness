@@ -168,9 +168,7 @@ export async function doctorDeliveryTask(
   if (active.workdir !== path.resolve(workdirInput))
     throw new Error("active_task_workdir_mismatch");
   const findings: string[] = [
-    loaded.source === "legacy_active_authority_v2"
-      ? "legacy_active_authority_migratable"
-      : "active_authority_valid",
+    "active_authority_valid",
     await inspectCompiledCache(active),
   ];
   if (await activeAuthorityLockExists(root))
@@ -350,6 +348,8 @@ function cacheDiagnostic(
 }
 
 function doctorAuthorityFinding(error: string): string {
+  if (error.includes("legacy_v2_active_authority_manual_required"))
+    return "legacy_v2_active_authority_manual_required";
   if (error.includes("active_authority_continuity_unrecoverable"))
     return "active_authority_continuity_unrecoverable";
   if (

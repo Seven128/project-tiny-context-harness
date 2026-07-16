@@ -27,6 +27,7 @@ test("strict security proof combines per-Check artifacts, negative Assertions an
     check.artifact_globs = ["artifacts/proof.json"];
     check.positive_assertions.push({
       key: "artifact-present",
+      criterion: "The security proof artifact is produced.",
       claims: ["result"],
       observation: "artifacts-ready",
       operator: "equals",
@@ -38,6 +39,7 @@ test("strict security proof combines per-Check artifacts, negative Assertions an
     });
     check.negative_assertions.push({
       key: "shortcut-rejected",
+      criterion: "Self-reported success remains rejected.",
       claims: ["forbidden_shortcut.self-report"],
       observation: "negative_ok",
       operator: "equals",
@@ -46,6 +48,7 @@ test("strict security proof combines per-Check artifacts, negative Assertions an
     outcome.acceptance.counterfactual_controls = [
       {
         key: "remove-state-carrier",
+        binding_key: "state-first",
         claims: ["obligation.implement-first"],
         check_key: check.key,
         mutation: { type: "remove_paths", paths: ["src/state.json"] },
@@ -91,6 +94,7 @@ test("Population V2 proves entity coverage and fails on an omitted eligible id",
     ];
     check.negative_assertions.push({
       key: "negative-path",
+      criterion: "The negative population path remains valid.",
       claims: ["result"],
       observation: "negative_ok",
       operator: "equals",
@@ -98,6 +102,12 @@ test("Population V2 proves entity coverage and fails on an omitted eligible id",
     });
     const populationCheck = structuredClone(check);
     populationCheck.key = "population-check";
+    populationCheck.positive_assertions = populationCheck.positive_assertions.map(
+      (assertion) => ({ ...assertion, claims: [] }),
+    );
+    populationCheck.negative_assertions = populationCheck.negative_assertions.map(
+      (assertion) => ({ ...assertion, claims: [] }),
+    );
     outcome.acceptance.checks.push(populationCheck);
     outcome.acceptance.population = {
       check_key: populationCheck.key,
@@ -112,6 +122,7 @@ test("Population V2 proves entity coverage and fails on an omitted eligible id",
     outcome.acceptance.counterfactual_controls = [
       {
         key: "remove-state-carrier",
+        binding_key: "state-first",
         claims: ["obligation.implement-first"],
         check_key: check.key,
         mutation: { type: "remove_paths", paths: ["src/state.json"] },

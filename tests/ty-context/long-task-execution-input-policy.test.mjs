@@ -65,6 +65,7 @@ test("all raw execution fields affect identity and per-check evidence does not",
   }
   assert.deepEqual(Object.keys(rawExecutionInputProjection(base)).sort(), [
     "environment_requirements",
+    "evidence_adapter",
     "runner",
     "verification_inputs",
   ]);
@@ -114,6 +115,7 @@ function compiledCheck() {
     outcome_key: "first",
     key: "test",
     proof_surface: "runtime_behavior",
+    evidence_adapter: "structured_json_v2",
     runner: {
       type: "node_oracle",
       target: "tests/oracle.mjs",

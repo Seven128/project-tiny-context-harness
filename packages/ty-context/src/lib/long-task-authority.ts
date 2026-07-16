@@ -9,6 +9,7 @@ import {
   CHECK_AUTHORITY_POLICY,
   projectFieldsByPolicy,
 } from "./long-task-authority-policy.js";
+import { evidenceAdapterForRunner } from "./long-task-evidence-adapter-policy.js";
 import { canonicalValueJson, sha256Hex } from "./strict-codec.js";
 
 const ACCEPTANCE_CHECK_POLICIES = new Set<AuthorityFieldPolicy>([
@@ -143,11 +144,14 @@ export function isMonotonicAcceptanceStrengthening(
 function acceptanceCheck(
   check: DeliveryContractV2["global"]["acceptance"]["checks"][number],
 ): unknown {
-  return projectFieldsByPolicy(
-    check,
-    CHECK_AUTHORITY_POLICY,
-    ACCEPTANCE_CHECK_POLICIES,
-  );
+  return {
+    ...projectFieldsByPolicy(
+      check,
+      CHECK_AUTHORITY_POLICY,
+      ACCEPTANCE_CHECK_POLICIES,
+    ),
+    evidence_adapter: evidenceAdapterForRunner(check.runner.type),
+  };
 }
 
 function technicalCheck(

@@ -45,6 +45,7 @@ console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution
   outcome.acceptance.counterfactual_controls = [
     {
       key: "remove-state",
+      binding_key: "state-first",
       claims: ["obligation.implement-first"],
       check_key: check.key,
       mutation: { type: "remove_paths", paths: ["src/state.json"] },
@@ -53,6 +54,7 @@ console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution
   ];
   check.negative_assertions.push({
     key: "negative-floor",
+    criterion: "The strict negative floor remains satisfied.",
     claims: ["result"],
     observation: "negative",
     operator: "equals",
@@ -121,23 +123,6 @@ export const authorityReductionScenarios = [
       contract.outcomes[0].technical.bindings[0].carrier_paths.push(
         "src/extra.json",
       );
-    },
-  },
-  {
-    name: "Source Claim removal",
-    field: "source_claims_removed_or_changed",
-    reason: "source_claim_removed_or_changed",
-    mutate(contract) {
-      contract.source_claims = [];
-      contract.task.source_paths = [];
-    },
-  },
-  {
-    name: "Source Claim rewrite",
-    field: "source_claims_removed_or_changed",
-    reason: "source_claim_removed_or_changed",
-    mutate(contract) {
-      contract.source_claims[0].statement = "A weaker replacement.";
     },
   },
   {

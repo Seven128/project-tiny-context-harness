@@ -192,6 +192,7 @@ export const POPULATION_AUTHORITY_POLICY = {
 
 export const COUNTERFACTUAL_AUTHORITY_POLICY = {
   key: "identity",
+  binding_key: "proof_additive",
   claims: "proof_additive",
   check_key: "proof_additive",
   mutation: "proof_additive",

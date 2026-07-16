@@ -103,6 +103,7 @@ test("strict risk downgrade remains rejected after cache deletion", async () => 
     const check = outcome.acceptance.checks[0];
     check.negative_assertions.push({
       key: "negative-floor",
+      criterion: "The strict negative floor remains satisfied.",
       claims: ["result"],
       observation: "result_copy",
       operator: "not_equals",
@@ -110,6 +111,7 @@ test("strict risk downgrade remains rejected after cache deletion", async () => 
     });
     outcome.acceptance.counterfactual_controls.push({
       key: "remove-state",
+      binding_key: "state-first",
       claims: ["obligation.implement-first"],
       check_key: check.key,
       mutation: { type: "remove_paths", paths: ["src/state.json"] },
@@ -171,7 +173,7 @@ test("a self-consistent forged cache is ignored by verify and doctor", async () 
   }
 });
 
-test("legacy V2 active state migrates only from a matching cache and otherwise fails closed", async () => {
+test("legacy development V2 Active Authority is manual-required and never migrated", async () => {
   const fixture = await createDeliveryFixture();
   try {
     await runCli(fixture.root, ["enable", "long-task"]);
@@ -196,32 +198,24 @@ test("legacy V2 active state migrates only from a matching cache and otherwise f
       cwd: fixture.root,
     });
 
-    const status = await runCli(fixture.root, [
-      "long-task",
-      "status",
-      fixture.workdir,
-    ]);
-    assert.equal(status.task_id, legacy.task_id);
+    await assert.rejects(
+      () =>
+        runCli(fixture.root, [
+          "long-task",
+          "status",
+          fixture.workdir,
+        ]),
+      /legacy_v2_active_authority_manual_required/u,
+    );
+    await assert.rejects(
+      () => runCli(fixture.root, ["long-task", "verify", fixture.workdir]),
+      /legacy_v2_active_authority_manual_required/u,
+    );
     assert.equal(
       JSON.parse(await readFile(activeFile, "utf8")).schema_version,
       "active-long-task-binding-v2",
     );
-    await runCli(fixture.root, ["long-task", "verify", fixture.workdir]);
-    const migrated = JSON.parse(await readFile(activeFile, "utf8"));
-    assert.equal(
-      migrated.schema_version,
-      "active-long-task-authority-v3",
-    );
-    assert.equal(
-      await gitConfig(fixture.root, markerKey),
-      `${migrated.task_id}|${migrated.authority_revision}|${migrated.active_authority_identity}`,
-    );
-
-    await writeFile(activeFile, `${JSON.stringify(legacy)}\n`);
-    await exec("git", ["config", "--local", markerKey, legacy.task_id], {
-      cwd: fixture.root,
-    });
-    await rm(path.join(fixture.workdir, ".ty-context", "compiled-contract.json"));
+    assert.equal(await gitConfig(fixture.root, markerKey), legacy.task_id);
     const doctor = await runCli(fixture.root, [
       "long-task",
       "doctor",
@@ -229,7 +223,7 @@ test("legacy V2 active state migrates only from a matching cache and otherwise f
     ]);
     assert.equal(
       doctor.status,
-      "active_authority_continuity_unrecoverable",
+      "legacy_v2_active_authority_manual_required",
     );
     assert.equal(
       doctor.next_action,
@@ -265,6 +259,7 @@ test("CAS and authority commit failure preserve old authority and progress", asy
 
     fixture.contract.outcomes[0].acceptance.checks[0].positive_assertions.push({
       key: "additional-proof",
+      criterion: "The additional proof remains true.",
       claims: ["result"],
       observation: "result_copy",
       operator: "equals",

@@ -170,12 +170,13 @@ function configureChecks(fixture, requirements) {
       positive_assertions: [
         {
           key: `raw-result-${index}`,
+          criterion: `Raw execution result ${index} is observable.`,
           claims: [
             "result",
             "requirement.observe-first",
             "obligation.implement-first",
           ],
-          observation: "result",
+          observation: index === 0 ? "result" : "result_copy",
           operator: "equals",
           expected: true,
         },
@@ -191,7 +192,7 @@ async function installCountingOracle(fixture, marker) {
     `import { appendFileSync, readFileSync } from "node:fs";
 appendFileSync(${JSON.stringify(marker)}, "run\\n");
 const state = JSON.parse(readFileSync(new URL("../src/state.json", import.meta.url), "utf8"));
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state.first}}));
+console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state.first,result_copy:state.first}}));
 `,
   );
   await commitCandidate(fixture.root);

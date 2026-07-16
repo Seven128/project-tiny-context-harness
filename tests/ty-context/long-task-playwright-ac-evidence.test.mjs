@@ -22,14 +22,11 @@ test("Playwright exposes independent AC observations and localizes a failed case
     raw(check, decoded),
     path.resolve("."),
   );
-  assert.deepEqual(
-    result.claim_proofs.map((proof) => proof.assertion_key),
-    ["ac-one"],
-  );
+  assert.deepEqual(result.claim_proofs, []);
   const finding = result.findings.find(
     (item) => item.assertion_key === "ac-two",
   );
-  assert.equal(finding?.code, "assertion_value_mismatch");
+  assert.equal(finding?.code, "acceptance_case_unexpected");
   assert.deepEqual(finding?.claim_keys, ["requirement.two"]);
 });
 
@@ -48,6 +45,20 @@ test("missing and skipped Playwright AC cases have distinct findings", async () 
   assert.equal(
     missing.findings.find((item) => item.assertion_key === "ac-two")?.code,
     "acceptance_case_not_executed",
+  );
+  assert.equal(
+    Object.hasOwn(
+      missingDecoded.observations,
+      "playwright.case.ac-two.passed",
+    ),
+    false,
+  );
+  assert.equal(
+    Object.hasOwn(
+      missingDecoded.observations,
+      "playwright.case.ac-two.skipped",
+    ),
+    false,
   );
 
   const skippedDecoded = decode(
@@ -80,7 +91,46 @@ test("duplicate Playwright AC ids are invalid evidence", () => {
     0,
   );
   assert.equal(decoded.execution_status, "invalid_evidence");
-  assert.equal(decoded.error, "playwright_ac_id_duplicate:ac-one");
+  assert.equal(decoded.error, "playwright_ac_id_duplicate:ac-one:default");
+});
+
+test("the same AC aggregates independently across Playwright projects", () => {
+  const check = compiledPlaywrightCheck();
+  const decoded = decode(
+    check,
+    report([
+      ac("ac-one", "expected", "passed", "chromium"),
+      ac("ac-one", "expected", "passed", "firefox"),
+      ac("ac-one", "expected", "passed", "webkit"),
+      ac("ac-two", "expected", "passed", "chromium"),
+    ]),
+    0,
+  );
+  assert.equal(decoded.execution_status, "completed");
+  assert.equal(decoded.observations["playwright.case.ac-one.passed"], true);
+  assert.deepEqual(
+    decoded.observations["playwright.case.ac-one.project_ids"],
+    ["chromium", "firefox", "webkit"],
+  );
+  assert.equal(
+    decoded.observations["playwright.case.ac-one.executed_instances"],
+    3,
+  );
+
+  const failed = decode(
+    check,
+    report([
+      ac("ac-one", "expected", "passed", "chromium"),
+      ac("ac-one", "unexpected", "failed", "firefox"),
+      ac("ac-two", "expected", "passed", "chromium"),
+    ]),
+    1,
+  );
+  assert.equal(failed.observations["playwright.case.ac-one.passed"], false);
+  assert.equal(
+    failed.observations["playwright.case.ac-one.failed_instances"],
+    1,
+  );
 });
 
 function compiledPlaywrightCheck() {
@@ -157,8 +207,11 @@ function report(cases) {
   };
 }
 
-function ac(id, status, resultStatus) {
-  return { id, test: { status, results: [{ status: resultStatus }] } };
+function ac(id, status, resultStatus, projectId = "default") {
+  return {
+    id,
+    test: { projectId, status, results: [{ status: resultStatus }] },
+  };
 }
 
 function decode(check, value, exitCode) {

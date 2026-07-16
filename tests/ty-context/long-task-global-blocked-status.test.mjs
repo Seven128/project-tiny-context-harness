@@ -72,6 +72,7 @@ function addBlockedGlobalCheck(contract) {
     positive_assertions: [
       {
         key: "external-service-proof",
+        criterion: "The external service constraint is observable.",
         claims: ["constraint.external-service"],
         observation: "result",
         operator: "equals",

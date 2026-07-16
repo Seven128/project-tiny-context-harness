@@ -13,9 +13,10 @@ export interface SourceCoverageV1 {
   resolved: number;
   mapped_to_product_claims: number;
   mapped_to_acceptance: number;
+  mapped_to_outcome_results: number;
   mapped_to_global_constraints: number;
+  mapped_to_risk_facts: number;
   mapped_to_external_confirmations: number;
-  out_of_scope: number;
   decision_required: number;
   unresolved: string[];
 }
@@ -62,9 +63,10 @@ export function emptyPreflightResult(
       resolved: 0,
       mapped_to_product_claims: 0,
       mapped_to_acceptance: 0,
+      mapped_to_outcome_results: 0,
       mapped_to_global_constraints: 0,
+      mapped_to_risk_facts: 0,
       mapped_to_external_confirmations: 0,
-      out_of_scope: 0,
       decision_required: 0,
       unresolved: [],
     },

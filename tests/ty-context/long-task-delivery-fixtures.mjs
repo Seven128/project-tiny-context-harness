@@ -14,14 +14,24 @@ export async function createDeliveryFixture(options = {}) {
   const root = await mkdtemp(path.join(os.tmpdir(), "ty-context-delivery-"));
   await mkdir(path.join(root, "src"), { recursive: true });
   await mkdir(path.join(root, "tests"), { recursive: true });
+  await mkdir(path.join(root, "artifacts"), { recursive: true });
   await mkdir(path.join(root, "project_context", "areas"), { recursive: true });
   await writeFile(
     path.join(root, "src", "state.json"),
     `${JSON.stringify({ first: true, second: false })}\n`,
   );
   await writeFile(
+    path.join(root, "artifacts", "proof.json"),
+    '{"fixture_proof":true}\n',
+  );
+  await writeFile(
     path.join(root, "source.md"),
-    "# Fixture source\n\nThe first outcome must be observable.\n",
+    `# Fixture source
+
+<!-- ty-source-item:start key=first-observable kind=requirement -->
+The first outcome must be observable.
+<!-- ty-source-item:end -->
+`,
   );
   await writeFile(
     path.join(root, "tests", "oracle.mjs"),
@@ -107,7 +117,7 @@ export function deliveryContract(options = {}) {
     verification_inputs: ["tests/oracle.mjs"],
     input_paths: ["src/**"],
     expected_output_paths: [],
-    artifact_globs: [],
+    artifact_globs: ["artifacts/proof.json"],
     positive_assertions: [
       {
         key: `${outcomeKey}-result`,

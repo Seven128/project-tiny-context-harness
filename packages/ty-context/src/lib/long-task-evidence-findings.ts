@@ -87,7 +87,19 @@ export function assertionFinding(
     const prefix = `playwright.case.${ac}`;
     const executed = observationValue(observations, `${prefix}.executed`);
     const skipped = observationValue(observations, `${prefix}.skipped`);
-    if (skipped.found && skipped.value === true) {
+    const flaky = observationValue(observations, `${prefix}.flaky`);
+    const unexpected = observationValue(observations, `${prefix}.unexpected`);
+    if (flaky.found && flaky.value === true) {
+      code = "acceptance_case_flaky";
+      message = `Acceptance case ${ac} was flaky.`;
+      nextAction =
+        "Remove flakiness from every declared Playwright project instance and rerun this Check.";
+    } else if (unexpected.found && unexpected.value === true) {
+      code = "acceptance_case_unexpected";
+      message = `Acceptance case ${ac} had an unexpected result.`;
+      nextAction =
+        "Fix the unexpected Playwright result in every declared project and rerun this Check.";
+    } else if (skipped.found && skipped.value === true) {
       code = "acceptance_case_skipped";
       message = `Acceptance case ${ac} was skipped.`;
       nextAction =

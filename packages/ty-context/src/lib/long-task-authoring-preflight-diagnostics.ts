@@ -24,28 +24,16 @@ export function addAuthoringDiagnostics(
         code: "source_claim_decision_required",
         message: `${claim.key}: ${claim.disposition.reason}`,
       });
-  for (const { outcomeKey, check } of allChecks(contract))
-    for (const assertion of [
-      ...check.positive_assertions,
-      ...check.negative_assertions,
-    ])
-      if (!assertion.criterion)
-        diagnostics.push({
-          level: "error",
-          code: "assertion_criterion_required",
-          message: `${outcomeKey ?? "GLOBAL"}.${check.key}.${assertion.key} requires criterion text.`,
-          ...(outcomeKey ? { outcome_key: outcomeKey } : {}),
-          check_key: check.key,
-        });
 }
 
 export function sourceCoverage(contract: DeliveryContractV2): SourceCoverageV1 {
   const counts = {
     claim: 0,
     acceptance: 0,
+    outcome_result: 0,
     global_constraint: 0,
+    risk_fact: 0,
     external_confirmation: 0,
-    out_of_scope: 0,
     decision_required: 0,
   };
   for (const item of contract.source_claims) counts[item.disposition.type] += 1;
@@ -54,9 +42,10 @@ export function sourceCoverage(contract: DeliveryContractV2): SourceCoverageV1 {
     resolved: contract.source_claims.length - counts.decision_required,
     mapped_to_product_claims: counts.claim,
     mapped_to_acceptance: counts.acceptance,
+    mapped_to_outcome_results: counts.outcome_result,
     mapped_to_global_constraints: counts.global_constraint,
+    mapped_to_risk_facts: counts.risk_fact,
     mapped_to_external_confirmations: counts.external_confirmation,
-    out_of_scope: counts.out_of_scope,
     decision_required: counts.decision_required,
     unresolved: contract.source_claims
       .filter((item) => item.disposition.type === "decision_required")
@@ -93,21 +82,6 @@ export function addDiagnosticError(
       ...(outcomeKey ? { outcome_key: outcomeKey } : {}),
       ...(checkKey ? { check_key: checkKey } : {}),
     });
-}
-
-function allChecks(contract: DeliveryContractV2) {
-  return [
-    ...contract.global.acceptance.checks.map((check) => ({
-      outcomeKey: null,
-      check,
-    })),
-    ...contract.outcomes.flatMap((outcome) =>
-      outcome.acceptance.checks.map((check) => ({
-        outcomeKey: outcome.key,
-        check,
-      })),
-    ),
-  ];
 }
 
 function diagnosticCode(message: string): string {

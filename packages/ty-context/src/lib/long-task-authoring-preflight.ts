@@ -14,11 +14,8 @@ import {
   type AuthoringPreflightDiagnosticV1,
   type AuthoringPreflightResultV1,
 } from "./long-task-authoring-preflight-types.js";
-import { runAuthoringRepositoryPreflight } from "./long-task-authoring-repository-preflight.js";
-import { compileProductClaimCoverage } from "./long-task-claims.js";
+import { validateContractForActivation } from "./long-task-activation-validation.js";
 import { parseDeliveryContractBundle } from "./long-task-delivery-parser.js";
-import { deliveryContractStructureDiagnostics } from "./long-task-delivery-validation.js";
-import { classifyLongTaskRisk, validateRiskProof } from "./long-task-risk.js";
 import { repositoryRoot } from "./long-task-workspace.js";
 
 export type {
@@ -44,31 +41,12 @@ export async function preflightDeliveryContract(
     return emptyPreflightResult(diagnostics);
   }
   const contract = parsed.contract;
-  for (const error of deliveryContractStructureDiagnostics(contract))
-    addDiagnosticError(diagnostics, error);
   addAuthoringDiagnostics(contract, parsed, diagnostics);
-
-  let claims: ReturnType<typeof compileProductClaimCoverage> | null = null;
-  try {
-    claims = compileProductClaimCoverage(contract, { allow_uncovered: true });
-  } catch (error) {
-    addDiagnosticError(diagnostics, error);
-  }
-
-  let risk: ReturnType<typeof classifyLongTaskRisk> | null = null;
-  try {
-    risk = classifyLongTaskRisk(contract);
-    validateRiskProof(contract, risk);
-  } catch (error) {
-    addDiagnosticError(diagnostics, error);
-  }
-
-  const repositoryResult = await runAuthoringRepositoryPreflight({
+  const validation = await validateContractForActivation({
     repository,
     workdir,
     contract,
-    claims,
-    risk,
+    mode: "collect",
     diagnostics,
   });
   const active = await loadAuthoringActiveAuthority(
@@ -85,11 +63,12 @@ export async function preflightDeliveryContract(
     would_create_authority_lock: active === null,
     outcomes: contract.outcomes.map((outcome) => outcome.key),
     source_coverage: sourceCoverage(contract),
-    claim_coverage: claims?.summary ?? emptyClaimCoverage(),
+    claim_coverage: validation.claims?.summary ?? emptyClaimCoverage(),
     revision_preview: authoringRevisionPreview(
       contract,
-      repositoryResult.source_hashes,
-      repositoryResult.context_snapshot,
+      validation.source_hashes,
+      validation.source_items,
+      validation.context_snapshot,
       active,
     ),
     diagnostics,

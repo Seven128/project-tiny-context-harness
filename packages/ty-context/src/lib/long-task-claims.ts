@@ -14,6 +14,10 @@ import {
   validateProofSurface,
 } from "./long-task-claim-definitions.js";
 import { fail } from "./long-task-delivery-shape.js";
+import {
+  validateClaimAssertionOperator,
+  validateGlobalAssertionOperator,
+} from "./long-task-claim-proof-policy.js";
 
 export interface CompiledClaimsV2 {
   by_global: GlobalClaimV2[];
@@ -29,6 +33,9 @@ export function compileProductClaimCoverage(
   const byOutcome = Object.fromEntries(
     contract.outcomes.map((outcome) => [outcome.key, generateClaims(outcome)]),
   );
+  for (const [outcomeKey, claims] of Object.entries(byOutcome))
+    if (!claims.some((claim) => claim.kind !== "result"))
+      fail("outcome_atomic_claim_required", outcomeKey);
   const globalClaimMap = new Map(
     byGlobal.map((claim) => [claim.local_key, claim]),
   );
@@ -63,6 +70,7 @@ export function compileProductClaimCoverage(
             `GLOBAL:${check.key}:${assertion.key}`,
           );
         assertionKeys.add(assertion.key);
+        validateGlobalAssertionOperator(assertion, check.key);
         for (const claimKey of assertion.claims)
           addGlobalProof(claimKey, {
             check_key: check.key,
@@ -95,6 +103,7 @@ export function compileProductClaimCoverage(
       claimKey: string,
       proof: ClaimProofV2,
       observation?: string,
+      assertion?: DeliveryContractV2["outcomes"][number]["acceptance"]["checks"][number]["positive_assertions"][number],
     ): void => {
       const claim = claimMap.get(claimKey);
       if (!claim) {
@@ -114,6 +123,14 @@ export function compileProductClaimCoverage(
           `${outcome.key}:${claim.local_key}`,
         );
       validateProofSurface(claim, proof, outcome.key);
+      if (assertion)
+        validateClaimAssertionOperator(
+          claim,
+          assertion,
+          proof.proof_surface,
+          outcome.key,
+          proof.check_key,
+        );
       const rows = proofs.get(claimKey) ?? [];
       rows.push(proof);
       proofs.set(claimKey, rows);
@@ -142,6 +159,7 @@ export function compileProductClaimCoverage(
                 proof_surface: check.proof_surface,
               },
               assertion.observation,
+              assertion,
             );
         }
       }
@@ -200,12 +218,31 @@ export function compileProductClaimCoverage(
         });
     }
 
-    const rows: Record<string, { covered: boolean; proofs: ClaimProofV2[] }> =
-      {};
+    const rows: ClaimCoverageSummaryV2["claims_by_outcome"][string] = {};
     for (const claim of claims) {
       const claimProofs = proofs.get(claim.local_key) ?? [];
-      const covered = claimProofs.length > 0;
-      rows[claim.local_key] = { covered, proofs: claimProofs };
+      const requiredSurfaces = [...claim.required_proof_surfaces].sort();
+      const coveredSurfaces = [
+        ...new Set(claimProofs.map((proof) => proof.proof_surface)),
+      ].sort();
+      const missingSurfaces = requiredSurfaces.filter(
+        (surface) => !coveredSurfaces.includes(surface),
+      );
+      const covered =
+        claimProofs.length > 0 &&
+        (requiredSurfaces.length === 0 || missingSurfaces.length === 0);
+      rows[claim.local_key] = {
+        required_surfaces: requiredSurfaces,
+        covered_surfaces: coveredSurfaces,
+        missing_surfaces: missingSurfaces,
+        covered,
+        proofs: claimProofs,
+      };
+      if (claimProofs.length && missingSurfaces.length)
+        fail(
+          "product_claim_required_surfaces_missing",
+          `${outcome.key}:${claim.local_key}:${missingSurfaces.join(",")}`,
+        );
       if (!covered) uncoveredOutcome.push(claim.id);
     }
     summaryRows[outcome.key] = rows;

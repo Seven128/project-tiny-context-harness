@@ -1,4 +1,4 @@
-import type { VerifierIdentityV2 } from "./long-task-runtime-types.js";
+import type { VerifierIdentityV2 } from "./long-task-authority-types.js";
 
 export interface AuthorityRevisionDiffV2 {
   product_claims_added: string[];

@@ -186,9 +186,11 @@ test("Stop and close rerun current Authority instead of clearing from an old Rec
 function addProof(contract, key) {
   contract.outcomes[0].acceptance.checks[0].positive_assertions.push({
     key,
+    criterion: "The concurrent revision proof remains true.",
     claims: ["result"],
     observation: "result_copy",
-    operator: "truthy",
+    operator: "equals",
+    expected: true,
   });
 }
 
@@ -200,9 +202,11 @@ function addBlockedProof(contract) {
     positive_assertions: [
       {
         key: "blocked-proof-result",
+        criterion: "The blocked proof result remains observable.",
         claims: ["result"],
         observation: "result",
-        operator: "truthy",
+        operator: "equals",
+        expected: true,
       },
     ],
     environment_requirements: [
