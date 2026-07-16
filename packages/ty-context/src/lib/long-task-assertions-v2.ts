@@ -4,6 +4,11 @@ import type {
 } from "./long-task-delivery-types.js";
 import { canonicalValueJson } from "./strict-codec.js";
 
+export interface AssertionComparison {
+  comparable: boolean;
+  passed: boolean;
+}
+
 export function evaluateDeliveryAssertion(
   assertion: DeliveryAssertionV2,
   observations: Record<string, unknown>,
@@ -12,10 +17,10 @@ export function evaluateDeliveryAssertion(
     observations,
     assertion.observation,
   );
-  if (assertion.operator === "not_exists") return !found;
   if (!found) return false;
   if (assertion.operator === "exists") return true;
   const expected = assertion.expected;
+  let comparison: AssertionComparison;
   switch (assertion.operator) {
     case "truthy":
       return Boolean(value);
@@ -26,44 +31,56 @@ export function evaluateDeliveryAssertion(
     case "not_equals":
       return canonicalValueJson(value) !== canonicalValueJson(expected);
     case "contains":
-      return contains(value, expected);
+      comparison = contains(value, expected);
+      break;
     case "not_contains":
-      return !contains(value, expected);
+      comparison = contains(value, expected);
+      comparison = {
+        comparable: comparison.comparable,
+        passed: comparison.comparable && !comparison.passed,
+      };
+      break;
     case "matches":
-      return (
-        typeof value === "string" &&
-        typeof expected === "string" &&
-        new RegExp(expected, "u").test(value)
-      );
+      comparison = matches(value, expected);
+      break;
     case "not_matches":
-      return (
-        typeof value === "string" &&
-        typeof expected === "string" &&
-        !new RegExp(expected, "u").test(value)
-      );
+      comparison = matches(value, expected);
+      comparison = {
+        comparable: comparison.comparable,
+        passed: comparison.comparable && !comparison.passed,
+      };
+      break;
     case "greater_than":
-      return numbers(value, expected, (a, b) => a > b);
+      comparison = numbers(value, expected, (a, b) => a > b);
+      break;
     case "greater_or_equal":
-      return numbers(value, expected, (a, b) => a >= b);
+      comparison = numbers(value, expected, (a, b) => a >= b);
+      break;
     case "less_than":
-      return numbers(value, expected, (a, b) => a < b);
+      comparison = numbers(value, expected, (a, b) => a < b);
+      break;
     case "less_or_equal":
-      return numbers(value, expected, (a, b) => a <= b);
+      comparison = numbers(value, expected, (a, b) => a <= b);
+      break;
     case "set_equals":
-      return sets(
+      comparison = sets(
         value,
         expected,
         (a, b) => a.size === b.size && [...a].every((item) => b.has(item)),
       );
+      break;
     case "subset_of":
-      return sets(value, expected, (a, b) =>
+      comparison = sets(value, expected, (a, b) =>
         [...a].every((item) => b.has(item)),
       );
+      break;
     case "superset_of":
-      return sets(value, expected, (a, b) =>
+      comparison = sets(value, expected, (a, b) =>
         [...b].every((item) => a.has(item)),
       );
+      break;
   }
+  return comparison.comparable && comparison.passed;
 }
 
 export function evaluatePopulation(
@@ -165,36 +182,65 @@ function failure(actual: unknown, reason: string) {
   return { passed: false, actual, reason };
 }
 
-function contains(value: unknown, expected: unknown): boolean {
+function contains(
+  value: unknown,
+  expected: unknown,
+): AssertionComparison {
   if (typeof value === "string" && typeof expected === "string")
-    return value.includes(expected);
+    return { comparable: true, passed: value.includes(expected) };
   if (Array.isArray(value))
-    return value.some(
-      (item) => canonicalValueJson(item) === canonicalValueJson(expected),
-    );
-  return false;
+    return {
+      comparable: true,
+      passed: value.some(
+        (item) => canonicalValueJson(item) === canonicalValueJson(expected),
+      ),
+    };
+  return { comparable: false, passed: false };
+}
+
+function matches(
+  value: unknown,
+  expected: unknown,
+): AssertionComparison {
+  if (typeof value !== "string" || typeof expected !== "string")
+    return { comparable: false, passed: false };
+  try {
+    return {
+      comparable: true,
+      passed: new RegExp(expected, "u").test(value),
+    };
+  } catch {
+    return { comparable: false, passed: false };
+  }
 }
 
 function numbers(
   left: unknown,
   right: unknown,
   compare: (left: number, right: number) => boolean,
-): boolean {
-  return (
-    typeof left === "number" &&
-    typeof right === "number" &&
-    compare(left, right)
-  );
+): AssertionComparison {
+  if (
+    typeof left !== "number" ||
+    typeof right !== "number" ||
+    !Number.isFinite(left) ||
+    !Number.isFinite(right)
+  )
+    return { comparable: false, passed: false };
+  return { comparable: true, passed: compare(left, right) };
 }
 
 function sets(
   left: unknown,
   right: unknown,
   compare: (left: Set<string>, right: Set<string>) => boolean,
-): boolean {
-  if (!Array.isArray(left) || !Array.isArray(right)) return false;
-  return compare(
-    new Set(left.map(canonicalValueJson)),
-    new Set(right.map(canonicalValueJson)),
-  );
+): AssertionComparison {
+  if (!Array.isArray(left) || !Array.isArray(right))
+    return { comparable: false, passed: false };
+  return {
+    comparable: true,
+    passed: compare(
+      new Set(left.map(canonicalValueJson)),
+      new Set(right.map(canonicalValueJson)),
+    ),
+  };
 }

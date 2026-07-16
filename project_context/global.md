@@ -39,12 +39,12 @@
 - L2 strict work is selected deterministically per Outcome. Public API/schema, persistent data, migrations, security/permission boundaries, irreversible external effects, full-population operations or a weakly observable critical user path require strict proof on the affected Outcome. Risk downgrade and multi-repository delivery are rejected.
 - `requested_level: standard` below the computed risk floor fails compile. Execution cannot downgrade risk.
 - One root V2 `delivery-contract.yaml` (with optional Outcome fragments) is authoring authority. Declared original sources remain provenance and Source Claims preserve direct coverage to generated Claims; there is no Packet revision chain, Source Unit inventory, SFC graph, Wave, Delivery Set or second plan.
-- Compile is pure static preflight. It validates strict YAML/schema, Global and Outcome Claim Coverage, conservative owner/binding pattern containment, Context/source/path/runner/proof identities, risk floor, UI proof, strict obligations and executable acceptance before product implementation begins.
+- Compile is pure static preflight. It validates strict YAML/schema, Global and Outcome Claim Coverage, one restricted repository-pattern AST shared by matching/subset/overlap, Context/source/path/runner/proof identities, risk floor, UI proof, strict obligations and executable acceptance before product implementation begins. Unsupported glob syntax is rejected and unproved containment/disjointness fails closed.
 - Every compile creates an immutable compiled identity. Contract authority, Source, referenced Context, canonical Product/Global semantics, runner/oracle, verifier or workspace drift invalidates prior derived results and requires recompilation; ordinary compile cannot silently adopt changed Source or Context.
 - Targeted `verify` exists only for repair findings and can never accept a task. `final-gate`, Stop and close rerun every Outcome/global Check on one current snapshot; stored Receipts are audit-only.
-- Assertions fail closed when an Observation is missing except for `not_exists`; Counterfactual proof is valid only when the designated Assertions are the complete finding set.
+- Assertions fail closed when an Observation is missing or type-incomparable. Negative proof requires an explicit Observation/value and implicit absence operators are unsupported. Counterfactual proof is valid only when the designated Assertions are the complete finding set.
 - Runners receive a minimal environment whitelist plus only Check-declared env vars. Protected Contract/Source/Context/verifier/proof inputs reject symlinks and detectable hardlinks, and Source Claims require real declared Source files.
-- Active authority is a Git common-dir record paired with a worktree Git-config marker. Stop/close never trust cache or Receipt and atomically clear the binding only after a successful Live Gate.
+- Active authority is a complete compiled snapshot in a Git common-dir V3 record paired with a worktree Git-config marker that binds task id, authority revision and compiled identity. The workdir compiled file is only a rebuildable projection; previous authority, immutable initial base and risk floor never come from it. Authority updates use compare-and-swap, legacy V2 state migrates only from a fully matching cache, and Stop/close atomically clear the binding only after a successful Live Gate.
 
 ## Durable-Fact And Authority Rules
 
@@ -57,7 +57,7 @@
 ## Current State
 
 - v0.6.0 defines `long-task-delivery-v2` as the only active schema, the package-owned Hook, V1 retirement migration and retired Delivery Set tombstone.
-- `ty-context enable long-task` installs the Long-Task Workflow Skill, Stop Hook and required templates. Hook lifecycle operations remove only exact managed entries and preserve user entries even when they share a group. Non-Codex/default consumers do not receive those assets unless enabled.
+- `ty-context enable long-task` installs the Long-Task Workflow Skill, Stop Hook and required templates. Hook lifecycle operations remove current or historical package-owned absolute commands only when their managed status and known package layout match, while preserving user entries even when they share a group or use similar names. Non-Codex/default consumers do not receive those assets unless enabled.
 - Upgrade safely converts the package-owned `composite-codex` profile selection to `long-task` and removes only package-owned retired assets. Existing user campaign/source/contract files remain ordinary historical files and are never executed, imported or deleted.
 - `composite-campaign` and `composite-long-task` may remain only as lightweight command tombstones that return `retired` and direct users to `ty-context long-task`; they import no retired runtime.
 - `/normal-long-task` is a retirement pointer to `/long-task-workflow`; it no longer creates a checklist, target prompt, Local Audit or a competing authority.

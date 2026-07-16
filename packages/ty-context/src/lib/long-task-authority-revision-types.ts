@@ -26,6 +26,8 @@ export interface AuthorityRevisionDiffV2 {
   forbidden_paths_removed: string[];
   runner_definitions_changed: string[];
   verification_inputs_removed_or_replaced: string[];
+  input_paths_removed_or_narrowed: string[];
+  expected_output_paths_removed_or_weakened: string[];
   artifacts_removed: string[];
   environment_requirements_removed: string[];
   bindings_removed_or_expanded: string[];

@@ -220,7 +220,7 @@
         "input_paths": { "$ref": "#/$defs/nonEmptyStrings" },
         "expected_output_paths": { "$ref": "#/$defs/nonEmptyStrings" },
         "artifact_globs": { "$ref": "#/$defs/nonEmptyStrings" },
-        "positive_assertions": { "type": "array", "items": { "$ref": "#/$defs/assertion" }, "minItems": 1 },
+        "positive_assertions": { "type": "array", "items": { "$ref": "#/$defs/assertion" } },
         "negative_assertions": { "type": "array", "items": { "$ref": "#/$defs/assertion" } },
         "environment_requirements": { "type": "array", "items": { "$ref": "#/$defs/environment" } }
       }
@@ -248,7 +248,7 @@
         "key": { "$ref": "#/$defs/key" },
         "claims": { "$ref": "#/$defs/nonEmptyStrings" },
         "observation": { "$ref": "#/$defs/nonEmpty" },
-        "operator": { "enum": ["equals", "not_equals", "contains", "not_contains", "matches", "not_matches", "greater_than", "greater_or_equal", "less_than", "less_or_equal", "truthy", "falsy", "exists", "not_exists", "set_equals", "subset_of", "superset_of"] },
+        "operator": { "enum": ["equals", "not_equals", "contains", "not_contains", "matches", "not_matches", "greater_than", "greater_or_equal", "less_than", "less_or_equal", "truthy", "falsy", "exists", "set_equals", "subset_of", "superset_of"] },
         "expected": true
       },
       "allOf": [
@@ -257,8 +257,20 @@
           "then": { "required": ["expected"] }
         },
         {
-          "if": { "properties": { "operator": { "enum": ["exists", "not_exists", "truthy", "falsy"] } } },
+          "if": { "properties": { "operator": { "enum": ["exists", "truthy", "falsy"] } } },
           "then": { "not": { "required": ["expected"] } }
+        },
+        {
+          "if": { "properties": { "operator": { "enum": ["matches", "not_matches"] } } },
+          "then": { "properties": { "expected": { "type": "string", "format": "regex" } } }
+        },
+        {
+          "if": { "properties": { "operator": { "enum": ["greater_than", "greater_or_equal", "less_than", "less_or_equal"] } } },
+          "then": { "properties": { "expected": { "type": "number" } } }
+        },
+        {
+          "if": { "properties": { "operator": { "enum": ["set_equals", "subset_of", "superset_of"] } } },
+          "then": { "properties": { "expected": { "type": "array" } } }
         }
       ]
     },

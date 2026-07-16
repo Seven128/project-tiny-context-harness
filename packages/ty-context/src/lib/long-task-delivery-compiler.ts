@@ -33,7 +33,6 @@ import {
   assertRiskNotDowngraded,
   enforceAuthorityRevision,
 } from "./long-task-authority-revision-enforcement.js";
-import { readCompiledDeliveryContract } from "./long-task-state.js";
 import { validateActualRiskSurfaces } from "./long-task-risk-surfaces.js";
 import { captureVerifierIdentity } from "./long-task-verifier-identity.js";
 import {
@@ -50,6 +49,7 @@ export interface CompileDeliveryOptionsV2 {
   live_gate?: boolean;
   initial_task_base?: InitialTaskBaseV2;
   authority_revision?: number;
+  previous_authority?: CompiledDeliveryContractV2 | null;
 }
 
 export async function compileDeliveryContract(
@@ -99,7 +99,7 @@ export async function compileDeliveryContract(
   );
   const previous = options.live_gate
     ? null
-    : await readPreviousCompiled(workdir);
+    : (options.previous_authority ?? null);
   const current = await captureWorkspaceManifest(repository, workdir);
   const initialTaskBase = options.initial_task_base ??
     previous?.initial_task_base ?? {
@@ -246,20 +246,4 @@ export async function compileDeliveryContract(
     ...unsigned,
     compiled_identity: sha256Hex(canonicalValueJson(unsigned)),
   };
-}
-
-async function readPreviousCompiled(
-  workdir: string,
-): Promise<CompiledDeliveryContractV2 | null> {
-  try {
-    return await readCompiledDeliveryContract(workdir);
-  } catch (error) {
-    if (
-      error instanceof Error &&
-      (error.message.includes("ENOENT") ||
-        error.message.includes("no such file"))
-    )
-      return null;
-    throw error;
-  }
 }

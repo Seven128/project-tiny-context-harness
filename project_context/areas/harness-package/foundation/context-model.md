@@ -36,7 +36,7 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 - Tests, smoke checks, CI, review, hidden probes and human acceptance prove product quality. Context can identify repeatable verification paths, but neither Context nor Harness validators claim that behavior passed.
 - `PROJECT_SPEC.md` owns the full Harness design explanation and historical rationale in this source workspace. Role Context keeps only high-frequency durable facts.
 - Agent internal plans are current execution state only. Existing `plan.md`, matrices, verdicts or other user files have no implicit authority.
-- Explicit Long-Task authority is: one source V2 Contract/Bundle; generated Claim Coverage; immutable initial base and protected authority hashes; targeted per-Check repair progress; a common-dir record plus Git-config marker; and a source-recompiled same-snapshot Live Final Gate run by final-gate, Stop or close.
+- Explicit Long-Task authority is: one source V2 Contract/Bundle; generated Claim Coverage; immutable initial base and protected authority hashes; targeted per-Check repair progress; a common-dir Active Authority V3 record containing the complete compiled snapshot plus a task/revision/identity Git-config marker; and a source-recompiled same-snapshot Live Final Gate run by final-gate, Stop or close. The workdir compiled file is never previous-authority or baseline authority.
 
 ## Priority When Sources Disagree
 

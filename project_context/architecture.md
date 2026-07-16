@@ -14,7 +14,7 @@ This is the restrained architecture map for the Harness source repository. It re
 - The sole active schema lives under `packages/ty-context/src/schemas/long-task-delivery-v2/**`; Claim, authority/progress/boundary, runner/evidence and Live Gate modules remain focused and separate.
 - Static compiler: strict YAML parsing, generated `OUT.<outcome-key>` / `CHECK.<outcome-key>.<check-key>` identities, dependency validation, deterministic risk floor, Context/source/runner/path/proof preflight and compiled identity.
 - Evidence Kernel V2: explicit command runner, Git-aware snapshot, Assertion/Population/Counterfactual evaluators, per-Check evidence projection, targeted verifier and source-recompiled same-snapshot Live Final Gate.
-- Recovery state: the user-authored `delivery-contract.yaml` and optional `source.md` live in the chosen workdir; compiled/progress/Receipt state is audit-only; the Git common-dir record and matching worktree config marker identify the active task.
+- Recovery state: the user-authored `delivery-contract.yaml` and optional `source.md` live in the chosen workdir; progress/Receipt and the workdir compiled file are audit/cache projections only. The Git common-dir Active Authority V3 record contains the complete compiled snapshot and immutable first base, while the matching worktree config marker binds task, revision and compiled identity.
 - Stop adapter is a no-op without a binding and otherwise runs the Live Final Gate fail-closed; it never trusts a stored Receipt or compiled cache.
 - Capability/profile selection: `packages/ty-context/src/lib/profiles.ts`, `commands/enable.ts`, `commands/disable.ts`, config parsing and upgrade migration.
 - Managed source: `.codex/ty-context-managed/**`; packaged assets: `packages/ty-context/assets/**`; mapping authority: `packages/ty-context/source-mappings.yaml`.
@@ -41,7 +41,7 @@ This is the restrained architecture map for the Harness source repository. It re
 ## Safety And Storage Boundaries
 
 - Contract parsing rejects unknown keys, duplicate keys, YAML aliases/merges/tags and multiple documents.
-- Paths are repository-relative and realpath-contained. Pattern-language inclusion uses one conservative subset prover and treats unproved relationships as outside the boundary. Protected Contract, fragment, Source, Context, runner, verification-input, Counterfactual-fixture and package-verifier files reject symlinks and detectable hardlinks; the snapshot-owned read-only `node_modules` junction is the sole explicit exception.
+- Paths are repository-relative and realpath-contained. Matching, subset and overlap/disjoint use one restricted repository-pattern AST; unsupported bracket/brace/extglob/non-segment-`**` syntax is rejected, and unproved subset/disjoint relationships fail closed. Protected Contract, fragment, Source, Context, runner, verification-input, Counterfactual-fixture and package-verifier files reject symlinks and detectable hardlinks; the snapshot-owned read-only `node_modules` junction is the sole explicit exception.
 - Commands use argv arrays with no shell, bounded output/time and a minimal environment whitelist. Only env vars explicitly declared by the current Check are additionally passed.
 - Worker/Agent prose, handwritten status, command exit alone and historical targeted passes cannot create accepted authority.
 - Final acceptance binds the same snapshot plus Contract, source, selected Context, runner/oracle, verifier, workdir and repository identity. History is not spliced into current proof.
@@ -51,7 +51,7 @@ This is the restrained architecture map for the Harness source repository. It re
 ## Distribution And Migration
 
 - Default profiles remain `core-portable` and `workflow-default`; `long-task` is explicit.
-- `sync` refreshes enabled managed assets only. Long-task enable/disable/upgrade share exact entry-level Hook cleanup and preserve same-group user entries. `upgrade` owns the deterministic safe migration from package-owned `composite-codex` selection/assets to `long-task`.
+- `sync` refreshes enabled managed assets only. Long-task enable/disable/upgrade share entry-level Hook cleanup that recognizes current and relocated package-owned absolute commands only through known managed status plus known package layout, while preserving same-group and similar-name user entries. `upgrade` owns the deterministic safe migration from package-owned `composite-codex` selection/assets to `long-task`.
 - Migration never imports or executes an unfinished historical campaign and never deletes user-authored campaign/source/contract files.
 - Package tarballs contain the Delivery Contract schema, Long-Task Skill/Hook/templates and Evidence Kernel, but no Campaign/AppServer/Codex-worker/SFC/Packet/Wave/worktree scheduler runtime.
 

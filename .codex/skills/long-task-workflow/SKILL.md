@@ -1,6 +1,6 @@
 ---
 name: long-task-workflow
-description: Prepare, execute, resume, verify, or close one Single-Goal Delivery Contract or logical Contract Bundle in the current native Goal and workspace. Use only when explicitly invoked or a valid common-dir V2 binding exists.
+description: Prepare, execute, resume, verify, or close one Single-Goal Delivery Contract or logical Contract Bundle in the current native Goal and workspace. Use only when explicitly invoked or a valid common-dir active authority binding exists.
 ---
 
 # Single-Goal Long-Task Workflow
@@ -33,9 +33,9 @@ ty-context long-task compile <workdir>
 ty-context long-task compile <workdir> --revise
 ```
 
-Compile rejects uncovered Global and Outcome result/control/non-completing/obligation/forbidden-shortcut Claims and requires Source Claims to bind real declared Source files. The first compile freezes an immutable initial base. Any later Contract authority, Source content/file-set, Context topology/file-set/content, Product semantic projection or Global semantic projection change requires `--revise`.
+Compile rejects uncovered Global and Outcome result/control/non-completing/obligation/forbidden-shortcut Claims and requires Source Claims to bind real declared Source files. The first compile freezes an immutable initial base. The complete compiled authority snapshot lives in Git common-dir and is bound to the worktree marker by task id, authority revision and compiled identity; `.ty-context/compiled-contract.json` is only a replaceable projection. Any later Contract authority, Source content/file-set, Context topology/file-set/content, Product semantic projection or Global semantic projection change requires `--revise`.
 
-After execution begins, Source/Context/Product/Global semantic changes, Product Claim additions/removals/rewrites, runner/input replacement, proof weakening, scope expansion and any unprovable Glob containment create an exact material-bound pending revision for the user. Only mechanical proof additions and proven scope tightening revise automatically; risk downgrade is rejected. The executing Agent must never run `approve-authority-revision` for its own pending revision or otherwise approve it.
+After execution begins, Source/Context/Product/Global semantic changes, Product Claim additions/removals/rewrites, runner/verification-input replacement, reduced `input_paths`, weakened `expected_output_paths`, other proof weakening, scope expansion and any unprovable repository-pattern containment create an exact material-bound pending revision for the user. Repository matching, subset and overlap use one restricted pattern language; unsupported glob syntax is rejected, and unknown subset/disjoint relations fail closed. Only mechanical proof additions and proven scope tightening revise automatically; risk downgrade is rejected. The executing Agent must never run `approve-authority-revision` for its own pending revision or otherwise approve it.
 
 ## Rolling Execution
 
@@ -45,6 +45,8 @@ Runner retry defaults to none. One retry is allowed only for `transient_once`, i
 
 Counterfactual V2 may mutate only declared carriers, never runner/verification inputs, and succeeds only when execution completes with exit zero and exactly the designated Assertions fail. Population V2 proves exact eligible = observed + valid exclusions by entity id.
 
+Assertions require an explicit Observation. A missing or type-incomparable Observation never proves a Claim; negative proof must use an explicit value such as `equals: false`, and implicit absence operators are unsupported.
+
 ## Live Final Authority
 
 Complete Context, product code and project tests, then create a clean candidate commit. Run:
@@ -53,9 +55,9 @@ Complete Context, product code and project tests, then create a clean candidate 
 ty-context long-task final-gate <workdir>
 ```
 
-Final Gate recompiles source authority, validates the Git common-dir record against the worktree Git-config marker, creates a Git-tree snapshot with dirty overlay only for targeted verification, and reruns every required Check on one snapshot. Equal raw executions may deduplicate only inside that Gate; artifact and Assertion evidence remains per Check.
+Final Gate recompiles source authority, validates the complete Git common-dir authority snapshot against the worktree Git-config marker, creates a Git-tree snapshot with dirty overlay only for targeted verification, and reruns every required Check on one snapshot. Equal raw executions may deduplicate only inside that Gate; artifact and Assertion evidence remains per Check.
 
-Receipts, status, progress and compiled cache are audit/recovery data with `reusable_for_acceptance: false`. Stop and close run the same Live Final Gate rather than trusting prior files. Successful Stop/close atomically clears the active binding. `abandon` is explicit non-success cleanup and never changes user Git content.
+Receipts, status, progress and compiled cache are audit/recovery data with `reusable_for_acceptance: false`. Status/resume/verify read active authority from the common-dir snapshot even when the cache is missing or forged. Authority changes use compare-and-swap; legacy V2 active state migrates only from a fully matching cache and otherwise fails closed for manual restore or abandon. Stop and close run the same Live Final Gate rather than trusting prior files. Successful Stop/close atomically clears the active binding. `abandon` is explicit non-success cleanup and never changes user Git content.
 
 Machine acceptance means only that declared machine checks passed on the bound snapshot. Report pending external confirmations and never claim Git hosting, CI, deployment, network isolation, payment/migration execution or human product acceptance.
 

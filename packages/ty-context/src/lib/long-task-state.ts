@@ -53,6 +53,37 @@ export interface ActiveLongTaskBindingV2 {
   authority_revision: number;
 }
 
+export interface ActiveLongTaskAuthorityV3 {
+  schema_version: "active-long-task-authority-v3";
+  task_id: string;
+  repository_root: string;
+  worktree_identity: string;
+  workdir: string;
+  active_authority_identity: string;
+  authority_revision: number;
+  initial_task_base: InitialTaskBaseV2;
+  verifier_identity: VerifierIdentityV2;
+  activated_at: string;
+  authority_snapshot: CompiledDeliveryContractV2;
+  authority_snapshot_sha256: string;
+}
+
+export type CompiledCacheStatusV3 =
+  | "compiled_cache_matching"
+  | "compiled_cache_missing_repairable"
+  | "compiled_cache_mismatched_ignored";
+
+export interface ActiveAuthorityLoadResultV3 {
+  authority: ActiveLongTaskAuthorityV3 | null;
+  source: "none" | "active_authority_v3" | "legacy_active_authority_v2";
+  migrated: boolean;
+}
+
+export interface StagedCompiledDeliveryContractV2 {
+  publish(): Promise<void>;
+  discard(): Promise<void>;
+}
+
 export interface PendingAuthorityRevisionV2 {
   schema_version: "long-task-authority-revision-pending-v2";
   previous_hashes: AuthorityHashesV2;
@@ -95,110 +126,177 @@ export async function activeRecordPath(
 export async function writeCompiledDeliveryContract(
   compiled: CompiledDeliveryContractV2,
 ): Promise<void> {
-  await atomicJson(runtimePath(compiled.workdir, COMPILED_FILE), compiled);
+  const staged = await stageCompiledDeliveryContract(compiled);
+  try {
+    await staged.publish();
+  } catch (error) {
+    await staged.discard();
+    throw error;
+  }
+}
+
+export async function stageCompiledDeliveryContract(
+  compiled: CompiledDeliveryContractV2,
+): Promise<StagedCompiledDeliveryContractV2> {
+  const target = runtimePath(compiled.workdir, COMPILED_FILE);
+  const temporary = await stageAtomicText(target, canonicalJson(compiled));
+  let consumed = false;
+  return {
+    async publish() {
+      if (consumed) throw new Error("compiled_cache_stage_already_consumed");
+      await rename(temporary, target);
+      consumed = true;
+    },
+    async discard() {
+      if (consumed) return;
+      consumed = true;
+      await rm(temporary, { force: true });
+    },
+  };
 }
 
 export async function readCompiledDeliveryContract(
   workdir: string,
 ): Promise<CompiledDeliveryContractV2> {
-  const value = (await readJson(
-    runtimePath(workdir, COMPILED_FILE),
-  )) as CompiledDeliveryContractV2;
-  if (value.schema_version !== "compiled-long-task-delivery-v2")
-    throw new Error("compiled_contract_invalid:schema_version");
-  const { compiled_identity: compiledIdentity, ...unsigned } = value;
-  if (sha256Hex(canonicalValueJson(unsigned)) !== compiledIdentity)
-    throw new Error("compiled_contract_invalid:identity");
-  if (path.resolve(workdir) !== value.workdir)
-    throw new Error("compiled_contract_invalid:workdir");
-  return value;
-}
-
-export async function activateDeliveryContract(
-  compiled: CompiledDeliveryContractV2,
-): Promise<ActiveLongTaskBindingV2> {
-  const existing = await readActiveLongTaskBinding(compiled.repository_root);
-  if (
-    existing &&
-    (existing.workdir !== compiled.workdir ||
-      existing.task_id !== compiled.task.id)
-  )
-    throw new Error(`active_task_exists:${existing.workdir}`);
-  if (
-    !existing ||
-    existing.active_authority_identity !== compiled.compiled_identity
-  )
-    await clearFinalReceipt(compiled.repository_root, compiled.workdir);
-  const binding: ActiveLongTaskBindingV2 = {
-    schema_version: "active-long-task-binding-v2",
-    task_id: compiled.task.id,
-    repository_root: compiled.repository_root,
-    worktree_identity: worktreeIdentity(compiled.repository_root),
-    workdir: compiled.workdir,
-    initial_task_base: compiled.initial_task_base,
-    active_authority_identity: compiled.compiled_identity,
-    verifier_identity: compiled.verifier_identity,
-    activated_at: existing?.activated_at ?? new Date().toISOString(),
-    authority_revision: compiled.authority_revision,
-  };
-  await ensureRuntimeExcludes(compiled.repository_root, compiled.workdir);
-  await atomicJson(await activeRecordPath(compiled.repository_root), binding);
-  await gitConfigSet(
-    compiled.repository_root,
-    markerKey(binding.worktree_identity),
-    binding.task_id,
+  return validateCompiledDeliveryContract(
+    await readJson(runtimePath(workdir, COMPILED_FILE)),
+    path.resolve(workdir),
   );
-  return binding;
 }
 
-export async function readActiveLongTaskBinding(
+export async function loadActiveLongTaskAuthority(
   repositoryRoot: string,
-): Promise<ActiveLongTaskBindingV2 | null> {
+  options: { migrate_legacy?: boolean } = {},
+): Promise<ActiveAuthorityLoadResultV3> {
   const root = path.resolve(repositoryRoot);
   const identity = worktreeIdentity(root);
   const [marker, raw] = await Promise.all([
     gitConfigGet(root, markerKey(identity)),
     readOptionalJson(await activeRecordPath(root)),
   ]);
-  if (marker === null && raw === null) return null;
+  if (marker === null && raw === null)
+    return { authority: null, source: "none", migrated: false };
   if (marker === null) throw new Error("active_binding_marker_missing");
   if (raw === null) throw new Error("active_binding_record_missing");
   const row = raw as Record<string, unknown>;
+  if (row.schema_version === "active-long-task-authority-v3")
+    return {
+      authority: await validateActiveAuthorityV3(root, identity, marker, row),
+      source: "active_authority_v3",
+      migrated: false,
+    };
+  if (row.schema_version !== "active-long-task-binding-v2")
+    throw new Error("active_authority_invalid:schema_version");
+  const legacy = await validateLegacyActiveBindingV2(
+    root,
+    identity,
+    marker,
+    row,
+  );
+  const authority = activeAuthorityFromCompiled(
+    legacy.authority_snapshot,
+    legacy.binding.activated_at,
+  );
+  if (!options.migrate_legacy)
+    return {
+      authority,
+      source: "legacy_active_authority_v2",
+      migrated: false,
+    };
+  await persistActiveAuthorityCas(
+    root,
+    authority,
+    legacy.binding.active_authority_identity,
+  );
+  return {
+    authority,
+    source: "legacy_active_authority_v2",
+    migrated: true,
+  };
+}
+
+export async function loadActiveCompiledAuthority(
+  repositoryRoot: string,
+  workdir?: string,
+  options: { migrate_legacy?: boolean } = {},
+): Promise<CompiledDeliveryContractV2 | null> {
+  const loaded = await loadActiveLongTaskAuthority(repositoryRoot, options);
+  if (!loaded.authority) return null;
   if (
-    row.schema_version !== "active-long-task-binding-v2" ||
-    typeof row.task_id !== "string" ||
-    typeof row.repository_root !== "string" ||
-    typeof row.worktree_identity !== "string" ||
-    typeof row.workdir !== "string" ||
-    typeof row.active_authority_identity !== "string" ||
-    typeof row.authority_revision !== "number" ||
-    !row.initial_task_base ||
-    !row.verifier_identity
+    workdir &&
+    normalizePath(loaded.authority.workdir) !== normalizePath(workdir)
   )
-    throw new Error("active_binding_invalid");
-  const binding = row as unknown as ActiveLongTaskBindingV2;
-  if (marker !== binding.task_id)
-    throw new Error("active_binding_task_marker_mismatch");
-  if (binding.worktree_identity !== identity)
-    throw new Error("active_binding_worktree_identity_mismatch");
-  if (normalizePath(binding.repository_root) !== normalizePath(root))
-    throw new Error("active_binding_repository_identity_mismatch");
-  await access(binding.workdir).catch(() => {
-    throw new Error("active_binding_workdir_missing");
+    throw new Error("active_task_workdir_mismatch");
+  return loaded.authority.authority_snapshot;
+}
+
+export async function readActiveLongTaskBinding(
+  repositoryRoot: string,
+): Promise<ActiveLongTaskAuthorityV3 | null> {
+  return (await loadActiveLongTaskAuthority(repositoryRoot)).authority;
+}
+
+export async function inspectCompiledCache(
+  authority: ActiveLongTaskAuthorityV3,
+): Promise<CompiledCacheStatusV3> {
+  try {
+    const cache = await readCompiledDeliveryContract(authority.workdir);
+    return cache.compiled_identity === authority.active_authority_identity
+      ? "compiled_cache_matching"
+      : "compiled_cache_mismatched_ignored";
+  } catch (error) {
+    return missingError(error)
+      ? "compiled_cache_missing_repairable"
+      : "compiled_cache_mismatched_ignored";
+  }
+}
+
+export async function commitActiveAuthority(options: {
+  candidate: CompiledDeliveryContractV2;
+  expected_previous_identity: string | null;
+}): Promise<ActiveLongTaskAuthorityV3> {
+  const root = path.resolve(options.candidate.repository_root);
+  const current = await loadActiveLongTaskAuthority(root);
+  assertAuthorityCasCandidate(
+    current.authority,
+    options.candidate,
+    options.expected_previous_identity,
+  );
+  await ensureRuntimeExcludes(root, options.candidate.workdir);
+  const authority = activeAuthorityFromCompiled(
+    options.candidate,
+    current.authority?.activated_at ?? new Date().toISOString(),
+  );
+  await persistActiveAuthorityCas(
+    root,
+    authority,
+    options.expected_previous_identity,
+  );
+  return authority;
+}
+
+export async function activateDeliveryContract(
+  compiled: CompiledDeliveryContractV2,
+): Promise<ActiveLongTaskAuthorityV3> {
+  const current = await loadActiveLongTaskAuthority(compiled.repository_root);
+  return commitActiveAuthority({
+    candidate: compiled,
+    expected_previous_identity:
+      current.authority?.active_authority_identity ?? null,
   });
-  await access(path.join(binding.workdir, CONTRACT_FILE)).catch(() => {
-    throw new Error("active_binding_contract_missing");
-  });
-  return binding;
 }
 
 export async function assertMatchingActiveBinding(
   compiled: CompiledDeliveryContractV2,
-): Promise<ActiveLongTaskBindingV2> {
-  const active = await readActiveLongTaskBinding(compiled.repository_root);
+): Promise<ActiveLongTaskAuthorityV3> {
+  const active = (
+    await loadActiveLongTaskAuthority(compiled.repository_root, {
+      migrate_legacy: true,
+    })
+  ).authority;
   if (!active) throw new Error("active_task_missing");
   if (
-    active.workdir !== compiled.workdir ||
+    normalizePath(active.workdir) !== normalizePath(compiled.workdir) ||
     active.task_id !== compiled.task.id ||
     active.active_authority_identity !== compiled.compiled_identity ||
     active.authority_revision !== compiled.authority_revision ||
@@ -209,6 +307,263 @@ export async function assertMatchingActiveBinding(
   )
     throw new Error("active_task_identity_mismatch");
   return active;
+}
+
+async function validateActiveAuthorityV3(
+  root: string,
+  identity: string,
+  marker: string,
+  row: Record<string, unknown>,
+): Promise<ActiveLongTaskAuthorityV3> {
+  if (
+    typeof row.task_id !== "string" ||
+    typeof row.repository_root !== "string" ||
+    typeof row.worktree_identity !== "string" ||
+    typeof row.workdir !== "string" ||
+    typeof row.active_authority_identity !== "string" ||
+    typeof row.authority_revision !== "number" ||
+    !Number.isInteger(row.authority_revision) ||
+    row.authority_revision < 1 ||
+    typeof row.activated_at !== "string" ||
+    typeof row.authority_snapshot_sha256 !== "string" ||
+    !row.initial_task_base ||
+    !row.verifier_identity ||
+    !row.authority_snapshot
+  )
+    throw new Error("active_authority_invalid:shape");
+  const authority = row as unknown as ActiveLongTaskAuthorityV3;
+  if (marker !== markerValue(authority))
+    throw new Error("marker_record_mismatch");
+  if (authority.worktree_identity !== identity)
+    throw new Error("active_authority_invalid:worktree_identity");
+  if (normalizePath(authority.repository_root) !== normalizePath(root))
+    throw new Error("active_authority_invalid:repository_identity");
+  const snapshot = validateCompiledDeliveryContract(
+    authority.authority_snapshot,
+    path.resolve(authority.workdir),
+  );
+  if (
+    sha256Hex(canonicalValueJson(snapshot)) !==
+    authority.authority_snapshot_sha256
+  )
+    throw new Error("active_authority_invalid:snapshot_hash");
+  if (
+    authority.task_id !== snapshot.task.id ||
+    normalizePath(authority.repository_root) !==
+      normalizePath(snapshot.repository_root) ||
+    normalizePath(authority.workdir) !== normalizePath(snapshot.workdir) ||
+    authority.active_authority_identity !== snapshot.compiled_identity ||
+    authority.authority_revision !== snapshot.authority_revision ||
+    !sameValue(authority.initial_task_base, snapshot.initial_task_base) ||
+    !sameValue(authority.verifier_identity, snapshot.verifier_identity)
+  )
+    throw new Error("active_authority_invalid:snapshot_binding");
+  await assertActiveWorkdir(authority.workdir);
+  return authority;
+}
+
+async function validateLegacyActiveBindingV2(
+  root: string,
+  identity: string,
+  marker: string,
+  row: Record<string, unknown>,
+): Promise<{
+  binding: ActiveLongTaskBindingV2;
+  authority_snapshot: CompiledDeliveryContractV2;
+}> {
+  if (
+    typeof row.task_id !== "string" ||
+    typeof row.repository_root !== "string" ||
+    typeof row.worktree_identity !== "string" ||
+    typeof row.workdir !== "string" ||
+    typeof row.active_authority_identity !== "string" ||
+    typeof row.authority_revision !== "number" ||
+    !Number.isInteger(row.authority_revision) ||
+    row.authority_revision < 1 ||
+    typeof row.activated_at !== "string" ||
+    !row.initial_task_base ||
+    !row.verifier_identity
+  )
+    throw new Error("active_authority_invalid:legacy_shape");
+  const binding = row as unknown as ActiveLongTaskBindingV2;
+  if (marker !== binding.task_id) throw new Error("marker_record_mismatch");
+  if (binding.worktree_identity !== identity)
+    throw new Error("active_authority_invalid:legacy_worktree_identity");
+  if (normalizePath(binding.repository_root) !== normalizePath(root))
+    throw new Error("active_authority_invalid:legacy_repository_identity");
+  await assertActiveWorkdir(binding.workdir);
+  let compiled: CompiledDeliveryContractV2;
+  try {
+    compiled = await readCompiledDeliveryContract(binding.workdir);
+  } catch {
+    throw new Error("active_authority_continuity_unrecoverable");
+  }
+  if (
+    binding.task_id !== compiled.task.id ||
+    normalizePath(binding.repository_root) !==
+      normalizePath(compiled.repository_root) ||
+    normalizePath(binding.workdir) !== normalizePath(compiled.workdir) ||
+    binding.active_authority_identity !== compiled.compiled_identity ||
+    binding.authority_revision !== compiled.authority_revision ||
+    !sameValue(binding.initial_task_base, compiled.initial_task_base) ||
+    !sameValue(binding.verifier_identity, compiled.verifier_identity)
+  )
+    throw new Error("active_authority_continuity_unrecoverable");
+  return { binding, authority_snapshot: compiled };
+}
+
+function validateCompiledDeliveryContract(
+  value: unknown,
+  expectedWorkdir?: string,
+): CompiledDeliveryContractV2 {
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    throw new Error("compiled_contract_invalid:shape");
+  const compiled = value as CompiledDeliveryContractV2;
+  if (
+    compiled.schema_version !== "compiled-long-task-delivery-v2" ||
+    typeof compiled.compiled_identity !== "string" ||
+    typeof compiled.repository_root !== "string" ||
+    typeof compiled.workdir !== "string"
+  )
+    throw new Error("compiled_contract_invalid:schema_version");
+  const { compiled_identity: compiledIdentity, ...unsigned } = compiled;
+  if (sha256Hex(canonicalValueJson(unsigned)) !== compiledIdentity)
+    throw new Error("compiled_contract_invalid:identity");
+  if (
+    expectedWorkdir &&
+    normalizePath(expectedWorkdir) !== normalizePath(compiled.workdir)
+  )
+    throw new Error("compiled_contract_invalid:workdir");
+  return compiled;
+}
+
+function activeAuthorityFromCompiled(
+  compiled: CompiledDeliveryContractV2,
+  activatedAt: string,
+): ActiveLongTaskAuthorityV3 {
+  const authoritySnapshot = validateCompiledDeliveryContract(
+    compiled,
+    compiled.workdir,
+  );
+  return {
+    schema_version: "active-long-task-authority-v3",
+    task_id: authoritySnapshot.task.id,
+    repository_root: path.resolve(authoritySnapshot.repository_root),
+    worktree_identity: worktreeIdentity(authoritySnapshot.repository_root),
+    workdir: path.resolve(authoritySnapshot.workdir),
+    active_authority_identity: authoritySnapshot.compiled_identity,
+    authority_revision: authoritySnapshot.authority_revision,
+    initial_task_base: authoritySnapshot.initial_task_base,
+    verifier_identity: authoritySnapshot.verifier_identity,
+    activated_at: activatedAt,
+    authority_snapshot: authoritySnapshot,
+    authority_snapshot_sha256: sha256Hex(
+      canonicalValueJson(authoritySnapshot),
+    ),
+  };
+}
+
+function assertAuthorityCasCandidate(
+  current: ActiveLongTaskAuthorityV3 | null,
+  candidate: CompiledDeliveryContractV2,
+  expectedPreviousIdentity: string | null,
+): void {
+  const currentIdentity = current?.active_authority_identity ?? null;
+  if (currentIdentity !== expectedPreviousIdentity)
+    throw new Error("active_authority_compare_and_swap_failed");
+  if (!current) {
+    if (candidate.authority_revision !== 1)
+      throw new Error("active_authority_revision_invalid:new_task");
+    return;
+  }
+  if (
+    normalizePath(current.workdir) !== normalizePath(candidate.workdir) ||
+    current.task_id !== candidate.task.id
+  )
+    throw new Error(`active_task_exists:${current.workdir}`);
+  if (!sameValue(current.initial_task_base, candidate.initial_task_base))
+    throw new Error("active_authority_initial_task_base_changed");
+  if (currentIdentity === candidate.compiled_identity) {
+    if (candidate.authority_revision !== current.authority_revision)
+      throw new Error("active_authority_revision_invalid:unchanged_identity");
+    return;
+  }
+  if (candidate.authority_revision !== current.authority_revision + 1)
+    throw new Error("active_authority_revision_invalid:expected_increment");
+}
+
+async function persistActiveAuthorityCas(
+  root: string,
+  authority: ActiveLongTaskAuthorityV3,
+  expectedPreviousIdentity: string | null,
+): Promise<void> {
+  const activeFile = await activeRecordPath(root);
+  await mkdir(path.dirname(activeFile), { recursive: true });
+  const lockFile = `${activeFile}.lock`;
+  let lock;
+  try {
+    lock = await open(lockFile, "wx");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "EEXIST")
+      throw new Error(
+        "active_authority_compare_and_swap_failed:lock_unavailable",
+      );
+    throw error;
+  }
+  try {
+    const current = await loadActiveLongTaskAuthority(root);
+    assertAuthorityCasCandidate(
+      current.authority,
+      authority.authority_snapshot,
+      expectedPreviousIdentity,
+    );
+    const identity = worktreeIdentity(root);
+    const key = markerKey(identity);
+    const [oldRecord, oldMarker] = await Promise.all([
+      readOptionalText(activeFile),
+      gitConfigGet(root, key),
+    ]);
+    try {
+      await atomicJson(activeFile, authority);
+      await gitConfigSet(root, key, markerValue(authority));
+    } catch (error) {
+      try {
+        if (oldRecord === null) await rm(activeFile, { force: true });
+        else await atomicText(activeFile, oldRecord);
+        if (oldMarker === null) await gitConfigUnset(root, key);
+        else await gitConfigSet(root, key, oldMarker);
+      } catch (rollbackError) {
+        throw new Error(
+          `active_authority_commit_rollback_failed:${message(rollbackError)}`,
+        );
+      }
+      throw new Error(`active_authority_commit_failed:${message(error)}`);
+    }
+  } finally {
+    await lock.close();
+    await rm(lockFile, { force: true });
+  }
+}
+
+async function assertActiveWorkdir(workdir: string): Promise<void> {
+  await access(workdir).catch(() => {
+    throw new Error("active_binding_workdir_missing");
+  });
+  await access(path.join(workdir, CONTRACT_FILE)).catch(() => {
+    throw new Error("active_binding_contract_missing");
+  });
+}
+
+function markerValue(authority: ActiveLongTaskAuthorityV3): string {
+  return [
+    authority.task_id,
+    String(authority.authority_revision),
+    authority.active_authority_identity,
+  ].join("|");
+}
+
+function sameValue(left: unknown, right: unknown): boolean {
+  return canonicalValueJson(left) === canonicalValueJson(right);
 }
 
 export async function writeProgressRecord(
@@ -422,11 +777,28 @@ async function readOptionalJson(file: string): Promise<unknown | null> {
   }
 }
 
+async function readOptionalText(file: string): Promise<string | null> {
+  try {
+    return await readFile(file, "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
+}
+
 async function atomicJson(file: string, value: unknown): Promise<void> {
   await atomicText(file, canonicalJson(value));
 }
 
 async function atomicText(file: string, content: string): Promise<void> {
+  const temporary = await stageAtomicText(file, content);
+  await rename(temporary, file);
+}
+
+async function stageAtomicText(
+  file: string,
+  content: string,
+): Promise<string> {
   await mkdir(path.dirname(file), { recursive: true });
   const temporary = `${file}.tmp-${process.pid}-${Date.now()}`;
   const handle = await open(temporary, "wx");
@@ -436,5 +808,14 @@ async function atomicText(file: string, content: string): Promise<void> {
   } finally {
     await handle.close();
   }
-  await rename(temporary, file);
+  return temporary;
+}
+
+function missingError(error: unknown): boolean {
+  const value = message(error);
+  return value.includes("ENOENT") || value.includes("no such file");
+}
+
+function message(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

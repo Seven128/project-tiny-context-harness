@@ -223,8 +223,6 @@ function validateCheck(
   owner: string,
   errors: string[],
 ): void {
-  if (!check.positive_assertions.length)
-    errors.push(`check_without_positive_assertion:${owner}:${check.key}`);
   if (!check.verification_inputs.length)
     errors.push(`verification_inputs_empty:${owner}:${check.key}`);
   if (

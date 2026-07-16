@@ -46,7 +46,6 @@ export type RunnerType =
 
 export type PresenceOrUnaryAssertionOperator =
   | "exists"
-  | "not_exists"
   | "truthy"
   | "falsy";
 

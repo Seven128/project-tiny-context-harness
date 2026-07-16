@@ -8,8 +8,8 @@ import type {
 } from "./long-task-delivery-types.js";
 import {
   assertRepositoryPattern,
+  classifyRepositoryPatternOverlap,
   matchesRepoPattern,
-  patternsOverlap,
 } from "./long-task-paths.js";
 import { assertProtectedRepositoryFile } from "./long-task-protected-files.js";
 import {
@@ -46,7 +46,11 @@ export async function freezeDeliveryCheck(
       !baseline.files.some((file) =>
         matchesRepoPattern(file.path, normalized),
       ) &&
-      !expectedOutputs.some((output) => patternsOverlap(output, normalized))
+      !expectedOutputs.some(
+        (output) =>
+          classifyRepositoryPatternOverlap(output, normalized).status ===
+          "proven_overlap",
+      )
     )
       throw new Error(`input_path_not_found:${check.key}:${pattern}`);
   }

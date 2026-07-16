@@ -24,14 +24,9 @@ const binaryOperators = [
   "subset_of",
   "superset_of",
 ];
-const presenceOrUnaryOperators = [
-  "exists",
-  "not_exists",
-  "truthy",
-  "falsy",
-];
+const presenceOrUnaryOperators = ["exists", "truthy", "falsy"];
 
-test("all Assertion operators fail closed for missing Observations except not_exists", () => {
+test("all active Assertion operators fail closed for missing Observations", () => {
   for (const operator of [
     ...presenceOrUnaryOperators,
     ...binaryOperators,
@@ -41,17 +36,36 @@ test("all Assertion operators fail closed for missing Observations except not_ex
       claims: ["result"],
       observation: "missing.value",
       operator,
-      ...(binaryOperators.includes(operator) ? { expected: expected(operator) } : {}),
+      ...(binaryOperators.includes(operator)
+        ? { expected: expected(operator) }
+        : {}),
     };
-    assert.equal(
-      evaluateDeliveryAssertion(assertion, {}),
-      operator === "not_exists",
-      operator,
-    );
+    assert.equal(evaluateDeliveryAssertion(assertion, {}), false, operator);
   }
 });
 
-test("Parser and JSON Schema require expected only for binary Assertions", async () => {
+test("not_exists is rejected by the Runtime Parser and absent from the JSON Schema", async () => {
+  const contract = deliveryContract();
+  contract.outcomes[0].acceptance.checks[0].positive_assertions[0].operator =
+    "not_exists";
+  delete contract.outcomes[0].acceptance.checks[0].positive_assertions[0]
+    .expected;
+  assert.throws(
+    () => parseDeliveryContractText(YAML.stringify(contract)),
+    /operator.*must be one of/u,
+  );
+  const schema = await deliverySchema();
+  assert.equal(
+    schema.$defs.assertion.properties.operator.enum.includes("not_exists"),
+    false,
+  );
+  assert.equal(
+    JSON.stringify(schema.$defs.assertion).includes("not_exists"),
+    false,
+  );
+});
+
+test("Parser statically validates expected presence, type, and regular expressions", () => {
   for (const operator of binaryOperators) {
     const contract = contractWithAssertion(operator);
     delete contract.outcomes[0].acceptance.checks[0].positive_assertions[0]
@@ -81,20 +95,65 @@ test("Parser and JSON Schema require expected only for binary Assertions", async
       operator,
     );
 
-  const repo = fileURLToPath(new URL("../..", import.meta.url));
-  const schema = JSON.parse(
-    await readFile(
-      path.join(
-        repo,
-        "packages/ty-context/src/schemas/long-task-delivery-v2/long-task-delivery-v2.schema.json",
-      ),
-      "utf8",
-    ),
+  const invalidRegex = contractWithAssertion("matches");
+  invalidRegex.outcomes[0].acceptance.checks[0].positive_assertions[0].expected =
+    "[";
+  assert.throws(
+    () => parseDeliveryContractText(YAML.stringify(invalidRegex)),
+    /assertion_expected_invalid_regex/u,
   );
-  assert.equal(schema.$defs.assertion.allOf.length, 2);
-  assert.deepEqual(
-    schema.$defs.assertion.allOf[1].then.not.required,
-    ["expected"],
+  const invalidNumeric = contractWithAssertion("greater_than");
+  invalidNumeric.outcomes[0].acceptance.checks[0].positive_assertions[0].expected =
+    "1";
+  assert.throws(
+    () => parseDeliveryContractText(YAML.stringify(invalidNumeric)),
+    /assertion_expected_finite_number_required/u,
+  );
+  const invalidSet = contractWithAssertion("set_equals");
+  invalidSet.outcomes[0].acceptance.checks[0].positive_assertions[0].expected =
+    {};
+  assert.throws(
+    () => parseDeliveryContractText(YAML.stringify(invalidSet)),
+    /assertion_expected_array_required/u,
+  );
+});
+
+test("negative operators cannot pass through incomparable Observation types", () => {
+  assert.equal(
+    evaluateDeliveryAssertion(assertion("not_contains", "value"), {
+      value: 123,
+    }),
+    false,
+  );
+  assert.equal(
+    evaluateDeliveryAssertion(assertion("not_contains", "value"), {
+      value: { nested: true },
+    }),
+    false,
+  );
+  assert.equal(
+    evaluateDeliveryAssertion(assertion("not_matches", ".*"), {
+      value: 123,
+    }),
+    false,
+  );
+  assert.equal(
+    evaluateDeliveryAssertion(assertion("less_than", 10), {
+      value: Number.POSITIVE_INFINITY,
+    }),
+    false,
+  );
+  assert.equal(
+    evaluateDeliveryAssertion(assertion("subset_of", []), {
+      value: "not-an-array",
+    }),
+    false,
+  );
+  assert.equal(
+    evaluateDeliveryAssertion(assertion("equals", false), {
+      value: false,
+    }),
+    true,
   );
 });
 
@@ -126,16 +185,16 @@ test("missing Observation produces assertion_failed without Claim proof", async 
     input_paths: [],
     expected_output_paths: [],
     artifact_globs: [],
-    positive_assertions: [
+    positive_assertions: [],
+    negative_assertions: [
       {
         key: "missing-result",
         claims: ["OUT.safety.result"],
         observation: "missing",
         operator: "equals",
-        expected: true,
+        expected: false,
       },
     ],
-    negative_assertions: [],
     environment_requirements: [],
   };
   const result = await evaluateCheckEvidence(
@@ -169,10 +228,22 @@ function contractWithAssertion(operator) {
       claims: ["result", "obligation.implement-first"],
       observation: "result",
       operator,
-      ...(binaryOperators.includes(operator) ? { expected: expected(operator) } : {}),
+      ...(binaryOperators.includes(operator)
+        ? { expected: expected(operator) }
+        : {}),
     },
   ];
   return contract;
+}
+
+function assertion(operator, expectedValue) {
+  return {
+    key: "negative",
+    claims: ["result"],
+    observation: "value",
+    operator,
+    expected: expectedValue,
+  };
 }
 
 function expected(operator) {
@@ -189,4 +260,17 @@ function expected(operator) {
   if (["matches", "not_matches"].includes(operator)) return ".*";
   if (["contains", "not_contains"].includes(operator)) return "value";
   return true;
+}
+
+async function deliverySchema() {
+  const repo = fileURLToPath(new URL("../..", import.meta.url));
+  return JSON.parse(
+    await readFile(
+      path.join(
+        repo,
+        "packages/ty-context/src/schemas/long-task-delivery-v2/long-task-delivery-v2.schema.json",
+      ),
+      "utf8",
+    ),
+  );
 }

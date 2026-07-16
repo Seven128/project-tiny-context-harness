@@ -135,7 +135,6 @@ function parseAssertions(value: unknown, label: string): DeliveryAssertionV2[] {
         "truthy",
         "falsy",
         "exists",
-        "not_exists",
         "set_equals",
         "subset_of",
         "superset_of",
@@ -147,6 +146,8 @@ function parseAssertions(value: unknown, label: string): DeliveryAssertionV2[] {
       fail(itemLabel, "assertion_expected_required");
     if (!isBinaryAssertionOperator(operator) && hasExpected)
       fail(itemLabel, "assertion_expected_forbidden");
+    if (isBinaryAssertionOperator(operator))
+      validateAssertionExpected(operator, row.expected, itemLabel);
     const base = {
       key: key(row.key, `${itemLabel}.key`),
       claims: strings(row.claims, `${itemLabel}.claims`),
@@ -165,5 +166,36 @@ function parseAssertions(value: unknown, label: string): DeliveryAssertionV2[] {
 function isBinaryAssertionOperator(
   operator: AssertionOperator,
 ): operator is BinaryAssertionOperator {
-  return !["exists", "not_exists", "truthy", "falsy"].includes(operator);
+  return !["exists", "truthy", "falsy"].includes(operator);
+}
+
+function validateAssertionExpected(
+  operator: BinaryAssertionOperator,
+  expected: unknown,
+  label: string,
+): void {
+  if (operator === "matches" || operator === "not_matches") {
+    if (typeof expected !== "string")
+      fail(label, "assertion_expected_string_required");
+    try {
+      new RegExp(expected, "u");
+    } catch {
+      fail(label, "assertion_expected_invalid_regex");
+    }
+  }
+  if (
+    [
+      "greater_than",
+      "greater_or_equal",
+      "less_than",
+      "less_or_equal",
+    ].includes(operator) &&
+    (typeof expected !== "number" || !Number.isFinite(expected))
+  )
+    fail(label, "assertion_expected_finite_number_required");
+  if (
+    ["set_equals", "subset_of", "superset_of"].includes(operator) &&
+    !Array.isArray(expected)
+  )
+    fail(label, "assertion_expected_array_required");
 }

@@ -23,8 +23,9 @@ export function prepareSemanticAuthority(contract) {
   outcome.acceptance.checks[0].negative_assertions.push({
     key: "exit-zero-is-insufficient",
     claims: ["non_completing.exit-zero-only"],
-    observation: "missing",
-    operator: "not_exists",
+    observation: "negative",
+    operator: "equals",
+    expected: false,
   });
   outcome.acceptance.checks.push({
     ...structuredClone(outcome.acceptance.checks[0]),

@@ -55,6 +55,40 @@ export function removedOrReplacedVerificationInputs(
     .map(([file]) => `${identity}:${file}`);
 }
 
+export function removedOrNarrowedInputPaths(
+  identity: string,
+  before: CompiledCheckV2,
+  after: CompiledCheckV2,
+): string[] {
+  return before.input_paths
+    .filter(
+      (oldPattern) =>
+        !after.input_paths.some(
+          (newPattern) =>
+            proveRepositoryPatternSubset(oldPattern, newPattern).status ===
+            "proven_subset",
+        ),
+    )
+    .map((pattern) => `${identity}:${pattern}`);
+}
+
+export function removedOrWeakenedExpectedOutputPaths(
+  identity: string,
+  before: CompiledCheckV2,
+  after: CompiledCheckV2,
+): string[] {
+  return before.expected_output_paths
+    .filter(
+      (oldPattern) =>
+        !after.expected_output_paths.some(
+          (newPattern) =>
+            proveRepositoryPatternSubset(newPattern, oldPattern).status ===
+            "proven_subset",
+        ),
+    )
+    .map((pattern) => `${identity}:${pattern}`);
+}
+
 export function sourceClaimReductions(
   beforeClaims: SourceClaimV2[],
   afterClaims: SourceClaimV2[],

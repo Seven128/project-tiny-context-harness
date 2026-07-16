@@ -8,8 +8,8 @@ import type {
 import {
   assertRepositoryPattern,
   matchesRepoPattern,
-  patternsOverlap,
   proveRepositoryPatternSubset,
+  repositoryPatternsMayOverlap,
 } from "./long-task-paths.js";
 import { assertProtectedRepositoryFile } from "./long-task-protected-files.js";
 import { sha256Hex } from "./strict-codec.js";
@@ -29,7 +29,11 @@ export function validateVerificationInputSeparation(
   ]);
   for (const check of checks)
     for (const source of Object.keys(check.verification_input_hashes)) {
-      if (implementation.some((pattern) => patternsOverlap(pattern, source)))
+      if (
+        implementation.some((pattern) =>
+          repositoryPatternsMayOverlap(pattern, source),
+        )
+      )
         throw new Error(
           `verification_input_overlaps_implementation:${check.key}:${source}`,
         );
@@ -40,7 +44,7 @@ export function validateVerificationInputSeparation(
         source.startsWith(".git/") ||
         source.split("/").includes("node_modules") ||
         check.artifact_globs.some((artifact) =>
-          patternsOverlap(artifact, source),
+          repositoryPatternsMayOverlap(artifact, source),
         )
       )
         throw new Error(`verification_input_protected:${check.key}:${source}`);
@@ -73,9 +77,13 @@ export function validateTechnicalPaths(
       ),
     );
     for (const pattern of allowed) {
-      if (patternsOverlap(pattern, workdirRelative))
+      if (repositoryPatternsMayOverlap(pattern, workdirRelative))
         throw new Error(`protected_path_declared:long_task_workdir:${pattern}`);
-      if (forbidden.some((blocked) => patternsOverlap(pattern, blocked)))
+      if (
+        forbidden.some((blocked) =>
+          repositoryPatternsMayOverlap(pattern, blocked),
+        )
+      )
         throw new Error(`allowed_forbidden_path_overlap:${pattern}`);
     }
     for (const binding of outcome.technical.bindings) {

@@ -7,9 +7,11 @@ import type {
 import { runDeliveryFinalGate } from "./long-task-final-v2.js";
 import { deliveryCompileFreshness } from "./long-task-freshness.js";
 import {
+  type ActiveLongTaskAuthorityV3,
   clearActiveBinding,
+  inspectCompiledCache,
+  loadActiveLongTaskAuthority,
   readActiveLongTaskBinding,
-  readCompiledDeliveryContract,
   readFinalReceipt,
   readProgressRecords,
 } from "./long-task-state.js";
@@ -43,13 +45,26 @@ export interface DeliveryStatusV2 {
 export async function readDeliveryStatus(
   workdir: string,
 ): Promise<DeliveryStatusV2> {
-  const compiled = await readCompiledDeliveryContract(workdir);
+  const root = await repositoryRoot(process.cwd());
+  const loaded = await loadActiveLongTaskAuthority(root);
+  const active = loaded.authority;
+  if (!active) throw new Error("active_task_missing");
+  if (active.workdir !== path.resolve(workdir))
+    throw new Error("active_task_workdir_mismatch");
+  return readDeliveryStatusForAuthority(active);
+}
+
+async function readDeliveryStatusForAuthority(
+  active: ActiveLongTaskAuthorityV3,
+): Promise<DeliveryStatusV2> {
+  const compiled = active.authority_snapshot;
+  const cacheStatus = await inspectCompiledCache(active);
   const current = await captureWorkspaceManifest(
     compiled.repository_root,
     compiled.workdir,
   );
   const stale = await deliveryCompileFreshness(compiled);
-  const progress = await readProgressRecords(workdir);
+  const progress = await readProgressRecords(active.workdir);
   let receipt = null;
   let receiptError: string | null = null;
   try {
@@ -82,16 +97,27 @@ export async function readDeliveryStatus(
     needs_reverify: projection.needsReverify,
     progress_passing: projection.progressPassing,
     progress_failing: projection.progressFailing,
-    findings: projection.findings,
+    findings: [
+      ...projection.findings,
+      ...(cacheStatus === "compiled_cache_matching"
+        ? []
+        : [cacheDiagnostic(cacheStatus)]),
+    ],
   };
 }
 
 export async function resumeDeliveryTask(
   workdir: string,
 ): Promise<Record<string, unknown>> {
-  const compiled = await readCompiledDeliveryContract(workdir);
+  const root = await repositoryRoot(process.cwd());
+  const loaded = await loadActiveLongTaskAuthority(root);
+  const active = loaded.authority;
+  if (!active) throw new Error("active_task_missing");
+  if (active.workdir !== path.resolve(workdir))
+    throw new Error("active_task_workdir_mismatch");
+  const compiled = active.authority_snapshot;
   const [status, git] = await Promise.all([
-    readDeliveryStatus(workdir),
+    readDeliveryStatusForAuthority(active),
     currentGitState(compiled.repository_root),
   ]);
   return {
@@ -123,37 +149,67 @@ export async function doctorDeliveryTask(
   workdirInput: string,
 ): Promise<Record<string, unknown>> {
   const root = await repositoryRoot(process.cwd());
-  const active = await readActiveLongTaskBinding(root);
+  let loaded;
+  try {
+    loaded = await loadActiveLongTaskAuthority(root);
+  } catch (error) {
+    const finding = doctorAuthorityFinding(message(error));
+    return {
+      schema_version: "long-task-doctor-v2",
+      status: finding,
+      healthy: false,
+      findings: [finding],
+      ...(finding === "active_authority_continuity_unrecoverable"
+        ? { next_action: "manual_restore_or_abandon_required" }
+        : {}),
+    };
+  }
+  const active = loaded.authority;
   if (!active) return { status: "no_active_task", healthy: true };
   if (active.workdir !== path.resolve(workdirInput))
     throw new Error("active_task_workdir_mismatch");
-  const compiled = await compileDeliveryContract(active.workdir, root, {
-    live_gate: true,
-    initial_task_base: active.initial_task_base,
-    authority_revision: active.authority_revision,
-    require_completion_gate: true,
-  });
-  const findings: string[] = [];
-  if (compiled.compiled_identity !== active.active_authority_identity)
-    findings.push("active_authority_identity_mismatch");
-  let cache = "available";
+  const findings: string[] = [
+    loaded.source === "legacy_active_authority_v2"
+      ? "legacy_active_authority_migratable"
+      : "active_authority_valid",
+    await inspectCompiledCache(active),
+  ];
+  let currentAuthorityIdentity: string | null = null;
   try {
-    await readCompiledDeliveryContract(active.workdir);
-  } catch {
-    cache = "missing_or_invalid";
+    const compiled = await compileDeliveryContract(active.workdir, root, {
+      live_gate: true,
+      initial_task_base: active.initial_task_base,
+      authority_revision: active.authority_revision,
+      require_completion_gate: true,
+    });
+    currentAuthorityIdentity = compiled.compiled_identity;
+    if (compiled.compiled_identity !== active.active_authority_identity)
+      findings.push("active_authority_source_mismatch");
+  } catch (error) {
+    findings.push(`active_authority_source_invalid:${message(error)}`);
   }
   return {
     schema_version: "long-task-doctor-v2",
-    healthy: findings.length === 0,
+    status: findings[0],
+    healthy: !findings.some(
+      (finding) =>
+        finding === "active_authority_source_mismatch" ||
+        finding.startsWith("active_authority_source_invalid:"),
+    ),
     task_id: active.task_id,
     authority_revision: active.authority_revision,
     marker_and_record: "matched",
     contract: "available",
-    current_authority_identity: compiled.compiled_identity,
-    verifier_identity: compiled.verifier_identity.bundle_sha256,
+    current_authority_identity: currentAuthorityIdentity,
+    active_authority_identity: active.active_authority_identity,
+    verifier_identity: active.verifier_identity.bundle_sha256,
     hook: "available",
-    source_context_fresh: findings.length === 0,
-    compiled_cache: cache,
+    source_context_fresh: !findings.some((finding) =>
+      finding.startsWith("active_authority_source_"),
+    ),
+    compiled_cache: findings.find((finding) =>
+      finding.startsWith("compiled_cache_"),
+    ),
     findings,
   };
 }
@@ -235,4 +291,34 @@ function nextAction(status: DeliveryStatusV2): string {
 
 function message(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function cacheDiagnostic(
+  code:
+    | "compiled_cache_missing_repairable"
+    | "compiled_cache_mismatched_ignored",
+): LongTaskFindingV2 {
+  return {
+    code,
+    outcome_key: null,
+    check_key: null,
+    message:
+      code === "compiled_cache_missing_repairable"
+        ? "The compiled cache projection is missing; active authority remains valid."
+        : "The compiled cache projection does not match active authority and was ignored.",
+    next_action:
+      "Run ty-context long-task compile to rebuild the cache projection from active authority.",
+  };
+}
+
+function doctorAuthorityFinding(error: string): string {
+  if (error.includes("active_authority_continuity_unrecoverable"))
+    return "active_authority_continuity_unrecoverable";
+  if (
+    error.includes("marker") ||
+    error.includes("active_binding_marker") ||
+    error.includes("active_binding_record_missing")
+  )
+    return "marker_record_mismatch";
+  return "active_authority_invalid";
 }

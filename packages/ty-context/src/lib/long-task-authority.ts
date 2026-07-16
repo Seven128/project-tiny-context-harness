@@ -4,7 +4,24 @@ import type {
   DeliveryContractV2,
   DeliveryOutcomeV2,
 } from "./long-task-delivery-types.js";
+import {
+  type AuthorityFieldPolicy,
+  CHECK_AUTHORITY_POLICY,
+  projectFieldsByPolicy,
+} from "./long-task-authority-policy.js";
 import { canonicalValueJson, sha256Hex } from "./strict-codec.js";
+
+const ACCEPTANCE_CHECK_POLICIES = new Set<AuthorityFieldPolicy>([
+  "identity",
+  "semantic_user_review",
+  "proof_additive",
+  "output_requirement",
+]);
+const TECHNICAL_CHECK_POLICIES = new Set<AuthorityFieldPolicy>([
+  "identity",
+  "runner_authority",
+  "input_coverage",
+]);
 
 export function computeAuthorityHashes(
   contract: DeliveryContractV2,
@@ -126,26 +143,21 @@ export function isMonotonicAcceptanceStrengthening(
 function acceptanceCheck(
   check: DeliveryContractV2["global"]["acceptance"]["checks"][number],
 ): unknown {
-  return {
-    key: check.key,
-    proof_surface: check.proof_surface,
-    positive_assertions: check.positive_assertions,
-    negative_assertions: check.negative_assertions,
-  };
+  return projectFieldsByPolicy(
+    check,
+    CHECK_AUTHORITY_POLICY,
+    ACCEPTANCE_CHECK_POLICIES,
+  );
 }
 
 function technicalCheck(
   check: DeliveryContractV2["global"]["acceptance"]["checks"][number],
 ): unknown {
-  return {
-    key: check.key,
-    runner: check.runner,
-    verification_inputs: check.verification_inputs,
-    input_paths: check.input_paths,
-    expected_output_paths: check.expected_output_paths,
-    artifact_globs: check.artifact_globs,
-    environment_requirements: check.environment_requirements,
-  };
+  return projectFieldsByPolicy(
+    check,
+    CHECK_AUTHORITY_POLICY,
+    TECHNICAL_CHECK_POLICIES,
+  );
 }
 
 function acceptanceSemantics(

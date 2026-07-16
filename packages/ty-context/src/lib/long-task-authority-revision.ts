@@ -26,7 +26,9 @@ import {
   obligationReductions,
   removedExactValues,
   removedGlobalForbiddenPaths,
+  removedOrNarrowedInputPaths,
   removedOrReplacedVerificationInputs,
+  removedOrWeakenedExpectedOutputPaths,
   removedStructuredValues,
   removedValues,
   rollbackReductions,
@@ -75,6 +77,8 @@ export function authorityRevisionDiff(
   const proofSurfacesChanged: string[] = [];
   const runnerDefinitionsChanged: string[] = [];
   const verificationInputsRemovedOrReplaced: string[] = [];
+  const inputPathsRemovedOrNarrowed: string[] = [];
+  const expectedOutputPathsRemovedOrWeakened: string[] = [];
   const artifactsRemoved: string[] = [];
   const environmentRequirementsRemoved: string[] = [];
   for (const [identity, before] of beforeChecks) {
@@ -92,6 +96,12 @@ export function authorityRevisionDiff(
     );
     verificationInputsRemovedOrReplaced.push(
       ...removedOrReplacedVerificationInputs(identity, before, after),
+    );
+    inputPathsRemovedOrNarrowed.push(
+      ...removedOrNarrowedInputPaths(identity, before, after),
+    );
+    expectedOutputPathsRemovedOrWeakened.push(
+      ...removedOrWeakenedExpectedOutputPaths(identity, before, after),
     );
     artifactsRemoved.push(
       ...removedExactValues(
@@ -220,6 +230,12 @@ export function authorityRevisionDiff(
     ...(verificationInputsRemovedOrReplaced.length
       ? ["verification_input_removed_or_replaced"]
       : []),
+    ...(inputPathsRemovedOrNarrowed.length
+      ? ["input_path_coverage_reduced"]
+      : []),
+    ...(expectedOutputPathsRemovedOrWeakened.length
+      ? ["expected_output_requirement_weakened"]
+      : []),
     ...(artifactsRemoved.length ? ["artifact_removed"] : []),
     ...(environmentRequirementsRemoved.length
       ? ["environment_requirement_removed"]
@@ -271,6 +287,9 @@ export function authorityRevisionDiff(
     runner_definitions_changed: runnerDefinitionsChanged,
     verification_inputs_removed_or_replaced:
       verificationInputsRemovedOrReplaced,
+    input_paths_removed_or_narrowed: inputPathsRemovedOrNarrowed,
+    expected_output_paths_removed_or_weakened:
+      expectedOutputPathsRemovedOrWeakened,
     artifacts_removed: artifactsRemoved,
     environment_requirements_removed: environmentRequirementsRemoved,
     bindings_removed_or_expanded: bindingsRemovedOrExpanded,
@@ -291,7 +310,9 @@ export function authorityRevisionDiff(
       bindingsRemovedOrExpanded.length > 0,
     runner_or_verification_inputs_changed:
       runnerDefinitionsChanged.length > 0 ||
-      verificationInputsRemovedOrReplaced.length > 0,
+      verificationInputsRemovedOrReplaced.length > 0 ||
+      inputPathsRemovedOrNarrowed.length > 0 ||
+      expectedOutputPathsRemovedOrWeakened.length > 0,
     technical_obligations_changed:
       obligationsRemovedOrWeakened.length > 0 ||
       rollbackOrRecoveryWeakened.length > 0,

@@ -15,14 +15,14 @@ import {
 } from "./long-task-evidence-v2.js";
 import { findScopeEscapes, matchesRepoPattern } from "./long-task-paths.js";
 import {
-  assertMatchingActiveBinding,
-  readCompiledDeliveryContract,
+  loadActiveCompiledAuthority,
   writeProgressRecord,
 } from "./long-task-state.js";
 import { createProgressRecord } from "./long-task-progress.js";
 import {
   changedWorkspacePaths,
   createWorkspaceSnapshot,
+  repositoryRoot,
   type WorkspaceSnapshotV2,
 } from "./long-task-workspace.js";
 
@@ -36,8 +36,11 @@ export async function verifyDeliveryContract(
   workdir: string,
   selection: { outcome?: string; check?: string } = {},
 ): Promise<TargetedVerificationResultV2> {
-  const compiled = await readCompiledDeliveryContract(workdir);
-  await assertMatchingActiveBinding(compiled);
+  const repository = await repositoryRoot(process.cwd());
+  const compiled = await loadActiveCompiledAuthority(repository, workdir, {
+    migrate_legacy: true,
+  });
+  if (!compiled) throw new Error("active_task_missing");
   const selected = selectChecks(compiled, selection);
   const snapshot = await createWorkspaceSnapshot(
     compiled.repository_root,

@@ -6,7 +6,7 @@ import type {
 } from "./long-task-delivery-types.js";
 import {
   assertMatchingActiveBinding,
-  readActiveLongTaskBinding,
+  loadActiveLongTaskAuthority,
   writeFinalReceipt,
 } from "./long-task-state.js";
 import {
@@ -25,7 +25,9 @@ export async function runDeliveryFinalGate(
 ): Promise<FinalReceiptV2> {
   const startedAt = new Date().toISOString();
   const repository = await repositoryRoot(process.cwd());
-  const active = await readActiveLongTaskBinding(repository);
+  const active = (
+    await loadActiveLongTaskAuthority(repository, { migrate_legacy: true })
+  ).authority;
   if (!active) throw new Error("active_task_missing");
   if (active.workdir !== (await resolved(workdirInput)))
     throw new Error("active_task_workdir_mismatch");

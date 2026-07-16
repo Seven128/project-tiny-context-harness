@@ -167,19 +167,36 @@ export function isManagedHookEntry(
   const commands = [row.command, row.commandWindows]
     .filter((value): value is string => typeof value === "string")
     .map((value) => value.trim());
-  if (
-    currentPackageCommand &&
-    commands.some((command) => command === currentPackageCommand)
-  )
-    return true;
   const repoLocal = commands.some((command) =>
     LEGACY_REPO_LOCAL_COMMANDS.has(command),
   );
   if (repoLocal) return true;
   const status = String(row.statusMessage ?? "");
+  if (!LEGACY_MANAGED_STATUSES.has(status)) return false;
+  return commands.some(
+    (command) =>
+      (Boolean(currentPackageCommand) &&
+        command === currentPackageCommand) ||
+      isHistoricalPackageOwnedCommand(command),
+  );
+}
+
+function isHistoricalPackageOwnedCommand(command: string): boolean {
+  const match = /^node "([^"\r\n]+)"$/u.exec(command);
+  if (!match) return false;
+  const absolute = match[1];
+  if (
+    !path.isAbsolute(absolute) &&
+    !path.win32.isAbsolute(absolute) &&
+    !path.posix.isAbsolute(absolute)
+  )
+    return false;
+  const normalized = absolute.replace(/\\/gu, "/");
   return (
-    LEGACY_MANAGED_STATUSES.has(status) &&
-    commands.some((command) => LEGACY_REPO_LOCAL_COMMANDS.has(command))
+    /\/node_modules\/project-tiny-context-harness\/dist\/long-task-hook\.js$/u.test(
+      normalized,
+    ) ||
+    /\/packages\/ty-context\/dist\/long-task-hook\.js$/u.test(normalized)
   );
 }
 

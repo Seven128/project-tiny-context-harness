@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { executeCheckRunner } from "../../packages/ty-context/dist/lib/long-task-check-runner.js";
@@ -140,6 +140,140 @@ test("Authority Revision rejects a risk downgrade instead of approving it", asyn
         "--revise",
       ]),
       /authority_risk_downgrade_rejected/,
+    );
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("input and expected-output authority reductions cover Global and Outcome Checks", async () => {
+  const fixture = await createDeliveryFixture();
+  try {
+    await mkdir(path.join(fixture.root, "artifacts"), { recursive: true });
+    await writeFile(
+      path.join(fixture.root, "artifacts", "proof.json"),
+      '{"proved":true}\n',
+    );
+    const outcomeCheck = fixture.contract.outcomes[0].acceptance.checks[0];
+    outcomeCheck.input_paths = ["src/state.json"];
+    outcomeCheck.expected_output_paths = ["artifacts/**"];
+    fixture.contract.global.technical.constraints.push({
+      key: "stable-runtime",
+      statement: "Runtime behavior remains stable.",
+    });
+    const globalCheck = structuredClone(outcomeCheck);
+    globalCheck.key = "global-check";
+    globalCheck.positive_assertions[0].key = "global-proof";
+    globalCheck.positive_assertions[0].claims = [
+      "constraint.stable-runtime",
+    ];
+    fixture.contract.global.acceptance.checks.push(globalCheck);
+    await writeContract(fixture.workdir, fixture.contract);
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    await runCli(fixture.root, ["long-task", "verify", fixture.workdir]);
+
+    const strengthened = structuredClone(fixture.contract);
+    for (const check of [
+      strengthened.global.acceptance.checks[0],
+      strengthened.outcomes[0].acceptance.checks[0],
+    ]) {
+      check.input_paths = ["src/**"];
+      check.expected_output_paths = [
+        "artifacts/proof.json",
+        "artifacts/extra.json",
+      ];
+    }
+    await writeContract(fixture.workdir, strengthened);
+    await runCli(fixture.root, [
+      "long-task",
+      "compile",
+      fixture.workdir,
+      "--revise",
+    ]);
+    await runCli(fixture.root, ["long-task", "verify", fixture.workdir]);
+
+    const weakened = structuredClone(strengthened);
+    for (const check of [
+      weakened.global.acceptance.checks[0],
+      weakened.outcomes[0].acceptance.checks[0],
+    ]) {
+      check.input_paths = ["src/state.json"];
+      check.expected_output_paths = ["artifacts/**"];
+    }
+    await writeContract(fixture.workdir, weakened);
+    await assert.rejects(
+      runCli(fixture.root, [
+        "long-task",
+        "compile",
+        fixture.workdir,
+        "--revise",
+      ]),
+      /authority_change_requires_user_decision/u,
+    );
+    let pending = JSON.parse(
+      await readFile(
+        path.join(
+          fixture.workdir,
+          ".ty-context/authority-revision-pending.json",
+        ),
+        "utf8",
+      ),
+    );
+    assert.deepEqual(
+      pending.revision_diff.input_paths_removed_or_narrowed.sort(),
+      ["GLOBAL.global-check:src/**", "first.first-check:src/**"],
+    );
+    assert.ok(
+      pending.revision_diff.reduction_reasons.includes(
+        "input_path_coverage_reduced",
+      ),
+    );
+    assert.ok(
+      pending.revision_diff.reduction_reasons.includes(
+        "expected_output_requirement_weakened",
+      ),
+    );
+    assert.ok(
+      pending.revision_diff.expected_output_paths_removed_or_weakened.some(
+        (entry) => entry.startsWith("GLOBAL.global-check:"),
+      ),
+    );
+    assert.ok(
+      pending.revision_diff.expected_output_paths_removed_or_weakened.some(
+        (entry) => entry.startsWith("first.first-check:"),
+      ),
+    );
+
+    const removed = structuredClone(strengthened);
+    for (const check of [
+      removed.global.acceptance.checks[0],
+      removed.outcomes[0].acceptance.checks[0],
+    ])
+      check.expected_output_paths = [];
+    await writeContract(fixture.workdir, removed);
+    await assert.rejects(
+      runCli(fixture.root, [
+        "long-task",
+        "compile",
+        fixture.workdir,
+        "--revise",
+      ]),
+      /authority_change_requires_user_decision/u,
+    );
+    pending = JSON.parse(
+      await readFile(
+        path.join(
+          fixture.workdir,
+          ".ty-context/authority-revision-pending.json",
+        ),
+        "utf8",
+      ),
+    );
+    assert.equal(
+      pending.revision_diff.expected_output_paths_removed_or_weakened
+        .length,
+      4,
     );
   } finally {
     await rm(fixture.root, { recursive: true, force: true });

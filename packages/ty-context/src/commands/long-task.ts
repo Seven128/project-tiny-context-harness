@@ -14,11 +14,13 @@ import {
 } from "../lib/long-task-status-v2.js";
 import {
   abandonLongTaskState,
-  activateDeliveryContract,
   approvePendingAuthorityRevision,
+  clearFinalReceipt,
   clearAuthorityRevision,
+  commitActiveAuthority,
   invalidateDerivedProgress,
-  writeCompiledDeliveryContract,
+  loadActiveLongTaskAuthority,
+  stageCompiledDeliveryContract,
 } from "../lib/long-task-state.js";
 import { verifyDeliveryContract } from "../lib/long-task-verifier-v2.js";
 import { repositoryRoot } from "../lib/long-task-workspace.js";
@@ -88,12 +90,50 @@ async function compile(workdir: string, args: string[]): Promise<void> {
   const revise = args.length === 1 && args[0] === "--revise";
   if (args.length && !revise)
     throw new Error(`Unknown or injected arguments: ${args.join(" ")}`);
+  const root = await repositoryRoot(process.cwd());
+  const loaded = await loadActiveLongTaskAuthority(root, {
+    migrate_legacy: true,
+  });
+  const previous = loaded.authority?.authority_snapshot ?? null;
+  if (
+    loaded.authority &&
+    loaded.authority.workdir !== path.resolve(workdir)
+  )
+    throw new Error(`active_task_exists:${loaded.authority.workdir}`);
   const compiled = await compileDeliveryContract(workdir, process.cwd(), {
     revise,
+    previous_authority: previous,
   });
-  if (revise) await invalidateDerivedProgress(workdir);
-  await writeCompiledDeliveryContract(compiled);
-  await activateDeliveryContract(compiled);
+  if (loaded.authority && loaded.authority.task_id !== compiled.task.id)
+    throw new Error(`active_task_exists:${loaded.authority.workdir}`);
+  const stagedCache = await stageCompiledDeliveryContract(compiled);
+  let authorityCommitted = false;
+  try {
+    await commitActiveAuthority({
+      candidate: compiled,
+      expected_previous_identity:
+        loaded.authority?.active_authority_identity ?? null,
+    });
+    authorityCommitted = true;
+    try {
+      await stagedCache.publish();
+    } catch (error) {
+      await stagedCache.discard();
+      throw new Error(
+        `compiled_cache_projection_publish_failed:${message(error)}`,
+      );
+    }
+  } catch (error) {
+    if (!authorityCommitted) await stagedCache.discard();
+    throw error;
+  }
+  if (
+    !previous ||
+    previous.compiled_identity !== compiled.compiled_identity
+  ) {
+    await invalidateDerivedProgress(workdir);
+    await clearFinalReceipt(compiled.repository_root, workdir);
+  }
   await clearAuthorityRevision(workdir);
   console.log(
     JSON.stringify({
@@ -106,6 +146,10 @@ async function compile(workdir: string, args: string[]): Promise<void> {
       claim_coverage: compiled.claim_coverage,
     }),
   );
+}
+
+function message(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 async function approveRevision(workdir: string, args: string[]): Promise<void> {

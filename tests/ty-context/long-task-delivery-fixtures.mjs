@@ -33,6 +33,7 @@ console.log(JSON.stringify({
   execution_status: "completed",
   observations: {
     result: state[key],
+    negative: false,
     population: {
       eligible_ids: [key],
       observed_ids: state[key] ? [key] : [],

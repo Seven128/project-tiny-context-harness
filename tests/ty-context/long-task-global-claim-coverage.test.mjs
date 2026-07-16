@@ -243,8 +243,9 @@ function makeGlobalCheck(
         {
           key: "global-negative",
           claims: negative,
-          observation: "missing",
-          operator: "not_exists",
+          observation: "negative",
+          operator: "equals",
+          expected: false,
         },
       ]
     : [];

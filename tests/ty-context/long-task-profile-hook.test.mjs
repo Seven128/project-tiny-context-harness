@@ -125,6 +125,58 @@ test("entry cleanup drops only empty managed-only groups and preserves configure
   ]);
 });
 
+test("Hook relocation removes only known package-owned absolute commands", () => {
+  const currentCommand = `node "${path.resolve(packageHook)}"`;
+  const oldNodeModules =
+    'node "C:\\old\\node_modules\\project-tiny-context-harness\\dist\\long-task-hook.js"';
+  const oldPnpm =
+    'node "C:\\old\\.pnpm\\project-tiny-context-harness@0.5.0\\node_modules\\project-tiny-context-harness\\dist\\long-task-hook.js"';
+  const oldWorkspace =
+    'node "C:\\repo\\packages\\ty-context\\dist\\long-task-hook.js"';
+  const userCustom = 'node "/user/project/dist/long-task-hook.js"';
+  const noStatusPackage =
+    'node "/old/node_modules/project-tiny-context-harness/dist/long-task-hook.js"';
+  const compositeUser = "node user-composite-long-task-hook.js";
+  const cleaned = removeManagedHookEntries(
+    [
+      {
+        matcher: "mixed",
+        hooks: [
+          ...[
+            oldNodeModules,
+            oldPnpm,
+            oldWorkspace,
+            currentCommand,
+          ].map((command) => ({
+            type: "command",
+            command,
+            statusMessage: "Tiny Context long-task live authority gate",
+          })),
+          {
+            type: "command",
+            command: userCustom,
+            statusMessage: "Tiny Context long-task live authority gate",
+          },
+          { type: "command", command: noStatusPackage },
+          {
+            type: "command",
+            command: compositeUser,
+            statusMessage: "Tiny Context long-task live authority gate",
+          },
+        ],
+      },
+    ],
+    currentCommand,
+  );
+  assert.equal(cleaned.removed, 4);
+  const retained = cleaned.groups[0].hooks.map((entry) => entry.command);
+  assert.deepEqual(retained, [
+    userCustom,
+    noStatusPackage,
+    compositeUser,
+  ]);
+});
+
 test("package-owned Hook resumes from common-dir and Stop runs the Live Gate", async () => {
   const fixture = await createDeliveryFixture();
   try {

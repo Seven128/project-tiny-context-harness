@@ -10,7 +10,7 @@ export async function prepareAuthorityRevisionFixture(fixture) {
 let state = { first: false };
 try { state = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8")); } catch {}
 const key = process.argv[2] || "first";
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state[key]}}));
+console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state[key],negative:false}}));
 `,
   );
   await writeFile(
@@ -54,8 +54,9 @@ console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution
   check.negative_assertions.push({
     key: "negative-floor",
     claims: ["result"],
-    observation: "never",
-    operator: "not_exists",
+    observation: "negative",
+    operator: "equals",
+    expected: false,
   });
 }
 

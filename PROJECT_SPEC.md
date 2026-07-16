@@ -143,7 +143,7 @@ Authors use stable local keys for controls, obligations, bindings and Assertions
 
 Compile derives canonical, key-sorted Product and Global semantic projections and combines them with Source hashes and the selected Context topology/file set/file hashes as Authority Revision materials. Any Contract authority or material change requires `--revise`; Source or Context cannot be silently refrozen by ordinary compile.
 
-After execution starts, Source/Context/Product/Global semantic changes, Product Claim additions/removals/rewrites, expanding owner/change/support/binding paths, removing forbidden paths, changing runners or existing verification inputs, or weakening artifacts, environment requirements, bindings, obligations, counterfactuals, population or rollback/recovery creates a pending revision whose identity binds previous/next authority hashes, actual materials, diff, risk floor and affected Outcomes. Only mechanical proof additions and machine-proven scope tightening may revise automatically. Risk downgrade is rejected and every revision invalidates old progress and Receipts.
+After execution starts, Source/Context/Product/Global semantic changes, Product Claim additions/removals/rewrites, expanding owner/change/support/binding paths, removing forbidden paths, changing runners or existing verification inputs, reducing `input_paths`, weakening `expected_output_paths`, or weakening artifacts, environment requirements, bindings, obligations, counterfactuals, population or rollback/recovery creates a pending revision whose identity binds previous/next authority hashes, actual materials, diff, risk floor and affected Outcomes. Every Contract authority structure has a compile-time field-policy registry so newly added fields cannot silently escape authority hashing and revision classification. Only mechanical proof additions and machine-proven scope/input/output tightening may revise automatically. Risk downgrade is rejected and every revision invalidates old progress and Receipts.
 
 If one atomic Product + Acceptance Contract exceeds a single file, use a Contract Bundle. Independent release/rollback/owner/risk/product boundaries run as separate top-level Contracts. Capacity, parallelism and model preference are never semantic separation boundaries.
 
@@ -151,11 +151,13 @@ If one atomic Product + Acceptance Contract exceeds a single file, use a Contrac
 
 Contract Boundary Check returns only `single_contract`, `single_contract_bundle`, `separate_top_level_contracts`, `decision_required` or `capacity_blocked`. It is a semantic authoring judgment and creates no execution state. `delivery-set` is a fixed non-executing retirement tombstone.
 
-The first formal Contract compile freezes `initial_task_base` with commit, tree and workspace manifest. Recompile retains that base. Protected source/Product/Acceptance/risk changes require `--revise`; reductions create a pending hash-bound Authority Revision, while risk downgrade is rejected. The executing Agent must not approve its own pending revision.
+The first formal Contract compile freezes `initial_task_base` with commit, tree and workspace manifest. Recompile retains that base. The complete `CompiledDeliveryContractV2` becomes an internal `active-long-task-authority-v3` snapshot under Git common-dir; its hash and the worktree Git-config marker bind task id, authority revision and compiled identity. `.ty-context/compiled-contract.json` is only a rebuildable projection and can never define previous authority, the initial base, risk floor or Final Gate identity. Protected source/Product/Acceptance/risk changes require `--revise`; reductions create a pending hash-bound Authority Revision, while risk downgrade is rejected. The executing Agent must not approve its own pending revision.
+
+Authority publication is compare-and-swap against the expected previous compiled identity. Compile stages the cache, commits the common-dir authority and marker, then publishes the cache and invalidates derived progress/Receipts. Failed compile/revision/CAS leaves the previous snapshot, initial base and progress intact; a cache publish failure leaves the new common-dir authority valid and repairable. Legacy `active-long-task-binding-v2` can migrate only when its workdir cache fully matches task, repository, workdir, revision, initial base, verifier and compiled identity. Missing or inconsistent legacy cache returns `active_authority_continuity_unrecoverable` rather than guessing from the current Contract.
 
 Targeted verification persists independent per-Check Progress Records scoped to protected authority, check/runner/verifier identity, relevant Context, input paths, binding carriers and dependency interfaces. They accumulate across runs and never authorize completion.
 
-Live Final Gate requires a clean candidate commit after all required Context updates. It recompiles the source Contract, validates the common-dir active record against the worktree Git-config marker, creates one Git-tree snapshot and reruns the complete Contract without historical proof reuse. Receipts bind HEAD, tree, workspace, Contract, source, Context and verifier identities but are audit-only and never reusable acceptance authority.
+Live Final Gate requires a clean candidate commit after all required Context updates. It recompiles the source Contract, validates the complete common-dir authority snapshot against the task/revision/identity worktree marker, creates one Git-tree snapshot and reruns the complete Contract without historical proof reuse. Verify, status and resume also read this snapshot rather than the workdir cache. Receipts bind HEAD, tree, workspace, Contract, source, Context and verifier identities but are audit-only and never reusable acceptance authority.
 
 ## 7. Static Compiler And Preflight
 
@@ -175,7 +177,7 @@ Compile is deterministic, static and model-free. It:
 - freezes source, Contract, selected Context topology/files, verifier, runner/oracle/command, workdir and repository identity;
 - activates the one long-task binding for the current worktree.
 
-All pattern-language inclusion decisions use one conservative repository subset prover. It proves only equality, exact-file matching and explicitly supported simple subtree/segment/extension relations. `not_subset` and `unknown` both fail closed for owner/binding validation and count as expansion in Authority Revision; identical literal prefixes never prove containment.
+Repository pattern normalization, matching, subset and overlap/disjoint use one AST. The active language supports literal segments, `*`, `?`, full-segment `**` and simple extension patterns; brackets, braces, extglob and non-segment `**` are rejected during compile. `not_subset` and `unknown` both fail closed for owner/binding validation and count as expansion in Authority Revision. Only `proven_disjoint` can separate verification inputs, artifacts, allowed/forbidden paths or runtime state; overlap and unknown are protected conflicts. Planned output may excuse a missing input only when overlap is proven, never when it is merely unknown.
 
 Compile never implements code, invokes a model, creates a process/worktree/branch or runs project verification.
 
@@ -192,7 +194,7 @@ The Evidence Kernel retains only low-level capabilities that directly close fals
 - population coverage evaluation;
 - counterfactual controls where strict risk requires them;
 - selected Context/source/runner/oracle/verifier hashes;
-- Git common-dir active record plus matching worktree Git-config marker;
+- Git common-dir Active Authority V3 snapshot plus matching task/revision/identity worktree Git-config marker;
 - outcome/check projection and derived status;
 - source-recompiled Live Final Gate and audit-only Receipt;
 - Stop Hook preflight and decision.
@@ -203,7 +205,7 @@ The compiled internal graph is deliberately small:
 Task -> Outcome -> Check -> Observation/Assertion
 ```
 
-Agent/worker prose, hand-written state and command exit code alone cannot create accepted authority. Missing, weakened or unexecutable proof fails closed.
+Agent/worker prose, hand-written state and command exit code alone cannot create accepted authority. Every Assertion needs an explicit Observation. Missing or type-incomparable values fail closed; negative operators never pass by inverting a type error, implicit absence operators are unsupported, and negative proof uses explicit values such as `equals: false`. Positive Assertions may be empty when exit/artifact/population or negative proof is the intended Check evidence, while Global non-goal/forbidden-shortcut coverage still requires negative Assertions.
 
 ## 9. Verification And Recovery Semantics
 
@@ -235,7 +237,7 @@ Bottom-up acceptance succeeds only when all required executable Checks, Outcomes
 
 ### Freshness And Stop
 
-Receipts and status describe the last audit only. The Stop Hook is a no-op without an active task; otherwise Stop and close run the Live Final Gate themselves. Success atomically clears the common-dir record and Git-config marker. `abandon` is explicit non-success teardown and never touches user Git content.
+Receipts and status describe the last audit only. Status/resume report missing or mismatched cache as a diagnostic while retaining the common-dir authority. Doctor is read-only and distinguishes valid/invalid authority, migratable legacy authority, unrecoverable continuity, matching/missing/mismatched cache and marker/record mismatch. The Stop Hook is a no-op without an active task; otherwise Stop and close run the Live Final Gate themselves. Success atomically clears the common-dir record and Git-config marker. `abandon` is explicit non-success teardown and never touches user Git content.
 
 ## 10. Retry And Decision Boundaries
 
@@ -281,7 +283,7 @@ Profiles are:
 - `workflow-default`;
 - explicit `long-task`.
 
-`ty-context enable long-task` installs only the Long-Task Skill, Stop Hook and required templates. Enable, disable and upgrade share one entry-level cleanup function that recognizes only current package-owned and exact historical Tiny Context Hook signatures. User entries in the same group, user-only groups and commands merely containing `composite` are preserved.
+`ty-context enable long-task` installs only the Long-Task Skill, Stop Hook and required templates. Enable, disable and upgrade share one entry-level cleanup function. Current or relocated package-owned absolute commands are recognized only with a known Tiny Context managed status, an exact `node "<absolute>/dist/long-task-hook.js"` shape and a known `node_modules`, pnpm or workspace-package layout; exact retired repo-local commands remain migratable. User entries in the same group, no-status lookalikes, user-only groups and commands merely containing `composite` are preserved.
 
 Upgrade safely changes package-owned `composite-codex` profile selection to `long-task`, removes package-owned retired assets and leaves user-authored historical campaign/source/Contract files untouched. It never imports an unfinished campaign or automatically executes it.
 
