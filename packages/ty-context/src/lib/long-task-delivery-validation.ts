@@ -86,6 +86,11 @@ function validateSourceClaims(
   contract: DeliveryContractV2,
   compiledClaims: ReturnType<typeof compileProductClaimCoverage>,
 ): void {
+  if (contract.source_claims.length > 0 && contract.task.source_paths.length === 0)
+    fail(
+      "source_paths_required_for_source_claims",
+      "source_claims require at least one source file",
+    );
   const sources = new Set(contract.task.source_paths);
   const productClaims = new Set(
     Object.values(compiledClaims.by_outcome)
@@ -105,14 +110,10 @@ function validateSourceClaims(
     ),
   ]);
   for (const claim of contract.source_claims) {
-    if (
-      sources.size &&
-      ![...sources].some(
-        (source) =>
-          claim.source_ref === source ||
-          claim.source_ref.startsWith(`${source}#`),
-      )
-    )
+    const [sourceFile, anchor, ...extra] = claim.source_ref.split("#");
+    if (!sourceFile || extra.length > 0 || (anchor !== undefined && !anchor))
+      fail("source_claim_ref_invalid", `${claim.key}:${claim.source_ref}`);
+    if (!sources.has(sourceFile))
       fail("source_claim_ref_unknown", `${claim.key}:${claim.source_ref}`);
     if (
       (claim.disposition.type === "claim" ||

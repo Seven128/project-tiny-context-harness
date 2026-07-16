@@ -308,11 +308,11 @@ Supported runners are `package_script`, `project_binary`, `node_oracle` and `pla
 
 A large atomic delivery remains one logical Contract. The root may replace inline `outcomes` with sorted `outcome_files`; fragments contain Outcome content only and share one binding, baseline, Final Gate and Receipt. File size, token count, implementation layers, parallelism or agent preference never justify multiple Contracts.
 
-V2 authoring preserves original `source_paths` and direct `source_claims`, each disposed to generated Claim refs, a global constraint, a source-backed out-of-scope item or a decision-required blocker. Compiler coverage validates declared claims without claiming it discovered omitted requirements.
+V2 authoring preserves original `source_paths` and direct `source_claims`, each disposed to generated Claim refs, a global constraint, a source-backed out-of-scope item or a decision-required blocker. Every Source Claim must bind a declared real Source file; `file#anchor` locations are allowed. Compiler coverage validates declared claims without claiming it discovered omitted requirements.
 
 Delivery Set orchestration is retired. Genuinely independent release/rollback/owner/risk/product boundaries run as separate top-level Contracts. `ty-context delivery-set ...` returns a fixed non-executing tombstone.
 
-After execution begins, protected source/Product/Acceptance/risk changes require `--revise`; authority reductions require approval of the exact hash-bound revision, while risk downgrade is rejected. The immutable initial baseline is retained and affected progress becomes stale.
+After execution begins, protected source/Product/Acceptance/risk changes require `--revise`; source/runner/input/scope/proof reductions require approval of the exact hash-bound revision, while proof additions and mechanically tighter scope may revise automatically. Risk downgrade is rejected, the executing Agent cannot self-approve, the immutable initial baseline is retained and affected progress becomes stale.
 
 ### Deterministic Risk
 
@@ -326,7 +326,7 @@ An explicit user request can raise the level to strict. Explicit `standard` belo
 
 Final acceptance is computed from executable current evidence, not agent prose. A command exit code, handwritten status, historical targeted pass or missing/weak proof cannot produce accepted. Contract, source, relevant Context, Oracle/runner, verifier or workspace drift invalidates previous results.
 
-Final Gate may run only Contract-declared verification commands and never production mutation/deployment/payment/migration execution. Retry defaults to none and is allowed once only for `transient_once` + idempotent + read-only/test-sandbox runners. Structured environment probes check executable/env/file/loopback availability before runner start; network isolation remains external. Counterfactual V2 accepts only exact designated Assertion failures, and Population V2 proves exact entity coverage. Receipts are audit-only (`reusable_for_acceptance: false`). Machine acceptance means only that this snapshot satisfies declared machine checks; CI, deployment and human confirmations remain external.
+Final Gate may run only Contract-declared verification commands and never production mutation/deployment/payment/migration execution. Retry defaults to none and is allowed once only for `transient_once` + idempotent + read-only/test-sandbox runners. Runners receive a minimal system environment whitelist plus only explicitly declared `env_var` requirements; undeclared secrets are not inherited. Protected authority/proof inputs reject symlinks and detectable hardlinks. Network isolation remains external. Counterfactual V2 accepts only exact designated Assertion failures with no artifact, population or other finding, and Population V2 proves exact entity coverage. Receipts are audit-only (`reusable_for_acceptance: false`). Every Outcome has an executable Check; human, CI, deployment and product confirmation live only in `external_confirmations`. A machine pass with pending confirmations reports `machine_accepted_external_pending`.
 
 ## Compatibility And Migration
 

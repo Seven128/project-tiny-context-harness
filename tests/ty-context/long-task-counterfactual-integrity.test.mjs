@@ -46,9 +46,44 @@ test("Counterfactual accepts only the exact designated Assertion failure", async
       await evaluateOutcomeCounterfactuals(compiled.outcomes[0], fixture.root),
       [],
     );
+    const artifactFailure = structuredClone(compiled.outcomes[0]);
+    artifactFailure.acceptance.checks[0].artifact_globs = [
+      "artifacts/missing-proof.json",
+    ];
+    let findings = await evaluateOutcomeCounterfactuals(
+      artifactFailure,
+      fixture.root,
+    );
+    assert.equal(findings.length, 1);
+    assert.deepEqual(findings[0].actual.finding_codes.sort(), [
+      "assertion_failed",
+      "invalid_evidence",
+    ]);
+
+    const populationFailure = structuredClone(compiled.outcomes[0]);
+    populationFailure.acceptance.population = {
+      check_key: check.key,
+      claims: ["result"],
+      observations: {
+        eligible_ids: "population.eligible_ids",
+        observed_ids: "population.observed_ids",
+        excluded_items: "population.excluded_items",
+      },
+      exclusion_rules: [],
+    };
+    findings = await evaluateOutcomeCounterfactuals(
+      populationFailure,
+      fixture.root,
+    );
+    assert.equal(findings.length, 1);
+    assert.deepEqual(findings[0].actual.finding_codes.sort(), [
+      "assertion_failed",
+      "population_coverage_failed",
+    ]);
+
     for (const mode of ["timeout", "blocked", "invalid", "extra-failure"]) {
       await writeOracle(fixture.root, mode);
-      const findings = await evaluateOutcomeCounterfactuals(
+      findings = await evaluateOutcomeCounterfactuals(
         compiled.outcomes[0],
         fixture.root,
       );
@@ -112,7 +147,7 @@ async function writeOracle(root, mode) {
 let result = false;
 try { result = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8")).first; }
 catch { ${missing} }
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result,other:${other}}}));
+console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result,other:${other},population:{eligible_ids:["first"],observed_ids:result?["first"]:[],excluded_items:[]}}}));
 `,
   );
 }

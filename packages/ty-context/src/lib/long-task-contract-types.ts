@@ -44,7 +44,13 @@ export type ProofSurface =
 export type RunnerType =
   "package_script" | "project_binary" | "node_oracle" | "playwright_test";
 
-export type AssertionOperator =
+export type PresenceOrUnaryAssertionOperator =
+  | "exists"
+  | "not_exists"
+  | "truthy"
+  | "falsy";
+
+export type BinaryAssertionOperator =
   | "equals"
   | "not_equals"
   | "contains"
@@ -55,21 +61,29 @@ export type AssertionOperator =
   | "greater_or_equal"
   | "less_than"
   | "less_or_equal"
-  | "truthy"
-  | "falsy"
-  | "exists"
-  | "not_exists"
   | "set_equals"
   | "subset_of"
   | "superset_of";
 
-export interface DeliveryAssertionV2 {
+export type AssertionOperator =
+  | PresenceOrUnaryAssertionOperator
+  | BinaryAssertionOperator;
+
+interface DeliveryAssertionBaseV2 {
   key: string;
   claims: string[];
   observation: string;
-  operator: AssertionOperator;
-  expected?: unknown;
 }
+
+export type DeliveryAssertionV2 =
+  | (DeliveryAssertionBaseV2 & {
+      operator: PresenceOrUnaryAssertionOperator;
+      expected?: never;
+    })
+  | (DeliveryAssertionBaseV2 & {
+      operator: BinaryAssertionOperator;
+      expected: unknown;
+    });
 
 export interface DeliveryRunnerV2 {
   type: RunnerType;

@@ -2,12 +2,20 @@ import { spawn } from "node:child_process";
 import { access, readFile } from "node:fs/promises";
 import net from "node:net";
 import path from "node:path";
+import {
+  decodeCheckEvidence,
+  invalidEvidence,
+} from "./long-task-check-evidence-decoder.js";
 import type {
   CompiledCheckV2,
   EnvironmentRequirementV2,
-  FrozenRunnerV2,
   RawCommandExecutionV2,
 } from "./long-task-delivery-types.js";
+import {
+  declaredEnvironmentValues,
+  outputContainsDeclaredEnvironmentValue,
+  runnerEnvironment,
+} from "./long-task-runner-environment.js";
 import { resolveInsideRepository } from "./long-task-workspace.js";
 import { sha256Hex } from "./strict-codec.js";
 
@@ -42,13 +50,21 @@ export async function executeCheckRunner(
   const maximumAttempts = retryAllowed ? 2 : 1;
   for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
     try {
-      const raw = await runOnce(check.runner, snapshotRoot);
-      const decoded = decodeEvidence(
-        check,
-        raw.exit_code,
-        raw.stdout,
-        raw.stderr,
+      const raw = await runOnce(check, snapshotRoot);
+      const secrets = declaredEnvironmentValues(
+        check.environment_requirements,
       );
+      const decoded = outputContainsDeclaredEnvironmentValue(raw, secrets)
+        ? invalidEvidence(
+            raw.exit_code,
+            "check_evidence_contains_declared_environment_value",
+          )
+        : decodeCheckEvidence(
+            check,
+            raw.exit_code,
+            raw.stdout,
+            raw.stderr,
+          );
       return {
         execution_identity: check.runner.execution_identity,
         ...decoded,
@@ -77,9 +93,10 @@ export async function executeCheckRunner(
 }
 
 async function runOnce(
-  runner: FrozenRunnerV2,
+  check: CompiledCheckV2,
   snapshotRoot: string,
 ): Promise<{ exit_code: number; stdout: Buffer; stderr: Buffer }> {
+  const runner = check.runner;
   const cwd = resolveInsideRepository(
     snapshotRoot,
     runner.resolved_cwd || ".",
@@ -99,7 +116,7 @@ async function runOnce(
       cwd,
       shell: false,
       windowsHide: true,
-      env: runnerEnvironment(),
+      env: runnerEnvironment(check.environment_requirements),
     });
     const stdout: Buffer[] = [];
     const stderr: Buffer[] = [];
@@ -143,124 +160,6 @@ async function runOnce(
       });
     });
   });
-}
-
-function decodeEvidence(
-  check: CompiledCheckV2,
-  exitCode: number,
-  stdout: Buffer,
-  stderr: Buffer,
-): Pick<
-  RawCommandExecutionV2,
-  "execution_status" | "exit_code" | "observations" | "error"
-> {
-  if (check.runner.type === "playwright_test")
-    return decodePlaywright(exitCode, stdout, stderr);
-  const lines = stdout
-    .toString("utf8")
-    .split(/\r?\n/u)
-    .map((line) => line.trim())
-    .filter(Boolean);
-  try {
-    const payload = JSON.parse(lines.at(-1) ?? "") as Record<string, unknown>;
-    if (payload.schema_version !== "long-task-check-result-v2")
-      return invalid(exitCode, "check_evidence_schema_invalid");
-    if (payload.execution_status === "blocked_external")
-      return {
-        execution_status: "blocked_external",
-        exit_code: exitCode,
-        observations: {},
-        error: `blocked_external:${String(payload.reason ?? "unspecified")}`,
-      };
-    if (payload.execution_status !== "completed")
-      return invalid(exitCode, "check_evidence_execution_status_invalid");
-    if (
-      !payload.observations ||
-      typeof payload.observations !== "object" ||
-      Array.isArray(payload.observations)
-    )
-      return invalid(exitCode, "check_evidence_observations_invalid");
-    return {
-      execution_status: "completed",
-      exit_code: exitCode,
-      observations: payload.observations as Record<string, unknown>,
-      error: null,
-    };
-  } catch (error) {
-    return invalid(exitCode, `check_evidence_json_invalid:${message(error)}`);
-  }
-}
-
-function decodePlaywright(
-  exitCode: number,
-  stdout: Buffer,
-  stderr: Buffer,
-): Pick<
-  RawCommandExecutionV2,
-  "execution_status" | "exit_code" | "observations" | "error"
-> {
-  try {
-    const report = JSON.parse(stdout.toString("utf8")) as Record<
-      string,
-      unknown
-    >;
-    const stats =
-      report.stats && typeof report.stats === "object"
-        ? (report.stats as Record<string, unknown>)
-        : null;
-    if (!stats) return invalid(exitCode, "playwright_report_invalid:stats");
-    const expected = integer(stats.expected);
-    const unexpected = integer(stats.unexpected);
-    const skipped = integer(stats.skipped);
-    const flaky = integer(stats.flaky);
-    if ([expected, unexpected, skipped, flaky].some((value) => value === null))
-      return invalid(exitCode, "playwright_report_invalid:counts");
-    const total = expected! + unexpected! + skipped! + flaky!;
-    return {
-      execution_status: "completed",
-      exit_code: exitCode,
-      observations: {
-        "playwright.passed": exitCode === 0,
-        "playwright.expected": expected,
-        "playwright.unexpected": unexpected,
-        "playwright.skipped": skipped,
-        "playwright.flaky": flaky,
-        "playwright.total": total,
-        "playwright.zero_or_all_skipped": total === 0 || skipped === total,
-      },
-      error: null,
-    };
-  } catch (error) {
-    const combined = `${stdout.toString("utf8")}\n${stderr.toString("utf8")}`;
-    if (
-      exitCode !== 0 &&
-      /Cannot find module|command not found|not recognized|Executable doesn't exist|browserType\.launch/iu.test(
-        combined,
-      )
-    )
-      return {
-        execution_status: "infrastructure_error",
-        exit_code: exitCode,
-        observations: {},
-        error: `playwright_startup_failed:${message(error)}`,
-      };
-    return invalid(exitCode, `playwright_report_invalid:${message(error)}`);
-  }
-}
-
-function invalid(
-  exitCode: number,
-  error: string,
-): Pick<
-  RawCommandExecutionV2,
-  "execution_status" | "exit_code" | "observations" | "error"
-> {
-  return {
-    execution_status: "invalid_evidence",
-    exit_code: exitCode,
-    observations: {},
-    error,
-  };
 }
 
 async function probeEnvironment(
@@ -348,21 +247,10 @@ async function loopbackAvailable(
   });
 }
 
-function runnerEnvironment(): NodeJS.ProcessEnv {
-  return {
-    ...process.env,
-    TY_CONTEXT_CHECK_PROTOCOL: "long-task-check-result-v2",
-  };
-}
-
 async function statSafe(file: string) {
   return import("node:fs/promises")
     .then(({ stat }) => stat(file))
     .catch(() => null);
-}
-
-function integer(value: unknown): number | null {
-  return Number.isInteger(value) && Number(value) >= 0 ? Number(value) : null;
 }
 
 function message(error: unknown): string {

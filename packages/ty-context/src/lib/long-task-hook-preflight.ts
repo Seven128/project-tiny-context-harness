@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { packageOwnedCommand } from "./long-task-hook-install.js";
+import { assertProtectedRepositoryFile } from "./long-task-protected-files.js";
 import { sha256Hex } from "./strict-codec.js";
 
 export interface CompletionGateCheck {
@@ -28,12 +29,27 @@ export async function checkLongTaskCompletionGate(
   let configHash = "missing";
   let hookHash = "missing";
   try {
-    hookHash = sha256Hex(await readFile(entry));
+    hookHash = sha256Hex(
+      await readFile(
+        await assertProtectedRepositoryFile(
+          packageRoot,
+          entry,
+          "package_owned_hook",
+        ),
+      ),
+    );
   } catch {
     findings.push("package_owned_hook_missing");
   }
   try {
-    const content = await readFile(config, "utf8");
+    const content = await readFile(
+      await assertProtectedRepositoryFile(
+        repositoryRoot,
+        config,
+        "completion_hook_config",
+      ),
+      "utf8",
+    );
     configHash = sha256Hex(content);
     const value = JSON.parse(content) as { hooks?: Record<string, unknown[]> };
     for (const event of ["SessionStart", "PostCompact", "Stop"]) {

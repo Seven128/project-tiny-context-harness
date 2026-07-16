@@ -141,7 +141,7 @@ CHECK.GLOBAL.<check-key>
 
 Authors use stable local keys for controls, obligations, bindings and Assertions. The compiler creates canonical Outcome-qualified Claim ids and rejects unknown, cross-Outcome or uncovered references.
 
-Product or Acceptance meaning may not be silently weakened by execution. Technical support paths and local constraints may be revised when real implementation discoveries do not change product or acceptance meaning; every revision requires recompile and invalidates old results.
+Product or Acceptance meaning may not be silently weakened by execution. After execution starts, removing or changing Source Claims, expanding owner/change/support/binding paths, removing forbidden paths, changing runners or existing verification inputs, or weakening artifacts, environment requirements, bindings, obligations, counterfactuals, population or rollback/recovery creates a hash-bound pending Authority Revision. Adding proof or mechanically tightening scope may revise automatically. Every revision invalidates old progress and Receipts.
 
 If one atomic Product + Acceptance Contract exceeds a single file, use a Contract Bundle. Independent release/rollback/owner/risk/product boundaries run as separate top-level Contracts. Capacity, parallelism and model preference are never semantic separation boundaries.
 
@@ -149,7 +149,7 @@ If one atomic Product + Acceptance Contract exceeds a single file, use a Contrac
 
 Contract Boundary Check returns only `single_contract`, `single_contract_bundle`, `separate_top_level_contracts`, `decision_required` or `capacity_blocked`. It is a semantic authoring judgment and creates no execution state. `delivery-set` is a fixed non-executing retirement tombstone.
 
-The first formal Contract compile freezes `initial_task_base` with commit, tree and workspace manifest. Recompile retains that base. Protected source/Product/Acceptance/risk changes require `--revise`; reductions create a pending hash-bound Authority Revision, while risk downgrade is rejected.
+The first formal Contract compile freezes `initial_task_base` with commit, tree and workspace manifest. Recompile retains that base. Protected source/Product/Acceptance/risk changes require `--revise`; reductions create a pending hash-bound Authority Revision, while risk downgrade is rejected. The executing Agent must not approve its own pending revision.
 
 Targeted verification persists independent per-Check Progress Records scoped to protected authority, check/runner/verifier identity, relevant Context, input paths, binding carriers and dependency interfaces. They accumulate across runs and never authorize completion.
 
@@ -162,8 +162,9 @@ Compile is deterministic, static and model-free. It:
 - strictly parses YAML and rejects duplicate/unknown keys, aliases, merges, tags and multiple documents;
 - validates Contract schema and unique Outcome/Check keys;
 - generates internal ids and validates Outcome dependencies/cycles;
-- validates registered Context refs and source paths;
+- validates registered Context refs and requires every Source Claim to bind a declared real Source file, with optional `file#anchor` location;
 - validates repository-contained safe paths, owner/binding semantics, resolved command targets, explicit verification inputs, package scripts, project binaries, Oracle/Playwright targets and structured environment probes;
+- rejects symlink and detectable hardlink authority/proof files, including the Contract, fragments, Source, Context, runner targets, verification inputs, frozen package/config files, Counterfactual fixtures and package-owned verifier files;
 - compiles and requires coverage for result, control, non-completing, obligation and forbidden-shortcut Claims;
 - requires executable falsifiable proof for every Outcome;
 - requires `ui_browser` proof when a UI owner surface or controls exist;
@@ -181,7 +182,7 @@ If actual changes escape declared expected/support paths or touch an undeclared 
 The Evidence Kernel retains only low-level capabilities that directly close false-completion paths:
 
 - repository/workspace snapshot and identity;
-- explicit argv command runner with bounded timeout/output/environment;
+- explicit argv command runner with bounded timeout/output and a minimal environment whitelist; only Check-declared `env_var` requirements are additionally passed;
 - observation and positive/negative assertion evaluation;
 - implementation binding/path evaluation;
 - population coverage evaluation;
@@ -226,7 +227,7 @@ It is not completion authority.
 
 `final-gate` creates one current workspace snapshot and reruns all global and Outcome Checks. Fully identical execution identities may run once inside that Gate and project to all owning Checks. No historical targeted or final result is reused.
 
-Bottom-up acceptance succeeds only when all required Checks, Outcomes, global constraints and risk-specific obligations pass. Manual-only judgment produces `external/manual acceptance required`, not machine accepted.
+Bottom-up acceptance succeeds only when all required executable Checks, Outcomes, global constraints and risk-specific obligations pass. Human, CI, deployment and product confirmations exist only as `external_confirmations` and never contribute machine proof. A machine pass with pending external confirmations reports `machine_accepted_external_pending`.
 
 ### Freshness And Stop
 
@@ -289,7 +290,7 @@ Upgrade safely changes package-owned `composite-codex` profile selection to `lon
 - README, Chinese README, package README, Context, AGENTS managed block, Skills, tests, release scripts and package assets must describe the same current workflow.
 - Public surfaces are English-complete; Chinese is an aligned translation.
 
-The package version for this architecture is `0.5.0`.
+The package version for this architecture is `0.6.0`.
 
 ## 13. Performance And Cost Boundaries
 
@@ -314,9 +315,11 @@ Stable honest limits:
 - Harness provides no core parallel mutation.
 - Harness does not observe platform token/model-call accounting.
 - Git/PR/CI/deployment/human product confirmation remain external.
+- Local mode trusts the installed package-owned verifier and Git metadata.
+- Network isolation remains the responsibility of the external platform.
 
 ## 15. Historical Design Boundary
 
 Earlier pre-0.5 designs experimented with stage document chains and later with multi-SFC campaign orchestration, including Source Unit inventories, Scope Fit, Packets, Codex/AppServer workers, Waves, worktrees and integration/finalization gates. Those designs provided useful evidence-freshness lessons but made Harness own platform/process/Git responsibilities with diminishing delivery-drift benefit.
 
-Version 0.5 keeps the reusable Evidence Kernel lesson—static falsifiability, current-snapshot recomputation, identity binding and Stop freshness—while retiring the orchestration plane. Historical names may appear only in explicit history, migration tests or command tombstones, never as current product behavior.
+Version 0.6.0 keeps the reusable Evidence Kernel lesson—static falsifiability, current-snapshot recomputation, identity binding and Stop freshness—while retiring the orchestration plane. Historical names may appear only in explicit history, migration tests or command tombstones, never as current product behavior.

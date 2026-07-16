@@ -34,6 +34,21 @@
     { "required": ["outcomes"], "not": { "required": ["outcome_files"] } },
     { "required": ["outcome_files"], "not": { "required": ["outcomes"] } }
   ],
+  "allOf": [
+    {
+      "if": {
+        "required": ["source_claims"],
+        "properties": { "source_claims": { "minItems": 1 } }
+      },
+      "then": {
+        "properties": {
+          "task": {
+            "properties": { "source_paths": { "minItems": 1 } }
+          }
+        }
+      }
+    }
+  ],
   "$defs": {
     "key": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
     "nonEmpty": { "type": "string", "minLength": 1 },
@@ -56,7 +71,7 @@
       "required": ["key", "source_ref", "statement", "disposition"],
       "properties": {
         "key": { "$ref": "#/$defs/key" },
-        "source_ref": { "$ref": "#/$defs/nonEmpty" },
+        "source_ref": { "type": "string", "pattern": "^[^#]+(?:#[^#]+)?$" },
         "statement": { "$ref": "#/$defs/nonEmpty" },
         "disposition": {
           "oneOf": [
@@ -235,7 +250,17 @@
         "observation": { "$ref": "#/$defs/nonEmpty" },
         "operator": { "enum": ["equals", "not_equals", "contains", "not_contains", "matches", "not_matches", "greater_than", "greater_or_equal", "less_than", "less_or_equal", "truthy", "falsy", "exists", "not_exists", "set_equals", "subset_of", "superset_of"] },
         "expected": true
-      }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "operator": { "enum": ["equals", "not_equals", "contains", "not_contains", "matches", "not_matches", "greater_than", "greater_or_equal", "less_than", "less_or_equal", "set_equals", "subset_of", "superset_of"] } } },
+          "then": { "required": ["expected"] }
+        },
+        {
+          "if": { "properties": { "operator": { "enum": ["exists", "not_exists", "truthy", "falsy"] } } },
+          "then": { "not": { "required": ["expected"] } }
+        }
+      ]
     },
     "environment": {
       "oneOf": [

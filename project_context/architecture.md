@@ -41,10 +41,12 @@ This is the restrained architecture map for the Harness source repository. It re
 ## Safety And Storage Boundaries
 
 - Contract parsing rejects unknown keys, duplicate keys, YAML aliases/merges/tags and multiple documents.
-- Paths are repository-relative, realpath-contained and protected from absolute/`..`/symlink escape. Commands use argv arrays with no shell and bounded output/time.
+- Paths are repository-relative and realpath-contained. Protected Contract, fragment, Source, Context, runner, verification-input, Counterfactual-fixture and package-verifier files reject symlinks and detectable hardlinks; the snapshot-owned read-only `node_modules` junction is the sole explicit exception.
+- Commands use argv arrays with no shell, bounded output/time and a minimal environment whitelist. Only env vars explicitly declared by the current Check are additionally passed.
 - Worker/Agent prose, handwritten status, command exit alone and historical targeted passes cannot create accepted authority.
 - Final acceptance binds the same snapshot plus Contract, source, selected Context, runner/oracle, verifier, workdir and repository identity. History is not spliced into current proof.
 - Runtime state is ordinary same-user project state, not a hostile-host security boundary. The product does not claim resistance to deliberate same-user/admin deletion, system Hook bypass or kernel compromise.
+- Local mode trusts the installed package-owned verifier and Git metadata; external platforms remain responsible for network isolation.
 
 ## Distribution And Migration
 

@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import DELIVERY_SCHEMA from "../schemas/long-task-delivery-v2/long-task-delivery-v2.schema.json" with { type: "json" };
 import OUTCOMES_SCHEMA from "../schemas/long-task-delivery-v2/long-task-outcomes-v2.schema.json" with { type: "json" };
 import { checkLongTaskCompletionGate } from "./long-task-hook-preflight.js";
+import { assertProtectedRepositoryFile } from "./long-task-protected-files.js";
 import type { VerifierIdentityV2 } from "./long-task-delivery-types.js";
 import { canonicalValueJson, sha256Hex } from "./strict-codec.js";
 
@@ -21,8 +22,13 @@ export async function captureVerifierIdentity(
   requireHook: boolean,
 ): Promise<VerifierIdentityV2> {
   const packageRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const packageFile = await assertProtectedRepositoryFile(
+    packageRoot,
+    path.join(packageRoot, "package.json"),
+    "package_owned_verifier_package",
+  );
   const packageJson = JSON.parse(
-    await readFile(path.join(packageRoot, "package.json"), "utf8"),
+    await readFile(packageFile, "utf8"),
   ) as { name: string; version: string };
   const files = await verifierBundleFiles(packageRoot);
   const hook = requireHook
@@ -67,7 +73,13 @@ async function verifierBundleFiles(
           [
             relative,
             sha256Hex(
-              await readFile(path.join(distRoot, ...relative.split("/"))),
+              await readFile(
+                await assertProtectedRepositoryFile(
+                  packageRoot,
+                  path.join(distRoot, ...relative.split("/")),
+                  `package_owned_verifier:${relative}`,
+                ),
+              ),
             ),
           ] as const,
       ),

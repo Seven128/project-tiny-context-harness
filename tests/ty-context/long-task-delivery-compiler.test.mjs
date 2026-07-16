@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
-import { rm } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import path from "node:path";
 import test from "node:test";
+import YAML from "yaml";
 import { compileDeliveryContract } from "../../packages/ty-context/dist/lib/long-task-delivery-compiler.js";
 import {
   createDeliveryFixture,
@@ -36,8 +38,53 @@ test("compiles V2 generated Claim/Outcome/Check ids and frozen runner targets un
     assert.equal(check.runner.resolved_cwd, "");
     assert.equal(check.runner.resolved_target, "tests/oracle.mjs");
     assert.equal(check.verification_input_hashes["tests/oracle.mjs"].length, 64);
+    assert.equal(compiled.source_hashes["source.md"].length, 64);
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("Strict Contracts and Contract Bundles require real Source authority", async () => {
+  const strictFixture = await createDeliveryFixture();
+  try {
+    strictFixture.contract.risk.requested_level = "strict";
+    strictFixture.contract.task.source_paths = [];
+    strictFixture.contract.source_claims = [];
+    await writeContract(strictFixture.workdir, strictFixture.contract);
+    await assert.rejects(
+      compileDeliveryContract(strictFixture.workdir, strictFixture.root, {
+        require_completion_gate: false,
+      }),
+      /source_claims_required_for_strict_or_bundle/u,
+    );
+  } finally {
+    await rm(strictFixture.root, { recursive: true, force: true });
+  }
+
+  const bundleFixture = await createDeliveryFixture();
+  try {
+    const bundle = structuredClone(bundleFixture.contract);
+    const [outcome] = bundle.outcomes;
+    delete bundle.outcomes;
+    bundle.outcome_files = ["outcomes/first.yaml"];
+    bundle.task.source_paths = [];
+    bundle.source_claims = [];
+    await mkdir(path.join(bundleFixture.workdir, "outcomes"), {
+      recursive: true,
+    });
+    await writeFile(
+      path.join(bundleFixture.workdir, "outcomes", "first.yaml"),
+      YAML.stringify(outcome),
+    );
+    await writeContract(bundleFixture.workdir, bundle);
+    await assert.rejects(
+      compileDeliveryContract(bundleFixture.workdir, bundleFixture.root, {
+        require_completion_gate: false,
+      }),
+      /source_claims_required_for_strict_or_bundle/u,
+    );
+  } finally {
+    await rm(bundleFixture.root, { recursive: true, force: true });
   }
 });
 

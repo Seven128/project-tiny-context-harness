@@ -74,7 +74,7 @@ Capacity never creates semantic Children. Bundle fragments remain one authority;
 - Static Contract errors block product implementation. Product/acceptance/architecture semantic conflicts return to the user; local code/check failures stay in the same Goal; retry defaults to none and one transient retry requires explicit idempotent read-only/test-sandbox policy.
 - Targeted verify may run one Check, one Outcome or all requested repair checks. It writes derived current-snapshot status but never accepted authority.
 - Final Gate creates one current snapshot and reruns all global and Outcome Checks. Only fully equal execution identities may be deduplicated inside that Gate; historical results are never reused.
-- Bottom-up Task acceptance requires every Outcome/Check and strict/global obligation. Manual-only outcomes remain external/manual acceptance required and cannot be machine accepted.
+- Bottom-up Task acceptance requires at least one executable Check per Outcome plus every strict/global obligation. Human, CI, deployment and product confirmations exist only in `external_confirmations`, never contribute machine proof, and yield `machine_accepted_external_pending` after all machine Checks pass.
 - Contract/source/relevant Context/runner/oracle/verifier/workspace changes stale audit results. Stop and close always run the Live Final Gate and never trust prior Receipts/cache; success clears the matching common-dir record/config marker.
 
 ## Scope And Risk Escalation

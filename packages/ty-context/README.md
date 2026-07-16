@@ -186,11 +186,11 @@ ty-context long-task close <workdir>
 ty-context long-task abandon <workdir>
 ```
 
-Compile generates Product/Control/Non-completing/Technical Claims, rejects uncovered Claims, validates source coverage, owner/binding/path authority and per-Outcome risk, then freezes resolved runners, verification inputs, verifier sources and an immutable initial baseline.
+Compile generates Product/Control/Non-completing/Technical Claims, rejects uncovered Claims, requires Source Claims to bind declared real Source files, validates owner/binding/path authority and per-Outcome risk, then freezes resolved runners, verification inputs, verifier sources and an immutable initial baseline.
 
 Targeted verify accumulates scoped per-Check Progress Records and can never accept. Final Gate, Stop and close recompile source authority, require the Git common-dir record/config marker to match, require a clean candidate commit and rerun every Check on one Git-tree snapshot. Status, Receipts and compiled cache are audit/recovery data only. Successful Stop/close clears the binding atomically.
 
-A large atomic task uses one logical Contract Bundle with Outcome-only `outcome_files`. Independent top-level boundaries run as separate Contracts; `delivery-set` is a fixed non-executing tombstone. Protected authority reductions require exact hash-bound revision approval; risk downgrade is rejected.
+A large atomic task uses one logical Contract Bundle with Outcome-only `outcome_files`. Independent top-level boundaries run as separate Contracts; `delivery-set` is a fixed non-executing tombstone. Protected source/runner/input/scope/proof reductions require exact hash-bound revision approval; additions and mechanically tighter scope may revise automatically. The executing Agent cannot self-approve and risk downgrade is rejected.
 
 Supported runners: `package_script`, `project_binary`, `node_oracle`, `playwright_test`.
 
@@ -202,7 +202,7 @@ L0 local work stays on the default workflow. L1 standard long work uses the Deli
 
 Users may raise risk to strict. Explicit `standard` below the computed floor fails. Strict negative, counterfactual, population, security, environment and rollback/recovery proof is compiler-enforced as applicable. Scope escape returns `scope_or_risk_escalation_required` for revision and recompilation in the same Goal.
 
-Agent prose, a command exit code, handwritten state, historical targeted passes and missing/weak proof cannot create accepted. Counterfactual V2 accepts only exact designated Assertion failures; Population V2 proves entity sets; structured environment probes block before runner start. Network isolation remains external. Receipts are audit-only and machine acceptance does not imply CI/deployment/human confirmation.
+Agent prose, a command exit code, handwritten state, historical targeted passes and missing/weak proof cannot create accepted. Missing Observations fail Assertions except `not_exists`. Counterfactual V2 accepts only exact designated Assertion failures with no artifact, population or other finding; Population V2 proves entity sets. Runners receive a minimal system environment whitelist plus explicitly declared env vars only, and protected authority/proof files reject symlinks and detectable hardlinks. Network isolation remains external. Every Outcome has an executable Check; CI, deployment, human and product confirmations live only in `external_confirmations`, producing `machine_accepted_external_pending` after machine proof passes. Receipts remain audit-only.
 
 ## Upgrade And Compatibility
 

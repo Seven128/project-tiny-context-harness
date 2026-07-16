@@ -1,8 +1,10 @@
 import type {
   AssertionOperator,
+  BinaryAssertionOperator,
   DeliveryAssertionV2,
   DeliveryCheckV2,
   DeliveryRunnerV2,
+  PresenceOrUnaryAssertionOperator,
   RunnerType,
 } from "./long-task-delivery-types.js";
 import {
@@ -117,34 +119,51 @@ function parseAssertions(value: unknown, label: string): DeliveryAssertionV2[] {
       ["key", "claims", "observation", "operator"],
       ["expected"],
     );
-    return {
+    const operator = literal(
+      row.operator,
+      [
+        "equals",
+        "not_equals",
+        "contains",
+        "not_contains",
+        "matches",
+        "not_matches",
+        "greater_than",
+        "greater_or_equal",
+        "less_than",
+        "less_or_equal",
+        "truthy",
+        "falsy",
+        "exists",
+        "not_exists",
+        "set_equals",
+        "subset_of",
+        "superset_of",
+      ] as const satisfies readonly AssertionOperator[],
+      `${itemLabel}.operator`,
+    );
+    const hasExpected = Object.hasOwn(row, "expected");
+    if (isBinaryAssertionOperator(operator) && !hasExpected)
+      fail(itemLabel, "assertion_expected_required");
+    if (!isBinaryAssertionOperator(operator) && hasExpected)
+      fail(itemLabel, "assertion_expected_forbidden");
+    const base = {
       key: key(row.key, `${itemLabel}.key`),
       claims: strings(row.claims, `${itemLabel}.claims`),
       observation: string(row.observation, `${itemLabel}.observation`),
-      operator: literal(
-        row.operator,
-        [
-          "equals",
-          "not_equals",
-          "contains",
-          "not_contains",
-          "matches",
-          "not_matches",
-          "greater_than",
-          "greater_or_equal",
-          "less_than",
-          "less_or_equal",
-          "truthy",
-          "falsy",
-          "exists",
-          "not_exists",
-          "set_equals",
-          "subset_of",
-          "superset_of",
-        ] as const satisfies readonly AssertionOperator[],
-        `${itemLabel}.operator`,
-      ),
-      ...(Object.hasOwn(row, "expected") ? { expected: row.expected } : {}),
+      operator,
     };
+    return isBinaryAssertionOperator(operator)
+      ? { ...base, operator, expected: row.expected }
+      : {
+          ...base,
+          operator: operator as PresenceOrUnaryAssertionOperator,
+        };
   });
+}
+
+function isBinaryAssertionOperator(
+  operator: AssertionOperator,
+): operator is BinaryAssertionOperator {
+  return !["exists", "not_exists", "truthy", "falsy"].includes(operator);
 }

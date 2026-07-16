@@ -1,4 +1,3 @@
-import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { captureContextGraphSnapshot } from "./context-graph-snapshot.js";
 import {
@@ -6,34 +5,30 @@ import {
   parseDeliveryContractBundle,
 } from "./long-task-delivery-parser.js";
 import type {
-  AuthorityHashesV2,
   CompiledDeliveryContractV2,
   CompiledOutcomeV2,
   DeliveryContractV2,
   InitialTaskBaseV2,
-  WorkspaceManifestV2,
 } from "./long-task-delivery-types.js";
 import { compileProductClaimCoverage } from "./long-task-claims.js";
 import { freezeDeliveryCheck } from "./long-task-runner-freeze.js";
 import { classifyLongTaskRisk, validateRiskProof } from "./long-task-risk.js";
 import {
-  assertRepositoryPattern,
-  matchesRepoPattern,
-  patternsOverlap,
-} from "./long-task-paths.js";
+  hashDeclaredFiles,
+  validateCounterfactualPaths,
+  validateTechnicalPaths,
+  validateVerificationInputSeparation,
+} from "./long-task-delivery-preflight.js";
 import { canonicalValueJson, sha256Hex } from "./strict-codec.js";
 import {
-  acceptanceSemanticsChanged,
   changedAuthoritySections,
   computeAuthorityHashes,
-  isMonotonicAcceptanceStrengthening,
 } from "./long-task-authority.js";
 import {
-  authorityRevisionApproved,
-  readCompiledDeliveryContract,
-  readProgressRecords,
-  writePendingAuthorityRevision,
-} from "./long-task-state.js";
+  assertRiskNotDowngraded,
+  enforceAuthorityRevision,
+} from "./long-task-authority-revision-enforcement.js";
+import { readCompiledDeliveryContract } from "./long-task-state.js";
 import { validateActualRiskSurfaces } from "./long-task-risk-surfaces.js";
 import { captureVerifierIdentity } from "./long-task-verifier-identity.js";
 import {
@@ -42,7 +37,6 @@ import {
   currentGitTree,
   repoRelative,
   repositoryRoot,
-  resolveInsideRepository,
 } from "./long-task-workspace.js";
 
 export interface CompileDeliveryOptionsV2 {
@@ -64,16 +58,16 @@ export async function compileDeliveryContract(
   if (!workdirRelative)
     throw new Error("long_task_workdir_must_not_be_repository_root");
   const contractFile = path.join(workdir, DELIVERY_CONTRACT_FILE);
-  const parsed = await parseDeliveryContractBundle(workdir);
+  const parsed = await parseDeliveryContractBundle(workdir, repository);
   const contract = parsed.contract;
   const claims = compileProductClaimCoverage(contract);
   const risk = classifyLongTaskRisk(contract);
-  validateRiskProof(contract, risk);
   if (
     (risk.effective_level === "strict" || parsed.outcome_files.length > 0) &&
     !contract.source_claims.length
   )
     throw new Error("source_claims_required_for_strict_or_bundle");
+  validateRiskProof(contract, risk);
   const decisionClaims = contract.source_claims.filter(
     (claim) => claim.disposition.type === "decision_required",
   );
@@ -180,6 +174,8 @@ export async function compileDeliveryContract(
         previous,
         contract,
         authorityHashes,
+        globalChecks,
+        outcomes,
         current,
         workdir,
         risk.minimum_level,
@@ -234,188 +230,6 @@ export async function compileDeliveryContract(
   };
 }
 
-function assertRiskNotDowngraded(
-  previous: CompiledDeliveryContractV2,
-  nextLevel: "standard" | "strict",
-  nextReasons: string[],
-): void {
-  if (previous.effective_risk === "strict" && nextLevel !== "strict")
-    throw new Error("authority_risk_downgrade_rejected:strict_to_standard");
-  const next = new Set(nextReasons);
-  const removed = previous.risk_reasons.filter((reason) => !next.has(reason));
-  if (removed.length)
-    throw new Error(`authority_risk_downgrade_rejected:${removed.join(",")}`);
-}
-
-async function enforceAuthorityRevision(
-  previous: CompiledDeliveryContractV2,
-  nextContract: DeliveryContractV2,
-  nextHashes: AuthorityHashesV2,
-  current: WorkspaceManifestV2,
-  workdir: string,
-  riskFloor: "standard" | "strict",
-): Promise<void> {
-  const progress = await readProgressRecords(workdir);
-  const gateExists = Boolean(
-    (
-      await stat(path.join(workdir, ".ty-context", "final-receipt.json")).catch(
-        () => null,
-      )
-    )?.isFile(),
-  );
-  const executionStarted =
-    changedWorkspacePaths(
-      previous.initial_task_base.workspace_manifest,
-      current,
-    ).length > 0 ||
-    Object.keys(progress).length > 0 ||
-    gateExists;
-  if (!executionStarted) return;
-  const diff = authorityRevisionDiff(previous, nextContract, nextHashes);
-  if (!diff.reduction_reasons.length) return;
-  const unsignedRevision = {
-    previous_hashes: previous.authority_hashes,
-    next_hashes: nextHashes,
-    changed_authority_sections: changedAuthoritySections(
-      previous.authority_hashes,
-      nextHashes,
-    ),
-    revision_diff: diff,
-    new_risk_floor: riskFloor,
-    affected_outcomes_or_contracts: nextContract.outcomes.map(
-      (outcome) => outcome.key,
-    ),
-  };
-  const revisionIdentity = sha256Hex(canonicalValueJson(unsignedRevision));
-  if (!(await authorityRevisionApproved(workdir, revisionIdentity))) {
-    await writePendingAuthorityRevision(workdir, {
-      schema_version: "long-task-authority-revision-pending-v2",
-      ...unsignedRevision,
-      revision_identity: revisionIdentity,
-      created_at: new Date().toISOString(),
-    });
-    throw new Error(
-      `authority_change_requires_user_decision:${revisionIdentity}`,
-    );
-  }
-}
-
-function authorityRevisionDiff(
-  previous: CompiledDeliveryContractV2,
-  next: DeliveryContractV2,
-  nextHashes: AuthorityHashesV2,
-): {
-  product_claims_added: string[];
-  product_claims_removed: string[];
-  checks_added: string[];
-  checks_removed: string[];
-  negative_assertions_removed: string[];
-  proof_surfaces_changed: string[];
-  source_claims_changed: boolean;
-  risk_changed: boolean;
-  owner_or_path_boundary_changed: boolean;
-  runner_or_verification_inputs_changed: boolean;
-  technical_obligations_changed: boolean;
-  reduction_reasons: string[];
-} {
-  const nextClaims = compileProductClaimCoverage(next).by_outcome;
-  const beforeClaimIds = new Set(
-    previous.outcomes.flatMap((outcome) =>
-      outcome.generated_claims.map((claim) => claim.id),
-    ),
-  );
-  const afterClaimIds = new Set(
-    Object.values(nextClaims)
-      .flat()
-      .map((claim) => claim.id),
-  );
-  const beforeChecks = checkIndex(previous.outcomes);
-  const afterChecks = checkIndex(next.outcomes);
-  const productClaimsRemoved = [...beforeClaimIds].filter(
-    (claim) => !afterClaimIds.has(claim),
-  );
-  const checksRemoved = [...beforeChecks.keys()].filter(
-    (check) => !afterChecks.has(check),
-  );
-  const negativeRemoved: string[] = [];
-  const surfacesChanged: string[] = [];
-  for (const [identity, before] of beforeChecks) {
-    const after = afterChecks.get(identity);
-    if (!after) continue;
-    const nextNegative = new Set(
-      after.negative_assertions.map((assertion) => assertion.key),
-    );
-    for (const assertion of before.negative_assertions)
-      if (!nextNegative.has(assertion.key))
-        negativeRemoved.push(`${identity}:${assertion.key}`);
-    if (before.proof_surface !== after.proof_surface)
-      surfacesChanged.push(
-        `${identity}:${before.proof_surface}->${after.proof_surface}`,
-      );
-  }
-  const riskChanged =
-    previous.authority_hashes.risk_authority_hash !==
-    nextHashes.risk_authority_hash;
-  const acceptanceChanged = acceptanceSemanticsChanged(previous, next);
-  const monotonic = isMonotonicAcceptanceStrengthening(previous, next);
-  const reductionReasons = [
-    ...(productClaimsRemoved.length ? ["product_claim_removed"] : []),
-    ...(checksRemoved.length ? ["check_removed"] : []),
-    ...(negativeRemoved.length ? ["negative_assertion_removed"] : []),
-    ...(surfacesChanged.length ? ["proof_surface_changed"] : []),
-    ...(riskChanged ? ["risk_changed_requires_review"] : []),
-    ...(acceptanceChanged && !monotonic ? ["acceptance_not_monotonic"] : []),
-  ];
-  return {
-    product_claims_added: [...afterClaimIds].filter(
-      (claim) => !beforeClaimIds.has(claim),
-    ),
-    product_claims_removed: productClaimsRemoved,
-    checks_added: [...afterChecks.keys()].filter(
-      (check) => !beforeChecks.has(check),
-    ),
-    checks_removed: checksRemoved,
-    negative_assertions_removed: negativeRemoved,
-    proof_surfaces_changed: surfacesChanged,
-    source_claims_changed:
-      previous.authority_hashes.source_authority_hash !==
-      nextHashes.source_authority_hash,
-    risk_changed: riskChanged,
-    owner_or_path_boundary_changed:
-      previous.authority_hashes.product_authority_hash !==
-        nextHashes.product_authority_hash ||
-      previous.authority_hashes.technical_authority_hash !==
-        nextHashes.technical_authority_hash,
-    runner_or_verification_inputs_changed:
-      previous.authority_hashes.acceptance_authority_hash !==
-      nextHashes.acceptance_authority_hash,
-    technical_obligations_changed:
-      previous.authority_hashes.technical_authority_hash !==
-      nextHashes.technical_authority_hash,
-    reduction_reasons: reductionReasons,
-  };
-}
-
-function checkIndex(
-  outcomes: Array<{
-    key: string;
-    acceptance: {
-      checks: DeliveryContractV2["outcomes"][number]["acceptance"]["checks"];
-    };
-  }>,
-): Map<
-  string,
-  DeliveryContractV2["outcomes"][number]["acceptance"]["checks"][number]
-> {
-  return new Map(
-    outcomes.flatMap((outcome) =>
-      outcome.acceptance.checks.map(
-        (check) => [`${outcome.key}.${check.key}`, check] as const,
-      ),
-    ),
-  );
-}
-
 async function readPreviousCompiled(
   workdir: string,
 ): Promise<CompiledDeliveryContractV2 | null> {
@@ -430,213 +244,4 @@ async function readPreviousCompiled(
       return null;
     throw error;
   }
-}
-
-function validateVerificationInputSeparation(
-  contract: DeliveryContractV2,
-  checks: CompiledDeliveryContractV2["outcomes"][number]["acceptance"]["checks"],
-  workdirRelative: string,
-): void {
-  const implementation = contract.outcomes.flatMap((outcome) => [
-    ...outcome.technical.expected_change_paths,
-    ...outcome.technical.allowed_support_paths,
-  ]);
-  for (const check of checks)
-    for (const source of Object.keys(check.verification_input_hashes)) {
-      if (implementation.some((pattern) => patternsOverlap(pattern, source)))
-        throw new Error(
-          `verification_input_overlaps_implementation:${check.key}:${source}`,
-        );
-      if (
-        source === workdirRelative ||
-        source.startsWith(`${workdirRelative}/`) ||
-        source === ".git" ||
-        source.startsWith(".git/") ||
-        source.split("/").includes("node_modules") ||
-        check.artifact_globs.some((artifact) =>
-          patternsOverlap(artifact, source),
-        )
-      )
-        throw new Error(`verification_input_protected:${check.key}:${source}`);
-    }
-}
-
-function validateTechnicalPaths(
-  contract: DeliveryContractV2,
-  repository: string,
-  workdirRelative: string,
-  baseline: WorkspaceManifestV2,
-): void {
-  const forbidden = [
-    ...contract.global.technical.forbidden_paths.map((entry) => entry.path),
-    ...contract.outcomes.flatMap(
-      (outcome) => outcome.technical.forbidden_paths,
-    ),
-  ].map((pattern, index) =>
-    assertRepositoryPattern(repository, pattern, `forbidden_paths[${index}]`),
-  );
-  for (const outcome of contract.outcomes) {
-    const allowed = [
-      ...outcome.technical.expected_change_paths,
-      ...outcome.technical.allowed_support_paths,
-    ].map((pattern, index) =>
-      assertRepositoryPattern(
-        repository,
-        pattern,
-        `${outcome.key}.allowed_paths[${index}]`,
-      ),
-    );
-    for (const pattern of allowed) {
-      if (patternsOverlap(pattern, workdirRelative))
-        throw new Error(`protected_path_declared:long_task_workdir:${pattern}`);
-      if (forbidden.some((blocked) => patternsOverlap(pattern, blocked)))
-        throw new Error(`allowed_forbidden_path_overlap:${pattern}`);
-    }
-    for (const binding of outcome.technical.bindings) {
-      const carriers = binding.carrier_paths.map((carrier) =>
-        assertRepositoryPattern(
-          repository,
-          carrier,
-          `${outcome.key}.${binding.key}.carrier_path`,
-        ),
-      );
-      for (const carrier of carriers) {
-        if (
-          binding.existence === "existing" &&
-          !baseline.files.some((file) => matchesRepoPattern(file.path, carrier))
-        )
-          throw new Error(
-            `binding_carrier_path_not_found:${outcome.key}:${carrier}`,
-          );
-        if (!allowed.some((pattern) => patternsOverlap(pattern, carrier)))
-          throw new Error(
-            `binding_carrier_outside_change_paths:${outcome.key}:${carrier}`,
-          );
-      }
-      if (binding.kind === "file") {
-        const target = assertRepositoryPattern(
-          repository,
-          binding.target,
-          `${outcome.key}.${binding.key}.target`,
-        );
-        if (!carriers.some((carrier) => matchesRepoPattern(target, carrier)))
-          throw new Error(
-            `binding_target_outside_carrier:${outcome.key}:${binding.key}`,
-          );
-      }
-      if (binding.kind === "path_glob") {
-        const target = assertRepositoryPattern(
-          repository,
-          binding.target,
-          `${outcome.key}.${binding.key}.target`,
-        );
-        if (
-          binding.existence === "existing" &&
-          !baseline.files.some((file) => matchesRepoPattern(file.path, target))
-        )
-          throw new Error(
-            `binding_target_not_found:${outcome.key}:${binding.key}`,
-          );
-      }
-    }
-  }
-}
-
-async function validateCounterfactualPaths(
-  contract: DeliveryContractV2,
-  compiledOutcomes: CompiledOutcomeV2[],
-  repository: string,
-  workdirRelative: string,
-): Promise<void> {
-  for (const outcome of contract.outcomes) {
-    const compiled = compiledOutcomes.find((item) => item.key === outcome.key)!;
-    const protectedInputs = new Set(
-      compiled.acceptance.checks.flatMap((check) => [
-        ...Object.keys(check.verification_input_hashes),
-        check.runner.resolved_target,
-      ]),
-    );
-    const mutationEnvelope = [
-      ...outcome.technical.expected_change_paths,
-      ...outcome.technical.bindings.flatMap((binding) => binding.carrier_paths),
-      ...outcome.acceptance.checks.flatMap((check) => check.input_paths),
-    ];
-    for (const control of outcome.acceptance.counterfactual_controls) {
-      const mutated =
-        control.mutation.type === "remove_paths"
-          ? control.mutation.paths
-          : [control.mutation.path];
-      for (const relative of mutated) {
-        const target = resolveInsideRepository(
-          repository,
-          relative,
-          `${outcome.key}.counterfactual`,
-        );
-        const normalized = repoRelative(repository, target);
-        if (
-          normalized === workdirRelative ||
-          normalized.startsWith(`${workdirRelative}/`)
-        )
-          throw new Error(
-            `counterfactual_path_protected:${outcome.key}:${relative}`,
-          );
-        if (
-          protectedInputs.has(normalized) ||
-          protectedInputs.has(relative.replace(/\\/gu, "/"))
-        )
-          throw new Error(
-            `counterfactual_verification_input_protected:${outcome.key}:${relative}`,
-          );
-        if (
-          !mutationEnvelope.some((pattern) =>
-            matchesRepoPattern(normalized, pattern),
-          )
-        )
-          throw new Error(
-            `counterfactual_path_outside_carrier:${outcome.key}:${relative}`,
-          );
-        if (!(await stat(target).catch(() => null)))
-          throw new Error(
-            `counterfactual_path_not_found:${outcome.key}:${relative}`,
-          );
-      }
-      if (control.mutation.type === "replace_file") {
-        const fixture = repoRelative(
-          repository,
-          resolveInsideRepository(
-            repository,
-            control.mutation.fixture_path,
-            `${outcome.key}.counterfactual.fixture`,
-          ),
-        );
-        if (!protectedInputs.has(fixture))
-          throw new Error(
-            `counterfactual_fixture_must_be_verification_input:${outcome.key}:${fixture}`,
-          );
-      }
-    }
-  }
-}
-
-async function hashDeclaredFiles(
-  repository: string,
-  files: string[],
-  label: string,
-): Promise<Record<string, string>> {
-  const result: Record<string, string> = {};
-  for (const [index, file] of files.entries()) {
-    const target = resolveInsideRepository(
-      repository,
-      file,
-      `${label}[${index}]`,
-    );
-    const info = await stat(target).catch(() => null);
-    if (!info?.isFile()) throw new Error(`${label}_path_not_found:${file}`);
-    result[repoRelative(repository, target)] = sha256Hex(
-      await readFile(target),
-    );
-  }
-  return Object.fromEntries(
-    Object.entries(result).sort(([a], [b]) => a.localeCompare(b)),
-  );
 }

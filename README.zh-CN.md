@@ -139,11 +139,11 @@ Runner 支持 `package_script`、`project_binary`、`node_oracle`、`playwright_
 
 大型但原子的交付仍是一个逻辑 Contract：根文件可以用排序后的 `outcome_files` 替代 inline `outcomes`，fragment 只含 Outcome，整个 Bundle 只有一个 binding、baseline、Final Gate 和 Receipt。文件数、token、前后端层、并行或 Agent 偏好都不是拆成多个 Contract 的理由。
 
-V2 必须保留原始 `source_paths` 和直接 `source_claims`。每条 source claim 只能指向生成 Claim、全局约束、带来源理由的 out-of-scope，或阻断执行的 decision-required。Compiler 只验证已声明要求，不声称能发现遗漏需求。
+V2 必须保留原始 `source_paths` 和直接 `source_claims`。每条 Source Claim 必须绑定一个已声明且真实存在的 Source 文件，允许 `file#anchor` 定位；其 disposition 只能指向生成 Claim、全局约束、带来源理由的 out-of-scope，或阻断执行的 decision-required。Compiler 只验证已声明要求，不声称能发现遗漏需求。
 
 Delivery Set 主动编排已退休。真正独立的 release/rollback/owner/risk/product 边界应分别运行顶层 Contract；`ty-context delivery-set ...` 只返回固定、不可执行的 tombstone。
 
-执行开始后，受保护的 source/Product/Acceptance/risk 变化必须使用 `--revise`；权威削弱需要批准精确 revision，risk downgrade 直接拒绝。首次 baseline 始终保留，受影响 progress 失效。
+执行开始后，受保护的 source/Product/Acceptance/risk 变化必须使用 `--revise`；Source、runner、verification input、范围或 proof 的削弱需要批准精确 hash-bound revision，新增 proof 与可机械证明的范围收紧可自动 revise。Risk downgrade 直接拒绝，执行 Agent 不得自行批准，首次 baseline 始终保留，受影响 progress 与 Receipt 失效。
 
 ## 确定性风险分级
 
@@ -157,7 +157,7 @@ Delivery Set 主动编排已退休。真正独立的 release/rollback/owner/risk
 
 最终接受来自当前可执行证据，不来自 Agent 文本。exit code、手写 status、历史 targeted pass、缺失或弱化的 proof 都不能产生 accepted。Contract、source、相关 Context、Oracle/runner、Verifier 或 workspace 改变后旧结果立即 stale。
 
-Final Gate 只能运行 Contract 声明的验证命令，禁止真实部署、支付、迁移执行或不可逆生产副作用。Retry 默认关闭，仅当 `transient_once`、幂等且 effect 为 read-only/test-sandbox 时允许一次。结构化环境探针在 runner 启动前检查 executable/env/file/loopback；网络隔离由外部平台负责。Counterfactual V2 只接受指定 Assertion 的精确失败，Population V2 证明实体全集覆盖。Receipt 仅供审计，不能复用为接受权威。
+Final Gate 只能运行 Contract 声明的验证命令，禁止真实部署、支付、迁移执行或不可逆生产副作用。Retry 默认关闭，仅当 `transient_once`、幂等且 effect 为 read-only/test-sandbox 时允许一次。Runner 默认只获得最小系统环境白名单，额外 env var 必须由当前 Check 精确声明，未声明 secret 不会继承；受保护 authority/proof 文件拒绝 symlink 与可检测 hardlink。网络隔离由外部平台负责。Counterfactual V2 只有在指定 Assertion 精确失败且不存在 artifact、population 或其他 finding 时才有效，Population V2 证明实体全集覆盖。每个 Outcome 必须有 executable Check；人工、CI、部署和产品确认只进入 `external_confirmations`，机器通过但仍待确认时状态为 `machine_accepted_external_pending`。Receipt 仅供审计，不能复用为接受权威。
 
 ## 兼容与迁移
 

@@ -12,12 +12,11 @@ export function evaluateDeliveryAssertion(
     observations,
     assertion.observation,
   );
+  if (assertion.operator === "not_exists") return !found;
+  if (!found) return false;
+  if (assertion.operator === "exists") return true;
   const expected = assertion.expected;
   switch (assertion.operator) {
-    case "exists":
-      return found;
-    case "not_exists":
-      return !found;
     case "truthy":
       return Boolean(value);
     case "falsy":

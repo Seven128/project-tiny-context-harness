@@ -3,7 +3,7 @@
 ## Project Goal
 
 - Maintain `project-tiny-context-harness`, the npm package and `ty-context` CLI behind the public Project Tiny Context Harness name.
-- Keep the default product small: Minimal Context preserves durable project facts; Workflow Contract defines the lightweight default agent loop; the explicitly enabled Long-Task Workflow adds one top-level Contract/Bundle/Set authority and verifier-owned completion for work that needs recovery across long sessions.
+- Keep the default product small: Minimal Context preserves durable project facts; Workflow Contract defines the lightweight default agent loop; the explicitly enabled Long-Task Workflow adds one top-level Contract/Bundle authority and verifier-owned completion for work that needs recovery across long sessions.
 - The Long-Task Workflow is Single-Goal Rolling Delivery V2: one platform-native continuing Goal and selected workspace with one Contract/Contract Bundle authority, compiled Product Claim Coverage, a rolling implementation frontier and one Live Evidence Kernel whose verification strength rises per risk Outcome.
 - A Delivery Contract preserves product outcomes, non-goals, stable technical boundaries, acceptance checks and relevant Context. It does not freeze file-by-file implementation steps.
 - A large atomic delivery may use `outcome_files` as one logical Contract Bundle. Independent release/rollback/owner/risk/product boundaries run as separate top-level Contracts; Delivery Set orchestration is retired.
@@ -22,7 +22,7 @@
 ## Background
 
 - Fresh coding-agent sessions need a small repo-owned recovery path for product intent, architecture boundaries and repeatable verification instead of rediscovering them from code.
-- The package previously included a multi-worker Campaign runtime. Version 0.5.0 replaces that active architecture with one native Goal, one selected workspace, one top-level Contract/Bundle/Set authority and verifier-owned current-snapshot evidence.
+- The package previously included a multi-worker Campaign runtime. Version 0.6.0 completes its replacement with one native Goal, one selected workspace, one top-level Contract/Bundle authority and verifier-owned current-snapshot evidence.
 - Historical names remain only where safe migration, non-executing tombstones or explicit design history require them.
 
 ## Design Rationale
@@ -35,13 +35,15 @@
 ## Workflow Direction
 
 - L0 local, reversible work stays on the default Workflow Contract and creates no Delivery Contract.
-- L1 standard long work uses one Contract/Bundle or Set authority, one native Goal, one workspace, scoped repair progress, a same-snapshot Final Gate and Stop freshness.
+- L1 standard long work uses one Contract/Bundle authority, one native Goal, one workspace, scoped repair progress, a same-snapshot Final Gate and Stop freshness.
 - L2 strict work is selected deterministically per Outcome. Public API/schema, persistent data, migrations, security/permission boundaries, irreversible external effects, full-population operations or a weakly observable critical user path require strict proof on the affected Outcome. Risk downgrade and multi-repository delivery are rejected.
 - `requested_level: standard` below the computed risk floor fails compile. Execution cannot downgrade risk.
 - One root V2 `delivery-contract.yaml` (with optional Outcome fragments) is authoring authority. Declared original sources remain provenance and Source Claims preserve direct coverage to generated Claims; there is no Packet revision chain, Source Unit inventory, SFC graph, Wave, Delivery Set or second plan.
 - Compile is pure static preflight. It validates strict YAML/schema, unique nested keys, Context/source/path/runner/proof identities, risk floor, UI proof, strict obligations and executable acceptance before product implementation begins.
 - Every compile creates an immutable compiled identity. Editing Contract, referenced Context, source, runner/oracle, verifier or workspace identity invalidates prior derived results and requires recompilation.
 - Targeted `verify` exists only for repair findings and can never accept a task. `final-gate`, Stop and close rerun every Outcome/global Check on one current snapshot; stored Receipts are audit-only.
+- Assertions fail closed when an Observation is missing except for `not_exists`; Counterfactual proof is valid only when the designated Assertions are the complete finding set.
+- Runners receive a minimal environment whitelist plus only Check-declared env vars. Protected Contract/Source/Context/verifier/proof inputs reject symlinks and detectable hardlinks, and Source Claims require real declared Source files.
 - Active authority is a Git common-dir record paired with a worktree Git-config marker. Stop/close never trust cache or Receipt and atomically clear the binding only after a successful Live Gate.
 
 ## Durable-Fact And Authority Rules

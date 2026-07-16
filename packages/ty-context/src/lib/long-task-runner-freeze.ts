@@ -10,6 +10,11 @@ import {
   assertRepositoryPattern,
   matchesRepoPattern,
 } from "./long-task-paths.js";
+import { assertProtectedRepositoryFile } from "./long-task-protected-files.js";
+import {
+  nearestRunnerFile,
+  npmCliPath,
+} from "./long-task-runner-files.js";
 import { canonicalValueJson, sha256Hex } from "./strict-codec.js";
 import {
   repoRelative,
@@ -87,12 +92,20 @@ async function resolvedRunnerTarget(
   cwd: string,
 ): Promise<string> {
   if (check.runner.type === "package_script") {
-    const packageFile = await nearestFile(cwd, repository, "package.json");
+    const packageFile = await nearestRunnerFile(
+      cwd,
+      repository,
+      "package.json",
+    );
     if (!packageFile)
       throw new Error(
         `package_json_not_found:${check.key}:${check.runner.cwd}`,
       );
-    return packageFile;
+    return assertProtectedRepositoryFile(
+      repository,
+      packageFile,
+      `${check.key}.package_json`,
+    );
   }
   const target = resolveInsideRepository(
     cwd,
@@ -103,8 +116,13 @@ async function resolvedRunnerTarget(
     throw new Error(
       `${check.runner.type}_path_not_found:${check.key}:${check.runner.target}`,
     );
-  repoRelative(repository, target);
-  return target;
+  const protectedTarget = await assertProtectedRepositoryFile(
+    repository,
+    target,
+    `${check.key}.runner_target`,
+  );
+  repoRelative(repository, protectedTarget);
+  return protectedTarget;
 }
 
 async function freezeRunner(
@@ -202,13 +220,19 @@ async function freezeVerificationInputs(
     );
     if (!matches.length)
       throw new Error(`verification_input_not_found:${check.key}:${source}`);
-    for (const file of matches)
-      result[file.path] = sha256Hex(
-        await readFile(path.join(repository, ...file.path.split("/"))),
+    for (const file of matches) {
+      const protectedFile = await assertProtectedRepositoryFile(
+        repository,
+        path.join(repository, ...file.path.split("/")),
+        `${check.key}.verification_input`,
       );
+      result[file.path] = sha256Hex(
+        await readFile(protectedFile),
+      );
+    }
   }
   const automatic = new Set<string>([repoRelative(repository, target)]);
-  const packageFile = await nearestFile(cwd, repository, "package.json");
+  const packageFile = await nearestRunnerFile(cwd, repository, "package.json");
   if (packageFile) automatic.add(repoRelative(repository, packageFile));
   for (const name of [
     "package-lock.json",
@@ -216,7 +240,7 @@ async function freezeVerificationInputs(
     "pnpm-lock.yaml",
     "yarn.lock",
   ]) {
-    const file = await nearestFile(cwd, repository, name);
+    const file = await nearestRunnerFile(cwd, repository, name);
     if (file) automatic.add(repoRelative(repository, file));
   }
   if (check.runner.type === "playwright_test")
@@ -226,7 +250,7 @@ async function freezeVerificationInputs(
       "playwright.config.mjs",
       "playwright.config.cjs",
     ]) {
-      const file = await nearestFile(cwd, repository, name);
+      const file = await nearestRunnerFile(cwd, repository, name);
       if (file) automatic.add(repoRelative(repository, file));
     }
   for (const relative of automatic) {
@@ -235,28 +259,16 @@ async function freezeVerificationInputs(
     );
     if (!file)
       throw new Error(`verification_input_not_found:${check.key}:${relative}`);
+    const protectedFile = await assertProtectedRepositoryFile(
+      repository,
+      path.join(repository, ...relative.split("/")),
+      `${check.key}.automatic_verification_input`,
+    );
     result[relative] = sha256Hex(
-      await readFile(path.join(repository, ...relative.split("/"))),
+      await readFile(protectedFile),
     );
   }
   return sortRecord(result);
-}
-
-async function nearestFile(
-  start: string,
-  repository: string,
-  name: string,
-): Promise<string | null> {
-  let current = path.resolve(start);
-  const root = path.resolve(repository);
-  for (;;) {
-    const candidate = path.join(current, name);
-    if ((await stat(candidate).catch(() => null))?.isFile()) return candidate;
-    if (current === root) return null;
-    const parent = path.dirname(current);
-    if (parent === current || !parent.startsWith(root)) return null;
-    current = parent;
-  }
 }
 
 function patternsMayOverlap(left: string, right: string): boolean {
@@ -270,22 +282,6 @@ function patternsMayOverlap(left: string, right: string): boolean {
   return Boolean(
     a && b && (a === b || a.startsWith(`${b}/`) || b.startsWith(`${a}/`)),
   );
-}
-
-async function npmCliPath(): Promise<string> {
-  const candidates = [
-    process.env.npm_execpath,
-    path.join(
-      path.dirname(process.execPath),
-      "node_modules",
-      "npm",
-      "bin",
-      "npm-cli.js",
-    ),
-  ].filter((candidate): candidate is string => Boolean(candidate));
-  for (const candidate of candidates)
-    if ((await stat(candidate).catch(() => null))?.isFile()) return candidate;
-  throw new Error("npm_cli_not_found_for_package_script_runner");
 }
 
 function sortRecord<T>(value: Record<string, T>): Record<string, T> {

@@ -82,3 +82,25 @@ test("uncovered Claims and cyclic dependencies fail closed", () => {
     /outcome_dependency_cycle/,
   );
 });
+
+test("Source Claims require declared Source files and valid file#anchor locators", () => {
+  const missingSources = deliveryContract();
+  missingSources.task.source_paths = [];
+  assert.throws(
+    () => parseDeliveryContractText(YAML.stringify(missingSources)),
+    /source_paths_required_for_source_claims/u,
+  );
+
+  const emptyAnchor = deliveryContract();
+  emptyAnchor.source_claims[0].source_ref = "source.md#";
+  assert.throws(
+    () => parseDeliveryContractText(YAML.stringify(emptyAnchor)),
+    /source_claim_ref_invalid/u,
+  );
+
+  const valid = deliveryContract();
+  valid.source_claims[0].source_ref = "source.md#section";
+  assert.doesNotThrow(() =>
+    parseDeliveryContractText(YAML.stringify(valid)),
+  );
+});

@@ -31,13 +31,13 @@ ty-context long-task compile <workdir>
 ty-context long-task compile <workdir> --revise
 ```
 
-Compile rejects uncovered result/control/non-completing/obligation/forbidden-shortcut Claims. The first compile freezes an immutable initial base. Protected authority changes require `--revise`; reductions require exact revision approval, while risk downgrade is rejected.
+Compile rejects uncovered result/control/non-completing/obligation/forbidden-shortcut Claims and requires Source Claims to bind real declared Source files. The first compile freezes an immutable initial base. Protected authority changes require `--revise`; reductions require exact revision approval, while risk downgrade is rejected. The executing Agent must never approve its own pending revision.
 
 ## Rolling Execution
 
 Implement dependency-ready Outcomes in the current workspace and run targeted `verify --outcome/--check`. Progress is scoped by Outcome authority, resolved runner, verification inputs, relevant Context and implementation inputs. It is repair evidence only and never acceptance authority.
 
-Runner retry defaults to none. One retry is allowed only for `transient_once`, idempotent, read-only/test-sandbox work. Structured environment requirements may probe executable, env var, file or loopback TCP availability; a failed probe blocks before runner start. The Harness does not provide network isolation.
+Runner retry defaults to none. One retry is allowed only for `transient_once`, idempotent, read-only/test-sandbox work. Runners receive a minimal environment whitelist plus only Check-declared env vars. Structured environment requirements may probe executable, env var, file or loopback TCP availability; a failed probe blocks before runner start. Protected authority/proof files reject symlinks and detectable hardlinks. The Harness does not provide network isolation.
 
 Counterfactual V2 may mutate only declared carriers, never runner/verification inputs, and succeeds only when execution completes with exit zero and exactly the designated Assertions fail. Population V2 proves exact eligible = observed + valid exclusions by entity id.
 

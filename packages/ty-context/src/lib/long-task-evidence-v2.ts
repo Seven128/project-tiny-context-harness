@@ -193,9 +193,18 @@ export async function evaluateOutcomeCounterfactuals(
         .map((assertion) => assertion.key)
         .sort();
       const expected = [...control.expected_assertion_failures].sort();
+      const onlyExpectedAssertionFailures =
+        result.status === "assertion_failed" &&
+        result.findings.length === expected.length &&
+        result.findings.every(
+          (finding) =>
+            finding.code === "assertion_failed" &&
+            expected.some((key) => finding.message === `assertion ${key} failed`),
+        );
       const valid =
         raw.execution_status === "completed" &&
         raw.exit_code === 0 &&
+        onlyExpectedAssertionFailures &&
         failedAssertions.length === expected.length &&
         failedAssertions.every((item, index) => item === expected[index]);
       if (!valid)
@@ -208,7 +217,9 @@ export async function evaluateOutcomeCounterfactuals(
           actual: {
             execution_status: raw.execution_status,
             exit_code: raw.exit_code,
+            result_status: result.status,
             failed_assertions: failedAssertions,
+            finding_codes: result.findings.map((finding) => finding.code),
           },
           next_action:
             "Repair the carrier mutation or proof so only the designated Assertion failures demonstrate sensitivity.",

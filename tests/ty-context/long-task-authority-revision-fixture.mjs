@@ -1,0 +1,184 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+export async function prepareAuthorityRevisionFixture(fixture) {
+  const check = fixture.contract.outcomes[0].acceptance.checks[0];
+  const outcome = fixture.contract.outcomes[0];
+  await writeFile(
+    path.join(fixture.root, "tests", "oracle.mjs"),
+    `import { readFile } from "node:fs/promises";
+let state = { first: false };
+try { state = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8")); } catch {}
+const key = process.argv[2] || "first";
+console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state[key]}}));
+`,
+  );
+  await writeFile(
+    path.join(fixture.root, "tests", "alternate-oracle.mjs"),
+    `console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:true}}));\n`,
+  );
+  await writeFile(
+    path.join(fixture.root, "tests", "helper.mjs"),
+    "export const helper = true;\n",
+  );
+  await writeFile(
+    path.join(fixture.root, "tests", "extra.mjs"),
+    "export const extra = true;\n",
+  );
+  await writeFile(path.join(fixture.root, "src", "extra.json"), "true\n");
+  await mkdir(path.join(fixture.root, "artifacts"), { recursive: true });
+  await writeFile(
+    path.join(fixture.root, "artifacts", "proof.json"),
+    '{"proved":true}\n',
+  );
+  check.verification_inputs.push("tests/helper.mjs");
+  check.artifact_globs = ["artifacts/proof.json"];
+  check.environment_requirements = [
+    { key: "path", kind: "env_var", target: "PATH" },
+  ];
+  outcome.technical.allowed_support_paths = ["src/support/**"];
+  outcome.technical.rollback_and_recovery = {
+    rollback: "Restore the previous state file.",
+    recovery: "Rerun the first Check.",
+    verification_check_keys: [check.key],
+  };
+  outcome.acceptance.counterfactual_controls = [
+    {
+      key: "remove-state",
+      claims: ["obligation.implement-first"],
+      check_key: check.key,
+      mutation: { type: "remove_paths", paths: ["src/state.json"] },
+      expected_assertion_failures: ["first-result"],
+    },
+  ];
+  check.negative_assertions.push({
+    key: "negative-floor",
+    claims: ["result"],
+    observation: "never",
+    operator: "not_exists",
+  });
+}
+
+export const authorityReductionScenarios = [
+  {
+    name: "runner target",
+    field: "runner_definitions_changed",
+    reason: "runner_definition_changed",
+    mutate(contract) {
+      contract.outcomes[0].acceptance.checks[0].runner.target =
+        "tests/alternate-oracle.mjs";
+    },
+  },
+  {
+    name: "runner type",
+    field: "runner_definitions_changed",
+    reason: "runner_definition_changed",
+    mutate(contract) {
+      contract.outcomes[0].acceptance.checks[0].runner.type = "project_binary";
+    },
+  },
+  {
+    name: "verification input removal",
+    field: "verification_inputs_removed_or_replaced",
+    reason: "verification_input_removed_or_replaced",
+    mutate(contract) {
+      contract.outcomes[0].acceptance.checks[0].verification_inputs = [
+        "tests/oracle.mjs",
+      ];
+    },
+  },
+  {
+    name: "allowed path expansion",
+    field: "allowed_paths_expanded",
+    reason: "allowed_path_expanded",
+    mutate(contract) {
+      contract.outcomes[0].product.owner.path_globs.push("support/**");
+      contract.outcomes[0].technical.allowed_support_paths.push("support/**");
+    },
+  },
+  {
+    name: "owner Context removal",
+    field: "owner_context_refs_removed",
+    reason: "owner_context_ref_removed",
+    mutate(contract) {
+      contract.outcomes[0].product.owner.context_refs = [];
+    },
+  },
+  {
+    name: "forbidden path removal",
+    field: "forbidden_paths_removed",
+    reason: "forbidden_path_removed",
+    mutate(contract) {
+      contract.outcomes[0].technical.forbidden_paths = [];
+    },
+  },
+  {
+    name: "binding carrier expansion",
+    field: "bindings_removed_or_expanded",
+    reason: "binding_removed_or_expanded",
+    mutate(contract) {
+      contract.outcomes[0].technical.bindings[0].carrier_paths.push(
+        "src/extra.json",
+      );
+    },
+  },
+  {
+    name: "Source Claim removal",
+    field: "source_claims_removed_or_changed",
+    reason: "source_claim_removed_or_changed",
+    mutate(contract) {
+      contract.source_claims = [];
+    },
+  },
+  {
+    name: "Source Claim rewrite",
+    field: "source_claims_removed_or_changed",
+    reason: "source_claim_removed_or_changed",
+    mutate(contract) {
+      contract.source_claims[0].statement = "A weaker replacement.";
+    },
+  },
+  {
+    name: "Obligation removal",
+    field: "obligations_removed_or_weakened",
+    reason: "obligation_removed_or_weakened",
+    mutate(contract) {
+      contract.outcomes[0].technical.obligations = [];
+      contract.outcomes[0].acceptance.checks[0].positive_assertions[0].claims =
+        ["result"];
+      contract.outcomes[0].acceptance.counterfactual_controls = [];
+    },
+  },
+  {
+    name: "Environment Requirement removal",
+    field: "environment_requirements_removed",
+    reason: "environment_requirement_removed",
+    mutate(contract) {
+      contract.outcomes[0].acceptance.checks[0].environment_requirements = [];
+    },
+  },
+  {
+    name: "artifact removal",
+    field: "artifacts_removed",
+    reason: "artifact_removed",
+    mutate(contract) {
+      contract.outcomes[0].acceptance.checks[0].artifact_globs = [];
+    },
+  },
+  {
+    name: "Counterfactual removal",
+    field: "counterfactuals_removed",
+    reason: "counterfactual_removed",
+    mutate(contract) {
+      contract.outcomes[0].acceptance.counterfactual_controls = [];
+    },
+  },
+  {
+    name: "rollback removal",
+    field: "rollback_or_recovery_weakened",
+    reason: "rollback_or_recovery_weakened",
+    mutate(contract) {
+      contract.outcomes[0].technical.rollback_and_recovery = null;
+    },
+  },
+];

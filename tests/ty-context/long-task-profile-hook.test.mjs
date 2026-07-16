@@ -16,10 +16,16 @@ import {
   pathExists,
   runCli,
 } from "./long-task-delivery-fixtures.mjs";
+import { assertLongTaskStaticConsistency } from "./long-task-static-consistency.mjs";
 
 const packageHook = fileURLToPath(
   new URL("../../packages/ty-context/dist/long-task-hook.js", import.meta.url),
 );
+const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
+
+test("source workspace version, Hook and manual-only documentation stay consistent", async () => {
+  await assertLongTaskStaticConsistency(repoRoot);
+});
 
 test("enable/disable owns one package-owned Hook per event and preserves user Hooks", async () => {
   const fixture = await createDeliveryFixture();

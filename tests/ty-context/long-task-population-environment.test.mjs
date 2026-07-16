@@ -127,6 +127,72 @@ test("Environment probes block before runner start and support executable/file/e
   }
 });
 
+test("Runner receives only the base whitelist plus declared env vars and never returns secret values", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "ty-context-env-pass-"));
+  const declaredKey = "TEST_API_TOKEN";
+  const undeclaredKey = "OPENAI_TEST_UNDECLARED_SECRET";
+  const declaredValue = `declared-${Date.now()}-secret`;
+  const undeclaredValue = `undeclared-${Date.now()}-secret`;
+  const previousDeclared = process.env[declaredKey];
+  const previousUndeclared = process.env[undeclaredKey];
+  process.env[declaredKey] = declaredValue;
+  process.env[undeclaredKey] = undeclaredValue;
+  try {
+    const base = check(root, path.join(root, "runner-started.txt"));
+    const environment_requirements = [
+      { key: "token", kind: "env_var", target: declaredKey },
+    ];
+    const safe = await executeCheckRunner(
+      {
+        ...base,
+        runner: {
+          ...base.runner,
+          executable_argv_prefix: [
+            "-e",
+            `console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{declared:process.env.${declaredKey}===${JSON.stringify(declaredValue)},undeclared_present:Boolean(process.env.${undeclaredKey}),path_present:Boolean(process.env.PATH)}}));`,
+          ],
+        },
+        environment_requirements,
+      },
+      root,
+    );
+    assert.equal(safe.execution_status, "completed");
+    assert.deepEqual(safe.observations, {
+      declared: true,
+      undeclared_present: false,
+      path_present: true,
+    });
+    assert.equal(JSON.stringify(safe).includes(declaredValue), false);
+    assert.equal(JSON.stringify(safe).includes(undeclaredValue), false);
+
+    const leaking = await executeCheckRunner(
+      {
+        ...base,
+        runner: {
+          ...base.runner,
+          execution_identity: "secret-leak",
+          executable_argv_prefix: [
+            "-e",
+            `console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{token:process.env.${declaredKey}}}));`,
+          ],
+        },
+        environment_requirements,
+      },
+      root,
+    );
+    assert.equal(leaking.execution_status, "invalid_evidence");
+    assert.equal(
+      leaking.error,
+      "check_evidence_contains_declared_environment_value",
+    );
+    assert.equal(JSON.stringify(leaking).includes(declaredValue), false);
+  } finally {
+    restoreEnvironment(declaredKey, previousDeclared);
+    restoreEnvironment(undeclaredKey, previousUndeclared);
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 function check(root, marker) {
   const script = `require('node:fs').writeFileSync(${JSON.stringify(marker)}, 'started'); console.log(JSON.stringify({schema_version:'long-task-check-result-v2',execution_status:'completed',observations:{result:true}}));`;
   return {
@@ -160,4 +226,9 @@ function check(root, marker) {
     negative_assertions: [],
     environment_requirements: [],
   };
+}
+
+function restoreEnvironment(key, value) {
+  if (value === undefined) delete process.env[key];
+  else process.env[key] = value;
 }

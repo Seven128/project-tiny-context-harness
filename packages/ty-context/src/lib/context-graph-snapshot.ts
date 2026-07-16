@@ -1,10 +1,11 @@
-import { readFile, readdir, stat } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { canonicalJson, sha256Hex } from "./strict-codec.js";
 import {
   parseContextManifest,
   type ContextManifest,
 } from "./context-manifest-schema.js";
+import { assertProtectedRepositoryFile } from "./long-task-protected-files.js";
 
 export interface ContextGraphSnapshot {
   mode: "referenced" | "full";
@@ -57,7 +58,8 @@ export async function captureContextGraphSnapshot(
   const hashes = Object.fromEntries(
     await Promise.all(
       files.map(
-        async (file) => [file, await hashFile(path.join(root, file))] as const,
+        async (file) =>
+          [file, await hashFile(root, path.join(root, file))] as const,
       ),
     ),
   );
@@ -133,11 +135,18 @@ export async function listContextFiles(
     for (const entry of await readdir(directory, { withFileTypes: true })) {
       const absolute = path.join(directory, entry.name);
       if (entry.isSymbolicLink()) {
-        throw new Error(`Context symlink is not allowed: ${absolute}`);
+        throw new Error(
+          `protected_input_symlink_not_allowed:context_authority:${absolute.replace(/\\/gu, "/")}`,
+        );
       }
       if (entry.isDirectory()) {
         await visit(absolute);
       } else if (entry.isFile()) {
+        await assertProtectedRepositoryFile(
+          root,
+          absolute,
+          "context_authority",
+        );
         result.push(repoRelative(root, absolute));
       }
     }
@@ -147,8 +156,13 @@ export async function listContextFiles(
 }
 
 async function readContextManifest(root: string): Promise<ContextManifest> {
+  const manifestFile = await assertProtectedRepositoryFile(
+    root,
+    path.join(root, "project_context", "context.toml"),
+    "context_manifest",
+  );
   const parsed = parseContextManifest(
-    await readFile(path.join(root, "project_context", "context.toml"), "utf8"),
+    await readFile(manifestFile, "utf8"),
   );
   if (!parsed.manifest || parsed.errors.length > 0) {
     throw new Error(`context_manifest_invalid:${parsed.errors.join("|")}`);
@@ -222,12 +236,13 @@ function contextTopologyHash(manifest: ContextManifest): string {
   return sha256Hex(canonicalJson(topology));
 }
 
-async function hashFile(file: string): Promise<string> {
-  const info = await stat(file);
-  if (!info.isFile()) {
-    throw new Error(`Expected regular file: ${file}`);
-  }
-  return sha256Hex(await readFile(file));
+async function hashFile(root: string, file: string): Promise<string> {
+  const protectedFile = await assertProtectedRepositoryFile(
+    root,
+    file,
+    "context_authority",
+  );
+  return sha256Hex(await readFile(protectedFile));
 }
 
 function repoRelative(root: string, file: string): string {
