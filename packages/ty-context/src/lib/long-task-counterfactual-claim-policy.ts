@@ -16,15 +16,6 @@ export function validateCounterfactualBindingClaims(
     throw new Error(
       `counterfactual_binding_check_mismatch:${outcome.key}:${control.key}:${binding.key}:${control.check_key}`,
     );
-  if (
-    !control.claims.some(
-      (claim) =>
-        claim.startsWith("requirement.") || claim.startsWith("obligation."),
-    )
-  )
-    throw new Error(
-      `counterfactual_binding_claim_required:${outcome.key}:${control.key}`,
-    );
   const check = outcome.acceptance.checks.find(
     (item) => item.key === control.check_key,
   );

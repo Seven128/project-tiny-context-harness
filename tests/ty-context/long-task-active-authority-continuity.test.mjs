@@ -104,19 +104,13 @@ test("strict risk downgrade remains rejected after cache deletion", async () => 
     check.negative_assertions.push({
       key: "negative-floor",
       criterion: "The strict negative floor remains satisfied.",
-      claims: ["result"],
+      claims: ["result", "requirement.observe-first"],
       observation: "result_copy",
       operator: "not_equals",
       expected: false,
     });
-    outcome.acceptance.counterfactual_controls.push({
-      key: "remove-state",
-      binding_key: "state-first",
-      claims: ["obligation.implement-first"],
-      check_key: check.key,
-      mutation: { type: "remove_paths", paths: ["src/state.json"] },
-      expected_assertion_failures: ["first-result"],
-    });
+    outcome.acceptance.counterfactual_controls[0]
+      .expected_assertion_failures.push("negative-floor");
     await writeContract(fixture.workdir, fixture.contract);
     await runCli(fixture.root, ["enable", "long-task"]);
     await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
@@ -260,7 +254,7 @@ test("CAS and authority commit failure preserve old authority and progress", asy
     fixture.contract.outcomes[0].acceptance.checks[0].positive_assertions.push({
       key: "additional-proof",
       criterion: "The additional proof remains true.",
-      claims: ["result"],
+      claims: [],
       observation: "result_copy",
       operator: "equals",
       expected: true,

@@ -103,12 +103,12 @@ export function assertionFinding(
       code = "acceptance_case_skipped";
       message = `Acceptance case ${ac} was skipped.`;
       nextAction =
-        "Make the declared [ac-key] Playwright case executable and rerun this Check.";
+        "Make the declared [ac:<key>] Playwright case executable and rerun this Check.";
     } else if (executed.found && executed.value === false) {
       code = "acceptance_case_not_executed";
       message = `Acceptance case ${ac} was not executed.`;
       nextAction =
-        "Add or restore the declared [ac-key] Playwright case and rerun this Check.";
+        "Add or restore the declared [ac:<key>] Playwright case and rerun this Check.";
     }
   } else if (result.status === "observation_missing") {
     message = `Observation ${result.observation} was missing.`;

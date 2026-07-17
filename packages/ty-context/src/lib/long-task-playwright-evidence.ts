@@ -29,7 +29,9 @@ export function extractPlaywrightEvidence(
     "playwright.zero_or_all_skipped": total === 0 || skipped === total,
   };
 
-  const instances = collectCases(report);
+  const collected = collectCases(report, declaredCaseIds(check));
+  if (collected.error) return invalid(collected.error);
+  const instances = collected.cases;
   const duplicate = duplicateCaseInstance(instances);
   if (duplicate)
     return invalid(
@@ -89,18 +91,24 @@ interface PlaywrightCase {
 
 function collectCases(
   report: Record<string, unknown>,
-): PlaywrightCaseInstance[] {
+  declaredIds: Set<string>,
+): { cases: PlaywrightCaseInstance[]; error: string | null } {
   const cases: PlaywrightCaseInstance[] = [];
-  visitSuites(report.suites, cases);
-  return cases;
+  const error = visitSuites(report.suites, cases, declaredIds);
+  return { cases, error };
 }
 
-function visitSuites(value: unknown, cases: PlaywrightCaseInstance[]): void {
-  if (!Array.isArray(value)) return;
+function visitSuites(
+  value: unknown,
+  cases: PlaywrightCaseInstance[],
+  declaredIds: Set<string>,
+): string | null {
+  if (!Array.isArray(value)) return null;
   for (const suiteValue of value) {
     const suite = record(suiteValue);
     if (!suite) continue;
-    visitSuites(suite.suites, cases);
+    const nestedError = visitSuites(suite.suites, cases, declaredIds);
+    if (nestedError) return nestedError;
     if (!Array.isArray(suite.specs)) continue;
     for (const specValue of suite.specs) {
       const spec = record(specValue);
@@ -111,13 +119,26 @@ function visitSuites(value: unknown, cases: PlaywrightCaseInstance[]): void {
         const title = [spec.title, test.title]
           .filter((item): item is string => typeof item === "string")
           .join(" ");
-        const ids = [...title.matchAll(/\[([a-z0-9][a-z0-9-]*)\]/gu)].map(
-          (match) => match[1],
-        );
-        for (const id of ids) cases.push(playwrightCase(id, test));
+        const ids = declaredIdsInTitle(title, declaredIds);
+        if (ids.length > 1)
+          return `playwright_test_multiple_ac_ids:${ids.join(",")}`;
+        if (ids.length === 1) cases.push(playwrightCase(ids[0], test));
       }
     }
   }
+  return null;
+}
+
+function declaredIdsInTitle(title: string, declared: Set<string>): string[] {
+  const explicit = [...title.matchAll(/\[ac:([a-z0-9][a-z0-9-]*)\]/gu)].map(
+    (match) => match[1],
+  );
+  const legacy = [...title.matchAll(/\[([a-z0-9][a-z0-9-]*)\]/gu)].map(
+    (match) => match[1],
+  );
+  return [
+    ...new Set([...explicit, ...legacy].filter((id) => declared.has(id))),
+  ].sort();
 }
 
 function playwrightCase(
@@ -169,11 +190,11 @@ function declaredCaseIds(check: CompiledCheckV2): Set<string> {
     ...check.positive_assertions,
     ...check.negative_assertions,
   ]) {
-    const match =
-      /^playwright\.case\.([a-z0-9][a-z0-9-]*)\.(?:passed|skipped)$/u.exec(
-        assertion.observation,
-      );
-    if (match) result.add(match[1]);
+    if (!assertion.claims.length) continue;
+    const match = /^playwright\.case\.([a-z0-9][a-z0-9-]*)\.passed$/u.exec(
+      assertion.observation,
+    );
+    if (match) result.add(assertion.key);
   }
   return result;
 }

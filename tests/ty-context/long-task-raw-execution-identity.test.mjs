@@ -60,7 +60,7 @@ test("different Environment Requirements cannot reuse Raw Execution", async () =
       result.check_results.map((check) => check.status),
       ["passed", "blocked_external", "blocked_external", "blocked_external"],
     );
-    assert.equal(await executionCount(marker), 1);
+    assert.equal(await executionCount(marker), 2);
   } finally {
     await rm(marker, { force: true });
     await rm(fixture.root, { recursive: true, force: true });
@@ -107,7 +107,7 @@ test("identical canonical Environment Requirements may share Raw Execution", asy
       result.check_results.map((check) => check.status),
       ["passed", "passed"],
     );
-    assert.equal(await executionCount(marker), 1);
+    assert.equal(await executionCount(marker), 3);
   } finally {
     restore(keys[0], previous[0]);
     restore(keys[1], previous[1]);
@@ -152,7 +152,7 @@ test("different env var targets produce different Raw Executions", async () => {
       result.check_results.map((check) => check.status),
       ["passed", "passed"],
     );
-    assert.equal(await executionCount(marker), 2);
+    assert.equal(await executionCount(marker), 4);
   } finally {
     restore(keys[0], previous[0]);
     restore(keys[1], previous[1]);
@@ -162,8 +162,9 @@ test("different env var targets produce different Raw Executions", async () => {
 });
 
 function configureChecks(fixture, requirements) {
-  const base = fixture.contract.outcomes[0].acceptance.checks[0];
-  fixture.contract.outcomes[0].acceptance.checks = requirements.map(
+  const outcome = fixture.contract.outcomes[0];
+  const base = outcome.acceptance.checks[0];
+  outcome.acceptance.checks = requirements.map(
     (environment_requirements, index) => ({
       ...structuredClone(base),
       key: `raw-${index}`,
@@ -184,6 +185,20 @@ function configureChecks(fixture, requirements) {
       environment_requirements: structuredClone(environment_requirements),
     }),
   );
+  outcome.acceptance.counterfactual_controls = requirements.map(
+    (_environmentRequirements, index) => ({
+      key: `raw-sensitive-${index}`,
+      binding_key: "state-first",
+      claims: [
+        "result",
+        "requirement.observe-first",
+        "obligation.implement-first",
+      ],
+      check_key: `raw-${index}`,
+      mutation: { type: "remove_paths", paths: ["src/state.json"] },
+      expected_assertion_failures: [`raw-result-${index}`],
+    }),
+  );
 }
 
 async function installCountingOracle(fixture, marker) {
@@ -191,7 +206,8 @@ async function installCountingOracle(fixture, marker) {
     path.join(fixture.root, "tests", "oracle.mjs"),
     `import { appendFileSync, readFileSync } from "node:fs";
 appendFileSync(${JSON.stringify(marker)}, "run\\n");
-const state = JSON.parse(readFileSync(new URL("../src/state.json", import.meta.url), "utf8"));
+let state = {first:false};
+try { state = JSON.parse(readFileSync(new URL("../src/state.json", import.meta.url), "utf8")); } catch {}
 console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state.first,result_copy:state.first}}));
 `,
   );

@@ -20,14 +20,19 @@ export function prepareSemanticAuthority(contract) {
     key: "exit-zero-only",
     statement: "Exit zero alone is not completion.",
   });
+  outcome.acceptance.counterfactual_controls[0].claims.push(
+    "non_completing.exit-zero-only",
+  );
   outcome.acceptance.checks[0].negative_assertions.push({
     key: "exit-zero-is-insufficient",
     criterion: "Exit zero alone remains insufficient.",
     claims: ["non_completing.exit-zero-only"],
-    observation: "negative",
+    observation: "result_copy",
     operator: "equals",
-    expected: false,
+    expected: true,
   });
+  outcome.acceptance.counterfactual_controls[0]
+    .expected_assertion_failures.push("exit-zero-is-insufficient");
   outcome.acceptance.checks.push({
     ...structuredClone(outcome.acceptance.checks[0]),
     key: "submit-ui",
@@ -60,6 +65,10 @@ export function prepareSemanticAuthority(contract) {
   contract.global.acceptance.checks.push({
     ...structuredClone(outcome.acceptance.checks[0]),
     key: "stable-runtime-check",
+    runner: {
+      ...structuredClone(outcome.acceptance.checks[0].runner),
+      argv: ["first", "global"],
+    },
     positive_assertions: [
       {
         key: "stable-runtime-proof",

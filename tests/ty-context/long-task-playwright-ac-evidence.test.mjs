@@ -94,6 +94,74 @@ test("duplicate Playwright AC ids are invalid evidence", () => {
   assert.equal(decoded.error, "playwright_ac_id_duplicate:ac-one:default");
 });
 
+test("new [ac:key] tokens bind exactly one declared AC", () => {
+  const check = compiledPlaywrightCheck();
+  const decoded = decode(
+    check,
+    report([ac("ac-one", "expected", "passed")]),
+    0,
+  );
+  assert.equal(decoded.execution_status, "completed");
+  assert.equal(decoded.observations["playwright.case.ac-one.passed"], true);
+  assert.deepEqual(decoded.observations["playwright.case_ids"], ["ac-one"]);
+});
+
+test("ordinary and undeclared Playwright tags never become AC observations", () => {
+  const check = compiledPlaywrightCheck();
+  const decoded = decode(
+    check,
+    report([
+      tagged("[smoke] [mobile] helper", "expected", "passed"),
+      tagged("[ac:unknown] [unknown] helper", "expected", "passed"),
+    ]),
+    0,
+  );
+  assert.equal(decoded.execution_status, "completed");
+  assert.deepEqual(decoded.observations["playwright.case_ids"], []);
+  for (const id of ["smoke", "mobile", "unknown"])
+    assert.equal(
+      Object.hasOwn(decoded.observations, `playwright.case.${id}.passed`),
+      false,
+      id,
+    );
+});
+
+test("legacy [key] tokens remain compatible only for declared AC keys", () => {
+  const check = compiledPlaywrightCheck();
+  const decoded = decode(
+    check,
+    report([
+      tagged("[ac-one] legacy declared", "expected", "passed"),
+      tagged("[unknown] legacy helper", "expected", "passed"),
+    ]),
+    0,
+  );
+  assert.equal(decoded.execution_status, "completed");
+  assert.equal(decoded.observations["playwright.case.ac-one.passed"], true);
+  assert.deepEqual(decoded.observations["playwright.case_ids"], ["ac-one"]);
+  assert.equal(
+    Object.hasOwn(decoded.observations, "playwright.case.unknown.passed"),
+    false,
+  );
+});
+
+test("one Playwright Test Instance cannot bind multiple declared AC ids", () => {
+  const check = compiledPlaywrightCheck();
+  const decoded = decode(
+    check,
+    report([
+      tagged(
+        "[ac:ac-one] [ac:ac-two] copied proof",
+        "expected",
+        "passed",
+      ),
+    ]),
+    0,
+  );
+  assert.equal(decoded.execution_status, "invalid_evidence");
+  assert.match(decoded.error, /^playwright_test_multiple_ac_ids:/u);
+});
+
 test("the same AC aggregates independently across Playwright projects", () => {
   const check = compiledPlaywrightCheck();
   const decoded = decode(
@@ -199,7 +267,7 @@ function report(cases) {
     suites: [
       {
         specs: cases.map((item) => ({
-          title: `[${item.id}] ${item.id}`,
+          title: item.title,
           tests: [item.test],
         })),
       },
@@ -210,6 +278,15 @@ function report(cases) {
 function ac(id, status, resultStatus, projectId = "default") {
   return {
     id,
+    title: `[ac:${id}] ${id}`,
+    test: { projectId, status, results: [{ status: resultStatus }] },
+  };
+}
+
+function tagged(title, status, resultStatus, projectId = "default") {
+  return {
+    id: title,
+    title,
     test: { projectId, status, results: [{ status: resultStatus }] },
   };
 }

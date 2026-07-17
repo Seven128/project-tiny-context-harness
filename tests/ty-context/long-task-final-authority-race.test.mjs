@@ -158,7 +158,7 @@ test("Stop and close rerun current Authority instead of clearing from an old Rec
       fixture.workdir,
     ]);
     assert.equal(stop.continue, false);
-    assert.equal(stop.reason, "live_final_gate_blocked_external");
+    assert.equal(stop.reason, "live_final_gate_needs_work");
     assert.equal(
       (await loadActiveLongTaskAuthority(fixture.root)).authority
         .active_authority_identity,
@@ -171,7 +171,7 @@ test("Stop and close rerun current Authority instead of clearing from an old Rec
           "close",
           fixture.workdir,
         ]),
-      /close_live_final_gate_failed:blocked_external/u,
+      /close_live_final_gate_failed:needs_work/u,
     );
     assert.equal(
       (await loadActiveLongTaskAuthority(fixture.root)).authority
@@ -187,10 +187,10 @@ function addProof(contract, key) {
   contract.outcomes[0].acceptance.checks[0].positive_assertions.push({
     key,
     criterion: "The concurrent revision proof remains true.",
-    claims: ["result"],
-    observation: "result_copy",
+    claims: [],
+    observation: "negative",
     operator: "equals",
-    expected: true,
+    expected: false,
   });
 }
 
@@ -203,7 +203,11 @@ function addBlockedProof(contract) {
       {
         key: "blocked-proof-result",
         criterion: "The blocked proof result remains observable.",
-        claims: ["result"],
+        claims: [
+          "result",
+          "requirement.observe-first",
+          "obligation.implement-first",
+        ],
         observation: "result",
         operator: "equals",
         expected: true,
@@ -217,6 +221,18 @@ function addBlockedProof(contract) {
       },
     ],
   });
+  contract.outcomes[0].acceptance.counterfactual_controls.push({
+    key: "blocked-proof-sensitive",
+    binding_key: "state-first",
+    claims: [
+      "result",
+      "requirement.observe-first",
+      "obligation.implement-first",
+    ],
+    check_key: "blocked-proof",
+    mutation: { type: "remove_paths", paths: ["src/state.json"] },
+    expected_assertion_failures: ["blocked-proof-result"],
+  });
 }
 
 async function installSlowOracle(fixture, signal) {
@@ -228,8 +244,9 @@ appendFileSync(${JSON.stringify(signal.started)}, "started\\n");
 while (!existsSync(${JSON.stringify(signal.release)})) {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20);
 }
-const state = JSON.parse(readFileSync(new URL("../src/state.json", import.meta.url), "utf8"));
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state.first,result_copy:state.first}}));
+let state = {first:false};
+try { state = JSON.parse(readFileSync(new URL("../src/state.json", import.meta.url), "utf8")); } catch {}
+console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state.first,result_copy:state.first,negative:false}}));
 `,
   );
   await commitCandidate(fixture.root);

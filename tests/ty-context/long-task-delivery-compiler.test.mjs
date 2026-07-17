@@ -115,6 +115,7 @@ test("preflight rejects invalid Context, missing runner path and Outcome without
       /node_oracle_path_not_found/,
     );
     fixture.contract.outcomes[0].acceptance.checks = [];
+    fixture.contract.outcomes[0].acceptance.counterfactual_controls = [];
     await writeContract(fixture.workdir, fixture.contract);
     await assert.rejects(
       compileDeliveryContract(fixture.workdir, fixture.root, {

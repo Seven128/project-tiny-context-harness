@@ -29,13 +29,18 @@ export function explainOutcomeClaimLinks(
     return {
       type: disposition.type,
       reference,
-      checks: proof ? proof.proofs.map((item) => item.check_key) : [],
-      assertions: proof ? proof.proofs.map((item) => item.assertion_key) : [],
+      source_backed: sourceBacked(contract, reference),
+      checks: proof ? unique(proof.proofs.map((item) => item.check_key)) : [],
+      assertions: proof
+        ? unique(proof.proofs.map((item) => item.assertion_key))
+        : [],
       required_proof_surfaces: proof ? proof.required_surfaces : [],
       covered_proof_surfaces: proof ? proof.covered_surfaces : [],
       evidence_adapters: proof
-        ? proof.proofs.map((item) =>
-            outcomeAdapter(contract, outcomeKey, item.check_key),
+        ? unique(
+            proof.proofs.map((item) =>
+              outcomeAdapter(contract, outcomeKey, item.check_key),
+            ),
           )
         : [],
     };
@@ -43,6 +48,7 @@ export function explainOutcomeClaimLinks(
 }
 
 export function explainOutcomeResultLinks(
+  contract: DeliveryContractV2,
   coverage: ClaimCoverageSummaryV2,
   disposition: ResultDisposition,
 ) {
@@ -52,7 +58,8 @@ export function explainOutcomeResultLinks(
     {
       type: disposition.type,
       reference: disposition.ref,
-      checks: proof ? proof.proofs.map((item) => item.check_key) : [],
+      source_backed: sourceBacked(contract, disposition.ref),
+      checks: proof ? unique(proof.proofs.map((item) => item.check_key)) : [],
     },
   ];
 }
@@ -67,12 +74,34 @@ export function explainGlobalClaimLinks(
     return {
       type: disposition.type,
       reference,
-      checks: proof ? proof.proofs.map((item) => item.check_key) : [],
-      assertions: proof ? proof.proofs.map((item) => item.assertion_key) : [],
+      source_backed: sourceBacked(contract, reference),
+      checks: proof ? unique(proof.proofs.map((item) => item.check_key)) : [],
+      assertions: proof
+        ? unique(proof.proofs.map((item) => item.assertion_key))
+        : [],
       evidence_adapters: proof
-        ? proof.proofs.map((item) => globalAdapter(contract, item.check_key))
+        ? unique(
+            proof.proofs.map((item) => globalAdapter(contract, item.check_key)),
+          )
         : [],
     };
+  });
+}
+
+function unique<T>(values: T[]): T[] {
+  return values.filter((value, index) => values.indexOf(value) === index);
+}
+
+function sourceBacked(contract: DeliveryContractV2, reference: string) {
+  return contract.source_claims.some((source) => {
+    const disposition = source.disposition;
+    if (disposition.type === "outcome_result")
+      return disposition.ref === reference;
+    return (
+      (disposition.type === "claim" ||
+        disposition.type === "global_constraint") &&
+      disposition.refs.includes(reference)
+    );
   });
 }
 

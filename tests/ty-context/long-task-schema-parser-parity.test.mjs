@@ -1,11 +1,17 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import YAML from "yaml";
+import { preflightDeliveryContract } from "../../packages/ty-context/dist/lib/long-task-authoring-preflight.js";
+import { compileDeliveryContract } from "../../packages/ty-context/dist/lib/long-task-delivery-compiler.js";
 import { parseDeliveryContractText } from "../../packages/ty-context/dist/lib/long-task-delivery-parser.js";
-import { deliveryContract } from "./long-task-delivery-fixtures.mjs";
+import {
+  createDeliveryFixture,
+  deliveryContract,
+  writeContract,
+} from "./long-task-delivery-fixtures.mjs";
 
 const activeOperators = [
   "equals",
@@ -151,6 +157,102 @@ test("Source authority cardinality and retired dispositions stay aligned across 
       parseDeliveryContractText(YAML.stringify(multipleAcceptanceRefs)),
     /source_claim_acceptance_ref_count/u,
   );
+});
+
+test("Requirement and Obligation proof surfaces are non-empty and unique in both Schema and Parser", async () => {
+  const schema = await deliverySchema();
+  for (const definition of ["requirement", "obligation"]) {
+    const surfaces =
+      schema.$defs[definition].properties.required_proof_surfaces;
+    assert.equal(surfaces.minItems, 1, `${definition} minItems`);
+    assert.equal(surfaces.uniqueItems, true, `${definition} uniqueItems`);
+  }
+
+  for (const [name, select] of [
+    ["Requirement", (contract) => contract.outcomes[0].product.requirements[0]],
+    ["Obligation", (contract) => contract.outcomes[0].technical.obligations[0]],
+  ]) {
+    const empty = deliveryContract();
+    select(empty).required_proof_surfaces = [];
+    assert.throws(
+      () => parseDeliveryContractText(YAML.stringify(empty)),
+      /required_proof_surfaces_empty/u,
+      `${name} empty`,
+    );
+
+    const duplicate = deliveryContract();
+    select(duplicate).required_proof_surfaces = [
+      "runtime_behavior",
+      "runtime_behavior",
+    ];
+    assert.throws(
+      () => parseDeliveryContractText(YAML.stringify(duplicate)),
+      /required_proof_surface_duplicate/u,
+      `${name} duplicate`,
+    );
+  }
+});
+
+test("Preflight and direct Compile reject the same operator and proof-surface safety errors", async () => {
+  const scenarios = [
+    {
+      code: "claim_assertion_explicit_expected_required",
+      mutate(contract) {
+        const assertion =
+          contract.outcomes[0].acceptance.checks[0]
+            .positive_assertions[0];
+        assertion.operator = "truthy";
+        delete assertion.expected;
+      },
+    },
+    ...[
+      ["Requirement", (contract) => contract.outcomes[0].product.requirements[0]],
+      ["Obligation", (contract) => contract.outcomes[0].technical.obligations[0]],
+    ].flatMap(([name, select]) => [
+      {
+        code: "required_proof_surfaces_empty",
+        name: `${name} empty`,
+        mutate(contract) {
+          select(contract).required_proof_surfaces = [];
+        },
+      },
+      {
+        code: "required_proof_surface_duplicate",
+        name: `${name} duplicate`,
+        mutate(contract) {
+          select(contract).required_proof_surfaces = [
+            "runtime_behavior",
+            "runtime_behavior",
+          ];
+        },
+      },
+    ]),
+  ];
+  for (const scenario of scenarios) {
+    const fixture = await createDeliveryFixture();
+    try {
+      scenario.mutate(fixture.contract);
+      await writeContract(fixture.workdir, fixture.contract);
+      const preflight = await preflightDeliveryContract(
+        fixture.workdir,
+        fixture.root,
+      );
+      assert.equal(preflight.status, "not_ready", scenario.name);
+      assert.ok(
+        preflight.diagnostics.some((item) => item.code === scenario.code),
+        `${scenario.name ?? scenario.code}: missing ${scenario.code}`,
+      );
+      await assert.rejects(
+        compileDeliveryContract(fixture.workdir, fixture.root, {
+          require_completion_gate: false,
+        }),
+        new RegExp(scenario.code, "u"),
+        scenario.name,
+      );
+    } finally {
+      await rm(fixture.root, { recursive: true, force: true });
+    }
+  }
 });
 
 async function deliverySchema() {

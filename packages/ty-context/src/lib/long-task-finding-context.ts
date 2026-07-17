@@ -24,13 +24,34 @@ export function enrichFinding(
     ? compiled.outcomes.find((item) => item.key === finding.outcome_key)
     : null;
   const sourceClaims = sourceClaimsForFinding(compiled, finding);
+  const sourceTargets = compiled.source_claims
+    .filter((source) => sourceClaims.includes(source.key))
+    .flatMap((source) => dispositionTargetRefs(source.disposition))
+    .filter((reference, index, all) => all.indexOf(reference) === index)
+    .sort();
   return {
     ...finding,
     ...(sourceClaims.length ? { source_claim_keys: sourceClaims } : {}),
+    ...(sourceTargets.length ? { source_target_refs: sourceTargets } : {}),
     ...(outcome && !finding.owner_paths
       ? { owner_paths: outcome.product.owner.path_globs }
       : {}),
   };
+}
+
+function dispositionTargetRefs(
+  disposition: CompiledDeliveryContractV2["source_claims"][number]["disposition"],
+): string[] {
+  if (disposition.type === "outcome_result") return [disposition.ref];
+  if (
+    disposition.type === "claim" ||
+    disposition.type === "acceptance" ||
+    disposition.type === "global_constraint" ||
+    disposition.type === "risk_fact" ||
+    disposition.type === "external_confirmation"
+  )
+    return disposition.refs;
+  return [];
 }
 
 function sourceClaimsForFinding(

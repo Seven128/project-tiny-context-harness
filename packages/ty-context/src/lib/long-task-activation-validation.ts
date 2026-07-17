@@ -19,6 +19,7 @@ import type {
   DeliveryContractV2,
   WorkspaceManifestV2,
 } from "./long-task-delivery-types.js";
+import { validateStructuredEvidenceSensitivity } from "./long-task-evidence-sensitivity-policy.js";
 import {
   deliveryContractStructureDiagnostics,
   validateDeliveryContractStructure,
@@ -32,6 +33,7 @@ import {
 } from "./long-task-risk.js";
 import { validateSourceContinuity } from "./long-task-source-continuity.js";
 import { compileSourceInventory } from "./long-task-source-inventory.js";
+import { validateSourceTargetContinuity } from "./long-task-source-target-continuity.js";
 import { validateSourceAnchors } from "./long-task-source-validation.js";
 import {
   captureWorkspaceManifest,
@@ -66,11 +68,6 @@ export async function validateContractForActivation(options: {
   const claims = await attempt(mode, diagnostics, () =>
     compileProductClaimCoverage(contract),
   );
-  const risk = await attempt(mode, diagnostics, () => {
-    const decision = classifyLongTaskRisk(contract);
-    validateRiskProof(contract, decision);
-    return decision;
-  });
   if (mode === "fail_fast") {
     const decisions = contract.source_claims
       .filter((claim) => claim.disposition.type === "decision_required")
@@ -97,7 +94,19 @@ export async function validateContractForActivation(options: {
         ? (error) => addDiagnosticError(diagnostics, new Error(error))
         : undefined,
     );
+    validateSourceTargetContinuity(
+      contract,
+      items,
+      mode === "collect"
+        ? (error) => addDiagnosticError(diagnostics, new Error(error))
+        : undefined,
+    );
     return items;
+  });
+  const risk = await attempt(mode, diagnostics, () => {
+    const decision = classifyLongTaskRisk(contract);
+    validateRiskProof(contract, decision);
+    return decision;
   });
   const context = await attempt(mode, diagnostics, () =>
     captureContextGraphSnapshot(
@@ -164,7 +173,7 @@ export async function validateContractForActivation(options: {
   await attempt(mode, diagnostics, () =>
     validateRawExecutionObservationOwnership(allChecks),
   );
-  if (allOutcomeChecksFrozen(contract, outcomes))
+  if (allOutcomeChecksFrozen(contract, outcomes)) {
     await attempt(mode, diagnostics, () =>
       validateCounterfactualPaths(
         contract,
@@ -173,6 +182,16 @@ export async function validateContractForActivation(options: {
         workdirRelative,
       ),
     );
+    await attempt(mode, diagnostics, () =>
+      validateStructuredEvidenceSensitivity(
+        contract,
+        outcomes,
+        mode === "collect"
+          ? (error) => addDiagnosticError(diagnostics, new Error(error))
+          : undefined,
+      ),
+    );
+  }
   return {
     claims,
     risk,

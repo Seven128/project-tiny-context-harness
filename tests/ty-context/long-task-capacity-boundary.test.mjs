@@ -14,7 +14,7 @@ import {
 test("outcome_files physical compatibility normalizes fragment order under one authority", async () => {
   const fixture = await createDeliveryFixture({ twoOutcomes: true });
   try {
-    const contract = deliveryContract({ twoOutcomes: true });
+    const contract = structuredClone(fixture.contract);
     const [first, second] = contract.outcomes;
     delete contract.outcomes;
     contract.outcome_files = ["outcomes/second.yaml", "outcomes/first.yaml"];

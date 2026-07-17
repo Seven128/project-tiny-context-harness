@@ -1,6 +1,7 @@
 export type SourceItemKind =
   | "outcome_result"
   | "requirement"
+  | "control"
   | "acceptance"
   | "technical_obligation"
   | "non_goal"

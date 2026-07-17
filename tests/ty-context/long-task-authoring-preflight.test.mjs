@@ -66,6 +66,10 @@ test("Authoring Preflight aggregates independent diagnostics", async () => {
       "result",
       "obligation.implement-first",
     ];
+    outcome.acceptance.counterfactual_controls[0].claims = [
+      "result",
+      "obligation.implement-first",
+    ];
     check.runner.target = "tests/missing-oracle.mjs";
     outcome.product.owner.context_refs = [
       "project_context/areas/missing.md",
@@ -108,8 +112,7 @@ test("Authoring Preflight previews an active revision without pending state", as
   try {
     await runCli(fixture.root, ["enable", "long-task"]);
     await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
-    fixture.contract.outcomes[0].product.requirements[0].statement =
-      "A revised atomic requirement.";
+    fixture.contract.outcomes[0].product.owner.label = "revised fixture";
     await writeContract(fixture.workdir, fixture.contract);
     const before = await stateSnapshot(fixture);
     const result = await preflightDeliveryContract(
@@ -176,6 +179,8 @@ ${sourceStatement}
 `,
     );
     fixture.contract.source_claims[0].statement = sourceStatement;
+    fixture.contract.outcomes[0].product.requirements[0].statement =
+      sourceStatement;
     await writeContract(fixture.workdir, fixture.contract);
     let result = await preflightDeliveryContract(
       fixture.workdir,

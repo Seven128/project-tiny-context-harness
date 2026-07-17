@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { writeFile } from "node:fs/promises";
+import path from "node:path";
 import test from "node:test";
 import YAML from "yaml";
 import { compileDeliveryContract } from "../../packages/ty-context/dist/lib/long-task-delivery-compiler.js";
@@ -32,6 +34,15 @@ test("Compact and expanded V2 authoring normalize to the same Contract", () => {
 test("Compact and expanded V2 authoring compile to identical authority", async () => {
   const fixture = await createDeliveryFixture();
   const expanded = expandedContract();
+  await writeFile(
+    path.join(fixture.root, "source.md"),
+    `# Fixture source
+
+<!-- ty-source-item:start key=first-observable kind=technical_obligation -->
+Implement first
+<!-- ty-source-item:end -->
+`,
+  );
   await writeContract(fixture.workdir, expanded);
   const expandedCompiled = await compileDeliveryContract(
     fixture.workdir,
@@ -83,6 +94,7 @@ function expandedContract() {
   contract.source_claims[0].disposition.refs = [
     "first.obligation.implement-first",
   ];
+  contract.source_claims[0].statement = "Implement first";
   check.proof_surface = "ui_browser";
   check.runner.type = "playwright_test";
   check.runner.target = "tests/oracle.mjs";

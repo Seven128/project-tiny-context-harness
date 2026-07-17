@@ -116,18 +116,10 @@ test("Authority Revision rejects a risk downgrade instead of approving it", asyn
     check.negative_assertions.push({
       key: "negative-floor",
       criterion: "The strict negative floor remains satisfied.",
-      claims: ["result"],
+      claims: [],
       observation: "result_copy",
       operator: "not_equals",
       expected: false,
-    });
-    outcome.acceptance.counterfactual_controls.push({
-      key: "remove-state",
-      binding_key: "state-first",
-      claims: ["obligation.implement-first"],
-      check_key: check.key,
-      mutation: { type: "remove_paths", paths: ["src/state.json"] },
-      expected_assertion_failures: ["first-result"],
     });
     await writeContract(fixture.workdir, fixture.contract);
     await runCli(fixture.root, ["enable", "long-task"]);
@@ -292,7 +284,8 @@ test("per-Check progress accumulates and stales only on scoped inputs", async ()
       path.join(fixture.root, "tests", "scoped-oracle.mjs"),
       `import { readFile } from "node:fs/promises";
 const key = process.argv[2];
-const value = JSON.parse(await readFile(new URL(\`../src/\${key}.json\`, import.meta.url), "utf8"));
+let value = false;
+try { value = JSON.parse(await readFile(new URL(\`../src/\${key}.json\`, import.meta.url), "utf8")); } catch {}
 console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:value}}));
 `,
     );
@@ -303,6 +296,9 @@ console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution
       check.input_paths = [`src/${outcome.key}.json`];
       outcome.technical.bindings[0].target = `src/${outcome.key}.json`;
       outcome.technical.bindings[0].carrier_paths = [
+        `src/${outcome.key}.json`,
+      ];
+      outcome.acceptance.counterfactual_controls[0].mutation.paths = [
         `src/${outcome.key}.json`,
       ];
     }

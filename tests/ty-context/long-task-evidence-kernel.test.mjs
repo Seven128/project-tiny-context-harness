@@ -28,7 +28,7 @@ test("strict security proof combines per-Check artifacts, negative Assertions an
     check.positive_assertions.push({
       key: "artifact-present",
       criterion: "The security proof artifact is produced.",
-      claims: ["result"],
+      claims: [],
       observation: "artifacts-ready",
       operator: "equals",
       expected: true,
@@ -49,10 +49,15 @@ test("strict security proof combines per-Check artifacts, negative Assertions an
       {
         key: "remove-state-carrier",
         binding_key: "state-first",
-        claims: ["obligation.implement-first"],
+        claims: [
+          "result",
+          "requirement.observe-first",
+          "obligation.implement-first",
+          "forbidden_shortcut.self-report",
+        ],
         check_key: check.key,
         mutation: { type: "remove_paths", paths: ["src/state.json"] },
-        expected_assertion_failures: ["first-result"],
+        expected_assertion_failures: ["first-result", "shortcut-rejected"],
       },
     ];
     await writeArtifactOracle(fixture.root);
@@ -95,7 +100,7 @@ test("Population V2 proves entity coverage and fails on an omitted eligible id",
     check.negative_assertions.push({
       key: "negative-path",
       criterion: "The negative population path remains valid.",
-      claims: ["result"],
+      claims: [],
       observation: "negative_ok",
       operator: "equals",
       expected: true,
@@ -123,7 +128,11 @@ test("Population V2 proves entity coverage and fails on an omitted eligible id",
       {
         key: "remove-state-carrier",
         binding_key: "state-first",
-        claims: ["obligation.implement-first"],
+        claims: [
+          "result",
+          "requirement.observe-first",
+          "obligation.implement-first",
+        ],
         check_key: check.key,
         mutation: { type: "remove_paths", paths: ["src/state.json"] },
         expected_assertion_failures: ["first-result"],
@@ -199,7 +208,7 @@ let result = false;
 try { result = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8")).first; } catch {}
 await mkdir(new URL("../artifacts", import.meta.url), {recursive:true});
 await writeFile(new URL("../artifacts/proof.json", import.meta.url), JSON.stringify({verified:result}));
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result,"artifacts-ready":true,negative_ok:true}}));
+console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result,"artifacts-ready":true,negative_ok:result}}));
 `,
   );
 }

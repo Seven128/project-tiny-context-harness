@@ -40,6 +40,9 @@ export function explainAcceptanceLinks(
       reference,
       criterion: assertion.criterion ?? null,
       claims: assertion.claims,
+      source_backed_claims: assertion.claims.filter((claim) =>
+        sourceBacked(contract, outcomeKey, claim),
+      ),
       required_proof_surfaces: required,
       covered_proof_surfaces: covered,
       proof_surface: check.proof_surface,
@@ -55,10 +58,28 @@ function missingAcceptanceLink(reference: string) {
     reference,
     criterion: null,
     claims: [],
+    source_backed_claims: [],
     required_proof_surfaces: {},
     covered_proof_surfaces: {},
     proof_surface: null,
     evidence_adapter: null,
     observation: null,
   };
+}
+
+function sourceBacked(
+  contract: DeliveryContractV2,
+  outcomeKey: string,
+  claim: string,
+) {
+  const reference = `${outcomeKey}.${claim}`;
+  return contract.source_claims.some((source) => {
+    const disposition = source.disposition;
+    return (
+      (disposition.type === "claim" || disposition.type === "outcome_result") &&
+      (disposition.type === "outcome_result"
+        ? disposition.ref === reference
+        : disposition.refs.includes(reference))
+    );
+  });
 }

@@ -55,7 +55,9 @@ function validateDispositionKind(
   const allowed = new Set<string>(
     kind === "outcome_result"
       ? ["outcome_result"]
-      : kind === "requirement" || kind === "technical_obligation"
+      : kind === "requirement" ||
+          kind === "control" ||
+          kind === "technical_obligation"
         ? ["claim"]
         : kind === "acceptance"
           ? ["acceptance"]

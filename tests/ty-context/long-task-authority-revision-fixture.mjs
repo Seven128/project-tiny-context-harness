@@ -46,7 +46,23 @@ console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution
     {
       key: "remove-state",
       binding_key: "state-first",
-      claims: ["obligation.implement-first"],
+      claims: [
+        "result",
+        "requirement.observe-first",
+        "obligation.implement-first",
+      ],
+      check_key: check.key,
+      mutation: { type: "remove_paths", paths: ["src/state.json"] },
+      expected_assertion_failures: ["first-result"],
+    },
+    {
+      key: "remove-state-redundant-proof",
+      binding_key: "state-first",
+      claims: [
+        "result",
+        "requirement.observe-first",
+        "obligation.implement-first",
+      ],
       check_key: check.key,
       mutation: { type: "remove_paths", paths: ["src/state.json"] },
       expected_assertion_failures: ["first-result"],
@@ -55,7 +71,7 @@ console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution
   check.negative_assertions.push({
     key: "negative-floor",
     criterion: "The strict negative floor remains satisfied.",
-    claims: ["result"],
+    claims: [],
     observation: "negative",
     operator: "equals",
     expected: false,
@@ -133,7 +149,9 @@ export const authorityReductionScenarios = [
       contract.outcomes[0].technical.obligations = [];
       contract.outcomes[0].acceptance.checks[0].positive_assertions[0].claims =
         ["result", "requirement.observe-first"];
-      contract.outcomes[0].acceptance.counterfactual_controls = [];
+      for (const control of contract.outcomes[0].acceptance
+        .counterfactual_controls)
+        control.claims = ["result", "requirement.observe-first"];
     },
   },
   {
@@ -157,7 +175,7 @@ export const authorityReductionScenarios = [
     field: "counterfactuals_removed",
     reason: "counterfactual_removed",
     mutate(contract) {
-      contract.outcomes[0].acceptance.counterfactual_controls = [];
+      contract.outcomes[0].acceptance.counterfactual_controls.pop();
     },
   },
   {

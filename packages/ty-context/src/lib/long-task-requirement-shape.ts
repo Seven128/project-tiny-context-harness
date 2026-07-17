@@ -1,16 +1,6 @@
-import type {
-  DeliveryOutcomeV2,
-  ProofSurface,
-} from "./long-task-delivery-types.js";
-import {
-  array,
-  fail,
-  key,
-  literal,
-  object,
-  PROOF_SURFACES,
-  string,
-} from "./long-task-shape-primitives.js";
+import type { DeliveryOutcomeV2 } from "./long-task-delivery-types.js";
+import { parseRequiredProofSurfaces } from "./long-task-required-proof-surfaces.js";
+import { array, key, object, string } from "./long-task-shape-primitives.js";
 
 export function parseRequirements(
   value: unknown,
@@ -23,18 +13,10 @@ export function parseRequirements(
       "statement",
       "required_proof_surfaces",
     ]);
-    const surfaces = array(
+    const surfaces = parseRequiredProofSurfaces(
       row.required_proof_surfaces,
       `${itemLabel}.required_proof_surfaces`,
-    ).map((surface, surfaceIndex) =>
-      literal(
-        surface,
-        PROOF_SURFACES,
-        `${itemLabel}.required_proof_surfaces[${surfaceIndex}]`,
-      ),
-    ) as ProofSurface[];
-    if (!surfaces.length)
-      fail(`${itemLabel}.required_proof_surfaces`, "must not be empty");
+    );
     return {
       key: key(row.key, `${itemLabel}.key`),
       statement: string(row.statement, `${itemLabel}.statement`),

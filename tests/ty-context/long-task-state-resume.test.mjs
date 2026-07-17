@@ -177,7 +177,9 @@ await writeFile(countFile, String(count));
 await mkdir(new URL("../artifacts", import.meta.url), {recursive:true});
 await writeFile(new URL("../artifacts/a.json", import.meta.url), "a");
 await writeFile(new URL("../artifacts/b.json", import.meta.url), "b");
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:true,invocation_count:count}}));
+let state = {first:false};
+try { state = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8")); } catch {}
+console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state.first,invocation_count:count}}));
 `,
     );
     const original = fixture.contract.outcomes[0].acceptance.checks[0];
@@ -191,6 +193,8 @@ console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution
       operator: "equals",
       expected: 1,
     });
+    fixture.contract.outcomes[0].acceptance.counterfactual_controls[0]
+      .expected_assertion_failures.push("single-invocation");
     const second = structuredClone(original);
     second.key = "same-execution-check";
     second.artifact_globs = ["artifacts/b.json"];

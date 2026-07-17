@@ -151,9 +151,13 @@ Include a `CTRL` when:
 
 For each included control, state its location or surface responsibility, user task, trigger, input, applicable states and feedback. Preserve normal, in-progress, success, failure, empty, permission and recovery states only when they genuinely apply.
 
+Give every decided Control field its own stable semantic meaning. Do not compress location, trigger, input, loading, empty, success, failure or feedback into one broad sentence when more than one field has been decided; later repository-aware authoring must be able to map each field independently.
+
 ## Acceptance Scenarios
 
 Write `AC` items as observable behavior, not low-level test commands.
+
+Each `AC` represents exactly one acceptance scenario and explicitly names the `REQ`, `CTRL` and/or `OBL` keys it accepts. Never label one AC as proof for several materially different success, failure, boundary or recovery scenarios; author separate ACs instead.
 
 For every important `REQ`, provide at least one of:
 
@@ -166,6 +170,12 @@ For every important `REQ`, provide at least one of:
 Cover the scenarios that actually exist: success, failure, boundary, recovery, permission, empty state, sample/full-population scope and forbidden results. Do not mechanically generate a fixed scenario set.
 
 Never introduce a product requirement for the first time inside an `AC`. Move hidden behavior, defaults, retention periods or recovery policies into a source-backed `REQ` or unresolved `DEC`.
+
+## Risk And Advisory Boundaries
+
+Each `RISK` states both the concrete Fact and every Affected Outcome. Generic risk prose without an affected Outcome is not actionable Source. `HINT` remains advisory and is never a Material Source Item: promote it to `OBL` if the implementation constraint is mandatory.
+
+This Skill emits ordinary Markdown only. Do not emit `ty-source-item` markers; repository-aware `/long-task-workflow` inserts those non-rendering markers later without rewriting the selected Source text.
 
 ## Default Markdown Structure
 

@@ -20,13 +20,20 @@ test("Requirement, criterion, Source-AC mapping and AC removal remain review aut
     removedRequirement.outcomes[0].product.requirements = [];
     removedRequirement.outcomes[0].acceptance.checks[0].positive_assertions[0].claims =
       ["result", "obligation.implement-first"];
+    removedRequirement.outcomes[0].acceptance.counterfactual_controls[0].claims =
+      ["result", "obligation.implement-first"];
+    removedRequirement.source_claims[0].statement = "Implement first";
     removedRequirement.source_claims[0].disposition = {
-      type: "acceptance",
-      refs: ["first.first-check.first-result"],
+      type: "claim",
+      refs: ["first.obligation.implement-first"],
     };
     removedRequirement.outcomes[0].acceptance.checks[0].positive_assertions[0].criterion =
       "The first outcome must be observable.";
-    await writeSource(fixture.root, "acceptance");
+    await writeSource(
+      fixture.root,
+      "technical_obligation",
+      "Implement first",
+    );
     await writeContract(fixture.workdir, removedRequirement);
     await expectDecision(fixture, {
       field: "product_claims_removed",
@@ -48,9 +55,18 @@ test("Requirement, criterion, Source-AC mapping and AC removal remain review aut
       type: "acceptance",
       refs: ["first.first-check.first-result"],
     };
+    changedSourceAcceptance.source_claims.push({
+      key: "first-requirement",
+      source_ref: "source.md#fixture-source",
+      statement: "The first outcome must be observable.",
+      disposition: {
+        type: "claim",
+        refs: ["first.requirement.observe-first"],
+      },
+    });
     changedSourceAcceptance.outcomes[0].acceptance.checks[0].positive_assertions[0].criterion =
       "The first outcome must be observable.";
-    await writeSource(fixture.root, "acceptance");
+    await writeSourceWithRequirement(fixture.root, "first-observable");
     await writeContract(fixture.workdir, changedSourceAcceptance);
     await expectDecision(fixture, {
       reason: "source_claim_removed_or_changed",
@@ -69,7 +85,18 @@ test("Requirement, criterion, Source-AC mapping and AC removal remain review aut
       type: "acceptance",
       refs: ["first.first-check.replacement-result"],
     };
-    await writeSource(fixture.root, "acceptance");
+    replacedAcceptance.source_claims.push({
+      key: "first-requirement",
+      source_ref: "source.md#fixture-source",
+      statement: "The first outcome must be observable.",
+      disposition: {
+        type: "claim",
+        refs: ["first.requirement.observe-first"],
+      },
+    });
+    replacedAcceptance.outcomes[0].acceptance.counterfactual_controls[0]
+      .expected_assertion_failures = ["replacement-result"];
+    await writeSourceWithRequirement(fixture.root, "first-observable");
     await writeContract(fixture.workdir, replacedAcceptance);
     await expectDecision(fixture, {
       reason: "acceptance_not_monotonic",
@@ -79,12 +106,32 @@ test("Requirement, criterion, Source-AC mapping and AC removal remain review aut
   }
 });
 
-async function writeSource(root, kind) {
+async function writeSource(
+  root,
+  kind,
+  statement = "The first outcome must be observable.",
+) {
   await writeFile(
     path.join(root, "source.md"),
     `# Fixture source
 
 <!-- ty-source-item:start key=first-observable kind=${kind} -->
+${statement}
+<!-- ty-source-item:end -->
+`,
+  );
+}
+
+async function writeSourceWithRequirement(root, acceptanceKey) {
+  await writeFile(
+    path.join(root, "source.md"),
+    `# Fixture source
+
+<!-- ty-source-item:start key=${acceptanceKey} kind=acceptance -->
+The first outcome must be observable.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=first-requirement kind=requirement -->
 The first outcome must be observable.
 <!-- ty-source-item:end -->
 `,

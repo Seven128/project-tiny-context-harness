@@ -28,6 +28,8 @@ Revised before execution.
 `,
     );
     fixture.contract.source_claims[0].statement = "Revised before execution.";
+    fixture.contract.outcomes[0].product.requirements[0].statement =
+      "Revised before execution.";
     await writeContract(fixture.workdir, fixture.contract);
     await assert.rejects(
       () => runCli(fixture.root, ["long-task", "compile", fixture.workdir]),
@@ -201,12 +203,26 @@ test("Source, Context, Product, Global, and Product Claim changes require exact 
     for (const scenario of semanticCases) {
       const candidate = structuredClone(contractBaseline);
       scenario.mutate(candidate);
+      if (scenario.address === "outcomes.first.requirements.observe-first") {
+        const statement = candidate.outcomes[0].product.requirements[0].statement;
+        candidate.source_claims[0].statement = statement;
+        await writeFile(
+          sourceFile,
+          `# Fixture source
+
+<!-- ty-source-item:start key=first-observable kind=requirement -->
+${statement}
+<!-- ty-source-item:end -->
+`,
+        );
+      }
       await writeContract(fixture.workdir, candidate);
       await expectDecision(fixture, {
         field: "product_semantics_changed",
         includes: scenario.address,
         reason: "product_semantics_changed",
       });
+      await writeFile(sourceFile, sourceBaseline);
     }
 
     const globalCandidate = structuredClone(contractBaseline);
@@ -233,6 +249,14 @@ test("Source, Context, Product, Global, and Product Claim changes require exact 
       operator: "equals",
       expected: true,
     });
+    addedClaim.outcomes[0].acceptance.counterfactual_controls.push({
+      key: "new-product-scope-sensitive",
+      binding_key: "state-first",
+      claims: ["obligation.new-product-scope"],
+      check_key: "first-check",
+      mutation: { type: "remove_paths", paths: ["src/state.json"] },
+      expected_assertion_failures: ["new-product-scope-proof"],
+    });
     await writeContract(fixture.workdir, addedClaim);
     await expectDecision(fixture, {
       field: "product_claims_added",
@@ -258,10 +282,10 @@ test("mechanical proof additions and path tightening remain automatic revisions"
     fixture.contract.outcomes[0].acceptance.checks[0].positive_assertions.push({
       key: "additional-proof",
       criterion: "The additional proof remains true.",
-      claims: ["result"],
-      observation: "result_copy",
+      claims: [],
+      observation: "negative",
       operator: "equals",
-      expected: true,
+      expected: false,
     });
     await writeContract(fixture.workdir, fixture.contract);
     let result = await runCli(fixture.root, [

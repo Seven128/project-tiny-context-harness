@@ -5,12 +5,11 @@ import type {
   KeyedPathV2,
   KeyedStatementV2,
 } from "./long-task-delivery-types.js";
+import { parseRequiredProofSurfaces } from "./long-task-required-proof-surfaces.js";
 import {
   array,
   key,
-  literal,
   object,
-  PROOF_SURFACES,
   repositoryFiles,
   repositoryPattern,
   repositoryPatterns,
@@ -100,15 +99,9 @@ export function parseObligations(
     return {
       key: key(row.key, `${itemLabel}.key`),
       statement: string(row.statement, `${itemLabel}.statement`),
-      required_proof_surfaces: array(
+      required_proof_surfaces: parseRequiredProofSurfaces(
         row.required_proof_surfaces,
         `${itemLabel}.required_proof_surfaces`,
-      ).map((surface, surfaceIndex) =>
-        literal(
-          surface,
-          PROOF_SURFACES,
-          `${itemLabel}.required_proof_surfaces[${surfaceIndex}]`,
-        ),
       ),
     };
   });

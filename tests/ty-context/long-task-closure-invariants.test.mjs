@@ -5,10 +5,6 @@ import YAML from "yaml";
 import { compileDeliveryContract } from "../../packages/ty-context/dist/lib/long-task-delivery-compiler.js";
 import { parseDeliveryContractText } from "../../packages/ty-context/dist/lib/long-task-delivery-parser.js";
 import {
-  classifyLongTaskRisk,
-  validateRiskProof,
-} from "../../packages/ty-context/dist/lib/long-task-risk.js";
-import {
   createDeliveryFixture,
   deliveryContract,
   writeContract,
@@ -98,6 +94,7 @@ test("required_proof_surfaces uses all-of coverage", () => {
 test("required_proof_surfaces passes only when every layer has a compatible proof", () => {
   const contract = deliveryContract();
   const outcome = contract.outcomes[0];
+  outcome.acceptance.counterfactual_controls = [];
   outcome.product.requirements[0].required_proof_surfaces = [
     "ui_browser",
     "data_state",
@@ -160,22 +157,56 @@ test("Claim-bearing Product Assertions cannot use unary operators", () => {
   );
 });
 
-test("custom structured Result proof requires a bounded sensitivity control when no alternative proof exists", () => {
-  const contract = deliveryContract();
-  contract.outcomes[0].acceptance.checks[0].artifact_globs = [];
-  assert.throws(
-    () => validateRiskProof(contract, classifyLongTaskRisk(contract)),
-    /weak_evidence_sensitivity_required:first/u,
-  );
+test("truthy and falsy cannot prove an implementation_structure Obligation", () => {
+  for (const operator of ["truthy", "falsy"]) {
+    const contract = deliveryContract();
+    const outcome = contract.outcomes[0];
+    outcome.acceptance.counterfactual_controls = [];
+    const check = outcome.acceptance.checks[0];
+    check.proof_surface = "implementation_structure";
+    outcome.technical.obligations[0].required_proof_surfaces = [
+      "implementation_structure",
+    ];
+    check.positive_assertions[0] = {
+      key: `structure-${operator}`,
+      criterion: "The implementation carrier exists structurally.",
+      claims: ["obligation.implement-first"],
+      observation: "result",
+      operator,
+    };
+    assert.throws(
+      () => parse(contract),
+      /claim_assertion_explicit_expected_required:first:first-check:/u,
+      operator,
+    );
+  }
 });
 
-test("explicit weak_observability always requires a bounded sensitivity control", () => {
+test("exists may prove only an implementation_structure Obligation", () => {
   const contract = deliveryContract();
-  contract.risk.facts.weak_observability = ["first"];
-  assert.throws(
-    () => validateRiskProof(contract, classifyLongTaskRisk(contract)),
-    /weak_evidence_sensitivity_required:first/u,
-  );
+  const outcome = contract.outcomes[0];
+  outcome.acceptance.counterfactual_controls = [];
+  outcome.technical.obligations[0].required_proof_surfaces = [
+    "implementation_structure",
+  ];
+  outcome.acceptance.checks[0].positive_assertions[0].claims = [
+    "result",
+    "requirement.observe-first",
+  ];
+  const structureCheck = structuredClone(outcome.acceptance.checks[0]);
+  structureCheck.key = "structure-check";
+  structureCheck.proof_surface = "implementation_structure";
+  structureCheck.positive_assertions = [
+    {
+      key: "implementation-carrier",
+      criterion: "The declared implementation carrier exists.",
+      claims: ["obligation.implement-first"],
+      observation: "result",
+      operator: "exists",
+    },
+  ];
+  outcome.acceptance.checks.push(structureCheck);
+  assert.doesNotThrow(() => parse(contract));
 });
 
 test("one Raw Execution Observation cannot be copied across Checks", async () => {

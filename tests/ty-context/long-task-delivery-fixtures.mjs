@@ -36,7 +36,8 @@ The first outcome must be observable.
   await writeFile(
     path.join(root, "tests", "oracle.mjs"),
     `import { readFile } from "node:fs/promises";
-const state = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8"));
+let state = { first: false, second: false };
+try { state = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8")); } catch {}
 const key = process.argv[2] || "first";
 console.log(JSON.stringify({
   schema_version: "long-task-check-result-v2",
@@ -96,6 +97,7 @@ default = true
   const workdir = path.join(root, ".long-task");
   await mkdir(workdir, { recursive: true });
   const contract = deliveryContract(options);
+  addDefaultSensitivityControls(contract);
   await writeContract(workdir, contract);
   return { root, workdir, contract };
 }
@@ -149,7 +151,7 @@ export function deliveryContract(options = {}) {
       requirements: [
         {
           key: `observe-${key}`,
-          statement: `${key} must be observable.`,
+          statement: `The ${key} outcome must be observable.`,
           required_proof_surfaces: ["runtime_behavior"],
         },
       ],
@@ -235,6 +237,24 @@ export function deliveryContract(options = {}) {
       ? [outcome("first", "first"), outcome("second", "second", ["first"])]
       : [outcome("first", "first")],
   };
+}
+
+function addDefaultSensitivityControls(contract) {
+  for (const outcome of contract.outcomes)
+    outcome.acceptance.counterfactual_controls = [
+      {
+        key: `remove-${outcome.key}-state`,
+        binding_key: `state-${outcome.key}`,
+        claims: [
+          "result",
+          `requirement.observe-${outcome.key}`,
+          `obligation.implement-${outcome.key}`,
+        ],
+        check_key: `${outcome.key}-check`,
+        mutation: { type: "remove_paths", paths: ["src/state.json"] },
+        expected_assertion_failures: [`${outcome.key}-result`],
+      },
+    ];
 }
 
 export async function writeContract(workdir, contract) {

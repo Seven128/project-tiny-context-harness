@@ -90,9 +90,11 @@ Context: no durable fact change
 - Outcome 只按可独立判断的可观察结果拆分；
 - 重要 Source 项使用稳定语义 Key 与显式 Anchor；
 - 强制技术义务使用 `OBL`，非强制实现建议使用 `HINT`；
-- AC 只描述可观察行为，不能首次偷渡新需求。
+- 已决定的每个 `CTRL` 字段都有可独立映射的稳定语义；
+- 每个 `RISK` 明确 Fact 与 Affected Outcome；
+- 每个 AC 只代表一个可观察场景，显式列出对应 `REQ`/`CTRL`/`OBL` Key，且不能首次偷渡新需求。
 
-它不更新项目 Context，不绑定真实仓库 owner/path/runner，不生成 Delivery Contract YAML，不执行实现，不创建工作流状态，也不声明完成。Source Plan 是 Source，不是 Contract Draft。推荐结构只是 Authoring Fast Path；普通文本方案仍可直接作为 Long-Task Source。
+它不更新项目 Context，不绑定真实仓库 owner/path/runner，不生成 Delivery Contract YAML，不执行实现，不创建工作流状态，也不声明完成。`HINT` 不是 Material Source Item；Source Plan Skill 不输出 `ty-source-item` Marker，Marker 由后续 repository-aware Long-Task Authoring 插入。Source Plan 是 Source，不是 Contract Draft。推荐结构只是 Authoring Fast Path；普通文本方案仍可直接作为 Long-Task Source。
 
 ## Single-Goal Rolling Delivery
 
@@ -165,9 +167,9 @@ Runner 支持 `package_script`、`project_binary`、`node_oracle`、`playwright_
 
 用户选定的一次完整交付始终只有一个 Contract 和一个 Final Gate，即使 Outcomes 业务关联较弱。Outcome 只按“可独立判断、可定向验证”的结果拆分；模型输出长度、YAML/文件长度、前后端层、模块数量、并行偏好或 Agent 容量都不是拆分依据。新 Authoring 使用 inline Outcomes；既有 `outcome_files` 只保留物理文件兼容意义，不产生语义、状态或完成边界。
 
-V2 强制至少一个真实 `source_path` 与一个 `source_claim`，且每个声明的 Source 文件至少包含一个 Material Item；纯背景资料不得进入 Source Authority。Authoring 阶段必须在原始 Markdown 中仅插入不渲染的 `ty-source-item:start/end` 标记，不得改写 Item 原文。支持 `outcome_result`、`requirement`、`acceptance`、`technical_obligation`、`non_goal`、`forbidden_shortcut`、`risk_fact`、`external_confirmation`、`decision`；所有 Source 文件中的 Marker key 与 Source Claim key 必须集合完全相等且全局唯一。嵌套、重叠、未闭合、空内容、非法 key，以及 `statement` 与 Marker 文本在有限空白规范化后不一致，都会阻止 Compile。
+V2 强制至少一个真实 `source_path` 与一个 `source_claim`，且每个声明的 Source 文件至少包含一个 Material Item；纯背景资料不得进入 Source Authority。Authoring 阶段必须在原始 Markdown 中仅插入不渲染的 `ty-source-item:start/end` 标记，不得改写 Item 原文。支持 `outcome_result`、`requirement`、`control`、`acceptance`、`technical_obligation`、`non_goal`、`forbidden_shortcut`、`risk_fact`、`external_confirmation`、`decision`；所有 Source 文件中的 Marker key 与 Source Claim key 必须集合完全相等且全局唯一。嵌套、重叠、未闭合、空内容、非法 key，以及 `statement` 与 Marker 文本在有限空白规范化后不一致，都会阻止 Compile。
 
-类型化 disposition 分开整体结果、非 Result Claim、单一命名 Acceptance Assertion、Global Constraint/Non-goal、Contract 中真实存在的 Risk Fact、External Confirmation 与真实决策。Source Acceptance 必须原样对应一个 `<outcome>.<check>.<assertion>` criterion，并证明至少一个非 Result Claim。`out_of_scope` 已退休：Source 明确的 non-goal 由 Global Negative Proof 覆盖；排除原本在范围内的要求只能进入 `decision_required`。普通 prose/Source Plan 只需 Marker 枚举，不必改成严格 YAML；Compiler 诚实地不声称能发现未标记的自然语言隐含要求。
+类型化 disposition 分开整体结果、Requirement/Control/Obligation Claim、单一命名 Acceptance Assertion、Global Constraint/Non-goal、Risk Fact/Affected Outcome、External Confirmation 与真实决策。每个非 Decision Source Item 必须且只能拥有一个同 Kind、同规范化文本的 Canonical Target，两个 Source Item 不得拥有同一 Target。Source Acceptance 必须原样对应一个 `<outcome>.<check>.<assertion>` criterion，并证明至少一个被独立 Requirement/Control/Obligation Source Item 支撑的非 Result Claim。`out_of_scope` 已退休：Source 明确的 non-goal 由 Global Negative Proof 覆盖；排除原本在范围内的要求只能进入 `decision_required`。普通 prose/Source Plan 只需 Marker 枚举，不必改成严格 YAML；Compiler 诚实地不声称能发现未标记的自然语言隐含要求。
 
 Delivery Set 主动编排以及一次选定交付内部的多顶层 Contract 拆分都已退休；`ty-context delivery-set ...` 只返回固定、不可执行的 tombstone。
 
@@ -187,9 +189,9 @@ Delivery Set 主动编排以及一次选定交付内部的多顶层 Contract 拆
 
 最终接受来自当前可执行证据，不来自 Agent 文本。Evidence Adapter 由 Runner 派生：只有 `playwright_test → playwright_json_v1` 可以证明 `ui_browser`，其余 Runner 均为 `structured_json_v2`，只能证明非浏览器 Surface。Adapter 进入 Acceptance、Raw Execution、Compiled、Progress 与 Receipt identity。每个 Outcome 至少有一个非 Result 原子 Claim，且 `required_proof_surfaces` 必须 all-of 全覆盖。Claim-bearing Assertion 使用显式 Expected 比较；`truthy/falsy` 禁止，`exists` 仅允许证明 `implementation_structure` Obligation。
 
-所有共享同一 Raw Execution identity 的 Check 中，一个 Claim-bearing Observation 只能属于一个 Assertion。Playwright Claim Proof 的唯一形式是 `playwright.case.<ac-key>.passed equals true`；aggregate/executed/skipped/status/count 仅供诊断。Missing、Skipped、Flaky、Unexpected、Failed，以及同一 Project 内重复 AC 全部 fail-closed；同一 AC 跨不同 Project 只有所有 Instance 均通过才聚合为通过。
+所有共享同一 Raw Execution identity 的 Check 中，一个 Claim-bearing Observation 只能属于一个 Assertion。Playwright Claim Proof 的唯一形式是 `playwright.case.<ac-key>.passed equals true`；Test Title 使用 `[ac:<assertion-key>]`，每个 Test Instance 最多绑定一个已声明 AC，普通标签被忽略，旧 `[<key>]` 只兼容已声明 Key。Aggregate/executed/skipped/status/count 仅供诊断。Missing、Skipped、Flaky、Unexpected、Failed、同一 Test 多 AC，以及同一 Project 内重复 AC 全部 fail-closed；同一 AC 跨不同 Project 只有所有 Instance 均通过才聚合为通过。
 
-Counterfactual 必须绑定当前 Outcome 的明确 Binding，只能修改其 carrier 的可证明子集，并且仅在 completed、exit-zero 且所有失败都严格是 designated `assertion_value_mismatch` 时成立；Observation missing/type mismatch、AC missing/skipped、Artifact/Population/Infrastructure 或额外 Assertion 失败都会使其无效。弱可观察 Outcome 与缺少其他强证据的 custom structured Result Check 至少需要一个有限 Sensitivity Counterfactual。只有整个 Check `passed` 后才输出 Claim/Population Proof。Finding 与 Explain 覆盖 Check、Counterfactual、Population、Scope/Binding、Source Mapping、Adapter、缺失 Surface 和 Sensitivity，并串起 Source→Claim/AC→Surface→Check→Adapter→Observation。
+Counterfactual 必须绑定当前 Outcome 的明确 Binding，只能修改其 carrier 的可证明子集，并且仅在 completed、exit-zero 且所有失败都严格是 designated `assertion_value_mismatch` 时成立；Observation missing/type mismatch、AC missing/skipped、Artifact/Population/Infrastructure 或额外 Assertion 失败都会使其无效。每个 Claim-bearing structured Check 都必须通过同 Check、覆盖对应 Claim 的 Counterfactual 证明敏感性；无关 Artifact、其他 Check 或无关 Claim 不能替代。正常可观察性下，同 Check Population 只豁免自身 Claims；`weak_observability` 下不豁免。Structured Result 还必须由 `result` 加至少一个相关非 Result Claim 共同形成失败根。只有整个 Check `passed` 后才输出 Claim/Population Proof。Finding 与 Explain 覆盖 Check、Counterfactual、Population、Scope/Binding、Source Mapping、Canonical Target、Adapter、缺失 Surface 和 Sensitivity，并串起 Source→Canonical Target→Claim/AC→Surface→Check→Adapter→Observation。
 
 Workdir cache 不能定义 previous authority。Commit、verifier migration、clear 与 abandon 共用唯一 active-state lock；Final/Verify 结束前重查 identity，Stop/close 使用 accepted-identity CAS。开发期 V2 Active Authority、Progress 与 Receipt 不迁移：doctor 报告 `manual_required`，用户升级 Contract 后重新形成 Authority Lock。损坏 continuity 由 doctor 指向显式 `abandon --force-corrupt-state`。
 

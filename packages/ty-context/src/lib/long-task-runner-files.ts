@@ -33,3 +33,21 @@ export async function npmCliPath(): Promise<string> {
     if ((await stat(candidate).catch(() => null))?.isFile()) return candidate;
   throw new Error("npm_cli_not_found_for_package_script_runner");
 }
+
+export async function npxCliPath(): Promise<string> {
+  const candidates = [
+    process.env.npm_execpath
+      ? path.join(path.dirname(process.env.npm_execpath), "npx-cli.js")
+      : null,
+    path.join(
+      path.dirname(process.execPath),
+      "node_modules",
+      "npm",
+      "bin",
+      "npx-cli.js",
+    ),
+  ].filter((candidate): candidate is string => Boolean(candidate));
+  for (const candidate of candidates)
+    if ((await stat(candidate).catch(() => null))?.isFile()) return candidate;
+  throw new Error("npx_cli_not_found_for_playwright_runner");
+}

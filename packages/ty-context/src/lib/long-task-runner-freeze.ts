@@ -13,7 +13,11 @@ import {
   matchesRepoPattern,
 } from "./long-task-paths.js";
 import { assertProtectedRepositoryFile } from "./long-task-protected-files.js";
-import { nearestRunnerFile, npmCliPath } from "./long-task-runner-files.js";
+import {
+  nearestRunnerFile,
+  npmCliPath,
+  npxCliPath,
+} from "./long-task-runner-files.js";
 import { canonicalValueJson, sha256Hex } from "./strict-codec.js";
 import {
   repoRelative,
@@ -166,8 +170,9 @@ async function freezeRunner(
       executable = process.execPath;
       prefix = [relativeFromCwd];
     } else if (runner.type === "playwright_test") {
-      executable = process.platform === "win32" ? "npx.cmd" : "npx";
+      executable = process.execPath;
       prefix = [
+        await npxCliPath(),
         "--no-install",
         "playwright",
         "test",

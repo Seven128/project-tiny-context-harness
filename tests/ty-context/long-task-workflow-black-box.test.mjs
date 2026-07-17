@@ -34,11 +34,24 @@ test("controlled real V2 Smoke proves only the current Live Final Gate can finis
 The first outcome must be observable.
 <!-- ty-source-item:end -->
 
+<!-- ty-source-item:start key=second-observable kind=requirement -->
+The second outcome must be observable.
+<!-- ty-source-item:end -->
+
 <!-- ty-source-item:start key=second-acceptance kind=acceptance -->
 second is observable and implemented.
 <!-- ty-source-item:end -->
 `,
     );
+    fixture.contract.source_claims.push({
+      key: "second-observable",
+      source_ref: "source.md#fixture-source",
+      statement: "The second outcome must be observable.",
+      disposition: {
+        type: "claim",
+        refs: ["second.requirement.observe-second"],
+      },
+    });
     fixture.contract.source_claims.push({
       key: "second-acceptance",
       source_ref: "source.md#fixture-source",
@@ -156,12 +169,16 @@ second is observable and implemented.
 The first outcome must be observable.
 <!-- ty-source-item:end -->
 
+<!-- ty-source-item:start key=second-observable kind=requirement -->
+The second outcome must be observable.
+<!-- ty-source-item:end -->
+
 <!-- ty-source-item:start key=second-acceptance kind=acceptance -->
 ${revisedAcceptance}
 <!-- ty-source-item:end -->
 `,
     );
-    fixture.contract.source_claims[1].statement = revisedAcceptance;
+    fixture.contract.source_claims[2].statement = revisedAcceptance;
     fixture.contract.outcomes[1].acceptance.checks[0].positive_assertions[0].criterion =
       revisedAcceptance;
     await writeContract(fixture.workdir, fixture.contract);

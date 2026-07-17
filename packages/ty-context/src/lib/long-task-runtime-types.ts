@@ -144,6 +144,7 @@ export interface LongTaskFindingV2 {
   outcome_key: string | null;
   check_key: string | null;
   source_claim_keys?: string[];
+  source_target_refs?: string[];
   claim_keys?: string[];
   assertion_key?: string;
   criterion?: string;

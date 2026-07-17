@@ -7,6 +7,7 @@ import { sha256Hex } from "./strict-codec.js";
 const KINDS = new Set<SourceItemKind>([
   "outcome_result",
   "requirement",
+  "control",
   "acceptance",
   "technical_obligation",
   "non_goal",

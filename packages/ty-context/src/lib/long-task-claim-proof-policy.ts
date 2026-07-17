@@ -5,7 +5,7 @@ import type {
   ProofSurface,
 } from "./long-task-delivery-types.js";
 
-const UNARY = new Set(["exists", "truthy", "falsy"]);
+const PRESENCE_OR_UNARY = new Set(["exists", "truthy", "falsy"]);
 
 export function validateDeclaredCheckSafety(
   contract: DeliveryContractV2,
@@ -25,22 +25,24 @@ export function validateClaimAssertionOperator(
   outcomeKey: string,
   checkKey: string,
 ): void {
-  if (!assertion.claims.length || !UNARY.has(assertion.operator)) return;
+  if (!assertion.claims.length || !PRESENCE_OR_UNARY.has(assertion.operator))
+    return;
   const implementationStructureObligation =
     claim.kind === "obligation" &&
     proofSurface === "implementation_structure" &&
     claim.required_proof_surfaces.includes("implementation_structure");
-  if (!implementationStructureObligation)
-    throw new Error(
-      `claim_assertion_explicit_expected_required:${outcomeKey}:${checkKey}:${assertion.key}`,
-    );
+  if (assertion.operator === "exists" && implementationStructureObligation)
+    return;
+  throw new Error(
+    `claim_assertion_explicit_expected_required:${outcomeKey}:${checkKey}:${assertion.key}`,
+  );
 }
 
 export function validateGlobalAssertionOperator(
   assertion: DeliveryAssertionV2,
   checkKey: string,
 ): void {
-  if (assertion.claims.length && UNARY.has(assertion.operator))
+  if (assertion.claims.length && PRESENCE_OR_UNARY.has(assertion.operator))
     throw new Error(
       `claim_assertion_explicit_expected_required:GLOBAL:${checkKey}:${assertion.key}`,
     );

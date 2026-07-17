@@ -21,7 +21,7 @@ test("Counterfactual accepts only the exact designated Assertion failure", async
     check.positive_assertions.push({
       key: "other-stays-true",
       criterion: "The unrelated observation remains true.",
-      claims: ["result"],
+      claims: [],
       observation: "other",
       operator: "equals",
       expected: true,
@@ -30,7 +30,11 @@ test("Counterfactual accepts only the exact designated Assertion failure", async
       {
         key: "remove-state",
         binding_key: "state-first",
-        claims: ["obligation.implement-first"],
+        claims: [
+          "result",
+          "requirement.observe-first",
+          "obligation.implement-first",
+        ],
         check_key: check.key,
         mutation: { type: "remove_paths", paths: ["src/state.json"] },
         expected_assertion_failures: ["first-result"],
