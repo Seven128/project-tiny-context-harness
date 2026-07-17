@@ -5,6 +5,7 @@
 - Provide the `ty-context` CLI, Minimal Context/default Workflow assets, validators, migrations, source-sync checks and the explicit Single-Goal Long-Task Workflow.
 - Preserve repo-native project intent and repeatable verification without reintroducing lifecycle documents or agent/process/Git orchestration.
 - Own one-Contract V2 authoring, compiled Source/REQ/CTRL/OBL/AC coverage and the Live Evidence Kernel that prevents false completion for declared Outcomes on one current Git-tree snapshot.
+- The explicit Long-Task profile manages the optional Source Plan Skill, the Long-Task Skill and the completion Hook. The Long-Task Skill owns iterative Contract Draft authoring through Final Gate; no standalone Contract Draft Skill exists.
 
 ## User / System Contract
 
@@ -12,9 +13,9 @@
 - `init` installs `core-portable` plus `workflow-default`; `ty-context enable long-task` explicitly installs the optional Source Plan Authoring Skill, Long-Task Workflow Skill, Stop Hook and templates. `disable long-task` removes only package-owned long-task assets.
 - `sync` refreshes enabled package-managed assets only. `upgrade` applies safe deterministic migrations, including `composite-codex` profile selection to `long-task`, before sync/doctor. Neither command creates or activates a task.
 - `ty-context long-task ...` owns the only active one-Contract path. `delivery-set` is a fixed retired tombstone; neither path schedules Agents, Goals, branches or worktrees.
-- `delivery-contract.yaml` is the only Contract authoring authority; real Source is mandatory provenance. Material Source Items are non-rendering markers in the original files, with set-equal, text-exact, typed Source Claims. The derived Source inventory is compiled projection, not another file/state. New authoring uses inline Outcomes; existing `outcome_files` are physical compatibility only.
+- `delivery-contract.yaml` is the only Contract authoring file and remains a non-authoritative Draft until formal Compile; real Source is mandatory provenance. Material Source Items are non-rendering markers in the original files, with set-equal, text-exact, typed Source Claims. The derived Source inventory is compiled projection, not another file/state. New authoring uses inline Outcomes; existing `outcome_files` are physical compatibility only.
 - Compact deterministic defaults reduce mechanical YAML without inferring Goal, Source, Context, Outcomes, owners, REQ/CTRL/OBL/AC, proof, risk or external-confirmation semantics. Read-only `preflight` aggregates diagnostics without creating any authority or audit state; only formal Compile creates Authority Lock.
-- The current platform Goal owns rolling implementation choices. Harness neither creates nor recovers physical Goals and never starts agents, Codex/AppServer, branches/worktrees, merge/push/PR flows or model retries.
+- The current platform Goal owns rolling implementation choices. A Draft Outcome is the authoring-time lifecycle of an Outcome; Outcomes are semantic acceptance and verification boundaries, not runtime Workers or scheduler tasks. Harness neither creates nor recovers physical Goals and never starts agents, Codex/AppServer, branches/worktrees, merge/push/PR flows or model retries.
 - Compile and read-only Preflight share one activation-safety kernel; skipping Preflight bypasses no Source, criterion, Claim/all-of-surface, adapter/Observation, risk, binding, runner/input, Counterfactual or sensitivity rule. The first successful compile is Authority Lock; every later declared Source/Product/Technical/Acceptance/Risk/Context or verifier material change compares with the active snapshot regardless of progress, Receipt, cache or implementation diff.
 - Targeted verify writes repair-only current-snapshot progress and never accepts. Final Gate, Stop and close recompile source authority and rerun the entire Contract on one snapshot.
 - Status, progress, Receipts and the workdir compiled cache are audit/recovery projections only. The common-dir Active Authority V3 snapshot is the sole previous-authority source. All active record/marker mutation shares one lock; Final/Verify recheck identity at completion and successful Stop/close uses accepted-identity CAS clear.
@@ -51,6 +52,7 @@
 - [Workflow Contract](harness-package/contracts/workflow-contract.md)
 - [Package-Managed Surface Contract](harness-package/contracts/package-managed-surfaces.md)
 - [Minimal Context Rationale](harness-package/decision-rationale/minimal-context.md)
+- [Long-Task Workflow Rationale](harness-package/decision-rationale/long-task-workflow.md)
 - [Implementation Index](harness-package/implementation-index.md)
 - [Verification](harness-package/verification.md)
 

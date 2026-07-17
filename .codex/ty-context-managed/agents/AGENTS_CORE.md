@@ -31,7 +31,9 @@ Do not infer long-task mode from duration, complexity, file count or agent prefe
 2. If the user explicitly invokes `/long-task-workflow`, prepare or resume exactly one complete `long-task-delivery-v2` Contract for the selected delivery in the current native Goal.
 3. `/normal-long-task` is a retirement pointer only. Otherwise remain on the default Workflow Contract, even when work is long.
 
-The workflow uses exactly one native Goal, one selected repository/workspace, one Contract and one Final Gate for the selected delivery. New authoring keeps inline Outcomes in the root `delivery-contract.yaml`; existing `outcome_files` remain only a physical compatibility form and create no semantic or completion boundary. Outcomes are independently decidable acceptance/dependency units, not output-length fragments, workers, branches, worktrees or model sessions.
+An optional Source Plan is upstream Source guidance, not a Contract Draft or required input protocol. Contract Draft authoring belongs inside `long-task-workflow`: the same non-authoritative `delivery-contract.yaml` is revised until the first successful formal Compile creates Authority Lock.
+
+The workflow uses exactly one native Goal, one selected repository/workspace, one Contract and one Final Gate for the selected delivery. New authoring keeps inline Outcomes in the root `delivery-contract.yaml`; existing `outcome_files` remain only a physical compatibility form and create no semantic or completion boundary. A Draft Outcome is the pre-lock lifecycle of an independently decidable acceptance/dependency unit; it decouples implementation and verification work but is not an output-length fragment, Worker, scheduler task, branch, worktree or model session.
 
 Supported CLI:
 

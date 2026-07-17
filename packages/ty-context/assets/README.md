@@ -217,7 +217,7 @@ It outputs one self-contained Markdown Source Plan that:
 - separates mandatory `OBL` obligations from advisory `HINT` suggestions;
 - writes observable acceptance scenarios without hiding new requirements in AC text.
 
-It does not update project Context, bind real repository owners/paths/runners, generate Delivery Contract YAML, run implementation, create workflow state or claim completion. Its structure is an authoring fast path, not a required input protocol; ordinary prose plans remain valid Long-Task Source.
+It does not update project Context, bind real repository owners/paths/runners, generate Delivery Contract YAML, run implementation, create workflow state or claim completion. A Source Plan is Source, not a Contract Draft. Its structure is an authoring fast path, not a required input protocol; ordinary prose plans remain valid Long-Task Source.
 
 ## Single-Goal Rolling Delivery
 
@@ -233,6 +233,10 @@ Use `/long-task-workflow` only when explicitly requested or when the current wor
 - a Stop Hook that rejects stale completion.
 
 Long-Task Contract authoring preserves stable Source keys and anchors where practical. Meaning-preserving structural decomposition and evidence-backed repository binding may continue; new business rules, defaults, recovery behavior, permissions or scope become `decision_required` instead of being silently added. Missing recommended Source Plan structure never blocks authoring, but the marker-only Material Source Item enumeration required for activation does.
+
+Before the first successful formal Compile, `delivery-contract.yaml` is one non-authoritative Contract Draft. `/long-task-workflow` keeps revising that same Draft across repository/Context reads and Preflight repair rounds; it does not require one response to produce a complete Contract. Draft authoring is integrated because repository bindings and verification inputs need real evidence, Preflight findings must feed back into the same object, and a separate handoff would risk lost meaning or a second plan/authority. No standalone Contract Draft Skill, Draft Receipt or Authoring State exists.
+
+A Draft Outcome is simply an Outcome before Authority Lock. Outcomes split independently observable, decidable and target-verifiable results so the current Goal can keep a smaller dependency-ready working set, target verification, localize failures, resume findings and invalidate stale local results. `depends_on` expresses acceptance readiness; the Rolling Frontier is temporary. An Outcome is not a Worker, scheduler task, queue or parallelism unit. Outcome decomposes execution and diagnosis, not completion authority: targeted passes never replace the one complete Final Gate on the current final snapshot.
 
 The platform owns physical Goal/session lifecycle. A later session runs `resume` to reconstruct semantic state; Tiny Context does not recreate the prior physical Turn.
 

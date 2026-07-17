@@ -32,6 +32,12 @@ read_policy = "on-demand"
 triggers = ["why minimal context", "legacy stage", "phase gate", "thick docs", "benchmark"]
 
 [[context]]
+path = "project_context/areas/harness-package/decision-rationale/long-task-workflow.md"
+role = "decision-rationale"
+read_policy = "on-demand"
+triggers = ["long-task objective", "false completion", "delivery drift", "contract draft", "draft outcome", "outcome decomposition", "rolling frontier", "why no authoring skill", "source plan boundary", "workflow mechanism cost", "Web GPT", "Codex authoring"]
+
+[[context]]
 path = "project_context/areas/harness-package/implementation-index.md"
 role = "implementation-index"
 read_policy = "on-demand"

@@ -72,6 +72,14 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
   assert.match(active, /meaning-preserving structural decomposition/is);
   assert.match(active, /repository binding.*real repository and Context evidence/is);
   assert.match(active, /new business rule.*`decision_required`/is);
+  assert.match(active, /^## Controlling Objective$/mu);
+  assert.match(active, /^## Contract Draft And Outcome Decomposition$/mu);
+  assert.match(active, /same non-authoritative `delivery-contract\.yaml`/iu);
+  assert.match(active, /need not be completed in one response/iu);
+  assert.match(active, /Draft Outcome[\s\S]*not a new schema field or runtime entity/iu);
+  assert.match(active, /`depends_on` means acceptance readiness/iu);
+  assert.match(active, /not persist a scheduler, Worker queue/iu);
+  assert.match(active, /Outcome decomposes execution and diagnosis, not completion authority/iu);
   assert.match(active, /second Contract plan/);
   assert.doesNotMatch(active, /Do not create a second plan, Authoring Skill product/);
   const normal = await read(
@@ -108,6 +116,11 @@ test("optional Source Plan authoring does not create a second Contract authority
   ]);
   assert.match(sourcePlan, /Do not generate Delivery Contract YAML/);
   assert.match(sourcePlan, /Do not update `project_context\/\*\*`/);
+  assert.match(sourcePlan, /This Skill authors Source, not a Contract Draft/iu);
+  assert.match(
+    sourcePlan,
+    /does not replace Contract Draft authoring inside `long-task-workflow`/iu,
+  );
   assert.match(sourcePlan, /Do not create:[\s\S]*Source Plan Schema/);
   assert.doesNotMatch(sourcePlan, /ty-context long-task (?:init|preflight|compile)/);
   assert.match(
@@ -124,6 +137,16 @@ test("optional Source Plan authoring does not create a second Contract authority
   );
   assert.match(workflowContext, /one complete Compact V2 Contract/);
   assert.match(workflowContext, /one current snapshot/);
+  assert.match(
+    workflowContext,
+    /Contract Draft[\s\S]*`long-task-workflow` owns its authoring/iu,
+  );
+  assert.match(
+    workflowContext,
+    /Draft Outcome[\s\S]*without creating `draft_outcomes`, a `DraftOutcome` runtime type/iu,
+  );
+  assert.match(workflowContext, /not a Contract Draft/iu);
+  assert.match(workflowContext, /only the source-recompiled Final Gate may accept/iu);
 });
 
 test("retired command names are lightweight non-executing tombstones", async () => {

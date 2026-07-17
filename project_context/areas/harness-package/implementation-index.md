@@ -8,6 +8,8 @@ read_policy: on-demand
 
 Navigation for current implementation surfaces. Behavior is defined by owning contract/area Context and `PROJECT_SPEC.md`.
 
+- Long-Task design rationale and mechanism-to-risk map: `project_context/areas/harness-package/decision-rationale/long-task-workflow.md`.
+
 ## CLI And Profiles
 
 - CLI entry/routing: `packages/ty-context/src/cli.ts`, `packages/ty-context/src/commands/index.ts`.
@@ -52,6 +54,7 @@ Navigation for current implementation surfaces. Behavior is defined by owning co
 - CLI/Evidence Kernel/Stop real temporary-Git black box: `tests/ty-context/long-task-workflow-*.test.mjs`.
 - Profile/init/sync/upgrade/package assets: existing focused profile/package/upgrade tests updated for `long-task`.
 - Source Plan Skill contract and parity: `tests/ty-context/source-plan-authoring-skill.test.mjs`.
+- Controlling objective, Draft lifecycle, Outcome decomposition and mechanism-admission consistency: `tests/ty-context/long-task-design-context.test.mjs`.
 - Adversarial suites: `long-task-active-authority-continuity.test.mjs`, `long-task-authority-adversarial.test.mjs`, `long-task-assertion-safety.test.mjs`, `long-task-schema-parser-parity.test.mjs`, `long-task-counterfactual-integrity.test.mjs`, `long-task-runner-freeze-v2.test.mjs`, population/environment and Hook relocation tests.
 - Suite partitioning: `tests/ty-context/run-package-suite.mjs`; package scripts expose `test:delivery-contract`, `test:long-task-workflow` and independent `test:long-task-performance`.
 - Consumer/package smoke: `tools/quickstart_smoke.mjs`, `tools/release_tarball_smoke.mjs`, `npm run preview:pack`.

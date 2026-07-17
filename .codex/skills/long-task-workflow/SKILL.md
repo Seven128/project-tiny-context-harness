@@ -11,13 +11,31 @@ Use one current native Goal, one repository and one workspace. Never create a sc
 
 `long-task-delivery-v2` is the only active Contract schema. Its root authoring file is `delivery-contract.yaml`. One user-selected delivery always uses one complete Contract and one Final Gate. New authoring uses inline Outcomes; existing `outcome_files` remain only a physical compatibility form and create no additional semantic, state or completion authority. `delivery-set` is retired and non-executing.
 
+## Controlling Objective
+
+Prevent false completion inside declared authority. Implementation may drift, fail or require rework, but every declared non-Result requirement and AC must remain traceable and any unsatisfied, unverifiable, insufficiently evidenced or stale item must block completion. Use findings to localize repair through Source Item, Outcome, Claim, Assertion, Check, Proof Surface, Binding and owner boundary.
+
+Only fresh evidence from the complete current final snapshot can create machine acceptance. Otherwise report the task as explicitly unfinished or qualified. `machine_accepted_external_pending` means machine-verifiable authority passed while named external confirmation remains; it is not complete external delivery. Never substitute summary prose, progress, historical tests, Receipts, one command exit code or Agent judgment for the Final Gate.
+
+## Contract Draft And Outcome Decomposition
+
+Before the first successful formal Compile, continuously revise the same non-authoritative `delivery-contract.yaml` as the Contract Draft. It need not be completed in one response; keep reading Source, repository and relevant Context and feed Preflight findings back into that same Draft. Draft authoring, Preflight, Compile, rolling execution, targeted verification and Final Gate are one `long-task-workflow` lifecycle. Do not create a standalone Contract Draft Skill, Draft Receipt, Authoring State, draft schema/CLI/runtime state or second plan.
+
+A Draft Outcome is an Outcome in that pre-Authority-Lock Draft, not a new schema field or runtime entity. Decompose only independently observable, decidable and target-verifiable results whose dependencies and owner boundary can be stated. Use those boundaries to keep a dependency-ready working set, target verification, localize failures, resume findings/next actions and mark stale local results precisely.
+
+`depends_on` means acceptance readiness. The current Goal may form a temporary Rolling Frontier from ready Outcomes and findings, but must not persist a scheduler, Worker queue, mandatory implementation DAG, model route or process tree. Never split for response/YAML/file length, implementation layer, module/file count, Agent capacity, Worker assignment or desired parallelism.
+
+> Outcome decomposes execution and diagnosis, not completion authority.
+
+The first successful formal Compile places the same Outcomes under one Contract Authority. Targeted verify remains repair evidence, and one complete current-snapshot Final Gate remains the only machine acceptance boundary.
+
 ## Entry
 
 1. Read the user request or external initial proposal plus minimum controlling Context and decide `Context Delta: none|required`.
 2. If a valid active binding exists, run `ty-context long-task resume <workdir>`.
 3. Otherwise author one complete Delivery Contract for the whole selected delivery. Do not create a second Contract plan, intermediate Contract-authoring product, matrix or top-level Contract split inside this workflow.
 4. A Long Task always has at least one real `source_path` and one `source_claim`, and every declared Source file contains at least one Material Source Item. During Contract authoring, wrap every material requirement in the original Markdown with non-rendering `ty-source-item:start/end` markers without rewriting its text. Background-only references belong in Context or ordinary working references, not Source Authority.
-5. Make the marked Source Item keys and `source_claim` keys exactly equal. Preserve the Source text byte-for-meaning: a Source Claim `statement` may differ only by line-ending normalization, surrounding blank-line removal and trailing-space cleanup. A WebGPT-style proposal, ordinary prose plan or optional Source Plan remains valid input after this marker-only enumeration; it does not need to become strict Contract YAML or match the recommended Source Plan structure.
+5. Make the marked Source Item keys and `source_claim` keys exactly equal. Preserve the Source text byte-for-meaning: a Source Claim `statement` may differ only by line-ending normalization, surrounding blank-line removal and trailing-space cleanup. A research proposal, ordinary prose plan or optional Source Plan remains valid input after this marker-only enumeration; it does not need to become strict Contract YAML or match the recommended Source Plan structure.
 6. When Source already provides stable semantic keys and Markdown anchors, preserve their meaning and reuse them where practical in Source Claim, Requirement, Control, Obligation and Assertion keys and `source_ref` values.
 
 ## Contract Authoring

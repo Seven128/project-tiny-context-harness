@@ -33,14 +33,16 @@ This contract defines source-only, managed, packaged and human-facing surfaces f
 
 - `node packages/ty-context/dist/cli.js package sync-source` copies mapped managed source to package assets.
 - `package check-source` verifies exact mapping parity.
-- Run build, sync twice, check-source and relevant consumer/package tests after changing managed guidance, Skills, Hooks, templates, profile metadata or source mappings.
+- Run build, sync twice, check-source, the enabled-profile workspace sync and relevant consumer/package tests after changing managed guidance, Skills, Hooks, templates, profile metadata or source mappings. The managed source, generated `.codex/skills/**` copy and package asset for each package-managed Skill must be byte-identical.
 - Public `sync` refreshes enabled package-managed assets only; semantic migration belongs to `upgrade`.
 
 ## Generated Skill Boundary
 
 - Package-managed Skills are business-agnostic. Project facts belong in the consumer Context or separate project-local Skills.
-- `/source-plan-authoring` explicitly authors or audits one high-fidelity Markdown Source Plan. It preserves direct requirements, marks derived content and unresolved decisions, uses stable semantic keys/anchors where useful, and creates no Context update, Contract YAML, workflow state, implementation or completion claim.
-- `/long-task-workflow` preserves ordinary prose or a Source Plan as Source, inserts text-preserving Material Source Item markers, authors one complete Compact V2 Contract with typed Source/REQ/CTRL/OBL/AC all-of coverage, runs shared-kernel read-only Preflight, compiles/approves revisions, executes a rolling Frontier and runs the Live Final Gate. It cannot create a Source Inventory/Preflight Receipt, second Contract plan, top-level split or Goal/agent/process/Git orchestration.
+- `/source-plan-authoring` explicitly authors or audits one high-fidelity Markdown Source Plan. It preserves direct requirements, marks derived content and unresolved decisions, uses stable semantic keys/anchors where useful, and creates no Context update, Contract Draft/YAML, repository binding, workflow state, implementation or completion claim. Its recommended format is optional Source guidance.
+- `/long-task-workflow` accepts ordinary prose or a Source Plan as Source and owns iterative authoring of the same non-authoritative Contract Draft, Material Source Item marking, typed Source/REQ/CTRL/OBL/AC all-of coverage, shared-kernel read-only Preflight repair, formal Compile/Authority Lock, rolling execution and Live Final Gate. A Draft Outcome is an authoring-time Outcome and semantic verification boundary, not a runtime Worker or scheduler unit.
+- No `contract-authoring`, `draft-authoring` or other standalone Contract Draft Skill exists. Contract Draft authoring and the later workflow are one lifecycle, with one Contract and one Final Gate; no Source Inventory/Preflight Receipt, second Contract plan, top-level split or Goal/agent/process/Git orchestration is allowed.
+- Historical reasons involving particular conversational or coding platforms remain source-workspace decision rationale. Package-managed Skills and public consumer guidance use only the platform-neutral repository-binding, Preflight-feedback, handoff, one-authority and iterative-authoring rationale.
 - `/normal-long-task` only reports retirement and points to `/long-task-workflow`; it creates no checklist, target prompt or Local Audit.
 - No package-managed Skill may restore Source Unit/SFC/Packet/Wave/Campaign artifacts or a second authority.
 
