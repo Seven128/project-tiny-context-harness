@@ -224,27 +224,25 @@ function rejectOptions(args: string[], allowed: string[]): void {
       throw new Error(`Unknown or injected arguments: ${args.join(" ")}`);
 }
 
-function rejectUnknown(args: string[], allowed: string[]): void {
-  if (args.some((argument) => !allowed.includes(argument)))
-    throw new Error(`Unknown or injected arguments: ${args.join(" ")}`);
+function rejectUnknown(actual: string[], allowed: string[]): void {
+  if (actual.join("\0") !== allowed.join("\0"))
+    throw new Error(`Unknown or injected arguments: ${actual.join(" ")}`);
 }
 
 function help(): void {
-  console.log(`ty-context long-task <command> <workdir>
-
-Commands:
-  init
-  preflight
-  compile [--revise]
-  approve-authority-revision --revision <sha>
-  explain
-  verify [--outcome <key>] [--check <key>]
-  status
-  resume
-  doctor
-  final-gate
-  stop-check [--message <text>]
-  close
-  abandon [--force-corrupt-state]
-`);
+  console.log(`ty-context long-task commands:
+  init <workdir>
+  preflight <workdir>
+  compile <workdir>
+  compile <workdir> --revise
+  approve-authority-revision <workdir> --revision <sha>
+  explain <workdir>
+  verify <workdir> [--outcome <key>] [--check <key>]
+  status <workdir>
+  resume <workdir>
+  doctor <workdir>
+  final-gate <workdir>
+  stop-check <workdir> [--message <text>]
+  close <workdir>
+  abandon <workdir> [--force-corrupt-state]`);
 }
