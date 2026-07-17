@@ -41,6 +41,15 @@ const HOTSPOT_TESTS = new Map([
     ],
   ],
   [
+    "packages/ty-context/src/lib/long-task-runtime-types.ts",
+    [
+      "long-task-context-evolution.test.mjs",
+      "long-task-delivery-compiler.test.mjs",
+      "long-task-semantic-authority-revision.test.mjs",
+      "long-task-state-resume.test.mjs",
+    ],
+  ],
+  [
     "packages/ty-context/src/commands/long-task.ts",
     [
       "long-task-active-authority-continuity.test.mjs",
@@ -110,7 +119,8 @@ export function selectAffectedTests(changedPaths, options = {}) {
     return plan("selected", DELIVERY_CONTRACT_FOCUSED_TESTS, true, [
       "scope:delivery-contract",
     ]);
-  if (scope !== "auto") throw new Error(`unknown affected-test scope: ${scope}`);
+  if (scope !== "auto")
+    throw new Error(`unknown affected-test scope: ${scope}`);
 
   const normalized = [...new Set(changedPaths.map(normalizePath))].filter(
     Boolean,
@@ -223,7 +233,10 @@ export function selectAffectedTests(changedPaths, options = {}) {
       continue;
     }
 
-    if (file.startsWith(".github/workflows/") || file.startsWith("tools/release_")) {
+    if (
+      file.startsWith(".github/workflows/") ||
+      file.startsWith("tools/release_")
+    ) {
       tests.add(testPath("workflow-test-entrypoints.test.mjs"));
       reasons.push(`${file}:workflow_entrypoint`);
       continue;
