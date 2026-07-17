@@ -51,7 +51,7 @@ test("Long-Task efficiency preserves the false-completion boundary", async () =>
     "Supporting Context",
     "implementation-index",
     "archive",
-    "verification and deployment Context remain controlling",
+    "Verification and deployment Context remain controlling",
     "compile --revise",
     "targeted Progress",
     "complete current Context snapshot",
