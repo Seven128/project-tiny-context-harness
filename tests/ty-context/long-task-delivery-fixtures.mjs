@@ -31,6 +31,17 @@ export async function createDeliveryFixture(options = {}) {
 <!-- ty-source-item:start key=first-observable kind=requirement -->
 The first outcome must be observable.
 <!-- ty-source-item:end -->
+${
+  options.externalConfirmation
+    ? `
+## Fixture external
+
+<!-- ty-source-item:start key=fixture-external kind=external_confirmation -->
+Confirm the fixture in external delivery.
+<!-- ty-source-item:end -->
+`
+    : ""
+}
 `,
   );
   await writeFile(
@@ -206,6 +217,19 @@ export function deliveryContract(options = {}) {
           refs: ["first.requirement.observe-first"],
         },
       },
+      ...(options.externalConfirmation
+        ? [
+            {
+              key: "fixture-external",
+              source_ref: "source.md#fixture-external",
+              statement: "Confirm the fixture in external delivery.",
+              disposition: {
+                type: "external_confirmation",
+                refs: ["fixture-external"],
+              },
+            },
+          ]
+        : []),
     ],
     risk: {
       requested_level: "auto",
@@ -229,7 +253,18 @@ export function deliveryContract(options = {}) {
         forbidden_paths: [{ key: "no-secrets", path: "secrets/**" }],
         forbidden_shortcuts: [],
       },
-      acceptance: { checks: [], external_confirmations: [] },
+      acceptance: {
+        checks: [],
+        external_confirmations: options.externalConfirmation
+          ? [
+              {
+                key: "fixture-external",
+                description: "Confirm the fixture in external delivery.",
+                owner: "release-owner",
+              },
+            ]
+          : [],
+      },
     },
     outcomes: options.twoOutcomes
       ? [outcome("first", "first"), outcome("second", "second", ["first"])]

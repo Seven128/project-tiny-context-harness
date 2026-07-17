@@ -220,6 +220,23 @@ test("package-owned Hook resumes from common-dir and Stop runs the Live Gate", a
   }
 });
 
+test("Stop Hook preserves external pending as a non-blocking system message", async () => {
+  const fixture = await createDeliveryFixture({ externalConfirmation: true });
+  try {
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    await commitCandidate(fixture.root);
+    const record = await activeRecordPath(fixture.root);
+    const result = await invokeHook(fixture.root, "Stop");
+    assert.equal(Object.hasOwn(result, "decision"), false);
+    assert.match(result.systemMessage, /fixture-external/iu);
+    assert.match(result.systemMessage, /complete external delivery remains pending/iu);
+    assert.equal(await pathExists(record), false);
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
 test("active record cannot redirect or weaken the current package verifier", async () => {
   const fixture = await createDeliveryFixture();
   try {

@@ -51,6 +51,8 @@ Within machine authority, only two result classes are trustworthy:
 
 `machine_accepted_external_pending` is the second class with a precise boundary: all machine-verifiable authority passed, but complete external delivery did not. Public reporting must name the pending external confirmations. It is not full delivery completion and not a vague third state between complete and incomplete.
 
+Qualification continuity is end-to-end. `final-gate`, `status`, `resume`, `stop-check`, the package-owned Stop Hook and `close` must preserve the same accepted `workflow_status` and the complete declared `external_confirmations`. `status` and `resume` expose an accepted `final_workflow_status` only while the Final Receipt is valid and fresh; drift makes that projection `null` even though the active Contract's declared external confirmations remain visible. Stop/close may clear the accepted machine Authority through CAS, but `closed` and a non-blocking Hook message mean only that the machine lifecycle ended, never that external delivery completed. This adds no external-confirmation state, Receipt or completion tracker.
+
 Authority conflict indicates drift, omission, stale information or a genuine decision. Source or Contract meaning must never be silently changed to fit current code. Progress, Receipt, status and compiled cache are recovery or audit projections, not acceptance authority. `resume` restores semantic state rather than a previous physical Turn. Source, Context, Contract, verifier, runner or workspace changes stale affected results. Final Gate recomputes the complete decision on the current snapshot; historical evidence cannot be spliced into current completion.
 
 The current platform session is the execution Goal. Harness does not create, simulate, persist or reconnect physical Goals or Turns, and Git history remains the ordinary record of Contract edits rather than a second plan or completion authority.
@@ -349,9 +351,11 @@ Check evaluation finishes exit, artifact, Assertion and Population evaluation be
 
 It is not completion authority.
 
+For compatibility, `final_result` retains its audit classification. Additive `final_workflow_status` reports the fresh Final Receipt's exact `workflow_status`, or `null` when no valid fresh Receipt exists. `external_confirmations` reports the complete declaration from the active compiled authority and is not Outcome Progress.
+
 ### Resume
 
-`resume` is read-only and reports Contract/compiled identity, effective risk, relevant Context, current Git HEAD/dirty state, freshness of recent verify/final results, passing/failing/stale/ready Outcomes, recent findings and the next safe action. It starts no process, changes no Git state and does not claim to reconnect a physical Turn.
+`resume` is read-only and reports Contract/compiled identity, effective risk, relevant Context, current Git HEAD/dirty state, freshness of recent verify/final results, the additive `final_workflow_status`, declared `external_confirmations`, passing/failing/stale/ready Outcomes, recent findings and the next safe action. It starts no process, changes no Git state and does not claim to reconnect a physical Turn.
 
 ### Final Gate
 
@@ -361,7 +365,7 @@ Bottom-up acceptance succeeds only when all required executable Checks, Outcomes
 
 ### Freshness And Stop
 
-Receipts and status describe the last audit only. Status/resume report missing or mismatched cache as a diagnostic while retaining common-dir authority. Verifier content authority contains package name plus bundle/schema/hook bytes; runtime locator contains package version/root. Pure locator change requires explicit `compile --revise` and auto-increments authority, while content change requires exact user approval; Verify/Final Gate/Stop/close reject stale verifier authority. Doctor reports deterministic `abandon <workdir> --force-corrupt-state` recovery for unrecoverable record/marker/cache/lock state. Force cleanup trusts only current repository/worktree-derived state paths and the contained supplied workdir, removing no Contract, Source, Context or Git content.
+Receipts and status describe the last audit only. Status/resume report missing or mismatched cache as a diagnostic while retaining common-dir authority, and never project a stale Receipt as a fresh accepted workflow status. Verifier content authority contains package name plus bundle/schema/hook bytes; runtime locator contains package version/root. Pure locator change requires explicit `compile --revise` and auto-increments authority, while content change requires exact user approval; Verify/Final Gate/Stop/close reject stale verifier authority. `stop-check` returns the Final Gate workflow status and confirmations when the Gate ran; external pending is a successful machine stop with a precise non-blocking message, whereas `needs_work`, `blocked_external`, Gate error and CAS failure remain fail-closed. The Stop Hook forwards that message through `systemMessage`. `close` runs the Gate once and returns `closed` plus the accepted workflow status and confirmations only after accepted-identity CAS clear. Doctor reports deterministic `abandon <workdir> --force-corrupt-state` recovery for unrecoverable record/marker/cache/lock state. Force cleanup trusts only current repository/worktree-derived state paths and the contained supplied workdir, removing no Contract, Source, Context or Git content.
 
 ## 10. Retry And Decision Boundaries
 

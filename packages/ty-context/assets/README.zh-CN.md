@@ -138,10 +138,10 @@ ty-context long-task abandon <workdir> [--force-corrupt-state]
 - `preflight` 应用 Compact 默认值并一次输出 Source/REQ/CTRL/OBL/AC、Context、风险、路径/Binding、Runner/Input 与 Proof 诊断；它完全只读，不创建 Authority Lock、marker、cache、progress、Receipt、pending revision、状态锁，也不运行项目 Check。
 - `compile` 生成 Global 与 Outcome Result/Requirement/Control-field/Non-completing/Technical Claim，拒绝未覆盖 Claim，并让第一次正式成功 Compile 立即成为 Authority Lock。此后所有 revision 都与 active authority 比较，删除 progress/Receipt/cache 或恢复代码不能重新开放弱化窗口。
 - `verify` 只在重查 active task/revision/compiled/worktree identity 后写 scoped Progress；并发 revision 返回 `active_authority_changed_during_verify`。
-- `status` 输出 `unverified`、`progress_passing`、`progress_failing`、`progress_stale` 或 `blocked_external`；它从 common-dir authority snapshot 读取，并把 workdir cache 缺失或不一致报告为可修复诊断。
-- `resume` 完全只读，从 common-dir authority snapshot 输出 task/contract identity、风险、相关 Context、Git 状态、ready Outcome、findings 和 next safe action。
+- `status` 输出 `unverified`、`progress_passing`、`progress_failing`、`progress_stale` 或 `blocked_external`；同时用 `final_workflow_status` 报告 fresh Final Receipt（发生 drift 后为 `null`），并完整返回 active Contract 的 `external_confirmations`。它从 common-dir authority snapshot 读取，并把 workdir cache 缺失或不一致报告为可修复诊断。
+- `resume` 完全只读，从 common-dir authority snapshot 输出 task/contract identity、风险、相关 Context、Git 状态、相同的 `final_workflow_status` 与 external confirmations、ready Outcome、findings 和 next safe action。
 - `final-gate` 在完整 Check 后再次验证 active identity；并发 revision 返回 `active_authority_changed_during_final_gate`，不能产生 accepted。
-- `stop-check` 与 `close` 自己运行 Live Final Gate，并只用 accepted identity 做 CAS clear。
+- `stop-check` 与 `close` 自己运行 Live Final Gate，并只用 accepted identity 做 CAS clear。机器范围通过但外部交付仍待确认时，Stop Hook 允许停止并显示非阻断 `systemMessage`；`close` 返回 `workflow_status` 和完整 `external_confirmations`。`status: closed` 只表示机器 Authority 已清理，不表示完整外部交付完成。
 - `abandon --force-corrupt-state` 仅用于损坏/mismatch/legacy-unrecoverable 状态或遗留锁，只删除确定性 active state 与 `<workdir>/.ty-context/**`。
 
 ### Delivery Contract

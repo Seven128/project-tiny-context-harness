@@ -2,7 +2,14 @@
 
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -12,11 +19,22 @@ const root = await mkdtemp(path.join(os.tmpdir(), "ty-context-tarball-smoke-"));
 try {
   run("npm", ["init", "-y"], root);
   run("npm", ["install", "--save-dev", tarball], root);
-  const installed = path.join(root, "node_modules", "project-tiny-context-harness");
+  const installed = path.join(
+    root,
+    "node_modules",
+    "project-tiny-context-harness",
+  );
   await assertTarballContents(installed);
   run(
     "npx",
-    ["--no-install", "ty-context", "init", "--adopt", "--harness-folder", ".agent"],
+    [
+      "--no-install",
+      "ty-context",
+      "init",
+      "--adopt",
+      "--harness-folder",
+      ".agent",
+    ],
     root,
   );
   if (existsSync(path.join(root, ".codex", "hooks.json")))
@@ -33,10 +51,21 @@ try {
     run("git", ["config", "user.name", "Tarball Smoke"], root);
     run("git", ["add", "."], root);
     run("git", ["commit", "-m", "tarball smoke fixture"], root);
-    run("npx", ["--no-install", "ty-context", "long-task", "compile", workdir], root);
-    run("npx", ["--no-install", "ty-context", "long-task", "final-gate", workdir], root);
+    run(
+      "npx",
+      ["--no-install", "ty-context", "long-task", "compile", workdir],
+      root,
+    );
+    run(
+      "npx",
+      ["--no-install", "ty-context", "long-task", "final-gate", workdir],
+      root,
+    );
     const result = JSON.parse(
-      await readFile(path.join(workdir, ".ty-context", "final-receipt.json"), "utf8"),
+      await readFile(
+        path.join(workdir, ".ty-context", "final-receipt.json"),
+        "utf8",
+      ),
     );
     if (
       result.schema_version !== "long-task-final-receipt-v2" ||
@@ -67,9 +96,19 @@ async function writeDeliveryInputs(root) {
   await mkdir(workdir, { recursive: true });
   await writeFile(path.join(root, "src/state.json"), '{"ready":true}\n');
   await writeFile(
+    path.join(root, "source.md"),
+    `# Tarball smoke source
+
+<!-- ty-source-item:start key=packaged-verifier kind=technical_obligation -->
+Use the packaged verifier.
+<!-- ty-source-item:end -->
+`,
+  );
+  await writeFile(
     path.join(root, "tests/oracle.mjs"),
     `import { readFile } from "node:fs/promises";
-const state = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8"));
+let state = { ready: false };
+try { state = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8")); } catch {}
 console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{ready:state.ready}}));
 `,
   );
@@ -80,9 +119,16 @@ task:
   id: tarball-smoke
   title: Tarball smoke
   goal: Prove the installed long-task workflow.
-  source_paths: []
+  source_paths: [source.md]
   context_refs: [project_context/areas/main.md]
   context_snapshot_mode: referenced
+source_claims:
+  - key: packaged-verifier
+    source_ref: source.md
+    statement: Use the packaged verifier.
+    disposition:
+      type: claim
+      refs: [installed.obligation.packaged-verifier]
 risk:
   requested_level: auto
   facts:
@@ -148,6 +194,7 @@ outcomes:
           artifact_globs: []
           positive_assertions:
             - key: installed-ready
+              criterion: The installed packaged verifier reports the fixture ready.
               claims: [result, obligation.packaged-verifier]
               observation: ready
               operator: equals
@@ -155,7 +202,13 @@ outcomes:
           negative_assertions: []
           environment_requirements: []
       population: null
-      counterfactual_controls: []
+      counterfactual_controls:
+        - key: remove-state
+          binding_key: state
+          claims: [obligation.packaged-verifier]
+          check_key: installed-check
+          mutation: { type: remove_paths, paths: [src/state.json] }
+          expected_assertion_failures: [installed-ready]
 `,
   );
   return workdir;
@@ -185,7 +238,8 @@ async function assertTarballContents(directory) {
     /^assets\/hooks\/long-task-hook\.mjs$/u,
   ]) {
     const found = files.find((file) => forbidden.test(file));
-    if (found) throw new Error(`tarball contains retired runtime asset: ${found}`);
+    if (found)
+      throw new Error(`tarball contains retired runtime asset: ${found}`);
   }
   for (const required of [
     "dist/schemas/long-task-delivery-v2/long-task-delivery-v2.schema.json",
@@ -196,9 +250,13 @@ async function assertTarballContents(directory) {
     "assets/skills/source-plan-authoring/SKILL.md",
     "assets/skills/long-task-workflow/SKILL.md",
   ]) {
-    if (!files.includes(required)) throw new Error(`tarball missing required asset: ${required}`);
+    if (!files.includes(required))
+      throw new Error(`tarball missing required asset: ${required}`);
   }
-  const migrations = await readFile(path.join(directory, "dist/lib/migrations.js"), "utf8");
+  const migrations = await readFile(
+    path.join(directory, "dist/lib/migrations.js"),
+    "utf8",
+  );
   if (!migrations.includes("long-task-v1-retirement"))
     throw new Error("tarball missing V1 retirement migration");
 }
@@ -208,8 +266,14 @@ function parseArgs(args) {
   const value = index >= 0 ? args[index + 1] : args[0];
   const portableOnly = args.includes("--portable-only");
   const expectedLength = portableOnly ? 3 : 2;
-  if (!value || (index >= 0 && args.length !== expectedLength) || (index < 0 && args.length !== 1))
-    throw new Error("usage: node tools/release_tarball_smoke.mjs --tarball <package.tgz> [--portable-only]");
+  if (
+    !value ||
+    (index >= 0 && args.length !== expectedLength) ||
+    (index < 0 && args.length !== 1)
+  )
+    throw new Error(
+      "usage: node tools/release_tarball_smoke.mjs --tarball <package.tgz> [--portable-only]",
+    );
   const resolved = path.resolve(value);
   if (!existsSync(resolved) || !resolved.endsWith(".tgz"))
     throw new Error(`tarball not found: ${resolved}`);
@@ -221,12 +285,18 @@ function run(command, args, cwd) {
     process.platform === "win32" && ["npm", "npx"].includes(command)
       ? (process.env.ComSpec ?? "cmd.exe")
       : command;
-  const argv = executable === command ? args : ["/d", "/s", "/c", command, ...args];
+  const argv =
+    executable === command ? args : ["/d", "/s", "/c", command, ...args];
   const result = spawnSync(executable, argv, {
     cwd,
     encoding: "utf8",
     env: { ...process.env, NO_COLOR: "1" },
   });
   if (result.status !== 0 || result.error)
-    throw result.error ?? new Error(`${command} ${args.join(" ")} failed\n${result.stdout}\n${result.stderr}`);
+    throw (
+      result.error ??
+      new Error(
+        `${command} ${args.join(" ")} failed\n${result.stdout}\n${result.stderr}`,
+      )
+    );
 }

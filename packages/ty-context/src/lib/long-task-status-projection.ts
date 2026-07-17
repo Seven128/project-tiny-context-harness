@@ -26,6 +26,7 @@ export type AuditGateStatusV2 =
 
 export function projectDeliveryStatus(input: StatusProjectionInputV2): {
   finalResult: AuditGateStatusV2;
+  finalWorkflowStatus: FinalReceiptV2["workflow_status"] | null;
   outcomes: Record<string, OutcomeStatusV2>;
   readyOutcomes: string[];
   needsReverify: string[];
@@ -36,6 +37,9 @@ export function projectDeliveryStatus(input: StatusProjectionInputV2): {
   const outcomes = projectOutcomes(input);
   return {
     finalResult: projectFinalResult(input),
+    finalWorkflowStatus: receiptFresh(input)
+      ? input.receipt!.workflow_status
+      : null,
     outcomes,
     readyOutcomes: readyOutcomes(input.compiled, outcomes),
     needsReverify: Object.entries(outcomes)
@@ -133,16 +137,21 @@ function readyOutcomes(
 
 function projectFinalResult(input: StatusProjectionInputV2): AuditGateStatusV2 {
   if (!input.receipt) return "no_final_gate";
-  if (
-    input.receiptError ||
-    input.stale.length ||
-    input.receipt.compiled_identity !== input.compiled.compiled_identity ||
-    input.receipt.snapshot_sha256 !== input.manifest.snapshot_sha256 ||
-    input.receipt.git_head !== input.manifest.git_head
-  )
-    return "last_gate_inputs_stale";
+  if (!receiptFresh(input)) return "last_gate_inputs_stale";
   if (input.receipt.workflow_status === "blocked_external")
     return "last_gate_blocked";
   if (input.receipt.workflow_status === "needs_work") return "last_gate_failed";
   return "last_gate_passed";
+}
+
+function receiptFresh(input: StatusProjectionInputV2): boolean {
+  return Boolean(
+    input.receipt &&
+    !input.receiptError &&
+    !input.stale.length &&
+    input.receipt.compiled_identity === input.compiled.compiled_identity &&
+    input.receipt.snapshot_sha256 === input.manifest.snapshot_sha256 &&
+    input.receipt.git_head === input.manifest.git_head &&
+    input.receipt.git_tree === input.manifest.fingerprint.head_tree,
+  );
 }

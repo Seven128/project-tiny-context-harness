@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
-test("long-task workflow tests run only in GitHub CI or through their explicit command", () => {
+test("long-task workflow tests stay in complete package and release gates", () => {
   const packageWorkflow = read(".github/workflows/package.yml");
   const publishWorkflow = read(".github/workflows/npm-publish.yml");
   const consumerWorkflow = read(".github/workflows/harness.yml");
@@ -83,7 +83,15 @@ test("long-task workflow tests run only in GitHub CI or through their explicit c
   assert.match(suiteRunner, /\^long-task-/);
   assert.doesNotMatch(releasePrepare, /test:(?:composite|long-task)-workflow/);
   assert.doesNotMatch(releasePublish, /test:(?:composite|long-task)-workflow/);
-  assert.match(releasePublish, /release_tarball_smoke\.mjs[\s\S]*--portable-only/);
+  assert.match(
+    releasePublish,
+    /run\("npm", \["test", "--workspace", packageName\]\)/u,
+  );
+  assert.match(releasePublish, /release_tarball_smoke\.mjs[\s\S]*--tarball/);
+  assert.doesNotMatch(
+    releasePublish,
+    /release_tarball_smoke\.mjs[^\r\n]*--portable-only/u,
+  );
   assert.match(tarballSmoke, /if \(!portableOnly\)/);
 });
 

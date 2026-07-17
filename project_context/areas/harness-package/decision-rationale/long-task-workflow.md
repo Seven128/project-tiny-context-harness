@@ -96,6 +96,8 @@ Machine authority has only two trustworthy outcomes: fresh evidence on the curre
 
 `machine_accepted_external_pending` means the machine-verifiable scope passed while external confirmation remains. It is not complete external delivery, must be reported with the pending confirmation, and is not a vague third completion state.
 
+That qualification must remain continuous after Final Gate. Collapsing it into `last_gate_passed`, `{}`, or generic `closed` reopens a false-completion path for callers that only see status, a resumed session, the Stop Hook or close output. The accepted workflow status therefore propagates through each surface; stale Receipts lose their accepted projection, while external confirmations remain visible as current Contract declarations. Stop/close can end the machine Authority lifecycle without tracking external work, but their output cannot convert machine acceptance into complete external delivery.
+
 Progress, status, Receipts and compiled cache are audit/recovery projections. Source, Context, Contract, verifier, runner or workspace drift stales affected evidence. `resume` restores semantic state, not a physical Turn, and historical evidence cannot be spliced into current acceptance.
 
 ## Stable Anti-Goals

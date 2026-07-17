@@ -1,6 +1,8 @@
 import path from "node:path";
 import { compileDeliveryContract } from "./long-task-delivery-compiler.js";
 import type {
+  ExternalConfirmationV2,
+  FinalReceiptV2,
   LongTaskFindingV2,
   OutcomeStatusV2,
 } from "./long-task-delivery-types.js";
@@ -34,6 +36,8 @@ export interface DeliveryStatusV2 {
   workspace_snapshot_sha256: string;
   acceptance_authority: "live_final_gate_required";
   final_result: AuditGateStatusV2;
+  final_workflow_status: FinalReceiptV2["workflow_status"] | null;
+  external_confirmations: ExternalConfirmationV2[];
   outcomes: Record<string, OutcomeStatusV2>;
   ready_outcomes: string[];
   ready_for_implementation: string[];
@@ -92,6 +96,8 @@ async function readDeliveryStatusForAuthority(
     workspace_snapshot_sha256: current.snapshot_sha256,
     acceptance_authority: "live_final_gate_required",
     final_result: projection.finalResult,
+    final_workflow_status: projection.finalWorkflowStatus,
+    external_confirmations: compiled.global.acceptance.external_confirmations,
     outcomes: projection.outcomes,
     ready_outcomes: projection.readyOutcomes,
     ready_for_implementation: projection.readyOutcomes,
@@ -135,6 +141,8 @@ export async function resumeDeliveryTask(
     git,
     acceptance_authority: "live_final_gate_required",
     last_gate: status.final_result,
+    final_workflow_status: status.final_workflow_status,
+    external_confirmations: status.external_confirmations,
     outcomes: status.outcomes,
     ready_outcomes: status.ready_outcomes,
     ready_for_implementation: status.ready_for_implementation,
@@ -222,7 +230,7 @@ export async function doctorDeliveryTask(
 export async function stopCheckDeliveryTask(
   workdirInput: string,
   messageText = "",
-): Promise<{ continue: boolean; reason: string; message?: string }> {
+): Promise<StopCheckDeliveryResultV2> {
   const root = await repositoryRoot(process.cwd());
   let active;
   try {
@@ -261,17 +269,21 @@ export async function stopCheckDeliveryTask(
           return {
             continue: false,
             reason: "active_authority_changed_after_final_gate",
+            workflow_status: result.workflow_status,
+            external_confirmations: result.external_confirmations,
+            message:
+              "Active Authority changed after the Live Final Gate; the accepted identity was not cleared.",
           };
         throw error;
       }
       return {
         continue: true,
         reason: result.workflow_status,
-        ...(result.external_confirmations.length
+        workflow_status: result.workflow_status,
+        external_confirmations: result.external_confirmations,
+        ...(result.workflow_status === "machine_accepted_external_pending"
           ? {
-              message: `External confirmations pending: ${result.external_confirmations
-                .map((item) => item.key)
-                .join(",")}`,
+              message: externalPendingMessage(result.external_confirmations),
             }
           : {}),
       };
@@ -279,6 +291,8 @@ export async function stopCheckDeliveryTask(
     return {
       continue: false,
       reason: `live_final_gate_${result.workflow_status}`,
+      workflow_status: result.workflow_status,
+      external_confirmations: result.external_confirmations,
       message:
         messageText ||
         result.findings.at(-1)?.next_action ||
@@ -298,7 +312,26 @@ export async function stopCheckDeliveryTask(
   }
 }
 
-export async function closeDeliveryTask(workdir: string): Promise<void> {
+export interface StopCheckDeliveryResultV2 {
+  continue: boolean;
+  reason: string;
+  workflow_status?: FinalReceiptV2["workflow_status"];
+  external_confirmations?: ExternalConfirmationV2[];
+  message?: string;
+}
+
+export interface CloseDeliveryResultV2 {
+  status: "closed";
+  workflow_status: Extract<
+    FinalReceiptV2["workflow_status"],
+    "machine_accepted" | "machine_accepted_external_pending"
+  >;
+  external_confirmations: ExternalConfirmationV2[];
+}
+
+export async function closeDeliveryTask(
+  workdir: string,
+): Promise<CloseDeliveryResultV2> {
   const root = await repositoryRoot(process.cwd());
   const active = await readActiveLongTaskBinding(root);
   if (!active || active.workdir !== path.resolve(workdir))
@@ -317,6 +350,20 @@ export async function closeDeliveryTask(workdir: string): Promise<void> {
     compiled_identity: active.active_authority_identity,
     worktree_identity: active.worktree_identity,
   });
+  return {
+    status: "closed",
+    workflow_status: result.workflow_status,
+    external_confirmations: result.external_confirmations,
+  };
+}
+
+function externalPendingMessage(
+  confirmations: ExternalConfirmationV2[],
+): string {
+  const pending = confirmations
+    .map((confirmation) => `${confirmation.key} (${confirmation.owner})`)
+    .join(", ");
+  return `Machine-verifiable scope accepted. Complete external delivery remains pending: ${pending}. Do not report complete external delivery.`;
 }
 
 function nextAction(status: DeliveryStatusV2): string {

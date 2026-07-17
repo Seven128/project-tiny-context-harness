@@ -17,6 +17,7 @@ export { verifyDeliveryContract } from "./lib/long-task-verifier-v2.js";
 export { runDeliveryFinalGate } from "./lib/long-task-final-v2.js";
 export {
   closeDeliveryTask,
+  type DeliveryStatusV2,
   doctorDeliveryTask,
   readDeliveryStatus,
   resumeDeliveryTask,
@@ -41,6 +42,7 @@ export type {
   DeliveryContractV2,
   DeliveryOutcomeV2,
   EffectiveRiskLevel,
+  ExternalConfirmationV2,
   FinalReceiptV2,
   LongTaskFindingV2,
   LongTaskRiskFacts,
