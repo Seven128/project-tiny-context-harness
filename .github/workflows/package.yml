@@ -84,12 +84,12 @@ jobs:
         run: npm ci
       - name: Check TypeScript formatting
         run: npm run format:check
-      - name: Build and typecheck package
+      - name: Typecheck package and build once
         run: npm run build --workspace project-tiny-context-harness
       - name: Complete package tests
         run: |
           set -o pipefail
-          npm run test:built --workspace project-tiny-context-harness 2>&1 | tee package-test.log
+          npm test --workspace project-tiny-context-harness --ignore-scripts 2>&1 | tee package-test.log
       - name: Upload package test diagnostics
         if: failure()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
@@ -129,7 +129,7 @@ jobs:
       - name: Complete package tests
         run: |
           set -o pipefail
-          npm run test:built --workspace project-tiny-context-harness 2>&1 | tee package-test.log
+          npm test --workspace project-tiny-context-harness --ignore-scripts 2>&1 | tee package-test.log
       - name: Upload package test diagnostics
         if: failure()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
