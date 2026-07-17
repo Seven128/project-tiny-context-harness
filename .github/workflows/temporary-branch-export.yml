@@ -14,11 +14,11 @@ jobs:
         with:
           fetch-depth: 0
       - name: Create source archive
-        run: tar --exclude=.git -czf branch-export.tgz .
+        run: tar --exclude=.git -czf /tmp/branch-export.tgz .
       - name: Upload source archive
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: branch-export-${{ github.sha }}
-          path: branch-export.tgz
+          path: /tmp/branch-export.tgz
           if-no-files-found: error
           retention-days: 1
