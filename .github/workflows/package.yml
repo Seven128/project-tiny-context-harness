@@ -95,7 +95,9 @@ jobs:
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: package-test-diagnostics-pr-${{ github.run_id }}-${{ github.run_attempt }}
-          path: package-test.log
+          path: |
+            package-test.log
+            tests/ty-context/long-task-source-authority-closure.test.mjs
           if-no-files-found: ignore
           retention-days: 3
       - name: Check package canonical source drift
