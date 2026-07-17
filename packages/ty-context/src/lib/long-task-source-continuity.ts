@@ -55,21 +55,23 @@ function validateDispositionKind(
   const allowed = new Set<string>(
     kind === "outcome_result"
       ? ["outcome_result"]
-      : kind === "requirement" ||
-          kind === "control" ||
-          kind === "technical_obligation"
-        ? ["claim"]
-        : kind === "acceptance"
-          ? ["acceptance"]
-          : kind === "non_goal"
-            ? ["global_constraint"]
-            : kind === "forbidden_shortcut"
-              ? ["claim", "global_constraint"]
-              : kind === "risk_fact"
-                ? ["risk_fact"]
-                : kind === "external_confirmation"
-                  ? ["external_confirmation"]
-                  : ["decision_required"],
+      : kind === "technical_obligation"
+        ? ["claim", "global_constraint"]
+        : kind === "requirement" ||
+            kind === "control" ||
+            kind === "non_completing"
+          ? ["claim"]
+          : kind === "acceptance"
+            ? ["acceptance"]
+            : kind === "non_goal"
+              ? ["global_constraint"]
+              : kind === "forbidden_shortcut"
+                ? ["claim", "global_constraint"]
+                : kind === "risk_fact"
+                  ? ["risk_fact"]
+                  : kind === "external_confirmation"
+                    ? ["external_confirmation"]
+                    : ["decision_required"],
   );
   if (!allowed.has(claim.disposition.type))
     issue(

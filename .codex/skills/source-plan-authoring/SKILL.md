@@ -129,6 +129,7 @@ Use only the types that apply.
 | `REQ` | Required product or system behavior | Requirement |
 | `CTRL` | Decided control task, placement or state | Control |
 | `OBL` | Mandatory technical obligation | Technical obligation |
+| `NCOMP` | Explicit result that must not be treated as completion | Non-completing Claim |
 | `AC` | Falsifiable observable acceptance scenario | Acceptance Assertion |
 | `NG` | Explicit non-goal | Non-goal |
 | `FS` | Forbidden shortcut or disallowed result | Forbidden shortcut |
@@ -149,7 +150,7 @@ Include a `CTRL` when:
 - its location, task or state changes product meaning;
 - leaving it open would permit materially different product designs.
 
-For each included control, state its location or surface responsibility, user task, trigger, input, applicable states and feedback. Preserve normal, in-progress, success, failure, empty, permission and recovery states only when they genuinely apply.
+For each included control, state every independently decided field separately: `Location`, `User task`, `Trigger`, `Input`, `Loading`, `Empty`, `Success`, `Failure` and `Feedback`. Use `not applicable` when a field was considered and genuinely does not apply; do not hide an undecided product choice behind that phrase. Preserve permission and recovery states separately when they genuinely apply.
 
 Give every decided Control field its own stable semantic meaning. Do not compress location, trigger, input, loading, empty, success, failure or feedback into one broad sentence when more than one field has been decided; later repository-aware authoring must be able to map each field independently.
 
@@ -157,7 +158,7 @@ Give every decided Control field its own stable semantic meaning. Do not compres
 
 Write `AC` items as observable behavior, not low-level test commands.
 
-Each `AC` represents exactly one acceptance scenario and explicitly names the `REQ`, `CTRL` and/or `OBL` keys it accepts. Never label one AC as proof for several materially different success, failure, boundary or recovery scenarios; author separate ACs instead.
+Each `AC` represents exactly one acceptance scenario and explicitly names the `REQ`, `CTRL`, `OBL` and/or `NCOMP` keys it accepts. It contains one `Given`, one `When` and one `Then`; each may be multiline, but together they describe only one independently decidable scenario. Never label one AC as proof for several materially different success, failure, boundary or recovery scenarios; author separate ACs instead.
 
 For every important `REQ`, provide at least one of:
 
@@ -173,7 +174,9 @@ Never introduce a product requirement for the first time inside an `AC`. Move hi
 
 ## Risk And Advisory Boundaries
 
-Each `RISK` states both the concrete Fact and every Affected Outcome. Generic risk prose without an affected Outcome is not actionable Source. `HINT` remains advisory and is never a Material Source Item: promote it to `OBL` if the implementation constraint is mandatory.
+Each `RISK` states `Fact`, `Affected Outcome`, `Basis` and `Consequence`. `Fact` uses one exact semantic name from `public_api_or_schema_change`, `persistent_data_change`, `migration`, `security_boundary_change`, `permission_boundary_change`, `irreversible_external_effect`, `full_population_operation` or `weak_observability_critical_path`. Each risk item names one affected Outcome; repeat the item with a distinct stable key when the same fact affects multiple Outcomes. If Fact or Affected Outcome cannot be determined from Source, create a `DEC` with `decision_required` instead of guessing. Generic risk prose without an affected Outcome is not actionable Source. `HINT` remains advisory and is never a Material Source Item: promote it to `OBL` if the implementation constraint is mandatory.
+
+Use `NCOMP` for an explicit, source-authoritative statement that names an outcome or shortcut that must not count as completion. It is neither an ordinary Requirement nor a non-goal: later Contract authoring maps it to a non-completing Claim and must provide negative or Counterfactual proof.
 
 This Skill emits ordinary Markdown only. Do not emit `ty-source-item` markers; repository-aware `/long-task-workflow` inserts those non-rendering markers later without rewriting the selected Source text.
 
@@ -241,16 +244,24 @@ Write in the user's language unless requested otherwise.
 - **CTRL `<control-key>`**
   - Location:
   - User task:
-  - Trigger:
-  - Input:
-  - Applicable states:
-  - Feedback:
+      - Trigger:
+      - Input:
+      - Loading:
+      - Empty:
+      - Success:
+      - Failure:
+      - Feedback:
 
 #### Technical Obligations And Boundaries
 
 <a id="<outcome-key>.obligation.<obligation-key>"></a>
 
 - **OBL `<obligation-key>`**
+  ...
+
+<a id="<outcome-key>.non-completing.<non-completing-key>"></a>
+
+- **NCOMP `<non-completing-key>`**
   ...
 
 #### Implementation Hints
@@ -263,11 +274,20 @@ Write in the user's language unless requested otherwise.
 <a id="<outcome-key>.acceptance.<acceptance-key>"></a>
 
 - **AC `<acceptance-key>`**
+  - Accepts: REQ `<key>`, CTRL `<key>`, OBL `<key>`, NCOMP `<key>`
   - Given:
   - When:
   - Then:
 
 #### Risks And Recovery
+
+<a id="<outcome-key>.risk.<risk-key>"></a>
+
+- **RISK `<risk-key>`**
+  - Fact:
+  - Affected Outcome:
+  - Basis:
+  - Consequence:
 
 ## 6. Cross-Outcome Constraints
 
@@ -306,7 +326,7 @@ Before returning the plan, verify:
 1. Every material original requirement is preserved.
 2. Distinct requirements were not collapsed into one vague Outcome.
 3. Every `REQ` has an `AC`, `EXT`, `DEC` or explicit exception.
-4. Every declared `CTRL` states its applicable states.
+4. Every declared `CTRL` independently states Location, User task, Trigger, Input, Loading, Empty, Success, Failure and Feedback.
 5. Every `OBL` is mandatory rather than a suggestion.
 6. No `AC` introduces undeclared product semantics.
 7. Every derived item identifies its basis.
@@ -316,6 +336,10 @@ Before returning the plan, verify:
 11. Non-goals and forbidden shortcuts are explicit.
 12. Risks concretely affect scope, verification or recovery rather than repeat a generic template.
 13. No unsupported number, threshold, metric or conclusion appears.
+14. Every `AC` names accepted `REQ`/`CTRL`/`OBL`/`NCOMP` keys and contains exactly one Given/When/Then scenario.
+15. Every `NCOMP` is an explicit source meaning rather than a restated Requirement or non-goal.
+16. Every `RISK` has one exact Fact, one Affected Outcome, Basis and Consequence; ambiguity is a `DEC`.
+17. Every decided control field remains independently traceable instead of being compressed into an aggregate state sentence.
 
 Do not emit a matrix or machine gate. End with:
 

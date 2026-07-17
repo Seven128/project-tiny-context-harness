@@ -69,12 +69,19 @@ function addBlockedGlobalCheck(contract) {
   contract.global.acceptance.checks.push({
     ...structuredClone(contract.outcomes[0].acceptance.checks[0]),
     key: "external-service-check",
+    proof_surface: "ui_browser",
+    runner: {
+      ...structuredClone(contract.outcomes[0].acceptance.checks[0].runner),
+      type: "playwright_test",
+      effect: "test_sandbox",
+      idempotent: false,
+    },
     positive_assertions: [
       {
         key: "external-service-proof",
         criterion: "The external service constraint is observable.",
         claims: ["constraint.external-service"],
-        observation: "result",
+        observation: "playwright.case.external-service-proof.passed",
         operator: "equals",
         expected: true,
       },

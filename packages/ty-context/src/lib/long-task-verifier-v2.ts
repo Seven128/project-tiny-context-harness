@@ -16,6 +16,7 @@ import {
 import { executeCheckRunner } from "./long-task-check-runner.js";
 import {
   evaluateCheckEvidence,
+  evaluateGlobalCounterfactuals,
   evaluateOutcomeCounterfactuals,
 } from "./long-task-evidence-v2.js";
 import { findScopeEscapes, matchesRepoPattern } from "./long-task-paths.js";
@@ -168,6 +169,20 @@ export async function runDeliveryChecks(
   findings.push(...checkResults.flatMap((result) => result.findings));
 
   if (includeCounterfactuals) {
+    const selectedGlobalCheckKeys = new Set(
+      checks
+        .filter((check) => check.outcome_key === null)
+        .map((check) => check.key),
+    );
+    if (selectedGlobalCheckKeys.size)
+      findings.push(
+        ...(await evaluateGlobalCounterfactuals(
+          compiled,
+          snapshot.root,
+          selectedGlobalCheckKeys,
+          snapshot.manifest,
+        )),
+      );
     const outcomeKeys = new Set(
       checks
         .map((check) => check.outcome_key)
@@ -194,6 +209,7 @@ export async function runDeliveryChecks(
             },
           },
           snapshot.root,
+          snapshot.manifest,
         )),
       );
     }
@@ -227,7 +243,7 @@ function finalPathFindings(
     for (const binding of outcome.technical.bindings)
       if (
         binding.existence === "planned" &&
-        !binding.carrier_paths.every((pattern) =>
+        !plannedBindingRequiredPatterns(binding).every((pattern) =>
           manifest.files.some((file) => matchesRepoPattern(file.path, pattern)),
         )
       )
@@ -245,6 +261,14 @@ function finalPathFindings(
           next_action: "Implement the declared binding and rerun verification.",
         });
   return findings;
+}
+
+function plannedBindingRequiredPatterns(
+  binding: CompiledDeliveryContractV2["outcomes"][number]["technical"]["bindings"][number],
+): string[] {
+  return binding.kind === "file" || binding.kind === "path_glob"
+    ? [binding.target]
+    : binding.carrier_paths;
 }
 
 export function allCompiledChecks(

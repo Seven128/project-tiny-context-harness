@@ -84,6 +84,27 @@ export function explainGlobalClaimLinks(
             proof.proofs.map((item) => globalAdapter(contract, item.check_key)),
           )
         : [],
+      counterfactuals: contract.global.acceptance.counterfactual_controls
+        .filter((control) => control.claims.includes(reference))
+        .map((control) => {
+          const [outcomeKey, bindingKey] = control.binding_ref.split(".");
+          const outcome = contract.outcomes.find(
+            (item) => item.key === outcomeKey,
+          );
+          const binding = outcome?.technical.bindings.find(
+            (item) => item.key === bindingKey,
+          );
+          return {
+            key: control.key,
+            check_key: control.check_key,
+            binding_ref: control.binding_ref,
+            owning_outcome: outcomeKey,
+            owner_paths: outcome?.product.owner.path_globs ?? [],
+            carrier_paths: binding?.carrier_paths ?? [],
+            expected_assertion_failures: control.expected_assertion_failures,
+            mutation: control.mutation,
+          };
+        }),
     };
   });
 }

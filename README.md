@@ -215,9 +215,10 @@ It outputs one self-contained Markdown Source Plan that:
 - splits Outcomes only by independently decidable observable results;
 - uses stable semantic keys and explicit anchors for important Source items;
 - separates mandatory `OBL` obligations from advisory `HINT` suggestions;
-- gives each decided `CTRL` field an independently stable meaning;
-- states each `RISK` Fact and its Affected Outcomes;
-- writes one observable scenario per `AC`, names its accepted `REQ`/`CTRL`/`OBL` keys, and hides no new requirement in AC text.
+- independently records each decided `CTRL` Location, User task, Trigger, Input, Loading, Empty, Success, Failure and Feedback field;
+- uses `NCOMP` for explicit results that must not count as completion;
+- states each `RISK` Fact, one Affected Outcome, Basis and Consequence, or emits `DEC` when the pair is unknown;
+- writes one Given/When/Then scenario per `AC`, names its accepted `REQ`/`CTRL`/`OBL`/`NCOMP` keys, and hides no new requirement in AC text.
 
 It does not update project Context, bind real repository owners/paths/runners, generate Delivery Contract YAML, run implementation, create workflow state or claim completion. `HINT` is not a Material Source Item, and Source Plan authoring emits no `ty-source-item` markers; repository-aware Long-Task authoring inserts markers later. A Source Plan is Source, not a Contract Draft. Its structure is an authoring fast path, not a required input protocol; ordinary prose plans remain valid Long-Task Source.
 
@@ -275,6 +276,7 @@ ty-context long-task abandon <workdir> [--force-corrupt-state]
 
 `long-task-delivery-v2` keeps Product Authority, Technical Boundary Authority and Acceptance Authority as logical sections of one file. Compact YAML omits only deterministic defaults; the normalized Contract and all hashes are identical to the expanded form. The compiler derives machine Claims for observable results, atomic Requirements, control fields including location, non-completing outcomes, technical obligations and forbidden shortcuts:
 
+<!-- long-task-public-contract-example:start -->
 ```yaml
 schema_version: long-task-delivery-v2
 task:
@@ -308,10 +310,12 @@ outcomes:
           required_proof_surfaces: [runtime_behavior]
     technical:
       expected_change_paths: ["src/**"]
-      obligations:
-        - key: runtime
-          statement: Implement the runtime behavior.
-          required_proof_surfaces: [runtime_behavior]
+      bindings:
+        - key: observable-carrier
+          kind: file
+          target: src/observable.ts
+          carrier_paths: [src/observable.ts]
+          existence: planned
     acceptance:
       checks:
         - key: runtime
@@ -321,19 +325,32 @@ outcomes:
             target: tests/runtime.mjs
             effect: read_only
           verification_inputs: [tests/runtime.mjs]
-          input_paths: ["src/**"]
+          input_paths: [src/observable.ts]
+          expected_output_paths: [src/observable.ts]
           positive_assertions:
             - key: observable-ac
               criterion: The declared requirement is observable.
-              claims: [result, requirement.observable, obligation.runtime]
+              claims: [result, requirement.observable]
               observation: result
               operator: equals
               expected: true
+      counterfactual_controls:
+        - key: remove-observable-carrier
+          binding_key: observable-carrier
+          claims: [result, requirement.observable]
+          check_key: runtime
+          mutation:
+            type: remove_paths
+            paths: [src/observable.ts]
+          expected_assertion_failures: [observable-ac]
 ```
+<!-- long-task-public-contract-example:end -->
 
 Authors provide task, Outcome, control and Check keys. The compiler generates `OUT.<outcome-key>` and `CHECK.<outcome-key>.<check-key>` identities. It rejects unknown/duplicate keys, YAML aliases/tags/merges, dependency cycles, unsafe paths, missing Context/source/runner files, missing package scripts, unverifiable Outcomes, and UI Outcomes without browser proof.
 
 Global non-goals, constraints and forbidden shortcuts generate `GLOBAL.non_goal.<key>`, `GLOBAL.constraint.<key>` and `GLOBAL.forbidden_shortcut.<key>`. They must be covered by Global Check Assertions using local refs. Non-goals and forbidden shortcuts require negative proof; constraints accept either polarity. Outcome and Global Checks cannot cross Claim scope. Global forbidden paths do not generate Claims because the changed-path boundary enforces them statically.
+
+Claim-bearing structured Global Checks also declare `global.acceptance.counterfactual_controls`. Each control uses `binding_ref: <outcome-key>.<binding-key>` to reuse an Outcome-owned implementation carrier; no separate Global Binding layer exists. An `existing` mutation target must exist at Preflight/Compile, while a `planned` target may be absent until implementation but must exist at Final Gate and participates in Progress freshness.
 
 Supported runners are `package_script`, `project_binary`, `node_oracle` and `playwright_test`. Supported proof surfaces are `ui_browser`, `runtime_behavior`, `api_contract`, `data_state`, `security_boundary`, `population_coverage` and `implementation_structure`.
 
@@ -349,9 +366,9 @@ Saving failure preserves the user's input and shows the reason.
 <!-- ty-source-item:end -->
 ```
 
-Supported kinds are `outcome_result`, `requirement`, `control`, `acceptance`, `technical_obligation`, `non_goal`, `forbidden_shortcut`, `risk_fact`, `external_confirmation` and `decision`. Every declared Source file contains at least one Material Item; background-only references stay outside Source Authority. Marker keys and Source Claim keys must be set-equal and globally unique across all Source files. Nested, overlapping, unclosed, empty or invalid markers fail Compile. Each `source_claim.statement` must match the marked text after only line-ending, surrounding-blank-line and trailing-space normalization.
+Supported kinds are `outcome_result`, `requirement`, `control`, `acceptance`, `technical_obligation`, `non_completing`, `non_goal`, `forbidden_shortcut`, `risk_fact`, `external_confirmation` and `decision`. A risk marker additionally carries its exact pair, for example `<!-- ty-source-item:start key=permission-risk kind=risk_fact fact=permission_boundary_change outcome=observable-outcome -->`. Every declared Source file contains at least one Material Item; background-only references stay outside Source Authority. Marker keys and Source Claim keys must be set-equal and globally unique across all Source files. Nested, overlapping, unclosed, empty or invalid markers fail Compile. Each `source_claim.statement` must match the marked text after only line-ending, surrounding-blank-line and trailing-space normalization.
 
-Typed dispositions keep overall results, Requirement/Control/Obligation Claims, one named Acceptance Assertion, Global constraints/non-goals, declared Fact/Affected-Outcome risk pairs, external confirmations and genuine decisions distinct. Every non-decision Source item owns exactly one canonical target of the same kind and normalized text, and no target may have two Source owners. A Source acceptance item maps to exactly one `<outcome>.<check>.<assertion>` whose criterion is text-identical and which proves at least one independently Source-backed non-Result Claim. `out_of_scope` is retired: an explicit Source non-goal needs covered negative proof, while excluding an in-scope item requires `decision_required`. Ordinary prose and Source Plans remain valid after marker-only enumeration; Compiler coverage is honest about being unable to discover unmarked natural-language requirements.
+Typed dispositions keep overall results, Requirement/Control/Obligation/Non-completing Claims, one named Acceptance Assertion, Global constraints/non-goals, declared Fact/Affected-Outcome risk pairs, external confirmations and genuine decisions distinct. Risk marker metadata must exactly equal its disposition and declared risk fact, and each Fact/Outcome pair has one Source owner. Every other non-decision Source item owns exactly one canonical target of the same kind and normalized text, and no target may have two Source owners. A Source acceptance item maps to exactly one `<outcome>.<check>.<assertion>` whose criterion is text-identical and which proves at least one independently Source-backed non-Result Claim. `out_of_scope` is retired: an explicit Source non-goal needs covered negative proof, while excluding an in-scope item requires `decision_required`. Ordinary prose and Source Plans remain valid after marker-only enumeration; Compiler coverage is honest about being unable to discover unmarked natural-language requirements.
 
 Delivery Set orchestration and top-level Contract splitting within one selected delivery are retired. `ty-context delivery-set ...` returns a fixed non-executing tombstone.
 
@@ -373,7 +390,7 @@ Final acceptance is computed from executable current evidence, not agent prose. 
 
 Every Outcome has at least one non-Result atomic Claim, and a Claim is covered only when all `required_proof_surfaces` are covered. Claim-bearing assertions use explicit expected-value comparisons; unary `truthy`/`falsy` are forbidden, and `exists` is limited to `implementation_structure` obligations. Across all Checks sharing one Raw Execution identity, one claim-bearing Observation belongs to one Assertion. Playwright Claim proof has one canonical form: `playwright.case.<ac-key>.passed equals true`. Missing, skipped, flaky, unexpected, failed or duplicate-within-project ACs fail closed; the same AC across distinct Playwright projects aggregates only when every instance passes. Decoder diagnostic fields such as aggregate pass, executed, skipped, status and counts cannot prove Claims.
 
-Counterfactuals bind a named Outcome implementation Binding and may mutate only a proven subset of its carriers. They succeed only on completed, exit-zero execution where every failure is an expected `assertion_value_mismatch`; missing/type-invalid observations, missing/skipped ACs, artifact/population/infrastructure failures and extra Assertion failures invalidate them. Weakly observable Outcomes and otherwise weak custom structured Result checks require a bounded sensitivity Counterfactual. Claim and Population proofs are emitted only after the complete Check status is `passed`.
+Outcome Counterfactuals bind a local Binding; Global Counterfactuals bind an Outcome-owned `binding_ref`. Both may mutate only a proven subset of carriers and succeed only on completed, exit-zero execution where every failure is an expected `assertion_value_mismatch`; missing/type-invalid observations, missing/skipped ACs, artifact/population/infrastructure failures and extra Assertion failures invalidate them. Standard frozen Playwright content is trusted verifier input and needs no Counterfactual. For a `weak_observability` Outcome, every claim-bearing Playwright AC and related Claim needs same-Check sensitivity; an executed designated unexpected AC is the controlled mismatch, while constant, partial and other-Check proof fails. Claim and Population proofs are emitted only after the complete Check status is `passed`.
 
 Raw Execution identity binds frozen runner identity plus canonical declared Environment Requirements, never actual environment values. A Playwright Test uses `[ac:<assertion-key>]`; one Test may bind at most one declared AC, undeclared tags are ignored, and legacy `[<key>]` works only for declared keys. Every Claim-bearing structured Check needs same-Check, Claim-related Counterfactual sensitivity; unrelated Artifacts or another Check do not count, Population exempts only its own Claims unless observability is weak, and Result proof must be sensitive through Result plus a related non-Result Claim. Findings from checks, Counterfactuals, Population, scope/binding, Source mapping, adapter, proof-surface and sensitivity validation carry Source, canonical target, Claim, AC/criterion, Observation, expected/actual and owner paths into Explain/Status/Resume. `explain` traces Source Item → canonical target → Claim or Assertion → required surfaces → Check → adapter → Observation. Global hard failure yields `needs_work`; otherwise any Global or Outcome environment block yields `blocked_external`. Contract, source, relevant Context, Oracle/runner, verifier or workspace drift invalidates previous results.
 

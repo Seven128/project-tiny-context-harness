@@ -11,6 +11,7 @@ import path from "node:path";
 import { performance } from "node:perf_hooks";
 import { promisify } from "node:util";
 import { compileDeliveryContract } from "../../packages/ty-context/dist/lib/long-task-delivery-compiler.js";
+import { preflightDeliveryContract } from "../../packages/ty-context/dist/lib/long-task-authoring-preflight.js";
 import { stopCheckDeliveryTask } from "../../packages/ty-context/dist/lib/long-task-status-v2.js";
 import {
   activateDeliveryContract,
@@ -29,14 +30,19 @@ import {
   commitCandidate,
   createDeliveryFixture,
   runCli,
+  writeContract,
 } from "./long-task-delivery-fixtures.mjs";
 
 const exec = promisify(execFile);
 const budgets = {
   status_ms: 1000,
   resume_ms: 1000,
+  preflight_ms: 2000,
   compile_ms: 2000,
   snapshot_ms: 5000,
+  final_gate_ms: 10000,
+  global_counterfactual_fixture_ms: 10000,
+  planned_binding_fixture_ms: 10000,
   stop_harness_ms: 3000,
 };
 
@@ -48,6 +54,10 @@ try {
   await createDirtyMatrix(fixture.root);
 
   process.chdir(fixture.root);
+  const preflight = await timed(() =>
+    preflightDeliveryContract(fixture.workdir, fixture.root),
+  );
+  assert.equal(preflight.value.status, "ready");
   const compile = await timed(() =>
     compileDeliveryContract(fixture.workdir, fixture.root, {
       require_completion_gate: true,
@@ -101,6 +111,8 @@ try {
   const stop = await timed(() => stopCheckDeliveryTask(fixture.workdir));
   assert.equal(stop.value.continue, true);
   const receipt = await readFinalReceipt(fixture.root, fixture.workdir);
+  const globalCounterfactual = await measureGlobalCounterfactualFixture();
+  const plannedBinding = await measurePlannedBindingFixture();
   const runnerMs = receipt.check_results.reduce(
     (sum, result) => sum + result.duration_ms,
     0,
@@ -110,8 +122,12 @@ try {
     untracked_files: 100,
     status_ms: round(status.ms),
     resume_ms: round(resume.ms),
+    preflight_ms: round(preflight.ms),
     compile_ms: round(compile.ms),
     snapshot_ms: round(snapshot.preparation_ms),
+    final_gate_ms: round(stop.ms),
+    global_counterfactual_fixture_ms: round(globalCounterfactual.ms),
+    planned_binding_fixture_ms: round(plannedBinding.ms),
     stop_total_ms: round(stop.ms),
     stop_snapshot_ms: round(receipt.snapshot_preparation_ms),
     stop_harness_ms: round(
@@ -121,8 +137,25 @@ try {
   };
   assert.ok(result.status_ms <= budgets.status_ms, JSON.stringify(result));
   assert.ok(result.resume_ms <= budgets.resume_ms, JSON.stringify(result));
+  assert.ok(
+    result.preflight_ms <= budgets.preflight_ms,
+    JSON.stringify(result),
+  );
   assert.ok(result.compile_ms <= budgets.compile_ms, JSON.stringify(result));
   assert.ok(result.snapshot_ms <= budgets.snapshot_ms, JSON.stringify(result));
+  assert.ok(
+    result.final_gate_ms <= budgets.final_gate_ms,
+    JSON.stringify(result),
+  );
+  assert.ok(
+    result.global_counterfactual_fixture_ms <=
+      budgets.global_counterfactual_fixture_ms,
+    JSON.stringify(result),
+  );
+  assert.ok(
+    result.planned_binding_fixture_ms <= budgets.planned_binding_fixture_ms,
+    JSON.stringify(result),
+  );
   assert.ok(
     result.stop_harness_ms <= budgets.stop_harness_ms,
     JSON.stringify(result),
@@ -136,6 +169,89 @@ try {
     maxRetries: 20,
     retryDelay: 100,
   });
+}
+
+async function measureGlobalCounterfactualFixture() {
+  const target = await createDeliveryFixture();
+  try {
+    const statement = "The performance fixture preserves global state.";
+    target.contract.global.technical.constraints.push({
+      key: "performance-global",
+      statement,
+    });
+    const check = structuredClone(
+      target.contract.outcomes[0].acceptance.checks[0],
+    );
+    check.key = "performance-global-check";
+    check.runner.argv = ["first", "global"];
+    check.positive_assertions = [
+      {
+        key: "performance-global-assertion",
+        criterion: statement,
+        claims: ["constraint.performance-global"],
+        observation: "result",
+        operator: "equals",
+        expected: true,
+      },
+    ];
+    check.negative_assertions = [];
+    target.contract.global.acceptance.checks.push(check);
+    target.contract.global.acceptance.counterfactual_controls.push({
+      key: "remove-global-state",
+      binding_ref: "first.state-first",
+      claims: ["constraint.performance-global"],
+      check_key: check.key,
+      mutation: { type: "remove_paths", paths: ["src/state.json"] },
+      expected_assertion_failures: ["performance-global-assertion"],
+    });
+    target.contract.source_claims.push({
+      key: "performance-global-source",
+      source_ref: "source.md",
+      statement,
+      disposition: {
+        type: "global_constraint",
+        refs: ["constraint.performance-global"],
+      },
+    });
+    const source = await readFile(path.join(target.root, "source.md"), "utf8");
+    await writeFile(
+      path.join(target.root, "source.md"),
+      `${source.trimEnd()}\n\n<!-- ty-source-item:start key=performance-global-source kind=technical_obligation -->\n${statement}\n<!-- ty-source-item:end -->\n`,
+    );
+    await writeContract(target.workdir, target.contract);
+    await runCli(target.root, ["enable", "long-task"]);
+    await runCli(target.root, ["long-task", "compile", target.workdir]);
+    return await timed(() =>
+      runCli(target.root, ["long-task", "final-gate", target.workdir]),
+    );
+  } finally {
+    await rm(target.root, {
+      recursive: true,
+      force: true,
+      maxRetries: 20,
+      retryDelay: 100,
+    });
+  }
+}
+
+async function measurePlannedBindingFixture() {
+  const target = await createDeliveryFixture();
+  try {
+    target.contract.outcomes[0].technical.bindings[0].existence = "planned";
+    await writeContract(target.workdir, target.contract);
+    await runCli(target.root, ["enable", "long-task"]);
+    await runCli(target.root, ["long-task", "compile", target.workdir]);
+    return await timed(() =>
+      runCli(target.root, ["long-task", "final-gate", target.workdir]),
+    );
+  } finally {
+    await rm(target.root, {
+      recursive: true,
+      force: true,
+      maxRetries: 20,
+      retryDelay: 100,
+    });
+  }
 }
 
 async function seedLargeRepository(root) {

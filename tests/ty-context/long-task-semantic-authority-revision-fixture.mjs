@@ -81,6 +81,14 @@ export function prepareSemanticAuthority(contract) {
     ],
     negative_assertions: [],
   });
+  contract.global.acceptance.counterfactual_controls.push({
+    key: "remove-stable-runtime",
+    binding_ref: "first.state-first",
+    claims: ["constraint.stable-runtime"],
+    check_key: "stable-runtime-check",
+    mutation: { type: "remove_paths", paths: ["src/state.json"] },
+    expected_assertion_failures: ["stable-runtime-proof"],
+  });
 }
 
 export async function expectDecision(fixture, expectation) {

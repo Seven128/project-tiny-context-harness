@@ -5,6 +5,7 @@ import { explainSourceLinks } from "../lib/long-task-explain-source-links.js";
 import { classifyLongTaskRisk } from "../lib/long-task-risk.js";
 import { compileSourceInventory } from "../lib/long-task-source-inventory.js";
 import { validateSourceContinuity } from "../lib/long-task-source-continuity.js";
+import { validateSourceTargetContinuity } from "../lib/long-task-source-target-continuity.js";
 import { repositoryRoot } from "../lib/long-task-workspace.js";
 
 export async function explainLongTask(workdir: string): Promise<void> {
@@ -15,6 +16,7 @@ export async function explainLongTask(workdir: string): Promise<void> {
     parsed.contract.task.source_paths,
   );
   validateSourceContinuity(parsed.contract, sourceInventory);
+  validateSourceTargetContinuity(parsed.contract, sourceInventory);
   const coverage = compileProductClaimCoverage(parsed.contract);
   const risk = classifyLongTaskRisk(parsed.contract);
   const globalClaims = Object.entries(coverage.summary.claims_by_global).map(

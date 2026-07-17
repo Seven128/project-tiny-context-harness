@@ -1,8 +1,14 @@
 import { readFile, stat } from "node:fs/promises";
-import { validateCounterfactualBindingClaims } from "./long-task-counterfactual-claim-policy.js";
+import {
+  validateCounterfactualBindingClaims,
+  validateGlobalCounterfactualBindingClaims,
+} from "./long-task-counterfactual-claim-policy.js";
 import type {
+  CompiledCheckV2,
   CompiledDeliveryContractV2,
   CompiledOutcomeV2,
+  CounterfactualMutationV2,
+  DeliveryBindingV2,
   DeliveryContractV2,
   WorkspaceManifestV2,
 } from "./long-task-delivery-types.js";
@@ -145,18 +151,26 @@ export function validateTechnicalPaths(
 
 export async function validateCounterfactualPaths(
   contract: DeliveryContractV2,
+  compiledGlobalChecks: CompiledCheckV2[],
   compiledOutcomes: CompiledOutcomeV2[],
   repository: string,
   workdirRelative: string,
+  protectedAuthorityPaths: string[],
 ): Promise<void> {
+  const allChecks = [
+    ...compiledGlobalChecks,
+    ...compiledOutcomes.flatMap((outcome) => outcome.acceptance.checks),
+  ];
+  const protectedInputs = new Set([
+    ...contract.task.source_paths,
+    ...protectedAuthorityPaths,
+    ...allChecks.flatMap((check) => [
+      ...Object.keys(check.verification_input_hashes),
+      check.runner.resolved_target,
+    ]),
+  ]);
   for (const outcome of contract.outcomes) {
     const compiled = compiledOutcomes.find((item) => item.key === outcome.key)!;
-    const protectedInputs = new Set(
-      compiled.acceptance.checks.flatMap((check) => [
-        ...Object.keys(check.verification_input_hashes),
-        check.runner.resolved_target,
-      ]),
-    );
     for (const control of outcome.acceptance.counterfactual_controls) {
       const binding = outcome.technical.bindings.find(
         (item) => item.key === control.binding_key,
@@ -166,67 +180,115 @@ export async function validateCounterfactualPaths(
           `counterfactual_binding_unknown:${outcome.key}:${control.key}:${control.binding_key}`,
         );
       validateCounterfactualBindingClaims(outcome, control, binding);
-      const mutated =
-        control.mutation.type === "remove_paths"
-          ? control.mutation.paths
-          : [control.mutation.path];
-      for (const relative of mutated) {
-        const target = resolveInsideRepository(
-          repository,
-          relative,
-          `${outcome.key}.counterfactual`,
-        );
-        const normalized = repoRelative(repository, target);
-        if (
-          normalized === workdirRelative ||
-          normalized.startsWith(`${workdirRelative}/`)
-        )
-          throw new Error(
-            `counterfactual_path_protected:${outcome.key}:${relative}`,
-          );
-        if (
-          protectedInputs.has(normalized) ||
-          protectedInputs.has(relative.replace(/\\/gu, "/"))
-        )
-          throw new Error(
-            `counterfactual_verification_input_protected:${outcome.key}:${relative}`,
-          );
-        if (
-          !binding.carrier_paths.some(
-            (pattern) =>
-              proveRepositoryPatternSubset(normalized, pattern).status ===
-              "proven_subset",
-          )
-        )
-          throw new Error(
-            `counterfactual_path_outside_binding:${outcome.key}:${control.key}:${relative}`,
-          );
-        if (!(await stat(target).catch(() => null)))
-          throw new Error(
-            `counterfactual_path_not_found:${outcome.key}:${relative}`,
-          );
-      }
-      if (control.mutation.type === "replace_file") {
-        const fixtureTarget = resolveInsideRepository(
-          repository,
-          control.mutation.fixture_path,
-          `${outcome.key}.counterfactual.fixture`,
-        );
-        const fixture = repoRelative(
-          repository,
-          await assertProtectedRepositoryFile(
-            repository,
-            fixtureTarget,
-            `${outcome.key}.counterfactual.fixture`,
-          ),
-        );
-        if (!protectedInputs.has(fixture))
-          throw new Error(
-            `counterfactual_fixture_must_be_verification_input:${outcome.key}:${fixture}`,
-          );
-      }
+      const check = compiled.acceptance.checks.find(
+        (item) => item.key === control.check_key,
+      )!;
+      await validateScopeCounterfactualPaths({
+        scope: outcome.key,
+        controlKey: control.key,
+        mutation: control.mutation,
+        binding,
+        check,
+        repository,
+        workdirRelative,
+        protectedInputs,
+      });
     }
   }
+  for (const control of contract.global.acceptance.counterfactual_controls) {
+    const { outcome, binding } = validateGlobalCounterfactualBindingClaims(
+      contract,
+      control,
+    );
+    const check = compiledGlobalChecks.find(
+      (item) => item.key === control.check_key,
+    )!;
+    await validateScopeCounterfactualPaths({
+      scope: "GLOBAL",
+      controlKey: control.key,
+      mutation: control.mutation,
+      binding,
+      check,
+      repository,
+      workdirRelative,
+      protectedInputs,
+      bindingRef: `${outcome.key}.${binding.key}`,
+    });
+  }
+}
+
+async function validateScopeCounterfactualPaths(options: {
+  scope: string;
+  controlKey: string;
+  mutation: CounterfactualMutationV2;
+  binding: DeliveryBindingV2;
+  check: CompiledCheckV2;
+  repository: string;
+  workdirRelative: string;
+  protectedInputs: Set<string>;
+  bindingRef?: string;
+}): Promise<void> {
+  const mutated =
+    options.mutation.type === "remove_paths"
+      ? options.mutation.paths
+      : [options.mutation.path];
+  for (const relative of mutated) {
+    const target = resolveInsideRepository(
+      options.repository,
+      relative,
+      `${options.scope}.counterfactual`,
+    );
+    const normalized = repoRelative(options.repository, target);
+    if (options.protectedInputs.has(normalized))
+      throw new Error(
+        `counterfactual_verification_input_protected:${options.scope}:${relative}`,
+      );
+    if (
+      normalized === options.workdirRelative ||
+      normalized.startsWith(`${options.workdirRelative}/`) ||
+      normalized === ".git" ||
+      normalized.startsWith(".git/") ||
+      normalized.split("/").includes("node_modules")
+    )
+      throw new Error(
+        `counterfactual_path_protected:${options.scope}:${relative}`,
+      );
+    if (
+      !options.binding.carrier_paths.some(
+        (pattern) =>
+          proveRepositoryPatternSubset(normalized, pattern).status ===
+          "proven_subset",
+      )
+    )
+      throw new Error(
+        `counterfactual_path_outside_binding:${options.scope}:${options.controlKey}:${relative}`,
+      );
+    if (
+      options.binding.existence === "existing" &&
+      !(await stat(target).catch(() => null))
+    )
+      throw new Error(
+        `counterfactual_path_not_found:${options.scope}:${relative}`,
+      );
+  }
+  if (options.mutation.type !== "replace_file") return;
+  const fixtureTarget = resolveInsideRepository(
+    options.repository,
+    options.mutation.fixture_path,
+    `${options.scope}.counterfactual.fixture`,
+  );
+  const fixture = repoRelative(
+    options.repository,
+    await assertProtectedRepositoryFile(
+      options.repository,
+      fixtureTarget,
+      `${options.scope}.counterfactual.fixture`,
+    ),
+  );
+  if (!Object.hasOwn(options.check.verification_input_hashes, fixture))
+    throw new Error(
+      `counterfactual_fixture_must_be_verification_input:${options.scope}:${fixture}`,
+    );
 }
 
 export async function hashDeclaredFiles(

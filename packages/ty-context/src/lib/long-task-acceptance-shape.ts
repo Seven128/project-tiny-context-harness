@@ -1,6 +1,7 @@
 import type {
   CounterfactualControlV2,
   EnvironmentRequirementV2,
+  GlobalCounterfactualControlV2,
   PopulationRequirementV2,
 } from "./long-task-delivery-types.js";
 import { parseKeyedStatements } from "./long-task-product-shape.js";
@@ -74,6 +75,77 @@ export function parseCounterfactuals(
       ),
     };
   });
+}
+
+export function parseGlobalCounterfactuals(
+  value: unknown,
+  label: string,
+): GlobalCounterfactualControlV2[] {
+  return array(value, label).map((item, index) => {
+    const itemLabel = `${label}[${index}]`;
+    const row = object(item, itemLabel, [
+      "key",
+      "binding_ref",
+      "claims",
+      "check_key",
+      "mutation",
+      "expected_assertion_failures",
+    ]);
+    const bindingRef = string(row.binding_ref, `${itemLabel}.binding_ref`);
+    if (!/^[a-z0-9][a-z0-9-]*\.[a-z0-9][a-z0-9-]*$/u.test(bindingRef))
+      fail(`${itemLabel}.binding_ref`, "must be <outcome-key>.<binding-key>");
+    const claims = strings(row.claims, `${itemLabel}.claims`);
+    if (!claims.length) fail(`${itemLabel}.claims`, "must not be empty");
+    const failures = strings(
+      row.expected_assertion_failures,
+      `${itemLabel}.expected_assertion_failures`,
+    ).map((entry, assertionIndex) =>
+      key(entry, `${itemLabel}.expected_assertion_failures[${assertionIndex}]`),
+    );
+    if (!failures.length)
+      fail(`${itemLabel}.expected_assertion_failures`, "must not be empty");
+    return {
+      key: key(row.key, `${itemLabel}.key`),
+      binding_ref: bindingRef,
+      claims,
+      check_key: key(row.check_key, `${itemLabel}.check_key`),
+      mutation: parseCounterfactualMutation(
+        row.mutation,
+        `${itemLabel}.mutation`,
+      ),
+      expected_assertion_failures: failures,
+    };
+  });
+}
+
+function parseCounterfactualMutation(
+  value: unknown,
+  label: string,
+): CounterfactualControlV2["mutation"] {
+  const mutation = object(
+    value,
+    label,
+    ["type"],
+    ["paths", "path", "fixture_path"],
+  );
+  const type = literal(
+    mutation.type,
+    ["remove_paths", "replace_file"] as const,
+    `${label}.type`,
+  );
+  return type === "remove_paths"
+    ? {
+        type,
+        paths: repositoryFiles(mutation.paths, `${label}.paths`),
+      }
+    : {
+        type,
+        path: repositoryFile(mutation.path, `${label}.path`),
+        fixture_path: repositoryFile(
+          mutation.fixture_path,
+          `${label}.fixture_path`,
+        ),
+      };
 }
 
 export function parsePopulation(

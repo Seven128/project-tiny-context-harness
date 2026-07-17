@@ -198,6 +198,8 @@ export async function compileDeliveryContract(
       technical: contract.global.technical,
       acceptance: {
         checks: globalChecks,
+        counterfactual_controls:
+          contract.global.acceptance.counterfactual_controls,
         external_confirmations:
           contract.global.acceptance.external_confirmations,
       },

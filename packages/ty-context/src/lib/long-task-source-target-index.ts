@@ -11,6 +11,7 @@ export interface CanonicalSourceTarget {
     | "requirement"
     | "control"
     | "technical_obligation"
+    | "non_completing"
     | "global_constraint"
     | "non_goal"
     | "forbidden_shortcut"
@@ -19,6 +20,8 @@ export interface CanonicalSourceTarget {
     | "external_confirmation";
   normalized_text?: string;
   outcome_key?: string;
+  risk_fact?: keyof DeliveryContractV2["risk"]["facts"];
+  affected_outcome?: string;
 }
 
 export function buildCanonicalSourceTargetIndex(
@@ -63,6 +66,15 @@ export function buildCanonicalSourceTargetIndex(
           outcome.key,
         ),
       );
+    for (const item of outcome.product.non_completing_outcomes)
+      targets.push(
+        target(
+          `${outcome.key}.non_completing.${item.key}`,
+          "non_completing",
+          item.statement,
+          outcome.key,
+        ),
+      );
     for (const shortcut of outcome.technical.forbidden_shortcuts)
       targets.push(
         target(
@@ -102,7 +114,12 @@ export function buildCanonicalSourceTargetIndex(
     );
   for (const [fact, outcomes] of Object.entries(contract.risk.facts))
     for (const outcome of outcomes)
-      targets.push({ ref: `${fact}:${outcome}`, kind: "risk_fact" });
+      targets.push({
+        ref: `${fact}:${outcome}`,
+        kind: "risk_fact",
+        risk_fact: fact as keyof DeliveryContractV2["risk"]["facts"],
+        affected_outcome: outcome,
+      });
   for (const item of contract.global.acceptance.external_confirmations)
     targets.push(target(item.key, "external_confirmation", item.description));
   return new Map(targets.map((item) => [item.ref, item]));

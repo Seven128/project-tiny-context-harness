@@ -39,7 +39,7 @@ This contract defines source-only, managed, packaged and human-facing surfaces f
 ## Generated Skill Boundary
 
 - Package-managed Skills are business-agnostic. Project facts belong in the consumer Context or separate project-local Skills.
-- `/source-plan-authoring` explicitly authors or audits one high-fidelity Markdown Source Plan. It preserves direct requirements, marks derived content and unresolved decisions, uses stable semantic keys/anchors where useful, and creates no Context update, Contract Draft/YAML, repository binding, workflow state, implementation or completion claim. Its recommended format is optional Source guidance.
+- `/source-plan-authoring` explicitly authors or audits one high-fidelity Markdown Source Plan. It preserves direct requirements, independent CTRL fields, NCOMP meanings, one-scenario AC links and exact Risk Fact/Outcome/Basis/Consequence, while marking derived content and unresolved decisions. It creates no Context update, Contract Draft/YAML, repository binding, workflow state, implementation or completion claim; its format remains optional Source guidance.
 - `/long-task-workflow` accepts ordinary prose or a Source Plan as Source and owns iterative authoring of the same non-authoritative Contract Draft, Material Source Item marking, typed Source/REQ/CTRL/OBL/AC all-of coverage, shared-kernel read-only Preflight repair, formal Compile/Authority Lock, rolling execution and Live Final Gate. A Draft Outcome is an authoring-time Outcome and semantic verification boundary, not a runtime Worker or scheduler unit.
 - No `contract-authoring`, `draft-authoring` or other standalone Contract Draft Skill exists. Contract Draft authoring and the later workflow are one lifecycle, with one Contract and one Final Gate; no Source Inventory/Preflight Receipt, second Contract plan, top-level split or Goal/agent/process/Git orchestration is allowed.
 - Historical reasons involving particular conversational or coding platforms remain source-workspace decision rationale. Package-managed Skills and public consumer guidance use only the platform-neutral repository-binding, Preflight-feedback, handoff, one-authority and iterative-authoring rationale.
@@ -50,5 +50,7 @@ This contract defines source-only, managed, packaged and human-facing surfaces f
 ## Change Impact Rule
 
 Public behavior changes require a same-semantics sweep across implementation, schema, managed source, package assets, Context, PROJECT_SPEC, English/Chinese README, package README, tests, source sync, quickstart/tarball and release/version surfaces as applicable.
+
+The public README Contract and reusable release fixture are executable examples, not regex documentation. Source sync owns README/package copies and both Skills; exact-tarball smoke and its built-CLI fixture must share the same marked Source/Binding/Counterfactual semantics.
 
 Public package surfaces must be English-complete. Chinese text is additive aligned documentation, never the sole activation path or explanation.

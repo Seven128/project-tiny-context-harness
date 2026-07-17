@@ -32,6 +32,7 @@
 - Profile selection: `lib/profiles.ts`, `commands/enable.ts`, `commands/disable.ts`, config and migrations.
 - Schema/types/parser/compiler/risk/preflight: `src/schemas/long-task-delivery-v2/**` and focused `lib/long-task-delivery-*`, `long-task-claims.ts` and `long-task-risk.ts` modules.
 - Evidence Kernel: runner-derived adapter, global Raw Execution Observation ownership, canonical multi-project Playwright AC, passed-Check-only Claim/Population proof, Binding/value-sensitive Counterfactual, verifier, active authority, final gate/receipt/status/resume/Stop modules. Development-period V2 Active Authority/Progress/Receipts are manual-required and never migrated.
+- Source/Evidence closure: `non_completing` is a first-class Source kind; Risk markers bind exact Fact/Outcome pairs; Global structured sensitivity resolves to Outcome Bindings; planned carriers close at Final Gate; standard frozen Playwright is trusted and weak-observability Playwright is counterfactually sensitive.
 - Managed source/assets/mappings: `.codex/ty-context-managed/**`, `packages/ty-context/assets/**`, `packages/ty-context/source-mappings.yaml`.
 - Profile-managed Skills: `source-plan-authoring` for optional high-fidelity ordinary Source and `long-task-workflow` for the one-Contract execution authority.
 - Release/version automation: `tools/sync_release_version.mjs`, release prepare/publish tools and exact-tarball smoke.

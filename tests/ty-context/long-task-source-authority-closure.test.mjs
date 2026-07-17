@@ -170,7 +170,11 @@ test("typed Source dispositions preserve Result, Risk, and Non-goal meaning", as
         path.join(fixture.root, "source.md"),
         `# Fixture source
 
-<!-- ty-source-item:start key=first-observable kind=${scenario} -->
+<!-- ty-source-item:start key=first-observable kind=${scenario}${
+          scenario === "risk_fact"
+            ? " fact=critical_user_path outcome=first"
+            : ""
+        } -->
 ${statement}
 <!-- ty-source-item:end -->
 `,
@@ -209,6 +213,14 @@ ${statement}
           },
         ];
         fixture.contract.global.acceptance.checks.push(globalCheck);
+        fixture.contract.global.acceptance.counterfactual_controls.push({
+          key: "remove-global-carrier",
+          binding_ref: "first.state-first",
+          claims: ["non_goal.no-legacy"],
+          check_key: "no-legacy",
+          mutation: { type: "remove_paths", paths: ["src/state.json"] },
+          expected_assertion_failures: ["no-legacy"],
+        });
         fixture.contract.source_claims[0].disposition = {
           type: "global_constraint",
           refs: ["non_goal.no-legacy"],
@@ -481,6 +493,8 @@ test("Canonical Source targets have exactly one ref and one Source owner", async
         key: "first-observable",
         kind: "risk_fact",
         statement: "The first outcome has explicit risk facts.",
+        fact: "critical_user_path",
+        outcome: "first",
       },
     ]);
     await assertPreflightAndCompileReject(
@@ -598,7 +612,11 @@ async function writeSourceItems(root, items) {
     path.join(root, "source.md"),
     `# Fixture source\n\n${items
       .map(
-        (item) => `<!-- ty-source-item:start key=${item.key} kind=${item.kind} -->
+        (item) => `<!-- ty-source-item:start key=${item.key} kind=${item.kind}${
+          item.kind === "risk_fact"
+            ? ` fact=${item.fact} outcome=${item.outcome}`
+            : ""
+        } -->
 ${item.statement}
 <!-- ty-source-item:end -->`,
       )

@@ -17,7 +17,7 @@ test("Counterfactual accepts only the exact designated Assertion failure", async
   try {
     const outcome = fixture.contract.outcomes[0];
     const check = outcome.acceptance.checks[0];
-    check.runner.timeout_ms = 120;
+    check.runner.timeout_ms = 2000;
     check.positive_assertions.push({
       key: "other-stays-true",
       criterion: "The unrelated observation remains true.",
@@ -99,8 +99,11 @@ test("Counterfactual accepts only the exact designated Assertion failure", async
       "extra-failure",
     ]) {
       await writeOracle(fixture.root, mode);
+      const candidate = structuredClone(compiled.outcomes[0]);
+      if (mode === "timeout")
+        candidate.acceptance.checks[0].runner.timeout_ms = 120;
       findings = await evaluateOutcomeCounterfactuals(
-        compiled.outcomes[0],
+        candidate,
         fixture.root,
       );
       assert.equal(findings.length, 1, mode);

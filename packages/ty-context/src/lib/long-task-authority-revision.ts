@@ -24,6 +24,7 @@ import {
   checkIndex,
   counterfactualReductions,
   expandedPatterns,
+  globalCounterfactualReductions,
   obligationReductions,
   removedExactValues,
   removedGlobalForbiddenPaths,
@@ -140,7 +141,7 @@ export function authorityRevisionDiff(
   const bindingsRemovedOrExpanded: string[] = [];
   const obligationsRemovedOrWeakened: string[] = [];
   const rollbackOrRecoveryWeakened: string[] = [];
-  const counterfactualsRemoved: string[] = [];
+  const counterfactualsRemoved = globalCounterfactualReductions(previous, next);
   const populationWeakened: string[] = [];
   const verifierDiff = verifierAuthorityDiff(
     previous.verifier_identity,

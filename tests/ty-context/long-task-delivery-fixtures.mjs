@@ -257,6 +257,7 @@ export function deliveryContract(options = {}) {
       },
       acceptance: {
         checks: [],
+        counterfactual_controls: [],
         external_confirmations: options.externalConfirmation
           ? [
               {

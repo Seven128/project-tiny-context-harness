@@ -86,6 +86,11 @@ The rule is risk-proportional. L0 local, reversible and directly testable work p
 - **Stop/close rerun the Live Final Gate** prevents post-Gate Source, Context, Contract, verifier or code drift from being accepted.
 - **Scope escape and risk escalation** prevent work outside the declared boundary from passing under the old scope or proof level.
 - **Counterfactual, Population and sensitivity proof** prevent always-true tests, sample-only claims and evidence disconnected from implementation carriers.
+- **Global Counterfactual to Outcome Binding** prevents a Global Claim from being backed by an unrelated global oracle without inventing a second Global Binding model; the cost is one explicit cross-scope reference and carrier freshness dependency.
+- **Exact Risk marker metadata** prevents a strong Source risk from being redirected to a weaker Fact or another Outcome; ambiguity costs a real `decision_required` pause instead of an inferred downgrade.
+- **Planned Binding existence** permits truthful authoring before a new file exists, while Final Gate existence and freshness close the no-op mutation path; compile-time absence is allowed only for the declared planned lifecycle.
+- **Two-layer Playwright trust** treats frozen standard test content as verifier authority and pays mutation cost only for `weak_observability`; this avoids mutating every UI test while still rejecting constant critical-path ACs.
+- **Non-completing Source kind** prevents explicit “does not count as done” meaning from being weakened into an ordinary Requirement or non-goal and makes its negative sensitivity independently traceable.
 - **Managed source, generated copy and package asset parity** prevent source-workspace rules and consumer-installed rules from diverging.
 
 These mappings explain existing value; they are not a runtime mechanism matrix or a second Authority.

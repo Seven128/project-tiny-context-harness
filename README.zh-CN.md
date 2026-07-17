@@ -90,9 +90,10 @@ Context: no durable fact change
 - Outcome 只按可独立判断的可观察结果拆分；
 - 重要 Source 项使用稳定语义 Key 与显式 Anchor；
 - 强制技术义务使用 `OBL`，非强制实现建议使用 `HINT`；
-- 已决定的每个 `CTRL` 字段都有可独立映射的稳定语义；
-- 每个 `RISK` 明确 Fact 与 Affected Outcome；
-- 每个 AC 只代表一个可观察场景，显式列出对应 `REQ`/`CTRL`/`OBL` Key，且不能首次偷渡新需求。
+- 每个已决定的 `CTRL` 分别记录 Location、User task、Trigger、Input、Loading、Empty、Success、Failure 与 Feedback；
+- 明确“不算完成”的 Source 含义使用 `NCOMP`；
+- 每个 `RISK` 明确 Fact、单个 Affected Outcome、Basis 与 Consequence，无法确定时进入 `DEC`；
+- 每个 AC 只代表一个 Given/When/Then 可观察场景，显式列出对应 `REQ`/`CTRL`/`OBL`/`NCOMP` Key，且不能首次偷渡新需求。
 
 它不更新项目 Context，不绑定真实仓库 owner/path/runner，不生成 Delivery Contract YAML，不执行实现，不创建工作流状态，也不声明完成。`HINT` 不是 Material Source Item；Source Plan Skill 不输出 `ty-source-item` Marker，Marker 由后续 repository-aware Long-Task Authoring 插入。Source Plan 是 Source，不是 Contract Draft。推荐结构只是 Authoring Fast Path；普通文本方案仍可直接作为 Long-Task Source。
 
@@ -161,15 +162,17 @@ Contract 顶层包含：
 
 Global non-goal、constraint 与 forbidden shortcut 分别生成 `GLOBAL.non_goal.<key>`、`GLOBAL.constraint.<key>`、`GLOBAL.forbidden_shortcut.<key>`，并必须由 Global Check 使用局部 ref 覆盖。Non-goal 与 forbidden shortcut 必须使用 negative proof；constraint 可使用任一 polarity。Global 与 Outcome Check 不得跨 Claim scope。Global forbidden path 不生成 Claim，继续由 changed-path 静态边界执行。
 
+带 Claim 的 structured Global Check 还必须声明 `global.acceptance.counterfactual_controls`。每个 control 通过 `binding_ref: <outcome-key>.<binding-key>` 复用 Outcome 拥有的实现 carrier，不新增 Global Binding 层。`existing` mutation target 在 Preflight/Compile 时必须存在；`planned` target 可在实现前缺失，但 Final Gate 时必须存在，并参与 Progress freshness。
+
 Runner 支持 `package_script`、`project_binary`、`node_oracle`、`playwright_test`。Proof surface 支持 `ui_browser`、`runtime_behavior`、`api_contract`、`data_state`、`security_boundary`、`population_coverage`、`implementation_structure`。
 
 ### 一个 Contract 与 Source Claim
 
 用户选定的一次完整交付始终只有一个 Contract 和一个 Final Gate，即使 Outcomes 业务关联较弱。Outcome 只按“可独立判断、可定向验证”的结果拆分；模型输出长度、YAML/文件长度、前后端层、模块数量、并行偏好或 Agent 容量都不是拆分依据。新 Authoring 使用 inline Outcomes；既有 `outcome_files` 只保留物理文件兼容意义，不产生语义、状态或完成边界。
 
-V2 强制至少一个真实 `source_path` 与一个 `source_claim`，且每个声明的 Source 文件至少包含一个 Material Item；纯背景资料不得进入 Source Authority。Authoring 阶段必须在原始 Markdown 中仅插入不渲染的 `ty-source-item:start/end` 标记，不得改写 Item 原文。支持 `outcome_result`、`requirement`、`control`、`acceptance`、`technical_obligation`、`non_goal`、`forbidden_shortcut`、`risk_fact`、`external_confirmation`、`decision`；所有 Source 文件中的 Marker key 与 Source Claim key 必须集合完全相等且全局唯一。嵌套、重叠、未闭合、空内容、非法 key，以及 `statement` 与 Marker 文本在有限空白规范化后不一致，都会阻止 Compile。
+V2 强制至少一个真实 `source_path` 与一个 `source_claim`，且每个声明的 Source 文件至少包含一个 Material Item；纯背景资料不得进入 Source Authority。Authoring 阶段必须在原始 Markdown 中仅插入不渲染的 `ty-source-item:start/end` 标记，不得改写 Item 原文。支持 `outcome_result`、`requirement`、`control`、`acceptance`、`technical_obligation`、`non_completing`、`non_goal`、`forbidden_shortcut`、`risk_fact`、`external_confirmation`、`decision`。Risk marker 必须同时写出精确 `fact=<fact-name> outcome=<outcome-key>`；其 metadata、disposition 与 `risk.facts` 必须一致，且一个 Fact/Outcome pair 只能有一个 Source owner。所有 Source 文件中的 Marker key 与 Source Claim key 必须集合完全相等且全局唯一。嵌套、重叠、未闭合、空内容、非法 key，以及 `statement` 与 Marker 文本在有限空白规范化后不一致，都会阻止 Compile。
 
-类型化 disposition 分开整体结果、Requirement/Control/Obligation Claim、单一命名 Acceptance Assertion、Global Constraint/Non-goal、Risk Fact/Affected Outcome、External Confirmation 与真实决策。每个非 Decision Source Item 必须且只能拥有一个同 Kind、同规范化文本的 Canonical Target，两个 Source Item 不得拥有同一 Target。Source Acceptance 必须原样对应一个 `<outcome>.<check>.<assertion>` criterion，并证明至少一个被独立 Requirement/Control/Obligation Source Item 支撑的非 Result Claim。`out_of_scope` 已退休：Source 明确的 non-goal 由 Global Negative Proof 覆盖；排除原本在范围内的要求只能进入 `decision_required`。普通 prose/Source Plan 只需 Marker 枚举，不必改成严格 YAML；Compiler 诚实地不声称能发现未标记的自然语言隐含要求。
+类型化 disposition 分开整体结果、Requirement/Control/Obligation/Non-completing Claim、单一命名 Acceptance Assertion、Global Constraint/Non-goal、Risk Fact/Affected Outcome、External Confirmation 与真实决策。每个非 Decision Source Item 必须且只能拥有一个同 Kind、同规范化文本的 Canonical Target，两个 Source Item 不得拥有同一 Target。Source Acceptance 必须原样对应一个 `<outcome>.<check>.<assertion>` criterion，并证明至少一个被独立 Requirement/Control/Obligation/Non-completing Source Item 支撑的非 Result Claim。`out_of_scope` 已退休：Source 明确的 non-goal 由 Global Negative Proof 覆盖；排除原本在范围内的要求只能进入 `decision_required`。普通 prose/Source Plan 只需 Marker 枚举，不必改成严格 YAML；Compiler 诚实地不声称能发现未标记的自然语言隐含要求。
 
 Delivery Set 主动编排以及一次选定交付内部的多顶层 Contract 拆分都已退休；`ty-context delivery-set ...` 只返回固定、不可执行的 tombstone。
 
@@ -191,7 +194,7 @@ Delivery Set 主动编排以及一次选定交付内部的多顶层 Contract 拆
 
 所有共享同一 Raw Execution identity 的 Check 中，一个 Claim-bearing Observation 只能属于一个 Assertion。Playwright Claim Proof 的唯一形式是 `playwright.case.<ac-key>.passed equals true`；Test Title 使用 `[ac:<assertion-key>]`，每个 Test Instance 最多绑定一个已声明 AC，普通标签被忽略，旧 `[<key>]` 只兼容已声明 Key。Aggregate/executed/skipped/status/count 仅供诊断。Missing、Skipped、Flaky、Unexpected、Failed、同一 Test 多 AC，以及同一 Project 内重复 AC 全部 fail-closed；同一 AC 跨不同 Project 只有所有 Instance 均通过才聚合为通过。
 
-Counterfactual 必须绑定当前 Outcome 的明确 Binding，只能修改其 carrier 的可证明子集，并且仅在 completed、exit-zero 且所有失败都严格是 designated `assertion_value_mismatch` 时成立；Observation missing/type mismatch、AC missing/skipped、Artifact/Population/Infrastructure 或额外 Assertion 失败都会使其无效。每个 Claim-bearing structured Check 都必须通过同 Check、覆盖对应 Claim 的 Counterfactual 证明敏感性；无关 Artifact、其他 Check 或无关 Claim 不能替代。正常可观察性下，同 Check Population 只豁免自身 Claims；`weak_observability` 下不豁免。Structured Result 还必须由 `result` 加至少一个相关非 Result Claim 共同形成失败根。只有整个 Check `passed` 后才输出 Claim/Population Proof。Finding 与 Explain 覆盖 Check、Counterfactual、Population、Scope/Binding、Source Mapping、Canonical Target、Adapter、缺失 Surface 和 Sensitivity，并串起 Source→Canonical Target→Claim/AC→Surface→Check→Adapter→Observation。
+Outcome Counterfactual 绑定本 Outcome 的 Binding；Global Counterfactual 通过 `binding_ref` 绑定某个 Outcome 拥有的 Binding。两者都只能修改 carrier 的可证明子集，并且仅在 completed、exit-zero 且所有失败都严格是 designated `assertion_value_mismatch` 时成立；Observation missing/type mismatch、AC missing/skipped、Artifact/Population/Infrastructure 或额外 Assertion 失败都会使其无效。标准 Playwright 的冻结测试内容属于 trusted verifier input，无需 Counterfactual；`weak_observability` Outcome 的每个 claim-bearing Playwright AC 及相关 Claim 都必须有同 Check 敏感性，恒真、部分覆盖或其他 Check 的 proof 均失败。每个 Claim-bearing structured Check 都必须通过同 Check、覆盖对应 Claim 的 Counterfactual 证明敏感性；正常可观察性下，同 Check Population 只豁免自身 Claims，弱可观察性下不豁免。Structured Result 还必须由 `result` 加至少一个相关非 Result Claim 共同形成失败根。只有整个 Check `passed` 后才输出 Claim/Population Proof。Finding 与 Explain 覆盖 Check、Counterfactual、Population、Scope/Binding、Source Mapping、Canonical Target、Adapter、缺失 Surface 和 Sensitivity，并串起 Source→Canonical Target→Claim/AC→Surface→Check→Adapter→Observation。
 
 Workdir cache 不能定义 previous authority。Commit、verifier migration、clear 与 abandon 共用唯一 active-state lock；Final/Verify 结束前重查 identity，Stop/close 使用 accepted-identity CAS。开发期 V2 Active Authority、Progress 与 Receipt 不迁移：doctor 报告 `manual_required`，用户升级 Contract 后重新形成 Authority Lock。损坏 continuity 由 doctor 指向显式 `abandon --force-corrupt-state`。
 

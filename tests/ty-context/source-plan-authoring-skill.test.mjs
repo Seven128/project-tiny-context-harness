@@ -75,6 +75,7 @@ test("source-plan-authoring is explicit, self-contained and non-authoritative", 
     "REQ",
     "CTRL",
     "OBL",
+    "NCOMP",
     "AC",
     "NG",
     "FS",
@@ -92,9 +93,15 @@ test("source-plan-authoring is explicit, self-contained and non-authoritative", 
   assert.ok(completeness, "Completeness Check section must exist");
   assert.equal(
     completeness.match(/^\d+\.\s/gmu)?.length,
-    13,
-    "Completeness Check must retain all 13 semantic audits",
+    17,
+    "Completeness Check must retain all 17 semantic audits",
   );
+  assert.match(body, /`Location`.*`User task`.*`Trigger`.*`Input`.*`Loading`.*`Empty`.*`Success`.*`Failure`.*`Feedback`/isu);
+  assert.match(body, /one `Given`, one `When` and one `Then`/iu);
+  assert.match(body, /`REQ`, `CTRL`, `OBL` and\/or `NCOMP`/u);
+  assert.match(body, /`Fact`, `Affected Outcome`, `Basis` and `Consequence`/u);
+  assert.match(body, /permission_boundary_change/iu);
+  assert.match(body, /create a `DEC` with `decision_required` instead of guessing/iu);
   assert.match(body, /Do not emit a matrix or machine gate/iu);
   assert.match(body, /Do not generate Delivery Contract YAML/iu);
   assert.match(body, /Do not update `project_context\/\*\*`/u);

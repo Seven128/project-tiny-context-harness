@@ -19,7 +19,7 @@ import type {
   DeliveryContractV2,
   WorkspaceManifestV2,
 } from "./long-task-delivery-types.js";
-import { validateStructuredEvidenceSensitivity } from "./long-task-evidence-sensitivity-policy.js";
+import { validateClaimEvidenceSensitivity } from "./long-task-evidence-sensitivity-policy.js";
 import {
   deliveryContractStructureDiagnostics,
   validateDeliveryContractStructure,
@@ -173,18 +173,27 @@ export async function validateContractForActivation(options: {
   await attempt(mode, diagnostics, () =>
     validateRawExecutionObservationOwnership(allChecks),
   );
-  if (allOutcomeChecksFrozen(contract, outcomes)) {
+  if (
+    allGlobalChecksFrozen(contract, globalChecks) &&
+    allOutcomeChecksFrozen(contract, outcomes)
+  ) {
     await attempt(mode, diagnostics, () =>
       validateCounterfactualPaths(
         contract,
+        globalChecks,
         outcomes,
         repository,
         workdirRelative,
+        [
+          ...contract.task.source_paths,
+          ...(context?.files ?? contract.task.context_refs),
+        ],
       ),
     );
     await attempt(mode, diagnostics, () =>
-      validateStructuredEvidenceSensitivity(
+      validateClaimEvidenceSensitivity(
         contract,
+        globalChecks,
         outcomes,
         mode === "collect"
           ? (error) => addDiagnosticError(diagnostics, new Error(error))
@@ -237,6 +246,13 @@ function emptyCompiledResult(
     global_checks: [],
     outcomes: [],
   };
+}
+
+function allGlobalChecksFrozen(
+  contract: DeliveryContractV2,
+  checks: CompiledCheckV2[],
+): boolean {
+  return checks.length === contract.global.acceptance.checks.length;
 }
 
 function allOutcomeChecksFrozen(

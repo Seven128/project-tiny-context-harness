@@ -63,6 +63,14 @@ test("every Delivery Contract authority structure has a complete field policy re
       mutation: { type: "remove_paths", paths: ["src/state.json"] },
       expected_assertion_failures: ["first-result"],
     },
+    global_counterfactual: {
+      key: "global-counterfactual",
+      binding_ref: "first.state-first",
+      claims: ["constraint.global-state"],
+      check_key: "global-check",
+      mutation: { type: "remove_paths", paths: ["src/state.json"] },
+      expected_assertion_failures: ["global-assertion"],
+    },
   };
   assert.deepEqual(
     Object.keys(AUTHORITY_FIELD_POLICY_REGISTRIES).sort(),

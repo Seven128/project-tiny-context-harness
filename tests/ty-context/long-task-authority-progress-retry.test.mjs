@@ -163,6 +163,14 @@ test("input and expected-output authority reductions cover Global and Outcome Ch
     ];
     globalCheck.positive_assertions[0].observation = "result_copy";
     fixture.contract.global.acceptance.checks.push(globalCheck);
+    fixture.contract.global.acceptance.counterfactual_controls.push({
+      key: "remove-global-runtime",
+      binding_ref: "first.state-first",
+      claims: ["constraint.stable-runtime"],
+      check_key: "global-check",
+      mutation: { type: "remove_paths", paths: ["src/state.json"] },
+      expected_assertion_failures: ["global-proof"],
+    });
     await writeContract(fixture.workdir, fixture.contract);
     await runCli(fixture.root, ["enable", "long-task"]);
     await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);

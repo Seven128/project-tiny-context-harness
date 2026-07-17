@@ -1,3 +1,4 @@
+import { parseGlobalCounterfactuals } from "./long-task-acceptance-shape.js";
 import { parseCheck } from "./long-task-check-shape.js";
 import {
   array,
@@ -99,7 +100,7 @@ export function parseGlobal(value: unknown): DeliveryContractV2["global"] {
     Object.hasOwn(row, "acceptance") ? row.acceptance : {},
     "global.acceptance",
     [],
-    ["checks", "external_confirmations"],
+    ["checks", "counterfactual_controls", "external_confirmations"],
   );
   return {
     product: {
@@ -132,6 +133,15 @@ export function parseGlobal(value: unknown): DeliveryContractV2["global"] {
         ? array(acceptance.checks, "global.acceptance.checks").map(
             (item, index) =>
               parseCheck(item, `global.acceptance.checks[${index}]`),
+          )
+        : [],
+      counterfactual_controls: Object.hasOwn(
+        acceptance,
+        "counterfactual_controls",
+      )
+        ? parseGlobalCounterfactuals(
+            acceptance.counterfactual_controls,
+            "global.acceptance.counterfactual_controls",
           )
         : [],
       external_confirmations: Object.hasOwn(

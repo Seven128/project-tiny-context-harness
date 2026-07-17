@@ -171,6 +171,14 @@ test("Global coverage appears in compile/explain and a failing Global Check bloc
         expected: false,
       }),
     );
+    fixture.contract.global.acceptance.counterfactual_controls.push({
+      key: "remove-global-runtime",
+      binding_ref: "first.state-first",
+      claims: ["constraint.global-runtime"],
+      check_key: "global-claim-check",
+      mutation: { type: "remove_paths", paths: ["src/state.json"] },
+      expected_assertion_failures: ["global-positive"],
+    });
     await writeContract(fixture.workdir, fixture.contract);
     await runCli(fixture.root, ["enable", "long-task"]);
     const compiled = await runCli(fixture.root, [

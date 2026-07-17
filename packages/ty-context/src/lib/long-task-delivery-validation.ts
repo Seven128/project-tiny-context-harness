@@ -79,6 +79,15 @@ function validateUniqueKeys(
     "source_claim_key_duplicate",
     report,
   );
+  for (const [fact, outcomes] of Object.entries(contract.risk.facts))
+    unique(outcomes, `risk_fact_outcome_duplicate:${fact}`, report);
+  unique(
+    contract.global.acceptance.counterfactual_controls.map(
+      (control) => control.key,
+    ),
+    "global_counterfactual_key_duplicate",
+    report,
+  );
   unique(
     contract.global.acceptance.external_confirmations.map((item) => item.key),
     "external_confirmation_key_duplicate",

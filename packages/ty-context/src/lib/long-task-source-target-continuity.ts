@@ -44,6 +44,17 @@ export function validateSourceTargetContinuity(
       continue;
     }
     if (
+      item.kind === "risk_fact" &&
+      (target.risk_fact !== item.risk_semantics?.fact ||
+        target.affected_outcome !== item.risk_semantics?.affected_outcome)
+    ) {
+      issue(
+        report,
+        `source_risk_target_mismatch:${claim.key}:${item.risk_semantics?.fact ?? "missing"}:${item.risk_semantics?.affected_outcome ?? "missing"}:${ref}`,
+      );
+      continue;
+    }
+    if (
       target.normalized_text !== undefined &&
       target.normalized_text !== item.normalized_text
     ) {
@@ -62,6 +73,7 @@ export function validateSourceTargetContinuity(
         "requirement",
         "control",
         "technical_obligation",
+        "non_completing",
         "forbidden_shortcut",
       ].includes(target.kind)
     )

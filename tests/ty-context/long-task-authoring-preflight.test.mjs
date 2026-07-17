@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import {
   access,
+  mkdir,
   readFile,
   readdir,
   rm,
@@ -10,6 +11,7 @@ import {
 import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
+import YAML from "yaml";
 import { compactLongTaskTemplate } from "../../packages/ty-context/dist/commands/long-task-authoring.js";
 import { preflightDeliveryContract } from "../../packages/ty-context/dist/lib/long-task-authoring-preflight.js";
 import { parseDeliveryContractText } from "../../packages/ty-context/dist/lib/long-task-delivery-parser.js";
@@ -21,6 +23,7 @@ import {
 import {
   createDeliveryFixture,
   runCli,
+  runCliFailure,
   writeContract,
 } from "./long-task-delivery-fixtures.mjs";
 
@@ -212,9 +215,72 @@ ${sourceStatement}
 test("init template is inline Compact V2 and at least 35 percent shorter", () => {
   const template = compactLongTaskTemplate();
   const parsed = parseDeliveryContractText(template);
+  const expanded = YAML.stringify(parsed, { lineWidth: 0 });
   assert.equal(parsed.outcomes.length, 1);
   assert.equal(template.includes("outcome_files"), false);
-  assert.ok(lineCount(template) <= Math.floor(89 * 0.65));
+  assert.deepEqual(parseDeliveryContractText(expanded), parsed);
+  assert.ok(
+    lineCount(template) <= Math.floor(lineCount(expanded) * 0.65),
+    `compact=${lineCount(template)}, expanded=${lineCount(expanded)}`,
+  );
+});
+
+test("init template runs through Preflight, Compile and planned-carrier Final Gate", async () => {
+  const fixture = await createDeliveryFixture();
+  try {
+    const contract = parseDeliveryContractText(compactLongTaskTemplate());
+    await mkdir(path.join(fixture.root, "plans"), { recursive: true });
+    await writeFile(
+      path.join(fixture.root, "plans", "replace-me.md"),
+      `# Replace me\n\n<a id="replace-requirement"></a>\n\n<!-- ty-source-item:start key=replace-requirement kind=requirement -->\nPreserve one atomic source requirement.\n<!-- ty-source-item:end -->\n`,
+    );
+    await writeFile(
+      path.join(fixture.root, "project_context", "areas", "replace-me.md"),
+      "# Replace owner\n",
+    );
+    await writeFile(
+      path.join(fixture.root, "tests", "replace-oracle.mjs"),
+      `import { readFile } from "node:fs/promises";\nlet result = false;\ntry { result = (await readFile(new URL("../src/replace-me.ts", import.meta.url), "utf8")).includes("replace"); } catch {}\nconsole.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result}}));\n`,
+    );
+    await writeContract(fixture.workdir, contract);
+    await git(fixture.root, [
+      "add",
+      "plans/replace-me.md",
+      "project_context/areas/replace-me.md",
+      "tests/replace-oracle.mjs",
+    ]);
+    await git(fixture.root, ["commit", "-m", "init template inputs"]);
+
+    const preflight = await preflightDeliveryContract(
+      fixture.workdir,
+      fixture.root,
+    );
+    assert.equal(preflight.status, "ready", JSON.stringify(preflight));
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    const missing = await runCliFailure(fixture.root, [
+      "long-task",
+      "final-gate",
+      fixture.workdir,
+    ]);
+    assert.equal(missing.workflow_status, "needs_work");
+    assert.ok(missing.findings.some((item) => item.code === "binding_missing"));
+
+    await writeFile(
+      path.join(fixture.root, "src", "replace-me.ts"),
+      "export const replace = true;\n",
+    );
+    await git(fixture.root, ["add", "src/replace-me.ts"]);
+    await git(fixture.root, ["commit", "-m", "implement init template"]);
+    const accepted = await runCli(fixture.root, [
+      "long-task",
+      "final-gate",
+      fixture.workdir,
+    ]);
+    assert.equal(accepted.workflow_status, "machine_accepted");
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
 });
 
 async function stateSnapshot(fixture) {

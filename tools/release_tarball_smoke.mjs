@@ -3,7 +3,6 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import {
-  mkdir,
   mkdtemp,
   readFile,
   readdir,
@@ -12,6 +11,7 @@ import {
 } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { writeReleaseTarballLongTaskFixture } from "./release_tarball_smoke_fixture.mjs";
 
 const { tarball, portableOnly } = parseArgs(process.argv.slice(2));
 const root = await mkdtemp(path.join(os.tmpdir(), "ty-context-tarball-smoke-"));
@@ -44,7 +44,7 @@ try {
 
   if (!portableOnly) {
     run("npx", ["--no-install", "ty-context", "enable", "long-task"], root);
-    const workdir = await writeDeliveryInputs(root);
+    const workdir = await writeReleaseTarballLongTaskFixture(root);
     await writeFile(path.join(root, ".gitignore"), "node_modules/\n", "utf8");
     run("git", ["init", "-b", "main"], root);
     run("git", ["config", "user.email", "tarball-smoke@example.invalid"], root);
@@ -87,131 +87,6 @@ try {
   console.error(error instanceof Error ? error.message : String(error));
   console.error(`Tarball smoke workspace kept at: ${root}`);
   process.exitCode = 1;
-}
-
-async function writeDeliveryInputs(root) {
-  const workdir = path.join(root, ".long-task");
-  await mkdir(path.join(root, "src"), { recursive: true });
-  await mkdir(path.join(root, "tests"), { recursive: true });
-  await mkdir(workdir, { recursive: true });
-  await writeFile(path.join(root, "src/state.json"), '{"ready":true}\n');
-  await writeFile(
-    path.join(root, "source.md"),
-    `# Tarball smoke source
-
-<!-- ty-source-item:start key=packaged-verifier kind=technical_obligation -->
-Use the packaged verifier.
-<!-- ty-source-item:end -->
-`,
-  );
-  await writeFile(
-    path.join(root, "tests/oracle.mjs"),
-    `import { readFile } from "node:fs/promises";
-let state = { ready: false };
-try { state = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8")); } catch {}
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{ready:state.ready}}));
-`,
-  );
-  await writeFile(
-    path.join(workdir, "delivery-contract.yaml"),
-    `schema_version: long-task-delivery-v2
-task:
-  id: tarball-smoke
-  title: Tarball smoke
-  goal: Prove the installed long-task workflow.
-  source_paths: [source.md]
-  context_refs: [project_context/areas/main.md]
-  context_snapshot_mode: referenced
-source_claims:
-  - key: packaged-verifier
-    source_ref: source.md
-    statement: Use the packaged verifier.
-    disposition:
-      type: claim
-      refs: [installed.obligation.packaged-verifier]
-risk:
-  requested_level: auto
-  facts:
-    public_api_or_schema_change: []
-    persistent_data_change: []
-    data_migration: []
-    security_boundary_change: []
-    permission_boundary_change: []
-    irreversible_external_effect: []
-    critical_user_path: []
-    full_population_operation: []
-    multi_repository_change: []
-    weak_observability: []
-global:
-  product: { non_goals: [] }
-  technical: { constraints: [], forbidden_paths: [], forbidden_shortcuts: [] }
-  acceptance: { checks: [], external_confirmations: [] }
-outcomes:
-  - key: installed
-    title: Installed workflow runs
-    depends_on: []
-    product:
-      observable_result: Installed CLI verifies current behavior.
-      owner:
-        label: fixture
-        context_refs: [project_context/areas/main.md]
-        path_globs: [src/**]
-      owner_surfaces: []
-      controls: []
-      non_completing_outcomes: []
-    technical:
-      obligations:
-        - key: packaged-verifier
-          statement: Use the packaged verifier.
-          required_proof_surfaces: [runtime_behavior]
-      expected_change_paths: [src/**]
-      allowed_support_paths: []
-      forbidden_paths: []
-      bindings:
-        - key: state
-          kind: file
-          target: src/state.json
-          carrier_paths: [src/state.json]
-          existence: existing
-      forbidden_shortcuts: []
-      rollback_and_recovery: null
-    acceptance:
-      checks:
-        - key: installed-check
-          proof_surface: runtime_behavior
-          runner:
-            type: node_oracle
-            target: tests/oracle.mjs
-            argv: []
-            cwd: .
-            timeout_ms: 30000
-            effect: read_only
-            retry_policy: none
-            idempotent: true
-          verification_inputs: [tests/oracle.mjs]
-          input_paths: [src/**]
-          expected_output_paths: []
-          artifact_globs: []
-          positive_assertions:
-            - key: installed-ready
-              criterion: The installed packaged verifier reports the fixture ready.
-              claims: [result, obligation.packaged-verifier]
-              observation: ready
-              operator: equals
-              expected: true
-          negative_assertions: []
-          environment_requirements: []
-      population: null
-      counterfactual_controls:
-        - key: remove-state
-          binding_key: state
-          claims: [obligation.packaged-verifier]
-          check_key: installed-check
-          mutation: { type: remove_paths, paths: [src/state.json] }
-          expected_assertion_failures: [installed-ready]
-`,
-  );
-  return workdir;
 }
 
 async function assertTarballContents(directory) {

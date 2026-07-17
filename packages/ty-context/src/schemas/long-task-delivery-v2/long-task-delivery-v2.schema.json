@@ -113,6 +113,7 @@
           "additionalProperties": false,
           "properties": {
             "checks": { "type": "array", "items": { "$ref": "#/$defs/check" }, "default": [] },
+            "counterfactual_controls": { "type": "array", "items": { "$ref": "#/$defs/globalCounterfactual" }, "default": [] },
             "external_confirmations": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["key", "description", "owner"], "properties": { "key": { "$ref": "#/$defs/key" }, "description": { "$ref": "#/$defs/nonEmpty" }, "owner": { "$ref": "#/$defs/nonEmpty" } } }, "default": [] }
           },
           "default": {}
@@ -309,6 +310,24 @@
         "claims": { "$ref": "#/$defs/nonEmptyStrings" },
         "check_key": { "$ref": "#/$defs/key" },
         "expected_assertion_failures": { "$ref": "#/$defs/keys" },
+        "mutation": {
+          "oneOf": [
+            { "type": "object", "additionalProperties": false, "required": ["type", "paths"], "properties": { "type": { "const": "remove_paths" }, "paths": { "$ref": "#/$defs/nonEmptyStrings" } } },
+            { "type": "object", "additionalProperties": false, "required": ["type", "path", "fixture_path"], "properties": { "type": { "const": "replace_file" }, "path": { "$ref": "#/$defs/nonEmpty" }, "fixture_path": { "$ref": "#/$defs/nonEmpty" } } }
+          ]
+        }
+      }
+    },
+    "globalCounterfactual": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "binding_ref", "claims", "check_key", "mutation", "expected_assertion_failures"],
+      "properties": {
+        "key": { "$ref": "#/$defs/key" },
+        "binding_ref": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*\\.[a-z0-9][a-z0-9-]*$" },
+        "claims": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/nonEmpty" } },
+        "check_key": { "$ref": "#/$defs/key" },
+        "expected_assertion_failures": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/key" }, "uniqueItems": true },
         "mutation": {
           "oneOf": [
             { "type": "object", "additionalProperties": false, "required": ["type", "paths"], "properties": { "type": { "const": "remove_paths" }, "paths": { "$ref": "#/$defs/nonEmptyStrings" } } },

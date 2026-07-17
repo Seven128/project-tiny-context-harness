@@ -1,5 +1,4 @@
 import type {
-  CounterfactualControlV2,
   DeliveryAssertionV2,
   DeliveryBindingV2,
   DeliveryCheckV2,
@@ -13,6 +12,10 @@ import type {
   RollbackRecoveryV2,
   SourceClaimV2,
 } from "./long-task-contract-types.js";
+import type {
+  CounterfactualControlV2,
+  GlobalCounterfactualControlV2,
+} from "./long-task-counterfactual-types.js";
 
 export type AuthorityFieldPolicy =
   | "identity"
@@ -35,7 +38,7 @@ type DeliveryRequirementV2 = OutcomeProductV2["requirements"][number];
 type OutcomeTechnicalV2 = DeliveryOutcomeV2["technical"];
 type OutcomeAcceptanceV2 = DeliveryOutcomeV2["acceptance"];
 
-export const TASK_AUTHORITY_POLICY = {
+const TASK_AUTHORITY_POLICY = {
   id: "identity",
   title: "descriptive_non_authoritative",
   goal: "semantic_user_review",
@@ -44,34 +47,35 @@ export const TASK_AUTHORITY_POLICY = {
   context_snapshot_mode: "scope",
 } satisfies Record<keyof TaskV2, AuthorityFieldPolicy>;
 
-export const SOURCE_CLAIM_AUTHORITY_POLICY = {
+const SOURCE_CLAIM_AUTHORITY_POLICY = {
   key: "identity",
   source_ref: "scope",
   statement: "semantic_user_review",
   disposition: "semantic_user_review",
 } satisfies Record<keyof SourceClaimV2, AuthorityFieldPolicy>;
 
-export const RISK_AUTHORITY_POLICY = {
+const RISK_AUTHORITY_POLICY = {
   requested_level: "semantic_user_review",
   facts: "semantic_user_review",
 } satisfies Record<keyof RiskV2, AuthorityFieldPolicy>;
 
-export const GLOBAL_PRODUCT_AUTHORITY_POLICY = {
+const GLOBAL_PRODUCT_AUTHORITY_POLICY = {
   non_goals: "semantic_user_review",
 } satisfies Record<keyof GlobalProductV2, AuthorityFieldPolicy>;
 
-export const GLOBAL_TECHNICAL_AUTHORITY_POLICY = {
+const GLOBAL_TECHNICAL_AUTHORITY_POLICY = {
   constraints: "semantic_user_review",
   forbidden_paths: "scope",
   forbidden_shortcuts: "semantic_user_review",
 } satisfies Record<keyof GlobalTechnicalV2, AuthorityFieldPolicy>;
 
-export const GLOBAL_ACCEPTANCE_AUTHORITY_POLICY = {
+const GLOBAL_ACCEPTANCE_AUTHORITY_POLICY = {
   checks: "proof_additive",
+  counterfactual_controls: "proof_additive",
   external_confirmations: "semantic_user_review",
 } satisfies Record<keyof GlobalAcceptanceV2, AuthorityFieldPolicy>;
 
-export const OUTCOME_AUTHORITY_POLICY = {
+const OUTCOME_AUTHORITY_POLICY = {
   key: "identity",
   title: "descriptive_non_authoritative",
   depends_on: "readiness_only",
@@ -80,7 +84,7 @@ export const OUTCOME_AUTHORITY_POLICY = {
   acceptance: "proof_additive",
 } satisfies Record<keyof DeliveryOutcomeV2, AuthorityFieldPolicy>;
 
-export const OUTCOME_PRODUCT_AUTHORITY_POLICY = {
+const OUTCOME_PRODUCT_AUTHORITY_POLICY = {
   observable_result: "semantic_user_review",
   owner: "semantic_user_review",
   requirements: "semantic_user_review",
@@ -89,19 +93,19 @@ export const OUTCOME_PRODUCT_AUTHORITY_POLICY = {
   non_completing_outcomes: "semantic_user_review",
 } satisfies Record<keyof OutcomeProductV2, AuthorityFieldPolicy>;
 
-export const REQUIREMENT_AUTHORITY_POLICY = {
+const REQUIREMENT_AUTHORITY_POLICY = {
   key: "identity",
   statement: "semantic_user_review",
   required_proof_surfaces: "proof_additive",
 } satisfies Record<keyof DeliveryRequirementV2, AuthorityFieldPolicy>;
 
-export const OWNER_AUTHORITY_POLICY = {
+const OWNER_AUTHORITY_POLICY = {
   label: "identity",
   context_refs: "scope",
   path_globs: "scope",
 } satisfies Record<keyof DeliveryOwnerV2, AuthorityFieldPolicy>;
 
-export const CONTROL_AUTHORITY_POLICY = {
+const CONTROL_AUTHORITY_POLICY = {
   key: "identity",
   location: "semantic_user_review",
   trigger: "semantic_user_review",
@@ -113,7 +117,7 @@ export const CONTROL_AUTHORITY_POLICY = {
   feedback: "semantic_user_review",
 } satisfies Record<keyof DeliveryControlV2, AuthorityFieldPolicy>;
 
-export const OUTCOME_TECHNICAL_AUTHORITY_POLICY = {
+const OUTCOME_TECHNICAL_AUTHORITY_POLICY = {
   obligations: "semantic_user_review",
   expected_change_paths: "scope",
   allowed_support_paths: "scope",
@@ -123,13 +127,13 @@ export const OUTCOME_TECHNICAL_AUTHORITY_POLICY = {
   rollback_and_recovery: "semantic_user_review",
 } satisfies Record<keyof OutcomeTechnicalV2, AuthorityFieldPolicy>;
 
-export const OBLIGATION_AUTHORITY_POLICY = {
+const OBLIGATION_AUTHORITY_POLICY = {
   key: "identity",
   statement: "semantic_user_review",
   required_proof_surfaces: "proof_additive",
 } satisfies Record<keyof DeliveryObligationV2, AuthorityFieldPolicy>;
 
-export const BINDING_AUTHORITY_POLICY = {
+const BINDING_AUTHORITY_POLICY = {
   key: "identity",
   kind: "semantic_user_review",
   target: "semantic_user_review",
@@ -138,13 +142,13 @@ export const BINDING_AUTHORITY_POLICY = {
   verification_check_key: "proof_additive",
 } satisfies Record<keyof DeliveryBindingV2, AuthorityFieldPolicy>;
 
-export const ROLLBACK_AUTHORITY_POLICY = {
+const ROLLBACK_AUTHORITY_POLICY = {
   rollback: "semantic_user_review",
   recovery: "semantic_user_review",
   verification_check_keys: "proof_additive",
 } satisfies Record<keyof RollbackRecoveryV2, AuthorityFieldPolicy>;
 
-export const OUTCOME_ACCEPTANCE_AUTHORITY_POLICY = {
+const OUTCOME_ACCEPTANCE_AUTHORITY_POLICY = {
   checks: "proof_additive",
   population: "proof_additive",
   counterfactual_controls: "proof_additive",
@@ -163,7 +167,7 @@ export const CHECK_AUTHORITY_POLICY = {
   environment_requirements: "proof_additive",
 } satisfies Record<keyof DeliveryCheckV2, AuthorityFieldPolicy>;
 
-export const ASSERTION_AUTHORITY_POLICY = {
+const ASSERTION_AUTHORITY_POLICY = {
   key: "identity",
   criterion: "semantic_user_review",
   claims: "proof_additive",
@@ -172,7 +176,7 @@ export const ASSERTION_AUTHORITY_POLICY = {
   expected: "proof_additive",
 } satisfies Record<keyof DeliveryAssertionV2, AuthorityFieldPolicy>;
 
-export const RUNNER_AUTHORITY_POLICY = {
+const RUNNER_AUTHORITY_POLICY = {
   type: "runner_authority",
   target: "runner_authority",
   argv: "runner_authority",
@@ -183,14 +187,14 @@ export const RUNNER_AUTHORITY_POLICY = {
   idempotent: "runner_authority",
 } satisfies Record<keyof DeliveryRunnerV2, AuthorityFieldPolicy>;
 
-export const POPULATION_AUTHORITY_POLICY = {
+const POPULATION_AUTHORITY_POLICY = {
   check_key: "proof_additive",
   claims: "proof_additive",
   observations: "proof_additive",
   exclusion_rules: "proof_additive",
 } satisfies Record<keyof PopulationRequirementV2, AuthorityFieldPolicy>;
 
-export const COUNTERFACTUAL_AUTHORITY_POLICY = {
+const COUNTERFACTUAL_AUTHORITY_POLICY = {
   key: "identity",
   binding_key: "proof_additive",
   claims: "proof_additive",
@@ -198,6 +202,15 @@ export const COUNTERFACTUAL_AUTHORITY_POLICY = {
   mutation: "proof_additive",
   expected_assertion_failures: "proof_additive",
 } satisfies Record<keyof CounterfactualControlV2, AuthorityFieldPolicy>;
+
+const GLOBAL_COUNTERFACTUAL_AUTHORITY_POLICY = {
+  key: "identity",
+  binding_ref: "proof_additive",
+  claims: "proof_additive",
+  check_key: "proof_additive",
+  mutation: "proof_additive",
+  expected_assertion_failures: "proof_additive",
+} satisfies Record<keyof GlobalCounterfactualControlV2, AuthorityFieldPolicy>;
 
 export const AUTHORITY_FIELD_POLICY_REGISTRIES = {
   task: TASK_AUTHORITY_POLICY,
@@ -221,6 +234,7 @@ export const AUTHORITY_FIELD_POLICY_REGISTRIES = {
   runner: RUNNER_AUTHORITY_POLICY,
   population: POPULATION_AUTHORITY_POLICY,
   counterfactual: COUNTERFACTUAL_AUTHORITY_POLICY,
+  global_counterfactual: GLOBAL_COUNTERFACTUAL_AUTHORITY_POLICY,
 } as const;
 
 export function projectFieldsByPolicy<T extends object>(

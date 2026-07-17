@@ -2,6 +2,10 @@ import type {
   LongTaskRiskFacts,
   RequestedRiskLevel,
 } from "./long-task-risk-types.js";
+import type {
+  CounterfactualControlV2,
+  GlobalCounterfactualControlV2,
+} from "./long-task-counterfactual-types.js";
 
 export type SourceClaimDispositionV2 =
   | { type: "claim"; refs: string[] }
@@ -160,19 +164,6 @@ export interface RollbackRecoveryV2 {
   verification_check_keys: string[];
 }
 
-export type CounterfactualMutationV2 =
-  | { type: "remove_paths"; paths: string[] }
-  | { type: "replace_file"; path: string; fixture_path: string };
-
-export interface CounterfactualControlV2 {
-  key: string;
-  binding_key: string;
-  claims: string[];
-  check_key: string;
-  mutation: CounterfactualMutationV2;
-  expected_assertion_failures: string[];
-}
-
 export interface PopulationRequirementV2 {
   check_key: string;
   claims: string[];
@@ -236,6 +227,7 @@ export interface DeliveryContractV2 {
     };
     acceptance: {
       checks: DeliveryCheckV2[];
+      counterfactual_controls: GlobalCounterfactualControlV2[];
       external_confirmations: ExternalConfirmationV2[];
     };
   };

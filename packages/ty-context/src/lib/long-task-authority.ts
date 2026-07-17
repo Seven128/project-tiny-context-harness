@@ -43,6 +43,8 @@ export function computeAuthorityHashes(
     acceptance_authority_hash: hash({
       external_confirmations: contract.global.acceptance.external_confirmations,
       global_checks: contract.global.acceptance.checks.map(acceptanceCheck),
+      global_counterfactual_controls:
+        contract.global.acceptance.counterfactual_controls,
       outcomes: contract.outcomes.map((outcome) => ({
         key: outcome.key,
         checks: outcome.acceptance.checks.map(acceptanceCheck),
@@ -109,6 +111,10 @@ export function isMonotonicAcceptanceStrengthening(
       previous.global.acceptance.external_confirmations,
       next.global.acceptance.external_confirmations,
     ) ||
+    !subset(
+      previous.global.acceptance.counterfactual_controls ?? [],
+      next.global.acceptance.counterfactual_controls,
+    ) ||
     !checksStrengthened(
       previous.global.acceptance.checks,
       next.global.acceptance.checks,
@@ -170,6 +176,8 @@ function acceptanceSemantics(
   return {
     external_confirmations: contract.global.acceptance.external_confirmations,
     global_checks: contract.global.acceptance.checks.map(acceptanceCheck),
+    global_counterfactual_controls:
+      contract.global.acceptance.counterfactual_controls ?? [],
     outcomes: contract.outcomes.map((outcome) => ({
       key: outcome.key,
       checks: outcome.acceptance.checks.map(acceptanceCheck),

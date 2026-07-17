@@ -106,17 +106,29 @@ function projectFindings(input: StatusProjectionInputV2): LongTaskFindingV2[] {
         "The last audit Receipt is invalid; it has no acceptance authority.",
       next_action: "Run a new Live Final Gate.",
     });
-  for (const record of Object.values(input.progress))
-    if (
-      input.compiled.outcomes.some((outcome) =>
-        outcome.acceptance.checks.some(
-          (check) =>
-            check.internal_id === record.check_internal_id &&
-            progressRecordFresh(record, input.compiled, input.manifest, check),
-        ),
-      )
-    )
+  const checks = [
+    ...input.compiled.global.acceptance.checks,
+    ...input.compiled.outcomes.flatMap((outcome) => outcome.acceptance.checks),
+  ];
+  for (const record of Object.values(input.progress)) {
+    const check = checks.find(
+      (candidate) => candidate.internal_id === record.check_internal_id,
+    );
+    if (!check) continue;
+    if (progressRecordFresh(record, input.compiled, input.manifest, check)) {
       findings.push(...record.findings);
+      continue;
+    }
+    if (check.outcome_key === null)
+      findings.push({
+        code: "global_progress_stale",
+        outcome_key: null,
+        check_key: check.key,
+        message: `Targeted progress for Global Check ${check.key} is stale.`,
+        next_action:
+          "Rerun the Global Check against the current carrier snapshot.",
+      });
+  }
   return findings;
 }
 

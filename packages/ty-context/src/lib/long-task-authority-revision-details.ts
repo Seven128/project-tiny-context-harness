@@ -235,6 +235,24 @@ export function counterfactualReductions(
     .map((control) => `${after.key}:${control.key}`);
 }
 
+export function globalCounterfactualReductions(
+  before: CompiledDeliveryContractV2,
+  after: DeliveryContractV2,
+): string[] {
+  const next = new Map(
+    after.global.acceptance.counterfactual_controls.map((control) => [
+      control.key,
+      control,
+    ]),
+  );
+  return (before.global.acceptance.counterfactual_controls ?? [])
+    .filter((control) => {
+      const candidate = next.get(control.key);
+      return !candidate || !same(control, candidate);
+    })
+    .map((control) => `GLOBAL:${control.key}`);
+}
+
 export function expandedPatterns(
   label: string,
   before: string[],

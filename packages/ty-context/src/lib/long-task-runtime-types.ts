@@ -133,6 +133,7 @@ export interface CompiledDeliveryContractV2 {
   global: Omit<DeliveryContractV2["global"], "acceptance"> & {
     acceptance: {
       checks: CompiledCheckV2[];
+      counterfactual_controls: DeliveryContractV2["global"]["acceptance"]["counterfactual_controls"];
       external_confirmations: DeliveryContractV2["global"]["acceptance"]["external_confirmations"];
     };
   };
@@ -147,6 +148,8 @@ export interface LongTaskFindingV2 {
   source_target_refs?: string[];
   claim_keys?: string[];
   assertion_key?: string;
+  binding_ref?: string;
+  owning_outcome_key?: string;
   criterion?: string;
   observation?: string;
   owner_paths?: string[];

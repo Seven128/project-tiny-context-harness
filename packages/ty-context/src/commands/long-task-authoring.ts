@@ -52,14 +52,16 @@ outcomes:
         path_globs: ["src/**", "tests/**"]
       requirements:
         - key: replace-requirement
-          statement: Preserve one atomic product requirement.
+          statement: Preserve one atomic source requirement.
           required_proof_surfaces: [runtime_behavior]
     technical:
       expected_change_paths: ["src/**"]
-      obligations:
-        - key: replace-runtime
-          statement: Implement the declared runtime behavior.
-          required_proof_surfaces: [runtime_behavior]
+      bindings:
+        - key: replace-carrier
+          kind: file
+          target: src/replace-me.ts
+          carrier_paths: [src/replace-me.ts]
+          existence: planned
     acceptance:
       checks:
         - key: replace-check
@@ -69,13 +71,23 @@ outcomes:
             target: tests/replace-oracle.mjs
             effect: read_only
           verification_inputs: ["tests/replace-oracle.mjs"]
-          input_paths: ["src/**"]
+          input_paths: [src/replace-me.ts]
+          expected_output_paths: [src/replace-me.ts]
           positive_assertions:
             - key: replace-success
               criterion: The declared outcome and requirement are observable.
-              claims: [result, requirement.replace-requirement, obligation.replace-runtime]
+              claims: [result, requirement.replace-requirement]
               observation: result
               operator: equals
               expected: true
+      counterfactual_controls:
+        - key: remove-replace-carrier
+          binding_key: replace-carrier
+          claims: [result, requirement.replace-requirement]
+          check_key: replace-check
+          mutation:
+            type: remove_paths
+            paths: [src/replace-me.ts]
+          expected_assertion_failures: [replace-success]
 `;
 }

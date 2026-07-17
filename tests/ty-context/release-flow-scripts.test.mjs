@@ -50,28 +50,6 @@ assert.equal(
   "node ../../tests/ty-context/run-package-suite.mjs long-task",
 );
 
-const tarballSmokeScript = readFileSync(
-  path.join(repoRoot, "tools/release_tarball_smoke.mjs"),
-  "utf8",
-);
-assert.match(tarballSmokeScript, /source\.md/u);
-assert.match(
-  tarballSmokeScript,
-  /ty-source-item:start key=packaged-verifier kind=technical_obligation/u,
-);
-assert.match(tarballSmokeScript, /source_paths: \[source\.md\]/u);
-assert.match(tarballSmokeScript, /source_claims:/u);
-assert.match(tarballSmokeScript, /statement: Use the packaged verifier\./u);
-assert.match(
-  tarballSmokeScript,
-  /criterion: The installed packaged verifier reports the fixture ready\./u,
-);
-assert.match(tarballSmokeScript, /claims: \[obligation\.packaged-verifier\]/u);
-assert.match(
-  tarballSmokeScript,
-  /expected_assertion_failures: \[installed-ready\]/u,
-);
-
 const trustedPublishWorkflow = readFileSync(
   path.join(repoRoot, ".github/workflows/npm-publish.yml"),
   "utf8",

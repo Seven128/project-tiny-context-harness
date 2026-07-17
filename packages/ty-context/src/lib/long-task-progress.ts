@@ -16,7 +16,7 @@ export function createProgressRecord(
   result: CheckExecutionResultV2,
 ): ProgressRecordV2 {
   const outcome = check.outcome_key
-    ? compiled.outcomes.find((item) => item.key === check.outcome_key)
+    ? (compiled.outcomes.find((item) => item.key === check.outcome_key) ?? null)
     : null;
   return {
     schema_version: "long-task-progress-record-v2",
@@ -29,14 +29,10 @@ export function createProgressRecord(
     runner_verifier_identity: runnerVerifierIdentity(compiled, check),
     relevant_context_identity: contextIdentity(compiled),
     resolved_input_path_hashes: hashPatterns(manifest, check.input_paths),
-    binding_carrier_path_hashes: outcome
-      ? hashPatterns(
-          manifest,
-          outcome.technical.bindings.flatMap(
-            (binding) => binding.carrier_paths,
-          ),
-        )
-      : {},
+    binding_carrier_path_hashes: hashPatterns(
+      manifest,
+      progressBindingCarrierPatterns(compiled, check, outcome),
+    ),
     dependency_interface_identities: dependencyInterfaceIdentities(
       compiled,
       manifest,
@@ -56,7 +52,7 @@ export function progressRecordFresh(
   check: CompiledCheckV2,
 ): boolean {
   const outcome = check.outcome_key
-    ? compiled.outcomes.find((item) => item.key === check.outcome_key)
+    ? (compiled.outcomes.find((item) => item.key === check.outcome_key) ?? null)
     : null;
   const expectedOutcomeAuthority = progressAuthorityHash(
     compiled,
@@ -75,14 +71,10 @@ export function progressRecordFresh(
     ) &&
     same(
       record.binding_carrier_path_hashes,
-      outcome
-        ? hashPatterns(
-            manifest,
-            outcome.technical.bindings.flatMap(
-              (binding) => binding.carrier_paths,
-            ),
-          )
-        : {},
+      hashPatterns(
+        manifest,
+        progressBindingCarrierPatterns(compiled, check, outcome),
+      ),
     ) &&
     same(
       record.dependency_interface_identities,
@@ -93,6 +85,29 @@ export function progressRecordFresh(
       ),
     )
   );
+}
+
+function progressBindingCarrierPatterns(
+  compiled: CompiledDeliveryContractV2,
+  check: CompiledCheckV2,
+  outcome: CompiledDeliveryContractV2["outcomes"][number] | null,
+): string[] {
+  if (outcome)
+    return outcome.technical.bindings.flatMap(
+      (binding) => binding.carrier_paths,
+    );
+  const references = (compiled.global.acceptance.counterfactual_controls ?? [])
+    .filter((control) => control.check_key === check.key)
+    .map((control) => control.binding_ref);
+  return references.flatMap((reference) => {
+    const [outcomeKey, bindingKey] = reference.split(".");
+    return (
+      compiled.outcomes
+        .find((item) => item.key === outcomeKey)
+        ?.technical.bindings.find((binding) => binding.key === bindingKey)
+        ?.carrier_paths ?? []
+    );
+  });
 }
 
 function progressAuthorityHash(

@@ -10,6 +10,7 @@ import {
   explainOutcomeResultLinks,
 } from "./long-task-explain-claim-links.js";
 import { buildCanonicalSourceTargetIndex } from "./long-task-source-target-index.js";
+import { classifyLongTaskRisk } from "./long-task-risk.js";
 
 export function explainSourceLinks(
   contract: DeliveryContractV2,
@@ -27,14 +28,25 @@ export function explainSourceLinks(
     links = explainOutcomeResultLinks(contract, coverage, disposition);
   if (disposition.type === "global_constraint")
     links = explainGlobalClaimLinks(contract, coverage, disposition);
-  if (
-    disposition.type === "external_confirmation" ||
-    disposition.type === "risk_fact"
-  )
+  if (disposition.type === "external_confirmation")
     links = disposition.refs.map((reference) => ({
       type: disposition.type,
       reference,
     }));
+  if (disposition.type === "risk_fact") {
+    const risk = classifyLongTaskRisk(contract);
+    links = disposition.refs.map((reference) => {
+      const [fact, affectedOutcome] = reference.split(":");
+      return {
+        type: disposition.type,
+        reference,
+        risk_fact: fact,
+        affected_outcome: affectedOutcome,
+        effective_risk: risk.effective_level,
+        risk_reasons: risk.reasons_by_outcome[affectedOutcome] ?? [],
+      };
+    });
+  }
   links ??= [
     {
       type: disposition.type,

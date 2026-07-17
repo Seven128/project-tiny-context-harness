@@ -43,8 +43,8 @@ test("long-task workflow tests stay in complete package and release gates", () =
   assert.match(read("tools/release_artifact_prepare.mjs"), /ty-context-release-artifact-v2|RELEASE_ARTIFACT_SCHEMA_V2/);
   assert.match(read("tools/workflow_release_artifact.mjs"), /dryRun[\s\S]*release-artifact-\$\{version\}\.json/);
   assert.match(read("tools/release_artifact_identity.mjs"), /lockfile_sha256/);
-  assert.match(tarballSmoke, /writeDeliveryInputs/);
-  assert.match(tarballSmoke, /long-task-delivery-v2/);
+  assert.match(tarballSmoke, /writeReleaseTarballLongTaskFixture/);
+  assert.match(read("tools/release_tarball_smoke_fixture.mjs"), /long-task-delivery-v2/);
   assert.match(tarballSmoke, /long-task-v1-retirement/);
   assert.match(tarballSmoke, /npm", \["install", "--save-dev", tarball\]/);
   assert.match(tarballSmoke, /"ty-context",\s*"init"/);
