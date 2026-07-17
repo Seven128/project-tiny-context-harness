@@ -728,7 +728,7 @@ async function configureGlobalSourceAcceptance(fixture, { sourceBacked }) {
       key: "no-legacy-assertion",
       criterion,
       claims: ["constraint.no-legacy"],
-      observation: "result",
+      observation: "result_copy",
       operator: "equals",
       expected: true,
     },

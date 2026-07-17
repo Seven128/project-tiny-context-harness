@@ -9,6 +9,17 @@ import {
   selectAffectedTests,
 } from "../../tools/affected_test_selection.mjs";
 
+test("affected-test tooling selects the portable subprocess regression", () => {
+  const selection = selectAffectedTests(["tools/npm_command_spec.mjs"]);
+  assert.equal(selection.mode, "selected");
+  assert.equal(selection.requires_build, false);
+  assert.deepEqual(selection.tests, [
+    "tests/ty-context/affected-test-portable-command.test.mjs",
+    "tests/ty-context/affected-test-selection.test.mjs",
+    "tests/ty-context/workflow-test-entrypoints.test.mjs",
+  ]);
+});
+
 test("hotspot source changes select focused regression tests", () => {
   const selection = selectAffectedTests([
     "packages/ty-context/src/lib/long-task-progress.ts",

@@ -33,14 +33,17 @@ test("long-task workflow tests stay in complete package and release gates", () =
   assert.match(packageWorkflow, /set -o pipefail/);
   assert.match(packageWorkflow, /tee package-test\.log/);
   assert.match(packageWorkflow, /Upload package test diagnostics/);
-  assert.match(
-    packageWorkflow,
-    /uses: actions\/upload-artifact@[a-f0-9]{40}/,
-  );
+  assert.match(packageWorkflow, /uses: actions\/upload-artifact@[a-f0-9]{40}/);
   assert.match(packageWorkflow, /if-no-files-found: ignore/);
   assert.doesNotMatch(packageWorkflow, /npm run test:long-task-workflow/);
   assert.match(packageWorkflow, /node tools\/quickstart_smoke\.mjs/);
   assert.match(packageWorkflow, /npm run preview:pack/);
+  assert.match(packageWorkflow, /windows-affected-test-launcher:/);
+  assert.match(packageWorkflow, /runs-on: windows-latest/);
+  assert.match(
+    packageWorkflow,
+    /Verify Windows npm subprocess launch[\s\S]*node --test tests\/ty-context\/affected-test-portable-command\.test\.mjs/,
+  );
 
   assert.match(publishWorkflow, /Build package/);
   assert.match(publishWorkflow, /npm install -g npm@12\.0\.1/);
@@ -142,6 +145,13 @@ test("long-task workflow tests stay in complete package and release gates", () =
     "npm run build && node ../../tests/ty-context/long-task-performance.mjs",
   );
   assert.equal(packageJson.scripts["test:composite-workflow"], undefined);
+
+  const affectedRunner = read("tools/run_affected_tests.mjs");
+  const npmCommandSpec = read("tools/npm_command_spec.mjs");
+  assert.match(affectedRunner, /npmCommandSpec/);
+  assert.doesNotMatch(affectedRunner, /npm\.cmd/);
+  assert.match(npmCommandSpec, /ComSpec/);
+  assert.match(npmCommandSpec, /cmd\.exe/);
 
   const suiteRunner = read("tests/ty-context/run-package-suite.mjs");
   assert.match(suiteRunner, /longTaskTestName/);

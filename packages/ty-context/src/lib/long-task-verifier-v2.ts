@@ -226,7 +226,8 @@ export async function runDeliveryChecks(
     unassignedFinding,
   ).map((result) => enrichCheckResultFindings(compiled, result));
   findings.push(...checkResults.flatMap((result) => result.findings));
-  if (unassignedFinding && !checkResults.length) findings.push(unassignedFinding);
+  if (unassignedFinding && !checkResults.length)
+    findings.push(unassignedFinding);
   return {
     snapshot: snapshot.manifest,
     check_results: checkResults,
@@ -243,9 +244,8 @@ function applyCounterfactualFindings(
     const projected = findings.filter((finding) =>
       findingBelongsToCheck(finding, result),
     );
-    const invariantFindings = unassignedFinding && index === 0
-      ? [unassignedFinding]
-      : [];
+    const invariantFindings =
+      unassignedFinding && index === 0 ? [unassignedFinding] : [];
     const projectedFindings = [...projected, ...invariantFindings];
     if (!projectedFindings.length) return result;
     return {

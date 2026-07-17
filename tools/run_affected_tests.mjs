@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { selectAffectedTests } from "./affected_test_selection.mjs";
+import { npmCommandSpec } from "./npm_command_spec.mjs";
 
 const exec = promisify(execFile);
 const repository = path.resolve(
@@ -31,23 +32,18 @@ console.log(
 if (options.list) process.exit(0);
 
 if (selection.requires_build && !options.noBuild) {
-  await run(npmCommand(), [
-    "run",
-    "build",
-    "--workspace",
-    "project-tiny-context-harness",
-  ]);
+  await runNpm(["run", "build", "--workspace", "project-tiny-context-harness"]);
 }
 
 if (selection.mode === "full-suite") {
-  await run(npmCommand(), [
+  await runNpm([
     "run",
     "test:built",
     "--workspace",
     "project-tiny-context-harness",
   ]);
 } else if (selection.mode === "long-task-suite") {
-  await run(npmCommand(), [
+  await runNpm([
     "run",
     "test:long-task-workflow:built",
     "--workspace",
@@ -170,7 +166,12 @@ async function gitLines(args) {
   }
 }
 
-async function run(command, args) {
+async function runNpm(args) {
+  const spec = npmCommandSpec(args);
+  await run(spec.command, spec.args, "npm");
+}
+
+async function run(command, args, displayCommand = command) {
   await new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: repository,
@@ -179,13 +180,10 @@ async function run(command, args) {
     });
     child.once("error", reject);
     child.once("exit", (code, signal) => {
-      if (signal) reject(new Error(`${command} terminated by ${signal}`));
+      if (signal)
+        reject(new Error(`${displayCommand} terminated by ${signal}`));
       else if (code === 0) resolve();
-      else reject(new Error(`${command} exited with code ${code ?? 1}`));
+      else reject(new Error(`${displayCommand} exited with code ${code ?? 1}`));
     });
   });
-}
-
-function npmCommand() {
-  return process.platform === "win32" ? "npm.cmd" : "npm";
 }

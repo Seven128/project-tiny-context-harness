@@ -3,6 +3,7 @@ import path from "node:path";
 const TEST_ROOT = "tests/ty-context";
 
 export const LONG_TASK_FOCUSED_TESTS = [
+  "affected-test-portable-command.test.mjs",
   "affected-test-selection.test.mjs",
   "long-task-authority-progress-retry.test.mjs",
   "long-task-closure-invariants.test.mjs",
@@ -25,6 +26,7 @@ export const DELIVERY_CONTRACT_FOCUSED_TESTS = [
 
 const STATIC_TESTS = new Set(
   [
+    "affected-test-portable-command.test.mjs",
     "affected-test-selection.test.mjs",
     "long-task-design-context.test.mjs",
     "long-task-efficiency-design.test.mjs",
@@ -158,8 +160,10 @@ export function selectAffectedTests(changedPaths, options = {}) {
 
     if (
       file === "tools/affected_test_selection.mjs" ||
+      file === "tools/npm_command_spec.mjs" ||
       file === "tools/run_affected_tests.mjs"
     ) {
+      tests.add(testPath("affected-test-portable-command.test.mjs"));
       tests.add(testPath("affected-test-selection.test.mjs"));
       tests.add(testPath("workflow-test-entrypoints.test.mjs"));
       reasons.push(`${file}:affected_test_tooling`);
