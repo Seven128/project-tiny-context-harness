@@ -18,6 +18,7 @@ import {
   compiledAuthorityMaterials,
   computeAuthorityMaterials,
 } from "./long-task-authority-materials.js";
+import { normalizeContextAuthoritySnapshot } from "./long-task-context-authority.js";
 import {
   assertRiskNotDowngraded,
   enforceAuthorityRevision,
@@ -175,14 +176,7 @@ export async function compileDeliveryContract(
     ),
     source_hashes: sourceHashes,
     source_items: sourceItems,
-    context_snapshot: {
-      mode: context.mode,
-      topology_sha256: context.topology_sha256,
-      files: context.files,
-      sha256: context.sha256,
-      authority_files: context.authority_files,
-      supporting_files: context.supporting_files,
-    },
+    context_snapshot: normalizeContextAuthoritySnapshot(context),
     verifier_identity: verifier,
     effective_risk: risk.effective_level,
     risk_reasons: risk.reasons,
