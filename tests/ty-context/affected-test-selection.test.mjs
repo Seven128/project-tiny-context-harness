@@ -22,6 +22,19 @@ test("hotspot source changes select focused regression tests", () => {
   ]);
 });
 
+test("shared long-task runtime types use focused authority and recovery coverage", () => {
+  const selection = selectAffectedTests([
+    "packages/ty-context/src/lib/long-task-runtime-types.ts",
+  ]);
+  assert.equal(selection.mode, "selected");
+  assert.deepEqual(selection.tests, [
+    "tests/ty-context/long-task-context-evolution.test.mjs",
+    "tests/ty-context/long-task-delivery-compiler.test.mjs",
+    "tests/ty-context/long-task-semantic-authority-revision.test.mjs",
+    "tests/ty-context/long-task-state-resume.test.mjs",
+  ]);
+});
+
 test("unmapped long-task runtime changes fail safe to the complete long-task suite", () => {
   const selection = selectAffectedTests([
     "packages/ty-context/src/lib/long-task-unmapped-runtime.ts",
