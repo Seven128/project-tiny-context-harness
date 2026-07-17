@@ -5,7 +5,9 @@ import { fileURLToPath } from "node:url";
 
 const suite = process.argv[2];
 if (suite !== "default" && suite !== "long-task") {
-  throw new Error("Usage: run-package-suite.mjs <default|long-task> [node-test options]");
+  throw new Error(
+    "Usage: run-package-suite.mjs <default|long-task> [node-test options]",
+  );
 }
 
 const testRoot = path.dirname(fileURLToPath(import.meta.url));
@@ -16,11 +18,28 @@ const files = (await readdir(testRoot))
   .sort()
   .map((name) => path.join(testRoot, name));
 
-if (files.length === 0) throw new Error(`No ${suite} package tests were selected.`);
+if (files.length === 0)
+  throw new Error(`No ${suite} package tests were selected.`);
 
+const forwardedOptions = process.argv.slice(3);
+const reporterOptions =
+  process.env.CI &&
+  process.env.TY_CONTEXT_VERBOSE_TESTS !== "1" &&
+  !forwardedOptions.some(
+    (option) =>
+      option === "--test-reporter" || option.startsWith("--test-reporter="),
+  )
+    ? ["--test-reporter=dot"]
+    : [];
 const child = spawn(
   process.execPath,
-  ["--test", "--test-concurrency=1", ...process.argv.slice(3), ...files],
+  [
+    "--test",
+    "--test-concurrency=1",
+    ...reporterOptions,
+    ...forwardedOptions,
+    ...files,
+  ],
   { stdio: "inherit" },
 );
 
