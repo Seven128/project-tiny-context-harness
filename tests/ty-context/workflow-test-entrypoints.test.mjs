@@ -19,7 +19,7 @@ test("long-task workflow tests stay in complete package and release gates", () =
   const releasePublish = read("tools/release_publish.mjs");
   const packageJson = JSON.parse(read("packages/ty-context/package.json"));
 
-  assert.match(packageWorkflow, /Build and typecheck package/);
+  assert.match(packageWorkflow, /Typecheck package and build once/);
   assert.match(
     packageWorkflow,
     /main:[\s\S]*Build package\s+run: npm run build --workspace project-tiny-context-harness[\s\S]*Validate modularity waiver lifecycle/,
@@ -28,7 +28,7 @@ test("long-task workflow tests stay in complete package and release gates", () =
   assert.match(packageWorkflow, /make validate-harness/);
   assert.match(
     packageWorkflow,
-    /Complete package tests[\s\S]*npm run test:built --workspace project-tiny-context-harness/,
+    /Complete package tests[\s\S]*npm test --workspace project-tiny-context-harness --ignore-scripts/,
   );
   assert.match(packageWorkflow, /set -o pipefail/);
   assert.match(packageWorkflow, /tee package-test\.log/);
@@ -127,7 +127,8 @@ test("long-task workflow tests stay in complete package and release gates", () =
     packageJson.scripts["test:built"],
     "npm run test:default:built && npm run test:long-task-workflow:built",
   );
-  assert.equal(packageJson.scripts.test, "npm run build && npm run test:built");
+  assert.equal(packageJson.scripts.pretest, "npm run build");
+  assert.equal(packageJson.scripts.test, "npm run test:built");
   assert.equal(
     packageJson.scripts["test:long-task-workflow:built"],
     "node ../../tests/ty-context/run-package-suite.mjs long-task",
