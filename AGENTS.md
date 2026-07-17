@@ -82,7 +82,7 @@ Tiny Context does not create or restore platform Goals, invoke models, spawn age
 - Full-project/source-pack exports stay under `tmp/ty-context/context-exports/**` and never enter Context.
 - Explicit Tiny Context upgrades use `context_harness_upgrade` and run `upgrade` before standalone `sync`.
 - Managed `AGENTS.md` blocks, `<harnessRoot>/ty-context-managed/**` and package-managed Skills are generated and sync-overwritten.
-- Non-Codex defaults install portable core/workflow only; `ty-context enable long-task` explicitly installs the Long-Task Workflow Skill and package-owned completion Hook.
+- Non-Codex defaults install portable core/workflow only; `ty-context enable long-task` explicitly installs the Source Plan Authoring Skill, Long-Task Workflow Skill and package-owned completion Hook.
 - `init`, `sync` and `upgrade` never import or execute historical V1/Campaign state or development-period V2 Active Authority/Progress/Receipts. Version 0.6.0 reports unfinished old authority as `manual_required` and installs only the package-owned V2 Hook.
 
 ## Verification

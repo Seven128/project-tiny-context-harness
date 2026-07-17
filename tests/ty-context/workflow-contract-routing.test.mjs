@@ -45,6 +45,35 @@ test("CLI and managed guidance route only explicit or active work to long-task",
   assert.match(guidance, /current native Goal/);
   assert.match(guidance, /Context Delta: none\|required/);
   assert.match(guidance, /Local fixes preserving durable semantics are `none`/);
+  assert.match(
+    guidance,
+    /installs the Source Plan Authoring Skill, Long-Task Workflow Skill and package-owned completion Hook/iu,
+  );
+});
+
+test("Workflow Contract names the complete Draft-to-qualified-result lifecycle", async () => {
+  const workflow = await read(
+    "project_context/areas/harness-package/contracts/workflow-contract.md",
+  );
+  const summary = workflow.match(/The workflow is:\r?\n\r?\n`([^`]+)`/u)?.[1];
+  assert.ok(summary);
+  for (const concept of [
+    "optional Source Plan",
+    "Contract Draft",
+    "Draft Outcome decomposition",
+    "Preflight repair loop",
+    "Authority Lock",
+    "Rolling Frontier",
+    "one-snapshot Final Gate",
+    "qualified machine result",
+    "qualification-preserving output",
+  ]) {
+    assert.match(summary, new RegExp(concept, "iu"));
+  }
+  assert.doesNotMatch(
+    summary,
+    /one complete Compact V2 Contract.*Authoring Preflight/iu,
+  );
 });
 
 test("long-task Skill is the only active long-task workflow and normal-long-task is a tombstone", async () => {
@@ -135,7 +164,7 @@ test("optional Source Plan authoring does not create a second Contract authority
     workflowContext,
     /No lifecycle phases, fixed Contract plans, separate Contract-Authoring Skill/is,
   );
-  assert.match(workflowContext, /one complete Compact V2 Contract/);
+  assert.match(workflowContext, /one continuously revised Contract Draft/);
   assert.match(workflowContext, /one current snapshot/);
   assert.match(
     workflowContext,

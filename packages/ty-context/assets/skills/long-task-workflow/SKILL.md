@@ -126,6 +126,8 @@ Receipts, status, progress and compiled cache are audit/recovery data only. Targ
 
 Machine acceptance means only that declared machine checks passed on the bound snapshot. Report pending external confirmations and never claim Git hosting, CI, deployment, network isolation, payment/migration execution or human product acceptance.
 
+Qualification must remain intact through `final-gate`, `status`, `resume`, `stop-check`, the package-owned Stop Hook and `close`. A fresh `machine_accepted_external_pending` result must keep every declared confirmation visible. A stale Final Receipt makes `final_workflow_status` null even though the active Contract still declares its confirmations. Stop/close may clear the accepted machine Authority through CAS; a Hook `systemMessage` or close `status: closed` reports that machine lifecycle result only and must never be described as completed external delivery. Do not invent external-confirmation tracking state or treat the message, close result or Receipt as confirmation evidence.
+
 ## Handoff
 
-Report implementation, effective per-Outcome risk, Claim Coverage, Live Gate result, external confirmations, Context status and blockers. State the local threat-model limits honestly: the installed package verifier and Git metadata are trusted, and undeclared requirements cannot be discovered by the Harness.
+Report implementation, effective per-Outcome risk, Claim Coverage, Live Gate result, every pending external confirmation by stable key and owner, Context status and blockers. Preserve `machine_accepted_external_pending` in the final Handoff and state explicitly that `closed` means only machine Authority cleanup. Never treat a Hook `systemMessage`, close result or Receipt as proof that external confirmation completed. State the local threat-model limits honestly: the installed package verifier and Git metadata are trusted, and undeclared requirements cannot be discovered by the Harness.

@@ -35,7 +35,8 @@ try {
     active.workdir,
     input.last_assistant_message ?? "",
   );
-  if (result.continue) output({});
+  if (result.continue)
+    output(result.message ? { systemMessage: result.message } : {});
   output({
     decision: "block",
     reason:

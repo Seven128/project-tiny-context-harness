@@ -92,10 +92,10 @@ async function main() {
   const timings = [];
   const pack = await timed(timings, "prepared artifact verification", () => readPreparedArtifact(version));
   await timed(timings, "complete package tests", () =>
-    run("npm", ["run", "test:default", "--workspace", packageName])
+    run("npm", ["test", "--workspace", packageName])
   );
   await timed(timings, "exact prepared tarball smoke", () =>
-    run("node", ["tools/release_tarball_smoke.mjs", "--tarball", pack.tarballRelativePath, "--portable-only"])
+    run("node", ["tools/release_tarball_smoke.mjs", "--tarball", pack.tarballRelativePath])
   );
   await timed(timings, "publish", () => publishTarball(pack.tarballRelativePath));
   await timed(timings, "registry latest verification", () => waitForLatest(version));

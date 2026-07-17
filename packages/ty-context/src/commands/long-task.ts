@@ -78,8 +78,15 @@ export async function longTask(args: string[]): Promise<void> {
   }
   if (subcommand === "close") {
     rejectUnknown(args.slice(2), []);
-    await closeDeliveryTask(workdir);
-    console.log(JSON.stringify({ status: "closed", workdir }));
+    const result = await closeDeliveryTask(workdir);
+    console.log(
+      JSON.stringify({
+        status: result.status,
+        workdir,
+        workflow_status: result.workflow_status,
+        external_confirmations: result.external_confirmations,
+      }),
+    );
     return;
   }
   if (subcommand === "abandon") {

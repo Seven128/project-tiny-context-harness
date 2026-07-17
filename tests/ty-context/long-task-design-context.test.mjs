@@ -215,6 +215,36 @@ test("Mechanism Admission Rule is explicit and creates no registry", async () =>
   assert.match(rationale, /not a matrix file, Receipt or runtime Registry/iu);
 });
 
+test("Harness Authoring Skill routes Long-Task changes through mechanism admission", async () => {
+  const skill = await read(
+    ".codex/skills/authoring/harness_package_design/SKILL.md",
+  );
+  assert.match(skill, /Long-Task Workflow Controlling Objective/iu);
+  assert.match(skill, /Authority Scope And Trusted Results/iu);
+  assert.match(skill, /Mechanism Admission Rule/iu);
+  assert.match(
+    skill,
+    /decision-rationale\/long-task-workflow\.md/iu,
+  );
+  for (const concept of [
+    "false-completion/delivery-drift path",
+    "invariant",
+    "overlap",
+    "cost",
+    "fail closed",
+    "second Authority",
+    "second plan",
+    "scheduling plane",
+  ]) {
+    assert.match(skill, new RegExp(concept, "iu"));
+  }
+  assert.match(skill, /不生成 Mechanism Matrix、Receipt、Registry/iu);
+  assert.match(
+    skill,
+    /(?:不生成|未创建) matrix、Receipt、Registry 或 runtime state/iu,
+  );
+});
+
 async function readSourceTree() {
   const root = path.join(repo, "packages/ty-context/src");
   const entries = await readdir(root, { recursive: true });
