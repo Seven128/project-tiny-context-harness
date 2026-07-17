@@ -11,7 +11,7 @@ default = true
 path = "project_context/areas/harness-package/foundation/context-model.md"
 role = "foundation"
 read_policy = "default"
-triggers = ["context model", "durable fact", "fact source", "role placement", "context priority"]
+triggers = ["context model", "durable fact", "fact source", "role placement", "context priority", "controlling context", "supporting context", "context evolution"]
 
 [[context]]
 path = "project_context/areas/harness-package/contracts/workflow-contract.md"
@@ -35,19 +35,19 @@ triggers = ["why minimal context", "legacy stage", "phase gate", "thick docs", "
 path = "project_context/areas/harness-package/decision-rationale/long-task-workflow.md"
 role = "decision-rationale"
 read_policy = "on-demand"
-triggers = ["long-task objective", "false completion", "delivery drift", "contract draft", "draft outcome", "outcome decomposition", "rolling frontier", "why no authoring skill", "source plan boundary", "workflow mechanism cost", "Web GPT", "Codex authoring"]
+triggers = ["long-task objective", "false completion", "delivery drift", "contract draft", "draft outcome", "outcome decomposition", "rolling frontier", "why no authoring skill", "source plan boundary", "workflow mechanism cost", "model switching", "subagent scheduling", "parallel agent", "context evolution", "affected tests", "Web GPT", "Codex authoring"]
 
 [[context]]
 path = "project_context/areas/harness-package/implementation-index.md"
 role = "implementation-index"
 read_policy = "on-demand"
-triggers = ["cli entry", "sync", "validator", "migration", "release tool", "test entry", "active contract", "final result", "stop hook"]
+triggers = ["cli entry", "sync", "validator", "migration", "release tool", "test entry", "affected test", "active contract", "final result", "stop hook", "context authority"]
 
 [[context]]
 path = "project_context/areas/harness-package/verification.md"
 role = "verification"
 read_policy = "default"
-triggers = ["test", "verify", "validation", "harness gate", "diff check", "long-task black box", "test budget", "final gate"]
+triggers = ["test", "verify", "validation", "harness gate", "diff check", "long-task black box", "test budget", "affected test", "focused test", "final gate"]
 
 [[areas]]
 id = "delivery-benchmark"
