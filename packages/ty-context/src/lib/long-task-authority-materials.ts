@@ -17,20 +17,12 @@ export function computeAuthorityMaterials(
   sourceItems: CompiledSourceItemV2[],
   contextSnapshot: ContextAuthoritySnapshotV2,
 ): NextAuthorityMaterialsV2 {
-  const normalizedContext = normalizeContextAuthoritySnapshot(contextSnapshot);
   return {
     source_hashes: sortRecord(sourceHashes),
     source_items: [...sourceItems].sort((left, right) =>
       left.key.localeCompare(right.key),
     ),
-    context_snapshot: {
-      mode: normalizedContext.mode,
-      topology_sha256: normalizedContext.topology_sha256,
-      files: normalizedContext.files,
-      sha256: normalizedContext.sha256,
-      authority_files: normalizedContext.authority_files,
-      supporting_files: normalizedContext.supporting_files,
-    },
+    context_snapshot: normalizeContextAuthoritySnapshot(contextSnapshot),
     product_semantics: projectProductSemantics(contract),
     global_semantics: projectGlobalSemantics(contract),
   };
