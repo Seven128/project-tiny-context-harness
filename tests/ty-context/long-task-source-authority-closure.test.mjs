@@ -5,6 +5,8 @@ import test from "node:test";
 import YAML from "yaml";
 import { preflightDeliveryContract } from "../../packages/ty-context/dist/lib/long-task-authoring-preflight.js";
 import { compileDeliveryContract } from "../../packages/ty-context/dist/lib/long-task-delivery-compiler.js";
+import { explainSourceLinks } from "../../packages/ty-context/dist/lib/long-task-explain-source-links.js";
+import { enrichFinding } from "../../packages/ty-context/dist/lib/long-task-finding-context.js";
 import { parseDeliveryContractText } from "../../packages/ty-context/dist/lib/long-task-delivery-parser.js";
 import { parseSourceItems } from "../../packages/ty-context/dist/lib/long-task-source-item-parser.js";
 import {
@@ -115,7 +117,10 @@ test("every declared Source file contains at least one Material Source Item", as
 });
 
 test("Source Item markers reject malformed declarations", () => {
-  const valid = (key, body = "Requirement text.") => `<!-- ty-source-item:start key=${key} kind=requirement -->
+  const valid = (
+    key,
+    body = "Requirement text.",
+  ) => `<!-- ty-source-item:start key=${key} kind=requirement -->
 ${body}
 <!-- ty-source-item:end -->`;
   assert.throws(
@@ -512,8 +517,7 @@ test("Source Acceptance must prove another Source-backed non-Result Claim", asyn
   try {
     const criterion = "The exact acceptance scenario passes.";
     const assertion =
-      fixture.contract.outcomes[0].acceptance.checks[0]
-        .positive_assertions[0];
+      fixture.contract.outcomes[0].acceptance.checks[0].positive_assertions[0];
     assertion.criterion = criterion;
     fixture.contract.source_claims[0] = {
       key: "acceptance-only",
@@ -544,8 +548,8 @@ test("Source Acceptance may prove a precisely Source-backed Requirement", async 
   const fixture = await createDeliveryFixture();
   try {
     const criterion = "The exact acceptance scenario passes.";
-    fixture.contract.outcomes[0].acceptance.checks[0]
-      .positive_assertions[0].criterion = criterion;
+    fixture.contract.outcomes[0].acceptance.checks[0].positive_assertions[0].criterion =
+      criterion;
     fixture.contract.source_claims.push({
       key: "first-acceptance",
       source_ref: "source.md#fixture-source",
@@ -583,11 +587,220 @@ test("Source Acceptance may prove a precisely Source-backed Requirement", async 
   }
 });
 
-async function assertPreflightAndCompileReject(
-  fixture,
-  code,
-  message = code,
-) {
+test("Source Acceptance resolves a Source-backed Global Assertion chain", async () => {
+  const fixture = await createDeliveryFixture();
+  try {
+    await configureGlobalSourceAcceptance(fixture, { sourceBacked: true });
+    const compiled = await compileDeliveryContract(
+      fixture.workdir,
+      fixture.root,
+      { require_completion_gate: false },
+    );
+    const source = fixture.contract.source_claims.find(
+      (claim) => claim.key === "global-acceptance",
+    );
+    const links = explainSourceLinks(
+      fixture.contract,
+      compiled.claim_coverage,
+      source,
+    );
+    assert.equal(
+      links[0].reference,
+      "GLOBAL.no-legacy-check.no-legacy-assertion",
+    );
+    assert.equal(links[0].scope, "global");
+    assert.deepEqual(links[0].source_backed_claims, ["constraint.no-legacy"]);
+    assert.deepEqual(links[0].counterfactuals, [
+      {
+        key: "remove-global-carrier",
+        claims: ["constraint.no-legacy"],
+        binding_ref: "first.state-first",
+        owning_outcome_key: "first",
+        expected_assertion_failures: ["no-legacy-assertion"],
+      },
+    ]);
+
+    const finding = enrichFinding(compiled, {
+      code: "assertion_value_mismatch",
+      outcome_key: null,
+      check_key: "no-legacy-check",
+      assertion_key: "no-legacy-assertion",
+      claim_keys: ["constraint.no-legacy"],
+      criterion: "Every runtime entry rejects legacy fallback.",
+      binding_ref: "first.state-first",
+      owning_outcome_key: "first",
+      owner_paths: ["src/**"],
+      message: "Global assertion failed.",
+      next_action: "Repair the global assertion.",
+    });
+    assert.deepEqual(finding.source_claim_keys, [
+      "global-acceptance",
+      "global-constraint",
+    ]);
+    assert.deepEqual(finding.source_target_refs, [
+      "GLOBAL.no-legacy-check.no-legacy-assertion",
+      "constraint.no-legacy",
+    ]);
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("Global Source Acceptance rejects unknown, unbacked, cross-scope, and rewritten targets", async () => {
+  const scenarios = [
+    {
+      name: "unknown Global Check",
+      sourceBacked: true,
+      code: "source_claim_acceptance_ref_unknown",
+      mutate(contract) {
+        acceptanceSource(contract).disposition.refs = [
+          "GLOBAL.unknown-check.no-legacy-assertion",
+        ];
+      },
+    },
+    {
+      name: "unknown Global Assertion",
+      sourceBacked: true,
+      code: "source_claim_acceptance_ref_unknown",
+      mutate(contract) {
+        acceptanceSource(contract).disposition.refs = [
+          "GLOBAL.no-legacy-check.unknown-assertion",
+        ];
+      },
+    },
+    {
+      name: "only a non-Source-backed Global Claim",
+      sourceBacked: false,
+      code: "source_acceptance_without_source_backed_claim",
+      mutate() {},
+    },
+    {
+      name: "Outcome Claim from a Global Assertion",
+      sourceBacked: true,
+      code: "global_assertion_claim_cross_scope",
+      mutate(contract) {
+        globalAcceptanceAssertion(contract).claims = [
+          "first.requirement.observe-first",
+        ];
+      },
+    },
+    {
+      name: "criterion rewritten from Source",
+      sourceBacked: true,
+      code: "source_acceptance_criterion_mismatch",
+      mutate(contract) {
+        globalAcceptanceAssertion(contract).criterion =
+          "A weaker rewritten acceptance criterion.";
+      },
+    },
+  ];
+  for (const scenario of scenarios) {
+    const fixture = await createDeliveryFixture();
+    try {
+      await configureGlobalSourceAcceptance(fixture, {
+        sourceBacked: scenario.sourceBacked,
+      });
+      scenario.mutate(fixture.contract);
+      await assertPreflightAndCompileReject(
+        fixture,
+        scenario.code,
+        scenario.name,
+      );
+    } finally {
+      await rm(fixture.root, { recursive: true, force: true });
+    }
+  }
+});
+
+async function configureGlobalSourceAcceptance(fixture, { sourceBacked }) {
+  const constraint = "Global runtime must reject legacy fallback.";
+  const criterion = "Every runtime entry rejects legacy fallback.";
+  fixture.contract.global.technical.constraints.push({
+    key: "no-legacy",
+    statement: constraint,
+  });
+  const check = structuredClone(
+    fixture.contract.outcomes[0].acceptance.checks[0],
+  );
+  check.key = "no-legacy-check";
+  check.positive_assertions = [
+    {
+      key: "no-legacy-assertion",
+      criterion,
+      claims: ["constraint.no-legacy"],
+      observation: "result",
+      operator: "equals",
+      expected: true,
+    },
+  ];
+  check.negative_assertions = [];
+  fixture.contract.global.acceptance.checks.push(check);
+  fixture.contract.global.acceptance.counterfactual_controls.push({
+    key: "remove-global-carrier",
+    binding_ref: "first.state-first",
+    claims: ["constraint.no-legacy"],
+    check_key: "no-legacy-check",
+    mutation: { type: "remove_paths", paths: ["src/state.json"] },
+    expected_assertion_failures: ["no-legacy-assertion"],
+  });
+  if (sourceBacked)
+    fixture.contract.source_claims.push({
+      key: "global-constraint",
+      source_ref: "source.md",
+      statement: constraint,
+      disposition: {
+        type: "global_constraint",
+        refs: ["constraint.no-legacy"],
+      },
+    });
+  fixture.contract.source_claims.push({
+    key: "global-acceptance",
+    source_ref: "source.md",
+    statement: criterion,
+    disposition: {
+      type: "acceptance",
+      refs: ["GLOBAL.no-legacy-check.no-legacy-assertion"],
+    },
+  });
+  await writeSourceItems(fixture.root, [
+    {
+      key: "first-observable",
+      kind: "requirement",
+      statement: "The first outcome must be observable.",
+    },
+    ...(sourceBacked
+      ? [
+          {
+            key: "global-constraint",
+            kind: "technical_obligation",
+            statement: constraint,
+          },
+        ]
+      : []),
+    {
+      key: "global-acceptance",
+      kind: "acceptance",
+      statement: criterion,
+    },
+  ]);
+  await writeContract(fixture.workdir, fixture.contract);
+}
+
+function acceptanceSource(contract) {
+  return contract.source_claims.find(
+    (claim) => claim.key === "global-acceptance",
+  );
+}
+
+function globalAcceptanceAssertion(contract) {
+  return contract.global.acceptance.checks
+    .find((check) => check.key === "no-legacy-check")
+    .positive_assertions.find(
+      (assertion) => assertion.key === "no-legacy-assertion",
+    );
+}
+
+async function assertPreflightAndCompileReject(fixture, code, message = code) {
   await writeContract(fixture.workdir, fixture.contract);
   const preflight = await preflightDeliveryContract(
     fixture.workdir,
@@ -637,7 +850,10 @@ async function addControlProof(fixture, failureState) {
     failure_state: failureState,
     feedback: "",
   });
-  await writeFile(path.join(fixture.root, "tests", "ui.spec.ts"), "export {};\n");
+  await writeFile(
+    path.join(fixture.root, "tests", "ui.spec.ts"),
+    "export {};\n",
+  );
   const check = structuredClone(outcome.acceptance.checks[0]);
   check.key = "ui-check";
   check.proof_surface = "ui_browser";
@@ -672,9 +888,7 @@ async function addControlProof(fixture, failureState) {
 
 function addGlobalConstraintProof(contract, key, statement) {
   contract.global.technical.constraints.push({ key, statement });
-  const check = structuredClone(
-    contract.outcomes[0].acceptance.checks[0],
-  );
+  const check = structuredClone(contract.outcomes[0].acceptance.checks[0]);
   check.key = `global-${key}`;
   check.positive_assertions = [
     {

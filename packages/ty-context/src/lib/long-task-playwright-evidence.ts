@@ -19,6 +19,9 @@ export function extractPlaywrightEvidence(
   if ([expected, unexpected, skipped, flaky].some((value) => value === null))
     return invalid("playwright_report_invalid:counts");
   const total = expected! + unexpected! + skipped! + flaky!;
+  const reportErrors = report.errors;
+  if (reportErrors !== undefined && !Array.isArray(reportErrors))
+    return invalid("playwright_report_invalid:errors");
   const observations: Record<string, unknown> = {
     "playwright.passed": exitCode === 0,
     "playwright.expected": expected,
@@ -27,11 +30,19 @@ export function extractPlaywrightEvidence(
     "playwright.flaky": flaky,
     "playwright.total": total,
     "playwright.zero_or_all_skipped": total === 0 || skipped === total,
+    "playwright.report_error_count": Array.isArray(reportErrors)
+      ? reportErrors.length
+      : 0,
   };
 
   const collected = collectCases(report, declaredCaseIds(check));
   if (collected.error) return invalid(collected.error);
   const instances = collected.cases;
+  observations["playwright.declared_unexpected_instances"] = instances.filter(
+    (item) => item.unexpected,
+  ).length;
+  observations["playwright.unbound_unexpected_instances"] =
+    collected.unbound_unexpected_instances;
   const duplicate = duplicateCaseInstance(instances);
   if (duplicate)
     return invalid(
@@ -51,6 +62,10 @@ export function extractPlaywrightEvidence(
     observations[`${prefix}.failed_instances`] = item.failed_instances;
     observations[`${prefix}.skipped_instances`] = item.skipped_instances;
     observations[`${prefix}.flaky_instances`] = item.flaky_instances;
+    observations[`${prefix}.unexpected_instances`] = item.unexpected_instances;
+    observations[`${prefix}.timed_out_instances`] = item.timed_out_instances;
+    observations[`${prefix}.interrupted_instances`] =
+      item.interrupted_instances;
   }
   for (const id of declaredCaseIds(check)) {
     const prefix = `playwright.case.${id}`;
@@ -71,6 +86,8 @@ interface PlaywrightCaseInstance {
   skipped: boolean;
   flaky: boolean;
   unexpected: boolean;
+  timed_out: boolean;
+  interrupted: boolean;
   status: string;
 }
 
@@ -87,27 +104,41 @@ interface PlaywrightCase {
   failed_instances: number;
   skipped_instances: number;
   flaky_instances: number;
+  unexpected_instances: number;
+  timed_out_instances: number;
+  interrupted_instances: number;
 }
 
 function collectCases(
   report: Record<string, unknown>,
   declaredIds: Set<string>,
-): { cases: PlaywrightCaseInstance[]; error: string | null } {
+): {
+  cases: PlaywrightCaseInstance[];
+  unbound_unexpected_instances: number;
+  error: string | null;
+} {
   const cases: PlaywrightCaseInstance[] = [];
-  const error = visitSuites(report.suites, cases, declaredIds);
-  return { cases, error };
+  const collection = { unbound_unexpected_instances: 0 };
+  const error = visitSuites(report.suites, cases, declaredIds, collection);
+  return { cases, error, ...collection };
 }
 
 function visitSuites(
   value: unknown,
   cases: PlaywrightCaseInstance[],
   declaredIds: Set<string>,
+  collection: { unbound_unexpected_instances: number },
 ): string | null {
   if (!Array.isArray(value)) return null;
   for (const suiteValue of value) {
     const suite = record(suiteValue);
     if (!suite) continue;
-    const nestedError = visitSuites(suite.suites, cases, declaredIds);
+    const nestedError = visitSuites(
+      suite.suites,
+      cases,
+      declaredIds,
+      collection,
+    );
     if (nestedError) return nestedError;
     if (!Array.isArray(suite.specs)) continue;
     for (const specValue of suite.specs) {
@@ -122,7 +153,10 @@ function visitSuites(
         const ids = declaredIdsInTitle(title, declaredIds);
         if (ids.length > 1)
           return `playwright_test_multiple_ac_ids:${ids.join(",")}`;
-        if (ids.length === 1) cases.push(playwrightCase(ids[0], test));
+        const instance = playwrightCase(ids[0] ?? "unbound", test);
+        if (ids.length === 1) cases.push(instance);
+        else if (instance.unexpected)
+          collection.unbound_unexpected_instances += 1;
       }
     }
   }
@@ -165,6 +199,8 @@ function playwrightCase(
   const executed = !skipped && resultStatuses.length > 0;
   const flaky = status === "flaky";
   const unexpected = status === "unexpected";
+  const timedOut = resultStatuses.includes("timedOut");
+  const interrupted = resultStatuses.includes("interrupted");
   const passed =
     executed &&
     !flaky &&
@@ -180,6 +216,8 @@ function playwrightCase(
     skipped,
     flaky,
     unexpected,
+    timed_out: timedOut,
+    interrupted,
     status,
   };
 }
@@ -224,6 +262,10 @@ function aggregateCases(instances: PlaywrightCaseInstance[]): PlaywrightCase[] {
       const skippedInstances = rows.filter((item) => item.skipped).length;
       const flakyInstances = rows.filter((item) => item.flaky).length;
       const unexpectedInstances = rows.filter((item) => item.unexpected).length;
+      const timedOutInstances = rows.filter((item) => item.timed_out).length;
+      const interruptedInstances = rows.filter(
+        (item) => item.interrupted,
+      ).length;
       const failedInstances = rows.filter(
         (item) => !item.passed && !item.skipped,
       ).length;
@@ -240,9 +282,13 @@ function aggregateCases(instances: PlaywrightCaseInstance[]): PlaywrightCase[] {
           ? "skipped"
           : flakyInstances
             ? "flaky"
-            : unexpectedInstances
-              ? "unexpected"
-              : "failed";
+            : timedOutInstances
+              ? "timed_out"
+              : interruptedInstances
+                ? "interrupted"
+                : unexpectedInstances
+                  ? "unexpected"
+                  : "failed";
       return {
         id,
         executed,
@@ -256,6 +302,9 @@ function aggregateCases(instances: PlaywrightCaseInstance[]): PlaywrightCase[] {
         failed_instances: failedInstances,
         skipped_instances: skippedInstances,
         flaky_instances: flakyInstances,
+        unexpected_instances: unexpectedInstances,
+        timed_out_instances: timedOutInstances,
+        interrupted_instances: interruptedInstances,
       };
     })
     .sort((left, right) => left.id.localeCompare(right.id));

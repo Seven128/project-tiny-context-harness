@@ -4,8 +4,12 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import YAML from "yaml";
+import { RISK_FACT_NAMES } from "../../packages/ty-context/dist/lib/long-task-risk-types.js";
 
-const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const repo = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../..",
+);
 const relativeSkillDirectories = [
   ".codex/ty-context-managed/skills/source-plan-authoring",
   ".codex/skills/source-plan-authoring",
@@ -27,7 +31,11 @@ test("source-plan-authoring is explicit, self-contained and non-authoritative", 
       "utf8",
     ),
   ]);
-  assert.equal(contents[1], contents[0], "generated source-workspace Skill drift");
+  assert.equal(
+    contents[1],
+    contents[0],
+    "generated source-workspace Skill drift",
+  );
   assert.equal(contents[2], contents[0], "package asset Skill drift");
 
   for (const directory of relativeSkillDirectories) {
@@ -43,7 +51,10 @@ test("source-plan-authoring is explicit, self-contained and non-authoritative", 
   assert.deepEqual(Object.keys(metadata).sort(), ["description", "name"]);
   assert.equal(metadata.name, "source-plan-authoring");
   assert.match(frontmatter, /^name:\s*source-plan-authoring$/mu);
-  assert.match(frontmatter, /description:\s*Use only when the user explicitly asks/iu);
+  assert.match(
+    frontmatter,
+    /description:\s*Use only when the user explicitly asks/iu,
+  );
   assert.match(
     frontmatter,
     /初版方案、源方案、方案源稿、Source Plan, initial delivery plan/u,
@@ -51,23 +62,41 @@ test("source-plan-authoring is explicit, self-contained and non-authoritative", 
   assert.match(frontmatter, /Do not trigger for ordinary product discussion/iu);
   assert.doesNotMatch(frontmatter, /产品方案|开发方案|技术方案/u);
 
-  assert.match(body, /one high-fidelity, self-contained Markdown Source Plan/iu);
+  assert.match(
+    body,
+    /one high-fidelity, self-contained Markdown Source Plan/iu,
+  );
   assert.match(body, /direct`, `derived`.*`decision_required`/isu);
   assert.match(body, /Derived From/iu);
-  assert.match(body, /does not change user capability, business rules or product scope/iu);
+  assert.match(
+    body,
+    /does not change user capability, business rules or product scope/iu,
+  );
   assert.match(
     body,
     /stable semantic lowercase-kebab keys and explicit Markdown `id` anchors/iu,
   );
   assert.match(body, /lowercase-kebab/iu);
-  assert.match(body, /<a id="<outcome-key>\.requirement\.<requirement-key>"><\/a>/u);
+  assert.match(
+    body,
+    /<a id="<outcome-key>\.requirement\.<requirement-key>"><\/a>/u,
+  );
   assert.match(body, /observable results can be independently judged/iu);
   assert.match(body, /Do not split an Outcome because of/iu);
   assert.match(body, /response or document length/iu);
   assert.match(body, /frontend\/backend or other implementation layers/iu);
-  assert.match(body, /Do not force every Source Plan to define every control/iu);
-  assert.match(body, /leaving it open would permit materially different product designs/iu);
-  assert.match(body, /Never introduce a product requirement for the first time inside an `AC`/iu);
+  assert.match(
+    body,
+    /Do not force every Source Plan to define every control/iu,
+  );
+  assert.match(
+    body,
+    /leaving it open would permit materially different product designs/iu,
+  );
+  assert.match(
+    body,
+    /Never introduce a product requirement for the first time inside an `AC`/iu,
+  );
   assert.match(body, /Keep `OBL` and `HINT` distinct/iu);
 
   for (const type of [
@@ -96,12 +125,34 @@ test("source-plan-authoring is explicit, self-contained and non-authoritative", 
     17,
     "Completeness Check must retain all 17 semantic audits",
   );
-  assert.match(body, /`Location`.*`User task`.*`Trigger`.*`Input`.*`Loading`.*`Empty`.*`Success`.*`Failure`.*`Feedback`/isu);
+  assert.match(
+    body,
+    /`Location`.*`User task`.*`Trigger`.*`Input`.*`Loading`.*`Empty`.*`Success`.*`Failure`.*`Feedback`/isu,
+  );
   assert.match(body, /one `Given`, one `When` and one `Then`/iu);
   assert.match(body, /`REQ`, `CTRL`, `OBL` and\/or `NCOMP`/u);
   assert.match(body, /`Fact`, `Affected Outcome`, `Basis` and `Consequence`/u);
   assert.match(body, /permission_boundary_change/iu);
-  assert.match(body, /create a `DEC` with `decision_required` instead of guessing/iu);
+  const declaredRiskFacts = body
+    .match(
+      /complete Runtime Risk Fact set:\r?\n\r?\n```text\r?\n([\s\S]*?)\r?\n```/u,
+    )?.[1]
+    .split(/\r?\n/u)
+    .map((item) => item.trim())
+    .filter(Boolean);
+  assert.deepEqual(declaredRiskFacts, [...RISK_FACT_NAMES]);
+  assert.doesNotMatch(body, /`migration`.*(?:Risk Fact|semantic name)/iu);
+  assert.doesNotMatch(body, /weak_observability_critical_path/u);
+  assert.match(
+    body,
+    /data migration uses `data_migration`, never `migration`/iu,
+  );
+  assert.match(body, /one `critical_user_path` and one `weak_observability`/iu);
+  assert.match(body, /Preserve `multi_repository_change` in Source/iu);
+  assert.match(
+    body,
+    /create a `DEC` with `decision_required` instead of guessing/iu,
+  );
   assert.match(body, /Do not emit a matrix or machine gate/iu);
   assert.match(body, /Do not generate Delivery Contract YAML/iu);
   assert.match(body, /Do not update `project_context\/\*\*`/u);
@@ -113,11 +164,20 @@ test("source-plan-authoring is explicit, self-contained and non-authoritative", 
     /does not replace Contract Draft authoring inside `long-task-workflow`/iu,
   );
   assert.match(body, /recommended structure is optional input guidance/iu);
-  assert.match(body, /Do not bind owners, files, runners, verification inputs/iu);
+  assert.match(
+    body,
+    /Do not bind owners, files, runners, verification inputs/iu,
+  );
   assert.match(body, /Source Plan Schema or mandatory format validator/iu);
   assert.match(body, /Source Plan CLI, Preflight or Compile step/iu);
-  assert.match(body, /Source Plan Receipt, Coverage Cache, Authority or state file/iu);
-  assert.match(body, /cannot prove that the user has expressed every real requirement/iu);
+  assert.match(
+    body,
+    /Source Plan Receipt, Coverage Cache, Authority or state file/iu,
+  );
+  assert.match(
+    body,
+    /cannot prove that the user has expressed every real requirement/iu,
+  );
   assert.doesNotMatch(
     body,
     /Codex|Claude|ChatGPT|Windows|macOS|Linux|PowerShell|Bash|Playwright/iu,
@@ -126,8 +186,14 @@ test("source-plan-authoring is explicit, self-contained and non-authoritative", 
     body,
     /ty-context long-task (?:init|preflight|compile|verify|final-gate)/iu,
   );
-  assert.doesNotMatch(body, /tests? passed|delivery complete|implementation complete/iu);
-  assert.ok(skill.split(/\r?\n/u).length < 500, "Skill must remain under 500 lines");
+  assert.doesNotMatch(
+    body,
+    /tests? passed|delivery complete|implementation complete/iu,
+  );
+  assert.ok(
+    skill.split(/\r?\n/u).length < 500,
+    "Skill must remain under 500 lines",
+  );
   assert.match(productPlan, /更新 `project_context\/\*\*`/u);
   assert.match(productPlan, /长期产品事实/u);
 });

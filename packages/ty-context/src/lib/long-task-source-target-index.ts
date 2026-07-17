@@ -19,6 +19,7 @@ export interface CanonicalSourceTarget {
     | "risk_fact"
     | "external_confirmation";
   normalized_text?: string;
+  scope?: "global" | "outcome";
   outcome_key?: string;
   risk_fact?: keyof DeliveryContractV2["risk"]["facts"];
   affected_outcome?: string;
@@ -95,6 +96,7 @@ export function buildCanonicalSourceTargetIndex(
             "acceptance",
             assertion.criterion,
             outcome.key,
+            "outcome",
           ),
         );
   }
@@ -112,6 +114,20 @@ export function buildCanonicalSourceTargetIndex(
         item.statement,
       ),
     );
+  for (const check of contract.global.acceptance.checks)
+    for (const assertion of [
+      ...check.positive_assertions,
+      ...check.negative_assertions,
+    ])
+      targets.push(
+        target(
+          `GLOBAL.${check.key}.${assertion.key}`,
+          "acceptance",
+          assertion.criterion,
+          undefined,
+          "global",
+        ),
+      );
   for (const [fact, outcomes] of Object.entries(contract.risk.facts))
     for (const outcome of outcomes)
       targets.push({
@@ -130,6 +146,7 @@ function target(
   kind: CanonicalSourceTarget["kind"],
   text?: string,
   outcomeKey?: string,
+  scope?: CanonicalSourceTarget["scope"],
 ): CanonicalSourceTarget {
   return {
     ref,
@@ -138,6 +155,7 @@ function target(
       ? { normalized_text: normalizeSourceItemText(text) }
       : {}),
     ...(outcomeKey ? { outcome_key: outcomeKey } : {}),
+    ...(scope ? { scope } : {}),
   };
 }
 

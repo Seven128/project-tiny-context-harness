@@ -3,6 +3,7 @@ import type {
   CompiledDeliveryContractV2,
   LongTaskFindingV2,
 } from "./long-task-delivery-types.js";
+import { resolveAcceptanceAssertion } from "./long-task-acceptance-reference.js";
 
 export function enrichCheckResultFindings(
   compiled: CompiledDeliveryContractV2,
@@ -59,9 +60,12 @@ function sourceClaimsForFinding(
   finding: LongTaskFindingV2,
 ): string[] {
   const acceptanceRef =
-    finding.outcome_key && finding.check_key && finding.assertion_key
-      ? `${finding.outcome_key}.${finding.check_key}.${finding.assertion_key}`
+    finding.check_key && finding.assertion_key
+      ? `${finding.outcome_key ?? "GLOBAL"}.${finding.check_key}.${finding.assertion_key}`
       : null;
+  const resolvedAcceptance = acceptanceRef
+    ? resolveAcceptanceAssertion(compiled, acceptanceRef)
+    : null;
   const productRefs = new Set(
     (finding.claim_keys ?? []).map((claim) =>
       finding.outcome_key ? `${finding.outcome_key}.${claim}` : claim,
@@ -71,8 +75,8 @@ function sourceClaimsForFinding(
     .filter((source) => {
       if (
         source.disposition.type === "acceptance" &&
-        acceptanceRef &&
-        source.disposition.refs.includes(acceptanceRef)
+        resolvedAcceptance &&
+        source.disposition.refs.includes(resolvedAcceptance.ref)
       )
         return true;
       if (

@@ -155,6 +155,65 @@ test("a constant Global Oracle cannot pass the Live Final Gate", async () => {
   }
 });
 
+test("Global Counterfactual failure is recoverable from targeted Progress", async () => {
+  const fixture = await createDeliveryFixture();
+  try {
+    await addGlobalClaim(fixture, {
+      counterfactual: true,
+      constant: true,
+    });
+    await writeContract(fixture.workdir, fixture.contract);
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    const failed = await runCliFailure(fixture.root, [
+      "long-task",
+      "verify",
+      fixture.workdir,
+      "--check",
+      "global-state-check",
+    ]);
+    const result = failed.check_results.find(
+      (item) => item.check_key === "global-state-check",
+    );
+    assert.equal(result.status, "invalid_evidence");
+    assert.deepEqual(result.claim_proofs, []);
+    assert.ok(
+      result.findings.some(
+        (finding) => finding.code === "counterfactual_integrity_failed",
+      ),
+    );
+
+    const status = await runCli(fixture.root, [
+      "long-task",
+      "status",
+      fixture.workdir,
+    ]);
+    assert.equal(status.final_workflow_status, null);
+    assert.ok(
+      status.findings.some(
+        (finding) =>
+          finding.code === "counterfactual_integrity_failed" &&
+          finding.check_key === "global-state-check",
+      ),
+    );
+    const resume = await runCli(fixture.root, [
+      "long-task",
+      "resume",
+      fixture.workdir,
+    ]);
+    assert.equal(resume.final_workflow_status, null);
+    assert.ok(
+      resume.recent_findings.some(
+        (finding) =>
+          finding.code === "counterfactual_integrity_failed" &&
+          finding.check_key === "global-state-check",
+      ),
+    );
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
 test("a sensitive Global Oracle passes the Live Final Gate", async () => {
   const fixture = await createDeliveryFixture();
   try {

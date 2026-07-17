@@ -4,7 +4,10 @@ import path from "node:path";
 import test from "node:test";
 import { preflightDeliveryContract } from "../../packages/ty-context/dist/lib/long-task-authoring-preflight.js";
 import { compileDeliveryContract } from "../../packages/ty-context/dist/lib/long-task-delivery-compiler.js";
+import { decodeCheckEvidence } from "../../packages/ty-context/dist/lib/long-task-check-evidence-decoder.js";
+import { evaluateCheckEvidence } from "../../packages/ty-context/dist/lib/long-task-evidence-v2.js";
 import { evaluateOutcomeCounterfactuals } from "../../packages/ty-context/dist/lib/long-task-evidence-v2.js";
+import { classifyPlaywrightCounterfactual } from "../../packages/ty-context/dist/lib/long-task-playwright-counterfactual-policy.js";
 import {
   createDeliveryFixture,
   writeContract,
@@ -58,8 +61,9 @@ test("weak_observability Playwright requires same-Check AC and Claim sensitivity
   const complete = await createDeliveryFixture();
   try {
     await configurePlaywright(complete, { weak: true, twoAssertions: true });
-    complete.contract.outcomes[0].acceptance.counterfactual_controls[0]
-      .expected_assertion_failures.push("first-obligation-ac");
+    complete.contract.outcomes[0].acceptance.counterfactual_controls[0].expected_assertion_failures.push(
+      "first-obligation-ac",
+    );
     await writeContract(complete.workdir, complete.contract);
     const preflight = await preflightDeliveryContract(
       complete.workdir,
@@ -113,7 +117,7 @@ test("weak-observability Playwright rejects a constant AC and accepts a sensitiv
       const runner = path.join(fixture.root, "tests", "fake-playwright.mjs");
       await writeFile(
         runner,
-        `import { access } from "node:fs/promises";\nlet ready = ${constant ? "true" : "false"};\nif (!ready) { try { await access(new URL("../src/state.json", import.meta.url)); ready = true; } catch {} }\nconst status = ready ? "expected" : "unexpected";\nconst resultStatus = ready ? "passed" : "failed";\nconsole.log(JSON.stringify({stats:{expected:ready?1:0,unexpected:ready?0:1,skipped:0,flaky:0},suites:[{specs:[{title:"[ac:first-result] first-result",tests:[{projectId:"default",status,results:[{status:resultStatus}]}]}]}]}));\n`,
+        `import { access } from "node:fs/promises";\nlet ready = ${constant ? "true" : "false"};\nif (!ready) { try { await access(new URL("../src/state.json", import.meta.url)); ready = true; } catch {} }\nconst status = ready ? "expected" : "unexpected";\nconst resultStatus = ready ? "passed" : "failed";\nconsole.log(JSON.stringify({stats:{expected:ready?1:0,unexpected:ready?0:1,skipped:0,flaky:0},errors:[],suites:[{specs:[{title:"[ac:first-result] first-result",tests:[{projectId:"default",status,results:[{status:resultStatus}]}]}]}]}));\nprocess.exitCode = ready ? 0 : 1;\n`,
       );
       const compiled = await compileDeliveryContract(
         fixture.workdir,
@@ -138,10 +142,203 @@ test("weak-observability Playwright rejects a constant AC and accepts a sensitiv
   }
 });
 
-async function configurePlaywright(
-  fixture,
-  { weak, twoAssertions = false },
-) {
+test("Playwright Counterfactual accepts only an exactly explained exit 1", async () => {
+  const fixture = await createDeliveryFixture();
+  try {
+    await configurePlaywright(fixture, { weak: true });
+    const compiled = await compileDeliveryContract(
+      fixture.workdir,
+      fixture.root,
+      { require_completion_gate: false },
+    );
+    const baseCheck = compiled.outcomes[0].acceptance.checks[0];
+    const control = compiled.outcomes[0].acceptance.counterfactual_controls[0];
+    const accepted = await classifyReport({
+      check: baseCheck,
+      control,
+      root: fixture.root,
+      exitCode: 1,
+      cases: [playwrightCase("first-result", "unexpected", "failed")],
+    });
+    assert.equal(accepted.classification.accepted_test_failure_exit, true);
+    assert.equal(
+      accepted.classification.normalized_result.status,
+      "assertion_failed",
+    );
+    assert.deepEqual(
+      accepted.classification.normalized_result.findings.map(
+        (finding) => finding.code,
+      ),
+      ["assertion_value_mismatch"],
+    );
+
+    const extraDeclaredCheck = structuredClone(baseCheck);
+    extraDeclaredCheck.positive_assertions.push({
+      key: "second-result",
+      criterion: "The second declared AC passes.",
+      claims: ["requirement.observe-first"],
+      observation: "playwright.case.second-result.passed",
+      operator: "equals",
+      expected: true,
+    });
+    const scenarios = [
+      {
+        name: "extra declared AC failure",
+        check: extraDeclaredCheck,
+        exitCode: 1,
+        cases: [
+          playwrightCase("first-result", "unexpected", "failed"),
+          playwrightCase("second-result", "unexpected", "failed"),
+        ],
+      },
+      {
+        name: "unbound Test failure",
+        check: baseCheck,
+        exitCode: 1,
+        cases: [
+          playwrightCase("first-result", "unexpected", "failed"),
+          playwrightCase(null, "unexpected", "failed"),
+        ],
+      },
+      {
+        name: "timed out AC",
+        check: baseCheck,
+        exitCode: 1,
+        cases: [playwrightCase("first-result", "unexpected", "timedOut")],
+      },
+      {
+        name: "interrupted AC",
+        check: baseCheck,
+        exitCode: 1,
+        cases: [playwrightCase("first-result", "unexpected", "interrupted")],
+      },
+      {
+        name: "flaky AC",
+        check: baseCheck,
+        exitCode: 1,
+        cases: [playwrightCase("first-result", "flaky", "passed")],
+      },
+      {
+        name: "skipped AC",
+        check: baseCheck,
+        exitCode: 1,
+        cases: [playwrightCase("first-result", "skipped", "skipped")],
+      },
+      {
+        name: "missing AC",
+        check: baseCheck,
+        exitCode: 1,
+        cases: [],
+      },
+      {
+        name: "root report error",
+        check: baseCheck,
+        exitCode: 1,
+        cases: [playwrightCase("first-result", "unexpected", "failed")],
+        errors: [{ message: "global setup failed" }],
+      },
+      {
+        name: "unsupported exit code",
+        check: baseCheck,
+        exitCode: 2,
+        cases: [playwrightCase("first-result", "unexpected", "failed")],
+      },
+    ];
+    for (const scenario of scenarios) {
+      const classified = await classifyReport({
+        ...scenario,
+        control,
+        root: fixture.root,
+      });
+      assert.equal(
+        classified.classification.accepted_test_failure_exit,
+        false,
+        scenario.name,
+      );
+      assert.ok(
+        classified.classification.rejection_reasons.length > 0,
+        scenario.name,
+      );
+    }
+
+    const baseline = await classifyReport({
+      check: baseCheck,
+      control,
+      root: fixture.root,
+      exitCode: 1,
+      cases: [playwrightCase("first-result", "unexpected", "failed")],
+    });
+    assert.equal(baseline.result.status, "test_failed");
+    assert.ok(
+      baseline.result.findings.some(
+        (finding) => finding.code === "test_failed",
+      ),
+    );
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+async function classifyReport({
+  check,
+  control,
+  root,
+  exitCode,
+  cases,
+  errors = [],
+}) {
+  const unexpected = cases.filter(
+    (item) => item.tests[0].status === "unexpected",
+  ).length;
+  const expected = cases.filter(
+    (item) => item.tests[0].status === "expected",
+  ).length;
+  const skipped = cases.filter(
+    (item) => item.tests[0].status === "skipped",
+  ).length;
+  const flaky = cases.filter((item) => item.tests[0].status === "flaky").length;
+  const decoded = decodeCheckEvidence(
+    check,
+    exitCode,
+    Buffer.from(
+      JSON.stringify({
+        stats: { expected, unexpected, skipped, flaky },
+        errors,
+        suites: [{ specs: cases }],
+      }),
+    ),
+    Buffer.alloc(0),
+  );
+  const raw = {
+    raw_execution_identity: check.raw_execution_identity,
+    execution_identity: check.runner.execution_identity,
+    ...decoded,
+    stdout_sha256: "fixture",
+    stderr_sha256: "fixture",
+    attempts: 1,
+    duration_ms: 1,
+  };
+  const result = await evaluateCheckEvidence(check, raw, root);
+  return {
+    result,
+    classification: classifyPlaywrightCounterfactual(raw, result, control),
+  };
+}
+
+function playwrightCase(id, status, resultStatus) {
+  return {
+    title: id ? `[ac:${id}] ${id}` : "unbound failing Test",
+    tests: [
+      {
+        projectId: "default",
+        status,
+        results: [{ status: resultStatus }],
+      },
+    ],
+  };
+}
+
+async function configurePlaywright(fixture, { weak, twoAssertions = false }) {
   await writeFile(
     path.join(fixture.root, "tests", "ui.spec.ts"),
     "// [ac:first-result]\n",

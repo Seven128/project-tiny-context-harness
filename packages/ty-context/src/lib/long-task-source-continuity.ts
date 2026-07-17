@@ -4,6 +4,7 @@ import type {
   SourceClaimV2,
   SourceItemKind,
 } from "./long-task-delivery-types.js";
+import { resolveAcceptanceAssertion } from "./long-task-acceptance-reference.js";
 import { normalizeSourceItemText } from "./long-task-source-item-parser.js";
 
 export function validateSourceContinuity(
@@ -31,13 +32,14 @@ export function validateSourceContinuity(
       issue(report, `source_claim_statement_mismatch:${claim.key}`);
     validateDispositionKind(claim, item.kind, report);
     if (claim.disposition.type === "acceptance") {
-      const assertion = acceptanceAssertion(
+      const resolved = resolveAcceptanceAssertion(
         contract,
         claim.disposition.refs[0],
       );
       if (
-        !assertion?.criterion ||
-        normalizeSourceItemText(assertion.criterion) !== item.normalized_text
+        !resolved?.assertion.criterion ||
+        normalizeSourceItemText(resolved.assertion.criterion) !==
+          item.normalized_text
       )
         issue(report, `source_acceptance_criterion_mismatch:${claim.key}`);
     }
@@ -78,20 +80,6 @@ function validateDispositionKind(
       report,
       `source_item_disposition_mismatch:${claim.key}:${kind}:${claim.disposition.type}`,
     );
-}
-
-function acceptanceAssertion(
-  contract: DeliveryContractV2,
-  reference: string | undefined,
-) {
-  const [outcomeKey, checkKey, assertionKey] = (reference ?? "").split(".");
-  const check = contract.outcomes
-    .find((outcome) => outcome.key === outcomeKey)
-    ?.acceptance.checks.find((item) => item.key === checkKey);
-  return [
-    ...(check?.positive_assertions ?? []),
-    ...(check?.negative_assertions ?? []),
-  ].find((assertion) => assertion.key === assertionKey);
 }
 
 type ValidationReporter = (message: string) => void;

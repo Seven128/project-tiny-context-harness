@@ -3,6 +3,7 @@ import type {
   DeliveryContractV2,
   SourceClaimV2,
 } from "./long-task-delivery-types.js";
+import { resolveAcceptanceAssertion } from "./long-task-acceptance-reference.js";
 import {
   buildCanonicalSourceTargetIndex,
   sourceKindForTarget,
@@ -18,6 +19,7 @@ export function validateSourceTargetContinuity(
   const targets = buildCanonicalSourceTargetIndex(contract);
   const owners = new Map<string, string>();
   const sourceBackedOutcomeClaims = new Set<string>();
+  const sourceBackedGlobalClaims = new Set<string>();
   const acceptanceBindings: Array<{
     claim: SourceClaimV2;
     target: CanonicalSourceTarget;
@@ -78,21 +80,34 @@ export function validateSourceTargetContinuity(
       ].includes(target.kind)
     )
       sourceBackedOutcomeClaims.add(ref);
+    if (
+      !target.outcome_key &&
+      ["global_constraint", "non_goal", "forbidden_shortcut"].includes(
+        target.kind,
+      )
+    )
+      sourceBackedGlobalClaims.add(ref);
     if (target.kind === "acceptance")
       acceptanceBindings.push({ claim, target });
   }
 
   for (const { claim, target } of acceptanceBindings) {
-    const assertion = acceptanceAssertion(contract, target.ref);
-    if (
-      !assertion ||
-      !target.outcome_key ||
-      !assertion.claims.some(
-        (localKey) =>
-          localKey !== "result" &&
-          sourceBackedOutcomeClaims.has(`${target.outcome_key}.${localKey}`),
-      )
-    )
+    const resolved = resolveAcceptanceAssertion(contract, target.ref);
+    const sourceBacked =
+      resolved?.scope === "outcome" && target.outcome_key
+        ? resolved.assertion.claims.some(
+            (localKey) =>
+              localKey !== "result" &&
+              sourceBackedOutcomeClaims.has(
+                `${target.outcome_key}.${localKey}`,
+              ),
+          )
+        : resolved?.scope === "global"
+          ? resolved.assertion.claims.some((localKey) =>
+              sourceBackedGlobalClaims.has(localKey),
+            )
+          : false;
+    if (!sourceBacked)
       issue(
         report,
         `source_acceptance_without_source_backed_claim:${claim.key}:${target.ref}`,
@@ -104,17 +119,6 @@ function dispositionRefs(disposition: SourceClaimV2["disposition"]): string[] {
   if (disposition.type === "decision_required") return [];
   if (disposition.type === "outcome_result") return [disposition.ref];
   return disposition.refs;
-}
-
-function acceptanceAssertion(contract: DeliveryContractV2, reference: string) {
-  const [outcomeKey, checkKey, assertionKey] = reference.split(".");
-  const check = contract.outcomes
-    .find((outcome) => outcome.key === outcomeKey)
-    ?.acceptance.checks.find((item) => item.key === checkKey);
-  return [
-    ...(check?.positive_assertions ?? []),
-    ...(check?.negative_assertions ?? []),
-  ].find((assertion) => assertion.key === assertionKey);
 }
 
 type ValidationReporter = (message: string) => void;

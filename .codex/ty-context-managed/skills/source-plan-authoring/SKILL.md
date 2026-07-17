@@ -174,7 +174,22 @@ Never introduce a product requirement for the first time inside an `AC`. Move hi
 
 ## Risk And Advisory Boundaries
 
-Each `RISK` states `Fact`, `Affected Outcome`, `Basis` and `Consequence`. `Fact` uses one exact semantic name from `public_api_or_schema_change`, `persistent_data_change`, `migration`, `security_boundary_change`, `permission_boundary_change`, `irreversible_external_effect`, `full_population_operation` or `weak_observability_critical_path`. Each risk item names one affected Outcome; repeat the item with a distinct stable key when the same fact affects multiple Outcomes. If Fact or Affected Outcome cannot be determined from Source, create a `DEC` with `decision_required` instead of guessing. Generic risk prose without an affected Outcome is not actionable Source. `HINT` remains advisory and is never a Material Source Item: promote it to `OBL` if the implementation constraint is mandatory.
+Each `RISK` states `Fact`, `Affected Outcome`, `Basis` and `Consequence`. `Fact` uses one exact name from the complete Runtime Risk Fact set:
+
+```text
+public_api_or_schema_change
+persistent_data_change
+data_migration
+security_boundary_change
+permission_boundary_change
+irreversible_external_effect
+critical_user_path
+full_population_operation
+multi_repository_change
+weak_observability
+```
+
+Do not invent or accept aliases. A data migration uses `data_migration`, never `migration`. A critical path with weak observability produces two independent `RISK` items with distinct stable keys: one `critical_user_path` and one `weak_observability`, both naming the affected Outcome. Preserve `multi_repository_change` in Source even though the current Runtime rejects multi-repository delivery; the Compiler owns that unsupported-delivery decision. Each risk item names one affected Outcome; repeat the item with a distinct stable key when the same fact affects multiple Outcomes. If Fact or Affected Outcome cannot be determined from Source, create a `DEC` with `decision_required` instead of guessing. Generic risk prose without an affected Outcome is not actionable Source. `HINT` remains advisory and is never a Material Source Item: promote it to `OBL` if the implementation constraint is mandatory.
 
 Use `NCOMP` for an explicit, source-authoritative statement that names an outcome or shortcut that must not count as completion. It is neither an ordinary Requirement nor a non-goal: later Contract authoring maps it to a non-completing Claim and must provide negative or Counterfactual proof.
 

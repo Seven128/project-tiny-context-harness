@@ -77,11 +77,11 @@ The rule is risk-proportional. L0 local, reversible and directly testable work p
 
 - **Material Source inventory** prevents a Source item from being omitted, rewritten or disappearing without a mapping.
 - **Atomic non-Result Claim Coverage** prevents several specific requirements from collapsing into one broad Outcome Result.
-- **Source AC to named Assertion semantic identity** prevents acceptance meaning from being weakened in the Contract.
+- **Source AC to named Assertion semantic identity** prevents acceptance meaning from being weakened in the Contract; the same canonical resolver covers Outcome refs and `GLOBAL.<check>.<assertion>`, while Global ACs require an independently Source-backed Global Claim and cannot cross scope.
 - **Shared Preflight/Compile activation-safety kernel** prevents skipping Preflight from bypassing activation rules.
 - **First-Compile Authority Lock and Authority Revision** prevent Source, Contract, Context or verifier edits from washing away requirements during execution.
 - **Executing Agent cannot approve its own weakening revision** prevents the implementer from lowering its own acceptance bar.
-- **Targeted verify is repair evidence only** prevents a local pass from being reported as whole-delivery completion.
+- **Targeted verify is repair evidence only** prevents a local pass from being reported as whole-delivery completion; Counterfactual failure is part of the owning Check Result/Progress rather than a transient top-level Finding, so status/resume cannot recover a false `progress_passing` state.
 - **Same-snapshot Final Gate** prevents historical pass aggregation and stale evidence reuse.
 - **Stop/close rerun the Live Final Gate** prevents post-Gate Source, Context, Contract, verifier or code drift from being accepted.
 - **Scope escape and risk escalation** prevent work outside the declared boundary from passing under the old scope or proof level.
@@ -89,7 +89,7 @@ The rule is risk-proportional. L0 local, reversible and directly testable work p
 - **Global Counterfactual to Outcome Binding** prevents a Global Claim from being backed by an unrelated global oracle without inventing a second Global Binding model; the cost is one explicit cross-scope reference and carrier freshness dependency.
 - **Exact Risk marker metadata** prevents a strong Source risk from being redirected to a weaker Fact or another Outcome; ambiguity costs a real `decision_required` pause instead of an inferred downgrade.
 - **Planned Binding existence** permits truthful authoring before a new file exists, while Final Gate existence and freshness close the no-op mutation path; compile-time absence is allowed only for the declared planned lifecycle.
-- **Two-layer Playwright trust** treats frozen standard test content as verifier authority and pays mutation cost only for `weak_observability`; this avoids mutating every UI test while still rejecting constant critical-path ACs.
+- **Two-layer Playwright trust** treats frozen standard test content as verifier authority and pays mutation cost only for `weak_observability`; its dedicated policy accepts Playwright's real exit-one test-failure protocol only when the entire unexpected-instance set is exactly the designated AC set, preserving fail-closed Baseline behavior without mutating every UI test.
 - **Non-completing Source kind** prevents explicit “does not count as done” meaning from being weakened into an ordinary Requirement or non-goal and makes its negative sensitivity independently traceable.
 - **Managed source, generated copy and package asset parity** prevent source-workspace rules and consumer-installed rules from diverging.
 

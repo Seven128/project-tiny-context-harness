@@ -1,4 +1,5 @@
 import type { DeliveryContractV2 } from "./long-task-delivery-types.js";
+import { resolveAcceptanceAssertion } from "./long-task-acceptance-reference.js";
 import type { compileProductClaimCoverage } from "./long-task-claims.js";
 import { fail } from "./long-task-delivery-shape.js";
 import type { RiskFactName } from "./long-task-risk-types.js";
@@ -26,22 +27,6 @@ export function validateSourceClaimMappings(
   const forbiddenPaths = new Set(
     contract.global.technical.forbidden_paths.map(
       (item) => `forbidden_path.${item.key}`,
-    ),
-  );
-  const acceptanceRefs = new Map<
-    string,
-    DeliveryContractV2["outcomes"][number]["acceptance"]["checks"][number]["positive_assertions"][number]
-  >(
-    contract.outcomes.flatMap((outcome) =>
-      outcome.acceptance.checks.flatMap((check) =>
-        [...check.positive_assertions, ...check.negative_assertions].map(
-          (assertion) =>
-            [
-              `${outcome.key}.${check.key}.${assertion.key}`,
-              assertion,
-            ] as const,
-        ),
-      ),
     ),
   );
   const outcomeResults = new Set(
@@ -73,23 +58,28 @@ export function validateSourceClaimMappings(
     if (disposition.type === "acceptance") {
       if (disposition.refs.length !== 1)
         issue(report, "source_claim_acceptance_ref_count", claim.key);
-      validateRefs(
-        claim.key,
-        disposition.refs,
-        new Set(acceptanceRefs.keys()),
-        "source_claim_acceptance_ref_unknown",
-        report,
-      );
       const reference = disposition.refs[0];
-      const assertion = acceptanceRefs.get(reference);
-      if (
-        assertion &&
-        (!assertion.claims.length ||
-          assertion.claims.every((item) => item === "result"))
+      const resolved = resolveAcceptanceAssertion(contract, reference);
+      if (!resolved)
+        issue(
+          report,
+          "source_claim_acceptance_ref_unknown",
+          `${claim.key}:${reference}`,
+        );
+      else if (
+        resolved.scope === "outcome" &&
+        (!resolved.assertion.claims.length ||
+          resolved.assertion.claims.every((item) => item === "result"))
       )
         issue(
           report,
           "source_claim_acceptance_result_only",
+          `${claim.key}:${reference}`,
+        );
+      else if (resolved.scope === "global" && !resolved.assertion.claims.length)
+        issue(
+          report,
+          "source_claim_acceptance_global_claim_required",
           `${claim.key}:${reference}`,
         );
     }

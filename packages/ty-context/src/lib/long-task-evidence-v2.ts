@@ -21,6 +21,7 @@ import {
   classifyCheckStatus,
   evaluateAssertionResults,
 } from "./long-task-evidence-findings.js";
+import { classifyPlaywrightCounterfactual } from "./long-task-playwright-counterfactual-policy.js";
 import { resolveInsideRepository } from "./long-task-workspace.js";
 
 export async function evaluateCheckEvidence(
@@ -279,25 +280,43 @@ async function evaluateCounterfactualSet(
         root,
         entry.evidenceOutcome,
       );
-      const sensitivityResult = normalizePlaywrightCounterfactualResult(result);
+      const playwrightClassification =
+        result.evidence_adapter === "playwright_json_v1"
+          ? classifyPlaywrightCounterfactual(raw, result, control)
+          : null;
+      const sensitivityResult =
+        playwrightClassification?.normalized_result ?? result;
       const failedAssertions = result.assertion_results
         .filter((assertion) => !assertion.passed)
         .map((assertion) => assertion.key)
         .sort();
       const expected = [...control.expected_assertion_failures].sort();
+      const acceptedExit = playwrightClassification
+        ? playwrightClassification.accepted_test_failure_exit
+        : raw.exit_code === 0;
       const valid =
         raw.execution_status === "completed" &&
-        raw.exit_code === 0 &&
+        acceptedExit &&
         isValidCounterfactualCheckResult(sensitivityResult, expected);
       if (!valid)
         findings.push(
-          counterfactualIntegrityFinding(entry, {
-            execution_status: raw.execution_status,
-            exit_code: raw.exit_code,
-            result_status: result.status,
-            failed_assertions: failedAssertions,
-            finding_codes: result.findings.map((finding) => finding.code),
-          }),
+          counterfactualIntegrityFinding(
+            entry,
+            playwrightClassification
+              ? playwrightCounterfactualDiagnostic(
+                  raw,
+                  result,
+                  expected,
+                  playwrightClassification.rejection_reasons,
+                )
+              : {
+                  execution_status: raw.execution_status,
+                  exit_code: raw.exit_code,
+                  result_status: result.status,
+                  failed_assertions: failedAssertions,
+                  finding_codes: result.findings.map((finding) => finding.code),
+                },
+          ),
         );
     } finally {
       await sandbox.dispose();
@@ -306,17 +325,48 @@ async function evaluateCounterfactualSet(
   return findings;
 }
 
-function normalizePlaywrightCounterfactualResult(
+function playwrightCounterfactualDiagnostic(
+  raw: RawCommandExecutionV2,
   result: CheckExecutionResultV2,
-): CheckExecutionResultV2 {
-  if (result.evidence_adapter !== "playwright_json_v1") return result;
+  expectedAssertions: string[],
+  rejectionReasons: string[],
+) {
+  const caseIds = result.assertion_results
+    .map(
+      (assertion) =>
+        /^playwright\.case\.([a-z0-9][a-z0-9-]*)\.passed$/u.exec(
+          assertion.observation,
+        )?.[1],
+    )
+    .filter((item): item is string => Boolean(item));
+  const unexpectedCaseIds = caseIds.filter(
+    (id) => raw.observations[`playwright.case.${id}.unexpected`] === true,
+  );
+  const timedOutCaseIds = caseIds.filter(
+    (id) =>
+      Number(raw.observations[`playwright.case.${id}.timed_out_instances`]) > 0,
+  );
+  const interruptedCaseIds = caseIds.filter(
+    (id) =>
+      Number(raw.observations[`playwright.case.${id}.interrupted_instances`]) >
+      0,
+  );
   return {
-    ...result,
-    findings: result.findings.map((finding) =>
-      finding.code === "acceptance_case_unexpected" && finding.assertion_key
-        ? { ...finding, code: "assertion_value_mismatch" }
-        : finding,
-    ),
+    execution_status: raw.execution_status,
+    exit_code: raw.exit_code,
+    result_status: result.status,
+    report_error_count:
+      raw.observations["playwright.report_error_count"] ?? null,
+    expected_assertions: expectedAssertions,
+    unexpected_case_ids: [...new Set(unexpectedCaseIds)].sort(),
+    declared_unexpected_instances:
+      raw.observations["playwright.declared_unexpected_instances"] ?? null,
+    unbound_unexpected_instances:
+      raw.observations["playwright.unbound_unexpected_instances"] ?? null,
+    timed_out_case_ids: [...new Set(timedOutCaseIds)].sort(),
+    interrupted_case_ids: [...new Set(interruptedCaseIds)].sort(),
+    finding_codes: result.findings.map((finding) => finding.code),
+    rejection_reasons: rejectionReasons,
   };
 }
 

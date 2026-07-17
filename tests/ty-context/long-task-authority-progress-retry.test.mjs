@@ -158,9 +158,7 @@ test("input and expected-output authority reductions cover Global and Outcome Ch
     const globalCheck = structuredClone(outcomeCheck);
     globalCheck.key = "global-check";
     globalCheck.positive_assertions[0].key = "global-proof";
-    globalCheck.positive_assertions[0].claims = [
-      "constraint.stable-runtime",
-    ];
+    globalCheck.positive_assertions[0].claims = ["constraint.stable-runtime"];
     globalCheck.positive_assertions[0].observation = "result_copy";
     fixture.contract.global.acceptance.checks.push(globalCheck);
     fixture.contract.global.acceptance.counterfactual_controls.push({
@@ -274,8 +272,7 @@ test("input and expected-output authority reductions cover Global and Outcome Ch
       ),
     );
     assert.equal(
-      pending.revision_diff.expected_output_paths_removed_or_weakened
-        .length,
+      pending.revision_diff.expected_output_paths_removed_or_weakened.length,
       4,
     );
   } finally {
@@ -303,9 +300,7 @@ console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution
       check.verification_inputs = ["tests/scoped-oracle.mjs"];
       check.input_paths = [`src/${outcome.key}.json`];
       outcome.technical.bindings[0].target = `src/${outcome.key}.json`;
-      outcome.technical.bindings[0].carrier_paths = [
-        `src/${outcome.key}.json`,
-      ];
+      outcome.technical.bindings[0].carrier_paths = [`src/${outcome.key}.json`];
       outcome.acceptance.counterfactual_controls[0].mutation.paths = [
         `src/${outcome.key}.json`,
       ];
@@ -349,6 +344,72 @@ console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution
   }
 });
 
+test("Counterfactual failure is persisted as failing Check Progress", async () => {
+  const fixture = await createDeliveryFixture();
+  try {
+    await writeFile(
+      path.join(fixture.root, "tests", "constant-oracle.mjs"),
+      `console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:true,result_copy:true,negative:false}}));
+`,
+    );
+    const check = fixture.contract.outcomes[0].acceptance.checks[0];
+    check.runner.target = "tests/constant-oracle.mjs";
+    check.runner.argv = [];
+    check.verification_inputs = ["tests/constant-oracle.mjs"];
+    await writeContract(fixture.workdir, fixture.contract);
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    const failed = await runCliFailure(fixture.root, [
+      "long-task",
+      "verify",
+      fixture.workdir,
+      "--outcome",
+      "first",
+    ]);
+    const result = failed.check_results.find(
+      (item) => item.check_key === "first-check",
+    );
+    assert.equal(result.status, "invalid_evidence");
+    assert.deepEqual(result.claim_proofs, []);
+    assert.ok(
+      result.findings.some(
+        (finding) => finding.code === "counterfactual_integrity_failed",
+      ),
+    );
+    assert.equal(
+      failed.findings.filter(
+        (finding) => finding.code === "counterfactual_integrity_failed",
+      ).length,
+      1,
+    );
+
+    const status = await runCli(fixture.root, [
+      "long-task",
+      "status",
+      fixture.workdir,
+    ]);
+    assert.equal(status.outcomes.first, "progress_failing");
+    assert.ok(
+      status.findings.some(
+        (finding) => finding.code === "counterfactual_integrity_failed",
+      ),
+    );
+    const resume = await runCli(fixture.root, [
+      "long-task",
+      "resume",
+      fixture.workdir,
+    ]);
+    assert.equal(resume.outcomes.first, "progress_failing");
+    assert.ok(
+      resume.recent_findings.some(
+        (finding) => finding.code === "counterfactual_integrity_failed",
+      ),
+    );
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
 test("Live Final Gate rejects dirty state and accepts one clean Git-tree snapshot", async () => {
   const fixture = await createDeliveryFixture();
   try {
@@ -360,11 +421,9 @@ test("Live Final Gate rejects dirty state and accepts one clean Git-tree snapsho
     );
     await assert.rejects(
       () =>
-        runCli(
-          fixture.root,
-          ["long-task", "final-gate", fixture.workdir],
-          { skipCandidateCommit: true },
-        ),
+        runCli(fixture.root, ["long-task", "final-gate", fixture.workdir], {
+          skipCandidateCommit: true,
+        }),
       /final_gate_requires_clean_candidate_commit/,
     );
     await commitCandidate(fixture.root);

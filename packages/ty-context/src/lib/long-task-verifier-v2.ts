@@ -149,7 +149,7 @@ export async function runDeliveryChecks(
     };
 
   const rawExecutions = new Map<string, RawCommandExecutionV2>();
-  const checkResults: CheckExecutionResultV2[] = [];
+  const mainCheckResults: CheckExecutionResultV2[] = [];
   for (const check of checks) {
     let raw = rawExecutions.get(check.raw_execution_identity);
     if (!raw) {
@@ -159,15 +159,12 @@ export async function runDeliveryChecks(
     const outcome = check.outcome_key
       ? compiled.outcomes.find((item) => item.key === check.outcome_key)
       : undefined;
-    checkResults.push(
-      enrichCheckResultFindings(
-        compiled,
-        await evaluateCheckEvidence(check, raw, snapshot.root, outcome),
-      ),
+    mainCheckResults.push(
+      await evaluateCheckEvidence(check, raw, snapshot.root, outcome),
     );
   }
-  findings.push(...checkResults.flatMap((result) => result.findings));
 
+  const counterfactualFindings: LongTaskFindingV2[] = [];
   if (includeCounterfactuals) {
     const selectedGlobalCheckKeys = new Set(
       checks
@@ -175,7 +172,7 @@ export async function runDeliveryChecks(
         .map((check) => check.key),
     );
     if (selectedGlobalCheckKeys.size)
-      findings.push(
+      counterfactualFindings.push(
         ...(await evaluateGlobalCounterfactuals(
           compiled,
           snapshot.root,
@@ -196,7 +193,7 @@ export async function runDeliveryChecks(
           .filter((check) => check.outcome_key === outcome.key)
           .map((check) => check.key),
       );
-      findings.push(
+      counterfactualFindings.push(
         ...(await evaluateOutcomeCounterfactuals(
           {
             ...outcome,
@@ -214,11 +211,62 @@ export async function runDeliveryChecks(
       );
     }
   }
+  const unassignedCounterfactuals = counterfactualFindings.filter(
+    (finding) =>
+      !mainCheckResults.some((result) =>
+        findingBelongsToCheck(finding, result),
+      ),
+  );
+  const checkResults = applyCounterfactualFindings(
+    mainCheckResults,
+    counterfactualFindings,
+  ).map((result) => enrichCheckResultFindings(compiled, result));
+  findings.push(...checkResults.flatMap((result) => result.findings));
+  if (unassignedCounterfactuals.length)
+    findings.push({
+      code: "counterfactual_finding_unassigned",
+      outcome_key: null,
+      check_key: null,
+      message:
+        "A Counterfactual Finding could not be assigned to its owning Check Result.",
+      actual: unassignedCounterfactuals,
+      next_action:
+        "Repair the Counterfactual evaluator ownership invariant before trusting verification progress.",
+    });
   return {
     snapshot: snapshot.manifest,
     check_results: checkResults,
     findings: findings.map((finding) => enrichFinding(compiled, finding)),
   };
+}
+
+function applyCounterfactualFindings(
+  checkResults: CheckExecutionResultV2[],
+  findings: LongTaskFindingV2[],
+): CheckExecutionResultV2[] {
+  return checkResults.map((result) => {
+    const projected = findings.filter((finding) =>
+      findingBelongsToCheck(finding, result),
+    );
+    if (!projected.length) return result;
+    return {
+      ...result,
+      status: result.status === "passed" ? "invalid_evidence" : result.status,
+      claim_proofs: [],
+      findings: [...result.findings, ...projected],
+    };
+  });
+}
+
+function findingBelongsToCheck(
+  finding: LongTaskFindingV2,
+  result: CheckExecutionResultV2,
+): boolean {
+  return (
+    finding.check_key !== null &&
+    finding.check_key === result.check_key &&
+    finding.outcome_key === result.outcome_key
+  );
 }
 
 function finalPathFindings(
