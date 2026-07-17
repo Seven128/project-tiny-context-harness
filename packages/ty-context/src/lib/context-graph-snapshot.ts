@@ -7,12 +7,14 @@ import {
 } from "./context-manifest-schema.js";
 import { assertProtectedRepositoryFile } from "./long-task-protected-files.js";
 
+const SUPPORTING_CONTEXT_ROLES = new Set(["implementation-index", "archive"]);
+
 export interface ContextGraphSnapshot {
   mode: "referenced" | "full";
   topology_sha256: string;
   files: string[];
   sha256: Record<string, string>;
-  authority_files: string[];
+  controlling_files: string[];
   supporting_files: string[];
 }
 
@@ -21,13 +23,6 @@ export interface CampaignContextBaseline {
   files: Record<string, string>;
   baseline_sha256: string;
 }
-
-const CORE_CONTEXT_FILES = [
-  "project_context/context.toml",
-  "project_context/global.md",
-  "project_context/architecture.md",
-];
-const SUPPORTING_CONTEXT_ROLES = new Set(["implementation-index", "archive"]);
 
 export async function captureContextGraphSnapshot(
   repositoryRoot: string,
@@ -39,17 +34,21 @@ export async function captureContextGraphSnapshot(
   const allFiles = await listContextFiles(root);
   const available = new Set(allFiles);
   const selected = new Set<string>();
-  const explicit = new Set<string>();
+  const explicitlySelected = new Set<string>();
 
   if (mode === "full") {
     allFiles.forEach((file) => selected.add(file));
   } else {
-    for (const required of CORE_CONTEXT_FILES) {
+    for (const required of [
+      "project_context/context.toml",
+      "project_context/global.md",
+      "project_context/architecture.md",
+    ]) {
       if (!available.has(required)) {
         throw new Error(`context_snapshot_required_file_missing:${required}`);
       }
       selected.add(required);
-      explicit.add(required);
+      explicitlySelected.add(required);
     }
     for (const contextRef of contextRefs) {
       const normalized = normalizeRepoPath(contextRef);
@@ -57,7 +56,7 @@ export async function captureContextGraphSnapshot(
         throw new Error(`context_ref_invalid:${contextRef}`);
       }
       selected.add(normalized);
-      explicit.add(normalized);
+      explicitlySelected.add(normalized);
     }
     addTransitiveChildren(manifest, selected, available);
   }
@@ -71,13 +70,19 @@ export async function captureContextGraphSnapshot(
       ),
     ),
   );
-  const classification = classifyContextFiles(manifest, files, explicit, mode);
+  const classification = classifyContextFiles(
+    manifest,
+    files,
+    explicitlySelected,
+    mode,
+  );
   return {
     mode,
     topology_sha256: contextTopologyHash(manifest),
     files,
     sha256: sortRecord(hashes),
-    ...classification,
+    controlling_files: classification.controlling,
+    supporting_files: classification.supporting,
   };
 }
 
@@ -210,24 +215,28 @@ function addTransitiveChildren(
 function classifyContextFiles(
   manifest: ContextManifest,
   files: string[],
-  explicit: Set<string>,
+  explicitlySelected: Set<string>,
   mode: "referenced" | "full",
-): { authority_files: string[]; supporting_files: string[] } {
-  if (mode === "full") {
-    return { authority_files: [...files], supporting_files: [] };
-  }
+): { controlling: string[]; supporting: string[] } {
+  if (mode === "full") return { controlling: [...files], supporting: [] };
   const roles = new Map(
-    manifest.contexts.map((entry) => [normalizeRepoPath(entry.path), entry.role]),
+    manifest.contexts.map(
+      (entry) => [normalizeRepoPath(entry.path), entry.role] as const,
+    ),
   );
-  const supportingFiles = files.filter(
-    (file) =>
-      !explicit.has(file) && SUPPORTING_CONTEXT_ROLES.has(roles.get(file) ?? ""),
-  );
-  const supporting = new Set(supportingFiles);
-  return {
-    authority_files: files.filter((file) => !supporting.has(file)),
-    supporting_files: supportingFiles,
-  };
+  const controlling: string[] = [];
+  const supporting: string[] = [];
+  for (const file of files) {
+    const role = roles.get(file);
+    if (
+      explicitlySelected.has(file) ||
+      role === undefined ||
+      !SUPPORTING_CONTEXT_ROLES.has(role)
+    )
+      controlling.push(file);
+    else supporting.push(file);
+  }
+  return { controlling, supporting };
 }
 
 function contextTopologyHash(manifest: ContextManifest): string {
