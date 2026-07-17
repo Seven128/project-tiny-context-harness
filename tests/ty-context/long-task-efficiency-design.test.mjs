@@ -11,17 +11,25 @@ const repository = path.resolve(
 const read = (relative) => readFile(path.join(repository, relative), "utf8");
 
 test("Long-Task efficiency preserves the false-completion boundary", async () => {
-  const [globalContext, rationale, contextModel, skill, verification] =
-    await Promise.all([
-      read("project_context/global.md"),
-      read(
-        "project_context/areas/harness-package/decision-rationale/long-task-workflow.md",
-      ),
-      read("project_context/areas/harness-package/foundation/context-model.md"),
-      read(".codex/skills/long-task-workflow/SKILL.md"),
-      read("project_context/areas/harness-package/verification.md"),
-    ]);
+  const [
+    specification,
+    globalContext,
+    rationale,
+    contextModel,
+    skill,
+    verification,
+  ] = await Promise.all([
+    read("PROJECT_SPEC.md"),
+    read("project_context/global.md"),
+    read(
+      "project_context/areas/harness-package/decision-rationale/long-task-workflow.md",
+    ),
+    read("project_context/areas/harness-package/foundation/context-model.md"),
+    read(".codex/skills/long-task-workflow/SKILL.md"),
+    read("project_context/areas/harness-package/verification.md"),
+  ]);
   const combined = [
+    specification,
     globalContext,
     rationale,
     contextModel,
@@ -48,6 +56,7 @@ test("Long-Task efficiency preserves the false-completion boundary", async () =>
     "targeted Progress",
     "complete current Context snapshot",
     "Full snapshot mode treats every Context file as controlling",
+    "affected or focused result is reusable completion evidence",
   ])
     assert.ok(combined.includes(expected), expected);
 });
