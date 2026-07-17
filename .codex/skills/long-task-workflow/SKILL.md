@@ -11,13 +11,27 @@ Use one current native Goal, one repository and one workspace. Never create a sc
 
 `long-task-delivery-v2` is the only active Contract schema. Its root authoring file is `delivery-contract.yaml`. One user-selected delivery always uses one complete Contract and one Final Gate. New authoring uses inline Outcomes; existing `outcome_files` remain only a physical compatibility form and create no additional semantic, state or completion authority. `delivery-set` is retired and non-executing.
 
+## Controlling Objective
+
+Prevent false completion inside declared, falsifiable authority. Implementation may take a wrong path and the model may fail to finish, but any unmet Requirement or acceptance criterion must keep the task unfinished. Only reliable evidence from the final current snapshot may authorize machine acceptance; summaries, progress, historical tests, Receipts, one command exit code and Agent judgment never substitute for that evidence.
+
+Machine scope has two honest result classes: every declared Requirement/AC is proved on the current final snapshot, or the task remains explicitly unfinished/qualified because something is unmet, unverifiable, insufficient, stale or externally pending. `machine_accepted_external_pending` proves only machine-verifiable scope, must name the pending confirmations and never means complete external delivery.
+
+## Contract Draft And Outcome Decomposition
+
+Before the first successful formal Compile, continuously revise the same non-authoritative `delivery-contract.yaml` as the Contract Draft. Read Source, repository and relevant Context and feed Preflight findings back into that file until it is complete. The Draft does not need to fit in one response and has no Draft schema, CLI, Receipt, Authoring State, second plan or separate Authority. Draft authoring, Preflight, Compile, execution and Final Gate are one workflow in this Skill; never create a standalone Contract Draft Authoring Skill.
+
+A Draft Outcome is simply an Outcome before Authority Lock, not a schema/runtime type, Worker, scheduler task, queue item or completion boundary. Decompose only independently observable, decidable and target-verifiable results so the current Goal can use a temporary dependency-ready Rolling Frontier, targeted verification, localized findings and recovery. `depends_on` expresses acceptance readiness, not mandatory implementation scheduling, and the Frontier is never persisted.
+
+Outcome decomposes execution and diagnosis, not completion authority. Every Outcome remains under the same Contract and must pass the one Final Gate on the final current snapshot.
+
 ## Entry
 
 1. Read the user request or external initial proposal plus minimum controlling Context and decide `Context Delta: none|required`.
 2. If a valid active binding exists, run `ty-context long-task resume <workdir>`.
 3. Otherwise author one complete Delivery Contract for the whole selected delivery. Do not create a second Contract plan, intermediate Contract-authoring product, matrix or top-level Contract split inside this workflow.
 4. A Long Task always has at least one real `source_path` and one `source_claim`, and every declared Source file contains at least one Material Source Item. During Contract authoring, wrap every material requirement in the original Markdown with non-rendering `ty-source-item:start/end` markers without rewriting its text. Background-only references belong in Context or ordinary working references, not Source Authority.
-5. Make the marked Source Item keys and `source_claim` keys exactly equal. Preserve the Source text byte-for-meaning: a Source Claim `statement` may differ only by line-ending normalization, surrounding blank-line removal and trailing-space cleanup. A WebGPT-style proposal, ordinary prose plan or optional Source Plan remains valid input after this marker-only enumeration; it does not need to become strict Contract YAML or match the recommended Source Plan structure.
+5. Make the marked Source Item keys and `source_claim` keys exactly equal. Preserve the Source text byte-for-meaning: a Source Claim `statement` may differ only by line-ending normalization, surrounding blank-line removal and trailing-space cleanup. An external research proposal, ordinary prose plan or optional Source Plan remains valid input after this marker-only enumeration; it does not need to become strict Contract YAML or match the recommended Source Plan structure.
 6. When Source already provides stable semantic keys and Markdown anchors, preserve their meaning and reuse them where practical in Source Claim, Requirement, Control, Obligation and Assertion keys and `source_ref` values.
 
 ## Contract Authoring

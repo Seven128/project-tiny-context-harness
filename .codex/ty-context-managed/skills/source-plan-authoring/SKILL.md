@@ -24,6 +24,9 @@ Record every product, technical and acceptance meaning that later work must not 
 ## Relationship To Other Skills
 
 - Keep `source-plan-authoring` focused on high-fidelity Source expression and traceability.
+- This Skill authors Source, not a Contract Draft.
+- It does not replace Contract Draft authoring inside `long-task-workflow`.
+- Its recommended structure is optional input guidance, not a required protocol.
 - Use `context_product_plan` separately when a Tiny Context project needs product decisions classified and written as durable facts in `project_context/**`. This Skill does not replace or invoke that responsibility.
 - Use `long-task-workflow` later to read ordinary Source or a Source Plan with real Context/repository evidence, author one Delivery Contract, bind owners/paths/runners/proof, implement and run the Live Final Gate.
 

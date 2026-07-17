@@ -5,6 +5,7 @@
 - Maintain `project-tiny-context-harness`, the npm package and `ty-context` CLI behind the public Project Tiny Context Harness name.
 - Keep the default product small: Minimal Context preserves durable project facts; Workflow Contract defines the lightweight default agent loop; the explicitly enabled Long-Task Workflow authors one complete Contract and adds verifier-owned completion for work that needs recovery across long sessions.
 - The explicit `long-task` profile also installs the optional `source-plan-authoring` Skill. It produces one self-contained Markdown Source Plan with stable semantic keys, traceable derivations and unresolved decisions as higher-fidelity ordinary Source input; it creates no Context update, Delivery Contract, runtime state or completion authority.
+- Contract Draft authoring belongs to `long-task-workflow`: before the first successful formal Compile, the same `delivery-contract.yaml` is a mutable non-authoritative Draft and its Draft Outcomes are ordinary Outcomes in an authoring-time state, not Workers, scheduler units or new runtime entities.
 - The Long-Task Workflow is Single-Goal Rolling Delivery V2: one complete user-selected delivery, one Contract, one platform-native continuing Goal, one selected workspace, compiled Source/REQ/CTRL/OBL/AC coverage, a rolling implementation frontier and one Live Evidence Kernel whose verification strength rises per risk Outcome.
 - A Delivery Contract preserves product outcomes, non-goals, stable technical boundaries, acceptance checks and relevant Context. It does not freeze file-by-file implementation steps.
 - New Contract authoring keeps inline Outcomes. Existing `outcome_files` remain only a physical compatibility representation of the same one-Contract authority and create no semantic, state or completion boundary. Delivery Set orchestration and top-level Contract splitting within one selected delivery are retired.
@@ -17,6 +18,7 @@
 - Harness does not schedule agents, launch Codex/AppServer workers, route models, manage process trees, create branches/worktrees, merge, push, open pull requests or perform deployment. Only Contract-declared project verification commands may create child processes.
 - A long task uses the current workspace or the one worktree already chosen by the user. Task length never creates another worktree, and core execution has no internal parallel mutation.
 - Outcome is an independently decidable and target-verifiable acceptance-result unit. It is not an output-length/file/module/frontend/backend fragment, Goal, worker, branch, worktree or fixed implementation slice. The current Goal selects one or more dependency-ready Outcomes as a temporary rolling Frontier; that Frontier is internal working state, not a persisted scheduling DAG.
+- Outcome decomposes execution and diagnosis, not completion authority. Draft Outcomes reduce requirement coupling for rolling implementation, targeted verification, failure localization and recovery, while every Outcome remains under the same Contract, final current snapshot and Final Gate.
 - Harness does not prove that the user declared every real requirement. It rejects internally incomplete or unverifiable Contracts but cannot manufacture semantic completeness from entity chains.
 - A recommended Source Plan structure is an optional authoring fast path, never a required input protocol or proof that every real requirement was declared. Material Source Item markers are nevertheless mandatory activation metadata for a Long Task and are inserted without rewriting the original Source text.
 - Product tests, CI, review, Git/PR delivery, deployment and human product confirmation remain external authorities.
@@ -31,7 +33,8 @@
 
 - Keep durable project memory and completion authority, but leave mutable implementation sequencing inside the current agent/platform Goal.
 - For sufficiently explicit and observable declared scope, eliminate authoritative false completion: rolling implementation may drift, but the workflow must detect and block observable divergence, direct repair and accept only a current-snapshot result aligned with the Contract and relevant Context.
-- Retain a workflow mechanism only while its distinct drift-prevention benefit justifies its authoring, runtime, state and recovery cost; stop before diminishing returns turn the Harness back into an orchestration plane.
+- Preventing false completion inside declared authority is the Long-Task Workflow's controlling objective. Machine authority either has complete reliable current-snapshot proof or remains explicitly unfinished/qualified; `machine_accepted_external_pending` proves only machine scope and never complete external delivery.
+- Retain a workflow mechanism only when it closes an independent false-completion or delivery-drift path, fails closed and justifies its authoring, runtime, state, recovery and maintenance cost without creating another Authority, plan or scheduling plane. See [Long-Task Workflow rationale](areas/harness-package/decision-rationale/long-task-workflow.md).
 - Use one complete Contract with Compact deterministic defaults and compiler-generated Outcome/Check/Claim identities to avoid duplicate plans and mechanical authoring cost.
 - Increase proof obligations deterministically with risk instead of imposing strict ceremony on every task.
 - Do not invent rationale or store implementation summaries, command output or test-result claims in Context.
@@ -102,6 +105,7 @@
   - [workflow contract](areas/harness-package/contracts/workflow-contract.md)
   - [package-managed surfaces](areas/harness-package/contracts/package-managed-surfaces.md)
   - [Minimal Context rationale](areas/harness-package/decision-rationale/minimal-context.md)
+  - [Long-Task Workflow rationale](areas/harness-package/decision-rationale/long-task-workflow.md)
   - [implementation index](areas/harness-package/implementation-index.md)
   - [verification](areas/harness-package/verification.md)
 - [delivery-benchmark](areas/delivery-benchmark.md)

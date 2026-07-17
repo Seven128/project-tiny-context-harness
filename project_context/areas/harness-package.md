@@ -5,11 +5,13 @@
 - Provide the `ty-context` CLI, Minimal Context/default Workflow assets, validators, migrations, source-sync checks and the explicit Single-Goal Long-Task Workflow.
 - Preserve repo-native project intent and repeatable verification without reintroducing lifecycle documents or agent/process/Git orchestration.
 - Own one-Contract V2 authoring, compiled Source/REQ/CTRL/OBL/AC coverage and the Live Evidence Kernel that prevents false completion for declared Outcomes on one current Git-tree snapshot.
+- Keep Contract Draft authoring inside `long-task-workflow`; Draft Outcomes are semantic authoring-time Outcome boundaries that reduce rolling implementation/verification/recovery coupling, never runtime Workers or completion authorities.
 
 ## User / System Contract
 
 - Product Surface Contract workflow is prompt-level and project-owned; package-managed Skills may guide `context_surface_contract`, but the Harness must not add a surface-specific Context role.
 - `init` installs `core-portable` plus `workflow-default`; `ty-context enable long-task` explicitly installs the optional Source Plan Authoring Skill, Long-Task Workflow Skill, Stop Hook and templates. `disable long-task` removes only package-owned long-task assets.
+- `source-plan-authoring` produces optional upstream Source; `long-task-workflow` authors and repairs the same repository-bound Contract Draft through Compile, rolling execution and Final Gate. There is no separate Contract Draft Skill.
 - `sync` refreshes enabled package-managed assets only. `upgrade` applies safe deterministic migrations, including `composite-codex` profile selection to `long-task`, before sync/doctor. Neither command creates or activates a task.
 - `ty-context long-task ...` owns the only active one-Contract path. `delivery-set` is a fixed retired tombstone; neither path schedules Agents, Goals, branches or worktrees.
 - `delivery-contract.yaml` is the only Contract authoring authority; real Source is mandatory provenance. Material Source Items are non-rendering markers in the original files, with set-equal, text-exact, typed Source Claims. The derived Source inventory is compiled projection, not another file/state. New authoring uses inline Outcomes; existing `outcome_files` are physical compatibility only.
@@ -51,6 +53,7 @@
 - [Workflow Contract](harness-package/contracts/workflow-contract.md)
 - [Package-Managed Surface Contract](harness-package/contracts/package-managed-surfaces.md)
 - [Minimal Context Rationale](harness-package/decision-rationale/minimal-context.md)
+- [Long-Task Workflow Rationale](harness-package/decision-rationale/long-task-workflow.md)
 - [Implementation Index](harness-package/implementation-index.md)
 - [Verification](harness-package/verification.md)
 

@@ -24,6 +24,7 @@ This contract defines source-only, managed, packaged and human-facing surfaces f
 
 - `core-portable` plus `workflow-default` are installed by default.
 - `long-task` is explicit. Enabling it installs the optional Source Plan Authoring Skill, Long-Task Workflow Skill, Stop Hook and required templates. Enable, disable and upgrade recognize current or relocated package-owned absolute Hook commands only when the known managed status and package layout both match; exact repo-local retired commands remain migratable. User entries, group metadata, no-status lookalikes and commands merely containing `composite` are preserved.
+- The profile installs both Skills because their responsibilities differ: `source-plan-authoring` optionally improves ordinary Source, while `long-task-workflow` owns repository-aware Contract Draft authoring, Preflight repair, Compile, rolling execution and Final Gate. No `contract-authoring` or Draft Skill is distributed.
 - Upgrade safely removes the V1 repo-local Hook, reports unfinished V1 or development-period V2 active state as manual, and never imports historical Progress/Receipts as current authority.
 - Retired command names are CLI tombstones in code, not packaged runtime profiles. They import no Campaign/SFC/worker/AppServer/worktree modules.
 - `init`, `sync` and `upgrade` never create, discover, import, activate or abandon a Delivery Contract.
@@ -40,9 +41,12 @@ This contract defines source-only, managed, packaged and human-facing surfaces f
 
 - Package-managed Skills are business-agnostic. Project facts belong in the consumer Context or separate project-local Skills.
 - `/source-plan-authoring` explicitly authors or audits one high-fidelity Markdown Source Plan. It preserves direct requirements, marks derived content and unresolved decisions, uses stable semantic keys/anchors where useful, and creates no Context update, Contract YAML, workflow state, implementation or completion claim.
-- `/long-task-workflow` preserves ordinary prose or a Source Plan as Source, inserts text-preserving Material Source Item markers, authors one complete Compact V2 Contract with typed Source/REQ/CTRL/OBL/AC all-of coverage, runs shared-kernel read-only Preflight, compiles/approves revisions, executes a rolling Frontier and runs the Live Final Gate. It cannot create a Source Inventory/Preflight Receipt, second Contract plan, top-level split or Goal/agent/process/Git orchestration.
+- `/source-plan-authoring` authors Source, not a Contract Draft. Its recommended structure is optional input guidance and it never replaces Contract Draft authoring inside `/long-task-workflow`.
+- `/long-task-workflow` preserves ordinary prose or a Source Plan as Source, continuously revises the same non-authoritative Contract Draft, inserts text-preserving Material Source Item markers, authors typed Source/REQ/CTRL/OBL/AC all-of coverage, runs shared-kernel read-only Preflight, compiles/approves revisions, executes a non-persisted Rolling Frontier and runs the one Live Final Gate. Draft Outcomes are not Workers/scheduler units or a second completion boundary. It cannot create a Source Inventory/Preflight Receipt, second Contract plan, top-level split or Goal/agent/process/Git orchestration.
+- Managed source, source-workspace generated copies and package assets for both Skills must remain byte-identical. The Web GPT/Codex historical reason for integrated Draft authoring belongs only in source-workspace decision rationale; package-managed Skills remain platform-neutral.
 - `/normal-long-task` only reports retirement and points to `/long-task-workflow`; it creates no checklist, target prompt or Local Audit.
 - No package-managed Skill may restore Source Unit/SFC/Packet/Wave/Campaign artifacts or a second authority.
+- No package-managed or generated `contract-authoring`, `draft-authoring` or `prepare-long-task-draft` Skill exists.
 
 ## Change Impact Rule
 

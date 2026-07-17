@@ -92,7 +92,7 @@ Context: no durable fact change
 - 强制技术义务使用 `OBL`，非强制实现建议使用 `HINT`；
 - AC 只描述可观察行为，不能首次偷渡新需求。
 
-它不更新项目 Context，不绑定真实仓库 owner/path/runner，不生成 Delivery Contract YAML，不执行实现，不创建工作流状态，也不声明完成。推荐结构只是 Authoring Fast Path；普通文本方案仍可直接作为 Long-Task Source。
+它产出的是 Source，不是 Contract Draft。它不更新项目 Context，不绑定真实仓库 owner/path/runner，不生成 Delivery Contract YAML，不执行实现，不创建工作流状态，也不声明完成。推荐结构只是 Authoring Fast Path，不是强制输入协议；普通文本方案仍可直接作为 Long-Task Source，Contract Draft Authoring 仍由 `/long-task-workflow` 负责。
 
 ## Single-Goal Rolling Delivery
 
@@ -108,6 +108,10 @@ Context: no durable fact change
 - Stop Hook 在结果 stale 时阻止完成。
 
 Long-Task Contract Authoring 会尽量保留 Source 中已有的稳定 Key 与 Anchor。保持产品含义的结构分解和有真实证据的仓库绑定可以继续；新增业务规则、默认值、恢复行为、权限或范围必须进入 `decision_required`，不能静默加入。缺少推荐 Source Plan 结构不构成阻塞，但激活前必须完成只插入标记、不改写原文的 Material Source Item 枚举。
+
+第一次正式 Compile 成功前，同一个 `delivery-contract.yaml` 是可持续修改、非权威的 Contract Draft。`/long-task-workflow` 可通过多轮仓库/Context 读取与 Preflight 修复持续完善它，不要求一次响应生成完整，也不创建 Draft Receipt、Authoring State、第二份计划或单独的 Contract Draft Skill。
+
+Draft Outcome 只是 Authority Lock 前的 Outcome，不是新 runtime 类型、Worker 或调度单元。Outcome 拆分降低滚动实现、定向验证、故障定位和恢复时的需求耦合；`depends_on` 仍只表示 acceptance readiness，Rolling Frontier 仍是当前 Goal 的临时内部组织。Outcome 拆分执行与诊断，不拆分完成权威：所有 Outcome 仍属于同一个 Contract，最终当前快照仍必须通过同一个 Final Gate。
 
 平台负责物理 Goal/会话生命周期。新会话通过 `resume` 恢复语义状态；Tiny Context 不会重建此前的物理 Turn。
 

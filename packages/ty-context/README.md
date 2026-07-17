@@ -170,13 +170,17 @@ Newly generated Harness configs default to `strict_except_generated`. Generated/
 
 Use `/source-plan-authoring` only for an explicitly requested initial plan, Source Plan, source draft, or an audit/refinement of such a plan for later implementation or Contract authoring. It produces one self-contained Markdown document with preserved direct requirements, traceable necessary derivations, `DEC`/`decision_required` product choices, semantic Outcome boundaries, stable keys/anchors, distinct `OBL`/`HINT` items and observable acceptance scenarios.
 
-It does not update Context, bind a repository, generate Delivery Contract YAML, execute implementation, create workflow state or claim completion. The structure is optional; ordinary prose remains valid Long-Task Source.
+It authors Source, not a Contract Draft. It does not update Context, bind a repository, generate Delivery Contract YAML, execute implementation, create workflow state or claim completion. The structure is optional input guidance; ordinary prose remains valid Long-Task Source, and Contract Draft authoring remains inside `/long-task-workflow`.
 
 ## Single-Goal Rolling Delivery
 
 The explicit Long-Task Workflow uses one platform-native Goal, one user-selected repository/workspace, one complete `long-task-delivery-v2` Contract and one Final Gate. Outcomes are independently decidable acceptance units; Delivery Set orchestration and top-level Contract splitting inside one selected delivery are retired.
 
 Contract authoring preserves stable Source keys/anchors where practical. Meaning-preserving structural decomposition and evidence-backed repository binding may continue, while new product semantics require `decision_required`. Missing recommended Source Plan structure alone never blocks authoring.
+
+Before the first successful formal Compile, the same `delivery-contract.yaml` is the mutable, non-authoritative Contract Draft. `/long-task-workflow` revises it across repository/Context reads and Preflight repair turns; one response need not contain the whole Draft, and there is no Draft Receipt, Authoring State, second plan or standalone Contract Draft Skill.
+
+A Draft Outcome is the authoring-time state of an Outcome, not a schema/runtime type, Worker or scheduler unit. Outcome decomposition reduces requirement coupling for rolling implementation, targeted verification, failure localization and recovery. `depends_on` is acceptance readiness and the Rolling Frontier is non-persisted internal organization. Outcome decomposes execution and diagnosis, not completion authority: one Contract and one complete current-snapshot Final Gate still accept the delivery.
 
 ```text
 ty-context long-task init <workdir>

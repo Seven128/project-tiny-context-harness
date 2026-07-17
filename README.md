@@ -217,7 +217,7 @@ It outputs one self-contained Markdown Source Plan that:
 - separates mandatory `OBL` obligations from advisory `HINT` suggestions;
 - writes observable acceptance scenarios without hiding new requirements in AC text.
 
-It does not update project Context, bind real repository owners/paths/runners, generate Delivery Contract YAML, run implementation, create workflow state or claim completion. Its structure is an authoring fast path, not a required input protocol; ordinary prose plans remain valid Long-Task Source.
+It authors Source, not a Contract Draft. It does not update project Context, bind real repository owners/paths/runners, generate Delivery Contract YAML, run implementation, create workflow state or claim completion. Its structure is an authoring fast path, not a required input protocol; ordinary prose plans remain valid Long-Task Source, and Contract Draft authoring remains inside `/long-task-workflow`.
 
 ## Single-Goal Rolling Delivery
 
@@ -233,6 +233,10 @@ Use `/long-task-workflow` only when explicitly requested or when the current wor
 - a Stop Hook that rejects stale completion.
 
 Long-Task Contract authoring preserves stable Source keys and anchors where practical. Meaning-preserving structural decomposition and evidence-backed repository binding may continue; new business rules, defaults, recovery behavior, permissions or scope become `decision_required` instead of being silently added. Missing recommended Source Plan structure never blocks authoring, but the marker-only Material Source Item enumeration required for activation does.
+
+Before the first successful formal Compile, the same `delivery-contract.yaml` is a mutable, non-authoritative Contract Draft. `/long-task-workflow` may revise it across multiple repository/Context reads and Preflight repair turns; it does not need to be generated in one response and creates no Draft Receipt, Authoring State, second plan or standalone Contract Draft Skill.
+
+A Draft Outcome is only an Outcome before Authority Lock, not a new runtime type, Worker or scheduler unit. Outcome decomposition reduces requirement coupling for rolling implementation, targeted verification, failure localization and recovery. `depends_on` remains acceptance readiness and the Rolling Frontier remains temporary internal organization. Outcome decomposes execution and diagnosis, not completion authority: every Outcome still belongs to the one Contract and the complete final current snapshot must pass the one Final Gate.
 
 The platform owns physical Goal/session lifecycle. A later session runs `resume` to reconstruct semantic state; Tiny Context does not recreate the prior physical Turn.
 

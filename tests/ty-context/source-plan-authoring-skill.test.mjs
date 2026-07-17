@@ -100,6 +100,9 @@ test("source-plan-authoring is explicit, self-contained and non-authoritative", 
   assert.match(body, /Do not update `project_context\/\*\*`/u);
   assert.match(body, /Use `context_product_plan` separately/iu);
   assert.match(body, /Use `long-task-workflow` later/iu);
+  assert.match(body, /This Skill authors Source, not a Contract Draft/iu);
+  assert.match(body, /does not replace Contract Draft authoring inside `long-task-workflow`/iu);
+  assert.match(body, /recommended structure is optional input guidance, not a required protocol/iu);
   assert.match(body, /Do not bind owners, files, runners, verification inputs/iu);
   assert.match(body, /Source Plan Schema or mandatory format validator/iu);
   assert.match(body, /Source Plan CLI, Preflight or Compile step/iu);

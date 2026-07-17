@@ -18,21 +18,21 @@ This is the restrained architecture map for the Harness source repository. It re
 - Evidence Kernel V2: runner-derived adapters, explicit command runner, Git-aware snapshot, canonical multi-project Playwright AC observations, passed-Check-only Claim/Population proof, Binding/value-sensitive Counterfactuals, precise enriched findings, targeted verifier and source-recompiled same-snapshot Live Final Gate.
 - Recovery state: the user-authored `delivery-contract.yaml` and optional `source.md` live in the chosen workdir; existing `outcome_files` are physical compatibility only. Progress/Receipt and the workdir compiled file are audit/cache projections only. The Git common-dir Active Authority V3 record contains the complete compiled snapshot and immutable first base, while the matching worktree config marker binds task, revision and compiled identity.
 - Stop adapter is a no-op without a binding and otherwise runs the Live Final Gate fail-closed; it never trusts a stored Receipt or compiled cache.
-- Capability/profile selection: `packages/ty-context/src/lib/profiles.ts`, `commands/enable.ts`, `commands/disable.ts`, config parsing and upgrade migration. The profile-managed authoring surfaces are the non-authoritative `source-plan-authoring` Skill and the authoritative-workflow `long-task-workflow` Skill.
+- Capability/profile selection: `packages/ty-context/src/lib/profiles.ts`, `commands/enable.ts`, `commands/disable.ts`, config parsing and upgrade migration. The profile-managed authoring surfaces are the non-authoritative `source-plan-authoring` Skill and the authoritative-workflow `long-task-workflow` Skill; Contract Draft authoring is integrated into the latter and has no standalone Skill.
 - Managed source: `.codex/ty-context-managed/**`; packaged assets: `packages/ty-context/assets/**`; mapping authority: `packages/ty-context/source-mappings.yaml`.
 - Source-workspace durable facts: `project_context/**`; full stable workflow design: `PROJECT_SPEC.md`.
 
 ## Data / Control Flow
 
-1. `long-task init <workdir>` creates one Compact inline-Outcome `delivery-contract.yaml` template.
-2. An optional upstream Source Plan may organize discussion and research into one self-contained Markdown Source with stable semantic keys, anchors, derivation provenance and unresolved decisions. It creates no Harness state or authority.
-3. The Long-Task Skill continuously authors the same complete Contract from ordinary prose or Source Plan input and relevant Context; recommended Source Plan formatting is never an input gate, and Outcome boundaries are semantic rather than capacity/file/layer/Agent boundaries.
-4. Contract authoring inserts only non-rendering Material Source Item markers into the original Source; marker keys and Source Claim keys become a text-exact, typed, set-equal inventory.
-5. `preflight` parses and normalizes the Contract, invokes shared activation validation in collecting mode and leaves Active Authority, marker, cache, progress, Receipt, pending revision, Git state and project runners untouched.
-6. `compile` invokes the same validation in fail-fast mode, computes atomic all-of Claim Coverage and risk floor, derives canonical Source/Product/Technical/Acceptance/Risk/Context projections, freezes adapter/runner/source/verifier identities and activates the worktree binding. It does not invoke a model or modify product code.
-7. The current native Goal reads Contract and relevant Context, selects dependency-ready Outcomes as its internal Frontier, implements in the current workspace and runs project-focused tests.
+1. Source begins as the user request, ordinary prose/external plan or an optional Source Plan. The Source Plan is upstream quality guidance only and creates no Harness state, repository binding or authority.
+2. `long-task init <workdir>` may create one Compact inline-Outcome `delivery-contract.yaml`; before formal Compile it is the continuously editable, non-authoritative Contract Draft.
+3. The same `long-task-workflow` Skill authors that Draft from Source and relevant Context across as many repository reads and repair turns as needed. It decomposes independently decidable results into Draft Outcomes, which are ordinary Outcomes in an authoring-time state rather than a new runtime type.
+4. Authoring binds owners, paths, runners, verification inputs, Proof Surfaces and Bindings from real repository/Context evidence and inserts only non-rendering Material Source Item markers into the original Source. Marker keys and Source Claim keys become a text-exact, typed, set-equal inventory.
+5. `preflight` parses and normalizes the Draft, invokes shared activation validation in collecting mode and feeds findings back into the same repair loop while leaving Active Authority, marker, cache, progress, Receipt, pending revision, Git state and project runners untouched.
+6. `compile` invokes the same validation in fail-fast mode, computes atomic all-of Claim Coverage and risk floor, derives canonical projections, freezes identities and creates Authority Lock/worktree binding. No Draft entity conversion occurs.
+7. The current native Goal temporarily selects dependency-ready Outcomes as its non-persisted Rolling Frontier, implements in the current workspace and runs project-focused tests. `depends_on` is acceptance readiness, not scheduler authority.
 8. `verify --outcome/--check` runs selected checks on a current snapshot, emits proof only for fully passed Checks and stores repair-only status after re-reading active identity.
-9. Contract `status` projects `unverified|progress_passing|progress_failing|progress_stale|blocked_external`; resume is read-only and starts no execution.
+9. Contract `status` projects `unverified|progress_passing|progress_failing|progress_stale|blocked_external`; resume is read-only and recovers semantic state, ready Outcomes, findings and next action without starting execution.
 10. `final-gate`, Stop and close recompile source authority, validate the common-dir record/config marker, create one Git-tree snapshot, rerun every Check, deduplicate only identical raw execution, then re-read active identity. Stop/close use accepted-identity CAS clear.
 11. Workspace, Contract, relevant Context, source, command/oracle or verifier drift stales audit results. `abandon` removes temporary task state without touching Git or authored source/Contract.
 
@@ -73,6 +73,7 @@ This is the restrained architecture map for the Harness source repository. It re
 
 - Do not restore stages, fixed plan files, Source Unit inventories, SFC graphs, Packets, Waves, integration branches, worker attempts, model routing, top-level Contract splitting or a second completion authority.
 - Do not introduce a separate Contract Authoring Skill, Authoring receipt/state, Coverage authority, execution registry, runner/proof recipe, YAML alias or capacity-based Outcome fragmentation.
+- Do not add `draft_outcomes`, `plan_items`, a Draft runtime/queue/Receipt/Authority or a persisted Rolling Frontier; Draft Outcome and Plan Item are design/lifecycle terms only.
 - Do not turn optional Source Plan authoring into a schema, CLI, preflight, validator, cache, receipt, authority or completion gate.
 - Do not auto-trigger Long-Task Workflow from duration/file count/complexity.
 - Do not let targeted verify accept, reuse historical results in Final Gate, or allow Skill prose to weaken compiler-enforced proof.

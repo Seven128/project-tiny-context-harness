@@ -46,6 +46,8 @@ Do not infer long-task mode from duration, complexity, file count or agent prefe
 
 The workflow uses exactly one native Goal, one selected repository/workspace, one Contract and one Final Gate for the selected delivery. New authoring keeps inline Outcomes in the root `delivery-contract.yaml`; existing `outcome_files` remain only a physical compatibility form and create no semantic or completion boundary. Outcomes are independently decidable acceptance/dependency units, not output-length fragments, workers, branches, worktrees or model sessions.
 
+An optional Source Plan is upstream Source guidance, not a Contract Draft. Continuous repository-aware Contract Draft authoring belongs to `long-task-workflow` together with Preflight, Compile, execution and Final Gate; no standalone Draft Authoring Skill or state exists. Outcome decomposition reduces rolling implementation, targeted verification, diagnosis and recovery coupling, but Outcomes are never Worker/scheduler units: one current Goal, workspace, Contract and Final Gate remain authoritative.
+
 Supported CLI:
 
 - `ty-context long-task init <workdir>`

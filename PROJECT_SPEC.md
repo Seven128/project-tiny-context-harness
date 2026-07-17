@@ -20,7 +20,24 @@ The workflow cannot guarantee that model-driven implementation never drifts whil
 
 Every added workflow mechanism must buy concrete drift-prevention value. The product keeps Claim Coverage, authority/freshness binding, scope/risk escalation, actionable findings and current-snapshot recomputation because they close distinct false-completion paths, and stops adding orchestration, state or ceremony before diminishing marginal drift reduction no longer justifies authoring, runtime and recovery cost.
 
-## 2. Authority Model
+## Long-Task Workflow Controlling Objective
+
+When a delivery Source is complete and fine-grained, covers every declared requirement and acceptance criterion, and gives each item reliable executable acceptance that the executing Agent cannot weaken by itself, the Long-Task Workflow must systematically prevent any declared item that is not actually satisfied from being accepted or reported as complete.
+
+The workflow does not promise that implementation will never take a wrong turn or that a model will always finish the work. It controls the final acceptable state:
+
+1. continuously compare Source Authority, the Contract, relevant Context and the current artifact to expose observable drift;
+2. block false completion while any declared requirement or acceptance criterion is unsatisfied;
+3. localize a failure to the responsible Source Item, Outcome, Claim, Assertion, Check, Proof Surface, Binding or owner boundary;
+4. give the current Goal an actionable repair direction;
+5. re-evaluate the complete Contract on the final current snapshot before delivery; and
+6. never let a summary, progress record, historical test, Receipt, single command exit code or Agent judgment impersonate completion.
+
+Implementation drift and acceptance drift are different. Trial, repair and a temporary wrong path may occur during implementation. The invariant is that any remaining observable drift at the final snapshot fails closed and remains unfinished; the workflow must never weaken the reporting standard to turn inability to finish into completion.
+
+The workflow is responsible only for declared, falsifiable authority. It cannot prove that the user never omitted a real requirement.
+
+## 2. Authority Scope And Trusted Results
 
 - `project_context/**` owns intended durable project facts.
 - `delivery-contract.yaml` owns the declared product outcomes, stable technical boundaries and machine acceptance for one active long task.
@@ -30,6 +47,28 @@ Every added workflow mechanism must buy concrete drift-prevention value. The pro
 - Git history naturally records Contract revisions. Harness does not add a Packet revision chain, second plan or hand-written completion state.
 
 When authorities disagree, disagreement is drift, missing implementation, stale Context/Contract or a real decision—not permission to follow local code convenience.
+
+The complete authority lifecycle is:
+
+1. **Source** preserves the original delivery semantics from the user request, ordinary prose, external proposal or optional Source Plan.
+2. **Project Context** preserves durable product ownership, architecture, interface, state/recovery and repeat-execution facts.
+3. **Contract Draft** is the still-editable structured expression before the first successful formal Compile.
+4. **Compiled Contract / Authority Lock** is the declared authority that cannot be silently weakened.
+5. **Current Code** is implementation reality.
+6. **Check Evidence** is current behavioral evidence.
+7. **Final Gate** is the only machine-acceptance decision over the complete Contract on the current final snapshot.
+8. **External Confirmation** remains the authority for CI, deployment, human product acceptance and other declared external results.
+
+Progress, status, Receipts and compiled caches are recovery or audit projections, not acceptance authority. Resume restores semantic state rather than a prior physical Turn. Source, Context, Contract, verifier, runner or workspace drift stales prior evidence, and historical passes cannot be spliced into current completion.
+
+Within the controlling objective, **Plan Item** is a design-level collective term, never a `plan_items` schema field or restored workflow entity. In V2 it means every declared item that must not be swallowed by an Outcome Result: an atomic Requirement; an applicable Control field, location or state; a Non-completing Outcome; a Technical Obligation; a Global Non-goal, Constraint or Forbidden Shortcut Claim; and any other declaration that requires a non-Result Claim. An acceptance criterion is the corresponding stable named Acceptance Assertion. No `plan_items`, PI file/state/Worker or three-input execution chain is introduced.
+
+Machine authority has only two trustworthy result classes:
+
+1. reliable evidence on the current final snapshot proves every declared requirement and acceptance criterion; or
+2. an item is unmet, unverifiable, weakly evidenced, stale or externally pending, so the task remains explicitly unfinished or qualified.
+
+`machine_accepted_external_pending` is a qualified instance of the first class only for the machine-verifiable scope. It never means the complete external delivery is finished, must always be reported with the pending confirmations, and is not a vague third state between complete and incomplete.
 
 ## 3. Workflow Levels
 
@@ -89,11 +128,62 @@ The Frontier is not persisted as a scheduler graph. Full file/function/component
 
 Core execution has no internal parallel mutation. Users may explicitly use platform-native parallel or Git facilities, but those facilities are external and do not change Harness completion authority.
 
+## Contract Draft And Draft Outcome Semantics
+
+Before the first successful formal Compile, the same `delivery-contract.yaml` is the **Contract Draft**. It is mutable, non-authoritative and may be refined through repeated Source, repository and Context reads plus Preflight findings. It need not fit in one model response and has no Draft schema, Draft CLI, Draft Receipt, Authoring State, second plan or separate Authoring Authority. The first successful formal Compile changes the authority lifecycle by creating Authority Lock; it does not convert between two different products.
+
+A **Draft Outcome** is simply an Outcome in that pre-lock Contract Draft. The phrase is an authoring-time lifecycle qualifier, not a `draft_outcomes` field, `DraftOutcome` runtime type, state file, Worker, queue, scheduler unit or independent completion authority. After Authority Lock the same Outcome participates in formal Contract authority.
+
+Outcome decomposition reduces requirement coupling when a larger complete delivery contains results that are independently observable, independently decidable, target-verifiable, dependency-expressible and localizable to their own Claims, Assertions, Checks and owner boundaries. That structure improves intermediate execution and repair efficiency:
+
+1. the current Goal expands implementation detail only for dependency-ready Outcomes in its Rolling Frontier;
+2. targeted verify shortens feedback by selecting one Outcome or Check;
+3. findings localize failure to an Outcome, Claim, Assertion, Check, Proof Surface, Binding and path;
+4. resume recovers ready Outcomes, findings and the next safe action without re-deriving the whole delivery;
+5. previously passing local evidence can become precisely stale; and
+6. Outcome dependencies help the current Goal organize rolling implementation and verification order.
+
+`depends_on` means acceptance readiness, not mandatory implementation scheduling. The **Rolling Frontier** is a temporary set of dependency-ready Outcomes chosen inside the current Goal; it is never persisted as a scheduler, Worker queue, model-routing graph, process tree or execution DAG. Outcomes do not promise parallelism or fewer model calls and never remove complete current-snapshot Final Gate verification.
+
+> Outcome decomposes execution and diagnosis, not completion authority.
+
+Every Outcome still belongs to the same Contract, current snapshot and Final Gate. Output/model capacity, YAML or file length, frontend/backend layers, file/module count, Agent capacity, Worker assignment and desired parallelism are never Outcome boundaries.
+
+## Source Plan And Contract Draft Boundary
+
+**Source** is the original delivery meaning expressed by a user request, ordinary prose plan, external plan or optional Source Plan. A **Source Plan** is optional upstream Source-quality assistance: it preserves direct requirements and qualifiers, identifies traceable necessary derivations, exposes `decision_required`, and gives important content stable semantic keys and anchors. It is not a Contract Draft, Delivery Contract, project Context, repository binding, workflow Authority, implementation plan or completion proof.
+
+The recommended Source Plan layout is an authoring fast path, not an input protocol. Ordinary prose and research plans remain valid Source; missing recommended headings, keys, anchors or type labels does not block Contract authoring. Activation still requires marker-only enumeration of every Material Source Item without rendering or semantic change.
+
+Contract authoring may add only meaning-preserving structural decomposition and repository binding supported by real repository or Context evidence without a decision. A new business rule, default or threshold, permission, recovery behavior, platform or data scope, persistence or retention policy, irreversible behavior or other product-scope choice is `decision_required`. The executing Agent must not relabel its preferred inference as a necessary derivation.
+
+## Integrated Contract Authoring Rationale
+
+Contract Draft authoring belongs inside `long-task-workflow`; there is no separate `contract-authoring`, `draft-authoring` or `prepare-long-task-draft` Skill. A complete Draft may exceed a single response, so the same Skill continuously revises the same file instead of requiring one-shot generation. Repository-aware authoring must read real Context and code to bind owners, paths, runners, verification inputs, Proof Surfaces and Bindings, and Preflight findings must feed back into that same Draft.
+
+A separate Skill would add a lossy handoff, separate repository evidence from unresolved findings and invite a second plan, Authoring Authority, Receipt or lifecycle product. Draft authoring, Preflight, formal Compile, rolling implementation, verification and Final Gate are one continuous workflow over the same Contract object. The source-workspace decision rationale records the platform-specific history; package-managed Skills and public guidance retain only this platform-independent architectural reason.
+
+## Mechanism Admission Rule
+
+Every proposed or retained Long-Task mechanism must answer all of these questions during design and review:
+
+1. Which concrete false-completion or delivery-drift path does it close?
+2. Which invariant does it establish?
+3. Which test, verification or current-snapshot evidence proves that invariant?
+4. Does another mechanism already cover the same risk?
+5. Which exact false-completion path would reopen if it were removed?
+6. What authoring, runtime, state, recovery and maintenance cost does it add?
+7. Does its independent drift-prevention value still exceed that cost?
+8. Does it fail closed?
+9. Does it create a second Authority, second plan or scheduling plane?
+
+Retain a mechanism only when its distinct, non-substitutable drift-prevention value justifies its cost. This is a specification and code-review rule, not a new matrix file, Receipt, runtime Registry or authority surface.
+
 ## 5. Canonical Delivery Contract V2
 
 The root authoring authority is `delivery-contract.yaml`, schema `long-task-delivery-v2`. New authoring uses inline Outcomes in one file. Existing `outcome_files` parsing remains compatible only as a physical storage choice; fragments create no additional semantic boundary, state or completion authority. Every complete delivery selected by the user stays in one Contract and one Final Gate even when its Outcomes are weakly related.
 
-Every Long Task has at least one real Source file, and every declared Source file contains at least one Material Source Item; background-only material belongs in Context or ordinary references. During Contract authoring, every Material Source Item is wrapped in its original Markdown with a non-rendering `<!-- ty-source-item:start key=... kind=... -->` / `<!-- ty-source-item:end -->` pair without rewriting its text. Source markers support overall results, requirements, acceptance criteria, technical obligations, non-goals, forbidden shortcuts, risk facts, external confirmations and decisions. A WebGPT-style research proposal, ordinary prose plan or optional Source Plan remains ordinary Source input after this marker-only enumeration and does not need to become strict Contract YAML.
+Every Long Task has at least one real Source file, and every declared Source file contains at least one Material Source Item; background-only material belongs in Context or ordinary references. During Contract authoring, every Material Source Item is wrapped in its original Markdown with a non-rendering `<!-- ty-source-item:start key=... kind=... -->` / `<!-- ty-source-item:end -->` pair without rewriting its text. Source markers support overall results, requirements, acceptance criteria, technical obligations, non-goals, forbidden shortcuts, risk facts, external confirmations and decisions. An external research proposal, ordinary prose plan or optional Source Plan remains ordinary Source input after this marker-only enumeration and does not need to become strict Contract YAML.
 
 When Source contains stable semantic keys and Markdown anchors, Contract authoring preserves their meaning and reuses them where practical. Meaning-preserving structural decomposition and evidence-backed repository binding may add control states, Assertions, owners, paths, runners and proof. A new business rule, default, threshold, recovery behavior, permission, platform/data scope or other product semantic is a real `decision_required` blocker rather than an implicit Contract expansion.
 

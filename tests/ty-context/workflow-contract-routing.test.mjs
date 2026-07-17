@@ -45,6 +45,10 @@ test("CLI and managed guidance route only explicit or active work to long-task",
   assert.match(guidance, /current native Goal/);
   assert.match(guidance, /Context Delta: none\|required/);
   assert.match(guidance, /Local fixes preserving durable semantics are `none`/);
+  assert.match(guidance, /optional Source Plan is upstream Source guidance, not a Contract Draft/i);
+  assert.match(guidance, /Contract Draft authoring.*`long-task-workflow`/i);
+  assert.match(guidance, /Outcomes are never Worker\/scheduler units/i);
+  assert.match(guidance, /one current Goal, workspace, Contract and Final Gate remain authoritative/i);
 });
 
 test("long-task Skill is the only active long-task workflow and normal-long-task is a tombstone", async () => {
@@ -73,6 +77,15 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
   assert.match(active, /repository binding.*real repository and Context evidence/is);
   assert.match(active, /new business rule.*`decision_required`/is);
   assert.match(active, /second Contract plan/);
+  assert.match(active, /^## Controlling Objective$/m);
+  assert.match(active, /^## Contract Draft And Outcome Decomposition$/m);
+  assert.match(active, /same non-authoritative `delivery-contract\.yaml` as the Contract Draft/i);
+  assert.match(active, /does not need to fit in one response/i);
+  assert.match(active, /Draft Outcome is simply an Outcome before Authority Lock/i);
+  assert.match(active, /not a schema\/runtime type, Worker, scheduler task, queue item or completion boundary/i);
+  assert.match(active, /Outcome decomposes execution and diagnosis, not completion authority/i);
+  assert.match(active, /`depends_on` expresses acceptance readiness/i);
+  assert.match(active, /same Contract.*one Final Gate/is);
   assert.doesNotMatch(active, /Do not create a second plan, Authoring Skill product/);
   const normal = await read(
     ".codex/ty-context-managed/skills/normal-long-task/SKILL.md",
@@ -109,6 +122,9 @@ test("optional Source Plan authoring does not create a second Contract authority
   assert.match(sourcePlan, /Do not generate Delivery Contract YAML/);
   assert.match(sourcePlan, /Do not update `project_context\/\*\*`/);
   assert.match(sourcePlan, /Do not create:[\s\S]*Source Plan Schema/);
+  assert.match(sourcePlan, /This Skill authors Source, not a Contract Draft/i);
+  assert.match(sourcePlan, /does not replace Contract Draft authoring inside `long-task-workflow`/i);
+  assert.match(sourcePlan, /recommended structure is optional input guidance/i);
   assert.doesNotMatch(sourcePlan, /ty-context long-task (?:init|preflight|compile)/);
   assert.match(
     workflowContext,
