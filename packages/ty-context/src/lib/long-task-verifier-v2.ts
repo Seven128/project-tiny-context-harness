@@ -217,22 +217,16 @@ export async function runDeliveryChecks(
         findingBelongsToCheck(finding, result),
       ),
   );
+  const unassignedFinding = unassignedCounterfactuals.length
+    ? unassignedCounterfactualFinding(unassignedCounterfactuals)
+    : null;
   const checkResults = applyCounterfactualFindings(
     mainCheckResults,
     counterfactualFindings,
+    unassignedFinding,
   ).map((result) => enrichCheckResultFindings(compiled, result));
   findings.push(...checkResults.flatMap((result) => result.findings));
-  if (unassignedCounterfactuals.length)
-    findings.push({
-      code: "counterfactual_finding_unassigned",
-      outcome_key: null,
-      check_key: null,
-      message:
-        "A Counterfactual Finding could not be assigned to its owning Check Result.",
-      actual: unassignedCounterfactuals,
-      next_action:
-        "Repair the Counterfactual evaluator ownership invariant before trusting verification progress.",
-    });
+  if (unassignedFinding && !checkResults.length) findings.push(unassignedFinding);
   return {
     snapshot: snapshot.manifest,
     check_results: checkResults,
@@ -243,17 +237,22 @@ export async function runDeliveryChecks(
 function applyCounterfactualFindings(
   checkResults: CheckExecutionResultV2[],
   findings: LongTaskFindingV2[],
+  unassignedFinding: LongTaskFindingV2 | null,
 ): CheckExecutionResultV2[] {
-  return checkResults.map((result) => {
+  return checkResults.map((result, index) => {
     const projected = findings.filter((finding) =>
       findingBelongsToCheck(finding, result),
     );
-    if (!projected.length) return result;
+    const invariantFindings = unassignedFinding && index === 0
+      ? [unassignedFinding]
+      : [];
+    const projectedFindings = [...projected, ...invariantFindings];
+    if (!projectedFindings.length) return result;
     return {
       ...result,
       status: result.status === "passed" ? "invalid_evidence" : result.status,
       claim_proofs: [],
-      findings: [...result.findings, ...projected],
+      findings: [...result.findings, ...projectedFindings],
     };
   });
 }
@@ -267,6 +266,21 @@ function findingBelongsToCheck(
     finding.check_key === result.check_key &&
     finding.outcome_key === result.outcome_key
   );
+}
+
+function unassignedCounterfactualFinding(
+  actual: LongTaskFindingV2[],
+): LongTaskFindingV2 {
+  return {
+    code: "counterfactual_finding_unassigned",
+    outcome_key: null,
+    check_key: null,
+    message:
+      "A Counterfactual Finding could not be assigned to its owning Check Result.",
+    actual,
+    next_action:
+      "Repair the Counterfactual evaluator ownership invariant before trusting verification progress.",
+  };
 }
 
 function finalPathFindings(
