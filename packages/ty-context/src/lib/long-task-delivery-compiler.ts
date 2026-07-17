@@ -180,6 +180,8 @@ export async function compileDeliveryContract(
       topology_sha256: context.topology_sha256,
       files: context.files,
       sha256: context.sha256,
+      authority_files: context.authority_files,
+      supporting_files: context.supporting_files,
     },
     verifier_identity: verifier,
     effective_risk: risk.effective_level,

@@ -51,6 +51,8 @@ export interface ContextAuthoritySnapshotV2 {
   topology_sha256: string;
   files: string[];
   sha256: Record<string, string>;
+  authority_files?: string[];
+  supporting_files?: string[];
 }
 
 export interface NextAuthorityMaterialsV2 {

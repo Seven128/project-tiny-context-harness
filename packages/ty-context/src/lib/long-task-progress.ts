@@ -6,6 +6,7 @@ import type {
   WorkspaceManifestV2,
 } from "./long-task-delivery-types.js";
 import { outcomeAuthorityHash } from "./long-task-authority.js";
+import { contextAuthorityProjection } from "./long-task-context-authority.js";
 import { matchesRepoPattern } from "./long-task-paths.js";
 import { canonicalValueJson, sha256Hex } from "./strict-codec.js";
 
@@ -158,10 +159,7 @@ function runnerVerifierIdentity(
 
 function contextIdentity(compiled: CompiledDeliveryContractV2): string {
   return sha256Hex(
-    canonicalValueJson({
-      topology: compiled.context_snapshot.topology_sha256,
-      files: compiled.context_snapshot.sha256,
-    }),
+    canonicalValueJson(contextAuthorityProjection(compiled.context_snapshot)),
   );
 }
 

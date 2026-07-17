@@ -12,6 +12,8 @@ export interface ContextGraphSnapshot {
   topology_sha256: string;
   files: string[];
   sha256: Record<string, string>;
+  authority_files: string[];
+  supporting_files: string[];
 }
 
 export interface CampaignContextBaseline {
@@ -19,6 +21,13 @@ export interface CampaignContextBaseline {
   files: Record<string, string>;
   baseline_sha256: string;
 }
+
+const CORE_CONTEXT_FILES = [
+  "project_context/context.toml",
+  "project_context/global.md",
+  "project_context/architecture.md",
+];
+const SUPPORTING_CONTEXT_ROLES = new Set(["implementation-index", "archive"]);
 
 export async function captureContextGraphSnapshot(
   repositoryRoot: string,
@@ -30,19 +39,17 @@ export async function captureContextGraphSnapshot(
   const allFiles = await listContextFiles(root);
   const available = new Set(allFiles);
   const selected = new Set<string>();
+  const explicit = new Set<string>();
 
   if (mode === "full") {
     allFiles.forEach((file) => selected.add(file));
   } else {
-    for (const required of [
-      "project_context/context.toml",
-      "project_context/global.md",
-      "project_context/architecture.md",
-    ]) {
+    for (const required of CORE_CONTEXT_FILES) {
       if (!available.has(required)) {
         throw new Error(`context_snapshot_required_file_missing:${required}`);
       }
       selected.add(required);
+      explicit.add(required);
     }
     for (const contextRef of contextRefs) {
       const normalized = normalizeRepoPath(contextRef);
@@ -50,6 +57,7 @@ export async function captureContextGraphSnapshot(
         throw new Error(`context_ref_invalid:${contextRef}`);
       }
       selected.add(normalized);
+      explicit.add(normalized);
     }
     addTransitiveChildren(manifest, selected, available);
   }
@@ -63,11 +71,13 @@ export async function captureContextGraphSnapshot(
       ),
     ),
   );
+  const classification = classifyContextFiles(manifest, files, explicit, mode);
   return {
     mode,
     topology_sha256: contextTopologyHash(manifest),
     files,
     sha256: sortRecord(hashes),
+    ...classification,
   };
 }
 
@@ -195,6 +205,29 @@ function addTransitiveChildren(
       }
     }
   }
+}
+
+function classifyContextFiles(
+  manifest: ContextManifest,
+  files: string[],
+  explicit: Set<string>,
+  mode: "referenced" | "full",
+): { authority_files: string[]; supporting_files: string[] } {
+  if (mode === "full") {
+    return { authority_files: [...files], supporting_files: [] };
+  }
+  const roles = new Map(
+    manifest.contexts.map((entry) => [normalizeRepoPath(entry.path), entry.role]),
+  );
+  const supportingFiles = files.filter(
+    (file) =>
+      !explicit.has(file) && SUPPORTING_CONTEXT_ROLES.has(roles.get(file) ?? ""),
+  );
+  const supporting = new Set(supportingFiles);
+  return {
+    authority_files: files.filter((file) => !supporting.has(file)),
+    supporting_files: supportingFiles,
+  };
 }
 
 function contextTopologyHash(manifest: ContextManifest): string {

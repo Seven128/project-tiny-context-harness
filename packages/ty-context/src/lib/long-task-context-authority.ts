@@ -1,4 +1,7 @@
-import type { ContextAuthoritySnapshotV2 } from "./long-task-delivery-types.js";
+import type {
+  CompiledDeliveryContractV2,
+  ContextAuthoritySnapshotV2,
+} from "./long-task-delivery-types.js";
 import { canonicalValueJson } from "./strict-codec.js";
 
 type ClassifiedContextSnapshot = ContextAuthoritySnapshotV2 & {
@@ -67,10 +70,63 @@ export function contextAuthorityChanged(
   previous: ContextAuthoritySnapshotV2,
   next: ContextAuthoritySnapshotV2,
 ): boolean {
-  return (
-    canonicalValueJson(contextAuthorityProjection(previous)) !==
-    canonicalValueJson(contextAuthorityProjection(next))
+  return !same(
+    contextAuthorityProjection(previous),
+    contextAuthorityProjection(next),
   );
+}
+
+export function canRetainProgressForSupportingContextRevision(
+  previous: CompiledDeliveryContractV2,
+  next: CompiledDeliveryContractV2,
+): boolean {
+  const previousContext = normalizeContextAuthoritySnapshot(
+    previous.context_snapshot,
+  );
+  const nextContext = normalizeContextAuthoritySnapshot(next.context_snapshot);
+  if (same(previousContext, nextContext)) return false;
+  if (contextAuthorityChanged(previousContext, nextContext)) return false;
+  return same(
+    nonContextProgressProjection(previous),
+    nonContextProgressProjection(next),
+  );
+}
+
+function nonContextProgressProjection(
+  compiled: CompiledDeliveryContractV2,
+): unknown {
+  return {
+    schema_version: compiled.schema_version,
+    repository_root: compiled.repository_root,
+    workdir: compiled.workdir,
+    contract_file: compiled.contract_file,
+    contract_sha256: compiled.contract_sha256,
+    contract_files: compiled.contract_files,
+    source_hashes: compiled.source_hashes,
+    source_items: compiled.source_items,
+    verifier_identity: compiled.verifier_identity,
+    effective_risk: compiled.effective_risk,
+    risk_reasons: compiled.risk_reasons,
+    baseline_workspace: compiled.baseline_workspace,
+    initial_task_base: compiled.initial_task_base,
+    authority_hashes: compiled.authority_hashes,
+    authority_materials: {
+      source_hashes: compiled.authority_materials.source_hashes,
+      source_items: compiled.authority_materials.source_items,
+      product_semantics: compiled.authority_materials.product_semantics,
+      global_semantics: compiled.authority_materials.global_semantics,
+    },
+    claim_coverage: compiled.claim_coverage,
+    task: compiled.task,
+    risk: compiled.risk,
+    source_claims: compiled.source_claims,
+    global: compiled.global,
+    outcomes: compiled.outcomes,
+  };
+}
+
+function same(left: unknown, right: unknown): boolean {
+  return canonicalValueJson(left) === canonicalValueJson(right);
 }
 
 function uniqueSorted(values: string[]): string[] {

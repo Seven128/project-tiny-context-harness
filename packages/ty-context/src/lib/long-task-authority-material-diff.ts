@@ -7,6 +7,7 @@ import type {
   SourceClaimV2,
 } from "./long-task-delivery-types.js";
 import { compiledAuthorityMaterials } from "./long-task-authority-materials.js";
+import { contextAuthorityChanged } from "./long-task-context-authority.js";
 import { canonicalValueJson } from "./strict-codec.js";
 
 export interface AuthorityMaterialRevisionDiffV2 {
@@ -66,6 +67,10 @@ export function authorityMaterialRevisionDiff(
     previousMaterials.context_snapshot.sha256,
     nextMaterials.context_snapshot.sha256,
   );
+  const controllingContextChanged = contextAuthorityChanged(
+    previousMaterials.context_snapshot,
+    nextMaterials.context_snapshot,
+  );
   return {
     product_semantics_changed: productSemanticsChanged,
     global_semantics_changed: globalSemanticsChanged,
@@ -85,13 +90,7 @@ export function authorityMaterialRevisionDiff(
       sourceFilesChanged.length
         ? ["source_file_content_changed"]
         : []),
-      ...(contextSnapshotModeChanged ||
-      contextTopologyChanged ||
-      contextFilesAdded.length ||
-      contextFilesRemoved.length ||
-      contextFilesChanged.length
-        ? ["context_authority_changed"]
-        : []),
+      ...(controllingContextChanged ? ["context_authority_changed"] : []),
     ],
   };
 }
