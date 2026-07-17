@@ -9,6 +9,10 @@ description: Author, preflight, execute, resume, verify, or close one complete S
 
 Use one current native Goal, one repository and one workspace. Never create a scheduler, model worker, agent runtime, App Server, branch, worktree, merge, push, PR, deployment, Campaign/SFC/Packet/Wave chain, matrix, verdict or second Contract plan. Never activate from task size alone.
 
+The host and user own model selection. The Harness cannot switch the current conversation model and must not add model routing state or a model-switch checkpoint. Do not pause a healthy Goal solely to change or downgrade the model; capability-related drift is handled by targeted repair plus the Final Gate.
+
+Never proactively spawn, assign or coordinate parallel subagents. Platform-native internal delegation, if it occurs, is opaque and non-authoritative: do not depend on it, persist it or treat it as progress. All implementation must converge into the unified current workspace snapshot before any verification can count.
+
 `long-task-delivery-v2` is the only active Contract schema. Its root authoring file is `delivery-contract.yaml`. One user-selected delivery always uses one complete Contract and one Final Gate. New authoring uses inline Outcomes; existing `outcome_files` remain only a physical compatibility form and create no additional semantic, state or completion authority. `delivery-set` is retired and non-executing.
 
 ## Controlling Objective
@@ -16,6 +20,8 @@ Use one current native Goal, one repository and one workspace. Never create a sc
 Prevent false completion inside declared authority. Implementation may drift, fail or require rework, but every declared non-Result requirement and AC must remain traceable and any unsatisfied, unverifiable, insufficiently evidenced or stale item must block completion. Use findings to localize repair through Source Item, Outcome, Claim, Assertion, Check, Proof Surface, Binding and owner boundary.
 
 Only fresh evidence from the complete current final snapshot can create machine acceptance. Otherwise report the task as explicitly unfinished or qualified. `machine_accepted_external_pending` means machine-verifiable authority passed while named external confirmation remains; it is not complete external delivery. Never substitute summary prose, progress, historical tests, Receipts, one command exit code or Agent judgment for the Final Gate.
+
+Prefer the lowest practical Authoring, Runtime, State, Recovery and verification cost that preserves the same false-completion interception. Do not add a mechanism merely because it is possible; retain it only when its independent drift-prevention benefit exceeds its total cost and it fails closed.
 
 ## Contract Draft And Outcome Decomposition
 
@@ -98,11 +104,20 @@ ty-context long-task compile <workdir> --revise
 
 Preflight and Compile call the same activation-safety validator. Compile rejects the same Source inventory/continuity, criterion, Claim coverage, all-of proof-surface, adapter, Observation ownership, risk, owner/path/binding, runner/input, Counterfactual and weak-sensitivity errors even when Preflight was skipped. Preflight collects every independent diagnostic reliably discoverable from a parseable structure; neither command reads or writes a Preflight Receipt. The first successful formal Compile is Authority Lock and freezes an immutable initial base. Every later revision compares declared source/product/technical/acceptance/risk/context projections against active authority; progress, Receipt/cache deletion or implementation restoration cannot reopen a weakening window. The complete compiled authority snapshot lives in Git common-dir and is bound to the worktree marker by task id, authority revision and compiled identity.
 
-After Authority Lock, Source/Context/Product/Global semantic changes, Product Claim additions/removals/rewrites, verifier-content changes, runner/verification-input replacement, reduced `input_paths`, weakened `expected_output_paths`, other proof weakening, scope expansion and unprovable containment create an exact material-bound pending revision. Pure verifier package root/version relocation auto-revises; content bytes require user approval. Every path-bearing field uses one canonical grammar; internal `.`/`..`, controls, absolute/drive/UNC paths and unsupported syntax fail closed. The executing Agent must never approve its own pending revision.
+After Authority Lock, Source/Product/Global semantic changes, Product Claim additions/removals/rewrites, Controlling Context changes, verifier-content changes, runner/verification-input replacement, reduced `input_paths`, weakened `expected_output_paths`, other proof weakening, scope expansion and unprovable containment create an exact material-bound pending revision. Pure verifier package root/version relocation auto-revises; content bytes require user approval. Every path-bearing field uses one canonical grammar; internal `.`/`..`, controls, absolute/drive/UNC paths and unsupported syntax fail closed. The executing Agent must never approve its own pending revision.
 
 ## Rolling Execution
 
-Implement dependency-ready Outcomes in the current workspace and run targeted `verify --outcome/--check`. Progress is scoped by Outcome authority, resolved runner, verification inputs, relevant Context and implementation inputs. It is repair evidence only and never acceptance authority. A Counterfactual Finding belongs to its Main Check Result: it makes an otherwise passed Check `invalid_evidence`, clears Claim Proofs and persists in that Check's Progress so `status` and `resume` recover the repair direction. Global Checks use the same Progress rule without inventing a Global Outcome state.
+Implement dependency-ready Outcomes in the current workspace and run targeted `verify --outcome/--check`. Small implementation-level plans, repair hypotheses and sequencing changes remain internal execution state and are acceptable after Authority Lock; they cannot change Product or Acceptance Authority silently.
+
+Re-evaluate `Context Delta` whenever implementation or repair discovers a durable fact. Update the owning Context before continuing:
+
+- **Controlling Context** includes core Context, every explicit `context_ref`, verification and deployment Context, and every file in full snapshot mode. Revise and recompile it through the protected Authority Revision path; a meaning- or boundary-changing revision may require exact user approval.
+- **Supporting Context** is limited in referenced mode to graph-derived, non-explicit `implementation-index` and `archive` files. Update it normally, then run `ty-context long-task compile <workdir> --revise`. A supporting-only change may auto-revise without user approval and does not invalidate otherwise fresh targeted Progress. Full snapshot mode treats every Context file as controlling.
+
+Do not pause a healthy Goal solely to change or downgrade the model. Continue with the selected model and use precise findings, targeted repair and the Final Gate to correct drift. Never proactively spawn or coordinate parallel subagents; any platform-internal delegation remains opaque and non-authoritative.
+
+Progress is scoped by Outcome authority, resolved runner, verification inputs, Controlling Context and implementation inputs. It is repair evidence only and never acceptance authority. A Counterfactual Finding belongs to its Main Check Result: it makes an otherwise passed Check `invalid_evidence`, clears Claim Proofs and persists in that Check's Progress so `status` and `resume` recover the repair direction. Global Checks use the same Progress rule without inventing a Global Outcome state.
 
 Runner retry defaults to none. One retry is allowed only for `transient_once`, idempotent, read-only/test-sandbox work. Raw Execution identity binds frozen runner identity plus canonical declared Environment Requirements, never actual env values; artifact and Assertion evidence remains per Check. A failed environment probe blocks before runner start. Protected authority/proof files reject symlinks and detectable hardlinks. The Harness does not provide network isolation.
 
@@ -116,13 +131,13 @@ Use precise findings to repair the owning Source item, Claim, AC/criterion, Obse
 
 ## Live Final Authority
 
-Complete Context, product code and project tests, then create a clean candidate commit. Run:
+Complete the current Context, product code and project tests, then create a clean candidate commit. Run:
 
 ```text
 ty-context long-task final-gate <workdir>
 ```
 
-Final Gate captures active task/revision/compiled/worktree identity, recompiles source authority, validates the common-dir snapshot/marker, creates a Git-tree snapshot and reruns every required Check. It rechecks active identity before acceptance; a concurrent revision returns `active_authority_changed_during_final_gate`.
+Final Gate captures active task/revision/compiled/worktree identity, recompiles source authority, reads the complete current Context snapshot, validates the common-dir snapshot/marker, creates a Git-tree snapshot and reruns every required Check. It rechecks active identity before acceptance; a concurrent revision returns `active_authority_changed_during_final_gate`.
 
 Receipts, status, progress and compiled cache are audit/recovery data only. Targeted verify rechecks active identity before progress writes. Commit, verifier migration, clear and abandon share one active-state lock; Stop/close clear only the accepted identity through CAS. Development-period V2 Active Authority, Progress and Receipts are never migrated; doctor reports `manual_required`, after which the operator upgrades the Contract and forms a new Authority Lock. For invalid/mismatched/unrecoverable state or a stale lock, use only `ty-context long-task abandon <workdir> --force-corrupt-state`; it preserves Contract, Source, Context and Git content.
 
@@ -132,4 +147,4 @@ Qualification must remain intact through `final-gate`, `status`, `resume`, `stop
 
 ## Handoff
 
-Report implementation, effective per-Outcome risk, Claim Coverage, Live Gate result, every pending external confirmation by stable key and owner, Context status and blockers. Preserve `machine_accepted_external_pending` in the final Handoff and state explicitly that `closed` means only machine Authority cleanup. Never treat a Hook `systemMessage`, close result or Receipt as proof that external confirmation completed. State the local threat-model limits honestly: the installed package verifier and Git metadata are trusted, and undeclared requirements cannot be discovered by the Harness.
+Report implementation, effective per-Outcome risk, Claim Coverage, Live Gate result, every pending external confirmation by stable key and owner, Context status and blockers. Preserve `machine_accepted_external_pending` in the final Handoff and state explicitly that `closed` means only machine Authority cleanup. Never treat a Hook `systemMessage`, close result or Receipt as proof that external confirmation completed. State the local threat-model limits honestly: the installed package verifier and Git metadata are trusted, undeclared requirements cannot be discovered by the Harness, model selection belongs to the host/user, and platform-internal delegation is not observed.

@@ -26,13 +26,16 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 - Scratch files are optional, user/agent-owned temporary memory. They have no fixed name or schema, are not Context or completion proof, are not registered in `context.toml`, and never become Workflow or Long-Task authority.
 - A Source Plan produced by the optional `source-plan-authoring` Skill is one self-contained Markdown provenance document. It may preserve stable requirement/control/obligation/acceptance keys and derivation sources for later Contract authoring, but it is not Context, a Delivery Contract, runtime state or completion proof.
 - One root V2 `delivery-contract.yaml` (optionally with Outcome fragments) is explicit long-task authoring authority. Original sources are provenance; compiled cache, per-Check progress, receipts and status are verifier-owned temporary audit/recovery state, never Context or acceptance authority.
+- **Controlling Context** is selected Context whose meaning can change current delivery ownership, architecture, product/technical contracts, risk, recovery, verification or deployment. Core files, explicit `context_refs`, verification/deployment Context and every file in full snapshot mode are controlling. Its change cannot be silently absorbed after Authority Lock.
+- **Supporting Context** is selected only through graph expansion, is not explicitly referenced, and has role `implementation-index` or `archive`. It improves navigation or preserves background material without defining acceptance. A supporting-only revision may preserve targeted Progress, but it never becomes proof.
 - Conformance is a handoff self-check against relevant Context and current task constraints. It creates delivery evidence, not durable Context by itself.
 
 ## Fact-Source Authority
 
 - `project_context/**` is authoritative for ownership, responsibility, architecture boundaries, integration direction, dependency constraints and repeatable verification/deployment paths.
 - `DESIGN.md` is authoritative for durable visual design-system facts when a project uses it.
-- Foundation, contract, decision-rationale, architecture, verification and deployment Context interpret current implementation paths before code convenience is allowed to redefine product or architecture intent.
+- Foundation, contract, decision-rationale, architecture, verification and deployment Context interpret current implementation paths before code convenience is allowed to redefine product or architecture intent. Verification and deployment Context remain controlling because changing a repeatable proof or release boundary can change what the delivery means.
+- `implementation-index` and `archive` may be Supporting Context only when they are graph-derived and non-explicit in referenced mode. An explicit reference or full snapshot makes them controlling.
 - Code is current implementation evidence. It shows what is implemented now but cannot silently redefine intended product, architecture or ownership.
 - Tests, smoke checks, CI, review, hidden probes and human acceptance prove product quality. Context can identify repeatable verification paths, but neither Context nor Harness validators claim that behavior passed.
 - `PROJECT_SPEC.md` owns the full Harness design explanation and historical rationale in this source workspace. Role Context keeps only high-frequency durable facts.
@@ -47,7 +50,8 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 4. Treat tests and external evidence as proof only for the claims they exercise.
 5. Treat an existing `plan.md`, matrix, verdict, local audit or prose completion claim as ordinary user/task data unless an explicitly invoked Skill owns it.
 6. If Context and code disagree, report implementation drift, missing work or stale Context; do not silently replace intended facts with code shape.
-7. If a task discovers a missing durable fact, set `Context Delta: required` and update the owning Context before implementation continues.
+7. Re-evaluate `Context Delta` throughout implementation and repair. If a task discovers a missing durable fact, set `Context Delta: required` and update the owning Context before implementation continues.
+8. After Authority Lock, revise Controlling Context through the protected Authority Revision path. Supporting-only Context may auto-revise without user approval and without invalidating otherwise fresh targeted Progress, but Final Gate still reads the complete current Context snapshot.
 
 ## Role Placement
 

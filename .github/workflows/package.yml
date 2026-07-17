@@ -84,10 +84,22 @@ jobs:
         run: npm ci
       - name: Check TypeScript formatting
         run: npm run format:check
-      - name: Typecheck package
-        run: npm run typecheck --workspace project-tiny-context-harness
+      - name: Typecheck package and build once
+        run: npm run build --workspace project-tiny-context-harness
       - name: Complete package tests
-        run: npm test --workspace project-tiny-context-harness
+        run: |
+          set -o pipefail
+          npm test --workspace project-tiny-context-harness --ignore-scripts 2>&1 | tee package-test.log
+      - name: Upload package test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: package-test-diagnostics-pr-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            package-test.log
+            tests/ty-context/long-task-source-authority-closure.test.mjs
+          if-no-files-found: ignore
+          retention-days: 3
       - name: Check package canonical source drift
         run: node packages/ty-context/dist/cli.js package check-source
       - name: Validate Context and touched-source modularity
@@ -112,14 +124,22 @@ jobs:
         run: npm ci
       - name: Check TypeScript formatting
         run: npm run format:check
-      - name: Typecheck package
-        run: npm run typecheck --workspace project-tiny-context-harness
       - name: Build package
         run: npm run build --workspace project-tiny-context-harness
       - name: Validate modularity waiver lifecycle
         run: node packages/ty-context/dist/cli.js check-modularity --config-only --fail-on-warning
       - name: Complete package tests
-        run: npm test --workspace project-tiny-context-harness
+        run: |
+          set -o pipefail
+          npm test --workspace project-tiny-context-harness --ignore-scripts 2>&1 | tee package-test.log
+      - name: Upload package test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: package-test-diagnostics-main-${{ github.run_id }}-${{ github.run_attempt }}
+          path: package-test.log
+          if-no-files-found: ignore
+          retention-days: 3
       - name: Check package canonical source drift
         run: node packages/ty-context/dist/cli.js package check-source
       - name: Validate Context and touched-source modularity

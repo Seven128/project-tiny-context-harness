@@ -7,6 +7,7 @@ import type {
 } from "./long-task-contract-types.js";
 import type {
   AuthorityHashesV2,
+  ContextAuthoritySnapshotV2,
   InitialTaskBaseV2,
   NextAuthorityMaterialsV2,
   VerifierIdentityV2,
@@ -112,12 +113,7 @@ export interface CompiledDeliveryContractV2 {
   contract_files: Record<string, string>;
   source_hashes: Record<string, string>;
   source_items: CompiledSourceItemV2[];
-  context_snapshot: {
-    mode: "referenced" | "full";
-    topology_sha256: string;
-    files: string[];
-    sha256: Record<string, string>;
-  };
+  context_snapshot: ContextAuthoritySnapshotV2;
   verifier_identity: VerifierIdentityV2;
   effective_risk: EffectiveRiskLevel;
   risk_reasons: string[];

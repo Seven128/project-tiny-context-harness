@@ -13,6 +13,10 @@
   ],
   "scripts": {
     "test": "npm test --workspace project-tiny-context-harness",
+    "test:affected": "node tools/run_affected_tests.mjs",
+    "test:affected:list": "node tools/run_affected_tests.mjs --list",
+    "test:long-task:focused": "node tools/run_affected_tests.mjs --scope long-task",
+    "test:delivery-contract:focused": "node tools/run_affected_tests.mjs --scope delivery-contract",
     "launch:check": "node tools/launch_readiness_check.mjs --offline",
     "launch:strict-external": "node tools/launch_readiness_check.mjs --strict-external",
     "launch:github-metadata": "node tools/github_metadata_update.mjs",

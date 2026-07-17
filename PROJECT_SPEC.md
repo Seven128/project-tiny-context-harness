@@ -31,6 +31,8 @@ The workflow does not promise that implementation stays on course at every inter
 
 Current-snapshot evidence outranks implementation narrative and historical results. If any declared item is unsatisfied, unverifiable or no longer backed by fresh evidence, the workflow must keep the task unfinished rather than soften the completion wording. This guarantee covers only declared and verifiable authority; it cannot prove that the user never omitted a real requirement.
 
+The efficiency objective is the lowest practical total workflow cost that preserves this false-completion interception strength. Prefer equal protection with lower Authoring, Runtime, State, Recovery, maintenance and test cost, or equal cost with stronger independent protection. Stop adding mechanisms when their marginal protection no longer exceeds their total cost. Efficiency never authorizes uncertain acceptance: when the evidence boundary is unclear, the workflow still fails closed.
+
 ## Authority Scope And Trusted Results
 
 The complete authority and evidence chain is:
@@ -53,7 +55,7 @@ Within machine authority, only two result classes are trustworthy:
 
 Qualification continuity is end-to-end. `final-gate`, `status`, `resume`, `stop-check`, the package-owned Stop Hook and `close` must preserve the same accepted `workflow_status` and the complete declared `external_confirmations`. `status` and `resume` expose an accepted `final_workflow_status` only while the Final Receipt is valid and fresh; drift makes that projection `null` even though the active Contract's declared external confirmations remain visible. Stop/close may clear the accepted machine Authority through CAS, but `closed` and a non-blocking Hook message mean only that the machine lifecycle ended, never that external delivery completed. This adds no external-confirmation state, Receipt or completion tracker.
 
-Authority conflict indicates drift, omission, stale information or a genuine decision. Source or Contract meaning must never be silently changed to fit current code. Progress, Receipt, status and compiled cache are recovery or audit projections, not acceptance authority. `resume` restores semantic state rather than a previous physical Turn. Source, Context, Contract, verifier, runner or workspace changes stale affected results. Final Gate recomputes the complete decision on the current snapshot; historical evidence cannot be spliced into current completion.
+Authority conflict indicates drift, omission, stale information or a genuine decision. Source or Contract meaning must never be silently changed to fit current code. Progress, Receipt, status and compiled cache are recovery or audit projections, not acceptance authority. `resume` restores semantic state rather than a previous physical Turn. Source, Controlling Context, Contract, verifier, runner or workspace changes stale affected results. A supporting-only Context revision may preserve otherwise-fresh scoped Progress, but it always clears the Final Receipt and Final Gate still binds the complete current Context snapshot. Historical evidence cannot be spliced into current completion.
 
 The current platform session is the execution Goal. Harness does not create, simulate, persist or reconnect physical Goals or Turns, and Git history remains the ordinary record of Contract edits rather than a second plan or completion authority.
 
@@ -170,18 +172,21 @@ request, discussion, research or external implementation source
 -> current native Goal executes in current workspace
 -> temporary dependency-ready Outcome Frontier
 -> targeted repair verification
--> same-Goal repair as needed
+-> same-Goal repair and Context Delta updates as needed
 -> one-snapshot complete Final Gate
 -> Stop freshness
 -> external Git/PR/CI/deployment/human confirmation
--> required Context update and drift check
 ```
 
 Outcome is an independently decidable and target-verifiable acceptance-result unit. It is not a Goal, branch, worktree, worker, frontend/backend layer, file group, output-length fragment or fixed implementation slice. `depends_on` determines acceptance readiness. The current Goal dynamically chooses one or more ready Outcomes as an internal Frontier and forms only the technical detail needed for that Frontier.
 
 The Frontier is not persisted as a scheduler graph. Full file/function/component/test order is intentionally not frozen before implementation discovers current-code reality.
 
-Core execution has no internal parallel mutation. Users may explicitly use platform-native parallel or Git facilities, but those facilities are external and do not change Harness completion authority.
+The host and user own model selection. Harness cannot switch the model of a running conversation or Goal and creates no model-tier scheduler, model-route state or mandatory downgrade checkpoint. A healthy Goal is not paused solely to change or downgrade the model because that pause/resume cost provides no independent false-completion protection. Capability-related implementation drift is repaired in the same Goal and remains blocked by the Final Gate until resolved.
+
+Harness never proactively spawns, assigns, coordinates, retries or recovers parallel subagents. Platform-native internal delegation may occur as opaque Agent behavior, but Harness neither depends on nor persists it and never treats it as progress or proof. Every change must converge into the one current workspace snapshot before Contract-declared verification can count.
+
+`Context Delta` remains live after Authority Lock. When implementation or repair discovers a durable fact, the current Goal updates the owning Context rather than preserving a known stale fact until the end. In referenced mode, core Context, explicit `context_refs`, verification/deployment Context and every selected requirement-bearing role are **Controlling Context**; changes require protected Authority Revision and may require exact user approval. Only graph-derived, non-explicit `implementation-index` and `archive` files are **Supporting Context**; a supporting-only content revision may auto-revise through `compile --revise` and preserve otherwise-fresh targeted Progress. Full snapshot mode and explicit references treat every selected file as controlling. Final Gate always recompiles and records the complete current Context snapshot.
 
 ## 5. Canonical Delivery Contract V2
 
@@ -251,9 +256,9 @@ The Source marker key set and `source_claim` key set must be exactly equal acros
 
 Typed dispositions preserve meaning. Every non-decision Source item owns exactly one canonical target of the same semantic kind and normalized text; a target has one Source owner. `claim` points only to the corresponding non-Result Requirement/Control/Obligation/Non-completing or Global Claim. Outcome `acceptance` points to one stable `<outcome>.<check>.<assertion>` whose criterion is Source-text-identical and which proves at least one non-Result Claim independently backed by a Requirement, Control, Obligation or Non-completing Source item. Global `acceptance` instead uses `GLOBAL.<check>.<assertion>`, remains criterion-identical, proves no Outcome Claim and must prove at least one Global non-goal, constraint or forbidden-shortcut Claim independently backed by another Source item. `outcome_result` is reserved for an explicitly marked overall result. A `risk_fact` marker's Fact/Outcome metadata, disposition and declared risk pair must match exactly, and each pair has one Source owner; ambiguity is `decision_required`. Source Plan authoring uses exactly the ten Runtime names in `risk.facts`, including `data_migration`, separate `critical_user_path` and `weak_observability`, and retained `multi_repository_change`; aliases such as `migration` or a combined critical/weak fact are invalid. Global constraints/non-goals, external confirmations and genuine decisions use their dedicated forms. `out_of_scope` is retired: an explicit Source non-goal maps to a negatively proven Global non-goal, while removing an in-scope item is a compile-blocking `decision_required`.
 
-Compile derives canonical, key-sorted Product, Acceptance and Global semantic projections and combines them with Source hashes/mappings and the selected Context topology/file set/file hashes as Authority Revision materials. Requirement statements, control locations, Assertion criteria and Source-to-Acceptance mappings participate in authority and revision classification. Any Contract authority or material change requires `--revise`; Source or Context cannot be silently refrozen by ordinary compile.
+Compile derives canonical, key-sorted Product, Acceptance and Global semantic projections and combines them with Source hashes/mappings plus the complete selected Context topology/file set/file hashes. A separate Controlling Context projection determines whether a Context revision needs approval and whether scoped Progress remains fresh; Supporting Context never becomes acceptance proof. Requirement statements, control locations, Assertion criteria and Source-to-Acceptance mappings participate in authority and revision classification. Any Contract authority or material change requires `--revise`; Source or Context cannot be silently refrozen by ordinary compile.
 
-The first successful compile is Authority Lock. From that point, Source/Context/Product/Global semantic changes, Product Claim additions/removals/rewrites, verifier content changes, expanding owner/change/support/binding paths, removing forbidden paths, changing runners or existing verification inputs, reducing `input_paths`, weakening `expected_output_paths`, or weakening artifacts, environment requirements, bindings, obligations, counterfactuals, population or rollback/recovery creates a pending revision whose identity binds previous/next authority hashes, actual materials, verifier projections, diff, risk floor and affected Outcomes. Progress, Receipt/cache deletion and implementation restoration never reopen a weakening window. Every Contract authority structure has a compile-time field-policy registry so newly added fields cannot silently escape authority hashing and revision classification. Only mechanical proof additions, pure verifier relocation and machine-proven scope/input/output tightening may revise automatically. Risk downgrade is rejected and every revision invalidates old progress and Receipts.
+The first successful compile is Authority Lock. From that point, Source/Controlling-Context/Product/Global semantic changes, Product Claim additions/removals/rewrites, verifier content changes, expanding owner/change/support/binding paths, removing forbidden paths, changing runners or existing verification inputs, reducing `input_paths`, weakening `expected_output_paths`, or weakening artifacts, environment requirements, bindings, obligations, counterfactuals, population or rollback/recovery creates a pending revision whose identity binds previous/next authority hashes, actual materials, verifier projections, diff, risk floor and affected Outcomes. Progress, Receipt/cache deletion and implementation restoration never reopen a weakening window. Every Contract authority structure has a compile-time field-policy registry so newly added fields cannot silently escape authority hashing and revision classification. Only mechanical proof additions, pure verifier relocation, machine-proven scope/input/output tightening and supporting-only Context content revisions may revise automatically. Risk downgrade is rejected. Authority revisions clear the Final Receipt; every revision invalidates old Progress except a supporting-only Context revision that preserves the exact Controlling Context, Contract, verifier, Check and input identities.
 
 Contract length, model output capacity, implementation layers, module count, parallelism and Agent preference never split a delivery or Outcome. If an existing Contract uses `outcome_files`, they are only a compatible physical representation of the same one-Contract authority. The author continues editing until the whole Contract is complete; an incomplete Draft is never formally compiled.
 
@@ -263,11 +268,11 @@ One user-selected delivery always produces one Contract and one Final Gate. The 
 
 The first formal Contract compile freezes `initial_task_base` with commit, tree and workspace manifest and immediately becomes Authority Lock. Recompile retains that base. The complete `CompiledDeliveryContractV2` becomes an internal `active-long-task-authority-v3` snapshot under Git common-dir; its hash and the worktree Git-config marker bind task id, authority revision and compiled identity. `.ty-context/compiled-contract.json` is only a rebuildable projection and can never define previous authority, the initial base, risk floor or Final Gate identity. Protected Source/Product/Acceptance/risk/verifier-content changes require `--revise`; reductions create a pending hash-bound Authority Revision, while risk downgrade is rejected. The executing Agent must not approve its own pending revision.
 
-Authority publication is compare-and-swap against the expected previous compiled identity. Commit, verifier migration, accepted clear, valid abandon and corrupt cleanup all use the single `<active-record>.lock`, which contains only pid, operation and creation time for diagnosis and never becomes authority. Compile stages the cache, commits the common-dir authority and marker, then publishes the cache and invalidates derived progress/Receipts. Stop/close clear only when task id, revision, compiled identity and worktree identity still match the Live Gate result. Failed compile/revision/CAS leaves the previous snapshot, initial base and progress intact; a cache publish failure leaves the new common-dir authority valid and repairable. Development-period `active-long-task-binding-v2`, Progress and Receipts are never migrated; they produce `manual_required`, after which the operator upgrades the Contract and forms a new Authority Lock.
+Authority publication is compare-and-swap against the expected previous compiled identity. Commit, verifier migration, accepted clear, valid abandon and corrupt cleanup all use the single `<active-record>.lock`, which contains only pid, operation and creation time for diagnosis and never becomes authority. Compile stages the cache, commits the common-dir authority and marker, then publishes the cache. It clears the Final Receipt for every changed compiled identity and invalidates derived Progress unless the revision changes only Supporting Context while preserving every Progress freshness identity. Stop/close clear only when task id, revision, compiled identity and worktree identity still match the Live Gate result. Failed compile/revision/CAS leaves the previous snapshot, initial base and progress intact; a cache publish failure leaves the new common-dir authority valid and repairable. Development-period `active-long-task-binding-v2`, Progress and Receipts are never migrated; they produce `manual_required`, after which the operator upgrades the Contract and forms a new Authority Lock.
 
-Targeted verification persists independent per-Check Progress Records scoped to protected authority, check/runner/verifier identity, relevant Context, input paths, binding carriers and dependency interfaces. Counterfactual Findings are projected into their owning Check Result before Progress creation: a passed Main Check becomes `invalid_evidence`, Claim Proofs are cleared, and the same Finding is recoverable through status/resume. Global Checks use the same record without adding a Global Outcome state. Immediately before writing, targeted verification re-reads active task/revision/compiled/worktree identity; a concurrent revision returns `active_authority_changed_during_verify` and writes no stale progress.
+Targeted verification persists independent per-Check Progress Records scoped to protected authority, check/runner/verifier identity, Controlling Context, input paths, binding carriers and dependency interfaces. Counterfactual Findings are projected into their owning Check Result before Progress creation: a passed Main Check becomes `invalid_evidence`, Claim Proofs are cleared, and the same Finding is recoverable through status/resume. Global Checks use the same record without adding a Global Outcome state. Immediately before writing, targeted verification re-reads active task/revision/compiled/worktree identity; a concurrent revision returns `active_authority_changed_during_verify` and writes no stale progress.
 
-Live Final Gate requires a clean candidate commit after all required Context updates. It captures active task/revision/compiled/worktree identity, recompiles the source Contract, validates the complete common-dir snapshot/marker, creates one Git-tree snapshot and reruns the complete Contract without historical proof reuse. After workspace freshness checks it re-reads active identity; a concurrent revision yields `active_authority_changed_during_final_gate` and `needs_work`, never an accepted Receipt. Verify, status and resume read common-dir authority rather than workdir cache. Receipts remain audit-only.
+Live Final Gate requires a clean candidate commit after all required Context updates. It captures active task/revision/compiled/worktree identity, recompiles the source Contract and the complete current Context snapshot, validates the complete common-dir snapshot/marker, creates one Git-tree snapshot and reruns the complete Contract without historical proof reuse. After workspace freshness checks it re-reads active identity; a concurrent revision yields `active_authority_changed_during_final_gate` and `needs_work`, never an accepted Receipt. Verify, status and resume read common-dir authority rather than workdir cache. Receipts remain audit-only.
 
 ## 7. Authoring Preflight And Static Compile
 
@@ -291,7 +296,7 @@ Compile is deterministic, static and model-free. It calls the shared activation-
 - requires `ui_browser` proof when a UI owner surface or controls exist;
 - computes effective risk and rejects a requested level below the floor;
 - enforces risk-trigger-specific negative, Counterfactual, population, security, environment and rollback/recovery proof, including Binding-carrier mutation containment, value-mismatch-only Counterfactual validity and bounded weak-evidence sensitivity;
-- freezes source, Contract, selected Context topology/files, verifier, runner/oracle/command, workdir and repository identity;
+- freezes source, Contract, the complete selected Context snapshot and its Controlling/Supporting classification, verifier, runner/oracle/command, workdir and repository identity;
 - activates the one long-task binding for the current worktree only after a formal successful Compile.
 
 Every path-bearing Contract field uses one canonical segment grammar before Contract hashing, revision comparison, runner/input freeze and matching. `/` and Windows `\` are accepted and normalized to `/`; exactly one leading `./` is removed; runner `cwd` alone may be `.`. Internal `.`/`..`, NUL/CR/LF/Tab, empty segments, absolute paths, Windows drives, UNC paths, brackets, braces, parentheses/extglob and non-segment `**` are rejected. Repository pattern matching, subset and overlap/disjoint use the resulting AST. `not_subset` and `unknown` both fail closed for owner/binding validation and count as expansion in Authority Revision.
@@ -311,7 +316,7 @@ The Evidence Kernel retains only low-level capabilities that directly close fals
 - implementation binding/path evaluation;
 - population coverage evaluation;
 - counterfactual controls where strict risk requires them;
-- selected Context/source/runner/oracle/verifier hashes;
+- complete selected Context/source/runner/oracle/verifier hashes plus the Controlling Context freshness projection;
 - Git common-dir Active Authority V3 snapshot plus matching task/revision/identity worktree Git-config marker;
 - outcome/check projection and derived status;
 - source-recompiled Live Final Gate and audit-only Receipt;
@@ -375,6 +380,8 @@ Receipts and status describe the last audit only. Status/resume report missing o
 - Local test/Check failures are repaired in the same Goal with no new Agent or model session.
 - Retry defaults to none. A transient verification command gets one mechanical retry only when it explicitly declares `transient_once`, idempotency and a read-only/test-sandbox effect; timeout alone does not establish safety.
 - Product, acceptance or architecture semantic conflicts pause for user/main-conversation decision and are not disguised as implementation failures.
+- A healthy Goal is not paused solely for a model downgrade. Harness cannot switch the host-selected model, and model changes provide no completion authority.
+- Harness never proactively schedules parallel subagents. Opaque platform-internal delegation cannot create Progress, authority or proof.
 - If the current Goal truly ends, a new session uses `resume` for semantic recovery. Harness does not simulate the old Turn or invent a Campaign identity.
 
 ## 11. CLI Contract
@@ -398,7 +405,7 @@ ty-context long-task close <workdir>
 ty-context long-task abandon <workdir>
 ```
 
-No Long-Task CLI command may start Codex/AppServer/agents, create/delete worktrees or branches, merge, push, open PRs, retry model calls or manage process trees. Only a Contract-declared project verification command may create a child process.
+No Long-Task CLI command may start Codex/AppServer/agents, create/delete worktrees or branches, merge, push, open PRs, retry model calls, switch models, schedule subagents or manage process trees. Only a Contract-declared project verification command may create a child process.
 
 `composite-campaign` and `composite-long-task` are lightweight retirement tombstones only. They report `retired`, do not execute historical state and direct users to `ty-context long-task`.
 
@@ -410,7 +417,7 @@ The Skill is intentionally model-guidance only. It creates no Source Plan Schema
 
 `context_product_plan` keeps its existing responsibility: make product judgments inside a Tiny Context project, classify durable product facts and update the owning `project_context/**` surfaces. It is not a required stage before or after Source Plan authoring.
 
-`/long-task-workflow` remains the only active long-task execution Skill. It preserves the user/external proposal or optional Source Plan as Source, inserts only Material Source Item markers into the original text, authors one complete Compact V2 Contract with set-equal Source Claims and semantic Outcomes using REQ/CTRL/OBL/AC, runs read-only Authoring Preflight, formally compiles only when Preflight is ready, continuously implements rolling Frontiers in the current native Goal, resumes semantic state, runs the Live Final Gate and reports results. It creates no second Contract plan, Source Inventory file/Receipt, intermediate Contract-authoring product, matrix or top-level Contract split.
+`/long-task-workflow` remains the only active long-task execution Skill. It preserves the user/external proposal or optional Source Plan as Source, inserts only Material Source Item markers into the original text, authors one complete Compact V2 Contract with set-equal Source Claims and semantic Outcomes using REQ/CTRL/OBL/AC, runs read-only Authoring Preflight, formally compiles only when Preflight is ready, continuously implements rolling Frontiers in the current native Goal, keeps `Context Delta` live during implementation, resumes semantic state, runs the Live Final Gate and reports results. It creates no model-switch checkpoint, proactive subagent scheduler, second Contract plan, Source Inventory file/Receipt, intermediate Contract-authoring product, matrix or top-level Contract split.
 
 `/normal-long-task` is a retirement pointer and creates no checklist, prompt or Local Audit.
 
@@ -446,8 +453,11 @@ Release update mode is part of the release contract. Every published version dec
 - Small-fixture status/resume target: at most one second.
 - Focused new loop tests target: at most five minutes.
 - Complete Long-Task Workflow suite: at most fifteen minutes.
-- Harness makes no model calls, implements no model retry and starts no long-lived child process outside declared verification commands.
-- Automated tests call no real Codex, VM, browser matrix, large worktree farm or real external service.
+- `test:affected:list`, `test:affected`, `test:long-task:focused` and `test:delivery-contract:focused` are non-authoritative development feedback loops. Known hot spots select focused regressions; unmapped Long-Task runtime widens to the complete Long-Task suite; shared package/dependency or unknown changes widen to the full suite.
+- Package CI builds once, then executes the complete built package suites without repeating the build. Failure diagnostics are retained briefly as an artifact; this changes observability, not acceptance.
+- Full package, source-parity, smoke, pack and release gates remain required before release. No affected or focused result is reusable completion evidence.
+- Harness makes no model calls, implements no model retry, cannot switch the host-selected model and starts no long-lived child process outside declared verification commands.
+- Automated tests call no real Codex, VM, browser matrix, large worktree farm, proactive subagent scheduler or real external service.
 - Local timing may report compile/verify/final wall time, invocation count and failure stage. Harness does not fabricate tokens, model calls, parent-agent attention or platform Goal duration.
 
 ## 14. Completion And Honest Limits
@@ -457,6 +467,8 @@ The architecture is complete only when CLI, Compact/expanded Contract normalizat
 Stable honest limits:
 
 - Harness does not create or restore a platform physical Goal.
+- Harness cannot switch the model selected by the host or user.
+- Harness does not observe opaque platform-internal delegation and never treats it as authority.
 - Harness does not prove the user never omitted an undeclared requirement.
 - Harness provides no core parallel mutation.
 - Harness does not observe platform token/model-call accounting.

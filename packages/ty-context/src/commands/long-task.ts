@@ -1,4 +1,5 @@
 import path from "node:path";
+import { canRetainProgressForSupportingContextRevision } from "../lib/long-task-context-authority.js";
 import { compileDeliveryContract } from "../lib/long-task-delivery-compiler.js";
 import { runDeliveryFinalGate } from "../lib/long-task-final-v2.js";
 import {
@@ -128,6 +129,9 @@ async function compile(workdir: string, args: string[]): Promise<void> {
   });
   if (loaded.authority && loaded.authority.task_id !== compiled.task.id)
     throw new Error(`active_task_exists:${loaded.authority.workdir}`);
+  const preserveProgress =
+    previous !== null &&
+    canRetainProgressForSupportingContextRevision(previous, compiled);
   const stagedCache = await stageCompiledDeliveryContract(compiled);
   let authorityCommitted = false;
   try {
@@ -150,7 +154,7 @@ async function compile(workdir: string, args: string[]): Promise<void> {
     throw error;
   }
   if (!previous || previous.compiled_identity !== compiled.compiled_identity) {
-    await invalidateDerivedProgress(workdir);
+    if (!preserveProgress) await invalidateDerivedProgress(workdir);
     await clearFinalReceipt(compiled.repository_root, workdir);
   }
   await clearAuthorityRevision(workdir);
@@ -163,6 +167,7 @@ async function compile(workdir: string, args: string[]): Promise<void> {
       effective_risk: compiled.effective_risk,
       outcomes: compiled.outcomes.map((outcome) => outcome.key),
       claim_coverage: compiled.claim_coverage,
+      progress_preserved: preserveProgress,
     }),
   );
 }

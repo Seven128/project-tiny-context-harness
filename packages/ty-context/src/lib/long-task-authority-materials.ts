@@ -8,6 +8,7 @@ import type {
   NextAuthorityMaterialsV2,
   ProductSemanticProjectionV2,
 } from "./long-task-delivery-types.js";
+import { normalizeContextAuthoritySnapshot } from "./long-task-context-authority.js";
 import { canonicalValueJson, sha256Hex } from "./strict-codec.js";
 
 export function computeAuthorityMaterials(
@@ -21,12 +22,7 @@ export function computeAuthorityMaterials(
     source_items: [...sourceItems].sort((left, right) =>
       left.key.localeCompare(right.key),
     ),
-    context_snapshot: {
-      mode: contextSnapshot.mode,
-      topology_sha256: contextSnapshot.topology_sha256,
-      files: [...contextSnapshot.files].sort(),
-      sha256: sortRecord(contextSnapshot.sha256),
-    },
+    context_snapshot: normalizeContextAuthoritySnapshot(contextSnapshot),
     product_semantics: projectProductSemantics(contract),
     global_semantics: projectGlobalSemantics(contract),
   };
