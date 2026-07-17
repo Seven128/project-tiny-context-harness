@@ -4,28 +4,21 @@ import type {
 } from "./long-task-delivery-types.js";
 import { canonicalValueJson } from "./strict-codec.js";
 
-type ClassifiedContextSnapshot = ContextAuthoritySnapshotV2 & {
-  authority_files?: string[];
-  supporting_files?: string[];
-};
-
-export interface NormalizedContextAuthoritySnapshotV2
-  extends ContextAuthoritySnapshotV2 {
-  authority_files: string[];
+export interface NormalizedContextAuthoritySnapshotV2 extends ContextAuthoritySnapshotV2 {
+  controlling_files: string[];
   supporting_files: string[];
 }
 
 export function normalizeContextAuthoritySnapshot(
   snapshot: ContextAuthoritySnapshotV2,
 ): NormalizedContextAuthoritySnapshotV2 {
-  const classified = snapshot as ClassifiedContextSnapshot;
   const files = uniqueSorted(snapshot.files);
   const available = new Set(files);
-  const declaredAuthority = Array.isArray(classified.authority_files)
-    ? classified.authority_files.filter((file) => available.has(file))
+  const declaredAuthority = Array.isArray(snapshot.controlling_files)
+    ? snapshot.controlling_files.filter((file) => available.has(file))
     : files;
-  const declaredSupporting = Array.isArray(classified.supporting_files)
-    ? classified.supporting_files.filter((file) => available.has(file))
+  const declaredSupporting = Array.isArray(snapshot.supporting_files)
+    ? snapshot.supporting_files.filter((file) => available.has(file))
     : [];
   const authority = new Set(declaredAuthority);
   const supporting = new Set(
@@ -39,8 +32,12 @@ export function normalizeContextAuthoritySnapshot(
     mode: snapshot.mode,
     topology_sha256: snapshot.topology_sha256,
     files,
-    sha256: sortRecord(snapshot.sha256),
-    authority_files: [...authority].sort(),
+    sha256: Object.fromEntries(
+      files
+        .filter((file) => file in snapshot.sha256)
+        .map((file) => [file, snapshot.sha256[file]]),
+    ),
+    controlling_files: [...authority].sort(),
     supporting_files: [...supporting].sort(),
   };
 }
@@ -50,16 +47,16 @@ export function contextAuthorityProjection(
 ): {
   mode: ContextAuthoritySnapshotV2["mode"];
   topology_sha256: string;
-  authority_files: string[];
+  controlling_files: string[];
   sha256: Record<string, string>;
 } {
   const normalized = normalizeContextAuthoritySnapshot(snapshot);
   return {
     mode: normalized.mode,
     topology_sha256: normalized.topology_sha256,
-    authority_files: normalized.authority_files,
+    controlling_files: normalized.controlling_files,
     sha256: Object.fromEntries(
-      normalized.authority_files
+      normalized.controlling_files
         .filter((file) => file in normalized.sha256)
         .map((file) => [file, normalized.sha256[file]]),
     ),
@@ -87,41 +84,30 @@ export function canRetainProgressForSupportingContextRevision(
   if (same(previousContext, nextContext)) return false;
   if (contextAuthorityChanged(previousContext, nextContext)) return false;
   return same(
-    nonContextProgressProjection(previous),
-    nonContextProgressProjection(next),
+    progressRetentionProjection(previous),
+    progressRetentionProjection(next),
   );
 }
 
-function nonContextProgressProjection(
+function progressRetentionProjection(
   compiled: CompiledDeliveryContractV2,
 ): unknown {
+  const {
+    compiled_identity: _compiledIdentity,
+    authority_revision: _authorityRevision,
+    context_snapshot: contextSnapshot,
+    authority_materials: authorityMaterials,
+    ...rest
+  } = compiled;
   return {
-    schema_version: compiled.schema_version,
-    repository_root: compiled.repository_root,
-    workdir: compiled.workdir,
-    contract_file: compiled.contract_file,
-    contract_sha256: compiled.contract_sha256,
-    contract_files: compiled.contract_files,
-    source_hashes: compiled.source_hashes,
-    source_items: compiled.source_items,
-    verifier_identity: compiled.verifier_identity,
-    effective_risk: compiled.effective_risk,
-    risk_reasons: compiled.risk_reasons,
-    baseline_workspace: compiled.baseline_workspace,
-    initial_task_base: compiled.initial_task_base,
-    authority_hashes: compiled.authority_hashes,
+    ...rest,
+    context_snapshot: contextAuthorityProjection(contextSnapshot),
     authority_materials: {
-      source_hashes: compiled.authority_materials.source_hashes,
-      source_items: compiled.authority_materials.source_items,
-      product_semantics: compiled.authority_materials.product_semantics,
-      global_semantics: compiled.authority_materials.global_semantics,
+      ...authorityMaterials,
+      context_snapshot: contextAuthorityProjection(
+        authorityMaterials.context_snapshot,
+      ),
     },
-    claim_coverage: compiled.claim_coverage,
-    task: compiled.task,
-    risk: compiled.risk,
-    source_claims: compiled.source_claims,
-    global: compiled.global,
-    outcomes: compiled.outcomes,
   };
 }
 
@@ -131,10 +117,4 @@ function same(left: unknown, right: unknown): boolean {
 
 function uniqueSorted(values: string[]): string[] {
   return [...new Set(values)].sort();
-}
-
-function sortRecord<T>(value: Record<string, T>): Record<string, T> {
-  return Object.fromEntries(
-    Object.entries(value).sort(([left], [right]) => left.localeCompare(right)),
-  );
 }
