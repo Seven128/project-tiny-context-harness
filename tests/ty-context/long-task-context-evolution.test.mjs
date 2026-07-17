@@ -5,22 +5,29 @@ import test from "node:test";
 import { normalizeContextAuthoritySnapshot } from "../../packages/ty-context/dist/lib/long-task-context-authority.js";
 import {
   createDeliveryFixture,
+  pathExists,
   runCli,
   writeContract,
 } from "./long-task-delivery-fixtures.mjs";
 
-const SUPPORTING_CONTEXT =
-  "project_context/areas/main/implementation-index.md";
+const SUPPORTING_CONTEXT = "project_context/areas/main/implementation-index.md";
 
-async function addSupportingContext(fixture) {
+async function addTransitiveContext(
+  fixture,
+  {
+    relative = SUPPORTING_CONTEXT,
+    role = "implementation-index",
+    content = "# Implementation index\n\nInitial navigation.\n",
+  } = {},
+) {
   const manifestFile = path.join(
     fixture.root,
     "project_context",
     "context.toml",
   );
-  const supportFile = path.join(fixture.root, ...SUPPORTING_CONTEXT.split("/"));
-  await mkdir(path.dirname(supportFile), { recursive: true });
-  await writeFile(supportFile, "# Implementation index\n\nInitial navigation.\n");
+  const contextFile = path.join(fixture.root, ...relative.split("/"));
+  await mkdir(path.dirname(contextFile), { recursive: true });
+  await writeFile(contextFile, content);
   const manifest = await readFile(manifestFile, "utf8");
   await writeFile(
     manifestFile,
@@ -29,15 +36,15 @@ async function addSupportingContext(fixture) {
 path = "project_context/areas/main.md"
 role = "area"
 read_policy = "default"
-default_children = ["${SUPPORTING_CONTEXT}"]
+default_children = ["${relative}"]
 
 [[context]]
-path = "${SUPPORTING_CONTEXT}"
-role = "implementation-index"
+path = "${relative}"
+role = "${role}"
 read_policy = "on-demand"
 `,
   );
-  return { manifestFile, supportFile };
+  return { contextFile, manifestFile };
 }
 
 test("legacy Context snapshots fail closed with every file controlling", () => {
@@ -50,9 +57,9 @@ test("legacy Context snapshots fail closed with every file controlling", () => {
       [SUPPORTING_CONTEXT]: "support",
     },
   });
-  assert.deepEqual(normalized.authority_files, [
-    "project_context/global.md",
+  assert.deepEqual(normalized.controlling_files, [
     SUPPORTING_CONTEXT,
+    "project_context/global.md",
   ]);
   assert.deepEqual(normalized.supporting_files, []);
 });
@@ -60,7 +67,7 @@ test("legacy Context snapshots fail closed with every file controlling", () => {
 test("supporting Context revises without approval and preserves scoped Progress", async () => {
   const fixture = await createDeliveryFixture();
   try {
-    const { supportFile } = await addSupportingContext(fixture);
+    const { contextFile: supportFile } = await addTransitiveContext(fixture);
     await runCli(fixture.root, ["enable", "long-task"]);
     await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
 
@@ -74,7 +81,7 @@ test("supporting Context revises without approval and preserves scoped Progress"
       SUPPORTING_CONTEXT,
     ]);
     assert.ok(
-      compiled.context_snapshot.authority_files.includes(
+      compiled.context_snapshot.controlling_files.includes(
         "project_context/areas/main.md",
       ),
     );
@@ -93,6 +100,14 @@ test("supporting Context revises without approval and preserves scoped Progress"
     ]);
     assert.equal(status.outcomes.first, "progress_passing");
 
+    await runCli(fixture.root, ["long-task", "final-gate", fixture.workdir]);
+    const finalReceiptFile = path.join(
+      fixture.workdir,
+      ".ty-context",
+      "final-receipt.json",
+    );
+    assert.equal(await pathExists(finalReceiptFile), true);
+
     await writeFile(
       supportFile,
       "# Implementation index\n\nUpdated navigation discovered during execution.\n",
@@ -109,6 +124,7 @@ test("supporting Context revises without approval and preserves scoped Progress"
     ]);
     assert.equal(revised.progress_preserved, true);
     assert.equal(revised.authority_revision, 2);
+    assert.equal(await pathExists(finalReceiptFile), false);
 
     status = await runCli(fixture.root, [
       "long-task",
@@ -170,24 +186,20 @@ test("supporting Context revises without approval and preserves scoped Progress"
 test("full Context snapshots classify every selected file as controlling", async () => {
   const fixture = await createDeliveryFixture();
   try {
-    await addSupportingContext(fixture);
+    await addTransitiveContext(fixture);
     fixture.contract.task.context_snapshot_mode = "full";
     await writeContract(fixture.workdir, fixture.contract);
     await runCli(fixture.root, ["enable", "long-task"]);
     await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
     const compiled = JSON.parse(
       await readFile(
-        path.join(
-          fixture.workdir,
-          ".ty-context",
-          "compiled-contract.json",
-        ),
+        path.join(fixture.workdir, ".ty-context", "compiled-contract.json"),
         "utf8",
       ),
     );
     assert.deepEqual(compiled.context_snapshot.supporting_files, []);
     assert.ok(
-      compiled.context_snapshot.authority_files.includes(SUPPORTING_CONTEXT),
+      compiled.context_snapshot.controlling_files.includes(SUPPORTING_CONTEXT),
     );
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
@@ -197,26 +209,50 @@ test("full Context snapshots classify every selected file as controlling", async
 test("explicitly referenced supporting roles remain controlling", async () => {
   const fixture = await createDeliveryFixture();
   try {
-    await addSupportingContext(fixture);
+    await addTransitiveContext(fixture);
     fixture.contract.task.context_refs.push(SUPPORTING_CONTEXT);
     await writeContract(fixture.workdir, fixture.contract);
     await runCli(fixture.root, ["enable", "long-task"]);
     await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
     const compiled = JSON.parse(
       await readFile(
-        path.join(
-          fixture.workdir,
-          ".ty-context",
-          "compiled-contract.json",
-        ),
+        path.join(fixture.workdir, ".ty-context", "compiled-contract.json"),
         "utf8",
       ),
     );
     assert.ok(
-      compiled.context_snapshot.authority_files.includes(SUPPORTING_CONTEXT),
+      compiled.context_snapshot.controlling_files.includes(SUPPORTING_CONTEXT),
     );
     assert.ok(
       !compiled.context_snapshot.supporting_files.includes(SUPPORTING_CONTEXT),
+    );
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("verification Context remains controlling in referenced mode", async () => {
+  const fixture = await createDeliveryFixture();
+  const verificationContext = "project_context/areas/main/verification.md";
+  try {
+    await addTransitiveContext(fixture, {
+      relative: verificationContext,
+      role: "verification",
+      content: "# Verification\n\nCurrent executable checks.\n",
+    });
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    const compiled = JSON.parse(
+      await readFile(
+        path.join(fixture.workdir, ".ty-context", "compiled-contract.json"),
+        "utf8",
+      ),
+    );
+    assert.ok(
+      compiled.context_snapshot.controlling_files.includes(verificationContext),
+    );
+    assert.ok(
+      !compiled.context_snapshot.supporting_files.includes(verificationContext),
     );
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
