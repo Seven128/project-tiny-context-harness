@@ -67,9 +67,9 @@ Coding agents need two different kinds of help:
 - durable facts that survive sessions without loading the whole repository;
 - trustworthy completion checks when a task spans many edits or context compactions.
 
-Tiny Context keeps those concerns narrow. `project_context/**` records durable ownership, architecture, contracts and repeatable verification. The default Workflow Contract guides ordinary work. The explicit Long-Task Workflow adds one machine-checked Delivery Contract, rolling repair verification, a same-snapshot Final Gate and Stop freshness.
+Tiny Context keeps those concerns narrow. `project_context/**` records durable ownership, architecture, contracts and repeatable verification. The default Workflow Contract combines manifest routing with one bounded Context search before `Context Delta`. The explicit Long-Task Workflow adds one machine-checked Delivery Contract, a one-time post-Authority-Lock model choice, rolling repair verification, a same-snapshot Final Gate and Stop freshness.
 
-It does not launch models, spawn agents, create branches or worktrees, merge, push, open pull requests, deploy, or claim to replace project tests and human acceptance.
+It does not launch or switch models, spawn agents, create branches or worktrees, merge, push, open pull requests, deploy, or claim to replace project tests and human acceptance.
 
 ## Capability Model
 
@@ -164,7 +164,9 @@ project_context/context.toml
 minimum graph-relevant area/role Context
 ```
 
-Only near-universal recovery facts should use `read_policy = "default"`; specialized architecture, contract, deployment and historical detail should be task-triggered `on-demand` Context. `ty-context doctor` reports the deterministic default read footprint, per-file/total soft-budget overages and byte-identical default files. These are advisory maintenance signals, not a new validation gate or workflow state.
+Only near-universal recovery facts should use `read_policy = "default"`; specialized architecture, contract, deployment and historical detail should be task-triggered `on-demand` Context. Before deciding `Context Delta`, the Agent also runs one bounded text search over `project_context/**` using a small set of high-signal task terms such as explicit area/module names and API/schema/state/security/verification/deployment language. Matching files are merged with manifest candidates and filtered by semantic relevance. This is not a vector or persistent retrieval system and creates no index, cache, registry, search state or authority.
+
+`ty-context doctor` reports the deterministic default read footprint, per-file/total soft-budget overages and byte-identical default files. These are advisory maintenance signals, not a new validation gate or workflow state.
 
 Typical roles are area/domain, contract, foundation, decision-rationale, implementation-index, verification and deployment. Context owns durable intended boundaries; code owns current implementation; tests, CI, browser/runtime evidence and people own behavior and product acceptance.
 
@@ -180,14 +182,15 @@ Context: no durable fact change
 
 Ordinary tasks stay lightweight:
 
-1. read minimum relevant Context;
-2. decide `Context Delta: none|required`;
-3. update owning Context first when durable semantics change;
-4. use the platform's internal plan;
-5. implement and run project-owned verification;
-6. perform Contract Conformance and Context drift checks.
+1. read core/default Context and collect manifest candidates;
+2. run one bounded Context search over `project_context/**` and read only relevant matches;
+3. decide `Context Delta: none|required`;
+4. update owning Context first when durable semantics change;
+5. use the platform's internal plan;
+6. implement and run project-owned verification;
+7. perform Contract Conformance and Context drift checks.
 
-The default workflow creates no required `plan.md`, matrix, verdict, evidence ledger or second execution plan. Task length, file count and complexity never auto-enable long-task state.
+The default workflow creates no required `plan.md`, matrix, verdict, evidence ledger, persistent Context-search index or second execution plan. Task length, file count and complexity never auto-enable long-task state.
 
 Plan Validator commands no longer exist; existing plan, matrix or verdict files remain ordinary user files.
 
@@ -234,6 +237,7 @@ Use `/long-task-workflow` only when explicitly requested or when the current wor
 - one user-selected repository/worktree;
 - one complete selected delivery, one Contract and one Final Gate;
 - Outcome dependencies as acceptance readiness, not worker scheduling;
+- one user model-choice checkpoint after first Authority Lock and before implementation;
 - a rolling internal implementation Frontier;
 - targeted repair checks that never accept;
 - a complete Final Gate on one current snapshot;
@@ -242,6 +246,8 @@ Use `/long-task-workflow` only when explicitly requested or when the current wor
 Long-Task Contract authoring preserves stable Source keys and anchors where practical. Meaning-preserving structural decomposition and evidence-backed repository binding may continue; new business rules, defaults, recovery behavior, permissions or scope become `decision_required` instead of being silently added. Missing recommended Source Plan structure never blocks authoring, but the marker-only Material Source Item enumeration required for activation does.
 
 Before the first successful formal Compile, `delivery-contract.yaml` is one non-authoritative Contract Draft. `/long-task-workflow` keeps revising that same Draft across repository/Context reads and Preflight repair rounds; it does not require one response to produce a complete Contract. Draft authoring is integrated because repository bindings and verification inputs need real evidence, Preflight findings must feed back into the same object, and a separate handoff would risk lost meaning or a second plan/authority. No standalone Contract Draft Skill, Draft Receipt or Authoring State exists.
+
+The first successful Compile creates Authority Lock and returns `execution_model_checkpoint.required: true`. Before implementation, the Agent asks the user to `continue_current_model` or switch models and then resume the active Long-Task. A task-specific model strategy already stated explicitly satisfies the checkpoint. Later Compile revisions return `required: false`; Harness does not switch models, persist acknowledgement/model-route state or repeat the pause.
 
 The package-managed Long-Task Skill uses progressive disclosure: its main `SKILL.md` keeps the objective, boundaries and phase routing; one-level references are read only for Contract authoring, evidence design or authority lifecycle. This reduces routine instruction load without moving any rule into a second authority. When Source or controlling Context declares an architecture invariant, the Contract uses existing technical obligations/global constraints/forbidden shortcuts, owner/path/Binding boundaries and a project-owned executable Check. Functional acceptance cannot substitute when the architecture invariant can fail independently.
 
@@ -270,7 +276,7 @@ ty-context long-task abandon <workdir> [--force-corrupt-state]
 
 - `init` creates one Compact inline-Outcome Contract template.
 - `preflight` applies Compact defaults and reports all discoverable Source/REQ/CTRL/OBL/AC, Context, risk, path/binding, runner/input and proof diagnostics. Exact duplicate diagnostics are merged with `occurrences`; known problems may include stable `refs` and a safe `repair_hint` that never weakens authority or invents product semantics. It is read-only: no Authority Lock, marker, cache, progress, Receipt, pending revision, state lock or project Check.
-- `compile` generates Global plus Outcome Result/Requirement/Control-field/Non-completing/Technical Claims, rejects uncovered Claims, preserves an immutable first baseline and makes the first successful formal Compile the Authority Lock. Every later revision compares against active authority regardless of progress, Receipt/cache deletion or implementation restoration. It freezes Source/Context/Product/Acceptance/Global/verifier materials, owner/binding authority, resolved runners and verification inputs in the complete common-dir Active Authority V3 snapshot.
+- `compile` generates Global plus Outcome Result/Requirement/Control-field/Non-completing/Technical Claims, rejects uncovered Claims, preserves an immutable first baseline and makes the first successful formal Compile the Authority Lock. The first result also includes `execution_model_checkpoint.required: true`; later Compile results return `required: false`. Every revision compares against active authority regardless of progress, Receipt/cache deletion or implementation restoration. Source/Context/Product/Acceptance/Global/verifier materials, owner/binding authority, resolved runners and verification inputs are frozen in the common-dir Active Authority V3 snapshot; the model-choice result is not stored as Authority state.
 - `verify` writes scoped per-Check Progress Records only after rechecking active task/revision/compiled/worktree identity. A concurrent revision returns `active_authority_changed_during_verify` and writes no stale progress.
 - `status` reports each Outcome as `unverified`, `progress_passing`, `progress_failing`, `progress_stale` or `blocked_external`. It also reports the fresh Final Receipt as `final_workflow_status` (or `null` after drift) and the active Contract's complete `external_confirmations`. It reads the common-dir authority snapshot and reports a missing or mismatched workdir cache as a repairable diagnostic.
 - `resume` is read-only and reports task identity, risk, relevant Context, Git state, the same `final_workflow_status` and external confirmations, ready Outcomes, findings and the next safe action from the common-dir authority snapshot.
@@ -378,7 +384,7 @@ Typed dispositions keep overall results, Requirement/Control/Obligation/Non-comp
 
 Delivery Set orchestration and top-level Contract splitting within one selected delivery are retired. `ty-context delivery-set ...` returns a fixed non-executing tombstone.
 
-Every Contract-authority, Source hash/file-set, Context topology/file-set/hash, Product/Global semantic or verifier-content change requires `--revise`; ordinary compile cannot silently refreeze it. After Authority Lock, reductions and Product Claim additions require approval of an exact revision identity bound to previous/next materials and verifier projections. Pure verifier package root/version relocation auto-revises, while bundle/schema/hook byte changes require user approval. Every Contract and Check execution field has a compile-time policy classification. Only mechanical proof additions, pure verifier relocation and machine-proven scope/input/output tightening revise automatically.
+Every Contract-authority, Source hash/file-set, selected Context authority structure/file-set/hash, Product/Global semantic or verifier-content change requires `--revise`; ordinary Compile cannot silently refreeze it. Retrieval-only `context.toml` changes do not revise active Authority, while selected ownership, role/dependency and content changes remain protected. After Authority Lock, reductions and Product Claim additions require approval of an exact revision identity. Pure verifier relocation and proven tightening may revise automatically.
 
 Every path-bearing field uses one canonical grammar before hashing and matching. Windows separators and one leading `./` normalize to `/`; runner `cwd` alone may be `.`. Internal `.`/`..`, controls, empty segments, absolute/drive/UNC paths, brackets, braces, parentheses/extglob and non-segment `**` are rejected. Pattern matching, subset and overlap/disjoint use the same AST, and unknown relations fail closed.
 
@@ -386,7 +392,7 @@ Every path-bearing field uses one canonical grammar before hashing and matching.
 
 - **L0**: local, reversible, directly testable work stays on the default workflow.
 - **L1 standard**: multiple observable Outcomes or cross-session recovery, with reliable executable checks.
-- **L2 strict**: public API/schema, persistent data, migration, security/permission boundary, irreversible external effect, full-population operation, or a critical path with weak observability. Proof is bound to the affected Outcome; multi-repository delivery is unsupported.
+- **L2 strict**: the same Long-Task workflow and Outcome model, with stronger proof on affected public API/schema, persistent data, migration, security/permission, irreversible, full-population or weak-observability critical-path Outcomes. Multi-repository delivery is unsupported.
 
 An explicit user request can raise the level to strict. Explicit `standard` below the computed floor fails with `risk_level_below_required`. Strict negative, counterfactual, population, security, environment and rollback/recovery obligations are compiler-enforced as applicable. Changed paths outside the declared envelope return a `scope_escape` Finding and require the same Goal to review risk/ownership, revise and recompile the Contract.
 
@@ -396,19 +402,19 @@ Final acceptance is computed from executable current evidence, not agent prose. 
 
 Every Outcome has at least one non-Result atomic Claim, and a Claim is covered only when all `required_proof_surfaces` are covered. Claim-bearing assertions use explicit expected-value comparisons; unary `truthy`/`falsy` are forbidden, and `exists` is limited to `implementation_structure` obligations. Across all Checks sharing one Raw Execution identity, one claim-bearing Observation belongs to one Assertion. Playwright Claim proof has one canonical form: `playwright.case.<ac-key>.passed equals true`. Missing, skipped, flaky, unexpected, failed or duplicate-within-project ACs fail closed; the same AC across distinct Playwright projects aggregates only when every instance passes. Decoder diagnostic fields such as aggregate pass, executed, skipped, status and counts cannot prove Claims.
 
-Outcome Counterfactuals bind a local Binding; Global Counterfactuals bind an Outcome-owned `binding_ref`. Both may mutate only a proven subset of carriers. `structured_json_v2` requires completed exit-zero execution with exactly the expected `assertion_value_mismatch` set. A weak `playwright_json_v1` Counterfactual may accept exit one only when valid JSON has no root error and every unexpected Test Instance is uniquely accounted for by the designated executed ACs; every unspecified declared AC passes and there is no unbound/extra Test, missing/skipped/flaky/timed-out/interrupted AC, artifact/population/environment or other Evidence failure. Exit zero with an unexpected AC and exit codes above one fail closed. Only an exactly explained exit removes the generic non-Assertion `test_failed` and normalizes designated unexpected ACs; ordinary Playwright Baseline Checks still require exit zero. Standard frozen Playwright content is trusted verifier input and needs no Counterfactual. For a `weak_observability` Outcome, every claim-bearing Playwright AC and related Claim needs same-Check sensitivity; constant, partial and other-Check proof fails. Claim and Population proofs are emitted only after the complete Check status is `passed`.
+Outcome Counterfactuals bind a local Binding; Global Counterfactuals bind an Outcome-owned `binding_ref`. Both may mutate only a proven subset of carriers. `structured_json_v2` requires completed exit-zero execution with exactly the expected `assertion_value_mismatch` set. A weak `playwright_json_v1` Counterfactual may accept exit one only under exact, complete unexpected-instance accounting; ordinary Playwright Baseline Checks still require exit zero. Standard frozen Playwright content is trusted verifier input. For a `weak_observability` Outcome, every claim-bearing Playwright AC and related Claim needs same-Check sensitivity. Claim and Population proofs are emitted only after the complete Check status is `passed`.
 
-Raw Execution identity binds frozen runner identity plus canonical declared Environment Requirements, never actual environment values. A Playwright Test uses `[ac:<assertion-key>]`; one Test may bind at most one declared AC, undeclared tags are ignored, and legacy `[<key>]` works only for declared keys. Report-error, declared/unbound-unexpected and per-AC unexpected/timeout/interruption observations are Counterfactual diagnostics only and cannot prove Claims. Every Claim-bearing structured Check needs same-Check, Claim-related Counterfactual sensitivity; unrelated Artifacts or another Check do not count, Population exempts only its own Claims unless observability is weak, and Result proof must be sensitive through Result plus a related non-Result Claim. Counterfactual Findings are projected into their owning Check Result before Progress is written: an otherwise passed Check becomes `invalid_evidence`, Claim Proofs clear, and status/resume recover the Finding for Outcome and Global Checks without a new Global Outcome state. Findings from checks, Counterfactuals, Population, scope/binding, Source mapping, adapter, proof-surface and sensitivity validation carry Source, canonical target, Claim, AC/criterion, Observation, expected/actual and owner paths into Explain/Status/Resume. `explain` traces Source Item → canonical target → Claim or Assertion → required surfaces → Check → adapter → Observation; a Global Source AC also traces its Global Claim, Counterfactual and Outcome-owned `binding_ref`. Global hard failure yields `needs_work`; otherwise any Global or Outcome environment block yields `blocked_external`. Contract, source, relevant Context, Oracle/runner, verifier or workspace drift invalidates previous results.
+Raw Execution identity binds frozen runner identity plus canonical declared Environment Requirements, never actual environment values. A Playwright Test uses `[ac:<assertion-key>]`; one Test may bind at most one declared AC. Every Claim-bearing structured Check needs same-Check, Claim-related Counterfactual sensitivity; unrelated Artifacts or another Check do not count. Counterfactual Findings are projected into their owning Check Result before Progress is written, so status/resume recover the Finding without a new Global Outcome state. Explain traces Source Item → canonical target → Claim or Assertion → required surfaces → Check → adapter → Observation.
 
-The workdir `.ty-context/compiled-contract.json` is only a rebuildable cache projection. Previous authority, the immutable initial base, risk floor and Final Gate identity come only from the common-dir snapshot. Commit, verifier migration, clear and abandon share one active-state lock; Final/Verify recheck identity and Stop/close use accepted-identity CAS. Development-period V2 Active Authority, Progress and Receipts are not migrated: doctor reports `manual_required`, the operator upgrades the Contract, and a new Authority Lock is formed. Corrupt continuity is recovered explicitly with `abandon --force-corrupt-state`.
+The workdir `.ty-context/compiled-contract.json` is only a rebuildable cache projection. Previous authority, the immutable initial base, risk floor and Final Gate identity come only from the common-dir snapshot. Commit, verifier migration, clear and abandon share one active-state lock; Final/Verify recheck identity and Stop/close use accepted-identity CAS. Development-period V2 Active Authority, Progress and Receipts are not migrated. Corrupt continuity is recovered explicitly with `abandon --force-corrupt-state`.
 
-Final Gate may run only Contract-declared verification commands and never production mutation/deployment/payment/migration execution. Retry defaults to none and is allowed once only for `transient_once` + idempotent + read-only/test-sandbox runners. Runners receive a minimal system environment whitelist plus only explicitly declared `env_var` requirements; undeclared secrets are not inherited. Protected authority/proof inputs reject symlinks and detectable hardlinks. Network isolation remains external. Counterfactual V2 accepts only exact designated Assertion failures with no artifact, population or other finding, and Population V2 proves exact entity coverage. Receipts are audit-only (`reusable_for_acceptance: false`). Every Outcome has an executable Check; human, CI, deployment and product confirmation live only in `external_confirmations`. A machine pass with pending confirmations reports `machine_accepted_external_pending`.
+Final Gate may run only Contract-declared verification commands and never production mutation/deployment/payment/migration execution. Retry defaults to none and is allowed once only for `transient_once` + idempotent + read-only/test-sandbox runners. Runners receive a minimal environment whitelist plus only declared environment requirements. Protected authority/proof inputs reject symlinks and detectable hardlinks. Network isolation remains external. Receipts are audit-only (`reusable_for_acceptance: false`). Human, CI, deployment and product confirmation live only in `external_confirmations`; a machine pass with pending confirmations reports `machine_accepted_external_pending`.
 
 ## Compatibility And Migration
 
-Version 0.6.0 retires the V1 schema/runtime and repo-local Hook. Enable, disable and upgrade remove only exact Tiny Context managed Hook entries. Relocated package-owned absolute commands are recognized only when the known managed status and a known `node_modules`, pnpm or workspace-package layout both match; no-status and similar-name user Hooks remain. A command is never deleted merely because it contains `composite`. Upgrade reports unfinished V1 active state as `manual_required` and never imports V1 progress or Receipts into V2 authority. Delivery Set, `composite-campaign` and `composite-long-task` commands are non-executing tombstones.
+Version 0.6.0 retires the V1 schema/runtime and repo-local Hook. Enable, disable and upgrade remove only exact Tiny Context managed Hook entries. Relocated package-owned absolute commands are recognized only when known managed status and package layout match; similar-name user Hooks remain. Upgrade never imports V1 progress or Receipts into V2 authority. Delivery Set, `composite-campaign` and `composite-long-task` commands are non-executing tombstones.
 
-Version 0.6.0 defines the first public V2 semantics while retaining the `long-task-delivery-v2` schema name and physical `outcome_files` parser form; it does not promise activation compatibility for development-period Drafts. Old Drafts receive explicit diagnostics for missing Source markers, result-compressed Source mappings, missing criteria, retired `out_of_scope`, non-Playwright browser proof and incomplete required surfaces. Optional Source Plan authoring adds no Schema, CLI, Preflight, Compile, Validator, Receipt, Authority or state. Preflight and direct Compile use one activation-safety kernel, so readable `criterion` text and every other completion-safety rule are mandatory even when Preflight is skipped.
+Version 0.6.0 defines the first public V2 semantics while retaining the `long-task-delivery-v2` schema name and physical `outcome_files` parser form. Optional Source Plan authoring adds no Schema, CLI, Preflight, Compile, Validator, Receipt, Authority or state. Preflight and direct Compile use one activation-safety kernel.
 
 `/normal-long-task` is also a retirement pointer to `/long-task-workflow`; it creates no checklist, prompt, audit, matrix, verdict or second authority.
 
@@ -425,7 +431,7 @@ npm install
 npm run format:check
 npm run typecheck --workspace project-tiny-context-harness
 npm run build --workspace project-tiny-context-harness
-node --test --test-concurrency=1 tests/ty-context/source-plan-authoring-skill.test.mjs tests/ty-context/sync-init-doctor.test.mjs tests/ty-context/workflow-contract-routing.test.mjs
+node --test --test-concurrency=1 tests/ty-context/source-plan-authoring-skill.test.mjs tests/ty-context/sync-init-doctor.test.mjs tests/ty-context/workflow-contract-routing.test.mjs tests/ty-context/long-task-model-choice-checkpoint.test.mjs
 npm run test:delivery-contract --workspace project-tiny-context-harness
 npm run test:long-task-workflow --workspace project-tiny-context-harness
 npm run test:long-task-performance --workspace project-tiny-context-harness
@@ -460,6 +466,8 @@ For concrete examples, see the [fresh-agent recovery walkthrough](docs/examples/
 
 - Tiny Context does not create or restore a platform Goal or physical session.
 - It cannot prove that a user declared every real requirement.
+- Bounded Context keyword search can still miss synonyms or indirect dependencies; it supplements rather than replaces semantic judgment.
+- Harness cannot switch the host-selected model; it only asks for the one post-Authority-Lock user choice.
 - Core long-task execution intentionally provides no parallel mutation runtime.
 - It does not observe platform token counts or model-call counts.
 - Network policy is declared to runners and proxy variables are restricted, but this is not an OS sandbox.
