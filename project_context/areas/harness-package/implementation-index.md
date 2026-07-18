@@ -14,7 +14,7 @@ Navigation for current implementation surfaces. Behavior is defined by owning co
 ## CLI And Profiles
 
 - CLI entry/routing: `packages/ty-context/src/cli.ts`, `packages/ty-context/src/commands/index.ts`.
-- Long-Task V2 command: `packages/ty-context/src/commands/long-task.ts`; supporting-only Context revisions are classified before derived Progress is invalidated.
+- Long-Task V2 command: `packages/ty-context/src/commands/long-task.ts`; supporting-only Context revisions are classified before derived Progress is invalidated, and first Compile emits the additive one-time `execution_model_checkpoint` before implementation.
 - Retired command tombstones: `commands/delivery-set.ts`, `commands/composite-long-task.ts`, `commands/composite-campaign.ts`.
 - Profile enable/disable and selection: `commands/enable.ts`, `commands/disable.ts`, `lib/profiles.ts`, `lib/types.ts`, config parser and migrations.
 
@@ -37,7 +37,7 @@ Navigation for current implementation surfaces. Behavior is defined by owning co
 - Common-dir Active Authority V3 snapshot, old-V2 manual-required boundary, task/revision/identity marker, CAS commit, compiled-cache projection, Authority Revision and audit state: `long-task-state.ts`.
 - Scoped progress, precise Source/Claim/AC findings, status/resume/explain/doctor, targeted verification and Live Final Gate: `long-task-verifier-v2.ts`, `long-task-progress.ts`, `long-task-status-v2.ts`, `long-task-final-v2.ts`, `long-task-freshness.ts`.
 - Package-owned Hook entry/install/preflight and exact entry-level cleanup: `src/long-task-hook.ts`, `long-task-hook-install.ts`, `long-task-hook-preflight.ts`.
-- No active module may import Campaign, SFC, Packet, Codex/AppServer, model routing, process identity/tree, parallel-subagent scheduling or Git worktree orchestration.
+- No active module may import Campaign, SFC, Packet, Codex/AppServer, persistent model routing/checkpoint state, process identity/tree, parallel-subagent scheduling or Git worktree orchestration.
 
 ## Managed Assets And Skills
 
@@ -45,7 +45,8 @@ Navigation for current implementation surfaces. Behavior is defined by owning co
 - Packaged assets: `packages/ty-context/assets/**`.
 - Source mappings: `packages/ty-context/source-mappings.yaml`.
 - Optional Source Plan Skill: `.codex/skills/source-plan-authoring/SKILL.md` and managed/package copies.
-- Active Long-Task Skill: `.codex/skills/long-task-workflow/SKILL.md` and managed/package copies; it owns the no model-switch checkpoint, no proactive parallel-subagent scheduling and live `Context Delta` procedure.
+- Default Workflow and engineering Skills require manifest routing plus one bounded text search over `project_context/**` before `Context Delta`; this remains guidance, not a search service or persisted index.
+- Active Long-Task Skill: `.codex/skills/long-task-workflow/SKILL.md` and managed/package copies; it owns the one-time post-Authority-Lock model choice, no automatic model switch/persistent model state, no proactive parallel-subagent scheduling and live `Context Delta` procedure.
 - Retirement pointer: `.codex/skills/normal-long-task/SKILL.md` and managed/package copies.
 - Source-workspace authoring Skill: `.codex/skills/authoring/harness_package_design/SKILL.md`.
 
@@ -55,6 +56,8 @@ Navigation for current implementation surfaces. Behavior is defined by owning co
 - Semantic authority, Context evolution, field completeness, conservative pattern containment/overlap and Global Claim coverage: `long-task-context-authority-topology.test.mjs`, `long-task-semantic-authority-revision.test.mjs`, `long-task-context-evolution.test.mjs`, `long-task-authority-field-completeness.test.mjs`, `long-task-pattern-containment.test.mjs`, `long-task-pattern-overlap.test.mjs`, `long-task-global-claim-coverage.test.mjs`.
 - Focused closure: `long-task-global-evidence-sensitivity.test.mjs`, `long-task-source-risk-binding.test.mjs`, `long-task-non-completing-source.test.mjs`, `long-task-playwright-trust-boundary.test.mjs`, `long-task-planned-counterfactual.test.mjs`, `long-task-public-contract-example.test.mjs` and `long-task-release-tarball-contract.test.mjs`.
 - CLI/Evidence Kernel/Stop real temporary-Git black box: `tests/ty-context/long-task-workflow-*.test.mjs`.
+- One-time first-Compile model choice: `tests/ty-context/long-task-model-choice-checkpoint.test.mjs`.
+- Default Context discovery guidance and generated parity: `tests/ty-context/workflow-contract-routing.test.mjs`.
 - Profile/init/sync/upgrade/package assets: existing focused profile/package/upgrade tests updated for `long-task`.
 - Source Plan Skill contract and parity: `tests/ty-context/source-plan-authoring-skill.test.mjs`.
 - Controlling objective, Draft lifecycle, Outcome decomposition and mechanism-admission consistency: `tests/ty-context/long-task-design-context.test.mjs`.
