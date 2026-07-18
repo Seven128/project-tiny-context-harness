@@ -30,6 +30,27 @@ test("default workflow uses internal planning and creates no second authority", 
   });
 });
 
+test("default Context routing combines manifest candidates with bounded search", async () => {
+  const [managed, rootAgents, packaged, development] = await Promise.all([
+    read(".codex/ty-context-managed/agents/AGENTS_CORE.md"),
+    read("AGENTS.md"),
+    read("packages/ty-context/assets/agents/AGENTS_CORE.md"),
+    read(".codex/ty-context-managed/skills/context_development_engineer/SKILL.md"),
+  ]);
+  assert.equal(packaged, managed, "package AGENTS Core drift");
+  assert.match(rootAgents, /bounded text search over `project_context\/\*\*`/iu);
+  for (const content of [managed, development]) {
+    assert.match(content, /graph\/trigger candidates|triggers\/read policy/iu);
+    assert.match(content, /bounded text search|bounded text search/iu);
+    assert.match(content, /project_context\/\*\*/u);
+    assert.match(content, /before deciding `Context Delta`|判断 `Context Delta` 前/iu);
+    assert.match(content, /area\/module|area\/module\/API/iu);
+    assert.match(content, /API\/schema\/state\/security\/verification\/deployment|API\/Schema\/state\/security\/verification\/deployment/iu);
+    assert.match(content, /supplements rather than replaces semantic judgment|补充语义判断/iu);
+    assert.match(content, /no index, cache, state or second authority|不创建索引、缓存或第二权威/iu);
+  }
+});
+
 test("CLI and managed guidance route only explicit or active work to long-task", async () => {
   const { stdout } = await exec(process.execPath, [
     path.join(repo, "packages/ty-context/dist/cli.js"),
@@ -39,12 +60,21 @@ test("CLI and managed guidance route only explicit or active work to long-task",
   assert.match(stdout, /Install Source Plan\/Long-Task Skills/);
   assert.doesNotMatch(stdout, /validate-plan-contract|validate-plan-acceptance/);
   const guidance = await read(".codex/ty-context-managed/agents/AGENTS_CORE.md");
-  assert.match(guidance, /Do not infer long-task mode from duration, complexity, file count/);
+  assert.match(
+    guidance,
+    /Do not infer long-task mode from duration, complexity, file count/,
+  );
   assert.match(guidance, /Git common-dir active record/);
   assert.match(guidance, /Git-config marker/);
   assert.match(guidance, /current native Goal/);
   assert.match(guidance, /Context Delta: none\|required/);
   assert.match(guidance, /Local fixes preserving durable semantics are `none`/);
+  assert.match(
+    guidance,
+    /After the first Authority Lock, stop once before implementation/iu,
+  );
+  assert.match(guidance, /continue with the current model or switch models/iu);
+  assert.match(guidance, /no model route or checkpoint state/iu);
   assert.match(
     guidance,
     /installs the Source Plan Authoring Skill, Long-Task Workflow Skill and package-owned completion Hook/iu,
@@ -63,6 +93,7 @@ test("Workflow Contract names the complete Draft-to-qualified-result lifecycle",
     "Draft Outcome decomposition",
     "Preflight repair loop",
     "Authority Lock",
+    "execution-model choice",
     "Rolling Frontier",
     "one-snapshot Final Gate",
     "qualified machine result",
@@ -92,7 +123,10 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
   assert.match(active, /delivery-set.*retired and non-executing/is);
   assert.match(active, /Final Gate/i);
   assert.match(active, /ordinary prose plan or optional Source Plan/is);
-  assert.match(active, /does not need to.*match the recommended Source Plan structure/is);
+  assert.match(
+    active,
+    /does not need to.*match the recommended Source Plan structure/is,
+  );
   assert.match(active, /stable semantic keys and Markdown anchors/is);
   assert.match(
     active,
@@ -105,12 +139,25 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
   assert.match(active, /^## Contract Draft And Outcome Decomposition$/mu);
   assert.match(active, /same non-authoritative `delivery-contract\.yaml`/iu);
   assert.match(active, /need not be completed in one response/iu);
-  assert.match(active, /Draft Outcome[\s\S]*not a new schema field or runtime entity/iu);
+  assert.match(
+    active,
+    /Draft Outcome[\s\S]*not a new schema field or runtime entity/iu,
+  );
   assert.match(active, /`depends_on` means acceptance readiness/iu);
   assert.match(active, /not persist a scheduler, Worker queue/iu);
-  assert.match(active, /Outcome decomposes execution and diagnosis, not completion authority/iu);
+  assert.match(
+    active,
+    /Outcome decomposes execution and diagnosis, not completion authority/iu,
+  );
+  assert.match(active, /execution_model_checkpoint\.required: true/iu);
+  assert.match(active, /continue_current_model/iu);
+  assert.match(active, /Later revisions return `required: false`/iu);
+  assert.match(active, /no checkpoint file.*model route.*automatic model switch/is);
   assert.match(active, /second Contract plan/);
-  assert.doesNotMatch(active, /Do not create a second plan, Authoring Skill product/);
+  assert.doesNotMatch(
+    active,
+    /Do not create a second plan, Authoring Skill product/,
+  );
   const normal = await read(
     ".codex/ty-context-managed/skills/normal-long-task/SKILL.md",
   );
@@ -175,7 +222,10 @@ test("optional Source Plan authoring does not create a second Contract authority
     /Draft Outcome[\s\S]*without creating `draft_outcomes`, a `DraftOutcome` runtime type/iu,
   );
   assert.match(workflowContext, /not a Contract Draft/iu);
-  assert.match(workflowContext, /only the source-recompiled Final Gate may accept/iu);
+  assert.match(
+    workflowContext,
+    /Only the source-recompiled Final Gate may accept/iu,
+  );
 });
 
 test("retired command names are lightweight non-executing tombstones", async () => {
