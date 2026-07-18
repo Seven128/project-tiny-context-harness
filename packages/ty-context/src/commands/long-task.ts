@@ -168,8 +168,27 @@ async function compile(workdir: string, args: string[]): Promise<void> {
       outcomes: compiled.outcomes.map((outcome) => outcome.key),
       claim_coverage: compiled.claim_coverage,
       progress_preserved: preserveProgress,
+      execution_model_checkpoint: executionModelCheckpoint(previous === null),
     }),
   );
+}
+
+function executionModelCheckpoint(firstAuthorityLock: boolean):
+  | {
+      required: true;
+      phase: "post_authority_lock_pre_implementation";
+      options: ["continue_current_model", "switch_model_then_resume"];
+      message: string;
+    }
+  | { required: false } {
+  if (!firstAuthorityLock) return { required: false };
+  return {
+    required: true,
+    phase: "post_authority_lock_pre_implementation",
+    options: ["continue_current_model", "switch_model_then_resume"],
+    message:
+      "Authority Lock created. Pause before implementation and ask the user whether to continue with the current model or switch models, then resume this active Long-Task.",
+  };
 }
 
 function message(error: unknown): string {
