@@ -13,6 +13,7 @@ Use the cheapest reliable feedback loop for the current change, then widen befor
 - `npm run test:long-task:focused`: one-build focused Long-Task regression loop for Context evolution, authority/progress, design boundaries and workflow entry points.
 - `npm run test:delivery-contract:focused`: one-build focused Contract authoring/compiler/coverage/risk loop.
 - `npm run test:affected -- --no-build`: reuse an already current `dist` build. This is valid only when the caller has already built the same source snapshot.
+- Package CI runs a lightweight `windows-latest` real-subprocess probe for the affected-test npm launcher; Windows must route npm through `ComSpec` rather than spawning `npm.cmd` directly.
 
 Affected and focused results are non-authoritative developer feedback. Before release or any claim that the package is fully validated, run the complete package, source-parity, smoke, pack and release gates below.
 
