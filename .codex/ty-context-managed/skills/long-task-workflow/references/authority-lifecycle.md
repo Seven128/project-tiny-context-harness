@@ -12,6 +12,8 @@ Preflight keeps every independently discovered diagnostic. When a structural dup
 
 The first successful `ty-context long-task compile <workdir>` is Authority Lock and freezes the immutable initial base and complete compiled authority snapshot in Git common-dir, bound to the worktree marker by task id, revision and compiled identity.
 
+Its JSON result includes `execution_model_checkpoint.required: true`. Before product implementation, stop once and ask the user to continue with the current model or switch models and then resume the active Long-Task. A task-specific model choice already stated explicitly satisfies the checkpoint. Later Compile revisions return `required: false`; no checkpoint file, acknowledgement state, model route or automatic model switch is created.
+
 ## Protected Revision
 
 After Authority Lock, Source/Product/Global semantics, Controlling Context, verifier content, runner/verification input replacement, proof reduction, scope expansion or unprovable containment must compare against active authority. Pure verifier relocation and proven proof/scope tightening may auto-revise; content weakening requires exact user approval. The executing Agent never approves its own pending revision.
