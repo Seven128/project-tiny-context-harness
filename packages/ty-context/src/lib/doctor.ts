@@ -2,6 +2,11 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import os from "node:os";
 import { readdir } from "node:fs/promises";
+import {
+  DEFAULT_CONTEXT_FILE_SOFT_BUDGET_BYTES,
+  DEFAULT_CONTEXT_TOTAL_SOFT_BUDGET_BYTES,
+  inspectDefaultContextFootprint,
+} from "./context-default-footprint.js";
 import { readConfig } from "./config.js";
 import { harnessConfigPath, harnessRoot } from "./harness-root.js";
 import { pathExists } from "./fs.js";
@@ -56,6 +61,33 @@ export async function runDoctor(projectRoot: string): Promise<DoctorReport> {
     if (!exists && managed.strategy !== "create-if-missing") {
       report.warnings.push(`managed path missing: ${managed.path}`);
     }
+  }
+
+  try {
+    const footprint = await inspectDefaultContextFootprint(projectRoot);
+    report.info.push(
+      `default Context read path: ${footprint.files.length} file(s), ${footprint.total_bytes} bytes`,
+    );
+    if (footprint.total_bytes > DEFAULT_CONTEXT_TOTAL_SOFT_BUDGET_BYTES) {
+      report.warnings.push(
+        `default Context read path is ${footprint.total_bytes} bytes, above the ${DEFAULT_CONTEXT_TOTAL_SOFT_BUDGET_BYTES}-byte soft budget; shorten near-universal facts or move specialized role Context to read_policy=\"on-demand\"`,
+      );
+    }
+    for (const file of footprint.files) {
+      if (file.bytes <= DEFAULT_CONTEXT_FILE_SOFT_BUDGET_BYTES) continue;
+      report.warnings.push(
+        `default Context file ${file.path} is ${file.bytes} bytes, above the ${DEFAULT_CONTEXT_FILE_SOFT_BUDGET_BYTES}-byte per-file soft budget`,
+      );
+    }
+    for (const group of footprint.duplicate_groups) {
+      report.warnings.push(
+        `default Context contains byte-identical files: ${group.join(", ")}; keep one owning fact source and replace duplicates with a short pointer`,
+      );
+    }
+  } catch (error) {
+    report.warnings.push(
+      `default Context footprint unavailable: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 
   for (const location of await findUserSuperpowersSkills()) {

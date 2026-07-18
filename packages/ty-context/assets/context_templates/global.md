@@ -10,7 +10,7 @@
 
 ## Background
 
-- Capture the minimum background a fresh agent needs before changing code.
+- Capture only near-universal background a fresh agent needs before changing code. Route specialized facts through on-demand role Context instead of copying them here.
 
 ## Design Rationale
 

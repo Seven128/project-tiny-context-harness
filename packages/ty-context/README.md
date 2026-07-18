@@ -148,13 +148,17 @@ Use this tarball path for source-preview testing, private review or package deve
 
 The default read path is `project_context/global.md`, `project_context/architecture.md`, `project_context/context.toml`, then minimum graph-relevant role Context. Ordinary tasks decide `Context Delta: none|required`, update durable facts before code when required, implement, verify, perform Contract Conformance and check Context drift.
 
+Only near-universal recovery facts should use `read_policy = "default"`; specialized detail should be task-triggered `on-demand`. `ty-context doctor` reports the deterministic default Context footprint, soft-budget overages and byte-identical default files as advisory maintenance signals, not a new gate.
+
 The default workflow has no required plan artifact, matrix, verdict, evidence ledger or second plan. Duration, file count and complexity never auto-enable long-task state.
 
 Plan Validator commands no longer exist; existing plan, matrix or verdict files remain ordinary user files.
 
 ### Architecture And Modularity Guidance
 
-Technical architecture support is a Minimal Context capability. For high-risk work, `Architecture Context Hit`, `Decision Rationale Hit: existing|required|none` and `Modularity Check: none|required|exception` are internal routing questions inside the platform's internal plan. No Task Contract or fixed `plan.md` is required. Do not invent rationale: store stable reasons, rejected alternatives or tradeoffs only in the smallest durable Context surface, and remember that architecture Context does not prove product quality.
+Technical architecture support is a Minimal Context capability. For high-risk work, `Architecture Context Hit`, `Decision Rationale Hit: existing|required|none` and `Modularity Check: none|required|exception` are internal routing questions inside the platform's internal plan. No Task Contract or fixed `plan.md` is required. The risk-triggered gate covers durable module/capability boundaries, public API/schema/data or persistence, source-of-truth/state ownership, dependency direction, cross-area work, migration/security/recovery and reusable abstractions; it resolves owner, unique source of truth, lifecycle/failure/compatibility, forbidden shortcuts and a project-owned executable architecture check. Small fixes do not pay this ceremony.
+
+Do not invent rationale: store stable reasons, rejected alternatives or tradeoffs only in the smallest durable Context surface, and remember that architecture Context does not prove product quality. Harness routes repository-native checks rather than becoming a language-generic architecture analyzer. Modularity diagnostics identify the highest-risk function and line.
 
 `ty-context check-modularity` audits selected handwritten source. `validate-code-modularity` and `validate-harness` enforce it separately from `validate-context`.
 
@@ -179,6 +183,8 @@ The explicit Long-Task Workflow uses one platform-native Goal, one user-selected
 Contract authoring preserves stable Source keys/anchors where practical. Meaning-preserving structural decomposition and evidence-backed repository binding may continue, while new product semantics require `decision_required`. Missing recommended Source Plan structure alone never blocks authoring.
 
 Before the first successful formal Compile, `delivery-contract.yaml` is one non-authoritative Contract Draft. `/long-task-workflow` revises the same Draft across repository/Context reads and Preflight repairs; a complete Contract need not fit one response. Integrated authoring keeps repository evidence and findings attached to the same object and avoids a second handoff, plan, authority or Receipt. There is no standalone Contract Draft Skill or Authoring State.
+
+The Long-Task Skill keeps objective/boundary/phase routing in its main file and loads one-level Contract-authoring, evidence-design and authority-lifecycle references only when that phase applies. This is instruction packaging only, not a second authority. Declared architecture invariants use existing obligations/constraints/forbidden shortcuts, owner/path/Binding boundaries and project-owned executable Checks; a functional AC cannot substitute for an independently failing architecture claim.
 
 A Draft Outcome is simply an Outcome before Authority Lock. Outcomes decompose independently observable, decidable and target-verifiable results to improve dependency-ready implementation, targeted verification, failure localization, resume and stale-result invalidation. `depends_on` means acceptance readiness and the Rolling Frontier is temporary; an Outcome is not a Worker, scheduler task, queue or parallel unit. Outcome decomposes execution and diagnosis, not completion authority, so one complete current-snapshot Final Gate remains mandatory.
 

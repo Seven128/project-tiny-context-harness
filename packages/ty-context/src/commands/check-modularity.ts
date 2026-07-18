@@ -59,7 +59,7 @@ export async function checkModularity(args: string[]): Promise<void> {
               ? "observed-risk"
               : "ok";
       console.log(
-        `${prefix}: ${file.relativePath} ${file.lines} lines statements=${file.metrics.maxFunctionStatements} branches=${file.metrics.maxBranchComplexity} exports=${file.metrics.exports} transitions=${file.metrics.stateTransitions} responsibilities=${file.metrics.responsibilities.join(",") || "none"}`,
+        `${prefix}: ${file.relativePath} ${file.lines} lines statements=${file.metrics.maxFunctionStatements} branches=${file.metrics.maxBranchComplexity} exports=${file.metrics.exports} transitions=${file.metrics.stateTransitions} responsibilities=${file.metrics.responsibilities.join(",") || "none"} statement_at=${formatLocation(file.metrics.maxFunctionStatementsLocation)} branch_at=${formatLocation(file.metrics.maxBranchComplexityLocation)}`,
       );
     }
     for (const error of report.errors) {
@@ -88,6 +88,12 @@ export async function checkModularity(args: string[]): Promise<void> {
     );
     process.exitCode = 1;
   }
+}
+
+function formatLocation(
+  location: { symbol: string; line: number } | undefined,
+): string {
+  return location ? `${location.symbol}:${location.line}` : "none";
 }
 
 function parseArgs(args: string[]): CheckModularityArgs {

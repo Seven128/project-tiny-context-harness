@@ -186,7 +186,11 @@ test("check-modularity catches compressed one-line branch complexity", async () 
     assert.equal(result.status, 0, output(result));
     assert.match(result.stdout, /over-limit: src\/compressed\.ts 1 lines/);
     assert.match(result.stdout, /branches=31/);
-    assert.match(result.stderr, /branch complexity exceeds limit 25/);
+    assert.match(result.stdout, /branch_at=compressed:1/);
+    assert.match(
+      result.stderr,
+      /branch complexity exceeds limit 25 in function compressed at line 1/,
+    );
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -218,6 +222,7 @@ test("check-modularity measures Python complexity per function instead of aggreg
     ]);
     assert.equal(result.status, 0, output(result));
     assert.match(result.stdout, /statements=3 branches=2/);
+    assert.match(result.stdout, /statement_at=check_0:1 branch_at=check_0:1/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

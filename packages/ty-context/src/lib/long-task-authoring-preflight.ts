@@ -6,6 +6,7 @@ import {
 import {
   addAuthoringDiagnostics,
   addDiagnosticError,
+  normalizeAuthoringDiagnostics,
   sourceCoverage,
 } from "./long-task-authoring-preflight-diagnostics.js";
 import {
@@ -38,7 +39,7 @@ export async function preflightDeliveryContract(
     });
   } catch (error) {
     addDiagnosticError(diagnostics, error);
-    return emptyPreflightResult(diagnostics);
+    return emptyPreflightResult(normalizeAuthoringDiagnostics(diagnostics));
   }
   const contract = parsed.contract;
   addAuthoringDiagnostics(contract, parsed, diagnostics);
@@ -54,7 +55,8 @@ export async function preflightDeliveryContract(
     workdir,
     diagnostics,
   );
-  const ready = !diagnostics.some(
+  const normalizedDiagnostics = normalizeAuthoringDiagnostics(diagnostics);
+  const ready = !normalizedDiagnostics.some(
     (item) => item.level === "error" || item.level === "decision_required",
   );
   return {
@@ -71,6 +73,6 @@ export async function preflightDeliveryContract(
       validation.context_snapshot,
       active,
     ),
-    diagnostics,
+    diagnostics: normalizedDiagnostics,
   };
 }

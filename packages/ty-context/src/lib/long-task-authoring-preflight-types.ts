@@ -6,6 +6,9 @@ export interface AuthoringPreflightDiagnosticV1 {
   message: string;
   outcome_key?: string;
   check_key?: string;
+  refs?: string[];
+  repair_hint?: string;
+  occurrences?: number;
 }
 
 export interface SourceCoverageV1 {

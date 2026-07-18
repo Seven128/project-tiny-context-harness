@@ -2,81 +2,52 @@
 
 This project uses Tiny Context. The Harness maintains durable Context and workflow authority; project tests, CI, runtime evidence and human acceptance prove product quality.
 
-Tiny Context has three capabilities:
-
-- Minimal Context: durable project facts in `project_context/**`.
-- Workflow Contract: lightweight default engineering behavior.
-- Single-Goal Long-Task Workflow: explicit rolling delivery with a live machine-completion gate.
+Tiny Context has three capabilities: Minimal Context, the default Workflow Contract, and the explicitly enabled Single-Goal Long-Task Workflow.
 
 ## Default Workflow Contract
 
-Unless an active Single-Goal Long-Task binding exists:
+Unless an active Long-Task binding exists:
 
-1. Read `project_context/global.md`, `project_context/architecture.md` and `project_context/context.toml`, then only graph-relevant area/role Context.
-2. For UI/product-surface work, confirm the user decision, required information/actions/feedback and main-versus-drilldown ownership before narrowing to code. Use `context_surface_contract` when durable responsibility is unclear or changes.
-3. Place durable facts by role: area/domain owns product scope; contract owns interfaces; foundation owns stable concepts; verification/deployment owns repeatable paths; implementation-index owns navigation; decision-rationale owns stable reasons.
-4. Decide exactly one durable-fact result: `Context Delta: none|required`. Product ownership, architecture, API/schema, state/recovery, dependency, security or repeatable verification/deployment changes are `required` and update owning Context before code. Local fixes preserving durable semantics are `none`.
-5. Use the agent/platform internal plan. Keep goal, boundaries/non-goals, controlling Context, likely implementation surfaces and verification clear before editing. For high-risk work, keep `Architecture Context Hit`, `Decision Rationale Hit: existing|required|none` and `Modularity Check: none|required|exception` as internal routing and maintenance questions; they are not artifacts or additional deltas.
-6. Implement, run project-owned verification, perform Contract Conformance and Context drift checks, then report implementation, verification, Context status and blockers.
+1. Read `project_context/global.md`, `project_context/architecture.md` and `project_context/context.toml`, then the default area root and only graph-relevant on-demand Context.
+2. For UI/product-surface work, confirm information/action/feedback ownership and use `context_surface_contract` when durable responsibility is unclear or changes; contract owns interfaces and existing area/subdomain/verification roles own the project facts.
+3. Decide exactly one `Context Delta: none|required`. Update owning Context before code when durable product ownership, architecture, API/schema/data, state/recovery, dependency, security, product-surface responsibility or repeatable verification/deployment changes. Local fixes preserving durable semantics are `none`.
+4. Use the agent/platform internal plan. For high-risk work keep `Architecture Context Hit`, `Decision Rationale Hit: existing|required|none` and `Modularity Check: none|required|exception` as internal routing and maintenance questions, not artifacts or extra deltas.
+5. Implement precisely, run project-owned verification, perform Contract Conformance and a Context drift check, then report implementation, verification, Context status and blockers.
 
-The default workflow never requires a plan artifact, matrix, verdict, evidence ledger or result document. Optional scratch files are not Context or completion proof and are never registered in `context.toml`.
+The default workflow never requires a plan artifact, matrix, verdict, evidence ledger or result document. Optional scratch is not Context or completion proof.
 
-For external product, architecture, technical or acceptance sources, internally classify every material constraint as covered by Context, requiring a Context update, task-local, explicitly out of scope or requiring a genuine user decision. Conformance must confirm controlling Context reached the correct modules, surfaces, APIs, state machines and verification paths without forbidden shortcuts.
+For external product, architecture, technical or acceptance sources, internally classify every material constraint as covered by Context, requiring a Context update, task-local, explicitly out of scope or requiring a genuine user decision. Conformance must confirm controlling Context reached the correct modules, surfaces, APIs, state machines and verification paths without forbidden shortcuts or duplicate authority.
 
 ## Long-Task Routing
 
 Do not infer long-task mode from duration, complexity, file count or agent preference.
 
-1. If the Git common-dir active record and matching worktree Git-config marker exist, resume its workdir with `ty-context long-task resume <workdir>` in the current native Goal.
-2. If the user explicitly invokes `/long-task-workflow`, prepare or resume exactly one complete `long-task-delivery-v2` Contract for the selected delivery in the current native Goal.
-3. `/normal-long-task` is a retirement pointer only. Otherwise remain on the default Workflow Contract, even when work is long.
+1. A valid Git common-dir active record plus matching worktree Git-config marker resumes through `ty-context long-task resume <workdir>` and `/long-task-workflow` in the current native Goal.
+2. Explicit `/long-task-workflow` authors or resumes exactly one complete `long-task-delivery-v2` Contract for the selected delivery.
+3. `/normal-long-task` is a retirement pointer. Otherwise remain on the default Workflow Contract, even when work is long.
 
-An optional Source Plan is upstream Source guidance, not a Contract Draft or required input protocol. Contract Draft authoring belongs inside `long-task-workflow`: the same non-authoritative `delivery-contract.yaml` is revised until the first successful formal Compile creates Authority Lock.
+Contract Draft authoring belongs inside `long-task-workflow`: continuously revise the same non-authoritative `delivery-contract.yaml` until the first successful formal Compile creates Authority Lock. An optional Source Plan is ordinary upstream Source guidance, not a Contract Draft or required input protocol.
 
-The workflow uses exactly one native Goal, one selected repository/workspace, one Contract and one Final Gate for the selected delivery. New authoring keeps inline Outcomes in the root `delivery-contract.yaml`; existing `outcome_files` remain only a physical compatibility form and create no semantic or completion boundary. A Draft Outcome is the pre-lock lifecycle of an independently decidable acceptance/dependency unit; it decouples implementation and verification work but is not an output-length fragment, Worker, scheduler task, branch, worktree or model session.
+The workflow uses one native Goal, one selected workspace, one Contract and one Final Gate. New authoring uses inline Outcomes; existing `outcome_files` are physical compatibility only. Outcomes decompose dependency-ready execution, targeted repair and diagnosis, not completion authority, workers, branches or model sessions.
 
-Supported CLI:
+Before authoring, proof design or authority lifecycle work, read the phase-specific references in the package-managed `long-task-workflow` Skill. Use `ty-context long-task help` for CLI syntax instead of treating this startup router as a command reference.
 
-- `ty-context long-task init <workdir>`
-- `ty-context long-task preflight <workdir>`
-- `ty-context long-task compile <workdir> [--revise]`
-- `ty-context long-task approve-authority-revision <workdir> --revision <sha>`
-- `ty-context long-task explain <workdir>`
-- `ty-context long-task verify <workdir> [--outcome <key>] [--check <key>]`
-- `ty-context long-task status|resume|doctor|final-gate <workdir>`
-- `ty-context long-task stop-check <workdir> [--message <text>]`
-- `ty-context long-task close <workdir>`
-- `ty-context long-task abandon <workdir> [--force-corrupt-state]`
+Final Gate, Stop and close recompile the source Contract and rerun every declared Check on one clean current snapshot. Targeted verify is repair evidence only. Status, progress, receipts and compiled cache are audit/recovery surfaces only; prose, historical tests or Agent judgment never create acceptance. External confirmations remain explicit and machine acceptance never implies CI, deployment or human acceptance.
 
-Contract V2 requires real Source files containing non-rendering, uniquely keyed Material Source Item markers. Marker keys and `source_claim` keys are set-equal, statements remain text-exact after whitespace normalization, and every non-decision Source item owns exactly one canonical target of the same semantic kind and normalized text; duplicate target ownership fails closed. Types include independently decided Control fields. Every Outcome has a non-Result atomic Claim, each Source AC maps to one criterion-identical Assertion containing an independently Source-backed non-Result Claim, `out_of_scope` is never resolved, and all required proof surfaces must be non-empty, unique and covered.
-
-Preflight is read-only and Compile uses the same activation-safety kernel, so skipping Preflight bypasses no rule. Claim operators are strict: `truthy`/`falsy` are diagnostic-only and `exists` proves only implementation-structure obligations. Evidence adapters derive from runner kind: only Playwright proves `ui_browser`; other runners use structured evidence. Claim-bearing Playwright evidence is only `playwright.case.<ac>.passed equals true`; `[ac:<key>]` binds one declared AC per Test, ordinary tags are ignored, and missing/skipped/flaky/unexpected/multi-AC cases fail closed. Every claim-bearing structured Check needs same-Check, Claim-related Counterfactual sensitivity; unrelated Artifacts or another Check do not count, same-Check Population exempts only its own Claims unless observability is weak, and Result proof must fail from Result plus a related non-Result root. One claim-bearing Observation cannot be reused across Checks sharing a Raw Execution. Counterfactuals bind a declared implementation carrier and accept only designated value mismatches. Claim proofs exist only for a fully passed Check.
-
-The first successful formal Compile is Authority Lock; later Source/Context/Product/Global/Acceptance/verifier-content or proof-reduction changes compare against active authority regardless of progress, Receipt/cache deletion or restored code. Pure verifier relocation and proven proof/scope tightening auto-revise; content weakening needs exact user approval. Every path-bearing field uses one canonical grammar, and Check execution fields have a compile-time raw/per-Check/progress/final classification. Targeted verify rechecks active identity before progress writes.
-
-Status, progress, Receipts and compiled cache are audit/recovery surfaces only. Commit, migration, clear and abandon share one active-state lock. Final Gate rechecks task/revision/compiled/worktree identity after all Checks; Stop/close use accepted-identity CAS and cannot clear a newer revision. Corrupt continuity is cleaned only by explicit `abandon --force-corrupt-state`. External confirmations remain explicit; machine acceptance never implies CI, deployment or human acceptance.
-
-Final Gate, Stop and close recompile the source Contract before evaluating the current Authority and snapshot.
-
-Risk routing is per Outcome. Public API/schema, persistent data, migration, security/permission boundaries, irreversible effects, full-population operations, or a critical path with weak observability impose strict proof on the affected Outcome. Risk downgrades are rejected. Multi-repository delivery is unsupported.
-
-Tiny Context does not create or restore platform Goals, invoke models, spawn agents, call an App Server, create branches/worktrees, merge, push, open PRs or manage process trees. Only Contract-declared project verification runners may execute product checks. Network isolation is the responsibility of the external platform.
+Tiny Context does not create or restore platform Goals, invoke models, spawn agents, call an App Server, create branches/worktrees, merge, push, open PRs, deploy or manage process trees. `ty-context enable long-task` installs the Source Plan Authoring Skill, Long-Task Workflow Skill and package-owned completion Hook.
 
 ## Durable Facts And Generated Surfaces
 
 - Context is intended ownership/boundary/contract truth; code is current implementation truth. Treat disagreement as drift, missing work or stale Context.
-- Long-term facts only go in `project_context/**` or `DESIGN.md`. Do not store logs, raw evidence, secrets, runtime state or receipts there.
-- Full-project/source-pack exports stay under `tmp/ty-context/context-exports/**` and never enter Context.
-- Explicit Tiny Context upgrades use `context_harness_upgrade` and run `upgrade` before standalone `sync`.
+- Long-term facts live only in `project_context/**` or `DESIGN.md`; logs, raw evidence, secrets, runtime state and receipts do not.
 - Managed `AGENTS.md` blocks, `<harnessRoot>/ty-context-managed/**` and package-managed Skills are generated and sync-overwritten.
-- Non-Codex defaults install portable core/workflow only; `ty-context enable long-task` explicitly installs the Source Plan Authoring Skill, Long-Task Workflow Skill and package-owned completion Hook.
-- `init`, `sync` and `upgrade` never import or execute historical V1/Campaign state or development-period V2 Active Authority/Progress/Receipts. Version 0.6.0 reports unfinished old authority as `manual_required` and installs only the package-owned V2 Hook.
+- Explicit upgrades use `context_harness_upgrade`; package sync never imports retired Campaign or development-period authority state.
 
 ## Verification
 
-- `make validate-context`: Context recoverability only.
+- `make validate-context`: Context recoverability.
 - `make validate-harness`: Context plus touched-source modularity.
-- `npm run test:long-task-performance --workspace project-tiny-context-harness`: independent large-repository budgets.
-- `npx --yes --package project-tiny-context-harness@latest ty-context package check-source`: managed-source/package drift.
+- `ty-context doctor`: installation health plus advisory default Context footprint.
+- `node packages/ty-context/dist/cli.js package check-source`: managed-source/package parity in this source workspace.
 
 Every handoff reports exactly one of `Context: updated ...` or `Context: no durable fact change`. Never claim tests, deployment or acceptance from Context alone.

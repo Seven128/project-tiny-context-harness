@@ -71,6 +71,49 @@ test("managed Long-Task Skill copies remain exact", async () => {
   for (const content of rest) assert.equal(content, first);
 });
 
+test("Long-Task guidance uses one-level progressive references without new authority", async () => {
+  const sourceRoot = ".codex/ty-context-managed/skills/long-task-workflow";
+  const generatedRoot = ".codex/skills/long-task-workflow";
+  const packagedRoot = "packages/ty-context/assets/skills/long-task-workflow";
+  const references = [
+    "references/contract-authoring.md",
+    "references/evidence-design.md",
+    "references/authority-lifecycle.md",
+  ];
+  const main = await read(`${sourceRoot}/SKILL.md`);
+
+  for (const reference of references) {
+    assert.ok(main.includes(reference), reference);
+    const [source, generated, packaged] = await Promise.all([
+      read(`${sourceRoot}/${reference}`),
+      read(`${generatedRoot}/${reference}`),
+      read(`${packagedRoot}/${reference}`),
+    ]);
+    assert.equal(generated, source);
+    assert.equal(packaged, source);
+  }
+
+  const contractAuthoring = await read(
+    `${sourceRoot}/references/contract-authoring.md`,
+  );
+  const evidenceDesign = await read(
+    `${sourceRoot}/references/evidence-design.md`,
+  );
+  const authorityLifecycle = await read(
+    `${sourceRoot}/references/authority-lifecycle.md`,
+  );
+  assert.match(contractAuthoring, /Architecture Closure/);
+  assert.match(contractAuthoring, /existing Contract fields/);
+  assert.match(
+    contractAuthoring,
+    /project-owned executable architecture check/,
+  );
+  assert.match(evidenceDesign, /playwright\.case\.<ac-key>\.passed/);
+  assert.match(authorityLifecycle, /Preflight is read-only/);
+  assert.match(main, /guidance, not new artifacts or authority/);
+  assert.doesNotMatch(main, /playwright\.case\.<ac-key>\.passed/);
+});
+
 test("affected developer loops remain non-authoritative", async () => {
   const verification = await read(
     "project_context/areas/harness-package/verification.md",

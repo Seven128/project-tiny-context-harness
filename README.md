@@ -164,6 +164,8 @@ project_context/context.toml
 minimum graph-relevant area/role Context
 ```
 
+Only near-universal recovery facts should use `read_policy = "default"`; specialized architecture, contract, deployment and historical detail should be task-triggered `on-demand` Context. `ty-context doctor` reports the deterministic default read footprint, per-file/total soft-budget overages and byte-identical default files. These are advisory maintenance signals, not a new validation gate or workflow state.
+
 Typical roles are area/domain, contract, foundation, decision-rationale, implementation-index, verification and deployment. Context owns durable intended boundaries; code owns current implementation; tests, CI, browser/runtime evidence and people own behavior and product acceptance.
 
 Every engineering handoff reports one Context result:
@@ -191,9 +193,11 @@ Plan Validator commands no longer exist; existing plan, matrix or verdict files 
 
 ### Architecture And Modularity Guidance
 
-Technical architecture support is a Minimal Context capability. For high-risk work, `Architecture Context Hit`, `Decision Rationale Hit: existing|required|none` and `Modularity Check: none|required|exception` are internal routing questions inside the platform's internal plan. No Task Contract or fixed `plan.md` is required. Do not invent rationale: store stable reasons, rejected alternatives or tradeoffs only in the smallest durable Context surface, and remember that architecture Context does not prove product quality.
+Technical architecture support is a Minimal Context capability. For high-risk work, `Architecture Context Hit`, `Decision Rationale Hit: existing|required|none` and `Modularity Check: none|required|exception` are internal routing questions inside the platform's internal plan. No Task Contract or fixed `plan.md` is required. The architecture gate is risk-triggered for durable module/capability boundaries, public API/schema/data or persistence, source-of-truth/state ownership, dependency direction, cross-area work, migration/security/recovery and reusable abstractions. It resolves owner, unique source of truth, dependency direction, interface/state lifecycle, failure/recovery/compatibility, forbidden shortcuts and the project-owned executable check that protects the boundary. Small fixes do not pay this ceremony.
 
-`ty-context check-modularity` audits selected handwritten source. `validate-code-modularity` and `validate-harness` enforce it separately from `validate-context`.
+Do not invent rationale: store stable reasons, rejected alternatives or tradeoffs only in the smallest durable Context surface, and remember that architecture Context does not prove product quality. Harness may route repository-native lint/AST/dependency/contract checks, but it does not become a language-generic architecture analyzer.
+
+`ty-context check-modularity` audits selected handwritten source and identifies the highest-risk function and line for statement/branch findings. `validate-code-modularity` and `validate-harness` enforce it separately from `validate-context`.
 
 #### Modularity Policy
 
@@ -239,6 +243,8 @@ Long-Task Contract authoring preserves stable Source keys and anchors where prac
 
 Before the first successful formal Compile, `delivery-contract.yaml` is one non-authoritative Contract Draft. `/long-task-workflow` keeps revising that same Draft across repository/Context reads and Preflight repair rounds; it does not require one response to produce a complete Contract. Draft authoring is integrated because repository bindings and verification inputs need real evidence, Preflight findings must feed back into the same object, and a separate handoff would risk lost meaning or a second plan/authority. No standalone Contract Draft Skill, Draft Receipt or Authoring State exists.
 
+The package-managed Long-Task Skill uses progressive disclosure: its main `SKILL.md` keeps the objective, boundaries and phase routing; one-level references are read only for Contract authoring, evidence design or authority lifecycle. This reduces routine instruction load without moving any rule into a second authority. When Source or controlling Context declares an architecture invariant, the Contract uses existing technical obligations/global constraints/forbidden shortcuts, owner/path/Binding boundaries and a project-owned executable Check. Functional acceptance cannot substitute when the architecture invariant can fail independently.
+
 A Draft Outcome is simply an Outcome before Authority Lock. Outcomes split independently observable, decidable and target-verifiable results so the current Goal can keep a smaller dependency-ready working set, target verification, localize failures, resume findings and invalidate stale local results. `depends_on` expresses acceptance readiness; the Rolling Frontier is temporary. An Outcome is not a Worker, scheduler task, queue or parallelism unit. Outcome decomposes execution and diagnosis, not completion authority: targeted passes never replace the one complete Final Gate on the current final snapshot.
 
 The platform owns physical Goal/session lifecycle. A later session runs `resume` to reconstruct semantic state; Tiny Context does not recreate the prior physical Turn.
@@ -263,7 +269,7 @@ ty-context long-task abandon <workdir> [--force-corrupt-state]
 ```
 
 - `init` creates one Compact inline-Outcome Contract template.
-- `preflight` applies Compact defaults and reports all discoverable Source/REQ/CTRL/OBL/AC, Context, risk, path/binding, runner/input and proof diagnostics. It is read-only: no Authority Lock, marker, cache, progress, Receipt, pending revision, state lock or project Check.
+- `preflight` applies Compact defaults and reports all discoverable Source/REQ/CTRL/OBL/AC, Context, risk, path/binding, runner/input and proof diagnostics. Exact duplicate diagnostics are merged with `occurrences`; known problems may include stable `refs` and a safe `repair_hint` that never weakens authority or invents product semantics. It is read-only: no Authority Lock, marker, cache, progress, Receipt, pending revision, state lock or project Check.
 - `compile` generates Global plus Outcome Result/Requirement/Control-field/Non-completing/Technical Claims, rejects uncovered Claims, preserves an immutable first baseline and makes the first successful formal Compile the Authority Lock. Every later revision compares against active authority regardless of progress, Receipt/cache deletion or implementation restoration. It freezes Source/Context/Product/Acceptance/Global/verifier materials, owner/binding authority, resolved runners and verification inputs in the complete common-dir Active Authority V3 snapshot.
 - `verify` writes scoped per-Check Progress Records only after rechecking active task/revision/compiled/worktree identity. A concurrent revision returns `active_authority_changed_during_verify` and writes no stale progress.
 - `status` reports each Outcome as `unverified`, `progress_passing`, `progress_failing`, `progress_stale` or `blocked_external`. It also reports the fresh Final Receipt as `final_workflow_status` (or `null` after drift) and the active Contract's complete `external_confirmations`. It reads the common-dir authority snapshot and reports a missing or mismatched workdir cache as a repairable diagnostic.

@@ -1,99 +1,87 @@
 # Architecture Context
 
-This is the restrained architecture map for the Harness source repository. It records durable component and authority boundaries, not implementation narration.
+This is the minimum durable architecture map for the Harness source repository. Detailed role contracts and design rationale are selected on demand through `project_context/context.toml`.
 
 ## System Boundary
 
-- The repository owns the `project-tiny-context-harness` npm package, `ty-context` CLI, Minimal Context assets, validators, source sync, explicit Long-Task Workflow capability, release automation and delivery benchmark skeleton.
-- Consumer projects receive portable Minimal Context/default Workflow assets. The optional Source Plan Authoring Skill, Long-Task Workflow Skill and Codex Stop Hook are selected by the explicit `long-task` profile.
-- Harness may run only safe verification commands declared in a compiled V2 Delivery Contract. Platform Goal/Turn lifecycle, agents, model routing, branches/worktrees, Git integration, PRs, CI, deployment and human acceptance remain outside the runtime.
+- The repository owns the `project-tiny-context-harness` npm package, `ty-context` CLI, managed Minimal Context/default Workflow assets, validators, source sync, explicit Long-Task capability, release automation and delivery benchmark.
+- Consumer projects receive portable core/default workflow assets. `ty-context enable long-task` adds the optional Source Plan Skill, Long-Task Workflow Skill and package-owned Stop Hook.
+- Harness owns durable Context and declared workflow authority, not product quality. Project tests, CI, runtime observation and human acceptance remain the evidence authorities.
+- Harness does not own platform Goal/Turn lifecycle, models, agents, process trees, network isolation, branches/worktrees, merge/push/PR, CI, deployment or external confirmation execution.
 
 ## Component Map
 
-- CLI routing: `packages/ty-context/src/commands/index.ts`; V2 Contract commands: `commands/long-task.ts`; Delivery Set/composite names are isolated retired tombstones.
-- The sole active schema lives under `packages/ty-context/src/schemas/long-task-delivery-v2/**`; Claim, authority/progress/boundary, runner/evidence and Live Gate modules remain focused and separate.
-- Source Authority: `long-task-source-item-parser.ts`, `long-task-source-inventory.ts`, `long-task-acceptance-reference.ts`, `long-task-source-target-index.ts`, `long-task-source-target-continuity.ts` and `long-task-source-continuity.ts` derive a text-bound Material Source inventory and in-memory canonical target index. They enforce marker/Claim set equality, one same-kind/text target per Source Item, unique target ownership, typed disposition continuity, Outcome/`GLOBAL.<check>.<assertion>` resolution and scope-correct Source-backed Acceptance without creating a second Source artifact.
-- Shared activation safety: `long-task-activation-validation.ts` is called by read-only Preflight in collecting mode and by static Compile in fail-fast mode. It owns Source target continuity, criterion/Source-backed Claim, Claim/operator/all-of-surface, adapter, Observation, risk, owner/path/binding, runner/input, Counterfactual and per-Check structured-sensitivity validation before Authority Lock.
-- Static compiler: canonical normalized Contract/authority/compiled identity, first-class atomic Claims, Acceptance mapping, adapter/Observation identity, field-policy completeness and first-success Authority Lock.
-- Evidence Kernel V2: runner-derived adapters, explicit command runner, Git-aware snapshot, declared-only single-AC-per-Test canonical multi-project Playwright observations, Playwright-specific exact exit-one Counterfactual classification, passed-Check-only Claim/Population proof, same-Check Claim-sensitive structured evidence, Binding/value-sensitive Counterfactuals projected into owning Check Progress, precise enriched findings, targeted verifier and source-recompiled same-snapshot Live Final Gate.
-- Recovery state: the user-authored `delivery-contract.yaml` and optional `source.md` live in the chosen workdir; existing `outcome_files` are physical compatibility only. Progress/Receipt and the workdir compiled file are audit/cache projections only. The Git common-dir Active Authority V3 record contains the complete compiled snapshot and immutable first base, while the matching worktree config marker binds task, revision and compiled identity.
-- Qualified-result propagation runs from Final Receipt through status/resume, stop-check, the Stop Hook and close. Status exposes a workflow status only for a fresh Receipt while confirmations come from active compiled authority; Stop/close may CAS-clear accepted machine Authority but preserve external-pending qualification in their output.
-- Stop adapter is a no-op without a binding and otherwise runs the Live Final Gate fail-closed; it never trusts a stored Receipt or compiled cache. A pending-external machine acceptance is non-blocking and reaches the Hook as `systemMessage`, not a new Hook state.
-- Capability/profile selection: `packages/ty-context/src/lib/profiles.ts`, `commands/enable.ts`, `commands/disable.ts`, config parsing and upgrade migration. The profile-managed authoring surfaces are the non-authoritative upstream `source-plan-authoring` Skill and `long-task-workflow`, which owns Contract Draft authoring, Preflight, Compile, rolling execution and Final Gate as one lifecycle.
-- Managed source: `.codex/ty-context-managed/**`; packaged assets: `packages/ty-context/assets/**`; mapping authority: `packages/ty-context/source-mappings.yaml`.
-- Source-workspace durable facts: `project_context/**`; full stable workflow design: `PROJECT_SPEC.md`.
+- CLI and command routing: `packages/ty-context/src/commands/**`.
+- Context manifest, graph, validation, export, sync and doctor: `packages/ty-context/src/lib/context-*`, `validators.ts`, `sync-engine.ts`, `doctor.ts`.
+- Active Contract schema: `packages/ty-context/src/schemas/long-task-delivery-v2/**` plus focused `long-task-*` parser/compiler/claims/risk modules.
+- Shared activation safety: `long-task-activation-validation.ts`, used by collecting Preflight and fail-fast Compile.
+- Source authority: Source marker/parser/inventory/target-continuity modules derive text-bound Source/REQ/CTRL/OBL/NCOMP/AC projections without another editable Source authority.
+- Evidence Kernel: runner-derived adapters, explicit runners, structured/Playwright observations, Counterfactual and Population sensitivity, targeted verifier, Git-aware snapshot and source-recompiled same-snapshot Live Final Gate.
+- Authority/recovery: one common-dir Active Authority V3 snapshot plus matching worktree marker; workdir compiled output, Progress and Receipts are rebuildable audit/recovery projections.
+- Managed source: `.codex/ty-context-managed/**`; package assets: `packages/ty-context/assets/**`; mapping authority: `packages/ty-context/source-mappings.yaml`.
+- Full stable mental model: `PROJECT_SPEC.md`; high-frequency durable facts: `project_context/**`.
 
-## Data / Control Flow
+## Default Context Read Architecture
 
-The lifecycle is:
-
-`Source -> optional Source Plan -> Contract Draft -> Draft Outcome decomposition -> repository/Context binding -> Preflight repair loop -> Compile / Authority Lock -> Rolling Frontier -> targeted repair verification -> one-snapshot Final Gate`
-
-1. Source may be a user request, ordinary prose, research or an external plan. An optional upstream Source Plan may improve keys, anchors, derivation provenance and unresolved decisions; it remains ordinary Source and creates no Harness state or authority.
-2. `long-task init <workdir>` may create a Compact inline-Outcome `delivery-contract.yaml` template. Until the first successful formal Compile, that file is one non-authoritative Contract Draft that `long-task-workflow` may revise across multiple repository/Context reads and responses.
-3. The Skill decomposes independently observable, decidable and target-verifiable results into Draft Outcomes. `Draft Outcome` adds no schema field or runtime type; it is the authoring-time lifecycle of the same Outcome that later enters Authority Lock.
-4. Repository/Context binding adds owners, paths, existing Bindings, runners, verification inputs and proof surfaces only from real evidence. Contract authoring inserts non-rendering Material Source Item markers into the original Source, producing a text-exact, typed, set-equal compiled inventory without changing Source meaning.
-5. `preflight` parses and normalizes the Draft, invokes shared activation validation in collecting mode and returns findings to the same Draft. The repair loop leaves Active Authority, marker, cache, progress, Receipt, pending revision, Git state and project runners untouched.
-6. `compile` invokes the same validation in fail-fast mode, computes atomic all-of Claim Coverage and risk floor, derives canonical Source/Product/Technical/Acceptance/Risk/Context projections, freezes adapter/runner/source/verifier identities and makes the first success Authority Lock. It does not invoke a model or modify product code.
-7. The current native Goal uses `depends_on` acceptance readiness and current findings to form a temporary Rolling Frontier, implement in the current workspace and run project-focused tests. The Frontier is not persisted and is not a scheduler or mandatory implementation plan.
-8. `verify --outcome/--check` runs selected checks on a current snapshot, emits proof only for fully passed Checks and stores repair-only status after re-reading active identity. It improves the repair loop but has no completion authority.
-9. Contract `status` projects `unverified|progress_passing|progress_failing|progress_stale|blocked_external`; `resume` restores semantic ready Outcomes, findings and next action without starting execution or reconnecting a physical Turn.
-10. `final-gate`, Stop and close recompile source authority, validate the common-dir record/config marker, require every planned mutation carrier, create one Git-tree snapshot, rerun every Global and Outcome Check plus declared sensitivity controls, deduplicate only identical raw execution, then re-read active identity. Outcome decomposition never reduces this complete current-snapshot verification; Stop/close use accepted-identity CAS clear and project the accepted workflow qualification plus all declared external confirmations without adding confirmation state.
-11. Workspace, Contract, relevant Context, Source, command/oracle or verifier drift stales affected results. `abandon` removes temporary task state without touching Git or authored Source/Contract.
-
-## Contract Shape And Risk
-
-- The Contract has `task`, `source_claims`, `risk`, `global` and `outcomes`. Product, Technical Boundary and Acceptance remain separate logical authorities inside the one file.
-- Model-authored public identifiers are only task, Outcome and Check keys. Compiler-generated internal identifiers remove the former cross-file reference namespace.
-- Outcome dependencies form the acceptance readiness relation only; they do not prescribe implementation slices or parallel scheduling. Requirements are atomic Product Claims; control location is a `ui_browser` Claim; named Assertions preserve Source AC identity.
-- Standard proof requires executable falsifiable checks, a non-Result atomic Claim per Outcome and all required surfaces. Only Playwright adapter evidence may prove `ui_browser`; Claim-bearing Playwright Assertions are AC `passed equals true`. Standard frozen Playwright inputs are trusted verifier content, while weak-observability Outcomes require same-Check AC/Claim Counterfactual sensitivity. A Claim-bearing Observation is unique across every Check sharing its Raw Execution identity.
-- Outcome Counterfactuals bind locally; Global Counterfactuals resolve `binding_ref` to an Outcome Binding and its carrier paths. Existing carriers close at Preflight/Compile, planned carriers close at Final Gate, and both feed Progress freshness. Risk Source metadata resolves exact Fact/Outcome pairs before effective per-Outcome risk is computed.
-- Actual changed paths outside declared expected/support paths, or a newly touched undeclared Context owner/boundary, return a `scope_escape` Finding; the current Goal reviews risk/ownership, revises and recompiles the Contract.
-
-## Safety And Storage Boundaries
-
-- Contract parsing rejects unknown keys, duplicate keys, YAML aliases/merges/tags and multiple documents.
-- Paths are repository-relative and realpath-contained. Exact paths and patterns share one canonical segment grammar before Contract hashing: Windows separators and one leading `./` normalize to `/`; internal `.`/`..`, NUL/CR/LF/Tab, empty segments, absolute/drive/UNC paths and unsupported wildcard syntax are rejected. Matching, subset and overlap/disjoint use the same restricted AST. Protected Contract, fragment, Source, Context, runner, verification-input, Counterfactual-fixture and package-verifier files reject symlinks and detectable hardlinks; the snapshot-owned read-only `node_modules` junction is the sole explicit exception.
-- Commands use argv arrays with no shell, bounded output/time and a minimal environment whitelist. Only env vars explicitly declared by the current Check are additionally passed.
-- Worker/Agent prose, handwritten status, command exit alone and historical targeted passes cannot create accepted authority.
-- Raw command reuse binds evidence adapter, frozen runner identity and canonical declared Environment Requirements, never actual env values. Claim-bearing Observation ownership spans all Checks sharing the identity; artifacts and Assertion evaluation remain per Check.
-- Final acceptance binds the same snapshot plus Contract, source, selected Context, runner/oracle, verifier content/runtime locator, workdir and repository identity. History is not spliced into current proof.
-- Runtime state is ordinary same-user project state, not a hostile-host security boundary. The product does not claim resistance to deliberate same-user/admin deletion, system Hook bypass or kernel compromise.
-- Local mode trusts the installed package-owned verifier and Git metadata; external platforms remain responsible for network isolation.
-- `abandon --force-corrupt-state` is the only stale-lock/invalid-record/marker-mismatch continuity cleanup. It derives record, marker and lock paths from the current repository/worktree, requires a repository-contained supplied workdir and removes only active state plus that workdir's `.ty-context/**`.
-
-## Distribution And Migration
-
-- Default profiles remain `core-portable` and `workflow-default`; `long-task` is explicit and owns both optional Source Plan authoring and the Long-Task execution Skill.
-- `sync` refreshes enabled managed assets only. Long-task enable/disable/upgrade share entry-level Hook cleanup that recognizes current and relocated package-owned absolute commands only through known managed status plus known package layout, while preserving same-group and similar-name user entries. `upgrade` owns the deterministic safe migration from package-owned `composite-codex` selection/assets to `long-task`.
-- Migration never imports or executes an unfinished historical campaign or development-period V2 Active Authority/Progress/Receipts and never deletes user-authored campaign/source/contract files.
-- Package tarballs contain the Delivery Contract schema, Long-Task Skill/Hook/templates and Evidence Kernel, but no Campaign/AppServer/Codex-worker/SFC/Packet/Wave/worktree scheduler runtime.
+- Near-universal startup Context is limited to `global.md`, `architecture.md`, `context.toml` and the default area root.
+- Foundation, workflow-contract, package-managed-surface and verification detail is task-triggered `on-demand` Context. This changes loading cost, not fact authority.
+- `ty-context doctor` deterministically reports selected default files, bytes, soft-budget overages and exact duplicate content. The report is advisory and creates no Context state or completion authority.
+- A Context fact has one primary owning file. Other high-frequency surfaces use short routing pointers instead of copying detailed rules.
 
 ## Design Rationale
 
-- Keep platform Goal/session lifecycle and Git orchestration outside Harness because duplicating them creates recovery state without improving acceptance evidence.
-- Preserve only an Evidence Kernel that closes concrete false-completion paths: strict preflight, executable assertions, current-snapshot Final Gate and exact freshness.
-- Use one workspace snapshot and one Contract authority so stale or historically spliced evidence cannot silently pass.
+- Keep the startup graph small because every fresh Agent pays that read and attention cost; preserve specialized facts by routing them on demand rather than deleting them.
+- Keep ordinary planning and architecture judgment inside the platform Goal. Persist only durable project facts and use project-native executable checks for objective boundaries.
+- Keep Long-Task acceptance separate from implementation sequencing: one Contract and one Final Gate provide completion authority without a scheduler, second plan or worker state.
+
+## Default Workflow And Architecture Quality
+
+- Default execution uses one `Context Delta: none|required`, platform-internal planning, precise implementation, project-owned verification, Contract Conformance and Context drift checking.
+- A risk-triggered architecture gate applies when work creates or changes a durable module/capability, public API/schema/data/persistence, state/source of truth, ownership/dependency direction, cross-area boundary, migration/security/recovery behavior or reusable abstraction.
+- The gate resolves owner, unique source of truth, dependency direction, interface/state/lifecycle, failure/retry/recovery/compatibility, forbidden shortcuts and the project-owned executable check that protects the boundary.
+- Durable results update owning Context; local implementation choices remain task-local. Small fixes do not pay architecture-ceremony cost.
+- Harness may route project-owned architecture checks but must not become a language-generic dependency analyzer. Repositories use their native lint/AST/architecture tools.
+- Modularity checks report physical and semantic risk, including the highest-risk function location, without changing project thresholds or creating lifecycle state.
+
+## Data / Control Flow
+
+`Source -> optional Source Plan -> one Contract Draft -> Outcome decomposition -> repository/Context binding -> read-only Preflight -> Compile / Authority Lock -> Rolling Frontier -> targeted verifier repair -> clean candidate commit -> source-recompiled same-snapshot Live Final Gate`
+
+- Product, Technical Boundary and Acceptance are distinct logical authorities inside one Contract.
+- Outcomes are independently observable, decidable and target-verifiable acceptance/diagnosis units. Dependencies express readiness only; no scheduler or mandatory implementation DAG is persisted.
+- A Draft Outcome is the pre-Authority-Lock lifecycle of that same Outcome, not a runtime type; it adds no schema field, state file, Worker or completion boundary.
+- Preflight and Compile share activation safety. Preflight diagnostics may include stable references, repair hints and duplicate occurrence counts, but remain read-only and non-authoritative.
+- Targeted verify may localize repair and store scoped current-snapshot Progress; it cannot accept.
+- Final Gate, Stop and close recompile Source authority, bind active task/revision/worktree/Git-tree identity and rerun all declared Global and Outcome checks. Only this complete current snapshot can create machine acceptance.
+
+## Contract And Architecture Closure
+
+- Stable architecture requirements are represented through existing Source-backed technical obligations, global constraints or forbidden shortcuts, owner/path envelopes, Bindings and project-owned executable Checks.
+- Functional behavior and architecture structure are separate claims when either can pass without the other. Both must have falsifiable proof when both are required.
+- Unsupported architecture preference, inferred product semantics or an unverifiable “good design” claim must not become false authority. Resolve it as durable Context, task-local judgment or `decision_required`.
+- Scope/path escape, duplicate authority, bypass of an owning service/facade, wrong dependency direction or second source of truth blocks only when the Contract or controlling Context declares the invariant and a reliable check can observe it.
 
 ## Constraints And Tradeoffs
 
-- Do not restore stages, fixed plan files, Source Unit inventories, SFC graphs, Packets, Waves, integration branches, worker attempts, model routing, top-level Contract splitting or a second completion authority.
-- Do not introduce a separate Contract Authoring Skill, Authoring receipt/state, Coverage authority, execution registry, runner/proof recipe, YAML alias or capacity-based Outcome fragmentation.
-- Do not introduce `draft_outcomes`, a `DraftOutcome` runtime type or persistent Rolling Frontier. Draft Outcome is a lifecycle qualifier; Outcome decomposition improves intermediate execution and diagnosis, not completion authority.
-- Do not turn optional Source Plan authoring into a schema, CLI, preflight, validator, cache, receipt, authority or completion gate.
-- Do not auto-trigger Long-Task Workflow from duration/file count/complexity.
-- Do not let targeted verify accept, reuse historical results in Final Gate, or allow Skill prose to weaken compiler-enforced proof.
-- Do not let `init`, `sync` or `upgrade` activate tasks or infer project semantics.
-- Keep `architecture.md` concise; detailed schema and operational usage belong in code/tests/README/PROJECT_SPEC.
+- Minimal default Context trades automatic reading of every specialized rule for lower recurring attention cost; task triggers and explicit Context references preserve access to the full durable fact set.
+- Architecture enforcement is limited to declared, falsifiable project invariants. Subjective design quality remains engineering review rather than false machine proof.
+- The first successful Compile creates Authority Lock and immutable initial base. Later protected reductions cannot be silently adopted.
+- One user-selected delivery has one Contract, one selected workspace and one Final Gate. Existing `outcome_files` are physical compatibility only.
+- No active Source Inventory/Coverage file, SFC/Packet/Wave/Campaign runtime, Worker scheduler, execution registry, second plan or external-confirmation tracker exists.
+- `init`, `sync` and `upgrade` never import or execute retired Campaign or development-period authority state.
+- Package-managed asset changes require source/package parity, idempotent sync and consumer-facing verification.
 
 ## Verification Implications
 
-- Focused Skill/profile tests prove explicit Source Plan triggering, semantic-boundary guidance, managed-source parity and long-task profile install/remove behavior; schema/parser/compiler/risk tests continue to prove Compact equivalence, Source/REQ/CTRL/OBL/AC coverage, read-only Preflight and deterministic routing.
-- Real temporary-Git black boxes prove the one-workspace verify/final/stale/close loop and platform non-orchestration boundary.
-- Source sync/check, consumer quickstart, exact tarball inspection and full package gates prove distributed-surface alignment.
+- `ty-context doctor` reports default Context footprint and exact duplicate default files as advisory maintenance signals.
+- `make validate-context` protects required recovery structure and registered role consistency; it is not relaxed to obtain a smaller Context.
+- Preflight remains read-only and Compile remains the fail-closed activation boundary. Added references, repair hints and occurrence counts may improve repair but cannot change acceptance.
+- Project-native architecture checks and `check-modularity` protect declared structural boundaries; Final Gate alone reruns the complete long-task authority on one current snapshot.
+- Managed source/package/generated copies must remain byte-aligned through source sync and package parity checks.
 
 ## Open Risks
 
-- Contract structure cannot prove that an author declared every real product requirement.
-- Package-managed Hooks and state protect against accidental drift, not deliberate same-user/admin or system-level tampering.
-- Snapshotting and complete Final Gates trade runtime cost for trustworthy current evidence; performance budgets keep that cost bounded.
+- A structurally complete Contract cannot discover undeclared requirements.
+- Same-user files, installed package code and Git metadata are trusted drift boundaries, not hostile-host security isolation.
+- Architecture quality beyond declared and observable invariants still depends on engineering judgment and review.
+- Public docs, managed source, package assets and generated workspace copies can drift unless parity checks remain enforced.

@@ -10,6 +10,8 @@ Project Tiny Context Harness is repo-native memory and delivery-drift protection
 
 The optional `source-plan-authoring` Skill is an upstream Source-quality helper, not a fourth authority layer. It turns discussions, research and initial plans into one self-contained Markdown Source Plan with stable semantic keys, traceable derivations, explicit unresolved decisions and observable acceptance scenarios. It does not update Context, bind a repository, create Contract/runtime state or claim completion.
 
+Minimal Context optimizes two purposes: preserve durable non-implementation facts, and let an Agent recover and update those facts with low search and attention cost. Near-universal facts use the core files and default area root; specialized role Context is task-triggered `on-demand`. `ty-context doctor` reports the deterministic default read set, byte footprint, soft-budget overages and exact duplicate default files. This is advisory observability only: it creates no Context state, authority or validation gate, and avoids adding configurable budget schema for a maintenance heuristic.
+
 The Long-Task Workflow V2 product equation is:
 
 > one complete delivery = one authoritative Contract + one continuing platform-native Goal + one selected workspace + rolling technical implementation + one trustworthy Evidence Kernel + one Final Gate
@@ -133,6 +135,8 @@ Retain a mechanism only when it provides clear, non-substitutable drift-preventi
 Use the default Workflow Contract when work is local, reversible, directly testable, covered by current Context, needs no cross-session recovery and does not change durable API/schema/data/security/recovery/product semantics. No Delivery Contract or long-task binding is created.
 
 `Architecture Context Hit` is an internal high-risk routing question. `Decision Rationale Hit` is an internal `existing|required|none` coverage question. They are not a durable fact, role, validator or artifact, and the check never creates a rationale delta or required file. `Context Delta` remains the only durable-fact decision point.
+
+The architecture gate is risk-triggered rather than universal. It applies to new durable modules/capabilities, public API/schema/data/persistence, source-of-truth or state ownership, dependency direction, cross-area boundaries, migration/security/recovery/compatibility and reusable abstractions. It resolves owner, unique source of truth, dependency direction, interface/state lifecycle, failure/retry/recovery/compatibility, forbidden shortcuts and a project-owned executable architecture check. Small local fixes do not pay this cost. Harness may route repository-native lint/AST/dependency/contract checks but does not become a language-generic architecture analyzer.
 
 Product Surface Contract work uses `context_surface_contract` and the existing `contract`, area/subdomain and verification roles. It must not add a new product-surface role; Source-to-Context judgment and Contract Conformance remain internal workflow checks.
 
@@ -278,6 +282,8 @@ Live Final Gate requires a clean candidate commit after all required Context upd
 
 `ty-context long-task preflight <workdir>` is a read-only, model-free Authoring check. After parseable structure is normalized, it calls the same activation-safety kernel as Compile in collecting mode and returns every independent diagnostic that can be reliably discovered from that structure. Invalid YAML or invalid root structure stops only the affected structural branch. Preflight never creates or updates Active Authority, initial base, worktree marker, compiled cache, progress, Receipt or pending revision; it does not acquire the active-state mutation lock and never runs project verification.
 
+Preflight diagnostics are repair-oriented without becoming repair authority. Exact duplicate diagnostics are emitted once with `occurrences`; known codes may expose stable `refs` plus a code-specific `repair_hint` limited to structural correction, coverage restoration, repository-path repair or explicit decision escalation. Hints never delete/weaken Claims, invent product semantics, mutate the Draft or bypass Compile. No YAML location registry, repair state or second authoring schema is added.
+
 New authoring uses Compact V2 YAML. The parser fills only deterministic defaults such as empty optional arrays, `context_snapshot_mode: referenced`, `requested_level: auto`, runner `cwd: .`, `timeout_ms: 30000`, `retry_policy: none` and `idempotent: false`. Goal, Source/Source Claims, Context, Outcomes, owners/paths, Requirements, applicable control states, obligations, proof surfaces, runner targets, verification inputs, Assertions, risk facts, forbidden shortcuts and external confirmations remain explicit. Compact and fully expanded forms normalize to the same Contract object, Contract hash, authority hashes, risk, Claim Coverage and compiled identity.
 
 Compile is deterministic, static and model-free. It calls the shared activation-safety kernel in fail-fast mode, so skipping Preflight cannot bypass any safety rule. The kernel:
@@ -419,6 +425,8 @@ The Skill is intentionally model-guidance only. It creates no Source Plan Schema
 
 `/long-task-workflow` remains the only active long-task execution Skill. It preserves the user/external proposal or optional Source Plan as Source, inserts only Material Source Item markers into the original text, authors one complete Compact V2 Contract with set-equal Source Claims and semantic Outcomes using REQ/CTRL/OBL/AC, runs read-only Authoring Preflight, formally compiles only when Preflight is ready, continuously implements rolling Frontiers in the current native Goal, keeps `Context Delta` live during implementation, resumes semantic state, runs the Live Final Gate and reports results. It creates no model-switch checkpoint, proactive subagent scheduler, second Contract plan, Source Inventory file/Receipt, intermediate Contract-authoring product, matrix or top-level Contract split.
 
+Its package-managed instruction surface uses progressive disclosure. The main `SKILL.md` owns the objective, hard boundaries, phase routing and lifecycle summary; one-level `references/contract-authoring.md`, `references/evidence-design.md` and `references/authority-lifecycle.md` are loaded only when that phase applies. References are prompt packaging, not files created in the user's workdir, state, Contract projections or another authority. Declared architecture invariants reuse Source-backed obligations/global constraints/forbidden shortcuts, owner/path/Binding boundaries and project-owned executable Checks; no architecture-specific authority layer is added.
+
 `/normal-long-task` is a retirement pointer and creates no checklist, prompt or Local Audit.
 
 Profiles are:
@@ -447,6 +455,7 @@ The package version for this architecture is `0.6.0`, the first public V2 semant
 
 Release update mode is part of the release contract. Every published version declares `sync-only`, `upgrade-required` or `manual-required`; `ty-context upgrade --check` reports `safe_pending`, `manual_required` and `blocked`, and direct `sync` does not run migrations. The reusable exact-tarball fixture contains marked Source, a Source-backed non-Result Claim, criterion, Binding and real same-Check Counterfactual covering Result plus that Claim; both Trusted Publishing and emergency fallback run the full fixture against the same prepared tarball before publish.
 
+- The source workspace's near-universal default Context set should remain below the advisory 64 KiB total and 16 KiB per-file soft budgets; `doctor` reports but does not block overages. Exact duplicate default files always produce an advisory warning.
 - Compact single-Outcome fixtures are at least 35% shorter than the expanded template while compiling identically.
 - Small-fixture Authoring Preflight target: at most two seconds.
 - Small-fixture Compile target: at most two seconds.
