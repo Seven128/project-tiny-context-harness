@@ -56,6 +56,96 @@ test("Context authority projection excludes retrieval-only friction without weak
   );
 });
 
+test("bounded Context discovery reduces trigger-only recall risk without a retrieval system", async () => {
+  const [agents, development, contextModel, architecture, rationale, efficiency] =
+    await Promise.all([
+      read(".codex/ty-context-managed/agents/AGENTS_CORE.md"),
+      read(
+        ".codex/ty-context-managed/skills/context_development_engineer/SKILL.md",
+      ),
+      read("project_context/areas/harness-package/foundation/context-model.md"),
+      read("project_context/architecture.md"),
+      read(
+        "project_context/areas/harness-package/decision-rationale/minimal-context.md",
+      ),
+      read("docs/long-task-workflow-efficiency.md"),
+    ]);
+  const combined = [
+    agents,
+    development,
+    contextModel,
+    architecture,
+    rationale,
+    efficiency,
+  ].join("\n");
+
+  assert.match(combined, /bounded (?:text|Context discovery) search/iu);
+  assert.match(combined, /project_context\/\*\*/u);
+  assert.match(combined, /before `Context Delta`|before deciding `Context Delta`/iu);
+  assert.match(combined, /area\/module/iu);
+  assert.match(
+    combined,
+    /API\/schema\/state\/security\/verification\/deployment|API\/Schema\/state\/security\/verification\/deployment/iu,
+  );
+  assert.match(combined, /supplements.*semantic judgment/isu);
+  assert.match(combined, /low fixed cost|low fixed cost/iu);
+  assert.doesNotMatch(
+    combined,
+    /create(?:s)? (?:a )?(?:vector|persistent) index|persist(?:s)? search state/iu,
+  );
+});
+
+test("one-time model choice uses Authority Lock without creating model routing state", async () => {
+  const [skill, generated, packaged, lifecycleSource, lifecycleGenerated, lifecyclePackaged, rationale, efficiency, architecture] =
+    await Promise.all([
+      read(".codex/ty-context-managed/skills/long-task-workflow/SKILL.md"),
+      read(".codex/skills/long-task-workflow/SKILL.md"),
+      read("packages/ty-context/assets/skills/long-task-workflow/SKILL.md"),
+      read(
+        ".codex/ty-context-managed/skills/long-task-workflow/references/authority-lifecycle.md",
+      ),
+      read(
+        ".codex/skills/long-task-workflow/references/authority-lifecycle.md",
+      ),
+      read(
+        "packages/ty-context/assets/skills/long-task-workflow/references/authority-lifecycle.md",
+      ),
+      read(
+        "project_context/areas/harness-package/decision-rationale/long-task-workflow.md",
+      ),
+      read("docs/long-task-workflow-efficiency.md"),
+      read("project_context/architecture.md"),
+    ]);
+
+  assert.equal(generated, skill);
+  assert.equal(packaged, skill);
+  assert.equal(lifecycleGenerated, lifecycleSource);
+  assert.equal(lifecyclePackaged, lifecycleSource);
+  const combined = [skill, lifecycleSource, rationale, efficiency, architecture].join(
+    "\n",
+  );
+
+  for (const expected of [
+    "execution_model_checkpoint",
+    "post_authority_lock_pre_implementation",
+    "continue_current_model",
+    "switch_model_then_resume",
+    "required: false",
+    "first Authority Lock",
+  ])
+    assert.match(combined, new RegExp(expected, "iu"), expected);
+  assert.match(combined, /stop once|one-time/iu);
+  assert.match(combined, /prior explicit|already stated explicitly/iu);
+  assert.match(
+    combined,
+    /no checkpoint file|no acknowledgement file|no acknowledgement state/iu,
+  );
+  assert.match(combined, /no .*model route|creates no model route/iu);
+  assert.match(combined, /does not switch|cannot switch/iu);
+  assert.match(combined, /not proof|not acceptance evidence/iu);
+  assert.doesNotMatch(combined, /model-tier scheduler.*active|persisted model route/iu);
+});
+
 test("Preflight repair ordering remains advisory and creates no authority", async () => {
   const [architecture, efficiency, ...references] = await Promise.all([
     read("project_context/architecture.md"),
