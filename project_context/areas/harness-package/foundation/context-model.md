@@ -13,12 +13,13 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 - Harness is the portable managed guidance, Context templates, default Skills and validators that shape expected agent behavior; it does not own project quality or ordinary task execution state.
 - Context is durable project fact stored in `project_context/**` or `DESIGN.md` so future agents can recover intent, ownership, boundaries and repeat-execution paths.
 - Minimal Context is the durable fact layer: the smallest repo-owned facts needed to recover project intent, ownership, boundaries and repeat-execution paths.
-- Workflow Contract is the default agent behavior layer: read the minimum relevant Context, decide one `Context Delta: none|required`, update durable facts first when required, use the agent's internal planning, implement, run project-owned verification, then perform Contract Conformance and Context drift check.
+- Workflow Contract is the default agent behavior layer: read core/default Context, combine manifest routing with one bounded Context discovery search, decide one `Context Delta: none|required`, update durable facts first when required, use the agent's internal planning, implement, run project-owned verification, then perform Contract Conformance and Context drift check.
 - Tiny Context has three cooperating capabilities: Minimal Context owns durable facts; Workflow Contract owns the lightweight default behavior; explicitly enabled Long-Task Workflow owns one Canonical Delivery Contract and verifier-derived current-snapshot completion authority for a platform-native Goal.
 - Repo-owned intent layer is the durable project fact surface that tells agents which product, architecture, ownership and dependency facts outrank current-code convenience.
 - Durable facts include product/domain ownership, surface responsibility, information architecture, API/schema semantics, state/runtime/recovery semantics, cross-domain boundaries, security boundaries and repeatable verification/deployment paths.
 - Workflow Contract is prompt-level order of thought, not a validator, phase gate, artifact schema, edit-order gate or long-task detector.
 - Internal plan means the agent's current reasoning about goal, boundaries, controlling Context, implementation surfaces and verification. It has no mandatory file, name or schema.
+- **Context discovery search** is one bounded text search over `project_context/**` before `Context Delta`, using a small set of high-signal terms from the task such as explicit area/module names and API/schema/state/security/verification/deployment language. It supplements manifest triggers and semantic judgment, reads only relevant matches and creates no index, cache, state or authority.
 - Small code task means a local implementation task where existing Context is sufficient and the change does not alter durable product, architecture, API/schema/data, runtime/state/recovery, verification/deployment, security/redaction or surface-ownership facts. It is not defined by lines changed.
 - Architecture Context Hit and Decision Rationale Hit are internal routing questions for high-risk work; they do not create additional deltas, Context roles, files or validators.
 - Source-to-Context judgment is the internal classification of each external product, architecture, technical or acceptance constraint as covered, requiring a Context update, task-local, explicitly out of scope or requiring a user decision. It is required thinking, not a Markdown table.
@@ -26,6 +27,7 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 - Scratch files are optional, user/agent-owned temporary memory. They have no fixed name or schema, are not Context or completion proof, are not registered in `context.toml`, and never become Workflow or Long-Task authority.
 - A Source Plan produced by the optional `source-plan-authoring` Skill is one self-contained Markdown provenance document. It may preserve stable requirement/control/obligation/acceptance keys and derivation sources for later Contract authoring, but it is not Context, a Delivery Contract, runtime state or completion proof.
 - One root V2 `delivery-contract.yaml` (optionally with Outcome fragments) is explicit long-task authoring authority. Original sources are provenance; compiled cache, per-Check progress, receipts and status are verifier-owned temporary audit/recovery state, never Context or acceptance authority.
+- **Execution-model checkpoint** is the single user-choice pause after the first Authority Lock and before Long-Task implementation. The user may continue with the current model or switch models and resume the active task. A prior explicit choice satisfies it; later revisions do not repeat it. It creates no model route, acknowledgement file, checkpoint state or completion authority.
 - **Controlling Context** is selected Context whose meaning can change current delivery ownership, architecture, product/technical contracts, risk, recovery, verification or deployment. Core files, explicit `context_refs`, verification/deployment Context and every file in full snapshot mode are controlling. Its change cannot be silently absorbed after Authority Lock.
 - **Supporting Context** is selected only through graph expansion, is not explicitly referenced, and has role `implementation-index` or `archive`. It improves navigation or preserves background material without defining acceptance. A supporting-only revision may preserve targeted Progress, but it never becomes proof.
 - **Retrieval metadata** is manifest guidance that changes how future agents find Context without changing the meaning of Context already selected for a delivery: `triggers`, `read_when`, `read_policy`, default selection and unselected nodes. Selected area ownership, role classification and selected dependency closure are authority structure, not retrieval metadata.
@@ -46,14 +48,15 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 
 ## Priority When Sources Disagree
 
-1. Treat Context as the intended target for ownership, boundaries, contracts and repeat-execution paths.
-2. Let principle-like Context roles interpret current-code convenience.
-3. Treat code as evidence of current state.
-4. Treat tests and external evidence as proof only for the claims they exercise.
-5. Treat an existing `plan.md`, matrix, verdict, local audit or prose completion claim as ordinary user/task data unless an explicitly invoked Skill owns it.
-6. If Context and code disagree, report implementation drift, missing work or stale Context; do not silently replace intended facts with code shape.
-7. Re-evaluate `Context Delta` throughout implementation and repair. If a task discovers a missing durable fact, set `Context Delta: required` and update the owning Context before implementation continues.
-8. After Authority Lock, revise Controlling Context through the protected Authority Revision path. Supporting-only Context may auto-revise without user approval and without invalidating otherwise fresh targeted Progress, but Final Gate still reads the complete current Context snapshot.
+1. Read the core/default Context, collect manifest candidates and run the bounded Context discovery search before deciding `Context Delta`.
+2. Treat the resulting relevant Context as the intended target for ownership, boundaries, contracts and repeat-execution paths.
+3. Let principle-like Context roles interpret current-code convenience.
+4. Treat code as evidence of current state.
+5. Treat tests and external evidence as proof only for the claims they exercise.
+6. Treat an existing `plan.md`, matrix, verdict, local audit or prose completion claim as ordinary user/task data unless an explicitly invoked Skill owns it.
+7. If Context and code disagree, report implementation drift, missing work or stale Context; do not silently replace intended facts with code shape.
+8. Re-evaluate `Context Delta` throughout implementation and repair. If a task discovers a missing durable fact, set `Context Delta: required` and update the owning Context before implementation continues.
+9. After Authority Lock, revise Controlling Context through the protected Authority Revision path. Supporting-only Context may auto-revise without user approval and without invalidating otherwise fresh targeted Progress, but Final Gate still reads the complete current Context snapshot.
 
 ## Role Placement
 
@@ -74,4 +77,5 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 - Do not invent rationale from current code shape.
 - Do not register scratch files, exported source packs, Delivery Contracts, optional source provenance, compiled long-task state or verification runs in `project_context/context.toml`.
 - Do not require or validate a fixed `plan.md`, Source-to-Context table, Context-to-Implementation table, matrix, verdict or evidence ledger for the default workflow.
+- Do not persist the bounded Context search or execution-model checkpoint as a new artifact, registry or runtime state.
 - Use Context to shorten future recovery and guide decisions; use code/tests/runtime evidence to prove current behavior.
