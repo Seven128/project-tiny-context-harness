@@ -17,13 +17,14 @@ When an active `/long-task-workflow` binding exists, that Skill owns lifecycle, 
 
 ## 默认工作方式
 
-1. 读取 `project_context/global.md`、`project_context/architecture.md`、`project_context/context.toml`、default area root，并按 triggers/read policy 读取相关 on-demand Context。
-2. 确认目标、约束、成功标准、影响域、验证/部署路径和风险。能从代码或 Context 得到的事实不要重复询问。
-3. Context 决定“应该是什么”；代码说明“现在是什么”；测试和运行证据证明行为。冲突是实现漂移、缺失工作或 stale Context，不能由代码静默重定义归属。
-4. 第一处编辑前决定唯一 `Context Delta: none|required`。影响 durable architecture boundary、module ownership、API / Schema / data contract、state / runtime semantics、dependency direction、verification / deployment semantics 或 durable rationale / tradeoff 时为 `required`，先更新 owning Context。不要创建 `plan.md`、Task Contract 文件或 Markdown 映射表。
-5. 用 Agent 内部计划保持 goal、non-goals、owner、boundaries、implementation surfaces、risk 和 verification 清晰。默认流程不要求或验证固定 `plan.md`、matrix、verdict 或 evidence ledger。
-6. 普通 bug fix、局部样式/实现漂移、小重构、package/release、测试修复或探索性 spike 不支付架构仪式成本；它们是 small code task，除非过程中形成了新的长期工程事实。
-7. 实现后运行 project-owned verification，做 `Contract Conformance` 和 Context drift check，只报告 `Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。
+1. 读取 `project_context/global.md`、`project_context/architecture.md`、`project_context/context.toml`、default area root，并按 triggers/read policy 收集相关 on-demand Context 候选。
+2. 在判断 `Context Delta` 前，用任务中明确的 area/module/API/Schema/state/security/verification/deployment 等少量高信号词，对 `project_context/**` 做一次 bounded text search；把命中的 Context 与 manifest 候选合并，只读取真正相关文件。搜索只补充语义判断，不创建索引、缓存或第二权威。
+3. 确认目标、约束、成功标准、影响域、验证/部署路径和风险。能从代码或 Context 得到的事实不要重复询问。
+4. Context 决定“应该是什么”；代码说明“现在是什么”；测试和运行证据证明行为。冲突是实现漂移、缺失工作或 stale Context，不能由代码静默重定义归属。
+5. 第一处编辑前决定唯一 `Context Delta: none|required`。影响 durable architecture boundary、module ownership、API / Schema / data contract、state / runtime semantics、dependency direction、verification / deployment semantics 或 durable rationale / tradeoff 时为 `required`，先更新 owning Context。不要创建 `plan.md`、Task Contract 文件或 Markdown 映射表。
+6. 用 Agent 内部计划保持 goal、non-goals、owner、boundaries、implementation surfaces、risk 和 verification 清晰。默认流程不要求或验证固定 `plan.md`、matrix、verdict 或 evidence ledger。
+7. 普通 bug fix、局部样式/实现漂移、小重构、package/release、测试修复或探索性 spike 不支付架构仪式成本；它们是 small code task，除非过程中形成了新的长期工程事实。
+8. 实现后运行 project-owned verification，做 `Contract Conformance` 和 Context drift check，只报告 `Context: 已更新 ...` 或 `Context: 本次无长期事实变化`。
 
 ## 风险触发 Architecture Gate
 
