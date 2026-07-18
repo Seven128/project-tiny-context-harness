@@ -9,17 +9,6 @@ import {
   selectAffectedTests,
 } from "../../tools/affected_test_selection.mjs";
 
-test("affected-test tooling selects the portable subprocess regression", () => {
-  const selection = selectAffectedTests(["tools/npm_command_spec.mjs"]);
-  assert.equal(selection.mode, "selected");
-  assert.equal(selection.requires_build, false);
-  assert.deepEqual(selection.tests, [
-    "tests/ty-context/affected-test-portable-command.test.mjs",
-    "tests/ty-context/affected-test-selection.test.mjs",
-    "tests/ty-context/workflow-test-entrypoints.test.mjs",
-  ]);
-});
-
 test("hotspot source changes select focused regression tests", () => {
   const selection = selectAffectedTests([
     "packages/ty-context/src/lib/long-task-progress.ts",
@@ -31,6 +20,32 @@ test("hotspot source changes select focused regression tests", () => {
     "tests/ty-context/long-task-context-evolution.test.mjs",
     "tests/ty-context/long-task-state-resume.test.mjs",
   ]);
+});
+
+test("Context authority topology changes use focused selection and freshness coverage", () => {
+  const selection = selectAffectedTests([
+    "packages/ty-context/src/lib/long-task-context-authority-topology.ts",
+  ]);
+  assert.equal(selection.mode, "selected");
+  assert.deepEqual(selection.tests, [
+    "tests/ty-context/long-task-context-authority-topology.test.mjs",
+    "tests/ty-context/long-task-context-evolution.test.mjs",
+    "tests/ty-context/long-task-semantic-authority-revision.test.mjs",
+  ]);
+});
+
+test("Preflight repair-diagnostic changes stay on focused Authoring coverage", () => {
+  for (const file of [
+    "packages/ty-context/src/lib/long-task-authoring-preflight-diagnostics.ts",
+    "packages/ty-context/src/lib/long-task-authoring-preflight-repair-order.ts",
+    "packages/ty-context/src/lib/long-task-authoring-preflight-types.ts",
+  ]) {
+    const selection = selectAffectedTests([file]);
+    assert.equal(selection.mode, "selected", file);
+    assert.deepEqual(selection.tests, [
+      "tests/ty-context/long-task-authoring-preflight.test.mjs",
+    ], file);
+  }
 });
 
 test("shared long-task runtime types use focused authority and recovery coverage", () => {

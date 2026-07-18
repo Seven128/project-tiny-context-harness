@@ -28,6 +28,7 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 - One root V2 `delivery-contract.yaml` (optionally with Outcome fragments) is explicit long-task authoring authority. Original sources are provenance; compiled cache, per-Check progress, receipts and status are verifier-owned temporary audit/recovery state, never Context or acceptance authority.
 - **Controlling Context** is selected Context whose meaning can change current delivery ownership, architecture, product/technical contracts, risk, recovery, verification or deployment. Core files, explicit `context_refs`, verification/deployment Context and every file in full snapshot mode are controlling. Its change cannot be silently absorbed after Authority Lock.
 - **Supporting Context** is selected only through graph expansion, is not explicitly referenced, and has role `implementation-index` or `archive`. It improves navigation or preserves background material without defining acceptance. A supporting-only revision may preserve targeted Progress, but it never becomes proof.
+- **Retrieval metadata** is manifest guidance that changes how future agents find Context without changing the meaning of Context already selected for a delivery: `triggers`, `read_when`, `read_policy`, default selection and unselected nodes. Selected area ownership, role classification and selected dependency closure are authority structure, not retrieval metadata.
 - Conformance is a handoff self-check against relevant Context and current task constraints. It creates delivery evidence, not durable Context by itself.
 
 ## Fact-Source Authority
@@ -41,6 +42,7 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 - `PROJECT_SPEC.md` owns the full Harness design explanation and historical rationale in this source workspace. Role Context keeps only high-frequency durable facts.
 - Agent internal plans are current execution state only. Existing `plan.md`, matrices, verdicts or other user files have no implicit authority.
 - Explicit Long-Task authority is: one complete source V2 Contract (with `outcome_files` only as physical compatibility); generated Source/REQ/CTRL/OBL/AC coverage; immutable initial base and protected authority hashes; targeted per-Check repair progress; a common-dir Active Authority V3 record containing the complete compiled snapshot plus a task/revision/identity Git-config marker; and a source-recompiled same-snapshot Live Final Gate run by final-gate, Stop or close. The workdir compiled file is never previous-authority or baseline authority.
+- In referenced mode, the `context.toml` entry in the Context snapshot uses a canonical selected-authority projection rather than raw retrieval text. Retrieval-only edits therefore do not revise active Authority or stale scoped Progress; selected structural changes and selected Context contents still do. A changed final Git tree still invalidates historical final acceptance and must pass the Live Final Gate again.
 
 ## Priority When Sources Disagree
 

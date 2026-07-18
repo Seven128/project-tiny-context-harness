@@ -9,6 +9,10 @@ export interface AuthoringPreflightDiagnosticV1 {
   refs?: string[];
   repair_hint?: string;
   occurrences?: number;
+  diagnostic_id?: string;
+  repair_group?: string;
+  repair_priority?: "primary" | "dependent";
+  blocked_by?: string[];
 }
 
 export interface SourceCoverageV1 {

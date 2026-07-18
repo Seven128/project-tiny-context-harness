@@ -8,6 +8,8 @@ Run `ty-context long-task preflight <workdir>` before first formal Compile. Reso
 
 Preflight and Compile call the same activation-safety validator. Skipping Preflight bypasses no Source continuity, criterion, Claim/all-of-surface, adapter/Observation, risk, owner/path/Binding, runner/input, Counterfactual or sensitivity rule.
 
+Preflight keeps every independently discovered diagnostic. When a structural duplicate makes the same Claim ambiguous or repeated, only that pair receives stable `diagnostic_id`, `repair_group`, `repair_priority` and `blocked_by` metadata so the structural blocker is repaired first. Independent findings keep their compact existing shape; no finding is hidden, reclassified or treated as resolved, and no repair state or authority is created.
+
 The first successful `ty-context long-task compile <workdir>` is Authority Lock and freezes the immutable initial base and complete compiled authority snapshot in Git common-dir, bound to the worktree marker by task id, revision and compiled identity.
 
 ## Protected Revision
@@ -17,6 +19,8 @@ After Authority Lock, Source/Product/Global semantics, Controlling Context, veri
 Every path-bearing field uses canonical grammar. Internal `.`/`..`, control characters, empty segments, absolute/drive/UNC paths and unsupported glob syntax fail closed.
 
 Controlling Context includes core Context, explicit `context_refs`, verification/deployment Context and every file in full snapshot mode. In referenced mode only graph-derived, non-explicit `implementation-index` and `archive` files are Supporting Context; a supporting-only `compile --revise` may preserve otherwise-fresh targeted Progress.
+
+`context.toml` retrieval guidance (`triggers`, `read_when`, `read_policy`, default selection and unselected nodes) is excluded from the selected delivery-authority projection. Selected area ownership, role/dependency structure and selected Context contents remain protected revision material. Retrieval-only edits may preserve scoped Progress, but a changed final Git tree still invalidates historical final acceptance and must pass the Live Final Gate again.
 
 ## Targeted Verification And Recovery
 

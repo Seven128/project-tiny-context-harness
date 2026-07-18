@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
+import { captureContextGraphSnapshot } from "../../packages/ty-context/dist/lib/context-graph-snapshot.js";
 import { normalizeContextAuthoritySnapshot } from "../../packages/ty-context/dist/lib/long-task-context-authority.js";
+import { deliveryCompileFreshness } from "../../packages/ty-context/dist/lib/long-task-freshness.js";
 import {
   createDeliveryFixture,
   pathExists,
@@ -45,6 +47,25 @@ read_policy = "on-demand"
 `,
   );
   return { contextFile, manifestFile };
+}
+
+async function addUnselectedContext(fixture, manifestFile) {
+  const relative = "project_context/areas/other/contract.md";
+  const contextFile = path.join(fixture.root, ...relative.split("/"));
+  await mkdir(path.dirname(contextFile), { recursive: true });
+  await writeFile(contextFile, "# Other contract\n\nUnselected durable contract.\n");
+  const manifest = await readFile(manifestFile, "utf8");
+  await writeFile(
+    manifestFile,
+    `${manifest}
+[[context]]
+path = "${relative}"
+role = "contract"
+read_policy = "on-demand"
+triggers = ["other contract"]
+`,
+  );
+  return { relative, contextFile };
 }
 
 test("legacy Context snapshots fail closed with every file controlling", () => {
@@ -176,6 +197,114 @@ test("supporting Context revises without approval and preserves scoped Progress"
     assert.ok(
       pending.revision_diff.reduction_reasons.includes(
         "context_authority_changed",
+      ),
+    );
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("retrieval-only Context manifest edits preserve active authority and scoped Progress", async () => {
+  const fixture = await createDeliveryFixture();
+  try {
+    const { manifestFile } = await addTransitiveContext(fixture);
+    const unselected = await addUnselectedContext(fixture, manifestFile);
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    await runCli(fixture.root, [
+      "long-task",
+      "verify",
+      fixture.workdir,
+      "--outcome",
+      "first",
+    ]);
+
+    const compiledFile = path.join(
+      fixture.workdir,
+      ".ty-context",
+      "compiled-contract.json",
+    );
+    const compiled = JSON.parse(await readFile(compiledFile, "utf8"));
+    const before = await captureContextGraphSnapshot(
+      fixture.root,
+      fixture.contract.task.context_refs,
+    );
+    const manifest = await readFile(manifestFile, "utf8");
+    await writeFile(
+      manifestFile,
+      manifest.replace(
+        `path = "${SUPPORTING_CONTEXT}"
+role = "implementation-index"
+read_policy = "on-demand"`,
+        `path = "${SUPPORTING_CONTEXT}"
+role = "implementation-index"
+read_when = "Navigation or entry-point discovery changes."
+read_policy = "optional"
+triggers = ["navigation", "entry point"]`,
+      ),
+    );
+
+    const afterRetrievalEdit = await captureContextGraphSnapshot(
+      fixture.root,
+      fixture.contract.task.context_refs,
+    );
+    assert.equal(afterRetrievalEdit.topology_sha256, before.topology_sha256);
+    assert.equal(
+      afterRetrievalEdit.sha256["project_context/context.toml"],
+      before.sha256["project_context/context.toml"],
+    );
+    assert.deepEqual(await deliveryCompileFreshness(compiled), []);
+
+    let status = await runCli(fixture.root, [
+      "long-task",
+      "status",
+      fixture.workdir,
+    ]);
+    assert.equal(status.outcomes.first, "progress_passing");
+    assert.ok(
+      !status.findings.some((finding) =>
+        finding.code.startsWith("context_changed_after_compile"),
+      ),
+    );
+
+    const withUnselectedEdit = (await readFile(manifestFile, "utf8")).replace(
+      `path = "${unselected.relative}"
+role = "contract"`,
+      `path = "${unselected.relative}"
+role = "foundation"`,
+    );
+    await writeFile(manifestFile, withUnselectedEdit);
+    const afterUnselectedEdit = await captureContextGraphSnapshot(
+      fixture.root,
+      fixture.contract.task.context_refs,
+    );
+    assert.equal(afterUnselectedEdit.topology_sha256, before.topology_sha256);
+    assert.deepEqual(await deliveryCompileFreshness(compiled), []);
+
+    const structurallyChanged = (await readFile(manifestFile, "utf8")).replace(
+      `role = "implementation-index"`,
+      `role = "contract"`,
+    );
+    await writeFile(manifestFile, structurallyChanged);
+    const afterAuthorityEdit = await captureContextGraphSnapshot(
+      fixture.root,
+      fixture.contract.task.context_refs,
+    );
+    assert.notEqual(afterAuthorityEdit.topology_sha256, before.topology_sha256);
+    assert.ok(
+      (await deliveryCompileFreshness(compiled)).some((finding) =>
+        finding.startsWith("context_changed_after_compile"),
+      ),
+    );
+
+    status = await runCli(fixture.root, [
+      "long-task",
+      "status",
+      fixture.workdir,
+    ]);
+    assert.ok(
+      status.findings.some((finding) =>
+        finding.code.startsWith("context_changed_after_compile"),
       ),
     );
   } finally {

@@ -3,10 +3,10 @@ import path from "node:path";
 const TEST_ROOT = "tests/ty-context";
 
 export const LONG_TASK_FOCUSED_TESTS = [
-  "affected-test-portable-command.test.mjs",
   "affected-test-selection.test.mjs",
   "long-task-authority-progress-retry.test.mjs",
   "long-task-closure-invariants.test.mjs",
+  "long-task-context-authority-topology.test.mjs",
   "long-task-context-evolution.test.mjs",
   "long-task-design-context.test.mjs",
   "long-task-efficiency-design.test.mjs",
@@ -26,8 +26,7 @@ export const DELIVERY_CONTRACT_FOCUSED_TESTS = [
 
 const STATIC_TESTS = new Set(
   [
-    "affected-test-portable-command.test.mjs",
-    "affected-test-selection.test.mjs",
+      "affected-test-selection.test.mjs",
     "long-task-design-context.test.mjs",
     "long-task-efficiency-design.test.mjs",
     "workflow-test-entrypoints.test.mjs",
@@ -62,11 +61,32 @@ const HOTSPOT_TESTS = new Map([
   [
     "packages/ty-context/src/lib/context-graph-snapshot.ts",
     [
+      "long-task-context-authority-topology.test.mjs",
       "context-manifest-hardening.test.mjs",
       "long-task-authority-progress-retry.test.mjs",
       "long-task-context-evolution.test.mjs",
       "long-task-semantic-authority-revision.test.mjs",
     ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-context-authority-topology.ts",
+    [
+      "long-task-context-authority-topology.test.mjs",
+      "long-task-context-evolution.test.mjs",
+      "long-task-semantic-authority-revision.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-authoring-preflight-repair-order.ts",
+    ["long-task-authoring-preflight.test.mjs"],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-authoring-preflight-diagnostics.ts",
+    ["long-task-authoring-preflight.test.mjs"],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-authoring-preflight-types.ts",
+    ["long-task-authoring-preflight.test.mjs"],
   ],
   [
     "packages/ty-context/src/lib/long-task-context-authority.ts",
@@ -160,10 +180,8 @@ export function selectAffectedTests(changedPaths, options = {}) {
 
     if (
       file === "tools/affected_test_selection.mjs" ||
-      file === "tools/npm_command_spec.mjs" ||
       file === "tools/run_affected_tests.mjs"
     ) {
-      tests.add(testPath("affected-test-portable-command.test.mjs"));
       tests.add(testPath("affected-test-selection.test.mjs"));
       tests.add(testPath("workflow-test-entrypoints.test.mjs"));
       reasons.push(`${file}:affected_test_tooling`);

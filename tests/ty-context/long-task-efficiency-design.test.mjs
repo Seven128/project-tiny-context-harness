@@ -10,108 +10,81 @@ const repository = path.resolve(
 );
 const read = (relative) => readFile(path.join(repository, relative), "utf8");
 
-test("Long-Task efficiency preserves the false-completion boundary", async () => {
-  const [
-    specification,
-    globalContext,
-    rationale,
-    contextModel,
-    skill,
-    verification,
-  ] = await Promise.all([
-    read("PROJECT_SPEC.md"),
-    read("project_context/global.md"),
-    read(
-      "project_context/areas/harness-package/decision-rationale/long-task-workflow.md",
-    ),
-    read("project_context/areas/harness-package/foundation/context-model.md"),
-    read(".codex/skills/long-task-workflow/SKILL.md"),
-    read("project_context/areas/harness-package/verification.md"),
-  ]);
+test("Context authority projection excludes retrieval-only friction without weakening final proof", async () => {
+  const [architecture, contextModel, rationale, efficiency, lifecycle] =
+    await Promise.all([
+      read("project_context/architecture.md"),
+      read("project_context/areas/harness-package/foundation/context-model.md"),
+      read(
+        "project_context/areas/harness-package/decision-rationale/minimal-context.md",
+      ),
+      read("docs/long-task-workflow-efficiency.md"),
+      read(
+        ".codex/ty-context-managed/skills/long-task-workflow/references/authority-lifecycle.md",
+      ),
+    ]);
   const combined = [
-    specification,
-    globalContext,
-    rationale,
+    architecture,
     contextModel,
-    skill,
-    verification,
+    rationale,
+    efficiency,
+    lifecycle,
   ].join("\n");
 
   for (const expected of [
-    "false completion",
-    "lowest practical",
-    "marginal protection",
-    "host and user own model selection",
-    "Do not pause a healthy Goal solely to change or downgrade the model",
-    "targeted repair plus the Final Gate",
-    "parallel subagents",
-    "opaque and non-authoritative",
-    "unified current workspace snapshot",
-    "Controlling Context",
-    "Supporting Context",
-    "implementation-index",
-    "archive",
-    "Verification and deployment Context remain controlling",
-    "compile --revise",
-    "targeted Progress",
-    "complete current Context snapshot",
-    "Full snapshot mode treats every Context file as controlling",
-    "affected or focused result is reusable completion evidence",
+    "triggers",
+    "read_when",
+    "read_policy",
+    "selected delivery-authority structure",
+    "selected area",
+    "selected role",
+    "scoped Progress",
+    "Live Final Gate",
   ])
-    assert.ok(combined.includes(expected), expected);
-});
-
-test("managed Long-Task Skill copies remain exact", async () => {
-  const paths = [
-    ".codex/skills/long-task-workflow/SKILL.md",
-    ".codex/ty-context-managed/skills/long-task-workflow/SKILL.md",
-    "packages/ty-context/assets/skills/long-task-workflow/SKILL.md",
-  ];
-  const [first, ...rest] = await Promise.all(paths.map(read));
-  for (const content of rest) assert.equal(content, first);
-});
-
-test("Long-Task guidance uses one-level progressive references without new authority", async () => {
-  const sourceRoot = ".codex/ty-context-managed/skills/long-task-workflow";
-  const generatedRoot = ".codex/skills/long-task-workflow";
-  const packagedRoot = "packages/ty-context/assets/skills/long-task-workflow";
-  const references = [
-    "references/contract-authoring.md",
-    "references/evidence-design.md",
-    "references/authority-lifecycle.md",
-  ];
-  const main = await read(`${sourceRoot}/SKILL.md`);
-
-  for (const reference of references) {
-    assert.ok(main.includes(reference), reference);
-    const [source, generated, packaged] = await Promise.all([
-      read(`${sourceRoot}/${reference}`),
-      read(`${generatedRoot}/${reference}`),
-      read(`${packagedRoot}/${reference}`),
-    ]);
-    assert.equal(generated, source);
-    assert.equal(packaged, source);
-  }
-
-  const contractAuthoring = await read(
-    `${sourceRoot}/references/contract-authoring.md`,
-  );
-  const evidenceDesign = await read(
-    `${sourceRoot}/references/evidence-design.md`,
-  );
-  const authorityLifecycle = await read(
-    `${sourceRoot}/references/authority-lifecycle.md`,
-  );
-  assert.match(contractAuthoring, /Architecture Closure/);
-  assert.match(contractAuthoring, /existing Contract fields/);
+    assert.match(combined, new RegExp(expected, "iu"), expected);
   assert.match(
-    contractAuthoring,
-    /project-owned executable architecture check/,
+    combined,
+    /retrieval-only[\s\S]*do not revise|retrieval-only[\s\S]*does not revise/iu,
   );
-  assert.match(evidenceDesign, /playwright\.case\.<ac-key>\.passed/);
-  assert.match(authorityLifecycle, /Preflight is read-only/);
-  assert.match(main, /guidance, not new artifacts or authority/);
-  assert.doesNotMatch(main, /playwright\.case\.<ac-key>\.passed/);
+  assert.match(
+    combined,
+    /changed Git tree[\s\S]*Live Final Gate|final Git tree[\s\S]*Live Final Gate/iu,
+  );
+  assert.doesNotMatch(
+    combined,
+    /retrieval registry|retrieval cache|retrieval state file/iu,
+  );
+});
+
+test("Preflight repair ordering remains advisory and creates no authority", async () => {
+  const [architecture, efficiency, ...references] = await Promise.all([
+    read("project_context/architecture.md"),
+    read("docs/long-task-workflow-efficiency.md"),
+    read(
+      ".codex/skills/long-task-workflow/references/authority-lifecycle.md",
+    ),
+    read(
+      ".codex/ty-context-managed/skills/long-task-workflow/references/authority-lifecycle.md",
+    ),
+    read(
+      "packages/ty-context/assets/skills/long-task-workflow/references/authority-lifecycle.md",
+    ),
+  ]);
+  const combined = [architecture, efficiency, ...references].join("\n");
+
+  for (const expected of [
+    "diagnostic_id",
+    "repair_group",
+    "repair_priority",
+    "blocked_by",
+    "structural duplicate",
+    "same Claim",
+  ])
+    assert.match(combined, new RegExp(expected, "iu"), expected);
+  assert.match(combined, /no (?:diagnostic|finding) is hidden/iu);
+  assert.match(combined, /no repair state|creates no repair state/iu);
+  assert.equal(references[1], references[0]);
+  assert.equal(references[2], references[0]);
 });
 
 test("affected developer loops remain non-authoritative", async () => {

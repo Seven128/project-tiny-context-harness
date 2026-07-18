@@ -1,5 +1,6 @@
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
+import { contextAuthorityTopologyHash } from "./long-task-context-authority-topology.js";
 import { canonicalJson, sha256Hex } from "./strict-codec.js";
 import {
   parseContextManifest,
@@ -7,6 +8,7 @@ import {
 } from "./context-manifest-schema.js";
 import { assertProtectedRepositoryFile } from "./long-task-protected-files.js";
 
+const CONTEXT_MANIFEST_PATH = "project_context/context.toml";
 const SUPPORTING_CONTEXT_ROLES = new Set(["implementation-index", "archive"]);
 
 export interface ContextGraphSnapshot {
@@ -40,7 +42,7 @@ export async function captureContextGraphSnapshot(
     allFiles.forEach((file) => selected.add(file));
   } else {
     for (const required of [
-      "project_context/context.toml",
+      CONTEXT_MANIFEST_PATH,
       "project_context/global.md",
       "project_context/architecture.md",
     ]) {
@@ -62,11 +64,17 @@ export async function captureContextGraphSnapshot(
   }
 
   const files = [...selected].sort();
+  const authorityTopologySha256 = contextAuthorityTopologyHash(manifest, files);
   const hashes = Object.fromEntries(
     await Promise.all(
       files.map(
         async (file) =>
-          [file, await hashFile(root, path.join(root, file))] as const,
+          [
+            file,
+            file === CONTEXT_MANIFEST_PATH
+              ? authorityTopologySha256
+              : await hashFile(root, path.join(root, file)),
+          ] as const,
       ),
     ),
   );
@@ -78,7 +86,7 @@ export async function captureContextGraphSnapshot(
   );
   return {
     mode,
-    topology_sha256: contextTopologyHash(manifest),
+    topology_sha256: authorityTopologySha256,
     files,
     sha256: sortRecord(hashes),
     controlling_files: classification.controlling,
@@ -135,8 +143,10 @@ export async function assertCampaignContextBaselineFresh(
 export async function currentContextTopologySha256(
   repositoryRoot: string,
 ): Promise<string> {
-  return contextTopologyHash(
-    await readContextManifest(path.resolve(repositoryRoot)),
+  const root = path.resolve(repositoryRoot);
+  return contextAuthorityTopologyHash(
+    await readContextManifest(root),
+    await listContextFiles(root),
   );
 }
 
@@ -237,43 +247,6 @@ function classifyContextFiles(
     else supporting.push(file);
   }
   return { controlling, supporting };
-}
-
-function contextTopologyHash(manifest: ContextManifest): string {
-  const topology = {
-    areas: manifest.areas
-      .map(
-        ({ line: _line, forbidden_runtime_dependencies, kind, ...area }) => ({
-          ...area,
-          ...(kind === undefined ? {} : { kind }),
-          context: normalizeRepoPath(area.context),
-          forbidden_runtime_dependencies: [
-            ...forbidden_runtime_dependencies,
-          ].sort(),
-        }),
-      )
-      .sort((left, right) => left.id.localeCompare(right.id)),
-    contexts: manifest.contexts
-      .map(
-        ({
-          line: _line,
-          triggers,
-          default_children,
-          read_when,
-          read_policy,
-          ...context
-        }) => ({
-          ...context,
-          ...(read_when === undefined ? {} : { read_when }),
-          ...(read_policy === undefined ? {} : { read_policy }),
-          path: normalizeRepoPath(context.path),
-          triggers: [...triggers].sort(),
-          default_children: [...default_children].map(normalizeRepoPath).sort(),
-        }),
-      )
-      .sort((left, right) => left.path.localeCompare(right.path)),
-  };
-  return sha256Hex(canonicalJson(topology));
 }
 
 async function hashFile(root: string, file: string): Promise<string> {
