@@ -35,19 +35,33 @@ test("default Context routing combines manifest candidates with bounded search",
     read(".codex/ty-context-managed/agents/AGENTS_CORE.md"),
     read("AGENTS.md"),
     read("packages/ty-context/assets/agents/AGENTS_CORE.md"),
-    read(".codex/ty-context-managed/skills/context_development_engineer/SKILL.md"),
+    read(
+      ".codex/ty-context-managed/skills/context_development_engineer/SKILL.md",
+    ),
   ]);
   assert.equal(packaged, managed, "package AGENTS Core drift");
   assert.match(rootAgents, /bounded text search over `project_context\/\*\*`/iu);
   for (const content of [managed, development]) {
     assert.match(content, /graph\/trigger candidates|triggers\/read policy/iu);
-    assert.match(content, /bounded text search|bounded text search/iu);
+    assert.match(content, /bounded text search/iu);
     assert.match(content, /project_context\/\*\*/u);
-    assert.match(content, /before deciding `Context Delta`|判断 `Context Delta` 前/iu);
+    assert.match(
+      content,
+      /before deciding `Context Delta`|判断 `Context Delta` 前/iu,
+    );
     assert.match(content, /area\/module|area\/module\/API/iu);
-    assert.match(content, /API\/schema\/state\/security\/verification\/deployment|API\/Schema\/state\/security\/verification\/deployment/iu);
-    assert.match(content, /supplements rather than replaces semantic judgment|补充语义判断/iu);
-    assert.match(content, /no index, cache, state or second authority|不创建索引、缓存或第二权威/iu);
+    assert.match(
+      content,
+      /API\/schema\/state\/security\/verification\/deployment|API\/Schema\/state\/security\/verification\/deployment/iu,
+    );
+    assert.match(
+      content,
+      /supplements rather than replaces semantic judgment|补充语义判断/iu,
+    );
+    assert.match(
+      content,
+      /no index, cache, state or second authority|不创建索引、缓存或第二权威/iu,
+    );
   }
 });
 
@@ -117,7 +131,10 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
   assert.equal(packaged, active, "package long-task Skill drift");
   assert.match(active, /delivery-contract\.yaml/);
   assert.match(active, /current native Goal/i);
-  assert.match(active, /Progress.*repair evidence only.*never acceptance authority/is);
+  assert.match(
+    active,
+    /Progress.*repair evidence only.*never acceptance authority/is,
+  );
   assert.match(active, /one complete Contract/);
   assert.match(active, /preflight/);
   assert.match(active, /delivery-set.*retired and non-executing/is);
@@ -133,7 +150,10 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
     /requirements conflict.*critical semantics are missing.*multiple materially different product designs.*user must choose.*no falsifiable acceptance standard/is,
   );
   assert.match(active, /meaning-preserving structural decomposition/is);
-  assert.match(active, /repository binding.*real repository and Context evidence/is);
+  assert.match(
+    active,
+    /repository binding.*real repository and Context evidence/is,
+  );
   assert.match(active, /new business rule.*`decision_required`/is);
   assert.match(active, /^## Controlling Objective$/mu);
   assert.match(active, /^## Contract Draft And Outcome Decomposition$/mu);
@@ -152,7 +172,10 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
   assert.match(active, /execution_model_checkpoint\.required: true/iu);
   assert.match(active, /continue_current_model/iu);
   assert.match(active, /Later revisions return `required: false`/iu);
-  assert.match(active, /no checkpoint file.*model route.*automatic model switch/is);
+  assert.match(
+    active,
+    /no checkpoint file.*model route.*automatic model switch/is,
+  );
   assert.match(active, /second Contract plan/);
   assert.doesNotMatch(
     active,
@@ -198,7 +221,10 @@ test("optional Source Plan authoring does not create a second Contract authority
     /does not replace Contract Draft authoring inside `long-task-workflow`/iu,
   );
   assert.match(sourcePlan, /Do not create:[\s\S]*Source Plan Schema/);
-  assert.doesNotMatch(sourcePlan, /ty-context long-task (?:init|preflight|compile)/);
+  assert.doesNotMatch(
+    sourcePlan,
+    /ty-context long-task (?:init|preflight|compile)/,
+  );
   assert.match(
     workflowContext,
     /ordinary prose plan or optional Source Plan remains ordinary Source input/is,
