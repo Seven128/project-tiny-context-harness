@@ -18,6 +18,12 @@ read_policy: on-demand
 - The durable value with the clearest return is project-owned intent: goals/non-goals, ownership, architecture/interface/state boundaries and repeatable verification/deployment paths that code alone cannot decide.
 - Context therefore remains the smallest durable fact surface; default execution uses platform-internal planning and project evidence.
 
+## Why Retrieval Metadata Is Not Delivery Authority
+
+- `triggers`, `read_when`, `read_policy`, default selection and unselected manifest nodes change how a future Agent discovers Context; they do not change the meaning of the Context already selected for an active delivery. Freezing them as delivery Authority creates revision and Progress-invalidating work without closing a false-completion path.
+- Referenced Long-Task snapshots therefore hash a canonical projection of selected area ownership, selected role classification and selected dependency closure, plus the selected Context file contents. Those authority-bearing changes remain fail-closed.
+- Retrieval-only edits may preserve scoped Progress, but they do not preserve final acceptance across a changed Git tree. The Live Final Gate still recompiles the final selected authority and verifies the final committed snapshot.
+
 ## Why A Long-Task Mechanism Still Exists
 
 - Long work is vulnerable to delivery drift across pauses, compaction and repair loops. Prompt discipline alone cannot stop a model from treating partial or stale evidence as complete.

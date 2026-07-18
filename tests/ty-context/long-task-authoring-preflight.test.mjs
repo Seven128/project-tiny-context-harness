@@ -105,35 +105,46 @@ test("Authoring Preflight aggregates independent diagnostics", async () => {
     const duplicateRequirement = result.diagnostics.find(
       (item) => item.code === "requirement_key_duplicate",
     );
-    assert.deepEqual(duplicateRequirement?.refs, ["first", "observe-first"]);
-    assert.match(
-      duplicateRequirement?.repair_hint ?? "",
-      /distinct stable keys/u,
-    );
-
-    const uncovered = result.diagnostics.find(
+    const uncoveredRequirement = result.diagnostics.find(
       (item) => item.code === "product_claim_uncovered",
     );
-    assert.deepEqual(uncovered?.refs, ["first.requirement.observe-first"]);
-    assert.equal(uncovered?.occurrences, 2);
-    assert.match(uncovered?.repair_hint ?? "", /do not weaken or delete/u);
-
-    const sourceAnchor = result.diagnostics.find(
-      (item) => item.code === "source_claim_anchor_not_found",
+    const criterion = result.diagnostics.find(
+      (item) => item.code === "assertion_criterion_required",
     );
-    assert.deepEqual(sourceAnchor?.refs, [
-      "first-observable",
-      "source.md#missing-anchor",
+    assert.equal(duplicateRequirement.repair_priority, "primary");
+    assert.equal(uncoveredRequirement.repair_priority, "dependent");
+    assert.equal(duplicateRequirement.repair_group, "first.requirement.observe-first");
+    assert.equal(uncoveredRequirement.repair_group, duplicateRequirement.repair_group);
+    assert.deepEqual(uncoveredRequirement.blocked_by, [
+      duplicateRequirement.diagnostic_id,
     ]);
+    assert.equal(uncoveredRequirement.occurrences, 2);
+    assert.equal(criterion.repair_group, undefined);
+    assert.equal(criterion.repair_priority, undefined);
+    assert.equal(criterion.blocked_by, undefined);
+    assert.equal(criterion.diagnostic_id, undefined);
 
-    const missingRunner = result.diagnostics.find(
-      (item) => item.code === "node_oracle_path_not_found",
+    const repeated = await preflightDeliveryContract(
+      fixture.workdir,
+      fixture.root,
     );
-    assert.deepEqual(missingRunner?.refs, [
-      "first-check",
-      "tests/missing-oracle.mjs",
-    ]);
-    assert.match(missingRunner?.repair_hint ?? "", /rerun Preflight/u);
+    assert.deepEqual(repeated.diagnostics, result.diagnostics);
+
+    outcome.product.requirements.pop();
+    await writeContract(fixture.workdir, fixture.contract);
+    const afterPrimaryRepair = await preflightDeliveryContract(
+      fixture.workdir,
+      fixture.root,
+    );
+    const remainingCoverage = afterPrimaryRepair.diagnostics.find(
+      (item) => item.code === "product_claim_uncovered",
+    );
+    assert.ok(remainingCoverage);
+    assert.equal(remainingCoverage.occurrences, 2);
+    assert.equal(remainingCoverage.diagnostic_id, undefined);
+    assert.equal(remainingCoverage.repair_group, undefined);
+    assert.equal(remainingCoverage.repair_priority, undefined);
+    assert.equal(remainingCoverage.blocked_by, undefined);
     assert.deepEqual(await stateSnapshot(fixture), before);
   } finally {
     await rm(fixture.root, { recursive: true, force: true });

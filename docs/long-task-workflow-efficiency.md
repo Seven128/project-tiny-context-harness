@@ -29,6 +29,14 @@ Referenced snapshots distinguish:
 
 Full snapshot mode treats every Context file as controlling. Explicitly referencing an otherwise supporting file also makes it controlling. Final Gate always recompiles and records the complete current Context snapshot.
 
+## Authority Projection Without Retrieval Friction
+
+`context.toml` serves both future Context discovery and active Long-Task authority. Retrieval guidance—`triggers`, `read_when`, `read_policy`, default selection and unselected nodes—does not alter the meaning of Context already selected for one delivery, so it is excluded from that delivery's authority projection. Selected area ownership, role/dependency structure and selected Context contents remain protected and fail closed.
+
+This removes unnecessary Authority Revision and scoped-Progress invalidation without adding a registry, index, state file or user step. It does not reuse final acceptance: any changed Git tree still requires the current-snapshot Live Final Gate.
+
+Preflight follows the same cost rule. Repair metadata is emitted only for duplicate/coverage pairs with a deterministic same-Claim dependency. Independent diagnostics keep their existing compact form, and no finding is hidden or treated as resolved.
+
 ## Test-Cost Layers
 
 Use short feedback loops during development, then widen before release:

@@ -13,6 +13,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 
 - CLI and command routing: `packages/ty-context/src/commands/**`.
 - Context manifest, graph, validation, export, sync and doctor: `packages/ty-context/src/lib/context-*`, `validators.ts`, `sync-engine.ts`, `doctor.ts`.
+- Context Authority projection: `long-task-context-authority-topology.ts` separates selected delivery-authority structure from retrieval-only manifest guidance before `context-graph-snapshot.ts` freezes Long-Task Context.
 - Active Contract schema: `packages/ty-context/src/schemas/long-task-delivery-v2/**` plus focused `long-task-*` parser/compiler/claims/risk modules.
 - Shared activation safety: `long-task-activation-validation.ts`, used by collecting Preflight and fail-fast Compile.
 - Source authority: Source marker/parser/inventory/target-continuity modules derive text-bound Source/REQ/CTRL/OBL/NCOMP/AC projections without another editable Source authority.
@@ -27,12 +28,14 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Foundation, workflow-contract, package-managed-surface and verification detail is task-triggered `on-demand` Context. This changes loading cost, not fact authority.
 - `ty-context doctor` deterministically reports selected default files, bytes, soft-budget overages and exact duplicate content. The report is advisory and creates no Context state or completion authority.
 - A Context fact has one primary owning file. Other high-frequency surfaces use short routing pointers instead of copying detailed rules.
+- `context.toml` retrieval fields (`triggers`, `read_when`, `read_policy`, default selection and unselected nodes) guide future Agent reads. Referenced Long-Task authority instead hashes the selected area/role/dependency projection plus selected Context contents, so retrieval-only maintenance does not create an Authority Revision or stale scoped Progress.
 
 ## Design Rationale
 
 - Keep the startup graph small because every fresh Agent pays that read and attention cost; preserve specialized facts by routing them on demand rather than deleting them.
 - Keep ordinary planning and architecture judgment inside the platform Goal. Persist only durable project facts and use project-native executable checks for objective boundaries.
 - Keep Long-Task acceptance separate from implementation sequencing: one Contract and one Final Gate provide completion authority without a scheduler, second plan or worker state.
+- Keep retrieval guidance outside active delivery authority because it changes how a future Agent finds facts, not the meaning of the Context files already selected for the current delivery. Selected ownership, role/dependency structure and file contents remain fail-closed.
 
 ## Default Workflow And Architecture Quality
 
@@ -50,7 +53,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Product, Technical Boundary and Acceptance are distinct logical authorities inside one Contract.
 - Outcomes are independently observable, decidable and target-verifiable acceptance/diagnosis units. Dependencies express readiness only; no scheduler or mandatory implementation DAG is persisted.
 - A Draft Outcome is the pre-Authority-Lock lifecycle of that same Outcome, not a runtime type; it adds no schema field, state file, Worker or completion boundary.
-- Preflight and Compile share activation safety. Preflight diagnostics may include stable references, repair hints and duplicate occurrence counts, but remain read-only and non-authoritative.
+- Preflight and Compile share activation safety. Preflight diagnostics may include stable references, repair hints, duplicate occurrence counts and narrowly proven primary/dependent repair links, but remain read-only and non-authoritative.
 - Targeted verify may localize repair and store scoped current-snapshot Progress; it cannot accept.
 - Final Gate, Stop and close recompile Source authority, bind active task/revision/worktree/Git-tree identity and rerun all declared Global and Outcome checks. Only this complete current snapshot can create machine acceptance.
 
@@ -64,6 +67,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 ## Constraints And Tradeoffs
 
 - Minimal default Context trades automatic reading of every specialized rule for lower recurring attention cost; task triggers and explicit Context references preserve access to the full durable fact set.
+- Retrieval-only manifest edits may preserve active Authority and scoped Progress, but they never preserve a Final Receipt across a changed Git tree; Final Gate still runs against the final committed snapshot.
 - Architecture enforcement is limited to declared, falsifiable project invariants. Subjective design quality remains engineering review rather than false machine proof.
 - The first successful Compile creates Authority Lock and immutable initial base. Later protected reductions cannot be silently adopted.
 - One user-selected delivery has one Contract, one selected workspace and one Final Gate. Existing `outcome_files` are physical compatibility only.
@@ -75,7 +79,8 @@ This is the minimum durable architecture map for the Harness source repository. 
 
 - `ty-context doctor` reports default Context footprint and exact duplicate default files as advisory maintenance signals.
 - `make validate-context` protects required recovery structure and registered role consistency; it is not relaxed to obtain a smaller Context.
-- Preflight remains read-only and Compile remains the fail-closed activation boundary. Added references, repair hints and occurrence counts may improve repair but cannot change acceptance.
+- Context Authority topology tests prove retrieval-only edits preserve selected authority while selected area, role and dependency changes remain hash-visible; Context evolution tests prove the same boundary through Compile, Progress and status.
+- Preflight remains read-only and Compile remains the fail-closed activation boundary. Added references, repair hints, occurrence counts and repair-order metadata may improve repair but cannot change acceptance.
 - Project-native architecture checks and `check-modularity` protect declared structural boundaries; Final Gate alone reruns the complete long-task authority on one current snapshot.
 - Managed source/package/generated copies must remain byte-aligned through source sync and package parity checks.
 

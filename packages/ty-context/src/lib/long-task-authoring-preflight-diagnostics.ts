@@ -1,5 +1,6 @@
 import type { ParsedDeliveryContractV2 } from "./long-task-delivery-parser.js";
 import type { DeliveryContractV2 } from "./long-task-delivery-types.js";
+import { applyDiagnosticRepairOrder } from "./long-task-authoring-preflight-repair-order.js";
 import type {
   AuthoringPreflightDiagnosticV1,
   SourceCoverageV1,
@@ -109,6 +110,10 @@ export function normalizeAuthoringDiagnostics(
       ...(refs ? { refs } : {}),
     };
     delete next.occurrences;
+    delete next.diagnostic_id;
+    delete next.repair_group;
+    delete next.repair_priority;
+    delete next.blocked_by;
     const key = JSON.stringify([
       next.level,
       next.code,
@@ -127,7 +132,7 @@ export function normalizeAuthoringDiagnostics(
     const existing = normalized[position]!;
     existing.occurrences = (existing.occurrences ?? 1) + 1;
   }
-  return normalized;
+  return applyDiagnosticRepairOrder(normalized);
 }
 
 function diagnosticCode(message: string): string {
