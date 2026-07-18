@@ -10,6 +10,7 @@ export const LONG_TASK_FOCUSED_TESTS = [
   "long-task-context-evolution.test.mjs",
   "long-task-design-context.test.mjs",
   "long-task-efficiency-design.test.mjs",
+  "long-task-model-choice-checkpoint.test.mjs",
   "long-task-semantic-authority-revision.test.mjs",
   "workflow-test-entrypoints.test.mjs",
 ].map(testPath);
@@ -26,7 +27,7 @@ export const DELIVERY_CONTRACT_FOCUSED_TESTS = [
 
 const STATIC_TESTS = new Set(
   [
-      "affected-test-selection.test.mjs",
+    "affected-test-selection.test.mjs",
     "long-task-design-context.test.mjs",
     "long-task-efficiency-design.test.mjs",
     "workflow-test-entrypoints.test.mjs",
@@ -55,6 +56,7 @@ const HOTSPOT_TESTS = new Map([
     [
       "long-task-active-authority-continuity.test.mjs",
       "long-task-context-evolution.test.mjs",
+      "long-task-model-choice-checkpoint.test.mjs",
       "long-task-workflow-black-box.test.mjs",
     ],
   ],
