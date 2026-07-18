@@ -8,7 +8,7 @@ read_policy: on-demand
 
 Single-Goal Long-Task Workflow exists to prevent false completion inside one complete declared delivery authority. It uses one native Goal, one selected workspace, one continuously authored Contract, semantic Outcome boundaries, repair-only targeted verification and one current-snapshot Final Gate. It does not own agent, process, model or Git orchestration.
 
-Contract Draft authoring, Preflight repair, formal Compile, rolling implementation, targeted verification and Final Gate remain one `long-task-workflow` lifecycle. `source-plan-authoring` is an optional upstream Source-quality helper, not a Contract authoring or completion authority.
+Contract Draft authoring, Preflight repair, formal Compile, one user model-choice checkpoint, rolling implementation, targeted verification and Final Gate remain one `long-task-workflow` lifecycle. `source-plan-authoring` is an optional upstream Source-quality helper, not a Contract authoring or completion authority.
 
 ## Controlling Objective
 
@@ -40,11 +40,15 @@ No Draft Outcome creates a Worker, scheduler item, queue, process tree, model ro
 
 The workflow must never proactively spawn, assign or coordinate parallel subagents. Platform or Agent internal delegation may still occur, but it is opaque and non-authoritative: the Harness neither depends on it nor persists it, and all outputs must converge into the unified current workspace snapshot before acceptance.
 
-## Why Model Selection Remains External
+## Why One Model-Choice Checkpoint Exists
 
-The host and user own model selection. The Harness cannot change the model of a running conversation or Goal and must not create model routing state, a model-switch worker or a mandatory downgrade checkpoint.
+The host and user own model selection, and Harness cannot switch the model of a running conversation or Goal. It therefore creates no model router, model worker, tier scheduler or acknowledgement state.
 
-Do not pause a healthy Goal solely to change or downgrade the model. The pause/resume cost would sacrifice automation for no independent false-completion protection. Continue execution with the selected model; if capability limits cause implementation drift, targeted repair plus the Final Gate must expose and block the remaining gap. A user may still change models externally, but that is not a Harness mechanism or completion signal.
+The first successful Compile is nevertheless a distinct cost boundary: Source, Contract, relevant Context, risk and acceptance evidence are now under Authority Lock. At that point the user can safely choose whether to keep the authoring model or switch to a lower-cost execution model, while the locked Contract, targeted repair and Final Gate continue to constrain completion.
+
+Compile emits `execution_model_checkpoint.required: true` only for the first Authority Lock. The Agent stops before product implementation and asks for `continue_current_model` or a model switch followed by resuming the active Long-Task. A model strategy already stated explicitly for the task satisfies the checkpoint. Later revisions return `required: false`; no repeated cost-only pause occurs.
+
+This checkpoint is an execution-cost optimization enabled by the workflow's drift protection, not acceptance evidence. Model choice never proves a Claim and does not weaken Final Gate requirements.
 
 ## Why Context Remains Mutable During Execution
 
@@ -68,7 +72,7 @@ Once work enters Codex, the same Draft can be revised continuously in the real r
 3. no extra Skill handoff can lose Source meaning, repository evidence or unresolved findings;
 4. there is less pressure to create a second plan, Authoring Authority or Authoring Receipt;
 5. Draft-to-Compile remains a lifecycle transition of one object rather than a conversion between products; and
-6. the Skill can iterate across as many responses as necessary, then continue through Compile, rolling execution, verification and Final Gate.
+6. the Skill can iterate across as many responses as necessary, then continue through Compile, the one-time model choice, rolling execution, verification and Final Gate.
 
 The platform-neutral form of this rationale belongs in `PROJECT_SPEC.md`. The Web GPT-to-Codex history remains source-workspace rationale only and must not enter package-managed Skills or public consumer guidance.
 
@@ -103,6 +107,7 @@ Affected-test selection follows the same rule. It shortens the developer feedbac
 - **Source AC to named Assertion semantic identity** prevents acceptance meaning from being weakened in the Contract; the same canonical resolver covers Outcome refs and `GLOBAL.<check>.<assertion>`, while Global ACs require an independently Source-backed Global Claim and cannot cross scope.
 - **Shared Preflight/Compile activation-safety kernel** prevents skipping Preflight from bypassing activation rules.
 - **First-Compile Authority Lock and Authority Revision** prevent Source, Contract, Controlling Context or verifier edits from washing away requirements during execution.
+- **One-time execution-model checkpoint** lets the user exploit locked Authority and Final Gate protection to choose a lower-cost execution model without creating model routing or repeated pauses. It is a cost mechanism, not proof.
 - **Controlling/Supporting Context classification** permits low-risk navigation/background updates during execution without discarding valid Progress while keeping explicit, verification, deployment and full-snapshot Context fail closed.
 - **Executing Agent cannot approve its own weakening revision** prevents the implementer from lowering its own acceptance bar.
 - **Targeted verify is repair evidence only** prevents a local pass from being reported as whole-delivery completion; Counterfactual failure is part of the owning Check Result/Progress rather than a transient top-level Finding, so status/resume cannot recover a false `progress_passing` state.
@@ -139,7 +144,7 @@ Progress, status, Receipts and compiled cache are audit/recovery projections. So
 - No second plan, second Contract authority, top-level Contract split or targeted-verify acceptance.
 - No capacity-, layer-, file-, module-, Agent- or parallelism-based Outcome splitting.
 - No proactive parallel subagent dispatch, Worker graph or subagent recovery state.
-- No model-switch checkpoint, model-tier scheduler, model routing state or cost-only pause in a healthy Goal.
+- No automatic model switch, model-tier scheduler, model routing state, repeated model checkpoints or persisted checkpoint acknowledgement.
 - No mandatory Source Plan format and no consumer platform-history guidance.
 - No restoration of SFC, Packet, Wave, Campaign, Delivery Set or model/process/Git orchestration.
 
