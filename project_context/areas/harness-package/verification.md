@@ -1,6 +1,6 @@
 ---
 context_role: verification
-read_policy: default
+read_policy: on-demand
 ---
 # Harness Package Verification
 

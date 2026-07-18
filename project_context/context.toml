@@ -10,19 +10,19 @@ default = true
 [[context]]
 path = "project_context/areas/harness-package/foundation/context-model.md"
 role = "foundation"
-read_policy = "default"
+read_policy = "on-demand"
 triggers = ["context model", "durable fact", "fact source", "role placement", "context priority", "controlling context", "supporting context", "context evolution"]
 
 [[context]]
 path = "project_context/areas/harness-package/contracts/workflow-contract.md"
 role = "contract"
-read_policy = "default"
+read_policy = "on-demand"
 triggers = ["workflow contract", "context delta", "internal plan", "plan.md", "local audit", "contract conformance"]
 
 [[context]]
 path = "project_context/areas/harness-package/contracts/package-managed-surfaces.md"
 role = "contract"
-read_policy = "default"
+read_policy = "on-demand"
 triggers = ["managed assets", "package assets", "generated skills", "source sync", "authoring skill", "project-level hook", "long-task profile"]
 
 [[context]]
@@ -46,7 +46,7 @@ triggers = ["cli entry", "sync", "validator", "migration", "release tool", "test
 [[context]]
 path = "project_context/areas/harness-package/verification.md"
 role = "verification"
-read_policy = "default"
+read_policy = "on-demand"
 triggers = ["test", "verify", "validation", "harness gate", "diff check", "long-task black box", "test budget", "affected test", "focused test", "final gate"]
 
 [[areas]]

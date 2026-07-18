@@ -62,9 +62,16 @@ export interface ModularityFileReport {
   waived?: ModularityWaiver;
 }
 
+export interface ModularityMetricLocation {
+  symbol: string;
+  line: number;
+}
+
 export interface ModularityMetrics {
   maxFunctionStatements: number;
+  maxFunctionStatementsLocation?: ModularityMetricLocation;
   maxBranchComplexity: number;
+  maxBranchComplexityLocation?: ModularityMetricLocation;
   exports: number;
   stateTransitions: number;
   responsibilities: string[];
@@ -225,13 +232,13 @@ function modularityRegressions(
       current: current.metrics.maxFunctionStatements,
       baseline: baseline.metrics.maxFunctionStatements,
       limit: COMPLEXITY_LIMITS.functionStatements,
-      message: `${current.metrics.maxFunctionStatements} statements in one function exceeds limit ${COMPLEXITY_LIMITS.functionStatements}`,
+      message: `${current.metrics.maxFunctionStatements} statements in one function exceeds limit ${COMPLEXITY_LIMITS.functionStatements}${formatMetricLocation(current.metrics.maxFunctionStatementsLocation)}`,
     },
     {
       current: current.metrics.maxBranchComplexity,
       baseline: baseline.metrics.maxBranchComplexity,
       limit: COMPLEXITY_LIMITS.branchComplexity,
-      message: `${current.metrics.maxBranchComplexity} branch complexity exceeds limit ${COMPLEXITY_LIMITS.branchComplexity}`,
+      message: `${current.metrics.maxBranchComplexity} branch complexity exceeds limit ${COMPLEXITY_LIMITS.branchComplexity}${formatMetricLocation(current.metrics.maxBranchComplexityLocation)}`,
     },
     {
       current: current.metrics.exports,
@@ -268,18 +275,31 @@ export function analyzeModularity(
     ? pythonFunctionBodies(code)
     : functionBodies(code);
   const analyzedBodies = bodies.map((body) => ({
-    statements: statementCount(body),
-    branches: branchComplexity(body),
+    ...body,
+    statements: statementCount(body.body),
+    branches: branchComplexity(body.body),
   }));
+  const statementPeak = maxMetricBody(analyzedBodies, "statements");
+  const branchPeak = maxMetricBody(analyzedBodies, "branches");
   return {
-    maxFunctionStatements: Math.max(
-      0,
-      ...analyzedBodies.map((body) => body.statements),
-    ),
-    maxBranchComplexity: Math.max(
-      0,
-      ...analyzedBodies.map((body) => body.branches),
-    ),
+    maxFunctionStatements: statementPeak?.statements ?? 0,
+    ...(statementPeak
+      ? {
+          maxFunctionStatementsLocation: {
+            symbol: statementPeak.symbol,
+            line: statementPeak.line,
+          },
+        }
+      : {}),
+    maxBranchComplexity: branchPeak?.branches ?? 0,
+    ...(branchPeak
+      ? {
+          maxBranchComplexityLocation: {
+            symbol: branchPeak.symbol,
+            line: branchPeak.line,
+          },
+        }
+      : {}),
     exports: exportCount(code),
     stateTransitions: stateTransitionCount(code),
     responsibilities: inferResponsibilities(code),
@@ -296,12 +316,12 @@ function modularityRisks(
     risks.push(`${lines} physical lines exceeds limit ${lineLimit}`);
   if (metrics.maxFunctionStatements > COMPLEXITY_LIMITS.functionStatements) {
     risks.push(
-      `${metrics.maxFunctionStatements} statements in one function exceeds limit ${COMPLEXITY_LIMITS.functionStatements}`,
+      `${metrics.maxFunctionStatements} statements in one function exceeds limit ${COMPLEXITY_LIMITS.functionStatements}${formatMetricLocation(metrics.maxFunctionStatementsLocation)}`,
     );
   }
   if (metrics.maxBranchComplexity > COMPLEXITY_LIMITS.branchComplexity) {
     risks.push(
-      `${metrics.maxBranchComplexity} branch complexity exceeds limit ${COMPLEXITY_LIMITS.branchComplexity}`,
+      `${metrics.maxBranchComplexity} branch complexity exceeds limit ${COMPLEXITY_LIMITS.branchComplexity}${formatMetricLocation(metrics.maxBranchComplexityLocation)}`,
     );
   }
   if (metrics.exports > COMPLEXITY_LIMITS.exports) {
@@ -460,33 +480,67 @@ function startsRegexLiteral(result: string): boolean {
   );
 }
 
-function functionBodies(code: string): string[] {
-  const starts = new Set<number>();
-  const patterns = [
-    /\bfunction\b[^{};]*\{/g,
-    /=>\s*\{/g,
-    /\b(?:async\s+)?(?:get\s+|set\s+)?[A-Za-z_$][\w$]*\s*\([^;{}]*\)\s*(?::\s*[^={]+)?\{/g,
-  ];
-  for (const pattern of patterns) {
-    for (const match of code.matchAll(pattern)) {
-      const prefix = match[0].trimStart();
-      if (/^(?:if|for|while|switch|catch|with)\b/.test(prefix)) continue;
-      starts.add((match.index ?? 0) + match[0].lastIndexOf("{"));
-    }
-  }
-  return [...starts]
-    .sort((left, right) => left - right)
-    .map((start) => balancedBody(code, start))
-    .filter((body): body is string => body !== undefined);
+interface FunctionBody {
+  body: string;
+  symbol: string;
+  line: number;
 }
 
-function pythonFunctionBodies(code: string): string[] {
+interface AnalyzedFunctionBody extends FunctionBody {
+  statements: number;
+  branches: number;
+}
+
+function functionBodies(code: string): FunctionBody[] {
+  const starts = new Map<number, string>();
+  const add = (openingBrace: number, symbol: string): void => {
+    const existing = starts.get(openingBrace);
+    if (!existing || existing === "<anonymous>")
+      starts.set(openingBrace, symbol);
+  };
+
+  for (const match of code.matchAll(
+    /\bfunction\s*([A-Za-z_$][\w$]*)?[^{};]*\{/g,
+  )) {
+    const openingBrace = (match.index ?? 0) + match[0].lastIndexOf("{");
+    add(openingBrace, match[1] || "<anonymous>");
+  }
+  for (const match of code.matchAll(/=>\s*\{/g)) {
+    const openingBrace = (match.index ?? 0) + match[0].lastIndexOf("{");
+    add(openingBrace, inferArrowSymbol(code, match.index ?? 0));
+  }
+  for (const match of code.matchAll(
+    /\b(?:async\s+)?(?:get\s+|set\s+)?([A-Za-z_$][\w$]*)\s*\([^;{}]*\)\s*(?::\s*[^={]+)?\{/g,
+  )) {
+    const prefix = match[0].trimStart();
+    if (/^(?:if|for|while|switch|catch|with)\b/u.test(prefix)) continue;
+    const openingBrace = (match.index ?? 0) + match[0].lastIndexOf("{");
+    add(openingBrace, match[1] || "<anonymous>");
+  }
+
+  return [...starts.entries()]
+    .sort(([left], [right]) => left - right)
+    .map(([openingBrace, symbol]) => {
+      const body = balancedBody(code, openingBrace);
+      return body === undefined
+        ? undefined
+        : {
+            body,
+            symbol,
+            line: lineNumberAt(code, openingBrace),
+          };
+    })
+    .filter((body): body is FunctionBody => body !== undefined);
+}
+
+function pythonFunctionBodies(code: string): FunctionBody[] {
   const lines = code.split(/\r\n|\n|\r/u);
-  const bodies: string[] = [];
+  const bodies: FunctionBody[] = [];
   for (let index = 0; index < lines.length; index += 1) {
-    const match = /^(\s*)(?:async\s+)?def\s+[A-Za-z_][A-Za-z0-9_]*\s*\(/u.exec(
-      lines[index],
-    );
+    const match =
+      /^(\s*)(?:async\s+)?def\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/u.exec(
+        lines[index],
+      );
     if (!match) continue;
     const indentation = indentationWidth(match[1]);
     const body: string[] = [];
@@ -500,9 +554,46 @@ function pythonFunctionBodies(code: string): string[] {
       if (indentationWidth(leading) <= indentation) break;
       body.push(line);
     }
-    bodies.push(body.join("\n"));
+    bodies.push({ body: body.join("\n"), symbol: match[2], line: index + 1 });
   }
   return bodies;
+}
+
+function inferArrowSymbol(code: string, arrowIndex: number): string {
+  const prefix = code.slice(Math.max(0, arrowIndex - 240), arrowIndex);
+  const assignment =
+    /(?:\b(?:const|let|var)\s+|\b)([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*$/u.exec(
+      prefix,
+    );
+  if (assignment?.[1]) return assignment[1];
+  const property =
+    /([A-Za-z_$][\w$]*)\s*:\s*(?:async\s*)?(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*$/u.exec(
+      prefix,
+    );
+  return property?.[1] ?? "<anonymous>";
+}
+
+function lineNumberAt(code: string, index: number): number {
+  return code.slice(0, index).split(/\r\n|\n|\r/u).length;
+}
+
+function maxMetricBody(
+  bodies: AnalyzedFunctionBody[],
+  metric: "statements" | "branches",
+): AnalyzedFunctionBody | undefined {
+  let selected: AnalyzedFunctionBody | undefined;
+  for (const body of bodies) {
+    if (!selected || body[metric] > selected[metric]) selected = body;
+  }
+  return selected;
+}
+
+function formatMetricLocation(
+  location: ModularityMetricLocation | undefined,
+): string {
+  return location
+    ? ` in function ${location.symbol} at line ${location.line}`
+    : "";
 }
 
 function indentationWidth(value: string): number {

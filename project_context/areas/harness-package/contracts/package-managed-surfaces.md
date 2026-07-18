@@ -1,6 +1,6 @@
 ---
 context_role: contract
-read_policy: default
+read_policy: on-demand
 ---
 # Package-Managed Surface Contract
 

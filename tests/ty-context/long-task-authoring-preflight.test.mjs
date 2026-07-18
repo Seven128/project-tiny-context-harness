@@ -74,17 +74,14 @@ test("Authoring Preflight aggregates independent diagnostics", async () => {
       "obligation.implement-first",
     ];
     check.runner.target = "tests/missing-oracle.mjs";
-    outcome.product.owner.context_refs = [
-      "project_context/areas/missing.md",
-    ];
+    outcome.product.owner.context_refs = ["project_context/areas/missing.md"];
     outcome.product.requirements.push(
       structuredClone(outcome.product.requirements[0]),
     );
     outcome.technical.bindings.push(
       structuredClone(outcome.technical.bindings[0]),
     );
-    fixture.contract.source_claims[0].source_ref =
-      "source.md#missing-anchor";
+    fixture.contract.source_claims[0].source_ref = "source.md#missing-anchor";
     await writeContract(fixture.workdir, fixture.contract);
 
     const before = await stateSnapshot(fixture);
@@ -104,6 +101,39 @@ test("Authoring Preflight aggregates independent diagnostics", async () => {
       "node_oracle_path_not_found",
     ])
       assert.ok(codes.has(code), `missing diagnostic ${code}`);
+
+    const duplicateRequirement = result.diagnostics.find(
+      (item) => item.code === "requirement_key_duplicate",
+    );
+    assert.deepEqual(duplicateRequirement?.refs, ["first", "observe-first"]);
+    assert.match(
+      duplicateRequirement?.repair_hint ?? "",
+      /distinct stable keys/u,
+    );
+
+    const uncovered = result.diagnostics.find(
+      (item) => item.code === "product_claim_uncovered",
+    );
+    assert.deepEqual(uncovered?.refs, ["first.requirement.observe-first"]);
+    assert.equal(uncovered?.occurrences, 2);
+    assert.match(uncovered?.repair_hint ?? "", /do not weaken or delete/u);
+
+    const sourceAnchor = result.diagnostics.find(
+      (item) => item.code === "source_claim_anchor_not_found",
+    );
+    assert.deepEqual(sourceAnchor?.refs, [
+      "first-observable",
+      "source.md#missing-anchor",
+    ]);
+
+    const missingRunner = result.diagnostics.find(
+      (item) => item.code === "node_oracle_path_not_found",
+    );
+    assert.deepEqual(missingRunner?.refs, [
+      "first-check",
+      "tests/missing-oracle.mjs",
+    ]);
+    assert.match(missingRunner?.repair_hint ?? "", /rerun Preflight/u);
     assert.deepEqual(await stateSnapshot(fixture), before);
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
@@ -185,10 +215,7 @@ ${sourceStatement}
     fixture.contract.outcomes[0].product.requirements[0].statement =
       sourceStatement;
     await writeContract(fixture.workdir, fixture.contract);
-    let result = await preflightDeliveryContract(
-      fixture.workdir,
-      fixture.root,
-    );
+    let result = await preflightDeliveryContract(fixture.workdir, fixture.root);
     assert.equal(result.status, "ready");
     assert.ok(
       result.revision_preview.declared_authority_sections_changed.includes(
@@ -289,7 +316,11 @@ async function stateSnapshot(fixture) {
   return {
     head: await git(fixture.root, ["rev-parse", "HEAD"]),
     index: await git(fixture.root, ["write-tree"]),
-    status: await git(fixture.root, ["status", "--short", "--untracked-files=all"]),
+    status: await git(fixture.root, [
+      "status",
+      "--short",
+      "--untracked-files=all",
+    ]),
     config: await git(fixture.root, ["config", "--local", "--list"]),
     active: await optionalFile(active),
     lock: await optionalFile(lock),

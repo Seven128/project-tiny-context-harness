@@ -57,6 +57,8 @@ project_context/context.toml
 最少的图相关 area/role Context
 ```
 
+只有近乎所有任务都需要的恢复事实才使用 `read_policy = "default"`；专业架构、契约、部署和历史细节应由任务触发按需读取。`ty-context doctor` 会报告确定性的默认 Context 文件/字节规模、单文件与总量软预算超限，以及字节完全相同的默认文件。这些只是维护提示，不是新验证 Gate 或运行时状态。
+
 Context 负责耐久的意图和边界，代码负责当前实现，测试/CI/浏览器或运行时证据/人工负责行为与产品验收。
 
 普通任务：
@@ -77,6 +79,12 @@ Context: updated <文件/原因>
 # 或
 Context: no durable fact change
 ```
+
+### 架构与模块质量
+
+技术架构能力属于 Minimal Context。高风险工作在平台内部计划中使用 `Architecture Context Hit`、`Decision Rationale Hit: existing|required|none` 和 `Modularity Check: none|required|exception`，不创建 Task Contract 或固定 `plan.md`。只有新长期模块/能力、公共 API/Schema/data/persistence、source of truth/state ownership、dependency direction、跨 area、migration/security/recovery 或可复用抽象才触发架构 Gate；小修复不支付这项成本。Gate 要明确 owner、唯一事实源、依赖方向、接口/状态生命周期、失败/恢复/兼容、禁止绕过路径和项目自己的可执行架构检查。
+
+Harness 只路由仓库原生 lint/AST/dependency/contract check，不实现跨语言通用架构分析器。`check-modularity` 的语句数/分支风险会定位到最高风险函数和行号。
 
 ### 可选 Source Plan Authoring
 
@@ -114,6 +122,8 @@ Long-Task Contract Authoring 会尽量保留 Source 中已有的稳定 Key 与 A
 
 第一次正式 Compile 成功前，`delivery-contract.yaml` 是同一份非权威 Contract Draft。`/long-task-workflow` 可以跨多轮仓库/Context 读取和 Preflight 修复持续修改它，不要求一次响应生成完整 Contract。Draft Authoring 与后续流程集成，是因为仓库绑定和验证输入需要真实证据、Preflight finding 必须回写同一对象，而且额外 handoff 容易丢失语义或产生第二计划/权威。不存在单独 Contract Draft Skill、Draft Receipt 或 Authoring State。
 
+Long-Task Skill 采用渐进读取：主 `SKILL.md` 只保留目标、硬边界和阶段路由，Contract Authoring、Evidence Design 与 Authority Lifecycle 细节只在对应阶段读取一层 reference。这只是指令组织，不产生第二权威。Source 或 Controlling Context 已声明的架构约束，使用现有 Technical Obligation/Global Constraint/Forbidden Shortcut、owner/path/Binding 和项目可执行 Check 闭环；当功能 AC 与架构约束可独立失败时，两者不能互相替代。
+
 Draft Outcome 只是 Authority Lock 前的 Outcome。Outcome 按可独立观察、判断和定向验证的结果拆分，使当前 Goal 能缩小 dependency-ready 工作集、定向验证、定位失败、恢复 finding 并精确失效旧局部结果。`depends_on` 只表示 acceptance readiness，Rolling Frontier 只是临时工作状态；Outcome 不是 Worker、scheduler task、queue 或并行单元。Outcome 拆分执行和诊断，不拆分完成权威，因此最终仍必须在当前最终快照运行一次完整 Final Gate。
 
 平台负责物理 Goal/会话生命周期。新会话通过 `resume` 恢复语义状态；Tiny Context 不会重建此前的物理 Turn。
@@ -138,7 +148,7 @@ ty-context long-task abandon <workdir> [--force-corrupt-state]
 ```
 
 - `init` 创建单文件 inline Outcome 的 Compact Contract 模板。
-- `preflight` 应用 Compact 默认值并一次输出 Source/REQ/CTRL/OBL/AC、Context、风险、路径/Binding、Runner/Input 与 Proof 诊断；它完全只读，不创建 Authority Lock、marker、cache、progress、Receipt、pending revision、状态锁，也不运行项目 Check。
+- `preflight` 应用 Compact 默认值并一次输出 Source/REQ/CTRL/OBL/AC、Context、风险、路径/Binding、Runner/Input 与 Proof 诊断；完全相同的诊断会合并并给出 `occurrences`，已知问题可附稳定 `refs` 和不会弱化权威的 `repair_hint`。它完全只读，不创建 Authority Lock、marker、cache、progress、Receipt、pending revision、状态锁，也不运行项目 Check。
 - `compile` 生成 Global 与 Outcome Result/Requirement/Control-field/Non-completing/Technical Claim，拒绝未覆盖 Claim，并让第一次正式成功 Compile 立即成为 Authority Lock。此后所有 revision 都与 active authority 比较，删除 progress/Receipt/cache 或恢复代码不能重新开放弱化窗口。
 - `verify` 先把 Counterfactual Finding 投影进所属 Check Result：原本 passed 的 Main Check 变为 `invalid_evidence`、Claim Proof 清空，再在重查 active task/revision/compiled/worktree identity 后写 scoped Progress；因此 Outcome/Global Check 的失败都能由 status/resume 恢复，且不新增 Global Outcome 状态。并发 revision 返回 `active_authority_changed_during_verify`。
 - `status` 输出 `unverified`、`progress_passing`、`progress_failing`、`progress_stale` 或 `blocked_external`；同时用 `final_workflow_status` 报告 fresh Final Receipt（发生 drift 后为 `null`），并完整返回 active Contract 的 `external_confirmations`。它从 common-dir authority snapshot 读取，并把 workdir cache 缺失或不一致报告为可修复诊断。

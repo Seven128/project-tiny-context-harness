@@ -1,6 +1,6 @@
 ---
 context_role: foundation
-read_policy: default
+read_policy: on-demand
 ---
 # Harness Context Model
 

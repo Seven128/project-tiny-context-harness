@@ -1,6 +1,9 @@
 # Schema v4 Minimal Context graph manifest.
 # Keep the default product/domain area for ordinary projects. Role context nodes
 # are read-purpose slices owned by an area or, only when cross-domain, by the project root.
+# Use read_policy = "default" only for near-universal recovery facts; prefer
+# "on-demand" for specialized architecture, contract, deployment or history detail.
+# `ty-context doctor` reports the deterministic default read footprint and exact duplicates.
 # When migrating deep files under project_context/areas/**, refine obvious
 # contract/foundation/subdomain/verification/deployment/implementation-index/
 # decision-rationale/archive files into [[context]] entries instead of keeping
