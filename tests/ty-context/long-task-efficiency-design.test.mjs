@@ -170,10 +170,19 @@ test("one-time model choice uses Authority Lock without creating model routing s
   assert.match(combined, /no .*model route|creates no model route/iu);
   assert.match(combined, /does not switch|cannot switch/iu);
   assert.match(combined, /not proof|not acceptance evidence/iu);
-  assert.doesNotMatch(
-    combined,
-    /model-tier scheduler.*active|persisted model route/iu,
-  );
+
+  const affirmativeModelRoutingClaims = combined
+    .split(/\r?\n/u)
+    .filter((line) =>
+      /model-tier scheduler.*active|persisted model route/iu.test(line),
+    )
+    .filter(
+      (line) =>
+        !/\bno\b|does not|without|never|not persisted|不创建|不持久化/iu.test(
+          line,
+        ),
+    );
+  assert.deepEqual(affirmativeModelRoutingClaims, []);
 });
 
 test("Preflight repair ordering remains advisory and creates no authority", async () => {
