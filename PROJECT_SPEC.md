@@ -408,7 +408,7 @@ The package version for this architecture is `0.6.0`, the first public V2 semant
 
 ## 14. Performance And Cost Boundaries
 
-Release update mode is part of the release contract. Every published version declares `sync-only`, `upgrade-required` or `manual-required`; direct `sync` does not run migrations. Release fixtures prove the same marked Source/Binding/Counterfactual Contract against the prepared tarball before publish.
+Release update mode is part of the release contract. Every published version declares `sync-only`, `upgrade-required` or `manual-required`; `ty-context upgrade --check` reports `safe_pending`, `manual_required` and `blocked`, and direct `sync` does not run migrations. Release fixtures prove the same marked Source/Binding/Counterfactual Contract against the prepared tarball before publish.
 
 - The near-universal default Context set remains under advisory byte budgets; `doctor` reports but does not block overages.
 - Bounded Context discovery searches only `project_context/**`, uses a small high-signal term set and creates no persistent retrieval infrastructure.
