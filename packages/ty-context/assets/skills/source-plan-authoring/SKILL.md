@@ -20,6 +20,7 @@ Record every product, technical and acceptance meaning that later work must not 
 - Do not independently turn current repository implementation into product intent. If supplied repository or Context evidence is relevant, cite it and distinguish durable constraints from incidental code shape.
 - Do not bind owners, files, runners, verification inputs, proof surfaces or Assertion observations for a real repository. Later Contract authoring owns those bindings.
 - Do not generate Delivery Contract YAML, execute implementation, run Long-Task commands or declare work complete.
+- Keep plan meaning separate from action authorization. A delegated recommendation may define the intended product or technical default, but payment, contracting, production release, destructive production mutation, a real permission grant, sensitive-data transmission or required legal/security/human approval remains an external confirmation.
 - Do not make this recommended structure a mandatory input protocol for later work.
 
 ## Relationship To Other Skills
@@ -39,7 +40,7 @@ Infer the working mode without asking the user to choose it:
 - **Synthesis mode:** turn a goal plus mixed notes, documents, images, diagrams, tables or examples into a new plan.
 - **Hybrid mode:** use an existing plan as the backbone and fill its gaps from the remaining artifacts.
 
-A short request is sufficient when it identifies the artifact roles, states the product or delivery goal, explains whether references are exact targets or inspiration and asks for synthesis, refinement or elaboration. Do not require a questionnaire or a pre-existing outline. Ask only when a supplied artifact cannot be accessed or when a blocking choice falls outside the delegated expansion boundary.
+A short request is sufficient when it identifies the artifact roles, states the product or delivery goal, explains whether references are exact targets or inspiration and asks for synthesis, refinement or elaboration. Do not require a fixed questionnaire or a pre-existing outline. Do not ask the user to approve a defensible recommended plan choice. Ask only when a supplied artifact cannot be accessed, authoritative inputs conflict, the user explicitly reserves a choice, a missing material preference could change the research or recommendation, or no defensible recommendation can be formed.
 
 Before authoring:
 
@@ -48,6 +49,18 @@ Before authoring:
 3. For screenshots or visual references, inventory visible surfaces, regions, controls, content hierarchy, navigation cues and represented states. Treat them as inspiration rather than an exact reproduction target unless the user says otherwise; do not import unrelated branding, sample data or product scope.
 4. Record an Input Inventory in the Source Plan with each input ID, role, authority, material content incorporated and any unreadable or intentionally unused portion. The inventory is traceability, not a new semantic type or authority.
 5. Make the resulting plan self-contained: incorporate every material requirement or constraint into a keyed item. Keep an external artifact reference only when the artifact itself remains necessary for exact visual, legal or other non-textual comparison.
+
+## Preference And Research Gate
+
+Before comparative research or a material product, technical, architecture or provider selection:
+
+1. Identify the decision criteria that could materially change the research scope, candidate set or recommendation. Common axes include quality or fidelity versus cost, delivery speed, reliability or support, privacy or compliance, control or vendor lock-in, operational burden, platform coverage and future extensibility.
+2. Treat a preference as known only when it follows from the user's words, a supplied authoritative artifact, project Context or another controlling constraint. Do not silently turn the author's own taste into user intent.
+3. If a material criterion is unknown or ambiguous, stop before comparative research or selection and ask the user one concise set of targeted questions about only the decision-changing axes. For example, ask whether quality or total cost should dominate when that answer would change which providers or technologies deserve investigation.
+4. Do not ask again when the preference is already available. Do not interrupt minor, reversible choices, or a choice with the same defensible recommendation across plausible preferences. This conditional gate is not a mandatory intake questionnaire.
+5. Once the preference envelope is clear, decide whether research is needed and how much. When a choice depends on current external capabilities, pricing, quotas, licensing, compatibility, regional availability, security posture or support, use current authoritative or primary sources and add them to the Input Inventory with their scope and retrieval date.
+
+Preference clarification determines what outcome to optimize. It does not approve a purchase, contract, deployment, permission grant, data transfer or other real-world action.
 
 ## Authoring Workflow
 
@@ -82,9 +95,9 @@ Do not disguise one possible product choice as a necessary derivation.
 
 ### Delegated elaboration
 
-When the user explicitly asks the Skill to synthesize, refine, complete, flesh out or use its judgment, treat that as bounded authorization to make coherent, low-impact and reversible product choices needed by the stated goal. Do not stop for minor choices that a competent product author can resolve from the supplied evidence and familiar interaction conventions.
+When the user explicitly asks the Skill to synthesize, refine, complete, flesh out or use its judgment, treat that as default plan-authoring delegation to make coherent product and technical choices needed by the stated goal. A recommendation is defensible only when material decision criteria are known and supplied evidence, project Context, established conventions or a conservative no-effect baseline supports the result. After the Preference And Research Gate is satisfied, adopt and record that recommendation instead of pausing for approval. High impact alone does not make a plan choice unresolved.
 
-Typical delegated choices include information hierarchy, screen grouping, navigation between already requested capabilities, control placement and labels, input validation implied by the data, non-destructive loading/empty/error/retry feedback, and representative content needed to make acceptance falsifiable.
+Typical delegated choices include information hierarchy, screen grouping, navigation between already requested capabilities, control placement and labels, input validation implied by the data, non-destructive loading/empty/error/retry feedback, representative content needed to make acceptance falsifiable, product defaults, thresholds, permission models, retention, platform scope and staged provider or automation policies when a defensible recommendation exists.
 
 For every delegated item or tightly coupled group:
 
@@ -94,7 +107,9 @@ For every delegated item or tightly coupled group:
 - state why the choice is coherent and what product meaning it adds;
 - keep it within the stated goal and do not contradict a higher-authority input.
 
-Delegation does not authorize unsupported permissions or roles, destructive or irreversible behavior, pricing/quota/budget rules, legal or security policy, persistent-data retention, external automation, business thresholds, platform support scope or sample-versus-full-population scope. These remain `DEC` unless directly decided by an authoritative input.
+For high-risk domains, prefer a conservative pre-authorization baseline when it still satisfies the stated goal: zero spend until approved, disabled production capability, least privilege, explicit opt-in, minimum justified retention, staging or POC before production, and no automated destructive behavior. Record the intended later capability separately from the gate that enables it. A conservative action gate does not substitute for an unknown preference that would change the intended product or technical choice.
+
+Delegation authorizes plan meaning only. It never authorizes payment or purchase, signature or contract acceptance, production deployment or public release, destructive mutation of production or user data, granting real permissions, transmitting sensitive data, bypassing legal/security review, or substituting a plan for required POC, field, accessibility or human validation. Declare each applicable real-world gate as an `EXT` external confirmation and continue authoring without asking for plan approval.
 
 ### Repository or Context evidence
 
@@ -104,9 +119,9 @@ Leave real owner/path/binding/runner selection to later repository-aware Contrac
 
 ### New product semantics
 
-Use a `DEC` item with status `decision_required` whenever more than one materially different choice remains and neither direct evidence nor the delegated elaboration boundary authorizes a choice.
+Use a `DEC` item with status `decision_required` only when authoritative inputs conflict, the user explicitly reserves the choice, a material preference remains unknown after the targeted question, or no single defensible recommendation can be supported by the known preference envelope, available evidence, Context, established convention or a conservative no-effect default. Several possible options do not by themselves require a decision when the decision criteria are known: recommend one, record its delegated basis and keep any real high-risk action as `EXT`.
 
-Never choose without a direct or recorded delegated basis:
+The following choices require an explicit direct or recorded delegated basis and may require a corresponding `EXT`; they are not automatic `DEC` items when a defensible recommendation exists:
 
 - a new user capability or changed business rule;
 - a default, threshold, range or metric;
@@ -209,7 +224,7 @@ For every important `REQ` and every material `CTRL` state, provide at least one 
 
 Cover the scenarios that actually exist: success, failure, boundary, recovery, permission, empty state, sample/full-population scope and forbidden results. Do not mechanically generate a fixed scenario set.
 
-Never introduce a product requirement for the first time inside an `AC`. Move hidden behavior, defaults, retention periods or recovery policies into a source-backed `REQ` or unresolved `DEC`.
+Never introduce a product requirement for the first time inside an `AC`. Move hidden behavior, defaults, retention periods or recovery policies into a direct or delegated source-backed `REQ`, or into `DEC` only when no defensible recommendation exists.
 
 ## Risk And Advisory Boundaries
 
@@ -427,15 +442,15 @@ Before returning the plan, verify:
 9. Every `OBL` is mandatory rather than a suggestion.
 10. No `AC` introduces undeclared product semantics.
 11. Every derived item identifies its basis and changes no user capability, business rule or product scope.
-12. Every delegated item identifies `Delegated By`, its evidence basis and the product meaning it adds.
-13. Delegated choices stay within the low-impact reversible boundary; reserved or conflicting choices remain `DEC`.
-14. Multiple reasonable choices outside recorded delegation remain decisions rather than silent model choices.
+12. Every delegated item identifies `Delegated By`, its evidence basis, the known material decision criteria and the product meaning it adds.
+13. Every delegated recommendation passed the Preference And Research Gate; current external claims use authoritative or primary sources, and any real high-risk action remains an explicit `EXT` rather than implied authorization.
+14. Every `DEC` is justified by conflicting authority, an explicitly user-reserved choice, a missing material preference or the absence of a defensible recommendation; high impact or multiple options with known criteria alone never create a pause.
 15. Reference or inspiration inputs are not treated as exact targets unless the user requested that authority.
 16. Sample, framework, representative validation and full population are not confused.
 17. Partial implementation is not worded as full completion.
 18. Non-goals and forbidden shortcuts are explicit.
 19. Risks concretely affect scope, verification or recovery rather than repeat a generic template.
-20. No unsupported number, threshold, metric or conclusion appears.
+20. No unsupported number, threshold, metric or conclusion appears; every delegated value cites its evidence, known preference, convention or conservative-default basis.
 21. Every `AC` names accepted `REQ`/`CTRL`/`OBL`/`NCOMP` keys and contains exactly one Given/When/Then scenario.
 22. Every `NCOMP` is an explicit source meaning rather than a restated Requirement or non-goal.
 23. Every `RISK` has one exact Fact, one Affected Outcome, Basis and Consequence; ambiguity is a `DEC`.
