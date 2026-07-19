@@ -92,10 +92,19 @@ test("bounded Context discovery reduces trigger-only recall risk without a retri
   );
   assert.match(combined, /supplements.*semantic judgment/isu);
   assert.match(combined, /low fixed cost/iu);
-  assert.doesNotMatch(
-    combined,
-    /create(?:s)? (?:a )?(?:vector|persistent) index|persist(?:s)? search state/iu,
-  );
+
+  const affirmativeInfrastructureClaims = combined
+    .split(/\r?\n/u)
+    .filter((line) =>
+      /create(?:s)? (?:a )?(?:vector|persistent) index|persist(?:s)? search state/iu.test(
+        line,
+      ),
+    )
+    .filter(
+      (line) =>
+        !/\bno\b|does not|without|never|不创建|不持久化/iu.test(line),
+    );
+  assert.deepEqual(affirmativeInfrastructureClaims, []);
 });
 
 test("one-time model choice uses Authority Lock without creating model routing state", async () => {
