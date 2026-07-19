@@ -1,0 +1,315 @@
+{
+  "schema_version": "tiny-context-agent-gold-set-v1",
+  "baseline_commit": "2ad71874a3e23a2221088ebb58238df64278b5c9",
+  "operator_only": true,
+  "coverage": {
+    "covered_task_tags": [
+      "api-schema",
+      "context-evolution",
+      "context-recovery",
+      "cross-layer",
+      "cross-module",
+      "external-pending",
+      "local-bug",
+      "permission-boundary",
+      "security-boundary",
+      "structured-json-oracle",
+      "ui-browser",
+      "worker-runtime"
+    ],
+    "known_gaps": [
+      {
+        "id": "population-coverage",
+        "reason": "The current four Minimal Context scenarios do not contain a true full-population operation with an independent population oracle."
+      },
+      {
+        "id": "long-task-authoring",
+        "reason": "The current scenarios benchmark ordinary lifecycle delivery and do not yet provide paired Compact V2 Contract-authoring fixtures."
+      },
+      {
+        "id": "preflight-repair",
+        "reason": "A deterministic multi-root Preflight error corpus must be added before measuring repair-order changes."
+      },
+      {
+        "id": "weak-observability",
+        "reason": "The existing UI scenarios exercise UI recovery, but not the Long-Task weak-observability Counterfactual policy as an isolated variable."
+      }
+    ]
+  },
+  "episodes": [
+    {
+      "id": "expense-policy-initial",
+      "scenario": "expense-policy-engine",
+      "stage": "initial",
+      "task_tags": ["structured-json-oracle"],
+      "expected_context_delta": "required",
+      "required_rubric_ids": [
+        "AC-EXP-001",
+        "AC-EXP-002",
+        "AC-EXP-003",
+        "AC-EXP-004",
+        "AC-EXP-005",
+        "AC-EXP-006",
+        "AC-EXP-007",
+        "AC-EXP-008",
+        "AC-EXP-009",
+        "AC-EXP-010"
+      ],
+      "controlling_fact_topics": [
+        "policy decision source of truth",
+        "CLI JSON input/output contract",
+        "audit reason semantics",
+        "runnable verification and recovery entrypoints"
+      ],
+      "required_verification_topics": ["unit policy paths", "CLI smoke"]
+    },
+    {
+      "id": "expense-policy-rfc",
+      "scenario": "expense-policy-engine",
+      "stage": "rfc",
+      "task_tags": ["api-schema", "context-evolution"],
+      "expected_context_delta": "required",
+      "required_rubric_ids": ["RFC-EXP-001", "RFC-EXP-002"],
+      "controlling_fact_topics": [
+        "jurisdiction canonical field",
+        "region deprecated compatibility alias",
+        "audit output terminology"
+      ],
+      "required_verification_topics": ["parser compatibility", "audit output"]
+    },
+    {
+      "id": "context-lab-initial",
+      "scenario": "project-context-recovery-lab",
+      "stage": "initial",
+      "task_tags": ["cross-module", "ui-browser", "worker-runtime"],
+      "expected_context_delta": "required",
+      "required_rubric_ids": [
+        "AC-CTX-001",
+        "AC-CTX-002",
+        "AC-CTX-003",
+        "AC-CTX-004",
+        "AC-CTX-005",
+        "AC-CTX-006",
+        "AC-CTX-007",
+        "AC-CTX-008"
+      ],
+      "controlling_fact_topics": [
+        "incident API ownership",
+        "board state and risk presentation",
+        "provider-event idempotency",
+        "bounded retry and dead-letter behavior",
+        "API worker and UI entrypoints"
+      ],
+      "required_verification_topics": ["API", "worker", "UI smoke"]
+    },
+    {
+      "id": "context-lab-recovery",
+      "scenario": "project-context-recovery-lab",
+      "stage": "recovery",
+      "task_tags": ["context-recovery"],
+      "expected_context_delta": "none",
+      "required_rubric_ids": [
+        "CTX-001",
+        "CTX-002",
+        "CTX-003",
+        "CTX-004",
+        "HANDOFF-CTX-001"
+      ],
+      "controlling_fact_topics": [
+        "runnable entrypoints",
+        "impactLevel and deprecated severity alias",
+        "mock versus live provider boundary",
+        "latest change state and next safe action"
+      ],
+      "required_verification_topics": ["documented npm test path"]
+    },
+    {
+      "id": "context-lab-rfc",
+      "scenario": "project-context-recovery-lab",
+      "stage": "rfc",
+      "task_tags": ["api-schema", "permission-boundary", "context-evolution"],
+      "expected_context_delta": "required",
+      "required_rubric_ids": ["RFC-CTX-001", "RFC-CTX-002", "RFC-CTX-003"],
+      "controlling_fact_topics": [
+        "impactLevel canonical schema",
+        "provider event naming contract",
+        "incident write permission boundary"
+      ],
+      "required_verification_topics": [
+        "deprecated alias compatibility",
+        "provider event rejection",
+        "permission enforcement"
+      ]
+    },
+    {
+      "id": "context-lab-debug",
+      "scenario": "project-context-recovery-lab",
+      "stage": "debug",
+      "task_tags": ["local-bug", "api-schema"],
+      "expected_context_delta": "none",
+      "required_rubric_ids": ["DEBUG-CTX-001"],
+      "controlling_fact_topics": ["canonical provider event names"],
+      "required_verification_topics": ["old event-name rejection"]
+    },
+    {
+      "id": "support-board-initial",
+      "scenario": "support-triage-board",
+      "stage": "initial",
+      "task_tags": ["cross-layer", "ui-browser"],
+      "expected_context_delta": "required",
+      "required_rubric_ids": [
+        "AC-SUP-001",
+        "AC-SUP-002",
+        "AC-SUP-003",
+        "AC-SUP-004",
+        "AC-SUP-005",
+        "AC-SUP-006",
+        "AC-SUP-007",
+        "AC-SUP-008",
+        "AC-SUP-009"
+      ],
+      "controlling_fact_topics": [
+        "support ticket API and UI entrypoints",
+        "priority policy source of truth",
+        "SLA risk presentation",
+        "structured API error contract",
+        "deterministic supportDesk smoke contract"
+      ],
+      "required_verification_topics": ["API", "priority policy", "UI smoke"]
+    },
+    {
+      "id": "support-board-recovery",
+      "scenario": "support-triage-board",
+      "stage": "recovery",
+      "task_tags": ["context-recovery", "cross-layer"],
+      "expected_context_delta": "none",
+      "required_rubric_ids": [
+        "CTX-SUP-001",
+        "CTX-SUP-002",
+        "CTX-SUP-003",
+        "CTX-SUP-004",
+        "HANDOFF-SUP-001"
+      ],
+      "controlling_fact_topics": [
+        "API and UI entrypoints",
+        "priority policy ownership",
+        "latest RFC or debug status",
+        "verification paths and next safe action"
+      ],
+      "required_verification_topics": ["API", "priority", "UI smoke"]
+    },
+    {
+      "id": "support-board-rfc",
+      "scenario": "support-triage-board",
+      "stage": "rfc",
+      "task_tags": ["cross-layer", "context-evolution"],
+      "expected_context_delta": "required",
+      "required_rubric_ids": ["RFC-SUP-001", "RFC-SUP-002", "RFC-SUP-003"],
+      "controlling_fact_topics": [
+        "weighted SLA priority policy",
+        "shared API and UI ordering",
+        "bulk-assignment audit requirement"
+      ],
+      "required_verification_topics": [
+        "priority weighting",
+        "API UI order agreement",
+        "bulk auditReason"
+      ]
+    },
+    {
+      "id": "support-board-debug",
+      "scenario": "support-triage-board",
+      "stage": "debug",
+      "task_tags": ["local-bug", "cross-layer"],
+      "expected_context_delta": "none",
+      "required_rubric_ids": ["DEBUG-SUP-001"],
+      "controlling_fact_topics": ["shared API and UI priority state"],
+      "required_verification_topics": ["stale ordering regression"]
+    },
+    {
+      "id": "webhook-bridge-initial",
+      "scenario": "webhook-provider-bridge",
+      "stage": "initial",
+      "task_tags": ["security-boundary", "worker-runtime"],
+      "expected_context_delta": "required",
+      "required_rubric_ids": [
+        "AC-WEB-001",
+        "AC-WEB-002",
+        "AC-WEB-003",
+        "AC-WEB-004",
+        "AC-WEB-005",
+        "AC-WEB-006",
+        "AC-WEB-007",
+        "AC-WEB-008"
+      ],
+      "controlling_fact_topics": [
+        "HMAC verification boundary",
+        "timestamp and replay rejection",
+        "event normalization and idempotency",
+        "bounded retry and dead-letter handling",
+        "health and mock-provider entrypoints"
+      ],
+      "required_verification_topics": [
+        "invalid signature",
+        "stale timestamp",
+        "replay",
+        "retry and DLQ smoke"
+      ]
+    },
+    {
+      "id": "webhook-bridge-recovery",
+      "scenario": "webhook-provider-bridge",
+      "stage": "recovery",
+      "task_tags": ["context-recovery", "external-pending", "security-boundary"],
+      "expected_context_delta": "none",
+      "required_rubric_ids": [
+        "CTX-WEB-001",
+        "CTX-WEB-002",
+        "CTX-WEB-003",
+        "CTX-WEB-004",
+        "HANDOFF-WEB-001"
+      ],
+      "controlling_fact_topics": [
+        "receiver health and test entrypoints",
+        "local mock and live evidence separation",
+        "credential blocker and do-not-retry rule",
+        "latest change state and next safe action"
+      ],
+      "required_verification_topics": ["mock-provider evidence only"]
+    },
+    {
+      "id": "webhook-bridge-rfc",
+      "scenario": "webhook-provider-bridge",
+      "stage": "rfc",
+      "task_tags": ["api-schema", "security-boundary", "context-evolution"],
+      "expected_context_delta": "required",
+      "required_rubric_ids": ["RFC-WEB-001", "RFC-WEB-002", "RFC-WEB-003"],
+      "controlling_fact_topics": [
+        "provider schema v2",
+        "tenant-bound signing payload",
+        "secret rotation grace window",
+        "replay protection"
+      ],
+      "required_verification_topics": [
+        "v1 rejection",
+        "signature payload",
+        "expired secret",
+        "replay"
+      ]
+    },
+    {
+      "id": "webhook-bridge-debug",
+      "scenario": "webhook-provider-bridge",
+      "stage": "debug",
+      "task_tags": ["local-bug", "security-boundary"],
+      "expected_context_delta": "none",
+      "required_rubric_ids": ["DEBUG-WEB-001"],
+      "controlling_fact_topics": [
+        "timestamp freshness",
+        "expired secret rejection",
+        "replay rejection"
+      ],
+      "required_verification_topics": ["negative security regression"]
+    }
+  ]
+}

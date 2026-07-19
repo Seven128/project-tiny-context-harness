@@ -22,6 +22,39 @@ For public claim boundaries and interpretation rules, see
 - Record any out-of-protocol intervention separately.
 - Publish no numbers unless both paths pass the same product quality bar.
 
+## Real Codex Agent Pair Boundary
+
+For an experiment that changes Context routing, workflow wording or another
+Agent-facing Harness surface, use the operator-only protocol under
+`agent-benchmark/**`:
+
+```sh
+node examples/delivery-benchmark/runner/agent_benchmark.mjs validate-assets
+```
+
+Use `--harness-root` to select the exact control or candidate checkout. Prepare
+the control from the fixed baseline commit and the candidate from its exact
+candidate commit; the pair tool itself may run from a separate tooling checkout.
+Build `packages/ty-context/dist/cli.js` in both selected checkouts before
+preparation. Both runs must use the same scenario, model, reasoning level, run
+index, prompt scope and hidden quality bar. The selected scenario corpus is
+revalidated against the operator gold-set rubric references before preparation.
+Each measured stage uses a new Codex session rooted at its prepared scenario
+directory; a main conversation cannot simulate two repository-root Harness
+configurations or a fresh recovery handoff.
+
+The pair runner records commit, built-CLI, prepared-tree, prompt, plan, gold-set,
+operator-tool and operator-asset hashes. The operator-asset projection covers the
+lifecycle runner, scenario inputs, staged prompts, rubric and hidden probe and
+must match across the pair. The runner never copies
+`agent-benchmark/gold-set.json` into the run directory and never invokes Codex.
+A same-commit pair, reused session, asymmetric intervention, changed operator
+asset, dirty or unpushed final repository, or failed hidden quality probe is
+calibration-only or invalid as appropriate.
+
+At least three conclusion-eligible pairs are required for an experiment decision;
+use five when the result is near a threshold or visibly high-variance.
+
 ## Formal Run Boundary
 
 For `harness` mode, the measured agent should maintain only:
@@ -79,6 +112,11 @@ The score report may also include workflow overhead ratio, artifact inventory /
 artifact count, gate true-product defect count versus hygiene issue count, and AC progress visibility.
 Treat them as diagnostic fields for overhead analysis, not as conclusion-grade
 efficiency or product-quality evidence.
+
+Agent-reported token counts and Context reads are diagnostic unless backed by a
+session or tool-event export. The pair metadata and hidden quality probe remain
+machine-checkable, but they do not turn low-confidence measurements into
+conclusion-grade evidence.
 
 ## Quality And Recovery
 

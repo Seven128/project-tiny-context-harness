@@ -50,12 +50,19 @@ A useful benchmark should include:
 - clear handling of failed or incomplete runs,
 - no conclusion if either path fails the same quality bar.
 
+When comparing two Agent-facing Harness variants, each measured stage on each side
+must run in a fresh real session rooted at its own prepared repository. A single
+conversation cannot stand in for two different root-level `AGENTS.md`, Skills and
+Context configurations or for the fresh-Agent recovery boundary.
+Deterministic packet preparation is useful, but it is not Agent evidence.
+
 ## What Counts As Evidence
 
 Good evidence:
 
 - a baseline/Harness pair that both pass the same tests or hidden quality probes,
 - observer elapsed time with enough run metadata to reproduce the boundary,
+- a clean final `main` pushed to the prepared local `origin/main`,
 - recovery-score evidence tied to file citations,
 - repeated scenario results that show a pattern,
 - adoption reports that describe concrete facts agents stopped rediscovering.
@@ -66,7 +73,13 @@ Weak evidence:
 - a run where Harness had more information than baseline,
 - a run where baseline failed quality but Harness passed,
 - a run where the operator intervened in one path but not the other,
+- a pair that reused the same Agent session,
 - old stage-based Tiny Context results.
+
+Agent-reported token counts and Context reads remain diagnostic unless an
+independent session/tool export supports them. Prompt, commit, built-CLI,
+prepared-tree, operator-tool, operator quality-bar and gold-set hashes prove configuration
+identity, not model behavior or product quality.
 
 ## How To Interpret Outcomes
 
@@ -111,8 +124,12 @@ examples/delivery-benchmark/
 
 Use:
 
-- [examples/delivery-benchmark/RUNBOOK.md](../examples/delivery-benchmark/RUNBOOK.md) for the operator protocol,
+- [examples/delivery-benchmark/RUNBOOK.md](../examples/delivery-benchmark/RUNBOOK.md) for the lifecycle operator protocol,
+- [examples/delivery-benchmark/agent-benchmark/README.md](../examples/delivery-benchmark/agent-benchmark/README.md) for real Codex control/candidate packet preparation and pair validation,
 - [examples/delivery-benchmark/results/README.md](../examples/delivery-benchmark/results/README.md) for the current reset status,
 - [examples/delivery-benchmark/results/index.html](../examples/delivery-benchmark/results/index.html) for the static report shell.
 
-Do not update public result summaries until a fresh baseline/Harness pair passes the current evidence rules.
+The Agent benchmark plan and gold set are operator-only benchmark inputs. The
+runner records their hashes but must not copy them into measured run directories.
+Do not update public result summaries until a fresh baseline/Harness pair passes
+the current evidence rules.

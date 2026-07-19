@@ -1,0 +1,118 @@
+{
+  "schema_version": "tiny-context-agent-benchmark-plan-v1",
+  "baseline_commit": "2ad71874a3e23a2221088ebb58238df64278b5c9",
+  "purpose": "Compare one current-main control with one isolated candidate while preserving the same model, prompt scope, hidden quality bar, fresh-session boundary, and operator protocol.",
+  "fixed_conditions": {
+    "fresh_session_per_run": true,
+    "fresh_session_per_stage": true,
+    "same_model_within_pair": true,
+    "same_reasoning_within_pair": true,
+    "same_prompt_scope_within_pair": true,
+    "same_quality_bar_within_pair": true,
+    "gold_set_operator_only": true,
+    "minimum_paired_runs": 3
+  },
+  "evidence_classes": {
+    "conclusion_grade": [
+      "external observer elapsed time",
+      "hidden scenario quality probe",
+      "prompt and Harness commit hashes",
+      "machine-counted Contract lines and Preflight rounds when available"
+    ],
+    "diagnostic_only": [
+      "agent-reported token counts",
+      "agent-reported Context reads without tool-log export",
+      "operator estimates",
+      "single calibration run"
+    ]
+  },
+  "tracks": [
+    {
+      "id": "context-routing",
+      "status": "agent_run_ready",
+      "question": "Does a stateless Context resolver preserve controlling-Context recall while reducing irrelevant reads or rediscovery cost relative to current main?",
+      "scenarios": [
+        "expense-policy-engine",
+        "project-context-recovery-lab",
+        "support-triage-board",
+        "webhook-provider-bridge"
+      ],
+      "admission": {
+        "hard_gates": {
+          "controlling_context_recall": 1,
+          "hidden_quality_no_regression": true,
+          "context_miss_rework_no_increase": true
+        },
+        "minimum_benefit_any": {
+          "irrelevant_context_bytes_reduction": 0.2,
+          "context_read_round_reduction": 1,
+          "agent_cost_reduction": 0.2
+        }
+      }
+    },
+    {
+      "id": "workflow-expression",
+      "status": "agent_run_ready",
+      "question": "Does Resolve-Change-Prove-Reconcile preserve current workflow behavior while reducing resident instruction cost?",
+      "scenarios": [
+        "expense-policy-engine",
+        "project-context-recovery-lab",
+        "support-triage-board",
+        "webhook-provider-bridge"
+      ],
+      "admission": {
+        "hard_gates": {
+          "controlling_context_recall_no_regression": true,
+          "context_delta_accuracy_no_regression": true,
+          "native_verification_no_regression": true,
+          "conformance_no_regression": true
+        },
+        "minimum_instruction_bytes_reduction": 0.2
+      }
+    },
+    {
+      "id": "long-task-authoring",
+      "status": "fixture_required",
+      "question": "Does compact Source/Risk/V3 authoring reduce current Compact V2 cost without changing canonical Authority or false-completion interception?",
+      "scenarios": [],
+      "admission": {
+        "hard_gates": {
+          "canonical_authority_equivalent": true,
+          "false_completion_adversarial_regressions": 0,
+          "final_gate_semantics_unchanged": true
+        },
+        "minimum_authoring_reduction": 0.3,
+        "minimum_preflight_round_reduction": 1
+      }
+    },
+    {
+      "id": "preflight-repair",
+      "status": "fixture_required",
+      "question": "Do only structurally proven causal diagnostics reduce repair rounds without hiding or misclassifying independent blockers?",
+      "scenarios": [],
+      "admission": {
+        "hard_gates": {
+          "hidden_diagnostics": 0,
+          "wrong_primary_attribution": 0,
+          "multi_root_preserved": true
+        },
+        "minimum_preflight_round_reduction": 1
+      }
+    },
+    {
+      "id": "final-gate-profile",
+      "status": "profile_only",
+      "question": "Is isolated runner execution, rather than snapshot or Harness overhead, a dominant real Final Gate cost?",
+      "scenarios": [],
+      "admission": {
+        "minimum_expected_wall_clock_reduction": 0.2,
+        "required_before_parallel_design": [
+          "runner time is a dominant share",
+          "multiple isolated checks are common",
+          "serial and parallel evidence are identical",
+          "failure localization does not regress"
+        ]
+      }
+    }
+  ]
+}

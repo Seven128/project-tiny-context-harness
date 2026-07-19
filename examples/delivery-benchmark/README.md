@@ -12,7 +12,9 @@ pairs before drawing new conclusions.
 - Public result data: empty.
 - Visual report shell: `results/index.html`.
 - Report data file: `results/benchmark-data.js`.
-- Runner: `runner/delivery_benchmark.mjs`.
+- Lifecycle runner: `runner/delivery_benchmark.mjs`.
+- Real Codex Agent pair runner: `runner/agent_benchmark.mjs`.
+- Operator-only pair plan and gold set: `agent-benchmark/**`.
 - Scenario skeletons: `scenarios/**`.
 - Raw artifacts: `.artifacts/delivery-benchmark/**` and not committed.
 
@@ -81,7 +83,24 @@ node examples/delivery-benchmark/runner/delivery_benchmark.mjs prepare \
   --force
 ```
 
-Use `RUNBOOK.md` for the current operator protocol.
+Use `RUNBOOK.md` for the current lifecycle protocol.
+
+## Real Codex Agent A/B
+
+`agent-benchmark/**` adds deterministic preparation and pair validation for
+experiments that must be executed in separate real Codex sessions for every
+measured lifecycle stage. It locks the Harness commit, built CLI, prepared tree,
+model, reasoning level, scenario, prompt,
+hidden gold-set, operator-tool and operator quality-bar hashes, but it does not
+run or simulate Codex.
+
+```sh
+node examples/delivery-benchmark/runner/agent_benchmark.mjs validate-assets
+```
+
+Use [`agent-benchmark/README.md`](agent-benchmark/README.md) for the exact
+control/candidate preparation and external-session procedure. The gold set stays
+operator-only and is never copied into a measured run directory.
 
 ## Documentation Boundary
 
