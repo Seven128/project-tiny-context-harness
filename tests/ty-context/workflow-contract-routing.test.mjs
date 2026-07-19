@@ -9,10 +9,17 @@ import { promisify } from "node:util";
 import { runInit } from "../../packages/ty-context/dist/lib/init.js";
 import { runValidator } from "../../packages/ty-context/dist/lib/validators.js";
 
-const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const repo = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../..",
+);
 const read = (relative) => readFile(path.join(repo, relative), "utf8");
 const exec = promisify(execFile);
-const missing = (file) => stat(file).then(() => false, () => true);
+const missing = (file) =>
+  stat(file).then(
+    () => false,
+    () => true,
+  );
 
 test("default workflow uses internal planning and creates no second authority", async () => {
   await withInitializedProject(async (root) => {
@@ -40,7 +47,10 @@ test("default Context routing combines manifest candidates with bounded search",
     ),
   ]);
   assert.equal(packaged, managed, "package AGENTS Core drift");
-  assert.match(rootAgents, /bounded text search over `project_context\/\*\*`/iu);
+  assert.match(
+    rootAgents,
+    /bounded text search over `project_context\/\*\*`/iu,
+  );
   for (const content of [managed, development]) {
     assert.match(content, /graph\/trigger candidates|triggers\/read policy/iu);
     assert.match(content, /bounded text search/iu);
@@ -72,8 +82,13 @@ test("CLI and managed guidance route only explicit or active work to long-task",
   ]);
   assert.match(stdout, /long-task <subcommand>/);
   assert.match(stdout, /Install Source Plan\/Long-Task Skills/);
-  assert.doesNotMatch(stdout, /validate-plan-contract|validate-plan-acceptance/);
-  const guidance = await read(".codex/ty-context-managed/agents/AGENTS_CORE.md");
+  assert.doesNotMatch(
+    stdout,
+    /validate-plan-contract|validate-plan-acceptance/,
+  );
+  const guidance = await read(
+    ".codex/ty-context-managed/agents/AGENTS_CORE.md",
+  );
   assert.match(
     guidance,
     /Do not infer long-task mode from duration, complexity, file count/,
@@ -147,14 +162,38 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
   assert.match(active, /stable semantic keys and Markdown anchors/is);
   assert.match(
     active,
-    /requirements conflict.*critical semantics are missing.*multiple materially different product designs.*user must choose.*no falsifiable acceptance standard/is,
+    /one recommendation is then defensible.*record it in real Source.*instead of pausing for approval/is,
   );
-  assert.match(active, /meaning-preserving structural decomposition/is);
   assert.match(
     active,
-    /repository binding.*real repository and Context evidence/is,
+    /Before comparative research or a material product, technical, architecture or provider selection.*quality versus cost.*stop before that research or selection and ask one concise targeted clarification/is,
   );
-  assert.match(active, /new business rule.*`decision_required`/is);
+  assert.match(
+    active,
+    /Do not impose a questionnaire, re-ask known preferences or interrupt minor reversible choices/is,
+  );
+  assert.match(
+    active,
+    /Once the material preference envelope is clear, decide what research is needed.*current authoritative or primary evidence/is,
+  );
+  assert.match(
+    active,
+    /Return only when authoritative requirements conflict.*user explicitly reserves.*no defensible recommendation.*no falsifiable acceptance standard/is,
+  );
+  assert.match(active, /meaning-preserving structural decomposition/is);
+  assert.match(active, /evidence-backed repository binding/is);
+  assert.match(
+    active,
+    /Never place a new product rule.*only in Contract YAML/is,
+  );
+  assert.match(
+    active,
+    /payment.*contracting.*production deployment.*destructive production mutation.*external confirmations/is,
+  );
+  assert.match(
+    active,
+    /conflicting, user-reserved, missing-preference or unsupported semantic remains `decision_required`/is,
+  );
   assert.match(active, /^## Controlling Objective$/mu);
   assert.match(active, /^## Contract Draft And Outcome Decomposition$/mu);
   assert.match(active, /same non-authoritative `delivery-contract\.yaml`/iu);
@@ -211,7 +250,9 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
 test("optional Source Plan authoring does not create a second Contract authority", async () => {
   const [sourcePlan, workflowContext] = await Promise.all([
     read(".codex/ty-context-managed/skills/source-plan-authoring/SKILL.md"),
-    read("project_context/areas/harness-package/contracts/workflow-contract.md"),
+    read(
+      "project_context/areas/harness-package/contracts/workflow-contract.md",
+    ),
   ]);
   assert.match(sourcePlan, /Do not generate Delivery Contract YAML/);
   assert.match(sourcePlan, /Do not update `project_context\/\*\*`/);
@@ -231,7 +272,15 @@ test("optional Source Plan authoring does not create a second Contract authority
   );
   assert.match(
     workflowContext,
-    /requirements conflict.*critical meaning is missing.*materially different product designs.*requires user choice.*falsifiable acceptance cannot be formed/is,
+    /material (?:preference|priority).*unknown or ambiguous.*stop before that research or selection and ask a concise targeted question/is,
+  );
+  assert.match(
+    workflowContext,
+    /Once the material preference envelope is known.*record one supported recommendation explicitly as delegated Source instead of pausing for approval/is,
+  );
+  assert.match(
+    workflowContext,
+    /returns for a decision only when requirements conflict.*user reserves the choice.*no defensible recommendation.*falsifiable acceptance cannot be formed/is,
   );
   assert.match(
     workflowContext,

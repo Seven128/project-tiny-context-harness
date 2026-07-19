@@ -137,7 +137,7 @@ The smoke packs the local workspace, installs it into a disposable repo and vali
 
 ```sh
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.6.1.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.6.2.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -218,14 +218,15 @@ An explicit Long-Task expresses material visual expectations through the existin
 
 ### Optional Source Plan Authoring
 
-Use `/source-plan-authoring` when explicitly asking for an initial plan, Source Plan, source draft, or synthesis/refinement/audit of later implementation or Contract-authoring Source. The input may be one substantially complete plan or a sparse goal plus mixed notes, product/technical documents, screenshots, diagrams and other attachments. A short request that identifies the artifact roles, product goal, reference authority and desired elaboration is enough; no intake questionnaire or pre-normalized outline is required.
+Use `/source-plan-authoring` when explicitly asking for an initial plan, Source Plan, source draft, or synthesis/refinement/audit of later implementation or Contract-authoring Source. The input may be one substantially complete plan or a sparse goal plus mixed notes, product/technical documents, screenshots, diagrams and other attachments. A short request that identifies the artifact roles, product goal, reference authority and desired elaboration is enough; no fixed intake questionnaire or pre-normalized outline is required.
 
 It outputs one self-contained Markdown Source Plan that:
 
 - inventories every supplied artifact, inspects all material pages/frames/screens and records coverage gaps instead of silently sampling;
 - preserves direct requirements and their qualifiers;
 - marks necessary derivations and cites what they derive from;
-- when the user delegates synthesis or elaboration, makes traceable low-impact, reversible product choices marked `delegated`, while keeping permissions, destructive behavior, pricing, retention, security policy and other high-impact choices as `DEC`/`decision_required`;
+- before comparative research or a material product, technical, architecture or provider selection, asks a concise targeted question when an unknown user priority such as quality versus cost, speed, reliability, privacy, lock-in or operational burden could change the research scope, candidate set or recommendation; it does not re-ask known preferences or interrupt minor reversible choices;
+- after the preference envelope is clear, decides what research is needed, uses current authoritative or primary sources for external capability/pricing/quota/license/compatibility/region/security/support claims, and treats a request to synthesize, refine, complete or use judgment as plan-level delegation: one supported recommendation is recorded as `delegated` with its instruction, preference/evidence basis and exact meaning instead of asking for approval, including high-impact plan semantics; real payment, contracting, production release, destructive production mutation, permission grants, sensitive-data transmission and required legal/security/human approval remain `EXT`, while only conflicts, user-reserved choices, missing material preferences or cases with no defensible recommendation remain `DEC`/`decision_required`;
 - splits Outcomes only by independently decidable observable results;
 - uses stable semantic keys and explicit anchors for important Source items;
 - separates mandatory `OBL` obligations from advisory `HINT` suggestions;
@@ -250,7 +251,7 @@ Use `/long-task-workflow` only when explicitly requested or when the current wor
 - a complete Final Gate on one current snapshot;
 - a Stop Hook that rejects stale completion.
 
-Long-Task Contract authoring preserves stable Source keys and anchors where practical. A product choice already recorded in Source under explicit user delegation remains ordinary Source meaning, but Contract authoring cannot extend that delegation. Meaning-preserving structural decomposition and evidence-backed repository binding may continue; any other new business rule, default, recovery behavior, permission or scope becomes `decision_required` instead of being silently added. Missing recommended Source Plan structure never blocks authoring, but the marker-only Material Source Item enumeration required for activation does.
+Long-Task Contract authoring preserves stable Source keys and anchors where practical. If an unknown preference could materially change comparative research or selection, it asks before proceeding. Once the decision criteria are clear, a defensible recommended plan choice is written into real Source with its delegation, preference/evidence basis and exact meaning before Contract mapping; it is never hidden only in YAML. That plan delegation does not authorize a real high-risk external action, which remains an explicit external confirmation. Meaning-preserving structural decomposition and evidence-backed repository binding may continue; conflicting, user-reserved, missing-preference or unsupported new product semantics remain `decision_required`. Missing recommended Source Plan structure never blocks authoring, but the marker-only Material Source Item enumeration required for activation does.
 
 Before the first successful formal Compile, `delivery-contract.yaml` is one non-authoritative Contract Draft. `/long-task-workflow` keeps revising that same Draft across repository/Context reads and Preflight repair rounds; it does not require one response to produce a complete Contract. Draft authoring is integrated because repository bindings and verification inputs need real evidence, Preflight findings must feed back into the same object, and a separate handoff would risk lost meaning or a second plan/authority. No standalone Contract Draft Skill, Draft Receipt or Authoring State exists.
 
@@ -452,7 +453,7 @@ make validate-harness
 
 The modularity gate is `ty-context check-modularity`. Scoped waivers require `owner`, `introduced_at`, `reason`, `tracking_issue` and `expiry_condition`.
 
-`npm run preview:pack` produces a local preview named `project-tiny-context-harness-0.6.1.tgz` under the preview output directory.
+`npm run preview:pack` produces a local preview named `project-tiny-context-harness-0.6.2.tgz` under the preview output directory.
 
 ## Community And Further Reading
 

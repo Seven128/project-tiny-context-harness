@@ -26,7 +26,7 @@ function assertMixedInputAndControlAuthoring(frontmatter, body) {
   assert.match(body, /A short request is sufficient/iu);
   assert.match(
     body,
-    /Do not require a questionnaire or a pre-existing outline/iu,
+    /Do not require a fixed questionnaire or a pre-existing outline/iu,
   );
   assert.match(body, /Assign every supplied artifact a stable input ID/iu);
   assert.match(body, /all pages, frames, screens, tables, diagrams/iu);
@@ -36,11 +36,50 @@ function assertMixedInputAndControlAuthoring(frontmatter, body) {
     /Treat them as inspiration rather than an exact reproduction target/iu,
   );
   assert.match(body, /Input Inventory/iu);
+  assert.match(body, /^## Preference And Research Gate$/mu);
+  assert.match(
+    body,
+    /Before comparative research or a material product, technical, architecture or provider selection/iu,
+  );
+  assert.match(
+    body,
+    /quality or fidelity versus cost.*delivery speed.*privacy or compliance.*vendor lock-in.*operational burden/isu,
+  );
+  assert.match(
+    body,
+    /stop before comparative research or selection and ask the user one concise set of targeted questions/iu,
+  );
+  assert.match(
+    body,
+    /Do not ask again when the preference is already available/iu,
+  );
+  assert.match(
+    body,
+    /Do not interrupt minor, reversible choices.*same defensible recommendation across plausible preferences/isu,
+  );
+  assert.match(body, /not a mandatory intake questionnaire/iu);
+  assert.match(
+    body,
+    /current authoritative or primary sources.*Input Inventory.*retrieval date/isu,
+  );
+  assert.match(
+    body,
+    /Preference clarification determines what outcome to optimize.*does not approve a purchase/isu,
+  );
   assert.match(body, /Delegated elaboration/iu);
-  assert.match(body, /low-impact and reversible product choices/iu);
+  assert.match(body, /default plan-authoring delegation/iu);
+  assert.match(
+    body,
+    /High impact alone does not make a plan choice unresolved/iu,
+  );
   assert.match(body, /mark it `delegated`/iu);
   assert.match(body, /state `Delegated By`/iu);
-  assert.match(body, /Delegation does not authorize unsupported permissions/iu);
+  assert.match(body, /Delegation authorizes plan meaning only/iu);
+  assert.match(body, /Declare each applicable real-world gate as an `EXT`/iu);
+  assert.match(
+    body,
+    /authoritative inputs conflict.*user explicitly reserves.*material preference remains unknown.*no single defensible recommendation/is,
+  );
   assert.match(body, /at control level/iu);
   assert.match(
     body,
@@ -57,11 +96,23 @@ function assertMixedInputAndControlAuthoring(frontmatter, body) {
 function assertDelegatedSourceCompatibility(longTaskSkill, contractAuthoring) {
   assert.match(
     longTaskSkill,
-    /product choice already authored in Source under a recorded explicit user delegation is Source meaning/iu,
+    /record it in real Source with the authoring instruction, preference\/evidence basis and exact added meaning instead of pausing for approval/iu,
+  );
+  assert.match(
+    longTaskSkill,
+    /If quality versus cost.*is unknown or ambiguous, stop before that research or selection and ask one concise targeted clarification/isu,
   );
   assert.match(
     contractAuthoring,
-    /`delegated` in a Source Plan is provenance, not a Contract disposition or new Claim kind/iu,
+    /`delegated` in a Source Plan is provenance, not a Contract disposition or new Claim kind[\s\S]*ask a concise targeted question before research or selection[\s\S]*never place the choice only in Contract YAML/iu,
+  );
+  assert.match(
+    [longTaskSkill, contractAuthoring].join("\n"),
+    /Payment, contracting, production deployment(?: or publication|\/publication)[\s\S]*external confirmation/iu,
+  );
+  assert.match(
+    [longTaskSkill, contractAuthoring].join("\n"),
+    /conflicting.*user-reserved.*missing-preference.*unsupported|Conflicting authority.*user-reserved choice.*missing material preference.*absence of a defensible recommendation/iu,
   );
 }
 
@@ -217,6 +268,14 @@ test("source-plan-authoring is explicit, self-contained and non-authoritative", 
   assert.match(
     body,
     /create a `DEC` with `decision_required` instead of guessing/iu,
+  );
+  assert.match(
+    body,
+    /high impact or multiple options with known criteria alone never create a pause/iu,
+  );
+  assert.match(
+    body,
+    /every delegated value cites its evidence, known preference, convention or conservative-default basis/iu,
   );
   assert.match(body, /Do not emit a matrix or machine gate/iu);
   assert.match(body, /Do not generate Delivery Contract YAML/iu);
