@@ -10,6 +10,7 @@ Read this only while authoring or structurally revising the one `delivery-contra
 - Every non-decision Source item owns exactly one same-kind, text-identical canonical target; no target may collapse multiple Source items. `out_of_scope` is not a resolution.
 - A Source AC maps criterion-identically to one named Assertion and proves at least one independently Source-backed non-Result Claim.
 - Missing recommended Source Plan headings or keys never blocks authoring. Missing mandatory Material Source Item markers does.
+- `delegated` in a Source Plan is provenance, not a Contract disposition or new Claim kind. When the plan records the explicit user instruction, basis and added meaning, preserve that keyed item as ordinary Source of its semantic kind. Do not use its delegation to invent further product choices during Contract authoring.
 
 ## Outcome Boundary
 

@@ -16,21 +16,85 @@ const relativeSkillDirectories = [
   "packages/ty-context/assets/skills/source-plan-authoring",
 ];
 
+function assertMixedInputAndControlAuthoring(frontmatter, body) {
+  assert.match(frontmatter, /mixed inputs/iu);
+  assert.match(frontmatter, /screenshots, diagrams or other attachments/iu);
+  assert.match(frontmatter, /control-level UI detail/iu);
+  assert.match(body, /Refinement mode/iu);
+  assert.match(body, /Synthesis mode/iu);
+  assert.match(body, /Hybrid mode/iu);
+  assert.match(body, /A short request is sufficient/iu);
+  assert.match(
+    body,
+    /Do not require a questionnaire or a pre-existing outline/iu,
+  );
+  assert.match(body, /Assign every supplied artifact a stable input ID/iu);
+  assert.match(body, /all pages, frames, screens, tables, diagrams/iu);
+  assert.match(body, /never silently sample a multi-part artifact/iu);
+  assert.match(
+    body,
+    /Treat them as inspiration rather than an exact reproduction target/iu,
+  );
+  assert.match(body, /Input Inventory/iu);
+  assert.match(body, /Delegated elaboration/iu);
+  assert.match(body, /low-impact and reversible product choices/iu);
+  assert.match(body, /mark it `delegated`/iu);
+  assert.match(body, /state `Delegated By`/iu);
+  assert.match(body, /Delegation does not authorize unsupported permissions/iu);
+  assert.match(body, /at control level/iu);
+  assert.match(
+    body,
+    /every user-visible surface and every material interactive control/iu,
+  );
+  assert.match(
+    body,
+    /expand it to the detail needed by later `long-task-workflow` Contract authoring/iu,
+  );
+  assert.match(body, /Ready for Contract authoring: yes\|no/iu);
+  assert.match(body, /without requiring the original conversation/iu);
+}
+
+function assertDelegatedSourceCompatibility(longTaskSkill, contractAuthoring) {
+  assert.match(
+    longTaskSkill,
+    /product choice already authored in Source under a recorded explicit user delegation is Source meaning/iu,
+  );
+  assert.match(
+    contractAuthoring,
+    /`delegated` in a Source Plan is provenance, not a Contract disposition or new Claim kind/iu,
+  );
+}
+
 test("source-plan-authoring is explicit, self-contained and non-authoritative", async () => {
-  const [contents, productPlan] = await Promise.all([
-    Promise.all(
-      relativeSkillDirectories.map((directory) =>
-        readFile(path.join(repo, directory, "SKILL.md"), "utf8"),
+  const [contents, productPlan, longTaskSkill, contractAuthoring] =
+    await Promise.all([
+      Promise.all(
+        relativeSkillDirectories.map((directory) =>
+          readFile(path.join(repo, directory, "SKILL.md"), "utf8"),
+        ),
       ),
-    ),
-    readFile(
-      path.join(
-        repo,
-        ".codex/ty-context-managed/skills/context_product_plan/SKILL.md",
+      readFile(
+        path.join(
+          repo,
+          ".codex/ty-context-managed/skills/context_product_plan/SKILL.md",
+        ),
+        "utf8",
       ),
-      "utf8",
-    ),
-  ]);
+      readFile(
+        path.join(
+          repo,
+          ".codex/ty-context-managed/skills/long-task-workflow/SKILL.md",
+        ),
+        "utf8",
+      ),
+      readFile(
+        path.join(
+          repo,
+          ".codex/ty-context-managed/skills/long-task-workflow/references/contract-authoring.md",
+        ),
+        "utf8",
+      ),
+    ]);
   assert.equal(
     contents[1],
     contents[0],
@@ -59,6 +123,7 @@ test("source-plan-authoring is explicit, self-contained and non-authoritative", 
     frontmatter,
     /初版方案、源方案、方案源稿、Source Plan, initial delivery plan/u,
   );
+  assertMixedInputAndControlAuthoring(frontmatter, body);
   assert.match(frontmatter, /Do not trigger for ordinary product discussion/iu);
   assert.doesNotMatch(frontmatter, /产品方案|开发方案|技术方案/u);
 
@@ -66,7 +131,7 @@ test("source-plan-authoring is explicit, self-contained and non-authoritative", 
     body,
     /one high-fidelity, self-contained Markdown Source Plan/iu,
   );
-  assert.match(body, /direct`, `derived`.*`decision_required`/isu);
+  assert.match(body, /direct`, `derived`, `delegated`.*`decision_required`/isu);
   assert.match(body, /Derived From/iu);
   assert.match(
     body,
@@ -87,7 +152,7 @@ test("source-plan-authoring is explicit, self-contained and non-authoritative", 
   assert.match(body, /frontend\/backend or other implementation layers/iu);
   assert.match(
     body,
-    /Do not force every Source Plan to define every control/iu,
+    /Do not force a non-interface Source Plan to invent controls/iu,
   );
   assert.match(
     body,
@@ -122,12 +187,12 @@ test("source-plan-authoring is explicit, self-contained and non-authoritative", 
   assert.ok(completeness, "Completeness Check section must exist");
   assert.equal(
     completeness.match(/^\d+\.\s/gmu)?.length,
-    17,
-    "Completeness Check must retain all 17 semantic audits",
+    25,
+    "Completeness Check must retain all 25 semantic audits",
   );
   assert.match(
     body,
-    /`Location`.*`User task`.*`Trigger`.*`Input`.*`Loading`.*`Empty`.*`Success`.*`Failure`.*`Feedback`/isu,
+    /`Surface`.*`Region`.*`Control type`.*`Label\/content`.*`Location`.*`User task`.*`Visibility`.*`Availability`.*`Trigger`.*`Input`.*`Validation`.*`Default`.*`Interaction`.*`Navigation\/result`.*`Loading`.*`Empty`.*`Success`.*`Failure`.*`Recovery`.*`Permission`.*`Feedback`.*`Accessibility`/isu,
   );
   assert.match(body, /one `Given`, one `When` and one `Then`/iu);
   assert.match(body, /`REQ`, `CTRL`, `OBL` and\/or `NCOMP`/u);
@@ -196,4 +261,5 @@ test("source-plan-authoring is explicit, self-contained and non-authoritative", 
   );
   assert.match(productPlan, /更新 `project_context\/\*\*`/u);
   assert.match(productPlan, /长期产品事实/u);
+  assertDelegatedSourceCompatibility(longTaskSkill, contractAuthoring);
 });

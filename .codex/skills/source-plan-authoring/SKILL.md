@@ -1,20 +1,21 @@
 ---
 name: source-plan-authoring
-description: Use only when the user explicitly asks for 初版方案、源方案、方案源稿、Source Plan, initial delivery plan, or asks to refine or audit such a plan as input for later implementation or Contract authoring. Produce one self-contained Markdown Source Plan with stable semantic keys, traceable derivations, acceptance scenarios, non-goals, risks and unresolved decisions. Do not trigger for ordinary product discussion, routine coding, implementation work, Delivery Contract authoring or long-task execution.
+description: Use only when the user explicitly asks for 初版方案、源方案、方案源稿、Source Plan, initial delivery plan, source draft, or asks to synthesize, refine or audit later implementation or Contract-authoring Source from one draft or mixed inputs such as notes, product/technical documents, screenshots, diagrams or other attachments. Produce one self-contained Markdown Source Plan with complete input coverage, traceable direct/derived/delegated content, control-level UI detail when applicable, stable semantic keys, acceptance scenarios, non-goals, risks and unresolved decisions. Do not trigger for ordinary product discussion, routine coding, implementation work, Delivery Contract authoring or long-task execution.
 ---
 
 # Source Plan Authoring
 
 ## Objective
 
-Produce one high-fidelity, self-contained Markdown Source Plan that preserves the user's real intent, supports later refinement and makes every added inference traceable.
+Produce one high-fidelity, self-contained Markdown Source Plan from either a nearly finished plan or a sparse brief plus mixed supplied artifacts. Preserve the user's real intent, expand it to the detail needed by later `long-task-workflow` Contract authoring and make every added inference or delegated choice traceable.
 
-Record every product, technical and acceptance meaning that later work must not omit, change or silently add. Prefer semantic completeness over template completeness.
+Record every product, technical and acceptance meaning that later work must not omit, change or silently add. For an in-scope user interface, reach page, region, control, state and feedback granularity. Prefer semantic completeness over template completeness.
 
 ## Boundaries
 
 - Produce or revise one Markdown Source Plan. If it does not fit in one response, continue the same document instead of inventing extra Outcomes or plans.
-- Preserve the original meaning and every material qualifier from the user's discussion, research and supplied source material.
+- Preserve the original meaning and every material qualifier from the user's discussion, research and every supplied artifact.
+- Do not require the user to pre-normalize inputs or restate content already available in an attachment.
 - Do not update `project_context/**` or treat the Source Plan as durable project Context.
 - Do not independently turn current repository implementation into product intent. If supplied repository or Context evidence is relevant, cite it and distinguish durable constraints from incidental code shape.
 - Do not bind owners, files, runners, verification inputs, proof surfaces or Assertion observations for a real repository. Later Contract authoring owns those bindings.
@@ -30,15 +31,35 @@ Record every product, technical and acceptance meaning that later work must not 
 - Use `context_product_plan` separately when a Tiny Context project needs product decisions classified and written as durable facts in `project_context/**`. This Skill does not replace or invoke that responsibility.
 - Use `long-task-workflow` later to read ordinary Source or a Source Plan with real Context/repository evidence, author one Delivery Contract, bind owners/paths/runners/proof, implement and run the Live Final Gate.
 
+## Intake Modes And Source Coverage
+
+Infer the working mode without asking the user to choose it:
+
+- **Refinement mode:** preserve and improve one substantially complete plan.
+- **Synthesis mode:** turn a goal plus mixed notes, documents, images, diagrams, tables or examples into a new plan.
+- **Hybrid mode:** use an existing plan as the backbone and fill its gaps from the remaining artifacts.
+
+A short request is sufficient when it identifies the artifact roles, states the product or delivery goal, explains whether references are exact targets or inspiration and asks for synthesis, refinement or elaboration. Do not require a questionnaire or a pre-existing outline. Ask only when a supplied artifact cannot be accessed or when a blocking choice falls outside the delegated expansion boundary.
+
+Before authoring:
+
+1. Assign every supplied artifact a stable input ID and inspect it with format-appropriate capabilities. Cover all pages, frames, screens, tables, diagrams, annotations and visible states that can carry material meaning; never silently sample a multi-part artifact.
+2. Classify each input as user instruction, authoritative product requirement, authoritative technical constraint, existing plan, repository/Context evidence, reference or inspiration. User-stated precedence wins; otherwise report material conflicts as `DEC` instead of merging them silently.
+3. For screenshots or visual references, inventory visible surfaces, regions, controls, content hierarchy, navigation cues and represented states. Treat them as inspiration rather than an exact reproduction target unless the user says otherwise; do not import unrelated branding, sample data or product scope.
+4. Record an Input Inventory in the Source Plan with each input ID, role, authority, material content incorporated and any unreadable or intentionally unused portion. The inventory is traceability, not a new semantic type or authority.
+5. Make the resulting plan self-contained: incorporate every material requirement or constraint into a keyed item. Keep an external artifact reference only when the artifact itself remains necessary for exact visual, legal or other non-textual comparison.
+
 ## Authoring Workflow
 
-1. Inventory every material source statement, including constraints, exceptions, examples that change meaning and already-decided controls or recovery behavior.
+1. Build the complete Input Inventory and extract every material statement, including constraints, exceptions, examples that change meaning and already-decided controls or recovery behavior.
 2. Preserve direct requirements before reorganizing them. Never compress several distinct requirements into a broad capability statement that loses qualifiers.
-3. Classify every addition as `direct`, `derived`, evidence-backed repository/Context information, or `decision_required`.
-4. Define Outcomes only where observable results can be independently judged and later mapped to Requirements and acceptance.
-5. Assign stable semantic keys and explicit anchors to important items.
-6. Write product requirements, applicable flows/states, meaningful controls, technical obligations, implementation hints and observable acceptance without hiding new semantics between types.
-7. Run the completeness check, revise the same document and end with a compact status summary.
+3. Classify every material addition as `direct`, `derived`, `delegated`, evidence-backed repository/Context information, or `decision_required`.
+4. Resolve the end-to-end user journey and applicable surfaces before enumerating their regions, controls, states and feedback.
+5. Define Outcomes only where observable results can be independently judged and later mapped to Requirements and acceptance.
+6. Assign stable semantic keys and explicit anchors to important items.
+7. Write product requirements, applicable flows/states, controls, technical obligations, implementation hints and observable acceptance without hiding new semantics between types.
+8. Trace every input to incorporated items or an explicit unused/unreadable disposition.
+9. Run the completeness check, revise the same document and end with a compact readiness summary.
 
 ## Expansion Boundary
 
@@ -59,6 +80,22 @@ For every derived item:
 
 Do not disguise one possible product choice as a necessary derivation.
 
+### Delegated elaboration
+
+When the user explicitly asks the Skill to synthesize, refine, complete, flesh out or use its judgment, treat that as bounded authorization to make coherent, low-impact and reversible product choices needed by the stated goal. Do not stop for minor choices that a competent product author can resolve from the supplied evidence and familiar interaction conventions.
+
+Typical delegated choices include information hierarchy, screen grouping, navigation between already requested capabilities, control placement and labels, input validation implied by the data, non-destructive loading/empty/error/retry feedback, and representative content needed to make acceptance falsifiable.
+
+For every delegated item or tightly coupled group:
+
+- mark it `delegated`;
+- state `Delegated By`, citing the user's authoring instruction;
+- state `Basis`, citing the relevant input IDs, constraints or convention;
+- state why the choice is coherent and what product meaning it adds;
+- keep it within the stated goal and do not contradict a higher-authority input.
+
+Delegation does not authorize unsupported permissions or roles, destructive or irreversible behavior, pricing/quota/budget rules, legal or security policy, persistent-data retention, external automation, business thresholds, platform support scope or sample-versus-full-population scope. These remain `DEC` unless directly decided by an authoritative input.
+
 ### Repository or Context evidence
 
 When supplied project evidence establishes an existing module boundary, state model, interface constraint, component system or verification entry, record the evidence and its source. Do not promote incidental current implementation into a product requirement.
@@ -67,9 +104,9 @@ Leave real owner/path/binding/runner selection to later repository-aware Contrac
 
 ### New product semantics
 
-Use a `DEC` item with status `decision_required` whenever more than one materially different choice remains or the sources do not authorize a decision.
+Use a `DEC` item with status `decision_required` whenever more than one materially different choice remains and neither direct evidence nor the delegated elaboration boundary authorizes a choice.
 
-Never silently choose:
+Never choose without a direct or recorded delegated basis:
 
 - a new user capability or changed business rule;
 - a default, threshold, range or metric;
@@ -140,9 +177,11 @@ Use only the types that apply.
 
 Keep `OBL` and `HINT` distinct: an `OBL` must be satisfied; a `HINT` may be replaced by another valid implementation.
 
-## Controls And States
+## Product Surfaces, Controls And States
 
-Do not force every Source Plan to define every control.
+Do not force a non-interface Source Plan to invent controls. For an in-scope interactive product, however, enumerate every user-visible surface and every material interactive control at control level; a broad feature or screen name is not enough.
+
+For each surface, state its purpose, entry and exit, persistent navigation, major regions, overlays or transient layers, and the Control keys it contains. Treat buttons, links, fields, selectors, tabs, toggles, menus, list or card actions, map or canvas gestures and other actionable elements as controls. Treat material status, validation, permission and recovery feedback as Control fields or independently keyed Requirements rather than decorative prose.
 
 Include a `CTRL` when:
 
@@ -150,9 +189,9 @@ Include a `CTRL` when:
 - its location, task or state changes product meaning;
 - leaving it open would permit materially different product designs.
 
-For each included control, state every independently decided field separately: `Location`, `User task`, `Trigger`, `Input`, `Loading`, `Empty`, `Success`, `Failure` and `Feedback`. Use `not applicable` when a field was considered and genuinely does not apply; do not hide an undecided product choice behind that phrase. Preserve permission and recovery states separately when they genuinely apply.
+For each included control, state every independently decided field separately: `Surface`, `Region`, `Control type`, `Label/content`, `Location`, `User task`, `Visibility`, `Availability`, `Trigger`, `Input`, `Validation`, `Default`, `Interaction`, `Navigation/result`, `Loading`, `Empty`, `Success`, `Failure`, `Recovery`, `Permission`, `Feedback` and `Accessibility`. Use `not applicable` when a field was considered and genuinely does not apply; do not hide an undecided product choice behind that phrase.
 
-Give every decided Control field its own stable semantic meaning. Do not compress location, trigger, input, loading, empty, success, failure or feedback into one broad sentence when more than one field has been decided; later repository-aware authoring must be able to map each field independently.
+Give every decided Control field its own stable semantic meaning. Do not compress placement, behavior, state or feedback into one broad sentence when more than one field has been decided; later repository-aware authoring must be able to map each field independently. Do not claim exact visual styling, animation, copy or responsive behavior unless it is direct, evidence-backed or within recorded delegation.
 
 ## Acceptance Scenarios
 
@@ -160,7 +199,7 @@ Write `AC` items as observable behavior, not low-level test commands.
 
 Each `AC` represents exactly one acceptance scenario and explicitly names the `REQ`, `CTRL`, `OBL` and/or `NCOMP` keys it accepts. It contains one `Given`, one `When` and one `Then`; each may be multiline, but together they describe only one independently decidable scenario. Never label one AC as proof for several materially different success, failure, boundary or recovery scenarios; author separate ACs instead.
 
-For every important `REQ`, provide at least one of:
+For every important `REQ` and every material `CTRL` state, provide at least one of:
 
 - a corresponding `AC`;
 - an `EXT`;
@@ -216,7 +255,14 @@ Write in the user's language unless requested otherwise.
 - Why this delivery is needed
 - Known constraints
 
-## 3. Delivery Scope
+## 3. Input Inventory And Interpretation
+
+- Input ID
+- Role and authority
+- Material content incorporated
+- Unreadable or intentionally unused content
+
+## 4. Delivery Scope
 
 ### In Scope
 
@@ -224,13 +270,19 @@ Write in the user's language unless requested otherwise.
 
 ### Forbidden Shortcuts
 
-## 4. Outcome Overview
+## 5. Product Surface Inventory
+
+- Surface purpose
+- Entry, exit and navigation
+- Regions, overlays and Control keys
+
+## 6. Outcome Overview
 
 - Outcome key
 - Observable result
 - Dependencies
 
-## 5. Outcomes
+## 7. Outcomes
 
 <a id="outcome.<outcome-key>"></a>
 
@@ -243,7 +295,17 @@ Write in the user's language unless requested otherwise.
 <a id="<outcome-key>.requirement.<requirement-key>"></a>
 
 - **REQ `<requirement-key>`**
-  ...
+  - Origin: direct | derived | delegated | evidence-backed
+  - Source basis:
+  - Requirement:
+
+#### Surface And Region Model
+
+- Surface:
+- Purpose:
+- Entry / exit:
+- Regions / overlays:
+- Included Control keys:
 
 #### User Flow And States
 
@@ -257,15 +319,30 @@ Write in the user's language unless requested otherwise.
 <a id="<outcome-key>.control.<control-key>"></a>
 
 - **CTRL `<control-key>`**
+  - Origin: direct | derived | delegated | evidence-backed
+  - Source basis:
+  - Surface:
+  - Region:
+  - Control type:
+  - Label/content:
   - Location:
   - User task:
-      - Trigger:
-      - Input:
-      - Loading:
-      - Empty:
-      - Success:
-      - Failure:
-      - Feedback:
+  - Visibility:
+  - Availability:
+  - Trigger:
+  - Input:
+  - Validation:
+  - Default:
+  - Interaction:
+  - Navigation/result:
+  - Loading:
+  - Empty:
+  - Success:
+  - Failure:
+  - Recovery:
+  - Permission:
+  - Feedback:
+  - Accessibility:
 
 #### Technical Obligations And Boundaries
 
@@ -304,18 +381,19 @@ Write in the user's language unless requested otherwise.
   - Basis:
   - Consequence:
 
-## 6. Cross-Outcome Constraints
+## 8. Cross-Outcome Constraints
 
-## 7. External Confirmations
+## 9. External Confirmations
 
-## 8. Derived Content And Sources
+## 10. Source Traceability And Authoring Decisions
 
-- Derived Item:
-- Derived From:
-- Reason:
-- Changes product meaning: no
+- Item or group:
+- Origin: direct | derived | delegated | evidence-backed
+- Source / Derived From / Delegated By:
+- Basis and reason:
+- Changes product meaning: no for derived; yes or no for delegated
 
-## 9. Decisions Required
+## 11. Decisions Required
 
 <a id="decision.<decision-key>"></a>
 
@@ -326,7 +404,7 @@ Write in the user's language unless requested otherwise.
   - Why it cannot be reliably derived:
   - Affected REQ / AC:
 
-## 10. Completeness Check
+## 12. Completeness Check
 
 - Covered core requirements
 - Unresolved product semantics
@@ -340,27 +418,37 @@ Before returning the plan, verify:
 
 1. Every material original requirement is preserved.
 2. Distinct requirements were not collapsed into one vague Outcome.
-3. Every `REQ` has an `AC`, `EXT`, `DEC` or explicit exception.
-4. Every declared `CTRL` independently states Location, User task, Trigger, Input, Loading, Empty, Success, Failure and Feedback.
-5. Every `OBL` is mandatory rather than a suggestion.
-6. No `AC` introduces undeclared product semantics.
-7. Every derived item identifies its basis.
-8. Multiple reasonable product choices remain decisions rather than silent model choices.
-9. Sample, framework, representative validation and full population are not confused.
-10. Partial implementation is not worded as full completion.
-11. Non-goals and forbidden shortcuts are explicit.
-12. Risks concretely affect scope, verification or recovery rather than repeat a generic template.
-13. No unsupported number, threshold, metric or conclusion appears.
-14. Every `AC` names accepted `REQ`/`CTRL`/`OBL`/`NCOMP` keys and contains exactly one Given/When/Then scenario.
-15. Every `NCOMP` is an explicit source meaning rather than a restated Requirement or non-goal.
-16. Every `RISK` has one exact Fact, one Affected Outcome, Basis and Consequence; ambiguity is a `DEC`.
-17. Every decided control field remains independently traceable instead of being compressed into an aggregate state sentence.
+3. Every supplied artifact appears in the Input Inventory with complete coverage or an explicit gap/disposition.
+4. Every material input statement maps to a keyed plan item or an explicit unused/conflict disposition.
+5. Every `REQ` and material `CTRL` state has an `AC`, `EXT`, `DEC` or explicit exception.
+6. Every in-scope interactive surface has purpose, entry/exit, regions and contained Control keys.
+7. Every material interactive control is independently enumerated with applicable placement, behavior, state, feedback and accessibility fields.
+8. Every declared `CTRL` independently states Surface, Region, Control type, Label/content, Location, User task, Visibility, Availability, Trigger, Input, Validation, Default, Interaction, Navigation/result, Loading, Empty, Success, Failure, Recovery, Permission, Feedback and Accessibility.
+9. Every `OBL` is mandatory rather than a suggestion.
+10. No `AC` introduces undeclared product semantics.
+11. Every derived item identifies its basis and changes no user capability, business rule or product scope.
+12. Every delegated item identifies `Delegated By`, its evidence basis and the product meaning it adds.
+13. Delegated choices stay within the low-impact reversible boundary; reserved or conflicting choices remain `DEC`.
+14. Multiple reasonable choices outside recorded delegation remain decisions rather than silent model choices.
+15. Reference or inspiration inputs are not treated as exact targets unless the user requested that authority.
+16. Sample, framework, representative validation and full population are not confused.
+17. Partial implementation is not worded as full completion.
+18. Non-goals and forbidden shortcuts are explicit.
+19. Risks concretely affect scope, verification or recovery rather than repeat a generic template.
+20. No unsupported number, threshold, metric or conclusion appears.
+21. Every `AC` names accepted `REQ`/`CTRL`/`OBL`/`NCOMP` keys and contains exactly one Given/When/Then scenario.
+22. Every `NCOMP` is an explicit source meaning rather than a restated Requirement or non-goal.
+23. Every `RISK` has one exact Fact, one Affected Outcome, Basis and Consequence; ambiguity is a `DEC`.
+24. Every decided control field remains independently traceable instead of being compressed into an aggregate state sentence.
+25. The document contains enough incorporated meaning for later Contract authoring without requiring the original conversation; any still-required external artifact is named explicitly.
 
 Do not emit a matrix or machine gate. End with:
 
 ```text
 Completeness status:
-- Ready for further refinement: yes|no
+- Ready for Contract authoring: yes|no
+- Input coverage gaps: none|...
+- Surface/control coverage: complete|not applicable|...
 - Decisions required: DEC-...
 - Advisory implementation hints: HINT-...
 - Unbound project facts: ...
