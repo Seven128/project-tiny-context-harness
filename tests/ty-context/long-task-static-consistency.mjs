@@ -21,8 +21,16 @@ export async function assertLongTaskStaticConsistency(repoRoot) {
     ),
     "utf8",
   );
+  const publishWorkflow = await readFile(
+    path.join(repoRoot, ".github/workflows/npm-publish.yml"),
+    "utf8",
+  );
   const gitignore = await readFile(path.join(repoRoot, ".gitignore"), "utf8");
-  assert.equal(packageJson.version, "0.6.0");
+  const expectedVersion = publishWorkflow.match(
+    /expected_version:[\s\S]*?default:\s*"([^"\r\n]+)"/u,
+  )?.[1];
+  assert.ok(expectedVersion, "npm publish workflow must declare expected_version");
+  assert.equal(packageJson.version, expectedVersion);
   assert.doesNotMatch(
     projectSpec,
     /package version for this architecture is `0\.5\.0`|Version 0\.5 keeps/u,
