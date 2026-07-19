@@ -9,7 +9,7 @@ description: Author, preflight, execute, resume, verify, or close one complete S
 
 Use one current native Goal, one repository, one selected workspace, one complete Contract and one Final Gate. Never create a scheduler, model worker, agent runtime, App Server, branch, worktree, merge, push, PR, deployment, Campaign/SFC/Packet/Wave chain, matrix, verdict or second Contract plan. Never activate from task size alone.
 
-The host and user own model selection. Do not pause a healthy Goal solely to change or downgrade the model; capability-related drift is handled by targeted repair plus the Final Gate. Never proactively spawn, assign or coordinate parallel subagents. Platform-native internal delegation, if it occurs, is opaque and non-authoritative and must converge into the unified current workspace snapshot before verification can count.
+The host and user own model selection. The workflow has exactly one user-choice checkpoint after the first Authority Lock and before implementation; Harness neither switches the model nor persists model-routing/checkpoint state. No checkpoint file, acknowledgement state, model route, model-tier scheduler or automatic model switch is created. Outside that boundary, do not pause a healthy Goal solely to change or downgrade the model. Capability-related drift is handled by targeted repair plus the Final Gate. Never proactively spawn, assign or coordinate parallel subagents. Platform-native internal delegation, if it occurs, is opaque and non-authoritative and must converge into the unified current workspace snapshot before verification can count.
 
 `long-task-delivery-v2` is the only active Contract schema. `delivery-contract.yaml` is the root authoring file. New authoring uses inline Outcomes; existing `outcome_files` are physical compatibility only. `delivery-set` is retired and non-executing.
 
@@ -51,16 +51,17 @@ A Draft Outcome is an Outcome in that pre-Authority-Lock Draft, not a new schema
 6. Continue reading repository, Source and Context and revise the same Draft. Return for a real decision when requirements conflict, critical semantics are missing, multiple materially different product designs remain, the user must choose a product rule or no falsifiable acceptance standard can be formed.
 7. Contract expansion is limited to meaning-preserving structural decomposition and repository binding supported by real repository and Context evidence. A new business rule, default, threshold, recovery behavior, permission or platform/data scope is `decision_required` and must not be silently added.
 8. Run read-only `ty-context long-task preflight <workdir>`, repair every error and `decision_required` finding in the same Draft, then formally Compile only when ready.
+9. When the first Compile returns `execution_model_checkpoint.required: true`, stop before implementation and ask the user to choose `continue_current_model` or switch models and then resume the active Long-Task. A task-specific choice already stated explicitly satisfies the checkpoint. Later revisions return `required: false` and do not repeat it.
 
 Architecture quality uses the existing authority model, not a new gate: when Source or controlling Context declares an architecture invariant, encode it as a Source-backed technical obligation/global constraint/forbidden shortcut plus owner/path/Binding boundaries and a project-owned executable Check. Functional acceptance cannot substitute when the architecture claim can fail independently. An unverifiable design preference remains task-local, durable Context or `decision_required`; it must not be promoted into false proof.
 
 ## Rolling Execution
 
-After Authority Lock, implement dependency-ready Outcomes in the current workspace. Small implementation plans and repair hypotheses are internal execution state and cannot silently change Product, Technical or Acceptance authority.
+After Authority Lock and the one-time execution-model checkpoint are satisfied, implement dependency-ready Outcomes in the current workspace. Small implementation plans and repair hypotheses are internal execution state and cannot silently change Product, Technical or Acceptance authority.
 
 Re-evaluate `Context Delta` whenever implementation or repair discovers a durable fact. Controlling Context changes use protected revision; graph-derived, non-explicit `implementation-index` and `archive` are Supporting Context in referenced mode and may auto-revise when only navigation/background changed. Full snapshot mode treats every selected Context file as controlling.
 
-Use targeted `verify --outcome/--check` only to drive repair. Progress is repair evidence only and never acceptance authority. Keep precise findings attached to the owning Source item, Claim, Assertion, Check, Binding and owner path. Do not pause solely for model switching or coordinate parallel subagents.
+Use targeted `verify --outcome/--check` only to drive repair. Progress is repair evidence only and never acceptance authority. Keep precise findings attached to the owning Source item, Claim, Assertion, Check, Binding and owner path. Do not add another model-switch pause or coordinate parallel subagents.
 
 ## Live Final Authority
 

@@ -62,11 +62,11 @@ No-install preview:
 
 ## Why It Exists
 
-`project_context/**` preserves small durable facts across sessions. The default workflow reads only graph-relevant Context and uses the platform's internal plan. For explicit long work, `long-task-delivery-v2` adds one complete Contract authority, compiled Source/REQ/CTRL/OBL/AC coverage, scoped progress and a source-recompiled Live Final Gate.
+`project_context/**` preserves small durable facts across sessions. The default workflow reads graph-relevant Context, supplements that route with one bounded Context search before `Context Delta`, and uses the platform's internal plan. For explicit long work, `long-task-delivery-v2` adds one complete Contract authority, compiled Source/REQ/CTRL/OBL/AC coverage, a one-time user model choice after Authority Lock, scoped progress and a source-recompiled Live Final Gate.
 
 Minimal Context preserves durable facts, the Workflow Contract governs ordinary work, and the Long-Task Workflow adds explicit machine completion authority.
 
-Tiny Context does not invoke models, create agents, branches or worktrees, merge, push, create PRs, deploy, or replace project tests and human acceptance.
+Tiny Context does not invoke or switch models, create agents, branches or worktrees, merge, push, create PRs, deploy, or replace project tests and human acceptance.
 
 ## Install And Initialize
 
@@ -146,11 +146,30 @@ Use this tarball path for source-preview testing, private review or package deve
 
 ## Minimal Context And Default Workflow
 
-The default read path is `project_context/global.md`, `project_context/architecture.md`, `project_context/context.toml`, then minimum graph-relevant role Context. Ordinary tasks decide `Context Delta: none|required`, update durable facts before code when required, implement, verify, perform Contract Conformance and check Context drift.
+The default read path is `project_context/global.md`, `project_context/architecture.md`, `project_context/context.toml`, the default area root, then minimum graph-relevant role Context.
 
 Only near-universal recovery facts should use `read_policy = "default"`; specialized detail should be task-triggered `on-demand`. `ty-context doctor` reports the deterministic default Context footprint, soft-budget overages and byte-identical default files as advisory maintenance signals, not a new gate.
 
-The default workflow has no required plan artifact, matrix, verdict, evidence ledger or second plan. Duration, file count and complexity never auto-enable long-task state.
+### Bounded Context discovery
+
+Before deciding `Context Delta`, the Agent combines two low-state routes:
+
+1. collect area, role, trigger and graph candidates from `context.toml`;
+2. run one bounded text search over `project_context/**` with a small set of high-signal task terms, including explicit area/module names and relevant API/schema/state/security/verification/deployment language;
+3. merge the candidates and read only semantically relevant files.
+
+The bounded search supplements rather than replaces Agent semantic judgment. It creates no vector or persistent index, cache, registry, search state or second authority. It can still miss unrelated synonyms or indirect dependencies, so high-risk work retains Architecture Context Hit and final Contract Conformance.
+
+Ordinary tasks:
+
+1. resolve minimum relevant Context through manifest routing plus bounded Context search;
+2. decide `Context Delta: none|required`;
+3. update durable facts before code when required;
+4. use the platform's internal plan;
+5. implement and run project-owned verification;
+6. perform Contract Conformance and Context drift checks.
+
+The default workflow has no required plan artifact, matrix, verdict, evidence ledger, persistent retrieval index or second plan. Duration, file count and complexity never auto-enable long-task state.
 
 Plan Validator commands no longer exist; existing plan, matrix or verdict files remain ordinary user files.
 
@@ -188,6 +207,24 @@ The Long-Task Skill keeps objective/boundary/phase routing in its main file and 
 
 A Draft Outcome is simply an Outcome before Authority Lock. Outcomes decompose independently observable, decidable and target-verifiable results to improve dependency-ready implementation, targeted verification, failure localization, resume and stale-result invalidation. `depends_on` means acceptance readiness and the Rolling Frontier is temporary; an Outcome is not a Worker, scheduler task, queue or parallel unit. Outcome decomposes execution and diagnosis, not completion authority, so one complete current-snapshot Final Gate remains mandatory.
 
+### One-time execution-model choice
+
+The first successful Compile creates Authority Lock and returns:
+
+```json
+{
+  "execution_model_checkpoint": {
+    "required": true,
+    "phase": "post_authority_lock_pre_implementation",
+    "options": ["continue_current_model", "switch_model_then_resume"]
+  }
+}
+```
+
+Before product implementation, the Agent asks the user to continue with the current model or switch models and then resume the active Long-Task. A task-specific model choice already stated explicitly satisfies the checkpoint. Later Compile revisions return `{ "required": false }` and do not repeat it.
+
+Harness cannot switch the host-selected model. It creates no checkpoint file, acknowledgement state, model route, model-tier scheduler or automatic model switch. The choice is a one-time execution-cost affordance enabled by locked Authority and Final Gate protection; it is not acceptance evidence.
+
 ```text
 ty-context long-task init <workdir>
 ty-context long-task preflight <workdir>
@@ -205,7 +242,7 @@ ty-context long-task close <workdir>
 ty-context long-task abandon <workdir> [--force-corrupt-state]
 ```
 
-Compact authoring omits only deterministic defaults and normalizes identically to the expanded form. `preflight` is a read-only aggregated Source/REQ/CTRL/OBL/AC and repository check that creates no authority, state, Receipt or runner execution. Compile generates Global plus Outcome Result/Requirement/Control-field/Non-completing/Technical Claims, rejects uncovered Claims and makes the first successful formal Compile the Authority Lock. Every later change compares with active authority regardless of progress, Receipt/cache deletion or implementation restoration. Source/Context/Product/Acceptance/Global/verifier content, resolved runners and verification inputs are frozen in the common-dir Active Authority V3 record.
+Compact authoring omits only deterministic defaults and normalizes identically to the expanded form. `preflight` is a read-only aggregated Source/REQ/CTRL/OBL/AC and repository check that creates no authority, state, Receipt or runner execution. Compile generates Global plus Outcome Result/Requirement/Control-field/Non-completing/Technical Claims, rejects uncovered Claims and makes the first successful formal Compile the Authority Lock. The first Compile result emits `execution_model_checkpoint.required: true`; later Compile revisions emit `required: false`. Every later authority change still compares with active authority regardless of progress, Receipt/cache deletion or implementation restoration. Source/Context/Product/Acceptance/Global/verifier content, resolved runners and verification inputs are frozen in the common-dir Active Authority V3 record.
 
 Targeted verify rechecks active task/revision/compiled/worktree identity before writing scoped Progress. Counterfactual Findings first enter the owning Check Result, invalidate an otherwise passed Check, clear Claim Proofs and remain visible in status/resume; Global Checks reuse the same Progress type without a Global Outcome state. Final Gate repeats the identity check after all Checks; Stop/close clear only the accepted identity through CAS. Commit, migration, clear and abandon share one active-state lock. `abandon --force-corrupt-state` is reserved for corrupt continuity or stale lock cleanup and preserves Contract, Source, Context and Git content.
 
@@ -236,7 +273,7 @@ ty-context sync
 
 Version 0.6.0 retires V1 and the repo-local Hook. Development-period V2 Active Authority, Progress and Receipts are not migrated; doctor reports `manual_required`, and the operator upgrades the Contract before forming a new Authority Lock. Invalid JSON, marker/record mismatch or stale lock is never guessed from damaged record paths; doctor reports the explicit contained cleanup command `ty-context long-task abandon <workdir> --force-corrupt-state`.
 
-Version 0.6.0 keeps the `long-task-delivery-v2` name and physical `outcome_files` parser form while defining the first public V2 semantics; development-period Drafts receive explicit migration diagnostics. Optional Source Plan authoring adds no Schema, CLI, Preflight, Compile, Validator, Receipt, Authority or state. Preflight and direct Compile share one activation-safety validator, so readable `criterion` text and all other completion-safety rules remain mandatory when Preflight is skipped.
+Version 0.6.0 keeps the `long-task-delivery-v2` name and physical `outcome_files` parser form while defining the first public V2 semantics; development-period Drafts receive explicit migration diagnostics. Optional Source Plan authoring and the additive execution-model checkpoint add no Schema, CLI, Preflight, Validator, Receipt, Authority or persisted model-routing state. Preflight and direct Compile share one activation-safety validator, so readable `criterion` text and all other completion-safety rules remain mandatory when Preflight is skipped.
 
 After updating the package, run `ty-context upgrade`. Use `ty-context upgrade --check` first when you need a read-only plan.
 
@@ -248,7 +285,7 @@ Release metadata declares one update mode: `sync-only`, `upgrade-required` or `m
 npm run format:check
 npm run typecheck --workspace project-tiny-context-harness
 npm run build --workspace project-tiny-context-harness
-node --test --test-concurrency=1 tests/ty-context/source-plan-authoring-skill.test.mjs tests/ty-context/sync-init-doctor.test.mjs tests/ty-context/workflow-contract-routing.test.mjs
+node --test --test-concurrency=1 tests/ty-context/source-plan-authoring-skill.test.mjs tests/ty-context/sync-init-doctor.test.mjs tests/ty-context/workflow-contract-routing.test.mjs tests/ty-context/long-task-model-choice-checkpoint.test.mjs
 npm run test:delivery-contract --workspace project-tiny-context-harness
 npm run test:long-task-workflow --workspace project-tiny-context-harness
 npm run test:long-task-performance --workspace project-tiny-context-harness
@@ -281,7 +318,7 @@ For concrete examples, see the [fresh-agent recovery walkthrough](https://github
 
 ## Honest Limits
 
-Tiny Context does not create or restore a platform Goal, prove that every requirement was declared, provide core parallel mutation, observe platform tokens/model calls, or own Git/PR/CI/deployment/human product confirmation. The installed package verifier and Git metadata are trusted; external platforms own network isolation, and deliberate same-user/admin tampering remains outside the local threat model.
+Tiny Context does not create or restore a platform Goal, prove that every requirement was declared, guarantee bounded keyword search finds every synonym or indirect dependency, switch the host-selected model, provide core parallel mutation, observe platform tokens/model calls, or own Git/PR/CI/deployment/human product confirmation. The installed package verifier and Git metadata are trusted; external platforms own network isolation, and deliberate same-user/admin tampering remains outside the local threat model.
 
 ## License
 

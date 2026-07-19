@@ -10,13 +10,19 @@ read_policy: on-demand
 
 ## Reason
 
-- This preserves recovery and false-completion protection while removing scheduler, worker, worktree, model-routing and duplicate-authority mechanisms that do not improve evidence for a single continuing Goal.
+- This preserves recovery and false-completion protection while removing scheduler, worker, worktree, persistent model-routing and duplicate-authority mechanisms that do not improve evidence for a single continuing Goal.
 
 ## Why Minimal Context
 
 - Modern coding agents already handle compact requirements, local design, editing, focused tests and repair. Persisting that mutable reasoning as a mandatory document chain adds synchronization cost without proving behavior.
 - The durable value with the clearest return is project-owned intent: goals/non-goals, ownership, architecture/interface/state boundaries and repeatable verification/deployment paths that code alone cannot decide.
 - Context therefore remains the smallest durable fact surface; default execution uses platform-internal planning and project evidence.
+
+## Why Manifest Routing Uses A Bounded Search Fallback
+
+- `context.toml` area, role, trigger and read-policy metadata provides a cheap first-pass route, but natural-language task wording can omit or paraphrase the registered trigger. Relying on prompt routing alone can hide a relevant on-demand Context and produce a wrong `Context Delta` judgment.
+- The default Workflow therefore adds one bounded text search over `project_context/**` before `Context Delta`, using only a small set of high-signal task terms such as explicit area/module names and API/schema/state/security/verification/deployment language. Matching files are merged with manifest candidates and then filtered by semantic relevance.
+- The search is intentionally narrow: it does not scan the whole codebase, create a vector index, persist search state or automatically treat every keyword hit as authority. This adds low fixed cost while reducing the most direct trigger-miss path.
 
 ## Why Retrieval Metadata Is Not Delivery Authority
 
@@ -35,6 +41,12 @@ read_policy: on-demand
 - Physical Goal/Turn lifecycle is a platform concern. Reimplementing it in Harness creates duplicate recovery authority and process orchestration that cannot improve product proof.
 - Outcome dependencies describe acceptance readiness, not implementation scheduling. A rolling Frontier lets the current native Goal adapt file/function/test details to the latest code without freezing a speculative technical DAG.
 - One current workspace removes branch/worktree/integration recovery and combined-gate machinery from the core. Users may explicitly use platform/Git parallelism, but it is not Harness runtime authority.
+
+## Why One Model-Choice Checkpoint Returns
+
+- The host and user still own model selection; Harness cannot switch models. However, the first Authority Lock creates a useful economic boundary: Source, Contract, Context, risk and executable acceptance are now frozen, so the execution model can be chosen with materially lower drift risk than during authoring.
+- Compile therefore emits one explicit pre-implementation choice: continue with the current model or switch models and resume the same active Long-Task. A task-specific model choice already stated by the user satisfies the checkpoint.
+- The checkpoint occurs only once, after the first Authority Lock. Later revisions do not repeat it, and no acknowledgement file, model route, scheduler or checkpoint state is persisted. This preserves the cost benefit without recreating model orchestration.
 
 ## Why One Delivery Contract
 
@@ -56,7 +68,7 @@ read_policy: on-demand
 
 ## Stable Anti-Goals
 
-- Do not restore stages, thick plan/result documents, Source/SFC/Packet/Wave/Campaign state, agent/process/Git orchestration or model routing as default or long-task runtime.
+- Do not restore stages, thick plan/result documents, Source/SFC/Packet/Wave/Campaign state, agent/process/Git orchestration or persistent model routing as default or long-task runtime.
 
 ## Why Bundle Remains And Delivery Set Is Retired
 

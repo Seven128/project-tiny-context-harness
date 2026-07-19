@@ -21,13 +21,14 @@ Tiny Context has three capabilities: Minimal Context, the default Workflow Contr
 
 Unless an active Long-Task binding exists:
 
-1. Read `project_context/global.md`, `project_context/architecture.md` and `project_context/context.toml`, then the default area root and only graph-relevant on-demand Context.
-2. For UI/product-surface work, confirm information/action/feedback ownership and use `context_surface_contract` when durable responsibility is unclear or changes; contract owns interfaces and existing area/subdomain/verification roles own the project facts.
-3. Decide exactly one `Context Delta: none|required`. Update owning Context before code when durable product ownership, architecture, API/schema/data, state/recovery, dependency, security, product-surface responsibility or repeatable verification/deployment changes. Local fixes preserving durable semantics are `none`.
-4. Use the agent/platform internal plan. For high-risk work keep `Architecture Context Hit`, `Decision Rationale Hit: existing|required|none` and `Modularity Check: none|required|exception` as internal routing and maintenance questions, not artifacts or extra deltas.
-5. Implement precisely, run project-owned verification, perform Contract Conformance and a Context drift check, then report implementation, verification, Context status and blockers.
+1. Read `project_context/global.md`, `project_context/architecture.md`, `project_context/context.toml` and the default area root, then collect graph/trigger candidates.
+2. Before deciding `Context Delta`, run one bounded text search over `project_context/**` using a small set of high-signal task terms such as explicit area/module names and API/schema/state/security/verification/deployment terms. Merge matching Context with manifest candidates and read only relevant files; search supplements rather than replaces semantic judgment.
+3. For UI/product-surface work, confirm information/action/feedback ownership and use `context_surface_contract` when durable responsibility is unclear or changes; contract owns interfaces and existing area/subdomain/verification roles own the project facts.
+4. Decide exactly one `Context Delta: none|required`. Update owning Context before code when durable product ownership, architecture, API/schema/data, state/recovery, dependency, security, product-surface responsibility or repeatable verification/deployment changes. Local fixes preserving durable semantics are `none`.
+5. Use the agent/platform internal plan. For high-risk work keep `Architecture Context Hit`, `Decision Rationale Hit: existing|required|none` and `Modularity Check: none|required|exception` as internal routing and maintenance questions, not artifacts or extra deltas.
+6. Implement precisely, run project-owned verification, perform Contract Conformance and a Context drift check, then report implementation, verification, Context status and blockers.
 
-The default workflow never requires a plan artifact, matrix, verdict, evidence ledger or result document. Optional scratch is not Context or completion proof.
+The default workflow never requires a plan artifact, matrix, verdict, evidence ledger or result document. Optional scratch is not Context or completion proof. The bounded Context search creates no index, cache, state or second authority.
 
 For external product, architecture, technical or acceptance sources, internally classify every material constraint as covered by Context, requiring a Context update, task-local, explicitly out of scope or requiring a genuine user decision. Conformance must confirm controlling Context reached the correct modules, surfaces, APIs, state machines and verification paths without forbidden shortcuts or duplicate authority.
 
@@ -42,6 +43,8 @@ Do not infer long-task mode from duration, complexity, file count or agent prefe
 Contract Draft authoring belongs inside `long-task-workflow`: continuously revise the same non-authoritative `delivery-contract.yaml` until the first successful formal Compile creates Authority Lock. An optional Source Plan is ordinary upstream Source guidance, not a Contract Draft or required input protocol.
 
 The workflow uses one native Goal, one selected workspace, one Contract and one Final Gate. New authoring uses inline Outcomes; existing `outcome_files` are physical compatibility only. Outcomes decompose dependency-ready execution, targeted repair and diagnosis, not completion authority, workers, branches or model sessions.
+
+After the first Authority Lock, stop once before implementation and ask the user to continue with the current model or switch models and then resume the active Long-Task. A model choice already stated explicitly for this task satisfies the checkpoint; later revisions do not repeat it. Harness records no model route or checkpoint state.
 
 Before authoring, proof design or authority lifecycle work, read the phase-specific references in the package-managed `long-task-workflow` Skill. Use `ty-context long-task help` for CLI syntax instead of treating this startup router as a command reference.
 

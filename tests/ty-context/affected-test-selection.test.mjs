@@ -22,6 +22,20 @@ test("hotspot source changes select focused regression tests", () => {
   ]);
 });
 
+test("Long-Task command changes include the one-time model-choice regression", () => {
+  const selection = selectAffectedTests([
+    "packages/ty-context/src/commands/long-task.ts",
+  ]);
+  assert.equal(selection.mode, "selected");
+  assert.equal(selection.requires_build, true);
+  assert.deepEqual(selection.tests, [
+    "tests/ty-context/long-task-active-authority-continuity.test.mjs",
+    "tests/ty-context/long-task-context-evolution.test.mjs",
+    "tests/ty-context/long-task-model-choice-checkpoint.test.mjs",
+    "tests/ty-context/long-task-workflow-black-box.test.mjs",
+  ]);
+});
+
 test("Context authority topology changes use focused selection and freshness coverage", () => {
   const selection = selectAffectedTests([
     "packages/ty-context/src/lib/long-task-context-authority-topology.ts",
@@ -42,9 +56,11 @@ test("Preflight repair-diagnostic changes stay on focused Authoring coverage", (
   ]) {
     const selection = selectAffectedTests([file]);
     assert.equal(selection.mode, "selected", file);
-    assert.deepEqual(selection.tests, [
-      "tests/ty-context/long-task-authoring-preflight.test.mjs",
-    ], file);
+    assert.deepEqual(
+      selection.tests,
+      ["tests/ty-context/long-task-authoring-preflight.test.mjs"],
+      file,
+    );
   }
 });
 

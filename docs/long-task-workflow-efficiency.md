@@ -4,13 +4,21 @@
 
 The Long-Task Workflow exists to prevent false completion inside declared authority. Its acceptable machine result is binary in substance: either fresh evidence on the complete current final snapshot proves every declared Plan Item and AC, or the delivery remains explicitly unfinished or qualified.
 
-Efficiency is subordinate to that objective. The preferred design is the lowest practical total workflow cost that preserves the same false-completion interception, or stronger interception at the same cost. A mechanism is retained only when it closes an independent delivery-drift path, fails closed and contributes more protection than its Authoring, Runtime, State, Recovery, maintenance and test cost.
+Efficiency is subordinate to that objective. The preferred design is the lowest practical total workflow cost that preserves the same false-completion interception, or stronger interception at the same cost. A mechanism is retained only when it closes an independent delivery-drift path or enables a material total-cost reduction without weakening acceptance, fails closed where acceptance is involved and contributes more value than its Authoring, Runtime, State, Recovery, maintenance and test cost.
 
-## Continuous Goal Execution
+## Bounded Context Discovery
 
-After the first successful formal Compile creates Authority Lock, the current Goal continues through implementation, targeted repair and Final Gate. Small implementation-level plans, reordered steps and repair hypotheses are ordinary internal execution state; they do not become a second plan or authority.
+Default Context routing combines manifest candidates with one bounded text search over `project_context/**` before `Context Delta`. The Agent uses a small set of high-signal task terms such as explicit area/module names and API/schema/state/security/verification/deployment language, merges matches with graph/trigger candidates and reads only relevant files.
 
-The host and user own model selection. The Harness cannot switch the current conversation model and does not add a model-tier scheduler or mandatory switch checkpoint. A healthy Goal is not paused solely to downgrade the model because the pause/resume cost provides no independent false-completion protection. Capability-related drift is handled by precise findings, targeted repair and the Final Gate.
+This reduces the direct trigger-miss path at low fixed cost. It is intentionally not a retrieval system: no whole-repository search requirement, vector/persistent index, cache, registry, search state or automatic authority inference is added. Keyword search supplements semantic judgment and final Conformance; it cannot eliminate synonym or indirect-dependency misses by itself.
+
+## One-Time Execution-Model Choice
+
+The first successful formal Compile creates Authority Lock and emits `execution_model_checkpoint.required: true`. Before product implementation, the Agent stops once and asks the user to `continue_current_model` or switch models and resume the active Long-Task. A task-specific model strategy already stated explicitly satisfies the checkpoint.
+
+This pause exists because locked Source/Contract/Context/risk/acceptance plus targeted repair and Final Gate materially reduce the risk of choosing a lower-cost execution model. It is an execution-cost mechanism, not proof. Harness does not switch the model, persist acknowledgement/model-routing state or repeat the checkpoint after later revisions; those Compile results return `required: false`.
+
+After the one-time choice, the current Goal continues through implementation, targeted repair and Final Gate. Small implementation-level plans, reordered steps and repair hypotheses are ordinary internal execution state; they do not become a second plan or authority.
 
 ## No Proactive Parallel-Subagent Scheduler
 
@@ -33,7 +41,7 @@ Full snapshot mode treats every Context file as controlling. Explicitly referenc
 
 `context.toml` serves both future Context discovery and active Long-Task authority. Retrieval guidance—`triggers`, `read_when`, `read_policy`, default selection and unselected nodes—does not alter the meaning of Context already selected for one delivery, so it is excluded from that delivery's authority projection. Selected area ownership, role/dependency structure and selected Context contents remain protected and fail closed.
 
-This removes unnecessary Authority Revision and scoped-Progress invalidation without adding a registry, index, state file or user step. It does not reuse final acceptance: any changed Git tree still requires the current-snapshot Live Final Gate.
+This removes unnecessary Authority Revision and scoped-Progress invalidation without adding a registry, index or state file. It does not reuse final acceptance: any changed Git tree still requires the current-snapshot Live Final Gate.
 
 Preflight follows the same cost rule. Repair metadata is emitted only for duplicate/coverage pairs with a deterministic same-Claim dependency. Independent diagnostics keep their existing compact form, and no finding is hidden or treated as resolved.
 
