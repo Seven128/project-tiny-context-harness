@@ -109,6 +109,7 @@ test("guidance-only changes select static consistency checks", () => {
     "tests/ty-context/long-task-design-context.test.mjs",
     "tests/ty-context/long-task-efficiency-design.test.mjs",
     "tests/ty-context/package-source.test.mjs",
+    "tests/ty-context/visual-delivery-guidance.test.mjs",
     "tests/ty-context/workflow-contract-routing.test.mjs",
   ]);
 });

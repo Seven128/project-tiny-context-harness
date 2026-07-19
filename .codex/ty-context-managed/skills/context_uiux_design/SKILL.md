@@ -82,6 +82,16 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
 - 视觉审查时先分清问题类型：a11y / responsive / theming / interaction / copy / performance / anti-pattern。把真正影响用户理解、操作或品牌信任的问题列为高优先级；少量纯审美偏好不要淹没关键问题。
 - Harness 默认携带 Impeccable CLI 能力；做设计稿、重做设计、视觉设计方案、设计系统方案、frontend redesign、visual polish 或既有 UI 视觉审查时，默认尝试运行 `npx impeccable detect <target>` 作为辅助证据，不必等待用户点名。其输出只能作为设计缺陷线索，不是 Harness gate，也不能替代人工截图检查、项目测试或 `validate-context`。
 
+## Visual Delivery Coverage / 视觉交付覆盖
+
+For material design-system, redesign, high-fidelity implementation or visual-polish work, keep a task-local **Visual Coverage Set** before implementation and verification. It is internal planning, not a required file, matrix, Context role, workflow artifact or completion authority.
+
+- Select risk-proportional representative combinations across production surface/route/component, viewport, theme or product mode, interaction/state, content stress and accessibility/motion conditions. Do not expand the full Cartesian product unless Source explicitly requires full combination coverage, and never claim an unchecked combination.
+- Cover relevant states such as default, hover, focus, active, disabled, loading, empty/no-results, error, success and long/extreme content. Use the project's declared viewport, contrast, target-size, reduced-motion and localization rules rather than inventing universal thresholds.
+- Keep the authority split explicit: `project_context/**` owns durable surface/interaction responsibility and `DESIGN.md` owns durable visual-system semantics and rationale. Record one authored exact-value token source and one generation direction; generated CSS/theme/export files are implementation outputs, not competing authored truth. If `DESIGN.md` is not the machine-token source, name the project-native source it governs instead of hand-maintaining the same exact values twice.
+- Inspect production components or real product routes. A detached static kit, mock, poster, marketing specimen or generated showcase may guide design review, but it cannot be the only evidence for product UI behavior or fidelity.
+- Render and inspect the declared coverage with project-owned browser/component tests plus screenshots or manual review as appropriate. Report the combinations actually checked and any omitted or external review explicitly. A screenshot baseline may be updated only through deliberate review; replacing it merely to erase a diff is not verification.
+
 ## 输出边界
 
 - 不默认创建 `.work_products/**`、UI/UX 独立文档、handoff matrix、review/test/release 文档。

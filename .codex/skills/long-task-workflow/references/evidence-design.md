@@ -25,6 +25,15 @@ Missing, skipped, flaky, unexpected, timed-out, interrupted, failed, multi-AC an
 
 Standard frozen Playwright verifier content is trusted. Weak-observability Outcomes require same-Check AC/Claim sensitivity. A weak Playwright Counterfactual may accept exit one only when every unexpected instance is uniquely a designated executed AC failure and there are no root, unbound, extra, missing, skipped, flaky, timeout, interruption, artifact, population, environment or other evidence failures. Ordinary Baseline Checks require exit zero.
 
+## Visual UI Evidence
+
+- Use Playwright for every declared `ui_browser` visual AC and bind each independently falsifiable AC to its own `[ac:<assertion-key>]` Test Instance. A broad screenshot or one passing page case does not silently prove separate viewport, theme, state, content-stress, layout or accessibility claims.
+- Make the test environment deterministic enough for its claim: freeze the relevant browser/project, viewport, theme/mode, locale/timezone, font loading, fixtures/data and animation/motion policy in declared verifier inputs or configuration.
+- Any reviewed screenshot baseline that affects pass/fail must exist for the accepting Compile and be included in `verification_inputs`. Generated screenshots, diffs and reports are Artifacts and review material; they are not editable acceptance authority. Creating or replacing a baseline after Authority Lock is verifier-material revision and must never be silently auto-updated to make a failure pass.
+- Screenshot comparison proves only the named visual similarity claim. Pair it with explicit DOM/layout/accessibility assertions when the Contract separately claims no overflow, action visibility, focus behavior, target size, semantic state, reduced motion or other observable behavior.
+- Run checks against production components or real product routes. A detached kit/mock harness is acceptable only when the Contract explicitly makes that artifact the product surface; otherwise it cannot substitute for the production carrier.
+- Keep subjective visual quality and approval external. A new visual direction or baseline that needs human judgment remains an explicit external confirmation even when all machine checks pass.
+
 ## Structured Evidence And Sensitivity
 
 Every claim-bearing `structured_json_v2` Check needs same-Check Claim-related Counterfactual sensitivity unless the Claim is covered by that same Check's Population proof; weak observability removes that Population exemption. Artifacts and another Check never substitute for sensitivity.

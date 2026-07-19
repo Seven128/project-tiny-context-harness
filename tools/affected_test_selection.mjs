@@ -12,6 +12,7 @@ export const LONG_TASK_FOCUSED_TESTS = [
   "long-task-efficiency-design.test.mjs",
   "long-task-model-choice-checkpoint.test.mjs",
   "long-task-semantic-authority-revision.test.mjs",
+  "visual-delivery-guidance.test.mjs",
   "workflow-test-entrypoints.test.mjs",
 ].map(testPath);
 
@@ -30,6 +31,7 @@ const STATIC_TESTS = new Set(
     "affected-test-selection.test.mjs",
     "long-task-design-context.test.mjs",
     "long-task-efficiency-design.test.mjs",
+    "visual-delivery-guidance.test.mjs",
     "workflow-test-entrypoints.test.mjs",
   ].map(testPath),
 );
@@ -232,6 +234,7 @@ export function selectAffectedTests(changedPaths, options = {}) {
       tests.add(testPath("long-task-design-context.test.mjs"));
       tests.add(testPath("long-task-efficiency-design.test.mjs"));
       tests.add(testPath("package-source.test.mjs"));
+      tests.add(testPath("visual-delivery-guidance.test.mjs"));
       tests.add(testPath("workflow-contract-routing.test.mjs"));
       reasons.push(`${file}:managed_guidance`);
       continue;
@@ -240,6 +243,7 @@ export function selectAffectedTests(changedPaths, options = {}) {
     if (file.startsWith("project_context/")) {
       tests.add(testPath("long-task-design-context.test.mjs"));
       tests.add(testPath("long-task-efficiency-design.test.mjs"));
+      tests.add(testPath("visual-delivery-guidance.test.mjs"));
       tests.add(testPath("validators.test.mjs"));
       reasons.push(`${file}:project_context`);
       continue;
@@ -253,6 +257,7 @@ export function selectAffectedTests(changedPaths, options = {}) {
       tests.add(testPath("long-task-design-context.test.mjs"));
       tests.add(testPath("long-task-efficiency-design.test.mjs"));
       tests.add(testPath("package-source.test.mjs"));
+      tests.add(testPath("visual-delivery-guidance.test.mjs"));
       reasons.push(`${file}:public_design_surface`);
       continue;
     }

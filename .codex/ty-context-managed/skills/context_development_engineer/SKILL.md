@@ -70,6 +70,18 @@ sample provider / interface / page 证据不能替代 all-provider / all-interfa
 - 缺失 durable surface responsibility 时设置 `Context Delta: required`，先用 `context_surface_contract` 或 owning Context 建立职责；
 - 收尾用简短 `Contract Conformance` 说明命中的 Context、实现满足方式、未满足项和验证入口。
 
+## Visual Delivery Implementation / 视觉交付实现
+
+When controlling Context, `DESIGN.md` or explicit Source declares material visual work, carry that intent into the real implementation without creating another workflow:
+
+- identify the production token source, its generation direction, the owning components/routes and any project-local UI/UX Skill before choosing implementation values;
+- reuse production components and real product routes for states/specimens instead of building a detached static imitation as the acceptance target;
+- preserve approved semantic tokens and component APIs; do not bypass them with undeclared raw color, spacing, typography or motion values merely to match one screenshot;
+- implement the declared Visual Coverage Set across the applicable viewport, theme/mode, state, content-stress and accessibility/motion combinations, while avoiding an unrequested full Cartesian expansion;
+- run project-owned rendered/component/browser verification and report only the combinations actually checked. Static analysis, generated kits and screenshot artifacts are supporting review material rather than proof of every visual or behavioral claim.
+
+If an active Long-Task applies, express material visual expectations through its existing Requirement, Control, Assertion, Check and external-confirmation mechanisms. Do not introduce a second visual plan, acceptance document or lifecycle.
+
 ## Modularity Check
 
 新实现、重构、重复逻辑、模块边界或影响面控制需要内部记录 `Modularity Check: none|required|exception`。

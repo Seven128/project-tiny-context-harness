@@ -41,6 +41,18 @@ Represent the invariant with existing Contract fields:
 
 Do not encode subjective “clean architecture” or generic quality prose as machine authority. If no reliable observation can falsify it, keep it as durable Context/review judgment or return `decision_required`. Harness routes the repository's architecture check; it does not become a language-generic dependency analyzer.
 
+## Visual Delivery Authoring
+
+When Source or controlling Context declares a design system, redesign, high-fidelity UI or other material visual result, author it through existing Contract semantics:
+
+- derive a task-local, risk-proportional Visual Coverage Set from declared Source, `project_context/**` and `DESIGN.md`: production surface/route/component, viewport, theme or product mode, interaction/state, content stress and accessibility/motion conditions;
+- select representative combinations rather than silently creating a full Cartesian requirement; an omitted combination remains unproven, while Source that explicitly requires full coverage must retain that scope;
+- encode each independently falsifiable visual expectation as an atomic Requirement, applicable Control field or named AC Assertion. Name the surface, viewport, theme/state/content condition and observable result when they matter to the claim;
+- bind the declared result to the owning Context/`DESIGN.md`, one authored token source and generation direction, production component/route carriers, path envelopes and project-owned browser checks. Detached kits, mocks or marketing specimens may be references but not substitute implementation carriers;
+- keep subjective visual direction, taste or approval outside false machine proof. Resolve an undecided direction as `decision_required`; represent required human design or new-baseline approval as an explicit external confirmation.
+
+This guidance adds no visual Schema, Claim kind, risk level, lifecycle state, coverage artifact or Gate. It only makes visual meaning explicit enough for the existing Requirement/Control/Assertion and `ui_browser` mechanisms to verify what was actually declared.
+
 ## Compact Authoring
 
 Compact V2 may omit only deterministic defaults: empty optional arrays/nulls, `context_snapshot_mode: referenced`, `requested_level: auto`, runner `argv: []`, `cwd: .`, `timeout_ms: 30000`, `retry_policy: none`, `idempotent: false`, and empty output/artifact/assertion/environment lists.

@@ -189,6 +189,12 @@ Newly generated Harness configs default to `strict_except_generated`. Generated/
 
 `context_surface_contract` compiles durable screen/page/CLI responsibility using the existing `contract`, area/subdomain and verification roles; `product-surface-contract.md` is the package template. Product Surface Contract authoring uses Source-to-Context judgment and Contract Conformance; it must not add a new product-surface Context role or claim product-quality proof.
 
+### Visual Delivery Guidance
+
+For material design-system, redesign, high-fidelity or visual-polish work, `context_uiux_design` keeps a task-local risk-proportional Visual Coverage Set across production surfaces/components, viewports, themes/modes, states, content stress and accessibility/motion conditions. It is internal planning, not a required matrix or authority. Durable surface/interaction facts remain in `project_context/**`; durable visual-system semantics and rationale remain in `DESIGN.md`; the project names one authored exact token source and generation direction. `context_development_engineer` binds that intent to production components/routes and reports only combinations actually rendered and checked.
+
+An explicit Long-Task uses its existing Requirement, Control, Assertion, `ui_browser`, verification-input and `external_confirmation` mechanisms for material visual expectations. Acceptance-affecting screenshot baselines are frozen verifier inputs, generated screenshots/diffs remain review artifacts, and subjective design or new-baseline approval remains external. No visual Schema, risk level, lifecycle state, Gate or required artifact is added.
+
 ### Optional Source Plan Authoring
 
 Use `/source-plan-authoring` only for an explicitly requested initial plan, Source Plan, source draft, or an audit/refinement of such a plan for later implementation or Contract authoring. It produces one self-contained Markdown document with preserved direct requirements, traceable necessary derivations, `DEC`/`decision_required` product choices, semantic Outcome boundaries, stable keys/anchors, independently meaningful decided `CTRL` fields, Runtime-exact Fact/Affected-Outcome `RISK` items, distinct `OBL`/`HINT` items and one observable scenario per `AC` with explicit accepted `REQ`/`CTRL`/`OBL` keys. Risk names are the ten Contract facts: use `data_migration`, split critical-path weak observability into `critical_user_path` plus `weak_observability`, and preserve `multi_repository_change` for Compiler rejection.

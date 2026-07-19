@@ -103,6 +103,12 @@ Context: no durable fact change
 
 Harness 只路由仓库原生 lint/AST/dependency/contract check，不实现跨语言通用架构分析器。`check-modularity` 的语句数/分支风险会定位到最高风险函数和行号。
 
+### 视觉交付指导
+
+对设计系统、重设计、高保真实现或 visual polish，`context_uiux_design` 在任务内部维护一个风险比例化的 Visual Coverage Set，覆盖生产 surface/component、viewport、theme/mode、state、content stress 与 accessibility/motion 条件。它只是内部计划，不是必需 matrix 或新权威。耐久 surface/interaction 事实仍属于 `project_context/**`，耐久视觉语义与理由属于 `DESIGN.md`；项目只声明一个精确 token 手工事实源和一个生成方向。`context_development_engineer` 把这些意图绑定到生产组件/真实 route，只报告真正渲染和检查过的组合，静态 kit 或 mock 不能替代产品 UI 证据。
+
+显式 Long-Task 仍通过现有 Requirement、Control、Assertion、`ui_browser`、verification input 与 `external_confirmation` 表达视觉要求。影响验收的截图 baseline 是冻结的 verifier input，生成截图/diff 只是 review artifact，主观设计或新 baseline 批准保持外部确认。这项指导不新增视觉 Schema、risk level、lifecycle state、Gate 或必需 artifact，也不修改默认 Workflow Contract。
+
 ### 可选 Source Plan Authoring
 
 只有用户明确要求初版方案、源方案、方案源稿、Source Plan，或要求审计/重构这类后续实现与 Contract Authoring 的输入时，才使用 `/source-plan-authoring`。
