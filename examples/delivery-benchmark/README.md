@@ -15,6 +15,7 @@ pairs before drawing new conclusions.
 - Runner: `runner/delivery_benchmark.mjs`.
 - Scenario skeletons: `scenarios/**`.
 - Raw artifacts: `.artifacts/delivery-benchmark/**` and not committed.
+- Mechanism A/B preparation: `mechanism/**`; it contains fixed tasks, gold, hidden probes and comparison tooling, but no Agent result or ROI conclusion.
 
 ## Benchmark Purpose
 
@@ -27,6 +28,18 @@ The current product question is:
 It is not a first-patch speed race and not a proof that any workflow is always
 faster. Future reports should show where Minimal Context reaches break-even, and
 where it does not.
+
+## Mechanism Experiments
+
+`mechanism/**` supports narrower decisions that package tests cannot settle, including Context routing, default Workflow wording and Long-Task Authoring cost. It reuses the same evidence discipline:
+
+- fixed baseline, fixture, model and quality bar;
+- fresh independent Codex roots;
+- operator-held gold and hidden probes;
+- canonical Authority equivalence before comparing Authoring cost;
+- no result from a calibration run, self-report or single pair.
+
+Use [`mechanism/README.md`](mechanism/README.md) and [`mechanism/RUNBOOK.md`](mechanism/RUNBOOK.md). Raw mechanism runs remain under `.artifacts/**` and never become Context or public result data.
 
 ## Diagnostic Metrics
 
@@ -81,7 +94,7 @@ node examples/delivery-benchmark/runner/delivery_benchmark.mjs prepare \
   --force
 ```
 
-Use `RUNBOOK.md` for the current operator protocol.
+Use `RUNBOOK.md` for the current lifecycle benchmark operator protocol. Use `mechanism/RUNBOOK.md` for controlled mechanism A/B runs.
 
 ## Documentation Boundary
 

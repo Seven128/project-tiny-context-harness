@@ -12,6 +12,8 @@ with the current Minimal Context prompt.
 For public claim boundaries and interpretation rules, see
 `docs/benchmarking.md`.
 
+Narrow mechanism A/B work uses `mechanism/RUNBOOK.md`. It does not change this lifecycle protocol, publish directly into `results/**`, or make Agent self-report conclusion-grade.
+
 ## Operator Duties
 
 - Prepare separate `baseline` and `harness` run directories.

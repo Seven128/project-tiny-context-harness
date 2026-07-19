@@ -1,0 +1,13 @@
+{
+  "task_id": "replace-me",
+  "variant_id": "replace-me",
+  "context_delta": "none",
+  "context_files_read": [],
+  "context_read_rounds": 0,
+  "context_selection_source": "agent_reported",
+  "verification_commands": [],
+  "conformance_completed": false,
+  "preflight_reports": [],
+  "compile_report": null,
+  "notes": ""
+}
