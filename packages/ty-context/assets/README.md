@@ -218,20 +218,21 @@ An explicit Long-Task expresses material visual expectations through the existin
 
 ### Optional Source Plan Authoring
 
-Use `/source-plan-authoring` only when explicitly asking for an initial plan, Source Plan, source draft, or an audit/refinement of such a plan for later implementation or Contract authoring.
+Use `/source-plan-authoring` when explicitly asking for an initial plan, Source Plan, source draft, or synthesis/refinement/audit of later implementation or Contract-authoring Source. The input may be one substantially complete plan or a sparse goal plus mixed notes, product/technical documents, screenshots, diagrams and other attachments. A short request that identifies the artifact roles, product goal, reference authority and desired elaboration is enough; no intake questionnaire or pre-normalized outline is required.
 
 It outputs one self-contained Markdown Source Plan that:
 
+- inventories every supplied artifact, inspects all material pages/frames/screens and records coverage gaps instead of silently sampling;
 - preserves direct requirements and their qualifiers;
 - marks necessary derivations and cites what they derive from;
-- turns unsupported product choices into `DEC`/`decision_required`;
+- when the user delegates synthesis or elaboration, makes traceable low-impact, reversible product choices marked `delegated`, while keeping permissions, destructive behavior, pricing, retention, security policy and other high-impact choices as `DEC`/`decision_required`;
 - splits Outcomes only by independently decidable observable results;
 - uses stable semantic keys and explicit anchors for important Source items;
 - separates mandatory `OBL` obligations from advisory `HINT` suggestions;
-- independently records each decided `CTRL` Location, User task, Trigger, Input, Loading, Empty, Success, Failure and Feedback field;
+- for interactive products, inventories every in-scope surface and material control, then independently records its surface/region/type/label, placement, task, visibility/availability, trigger/input/validation/default, interaction/navigation, loading/empty/success/failure/recovery/permission/feedback and accessibility fields;
 - uses `NCOMP` for explicit results that must not count as completion;
 - states each `RISK` Fact, one Affected Outcome, Basis and Consequence, or emits `DEC` when the pair is unknown; Fact is exactly one of `public_api_or_schema_change`, `persistent_data_change`, `data_migration`, `security_boundary_change`, `permission_boundary_change`, `irreversible_external_effect`, `critical_user_path`, `full_population_operation`, `multi_repository_change` or `weak_observability`;
-- writes one Given/When/Then scenario per `AC`, names its accepted `REQ`/`CTRL`/`OBL`/`NCOMP` keys, and hides no new requirement in AC text.
+- writes one Given/When/Then scenario per `AC`, names its accepted `REQ`/`CTRL`/`OBL`/`NCOMP` keys, hides no new requirement in AC text and reports whether the document is ready for Contract authoring.
 
 It does not update project Context, bind real repository owners/paths/runners, generate Delivery Contract YAML, run implementation, create workflow state or claim completion. `HINT` is not a Material Source Item, and Source Plan authoring emits no `ty-source-item` markers; repository-aware Long-Task authoring inserts markers later. A Source Plan is Source, not a Contract Draft. Its structure is an authoring fast path, not a required input protocol; ordinary prose plans remain valid Long-Task Source.
 
@@ -249,7 +250,7 @@ Use `/long-task-workflow` only when explicitly requested or when the current wor
 - a complete Final Gate on one current snapshot;
 - a Stop Hook that rejects stale completion.
 
-Long-Task Contract authoring preserves stable Source keys and anchors where practical. Meaning-preserving structural decomposition and evidence-backed repository binding may continue; new business rules, defaults, recovery behavior, permissions or scope become `decision_required` instead of being silently added. Missing recommended Source Plan structure never blocks authoring, but the marker-only Material Source Item enumeration required for activation does.
+Long-Task Contract authoring preserves stable Source keys and anchors where practical. A product choice already recorded in Source under explicit user delegation remains ordinary Source meaning, but Contract authoring cannot extend that delegation. Meaning-preserving structural decomposition and evidence-backed repository binding may continue; any other new business rule, default, recovery behavior, permission or scope becomes `decision_required` instead of being silently added. Missing recommended Source Plan structure never blocks authoring, but the marker-only Material Source Item enumeration required for activation does.
 
 Before the first successful formal Compile, `delivery-contract.yaml` is one non-authoritative Contract Draft. `/long-task-workflow` keeps revising that same Draft across repository/Context reads and Preflight repair rounds; it does not require one response to produce a complete Contract. Draft authoring is integrated because repository bindings and verification inputs need real evidence, Preflight findings must feed back into the same object, and a separate handoff would risk lost meaning or a second plan/authority. No standalone Contract Draft Skill, Draft Receipt or Authoring State exists.
 

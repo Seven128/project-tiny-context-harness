@@ -78,7 +78,11 @@ The platform-neutral form of this rationale belongs in `PROJECT_SPEC.md`. The We
 
 ## Source Plan Versus Contract Draft
 
-A Source Plan is optional Markdown Source. It preserves direct requirements and qualifiers, traces necessary derivations, exposes `decision_required`, and supplies stable semantic keys and anchors. It is not a Contract Draft, Delivery Contract, Context update, repository binding, workflow Authority, implementation plan or proof.
+A Source Plan is optional Markdown Source. It can refine one substantially complete plan or synthesize a sparse goal plus mixed documents, screenshots, diagrams and other attachments without a structured intake form. It accounts for every supplied input, preserves direct requirements and qualifiers, traces necessary derivations, expands interactive work to surface/region/control/state/feedback granularity and exposes `decision_required`.
+
+When the user explicitly delegates synthesis or elaboration, the Source Plan may make low-impact reversible product choices, but it records each choice as `delegated` with the authorizing instruction, evidence basis and added product meaning. High-impact permissions, irreversible behavior, pricing/quota, security/legal policy, persistence/retention, external automation, business thresholds, platform scope and population scope remain decisions unless authoritative Source decides them. A recorded delegated item becomes ordinary Source for Contract authoring; `long-task-workflow` preserves it but cannot extend that delegation or invent another choice.
+
+The plan supplies stable semantic keys and anchors. It is not a Contract Draft, Delivery Contract, Context update, repository binding, workflow Authority, implementation plan or proof.
 
 Ordinary user requests, prose plans, research plans and external proposals are equally valid Source. Recommended Source Plan structure is an Authoring Fast Path, not an input protocol. Material Source Items still receive text-preserving nonrendering markers before activation.
 
