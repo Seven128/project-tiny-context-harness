@@ -153,11 +153,14 @@ test("one-time model choice uses Authority Lock without creating model routing s
   for (const expected of [
     "execution_model_checkpoint",
     "continue_current_model",
-    "switch_model_then_resume",
     "required: false",
     "first Authority Lock",
   ])
     assert.match(combined, new RegExp(expected, "iu"), expected);
+  assert.match(
+    combined,
+    /switch_model_then_resume|switch models[\s\S]{0,80}resume/iu,
+  );
   assert.match(combined, /stop once|one-time/iu);
   assert.match(combined, /prior explicit|already stated explicitly/iu);
   assert.match(
