@@ -1,6 +1,6 @@
 # Project Tiny Context Harness
 
-Project Tiny Context Harness 是给 AI coding agents 使用的轻量项目记忆层，也是一套由 npm 包管理的上下文与交付 Harness。它为仓库提供耐久项目记忆、轻量默认工作流，以及显式启用的 Single-Goal Rolling Delivery（单目标滚动交付）长程工作流；它不是 Agent 调度器，也不接管 Git 编排。
+Project Tiny Context Harness 是给 AI coding agents 用的轻量项目记忆层，也是一套由 npm 包管理的上下文与交付 Harness。它为仓库提供耐久项目记忆、轻量默认工作流，以及显式启用的 Single-Goal Rolling Delivery（单目标滚动交付）长程工作流；它不是 Agent 调度器，也不接管 Git 编排。
 
 [English](README.md)
 
