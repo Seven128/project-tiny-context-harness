@@ -9,7 +9,8 @@ import { fileURLToPath } from "node:url";
 import { stableTextSha256 } from "../../tools/release_artifact_identity.mjs";
 import {
   artifactIntegrity,
-  assertRegistryArtifact
+  assertRegistryArtifact,
+  registryArtifactFromView
 } from "../../tools/publish_prepared_artifact.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -92,6 +93,21 @@ test("publish retry accepts only an already-published byte-identical artifact", 
       ),
     /Registry artifact mismatch/u
   );
+});
+
+test("registry verification accepts npm 11 objects and npm 12 singleton arrays", () => {
+  const expected = {
+    version: "1.2.3",
+    integrity: "sha512-exact"
+  };
+  const npmView = {
+    version: expected.version,
+    "dist.integrity": expected.integrity
+  };
+  assert.deepEqual(registryArtifactFromView(npmView), expected);
+  assert.deepEqual(registryArtifactFromView([npmView]), expected);
+  assert.deepEqual(registryArtifactFromView([]), {});
+  assert.deepEqual(registryArtifactFromView([npmView, npmView]), {});
 });
 
 function createFixture() {

@@ -21,6 +21,17 @@ export function assertRegistryArtifact(state, { version, integrity }) {
   }
 }
 
+export function registryArtifactFromView(value) {
+  const record = Array.isArray(value) ? (value.length === 1 ? value[0] : null) : value;
+  if (!record || typeof record !== "object" || Array.isArray(record)) {
+    return {};
+  }
+  return {
+    version: record.version,
+    integrity: record["dist.integrity"] ?? record.integrity ?? record.dist?.integrity
+  };
+}
+
 async function main() {
   const argv = process.argv.slice(2);
   const root = path.resolve(optionalValue(argv, "--root") ?? defaultRoot);
@@ -67,10 +78,7 @@ async function registryState(version, root) {
     throw new Error(`Registry lookup failed for ${packageName}@${version}: ${result.output.trim()}`);
   }
   const parsed = parseJsonFromOutput(result.output);
-  return {
-    version: parsed.version,
-    integrity: parsed["dist.integrity"] ?? parsed.integrity
-  };
+  return registryArtifactFromView(parsed);
 }
 
 function requiredValue(argv, flag) {
