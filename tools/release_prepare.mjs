@@ -101,7 +101,7 @@ async function main() {
   if (args.fast) {
     await timed(timings, "release focused tests", () => run("node", ["--test", ...releaseFocusedTests]));
   } else {
-    await timed(timings, "complete package tests", () =>
+    await timed(timings, "default preparation tests", () =>
       run("npm", ["run", "test:default:built", "--workspace", workspaceName])
     );
   }
@@ -125,8 +125,9 @@ async function main() {
   console.log("  git add -A");
   console.log(`  git commit -m "Release ${targetVersion}"`);
   console.log("  git push origin main");
-  console.log("  npm run release:publish -- --local-fallback --yes");
-  console.log("  # Add --registry-smoke only when you want the slower post-publish install smoke.");
+  console.log("  npm run release:publish");
+  console.log("  # Dispatch dry_run: false once; the workflow tests and publishes one artifact.");
+  console.log("  # Use --local-fallback --yes only when workflow dispatch is unavailable.");
 }
 
 async function readPackageVersion() {

@@ -8,19 +8,19 @@ on:
         required: true
         default: "0.7.0"
       dry_run:
-        description: "Build, validate, and pack without publishing."
+        description: "Optional prepare-only diagnostic; false prepares once and publishes the same artifact."
         required: true
         type: boolean
         default: true
 
 permissions:
-  contents: write
-  id-token: write
+  contents: read
 
 jobs:
-  publish:
+  prepare:
     runs-on: ubuntu-latest
-    environment: npm-publish
+    outputs:
+      filename: ${{ steps.release-artifact.outputs.filename }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
@@ -62,7 +62,6 @@ jobs:
       - name: Complete package tests
         run: npm test --workspace project-tiny-context-harness
 
-
       - name: Check release version surfaces
         run: npm run release:check-version
 
@@ -75,31 +74,82 @@ jobs:
       - name: Quickstart smoke
         run: node tools/quickstart_smoke.mjs
 
-      - name: Pack once and verify immutable prepared artifact
+      - name: Pack once and bind the release artifact
+        id: release-artifact
         shell: bash
         run: |
           mkdir -p .artifacts/releases/prepared
           npm pack --json --workspace project-tiny-context-harness --pack-destination .artifacts/releases/prepared > .artifacts/releases/prepared/pack-result.json
           node tools/workflow_release_artifact.mjs \
             --version "${{ inputs.expected_version }}" \
-            --dry-run "${{ inputs.dry_run }}" \
+            --dry-run "true" \
+            --source-commit "${{ github.sha }}" \
             --pack-json .artifacts/releases/prepared/pack-result.json \
             --tarball-dir .artifacts/releases/prepared \
             --result .artifacts/releases/prepared/workflow-release-artifact.json
           FILENAME="$(node -p "require('./.artifacts/releases/prepared/workflow-release-artifact.json').filename")"
-          echo "FILENAME=$FILENAME" >> "$GITHUB_ENV"
+          echo "filename=$FILENAME" >> "$GITHUB_OUTPUT"
 
       - name: Install and test the exact packed tarball
-        run: node tools/release_tarball_smoke.mjs --tarball ".artifacts/releases/prepared/$FILENAME"
+        run: node tools/release_tarball_smoke.mjs --tarball ".artifacts/releases/prepared/${{ steps.release-artifact.outputs.filename }}"
 
-      - name: Publish package with npm trusted publishing
-        if: ${{ !inputs.dry_run }}
+      - name: Upload the verified release artifact
+        id: upload-release-artifact
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: npm-release-${{ github.run_id }}
+          path: |
+            .artifacts/releases/prepared/${{ steps.release-artifact.outputs.filename }}
+            .artifacts/releases/prepared/workflow-release-artifact.json
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
+
+  publish:
+    if: ${{ !inputs.dry_run }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Ensure npm supports trusted publishing
+        run: |
+          npm install -g npm@12.0.1
+          npm --version
+          node -e "const v=require('child_process').execFileSync('npm',['--version'],{encoding:'utf8'}).trim(); if (v !== '12.0.1') throw new Error('npm CLI 12.0.1 is required for this release workflow');"
+
+      - name: Download the verified release artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: npm-release-${{ github.run_id }}
+          path: .artifacts/releases/prepared
+
+      - name: Verify the prepared artifact handoff
+        run: |
+          node tools/verify_workflow_release_artifact.mjs \
+            --version "${{ inputs.expected_version }}" \
+            --source-commit "${{ github.sha }}" \
+            --attestation .artifacts/releases/prepared/workflow-release-artifact.json \
+            --tarball ".artifacts/releases/prepared/${{ needs.prepare.outputs.filename }}"
+
+      - name: Publish or verify the exact package artifact
         env:
           NPM_CONFIG_PROVENANCE: "true"
-        run: npm publish ".artifacts/releases/prepared/$FILENAME" --access public
+        run: |
+          node tools/publish_prepared_artifact.mjs \
+            --version "${{ inputs.expected_version }}" \
+            --tarball ".artifacts/releases/prepared/${{ needs.prepare.outputs.filename }}"
 
       - name: Create or update GitHub Release
-        if: ${{ !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: node tools/github_release_publish.mjs --version "${{ inputs.expected_version }}" --target "${{ github.sha }}"

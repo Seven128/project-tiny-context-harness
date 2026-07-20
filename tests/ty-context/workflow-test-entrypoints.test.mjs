@@ -128,9 +128,11 @@ test("publish, tarball, and consumer gates retain complete release boundaries", 
   );
   assert.match(publishWorkflow, /workflow-release-artifact\.json/);
   assert.match(publishWorkflow, /release_tarball_smoke\.mjs --tarball/);
+  assert.match(publishWorkflow, /publish_prepared_artifact\.mjs/);
+  assert.doesNotMatch(publishWorkflow, /run: npm publish/);
   assert.match(
-    publishWorkflow,
-    /npm publish "\.artifacts\/releases\/prepared\/\$FILENAME"/,
+    read("tools/publish_prepared_artifact.mjs"),
+    /npm["], \["publish"[\s\S]*assertRegistryArtifact/,
   );
   assert.match(
     read("tools/release_artifact_prepare.mjs"),

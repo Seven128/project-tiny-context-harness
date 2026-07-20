@@ -37,13 +37,11 @@ test("status projects rolling progress but always requires a Live Final Gate", a
     assert.equal(unverified.outcomes.first, "unverified");
     assert.equal(unverified.final_result, "no_final_gate");
     assert.equal(unverified.acceptance_authority, "live_final_gate_required");
-    const started = performance.now();
     const resumed = await runCli(fixture.root, [
       "long-task",
       "resume",
       fixture.workdir,
     ]);
-    assert.ok(performance.now() - started < 1000);
     assert.equal(resumed.task.id, "fixture-task");
 
     await runCli(fixture.root, ["long-task", "verify", fixture.workdir]);

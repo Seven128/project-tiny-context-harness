@@ -41,13 +41,13 @@ triggers = ["long-task objective", "false completion", "delivery drift", "contra
 path = "project_context/areas/harness-package/implementation-index.md"
 role = "implementation-index"
 read_policy = "on-demand"
-triggers = ["cli entry", "sync", "validator", "migration", "release tool", "test entry", "test suite policy", "affected test", "affected change discovery", "active contract", "final result", "stop hook", "context authority", "authority revision summary", "diagnose-revision", "execution model checkpoint"]
+triggers = ["cli entry", "sync", "validator", "migration", "release tool", "release artifact", "trusted publish", "test entry", "test suite policy", "affected test", "affected change discovery", "active contract", "final result", "stop hook", "context authority", "authority revision summary", "diagnose-revision", "execution model checkpoint"]
 
 [[context]]
 path = "project_context/areas/harness-package/verification.md"
 role = "verification"
 read_policy = "on-demand"
-triggers = ["test", "verify", "validation", "harness gate", "diff check", "visual guidance test", "long-task black box", "test budget", "test suite purpose", "test ROI", "rerun policy", "trust boundary gate", "release regression suite", "affected test", "focused test", "final gate", "model checkpoint test"]
+triggers = ["test", "verify", "validation", "harness gate", "diff check", "visual guidance test", "long-task black box", "test budget", "test suite purpose", "test ROI", "rerun policy", "trust boundary gate", "release regression suite", "release workflow", "trusted publish", "artifact handoff", "affected test", "focused test", "final gate", "model checkpoint test"]
 
 [[areas]]
 id = "delivery-benchmark"

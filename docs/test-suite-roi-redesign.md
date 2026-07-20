@@ -28,6 +28,7 @@ The initial rollout was implemented on 2026-07-20. It changes package-developmen
 | `TS-TIER-RELEASE` | Complete package release regression |
 | `TS-ROUTING` | Local/CI change discovery and fail-safe selection |
 | `TS-RERUN` | Repair-loop and full-suite rerun policy |
+| `TS-RELEASE-HANDOFF` | One-test/one-pack release artifact handoff and retry boundary |
 | `TS-OPTIMIZE` | Safe runtime optimization rules |
 | `TS-MIGRATION` | Phased implementation and affected files |
 | `TS-METRICS` | ROI measurements and review thresholds |
@@ -193,6 +194,18 @@ Local complete-suite budget per task:
 - a third or later invocation requires a recorded reason such as a confirmed flaky/infrastructure investigation or a release-blocking late mutation.
 
 A source change after a green aggregate gate invalidates that result, but the rerun tier should match the change. A documentation-only correction should rerun its static/Context gates; it should not automatically trigger the complete suite unless package or release policy maps it there.
+
+## `TS-RELEASE-HANDOFF` — One Verified Artifact
+
+Trusted Publishing uses a two-job graph inside one workflow run:
+
+1. `prepare` runs the complete package suite once, then packs once and runs exact-tarball smoke once;
+2. it uploads the tarball plus a runtime attestation bound to the dispatch commit, stable lockfile identity and tarball SHA-256;
+3. after the protected environment gate, `publish` downloads and verifies those exact bytes;
+4. `publish` does not install dependencies, build, test, repack or repeat smoke;
+5. a retry may skip npm publication only when the registry version and integrity already match the prepared artifact exactly.
+
+`dry_run: true` executes only step 1 and artifact upload as an optional diagnostic. It is not required before `dry_run: false`, because a real run already performs the same prepare gate before publication. Node/npm versions are recorded as provenance but are not equality gates for the non-building publisher job. Lockfile hashing normalizes CRLF/LF only, so cross-worktree line endings do not cause false drift while semantic changes still block.
 
 ## `TS-OPTIMIZE` — Safe Runtime Reduction
 

@@ -42,8 +42,8 @@ assert.match(markdown, /read-only: it does not publish to npm, create releases, 
 assert.match(markdown, /npm run launch:unblock -- --strict/);
 assert.match(markdown, /https:\/\/github\.com\/Seven128\/project-tiny-context-harness\/actions\/workflows\/npm-publish\.yml/);
 assert.match(markdown, new RegExp(`expected_version: ${packageVersionPattern}`));
-assert.match(markdown, /dry_run: true/);
-assert.match(markdown, /then dry_run: false/);
+assert.match(markdown, /dry_run: false/);
+assert.doesNotMatch(markdown, /then dry_run: false/);
 assert.match(markdown, new RegExp(`https://github\\.com/Seven128/project-tiny-context-harness/releases/new\\?tag=v${packageVersionPattern}`));
 assert.match(markdown, new RegExp(`docs/launch/github-release-${packageVersionPattern}\\.md`));
 assert.match(markdown, /https:\/\/news\.ycombinator\.com\/submit/);
@@ -71,6 +71,10 @@ assert.equal(jsonResult.status, 0, jsonResult.stderr);
 const json = JSON.parse(jsonResult.stdout);
 assert.equal(json.steps[0].id, "npm-trusted-publish");
 assert.equal(json.steps[0].inputs[0], `expected_version: ${packageManifest.version}`);
+assert.deepEqual(json.steps[0].inputs, [
+  `expected_version: ${packageManifest.version}`,
+  "dry_run: false"
+]);
 assert.equal(
   json.steps[2].prefillUrl,
   "https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fgithub.com%2FSeven128%2Fproject-tiny-context-harness&t=Show%20HN%3A%20Tiny%20project%20memory%20for%20coding%20agents"

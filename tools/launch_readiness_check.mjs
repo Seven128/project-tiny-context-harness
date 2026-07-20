@@ -1213,7 +1213,7 @@ function localChecks() {
       contains(npmTrustedPublishing, /npm run release:check-version/) &&
       contains(npmTrustedPublishing, /tools\/github_release_publish\.mjs/) &&
       contains(npmTrustedPublishing, /expected_version: <new-version>/) &&
-      contains(npmTrustedPublishing, /0\.2\.41` dry run and real publish/) &&
+      contains(npmTrustedPublishing, /one real workflow run/) &&
       rootPackage.scripts?.["release:sync-version"] === "node tools/sync_release_version.mjs" &&
       rootPackage.scripts?.["release:check-version"] === "node tools/sync_release_version.mjs --check" &&
       rootPackage.scripts?.["release:prepare"] === "node tools/release_prepare.mjs" &&
@@ -1244,15 +1244,25 @@ function localChecks() {
       contains(npmTrustedPublishWorkflow, /node tools\/quickstart_smoke\.mjs/) &&
       contains(npmTrustedPublishWorkflow, /npm pack --json --workspace project-tiny-context-harness --pack-destination \.artifacts\/releases\/prepared/) &&
       contains(npmTrustedPublishWorkflow, /workflow_release_artifact\.mjs/) &&
-      contains(npmTrustedPublishWorkflow, /--dry-run "\$\{\{ inputs\.dry_run \}\}"/) &&
+      contains(npmTrustedPublishWorkflow, /--source-commit "\$\{\{ github\.sha \}\}"/) &&
       contains(npmTrustedPublishWorkflow, /release_tarball_smoke\.mjs --tarball/) &&
+      contains(npmTrustedPublishWorkflow, /uses: actions\/upload-artifact@[a-f0-9]{40}/) &&
+      contains(npmTrustedPublishWorkflow, /uses: actions\/download-artifact@[a-f0-9]{40}/) &&
+      contains(npmTrustedPublishWorkflow, /name: npm-release-\$\{\{ github\.run_id \}\}/) &&
+      contains(npmTrustedPublishWorkflow, /overwrite: true/) &&
+      !contains(npmTrustedPublishWorkflow, /github\.run_attempt/) &&
+      contains(npmTrustedPublishWorkflow, /needs: prepare/) &&
+      contains(npmTrustedPublishWorkflow, /verify_workflow_release_artifact\.mjs/) &&
+      contains(npmTrustedPublishWorkflow, /publish_prepared_artifact\.mjs/) &&
+      (npmTrustedPublishWorkflow.match(/npm test --workspace project-tiny-context-harness/g)?.length ?? 0) === 1 &&
+      (npmTrustedPublishWorkflow.match(/npm pack --json/g)?.length ?? 0) === 1 &&
+      (npmTrustedPublishWorkflow.match(/release_tarball_smoke\.mjs/g)?.length ?? 0) === 1 &&
       contains(npmTrustedPublishWorkflow, /NPM_CONFIG_PROVENANCE:\s*"true"/) &&
-      contains(npmTrustedPublishWorkflow, /npm publish "\.artifacts\/releases\/prepared\/\$FILENAME" --access public/) &&
       contains(npmTrustedPublishWorkflow, /Create or update GitHub Release/) &&
       contains(npmTrustedPublishWorkflow, /GH_TOKEN:\s*\$\{\{ github\.token \}\}/) &&
       contains(npmTrustedPublishWorkflow, /node tools\/github_release_publish\.mjs --version "\$\{\{ inputs\.expected_version \}\}" --target "\$\{\{ github\.sha \}\}"/) &&
       !contains(npmTrustedPublishWorkflow, /NPM_TOKEN|NODE_AUTH_TOKEN/),
-    "npm trusted publishing packet documents post-first-publish OIDC setup and provides a manual dry-run-first workflow without long-lived npm publish tokens."
+    "npm trusted publishing packet documents a one-prepare protected artifact handoff without long-lived npm publish tokens or duplicate full-suite execution."
   );
   addCheck(
     checks,

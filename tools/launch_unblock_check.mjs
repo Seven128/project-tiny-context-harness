@@ -90,7 +90,7 @@ function releaseDelta(npmAccess) {
     localVersion,
     publishedVersion,
     workflowUrl: npmTrustedPublishWorkflowUrl,
-    nextAction: `Run GitHub Actions npm Trusted Publish with expected_version ${localVersion}. Use dry_run true first, then dry_run false when ready.`
+    nextAction: `Run GitHub Actions npm Trusted Publish once with expected_version ${localVersion} and dry_run false; the protected publish job reuses the artifact prepared and tested by that run.`
   };
 }
 
@@ -119,15 +119,10 @@ function appendNpmTrustedPublishCommands(lines, report) {
   lines.push("");
   lines.push("```text");
   lines.push(`expected_version: ${report.releaseDelta.localVersion}`);
-  lines.push("dry_run: true");
-  lines.push("```");
-  lines.push("");
-  lines.push("If the dry run succeeds and you want the npm page refreshed:");
-  lines.push("");
-  lines.push("```text");
-  lines.push(`expected_version: ${report.releaseDelta.localVersion}`);
   lines.push("dry_run: false");
   lines.push("```");
+  lines.push("");
+  lines.push("Use `dry_run: true` only for an optional prepare-only diagnostic. A real run already tests, packs and smokes once before the protected publish job reuses those exact bytes.");
   lines.push("");
   lines.push("This is not a local token publish path; the workflow must continue using npm Trusted Publishing without `NPM_TOKEN` or `NODE_AUTH_TOKEN`.");
   lines.push("");
@@ -259,7 +254,7 @@ export function renderMarkdown(report) {
   if (report.status === "ready") {
     lines.push("Broad launch gate is clear; keep final channel-specific review and claims-boundary checks before posting.");
   } else if (report.status === "ready-with-cleanup") {
-    lines.push("Required broad launch gate is clear, but npm publish cleanup remains. Run the Trusted Publishing dry run and real publish before broad launch if you want the live npm README to match current main.");
+    lines.push("Required broad launch gate is clear, but npm publish cleanup remains. Run one real Trusted Publishing workflow before broad launch if you want the live npm README to match current main.");
   } else {
     lines.push("Broad launch remains blocked until the strict external gate has no TODOs.");
   }

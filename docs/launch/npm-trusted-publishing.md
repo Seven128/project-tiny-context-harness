@@ -22,7 +22,7 @@ Important current constraints:
 
 The renamed package exists on npm. Use local token publishing only as an emergency fallback.
 
-The current published package is `project-tiny-context-harness@0.7.0`. Prefer the GitHub Actions Trusted Publishing workflow after a successful dry run; use the local fallback only when workflow dispatch is unavailable and the normal release checks pass. Do not run a real publish for an existing version again; npm versions are immutable.
+The current published package is `project-tiny-context-harness@0.7.0`. Prefer one real workflow run through GitHub Actions Trusted Publishing; use the local fallback only when workflow dispatch is unavailable and the normal release checks pass. `dry_run: true` remains an optional prepare-only diagnostic, not a mandatory rehearsal that duplicates the full suite. Do not publish different bytes for an existing version; npm versions are immutable.
 
 Real publish runs also create or update the matching GitHub Release from `docs/launch/github-release-<version>.md` by running `node tools/github_release_publish.mjs --version <version> --target <github.sha>`. Dry runs do not create or edit GitHub releases.
 
@@ -38,7 +38,7 @@ git commit -m "Release <new-version>"
 git push origin main
 ```
 
-Use the full gate without `--fast` when the release touches upgrade/migration logic, broad package behavior or anything that needs the complete workspace test suite.
+Use the default preparation gate without `--fast` when the release touches upgrade/migration logic or broad package behavior. This local authoring check does not replace the complete release regression owned by the Trusted Publishing prepare job.
 
 `release:prepare` owns the upgrade impact review for the release. Maintainers should not need a separate reminder to "check upgrade changes": if changed files are upgrade-sensitive, `sync-only` fails; `upgrade-required` must include upgrade/migration implementation plus upgrade test evidence; `manual-required` must generate release-packet text that tells users which manual follow-up remains.
 
@@ -89,17 +89,18 @@ It is manual-only:
 - `dry_run` defaults to `true`.
 - `expected_version` must match `packages/ty-context/package.json`.
 - Versioned release surfaces must be prepared before commit with `npm run release:prepare -- --version <patch|minor|major|x.y.z> --update-mode <sync-only|upgrade-required|manual-required>`; the workflow verifies this with `npm run release:check-version`.
-- The job runs on `ubuntu-latest` with Node `24`.
+- The prepare and publish jobs run on `ubuntu-latest` with Node `24`; only the publish job receives the protected `npm-publish` environment and write/OIDC permissions.
 - The workflow installs the explicitly pinned npm CLI version declared in the workflow (`12.0.1` at this snapshot); it never uses unbounded `npm@latest`.
-- It builds/typechecks the package, runs the complete default and Long-Task Workflow test suites, package source drift, `make validate-harness` and Quickstart Smoke, then packs exactly once. The verifier accepts the npm 11 array and npm 12 workspace-keyed JSON shapes while requiring exactly one packed artifact. A dry run creates an ephemeral Release Artifact V2 identity for those exact bytes; a real publish must match the committed `docs/launch/release-artifact-<version>.json` authority.
-- Release Artifact V2 binds the tarball SHA-256, Node version, npm version and `package-lock.json` SHA-256. Any environment or lockfile drift fails before smoke/publication, and dry-run identity never authorizes a real publish.
+- The prepare job builds/typechecks the package, runs the complete default and Long-Task Workflow test suites, package source drift, `make validate-harness` and Quickstart Smoke, then packs exactly once. The verifier accepts the npm 11 array and npm 12 workspace-keyed JSON shapes while requiring exactly one packed artifact.
+- The prepare job records the dispatch source commit, tarball SHA-256, CRLF/LF-stable `package-lock.json` identity and Node/npm build provenance, runs the exact-tarball install smoke, then uploads only that verified tarball and runtime attestation.
+- After environment approval, the publish job downloads that same-run artifact and verifies source commit, lockfile identity, filename and tarball SHA-256. It does not install dependencies, rebuild, rerun the complete suite, repack or rerun smoke. Node/npm versions are provenance rather than a requirement that the non-building publisher process reproduce the preparation environment.
 - It installs that exact packed tarball into an empty temporary repository and runs `ty-context init`, `doctor`, `validate-context` and a `long-task-delivery-v2` final-gate black box before publishing only the tested tarball path. The full smoke uses a real marked Source file, a set-equal exact Source Claim, a criterion-identical Claim-bearing Assertion, an Outcome Binding and a same-Check Counterfactual that covers both `result` and its Source-backed non-Result Claim. The reusable fixture is also executed directly by the local built-CLI test; static YAML regex checks are not treated as Contract proof.
 - Emergency fallback and Trusted Publishing both run this same full Long-Task verification against the exact prepared tarball, never `--portable-only`. This documents the release gate implemented in the repository; it does not claim that the currently published version contains unshipped local changes.
-- The publish step runs only when `dry_run` is false.
+- The publish job runs only when `dry_run` is false. The artifact name is stable for the workflow run, so retrying only the failed publish job reuses the successful prepare artifact; rerunning all jobs replaces it only after prepare succeeds again. If a retry finds the same version already published, it proceeds only when registry integrity matches the prepared tarball exactly; mismatched bytes fail closed.
 - The GitHub Release create/update step runs only after a real publish, uses the release packet body and marks `v<version>` as the latest release.
 - The workflow must not define `NPM_TOKEN` or `NODE_AUTH_TOKEN`; publish authentication should come from OIDC.
 
-## Dry Run
+## Optional Dry Run
 
 Open <https://github.com/Seven128/project-tiny-context-harness/actions/workflows/npm-publish.yml>, click **Run workflow**, choose branch `main`, then run **npm Trusted Publish** with the next committed package version:
 
@@ -117,16 +118,18 @@ Expected result:
 - no npm publish occurs,
 - no GitHub Release is created or edited.
 
-The maintainer verified the `0.2.41` dry run and real publish on 2026-06-10 after configuring npm Trusted Publishing.
+The maintainer verified the historical `0.2.41` dry run and real publish on 2026-06-10 after configuring npm Trusted Publishing. Current releases do not require both invocations.
 
 ## Real Publish
 
-Only after a new package version is committed on `main`, run the workflow with that version:
+After a new package version is committed on `main`, run one real workflow with that version:
 
 ```text
 expected_version: <new-version>
 dry_run: false
 ```
+
+That one run performs the complete prepare gate once, pauses at the protected publish environment if approval is configured, then publishes the already tested artifact. Do not precede every real run with a duplicate dry run.
 
 Then verify:
 

@@ -70,5 +70,7 @@ Navigation for current implementation surfaces. Behavior is defined by owning co
 
 - Version sync: `tools/sync_release_version.mjs`.
 - Release prepare/publish: `tools/release_prepare.mjs`, `tools/release_publish.mjs`, compatibility wrapper `tools/release_npm.mjs`.
+- Trusted artifact handoff: `.github/workflows/npm-publish.yml` owns the one-prepare/one-publish job graph; `tools/workflow_release_artifact.mjs` records the runtime artifact and source commit; `tools/verify_workflow_release_artifact.mjs` verifies the downloaded tarball before publication; `tools/publish_prepared_artifact.mjs` makes same-integrity retries safe; `tools/release_artifact_identity.mjs` owns CRLF/LF-stable lockfile identity and separates source identity from build-environment provenance.
+- Release behavior tests: `tests/ty-context/workflow-release-artifact.test.mjs`, `release-flow-scripts.test.mjs`, `launch-readiness-script.test.mjs`, `launch-unblock-script.test.mjs` and `launch-next-steps-script.test.mjs`.
 - Public docs: `README.md`, `README.zh-CN.md`, `packages/ty-context/README.md`.
 - Stable design: `PROJECT_SPEC.md`; durable source-workspace facts: `project_context/**`.

@@ -255,8 +255,8 @@ export function buildNextSteps({ packageVersion = packageJson.version } = {}) {
       why: "The live npm README follows immutable package versions; this step is done once npm latest matches the prepared patch version.",
       url: urls.npmTrustedPublish,
       commands: ["npm run launch:unblock -- --strict"],
-      inputs: [`expected_version: ${packageVersion}`, "dry_run: true", "then dry_run: false"],
-      stopIf: "dry run fails or npm Trusted Publishing asks for NPM_TOKEN / NODE_AUTH_TOKEN"
+      inputs: [`expected_version: ${packageVersion}`, "dry_run: false"],
+      stopIf: "the prepare or protected publish job fails, or npm Trusted Publishing asks for NPM_TOKEN / NODE_AUTH_TOKEN"
     },
     {
       id: `github-release-${packageVersion}`,

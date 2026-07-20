@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import {
   RELEASE_ARTIFACT_SCHEMA_V2,
   assertReleaseArtifactAttestation,
-  assertReleaseEnvironmentIdentity,
+  assertReleaseSourceIdentity,
   readReleaseEnvironmentIdentity
 } from "./release_artifact_identity.mjs";
 import { parsePackJson } from "./release_publish_helpers.mjs";
@@ -21,6 +21,11 @@ const packJsonFile = insideRoot(requiredValue("--pack-json"), "pack_json");
 const tarballDir = insideRoot(requiredValue("--tarball-dir"), "tarball_dir");
 const resultFile = insideRoot(requiredValue("--result"), "result");
 const packageName = "project-tiny-context-harness";
+const sourceCommit = optionalValue("--source-commit");
+
+if (sourceCommit && !/^[a-f0-9]{40}$/i.test(sourceCommit)) {
+  throw new Error("workflow_release_source_commit_invalid");
+}
 
 if (!/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(version)) {
   throw new Error("workflow_release_version_invalid");
@@ -44,6 +49,7 @@ const attestation = dryRun
       version,
       filename: packed.filename,
       sha256,
+      ...(sourceCommit ? { source_commit: sourceCommit.toLowerCase() } : {}),
       ...(await readReleaseEnvironmentIdentity(root))
     }
   : JSON.parse(
@@ -51,7 +57,7 @@ const attestation = dryRun
     );
 
 assertReleaseArtifactAttestation(attestation, { packageName, version });
-await assertReleaseEnvironmentIdentity(attestation, root);
+await assertReleaseSourceIdentity(attestation, root);
 if (attestation.filename !== packed.filename || attestation.sha256 !== sha256) {
   throw new Error("workflow_release_artifact_identity_mismatch");
 }

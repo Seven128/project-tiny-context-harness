@@ -6,12 +6,24 @@ import path from "node:path";
 export const RELEASE_ARTIFACT_SCHEMA_V2 = "ty-context-release-artifact-v2";
 
 export async function readReleaseEnvironmentIdentity(root) {
-  const lockfile = await readFile(path.join(root, "package-lock.json"));
   return {
     node_version: process.version,
     npm_version: npmVersion(),
-    lockfile_sha256: createHash("sha256").update(lockfile).digest("hex")
+    ...(await readReleaseSourceIdentity(root))
   };
+}
+
+export async function readReleaseSourceIdentity(root) {
+  const lockfile = await readFile(path.join(root, "package-lock.json"), "utf8");
+  return {
+    lockfile_sha256: stableTextSha256(lockfile)
+  };
+}
+
+export function stableTextSha256(content) {
+  return createHash("sha256")
+    .update(String(content).replace(/\r\n?/g, "\n"), "utf8")
+    .digest("hex");
 }
 
 export function assertReleaseArtifactAttestation(attestation, { packageName, version }) {
@@ -38,6 +50,16 @@ export async function assertReleaseEnvironmentIdentity(attestation, root) {
         `Prepared release ${field} mismatch: expected ${attestation[field]}, got ${actual[field]}`
       );
     }
+  }
+  return actual;
+}
+
+export async function assertReleaseSourceIdentity(attestation, root) {
+  const actual = await readReleaseSourceIdentity(root);
+  if (attestation.lockfile_sha256 !== actual.lockfile_sha256) {
+    throw new Error(
+      `Prepared release lockfile_sha256 mismatch: expected ${attestation.lockfile_sha256}, got ${actual.lockfile_sha256}`
+    );
   }
   return actual;
 }

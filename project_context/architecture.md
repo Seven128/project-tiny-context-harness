@@ -21,6 +21,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Authority/recovery: one common-dir Active Authority V3 snapshot plus matching worktree marker; workdir compiled output, Progress and Receipts are rebuildable audit/recovery projections.
 - Revision diagnosis: `long-task-authority-revision*.ts` deterministically classifies and summarizes the candidate; `long-task-authority-revision-diagnosis.ts` exercises only scope-only candidates through existing active Check identities with unchanged runner/verifier authority, without publishing authority or evidence.
 - Compile handoff: `commands/long-task.ts` emits an additive one-time `execution_model_checkpoint` after first Authority Lock; it does not switch models or persist acknowledgement/model-route state.
+- Release pipeline: `.github/workflows/npm-publish.yml` separates one complete prepare/test/pack/smoke job from the protected publish job. The second job downloads and verifies the exact prepared artifact for the same source commit; it never rebuilds, retests or repacks.
 - Managed source: `.codex/ty-context-managed/**`; package assets: `packages/ty-context/assets/**`; mapping authority: `packages/ty-context/source-mappings.yaml`.
 - Full stable mental model: `PROJECT_SPEC.md`; high-frequency durable facts: `project_context/**`.
 
@@ -96,6 +97,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Revision tests must prove the three-way classifier, exact summary/hash binding, scope-only candidate execution with zero durable-state mutation, red-candidate non-execution, stable pending projection in status/resume, approval invalidation after edits and full evidence invalidation after adoption.
 - Project-native architecture checks and `check-modularity` protect declared structural boundaries; Final Gate alone reruns the complete long-task authority on one current snapshot.
 - Managed source/package/generated copies must remain byte-aligned through source sync and package parity checks.
+- Trusted publication binds the tested tarball SHA-256, dispatch source commit and a CRLF/LF-stable lockfile identity across the job boundary. Node/npm versions remain build provenance, not a requirement that the later publisher process use byte-identical tools.
 
 ## Open Risks
 

@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
   mkdirSync,
@@ -12,6 +11,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parsePackJson } from "../../tools/release_publish_helpers.mjs";
+import { stableTextSha256 } from "../../tools/release_artifact_identity.mjs";
 
 const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -58,6 +58,21 @@ assert.match(
   trustedPublishWorkflow,
   /npm test --workspace project-tiny-context-harness/u,
 );
+assert.equal(
+  trustedPublishWorkflow.match(/npm test --workspace project-tiny-context-harness/gu)?.length,
+  1,
+);
+assert.equal(trustedPublishWorkflow.match(/npm pack --json/gu)?.length, 1);
+assert.equal(trustedPublishWorkflow.match(/release_tarball_smoke\.mjs/gu)?.length, 1);
+assert.match(trustedPublishWorkflow, /prepare:[\s\S]*publish:/u);
+assert.match(trustedPublishWorkflow, /needs: prepare/u);
+assert.match(trustedPublishWorkflow, /actions\/upload-artifact@[a-f0-9]{40}/u);
+assert.match(trustedPublishWorkflow, /actions\/download-artifact@[a-f0-9]{40}/u);
+assert.match(trustedPublishWorkflow, /name: npm-release-\$\{\{ github\.run_id \}\}/u);
+assert.match(trustedPublishWorkflow, /overwrite: true/u);
+assert.doesNotMatch(trustedPublishWorkflow, /github\.run_attempt/u);
+assert.match(trustedPublishWorkflow, /verify_workflow_release_artifact\.mjs/u);
+assert.match(trustedPublishWorkflow, /publish_prepared_artifact\.mjs/u);
 assert.match(trustedPublishWorkflow, /release_tarball_smoke\.mjs --tarball/u);
 assert.doesNotMatch(
   trustedPublishWorkflow,
@@ -176,9 +191,7 @@ try {
   assert.match(attestation.npm_version, /^\d+\.\d+\.\d+/);
   assert.equal(
     attestation.lockfile_sha256,
-    createHash("sha256")
-      .update(readFileSync(path.join(fixture, "package-lock.json")))
-      .digest("hex"),
+    stableTextSha256(readFileSync(path.join(fixture, "package-lock.json"), "utf8")),
   );
 
   const prepareCommands = readJsonLines(prepareLog);
@@ -366,6 +379,9 @@ try {
     `${publishNoFallback.stdout}\n${publishNoFallback.stderr}`,
   );
   assert.match(publishNoFallback.stdout, /Trusted Publishing is preferred/);
+  assert.match(publishNoFallback.stdout, /dry_run: false/);
+  assert.match(publishNoFallback.stdout, /prepares and tests once/u);
+  assert.doesNotMatch(publishNoFallback.stdout, /rerun with dry_run: false/u);
   assert.doesNotMatch(
     publishNoFallback.stdout,
     /Published project-tiny-context-harness@1\.2\.4/,

@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { commandLogEntry, delay, parseJsonFromOutput, requireValue, runCommand, singleLine } from "./release_publish_helpers.mjs";
 import { stubbedReleasePublishResult } from "./release_publish_test_stubs.mjs";
 import { assertReleaseUpgradeImpactEvidence } from "./release_upgrade_impact.mjs";
-import { assertReleaseArtifactAttestation, assertReleaseEnvironmentIdentity } from "./release_artifact_identity.mjs";
+import { assertReleaseArtifactAttestation, assertReleaseSourceIdentity } from "./release_artifact_identity.mjs";
 
 const defaultRepoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageName = "project-tiny-context-harness";
@@ -82,8 +82,9 @@ async function main() {
     console.log("Trusted Publishing is preferred.");
     console.log("Run GitHub Actions workflow .github/workflows/npm-publish.yml with:");
     console.log(`  expected_version: ${version}`);
-    console.log("  dry_run: true");
-    console.log("Then rerun with dry_run: false if the dry run passes.");
+    console.log("  dry_run: false");
+    console.log("That one run prepares and tests once, then publishes the same protected artifact.");
+    console.log("Use dry_run: true only for an optional prepare-only diagnostic.");
     console.log("Use --local-fallback --yes only when workflow dispatch is unavailable.");
     return;
   }
@@ -167,7 +168,7 @@ async function readPreparedArtifact(version) {
   const attestationPath = path.join(args.root, "docs", "launch", `release-artifact-${version}.json`);
   const attestation = JSON.parse(await readFile(attestationPath, "utf8"));
   assertReleaseArtifactAttestation(attestation, { packageName, version });
-  await assertReleaseEnvironmentIdentity(attestation, args.root);
+  await assertReleaseSourceIdentity(attestation, args.root);
   const relative = path
     .join(".artifacts", "releases", "prepared", attestation.filename)
     .replace(/\\/g, "/");

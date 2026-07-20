@@ -21,7 +21,7 @@ npm run test:affected
 make validate-context
 ```
 
-Before handing off a frozen Long-Task package candidate, run `npm run test:long-task:trust`. Use `npm test --workspace project-tiny-context-harness` for shared package/dependency changes or an explicit release rehearsal; `main` and publish always retain that complete release regression.
+Before handing off a frozen Long-Task package candidate, run `npm run test:long-task:trust`. Use `npm test --workspace project-tiny-context-harness` for shared package/dependency changes or an explicit release rehearsal. Trusted Publishing runs the complete release regression once in its prepare job, then publishes the exact verified artifact without rebuilding or rerunning the suite.
 
 If you change package-managed assets, also run:
 
