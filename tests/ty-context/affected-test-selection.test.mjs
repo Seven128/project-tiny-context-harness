@@ -6,8 +6,10 @@ import { fileURLToPath } from "node:url";
 import {
   DELIVERY_CONTRACT_FOCUSED_TESTS,
   LONG_TASK_FOCUSED_TESTS,
+  LONG_TASK_TRUST_TESTS,
   selectAffectedTests,
 } from "../../tools/affected_test_selection.mjs";
+import { resolveTestTimingOutput } from "../../tools/test_suite_policy.mjs";
 
 test("hotspot source changes select focused regression tests", () => {
   const selection = selectAffectedTests([
@@ -30,8 +32,45 @@ test("Long-Task command changes include the one-time model-choice regression", (
   assert.equal(selection.requires_build, true);
   assert.deepEqual(selection.tests, [
     "tests/ty-context/long-task-active-authority-continuity.test.mjs",
+    "tests/ty-context/long-task-authority-revision-classification.test.mjs",
+    "tests/ty-context/long-task-authority-revision-diagnosis.test.mjs",
     "tests/ty-context/long-task-context-evolution.test.mjs",
     "tests/ty-context/long-task-model-choice-checkpoint.test.mjs",
+    "tests/ty-context/long-task-workflow-black-box.test.mjs",
+  ]);
+});
+
+test("Authority Revision classifier changes select diagnosis and semantic coverage", () => {
+  const selection = selectAffectedTests([
+    "packages/ty-context/src/lib/long-task-authority-revision-summary.ts",
+  ]);
+  assert.equal(selection.mode, "selected");
+  assert.equal(selection.requires_build, true);
+  assert.deepEqual(selection.tests, [
+    "tests/ty-context/long-task-authority-revision-classification.test.mjs",
+    "tests/ty-context/long-task-authority-revision-diagnosis.test.mjs",
+    "tests/ty-context/long-task-semantic-authority-revision.test.mjs",
+  ]);
+});
+
+test("split Authority Revision command modules retain focused routing coverage", () => {
+  const revision = selectAffectedTests([
+    "packages/ty-context/src/commands/long-task-revision.ts",
+  ]);
+  assert.deepEqual(revision.tests, [
+    "tests/ty-context/long-task-active-authority-continuity.test.mjs",
+    "tests/ty-context/long-task-authority-revision-classification.test.mjs",
+    "tests/ty-context/long-task-authority-revision-diagnosis.test.mjs",
+    "tests/ty-context/long-task-context-evolution.test.mjs",
+    "tests/ty-context/long-task-model-choice-checkpoint.test.mjs",
+    "tests/ty-context/long-task-workflow-black-box.test.mjs",
+  ]);
+
+  const args = selectAffectedTests([
+    "packages/ty-context/src/commands/long-task-command-args.ts",
+  ]);
+  assert.deepEqual(args.tests, [
+    "tests/ty-context/long-task-authority-revision-diagnosis.test.mjs",
     "tests/ty-context/long-task-workflow-black-box.test.mjs",
   ]);
 });
@@ -77,13 +116,27 @@ test("shared long-task runtime types use focused authority and recovery coverage
   ]);
 });
 
-test("unmapped long-task runtime changes fail safe to the complete long-task suite", () => {
+test("unmapped long-task runtime changes fail safe to the Trust Boundary Gate", () => {
   const selection = selectAffectedTests([
     "packages/ty-context/src/lib/long-task-unmapped-runtime.ts",
   ]);
-  assert.equal(selection.mode, "long-task-suite");
+  assert.equal(selection.mode, "trust-boundary");
+  assert.equal(selection.tier, "trust-boundary");
+  assert.match(selection.purpose, /false-completion/u);
   assert.deepEqual(selection.tests, []);
   assert.equal(selection.requires_build, true);
+});
+
+test("Trust widening retains affected tests that the canonical gate does not contain", () => {
+  const selection = selectAffectedTests([
+    "packages/ty-context/src/lib/long-task-unmapped-runtime.ts",
+    "tests/ty-context/long-task-delivery-parser.test.mjs",
+    "tests/ty-context/long-task-workflow-black-box.test.mjs",
+  ]);
+  assert.equal(selection.mode, "trust-boundary");
+  assert.deepEqual(selection.tests, [
+    "tests/ty-context/long-task-delivery-parser.test.mjs",
+  ]);
 });
 
 test("shared package runtime and dependency changes fail safe to the full suite", () => {
@@ -115,6 +168,11 @@ test("guidance-only changes select static consistency checks", () => {
 });
 
 test("explicit scopes are deterministic and no-change auto mode stays useful", () => {
+  const trust = selectAffectedTests([], { scope: "trust" });
+  assert.equal(trust.mode, "trust-boundary");
+  assert.equal(trust.tier, "trust-boundary");
+  assert.deepEqual(trust.tests, []);
+  assert.ok(LONG_TASK_TRUST_TESTS.length >= 8);
   assert.deepEqual(
     selectAffectedTests([], { scope: "long-task" }).tests,
     LONG_TASK_FOCUSED_TESTS,
@@ -125,6 +183,27 @@ test("explicit scopes are deterministic and no-change auto mode stays useful", (
   );
   assert.deepEqual(selectAffectedTests([]).tests, LONG_TASK_FOCUSED_TESTS);
   assert.equal(selectAffectedTests([], { scope: "all" }).mode, "full-suite");
+});
+
+test("affected tooling changes select discovery, selection, and entry-point coverage", () => {
+  for (const file of [
+    "tools/affected_change_discovery.mjs",
+    "tools/affected_test_selection.mjs",
+    "tools/run_affected_tests.mjs",
+    "tools/test_suite_policy.mjs",
+  ]) {
+    const selection = selectAffectedTests([file]);
+    assert.equal(selection.mode, "selected", file);
+    assert.deepEqual(
+      selection.tests,
+      [
+        "tests/ty-context/affected-change-discovery.test.mjs",
+        "tests/ty-context/affected-test-selection.test.mjs",
+        "tests/ty-context/workflow-test-entrypoints.test.mjs",
+      ],
+      file,
+    );
+  }
 });
 
 test("direct test edits run that test while shared fixture edits widen safely", () => {
@@ -159,6 +238,10 @@ test("package scripts expose affected and focused developer loops", async () => 
     "node tools/run_affected_tests.mjs --list",
   );
   assert.equal(
+    packageJson.scripts["test:long-task:trust"],
+    "node tools/run_affected_tests.mjs --scope trust",
+  );
+  assert.equal(
     packageJson.scripts["test:long-task:focused"],
     "node tools/run_affected_tests.mjs --scope long-task",
   );
@@ -166,4 +249,26 @@ test("package scripts expose affected and focused developer loops", async () => 
     packageJson.scripts["test:delivery-contract:focused"],
     "node tools/run_affected_tests.mjs --scope delivery-contract",
   );
+});
+
+test("suite timing paths are rooted at the repository, not the npm workspace cwd", () => {
+  const repositoryRoot = path.resolve("timing-repository-fixture");
+  assert.equal(
+    resolveTestTimingOutput(repositoryRoot, "long-task-trust", {
+      TY_CONTEXT_TEST_TIMING_DIR: ".artifacts/test-timing/pr",
+    }),
+    path.resolve(
+      repositoryRoot,
+      ".artifacts/test-timing/pr/long-task-trust.json",
+    ),
+  );
+
+  const absoluteFile = path.resolve(repositoryRoot, "timing.json");
+  assert.equal(
+    resolveTestTimingOutput(repositoryRoot, "default", {
+      TY_CONTEXT_TEST_TIMING_FILE: absoluteFile,
+    }),
+    absoluteFile,
+  );
+  assert.equal(resolveTestTimingOutput(repositoryRoot, "default", {}), null);
 });

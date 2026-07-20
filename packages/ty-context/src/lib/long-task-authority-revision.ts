@@ -18,6 +18,8 @@ import {
 } from "./long-task-authority-material-diff.js";
 import { compileProductClaimCoverage } from "./long-task-claims.js";
 import {
+  addedInputPaths,
+  addedVerificationInputs,
   addedValues,
   bindingReductions,
   changedRunnerFields,
@@ -77,7 +79,9 @@ export function authorityRevisionDiff(
   const negativeAssertionsRemoved: string[] = [];
   const proofSurfacesChanged: string[] = [];
   const runnerDefinitionsChanged: string[] = [];
+  const verificationInputsAdded: string[] = [];
   const verificationInputsRemovedOrReplaced: string[] = [];
+  const inputPathsAdded: string[] = [];
   const inputPathsRemovedOrNarrowed: string[] = [];
   const expectedOutputPathsRemovedOrWeakened: string[] = [];
   const artifactsRemoved: string[] = [];
@@ -95,9 +99,13 @@ export function authorityRevisionDiff(
     runnerDefinitionsChanged.push(
       ...changedRunnerFields(identity, before, after),
     );
+    verificationInputsAdded.push(
+      ...addedVerificationInputs(identity, before, after),
+    );
     verificationInputsRemovedOrReplaced.push(
       ...removedOrReplacedVerificationInputs(identity, before, after),
     );
+    inputPathsAdded.push(...addedInputPaths(identity, before, after));
     inputPathsRemovedOrNarrowed.push(
       ...removedOrNarrowedInputPaths(identity, before, after),
     );
@@ -204,6 +212,10 @@ export function authorityRevisionDiff(
     previous.authority_hashes.risk_authority_hash !==
     nextHashes.risk_authority_hash;
   const acceptanceChanged = acceptanceSemanticsChanged(previous, next);
+  const externalConfirmationsChanged = !same(
+    previous.global.acceptance.external_confirmations,
+    next.global.acceptance.external_confirmations,
+  );
   const monotonic = isMonotonicAcceptanceStrengthening(previous, next);
   const reductionReasons = [
     ...(productClaimsAdded.length ? ["product_claim_added"] : []),
@@ -288,8 +300,10 @@ export function authorityRevisionDiff(
     allowed_paths_expanded: allowedPathsExpanded,
     forbidden_paths_removed: forbiddenPathsRemoved,
     runner_definitions_changed: runnerDefinitionsChanged,
+    verification_inputs_added: verificationInputsAdded,
     verification_inputs_removed_or_replaced:
       verificationInputsRemovedOrReplaced,
+    input_paths_added: inputPathsAdded,
     input_paths_removed_or_narrowed: inputPathsRemovedOrNarrowed,
     expected_output_paths_removed_or_weakened:
       expectedOutputPathsRemovedOrWeakened,
@@ -300,6 +314,7 @@ export function authorityRevisionDiff(
     rollback_or_recovery_weakened: rollbackOrRecoveryWeakened,
     counterfactuals_removed: counterfactualsRemoved,
     population_weakened: populationWeakened,
+    external_confirmations_changed: externalConfirmationsChanged,
     ...verifierDiff,
     source_claims_changed:
       previous.authority_hashes.source_authority_hash !==

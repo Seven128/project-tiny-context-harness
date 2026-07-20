@@ -57,19 +57,25 @@ test("Context authority projection excludes retrieval-only friction without weak
 });
 
 test("bounded Context discovery reduces trigger-only recall risk without a retrieval system", async () => {
-  const [agents, development, contextModel, architecture, rationale, efficiency] =
-    await Promise.all([
-      read(".codex/ty-context-managed/agents/AGENTS_CORE.md"),
-      read(
-        ".codex/ty-context-managed/skills/context_development_engineer/SKILL.md",
-      ),
-      read("project_context/areas/harness-package/foundation/context-model.md"),
-      read("project_context/architecture.md"),
-      read(
-        "project_context/areas/harness-package/decision-rationale/minimal-context.md",
-      ),
-      read("docs/long-task-workflow-efficiency.md"),
-    ]);
+  const [
+    agents,
+    development,
+    contextModel,
+    architecture,
+    rationale,
+    efficiency,
+  ] = await Promise.all([
+    read(".codex/ty-context-managed/agents/AGENTS_CORE.md"),
+    read(
+      ".codex/ty-context-managed/skills/context_development_engineer/SKILL.md",
+    ),
+    read("project_context/areas/harness-package/foundation/context-model.md"),
+    read("project_context/architecture.md"),
+    read(
+      "project_context/areas/harness-package/decision-rationale/minimal-context.md",
+    ),
+    read("docs/long-task-workflow-efficiency.md"),
+  ]);
   const combined = [
     agents,
     development,
@@ -101,8 +107,7 @@ test("bounded Context discovery reduces trigger-only recall risk without a retri
       ),
     )
     .filter(
-      (line) =>
-        !/\bno\b|does not|without|never|不创建|不持久化/iu.test(line),
+      (line) => !/\bno\b|does not|without|never|不创建|不持久化/iu.test(line),
     );
   assert.deepEqual(affirmativeInfrastructureClaims, []);
 });
@@ -125,9 +130,7 @@ test("one-time model choice uses Authority Lock without creating model routing s
     read(
       ".codex/ty-context-managed/skills/long-task-workflow/references/authority-lifecycle.md",
     ),
-    read(
-      ".codex/skills/long-task-workflow/references/authority-lifecycle.md",
-    ),
+    read(".codex/skills/long-task-workflow/references/authority-lifecycle.md"),
     read(
       "packages/ty-context/assets/skills/long-task-workflow/references/authority-lifecycle.md",
     ),
@@ -189,9 +192,7 @@ test("Preflight repair ordering remains advisory and creates no authority", asyn
   const [architecture, efficiency, ...references] = await Promise.all([
     read("project_context/architecture.md"),
     read("docs/long-task-workflow-efficiency.md"),
-    read(
-      ".codex/skills/long-task-workflow/references/authority-lifecycle.md",
-    ),
+    read(".codex/skills/long-task-workflow/references/authority-lifecycle.md"),
     read(
       ".codex/ty-context-managed/skills/long-task-workflow/references/authority-lifecycle.md",
     ),
@@ -217,16 +218,44 @@ test("Preflight repair ordering remains advisory and creates no authority", asyn
 });
 
 test("affected developer loops remain non-authoritative", async () => {
-  const verification = await read(
-    "project_context/areas/harness-package/verification.md",
-  );
+  const [verification, implementation, efficiency, specification] =
+    await Promise.all([
+      read("project_context/areas/harness-package/verification.md"),
+      read("docs/test-suite-roi-redesign.md"),
+      read("docs/long-task-workflow-efficiency.md"),
+      read("PROJECT_SPEC.md"),
+    ]);
+  const combined = [
+    verification,
+    implementation,
+    efficiency,
+    specification,
+  ].join("\n");
   for (const command of [
     "test:affected:list",
     "test:affected",
     "test:long-task:focused",
+    "test:long-task:trust",
     "test:delivery-contract:focused",
     "do not replace complete CI/release gates",
     "fail safe",
   ])
-    assert.ok(verification.includes(command), command);
+    assert.ok(combined.includes(command), command);
+
+  for (const boundary of [
+    "local-worktree",
+    "HEAD^",
+    "Trust Boundary Gate",
+    "test-suite-timing-v1",
+    "main",
+    "publish",
+  ])
+    assert.ok(combined.includes(boundary), boundary);
+
+  assert.match(combined, /zero times during ordinary repair/iu);
+  assert.match(combined, /third run requires/iu);
+  assert.match(
+    combined,
+    /never Contract acceptance|never.*acceptance authority|never becomes Long-Task acceptance evidence/iu,
+  );
 });

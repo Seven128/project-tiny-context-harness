@@ -6,7 +6,7 @@ on:
       expected_version:
         description: "Must match packages/ty-context/package.json version."
         required: true
-        default: "0.6.2"
+        default: "0.7.0"
       dry_run:
         description: "Build, validate, and pack without publishing."
         required: true

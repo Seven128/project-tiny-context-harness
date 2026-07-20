@@ -54,8 +54,11 @@ npm run test:affected:list
 npm run test:affected
 npm run test:long-task:focused
 npm run test:delivery-contract:focused
+npm run test:long-task:trust
 ```
 
-The affected selector maps known hot spots to focused regression tests, widens unmapped Long-Task runtime changes to the complete Long-Task suite, and widens shared package, dependency or unknown changes to the full suite. It builds at most once per invocation when a build is required.
+The affected selector maps known hot spots to focused regression tests, widens unmapped Long-Task runtime changes to the Trust Boundary Gate, and widens shared fixtures, package/dependency or unknown changes to complete suites. Dirty local discovery uses only current working-tree paths; clean local discovery uses `HEAD^`; explicit and CI bases are exact. It builds at most once per invocation when a build is required.
 
-Affected and focused results are developer feedback only. They do not replace the complete package suite, source parity, smoke, pack, release checks or the Long-Task Final Gate.
+The Trust Boundary Gate is the middle-cost frozen-candidate check for independent high-impact authority, freshness, forged-evidence, Final Gate/Stop/close, Hook/profile and platform-boundary regressions. Pull requests run the complete default suite plus this gate. `main`, publish and release retain the complete package suite.
+
+Affected, focused and Trust results are package feedback only. They do not replace the complete release suite, source parity, smoke, pack, release checks or the Long-Task Final Gate. Do not run the complete suite after each small repair: batch aggregate failures, rerun failed/affected coverage, then rerun the selected aggregate gate once on the frozen snapshot.

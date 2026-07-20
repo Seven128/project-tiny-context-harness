@@ -44,7 +44,8 @@
 - The first successful Compile creates Authority Lock and emits `execution_model_checkpoint.required: true`. Before implementation the Agent asks the user to continue with the current model or switch models and resume; a prior explicit model strategy satisfies the checkpoint, later revisions do not repeat it, and the choice is not proof.
 - Outcome decomposes execution, dependency readiness, targeted verification and diagnosis; it does not split completion authority. File count, layers, capacity, model context, desired parallelism or output length never create an Outcome or Contract boundary.
 - Targeted verify is repair evidence only. Final Gate, Stop and close recompile Source authority and rerun the complete Contract on one clean current Git-tree snapshot. Status, Progress, Receipts and compiled cache are audit/recovery projections only.
-- Authority revisions fail closed. Source/Product/Technical/Acceptance/Risk, Controlling Context or verifier-material weakening cannot be adopted silently. The executing Agent never approves its own protected reduction.
+- Authority revisions use three fail-closed classes. Machine-proven monotonic evidence strengthening auto-revises; a candidate whose only protected reasons are owner/change/support scope expansion remains inactive but may be exercised through stateless diagnosis, with safe monotonic strengthening allowed to coexist; every other protected semantic change, proof weakening, runner or verifier-content change, or risk change requires the exact revision identity. The executing Agent never approves its own protected revision.
+- `diagnose-revision` recompiles the same `delivery-contract.yaml` against the active Authority and may run only existing active Check identities with unchanged runner/verifier authority for a scope-only candidate. It writes no pending/approval state, Active Authority, cache, Progress or Receipt and never authorizes acceptance. Repeated edits accumulate only in the existing Contract Draft; ordinary `compile --revise` creates one hash-bound pending decision and concise deterministic summary. Until approval and atomic adoption, the old Authority remains active; adoption invalidates derived evidence and the complete current-snapshot Final Gate remains mandatory.
 - Architecture requirements that matter to acceptance must use existing Contract mechanisms: Source-backed technical obligations or forbidden shortcuts, owner/path/binding boundaries and project-owned executable checks. A functional AC cannot substitute for a declared architecture invariant.
 - Machine acceptance never implies Git hosting, CI, deployment, network isolation, migration/payment execution or human product acceptance. Those remain explicit external confirmations.
 
@@ -56,7 +57,7 @@
 
 ## Current State
 
-- Package version `0.6.0` defines the public `long-task-delivery-v2` path, explicit `long-task` profile, package-owned Stop Hook and manual boundary for development-period authority state.
+- Package version `0.7.0` defines the public `long-task-delivery-v2` path, explicit `long-task` profile, package-owned Stop Hook, stateless Authority Revision diagnosis and manual boundary for development-period authority state.
 - Managed source lives under `.codex/ty-context-managed/**`; packaged assets live under `packages/ty-context/assets/**`; `packages/ty-context/source-mappings.yaml` is the copy authority.
 - Root `AGENTS.md` is a startup router and hard-boundary surface. Skills own role procedures, `PROJECT_SPEC.md` owns the full stable design explanation, role Context owns durable facts, README owns human usage, and tests own machine proof.
 - `ty-context doctor` reports the deterministic default Context read footprint and warns on excessive or byte-identical default content without creating a new validation gate.
@@ -67,14 +68,15 @@
 - `make validate-context`: Context recoverability.
 - `make validate-harness`: Context plus touched-source modularity.
 - `npm run test:affected`: fail-safe affected test selection.
-- `npm test --workspace project-tiny-context-harness`: complete package and Long-Task suites.
+- `npm run test:long-task:trust`: bounded high-impact Long-Task Trust Boundary regression after a candidate diff is frozen.
+- `npm test --workspace project-tiny-context-harness`: complete package and Long-Task release-regression suites.
 - `npm run test:long-task-performance --workspace project-tiny-context-harness`: large-repository runtime budgets.
 - `node packages/ty-context/dist/cli.js package check-source`: managed source/package parity.
 - `git diff --check`: patch hygiene.
 
 ## Next Safe Action
 
-Keep implementation, managed source, package assets, Context, `PROJECT_SPEC.md`, English/Chinese README and behavior tests aligned. Prefer focused loops while editing, then run the complete applicable gates before claiming readiness.
+Keep implementation, managed source, package assets, Context, `PROJECT_SPEC.md`, English/Chinese README and behavior tests aligned. Use affected/focused loops while editing, the Trust Boundary Gate on a frozen Long-Task candidate, and the complete suite only when release routing requires it.
 
 ## Context Index
 

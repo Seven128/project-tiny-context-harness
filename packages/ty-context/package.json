@@ -1,6 +1,6 @@
 {
   "name": "project-tiny-context-harness",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "description": "Minimal project memory and validation harness for AI coding agents.",
   "license": "MIT",
   "author": "Seven128",
@@ -53,6 +53,8 @@
     "test:default:built": "node ../../tests/ty-context/run-package-suite.mjs default",
     "test:default": "npm run build && npm run test:default:built",
     "test:built": "npm run test:default:built && npm run test:long-task-workflow:built",
+    "test:trust:built": "npm run test:default:built && npm run test:long-task-trust:built",
+    "test:trust": "npm run build && npm run test:trust:built",
     "pretest": "npm run build",
     "test": "npm run test:built",
     "test:workflow-default:built": "node --test --test-concurrency=1 ../../tests/ty-context/workflow-contract-routing.test.mjs",
@@ -60,6 +62,8 @@
     "test:delivery-contract": "npm run build && npm run test:delivery-contract:built",
     "test:long-task-workflow:built": "node ../../tests/ty-context/run-package-suite.mjs long-task",
     "test:long-task-workflow": "npm run build && npm run test:long-task-workflow:built",
+    "test:long-task-trust:built": "node ../../tests/ty-context/run-package-suite.mjs long-task-trust",
+    "test:long-task-trust": "npm run build && npm run test:long-task-trust:built",
     "test:long-task-performance": "npm run build && node ../../tests/ty-context/long-task-performance.mjs",
     "prepack": "npm run build"
   },

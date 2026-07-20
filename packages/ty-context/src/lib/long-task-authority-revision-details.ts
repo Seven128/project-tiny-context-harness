@@ -53,6 +53,26 @@ export function removedOrReplacedVerificationInputs(
     .map(([file]) => `${identity}:${file}`);
 }
 
+export function addedVerificationInputs(
+  identity: string,
+  before: CompiledCheckV2,
+  after: CompiledCheckV2,
+): string[] {
+  return Object.keys(after.verification_input_hashes)
+    .filter((file) => before.verification_input_hashes[file] === undefined)
+    .map((file) => `${identity}:${file}`);
+}
+
+export function addedInputPaths(
+  identity: string,
+  before: CompiledCheckV2,
+  after: CompiledCheckV2,
+): string[] {
+  return after.input_paths
+    .filter((pattern) => !before.input_paths.includes(pattern))
+    .map((pattern) => `${identity}:${pattern}`);
+}
+
 export function removedOrNarrowedInputPaths(
   identity: string,
   before: CompiledCheckV2,

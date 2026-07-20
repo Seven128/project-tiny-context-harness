@@ -1,4 +1,56 @@
-import type { VerifierIdentityV2 } from "./long-task-authority-types.js";
+import type {
+  AuthorityHashesV2,
+  AuthorityMaterialHashesV2,
+  NextAuthorityMaterialsV2,
+  VerifierIdentityV2,
+} from "./long-task-authority-types.js";
+
+export type AuthorityRevisionChangeClassV2 =
+  | "monotonic_evidence_strengthening"
+  | "scope_only_expansion"
+  | "protected_semantic_or_proof_change";
+
+export interface AuthorityRevisionApprovalSummaryV2 {
+  product_semantics_changed: boolean;
+  global_or_technical_semantics_changed: boolean;
+  source_or_claims_changed: boolean;
+  context_authority_changed: boolean;
+  acceptance_or_proof_weakened: boolean;
+  verifier_or_runner_changed: boolean;
+  write_scope_expanded: boolean;
+  risk_changed: boolean;
+  external_confirmations_changed: boolean;
+  added_verification_dependencies: string[];
+  expanded_owner_paths: string[];
+  expanded_expected_change_paths: string[];
+  expanded_allowed_support_paths: string[];
+  protected_reasons: string[];
+  affected_outcomes: string[];
+}
+
+export interface AuthorityRevisionProposalV2 {
+  previous_hashes: AuthorityHashesV2;
+  next_hashes: AuthorityHashesV2;
+  previous_materials: NextAuthorityMaterialsV2;
+  next_materials: NextAuthorityMaterialsV2;
+  previous_material_hashes: AuthorityMaterialHashesV2;
+  next_material_hashes: AuthorityMaterialHashesV2;
+  changed_authority_sections: string[];
+  revision_diff: AuthorityRevisionDiffV2;
+  new_risk_floor: "standard" | "strict";
+  affected_outcomes_or_contracts: string[];
+  change_class: AuthorityRevisionChangeClassV2;
+  approval_required: boolean;
+  approval_summary: AuthorityRevisionApprovalSummaryV2;
+  revision_identity: string;
+}
+
+export interface AuthorityRevisionDecisionV2 {
+  revision_identity: string;
+  change_class: AuthorityRevisionChangeClassV2;
+  approval_required: boolean;
+  approval_summary: AuthorityRevisionApprovalSummaryV2;
+}
 
 export interface AuthorityRevisionDiffV2 {
   product_claims_added: string[];
@@ -27,7 +79,9 @@ export interface AuthorityRevisionDiffV2 {
   allowed_paths_expanded: string[];
   forbidden_paths_removed: string[];
   runner_definitions_changed: string[];
+  verification_inputs_added: string[];
   verification_inputs_removed_or_replaced: string[];
+  input_paths_added: string[];
   input_paths_removed_or_narrowed: string[];
   expected_output_paths_removed_or_weakened: string[];
   artifacts_removed: string[];
@@ -37,6 +91,7 @@ export interface AuthorityRevisionDiffV2 {
   rollback_or_recovery_weakened: string[];
   counterfactuals_removed: string[];
   population_weakened: string[];
+  external_confirmations_changed: boolean;
   verifier_content_changed: boolean;
   verifier_runtime_locator_changed: boolean;
   verifier_files_changed: string[];

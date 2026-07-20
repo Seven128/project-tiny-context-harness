@@ -3,10 +3,12 @@ import {
   authorityMaterialHashes,
   compiledAuthorityMaterials,
 } from "./long-task-authority-materials.js";
+import { authorityRevisionDiff } from "./long-task-authority-revision.js";
 import {
-  authorityRevisionDiff,
-  type AuthorityRevisionDiffV2,
-} from "./long-task-authority-revision.js";
+  classifyAuthorityRevision,
+  summarizeAuthorityRevision,
+} from "./long-task-authority-revision-summary.js";
+import type { AuthorityRevisionProposalV2 } from "./long-task-authority-revision-types.js";
 import type {
   AuthorityHashesV2,
   CompiledDeliveryContractV2,
@@ -34,7 +36,7 @@ export function assertRiskNotDowngraded(
     throw new Error(`authority_risk_downgrade_rejected:${removed.join(",")}`);
 }
 
-export async function enforceAuthorityRevision(
+export function buildAuthorityRevisionProposal(
   previous: CompiledDeliveryContractV2,
   nextContract: DeliveryContractV2,
   nextHashes: AuthorityHashesV2,
@@ -42,9 +44,8 @@ export async function enforceAuthorityRevision(
   nextGlobalChecks: CompiledDeliveryContractV2["global"]["acceptance"]["checks"],
   nextOutcomes: CompiledOutcomeV2[],
   nextVerifier: VerifierIdentityV2,
-  workdir: string,
   riskFloor: "standard" | "strict",
-): Promise<void> {
+): AuthorityRevisionProposalV2 {
   const previousMaterials = compiledAuthorityMaterials(previous);
   const diff = authorityRevisionDiff(
     previous,
@@ -55,7 +56,11 @@ export async function enforceAuthorityRevision(
     nextOutcomes,
     nextVerifier,
   );
-  if (!diff.reduction_reasons.length) return;
+  const changeClass = classifyAuthorityRevision(diff);
+  const approvalSummary = summarizeAuthorityRevision(
+    diff,
+    nextContract.outcomes.map((outcome) => outcome.key),
+  );
   const unsignedRevision = {
     previous_hashes: previous.authority_hashes,
     next_hashes: nextHashes,
@@ -67,22 +72,30 @@ export async function enforceAuthorityRevision(
       previous.authority_hashes,
       nextHashes,
     ),
-    revision_diff: diff as AuthorityRevisionDiffV2 & Record<string, unknown>,
+    revision_diff: diff,
     new_risk_floor: riskFloor,
-    affected_outcomes_or_contracts: nextContract.outcomes.map(
-      (outcome) => outcome.key,
-    ),
+    affected_outcomes_or_contracts: approvalSummary.affected_outcomes,
+    change_class: changeClass,
+    approval_required: diff.reduction_reasons.length > 0,
+    approval_summary: approvalSummary,
   };
   const revisionIdentity = sha256Hex(canonicalValueJson(unsignedRevision));
-  if (!(await authorityRevisionApproved(workdir, revisionIdentity))) {
+  return { ...unsignedRevision, revision_identity: revisionIdentity };
+}
+
+export async function enforceAuthorityRevision(
+  proposal: AuthorityRevisionProposalV2,
+  workdir: string,
+): Promise<void> {
+  if (!proposal.approval_required) return;
+  if (!(await authorityRevisionApproved(workdir, proposal.revision_identity))) {
     await writePendingAuthorityRevision(workdir, {
       schema_version: "long-task-authority-revision-pending-v2",
-      ...unsignedRevision,
-      revision_identity: revisionIdentity,
+      ...proposal,
       created_at: new Date().toISOString(),
     });
     throw new Error(
-      `authority_change_requires_user_decision:${revisionIdentity}`,
+      `authority_change_requires_user_decision:${proposal.revision_identity}`,
     );
   }
 }

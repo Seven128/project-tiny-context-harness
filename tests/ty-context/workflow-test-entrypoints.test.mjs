@@ -9,15 +9,11 @@ const repoRoot = path.resolve(
   "../..",
 );
 
-test("long-task workflow tests stay in complete package and release gates", () => {
+test("package CI separates the Trust tier from complete release regression", () => {
   const packageWorkflow = read(".github/workflows/package.yml");
-  const publishWorkflow = read(".github/workflows/npm-publish.yml");
-  const consumerWorkflow = read(".github/workflows/harness.yml");
-  const publishRunbook = read("docs/launch/npm-trusted-publishing.md");
-  const tarballSmoke = read("tools/release_tarball_smoke.mjs");
-  const releasePrepare = read("tools/release_prepare.mjs");
-  const releasePublish = read("tools/release_publish.mjs");
   const packageJson = JSON.parse(read("packages/ty-context/package.json"));
+  const pullRequestJob = section(packageWorkflow, "pull-request", "main");
+  const mainJob = section(packageWorkflow, "main");
 
   assert.match(packageWorkflow, /Typecheck package and build once/);
   assert.match(
@@ -26,18 +22,95 @@ test("long-task workflow tests stay in complete package and release gates", () =
   );
   assert.match(packageWorkflow, /package check-source/);
   assert.match(packageWorkflow, /make validate-harness/);
+  assert.match(pullRequestJob, /Trust boundary package tests/);
+  assert.match(pullRequestJob, /TY_CONTEXT_TEST_TIMING_DIR/);
   assert.match(
-    packageWorkflow,
+    pullRequestJob,
+    /npm run test:trust:built --workspace project-tiny-context-harness --ignore-scripts/,
+  );
+  assert.doesNotMatch(
+    pullRequestJob,
+    /npm test --workspace project-tiny-context-harness/u,
+  );
+  assert.match(
+    mainJob,
     /Complete package tests[\s\S]*npm test --workspace project-tiny-context-harness --ignore-scripts/,
   );
+  assert.match(mainJob, /TY_CONTEXT_TEST_TIMING_DIR/);
   assert.match(packageWorkflow, /set -o pipefail/);
   assert.match(packageWorkflow, /tee package-test\.log/);
   assert.match(packageWorkflow, /Upload package test diagnostics/);
+  assert.match(packageWorkflow, /Upload package test timing/);
   assert.match(packageWorkflow, /uses: actions\/upload-artifact@[a-f0-9]{40}/);
   assert.match(packageWorkflow, /if-no-files-found: ignore/);
   assert.doesNotMatch(packageWorkflow, /npm run test:long-task-workflow/);
   assert.match(packageWorkflow, /node tools\/quickstart_smoke\.mjs/);
   assert.match(packageWorkflow, /npm run preview:pack/);
+
+  assert.equal(
+    packageJson.scripts["test:default:built"],
+    "node ../../tests/ty-context/run-package-suite.mjs default",
+  );
+  assert.equal(
+    packageJson.scripts["test:default"],
+    "npm run build && npm run test:default:built",
+  );
+  assert.equal(
+    packageJson.scripts["test:built"],
+    "npm run test:default:built && npm run test:long-task-workflow:built",
+  );
+  assert.equal(
+    packageJson.scripts["test:trust:built"],
+    "npm run test:default:built && npm run test:long-task-trust:built",
+  );
+  assert.equal(
+    packageJson.scripts["test:trust"],
+    "npm run build && npm run test:trust:built",
+  );
+  assert.equal(packageJson.scripts.pretest, "npm run build");
+  assert.equal(packageJson.scripts.test, "npm run test:built");
+  assert.equal(
+    packageJson.scripts["test:long-task-workflow:built"],
+    "node ../../tests/ty-context/run-package-suite.mjs long-task",
+  );
+  assert.equal(
+    packageJson.scripts["test:long-task-workflow"],
+    "npm run build && npm run test:long-task-workflow:built",
+  );
+  assert.equal(
+    packageJson.scripts["test:long-task-trust:built"],
+    "node ../../tests/ty-context/run-package-suite.mjs long-task-trust",
+  );
+  assert.equal(
+    packageJson.scripts["test:long-task-trust"],
+    "npm run build && npm run test:long-task-trust:built",
+  );
+  assert.equal(
+    packageJson.scripts["test:long-task-performance"],
+    "npm run build && node ../../tests/ty-context/long-task-performance.mjs",
+  );
+  assert.equal(packageJson.scripts["test:composite-workflow"], undefined);
+
+  const suiteRunner = read("tests/ty-context/run-package-suite.mjs");
+  assert.match(suiteRunner, /longTaskTestName/);
+  assert.match(suiteRunner, /\(selectedSuite === "long-task"\)/);
+  assert.match(suiteRunner, /\^long-task-/);
+  assert.match(suiteRunner, /LONG_TASK_TRUST_TEST_FILES/);
+  assert.match(suiteRunner, /long-task-trust/);
+  assert.match(suiteRunner, /test-suite-timing-v1/);
+  assert.match(suiteRunner, /resolveTestTimingOutput\(repositoryRoot, suite\)/);
+  assert.match(suiteRunner, /CI[\s\S]*--test-reporter=dot/);
+});
+
+test("publish, tarball, and consumer gates retain complete release boundaries", () => {
+  const packageWorkflow = read(".github/workflows/package.yml");
+  const publishWorkflow = read(".github/workflows/npm-publish.yml");
+  const consumerWorkflow = read(".github/workflows/harness.yml");
+  const publishRunbook = read("docs/launch/npm-trusted-publishing.md");
+  const tarballSmoke = read("tools/release_tarball_smoke.mjs");
+  const releasePrepare = read("tools/release_prepare.mjs");
+  const releasePublish = read("tools/release_publish.mjs");
+
   assert.match(publishWorkflow, /Build package/);
   assert.match(publishWorkflow, /npm install -g npm@12\.0\.1/);
   assert.doesNotMatch(publishWorkflow, /npm@latest/);
@@ -110,40 +183,6 @@ test("long-task workflow tests stay in complete package and release gates", () =
     consumerWorkflow,
     /composite-campaign-v5-app-server-black-box/,
   );
-
-  assert.equal(
-    packageJson.scripts["test:default:built"],
-    "node ../../tests/ty-context/run-package-suite.mjs default",
-  );
-  assert.equal(
-    packageJson.scripts["test:default"],
-    "npm run build && npm run test:default:built",
-  );
-  assert.equal(
-    packageJson.scripts["test:built"],
-    "npm run test:default:built && npm run test:long-task-workflow:built",
-  );
-  assert.equal(packageJson.scripts.pretest, "npm run build");
-  assert.equal(packageJson.scripts.test, "npm run test:built");
-  assert.equal(
-    packageJson.scripts["test:long-task-workflow:built"],
-    "node ../../tests/ty-context/run-package-suite.mjs long-task",
-  );
-  assert.equal(
-    packageJson.scripts["test:long-task-workflow"],
-    "npm run build && npm run test:long-task-workflow:built",
-  );
-  assert.equal(
-    packageJson.scripts["test:long-task-performance"],
-    "npm run build && node ../../tests/ty-context/long-task-performance.mjs",
-  );
-  assert.equal(packageJson.scripts["test:composite-workflow"], undefined);
-
-  const suiteRunner = read("tests/ty-context/run-package-suite.mjs");
-  assert.match(suiteRunner, /longTaskTestName/);
-  assert.match(suiteRunner, /\(suite === "long-task"\)/);
-  assert.match(suiteRunner, /\^long-task-/);
-  assert.match(suiteRunner, /CI[\s\S]*--test-reporter=dot/);
   assert.doesNotMatch(releasePrepare, /test:(?:composite|long-task)-workflow/);
   assert.doesNotMatch(releasePublish, /test:(?:composite|long-task)-workflow/);
   assert.match(
@@ -177,4 +216,14 @@ test("affected-test launcher stays portable and has a Windows gate", () => {
 
 function read(relativePath) {
   return readFileSync(path.join(repoRoot, relativePath), "utf8");
+}
+
+function section(source, start, end) {
+  const startMarker = `  ${start}:`;
+  const startIndex = source.indexOf(startMarker);
+  assert.notEqual(startIndex, -1, `missing workflow section: ${start}`);
+  if (!end) return source.slice(startIndex);
+  const endIndex = source.indexOf(`  ${end}:`, startIndex + startMarker.length);
+  assert.notEqual(endIndex, -1, `missing workflow section: ${end}`);
+  return source.slice(startIndex, endIndex);
 }

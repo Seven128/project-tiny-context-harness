@@ -64,6 +64,8 @@ Re-evaluate `Context Delta` whenever implementation or repair discovers a durabl
 
 Use targeted `verify --outcome/--check` only to drive repair. Progress is repair evidence only and never acceptance authority. Keep precise findings attached to the owning Source item, Claim, Assertion, Check, Binding and owner path. Do not add another model-switch pause or coordinate parallel subagents.
 
+When implementation discovers missing Contract paths, first classify the revision. Proven monotonic evidence strengthening may use ordinary `compile --revise` directly. If every protected reason is only owner/expected-change/allowed-support expansion, continue editing the same `delivery-contract.yaml` and use `ty-context long-task diagnose-revision <workdir> [--outcome <key>] [--check <key>]` to exercise only existing active Check identities with unchanged runner/verifier authority; safe monotonic strengthening may coexist. Candidate diagnostics are transient: they authorize no acceptance and write no pending/approval state, Active Authority, cache, Progress or Receipt. Semantic changes, proof weakening, runner or verifier-content changes, and risk-increase candidates are preview-only and must not run; risk downgrade is rejected. When the candidate is complete, run ordinary `compile --revise` once, present its exact concise decision summary to the user, and never approve it yourself. Keep the previous Authority active until exact approval and atomic adoption; after adoption, discard historical/candidate evidence and require the complete Final Gate.
+
 ## Live Final Authority
 
 Complete Context, implementation and project tests, create a clean candidate commit, then run `ty-context long-task final-gate <workdir>`.

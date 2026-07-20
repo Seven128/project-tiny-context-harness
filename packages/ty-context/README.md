@@ -137,7 +137,7 @@ npm ci
 npm run smoke:quickstart
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.6.2.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.0.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -233,11 +233,14 @@ Before product implementation, the Agent asks the user to continue with the curr
 
 Harness cannot switch the host-selected model. It creates no checkpoint file, acknowledgement state, model route, model-tier scheduler or automatic model switch. The choice is a one-time execution-cost affordance enabled by locked Authority and Final Gate protection; it is not acceptance evidence.
 
+Post-lock revisions use three fail-closed paths. Proven monotonic/mechanical strengthening auto-adopts. A candidate whose only protected reasons are owner/change/support expansion may run existing active Check identities with unchanged runner/verifier authority through stateless `diagnose-revision`; safe monotonic strengthening may coexist, but those transient results write no authority, pending decision, Progress, cache or Receipt and cannot accept. Semantic changes, proof weakening, runner or verifier-content changes, and risk increases are preview-only; risk downgrade is rejected. Related edits remain in the same `delivery-contract.yaml` until one ordinary `compile --revise` emits an exact hash-bound approval summary; `status` and `resume` project that same pending decision. Exact adoption invalidates derived evidence and never replaces the complete current-snapshot Final Gate.
+
 ```text
 ty-context long-task init <workdir>
 ty-context long-task preflight <workdir>
 ty-context long-task compile <workdir>
 ty-context long-task compile <workdir> --revise
+ty-context long-task diagnose-revision <workdir> [--outcome <key>] [--check <key>]
 ty-context long-task approve-authority-revision <workdir> --revision <sha>
 ty-context long-task explain <workdir>
 ty-context long-task verify <workdir> [--outcome <key>] [--check <key>]
@@ -251,6 +254,8 @@ ty-context long-task abandon <workdir> [--force-corrupt-state]
 ```
 
 Compact authoring omits only deterministic defaults and normalizes identically to the expanded form. `preflight` is a read-only aggregated Source/REQ/CTRL/OBL/AC and repository check that creates no authority, state, Receipt or runner execution. Compile generates Global plus Outcome Result/Requirement/Control-field/Non-completing/Technical Claims, rejects uncovered Claims and makes the first successful formal Compile the Authority Lock. The first Compile result emits `execution_model_checkpoint.required: true`; later Compile revisions emit `required: false`. Every later authority change still compares with active authority regardless of progress, Receipt/cache deletion or implementation restoration. Source/Context/Product/Acceptance/Global/verifier content, resolved runners and verification inputs are frozen in the common-dir Active Authority V3 record.
+
+`diagnose-revision` performs a side-effect-free candidate Compile and only exercises existing active Check identities whose runner/verifier authority is unchanged. Its output explicitly denies acceptance, Progress and pending-state writes. Protected `compile --revise` emits `authority_revision_pending`, the exact decision id and a deterministic concise summary before failing closed; approving a different or stale id is rejected.
 
 Targeted verify rechecks active task/revision/compiled/worktree identity before writing scoped Progress. Counterfactual Findings first enter the owning Check Result, invalidate an otherwise passed Check, clear Claim Proofs and remain visible in status/resume; Global Checks reuse the same Progress type without a Global Outcome state. Final Gate repeats the identity check after all Checks; Stop/close clear only the accepted identity through CAS. Commit, migration, clear and abandon share one active-state lock. `abandon --force-corrupt-state` is reserved for corrupt continuity or stale lock cleanup and preserves Contract, Source, Context and Git content.
 
@@ -293,9 +298,9 @@ Release metadata declares one update mode: `sync-only`, `upgrade-required` or `m
 npm run format:check
 npm run typecheck --workspace project-tiny-context-harness
 npm run build --workspace project-tiny-context-harness
-node --test --test-concurrency=1 tests/ty-context/source-plan-authoring-skill.test.mjs tests/ty-context/sync-init-doctor.test.mjs tests/ty-context/workflow-contract-routing.test.mjs tests/ty-context/long-task-model-choice-checkpoint.test.mjs
-npm run test:delivery-contract --workspace project-tiny-context-harness
-npm run test:long-task-workflow --workspace project-tiny-context-harness
+npm run test:affected:list
+npm run test:affected
+npm run test:long-task:trust
 npm run test:long-task-performance --workspace project-tiny-context-harness
 npm test
 npm run smoke:quickstart
@@ -305,9 +310,11 @@ node packages/ty-context/dist/cli.js package check-source
 make validate-harness
 ```
 
+`test:affected` is the edit/fix loop. `test:long-task:trust` is the frozen-candidate high-impact boundary gate used by pull-request CI. `npm test` is the complete release regression retained on `main` and publish; do not rerun it after every small repair. Explicit delivery-contract and complete Long-Task gates remain available as package workspace scripts.
+
 The modularity gate is `ty-context check-modularity`. Scoped waivers require `owner`, `introduced_at`, `reason`, `tracking_issue` and `expiry_condition`.
 
-The synchronized local preview tarball is named `project-tiny-context-harness-0.6.2.tgz`.
+The synchronized local preview tarball is named `project-tiny-context-harness-0.7.0.tgz`.
 
 ## Community And Further Reading
 

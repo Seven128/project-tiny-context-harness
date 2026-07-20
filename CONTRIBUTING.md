@@ -17,9 +17,11 @@ The current product is **Minimal Context Harness**: small durable project memory
 
 ```sh
 npm ci
-npm test --workspace project-tiny-context-harness
+npm run test:affected
 make validate-context
 ```
+
+Before handing off a frozen Long-Task package candidate, run `npm run test:long-task:trust`. Use `npm test --workspace project-tiny-context-harness` for shared package/dependency changes or an explicit release rehearsal; `main` and publish always retain that complete release regression.
 
 If you change package-managed assets, also run:
 

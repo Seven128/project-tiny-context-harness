@@ -1,25 +1,28 @@
-import { execFile, spawn } from "node:child_process";
+import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { promisify } from "node:util";
+import { resolveAffectedChanges } from "./affected_change_discovery.mjs";
 import { selectAffectedTests } from "./affected_test_selection.mjs";
 import { npmCommandSpec } from "./npm_command_spec.mjs";
 
-const exec = promisify(execFile);
 const repository = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
 const options = parseArgs(process.argv.slice(2));
-const changedPaths = options.paths.length
-  ? options.paths
-  : await discoverChangedPaths(options.base);
+const changes = await resolveAffectedChanges({
+  repository,
+  explicitBase: options.base,
+  explicitPaths: options.paths,
+});
+const changedPaths = changes.paths;
 const selection = selectAffectedTests(changedPaths, { scope: options.scope });
 
 console.log(
   JSON.stringify(
     {
-      schema_version: "affected-test-plan-v1",
+      schema_version: "affected-test-plan-v2",
+      discovery: changes.discovery,
       changed_paths: changedPaths,
       ...selection,
       build_skipped: options.noBuild,
@@ -46,6 +49,20 @@ if (selection.mode === "full-suite") {
   await runNpm([
     "run",
     "test:long-task-workflow:built",
+    "--workspace",
+    "project-tiny-context-harness",
+  ]);
+} else if (selection.mode === "trust-boundary") {
+  if (selection.tests.length > 0) {
+    await run(process.execPath, [
+      "--test",
+      "--test-concurrency=1",
+      ...selection.tests,
+    ]);
+  }
+  await runNpm([
+    "run",
+    "test:long-task-trust:built",
     "--workspace",
     "project-tiny-context-harness",
   ]);
@@ -83,7 +100,7 @@ Options:
   --no-build             Reuse an existing dist build
   --base <ref>           Compare the current HEAD with a specific Git ref
   --path <path>          Supply a changed path directly; may be repeated
-  --scope <scope>        auto | long-task | delivery-contract | all
+  --scope <scope>        auto | trust | long-task | delivery-contract | all
 `);
       process.exit(0);
     } else throw new Error(`unknown argument: ${argument}`);
@@ -96,74 +113,6 @@ function requiredValue(args, index, flag) {
   if (!value || value.startsWith("--"))
     throw new Error(`${flag} requires a value`);
   return value;
-}
-
-async function discoverChangedPaths(explicitBase) {
-  const changed = new Set();
-  for (const file of await gitLines([
-    "diff",
-    "--name-only",
-    "--diff-filter=ACMRTD",
-    "HEAD",
-  ]))
-    changed.add(file);
-  for (const file of await gitLines([
-    "ls-files",
-    "--others",
-    "--exclude-standard",
-  ]))
-    changed.add(file);
-
-  const candidates = [
-    explicitBase,
-    process.env.AFFECTED_BASE,
-    process.env.GITHUB_BASE_REF
-      ? `origin/${process.env.GITHUB_BASE_REF}`
-      : null,
-    "origin/main",
-    "main",
-    "HEAD^",
-  ].filter(Boolean);
-  for (const candidate of [...new Set(candidates)]) {
-    if (!(await gitRefExists(candidate))) continue;
-    const files = await gitLines([
-      "diff",
-      "--name-only",
-      "--diff-filter=ACMRTD",
-      `${candidate}...HEAD`,
-    ]);
-    if (!files.length) continue;
-    files.forEach((file) => changed.add(file));
-    break;
-  }
-  return [...changed].sort();
-}
-
-async function gitRefExists(ref) {
-  try {
-    await exec("git", ["rev-parse", "--verify", `${ref}^{commit}`], {
-      cwd: repository,
-      windowsHide: true,
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function gitLines(args) {
-  try {
-    const result = await exec("git", args, {
-      cwd: repository,
-      windowsHide: true,
-    });
-    return result.stdout
-      .split(/\r?\n/u)
-      .map((line) => line.trim())
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
 }
 
 async function runNpm(args) {

@@ -118,6 +118,8 @@ Affected-test selection follows the same rule. It shortens the developer feedbac
 - **One-time execution-model checkpoint** lets the user exploit locked Authority and Final Gate protection to choose a lower-cost execution model without creating model routing or repeated pauses. It is a cost mechanism, not proof.
 - **Controlling/Supporting Context classification** permits low-risk navigation/background updates during execution without discarding valid Progress while keeping explicit, verification, deployment and full-snapshot Context fail closed.
 - **Executing Agent cannot approve its own weakening revision** prevents the implementer from lowering its own acceptance bar.
+- **Three-way revision classification** keeps formally monotonic evidence strengthening automatic, permits existing active Check identities with unchanged runner/verifier authority to diagnose an inactive candidate whose only protected reasons are scope expansion, and keeps semantic changes, proof weakening, runner or verifier-content changes and risk changes behind the exact revision identity.
+- **Stateless same-Contract candidate diagnosis** lets related scope discoveries accumulate in `delivery-contract.yaml` and be exercised before one approval request without creating a pending Draft authority, revision lifecycle, Progress, Receipt or acceptance result. The previous Authority remains the only active one throughout diagnosis.
 - **Targeted verify is repair evidence only** prevents a local pass from being reported as whole-delivery completion; Counterfactual failure is part of the owning Check Result/Progress rather than a transient top-level Finding, so status/resume cannot recover a false `progress_passing` state.
 - **Same-snapshot Final Gate** prevents historical pass aggregation and stale evidence reuse.
 - **Stop/close rerun the Live Final Gate** prevents post-Gate Source, Context, Contract, verifier or code drift from being accepted.
@@ -141,13 +143,14 @@ Machine authority has only two trustworthy outcomes: fresh evidence on the curre
 
 That qualification must remain continuous after Final Gate. Collapsing it into `last_gate_passed`, `{}`, or generic `closed` reopens a false-completion path for callers that only see status, a resumed session, the Stop Hook or close output. The accepted workflow status therefore propagates through each surface; stale Receipts lose their accepted projection, while external confirmations remain visible as current Contract declarations. Stop/close can end the machine Authority lifecycle without tracking external work, but their output cannot convert machine acceptance into complete external delivery.
 
-Progress, status, Receipts and compiled cache are audit/recovery projections. Source, Controlling Context, Contract, verifier, runner or workspace drift stales affected evidence. Supporting-only Context revisions may preserve scoped Progress, but `resume` still restores current semantic state rather than a physical Turn, and historical evidence cannot be spliced into current acceptance.
+Progress, status, Receipts and compiled cache are audit/recovery projections. Candidate diagnostic results are transient repair output and are never Progress or completion evidence. Source, Controlling Context, Contract, verifier, runner or workspace drift stales affected evidence. Supporting-only Context revisions may preserve scoped Progress, but every adopted protected revision invalidates derived evidence; `resume` restores current semantic state rather than a physical Turn, and historical or candidate evidence cannot be spliced into current acceptance.
 
 ## Stable Anti-Goals
 
 - No `draft_outcomes` or `plan_items` schema fields.
 - No `DraftOutcome` runtime type, Draft Outcome state, Worker, scheduler or queue.
 - No Contract Draft CLI, Receipt, Authoring State or Authoring Authority.
+- No persistent pending-revision Draft, standing-approval policy, candidate cache, candidate Progress or revision scheduler; repeated candidate edits live only in the existing `delivery-contract.yaml` until ordinary Compile creates one exact pending decision.
 - No standalone `contract-authoring`, `draft-authoring` or draft-preparation Skill.
 - No second plan, second Contract authority, top-level Contract split or targeted-verify acceptance.
 - No capacity-, layer-, file-, module-, Agent- or parallelism-based Outcome splitting.

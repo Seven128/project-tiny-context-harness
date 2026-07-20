@@ -21,8 +21,10 @@ import {
 import { normalizeContextAuthoritySnapshot } from "./long-task-context-authority.js";
 import {
   assertRiskNotDowngraded,
+  buildAuthorityRevisionProposal,
   enforceAuthorityRevision,
 } from "./long-task-authority-revision-enforcement.js";
+import type { AuthorityRevisionProposalV2 } from "./long-task-authority-revision-types.js";
 import { validateActualRiskSurfaces } from "./long-task-risk-surfaces.js";
 import { captureVerifierIdentity } from "./long-task-verifier-identity.js";
 import { verifierAuthorityDiff } from "./long-task-verifier-authority.js";
@@ -40,6 +42,8 @@ export interface CompileDeliveryOptionsV2 {
   initial_task_base?: InitialTaskBaseV2;
   authority_revision?: number;
   previous_authority?: CompiledDeliveryContractV2 | null;
+  authority_revision_mode?: "enforce" | "diagnose";
+  on_authority_revision?: (proposal: AuthorityRevisionProposalV2) => void;
 }
 
 export async function compileDeliveryContract(
@@ -148,7 +152,7 @@ export async function compileDeliveryContract(
     if (options.revise && authorityChanged) {
       assertRiskNotDowngraded(previous, risk.effective_level, risk.reasons);
       authorityRevision = previous.authority_revision + 1;
-      await enforceAuthorityRevision(
+      const proposal = buildAuthorityRevisionProposal(
         previous,
         contract,
         authorityHashes,
@@ -156,9 +160,11 @@ export async function compileDeliveryContract(
         globalChecks,
         outcomes,
         verifier,
-        workdir,
         risk.minimum_level,
       );
+      options.on_authority_revision?.(proposal);
+      if (options.authority_revision_mode !== "diagnose")
+        await enforceAuthorityRevision(proposal, workdir);
     }
   }
 

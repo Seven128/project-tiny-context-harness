@@ -236,6 +236,10 @@ test("registered rationale owns history, mechanism mapping and trusted limits", 
     "decision criteria",
     "tradeoff preference",
     "research before selection",
+    "authority revision",
+    "revision diagnosis",
+    "approval summary",
+    "scope expansion",
     "Web GPT",
     "Codex authoring",
   ]) {
@@ -251,6 +255,8 @@ test("registered rationale owns history, mechanism mapping and trusted limits", 
     "Shared Preflight/Compile activation-safety kernel",
     "First-Compile Authority Lock and Authority Revision",
     "Executing Agent cannot approve",
+    "Three-way revision classification",
+    "Stateless same-Contract candidate diagnosis",
     "Targeted verify is repair evidence only",
     "Same-snapshot Final Gate",
     "Stop/close rerun the Live Final Gate",
@@ -266,6 +272,39 @@ test("registered rationale owns history, mechanism mapping and trusted limits", 
     /Preventing false completion[\s\S]*controlling objective/iu,
   );
   assert.match(verification, /Long-Task design consistency/iu);
+});
+
+test("revision diagnosis stays one-Contract, non-authoritative, and exact-approval bound", async () => {
+  const [spec, globalContext, lifecycle, publicReadmes] = await Promise.all([
+    read("PROJECT_SPEC.md"),
+    read("project_context/global.md"),
+    read(
+      ".codex/ty-context-managed/skills/long-task-workflow/references/authority-lifecycle.md",
+    ),
+    Promise.all([
+      read("README.md"),
+      read("README.zh-CN.md"),
+      read("packages/ty-context/README.md"),
+    ]).then((values) => values.join("\n")),
+  ]);
+  const combined = [spec, globalContext, lifecycle, publicReadmes].join("\n");
+  assert.match(combined, /diagnose-revision/iu);
+  assert.match(
+    combined,
+    /scope-only[\s\S]*existing active Check identities[\s\S]*acceptance_authorized: false/iu,
+  );
+  assert.match(
+    combined,
+    /writes no pending\/approval[\s\S]*Progress[\s\S]*Receipt/iu,
+  );
+  assert.match(
+    combined,
+    /previous Authority remains active[\s\S]*exact approval[\s\S]*Final Gate/iu,
+  );
+  assert.match(
+    combined,
+    /same `delivery-contract\.yaml`[\s\S]*not a pending Draft authority/iu,
+  );
 });
 
 test("Mechanism Admission Rule is explicit and creates no registry", async () => {

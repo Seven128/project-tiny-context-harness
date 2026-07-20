@@ -342,7 +342,7 @@ export function allCompiledChecks(
   ];
 }
 
-function selectChecks(
+export function selectChecks(
   compiled: CompiledDeliveryContractV2,
   selection: { outcome?: string; check?: string },
 ): CompiledCheckV2[] {

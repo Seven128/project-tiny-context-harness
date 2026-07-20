@@ -1,5 +1,7 @@
 import path from "node:path";
 import { compileDeliveryContract } from "./long-task-delivery-compiler.js";
+import type { AuthorityRevisionDecisionV2 } from "./long-task-authority-revision-types.js";
+import { projectAuthorityRevisionDecision } from "./long-task-authority-revision-summary.js";
 import type {
   ExternalConfirmationV2,
   FinalReceiptV2,
@@ -16,6 +18,7 @@ import {
   loadActiveLongTaskAuthority,
   readActiveLongTaskBinding,
   readFinalReceipt,
+  readPendingAuthorityRevision,
   readProgressRecords,
 } from "./long-task-state.js";
 import {
@@ -45,6 +48,7 @@ export interface DeliveryStatusV2 {
   progress_passing: string[];
   progress_failing: string[];
   findings: LongTaskFindingV2[];
+  pending_authority_revision: AuthorityRevisionDecisionV2 | null;
 }
 
 export async function readDeliveryStatus(
@@ -69,7 +73,10 @@ async function readDeliveryStatusForAuthority(
     compiled.workdir,
   );
   const stale = await deliveryCompileFreshness(compiled);
-  const progress = await readProgressRecords(active.workdir);
+  const [progress, pending] = await Promise.all([
+    readProgressRecords(active.workdir),
+    readPendingAuthorityRevision(active.workdir),
+  ]);
   let receipt = null;
   let receiptError: string | null = null;
   try {
@@ -104,6 +111,9 @@ async function readDeliveryStatusForAuthority(
     needs_reverify: projection.needsReverify,
     progress_passing: projection.progressPassing,
     progress_failing: projection.progressFailing,
+    pending_authority_revision: pending
+      ? projectAuthorityRevisionDecision(pending)
+      : null,
     findings: [
       ...projection.findings,
       ...(cacheStatus === "compiled_cache_matching"
@@ -149,6 +159,7 @@ export async function resumeDeliveryTask(
     needs_reverify: status.needs_reverify,
     progress_passing: status.progress_passing,
     progress_failing: status.progress_failing,
+    pending_authority_revision: status.pending_authority_revision,
     recent_findings: status.findings,
     next_safe_action: nextAction(status),
   };
@@ -367,6 +378,8 @@ function externalPendingMessage(
 }
 
 function nextAction(status: DeliveryStatusV2): string {
+  if (status.pending_authority_revision)
+    return `Ask the user to approve or reject Authority Revision ${status.pending_authority_revision.revision_identity}; keep the previous Authority active until then.`;
   if (status.findings.length) return status.findings.at(-1)!.next_action;
   if (status.ready_outcomes.length)
     return `Implement and verify ready Outcome: ${status.ready_outcomes[0]}.`;

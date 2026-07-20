@@ -19,6 +19,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Source authority: Source marker/parser/inventory/target-continuity modules derive text-bound Source/REQ/CTRL/OBL/NCOMP/AC projections without another editable Source authority.
 - Evidence Kernel: runner-derived adapters, explicit runners, structured/Playwright observations, Counterfactual and Population sensitivity, targeted verifier, Git-aware snapshot and source-recompiled same-snapshot Live Final Gate.
 - Authority/recovery: one common-dir Active Authority V3 snapshot plus matching worktree marker; workdir compiled output, Progress and Receipts are rebuildable audit/recovery projections.
+- Revision diagnosis: `long-task-authority-revision*.ts` deterministically classifies and summarizes the candidate; `long-task-authority-revision-diagnosis.ts` exercises only scope-only candidates through existing active Check identities with unchanged runner/verifier authority, without publishing authority or evidence.
 - Compile handoff: `commands/long-task.ts` emits an additive one-time `execution_model_checkpoint` after first Authority Lock; it does not switch models or persist acknowledgement/model-route state.
 - Managed source: `.codex/ty-context-managed/**`; package assets: `packages/ty-context/assets/**`; mapping authority: `packages/ty-context/source-mappings.yaml`.
 - Full stable mental model: `PROJECT_SPEC.md`; high-frequency durable facts: `project_context/**`.
@@ -53,7 +54,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 
 ## Data / Control Flow
 
-`Source -> optional Source Plan -> one Contract Draft -> Outcome decomposition -> repository/Context binding -> read-only Preflight -> Compile / Authority Lock -> one-time execution-model choice -> Rolling Frontier -> targeted verifier repair -> clean candidate commit -> source-recompiled same-snapshot Live Final Gate`
+`Source -> optional Source Plan -> one Contract Draft -> Outcome decomposition -> repository/Context binding -> read-only Preflight -> Compile / Authority Lock -> one-time execution-model choice -> Rolling Frontier -> targeted verifier repair -> optional same-Contract stateless revision diagnosis -> exact pending approval when protected -> clean candidate commit -> source-recompiled same-snapshot Live Final Gate`
 
 - Product, Technical Boundary and Acceptance are distinct logical authorities inside one Contract.
 - Outcomes are independently observable, decidable and target-verifiable acceptance/diagnosis units. Dependencies express readiness only; no scheduler or mandatory implementation DAG is persisted.
@@ -61,6 +62,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Preflight and Compile share activation safety. Preflight diagnostics may include stable references, repair hints, duplicate occurrence counts and narrowly proven primary/dependent repair links, but remain read-only and non-authoritative.
 - First Compile emits the one-time model choice. A prior explicit user model strategy satisfies it; later revisions do not repeat it. The choice is not completion proof.
 - Targeted verify may localize repair and store scoped current-snapshot Progress; it cannot accept.
+- Revision diagnosis is a non-authoritative repair loop, not extended Preflight: monotonic proof strengthening needs no approval, a candidate whose only protected reasons are scope expansion may run existing active Check identities with unchanged runner/verifier authority without writing Progress, semantic changes, proof weakening, runner or verifier-content changes, and risk increases are summarized but never executed as candidates, and risk downgrade is rejected. Only `compile --revise` may create the single pending decision and only approved atomic Compile may replace Active Authority.
 - Final Gate, Stop and close recompile Source authority, bind active task/revision/worktree/Git-tree identity and rerun all declared Global and Outcome checks. Only this complete current snapshot can create machine acceptance.
 
 ## Contract And Architecture Closure
@@ -76,7 +78,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Keyword search cannot understand every synonym or indirect dependency, so it supplements rather than replaces semantic reasoning, Architecture Context Hit and final Conformance.
 - Retrieval-only manifest edits may preserve active Authority and scoped Progress, but they never preserve a Final Receipt across a changed Git tree; Final Gate still runs against the final committed snapshot.
 - Architecture enforcement is limited to declared, falsifiable project invariants. Subjective design quality remains engineering review rather than false machine proof.
-- The first successful Compile creates Authority Lock and immutable initial base. Later protected reductions cannot be silently adopted.
+- The first successful Compile creates Authority Lock and immutable initial base. Later protected changes cannot be silently adopted; candidate diagnosis leaves the old Authority active and cannot create a second Draft authority, state plane or acceptance path.
 - The execution-model checkpoint is one additive compile signal and Agent pause; no model switch, route, tier scheduler, acknowledgement file or repeated checkpoint exists.
 - One user-selected delivery has one Contract, one selected workspace and one Final Gate. Existing `outcome_files` are physical compatibility only.
 - No active Source Inventory/Coverage file, SFC/Packet/Wave/Campaign runtime, Worker scheduler, execution registry, second plan or external-confirmation tracker exists.
@@ -91,6 +93,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Context Authority topology tests prove retrieval-only edits preserve selected authority while selected area, role and dependency changes remain hash-visible; Context evolution tests prove the same boundary through Compile, Progress and status.
 - Long-Task CLI tests must prove first Compile emits `execution_model_checkpoint.required: true`, later Compile emits `false`, and Skill/reference/package copies preserve the same one-time/no-state semantics.
 - Preflight remains read-only and Compile remains the fail-closed activation boundary. Added references, repair hints, occurrence counts and repair-order metadata may improve repair but cannot change acceptance.
+- Revision tests must prove the three-way classifier, exact summary/hash binding, scope-only candidate execution with zero durable-state mutation, red-candidate non-execution, stable pending projection in status/resume, approval invalidation after edits and full evidence invalidation after adoption.
 - Project-native architecture checks and `check-modularity` protect declared structural boundaries; Final Gate alone reruns the complete long-task authority on one current snapshot.
 - Managed source/package/generated copies must remain byte-aligned through source sync and package parity checks.
 

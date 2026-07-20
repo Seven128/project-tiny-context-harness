@@ -1,40 +1,19 @@
 import path from "node:path";
+import {
+  DELIVERY_CONTRACT_FOCUSED_TESTS,
+  LONG_TASK_FOCUSED_TESTS,
+  LONG_TASK_TRUST_TESTS,
+  normalizeRepositoryPath,
+  STATIC_TESTS,
+  TEST_ROOT,
+  testPath,
+} from "./test_suite_policy.mjs";
 
-const TEST_ROOT = "tests/ty-context";
-
-export const LONG_TASK_FOCUSED_TESTS = [
-  "affected-test-selection.test.mjs",
-  "long-task-authority-progress-retry.test.mjs",
-  "long-task-closure-invariants.test.mjs",
-  "long-task-context-authority-topology.test.mjs",
-  "long-task-context-evolution.test.mjs",
-  "long-task-design-context.test.mjs",
-  "long-task-efficiency-design.test.mjs",
-  "long-task-model-choice-checkpoint.test.mjs",
-  "long-task-semantic-authority-revision.test.mjs",
-  "visual-delivery-guidance.test.mjs",
-  "workflow-test-entrypoints.test.mjs",
-].map(testPath);
-
-export const DELIVERY_CONTRACT_FOCUSED_TESTS = [
-  "long-task-authoring-claims.test.mjs",
-  "long-task-authoring-preflight.test.mjs",
-  "long-task-claim-coverage.test.mjs",
-  "long-task-delivery-compiler.test.mjs",
-  "long-task-delivery-parser.test.mjs",
-  "long-task-delivery-risk.test.mjs",
-  "long-task-source-authority-closure.test.mjs",
-].map(testPath);
-
-const STATIC_TESTS = new Set(
-  [
-    "affected-test-selection.test.mjs",
-    "long-task-design-context.test.mjs",
-    "long-task-efficiency-design.test.mjs",
-    "visual-delivery-guidance.test.mjs",
-    "workflow-test-entrypoints.test.mjs",
-  ].map(testPath),
-);
+export {
+  DELIVERY_CONTRACT_FOCUSED_TESTS,
+  LONG_TASK_FOCUSED_TESTS,
+  LONG_TASK_TRUST_TESTS,
+} from "./test_suite_policy.mjs";
 
 const HOTSPOT_TESTS = new Map([
   [
@@ -57,9 +36,77 @@ const HOTSPOT_TESTS = new Map([
     "packages/ty-context/src/commands/long-task.ts",
     [
       "long-task-active-authority-continuity.test.mjs",
+      "long-task-authority-revision-classification.test.mjs",
+      "long-task-authority-revision-diagnosis.test.mjs",
       "long-task-context-evolution.test.mjs",
       "long-task-model-choice-checkpoint.test.mjs",
       "long-task-workflow-black-box.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/commands/long-task-revision.ts",
+    [
+      "long-task-active-authority-continuity.test.mjs",
+      "long-task-authority-revision-classification.test.mjs",
+      "long-task-authority-revision-diagnosis.test.mjs",
+      "long-task-context-evolution.test.mjs",
+      "long-task-model-choice-checkpoint.test.mjs",
+      "long-task-workflow-black-box.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/commands/long-task-command-args.ts",
+    [
+      "long-task-authority-revision-diagnosis.test.mjs",
+      "long-task-workflow-black-box.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-authority-revision-diagnosis.ts",
+    ["long-task-authority-revision-diagnosis.test.mjs"],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-authority-revision-summary.ts",
+    [
+      "long-task-authority-revision-classification.test.mjs",
+      "long-task-authority-revision-diagnosis.test.mjs",
+      "long-task-semantic-authority-revision.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-authority-revision-types.ts",
+    [
+      "long-task-authority-progress-retry.test.mjs",
+      "long-task-authority-revision-classification.test.mjs",
+      "long-task-authority-revision-diagnosis.test.mjs",
+      "long-task-semantic-authority-revision.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-authority-revision.ts",
+    [
+      "long-task-authority-progress-retry.test.mjs",
+      "long-task-authority-revision-classification.test.mjs",
+      "long-task-authority-revision-diagnosis.test.mjs",
+      "long-task-semantic-authority-revision.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-authority-revision-details.ts",
+    [
+      "long-task-authority-progress-retry.test.mjs",
+      "long-task-authority-revision-classification.test.mjs",
+      "long-task-authority-revision-diagnosis.test.mjs",
+      "long-task-semantic-authority-revision.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-authority-revision-enforcement.ts",
+    [
+      "long-task-authority-progress-retry.test.mjs",
+      "long-task-authority-revision-classification.test.mjs",
+      "long-task-authority-revision-diagnosis.test.mjs",
+      "long-task-semantic-authority-revision.test.mjs",
     ],
   ],
   [
@@ -123,7 +170,34 @@ const HOTSPOT_TESTS = new Map([
       "long-task-closure-invariants.test.mjs",
       "long-task-context-evolution.test.mjs",
       "long-task-delivery-compiler.test.mjs",
+      "long-task-authority-revision-classification.test.mjs",
+      "long-task-authority-revision-diagnosis.test.mjs",
       "long-task-semantic-authority-revision.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-state.ts",
+    [
+      "long-task-active-authority-continuity.test.mjs",
+      "long-task-authority-progress-retry.test.mjs",
+      "long-task-authority-revision-diagnosis.test.mjs",
+      "long-task-state-resume.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-status-v2.ts",
+    [
+      "long-task-authority-revision-diagnosis.test.mjs",
+      "long-task-qualified-completion.test.mjs",
+      "long-task-state-resume.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-verifier-v2.ts",
+    [
+      "long-task-authority-progress-retry.test.mjs",
+      "long-task-authority-revision-diagnosis.test.mjs",
+      "long-task-workflow-black-box.test.mjs",
     ],
   ],
   [
@@ -139,6 +213,8 @@ const HOTSPOT_TESTS = new Map([
 export function selectAffectedTests(changedPaths, options = {}) {
   const scope = options.scope ?? "auto";
   if (scope === "all") return plan("full-suite", [], true, ["scope:all"]);
+  if (scope === "trust")
+    return plan("trust-boundary", [], true, ["scope:trust"]);
   if (scope === "long-task")
     return plan("selected", LONG_TASK_FOCUSED_TESTS, true, ["scope:long-task"]);
   if (scope === "delivery-contract")
@@ -183,9 +259,12 @@ export function selectAffectedTests(changedPaths, options = {}) {
     }
 
     if (
+      file === "tools/affected_change_discovery.mjs" ||
       file === "tools/affected_test_selection.mjs" ||
-      file === "tools/run_affected_tests.mjs"
+      file === "tools/run_affected_tests.mjs" ||
+      file === "tools/test_suite_policy.mjs"
     ) {
+      tests.add(testPath("affected-change-discovery.test.mjs"));
       tests.add(testPath("affected-test-selection.test.mjs"));
       tests.add(testPath("workflow-test-entrypoints.test.mjs"));
       reasons.push(`${file}:affected_test_tooling`);
@@ -216,7 +295,7 @@ export function selectAffectedTests(changedPaths, options = {}) {
     }
 
     if (file.startsWith("packages/ty-context/src/lib/long-task-")) {
-      mode = widen(mode, "long-task-suite");
+      mode = widen(mode, "trust-boundary");
       reasons.push(`${file}:unmapped_long_task_runtime`);
       continue;
     }
@@ -282,7 +361,9 @@ export function selectAffectedTests(changedPaths, options = {}) {
     reasons.push(`${file}:unclassified_fail_safe`);
   }
 
-  if (mode !== "selected") tests.clear();
+  if (mode === "long-task-suite" || mode === "full-suite") tests.clear();
+  if (mode === "trust-boundary")
+    LONG_TASK_TRUST_TESTS.forEach((test) => tests.delete(test));
   const selected = [...tests].sort();
   const requiresBuild =
     mode !== "selected" || selected.some((test) => !STATIC_TESTS.has(test));
@@ -292,6 +373,8 @@ export function selectAffectedTests(changedPaths, options = {}) {
 function plan(mode, tests, requiresBuild, reasons) {
   return {
     mode,
+    tier: tierForMode(mode),
+    purpose: purposeForMode(mode),
     tests: [...new Set(tests)].sort(),
     requires_build: requiresBuild,
     reasons: [...new Set(reasons)].sort(),
@@ -299,19 +382,28 @@ function plan(mode, tests, requiresBuild, reasons) {
 }
 
 function widen(current, next) {
-  const rank = { selected: 0, "long-task-suite": 1, "full-suite": 2 };
+  const rank = {
+    selected: 0,
+    "trust-boundary": 1,
+    "long-task-suite": 2,
+    "full-suite": 3,
+  };
   return rank[next] > rank[current] ? next : current;
 }
 
-function testPath(name) {
-  return `${TEST_ROOT}/${name}`;
+function tierForMode(mode) {
+  if (mode === "selected") return "developer-feedback";
+  if (mode === "trust-boundary") return "trust-boundary";
+  return "release-regression";
 }
 
-function normalizePath(value) {
-  return value
-    .split(path.sep)
-    .join("/")
-    .replace(/\\/gu, "/")
-    .replace(/^\.\//u, "")
-    .trim();
+function purposeForMode(mode) {
+  if (mode === "selected") return "task-local defect localization";
+  if (mode === "trust-boundary")
+    return "high-impact cross-module false-completion regression";
+  if (mode === "long-task-suite")
+    return "complete Long-Task release regression";
+  return "complete package release regression";
 }
+
+const normalizePath = normalizeRepositoryPath;

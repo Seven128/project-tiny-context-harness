@@ -127,12 +127,24 @@ test("planned to existing enters reviewed Technical Authority revision", async (
     fixture.contract.outcomes[0].technical.bindings[0].existence = "existing";
     await writeContract(fixture.workdir, fixture.contract);
     const failure = await runCliFailure(fixture.root, [
-      "long-task", "compile", fixture.workdir, "--revise",
-    ]).catch((error) => error);
-    assert.match(failure.stderr ?? failure.message, /authority_change_requires_user_decision/u);
+      "long-task",
+      "compile",
+      fixture.workdir,
+      "--revise",
+    ]);
+    assert.equal(failure.status, "authority_revision_pending");
+    assert.ok(
+      failure.pending_authority_revision.approval_summary.protected_reasons.includes(
+        "binding_removed_or_expanded",
+      ),
+    );
     const pending = JSON.parse(
       await readFile(
-        path.join(fixture.workdir, ".ty-context", "authority-revision-pending.json"),
+        path.join(
+          fixture.workdir,
+          ".ty-context",
+          "authority-revision-pending.json",
+        ),
         "utf8",
       ),
     );

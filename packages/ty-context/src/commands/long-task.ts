@@ -1,6 +1,4 @@
 import path from "node:path";
-import { canRetainProgressForSupportingContextRevision } from "../lib/long-task-context-authority.js";
-import { compileDeliveryContract } from "../lib/long-task-delivery-compiler.js";
 import { runDeliveryFinalGate } from "../lib/long-task-final-v2.js";
 import {
   closeDeliveryTask,
@@ -11,14 +9,7 @@ import {
 } from "../lib/long-task-status-v2.js";
 import {
   abandonLongTaskState,
-  approvePendingAuthorityRevision,
-  clearFinalReceipt,
-  clearAuthorityRevision,
-  commitActiveAuthority,
   forceClearCorruptActiveState,
-  invalidateDerivedProgress,
-  loadActiveLongTaskAuthority,
-  stageCompiledDeliveryContract,
 } from "../lib/long-task-state.js";
 import { verifyDeliveryContract } from "../lib/long-task-verifier-v2.js";
 import { repositoryRoot } from "../lib/long-task-workspace.js";
@@ -26,16 +17,13 @@ import {
   initializeLongTask,
   preflightLongTask,
 } from "./long-task-authoring.js";
+import {
+  option,
+  rejectOptions,
+  rejectUnknown,
+} from "./long-task-command-args.js";
 import { explainLongTask } from "./long-task-explain.js";
-
-type ExecutionModelCheckpoint =
-  | {
-      required: true;
-      phase: "post_authority_lock_pre_implementation";
-      options: ["continue_current_model", "switch_model_then_resume"];
-      message: string;
-    }
-  | { required: false };
+import { handleLongTaskRevisionCommand } from "./long-task-revision.js";
 
 export async function longTask(args: string[]): Promise<void> {
   const subcommand = args[0] ?? "help";
@@ -54,9 +42,8 @@ export async function longTask(args: string[]): Promise<void> {
     rejectUnknown(args.slice(2), []);
     return preflightLongTask(workdir);
   }
-  if (subcommand === "compile") return compile(workdir, args.slice(2));
-  if (subcommand === "approve-authority-revision")
-    return approveRevision(workdir, args.slice(2));
+  if (await handleLongTaskRevisionCommand(subcommand, workdir, args.slice(2)))
+    return;
   if (subcommand === "explain") {
     rejectUnknown(args.slice(2), []);
     return explainLongTask(workdir);
@@ -121,94 +108,6 @@ export async function longTask(args: string[]): Promise<void> {
   throw new Error(`Unknown long-task subcommand: ${subcommand}`);
 }
 
-async function compile(workdir: string, args: string[]): Promise<void> {
-  const revise = args.length === 1 && args[0] === "--revise";
-  if (args.length && !revise)
-    throw new Error(`Unknown or injected arguments: ${args.join(" ")}`);
-  const root = await repositoryRoot(process.cwd());
-  const loaded = await loadActiveLongTaskAuthority(root, {
-    migrate_legacy: true,
-  });
-  const previous = loaded.authority?.authority_snapshot ?? null;
-  if (loaded.authority && loaded.authority.workdir !== path.resolve(workdir))
-    throw new Error(`active_task_exists:${loaded.authority.workdir}`);
-  const compiled = await compileDeliveryContract(workdir, process.cwd(), {
-    revise,
-    previous_authority: previous,
-  });
-  if (loaded.authority && loaded.authority.task_id !== compiled.task.id)
-    throw new Error(`active_task_exists:${loaded.authority.workdir}`);
-  const preserveProgress =
-    previous !== null &&
-    canRetainProgressForSupportingContextRevision(previous, compiled);
-  const stagedCache = await stageCompiledDeliveryContract(compiled);
-  let authorityCommitted = false;
-  try {
-    await commitActiveAuthority({
-      candidate: compiled,
-      expected_previous_identity:
-        loaded.authority?.active_authority_identity ?? null,
-    });
-    authorityCommitted = true;
-    try {
-      await stagedCache.publish();
-    } catch (error) {
-      await stagedCache.discard();
-      throw new Error(
-        `compiled_cache_projection_publish_failed:${message(error)}`,
-      );
-    }
-  } catch (error) {
-    if (!authorityCommitted) await stagedCache.discard();
-    throw error;
-  }
-  if (!previous || previous.compiled_identity !== compiled.compiled_identity) {
-    if (!preserveProgress) await invalidateDerivedProgress(workdir);
-    await clearFinalReceipt(compiled.repository_root, workdir);
-  }
-  await clearAuthorityRevision(workdir);
-  console.log(
-    JSON.stringify({
-      status: "compiled",
-      task_id: compiled.task.id,
-      compiled_identity: compiled.compiled_identity,
-      authority_revision: compiled.authority_revision,
-      effective_risk: compiled.effective_risk,
-      outcomes: compiled.outcomes.map((outcome) => outcome.key),
-      claim_coverage: compiled.claim_coverage,
-      progress_preserved: preserveProgress,
-      execution_model_checkpoint: executionModelCheckpoint(previous === null),
-    }),
-  );
-}
-
-function executionModelCheckpoint(
-  firstAuthorityLock: boolean,
-): ExecutionModelCheckpoint {
-  if (!firstAuthorityLock) return { required: false };
-  return {
-    required: true,
-    phase: "post_authority_lock_pre_implementation",
-    options: ["continue_current_model", "switch_model_then_resume"],
-    message:
-      "Authority Lock created. Pause before implementation and ask the user whether to continue with the current model or switch models, then resume this active Long-Task.",
-  };
-}
-
-function message(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
-async function approveRevision(workdir: string, args: string[]): Promise<void> {
-  const revision = option(args, "--revision");
-  rejectOptions(args, ["--revision"]);
-  if (!revision) throw new Error("--revision requires a value");
-  await approvePendingAuthorityRevision(workdir, revision);
-  console.log(
-    JSON.stringify({ status: "authority_revision_approved", revision }),
-  );
-}
-
 async function verify(workdir: string, args: string[]): Promise<void> {
   const outcome = option(args, "--outcome");
   const check = option(args, "--check");
@@ -229,35 +128,13 @@ async function finalGate(workdir: string, args: string[]): Promise<void> {
     process.exitCode = 1;
 }
 
-function option(args: string[], name: string): string | undefined {
-  const indexes = args.flatMap((value, index) =>
-    value === name ? [index] : [],
-  );
-  if (indexes.length > 1) throw new Error(`duplicate option: ${name}`);
-  if (!indexes.length) return undefined;
-  const value = args[indexes[0] + 1];
-  if (!value || value.startsWith("--"))
-    throw new Error(`${name} requires a value`);
-  return value;
-}
-
-function rejectOptions(args: string[], allowed: string[]): void {
-  for (let index = 0; index < args.length; index += 2)
-    if (!allowed.includes(args[index]) || !args[index + 1])
-      throw new Error(`Unknown or injected arguments: ${args.join(" ")}`);
-}
-
-function rejectUnknown(actual: string[], allowed: string[]): void {
-  if (actual.join("\0") !== allowed.join("\0"))
-    throw new Error(`Unknown or injected arguments: ${actual.join(" ")}`);
-}
-
 function help(): void {
   console.log(`ty-context long-task commands:
   init <workdir>
   preflight <workdir>
   compile <workdir>
   compile <workdir> --revise
+  diagnose-revision <workdir> [--outcome <key>] [--check <key>]
   approve-authority-revision <workdir> --revision <sha>
   explain <workdir>
   verify <workdir> [--outcome <key>] [--check <key>]

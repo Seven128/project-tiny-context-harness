@@ -16,7 +16,15 @@ Its JSON result includes `execution_model_checkpoint.required: true`. Before pro
 
 ## Protected Revision
 
-After Authority Lock, Source/Product/Global semantics, Controlling Context, verifier content, runner/verification input replacement, proof reduction, scope expansion or unprovable containment must compare against active authority. Pure verifier relocation and proven proof/scope tightening may auto-revise; content weakening requires exact user approval. The executing Agent never approves its own pending revision.
+After Authority Lock, every revision compares against active authority and follows one of three paths:
+
+1. proven monotonic evidence strengthening, pure verifier relocation, proven tightening and supporting-only Context revision may auto-revise;
+2. a candidate whose only protected reasons are owner, expected-change or allowed-support expansion remains inactive but may be exercised with `diagnose-revision` through existing active Check identities whose runner/verifier authority is unchanged; safe monotonic strengthening may coexist; or
+3. every semantic change, proof weakening, runner or verifier-content change, risk change or other protected reason requires the exact revision identity and is never candidate-executed.
+
+`diagnose-revision` recompiles the same `delivery-contract.yaml` in memory, creates only a disposable workspace snapshot when class 2 is proven, and returns transient repair results with `acceptance_authorized: false`. It writes no pending/approval state, authority/marker, cache, Progress or Receipt. Repeated edits therefore accumulate only in the one existing Contract authoring file, not a pending Draft authority or candidate state plane.
+
+Ordinary `compile --revise` is the only operation that may create the one pending decision. It binds a deterministic concise change summary into the revision identity. `status` and `resume` expose that same decision so the host can deduplicate the user prompt without a Harness-owned waiting state. The executing Agent never approves its own pending revision; earlier blanket authorization cannot approve a later exact identity. If the candidate changes, the identity changes and old approval is rejected. The previous Authority remains active until approved compare-and-swap adoption, which invalidates derived evidence and leaves the complete source-recompiled Final Gate mandatory.
 
 Every path-bearing field uses canonical grammar. Internal `.`/`..`, control characters, empty segments, absolute/drive/UNC paths and unsupported glob syntax fail closed.
 
