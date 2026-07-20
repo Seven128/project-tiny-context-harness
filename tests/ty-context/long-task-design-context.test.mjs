@@ -124,6 +124,119 @@ test("Outcome decomposition improves repair without creating scheduling authorit
   assert.match(combined, /one Contract[\s\S]*one Final Gate/iu);
 });
 
+test("target-runtime feedback stays live, rolling, and state-free", async () => {
+  const [
+    spec,
+    workflow,
+    rationale,
+    efficiency,
+    skill,
+    generatedSkill,
+    packagedSkill,
+    contractAuthoring,
+    generatedContractAuthoring,
+    packagedContractAuthoring,
+    evidenceDesign,
+    generatedEvidenceDesign,
+    packagedEvidenceDesign,
+    lifecycle,
+    generatedLifecycle,
+    packagedLifecycle,
+    publicReadmes,
+    sourceCode,
+  ] = await Promise.all([
+    read("PROJECT_SPEC.md"),
+    read(
+      "project_context/areas/harness-package/contracts/workflow-contract.md",
+    ),
+    read(
+      "project_context/areas/harness-package/decision-rationale/long-task-workflow.md",
+    ),
+    read("docs/long-task-workflow-efficiency.md"),
+    read(".codex/ty-context-managed/skills/long-task-workflow/SKILL.md"),
+    read(".codex/skills/long-task-workflow/SKILL.md"),
+    read("packages/ty-context/assets/skills/long-task-workflow/SKILL.md"),
+    read(
+      ".codex/ty-context-managed/skills/long-task-workflow/references/contract-authoring.md",
+    ),
+    read(".codex/skills/long-task-workflow/references/contract-authoring.md"),
+    read(
+      "packages/ty-context/assets/skills/long-task-workflow/references/contract-authoring.md",
+    ),
+    read(
+      ".codex/ty-context-managed/skills/long-task-workflow/references/evidence-design.md",
+    ),
+    read(".codex/skills/long-task-workflow/references/evidence-design.md"),
+    read(
+      "packages/ty-context/assets/skills/long-task-workflow/references/evidence-design.md",
+    ),
+    read(
+      ".codex/ty-context-managed/skills/long-task-workflow/references/authority-lifecycle.md",
+    ),
+    read(".codex/skills/long-task-workflow/references/authority-lifecycle.md"),
+    read(
+      "packages/ty-context/assets/skills/long-task-workflow/references/authority-lifecycle.md",
+    ),
+    Promise.all([
+      read("README.md"),
+      read("README.zh-CN.md"),
+      read("packages/ty-context/README.md"),
+    ]).then((values) => values.join("\n")),
+    readSourceTree(),
+  ]);
+
+  assert.equal(generatedSkill, skill);
+  assert.equal(packagedSkill, skill);
+  assert.equal(generatedContractAuthoring, contractAuthoring);
+  assert.equal(packagedContractAuthoring, contractAuthoring);
+  assert.equal(generatedEvidenceDesign, evidenceDesign);
+  assert.equal(packagedEvidenceDesign, evidenceDesign);
+  assert.equal(generatedLifecycle, lifecycle);
+  assert.equal(packagedLifecycle, lifecycle);
+
+  const combined = [
+    spec,
+    workflow,
+    rationale,
+    efficiency,
+    skill,
+    contractAuthoring,
+    evidenceDesign,
+    lifecycle,
+    publicReadmes,
+  ].join("\n");
+
+  assert.match(combined, /proxy surface[\s\S]*target runtime/iu);
+  assert.match(
+    combined,
+    /target-runtime Check[\s\S]*current (?:Check|runner|Raw Execution|Gate) execution/iu,
+  );
+  assert.match(
+    combined,
+    /tracked (?:or generated )?(?:status )?report[\s\S]*not (?:be )?the sole (?:runtime )?proof/iu,
+  );
+  assert.match(combined, /earliest (?:owning )?Outcome/iu);
+  assert.match(combined, /first runnable (?:slice|boundary)/iu);
+  assert.match(combined, /coalesc/iu);
+  assert.match(combined, /`input_paths`[\s\S]*Binding carrier/iu);
+  assert.match(combined, /Final Gate[\s\S]*rerun/iu);
+  assert.match(
+    combined,
+    /no `platform_impact`|adds no `platform_impact`|Do not add `platform_impact`/iu,
+  );
+  assert.match(combined, /no .*completion state|adds no .*completion state/iu);
+  assert.match(combined, /per[- ]Outcome[\/ ](?:or|and).*per[- ]edit/iu);
+  assert.match(
+    combined,
+    /`progress_passing`[\s\S]*targeted repair evidence[\s\S]*`final_workflow_status: null`[\s\S]*unfinished/iu,
+  );
+
+  assert.doesNotMatch(
+    sourceCode,
+    /\bplatform_impact\b|\bimplementation_complete\b|\bplatform_smoke_verified\b/u,
+  );
+});
+
 test("Source Plan and Contract Draft authoring responsibilities stay separate", async () => {
   const [spec, sourcePlan, longTask, agents, publicReadmes] = await Promise.all(
     [
@@ -232,6 +345,10 @@ test("registered rationale owns history, mechanism mapping and trusted limits", 
     "contract draft",
     "draft outcome",
     "rolling frontier",
+    "target runtime",
+    "rolling runtime smoke",
+    "proxy evidence",
+    "stale report",
     "why no authoring skill",
     "decision criteria",
     "tradeoff preference",

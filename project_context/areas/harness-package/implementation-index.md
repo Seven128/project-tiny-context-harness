@@ -46,7 +46,7 @@ Navigation for current implementation surfaces. Behavior is defined by owning co
 - Source mappings: `packages/ty-context/source-mappings.yaml`.
 - Optional Source Plan Skill: `.codex/skills/source-plan-authoring/SKILL.md` and managed/package copies.
 - Default Workflow and engineering Skills require manifest routing plus one bounded text search over `project_context/**` before `Context Delta`; this remains guidance, not a search service or persisted index.
-- Active Long-Task Skill: `.codex/skills/long-task-workflow/SKILL.md` and managed/package copies; it owns the one-time post-Authority-Lock model choice, no automatic model switch/persistent model state, no proactive parallel-subagent scheduling and live `Context Delta` procedure.
+- Active Long-Task Skill: `.codex/skills/long-task-workflow/SKILL.md` and managed/package copies; it owns the one-time post-Authority-Lock model choice, no automatic model switch/persistent model state, no proactive parallel-subagent scheduling, live `Context Delta`, current-execution target-runtime proof, coalesced rolling runtime feedback and exact progress/final-status reporting. Its Contract-authoring, Evidence-design and Authority-lifecycle references own the detailed boundaries.
 - Retirement pointer: `.codex/skills/normal-long-task/SKILL.md` and managed/package copies.
 - Source-workspace authoring Skill: `.codex/skills/authoring/harness_package_design/SKILL.md`.
 
@@ -60,7 +60,7 @@ Navigation for current implementation surfaces. Behavior is defined by owning co
 - Default Context discovery guidance and generated parity: `tests/ty-context/workflow-contract-routing.test.mjs`.
 - Profile/init/sync/upgrade/package assets: existing focused profile/package/upgrade tests updated for `long-task`.
 - Source Plan Skill contract and parity: `tests/ty-context/source-plan-authoring-skill.test.mjs`.
-- Controlling objective, Draft lifecycle, Outcome decomposition and mechanism-admission consistency: `tests/ty-context/long-task-design-context.test.mjs`.
+- Controlling objective, Draft lifecycle, Outcome decomposition, live target-runtime/rolling-feedback guidance and mechanism-admission consistency: `tests/ty-context/long-task-design-context.test.mjs`.
 - Efficiency boundaries and affected routing: `tools/test_suite_policy.mjs` owns the canonical focused/Trust lists; `tools/affected_change_discovery.mjs` owns explicit/local/CI change sources; `tools/affected_test_selection.mjs` owns fail-safe tier selection; `tools/run_affected_tests.mjs` executes the plan; `tests/ty-context/affected-change-discovery.test.mjs`, `affected-test-selection.test.mjs` and `long-task-efficiency-design.test.mjs` prove the boundaries.
 - Adversarial suites: `long-task-active-authority-continuity.test.mjs`, `long-task-authority-adversarial.test.mjs`, `long-task-assertion-safety.test.mjs`, `long-task-schema-parser-parity.test.mjs`, `long-task-counterfactual-integrity.test.mjs`, `long-task-playwright-ac-evidence.test.mjs`, `long-task-runner-freeze-v2.test.mjs`, `long-task-final-closure-mutation-smoke.test.mjs`, population/environment and Hook relocation tests.
 - Suite partitioning and timing: `tests/ty-context/run-package-suite.mjs` emits ephemeral `test-suite-timing-v1`; root scripts expose `test:affected`, `test:long-task:focused`, `test:long-task:trust` and `test:delivery-contract:focused`; package `test:trust:built` runs complete default plus canonical Long-Task Trust coverage for PRs, while `test:built`/`npm test` retains complete release coverage for `main` and publish.

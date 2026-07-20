@@ -45,6 +45,23 @@ This removes unnecessary Authority Revision and scoped-Progress invalidation wit
 
 Preflight follows the same cost rule. Repair metadata is emitted only for duplicate/coverage pairs with a deterministic same-Claim dependency. Independent diagnostics keep their existing compact form, and no finding is hidden or treated as resolved.
 
+## Rolling Target-Runtime Feedback
+
+When a declared result can pass on a proxy surface while failing in its target runtime, delaying the first target execution until Final Gate creates avoidable rework. Replaying a tracked status report in Final Gate is worse: it reruns the reader, not the target, and can falsely accept a stale self-report on an otherwise current snapshot.
+
+Use the existing Contract and Progress model instead of adding platform flags or another state machine:
+
+- put the live target Check in the earliest Outcome that owns the first runnable boundary;
+- make its current Raw Execution exercise the target and derive structured Observations from that same session;
+- declare runtime-affecting `input_paths`, Binding carriers, verification inputs and environment requirements so relevant changes stale Progress;
+- targeted-verify once after the first runnable slice and again before dependent work grows after accumulated relevant changes;
+- coalesce edits, choose the cheapest reliable Check and reuse identical Raw Execution where valid; and
+- let the one Final Gate rerun the complete live Check set for acceptance.
+
+Historical reports, screenshots, binaries and logs remain review material. Build, install, process start and absence of fatal logs prove only those exact Claims; broader runnable behavior needs a stable product-owned sentinel or declared interaction. Capability-specific probes are required only when their Claims are in scope.
+
+This policy adds bounded authoring and selected runtime cost but no Schema field, `platform_impact` taxonomy, scheduler, persistent trigger queue, per-platform completion status or mandatory rebuild per Outcome/edit. Its net value comes from earlier defect localization plus closing the stale self-report acceptance path while preserving one final authority.
+
 ## Test-Cost Layers
 
 Use short feedback loops during development, then widen before release:

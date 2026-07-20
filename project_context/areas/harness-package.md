@@ -27,6 +27,7 @@
 - Package behavior changes keep implementation, managed source, package assets, Context, `PROJECT_SPEC.md`, public README and behavior tests aligned.
 - Risk-triggered architecture decisions resolve owner, unique source of truth, dependency direction, interface/state lifecycle, failure/recovery/compatibility, forbidden shortcuts and project-owned verification.
 - Long-Task architecture invariants use existing obligations/constraints/forbidden shortcuts, path/Binding ownership and executable Checks; no architecture-specific authority layer or generic dependency engine is added.
+- A Claim that can pass on a proxy while failing in its target runtime uses a current-execution Check in the earliest owning Outcome. Existing input freshness drives coalesced rolling feedback, while the one Final Gate reruns the live Check; no platform-impact fields, per-platform state or per-Outcome rebuild mandate is added.
 - Preflight diagnostics may improve repair localization through stable refs, safe repair hints and occurrence counts while remaining read-only.
 - Modularity diagnostics identify the responsible function/location while preserving existing thresholds and waiver policy.
 

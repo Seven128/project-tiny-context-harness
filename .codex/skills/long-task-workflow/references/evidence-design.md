@@ -17,6 +17,14 @@ Evidence adapter is derived from runner kind. Only Playwright may prove `ui_brow
 
 Across all Checks sharing a Raw Execution, one Claim-bearing Observation belongs to one Assertion. Shared setup may execute once only when independent per-Check observations and artifacts remain unambiguous.
 
+## Live Target Runtime Evidence
+
+- For a target-runtime Claim, the accepting Check must exercise that target during the current runner invocation and derive structured Observations from the same runtime session. Rerunning a parser for a tracked or generated status report reruns the parser, not the target.
+- A proxy surface may prove its own Claim but cannot substitute when proxy and target can fail independently. Static source/config shape proves structure only. The existence of a build, installation, started process or clean fatal-error scan proves only those exact assertions.
+- If the declared result includes a runnable product surface or interaction, observe a stable product-owned sentinel or the declared interaction in the target session. A generic process/activity/window, development shell or absence of errors is insufficient for that broader Claim.
+- Historical reports, screenshots, binaries and logs are review material. Current-run screenshots/logs may accompany a Check as Artifacts, but the accepting Observation must come from the live runner execution and cannot be imported from historical state.
+- Bind every runtime-affecting implementation surface through `input_paths` and relevant Binding carriers; keep runner/helper/config files in `verification_inputs`. This lets existing Progress freshness identify when rolling feedback is stale without a new trigger registry.
+
 ## Playwright
 
 Claim-bearing Playwright proof is only `playwright.case.<ac-key>.passed equals true`. `[ac:<assertion-key>]` binds one declared AC per Test Instance; ordinary tags are ignored and legacy `[<key>]` binds only a declared key.

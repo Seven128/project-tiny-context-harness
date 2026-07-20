@@ -137,7 +137,7 @@ The smoke packs the local workspace, installs it into a disposable repo and vali
 
 ```sh
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.0.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.1.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -264,6 +264,8 @@ The package-managed Long-Task Skill uses progressive disclosure: its main `SKILL
 
 A Draft Outcome is simply an Outcome before Authority Lock. Outcomes split independently observable, decidable and target-verifiable results so the current Goal can keep a smaller dependency-ready working set, target verification, localize failures, resume findings and invalidate stale local results. `depends_on` expresses acceptance readiness; the Rolling Frontier is temporary. An Outcome is not a Worker, scheduler task, queue or parallelism unit. Outcome decomposes execution and diagnosis, not completion authority: targeted passes never replace the one complete Final Gate on the current final snapshot.
 
+When a declared result can pass on a proxy surface while failing in its target runtime, the earliest owning Outcome declares a project-owned Check that exercises the target during the current Check execution. A tracked report, screenshot, binary, log or historical run cannot be the sole runtime proof. The Goal runs that Check after the first runnable slice and, after coalescing related edits, before dependent work grows when declared `input_paths` or Binding carriers make Progress stale. This uses existing targeted verification and Final Gate semantics: it adds no `platform_impact` flags or completion state, requires no full rebuild per Outcome/edit, never accepts early and is rerun by Final Gate.
+
 The platform owns physical Goal/session lifecycle. A later session runs `resume` to reconstruct semantic state; Tiny Context does not recreate the prior physical Turn.
 
 ### CLI
@@ -292,7 +294,7 @@ ty-context long-task abandon <workdir> [--force-corrupt-state]
 - `diagnose-revision` performs a side-effect-free candidate Compile. Only a scope-only candidate may run existing active Check identities with unchanged runner/verifier authority; semantic changes, proof weakening, runner or verifier-content changes, and risk increases are summarized without runner execution, while risk downgrade is rejected. Output always has `acceptance_authorized: false`, `progress_written: false` and `pending_revision_written: false`.
 - `compile --revise` auto-adopts proven-safe revisions. Protected revisions return `authority_revision_pending` on stdout plus the exact decision id and deterministic approval summary, then fail closed until `approve-authority-revision` approves that exact id. Candidate edits produce a new id and invalidate the old approval.
 - `verify` writes scoped per-Check Progress Records only after rechecking active task/revision/compiled/worktree identity. A concurrent revision returns `active_authority_changed_during_verify` and writes no stale progress.
-- `status` reports each Outcome as `unverified`, `progress_passing`, `progress_failing`, `progress_stale` or `blocked_external`. It also reports the fresh Final Receipt as `final_workflow_status` (or `null` after drift), the active Contract's complete `external_confirmations` and the single `pending_authority_revision` decision when present. It reads the common-dir authority snapshot and reports a missing or mismatched workdir cache as a repairable diagnostic.
+- `status` reports each Outcome as `unverified`, `progress_passing`, `progress_failing`, `progress_stale` or `blocked_external`. It also reports the fresh Final Receipt as `final_workflow_status` (or `null` after drift), the active Contract's complete `external_confirmations` and the single `pending_authority_revision` decision when present. `progress_passing` is targeted repair evidence rather than “Outcome complete”; `progress_stale` is not a current pass, and `final_workflow_status: null` means unfinished. It reads the common-dir authority snapshot and reports a missing or mismatched workdir cache as a repairable diagnostic.
 - `resume` is read-only and reports task identity, risk, relevant Context, Git state, the same Final/external/pending decision surfaces, ready Outcomes, findings and the next safe action from the common-dir authority snapshot.
 - `final-gate` requires a clean candidate commit, recompiles source authority, reruns every required Check on one Git-tree snapshot and rechecks active identity before acceptance.
 - `stop-check` and `close` run that Live Final Gate themselves. They never trust status, progress, a Receipt or compiled cache for acceptance; success clears only the accepted identity through CAS. When machine scope passes with external work pending, the Stop Hook allows stopping but shows a non-blocking `systemMessage`; `close` returns `workflow_status` plus all `external_confirmations`. `status: closed` means only that machine Authority was cleared, not that complete external delivery finished.
@@ -461,7 +463,7 @@ make validate-harness
 
 The modularity gate is `ty-context check-modularity`. Scoped waivers require `owner`, `introduced_at`, `reason`, `tracking_issue` and `expiry_condition`.
 
-`npm run preview:pack` produces a local preview named `project-tiny-context-harness-0.7.0.tgz` under the preview output directory.
+`npm run preview:pack` produces a local preview named `project-tiny-context-harness-0.7.1.tgz` under the preview output directory.
 
 ## Community And Further Reading
 

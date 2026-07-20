@@ -98,6 +98,14 @@ Draft Outcomes make rolling work cheaper to reason about, but they do not create
 
 Final Gate rechecks all Global and Outcome Checks on one current snapshot. This prevents local passes, stale passes or historically compatible results from being aggregated into completion. There is always one selected delivery, one Contract Authority and one Final Gate.
 
+## Why Live Target-Runtime Feedback Reuses Existing Checks
+
+A same-snapshot Gate is only as truthful as its declared Checks. When a result can pass on a proxy surface while failing in its target runtime, rereading a tracked status report during Final Gate reruns the reader, not the target. The accepting Check must therefore exercise the declared target during its current Raw Execution and derive the asserted Observation from that session. Historical reports, screenshots, binaries and logs remain review artifacts; build, install, process start or absence of fatal logs prove only those exact claims unless a product-owned sentinel or interaction is also observed.
+
+The same Check belongs to the earliest Outcome that owns the first runnable target boundary instead of a terminal omnibus Outcome. Its `input_paths`, Binding carriers, verification inputs and environment requirements use existing Contract semantics to bind the runtime-affecting surface. The current Goal targeted-verifies it after the first runnable slice and again before dependent work grows when accumulated relevant changes make Progress stale. Related edits are coalesced, identical Raw Executions may still deduplicate, and a full target rebuild is not required per Outcome or per edit.
+
+This closes two distinct paths: late discovery that multiplies rework, and false acceptance from a current snapshot containing stale self-reported runtime status. It adds small Contract-authoring and selected Runtime cost, but no Schema field, platform taxonomy, scheduler, persistent trigger state or extra completion authority. Capability-specific probes remain project-owned and are required only for the Claims that need them. Targeted results remain repair-only; the one Final Gate reruns every declared live Check on the final snapshot.
+
 ## Mechanism Admission And Cost Boundary
 
 A mechanism is admitted or retained only when it closes a concrete and otherwise insufficiently covered false-completion or delivery-drift path, establishes a testable invariant, fails closed and provides more independent drift-prevention value than its Authoring, Runtime, State, Recovery and maintenance cost.
@@ -121,6 +129,8 @@ Affected-test selection follows the same rule. It shortens the developer feedbac
 - **Three-way revision classification** keeps formally monotonic evidence strengthening automatic, permits existing active Check identities with unchanged runner/verifier authority to diagnose an inactive candidate whose only protected reasons are scope expansion, and keeps semantic changes, proof weakening, runner or verifier-content changes and risk changes behind the exact revision identity.
 - **Stateless same-Contract candidate diagnosis** lets related scope discoveries accumulate in `delivery-contract.yaml` and be exercised before one approval request without creating a pending Draft authority, revision lifecycle, Progress, Receipt or acceptance result. The previous Authority remains the only active one throughout diagnosis.
 - **Targeted verify is repair evidence only** prevents a local pass from being reported as whole-delivery completion; Counterfactual failure is part of the owning Check Result/Progress rather than a transient top-level Finding, so status/resume cannot recover a false `progress_passing` state.
+- **Live target-runtime Check ownership** prevents a proxy pass or tracked self-report from proving a Claim that can fail independently in the target; the earliest owning Outcome executes the target in the current Check run and binds runtime-affecting inputs through existing fields.
+- **Coalesced rolling runtime verification** reduces late-rework cost by using that same non-accepting Check at the first runnable boundary and after accumulated relevant input changes, without a per-Outcome rebuild rule, scheduler or new state.
 - **Same-snapshot Final Gate** prevents historical pass aggregation and stale evidence reuse.
 - **Stop/close rerun the Live Final Gate** prevents post-Gate Source, Context, Contract, verifier or code drift from being accepted.
 - **Scope escape and risk escalation** prevent work outside the declared boundary from passing under the old scope or proof level.
@@ -156,6 +166,7 @@ Progress, status, Receipts and compiled cache are audit/recovery projections. Ca
 - No capacity-, layer-, file-, module-, Agent- or parallelism-based Outcome splitting.
 - No proactive parallel subagent dispatch, Worker graph or subagent recovery state.
 - No automatic model switch, model-tier scheduler, model routing state, repeated model checkpoints or persisted checkpoint acknowledgement.
+- No `platform_impact` taxonomy, manually maintained platform flags, per-platform completion state, `implementation_complete` state or mandatory full runtime rebuild per Outcome/edit.
 - No mandatory Source Plan format and no consumer platform-history guidance.
 - No restoration of SFC, Packet, Wave, Campaign, Delivery Set or model/process/Git orchestration.
 
@@ -165,5 +176,6 @@ Progress, status, Receipts and compiled cache are audit/recovery projections. Ca
 - It cannot guarantee that a model completes implementation or avoids intermediate drift.
 - It cannot switch the model selected by the host or observe opaque platform-internal delegation.
 - It accepts only declared, falsifiable machine authority; CI, deployment and human product acceptance remain external.
+- It trusts the installed project verifier and cannot semantically inspect whether an oracle truly exercised its claimed target; current-execution target proof is therefore a Contract-authoring and verifier-quality invariant, not hostile-verifier attestation.
 - Local mode trusts the installed verifier and Git metadata and is not a hostile-host security boundary.
 - Complete current-snapshot verification costs time; risk-proportional routing and affected developer tests keep unnecessary cost off ordinary work without weakening release acceptance.

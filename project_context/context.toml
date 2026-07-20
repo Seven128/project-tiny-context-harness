@@ -35,7 +35,7 @@ triggers = ["why minimal context", "why bounded search", "context recall", "trig
 path = "project_context/areas/harness-package/decision-rationale/long-task-workflow.md"
 role = "decision-rationale"
 read_policy = "on-demand"
-triggers = ["long-task objective", "false completion", "delivery drift", "contract draft", "draft outcome", "outcome decomposition", "rolling frontier", "why no authoring skill", "source plan boundary", "default decision delegation", "decision criteria", "tradeoff preference", "research before selection", "provider research", "technical selection", "high-risk external action", "decision required", "workflow mechanism cost", "authority revision", "revision diagnosis", "approval summary", "scope expansion", "model switching", "model choice checkpoint", "execution model checkpoint", "subagent scheduling", "parallel agent", "context evolution", "affected tests", "Web GPT", "Codex authoring"]
+triggers = ["long-task objective", "false completion", "delivery drift", "contract draft", "draft outcome", "outcome decomposition", "rolling frontier", "target runtime", "rolling runtime smoke", "proxy evidence", "stale report", "why no authoring skill", "source plan boundary", "default decision delegation", "decision criteria", "tradeoff preference", "research before selection", "provider research", "technical selection", "high-risk external action", "decision required", "workflow mechanism cost", "authority revision", "revision diagnosis", "approval summary", "scope expansion", "model switching", "model choice checkpoint", "execution model checkpoint", "subagent scheduling", "parallel agent", "context evolution", "affected tests", "Web GPT", "Codex authoring"]
 
 [[context]]
 path = "project_context/areas/harness-package/implementation-index.md"
@@ -47,7 +47,7 @@ triggers = ["cli entry", "sync", "validator", "migration", "release tool", "rele
 path = "project_context/areas/harness-package/verification.md"
 role = "verification"
 read_policy = "on-demand"
-triggers = ["test", "verify", "validation", "harness gate", "diff check", "visual guidance test", "long-task black box", "test budget", "test suite purpose", "test ROI", "rerun policy", "trust boundary gate", "release regression suite", "release workflow", "trusted publish", "artifact handoff", "affected test", "focused test", "final gate", "model checkpoint test"]
+triggers = ["test", "verify", "validation", "harness gate", "diff check", "visual guidance test", "long-task black box", "target runtime", "rolling runtime smoke", "proxy evidence", "test budget", "test suite purpose", "test ROI", "rerun policy", "trust boundary gate", "release regression suite", "release workflow", "trusted publish", "artifact handoff", "affected test", "focused test", "final gate", "model checkpoint test"]
 
 [[areas]]
 id = "delivery-benchmark"

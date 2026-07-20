@@ -137,7 +137,7 @@ npm ci
 npm run smoke:quickstart
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.0.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.1.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -215,6 +215,8 @@ The Long-Task Skill keeps objective/boundary/phase routing in its main file and 
 
 A Draft Outcome is simply an Outcome before Authority Lock. Outcomes decompose independently observable, decidable and target-verifiable results to improve dependency-ready implementation, targeted verification, failure localization, resume and stale-result invalidation. `depends_on` means acceptance readiness and the Rolling Frontier is temporary; an Outcome is not a Worker, scheduler task, queue or parallel unit. Outcome decomposes execution and diagnosis, not completion authority, so one complete current-snapshot Final Gate remains mandatory.
 
+When a declared result can pass on a proxy surface while failing in its target runtime, the earliest owning Outcome declares a project-owned Check that exercises the target during the current Check execution. A tracked report, screenshot, binary, log or historical run cannot be the sole runtime proof. The Goal runs that Check after the first runnable slice and, after coalescing related edits, before dependent work grows when declared `input_paths` or Binding carriers make Progress stale. This reuses targeted verification and Final Gate: it adds no `platform_impact` flags or completion state, requires no full rebuild per Outcome/edit, never accepts early and is rerun by Final Gate.
+
 ### One-time execution-model choice
 
 The first successful Compile creates Authority Lock and returns:
@@ -259,7 +261,7 @@ Compact authoring omits only deterministic defaults and normalizes identically t
 
 Targeted verify rechecks active task/revision/compiled/worktree identity before writing scoped Progress. Counterfactual Findings first enter the owning Check Result, invalidate an otherwise passed Check, clear Claim Proofs and remain visible in status/resume; Global Checks reuse the same Progress type without a Global Outcome state. Final Gate repeats the identity check after all Checks; Stop/close clear only the accepted identity through CAS. Commit, migration, clear and abandon share one active-state lock. `abandon --force-corrupt-state` is reserved for corrupt continuity or stale lock cleanup and preserves Contract, Source, Context and Git content.
 
-`status` and read-only `resume` report the current fresh Final Receipt as `final_workflow_status` (or `null` after drift) plus the active Contract's complete `external_confirmations`. When machine scope passes with external delivery pending, the package-owned Stop Hook allows stopping and emits a non-blocking `systemMessage`; `close` preserves the accepted `workflow_status` and confirmations in its JSON result. `status: closed` means only that machine Authority was cleared, not that external delivery completed.
+`status` and read-only `resume` report the current fresh Final Receipt as `final_workflow_status` (or `null` after drift) plus the active Contract's complete `external_confirmations`. `progress_passing` is targeted repair evidence rather than “Outcome complete”; `progress_stale` is not a current pass, and `final_workflow_status: null` means unfinished. When machine scope passes with external delivery pending, the package-owned Stop Hook allows stopping and emits a non-blocking `systemMessage`; `close` preserves the accepted `workflow_status` and confirmations in its JSON result. `status: closed` means only that machine Authority was cleared, not that external delivery completed.
 
 New authoring uses inline Outcomes. Existing `outcome_files` remains physical compatibility only and creates no semantic or completion boundary. A Long Task requires real Source, and every declared Source file contains at least one Material Item; background-only references remain outside Source Authority. Every Material Source Item is wrapped in the original Markdown with a non-rendering, uniquely keyed `ty-source-item:start/end` marker; `control` is a first-class kind, marker keys and `source_claim` keys are set-equal, and statements are text-exact after limited whitespace normalization. Every non-decision Source item owns one same-kind, same-text canonical target and duplicate ownership fails. Outcome Source Acceptance maps to criterion-identical `<outcome>.<check>.<assertion>` with an independently Source-backed non-Result Claim; Global Source Acceptance maps to criterion-identical `GLOBAL.<check>.<assertion>`, proves no Outcome Claim and needs an independently Source-backed Global Claim. Typed dispositions keep Requirements, Controls, Acceptance, Results, Fact/Affected-Outcome Risk, Non-goals, External Confirmations and Decisions distinct; `out_of_scope` is retired. Ordinary prose remains valid after marker-only enumeration.
 
@@ -314,7 +316,7 @@ make validate-harness
 
 The modularity gate is `ty-context check-modularity`. Scoped waivers require `owner`, `introduced_at`, `reason`, `tracking_issue` and `expiry_condition`.
 
-The synchronized local preview tarball is named `project-tiny-context-harness-0.7.0.tgz`.
+The synchronized local preview tarball is named `project-tiny-context-harness-0.7.1.tgz`.
 
 ## Community And Further Reading
 

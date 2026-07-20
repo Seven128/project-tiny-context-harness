@@ -209,6 +209,10 @@ Harness never proactively spawns, assigns, coordinates, retries or recovers para
 
 `Context Delta` remains live after Authority Lock. When implementation or repair discovers a durable fact, the current Goal updates the owning Context rather than preserving a known stale fact until the end. In referenced mode, core Context, explicit `context_refs`, verification/deployment Context and every selected requirement-bearing role are **Controlling Context**; changes require protected Authority Revision and may require exact user approval. Only graph-derived, non-explicit `implementation-index` and `archive` files are **Supporting Context**; a supporting-only content revision may auto-revise through `compile --revise` and preserve otherwise-fresh targeted Progress. Full snapshot mode and explicit references treat every selected file as controlling. Final Gate always recompiles and records the complete current Context snapshot.
 
+Target-runtime feedback is also rolling, but remains non-authoritative. If a declared result can pass on a proxy surface while failing in its target runtime, the earliest Outcome that owns the first runnable boundary declares a project-owned Check that exercises the target during the current Raw Execution and derives its asserted Observation from that session. A tracked status report, screenshot, binary, log or historical run cannot be the sole proof of that Claim. The Check declares its runtime-affecting `input_paths`, Binding carriers, verification inputs and environment requirements through existing Contract fields.
+
+The current Goal targeted-verifies that Check after the first runnable slice and again before dependent work grows when accumulated relevant changes have made its Progress stale. Related edits are coalesced and the cheapest reliable target Check is used; there is no mandatory full environment rebuild per Outcome or per edit. This adds no `platform_impact` taxonomy, per-platform completion state, scheduler or acceptance path. Final Gate still reruns every declared target-runtime Check on the final snapshot.
+
 ## 5. Canonical Delivery Contract V2
 
 The root authoring file is `delivery-contract.yaml`, schema `long-task-delivery-v2`. It remains a non-authoritative Contract Draft until the first successful formal Compile. New authoring uses inline Outcomes in one file. Existing `outcome_files` parsing remains compatible only as a physical storage choice; fragments create no additional semantic boundary, state or completion authority. Every complete delivery selected by the user stays in one Contract and one Final Gate even when its Outcomes are weakly related.
@@ -319,6 +323,7 @@ The Evidence Kernel retains only low-level capabilities that directly close fals
 - population coverage evaluation;
 - counterfactual controls where required;
 - complete selected Context/source/runner/oracle/verifier hashes plus Controlling Context freshness;
+- current-execution target-runtime observation when a declared Claim can fail independently from its proxy surface;
 - Git common-dir Active Authority V3 snapshot plus matching worktree marker;
 - outcome/check projection and derived status;
 - source-recompiled Live Final Gate and audit-only Receipt;
@@ -338,15 +343,21 @@ Across all Checks sharing one Raw Execution identity, one claim-bearing Observat
 
 Claim-bearing Product/Global assertions use explicit expected-value comparisons; `truthy`/`falsy` are prohibited and `exists` is limited to an `implementation_structure` obligation. Outcome Counterfactuals name an Outcome Binding; Global Counterfactuals use an Outcome-owned `binding_ref`. Both mutate only a proven subset of carriers. Structured evidence requires completed exit-zero execution with exactly designated `assertion_value_mismatch` failures. Weak-observability Playwright Counterfactuals accept exit one only under complete exact accounting of every unexpected instance; ordinary Baselines still require exit zero. Same-Check sensitivity is required for structured Claim proof, and Population exempts only its own Claims under normal observability. Claim and Population proofs are empty unless the complete Check passes.
 
+For target-runtime Claims, “current snapshot” and “current execution” are both required. Rerunning an oracle that merely reads a committed or generated status file proves only the file's contents, not the target runtime. Build, installation, process start and absence of fatal logs likewise prove only those named assertions. A broader runnable-result Claim needs a stable product-owned sentinel or declared interaction observed from the same target session. Artifacts remain review material; they may accompany but never replace the structured Observation produced by the live Check.
+
 ## 9. Verification And Recovery Semantics
 
 ### Targeted Verify
 
 `verify` can select one Outcome, one Check or all repair checks. It runs on a current snapshot, records precise findings and projects current status, but always has `acceptance_authorized: false`. Findings carry the owning Source/Claim/Assertion/Observation/owner-path repair context without exposing secrets.
 
+When a target-runtime Check exists, the Goal runs it at the first runnable boundary and after coalesced changes to declared runtime inputs before relying on that boundary for more work. This is a feedback-cost policy, not a persisted trigger queue: no per-Outcome rebuild is required, identical Raw Execution may still deduplicate, and only the later complete Final Gate can accept.
+
 ### Status
 
 `status` reports each Outcome as `unverified`, `progress_passing`, `progress_failing`, `progress_stale` or `blocked_external`. It is not completion authority. `final_workflow_status` reports a fresh Final Receipt's exact workflow status or `null`; `external_confirmations` reports current declarations from active authority.
+
+User-facing reporting must preserve those meanings. `progress_passing` is described as current targeted repair evidence, never “Outcome complete”; `progress_stale` cannot be reported as a current pass; and `final_workflow_status: null` means the Goal remains unfinished. `machine_accepted_external_pending` is reported exactly with its pending confirmations. No `implementation_complete`, `platform_smoke_verified` or other persistent state vocabulary is added.
 
 ### Resume
 
@@ -440,6 +451,7 @@ Trusted publication uses one prepare/test/pack/smoke execution per source commit
 - Small-fixture Preflight and Compile targets are each at most two seconds; status/resume at most one second.
 - Focused loops target at most five minutes. Dirty local affected discovery uses only current worktree paths, clean local discovery uses the current commit parent, and explicit/CI bases are exact; no local working set is unioned with an inferred historical branch diff.
 - Affected/focused loops are non-authoritative developer feedback. Unmapped Long-Task runtime changes widen to the canonical Trust Boundary Gate; shared fixtures, package/dependency boundaries and unknown broad changes still widen to complete suites.
+- Project target-runtime checks use the same cost shape: run once at the first runnable boundary, coalesce relevant input changes, and rerun before dependent work expands plus in Final Gate. Do not impose a full target rebuild on every Outcome/edit; reuse caches, installed test targets and identical Raw Execution only when the declared Claim remains reliably falsifiable.
 - The canonical Long-Task Trust Boundary Gate targets p95 at most eight minutes and proves high-impact authority continuity/CAS, forged evidence, revision, Context freshness, Final Gate/Stop/close, Hook/profile, qualification and platform-boundary regressions. It is package regression evidence, never Contract acceptance.
 - Pull-request Package CI builds once and runs the complete default suite plus the Trust Boundary Gate. `main`, publish and release build once and execute the complete built package suites; the complete Long-Task Workflow suite remains at most fifteen minutes.
 - Package-suite timing is ephemeral diagnostic output only. It creates no result cache, workflow state, Receipt or reusable authority.
@@ -462,6 +474,7 @@ Stable honest limits:
 - Harness does not observe platform token/model-call accounting.
 - Git/PR/CI/deployment/human product confirmation remain external.
 - Local mode trusts the installed package-owned verifier and Git metadata.
+- Harness cannot semantically attest that a trusted project oracle really exercised its claimed target runtime; Contract authoring, verifier review and protected verifier identity own that boundary.
 - Network isolation remains the responsibility of the external platform.
 
 ## 16. Historical Design Boundary

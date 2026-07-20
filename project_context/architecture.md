@@ -17,7 +17,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Active Contract schema: `packages/ty-context/src/schemas/long-task-delivery-v2/**` plus focused `long-task-*` parser/compiler/claims/risk modules.
 - Shared activation safety: `long-task-activation-validation.ts`, used by collecting Preflight and fail-fast Compile.
 - Source authority: Source marker/parser/inventory/target-continuity modules derive text-bound Source/REQ/CTRL/OBL/NCOMP/AC projections without another editable Source authority.
-- Evidence Kernel: runner-derived adapters, explicit runners, structured/Playwright observations, Counterfactual and Population sensitivity, targeted verifier, Git-aware snapshot and source-recompiled same-snapshot Live Final Gate.
+- Evidence Kernel: runner-derived adapters, explicit runners, structured/Playwright observations, Counterfactual and Population sensitivity, target-runtime-current-execution proof, targeted verifier, Git-aware snapshot and source-recompiled same-snapshot Live Final Gate.
 - Authority/recovery: one common-dir Active Authority V3 snapshot plus matching worktree marker; workdir compiled output, Progress and Receipts are rebuildable audit/recovery projections.
 - Revision diagnosis: `long-task-authority-revision*.ts` deterministically classifies and summarizes the candidate; `long-task-authority-revision-diagnosis.ts` exercises only scope-only candidates through existing active Check identities with unchanged runner/verifier authority, without publishing authority or evidence.
 - Compile handoff: `commands/long-task.ts` emits an additive one-time `execution_model_checkpoint` after first Authority Lock; it does not switch models or persist acknowledgement/model-route state.
@@ -63,6 +63,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Preflight and Compile share activation safety. Preflight diagnostics may include stable references, repair hints, duplicate occurrence counts and narrowly proven primary/dependent repair links, but remain read-only and non-authoritative.
 - First Compile emits the one-time model choice. A prior explicit user model strategy satisfies it; later revisions do not repeat it. The choice is not completion proof.
 - Targeted verify may localize repair and store scoped current-snapshot Progress; it cannot accept.
+- A target-runtime Claim that can diverge from a proxy surface is owned by the earliest runnable Outcome and proved by a Check that exercises the target in its current Raw Execution. The current Goal runs that existing Check at the first runnable boundary and after coalesced changes to its declared runtime inputs; this creates no scheduler, platform taxonomy or extra completion state.
 - Revision diagnosis is a non-authoritative repair loop, not extended Preflight: monotonic proof strengthening needs no approval, a candidate whose only protected reasons are scope expansion may run existing active Check identities with unchanged runner/verifier authority without writing Progress, semantic changes, proof weakening, runner or verifier-content changes, and risk increases are summarized but never executed as candidates, and risk downgrade is rejected. Only `compile --revise` may create the single pending decision and only approved atomic Compile may replace Active Authority.
 - Final Gate, Stop and close recompile Source authority, bind active task/revision/worktree/Git-tree identity and rerun all declared Global and Outcome checks. Only this complete current snapshot can create machine acceptance.
 
@@ -79,6 +80,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Keyword search cannot understand every synonym or indirect dependency, so it supplements rather than replaces semantic reasoning, Architecture Context Hit and final Conformance.
 - Retrieval-only manifest edits may preserve active Authority and scoped Progress, but they never preserve a Final Receipt across a changed Git tree; Final Gate still runs against the final committed snapshot.
 - Architecture enforcement is limited to declared, falsifiable project invariants. Subjective design quality remains engineering review rather than false machine proof.
+- Runtime evidence is likewise project-owned: Harness can require current-execution semantics in Contract authoring and freeze the runner/verifier, but it cannot infer a platform taxonomy or independently prove that a trusted project oracle exercises the intended target.
 - The first successful Compile creates Authority Lock and immutable initial base. Later protected changes cannot be silently adopted; candidate diagnosis leaves the old Authority active and cannot create a second Draft authority, state plane or acceptance path.
 - The execution-model checkpoint is one additive compile signal and Agent pause; no model switch, route, tier scheduler, acknowledgement file or repeated checkpoint exists.
 - One user-selected delivery has one Contract, one selected workspace and one Final Gate. Existing `outcome_files` are physical compatibility only.
@@ -97,6 +99,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Revision tests must prove the three-way classifier, exact summary/hash binding, scope-only candidate execution with zero durable-state mutation, red-candidate non-execution, stable pending projection in status/resume, approval invalidation after edits and full evidence invalidation after adoption.
 - Project-native architecture checks and `check-modularity` protect declared structural boundaries; Final Gate alone reruns the complete long-task authority on one current snapshot.
 - Managed source/package/generated copies must remain byte-aligned through source sync and package parity checks.
+- Guidance parity tests prove that a proxy, tracked status report or historical artifact cannot be the sole proof of a target-runtime Claim; rolling reruns remain coalesced through existing input freshness and no `platform_impact` field, per-Outcome rebuild rule or new completion state appears.
 - Trusted publication binds the tested tarball SHA-256, dispatch source commit and a CRLF/LF-stable lockfile identity across the job boundary. Node/npm versions remain build provenance, not a requirement that the later publisher process use byte-identical tools.
 
 ## Open Risks

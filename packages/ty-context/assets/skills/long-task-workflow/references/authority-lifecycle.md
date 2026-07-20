@@ -36,13 +36,17 @@ Controlling Context includes core Context, explicit `context_refs`, verification
 
 `verify --outcome/--check` runs scoped current-snapshot checks for repair and rechecks active identity before writing Progress. A Counterfactual finding is projected into the owning Main Check, changes an otherwise passed Check to `invalid_evidence`, clears Claim proofs and remains recoverable through `status`/`resume`. Global Checks use the same record without a new Global Outcome state.
 
+For a declared target-runtime Check, run targeted verify once when its earliest owning Outcome reaches the first runnable boundary. After accumulated changes to its declared `input_paths` or Binding carriers make Progress stale, rerun before dependent work grows. Coalesce related edits and use the cheapest reliable Check; do not create a per-edit/per-Outcome rebuild rule, trigger queue or platform state. These runs remain `acceptance_authorized: false`.
+
 Progress freshness binds Outcome authority, runner, verification inputs, Controlling Context and implementation inputs. Retry defaults to none; one retry is allowed only for explicit `transient_once`, idempotent, read-only/test-sandbox work.
 
 Status, Progress, Receipts and workdir compiled output are audit/recovery projections only. Development-period authority state is `manual_required` and never migrated.
 
+Report their exact meaning: `progress_passing` is current targeted repair evidence rather than “Outcome complete”; `progress_stale` is not a current pass; `final_workflow_status: null` means the Goal is unfinished. Do not invent `implementation_complete`, `platform_smoke_verified` or another persistent completion vocabulary.
+
 ## Final Gate And Terminal Paths
 
-Before Final Gate, complete Context/code/tests and create a clean candidate commit. Final Gate captures active identity, recompiles Source authority, reads complete current Context, validates common-dir record/marker, creates a Git-tree snapshot, reruns all Checks and sensitivity controls and rechecks identity before acceptance. A concurrent revision returns `active_authority_changed_during_final_gate`.
+Before Final Gate, complete Context/code/tests and create a clean candidate commit. Final Gate captures active identity, recompiles Source authority, reads complete current Context, validates common-dir record/marker, creates a Git-tree snapshot, reruns all Checks and sensitivity controls and rechecks identity before acceptance. A target-runtime Check must exercise its target again in that Final Gate execution; rereading historical status does not become live proof merely because the reader reran. A concurrent revision returns `active_authority_changed_during_final_gate`.
 
 Commit, verifier migration, clear and abandon share one active-state lock. Stop/close clear only the identity actually accepted through CAS and preserve `machine_accepted_external_pending` plus every named external confirmation in output. A stale Receipt exposes no accepted workflow status.
 

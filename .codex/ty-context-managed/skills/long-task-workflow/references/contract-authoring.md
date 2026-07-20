@@ -44,6 +44,20 @@ Represent the invariant with existing Contract fields:
 
 Do not encode subjective “clean architecture” or generic quality prose as machine authority. If no reliable observation can falsify it, keep it as durable Context/review judgment or return `decision_required`. Harness routes the repository's architecture check; it does not become a language-generic dependency analyzer.
 
+## Proxy And Target Runtime Independence
+
+When a declared result can pass on a proxy surface while failing in its target runtime, author independent target-runtime proof. Put the project-owned live Check in the earliest Outcome that owns the first runnable target boundary rather than postponing it to a terminal release/quality Outcome.
+
+Use existing Contract semantics:
+
+1. require `runtime_behavior` or the other proof surface that matches the actual Claim;
+2. make the accepting runner exercise the target during the current Raw Execution and derive its asserted Observation from that same session;
+3. include the runtime-affecting entrypoints, dependency manifests/lockfiles, configuration and integration carriers in `input_paths` or Bindings as appropriate;
+4. freeze runner helpers/configuration as `verification_inputs` and declare only genuine environment requirements; and
+5. add capability-specific probes only for Claims that actually require them.
+
+A proxy check, static repository shape, tracked status report, prior screenshot, binary or historical run cannot be the sole proof of a Claim that can fail independently in the target. Do not add `platform_impact` flags, a platform taxonomy or per-platform completion state: Check ownership, proof surfaces, declared inputs, Bindings and risk already express the necessary boundary.
+
 ## Visual Delivery Authoring
 
 When Source or controlling Context declares a design system, redesign, high-fidelity UI or other material visual result, author it through existing Contract semantics:
