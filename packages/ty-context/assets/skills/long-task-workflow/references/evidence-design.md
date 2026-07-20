@@ -25,6 +25,13 @@ Across all Checks sharing a Raw Execution, one Claim-bearing Observation belongs
 - Historical reports, screenshots, binaries and logs are review material. Current-run screenshots/logs may accompany a Check as Artifacts, but the accepting Observation must come from the live runner execution and cannot be imported from historical state.
 - Bind every runtime-affecting implementation surface through `input_paths` and relevant Binding carriers; keep runner/helper/config files in `verification_inputs`. This lets existing Progress freshness identify when rolling feedback is stale without a new trigger registry.
 
+## Causal Boundary Review After Revision
+
+- When a rolling blocker causes a semantic or proof revision, review only the affected weak-observability or high-risk Outcomes before adoption. Ask whether a cheaper proxy, fixed response or self-reported success could pass while the declared result still fails at a farther independent boundary.
+- Evidence must reach the furthest independently failing boundary named by the Claim. A proxy may prove its own result, but it cannot prove a downstream state or effect merely by reporting success.
+- For a behavioral Claim, prefer a Counterfactual that disrupts the claimed causal capability when removing a carrier would prove only file dependence. `replace_file` may supply a declared inert/failing implementation fixture; `remove_paths` remains valid when carrier existence is itself the claimed boundary.
+- Keep this risk-proportional and internal. Do not create an evidence matrix, product-effect taxonomy, universal restart/end-to-end suite, new mutation type or persistent review state.
+
 ## Playwright
 
 Claim-bearing Playwright proof is only `playwright.case.<ac-key>.passed equals true`. `[ac:<assertion-key>]` binds one declared AC per Test Instance; ordinary tags are ignored and legacy `[<key>]` binds only a declared key.

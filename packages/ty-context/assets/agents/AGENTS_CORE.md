@@ -35,7 +35,7 @@ After the first Authority Lock, stop once before implementation and ask the user
 
 Before authoring, proof design or authority lifecycle work, read the phase-specific references in the package-managed `long-task-workflow` Skill. Use `ty-context long-task help` for CLI syntax instead of treating this startup router as a command reference.
 
-Final Gate, Stop and close recompile the source Contract and rerun every declared Check on one clean current snapshot. Targeted verify is repair evidence only. Status, progress, receipts and compiled cache are audit/recovery surfaces only; prose, historical tests or Agent judgment never create acceptance. External confirmations remain explicit and machine acceptance never implies CI, deployment or human acceptance.
+Final Gate, Stop and close recompile the source Contract and rerun every declared Check on one clean current snapshot. Targeted verify is repair evidence only. Status, progress, receipts and compiled cache are audit/recovery surfaces only; prose, historical tests or Agent judgment never create acceptance. An adopted Authority Revision returns to rolling execution and is never delivery completion. External confirmations remain explicit; machine acceptance covers declared machine Authority and cannot by itself authorize completing the platform-native Goal, CI, deployment or human acceptance.
 
 Tiny Context does not create or restore platform Goals, invoke models, spawn agents, call an App Server, create branches/worktrees, merge, push, open PRs, deploy or manage process trees. `ty-context enable long-task` installs the Source Plan Authoring Skill, Long-Task Workflow Skill and package-owned completion Hook.
 

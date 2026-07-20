@@ -212,10 +212,11 @@ export function authorityRevisionDiff(
     previous.authority_hashes.risk_authority_hash !==
     nextHashes.risk_authority_hash;
   const acceptanceChanged = acceptanceSemanticsChanged(previous, next);
-  const externalConfirmationsChanged = !same(
+  const externalConfirmationChanges = keyedAuthorityChanges(
     previous.global.acceptance.external_confirmations,
     next.global.acceptance.external_confirmations,
   );
+  const externalConfirmationsChanged = externalConfirmationChanges.length > 0;
   const monotonic = isMonotonicAcceptanceStrengthening(previous, next);
   const reductionReasons = [
     ...(productClaimsAdded.length ? ["product_claim_added"] : []),
@@ -315,6 +316,7 @@ export function authorityRevisionDiff(
     counterfactuals_removed: counterfactualsRemoved,
     population_weakened: populationWeakened,
     external_confirmations_changed: externalConfirmationsChanged,
+    external_confirmation_changes: externalConfirmationChanges,
     ...verifierDiff,
     source_claims_changed:
       previous.authority_hashes.source_authority_hash !==
@@ -337,4 +339,26 @@ export function authorityRevisionDiff(
       rollbackOrRecoveryWeakened.length > 0,
     reduction_reasons: [...new Set(reductionReasons)],
   };
+}
+
+function keyedAuthorityChanges(
+  before: Array<{ key: string }>,
+  after: Array<{ key: string }>,
+): string[] {
+  const beforeByKey = new Map(before.map((item) => [item.key, item]));
+  const afterByKey = new Map(after.map((item) => [item.key, item]));
+  return [
+    ...before
+      .filter((item) => !afterByKey.has(item.key))
+      .map((item) => `${item.key}:removed`),
+    ...after
+      .filter((item) => !beforeByKey.has(item.key))
+      .map((item) => `${item.key}:added`),
+    ...before
+      .filter((item) => {
+        const candidate = afterByKey.get(item.key);
+        return candidate !== undefined && !same(item, candidate);
+      })
+      .map((item) => `${item.key}:changed`),
+  ].sort();
 }

@@ -82,6 +82,9 @@ export async function longTask(args: string[]): Promise<void> {
         workdir,
         workflow_status: result.workflow_status,
         external_confirmations: result.external_confirmations,
+        acceptance_scope: result.acceptance_scope,
+        closed_scope: result.closed_scope,
+        native_goal_effect: result.native_goal_effect,
       }),
     );
     return;
@@ -120,7 +123,13 @@ async function verify(workdir: string, args: string[]): Promise<void> {
 async function finalGate(workdir: string, args: string[]): Promise<void> {
   rejectUnknown(args, []);
   const result = await runDeliveryFinalGate(workdir);
-  console.log(JSON.stringify(result));
+  console.log(
+    JSON.stringify({
+      ...result,
+      acceptance_scope: "declared_machine_authority",
+      native_goal_effect: "none",
+    }),
+  );
   if (
     result.workflow_status !== "machine_accepted" &&
     result.workflow_status !== "machine_accepted_external_pending"

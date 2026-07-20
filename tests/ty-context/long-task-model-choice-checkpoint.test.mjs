@@ -25,6 +25,10 @@ test("first Authority Lock emits one execution-model checkpoint and later Compil
       fixture.workdir,
     ]);
     assert.deepEqual(first.execution_model_checkpoint, expectedCheckpoint);
+    assert.equal(first.lifecycle_event, "authority_locked");
+    assert.equal(first.delivery_completed_by_this_event, false);
+    assert.equal(first.native_goal_effect, "none");
+    assert.match(first.next_action, /rolling implementation/iu);
 
     const repeated = await runCli(fixture.root, [
       "long-task",
@@ -32,6 +36,9 @@ test("first Authority Lock emits one execution-model checkpoint and later Compil
       fixture.workdir,
     ]);
     assert.deepEqual(repeated.execution_model_checkpoint, { required: false });
+    assert.equal(repeated.lifecycle_event, "authority_recompiled_unchanged");
+    assert.equal(repeated.delivery_completed_by_this_event, false);
+    assert.equal(repeated.native_goal_effect, "none");
     assert.equal(repeated.compiled_identity, first.compiled_identity);
     assert.equal(repeated.authority_revision, first.authority_revision);
   } finally {

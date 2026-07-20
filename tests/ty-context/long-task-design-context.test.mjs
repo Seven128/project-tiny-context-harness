@@ -354,9 +354,13 @@ test("registered rationale owns history, mechanism mapping and trusted limits", 
     "tradeoff preference",
     "research before selection",
     "authority revision",
+    "blocker-driven revision",
+    "revision return",
     "revision diagnosis",
     "approval summary",
     "scope expansion",
+    "terminal scope",
+    "native goal completion",
     "Web GPT",
     "Codex authoring",
   ]) {
@@ -373,10 +377,12 @@ test("registered rationale owns history, mechanism mapping and trusted limits", 
     "First-Compile Authority Lock and Authority Revision",
     "Executing Agent cannot approve",
     "Three-way revision classification",
+    "Exact material revision summary and rolling return",
     "Stateless same-Contract candidate diagnosis",
     "Targeted verify is repair evidence only",
     "Same-snapshot Final Gate",
     "Stop/close rerun the Live Final Gate",
+    "Machine/native terminal scope isolation",
     "Scope escape and risk escalation",
     "Counterfactual, Population and sensitivity proof",
     "Managed source, generated copy and package asset parity",
@@ -420,8 +426,48 @@ test("revision diagnosis stays one-Contract, non-authoritative, and exact-approv
   );
   assert.match(
     combined,
+    /adoption[\s\S]*not (?:a )?delivery completion[\s\S]*rolling (?:implementation|execution|repair)/iu,
+  );
+  assert.match(
+    combined,
+    /Source\/Product Claim reductions[\s\S]*external-confirmation keys/iu,
+  );
+  assert.match(
+    combined,
+    /declared_machine_authority[\s\S]*native_goal_effect/iu,
+  );
+  assert.match(
+    combined,
     /same `delivery-contract\.yaml`[\s\S]*not a pending Draft authority/iu,
   );
+});
+
+test("blocker revisions use causal evidence without adding completion state", async () => {
+  const [skill, evidence, contract, rationale] = await Promise.all([
+    read(".codex/ty-context-managed/skills/long-task-workflow/SKILL.md"),
+    read(
+      ".codex/ty-context-managed/skills/long-task-workflow/references/evidence-design.md",
+    ),
+    read("project_context/areas/harness-package/contracts/workflow-contract.md"),
+    read(
+      "project_context/areas/harness-package/decision-rationale/long-task-workflow.md",
+    ),
+  ]);
+  const combined = [skill, evidence, contract, rationale].join("\n");
+  assert.match(
+    combined,
+    /difficulty or delay[\s\S]*never reclassifies machine-verifiable scope as external/iu,
+  );
+  assert.match(
+    combined,
+    /furthest independently failing boundary[\s\S]*causal capability/iu,
+  );
+  assert.match(
+    combined,
+    /veto-only[\s\S]*never (?:lets Agent judgment replace|substitutes Agent judgment for) Final Gate/iu,
+  );
+  assert.match(combined, /no persistent `authority_revision_in_progress`/iu);
+  assert.match(combined, /no product taxonomy|not a product taxonomy/iu);
 });
 
 test("Mechanism Admission Rule is explicit and creates no registry", async () => {

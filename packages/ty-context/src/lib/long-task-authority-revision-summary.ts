@@ -82,6 +82,27 @@ export function summarizeAuthorityRevision(
     write_scope_expanded: diff.owner_or_path_boundary_changed,
     risk_changed: diff.risk_changed,
     external_confirmations_changed: diff.external_confirmations_changed,
+    semantic_fields_changed: uniqueSorted([
+      ...diff.product_semantics_changed,
+      ...diff.global_semantics_changed,
+    ]),
+    source_claim_changes: uniqueSorted([
+      ...diff.source_claims_added,
+      ...diff.source_claims_removed_or_changed,
+    ]),
+    product_claim_changes: uniqueSorted([
+      ...diff.product_claims_added.map((claim) => `${claim}:added`),
+      ...diff.product_claims_removed.map((claim) => `${claim}:removed`),
+      ...diff.product_claims_changed.map((claim) => `${claim}:changed`),
+    ]),
+    proof_reductions: uniqueSorted(
+      diff.reduction_reasons.filter((reason) =>
+        PROOF_REDUCTION_REASONS.has(reason),
+      ),
+    ),
+    external_confirmation_changes: uniqueSorted(
+      diff.external_confirmation_changes,
+    ),
     added_verification_dependencies: uniqueSorted([
       ...diff.verification_inputs_added,
       ...diff.input_paths_added,
@@ -114,14 +135,39 @@ export function projectAuthorityRevisionDecision(value: {
     input_paths_added: value.revision_diff.input_paths_added ?? [],
     external_confirmations_changed:
       value.revision_diff.external_confirmations_changed ?? false,
+    external_confirmation_changes:
+      value.revision_diff.external_confirmation_changes ?? [],
   } as AuthorityRevisionDiffV2;
+  const computedSummary = summarizeAuthorityRevision(
+    diff,
+    value.affected_outcomes_or_contracts,
+  );
+  const storedSummary = value.approval_summary as
+    Partial<AuthorityRevisionApprovalSummaryV2> | undefined;
   return {
     revision_identity: value.revision_identity,
     change_class: value.change_class ?? classifyAuthorityRevision(diff),
     approval_required: value.approval_required ?? true,
-    approval_summary:
-      value.approval_summary ??
-      summarizeAuthorityRevision(diff, value.affected_outcomes_or_contracts),
+    approval_summary: storedSummary
+      ? {
+          ...computedSummary,
+          ...storedSummary,
+          semantic_fields_changed:
+            storedSummary.semantic_fields_changed ??
+            computedSummary.semantic_fields_changed,
+          source_claim_changes:
+            storedSummary.source_claim_changes ??
+            computedSummary.source_claim_changes,
+          product_claim_changes:
+            storedSummary.product_claim_changes ??
+            computedSummary.product_claim_changes,
+          proof_reductions:
+            storedSummary.proof_reductions ?? computedSummary.proof_reductions,
+          external_confirmation_changes:
+            storedSummary.external_confirmation_changes ??
+            computedSummary.external_confirmation_changes,
+        }
+      : computedSummary,
   };
 }
 

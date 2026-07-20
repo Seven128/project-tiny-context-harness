@@ -30,6 +30,8 @@ test("fresh external pending qualification reaches status and resume", async () 
     ]);
     assert.equal(final.workflow_status, "machine_accepted_external_pending");
     assert.deepEqual(final.external_confirmations, externalConfirmations);
+    assert.equal(final.acceptance_scope, "declared_machine_authority");
+    assert.equal(final.native_goal_effect, "none");
 
     const status = await runCli(fixture.root, [
       "long-task",
@@ -42,6 +44,8 @@ test("fresh external pending qualification reaches status and resume", async () 
       "machine_accepted_external_pending",
     );
     assert.deepEqual(status.external_confirmations, externalConfirmations);
+    assert.equal(status.acceptance_scope, "declared_machine_authority");
+    assert.equal(status.native_goal_effect, "none");
 
     const resume = await runCli(fixture.root, [
       "long-task",
@@ -54,6 +58,8 @@ test("fresh external pending qualification reaches status and resume", async () 
       "machine_accepted_external_pending",
     );
     assert.deepEqual(resume.external_confirmations, externalConfirmations);
+    assert.equal(resume.acceptance_scope, "declared_machine_authority");
+    assert.equal(resume.native_goal_effect, "none");
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }
@@ -104,7 +110,10 @@ test("stop-check returns structured external pending qualification and clears CA
     assert.equal(result.reason, "machine_accepted_external_pending");
     assert.equal(result.workflow_status, "machine_accepted_external_pending");
     assert.deepEqual(result.external_confirmations, externalConfirmations);
+    assert.equal(result.acceptance_scope, "declared_machine_authority");
+    assert.equal(result.native_goal_effect, "none");
     assert.match(result.message, /complete external delivery remains pending/iu);
+    assert.match(result.message, /platform-native Goal/iu);
     assert.match(result.message, /fixture-external \(release-owner\)/u);
     assert.equal(await pathExists(record), false);
   } finally {
@@ -127,6 +136,9 @@ test("close preserves external pending qualification after clearing machine Auth
     assert.equal(result.status, "closed");
     assert.equal(result.workflow_status, "machine_accepted_external_pending");
     assert.deepEqual(result.external_confirmations, externalConfirmations);
+    assert.equal(result.acceptance_scope, "declared_machine_authority");
+    assert.equal(result.closed_scope, "machine_authority");
+    assert.equal(result.native_goal_effect, "none");
     assert.equal(result.workdir, fixture.workdir);
     assert.equal(await pathExists(record), false);
   } finally {
@@ -146,6 +158,8 @@ test("ordinary machine acceptance emits no external warning and close stays qual
     ]);
     assert.equal(final.workflow_status, "machine_accepted");
     assert.deepEqual(final.external_confirmations, []);
+    assert.equal(final.acceptance_scope, "declared_machine_authority");
+    assert.equal(final.native_goal_effect, "none");
     const stop = await runCli(fixture.root, [
       "long-task",
       "stop-check",
@@ -153,7 +167,9 @@ test("ordinary machine acceptance emits no external warning and close stays qual
     ]);
     assert.equal(stop.workflow_status, "machine_accepted");
     assert.deepEqual(stop.external_confirmations, []);
-    assert.equal(Object.hasOwn(stop, "message"), false);
+    assert.equal(stop.acceptance_scope, "declared_machine_authority");
+    assert.equal(stop.native_goal_effect, "none");
+    assert.match(stop.message, /platform-native Goal/iu);
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }
@@ -174,6 +190,9 @@ test("ordinary machine acceptance emits no external warning and close stays qual
     ]);
     assert.equal(close.workflow_status, "machine_accepted");
     assert.deepEqual(close.external_confirmations, []);
+    assert.equal(close.acceptance_scope, "declared_machine_authority");
+    assert.equal(close.closed_scope, "machine_authority");
+    assert.equal(close.native_goal_effect, "none");
   } finally {
     await rm(closeFixture.root, { recursive: true, force: true });
   }

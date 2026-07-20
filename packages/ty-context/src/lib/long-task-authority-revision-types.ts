@@ -20,6 +20,11 @@ export interface AuthorityRevisionApprovalSummaryV2 {
   write_scope_expanded: boolean;
   risk_changed: boolean;
   external_confirmations_changed: boolean;
+  semantic_fields_changed: string[];
+  source_claim_changes: string[];
+  product_claim_changes: string[];
+  proof_reductions: string[];
+  external_confirmation_changes: string[];
   added_verification_dependencies: string[];
   expanded_owner_paths: string[];
   expanded_expected_change_paths: string[];
@@ -92,6 +97,7 @@ export interface AuthorityRevisionDiffV2 {
   counterfactuals_removed: string[];
   population_weakened: string[];
   external_confirmations_changed: boolean;
+  external_confirmation_changes: string[];
   verifier_content_changed: boolean;
   verifier_runtime_locator_changed: boolean;
   verifier_files_changed: string[];

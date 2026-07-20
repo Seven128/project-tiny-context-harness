@@ -62,6 +62,10 @@ Authority conflict indicates drift, omission, stale information or a genuine dec
 
 The current platform session is the execution Goal. Harness does not create, simulate, persist or reconnect physical Goals or Turns, and Git history remains the ordinary record of Contract edits rather than a second plan or completion authority.
 
+Authority Revision adoption likewise is not a delivery completion. When rolling implementation meets a blocker, implementation difficulty alone cannot reclassify machine-verifiable work as external or remove it. A real Product, Acceptance or machine/external boundary change first becomes marked Source and then a protected exact revision. Adoption invalidates affected evidence and returns the current Goal to rolling implementation or repair under the revised Authority. Revision output makes that no-completion effect explicit.
+
+Machine acceptance remains limited to declared machine Authority and has no direct effect on the platform-native Goal. Before completing that Goal, the Agent performs a veto-only conformance review against the current user/Goal meaning and accepted marked Source, including pending revisions, blockers and omitted requirements. A mismatch keeps the Goal active and triggers Source/Contract repair; a clean review is not positive acceptance evidence and never substitutes Agent judgment for Final Gate proof.
+
 ## Contract Draft And Draft Outcome Semantics
 
 `delivery-contract.yaml` is a **Contract Draft** until the first successful formal Compile. The Draft is one continuously revised, non-authoritative object: it may take multiple model responses and multiple rounds of repository reading, Context reading, Preflight diagnostics and repair before it is complete. It has no separate Draft Receipt, Authoring State, second plan, draft schema, draft CLI or draft runtime state. The first successful formal Compile creates Authority Lock; that lifecycle change does not replace the file with another authoring product.
@@ -137,6 +141,8 @@ Every proposed or retained Long-Task mechanism must answer:
 9. Does it create a second Authority, second plan or scheduling plane?
 
 Retain an acceptance mechanism only when it provides clear, non-substitutable drift-prevention value. A non-authority workflow affordance may additionally be retained when existing fail-closed protection makes a material total-cost reduction possible and the affordance adds no acceptance bypass, second Authority, second plan, scheduler or persistent control state. The first-lock execution-model choice uses this second rule. This remains a specification and code-review principle, not a new mechanism matrix, Receipt or runtime Registry.
+
+Revision-return and terminal-scope affordances use that same non-authority rule. Compile/revision JSON reports `delivery_completed_by_this_event: false` and a rolling next action; Final Gate/Stop/close output reports `acceptance_scope: declared_machine_authority` and `native_goal_effect: none`; close additionally reports `closed_scope: machine_authority`; and the Stop Hook emits one non-blocking scope message. These fields and guidance close state-transition ambiguity without a persistent `authority_revision_in_progress`, native-Goal state, second semantic Gate or Goal restoration runtime.
 
 Apply protection proportionally: L0 work must not pay Contract cost; L1 pays for one complete Contract, rolling execution and a current-snapshot Final Gate; L2 raises proof only on affected high-risk Outcomes. Risk must escalate automatically or explicitly and can never be downgraded by the executing Agent.
 
@@ -367,9 +373,13 @@ User-facing reporting must preserve those meanings. `progress_passing` is descri
 
 `final-gate` creates one current workspace snapshot and reruns all Global and Outcome Checks. Identical Raw Execution identities may execute once inside the Gate while each Check still evaluates its own Assertions and artifacts. Bottom-up acceptance succeeds only when all executable Checks, Outcomes, global constraints and risk obligations pass. External confirmations never contribute machine proof; a machine pass with pending confirmations reports `machine_accepted_external_pending`.
 
+For behavioral Claims changed by a blocker-driven revision, Contract authoring reviews only the affected weak-observability or high-risk Outcomes. Their evidence must reach the furthest independently failing boundary named by the Claim; proxy/self-reported success cannot prove a downstream result, and a Counterfactual should disrupt the claimed causal capability rather than only carrier existence when those can diverge. This uses existing proof surfaces, Checks, Bindings and mutation forms and creates no product taxonomy, Schema field or universal runtime mandate.
+
 ### Freshness And Stop
 
 Receipts and status describe the last audit only. Status/resume never project a stale Receipt as accepted. Verifier content changes require protected revision. `stop-check` returns the Live Gate result; external pending is a successful machine stop with a precise non-blocking message, while `needs_work`, `blocked_external`, Gate error and CAS failure remain fail-closed. `close` runs the Gate and clears only accepted identity. Doctor provides deterministic corrupt-state recovery without removing Contract, Source, Context or Git content.
+
+Every accepted Stop result emits a non-blocking terminal-scope message, not only external-pending results. CLI output identifies machine acceptance and Authority cleanup without claiming native-Goal completion. This message causes no approval pause and owns no state.
 
 ## 10. Retry And Decision Boundaries
 
@@ -378,6 +388,7 @@ Receipts and status describe the last audit only. Status/resume never project a 
 - Local test/Check failures are repaired in the same Goal with no new Agent or mandatory model session.
 - Retry defaults to none. A transient verification command gets one mechanical retry only when it declares `transient_once`, idempotency and a read-only/test-sandbox effect.
 - Product, acceptance or architecture semantic conflicts, explicitly user-reserved choices, missing decision-changing preferences and choices with no defensible recommendation pause for user decision and are not disguised as implementation failures. Preference clarification happens before choice-sensitive research; a later defensible recommended plan choice is recorded as delegated Source instead of creating an approval pause. Any real high-risk external action remains an External Confirmation.
+- A rolling blocker does not by itself authorize scope reduction or External Confirmation reclassification. When the selected delivery genuinely changes, record the exact marked Source change, expose material Claim/proof/external-confirmation deltas in the hash-bound approval summary, adopt only the exact approved identity and resume rolling execution under it. Revision completion vocabulary must never be used for delivery or native-Goal completion.
 - Outside the one first-lock checkpoint, a healthy Goal is not paused solely for a model downgrade. Harness cannot switch the host-selected model, and model choice provides no completion authority.
 - Harness never proactively schedules parallel subagents. Opaque platform-internal delegation cannot create Progress, authority or proof.
 - If the current Goal truly ends, a new session uses `resume` for semantic recovery. Harness does not simulate the old Turn or invent a Campaign identity.

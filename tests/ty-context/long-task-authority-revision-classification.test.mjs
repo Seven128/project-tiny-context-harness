@@ -110,6 +110,10 @@ test("additive verification dependencies remain automatic and are summarized", a
       "--revise",
     ]);
     assert.equal(revised.status, "compiled");
+    assert.equal(revised.lifecycle_event, "authority_revision_adopted");
+    assert.equal(revised.delivery_completed_by_this_event, false);
+    assert.equal(revised.native_goal_effect, "none");
+    assert.match(revised.next_action, /rolling implementation|repair/iu);
     assert.equal(revised.authority_revision, 2);
     assert.equal(
       revised.authority_revision_change.change_class,
@@ -131,6 +135,47 @@ test("additive verification dependencies remain automatic and are summarized", a
       ),
       false,
     );
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("protected summaries enumerate removed Source and external-confirmation keys", async () => {
+  const fixture = await createDeliveryFixture({ externalConfirmation: true });
+  try {
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    await writeFile(
+      path.join(fixture.root, "source.md"),
+      `# Fixture source
+
+<!-- ty-source-item:start key=first-observable kind=requirement -->
+The first outcome must be observable.
+<!-- ty-source-item:end -->
+`,
+    );
+    fixture.contract.source_claims = fixture.contract.source_claims.filter(
+      (claim) => claim.key !== "fixture-external",
+    );
+    fixture.contract.global.acceptance.external_confirmations = [];
+    await writeContract(fixture.workdir, fixture.contract);
+
+    const pending = await runCliFailure(fixture.root, [
+      "long-task",
+      "compile",
+      fixture.workdir,
+      "--revise",
+    ]);
+    const summary = pending.pending_authority_revision.approval_summary;
+    assert.equal(pending.delivery_completed_by_this_event, false);
+    assert.equal(pending.native_goal_effect, "none");
+    assert.deepEqual(summary.source_claim_changes, [
+      "fixture-external:removed",
+    ]);
+    assert.deepEqual(summary.external_confirmation_changes, [
+      "fixture-external:removed",
+    ]);
+    assert.equal(summary.external_confirmations_changed, true);
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }

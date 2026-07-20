@@ -116,6 +116,10 @@ The rule is risk-proportional. L0 local, reversible and directly testable work p
 
 Affected-test selection follows the same rule. It shortens the developer feedback loop by mapping known hot spots to focused tests, widening unmapped Long-Task runtime changes to the complete Long-Task suite, and widening shared package, dependency or unknown changes to the full suite. It is fail safe and never replaces complete CI/release gates or the workflow Final Gate.
 
+Authority Revision and terminal guidance use the same cost rule. An adopted revision replaces declared authority, invalidates affected evidence and returns execution to the revised Rolling Frontier; it is not another completion state. Revision JSON names that no-completion effect and exact material reductions, while accepted terminal JSON and the Stop Hook name the declared-machine-authority scope. Before platform-native Goal completion, an Agent performs a veto-only Goal-to-Source conformance review. These are low-cost boundary affordances: they add no persistent revision state, native-Goal state, second Gate or positive Agent-judgment proof.
+
+When a rolling blocker motivates revision, implementation difficulty alone cannot move a machine-verifiable requirement behind an External Confirmation or erase it. A real scope change is marked Source meaning and protected exact approval. After adoption, only affected weak-observability or high-risk Outcomes pay an adversarial evidence review: the Check must reach the furthest independently failing boundary named by the Claim, and a behavioral Counterfactual should disrupt the claimed causal capability when carrier presence alone can diverge. This is authoring guidance over existing Checks and mutations, not a product taxonomy, Schema field or universal runtime suite.
+
 ## Current Mechanisms And False-Completion Paths
 
 - **Material Source inventory** prevents a Source item from being omitted, rewritten or disappearing without a mapping.
@@ -127,12 +131,14 @@ Affected-test selection follows the same rule. It shortens the developer feedbac
 - **Controlling/Supporting Context classification** permits low-risk navigation/background updates during execution without discarding valid Progress while keeping explicit, verification, deployment and full-snapshot Context fail closed.
 - **Executing Agent cannot approve its own weakening revision** prevents the implementer from lowering its own acceptance bar.
 - **Three-way revision classification** keeps formally monotonic evidence strengthening automatic, permits existing active Check identities with unchanged runner/verifier authority to diagnose an inactive candidate whose only protected reasons are scope expansion, and keeps semantic changes, proof weakening, runner or verifier-content changes and risk changes behind the exact revision identity.
+- **Exact material revision summary and rolling return** make Source/Product Claim reductions, changed semantic fields, proof reductions and external-confirmation keys visible for the approved identity, then make adoption return to implementation instead of being mistaken for delivery completion.
 - **Stateless same-Contract candidate diagnosis** lets related scope discoveries accumulate in `delivery-contract.yaml` and be exercised before one approval request without creating a pending Draft authority, revision lifecycle, Progress, Receipt or acceptance result. The previous Authority remains the only active one throughout diagnosis.
 - **Targeted verify is repair evidence only** prevents a local pass from being reported as whole-delivery completion; Counterfactual failure is part of the owning Check Result/Progress rather than a transient top-level Finding, so status/resume cannot recover a false `progress_passing` state.
 - **Live target-runtime Check ownership** prevents a proxy pass or tracked self-report from proving a Claim that can fail independently in the target; the earliest owning Outcome executes the target in the current Check run and binds runtime-affecting inputs through existing fields.
 - **Coalesced rolling runtime verification** reduces late-rework cost by using that same non-accepting Check at the first runnable boundary and after accumulated relevant input changes, without a per-Outcome rebuild rule, scheduler or new state.
 - **Same-snapshot Final Gate** prevents historical pass aggregation and stale evidence reuse.
 - **Stop/close rerun the Live Final Gate** prevents post-Gate Source, Context, Contract, verifier or code drift from being accepted.
+- **Machine/native terminal scope isolation** makes Final Gate, Stop and close identify declared machine Authority, leaves native Goal mutation with the host and uses a veto-only Goal-to-Source conformance review before platform completion.
 - **Scope escape and risk escalation** prevent work outside the declared boundary from passing under the old scope or proof level.
 - **Counterfactual, Population and sensitivity proof** prevent always-true tests, sample-only claims and evidence disconnected from implementation carriers.
 - **Global Counterfactual to Outcome Binding** prevents a Global Claim from being backed by an unrelated global oracle without inventing a second Global Binding model; the cost is one explicit cross-scope reference and carrier freshness dependency.
@@ -167,6 +173,7 @@ Progress, status, Receipts and compiled cache are audit/recovery projections. Ca
 - No proactive parallel subagent dispatch, Worker graph or subagent recovery state.
 - No automatic model switch, model-tier scheduler, model routing state, repeated model checkpoints or persisted checkpoint acknowledgement.
 - No `platform_impact` taxonomy, manually maintained platform flags, per-platform completion state, `implementation_complete` state or mandatory full runtime rebuild per Outcome/edit.
+- No persistent `authority_revision_in_progress`, native-Goal completion state, Goal restoration runtime or second semantic completion Gate.
 - No mandatory Source Plan format and no consumer platform-history guidance.
 - No restoration of SFC, Packet, Wave, Campaign, Delivery Set or model/process/Git orchestration.
 

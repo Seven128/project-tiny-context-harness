@@ -38,6 +38,8 @@ export interface DeliveryStatusV2 {
   effective_risk: "standard" | "strict";
   workspace_snapshot_sha256: string;
   acceptance_authority: "live_final_gate_required";
+  acceptance_scope: "declared_machine_authority";
+  native_goal_effect: "none";
   final_result: AuditGateStatusV2;
   final_workflow_status: FinalReceiptV2["workflow_status"] | null;
   external_confirmations: ExternalConfirmationV2[];
@@ -102,6 +104,8 @@ async function readDeliveryStatusForAuthority(
     effective_risk: compiled.effective_risk,
     workspace_snapshot_sha256: current.snapshot_sha256,
     acceptance_authority: "live_final_gate_required",
+    acceptance_scope: "declared_machine_authority",
+    native_goal_effect: "none",
     final_result: projection.finalResult,
     final_workflow_status: projection.finalWorkflowStatus,
     external_confirmations: compiled.global.acceptance.external_confirmations,
@@ -150,6 +154,8 @@ export async function resumeDeliveryTask(
     context_refs: compiled.task.context_refs,
     git,
     acceptance_authority: "live_final_gate_required",
+    acceptance_scope: "declared_machine_authority",
+    native_goal_effect: "none",
     last_gate: status.final_result,
     final_workflow_status: status.final_workflow_status,
     external_confirmations: status.external_confirmations,
@@ -292,11 +298,12 @@ export async function stopCheckDeliveryTask(
         reason: result.workflow_status,
         workflow_status: result.workflow_status,
         external_confirmations: result.external_confirmations,
-        ...(result.workflow_status === "machine_accepted_external_pending"
-          ? {
-              message: externalPendingMessage(result.external_confirmations),
-            }
-          : {}),
+        acceptance_scope: "declared_machine_authority",
+        native_goal_effect: "none",
+        message: acceptedScopeMessage(
+          result.workflow_status,
+          result.external_confirmations,
+        ),
       };
     }
     return {
@@ -328,6 +335,8 @@ export interface StopCheckDeliveryResultV2 {
   reason: string;
   workflow_status?: FinalReceiptV2["workflow_status"];
   external_confirmations?: ExternalConfirmationV2[];
+  acceptance_scope?: "declared_machine_authority";
+  native_goal_effect?: "none";
   message?: string;
 }
 
@@ -338,6 +347,9 @@ export interface CloseDeliveryResultV2 {
     "machine_accepted" | "machine_accepted_external_pending"
   >;
   external_confirmations: ExternalConfirmationV2[];
+  acceptance_scope: "declared_machine_authority";
+  closed_scope: "machine_authority";
+  native_goal_effect: "none";
 }
 
 export async function closeDeliveryTask(
@@ -365,16 +377,26 @@ export async function closeDeliveryTask(
     status: "closed",
     workflow_status: result.workflow_status,
     external_confirmations: result.external_confirmations,
+    acceptance_scope: "declared_machine_authority",
+    closed_scope: "machine_authority",
+    native_goal_effect: "none",
   };
 }
 
-function externalPendingMessage(
+function acceptedScopeMessage(
+  workflowStatus: Extract<
+    FinalReceiptV2["workflow_status"],
+    "machine_accepted" | "machine_accepted_external_pending"
+  >,
   confirmations: ExternalConfirmationV2[],
 ): string {
+  const scope =
+    "Declared machine Authority accepted and cleared. This result has no direct effect on the platform-native Goal; before completing it, confirm current Goal/user meaning is fully represented by accepted Source and no revision, blocker, or omitted requirement remains.";
+  if (workflowStatus === "machine_accepted") return scope;
   const pending = confirmations
     .map((confirmation) => `${confirmation.key} (${confirmation.owner})`)
     .join(", ");
-  return `Machine-verifiable scope accepted. Complete external delivery remains pending: ${pending}. Do not report complete external delivery.`;
+  return `${scope} Complete external delivery remains pending: ${pending}. Do not report complete external delivery.`;
 }
 
 function nextAction(status: DeliveryStatusV2): string {

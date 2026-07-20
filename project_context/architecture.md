@@ -19,7 +19,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Source authority: Source marker/parser/inventory/target-continuity modules derive text-bound Source/REQ/CTRL/OBL/NCOMP/AC projections without another editable Source authority.
 - Evidence Kernel: runner-derived adapters, explicit runners, structured/Playwright observations, Counterfactual and Population sensitivity, target-runtime-current-execution proof, targeted verifier, Git-aware snapshot and source-recompiled same-snapshot Live Final Gate.
 - Authority/recovery: one common-dir Active Authority V3 snapshot plus matching worktree marker; workdir compiled output, Progress and Receipts are rebuildable audit/recovery projections.
-- Revision diagnosis: `long-task-authority-revision*.ts` deterministically classifies and summarizes the candidate; `long-task-authority-revision-diagnosis.ts` exercises only scope-only candidates through existing active Check identities with unchanged runner/verifier authority, without publishing authority or evidence.
+- Revision diagnosis: `long-task-authority-revision*.ts` deterministically classifies and summarizes the candidate, including exact changed semantic fields, Source/Product Claim reductions and external-confirmation keys; `long-task-authority-revision-diagnosis.ts` exercises only scope-only candidates through existing active Check identities with unchanged runner/verifier authority, without publishing authority or evidence.
 - Compile handoff: `commands/long-task.ts` emits an additive one-time `execution_model_checkpoint` after first Authority Lock; it does not switch models or persist acknowledgement/model-route state.
 - Release pipeline: `.github/workflows/npm-publish.yml` separates one complete prepare/test/pack/smoke job from the protected publish job. The second job downloads and verifies the exact prepared artifact for the same source commit; it never rebuilds, retests or repacks.
 - Managed source: `.codex/ty-context-managed/**`; package assets: `packages/ty-context/assets/**`; mapping authority: `packages/ty-context/source-mappings.yaml`.
@@ -55,7 +55,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 
 ## Data / Control Flow
 
-`Source -> optional Source Plan -> one Contract Draft -> Outcome decomposition -> repository/Context binding -> read-only Preflight -> Compile / Authority Lock -> one-time execution-model choice -> Rolling Frontier -> targeted verifier repair -> optional same-Contract stateless revision diagnosis -> exact pending approval when protected -> clean candidate commit -> source-recompiled same-snapshot Live Final Gate`
+`Source -> optional Source Plan -> one Contract Draft -> Outcome decomposition -> repository/Context binding -> read-only Preflight -> Compile / Authority Lock -> one-time execution-model choice -> Rolling Frontier -> targeted verifier repair -> optional same-Contract stateless revision diagnosis -> exact pending approval when protected -> Authority Revision adoption -> Rolling Frontier under revised authority -> clean candidate commit -> source-recompiled same-snapshot Live Final Gate`
 
 - Product, Technical Boundary and Acceptance are distinct logical authorities inside one Contract.
 - Outcomes are independently observable, decidable and target-verifiable acceptance/diagnosis units. Dependencies express readiness only; no scheduler or mandatory implementation DAG is persisted.
@@ -65,7 +65,8 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Targeted verify may localize repair and store scoped current-snapshot Progress; it cannot accept.
 - A target-runtime Claim that can diverge from a proxy surface is owned by the earliest runnable Outcome and proved by a Check that exercises the target in its current Raw Execution. The current Goal runs that existing Check at the first runnable boundary and after coalesced changes to its declared runtime inputs; this creates no scheduler, platform taxonomy or extra completion state.
 - Revision diagnosis is a non-authoritative repair loop, not extended Preflight: monotonic proof strengthening needs no approval, a candidate whose only protected reasons are scope expansion may run existing active Check identities with unchanged runner/verifier authority without writing Progress, semantic changes, proof weakening, runner or verifier-content changes, and risk increases are summarized but never executed as candidates, and risk downgrade is rejected. Only `compile --revise` may create the single pending decision and only approved atomic Compile may replace Active Authority.
-- Final Gate, Stop and close recompile Source authority, bind active task/revision/worktree/Git-tree identity and rerun all declared Global and Outcome checks. Only this complete current snapshot can create machine acceptance.
+- Revision adoption invalidates affected evidence and returns control to rolling implementation; it never creates delivery acceptance or changes the platform-native Goal. CLI revision results expose that no-completion effect and a next action without adding lifecycle state.
+- Final Gate, Stop and close recompile Source authority, bind active task/revision/worktree/Git-tree identity and rerun all declared Global and Outcome checks. Only this complete current snapshot can create machine acceptance, and public JSON/Hook output identifies its scope as declared machine Authority rather than native-Goal completion.
 
 ## Contract And Architecture Closure
 
@@ -80,11 +81,12 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Keyword search cannot understand every synonym or indirect dependency, so it supplements rather than replaces semantic reasoning, Architecture Context Hit and final Conformance.
 - Retrieval-only manifest edits may preserve active Authority and scoped Progress, but they never preserve a Final Receipt across a changed Git tree; Final Gate still runs against the final committed snapshot.
 - Architecture enforcement is limited to declared, falsifiable project invariants. Subjective design quality remains engineering review rather than false machine proof.
-- Runtime evidence is likewise project-owned: Harness can require current-execution semantics in Contract authoring and freeze the runner/verifier, but it cannot infer a platform taxonomy or independently prove that a trusted project oracle exercises the intended target.
+- Runtime evidence is likewise project-owned: Harness can require current-execution semantics in Contract authoring, require affected behavioral proof to reach the furthest independently failing declared boundary, prefer causal Counterfactuals when carrier presence can diverge from capability, and freeze the runner/verifier. It cannot infer a platform taxonomy or independently prove that a trusted project oracle exercises the intended target.
 - The first successful Compile creates Authority Lock and immutable initial base. Later protected changes cannot be silently adopted; candidate diagnosis leaves the old Authority active and cannot create a second Draft authority, state plane or acceptance path.
 - The execution-model checkpoint is one additive compile signal and Agent pause; no model switch, route, tier scheduler, acknowledgement file or repeated checkpoint exists.
 - One user-selected delivery has one Contract, one selected workspace and one Final Gate. Existing `outcome_files` are physical compatibility only.
 - No active Source Inventory/Coverage file, SFC/Packet/Wave/Campaign runtime, Worker scheduler, execution registry, second plan or external-confirmation tracker exists.
+- No persistent `authority_revision_in_progress`, native-Goal completion state or Goal-restoration runtime exists; current candidate files, pending exact revision identity and the host Goal remain the respective owners.
 - `init`, `sync` and `upgrade` never import or execute retired Campaign or development-period authority state.
 - Package-managed asset changes require source/package parity, idempotent sync and consumer-facing verification.
 

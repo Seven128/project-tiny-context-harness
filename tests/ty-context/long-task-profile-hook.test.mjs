@@ -212,7 +212,10 @@ test("package-owned Hook resumes from common-dir and Stop runs the Live Gate", a
     assert.equal(blocked.decision, "block");
 
     await commitCandidate(fixture.root);
-    assert.deepEqual(await invokeHook(fixture.root, "Stop"), {});
+    const accepted = await invokeHook(fixture.root, "Stop");
+    assert.equal(Object.hasOwn(accepted, "decision"), false);
+    assert.match(accepted.systemMessage, /platform-native Goal/iu);
+    assert.match(accepted.systemMessage, /Declared machine Authority/iu);
     assert.equal(await pathExists(record), false);
     assert.deepEqual(await invokeHook(fixture.root, "Stop"), {});
   } finally {
@@ -231,6 +234,7 @@ test("Stop Hook preserves external pending as a non-blocking system message", as
     assert.equal(Object.hasOwn(result, "decision"), false);
     assert.match(result.systemMessage, /fixture-external/iu);
     assert.match(result.systemMessage, /complete external delivery remains pending/iu);
+    assert.match(result.systemMessage, /platform-native Goal/iu);
     assert.equal(await pathExists(record), false);
   } finally {
     await rm(fixture.root, { recursive: true, force: true });

@@ -92,9 +92,34 @@ async function compile(workdir: string, args: string[]): Promise<void> {
     await clearFinalReceipt(compiled.repository_root, workdir);
   }
   await clearAuthorityRevision(workdir);
+  printCompileResult(
+    compiled,
+    previous,
+    preserveProgress,
+    revisionCapture.proposal,
+  );
+}
+
+function printCompileResult(
+  compiled: CompiledDeliveryContractV2,
+  previous: CompiledDeliveryContractV2 | null,
+  preserveProgress: boolean,
+  revisionProposal: AuthorityRevisionProposalV2 | null,
+): void {
+  const firstAuthorityLock = previous === null;
+  const authorityChanged =
+    previous !== null &&
+    previous.compiled_identity !== compiled.compiled_identity;
   console.log(
     JSON.stringify({
       status: "compiled",
+      lifecycle_event: firstAuthorityLock
+        ? "authority_locked"
+        : authorityChanged
+          ? "authority_revision_adopted"
+          : "authority_recompiled_unchanged",
+      delivery_completed_by_this_event: false,
+      native_goal_effect: "none",
       task_id: compiled.task.id,
       compiled_identity: compiled.compiled_identity,
       authority_revision: compiled.authority_revision,
@@ -102,10 +127,15 @@ async function compile(workdir: string, args: string[]): Promise<void> {
       outcomes: compiled.outcomes.map((outcome) => outcome.key),
       claim_coverage: compiled.claim_coverage,
       progress_preserved: preserveProgress,
-      authority_revision_change: revisionCapture.proposal
-        ? projectAuthorityRevisionDecision(revisionCapture.proposal)
+      authority_revision_change: revisionProposal
+        ? projectAuthorityRevisionDecision(revisionProposal)
         : null,
-      execution_model_checkpoint: executionModelCheckpoint(previous === null),
+      next_action: firstAuthorityLock
+        ? "Complete the one-time model choice, then begin rolling implementation."
+        : authorityChanged
+          ? "Run status or resume, then continue rolling implementation or repair under the adopted Authority Revision."
+          : "Continue rolling implementation or repair under the active Authority.",
+      execution_model_checkpoint: executionModelCheckpoint(firstAuthorityLock),
     }),
   );
 }
@@ -141,8 +171,12 @@ async function printPendingDecision(
     JSON.stringify({
       status: "authority_revision_pending",
       acceptance_authorized: false,
+      delivery_completed_by_this_event: false,
+      native_goal_effect: "none",
       active_compiled_identity: previous?.compiled_identity ?? null,
       pending_authority_revision: projectAuthorityRevisionDecision(pending),
+      next_action:
+        "Ask the user to approve or reject this exact material revision; keep the previous Authority active.",
     }),
   );
 }
@@ -165,7 +199,14 @@ async function approveRevision(workdir: string, args: string[]): Promise<void> {
   if (!revision) throw new Error("--revision requires a value");
   await approvePendingAuthorityRevision(workdir, revision);
   console.log(
-    JSON.stringify({ status: "authority_revision_approved", revision }),
+    JSON.stringify({
+      status: "authority_revision_approved",
+      revision,
+      delivery_completed_by_this_event: false,
+      native_goal_effect: "none",
+      next_action:
+        "Run compile --revise to atomically adopt the approved revision, then return to rolling implementation or repair.",
+    }),
   );
 }
 

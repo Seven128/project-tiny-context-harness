@@ -301,6 +301,18 @@ test("optional Source Plan authoring does not create a second Contract authority
     workflowContext,
     /Only the source-recompiled Final Gate may accept/iu,
   );
+  assert.match(
+    workflowContext,
+    /rolling blocker[\s\S]*not itself an External Confirmation[\s\S]*adoption[\s\S]*resumes rolling implementation/iu,
+  );
+  assert.match(
+    workflowContext,
+    /delivery_completed_by_this_event: false[\s\S]*acceptance_scope: declared_machine_authority[\s\S]*native_goal_effect: none/iu,
+  );
+  assert.match(
+    workflowContext,
+    /veto-only conformance guard[\s\S]*never substitutes Agent judgment for Final Gate proof/iu,
+  );
 });
 
 test("retired command names are lightweight non-executing tombstones", async () => {

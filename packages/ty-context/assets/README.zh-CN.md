@@ -163,15 +163,15 @@ Long-Task Contract Authoring 会尽量保留 Source 中已有的稳定 Key 与 A
 
 Agent 此时在实现前只暂停一次，请用户选择：继续当前模型，或切换模型后恢复同一 active Long-Task。如果用户已明确给出本任务的模型策略，则视为已完成选择。后续 `compile --revise` 返回 `required: false`，不会重复暂停。Harness 不会自动切换模型，也不持久化 acknowledgement、model route 或 checkpoint state；模型选择不是验收证据。
 
-锁定后的修订分三类：机器可证明的单调证据增强和机械安全变化自动采用；如果唯一的受保护原因只是扩大 owner、expected-change 或 allowed-support path（可以同时带有安全的单调增强），就能用 `diagnose-revision` 在不切换 Authority 的前提下运行原 Active Authority 已有且未更换的 Check；产品/Source/Acceptance 语义变化、证明弱化、verifier 内容或 runner 变化、风险上升只给摘要，不运行候选，风险降级则直接拒绝。诊断结果不是 Progress 或 acceptance，也不会写 pending/approval、cache、Receipt 或 marker。相关修改只在同一份 `delivery-contract.yaml` 中累计，最终由一次 `compile --revise` 生成带短摘要的精确 hash；`status`/`resume` 投影同一个待批决策。批准并原子采用后旧证据失效，完整 Final Gate 仍必须重跑。
+锁定后的修订分三类：机器可证明的单调证据增强和机械安全变化自动采用；如果唯一的受保护原因只是扩大 owner、expected-change 或 allowed-support path（可以同时带有安全的单调增强），就能用 `diagnose-revision` 在不切换 Authority 的前提下运行原 Active Authority 已有且未更换的 Check；产品/Source/Acceptance 语义变化、证明弱化、verifier 内容或 runner 变化、风险上升只给摘要，不运行候选，风险降级则直接拒绝。滚动实现遇阻本身不是 External Confirmation，也不允许删除机器可验证范围；真正的范围变化必须先成为 marked Source。诊断结果不是 Progress 或 acceptance，也不会写 pending/approval、cache、Receipt 或 marker。相关修改只在同一份 `delivery-contract.yaml` 中累计，最终由一次 `compile --revise` 生成精确 hash 与包含语义字段、Source/Product Claim 缩减、proof 缩减和 external-confirmation key 的短摘要；`status`/`resume` 投影同一个待批决策。批准并原子采用后返回 `delivery_completed_by_this_event: false`，旧证据失效并回到滚动实现或修复，完整 Final Gate 仍必须重跑。
 
 Long-Task Skill 采用渐进读取：主 `SKILL.md` 只保留目标、硬边界和阶段路由，Contract Authoring、Evidence Design 与 Authority Lifecycle 细节只在对应阶段读取一层 reference。这只是指令组织，不产生第二权威。
 
 Draft Outcome 只是 Authority Lock 前的 Outcome。Outcome 按可独立观察、判断和定向验证的结果拆分，使当前 Goal 能缩小 dependency-ready 工作集、定向验证、定位失败、恢复 finding 并精确失效旧局部结果。`depends_on` 只表示 acceptance readiness，Rolling Frontier 只是临时工作状态；Outcome 不是 Worker、scheduler task、queue 或并行单元。Outcome 拆分执行和诊断，不拆分完成权威，因此最终仍必须在当前最终快照运行一次完整 Final Gate。
 
-如果一个声明结果可能在代理表面通过、却在目标运行时独立失败，最早拥有可运行边界的 Outcome 必须声明项目自有的真实运行 Check，并在当前 Check 执行中启动或触达目标、从同一会话产生结构化 Observation。仓库内状态报告、截图、二进制、日志或历史运行不能单独证明目标运行时。当前 Goal 在第一个可运行切片后执行一次；后续相关修改先合并，在声明的 `input_paths` 或 Binding carrier 使 Progress stale 后、扩大依赖工作前再运行。它复用 targeted verify 与 Final Gate，不增加 `platform_impact` 字段或完成状态，不要求每个 Outcome/每次编辑完整重建，也不提前取得接受权；Final Gate 仍会重跑。
+如果一个声明结果可能在代理表面通过、却在目标运行时独立失败，最早拥有可运行边界的 Outcome 必须声明项目自有的真实运行 Check，并在当前 Check 执行中启动或触达目标、从同一会话产生结构化 Observation。仓库内状态报告、截图、二进制、日志或历史运行不能单独证明目标运行时。阻塞驱动的语义或 proof 修订只让受影响的 weak-observability/high-risk 行为 Claim 支付因果审查成本：证据必须到达 Claim 声明的最远独立失败边界；当 carrier 存在不等于能力成立时，Counterfactual 应破坏被声明的能力。当前 Goal 在第一个可运行切片后执行一次；后续相关修改先合并，在声明的 `input_paths` 或 Binding carrier 使 Progress stale 后、扩大依赖工作前再运行。它复用 targeted verify 与 Final Gate，不增加产品 taxonomy、`platform_impact` 字段、全局 runtime 套件或完成状态，不要求每个 Outcome/每次编辑完整重建，也不提前取得接受权；Final Gate 仍会重跑。
 
-平台负责物理 Goal/会话生命周期。新会话通过 `resume` 恢复语义状态；Tiny Context 不会重建此前的物理 Turn。
+平台负责物理 Goal/会话生命周期。新会话通过 `resume` 恢复语义状态；Tiny Context 不会重建此前的物理 Turn。机器接受只覆盖 `declared_machine_authority`，并报告 `native_goal_effect: none`。完成平台原生 Goal 前，Agent 只做一次否决型核对：当前 Goal/用户语义是否全部进入 accepted marked Source，且没有 pending revision、未解 blocker 或遗漏；它只能阻止并触发修复，不能增加验收证据。
 
 ### CLI
 
@@ -195,14 +195,14 @@ ty-context long-task abandon <workdir> [--force-corrupt-state]
 
 - `init` 创建单文件 inline Outcome 的 Compact Contract 模板。
 - `preflight` 应用 Compact 默认值并一次输出 Source/REQ/CTRL/OBL/AC、Context、风险、路径/Binding、Runner/Input 与 Proof 诊断；它完全只读，不创建 Authority Lock、marker、cache、progress、Receipt、pending revision、状态锁，也不运行项目 Check。
-- `compile` 生成 Global 与 Outcome Result/Requirement/Control-field/Non-completing/Technical Claim，拒绝未覆盖 Claim，并让第一次正式成功 Compile 成为 Authority Lock。第一次结果附带 `execution_model_checkpoint.required: true`，后续 Compile 返回 `false`；该字段不进入 Authority state。
+- `compile` 生成 Global 与 Outcome Result/Requirement/Control-field/Non-completing/Technical Claim，拒绝未覆盖 Claim，并让第一次正式成功 Compile 成为 Authority Lock。每次结果都包含 lifecycle event、`delivery_completed_by_this_event: false`、`native_goal_effect: none` 和 next action。第一次结果附带 `execution_model_checkpoint.required: true`，后续 Compile 返回 `false`；这些字段不进入 Authority state。
 - `diagnose-revision` 只做无副作用候选 Compile；仅 scope-only 候选能运行 Active Authority 已有且未更换的 Check，输出固定为非验收、非 Progress、非 pending。
-- `compile --revise` 自动采用可证明安全的修订；受保护修订在 stdout 返回 `authority_revision_pending`、精确 decision id 与确定性短摘要，并继续 fail closed，直到用户批准完全相同的 id。候选内容再变会生成新 id，并使旧批准失效。
+- `compile --revise` 自动采用可证明安全的修订；受保护修订在 stdout 返回 `authority_revision_pending`、精确 decision id 与确定性 material 摘要，并继续 fail closed，直到用户批准完全相同的 id。候选内容再变会生成新 id，并使旧批准失效。采用后输出 `authority_revision_adopted` 并回到滚动执行，不表示交付完成。
 - `verify` 在重查 active task/revision/compiled/worktree identity 后写 scoped Progress；targeted verify 始终只是修复证据。
 - `status` 输出 `unverified`、`progress_passing`、`progress_failing`、`progress_stale` 或 `blocked_external`，并报告 fresh `final_workflow_status`、完整 `external_confirmations` 与唯一的 `pending_authority_revision`。`progress_passing` 只能表述为定向修复证据，不能简称“Outcome 完成”；`progress_stale` 不是当前通过，`final_workflow_status: null` 表示 Goal 尚未完成。
 - `resume` 完全只读，恢复 task/contract identity、风险、相关 Context、Git 状态、同一待批决策、ready Outcome、findings 和 next safe action。
 - `final-gate` 在完整 Check 后再次验证 active identity；并发 revision 不能产生 accepted。
-- `stop-check` 与 `close` 自己运行 Live Final Gate，并只用 accepted identity 做 CAS clear。`status: closed` 只表示机器 Authority 已清理，不表示完整外部交付完成。
+- `stop-check` 与 `close` 自己运行 Live Final Gate，并只用 accepted identity 做 CAS clear。每次机器接受的 Stop 都给一个非阻塞 terminal-scope `systemMessage`；外部待确认时同时列出全部确认项。Final/Stop/close 输出 `acceptance_scope: declared_machine_authority` 与 `native_goal_effect: none`，close 另输出 `closed_scope: machine_authority`。`status: closed` 只表示机器 Authority 已清理，不表示原生 Goal 或完整外部交付完成。
 - `abandon --force-corrupt-state` 仅用于损坏/mismatch/legacy-unrecoverable 状态或遗留锁，只删除确定性 active state 与 `<workdir>/.ty-context/**`。
 
 ### Delivery Contract
