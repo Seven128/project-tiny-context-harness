@@ -182,15 +182,25 @@ Run cheap, diagnostic gates before expensive aggregate gates:
 When an aggregate gate fails:
 
 1. collect and classify every failure from that invocation;
-2. repair the known causes as one batch;
-3. rerun only the failed tests plus affected coverage until they pass;
-4. rerun the failed aggregate gate once on the newly frozen snapshot.
+2. distinguish a verification-snapshot failure from a proven local environment-only failure;
+3. repair the known causes as one batch;
+4. rerun only the failed tests plus affected/Trust coverage until they pass;
+5. rerun the failed aggregate gate once on the newly frozen snapshot when tracked source, tests, configuration, shared fixtures or runners changed, cross-suite contamination is plausible, or that invocation owns the required final validation claim.
+
+Skipping a repeated *local* complete suite is safe only when all of these conditions hold:
+
+- the failure is attributable to ignored/untracked local state or external infrastructure rather than product or test semantics;
+- tracked source, tests, configuration, shared fixtures and runners are unchanged from the failed aggregate snapshot;
+- the failed test and selected affected/Trust repair coverage pass after the environment is restored; and
+- a guaranteed downstream `main` or release route will run the complete suite and its green result remains required.
+
+In that case, report the local aggregate as failed and defer the single clean complete pass to the downstream gate. Never splice partial reruns into a claim that the local complete suite passed. If no such downstream gate exists, or the local invocation itself owns the final validation claim, the complete aggregate must pass after repair.
 
 Local complete-suite budget per task:
 
 - zero invocations in the ordinary edit/fix loop;
 - at most one planned final invocation after diff freeze when routing requires it;
-- one additional invocation after an actionable aggregate failure and batched repair;
+- one additional invocation after an actionable aggregate failure and batched repair only when the local run still owns the required clean aggregate or the safe deferral conditions above are not all met;
 - a third or later invocation requires a recorded reason such as a confirmed flaky/infrastructure investigation or a release-blocking late mutation.
 
 A source change after a green aggregate gate invalidates that result, but the rerun tier should match the change. A documentation-only correction should rerun its static/Context gates; it should not automatically trigger the complete suite unless package or release policy maps it there.

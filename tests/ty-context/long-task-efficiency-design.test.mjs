@@ -259,3 +259,34 @@ test("affected developer loops remain non-authoritative", async () => {
     /never Contract acceptance|never.*acceptance authority|never becomes Long-Task acceptance evidence/iu,
   );
 });
+
+test("aggregate rerun policy removes only redundant local complete runs", async () => {
+  const [verification, redesign, efficiency, specification, authoring] =
+    await Promise.all([
+      read("project_context/areas/harness-package/verification.md"),
+      read("docs/test-suite-roi-redesign.md"),
+      read("docs/long-task-workflow-efficiency.md"),
+      read("PROJECT_SPEC.md"),
+      read(".codex/skills/authoring/harness_package_design/SKILL.md"),
+    ]);
+  assert.match(
+    verification,
+    /environment-only[\s\S]*tracked verification inputs[\s\S]*guaranteed downstream[\s\S]*local aggregate remains failed[\s\S]*without that downstream gate[\s\S]*clean complete rerun/iu,
+  );
+  assert.match(
+    redesign,
+    /tracked source[\s\S]*tests[\s\S]*configuration[\s\S]*shared fixtures[\s\S]*runners[\s\S]*never splice partial reruns/iu,
+  );
+  assert.match(
+    efficiency,
+    /cross-suite contamination[\s\S]*guaranteed downstream[\s\S]*failed local aggregate remains failed[\s\S]*partial reruns cannot be reported/iu,
+  );
+  assert.match(
+    specification,
+    /cross-suite contamination[\s\S]*environment-only[\s\S]*guaranteed downstream[\s\S]*partial reruns never become a local complete-pass claim/iu,
+  );
+  assert.match(
+    authoring,
+    /TS-RERUN[\s\S]*不得把失败后的局部复验拼接[\s\S]*tracked verification inputs[\s\S]*environment-only[\s\S]*否则最终证明必须重新取得一次完整通过/iu,
+  );
+});
