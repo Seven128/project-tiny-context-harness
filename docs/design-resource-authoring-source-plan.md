@@ -1,0 +1,767 @@
+# Open Design–Backed Design Resource Authoring — Source Plan
+
+<a id="dra-plan-meta"></a>
+## Plan Metadata
+
+- Plan key: `PLAN-DRA-001`
+- Status: implementation baseline for a separately authorized package delivery; provider experiments completed on 2026-07-22
+- Goal: define a high-quality, efficient `design-resource-authoring` Skill that reads product/technical/design Source, discovers Open Design's current capabilities, decides which design resources are justified for the requested scope, commissions only those resources, and hands them to Tiny Context as ordinary external Source.
+- Originating research Goal delivery: current-source research, bounded capability experiments and this implementation-ready plan only.
+- Subsequent delivery: the user separately authorized package implementation on 2026-07-22; that Goal owns the production Skill, owning Context/public guidance, package distribution and deterministic/opt-in verification changes. Application-product code, Delivery Contract authoring, package publication and automatic adoption of generated resources remain excluded.
+- Authority: this document is optional upstream Source/navigation. It is not Context, a Contract Draft, runtime state, Design Authority, selection approval or completion evidence.
+- Research date: 2026-07-22.
+
+### Navigation index
+
+- [Executive decision](#dra-executive-decision)
+- [Input inventory and treatment](#dra-input-inventory)
+- [Existing Tiny Context consumption boundary](#dra-current-boundary)
+- [Research questions](#dra-research-questions)
+- [Resolved Open Design capability findings](#dra-research-findings)
+- [Dynamic resource decision model](#dra-decision-model)
+- [Open Design orchestration and recovery](#dra-provider-orchestration)
+- [Bounded experiment record](#dra-experiments)
+- [Requirements and non-goals](#dra-requirements)
+- [Output and downstream handoff](#dra-handoff-contract)
+- [Non-goals](#dra-non-goals)
+- [Implementation outcomes and dependencies](#dra-outcomes)
+- [Implementation blueprint](#dra-implementation-blueprint)
+- [Acceptance scenarios](#dra-acceptance)
+- [Risks and mitigations](#dra-risks)
+- [Delegated decisions](#dra-decisions)
+- [Repository/test impact](#dra-implementation-impact)
+- [Traceability](#dra-traceability)
+- [Completeness status](#dra-completeness)
+
+<a id="dra-executive-decision"></a>
+## Executive Decision
+
+The implemented Skill is a thin, provider-aware commissioning and handoff layer over Open Design, not a local copy of Open Design prompts, templates or generation logic.
+
+```text
+current request + raw draft/product/technical/design Source + optional Source Plan
+  -> requested-scope ceiling and design-gap analysis
+  -> live Open Design capability discovery
+  -> justified resource selection, with reasons and omissions
+  -> Open Design project/run/artifact generation
+  -> bounded review, optional iteration and provenance-preserving handoff
+  -> ordinary external design Source
+  -> downstream default Workflow Contract or Long-Task UI Authority Closure
+  -> optional durable adoption, implementation and project-owned verification
+```
+
+No resource type is globally mandatory. A prototype is expected to be high-value for many new Web/App screens and interaction flows, but it is selected only when the current design gap and available Open Design capability justify it. The same rule applies to wireframes, visual candidates, component state studies, design systems, Figma handoffs and every other resource.
+
+The generation Skill never updates `project_context/**`, `DESIGN.md` or production code merely because generation succeeded. It never promotes a candidate to `exact-target`, creates Contract authority or claims product acceptance. Those decisions remain downstream.
+
+`source-plan-authoring` is neither a prerequisite nor an automatic next step. A raw first draft may enter an exploration loop directly: generate a bounded candidate, iterate and obtain an explicit human selection. When requested, the Skill may then return one consolidated accepted-design-decision delta. A separate owning step may revise the first draft later. If the delivery later uses `source-plan-authoring`, it should receive both that revised draft and the selected design resources so control, state, interaction and visual details are not flattened into prose. The generation Skill never edits either draft.
+
+<a id="dra-input-inventory"></a>
+## Input Inventory And Treatment
+
+### `IN-DRA-USER-001` — Current conversation and explicit Goal
+
+- Role: controlling direct Source.
+- Direct meaning:
+  - design-resource generation deserves a dedicated Skill separate from Source Plan authoring and from downstream development workflows;
+  - inputs may be a product plan plus technical plan, or a specialized visual-design brief and requirements;
+  - the Skill must decide what to obtain from Open Design from the actual request and Open Design's actual capabilities;
+  - neither prototypes nor any other artifact are fixed mandatory outputs, even if prototypes are often likely for Web/App work;
+  - Open Design should be invoked rather than having its mature generation logic copied into Tiny Context;
+  - the result must be suitable Source for the default Workflow Contract or `long-task-workflow`;
+  - generation alone must not update Context or implementation;
+  - a user may provide extensive background while requesting only one control, one screen or a few screens for style exploration;
+  - an initial draft may go directly through repeated design-resource exploration before any Source Plan exists;
+  - after explicit selection, the Skill should report accepted design decisions and their likely draft impact, while a separate step owns any revision of the initial draft;
+  - efficiency and quality both matter, and unnecessary post-generation packaging/validation work should not obscure a simple preview request;
+  - this Goal must research source and live behavior, execute bounded experiments, produce a complete plan and index important details.
+
+### `IN-DRA-EXT-001` — Original 1,077-line external UI/UX upgrade proposal
+
+- Authoring-time path: `C:\Users\777\.codex\attachments\adc1c9bf-c698-46ae-b6bc-819752ba43fb\pasted-text.txt`.
+- Role: external proposal/problem evidence, not automatically authoritative project fact.
+- Adopted meaning:
+  - distinguish product/surface meaning, visual-system authority, concrete targets, implementation and evidence;
+  - preserve stable surface/control/target identities and explicit condition coverage;
+  - candidates and inspiration do not authorize fidelity implementation;
+  - subjective visual selection remains a human or explicitly delegated decision;
+  - static visuals alone do not prove interaction, accessibility or independent native targets.
+- Corrected/narrowed meaning:
+  - no mandatory Figma, three variants, fixed directory, pixel threshold, full state-image set or Cartesian coverage;
+  - Starward-specific pages, directions and viewport suggestions are pilot material, not package-wide facts;
+  - the resource-generation Skill does not own Context adoption, production implementation or Final Gate evidence.
+
+### `IN-DRA-PLAN-001` — Existing page-level UI/UX authority Source Plan
+
+- Repository path: `docs/page-level-uiux-authority-source-plan.md`.
+- Role: approved upstream architecture Source for the already-implemented consumption boundary.
+- Controlling constraints:
+  - external design resources remain ordinary Source until reconciled downstream;
+  - stable surface/control/target keys connect design Source to Context, `DESIGN.md`, implementation and verification;
+  - lightweight UI work remains lightweight;
+  - no second product/design authority, Contract, Gate or UI workflow lifecycle;
+  - selected targets require real selection basis and protected adoption, while candidates cannot select themselves.
+
+### `IN-DRA-HARNESS-001` — Current Tiny Context authority and implementation
+
+- Role: controlling durable project authority plus current implementation evidence.
+- Primary sources read for this plan: `project_context/global.md`, `project_context/architecture.md`, `project_context/context.toml`, the Harness package area root and its workflow/package/foundation/Long-Task/verification/implementation-index Context.
+- Current boundary:
+  - Tiny Context already consumes externally authored flows, wireframes, visual candidates, prototypes, token exports, component specifications and Figma resources without requiring a common pack;
+  - default Workflow owns UI Authority Closure, `Context Delta`, durable adoption, implementation and project verification;
+  - Long-Task accepts such resources through existing Source, Binding, verification-input, protected revision and Check mechanisms;
+  - Source Plan authoring may supply richer upstream meaning but is optional and does not generate designs;
+  - at research time the product specification did not yet include this thin commissioner; the separately authorized implementation delivery therefore treated adding it as a product-boundary change and applied the normal package-authoring impact review.
+
+### `IN-DRA-OD-001` — Open Design official repository and protocol sources
+
+- Role: primary, current provider evidence; retrieved 2026-07-22.
+- Repository: <https://github.com/nexu-io/open-design>.
+- Researched revision: [`447b18b98e0db98a586ef913b76b0269e487db70`](https://github.com/nexu-io/open-design/tree/447b18b98e0db98a586ef913b76b0269e487db70), current upstream `main` at retrieval time.
+- Material sources:
+  - [project README](https://github.com/nexu-io/open-design/blob/447b18b98e0db98a586ef913b76b0269e487db70/README.md);
+  - [`docs/agent-adapters.md`](https://github.com/nexu-io/open-design/blob/447b18b98e0db98a586ef913b76b0269e487db70/docs/agent-adapters.md);
+  - [`docs/skills-protocol.md`](https://github.com/nexu-io/open-design/blob/447b18b98e0db98a586ef913b76b0269e487db70/docs/skills-protocol.md);
+  - [daemon MCP implementation](https://github.com/nexu-io/open-design/blob/447b18b98e0db98a586ef913b76b0269e487db70/apps/daemon/src/mcp.ts) and MCP run/artifact tests;
+  - current functional-skill, rendering-template, design-system and plugin registries;
+  - [`mobile-app`](https://github.com/nexu-io/open-design/blob/447b18b98e0db98a586ef913b76b0269e487db70/design-templates/mobile-app/SKILL.md), [`wireframe-mobile-flow`](https://github.com/nexu-io/open-design/blob/447b18b98e0db98a586ef913b76b0269e487db70/design-templates/wireframe-mobile-flow/SKILL.md), [`frontend-design`](https://github.com/nexu-io/open-design/blob/447b18b98e0db98a586ef913b76b0269e487db70/skills/frontend-design/SKILL.md) and Figma catalogue/plugin sources.
+- Treatment: repository claims are pinned to this revision. Runtime availability was independently checked against the local installation rather than inferred from documentation.
+
+### `IN-DRA-OD-LOCAL-001` — Local Open Design installation and visible capability catalogue
+
+- Role: environment-specific runtime evidence, observed 2026-07-22.
+- Installation: `E:\Open Design\Open Design.exe`; the desktop app is installed and running.
+- Installed payload: `open-design-packaged-app` `0.15.1`; its embedded MCP server reports protocol `2025-06-18` and server version `0.2.0`.
+- Live catalogue snapshot: 162 functional skills, 125 rendering templates, 152 design systems and 460 installed plugin records.
+- Inner agents available through Open Design included Codex CLI `0.144.5`, AMR and BYOK OpenCode. Codex advertised nine live model choices including `gpt-5.6-sol`; all four experiment runs used Open Design's `codex` agent with that model.
+- The active experiment design system was `user:design-md` (“今晚去观星”), digest `42ec0bd36f8be7a4f92245044633922c6c661d9e9411bcc4d801f73a5378e201`.
+- Open Design exposes project templates including prototype, wireframe, mobile app, website, slides, document, HyperFrames, WebGL, dashboard, image, video, audio and design-system creation. Relevant templates include greybox, hand-drawn, mobile-flow and annotated/redline wireframes.
+- `od` is not on this shell's `PATH`, but `/api/mcp/install-info` returned an absolute packaged runtime command that successfully launched `od --help` and the stdio MCP server. Codex MCP install status was `available: true`, `installed: false`; this Goal did not mutate global Codex MCP configuration.
+
+### `IN-DRA-VIS-001` — Supplied screenshots and prior exploratory output
+
+- `codex-clipboard-52fa92f7-7bda-45bb-8feb-c5a02c3f69f8.png`: Open Design advice distinguishing high-fidelity prototype use from wireframe-only structure work.
+- `codex-clipboard-d78da62b-37b7-4402-8ba5-ee29cf46edfc.png`: prior one-screen “今晚首页” candidate and the unwanted extra validation/packaging actions that followed a simple preview request.
+- `codex-clipboard-ef65d3c9-c5ac-4725-901d-c5c1b6f74958.png`: current Open Design home and template picker, including prototype, wireframe, mobile and other project types.
+- Role: visual/runtime evidence and usability motivation, not selected product target authority.
+
+<a id="dra-current-boundary"></a>
+## Existing Consumption Boundary To Preserve
+
+Tiny Context already has the downstream half of the system:
+
+1. generation outputs can arrive in any project-native format as ordinary Source;
+2. a candidate has no fidelity authority;
+3. a selected exact target or scoped constraint must have selection basis, declared surface/viewport/mode/state/content coverage and stable immutable identity;
+4. default Workflow or Long-Task reconciles that Source with product/surface Context and `DESIGN.md`;
+5. only the downstream workflow may update durable owners, implement production code and declare project-owned checks;
+6. generated screenshots, diffs, logs, Open Design runs and packaging receipts remain Source/review/evidence material, not Context.
+
+The missing half is not another authority model. It is a resource-planning and provider-orchestration capability that can answer:
+
+```text
+What design uncertainty blocks or materially improves this requested scope?
+Which available Open Design resource is the cheapest sufficient way to resolve it?
+What should intentionally not be generated?
+What condition coverage and provenance must survive handoff?
+Does the user want exploration, a development handoff, or selected-source preparation?
+```
+
+<a id="dra-research-questions"></a>
+## Research Questions
+
+- `RQ-DRA-001` — Which Open Design capabilities are callable through MCP today, and which still require CLI or desktop interaction?
+- `RQ-DRA-002` — Can the outer Codex commission an Open Design run whose configured inner agent is Codex CLI, without emulating Open Design prompts?
+- `RQ-DRA-003` — Which resource kinds are first-class skills/templates/plugins, and which require a generic project plus a custom commission?
+- `RQ-DRA-004` — Can generated source files, previews, run status and provenance be retrieved programmatically and handed off reproducibly?
+- `RQ-DRA-005` — What installation/authentication/model-discovery/bootstrap steps are required, and which may safely be automated?
+- `RQ-DRA-006` — Is Figma export/library/file generation operational from Open Design, merely catalogued, or dependent on separately installed upstream capabilities?
+- `RQ-DRA-007` — Can one component, one page and one low-to-high-fidelity flow be generated without scope expansion, and what review/iteration is actually useful?
+- `RQ-DRA-008` — Which provider failures are recoverable by retry/resume, and when is UI/Computer Use genuinely required?
+
+<a id="dra-research-findings"></a>
+## Resolved Open Design Capability Findings
+
+### `FIND-DRA-001` — MCP is a real commissioning surface, not only a file reader
+
+A live stdio handshake against the installed Open Design MCP succeeded with protocol `2025-06-18`. It exposed 19 tools:
+
+```text
+list_projects, get_active_context, get_artifact, get_project, get_file,
+search_files, list_files, create_artifact, write_file, delete_file,
+delete_project, create_project, list_skills, list_plugins, start_run,
+get_run, cancel_run, list_agents
+```
+
+`create_project` intentionally defaults `skipDiscoveryBrief` to true for outer-agent use. `start_run` commissions Open Design; the daemon then launches its own configured agent. `get_run` is asynchronous and exposes terminal status, preview and the inner agent message. This is the primary v1 integration contract.
+
+### `FIND-DRA-002` — Codex CLI can be the inner Open Design agent
+
+Live `list_agents` returned Codex as available and authenticated. The three initial runs and one high-fidelity follow-up were launched by Open Design with agent `codex` and model `gpt-5.6-sol`. Run start events identify the project cwd, model and agent, and the daemon captured a redacted native resume handle. The outer Skill therefore chooses/discovers an Open Design agent; it does not recursively execute itself or imitate the selected Open Design recipe.
+
+### `FIND-DRA-003` — Functional skills and rendering templates are distinct registries
+
+Open Design serves functional skills from `/api/skills` and rendering templates from `/api/design-templates`; a project/run can resolve an ID from either registry. The distinction is material:
+
+- `frontend-design` is a functional skill and appears in MCP `list_skills`;
+- `mobile-app` and `wireframe-mobile-flow` are rendering templates and do not appear in MCP `list_skills`;
+- the installed provider had 162 functional skills and 125 rendering templates;
+- no general-purpose component-state-board template was present; the bounded component experiment used `frontend-design` instead;
+- `mobile-app` is deliberately one high-fidelity screen/one job; `wireframe-mobile-flow` is deliberately a three-or-four-frame lo-fi structure board;
+- Open Design has specific high-fidelity multi-frame templates such as onboarding or gamified-app, but no generic high-fidelity multi-page product-flow template. Generic `frontend-design` is the supported escape hatch for a bespoke interactive flow.
+
+### `FIND-DRA-004` — Current MCP has a template-discovery gap
+
+The live MCP exposed 315 resources under only `od://focus`, `od://skills` and `od://design-systems`. It has no `list_design_templates` tool and no `od://design-templates/...` resources, even though `start_run`/project resolution can use a known rendering-template ID. The Skill must not solve this by copying a stale template catalogue.
+
+Required compatibility behavior:
+
+1. use `list_design_templates` when a future provider exposes it;
+2. on the tested local provider, use a version-guarded structured `/api/design-templates` compatibility query or UI-assisted template selection;
+3. when neither is available, continue with discoverable functional skills/plugins only if they preserve the requested meaning, and report degraded template discovery;
+4. propose an upstream Open Design addition for `list_design_templates` plus `od://design-templates/<id>/SKILL.md`, because the run protocol already accepts these IDs.
+
+Computer Use is therefore a fallback for provider bootstrap/template-picker or other genuinely UI-only state, not the primary generation transport.
+
+### `FIND-DRA-005` — Artifact retrieval needs explicit entry resolution and immutable identity
+
+MCP `get_run` successfully returned a raw preview for completed runs. MCP `get_artifact` retrieved the page source when called with explicit `entry: "index.html"`, but the implicit call failed with `no entry file` because generated files did not automatically populate project `metadata.entryFile`. The lo-fi template emitted `stargazing-decision-flow.html`, so assuming `index.html` also fails in the opposite direction.
+
+Preview URLs are project paths, not immutable run snapshots. After the same project gained a later `index.html`, querying the earlier lo-fi run resolved the project's current `index.html` preview. Handoff must therefore preserve `project id + run id + explicit entry path + content hash/snapshot`; a mutable preview URL alone is insufficient.
+
+### `FIND-DRA-006` — Figma support is conditional and currently asymmetric
+
+The provider has real Figma-import machinery: `figma-extract` accepts a Figma URL and OAuth token, retrieves node tree/tokens/assets and requires a configured Figma connector. Its plugin doctor passed manifest integrity, which does not prove OAuth, connector availability or a successful extraction.
+
+The installed `figma-generate-design` and `figma-generate-library` skills are catalogue pointers to `https://github.com/figma/skills`; their own instructions require the full upstream bundles to be installed in the active agent. Open Design's `handoff` atom records a Figma export target only after another exporter wrote it; it is not itself a Figma frame writer. No Figma MCP/connector or editable-design creation was proven operational in this Goal. A Codex Figma plugin may be offered only when the user explicitly wants Figma and the connector/plugin is installed and authenticated; it is never a prerequisite for HTML prototypes or Tiny Context consumption.
+
+### `FIND-DRA-007` — Provider self-review and outer review are different layers
+
+The generated HTML sources contained structural checks, but the high-fidelity flow run showed that the nested Codex process had no Browser MCP servers in its Open Design tool bundle. It attempted a hidden local server that policy rejected and a Windows-incompatible Bash Playwright wrapper before recovering. The outer Codex Browser could inspect the finished provider preview directly.
+
+The efficient split is:
+
+- Open Design owns its recipe/template execution and source creation;
+- the outer Skill performs the intent-proportional render, interaction and console sanity check promised to the user;
+- project E2E/native/visual-regression tests remain downstream implementation evidence.
+
+Do not instruct every Open Design run to reproduce the outer browser harness. This adds latency and fragility without improving authority.
+
+### `FIND-DRA-008` — Run status, diagnostics and quality must be interpreted separately
+
+The live Codex runs emitted repeated model-cache schema and refresh diagnostics on stderr while still completing with exit code 0 and usable artifacts. The high-fidelity flow follow-up exposed the inverse mismatch: its agent emitted a final response, usage event and complete artifact that passed outer review, but remained `running` until Open Design eventually marked it `failed` after 600 seconds without new output. The terminal record reported exit code 1, `AGENT_EXECUTION_FAILED`, `timeout` / `inactivity_timeout`, `resumable: true`, `endedWithUnfinishedWork: false` and `artifactCount: 1`. Conversely, a `succeeded` run and artifact count do not prove visual correctness, interaction coverage or downstream suitability.
+
+The adapter must preserve three separate facts:
+
+- provider execution state: `running`, terminal success, terminal failure or terminal reconciliation pending;
+- artifact readiness: missing, partial, retrievable and hashable, or review-complete;
+- design suitability: unreviewed, structurally sane, interaction-sane or selected by a human/delegated rule.
+
+It should preserve diagnostics, require terminal status before declaring provider execution success, and apply the bounded artifact check promised by the current intent. If a complete artifact exists while terminal reconciliation remains pending, it may show or hand off that artifact with the explicit qualifier `artifact-ready/run-unreconciled`. If the provider later fails after the complete artifact was emitted, update the qualifier to `artifact-ready/provider-failed` and preserve the failure details. Do not silently relabel either run as succeeded, discard an independently verified artifact solely because of post-artifact process bookkeeping, cancel a still-live run without the user's instruction or turn any status into product acceptance.
+
+<a id="dra-decision-model"></a>
+## Dynamic Resource Decision Model
+
+The Skill should infer a bounded commission from ordinary prose; it must not require a questionnaire or assume that all supplied background is generation scope.
+
+### Step 1 — Establish the requested-scope ceiling
+
+Separate background coverage from requested output coverage. Explicit scoping such as “only this control,” “one screen,” “three screens,” “style exploration only,” “do not update Context/code,” or “prepare for Long-Task implementation” is binding. More input detail improves the selected artifact; it never silently expands the artifact count.
+
+### Step 2 — Inventory existing authority and uncertainty
+
+For the requested surfaces/controls only, identify:
+
+- product/user decision and required behavior;
+- platform, viewport and interaction modality;
+- existing information architecture, screen/control semantics and states;
+- existing design system, exact targets, constraints, inspiration and implementation;
+- visual-direction uncertainty, interaction uncertainty, responsive/native uncertainty and verification needs;
+- genuine user choices that cannot be inferred from stated quality, efficiency, brand, cost, privacy or lock-in preferences.
+
+### Step 3 — Discover live provider capability
+
+Query Open Design's current agents, models, skills, plugins, templates/projects and available integration paths. Do not hardcode a copied template prompt or assume a catalogued Figma workflow is installed. Record unavailable capabilities and choose a supported substitute only when it preserves the requested meaning.
+
+### Step 4 — Select the smallest sufficient resource set
+
+Each candidate resource receives one disposition:
+
+- `selected`: needed now, with a stated gap it resolves;
+- `optional`: useful but not needed for the requested decision/handoff;
+- `not-needed`: existing authority or smaller resources are sufficient;
+- `unavailable`: Open Design cannot currently produce or export it in this environment;
+- `decision-required`: a user-reserved preference materially changes the commission.
+
+Resource selection is benefit-driven rather than phase-driven. Examples to validate, not universal rules:
+
+- a single known control may need an interactive component specimen or state board, but no page prototype;
+- a new information-dense screen with uncertain hierarchy may benefit first from an annotated or greybox wireframe;
+- a visually directed single page may need one high-fidelity interactive prototype and no low-fidelity duplicate;
+- a multi-screen flow with navigation/state inheritance may justify a low-fidelity flow and then a consistent high-fidelity prototype;
+- an existing immutable Figma/HTML target may require no new design generation;
+- a local style bug under adequate authority requires none of these resources.
+
+Use the following as selection heuristics, not a mandatory phase sequence:
+
+| Design gap to resolve | Usually sufficient resource | Select when | Usually omit when |
+| --- | --- | --- | --- |
+| Route, screen ownership or transition order | Lo-fi flow/wireframe | navigation, branching or cross-screen state is unresolved | the flow is already authoritative and only styling is open |
+| One screen's information hierarchy | Annotated/greybox screen | grouping, priority, disclosure or action placement is unresolved | a selected exact target already fixes layout |
+| Visual direction for a bounded surface | One or more high-fidelity candidates | the user is comparing styles or no selected visual target exists | only interaction semantics are uncertain |
+| One control's behavior and states | Interactive component specimen/state workbench | control logic, feedback, keyboard, error/loading or recovery is unclear | a component library/source already specifies and demonstrates it |
+| Cross-screen behavior and shared state | Interactive flow prototype | transitions, persistence or conditional UI must be experienced | a static board answers the current decision and implementation is not yet requested |
+| Reusable visual language | `DESIGN.md`/design-system resource | several surfaces need a coherent durable language and existing authority is insufficient | the request is a throwaway style probe or one isolated control |
+| Editable collaborative source | Figma frames/library | team review, editable layout/component collaboration or Figma is the declared system of record | HTML/source screenshots are sufficient or Figma capability/auth is absent |
+| Bespoke imagery/media/3D | Specialized Open Design media capability | the requested UI genuinely depends on those assets | decorative media would only fill an authority gap with invention |
+
+Prototype selection heuristic: prefer a real prototype when the unresolved question depends on interaction, transition, shared state, responsive behavior or implementation-facing feedback. Prefer a static/lo-fi resource when the unresolved question is topology, hierarchy or visual direction and interaction would add no independent information. Select neither when existing authority already answers the requested scope.
+
+### Step 5 — Match execution depth to user intent
+
+- `exploration`: generate only the requested candidate count/scope, perform a minimal render/open sanity check, show the result and stop for feedback; do not create a pack, validator run, Context change or implementation.
+- `handoff`: retrieve project-native source, preview and concise provenance/coverage notes needed by a development workflow; run bounded structural/interaction checks relevant to the promised resource.
+- `selected-source-preparation`: only after an explicit user selection or delegated selection rule, freeze/export the selected resource with stable identity and declared coverage so the downstream workflow can consider adoption. This still does not itself update durable authority or production code.
+
+### Ephemeral commission envelope
+
+For every selected resource, the Skill forms one task-local commission envelope. It is an internal execution structure, not a required file or second plan:
+
+- requested scope ceiling and maximum artifact/screen/control count;
+- source facts, constraints, references and unresolved decisions relevant to that scope;
+- stable surface/control/state keys;
+- platform, viewport, mode and interaction modality;
+- the independent design gap this resource must resolve;
+- selected live provider capability ID and why it is the smallest sufficient choice;
+- required content/state/transition coverage and explicit exclusions;
+- expected entry/file form and intent-proportional review promise.
+
+The envelope supplies product-specific instructions around the provider capability. It must not embed or paraphrase Open Design's own template body, seed or hidden workflow prompt.
+
+<a id="dra-provider-orchestration"></a>
+## Open Design Orchestration Boundary
+
+The preferred transport order is:
+
+1. Open Design MCP for discovery, project creation, run commissioning, status/cancel and artifact/file retrieval;
+2. Open Design CLI or daemon API when MCP installation cannot be refreshed in the current host but equivalent structured behavior is available;
+3. desktop Browser/Computer Use only for bootstrap, an unavoidable UI-only selection, signed-in provider interaction, visual preview inspection or recovery.
+
+The outer Skill supplies the product commission, selected Open Design capability and bounded inputs. Open Design's daemon launches its configured inner agent, including Codex CLI where configured. The outer Skill must not recreate the Open Design template prompt, pretend that calling image generation alone is equivalent, or hardcode a model ID that Open Design can discover.
+
+Figma is an optional provider-side refinement/handoff route. It is selected only when the request benefits from editable frames/libraries or organizational handoff and the required Figma capabilities/authentication are actually installed. A catalogue pointer to upstream Figma skills is not evidence that the local path is operational.
+
+### Provider preflight and execution algorithm
+
+1. Discover whether callable Open Design MCP tools already exist. Do not infer absence merely from a missing `od` command.
+2. If MCP is callable, initialize only the required discovery surfaces: installed agents/models, functional skills, plugins, relevant design systems and rendering templates when supported.
+3. If MCP is not configured but Open Design is installed, report the exact setup boundary. A persistent MCP install changes host configuration and must be explicit; do not silently edit Codex configuration. A tested absolute `od mcp`/daemon route may serve as a task-local compatibility path without installation.
+4. Normalize capability metadata to `id`, `kind`, `mode`, `platform`, `fidelity`, `preview type`, design-system requirement, setup/auth state and source version. Do not persist the whole catalogue in Tiny Context.
+5. Create or choose a task-local Open Design project. For a new outer-agent project, skip the nested discovery brief because the outer Skill already established the commission.
+6. Select the live inner agent/model from `list_agents` or respect an explicit user choice. Do not hardcode the experiment model.
+7. Start one run per independently useful resource; parallelize only independent commissions. A low-to-high transformation that consumes the lo-fi artifact is sequential.
+8. Poll at provider-appropriate intervals. `running` with unchanged files is not itself a hang; never replace a slow run with hand-authored placeholder output. If a final response and retrievable artifact appear before terminal reconciliation, classify them as `artifact-ready/run-unreconciled`, preserve the run locator/last update and continue bounded observation without claiming provider success. If the provider later fails, transition to `artifact-ready/provider-failed`; retry/resume only when the promised artifact is incomplete/corrupt or the user requests another attempt. Cancel only on explicit user request or a confirmed, user-authorized recovery decision.
+9. On success, resolve the actual entry through run output/project metadata/file listing. Retrieve using an explicit entry path, then calculate a content hash or snapshot before later iterations mutate the project.
+10. Perform only the review promised by intent. Exploration needs render/open and obvious-scope sanity; handoff adds relevant structure, interaction, console and coverage checks; neither proves production acceptance.
+11. Return the requested preview or handoff. Keep provider diagnostics and known limitations visible without burying a simple exploration result in packaging noise.
+
+### Recovery order
+
+- Missing MCP registration: use explicit setup guidance or a task-local structured bridge; UI automation is last.
+- Missing template enumeration: future MCP method, then version-guarded daemon query, then UI-assisted selection, then an honest functional-skill substitute or `unavailable` result.
+- Unknown/failed entry lookup: `get_project`/`list_files`, choose the declared or generated entry explicitly, then `get_artifact(entry=...)`.
+- Authentication/connector failure: preserve the failed provider result and request only the missing auth/authorization; never synthesize Figma IDs, tokens or exports.
+- Terminal provider failure: if the promised artifact is missing/incomplete/corrupt and diagnostics identify a recoverable cause, allow one bounded retry/resume; if an independently reviewed artifact is complete, retain it with `artifact-ready/provider-failed` and stop unless the user requests another attempt. Always return the failure and task-local project/run locator.
+- Visually or behaviorally unsuitable artifact: refine the same project/run lineage with a precise delta when the user requested handoff quality; for exploration, show the candidate and ask for direction rather than silently multiplying variants.
+
+<a id="dra-experiments"></a>
+## Bounded Capability Experiments
+
+All experiments use one compact stargazing-product scenario to reduce domain variance. They create only external/task-local Open Design projects and artifacts; they do not modify repository Context, `DESIGN.md` or production code.
+
+### `EXP-DRA-001` — One control/component
+
+- Purpose: test whether Open Design can produce a focused, implementation-useful component interaction/state resource without expanding to a whole screen.
+- Subject/key: `tonight-observation-window-selector`, a 390px night observation-window range control for 20:00–05:00, recommended 23:40–02:10 and humidity risk after 01:00.
+- Capability choice: functional skill `frontend-design`; no relevant dedicated generic component template was found in the 125-template catalogue.
+- Open Design project: `tc-dra-component-20260722`.
+- Run: `82157a4b-958d-48ea-9458-6d655d8e9506`; `codex` / `gpt-5.6-sol`; succeeded in 11m38s; exit code 0; one artifact.
+- Artifact: task-local `index.html`, 37,282 bytes, SHA-256 `4175AB613765340D94DA1A31502A9FE8F71D8799E50E058B295CDC065D99D39D`.
+- Verified result:
+  - exactly one control workbench, not a page;
+  - default, keyboard/focus, dragging/pressed, disabled, loading and invalid/recovery states share one component instance;
+  - two semantic sliders expose current values and accessible value text;
+  - ArrowRight changed start by 10 minutes, PageUp by 30 minutes and Escape restored 23:40;
+  - invalid state exposed a visible alert and “恢复推荐窗口” returned to valid defaults;
+  - native controls and state buttons measured 44px minimum; no Browser console warnings/errors were observed.
+- Conclusion: a focused component resource is viable without a template or page expansion, but its state/interaction coverage must be explicitly commissioned and outer-verified. This resource is useful only when the control behavior is an independent design gap.
+
+### `EXP-DRA-002` — One high-fidelity page
+
+- Purpose: test the common “large background, one requested screen, show me the style” path.
+- Subject: only the night-mode “今晚首页.”
+- Capability choice: rendering template `mobile-app`, whose own contract is one high-fidelity iPhone 15 Pro screen/one job and requires a design system.
+- Open Design project: `tc-dra-page-20260722`.
+- Run: `179d96ac-95e4-4f09-b6e5-ca58e8549c60`; `codex` / `gpt-5.6-sol`; succeeded in 7m36s; exit code 0; one artifact.
+- Artifact: task-local `index.html`, 24,223 bytes, SHA-256 `559231D46905EF9ADD882A5A6AB0F8F194B7EA631615F5598DF032E6D279A90F`.
+- Verified result:
+  - one 390×844 device and one “今晚首页,” with no second screen/flow board/Figma/pack;
+  - decision, 82/100 score, 23:40–02:10 window, favorable/risk reasons, CTA, four-condition summary and two visible-target previews are present;
+  - CTA stayed on the same URL, showed progress and settled as “推荐地点已准备” with a live status message;
+  - the conditions control toggled `aria-expanded` and revealed window/risk rationale;
+  - CTA, disclosure and five navigation anchors measured at least 50px high; no Browser console warnings/errors were observed.
+- Conclusion: when hierarchy and visual direction are already sufficiently bounded, one high-fidelity interactive page can answer the style question without a preceding wireframe. Template choice enforced the scope ceiling more reliably than a generic “make it beautiful” prompt.
+
+### `EXP-DRA-003` — Three-screen low-to-high-fidelity flow
+
+- Purpose: test whether a multi-screen Web/App delivery benefits from and can sustain a low-fidelity flow followed by a consistent high-fidelity prototype.
+- Subject: “今晚首页 → 观星地图 → 地点详情.”
+- Low-fidelity capability: `wireframe-mobile-flow` rendering template.
+- Open Design project: `tc-dra-flow-20260722`.
+- Low-fidelity run: `c752f171-8e3d-4328-a00e-d2e32bc73fd6`; `codex` / `gpt-5.6-sol`; succeeded in 4m52s; exit code 0; one artifact.
+- Low-fidelity artifact: task-local `stargazing-decision-flow.html`, 25,638 bytes, SHA-256 `36C47EB5EA889E6DBEE51882A45140F28D4105B6BF9183E00272976F9FB4F661`.
+- Low-fidelity verification:
+  - exactly one board, three phone frames (`tonight-home`, `stargazing-map`, `spot-detail`), two action connectors and two UX annotations;
+  - `百花山观景台` and its time context remain consistent from selected map card to detail;
+  - all three 245px phone frames fit inside the measured 1,280px viewport;
+  - the board is intentionally static and its CTA-like elements are not development-ready interactions;
+  - no Browser console warnings/errors were observed.
+- High-fidelity follow-up: the same project was switched to `frontend-design`; the commission preserves the lo-fi file and creates a separate single-shell `index.html` with exactly three interactive states, shared `百花山观景台` and 23:40–02:10 state, real forward/back transitions and no extra surface.
+- High-fidelity run: `53fd454f-d88d-46e3-8db6-82b996a820ac`; `codex` / `gpt-5.6-sol`; terminal `failed` after 26m38s with exit code 1 and one artifact. Open Design reported `AGENT_EXECUTION_FAILED`, `timeout` / `inactivity_timeout`, `resumable: true` and `endedWithUnfinishedWork: false` after 600 seconds without new output. Because the inner agent had already emitted its final response/usage and the complete artifact passed outer review, this is recorded as `artifact-ready/provider-failed`, not provider success and not an incomplete design result.
+- High-fidelity artifact: task-local `index.html`, 36,562 bytes, SHA-256 `06CBF4CD36F21917E18C5CDE7AF1169E9EF109308555AB2038D96A7C4C546D77`. The lo-fi source retained SHA-256 `36C47EB5EA889E6DBEE51882A45140F28D4105B6BF9183E00272976F9FB4F661` after the follow-up.
+- High-fidelity verification:
+  - exactly one 390×844 phone shell exposes three screen states rather than three unrelated mockups;
+  - the home CTA transitions to map; the selected `百花山观景台` marker/card and 23:40–02:10 window remain visible;
+  - opening detail preserves the selected location/window, its route action produces in-artifact feedback, and Back returns to map with the same selection;
+  - visible controls measured at least 44px; 25 `data-od-id` hooks were present; no Browser console warnings/errors were observed.
+- Comparison: the lo-fi board independently exposes simultaneous topology, connectors and UX annotations; the high-fi artifact independently proves transitions, feedback, control sizing and state retention. Both are justified when both information topology and interaction/visual behavior remain unresolved. Either is redundant when the other already answers the current decision, so this experiment supports a conditional two-step choice rather than a universal low-to-high sequence.
+
+<a id="dra-requirements"></a>
+## Requirements
+
+### Skill trigger and input handling
+
+- `REQ-DRA-001` — Trigger only for explicit standalone design-resource planning/generation or an explicit request to use Open Design; ordinary UI implementation and durable authority repair remain with existing workflows/Skills.
+- `REQ-DRA-002` — Accept product plans, technical plans, optional Source Plans, specialized visual briefs, screenshots/references and existing design resources without a mandatory input schema.
+- `REQ-DRA-003` — Inventory every supplied input and preserve its role as exact target, constraint, inspiration, current implementation evidence or background.
+- `REQ-DRA-004` — Treat explicit output scope as a hard ceiling independent of background breadth.
+- `REQ-DRA-005` — Ask only for a genuine missing preference that materially changes the provider commission; otherwise use traceable, reversible judgment.
+- `REQ-DRA-006` — Accept a raw initial draft without invoking `source-plan-authoring`; after explicit selection, optionally return one consolidated accepted-design-decision delta when requested for a separately authorized later draft revision, and never edit or regenerate the draft or a Source Plan.
+
+### Resource planning
+
+- `REQ-DRA-010` — Derive resource needs from requested scope, existing authority/gaps, uncertainty, platform/interactions, desired downstream use and live Open Design capability.
+- `REQ-DRA-011` — Make no artifact globally mandatory and explain every selected, omitted, unavailable or decision-blocked resource.
+- `REQ-DRA-012` — Prefer the smallest sufficient resource set and stop once the requested exploration or handoff decision is supported.
+- `REQ-DRA-013` — Preserve stable surface/control/state/target keys from input when available and propose task-local stable keys when needed for handoff.
+- `REQ-DRA-014` — Keep candidate generation, selection and authority adoption distinct.
+
+### Provider execution
+
+- `REQ-DRA-020` — Discover current Open Design agents/models/capabilities at runtime rather than copying prompts or hardcoding stale catalogue/model values.
+- `REQ-DRA-021` — Prefer structured MCP execution and retrieval, with CLI/daemon and UI-only fallbacks that preserve the same commission semantics.
+- `REQ-DRA-022` — Support the Open Design daemon using Codex CLI as its configured inner agent without treating the nested process as recursive Skill execution.
+- `REQ-DRA-023` — Keep generated Open Design projects/runs/artifacts task-local until the user requests a handoff or selects a candidate.
+- `REQ-DRA-024` — Bound run polling, report provider progress during long runs, keep terminal execution state separate from artifact readiness, label complete output from a nonterminal run `artifact-ready/run-unreconciled` and transition it to `artifact-ready/provider-failed` if the provider later fails, retry only when the promised resource remains incomplete/corrupt or the user requests it, support user-authorized cancellation where available and never hide a provider failure behind a generated placeholder.
+- `REQ-DRA-025` — Treat Figma, image, video, 3D/WebGL and other specialized routes as conditional capabilities with their own setup/export checks.
+- `REQ-DRA-026` — Treat persistent MCP/plugin installation, authentication and new disclosure paths as explicit setup actions; generation permission does not silently authorize global host configuration changes.
+- `REQ-DRA-027` — Distinguish functional-skill and rendering-template discovery; never vendor a fallback template catalogue, and surface degraded discovery when the provider cannot enumerate a relevant registry.
+- `REQ-DRA-028` — Resolve and retrieve the actual entry path explicitly, then preserve run/project/capability/design-system provenance plus an immutable content hash or snapshot before later iterations.
+- `REQ-DRA-029` — Keep provider self-check, outer artifact sanity review and downstream product verification distinct; require only the layer promised by the current intent.
+
+### Output and downstream handoff
+
+- `REQ-DRA-030` — In exploration intent, show the requested result with only minimal sanity review and no unsolicited packaging/validator sequence.
+- `REQ-DRA-031` — In handoff intent, return project-native source/preview plus concise provenance, classification, declared coverage, unresolved decisions and known limitations; do not require a Tiny Context-specific pack schema or directory.
+- `REQ-DRA-032` — For selected-source preparation, preserve immutable identity or a content snapshot/hash and selection basis, while leaving actual Context/`DESIGN.md`/Contract adoption downstream.
+- `REQ-DRA-033` — Never claim that Open Design tool success proves product quality, production fidelity, accessibility, native behavior or acceptance beyond the inspected artifact.
+- `REQ-DRA-034` — Never update Context, `DESIGN.md`, production code or a Delivery Contract unless the user separately enters and authorizes the consuming workflow.
+- `REQ-DRA-035` — In a handoff, identify every resource by stable surface/control keys, candidate/constraint/selected classification, declared viewport/mode/state/content/interaction coverage, source locator/hash, selection basis if any, unresolved decisions and forbidden inferences.
+- `REQ-DRA-036` — If the user explicitly selects a candidate and asks to prepare it for team/development use, export or snapshot it to a user-approved durable location; do not rely on Open Design's mutable project preview URL.
+- `REQ-DRA-037` — When design exploration precedes Source Plan authoring, keep candidate iterations and interim observations task-local; do not require a delta after every iteration; after selection, identify accepted, rejected and unresolved decisions plus their product/control/state implications, return differences only when requested, optionally consolidate them once at the end, and let a separate plan owner decide whether and when to reconcile accepted changes.
+
+### Distribution and verification planning
+
+- `REQ-DRA-040` — Keep one authored Skill source and synchronized workspace/package-managed copies under existing source-sync rules.
+- `REQ-DRA-041` — Update the product specification, public English/Chinese guidance, Skill routing and affected-test selection to reflect the new optional orchestration capability without weakening the existing consumption boundary.
+- `REQ-DRA-042` — Add static contract tests, mock-provider behavior tests and opt-in live Open Design smoke tests; the normal package suite must not depend on a running desktop app, paid provider, login or nondeterministic design quality.
+- `REQ-DRA-043` — Test scope ceilings, no-mutation boundaries, capability fallback, candidate-versus-selected semantics, timeout/cancel/recovery and downstream handoff fields.
+
+<a id="dra-handoff-contract"></a>
+## Output And Downstream Handoff Contract
+
+The Skill returns ordinary Source, not a new package format. A simple exploration response may contain only the preview, scope and obvious limitations. A development handoff should carry the following compact information in prose or a task-local block; no dedicated file is mandatory:
+
+```yaml
+resource_key: target.tonight-home.night.candidate-a
+classification: candidate # candidate | inspiration | constraint | exact-target
+surface_keys: [surface.tonight-home]
+control_keys: [control.recommended-spots-cta, control.conditions-disclosure]
+provider:
+  name: open-design
+  app_version: 0.15.1
+  project_id: tc-dra-page-20260722
+  run_id: 179d96ac-95e4-4f09-b6e5-ca58e8549c60
+  capability_kind: design-template
+  capability_id: mobile-app
+  agent: codex
+  model: gpt-5.6-sol
+  design_system_id: user:design-md
+  design_system_digest: 42ec0bd...
+source:
+  entry: index.html
+  sha256: 559231D4...
+  durable_snapshot: null # populated only when explicitly prepared/exported
+coverage:
+  platform: mobile
+  viewport: 390x844
+  modes: [night]
+  states: [default, cta-progress, cta-ready, conditions-expanded]
+  content: [decision, score, best-window, reasons, conditions, visible-target-preview]
+selection_basis: null # remains a candidate until a real selection exists
+unresolved: []
+forbidden_inference:
+  - does not prove native rendering, production accessibility or downstream acceptance
+```
+
+The example is descriptive, not a required schema. Unknown fields remain unknown; the Skill must not invent coverage.
+
+### Initial-draft exploration loop
+
+1. A raw initial proposal, mixed notes or other `source-plan-authoring` inputs may be used directly; no Source Plan is generated as a side effect.
+2. Candidate iterations remain task-local and do not continuously rewrite the proposal.
+3. After the user explicitly selects or rejects a direction, the Skill may return an accepted-design-decision delta covering accepted, rejected and unresolved choices plus affected surface/control/state keys. It need not emit a delta after each iteration; task-local observations may instead be returned once as a consolidated delta when requested after the direction is final.
+4. A separately authorized product/plan-owning step revises the initial proposal. The Skill neither applies nor assumes that revision.
+5. If `source-plan-authoring` is later used, its inputs should include the revised proposal and selected immutable design resources. This preserves rich visual/interaction Source without making either input depend on the other.
+
+### Default Workflow Contract consumption
+
+1. The user brings or selects the generated Source while authorizing a concrete development request.
+2. Default Workflow performs UI Authority Closure against product/surface Context and `DESIGN.md`.
+3. It classifies the resource, confirms selection basis and coverage, decides `Context Delta`, and only then adopts durable facts or exact-target references when required.
+4. Implementation and project-owned verification consume the selected source. Candidate previews and Open Design run success cannot authorize fidelity.
+
+### Long-Task Workflow consumption
+
+1. The resource or optional Source Plan is ordinary upstream Source to Contract authoring.
+2. Contract Source/Bindings identify stable surfaces, controls, target files/URLs/hashes and conditions; verification inputs/checks cover only declared machine-verifiable claims.
+3. Authority Lock, protected revisions and Final Gate remain the only Long-Task authority lifecycle. The generation Skill creates no Contract Draft, outcome, receipt or Gate.
+4. If a selected target changes, the downstream workflow applies its normal Source/Authority revision rules; an Open Design rerun alone never mutates Contract authority.
+
+### Context and `DESIGN.md` boundary
+
+- Candidate exploration changes neither Context nor `DESIGN.md`.
+- A user-selected visual target may remain versioned authored design Source; durable design principles/tokens/component rules enter `DESIGN.md` or owning Context only through downstream reconciliation.
+- Screenshots, diffs, provider logs, prompt caches, raw run events, mutable preview URLs and generated review receipts do not become Context.
+- If generation reveals a product/surface decision that the user has not made, record it as unresolved Source rather than silently resolving it in visuals.
+
+<a id="dra-non-goals"></a>
+## Non-Goals
+
+- `NCOMP-DRA-001` — Do not vendor, fork or paraphrase Open Design's internal prompts/templates into the Tiny Context Skill.
+- `NCOMP-DRA-002` — Do not make prototype, wireframe, high-fidelity output, Figma, three variants, a design system, a component board or any directory/pack universally required.
+- `NCOMP-DRA-003` — Do not create a second Design Authority, Context role, Contract, Gate, artifact registry, provider state machine or acceptance lifecycle.
+- `NCOMP-DRA-004` — Do not have generated candidates select or approve themselves.
+- `NCOMP-DRA-005` — Do not modify production UI, project Context or `DESIGN.md` during standalone generation.
+- `NCOMP-DRA-006` — Do not equate a rendered image with an interactive prototype or claim unsupported platform/state/accessibility coverage.
+- `NCOMP-DRA-007` — Do not require the user to reduce a rich input set merely because the requested output is small.
+- `NCOMP-DRA-008` — This Source Plan alone does not authorize implementation or publication; either requires a separate explicit delivery request and the normal package-authoring workflow.
+- `NCOMP-DRA-009` — Do not invoke `source-plan-authoring`, rewrite an initial draft or treat candidate iteration as accepted product-plan change.
+
+<a id="dra-outcomes"></a>
+## Implementation Outcomes And Dependencies
+
+### `OUT-DRA-01` — Capability-aware commissioning contract
+
+- Result: the Skill trigger, input inventory, scope ceiling, uncertainty analysis and resource disposition logic are documented and tested.
+- Depends on: none.
+
+### `OUT-DRA-02` — Open Design adapter and recovery path
+
+- Result: structured capability discovery, functional-skill/rendering-template distinction, project/run/artifact orchestration, explicit entry/hash capture and bounded fallbacks work without copied prompts.
+- Depends on: `OUT-DRA-01`.
+
+### `OUT-DRA-03` — Intent-proportional review and handoff
+
+- Result: exploration stops after a preview; handoff preserves source/provenance/coverage; selected-source preparation remains separate from adoption.
+- Depends on: `OUT-DRA-01`, `OUT-DRA-02`.
+
+### `OUT-DRA-04` — Tiny Context routing and package integration
+
+- Result: the explicit `design-resource-authoring` Skill is installed as a default package-managed capability while current Source Plan, Product Design, UI/UX authority, default Workflow and Long-Task responsibilities remain non-overlapping and discoverable.
+- Depends on: `OUT-DRA-01`, `OUT-DRA-03`.
+
+### `OUT-DRA-05` — Deterministic regression and optional live confidence
+
+- Result: repository tests prove Skill/package semantics without making normal CI depend on Open Design; separately enabled live smoke tests prove the installed provider path.
+- Depends on: `OUT-DRA-02`, `OUT-DRA-03`, `OUT-DRA-04`.
+
+<a id="dra-implementation-blueprint"></a>
+## Implementation Blueprint
+
+### Authoritative files and distribution
+
+The authoring source is `.codex/ty-context-managed/skills/design-resource-authoring/**`, not the generated `.codex/skills/**` copy. `package sync-source` copies it into `packages/ty-context/assets/skills/design-resource-authoring/**`; the workspace/profile sync then materializes `.codex/skills/design-resource-authoring/**` and consumer harness-root equivalents.
+
+Proposed authored tree:
+
+```text
+.codex/ty-context-managed/skills/design-resource-authoring/
+├── SKILL.md
+└── references/
+    ├── resource-selection.md
+    ├── open-design-provider.md
+    └── downstream-handoff.md
+```
+
+- `SKILL.md`: narrow triggers, input inventory, scope ceiling, intent mode, core decision/execution loop and hard boundaries.
+- `resource-selection.md`: dynamic gap-to-resource heuristics, dispositions and commission envelope; no fixed artifact sequence.
+- `open-design-provider.md`: capability discovery, MCP/daemon/UI recovery, polling, entry resolution, hashing and Figma capability checks; no copied provider templates.
+- `downstream-handoff.md`: candidate/selection/authority separation and default/Long-Task handoff fields.
+
+Do not add a script merely to restate instructions. Add a small protocol helper only if implementation proves that platform-exposed MCP calls cannot safely perform the current template-discovery/explicit-entry compatibility path. Any helper must normalize metadata and transport only; it must not contain design prompts, a template catalogue or an authority registry.
+
+Because narrow one-control/one-screen exploration is useful outside Long-Task, add `design-resource-authoring` to the base set returned by `enabledManagedSkillNames`; do not require the `long-task` profile. Its front matter remains explicit enough that ordinary UI implementation does not trigger provider generation.
+
+### Phase `IMP-DRA-01` — Skill contract and routing
+
+- Author `SKILL.md` and three references from `REQ-DRA-001` through `REQ-DRA-014`.
+- Add precise English and Chinese explicit triggers such as “generate design resources,” “author design resources,” “use Open Design,” “生成设计资源” and “使用 Open Design”; exclude generic `design`, `UI`, `prototype` and ordinary implementation mentions.
+- Cross-link, without duplicating logic, from `source-plan-authoring`, `context_uiux_design` and `long-task-workflow` only where routing ambiguity exists.
+- Update stable product rationale in `PROJECT_SPEC.md` and durable package-capability ownership in the appropriate `project_context/**` owner when implementation begins.
+
+### Phase `IMP-DRA-02` — Provider capability and execution path
+
+- Implement instructions/tool routing for MCP `list_agents`, `list_skills`, `list_plugins`, design-system resources, `create_project`, `start_run`, `get_run`, `cancel_run`, `list_files` and `get_artifact`.
+- Feature-detect a future `list_design_templates`; otherwise use the bounded compatibility order in `FIND-DRA-004`.
+- Recommend or contribute the minimal upstream Open Design MCP addition rather than vendoring catalogue data.
+- Make persistent MCP installation and Figma/plugin authentication explicit setup actions.
+- Enforce explicit entry lookup and immutable snapshot/hash capture before handoff.
+
+### Phase `IMP-DRA-03` — Intent-proportional review and handoff
+
+- Exploration: render/open, verify scope count and obvious corruption, show result, stop.
+- Handoff: add relevant DOM/interaction/console checks and compact provenance/coverage.
+- Selected-source preparation: require real selection basis, then export/snapshot to an approved durable location and return the locator/hash; make no Context/code/Contract edits.
+- Keep outer visual checking outside the nested Open Design run unless the live provider advertises a reliable equivalent.
+
+### Phase `IMP-DRA-04` — Package/public surfaces and migration
+
+- Add the Skill to base managed-skill selection and source/package/release inventories.
+- Update `README.md`, `README.zh-CN.md`, `packages/ty-context/README.md` and generated/public guidance with an English-complete explanation of optional Open Design orchestration and its no-authority/no-provider-dependency guarantee.
+- Remove the former deleted-Skill tombstone expectation only where tests currently assert `design-resource-authoring` is absent; do not reintroduce the old Resource Pack behavior.
+- Treat the reintroduced name as a new thin commissioner. No migration should resurrect stale prior Skill files, packs or generated resources; normal sync overwrites package-managed copies from the new source.
+
+### Phase `IMP-DRA-05` — Verification and release readiness
+
+- Add deterministic static/behavioral tests described below.
+- Build, run focused tests, run `package sync-source` twice to prove convergence, `package check-source`, workspace/profile sync, Context/Harness validation, affected tests, package regression, tarball smoke and `git diff --check`.
+- Keep live provider smoke opt-in and non-gating for normal package CI.
+
+<a id="dra-acceptance"></a>
+## Acceptance Scenarios
+
+- `AC-DRA-001` — Given a long product/technical plan and an explicit “one control only” request, the Skill commissions at most one control-scoped resource and explains why no page/flow resources were generated. Accepts `REQ-DRA-002`, `REQ-DRA-004`, `REQ-DRA-010` through `REQ-DRA-012`.
+- `AC-DRA-002` — Given a one-screen visual exploration request, the Skill generates only that candidate, shows it after a minimal sanity check and performs no Context/code/pack mutation. Accepts `REQ-DRA-004`, `REQ-DRA-030`, `REQ-DRA-034`.
+- `AC-DRA-003` — Given a new interaction-rich three-screen flow and insufficient existing authority, the Skill can select both a flow wireframe and high-fidelity prototype only when each resolves an independent gap, otherwise it omits the redundant resource with reasons. Accepts `REQ-DRA-010` through `REQ-DRA-012`.
+- `AC-DRA-004` — Given sufficient selected exact design authority for a local style fix, the Skill selects no new design resource and routes the request back to the ordinary implementation path. Accepts `REQ-DRA-001`, `REQ-DRA-011`, `NCOMP-DRA-002`.
+- `AC-DRA-005` — Given Open Design with Codex CLI configured, structured commissioning starts an inner Open Design run and retrieves its status/output without the outer Skill copying the Open Design prompt or hardcoding a model. Accepts `REQ-DRA-020` through `REQ-DRA-022`, `NCOMP-DRA-001`.
+- `AC-DRA-006` — Given MCP is unavailable in the current host but the local daemon/CLI is usable, the Skill uses the bounded fallback and preserves the same commission and provenance. Accepts `REQ-DRA-021`, `REQ-DRA-024`.
+- `AC-DRA-007` — Given a catalogued but uninstalled Figma capability, the Skill reports it unavailable or optional and does not pretend a Figma handoff succeeded. Accepts `REQ-DRA-020`, `REQ-DRA-025`, `REQ-DRA-033`.
+- `AC-DRA-008` — Given a generated candidate, the result remains ordinary Source until an explicit selection basis exists and the downstream workflow adopts it. Accepts `REQ-DRA-014`, `REQ-DRA-032` through `REQ-DRA-034`.
+- `AC-DRA-009` — Given a handoff request, the downstream workflow can identify the surface/control keys, resource classification, conditions, provenance, stable locator/snapshot and known gaps without a mandatory proprietary pack. Accepts `REQ-DRA-013`, `REQ-DRA-031`, `REQ-DRA-032`.
+- `AC-DRA-010` — Given normal package CI with no Open Design installation, deterministic mock/static tests pass and live provider tests are skipped explicitly rather than failing or fabricating evidence. Accepts `REQ-DRA-040` through `REQ-DRA-043`.
+- `AC-DRA-011` — Given current Open Design MCP where functional skills are enumerable but rendering templates are not, the Skill detects the gap, uses the declared compatibility order and never falls back to a copied catalogue. Accepts `REQ-DRA-020`, `REQ-DRA-027`, `FIND-DRA-003`, `FIND-DRA-004`.
+- `AC-DRA-012` — Given a succeeded run whose project lacks `metadata.entryFile`, the Skill lists files, retrieves the intended artifact with explicit entry and records its hash; a later project iteration cannot silently change the handed-off identity. Accepts `REQ-DRA-028`, `REQ-DRA-036`, `FIND-DRA-005`.
+- `AC-DRA-013` — Given an exploration request, the nested provider cannot run its own browser verification, but the artifact renders and its requested scope is intact; the outer Skill performs only the promised sanity check and does not launch a validation pack. Accepts `REQ-DRA-029`, `REQ-DRA-030`, `FIND-DRA-007`.
+- `AC-DRA-014` — Given an explicit Figma deliverable request with only catalogue pointers or missing connector/auth, the Skill reports exact setup/unavailability and offers a non-Figma resource only if it preserves intent; it never labels HTML or a manifest record as an editable Figma design. Accepts `REQ-DRA-025`, `REQ-DRA-026`, `REQ-DRA-033`.
+- `AC-DRA-015` — Given a provider run that emitted a final message and complete retrievable artifact but remains nonterminal, the Skill may show it with its hash and `artifact-ready/run-unreconciled` qualifier. If the provider later terminates with a post-artifact timeout, the result becomes `artifact-ready/provider-failed`, retains the exact failure and run locator, claims neither provider success nor product acceptance and is not automatically retried or discarded. Accepts `REQ-DRA-024`, `REQ-DRA-028`, `REQ-DRA-033`, `FIND-DRA-008`.
+- `AC-DRA-016` — Given only an initial product draft, the Skill iterates bounded candidates without creating a Source Plan or rewriting the draft. After explicit user selection it returns no per-iteration delta; when requested after the direction is final, it may return one consolidated accepted-design-decision delta. A later `source-plan-authoring` call can independently consume the separately revised draft and selected immutable resources. Accepts `REQ-DRA-002`, `REQ-DRA-006`, `REQ-DRA-014`, `REQ-DRA-037`, `NCOMP-DRA-009`.
+
+<a id="dra-risks"></a>
+## Risks And Mitigations
+
+- `RISK-DRA-001` — Fact `external_dependency`: Open Design MCP/tools/templates may change independently. Affects `OUT-DRA-02`. Mitigation: runtime discovery, pinned research evidence, thin adapter, honest unavailable results and optional live tests.
+- `RISK-DRA-002` — Fact `weak_observability`: design quality is partly subjective and provider runs are nondeterministic. Affects `OUT-DRA-03`. Mitigation: separate structural sanity checks from human selection; never convert aesthetic judgment into a machine pass.
+- `RISK-DRA-003` — Fact `critical_user_path`: a Skill may over-generate from rich background and violate a narrow exploration request. Affects `OUT-DRA-01`, `OUT-DRA-03`. Mitigation: hard requested-scope ceiling and explicit exploration stopping rule.
+- `RISK-DRA-004` — Fact `third_party_outage`: daemon/agent/authentication failure can interrupt generation. Affects `OUT-DRA-02`. Mitigation: preflight discovery, bounded polling, surfaced run errors, cancel/retry/resume where supported and no placeholder success.
+- `RISK-DRA-005` — Fact `security_boundary`: product Source or proprietary references may be sent through configured provider/agent paths. Affects `OUT-DRA-02`, `OUT-DRA-03`. Mitigation: expose the selected provider path, respect local-first execution and require explicit confirmation only when the actual path expands data disclosure beyond the user's configured/local expectation.
+- `RISK-DRA-006` — Fact `architecture_change`: adding a package-owned orchestration Skill reverses the current “no generation Skill” product boundary. Affects `OUT-DRA-04`, `OUT-DRA-05`. Mitigation: keep the Skill optional/thin, update all controlling/public surfaces together and prove no authority/lifecycle duplication.
+- `RISK-DRA-007` — Fact `partial_provider_discovery`: current MCP omits the rendering-template registry. Affects `OUT-DRA-02`. Mitigation: feature detection, upstream-compatible addition, version-guarded fallback and no vendored catalogue.
+- `RISK-DRA-008` — Fact `mutable_external_source`: Open Design preview/project files can change after later runs and implicit entry discovery can fail. Affects `OUT-DRA-03`. Mitigation: explicit entry resolution and immutable hash/snapshot before handoff.
+- `RISK-DRA-009` — Fact `nested_tool_mismatch`: Open Design's inner agent may see Skill instructions without the browser/MCP runtime they expect. Affects `OUT-DRA-02`, `OUT-DRA-03`. Mitigation: keep provider commission focused on generation, inspect advertised tool bundle, and perform outer review with available project/browser tools.
+- `RISK-DRA-010` — Fact `profile_surface_growth`: a base-installed Skill increases default capability/trigger surface. Affects `OUT-DRA-04`. Mitigation: explicit narrow triggers, no automatic provider dependency, static trigger tests and no change to ordinary Workflow routing.
+- `RISK-DRA-011` — Fact `post_artifact_terminal_failure`: a nested provider process may leave a run nonterminal and eventually time out after its final message and complete artifact. Affects `OUT-DRA-02`, `OUT-DRA-03`. Mitigation: model execution state and artifact readiness separately, preserve last-update/failure diagnostics, use bounded observation, never invent success, retain independently verified output and retry only when artifact completeness or user intent justifies it.
+
+<a id="dra-decisions"></a>
+## Delegated Decisions And Open Research Items
+
+The user delegated detailed plan design under the explicit preference for high quality, efficiency and reuse of Open Design. The following are supported delegated choices:
+
+- `DLG-DRA-001` — Implement a thin Open Design commissioner rather than a local design-generation engine. Basis: explicit user preference plus Open Design's MCP/CLI skill/template architecture.
+- `DLG-DRA-002` — Use dynamic resource dispositions and a hard scope ceiling rather than a fixed artifact sequence. Basis: the user's correction that no artifact is universally mandatory and the need to support one-control/one-screen exploration.
+- `DLG-DRA-003` — Prefer MCP, then structured CLI/daemon fallback, with UI automation last. Basis: current Open Design MCP source and reliability/efficiency constraints.
+- `DLG-DRA-004` — Separate exploration, handoff and selected-source preparation behavior without creating persisted workflow state. Basis: prior one-page trial and existing Tiny Context downstream authority boundary.
+- `DLG-DRA-005` — Install the new Skill in the base managed-skill set, not only the Long-Task profile. Basis: the user explicitly needs one-control/one-screen generation for default-workflow inputs as well as Long-Task handoff; narrow explicit triggers prevent ordinary UI work from invoking it.
+- `DLG-DRA-006` — Treat current rendering-template enumeration as a provider compatibility gap and prefer an upstream MCP addition over a Tiny Context-owned catalogue. Basis: live MCP/source evidence and the user's “do not reinvent Open Design” constraint.
+- `DLG-DRA-007` — Make outer artifact review the default and nested provider browser verification optional/capability-driven. Basis: the high-fidelity flow experiment's tool-bundle mismatch and the requirement for efficient, evidence-backed generation.
+
+`RQ-DRA-001` through `RQ-DRA-008` are resolved by `FIND-DRA-001` through `FIND-DRA-008` and the experiment record. No user decision is required before implementation. A later user may still choose a provider/model, approve persistent MCP/Figma setup, select among candidates or reserve a visual decision; those are runtime choices, not plan gaps.
+
+<a id="dra-implementation-impact"></a>
+## Proposed Repository Impact And Verification
+
+If the user later authorizes implementation, the change should be reviewed under the Harness package authoring rules. Expected impact includes:
+
+- authored `.codex/ty-context-managed/skills/design-resource-authoring/**`, generated `.codex/skills/**`, and `packages/ty-context/assets/skills/**` through existing source sync;
+- `packages/ty-context/src/lib/profiles.ts` base managed-skill set plus sync/init/upgrade/release fixture inventories;
+- small directly referenced Skill resources, and a transport-only helper only if capability probing proves necessary;
+- `PROJECT_SPEC.md`, owning package Context, `README.md`, `README.zh-CN.md`, `packages/ty-context/README.md` and relevant Skill-routing wording;
+- current `source-plan-authoring`, `context_uiux_design`, default Workflow and `long-task-workflow` boundary text only where cross-links are needed, not duplicated generation logic;
+- new `tests/ty-context/design-resource-authoring-skill.test.mjs` plus affected package-source/profile/sync/doctor/orientation/tarball/consumer-lab tests;
+- explicit migration of the deleted-Skill assertions in `tests/ty-context/sync-init-doctor.test.mjs` and the no-generation-Skill boundary assertion in `tests/ty-context/visual-delivery-guidance.test.mjs`, replacing them with the new thin-commissioner/no-authority boundary rather than simply removing coverage;
+- optional local integration fixture/tooling outside the normal deterministic gate.
+
+Focused deterministic test cases should cover:
+
+- explicit bilingual trigger inclusion and generic-design/ordinary-implementation exclusions;
+- rich background plus one-control/one-page scope ceilings;
+- no globally mandatory prototype/wireframe/Figma/design-system sequence;
+- selected/optional/not-needed/unavailable/decision-required dispositions;
+- functional-skill versus rendering-template discovery and missing-template fallback;
+- Open Design unavailable, MCP unregistered, missing agent/model, running/succeeded/failed/canceled, nonfatal stderr and bounded retry paths;
+- implicit `get_artifact` entry failure followed by file listing/explicit retrieval;
+- mutable preview rejection in favor of explicit entry plus content hash/snapshot;
+- final agent message plus complete artifact while the run remains nonterminal, followed by a post-artifact provider timeout; test `artifact-ready/run-unreconciled` → `artifact-ready/provider-failed`, retained provenance and no automatic cancel/retry;
+- Figma catalogue-only, missing connector/auth and proven-operational cases;
+- exploration stopping after minimal preview, handoff metadata, selection-basis enforcement and zero Context/`DESIGN.md`/code/Contract mutation;
+- authored/package/generated source equality, profile installation, idempotent sync and release tarball inclusion.
+
+Live tests are split:
+
+- read-only opt-in smoke: MCP initialize, tool/resource enumeration, agent discovery and capability split;
+- manual/opt-in generative confidence: one tiny bounded artifact and explicit-entry retrieval, never a normal CI requirement;
+- human/Browser review: aesthetic/interaction judgment, never reduced to a package pass/fail claim.
+
+The implementation verification sequence should include build, focused static/mock tests, two source-sync passes, source parity, enabled-profile sync, Context/Harness validation, affected tests, package regression and `git diff --check`. Live Open Design experiments remain separately reported external-integration evidence and cannot be a required deterministic package gate.
+
+<a id="dra-traceability"></a>
+## Traceability Summary
+
+- `IN-DRA-USER-001` controls the no-mandatory-resource rule, scope ceiling, Open Design reuse, no-mutation boundary, experiments and complete-plan requirement.
+- `IN-DRA-EXT-001` and `IN-DRA-PLAN-001` control the design-authority, target-classification, condition-coverage and evidence boundaries.
+- `IN-DRA-HARNESS-001` controls Tiny Context ownership, Source/Contract separation, package impact and downstream adoption.
+- `IN-DRA-OD-001`, `IN-DRA-OD-LOCAL-001` and `FIND-DRA-001` through `FIND-DRA-008` control the adapter, capability split, setup/recovery, Figma boundary, entry/provenance rules and live test design.
+- `IN-DRA-VIS-001` controls the narrow-preview and no-unnecessary-postprocessing usability requirement.
+
+<a id="dra-completeness"></a>
+## Completeness Status
+
+- Input inventory: complete for currently supplied conversation, attachment, repository authority and screenshots.
+- Open Design source pin and capability audit: complete against upstream revision `447b18b98e0db98a586ef913b76b0269e487db70` and local package `0.15.1`.
+- Component/page/flow experiments: complete; three terminal-success artifacts and one fully generated/outer-reviewed `artifact-ready/provider-failed` artifact are recorded with project/run IDs, explicit entries, hashes and failure diagnostics.
+- Provider failure/recovery, registry asymmetry, mutable-preview, nested-tool and Figma availability findings: complete for the researched provider/runtime.
+- Requirements, downstream boundaries, implementation outcomes, repository impact and deterministic/live test split: complete and traceable.
+- Final cross-input audit: complete; every current user correction and material external/repository/provider constraint is covered, delegated or explicitly excluded.
+
+This Source Plan remains optional upstream Source and authorizes no package change by itself. The separately authorized 2026-07-22 implementation request entered the normal Harness package-authoring workflow and owns its Context Delta, code, tests and release-facing verification; publication remains a separate user action.

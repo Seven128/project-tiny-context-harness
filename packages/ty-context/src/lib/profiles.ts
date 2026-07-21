@@ -78,6 +78,7 @@ export function enabledManagedSkillNames(config: HarnessConfig): Set<string> {
     "context_product_plan",
     "context_surface_contract",
     "context_uiux_design",
+    "design-resource-authoring",
   ]);
   if (isProfileEnabled(config, "workflow-default"))
     names.add("normal-long-task");

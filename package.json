@@ -31,6 +31,7 @@
     "launch:feedback-note": "node tools/launch_feedback_note.mjs",
     "preview:pack": "node tools/source_preview_pack.mjs --clean",
     "smoke:quickstart": "node tools/quickstart_smoke.mjs --clean",
+    "smoke:open-design": "node tools/open_design_live_smoke.mjs",
     "release:sync-version": "node tools/sync_release_version.mjs",
     "release:check-version": "node tools/sync_release_version.mjs --check",
     "release:github": "node tools/github_release_publish.mjs",

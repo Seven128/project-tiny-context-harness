@@ -59,6 +59,7 @@ test("non_codex_sync_does_not_install_codex_hooks", async () => {
       ".agent/skills/context_surface_contract/SKILL.md",
       ".agent/skills/context_full_project_export/SKILL.md",
       ".agent/skills/context_harness_upgrade/SKILL.md",
+      ".agent/skills/design-resource-authoring/SKILL.md",
       ".agent/skills/normal-long-task/SKILL.md",
     ]) {
       await stat(path.join(root, file));
@@ -68,7 +69,6 @@ test("non_codex_sync_does_not_install_codex_hooks", async () => {
       "plan.md",
       ".agent/state/plan.yaml",
       ".agent/state/lifecycle.yaml",
-      ".agent/skills/design-resource-authoring/SKILL.md",
       ".agent/skills/source-plan-authoring/SKILL.md",
       ".agent/skills/prepare-composite-long-task/SKILL.md",
       ".agent/skills/composite-long-task-workflow/SKILL.md",
@@ -355,7 +355,7 @@ test("long_task_disable_removes_only_owned_hooks_and_Skills", async () => {
           "SKILL.md",
         ),
       ),
-      false,
+      true,
     );
   });
 });
@@ -478,6 +478,9 @@ test("CLI init keeps portable defaults and explicit enable activates long-task",
     assert.equal(enable.status, 0, `${enable.stdout}\n${enable.stderr}`);
     assert.match(enable.stdout, /enabled profile long-task/);
     await stat(path.join(root, ".codex/hooks.json"));
+    await stat(
+      path.join(root, ".codex/skills/design-resource-authoring/SKILL.md"),
+    );
     await stat(path.join(root, ".codex/skills/long-task-workflow/SKILL.md"));
     await stat(path.join(root, ".codex/skills/source-plan-authoring/SKILL.md"));
 

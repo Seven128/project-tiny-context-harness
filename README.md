@@ -77,7 +77,7 @@ It does not launch or switch models, spawn agents, create branches or worktrees,
 2. **Workflow Contract** — Context-first default engineering behavior using the platform's internal plan; no required plan artifact.
 3. **Long-Task Workflow** — explicit Single-Goal Rolling Delivery with `long-task-delivery-v2`, compiled Claim Coverage and a verifier-owned Live Final Gate.
 
-The opt-in long-task profile also provides `/source-plan-authoring`, an upstream Source-quality helper rather than another authority layer.
+The base managed set also provides `/design-resource-authoring`, an explicitly triggered thin commissioner for task-local Open Design resources rather than a generation engine or authority layer. The opt-in long-task profile additionally provides `/source-plan-authoring`, an upstream Source-quality helper.
 
 Default profiles are `core-portable` and `workflow-default`. Enable the opt-in profile with:
 
@@ -85,7 +85,7 @@ Default profiles are `core-portable` and `workflow-default`. Enable the opt-in p
 ty-context enable long-task
 ```
 
-This installs `/source-plan-authoring`, `/long-task-workflow` and the completion Hook. It does not install an agent runtime, model worker, scheduler, Git orchestration assets or a design-generation system.
+This additionally installs `/source-plan-authoring`, `/long-task-workflow` and the completion Hook. `/design-resource-authoring` is already in the base managed set. Tiny Context does not install Open Design, an agent runtime, model worker, scheduler, Git orchestration assets or another design-generation runtime.
 
 ## Try It In 60 Seconds
 
@@ -137,7 +137,7 @@ The smoke packs the local workspace, installs it into a disposable repo and vali
 
 ```sh
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.5.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.6.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -214,7 +214,7 @@ For material UI, **UI Authority Closure** reconciles each stable surface/control
 
 ### Visual Delivery Guidance
 
-The default Workflow now performs UI Authority Closure and a conditional Design Authority Check before material production UI: new/redesigned screens, primary layout/navigation/theme/component-system work, high-fidelity implementation and substantial visual polish. It reads the owning Surface/Screen/Control Context, `DESIGN.md`, one authored exact token source/generation direction and selected design references. Each reference is `exact-target`, `constraint` or `inspiration`; an unconfigured starter, candidate, style-only prose or inspiration does not authorize invented production layout. A configured project visual system is not a claim that every page is implementation-ready. Standalone resource generation stays with dedicated external Product Design/Figma/prototype systems; downstream durable adoption/repair routes through `context_uiux_design`. Ordinary implementation with sufficient authority, local style fixes and throwaway prototypes remain lightweight.
+The default Workflow now performs UI Authority Closure and a conditional Design Authority Check before material production UI: new/redesigned screens, primary layout/navigation/theme/component-system work, high-fidelity implementation and substantial visual polish. It reads the owning Surface/Screen/Control Context, `DESIGN.md`, one authored exact token source/generation direction and selected design references. Each reference is `exact-target`, `constraint` or `inspiration`; an unconfigured starter, candidate, style-only prose or inspiration does not authorize invented production layout. A configured project visual system is not a claim that every page is implementation-ready. Explicit standalone resource generation routes to `/design-resource-authoring`, which commissions external Open Design capabilities without adopting authority; downstream durable adoption/repair routes through `context_uiux_design`. Ordinary implementation with sufficient authority, local style fixes and throwaway prototypes remain lightweight.
 
 For material work, `context_uiux_design` keeps a task-local risk-proportional Visual Coverage Set across production surfaces/components, viewports, themes/modes, states, content stress and accessibility/motion conditions. Durable surface/interaction facts remain in `project_context/**`; durable visual semantics and the design-reference registry remain in `DESIGN.md`; versioned targets stay at project-native paths. `context_development_engineer` binds that intent to production routes and reports only combinations actually rendered and checked. An implementation screenshot cannot become its own target.
 
@@ -224,11 +224,17 @@ Combined design-and-implementation work may author candidates in ordinary Outcom
 
 `ty-context doctor` keeps its compatible `missing | unconfigured | configured` project-level status and adds advisory Design Authority Index, token-source and classified-reference signals. It explicitly does not infer surface implementation readiness; that requires the owning Screen/Control meaning, selected target/constraints and project-owned verification.
 
-### External Design Resources
+### Optional Design Resource Authoring
 
-Use dedicated Product Design, Figma, image-generation, prototype or human design systems to create standalone flows, wireframes, visual candidates, high-fidelity targets, tokens, assets and prototypes. Tiny Context does not duplicate those mature generation workflows or require a proprietary plugin, pack schema, fixed directory or artifact count.
+Use `/design-resource-authoring` only when explicitly asking to generate, iterate or prepare standalone design resources, or to use Open Design. Inputs may be raw notes or an initial proposal, product/technical plans, a specialized visual brief, screenshots, existing resources or an optional Source Plan. Source Plan authoring is not a prerequisite: both Skills can consume raw inputs independently and neither invokes the other.
 
-Their outputs enter the default Workflow or Long-Task as ordinary external Source. Candidates and inspiration authorize no fidelity. A selected exact target controls only its declared surface/viewport/mode/state/content conditions and needs a stable immutable identity before it can become an acceptance-affecting `verification_input`. `context_uiux_design` performs downstream UI Authority Closure and adopts only durable facts into Context/`DESIGN.md`; implementation renders and diffs remain evidence artifacts rather than self-authorizing targets.
+The Skill fixes the requested output as a hard scope ceiling, discovers current Open Design agents/models, functional skills, rendering templates, design systems, plugins and export routes, then gives every considered resource a reasoned `selected`, `optional`, `not-needed`, `unavailable` or `decision-required` disposition. It commissions only the smallest sufficient set through structured MCP, with bounded CLI/daemon and UI fallback. A prototype, low/high-fidelity pair, component board, Figma handoff, variant count or directory is never universally required, and Tiny Context never copies Open Design prompts/templates or vendors a provider catalogue.
+
+Exploration returns the requested visible candidate after minimal sanity review. Handoff adds project/run/capability provenance, explicit entry, declared coverage and known limitations. Selected-source preparation requires a real human selection basis and immutable hash or approved snapshot, but still creates no Design Authority. Candidate iterations stay task-local; the Skill may return one final consolidated accepted/rejected/unresolved delta for a separately owned proposal revision, but never edits the proposal, `project_context/**`, `DESIGN.md`, production code or a Delivery Contract.
+
+The actual generation remains with configured Open Design/Product Design, Figma, image-generation, prototype or human systems. Their outputs enter the default Workflow or Long-Task as ordinary external Source. Candidates and inspiration authorize no fidelity. A selected exact target controls only its declared surface/viewport/mode/state/content conditions and needs stable immutable identity before it can affect a `verification_input`. `context_uiux_design` performs downstream UI Authority Closure and adopts only durable facts into Context/`DESIGN.md`; implementation renders and diffs remain evidence artifacts rather than self-authorizing targets.
+
+Maintainers may set `TY_CONTEXT_OPEN_DESIGN_MCP_COMMAND` plus optional `TY_CONTEXT_OPEN_DESIGN_MCP_ARGS_JSON` and run `npm run smoke:open-design` for an opt-in, read-only discovery smoke. Normal tests use a local mock MCP and never require Open Design, login, paid access or nondeterministic design output.
 
 ### Optional Source Plan Authoring
 
@@ -510,7 +516,7 @@ make validate-harness
 
 The modularity gate is `ty-context check-modularity`. Scoped waivers require `owner`, `introduced_at`, `reason`, `tracking_issue` and `expiry_condition`.
 
-`npm run preview:pack` produces a local preview named `project-tiny-context-harness-0.7.5.tgz` under the preview output directory.
+`npm run preview:pack` produces a local preview named `project-tiny-context-harness-0.7.6.tgz` under the preview output directory.
 
 ## Community And Further Reading
 

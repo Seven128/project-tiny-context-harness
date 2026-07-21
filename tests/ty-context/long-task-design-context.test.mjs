@@ -267,7 +267,7 @@ test("Source Plan and Contract Draft authoring responsibilities stay separate", 
   );
   assert.match(
     sourcePlan,
-    /dedicated external Product Design capability[\s\S]*neither invokes that capability nor generates design resources/iu,
+    /`design-resource-authoring` may consume the same raw inputs independently[\s\S]*Neither Skill invokes the other[\s\S]*does not generate or select those resources/iu,
   );
   assert.match(
     spec,
@@ -303,7 +303,7 @@ test("Source Plan and Contract Draft authoring responsibilities stay separate", 
   assert.match(publicReadmes, /Source Plan is Source, not a Contract Draft/iu);
   assert.match(
     publicReadmes,
-    /External Design Resources[\s\S]*Candidates and inspiration authorize no fidelity[\s\S]*stable immutable identity/iu,
+    /Optional Design Resource Authoring[\s\S]*Candidates and inspiration authorize no fidelity[\s\S]*stable immutable identity/iu,
   );
   assert.match(
     publicReadmes,
@@ -460,7 +460,9 @@ test("blocker revisions use causal evidence without adding completion state", as
     read(
       ".codex/ty-context-managed/skills/long-task-workflow/references/evidence-design.md",
     ),
-    read("project_context/areas/harness-package/contracts/workflow-contract.md"),
+    read(
+      "project_context/areas/harness-package/contracts/workflow-contract.md",
+    ),
     read(
       "project_context/areas/harness-package/decision-rationale/long-task-workflow.md",
     ),

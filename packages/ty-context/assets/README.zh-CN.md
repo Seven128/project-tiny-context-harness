@@ -38,13 +38,13 @@ npx --yes project-tiny-context-harness ty-context sync
 
 `upgrade` 先执行安全迁移再同步；资产刷新不会推断或覆盖用户编写的 Context、Source、Delivery Contract 或历史文件。
 
-默认 Profile 是 `core-portable` 与 `workflow-default`。显式启用长程能力：
+默认 Profile 是 `core-portable` 与 `workflow-default`，基础 managed set 已包含 `/design-resource-authoring`。显式启用长程能力：
 
 ```powershell
 ty-context enable long-task
 ```
 
-启用长程能力会安装 `/source-plan-authoring`、`/long-task-workflow` 与完成 Hook。它不安装模型 Worker、Agent runtime、调度器、Git 编排资产或设计生成系统。
+启用长程能力会额外安装 `/source-plan-authoring`、`/long-task-workflow` 与完成 Hook；`ty-context disable long-task` 只移除这些 Long-Task-owned surfaces，并保留基础 `/design-resource-authoring`。Tiny Context 不安装 Open Design、模型 Worker、Agent runtime、调度器、Git 编排资产或其他设计生成 runtime。
 
 ## Minimal Context 与默认工作流
 
@@ -111,7 +111,7 @@ material UI 在实现前执行 **UI Authority Closure**：每个稳定 surface/c
 
 ### 视觉交付指导
 
-默认 Workflow 现在会在 material production UI 前执行 UI Authority Closure 和条件式 Design Authority Check，包括新建/重做页面、主要布局/导航/主题/组件体系、高保真实现和大幅 visual polish。它读取 owning Surface/Screen/Control Context、`DESIGN.md`、唯一 authored token source/generation direction 和选定设计引用。引用分为 `exact-target`、`constraint`、`inspiration`；未配置 starter、候选稿、只有风格文字或灵感图都不能授权 agent 自行发明生产布局；全局视觉系统 configured 也不等于每个页面 implementation-ready。独立设计资源生成由外部专用 Product Design、Figma 或原型系统负责；进入开发流程后的耐久权威采纳/修复路由到 `context_uiux_design`。已有充分权威的普通实现、局部样式修复和 throwaway prototype 仍保持轻量。
+默认 Workflow 现在会在 material production UI 前执行 UI Authority Closure 和条件式 Design Authority Check，包括新建/重做页面、主要布局/导航/主题/组件体系、高保真实现和大幅 visual polish。它读取 owning Surface/Screen/Control Context、`DESIGN.md`、唯一 authored token source/generation direction 和选定设计引用。引用分为 `exact-target`、`constraint`、`inspiration`；未配置 starter、候选稿、只有风格文字或灵感图都不能授权 agent 自行发明生产布局；全局视觉系统 configured 也不等于每个页面 implementation-ready。明确的独立设计资源生成请求路由到 `/design-resource-authoring`，由它委托外部 Open Design 能力但不采纳权威；进入开发流程后的耐久权威采纳/修复路由到 `context_uiux_design`。已有充分权威的普通实现、局部样式修复和 throwaway prototype 仍保持轻量。
 
 对 material 工作，`context_uiux_design` 在任务内部维护风险比例化的 Visual Coverage Set；耐久 surface/interaction 事实属于 `project_context/**`，耐久视觉语义和设计引用 registry 属于 `DESIGN.md`，versioned target 保留在项目原生路径。`context_development_engineer` 把这些意图绑定到生产组件/真实 route，只报告真正渲染和检查过的组合；实现截图不能成为它自己的目标。
 
@@ -121,11 +121,17 @@ combined design-and-implementation 可以先用普通 Outcome/Stage 生成候选
 
 `ty-context doctor` 保留兼容的项目级 `missing | unconfigured | configured` 状态，并增加 Design Authority Index、token source 和已分类 reference 的 advisory 信号。它明确不推断页面实现就绪；material surface 仍需 owning Screen/Control meaning、selected target/constraints 与项目自己的验证路径。
 
-### 外部设计资源
+### 可选 Design Resource Authoring
 
-独立 flow、线框图、视觉候选、高保真目标、token、素材与原型由专用 Product Design、Figma、图片生成、原型工具或人工设计流程生成。Tiny Context 不复制这些成熟能力，也不要求专有插件、统一 pack schema、固定目录或固定产物数量。
+只有在用户明确要求生成、迭代、准备独立设计资源或使用 Open Design 时，才使用 `/design-resource-authoring`。输入可以是零散笔记或初版方案、产品/技术方案、专门视觉 brief、截图、已有资源或可选 Source Plan。Source Plan 不是前置项：两个 Skill 都可以独立读取原始输入，互不调用。
 
-这些输出以普通 external Source 进入默认 Workflow 或 Long-Task。candidate 与 inspiration 不授权 fidelity；selected exact target 只控制其声明的 surface/viewport/mode/state/content 条件，并且需要稳定不可变身份后才能成为影响验收的 `verification_input`。`context_uiux_design` 在下游执行 UI Authority Closure，只把耐久事实采纳到 Context/`DESIGN.md`；实现截图与 diff 仍是证据 artifact，不能自我授权为目标。
+Skill 先把明确输出当作硬 scope ceiling，再实时发现 Open Design 当前 agent/model、functional skill、rendering template、design system、plugin 与 export route，并把每种候选资源说明为 `selected`、`optional`、`not-needed`、`unavailable` 或 `decision-required`。它只通过结构化 MCP（必要时有限使用 CLI/daemon/UI fallback）委托最小充分资源集；原型、低/高保真组合、组件板、Figma handoff、变体数量和目录都不是全局必选项。Tiny Context 不复制 Open Design 的 prompt/template，也不内置 provider catalogue。
+
+探索模式只做最小完整性检查并尽快展示指定候选；handoff 增加 project/run/capability provenance、明确 entry、声明覆盖与已知限制；selected-source preparation 要求真实人工选择依据和不可变 hash 或已批准 snapshot，但仍不产生 Design Authority。候选迭代保持任务内；Skill 可以在方向最终确定后返回一份合并的 accepted/rejected/unresolved 差异供独立方案步骤处理，但不会修改初版方案、`project_context/**`、`DESIGN.md`、生产代码或 Delivery Contract。
+
+实际生成仍由已配置的 Open Design/Product Design、Figma、图片生成、原型工具或人工设计流程负责。这些输出以普通 external Source 进入默认 Workflow 或 Long-Task。candidate 与 inspiration 不授权 fidelity；selected exact target 只控制其声明的 surface/viewport/mode/state/content 条件，并且需要稳定不可变身份后才能成为影响验收的 `verification_input`。`context_uiux_design` 在下游执行 UI Authority Closure，只把耐久事实采纳到 Context/`DESIGN.md`；实现截图与 diff 仍是证据 artifact，不能自我授权为目标。
+
+维护者可以设置 `TY_CONTEXT_OPEN_DESIGN_MCP_COMMAND` 与可选 `TY_CONTEXT_OPEN_DESIGN_MCP_ARGS_JSON`，运行 `npm run smoke:open-design` 做显式启用、只读的 discovery smoke。正常测试使用本地 mock MCP，不依赖 Open Design、登录、付费能力或不确定的设计输出。
 
 ### 可选 Source Plan Authoring
 

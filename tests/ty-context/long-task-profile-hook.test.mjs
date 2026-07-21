@@ -51,17 +51,20 @@ test("enable/disable owns one package-owned Hook per event and preserves user Ho
       await pathExists(
         path.join(
           fixture.root,
-          ".codex/skills/long-task-workflow/SKILL.md",
+          ".codex/skills/design-resource-authoring/SKILL.md",
         ),
       ),
       true,
     );
     assert.equal(
       await pathExists(
-        path.join(
-          fixture.root,
-          ".codex/skills/source-plan-authoring/SKILL.md",
-        ),
+        path.join(fixture.root, ".codex/skills/long-task-workflow/SKILL.md"),
+      ),
+      true,
+    );
+    assert.equal(
+      await pathExists(
+        path.join(fixture.root, ".codex/skills/source-plan-authoring/SKILL.md"),
       ),
       true,
     );
@@ -104,6 +107,15 @@ test("enable/disable owns one package-owned Hook per event and preserves user Ho
     assert.equal(
       await pathExists(
         path.join(fixture.root, ".codex/skills/user-local/SKILL.md"),
+      ),
+      true,
+    );
+    assert.equal(
+      await pathExists(
+        path.join(
+          fixture.root,
+          ".codex/skills/design-resource-authoring/SKILL.md",
+        ),
       ),
       true,
     );
@@ -157,16 +169,13 @@ test("Hook relocation removes only known package-owned absolute commands", () =>
       {
         matcher: "mixed",
         hooks: [
-          ...[
-            oldNodeModules,
-            oldPnpm,
-            oldWorkspace,
-            currentCommand,
-          ].map((command) => ({
-            type: "command",
-            command,
-            statusMessage: "Tiny Context long-task live authority gate",
-          })),
+          ...[oldNodeModules, oldPnpm, oldWorkspace, currentCommand].map(
+            (command) => ({
+              type: "command",
+              command,
+              statusMessage: "Tiny Context long-task live authority gate",
+            }),
+          ),
           {
             type: "command",
             command: userCustom,
@@ -185,11 +194,7 @@ test("Hook relocation removes only known package-owned absolute commands", () =>
   );
   assert.equal(cleaned.removed, 4);
   const retained = cleaned.groups[0].hooks.map((entry) => entry.command);
-  assert.deepEqual(retained, [
-    userCustom,
-    noStatusPackage,
-    compositeUser,
-  ]);
+  assert.deepEqual(retained, [userCustom, noStatusPackage, compositeUser]);
 });
 
 test("package-owned Hook resumes from common-dir and Stop runs the Live Gate", async () => {
@@ -201,13 +206,19 @@ test("package-owned Hook resumes from common-dir and Stop runs the Live Gate", a
     await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
     const record = await activeRecordPath(fixture.root);
     assert.equal(await pathExists(record), true);
-    assert.match(record.replace(/\\/gu, "/"), /\.git\/ty-context\/long-task\/worktrees\//u);
+    assert.match(
+      record.replace(/\\/gu, "/"),
+      /\.git\/ty-context\/long-task\/worktrees\//u,
+    );
     const session = await invokeHook(fixture.root, "SessionStart");
     assert.match(
       session.hookSpecificOutput.additionalContext,
       /Active Single-Goal Long-Task Workflow V2/,
     );
-    assert.match(session.hookSpecificOutput.additionalContext, /long-task resume/);
+    assert.match(
+      session.hookSpecificOutput.additionalContext,
+      /long-task resume/,
+    );
     const blocked = await invokeHook(fixture.root, "Stop");
     assert.equal(blocked.decision, "block");
 
@@ -227,13 +238,25 @@ test("Stop Hook preserves external pending as a non-blocking system message", as
   const fixture = await createDeliveryFixture({ externalConfirmation: true });
   try {
     await runCli(fixture.root, ["enable", "long-task"]);
+    assert.equal(
+      await pathExists(
+        path.join(
+          fixture.root,
+          ".codex/skills/design-resource-authoring/SKILL.md",
+        ),
+      ),
+      true,
+    );
     await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
     await commitCandidate(fixture.root);
     const record = await activeRecordPath(fixture.root);
     const result = await invokeHook(fixture.root, "Stop");
     assert.equal(Object.hasOwn(result, "decision"), false);
     assert.match(result.systemMessage, /fixture-external/iu);
-    assert.match(result.systemMessage, /complete external delivery remains pending/iu);
+    assert.match(
+      result.systemMessage,
+      /complete external delivery remains pending/iu,
+    );
     assert.match(result.systemMessage, /platform-native Goal/iu);
     assert.equal(await pathExists(record), false);
   } finally {
@@ -266,7 +289,10 @@ test("upgrade still preserves historical Campaign files", async () => {
     await runCli(fixture.root, ["enable", "long-task"]);
     const configFile = path.join(fixture.root, ".codex/config.yaml");
     const raw = await readFile(configFile, "utf8");
-    await writeFile(configFile, raw.replace(/- long-task/u, "- composite-codex"));
+    await writeFile(
+      configFile,
+      raw.replace(/- long-task/u, "- composite-codex"),
+    );
     const hooksFile = path.join(fixture.root, ".codex/hooks.json");
     const hooks = JSON.parse(await readFile(hooksFile, "utf8"));
     hooks.hooks.Stop[0].hooks.push(

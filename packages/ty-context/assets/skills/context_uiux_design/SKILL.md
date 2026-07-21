@@ -1,6 +1,6 @@
 ---
 name: context_uiux_design
-description: Use when the user explicitly asks to establish, adopt or repair durable UI/UX Design Authority, DESIGN.md, design-system governance, visual standards, stable interaction/surface Context, Impeccable review, visual polish, frontend redesign, or when material production UI lacks sufficient or consistent Design Authority in a Minimal Context Harness project. For standalone generation of low/high-fidelity wireframes, visual candidates, a design prototype or Figma handoff, use an available dedicated Product Design capability instead; do not trigger this Skill solely for resource generation, routine implementation with sufficient authority, local CSS fixes, UI bugs, explicit throwaway prototypes or generic mentions of design.
+description: Use when the user explicitly asks to establish, adopt or repair durable UI/UX Design Authority, DESIGN.md, design-system governance, visual standards, stable interaction/surface Context, Impeccable review, visual polish, frontend redesign, or when material production UI lacks sufficient or consistent Design Authority in a Minimal Context Harness project. For standalone generation of low/high-fidelity wireframes, visual candidates, a design prototype or Figma handoff, use design-resource-authoring instead; do not trigger this Skill solely for resource generation, routine implementation with sufficient authority, local CSS fixes, UI bugs, explicit throwaway prototypes or generic mentions of design.
 ---
 
 # Context UIUX Design
@@ -23,8 +23,8 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
 
 ## External Design Resource Consumption / 外部设计资源消费
 
-- Product Design、Figma、图像生成、原型工具或人工设计流程可以在上游产生 flow、低保真、候选方向、已选高保真、token/component/asset 与交互原型；Tiny Context 不复制这些工具的生成流程。
-- 本 Skill 不承担独立资源生产。只有进入默认开发流程或 Long-Task、需要采纳稳定结论时，本 Skill 才消费外部设计 Source。
+- `design-resource-authoring` 可以按明确请求在上游动态委托 Open Design 产生 flow、低保真、候选方向、控件状态、交互原型或条件式 Figma handoff；它不复制 provider 的提示词/模板，也不把任何资源设为全局必选。
+- 本 Skill 不承担独立资源生产。只有进入默认开发流程或 Long-Task、需要采纳稳定结论时，本 Skill 才消费这些或其他外部设计 Source。
 - 候选、灵感和未选定输出不是 Context readiness 或实现权威，不能写入 selected registry；选定目标仍必须完成 UI Authority Closure 和 `Context Delta`。
 - 消费时核对产品 Source、Screen/Control Context、`DESIGN.md`、token owner、资源稳定身份及 exact-target 覆盖条件；只把长期稳定且无冲突的事实写入其唯一 owner，不要求统一 pack、目录或工具格式。
 - 设计资源生成本身不改 `project_context/**`、`DESIGN.md` 或 production code。下游采纳、实现与验证仍由当前 Workflow Contract 或 `long-task-workflow` 负责。
@@ -33,7 +33,7 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
 
 1. 先读取 `project_context/global.md` 和 `project_context/context.toml`，按 default area、triggers、read_when 选择相关 context。
 2. 如果项目存在 `DESIGN.md`，先读取其 Design Authority 状态、唯一 token 源/生成方向和设计引用。仅当当前开发工作流经 UI Authority Closure 判断长期视觉体系需要采纳或修复时，按 Google `@google/design.md` 的格式创建或更新根目录 `DESIGN.md`；独立资源生成阶段不写入。
-3. 读取已有外部设计资源或其他 selected Source，整理需要采纳的用户流程、页面/组件清单、关键状态、交互反馈、响应式边界、a11y、视觉约束、token 和 design reference registry。若当前请求只是生成资源，转到可用的专用 Product Design 能力；不要在本 Skill 内复制其生成流程或建立强制交付格式。
+3. 读取已有外部设计资源或其他 selected Source，整理需要采纳的用户流程、页面/组件清单、关键状态、交互反馈、响应式边界、a11y、视觉约束、token 和 design reference registry。若当前请求只是生成资源，转到 `design-resource-authoring`；不要在本 Skill 内复制 provider 生成流程或建立强制交付格式。
 4. 涉及 Product Surface（Web 页面、移动/桌面屏幕、游戏 UI/HUD/菜单、CLI/TUI 输出、扩展或设备界面）、前端布局、UI/UX、产品模块边界或信息放置时，把产品/页面定位检查作为前置动作：用户在这个 surface 要完成的判断、产品必须提供的信息/动作/反馈、不应常驻的信息、主层/下钻/运维/诊断/详情归属、布局和信息密度是否匹配任务。多 surface、多平台或多模块归属不清时，先读取相关 Context、搜索入口并结合已有 UI 代码/截图做信息架构 sweep，必要时使用 `context_surface_contract` 做 Surface Contract Check，再收窄到具体视觉或交互实现。该检查是下一步变更分类的输入；只有形成长期 surface 职责、信息架构、交互契约或模块边界结论时才更新 Context 或 `DESIGN.md`。
    - 若存在 Product Surface Contract，读取并对齐 primary user question、main allows/forbids、drilldown ownership、long-task state 和 verification。
    - 若缺失且本任务改变 durable surface responsibility，将唯一 `Context Delta` 设为 `required`，把界面职责写入 `project_context/**`；视觉 token、颜色、字体、间距、圆角和视觉 rationale 仍写入 `DESIGN.md`。
@@ -106,7 +106,7 @@ Configured is system-level visual authority only, not surface implementation-rea
 - Read the owning surface/interaction Context, `DESIGN.md`, the authored exact-value token source and generation direction, existing production components/routes and every material design reference.
 - Classify each reference as `exact-target`, `constraint` or `inspiration`. Record the affected surface/route/component, project path or URI and relevant viewport/theme/mode/state. Exact targets authorize fidelity comparison only for those conditions; constraints authorize only their named rule; inspiration proves no reproduction claim.
 - Treat a missing `DESIGN.md`, its package starter with Design authority status: `unconfigured`, style-only prose, an inspiration-only set or conflicting references as insufficient authority for invented production layout.
-- If the user explicitly delegates standalone design-resource generation, use an available dedicated Product Design capability to author candidate or selected upstream Source. In this downstream Skill, adopt a selected target into durable Context/`DESIGN.md` only after UI Authority Closure. Ask only when an unknown material preference could change the result or the user reserves the choice.
+- If the user explicitly delegates standalone design-resource generation, use `design-resource-authoring` to commission the smallest sufficient set from available Product Design/Open Design capabilities. In this downstream Skill, adopt a selected target into durable Context/`DESIGN.md` only after UI Authority Closure. Ask only when an unknown material preference could change the result or the user reserves the choice.
 - Never use the implementation's own generated screenshot or diff as the target it claims to match. A target is selected Source; an implementation render is evidence. Baseline replacement requires deliberate review and cannot merely erase a failure.
 - Do not require Figma, a fixed `docs/design/**` tree, an image for every local change or universal pixel-perfect thresholds. Use project-native design assets and the smallest authority sufficient for the claimed fidelity.
 
@@ -125,9 +125,9 @@ For material design-system, redesign, high-fidelity implementation or visual-pol
 
 - 不默认创建 `.work_products/**`、UI/UX 独立文档、handoff matrix、review/test/release 文档。
 - 不要求 lifecycle phase、plan task、phase gate 或阶段 Skill。
-- 如果用户明确要求独立设计稿、mock、线框图、原型或 Figma handoff，使用可用的专用 Product Design 能力；本 Skill 只在后续开发流程中采纳长期事实。
+- 如果用户明确要求独立设计稿、mock、线框图、原型或 Figma handoff，使用 `design-resource-authoring`；本 Skill 只在后续开发流程中采纳长期事实。
 - `DESIGN.md` 是视觉设计系统事实源；项目流程、模块契约和下一步动作仍以 `project_context/**` 为准。
-- 如果普通页面实现已经有充分 Design Authority，或用户只要求修复 UI bug、局部改 CSS、换颜色、明确的 throwaway prototype，或只是泛泛提到“设计 / design / user experience”，不需要触发本 Skill；durable 视觉体系/Context 采纳，或 material production UI 缺失/冲突的 Design Authority 才使用。明确要求设计资源产物但尚未进入采纳/实现流程时使用专用 Product Design 能力。
+- 如果普通页面实现已经有充分 Design Authority，或用户只要求修复 UI bug、局部改 CSS、换颜色、明确的 throwaway prototype，或只是泛泛提到“设计 / design / user experience”，不需要触发本 Skill；durable 视觉体系/Context 采纳，或 material production UI 缺失/冲突的 Design Authority 才使用。明确要求设计资源产物但尚未进入采纳/实现流程时使用 `design-resource-authoring`。
 
 ## DESIGN.md 使用规则
 

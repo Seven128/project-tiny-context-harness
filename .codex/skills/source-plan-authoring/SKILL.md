@@ -31,7 +31,7 @@ Record every product, technical and acceptance meaning that later work must not 
 - It does not replace Contract Draft authoring inside `long-task-workflow`.
 - Its recommended structure is optional input guidance.
 - Use `context_product_plan` separately when a Tiny Context project needs product decisions classified and written as durable facts in `project_context/**`. This Skill does not replace or invoke that responsibility.
-- A dedicated external Product Design capability may consume the Source Plan to create low/high-fidelity targets, visual candidates, a Figma handoff or an isolated interaction prototype. This Skill neither invokes that capability nor generates design resources.
+- `design-resource-authoring` may consume the same raw inputs independently or consume an existing Source Plan to commission low/high-fidelity targets, visual candidates, a conditional Figma handoff or an isolated interaction prototype. Neither Skill invokes the other. When explicitly requested after design selection, this Skill may instead consume both a separately revised initial proposal and selected immutable design resources as ordinary inputs; it still does not generate or select those resources.
 - Use `long-task-workflow` later to read ordinary Source or a Source Plan with real Context/repository evidence, author one Delivery Contract, bind owners/paths/runners/proof, implement and run the Live Final Gate.
 
 ## Intake Modes And Source Coverage

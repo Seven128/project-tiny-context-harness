@@ -2,13 +2,7 @@
 
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import {
-  mkdtemp,
-  readFile,
-  readdir,
-  rm,
-  writeFile,
-} from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { writeReleaseTarballLongTaskFixture } from "./release_tarball_smoke_fixture.mjs";
@@ -122,6 +116,10 @@ async function assertTarballContents(directory) {
     "dist/lib/long-task-claims.js",
     "dist/long-task-hook.js",
     "dist/lib/migrations.js",
+    "assets/skills/design-resource-authoring/SKILL.md",
+    "assets/skills/design-resource-authoring/references/resource-selection.md",
+    "assets/skills/design-resource-authoring/references/open-design-provider.md",
+    "assets/skills/design-resource-authoring/references/downstream-handoff.md",
     "assets/skills/source-plan-authoring/SKILL.md",
     "assets/skills/long-task-workflow/SKILL.md",
   ]) {

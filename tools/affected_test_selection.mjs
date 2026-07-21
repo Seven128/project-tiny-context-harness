@@ -18,14 +18,16 @@ export {
 const HOTSPOT_TESTS = new Map([
   [
     "packages/ty-context/src/lib/design-md.ts",
-    [
-      "sync-init-doctor.test.mjs",
-      "visual-delivery-guidance.test.mjs",
-    ],
+    ["sync-init-doctor.test.mjs", "visual-delivery-guidance.test.mjs"],
   ],
+  ["packages/ty-context/src/lib/doctor.ts", ["sync-init-doctor.test.mjs"]],
   [
-    "packages/ty-context/src/lib/doctor.ts",
-    ["sync-init-doctor.test.mjs"],
+    "packages/ty-context/src/lib/profiles.ts",
+    [
+      "design-resource-authoring-skill.test.mjs",
+      "sync-init-doctor.test.mjs",
+      "long-task-profile-hook.test.mjs",
+    ],
   ],
   [
     "packages/ty-context/src/lib/long-task-contract-types.ts",
@@ -389,6 +391,7 @@ export function selectAffectedTests(changedPaths, options = {}) {
 
     if (file === "package.json") {
       tests.add(testPath("affected-test-selection.test.mjs"));
+      tests.add(testPath("design-resource-authoring-provider.test.mjs"));
       tests.add(testPath("workflow-test-entrypoints.test.mjs"));
       reasons.push(`${file}:root_entrypoints`);
       continue;
@@ -426,6 +429,9 @@ export function selectAffectedTests(changedPaths, options = {}) {
       file.startsWith(".codex/") ||
       file.startsWith("packages/ty-context/assets/")
     ) {
+      tests.add(testPath("design-resource-authoring-skill.test.mjs"));
+      if (file.includes("design-resource-authoring"))
+        tests.add(testPath("design-resource-authoring-provider.test.mjs"));
       tests.add(testPath("long-task-design-context.test.mjs"));
       tests.add(testPath("long-task-efficiency-design.test.mjs"));
       tests.add(testPath("package-source.test.mjs"));
@@ -436,6 +442,7 @@ export function selectAffectedTests(changedPaths, options = {}) {
     }
 
     if (file.startsWith("project_context/")) {
+      tests.add(testPath("design-resource-authoring-skill.test.mjs"));
       tests.add(testPath("long-task-design-context.test.mjs"));
       tests.add(testPath("long-task-efficiency-design.test.mjs"));
       tests.add(testPath("visual-delivery-guidance.test.mjs"));
@@ -449,6 +456,7 @@ export function selectAffectedTests(changedPaths, options = {}) {
       file === "packages/ty-context/README.md" ||
       /^README(?:\.zh-CN)?\.md$/u.test(file)
     ) {
+      tests.add(testPath("design-resource-authoring-skill.test.mjs"));
       tests.add(testPath("long-task-design-context.test.mjs"));
       tests.add(testPath("long-task-efficiency-design.test.mjs"));
       tests.add(testPath("package-source.test.mjs"));
@@ -466,7 +474,15 @@ export function selectAffectedTests(changedPaths, options = {}) {
       continue;
     }
 
+    if (file === "tools/open_design_live_smoke.mjs") {
+      tests.add(testPath("design-resource-authoring-provider.test.mjs"));
+      reasons.push(`${file}:open_design_smoke`);
+      continue;
+    }
+
     if (file.endsWith(".md") || file.startsWith("docs/")) {
+      if (file === "docs/design-resource-authoring-source-plan.md")
+        tests.add(testPath("design-resource-authoring-skill.test.mjs"));
       tests.add(testPath("long-task-design-context.test.mjs"));
       tests.add(testPath("long-task-efficiency-design.test.mjs"));
       reasons.push(`${file}:documentation`);

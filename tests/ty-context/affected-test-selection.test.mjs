@@ -37,9 +37,7 @@ test("Design Authority scaffold and advisory changes select focused coverage", (
     "tests/ty-context/visual-delivery-guidance.test.mjs",
   ]);
 
-  const doctor = selectAffectedTests([
-    "packages/ty-context/src/lib/doctor.ts",
-  ]);
+  const doctor = selectAffectedTests(["packages/ty-context/src/lib/doctor.ts"]);
   assert.equal(doctor.mode, "selected");
   assert.equal(doctor.requires_build, true);
   assert.deepEqual(doctor.tests, [
@@ -210,12 +208,47 @@ test("guidance-only changes select static consistency checks", () => {
   assert.equal(selection.mode, "selected");
   assert.equal(selection.requires_build, true);
   assert.deepEqual(selection.tests, [
+    "tests/ty-context/design-resource-authoring-skill.test.mjs",
     "tests/ty-context/long-task-design-context.test.mjs",
     "tests/ty-context/long-task-efficiency-design.test.mjs",
     "tests/ty-context/package-source.test.mjs",
     "tests/ty-context/visual-delivery-guidance.test.mjs",
     "tests/ty-context/workflow-contract-routing.test.mjs",
   ]);
+});
+
+test("design-resource authoring profile and provider changes select focused coverage", () => {
+  const profile = selectAffectedTests([
+    "packages/ty-context/src/lib/profiles.ts",
+  ]);
+  assert.equal(profile.mode, "selected");
+  assert.equal(profile.requires_build, true);
+  assert.deepEqual(profile.tests, [
+    "tests/ty-context/design-resource-authoring-skill.test.mjs",
+    "tests/ty-context/long-task-profile-hook.test.mjs",
+    "tests/ty-context/sync-init-doctor.test.mjs",
+  ]);
+
+  const provider = selectAffectedTests(["tools/open_design_live_smoke.mjs"]);
+  assert.equal(provider.mode, "selected");
+  assert.equal(provider.requires_build, false);
+  assert.deepEqual(provider.tests, [
+    "tests/ty-context/design-resource-authoring-provider.test.mjs",
+  ]);
+
+  const skill = selectAffectedTests([
+    ".codex/ty-context-managed/skills/design-resource-authoring/SKILL.md",
+  ]);
+  assert.ok(
+    skill.tests.includes(
+      "tests/ty-context/design-resource-authoring-provider.test.mjs",
+    ),
+  );
+  assert.ok(
+    skill.tests.includes(
+      "tests/ty-context/design-resource-authoring-skill.test.mjs",
+    ),
+  );
 });
 
 test("explicit scopes are deterministic and no-change auto mode stays useful", () => {
@@ -299,6 +332,10 @@ test("package scripts expose affected and focused developer loops", async () => 
   assert.equal(
     packageJson.scripts["test:delivery-contract:focused"],
     "node tools/run_affected_tests.mjs --scope delivery-contract",
+  );
+  assert.equal(
+    packageJson.scripts["smoke:open-design"],
+    "node tools/open_design_live_smoke.mjs",
   );
 });
 
