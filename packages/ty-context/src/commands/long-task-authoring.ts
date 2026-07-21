@@ -29,6 +29,17 @@ task:
   id: replace-me
   title: Replace me
   goal: Describe the complete observable delivery goal.
+  target_profile:
+    key: replace-target
+    description: The declared product target is usable from its root entrypoint.
+    required_state: target_profile_usable
+    required_target_refs: [replace-runtime]
+  execution_targets:
+    - key: replace-runtime
+      description: The product runtime used by the acceptance oracle.
+      role: product
+      runtime_family: process
+      root_entrypoint: tests/replace-oracle.mjs
   source_paths: [plans/replace-me.md]
   context_refs: [project_context/areas/replace-me.md]
 source_claims:
@@ -38,14 +49,22 @@ source_claims:
     disposition:
       type: claim
       refs: [replace-outcome.requirement.replace-requirement]
+stages:
+  - key: delivery
+    title: Delivery
+    depends_on: []
+    gate_outcome: replace-outcome
 risk:
   facts: {}
 global: {}
 outcomes:
   - key: replace-outcome
     title: Replace outcome
+    stage: delivery
     product:
       observable_result: Describe what a user or system can observe.
+      success_path_required: true
+      degradation_path_required: false
       owner:
         label: replace-owner
         context_refs: [project_context/areas/replace-me.md]
@@ -65,6 +84,11 @@ outcomes:
     acceptance:
       checks:
         - key: replace-check
+          journey_roles: [success, stage_gate]
+          execution_target: {target_ref: replace-runtime, entrypoint: root}
+          scenario:
+            given: [{key: source-ready, statement: The planned source carrier is available.}]
+            when: [{key: inspect-result, statement: Inspect the product result through the declared runtime.}]
           proof_surface: runtime_behavior
           runner:
             type: node_oracle
@@ -78,6 +102,7 @@ outcomes:
               criterion: The declared outcome and requirement are observable.
               claims: [result, requirement.replace-requirement]
               observation: result
+              evidence_capabilities: [state_delta, target_runtime]
               operator: equals
               expected: true
       counterfactual_controls:

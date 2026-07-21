@@ -262,9 +262,13 @@ Later revisions are classified into three paths. Formally monotonic evidence str
 
 The package-managed Long-Task Skill uses progressive disclosure: its main `SKILL.md` keeps the objective, boundaries and phase routing; one-level references are read only for Contract authoring, evidence design or authority lifecycle. This reduces routine instruction load without moving any rule into a second authority. When Source or controlling Context declares an architecture invariant, the Contract uses existing technical obligations/global constraints/forbidden shortcuts, owner/path/Binding boundaries and a project-owned executable Check. Functional acceptance cannot substitute when the architecture invariant can fail independently.
 
-A Draft Outcome is simply an Outcome before Authority Lock. Outcomes split independently observable, decidable and target-verifiable results so the current Goal can keep a smaller dependency-ready working set, target verification, localize failures, resume findings and invalidate stale local results. `depends_on` expresses acceptance readiness; the Rolling Frontier is temporary. An Outcome is not a Worker, scheduler task, queue or parallelism unit. Outcome decomposes execution and diagnosis, not completion authority: targeted passes never replace the one complete Final Gate on the current final snapshot.
+A Draft Outcome is simply an Outcome before Authority Lock. Outcomes split independently observable, decidable, vertical and target-verifiable results so the current Goal can keep a smaller dependency-ready working set, target verification, localize failures, resume findings and invalidate stale local results. `depends_on` expresses acceptance readiness. Every Outcome belongs to one ordered Stage; its Stage gate transitively depends on the other Outcomes in that Stage, and later Stages depend on earlier gates. The Rolling Frontier and Stage status are derived from ordinary Outcome Progress and are temporary. An Outcome is not a Worker, scheduler task, queue or parallelism unit, and a Stage owns no Receipt or second Gate. Outcome decomposes execution and diagnosis, not completion authority: targeted passes never replace the one complete Final Gate on the current final snapshot.
 
-When a declared result can pass on a proxy surface while failing in its target runtime, the earliest owning Outcome declares a project-owned Check that exercises the target during the current Check execution. A tracked report, screenshot, binary, log or historical run cannot be the sole runtime proof. After a blocker-driven semantic/proof revision, only affected weak-observability or high-risk behavioral Claims pay a causal review: evidence reaches the furthest independently failing declared boundary, and a Counterfactual disrupts the claimed capability when carrier presence alone can diverge. The Goal runs the live Check after the first runnable slice and, after coalescing related edits, before dependent work grows when declared `input_paths` or Binding carriers make Progress stale. This uses existing targeted verification and Final Gate semantics: it adds no product taxonomy, `platform_impact` flags, universal runtime suite or completion state, requires no full rebuild per Outcome/edit, never accepts early and is rerun by Final Gate.
+The Contract declares one bounded target profile, its non-empty required product target refs and each target's runtime family/root entrypoint. A Web/process proxy cannot satisfy an independently required Native/desktop target. Browser target proof uses Playwright; Native/desktop target proof uses a project binary. Every `critical_user_path` Outcome and Stage gate proves `target_runtime` from every required target's root entrypoint; a multi-Outcome Stage gate also proves at least two distinct surfaces share one runtime state.
+
+When a declared result can pass on a proxy surface while failing in its target runtime, the earliest owning Outcome declares a project-owned Check that exercises the target during the current Check execution. A tracked report, screenshot, binary, log or historical run cannot be the sole runtime proof. Checks declare keyed Given/When scenarios and journey roles; Assertions declare all-of Evidence Capabilities backed by typed current-execution records. Static `presence` cannot prove behavior, degradation cannot replace required success, fixed-input output cannot prove variation and a producer cannot self-attest its own boundary/external effect. After a blocker-driven semantic/proof revision, only affected weak-observability or high-risk behavioral Claims pay causal review. The Goal runs the live Check after the first runnable slice and, after coalescing related edits, before dependent work grows when declared inputs make Progress stale. This reuses targeted verification and Final Gate: it adds no open-ended `platform_impact` flags, per-platform progress state or alternate Gate, requires no full rebuild per Outcome/edit, never accepts early and is rerun by Final Gate.
+
+A separate read-only Global Product Conformance Check is required only for weak-observability work that also has multiple Stages or multiple required product runtime families. It starts at a required root product target, has independent Raw Execution and runs within the existing Final Gate. Single-Stage, single-family work retains the existing same-Check sensitivity path and pays no extra conformance run.
 
 The platform owns physical Goal/session lifecycle. A later session runs `resume` to reconstruct semantic state; Tiny Context does not recreate the prior physical Turn. Machine acceptance covers only `declared_machine_authority` and reports `native_goal_effect: none`. Before completing the platform-native Goal, the Agent performs a veto-only comparison of current Goal/user meaning against accepted marked Source and checks for pending revisions, unresolved blockers or omissions; this guard may block and repair, but it never supplies acceptance proof.
 
@@ -289,14 +293,14 @@ ty-context long-task abandon <workdir> [--force-corrupt-state]
 ```
 
 - `init` creates one Compact inline-Outcome Contract template.
-- `preflight` applies Compact defaults and reports all discoverable Source/REQ/CTRL/OBL/AC, Context, risk, path/binding, runner/input and proof diagnostics. Exact duplicate diagnostics are merged with `occurrences`; known problems may include stable `refs` and a safe `repair_hint` that never weakens authority or invents product semantics. It is read-only: no Authority Lock, marker, cache, progress, Receipt, pending revision, state lock or project Check.
+- `preflight` applies Compact defaults and reports all discoverable Source/REQ/CTRL/OBL/AC, Stage closure, required-target/root/runner, scenario/journey, capability, external-impact, Product Conformance, Context, risk, path/binding, runner/input and proof diagnostics. Exact duplicate diagnostics are merged with `occurrences`; known problems may include stable `refs` and a safe `repair_hint` that never weakens authority or invents product semantics. It is read-only: no Authority Lock, marker, cache, progress, Receipt, pending revision, state lock or project Check.
 - `compile` generates Global plus Outcome Result/Requirement/Control-field/Non-completing/Technical Claims, rejects uncovered Claims, preserves an immutable first baseline and makes the first successful formal Compile the Authority Lock. Every result includes a lifecycle event, `delivery_completed_by_this_event: false`, `native_goal_effect: none` and a next action. The first result also includes `execution_model_checkpoint.required: true`; later Compile results return `required: false`. Every revision compares against active authority regardless of progress, Receipt/cache deletion or implementation restoration. Source/Context/Product/Acceptance/Global/verifier materials, owner/binding authority, resolved runners and verification inputs are frozen in the common-dir Active Authority V3 snapshot; the model-choice result is not stored as Authority state.
 - `diagnose-revision` performs a side-effect-free candidate Compile. Only a scope-only candidate may run existing active Check identities with unchanged runner/verifier authority; semantic changes, proof weakening, runner or verifier-content changes, and risk increases are summarized without runner execution, while risk downgrade is rejected. Output always has `acceptance_authorized: false`, `progress_written: false` and `pending_revision_written: false`.
 - `compile --revise` auto-adopts proven-safe revisions. Protected revisions return `authority_revision_pending` on stdout plus the exact decision id and deterministic material approval summary, then fail closed until `approve-authority-revision` approves that exact id. Candidate edits produce a new id and invalidate the old approval. Adoption emits `authority_revision_adopted` and returns to rolling execution; it never means delivery completion.
 - `verify` writes scoped per-Check Progress Records only after rechecking active task/revision/compiled/worktree identity. A concurrent revision returns `active_authority_changed_during_verify` and writes no stale progress.
-- `status` reports each Outcome as `unverified`, `progress_passing`, `progress_failing`, `progress_stale` or `blocked_external`. It also reports the fresh Final Receipt as `final_workflow_status` (or `null` after drift), the active Contract's complete `external_confirmations` and the single `pending_authority_revision` decision when present. `progress_passing` is targeted repair evidence rather than “Outcome complete”; `progress_stale` is not a current pass, and `final_workflow_status: null` means unfinished. It reads the common-dir authority snapshot and reports a missing or mismatched workdir cache as a repairable diagnostic.
-- `resume` is read-only and reports task identity, risk, relevant Context, Git state, the same Final/external/pending decision surfaces, ready Outcomes, findings and the next safe action from the common-dir authority snapshot.
-- `final-gate` requires a clean candidate commit, recompiles source authority, reruns every required Check on one Git-tree snapshot and rechecks active identity before acceptance.
+- `status` reports each Outcome as `unverified`, `progress_passing`, `progress_failing`, `progress_stale` or `blocked_external`. It derives `stages`, `ready_stages` and the stage-constrained Outcome frontier from current Progress without persisting Stage completion. It also reports the fresh Final Receipt as `final_workflow_status` (or `null` after drift), target profile/state, the active Contract's complete `external_confirmations` and the single `pending_authority_revision` decision when present. `progress_passing` is targeted repair evidence rather than “Outcome complete”; `progress_stale` is not a current pass, and `final_workflow_status: null` means unfinished. It reads the common-dir authority snapshot and reports a missing or mismatched workdir cache as a repairable diagnostic.
+- `resume` is read-only and reports task identity, risk, relevant Context, Git state, the same Final/target/Stage/external/pending decision surfaces, ready Outcomes, findings and the next safe action from the common-dir authority snapshot.
+- `final-gate` requires a clean candidate commit, recompiles source authority, reruns every required Check on one Git-tree snapshot and rechecks active identity before acceptance. Its Receipt derives each Stage as `passed`, `failed`, `blocked_external` or `blocked_dependency`, and derives `target_state` as `not_accepted`, `blocked_external` or the Contract's exact `implementation_complete`, `target_profile_usable` or `production_release_ready` qualification.
 - `stop-check` and `close` run that Live Final Gate themselves. They never trust status, progress, a Receipt or compiled cache for acceptance; success clears only the accepted identity through CAS. Every accepted Stop emits one non-blocking terminal-scope `systemMessage`; external-pending results additionally name all confirmations. Final/Stop/close report `acceptance_scope: declared_machine_authority` and `native_goal_effect: none`; close also reports `closed_scope: machine_authority`. `status: closed` means only that machine Authority was cleared, not that the native Goal or complete external delivery finished.
 - `abandon` is explicit non-success cleanup. `--force-corrupt-state` is reserved for invalid/mismatched/legacy-unrecoverable state or a stale active lock and removes only deterministic local active state plus `<workdir>/.ty-context/**`; Contract, Source, Context and Git content are preserved.
 
@@ -311,6 +315,17 @@ task:
   id: example-task
   title: Example task
   goal: Complete observable delivery goal
+  target_profile:
+    key: personal-trial
+    description: The example is usable from its declared runtime root.
+    required_state: target_profile_usable
+    required_target_refs: [example-runtime]
+  execution_targets:
+    - key: example-runtime
+      description: Example product runtime
+      role: product
+      runtime_family: process
+      root_entrypoint: tests/runtime.mjs
   source_paths: [plans/example.md]
   context_refs: [project_context/areas/main.md]
 source_claims:
@@ -320,14 +335,22 @@ source_claims:
     disposition:
       type: claim
       refs: [observable-outcome.requirement.observable]
+stages:
+  - key: delivery
+    title: Delivery
+    depends_on: []
+    gate_outcome: observable-outcome
 risk:
   facts: {}
 global: {}
 outcomes:
   - key: observable-outcome
     title: Observable outcome
+    stage: delivery
     product:
       observable_result: What a user or system can observe
+      success_path_required: true
+      degradation_path_required: false
       owner:
         label: Owning product or module boundary
         context_refs: [project_context/areas/main.md]
@@ -347,6 +370,11 @@ outcomes:
     acceptance:
       checks:
         - key: runtime
+          journey_roles: [success, stage_gate]
+          execution_target: {target_ref: example-runtime, entrypoint: root}
+          scenario:
+            given: [{key: source-ready, statement: The planned source carrier is available.}]
+            when: [{key: inspect-result, statement: Inspect the result through the declared runtime.}]
           proof_surface: runtime_behavior
           runner:
             type: node_oracle
@@ -360,6 +388,7 @@ outcomes:
               criterion: The declared requirement is observable.
               claims: [result, requirement.observable]
               observation: result
+              evidence_capabilities: [state_delta, target_runtime]
               operator: equals
               expected: true
       counterfactual_controls:
@@ -380,7 +409,7 @@ Global non-goals, constraints and forbidden shortcuts generate `GLOBAL.non_goal.
 
 Claim-bearing structured Global Checks also declare `global.acceptance.counterfactual_controls`. Each control uses `binding_ref: <outcome-key>.<binding-key>` to reuse an Outcome-owned implementation carrier; no separate Global Binding layer exists. An `existing` mutation target must exist at Preflight/Compile, while a `planned` target may be absent until implementation but must exist at Final Gate and participates in Progress freshness.
 
-Supported runners are `package_script`, `project_binary`, `node_oracle` and `playwright_test`. Supported proof surfaces are `ui_browser`, `runtime_behavior`, `api_contract`, `data_state`, `security_boundary`, `population_coverage` and `implementation_structure`.
+Supported runners are `package_script`, `project_binary`, `node_oracle` and `playwright_test`. Supported proof surfaces are `ui_browser`, `runtime_behavior`, `api_contract`, `data_state`, `security_boundary`, `population_coverage` and `implementation_structure`. Execution-target runtime families are the bounded `browser`, `native`, `desktop`, `service`, `process` and `external` set; target roles are `product`, `support` and `observer`. Required target refs resolve only to product targets. Browser target proof requires `playwright_test`; Native/desktop target proof requires `project_binary`.
 
 ### One Contract And Source Claims
 
@@ -414,11 +443,13 @@ An explicit user request can raise the level to strict. Explicit `standard` belo
 
 ### Evidence And Authority
 
-Final acceptance is computed from executable current evidence, not agent prose. Evidence adapters derive from runner kind: `playwright_test` produces `playwright_json_v1` and is the only adapter allowed for `ui_browser`; package scripts, project binaries and Node oracles produce `structured_json_v2` for all non-browser surfaces. The adapter is part of acceptance, raw-execution, compiled, progress and Receipt identity.
+Final acceptance is computed from executable current evidence, not agent prose. Evidence adapters derive from runner kind: `playwright_test` produces `playwright_json_v1` and is the only adapter allowed for `ui_browser`; package scripts, project binaries and Node oracles use the `structured_json_v2` adapter for non-browser surfaces and emit the additive `long-task-check-result-v3` payload when capability records are required. V2 payloads remain decodable only for compatibility and cannot satisfy non-presence capabilities. The adapter is part of acceptance, raw-execution, compiled, progress and Receipt identity.
+
+Every Check declares non-empty keyed `scenario.given` and `scenario.when` steps plus one or more roles from `success`, `degradation`, `recovery`, `stage_gate` and `conformance`. Every Assertion declares an all-of set from `presence`, `interaction_trace`, `state_delta`, `cross_surface_consistency`, `durable_readback`, `boundary_invocation`, `external_side_effect`, `failure_injection`, `visual_render`, `target_runtime` and `input_variation`. Except for static `presence`, each capability requires exactly one typed current-execution record bound to that Assertion. Missing, duplicate, unknown or undeclared records fail closed. Result Claims use success Checks only; success and degradation cannot share one Check. External-boundary evidence runs on an observer target. Input variation proves at least two distinct inputs, two output hashes and a failure case.
 
 Every Outcome has at least one non-Result atomic Claim, and a Claim is covered only when all `required_proof_surfaces` are covered. Claim-bearing assertions use explicit expected-value comparisons; unary `truthy`/`falsy` are forbidden, and `exists` is limited to `implementation_structure` obligations. Across all Checks sharing one Raw Execution identity, one claim-bearing Observation belongs to one Assertion. Playwright Claim proof has one canonical form: `playwright.case.<ac-key>.passed equals true`. Missing, skipped, flaky, unexpected, failed or duplicate-within-project ACs fail closed; the same AC across distinct Playwright projects aggregates only when every instance passes. Decoder diagnostic fields such as aggregate pass, executed, skipped, status and counts cannot prove Claims.
 
-Outcome Counterfactuals bind a local Binding; Global Counterfactuals bind an Outcome-owned `binding_ref`. Both may mutate only a proven subset of carriers. `structured_json_v2` requires completed exit-zero execution with exactly the expected `assertion_value_mismatch` set. A weak `playwright_json_v1` Counterfactual may accept exit one only under exact, complete unexpected-instance accounting; ordinary Playwright Baseline Checks still require exit zero. Standard frozen Playwright content is trusted verifier input. For a `weak_observability` Outcome, every claim-bearing Playwright AC and related Claim needs same-Check sensitivity. Claim and Population proofs are emitted only after the complete Check status is `passed`.
+Outcome Counterfactuals bind a local Binding; Global Counterfactuals bind an Outcome-owned `binding_ref`. Both may mutate only a proven subset of carriers. `structured_json_v2` adapter executions require completed exit-zero execution with exactly the expected `assertion_value_mismatch` set. A weak `playwright_json_v1` Counterfactual may accept exit one only under exact, complete unexpected-instance accounting; ordinary Playwright Baseline Checks still require exit zero. Standard frozen Playwright content is trusted verifier input. For a `weak_observability` Outcome, every claim-bearing Playwright AC and related Claim needs same-Check sensitivity. Claim and Population proofs are emitted only after the complete Check status is `passed`.
 
 Raw Execution identity binds frozen runner identity plus canonical declared Environment Requirements, never actual environment values. A Playwright Test uses `[ac:<assertion-key>]`; one Test may bind at most one declared AC. Every Claim-bearing structured Check needs same-Check, Claim-related Counterfactual sensitivity; unrelated Artifacts or another Check do not count. Counterfactual Findings are projected into their owning Check Result before Progress is written, so status/resume recover the Finding without a new Global Outcome state. Explain traces Source Item → canonical target → Claim or Assertion → required surfaces → Check → adapter → Observation.
 
@@ -431,6 +462,8 @@ Final Gate may run only Contract-declared verification commands and never produc
 Version 0.6.0 retires the V1 schema/runtime and repo-local Hook. Enable, disable and upgrade remove only exact Tiny Context managed Hook entries. Relocated package-owned absolute commands are recognized only when known managed status and package layout match; similar-name user Hooks remain. Upgrade never imports V1 progress or Receipts into V2 authority. Delivery Set, `composite-campaign` and `composite-long-task` commands are non-executing tombstones.
 
 Version 0.6.0 defines the first public V2 semantics while retaining the `long-task-delivery-v2` schema name and physical `outcome_files` parser form. Optional Source Plan authoring adds no Schema, CLI, Preflight, Compile, Validator, Receipt, Authority or state. Preflight and direct Compile use one activation-safety kernel.
+
+Version 0.7.2 strengthens that same V2 authority with ordered Stages, bounded required targets/root entrypoints, explicit success/degradation journeys and scenarios, typed Evidence Capabilities, typed external impact, risk-proportional Product Conformance and terminal target/Stage projections. An older V2 Contract missing those fields reports the indexed manual migration `long-task-v2-semantic-drift-authority`; re-author the missing meaning from Source. Upgrade never infers those semantics or imports old Progress/Receipts as passing evidence.
 
 `/normal-long-task` is also a retirement pointer to `/long-task-workflow`; it creates no checklist, prompt, audit, matrix, verdict or second authority.
 

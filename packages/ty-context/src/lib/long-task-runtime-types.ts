@@ -6,6 +6,10 @@ import type {
   ProofSurface,
 } from "./long-task-contract-types.js";
 import type {
+  EvidenceCapabilityV2,
+  ExecutionTargetV2,
+} from "./long-task-semantic-contract-types.js";
+import type {
   AuthorityHashesV2,
   ContextAuthoritySnapshotV2,
   InitialTaskBaseV2,
@@ -13,6 +17,7 @@ import type {
   VerifierIdentityV2,
 } from "./long-task-authority-types.js";
 import type { EvidenceAdapter } from "./long-task-evidence-adapter-types.js";
+import type { EvidenceCapabilityRecordV2 } from "./long-task-evidence-capability-types.js";
 import type {
   EffectiveRiskLevel,
   RiskFactName,
@@ -38,6 +43,8 @@ export interface CompiledCheckV2 extends Omit<DeliveryCheckV2, "runner"> {
   evidence_adapter: EvidenceAdapter;
   verification_input_hashes: Record<string, string>;
   raw_execution_identity: string;
+  execution_target_definition: ExecutionTargetV2;
+  known_execution_targets: ExecutionTargetV2[];
 }
 
 export interface ProductClaimV2 {
@@ -126,6 +133,7 @@ export interface CompiledDeliveryContractV2 {
   task: DeliveryContractV2["task"];
   risk: DeliveryContractV2["risk"];
   source_claims: DeliveryContractV2["source_claims"];
+  stages: DeliveryContractV2["stages"];
   global: Omit<DeliveryContractV2["global"], "acceptance"> & {
     acceptance: {
       checks: CompiledCheckV2[];
@@ -170,6 +178,8 @@ export interface AssertionResultV2 {
   passed: boolean;
   claims: string[];
   observation: string;
+  evidence_capabilities: EvidenceCapabilityV2[];
+  evidence_complete: boolean;
   status:
     | "passed"
     | "observation_missing"
@@ -189,6 +199,7 @@ export interface RawCommandExecutionV2 {
     | "invalid_evidence";
   exit_code: number;
   observations: Record<string, unknown>;
+  evidence_records: EvidenceCapabilityRecordV2[];
   stdout_sha256: string;
   stderr_sha256: string;
   attempts: number;
@@ -205,6 +216,7 @@ export interface CheckExecutionResultV2 {
   execution_identity: string;
   assertion_results: AssertionResultV2[];
   observations: Record<string, unknown>;
+  evidence_records: EvidenceCapabilityRecordV2[];
   artifact_hashes: Record<string, string>;
   claim_proofs: ClaimProofV2[];
   findings: LongTaskFindingV2[];
@@ -251,6 +263,15 @@ export type OutcomeStatusV2 =
   | "progress_stale"
   | "blocked_external";
 
+export type StageStatusV2 =
+  | "locked"
+  | "ready"
+  | "unverified"
+  | "progress_passing"
+  | "progress_failing"
+  | "progress_stale"
+  | "blocked_external";
+
 export interface FinalReceiptV2 {
   schema_version: "long-task-final-receipt-v2";
   receipt_sha256: string;
@@ -261,6 +282,15 @@ export interface FinalReceiptV2 {
     | "machine_accepted_external_pending"
     | "needs_work"
     | "blocked_external";
+  target_profile: DeliveryContractV2["task"]["target_profile"];
+  target_state:
+    | DeliveryContractV2["task"]["target_profile"]["required_state"]
+    | "not_accepted"
+    | "blocked_external";
+  stage_results: Record<
+    string,
+    "passed" | "failed" | "blocked_external" | "blocked_dependency"
+  >;
   compiled_identity: string;
   contract_sha256: string;
   snapshot_sha256: string;

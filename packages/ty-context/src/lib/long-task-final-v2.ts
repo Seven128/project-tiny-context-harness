@@ -125,18 +125,32 @@ export async function runDeliveryFinalGate(
       globalBlocked ||
       Object.values(outcomeResults).includes("blocked_external") ||
       run.findings.some((finding) => finding.code === "blocked_external");
+    const targetBlocked =
+      compiled.global.acceptance.external_confirmations.some(
+        (confirmation) => confirmation.blocks_target,
+      );
     const workflowStatus: FinalReceiptV2["workflow_status"] = failed
       ? "needs_work"
-      : blocked
+      : blocked || targetBlocked
         ? "blocked_external"
         : compiled.global.acceptance.external_confirmations.length
           ? "machine_accepted_external_pending"
           : "machine_accepted";
+    const targetState: FinalReceiptV2["target_state"] =
+      workflowStatus === "machine_accepted" ||
+      workflowStatus === "machine_accepted_external_pending"
+        ? compiled.task.target_profile.required_state
+        : workflowStatus === "blocked_external"
+          ? "blocked_external"
+          : "not_accepted";
     return writeFinalReceipt(repository, active.workdir, {
       schema_version: "long-task-final-receipt-v2",
       authority_scope: "audit_only",
       reusable_for_acceptance: false,
       workflow_status: workflowStatus,
+      target_profile: compiled.task.target_profile,
+      target_state: targetState,
+      stage_results: projectStages(compiled, outcomeResults),
       compiled_identity: compiled.compiled_identity,
       contract_sha256: compiled.contract_sha256,
       snapshot_sha256: snapshot.manifest.snapshot_sha256,
@@ -156,6 +170,41 @@ export async function runDeliveryFinalGate(
   } finally {
     await snapshot.dispose();
   }
+}
+
+function projectStages(
+  compiled: Awaited<ReturnType<typeof compileDeliveryContract>>,
+  outcomes: Record<string, "passed" | "failed" | "blocked_external">,
+): FinalReceiptV2["stage_results"] {
+  const result: FinalReceiptV2["stage_results"] = {};
+  const remaining = new Set(compiled.stages.map((stage) => stage.key));
+  while (remaining.size) {
+    let advanced = false;
+    for (const stage of compiled.stages) {
+      if (!remaining.has(stage.key)) continue;
+      if (stage.depends_on.some((dependency) => remaining.has(dependency)))
+        continue;
+      const owned = compiled.outcomes
+        .filter((outcome) => outcome.stage === stage.key)
+        .map((outcome) => outcomes[outcome.key]);
+      result[stage.key] = owned.includes("failed")
+        ? "failed"
+        : owned.includes("blocked_external")
+          ? "blocked_external"
+          : stage.depends_on.some(
+                (dependency) => result[dependency] !== "passed",
+              )
+            ? "blocked_dependency"
+            : "passed";
+      remaining.delete(stage.key);
+      advanced = true;
+    }
+    if (!advanced) {
+      for (const stage of remaining) result[stage] = "blocked_dependency";
+      break;
+    }
+  }
+  return result;
 }
 
 function projectOutcomes(

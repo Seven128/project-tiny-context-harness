@@ -117,7 +117,7 @@ test("weak-observability Playwright rejects a constant AC and accepts a sensitiv
       const runner = path.join(fixture.root, "tests", "fake-playwright.mjs");
       await writeFile(
         runner,
-        `import { access } from "node:fs/promises";\nlet ready = ${constant ? "true" : "false"};\nif (!ready) { try { await access(new URL("../src/state.json", import.meta.url)); ready = true; } catch {} }\nconst status = ready ? "expected" : "unexpected";\nconst resultStatus = ready ? "passed" : "failed";\nconsole.log(JSON.stringify({stats:{expected:ready?1:0,unexpected:ready?0:1,skipped:0,flaky:0},errors:[],suites:[{specs:[{title:"[ac:first-result] first-result",tests:[{projectId:"default",status,results:[{status:resultStatus}]}]}]}]}));\nprocess.exitCode = ready ? 0 : 1;\n`,
+        `import { access } from "node:fs/promises";\nlet ready = ${constant ? "true" : "false"};\nif (!ready) { try { await access(new URL("../src/state.json", import.meta.url)); ready = true; } catch {} }\nconst status = ready ? "expected" : "unexpected";\nconst resultStatus = ready ? "passed" : "failed";\nconst steps = [{title:"[given:fixture-loaded]"},{title:"[action:read-outcome]"}];\nconsole.log(JSON.stringify({stats:{expected:ready?1:0,unexpected:ready?0:1,skipped:0,flaky:0},errors:[],suites:[{specs:[{title:"[ac:first-result] first-result",tests:[{projectId:"default",status,results:[{status:resultStatus,steps}]}]}]}]}));\nprocess.exitCode = ready ? 0 : 1;\n`,
       );
       const compiled = await compileDeliveryContract(
         fixture.workdir,
@@ -178,6 +178,7 @@ test("Playwright Counterfactual accepts only an exactly explained exit 1", async
       criterion: "The second declared AC passes.",
       claims: ["requirement.observe-first"],
       observation: "playwright.case.second-result.passed",
+      evidence_capabilities: ["interaction_trace"],
       operator: "equals",
       expected: true,
     });
@@ -332,7 +333,15 @@ function playwrightCase(id, status, resultStatus) {
       {
         projectId: "default",
         status,
-        results: [{ status: resultStatus }],
+        results: [
+          {
+            status: resultStatus,
+            steps: [
+              { title: "[given:fixture-loaded]" },
+              { title: "[action:read-outcome]" },
+            ],
+          },
+        ],
       },
     ],
   };
@@ -344,6 +353,7 @@ async function configurePlaywright(fixture, { weak, twoAssertions = false }) {
     "// [ac:first-result]\n",
   );
   const outcome = fixture.contract.outcomes[0];
+  fixture.contract.task.execution_targets[0].runtime_family = "browser";
   const check = outcome.acceptance.checks[0];
   check.proof_surface = "ui_browser";
   check.runner = {
@@ -360,6 +370,10 @@ async function configurePlaywright(fixture, { weak, twoAssertions = false }) {
   check.artifact_globs = [];
   check.positive_assertions[0].observation =
     "playwright.case.first-result.passed";
+  check.positive_assertions[0].evidence_capabilities = [
+    "interaction_trace",
+    "target_runtime",
+  ];
   outcome.product.requirements[0].required_proof_surfaces = ["ui_browser"];
   outcome.technical.obligations[0].required_proof_surfaces = ["ui_browser"];
   if (weak) fixture.contract.risk.facts.weak_observability = ["first"];
@@ -369,6 +383,7 @@ async function configurePlaywright(fixture, { weak, twoAssertions = false }) {
       criterion: "The UI also proves the implementation obligation.",
       claims: ["obligation.implement-first"],
       observation: "playwright.case.first-obligation-ac.passed",
+      evidence_capabilities: ["interaction_trace"],
       operator: "equals",
       expected: true,
     });

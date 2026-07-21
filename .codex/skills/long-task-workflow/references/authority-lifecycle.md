@@ -6,7 +6,7 @@ Read this before Preflight, Compile, revision, resume, targeted verify, Final Ga
 
 Run `ty-context long-task preflight <workdir>` before first formal Compile. Resolve every `error` and `decision_required` diagnostic and review warnings. Preflight is read-only: it creates no Active Authority, initial base, marker, cache, Progress, Receipt or pending revision, runs no project Check and persists no success record.
 
-Preflight and Compile call the same activation-safety validator. Skipping Preflight bypasses no Source continuity, criterion, Claim/all-of-surface, adapter/Observation, risk, owner/path/Binding, runner/input, Counterfactual or sensitivity rule.
+Preflight and Compile call the same activation-safety validator. Skipping Preflight bypasses no Source continuity, criterion, Claim/all-of-surface, Stage closure/cross-surface gate, required-target/root/runner binding, scenario/journey separation, capability adequacy, typed external impact, bounded Product Conformance, adapter/Observation, risk, owner/path/Binding, runner/input, Counterfactual or sensitivity rule.
 
 Preflight keeps every independently discovered diagnostic. When a structural duplicate makes the same Claim ambiguous or repeated, only that pair receives stable `diagnostic_id`, `repair_group`, `repair_priority` and `blocked_by` metadata so the structural blocker is repaired first. Independent findings keep their compact existing shape; no finding is hidden, reclassified or treated as resolved, and no repair state or authority is created.
 
@@ -18,9 +18,9 @@ Its JSON result includes `execution_model_checkpoint.required: true`. Before pro
 
 After Authority Lock, every revision compares against active authority and follows one of three paths:
 
-1. proven monotonic evidence strengthening, pure verifier relocation, proven tightening and supporting-only Context revision may auto-revise;
+1. proven monotonic evidence strengthening—including adding capabilities while preserving every existing Assertion meaning—pure verifier relocation, proven tightening and supporting-only Context revision may auto-revise;
 2. a candidate whose only protected reasons are owner, expected-change or allowed-support expansion remains inactive but may be exercised with `diagnose-revision` through existing active Check identities whose runner/verifier authority is unchanged; safe monotonic strengthening may coexist; or
-3. every semantic change, proof weakening, runner or verifier-content change, risk change or other protected reason requires the exact revision identity and is never candidate-executed.
+3. every Source/Product/target profile/required-target/Stage/success-degradation/external-impact semantic change, removed capability or scenario step, root-to-internal move, proof weakening, runner or verifier-content change, risk change or other protected reason requires the exact revision identity and is never candidate-executed.
 
 `diagnose-revision` recompiles the same `delivery-contract.yaml` in memory, creates only a disposable workspace snapshot when class 2 is proven, and returns transient repair results with `acceptance_authorized: false`. It writes no pending/approval state, authority/marker, cache, Progress or Receipt. Repeated edits therefore accumulate only in the one existing Contract authoring file, not a pending Draft authority or candidate state plane.
 
@@ -42,14 +42,16 @@ Progress freshness binds Outcome authority, runner, verification inputs, Control
 
 Status, Progress, Receipts and workdir compiled output are audit/recovery projections only. Development-period authority state is `manual_required` and never migrated.
 
-Report their exact meaning: `progress_passing` is current targeted repair evidence rather than “Outcome complete”; `progress_stale` is not a current pass; `final_workflow_status: null` means the Goal is unfinished. Do not invent `implementation_complete`, `platform_smoke_verified` or another persistent completion vocabulary.
+Report their exact meaning: `progress_passing` is current targeted repair evidence rather than “Outcome complete”; `progress_stale` is not a current pass; `final_workflow_status: null` means the Goal is unfinished. `status`/`resume` derive `ready_stages`, `ready_outcomes` and Stage status from current Progress; they do not persist a Stage pass. `target_state` remains `not_accepted` until a fresh Final Gate accepts, becomes `blocked_external` for a target blocker, or names the Contract's `implementation_complete`, `target_profile_usable` or `production_release_ready` state after machine acceptance. Do not invent per-platform progress/status.
 
 ## Final Gate And Terminal Paths
 
-Before Final Gate, complete Context/code/tests and create a clean candidate commit. Final Gate captures active identity, recompiles Source authority, reads complete current Context, validates common-dir record/marker, creates a Git-tree snapshot, reruns all Checks and sensitivity controls and rechecks identity before acceptance. A target-runtime Check must exercise its target again in that Final Gate execution; rereading historical status does not become live proof merely because the reader reran. A concurrent revision returns `active_authority_changed_during_final_gate`.
+Before Final Gate, complete Context/code/tests and create a clean candidate commit. Final Gate captures active identity, recompiles Source authority, reads complete current Context, validates common-dir record/marker, creates a Git-tree snapshot, reruns all Checks and sensitivity controls and rechecks identity before acceptance. A target-runtime Check must exercise its exact target again in that Final Gate execution; rereading historical status does not become live proof merely because the reader reran. The Receipt reports the target profile/state and every Stage as `passed`, `failed`, `blocked_external` or `blocked_dependency`. A concurrent revision returns `active_authority_changed_during_final_gate`.
 
 Commit, verifier migration, clear and abandon share one active-state lock. Stop/close clear only the identity actually accepted through CAS and preserve `machine_accepted_external_pending` plus every named external confirmation in output. Final Gate/Stop/close identify `acceptance_scope: declared_machine_authority` and `native_goal_effect: none`; close additionally identifies `closed_scope: machine_authority`. The Stop Hook emits the same scope as one non-blocking message for either accepted machine status. A stale Receipt exposes no accepted workflow status.
 
 Before platform-native Goal completion, compare current Goal/user meaning with accepted marked Source and check for a pending revision, unresolved blocker or omitted requirement. This review may only veto completion and direct Source/Contract repair; it is not a second acceptance Gate and cannot create proof.
 
 For invalid, mismatched, unrecoverable or stale-lock continuity, use only `ty-context long-task abandon <workdir> --force-corrupt-state`; it preserves authored Contract, Source, Context and Git content.
+
+An older `long-task-delivery-v2` Contract that lacks Stage, required-target, scenario, journey, success/degradation, capability or typed external-impact fields is a manual migration. `upgrade --check` reports `long-task-v2-semantic-drift-authority`, and parsing lists missing field paths. Re-author those meanings from Source; never infer them from old Progress/Receipts or import historical passing evidence as acceptance.

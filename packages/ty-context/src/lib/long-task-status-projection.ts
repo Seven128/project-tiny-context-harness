@@ -4,6 +4,7 @@ import type {
   LongTaskFindingV2,
   OutcomeStatusV2,
   ProgressRecordV2,
+  StageStatusV2,
   WorkspaceManifestV2,
 } from "./long-task-delivery-types.js";
 import { progressRecordFresh } from "./long-task-progress.js";
@@ -27,7 +28,10 @@ export type AuditGateStatusV2 =
 export function projectDeliveryStatus(input: StatusProjectionInputV2): {
   finalResult: AuditGateStatusV2;
   finalWorkflowStatus: FinalReceiptV2["workflow_status"] | null;
+  targetState: FinalReceiptV2["target_state"];
   outcomes: Record<string, OutcomeStatusV2>;
+  stages: Record<string, StageStatusV2>;
+  readyStages: string[];
   readyOutcomes: string[];
   needsReverify: string[];
   progressPassing: string[];
@@ -35,13 +39,21 @@ export function projectDeliveryStatus(input: StatusProjectionInputV2): {
   findings: LongTaskFindingV2[];
 } {
   const outcomes = projectOutcomes(input);
+  const stages = projectStages(input.compiled, outcomes);
   return {
     finalResult: projectFinalResult(input),
     finalWorkflowStatus: receiptFresh(input)
       ? input.receipt!.workflow_status
       : null,
+    targetState: receiptFresh(input)
+      ? (input.receipt!.target_state ?? legacyTargetState(input.receipt!))
+      : "not_accepted",
     outcomes,
-    readyOutcomes: readyOutcomes(input.compiled, outcomes),
+    stages,
+    readyStages: Object.entries(stages)
+      .filter(([, status]) => status === "ready")
+      .map(([key]) => key),
+    readyOutcomes: readyOutcomes(input.compiled, outcomes, stages),
     needsReverify: Object.entries(outcomes)
       .filter(([, status]) =>
         ["unverified", "progress_stale", "progress_failing"].includes(status),
@@ -135,16 +147,77 @@ function projectFindings(input: StatusProjectionInputV2): LongTaskFindingV2[] {
 function readyOutcomes(
   compiled: CompiledDeliveryContractV2,
   outcomes: Record<string, OutcomeStatusV2>,
+  stages: Record<string, StageStatusV2>,
 ): string[] {
   return compiled.outcomes
     .filter(
       (outcome) =>
+        stages[outcome.stage] !== "locked" &&
+        stages[outcome.stage] !== "progress_passing" &&
         outcomes[outcome.key] !== "progress_passing" &&
         outcome.depends_on.every(
           (dependency) => outcomes[dependency] === "progress_passing",
         ),
     )
     .map((outcome) => outcome.key);
+}
+
+function legacyTargetState(
+  receipt: FinalReceiptV2,
+): FinalReceiptV2["target_state"] {
+  if (
+    receipt.workflow_status === "machine_accepted" ||
+    receipt.workflow_status === "machine_accepted_external_pending"
+  )
+    return receipt.target_profile.required_state;
+  return receipt.workflow_status === "blocked_external"
+    ? "blocked_external"
+    : "not_accepted";
+}
+
+function projectStages(
+  compiled: CompiledDeliveryContractV2,
+  outcomes: Record<string, OutcomeStatusV2>,
+): Record<string, StageStatusV2> {
+  const result: Record<string, StageStatusV2> = {};
+  const remaining = new Set(compiled.stages.map((stage) => stage.key));
+  while (remaining.size) {
+    let advanced = false;
+    for (const stage of compiled.stages) {
+      if (!remaining.has(stage.key)) continue;
+      if (stage.depends_on.some((dependency) => remaining.has(dependency)))
+        continue;
+      const prerequisitesPassing = stage.depends_on.every(
+        (dependency) => result[dependency] === "progress_passing",
+      );
+      if (!prerequisitesPassing) result[stage.key] = "locked";
+      else {
+        const owned = compiled.outcomes
+          .filter((outcome) => outcome.stage === stage.key)
+          .map((outcome) => outcomes[outcome.key]);
+        const gate = outcomes[stage.gate_outcome];
+        result[stage.key] = owned.includes("progress_failing")
+          ? "progress_failing"
+          : owned.includes("blocked_external")
+            ? "blocked_external"
+            : owned.includes("progress_stale")
+              ? "progress_stale"
+              : gate === "progress_passing" &&
+                  owned.every((status) => status === "progress_passing")
+                ? "progress_passing"
+                : owned.every((status) => status === "unverified")
+                  ? "ready"
+                  : "unverified";
+      }
+      remaining.delete(stage.key);
+      advanced = true;
+    }
+    if (!advanced) {
+      for (const stage of remaining) result[stage] = "locked";
+      break;
+    }
+  }
+  return result;
 }
 
 function projectFinalResult(input: StatusProjectionInputV2): AuditGateStatusV2 {

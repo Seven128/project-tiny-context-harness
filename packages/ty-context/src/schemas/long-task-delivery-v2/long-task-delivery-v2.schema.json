@@ -4,17 +4,19 @@
   "title": "Single-Goal Delivery Contract V2",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "task", "source_claims", "risk", "global"],
+  "required": ["schema_version", "task", "source_claims", "stages", "risk", "global"],
   "properties": {
     "schema_version": { "const": "long-task-delivery-v2" },
     "task": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "title", "goal", "source_paths", "context_refs"],
+      "required": ["id", "title", "goal", "target_profile", "execution_targets", "source_paths", "context_refs"],
       "properties": {
         "id": { "$ref": "#/$defs/key" },
         "title": { "$ref": "#/$defs/nonEmpty" },
         "goal": { "$ref": "#/$defs/nonEmpty" },
+        "target_profile": { "$ref": "#/$defs/targetProfile" },
+        "execution_targets": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/executionTarget" } },
         "source_paths": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/nonEmpty" } },
         "context_refs": { "$ref": "#/$defs/nonEmptyStrings" },
         "context_snapshot_mode": { "enum": ["referenced", "full"], "default": "referenced" }
@@ -25,6 +27,7 @@
       "minItems": 1,
       "items": { "$ref": "#/$defs/sourceClaim" }
     },
+    "stages": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/stage" } },
     "risk": { "$ref": "#/$defs/risk" },
     "global": { "$ref": "#/$defs/global" },
     "outcomes": { "type": "array", "items": { "$ref": "#/$defs/outcome" }, "minItems": 1 },
@@ -38,6 +41,40 @@
     "key": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
     "nonEmpty": { "type": "string", "minLength": 1 },
     "nonEmptyStrings": { "type": "array", "items": { "$ref": "#/$defs/nonEmpty" } },
+    "targetProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "description", "required_state", "required_target_refs"],
+      "properties": {
+        "key": { "$ref": "#/$defs/key" },
+        "description": { "$ref": "#/$defs/nonEmpty" },
+        "required_state": { "enum": ["implementation_complete", "target_profile_usable", "production_release_ready"] },
+        "required_target_refs": { "$ref": "#/$defs/keys" }
+      }
+    },
+    "executionTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "description", "role", "runtime_family", "root_entrypoint"],
+      "properties": {
+        "key": { "$ref": "#/$defs/key" },
+        "description": { "$ref": "#/$defs/nonEmpty" },
+        "role": { "enum": ["product", "support", "observer"] },
+        "runtime_family": { "enum": ["browser", "native", "desktop", "service", "process", "external"] },
+        "root_entrypoint": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "title", "depends_on", "gate_outcome"],
+      "properties": {
+        "key": { "$ref": "#/$defs/key" },
+        "title": { "$ref": "#/$defs/nonEmpty" },
+        "depends_on": { "$ref": "#/$defs/keys" },
+        "gate_outcome": { "$ref": "#/$defs/key" }
+      }
+    },
     "keyedStatement": {
       "type": "object",
       "additionalProperties": false,
@@ -114,7 +151,7 @@
           "properties": {
             "checks": { "type": "array", "items": { "$ref": "#/$defs/check" }, "default": [] },
             "counterfactual_controls": { "type": "array", "items": { "$ref": "#/$defs/globalCounterfactual" }, "default": [] },
-            "external_confirmations": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["key", "description", "owner"], "properties": { "key": { "$ref": "#/$defs/key" }, "description": { "$ref": "#/$defs/nonEmpty" }, "owner": { "$ref": "#/$defs/nonEmpty" } } }, "default": [] }
+            "external_confirmations": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["key", "description", "owner", "kind", "impact_claims", "blocks_target"], "properties": { "key": { "$ref": "#/$defs/key" }, "description": { "$ref": "#/$defs/nonEmpty" }, "owner": { "$ref": "#/$defs/nonEmpty" }, "kind": { "enum": ["functional_prerequisite", "field_validation", "production_release_gate", "commercial_activation", "expert_authority"] }, "impact_claims": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/nonEmpty" } }, "blocks_target": { "type": "boolean" } } }, "default": [] }
           },
           "default": {}
         }
@@ -123,10 +160,11 @@
     "outcome": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["key", "title", "product", "technical", "acceptance"],
+      "required": ["key", "title", "stage", "product", "technical", "acceptance"],
       "properties": {
         "key": { "$ref": "#/$defs/key" },
         "title": { "$ref": "#/$defs/nonEmpty" },
+        "stage": { "$ref": "#/$defs/key" },
         "depends_on": { "$ref": "#/$defs/keys", "default": [] },
         "product": { "$ref": "#/$defs/product" },
         "technical": { "$ref": "#/$defs/technical" },
@@ -136,9 +174,11 @@
     "product": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["observable_result", "owner"],
+      "required": ["observable_result", "success_path_required", "degradation_path_required", "owner"],
       "properties": {
         "observable_result": { "$ref": "#/$defs/nonEmpty" },
+        "success_path_required": { "type": "boolean" },
+        "degradation_path_required": { "type": "boolean" },
         "owner": { "type": "object", "additionalProperties": false, "required": ["label", "context_refs", "path_globs"], "properties": { "label": { "$ref": "#/$defs/nonEmpty" }, "context_refs": { "$ref": "#/$defs/nonEmptyStrings" }, "path_globs": { "$ref": "#/$defs/nonEmptyStrings" } } },
         "requirements": { "type": "array", "items": { "$ref": "#/$defs/requirement" }, "default": [] },
         "owner_surfaces": { "$ref": "#/$defs/nonEmptyStrings", "default": [] },
@@ -204,9 +244,12 @@
     "check": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["key", "proof_surface", "runner", "verification_inputs"],
+      "required": ["key", "journey_roles", "execution_target", "scenario", "proof_surface", "runner", "verification_inputs"],
       "properties": {
         "key": { "$ref": "#/$defs/key" },
+        "journey_roles": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["success", "degradation", "recovery", "stage_gate", "conformance"] } },
+        "execution_target": { "type": "object", "additionalProperties": false, "required": ["target_ref", "entrypoint"], "properties": { "target_ref": { "$ref": "#/$defs/key" }, "entrypoint": { "enum": ["root", "internal"] } } },
+        "scenario": { "$ref": "#/$defs/scenario" },
         "proof_surface": { "$ref": "#/$defs/proofSurface" },
         "runner": { "$ref": "#/$defs/runner" },
         "verification_inputs": { "$ref": "#/$defs/nonEmptyStrings" },
@@ -236,12 +279,13 @@
     "assertion": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["key", "claims", "observation", "operator"],
+      "required": ["key", "claims", "observation", "operator", "evidence_capabilities"],
       "properties": {
         "key": { "$ref": "#/$defs/key" },
         "criterion": { "$ref": "#/$defs/nonEmpty" },
         "claims": { "$ref": "#/$defs/nonEmptyStrings" },
         "observation": { "$ref": "#/$defs/nonEmpty" },
+        "evidence_capabilities": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/evidenceCapability" } },
         "operator": { "enum": ["equals", "not_equals", "contains", "not_contains", "matches", "not_matches", "greater_than", "greater_or_equal", "less_than", "less_or_equal", "truthy", "falsy", "exists", "set_equals", "subset_of", "superset_of"] },
         "expected": true
       },
@@ -268,6 +312,16 @@
         }
       ]
     },
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["given", "when"],
+      "properties": {
+        "given": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/keyedStatement" } },
+        "when": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/keyedStatement" } }
+      }
+    },
+    "evidenceCapability": { "enum": ["presence", "interaction_trace", "state_delta", "cross_surface_consistency", "durable_readback", "boundary_invocation", "external_side_effect", "failure_injection", "visual_render", "target_runtime", "input_variation"] },
     "environment": {
       "oneOf": [
         {

@@ -195,6 +195,7 @@ export async function compileDeliveryContract(
     task: contract.task,
     risk: contract.risk,
     source_claims: contract.source_claims,
+    stages: contract.stages,
     global: {
       product: contract.global.product,
       technical: contract.global.technical,

@@ -11,13 +11,16 @@ test("every DeliveryCheck field has an explicit execution-input policy", () => {
   assert.deepEqual(Object.keys(CHECK_EXECUTION_INPUT_POLICY).sort(), [
     "artifact_globs",
     "environment_requirements",
+    "execution_target",
     "expected_output_paths",
     "input_paths",
+    "journey_roles",
     "key",
     "negative_assertions",
     "positive_assertions",
     "proof_surface",
     "runner",
+    "scenario",
     "verification_inputs",
   ]);
   assert.deepEqual(
@@ -25,7 +28,7 @@ test("every DeliveryCheck field has an explicit execution-input policy", () => {
       .filter(([, policy]) => policy === "raw_execution")
       .map(([field]) => field)
       .sort(),
-    ["environment_requirements", "runner"],
+    ["environment_requirements", "execution_target", "runner"],
   );
   assert.equal(
     CHECK_EXECUTION_INPUT_POLICY.verification_inputs,
@@ -48,6 +51,10 @@ test("all raw execution fields affect identity and per-check evidence does not",
     baseIdentity,
   );
 
+  const targetChanged = structuredClone(base);
+  targetChanged.execution_target.target_ref = "other-target";
+  assert.notEqual(computeRawExecutionIdentity(targetChanged), baseIdentity);
+
   for (const mutate of [
     (check) => check.artifact_globs.push("artifacts/**"),
     (check) =>
@@ -55,6 +62,7 @@ test("all raw execution fields affect identity and per-check evidence does not",
         key: "extra",
         claims: ["result"],
         observation: "result",
+        evidence_capabilities: ["state_delta"],
         operator: "truthy",
       }),
     (check) => check.negative_assertions.push(check.positive_assertions[0]),
@@ -66,6 +74,9 @@ test("all raw execution fields affect identity and per-check evidence does not",
   assert.deepEqual(Object.keys(rawExecutionInputProjection(base)).sort(), [
     "environment_requirements",
     "evidence_adapter",
+    "execution_target",
+    "execution_target_definition",
+    "known_execution_targets",
     "runner",
     "verification_inputs",
   ]);
@@ -114,6 +125,28 @@ function compiledCheck() {
     internal_id: "CHECK.first.test",
     outcome_key: "first",
     key: "test",
+    journey_roles: ["success"],
+    execution_target: { target_ref: "process-app", entrypoint: "root" },
+    execution_target_definition: {
+      key: "process-app",
+      description: "The process fixture.",
+      role: "product",
+      runtime_family: "process",
+      root_entrypoint: "tests/oracle.mjs",
+    },
+    known_execution_targets: [
+      {
+        key: "process-app",
+        description: "The process fixture.",
+        role: "product",
+        runtime_family: "process",
+        root_entrypoint: "tests/oracle.mjs",
+      },
+    ],
+    scenario: {
+      given: [{ key: "fixture-loaded", statement: "Load the fixture." }],
+      when: [{ key: "read-result", statement: "Read the result." }],
+    },
     proof_surface: "runtime_behavior",
     evidence_adapter: "structured_json_v2",
     runner: {
@@ -144,6 +177,7 @@ function compiledCheck() {
         key: "result",
         claims: ["result"],
         observation: "result",
+        evidence_capabilities: ["state_delta"],
         operator: "equals",
         expected: true,
       },

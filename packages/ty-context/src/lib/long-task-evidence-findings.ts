@@ -36,6 +36,8 @@ export function evaluateAssertionResults(
       passed: evaluation.passed,
       claims: assertion.claims,
       observation: assertion.observation,
+      evidence_capabilities: assertion.evidence_capabilities,
+      evidence_complete: false,
       status: evaluation.status,
       ...(Object.hasOwn(evaluation, "expected")
         ? { expected: evaluation.expected }
@@ -60,7 +62,9 @@ export function classifyCheckStatus(
   if (
     findings.some(
       (item) =>
-        item.code === "invalid_evidence" || item.code === "artifact_missing",
+        item.code === "invalid_evidence" ||
+        item.code === "artifact_missing" ||
+        item.code === "evidence_capability_invalid",
     )
   )
     return "invalid_evidence";

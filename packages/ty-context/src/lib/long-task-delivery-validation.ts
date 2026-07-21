@@ -8,6 +8,12 @@ import { proveRepositoryPatternSubset } from "./long-task-paths.js";
 import { validateSourceClaimMappings } from "./long-task-source-claim-validation.js";
 import { validateDeclaredCheckSafety } from "./long-task-claim-proof-policy.js";
 import { validateEvidenceAdapterCompatibility } from "./long-task-evidence-adapter-policy.js";
+import { validateEvidenceCapabilityDeclarations } from "./long-task-evidence-capability-policy.js";
+import { validateDeliveryStages } from "./long-task-stage-policy.js";
+import {
+  validateExecutionTargets,
+  validateExternalConfirmationImpacts,
+} from "./long-task-target-policy.js";
 
 export function validateDeliveryContractStructure(
   contract: DeliveryContractV2,
@@ -22,6 +28,10 @@ export function validateDeliveryContractStructure(
   });
   validateSourceClaimMappings(contract, claims);
   assertCompiledClaimsCovered(claims);
+  validateDeliveryStages(contract);
+  validateExecutionTargets(contract);
+  validateEvidenceCapabilityDeclarations(contract);
+  validateExternalConfirmationImpacts(contract, claims);
 }
 
 export function deliveryContractStructureDiagnostics(
@@ -31,6 +41,9 @@ export function deliveryContractStructureDiagnostics(
   const report = (message: string) => diagnostics.push(message);
   validateUniqueKeys(contract, report);
   validateDependencies(contract, report);
+  validateDeliveryStages(contract, report);
+  validateExecutionTargets(contract, report);
+  validateEvidenceCapabilityDeclarations(contract, report);
   validateOwnerAndBindings(contract, report);
   validateDeclaredCheckSafety(contract, report);
   validateEvidenceAdapters(contract, report);
@@ -40,6 +53,7 @@ export function deliveryContractStructureDiagnostics(
   });
   if (claims) {
     validateSourceClaimMappings(contract, claims, report);
+    validateExternalConfirmationImpacts(contract, claims, report);
     capture(diagnostics, () => assertCompiledClaimsCovered(claims!));
   }
   return [...new Set(diagnostics)];

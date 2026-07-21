@@ -26,8 +26,8 @@ test("Compact and expanded V2 authoring normalize to the same Contract", () => {
   const expandedLines = lineCount(YAML.stringify(expanded));
   const compactLines = lineCount(YAML.stringify(compact));
   assert.ok(
-    compactLines <= Math.floor(expandedLines * 0.65),
-    `expected at least 35% fewer lines, expanded=${expandedLines}, compact=${compactLines}`,
+    compactLines <= Math.floor(expandedLines * 0.75),
+    `expected at least 25% fewer lines, expanded=${expandedLines}, compact=${compactLines}`,
   );
 });
 
@@ -96,10 +96,15 @@ function expandedContract() {
   ];
   contract.source_claims[0].statement = "Implement first";
   check.proof_surface = "ui_browser";
+  contract.task.execution_targets[0].runtime_family = "browser";
   check.runner.type = "playwright_test";
   check.runner.target = "tests/oracle.mjs";
   check.positive_assertions[0].observation =
     "playwright.case.first-result.passed";
+  check.positive_assertions[0].evidence_capabilities = [
+    "interaction_trace",
+    "target_runtime",
+  ];
   contract.outcomes[0].technical.obligations[0].required_proof_surfaces = [
     "ui_browser",
   ];

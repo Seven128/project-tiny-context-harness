@@ -177,7 +177,15 @@ async function configurePlannedCarrier(fixture) {
     `import { readFile } from "node:fs/promises";
 let state = { ready: false };
 try { state = JSON.parse(await readFile(new URL("../src/planned.json", import.meta.url), "utf8")); } catch {}
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state.ready === true,negative:false}}));
+console.log(JSON.stringify({
+  schema_version:"long-task-check-result-v3",
+  execution_status:"completed",
+  observations:{result:state.ready === true,negative:false},
+  evidence_records:[
+    {assertion_key:"first-result",capability:"target_runtime",target_ref:"fixture-app",root_entrypoint:"tests/oracle.mjs",session_id:"planned-session",cold_start:true},
+    {assertion_key:"first-result",capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:["ready"]}
+  ]
+}));
 `,
   );
   await writeContract(fixture.workdir, fixture.contract);

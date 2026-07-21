@@ -10,12 +10,13 @@ export async function prepareAuthorityRevisionFixture(fixture) {
 let state = { first: false };
 try { state = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8")); } catch {}
 const key = process.argv[2] || "first";
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state[key],negative:false}}));
+const assertionKey = key + "-result";
+console.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution_status:"completed",observations:{result:state[key],negative:false},evidence_records:[{assertion_key:assertionKey,capability:"target_runtime",target_ref:"fixture-app",root_entrypoint:"tests/oracle.mjs",session_id:"revision-" + key + "-session",cold_start:true},{assertion_key:assertionKey,capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:[key]},{assertion_key:"negative-floor",capability:"state_delta",before_sha256:"2".repeat(64),after_sha256:"3".repeat(64),changed_fields:["negative"]}]}));
 `,
   );
   await writeFile(
     path.join(fixture.root, "tests", "alternate-oracle.mjs"),
-    `console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:true}}));\n`,
+    `console.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution_status:"completed",observations:{result:true,negative:false},evidence_records:[{assertion_key:"first-result",capability:"target_runtime",target_ref:"fixture-app",root_entrypoint:"tests/oracle.mjs",session_id:"alternate-session",cold_start:true},{assertion_key:"first-result",capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:["first"]},{assertion_key:"negative-floor",capability:"state_delta",before_sha256:"2".repeat(64),after_sha256:"3".repeat(64),changed_fields:["negative"]}]}));\n`,
   );
   await writeFile(
     path.join(fixture.root, "tests", "helper.mjs"),
@@ -73,6 +74,7 @@ console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution
     criterion: "The strict negative floor remains satisfied.",
     claims: [],
     observation: "negative",
+    evidence_capabilities: ["state_delta"],
     operator: "equals",
     expected: false,
   });

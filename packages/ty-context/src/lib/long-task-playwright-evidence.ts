@@ -1,7 +1,11 @@
-import type { CompiledCheckV2 } from "./long-task-delivery-types.js";
+import type {
+  CompiledCheckV2,
+  EvidenceCapabilityRecordV2,
+} from "./long-task-delivery-types.js";
 
 export interface PlaywrightEvidence {
   observations: Record<string, unknown>;
+  evidence_records: EvidenceCapabilityRecordV2[];
   error: string | null;
 }
 
@@ -75,7 +79,37 @@ export function extractPlaywrightEvidence(
     }
   }
   observations["playwright.case_ids"] = cases.map((item) => item.id).sort();
-  return { observations, error: null };
+  const evidenceRecords: EvidenceCapabilityRecordV2[] = [];
+  for (const item of cases) {
+    const assertion = [
+      ...check.positive_assertions,
+      ...check.negative_assertions,
+    ].find((candidate) => candidate.key === item.id);
+    if (
+      assertion?.evidence_capabilities.includes("interaction_trace") &&
+      item.executed
+    )
+      evidenceRecords.push({
+        assertion_key: assertion.key,
+        capability: "interaction_trace",
+        target_ref: check.execution_target.target_ref,
+        given_keys: item.given_keys,
+        action_keys: item.action_keys,
+      });
+    if (
+      assertion?.evidence_capabilities.includes("target_runtime") &&
+      item.executed
+    )
+      evidenceRecords.push({
+        assertion_key: assertion.key,
+        capability: "target_runtime",
+        target_ref: check.execution_target.target_ref,
+        root_entrypoint: check.execution_target_definition.root_entrypoint,
+        session_id: `playwright:${item.id}:${item.project_ids.join(",")}`,
+        cold_start: check.execution_target.entrypoint === "root",
+      });
+  }
+  return { observations, evidence_records: evidenceRecords, error: null };
 }
 
 interface PlaywrightCaseInstance {
@@ -89,6 +123,8 @@ interface PlaywrightCaseInstance {
   timed_out: boolean;
   interrupted: boolean;
   status: string;
+  given_keys: string[];
+  action_keys: string[];
 }
 
 interface PlaywrightCase {
@@ -107,6 +143,8 @@ interface PlaywrightCase {
   unexpected_instances: number;
   timed_out_instances: number;
   interrupted_instances: number;
+  given_keys: string[];
+  action_keys: string[];
 }
 
 function collectCases(
@@ -208,6 +246,13 @@ function playwrightCase(
     status === "expected" &&
     resultStatuses.length > 0 &&
     resultStatuses.at(-1) === "passed";
+  const traces = results.map((result) => scenarioTrace(result!));
+  const givenKeys = traces[0]?.given_keys ?? [];
+  const actionKeys = traces[0]?.action_keys ?? [];
+  const traceConsistent = traces.every(
+    (trace) =>
+      same(trace.given_keys, givenKeys) && same(trace.action_keys, actionKeys),
+  );
   return {
     id,
     project_id: projectId,
@@ -219,6 +264,8 @@ function playwrightCase(
     timed_out: timedOut,
     interrupted,
     status,
+    given_keys: traceConsistent ? givenKeys : [],
+    action_keys: traceConsistent ? actionKeys : [],
   };
 }
 
@@ -305,6 +352,16 @@ function aggregateCases(instances: PlaywrightCaseInstance[]): PlaywrightCase[] {
         unexpected_instances: unexpectedInstances,
         timed_out_instances: timedOutInstances,
         interrupted_instances: interruptedInstances,
+        given_keys:
+          rows.length &&
+          rows.every((row) => same(row.given_keys, rows[0].given_keys))
+            ? rows[0].given_keys
+            : [],
+        action_keys:
+          rows.length &&
+          rows.every((row) => same(row.action_keys, rows[0].action_keys))
+            ? rows[0].action_keys
+            : [],
       };
     })
     .sort((left, right) => left.id.localeCompare(right.id));
@@ -320,6 +377,37 @@ function integer(value: unknown): number | null {
   return Number.isInteger(value) && Number(value) >= 0 ? Number(value) : null;
 }
 
+function scenarioTrace(result: Record<string, unknown>): {
+  given_keys: string[];
+  action_keys: string[];
+} {
+  const givenKeys: string[] = [];
+  const actionKeys: string[] = [];
+  const visit = (value: unknown): void => {
+    if (!Array.isArray(value)) return;
+    for (const item of value) {
+      const step = record(item);
+      if (!step) continue;
+      if (typeof step.title === "string") {
+        const given = /^\[given:([a-z0-9][a-z0-9-]*)\]$/u.exec(step.title);
+        const action = /^\[action:([a-z0-9][a-z0-9-]*)\]$/u.exec(step.title);
+        if (given) givenKeys.push(given[1]);
+        if (action) actionKeys.push(action[1]);
+      }
+      visit(step.steps);
+    }
+  };
+  visit(result.steps);
+  return { given_keys: givenKeys, action_keys: actionKeys };
+}
+
+function same(left: string[], right: string[]): boolean {
+  return (
+    left.length === right.length &&
+    left.every((value, index) => value === right[index])
+  );
+}
+
 function invalid(error: string): PlaywrightEvidence {
-  return { observations: {}, error };
+  return { observations: {}, evidence_records: [], error };
 }

@@ -22,6 +22,7 @@ import {
   evaluateAssertionResults,
 } from "./long-task-evidence-findings.js";
 import { classifyPlaywrightCounterfactual } from "./long-task-playwright-counterfactual-policy.js";
+import { evaluateEvidenceCapabilities } from "./long-task-evidence-capability-policy.js";
 import { resolveInsideRepository } from "./long-task-workspace.js";
 
 export async function evaluateCheckEvidence(
@@ -33,55 +34,13 @@ export async function evaluateCheckEvidence(
   const artifacts = await collectCheckArtifacts(check, snapshotRoot);
   const assertionResults = evaluateAssertionResults(check, raw.observations);
   const executionCompleted = raw.execution_status === "completed";
-  const findings: LongTaskFindingV2[] = [];
-  if (!executionCompleted)
-    findings.push(
-      checkFinding(
-        check,
-        raw.execution_status,
-        raw.error ?? raw.execution_status,
-        raw.execution_status === "blocked_external"
-          ? "Satisfy the declared Environment Requirement and rerun this Check."
-          : "Repair the declared runner or evidence protocol and rerun this Check.",
-      ),
-    );
-  if (executionCompleted && raw.exit_code !== 0)
-    findings.push(
-      checkFinding(
-        check,
-        "test_failed",
-        `command exited ${raw.exit_code}`,
-        "Fix the implementation or declared verification command, then rerun this Check.",
-      ),
-    );
-  if (
-    executionCompleted &&
-    raw.observations["playwright.zero_or_all_skipped"] === true
-  )
-    findings.push(
-      checkFinding(
-        check,
-        "test_failed",
-        "Playwright executed zero tests or skipped every test.",
-        "Make the declared Playwright target execute at least one non-skipped test.",
-      ),
-    );
-  if (executionCompleted) {
-    for (const error of artifacts.errors)
-      findings.push(
-        checkFinding(
-          check,
-          "artifact_missing",
-          error,
-          "Produce the artifact declared for this Check and rerun it.",
-        ),
-      );
-    for (const result of assertionResults)
-      if (!result.passed)
-        findings.push(
-          assertionFinding(check, result, raw.observations, outcome),
-        );
-  }
+  const findings = collectExecutionFindings(
+    check,
+    raw,
+    outcome,
+    artifacts,
+    assertionResults,
+  );
 
   const population = outcome?.acceptance.population;
   let populationPassed = true;
@@ -106,12 +65,14 @@ export async function evaluateCheckEvidence(
   const claimProofs: ClaimProofV2[] =
     status === "passed"
       ? assertionResults.flatMap((result) =>
-          result.claims.map((claim) => ({
-            check_key: check.key,
-            assertion_key: result.key,
-            polarity: result.polarity,
-            proof_surface: check.proof_surface,
-          })),
+          result.evidence_complete
+            ? result.claims.map((claim) => ({
+                check_key: check.key,
+                assertion_key: result.key,
+                polarity: result.polarity,
+                proof_surface: check.proof_surface,
+              }))
+            : [],
         )
       : [];
   if (
@@ -137,12 +98,86 @@ export async function evaluateCheckEvidence(
     execution_identity: raw.raw_execution_identity,
     assertion_results: assertionResults,
     observations: raw.observations,
+    evidence_records: raw.evidence_records ?? [],
     artifact_hashes: artifacts.hashes,
     claim_proofs: claimProofs,
     findings,
     attempts: raw.attempts,
     duration_ms: raw.duration_ms,
   };
+}
+
+function collectExecutionFindings(
+  check: CompiledCheckV2,
+  raw: RawCommandExecutionV2,
+  outcome: CompiledOutcomeV2 | undefined,
+  artifacts: Awaited<ReturnType<typeof collectCheckArtifacts>>,
+  assertionResults: CheckExecutionResultV2["assertion_results"],
+): LongTaskFindingV2[] {
+  const findings: LongTaskFindingV2[] = [];
+  if (raw.execution_status !== "completed") {
+    findings.push(
+      checkFinding(
+        check,
+        raw.execution_status,
+        raw.error ?? raw.execution_status,
+        raw.execution_status === "blocked_external"
+          ? "Satisfy the declared Environment Requirement and rerun this Check."
+          : "Repair the declared runner or evidence protocol and rerun this Check.",
+      ),
+    );
+    return findings;
+  }
+  if (raw.exit_code !== 0)
+    findings.push(
+      checkFinding(
+        check,
+        "test_failed",
+        `command exited ${raw.exit_code}`,
+        "Fix the implementation or declared verification command, then rerun this Check.",
+      ),
+    );
+  if (raw.observations["playwright.zero_or_all_skipped"] === true)
+    findings.push(
+      checkFinding(
+        check,
+        "test_failed",
+        "Playwright executed zero tests or skipped every test.",
+        "Make the declared Playwright target execute at least one non-skipped test.",
+      ),
+    );
+  for (const error of artifacts.errors)
+    findings.push(
+      checkFinding(
+        check,
+        "artifact_missing",
+        error,
+        "Produce the artifact declared for this Check and rerun it.",
+      ),
+    );
+  for (const result of assertionResults)
+    if (!result.passed)
+      findings.push(assertionFinding(check, result, raw.observations, outcome));
+  const capabilityEvaluation = evaluateEvidenceCapabilities(
+    check,
+    raw.evidence_records,
+    artifacts.hashes,
+  );
+  const passedAssertions = new Set(
+    assertionResults
+      .filter((result) => result.passed)
+      .map((result) => result.key),
+  );
+  findings.push(
+    ...capabilityEvaluation.findings.filter(
+      (finding) =>
+        !finding.assertion_key || passedAssertions.has(finding.assertion_key),
+    ),
+  );
+  for (const result of assertionResults)
+    result.evidence_complete =
+      result.passed && capabilityEvaluation.complete[result.key] === true;
+  return findings;
 }
 
 export async function evaluateOutcomeCounterfactuals(

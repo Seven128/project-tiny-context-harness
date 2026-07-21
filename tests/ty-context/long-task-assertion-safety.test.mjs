@@ -35,6 +35,8 @@ test("all active Assertion operators fail closed for missing Observations", () =
       key: "safety",
       claims: ["result"],
       observation: "missing.value",
+      evidence_capabilities:
+        operator === "exists" ? ["presence"] : ["state_delta"],
       operator,
       ...(binaryOperators.includes(operator)
         ? { expected: expected(operator) }
@@ -192,6 +194,7 @@ test("missing Observation produces assertion_failed without Claim proof", async 
         key: "missing-result",
         claims: ["OUT.safety.result"],
         observation: "missing",
+        evidence_capabilities: ["state_delta"],
         operator: "equals",
         expected: false,
       },
@@ -300,6 +303,8 @@ function contractWithAssertion(operator) {
       criterion: "Auxiliary operator parsing remains well-defined.",
       claims: [],
       observation: "auxiliary",
+      evidence_capabilities:
+        operator === "exists" ? ["presence"] : ["state_delta"],
       operator,
       ...(binaryOperators.includes(operator)
         ? { expected: expected(operator) }
@@ -315,6 +320,7 @@ function assertion(operator, expectedValue) {
     key: "negative",
     claims: ["result"],
     observation: "value",
+    evidence_capabilities: ["state_delta"],
     operator,
     expected: expectedValue,
   };
@@ -386,6 +392,7 @@ function compiledCheck() {
         criterion: "The complete Check result is true.",
         claims: ["result"],
         observation: "result",
+        evidence_capabilities: ["state_delta"],
         operator: "equals",
         expected: true,
       },
@@ -402,6 +409,15 @@ function rawExecution(check, observations) {
     execution_status: "completed",
     exit_code: 0,
     observations,
+    evidence_records: [
+      {
+        assertion_key: check.positive_assertions[0].key,
+        capability: "state_delta",
+        before_sha256: "0".repeat(64),
+        after_sha256: "1".repeat(64),
+        changed_fields: ["result"],
+      },
+    ],
     stdout_sha256: "stdout",
     stderr_sha256: "stderr",
     attempts: 1,

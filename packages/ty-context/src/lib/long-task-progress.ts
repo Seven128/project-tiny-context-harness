@@ -140,6 +140,10 @@ export function checkIdentity(check: CompiledCheckV2): string {
       artifact_globs: check.artifact_globs,
       positive_assertions: check.positive_assertions,
       negative_assertions: check.negative_assertions,
+      journey_roles: check.journey_roles,
+      execution_target: check.execution_target,
+      execution_target_definition: check.execution_target_definition,
+      scenario: check.scenario,
       environment_requirements: check.environment_requirements,
     }),
   );

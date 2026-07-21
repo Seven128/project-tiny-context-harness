@@ -103,6 +103,7 @@ try {
         criterion: "The negative proof remains explicit.",
         claims: ["result"],
         observation: "missing",
+        evidence_capabilities: ["state_delta"],
         operator: "equals",
         expected: false,
       },

@@ -9,8 +9,10 @@ import type {
 } from "./long-task-delivery-types.js";
 import {
   array,
+  EVIDENCE_CAPABILITIES,
   fail,
   key,
+  JOURNEY_ROLES,
   literal,
   object,
   parseEnvironmentRequirements,
@@ -26,7 +28,15 @@ export function parseCheck(value: unknown, label: string): DeliveryCheckV2 {
   const row = object(
     value,
     label,
-    ["key", "proof_surface", "runner", "verification_inputs"],
+    [
+      "key",
+      "journey_roles",
+      "execution_target",
+      "scenario",
+      "proof_surface",
+      "runner",
+      "verification_inputs",
+    ],
     [
       "input_paths",
       "expected_output_paths",
@@ -36,8 +46,33 @@ export function parseCheck(value: unknown, label: string): DeliveryCheckV2 {
       "environment_requirements",
     ],
   );
+  const executionTarget = object(
+    row.execution_target,
+    `${label}.execution_target`,
+    ["target_ref", "entrypoint"],
+  );
+  const scenario = object(row.scenario, `${label}.scenario`, ["given", "when"]);
   return {
     key: key(row.key, `${label}.key`),
+    journey_roles: array(row.journey_roles, `${label}.journey_roles`).map(
+      (item, index) =>
+        literal(item, JOURNEY_ROLES, `${label}.journey_roles[${index}]`),
+    ),
+    execution_target: {
+      target_ref: key(
+        executionTarget.target_ref,
+        `${label}.execution_target.target_ref`,
+      ),
+      entrypoint: literal(
+        executionTarget.entrypoint,
+        ["root", "internal"] as const,
+        `${label}.execution_target.entrypoint`,
+      ),
+    },
+    scenario: {
+      given: parseScenarioSteps(scenario.given, `${label}.scenario.given`),
+      when: parseScenarioSteps(scenario.when, `${label}.scenario.when`),
+    },
     proof_surface: literal(
       row.proof_surface,
       PROOF_SURFACES,
@@ -134,7 +169,7 @@ function parseAssertions(value: unknown, label: string): DeliveryAssertionV2[] {
     const row = object(
       item,
       itemLabel,
-      ["key", "claims", "observation", "operator"],
+      ["key", "claims", "observation", "operator", "evidence_capabilities"],
       ["criterion", "expected"],
     );
     const operator = literal(
@@ -173,6 +208,16 @@ function parseAssertions(value: unknown, label: string): DeliveryAssertionV2[] {
         : {}),
       claims: strings(row.claims, `${itemLabel}.claims`),
       observation: string(row.observation, `${itemLabel}.observation`),
+      evidence_capabilities: array(
+        row.evidence_capabilities,
+        `${itemLabel}.evidence_capabilities`,
+      ).map((capability, capabilityIndex) =>
+        literal(
+          capability,
+          EVIDENCE_CAPABILITIES,
+          `${itemLabel}.evidence_capabilities[${capabilityIndex}]`,
+        ),
+      ),
       operator,
     };
     return isBinaryAssertionOperator(operator)
@@ -181,6 +226,20 @@ function parseAssertions(value: unknown, label: string): DeliveryAssertionV2[] {
           ...base,
           operator: operator as PresenceOrUnaryAssertionOperator,
         };
+  });
+}
+
+function parseScenarioSteps(
+  value: unknown,
+  label: string,
+): DeliveryCheckV2["scenario"]["given"] {
+  return array(value, label).map((item, index) => {
+    const itemLabel = `${label}[${index}]`;
+    const row = object(item, itemLabel, ["key", "statement"]);
+    return {
+      key: key(row.key, `${itemLabel}.key`),
+      statement: string(row.statement, `${itemLabel}.statement`),
+    };
   });
 }
 

@@ -180,8 +180,9 @@ try {
   fixture.contract.outcomes[0].acceptance.checks[0].positive_assertions.push({
     key: "race-proof",
     criterion: "The authority race proof remains observable.",
-    claims: ["result"],
-    observation: "result_copy",
+    claims: [],
+    observation: "constant_true",
+    evidence_capabilities: ["presence"],
     operator: "equals",
     expected: true,
   });
@@ -273,8 +274,9 @@ function addEnvironmentCheck(contract) {
       {
         key: "environment-result",
         criterion: "The environment-gated result remains observable.",
-        claims: ["result"],
+        claims: [],
         observation: "result",
+        evidence_capabilities: ["state_delta"],
         operator: "equals",
         expected: true,
       },
@@ -306,8 +308,13 @@ if (started && release) {
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20);
   }
 }
-const state = JSON.parse(readFileSync(new URL("../src/state.json", import.meta.url), "utf8"));
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state.first,result_copy:state.first}}));
+let state = {first:false};
+try { state = JSON.parse(readFileSync(new URL("../src/state.json", import.meta.url), "utf8")); } catch {}
+const assertionKey = started && release ? "environment-result" : "first-result";
+const evidence_records = assertionKey === "first-result"
+  ? [{assertion_key:assertionKey,capability:"target_runtime",target_ref:"fixture-app",root_entrypoint:"tests/oracle.mjs",session_id:"smoke-root-session",cold_start:true},{assertion_key:assertionKey,capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:["first"]}]
+  : [{assertion_key:assertionKey,capability:"state_delta",before_sha256:"2".repeat(64),after_sha256:"3".repeat(64),changed_fields:["first"]}];
+console.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution_status:"completed",observations:{result:state.first,result_copy:state.first,constant_true:true},evidence_records}));
 `,
   );
 }

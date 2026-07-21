@@ -3,10 +3,35 @@ import os from "node:os";
 import path from "node:path";
 
 export function configureMixedEvidenceContract(contract) {
+  contract.task.execution_targets.push({
+    key: "fixture-browser",
+    description: "The browser product runtime.",
+    role: "product",
+    runtime_family: "browser",
+    root_entrypoint: "/",
+  });
   const browser = contract.outcomes[0];
   browser.product.requirements[0].required_proof_surfaces = ["ui_browser"];
-  browser.technical.obligations[0].required_proof_surfaces = ["ui_browser"];
-  const ui = browser.acceptance.checks[0];
+  browser.technical.obligations[0].required_proof_surfaces = [
+    "runtime_behavior",
+    "ui_browser",
+  ];
+  const stageGate = browser.acceptance.checks[0];
+  stageGate.positive_assertions[0].claims = [
+    "result",
+    "obligation.implement-first",
+  ];
+  browser.acceptance.counterfactual_controls[0].claims = [
+    "result",
+    "obligation.implement-first",
+  ];
+  const ui = structuredClone(stageGate);
+  ui.key = "ui-check";
+  ui.journey_roles = ["success"];
+  ui.execution_target = {
+    target_ref: "fixture-browser",
+    entrypoint: "root",
+  };
   ui.proof_surface = "ui_browser";
   ui.runner = {
     type: "playwright_test",
@@ -30,6 +55,7 @@ export function configureMixedEvidenceContract(contract) {
         "obligation.implement-first",
       ],
       observation: "playwright.case.ui-acceptance.passed",
+      evidence_capabilities: ["interaction_trace", "target_runtime"],
       operator: "equals",
       expected: true,
     },
@@ -38,11 +64,12 @@ export function configureMixedEvidenceContract(contract) {
       criterion: "The UI recovery case passes.",
       claims: ["requirement.observe-first"],
       observation: "playwright.case.ui-recovery.passed",
+      evidence_capabilities: ["interaction_trace"],
       operator: "equals",
       expected: true,
     },
   ];
-  browser.acceptance.counterfactual_controls = [];
+  browser.acceptance.checks.push(ui);
 
   const structured = contract.outcomes[1];
   structured.acceptance.checks[0].runner.target =
@@ -53,6 +80,10 @@ export function configureMixedEvidenceContract(contract) {
   structured.acceptance.checks[0].artifact_globs = [];
   structured.acceptance.checks[0].positive_assertions[0].key =
     "structured-acceptance";
+  structured.acceptance.checks[0].runner.argv = [
+    "second",
+    "structured-acceptance",
+  ];
   structured.acceptance.checks[0].positive_assertions[0].criterion =
     "The structured outcome is observable and implemented.";
   structured.acceptance.counterfactual_controls = [];
@@ -65,12 +96,12 @@ export function configureMixedEvidenceContract(contract) {
     sourceAcceptance(
       "first-ui-acceptance",
       "The UI acceptance case passes.",
-      "first.first-check.ui-acceptance",
+      "first.ui-check.ui-acceptance",
     ),
     sourceAcceptance(
       "first-ui-recovery",
       "The UI recovery case passes.",
-      "first.first-check.ui-recovery",
+      "first.ui-check.ui-recovery",
     ),
     {
       key: "second-observable",
@@ -137,7 +168,8 @@ const mode = JSON.parse(await readFile("src/ui-mode.json", "utf8"));
 const cases = mode === "multiple"
   ? ["[ac:ui-acceptance] [ac:ui-recovery] copied proof"]
   : ["[ac:ui-acceptance] acceptance", "[ac:ui-recovery] recovery"];
-const specs = cases.map((title) => ({title, tests:[{projectId:"default",status:"expected",results:[{status:"passed"}]}]}));
+const steps = [{title:"[given:fixture-loaded]"},{title:"[action:read-outcome]"}];
+const specs = cases.map((title) => ({title, tests:[{projectId:"default",status:"expected",results:[{status:"passed",steps}]}]}));
 console.log(JSON.stringify({stats:{expected:cases.length,unexpected:0,skipped:0,flaky:0},suites:[{specs}]}));
 `,
   );

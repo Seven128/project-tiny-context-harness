@@ -34,9 +34,13 @@ export function computeAuthorityHashes(
     }),
     product_authority_hash: hash({
       goal: contract.task.goal,
+      target_profile: contract.task.target_profile,
+      execution_targets: contract.task.execution_targets,
+      stages: contract.stages,
       global: contract.global.product,
       outcomes: contract.outcomes.map((outcome) => ({
         key: outcome.key,
+        stage: outcome.stage,
         product: outcome.product,
       })),
     }),
@@ -67,6 +71,7 @@ export function computeAuthorityHashes(
 
 export function outcomeAuthorityHash(outcome: DeliveryOutcomeV2): string {
   return hash({
+    stage: outcome.stage,
     product: outcome.product,
     acceptance: {
       checks: outcome.acceptance.checks.map(acceptanceCheck),
@@ -107,7 +112,7 @@ export function isMonotonicAcceptanceStrengthening(
 ): boolean {
   if (!acceptanceSemanticsChanged(previous, next)) return false;
   if (
-    !subset(
+    !same(
       previous.global.acceptance.external_confirmations,
       next.global.acceptance.external_confirmations,
     ) ||
@@ -197,11 +202,58 @@ function checksStrengthened(
     if (
       !nextCheck ||
       previousCheck.proof_surface !== nextCheck.proof_surface ||
+      !same(previousCheck.execution_target, nextCheck.execution_target) ||
+      !subset(previousCheck.journey_roles, nextCheck.journey_roles) ||
+      !subset(previousCheck.scenario.given, nextCheck.scenario.given) ||
+      !subset(previousCheck.scenario.when, nextCheck.scenario.when) ||
       !subset(
+        previousCheck.verification_inputs,
+        nextCheck.verification_inputs,
+      ) ||
+      !subset(previousCheck.input_paths, nextCheck.input_paths) ||
+      !subset(
+        previousCheck.expected_output_paths,
+        nextCheck.expected_output_paths,
+      ) ||
+      !subset(previousCheck.artifact_globs, nextCheck.artifact_globs) ||
+      !subset(
+        previousCheck.environment_requirements,
+        nextCheck.environment_requirements,
+      ) ||
+      !assertionsStrengthened(
         previousCheck.positive_assertions,
         nextCheck.positive_assertions,
       ) ||
-      !subset(previousCheck.negative_assertions, nextCheck.negative_assertions)
+      !assertionsStrengthened(
+        previousCheck.negative_assertions,
+        nextCheck.negative_assertions,
+      )
+    )
+      return false;
+  }
+  return true;
+}
+
+function assertionsStrengthened(
+  previous: DeliveryContractV2["global"]["acceptance"]["checks"][number]["positive_assertions"],
+  next: DeliveryContractV2["global"]["acceptance"]["checks"][number]["positive_assertions"],
+): boolean {
+  const nextAssertions = new Map(
+    next.map((assertion) => [assertion.key, assertion]),
+  );
+  for (const previousAssertion of previous) {
+    const nextAssertion = nextAssertions.get(previousAssertion.key);
+    if (
+      !nextAssertion ||
+      previousAssertion.criterion !== nextAssertion.criterion ||
+      !same(previousAssertion.claims, nextAssertion.claims) ||
+      previousAssertion.observation !== nextAssertion.observation ||
+      previousAssertion.operator !== nextAssertion.operator ||
+      !same(previousAssertion.expected, nextAssertion.expected) ||
+      !subset(
+        previousAssertion.evidence_capabilities,
+        nextAssertion.evidence_capabilities,
+      )
     )
       return false;
   }

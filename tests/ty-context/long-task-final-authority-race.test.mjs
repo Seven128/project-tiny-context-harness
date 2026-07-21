@@ -189,6 +189,7 @@ function addProof(contract, key) {
     criterion: "The concurrent revision proof remains true.",
     claims: [],
     observation: "negative",
+    evidence_capabilities: ["presence"],
     operator: "equals",
     expected: false,
   });
@@ -209,6 +210,7 @@ function addBlockedProof(contract) {
           "obligation.implement-first",
         ],
         observation: "result",
+        evidence_capabilities: ["state_delta"],
         operator: "equals",
         expected: true,
       },
@@ -246,7 +248,7 @@ while (!existsSync(${JSON.stringify(signal.release)})) {
 }
 let state = {first:false};
 try { state = JSON.parse(readFileSync(new URL("../src/state.json", import.meta.url), "utf8")); } catch {}
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state.first,result_copy:state.first,negative:false}}));
+console.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution_status:"completed",observations:{result:state.first,result_copy:state.first,negative:false},evidence_records:[{assertion_key:"first-result",capability:"target_runtime",target_ref:"fixture-app",root_entrypoint:"tests/oracle.mjs",session_id:"race-session",cold_start:true},{assertion_key:"first-result",capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:["first"]}]}));
 `,
   );
   await commitCandidate(fixture.root);

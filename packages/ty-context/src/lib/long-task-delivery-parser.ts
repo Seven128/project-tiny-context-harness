@@ -19,8 +19,17 @@ import type {
   DeliveryContractV2,
   DeliveryOutcomeV2,
 } from "./long-task-delivery-types.js";
-import { parseGlobal, parseRisk, parseTask } from "./long-task-root-shape.js";
+import {
+  parseGlobal,
+  parseRisk,
+  parseStages,
+  parseTask,
+} from "./long-task-root-shape.js";
 import { repositoryRoot } from "./long-task-workspace.js";
+import {
+  assertNoSemanticDriftMigration,
+  semanticDriftMigrationFields,
+} from "./long-task-semantic-drift-migration.js";
 
 export const DELIVERY_CONTRACT_FILE = "delivery-contract.yaml";
 
@@ -131,10 +140,11 @@ function parseRoot(raw: string, bundle: boolean): Record<string, unknown> {
       "long-task-delivery-v1"
   )
     throw new Error("long_task_delivery_v1_retired_use_v2");
+  assertNoSemanticDriftMigration(semanticDriftMigrationFields(decoded));
   return object(
     decoded,
     "$",
-    ["schema_version", "task", "source_claims", "risk", "global"],
+    ["schema_version", "task", "source_claims", "stages", "risk", "global"],
     bundle ? ["outcomes", "outcome_files"] : ["outcomes"],
   );
 }
@@ -152,6 +162,7 @@ function parseContractRoot(
     schema_version: "long-task-delivery-v2",
     task: parseTask(root.task),
     source_claims: parseSourceClaims(root.source_claims, "source_claims"),
+    stages: parseStages(root.stages),
     risk: parseRisk(root.risk),
     global: parseGlobal(root.global),
     outcomes,

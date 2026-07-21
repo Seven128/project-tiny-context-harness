@@ -5,6 +5,13 @@ import { runCli } from "./long-task-delivery-fixtures.mjs";
 
 export function prepareSemanticAuthority(contract) {
   const outcome = contract.outcomes[0];
+  contract.task.execution_targets.push({
+    key: "fixture-browser",
+    description: "The browser support surface.",
+    role: "support",
+    runtime_family: "browser",
+    root_entrypoint: "/",
+  });
   outcome.product.controls.push({
     key: "submit",
     location: "footer",
@@ -28,6 +35,7 @@ export function prepareSemanticAuthority(contract) {
     criterion: "Exit zero alone remains insufficient.",
     claims: ["non_completing.exit-zero-only"],
     observation: "result_copy",
+    evidence_capabilities: ["state_delta"],
     operator: "equals",
     expected: true,
   });
@@ -36,6 +44,11 @@ export function prepareSemanticAuthority(contract) {
   outcome.acceptance.checks.push({
     ...structuredClone(outcome.acceptance.checks[0]),
     key: "submit-ui",
+    journey_roles: ["success"],
+    execution_target: {
+      target_ref: "fixture-browser",
+      entrypoint: "root",
+    },
     proof_surface: "ui_browser",
     runner: {
       ...structuredClone(outcome.acceptance.checks[0].runner),
@@ -52,6 +65,7 @@ export function prepareSemanticAuthority(contract) {
           "control.submit.failure",
         ],
         observation: "playwright.case.submit-states.passed",
+        evidence_capabilities: ["interaction_trace"],
         operator: "equals",
         expected: true,
       },
@@ -75,6 +89,7 @@ export function prepareSemanticAuthority(contract) {
         criterion: "The declared runtime remains stable.",
         claims: ["constraint.stable-runtime"],
         observation: "result_copy",
+        evidence_capabilities: ["state_delta"],
         operator: "equals",
         expected: true,
       },

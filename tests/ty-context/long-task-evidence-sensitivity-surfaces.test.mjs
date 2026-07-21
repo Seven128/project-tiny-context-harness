@@ -81,6 +81,7 @@ test("Playwright Claims do not require an additional Counterfactual", async () =
     await writeFile(path.join(fixture.root, "tests", "ui.spec.ts"), "export {};\n");
     outcome.technical.obligations = [];
     outcome.product.requirements[0].required_proof_surfaces = ["ui_browser"];
+    fixture.contract.task.execution_targets[0].runtime_family = "browser";
     check.proof_surface = "ui_browser";
     check.runner.type = "playwright_test";
     check.runner.target = "tests/ui.spec.ts";
@@ -95,6 +96,7 @@ test("Playwright Claims do not require an additional Counterfactual", async () =
         criterion: "The first browser acceptance case passes.",
         claims: ["result", "requirement.observe-first"],
         observation: "playwright.case.first-ui.passed",
+        evidence_capabilities: ["interaction_trace", "target_runtime"],
         operator: "equals",
         expected: true,
       },

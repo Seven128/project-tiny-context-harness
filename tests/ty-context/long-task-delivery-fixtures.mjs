@@ -50,8 +50,9 @@ Confirm the fixture in external delivery.
 let state = { first: false, second: false };
 try { state = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8")); } catch {}
 const key = process.argv[2] || "first";
+const assertionKey = process.argv[3] || \`${"${key}"}-result\`;
 console.log(JSON.stringify({
-  schema_version: "long-task-check-result-v2",
+  schema_version: "long-task-check-result-v3",
   execution_status: "completed",
   observations: {
     result: state[key],
@@ -62,7 +63,24 @@ console.log(JSON.stringify({
       observed_ids: state[key] ? [key] : [],
       excluded_items: []
     }
-  }
+  },
+  evidence_records: [
+    {
+      assertion_key: assertionKey,
+      capability: "target_runtime",
+      target_ref: "fixture-app",
+      root_entrypoint: "tests/oracle.mjs",
+      session_id: \`fixture-${"${key}"}-session\`,
+      cold_start: true
+    },
+    {
+      assertion_key: assertionKey,
+      capability: "state_delta",
+      before_sha256: "0".repeat(64),
+      after_sha256: "1".repeat(64),
+      changed_fields: [key]
+    }
+  ]
 }));
 `,
   );
@@ -116,6 +134,12 @@ default = true
 export function deliveryContract(options = {}) {
   const check = (key, argument, outcomeKey) => ({
     key,
+    journey_roles: ["success", "stage_gate"],
+    execution_target: { target_ref: "fixture-app", entrypoint: "root" },
+    scenario: {
+      given: [{ key: "fixture-loaded", statement: "Load the fixture state." }],
+      when: [{ key: "read-outcome", statement: "Read the selected outcome." }],
+    },
     proof_surface: "runtime_behavior",
     runner: {
       type: "node_oracle",
@@ -141,6 +165,7 @@ export function deliveryContract(options = {}) {
           `obligation.implement-${outcomeKey}`,
         ],
         observation: "result",
+        evidence_capabilities: ["target_runtime", "state_delta"],
         operator: "equals",
         expected: true,
       },
@@ -151,9 +176,12 @@ export function deliveryContract(options = {}) {
   const outcome = (key, argument, dependsOn = []) => ({
     key,
     title: `${key} title`,
+    stage: key,
     depends_on: dependsOn,
     product: {
       observable_result: `${key} becomes observable`,
+      success_path_required: true,
+      degradation_path_required: false,
       owner: {
         label: "fixture",
         context_refs: ["project_context/areas/main.md"],
@@ -205,6 +233,21 @@ export function deliveryContract(options = {}) {
       id: "fixture-task",
       title: "Fixture task",
       goal: "Prove the declared fixture outcomes.",
+      target_profile: {
+        key: "fixture-target",
+        description: "The executable fixture is usable through its declared root.",
+        required_state: "target_profile_usable",
+        required_target_refs: ["fixture-app"],
+      },
+      execution_targets: [
+        {
+          key: "fixture-app",
+          description: "The fixture process entrypoint.",
+          role: "product",
+          runtime_family: "process",
+          root_entrypoint: "tests/oracle.mjs",
+        },
+      ],
       source_paths: ["source.md"],
       context_refs: ["project_context/areas/main.md"],
       context_snapshot_mode: "referenced",
@@ -233,6 +276,14 @@ export function deliveryContract(options = {}) {
           ]
         : []),
     ],
+    stages: options.twoOutcomes
+      ? [
+          { key: "first", title: "First", depends_on: [], gate_outcome: "first" },
+          { key: "second", title: "Second", depends_on: ["first"], gate_outcome: "second" },
+        ]
+      : [
+          { key: "first", title: "First", depends_on: [], gate_outcome: "first" },
+        ],
     risk: {
       requested_level: "auto",
       facts: {
@@ -264,6 +315,9 @@ export function deliveryContract(options = {}) {
                 key: "fixture-external",
                 description: "Confirm the fixture in external delivery.",
                 owner: "release-owner",
+                kind: "field_validation",
+                impact_claims: ["first.result"],
+                blocks_target: false,
               },
             ]
           : [],

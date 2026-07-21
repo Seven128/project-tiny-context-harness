@@ -1,4 +1,8 @@
-import type { ProofSurface } from "./long-task-delivery-types.js";
+import type {
+  DeliveryJourneyRoleV2,
+  EvidenceCapabilityV2,
+  ProofSurface,
+} from "./long-task-delivery-types.js";
 import {
   normalizeRepositoryCwd,
   normalizeRepositoryFile,
@@ -37,6 +41,11 @@ export function string(value: unknown, label: string): string {
 
 export function text(value: unknown, label: string): string {
   if (typeof value !== "string") fail(label, "must be a string");
+  return value;
+}
+
+export function boolean(value: unknown, label: string): boolean {
+  if (typeof value !== "boolean") fail(label, "must be a boolean");
   return value;
 }
 
@@ -112,6 +121,28 @@ export const PROOF_SURFACES = [
   "population_coverage",
   "implementation_structure",
 ] as const satisfies readonly ProofSurface[];
+
+export const JOURNEY_ROLES = [
+  "success",
+  "degradation",
+  "recovery",
+  "stage_gate",
+  "conformance",
+] as const satisfies readonly DeliveryJourneyRoleV2[];
+
+export const EVIDENCE_CAPABILITIES = [
+  "presence",
+  "interaction_trace",
+  "state_delta",
+  "cross_surface_consistency",
+  "durable_readback",
+  "boundary_invocation",
+  "external_side_effect",
+  "failure_injection",
+  "visual_render",
+  "target_runtime",
+  "input_variation",
+] as const satisfies readonly EvidenceCapabilityV2[];
 
 export function fail(label: string, message: string): never {
   throw new Error(`delivery_contract_invalid:${label}:${message}`);

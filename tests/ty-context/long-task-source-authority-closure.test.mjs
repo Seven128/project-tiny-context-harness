@@ -213,6 +213,7 @@ ${statement}
             criterion: statement,
             claims: ["non_goal.no-legacy"],
             observation: "negative",
+            evidence_capabilities: ["state_delta"],
             operator: "equals",
             expected: false,
           },
@@ -405,6 +406,9 @@ test("Source targets preserve authoritative Result, Control, and External Confir
           key: "owner-approval",
           description: "The product owner confirms the final behavior.",
           owner: "Product owner",
+          kind: "field_validation",
+          impact_claims: ["first.result"],
+          blocks_target: false,
         });
         fixture.contract.source_claims[0].disposition = {
           type: "external_confirmation",
@@ -729,6 +733,7 @@ async function configureGlobalSourceAcceptance(fixture, { sourceBacked }) {
       criterion,
       claims: ["constraint.no-legacy"],
       observation: "result_copy",
+      evidence_capabilities: ["state_delta"],
       operator: "equals",
       expected: true,
     },
@@ -855,7 +860,19 @@ async function addControlProof(fixture, failureState) {
     "export {};\n",
   );
   const check = structuredClone(outcome.acceptance.checks[0]);
+  fixture.contract.task.execution_targets.push({
+    key: "fixture-browser",
+    description: "The browser support surface.",
+    role: "support",
+    runtime_family: "browser",
+    root_entrypoint: "/",
+  });
   check.key = "ui-check";
+  check.journey_roles = ["success"];
+  check.execution_target = {
+    target_ref: "fixture-browser",
+    entrypoint: "root",
+  };
   check.proof_surface = "ui_browser";
   check.runner.type = "playwright_test";
   check.runner.target = "tests/ui.spec.ts";
@@ -870,6 +887,7 @@ async function addControlProof(fixture, failureState) {
       criterion: "The save control appears in the Settings form.",
       claims: ["control.save.location"],
       observation: "playwright.case.save-location.passed",
+      evidence_capabilities: ["interaction_trace"],
       operator: "equals",
       expected: true,
     },
@@ -878,6 +896,7 @@ async function addControlProof(fixture, failureState) {
       criterion: "The failure state preserves user input.",
       claims: ["control.save.failure"],
       observation: "playwright.case.save-failure.passed",
+      evidence_capabilities: ["interaction_trace"],
       operator: "equals",
       expected: true,
     },
@@ -896,6 +915,7 @@ function addGlobalConstraintProof(contract, key, statement) {
       criterion: statement,
       claims: [`constraint.${key}`],
       observation: "result",
+      evidence_capabilities: ["state_delta"],
       operator: "equals",
       expected: true,
     },

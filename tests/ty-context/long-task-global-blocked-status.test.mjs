@@ -62,6 +62,13 @@ test("a real Outcome failure outranks Global blocked_external", async () => {
 });
 
 function addBlockedGlobalCheck(contract) {
+  contract.task.execution_targets.push({
+    key: "fixture-browser",
+    description: "The browser support surface.",
+    role: "support",
+    runtime_family: "browser",
+    root_entrypoint: "/",
+  });
   contract.global.technical.constraints.push({
     key: "external-service",
     statement: "An external service must be available.",
@@ -69,6 +76,11 @@ function addBlockedGlobalCheck(contract) {
   contract.global.acceptance.checks.push({
     ...structuredClone(contract.outcomes[0].acceptance.checks[0]),
     key: "external-service-check",
+    journey_roles: ["degradation"],
+    execution_target: {
+      target_ref: "fixture-browser",
+      entrypoint: "root",
+    },
     proof_surface: "ui_browser",
     runner: {
       ...structuredClone(contract.outcomes[0].acceptance.checks[0].runner),
@@ -82,6 +94,7 @@ function addBlockedGlobalCheck(contract) {
         criterion: "The external service constraint is observable.",
         claims: ["constraint.external-service"],
         observation: "playwright.case.external-service-proof.passed",
+        evidence_capabilities: ["interaction_trace"],
         operator: "equals",
         expected: true,
       },

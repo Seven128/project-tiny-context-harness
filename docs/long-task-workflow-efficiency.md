@@ -49,8 +49,9 @@ Preflight follows the same cost rule. Repair metadata is emitted only for duplic
 
 When a declared result can pass on a proxy surface while failing in its target runtime, delaying the first target execution until Final Gate creates avoidable rework. Replaying a tracked status report in Final Gate is worse: it reruns the reader, not the target, and can falsely accept a stale self-report on an otherwise current snapshot.
 
-Use the existing Contract and Progress model instead of adding platform flags or another state machine:
+Use the existing Contract and Progress model plus one bounded target profile instead of adding open-ended platform flags or another state machine:
 
+- declare the exact non-empty required product target refs, bounded runtime family and root entrypoint;
 - put the live target Check in the earliest Outcome that owns the first runnable boundary;
 - make its current Raw Execution exercise the target and derive structured Observations from that same session;
 - declare runtime-affecting `input_paths`, Binding carriers, verification inputs and environment requirements so relevant changes stale Progress;
@@ -60,7 +61,15 @@ Use the existing Contract and Progress model instead of adding platform flags or
 
 Historical reports, screenshots, binaries and logs remain review material. Build, install, process start and absence of fatal logs prove only those exact Claims; broader runnable behavior needs a stable product-owned sentinel or declared interaction. Capability-specific probes are required only when their Claims are in scope.
 
-This policy adds bounded authoring and selected runtime cost but no Schema field, `platform_impact` taxonomy, scheduler, persistent trigger queue, per-platform completion status or mandatory rebuild per Outcome/edit. Its net value comes from earlier defect localization plus closing the stale self-report acceptance path while preserving one final authority.
+Every vertical Outcome belongs to one Stage. Stage readiness reuses Outcome dependencies and Progress; the gate proves every required target from its root, and only a multi-Outcome Stage pays the additional cross-surface-consistency proof. A separate read-only Product Conformance Check is required only when weak observability combines with multiple Stages or multiple required product runtime families. Single-Stage/single-family work pays no extra conformance run.
+
+This policy adds bounded authoring and selected runtime cost but no open-ended `platform_impact` taxonomy, scheduler, persistent trigger queue, per-platform Progress or mandatory rebuild per Outcome/edit. Terminal target and Stage projections are derived only at Final Gate; they are not another state machine. Its net value comes from earlier defect localization plus closing proxy, stale self-report, degraded-success, fixed-input, self-attested-boundary and cross-surface drift paths while preserving one final authority.
+
+## Capability-Adequate Evidence
+
+Checks declare keyed Given/When scenarios, a journey role, an execution target and all-of Evidence Capabilities per Assertion. Static `presence` proves only existence. Every behavioral capability requires exactly one typed current-execution record bound to the Assertion; missing, duplicate, unknown and undeclared records fail closed. Success and degradation use separate Checks, Result proof comes only from success, boundary effects use an observer target, and input variation requires distinct inputs, outputs and a failure case.
+
+These fields concentrate verifier review at Authoring/Preflight instead of adding repeated runtime ceremony. V2 structured results remain readable for compatibility but cannot satisfy behavioral capabilities. Capability additions are monotonic evidence strengthening; removal or semantic weakening is protected Authority Revision.
 
 ## Test-Cost Layers
 

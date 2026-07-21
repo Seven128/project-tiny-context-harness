@@ -177,7 +177,7 @@ await writeFile(new URL("../artifacts/a.json", import.meta.url), "a");
 await writeFile(new URL("../artifacts/b.json", import.meta.url), "b");
 let state = {first:false};
 try { state = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8")); } catch {}
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state.first,invocation_count:count}}));
+console.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution_status:"completed",observations:{result:state.first,invocation_count:count},evidence_records:[{assertion_key:"first-result",capability:"target_runtime",target_ref:"fixture-app",root_entrypoint:"tests/oracle.mjs",session_id:"deduplicated-session",cold_start:true},{assertion_key:"first-result",capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:["first"]},{assertion_key:"single-invocation",capability:"state_delta",before_sha256:"2".repeat(64),after_sha256:"3".repeat(64),changed_fields:["invocation_count"]}]}));
 `,
     );
     const original = fixture.contract.outcomes[0].acceptance.checks[0];
@@ -188,6 +188,7 @@ console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution
       criterion: "The shared Raw Execution is invoked exactly once.",
       claims: ["result"],
       observation: "invocation_count",
+      evidence_capabilities: ["state_delta"],
       operator: "equals",
       expected: 1,
     });

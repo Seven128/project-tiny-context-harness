@@ -61,7 +61,19 @@ test("Control location is an independent ui_browser Claim", () => {
     feedback: "",
   });
   const uiCheck = structuredClone(covered.outcomes[0].acceptance.checks[0]);
+  covered.task.execution_targets.push({
+    key: "fixture-browser",
+    description: "The browser support surface.",
+    role: "support",
+    runtime_family: "browser",
+    root_entrypoint: "/",
+  });
   uiCheck.key = "submit-ui";
+  uiCheck.journey_roles = ["success"];
+  uiCheck.execution_target = {
+    target_ref: "fixture-browser",
+    entrypoint: "root",
+  };
   uiCheck.proof_surface = "ui_browser";
   uiCheck.runner.type = "playwright_test";
   uiCheck.runner.target = "tests/ui.spec.ts";
@@ -71,6 +83,7 @@ test("Control location is an independent ui_browser Claim", () => {
       criterion: "Submit is in the settings footer.",
       claims: ["control.submit.location", "control.submit.trigger"],
       observation: "playwright.case.submit-location.passed",
+      evidence_capabilities: ["interaction_trace"],
       operator: "equals",
       expected: true,
     },
@@ -124,6 +137,9 @@ test("Source external-confirmation refs must resolve", () => {
     key: "human-review",
     description: "A human reviews the result.",
     owner: "maintainer",
+    kind: "field_validation",
+    impact_claims: ["first.result"],
+    blocks_target: false,
   });
   contract.source_claims[0].disposition = {
     type: "external_confirmation",
@@ -146,6 +162,7 @@ test("one Check cannot duplicate an Observation or use playwright.passed for fin
     criterion: "A second assertion reuses the same broad observation.",
     claims: ["result"],
     observation: check.positive_assertions[0].observation,
+    evidence_capabilities: ["state_delta"],
     operator: "equals",
     expected: true,
   });
@@ -155,11 +172,16 @@ test("one Check cannot duplicate an Observation or use playwright.passed for fin
   );
 
   const broad = deliveryContract();
+  broad.task.execution_targets[0].runtime_family = "browser";
   broad.outcomes[0].acceptance.checks[0].runner.type = "playwright_test";
   broad.outcomes[0].acceptance.checks[0].runner.target = "tests/ui.spec.ts";
   broad.outcomes[0].acceptance.checks[0].proof_surface = "runtime_behavior";
   broad.outcomes[0].acceptance.checks[0].positive_assertions[0].observation =
     "playwright.passed";
+  broad.outcomes[0].acceptance.checks[0].positive_assertions[0].evidence_capabilities = [
+    "interaction_trace",
+    "target_runtime",
+  ];
   assert.throws(
     () => parse(broad),
     /playwright_claim_assertion_invalid:first:first-check:first-result/u,

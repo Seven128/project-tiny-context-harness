@@ -6,6 +6,17 @@ import type {
   CounterfactualControlV2,
   GlobalCounterfactualControlV2,
 } from "./long-task-counterfactual-types.js";
+import type {
+  CheckExecutionTargetV2,
+  DeliveryJourneyRoleV2,
+  DeliveryScenarioV2,
+  DeliveryStageV2,
+  EvidenceCapabilityV2,
+  ExecutionTargetV2,
+  ExternalConfirmationKindV2,
+  KeyedStatementV2,
+  TargetProfileV2,
+} from "./long-task-semantic-contract-types.js";
 
 export type SourceClaimDispositionV2 =
   | { type: "claim"; refs: string[] }
@@ -23,11 +34,6 @@ export interface SourceClaimV2 {
   disposition: SourceClaimDispositionV2;
 }
 
-export interface KeyedStatementV2 {
-  key: string;
-  statement: string;
-}
-
 export interface KeyedPathV2 {
   key: string;
   path: string;
@@ -37,6 +43,9 @@ export interface ExternalConfirmationV2 {
   key: string;
   description: string;
   owner: string;
+  kind: ExternalConfirmationKindV2;
+  impact_claims: string[];
+  blocks_target: boolean;
 }
 
 export type ProofSurface =
@@ -76,6 +85,7 @@ interface DeliveryAssertionBaseV2 {
   criterion?: string;
   claims: string[];
   observation: string;
+  evidence_capabilities: EvidenceCapabilityV2[];
 }
 
 export type DeliveryAssertionV2 =
@@ -112,6 +122,9 @@ export type EnvironmentRequirementV2 =
 
 export interface DeliveryCheckV2 {
   key: string;
+  journey_roles: DeliveryJourneyRoleV2[];
+  execution_target: CheckExecutionTargetV2;
+  scenario: DeliveryScenarioV2;
   proof_surface: ProofSurface;
   runner: DeliveryRunnerV2;
   verification_inputs: string[];
@@ -178,9 +191,12 @@ export interface PopulationRequirementV2 {
 export interface DeliveryOutcomeV2 {
   key: string;
   title: string;
+  stage: string;
   depends_on: string[];
   product: {
     observable_result: string;
+    success_path_required: boolean;
+    degradation_path_required: boolean;
     owner: DeliveryOwnerV2;
     requirements: DeliveryRequirementV2[];
     owner_surfaces: string[];
@@ -209,11 +225,14 @@ export interface DeliveryContractV2 {
     id: string;
     title: string;
     goal: string;
+    target_profile: TargetProfileV2;
+    execution_targets: ExecutionTargetV2[];
     source_paths: string[];
     context_refs: string[];
     context_snapshot_mode: "referenced" | "full";
   };
   source_claims: SourceClaimV2[];
+  stages: DeliveryStageV2[];
   risk: {
     requested_level: RequestedRiskLevel;
     facts: LongTaskRiskFacts;

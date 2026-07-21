@@ -30,7 +30,7 @@ test("controlled closure mutation smoke rejects false authority and stale proof"
     );
     await writeFile(
       path.join(fixture.root, "tests", "constant-oracle.mjs"),
-      'console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:true}}));\n',
+      'console.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution_status:"completed",observations:{result:true},evidence_records:[{assertion_key:"structured-acceptance",capability:"target_runtime",target_ref:"fixture-app",root_entrypoint:"tests/oracle.mjs",session_id:"constant-session",cold_start:true},{assertion_key:"structured-acceptance",capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:["second"]}]}));\n',
     );
     await writeFile(
       path.join(fixture.root, "src", "ui-mode.json"),
@@ -114,7 +114,8 @@ test("controlled closure mutation smoke rejects false authority and stale proof"
       { env },
     );
     const invalidUi = finalGate.check_results.find(
-      (result) => result.outcome_key === "first",
+      (result) =>
+        result.outcome_key === "first" && result.check_key === "ui-check",
     );
     assert.equal(invalidUi.status, "invalid_evidence");
     assert.equal(finalGate.workflow_status, "needs_work");

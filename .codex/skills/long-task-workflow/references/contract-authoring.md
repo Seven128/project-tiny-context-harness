@@ -31,6 +31,14 @@ For every Outcome declare:
 
 Global non-goals, constraints and forbidden shortcuts remain Global authority and use Global Checks/Assertions when machine proof is required.
 
+## Stage And Target Profile
+
+- Declare one ordered `stages` DAG in the same Contract. Every Outcome belongs to exactly one Stage; every Stage names one gate Outcome; the gate transitively depends on every other Outcome in that Stage; and every later Stage Outcome transitively depends on every prerequisite gate.
+- A Stage Gate is not a second Final Gate or Receipt. It is one or more `stage_gate` Checks owned by the gate Outcome, and its status/frontier is derived from ordinary Outcome Progress.
+- A multi-Outcome Stage Gate declares `cross_surface_consistency`. Its runtime record names at least two distinct `surface_ref` values, may use the same runtime target for several pages, and proves one matching state version.
+- `task.target_profile` declares `required_state` plus a non-empty, duplicate-free `required_target_refs`. Each ref resolves to a `product` execution target with one bounded runtime family and root entrypoint. Every Stage Gate and every `critical_user_path` Outcome provides root `target_runtime` proof for every required ref; optional support/observer targets never substitute.
+- Use `implementation_complete` only when code-level implementation is the selected target, `target_profile_usable` when the declared required targets must be usable, and `production_release_ready` only when release gates are part of the selected target. These are terminal target qualifications, not Outcome progress states.
+
 ## Architecture Closure
 
 Architecture protection is risk-triggered and project-specific. Use it when the delivery declares module ownership, unique source of truth, dependency direction, API/schema/data boundary, state lifecycle, persistence/recovery, security boundary, compatibility/migration or a forbidden bypass.
@@ -47,7 +55,7 @@ Do not encode subjective “clean architecture” or generic quality prose as ma
 
 ## Proxy And Target Runtime Independence
 
-When a declared result can pass on a proxy surface while failing in its target runtime, author independent target-runtime proof. Put the project-owned live Check in the earliest Outcome that owns the first runnable target boundary rather than postponing it to a terminal release/quality Outcome.
+When a declared result can pass on a proxy surface while failing in its target runtime, author independent target-runtime proof for the exact required target ref. Put the project-owned live Check in the earliest Outcome that owns the first runnable target boundary rather than postponing it to a terminal release/quality Outcome.
 
 Use existing Contract semantics:
 
@@ -57,7 +65,13 @@ Use existing Contract semantics:
 4. freeze runner helpers/configuration as `verification_inputs` and declare only genuine environment requirements; and
 5. add capability-specific probes only for Claims that actually require them.
 
-A proxy check, static repository shape, tracked status report, prior screenshot, binary or historical run cannot be the sole proof of a Claim that can fail independently in the target. Do not add `platform_impact` flags, a platform taxonomy or per-platform completion state: Check ownership, proof surfaces, declared inputs, Bindings and risk already express the necessary boundary.
+A proxy check, static repository shape, tracked status report, prior screenshot, binary or historical run cannot be the sole proof of a Claim that can fail independently in the target. Use only the bounded execution-target runtime families and required refs in the Contract; do not add open-ended `platform_impact` flags or per-platform Progress state.
+
+## Success, Degradation And External Boundaries
+
+- Set `success_path_required` and `degradation_path_required` explicitly. A Result Claim is proved only by a `success` Check; the same Check cannot be both success and degradation, and an honest unavailable/pending/recovery state cannot replace required success.
+- External confirmations declare `kind`, exact `impact_claims` and `blocks_target`. A `functional_prerequisite` blocks the selected target; a `production_release_gate` blocks a production-release target but may remain non-blocking for a lower target. Reclassification or impact changes are protected authority.
+- `boundary_invocation` and `external_side_effect` are machine evidence only when their Check executes on a declared independent `observer` target. Product self-report never proves the downstream effect.
 
 ## Visual Delivery Authoring
 
@@ -75,6 +89,6 @@ This guidance adds no visual Schema, Claim kind, risk level, lifecycle state, co
 
 Compact V2 may omit only deterministic defaults: empty optional arrays/nulls, `context_snapshot_mode: referenced`, `requested_level: auto`, runner `argv: []`, `cwd: .`, `timeout_ms: 30000`, `retry_policy: none`, `idempotent: false`, and empty output/artifact/assertion/environment lists.
 
-Goal, Source/Source Claims, Context, observable results, owners/paths, REQ, applicable CTRL states, OBL, proof surfaces, runner targets/effects, verification inputs, Assertions, risk, forbidden shortcuts and external confirmations remain explicit.
+Goal, target profile/required targets, ordered Stages, Source/Source Claims, Context, observable results, success/degradation requirements, owners/paths, REQ, applicable CTRL states, OBL, proof surfaces, Given/When scenarios, journey roles, Evidence Capabilities, runner targets/effects, verification inputs, Assertions, risk, forbidden shortcuts and typed external confirmations remain explicit.
 
 Compiler-generated Outcome/Check/Claim identities replace handwritten mechanical cross-entity references. This does not authorize compiler inference of product meaning, owners, architecture, proof or risk.

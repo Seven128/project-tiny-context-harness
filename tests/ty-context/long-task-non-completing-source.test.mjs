@@ -141,6 +141,7 @@ async function addNonCompletingSource(fixture) {
     criterion,
     claims: ["non_completing.spinner-only"],
     observation: "negative",
+    evidence_capabilities: ["state_delta"],
     operator: "equals",
     expected: false,
   });

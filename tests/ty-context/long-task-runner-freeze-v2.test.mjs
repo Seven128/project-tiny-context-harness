@@ -37,7 +37,7 @@ test("runner target resolves from a subdirectory and executes that frozen target
     await mkdir(path.join(fixture.root, "tools/sub"), { recursive: true });
     await writeFile(
       path.join(fixture.root, "tools/sub/oracle.mjs"),
-      'console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:true}}));\n',
+      'console.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution_status:"completed",observations:{result:true},evidence_records:[{assertion_key:"first-result",capability:"target_runtime",target_ref:"fixture-app",root_entrypoint:"tests/oracle.mjs",session_id:"subdirectory-session",cold_start:true},{assertion_key:"first-result",capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:["first"]}]}));\n',
     );
     const check = fixture.contract.outcomes[0].acceptance.checks[0];
     check.runner.cwd = "tools/sub";
@@ -70,11 +70,16 @@ test("helper, fixture, Playwright config, package script and lockfile are frozen
     );
     await writeFile(path.join(fixture.root, "package-lock.json"), "{}\n");
     const check = fixture.contract.outcomes[0].acceptance.checks[0];
+    fixture.contract.task.execution_targets[0].runtime_family = "browser";
     check.runner.type = "playwright_test";
     check.runner.target = "tests/ui.spec.mjs";
     check.proof_surface = "ui_browser";
     check.positive_assertions[0].observation =
       "playwright.case.first-result.passed";
+    check.positive_assertions[0].evidence_capabilities = [
+      "interaction_trace",
+      "target_runtime",
+    ];
     fixture.contract.outcomes[0].product.requirements[0].required_proof_surfaces =
       ["ui_browser"];
     fixture.contract.outcomes[0].technical.obligations[0].required_proof_surfaces =
